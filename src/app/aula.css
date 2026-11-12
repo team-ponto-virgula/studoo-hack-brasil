@@ -147,3 +147,6 @@
 @media (prefers-reduced-motion: reduce) {
   .aula-rodape__conteudo > .botao:active:not(:disabled) { transform: none; }
 }
+
+.aula-revisao { display: flex; align-items: center; gap: 8px; color: var(--sucesso); font-size: 0.875rem; font-weight: 800; }
+.aula-revisao .icone { width: 18px; height: 18px; }

@@ -1,137 +1,114 @@
-.painel--trilha {
-  width: min(100%, 44rem);
-  min-width: 0;
-  margin-inline: auto;
-}
+/* Tela do plano: faixa do topo com título, progresso total e próximo passo; abaixo, o caminho (src/ui/caminho.css). */
+
+.painel--trilha { display: grid; gap: 32px; min-width: 0; }
 
 .trilha-cabecalho {
-  padding: clamp(20px, 4vw, 36px);
-  border-radius: 26px;
-  color: var(--fundo);
-  background: var(--acao);
-}
-
-.trilha-cabecalho h1 { text-wrap: balance; }
-.trilha-cabecalho p, .trilha-cabecalho .progresso span, .trilha-cabecalho .progresso-vazio { color: inherit; }
-.trilha-cabecalho .plano-progresso { margin-block: 20px 0; }
-.trilha-cabecalho .progresso { margin-top: 8px; }
-.trilha-cabecalho progress { background: #ffffff38; }
-.trilha-cabecalho progress::-webkit-progress-bar { background: #ffffff38; }
-.trilha-cabecalho progress::-webkit-progress-value { background: var(--fundo); }
-.trilha-cabecalho progress::-moz-progress-bar { background: var(--fundo); }
-
-.trilha-fluxos {
   display: grid;
-  gap: 20px;
-  margin-top: 24px;
-}
-
-.trilha-fluxo {
+  align-content: start;
   min-width: 0;
-  border: 1px solid var(--gelo);
-  border-radius: 24px;
-  background: var(--fundo);
-}
-
-.trilha-fluxo__cabecalho {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  padding: 16px clamp(16px, 4vw, 28px);
-  border-bottom: 1px solid var(--gelo);
-  border-radius: 23px 23px 0 0;
+  padding: 24px;
+  border-radius: var(--raio-bloco);
   background: var(--nevoa);
 }
 
-.trilha-fluxo__cabecalho p, .trilha-no__estado { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
-.trilha-fluxo > p { margin: 16px clamp(16px, 4vw, 28px); }
+.trilha-resumo { min-width: 0; }
+.trilha-cabecalho h1 { font-size: 1.75rem; line-height: 1.15; text-wrap: balance; overflow-wrap: anywhere; }
 
-.trilha-nos {
-  --no-tamanho: 58px;
-  --no-passo: clamp(10px, 3.3vw, 26px);
+/* O objetivo pode ter até 500 caracteres: na faixa ficam três linhas; o leitor de tela lê o texto inteiro. */
+.trilha-cabecalho .introducao {
+  display: -webkit-box;
+  margin-top: 8px;
+  overflow: hidden;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.trilha-cabecalho .plano-progresso { max-width: none; margin-block: 20px 0; }
+.trilha-cabecalho progress { background: var(--fundo); }
+.trilha-cabecalho progress::-webkit-progress-bar { background: var(--fundo); }
+
+.trilha-proximo {
   display: grid;
-  gap: 18px;
-  margin: 0;
-  padding: 24px clamp(16px, 4vw, 28px) 28px;
-  list-style: none;
+  gap: 2px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--gelo);
 }
 
-.trilha-no {
-  --no-deslocamento: 0px;
-  --no-curva: -28deg;
-  position: relative;
+.trilha-proximo__rotulo, .trilha-proximo__detalhe { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+.trilha-proximo__titulo { font-size: 1.0625rem; font-weight: 800; overflow-wrap: anywhere; }
+.trilha-proximo > .botao { justify-self: start; margin-top: 14px; }
+
+.trilha-concluida {
   display: grid;
-  grid-template-columns: var(--no-tamanho) minmax(0, 1fr);
-  align-items: center;
-  gap: clamp(10px, 3vw, 16px);
-  min-width: 0;
-  padding-inline-start: var(--no-deslocamento);
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--gelo);
 }
 
-.trilha-no:nth-child(4n + 2), .trilha-no:nth-child(4n) { --no-deslocamento: var(--no-passo); }
-.trilha-no:nth-child(4n + 3) { --no-deslocamento: calc(2 * var(--no-passo)); }
-.trilha-no:nth-child(4n + 3), .trilha-no:nth-child(4n) { --no-curva: 28deg; }
+.trilha-concluida__titulo { display: flex; align-items: center; gap: 8px; color: var(--sucesso); font-weight: 800; }
+.trilha-concluida__titulo .icone { width: 20px; height: 20px; }
+.trilha-concluida > p:not(.trilha-concluida__titulo) { color: var(--texto2); }
+.trilha-concluida .acao-principal, .trilha-vazia .acao-principal { margin-top: 8px; }
+.trilha-vazia { display: grid; justify-items: start; gap: 16px; }
 
-.trilha-no:not(:last-child)::before {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  inset-block: calc(50% + 14px) -36px;
-  inset-inline-start: calc(var(--no-deslocamento) + var(--no-tamanho) / 2 - 1px);
-  border-inline-start: 3px dashed var(--gelo);
-  transform: rotate(var(--no-curva));
-  transform-origin: top;
-}
+.conclusao-liberada { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--acao); font-weight: 800; }
+.conclusao-liberada .icone { width: 20px; height: 20px; }
 
-.trilha-no[data-estado='concluida']:not(:last-child)::before { border-color: color-mix(in srgb, var(--sucesso) 42%, white); }
-
-.trilha-no__marca {
-  z-index: 1;
-  display: grid;
-  width: var(--no-tamanho);
-  height: var(--no-tamanho);
-  min-width: var(--no-tamanho);
-  min-height: var(--no-tamanho);
-  place-items: center;
-  padding: 0;
-  border: 2px solid var(--gelo);
-  border-radius: 50%;
-  color: var(--texto2);
-  background: var(--nevoa);
-  font-size: 1.6rem;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.trilha-no[data-estado='atual'] .trilha-no__marca {
-  border-color: var(--acao);
-  color: var(--fundo);
-  background: var(--acao);
-  box-shadow: 0 5px 0 var(--texto);
-  cursor: pointer;
-  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
-}
-
-.trilha-no[data-estado='atual'] .trilha-no__marca:disabled { cursor: wait; opacity: 0.75; }
-.trilha-no[data-estado='atual'] .trilha-no__marca:hover:not(:disabled) { background: var(--texto); }
-.trilha-no[data-estado='atual'] .trilha-no__marca:active:not(:disabled) { box-shadow: 0 1px 0 var(--texto); transform: translateY(4px); }
-.trilha-no[data-estado='concluida'] .trilha-no__marca { border-color: var(--sucesso); color: var(--sucesso); background: #e6f6ee; }
-
-.trilha-no__texto { display: grid; gap: 3px; min-width: 0; overflow-wrap: anywhere; }
-.trilha-no__texto strong { font-weight: 900; }
-.trilha-no[data-estado='atual'] .trilha-no__estado { color: var(--acao); }
-.trilha-no[data-estado='concluida'] .trilha-no__estado { color: var(--sucesso); }
-
+/* Celular: o próximo passo vira o rodapé fixo, ao alcance do polegar. */
 @media (max-width: 767px) {
-  .trilha-cabecalho { border-radius: 20px; }
-  .trilha-fluxos { gap: 16px; margin-top: 20px; }
-  .trilha-nos { --no-tamanho: 52px; --no-passo: 12px; }
-  .trilha-no { --no-curva: -16deg; }
-  .trilha-no:nth-child(4n + 3), .trilha-no:nth-child(4n) { --no-curva: 16deg; }
+  .painel--trilha { gap: 28px; }
+  .trilha-cabecalho { padding: 20px; }
+
+  .trilha-proximo {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 2;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'rotulo botao' 'titulo botao';
+    align-items: center;
+    column-gap: 12px;
+    margin: 0;
+    padding: 12px max(20px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    border-top: 1px solid var(--gelo);
+    background: var(--fundo);
+  }
+
+  .trilha-proximo__rotulo { grid-area: rotulo; font-size: 0.8125rem; }
+  .trilha-proximo__titulo { grid-area: titulo; overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
+  .trilha-proximo__detalhe { display: none; }
+  .trilha-proximo > .botao { grid-area: botao; margin: 0; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .trilha-no[data-estado='atual'] .trilha-no__marca:active:not(:disabled) { transform: none; }
+/* Tablet: coluna única centrada, com o próximo passo dentro da faixa do topo. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .painel--trilha { width: min(100%, 36rem); margin-inline: auto; }
+}
+
+/* Computador: faixa larga no topo, com o próximo passo à direita; o caminho segue centrado abaixo. */
+@media (min-width: 1024px) {
+  .painel--trilha { width: min(100%, 52rem); justify-self: center; }
+
+  .trilha-cabecalho {
+    grid-template-columns: minmax(0, 1fr) 16rem;
+    align-items: center;
+    column-gap: 32px;
+    padding: 28px 32px;
+  }
+
+  .trilha-cabecalho .introducao { max-width: 60ch; }
+
+  .trilha-proximo, .trilha-concluida {
+    margin: 0;
+    padding: 4px 0 4px 32px;
+    border-top: 0;
+    border-left: 1px solid var(--gelo);
+  }
+
+  .trilha-proximo > .botao { justify-self: stretch; }
+  .painel--trilha > .caminho, .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
 }
