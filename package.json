@@ -1,0 +1,42 @@
+{
+  "name": "studoo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "predev": "npm run db:generate",
+    "dev": "next dev --hostname localhost",
+    "prebuild": "npm run db:generate",
+    "build": "next build",
+    "start": "next start --hostname localhost",
+    "pretypecheck": "npm run db:generate",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test:marco": "node --env-file=.env --test tests/marco-local.test.mjs",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:seed": "node --env-file-if-exists=.env --import tsx prisma/seed.ts",
+    "db:local": "node scripts/banco-local.mjs"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
+    "dotenv": "^17.0.0",
+    "next": "^16.1.0",
+    "pg": "^8.16.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/pg": "^8.15.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "embedded-postgres": "^18.6.0-beta.0",
+    "prisma": "^7.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
