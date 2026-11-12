@@ -7,6 +7,13 @@ export const mensagens = {
   sair: 'Sair',
   carregando: 'Carregando…',
   tentar: 'Tentar novamente',
+  planos: {
+    titulo: 'Meus planos',
+    novo: 'Novo plano',
+    abrir: 'Abrir plano',
+    progresso: (concluidas: number, total: number) => `${concluidas} de ${total} ${total === 1 ? 'lição concluída' : 'lições concluídas'}`,
+    semProgresso: '—',
+  },
   objetivo: {
     titulo: 'O que você quer aprender?',
     instrucao: 'Conte o que quer estudar e o que já sabe sobre o assunto.',
