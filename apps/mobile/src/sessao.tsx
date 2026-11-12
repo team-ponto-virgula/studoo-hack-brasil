@@ -1,6 +1,6 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Keyboard, Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
+import { BackHandler, Image, Keyboard, Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Estudo } from './estudo';
 import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos } from './interface';
@@ -9,6 +9,7 @@ import { cores } from './tema';
 
 type Sessao =
   | { tipo: 'verificando' }
+  | { tipo: 'boas-vindas' }
   | { tipo: 'entrada'; erro?: string }
   | { tipo: 'falha'; erro: string }
   | { tipo: 'ativa'; cliente: ClienteNativo };
@@ -25,7 +26,7 @@ export function AppMobile() {
         const token = await lerToken();
         if (!ativo) return;
         if (!token) {
-          setSessao({ tipo: 'entrada' });
+          setSessao({ tipo: 'boas-vindas' });
           return;
         }
 
@@ -79,8 +80,10 @@ export function AppMobile() {
   switch (sessao.tipo) {
     case 'ativa':
       return <Estudo cliente={sessao.cliente} sair={() => sair(sessao.cliente)} expirar={expirar} />;
+    case 'boas-vindas':
+      return <BoasVindas entrar={() => setSessao({ tipo: 'entrada' })} />;
     case 'entrada':
-      return <Entrada erroInicial={sessao.erro} entrar={entrar} />;
+      return <Entrada erroInicial={sessao.erro} entrar={entrar} voltar={() => setSessao({ tipo: 'boas-vindas' })} />;
     case 'falha':
       return (
         <Tela pagina="falha" rodape={<Botao rotulo={mensagens.tentar} testID="tentar-sessao" acao={() => {
@@ -105,9 +108,22 @@ async function encerrarNoAparelho(erro?: string): Promise<Sessao> {
   }
 }
 
-function Entrada({ erroInicial, entrar }: {
+function BoasVindas({ entrar }: { entrar: () => void }) {
+  return (
+    <Tela pagina="boas-vindas" rodape={<Botao rotulo={mensagens.boasVindas.entrar} testID="entrar-no-piloto" acao={entrar} />}>
+      <View style={entradaEstilos.arte} importantForAccessibility="no-hide-descendants">
+        <Image source={require('../assets/marca/stu-oi.png')} style={entradaEstilos.stu} resizeMode="contain" />
+      </View>
+      <Titulo testID="boas-vindas">{mensagens.boasVindas.titulo}</Titulo>
+      <Text style={estilos.introducao}>{mensagens.boasVindas.texto}</Text>
+    </Tela>
+  );
+}
+
+function Entrada({ erroInicial, entrar, voltar }: {
   erroInicial?: string;
   entrar: (email: string, senha: string) => Promise<void>;
+  voltar: () => void;
 }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
@@ -116,6 +132,14 @@ function Entrada({ erroInicial, entrar }: {
   const emEnvio = useRef(false);
   const campoSenha = useRef<ComponentRef<typeof TextInput>>(null);
   const podeEntrar = !!email.trim() && !!senha && !ocupado;
+
+  useEffect(() => {
+    const assinatura = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (!emEnvio.current) voltar();
+      return true;
+    });
+    return () => assinatura.remove();
+  }, [voltar]);
 
   async function enviar() {
     if (emEnvio.current || !podeEntrar) return;
@@ -137,6 +161,7 @@ function Entrada({ erroInicial, entrar }: {
 
   return (
     <Tela pagina="entrada"
+      acoes={<Botao rotulo={mensagens.voltar} testID="voltar-boas-vindas" variante="texto" compacto desativado={ocupado} acao={voltar} />}
       rodape={<Botao rotulo={ocupado ? mensagens.entrada.entrando : mensagens.entrada.entrar}
         testID="entrar" desativado={!podeEntrar} ocupado={ocupado} acao={() => void enviar()} />}>
       <Titulo testID="titulo-entrada" foco>{mensagens.entrada.titulo}</Titulo>
@@ -160,5 +185,7 @@ function Entrada({ erroInicial, entrar }: {
 }
 
 const entradaEstilos = StyleSheet.create({
+  arte: { minHeight: 160, alignItems: 'center', justifyContent: 'center', padding: 12, marginBottom: 24, borderRadius: 20, backgroundColor: cores.nevoa },
+  stu: { width: 116, height: 128 },
   formulario: { gap: 16, marginTop: 24 },
 });

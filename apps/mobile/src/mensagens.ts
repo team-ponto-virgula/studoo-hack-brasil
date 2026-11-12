@@ -7,6 +7,11 @@ export const mensagens = {
   sair: 'Sair',
   carregando: 'Carregando…',
   tentar: 'Tentar novamente',
+  boasVindas: {
+    titulo: 'Estude o que você precisa aprender',
+    texto: 'Conte o que quer estudar. O Studoo propõe um plano com lições curtas e exercícios.',
+    entrar: 'Entrar no piloto',
+  },
   entrada: {
     titulo: 'Entre no Studoo',
     texto: 'Use a conta do piloto para abrir seus planos de estudo.',
