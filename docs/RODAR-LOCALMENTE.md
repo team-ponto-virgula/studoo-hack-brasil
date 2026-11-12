@@ -13,15 +13,27 @@ Na primeira execução, o bootstrap cria `.env`, inicia o PostgreSQL em `127.0.0
 
 Deixe o banco rodando. Em outro terminal, na raiz, execute `npm run dev` e abra [o Studoo local](http://localhost:3000). Para checar o build web com o ambiente do bootstrap, execute `npm run build`. Para iniciar o build, execute `npm start`.
 
+## IA falsa e teto de gerações
+
+Com `IA=falsa`, a geração não chama nenhum serviço externo. Objetivos de SQL devolvem o plano de demonstração. Qualquer outro objetivo gera uma trilha simulada e determinística de 3 fluxos com 3 lições. Três variáveis opcionais ajustam o comportamento. Sem elas, valem os padrões abaixo.
+
+| Variável | Padrão | Efeito |
+| --- | --- | --- |
+| `STUDOO_IA_FALSA_PAUSA_MS` | `450` | Pausa entre os eventos da rota ao vivo, para a tela mostrar a trilha se formando. Use `0` para desligar. |
+| `STUDOO_LIMITE_GERACOES` | `20` | Gerações permitidas por pessoa em cada janela. Teto provisório, em memória do processo; o teto definitivo é a D7. |
+| `STUDOO_JANELA_GERACOES_MIN` | `60` | Tamanho da janela do teto, em minutos. |
+
 ## Testes
 
 ```sh
 npm run typecheck
 npm run typecheck --workspace apps/mobile
+npm run test:dominio
 npm run test:marco
+npm run test:trilha
 ```
 
-O teste web usa o banco local e o servidor em `http://localhost:3000`. Ele cria contas sintéticas temporárias para verificar acesso, aceite da proposta, feedback, conclusão e retomada do plano.
+`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
 
 ## App Android em modo de desenvolvimento
 

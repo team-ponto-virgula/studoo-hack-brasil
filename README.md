@@ -2,7 +2,7 @@
 
 O Studoo transforma um objetivo de estudo em um plano com lições curtas. Cada lição reúne uma explicação, um exemplo e um exercício com feedback. O plano só entra na área de estudo quando a pessoa aceita a proposta.
 
-A demonstração usa SQL. Uma geração simulada propõe dois fluxos, **Consultas** e **Junções**, com quatro lições no total. O progresso fica salvo no PostgreSQL e aparece na web e no app Android quando os dois usam a mesma conta e o mesmo banco local.
+A demonstração usa SQL. Uma geração simulada propõe dois fluxos, **Consultas** e **Junções**, com quatro lições no total. Com `IA=falsa`, qualquer outro objetivo ganha uma trilha simulada de três fluxos com três lições cada, emitida aos poucos por `POST /api/aprendizado/propostas/ao-vivo` ([spec 03](docs/specs/03-trilha-ao-vivo.md)). O progresso fica salvo no PostgreSQL e aparece na web e no app Android quando os dois usam a mesma conta e o mesmo banco local.
 
 ## Começar pela web
 
