@@ -13,6 +13,7 @@ import {
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, EstadoVazio, Logo, Skeleton } from '../ui';
+import './trilha.css';
 
 type Tela =
   | { tipo: 'planos' }
@@ -326,58 +327,54 @@ function Plano({ plano, ocupado, abrirLicao }: {
   ocupado: boolean;
   abrirLicao: (id: string) => void;
 }) {
-  const fluxosPendentes = plano.fluxos.filter((fluxo) => fluxo.proximaLicaoId !== null);
-
   return (
-    <section className="painel">
-      <h1 tabIndex={-1}>{plano.titulo}</h1>
-      <p className="introducao">{plano.objetivo}</p>
-      <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} /></div>
-      <div className="fluxos-cabecalho">
-        <h2>{mensagens.planos.fluxos}</h2>
-        <p>{mensagens.planos.escolherFluxo}</p>
-      </div>
-      <div className="fluxos">
+    <section className="painel painel--trilha">
+      <header className="trilha-cabecalho">
+        <h1 tabIndex={-1}>{plano.titulo}</h1>
+        <p className="introducao">{plano.objetivo}</p>
+        <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} /></div>
+      </header>
+      <div className="trilha-fluxos">
         {plano.fluxos.map((fluxo) => {
-          const proxima = fluxo.proximaLicaoId;
+          const tituloFluxo = `trilha-fluxo-${fluxo.id}`;
           const acao = fluxo.progresso.concluidas > 0 ? mensagens.planos.retomar : mensagens.planos.iniciar;
 
           return (
-            <section className="fluxo" key={fluxo.id}>
-              <h3>{fluxo.titulo}</h3>
-              <BarraProgresso progresso={fluxo.progresso} />
-              <ul className="fluxo-licoes fluxo-licoes--estado">
-                {fluxo.licoes.map((licao) => (
-                  <li key={licao.id}>
-                    <span className={licao.concluida ? 'licao-ponto licao-ponto--concluida' : 'licao-ponto'} aria-hidden="true">{licao.concluida ? '✓' : ''}</span>
-                    <span>{licao.titulo}{licao.concluida && <span className="somente-leitor">{`. ${mensagens.licao.concluida}`}</span>}</span>
-                  </li>
-                ))}
-              </ul>
-              {proxima ? (
-                <Botao className="fluxo-acao" variante="secundario" disabled={ocupado} aria-label={`${acao} ${fluxo.titulo}`} onClick={() => abrirLicao(proxima)}>{acao}</Botao>
+            <article className="trilha-fluxo" key={fluxo.id} aria-labelledby={tituloFluxo}>
+              <header className="trilha-fluxo__cabecalho">
+                <h2 id={tituloFluxo}>{fluxo.titulo}</h2>
+                {fluxo.licoes.length > 0 && <p>{mensagens.planos.contagem(fluxo.progresso.concluidas, fluxo.progresso.total)}</p>}
+              </header>
+              {fluxo.licoes.length > 0 ? (
+                <ol className="trilha-nos">
+                  {fluxo.licoes.map((licao) => {
+                    const estado = licao.concluida ? 'concluida' : licao.id === fluxo.proximaLicaoId ? 'atual' : 'pendente';
+                    const tituloLicao = `trilha-licao-${licao.id}`;
+                    const rotulo = estado === 'atual' ? acao : estado === 'concluida' ? mensagens.licao.concluida : mensagens.planos.emSeguida;
+
+                    return (
+                      <li key={licao.id} className="trilha-no" data-estado={estado}>
+                        {estado === 'atual' ? (
+                          <button type="button" className="trilha-no__marca" aria-label={`${acao} ${fluxo.titulo}`}
+                            aria-describedby={tituloLicao} disabled={ocupado} onClick={() => abrirLicao(licao.id)}>
+                            <span aria-hidden="true">✦</span>
+                          </button>
+                        ) : <span className="trilha-no__marca" aria-hidden="true">{estado === 'concluida' ? '✓' : '·'}</span>}
+                        <div className="trilha-no__texto">
+                          <strong id={tituloLicao}>{licao.titulo}</strong>
+                          <span className="trilha-no__estado">{rotulo}</span>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ol>
               ) : (
-                fluxo.licoes.length > 0
-                  ? <p className="fluxo-concluido"><span aria-hidden="true">✓</span> {mensagens.planos.concluido}</p>
-                  : <EstadoVazio>{mensagens.planos.semLicoes}</EstadoVazio>
+                <EstadoVazio>{mensagens.planos.semLicoes}</EstadoVazio>
               )}
-            </section>
+            </article>
           );
         })}
       </div>
-      {fluxosPendentes.length > 0 && (
-        <div className="fluxos-movel">
-          <AcaoPrincipal>
-            <div className="fluxos-acoes">
-              {fluxosPendentes.map(({ id, titulo, progresso, proximaLicaoId }) => proximaLicaoId && (
-                <Botao key={id} disabled={ocupado}
-                  aria-label={`${progresso.concluidas > 0 ? mensagens.planos.retomar : mensagens.planos.iniciar} ${titulo}`}
-                  onClick={() => abrirLicao(proximaLicaoId)}>{titulo}</Botao>
-              ))}
-            </div>
-          </AcaoPrincipal>
-        </div>
-      )}
     </section>
   );
 }
