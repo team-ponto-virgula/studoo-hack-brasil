@@ -3,6 +3,14 @@ export const mensagens = {
   descricao: 'Planos de estudo com lições curtas e exercícios.',
   estudos: 'Área de estudo',
   carregando: 'Carregando',
+  login: {
+    titulo: 'Entre no Studoo',
+    instrucoes: 'Use sua conta para abrir seus planos de estudo.',
+    email: 'E-mail',
+    senha: 'Senha',
+    entrar: 'Entrar',
+    entrando: 'Entrando…',
+  },
   erros: {
     credenciais_invalidas: 'E-mail ou senha inválidos.',
     limite_login: 'E-mail ou senha inválidos.',
