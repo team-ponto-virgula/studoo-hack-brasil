@@ -1,8 +1,12 @@
 export const mensagens = {
   nome: 'Studoo',
   descricao: 'Planos de estudo com lições curtas e exercícios.',
+  pular: 'Ir para o conteúdo',
+  navegacao: 'Navegação de estudos',
   estudos: 'Área de estudo',
   carregando: 'Carregando',
+  tentarNovamente: 'Tentar novamente',
+  sair: 'Sair',
   login: {
     titulo: 'Entre no Studoo',
     instrucoes: 'Use sua conta para abrir seus planos de estudo.',
@@ -10,6 +14,20 @@ export const mensagens = {
     senha: 'Senha',
     entrar: 'Entrar',
     entrando: 'Entrando…',
+  },
+  planos: {
+    titulo: 'Meus planos',
+    novo: 'Novo plano',
+    fluxos: 'Fluxos de estudo',
+    escolherFluxo: 'Escolha um fluxo para estudar ou retomar.',
+    abrir: 'Abrir plano',
+    iniciar: 'Começar fluxo',
+    retomar: 'Retomar fluxo',
+    concluido: 'Fluxo concluído',
+    semLicoes: 'Este fluxo ainda está sem lições.',
+    contagem: (concluidas: number, total: number) => `${concluidas} de ${total} ${total === 1 ? 'lição concluída' : 'lições concluídas'}`,
+    progressoPlano: 'Progresso no plano',
+    semProgresso: '—',
   },
   erros: {
     credenciais_invalidas: 'E-mail ou senha inválidos.',
