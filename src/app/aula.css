@@ -127,7 +127,12 @@
   transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
 
-.aula-rodape__conteudo > .botao:disabled { box-shadow: 0 4px 0 var(--gelo); }
+.aula-rodape__conteudo > .botao:disabled {
+  border-color: var(--gelo);
+  color: var(--texto2);
+  background: var(--nevoa);
+  box-shadow: 0 4px 0 var(--gelo);
+}
 .aula-rodape__conteudo > .botao:active:not(:disabled) { box-shadow: 0 1px 0 var(--texto); transform: translateY(3px); }
 .painel--aula:has(.aula-feedback[data-correta='true']) .aula-rodape__conteudo > .botao:not(:disabled) { background: var(--sucesso); }
 
