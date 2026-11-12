@@ -1,4 +1,4 @@
-import type { ExercicioPublico, Progresso } from "@/contratos/aprendizado";
+import type { ExercicioPublico, Progresso } from "@studoo/contratos";
 
 export type ExercicioInterno = ExercicioPublico & {
   gabarito: string[];

@@ -90,12 +90,15 @@ export class ErroStudoo extends Error {
 
 type Autenticacao = { autenticado: true };
 
-export function criarClienteStudoo(transporte: typeof fetch = fetch) {
+export type TransporteStudoo = (
+  caminho: string,
+  opcoes: { method: string; headers?: Record<string, string>; body?: string },
+) => Promise<{ status: number; ok: boolean; json(): Promise<unknown> }>;
+
+export function criarClienteStudoo(transporte: TransporteStudoo) {
   async function solicitar<T>(caminho: string, metodo = "GET", dados?: object): Promise<T> {
     const resposta = await transporte(`/api${caminho}`, {
       method: metodo,
-      credentials: "same-origin",
-      cache: "no-store",
       ...(dados && {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dados),
@@ -104,7 +107,10 @@ export function criarClienteStudoo(transporte: typeof fetch = fetch) {
     if (resposta.status === 204) return null as T;
     const corpo = await resposta.json().catch(() => null);
     if (!resposta.ok || corpo === null) {
-      const codigo = codigosErro.find((valor) => valor === corpo?.codigo);
+      const codigoRecebido = typeof corpo === "object" && corpo !== null && "codigo" in corpo
+        ? corpo.codigo
+        : undefined;
+      const codigo = codigosErro.find((valor) => valor === codigoRecebido);
       throw new ErroStudoo(codigo ?? "falha");
     }
     return corpo as T;

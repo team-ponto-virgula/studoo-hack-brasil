@@ -6,7 +6,7 @@ import type {
   PlanoDetalhe,
   PlanoResumo,
   PropostaPlano,
-} from "@/contratos/aprendizado";
+} from "@studoo/contratos";
 import {
   apresentarExercicio,
   avaliarResposta,

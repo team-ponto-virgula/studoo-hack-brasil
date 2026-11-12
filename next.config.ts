@@ -5,6 +5,7 @@ const config: NextConfig = {
   devIndicators: false,
   logging: false,
   poweredByHeader: false,
+  transpilePackages: ["@studoo/contratos"],
 };
 
 export default config;

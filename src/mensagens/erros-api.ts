@@ -1,4 +1,4 @@
-import type { CodigoErro } from "@/contratos/aprendizado";
+import type { CodigoErro } from "@studoo/contratos";
 
 export const mensagensApi: Record<CodigoErro, string> = {
   invalido: "Confira os dados e tente de novo.",

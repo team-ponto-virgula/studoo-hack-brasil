@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import {
-  criarClienteStudoo,
   ErroStudoo,
   type Avaliacao,
   type LicaoDetalhe,
@@ -10,11 +9,10 @@ import {
   type PlanoResumo,
   type Progresso,
   type PropostaPlano,
-} from '../contratos/aprendizado';
+} from '@studoo/contratos';
+import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, EstadoVazio, Logo, Skeleton } from '../ui';
-
-const cliente = criarClienteStudoo();
 
 type Tela =
   | { tipo: 'planos' }

@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { criarClienteStudoo, ErroStudoo } from '../../contratos/aprendizado';
+import { ErroStudoo } from '@studoo/contratos';
+import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, Logo, Skeleton, Stu } from '../../ui';
-
-const cliente = criarClienteStudoo();
 
 export function Entrada() {
   const [verificando, setVerificando] = useState(true);

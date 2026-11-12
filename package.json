@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
   "engines": {
     "node": ">=24"
   },
@@ -21,6 +22,7 @@
     "db:local": "node scripts/banco-local.mjs"
   },
   "dependencies": {
+    "@studoo/contratos": "0.1.0",
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "dotenv": "^17.0.0",

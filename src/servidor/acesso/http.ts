@@ -1,4 +1,4 @@
-import type { CodigoErro } from "@/contratos/aprendizado";
+import type { CodigoErro } from "@studoo/contratos";
 import { mensagensApi } from "@/mensagens/erros-api";
 import { lerCookieSessao, origemStudoo } from "./origem";
 import { usuarioDaSessao } from "./sessao";
