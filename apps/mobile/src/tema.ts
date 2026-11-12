@@ -5,6 +5,8 @@ export const cores = {
   texto: '#1B2A5E',
   textoSecundario: '#5E6A85',
   acao: '#3858D6',
+  sucesso: '#1F7A5A',
+  alerta: '#9A5B00',
   erro: '#C23B4E',
 } as const;
 
