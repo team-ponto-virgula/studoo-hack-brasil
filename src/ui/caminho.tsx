@@ -61,6 +61,7 @@ function explicar(nos: readonly NoCaminho[], indice: number) {
 /**
  * Caminho único e contínuo de lições, na ordem de aprendizado, com nós que alternam de lado.
  * Não agrupa por assunto: entre um trecho e outro aparece só um marco discreto, sem nome.
+ * O leitor de tela ouve o marco como "Marco 1", "Marco 2"…, logo depois do último nó do trecho.
  * O nó atual abre a lição; concluído ou bloqueado abre um balão que explica o estado.
  * Com `stu`, o Stu abre o caminho com essa frase curta (uma vez por tela, sem balão de fala).
  * Com `chegada`, o caminho termina num marco de chegada, que fica cheio quando todas as lições estão concluídas.
@@ -83,6 +84,7 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
   const primeiraLiberada = liberadas[0] ?? null;
   const total = nos.length;
   const comChegada = chegada && total > 0;
+  const trechos = Array.from(new Set(nos.map((no) => no.trecho)));
   const tudoFeito = total > 0 && nos.every((no) => no.estado === 'concluida');
 
   useEffect(() => {
@@ -236,6 +238,7 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
                   </div>
                 </>
               )}
+              {fimDoTrecho && <span className="somente-leitor">{mensagens.trilha.marco(trechos.indexOf(no.trecho) + 1)}</span>}
             </li>
           );
         })}

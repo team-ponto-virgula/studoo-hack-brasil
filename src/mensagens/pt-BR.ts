@@ -55,6 +55,7 @@ export const mensagens = {
     stuInicio: 'Comece pela primeira lição. Cada uma libera a próxima.',
     stuMeio: 'Continue de onde parou. A próxima lição já está liberada.',
     stuFim: 'Você chegou ao fim da trilha!',
+    marco: (numero: number) => `Marco ${numero}`,
     chegada: 'Fim da trilha',
     chegadaFeita: 'Trilha concluída',
   },
