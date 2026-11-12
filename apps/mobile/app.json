@@ -7,7 +7,7 @@
     "platforms": ["android", "ios"],
     "icon": "./assets/marca/icone-1024.png",
     "userInterfaceStyle": "light",
-    "plugins": ["expo-router", "expo-secure-store"],
+    "plugins": ["expo-router", "expo-secure-store", "./plugins/with-android-piloto-ca.cjs"],
     "android": {
       "package": "com.studoo.mobile.dev"
     },
