@@ -1,14 +1,41 @@
-/* Caminho da trilha: um só caminho contínuo, nós que alternam de lado e um marco discreto entre trechos (DESIGN §4, §6, §7, §9). */
+/*
+ * Caminho da trilha: um só caminho contínuo, nós que alternam de lado, um marco discreto entre trechos,
+ * o Stu no começo e a chegada no fim (DESIGN §4, §6, §7, §9, §13).
+ */
 
 .icone { display: block; flex: none; width: 24px; height: 24px; }
 
-.caminho { min-width: 0; }
-
-.caminho-nos {
+.caminho {
   --lente-base: 64px;
   --gap-linhas: 48px;
   --folga-etiqueta: 56px;
   --folga-marco: 48px;
+  /* Borda inferior do nó tocável: dá a sensação de botão que afunda no toque. */
+  --borda-3d: 5px;
+  min-width: 0;
+}
+
+/* Stu abre o caminho do lado oposto ao primeiro nó, com uma frase curta ao lado (sem balão de fala). */
+.caminho-stu {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.caminho-stu p {
+  max-width: 20rem;
+  color: var(--texto2);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: end;
+}
+
+.caminho-stu .stu { flex: none; width: 64px; height: auto; }
+
+.caminho-nos {
   display: grid;
   gap: var(--gap-linhas);
   margin: 0;
@@ -18,6 +45,7 @@
 
 /* Espaço para o rótulo "Começar" quando o nó atual abre o caminho. */
 .caminho-nos:has(> .caminho-no:first-child[data-estado='atual']) { padding-top: calc(var(--folga-etiqueta) + 8px); }
+.caminho:has(> .caminho-chegada) > .caminho-nos { padding-bottom: 0; }
 
 .caminho-no {
   --lente: var(--lente-base);
@@ -84,13 +112,21 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   border-radius: 50%;
   color: var(--texto2);
   background: var(--nevoa);
-  transition: transform 150ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+  --cor-3d: color-mix(in srgb, var(--gelo) 55%, var(--texto2));
+  box-shadow: 0 var(--borda-3d) 0 var(--cor-3d);
+  transition: translate 120ms ease-out, box-shadow 120ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
 }
 
 .caminho-no__lente > .icone { width: 44%; height: 44%; }
-.caminho-no[data-estado='concluida'] .caminho-no__lente { border-color: var(--sucesso); color: var(--fundo); background: var(--sucesso); }
-.caminho-no[data-estado='atual'] .caminho-no__lente { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
-.caminho-no[data-estado='previa'] .caminho-no__lente { color: var(--acao); background: var(--fundo); }
+.caminho-no[data-estado='concluida'] .caminho-no__lente {
+  border-color: var(--sucesso);
+  color: var(--fundo);
+  background: var(--sucesso);
+  --cor-3d: color-mix(in srgb, var(--sucesso) 55%, var(--texto));
+}
+
+.caminho-no[data-estado='atual'] .caminho-no__lente { border-color: var(--acao); color: var(--fundo); background: var(--acao); --cor-3d: var(--texto); }
+.caminho-no[data-estado='previa'] .caminho-no__lente { color: var(--acao); background: var(--fundo); box-shadow: none; }
 
 /* Halo do nó atual: entra uma vez, não pulsa. */
 .caminho-no[data-estado='atual'] .caminho-no__lente::before {
@@ -102,7 +138,8 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   animation: caminho-halo 240ms ease-out backwards;
 }
 
-.caminho-no__alvo:active:not(:disabled) .caminho-no__lente { transform: scale(0.96); }
+/* No toque, o nó afunda: a borda inferior some e a lente desce o mesmo tanto. */
+.caminho-no__alvo:active:not(:disabled) .caminho-no__lente { box-shadow: 0 0 0 var(--cor-3d); translate: 0 var(--borda-3d); }
 
 .caminho-no__etiqueta {
   position: absolute;
@@ -218,6 +255,31 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 
 .caminho-marco > .icone { width: 16px; height: 16px; }
 
+/* Chegada: fim do caminho, no centro; fica cheia quando todas as lições estão concluídas. */
+.caminho-chegada {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: var(--gap-linhas);
+  padding-bottom: 8px;
+}
+
+.caminho-chegada__lente {
+  display: grid;
+  width: var(--lente-base);
+  height: var(--lente-base);
+  place-items: center;
+  border: 3px solid var(--gelo);
+  border-radius: 50%;
+  color: var(--texto2);
+  background: var(--nevoa);
+}
+
+.caminho-chegada__lente > .icone { width: 44%; height: 44%; }
+.caminho-chegada__texto { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
+.caminho-chegada[data-feita] .caminho-chegada__lente { border-color: var(--sucesso); color: var(--fundo); background: var(--sucesso); }
+.caminho-chegada[data-feita] .caminho-chegada__texto { color: var(--sucesso); }
+
 .caminho-balao {
   position: absolute;
   top: calc(100% + 14px);
@@ -285,7 +347,11 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-balao__fechar .icone { width: 20px; height: 20px; }
 
 @media (hover: hover) {
-  .caminho-no[data-estado='atual'] .caminho-no__alvo:hover:not(:disabled) .caminho-no__lente { border-color: var(--texto); background: var(--texto); }
+  .caminho-no[data-estado='atual'] .caminho-no__alvo:hover:not(:disabled) .caminho-no__lente {
+    border-color: color-mix(in srgb, var(--acao) 80%, var(--texto));
+    background: color-mix(in srgb, var(--acao) 80%, var(--texto));
+  }
+
   .caminho-no__alvo:hover:not(:disabled) .caminho-no__titulo { text-decoration: underline; text-underline-offset: 4px; }
   .caminho-balao__fechar:hover { color: var(--texto); background: var(--nevoa); }
 }
@@ -316,7 +382,8 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .skeleton-trilha__no[data-lado='direita'] { margin-left: calc(75% - 32px); }
 
 @media (min-width: 768px) {
-  .caminho-nos { --lente-base: 72px; --gap-linhas: 52px; }
+  .caminho { --lente-base: 72px; --gap-linhas: 52px; }
+  .caminho-stu .stu { width: 72px; }
   .skeleton-trilha__no { width: 72px; height: 72px; margin-left: calc(25% - 36px); }
   .skeleton-trilha__no[data-lado='direita'] { margin-left: calc(75% - 36px); }
 }
@@ -326,7 +393,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 }
 
 @media (min-width: 1024px) {
-  .caminho-nos { --lente-base: 76px; --gap-linhas: 56px; --folga-marco: 56px; }
+  .caminho { --lente-base: 76px; --gap-linhas: 56px; --folga-marco: 56px; }
   .skeleton-trilha { width: min(100%, 52rem); justify-self: center; }
   .skeleton-trilha__caminho { width: min(100%, 36rem); justify-self: center; }
 }
@@ -338,6 +405,4 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 /* Movimento reduzido: tudo já aparece no estado final, com a mesma informação (como o bloco global faz com as transições). */
 @media (prefers-reduced-motion: reduce) {
   .caminho *, .caminho *::before, .caminho *::after { animation: none !important; }
-
-  .caminho-no__alvo:active:not(:disabled) .caminho-no__lente { transform: none; }
 }

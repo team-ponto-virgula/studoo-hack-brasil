@@ -2,20 +2,22 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao } from './componentes';
+import { Botao, Stu } from './componentes';
 import './caminho.css';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco entre um trecho e outro. */
 export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number };
 
-type NomeIcone = 'check' | 'livro' | 'cadeado' | 'bandeira' | 'fechar';
+type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar';
 
 const desenhos: Record<NomeIcone, ReactNode> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
   livro: <path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5zM12 6.5V19" />,
+  revisao: <path d="M19.5 12a7.5 7.5 0 0 1-13 5.1M4.5 12a7.5 7.5 0 0 1 13-5.1M17.5 3.5v3.6h-3.6M6.5 20.5v-3.6h3.6" />,
   cadeado: <><rect x="5.5" y="10.5" width="13" height="9" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></>,
   bandeira: <path d="M6 20V4.5M6 5h10.5l-2 3.5 2 3.5H6" />,
+  trofeu: <path d="M8 4.5h8V10a4 4 0 0 1-8 0V4.5zM8 6.5H5.5a2.5 2.5 0 0 0 2.5 3.5M16 6.5h2.5a2.5 2.5 0 0 1-2.5 3.5M12 14v3.5M8.5 20h7" />,
   fechar: <path d="M7 7l10 10M17 7L7 17" />,
 };
 
@@ -28,7 +30,22 @@ export function Icone({ nome }: { nome: NomeIcone }) {
   );
 }
 
-const iconeDoEstado: Record<EstadoNo, NomeIcone> = { concluida: 'check', atual: 'livro', bloqueada: 'cadeado', previa: 'livro' };
+/**
+ * Ícone do nó: concluída mostra o visto e bloqueada o cadeado; a atual e a prévia mostram o tipo da lição.
+ * O contrato ainda não tem o tipo da lição, então a revisão é reconhecida pelo título ("Revisão…").
+ */
+function iconeDoNo(no: NoCaminho): NomeIcone {
+  if (no.estado === 'concluida') return 'check';
+  if (no.estado === 'bloqueada') return 'cadeado';
+  return no.titulo.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro';
+}
+
+/** Curva da ligação: de um lado ao outro entre dois nós, ou do último nó até a chegada, no centro. */
+function tracado(lado: 'esquerda' | 'direita', ateChegada: boolean) {
+  const de = lado === 'esquerda' ? 25 : 75;
+  const ate = ateChegada ? 50 : 100 - de;
+  return `M${de} 0C${de} 50 ${ate} 50 ${ate} 100`;
+}
 
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 function explicar(nos: readonly NoCaminho[], indice: number) {
@@ -45,9 +62,13 @@ function explicar(nos: readonly NoCaminho[], indice: number) {
  * Caminho único e contínuo de lições, na ordem de aprendizado, com nós que alternam de lado.
  * Não agrupa por assunto: entre um trecho e outro aparece só um marco discreto, sem nome.
  * O nó atual abre a lição; concluído ou bloqueado abre um balão que explica o estado.
+ * Com `stu`, o Stu abre o caminho com essa frase curta (uma vez por tela, sem balão de fala).
+ * Com `chegada`, o caminho termina num marco de chegada, que fica cheio quando todas as lições estão concluídas.
  */
-export function Caminho({ nos, ocupado = false, abrindo = null, liberadas = [], rolarPara = null, aoAbrir }: {
+export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = null, liberadas = [], rolarPara = null, aoAbrir }: {
   nos: readonly NoCaminho[];
+  stu?: string;
+  chegada?: boolean;
   ocupado?: boolean;
   abrindo?: string | null;
   liberadas?: readonly string[];
@@ -61,6 +82,8 @@ export function Caminho({ nos, ocupado = false, abrindo = null, liberadas = [], 
   const base = useId();
   const primeiraLiberada = liberadas[0] ?? null;
   const total = nos.length;
+  const comChegada = chegada && total > 0;
+  const tudoFeito = total > 0 && nos.every((no) => no.estado === 'concluida');
 
   useEffect(() => {
     if (!primeiraLiberada) return;
@@ -122,10 +145,17 @@ export function Caminho({ nos, ocupado = false, abrindo = null, liberadas = [], 
 
   return (
     <div className="caminho">
+      {stu && (
+        <div className="caminho-stu">
+          <p>{stu}</p>
+          <Stu />
+        </div>
+      )}
       <ol className="caminho-nos" role="list" aria-label={mensagens.trilha.licoes}>
         {nos.map((no, indice) => {
           const seguinte = nos[indice + 1];
           const fimDoTrecho = seguinte !== undefined && seguinte.trecho !== no.trecho;
+          const vaiAteChegada = seguinte === undefined && comChegada;
           const lado = indice % 2 === 0 ? 'esquerda' : 'direita';
           const atual = no.estado === 'atual';
           const estaAberto = aberto === no.id;
@@ -142,7 +172,7 @@ export function Caminho({ nos, ocupado = false, abrindo = null, liberadas = [], 
           const conteudo = (
             <>
               <span className="caminho-no__lente" aria-hidden="true">
-                <Icone nome={iconeDoEstado[no.estado]} />
+                <Icone nome={iconeDoNo(no)} />
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {atual && <span className="caminho-no__etiqueta">{mensagens.trilha.comecar}</span>}
               </span>
@@ -165,10 +195,10 @@ export function Caminho({ nos, ocupado = false, abrindo = null, liberadas = [], 
                 const destino = evento.relatedTarget;
                 if (estaAberto && destino instanceof Node && !evento.currentTarget.contains(destino)) setAberto(null);
               }}>
-              {seguinte && (
+              {(seguinte || vaiAteChegada) && (
                 <span className="caminho-ligacao" data-feita={no.estado === 'concluida' || undefined} aria-hidden="true">
                   <svg className="caminho-conector" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
-                    <path d={lado === 'esquerda' ? 'M25 0C25 50 75 50 75 100' : 'M75 0C75 50 25 50 25 100'} />
+                    <path d={tracado(lado, vaiAteChegada)} />
                   </svg>
                   {fimDoTrecho && <span className="caminho-marco"><Icone nome="bandeira" /></span>}
                 </span>
@@ -210,6 +240,12 @@ export function Caminho({ nos, ocupado = false, abrindo = null, liberadas = [], 
           );
         })}
       </ol>
+      {comChegada && (
+        <div className="caminho-chegada" data-feita={tudoFeito || undefined}>
+          <span className="caminho-chegada__lente" aria-hidden="true"><Icone nome="trofeu" /></span>
+          <p className="caminho-chegada__texto">{tudoFeito ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}</p>
+        </div>
+      )}
       <p className="somente-leitor" role="status">{anuncio}</p>
     </div>
   );

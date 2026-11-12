@@ -52,6 +52,11 @@ export const mensagens = {
     concluido: 'Plano concluído',
     concluidoTexto: 'Você concluiu todas as lições deste plano. Refaça qualquer uma pela trilha ou crie um novo plano.',
     revisitando: 'Você já concluiu esta lição. Refazer não muda seu progresso.',
+    stuInicio: 'Comece pela primeira lição. Cada uma libera a próxima.',
+    stuMeio: 'Continue de onde parou. A próxima lição já está liberada.',
+    stuFim: 'Você chegou ao fim da trilha!',
+    chegada: 'Fim da trilha',
+    chegadaFeita: 'Trilha concluída',
   },
   pedido: {
     titulo: 'O que você quer aprender?',

@@ -391,6 +391,10 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
   const { plano, origem, liberadas = [] } = tela;
   const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
   const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : null;
+  const concluidas = nos.filter((no) => no.estado === 'concluida').length;
+  let falaStu: string = mensagens.trilha.stuMeio;
+  if (!proximo) falaStu = mensagens.trilha.stuFim;
+  else if (concluidas === 0) falaStu = mensagens.trilha.stuInicio;
 
   return (
     <section className="painel painel--trilha">
@@ -413,7 +417,7 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
         )}
       </header>
       {nos.length > 0 ? (
-        <Caminho nos={nos} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} rolarPara={rolarPara}
+        <Caminho nos={nos} stu={falaStu} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} rolarPara={rolarPara}
           aoAbrir={(no) => abrirLicao(no.id)} />
       ) : (
         <div className="trilha-vazia">
