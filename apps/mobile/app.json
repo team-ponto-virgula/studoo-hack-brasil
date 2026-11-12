@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "Studoo",
+    "slug": "studoo-mobile",
+    "version": "0.1.0",
+    "scheme": "studoo-dev",
+    "platforms": ["android", "ios"],
+    "icon": "./assets/marca/icone-1024.png",
+    "userInterfaceStyle": "light",
+    "plugins": ["expo-router"],
+    "android": {
+      "package": "com.studoo.mobile.dev"
+    },
+    "ios": {
+      "bundleIdentifier": "com.studoo.mobile.dev"
+    }
+  }
+}
