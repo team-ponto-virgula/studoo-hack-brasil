@@ -1,9 +1,10 @@
 import type { Avaliacao, LicaoDetalhe } from '@studoo/contratos';
 import { useState, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Icone } from './icone';
 import { Botao, Campo, EstadoMensagem, Tela, Titulo, estilos } from './interface';
 import { mensagens } from './mensagens';
-import { cores } from './tema';
+import { cores, fontes } from './tema';
 
 export function Licao({ licao, acoes, erro, pendente, voltar, avaliar, concluir }: {
   licao: LicaoDetalhe;
@@ -37,6 +38,12 @@ export function Licao({ licao, acoes, erro, pendente, voltar, avaliar, concluir 
         desativado={ocupado || !resposta.trim()} ocupado={pendente === 'avaliar'} acao={() => void enviar()} />}>
       <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" variante="texto" compacto desativado={ocupado} acao={voltar} />
       <Titulo testID="titulo-licao" foco>{licao.titulo}</Titulo>
+      {licao.concluida && (
+        <View style={licaoEstilos.revisao}>
+          <Icone nome="check" tamanho={18} cor={cores.sucesso} />
+          <Text style={licaoEstilos.revisaoTexto}>{mensagens.trilha.revisitando}</Text>
+        </View>
+      )}
       <Text style={estilos.introducao}>{licao.objetivo}</Text>
 
       <View style={licaoEstilos.secao}>
@@ -87,6 +94,8 @@ function Opcao({ id, texto, selecionada, desativada, acao }: {
 }
 
 const licaoEstilos = StyleSheet.create({
+  revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8 },
+  revisaoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   secao: { marginTop: 24, gap: 8 },
   exemplo: { padding: 16, borderRadius: 20, backgroundColor: cores.nevoa },
   codigo: { padding: 12, borderRadius: 12, color: cores.texto, backgroundColor: cores.nevoa,
