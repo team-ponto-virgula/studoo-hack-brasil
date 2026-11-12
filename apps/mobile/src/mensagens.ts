@@ -21,9 +21,9 @@ export const mensagens = {
     placeholder: 'Quero praticar filtros e junções em SQL…',
     exemplo: 'Já sei usar SELECT e quero praticar filtros e junções para uma prova de SQL.',
     usarExemplo: 'Usar exemplo de SQL',
-    aviso: 'Prévia com dados de exemplo. Evite inserir dados pessoais.',
-    gerar: 'Gerar prévia',
-    gerando: 'Preparando a prévia…',
+    aviso: 'Descreva o que quer estudar sem incluir dados pessoais.',
+    gerar: 'Gerar plano',
+    gerando: 'Preparando seu plano…',
   },
   proposta: {
     tipo: 'Prévia de IA simulada',

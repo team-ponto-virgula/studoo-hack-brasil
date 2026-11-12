@@ -144,6 +144,27 @@ export function Estudo({ cliente, sair, expirar }: {
   );
   const mensagem = erro && <EstadoMensagem mensagem={erro} />;
 
+  if (etapa.tipo === 'objetivo' || (etapa.tipo === 'planos' && planos?.length === 0)) {
+    return (
+      <Tela pagina="objetivo" acoes={acoes} rodape={<Botao rotulo={pendente === 'gerar' ? mensagens.objetivo.gerando : mensagens.objetivo.gerar}
+        testID="gerar-proposta" desativado={ocupado || !objetivo.trim()} ocupado={pendente === 'gerar'} acao={() => void gerar()} />}>
+        <Titulo testID="titulo-objetivo" foco>{mensagens.objetivo.titulo}</Titulo>
+        <Text style={estilos.introducao}>{mensagens.objetivo.instrucao}</Text>
+        <View style={estudoEstilos.secao}>
+          <Campo testID="objetivo-estudo" rotulo={mensagens.objetivo.campo} placeholder={mensagens.objetivo.placeholder}
+            value={objetivo} onChangeText={atualizarObjetivo} editable={!ocupado} multiline maxLength={1000} />
+        </View>
+        <View style={estudoEstilos.espaco}>
+          <Botao rotulo={mensagens.objetivo.usarExemplo} testID="usar-exemplo-sql" variante="secundario" compacto
+            desativado={ocupado} acao={() => atualizarObjetivo(mensagens.objetivo.exemplo)} />
+        </View>
+        <Text style={[estilos.legenda, estudoEstilos.espaco]}>{mensagens.objetivo.aviso}</Text>
+        {mensagem}
+        {pendente === 'gerar' && <Skeleton texto={mensagens.objetivo.gerando} />}
+      </Tela>
+    );
+  }
+
   return (
     <Tela pagina="planos" acoes={acoes} rodape={planos
       ? <Botao rotulo={mensagens.planos.novo} testID="novo-plano" desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />
