@@ -50,6 +50,9 @@ export const mensagens = {
     aceitar: 'Aceitar plano',
     aceitando: 'Salvando plano…',
   },
+  licao: {
+    concluida: 'Lição concluída',
+  },
   erros: {
     credenciais_invalidas: 'E-mail ou senha inválidos.',
     limite_login: 'E-mail ou senha inválidos.',

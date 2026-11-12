@@ -257,6 +257,9 @@ export function Estudo() {
           {pendente !== 'abrir' && tela.tipo === 'proposta' && (
             <Proposta proposta={tela.proposta} ocupado={ocupado} aceitar={() => void aceitar(tela.proposta)} editar={() => navegar({ tipo: 'objetivo' })} />
           )}
+          {pendente !== 'abrir' && tela.tipo === 'plano' && (
+            <Plano plano={tela.plano} ocupado={ocupado} abrirLicao={(id) => void abrirLicao(tela.plano, id)} />
+          )}
         </main>
       </div>
     </div>
@@ -305,6 +308,67 @@ function Proposta({ proposta, ocupado, aceitar, editar }: {
         <Botao variante="secundario" disabled={ocupado} onClick={editar}>{mensagens.proposta.editar}</Botao>
         <AcaoPrincipal><Botao disabled={ocupado} onClick={aceitar}>{ocupado ? mensagens.proposta.aceitando : mensagens.proposta.aceitar}</Botao></AcaoPrincipal>
       </div>
+    </section>
+  );
+}
+
+function Plano({ plano, ocupado, abrirLicao }: {
+  plano: PlanoDetalhe;
+  ocupado: boolean;
+  abrirLicao: (id: string) => void;
+}) {
+  const fluxosPendentes = plano.fluxos.filter((fluxo) => fluxo.proximaLicaoId !== null);
+
+  return (
+    <section className="painel">
+      <h1 tabIndex={-1}>{plano.titulo}</h1>
+      <p className="introducao">{plano.objetivo}</p>
+      <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} /></div>
+      <div className="fluxos-cabecalho">
+        <h2>{mensagens.planos.fluxos}</h2>
+        <p>{mensagens.planos.escolherFluxo}</p>
+      </div>
+      <div className="fluxos">
+        {plano.fluxos.map((fluxo) => {
+          const proxima = fluxo.proximaLicaoId;
+          const acao = fluxo.progresso.concluidas > 0 ? mensagens.planos.retomar : mensagens.planos.iniciar;
+
+          return (
+            <section className="fluxo" key={fluxo.id}>
+              <h3>{fluxo.titulo}</h3>
+              <BarraProgresso progresso={fluxo.progresso} />
+              <ul className="fluxo-licoes fluxo-licoes--estado">
+                {fluxo.licoes.map((licao) => (
+                  <li key={licao.id}>
+                    <span className={licao.concluida ? 'licao-ponto licao-ponto--concluida' : 'licao-ponto'} aria-hidden="true">{licao.concluida ? '✓' : ''}</span>
+                    <span>{licao.titulo}{licao.concluida && <span className="somente-leitor">{`. ${mensagens.licao.concluida}`}</span>}</span>
+                  </li>
+                ))}
+              </ul>
+              {proxima ? (
+                <Botao className="fluxo-acao" variante="secundario" disabled={ocupado} aria-label={`${acao} ${fluxo.titulo}`} onClick={() => abrirLicao(proxima)}>{acao}</Botao>
+              ) : (
+                fluxo.licoes.length > 0
+                  ? <p className="fluxo-concluido"><span aria-hidden="true">✓</span> {mensagens.planos.concluido}</p>
+                  : <EstadoVazio>{mensagens.planos.semLicoes}</EstadoVazio>
+              )}
+            </section>
+          );
+        })}
+      </div>
+      {fluxosPendentes.length > 0 && (
+        <div className="fluxos-movel">
+          <AcaoPrincipal>
+            <div className="fluxos-acoes">
+              {fluxosPendentes.map(({ id, titulo, progresso, proximaLicaoId }) => proximaLicaoId && (
+                <Botao key={id} disabled={ocupado}
+                  aria-label={`${progresso.concluidas > 0 ? mensagens.planos.retomar : mensagens.planos.iniciar} ${titulo}`}
+                  onClick={() => abrirLicao(proximaLicaoId)}>{titulo}</Botao>
+              ))}
+            </div>
+          </AcaoPrincipal>
+        </div>
+      )}
     </section>
   );
 }
