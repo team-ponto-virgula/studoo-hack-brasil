@@ -25,5 +25,6 @@ O ambiente local usa `IA=falsa` e `EMAIL=falso`. [Guia do banco, dos testes e do
 
 - `src/` reúne a interface web e a API Next.js. `prisma/` contém o esquema e as migrações do PostgreSQL.
 - `apps/mobile/` contém o app Expo. `packages/contratos/` compartilha tipos e o cliente HTTP entre a web e o app.
+- Tudo o que se faz na web deve ser replicado no app mobile, adaptado ao celular: veja as [regras do projeto](docs/REGRAS-DO-PROJETO.md).
 
 Esta entrega retoma a ideia do Studoo com a implementação feita após a abertura de 4 de novembro de 2026, às 21h, no horário de Brasília. O histórico Git foi iniciado para esta entrega. O logo e o ícone são exportações raster da identidade visual existente do Studoo. A ilustração de boas-vindas foi criada para esta edição. As fontes [Nunito](https://github.com/google/fonts/tree/main/ofl/nunito) e [Quicksand](https://github.com/google/fonts/tree/main/ofl/quicksand) são distribuídas com suas licenças SIL Open Font License.
