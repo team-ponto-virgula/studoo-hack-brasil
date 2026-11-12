@@ -5,6 +5,7 @@ import { avaliarResposta, conteudoValido, esqueletoValido } from "../src/dominio
 import { emitirComprovante, lerComprovante } from "../src/servidor/aprendizado/comprovantes.ts";
 import { iniciarGeracao } from "../src/servidor/aprendizado/geracao.ts";
 import { criarGeradorFalso } from "../src/servidor/ia/falsa.ts";
+import { REGRAS_ORDEM_DA_TRILHA, instrucoesDeOrdem } from "../src/servidor/ia/ordem.ts";
 import { registrarGeracao, reiniciarLimiteDeGeracoes } from "../src/servidor/ia/limite.ts";
 
 process.env.IA = "falsa";
@@ -202,4 +203,12 @@ test("o token da proposta é assinado, ligado à pessoa e rejeita esqueleto adul
   assert.equal(lerComprovante("proposta", ana, `${adulterado}.${assinatura}`), null);
   const invalido = emitirComprovante("proposta", ana, { id: "1", expiraEm: Date.now() + 1000, plano: { ...esqueleto, fluxos: [] } });
   assert.equal(lerComprovante("proposta", ana, invalido), null, "esqueleto inválido não vale mesmo assinado");
+});
+
+test("as regras de ordenação da trilha ficam registradas para o prompt da IA real", () => {
+  assert.equal(REGRAS_ORDEM_DA_TRILHA.length, 6);
+  const texto = instrucoesDeOrdem();
+  for (const trecho of ["pré-requisitos", "conceito novo", "dificuldade cresce", "Intercale", "revisão", "Não agrupe"]) {
+    assert.ok(texto.includes(trecho), trecho);
+  }
 });

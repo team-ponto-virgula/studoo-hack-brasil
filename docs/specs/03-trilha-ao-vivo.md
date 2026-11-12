@@ -52,6 +52,7 @@ Os tipos ficam em `packages/contratos/src/aprendizado.ts`: `EventoGeracao`, `int
 ## IA
 
 - `IA=falsa` (padrão, testes e CI): o adaptador falso emite os eventos com pequenas pausas, para a tela mostrar a geração ao vivo. Para SQL, devolve o plano de demonstração com as mesmas lições, reorganizado numa sequência única de aprendizado. Para qualquer outro objetivo, gera uma trilha genérica e determinística de 3 trechos com 3 lições cada, já na ordem de aprendizado e com uma revisão, com conteúdo e exercícios simulados.
+- As regras de ordenação da seção anterior ficam registradas em `src/servidor/ia/ordem.ts` (`REGRAS_ORDEM_DA_TRILHA`, `instrucoesDeOrdem`) e entram no prompt do adaptador real quando o provedor for escolhido.
 - A IA real fica atrás da mesma interface e entra depois que o dono escolher o provedor (D5). Nenhum teste chama a IA real.
 - O limite de gerações por pessoa é provisório e configurável por variável (`STUDOO_LIMITE_GERACOES`, `STUDOO_JANELA_GERACOES_MIN`; veja [Rodar localmente](../RODAR-LOCALMENTE.md#ia-falsa-e-teto-de-gerações)). O teto definitivo segue aberto em D7.
 - A pausa do adaptador falso vem de `STUDOO_IA_FALSA_PAUSA_MS` (padrão 450 ms; 0 nos testes).
