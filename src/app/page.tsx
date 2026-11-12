@@ -1,7 +1,7 @@
-import { mensagens } from "../mensagens/pt-BR";
+import { Estudo } from './estudo';
 
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-dynamic';
 
 export default function Home() {
-  return <main><h1>{mensagens.estudos}</h1></main>;
+  return <Estudo />;
 }
