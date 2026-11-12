@@ -90,6 +90,11 @@ export class ErroStudoo extends Error {
 
 type Autenticacao = { autenticado: true };
 
+export interface SessaoNativa {
+  token: string;
+  expiraEm: string;
+}
+
 export type TransporteStudoo = (
   caminho: string,
   opcoes: { method: string; headers?: Record<string, string>; body?: string },
@@ -118,6 +123,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
 
   return {
     login: (email: string, senha: string) => solicitar<Autenticacao>("/login", "POST", { email, senha }),
+    loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
     sessao: () => solicitar<Autenticacao>("/sessao"),
     logout: () => solicitar<null>("/sessao", "DELETE"),
     gerarProposta: (objetivo: string) => solicitar<PropostaPlano>("/aprendizado/propostas", "POST", { objetivo }),

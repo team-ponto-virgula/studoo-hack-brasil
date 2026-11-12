@@ -8,6 +8,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum CanalSessao {
+  WEB
+  MOBILE
+}
+
 model Usuario {
   id        String             @id @default(uuid())
   email     String             @unique
@@ -18,11 +23,12 @@ model Usuario {
 }
 
 model Sessao {
-  tokenHash String   @id
+  tokenHash String      @id
   usuarioId String
-  criadaEm  DateTime @default(now()) @db.Timestamptz(3)
-  expiraEm  DateTime @db.Timestamptz(3)
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  canal     CanalSessao @default(WEB)
+  criadaEm  DateTime    @default(now()) @db.Timestamptz(3)
+  expiraEm  DateTime    @db.Timestamptz(3)
+  usuario   Usuario     @relation(fields: [usuarioId], references: [id])
 
   @@index([usuarioId])
 }

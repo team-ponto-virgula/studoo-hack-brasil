@@ -1,5 +1,6 @@
 import type { CodigoErro } from "@studoo/contratos";
 import { mensagensApi } from "@/mensagens/erros-api";
+import type { CanalSessao } from "@/servidor/banco/gerado/client";
 import { lerCookieSessao, origemStudoo } from "./origem";
 import { usuarioDaSessao } from "./sessao";
 
@@ -61,15 +62,9 @@ export async function lerJson(request: Request): Promise<unknown> {
   }
 }
 
-export async function rotaPublica(request: Request, acao: () => Promise<Response>): Promise<Response> {
+async function tratarRota(acao: () => Promise<Response>): Promise<Response> {
   const inicio = performance.now();
   try {
-    const origem = request.headers.get("origin");
-    const leitura = request.method === "GET" || request.method === "HEAD";
-    const permitida = origemStudoo();
-    if ((!leitura || origem !== null) && (!permitida || origem !== permitida)) {
-      throw new FalhaApi("origem_invalida");
-    }
     return await acao();
   } catch (erro) {
     const codigo = erro instanceof FalhaApi ? erro.codigo : "falha";
@@ -84,11 +79,72 @@ export async function rotaPublica(request: Request, acao: () => Promise<Response
   }
 }
 
-export function rotaPrivada(request: Request, acao: (usuarioId: string) => Promise<Response>): Promise<Response> {
-  return rotaPublica(request, async () => {
+function validarOrigemWeb(request: Request) {
+  const origem = request.headers.get("origin");
+  const leitura = request.method === "GET" || request.method === "HEAD";
+  const permitida = origemStudoo();
+  if ((!leitura || origem !== null) && (!permitida || origem !== permitida)) {
+    throw new FalhaApi("origem_invalida");
+  }
+}
+
+function validarCanalMobile(request: Request, indisponivel: "nao_encontrado" | "nao_autenticado") {
+  if (request.headers.has("origin")) throw new FalhaApi("origem_invalida");
+  if (request.headers.has("cookie")) throw new FalhaApi("nao_autenticado");
+
+  const piloto = process.env.STUDOO_SESSAO_MOBILE_PILOTO === "1";
+  const origem = origemStudoo();
+  if (!piloto || !origem?.startsWith("https:")) throw new FalhaApi(indisponivel);
+
+  const url = new URL(request.url);
+  const autorizada = new URL(origem);
+  // O Next normaliza o host interno de Request.url no HTTPS local.
+  if (url.protocol !== "https:" || url.port !== autorizada.port || request.headers.get("host") !== autorizada.host) {
+    throw new FalhaApi(indisponivel);
+  }
+}
+
+export function rotaPublica(request: Request, acao: () => Promise<Response>): Promise<Response> {
+  return tratarRota(async () => {
+    validarOrigemWeb(request);
+    if (request.headers.has("authorization")) throw new FalhaApi("nao_autenticado");
+    return acao();
+  });
+}
+
+export function rotaEntradaMobile(request: Request, acao: () => Promise<Response>): Promise<Response> {
+  return tratarRota(async () => {
+    validarCanalMobile(request, "nao_encontrado");
+    if (request.headers.has("authorization")) throw new FalhaApi("nao_autenticado");
+    return acao();
+  });
+}
+
+type CredencialSessao = { canal: CanalSessao; token: string };
+
+function lerCredencial(request: Request): CredencialSessao {
+  const autorizacao = request.headers.get("authorization");
+  if (autorizacao === null) {
+    validarOrigemWeb(request);
     const token = lerCookieSessao(request);
-    const usuarioId = token ? await usuarioDaSessao(token) : null;
+    if (!token) throw new FalhaApi("nao_autenticado");
+    return { canal: "WEB", token };
+  }
+
+  validarCanalMobile(request, "nao_autenticado");
+  const token = /^Bearer ([A-Za-z0-9_-]{43})$/i.exec(autorizacao)?.[1];
+  if (!token) throw new FalhaApi("nao_autenticado");
+  return { canal: "MOBILE", token };
+}
+
+export function rotaPrivada(
+  request: Request,
+  acao: (usuarioId: string, credencial: CredencialSessao) => Promise<Response>,
+): Promise<Response> {
+  return tratarRota(async () => {
+    const credencial = lerCredencial(request);
+    const usuarioId = await usuarioDaSessao(credencial.token, credencial.canal);
     if (!usuarioId) throw new FalhaApi("nao_autenticado");
-    return acao(usuarioId);
+    return acao(usuarioId, credencial);
   });
 }

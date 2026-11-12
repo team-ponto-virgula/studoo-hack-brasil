@@ -1,5 +1,6 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { banco } from "@/servidor/banco/cliente";
+import type { CanalSessao } from "@/servidor/banco/gerado/client";
 import { normalizarEmail, verificarSenha } from "./credenciais";
 import { duracaoSessao } from "./origem";
 
@@ -10,9 +11,9 @@ function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
-type ResultadoLogin = { estado: "ok"; token: string } | { estado: "credenciais_invalidas" | "limite_login" };
+type ResultadoLogin = { estado: "ok"; token: string; expiraEm: Date } | { estado: "credenciais_invalidas" | "limite_login" };
 
-export async function entrar(emailEntrada: unknown, senha: unknown): Promise<ResultadoLogin> {
+export async function entrar(emailEntrada: unknown, senha: unknown, canal: CanalSessao = "WEB"): Promise<ResultadoLogin> {
   const email = normalizarEmail(emailEntrada);
   const dominioPermitido = process.env.STUDOO_DOMINIO_EMAIL?.toLowerCase();
   const segredo = process.env.STUDOO_CHAVE_ASSINATURA ?? "";
@@ -42,28 +43,30 @@ export async function entrar(emailEntrada: unknown, senha: unknown): Promise<Res
     }
 
     const token = randomBytes(32).toString("base64url");
+    const expiraEm = new Date(agora.getTime() + duracaoSessao * 1000);
     await transacao.tentativaLogin.deleteMany({ where: { chave } });
     await transacao.sessao.deleteMany({ where: { usuarioId: usuario.id, expiraEm: { lte: agora } } });
     await transacao.sessao.create({
       data: {
         tokenHash: hashToken(token),
         usuarioId: usuario.id,
+        canal,
         criadaEm: agora,
-        expiraEm: new Date(agora.getTime() + duracaoSessao * 1000),
+        expiraEm,
       },
     });
-    return { estado: "ok", token };
+    return { estado: "ok", token, expiraEm };
   });
 }
 
-export async function usuarioDaSessao(token: string) {
+export async function usuarioDaSessao(token: string, canal: CanalSessao) {
   const sessao = await banco.sessao.findUnique({
-    where: { tokenHash: hashToken(token), expiraEm: { gt: new Date() } },
+    where: { tokenHash: hashToken(token), canal, expiraEm: { gt: new Date() } },
     select: { usuarioId: true },
   });
   return sessao?.usuarioId ?? null;
 }
 
-export async function revogarSessao(usuarioId: string, token: string) {
-  await banco.sessao.deleteMany({ where: { usuarioId, tokenHash: hashToken(token) } });
+export async function revogarSessao(usuarioId: string, token: string, canal: CanalSessao) {
+  await banco.sessao.deleteMany({ where: { usuarioId, tokenHash: hashToken(token), canal } });
 }
