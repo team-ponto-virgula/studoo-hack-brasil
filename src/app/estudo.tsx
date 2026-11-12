@@ -260,6 +260,12 @@ export function Estudo() {
           {pendente !== 'abrir' && tela.tipo === 'plano' && (
             <Plano plano={tela.plano} ocupado={ocupado} abrirLicao={(id) => void abrirLicao(tela.plano, id)} />
           )}
+          {pendente !== 'abrir' && tela.tipo === 'licao' && (
+            <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}
+              avaliar={(resposta) => executar('avaliar', () => cliente.avaliarLicao(tela.licao.id, resposta))}
+              concluir={(comprovante) => concluir(tela.licao, comprovante)}
+              voltar={() => navegar({ tipo: 'plano', plano: tela.plano })} />
+          )}
         </main>
       </div>
     </div>
@@ -370,5 +376,82 @@ function Plano({ plano, ocupado, abrirLicao }: {
         </div>
       )}
     </section>
+  );
+}
+
+function Licao({ licao, pendente, avaliar, concluir, voltar }: {
+  licao: LicaoDetalhe;
+  pendente: Acao | null;
+  avaliar: (resposta: string) => Promise<Resultado<Avaliacao>>;
+  concluir: (comprovante: string) => Promise<boolean>;
+  voltar: () => void;
+}) {
+  const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
+  const feedback = useRef<HTMLDivElement>(null);
+  const { exercicio } = licao;
+  const ocupado = pendente !== null;
+
+  useEffect(() => {
+    if (avaliacao) feedback.current?.focus();
+  }, [avaliacao]);
+
+  async function responder(evento: FormEvent<HTMLFormElement>) {
+    evento.preventDefault();
+    const resposta = new FormData(evento.currentTarget).get('resposta');
+    if (typeof resposta !== 'string') return;
+    const resultado = await avaliar(resposta);
+    if (resultado.ok) setAvaliacao(resultado.dados);
+  }
+
+  async function continuar(comprovante: string) {
+    if (!await concluir(comprovante)) setAvaliacao(null);
+  }
+
+  return (
+    <article className="painel painel--licao">
+      <Botao variante="texto" className="voltar" disabled={ocupado} onClick={voltar}><span aria-hidden="true">←</span> {mensagens.licao.voltar}</Botao>
+      <h1 tabIndex={-1}>{licao.titulo}</h1>
+      <p className="introducao">{licao.objetivo}</p>
+      <section className="licao-secao">
+        <h2>{mensagens.licao.conceito}</h2>
+        <p>{licao.conceito}</p>
+        <p className="licao-origem">{mensagens.proposta.origem} · {licao.origem}</p>
+      </section>
+      <section className="licao-secao licao-exemplo">
+        <h2>{mensagens.licao.exemplo}</h2>
+        <p>{licao.exemplo}</p>
+      </section>
+      <section className="licao-secao">
+        <h2>{mensagens.licao.exercicio}</h2>
+        <p>{exercicio.enunciado}</p>
+        {exercicio.contexto && <p>{exercicio.contexto}</p>}
+        {exercicio.trecho && <pre className="licao-codigo"><code>{exercicio.trecho}</code></pre>}
+        {avaliacao === null && (
+          <form className="formulario" method="post" onSubmit={responder}>
+            {exercicio.tipo === 'lacuna' ? (
+              <div className="campo campo--resposta">
+                <label htmlFor="resposta">{mensagens.licao.resposta}</label>
+                <input name="resposta" id="resposta" type="text" autoComplete="off" autoCapitalize="none" spellCheck={false} required disabled={ocupado} />
+              </div>
+            ) : (
+              <fieldset className="opcoes" disabled={ocupado}>
+                <legend>{mensagens.licao.resposta}</legend>
+                {exercicio.opcoes.map((opcao) => <label key={opcao.id}><input type="radio" name="resposta" value={opcao.id} required /><span>{opcao.texto}</span></label>)}
+              </fieldset>
+            )}
+            <AcaoPrincipal><Botao type="submit" disabled={ocupado}>{pendente === 'avaliar' ? mensagens.licao.avaliando : mensagens.licao.avaliar}</Botao></AcaoPrincipal>
+          </form>
+        )}
+        <div aria-live="polite">
+          {avaliacao && (
+            <div ref={feedback} tabIndex={-1} className={`feedback ${avaliacao.correta ? 'feedback--correto' : 'feedback--ajuste'}`}>
+              <h3><span className="sinal" aria-hidden="true">{avaliacao.correta ? '✓' : '!'}</span>{avaliacao.correta ? mensagens.licao.correta : mensagens.licao.incorreta}</h3>
+              <p>{avaliacao.feedback}</p>
+            </div>
+          )}
+        </div>
+        {avaliacao && <AcaoPrincipal><Botao disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>{pendente === 'concluir' ? mensagens.licao.concluindo : mensagens.licao.continuar}</Botao></AcaoPrincipal>}
+      </section>
+    </article>
   );
 }

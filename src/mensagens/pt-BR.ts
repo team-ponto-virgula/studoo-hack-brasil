@@ -51,6 +51,17 @@ export const mensagens = {
     aceitando: 'Salvando plano…',
   },
   licao: {
+    voltar: 'Voltar ao plano',
+    conceito: 'Conceito',
+    exemplo: 'Exemplo resolvido',
+    exercicio: 'Exercício',
+    resposta: 'Sua resposta',
+    avaliar: 'Enviar resposta',
+    avaliando: 'Conferindo resposta…',
+    correta: 'Resposta correta',
+    incorreta: 'Resposta incorreta',
+    continuar: 'Continuar',
+    concluindo: 'Registrando conclusão…',
     concluida: 'Lição concluída',
   },
   erros: {
