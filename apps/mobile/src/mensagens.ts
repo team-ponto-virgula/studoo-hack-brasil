@@ -68,7 +68,7 @@ export const mensagens = {
     progresso: 'Progresso no plano',
   },
   erros: {
-    invalido: 'Escreva um objetivo de estudo com até mil caracteres.',
+    invalido: 'Confira o que você escreveu e tente novamente.',
     objetivo_fora_do_piloto: 'Experimente um objetivo sobre SQL, como praticar filtros para uma prova.',
     proposta_invalida: 'Esta prévia expirou. Edite o objetivo e gere outra proposta.',
     avaliacao_invalida: 'A confirmação expirou. Envie a resposta novamente.',
@@ -77,7 +77,7 @@ export const mensagens = {
     nao_autenticado: 'Sua sessão terminou. Entre para continuar.',
     nao_encontrado: 'Este conteúdo não está disponível. Volte aos seus planos.',
     ia_indisponivel: 'A geração está indisponível agora. Tente novamente.',
-    falha: 'Não foi possível gerar a prévia. Tente novamente.',
+    falha: 'Não foi possível continuar. Tente novamente.',
     conexao: 'Confira a conexão e tente novamente.',
     configuracao: 'O app precisa do endereço HTTPS do servidor do piloto.',
     armazenamento: 'Não foi possível acessar a sessão segura no aparelho. Tente novamente.',

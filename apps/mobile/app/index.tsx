@@ -1,5 +1,5 @@
-import { PreviaDeEstudo } from '../src/previa-de-estudo';
+import { AppMobile } from '../src/sessao';
 
 export default function Inicio() {
-  return <PreviaDeEstudo />;
+  return <AppMobile />;
 }
