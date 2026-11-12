@@ -15,9 +15,10 @@ const planoSql: PlanoInterno = {
   titulo: "SQL para a prova",
   objetivo: "Praticar filtros e junções em consultas.",
   origem,
+  // Sequência única de aprendizado (spec 03, "Ordem da trilha"): os trechos só posicionam os marcos e não são assuntos.
   fluxos: [
     {
-      titulo: "Consultas",
+      titulo: "Primeiros passos",
       licoes: [
         {
           titulo: "Filtrar com WHERE incluindo o valor no limite",
@@ -35,31 +36,6 @@ const planoSql: PlanoInterno = {
             feedbackIncorreto: "Use >= para incluir a nota 7 de Bia e a nota 9 de Caio. Com >, apenas Caio aparece porque a condição exige uma nota acima de 7.",
           },
         },
-        {
-          titulo: "Combinar condições com AND",
-          objetivo: "Selecionar as linhas que satisfazem duas condições ao mesmo tempo.",
-          conceito: "AND combina dois testes no WHERE. Uma linha entra no resultado quando os dois testes são verdadeiros.",
-          exemplo: "Com WHERE preco <= 20 AND estoque > 0, um caderno de preço 18 e estoque 2 entra. Uma caneta de preço 10 e estoque 0 fica de fora.",
-          origem,
-          exercicio: {
-            tipo: "multipla_escolha",
-            enunciado: "Qual produto passa pelos dois filtros da consulta?",
-            trecho: "SELECT produto FROM itens WHERE preco < 30 AND estoque >= 2;",
-            opcoes: [
-              { id: "caderno", texto: "Caderno, preço 24 e estoque 2" },
-              { id: "lapis", texto: "Lápis, preço 5 e estoque 1" },
-              { id: "estojo", texto: "Estojo, preço 30 e estoque 5" },
-            ],
-            gabarito: ["caderno"],
-            feedbackCorreto: "O caderno custa menos que 30 e tem pelo menos 2 unidades em estoque. As duas condições são verdadeiras.",
-            feedbackIncorreto: "AND exige as duas condições. O lápis tem estoque abaixo de 2, e o estojo custa exatamente 30. Apenas o caderno passa pelos dois filtros.",
-          },
-        },
-      ],
-    },
-    {
-      titulo: "Junções",
-      licoes: [
         {
           titulo: "Relacionar tabelas com INNER JOIN",
           objetivo: "Encontrar correspondências entre duas tabelas por uma chave.",
@@ -81,6 +57,57 @@ const planoSql: PlanoInterno = {
             feedbackIncorreto: "Compare alunos.id com matriculas.aluno_id. O único par é o de id 2, então apenas Bia aparece.",
           },
         },
+      ],
+    },
+    {
+      titulo: "Praticando",
+      licoes: [
+        {
+          titulo: "Combinar condições com AND",
+          objetivo: "Selecionar as linhas que satisfazem duas condições ao mesmo tempo.",
+          conceito: "AND combina dois testes no WHERE. Uma linha entra no resultado quando os dois testes são verdadeiros.",
+          exemplo: "Com WHERE preco <= 20 AND estoque > 0, um caderno de preço 18 e estoque 2 entra. Uma caneta de preço 10 e estoque 0 fica de fora.",
+          origem,
+          exercicio: {
+            tipo: "multipla_escolha",
+            enunciado: "Qual produto passa pelos dois filtros da consulta?",
+            trecho: "SELECT produto FROM itens WHERE preco < 30 AND estoque >= 2;",
+            opcoes: [
+              { id: "caderno", texto: "Caderno, preço 24 e estoque 2" },
+              { id: "lapis", texto: "Lápis, preço 5 e estoque 1" },
+              { id: "estojo", texto: "Estojo, preço 30 e estoque 5" },
+            ],
+            gabarito: ["caderno"],
+            feedbackCorreto: "O caderno custa menos que 30 e tem pelo menos 2 unidades em estoque. As duas condições são verdadeiras.",
+            feedbackIncorreto: "AND exige as duas condições. O lápis tem estoque abaixo de 2, e o estojo custa exatamente 30. Apenas o caderno passa pelos dois filtros.",
+          },
+        },
+        {
+          titulo: "Revisão: filtro e junção na mesma consulta",
+          objetivo: "Combinar uma junção com um filtro para responder a uma pergunta só.",
+          conceito: "Uma consulta pode juntar duas tabelas e filtrar o resultado. O INNER JOIN liga as linhas que têm par, e o WHERE descarta as que não atendem à condição. O limite continua entrando quando você usa >= ou <=.",
+          exemplo: "Em clientes INNER JOIN pedidos com WHERE pedidos.total >= 50, primeiro cada pedido é ligado ao seu cliente. Depois ficam só os pedidos de total 50 ou mais.",
+          origem,
+          exercicio: {
+            tipo: "multipla_escolha",
+            enunciado: "Quais clientes aparecem no resultado?",
+            contexto: "A tabela clientes tem Joana com id 3 e Marcos com id 4. A tabela pedidos tem o pedido 50 de cliente_id 3 com total 80, o pedido 51 de cliente_id 3 com total 20 e o pedido 52 de cliente_id 4 com total 50.",
+            trecho: "SELECT clientes.nome FROM clientes INNER JOIN pedidos ON clientes.id = pedidos.cliente_id WHERE pedidos.total >= 50;",
+            opcoes: [
+              { id: "joana", texto: "Apenas Joana" },
+              { id: "marcos", texto: "Apenas Marcos" },
+              { id: "ambos", texto: "Joana e Marcos" },
+            ],
+            gabarito: ["ambos"],
+            feedbackCorreto: "O pedido 50 de Joana tem total 80 e o pedido 52 de Marcos tem total 50. O >= deixa o 50 entrar, então os dois aparecem.",
+            feedbackIncorreto: "Ligue cada pedido ao cliente e depois filtre total >= 50. O pedido 50 (Joana, total 80) e o pedido 52 (Marcos, total exatamente 50) passam. O pedido 51 sai por ter total 20.",
+          },
+        },
+      ],
+    },
+    {
+      titulo: "Desafio",
+      licoes: [
         {
           titulo: "Incluir linhas sem par com LEFT JOIN",
           objetivo: "Preservar todas as linhas da tabela à esquerda da junção.",
@@ -156,7 +183,7 @@ function conteudoDoSql(fluxo: number, licao: number): ConteudoLicao {
 
 /**
  * IA falsa: nenhuma chamada externa. SQL devolve o plano de demonstração; qualquer outro objetivo
- * ganha uma trilha genérica e determinística de 3 fluxos com 3 lições.
+ * ganha uma trilha genérica e determinística de 3 trechos com 3 lições, já na ordem de aprendizado.
  */
 export function criarGeradorFalso(): GeradorTrilha {
   return {

@@ -45,8 +45,33 @@ test("SQL continua com o plano de demonstração", async () => {
   const eventos = await coletar(iniciarGeracao(usuario(), "Quero praticar SQL para a prova"));
   const pronto = eventos.at(-1);
   assert.equal(pronto.tipo, "pronto");
-  assert.deepEqual(pronto.proposta.fluxos.map(({ titulo }) => titulo), ["Consultas", "Junções"]);
-  assert.equal(pronto.proposta.fluxos.flatMap(({ licoes }) => licoes).length, 4);
+  assert.deepEqual(pronto.proposta.fluxos.map(({ titulo }) => titulo), ["Primeiros passos", "Praticando", "Desafio"]);
+  assert.equal(pronto.proposta.fluxos.flatMap(({ licoes }) => licoes).length, 5);
+});
+
+test("SQL vira uma sequência única de aprendizado, sem trechos por assunto e com revisão que mistura filtro e junção", async () => {
+  const eventos = await coletar(iniciarGeracao(usuario(), "Quero praticar SQL para a prova"));
+  const { proposta } = eventos.at(-1);
+  const titulos = proposta.fluxos.flatMap(({ licoes }) => licoes.map(({ titulo }) => titulo));
+  assert.deepEqual(titulos.map((titulo) => titulo.split(" ").slice(0, 3).join(" ")), [
+    "Filtrar com WHERE", "Relacionar tabelas com", "Combinar condições com", "Revisão: filtro e", "Incluir linhas sem",
+  ]);
+  assert.ok(proposta.fluxos.every(({ titulo }) => !/consulta|jun[cç]|where|join|sql/i.test(titulo)));
+  const gerador = criarGeradorFalso();
+  const esqueleto = { gerador: "falsa-sql-v1", origem: proposta.origem, ...proposta };
+  const revisao = await gerador.gerarConteudo(esqueleto, 1, 1, new AbortController().signal);
+  assert.ok(conteudoValido(revisao));
+  assert.match(revisao.exercicio.trecho, /INNER JOIN[\s\S]*WHERE/);
+  assert.equal(avaliarResposta(revisao.exercicio, revisao.exercicio.gabarito[0])?.correta, true);
+});
+
+test("a trilha genérica tem trechos sem nome de assunto e ao menos uma lição de revisão", async () => {
+  for (const objetivo of ["Frações", "Inglês para entrevista"]) {
+    const { proposta } = (await coletar(iniciarGeracao(usuario(), objetivo))).at(-1);
+    assert.deepEqual(proposta.fluxos.map(({ titulo }) => titulo), ["Primeiros passos", "Praticando", "Indo além"]);
+    assert.ok(proposta.fluxos.every(({ titulo }) => !titulo.toLowerCase().includes(objetivo.toLowerCase())));
+    assert.ok(proposta.fluxos.flatMap(({ licoes }) => licoes).some(({ titulo }) => /revis/i.test(titulo)));
+  }
 });
 
 test("a trilha é determinística por objetivo e muda de um objetivo para outro", async () => {

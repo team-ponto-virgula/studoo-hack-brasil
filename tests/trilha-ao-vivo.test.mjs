@@ -276,9 +276,9 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
 
   await t.test("o percurso de SQL pela rota ao vivo continua com o plano de demonstração", async () => {
     const { eventos } = await gerar(cookie, "SQL para a prova");
-    assert.deepEqual(estruturaDosEventos(eventos).map(({ titulo }) => titulo), ["Consultas", "Junções"]);
+    assert.deepEqual(estruturaDosEventos(eventos).map(({ titulo }) => titulo), ["Primeiros passos", "Praticando", "Desafio"]);
     const aceito = await (await enviar("/planos", { token: eventos.at(-1).proposta.token })).json();
-    assert.deepEqual(aceito.progresso, { concluidas: 0, total: 4, percentual: 0 });
+    assert.deepEqual(aceito.progresso, { concluidas: 0, total: 5, percentual: 0 });
     const licaoId = aceito.fluxos[0].proximaLicaoId;
     const licao = await (await chamar(`${prefixo}/licoes/${licaoId}`, { cookie })).json();
     assert.equal(licao.exercicio.tipo, "lacuna");

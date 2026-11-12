@@ -85,7 +85,7 @@ test('sessão nativa HTTPS de 8 horas e progresso na conta web', async (t) => {
   const leituraWeb = await chamar(web, `${caminho}/planos/${plano.id}`, { cookie });
   assert.equal(leituraWeb.status, 200);
   const progressoWeb = await leituraWeb.json();
-  assert.deepEqual(progressoWeb.progresso, { concluidas: 1, total: 4, percentual: 25 });
+  assert.deepEqual(progressoWeb.progresso, { concluidas: 1, total: 5, percentual: 20 });
   assert.equal(progressoWeb.fluxos[0].proximaLicaoId, plano.fluxos[0].licoes[1].id);
 
   assert.equal((await chamar(mobile, '/api/sessao', { metodo: 'DELETE', token })).status, 204);

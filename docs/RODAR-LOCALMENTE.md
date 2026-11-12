@@ -15,7 +15,7 @@ Deixe o banco rodando. Em outro terminal, na raiz, execute `npm run dev` e abra 
 
 ## IA falsa e teto de gerações
 
-Com `IA=falsa`, a geração não chama nenhum serviço externo. Objetivos de SQL devolvem o plano de demonstração. Qualquer outro objetivo gera uma trilha simulada e determinística de 3 fluxos com 3 lições. Três variáveis opcionais ajustam o comportamento. Sem elas, valem os padrões abaixo.
+Com `IA=falsa`, a geração não chama nenhum serviço externo. Objetivos de SQL devolvem o plano de demonstração, de 5 lições numa sequência única. Qualquer outro objetivo gera uma trilha simulada e determinística de 3 trechos com 3 lições, na ordem de aprendizado e com uma revisão. Três variáveis opcionais ajustam o comportamento. Sem elas, valem os padrões abaixo.
 
 | Variável | Padrão | Efeito |
 | --- | --- | --- |

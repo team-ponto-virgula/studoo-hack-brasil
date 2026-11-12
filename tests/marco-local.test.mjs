@@ -130,7 +130,7 @@ test("primeiro marco via HTTP com contas sintéticas", async (t) => {
     const resposta = await enviar("/propostas", { objetivo });
     assert.equal(resposta.status, 200);
     const proposta = await resposta.json();
-    assert.deepEqual(proposta.fluxos.map(({ titulo }) => titulo), ["Consultas", "Junções"]);
+    assert.deepEqual(proposta.fluxos.map(({ titulo }) => titulo), ["Primeiros passos", "Praticando", "Desafio"]);
     assert.deepEqual(await (await listar()).json(), []);
 
     assert.equal((await enviar("/planos", { token: proposta.token }, outroCookie)).status, 404);
@@ -139,15 +139,15 @@ test("primeiro marco via HTTP com contas sintéticas", async (t) => {
     const planos = await Promise.all(aceites.map((aceite) => aceite.json()));
     assert.equal(new Set(planos.map(({ id }) => id)).size, 1);
     plano = planos[0];
-    assert.deepEqual(plano.progresso, { concluidas: 0, total: 4, percentual: 0 });
+    assert.deepEqual(plano.progresso, { concluidas: 0, total: 5, percentual: 0 });
     assert.equal((await (await listar()).json()).length, 1);
     assert.equal((await chamar(`${prefixo}/planos/${plano.id}`, { cookie: outroCookie })).status, 404);
   });
 
   await t.test("feedback, conclusão idempotente e retomada pela próxima lição", async () => {
     assert.ok(plano);
-    const consultas = plano.fluxos[0];
-    const licaoId = consultas.proximaLicaoId;
+    const trecho = plano.fluxos[0];
+    const licaoId = trecho.proximaLicaoId;
     assert.ok(licaoId);
     const caminho = `/licoes/${licaoId}`;
     assert.equal((await chamar(`${prefixo}${caminho}`, { cookie: outroCookie })).status, 404);
@@ -172,9 +172,9 @@ test("primeiro marco via HTTP com contas sintéticas", async (t) => {
     const registros = await Promise.all(conclusoes.map((conclusao) => conclusao.json()));
     assert.equal(new Set(registros.map(({ concluidaEm }) => concluidaEm)).size, 1);
     const atualizado = await (await chamar(`${prefixo}/planos/${plano.id}`, { cookie })).json();
-    assert.deepEqual(atualizado.progresso, { concluidas: 1, total: 4, percentual: 25 });
+    assert.deepEqual(atualizado.progresso, { concluidas: 1, total: 5, percentual: 20 });
     assert.equal(atualizado.fluxos[0].progresso.percentual, 50);
-    assert.equal(atualizado.fluxos[0].proximaLicaoId, consultas.licoes[1].id);
+    assert.equal(atualizado.fluxos[0].proximaLicaoId, trecho.licoes[1].id);
   });
 
   await t.test("logout revoga o cookie e novo login preserva o progresso", async () => {
