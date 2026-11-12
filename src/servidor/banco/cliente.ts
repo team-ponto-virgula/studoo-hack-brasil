@@ -8,7 +8,8 @@ function criarCliente() {
     throw new Error("DATABASE_URL ausente.");
   }
 
-  return new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
+  // O adaptador Prisma interpreta timestamps do PostgreSQL em UTC.
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString, options: "-c TimeZone=UTC" }) });
 }
 
 const instancia = globalThis as typeof globalThis & { bancoStudoo?: PrismaClient };
