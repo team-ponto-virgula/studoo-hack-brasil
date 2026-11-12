@@ -1,11 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { esqueletoValido, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
+
+// Uma proposta carrega o esqueleto do plano (títulos). Com 8 fluxos de 8 lições cabe com folga.
+const TAMANHO_MAXIMO = 6000;
 
 type TipoComprovante = "proposta" | "avaliacao";
 
 type Comprovante = {
   id: string;
   expiraEm: number;
-  versao?: string;
+  plano?: EsqueletoPlano;
 };
 
 function assinatura(tipo: TipoComprovante, usuarioId: string, corpo: string): string {
@@ -25,7 +29,7 @@ export function emitirComprovante(tipo: TipoComprovante, usuarioId: string, dado
 }
 
 export function lerComprovante(tipo: TipoComprovante, usuarioId: string, token: string): Comprovante | null {
-  if (token.length > 1024) {
+  if (token.length > TAMANHO_MAXIMO) {
     return null;
   }
 
@@ -46,11 +50,11 @@ export function lerComprovante(tipo: TipoComprovante, usuarioId: string, token: 
   }
 
   const { id, expiraEm } = dados;
-  const versao = "versao" in dados ? dados.versao : undefined;
+  const plano = "plano" in dados ? dados.plano : undefined;
   if (typeof id !== "string" || typeof expiraEm !== "number" || !Number.isSafeInteger(expiraEm) ||
-      (versao !== undefined && typeof versao !== "string")) {
+      (plano !== undefined && !esqueletoValido(plano))) {
     return null;
   }
 
-  return { id, expiraEm, ...(versao && { versao }) };
+  return { id, expiraEm, ...(plano && { plano }) };
 }

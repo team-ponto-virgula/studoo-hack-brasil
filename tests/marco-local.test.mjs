@@ -122,9 +122,11 @@ test("primeiro marco via HTTP com contas sintéticas", async (t) => {
   });
 
   let plano;
-  await t.test("prévia de SQL privada e aceite atômico com reenvio", async () => {
+  await t.test("prévia de SQL privada, objetivo livre e aceite atômico com reenvio", async () => {
     const vago = await enviar("/propostas", { objetivo: "Tenho uma prova amanhã." });
-    assert.equal(vago.status, 422);
+    assert.equal(vago.status, 200);
+    assert.equal((await vago.json()).fluxos.length, 3);
+    assert.equal((await enviar("/propostas", { objetivo: "ab" })).status, 400);
     const resposta = await enviar("/propostas", { objetivo });
     assert.equal(resposta.status, 200);
     const proposta = await resposta.json();

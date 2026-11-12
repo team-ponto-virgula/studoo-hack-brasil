@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import type {
   Avaliacao,
   Conclusao,
@@ -12,16 +11,17 @@ import {
   avaliarResposta,
   calcularProgresso,
   conteudoValido,
-  planoValido,
-  type PlanoInterno,
+  type ConteudoLicao,
+  type EsqueletoPlano,
 } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { banco } from "@/servidor/banco/cliente";
 import type { Prisma } from "@/servidor/banco/gerado/client";
-import { carregarPlanoFalso, reconhecerObjetivoSql, VERSAO_PLANO_SQL } from "@/servidor/ia/falsa";
+import { obterGerador } from "@/servidor/ia/gerador";
 import { emitirComprovante, lerComprovante } from "./comprovantes";
+import { iniciarGeracao } from "./geracao";
 
-const DURACAO_PROPOSTA = 30 * 60 * 1000;
+const TEMPO_CONTEUDO = 30_000;
 const DURACAO_AVALIACAO = 15 * 60 * 1000;
 
 const selecaoPlano = {
@@ -44,43 +44,14 @@ const selecaoPlano = {
 
 type PlanoPersistido = Prisma.PlanoAprendizadoGetPayload<{ select: typeof selecaoPlano }>;
 
-function planoDaVersao(versao: string): PlanoInterno {
-  const plano = carregarPlanoFalso(versao);
-  if (!planoValido(plano)) {
-    throw new FalhaApi("ia_indisponivel");
+/** Proposta de uma vez, para o cliente que não acompanha a geração (POST /propostas). */
+export async function gerarProposta(usuarioId: string, objetivo: string): Promise<PropostaPlano> {
+  const geracao = iniciarGeracao(usuarioId, objetivo);
+  for await (const evento of geracao.eventos(new AbortController().signal, { aoVivo: false })) {
+    if (evento.tipo === "pronto") return evento.proposta;
+    if (evento.tipo === "erro") throw new FalhaApi(evento.codigo);
   }
-  return plano;
-}
-
-export function gerarProposta(usuarioId: string, objetivo: string): PropostaPlano {
-  const texto = objetivo.trim();
-  if (!texto || texto.length > 1000) {
-    throw new FalhaApi("invalido");
-  }
-  if (process.env.IA !== "falsa") {
-    throw new FalhaApi("ia_indisponivel");
-  }
-  if (!reconhecerObjetivoSql(texto)) {
-    throw new FalhaApi("objetivo_fora_do_piloto");
-  }
-
-  const plano = planoDaVersao(VERSAO_PLANO_SQL);
-  const token = emitirComprovante("proposta", usuarioId, {
-    id: randomUUID(),
-    expiraEm: Date.now() + DURACAO_PROPOSTA,
-    versao: VERSAO_PLANO_SQL,
-  });
-
-  return {
-    token,
-    titulo: plano.titulo,
-    objetivo: plano.objetivo,
-    origem: plano.origem,
-    fluxos: plano.fluxos.map(({ titulo, licoes }) => ({
-      titulo,
-      licoes: licoes.map((licao) => ({ titulo: licao.titulo })),
-    })),
-  };
+  throw new FalhaApi("falha");
 }
 
 function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
@@ -141,9 +112,22 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
   });
 }
 
+/** Pede ao gerador o conteúdo de cada lição do esqueleto aceito e valida o que voltou. */
+async function gerarConteudos(plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
+  const gerador = obterGerador();
+  const sinal = AbortSignal.timeout(TEMPO_CONTEUDO);
+  const conteudos = await Promise.all(plano.fluxos.map((fluxo, indiceFluxo) =>
+    Promise.all(fluxo.licoes.map((_licao, indiceLicao) =>
+      gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal)))));
+  if (!conteudos.every((licoes) => licoes.every(conteudoValido))) {
+    throw new FalhaApi("ia_indisponivel");
+  }
+  return conteudos;
+}
+
 export async function aceitarProposta(usuarioId: string, token: string): Promise<PlanoDetalhe> {
   const proposta = lerComprovante("proposta", usuarioId, token);
-  if (!proposta?.versao) {
+  if (!proposta?.plano) {
     throw new FalhaApi("nao_encontrado");
   }
 
@@ -156,7 +140,8 @@ export async function aceitarProposta(usuarioId: string, token: string): Promise
     throw new FalhaApi("proposta_invalida");
   }
 
-  const plano = planoDaVersao(proposta.versao);
+  const plano = proposta.plano;
+  const conteudos = await gerarConteudos(plano);
   const fluxos = plano.fluxos.map(({ titulo }, indice) => ({
     usuarioId,
     id: `${id}-${indice + 1}`,
@@ -166,14 +151,17 @@ export async function aceitarProposta(usuarioId: string, token: string): Promise
   }));
   const licoes = plano.fluxos.flatMap((fluxo, indiceFluxo) => {
     const fluxoId = fluxos[indiceFluxo].id;
-    return fluxo.licoes.map(({ titulo, exercicio, ...conteudo }, indiceLicao) => ({
-      usuarioId,
-      id: `${fluxoId}-${indiceLicao + 1}`,
-      fluxoId,
-      titulo,
-      ordem: indiceLicao + 1,
-      conteudo: { ...conteudo, exercicio: { ...exercicio } },
-    }));
+    return fluxo.licoes.map(({ titulo }, indiceLicao) => {
+      const { exercicio, ...conteudo } = conteudos[indiceFluxo][indiceLicao];
+      return {
+        usuarioId,
+        id: `${fluxoId}-${indiceLicao + 1}`,
+        fluxoId,
+        titulo,
+        ordem: indiceLicao + 1,
+        conteudo: { ...conteudo, exercicio: { ...exercicio } },
+      };
+    });
   });
 
   try {

@@ -1,6 +1,13 @@
-import type { PlanoInterno } from "@/dominio/aprendizado/plano";
+import type { ConteudoLicao, EsqueletoPlano, PlanoInterno } from "@/dominio/aprendizado/plano";
+import { FalhaApi } from "@/servidor/acesso/http";
+import type { EventoEstrutura, GeradorTrilha, MetaPlano } from "./gerador";
+import { conteudoGenerico, planoGenerico } from "./falsa-generica";
 
-export const VERSAO_PLANO_SQL = "sql-v1";
+type EstruturaDoPlano = { titulo: string; objetivo: string; fluxos: { titulo: string; licoes: { titulo: string }[] }[] };
+
+const GERADOR_SQL = "falsa-sql-v1";
+const GERADOR_GENERICO = "falsa-generica-v1";
+const PAUSA_PADRAO_MS = 450;
 
 const origem = "Conhecimento geral de SQL";
 
@@ -104,6 +111,76 @@ export function reconhecerObjetivoSql(objetivo: string): boolean {
   return /\b(?:sql|postgres(?:ql)?|mysql|sqlite|select|where|join)\b/i.test(objetivo);
 }
 
-export function carregarPlanoFalso(versao: string): unknown {
-  return versao === VERSAO_PLANO_SQL ? planoSql : null;
+/** Pausa entre eventos, em ms. STUDOO_IA_FALSA_PAUSA_MS=0 desliga (testes). */
+function pausaConfigurada(): number {
+  const bruto = process.env.STUDOO_IA_FALSA_PAUSA_MS;
+  const valor = bruto === undefined || bruto.trim() === "" ? PAUSA_PADRAO_MS : Number(bruto);
+  return Number.isFinite(valor) ? Math.min(Math.max(Math.trunc(valor), 0), 5000) : PAUSA_PADRAO_MS;
+}
+
+/** Espera `ms`. Devolve false se o sinal abortou antes do fim. */
+function dormir(ms: number, sinal: AbortSignal): Promise<boolean> {
+  if (sinal.aborted) return Promise.resolve(false);
+  if (ms <= 0) return Promise.resolve(true);
+  return new Promise((resolver) => {
+    const fim = () => {
+      clearTimeout(temporizador);
+      resolver(false);
+    };
+    const temporizador = setTimeout(() => {
+      sinal.removeEventListener("abort", fim);
+      resolver(true);
+    }, ms);
+    sinal.addEventListener("abort", fim, { once: true });
+  });
+}
+
+function eventosDoPlano(plano: EstruturaDoPlano): EventoEstrutura[] {
+  return [
+    { tipo: "plano", titulo: plano.titulo, objetivo: plano.objetivo },
+    ...plano.fluxos.flatMap((fluxo, indiceFluxo): EventoEstrutura[] => [
+      { tipo: "fluxo", fluxo: indiceFluxo, titulo: fluxo.titulo },
+      ...fluxo.licoes.map((licao, indiceLicao): EventoEstrutura => (
+        { tipo: "licao", fluxo: indiceFluxo, licao: indiceLicao, titulo: licao.titulo }
+      )),
+    ]),
+  ];
+}
+
+function conteudoDoSql(fluxo: number, licao: number): ConteudoLicao {
+  const alvo = planoSql.fluxos[fluxo]?.licoes[licao];
+  if (!alvo) throw new FalhaApi("proposta_invalida");
+  const { titulo: _titulo, ...conteudo } = alvo;
+  return conteudo;
+}
+
+/**
+ * IA falsa: nenhuma chamada externa. SQL devolve o plano de demonstração; qualquer outro objetivo
+ * ganha uma trilha genérica e determinística de 3 fluxos com 3 lições.
+ */
+export function criarGeradorFalso(): GeradorTrilha {
+  return {
+    async *gerarEstrutura(objetivo, sinal, { aoVivo }) {
+      const sql = reconhecerObjetivoSql(objetivo);
+      const plano = sql ? planoSql : planoGenerico(objetivo);
+      const pausa = aoVivo ? pausaConfigurada() : 0;
+      for (const evento of eventosDoPlano(plano)) {
+        if (!await dormir(pausa, sinal)) return undefined;
+        yield evento;
+      }
+      const meta: MetaPlano = { gerador: sql ? GERADOR_SQL : GERADOR_GENERICO, origem: plano.origem };
+      return meta;
+    },
+
+    async gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal) {
+      sinal.throwIfAborted();
+      if (esqueleto.gerador === GERADOR_SQL) return conteudoDoSql(fluxo, licao);
+      if (esqueleto.gerador === GERADOR_GENERICO) {
+        const conteudo = conteudoGenerico(esqueleto.objetivo, fluxo, licao);
+        if (!conteudo) throw new FalhaApi("proposta_invalida");
+        return conteudo;
+      }
+      throw new FalhaApi("proposta_invalida");
+    },
+  };
 }
