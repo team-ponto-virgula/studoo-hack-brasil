@@ -155,6 +155,28 @@ export function Estudo({ cliente, sair, expirar }: {
       concluir={(comprovante) => concluir(etapa.licao, comprovante)} />;
   }
 
+  if (etapa.tipo === 'concluida') {
+    const { plano, licao } = etapa;
+    const proxima = plano.fluxos.find((fluxo) => fluxo.id === licao.fluxoId)?.proximaLicaoId;
+    return (
+      <Tela pagina="concluida" acoes={acoes} rodape={<>
+        {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" desativado={ocupado} acao={() => void abrirLicao(plano, proxima)} />}
+        <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" variante={proxima ? 'secundario' : 'primario'} desativado={ocupado}
+          acao={() => abrir({ tipo: 'plano', plano })} />
+      </>}>
+        <View importantForAccessibility="no" style={estudoEstilos.sinalConcluida}><Text style={estudoEstilos.iconeConcluida}>✓</Text></View>
+        <Titulo testID="titulo-conclusao" foco>{mensagens.licao.concluida}</Titulo>
+        <Text style={estilos.introducao}>{licao.titulo}</Text>
+        <View style={estudoEstilos.bloco}>
+          <Text style={estilos.tituloBloco}>{mensagens.licao.progresso}</Text>
+          <BarraProgresso progresso={plano.progresso} testID="progresso-plano" />
+        </View>
+        {mensagem}
+        {pendente === 'abrir' && <Skeleton />}
+      </Tela>
+    );
+  }
+
   if (etapa.tipo === 'plano') {
     const { plano } = etapa;
     return (

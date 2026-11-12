@@ -50,7 +50,9 @@ export const mensagens = {
     continuar: 'Continuar',
     concluindo: 'Registrando conclusão…',
     concluida: 'Lição concluída',
+    avancar: 'Ir para a próxima lição',
     voltar: 'Voltar ao plano',
+    progresso: 'Progresso no plano',
   },
   erros: {
     invalido: 'Escreva um objetivo de estudo com até mil caracteres.',
