@@ -77,6 +77,7 @@ const codigosErro = [
   "credenciais_invalidas",
   "limite_login",
   "ia_indisponivel",
+  "limite_geracoes",
 ] as const;
 
 export type CodigoErro = typeof codigosErro[number];

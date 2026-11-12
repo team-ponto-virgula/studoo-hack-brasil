@@ -12,4 +12,5 @@ export const mensagensApi: Record<CodigoErro, string> = {
   credenciais_invalidas: "E-mail ou senha inválidos.",
   limite_login: "E-mail ou senha inválidos.",
   ia_indisponivel: "A geração está indisponível. Tente de novo.",
+  limite_geracoes: "Você gerou trilhas demais por agora. Tente de novo mais tarde.",
 };
