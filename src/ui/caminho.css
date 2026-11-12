@@ -10,8 +10,6 @@
   --gap-linhas: 48px;
   --folga-etiqueta: 56px;
   --folga-marco: 48px;
-  /* Borda inferior do nó tocável: dá a sensação de botão que afunda no toque. */
-  --borda-3d: 5px;
   min-width: 0;
 }
 
@@ -112,9 +110,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   border-radius: 50%;
   color: var(--texto2);
   background: var(--nevoa);
-  --cor-3d: color-mix(in srgb, var(--gelo) 55%, var(--texto2));
-  box-shadow: 0 var(--borda-3d) 0 var(--cor-3d);
-  transition: translate 120ms ease-out, box-shadow 120ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+  transition: opacity 120ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
 }
 
 .caminho-no__lente > .icone { width: 44%; height: 44%; }
@@ -122,11 +118,10 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   border-color: var(--sucesso);
   color: var(--fundo);
   background: var(--sucesso);
-  --cor-3d: color-mix(in srgb, var(--sucesso) 55%, var(--texto));
 }
 
-.caminho-no[data-estado='atual'] .caminho-no__lente { border-color: var(--acao); color: var(--fundo); background: var(--acao); --cor-3d: var(--texto); }
-.caminho-no[data-estado='previa'] .caminho-no__lente { color: var(--acao); background: var(--fundo); box-shadow: none; }
+.caminho-no[data-estado='atual'] .caminho-no__lente { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
+.caminho-no[data-estado='previa'] .caminho-no__lente { color: var(--acao); background: var(--fundo); }
 
 /* Halo do nó atual: entra uma vez, não pulsa. */
 .caminho-no[data-estado='atual'] .caminho-no__lente::before {
@@ -138,8 +133,8 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   animation: caminho-halo 240ms ease-out backwards;
 }
 
-/* No toque, o nó afunda: a borda inferior some e a lente desce o mesmo tanto. */
-.caminho-no__alvo:active:not(:disabled) .caminho-no__lente { box-shadow: 0 0 0 var(--cor-3d); translate: 0 var(--borda-3d); }
+/* No toque, a lente usa a mesma opacidade de pressionado do botão, sem relevo nem sombra (DESIGN §4). */
+.caminho-no__alvo:active:not(:disabled) .caminho-no__lente { opacity: 0.82; }
 
 .caminho-no__etiqueta {
   position: absolute;
