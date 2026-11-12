@@ -144,6 +144,30 @@ export function Estudo({ cliente, sair, expirar }: {
   );
   const mensagem = erro && <EstadoMensagem mensagem={erro} />;
 
+  if (etapa.tipo === 'proposta') {
+    const { proposta } = etapa;
+    return (
+      <Tela pagina="proposta" acoes={acoes} rodape={<>
+        <Botao rotulo={pendente === 'aceitar' ? mensagens.proposta.aceitando : mensagens.proposta.aceitar} testID="aceitar-plano"
+          desativado={ocupado} ocupado={pendente === 'aceitar'} acao={() => void aceitar(proposta)} />
+        <Botao rotulo={mensagens.proposta.editar} testID="editar-objetivo" variante="texto" desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />
+      </>}>
+        <Text style={[estilos.legenda, estudoEstilos.tipoProposta]}>{mensagens.proposta.tipo}</Text>
+        <Titulo testID="titulo-proposta" foco>{proposta.titulo}</Titulo>
+        <Text style={estilos.introducao}>{proposta.objetivo}</Text>
+        <Text style={[estilos.legenda, estudoEstilos.espaco]}>{mensagens.proposta.origem} · {proposta.origem}</Text>
+        {mensagem}
+        <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.secao]}>{mensagens.proposta.fluxos}</Text>
+        {proposta.fluxos.map((fluxo, indice) => (
+          <View key={fluxo.titulo} style={estudoEstilos.bloco}>
+            <Text testID={idFluxo(fluxo.titulo, indice)} accessibilityRole="header" style={estilos.tituloBloco}>{fluxo.titulo}</Text>
+            {fluxo.licoes.map((licao, ordem) => <Text key={licao.titulo} style={estilos.textoSecundario}>{ordem + 1}. {licao.titulo}</Text>)}
+          </View>
+        ))}
+      </Tela>
+    );
+  }
+
   if (etapa.tipo === 'objetivo' || (etapa.tipo === 'planos' && planos?.length === 0)) {
     return (
       <Tela pagina="objetivo" acoes={acoes} rodape={<Botao rotulo={pendente === 'gerar' ? mensagens.objetivo.gerando : mensagens.objetivo.gerar}

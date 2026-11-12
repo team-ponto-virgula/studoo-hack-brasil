@@ -30,6 +30,8 @@ export const mensagens = {
     origem: 'Origem',
     fluxos: 'Fluxos de estudo',
     editar: 'Editar objetivo',
+    aceitar: 'Aceitar plano',
+    aceitando: 'Salvando plano…',
   },
   erros: {
     invalido: 'Escreva um objetivo de estudo com até mil caracteres.',
