@@ -254,6 +254,9 @@ export function Estudo() {
               <AcaoPrincipal><Botao disabled={ocupado} onClick={() => navegar({ tipo: 'objetivo' })}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
             </section>
           )}
+          {pendente !== 'abrir' && tela.tipo === 'proposta' && (
+            <Proposta proposta={tela.proposta} ocupado={ocupado} aceitar={() => void aceitar(tela.proposta)} editar={() => navegar({ tipo: 'objetivo' })} />
+          )}
         </main>
       </div>
     </div>
@@ -270,5 +273,38 @@ function BarraProgresso({ progresso }: { progresso: Progresso }) {
       <progress aria-label={texto} value={progresso.concluidas} max={progresso.total} />
       <span>{texto}</span>
     </div>
+  );
+}
+
+function Proposta({ proposta, ocupado, aceitar, editar }: {
+  proposta: PropostaPlano;
+  ocupado: boolean;
+  aceitar: () => void;
+  editar: () => void;
+}) {
+  return (
+    <section className="painel">
+      <p className="contexto-tela">{mensagens.proposta.tipo}</p>
+      <h1 tabIndex={-1}>{proposta.titulo}</h1>
+      <p className="introducao">{mensagens.proposta.instrucoes}</p>
+      <dl className="proposta-dados">
+        <div><dt>{mensagens.proposta.objetivo}</dt><dd>{proposta.objetivo}</dd></div>
+        <div><dt>{mensagens.proposta.origem}</dt><dd>{proposta.origem}<span>{mensagens.proposta.estado}</span></dd></div>
+      </dl>
+      <div className="fluxos">
+        {proposta.fluxos.map((fluxo) => (
+          <section className="fluxo" key={fluxo.titulo}>
+            <h2>{fluxo.titulo}</h2>
+            <ol className="fluxo-licoes">
+              {fluxo.licoes.map((licao) => <li key={licao.titulo}>{licao.titulo}</li>)}
+            </ol>
+          </section>
+        ))}
+      </div>
+      <div className="acoes-tela">
+        <Botao variante="secundario" disabled={ocupado} onClick={editar}>{mensagens.proposta.editar}</Botao>
+        <AcaoPrincipal><Botao disabled={ocupado} onClick={aceitar}>{ocupado ? mensagens.proposta.aceitando : mensagens.proposta.aceitar}</Botao></AcaoPrincipal>
+      </div>
+    </section>
   );
 }

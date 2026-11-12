@@ -40,6 +40,16 @@ export const mensagens = {
     gerar: 'Gerar plano',
     gerando: 'Preparando seu plano…',
   },
+  proposta: {
+    tipo: 'Prévia do plano',
+    estado: 'Proposta de IA simulada',
+    instrucoes: 'Confira os fluxos e as lições antes de aceitar.',
+    objetivo: 'Objetivo',
+    origem: 'Origem',
+    editar: 'Editar objetivo',
+    aceitar: 'Aceitar plano',
+    aceitando: 'Salvando plano…',
+  },
   erros: {
     credenciais_invalidas: 'E-mail ou senha inválidos.',
     limite_login: 'E-mail ou senha inválidos.',
