@@ -63,6 +63,7 @@ export const mensagens = {
     continuar: 'Continuar',
     concluindo: 'Registrando conclusão…',
     concluida: 'Lição concluída',
+    avancar: 'Ir para a próxima lição',
   },
   erros: {
     credenciais_invalidas: 'E-mail ou senha inválidos.',

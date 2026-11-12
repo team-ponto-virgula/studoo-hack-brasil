@@ -266,6 +266,11 @@ export function Estudo() {
               concluir={(comprovante) => concluir(tela.licao, comprovante)}
               voltar={() => navegar({ tipo: 'plano', plano: tela.plano })} />
           )}
+          {pendente !== 'abrir' && tela.tipo === 'concluida' && (
+            <LicaoConcluida plano={tela.plano} licao={tela.licao} ocupado={ocupado}
+              abrirLicao={(id) => void abrirLicao(tela.plano, id)}
+              voltar={() => navegar({ tipo: 'plano', plano: tela.plano })} />
+          )}
         </main>
       </div>
     </div>
@@ -453,5 +458,31 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         {avaliacao && <AcaoPrincipal><Botao disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>{pendente === 'concluir' ? mensagens.licao.concluindo : mensagens.licao.continuar}</Botao></AcaoPrincipal>}
       </section>
     </article>
+  );
+}
+
+function LicaoConcluida({ plano, licao, ocupado, abrirLicao, voltar }: {
+  plano: PlanoDetalhe;
+  licao: LicaoDetalhe;
+  ocupado: boolean;
+  abrirLicao: (id: string) => void;
+  voltar: () => void;
+}) {
+  const proxima = plano.fluxos.find((fluxo) => fluxo.id === licao.fluxoId)?.proximaLicaoId;
+
+  return (
+    <section className="painel painel--concluida">
+      <div className="conclusao-sinal" aria-hidden="true">✓</div>
+      <h1 tabIndex={-1}>{mensagens.licao.concluida}</h1>
+      <p className="introducao">{licao.titulo}</p>
+      <div className="conclusao-progresso">
+        <h2>{mensagens.planos.progressoPlano}</h2>
+        <BarraProgresso progresso={plano.progresso} />
+      </div>
+      <div className="acoes-tela">
+        {proxima && <Botao variante="secundario" disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>}
+        <AcaoPrincipal><Botao disabled={ocupado} onClick={proxima ? () => abrirLicao(proxima) : voltar}>{proxima ? mensagens.licao.avancar : mensagens.licao.voltar}</Botao></AcaoPrincipal>
+      </div>
+    </section>
   );
 }
