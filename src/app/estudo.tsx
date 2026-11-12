@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   ErroStudoo,
   type Avaliacao,
@@ -12,7 +12,18 @@ import {
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
-import { AcaoPrincipal, Botao, EstadoErro, EstadoVazio, Logo, Skeleton } from '../ui';
+import {
+  AcaoPrincipal,
+  Botao,
+  Caminho,
+  EstadoErro,
+  EstadoVazio,
+  Icone,
+  Logo,
+  Skeleton,
+  SkeletonTrilha,
+  type NoCaminho,
+} from '../ui';
 import './aula.css';
 import './trilha.css';
 
@@ -20,11 +31,12 @@ type Tela =
   | { tipo: 'planos' }
   | { tipo: 'objetivo' }
   | { tipo: 'proposta'; proposta: PropostaPlano }
-  | { tipo: 'plano'; plano: PlanoDetalhe }
+  | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[] }
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
-  | { tipo: 'concluida'; plano: PlanoDetalhe; licao: LicaoDetalhe };
+  | { tipo: 'concluida'; plano: PlanoDetalhe; licao: LicaoDetalhe; liberadas: string[] };
 
-type Acao = 'gerar' | 'aceitar' | 'abrir' | 'avaliar' | 'concluir' | 'sair';
+type TelaPlano = Extract<Tela, { tipo: 'plano' }>;
+type Acao = 'gerar' | 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair';
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 
 export function Estudo() {
@@ -34,6 +46,7 @@ export function Estudo() {
   const [planos, setPlanos] = useState<PlanoResumo[]>([]);
   const [objetivo, setObjetivo] = useState('');
   const [pendente, setPendente] = useState<Acao | null>(null);
+  const [abrindo, setAbrindo] = useState<string | null>(null);
   const emExecucao = useRef(false);
   const principal = useRef<HTMLElement>(null);
 
@@ -86,6 +99,10 @@ export function Estudo() {
     if (inicio === 'pronto') principal.current?.querySelector('h1')?.focus();
   }, [inicio, tela]);
 
+  useEffect(() => {
+    if (erro) principal.current?.querySelector('.estado-erro')?.scrollIntoView({ block: 'nearest' });
+  }, [erro]);
+
   function navegar(destino: Tela) {
     setErro(null);
     setTela(destino);
@@ -134,7 +151,7 @@ export function Estudo() {
   }
 
   async function abrirPlano(id: string) {
-    const resultado = await executar('abrir', () => cliente.obterPlano(id));
+    const resultado = await executar('plano', () => cliente.obterPlano(id));
     if (resultado.ok) {
       atualizarPlano(resultado.dados);
       navegar({ tipo: 'plano', plano: resultado.dados });
@@ -142,15 +159,19 @@ export function Estudo() {
   }
 
   async function abrirLicao(plano: PlanoDetalhe, id: string) {
+    if (emExecucao.current) return;
+    setAbrindo(id);
     const resultado = await executar('abrir', () => cliente.obterLicao(id));
+    setAbrindo(null);
     if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados });
   }
 
-  async function concluir(licao: LicaoDetalhe, comprovante: string) {
+  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string) {
     const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante));
     if (resultado.ok) {
-      atualizarPlano(resultado.dados.plano);
-      navegar({ tipo: 'concluida', plano: resultado.dados.plano, licao });
+      const atualizado = resultado.dados.plano;
+      atualizarPlano(atualizado);
+      navegar({ tipo: 'concluida', plano: atualizado, licao, liberadas: liberadasEntre(plano, atualizado) });
       return true;
     }
     return resultado.codigo !== 'avaliacao_invalida';
@@ -163,6 +184,9 @@ export function Estudo() {
 
   const ocupado = pendente !== null;
   const planoAtual = 'plano' in tela ? tela.plano.id : null;
+  const carregandoTrilha = pendente === 'plano';
+  const carregandoLicao = pendente === 'abrir' && tela.tipo !== 'plano';
+  const visivel = !carregandoTrilha && !carregandoLicao;
 
   if (inicio !== 'pronto') {
     return (
@@ -217,8 +241,9 @@ export function Estudo() {
 
         <main id="conteudo-principal" className="estudo-principal" tabIndex={-1} ref={principal} aria-busy={ocupado}>
           {erro && <EstadoErro codigo={erro} />}
-          {pendente === 'abrir' && <Skeleton />}
-          {pendente !== 'abrir' && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
+          {carregandoTrilha && <SkeletonTrilha />}
+          {carregandoLicao && <Skeleton />}
+          {visivel && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
             <section className="painel painel--objetivo">
               <h1 tabIndex={-1}>{mensagens.pedido.titulo}</h1>
               <p className="introducao">{mensagens.pedido.instrucoes}</p>
@@ -237,7 +262,7 @@ export function Estudo() {
               </form>
             </section>
           )}
-          {pendente !== 'abrir' && tela.tipo === 'planos' && planos.length > 0 && (
+          {visivel && tela.tipo === 'planos' && planos.length > 0 && (
             <section className="painel">
               <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
               <ul className="planos-ativos">
@@ -254,22 +279,24 @@ export function Estudo() {
               <AcaoPrincipal><Botao disabled={ocupado} onClick={() => navegar({ tipo: 'objetivo' })}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
             </section>
           )}
-          {pendente !== 'abrir' && tela.tipo === 'proposta' && (
+          {visivel && tela.tipo === 'proposta' && (
             <Proposta proposta={tela.proposta} ocupado={ocupado} aceitar={() => void aceitar(tela.proposta)} editar={() => navegar({ tipo: 'objetivo' })} />
           )}
-          {pendente !== 'abrir' && tela.tipo === 'plano' && (
-            <Plano plano={tela.plano} ocupado={ocupado} abrirLicao={(id) => void abrirLicao(tela.plano, id)} />
+          {visivel && tela.tipo === 'plano' && (
+            <Plano tela={tela} ocupado={ocupado} abrindo={abrindo}
+              abrirLicao={(id) => void abrirLicao(tela.plano, id)}
+              novoPlano={() => navegar({ tipo: 'objetivo' })} />
           )}
-          {pendente !== 'abrir' && tela.tipo === 'licao' && (
+          {visivel && tela.tipo === 'licao' && (
             <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}
               avaliar={(resposta) => executar('avaliar', () => cliente.avaliarLicao(tela.licao.id, resposta))}
-              concluir={(comprovante) => concluir(tela.licao, comprovante)}
-              voltar={() => navegar({ tipo: 'plano', plano: tela.plano })} />
+              concluir={(comprovante) => concluir(tela.plano, tela.licao, comprovante)}
+              voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id })} />
           )}
-          {pendente !== 'abrir' && tela.tipo === 'concluida' && (
-            <LicaoConcluida plano={tela.plano} licao={tela.licao} ocupado={ocupado}
+          {visivel && tela.tipo === 'concluida' && (
+            <LicaoConcluida plano={tela.plano} licao={tela.licao} liberadas={tela.liberadas} ocupado={ocupado}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
-              voltar={() => navegar({ tipo: 'plano', plano: tela.plano })} />
+              voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas })} />
           )}
         </main>
       </div>
@@ -323,60 +350,100 @@ function Proposta({ proposta, ocupado, aceitar, editar }: {
   );
 }
 
-function Plano({ plano, ocupado, abrirLicao }: {
-  plano: PlanoDetalhe;
+/**
+ * Próxima lição do caminho: a `proximaLicaoId` do primeiro trecho que ainda tem lição pendente.
+ * Como cada trecho aponta a sua primeira lição não concluída, é a primeira pendente na ordem da trilha.
+ */
+function proximaDoCaminho(plano: PlanoDetalhe) {
+  return plano.fluxos.find((fluxo) => fluxo.proximaLicaoId)?.proximaLicaoId ?? null;
+}
+
+/** Lição que a conclusão liberou no caminho, para o nó animar quando a pessoa volta à trilha. */
+function liberadasEntre(antes: PlanoDetalhe, depois: PlanoDetalhe) {
+  const proxima = proximaDoCaminho(depois);
+  return proxima && proxima !== proximaDoCaminho(antes) ? [proxima] : [];
+}
+
+/**
+ * Achata os trechos num caminho único, na ordem da trilha. Só a próxima lição fica disponível (atual);
+ * as pendentes depois dela ficam bloqueadas e as concluídas podem ser refeitas.
+ */
+function montarTrilha(plano: PlanoDetalhe) {
+  const atual = proximaDoCaminho(plano);
+  const nos = plano.fluxos.flatMap((fluxo, trecho) => fluxo.licoes.map((licao): NoCaminho => {
+    let estado: NoCaminho['estado'] = 'bloqueada';
+    if (licao.concluida) estado = 'concluida';
+    else if (licao.id === atual) estado = 'atual';
+    return { id: licao.id, titulo: licao.titulo, estado, trecho };
+  }));
+  const indice = nos.findIndex((no) => no.estado === 'atual');
+  const proximo = indice >= 0 ? { no: nos[indice], posicao: mensagens.trilha.posicao(indice + 1, nos.length) } : null;
+  return { nos, proximo };
+}
+
+function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
+  tela: TelaPlano;
   ocupado: boolean;
+  abrindo: string | null;
   abrirLicao: (id: string) => void;
+  novoPlano: () => void;
 }) {
+  const { plano, origem, liberadas = [] } = tela;
+  const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
+  const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : null;
+
   return (
     <section className="painel painel--trilha">
       <header className="trilha-cabecalho">
-        <h1 tabIndex={-1}>{plano.titulo}</h1>
-        <p className="introducao">{plano.objetivo}</p>
-        <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} /></div>
+        <div className="trilha-resumo">
+          <h1 tabIndex={-1}>{plano.titulo}</h1>
+          <p className="introducao">{plano.objetivo}</p>
+          <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} /></div>
+        </div>
+        {proximo && (
+          <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id}
+            ocupado={ocupado} aoAbrir={() => abrirLicao(proximo.no.id)} />
+        )}
+        {nos.length > 0 && !proximo && (
+          <div className="trilha-concluida">
+            <p className="trilha-concluida__titulo"><Icone nome="check" />{mensagens.trilha.concluido}</p>
+            <p>{mensagens.trilha.concluidoTexto}</p>
+            <AcaoPrincipal><Botao disabled={ocupado} onClick={novoPlano}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
+          </div>
+        )}
       </header>
-      <div className="trilha-fluxos">
-        {plano.fluxos.map((fluxo) => {
-          const tituloFluxo = `trilha-fluxo-${fluxo.id}`;
-          const acao = fluxo.progresso.concluidas > 0 ? mensagens.planos.retomar : mensagens.planos.iniciar;
-
-          return (
-            <article className="trilha-fluxo" key={fluxo.id} aria-labelledby={tituloFluxo}>
-              <header className="trilha-fluxo__cabecalho">
-                <h2 id={tituloFluxo}>{fluxo.titulo}</h2>
-                {fluxo.licoes.length > 0 && <p>{mensagens.planos.contagem(fluxo.progresso.concluidas, fluxo.progresso.total)}</p>}
-              </header>
-              {fluxo.licoes.length > 0 ? (
-                <ol className="trilha-nos">
-                  {fluxo.licoes.map((licao) => {
-                    const estado = licao.concluida ? 'concluida' : licao.id === fluxo.proximaLicaoId ? 'atual' : 'pendente';
-                    const tituloLicao = `trilha-licao-${licao.id}`;
-                    const rotulo = estado === 'atual' ? acao : estado === 'concluida' ? mensagens.licao.concluida : mensagens.planos.emSeguida;
-
-                    return (
-                      <li key={licao.id} className="trilha-no" data-estado={estado}>
-                        {estado === 'atual' ? (
-                          <button type="button" className="trilha-no__marca" aria-label={`${acao} ${fluxo.titulo}`}
-                            aria-describedby={tituloLicao} disabled={ocupado} onClick={() => abrirLicao(licao.id)}>
-                            <span aria-hidden="true">✦</span>
-                          </button>
-                        ) : <span className="trilha-no__marca" aria-hidden="true">{estado === 'concluida' ? '✓' : '·'}</span>}
-                        <div className="trilha-no__texto">
-                          <strong id={tituloLicao}>{licao.titulo}</strong>
-                          <span className="trilha-no__estado">{rotulo}</span>
-                        </div>
-                      </li>
-                    );
-                  })}
-                </ol>
-              ) : (
-                <EstadoVazio>{mensagens.planos.semLicoes}</EstadoVazio>
-              )}
-            </article>
-          );
-        })}
-      </div>
+      {nos.length > 0 ? (
+        <Caminho nos={nos} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} rolarPara={rolarPara}
+          aoAbrir={(no) => abrirLicao(no.id)} />
+      ) : (
+        <div className="trilha-vazia">
+          <EstadoVazio>{mensagens.trilha.semLicoes}</EstadoVazio>
+          <AcaoPrincipal><Botao disabled={ocupado} onClick={novoPlano}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
+        </div>
+      )}
     </section>
+  );
+}
+
+/** Próxima lição do plano; no celular vira o rodapé fixo da tela. */
+function ProximoPasso({ titulo, detalhe, abrindo, ocupado, aoAbrir }: {
+  titulo: string;
+  detalhe: string;
+  abrindo: boolean;
+  ocupado: boolean;
+  aoAbrir: () => void;
+}) {
+  const idTitulo = useId();
+
+  return (
+    <div className="trilha-proximo">
+      <p className="trilha-proximo__rotulo">{mensagens.trilha.proxima}</p>
+      <p className="trilha-proximo__titulo" id={idTitulo}>{titulo}</p>
+      <p className="trilha-proximo__detalhe">{detalhe}</p>
+      <Botao disabled={ocupado} aria-describedby={idTitulo} onClick={aoAbrir}>
+        {abrindo ? mensagens.trilha.abrindo : mensagens.trilha.comecarLicao}
+      </Botao>
+    </div>
   );
 }
 
@@ -495,27 +562,30 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   );
 }
 
-function LicaoConcluida({ plano, licao, ocupado, abrirLicao, voltar }: {
+function LicaoConcluida({ plano, licao, liberadas, ocupado, abrirLicao, voltar }: {
   plano: PlanoDetalhe;
   licao: LicaoDetalhe;
+  liberadas: string[];
   ocupado: boolean;
   abrirLicao: (id: string) => void;
   voltar: () => void;
 }) {
-  const proxima = plano.fluxos.find((fluxo) => fluxo.id === licao.fluxoId)?.proximaLicaoId;
+  const proxima = proximaDoCaminho(plano);
+  const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
 
   return (
     <section className="painel painel--concluida">
-      <div className="conclusao-sinal" aria-hidden="true">✓</div>
+      <div className="conclusao-sinal" aria-hidden="true"><Icone nome="check" /></div>
       <h1 tabIndex={-1}>{mensagens.licao.concluida}</h1>
       <p className="introducao">{licao.titulo}</p>
+      {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}
       <div className="conclusao-progresso">
         <h2>{mensagens.planos.progressoPlano}</h2>
         <BarraProgresso progresso={plano.progresso} />
       </div>
       <div className="acoes-tela">
-        {proxima && <Botao variante="secundario" disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>}
-        <AcaoPrincipal><Botao disabled={ocupado} onClick={proxima ? () => abrirLicao(proxima) : voltar}>{proxima ? mensagens.licao.avancar : mensagens.licao.voltar}</Botao></AcaoPrincipal>
+        {proxima && <Botao variante="secundario" disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
+        <AcaoPrincipal><Botao disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao></AcaoPrincipal>
       </div>
     </section>
   );
