@@ -51,6 +51,8 @@ export const mensagens = {
   },
   licao: {
     voltar: 'Voltar ao plano',
+    posicao: (etapa: number, total: number) => `Etapa ${etapa} de ${total}`,
+    seguir: 'Avançar',
     conceito: 'Conceito',
     exemplo: 'Exemplo resolvido',
     exercicio: 'Exercício',

@@ -13,6 +13,7 @@ import {
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, EstadoVazio, Logo, Skeleton } from '../ui';
+import './aula.css';
 import './trilha.css';
 
 type Tela =
@@ -379,6 +380,8 @@ function Plano({ plano, ocupado, abrirLicao }: {
   );
 }
 
+const posicoesAula = { conceito: 1, exemplo: 2, exercicio: 3, feedback: 4 } as const;
+
 function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   licao: LicaoDetalhe;
   pendente: Acao | null;
@@ -386,19 +389,23 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   concluir: (comprovante: string) => Promise<boolean>;
   voltar: () => void;
 }) {
+  const [etapa, setEtapa] = useState<'conceito' | 'exemplo' | 'exercicio'>('conceito');
+  const [resposta, setResposta] = useState('');
   const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
-  const feedback = useRef<HTMLDivElement>(null);
+  const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const { exercicio } = licao;
   const ocupado = pendente !== null;
+  const etapaAtual = avaliacao ? 'feedback' : etapa;
+  const posicao = posicoesAula[etapaAtual];
+  const andamento = mensagens.licao.posicao(posicao, posicoesAula.feedback);
 
   useEffect(() => {
-    if (avaliacao) feedback.current?.focus();
-  }, [avaliacao]);
+    if (etapaAtual !== 'conceito') tituloEtapa.current?.focus();
+  }, [etapaAtual]);
 
   async function responder(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    const resposta = new FormData(evento.currentTarget).get('resposta');
-    if (typeof resposta !== 'string') return;
+    if (ocupado || !resposta.trim()) return;
     const resultado = await avaliar(resposta);
     if (resultado.ok) setAvaliacao(resultado.dados);
   }
@@ -407,51 +414,83 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     if (!await concluir(comprovante)) setAvaliacao(null);
   }
 
+  let acao;
+  if (avaliacao) {
+    acao = <Botao disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>{pendente === 'concluir' ? mensagens.licao.concluindo : mensagens.licao.continuar}</Botao>;
+  } else if (etapa === 'exercicio') {
+    acao = <Botao type="submit" form="resposta-licao" disabled={ocupado || !resposta.trim()}>{pendente === 'avaliar' ? mensagens.licao.avaliando : mensagens.licao.avaliar}</Botao>;
+  } else {
+    acao = <Botao disabled={ocupado} onClick={() => setEtapa(etapa === 'conceito' ? 'exemplo' : 'exercicio')}>{mensagens.licao.seguir}</Botao>;
+  }
+
   return (
-    <article className="painel painel--licao">
-      <Botao variante="texto" className="voltar" disabled={ocupado} onClick={voltar}><span aria-hidden="true">←</span> {mensagens.licao.voltar}</Botao>
-      <h1 tabIndex={-1}>{licao.titulo}</h1>
-      <p className="introducao">{licao.objetivo}</p>
-      <section className="licao-secao">
-        <h2>{mensagens.licao.conceito}</h2>
-        <p>{licao.conceito}</p>
-        <p className="licao-origem">{mensagens.proposta.origem} · {licao.origem}</p>
-      </section>
-      <section className="licao-secao licao-exemplo">
-        <h2>{mensagens.licao.exemplo}</h2>
-        <p>{licao.exemplo}</p>
-      </section>
-      <section className="licao-secao">
-        <h2>{mensagens.licao.exercicio}</h2>
-        <p>{exercicio.enunciado}</p>
-        {exercicio.contexto && <p>{exercicio.contexto}</p>}
-        {exercicio.trecho && <pre className="licao-codigo"><code>{exercicio.trecho}</code></pre>}
-        {avaliacao === null && (
-          <form className="formulario" method="post" onSubmit={responder}>
-            {exercicio.tipo === 'lacuna' ? (
-              <div className="campo campo--resposta">
-                <label htmlFor="resposta">{mensagens.licao.resposta}</label>
-                <input name="resposta" id="resposta" type="text" autoComplete="off" autoCapitalize="none" spellCheck={false} required disabled={ocupado} />
-              </div>
-            ) : (
-              <fieldset className="opcoes" disabled={ocupado}>
-                <legend>{mensagens.licao.resposta}</legend>
-                {exercicio.opcoes.map((opcao) => <label key={opcao.id}><input type="radio" name="resposta" value={opcao.id} required /><span>{opcao.texto}</span></label>)}
-              </fieldset>
-            )}
-            <AcaoPrincipal><Botao type="submit" disabled={ocupado}>{pendente === 'avaliar' ? mensagens.licao.avaliando : mensagens.licao.avaliar}</Botao></AcaoPrincipal>
-          </form>
+    <article className="painel painel--aula">
+      <header className="aula-topo">
+        <button type="button" className="aula-fechar" aria-label={mensagens.licao.voltar} disabled={ocupado} onClick={voltar}>
+          <span aria-hidden="true">×</span>
+        </button>
+        <div className="aula-andamento">
+          <progress className="aula-progresso" aria-label={andamento} value={posicao} max={posicoesAula.feedback} />
+          <span className="aula-posicao" aria-hidden="true">{andamento}</span>
+        </div>
+      </header>
+      <div className="aula-miolo">
+        <h1 tabIndex={-1}>{licao.titulo}</h1>
+        {etapaAtual === 'conceito' && (
+          <>
+            <p className="introducao">{licao.objetivo}</p>
+            <section className="aula-quadro" data-etapa="conceito" aria-labelledby="etapa-aula">
+              <h2 id="etapa-aula">{mensagens.licao.conceito}</h2>
+              <p>{licao.conceito}</p>
+              <p className="licao-origem">{mensagens.proposta.origem} · {licao.origem}</p>
+            </section>
+          </>
         )}
-        <div aria-live="polite">
-          {avaliacao && (
-            <div ref={feedback} tabIndex={-1} className={`feedback ${avaliacao.correta ? 'feedback--correto' : 'feedback--ajuste'}`}>
-              <h3><span className="sinal" aria-hidden="true">{avaliacao.correta ? '✓' : '!'}</span>{avaliacao.correta ? mensagens.licao.correta : mensagens.licao.incorreta}</h3>
+        {etapaAtual === 'exemplo' && (
+          <section className="aula-quadro" data-etapa="exemplo" aria-labelledby="etapa-aula">
+            <h2 id="etapa-aula" ref={tituloEtapa} tabIndex={-1}>{mensagens.licao.exemplo}</h2>
+            <p>{licao.exemplo}</p>
+          </section>
+        )}
+        {etapaAtual === 'exercicio' && (
+          <section className="aula-quadro" data-etapa="exercicio" aria-labelledby="etapa-aula">
+            <h2 id="etapa-aula" ref={tituloEtapa} tabIndex={-1}>{mensagens.licao.exercicio}</h2>
+            <p>{exercicio.enunciado}</p>
+            {exercicio.contexto && <p>{exercicio.contexto}</p>}
+            {exercicio.trecho && <pre className="licao-codigo"><code>{exercicio.trecho}</code></pre>}
+            <form id="resposta-licao" className="formulario" method="post" onSubmit={responder}>
+              {exercicio.tipo === 'lacuna' ? (
+                <div className="campo campo--resposta">
+                  <label htmlFor="resposta">{mensagens.licao.resposta}</label>
+                  <input id="resposta" name="resposta" type="text" autoComplete="off" autoCapitalize="none" spellCheck={false}
+                    value={resposta} onChange={(evento) => setResposta(evento.target.value)} required disabled={ocupado} />
+                </div>
+              ) : (
+                <fieldset className="opcoes" disabled={ocupado}>
+                  <legend>{mensagens.licao.resposta}</legend>
+                  {exercicio.opcoes.map((opcao) => (
+                    <label key={opcao.id}>
+                      <input type="radio" name="resposta" value={opcao.id} required checked={resposta === opcao.id}
+                        onChange={() => setResposta(opcao.id)} />
+                      <span>{opcao.texto}</span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
+            </form>
+          </section>
+        )}
+        {avaliacao && (
+          <section className="aula-feedback" data-correta={avaliacao.correta} aria-labelledby="etapa-aula">
+            <span className="aula-feedback__icone" aria-hidden="true">{avaliacao.correta ? '✓' : '!'}</span>
+            <div>
+              <h2 id="etapa-aula" ref={tituloEtapa} tabIndex={-1}>{avaliacao.correta ? mensagens.licao.correta : mensagens.licao.incorreta}</h2>
               <p>{avaliacao.feedback}</p>
             </div>
-          )}
-        </div>
-        {avaliacao && <AcaoPrincipal><Botao disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>{pendente === 'concluir' ? mensagens.licao.concluindo : mensagens.licao.continuar}</Botao></AcaoPrincipal>}
-      </section>
+          </section>
+        )}
+      </div>
+      <footer className="aula-rodape"><div className="aula-rodape__conteudo">{acao}</div></footer>
     </article>
   );
 }

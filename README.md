@@ -17,7 +17,7 @@ Mantenha o primeiro terminal aberto. Em outro terminal, rode `npm run dev` e abr
 
 1. Abra um plano novo, escolha **Usar exemplo de SQL** e depois **Gerar plano**.
 2. Confira a proposta, escolha **Aceitar plano** e comece pelo fluxo **Consultas**.
-3. Na primeira lição, responda `>=`, envie a resposta e escolha **Continuar** após ler o feedback. O plano passa a mostrar uma de quatro lições concluídas.
+3. Avance pelo conceito e pelo exemplo. No exercício, responda `>=`, envie a resposta e escolha **Continuar** após ler o feedback. A trilha marca a lição como concluída e oferece a próxima.
 
 O ambiente local usa `IA=falsa` e `EMAIL=falso`. [Guia do banco, dos testes e do app Android](docs/RODAR-LOCALMENTE.md)
 

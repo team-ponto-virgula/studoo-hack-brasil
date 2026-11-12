@@ -1,0 +1,144 @@
+.estudo:has(.painel--aula) { grid-template-columns: minmax(0, 1fr); }
+.estudo:has(.painel--aula) .barra-lateral, .estudo:has(.painel--aula) .estudo-cabecalho { display: none; }
+
+.estudo-principal:has(.painel--aula) {
+  width: min(100%, 57rem);
+  margin-inline: auto;
+  padding: clamp(16px, 4vw, 40px) clamp(20px, 5vw, 56px) 0;
+}
+
+.painel--aula {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  min-height: calc(100svh - clamp(16px, 4vw, 40px));
+  flex-direction: column;
+  gap: clamp(20px, 5vw, 44px);
+}
+
+.aula-topo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(12px, 4vw, 28px);
+}
+
+.aula-fechar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--gelo);
+  border-radius: 14px;
+  color: var(--texto2);
+  background: var(--fundo);
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.aula-fechar:hover:not(:disabled) { color: var(--texto); background: var(--nevoa); }
+.aula-fechar:disabled { cursor: wait; opacity: 0.65; }
+
+.aula-andamento { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 12px; }
+.aula-progresso { height: 14px; background: var(--gelo); }
+.aula-progresso::-webkit-progress-bar { background: var(--gelo); }
+.aula-posicao { color: var(--texto2); font-size: 0.875rem; font-weight: 900; }
+
+.aula-miolo {
+  display: grid;
+  width: min(100%, 42rem);
+  align-content: start;
+  flex: 1 0 auto;
+  gap: 20px;
+  margin-inline: auto;
+}
+
+.aula-miolo h1 { text-wrap: balance; }
+.aula-miolo .introducao { margin-top: 0; }
+
+.aula-quadro {
+  display: grid;
+  min-width: 0;
+  gap: 12px;
+  padding: clamp(16px, 5vw, 30px);
+  border: 1px solid var(--gelo);
+  border-radius: 24px;
+  background: var(--fundo);
+}
+
+.aula-quadro[data-etapa='conceito'], .aula-quadro[data-etapa='exemplo'] { border-color: transparent; background: var(--nevoa); }
+.aula-quadro h2[tabindex='-1']:focus { outline: none; }
+.aula-quadro .licao-codigo { margin: 0; border: 0; color: var(--fundo); background: var(--texto); }
+.aula-quadro .formulario { gap: 16px; margin-top: 4px; }
+.aula-quadro .campo--resposta { max-width: none; }
+.aula-quadro .opcoes label { border-width: 2px; }
+
+.aula-feedback {
+  --aula-retorno: var(--sucesso);
+  --aula-retorno-fundo: #e9f7ee;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  min-width: 0;
+  padding: clamp(16px, 4vw, 28px);
+  border: 1px solid var(--aula-retorno);
+  border-radius: 22px;
+  color: var(--aula-retorno);
+  background: var(--aula-retorno-fundo);
+}
+
+.aula-feedback[data-correta='false'] { --aula-retorno: var(--alerta); --aula-retorno-fundo: #fff3de; }
+.aula-feedback p { margin-top: 6px; color: var(--texto); }
+
+.aula-feedback__icone {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  background: var(--fundo);
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.aula-rodape {
+  position: sticky;
+  z-index: 2;
+  inset-block-end: 0;
+  padding: 16px 0 calc(19px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--gelo);
+  background: var(--fundo);
+}
+
+.aula-rodape__conteudo { display: flex; width: min(100%, 42rem); justify-content: flex-end; margin-inline: auto; }
+
+.aula-rodape__conteudo > .botao {
+  min-width: min(100%, 11rem);
+  min-height: 52px;
+  border-radius: 15px;
+  box-shadow: 0 4px 0 var(--texto);
+  font-weight: 900;
+  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.aula-rodape__conteudo > .botao:disabled { box-shadow: 0 4px 0 var(--gelo); }
+.aula-rodape__conteudo > .botao:active:not(:disabled) { box-shadow: 0 1px 0 var(--texto); transform: translateY(3px); }
+.painel--aula:has(.aula-feedback[data-correta='true']) .aula-rodape__conteudo > .botao:not(:disabled) { background: var(--sucesso); }
+
+@media (max-width: 767px) {
+  .estudo-principal:has(.painel--aula) { padding-top: max(16px, env(safe-area-inset-top)); }
+  .painel--aula { gap: 24px; min-height: calc(100svh - max(16px, env(safe-area-inset-top))); }
+  .aula-miolo { gap: 16px; }
+  .aula-andamento { gap: 8px; }
+  .aula-rodape__conteudo > .botao { width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aula-rodape__conteudo > .botao:active:not(:disabled) { transform: none; }
+}
