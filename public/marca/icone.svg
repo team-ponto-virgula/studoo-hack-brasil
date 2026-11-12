@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>Studoo</title>
+  <path fill="#3858D6" d="M0 0h512v512H0z"/>
+  <rect x="143" y="111" width="226" height="290" rx="45" fill="#1B2A5E" transform="rotate(12 256 256)"/>
+  <rect x="143" y="111" width="226" height="290" rx="45" fill="#FFFFFF" transform="rotate(-9 256 256)"/>
+  <g transform="rotate(-9 256 256)">
+    <path d="M196 183h106" fill="none" stroke="#3858D6" stroke-width="24" stroke-linecap="round"/>
+    <path d="M219 245v80" fill="none" stroke="#E1E7FA" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="219" cy="245" r="15" fill="#3858D6"/>
+    <circle cx="219" cy="285" r="15" fill="#A3B5F5"/>
+    <circle cx="219" cy="325" r="15" fill="#A3B5F5"/>
+    <path d="M256 245h52m-52 40h37m-37 40h52" fill="none" stroke="#1B2A5E" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

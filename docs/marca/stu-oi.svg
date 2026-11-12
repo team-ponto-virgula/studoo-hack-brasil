@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="220" viewBox="0 0 200 220">
+  <title>Cartões de estudo</title>
+  <circle cx="101" cy="112" r="79" fill="#F1F4FD"/>
+  <path d="M30 161c9 20 28 34 50 39m48-181c22 7 38 22 48 45" fill="none" stroke="#A3B5F5" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="174" cy="71" r="5" fill="#3858D6"/>
+  <circle cx="80" cy="200" r="3" fill="#A3B5F5"/>
+  <rect x="52" y="45" width="104" height="131" rx="15" fill="#1B2A5E" transform="rotate(13 104 110.5)"/>
+  <rect x="45" y="43" width="104" height="131" rx="15" fill="#3858D6" transform="rotate(-10 97 108.5)"/>
+  <g transform="rotate(-10 97 108.5)">
+    <rect x="52" y="50" width="90" height="117" rx="10" fill="#FFFFFF"/>
+    <path d="M69 74h49" fill="none" stroke="#3858D6" stroke-width="6" stroke-linecap="round"/>
+    <path d="M75 100v40" fill="none" stroke="#E1E7FA" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="75" cy="100" r="6" fill="#3858D6"/>
+    <circle cx="75" cy="120" r="6" fill="#A3B5F5"/>
+    <circle cx="75" cy="140" r="6" fill="#A3B5F5"/>
+    <path d="M91 100h30m-30 20h21m-21 20h29" fill="none" stroke="#1B2A5E" stroke-width="3.5" stroke-linecap="round"/>
+  </g>
+  <path d="M158 153v18m-9-9h18" fill="none" stroke="#3858D6" stroke-width="3.5" stroke-linecap="round"/>
+  <circle cx="31" cy="76" r="3" fill="#A3B5F5"/>
+</svg>
