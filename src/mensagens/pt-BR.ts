@@ -29,6 +29,17 @@ export const mensagens = {
     progressoPlano: 'Progresso no plano',
     semProgresso: '—',
   },
+  pedido: {
+    titulo: 'O que você quer aprender?',
+    instrucoes: 'Conte o que quer estudar e o que já sabe sobre o assunto.',
+    objetivo: 'Seu objetivo de estudo',
+    exemplo: 'Já sei usar SELECT e quero praticar filtros e junções para uma prova de SQL.',
+    usarExemplo: 'Usar exemplo de SQL',
+    escopo: 'Este piloto trabalha com um plano de exemplo sobre SQL.',
+    privacidade: 'Descreva só o que quer estudar, sem incluir dados pessoais.',
+    gerar: 'Gerar plano',
+    gerando: 'Preparando seu plano…',
+  },
   erros: {
     credenciais_invalidas: 'E-mail ou senha inválidos.',
     limite_login: 'E-mail ou senha inválidos.',

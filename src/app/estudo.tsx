@@ -218,6 +218,25 @@ export function Estudo() {
         <main id="conteudo-principal" className="estudo-principal" tabIndex={-1} ref={principal} aria-busy={ocupado}>
           {erro && <EstadoErro codigo={erro} />}
           {pendente === 'abrir' && <Skeleton />}
+          {pendente !== 'abrir' && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
+            <section className="painel painel--objetivo">
+              <h1 tabIndex={-1}>{mensagens.pedido.titulo}</h1>
+              <p className="introducao">{mensagens.pedido.instrucoes}</p>
+              <form className="formulario" method="post" onSubmit={gerar}>
+                <div className="campo">
+                  <label htmlFor="objetivo">{mensagens.pedido.objetivo}</label>
+                  <textarea id="objetivo" name="objetivo" rows={5} required value={objetivo} onChange={(evento) => setObjetivo(evento.target.value)} disabled={ocupado} aria-describedby="objetivo-privacidade" />
+                  <small id="objetivo-privacidade">{mensagens.pedido.privacidade}</small>
+                </div>
+                <div className="objetivo-exemplo">
+                  <p>{mensagens.pedido.escopo}</p>
+                  <Botao variante="texto" onClick={() => setObjetivo(mensagens.pedido.exemplo)} disabled={ocupado}>{mensagens.pedido.usarExemplo}</Botao>
+                </div>
+                {pendente === 'gerar' && <Skeleton texto={mensagens.pedido.gerando} />}
+                <AcaoPrincipal><Botao type="submit" disabled={ocupado || !objetivo.trim()}>{pendente === 'gerar' ? mensagens.pedido.gerando : mensagens.pedido.gerar}</Botao></AcaoPrincipal>
+              </form>
+            </section>
+          )}
           {pendente !== 'abrir' && tela.tipo === 'planos' && planos.length > 0 && (
             <section className="painel">
               <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
