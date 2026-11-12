@@ -16,6 +16,8 @@
     "pretypecheck": "npm run db:generate",
     "typecheck": "next typegen && tsc --noEmit",
     "test:marco": "node --env-file=.env --test tests/marco-local.test.mjs",
+    "test:dominio": "node --env-file=.env --import tsx --test tests/dominio-geracao.test.mjs",
+    "test:trilha": "node --env-file=.env --import tsx --test tests/trilha-ao-vivo.test.mjs",
     "test:mobile": "node --env-file=.env --test tests/marco-mobile-local.test.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",

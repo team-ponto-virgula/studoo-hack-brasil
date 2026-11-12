@@ -16,6 +16,7 @@ const statusErros: Record<CodigoErro, number> = {
   credenciais_invalidas: 401,
   limite_login: 429,
   ia_indisponivel: 503,
+  limite_geracoes: 429,
 };
 
 export class FalhaApi extends Error {
@@ -24,13 +25,15 @@ export class FalhaApi extends Error {
   }
 }
 
+export const cabecalhosSeguros = {
+  "Cache-Control": "no-store",
+  "Referrer-Policy": "no-referrer",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+};
+
 export function responder(dados: unknown, status = 200) {
-  const headers = {
-    "Cache-Control": "no-store",
-    "Referrer-Policy": "no-referrer",
-    "X-Content-Type-Options": "nosniff",
-    "X-Frame-Options": "DENY",
-  };
+  const headers = cabecalhosSeguros;
   return status === 204 ? new Response(null, { status, headers }) : Response.json(dados, { status, headers });
 }
 
