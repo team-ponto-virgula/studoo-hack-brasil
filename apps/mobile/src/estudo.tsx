@@ -144,6 +144,40 @@ export function Estudo({ cliente, sair, expirar }: {
   );
   const mensagem = erro && <EstadoMensagem mensagem={erro} />;
 
+  if (etapa.tipo === 'plano') {
+    const { plano } = etapa;
+    return (
+      <Tela pagina={`plano-${plano.id}`} acoes={acoes}>
+        <Titulo testID="titulo-plano" foco>{plano.titulo}</Titulo>
+        <Text style={estilos.introducao}>{plano.objetivo}</Text>
+        <BarraProgresso progresso={plano.progresso} testID="progresso-plano" />
+        <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.secao]}>{mensagens.proposta.fluxos}</Text>
+        <Text style={estilos.textoSecundario}>{mensagens.planos.escolher}</Text>
+        {mensagem}
+        {pendente === 'abrir' && <Skeleton />}
+        {plano.fluxos.map((fluxo, indice) => {
+          const proxima = fluxo.proximaLicaoId;
+          const acao = fluxo.progresso.concluidas > 0 ? mensagens.planos.retomar : mensagens.planos.comecar;
+          return (
+            <View key={fluxo.id} style={estudoEstilos.bloco}>
+              <Text testID={idFluxo(fluxo.titulo, indice)} accessibilityRole="header" style={estilos.tituloBloco}>{fluxo.titulo}</Text>
+              <BarraProgresso progresso={fluxo.progresso} />
+              {fluxo.licoes.map((licao) => (
+                <Text key={licao.id} style={estilos.textoSecundario}
+                  accessibilityLabel={licao.concluida ? `${licao.titulo}. ${mensagens.licao.concluida}` : licao.titulo}>
+                  {licao.concluida ? '✓ ' : '○ '}{licao.titulo}
+                </Text>
+              ))}
+              {proxima ? <Botao rotulo={acao} testID={`iniciar-${idFluxo(fluxo.titulo, indice)}`} variante="secundario"
+                desativado={ocupado} acao={() => void abrirLicao(plano, proxima)} />
+                : <Text style={estilos.textoSecundario}>{fluxo.licoes.length ? mensagens.planos.concluido : mensagens.planos.semLicoes}</Text>}
+            </View>
+          );
+        })}
+      </Tela>
+    );
+  }
+
   if (etapa.tipo === 'proposta') {
     const { proposta } = etapa;
     return (

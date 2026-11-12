@@ -11,6 +11,11 @@ export const mensagens = {
     titulo: 'Meus planos',
     novo: 'Novo plano',
     abrir: 'Abrir plano',
+    comecar: 'Começar fluxo',
+    retomar: 'Retomar fluxo',
+    escolher: 'Escolha um fluxo para estudar ou retomar.',
+    concluido: 'Fluxo concluído',
+    semLicoes: 'Este fluxo ainda está sem lições.',
     progresso: (concluidas: number, total: number) => `${concluidas} de ${total} ${total === 1 ? 'lição concluída' : 'lições concluídas'}`,
     semProgresso: '—',
   },
@@ -32,6 +37,9 @@ export const mensagens = {
     editar: 'Editar objetivo',
     aceitar: 'Aceitar plano',
     aceitando: 'Salvando plano…',
+  },
+  licao: {
+    concluida: 'Lição concluída',
   },
   erros: {
     invalido: 'Escreva um objetivo de estudo com até mil caracteres.',
