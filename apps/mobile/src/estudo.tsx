@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BackHandler, Keyboard, StyleSheet, Text, View } from 'react-native';
 import { sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos } from './interface';
+import { Licao } from './licao';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 
@@ -143,6 +144,16 @@ export function Estudo({ cliente, sair, expirar }: {
     </>
   );
   const mensagem = erro && <EstadoMensagem mensagem={erro} />;
+
+  if (etapa.tipo === 'licao') {
+    return <Licao key={etapa.licao.id} licao={etapa.licao} acoes={acoes} erro={erro} pendente={pendente}
+      voltar={() => abrir({ tipo: 'plano', plano: etapa.plano })}
+      avaliar={async (resposta) => {
+        const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta));
+        return resultado.ok ? resultado.dados : null;
+      }}
+      concluir={(comprovante) => concluir(etapa.licao, comprovante)} />;
+  }
 
   if (etapa.tipo === 'plano') {
     const { plano } = etapa;

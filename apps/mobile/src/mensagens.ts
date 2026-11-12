@@ -39,7 +39,18 @@ export const mensagens = {
     aceitando: 'Salvando plano…',
   },
   licao: {
+    conceito: 'Conceito',
+    exemplo: 'Exemplo resolvido',
+    exercicio: 'Exercício',
+    resposta: 'Sua resposta',
+    avaliar: 'Enviar resposta',
+    avaliando: 'Conferindo resposta…',
+    correta: 'Resposta correta',
+    incorreta: 'Resposta incorreta',
+    continuar: 'Continuar',
+    concluindo: 'Registrando conclusão…',
     concluida: 'Lição concluída',
+    voltar: 'Voltar ao plano',
   },
   erros: {
     invalido: 'Escreva um objetivo de estudo com até mil caracteres.',
