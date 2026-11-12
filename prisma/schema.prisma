@@ -1,0 +1,83 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/servidor/banco/gerado"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Usuario {
+  id        String             @id @default(uuid())
+  email     String             @unique
+  senhaHash String
+  fuso      String
+  sessoes   Sessao[]
+  planos    PlanoAprendizado[]
+}
+
+model Sessao {
+  tokenHash String   @id
+  usuarioId String
+  criadaEm  DateTime @default(now()) @db.Timestamptz(3)
+  expiraEm  DateTime @db.Timestamptz(3)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+
+  @@index([usuarioId])
+}
+
+model TentativaLogin {
+  chave        String   @id
+  falhas       Int
+  janelaInicio DateTime @db.Timestamptz(3)
+}
+
+model PlanoAprendizado {
+  usuarioId String
+  id        String
+  titulo    String
+  objetivo  String
+  origem    String
+  criadoEm  DateTime @default(now()) @db.Timestamptz(3)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  fluxos    Fluxo[]
+
+  @@id([usuarioId, id])
+}
+
+model Fluxo {
+  usuarioId String
+  id        String
+  planoId   String
+  titulo    String
+  ordem     Int
+  plano     PlanoAprendizado @relation(fields: [usuarioId, planoId], references: [usuarioId, id])
+  licoes    Licao[]
+
+  @@id([usuarioId, id])
+  @@unique([usuarioId, planoId, ordem])
+}
+
+model Licao {
+  usuarioId String
+  id        String
+  fluxoId   String
+  titulo    String
+  ordem     Int
+  conteudo  Json
+  fluxo     Fluxo           @relation(fields: [usuarioId, fluxoId], references: [usuarioId, id])
+  conclusao RegistroEstudo?
+
+  @@id([usuarioId, id])
+  @@unique([usuarioId, fluxoId, ordem])
+}
+
+model RegistroEstudo {
+  usuarioId   String
+  licaoId     String
+  concluidoEm DateTime @default(now()) @db.Timestamptz(3)
+  licao       Licao    @relation(fields: [usuarioId, licaoId], references: [usuarioId, id])
+
+  @@id([usuarioId, licaoId])
+}

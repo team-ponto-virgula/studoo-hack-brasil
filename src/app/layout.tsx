@@ -1,0 +1,13 @@
+import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
+import { mensagens } from '../mensagens/pt-BR';
+
+export const metadata: Metadata = {
+  title: mensagens.nome,
+  description: mensagens.descricao,
+  robots: { index: false, follow: false },
+};
+
+export default function Layout({ children }: { children: ReactNode }) {
+  return <html lang="pt-BR"><body>{children}</body></html>;
+}
