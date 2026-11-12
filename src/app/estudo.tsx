@@ -505,6 +505,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         <h1 tabIndex={-1}>{licao.titulo}</h1>
         {etapaAtual === 'conceito' && (
           <>
+            {licao.concluida && <p className="aula-revisao"><Icone nome="check" />{mensagens.trilha.revisitando}</p>}
             <p className="introducao">{licao.objetivo}</p>
             <section className="aula-quadro" data-etapa="conceito" aria-labelledby="etapa-aula">
               <h2 id="etapa-aula">{mensagens.licao.conceito}</h2>
