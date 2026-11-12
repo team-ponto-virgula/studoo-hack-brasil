@@ -7,6 +7,14 @@ export const mensagens = {
   sair: 'Sair',
   carregando: 'Carregando…',
   tentar: 'Tentar novamente',
+  entrada: {
+    titulo: 'Entre no Studoo',
+    texto: 'Use a conta do piloto para abrir seus planos de estudo.',
+    email: 'E-mail',
+    senha: 'Senha',
+    entrar: 'Entrar',
+    entrando: 'Entrando…',
+  },
   planos: {
     titulo: 'Meus planos',
     novo: 'Novo plano',
