@@ -88,6 +88,63 @@ export class ErroStudoo extends Error {
   }
 }
 
+export const LIMITES_GERACAO = { objetivoMin: 3, objetivoMax: 500 } as const;
+
+/** Uma linha da resposta NDJSON de POST /api/aprendizado/propostas/ao-vivo. */
+export type EventoGeracao =
+  | { tipo: "plano"; titulo: string; objetivo: string }
+  | { tipo: "fluxo"; fluxo: number; titulo: string }
+  | { tipo: "licao"; fluxo: number; licao: number; titulo: string }
+  | { tipo: "pronto"; proposta: PropostaPlano }
+  | { tipo: "erro"; codigo: CodigoErro };
+
+function texto(valor: unknown): valor is string {
+  return typeof valor === "string" && valor.length > 0;
+}
+
+function indice(valor: unknown): valor is number {
+  return typeof valor === "number" && Number.isInteger(valor) && valor >= 0;
+}
+
+/** Valida uma linha NDJSON. Devolve null para linha vazia ou fora do contrato. */
+export function interpretarEventoGeracao(linha: string): EventoGeracao | null {
+  if (!linha.trim()) return null;
+  let dado: Record<string, unknown>;
+  try {
+    const bruto: unknown = JSON.parse(linha);
+    if (typeof bruto !== "object" || bruto === null) return null;
+    dado = bruto as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+  switch (dado.tipo) {
+    case "plano":
+      return texto(dado.titulo) && texto(dado.objetivo)
+        ? { tipo: "plano", titulo: dado.titulo, objetivo: dado.objetivo }
+        : null;
+    case "fluxo":
+      return indice(dado.fluxo) && texto(dado.titulo)
+        ? { tipo: "fluxo", fluxo: dado.fluxo, titulo: dado.titulo }
+        : null;
+    case "licao":
+      return indice(dado.fluxo) && indice(dado.licao) && texto(dado.titulo)
+        ? { tipo: "licao", fluxo: dado.fluxo, licao: dado.licao, titulo: dado.titulo }
+        : null;
+    case "pronto": {
+      const proposta = dado.proposta as PropostaPlano | undefined;
+      return proposta && texto(proposta.token) && Array.isArray(proposta.fluxos)
+        ? { tipo: "pronto", proposta }
+        : null;
+    }
+    case "erro": {
+      const codigo = codigosErro.find((valor) => valor === dado.codigo);
+      return { tipo: "erro", codigo: codigo ?? "falha" };
+    }
+    default:
+      return null;
+  }
+}
+
 type Autenticacao = { autenticado: true };
 
 export interface SessaoNativa {
