@@ -12,9 +12,8 @@ export const mensagens = {
     entrar: 'Entrar no piloto',
   },
   entrada: {
-    titulo: 'Entre no Studoo',
-    inicioTitulo: 'Entre no',
-    texto: 'Use a conta do piloto para abrir seus planos de estudo.',
+    titulo: 'Acesse sua conta',
+    texto: 'Entre para continuar seus estudos.',
     email: 'E-mail',
     senha: 'Senha',
     entrar: 'Entrar',

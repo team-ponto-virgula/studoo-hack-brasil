@@ -54,12 +54,12 @@ export function Entrada() {
   return (
     <div className="entrada">
       <main className="entrada-conteudo" id="conteudo-principal">
-        <div className="entrada-marca"><Logo /></div>
         <div className="entrada-forma">
-          <h1 className="entrada-titulo" aria-label={mensagens.login.titulo}>
-            <span>{mensagens.login.tituloAntesDaMarca}</span><Logo decorativo />
-          </h1>
-          <p className="introducao">{mensagens.login.instrucoes}</p>
+          <header className="entrada-cabecalho">
+            <Logo />
+            <h1>{mensagens.login.titulo}</h1>
+            <p className="introducao">{mensagens.login.instrucoes}</p>
+          </header>
           {verificando ? <Skeleton /> : (
             <form className="formulario" method="post" onSubmit={entrar} aria-busy={enviando}>
               <div className="campo">
