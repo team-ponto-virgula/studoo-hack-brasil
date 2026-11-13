@@ -1,16 +1,76 @@
-/* Pedido da trilha (spec 03 §1): pergunta grande com o Stu, campo amplo, sugestões tocáveis e "Gerar trilha". */
+/*
+ * Pedido da trilha (spec 03 §1): pergunta grande com o Stu, campo amplo com dica, ideias por área de interesse
+ * (qualquer assunto, não só programação), "Surpreenda-me" e "Gerar trilha".
+ */
 
-.painel--pedido { display: grid; gap: 24px; width: min(100%, 40rem); }
+.painel--pedido { display: grid; gap: 24px; width: min(100%, 44rem); }
 
 .pedido-topo {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: end;
   gap: 16px;
 }
 
-.pedido-topo .introducao { margin-top: 8px; }
-.pedido-topo .stu { width: 72px; }
+.pedido-topo .introducao { margin-top: 10px; }
+
+.pedido-como {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  margin-left: -8px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--acao);
+  background: transparent;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pedido-como:hover:not(:disabled) { background: var(--nevoa); }
+.pedido-como:disabled { color: var(--texto2); cursor: default; }
+
+.pedido-como__sinal {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--acao);
+  background: #e5ebff;
+  font-size: 0.8125rem;
+  font-weight: 900;
+}
+.pedido-stu { display: grid; justify-items: end; gap: 6px; }
+.pedido-stu .stu { width: 76px; }
+
+.pedido-stu__fala {
+  position: relative;
+  max-width: 9.5rem;
+  padding: 8px 12px;
+  border-radius: 14px;
+  color: var(--texto);
+  background: var(--ceu);
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+}
+
+.pedido-stu__fala::after {
+  content: '';
+  position: absolute;
+  right: 26px;
+  bottom: -5px;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--ceu);
+  rotate: 45deg;
+}
 
 /* Aviso neutro, como "Geração cancelada. Nada foi salvo."; o leitor de tela ouve o mesmo texto pela região de status. */
 .pedido-aviso {
@@ -20,49 +80,126 @@
   font-weight: 700;
 }
 
-.pedido-formulario { gap: 24px; }
-.pedido-formulario .campo textarea { min-height: 152px; font-size: 1.125rem; line-height: 1.45; }
+.pedido-formulario { gap: 28px; }
+.pedido-campo textarea { min-height: 148px; padding: 14px 18px; font-size: 1.125rem; line-height: 1.45; background: #fbfcff; }
+.pedido-dica { color: var(--texto) !important; font-weight: 700; }
 .pedido-contador { justify-self: end; }
 
-.pedido-sugestoes { display: grid; gap: 12px; min-width: 0; }
-.pedido-sugestoes__titulo { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
-.pedido-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pedido-sugestoes { display: grid; gap: 14px; min-width: 0; }
+.pedido-sugestoes__topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.pedido-sugestoes__titulo { font-family: Quicksand, sans-serif; font-size: 1.125rem; font-weight: 700; letter-spacing: -0.02em; }
 
-.pedido-chip {
+.pedido-surpresa {
   display: inline-flex;
   min-height: 44px;
-  max-width: 100%;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  border: 1px solid var(--gelo);
-  border-radius: var(--raio-campo);
+  padding: 8px 14px;
+  border: 2px solid #ffe3a3;
+  border-radius: 999px;
+  color: #7a4a00;
+  background: #fff7e0;
+  box-shadow: 0 3px 0 #ffe3a3;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.pedido-surpresa .desenho { --tam: 18px; }
+.pedido-surpresa:active:not(:disabled) { box-shadow: 0 1px 0 #ffe3a3; transform: translateY(2px); }
+.pedido-surpresa:disabled { color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); box-shadow: none; cursor: default; }
+
+/* Áreas: no celular, uma fileira que rola para o lado; na tela larga, quebram em linhas. */
+.pedido-temas {
+  display: flex;
+  gap: 8px;
+  margin-inline: calc(-1 * var(--espaco-pagina));
+  padding: 2px var(--espaco-pagina) 6px;
+  overflow-x: auto;
+  scroll-padding-inline: var(--espaco-pagina);
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+}
+
+.pedido-temas::-webkit-scrollbar { display: none; }
+
+.pedido-tema {
+  display: inline-flex;
+  flex: none;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 10px;
+  border: 2px solid var(--gelo);
+  border-radius: 999px;
   color: var(--texto);
   background: var(--fundo);
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: border-color 140ms ease-out, background-color 140ms ease-out, color 140ms ease-out;
+}
+
+.pedido-tema .desenho { --tam: 22px; }
+.pedido-tema[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f0f4ff; }
+.pedido-tema:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
+
+.pedido-exemplos { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+
+.pedido-exemplo {
+  display: grid;
+  width: 100%;
+  min-height: 60px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px 8px 8px;
+  border: 2px solid var(--gelo);
+  border-radius: 18px;
+  color: var(--texto);
+  background: var(--fundo);
+  box-shadow: 0 3px 0 var(--gelo);
   font-weight: 700;
   text-align: start;
-  overflow-wrap: anywhere;
   cursor: pointer;
-  transition: color 160ms ease-out, background-color 160ms ease-out, border-color 160ms ease-out;
+  transition: border-color 140ms ease-out, background-color 140ms ease-out, box-shadow 110ms ease-out, transform 110ms ease-out;
 }
 
-.pedido-chip .icone { width: 18px; height: 18px; }
-.pedido-chip[data-escolhida] { border-color: var(--acao); color: var(--acao); background: var(--nevoa); }
-.pedido-chip:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
-.pedido-chip:active:not(:disabled) { opacity: 0.82; }
+.pedido-exemplo__icone { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: var(--nevoa); }
+.pedido-exemplo__icone .desenho { --tam: 26px; }
+.pedido-exemplo__texto { overflow-wrap: anywhere; }
+.pedido-exemplo__acao { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; color: var(--texto2); }
+.pedido-exemplo__acao .icone { width: 18px; height: 18px; }
+.pedido-exemplo[data-escolhida] { border-color: var(--acao); background: #f3f6ff; box-shadow: 0 3px 0 #b9c7f5; }
+.pedido-exemplo[data-escolhida] .pedido-exemplo__acao { color: var(--fundo); background: var(--acao); }
+.pedido-exemplo:active:not(:disabled) { box-shadow: 0 1px 0 var(--gelo); transform: translateY(2px); }
+.pedido-exemplo:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
 
 @media (hover: hover) {
-  .pedido-chip:hover:not(:disabled) { border-color: var(--acao); background: var(--nevoa); }
+  .pedido-tema:hover:not(:disabled):not([aria-pressed='true']) { border-color: #c3cdf2; background: var(--nevoa); }
+  .pedido-exemplo:hover:not(:disabled):not([data-escolhida]) { border-color: #c3cdf2; }
+  .pedido-exemplo:hover:not(:disabled):not([data-escolhida]) .pedido-exemplo__acao { color: var(--acao); }
 }
 
-/* Tablet e computador: coluna centrada, Stu maior e "Gerar trilha" com largura de ação principal. */
+/* Tablet e computador: coluna centrada, Stu maior, áreas em linhas e ideias em duas colunas. */
 @media (min-width: 768px) {
   .painel--pedido { justify-self: center; gap: 28px; }
   .pedido-topo { gap: 24px; }
-  .pedido-topo .stu { width: 96px; }
+  .pedido-stu .stu { width: 96px; }
+  .pedido-temas { flex-wrap: wrap; margin-inline: 0; padding: 0; overflow: visible; }
+  .pedido-exemplos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pedido-formulario .acao-principal > .botao { min-width: 14rem; }
 }
 
 @media (min-width: 1024px) {
-  .pedido-topo .stu { width: 112px; }
+  .pedido-stu .stu { width: 108px; }
+}
+
+@media (max-width: 479px) {
+  .pedido-stu__fala { display: none; }
+  .pedido-stu .stu { width: 68px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pedido-exemplo:active:not(:disabled), .pedido-surpresa:active:not(:disabled) { transform: none; }
 }

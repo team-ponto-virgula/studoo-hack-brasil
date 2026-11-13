@@ -1,14 +1,19 @@
-/* Tela do plano: faixa do topo com título, progresso total e próximo passo; abaixo, o caminho (src/ui/caminho.css). */
+/*
+ * Tela do plano: faixa do topo com título, progresso total e próximo passo; abaixo, o mapa do mundo com o caminho
+ * (src/ui/caminho.css). No celular o mapa vai de uma borda à outra; no tablet e no computador, tem cantos arredondados.
+ */
 
-.painel--trilha { display: grid; gap: 32px; min-width: 0; }
+.painel--trilha { display: grid; gap: 24px; min-width: 0; }
 
 .trilha-cabecalho {
   display: grid;
   align-content: start;
   min-width: 0;
-  padding: 24px;
-  border-radius: var(--raio-bloco);
-  background: var(--nevoa);
+  padding: 22px 24px 24px;
+  border: 2px solid var(--gelo);
+  border-radius: 24px;
+  background: var(--fundo);
+  box-shadow: 0 4px 0 var(--gelo);
 }
 
 .trilha-resumo { min-width: 0; }
@@ -26,19 +31,23 @@
   line-clamp: 3;
 }
 
-.trilha-cabecalho .plano-progresso { max-width: none; margin-block: 20px 0; }
-.trilha-cabecalho progress { background: var(--fundo); }
-.trilha-cabecalho progress::-webkit-progress-bar { background: var(--fundo); }
+.trilha-cabecalho .plano-progresso { max-width: none; margin-block: 18px 0; }
+.trilha-cabecalho progress { height: 14px; background: var(--nevoa); }
+.trilha-cabecalho progress::-webkit-progress-bar { background: var(--nevoa); }
+.trilha-cabecalho progress::-webkit-progress-value { background: linear-gradient(90deg, var(--acao), #5b7cf0); }
+.progresso__legenda { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.progresso__percentual { color: var(--acao) !important; font-weight: 900 !important; }
 
 .trilha-proximo {
   display: grid;
   gap: 2px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid var(--gelo);
+  border-top: 2px solid var(--nevoa);
 }
 
 .trilha-proximo__rotulo, .trilha-proximo__detalhe { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+.trilha-proximo__rotulo { color: var(--acao); font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.8125rem; }
 .trilha-proximo__titulo { font-size: 1.0625rem; font-weight: 800; overflow-wrap: anywhere; }
 .trilha-proximo > .botao { justify-self: start; margin-top: 14px; }
 
@@ -47,7 +56,7 @@
   gap: 8px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid var(--gelo);
+  border-top: 2px solid var(--nevoa);
 }
 
 .trilha-concluida__titulo { display: flex; align-items: center; gap: 8px; color: var(--sucesso); font-weight: 800; }
@@ -64,6 +73,7 @@
  * fica presa ao fim da tela, com o andamento da IA e, no fim, Ajustar pedido e Começar.
  */
 .painel--geracao .trilha-cabecalho { grid-template-columns: minmax(0, 1fr); }
+.painel--geracao .contexto-tela { color: var(--acao); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
 .geracao-titulo { display: block; animation: geracao-titulo 200ms ease-out backwards; }
 .geracao-ia { margin-top: 16px; color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
 .geracao-origem { margin-top: 4px; color: var(--texto2); font-size: 0.875rem; overflow-wrap: anywhere; }
@@ -78,8 +88,8 @@
   display: flex;
   align-items: center;
   gap: 12px 16px;
-  padding: 16px 0 calc(16px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--gelo);
+  padding: 16px 0 calc(18px + env(safe-area-inset-bottom));
+  border-top: 2px solid var(--nevoa);
   background: var(--fundo);
 }
 
@@ -94,10 +104,11 @@
   .geracao-titulo { animation: none; }
 }
 
-/* Celular: o próximo passo vira o rodapé fixo, ao alcance do polegar. */
+/* Celular: o mapa ocupa a largura da tela e o próximo passo vira o rodapé fixo, ao alcance do polegar. */
 @media (max-width: 767px) {
-  .painel--trilha { gap: 28px; }
-  .trilha-cabecalho { padding: 20px; }
+  .painel--trilha { gap: 20px; }
+  .trilha-cabecalho { padding: 18px 20px 20px; }
+  .painel--trilha > .caminho { margin-inline: calc(-1 * var(--espaco-pagina)); }
 
   .trilha-proximo {
     position: fixed;
@@ -108,12 +119,12 @@
     align-items: center;
     column-gap: 12px;
     margin: 0;
-    padding: 12px max(20px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-    border-top: 1px solid var(--gelo);
+    padding: 12px max(20px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    border-top: 2px solid var(--nevoa);
     background: var(--fundo);
   }
 
-  .trilha-proximo__rotulo { grid-area: rotulo; font-size: 0.8125rem; }
+  .trilha-proximo__rotulo { grid-area: rotulo; font-size: 0.75rem; }
   .trilha-proximo__titulo { grid-area: titulo; overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
   .trilha-proximo__detalhe { display: none; }
   .trilha-proximo > .botao { grid-area: botao; margin: 0; }
@@ -122,7 +133,7 @@
     position: fixed;
     inset: auto 0 0;
     gap: 12px;
-    padding: 12px max(20px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    padding: 12px max(20px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   }
 
   /* Trilha pronta: os dois botões dividem o rodapé; o andamento já foi dito no caminho e ao leitor de tela. */
@@ -135,7 +146,7 @@
   .painel--trilha { width: min(100%, 36rem); margin-inline: auto; }
 }
 
-/* Computador: faixa larga no topo, com o próximo passo à direita; o caminho segue centrado abaixo. */
+/* Computador: faixa larga no topo, com o próximo passo à direita; o mapa usa a largura toda, com o caminho no centro. */
 @media (min-width: 1024px) {
   .painel--trilha { width: min(100%, 52rem); justify-self: center; }
 
@@ -143,7 +154,7 @@
     grid-template-columns: minmax(0, 1fr) 16rem;
     align-items: center;
     column-gap: 32px;
-    padding: 28px 32px;
+    padding: 26px 32px 28px;
   }
 
   .trilha-cabecalho .introducao { max-width: 60ch; }
@@ -152,9 +163,9 @@
     margin: 0;
     padding: 4px 0 4px 32px;
     border-top: 0;
-    border-left: 1px solid var(--gelo);
+    border-left: 2px solid var(--nevoa);
   }
 
   .trilha-proximo > .botao { justify-self: stretch; }
-  .painel--trilha > .caminho, .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
+  .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
 }

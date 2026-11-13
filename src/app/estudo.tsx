@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
 import {
   ErroStudoo,
-  LIMITES_GERACAO,
   type Avaliacao,
   type LicaoDetalhe,
   type PlanoDetalhe,
@@ -17,21 +16,25 @@ import {
   AcaoPrincipal,
   Botao,
   Caminho,
+  Desenho,
   EstadoErro,
   EstadoVazio,
   Icone,
   Logo,
   Skeleton,
   SkeletonTrilha,
-  Stu,
+  coresDaRegiao,
+  regiaoDoTrecho,
   type NoCaminho,
 } from '../ui';
+import { Apresentacao, apresentacaoVista, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
+import { Pedido } from './pedido';
 import './aula.css';
-import './pedido.css';
 import './trilha.css';
 
 type Tela =
+  | { tipo: 'apresentacao'; primeiraVez: boolean }
   | { tipo: 'planos' }
   | { tipo: 'objetivo' }
   | { tipo: 'geracao' }
@@ -70,6 +73,8 @@ export function Estudo() {
       const ativos = await cliente.listarPlanos();
       if (cancelado()) return;
       setPlanos(ativos);
+      // No primeiro acesso, sem planos, a apresentação vem antes do pedido.
+      if (ativos.length === 0 && !apresentacaoVista()) setTela({ tipo: 'apresentacao', primeiraVez: true });
       setInicio('pronto');
     } catch (falha) {
       if (cancelado()) return;
@@ -279,6 +284,12 @@ export function Estudo() {
     if (resultado.ok) irParaLogin();
   }
 
+  /** Fim da apresentação (concluída ou pulada): não aparece mais neste navegador e o pedido abre. */
+  function concluirApresentacao() {
+    marcarApresentacaoVista();
+    navegar({ tipo: 'objetivo' });
+  }
+
   const ocupado = pendente !== null;
   const planoAtual = 'plano' in tela ? tela.plano.id : null;
   const carregandoTrilha = pendente === 'plano';
@@ -325,6 +336,11 @@ export function Estudo() {
             <span aria-hidden="true">+</span> {mensagens.planos.novo}
           </Botao>
         </nav>
+        <div className="navegacao-rodape">
+          <Botao variante="texto" onClick={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
+            {mensagens.pedido.comoFunciona}
+          </Botao>
+        </div>
       </aside>
 
       <div className="estudo-pagina">
@@ -342,22 +358,23 @@ export function Estudo() {
           {erro && <EstadoErro codigo={erro} />}
           {carregandoTrilha && <SkeletonTrilha />}
           {carregandoLicao && <SkeletonLicao texto={pendente === 'aceitar' ? mensagens.geracao.comecando : mensagens.licao.carregando} />}
+          {visivel && tela.tipo === 'apresentacao' && (
+            <Apresentacao primeiraVez={tela.primeiraVez} concluir={concluirApresentacao} />
+          )}
           {visivel && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
             <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0}
               aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
-              verPlanos={() => navegar({ tipo: 'planos' })} />
+              verPlanos={() => navegar({ tipo: 'planos' })}
+              comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} />
           )}
           {visivel && tela.tipo === 'planos' && planos.length > 0 && (
-            <section className="painel">
+            <section className="painel painel--planos">
               <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
+              <p className="introducao">{mensagens.planos.subtitulo}</p>
               <ul className="planos-ativos">
-                {planos.map((plano) => (
+                {planos.map((plano, indice) => (
                   <li key={plano.id}>
-                    <div>
-                      <h2>{plano.titulo}</h2>
-                      <BarraProgresso progresso={plano.progresso} />
-                    </div>
-                    <Botao variante="secundario" aria-label={`${mensagens.planos.abrir} ${plano.titulo}`} disabled={ocupado} onClick={() => void abrirPlano(plano.id)}>{mensagens.planos.abrir}</Botao>
+                    <CartaoPlano plano={plano} regiao={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)} />
                   </li>
                 ))}
               </ul>
@@ -390,7 +407,7 @@ export function Estudo() {
   );
 }
 
-function BarraProgresso({ progresso }: { progresso: Progresso }) {
+function BarraProgresso({ progresso, comPercentual = false }: { progresso: Progresso; comPercentual?: boolean }) {
   if (progresso.percentual === null) return <span className="progresso-vazio">{mensagens.planos.semProgresso}</span>;
 
   const texto = mensagens.planos.contagem(progresso.concluidas, progresso.total);
@@ -398,105 +415,46 @@ function BarraProgresso({ progresso }: { progresso: Progresso }) {
   return (
     <div className="progresso">
       <progress aria-label={texto} value={progresso.concluidas} max={progresso.total} />
-      <span>{texto}</span>
+      <span className="progresso__legenda">
+        <span>{texto}</span>
+        {comPercentual && <span className="progresso__percentual" aria-hidden="true">{mensagens.trilha.percentual(progresso.percentual)}</span>}
+      </span>
     </div>
   );
 }
 
-/** Pedido da trilha: a pessoa escreve o que quer aprender, ou toca numa sugestão, e gera a trilha ao vivo. */
-function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, aoMudar, anunciar, gerar, verPlanos }: {
-  objetivo: string;
-  ocupado: boolean;
-  aviso: string | null;
-  falha: string | null;
-  temPlanos: boolean;
-  aoMudar: (texto: string) => void;
-  anunciar: (texto: string) => void;
-  gerar: (texto: string) => void;
-  verPlanos: () => void;
-}) {
-  const [curto, setCurto] = useState(false);
-  const campo = useRef<HTMLTextAreaElement>(null);
-  const texto = objetivo.trim();
-  const mostrarCurto = curto && texto.length < LIMITES_GERACAO.objetivoMin;
-  const mostrarContador = objetivo.length >= LIMITES_GERACAO.objetivoMax - 100;
-  const descricao = [mostrarCurto && 'objetivo-erro', 'objetivo-privacidade', mostrarContador && 'objetivo-contador']
-    .filter(Boolean).join(' ');
-  const repetivel = falha === 'ia_indisponivel' || falha === 'falha' || falha === 'rede';
-
-  function tentar() {
-    if (ocupado || !texto) return;
-    if (texto.length < LIMITES_GERACAO.objetivoMin) {
-      setCurto(true);
-      campo.current?.focus();
-      return;
-    }
-    gerar(texto);
-  }
-
-  function enviar(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    tentar();
-  }
-
-  function sugerir(exemplo: string) {
-    aoMudar(exemplo);
-    setCurto(false);
-    anunciar(mensagens.pedido.sugestaoAplicada(exemplo));
-  }
+/**
+ * Cartão de um plano em Meus planos: uma faixa do mundo (cada plano numa região, para os cartões não ficarem iguais),
+ * o título, o progresso e a ação que cabe: começar, continuar ou rever a trilha concluída.
+ */
+function CartaoPlano({ plano, regiao, ocupado, abrir }: { plano: PlanoResumo; regiao: number; ocupado: boolean; abrir: () => void }) {
+  const { concluidas, total } = plano.progresso;
+  const concluido = total > 0 && concluidas === total;
+  let acao: string = mensagens.planos.continuar;
+  if (concluido) acao = mensagens.planos.rever;
+  else if (concluidas === 0) acao = mensagens.planos.comecar;
+  const enfeites = regiaoDoTrecho(regiao).enfeites;
 
   return (
-    <section className="painel painel--pedido">
-      <div className="pedido-topo">
-        <div>
-          <h1 tabIndex={-1}>{mensagens.pedido.titulo}</h1>
-          <p className="introducao">{mensagens.pedido.instrucoes}</p>
-        </div>
-        <Stu />
+    <article className="plano-cartao">
+      <div className="plano-cartao__cena" style={coresDaRegiao(regiao)} aria-hidden="true">
+        <span className="plano-cartao__colina" />
+        <Desenho nome={enfeites[0]} />
+        <Desenho nome={enfeites[1]} />
+        <Desenho nome={enfeites[3]} />
+        <Desenho nome={enfeites[2]} />
+        {concluido && <span className="plano-cartao__selo"><Icone nome="trofeu" />{mensagens.planos.concluido}</span>}
       </div>
-      {aviso && <p className="pedido-aviso">{aviso}</p>}
-      {falha && (
-        <EstadoErro codigo={falha}>
-          {repetivel && <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>}
-          {falha === 'limite_geracoes' && temPlanos && <Botao variante="secundario" disabled={ocupado} onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>}
-        </EstadoErro>
-      )}
-      <form className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
-        <div className="campo">
-          <label htmlFor="objetivo">{mensagens.pedido.objetivo}</label>
-          <textarea ref={campo} id="objetivo" name="objetivo" rows={4} maxLength={LIMITES_GERACAO.objetivoMax} required
-            value={objetivo} disabled={ocupado} aria-invalid={mostrarCurto || undefined} aria-describedby={descricao}
-            onChange={(evento) => aoMudar(evento.target.value)} />
-          {mostrarCurto && (
-            <p className="campo-erro" id="objetivo-erro">
-              <span className="sinal" aria-hidden="true">!</span>{mensagens.pedido.curto(LIMITES_GERACAO.objetivoMin)}
-            </p>
-          )}
-          <small id="objetivo-privacidade">{mensagens.pedido.privacidade}</small>
-          {mostrarContador && (
-            <small className="pedido-contador" id="objetivo-contador">
-              {mensagens.pedido.contador(objetivo.length, LIMITES_GERACAO.objetivoMax)}
-            </small>
-          )}
+      <div className="plano-cartao__corpo">
+        <div>
+          <h2>{plano.titulo}</h2>
+          <BarraProgresso progresso={plano.progresso} />
         </div>
-        <div className="pedido-sugestoes" role="group" aria-labelledby="pedido-sugestoes">
-          <p className="pedido-sugestoes__titulo" id="pedido-sugestoes">{mensagens.pedido.sugestoes}</p>
-          <div className="pedido-chips">
-            {mensagens.pedido.exemplos.map((exemplo) => {
-              const escolhida = texto === exemplo;
-              return (
-                <button key={exemplo} type="button" className="pedido-chip" data-escolhida={escolhida || undefined}
-                  disabled={ocupado} onClick={() => sugerir(exemplo)}>
-                  {escolhida && <Icone nome="check" />}
-                  {exemplo}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        <AcaoPrincipal><Botao type="submit" disabled={ocupado || !texto}>{mensagens.pedido.gerar}</Botao></AcaoPrincipal>
-      </form>
-    </section>
+        <Botao variante={concluido ? 'secundario' : 'primario'} aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
+          {acao}<Icone nome="seta" />
+        </Botao>
+      </div>
+    </article>
   );
 }
 
@@ -635,7 +593,7 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
         <div className="trilha-resumo">
           <h1 tabIndex={-1}>{plano.titulo}</h1>
           {!repeteTitulo(plano.titulo, plano.objetivo) && <p className="introducao">{plano.objetivo}</p>}
-          <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} /></div>
+          <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} comPercentual /></div>
         </div>
         {proximo && (
           <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id}
@@ -813,13 +771,20 @@ function LicaoConcluida({ plano, licao, liberadas, ocupado, abrirLicao, voltar }
 
   return (
     <section className="painel painel--concluida">
-      <div className="conclusao-sinal" aria-hidden="true"><Icone nome="check" /></div>
+      <div className="conclusao-cena" aria-hidden="true">
+        <Desenho nome="estrela" className="conclusao-brilho" />
+        <Desenho nome="estrela" className="conclusao-brilho" />
+        <Desenho nome="estrela" className="conclusao-brilho" />
+        <Desenho nome="estrela" className="conclusao-brilho" />
+        <span className="conclusao-sinal"><Icone nome="check" /></span>
+      </div>
       <h1 tabIndex={-1}>{mensagens.licao.concluida}</h1>
+      <p className="conclusao-texto">{mensagens.licao.comemoracao}</p>
       <p className="introducao">{licao.titulo}</p>
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}
       <div className="conclusao-progresso">
         <h2>{mensagens.planos.progressoPlano}</h2>
-        <BarraProgresso progresso={plano.progresso} />
+        <BarraProgresso progresso={plano.progresso} comPercentual />
       </div>
       <div className="acoes-tela">
         {proxima && <Botao variante="secundario" disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
