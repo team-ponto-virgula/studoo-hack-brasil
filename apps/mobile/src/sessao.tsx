@@ -1,9 +1,9 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { BackHandler, Image, Keyboard, Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
+import { AccessibilityInfo, BackHandler, Image, Keyboard, Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Estudo } from './estudo';
-import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos } from './interface';
+import { Botao, Campo, EstadoMensagem, Logo, Skeleton, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { cores } from './tema';
 
@@ -131,7 +131,12 @@ function Entrada({ erroInicial, entrar, voltar }: {
   const [ocupado, setOcupado] = useState(false);
   const emEnvio = useRef(false);
   const campoSenha = useRef<ComponentRef<typeof TextInput>>(null);
+  const titulo = useRef<ComponentRef<typeof View>>(null);
   const podeEntrar = !!email.trim() && !!senha && !ocupado;
+
+  useEffect(() => {
+    if (titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus');
+  }, []);
 
   useEffect(() => {
     const assinatura = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -164,7 +169,11 @@ function Entrada({ erroInicial, entrar, voltar }: {
       acoes={<Botao rotulo={mensagens.voltar} testID="voltar-boas-vindas" variante="texto" compacto desativado={ocupado} acao={voltar} />}
       rodape={<Botao rotulo={ocupado ? mensagens.entrada.entrando : mensagens.entrada.entrar}
         testID="entrar" desativado={!podeEntrar} ocupado={ocupado} acao={() => void enviar()} />}>
-      <Titulo testID="titulo-entrada" foco>{mensagens.entrada.titulo}</Titulo>
+      <View ref={titulo} testID="titulo-entrada" accessible accessibilityRole="header"
+        accessibilityLabel={mensagens.entrada.titulo} style={entradaEstilos.titulo}>
+        <Text accessible={false} importantForAccessibility="no" style={estilos.titulo}>{mensagens.entrada.inicioTitulo}</Text>
+        <Logo decorativo estilo={entradaEstilos.logoTitulo} />
+      </View>
       <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
       <View style={entradaEstilos.formulario}>
         <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email}
@@ -187,5 +196,7 @@ function Entrada({ erroInicial, entrar, voltar }: {
 const entradaEstilos = StyleSheet.create({
   arte: { minHeight: 160, alignItems: 'center', justifyContent: 'center', padding: 12, marginBottom: 24, borderRadius: 20, backgroundColor: cores.nevoa },
   stu: { width: 116, height: 128 },
+  titulo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
+  logoTitulo: { width: 124, height: 41 },
   formulario: { gap: 16, marginTop: 24 },
 });

@@ -101,10 +101,40 @@ export function avaliarResposta(exercicio: ExercicioInterno, resposta: string) {
     return null;
   }
 
-  const correta = exercicio.gabarito.includes(valor);
+  const correta = exercicio.tipo === "lacuna"
+    ? exercicio.gabarito.some((esperado) => esperado.toLocaleLowerCase("pt-BR") === valor.toLocaleLowerCase("pt-BR"))
+    : exercicio.gabarito.includes(valor);
   return { correta, feedback: correta ? exercicio.feedbackCorreto : exercicio.feedbackIncorreto };
 }
 
 export function calcularProgresso(concluidas: number, total: number): Progresso {
   return { concluidas, total, percentual: total === 0 ? null : (concluidas / total) * 100 };
+}
+
+/** Estrutura de uma proposta: títulos, sem o conteúdo das lições. É o que o token da proposta carrega. */
+export type EsqueletoPlano = {
+  gerador: string;
+  titulo: string;
+  objetivo: string;
+  origem: string;
+  fluxos: { titulo: string; licoes: { titulo: string }[] }[];
+};
+
+export const LIMITES_ESQUELETO = { fluxos: 8, licoesPorFluxo: 8, titulo: 200, objetivo: 1000 } as const;
+
+function textoAte(valor: unknown, maximo: number): valor is string {
+  return texto(valor) && valor.length <= maximo;
+}
+
+export function esqueletoValido(valor: unknown): valor is EsqueletoPlano {
+  if (!objeto(valor) || !textoAte(valor.gerador, 40) || !textoAte(valor.titulo, LIMITES_ESQUELETO.titulo) ||
+      !textoAte(valor.objetivo, LIMITES_ESQUELETO.objetivo) || !textoAte(valor.origem, LIMITES_ESQUELETO.titulo) ||
+      !Array.isArray(valor.fluxos) || valor.fluxos.length === 0 || valor.fluxos.length > LIMITES_ESQUELETO.fluxos) {
+    return false;
+  }
+
+  return valor.fluxos.every((fluxo) =>
+    objeto(fluxo) && textoAte(fluxo.titulo, LIMITES_ESQUELETO.titulo) && Array.isArray(fluxo.licoes) &&
+    fluxo.licoes.length > 0 && fluxo.licoes.length <= LIMITES_ESQUELETO.licoesPorFluxo &&
+    fluxo.licoes.every((licao) => objeto(licao) && textoAte(licao.titulo, LIMITES_ESQUELETO.titulo)));
 }

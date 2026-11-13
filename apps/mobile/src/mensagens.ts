@@ -1,5 +1,4 @@
-import { ErroStudoo } from '@studoo/contratos';
-import { FalhaMobile } from './api-nativa';
+import { codigoDaFalha } from './api-nativa';
 
 export const mensagens = {
   marca: 'Studoo',
@@ -14,6 +13,7 @@ export const mensagens = {
   },
   entrada: {
     titulo: 'Entre no Studoo',
+    inicioTitulo: 'Entre no',
     texto: 'Use a conta do piloto para abrir seus planos de estudo.',
     email: 'E-mail',
     senha: 'Senha',
@@ -24,34 +24,82 @@ export const mensagens = {
     titulo: 'Meus planos',
     novo: 'Novo plano',
     abrir: 'Abrir plano',
-    comecar: 'Começar fluxo',
-    retomar: 'Retomar fluxo',
-    escolher: 'Escolha um fluxo para estudar ou retomar.',
-    concluido: 'Fluxo concluído',
-    semLicoes: 'Este fluxo ainda está sem lições.',
     progresso: (concluidas: number, total: number) => `${concluidas} de ${total} ${total === 1 ? 'lição concluída' : 'lições concluídas'}`,
     semProgresso: '—',
   },
-  objetivo: {
-    titulo: 'O que você quer aprender?',
-    instrucao: 'Conte o que quer estudar e o que já sabe sobre o assunto.',
-    campo: 'Seu objetivo de estudo',
-    placeholder: 'Quero praticar filtros e junções em SQL…',
-    exemplo: 'Já sei usar SELECT e quero praticar filtros e junções para uma prova de SQL.',
-    usarExemplo: 'Usar exemplo de SQL',
-    aviso: 'Descreva o que quer estudar sem incluir dados pessoais.',
-    gerar: 'Gerar plano',
-    gerando: 'Preparando seu plano…',
+  trilha: {
+    carregando: 'Carregando sua trilha',
+    licoes: 'Lições da trilha',
+    semLicoes: 'Este plano ainda está sem lições. Crie um novo plano para começar a estudar.',
+    posicao: (licao: number, total: number) => `Lição ${licao} de ${total}`,
+    posicaoParcial: (licao: number) => `Lição ${licao}`,
+    estados: {
+      concluida: 'Concluída',
+      atual: 'Atual',
+      bloqueada: 'Bloqueada',
+      previa: 'Na prévia',
+    },
+    abrindo: 'Abrindo…',
+    comecar: 'Começar',
+    nomeNo: (titulo: string, posicao: string, estado: string) => `${titulo}. ${posicao}, ${estado}.`,
+    nomeNoAtual: (titulo: string, posicao: string) => `Começar: ${titulo}. ${posicao}, atual.`,
+    fechar: 'Fechar',
+    concluidaTexto: 'Você concluiu esta lição. Refazer não muda seu progresso.',
+    refazer: 'Refazer lição',
+    bloqueadaUma: (anterior: string) => `Conclua “${anterior}” para liberar esta lição.`,
+    bloqueadaVarias: (faltam: number, anterior: string) => `Faltam ${faltam} lições antes desta. Comece por “${anterior}”.`,
+    bloqueadaSemPasso: 'Conclua as lições anteriores do caminho para liberar esta.',
+    liberada: (titulo: string) => `Lição liberada: ${titulo}.`,
+    liberadaNaTrilha: (titulo: string) => `Liberada na trilha: ${titulo}`,
+    proxima: 'Próxima lição',
+    comecarLicao: 'Começar lição',
+    concluido: 'Plano concluído',
+    concluidoTexto: 'Você concluiu todas as lições deste plano. Refaça qualquer uma pela trilha ou crie um novo plano.',
+    revisitando: 'Você já concluiu esta lição. Refazer não muda seu progresso.',
+    stuInicio: 'Comece pela primeira lição. Cada uma libera a próxima.',
+    stuMeio: 'Continue de onde parou. A próxima lição já está liberada.',
+    stuFim: 'Você chegou ao fim da trilha!',
+    marco: (numero: number) => `Marco ${numero}`,
+    chegada: 'Fim da trilha',
+    chegadaFeita: 'Trilha concluída',
   },
-  proposta: {
-    tipo: 'Prévia de IA simulada',
-    origem: 'Origem',
-    fluxos: 'Fluxos de estudo',
-    editar: 'Editar objetivo',
-    aceitar: 'Aceitar plano',
-    aceitando: 'Salvando plano…',
+  pedido: {
+    titulo: 'O que você quer aprender?',
+    instrucoes: 'Conte o tema e o que você já sabe. A IA do Studoo monta uma trilha de lições curtas, e você confere antes de começar.',
+    objetivo: 'Seu objetivo de estudo',
+    privacidade: 'Descreva só o que quer estudar, sem incluir dados pessoais.',
+    curto: (minimo: number) => `Escreva pelo menos ${minimo} caracteres para a IA entender o que você quer estudar.`,
+    contador: (usados: number, maximo: number) => `${usados} de ${maximo} caracteres`,
+    sugestoes: 'Sugestões para começar',
+    exemplos: ['SQL para a prova', 'Frações', 'Inglês para entrevista'],
+    sugestaoAplicada: (texto: string) => `Objetivo preenchido: ${texto}.`,
+    gerar: 'Gerar trilha',
+    cancelada: 'Geração cancelada. Nada foi salvo.',
+    verPlanos: 'Ver meus planos',
+  },
+  geracao: {
+    contexto: 'Nova trilha',
+    montandoTitulo: 'Montando sua trilha',
+    montando: 'Montando a trilha',
+    pronta: 'Trilha pronta',
+    contagem: (total: number) => total === 0
+      ? 'Preparando as lições…'
+      : `${total} ${total === 1 ? 'lição' : 'lições'} até agora`,
+    contagemFinal: (total: number) => `${total} ${total === 1 ? 'lição' : 'lições'}`,
+    stuMontando: 'Montando sua trilha, uma lição de cada vez…',
+    stuPronta: 'Confira o caminho e comece quando quiser.',
+    ia: 'Gerada por IA a partir do seu pedido. Confira as lições antes de começar.',
+    origem: (origem: string) => `Origem: ${origem}`,
+    cancelar: 'Cancelar',
+    comecar: 'Começar',
+    comecando: 'Preparando sua trilha…',
+    ajustar: 'Ajustar pedido',
+    anuncioTitulo: (titulo: string) => `Trilha: ${titulo}. As lições vão aparecer uma a uma.`,
+    anuncioPronta: (total: number) => `Trilha pronta, com ${total} ${total === 1 ? 'lição' : 'lições'}. Escolha Começar para salvar a trilha e abrir a primeira lição.`,
   },
   licao: {
+    carregando: 'Abrindo a lição',
+    origem: 'Origem',
     conceito: 'Conceito',
     exemplo: 'Exemplo resolvido',
     exercicio: 'Exercício',
@@ -64,19 +112,20 @@ export const mensagens = {
     concluindo: 'Registrando conclusão…',
     concluida: 'Lição concluída',
     avancar: 'Ir para a próxima lição',
-    voltar: 'Voltar ao plano',
+    voltar: 'Voltar à trilha',
     progresso: 'Progresso no plano',
   },
   erros: {
     invalido: 'Confira o que você escreveu e tente novamente.',
     objetivo_fora_do_piloto: 'Experimente um objetivo sobre SQL, como praticar filtros para uma prova.',
-    proposta_invalida: 'Esta prévia expirou. Edite o objetivo e gere outra proposta.',
+    proposta_invalida: 'Esta prévia expirou. Ajuste o pedido e gere a trilha de novo.',
     avaliacao_invalida: 'A confirmação expirou. Envie a resposta novamente.',
     credenciais_invalidas: 'E-mail ou senha inválidos.',
     limite_login: 'E-mail ou senha inválidos.',
     nao_autenticado: 'Sua sessão terminou. Entre para continuar.',
     nao_encontrado: 'Este conteúdo não está disponível. Volte aos seus planos.',
     ia_indisponivel: 'A geração está indisponível agora. Tente novamente.',
+    limite_geracoes: 'Por agora, o limite de novas trilhas foi atingido. Tente de novo mais tarde. Seus planos salvos continuam disponíveis.',
     falha: 'Não foi possível continuar. Tente novamente.',
     conexao: 'Confira a conexão e tente novamente.',
     configuracao: 'O app precisa do endereço HTTPS do servidor do piloto.',
@@ -84,10 +133,13 @@ export const mensagens = {
   },
 } as const;
 
+/** Texto de um código de erro da API ou do app; fora deles, a falha genérica. */
+export function mensagemDoCodigo(codigo: string) {
+  return Object.hasOwn(mensagens.erros, codigo)
+    ? mensagens.erros[codigo as keyof typeof mensagens.erros]
+    : mensagens.erros.falha;
+}
+
 export function mensagemDeErro(erro: unknown) {
-  if (erro instanceof ErroStudoo || erro instanceof FalhaMobile) {
-    const codigo = erro.codigo;
-    if (Object.hasOwn(mensagens.erros, codigo)) return mensagens.erros[codigo as keyof typeof mensagens.erros];
-  }
-  return mensagens.erros.falha;
+  return mensagemDoCodigo(codigoDaFalha(erro));
 }

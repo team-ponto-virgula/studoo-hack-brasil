@@ -147,3 +147,22 @@
 @media (prefers-reduced-motion: reduce) {
   .aula-rodape__conteudo > .botao:active:not(:disabled) { transform: none; }
 }
+
+.aula-revisao { display: flex; align-items: center; gap: 8px; color: var(--sucesso); font-size: 0.875rem; font-weight: 800; }
+.aula-revisao .icone { width: 18px; height: 18px; }
+
+/* Carregando a lição: a forma da aula, com o mesmo leiaute do topo, do quadro e do rodapé. */
+.skeleton-licao span { display: block; background: var(--gelo); }
+.skeleton-licao__fechar { width: 44px; height: 44px; border-radius: 14px; }
+.skeleton-licao__progresso { height: 14px; border-radius: 999px; }
+.skeleton-licao__titulo { width: 72%; height: 36px; border-radius: 8px; }
+.skeleton-licao__linha { width: 56%; height: 16px; border-radius: 8px; }
+.skeleton-licao__quadro { border-color: transparent; background: var(--nevoa); }
+.skeleton-licao__quadro span { height: 16px; border-radius: 8px; background: var(--fundo); }
+.skeleton-licao__quadro span:first-child { width: 32%; height: 20px; }
+.skeleton-licao__quadro span:last-child { width: 64%; }
+.skeleton-licao__botao { width: min(100%, 11rem); height: 52px; border-radius: 15px; }
+
+@media (max-width: 767px) {
+  .skeleton-licao__botao { width: 100%; }
+}

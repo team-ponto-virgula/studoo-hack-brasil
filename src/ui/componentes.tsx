@@ -1,15 +1,13 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 
-export function Logo({ animado = false }: { animado?: boolean }) {
+export function Logo({ decorativo = false }: { decorativo?: boolean }) {
   return (
-    <img
-      className="logo"
-      src={animado ? '/marca/logo-animado.svg' : '/marca/logo-com-sorriso.svg'}
-      width={140}
-      height={46}
-      alt={mensagens.nome}
-    />
+    <picture className="logo-quadro">
+      <source media="(prefers-reduced-motion: reduce)" srcSet="/marca/logo-com-sorriso.svg" />
+      <img className="logo" src="/marca/logo-animado.svg" width={140} height={46}
+        alt={decorativo ? '' : mensagens.nome} />
+    </picture>
   );
 }
 

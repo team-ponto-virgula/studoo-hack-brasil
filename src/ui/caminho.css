@@ -1,0 +1,420 @@
+/*
+ * Caminho da trilha: um só caminho contínuo, nós que alternam de lado, um marco discreto entre trechos,
+ * o Stu no começo e a chegada no fim (DESIGN §4, §6, §7, §9, §13).
+ */
+
+.icone { display: block; flex: none; width: 24px; height: 24px; }
+
+.caminho {
+  --lente-base: 64px;
+  --gap-linhas: 48px;
+  --folga-etiqueta: 56px;
+  --folga-marco: 48px;
+  min-width: 0;
+}
+
+/* Stu abre o caminho do lado oposto ao primeiro nó, com uma frase curta ao lado (sem balão de fala). */
+.caminho-stu {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 8px;
+}
+
+.caminho-stu p {
+  max-width: 20rem;
+  color: var(--texto2);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: end;
+}
+
+.caminho-stu .stu { flex: none; width: 64px; height: auto; }
+
+.caminho-nos {
+  display: grid;
+  gap: var(--gap-linhas);
+  margin: 0;
+  padding: 32px 0 8px;
+  list-style: none;
+}
+
+/* Espaço para o rótulo "Começar" quando o nó atual abre o caminho. */
+.caminho-nos:has(> .caminho-no:first-child[data-estado='atual']) { padding-top: calc(var(--folga-etiqueta) + 8px); }
+.caminho:has(> .caminho-chegada) > .caminho-nos { padding-bottom: 0; }
+
+.caminho-no {
+  --lente: var(--lente-base);
+  --margem: calc(25% - var(--lente) / 2);
+  --depois: 0px;
+  position: relative;
+  z-index: 0;
+  min-width: 0;
+  margin-bottom: var(--depois);
+}
+
+/* Folgas depois do nó: o rótulo "Começar" do próximo nó e o marco de fim de trecho ganham espaço próprio. */
+.caminho-no:has(+ .caminho-no[data-estado='atual']) { --depois: var(--folga-etiqueta); }
+.caminho-no[data-fim-trecho] { --depois: var(--folga-marco); }
+.caminho-no[data-fim-trecho]:has(+ .caminho-no[data-estado='atual']) { --depois: calc(var(--folga-marco) + var(--folga-etiqueta)); }
+/* Cada nó é uma camada própria; o nó com balão aberto fica acima dos vizinhos e abaixo do rodapé fixo. */
+.caminho-no[data-aberto] { z-index: 1; }
+
+.caminho-no__alvo {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--margem) var(--lente) minmax(0, 1fr);
+  grid-template-areas: '. lente texto';
+  align-items: start;
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-campo);
+  color: var(--texto);
+  background: transparent;
+  text-align: start;
+  cursor: pointer;
+}
+
+.caminho-no[data-lado='direita'] .caminho-no__alvo {
+  grid-template-columns: minmax(0, 1fr) var(--lente) var(--margem);
+  grid-template-areas: 'texto lente .';
+  text-align: end;
+}
+
+div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
+
+/* O anel de foco vai para a lente, que é o que a pessoa enxerga como o nó. */
+.caminho-no__alvo:focus-visible { outline: none; }
+.caminho-no__alvo:focus-visible .caminho-no__lente { outline: 3px solid var(--acao); outline-offset: 4px; }
+.caminho-no[data-estado='atual'] .caminho-no__alvo:focus-visible .caminho-no__lente { outline-offset: 14px; }
+
+.caminho-no__alvo:focus-visible .caminho-no__titulo {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+.caminho-no__lente {
+  position: relative;
+  display: grid;
+  grid-area: lente;
+  width: var(--lente);
+  height: var(--lente);
+  place-items: center;
+  border: 3px solid var(--gelo);
+  border-radius: 50%;
+  color: var(--texto2);
+  background: var(--nevoa);
+  transition: opacity 120ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+}
+
+.caminho-no__lente > .icone { width: 44%; height: 44%; }
+.caminho-no[data-estado='concluida'] .caminho-no__lente {
+  border-color: var(--sucesso);
+  color: var(--fundo);
+  background: var(--sucesso);
+}
+
+.caminho-no[data-estado='atual'] .caminho-no__lente { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
+.caminho-no[data-estado='previa'] .caminho-no__lente { color: var(--acao); background: var(--fundo); }
+
+/* Halo do nó atual: entra uma vez, não pulsa. */
+.caminho-no[data-estado='atual'] .caminho-no__lente::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+  border: 6px solid var(--gelo);
+  border-radius: 50%;
+  animation: caminho-halo 240ms ease-out backwards;
+}
+
+/* No toque, a lente usa a mesma opacidade de pressionado do botão, sem relevo nem sombra (DESIGN §4). */
+.caminho-no__alvo:active:not(:disabled) .caminho-no__lente { opacity: 0.82; }
+
+.caminho-no__etiqueta {
+  position: absolute;
+  bottom: calc(100% + 20px);
+  left: 50%;
+  z-index: 1;
+  padding: 6px 12px;
+  border-radius: var(--raio-campo);
+  color: var(--fundo);
+  background: var(--texto);
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+  translate: -50% 0;
+  animation: caminho-etiqueta 200ms ease-out 120ms backwards;
+}
+
+.caminho-no__etiqueta::after {
+  content: '';
+  position: absolute;
+  top: calc(100% - 6px);
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--texto);
+  translate: -50% 0;
+  rotate: 45deg;
+}
+
+/* Cadeado que se abre quando a pessoa volta de uma lição concluída. */
+.caminho-no__cadeado {
+  position: absolute;
+  inset: -3px;
+  display: grid;
+  place-items: center;
+  border: 3px solid var(--gelo);
+  border-radius: 50%;
+  color: var(--texto2);
+  background: var(--nevoa);
+  opacity: 0;
+  animation: caminho-abrir 200ms ease-out 160ms backwards;
+}
+
+.caminho-no__cadeado > .icone { width: 44%; height: 44%; }
+.caminho-no[data-liberada] .caminho-no__lente { animation: caminho-liberar 240ms ease-out 340ms backwards; }
+.caminho-no[data-liberada] .caminho-no__lente::before { animation-delay: 560ms; }
+.caminho-no[data-liberada] .caminho-no__etiqueta { animation-delay: 640ms; }
+
+.caminho-no__texto {
+  display: flex;
+  grid-area: texto;
+  min-width: 0;
+  min-height: var(--lente);
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding-inline: 16px;
+  overflow-wrap: anywhere;
+}
+
+.caminho-no__titulo { font-weight: 800; line-height: 1.3; }
+.caminho-no__estado { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+.caminho-no[data-estado='bloqueada'] .caminho-no__titulo { color: var(--texto2); }
+.caminho-no[data-estado='concluida'] .caminho-no__estado { color: var(--sucesso); }
+.caminho-no[data-estado='atual'] .caminho-no__estado { color: var(--acao); }
+
+/* Ligação até o próximo nó: pontilhada adiante, contínua depois de concluída. */
+.caminho-ligacao {
+  position: absolute;
+  top: var(--lente);
+  left: 0;
+  z-index: 0;
+  width: 100%;
+  height: calc(100% - var(--lente) + var(--gap-linhas) + var(--depois));
+  pointer-events: none;
+}
+
+.caminho-conector { display: block; width: 100%; height: 100%; overflow: visible; }
+
+.caminho-conector path {
+  fill: none;
+  stroke: var(--gelo);
+  stroke-width: 4px;
+  stroke-linecap: round;
+  stroke-dasharray: 0 12px;
+  vector-effect: non-scaling-stroke;
+}
+
+.caminho-ligacao[data-feita] path { stroke: var(--sucesso); stroke-dasharray: none; }
+
+/* Antes do nó atual, a ligação termina no rótulo "Começar", que fica no caminho em vez de cruzá-lo. */
+.caminho-no:has(+ .caminho-no[data-estado='atual']) > .caminho-ligacao {
+  height: calc(100% - var(--lente) + var(--gap-linhas) + var(--depois) - 46px);
+}
+
+/* Marco entre um trecho e outro: só um sinal no meio da ligação, sem nome de assunto. */
+.caminho-marco {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 2px solid var(--gelo);
+  border-radius: 50%;
+  color: var(--texto2);
+  background: var(--fundo);
+  translate: -50% -50%;
+}
+
+.caminho-marco > .icone { width: 16px; height: 16px; }
+
+/* Chegada: fim do caminho, no centro; fica cheia quando todas as lições estão concluídas. */
+.caminho-chegada {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: var(--gap-linhas);
+  padding-bottom: 8px;
+}
+
+.caminho-chegada__lente {
+  display: grid;
+  width: var(--lente-base);
+  height: var(--lente-base);
+  place-items: center;
+  border: 3px solid var(--gelo);
+  border-radius: 50%;
+  color: var(--texto2);
+  background: var(--nevoa);
+}
+
+.caminho-chegada__lente > .icone { width: 44%; height: 44%; }
+.caminho-chegada__texto { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
+.caminho-chegada[data-feita] .caminho-chegada__lente { border-color: var(--sucesso); color: var(--fundo); background: var(--sucesso); }
+.caminho-chegada[data-feita] .caminho-chegada__texto { color: var(--sucesso); }
+
+.caminho-balao {
+  position: absolute;
+  top: calc(100% + 14px);
+  left: 0;
+  z-index: 1;
+  display: grid;
+  gap: 12px;
+  width: min(100%, 24rem);
+  padding: 12px 12px 20px 20px;
+  border: 1px solid var(--gelo);
+  border-radius: var(--raio-bloco);
+  background: var(--fundo);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--texto) 16%, transparent);
+  --folga-balao: 24px;
+  scroll-margin-block: 24px var(--folga-balao);
+  animation: caminho-balao 160ms ease-out backwards;
+}
+
+/* Folga invisível abaixo do balão: no fim da página ainda dá para rolar até ele ficar acima do rodapé. */
+.caminho-balao::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 1px;
+  height: var(--folga-balao);
+  pointer-events: none;
+}
+
+.caminho-no[data-lado='direita'] .caminho-balao { right: 0; left: auto; }
+
+.caminho-balao__seta {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: calc(25% - 8px);
+  z-index: 2;
+  width: 16px;
+  height: 16px;
+  border-top: 1px solid var(--gelo);
+  border-left: 1px solid var(--gelo);
+  background: var(--fundo);
+  rotate: 45deg;
+  animation: caminho-balao 160ms ease-out backwards;
+}
+
+.caminho-no[data-lado='direita'] .caminho-balao__seta { left: calc(75% - 8px); }
+.caminho-balao__topo { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; }
+.caminho-balao__titulo { padding-top: 10px; font-weight: 800; overflow-wrap: anywhere; }
+.caminho-balao__texto { padding-right: 8px; color: var(--texto2); }
+.caminho-balao > .botao { justify-self: start; }
+
+.caminho-balao__fechar {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--raio-campo);
+  color: var(--texto2);
+  background: transparent;
+  cursor: pointer;
+}
+
+.caminho-balao__fechar .icone { width: 20px; height: 20px; }
+
+@media (hover: hover) {
+  .caminho-no[data-estado='atual'] .caminho-no__alvo:hover:not(:disabled) .caminho-no__lente {
+    border-color: color-mix(in srgb, var(--acao) 80%, var(--texto));
+    background: color-mix(in srgb, var(--acao) 80%, var(--texto));
+  }
+
+  .caminho-no__alvo:hover:not(:disabled) .caminho-no__titulo { text-decoration: underline; text-underline-offset: 4px; }
+  .caminho-balao__fechar:hover { color: var(--texto); background: var(--nevoa); }
+}
+
+/*
+ * Trilha em montagem (geração ao vivo): cada nó entra com um movimento curto, na ordem em que chega.
+ * O Stu "pensa" só enquanto a IA trabalha (DESIGN §6); o texto ao lado diz o mesmo para quem não vê o movimento.
+ */
+.caminho[data-montando] .caminho-no[data-estado='previa'] { animation: caminho-surgir 220ms ease-out backwards; }
+.caminho[data-montando] .caminho-stu .stu { animation: caminho-pensar 1400ms ease-in-out infinite alternate; }
+
+/* Onde a próxima lição vai aparecer: lente tracejada e linhas em esqueleto. A folga mantém esse nó, e depois a chegada, acima do rodapé fixo. */
+.caminho-no--vindo, .caminho-chegada { scroll-margin-block-end: calc(112px + env(safe-area-inset-bottom)); }
+.caminho-no--vindo .caminho-no__lente { border-style: dashed; background: var(--fundo); }
+.caminho-no--vindo .caminho-no__texto { gap: 8px; }
+.caminho-no--vindo .caminho-no__texto > span { display: block; width: 60%; height: 16px; border-radius: 8px; background: var(--gelo); }
+.caminho-no--vindo .caminho-no__texto > span + span { width: 30%; height: 12px; }
+.caminho-no--vindo[data-lado='direita'] .caminho-no__texto { align-items: flex-end; }
+
+@keyframes caminho-halo { from { opacity: 0; transform: scale(0.8); } }
+@keyframes caminho-surgir { from { opacity: 0; transform: translateY(8px) scale(0.96); } }
+@keyframes caminho-pensar { to { transform: translateY(-4px); } }
+@keyframes caminho-etiqueta { from { opacity: 0; transform: translateY(6px); } }
+@keyframes caminho-abrir { from { opacity: 1; } }
+@keyframes caminho-liberar { 0% { transform: scale(0.84); } 60% { transform: scale(1.08); } }
+@keyframes caminho-balao { from { opacity: 0; transform: translateY(-4px); } }
+
+/* Skeleton com a forma da trilha; acompanha o leiaute de src/app/trilha.css. */
+.skeleton-trilha { display: grid; gap: 32px; min-width: 0; }
+.skeleton-trilha span { display: block; background: var(--gelo); }
+
+.skeleton-trilha__cabecalho {
+  display: grid;
+  gap: 12px;
+  padding: 24px;
+  border-radius: var(--raio-bloco);
+  background: var(--nevoa);
+}
+
+.skeleton-trilha__cabecalho span { height: 16px; border-radius: 8px; }
+.skeleton-trilha__cabecalho span:nth-child(1) { width: 72%; height: 32px; }
+.skeleton-trilha__cabecalho span:nth-child(3) { width: 48%; height: 8px; margin-top: 12px; }
+.skeleton-trilha__caminho { display: grid; gap: 40px; padding-top: 8px; }
+.skeleton-trilha__no { width: 64px; height: 64px; margin-left: calc(25% - 32px); border-radius: 50%; }
+.skeleton-trilha__no[data-lado='direita'] { margin-left: calc(75% - 32px); }
+
+@media (min-width: 768px) {
+  .caminho { --lente-base: 72px; --gap-linhas: 52px; }
+  .caminho-stu .stu { width: 72px; }
+  .skeleton-trilha__no { width: 72px; height: 72px; margin-left: calc(25% - 36px); }
+  .skeleton-trilha__no[data-lado='direita'] { margin-left: calc(75% - 36px); }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .skeleton-trilha { width: min(100%, 36rem); margin-inline: auto; }
+}
+
+@media (min-width: 1024px) {
+  .caminho { --lente-base: 76px; --gap-linhas: 56px; --folga-marco: 56px; }
+  .skeleton-trilha { width: min(100%, 52rem); justify-self: center; }
+  .skeleton-trilha__caminho { width: min(100%, 36rem); justify-self: center; }
+}
+
+@media (max-width: 767px) {
+  .caminho-balao { --folga-balao: calc(108px + env(safe-area-inset-bottom)); }
+}
+
+/* Movimento reduzido: tudo já aparece no estado final, com a mesma informação (como o bloco global faz com as transições). */
+@media (prefers-reduced-motion: reduce) {
+  .caminho *, .caminho *::before, .caminho *::after { animation: none !important; }
+}

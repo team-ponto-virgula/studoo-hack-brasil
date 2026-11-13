@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
-  Image,
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,30 +11,40 @@ import {
   Text,
   TextInput,
   View,
+  type ImageStyle,
+  type StyleProp,
   type TextInputProps,
+  type TextStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 
-export function Tela({ children, acoes, rodape, pagina }: {
+export function Tela({ children, acoes, rodape, pagina, rolagem, aoMedir, aoRolar }: {
   children: ReactNode;
   acoes?: ReactNode;
   rodape?: ReactNode;
   pagina: string;
+  /** Referência da rolagem, para a tela levar a pessoa até um ponto do conteúdo (como o nó liberado na trilha). */
+  rolagem?: Ref<ComponentRef<typeof ScrollView>>;
+  /** Altura visível da rolagem, para a tela saber se um ponto do conteúdo já está à vista. */
+  aoMedir?: (altura: number) => void;
+  /** Quanto a pessoa já rolou, para a tela acompanhar o conteúdo que chega sem tirar a pessoa do lugar. */
+  aoRolar?: (y: number) => void;
 }) {
   return (
     <SafeAreaView style={estilos.tela}>
       <View style={estilos.cabecalho}>
         <View style={estilos.marcaConteudo}>
-          <Image source={require('../assets/marca/logo-com-sorriso.png')} resizeMode="contain"
-            accessibilityLabel={mensagens.marca} accessible style={estilos.logo} />
+          <Logo />
           {acoes && <View style={estilos.acoes}>{acoes}</View>}
         </View>
       </View>
 
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView key={pagina} keyboardShouldPersistTaps="handled" contentContainerStyle={estilos.conteudo}>
+        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" contentContainerStyle={estilos.conteudo}
+          onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
+          onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}>
           {children}
         </ScrollView>
         {rodape && <View style={estilos.rodape}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}
@@ -42,10 +53,67 @@ export function Tela({ children, acoes, rodape, pagina }: {
   );
 }
 
-export function Titulo({ children, testID, foco = false }: {
+/**
+ * Preferência de movimento reduzido do aparelho; `null` enquanto a resposta não chega.
+ * Quem anima espera a resposta e, com movimento reduzido, mostra o estado final com a mesma informação.
+ */
+export function useMovimentoReduzido() {
+  const [reduzir, setReduzir] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let ativo = true;
+    AccessibilityInfo.isReduceMotionEnabled()
+      .then((valor) => { if (ativo) setReduzir(valor); })
+      .catch(() => { if (ativo) setReduzir(false); });
+    const assinatura = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduzir);
+    return () => {
+      ativo = false;
+      assinatura.remove();
+    };
+  }, []);
+
+  return reduzir;
+}
+
+export function Logo({ decorativo = false, estilo }: { decorativo?: boolean; estilo?: StyleProp<ImageStyle> }) {
+  const reduzir = useMovimentoReduzido();
+  const [subida] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (reduzir !== false) return;
+
+    const movimento = {
+      duration: 1500,
+      easing: Easing.inOut(Easing.ease),
+      isInteraction: false,
+      useNativeDriver: true,
+    };
+    const ciclo = Animated.loop(Animated.sequence([
+      Animated.timing(subida, { ...movimento, toValue: -2 }),
+      Animated.timing(subida, { ...movimento, toValue: 0 }),
+    ]));
+
+    ciclo.start();
+    return () => {
+      ciclo.stop();
+      subida.setValue(0);
+    };
+  }, [reduzir, subida]);
+
+  return (
+    <Animated.Image source={require('../assets/marca/logo-com-sorriso.png')} resizeMode="contain"
+      accessible={!decorativo} accessibilityLabel={decorativo ? undefined : mensagens.marca}
+      importantForAccessibility={decorativo ? 'no' : 'auto'} accessibilityElementsHidden={decorativo}
+      style={[estilos.logo, estilo, { transform: [{ translateY: subida }] }]} />
+  );
+}
+
+export function Titulo({ children, testID, foco = false, estilo }: {
   children: ReactNode;
   testID?: string;
   foco?: boolean;
+  /** Ajuste de tamanho para o título dentro de um bloco, como a faixa da trilha. */
+  estilo?: StyleProp<TextStyle>;
 }) {
   const titulo = useRef<ComponentRef<typeof Text>>(null);
 
@@ -53,13 +121,15 @@ export function Titulo({ children, testID, foco = false }: {
     if (foco && titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus');
   }, [foco]);
 
-  return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" style={estilos.titulo}>{children}</Text>;
+  return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" style={[estilos.titulo, estilo]}>{children}</Text>;
 }
 
-export function Botao({ rotulo, acao, testID, desativado = false, ocupado = false, variante = 'primario', compacto = false }: {
+export function Botao({ rotulo, acao, testID, dica, desativado = false, ocupado = false, variante = 'primario', compacto = false }: {
   rotulo: string;
   acao: () => void;
   testID?: string;
+  /** Complemento que o leitor de tela lê depois do rótulo, como o título da lição que o botão abre. */
+  dica?: string;
   desativado?: boolean;
   ocupado?: boolean;
   variante?: 'primario' | 'secundario' | 'texto';
@@ -71,6 +141,7 @@ export function Botao({ rotulo, acao, testID, desativado = false, ocupado = fals
     <Pressable
       testID={testID}
       accessibilityRole="button"
+      accessibilityHint={dica}
       accessibilityState={{ disabled: desativado, busy: ocupado }}
       disabled={desativado}
       onPress={acao}
