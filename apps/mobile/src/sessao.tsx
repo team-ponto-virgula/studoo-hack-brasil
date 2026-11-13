@@ -1,11 +1,15 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { BackHandler, Image, Keyboard, Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
+import { BackHandler, Image, Keyboard, Platform, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Estudo } from './estudo';
-import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos } from './interface';
+import { Icone } from './icone';
+import { Botao, BotaoIcone, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
-import { cores } from './tema';
+import { Desenho, Paisagem } from './mundo';
+import { cores, fontes } from './tema';
+
+const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Sessao =
   | { tipo: 'verificando' }
@@ -108,14 +112,39 @@ async function encerrarNoAparelho(erro?: string): Promise<Sessao> {
   }
 }
 
+/**
+ * Boas-vindas: a paisagem do mundo com o Stu, a promessa do Studoo e três destaques (qualquer assunto, a trilha montada
+ * pela IA e o progresso salvo), como o painel da entrada na web.
+ */
 function BoasVindas({ entrar }: { entrar: () => void }) {
+  const { width } = useWindowDimensions();
+  const largura = Math.min(width, 620) - 40;
+
   return (
-    <Tela pagina="boas-vindas" rodape={<Botao rotulo={mensagens.boasVindas.entrar} testID="entrar-no-piloto" acao={entrar} />}>
-      <View style={entradaEstilos.arte} importantForAccessibility="no-hide-descendants">
-        <Image source={require('../assets/marca/stu-oi.png')} style={entradaEstilos.stu} resizeMode="contain" />
+    <Tela pagina="boas-vindas" rodape={<Botao rotulo={mensagens.boasVindas.entrar} testID="entrar-no-piloto" icone="seta" acao={entrar} />}>
+      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <Paisagem altura={Math.round(largura * 0.7)} estilo={entradaEstilos.arte}>
+          {(l) => (
+            <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+              style={{ position: 'absolute', bottom: '7%', left: l * 0.35, width: l * 0.3, height: l * 0.33 }} />
+          )}
+        </Paisagem>
       </View>
       <Titulo testID="boas-vindas">{mensagens.boasVindas.titulo}</Titulo>
       <Text style={estilos.introducao}>{mensagens.boasVindas.texto}</Text>
+      <View style={entradaEstilos.destaques}>
+        {mensagens.boasVindas.destaques.map((destaque, indice) => (
+          <View key={destaque} style={entradaEstilos.destaque}>
+            <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+              style={[entradaEstilos.destaqueIcone, entradaEstilos[`destaque${indice}` as 'destaque0']]}>
+              {indice === 0 && <Desenho nome="temaPopulares" largura={22} />}
+              {indice === 1 && <Icone nome="livro" tamanho={20} cor={cores.fundo} />}
+              {indice === 2 && <Icone nome="check" tamanho={20} cor={cores.fundo} />}
+            </View>
+            <Text style={entradaEstilos.destaqueTexto}>{destaque}</Text>
+          </View>
+        ))}
+      </View>
     </Tela>
   );
 }
@@ -128,8 +157,11 @@ function Entrada({ erroInicial, entrar, voltar }: {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState(erroInicial);
+  const [erroEmail, setErroEmail] = useState<string | undefined>();
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   const emEnvio = useRef(false);
+  const campoEmail = useRef<ComponentRef<typeof TextInput>>(null);
   const campoSenha = useRef<ComponentRef<typeof TextInput>>(null);
   const podeEntrar = !!email.trim() && !!senha && !ocupado;
 
@@ -143,6 +175,12 @@ function Entrada({ erroInicial, entrar, voltar }: {
 
   async function enviar() {
     if (emEnvio.current || !podeEntrar) return;
+    // O e-mail é conferido no aparelho, como na web: o erro fica no campo, que recebe o foco.
+    if (!formatoEmail.test(email.trim())) {
+      setErroEmail(mensagens.entrada.emailInvalido);
+      campoEmail.current?.focus();
+      return;
+    }
     Keyboard.dismiss();
     emEnvio.current = true;
     setOcupado(true);
@@ -164,20 +202,32 @@ function Entrada({ erroInicial, entrar, voltar }: {
       acoes={<Botao rotulo={mensagens.voltar} testID="voltar-boas-vindas" variante="texto" compacto desativado={ocupado} acao={voltar} />}
       rodape={<Botao rotulo={ocupado ? mensagens.entrada.entrando : mensagens.entrada.entrar}
         testID="entrar" desativado={!podeEntrar} ocupado={ocupado} acao={() => void enviar()} />}>
+      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <Paisagem altura={140} compacta estilo={entradaEstilos.banner}>
+          {(l) => (
+            <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+              style={{ position: 'absolute', bottom: '8%', left: l / 2 - 36, width: 72, height: 80 }} />
+          )}
+        </Paisagem>
+      </View>
       <Titulo foco testID="titulo-entrada">{mensagens.entrada.titulo}</Titulo>
       <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
       <View style={entradaEstilos.formulario}>
-        <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email}
-          onChangeText={(valor) => { setEmail(valor); setErro(undefined); }}
+        <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email} campoRef={campoEmail} erro={erroEmail}
+          onChangeText={(valor) => { setEmail(valor); setErro(undefined); setErroEmail(undefined); }}
           autoCapitalize="none" autoCorrect={false} keyboardType="email-address" returnKeyType="next"
           textContentType={Platform.OS === 'ios' ? 'username' : undefined}
           autoComplete={Platform.OS === 'android' ? 'email' : undefined}
           editable={!ocupado} onSubmitEditing={() => campoSenha.current?.focus()} />
         <Campo testID="login-senha" rotulo={mensagens.entrada.senha} value={senha} campoRef={campoSenha}
-          onChangeText={(valor) => { setSenha(valor); setErro(undefined); }} secureTextEntry returnKeyType="go"
+          onChangeText={(valor) => { setSenha(valor); setErro(undefined); }} secureTextEntry={!mostrarSenha} returnKeyType="go"
+          autoCapitalize="none" autoCorrect={false}
           textContentType={Platform.OS === 'ios' ? 'password' : undefined}
           autoComplete={Platform.OS === 'android' ? 'current-password' : undefined}
-          editable={!ocupado} onSubmitEditing={() => void enviar()} />
+          editable={!ocupado} onSubmitEditing={() => void enviar()}
+          acessorio={<BotaoIcone icone={mostrarSenha ? 'olhoFechado' : 'olho'} testID="alternar-senha" selecionado={mostrarSenha}
+            rotulo={mensagens.entrada.mostrarSenha} desativado={ocupado}
+            acao={() => setMostrarSenha((atual) => !atual)} />} />
       </View>
       {erro && <EstadoMensagem mensagem={erro} />}
     </Tela>
@@ -185,7 +235,14 @@ function Entrada({ erroInicial, entrar, voltar }: {
 }
 
 const entradaEstilos = StyleSheet.create({
-  arte: { minHeight: 160, alignItems: 'center', justifyContent: 'center', padding: 12, marginBottom: 24, borderRadius: 20, backgroundColor: cores.nevoa },
-  stu: { width: 116, height: 128 },
+  arte: { marginBottom: 24, borderRadius: 28 },
+  banner: { marginBottom: 24, borderRadius: 24 },
   formulario: { gap: 20, marginTop: 28 },
+  destaques: { gap: 12, marginTop: 24 },
+  destaque: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  destaqueIcone: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3 },
+  destaque0: { backgroundColor: '#FFF3D1', borderBottomColor: '#FFE3A3' },
+  destaque1: { backgroundColor: cores.acao, borderBottomColor: cores.acaoEscura },
+  destaque2: { backgroundColor: cores.sucessoClaro, borderBottomColor: cores.sucesso },
+  destaqueTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
 });

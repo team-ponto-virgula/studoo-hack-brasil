@@ -30,7 +30,7 @@
   min-height: 44px;
   place-items: center;
   padding: 0;
-  border: 1px solid var(--gelo);
+  border: 2px solid var(--gelo);
   border-radius: 14px;
   color: var(--texto2);
   background: var(--fundo);
@@ -86,7 +86,7 @@
   gap: 12px;
   min-width: 0;
   padding: clamp(16px, 4vw, 28px);
-  border: 1px solid var(--aula-retorno);
+  border: 2px solid var(--aula-retorno);
   border-radius: 22px;
   color: var(--aula-retorno);
   background: var(--aula-retorno-fundo);
@@ -112,7 +112,7 @@
   z-index: 2;
   inset-block-end: 0;
   padding: 16px 0 calc(19px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--gelo);
+  border-top: 2px solid var(--nevoa);
   background: var(--fundo);
 }
 
@@ -121,20 +121,13 @@
 .aula-rodape__conteudo > .botao {
   min-width: min(100%, 11rem);
   min-height: 52px;
-  border-radius: 15px;
-  box-shadow: 0 4px 0 var(--texto);
   font-weight: 900;
-  transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
 
-.aula-rodape__conteudo > .botao:disabled {
-  border-color: var(--gelo);
-  color: var(--texto2);
-  background: var(--nevoa);
-  box-shadow: 0 4px 0 var(--gelo);
+.painel--aula:has(.aula-feedback[data-correta='true']) .aula-rodape__conteudo > .botao:not(:disabled) {
+  --labio: var(--sucesso);
+  background: var(--sucesso-claro);
 }
-.aula-rodape__conteudo > .botao:active:not(:disabled) { box-shadow: 0 1px 0 var(--texto); transform: translateY(3px); }
-.painel--aula:has(.aula-feedback[data-correta='true']) .aula-rodape__conteudo > .botao:not(:disabled) { background: var(--sucesso); }
 
 @media (max-width: 767px) {
   .estudo-principal:has(.painel--aula) { padding-top: max(16px, env(safe-area-inset-top)); }
@@ -142,10 +135,6 @@
   .aula-miolo { gap: 16px; }
   .aula-andamento { gap: 8px; }
   .aula-rodape__conteudo > .botao { width: 100%; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .aula-rodape__conteudo > .botao:active:not(:disabled) { transform: none; }
 }
 
 .aula-revisao { display: flex; align-items: center; gap: 8px; color: var(--sucesso); font-size: 0.875rem; font-weight: 800; }

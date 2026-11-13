@@ -15,11 +15,11 @@ npm run db:local
 
 Mantenha o primeiro terminal aberto. Em outro terminal, rode `npm run dev` e abra [o Studoo local](http://localhost:3000). Use o e-mail e a senha da conta sintética que o bootstrap gravou no seu `.env`.
 
-1. Abra um plano novo, toque na sugestão **SQL para a prova** (ou escreva o que quer aprender) e escolha **Gerar trilha**. A trilha se monta na tela, lição por lição; **Cancelar** interrompe sem salvar nada.
+1. No primeiro acesso, sem planos, uma apresentação de quatro passos mostra como o Studoo funciona; **Pular** vai direto ao pedido. Toque na sugestão **SQL para a prova** (em Populares) ou escolha uma ideia de outra área, como Idiomas ou Música, ou escreva o que quer aprender. Depois, escolha **Gerar trilha**. A trilha se monta na tela, lição por lição, sobre um mapa ilustrado; **Cancelar** interrompe sem salvar nada.
 2. Com a trilha pronta, escolha **Começar**: o plano é salvo e a primeira lição abre. **Ajustar pedido** volta ao texto, também sem salvar.
 3. Avance pelo conceito e pelo exemplo. No exercício, responda `>=`, envie a resposta e escolha **Continuar** após ler o feedback. A trilha marca a lição como concluída e oferece a próxima.
 
-O ambiente local usa `IA=falsa` e `EMAIL=falso`. [Guia do banco, dos testes e do app Android](docs/RODAR-LOCALMENTE.md)
+O ambiente local usa `IA=falsa` e `EMAIL=falso`. Para ver a apresentação de novo, toque em **Como funciona?** no pedido. [Guia do banco, dos testes e do app Android](docs/RODAR-LOCALMENTE.md) · [Experiência ilustrada (spec 04)](docs/specs/04-experiencia-ilustrada.md)
 
 ## Código e origem
 

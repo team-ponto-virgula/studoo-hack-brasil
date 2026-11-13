@@ -1,50 +1,89 @@
 /*
- * Caminho da trilha: um só caminho contínuo, nós que alternam de lado, um marco discreto entre trechos,
- * o Stu no começo e a chegada no fim (DESIGN §4, §6, §7, §9, §13).
+ * Caminho da trilha sobre o mundo ilustrado: cada trecho é uma região do mapa (src/ui/mundo-desenhos.ts), os nós têm
+ * relevo e alternam de lado, a estrada liga um nó ao outro, o marco fica na fronteira entre regiões, o Stu abre o
+ * mapa e o troféu fecha o caminho no topo. No celular o mapa ocupa a largura da tela; a partir de 1024 px o caminho
+ * fica numa coluna central e as faixas laterais ganham mais cenário.
  */
 
 .icone { display: block; flex: none; width: 24px; height: 24px; }
 
 .caminho {
   --lente-base: 64px;
-  --gap-linhas: 48px;
+  --gap-linhas: 52px;
   --folga-etiqueta: 56px;
-  --folga-marco: 48px;
+  --folga-marco: 76px;
+  --coluna: 100%;
+  --lateral: 0px;
+  --tam-enfeite: 44px;
+  --tam-miudo: 24px;
+  --tam-lateral: 64px;
+  --estrada: rgb(255 255 255 / 0.66);
+  --labio-neutro: #c8d0ea;
+  position: relative;
   min-width: 0;
+  isolation: isolate;
 }
 
-/* Stu abre o caminho do lado oposto ao primeiro nó, com uma frase curta ao lado (sem balão de fala). */
-.caminho-stu {
+/* Começo do mapa: céu, colinas da primeira região e o Stu com a frase num balão. */
+.caminho-inicio {
+  position: relative;
   display: flex;
-  align-items: center;
+  min-height: 176px;
+  align-items: flex-end;
   justify-content: flex-end;
-  gap: 12px;
-  padding-top: 8px;
+  padding: 24px calc(var(--lateral) + 16px) 26px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #dce8ff 0%, #eef4ff 70%);
 }
 
-.caminho-stu p {
-  max-width: 20rem;
-  color: var(--texto2);
+.caminho-inicio__ceu { position: absolute; inset: 0; pointer-events: none; }
+.caminho-inicio__sol { position: absolute; top: 14px; left: calc(var(--lateral) + 18px); --tam: 44px; }
+.caminho-inicio__nuvem { position: absolute; --tam: 64px; opacity: 0.95; }
+.caminho-inicio__nuvem--1 { top: 18px; left: calc(var(--lateral) + 30%); animation: mundo-nuvem 26s ease-in-out infinite alternate; }
+.caminho-inicio__nuvem--2 { top: 56px; left: calc(var(--lateral) + 4%); --tam: 46px; animation: mundo-nuvem 32s ease-in-out -8s infinite alternate-reverse; }
+.caminho-inicio__colinas { position: absolute; left: 0; bottom: 0; display: block; width: 100%; height: 76px; }
+.caminho-inicio__conteudo { position: relative; z-index: 1; display: flex; align-items: flex-end; gap: 10px; min-width: 0; }
+
+.caminho-inicio__fala {
+  position: relative;
+  max-width: 17rem;
+  margin-bottom: 46px;
+  padding: 12px 16px;
+  border-radius: 18px;
+  color: var(--texto);
+  background: var(--fundo);
+  box-shadow: 0 3px 0 rgb(27 42 94 / 0.08);
   font-size: 0.9375rem;
-  font-weight: 700;
-  line-height: 1.4;
-  text-align: end;
+  font-weight: 800;
+  line-height: 1.35;
+  text-wrap: pretty;
 }
 
-.caminho-stu .stu { flex: none; width: 64px; height: auto; }
+.caminho-inicio__fala::after {
+  content: '';
+  position: absolute;
+  right: -6px;
+  bottom: 18px;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  background: var(--fundo);
+  rotate: 45deg;
+}
+
+.caminho-inicio .stu { flex: none; width: 82px; height: auto; margin-bottom: 4px; }
 
 .caminho-nos {
   display: grid;
-  gap: var(--gap-linhas);
   margin: 0;
-  padding: 32px 0 8px;
+  padding: 0;
   list-style: none;
 }
 
-/* Espaço para o rótulo "Começar" quando o nó atual abre o caminho. */
-.caminho-nos:has(> .caminho-no:first-child[data-estado='atual']) { padding-top: calc(var(--folga-etiqueta) + 8px); }
-.caminho:has(> .caminho-chegada) > .caminho-nos { padding-bottom: 0; }
-
+/*
+ * Cada linha é uma faixa da região, da altura do nó até o próximo: o espaço entre os nós fica dentro da linha
+ * (padding), para o chão da região não ter falhas. Folgas extras: o rótulo "Começar" do próximo nó e a fronteira.
+ */
 .caminho-no {
   --lente: var(--lente-base);
   --margem: calc(25% - var(--lente) / 2);
@@ -52,15 +91,36 @@
   position: relative;
   z-index: 0;
   min-width: 0;
-  margin-bottom: var(--depois);
+  padding: 0 var(--lateral) 32px;
+  background: var(--chao);
 }
 
-/* Folgas depois do nó: o rótulo "Começar" do próximo nó e o marco de fim de trecho ganham espaço próprio. */
+.caminho-no[data-ligado] { padding-bottom: calc(var(--gap-linhas) + var(--depois)); }
 .caminho-no:has(+ .caminho-no[data-estado='atual']) { --depois: var(--folga-etiqueta); }
 .caminho-no[data-fim-trecho] { --depois: var(--folga-marco); }
 .caminho-no[data-fim-trecho]:has(+ .caminho-no[data-estado='atual']) { --depois: calc(var(--folga-marco) + var(--folga-etiqueta)); }
 /* Cada nó é uma camada própria; o nó com balão aberto fica acima dos vizinhos e abaixo do rodapé fixo. */
 .caminho-no[data-aberto] { z-index: 1; }
+
+/* Cenário da linha: um enfeite grande e um miúdo no lado livre do nó e, na tela larga, mais dois nas faixas laterais. */
+.caminho-terreno { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.caminho-enfeite { position: absolute; }
+
+.caminho-enfeite--grande {
+  --tam: var(--tam-enfeite);
+  top: 4px;
+  left: calc(var(--lateral) + (var(--coluna) * 0.25 - var(--lente) / 2 - var(--tam)) / 2);
+}
+
+.caminho-enfeite--miudo {
+  --tam: var(--tam-miudo);
+  top: calc(var(--lente) + 16px);
+  left: calc(var(--lateral) + var(--coluna) * 0.25 - var(--lente) / 2 - var(--tam) - 6px);
+}
+
+.caminho-no[data-lado='direita'] .caminho-enfeite--grande { right: calc(var(--lateral) + (var(--coluna) * 0.25 - var(--lente) / 2 - var(--tam)) / 2); left: auto; }
+.caminho-no[data-lado='direita'] .caminho-enfeite--miudo { right: calc(var(--lateral) + var(--coluna) * 0.25 - var(--lente) / 2 - var(--tam) - 6px); left: auto; }
+.caminho-enfeite--lateral, .caminho-enfeite--lateral-miudo { display: none; }
 
 .caminho-no__alvo {
   position: relative;
@@ -90,67 +150,67 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 
 /* O anel de foco vai para a lente, que é o que a pessoa enxerga como o nó. */
 .caminho-no__alvo:focus-visible { outline: none; }
-.caminho-no__alvo:focus-visible .caminho-no__lente { outline: 3px solid var(--acao); outline-offset: 4px; }
-.caminho-no[data-estado='atual'] .caminho-no__alvo:focus-visible .caminho-no__lente { outline-offset: 14px; }
+.caminho-no__alvo:focus-visible .caminho-no__lente { outline: 3px solid var(--acao); outline-offset: 6px; }
+.caminho-no[data-estado='atual'] .caminho-no__alvo:focus-visible .caminho-no__lente { outline-offset: 16px; }
+.caminho-no__alvo:focus-visible .caminho-no__titulo { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 4px; }
 
-.caminho-no__alvo:focus-visible .caminho-no__titulo {
-  text-decoration: underline;
-  text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
-}
-
+/* Lente com relevo: a face e, embaixo, o lábio mais escuro; no toque, a face desce até o lábio. */
 .caminho-no__lente {
+  --face: #e9edf8;
+  --labio: var(--labio-neutro);
+  --tinta: #7d87a6;
   position: relative;
   display: grid;
   grid-area: lente;
   width: var(--lente);
   height: var(--lente);
   place-items: center;
-  border: 3px solid var(--gelo);
   border-radius: 50%;
-  color: var(--texto2);
-  background: var(--nevoa);
-  transition: opacity 120ms ease-out, background-color 150ms ease-out, border-color 150ms ease-out;
+  color: var(--tinta);
+  background: var(--face);
+  box-shadow: inset 0 0 0 4px rgb(255 255 255 / 0.2), 0 6px 0 var(--labio), 0 12px 18px rgb(27 42 94 / 0.12);
+  transition: transform 110ms ease-out, box-shadow 110ms ease-out, background-color 150ms ease-out, filter 150ms ease-out;
 }
 
-.caminho-no__lente > .icone { width: 44%; height: 44%; }
-.caminho-no[data-estado='concluida'] .caminho-no__lente {
-  border-color: var(--sucesso);
-  color: var(--fundo);
-  background: var(--sucesso);
+.caminho-no__lente > .icone { width: 44%; height: 44%; stroke-width: 3; }
+.caminho-no[data-estado='concluida'] .caminho-no__lente { --face: #2f9e6f; --labio: var(--sucesso); --tinta: var(--fundo); }
+.caminho-no[data-estado='atual'] .caminho-no__lente { --face: var(--acao); --labio: #2a44a8; --tinta: var(--fundo); }
+.caminho-no[data-estado='previa'] .caminho-no__lente { --face: var(--fundo); --labio: #cdd6f2; --tinta: var(--acao); }
+
+.caminho-no__alvo:active:not(:disabled) .caminho-no__lente {
+  box-shadow: inset 0 0 0 4px rgb(255 255 255 / 0.2), 0 2px 0 var(--labio), 0 6px 10px rgb(27 42 94 / 0.1);
+  transform: translateY(4px);
 }
 
-.caminho-no[data-estado='atual'] .caminho-no__lente { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
-.caminho-no[data-estado='previa'] .caminho-no__lente { color: var(--acao); background: var(--fundo); }
-
-/* Halo do nó atual: entra uma vez, não pulsa. */
+/* Anel do nó atual: entra uma vez e depois respira devagar, para a pessoa achar onde continuar. */
 .caminho-no[data-estado='atual'] .caminho-no__lente::before {
   content: '';
   position: absolute;
   inset: -12px;
-  border: 6px solid var(--gelo);
+  border: 5px solid rgb(56 88 214 / 0.24);
   border-radius: 50%;
-  animation: caminho-halo 240ms ease-out backwards;
+  animation: caminho-halo 240ms ease-out backwards, caminho-respirar 2200ms ease-in-out 400ms infinite;
 }
-
-/* No toque, a lente usa a mesma opacidade de pressionado do botão, sem relevo nem sombra (DESIGN §4). */
-.caminho-no__alvo:active:not(:disabled) .caminho-no__lente { opacity: 0.82; }
 
 .caminho-no__etiqueta {
   position: absolute;
-  bottom: calc(100% + 20px);
+  bottom: calc(100% + 22px);
   left: 50%;
-  z-index: 1;
-  padding: 6px 12px;
-  border-radius: var(--raio-campo);
-  color: var(--fundo);
-  background: var(--texto);
+  z-index: 2;
+  padding: 7px 14px;
+  border: 2px solid var(--gelo);
+  border-radius: 12px;
+  color: var(--acao);
+  background: var(--fundo);
+  box-shadow: 0 3px 0 var(--gelo);
   font-size: 0.875rem;
-  font-weight: 800;
-  line-height: 1.25;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
   white-space: nowrap;
   translate: -50% 0;
-  animation: caminho-etiqueta 200ms ease-out 120ms backwards;
+  animation: caminho-etiqueta 200ms ease-out 120ms backwards, caminho-flutuar 1600ms ease-in-out 500ms infinite alternate;
 }
 
 .caminho-no__etiqueta::after {
@@ -158,10 +218,12 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   position: absolute;
   top: calc(100% - 6px);
   left: 50%;
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  background: var(--texto);
+  width: 11px;
+  height: 11px;
+  border-right: 2px solid var(--gelo);
+  border-bottom: 2px solid var(--gelo);
+  border-radius: 0 0 3px;
+  background: var(--fundo);
   translate: -50% 0;
   rotate: 45deg;
 }
@@ -169,129 +231,184 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 /* Cadeado que se abre quando a pessoa volta de uma lição concluída. */
 .caminho-no__cadeado {
   position: absolute;
-  inset: -3px;
+  inset: 0;
   display: grid;
   place-items: center;
-  border: 3px solid var(--gelo);
   border-radius: 50%;
-  color: var(--texto2);
-  background: var(--nevoa);
+  color: #7d87a6;
+  background: #e9edf8;
   opacity: 0;
   animation: caminho-abrir 200ms ease-out 160ms backwards;
 }
 
-.caminho-no__cadeado > .icone { width: 44%; height: 44%; }
+.caminho-no__cadeado > .icone { width: 44%; height: 44%; stroke-width: 3; }
 .caminho-no[data-liberada] .caminho-no__lente { animation: caminho-liberar 240ms ease-out 340ms backwards; }
-.caminho-no[data-liberada] .caminho-no__lente::before { animation-delay: 560ms; }
-.caminho-no[data-liberada] .caminho-no__etiqueta { animation-delay: 640ms; }
+.caminho-no[data-liberada] .caminho-no__lente::before { animation-delay: 560ms, 900ms; }
+.caminho-no[data-liberada] .caminho-no__etiqueta { animation-delay: 640ms, 1000ms; }
 
+/* Placa com o título e o estado, para o texto ficar legível sobre qualquer região. */
 .caminho-no__texto {
   display: flex;
   grid-area: texto;
+  justify-self: start;
+  align-self: center;
   min-width: 0;
-  min-height: var(--lente);
+  max-width: calc(100% - 26px);
   flex-direction: column;
-  justify-content: center;
-  gap: 2px;
-  padding-inline: 16px;
+  gap: 1px;
+  margin-left: 14px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: 0 2px 0 rgb(27 42 94 / 0.07);
   overflow-wrap: anywhere;
 }
 
+.caminho-no[data-lado='direita'] .caminho-no__texto { justify-self: end; margin-right: 14px; margin-left: 0; }
 .caminho-no__titulo { font-weight: 800; line-height: 1.3; }
-.caminho-no__estado { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+.caminho-no__estado { color: var(--texto2); font-size: 0.8125rem; font-weight: 800; }
+.caminho-no[data-estado='bloqueada'] .caminho-no__texto { background: rgb(255 255 255 / 0.74); }
 .caminho-no[data-estado='bloqueada'] .caminho-no__titulo { color: var(--texto2); }
 .caminho-no[data-estado='concluida'] .caminho-no__estado { color: var(--sucesso); }
 .caminho-no[data-estado='atual'] .caminho-no__estado { color: var(--acao); }
+.caminho-no[data-estado='atual'] .caminho-no__texto { box-shadow: 0 0 0 2px rgb(56 88 214 / 0.18), 0 2px 0 rgb(27 42 94 / 0.07); }
 
-/* Ligação até o próximo nó: pontilhada adiante, contínua depois de concluída. */
+/* Ligação até o próximo nó: a estrada clara e, por cima, a linha pontilhada adiante e contínua depois de concluída. */
 .caminho-ligacao {
   position: absolute;
   top: var(--lente);
-  left: 0;
+  bottom: 0;
+  left: var(--lateral);
   z-index: 0;
-  width: 100%;
-  height: calc(100% - var(--lente) + var(--gap-linhas) + var(--depois));
+  width: var(--coluna);
   pointer-events: none;
 }
 
 .caminho-conector { display: block; width: 100%; height: 100%; overflow: visible; }
+.caminho-conector path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.caminho-conector__estrada { stroke: var(--estrada); stroke-width: 26px; }
+.caminho-conector__linha { stroke: rgb(27 42 94 / 0.24); stroke-width: 5px; stroke-dasharray: 0 13px; }
+.caminho-ligacao[data-feita] .caminho-conector__linha { stroke: #2f9e6f; stroke-width: 6px; stroke-dasharray: none; }
 
-.caminho-conector path {
-  fill: none;
-  stroke: var(--gelo);
-  stroke-width: 4px;
-  stroke-linecap: round;
-  stroke-dasharray: 0 12px;
-  vector-effect: non-scaling-stroke;
-}
-
-.caminho-ligacao[data-feita] path { stroke: var(--sucesso); stroke-dasharray: none; }
-
-/* Antes do nó atual, a ligação termina no rótulo "Começar", que fica no caminho em vez de cruzá-lo. */
-.caminho-no:has(+ .caminho-no[data-estado='atual']) > .caminho-ligacao {
-  height: calc(100% - var(--lente) + var(--gap-linhas) + var(--depois) - 46px);
-}
-
-/* Marco entre um trecho e outro: só um sinal no meio da ligação, sem nome de assunto. */
+/* Marco entre um trecho e outro: um sinal com relevo sobre a fronteira das regiões, sem nome de assunto. */
 .caminho-marco {
   position: absolute;
-  top: 50%;
+  top: calc(var(--lente) + (100% - var(--lente)) / 2);
   left: 50%;
+  z-index: 1;
   display: grid;
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   place-items: center;
-  border: 2px solid var(--gelo);
   border-radius: 50%;
   color: var(--texto2);
   background: var(--fundo);
+  box-shadow: 0 4px 0 var(--labio-neutro);
   translate: -50% -50%;
 }
 
-.caminho-marco > .icone { width: 16px; height: 16px; }
+.caminho-marco > .icone { width: 20px; height: 20px; }
+.caminho-marco[data-vencido] { color: #7a4a00; background: #ffd166; box-shadow: 0 4px 0 #e0a92e; }
 
-/* Chegada: fim do caminho, no centro; fica cheia quando todas as lições estão concluídas. */
+/* Chegada: o topo do caminho, com o troféu numa colina; fica dourada quando todas as lições estão concluídas. */
 .caminho-chegada {
+  position: relative;
   display: grid;
+  min-height: 220px;
+  align-content: end;
   justify-items: center;
-  gap: 8px;
-  margin-top: var(--gap-linhas);
-  padding-bottom: 8px;
+  gap: 14px;
+  padding: 36px calc(var(--lateral) + 16px) 30px;
+  overflow: hidden;
+  background: var(--chao);
 }
+
+.caminho-chegada::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 26px;
+  height: 64px;
+  border-radius: 0 0 13px 13px;
+  background: var(--estrada);
+  translate: -50% 0;
+}
+
+.caminho-chegada__cenario { position: absolute; inset: 0; pointer-events: none; }
+
+.caminho-chegada__colina {
+  position: absolute;
+  bottom: -48px;
+  left: 50%;
+  width: min(94%, 440px);
+  height: 190px;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: var(--relevo);
+  translate: -50% 0;
+}
+
+.caminho-chegada__bandeira { position: absolute; bottom: 96px; --tam: 30px; }
+.caminho-chegada__bandeira--1 { left: calc(50% - 104px); }
+.caminho-chegada__bandeira--2 { right: calc(50% - 104px); transform: scaleX(-1); }
+.caminho-chegada__brilho { position: absolute; --tam: 22px; animation: caminho-cintilar 1800ms ease-in-out infinite; }
+.caminho-chegada__brilho--1 { bottom: 150px; left: calc(50% - 72px); }
+.caminho-chegada__brilho--2 { bottom: 172px; right: calc(50% - 66px); --tam: 16px; animation-delay: 500ms; }
+.caminho-chegada__brilho--3 { bottom: 118px; right: calc(50% - 98px); --tam: 14px; animation-delay: 1000ms; }
 
 .caminho-chegada__lente {
+  position: relative;
+  z-index: 1;
   display: grid;
-  width: var(--lente-base);
-  height: var(--lente-base);
+  width: calc(var(--lente-base) + 16px);
+  height: calc(var(--lente-base) + 16px);
   place-items: center;
-  border: 3px solid var(--gelo);
   border-radius: 50%;
   color: var(--texto2);
-  background: var(--nevoa);
+  background: var(--fundo);
+  box-shadow: inset 0 0 0 5px rgb(225 231 250 / 0.7), 0 7px 0 #cdd6f2, 0 14px 22px rgb(27 42 94 / 0.14);
 }
 
-.caminho-chegada__lente > .icone { width: 44%; height: 44%; }
-.caminho-chegada__texto { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
-.caminho-chegada[data-feita] .caminho-chegada__lente { border-color: var(--sucesso); color: var(--fundo); background: var(--sucesso); }
+.caminho-chegada__lente > .icone { width: 46%; height: 46%; stroke-width: 2.75; }
+
+.caminho-chegada__texto {
+  position: relative;
+  z-index: 1;
+  padding: 6px 14px;
+  border-radius: 999px;
+  color: var(--texto2);
+  background: rgb(255 255 255 / 0.9);
+  font-size: 0.875rem;
+  font-weight: 900;
+}
+
+.caminho-chegada[data-feita] .caminho-chegada__lente {
+  color: #7a4a00;
+  background: #ffd166;
+  box-shadow: inset 0 0 0 5px rgb(255 255 255 / 0.3), 0 7px 0 #e0a92e, 0 14px 22px rgb(122 74 0 / 0.18);
+}
+
 .caminho-chegada[data-feita] .caminho-chegada__texto { color: var(--sucesso); }
 
 .caminho-balao {
   position: absolute;
-  top: calc(100% + 14px);
-  left: 0;
-  z-index: 1;
+  top: calc(100% - var(--gap-linhas) - var(--depois) + 16px);
+  left: var(--lateral);
+  z-index: 3;
   display: grid;
   gap: 12px;
-  width: min(100%, 24rem);
+  width: min(var(--coluna), 24rem);
   padding: 12px 12px 20px 20px;
   border: 1px solid var(--gelo);
   border-radius: var(--raio-bloco);
   background: var(--fundo);
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--texto) 16%, transparent);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--texto) 18%, transparent);
   --folga-balao: 24px;
   scroll-margin-block: 24px var(--folga-balao);
   animation: caminho-balao 160ms ease-out backwards;
 }
+
+.caminho-no:not([data-ligado]) .caminho-balao { top: calc(100% - 32px + 16px); }
 
 /* Folga invisível abaixo do balão: no fim da página ainda dá para rolar até ele ficar acima do rodapé. */
 .caminho-balao::after {
@@ -304,13 +421,13 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   pointer-events: none;
 }
 
-.caminho-no[data-lado='direita'] .caminho-balao { right: 0; left: auto; }
+.caminho-no[data-lado='direita'] .caminho-balao { right: var(--lateral); left: auto; }
 
 .caminho-balao__seta {
   position: absolute;
-  top: calc(100% + 6px);
-  left: calc(25% - 8px);
-  z-index: 2;
+  top: calc(100% - var(--gap-linhas) - var(--depois) + 8px);
+  left: calc(var(--lateral) + var(--coluna) * 0.25 - 8px);
+  z-index: 4;
   width: 16px;
   height: 16px;
   border-top: 1px solid var(--gelo);
@@ -320,7 +437,8 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   animation: caminho-balao 160ms ease-out backwards;
 }
 
-.caminho-no[data-lado='direita'] .caminho-balao__seta { left: calc(75% - 8px); }
+.caminho-no:not([data-ligado]) .caminho-balao__seta { top: calc(100% - 32px + 8px); }
+.caminho-no[data-lado='direita'] .caminho-balao__seta { left: calc(var(--lateral) + var(--coluna) * 0.75 - 8px); }
 .caminho-balao__topo { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 8px; }
 .caminho-balao__titulo { padding-top: 10px; font-weight: 800; overflow-wrap: anywhere; }
 .caminho-balao__texto { padding-right: 8px; color: var(--texto2); }
@@ -342,60 +460,78 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-balao__fechar .icone { width: 20px; height: 20px; }
 
 @media (hover: hover) {
-  .caminho-no[data-estado='atual'] .caminho-no__alvo:hover:not(:disabled) .caminho-no__lente {
-    border-color: color-mix(in srgb, var(--acao) 80%, var(--texto));
-    background: color-mix(in srgb, var(--acao) 80%, var(--texto));
-  }
-
+  .caminho-no__alvo:hover:not(:disabled) .caminho-no__lente { filter: brightness(1.06); }
   .caminho-no__alvo:hover:not(:disabled) .caminho-no__titulo { text-decoration: underline; text-underline-offset: 4px; }
   .caminho-balao__fechar:hover { color: var(--texto); background: var(--nevoa); }
 }
 
 /*
- * Trilha em montagem (geração ao vivo): cada nó entra com um movimento curto, na ordem em que chega.
- * O Stu "pensa" só enquanto a IA trabalha (DESIGN §6); o texto ao lado diz o mesmo para quem não vê o movimento.
+ * Trilha em montagem (geração ao vivo): cada nó entra com um movimento curto, na ordem em que chega, e o cenário da
+ * linha brota logo depois. O Stu "pensa" enquanto a IA trabalha; o texto ao lado diz o mesmo para quem não vê o movimento.
  */
-.caminho[data-montando] .caminho-no[data-estado='previa'] { animation: caminho-surgir 220ms ease-out backwards; }
-.caminho[data-montando] .caminho-stu .stu { animation: caminho-pensar 1400ms ease-in-out infinite alternate; }
+.caminho[data-montando] .caminho-no[data-estado='previa'] .caminho-no__alvo { animation: caminho-surgir 220ms ease-out backwards; }
+.caminho[data-montando] .caminho-no[data-estado='previa'] .caminho-enfeite { transform-origin: 50% 100%; animation: caminho-brotar 420ms ease-out 160ms backwards; }
+.caminho[data-montando] .mundo-fronteira { animation: caminho-aparecer 360ms ease-out backwards; }
+.caminho[data-montando] .caminho-inicio .stu { animation: caminho-pensar 1400ms ease-in-out infinite alternate; }
 
 /* Onde a próxima lição vai aparecer: lente tracejada e linhas em esqueleto. A folga mantém esse nó, e depois a chegada, acima do rodapé fixo. */
 .caminho-no--vindo, .caminho-chegada { scroll-margin-block-end: calc(112px + env(safe-area-inset-bottom)); }
-.caminho-no--vindo .caminho-no__lente { border-style: dashed; background: var(--fundo); }
-.caminho-no--vindo .caminho-no__texto { gap: 8px; }
-.caminho-no--vindo .caminho-no__texto > span { display: block; width: 60%; height: 16px; border-radius: 8px; background: var(--gelo); }
-.caminho-no--vindo .caminho-no__texto > span + span { width: 30%; height: 12px; }
+.caminho-no--vindo .caminho-no__lente { border: 3px dashed #c3cdee; background: rgb(255 255 255 / 0.7); box-shadow: none; }
+.caminho-no--vindo .caminho-no__texto { width: 60%; gap: 8px; }
+.caminho-no--vindo .caminho-no__texto > span { display: block; width: 80%; height: 14px; border-radius: 8px; background: var(--gelo); }
+.caminho-no--vindo .caminho-no__texto > span + span { width: 45%; height: 10px; }
 .caminho-no--vindo[data-lado='direita'] .caminho-no__texto { align-items: flex-end; }
 
 @keyframes caminho-halo { from { opacity: 0; transform: scale(0.8); } }
+@keyframes caminho-respirar { 50% { opacity: 0.45; transform: scale(1.08); } }
 @keyframes caminho-surgir { from { opacity: 0; transform: translateY(8px) scale(0.96); } }
+@keyframes caminho-brotar { from { opacity: 0; transform: scale(0.4); } }
+@keyframes caminho-aparecer { from { opacity: 0; } }
 @keyframes caminho-pensar { to { transform: translateY(-4px); } }
 @keyframes caminho-etiqueta { from { opacity: 0; transform: translateY(6px); } }
+@keyframes caminho-flutuar { to { transform: translateY(-4px); } }
 @keyframes caminho-abrir { from { opacity: 1; } }
 @keyframes caminho-liberar { 0% { transform: scale(0.84); } 60% { transform: scale(1.08); } }
 @keyframes caminho-balao { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes caminho-cintilar { 50% { opacity: 0.4; transform: scale(0.7) rotate(20deg); } }
+@keyframes mundo-nuvem { to { transform: translateX(24px); } }
 
-/* Skeleton com a forma da trilha; acompanha o leiaute de src/app/trilha.css. */
-.skeleton-trilha { display: grid; gap: 32px; min-width: 0; }
-.skeleton-trilha span { display: block; background: var(--gelo); }
+/* Esqueleto com a forma da trilha: a faixa do topo e o mapa; acompanha o leiaute de src/app/trilha.css. */
+.skeleton-trilha { display: grid; gap: 28px; min-width: 0; }
+.skeleton-trilha span { display: block; }
 
 .skeleton-trilha__cabecalho {
   display: grid;
   gap: 12px;
   padding: 24px;
-  border-radius: var(--raio-bloco);
-  background: var(--nevoa);
+  border: 2px solid var(--gelo);
+  border-radius: 24px;
 }
 
-.skeleton-trilha__cabecalho span { height: 16px; border-radius: 8px; }
+.skeleton-trilha__cabecalho span { height: 16px; border-radius: 8px; background: var(--gelo); }
 .skeleton-trilha__cabecalho span:nth-child(1) { width: 72%; height: 32px; }
-.skeleton-trilha__cabecalho span:nth-child(3) { width: 48%; height: 8px; margin-top: 12px; }
-.skeleton-trilha__caminho { display: grid; gap: 40px; padding-top: 8px; }
-.skeleton-trilha__no { width: 64px; height: 64px; margin-left: calc(25% - 32px); border-radius: 50%; }
+.skeleton-trilha__cabecalho span:nth-child(3) { width: 48%; height: 12px; margin-top: 12px; }
+.skeleton-trilha__caminho { display: grid; gap: 52px; padding: 56px 0; background: var(--chao); }
+
+.skeleton-trilha__no {
+  width: 64px;
+  height: 64px;
+  margin-left: calc(25% - 32px);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.75);
+  box-shadow: 0 6px 0 rgb(255 255 255 / 0.45);
+}
+
 .skeleton-trilha__no[data-lado='direita'] { margin-left: calc(75% - 32px); }
 
+@media (max-width: 767px) {
+  .caminho-balao { --folga-balao: calc(108px + env(safe-area-inset-bottom)); }
+}
+
 @media (min-width: 768px) {
-  .caminho { --lente-base: 72px; --gap-linhas: 52px; }
-  .caminho-stu .stu { width: 72px; }
+  .caminho { --lente-base: 72px; --gap-linhas: 56px; --tam-enfeite: 54px; --tam-miudo: 28px; border-radius: 28px; overflow: hidden; }
+  .caminho-inicio .stu { width: 92px; }
+  .skeleton-trilha__caminho { border-radius: 28px; }
   .skeleton-trilha__no { width: 72px; height: 72px; margin-left: calc(25% - 36px); }
   .skeleton-trilha__no[data-lado='direita'] { margin-left: calc(75% - 36px); }
 }
@@ -405,13 +541,37 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 }
 
 @media (min-width: 1024px) {
-  .caminho { --lente-base: 76px; --gap-linhas: 56px; --folga-marco: 56px; }
-  .skeleton-trilha { width: min(100%, 52rem); justify-self: center; }
-  .skeleton-trilha__caminho { width: min(100%, 36rem); justify-self: center; }
-}
+  .caminho {
+    --lente-base: 76px;
+    --gap-linhas: 60px;
+    --folga-marco: 84px;
+    --coluna: min(100%, 36rem);
+    --lateral: calc((100% - min(100%, 36rem)) / 2);
+    --tam-enfeite: 60px;
+  }
 
-@media (max-width: 767px) {
-  .caminho-balao { --folga-balao: calc(108px + env(safe-area-inset-bottom)); }
+  .caminho-inicio { min-height: 196px; }
+  .caminho-inicio__nuvem { --tam: 84px; }
+  .caminho-inicio__nuvem--2 { --tam: 60px; }
+  .caminho-no__texto { max-width: min(calc(100% - 26px), 20rem); }
+
+  .caminho-enfeite--lateral, .caminho-enfeite--lateral-miudo { display: block; }
+
+  .caminho-enfeite--lateral {
+    --tam: var(--tam-lateral);
+    top: 0;
+    right: calc(var(--lateral) / 2 - var(--tam) / 2);
+  }
+
+  .caminho-enfeite--lateral-miudo {
+    --tam: 30px;
+    top: calc(var(--lente) + 10px);
+    left: calc(var(--lateral) / 2 - var(--tam) / 2);
+  }
+
+  .caminho-no[data-lado='direita'] .caminho-enfeite--lateral { right: auto; left: calc(var(--lateral) / 2 - var(--tam) / 2); }
+  .caminho-no[data-lado='direita'] .caminho-enfeite--lateral-miudo { right: calc(var(--lateral) / 2 - var(--tam) / 2); left: auto; }
+  .skeleton-trilha { width: 100%; justify-self: center; }
 }
 
 /* Movimento reduzido: tudo já aparece no estado final, com a mesma informação (como o bloco global faz com as transições). */

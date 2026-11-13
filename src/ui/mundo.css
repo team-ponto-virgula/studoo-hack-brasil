@@ -1,0 +1,63 @@
+/* Mundo ilustrado (src/ui/mundo.tsx): desenhos, fronteira entre regiões e a paisagem das telas de entrada. */
+
+.desenho { display: block; width: var(--tam, 40px); height: auto; overflow: visible; }
+
+/* Fronteira: ocupa o espaço abaixo do nó; a onda fica no meio e o resto já tem o chão da região seguinte. */
+.mundo-fronteira { position: absolute; inset: var(--lente, 0px) 0 0; z-index: 0; pointer-events: none; }
+.mundo-fronteira__onda { position: absolute; top: calc(50% - 24px); left: 0; display: block; width: 100%; height: 48px; }
+.mundo-fronteira__resto { position: absolute; top: calc(50% + 23.5px); right: 0; bottom: 0; left: 0; background: var(--chao); }
+
+.mundo-fronteira__enfeite {
+  position: absolute;
+  bottom: calc(50% - 4px);
+  left: calc(var(--lateral, 0px) + var(--coluna, 100%) * var(--x));
+}
+
+.mundo-fronteira__enfeite--fim { right: calc(var(--lateral, 0px) + var(--coluna, 100%) * var(--x)); left: auto; }
+
+/*
+ * Paisagem vista de lado: céu, sol, nuvens que passam devagar, um balão, montanhas, colinas e árvores.
+ * As medidas acompanham a largura da caixa (cqw), então a mesma cena serve no celular e na tela larga.
+ */
+.paisagem {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  isolation: isolate;
+  container-type: inline-size;
+  background: linear-gradient(180deg, #d4e3ff 0%, #e6efff 52%, #f3f7ff 100%);
+}
+
+.paisagem__ceu, .paisagem__chao { position: absolute; inset: 0; pointer-events: none; }
+.paisagem__sol { position: absolute; top: 8%; right: 10%; --tam: 13cqw; }
+.paisagem__nuvem { position: absolute; --tam: 20cqw; }
+.paisagem__nuvem--1 { top: 9%; left: 8%; animation: paisagem-nuvem 30s ease-in-out infinite alternate; }
+.paisagem__nuvem--2 { top: 20%; left: 46%; --tam: 14cqw; opacity: 0.9; animation: paisagem-nuvem 38s ease-in-out -12s infinite alternate-reverse; }
+.paisagem__nuvem--3 { top: 4%; left: 62%; --tam: 11cqw; opacity: 0.8; animation: paisagem-nuvem 34s ease-in-out -4s infinite alternate; }
+.paisagem__balao { position: absolute; top: 14%; left: 28%; --tam: 7cqw; animation: paisagem-balao 6s ease-in-out infinite alternate; }
+
+.paisagem__colina { position: absolute; border-radius: 50% 50% 0 0 / 100% 100% 0 0; }
+.paisagem__colina--fundo { bottom: 16%; left: -14%; width: 78%; height: 40%; background: #b1ddbe; }
+.paisagem__colina--meio { right: -18%; bottom: 8%; width: 84%; height: 38%; background: #c9e9bb; }
+.paisagem__colina--frente { right: -6%; bottom: -6%; left: -6%; height: 24%; background: #e3f4da; border-radius: 50% 50% 0 0 / 60% 60% 0 0; }
+.paisagem__picos { position: absolute; bottom: 33%; right: 2%; z-index: -1; --tam: 40cqw; }
+.paisagem__colina--fundo, .paisagem__colina--meio, .paisagem__colina--frente { z-index: 0; }
+.paisagem__enfeite { position: absolute; z-index: 1; }
+.paisagem__enfeite--pinheiro1 { bottom: 41%; left: 8%; --tam: 8cqw; }
+.paisagem__enfeite--pinheiro2 { bottom: 43%; left: 17%; --tam: 6cqw; }
+.paisagem__enfeite--arvore1 { bottom: 33%; right: 18%; --tam: 9cqw; }
+.paisagem__enfeite--arvore2 { bottom: 31%; right: 7%; --tam: 7cqw; }
+.paisagem__enfeite--casa { bottom: 36%; left: 30%; --tam: 8cqw; }
+.paisagem__enfeite--arbusto { bottom: 11%; left: 6%; --tam: 9cqw; }
+.paisagem__enfeite--flores { bottom: 8%; right: 10%; --tam: 7cqw; }
+.paisagem__conteudo { position: absolute; inset: 0; z-index: 2; }
+
+/* Compacta: faixa baixa, só com o essencial (celular, acima do formulário). */
+.paisagem--compacta .paisagem__balao, .paisagem--compacta .paisagem__nuvem--3, .paisagem--compacta .paisagem__enfeite--casa { display: none; }
+
+@keyframes paisagem-nuvem { to { transform: translateX(6cqw); } }
+@keyframes paisagem-balao { to { transform: translateY(-10%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .paisagem *, .mundo-fronteira * { animation: none !important; }
+}
