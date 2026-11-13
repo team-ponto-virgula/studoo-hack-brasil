@@ -22,6 +22,8 @@ export function Entrada() {
   const [errosCampo, setErrosCampo] = useState<ErrosCampo>({});
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
+  /** Conta os erros: a cada um, o formulário treme de novo. */
+  const [tremor, setTremor] = useState(0);
   const emEnvio = useRef(false);
   const campoEmail = useRef<HTMLInputElement>(null);
   const campoSenha = useRef<HTMLInputElement>(null);
@@ -53,6 +55,7 @@ export function Entrada() {
     if (!formatoEmail.test(email)) erros.email = mensagens.login.emailInvalido;
     if (!senha) erros.senha = mensagens.login.senhaVazia;
     setErrosCampo(erros);
+    if (erros.email || erros.senha) setTremor((anterior) => anterior + 1);
     if (erros.email) {
       campoEmail.current?.focus();
       return;
@@ -71,6 +74,7 @@ export function Entrada() {
       window.location.replace('/');
     } catch (falha) {
       setErro(falha instanceof ErroStudoo ? falha.codigo : 'rede');
+      setTremor((anterior) => anterior + 1);
       setEnviando(false);
       emEnvio.current = false;
     }
@@ -99,7 +103,8 @@ export function Entrada() {
             <p className="introducao">{mensagens.login.instrucoes}</p>
           </header>
           {verificando ? <Skeleton /> : (
-            <form className="formulario" method="post" noValidate onSubmit={entrar} aria-busy={enviando}>
+            <form className="formulario" method="post" noValidate onSubmit={entrar} aria-busy={enviando}
+              data-tremor={tremor ? (tremor % 2 ? 'a' : 'b') : undefined}>
               <div className="campo">
                 <label htmlFor="email">{mensagens.login.email}</label>
                 <input ref={campoEmail} id="email" name="email" type="email" inputMode="email" autoComplete="username"
@@ -129,7 +134,16 @@ export function Entrada() {
                 )}
               </div>
               {erro && <EstadoErro codigo={erro} />}
-              <AcaoPrincipal><Botao type="submit" disabled={enviando}>{enviando ? mensagens.login.entrando : mensagens.login.entrar}</Botao></AcaoPrincipal>
+              <AcaoPrincipal>
+                <Botao type="submit" disabled={enviando}>
+                  {enviando ? (
+                    <>
+                      <span className="carregando" aria-hidden="true"><span /><span /><span /></span>
+                      <span className="somente-leitor">{mensagens.login.entrando}</span>
+                    </>
+                  ) : mensagens.login.entrar}
+                </Botao>
+              </AcaoPrincipal>
             </form>
           )}
         </div>

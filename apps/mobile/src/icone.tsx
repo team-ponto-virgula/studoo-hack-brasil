@@ -59,6 +59,22 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 11.5, top: 7.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
     { left: 11.5, top: 13.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
+  lampada: [
+    { left: 6.5, top: 2.75, width: 11, height: 11, borderWidth: 2.5, borderRadius: 5.5 },
+    { left: 9.25, top: 12.5, width: 5.5, height: 3.75, borderLeftWidth: 2.5, borderRightWidth: 2.5 },
+    { left: 8.75, top: 16, width: 6.5, height: 2.5, borderRadius: 1.25, traco: true },
+    { left: 10, top: 19.5, width: 4, height: 2.5, borderRadius: 1.25, traco: true },
+  ],
+  relogio: [
+    { left: 3.5, top: 3.5, width: 17, height: 17, borderWidth: 2.5, borderRadius: 8.5 },
+    { left: 10.75, top: 7, width: 2.5, height: 6.25, borderRadius: 1.25, traco: true },
+    { left: 10.45, top: 11.75, width: 6.1, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '33.7deg' }] },
+  ],
+  alvo: [
+    { left: 3.5, top: 3.5, width: 17, height: 17, borderWidth: 2.5, borderRadius: 8.5 },
+    { left: 7.5, top: 7.5, width: 9, height: 9, borderWidth: 2.5, borderRadius: 4.5 },
+    { left: 11, top: 11, width: 2, height: 2, borderRadius: 1, traco: true },
+  ],
 };
 
 const medidas = [

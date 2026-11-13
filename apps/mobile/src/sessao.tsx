@@ -1,6 +1,7 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { BackHandler, Image, Keyboard, Platform, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
+import { Animated, BackHandler, Keyboard, Platform, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
+import { estiloDeEntrada, useAparecer, useTremor, useVaiVem } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Estudo } from './estudo';
 import { Icone } from './icone';
@@ -119,33 +120,54 @@ async function encerrarNoAparelho(erro?: string): Promise<Sessao> {
 function BoasVindas({ entrar }: { entrar: () => void }) {
   const { width } = useWindowDimensions();
   const largura = Math.min(width, 620) - 40;
+  const arte = useAparecer(0, 420);
+  const titulo = useAparecer(140, 420);
+  const texto = useAparecer(220, 420);
 
   return (
     <Tela pagina="boas-vindas" rodape={<Botao rotulo={mensagens.boasVindas.entrar} testID="entrar-no-piloto" icone="seta" acao={entrar} />}>
-      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={estiloDeEntrada(arte, 14, 0.97)}>
         <Paisagem altura={Math.round(largura * 0.7)} estilo={entradaEstilos.arte}>
-          {(l) => (
-            <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-              style={{ position: 'absolute', bottom: '7%', left: l * 0.35, width: l * 0.3, height: l * 0.33 }} />
-          )}
+          {(l) => <StuAcenando largura={l * 0.3} esquerda={l * 0.35} />}
         </Paisagem>
-      </View>
-      <Titulo testID="boas-vindas">{mensagens.boasVindas.titulo}</Titulo>
-      <Text style={estilos.introducao}>{mensagens.boasVindas.texto}</Text>
+      </Animated.View>
+      <Animated.View style={estiloDeEntrada(titulo, 10, 1)}>
+        <Titulo testID="boas-vindas">{mensagens.boasVindas.titulo}</Titulo>
+      </Animated.View>
+      <Animated.View style={estiloDeEntrada(texto, 10, 1)}>
+        <Text style={estilos.introducao}>{mensagens.boasVindas.texto}</Text>
+      </Animated.View>
       <View style={entradaEstilos.destaques}>
-        {mensagens.boasVindas.destaques.map((destaque, indice) => (
-          <View key={destaque} style={entradaEstilos.destaque}>
-            <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-              style={[entradaEstilos.destaqueIcone, entradaEstilos[`destaque${indice}` as 'destaque0']]}>
-              {indice === 0 && <Desenho nome="temaPopulares" largura={22} />}
-              {indice === 1 && <Icone nome="livro" tamanho={20} cor={cores.fundo} />}
-              {indice === 2 && <Icone nome="check" tamanho={20} cor={cores.fundo} />}
-            </View>
-            <Text style={entradaEstilos.destaqueTexto}>{destaque}</Text>
-          </View>
-        ))}
+        {mensagens.boasVindas.destaques.map((destaque, indice) => <Destaque key={destaque} texto={destaque} indice={indice} />)}
       </View>
     </Tela>
+  );
+}
+
+/** Destaque das boas-vindas: entra em sequência, com o ícone que aparece com um pulinho. */
+function Destaque({ texto, indice }: { texto: string; indice: number }) {
+  const entrada = useAparecer(320 + indice * 90, 420, true);
+  return (
+    <Animated.View style={[entradaEstilos.destaque, estiloDeEntrada(entrada, 12, 0.94)]}>
+      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+        style={[entradaEstilos.destaqueIcone, entradaEstilos[`destaque${indice}` as 'destaque0']]}>
+        {indice === 0 && <Desenho nome="temaPopulares" largura={22} />}
+        {indice === 1 && <Icone nome="livro" tamanho={20} cor={cores.fundo} />}
+        {indice === 2 && <Icone nome="check" tamanho={20} cor={cores.fundo} />}
+      </View>
+      <Text style={entradaEstilos.destaqueTexto}>{texto}</Text>
+    </Animated.View>
+  );
+}
+
+/** O Stu na paisagem: sobe e desce devagar e acena de vez em quando. */
+function StuAcenando({ largura, esquerda }: { largura: number; esquerda: number }) {
+  const aceno = useVaiVem(2400);
+  return (
+    <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+      style={{ position: 'absolute', bottom: '7%', left: esquerda, width: largura, height: largura * 1.1, transformOrigin: 'bottom', transform: [
+        { rotate: aceno.interpolate({ inputRange: [0, 0.8, 0.88, 0.94, 1], outputRange: ['0deg', '0deg', '-6deg', '5deg', '0deg'] }) },
+      ] }} />
   );
 }
 
@@ -160,6 +182,9 @@ function Entrada({ erroInicial, entrar, voltar }: {
   const [erroEmail, setErroEmail] = useState<string | undefined>();
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [ocupado, setOcupado] = useState(false);
+  /** Conta os erros: a cada um, o formulário treme de novo, como na web. */
+  const [erros, setErros] = useState(0);
+  const tremor = useTremor(erros);
   const emEnvio = useRef(false);
   const campoEmail = useRef<ComponentRef<typeof TextInput>>(null);
   const campoSenha = useRef<ComponentRef<typeof TextInput>>(null);
@@ -178,6 +203,7 @@ function Entrada({ erroInicial, entrar, voltar }: {
     // O e-mail é conferido no aparelho, como na web: o erro fica no campo, que recebe o foco.
     if (!formatoEmail.test(email.trim())) {
       setErroEmail(mensagens.entrada.emailInvalido);
+      setErros((total) => total + 1);
       campoEmail.current?.focus();
       return;
     }
@@ -190,6 +216,7 @@ function Entrada({ erroInicial, entrar, voltar }: {
       await entrar(email.trim(), senha);
     } catch (falha) {
       setErro(mensagemDeErro(falha));
+      setErros((total) => total + 1);
       if (falha instanceof ErroStudoo && falha.codigo === 'credenciais_invalidas') setSenha('');
     } finally {
       emEnvio.current = false;
@@ -201,18 +228,15 @@ function Entrada({ erroInicial, entrar, voltar }: {
     <Tela pagina="entrada"
       acoes={<Botao rotulo={mensagens.voltar} testID="voltar-boas-vindas" variante="texto" compacto desativado={ocupado} acao={voltar} />}
       rodape={<Botao rotulo={ocupado ? mensagens.entrada.entrando : mensagens.entrada.entrar}
-        testID="entrar" desativado={!podeEntrar} ocupado={ocupado} acao={() => void enviar()} />}>
+        testID="entrar" desativado={!podeEntrar} ocupado={ocupado} carregando={ocupado} acao={() => void enviar()} />}>
       <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <Paisagem altura={140} compacta estilo={entradaEstilos.banner}>
-          {(l) => (
-            <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-              style={{ position: 'absolute', bottom: '8%', left: l / 2 - 36, width: 72, height: 80 }} />
-          )}
+          {(l) => <StuAcenando largura={72} esquerda={l / 2 - 36} />}
         </Paisagem>
       </View>
       <Titulo foco testID="titulo-entrada">{mensagens.entrada.titulo}</Titulo>
       <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
-      <View style={entradaEstilos.formulario}>
+      <Animated.View style={[entradaEstilos.formulario, { transform: [{ translateX: tremor }] }]}>
         <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email} campoRef={campoEmail} erro={erroEmail}
           onChangeText={(valor) => { setEmail(valor); setErro(undefined); setErroEmail(undefined); }}
           autoCapitalize="none" autoCorrect={false} keyboardType="email-address" returnKeyType="next"
@@ -228,7 +252,7 @@ function Entrada({ erroInicial, entrar, voltar }: {
           acessorio={<BotaoIcone icone={mostrarSenha ? 'olhoFechado' : 'olho'} testID="alternar-senha" selecionado={mostrarSenha}
             rotulo={mensagens.entrada.mostrarSenha} desativado={ocupado}
             acao={() => setMostrarSenha((atual) => !atual)} />} />
-      </View>
+      </Animated.View>
       {erro && <EstadoMensagem mensagem={erro} />}
     </Tela>
   );

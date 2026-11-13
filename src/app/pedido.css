@@ -5,12 +5,7 @@
 
 .painel--pedido { display: grid; gap: 24px; width: min(100%, 44rem); }
 
-.pedido-topo {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: end;
-  gap: 16px;
-}
+.pedido-topo { display: grid; min-width: 0; }
 
 .pedido-topo .introducao { margin-top: 10px; }
 
@@ -44,31 +39,38 @@
   font-size: 0.8125rem;
   font-weight: 900;
 }
-.pedido-stu { display: grid; justify-items: end; gap: 6px; }
-.pedido-stu .stu { width: 76px; }
+/* O Stu acima do campo, com um balão que reage ao pedido: convida, incentiva e comemora a ideia escolhida. */
+.pedido-stu { display: flex; align-items: flex-end; gap: 10px; margin-bottom: -10px; }
+.pedido-stu .stu { flex: none; width: 66px; transform-origin: 50% 100%; animation: pedido-stu 3000ms ease-in-out infinite; }
 
 .pedido-stu__fala {
   position: relative;
-  max-width: 9.5rem;
-  padding: 8px 12px;
-  border-radius: 14px;
+  max-width: 22rem;
+  margin-bottom: 22px;
+  padding: 10px 14px;
+  border: 2px solid var(--gelo);
+  border-radius: 16px;
   color: var(--texto);
-  background: var(--ceu);
-  font-size: 0.875rem;
+  background: var(--fundo);
+  box-shadow: 0 3px 0 var(--gelo);
+  font-size: 0.9375rem;
   font-weight: 800;
   line-height: 1.3;
-  text-align: center;
+  transform-origin: 0 100%;
+  animation: pedido-fala 380ms cubic-bezier(0.2, 0.9, 0.3, 1.4) backwards;
 }
 
-.pedido-stu__fala::after {
+.pedido-stu__fala::before {
   content: '';
   position: absolute;
-  right: 26px;
-  bottom: -5px;
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  background: var(--ceu);
+  bottom: 12px;
+  left: -9px;
+  width: 14px;
+  height: 14px;
+  border-bottom: 2px solid var(--gelo);
+  border-left: 2px solid var(--gelo);
+  border-radius: 0 0 0 3px;
+  background: var(--fundo);
   rotate: 45deg;
 }
 
@@ -82,6 +84,9 @@
 
 .pedido-formulario { gap: 28px; }
 .pedido-campo textarea { min-height: 148px; padding: 14px 18px; font-size: 1.125rem; line-height: 1.45; background: #fbfcff; }
+/* Ideia aplicada: o campo brilha em dourado por um instante (dois nomes iguais para a animação rodar a cada ideia). */
+.pedido-campo textarea[data-brilho='a'] { animation: pedido-brilho-a 900ms ease-out; }
+.pedido-campo textarea[data-brilho='b'] { animation: pedido-brilho-b 900ms ease-out; }
 .pedido-dica { color: var(--texto) !important; font-weight: 700; }
 .pedido-contador { justify-self: end; }
 
@@ -141,6 +146,7 @@
 }
 
 .pedido-tema .desenho { --tam: 22px; }
+.pedido-tema[aria-pressed='true'] .desenho { animation: pedido-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
 .pedido-tema[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f0f4ff; }
 .pedido-tema:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
 
@@ -171,7 +177,35 @@
 .pedido-exemplo__acao { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; color: var(--texto2); }
 .pedido-exemplo__acao .icone { width: 18px; height: 18px; }
 .pedido-exemplo[data-escolhida] { border-color: var(--acao); background: #f3f6ff; box-shadow: 0 3px 0 #b9c7f5; }
-.pedido-exemplo[data-escolhida] .pedido-exemplo__acao { color: var(--fundo); background: var(--acao); }
+.pedido-exemplo[data-escolhida] .pedido-exemplo__acao { color: var(--fundo); background: var(--acao); animation: pedido-check 420ms cubic-bezier(0.2, 0.9, 0.3, 1.6); }
+.pedido-exemplos > li { animation: pedido-ideia 360ms cubic-bezier(0.2, 0.8, 0.3, 1.2) backwards; }
+.pedido-exemplos > li:nth-child(2) { animation-delay: 50ms; }
+.pedido-exemplos > li:nth-child(3) { animation-delay: 100ms; }
+.pedido-exemplos > li:nth-child(4) { animation-delay: 150ms; }
+.pedido-exemplos > li:nth-child(5) { animation-delay: 200ms; }
+.pedido-exemplos > li:nth-child(6) { animation-delay: 250ms; }
+
+/* Gerar trilha: quando fica disponível, um brilho atravessa o botão uma vez. */
+.pedido-formulario .acao-principal .botao { position: relative; overflow: hidden; }
+
+.pedido-formulario .acao-principal .botao:not(:disabled)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
+  pointer-events: none;
+  transform: translateX(-120%);
+  animation: pedido-brilho-botao 1100ms ease-out 200ms forwards;
+}
+
+@keyframes pedido-fala { from { opacity: 0; transform: scale(0.85); } }
+@keyframes pedido-stu { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes pedido-brilho-a { 0% { border-color: #f0b429; box-shadow: 0 0 0 0 rgb(255 209 102 / 0.9); } 100% { box-shadow: 0 0 0 14px rgb(255 209 102 / 0); } }
+@keyframes pedido-brilho-b { 0% { border-color: #f0b429; box-shadow: 0 0 0 0 rgb(255 209 102 / 0.9); } 100% { box-shadow: 0 0 0 14px rgb(255 209 102 / 0); } }
+@keyframes pedido-icone { 0% { transform: scale(1) rotate(0deg); } 30% { transform: scale(1.3) rotate(-12deg); } 60% { transform: scale(0.95) rotate(8deg); } 100% { transform: scale(1) rotate(0deg); } }
+@keyframes pedido-check { from { transform: scale(0.3); } }
+@keyframes pedido-ideia { from { opacity: 0; transform: translateY(8px); } }
+@keyframes pedido-brilho-botao { to { transform: translateX(120%); } }
 .pedido-exemplo:active:not(:disabled) { box-shadow: 0 1px 0 var(--gelo); transform: translateY(2px); }
 .pedido-exemplo:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
 
@@ -184,22 +218,15 @@
 /* Tablet e computador: coluna centrada, Stu maior, áreas em linhas e ideias em duas colunas. */
 @media (min-width: 768px) {
   .painel--pedido { justify-self: center; gap: 28px; }
-  .pedido-topo { gap: 24px; }
-  .pedido-stu .stu { width: 96px; }
+  .pedido-stu .stu { width: 76px; }
   .pedido-temas { flex-wrap: wrap; margin-inline: 0; padding: 0; overflow: visible; }
   .pedido-exemplos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pedido-formulario .acao-principal > .botao { min-width: 14rem; }
 }
 
-@media (min-width: 1024px) {
-  .pedido-stu .stu { width: 108px; }
-}
 
-@media (max-width: 479px) {
-  .pedido-stu__fala { display: none; }
-  .pedido-stu .stu { width: 68px; }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .pedido-exemplo:active:not(:disabled), .pedido-surpresa:active:not(:disabled) { transform: none; }
+  .pedido-formulario .acao-principal .botao::after { display: none; }
 }

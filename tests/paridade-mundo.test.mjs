@@ -22,9 +22,23 @@ function lista(texto, rotulo) {
   return texto.slice(inicio, fim);
 }
 
+/** Bloco de primeiro nível do objeto de mensagens, do rótulo até a chave que fecha o bloco. */
+function bloco(texto, rotulo) {
+  const inicio = texto.indexOf(`  ${rotulo}: {\n`);
+  assert.ok(inicio >= 0, `bloco ${rotulo} não encontrado`);
+  const fim = texto.indexOf("\n  },", inicio);
+  return texto.slice(inicio, fim);
+}
+
 test("as áreas e ideias do pedido e os passos da apresentação são os mesmos na web e no app", async () => {
   const [web, app] = await Promise.all([ler("src/mensagens/pt-BR.ts"), ler("apps/mobile/src/mensagens.ts")]);
   for (const rotulo of ["temas", "passos"]) assert.equal(lista(app, rotulo), lista(web, rotulo), rotulo);
   assert.match(lista(web, "temas"), /id: 'idiomas'.*id: 'musica'.*id: 'matematica'/s);
   assert.match(lista(web, "temas"), /'SQL para a prova'/);
+});
+
+test("a tela que escreve as lições e as dicas da geração dizem o mesmo na web e no app", async () => {
+  const [web, app] = await Promise.all([ler("src/mensagens/pt-BR.ts"), ler("apps/mobile/src/mensagens.ts")]);
+  assert.equal(bloco(app, "preparo"), bloco(web, "preparo"));
+  assert.equal(lista(app, "dicas"), lista(web, "dicas"));
 });

@@ -35,8 +35,46 @@
 .apresentacao-pontos > span[data-ativo] { width: 28px; background: var(--acao); }
 .apresentacao-posicao { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
 
-.apresentacao-arte { animation: apresentacao-entrar 320ms ease-out backwards; }
-.apresentacao-textos { display: grid; gap: 4px; animation: apresentacao-entrar 320ms ease-out 60ms backwards; }
+.apresentacao-arte { animation: apresentacao-entrar 380ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards; }
+.apresentacao-textos { display: grid; gap: 4px; animation: apresentacao-entrar 380ms cubic-bezier(0.2, 0.8, 0.3, 1) 60ms backwards; }
+.apresentacao-arte[data-direcao='tras'], .apresentacao-textos[data-direcao='tras'] { animation-name: apresentacao-voltar; }
+
+/* Último passo: as áreas de interesse, em cartões que entram em sequência; a escolhida fica marcada e o ícone pula. */
+.apresentacao-areas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px;
+  border-radius: 28px;
+  background: var(--ceu);
+}
+
+.apresentacao-area {
+  display: grid;
+  min-height: 96px;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border: 2px solid var(--gelo);
+  border-radius: 18px;
+  color: var(--texto);
+  background: var(--fundo);
+  box-shadow: 0 4px 0 var(--gelo);
+  font-weight: 800;
+  cursor: pointer;
+  animation: apresentacao-surgir 380ms cubic-bezier(0.2, 0.9, 0.3, 1.3) calc(var(--i) * 55ms) backwards;
+  transition: border-color 140ms ease-out, background-color 140ms ease-out, box-shadow 110ms ease-out, transform 110ms ease-out;
+}
+
+.apresentacao-area .desenho { --tam: 36px; }
+.apresentacao-area:active { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
+.apresentacao-area[aria-pressed='true'] { border-color: var(--acao); color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
+.apresentacao-area[aria-pressed='true'] .desenho { animation: apresentacao-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+
+@media (hover: hover) {
+  .apresentacao-area:hover:not([aria-pressed='true']) { background: var(--nevoa); }
+}
 .apresentacao-textos h1 { text-wrap: balance; }
 .apresentacao-textos .introducao { font-size: 1.125rem; }
 .apresentacao-paisagem { aspect-ratio: 4 / 3; border-radius: 28px; }
@@ -192,12 +230,15 @@
 .apresentacao-rodape__conteudo { display: flex; justify-content: flex-end; gap: 12px; }
 .apresentacao-rodape__conteudo > .botao { min-width: min(100%, 10rem); }
 
-@keyframes apresentacao-entrar { from { opacity: 0; transform: translateY(8px); } }
+@keyframes apresentacao-entrar { from { opacity: 0; transform: translateX(32px); } }
+@keyframes apresentacao-voltar { from { opacity: 0; transform: translateX(-32px); } }
+@keyframes apresentacao-icone { 0% { transform: scale(1) rotate(0deg); } 30% { transform: scale(1.3) rotate(-12deg); } 60% { transform: scale(0.95) rotate(8deg); } 100% { transform: scale(1) rotate(0deg); } }
 /* `scale` à parte de `transform`, para somar com a flutuação dos temas em vez de ser anulado por ela. */
 @keyframes apresentacao-surgir { from { opacity: 0; scale: 0.5; } }
 @keyframes apresentacao-acenar { 0%, 60%, 100% { rotate: 0deg; } 70% { rotate: -5deg; } 80% { rotate: 4deg; } 90% { rotate: -3deg; } }
 
 @media (min-width: 768px) {
+  .apresentacao-areas { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .apresentacao-paisagem { aspect-ratio: 16 / 10; }
   .mini-trilha { aspect-ratio: 16 / 9; }
 }

@@ -186,6 +186,11 @@ export const desenhosMundo = {
 
 export type NomeDesenho = keyof typeof desenhosMundo;
 
+/** Desenhos que balançam devagar com o vento no mapa; pedras, casas, água e montanhas ficam paradas. */
+export const desenhosQueBalancam: ReadonlySet<NomeDesenho> = new Set<NomeDesenho>(
+  ['arvore', 'pinheiro', 'arbusto', 'flores', 'relva', 'cogumelo', 'balao', 'nuvem'],
+);
+
 /**
  * Regiões do mundo, uma por trecho da trilha, em ciclo: dos campos à floresta e às montanhas, e depois o lago, a vila e
  * as nuvens. A região é só cenário: não tem nome na tela nem agrupa lições por assunto (spec 03).

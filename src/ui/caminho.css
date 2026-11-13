@@ -17,6 +17,7 @@
   --tam-enfeite: 44px;
   --tam-miudo: 24px;
   --tam-lateral: 64px;
+  --tam-guia: 54px;
   --estrada: rgb(255 255 255 / 0.66);
   --labio-neutro: #c8d0ea;
   position: relative;
@@ -469,20 +470,149 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
  * Trilha em montagem (geração ao vivo): cada nó entra com um movimento curto, na ordem em que chega, e o cenário da
  * linha brota logo depois. O Stu "pensa" enquanto a IA trabalha; o texto ao lado diz o mesmo para quem não vê o movimento.
  */
-.caminho[data-montando] .caminho-no[data-estado='previa'] .caminho-no__alvo { animation: caminho-surgir 220ms ease-out backwards; }
+.caminho[data-montando] .caminho-no[data-estado='previa'] .caminho-no__alvo { animation: caminho-cair 520ms cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards; }
 .caminho[data-montando] .caminho-no[data-estado='previa'] .caminho-enfeite { transform-origin: 50% 100%; animation: caminho-brotar 420ms ease-out 160ms backwards; }
+.caminho[data-montando] .caminho-no[data-estado='previa'] .caminho-enfeite--balanca {
+  animation: caminho-brotar 420ms ease-out 160ms backwards, caminho-balancar 3600ms ease-in-out calc(var(--ordem, 0) * -600ms) infinite alternate;
+}
 .caminho[data-montando] .mundo-fronteira { animation: caminho-aparecer 360ms ease-out backwards; }
 .caminho[data-montando] .caminho-inicio .stu { animation: caminho-pensar 1400ms ease-in-out infinite alternate; }
 
 /* Onde a próxima lição vai aparecer: lente tracejada e linhas em esqueleto. A folga mantém esse nó, e depois a chegada, acima do rodapé fixo. */
 .caminho-no--vindo, .caminho-chegada { scroll-margin-block-end: calc(112px + env(safe-area-inset-bottom)); }
-.caminho-no--vindo .caminho-no__lente { border: 3px dashed #c3cdee; background: rgb(255 255 255 / 0.7); box-shadow: none; }
+.caminho-no--vindo .caminho-no__lente { border: 3px dashed #b9c5ec; background: rgb(255 255 255 / 0.7); box-shadow: none; animation: vindo-girar 6s linear infinite; }
 .caminho-no--vindo .caminho-no__texto { width: 60%; gap: 8px; }
-.caminho-no--vindo .caminho-no__texto > span { display: block; width: 80%; height: 14px; border-radius: 8px; background: var(--gelo); }
+.caminho-no--vindo .caminho-no__texto > span { display: block; width: 80%; height: 14px; border-radius: 8px; }
 .caminho-no--vindo .caminho-no__texto > span + span { width: 45%; height: 10px; }
 .caminho-no--vindo[data-lado='direita'] .caminho-no__texto { align-items: flex-end; }
 
+/* Stu guia: ao lado do nó atual, no lado livre; sobe e desce devagar e acena de vez em quando. */
+.caminho-guia {
+  --tam: var(--tam-guia);
+  position: absolute;
+  top: -12px;
+  left: calc(var(--lateral) + (var(--coluna) * 0.25 - var(--lente) / 2 - var(--tam)) / 2);
+  z-index: 1;
+  width: var(--tam);
+  animation: caminho-guia-entrar 460ms cubic-bezier(0.2, 0.9, 0.3, 1.4) 300ms backwards;
+}
+
+.caminho-no[data-lado='direita'] .caminho-guia { right: calc(var(--lateral) + (var(--coluna) * 0.25 - var(--lente) / 2 - var(--tam)) / 2); left: auto; }
+.caminho-guia .stu { width: 100%; transform-origin: 50% 100%; animation: caminho-guia 2600ms ease-in-out infinite, stu-acenar 5200ms ease-in-out 1200ms infinite; }
+
+.caminho-guia::after {
+  content: '';
+  position: absolute;
+  right: 18%;
+  bottom: -2px;
+  left: 18%;
+  z-index: -1;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(27 42 94 / 0.14);
+  animation: caminho-guia-sombra 2600ms ease-in-out infinite;
+}
+
+/* Placa de madeira no alto do mapa, com a frase do Stu quando ele está no caminho. */
+.caminho-inicio__conteudo--placa { margin-bottom: 22px; }
+
+.caminho-placa {
+  position: relative;
+  max-width: 17rem;
+  padding: 10px 16px;
+  border: 3px solid #c79a62;
+  border-radius: 12px;
+  color: #5b3a17;
+  background: #f7e3c2;
+  box-shadow: 0 4px 0 #b0844d;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  line-height: 1.35;
+  text-wrap: pretty;
+  transform-origin: 50% 140%;
+  animation: placa-entrar 520ms cubic-bezier(0.2, 0.9, 0.3, 1.3) 150ms backwards;
+}
+
+.caminho-placa::before, .caminho-placa::after {
+  content: '';
+  position: absolute;
+  top: calc(100% + 3px);
+  z-index: -1;
+  width: 8px;
+  height: 30px;
+  border-radius: 0 0 3px 3px;
+  background: #a87650;
+}
+
+.caminho-placa::before { left: 22%; }
+.caminho-placa::after { right: 22%; }
+
+/* Balão do Stu na geração: pontinhos que digitam e a dica que troca. */
+.caminho-inicio__fala { display: grid; gap: 6px; }
+.caminho-digitando { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: middle; }
+.caminho-digitando > span { width: 6px; height: 6px; border-radius: 50%; background: var(--acao); animation: carregando-pulo 900ms ease-in-out infinite; }
+.caminho-digitando > span:nth-child(2) { animation-delay: 150ms; }
+.caminho-digitando > span:nth-child(3) { animation-delay: 300ms; }
+.caminho-inicio__dica { color: var(--texto2); font-size: 0.8125rem; font-weight: 700; animation: dica-entrar 420ms ease-out backwards; }
+
+/* Árvores, flores e balões balançam devagar com o vento. */
+.caminho-enfeite--balanca { transform-origin: 50% 100%; animation: caminho-balancar 3600ms ease-in-out calc(var(--ordem, 0) * -600ms) infinite alternate; }
+
+/* Entrada da trilha: os nós caem no lugar um a um, de cima para baixo, e o cenário brota logo depois. */
+.caminho[data-entrada] .caminho-no__alvo { animation: caminho-cair 520ms cubic-bezier(0.2, 0.9, 0.3, 1.3) calc(100ms + var(--ordem) * 70ms) backwards; }
+.caminho[data-entrada] .caminho-enfeite { transform-origin: 50% 100%; animation: caminho-brotar 480ms ease-out calc(260ms + var(--ordem) * 70ms) backwards; }
+
+.caminho[data-entrada] .caminho-enfeite--balanca {
+  animation: caminho-brotar 480ms ease-out calc(260ms + var(--ordem) * 70ms) backwards,
+    caminho-balancar 3600ms ease-in-out calc(var(--ordem, 0) * -600ms) infinite alternate;
+}
+
+/* Volta de uma lição concluída: o nó comemora, a linha até o próximo se desenha e só então o próximo se abre. */
+.caminho-no[data-recem] .caminho-no__lente { animation: caminho-comemorar 640ms cubic-bezier(0.2, 0.9, 0.3, 1.5) 200ms backwards; }
+.caminho-ligacao__desenho { position: absolute; inset: 0; clip-path: inset(0 0 0 0); animation: caminho-desenhar 700ms ease-in-out 600ms backwards; }
+.caminho-conector__linha.caminho-conector__linha--feita { stroke: #2f9e6f; stroke-width: 6px; stroke-dasharray: none; }
+.caminho[data-recem] .caminho-no[data-liberada] .caminho-no__cadeado { animation-delay: 1050ms; }
+.caminho[data-recem] .caminho-no[data-liberada] .caminho-no__lente { animation-delay: 1200ms; }
+.caminho[data-recem] .caminho-no[data-liberada] .caminho-no__lente::before { animation-delay: 1420ms, 1800ms; }
+.caminho[data-recem] .caminho-no[data-liberada] .caminho-no__etiqueta { animation-delay: 1500ms, 1900ms; }
+.caminho[data-recem] .caminho-no[data-liberada] .caminho-guia { animation-delay: 1350ms; }
+
+/* Balão do nó: abre com um pulinho, a partir da seta, na cor do estado. */
+.caminho-balao { transform-origin: 50% 0; animation: caminho-balao-abrir 220ms cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards; }
+.caminho-balao[data-estado='concluida'] { border: 2px solid #b6e3c8; box-shadow: 0 5px 0 #b6e3c8, 0 14px 32px rgb(27 42 94 / 0.14); }
+.caminho-balao[data-estado='concluida'] .caminho-balao__titulo { color: var(--sucesso); }
+.caminho-balao[data-estado='bloqueada'] { border: 2px solid var(--gelo); box-shadow: 0 5px 0 var(--gelo), 0 14px 32px rgb(27 42 94 / 0.14); }
+
+/* Marco vencido: a bandeira acena. */
+.caminho-marco[data-vencido] .icone { transform-origin: 25% 85%; animation: marco-acenar 1800ms ease-in-out infinite; }
+
+/* Chegada: com tudo concluído, o Stu pula ao lado do troféu; quando a trilha fica pronta ou é vencida agora, há festa. */
+.caminho-chegada__stu {
+  position: absolute;
+  bottom: 74px;
+  left: calc(50% + 50px);
+  z-index: 2;
+  width: 62px;
+  animation: chegada-pular 760ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite alternate;
+}
+
+.caminho-chegada[data-festa] .caminho-chegada__lente { animation: chegada-festa 720ms cubic-bezier(0.2, 0.9, 0.3, 1.5) backwards; }
+
 @keyframes caminho-halo { from { opacity: 0; transform: scale(0.8); } }
+@keyframes caminho-cair { 0% { opacity: 0; transform: translateY(-18px) scale(0.9); } 60% { opacity: 1; transform: translateY(3px) scale(1.02); } }
+@keyframes caminho-balancar { from { rotate: -2.5deg; } to { rotate: 2.5deg; } }
+@keyframes caminho-comemorar { 0% { transform: scale(0.7); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes caminho-desenhar { from { clip-path: inset(0 0 100% 0); } }
+@keyframes caminho-balao-abrir { from { opacity: 0; transform: translateY(-6px) scale(0.92); } }
+@keyframes caminho-guia { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes caminho-guia-sombra { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(0.8); opacity: 0.6; } }
+@keyframes caminho-guia-entrar { from { opacity: 0; transform: translateY(10px) scale(0.6); } }
+@keyframes placa-entrar { from { opacity: 0; transform: rotate(-8deg) scale(0.8); } }
+@keyframes dica-entrar { from { opacity: 0; transform: translateY(4px); } }
+@keyframes marco-acenar { 0%, 100% { rotate: -6deg; } 50% { rotate: 9deg; } }
+@keyframes chegada-pular { from { transform: translateY(0); } to { transform: translateY(-14px) rotate(4deg); } }
+@keyframes chegada-festa { 0% { transform: scale(0.5); } 60% { transform: scale(1.16); } 100% { transform: scale(1); } }
+@keyframes vindo-girar { to { rotate: 360deg; } }
 @keyframes caminho-respirar { 50% { opacity: 0.45; transform: scale(1.08); } }
 @keyframes caminho-surgir { from { opacity: 0; transform: translateY(8px) scale(0.96); } }
 @keyframes caminho-brotar { from { opacity: 0; transform: scale(0.4); } }
@@ -529,7 +659,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 }
 
 @media (min-width: 768px) {
-  .caminho { --lente-base: 72px; --gap-linhas: 56px; --tam-enfeite: 54px; --tam-miudo: 28px; border-radius: 28px; overflow: hidden; }
+  .caminho { --lente-base: 72px; --gap-linhas: 56px; --tam-enfeite: 54px; --tam-miudo: 28px; --tam-guia: 62px; border-radius: 28px; overflow: hidden; }
   .caminho-inicio .stu { width: 92px; }
   .skeleton-trilha__caminho { border-radius: 28px; }
   .skeleton-trilha__no { width: 72px; height: 72px; margin-left: calc(25% - 36px); }
@@ -548,6 +678,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
     --coluna: min(100%, 36rem);
     --lateral: calc((100% - min(100%, 36rem)) / 2);
     --tam-enfeite: 60px;
+    --tam-guia: 68px;
   }
 
   .caminho-inicio { min-height: 196px; }

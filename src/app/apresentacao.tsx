@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, Icone, Paisagem, Stu, coresDaRegiao, type NomeDesenho } from '../ui';
+import { iconesDosTemas, type IdTema } from './pedido';
 import './apresentacao.css';
 
 const chave = 'studoo.apresentacao';
@@ -33,14 +34,20 @@ const temasDaArte: readonly { nome: string; icone: NomeDesenho }[] = [
   { nome: mensagens.apresentacao.temas[5], icone: 'temaTecnologia' },
 ];
 
+/** Áreas para escolher no último passo: as do pedido, menos Populares. */
+const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 'populares');
+
 /**
- * Apresentação do Studoo em quatro passos: o Stu, qualquer assunto, a trilha que nasce e o progresso salvo.
- * Na primeira vez termina em "Criar minha primeira trilha"; reaberta pelo pedido, termina em "Entendi". Pular encerra
- * a qualquer momento. O título de cada passo recebe o foco e diz a posição ("Passo 2 de 4"); as setas do teclado
- * também avançam e voltam. As ilustrações são decorativas.
+ * Apresentação do Studoo em cinco passos: o Stu, qualquer assunto, a trilha que nasce, o progresso salvo e, por fim,
+ * a área que interessa, que já abre o pedido com as ideias dela. Na primeira vez termina em "Criar minha primeira
+ * trilha"; reaberta pelo pedido, termina em "Entendi". Pular encerra a qualquer momento. Cada passo entra deslizando
+ * na direção em que a pessoa anda. O título de cada passo recebe o foco e diz a posição ("Passo 2 de 5"); as setas do
+ * teclado também avançam e voltam. As ilustrações são decorativas.
  */
-export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; concluir: () => void }) {
+export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; concluir: (area?: IdTema) => void }) {
   const [passo, setPasso] = useState(0);
+  const [direcao, setDirecao] = useState<'frente' | 'tras'>('frente');
+  const [area, setArea] = useState<IdTema | undefined>();
   const titulo = useRef<HTMLHeadingElement>(null);
   const passos = mensagens.apresentacao.passos;
   const total = passos.length;
@@ -56,18 +63,23 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
     titulo.current?.focus();
   }, [passo]);
 
+  function irPara(destino: number) {
+    setDirecao(destino < passo ? 'tras' : 'frente');
+    setPasso(destino);
+  }
+
   function avancar() {
-    if (ultimo) concluir();
-    else setPasso(passo + 1);
+    if (ultimo) concluir(area);
+    else irPara(passo + 1);
   }
 
   function teclas(evento: KeyboardEvent<HTMLElement>) {
     if (evento.key === 'ArrowRight' && !ultimo) {
       evento.preventDefault();
-      setPasso(passo + 1);
+      irPara(passo + 1);
     } else if (evento.key === 'ArrowLeft' && passo > 0) {
       evento.preventDefault();
-      setPasso(passo - 1);
+      irPara(passo - 1);
     }
   }
 
@@ -85,15 +97,28 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
           </span>
           <span className="apresentacao-posicao">{posicao}</span>
         </div>
-        {!ultimo && <Botao variante="texto" onClick={concluir}>{mensagens.apresentacao.pular}</Botao>}
+        {!ultimo && <Botao variante="texto" onClick={() => concluir()}>{mensagens.apresentacao.pular}</Botao>}
       </header>
-      <div className="apresentacao-arte" key={passo} aria-hidden="true">
-        {passo === 0 && <ArteStu />}
-        {passo === 1 && <ArteTemas />}
-        {passo === 2 && <ArteTrilha />}
-        {passo === 3 && <ArteProgresso />}
-      </div>
-      <div className="apresentacao-textos" key={`textos-${passo}`}>
+      {passo < 4 ? (
+        <div className="apresentacao-arte" key={passo} data-direcao={direcao} aria-hidden="true">
+          {passo === 0 && <ArteStu />}
+          {passo === 1 && <ArteTemas />}
+          {passo === 2 && <ArteTrilha />}
+          {passo === 3 && <ArteProgresso />}
+        </div>
+      ) : (
+        <div className="apresentacao-arte apresentacao-areas" key={passo} data-direcao={direcao} role="group"
+          aria-label={mensagens.apresentacao.areas}>
+          {areasDaApresentacao.map((item, indice) => (
+            <button key={item.id} type="button" className="apresentacao-area" aria-pressed={area === item.id}
+              style={{ '--i': indice } as CSSProperties} onClick={() => setArea((atual) => (atual === item.id ? undefined : item.id))}>
+              <Desenho nome={iconesDosTemas[item.id]} />
+              {item.nome}
+            </button>
+          ))}
+        </div>
+      )}
+      <div className="apresentacao-textos" key={`textos-${passo}`} data-direcao={direcao}>
         <h1 id="apresentacao-titulo" tabIndex={-1} ref={titulo}>
           <span className="somente-leitor">{posicao}: </span>{passos[passo].titulo}
         </h1>
@@ -101,7 +126,7 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
       </div>
       <footer className="apresentacao-rodape">
         <div className="apresentacao-rodape__conteudo">
-          {passo > 0 && <Botao variante="secundario" onClick={() => setPasso(passo - 1)}>{mensagens.apresentacao.voltar}</Botao>}
+          {passo > 0 && <Botao variante="secundario" onClick={() => irPara(passo - 1)}>{mensagens.apresentacao.voltar}</Botao>}
           <Botao onClick={avancar}>{rotuloFinal}{!ultimo && <Icone nome="seta" />}</Botao>
         </div>
       </footer>

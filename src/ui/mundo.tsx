@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { coresMundo, desenhosMundo, regiaoDoTrecho, type Forma, type NomeDesenho } from './mundo-desenhos';
+import { coresMundo, desenhosMundo, desenhosQueBalancam, regiaoDoTrecho, type Forma, type NomeDesenho } from './mundo-desenhos';
 import './mundo.css';
 
 /*
@@ -46,6 +46,11 @@ export function Desenho({ nome, className = '', style }: { nome: NomeDesenho; cl
   );
 }
 
+/** Classe de um enfeite que balança com o vento (árvores, flores…); os outros ficam parados. */
+function classeQueBalanca(nome: NomeDesenho, base: string) {
+  return desenhosQueBalancam.has(nome) ? `${base} mundo-balanca` : base;
+}
+
 /** Cores de uma região como variáveis CSS: o chão (`--chao`) e o relevo (`--relevo`). */
 export function coresDaRegiao(trecho: number): CSSProperties {
   const regiao = regiaoDoTrecho(trecho);
@@ -67,10 +72,10 @@ export function Fronteira({ trechoSeguinte }: { trechoSeguinte: number }) {
         <path d="M0 32C40 16 76 14 110 24S176 44 218 30 296 10 338 20 384 34 400 28V48H0Z" fill="var(--chao)" />
       </svg>
       <span className="mundo-fronteira__resto" />
-      <Desenho nome={primeiro} className="mundo-fronteira__enfeite" style={posicao(0.02, 46)} />
-      <Desenho nome={segundo} className="mundo-fronteira__enfeite" style={posicao(0.15, 34)} />
-      <Desenho nome={terceiro} className="mundo-fronteira__enfeite mundo-fronteira__enfeite--fim" style={posicao(0.15, 30)} />
-      <Desenho nome={quarto} className="mundo-fronteira__enfeite mundo-fronteira__enfeite--fim" style={posicao(0.02, 44)} />
+      <Desenho nome={primeiro} className={classeQueBalanca(primeiro, 'mundo-fronteira__enfeite')} style={posicao(0.02, 46)} />
+      <Desenho nome={segundo} className={classeQueBalanca(segundo, 'mundo-fronteira__enfeite')} style={posicao(0.15, 34)} />
+      <Desenho nome={terceiro} className={classeQueBalanca(terceiro, 'mundo-fronteira__enfeite mundo-fronteira__enfeite--fim')} style={posicao(0.15, 30)} />
+      <Desenho nome={quarto} className={classeQueBalanca(quarto, 'mundo-fronteira__enfeite mundo-fronteira__enfeite--fim')} style={posicao(0.02, 44)} />
     </span>
   );
 }
