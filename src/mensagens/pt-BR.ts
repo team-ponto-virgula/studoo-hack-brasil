@@ -8,9 +8,8 @@ export const mensagens = {
   tentarNovamente: 'Tentar novamente',
   sair: 'Sair',
   login: {
-    titulo: 'Entre no Studoo',
-    tituloAntesDaMarca: 'Entre no',
-    instrucoes: 'Use sua conta para abrir seus planos de estudo.',
+    titulo: 'Acesse sua conta',
+    instrucoes: 'Entre para continuar seus estudos.',
     email: 'E-mail',
     senha: 'Senha',
     entrar: 'Entrar',

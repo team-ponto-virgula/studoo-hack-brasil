@@ -171,22 +171,19 @@ button, input, textarea { font: inherit; }
   display: grid;
   min-height: 100vh;
   min-height: 100svh;
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr);
 }
 
 .entrada-conteudo {
   display: grid;
   min-width: 0;
-  align-content: center;
-  justify-items: center;
-  padding: 116px max(28px, 8vw) 56px;
-  position: relative;
+  place-items: center;
+  padding: 48px var(--espaco-pagina);
 }
 
-.entrada-marca { position: absolute; top: 36px; left: max(28px, 6vw); }
-.entrada-forma { width: 100%; max-width: 420px; }
-.entrada-titulo { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.26em; }
-.entrada-titulo .logo { display: block; width: clamp(116px, 4.04em, 164px); height: auto; transform: translateY(0.22em); }
+.entrada-forma { width: 100%; max-width: 400px; }
+.entrada-cabecalho .logo-quadro { display: block; width: fit-content; margin-bottom: 24px; }
+.entrada-cabecalho .introducao { margin-top: 8px; }
 .entrada-forma .formulario { margin-top: 32px; }
 .entrada-forma .botao--primario { width: 100%; }
 
@@ -377,7 +374,6 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 @media (max-width: 1023px) {
   .entrada { grid-template-columns: minmax(0, 1fr); }
   .entrada-arte { display: none; }
-  .entrada-marca { left: var(--espaco-pagina); }
   .estudo { grid-template-columns: minmax(0, 1fr); }
   .barra-lateral, .estudo-identificacao { display: none; }
   .estudo-marca, .planos-movel { display: block; }
@@ -388,13 +384,13 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
   :root { --espaco-pagina: 20px; }
 
   .entrada-conteudo {
-    justify-items: start;
-    align-content: start;
-    padding: 112px max(20px, env(safe-area-inset-right)) calc(104px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    padding: calc(36px + env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
   }
 
-  .entrada-marca { top: max(24px, env(safe-area-inset-top)); }
-  .entrada-forma { max-width: 100%; }
+  .entrada-cabecalho .logo { width: 124px; }
+  .entrada-forma .formulario { margin-top: 24px; }
+  .entrada-forma .acao-principal { padding-inline: max(24px, env(safe-area-inset-left)) max(24px, env(safe-area-inset-right)); }
+  .entrada-forma .acao-principal > .botao { max-width: 400px; }
   .estudo-cabecalho { min-height: 64px; padding: max(4px, env(safe-area-inset-top)) 16px 4px; }
   .estudo-cabecalho .logo { width: 102px; }
   .estudo-conta .botao { min-height: 44px; padding-inline: 8px; font-size: 0.875rem; }
