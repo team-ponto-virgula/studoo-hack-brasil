@@ -29,11 +29,12 @@ Com `IA=falsa`, a geração não chama nenhum serviço externo. Objetivos de SQL
 npm run typecheck
 npm run typecheck --workspace apps/mobile
 npm run test:dominio
+npm run test:paridade
 npm run test:marco
 npm run test:trilha
 ```
 
-`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
+`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. `test:paridade` também não: confere que os desenhos do mundo da trilha, as ideias do pedido e os passos da apresentação são os mesmos na web e no app. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
 
 ## App Android em modo de desenvolvimento
 
