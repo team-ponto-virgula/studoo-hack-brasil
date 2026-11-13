@@ -1,15 +1,19 @@
 'use client';
 
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Stu } from './componentes';
+import { Confete } from './festa';
+import { Desenho, Fronteira, coresDaRegiao } from './mundo';
+import { desenhosQueBalancam, enfeitesDaLinha, regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
 import './caminho.css';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
-/** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco entre um trecho e outro. */
+/** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco e a região do mundo. */
 export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number };
 
-type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar';
+export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
+  | 'lampada' | 'relogio' | 'alvo';
 
 const desenhos: Record<NomeIcone, ReactNode> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
@@ -19,6 +23,12 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   bandeira: <path d="M6 20V4.5M6 5h10.5l-2 3.5 2 3.5H6" />,
   trofeu: <path d="M8 4.5h8V10a4 4 0 0 1-8 0V4.5zM8 6.5H5.5a2.5 2.5 0 0 0 2.5 3.5M16 6.5h2.5a2.5 2.5 0 0 1-2.5 3.5M12 14v3.5M8.5 20h7" />,
   fechar: <path d="M7 7l10 10M17 7L7 17" />,
+  olho: <><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></>,
+  olhoFechado: <path d="M4 4l16 16M9.9 5.8A9.6 9.6 0 0 1 12 5.5C18 5.5 21.5 12 21.5 12a17 17 0 0 1-3 3.7M6.4 7.4A17 17 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 4-.9M9.9 9.9a3 3 0 0 0 4.2 4.2" />,
+  seta: <path d="M5 12h14M13 6l6 6-6 6" />,
+  lampada: <path d="M9.5 18h5M10.5 21h3M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.2v.3h4v-.3c0-.9.5-1.7 1.2-2.2A5.5 5.5 0 0 0 12 3.5z" />,
+  relogio: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>,
+  alvo: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="0.8" /></>,
 };
 
 export function Icone({ nome }: { nome: NomeIcone }) {
@@ -58,19 +68,37 @@ function explicar(nos: readonly NoCaminho[], indice: number) {
     : mensagens.trilha.bloqueadaVarias(pendentes.length, comeco.titulo);
 }
 
+function classeDoEnfeite(nome: NomeDesenho, base: string) {
+  return desenhosQueBalancam.has(nome) ? `${base} caminho-enfeite--balanca` : base;
+}
+
+/** Um trecho está vencido quando todas as suas lições estão concluídas: o marco que o fecha fica dourado. */
+function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
+  return nos.every((no) => no.trecho !== trecho || no.estado === 'concluida');
+}
+
 /**
- * Caminho único e contínuo de lições, na ordem de aprendizado, com nós que alternam de lado.
- * Não agrupa por assunto: entre um trecho e outro aparece só um marco discreto, sem nome.
- * O leitor de tela ouve o marco como "Marco 1", "Marco 2"…, logo depois do último nó do trecho.
+ * Caminho único e contínuo de lições, na ordem de aprendizado, com nós que alternam de lado, sobre um mundo ilustrado:
+ * cada trecho da trilha é uma região (campos, floresta, montanhas…), com enfeites nas bordas e uma fronteira ondulada.
+ * Não agrupa por assunto: entre um trecho e outro aparece só o marco, sem nome, sobre a fronteira.
+ * O leitor de tela ouve o marco como "Marco 1", "Marco 2"…, logo depois do último nó do trecho; o cenário fica de fora.
  * O nó atual abre a lição; concluído ou bloqueado abre um balão que explica o estado.
- * Com `stu`, o Stu abre o caminho com essa frase curta (uma vez por tela, sem balão de fala).
- * Com `chegada`, o caminho termina num marco de chegada, que fica cheio quando todas as lições estão concluídas.
- * Com `montando`, a trilha ainda está sendo gerada: cada nó novo entra com um movimento curto, a posição não tem total
- * e um nó em esqueleto marca onde a próxima lição vai aparecer. A tela acompanha esse nó enquanto a pessoa está olhando o fim do caminho.
+ * O Stu acompanha a pessoa: fica ao lado do nó atual (e, com tudo concluído, ao lado do troféu); a frase `stu` vai numa
+ * placa no alto do mapa. Sem nó atual (a prévia da geração), o Stu abre o mapa com a frase num balão e, enquanto a IA
+ * monta a trilha, as `dicas` se revezam embaixo dela.
+ * Com `chegada`, o caminho termina no topo, com o troféu, que fica dourado quando todas as lições estão concluídas.
+ * Com `montando`, a trilha ainda está sendo gerada: cada nó novo cai no lugar e o cenário brota junto, a posição não tem
+ * total e um nó em esqueleto marca onde a próxima lição vai aparecer. A tela acompanha esse nó enquanto a pessoa está
+ * olhando o fim do caminho. Quando a montagem termina, o troféu entra com confete.
+ * Ao abrir, os nós entram em sequência. Com `recemConcluida`, o nó da lição que a pessoa acabou de concluir comemora,
+ * a linha até o próximo se desenha e só então o próximo nó se abre.
  */
-export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [], rolarPara = null, aoAbrir }: {
+export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
+  rolarPara = null, recemConcluida = null, aoAbrir }: {
   nos: readonly NoCaminho[];
   stu?: string;
+  dicas?: readonly string[];
+  recemConcluida?: string | null;
   chegada?: boolean;
   montando?: boolean;
   ocupado?: boolean;
@@ -81,6 +109,10 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
 }) {
   const [aberto, setAberto] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState('');
+  // A entrada em sequência só acontece numa trilha que já abre pronta, não quando a geração termina.
+  const [entrada] = useState(() => !montando);
+  const [dica, setDica] = useState(0);
+  const [festaNaChegada, setFestaNaChegada] = useState(false);
   const botoes = useRef(new Map<string, HTMLButtonElement>());
   const balao = useRef<HTMLDivElement>(null);
   const vindo = useRef<HTMLLIElement>(null);
@@ -92,6 +124,18 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
   const comChegada = chegada && total > 0;
   const trechos = Array.from(new Set(nos.map((no) => no.trecho)));
   const tudoFeito = total > 0 && nos.every((no) => no.estado === 'concluida');
+  const primeiroTrecho = nos[0]?.trecho ?? 0;
+  const ultimoTrecho = nos[total - 1]?.trecho ?? 0;
+  const guiaNoCaminho = !montando && nos.some((no) => no.estado === 'atual');
+  const stuNaChegada = !montando && tudoFeito;
+  const comRecem = recemConcluida !== null && nos.some((no) => no.id === recemConcluida);
+
+  // Enquanto a IA monta a trilha, uma dica nova a cada poucos segundos.
+  useEffect(() => {
+    if (!montando || dicas.length < 2) return;
+    const intervalo = window.setInterval(() => setDica((atual) => (atual + 1) % dicas.length), 3600);
+    return () => window.clearInterval(intervalo);
+  }, [montando, dicas.length]);
 
   useEffect(() => {
     if (!primeiraLiberada) return;
@@ -134,6 +178,7 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
   useEffect(() => {
     const acabouDeMontar = estavaMontando.current && !montando;
     estavaMontando.current = montando;
+    if (acabouDeMontar) setFestaNaChegada(true);
     const item = fim.current;
     const ultimo = item?.previousElementSibling?.lastElementChild;
     if (!acabouDeMontar || !item || !ultimo) return;
@@ -181,19 +226,40 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
   }
 
   return (
-    <div className="caminho" data-montando={montando || undefined}>
-      {stu && (
-        <div className="caminho-stu">
-          <p>{stu}</p>
-          <Stu />
-        </div>
-      )}
+    <div className="caminho" data-montando={montando || undefined} data-entrada={(entrada && !comRecem) || undefined}
+      data-recem={comRecem || undefined}>
+      <div className="caminho-inicio" style={coresDaRegiao(primeiroTrecho)} data-regiao={regiaoDoTrecho(primeiroTrecho).id}>
+        <span className="caminho-inicio__ceu" aria-hidden="true">
+          <Desenho nome="nuvem" className="caminho-inicio__nuvem caminho-inicio__nuvem--1" />
+          <Desenho nome="nuvem" className="caminho-inicio__nuvem caminho-inicio__nuvem--2" />
+          <Desenho nome="sol" className="caminho-inicio__sol" />
+        </span>
+        <svg className="caminho-inicio__colinas" viewBox="0 0 400 64" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <path d="M0 30C50 6 96 4 148 22S236 52 292 30 368 8 400 18V64H0Z" fill="var(--relevo)" />
+          <path d="M0 44C44 28 90 26 140 38S228 60 286 44 364 26 400 34V64H0Z" fill="var(--chao)" />
+        </svg>
+        {stu && (guiaNoCaminho || stuNaChegada) && (
+          <div className="caminho-inicio__conteudo caminho-inicio__conteudo--placa">
+            <p className="caminho-placa">{stu}</p>
+          </div>
+        )}
+        {stu && !guiaNoCaminho && !stuNaChegada && (
+          <div className="caminho-inicio__conteudo">
+            <p className="caminho-inicio__fala">
+              <span>{stu}{montando && <span className="caminho-digitando" aria-hidden="true"><span /><span /><span /></span>}</span>
+              {montando && dicas.length > 0 && <span className="caminho-inicio__dica" key={dica}>{dicas[dica]}</span>}
+            </p>
+            <Stu />
+          </div>
+        )}
+      </div>
       <ol className="caminho-nos" role="list" aria-label={mensagens.trilha.licoes}>
         {nos.map((no, indice) => {
           const seguinte = nos[indice + 1];
           const fimDoTrecho = seguinte !== undefined && seguinte.trecho !== no.trecho;
           const vaiAteChegada = seguinte === undefined && comChegada;
           const vaiAteVindo = seguinte === undefined && montando;
+          const ligado = seguinte !== undefined || vaiAteChegada || vaiAteVindo;
           const lado = indice % 2 === 0 ? 'esquerda' : 'direita';
           const atual = no.estado === 'atual';
           const estaAberto = aberto === no.id;
@@ -206,12 +272,19 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
             : mensagens.trilha.nomeNo(no.titulo, posicao, estado.toLocaleLowerCase('pt-BR'));
           let linha = no.estado === 'previa' ? posicao : estado;
           if (abrindo === no.id) linha = mensagens.trilha.abrindo;
+          const enfeites = enfeitesDaLinha(no.trecho, indice);
+          const lateral = enfeitesDaLinha(no.trecho, indice + 2);
+          const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
+          const numeroMarco = trechos.indexOf(no.trecho) + 1;
+          const recem = no.id === recemConcluida;
+          const desenhar = recem && no.estado === 'concluida' && ligado;
 
           const conteudo = (
             <>
               <span className="caminho-no__lente" aria-hidden="true">
                 <Icone nome={iconeDoNo(no)} />
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
+                {recem && <Confete quantidade={12} />}
                 {atual && <span className="caminho-no__etiqueta">{mensagens.trilha.comecar}</span>}
               </span>
               <span className="caminho-no__texto" aria-hidden="true">
@@ -223,7 +296,9 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
 
           return (
             <li key={no.id} className="caminho-no" data-estado={no.estado} data-lado={lado}
-              data-fim-trecho={fimDoTrecho || undefined} data-liberada={liberada || undefined} data-aberto={estaAberto || undefined}
+              style={{ ...coresDaRegiao(no.trecho), '--ordem': indice } as CSSProperties}
+              data-ligado={ligado || undefined} data-fim-trecho={fimDoTrecho || undefined} data-liberada={liberada || undefined}
+              data-aberto={estaAberto || undefined} data-recem={recem || undefined}
               onKeyDown={(evento) => {
                 if (evento.key !== 'Escape' || !estaAberto) return;
                 evento.stopPropagation();
@@ -233,12 +308,33 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
                 const destino = evento.relatedTarget;
                 if (estaAberto && destino instanceof Node && !evento.currentTarget.contains(destino)) setAberto(null);
               }}>
-              {(seguinte || vaiAteChegada || vaiAteVindo) && (
-                <span className="caminho-ligacao" data-feita={no.estado === 'concluida' || undefined} aria-hidden="true">
+              <span className="caminho-terreno" aria-hidden="true">
+                {atual && guiaNoCaminho
+                  ? <span className="caminho-guia"><Stu /></span>
+                  : <Desenho nome={enfeites.grande} className={classeDoEnfeite(enfeites.grande, 'caminho-enfeite caminho-enfeite--grande')} />}
+                <Desenho nome={enfeites.miudo} className={classeDoEnfeite(enfeites.miudo, 'caminho-enfeite caminho-enfeite--miudo')} />
+                <Desenho nome={lateral.grande} className={classeDoEnfeite(lateral.grande, 'caminho-enfeite caminho-enfeite--lateral')} />
+                <Desenho nome={lateral.miudo} className={classeDoEnfeite(lateral.miudo, 'caminho-enfeite caminho-enfeite--lateral-miudo')} />
+              </span>
+              {fimDoTrecho && <Fronteira trechoSeguinte={seguinte.trecho} />}
+              {ligado && (
+                <span className="caminho-ligacao" data-feita={(no.estado === 'concluida' && !desenhar) || undefined} aria-hidden="true">
                   <svg className="caminho-conector" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
-                    <path d={tracado(lado, vaiAteChegada)} />
+                    <path className="caminho-conector__estrada" d={tracado(lado, vaiAteChegada)} />
+                    <path className="caminho-conector__linha" d={tracado(lado, vaiAteChegada)} />
                   </svg>
-                  {fimDoTrecho && <span className="caminho-marco"><Icone nome="bandeira" /></span>}
+                  {desenhar && (
+                    <span className="caminho-ligacao__desenho">
+                      <svg className="caminho-conector" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
+                        <path className="caminho-conector__linha caminho-conector__linha--feita" d={tracado(lado, vaiAteChegada)} />
+                      </svg>
+                    </span>
+                  )}
+                </span>
+              )}
+              {fimDoTrecho && (
+                <span className="caminho-marco" data-vencido={marcoVencido || undefined} aria-hidden="true">
+                  <Icone nome="bandeira" />
                 </span>
               )}
               {no.estado === 'previa' ? (
@@ -256,7 +352,7 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
               {estaAberto && (
                 <>
                   <span className="caminho-balao__seta" aria-hidden="true" />
-                  <div className="caminho-balao" id={idBalao} ref={balao} role="dialog" tabIndex={-1}
+                  <div className="caminho-balao" id={idBalao} ref={balao} role="dialog" tabIndex={-1} data-estado={no.estado}
                     aria-labelledby={`${idBalao}-titulo`} aria-describedby={`${idBalao}-texto`}>
                     <div className="caminho-balao__topo">
                       <p className="caminho-balao__titulo" id={`${idBalao}-titulo`}>{no.titulo}</p>
@@ -274,12 +370,17 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
                   </div>
                 </>
               )}
-              {fimDoTrecho && <span className="somente-leitor">{mensagens.trilha.marco(trechos.indexOf(no.trecho) + 1)}</span>}
+              {fimDoTrecho && (
+                <span className="somente-leitor">
+                  {marcoVencido ? mensagens.trilha.marcoVencido(numeroMarco) : mensagens.trilha.marco(numeroMarco)}
+                </span>
+              )}
             </li>
           );
         })}
         {montando && (
-          <li className="caminho-no caminho-no--vindo" data-lado={total % 2 === 0 ? 'esquerda' : 'direita'} ref={vindo} aria-hidden="true">
+          <li className="caminho-no caminho-no--vindo" data-lado={total % 2 === 0 ? 'esquerda' : 'direita'} ref={vindo}
+            style={coresDaRegiao(ultimoTrecho)} aria-hidden="true">
             <div className="caminho-no__alvo">
               <span className="caminho-no__lente" />
               <span className="caminho-no__texto"><span /><span /></span>
@@ -288,8 +389,25 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
         )}
       </ol>
       {comChegada && (
-        <div className="caminho-chegada" data-feita={tudoFeito || undefined} ref={fim}>
-          <span className="caminho-chegada__lente" aria-hidden="true"><Icone nome="trofeu" /></span>
+        <div className="caminho-chegada" data-feita={tudoFeito || undefined} ref={fim} style={coresDaRegiao(ultimoTrecho)}
+          data-festa={festaNaChegada || (comRecem && tudoFeito) || undefined}>
+          <span className="caminho-chegada__cenario" aria-hidden="true">
+            <span className="caminho-chegada__colina" />
+            <Desenho nome="bandeira" className="caminho-chegada__bandeira caminho-chegada__bandeira--1" />
+            <Desenho nome="bandeira" className="caminho-chegada__bandeira caminho-chegada__bandeira--2" />
+            {tudoFeito && (
+              <>
+                <Desenho nome="estrela" className="caminho-chegada__brilho caminho-chegada__brilho--1" />
+                <Desenho nome="estrela" className="caminho-chegada__brilho caminho-chegada__brilho--2" />
+                <Desenho nome="estrela" className="caminho-chegada__brilho caminho-chegada__brilho--3" />
+              </>
+            )}
+          </span>
+          {stuNaChegada && <span className="caminho-chegada__stu" aria-hidden="true"><Stu /></span>}
+          <span className="caminho-chegada__lente" aria-hidden="true">
+            <Icone nome="trofeu" />
+            {(festaNaChegada || (comRecem && tudoFeito)) && <Confete quantidade={18} />}
+          </span>
           <p className="caminho-chegada__texto">{tudoFeito ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}</p>
         </div>
       )}
@@ -298,6 +416,7 @@ export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = 
   );
 }
 
+/** Esqueleto da trilha: a faixa do topo e o mapa com a forma do caminho, nas cores dos campos. */
 export function SkeletonTrilha() {
   return (
     <div className="skeleton-trilha" role="status">
@@ -305,7 +424,7 @@ export function SkeletonTrilha() {
       <div className="skeleton-trilha__cabecalho" aria-hidden="true">
         <span /><span /><span />
       </div>
-      <div className="skeleton-trilha__caminho" aria-hidden="true">
+      <div className="skeleton-trilha__caminho" style={coresDaRegiao(0) as CSSProperties} aria-hidden="true">
         <span className="skeleton-trilha__no" data-lado="esquerda" />
         <span className="skeleton-trilha__no" data-lado="direita" />
         <span className="skeleton-trilha__no" data-lado="esquerda" />

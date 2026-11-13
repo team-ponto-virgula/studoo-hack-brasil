@@ -1,9 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import {
   ErroStudoo,
-  LIMITES_GERACAO,
   type Avaliacao,
   type LicaoDetalhe,
   type PlanoDetalhe,
@@ -17,6 +16,8 @@ import {
   AcaoPrincipal,
   Botao,
   Caminho,
+  Confete,
+  Desenho,
   EstadoErro,
   EstadoVazio,
   Icone,
@@ -24,24 +25,45 @@ import {
   Skeleton,
   SkeletonTrilha,
   Stu,
+  coresDaRegiao,
+  regiaoDoTrecho,
   type NoCaminho,
+  type NomeIcone,
 } from '../ui';
+import { Apresentacao, apresentacaoVista, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
+import { Pedido, type IdTema } from './pedido';
 import './aula.css';
-import './pedido.css';
 import './trilha.css';
 
 type Tela =
+  | { tipo: 'apresentacao'; primeiraVez: boolean }
   | { tipo: 'planos' }
   | { tipo: 'objetivo' }
   | { tipo: 'geracao' }
-  | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[] }
+  /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
+  | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string }
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
-  | { tipo: 'concluida'; plano: PlanoDetalhe; licao: LicaoDetalhe; liberadas: string[] };
+  | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
 
 type TelaPlano = Extract<Tela, { tipo: 'plano' }>;
 type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair';
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
+
+/** Quanto "Escrevendo suas lições" fica na tela, no mínimo: com a IA falsa, o aceite volta rápido e o título piscaria. */
+const ESCRITA_MINIMA_MS = 1200;
+/** Quanto "Lições prontas!" fica na tela, no mínimo, para o visto passar por todas as lições. */
+const PAUSA_LICOES_PRONTAS_MS = 900;
+const pausa = (ms: number) => new Promise<void>((resolver) => window.setTimeout(resolver, ms));
+
+/**
+ * Volta ao topo da página. Repete no quadro seguinte porque uma rolagem suave ainda em curso (o caminho mostrando a
+ * chegada quando a trilha fica pronta) dá mais um passo depois da primeira volta e deixaria a tela nova rolada.
+ */
+function voltarAoTopo() {
+  window.scrollTo(0, 0);
+  window.requestAnimationFrame(() => window.scrollTo(0, 0));
+}
 
 export function Estudo() {
   const [inicio, setInicio] = useState<'carregando' | 'pronto' | 'falha'>('carregando');
@@ -49,6 +71,8 @@ export function Estudo() {
   const [tela, setTela] = useState<Tela>({ tipo: 'planos' });
   const [planos, setPlanos] = useState<PlanoResumo[]>([]);
   const [objetivo, setObjetivo] = useState('');
+  /** Área escolhida no fim da apresentação: o pedido abre com as ideias dela. */
+  const [areaInicial, setAreaInicial] = useState<IdTema | undefined>();
   const [pendente, setPendente] = useState<Acao | null>(null);
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const [geracao, setGeracao] = useState<TrilhaEmGeracao | null>(null);
@@ -70,6 +94,8 @@ export function Estudo() {
       const ativos = await cliente.listarPlanos();
       if (cancelado()) return;
       setPlanos(ativos);
+      // No primeiro acesso, sem planos, a apresentação vem antes do pedido.
+      if (ativos.length === 0 && !apresentacaoVista()) setTela({ tipo: 'apresentacao', primeiraVez: true });
       setInicio('pronto');
     } catch (falha) {
       if (cancelado()) return;
@@ -137,7 +163,7 @@ export function Estudo() {
    */
   function navegar(destino: Tela) {
     if (destino.tipo !== 'geracao') pararGeracao();
-    if (destino.tipo !== tela.tipo) window.scrollTo(0, 0);
+    if (destino.tipo !== tela.tipo) voltarAoTopo();
     setErro(null);
     setFalhaGeracao(null);
     setAviso(null);
@@ -221,7 +247,10 @@ export function Estudo() {
 
   /** Começar: salva a trilha mostrada (o aceite gera o conteúdo das lições) e abre a primeira lição. */
   async function comecar(proposta: PropostaPlano) {
-    const aceite = await executar('aceitar', () => cliente.aceitarProposta(proposta.token));
+    const aceite = await executar('aceitar', async () => {
+      const [plano] = await Promise.all([cliente.aceitarProposta(proposta.token), pausa(ESCRITA_MINIMA_MS)]);
+      return plano;
+    });
     if (!aceite.ok) {
       // Volta à trilha gerada (nova tela, mesmo estado): o foco vai ao título e o erro fica no topo.
       if (aceite.codigo !== 'nao_autenticado') setTela({ tipo: 'geracao' });
@@ -235,7 +264,11 @@ export function Estudo() {
       navegar({ tipo: 'plano', plano });
       return;
     }
-    const licao = await executar('abrir', () => cliente.obterLicao(primeira));
+    // As lições acabaram de ficar prontas: o visto passa por elas enquanto a primeira abre.
+    const licao = await executar('abrir', async () => {
+      const [dados] = await Promise.all([cliente.obterLicao(primeira), pausa(PAUSA_LICOES_PRONTAS_MS)]);
+      return dados;
+    });
     if (licao.ok) {
       navegar({ tipo: 'licao', plano, licao: licao.dados });
       return;
@@ -263,12 +296,12 @@ export function Estudo() {
     if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados });
   }
 
-  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string) {
+  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao) {
     const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante));
     if (resultado.ok) {
       const atualizado = resultado.dados.plano;
       atualizarPlano(atualizado);
-      navegar({ tipo: 'concluida', plano: atualizado, licao, liberadas: liberadasEntre(plano, atualizado) });
+      navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
       return true;
     }
     return resultado.codigo !== 'avaliacao_invalida';
@@ -277,6 +310,13 @@ export function Estudo() {
   async function sair() {
     const resultado = await executar('sair', () => cliente.logout());
     if (resultado.ok) irParaLogin();
+  }
+
+  /** Fim da apresentação (concluída ou pulada): não aparece mais neste navegador e o pedido abre. */
+  function concluirApresentacao(area?: IdTema) {
+    marcarApresentacaoVista();
+    if (area) setAreaInicial(area);
+    navegar({ tipo: 'objetivo' });
   }
 
   const ocupado = pendente !== null;
@@ -325,6 +365,11 @@ export function Estudo() {
             <span aria-hidden="true">+</span> {mensagens.planos.novo}
           </Botao>
         </nav>
+        <div className="navegacao-rodape">
+          <Botao variante="texto" onClick={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
+            {mensagens.pedido.comoFunciona}
+          </Botao>
+        </div>
       </aside>
 
       <div className="estudo-pagina">
@@ -341,23 +386,26 @@ export function Estudo() {
           <p className="somente-leitor" role="status">{anuncio}</p>
           {erro && <EstadoErro codigo={erro} />}
           {carregandoTrilha && <SkeletonTrilha />}
-          {carregandoLicao && <SkeletonLicao texto={pendente === 'aceitar' ? mensagens.geracao.comecando : mensagens.licao.carregando} />}
+          {carregandoLicao && (tela.tipo === 'geracao' && geracao?.proposta
+            ? <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />
+            : <SkeletonLicao texto={mensagens.licao.carregando} />)}
+          {visivel && tela.tipo === 'apresentacao' && (
+            <Apresentacao primeiraVez={tela.primeiraVez} concluir={concluirApresentacao} />
+          )}
           {visivel && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
-            <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0}
+            <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
               aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
-              verPlanos={() => navegar({ tipo: 'planos' })} />
+              verPlanos={() => navegar({ tipo: 'planos' })}
+              comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} />
           )}
           {visivel && tela.tipo === 'planos' && planos.length > 0 && (
-            <section className="painel">
+            <section className="painel painel--planos">
               <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
+              <p className="introducao">{mensagens.planos.subtitulo}</p>
               <ul className="planos-ativos">
-                {planos.map((plano) => (
-                  <li key={plano.id}>
-                    <div>
-                      <h2>{plano.titulo}</h2>
-                      <BarraProgresso progresso={plano.progresso} />
-                    </div>
-                    <Botao variante="secundario" aria-label={`${mensagens.planos.abrir} ${plano.titulo}`} disabled={ocupado} onClick={() => void abrirPlano(plano.id)}>{mensagens.planos.abrir}</Botao>
+                {planos.map((plano, indice) => (
+                  <li key={plano.id} style={{ '--ordem': indice } as CSSProperties}>
+                    <CartaoPlano plano={plano} regiao={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)} />
                   </li>
                 ))}
               </ul>
@@ -376,13 +424,13 @@ export function Estudo() {
           {visivel && tela.tipo === 'licao' && (
             <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}
               avaliar={(resposta) => executar('avaliar', () => cliente.avaliarLicao(tela.licao.id, resposta))}
-              concluir={(comprovante) => concluir(tela.plano, tela.licao, comprovante)}
+              concluir={(comprovante, resumo) => concluir(tela.plano, tela.licao, comprovante, resumo)}
               voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id })} />
           )}
           {visivel && tela.tipo === 'concluida' && (
-            <LicaoConcluida plano={tela.plano} licao={tela.licao} liberadas={tela.liberadas} ocupado={ocupado}
+            <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
-              voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas })} />
+              voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas, concluida: tela.licao.id })} />
           )}
         </main>
       </div>
@@ -390,113 +438,62 @@ export function Estudo() {
   );
 }
 
-function BarraProgresso({ progresso }: { progresso: Progresso }) {
+/**
+ * Barra de progresso do plano. Enche com uma animação curta ao aparecer: do zero ou, com `de`, a partir do progresso
+ * anterior (na lição concluída). O leitor de tela ouve a contagem ("1 de 5 lições concluídas").
+ */
+function BarraProgresso({ progresso, comPercentual = false, de }: { progresso: Progresso; comPercentual?: boolean; de?: Progresso }) {
   if (progresso.percentual === null) return <span className="progresso-vazio">{mensagens.planos.semProgresso}</span>;
 
   const texto = mensagens.planos.contagem(progresso.concluidas, progresso.total);
+  const estilo = { '--valor': `${progresso.percentual}%`, '--de': `${de?.percentual ?? 0}%` } as CSSProperties;
 
   return (
     <div className="progresso">
-      <progress aria-label={texto} value={progresso.concluidas} max={progresso.total} />
-      <span>{texto}</span>
+      <div className="barra" role="progressbar" aria-label={texto} aria-valuemin={0} aria-valuemax={progresso.total}
+        aria-valuenow={progresso.concluidas} style={estilo}>
+        <span className="barra__preenchimento" />
+      </div>
+      <span className="progresso__legenda">
+        <span>{texto}</span>
+        {comPercentual && <span className="progresso__percentual" aria-hidden="true">{mensagens.trilha.percentual(progresso.percentual)}</span>}
+      </span>
     </div>
   );
 }
 
-/** Pedido da trilha: a pessoa escreve o que quer aprender, ou toca numa sugestão, e gera a trilha ao vivo. */
-function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, aoMudar, anunciar, gerar, verPlanos }: {
-  objetivo: string;
-  ocupado: boolean;
-  aviso: string | null;
-  falha: string | null;
-  temPlanos: boolean;
-  aoMudar: (texto: string) => void;
-  anunciar: (texto: string) => void;
-  gerar: (texto: string) => void;
-  verPlanos: () => void;
-}) {
-  const [curto, setCurto] = useState(false);
-  const campo = useRef<HTMLTextAreaElement>(null);
-  const texto = objetivo.trim();
-  const mostrarCurto = curto && texto.length < LIMITES_GERACAO.objetivoMin;
-  const mostrarContador = objetivo.length >= LIMITES_GERACAO.objetivoMax - 100;
-  const descricao = [mostrarCurto && 'objetivo-erro', 'objetivo-privacidade', mostrarContador && 'objetivo-contador']
-    .filter(Boolean).join(' ');
-  const repetivel = falha === 'ia_indisponivel' || falha === 'falha' || falha === 'rede';
-
-  function tentar() {
-    if (ocupado || !texto) return;
-    if (texto.length < LIMITES_GERACAO.objetivoMin) {
-      setCurto(true);
-      campo.current?.focus();
-      return;
-    }
-    gerar(texto);
-  }
-
-  function enviar(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    tentar();
-  }
-
-  function sugerir(exemplo: string) {
-    aoMudar(exemplo);
-    setCurto(false);
-    anunciar(mensagens.pedido.sugestaoAplicada(exemplo));
-  }
+/**
+ * Cartão de um plano em Meus planos: uma faixa do mundo (cada plano numa região, para os cartões não ficarem iguais),
+ * o título, o progresso e a ação que cabe: começar, continuar ou rever a trilha concluída.
+ */
+function CartaoPlano({ plano, regiao, ocupado, abrir }: { plano: PlanoResumo; regiao: number; ocupado: boolean; abrir: () => void }) {
+  const { concluidas, total } = plano.progresso;
+  const concluido = total > 0 && concluidas === total;
+  let acao: string = mensagens.planos.continuar;
+  if (concluido) acao = mensagens.planos.rever;
+  else if (concluidas === 0) acao = mensagens.planos.comecar;
+  const enfeites = regiaoDoTrecho(regiao).enfeites;
 
   return (
-    <section className="painel painel--pedido">
-      <div className="pedido-topo">
-        <div>
-          <h1 tabIndex={-1}>{mensagens.pedido.titulo}</h1>
-          <p className="introducao">{mensagens.pedido.instrucoes}</p>
-        </div>
-        <Stu />
+    <article className="plano-cartao">
+      <div className="plano-cartao__cena" style={coresDaRegiao(regiao)} aria-hidden="true">
+        <span className="plano-cartao__colina" />
+        <Desenho nome={enfeites[0]} />
+        <Desenho nome={enfeites[1]} />
+        <Desenho nome={enfeites[3]} />
+        <Desenho nome={enfeites[2]} />
+        {concluido && <span className="plano-cartao__selo"><Icone nome="trofeu" />{mensagens.planos.concluido}</span>}
       </div>
-      {aviso && <p className="pedido-aviso">{aviso}</p>}
-      {falha && (
-        <EstadoErro codigo={falha}>
-          {repetivel && <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>}
-          {falha === 'limite_geracoes' && temPlanos && <Botao variante="secundario" disabled={ocupado} onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>}
-        </EstadoErro>
-      )}
-      <form className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
-        <div className="campo">
-          <label htmlFor="objetivo">{mensagens.pedido.objetivo}</label>
-          <textarea ref={campo} id="objetivo" name="objetivo" rows={4} maxLength={LIMITES_GERACAO.objetivoMax} required
-            value={objetivo} disabled={ocupado} aria-invalid={mostrarCurto || undefined} aria-describedby={descricao}
-            onChange={(evento) => aoMudar(evento.target.value)} />
-          {mostrarCurto && (
-            <p className="campo-erro" id="objetivo-erro">
-              <span className="sinal" aria-hidden="true">!</span>{mensagens.pedido.curto(LIMITES_GERACAO.objetivoMin)}
-            </p>
-          )}
-          <small id="objetivo-privacidade">{mensagens.pedido.privacidade}</small>
-          {mostrarContador && (
-            <small className="pedido-contador" id="objetivo-contador">
-              {mensagens.pedido.contador(objetivo.length, LIMITES_GERACAO.objetivoMax)}
-            </small>
-          )}
+      <div className="plano-cartao__corpo">
+        <div>
+          <h2>{plano.titulo}</h2>
+          <BarraProgresso progresso={plano.progresso} />
         </div>
-        <div className="pedido-sugestoes" role="group" aria-labelledby="pedido-sugestoes">
-          <p className="pedido-sugestoes__titulo" id="pedido-sugestoes">{mensagens.pedido.sugestoes}</p>
-          <div className="pedido-chips">
-            {mensagens.pedido.exemplos.map((exemplo) => {
-              const escolhida = texto === exemplo;
-              return (
-                <button key={exemplo} type="button" className="pedido-chip" data-escolhida={escolhida || undefined}
-                  disabled={ocupado} onClick={() => sugerir(exemplo)}>
-                  {escolhida && <Icone nome="check" />}
-                  {exemplo}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-        <AcaoPrincipal><Botao type="submit" disabled={ocupado || !texto}>{mensagens.pedido.gerar}</Botao></AcaoPrincipal>
-      </form>
-    </section>
+        <Botao variante={concluido ? 'secundario' : 'primario'} aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
+          {acao}<Icone nome="seta" />
+        </Botao>
+      </div>
+    </article>
   );
 }
 
@@ -536,7 +533,7 @@ function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar }: {
             : <span className="geracao-esqueleto geracao-esqueleto--origem" aria-hidden="true" />}
         </div>
       </header>
-      <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando}
+      <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas}
         chegada={proposta !== null} montando={proposta === null} />
       <div className="geracao-acoes" data-pronta={proposta ? true : undefined}>
         <Botao key="voltar" variante="secundario" disabled={ocupado} onClick={proposta ? ajustar : cancelar}>
@@ -550,6 +547,63 @@ function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar }: {
         </p>
         {proposta && <Botao key="comecar" disabled={ocupado} onClick={() => comecar(proposta)}>{mensagens.geracao.comecar}</Botao>}
       </div>
+    </section>
+  );
+}
+
+/**
+ * Começar: o aceite salva a trilha e a IA escreve a explicação, o exemplo e o exercício de cada lição, o que leva alguns
+ * segundos com a IA real. No lugar de um esqueleto, o Stu escreve as lições da trilha da pessoa e dicas se revezam.
+ * O aceite é um pedido só, sem andamento por lição, então nenhuma lição ganha o visto antes da hora: o brilho que desce
+ * pela lista só diz que a escrita está acontecendo. Quando o aceite volta (`prontas`), o visto passa por todas.
+ */
+function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; prontas: boolean }) {
+  const titulo = useRef<HTMLHeadingElement>(null);
+  const [dica, setDica] = useState(0);
+  const dicas = mensagens.geracao.dicas;
+  const licoes = proposta.fluxos.flatMap((fluxo) => fluxo.licoes.map((licao) => licao.titulo));
+
+  // A tela começa do topo (a trilha gerada podia estar rolada até o fim) e, como o botão Começar sai da tela, o foco vem
+  // para o título, que diz o que está acontecendo.
+  useEffect(() => {
+    voltarAoTopo();
+    titulo.current?.focus({ preventScroll: true });
+  }, []);
+
+  useEffect(() => {
+    if (prontas) return;
+    const intervalo = window.setInterval(() => setDica((atual) => (atual + 1) % dicas.length), 3600);
+    return () => window.clearInterval(intervalo);
+  }, [prontas, dicas.length]);
+
+  return (
+    <section className="painel painel--preparo" data-prontas={prontas || undefined}>
+      <div className="preparo-cena" style={coresDaRegiao(0)} aria-hidden="true">
+        <span className="preparo-cena__colina" />
+        <Desenho nome="arvore" />
+        <Desenho nome="flores" />
+        <Desenho nome="arbusto" />
+        <span className="preparo-folha" />
+        <span className="preparo-folha" />
+        <span className="preparo-folha" />
+        <Stu />
+        <span className="preparo-lapis" />
+      </div>
+      <p className="contexto-tela">{proposta.titulo}</p>
+      <h1 ref={titulo} tabIndex={-1}>{prontas ? mensagens.preparo.prontas : mensagens.preparo.titulo}</h1>
+      <p className="introducao">{prontas ? mensagens.preparo.textoProntas : mensagens.preparo.texto}</p>
+      <ol className="preparo-lista" aria-label={mensagens.preparo.lista}>
+        {licoes.map((nome, indice) => (
+          <li key={indice} style={{ '--ordem': indice } as CSSProperties}>
+            <span className="preparo-lista__icone">
+              <Icone nome={prontas ? 'check' : nome.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro'} />
+            </span>
+            <span className="preparo-lista__titulo">{nome}</span>
+          </li>
+        ))}
+      </ol>
+      {!prontas && <p key={dica} className="preparo-dica" aria-hidden="true"><Icone nome="lampada" />{dicas[dica]}</p>}
+      <p className="somente-leitor" role="status">{prontas ? mensagens.preparo.anuncioProntas : mensagens.preparo.anuncio}</p>
     </section>
   );
 }
@@ -635,7 +689,7 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
         <div className="trilha-resumo">
           <h1 tabIndex={-1}>{plano.titulo}</h1>
           {!repeteTitulo(plano.titulo, plano.objetivo) && <p className="introducao">{plano.objetivo}</p>}
-          <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} /></div>
+          <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} comPercentual /></div>
         </div>
         {proximo && (
           <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id}
@@ -651,6 +705,7 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
       </header>
       {nos.length > 0 ? (
         <Caminho nos={nos} stu={falaStu} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} rolarPara={rolarPara}
+          recemConcluida={tela.concluida ?? null}
           aoAbrir={(no) => abrirLicao(no.id)} />
       ) : (
         <div className="trilha-vazia">
@@ -685,141 +740,301 @@ function ProximoPasso({ titulo, detalhe, abrindo, ocupado, aoAbrir }: {
 }
 
 const posicoesAula = { conceito: 1, exemplo: 2, exercicio: 3, feedback: 4 } as const;
+type EtapaAula = 'conceito' | 'exemplo' | 'exercicio';
+/** O que a pessoa fez na lição, para o resumo da conclusão: tempo, tentativas e se acertou de primeira. */
+export type ResumoLicao = { segundos: number; tentativas: number; dePrimeira: boolean };
 
+const iconesDaEtapa: Record<EtapaAula, NomeIcone> = { conceito: 'livro', exemplo: 'lampada', exercicio: 'alvo' };
+
+/** Título do acerto: varia entre as lições, sem sorteio (a mesma lição tem sempre o mesmo). */
+function tituloDoAcerto(id: string) {
+  let soma = 0;
+  for (const caractere of id) soma = (soma * 31 + caractere.charCodeAt(0)) >>> 0;
+  return mensagens.licao.certas[soma % mensagens.licao.certas.length];
+}
+
+/**
+ * Aula por etapas (spec 02): conceito, exemplo e exercício, uma de cada vez, com a barra de andamento no topo.
+ * O conceito vem num balão do Stu. No exercício de escolha, as teclas 1, 2, 3… marcam a opção e Enter verifica.
+ * Depois da resposta, o rodapé vira o painel de retorno, que sobe verde no acerto (com confete) ou âmbar no erro
+ * (o exercício treme). No erro, dá para tentar de novo ou continuar; Continuar registra a conclusão.
+ * O título de cada etapa e o do retorno recebem o foco. Se a confirmação expirar, a aula volta ao exercício.
+ */
 function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   licao: LicaoDetalhe;
   pendente: Acao | null;
   avaliar: (resposta: string) => Promise<Resultado<Avaliacao>>;
-  concluir: (comprovante: string) => Promise<boolean>;
+  concluir: (comprovante: string, resumo: ResumoLicao) => Promise<boolean>;
   voltar: () => void;
 }) {
-  const [etapa, setEtapa] = useState<'conceito' | 'exemplo' | 'exercicio'>('conceito');
+  const [etapa, setEtapa] = useState<EtapaAula>('conceito');
   const [resposta, setResposta] = useState('');
   const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
+  const [tentativas, setTentativas] = useState(0);
+  const [dePrimeira, setDePrimeira] = useState<boolean | null>(null);
+  const [inicio] = useState(() => Date.now());
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
+  const tituloRetorno = useRef<HTMLHeadingElement>(null);
+  const formulario = useRef<HTMLFormElement>(null);
+  const continuarAgora = useRef<() => void>(() => undefined);
   const { exercicio } = licao;
   const ocupado = pendente !== null;
-  const etapaAtual = avaliacao ? 'feedback' : etapa;
-  const posicao = posicoesAula[etapaAtual];
+  const posicao = avaliacao ? posicoesAula.feedback : posicoesAula[etapa];
   const andamento = mensagens.licao.posicao(posicao, posicoesAula.feedback);
+  const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : undefined;
+  const nomeEtapa = { conceito: mensagens.licao.conceito, exemplo: mensagens.licao.exemplo, exercicio: mensagens.licao.exercicio }[etapa];
 
   useEffect(() => {
-    if (etapaAtual !== 'conceito') tituloEtapa.current?.focus();
-  }, [etapaAtual]);
+    if (etapa !== 'conceito') tituloEtapa.current?.focus();
+  }, [etapa]);
+
+  useEffect(() => {
+    if (avaliacao) tituloRetorno.current?.focus();
+  }, [avaliacao]);
+
+  // Atalhos: no exercício de escolha, 1, 2, 3… marcam a opção; depois do retorno, Enter continua.
+  useEffect(() => {
+    function teclas(evento: KeyboardEvent) {
+      if (evento.altKey || evento.ctrlKey || evento.metaKey) return;
+      const alvo = evento.target instanceof HTMLElement ? evento.target : null;
+      if (avaliacao) {
+        if (evento.key === 'Enter' && !alvo?.closest('button, a')) {
+          evento.preventDefault();
+          continuarAgora.current();
+        }
+        return;
+      }
+      if (etapa !== 'exercicio' || exercicio.tipo !== 'multipla_escolha' || alvo?.matches('input[type="text"], textarea')) return;
+      const indice = Number.parseInt(evento.key, 10) - 1;
+      if (indice >= 0 && indice < exercicio.opcoes.length) {
+        evento.preventDefault();
+        setResposta(exercicio.opcoes[indice].id);
+      }
+    }
+    window.addEventListener('keydown', teclas);
+    return () => window.removeEventListener('keydown', teclas);
+  }, [etapa, avaliacao, exercicio]);
 
   async function responder(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (ocupado || !resposta.trim()) return;
+    if (ocupado || avaliacao || !resposta.trim()) return;
     const resultado = await avaliar(resposta);
-    if (resultado.ok) setAvaliacao(resultado.dados);
+    if (!resultado.ok) return;
+    setTentativas((total) => total + 1);
+    setDePrimeira((anterior) => anterior ?? resultado.dados.correta);
+    setAvaliacao(resultado.dados);
+  }
+
+  function tentarDeNovo() {
+    setAvaliacao(null);
+    window.requestAnimationFrame(() => {
+      const campo = formulario.current?.querySelector<HTMLInputElement>('input[type="text"], input:checked, input');
+      campo?.focus();
+    });
   }
 
   async function continuar(comprovante: string) {
-    if (!await concluir(comprovante)) setAvaliacao(null);
+    if (ocupado) return;
+    const resumo = { segundos: Math.max(1, Math.round((Date.now() - inicio) / 1000)), tentativas, dePrimeira: dePrimeira === true };
+    if (!await concluir(comprovante, resumo)) setAvaliacao(null);
   }
+
+  continuarAgora.current = () => {
+    if (avaliacao) void continuar(avaliacao.comprovante);
+  };
 
   let acao;
   if (avaliacao) {
-    acao = <Botao disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>{pendente === 'concluir' ? mensagens.licao.concluindo : mensagens.licao.continuar}</Botao>;
+    acao = (
+      <Botao variante={avaliacao.correta ? 'sucesso' : 'alerta'} disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>
+        {pendente === 'concluir' ? mensagens.licao.concluindo : mensagens.licao.continuar}
+      </Botao>
+    );
   } else if (etapa === 'exercicio') {
     acao = <Botao type="submit" form="resposta-licao" disabled={ocupado || !resposta.trim()}>{pendente === 'avaliar' ? mensagens.licao.avaliando : mensagens.licao.avaliar}</Botao>;
   } else {
-    acao = <Botao disabled={ocupado} onClick={() => setEtapa(etapa === 'conceito' ? 'exemplo' : 'exercicio')}>{mensagens.licao.seguir}</Botao>;
+    acao = (
+      <Botao disabled={ocupado} onClick={() => setEtapa(etapa === 'conceito' ? 'exemplo' : 'exercicio')}>
+        {mensagens.licao.seguir}<Icone nome="seta" />
+      </Botao>
+    );
   }
 
   return (
-    <article className="painel painel--aula">
+    <article className="painel painel--aula" data-retorno={retorno}>
       <header className="aula-topo">
         <button type="button" className="aula-fechar" aria-label={mensagens.licao.voltar} disabled={ocupado} onClick={voltar}>
-          <span aria-hidden="true">×</span>
+          <Icone nome="fechar" />
         </button>
         <div className="aula-andamento">
-          <progress className="aula-progresso" aria-label={andamento} value={posicao} max={posicoesAula.feedback} />
+          <div className="aula-barra" role="progressbar" aria-label={andamento} aria-valuemin={0} aria-valuemax={posicoesAula.feedback}
+            aria-valuenow={posicao}>
+            <span className="aula-barra__preenchimento" style={{ '--progresso': posicao / posicoesAula.feedback } as CSSProperties} />
+          </div>
           <span className="aula-posicao" aria-hidden="true">{andamento}</span>
         </div>
       </header>
-      <div className="aula-miolo">
+      <div className="aula-miolo" key={etapa}>
+        <p className="aula-etapa" data-etapa={etapa}><Icone nome={iconesDaEtapa[etapa]} />{nomeEtapa}</p>
         <h1 tabIndex={-1}>{licao.titulo}</h1>
-        {etapaAtual === 'conceito' && (
+        {etapa === 'conceito' && (
           <>
             {licao.concluida && <p className="aula-revisao"><Icone nome="check" />{mensagens.trilha.revisitando}</p>}
             <p className="introducao">{licao.objetivo}</p>
-            <section className="aula-quadro" data-etapa="conceito" aria-labelledby="etapa-aula">
-              <h2 id="etapa-aula">{mensagens.licao.conceito}</h2>
-              <p>{licao.conceito}</p>
-              <p className="licao-origem">{mensagens.licao.origem} · {licao.origem}</p>
-            </section>
+            <div className="aula-explicacao">
+              <Stu />
+              <section className="aula-balao" aria-labelledby="etapa-aula">
+                <h2 id="etapa-aula">{mensagens.licao.conceito}</h2>
+                <p>{licao.conceito}</p>
+                <p className="licao-origem">{mensagens.licao.origem} · {licao.origem}</p>
+              </section>
+            </div>
           </>
         )}
-        {etapaAtual === 'exemplo' && (
+        {etapa === 'exemplo' && (
           <section className="aula-quadro" data-etapa="exemplo" aria-labelledby="etapa-aula">
             <h2 id="etapa-aula" ref={tituloEtapa} tabIndex={-1}>{mensagens.licao.exemplo}</h2>
             <p>{licao.exemplo}</p>
           </section>
         )}
-        {etapaAtual === 'exercicio' && (
+        {etapa === 'exercicio' && (
           <section className="aula-quadro" data-etapa="exercicio" aria-labelledby="etapa-aula">
             <h2 id="etapa-aula" ref={tituloEtapa} tabIndex={-1}>{mensagens.licao.exercicio}</h2>
             <p>{exercicio.enunciado}</p>
             {exercicio.contexto && <p>{exercicio.contexto}</p>}
             {exercicio.trecho && <pre className="licao-codigo"><code>{exercicio.trecho}</code></pre>}
-            <form id="resposta-licao" className="formulario" method="post" onSubmit={responder}>
+            <form id="resposta-licao" ref={formulario} className="formulario" method="post" onSubmit={responder}>
               {exercicio.tipo === 'lacuna' ? (
                 <div className="campo campo--resposta">
                   <label htmlFor="resposta">{mensagens.licao.resposta}</label>
                   <input id="resposta" name="resposta" type="text" autoComplete="off" autoCapitalize="none" spellCheck={false}
-                    value={resposta} onChange={(evento) => setResposta(evento.target.value)} required disabled={ocupado} />
+                    value={resposta} onChange={(evento) => setResposta(evento.target.value)} required disabled={ocupado}
+                    readOnly={avaliacao !== null} data-retorno={retorno} />
                 </div>
               ) : (
-                <fieldset className="opcoes" disabled={ocupado}>
+                <fieldset className="opcoes" disabled={ocupado || avaliacao !== null}>
                   <legend>{mensagens.licao.resposta}</legend>
-                  {exercicio.opcoes.map((opcao) => (
-                    <label key={opcao.id}>
+                  {exercicio.opcoes.map((opcao, indice) => (
+                    <label key={opcao.id} data-retorno={resposta === opcao.id ? retorno : undefined}>
                       <input type="radio" name="resposta" value={opcao.id} required checked={resposta === opcao.id}
                         onChange={() => setResposta(opcao.id)} />
+                      <span className="opcao-tecla" aria-hidden="true">{indice + 1}</span>
                       <span>{opcao.texto}</span>
                     </label>
                   ))}
+                  <p className="opcoes-atalho">{mensagens.licao.atalho(exercicio.opcoes.length)}</p>
                 </fieldset>
               )}
             </form>
           </section>
         )}
-        {avaliacao && (
-          <section className="aula-feedback" data-correta={avaliacao.correta} aria-labelledby="etapa-aula">
-            <span className="aula-feedback__icone" aria-hidden="true">{avaliacao.correta ? '✓' : '!'}</span>
-            <div>
-              <h2 id="etapa-aula" ref={tituloEtapa} tabIndex={-1}>{avaliacao.correta ? mensagens.licao.correta : mensagens.licao.incorreta}</h2>
-              <p>{avaliacao.feedback}</p>
-            </div>
-          </section>
-        )}
       </div>
-      <footer className="aula-rodape"><div className="aula-rodape__conteudo">{acao}</div></footer>
+      <footer className="aula-rodape" data-retorno={retorno}>
+        <div className="aula-rodape__conteudo">
+          {avaliacao && (
+            <section className="aula-retorno" aria-labelledby="aula-retorno-titulo">
+              <span className="aula-retorno__icone" aria-hidden="true">
+                <Icone nome={avaliacao.correta ? 'check' : 'fechar'} />
+                {avaliacao.correta && <Confete quantidade={14} />}
+              </span>
+              <div>
+                <h2 id="aula-retorno-titulo" ref={tituloRetorno} tabIndex={-1}>
+                  {avaliacao.correta ? tituloDoAcerto(licao.id) : mensagens.licao.errada}
+                  <span className="somente-leitor"> {avaliacao.correta ? mensagens.licao.correta : mensagens.licao.incorreta}.</span>
+                </h2>
+                <p>{avaliacao.feedback}</p>
+              </div>
+            </section>
+          )}
+          <div className="aula-rodape__acoes">
+            {avaliacao && !avaliacao.correta && (
+              <Botao variante="secundario" disabled={ocupado} onClick={tentarDeNovo}>{mensagens.licao.tentarDeNovo}</Botao>
+            )}
+            {acao}
+          </div>
+        </div>
+      </footer>
     </article>
   );
 }
 
-function LicaoConcluida({ plano, licao, liberadas, ocupado, abrirLicao, voltar }: {
+/** Tempo em minutos e segundos, como 1:05. */
+function formatarTempo(segundos: number) {
+  return `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
+}
+
+/** Número que conta de zero até o valor, uma vez; com movimento reduzido, já mostra o valor. */
+function Contador({ valor, formatar }: { valor: number; formatar: (valor: number) => string }) {
+  const [atual, setAtual] = useState(0);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setAtual(valor);
+      return;
+    }
+    const comeco = performance.now();
+    let quadro = 0;
+    function passo(agora: number) {
+      const fracao = Math.min(1, (agora - comeco) / 900);
+      setAtual(Math.round(valor * (1 - (1 - fracao) ** 3)));
+      if (fracao < 1) quadro = window.requestAnimationFrame(passo);
+    }
+    quadro = window.requestAnimationFrame(passo);
+    return () => window.cancelAnimationFrame(quadro);
+  }, [valor]);
+
+  return <>{formatar(atual)}</>;
+}
+
+/**
+ * Lição concluída: chuva de confete, o Stu pulando, o resumo da lição (tempo, acerto e etapas), a lição liberada e o
+ * progresso do plano, que enche a partir de onde estava. Tela inteira, como a aula.
+ */
+function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrirLicao, voltar }: {
   plano: PlanoDetalhe;
+  antes: Progresso;
   licao: LicaoDetalhe;
   liberadas: string[];
+  resumo?: ResumoLicao;
   ocupado: boolean;
   abrirLicao: (id: string) => void;
   voltar: () => void;
 }) {
   const proxima = proximaDoCaminho(plano);
   const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
+  const textos = mensagens.licao.resumo;
 
   return (
     <section className="painel painel--concluida">
-      <div className="conclusao-sinal" aria-hidden="true"><Icone nome="check" /></div>
+      <Confete chuva quantidade={44} />
+      <div className="conclusao-cena" aria-hidden="true">
+        <span className="conclusao-raios" />
+        <Stu />
+        <span className="conclusao-selo"><Icone nome="check" /></span>
+      </div>
       <h1 tabIndex={-1}>{mensagens.licao.concluida}</h1>
-      <p className="introducao">{licao.titulo}</p>
+      <p className="conclusao-texto">{mensagens.licao.comemoracao}</p>
+      <p className="conclusao-licao">{licao.titulo}</p>
+      {resumo && (
+        <ul className="conclusao-numeros" aria-label={textos.titulo}>
+          <li data-tipo="tempo">
+            <span className="conclusao-numeros__rotulo"><Icone nome="relogio" />{textos.tempo}</span>
+            <span className="conclusao-numeros__valor"><Contador valor={resumo.segundos} formatar={formatarTempo} /></span>
+          </li>
+          <li data-tipo="acerto" data-primeira={resumo.dePrimeira || undefined}>
+            <span className="conclusao-numeros__rotulo"><Icone nome="alvo" />{textos.acerto}</span>
+            <span className="conclusao-numeros__valor">{resumo.dePrimeira ? textos.dePrimeira : textos.tentativas(resumo.tentativas)}</span>
+          </li>
+          <li data-tipo="etapas">
+            <span className="conclusao-numeros__rotulo"><Icone nome="check" />{textos.etapas}</span>
+            <span className="conclusao-numeros__valor">{textos.etapasFeitas}</span>
+          </li>
+        </ul>
+      )}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}
       <div className="conclusao-progresso">
         <h2>{mensagens.planos.progressoPlano}</h2>
-        <BarraProgresso progresso={plano.progresso} />
+        <BarraProgresso progresso={plano.progresso} de={antes} comPercentual />
       </div>
       <div className="acoes-tela">
         {proxima && <Botao variante="secundario" disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}

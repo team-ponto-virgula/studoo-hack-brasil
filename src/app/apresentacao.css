@@ -1,0 +1,254 @@
+/*
+ * Apresentação (onboarding): tela inteira, sem barra lateral, com a ilustração do passo, o texto e as ações no rodapé.
+ * As ilustrações reaproveitam o mundo da trilha (src/ui/mundo.tsx).
+ */
+
+.estudo:has(.painel--apresentacao) { grid-template-columns: minmax(0, 1fr); }
+.estudo:has(.painel--apresentacao) .barra-lateral, .estudo:has(.painel--apresentacao) .estudo-cabecalho { display: none; }
+
+.estudo-principal:has(.painel--apresentacao) {
+  width: min(100%, 44rem);
+  margin-inline: auto;
+  padding: clamp(16px, 4vw, 32px) clamp(20px, 5vw, 40px) 0;
+}
+
+.painel--apresentacao {
+  display: flex;
+  min-height: calc(100svh - clamp(16px, 4vw, 32px));
+  flex-direction: column;
+  gap: 24px;
+}
+
+.apresentacao-topo { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 16px; }
+.apresentacao-andamento { display: flex; align-items: center; gap: 14px; }
+.apresentacao-pontos { display: flex; gap: 6px; }
+
+.apresentacao-pontos > span {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--gelo);
+  transition: width 220ms ease-out, background-color 220ms ease-out;
+}
+
+.apresentacao-pontos > span[data-feito] { background: #9fb1f0; }
+.apresentacao-pontos > span[data-ativo] { width: 28px; background: var(--acao); }
+.apresentacao-posicao { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
+
+.apresentacao-arte { animation: apresentacao-entrar 380ms cubic-bezier(0.2, 0.8, 0.3, 1) backwards; }
+.apresentacao-textos { display: grid; gap: 4px; animation: apresentacao-entrar 380ms cubic-bezier(0.2, 0.8, 0.3, 1) 60ms backwards; }
+.apresentacao-arte[data-direcao='tras'], .apresentacao-textos[data-direcao='tras'] { animation-name: apresentacao-voltar; }
+
+/* Último passo: as áreas de interesse, em cartões que entram em sequência; a escolhida fica marcada e o ícone pula. */
+.apresentacao-areas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 16px;
+  border-radius: 28px;
+  background: var(--ceu);
+}
+
+.apresentacao-area {
+  display: grid;
+  min-height: 96px;
+  justify-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  border: 2px solid var(--gelo);
+  border-radius: 18px;
+  color: var(--texto);
+  background: var(--fundo);
+  box-shadow: 0 4px 0 var(--gelo);
+  font-weight: 800;
+  cursor: pointer;
+  animation: apresentacao-surgir 380ms cubic-bezier(0.2, 0.9, 0.3, 1.3) calc(var(--i) * 55ms) backwards;
+  transition: border-color 140ms ease-out, background-color 140ms ease-out, box-shadow 110ms ease-out, transform 110ms ease-out;
+}
+
+.apresentacao-area .desenho { --tam: 36px; }
+.apresentacao-area:active { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
+.apresentacao-area[aria-pressed='true'] { border-color: var(--acao); color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
+.apresentacao-area[aria-pressed='true'] .desenho { animation: apresentacao-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+
+@media (hover: hover) {
+  .apresentacao-area:hover:not([aria-pressed='true']) { background: var(--nevoa); }
+}
+.apresentacao-textos h1 { text-wrap: balance; }
+.apresentacao-textos .introducao { font-size: 1.125rem; }
+.apresentacao-paisagem { aspect-ratio: 4 / 3; border-radius: 28px; }
+
+/* Passo 1: o Stu dá oi no meio da paisagem. */
+.apresentacao-paisagem--stu .stu {
+  position: absolute;
+  bottom: 6%;
+  left: 50%;
+  width: 34%;
+  transform-origin: 50% 100%;
+  translate: -50% 0;
+  animation: apresentacao-acenar 2400ms ease-in-out 400ms infinite;
+}
+
+.apresentacao-oi {
+  position: absolute;
+  bottom: 52%;
+  left: 62%;
+  padding: 6px 14px;
+  border-radius: 16px 16px 16px 4px;
+  color: var(--acao);
+  background: var(--fundo);
+  box-shadow: 0 4px 0 rgb(27 42 94 / 0.08);
+  font-family: Quicksand, sans-serif;
+  font-size: clamp(1.125rem, 5cqw, 1.75rem);
+  font-weight: 700;
+  animation: apresentacao-surgir 360ms cubic-bezier(0.2, 0.9, 0.3, 1.3) 300ms backwards;
+}
+
+/* Passo 2: temas de vários assuntos flutuam em volta do Stu. */
+.apresentacao-paisagem--temas .stu { position: absolute; bottom: 5%; left: 50%; width: 20%; translate: -50% 0; }
+
+.apresentacao-tema {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px 5px 6px;
+  border-radius: 999px;
+  color: var(--texto);
+  background: var(--fundo);
+  box-shadow: 0 4px 0 rgb(27 42 94 / 0.08);
+  font-size: clamp(0.8125rem, 3.6cqw, 1rem);
+  font-weight: 800;
+  white-space: nowrap;
+  animation: apresentacao-surgir 360ms cubic-bezier(0.2, 0.9, 0.3, 1.3) calc(120ms + var(--i) * 110ms) backwards,
+    entrada-flutuar 3000ms ease-in-out calc(var(--i) * -500ms) infinite alternate;
+}
+
+.apresentacao-tema .desenho { --tam: clamp(20px, 6cqw, 26px); }
+.apresentacao-tema:nth-of-type(1) { top: 10%; left: 6%; }
+.apresentacao-tema:nth-of-type(2) { top: 22%; right: 8%; }
+.apresentacao-tema:nth-of-type(3) { top: 36%; left: 10%; }
+.apresentacao-tema:nth-of-type(4) { top: 44%; right: 5%; }
+.apresentacao-tema:nth-of-type(5) { top: 58%; left: 3%; }
+.apresentacao-tema:nth-of-type(6) { top: 6%; left: 44%; }
+
+/* Passos 3 e 4: um pedaço de trilha visto de cima, com a mesma estrada e os mesmos nós do mapa. */
+.mini-trilha {
+  position: relative;
+  aspect-ratio: 16 / 11;
+  overflow: hidden;
+  border-radius: 28px;
+  background: radial-gradient(circle at 70% 20%, rgb(255 255 255 / 0.5), transparent 45%), var(--chao);
+  container-type: inline-size;
+}
+
+.mini-trilha__estrada { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mini-trilha__estrada path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.mini-trilha__chao { stroke: rgb(255 255 255 / 0.7); stroke-width: 7cqw; }
+.mini-trilha__linha { stroke: rgb(27 42 94 / 0.24); stroke-width: 1.4cqw; stroke-dasharray: 0 3.6cqw; }
+.mini-trilha__linha--feita { stroke: var(--sucesso-claro); stroke-width: 1.8cqw; stroke-dasharray: none; }
+
+.mini-trilha__enfeite, .mini-trilha__brilho {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  translate: -50% -50%;
+  transform-origin: 50% 100%;
+  animation: caminho-brotar 420ms ease-out var(--atraso, 0ms) backwards;
+}
+
+.mini-trilha__brilho { animation: caminho-cintilar 1800ms ease-in-out infinite; }
+
+.mini-trilha__no {
+  position: absolute;
+  top: var(--y);
+  left: var(--x);
+  display: grid;
+  width: 16cqw;
+  height: 16cqw;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--fundo);
+  background: var(--acao);
+  box-shadow: inset 0 0 0 0.9cqw rgb(255 255 255 / 0.2), 0 1.5cqw 0 var(--acao-escura);
+  translate: -50% -50%;
+  animation: apresentacao-surgir 380ms cubic-bezier(0.2, 0.9, 0.3, 1.3) var(--atraso, 0ms) backwards;
+}
+
+.mini-trilha__no .icone { width: 44%; height: 44%; stroke-width: 3; }
+.mini-trilha__no[data-estado='previa'] { color: var(--acao); background: var(--fundo); box-shadow: 0 1.5cqw 0 #cdd6f2; }
+.mini-trilha__no[data-estado='concluida'] { background: var(--sucesso-claro); box-shadow: inset 0 0 0 0.9cqw rgb(255 255 255 / 0.2), 0 1.5cqw 0 var(--sucesso); }
+.mini-trilha__no--trofeu { width: 19cqw; height: 19cqw; color: #7a4a00; background: var(--ouro); box-shadow: inset 0 0 0 1cqw rgb(255 255 255 / 0.3), 0 1.6cqw 0 var(--ouro-escuro); }
+
+.mini-trilha__etiqueta {
+  position: absolute;
+  bottom: calc(100% + 3cqw);
+  left: 50%;
+  padding: 1cqw 2.6cqw;
+  border: 2px solid var(--gelo);
+  border-radius: 10px;
+  color: var(--acao);
+  background: var(--fundo);
+  font-size: clamp(0.6875rem, 3cqw, 0.875rem);
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  translate: -50% 0;
+  animation: caminho-flutuar 1600ms ease-in-out infinite alternate;
+}
+
+.mini-trilha__selo {
+  position: absolute;
+  right: 5%;
+  bottom: 7%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px 8px 10px;
+  border-radius: 999px;
+  color: var(--sucesso);
+  background: var(--fundo);
+  box-shadow: 0 4px 0 rgb(27 42 94 / 0.08);
+  font-size: clamp(0.8125rem, 3.6cqw, 1rem);
+  font-weight: 900;
+  animation: apresentacao-surgir 380ms cubic-bezier(0.2, 0.9, 0.3, 1.3) 300ms backwards;
+}
+
+.mini-trilha__selo .icone { width: 18px; height: 18px; stroke-width: 3; }
+
+.apresentacao-rodape {
+  position: sticky;
+  z-index: 2;
+  inset-block-end: 0;
+  margin-top: auto;
+  padding: 16px 0 calc(18px + env(safe-area-inset-bottom));
+  border-top: 2px solid var(--nevoa);
+  background: var(--fundo);
+}
+
+.apresentacao-rodape__conteudo { display: flex; justify-content: flex-end; gap: 12px; }
+.apresentacao-rodape__conteudo > .botao { min-width: min(100%, 10rem); }
+
+@keyframes apresentacao-entrar { from { opacity: 0; transform: translateX(32px); } }
+@keyframes apresentacao-voltar { from { opacity: 0; transform: translateX(-32px); } }
+@keyframes apresentacao-icone { 0% { transform: scale(1) rotate(0deg); } 30% { transform: scale(1.3) rotate(-12deg); } 60% { transform: scale(0.95) rotate(8deg); } 100% { transform: scale(1) rotate(0deg); } }
+/* `scale` à parte de `transform`, para somar com a flutuação dos temas em vez de ser anulado por ela. */
+@keyframes apresentacao-surgir { from { opacity: 0; scale: 0.5; } }
+@keyframes apresentacao-acenar { 0%, 60%, 100% { rotate: 0deg; } 70% { rotate: -5deg; } 80% { rotate: 4deg; } 90% { rotate: -3deg; } }
+
+@media (min-width: 768px) {
+  .apresentacao-areas { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .apresentacao-paisagem { aspect-ratio: 16 / 10; }
+  .mini-trilha { aspect-ratio: 16 / 9; }
+}
+
+@media (max-width: 767px) {
+  .estudo-principal:has(.painel--apresentacao) { padding-top: max(12px, env(safe-area-inset-top)); }
+  .painel--apresentacao { gap: 20px; }
+  .apresentacao-rodape__conteudo > .botao { flex: 1 1 0; min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .painel--apresentacao *, .painel--apresentacao *::before, .painel--apresentacao *::after { animation: none !important; }
+}

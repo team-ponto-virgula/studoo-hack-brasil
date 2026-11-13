@@ -21,7 +21,8 @@ import { obterGerador } from "@/servidor/ia/gerador";
 import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { iniciarGeracao } from "./geracao";
 
-const TEMPO_CONTEUDO = 30_000;
+/** Tempo para criar o conteúdo de todas as lições no aceite (com a IA real, em paralelo e com uma segunda tentativa). */
+const TEMPO_CONTEUDO = 75_000;
 const DURACAO_AVALIACAO = 15 * 60 * 1000;
 
 const selecaoPlano = {
@@ -125,6 +126,12 @@ async function gerarConteudos(plano: EsqueletoPlano): Promise<ConteudoLicao[][]>
   return conteudos;
 }
 
+/**
+ * Aceites em andamento, por pessoa e proposta. Com a IA real, o aceite escreve todas as lições (vários pedidos ao
+ * provedor): um segundo aceite igual, enquanto o primeiro corre, espera o mesmo resultado em vez de gerar tudo de novo.
+ */
+const aceitesEmAndamento = new Map<string, Promise<PlanoDetalhe>>();
+
 export async function aceitarProposta(usuarioId: string, token: string): Promise<PlanoDetalhe> {
   const proposta = lerComprovante("proposta", usuarioId, token);
   if (!proposta?.plano) {
@@ -140,7 +147,15 @@ export async function aceitarProposta(usuarioId: string, token: string): Promise
     throw new FalhaApi("proposta_invalida");
   }
 
-  const plano = proposta.plano;
+  const chave = `${usuarioId}:${id}`;
+  const emAndamento = aceitesEmAndamento.get(chave);
+  if (emAndamento) return emAndamento;
+  const aceite = criarPlanoAceito(usuarioId, id, proposta.plano).finally(() => aceitesEmAndamento.delete(chave));
+  aceitesEmAndamento.set(chave, aceite);
+  return aceite;
+}
+
+async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoPlano): Promise<PlanoDetalhe> {
   const conteudos = await gerarConteudos(plano);
   const fluxos = plano.fluxos.map(({ titulo }, indice) => ({
     usuarioId,

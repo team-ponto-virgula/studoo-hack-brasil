@@ -15,14 +15,19 @@ import {
   type StyleProp,
   type TextInputProps,
   type TextStyle,
+  type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Icone } from './icone';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
+import type { NomeIcone } from './trilha';
 
-export function Tela({ children, acoes, rodape, pagina, rolagem, aoMedir, aoRolar }: {
+export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, aoRolar, estiloConteudo, estiloRodape }: {
   children: ReactNode;
   acoes?: ReactNode;
+  /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
+  topo?: ReactNode;
   rodape?: ReactNode;
   pagina: string;
   /** Referência da rolagem, para a tela levar a pessoa até um ponto do conteúdo (como o nó liberado na trilha). */
@@ -31,25 +36,55 @@ export function Tela({ children, acoes, rodape, pagina, rolagem, aoMedir, aoRola
   aoMedir?: (altura: number) => void;
   /** Quanto a pessoa já rolou, para a tela acompanhar o conteúdo que chega sem tirar a pessoa do lugar. */
   aoRolar?: (y: number) => void;
+  estiloConteudo?: StyleProp<ViewStyle>;
+  /** Fundo do rodapé, como o verde ou o âmbar do retorno da aula. */
+  estiloRodape?: StyleProp<ViewStyle>;
 }) {
   return (
     <SafeAreaView style={estilos.tela}>
       <View style={estilos.cabecalho}>
         <View style={estilos.marcaConteudo}>
-          <Logo />
-          {acoes && <View style={estilos.acoes}>{acoes}</View>}
+          {topo ?? (
+            <>
+              <Logo />
+              {acoes && <View style={estilos.acoes}>{acoes}</View>}
+            </>
+          )}
         </View>
       </View>
 
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" contentContainerStyle={estilos.conteudo}
+        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" contentContainerStyle={[estilos.conteudo, estiloConteudo]}
           onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
           onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}>
-          {children}
+          <Entrada>{children}</Entrada>
         </ScrollView>
-        {rodape && <View style={estilos.rodape}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}
+        {rodape && <View style={[estilos.rodape, estiloRodape]}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+/** Cada tela entra com uma subida curta, como na web; com movimento reduzido, já aparece pronta. */
+function Entrada({ children }: { children: ReactNode }) {
+  const reduzir = useMovimentoReduzido();
+  const [valor] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (reduzir === null) return;
+    if (reduzir) {
+      valor.setValue(1);
+      return;
+    }
+    const animacao = Animated.timing(valor, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [reduzir, valor]);
+
+  return (
+    <Animated.View style={{ opacity: valor, transform: [{ translateY: valor.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+      {children}
+    </Animated.View>
   );
 }
 
@@ -75,30 +110,36 @@ export function useMovimentoReduzido() {
   return reduzir;
 }
 
-export function Logo({ decorativo = false, estilo }: { decorativo?: boolean; estilo?: StyleProp<ImageStyle> }) {
+/**
+ * Movimento que vai e volta sem parar (um balanço de -`amplitude` a 0), para o que precisa chamar a atenção enquanto
+ * o estado dura, como o rótulo "Começar". Com movimento reduzido, fica parado.
+ */
+export function useBalanco(amplitude: number, duracao: number, ativo = true) {
   const reduzir = useMovimentoReduzido();
-  const [subida] = useState(() => new Animated.Value(0));
+  const [valor] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    if (reduzir !== false) return;
-
-    const movimento = {
-      duration: 1500,
-      easing: Easing.inOut(Easing.ease),
-      isInteraction: false,
-      useNativeDriver: true,
-    };
+    if (reduzir !== false || !ativo) {
+      valor.setValue(0);
+      return;
+    }
+    const movimento = { duration: duracao, easing: Easing.inOut(Easing.ease), isInteraction: false, useNativeDriver: true };
     const ciclo = Animated.loop(Animated.sequence([
-      Animated.timing(subida, { ...movimento, toValue: -2 }),
-      Animated.timing(subida, { ...movimento, toValue: 0 }),
+      Animated.timing(valor, { ...movimento, toValue: -amplitude }),
+      Animated.timing(valor, { ...movimento, toValue: 0 }),
     ]));
-
     ciclo.start();
     return () => {
       ciclo.stop();
-      subida.setValue(0);
+      valor.setValue(0);
     };
-  }, [reduzir, subida]);
+  }, [reduzir, ativo, amplitude, duracao, valor]);
+
+  return valor;
+}
+
+export function Logo({ decorativo = false, estilo }: { decorativo?: boolean; estilo?: StyleProp<ImageStyle> }) {
+  const subida = useBalanco(2, 1500);
 
   return (
     <Animated.Image source={require('../assets/marca/logo-com-sorriso.png')} resizeMode="contain"
@@ -124,23 +165,36 @@ export function Titulo({ children, testID, foco = false, estilo }: {
   return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" style={[estilos.titulo, estilo]}>{children}</Text>;
 }
 
-export function Botao({ rotulo, acao, testID, dica, desativado = false, ocupado = false, variante = 'primario', compacto = false }: {
+/**
+ * Botão com relevo, como na web: a face e um lábio mais escuro embaixo; no toque, a face desce até o lábio
+ * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
+ */
+export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
+  compacto = false }: {
   rotulo: string;
   acao: () => void;
   testID?: string;
   /** Complemento que o leitor de tela lê depois do rótulo, como o título da lição que o botão abre. */
   dica?: string;
+  /** Ícone depois do rótulo, como a seta de "Continuar". */
+  icone?: NomeIcone;
   desativado?: boolean;
   ocupado?: boolean;
-  variante?: 'primario' | 'secundario' | 'texto';
+  /** Mostra pontinhos pulando no lugar do rótulo, que segue como nome do botão para o leitor de tela. */
+  carregando?: boolean;
+  /** `sucesso` e `alerta` são o verde e o âmbar do retorno da aula, com contraste para o texto branco. */
+  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto';
   compacto?: boolean;
 }) {
   const [focado, setFocado] = useState(false);
+  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' ? cores.fundo : cores.acao;
+  if (desativado) corTexto = cores.textoSecundario;
 
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
+      accessibilityLabel={rotulo}
       accessibilityHint={dica}
       accessibilityState={{ disabled: desativado, busy: ocupado }}
       disabled={desativado}
@@ -150,32 +204,107 @@ export function Botao({ rotulo, acao, testID, dica, desativado = false, ocupado 
       style={({ pressed }) => [
         estilos.botao,
         variante === 'secundario' && estilos.botaoSecundario,
+        variante === 'sucesso' && estilos.botaoSucesso,
+        variante === 'alerta' && estilos.botaoAlerta,
         variante === 'texto' && estilos.botaoTextoLivre,
         compacto && estilos.botaoCompacto,
-        pressed && estilos.botaoPressionado,
+        pressed && variante !== 'texto' && estilos.botaoAfundado,
+        pressed && variante === 'texto' && estilos.botaoPressionado,
         focado && estilos.foco,
-        desativado && estilos.botaoDesativado,
+        desativado && variante !== 'texto' && estilos.botaoDesativado,
       ]}
     >
-      <Text style={[estilos.botaoTexto, variante !== 'primario' && estilos.botaoTextoSecundario,
-        compacto && estilos.botaoTextoCompacto, desativado && estilos.botaoTextoDesativado]}>{rotulo}</Text>
+      {carregando ? <Pontinhos cor={corTexto} /> : (
+        <>
+          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto]}>{rotulo}</Text>
+          {icone && <Icone nome={icone} tamanho={18} cor={corTexto} />}
+        </>
+      )}
     </Pressable>
   );
 }
 
-export function Campo({ rotulo, campoRef, ...props }: TextInputProps & { rotulo: string; campoRef?: Ref<ComponentRef<typeof TextInput>> }) {
+/** Três pontinhos que pulam em sequência, enquanto uma ação acontece; parados com movimento reduzido. */
+export function Pontinhos({ cor }: { cor: string }) {
+  const reduzir = useMovimentoReduzido();
+  const [valor] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (reduzir !== false) return;
+    const ciclo = Animated.loop(Animated.timing(valor, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true }));
+    ciclo.start();
+    return () => {
+      ciclo.stop();
+      valor.setValue(0);
+    };
+  }, [reduzir, valor]);
+
+  return (
+    <View style={estilos.pontinhos} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      {[0, 1, 2].map((indice) => {
+        const comeco = indice * 0.16;
+        return (
+          <Animated.View key={indice} style={[estilos.pontinho, { backgroundColor: cor, transform: [{
+            translateY: valor.interpolate({ inputRange: [0, comeco, comeco + 0.2, comeco + 0.4, 1], outputRange: [0, 0, -6, 0, 0], extrapolate: 'clamp' }),
+          }] }]} />
+        );
+      })}
+    </View>
+  );
+}
+
+export function Campo({ rotulo, campoRef, erro, acessorio, ...props }: TextInputProps & {
+  rotulo: string;
+  campoRef?: Ref<ComponentRef<typeof TextInput>>;
+  /** Erro do campo, mostrado embaixo dele e lido pelo leitor de tela junto com a dica. */
+  erro?: string;
+  /** Algo dentro do campo, à direita, como o botão de mostrar a senha. */
+  acessorio?: ReactNode;
+}) {
   const [focado, setFocado] = useState(false);
   const rotuloId = props.testID ? `rotulo-${props.testID}` : undefined;
+  const dica = [erro, props.accessibilityHint].filter(Boolean).join(' ') || undefined;
 
   return (
     <View style={estilos.campo}>
       <Text nativeID={rotuloId} style={estilos.rotulo}>{rotulo}</Text>
-      <TextInput {...props} ref={campoRef} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloId}
-        placeholderTextColor={cores.textoSecundario}
-        style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, focado && estilos.entradaFocada, props.style]}
-        onFocus={(evento) => { setFocado(true); props.onFocus?.(evento); }}
-        onBlur={(evento) => { setFocado(false); props.onBlur?.(evento); }} />
+      <View>
+        <TextInput {...props} ref={campoRef} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloId} accessibilityHint={dica}
+          placeholderTextColor="#7A84A0"
+          style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, !!erro && estilos.entradaErro,
+            focado && estilos.entradaFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
+          onFocus={(evento) => { setFocado(true); props.onFocus?.(evento); }}
+          onBlur={(evento) => { setFocado(false); props.onBlur?.(evento); }} />
+        {acessorio && <View style={estilos.acessorio}>{acessorio}</View>}
+      </View>
+      {erro && (
+        <View style={estilos.campoErro} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Text style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro }]}>!</Text>
+          <Text style={estilos.campoErroTexto}>{erro}</Text>
+        </View>
+      )}
     </View>
+  );
+}
+
+/** Botão só com ícone, de 44 pontos, como o de mostrar a senha ou o de fechar. */
+export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = false, testID, cor = cores.textoSecundario }: {
+  icone: NomeIcone;
+  rotulo: string;
+  acao: () => void;
+  selecionado?: boolean;
+  desativado?: boolean;
+  testID?: string;
+  cor?: string;
+}) {
+  const [focado, setFocado] = useState(false);
+  return (
+    <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={rotulo}
+      accessibilityState={{ disabled: desativado, ...(selecionado === undefined ? null : { selected: selecionado }) }}
+      disabled={desativado} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      style={({ pressed }) => [estilos.botaoIcone, pressed && estilos.botaoIconePressionado, focado && estilos.foco]}>
+      <Icone nome={icone} tamanho={22} cor={cor} />
+    </Pressable>
   );
 }
 
@@ -188,6 +317,7 @@ export function EstadoMensagem({ mensagem, titulo, tipo = 'erro', testID, foco =
 }) {
   const area = useRef<ComponentRef<typeof View>>(null);
   const cor = tipo === 'correto' ? cores.sucesso : tipo === 'ajuste' ? cores.alerta : cores.erro;
+  const fundo = tipo === 'correto' ? '#E9F7EE' : tipo === 'ajuste' ? '#FFF3DE' : '#FFF5F6';
 
   useEffect(() => {
     if (foco && area.current) AccessibilityInfo.sendAccessibilityEvent(area.current, 'focus');
@@ -196,8 +326,8 @@ export function EstadoMensagem({ mensagem, titulo, tipo = 'erro', testID, foco =
   return (
     <View ref={area} testID={testID} accessible accessibilityRole="alert"
       accessibilityLabel={titulo ? `${titulo}. ${mensagem}` : mensagem}
-      style={[estilos.mensagem, { borderColor: cor }]}>
-      <Text importantForAccessibility="no" style={[estilos.sinal, { color: cor, borderColor: cor }]}>{tipo === 'correto' ? '✓' : '!'}</Text>
+      style={[estilos.mensagem, { borderColor: cor, backgroundColor: fundo }]}>
+      <Text importantForAccessibility="no" style={[estilos.sinal, { color: cor, borderColor: cor, backgroundColor: cores.fundo }]}>{tipo === 'correto' ? '✓' : '!'}</Text>
       <View style={estilos.mensagemConteudo}>
         {titulo && <Text style={[estilos.mensagemTitulo, { color: cor }]}>{titulo}</Text>}
         <Text style={[estilos.texto, tipo === 'erro' && { color: cor }]}>{mensagem}</Text>
@@ -206,18 +336,41 @@ export function EstadoMensagem({ mensagem, titulo, tipo = 'erro', testID, foco =
   );
 }
 
+/** Esqueleto que pulsa devagar enquanto o conteúdo carrega, como o brilho da web; parado com movimento reduzido. */
+export function usePulso() {
+  const reduzir = useMovimentoReduzido();
+  const [valor] = useState(() => new Animated.Value(1));
+
+  useEffect(() => {
+    if (reduzir !== false) return;
+    const movimento = { duration: 750, easing: Easing.inOut(Easing.ease), isInteraction: false, useNativeDriver: true };
+    const ciclo = Animated.loop(Animated.sequence([
+      Animated.timing(valor, { ...movimento, toValue: 0.55 }),
+      Animated.timing(valor, { ...movimento, toValue: 1 }),
+    ]));
+    ciclo.start();
+    return () => {
+      ciclo.stop();
+      valor.setValue(1);
+    };
+  }, [reduzir, valor]);
+
+  return valor;
+}
+
 export function Skeleton({ texto = mensagens.carregando }: { texto?: string }) {
+  const pulso = usePulso();
   return (
-    <View accessibilityLiveRegion="polite" accessibilityLabel={texto} accessible style={estilos.skeleton}>
+    <Animated.View accessibilityLiveRegion="polite" accessibilityLabel={texto} accessible style={[estilos.skeleton, { opacity: pulso }]}>
       <View style={estilos.skeletonCurto} />
       <View style={estilos.skeletonLinha} />
-    </View>
+    </Animated.View>
   );
 }
 
 export const estilos = StyleSheet.create({
   tela: { flex: 1, backgroundColor: cores.fundo },
-  cabecalho: { borderBottomWidth: 1, borderColor: cores.gelo },
+  cabecalho: { borderBottomWidth: 2, borderColor: cores.nevoa },
   marcaConteudo: {
     width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 8,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, minHeight: 60,
@@ -235,14 +388,19 @@ export const estilos = StyleSheet.create({
   campo: { gap: 8 },
   rotulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   entrada: {
-    minHeight: 48, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderRadius: 12,
-    borderColor: cores.textoSecundario, color: cores.texto, backgroundColor: cores.fundo,
+    minHeight: 52, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 2, borderRadius: 14,
+    borderColor: cores.bordaCampo, color: cores.texto, backgroundColor: cores.fundo,
     fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24,
   },
   entradaMultilinha: { minHeight: 132, textAlignVertical: 'top' },
-  entradaFocada: { borderColor: cores.acao, outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 1, outlineStyle: 'solid' },
+  entradaErro: { borderColor: cores.erro },
+  entradaFocada: { borderColor: cores.acao, outlineColor: 'rgba(56, 88, 214, 0.18)', outlineWidth: 4, outlineOffset: 0, outlineStyle: 'solid' },
+  entradaComAcessorio: { paddingRight: 52 },
+  acessorio: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center' },
+  campoErro: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  campoErroTexto: { flex: 1, color: cores.erro, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   mensagem: {
-    marginTop: 16, padding: 12, borderRadius: 12, borderWidth: 1,
+    marginTop: 16, padding: 12, borderRadius: 14, borderWidth: 2,
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
   },
   mensagemConteudo: { flex: 1, gap: 4 },
@@ -251,18 +409,25 @@ export const estilos = StyleSheet.create({
   skeleton: { marginTop: 20, gap: 8 },
   skeletonCurto: { width: '55%', height: 24, borderRadius: 8, backgroundColor: cores.gelo },
   skeletonLinha: { width: '100%', height: 16, borderRadius: 8, backgroundColor: cores.gelo },
-  rodape: { borderTopWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
-  rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', padding: 16, gap: 8 },
-  botao: { minHeight: 48, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8,
-    borderWidth: 2, borderRadius: 20, borderColor: cores.acao, backgroundColor: cores.acao },
-  botaoSecundario: { backgroundColor: cores.fundo },
-  botaoTextoLivre: { borderColor: 'transparent', backgroundColor: 'transparent' },
+  rodape: { borderTopWidth: 2, borderColor: cores.nevoa, backgroundColor: cores.fundo },
+  rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', padding: 16, gap: 10 },
+  botao: {
+    minHeight: 50, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 8,
+    borderWidth: 2, borderBottomWidth: 5, borderRadius: 16, borderColor: cores.acao, borderBottomColor: cores.acaoEscura, backgroundColor: cores.acao,
+  },
+  botaoSecundario: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.fundo },
+  botaoSucesso: { borderColor: cores.sucesso, borderBottomColor: '#145A42', backgroundColor: cores.sucesso },
+  botaoAlerta: { borderColor: cores.alerta, borderBottomColor: '#6E4100', backgroundColor: cores.alerta },
+  pontinhos: { height: 24, flexDirection: 'row', alignItems: 'center', gap: 5 },
+  pontinho: { width: 8, height: 8, borderRadius: 4 },
+  botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
   botaoCompacto: { alignSelf: 'flex-start', minHeight: 44, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
+  botaoAfundado: { borderBottomWidth: 2, marginTop: 3 },
   botaoPressionado: { opacity: 0.82 },
   foco: { outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
-  botaoDesativado: { borderColor: cores.gelo, backgroundColor: cores.nevoa },
-  botaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24, textAlign: 'center' },
-  botaoTextoSecundario: { color: cores.acao },
+  botaoDesativado: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.nevoa },
+  botaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24, textAlign: 'center', flexShrink: 1 },
   botaoTextoCompacto: { fontSize: 14, lineHeight: 20 },
-  botaoTextoDesativado: { color: cores.textoSecundario },
+  botaoIcone: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
+  botaoIconePressionado: { backgroundColor: cores.nevoa },
 });

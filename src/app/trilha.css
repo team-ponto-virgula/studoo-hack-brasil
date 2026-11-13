@@ -1,14 +1,19 @@
-/* Tela do plano: faixa do topo com título, progresso total e próximo passo; abaixo, o caminho (src/ui/caminho.css). */
+/*
+ * Tela do plano: faixa do topo com título, progresso total e próximo passo; abaixo, o mapa do mundo com o caminho
+ * (src/ui/caminho.css). No celular o mapa vai de uma borda à outra; no tablet e no computador, tem cantos arredondados.
+ */
 
-.painel--trilha { display: grid; gap: 32px; min-width: 0; }
+.painel--trilha { display: grid; gap: 24px; min-width: 0; }
 
 .trilha-cabecalho {
   display: grid;
   align-content: start;
   min-width: 0;
-  padding: 24px;
-  border-radius: var(--raio-bloco);
-  background: var(--nevoa);
+  padding: 22px 24px 24px;
+  border: 2px solid var(--gelo);
+  border-radius: 24px;
+  background: var(--fundo);
+  box-shadow: 0 4px 0 var(--gelo);
 }
 
 .trilha-resumo { min-width: 0; }
@@ -26,19 +31,22 @@
   line-clamp: 3;
 }
 
-.trilha-cabecalho .plano-progresso { max-width: none; margin-block: 20px 0; }
-.trilha-cabecalho progress { background: var(--fundo); }
-.trilha-cabecalho progress::-webkit-progress-bar { background: var(--fundo); }
+.trilha-cabecalho .plano-progresso { max-width: none; margin-block: 18px 0; }
+.trilha-cabecalho .barra { height: 16px; }
+.trilha-cabecalho .barra__preenchimento { background: linear-gradient(90deg, var(--acao), #5b7cf0); }
+.progresso__legenda { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.progresso__percentual { color: var(--acao) !important; font-weight: 900 !important; }
 
 .trilha-proximo {
   display: grid;
   gap: 2px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid var(--gelo);
+  border-top: 2px solid var(--nevoa);
 }
 
 .trilha-proximo__rotulo, .trilha-proximo__detalhe { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+.trilha-proximo__rotulo { color: var(--acao); font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.8125rem; }
 .trilha-proximo__titulo { font-size: 1.0625rem; font-weight: 800; overflow-wrap: anywhere; }
 .trilha-proximo > .botao { justify-self: start; margin-top: 14px; }
 
@@ -47,7 +55,7 @@
   gap: 8px;
   margin-top: 20px;
   padding-top: 20px;
-  border-top: 1px solid var(--gelo);
+  border-top: 2px solid var(--nevoa);
 }
 
 .trilha-concluida__titulo { display: flex; align-items: center; gap: 8px; color: var(--sucesso); font-weight: 800; }
@@ -64,6 +72,7 @@
  * fica presa ao fim da tela, com o andamento da IA e, no fim, Ajustar pedido e Começar.
  */
 .painel--geracao .trilha-cabecalho { grid-template-columns: minmax(0, 1fr); }
+.painel--geracao .contexto-tela { color: var(--acao); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
 .geracao-titulo { display: block; animation: geracao-titulo 200ms ease-out backwards; }
 .geracao-ia { margin-top: 16px; color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
 .geracao-origem { margin-top: 4px; color: var(--texto2); font-size: 0.875rem; overflow-wrap: anywhere; }
@@ -78,8 +87,8 @@
   display: flex;
   align-items: center;
   gap: 12px 16px;
-  padding: 16px 0 calc(16px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--gelo);
+  padding: 16px 0 calc(18px + env(safe-area-inset-bottom));
+  border-top: 2px solid var(--nevoa);
   background: var(--fundo);
 }
 
@@ -94,10 +103,205 @@
   .geracao-titulo { animation: none; }
 }
 
-/* Celular: o próximo passo vira o rodapé fixo, ao alcance do polegar. */
+/*
+ * Escrevendo as lições (aceite): o Stu escreve com o lápis e as folhas voam; um brilho desce pela lista de lições, sem
+ * marcar nenhuma como pronta. Quando o aceite volta, o visto verde passa pela lista, uma lição de cada vez.
+ */
+.estudo-principal:has(.painel--preparo) { width: min(100%, 40rem); margin-inline: auto; padding-top: clamp(16px, 4vw, 40px); }
+.painel--preparo .contexto-tela { color: var(--acao); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; overflow-wrap: anywhere; }
+
+.preparo-cena {
+  position: relative;
+  display: grid;
+  height: 184px;
+  place-items: end center;
+  overflow: hidden;
+  margin-bottom: 22px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #dbe5ff 0%, var(--ceu) 70%);
+  box-shadow: 0 4px 0 var(--gelo);
+}
+
+.preparo-cena__colina {
+  position: absolute;
+  right: -12%;
+  bottom: -64px;
+  left: -12%;
+  height: 124px;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: var(--chao);
+  box-shadow: inset 0 7px 0 var(--relevo);
+}
+
+.preparo-cena .desenho { position: absolute; bottom: 16px; }
+.preparo-cena .desenho:nth-of-type(1) { left: 9%; --tam: 52px; }
+.preparo-cena .desenho:nth-of-type(2) { right: 25%; bottom: 12px; --tam: 30px; }
+.preparo-cena .desenho:nth-of-type(3) { right: 7%; --tam: 46px; }
+
+.preparo-cena .stu {
+  position: relative;
+  width: 112px;
+  height: auto;
+  margin-bottom: 14px;
+  transform-origin: 50% 100%;
+  animation: preparo-stu 2400ms ease-in-out infinite;
+}
+
+/* O lápis: borracha, ponteira, corpo amarelo e a ponta de madeira com o grafite. */
+.preparo-lapis {
+  position: absolute;
+  bottom: 62px;
+  left: calc(50% + 36px);
+  width: 13px;
+  height: 52px;
+  border-radius: 4px 4px 1px 1px;
+  background: linear-gradient(#ff8fa3 0 9px, #c9d1ea 9px 14px, var(--ouro) 14px 100%);
+  box-shadow: inset -3px 0 0 rgb(0 0 0 / 0.08);
+  transform-origin: 50% 100%;
+  rotate: 24deg;
+  animation: preparo-lapis 520ms ease-in-out infinite alternate;
+}
+
+.preparo-lapis::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  border-top: 11px solid #e9b880;
+  border-right: 6.5px solid transparent;
+  border-left: 6.5px solid transparent;
+}
+
+.preparo-lapis::before {
+  content: '';
+  position: absolute;
+  top: calc(100% + 7px);
+  left: 4.5px;
+  z-index: 1;
+  border-top: 4px solid var(--texto);
+  border-right: 2px solid transparent;
+  border-left: 2px solid transparent;
+}
+
+/* Folhas escritas que saem do Stu e voam para os lados. */
+.preparo-folha {
+  position: absolute;
+  bottom: 74px;
+  left: calc(50% - 13px);
+  width: 26px;
+  height: 32px;
+  border-radius: 5px;
+  background:
+    linear-gradient(var(--gelo), var(--gelo)) 5px 8px / 16px 3px no-repeat,
+    linear-gradient(var(--gelo), var(--gelo)) 5px 14px / 12px 3px no-repeat,
+    linear-gradient(var(--gelo), var(--gelo)) 5px 20px / 14px 3px no-repeat,
+    var(--fundo);
+  box-shadow: 0 2px 0 var(--borda-campo);
+  opacity: 0;
+  animation: preparo-folha 3300ms ease-out infinite;
+}
+
+.preparo-folha:nth-of-type(2) { --x: -118px; --giro: -28deg; animation-delay: 1100ms; }
+.preparo-folha:nth-of-type(3) { --x: 70px; --y: -128px; --giro: 14deg; animation-delay: 2200ms; }
+
+.preparo-lista { display: grid; gap: 10px; margin: 24px 0 0; padding: 0; list-style: none; }
+
+.preparo-lista li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 9px 16px 9px 10px;
+  overflow: hidden;
+  border: 2px solid var(--gelo);
+  border-radius: 16px;
+  background: var(--fundo);
+  box-shadow: 0 3px 0 var(--gelo);
+  font-weight: 800;
+  line-height: 1.3;
+  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
+  animation: painel-entrar 380ms cubic-bezier(0.2, 0.8, 0.3, 1) calc(100ms + var(--ordem) * 60ms) backwards;
+}
+
+/* O brilho que desce pela lista: a escrita está acontecendo. */
+.preparo-lista li::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 20%, rgb(56 88 214 / 0.1) 50%, transparent 80%);
+  translate: -100% 0;
+  pointer-events: none;
+  animation: preparo-escrever 2000ms ease-in-out calc(600ms + var(--ordem) * 200ms) infinite;
+}
+
+.preparo-lista__icone {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: none;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--acao);
+  background: var(--nevoa);
+}
+
+.preparo-lista__icone .icone { width: 20px; height: 20px; }
+.preparo-lista__titulo { min-width: 0; overflow-wrap: anywhere; }
+
+.painel--preparo[data-prontas] .preparo-lista li { border-color: #bfe5d2; box-shadow: 0 3px 0 #bfe5d2; }
+.painel--preparo[data-prontas] .preparo-lista li::after { display: none; }
+
+.painel--preparo[data-prontas] .preparo-lista__icone {
+  color: var(--fundo);
+  background: var(--sucesso-claro);
+  box-shadow: 0 3px 0 var(--sucesso);
+  animation: preparo-visto 420ms cubic-bezier(0.2, 0.9, 0.3, 1.6) calc(var(--ordem) * 45ms) backwards;
+}
+
+.painel--preparo[data-prontas] .preparo-lista__icone .icone { stroke-width: 3; }
+.painel--preparo[data-prontas] .preparo-lapis, .painel--preparo[data-prontas] .preparo-folha { display: none; }
+.painel--preparo[data-prontas] .preparo-cena .stu { animation: preparo-pulo 300ms cubic-bezier(0.3, 0.6, 0.4, 1) 2 alternate; }
+
+.preparo-dica {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  border-radius: 16px;
+  color: var(--texto2);
+  background: var(--nevoa);
+  font-weight: 700;
+  animation: preparo-dica 420ms ease-out backwards;
+}
+
+.preparo-dica .icone { width: 22px; height: 22px; flex: none; color: var(--ouro-escuro); }
+
+@keyframes preparo-stu { 50% { transform: translateY(-6px) rotate(-2deg); } }
+@keyframes preparo-lapis { from { rotate: 16deg; translate: 0 0; } to { rotate: 32deg; translate: 4px 2px; } }
+@keyframes preparo-folha {
+  0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.5); }
+  12% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--x, 104px), var(--y, -96px)) rotate(var(--giro, 24deg)) scale(1); }
+}
+@keyframes preparo-escrever { from { translate: -100% 0; } 55%, to { translate: 100% 0; } }
+@keyframes preparo-visto { from { transform: scale(0.3) rotate(-30deg); } }
+@keyframes preparo-pulo { to { transform: translateY(-14px); } }
+@keyframes preparo-dica { from { opacity: 0; transform: translateY(6px); } }
+
 @media (max-width: 767px) {
-  .painel--trilha { gap: 28px; }
-  .trilha-cabecalho { padding: 20px; }
+  .preparo-cena { height: 164px; margin-bottom: 18px; }
+  .preparo-cena .stu { width: 98px; }
+  .preparo-lapis { bottom: 56px; left: calc(50% + 30px); }
+}
+
+/* Celular: o mapa ocupa a largura da tela e o próximo passo vira o rodapé fixo, ao alcance do polegar. */
+@media (max-width: 767px) {
+  .painel--trilha { gap: 20px; }
+  .trilha-cabecalho { padding: 18px 20px 20px; }
+  .painel--trilha > .caminho { margin-inline: calc(-1 * var(--espaco-pagina)); }
 
   .trilha-proximo {
     position: fixed;
@@ -108,12 +312,12 @@
     align-items: center;
     column-gap: 12px;
     margin: 0;
-    padding: 12px max(20px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-    border-top: 1px solid var(--gelo);
+    padding: 12px max(20px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    border-top: 2px solid var(--nevoa);
     background: var(--fundo);
   }
 
-  .trilha-proximo__rotulo { grid-area: rotulo; font-size: 0.8125rem; }
+  .trilha-proximo__rotulo { grid-area: rotulo; font-size: 0.75rem; }
   .trilha-proximo__titulo { grid-area: titulo; overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
   .trilha-proximo__detalhe { display: none; }
   .trilha-proximo > .botao { grid-area: botao; margin: 0; }
@@ -122,7 +326,7 @@
     position: fixed;
     inset: auto 0 0;
     gap: 12px;
-    padding: 12px max(20px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    padding: 12px max(20px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   }
 
   /* Trilha pronta: os dois botões dividem o rodapé; o andamento já foi dito no caminho e ao leitor de tela. */
@@ -135,7 +339,7 @@
   .painel--trilha { width: min(100%, 36rem); margin-inline: auto; }
 }
 
-/* Computador: faixa larga no topo, com o próximo passo à direita; o caminho segue centrado abaixo. */
+/* Computador: faixa larga no topo, com o próximo passo à direita; o mapa usa a largura toda, com o caminho no centro. */
 @media (min-width: 1024px) {
   .painel--trilha { width: min(100%, 52rem); justify-self: center; }
 
@@ -143,7 +347,7 @@
     grid-template-columns: minmax(0, 1fr) 16rem;
     align-items: center;
     column-gap: 32px;
-    padding: 28px 32px;
+    padding: 26px 32px 28px;
   }
 
   .trilha-cabecalho .introducao { max-width: 60ch; }
@@ -152,9 +356,9 @@
     margin: 0;
     padding: 4px 0 4px 32px;
     border-top: 0;
-    border-left: 1px solid var(--gelo);
+    border-left: 2px solid var(--nevoa);
   }
 
   .trilha-proximo > .botao { justify-self: stretch; }
-  .painel--trilha > .caminho, .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
+  .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
 }

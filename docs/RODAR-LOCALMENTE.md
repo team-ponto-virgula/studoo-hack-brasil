@@ -23,17 +23,46 @@ Com `IA=falsa`, a geração não chama nenhum serviço externo. Objetivos de SQL
 | `STUDOO_LIMITE_GERACOES` | `20` | Gerações permitidas por pessoa em cada janela. Teto provisório, em memória do processo; o teto definitivo é a D7. |
 | `STUDOO_JANELA_GERACOES_MIN` | `60` | Tamanho da janela do teto, em minutos. |
 
+## IA da OpenAI
+
+Com `IA=openai`, a [Responses API](https://platform.openai.com/docs/api-reference/responses) da OpenAI escreve a trilha e as lições. A estrutura chega por streaming, então a trilha nasce na tela enquanto o modelo escreve. O conteúdo de cada lição é escrito no **Começar**, com Structured Outputs (JSON Schema estrito), e passa pela mesma validação da IA falsa. O pedido leva só o objetivo e os títulos da trilha, nunca dados da conta. A chave fica só no servidor; o app usa a IA pelo servidor, sem configuração própria.
+
+O `npm run db:local` exige `IA=falsa` no `.env`. Para ligar a OpenAI, crie um `.env.local` na raiz. Ele fica fora do Git e vale por cima do `.env`.
+
+```sh
+IA=openai
+OPENAI_API_KEY=sua-chave
+```
+
+Para conferir a chave antes de abrir o Studoo, rode `npm run ia:conferir` (ou `npm run ia:conferir -- "seu objetivo"`). O comando usa o mesmo adaptador do servidor: mostra a trilha chegando por streaming, escreve a primeira lição e diz se tudo veio no formato do Studoo, sem gravar nada no banco. Se falhar, a linha `ia-openai` mostra o status da OpenAI (por exemplo, 401 para chave inválida e 404 para modelo inexistente).
+
+Depois, reinicie o `npm run dev`. Na trilha gerada, a origem passa a mostrar "IA da OpenAI" e o modelo.
+
+| Variável | Padrão | Efeito |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | (nenhum) | Chave da API. Sem ela, vale a reserva. |
+| `OPENAI_MODELO` | `gpt-5.6-luna` | Modelo da Responses API. O padrão é o de menor custo e latência. |
+| `OPENAI_ESFORCO` | `low` nos modelos de raciocínio | Esforço de raciocínio (`reasoning.effort`). Vazio tira o campo do pedido. Se o modelo recusar o valor, o Studoo pede de novo sem ele. |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Outro endereço compatível. Só HTTPS, ou HTTP no próprio computador. |
+| `STUDOO_IA_RESERVA` | `falsa` | Sem chave, ou se a OpenAI falhar antes da primeira linha da trilha, `falsa` usa a IA falsa, para a demonstração não parar. `nenhuma` mostra o erro de IA indisponível. |
+
+Uma falha no meio da geração mostra o erro de IA indisponível, e o pedido continua no campo. Se a escrita das lições falhar no **Começar**, a trilha continua na tela com o erro, e **Começar** tenta de novo. Os logs registram só o código e o status, sem objetivo, conteúdo ou chave.
+
 ## Testes
 
 ```sh
 npm run typecheck
 npm run typecheck --workspace apps/mobile
 npm run test:dominio
+npm run test:paridade
+npm run test:ia
 npm run test:marco
 npm run test:trilha
 ```
 
-`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
+`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. `test:paridade` também não: confere que os desenhos do mundo da trilha, as ideias do pedido, os passos da apresentação e os textos da tela que escreve as lições são os mesmos na web e no app. `test:ia` confere o adaptador da OpenAI com um servidor local que imita a Responses API, sem chave e sem rede: a trilha por streaming, o conteúdo da lição, a reserva e as falhas. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
+
+O GitHub Actions roda a mesma verificação em cada PR e em cada push para `development` e `main` (`.github/workflows/verificacao.yml`): os dois typechecks, `test:dominio`, `test:paridade`, `test:ia`, o build e, com um PostgreSQL de serviço, `test:marco` e `test:trilha`. O CI usa só os adaptadores falsos e credenciais geradas na hora.
 
 ## App Android em modo de desenvolvimento
 

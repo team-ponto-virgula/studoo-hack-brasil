@@ -1,0 +1,39 @@
+/* Confete (src/ui/festa.tsx): estouro em volta de um ponto ou chuva pela tela. */
+
+.confete { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+
+.confete > span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--l);
+  height: var(--a);
+  border-radius: 2px;
+  background: var(--cor);
+  opacity: 0;
+  animation: confete-estouro 900ms cubic-bezier(0.15, 0.7, 0.3, 1) var(--atraso) forwards;
+}
+
+.confete--chuva { position: fixed; z-index: 20; overflow: hidden; }
+
+.confete--chuva > span {
+  top: -24px;
+  left: var(--x);
+  animation: confete-chuva var(--duracao) cubic-bezier(0.35, 0.1, 0.6, 1) var(--atraso) forwards;
+}
+
+@keyframes confete-estouro {
+  0% { opacity: 1; transform: translate(-50%, -50%) rotate(0deg) scale(0.4); }
+  70% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--x)), calc(-50% + var(--y))) rotate(var(--giro)) scale(1); }
+}
+
+@keyframes confete-chuva {
+  0% { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translate3d(var(--deriva), 105vh, 0) rotate(var(--giro)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confete { display: none; }
+}
