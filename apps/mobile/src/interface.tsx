@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 
-export function Tela({ children, acoes, rodape, pagina, rolagem, aoMedir }: {
+export function Tela({ children, acoes, rodape, pagina, rolagem, aoMedir, aoRolar }: {
   children: ReactNode;
   acoes?: ReactNode;
   rodape?: ReactNode;
@@ -27,6 +27,8 @@ export function Tela({ children, acoes, rodape, pagina, rolagem, aoMedir }: {
   rolagem?: Ref<ComponentRef<typeof ScrollView>>;
   /** Altura visível da rolagem, para a tela saber se um ponto do conteúdo já está à vista. */
   aoMedir?: (altura: number) => void;
+  /** Quanto a pessoa já rolou, para a tela acompanhar o conteúdo que chega sem tirar a pessoa do lugar. */
+  aoRolar?: (y: number) => void;
 }) {
   return (
     <SafeAreaView style={estilos.tela}>
@@ -40,7 +42,8 @@ export function Tela({ children, acoes, rodape, pagina, rolagem, aoMedir }: {
 
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" contentContainerStyle={estilos.conteudo}
-          onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}>
+          onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
+          onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}>
           {children}
         </ScrollView>
         {rodape && <View style={estilos.rodape}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}

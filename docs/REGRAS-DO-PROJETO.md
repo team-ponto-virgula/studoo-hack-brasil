@@ -11,7 +11,7 @@ Tudo o que for feito na web (`src/app`, `src/ui`) precisa ser replicado no app m
 
 ### Mudanças de API ou de contrato
 
-Quem altera a API, o contrato (`packages/contratos`) ou os dados que a tela mostra avisa, no PR, o que o mobile precisa acompanhar. Exemplo: quando `fluxo` passou a ser um trecho da trilha e não um assunto, o mapeamento de `idFluxo` em `apps/mobile/src/estudo.tsx` (que ainda reconhece os títulos "Consultas" e "Junções") passou a depender do novo comportamento da tela.
+Quem altera a API, o contrato (`packages/contratos`) ou os dados que a tela mostra avisa, no PR, o que o mobile precisa acompanhar. Exemplo: quando `fluxo` passou a ser um trecho da trilha e não um assunto, o mapeamento de `idFluxo` que o app mobile usava na tela da proposta (reconhecia os títulos "Consultas" e "Junções") passou a depender do novo comportamento da tela; ele saiu junto com essa tela, quando a trilha passou a ser gerada ao vivo.
 
 ### Lista de conferência do PR de tela
 

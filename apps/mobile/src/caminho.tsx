@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
   Animated,
   Easing,
-  Image,
   Modal,
   Pressable,
   StyleSheet,
@@ -16,7 +15,7 @@ import { Icone } from './icone';
 import { Botao, estilos, useMovimentoReduzido } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
-import { explicar, iconeDoNo, nomeDoNo, type EstadoNo, type NoCaminho } from './trilha';
+import { explicar, iconeDoNo, nomeDoNo, posicaoDoNo, type EstadoNo, type NoCaminho } from './trilha';
 
 /*
  * Caminho da trilha no app: a mesma lógica da web (src/ui/caminho.tsx), com componentes nativos.
@@ -27,6 +26,9 @@ import { explicar, iconeDoNo, nomeDoNo, type EstadoNo, type NoCaminho } from './
 type Lado = 'esquerda' | 'direita';
 type Medidas = { lente: number; linhas: number; etiqueta: number; marco: number };
 type Ponto = { x: number; y: number };
+type Caixa = { y: number; altura: number };
+/** Topo e base de um trecho do caminho na rolagem da tela. */
+export type Faixa = { topo: number; base: number };
 
 /** Mesmas medidas da web: celular, tablet e telas a partir de 1024 px (DESIGN §11). */
 function useMedidas(): Medidas {
@@ -57,25 +59,33 @@ const corDoEstado: Record<EstadoNo, string> = {
  * O leitor de tela ouve o marco como "Marco 1", "Marco 2"…, logo depois do último nó do trecho.
  * O nó atual abre a lição; concluído ou bloqueado abre a folha que explica o estado.
  * Com `rolarPara`, avisa por `aoRolar` o topo e a base da lente desse nó na rolagem da tela (o caminho deve ser filho direto dela).
+ * Com `montando`, a trilha ainda está sendo gerada: cada nó novo entra com um movimento curto, a posição não tem total
+ * e um nó em esqueleto marca onde a próxima lição vai aparecer. A cada nó, e quando a chegada entra no fim, `acompanhar` recebe
+ * o último nó e o ponto que deve ficar à vista, para a tela rolar só se a pessoa estava olhando o fim do caminho, como na web.
  */
-export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = null, liberadas = [], rolarPara = null, aoRolar, aoAbrir }: {
+export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [], rolarPara = null,
+  aoRolar, acompanhar, aoAbrir }: {
   nos: readonly NoCaminho[];
   stu?: string;
   chegada?: boolean;
+  montando?: boolean;
   ocupado?: boolean;
   abrindo?: string | null;
   liberadas?: readonly string[];
   rolarPara?: string | null;
   aoRolar?: (topo: number, base: number) => void;
+  acompanhar?: (ultimo: Faixa, alvo: Faixa) => void;
   aoAbrir?: (no: NoCaminho) => void;
 }) {
   const medidas = useMedidas();
   const reduzir = useMovimentoReduzido();
   const [aberto, setAberto] = useState<string | null>(null);
   const alvos = useRef(new Map<string, ComponentRef<typeof View>>());
-  const posicoes = useRef<{ caminho: number | null; lista: number | null; linhas: Map<string, number> }>(
-    { caminho: null, lista: null, linhas: new Map() });
+  const posicoes = useRef<{ caminho: number | null; lista: number | null; linhas: Map<string, Caixa>; vindo: Caixa | null; chegada: Caixa | null }>(
+    { caminho: null, lista: null, linhas: new Map(), vindo: null, chegada: null });
   const rolado = useRef<string | null>(null);
+  const acompanhando = useRef<'novo' | 'fim' | null>(null);
+  const estavaMontando = useRef(montando);
   const total = nos.length;
   const comChegada = chegada && total > 0;
   const trechos = Array.from(new Set(nos.map((no) => no.trecho)));
@@ -93,14 +103,50 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
     if (ocupado) setAberto(null);
   }, [ocupado]);
 
+  // Enquanto a trilha é montada, o nó em esqueleto fica à vista se a pessoa estava vendo o último nó que chegou.
+  useEffect(() => {
+    if (!montando || total === 0) return;
+    acompanhando.current = 'novo';
+    tentarAcompanhar();
+  }, [montando, total]);
+
+  // Quando a montagem termina, a chegada entra no lugar do esqueleto e fica à vista pela mesma regra.
+  useEffect(() => {
+    const acabouDeMontar = estavaMontando.current && !montando;
+    estavaMontando.current = montando;
+    if (!acabouDeMontar) return;
+    acompanhando.current = 'fim';
+    tentarAcompanhar();
+  }, [montando]);
+
   function tentarRolar() {
     if (!rolarPara || !aoRolar || rolado.current === rolarPara) return;
     const { caminho, lista, linhas } = posicoes.current;
     const linha = linhas.get(rolarPara);
     if (caminho === null || lista === null || linha === undefined) return;
     rolado.current = rolarPara;
-    const topo = caminho + lista + linha;
+    const topo = caminho + lista + linha.y;
     aoRolar(topo, topo + medidas.lente);
+  }
+
+  /**
+   * Acompanha o fim do caminho depois que as medidas chegam: o nó novo e o esqueleto (ou a chegada) só têm posição
+   * depois do layout, que vem depois do efeito. Quem chegar por último completa o pedido.
+   */
+  function tentarAcompanhar() {
+    const modo = acompanhando.current;
+    const ultimo = nos[total - 1];
+    if (!modo || !acompanhar || !ultimo) return;
+    const { caminho, lista, linhas, vindo, chegada: fim } = posicoes.current;
+    const linha = linhas.get(ultimo.id);
+    const alvo = modo === 'novo' ? vindo : fim;
+    if (caminho === null || lista === null || !linha || !alvo) return;
+    // O esqueleto ainda na posição antiga (antes do nó novo) não serve: espera a medida nova.
+    if (modo === 'novo' && alvo.y < linha.y + linha.altura - 1) return;
+    acompanhando.current = null;
+    const topoLinha = caminho + lista + linha.y;
+    const topoAlvo = modo === 'novo' ? caminho + lista + alvo.y : caminho + alvo.y;
+    acompanhar({ topo: topoLinha, base: topoLinha + linha.altura }, { topo: topoAlvo, base: topoAlvo + alvo.altura });
   }
 
   function tocar(no: NoCaminho) {
@@ -132,13 +178,7 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
       posicoes.current.caminho = evento.nativeEvent.layout.y;
       tentarRolar();
     }}>
-      {stu && (
-        <View style={caminhoEstilos.stu}>
-          <Text style={caminhoEstilos.stuTexto}>{stu}</Text>
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            importantForAccessibility="no" style={{ width: medidas.lente, height: Math.round(medidas.lente * 1.1) }} />
-        </View>
-      )}
+      {stu && <StuDoCaminho texto={stu} lente={medidas.lente} pensando={montando && reduzir === false} />}
       <View accessibilityRole="list" accessibilityLabel={mensagens.trilha.licoes}
         style={{ paddingTop: nos[0]?.estado === 'atual' ? medidas.etiqueta + 8 : 32 }}
         onLayout={(evento) => {
@@ -149,29 +189,41 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
           const seguinte = nos[indice + 1];
           const fimDoTrecho = seguinte !== undefined && seguinte.trecho !== no.trecho;
           const vaiAteChegada = seguinte === undefined && comChegada;
+          const vaiAteVindo = seguinte === undefined && montando;
           const lado: Lado = indice % 2 === 0 ? 'esquerda' : 'direita';
           let depois = 0;
           if (seguinte?.estado === 'atual') depois += medidas.etiqueta;
           if (fimDoTrecho) depois += medidas.marco;
-          const espaco = seguinte || vaiAteChegada ? medidas.linhas + depois : 0;
+          const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 0;
 
           // O espaço até o próximo nó fica dentro da linha (padding), para o marco anunciado caber nos limites dela.
           return (
-            <View key={no.id} style={{ paddingBottom: espaco }} onLayout={(evento) => {
-              posicoes.current.linhas.set(no.id, evento.nativeEvent.layout.y);
-              tentarRolar();
-            }}>
+            <Linha key={no.id} espaco={espaco} surgir={montando && no.estado === 'previa' && reduzir === false}
+              aoMedir={(caixa) => {
+                posicoes.current.linhas.set(no.id, caixa);
+                tentarRolar();
+                tentarAcompanhar();
+              }}>
               {espaco > 0 && <Ligacao lado={lado} ateChegada={vaiAteChegada} feita={no.estado === 'concluida'} topo={medidas.lente} />}
-              <No no={no} indice={indice} total={total} lado={lado} medidas={medidas} reduzir={reduzir}
+              <No no={no} posicao={posicaoDoNo(indice, total, montando)} lado={lado} medidas={medidas} reduzir={reduzir}
                 ocupado={ocupado} abrindo={abrindo === no.id} liberada={liberadas.includes(no.id)}
                 guardar={(alvo) => guardarAlvo(no.id, alvo)} tocar={() => tocar(no)} />
               {fimDoTrecho && <Marco numero={trechos.indexOf(no.trecho) + 1} topo={medidas.lente} />}
-            </View>
+            </Linha>
           );
         })}
+        {montando && (
+          <Vindo lado={total % 2 === 0 ? 'esquerda' : 'direita'} medidas={medidas} aoMedir={(caixa) => {
+            posicoes.current.vindo = caixa;
+            tentarAcompanhar();
+          }} />
+        )}
       </View>
       {comChegada && (
-        <View style={caminhoEstilos.chegada}>
+        <View style={caminhoEstilos.chegada} onLayout={(evento) => {
+          posicoes.current.chegada = { y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height };
+          tentarAcompanhar();
+        }}>
           <View style={[caminhoEstilos.chegadaLente, circulo(medidas.lente), tudoFeito && caminhoEstilos.chegadaFeita]}>
             <Icone nome="trofeu" tamanho={Math.round(medidas.lente * 0.44)} cor={tudoFeito ? cores.fundo : cores.textoSecundario} />
           </View>
@@ -197,10 +249,95 @@ function circulo(tamanho: number) {
   return { width: tamanho, height: tamanho, borderRadius: tamanho / 2 };
 }
 
-function No({ no, indice, total, lado, medidas, reduzir, ocupado, abrindo, liberada, guardar, tocar }: {
+/**
+ * O Stu no começo do caminho, com a frase ao lado. Enquanto a IA monta a trilha, ele "pensa": sobe e desce devagar,
+ * o único gesto que repete enquanto o estado dura (DESIGN §6). A frase diz o mesmo para quem não vê o movimento.
+ */
+function StuDoCaminho({ texto, lente, pensando }: { texto: string; lente: number; pensando: boolean }) {
+  const subida = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!pensando) {
+      subida.setValue(0);
+      return;
+    }
+    const balanco = Easing.inOut(Easing.ease);
+    const ciclo = Animated.loop(Animated.sequence([
+      Animated.timing(subida, { toValue: -4, duration: 1400, easing: balanco, useNativeDriver: true }),
+      Animated.timing(subida, { toValue: 0, duration: 1400, easing: balanco, useNativeDriver: true }),
+    ]));
+    ciclo.start();
+    return () => {
+      ciclo.stop();
+      subida.setValue(0);
+    };
+  }, [pensando, subida]);
+
+  return (
+    <View style={caminhoEstilos.stu}>
+      <Text style={caminhoEstilos.stuTexto}>{texto}</Text>
+      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+        importantForAccessibility="no"
+        style={{ width: lente, height: Math.round(lente * 1.1), transform: [{ translateY: subida }] }} />
+    </View>
+  );
+}
+
+/**
+ * Linha do caminho: o nó, a ligação até o próximo e o marco. Na montagem, a linha nova entra uma vez com um movimento curto
+ * (opacidade, subida e escala, como a web); com movimento reduzido, já aparece pronta.
+ */
+function Linha({ espaco, surgir, aoMedir, children }: {
+  espaco: number;
+  surgir: boolean;
+  aoMedir: (caixa: Caixa) => void;
+  children: ReactNode;
+}) {
+  const [entrada] = useState(() => surgir ? new Animated.Value(0) : null);
+
+  useEffect(() => {
+    if (!entrada) return;
+    const animacao = Animated.timing(entrada, { toValue: 1, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [entrada]);
+
+  return (
+    <Animated.View style={[{ paddingBottom: espaco }, entrada && {
+      opacity: entrada,
+      transform: [
+        { translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) },
+        { scale: entrada.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) },
+      ],
+    }]} onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
+      {children}
+    </Animated.View>
+  );
+}
+
+/** Onde a próxima lição vai aparecer: lente tracejada e linhas em esqueleto, fora do leitor de tela (a contagem diz o mesmo). */
+function Vindo({ lado, medidas, aoMedir }: { lado: Lado; medidas: Medidas; aoMedir: (caixa: Caixa) => void }) {
+  const direita = lado === 'direita';
+  return (
+    <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      style={[caminhoEstilos.alvo, direita && caminhoEstilos.alvoDireita]}
+      onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
+      <View style={caminhoEstilos.margem} />
+      <View style={direita ? { marginRight: -medidas.lente / 2 } : { marginLeft: -medidas.lente / 2 }}>
+        <View style={[circulo(medidas.lente), caminhoEstilos.vindoLente]} />
+      </View>
+      <View style={[caminhoEstilos.texto, caminhoEstilos.vindoTexto, direita && caminhoEstilos.vindoTextoDireita, { minHeight: medidas.lente }]}>
+        <View style={caminhoEstilos.vindoTitulo} />
+        <View style={caminhoEstilos.vindoEstado} />
+      </View>
+    </View>
+  );
+}
+
+function No({ no, posicao, lado, medidas, reduzir, ocupado, abrindo, liberada, guardar, tocar }: {
   no: NoCaminho;
-  indice: number;
-  total: number;
+  /** "Lição 3 de 9", ou só "Lição 3" enquanto a trilha é montada. */
+  posicao: string;
   lado: Lado;
   medidas: Medidas;
   reduzir: boolean | null;
@@ -211,8 +348,8 @@ function No({ no, indice, total, lado, medidas, reduzir, ocupado, abrindo, liber
   tocar: () => void;
 }) {
   const [focado, setFocado] = useState(false);
-  const nome = nomeDoNo(no, indice, total);
-  let linha: string = no.estado === 'previa' ? mensagens.trilha.posicao(indice + 1, total) : mensagens.trilha.estados[no.estado];
+  const nome = nomeDoNo(no, posicao);
+  let linha: string = no.estado === 'previa' ? posicao : mensagens.trilha.estados[no.estado];
   if (abrindo) linha = mensagens.trilha.abrindo;
   const direita = lado === 'direita';
 
@@ -520,4 +657,9 @@ const caminhoEstilos = StyleSheet.create({
   skeletonCabecalho: { gap: 12, padding: 24, borderRadius: 20, backgroundColor: cores.nevoa },
   skeletonLinha: { height: 16, borderRadius: 8, backgroundColor: cores.gelo },
   skeletonNo: { backgroundColor: cores.gelo },
+  vindoLente: { borderWidth: 3, borderStyle: 'dashed', borderColor: cores.gelo, backgroundColor: cores.fundo },
+  vindoTexto: { gap: 8 },
+  vindoTextoDireita: { alignItems: 'flex-end' },
+  vindoTitulo: { width: '60%', height: 16, borderRadius: 8, backgroundColor: cores.gelo },
+  vindoEstado: { width: '30%', height: 12, borderRadius: 8, backgroundColor: cores.gelo },
 });

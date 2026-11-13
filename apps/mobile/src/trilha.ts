@@ -2,7 +2,7 @@ import type { PlanoDetalhe } from '@studoo/contratos';
 import { mensagens } from './mensagens';
 
 /*
- * Regras da trilha, iguais às da web (src/app/estudo.tsx e src/ui/caminho.tsx).
+ * Regras da trilha, iguais às da web (src/app/estudo.tsx, src/app/geracao-ao-vivo.ts e src/ui/caminho.tsx).
  * Ficam aqui, sem nada de tela, para comparar as duas versões com facilidade.
  */
 
@@ -38,7 +38,7 @@ export function montarTrilha(plano: PlanoDetalhe) {
     return { id: licao.id, titulo: licao.titulo, estado, trecho };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
-  const proximo = indice >= 0 ? { no: nos[indice], posicao: mensagens.trilha.posicao(indice + 1, nos.length) } : null;
+  const proximo = indice >= 0 ? { no: nos[indice], posicao: posicaoDoNo(indice, nos.length) } : null;
   return { nos, proximo };
 }
 
@@ -70,9 +70,22 @@ export function iconeDoNo(no: NoCaminho): NomeIcone {
   return no.titulo.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro';
 }
 
+/**
+ * Posição do nó no caminho. Enquanto a trilha ainda está sendo montada, o total muda a cada lição que chega,
+ * então a posição mostra só o número ("Lição 3"); com a trilha completa, mostra também o total ("Lição 3 de 9").
+ */
+export function posicaoDoNo(indice: number, total: number, montando = false) {
+  return montando ? mensagens.trilha.posicaoParcial(indice + 1) : mensagens.trilha.posicao(indice + 1, total);
+}
+
 /** Nome que o leitor de tela lê no nó: título, posição e estado; o atual começa pela ação. */
-export function nomeDoNo(no: NoCaminho, indice: number, total: number) {
-  const posicao = mensagens.trilha.posicao(indice + 1, total);
+export function nomeDoNo(no: NoCaminho, posicao: string) {
   if (no.estado === 'atual') return mensagens.trilha.nomeNoAtual(no.titulo, posicao);
   return mensagens.trilha.nomeNo(no.titulo, posicao, mensagens.trilha.estados[no.estado].toLocaleLowerCase('pt-BR'));
+}
+
+/** O pedido aparece sob o título só quando acrescenta algo: num objetivo curto, o título pode ser o próprio pedido. */
+export function repeteTitulo(titulo: string | null, objetivo: string) {
+  const comparavel = (texto: string) => texto.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
+  return titulo !== null && comparavel(titulo) === comparavel(objetivo);
 }
