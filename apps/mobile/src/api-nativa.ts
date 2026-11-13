@@ -1,6 +1,7 @@
-import { criarClienteStudoo, ErroStudoo } from '@studoo/contratos';
+import { criarClienteStudoo, ErroStudoo, type EventoGeracao } from '@studoo/contratos';
 import { fetch } from 'expo/fetch';
 import * as SecureStore from 'expo-secure-store';
+import { codigoDaResposta, lerEventos } from './geracao-ao-vivo';
 
 const tempoLimiteMs = 15_000;
 
@@ -55,7 +56,7 @@ export async function apagarToken() {
 }
 
 export function criarClienteNativo(token?: string) {
-  return criarClienteStudoo(async (caminho, opcoes) => {
+  const cliente = criarClienteStudoo(async (caminho, opcoes) => {
     const origem = origemConfigurada().origin;
     const controle = new AbortController();
     const limite = setTimeout(() => controle.abort(), tempoLimiteMs);
@@ -84,10 +85,65 @@ export function criarClienteNativo(token?: string) {
       clearTimeout(limite);
     }
   });
+
+  return {
+    ...cliente,
+    gerarTrilhaAoVivo: (objetivo: string, sinal: AbortSignal) => gerarTrilhaAoVivo(objetivo, sinal, token),
+  };
+}
+
+/**
+ * Geração ao vivo (spec 03), o mesmo pedido da web com o token no lugar do cookie: a resposta chega em NDJSON e cada linha
+ * vira um evento validado pelo contrato. O tempo limite vale até a resposta começar; depois, a trilha segue chegando enquanto
+ * a pessoa acompanha, e `sinal` (Cancelar, sair da tela) interrompe o pedido, como na web. O servidor não guarda nada até o aceite.
+ */
+async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal, token?: string): AsyncGenerator<EventoGeracao> {
+  const origem = origemConfigurada().origin;
+  const controle = new AbortController();
+  const interromper = () => controle.abort();
+  sinal.addEventListener('abort', interromper);
+  if (sinal.aborted) interromper();
+  const limite = setTimeout(interromper, tempoLimiteMs);
+
+  try {
+    const resposta = await fetch(`${origem}/api/aprendizado/propostas/ao-vivo`, {
+      method: 'POST',
+      credentials: 'omit',
+      redirect: 'error',
+      signal: controle.signal,
+      headers: {
+        'Cache-Control': 'no-store',
+        'Content-Type': 'application/json',
+        Accept: 'application/x-ndjson',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ objetivo }),
+    });
+    if (token && resposta.status === 401) throw new ErroStudoo('nao_autenticado');
+    // Erro antes do início (validação, limite, sessão): o servidor responde no JSON de erro de sempre.
+    if (!resposta.ok || !resposta.body || !resposta.headers.get('content-type')?.includes('application/x-ndjson')) {
+      const corpo: unknown = await resposta.json().catch(() => null);
+      if (controle.signal.aborted) throw new FalhaMobile('conexao');
+      throw new ErroStudoo(codigoDaResposta(corpo));
+    }
+    clearTimeout(limite);
+    yield* lerEventos(resposta.body);
+  } catch (erro) {
+    if (erro instanceof ErroStudoo || erro instanceof FalhaMobile) throw erro;
+    throw new FalhaMobile('conexao');
+  } finally {
+    clearTimeout(limite);
+    sinal.removeEventListener('abort', interromper);
+  }
 }
 
 export type ClienteNativo = ReturnType<typeof criarClienteNativo>;
 
 export function sessaoInvalida(erro: unknown) {
   return erro instanceof ErroStudoo && erro.codigo === 'nao_autenticado';
+}
+
+/** Código de uma falha da API ou do app, para a tela escolher a mensagem e a ação; fora deles, `falha`. */
+export function codigoDaFalha(erro: unknown): string {
+  return erro instanceof ErroStudoo || erro instanceof FalhaMobile ? erro.codigo : 'falha';
 }

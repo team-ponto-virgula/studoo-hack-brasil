@@ -49,7 +49,7 @@ export function Licao({ licao, acoes, erro, pendente, voltar, avaliar, concluir 
       <View style={licaoEstilos.secao}>
         <Text accessibilityRole="header" style={estilos.subtitulo}>{mensagens.licao.conceito}</Text>
         <Text style={estilos.texto}>{licao.conceito}</Text>
-        <Text style={estilos.legenda}>{mensagens.proposta.origem} · {licao.origem}</Text>
+        <Text style={estilos.legenda}>{mensagens.licao.origem} · {licao.origem}</Text>
       </View>
       <View style={[licaoEstilos.secao, licaoEstilos.exemplo]}>
         <Text accessibilityRole="header" style={estilos.subtitulo}>{mensagens.licao.exemplo}</Text>
