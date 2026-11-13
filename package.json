@@ -19,6 +19,7 @@
     "test:dominio": "node --env-file=.env --import tsx --test tests/dominio-geracao.test.mjs",
     "test:trilha": "node --env-file=.env --import tsx --test tests/trilha-ao-vivo.test.mjs",
     "test:mobile": "node --env-file=.env --test tests/marco-mobile-local.test.mjs",
+    "test:paridade": "node --test tests/paridade-mundo.test.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node --env-file-if-exists=.env --import tsx prisma/seed.ts",
