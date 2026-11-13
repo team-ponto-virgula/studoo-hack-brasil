@@ -1,0 +1,95 @@
+# Verificação de cada PR e de development/main: tipos da web e do app, testes sem servidor, build e os percursos HTTP
+# com um PostgreSQL de serviço. Usa só os adaptadores falsos (IA=falsa, EMAIL=falso) e credenciais geradas na hora.
+name: Verificação
+
+on:
+  pull_request:
+  push:
+    branches: [development, main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verificacao-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: studoo
+          POSTGRES_PASSWORD: studoo-ci
+          POSTGRES_DB: studoo_local
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U studoo -d studoo_local"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Ambiente do piloto local (adaptadores falsos)
+        run: |
+          {
+            echo "DATABASE_URL=postgresql://studoo:studoo-ci@127.0.0.1:5432/studoo_local"
+            echo "STUDOO_ORIGEM=http://localhost:3000"
+            echo "STUDOO_DOMINIO_EMAIL=example.test"
+            echo "STUDOO_EMAIL=piloto@example.test"
+            echo "STUDOO_SENHA=$(openssl rand -base64 18 | tr '+/' '-_')"
+            echo "STUDOO_CHAVE_ASSINATURA=$(openssl rand -hex 32)"
+            echo "STUDOO_SESSAO_MOBILE_PILOTO=0"
+            echo "IA=falsa"
+            echo "EMAIL=falso"
+          } > .env
+
+      - name: Tipos da web
+        run: npm run typecheck
+
+      - name: Tipos do app
+        run: npm run typecheck --workspace apps/mobile
+
+      - name: Testes sem servidor (domínio, paridade e IA da OpenAI simulada)
+        run: |
+          npm run test:dominio
+          npm run test:paridade
+          npm run test:ia
+
+      - name: Build
+        run: npm run build
+
+      - name: Banco (migrações e conta de demonstração)
+        run: |
+          npm run db:migrate
+          npm run db:seed
+
+      - name: Percursos HTTP (marco e trilha ao vivo)
+        run: |
+          STUDOO_IA_FALSA_PAUSA_MS=0 npm start > servidor.log 2>&1 &
+          for tentativa in $(seq 1 60); do
+            curl -sf http://localhost:3000/api/saude > /dev/null && break
+            sleep 1
+          done
+          npm run test:marco
+          npm run test:trilha
+
+      - name: Log do servidor
+        if: failure()
+        run: tail -n 200 servidor.log || true

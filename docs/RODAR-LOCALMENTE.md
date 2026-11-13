@@ -62,6 +62,8 @@ npm run test:trilha
 
 `test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. `test:paridade` também não: confere que os desenhos do mundo da trilha, as ideias do pedido, os passos da apresentação e os textos da tela que escreve as lições são os mesmos na web e no app. `test:ia` confere o adaptador da OpenAI com um servidor local que imita a Responses API, sem chave e sem rede: a trilha por streaming, o conteúdo da lição, a reserva e as falhas. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
 
+O GitHub Actions roda a mesma verificação em cada PR e em cada push para `development` e `main` (`.github/workflows/verificacao.yml`): os dois typechecks, `test:dominio`, `test:paridade`, `test:ia`, o build e, com um PostgreSQL de serviço, `test:marco` e `test:trilha`. O CI usa só os adaptadores falsos e credenciais geradas na hora.
+
 ## App Android em modo de desenvolvimento
 
 Use um emulador iniciado, um JDK e o SDK Android configurados para o Expo. Tenha `adb` no PATH e OpenSSL 3 disponível. Mantenha o banco local ativo. Para rodar web e API móvel ao mesmo tempo, use o build web em `http://localhost:3000` com `npm run build` e `npm start`. A API móvel roda em outro processo, em `https://127.0.0.1:3443`.
