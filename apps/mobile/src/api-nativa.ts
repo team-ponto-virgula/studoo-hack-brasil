@@ -4,6 +4,8 @@ import * as SecureStore from 'expo-secure-store';
 import { codigoDaResposta, lerEventos } from './geracao-ao-vivo';
 
 const tempoLimiteMs = 15_000;
+/** O aceite cria o conteúdo de todas as lições; com a IA real, isso leva mais que um pedido comum. */
+const tempoLimiteDoAceiteMs = 90_000;
 
 export class FalhaMobile extends Error {
   constructor(public readonly codigo: 'conexao' | 'configuracao' | 'armazenamento') {
@@ -59,7 +61,8 @@ export function criarClienteNativo(token?: string) {
   const cliente = criarClienteStudoo(async (caminho, opcoes) => {
     const origem = origemConfigurada().origin;
     const controle = new AbortController();
-    const limite = setTimeout(() => controle.abort(), tempoLimiteMs);
+    const aceite = opcoes.method === 'POST' && caminho === '/api/aprendizado/planos';
+    const limite = setTimeout(() => controle.abort(), aceite ? tempoLimiteDoAceiteMs : tempoLimiteMs);
 
     try {
       const resposta = await fetch(`${origem}${caminho}`, {

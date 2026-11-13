@@ -1,7 +1,7 @@
 /**
- * Regras de ordenação da trilha (spec 03, "Ordem da trilha"). A IA falsa já as segue nos planos fixos.
- * Um adaptador de IA real deve incluí-las no prompt de sistema quando o provedor for escolhido (D5),
- * ao lado das instruções de formato dos eventos. O pedido continua levando só o objetivo (SEGURANCA.md §5).
+ * Regras de ordenação da trilha (spec 03, "Ordem da trilha"). A IA falsa já as segue nos planos fixos, e o adaptador da
+ * OpenAI (D5, `openai.ts`) as inclui no prompt de sistema, ao lado das instruções de formato dos eventos. O pedido continua
+ * levando só o objetivo (SEGURANCA.md §5).
  */
 export const REGRAS_ORDEM_DA_TRILHA = [
   "Coloque os pré-requisitos antes do que depende deles.",
