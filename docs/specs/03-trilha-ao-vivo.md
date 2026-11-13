@@ -52,8 +52,10 @@ Os tipos ficam em `packages/contratos/src/aprendizado.ts`: `EventoGeracao`, `int
 ## IA
 
 - `IA=falsa` (padrão, testes e CI): o adaptador falso emite os eventos com pequenas pausas, para a tela mostrar a geração ao vivo. Para SQL, devolve o plano de demonstração com as mesmas lições, reorganizado numa sequência única de aprendizado. Para qualquer outro objetivo, gera uma trilha genérica e determinística de 3 trechos com 3 lições cada, já na ordem de aprendizado e com uma revisão, com conteúdo e exercícios simulados.
-- As regras de ordenação da seção anterior ficam registradas em `src/servidor/ia/ordem.ts` (`REGRAS_ORDEM_DA_TRILHA`, `instrucoesDeOrdem`) e entram no prompt do adaptador real quando o provedor for escolhido.
-- A IA real fica atrás da mesma interface e entra depois que o dono escolher o provedor (D5). Nenhum teste chama a IA real.
+- As regras de ordenação da seção anterior ficam registradas em `src/servidor/ia/ordem.ts` (`REGRAS_ORDEM_DA_TRILHA`, `instrucoesDeOrdem`) e entram no prompt do adaptador da OpenAI.
+- `IA=openai` (D5: OpenAI, pela Responses API): o adaptador `src/servidor/ia/openai.ts` fica atrás da mesma interface. A estrutura vem por streaming, uma linha JSON por evento, e cada linha completa vira um evento na hora; o servidor calcula os índices e só emite um trecho junto com a primeira lição dele, então nunca há trecho vazio. O conteúdo de cada lição é pedido no aceite, com Structured Outputs (JSON Schema estrito), e passa pela mesma validação da IA falsa, com uma segunda tentativa se vier fora do formato. Sem chave, ou se a OpenAI falhar antes do primeiro evento, a IA falsa entra de reserva (`STUDOO_IA_RESERVA`). Configuração em [Rodar localmente](../RODAR-LOCALMENTE.md#ia-da-openai).
+- Com a IA real, o aceite leva alguns segundos: as lições são escritas em paralelo, com até 75 s no servidor, e o app espera até 90 s por esse pedido. Enquanto isso, a tela mostra as lições sendo escritas ([spec 04](04-experiencia-ilustrada.md)). Um segundo aceite da mesma proposta, enquanto o primeiro corre, espera o mesmo resultado, sem pedir as lições de novo ao provedor.
+- Nenhum teste chama a IA real: `npm run test:ia` usa um servidor local que imita a Responses API.
 - O limite de gerações por pessoa é provisório e configurável por variável (`STUDOO_LIMITE_GERACOES`, `STUDOO_JANELA_GERACOES_MIN`; veja [Rodar localmente](../RODAR-LOCALMENTE.md#ia-falsa-e-teto-de-gerações)). O teto definitivo segue aberto em D7.
 - A pausa do adaptador falso vem de `STUDOO_IA_FALSA_PAUSA_MS` (padrão 450 ms; 0 nos testes).
 
