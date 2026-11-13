@@ -65,11 +65,14 @@ function explicar(nos: readonly NoCaminho[], indice: number) {
  * O nó atual abre a lição; concluído ou bloqueado abre um balão que explica o estado.
  * Com `stu`, o Stu abre o caminho com essa frase curta (uma vez por tela, sem balão de fala).
  * Com `chegada`, o caminho termina num marco de chegada, que fica cheio quando todas as lições estão concluídas.
+ * Com `montando`, a trilha ainda está sendo gerada: cada nó novo entra com um movimento curto, a posição não tem total
+ * e um nó em esqueleto marca onde a próxima lição vai aparecer. A tela acompanha esse nó enquanto a pessoa está olhando o fim do caminho.
  */
-export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = null, liberadas = [], rolarPara = null, aoAbrir }: {
+export function Caminho({ nos, stu, chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [], rolarPara = null, aoAbrir }: {
   nos: readonly NoCaminho[];
   stu?: string;
   chegada?: boolean;
+  montando?: boolean;
   ocupado?: boolean;
   abrindo?: string | null;
   liberadas?: readonly string[];
@@ -80,6 +83,9 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
   const [anuncio, setAnuncio] = useState('');
   const botoes = useRef(new Map<string, HTMLButtonElement>());
   const balao = useRef<HTMLDivElement>(null);
+  const vindo = useRef<HTMLLIElement>(null);
+  const fim = useRef<HTMLDivElement>(null);
+  const estavaMontando = useRef(montando);
   const base = useId();
   const primeiraLiberada = liberadas[0] ?? null;
   const total = nos.length;
@@ -109,6 +115,35 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
   useEffect(() => {
     if (ocupado) setAberto(null);
   }, [ocupado]);
+
+  // Enquanto a trilha é montada, o nó em esqueleto fica à vista se a pessoa estava vendo o último nó que chegou.
+  useEffect(() => {
+    const item = vindo.current;
+    const anterior = item?.previousElementSibling;
+    if (!montando || !item || !anterior) return;
+    const limite = window.innerHeight - (Number.parseFloat(getComputedStyle(item).scrollMarginBottom) || 0);
+    const caixaAnterior = anterior.getBoundingClientRect();
+    if (caixaAnterior.top > limite || caixaAnterior.bottom < 0) return;
+    if (item.getBoundingClientRect().bottom <= limite) return;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    item.scrollIntoView({ block: 'nearest', behavior: reduzido ? 'auto' : 'smooth' });
+  }, [montando, total]);
+
+  // Quando a montagem termina, a chegada entra no lugar do esqueleto e fica à vista pela mesma regra: só se a pessoa
+  // estava vendo o fim do caminho.
+  useEffect(() => {
+    const acabouDeMontar = estavaMontando.current && !montando;
+    estavaMontando.current = montando;
+    const item = fim.current;
+    const ultimo = item?.previousElementSibling?.lastElementChild;
+    if (!acabouDeMontar || !item || !ultimo) return;
+    const limite = window.innerHeight - (Number.parseFloat(getComputedStyle(item).scrollMarginBottom) || 0);
+    const caixaUltimo = ultimo.getBoundingClientRect();
+    if (caixaUltimo.top > limite || caixaUltimo.bottom < 0) return;
+    if (item.getBoundingClientRect().bottom <= limite) return;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    item.scrollIntoView({ block: 'nearest', behavior: reduzido ? 'auto' : 'smooth' });
+  }, [montando]);
 
   useEffect(() => {
     if (!aberto) return;
@@ -146,7 +181,7 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
   }
 
   return (
-    <div className="caminho">
+    <div className="caminho" data-montando={montando || undefined}>
       {stu && (
         <div className="caminho-stu">
           <p>{stu}</p>
@@ -158,12 +193,13 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
           const seguinte = nos[indice + 1];
           const fimDoTrecho = seguinte !== undefined && seguinte.trecho !== no.trecho;
           const vaiAteChegada = seguinte === undefined && comChegada;
+          const vaiAteVindo = seguinte === undefined && montando;
           const lado = indice % 2 === 0 ? 'esquerda' : 'direita';
           const atual = no.estado === 'atual';
           const estaAberto = aberto === no.id;
           const liberada = liberadas.includes(no.id);
           const idBalao = `${base}-balao-${indice}`;
-          const posicao = mensagens.trilha.posicao(indice + 1, total);
+          const posicao = montando ? mensagens.trilha.posicaoParcial(indice + 1) : mensagens.trilha.posicao(indice + 1, total);
           const estado = mensagens.trilha.estados[no.estado];
           const nome = atual
             ? mensagens.trilha.nomeNoAtual(no.titulo, posicao)
@@ -197,7 +233,7 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
                 const destino = evento.relatedTarget;
                 if (estaAberto && destino instanceof Node && !evento.currentTarget.contains(destino)) setAberto(null);
               }}>
-              {(seguinte || vaiAteChegada) && (
+              {(seguinte || vaiAteChegada || vaiAteVindo) && (
                 <span className="caminho-ligacao" data-feita={no.estado === 'concluida' || undefined} aria-hidden="true">
                   <svg className="caminho-conector" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
                     <path d={tracado(lado, vaiAteChegada)} />
@@ -242,9 +278,17 @@ export function Caminho({ nos, stu, chegada = true, ocupado = false, abrindo = n
             </li>
           );
         })}
+        {montando && (
+          <li className="caminho-no caminho-no--vindo" data-lado={total % 2 === 0 ? 'esquerda' : 'direita'} ref={vindo} aria-hidden="true">
+            <div className="caminho-no__alvo">
+              <span className="caminho-no__lente" />
+              <span className="caminho-no__texto"><span /><span /></span>
+            </div>
+          </li>
+        )}
       </ol>
       {comChegada && (
-        <div className="caminho-chegada" data-feita={tudoFeito || undefined}>
+        <div className="caminho-chegada" data-feita={tudoFeito || undefined} ref={fim}>
           <span className="caminho-chegada__lente" aria-hidden="true"><Icone nome="trofeu" /></span>
           <p className="caminho-chegada__texto">{tudoFeito ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}</p>
         </div>
