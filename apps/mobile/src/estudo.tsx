@@ -1,5 +1,5 @@
 import { ErroStudoo, LIMITES_GERACAO, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
-import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -15,19 +15,22 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
 import { codigoDaFalha, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Apresentacao } from './apresentacao';
 import { Caminho, SkeletonTrilha, type Faixa } from './caminho';
 import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { Icone } from './icone';
-import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos, useMovimentoReduzido } from './interface';
-import { Licao } from './licao';
+import { Confete } from './festa';
+import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
+import { Licao, type ResumoLicao } from './licao';
 import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, coresDaRegiao } from './mundo';
 import { apresentacaoVista, marcarApresentacaoVista } from './preferencias';
+import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './temas';
 import { cores, fontes } from './tema';
-import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo } from './trilha';
+import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NomeIcone } from './trilha';
 
 /*
  * Estudo no app, com os mesmos passos da web (src/app/estudo.tsx): a pessoa escreve o que quer aprender, a trilha é montada
@@ -39,17 +42,26 @@ type Etapa =
   | { tipo: 'planos' }
   | { tipo: 'objetivo' }
   | { tipo: 'geracao' }
-  | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[] }
+  /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
+  | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string }
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
-  | { tipo: 'concluida'; plano: PlanoDetalhe; licao: LicaoDetalhe; liberadas: string[] };
+  | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
 
 type EtapaPlano = Extract<Etapa, { tipo: 'plano' }>;
 type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair';
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 
+/** Quanto "Escrevendo suas lições" fica na tela, no mínimo: com a IA falsa, o aceite volta rápido e o título piscaria. */
+const ESCRITA_MINIMA_MS = 1200;
+/** Quanto "Lições prontas!" fica na tela, no mínimo, para o visto passar por todas as lições (como na web). */
+const PAUSA_LICOES_PRONTAS_MS = 900;
+const pausa = (ms: number) => new Promise<void>((resolver) => setTimeout(resolver, ms));
+
 /** Volta da lição ou da conclusão para a trilha, que rola até o nó liberado, o próximo ou a lição de origem, como na web. */
 function voltarATrilha(etapa: Extract<Etapa, { tipo: 'licao' | 'concluida' }>): EtapaPlano {
-  if (etapa.tipo === 'concluida') return { tipo: 'plano', plano: etapa.plano, origem: etapa.licao.id, liberadas: etapa.liberadas };
+  if (etapa.tipo === 'concluida') {
+    return { tipo: 'plano', plano: etapa.plano, origem: etapa.licao.id, liberadas: etapa.liberadas, concluida: etapa.licao.id };
+  }
   return { tipo: 'plano', plano: etapa.plano, origem: etapa.licao.id };
 }
 
@@ -66,6 +78,8 @@ export function Estudo({ cliente, sair, expirar }: {
   const [planos, setPlanos] = useState<PlanoResumo[] | null>(null);
   const [etapa, setEtapa] = useState<Etapa>({ tipo: 'planos' });
   const [objetivo, setObjetivo] = useState('');
+  /** Área escolhida no fim da apresentação: o pedido abre com as ideias dela. */
+  const [areaInicial, setAreaInicial] = useState<IdTema | undefined>();
   const [pendente, setPendente] = useState<Acao | null>(null);
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -122,7 +136,8 @@ export function Estudo({ cliente, sair, expirar }: {
   }, [etapa, geracao]);
 
   /** Fim da apresentação (concluída, pulada ou com o voltar do aparelho): não aparece mais neste aparelho e o pedido abre. */
-  async function concluirApresentacao() {
+  async function concluirApresentacao(area?: IdTema) {
+    if (area) setAreaInicial(area);
     navegar({ tipo: 'objetivo' });
     await marcarApresentacaoVista();
   }
@@ -227,7 +242,10 @@ export function Estudo({ cliente, sair, expirar }: {
 
   /** Começar: salva a trilha mostrada (o aceite gera o conteúdo das lições) e abre a primeira lição. */
   async function comecar(proposta: PropostaPlano) {
-    const aceite = await executar('aceitar', () => cliente.aceitarProposta(proposta.token));
+    const aceite = await executar('aceitar', async () => {
+      const [plano] = await Promise.all([cliente.aceitarProposta(proposta.token), pausa(ESCRITA_MINIMA_MS)]);
+      return plano;
+    });
     // Sem o aceite, a trilha gerada volta (nova tela, mesmo estado), com o erro no topo e em foco.
     if (!aceite.ok) return;
     const plano = aceite.dados;
@@ -238,7 +256,11 @@ export function Estudo({ cliente, sair, expirar }: {
       navegar({ tipo: 'plano', plano });
       return;
     }
-    const licao = await executar('abrir', () => cliente.obterLicao(primeira));
+    // As lições acabaram de ficar prontas: o visto passa por elas enquanto a primeira abre.
+    const licao = await executar('abrir', async () => {
+      const [dados] = await Promise.all([cliente.obterLicao(primeira), pausa(PAUSA_LICOES_PRONTAS_MS)]);
+      return dados;
+    });
     if (licao.ok) {
       navegar({ tipo: 'licao', plano, licao: licao.dados });
       return;
@@ -264,12 +286,12 @@ export function Estudo({ cliente, sair, expirar }: {
     if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados });
   }
 
-  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string) {
+  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao) {
     const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante));
     if (resultado.ok) {
       const atualizado = resultado.dados.plano;
       atualizarPlano(atualizado);
-      navegar({ tipo: 'concluida', plano: atualizado, licao, liberadas: liberadasEntre(plano, atualizado) });
+      navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
       return true;
     }
     return resultado.codigo !== 'avaliacao_invalida';
@@ -286,14 +308,15 @@ export function Estudo({ cliente, sair, expirar }: {
   const mensagem = erro && <EstadoMensagem mensagem={erro} />;
 
   // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. Começar, na trilha gerada,
-  // já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só, no mesmo esqueleto.
+  // mostra o Stu escrevendo as lições até a primeira abrir: salvar o plano e abrir a lição é uma espera só.
   if (pendente === 'plano') return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
-  if ((pendente === 'abrir' && etapa.tipo !== 'plano') || (pendente === 'aceitar' && etapa.tipo === 'geracao')) {
-    return <SkeletonLicao texto={pendente === 'aceitar' ? mensagens.geracao.comecando : mensagens.licao.carregando} />;
+  if (etapa.tipo === 'geracao' && geracao?.proposta && (pendente === 'aceitar' || pendente === 'abrir')) {
+    return <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />;
   }
+  if (pendente === 'abrir' && etapa.tipo !== 'plano') return <SkeletonLicao texto={mensagens.licao.carregando} />;
 
   if (etapa.tipo === 'apresentacao') {
-    return <Apresentacao primeiraVez={etapa.primeiraVez} concluir={() => void concluirApresentacao()} />;
+    return <Apresentacao primeiraVez={etapa.primeiraVez} concluir={(area) => void concluirApresentacao(area)} />;
   }
 
   if (etapa.tipo === 'licao') {
@@ -303,35 +326,17 @@ export function Estudo({ cliente, sair, expirar }: {
         const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta));
         return resultado.ok ? resultado.dados : null;
       }}
-      concluir={(comprovante) => concluir(etapa.plano, etapa.licao, comprovante)} />;
+      concluir={(comprovante, resumo) => concluir(etapa.plano, etapa.licao, comprovante, resumo)} />;
   }
 
   if (etapa.tipo === 'concluida') {
-    const { plano, licao, liberadas } = etapa;
-    const proxima = proximaDoCaminho(plano);
-    const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
+    const proxima = proximaDoCaminho(etapa.plano);
     return (
-      <Tela pagina="concluida" acoes={acoes} rodape={<>
+      <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} rodape={<>
         {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" variante="secundario" desativado={ocupado}
-          acao={() => void abrirLicao(plano, proxima)} />}
+          acao={() => void abrirLicao(etapa.plano, proxima)} />}
         <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" desativado={ocupado} acao={() => abrir(voltarATrilha(etapa))} />
-      </>}>
-        <Medalha />
-        <Titulo testID="titulo-conclusao" foco>{mensagens.licao.concluida}</Titulo>
-        <Text style={estudoEstilos.comemoracao}>{mensagens.licao.comemoracao}</Text>
-        <Text style={estilos.introducao}>{licao.titulo}</Text>
-        {liberada && (
-          <View style={estudoEstilos.liberada}>
-            <Icone nome="livro" tamanho={20} cor={cores.acao} />
-            <Text style={estudoEstilos.liberadaTexto}>{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</Text>
-          </View>
-        )}
-        <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}>
-          <Text accessibilityRole="header" style={estilos.tituloBloco}>{mensagens.licao.progresso}</Text>
-          <BarraProgresso progresso={plano.progresso} testID="progresso-plano" comPercentual />
-        </View>
-        {mensagem}
-      </Tela>
+      </>} />
     );
   }
 
@@ -346,7 +351,7 @@ export function Estudo({ cliente, sair, expirar }: {
   }
 
   if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
-    return <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} erro={erro}
+    return <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} erro={erro} areaInicial={areaInicial}
       temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
       verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })} />;
   }
@@ -369,31 +374,6 @@ export function Estudo({ cliente, sair, expirar }: {
   );
 }
 
-type Tema = (typeof mensagens.pedido.temas)[number];
-type IdTema = Tema['id'];
-
-/** Ícone de cada área de interesse, com os mesmos desenhos da web (src/app/pedido.tsx). */
-const iconesDosTemas: Record<IdTema, NomeDesenho> = {
-  populares: 'temaPopulares',
-  idiomas: 'temaIdiomas',
-  musica: 'temaMusica',
-  matematica: 'temaMatematica',
-  ciencias: 'temaCiencias',
-  tecnologia: 'temaTecnologia',
-  artes: 'temaArtes',
-  carreira: 'temaCarreira',
-  'dia-a-dia': 'temaDiaADia',
-};
-
-/** Área de um exemplo: em Populares, cada exemplo mostra o ícone da área de onde veio. */
-function iconeDoExemplo(tema: Tema, exemplo: string): NomeDesenho {
-  if (tema.id !== 'populares') return iconesDosTemas[tema.id];
-  const origem = mensagens.pedido.temas.find((item) => item.id !== 'populares' && (item.exemplos as readonly string[]).includes(exemplo));
-  return iconesDosTemas[origem?.id ?? 'populares'];
-}
-
-const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema) => tema.exemplos as readonly string[])));
-
 /**
  * Pedido da trilha: a pessoa escreve o que quer aprender, ou escolhe uma ideia, e gera a trilha ao vivo.
  * As ideias vêm por área de interesse (idiomas, música, matemática…), numa fileira que desliza para o lado, para mostrar
@@ -401,13 +381,15 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * Um objetivo curto demais não sai do aparelho: o campo mostra o que falta e recebe o foco.
  * O foco da tela vai ao erro, quando há um, e senão ao título; o aviso de geração cancelada é anunciado.
  */
-function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, acoes, aoMudar, gerar, verPlanos, comoFunciona }: {
+function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona }: {
   objetivo: string;
   ocupado: boolean;
   aviso: string | null;
   falha: string | null;
   erro: string | null;
   temPlanos: boolean;
+  /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
+  areaInicial?: IdTema;
   acoes: ReactNode;
   aoMudar: (texto: string) => void;
   gerar: (texto: string) => void;
@@ -415,11 +397,12 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, acoes, aoMud
   comoFunciona: () => void;
 }) {
   const [curto, setCurto] = useState(false);
-  const [idTema, setIdTema] = useState<IdTema>('populares');
+  const [idTema, setIdTema] = useState<IdTema>(areaInicial ?? 'populares');
+  const [escolhida, setEscolhida] = useState<string | null>(null);
+  const [brilho, setBrilho] = useState(0);
   // Decidido uma vez: o erro que some enquanto a pessoa digita não devolve o foco ao título.
   const [focarTitulo] = useState(() => !erro && !falha);
   const campo = useRef<ComponentRef<typeof TextInput>>(null);
-  const { width } = useWindowDimensions();
   const texto = objetivo.trim();
   const tema = mensagens.pedido.temas.find((item) => item.id === idTema) ?? mensagens.pedido.temas[0];
   const minimo = LIMITES_GERACAO.objetivoMin;
@@ -431,7 +414,11 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, acoes, aoMud
     .filter(Boolean).join(' ');
   const repetivel = falha === 'ia_indisponivel' || falha === 'falha' || falha === 'conexao';
   const mostrarVerPlanos = falha === 'limite_geracoes' && temPlanos;
-  const stu = width >= 1024 ? 108 : width >= 768 ? 96 : 72;
+  // O Stu reage ao pedido, como na web: convida, incentiva enquanto a pessoa escreve e comemora a ideia escolhida.
+  let fala: string = mensagens.pedido.falas.vazio;
+  if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
+  else if (texto.length >= 20) fala = mensagens.pedido.falas.pronto;
+  else if (texto.length > 0) fala = mensagens.pedido.falas.curto;
 
   function tentar() {
     if (ocupado || !texto) return;
@@ -445,35 +432,23 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, acoes, aoMud
     gerar(texto);
   }
 
-  function sugerir(exemplo: string) {
-    aoMudar(exemplo);
+  function sugerir(ideia: string) {
+    aoMudar(ideia);
     setCurto(false);
-    anunciar(mensagens.pedido.sugestaoAplicada(exemplo));
+    setEscolhida(ideia);
+    setBrilho((anterior) => anterior + 1);
+    anunciar(mensagens.pedido.sugestaoAplicada(ideia));
   }
 
   function surpreender() {
-    const opcoes = todosOsExemplos.filter((exemplo) => exemplo !== texto);
+    const opcoes = todosOsExemplos.filter((ideia) => ideia !== texto);
     sugerir(opcoes[Math.floor(Math.random() * opcoes.length)]);
   }
 
   return (
     <Tela pagina="objetivo" acoes={acoes} rodape={<Botao rotulo={mensagens.pedido.gerar} testID="gerar-trilha"
       desativado={ocupado || !texto} acao={tentar} />}>
-      <View style={[estudoEstilos.pedidoTopo, width >= 768 && estudoEstilos.pedidoTopoLargo]}>
-        <View style={estudoEstilos.pedidoTextos}>
-          <Titulo testID="titulo-objetivo" foco={focarTitulo}>{mensagens.pedido.titulo}</Titulo>
-        </View>
-        <View style={estudoEstilos.pedidoStu} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          {width >= 400 && (
-            <View style={estudoEstilos.pedidoFala}>
-              <Text style={estudoEstilos.pedidoFalaTexto}>{mensagens.pedido.stuFala}</Text>
-              <View style={estudoEstilos.pedidoFalaSeta} />
-            </View>
-          )}
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            importantForAccessibility="no" style={{ width: stu, height: Math.round(stu * 1.1) }} />
-        </View>
-      </View>
+      <Titulo testID="titulo-objetivo" foco={focarTitulo}>{mensagens.pedido.titulo}</Titulo>
       <Text style={estilos.introducao}>{mensagens.pedido.instrucoes}</Text>
       <LinkComoFunciona desativado={ocupado} acao={comoFunciona} />
       {aviso && <Text style={estudoEstilos.aviso}>{aviso}</Text>}
@@ -486,10 +461,9 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, acoes, aoMud
             desativado={ocupado} acao={verPlanos} />}
         </View>
       )}
+      <StuQueReage fala={fala} />
       <View style={estudoEstilos.campoPedido}>
-        <Campo campoRef={campo} testID="objetivo-estudo" rotulo={mensagens.pedido.objetivo} value={objetivo}
-          onChangeText={aoMudar} editable={!ocupado} multiline maxLength={LIMITES_GERACAO.objetivoMax}
-          placeholder={mensagens.pedido.exemploCampo} accessibilityHint={dica} style={estudoEstilos.entradaPedido} />
+        <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} />
         {mostrarCurto && (
           <View style={estudoEstilos.campoErro}>
             <Text importantForAccessibility="no" style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro }]}>!</Text>
@@ -512,14 +486,117 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, acoes, aoMud
               escolhida={item.id === idTema} desativada={ocupado} acao={() => setIdTema(item.id)} />
           ))}
         </ScrollView>
-        <View style={estudoEstilos.exemplos}>
+        <View key={tema.id} style={estudoEstilos.exemplos}>
           {tema.exemplos.map((exemplo, indice) => (
-            <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(tema, exemplo)} testID={`sugestao-${indice}`}
+            <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(tema, exemplo)} testID={`sugestao-${indice}`} ordem={indice}
               escolhida={texto === exemplo} desativada={ocupado} acao={() => sugerir(exemplo)} />
           ))}
         </View>
       </View>
     </Tela>
+  );
+}
+
+/** O Stu acima do campo, que sobe e desce devagar, com um balão que reage ao pedido, como na web. */
+function StuQueReage({ fala }: { fala: string }) {
+  const balanco = useBalanco(4, 1500);
+  return (
+    <View style={estudoEstilos.stuReage} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+        style={{ width: 62, height: 68, transform: [{ translateY: balanco }] }} />
+      <BalaoFala key={fala} texto={fala} />
+    </View>
+  );
+}
+
+/** Balão de fala que entra com um pulinho a cada frase nova. */
+function BalaoFala({ texto }: { texto: string }) {
+  const entrada = useAparecer(0, 380, true);
+  return (
+    <Animated.View style={[estudoEstilos.balaoFala, {
+      opacity: entrada, transform: [{ scale: entrada.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }],
+    }]}>
+      <View style={estudoEstilos.balaoFalaSeta} />
+      <Text style={estudoEstilos.balaoFalaTexto}>{texto}</Text>
+    </Animated.View>
+  );
+}
+
+/**
+ * Exemplo que se escreve sozinho no campo vazio, letra por letra, e se apaga para dar lugar ao próximo, como na web.
+ * Para quando a pessoa escreve ou o campo está em foco (o leitor de tela não ouve o exemplo mudando);
+ * com movimento reduzido, fica o primeiro exemplo, parado.
+ */
+function useExemploDigitado(ativo: boolean) {
+  const reduzir = useMovimentoReduzido();
+  const exemplos = mensagens.pedido.exemplosDigitados;
+  const [texto, setTexto] = useState<string>(exemplos[0]);
+
+  useEffect(() => {
+    if (!ativo || reduzir !== false) {
+      setTexto(exemplos[0]);
+      return;
+    }
+    let indice = 0;
+    let letras = 0;
+    let apagando = false;
+    let espera: ReturnType<typeof setTimeout>;
+    function passo() {
+      const atual = exemplos[indice];
+      if (!apagando && letras < atual.length) {
+        letras += 1;
+        espera = setTimeout(passo, 55);
+      } else if (!apagando) {
+        apagando = true;
+        espera = setTimeout(passo, 1700);
+      } else if (letras > 0) {
+        letras -= 1;
+        espera = setTimeout(passo, 22);
+      } else {
+        apagando = false;
+        indice = (indice + 1) % exemplos.length;
+        espera = setTimeout(passo, 350);
+      }
+      setTexto(exemplos[indice].slice(0, letras));
+    }
+    setTexto('');
+    espera = setTimeout(passo, 600);
+    return () => clearTimeout(espera);
+  }, [ativo, reduzir, exemplos]);
+
+  return texto;
+}
+
+/** Campo do objetivo: só ele redesenha a cada letra do exemplo; brilha em dourado quando uma ideia é aplicada. */
+function CampoObjetivo({ campoRef, valor, aoMudar, editavel, dica, brilho }: {
+  campoRef: Ref<ComponentRef<typeof TextInput>>;
+  valor: string;
+  aoMudar: (texto: string) => void;
+  editavel: boolean;
+  dica: string;
+  brilho: number;
+}) {
+  const [focado, setFocado] = useState(false);
+  const exemplo = useExemploDigitado(valor.length === 0 && editavel && !focado);
+  const reduzir = useMovimentoReduzido();
+  const [luz] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (!brilho || reduzir !== false) return;
+    luz.setValue(1);
+    const animacao = Animated.timing(luz, { toValue: 0, duration: 900, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [brilho, reduzir, luz]);
+
+  return (
+    <View>
+      <Campo campoRef={campoRef} testID="objetivo-estudo" rotulo={mensagens.pedido.objetivo} value={valor}
+        onChangeText={aoMudar} editable={editavel} multiline maxLength={LIMITES_GERACAO.objetivoMax}
+        placeholder={`${mensagens.pedido.exemploPrefixo}${exemplo}`} accessibilityHint={dica} style={estudoEstilos.entradaPedido}
+        onFocus={() => setFocado(true)} onBlur={() => setFocado(false)} />
+      <Animated.View pointerEvents="none" style={[estudoEstilos.luzCampo, { opacity: luz }]} />
+    </View>
   );
 }
 
@@ -552,7 +629,7 @@ function Surpresa({ desativada, acao }: { desativada: boolean; acao: () => void 
   );
 }
 
-/** Área de interesse: mostra as ideias dela. A escolhida fica marcada e o leitor de tela ouve que está selecionada. */
+/** Área de interesse: mostra as ideias dela. A escolhida fica marcada, o ícone pula e o leitor de tela ouve que está selecionada. */
 function Area({ nome, icone, testID, escolhida, desativada, acao }: {
   nome: string;
   icone: NomeDesenho;
@@ -562,42 +639,50 @@ function Area({ nome, icone, testID, escolhida, desativada, acao }: {
   acao: () => void;
 }) {
   const [focado, setFocado] = useState(false);
+  const pulo = usePulinho(escolhida, 1.3);
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ selected: escolhida, disabled: desativada }}
       disabled={desativada} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
       style={({ pressed }) => [estudoEstilos.area, escolhida && estudoEstilos.areaEscolhida, desativada && estudoEstilos.chipDesativada,
         pressed && estilos.botaoPressionado, focado && estilos.foco]}>
-      <Desenho nome={icone} largura={22} />
+      <Animated.View style={{ transform: [{ scale: pulo }, { rotate: pulo.interpolate({ inputRange: [1, 1.3], outputRange: ['0deg', '-12deg'] }) }] }}>
+        <Desenho nome={icone} largura={22} />
+      </Animated.View>
       <Text style={[estudoEstilos.areaTexto, escolhida && { color: cores.acao }, desativada && { color: cores.textoSecundario }]}>{nome}</Text>
     </Pressable>
   );
 }
 
-/** Ideia de objetivo: preenche o campo. A escolhida mostra o visto e o leitor de tela ouve que está selecionada. */
-function Sugestao({ texto, icone, testID, escolhida, desativada, acao }: {
+/** Ideia de objetivo: preenche o campo. Entra em sequência; a escolhida mostra o visto, que pula, e o leitor de tela ouve que está selecionada. */
+function Sugestao({ texto, icone, testID, ordem, escolhida, desativada, acao }: {
   texto: string;
   icone: NomeDesenho;
   testID: string;
+  ordem: number;
   escolhida: boolean;
   desativada: boolean;
   acao: () => void;
 }) {
   const [focado, setFocado] = useState(false);
+  const entrada = useAparecer(ordem * 50, 360);
+  const pulo = usePulinho(escolhida, 1.35);
 
   return (
-    <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ selected: escolhida, disabled: desativada }}
-      disabled={desativada} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
-      style={({ pressed }) => [estudoEstilos.chip, escolhida && estudoEstilos.chipEscolhida, desativada && estudoEstilos.chipDesativada,
-        pressed && estudoEstilos.chipAfundado, focado && estilos.foco]}>
-      <View style={estudoEstilos.chipIcone} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <Desenho nome={icone} largura={26} />
-      </View>
-      <Text style={[estudoEstilos.chipTexto, desativada && { color: cores.textoSecundario }]}>{texto}</Text>
-      <View style={[estudoEstilos.chipAcao, escolhida && estudoEstilos.chipAcaoEscolhida]} importantForAccessibility="no-hide-descendants"
-        accessibilityElementsHidden>
-        <Icone nome={escolhida ? 'check' : 'seta'} tamanho={18} cor={escolhida ? cores.fundo : cores.textoSecundario} />
-      </View>
-    </Pressable>
+    <Animated.View style={estiloDeEntrada(entrada, 8, 1)}>
+      <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ selected: escolhida, disabled: desativada }}
+        disabled={desativada} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+        style={({ pressed }) => [estudoEstilos.chip, escolhida && estudoEstilos.chipEscolhida, desativada && estudoEstilos.chipDesativada,
+          pressed && estudoEstilos.chipAfundado, focado && estilos.foco]}>
+        <View style={estudoEstilos.chipIcone} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Desenho nome={icone} largura={26} />
+        </View>
+        <Text style={[estudoEstilos.chipTexto, desativada && { color: cores.textoSecundario }]}>{texto}</Text>
+        <Animated.View style={[estudoEstilos.chipAcao, escolhida && estudoEstilos.chipAcaoEscolhida, { transform: [{ scale: pulo }] }]}
+          importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Icone nome={escolhida ? 'check' : 'seta'} tamanho={18} cor={escolhida ? cores.fundo : cores.textoSecundario} />
+        </Animated.View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -689,7 +774,7 @@ function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajust
           ? <Text style={estudoEstilos.geracaoOrigem}>{mensagens.geracao.origem(proposta.origem)}</Text>
           : <View importantForAccessibility="no" accessibilityElementsHidden style={estudoEstilos.esqueletoOrigem} />}
       </View>
-      <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando}
+      <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas}
         chegada={proposta !== null} montando={proposta === null} acompanhar={acompanhar} />
     </Tela>
   );
@@ -738,9 +823,196 @@ function TextoQueChega({ texto, surgir }: { texto: string; surgir: boolean }) {
 }
 
 /**
+ * Começar, como na web: o aceite salva a trilha e a IA escreve a explicação, o exemplo e o exercício de cada lição.
+ * Enquanto isso, o Stu escreve com o lápis, as folhas voam, um brilho desce pela lista das lições e dicas se revezam.
+ * O aceite é um pedido só, sem andamento por lição, então nenhuma lição ganha o visto antes da hora; com `prontas`
+ * (o aceite voltou), o visto passa por todas enquanto a primeira lição abre.
+ */
+function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; prontas: boolean }) {
+  const licoes = proposta.fluxos.flatMap((fluxo) => fluxo.licoes.map((licao) => licao.titulo));
+
+  useEffect(() => {
+    if (prontas) AccessibilityInfo.announceForAccessibility(mensagens.preparo.anuncioProntas);
+  }, [prontas]);
+
+  return (
+    <Tela pagina="preparando-licoes">
+      <CenaPreparo prontas={prontas} />
+      <Text style={estudoEstilos.contexto}>{proposta.titulo}</Text>
+      <Titulo testID="titulo-preparo" foco>{prontas ? mensagens.preparo.prontas : mensagens.preparo.titulo}</Titulo>
+      <Text style={estilos.introducao}>{prontas ? mensagens.preparo.textoProntas : mensagens.preparo.texto}</Text>
+      <View style={estudoEstilos.preparoLista} accessibilityLabel={mensagens.preparo.lista}>
+        {licoes.map((nome, indice) => (
+          <LinhaPreparo key={indice} nome={nome} indice={indice} total={licoes.length} prontas={prontas} />
+        ))}
+      </View>
+      {!prontas && <DicaPreparo />}
+    </Tela>
+  );
+}
+
+/** A cena do Stu escrevendo: o céu, a colina da primeira região, o lápis que risca e as folhas que voam. */
+function CenaPreparo({ prontas }: { prontas: boolean }) {
+  const reduzir = useMovimentoReduzido();
+  const { chao, relevo } = coresDaRegiao(0);
+  const subida = useBalanco(6, 1200, !prontas);
+  const [risco] = useState(() => new Animated.Value(0));
+  const [pulo] = useState(() => new Animated.Value(0));
+  const [folhas] = useState(() => [0, 1, 2].map(() => new Animated.Value(0)));
+
+  useEffect(() => {
+    if (reduzir !== false || prontas) return;
+    const movimento = { duration: 520, easing: Easing.inOut(Easing.ease), isInteraction: false, useNativeDriver: true };
+    const lapis = Animated.loop(Animated.sequence([
+      Animated.timing(risco, { ...movimento, toValue: 1 }),
+      Animated.timing(risco, { ...movimento, toValue: 0 }),
+    ]));
+    const voar = folhas.map((folha, indice) => Animated.loop(Animated.sequence([
+      Animated.delay(indice * 1100),
+      Animated.timing(folha, { toValue: 1, duration: 3300, easing: Easing.out(Easing.quad), isInteraction: false, useNativeDriver: true }),
+      Animated.timing(folha, { toValue: 0, duration: 0, useNativeDriver: true }),
+      Animated.delay((2 - indice) * 1100),
+    ])));
+    lapis.start();
+    voar.forEach((animacao) => animacao.start());
+    return () => {
+      lapis.stop();
+      voar.forEach((animacao) => animacao.stop());
+      folhas.forEach((folha) => folha.setValue(0));
+    };
+  }, [reduzir, prontas, risco, folhas]);
+
+  // Lições prontas: o Stu dá dois pulinhos.
+  useEffect(() => {
+    if (!prontas || reduzir !== false) return;
+    const subir = Animated.timing(pulo, { toValue: -14, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    const descer = Animated.timing(pulo, { toValue: 0, duration: 300, easing: Easing.in(Easing.quad), useNativeDriver: true });
+    const pular = Animated.sequence([subir, descer]);
+    pular.start();
+    return () => pular.stop();
+  }, [prontas, reduzir, pulo]);
+
+  const destinos = [{ x: 104, y: -96, giro: '24deg' }, { x: -118, y: -96, giro: '-28deg' }, { x: 70, y: -128, giro: '14deg' }];
+
+  return (
+    <View style={estudoEstilos.preparoCena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <View style={[estudoEstilos.preparoColina, { backgroundColor: chao, borderTopColor: relevo }]} />
+      <Desenho nome="arvore" largura={52} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%', bottom: 16 }]} />
+      <Desenho nome="flores" largura={30} estilo={[estudoEstilos.cartaoEnfeite, { right: '25%', bottom: 12 }]} />
+      <Desenho nome="arbusto" largura={46} estilo={[estudoEstilos.cartaoEnfeite, { right: '7%', bottom: 16 }]} />
+      {!prontas && reduzir === false && folhas.map((folha, indice) => (
+        <Animated.View key={indice} style={[estudoEstilos.preparoFolha, {
+          opacity: folha.interpolate({ inputRange: [0, 0.12, 0.8, 1], outputRange: [0, 1, 1, 0] }),
+          transform: [
+            { translateX: folha.interpolate({ inputRange: [0, 1], outputRange: [0, destinos[indice].x] }) },
+            { translateY: folha.interpolate({ inputRange: [0, 1], outputRange: [0, destinos[indice].y] }) },
+            { rotate: folha.interpolate({ inputRange: [0, 1], outputRange: ['0deg', destinos[indice].giro] }) },
+            { scale: folha.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) },
+          ],
+        }]}>
+          <View style={[estudoEstilos.preparoFolhaLinha, { width: 16 }]} />
+          <View style={[estudoEstilos.preparoFolhaLinha, { width: 12 }]} />
+          <View style={[estudoEstilos.preparoFolhaLinha, { width: 14 }]} />
+        </Animated.View>
+      ))}
+      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+        style={[estudoEstilos.preparoStu, { transform: [{ translateY: prontas ? pulo : subida }] }]} />
+      {!prontas && (
+        <Animated.View style={[estudoEstilos.preparoLapis, {
+          transform: [
+            { translateX: risco.interpolate({ inputRange: [0, 1], outputRange: [0, 4] }) },
+            { rotate: risco.interpolate({ inputRange: [0, 1], outputRange: ['16deg', '32deg'] }) },
+          ],
+        }]}>
+          <View style={estudoEstilos.preparoLapisBorracha} />
+          <View style={estudoEstilos.preparoLapisPonteira} />
+          <View style={estudoEstilos.preparoLapisCorpo} />
+          <View style={estudoEstilos.preparoLapisPonta} />
+          <View style={estudoEstilos.preparoLapisGrafite} />
+        </Animated.View>
+      )}
+    </View>
+  );
+}
+
+/** Uma lição da lista: entra em sequência; enquanto a IA escreve, um brilho passa por ela; pronta, ganha o visto. */
+function LinhaPreparo({ nome, indice, total, prontas }: { nome: string; indice: number; total: number; prontas: boolean }) {
+  const reduzir = useMovimentoReduzido();
+  const entrada = useAparecer(100 + indice * 60, 380);
+  const [brilho] = useState(() => new Animated.Value(0));
+  const revisao = nome.trim().toLocaleLowerCase('pt-BR').startsWith('revis');
+
+  useEffect(() => {
+    if (reduzir !== false || prontas) {
+      brilho.setValue(0);
+      return;
+    }
+    // Todas as linhas têm o mesmo ciclo; o atraso de cada uma faz o brilho descer pela lista.
+    const movimento = { duration: 500, easing: Easing.inOut(Easing.ease), isInteraction: false, useNativeDriver: true };
+    const ciclo = Animated.loop(Animated.sequence([
+      Animated.delay(600 + indice * 200),
+      Animated.timing(brilho, { ...movimento, toValue: 1 }),
+      Animated.timing(brilho, { ...movimento, toValue: 0 }),
+      Animated.delay(Math.max(0, total - indice - 1) * 200),
+    ]));
+    ciclo.start();
+    return () => ciclo.stop();
+  }, [reduzir, prontas, brilho, indice, total]);
+
+  return (
+    <Animated.View style={[estudoEstilos.preparoLinha, prontas && estudoEstilos.preparoLinhaPronta, estiloDeEntrada(entrada)]}>
+      <Animated.View pointerEvents="none" style={[estudoEstilos.preparoBrilho, { opacity: brilho }]} />
+      <IconePreparo key={prontas ? 'pronta' : 'escrevendo'} pronta={prontas} atraso={indice * 45} nome={revisao ? 'revisao' : 'livro'} />
+      <Text style={estudoEstilos.preparoTitulo}>{nome}</Text>
+    </Animated.View>
+  );
+}
+
+function IconePreparo({ pronta, atraso, nome }: { pronta: boolean; atraso: number; nome: NomeIcone }) {
+  const visto = useAparecer(atraso, 420, true);
+  if (!pronta) {
+    return <View style={estudoEstilos.preparoIcone}><Icone nome={nome} tamanho={20} cor={cores.acao} /></View>;
+  }
+  return (
+    <Animated.View style={[estudoEstilos.preparoIcone, estudoEstilos.preparoIconePronto, {
+      transform: [
+        { scale: visto.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
+        { rotate: visto.interpolate({ inputRange: [0, 1], outputRange: ['-30deg', '0deg'] }) },
+      ],
+    }]}>
+      <Icone nome="check" tamanho={20} cor={cores.fundo} />
+    </Animated.View>
+  );
+}
+
+/** Dicas de estudo que se revezam embaixo da lista, como na geração ao vivo. */
+function DicaPreparo() {
+  const dicas = mensagens.geracao.dicas;
+  const [indice, setIndice] = useState(0);
+
+  useEffect(() => {
+    const intervalo = setInterval(() => setIndice((atual) => (atual + 1) % dicas.length), 3600);
+    return () => clearInterval(intervalo);
+  }, [dicas.length]);
+
+  return <TextoDaDica key={indice} texto={dicas[indice]} />;
+}
+
+function TextoDaDica({ texto }: { texto: string }) {
+  const entrada = useAparecer(0, 420);
+  return (
+    <Animated.View style={[estudoEstilos.preparoDica, {
+      opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
+    }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <Icone nome="lampada" tamanho={22} cor={cores.ouroEscuro} />
+      <Text style={estudoEstilos.preparoDicaTexto}>{texto}</Text>
+    </Animated.View>
+  );
+}
+
+/**
  * Carregando a lição: a forma da aula (fechar e andamento no topo, título, quadro e botão), sem spinner (DESIGN §7).
- * Recebe o foco, porque o botão tocado sai da tela; ao trocar de "Preparando sua trilha…" para "Abrindo a lição",
- * o leitor de tela ouve o texto novo.
+ * Recebe o foco, porque o botão tocado sai da tela, e o leitor de tela ouve "Abrindo a lição".
  */
 function SkeletonLicao({ texto }: { texto: string }) {
   const area = useRef<ComponentRef<typeof View>>(null);
@@ -842,7 +1114,7 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
         )}
       </View>
       {nos.length > 0 ? (
-        <Caminho nos={nos} stu={falaDoStu(nos)} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas}
+        <Caminho nos={nos} stu={falaDoStu(nos)} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} recemConcluida={etapa.concluida ?? null}
           rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)} />
       ) : (
         <View style={estudoEstilos.vazio}>
@@ -893,20 +1165,44 @@ function ProximoPasso({ titulo, detalhe, abrindo, ocupado, rodape, aoAbrir }: {
   );
 }
 
-/** Barra de progresso; com `comPercentual`, mostra também a porcentagem, como a faixa da trilha na web. */
-function BarraProgresso({ progresso, testID, naFaixa = false, comPercentual = false }: {
+/**
+ * Barra de progresso; com `comPercentual`, mostra também a porcentagem, como a faixa da trilha na web. Enche com uma
+ * animação curta ao aparecer: do zero ou, com `de`, a partir do progresso anterior (na lição concluída).
+ */
+function BarraProgresso({ progresso, testID, naFaixa = false, comPercentual = false, de }: {
   progresso: Progresso;
   testID?: string;
   naFaixa?: boolean;
   comPercentual?: boolean;
+  de?: Progresso;
 }) {
+  const reduzir = useMovimentoReduzido();
+  const [enchimento] = useState(() => new Animated.Value(0));
+  const valor = progresso.percentual ?? 0;
+  const inicial = de?.percentual ?? 0;
+
+  useEffect(() => {
+    if (reduzir === null) return;
+    if (reduzir) {
+      enchimento.setValue(1);
+      return;
+    }
+    const animacao = Animated.timing(enchimento, { toValue: 1, duration: 900, delay: 300, easing: Easing.out(Easing.cubic), useNativeDriver: false });
+    animacao.start();
+    return () => animacao.stop();
+  }, [reduzir, enchimento]);
+
   if (progresso.percentual === null) {
     return <Text testID={testID} style={[estilos.legenda, naFaixa && estudoEstilos.progressoNaFaixa]}>{mensagens.planos.semProgresso}</Text>;
   }
   return (
     <View style={[estudoEstilos.progresso, naFaixa && estudoEstilos.progressoNaFaixa]}>
       <View importantForAccessibility="no" style={[estudoEstilos.trilha, naFaixa && estudoEstilos.trilhaNaFaixa]}>
-        <View style={[estudoEstilos.preenchimento, { width: `${progresso.percentual}%` }]} />
+        <Animated.View style={[estudoEstilos.preenchimento, {
+          width: enchimento.interpolate({ inputRange: [0, 1], outputRange: [`${inicial}%`, `${valor}%`] }),
+        }]}>
+          <View style={estudoEstilos.brilhoBarra} />
+        </Animated.View>
       </View>
       <View style={estudoEstilos.progressoLegenda}>
         <Text testID={testID} style={[estilos.legenda, estudoEstilos.progressoTexto]}>{mensagens.planos.progresso(progresso.concluidas, progresso.total)}</Text>
@@ -932,9 +1228,10 @@ function CartaoPlano({ plano, indice, ocupado, abrir }: { plano: PlanoResumo; in
   else if (concluidas === 0) acao = mensagens.planos.comecar;
   const { chao, relevo } = coresDaRegiao(indice);
   const enfeites = regiaoDoTrecho(indice).enfeites;
+  const entrada = useAparecer(120 + indice * 80, 420);
 
   return (
-    <View style={estudoEstilos.cartao}>
+    <Animated.View style={[estudoEstilos.cartao, estiloDeEntrada(entrada)]}>
       <View style={[estudoEstilos.cartaoCena, { backgroundColor: chao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <View style={[estudoEstilos.cartaoColina, { backgroundColor: relevo }]} />
         <Desenho nome={enfeites[0]} largura={46} estilo={[estudoEstilos.cartaoEnfeite, { left: '8%' }]} />
@@ -956,40 +1253,137 @@ function CartaoPlano({ plano, indice, ocupado, abrir }: { plano: PlanoResumo; in
             dica={plano.titulo} desativado={ocupado} acao={abrir} />
         </View>
       </View>
+    </Animated.View>
+  );
+}
+
+/** Tempo em minutos e segundos, como 1:05. */
+function formatarTempo(segundos: number) {
+  return `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
+}
+
+/**
+ * Lição concluída, como na web: chuva de confete, raios girando atrás do Stu, que pula, o resumo da lição (tempo,
+ * acerto e etapas), a lição liberada e o progresso do plano, que enche a partir de onde estava.
+ */
+function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
+  etapa: Extract<Etapa, { tipo: 'concluida' }>;
+  acoes: ReactNode;
+  mensagem: ReactNode;
+  rodape: ReactNode;
+}) {
+  const { plano, antes, licao, liberadas, resumo } = etapa;
+  const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
+  const entradaLiberada = useAparecer(1000, 420, true);
+
+  return (
+    <Tela pagina="concluida" acoes={acoes} rodape={rodape}>
+      <Confete chuva quantidade={36} />
+      <View style={estudoEstilos.conclusaoTopo}>
+        <CenaConclusao />
+        <Titulo testID="titulo-conclusao" foco estilo={estudoEstilos.textoCentro}>{mensagens.licao.concluida}</Titulo>
+        <Text style={[estudoEstilos.comemoracao, estudoEstilos.textoCentro]}>{mensagens.licao.comemoracao}</Text>
+        <Text style={[estudoEstilos.conclusaoLicao, estudoEstilos.textoCentro]}>{licao.titulo}</Text>
+      </View>
+      {resumo && <NumerosDaLicao resumo={resumo} />}
+      {liberada && (
+        <Animated.View style={[estudoEstilos.liberada, estiloDeEntrada(entradaLiberada, 12)]}>
+          <Icone nome="livro" tamanho={20} cor={cores.acao} />
+          <Text style={estudoEstilos.liberadaTexto}>{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</Text>
+        </Animated.View>
+      )}
+      <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}>
+        <Text accessibilityRole="header" style={estilos.tituloBloco}>{mensagens.licao.progresso}</Text>
+        <BarraProgresso progresso={plano.progresso} de={antes} testID="progresso-plano" comPercentual />
+      </View>
+      {mensagem}
+    </Tela>
+  );
+}
+
+/** Raios dourados que giram devagar, o Stu que pula algumas vezes e depois flutua, e o selo de concluída. */
+function CenaConclusao() {
+  const reduzir = useMovimentoReduzido();
+  const [giro] = useState(() => new Animated.Value(0));
+  const [pulo] = useState(() => new Animated.Value(0));
+  const raios = useAparecer(0, 700);
+  const selo = useAparecer(700, 520, true);
+
+  useEffect(() => {
+    if (reduzir !== false) return;
+    const girar = Animated.loop(Animated.timing(giro, { toValue: 1, duration: 16000, easing: Easing.linear, isInteraction: false, useNativeDriver: true }));
+    const subir = (duracao: number, altura: number) => Animated.timing(pulo, { toValue: altura, duration: duracao, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    const descer = (duracao: number) => Animated.timing(pulo, { toValue: 0, duration: duracao, easing: Easing.in(Easing.quad), useNativeDriver: true });
+    const pular = Animated.sequence([
+      Animated.delay(250), subir(240, -26), descer(240), subir(240, -26), descer(240),
+      Animated.loop(Animated.sequence([subir(1300, -6), descer(1300)])),
+    ]);
+    girar.start();
+    pular.start();
+    return () => {
+      girar.stop();
+      pular.stop();
+    };
+  }, [reduzir, giro, pulo]);
+
+  return (
+    <View style={estudoEstilos.cena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <Animated.View style={[estudoEstilos.raios, {
+        opacity: raios,
+        transform: [
+          { scale: raios.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) },
+          { rotate: giro.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
+        ],
+      }]}>
+        {Array.from({ length: 12 }, (_, indice) => (
+          <View key={indice} style={[estudoEstilos.raio, { transform: [{ rotate: `${indice * 30}deg` }] }]} />
+        ))}
+      </Animated.View>
+      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+        style={{ width: 130, height: 143, transform: [{ translateY: pulo }] }} />
+      <Animated.View style={[estudoEstilos.seloConclusao, {
+        opacity: selo,
+        transform: [
+          { scale: selo.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
+          { rotate: selo.interpolate({ inputRange: [0, 1], outputRange: ['-40deg', '0deg'] }) },
+        ],
+      }]}>
+        <Icone nome="check" tamanho={28} cor={cores.fundo} />
+      </Animated.View>
     </View>
   );
 }
 
-/** Medalha da lição concluída: entra com um pulinho e brilhos em volta; com movimento reduzido, já aparece pronta. */
-function Medalha() {
-  const reduzir = useMovimentoReduzido();
-  const [entrada] = useState(() => new Animated.Value(0));
-
-  useEffect(() => {
-    if (reduzir === null) return;
-    if (reduzir) {
-      entrada.setValue(1);
-      return;
-    }
-    const animacao = Animated.timing(entrada, { toValue: 1, duration: 420, easing: Easing.out(Easing.back(1.8)), useNativeDriver: true });
-    animacao.start();
-    return () => animacao.stop();
-  }, [reduzir, entrada]);
-
-  const surgir = { opacity: entrada, transform: [{ scale: entrada.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }] };
+/** Resumo da lição em três cartões que entram em sequência; o tempo conta de zero até o valor. */
+function NumerosDaLicao({ resumo }: { resumo: ResumoLicao }) {
+  const textos = mensagens.licao.resumo;
+  const segundos = useContagem(resumo.segundos, 900, 650);
+  const itens = [
+    { chave: 'tempo', icone: 'relogio' as const, rotulo: textos.tempo, valor: formatarTempo(segundos), cor: cores.acao },
+    { chave: 'acerto', icone: 'alvo' as const, rotulo: textos.acerto,
+      valor: resumo.dePrimeira ? textos.dePrimeira : textos.tentativas(resumo.tentativas), cor: resumo.dePrimeira ? cores.sucesso : cores.alerta },
+    { chave: 'etapas', icone: 'check' as const, rotulo: textos.etapas, valor: textos.etapasFeitas, cor: '#5B4BB7' },
+  ];
   return (
-    <View style={estudoEstilos.medalhaCena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <Animated.View style={[estudoEstilos.brilho, { top: 2, left: 10 }, surgir]}><Desenho nome="estrela" largura={22} /></Animated.View>
-      <Animated.View style={[estudoEstilos.brilho, { top: 12, right: 0 }, surgir]}><Desenho nome="estrela" largura={16} /></Animated.View>
-      <Animated.View style={[estudoEstilos.brilho, { bottom: 14, left: -4 }, surgir]}><Desenho nome="estrela" largura={14} /></Animated.View>
-      <Animated.View style={[estudoEstilos.brilho, { bottom: 4, right: 6 }, surgir]}><Desenho nome="estrela" largura={20} /></Animated.View>
-      <Animated.View style={[estudoEstilos.medalha, surgir]}>
-        <View style={estudoEstilos.medalhaLabio} />
-        <View style={estudoEstilos.medalhaFace}>
-          <Icone nome="check" tamanho={48} cor={cores.fundo} />
-        </View>
-      </Animated.View>
+    <View style={estudoEstilos.numeros} accessible accessibilityLabel={`${textos.titulo}: ${itens.map((item) => `${item.rotulo} ${item.chave === 'tempo' ? formatarTempo(resumo.segundos) : item.valor}`).join(', ')}`}>
+      {itens.map((item, indice) => <CartaoNumero key={item.chave} {...item} ordem={indice} />)}
     </View>
+  );
+}
+
+function CartaoNumero({ icone, rotulo, valor, cor, ordem }: { icone: NomeIcone; rotulo: string; valor: string; cor: string; ordem: number }) {
+  const entrada = useAparecer(600 + ordem * 120, 480, true);
+  return (
+    <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      style={[estudoEstilos.numero, { backgroundColor: cor, borderColor: cor }, estiloDeEntrada(entrada, 14, 0.9)]}>
+      <View style={estudoEstilos.numeroRotulo}>
+        <Icone nome={icone} tamanho={14} cor={cores.fundo} />
+        <Text style={estudoEstilos.numeroRotuloTexto}>{rotulo.toLocaleUpperCase('pt-BR')}</Text>
+      </View>
+      <View style={estudoEstilos.numeroValor}>
+        <Text style={estudoEstilos.numeroValorTexto}>{valor}</Text>
+      </View>
+    </Animated.View>
   );
 }
 
@@ -1003,7 +1397,8 @@ const estudoEstilos = StyleSheet.create({
   percentual: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   trilha: { height: 10, borderRadius: 5, backgroundColor: cores.nevoa, overflow: 'hidden' },
   trilhaNaFaixa: { height: 14, borderRadius: 7 },
-  preenchimento: { height: '100%', backgroundColor: cores.acao, borderRadius: 7 },
+  preenchimento: { height: '100%', backgroundColor: cores.acao, borderRadius: 7, overflow: 'hidden' },
+  brilhoBarra: { position: 'absolute', top: 3, left: 6, right: 6, height: 3, borderRadius: 2, backgroundColor: 'rgba(255, 255, 255, 0.3)' },
   // Faixa do topo da trilha: cartão branco com relevo, como na web.
   faixa: { marginBottom: 12, padding: 20, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   faixaLarga: { padding: 24 },
@@ -1027,13 +1422,22 @@ const estudoEstilos = StyleSheet.create({
   liberada: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
   liberadaTexto: { flex: 1, color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   // Lição concluída
-  medalhaCena: { width: 136, height: 136, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  brilho: { position: 'absolute' },
-  medalha: { width: 96, height: 103 },
-  medalhaLabio: { position: 'absolute', top: 7, width: 96, height: 96, borderRadius: 48, backgroundColor: cores.sucesso },
-  medalhaFace: { position: 'absolute', top: 0, width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 6, borderColor: 'rgba(255, 255, 255, 0.2)', backgroundColor: cores.sucessoClaro },
+  conclusaoTopo: { alignItems: 'center' },
+  textoCentro: { textAlign: 'center' },
+  cena: { width: 190, height: 172, alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 },
+  raios: { position: 'absolute', left: -6, top: -12, width: 202, height: 202, alignItems: 'center', justifyContent: 'center' },
+  raio: { position: 'absolute', width: 18, height: 202, borderRadius: 9, backgroundColor: 'rgba(255, 209, 102, 0.28)' },
+  seloConclusao: { position: 'absolute', right: 6, bottom: 28, width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 4, borderColor: cores.fundo, backgroundColor: cores.sucessoClaro },
   comemoracao: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
+  conclusaoLicao: { marginTop: 2, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
+  numeros: { flexDirection: 'row', gap: 8, marginTop: 24 },
+  numero: { flex: 1, minWidth: 0, overflow: 'hidden', borderRadius: 16, borderWidth: 2 },
+  numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 6, paddingVertical: 6 },
+  numeroRotuloTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 11, lineHeight: 14, letterSpacing: 0.5 },
+  numeroValor: { alignItems: 'center', marginHorizontal: 2, marginBottom: 2, paddingHorizontal: 4, paddingVertical: 10, borderRadius: 13,
+    backgroundColor: cores.fundo },
+  numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
   // Meus planos
   cartao: { marginTop: 16, overflow: 'hidden', borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo,
     backgroundColor: cores.fundo },
@@ -1046,14 +1450,13 @@ const estudoEstilos = StyleSheet.create({
   cartaoCorpo: { gap: 4, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 },
   cartaoAcao: { alignItems: 'flex-start', marginTop: 14 },
   // Pedido
-  pedidoTopo: { flexDirection: 'row', alignItems: 'flex-end', gap: 12 },
-  pedidoTopoLargo: { gap: 24 },
-  pedidoTextos: { flex: 1, minWidth: 0 },
-  pedidoStu: { alignItems: 'flex-end', gap: 6 },
-  pedidoFala: { maxWidth: 140, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14, backgroundColor: cores.ceu },
-  pedidoFalaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 17, textAlign: 'center' },
-  pedidoFalaSeta: { position: 'absolute', right: 26, bottom: -5, width: 12, height: 12, borderRadius: 2, backgroundColor: cores.ceu,
-    transform: [{ rotate: '45deg' }] },
+  stuReage: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginTop: 20, marginBottom: -6 },
+  balaoFala: { flexShrink: 1, maxWidth: 320, marginBottom: 22, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16,
+    borderWidth: 2, borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  balaoFalaSeta: { position: 'absolute', left: -9, bottom: 12, width: 14, height: 14, borderLeftWidth: 2, borderBottomWidth: 2,
+    borderColor: cores.gelo, borderBottomLeftRadius: 3, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
+  balaoFalaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
+  luzCampo: { position: 'absolute', left: -3, right: -3, top: 25, bottom: -3, borderRadius: 17, borderWidth: 3, borderColor: '#F0B429' },
   como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 44, marginTop: 6, marginLeft: -8,
     paddingHorizontal: 8, borderRadius: 12 },
   comoPressionado: { backgroundColor: cores.nevoa },
@@ -1115,4 +1518,32 @@ const estudoEstilos = StyleSheet.create({
   esqueletoBarraPrimeira: { width: '32%', height: 20 },
   esqueletoBarraUltima: { width: '64%' },
   esqueletoBotao: { width: '100%', height: 50, borderRadius: 16, backgroundColor: cores.gelo },
+  // Escrevendo as lições (aceite)
+  preparoCena: { height: 164, marginBottom: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-end', borderRadius: 24,
+    borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: '#E4ECFF' },
+  preparoColina: { position: 'absolute', left: '-12%', right: '-12%', bottom: -64, height: 124, borderTopWidth: 7,
+    borderTopLeftRadius: 400, borderTopRightRadius: 400 },
+  preparoStu: { width: 98, height: 108, marginBottom: 12 },
+  preparoLapis: { position: 'absolute', bottom: 56, left: '50%', marginLeft: 30, width: 13, height: 63, transformOrigin: '50% 100%' },
+  preparoLapisBorracha: { height: 9, borderTopLeftRadius: 4, borderTopRightRadius: 4, backgroundColor: '#FF8FA3' },
+  preparoLapisPonteira: { height: 5, backgroundColor: cores.bordaCampo },
+  preparoLapisCorpo: { height: 38, backgroundColor: cores.ouro },
+  preparoLapisPonta: { width: 0, height: 0, borderTopWidth: 11, borderTopColor: '#E9B880', borderLeftWidth: 6.5, borderRightWidth: 6.5,
+    borderLeftColor: 'transparent', borderRightColor: 'transparent' },
+  preparoLapisGrafite: { position: 'absolute', bottom: 0, left: 4.5, width: 0, height: 0, borderTopWidth: 4, borderTopColor: cores.texto,
+    borderLeftWidth: 2, borderRightWidth: 2, borderLeftColor: 'transparent', borderRightColor: 'transparent' },
+  preparoFolha: { position: 'absolute', bottom: 74, left: '50%', marginLeft: -13, width: 26, height: 32, gap: 3, paddingTop: 8, paddingLeft: 5,
+    borderRadius: 5, borderBottomWidth: 2, borderColor: cores.bordaCampo, backgroundColor: cores.fundo },
+  preparoFolhaLinha: { height: 3, borderRadius: 2, backgroundColor: cores.gelo },
+  preparoLista: { gap: 10, marginTop: 22 },
+  preparoLinha: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden', paddingVertical: 9, paddingLeft: 10,
+    paddingRight: 16, borderRadius: 16, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  preparoLinhaPronta: { borderColor: '#BFE5D2' },
+  preparoBrilho: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(56, 88, 214, 0.08)' },
+  preparoIcone: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
+  preparoIconePronto: { borderBottomWidth: 3, borderColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
+  preparoTitulo: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 21 },
+  preparoDica: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16,
+    backgroundColor: cores.nevoa },
+  preparoDicaTexto: { flex: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
 });

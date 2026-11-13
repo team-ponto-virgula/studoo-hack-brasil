@@ -23,7 +23,7 @@ import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
-export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, aoRolar, estiloConteudo }: {
+export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, aoRolar, estiloConteudo, estiloRodape }: {
   children: ReactNode;
   acoes?: ReactNode;
   /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
@@ -37,6 +37,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, 
   /** Quanto a pessoa já rolou, para a tela acompanhar o conteúdo que chega sem tirar a pessoa do lugar. */
   aoRolar?: (y: number) => void;
   estiloConteudo?: StyleProp<ViewStyle>;
+  /** Fundo do rodapé, como o verde ou o âmbar do retorno da aula. */
+  estiloRodape?: StyleProp<ViewStyle>;
 }) {
   return (
     <SafeAreaView style={estilos.tela}>
@@ -55,11 +57,34 @@ export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, 
         <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" contentContainerStyle={[estilos.conteudo, estiloConteudo]}
           onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
           onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}>
-          {children}
+          <Entrada>{children}</Entrada>
         </ScrollView>
-        {rodape && <View style={estilos.rodape}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}
+        {rodape && <View style={[estilos.rodape, estiloRodape]}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+/** Cada tela entra com uma subida curta, como na web; com movimento reduzido, já aparece pronta. */
+function Entrada({ children }: { children: ReactNode }) {
+  const reduzir = useMovimentoReduzido();
+  const [valor] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (reduzir === null) return;
+    if (reduzir) {
+      valor.setValue(1);
+      return;
+    }
+    const animacao = Animated.timing(valor, { toValue: 1, duration: 340, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [reduzir, valor]);
+
+  return (
+    <Animated.View style={{ opacity: valor, transform: [{ translateY: valor.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }] }}>
+      {children}
+    </Animated.View>
   );
 }
 
@@ -144,7 +169,8 @@ export function Titulo({ children, testID, foco = false, estilo }: {
  * Botão com relevo, como na web: a face e um lábio mais escuro embaixo; no toque, a face desce até o lábio
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
-export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, variante = 'primario', compacto = false }: {
+export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
+  compacto = false }: {
   rotulo: string;
   acao: () => void;
   testID?: string;
@@ -154,18 +180,21 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
   icone?: NomeIcone;
   desativado?: boolean;
   ocupado?: boolean;
-  /** `sucesso` é o primário verde, como o Continuar depois de uma resposta certa. */
-  variante?: 'primario' | 'sucesso' | 'secundario' | 'texto';
+  /** Mostra pontinhos pulando no lugar do rótulo, que segue como nome do botão para o leitor de tela. */
+  carregando?: boolean;
+  /** `sucesso` e `alerta` são o verde e o âmbar do retorno da aula, com contraste para o texto branco. */
+  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto';
   compacto?: boolean;
 }) {
   const [focado, setFocado] = useState(false);
-  let corTexto: string = variante === 'primario' || variante === 'sucesso' ? cores.fundo : cores.acao;
+  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' ? cores.fundo : cores.acao;
   if (desativado) corTexto = cores.textoSecundario;
 
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
+      accessibilityLabel={rotulo}
       accessibilityHint={dica}
       accessibilityState={{ disabled: desativado, busy: ocupado }}
       disabled={desativado}
@@ -176,6 +205,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
         estilos.botao,
         variante === 'secundario' && estilos.botaoSecundario,
         variante === 'sucesso' && estilos.botaoSucesso,
+        variante === 'alerta' && estilos.botaoAlerta,
         variante === 'texto' && estilos.botaoTextoLivre,
         compacto && estilos.botaoCompacto,
         pressed && variante !== 'texto' && estilos.botaoAfundado,
@@ -184,9 +214,42 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
         desativado && variante !== 'texto' && estilos.botaoDesativado,
       ]}
     >
-      <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto]}>{rotulo}</Text>
-      {icone && <Icone nome={icone} tamanho={18} cor={corTexto} />}
+      {carregando ? <Pontinhos cor={corTexto} /> : (
+        <>
+          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto]}>{rotulo}</Text>
+          {icone && <Icone nome={icone} tamanho={18} cor={corTexto} />}
+        </>
+      )}
     </Pressable>
+  );
+}
+
+/** Três pontinhos que pulam em sequência, enquanto uma ação acontece; parados com movimento reduzido. */
+export function Pontinhos({ cor }: { cor: string }) {
+  const reduzir = useMovimentoReduzido();
+  const [valor] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (reduzir !== false) return;
+    const ciclo = Animated.loop(Animated.timing(valor, { toValue: 1, duration: 900, easing: Easing.linear, useNativeDriver: true }));
+    ciclo.start();
+    return () => {
+      ciclo.stop();
+      valor.setValue(0);
+    };
+  }, [reduzir, valor]);
+
+  return (
+    <View style={estilos.pontinhos} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      {[0, 1, 2].map((indice) => {
+        const comeco = indice * 0.16;
+        return (
+          <Animated.View key={indice} style={[estilos.pontinho, { backgroundColor: cor, transform: [{
+            translateY: valor.interpolate({ inputRange: [0, comeco, comeco + 0.2, comeco + 0.4, 1], outputRange: [0, 0, -6, 0, 0], extrapolate: 'clamp' }),
+          }] }]} />
+        );
+      })}
+    </View>
   );
 }
 
@@ -273,12 +336,35 @@ export function EstadoMensagem({ mensagem, titulo, tipo = 'erro', testID, foco =
   );
 }
 
+/** Esqueleto que pulsa devagar enquanto o conteúdo carrega, como o brilho da web; parado com movimento reduzido. */
+export function usePulso() {
+  const reduzir = useMovimentoReduzido();
+  const [valor] = useState(() => new Animated.Value(1));
+
+  useEffect(() => {
+    if (reduzir !== false) return;
+    const movimento = { duration: 750, easing: Easing.inOut(Easing.ease), isInteraction: false, useNativeDriver: true };
+    const ciclo = Animated.loop(Animated.sequence([
+      Animated.timing(valor, { ...movimento, toValue: 0.55 }),
+      Animated.timing(valor, { ...movimento, toValue: 1 }),
+    ]));
+    ciclo.start();
+    return () => {
+      ciclo.stop();
+      valor.setValue(1);
+    };
+  }, [reduzir, valor]);
+
+  return valor;
+}
+
 export function Skeleton({ texto = mensagens.carregando }: { texto?: string }) {
+  const pulso = usePulso();
   return (
-    <View accessibilityLiveRegion="polite" accessibilityLabel={texto} accessible style={estilos.skeleton}>
+    <Animated.View accessibilityLiveRegion="polite" accessibilityLabel={texto} accessible style={[estilos.skeleton, { opacity: pulso }]}>
       <View style={estilos.skeletonCurto} />
       <View style={estilos.skeletonLinha} />
-    </View>
+    </Animated.View>
   );
 }
 
@@ -330,7 +416,10 @@ export const estilos = StyleSheet.create({
     borderWidth: 2, borderBottomWidth: 5, borderRadius: 16, borderColor: cores.acao, borderBottomColor: cores.acaoEscura, backgroundColor: cores.acao,
   },
   botaoSecundario: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.fundo },
-  botaoSucesso: { borderColor: cores.sucessoClaro, borderBottomColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
+  botaoSucesso: { borderColor: cores.sucesso, borderBottomColor: '#145A42', backgroundColor: cores.sucesso },
+  botaoAlerta: { borderColor: cores.alerta, borderBottomColor: '#6E4100', backgroundColor: cores.alerta },
+  pontinhos: { height: 24, flexDirection: 'row', alignItems: 'center', gap: 5 },
+  pontinho: { width: 8, height: 8, borderRadius: 4 },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
   botaoCompacto: { alignSelf: 'flex-start', minHeight: 44, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
   botaoAfundado: { borderBottomWidth: 2, marginTop: 3 },

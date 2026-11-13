@@ -4,6 +4,7 @@ import {
   Animated,
   Easing,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -13,12 +14,14 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { usePulinho } from './animacoes';
 import { tracoGrosso } from './caminho';
 import { Icone } from './icone';
 import { Botao, estilos, useBalanco, useMovimentoReduzido } from './interface';
 import { mensagens } from './mensagens';
 import type { NomeDesenho } from './mundo-desenhos';
 import { Desenho, Paisagem, coresDaRegiao } from './mundo';
+import { iconesDosTemas, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
@@ -36,15 +39,20 @@ const temasDaArte: readonly { nome: string; icone: NomeDesenho; posicao: ViewSty
   { nome: mensagens.apresentacao.temas[5], icone: 'temaTecnologia', posicao: { top: '6%', left: '44%' } },
 ];
 
+/** Áreas para escolher no último passo: as do pedido, menos Populares. */
+const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 'populares');
+
 /**
- * Passos da apresentação, em páginas. Na primeira vez termina em "Criar minha primeira trilha"; reaberta pelo pedido,
- * termina em "Entendi". Pular encerra a qualquer momento. O título de cada passo recebe o foco e diz a posição; as páginas
- * fora da vista ficam fora do leitor de tela. As ilustrações são decorativas.
+ * Passos da apresentação, em páginas, como os cinco da web; o último é a escolha da área que interessa, que já abre o
+ * pedido com as ideias dela. Na primeira vez termina em "Criar minha primeira trilha"; reaberta pelo pedido, termina em
+ * "Entendi". Pular encerra a qualquer momento. O título de cada passo recebe o foco e diz a posição; as páginas fora da
+ * vista ficam fora do leitor de tela. As ilustrações são decorativas.
  */
-export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; concluir: () => void }) {
+export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; concluir: (area?: IdTema) => void }) {
   const { width } = useWindowDimensions();
   const reduzir = useMovimentoReduzido();
   const [passo, setPasso] = useState(0);
+  const [area, setArea] = useState<IdTema | undefined>();
   const paginas = useRef<ComponentRef<typeof ScrollView>>(null);
   const titulos = useRef<(ComponentRef<typeof Text> | null)[]>([]);
   const primeira = useRef(true);
@@ -83,7 +91,7 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
             </View>
             <Text style={apresentacaoEstilos.posicao}>{mensagens.apresentacao.posicao(passo + 1, total)}</Text>
           </View>
-          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto acao={concluir} />}
+          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto acao={() => concluir()} />}
         </View>
       </View>
       <ScrollView ref={paginas} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={estilos.tela}
@@ -94,12 +102,21 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
         {passos.map((item, indice) => (
           <ScrollView key={item.titulo} style={{ width }} contentContainerStyle={[estilos.conteudo, apresentacaoEstilos.pagina]}
             importantForAccessibility={indice === passo ? 'auto' : 'no-hide-descendants'} accessibilityElementsHidden={indice !== passo}>
-            <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-              {indice === 0 && <ArteStu largura={largura} />}
-              {indice === 1 && <ArteTemas largura={largura} />}
-              {indice === 2 && <ArteTrilha largura={largura} animar={indice === passo && reduzir === false} />}
-              {indice === 3 && <ArteProgresso largura={largura} />}
-            </View>
+            {indice < 4 ? (
+              <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+                {indice === 0 && <ArteStu largura={largura} />}
+                {indice === 1 && <ArteTemas largura={largura} />}
+                {indice === 2 && <ArteTrilha largura={largura} animar={indice === passo && reduzir === false} />}
+                {indice === 3 && <ArteProgresso largura={largura} />}
+              </View>
+            ) : (
+              <View accessibilityLabel={mensagens.apresentacao.areas} style={apresentacaoEstilos.areas}>
+                {areasDaApresentacao.map((item) => (
+                  <AreaDaApresentacao key={item.id} nome={item.nome} id={item.id} escolhida={area === item.id}
+                    escolher={() => setArea((atual) => (atual === item.id ? undefined : item.id))} />
+                ))}
+              </View>
+            )}
             <Text ref={(titulo) => { titulos.current[indice] = titulo; }} testID={`titulo-apresentacao-${indice}`} accessible
               accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`}
               style={[estilos.titulo, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
@@ -116,11 +133,29 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
           )}
           <View style={[apresentacaoEstilos.metade, ultimo && apresentacaoEstilos.principalLargo]}>
             <Botao rotulo={rotuloFinal} testID="avancar-apresentacao" icone={ultimo ? undefined : 'seta'}
-              acao={() => (ultimo ? concluir() : irPara(passo + 1))} />
+              acao={() => (ultimo ? concluir(area) : irPara(passo + 1))} />
           </View>
         </View>
       </View>
     </SafeAreaView>
+  );
+}
+
+/** Área no último passo: cartão com o ícone; a escolhida fica marcada, o ícone pula e o leitor de tela ouve que está selecionada. */
+function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nome: string; escolhida: boolean; escolher: () => void }) {
+  const [focada, setFocada] = useState(false);
+  const pulo = usePulinho(escolhida, 1.3);
+  return (
+    <Pressable testID={`area-apresentacao-${id}`} accessibilityRole="button" accessibilityState={{ selected: escolhida }}
+      onPress={escolher} onFocus={() => setFocada(true)} onBlur={() => setFocada(false)}
+      style={({ pressed }) => [apresentacaoEstilos.area, escolhida && apresentacaoEstilos.areaEscolhida, pressed && apresentacaoEstilos.areaAfundada,
+        focada && estilos.foco]}>
+      <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+        style={{ transform: [{ scale: pulo }, { rotate: pulo.interpolate({ inputRange: [1, 1.3], outputRange: ['0deg', '-12deg'] }) }] }}>
+        <Desenho nome={iconesDosTemas[id]} largura={36} />
+      </Animated.View>
+      <Text style={[apresentacaoEstilos.areaTexto, escolhida && { color: cores.acaoEscura }]}>{nome}</Text>
+    </Pressable>
   );
 }
 
@@ -310,6 +345,12 @@ const apresentacaoEstilos = StyleSheet.create({
   etiqueta: { position: 'absolute', width: 96, alignItems: 'center', paddingVertical: 4, borderRadius: 10, borderWidth: 2,
     borderColor: cores.gelo, backgroundColor: cores.fundo },
   etiquetaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
+  areas: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 14, borderRadius: 28, backgroundColor: cores.ceu },
+  area: { width: '47.5%', flexGrow: 1, minHeight: 92, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12,
+    borderRadius: 18, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  areaEscolhida: { borderColor: cores.acao, borderBottomColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
+  areaAfundada: { borderBottomWidth: 2, marginTop: 3 },
+  areaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
   selo: { position: 'absolute', right: '5%', bottom: '7%', flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10,
     paddingRight: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: cores.fundo },
   seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },

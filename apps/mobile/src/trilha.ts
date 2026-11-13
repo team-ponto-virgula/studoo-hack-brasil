@@ -9,7 +9,8 @@ import { mensagens } from './mensagens';
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco entre um trecho e outro. */
 export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number };
-export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta';
+export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
+  | 'lampada' | 'relogio' | 'alvo';
 
 /**
  * Próxima lição do caminho: a do primeiro trecho que ainda tem lição pendente.
