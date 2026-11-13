@@ -87,6 +87,7 @@ button, input, textarea { font: inherit; }
 
 .pular:focus { transform: none; }
 .logo { width: 140px; }
+.logo-quadro { display: inline-block; vertical-align: middle; }
 
 .botao {
   display: inline-flex;
@@ -184,6 +185,8 @@ button, input, textarea { font: inherit; }
 
 .entrada-marca { position: absolute; top: 36px; left: max(28px, 6vw); }
 .entrada-forma { width: 100%; max-width: 420px; }
+.entrada-titulo { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 0.26em; }
+.entrada-titulo .logo { display: block; width: clamp(116px, 4.04em, 164px); height: auto; transform: translateY(0.22em); }
 .entrada-forma .formulario { margin-top: 32px; }
 .entrada-forma .botao--primario { width: 100%; }
 

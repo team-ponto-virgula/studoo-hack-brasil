@@ -307,7 +307,7 @@ export function Estudo() {
     <div className="estudo">
       <a className="pular" href="#conteudo-principal">{mensagens.pular}</a>
       <aside className="barra-lateral">
-        <div className="barra-marca"><Logo animado={tela.tipo === 'concluida'} /></div>
+        <div className="barra-marca"><Logo /></div>
         <nav className="navegacao" aria-label={mensagens.navegacao}>
           <Botao variante="texto" className="navegacao-item" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado} aria-current={tela.tipo === 'planos' ? 'page' : undefined}>
             {mensagens.planos.titulo}
@@ -330,7 +330,7 @@ export function Estudo() {
       <div className="estudo-pagina">
         <header className="estudo-cabecalho">
           <span className="estudo-identificacao">{mensagens.estudos}</span>
-          <div className="estudo-marca"><Logo animado={tela.tipo === 'concluida'} /></div>
+          <div className="estudo-marca"><Logo /></div>
           <div className="estudo-conta">
             <Botao variante="texto" className="planos-movel" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
             <Botao variante="texto" onClick={() => void sair()} disabled={ocupado}>{mensagens.sair}</Botao>

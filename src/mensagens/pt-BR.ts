@@ -9,6 +9,7 @@ export const mensagens = {
   sair: 'Sair',
   login: {
     titulo: 'Entre no Studoo',
+    tituloAntesDaMarca: 'Entre no',
     instrucoes: 'Use sua conta para abrir seus planos de estudo.',
     email: 'E-mail',
     senha: 'Senha',

@@ -56,7 +56,9 @@ export function Entrada() {
       <main className="entrada-conteudo" id="conteudo-principal">
         <div className="entrada-marca"><Logo /></div>
         <div className="entrada-forma">
-          <h1>{mensagens.login.titulo}</h1>
+          <h1 className="entrada-titulo" aria-label={mensagens.login.titulo}>
+            <span>{mensagens.login.tituloAntesDaMarca}</span><Logo decorativo />
+          </h1>
           <p className="introducao">{mensagens.login.instrucoes}</p>
           {verificando ? <Skeleton /> : (
             <form className="formulario" method="post" onSubmit={entrar} aria-busy={enviando}>

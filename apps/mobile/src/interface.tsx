@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
-  Image,
+  Animated,
+  Easing,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -10,6 +11,7 @@ import {
   Text,
   TextInput,
   View,
+  type ImageStyle,
   type StyleProp,
   type TextInputProps,
   type TextStyle,
@@ -34,8 +36,7 @@ export function Tela({ children, acoes, rodape, pagina, rolagem, aoMedir, aoRola
     <SafeAreaView style={estilos.tela}>
       <View style={estilos.cabecalho}>
         <View style={estilos.marcaConteudo}>
-          <Image source={require('../assets/marca/logo-com-sorriso.png')} resizeMode="contain"
-            accessibilityLabel={mensagens.marca} accessible style={estilos.logo} />
+          <Logo />
           {acoes && <View style={estilos.acoes}>{acoes}</View>}
         </View>
       </View>
@@ -72,6 +73,39 @@ export function useMovimentoReduzido() {
   }, []);
 
   return reduzir;
+}
+
+export function Logo({ decorativo = false, estilo }: { decorativo?: boolean; estilo?: StyleProp<ImageStyle> }) {
+  const reduzir = useMovimentoReduzido();
+  const [subida] = useState(() => new Animated.Value(0));
+
+  useEffect(() => {
+    if (reduzir !== false) return;
+
+    const movimento = {
+      duration: 1500,
+      easing: Easing.inOut(Easing.ease),
+      isInteraction: false,
+      useNativeDriver: true,
+    };
+    const ciclo = Animated.loop(Animated.sequence([
+      Animated.timing(subida, { ...movimento, toValue: -2 }),
+      Animated.timing(subida, { ...movimento, toValue: 0 }),
+    ]));
+
+    ciclo.start();
+    return () => {
+      ciclo.stop();
+      subida.setValue(0);
+    };
+  }, [reduzir, subida]);
+
+  return (
+    <Animated.Image source={require('../assets/marca/logo-com-sorriso.png')} resizeMode="contain"
+      accessible={!decorativo} accessibilityLabel={decorativo ? undefined : mensagens.marca}
+      importantForAccessibility={decorativo ? 'no' : 'auto'} accessibilityElementsHidden={decorativo}
+      style={[estilos.logo, estilo, { transform: [{ translateY: subida }] }]} />
+  );
 }
 
 export function Titulo({ children, testID, foco = false, estilo }: {
