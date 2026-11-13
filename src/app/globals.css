@@ -232,7 +232,17 @@ button, input, textarea { font: inherit; }
   grid-template-columns: clamp(216px, 21vw, 276px) minmax(0, 1fr);
 }
 
-.barra-lateral { padding: 32px 24px; background: var(--nevoa); }
+/* Na tela larga, a barra lateral fica parada enquanto a página rola: marca e navegação continuam à vista em trilhas longas. */
+.barra-lateral {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  height: 100svh;
+  overflow-y: auto;
+  padding: 32px 24px;
+  background: var(--nevoa);
+}
 .barra-marca { min-height: 48px; margin-bottom: 36px; }
 .navegacao { display: grid; align-content: start; gap: 8px; }
 .navegacao-planos { display: grid; gap: 4px; margin: 0; padding: 0 0 8px 12px; list-style: none; }
