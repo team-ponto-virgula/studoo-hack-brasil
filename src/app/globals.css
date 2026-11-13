@@ -131,6 +131,8 @@ button, input, textarea { font: inherit; }
 
 .campo textarea { min-height: 136px; resize: vertical; }
 .campo input:disabled, .campo textarea:disabled { background: var(--nevoa); }
+.campo [aria-invalid='true'] { border-color: var(--erro); }
+.campo-erro { display: flex; align-items: flex-start; gap: 8px; color: var(--erro); font-size: 0.875rem; font-weight: 700; }
 .formulario { display: grid; gap: 20px; }
 .introducao { margin-top: 12px; color: var(--texto2); font-size: 1.0625rem; }
 
@@ -270,11 +272,7 @@ button, input, textarea { font: inherit; }
 }
 
 .painel { min-width: 0; }
-.painel--objetivo, .painel--concluida { max-width: 720px; }
-.painel--objetivo .formulario { margin-top: 32px; padding: 24px; border: 1px solid var(--gelo); border-radius: var(--raio-bloco); }
-.objetivo-exemplo { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; }
-.objetivo-exemplo p { color: var(--texto2); font-size: 0.875rem; }
-.objetivo-exemplo .botao { min-height: 44px; }
+.painel--concluida { max-width: 720px; }
 .contexto-tela { margin-bottom: 8px; color: var(--texto2); font-weight: 800; }
 .acoes-tela { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 28px; }
 
@@ -318,26 +316,6 @@ progress::-webkit-progress-bar { background: var(--nevoa); }
 progress::-webkit-progress-value { border-radius: 999px; background: var(--acao); }
 progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 .plano-progresso { max-width: 340px; margin-block: 20px 32px; }
-.proposta-dados { display: grid; gap: 16px; max-width: 720px; margin-block: 24px; }
-.proposta-dados > div { display: grid; grid-template-columns: 100px minmax(0, 1fr); gap: 8px; }
-.proposta-dados dt { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
-.proposta-dados dd { margin: 0; overflow-wrap: anywhere; }
-.proposta-dados dd span { display: block; color: var(--texto2); font-size: 0.875rem; }
-.fluxos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
-
-.fluxo {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 24px;
-  border: 1px solid var(--gelo);
-  border-radius: var(--raio-bloco);
-}
-
-.fluxo-licoes { display: grid; gap: 12px; padding-left: 20px; margin-block: 12px; color: var(--texto2); }
-.fluxo-licoes li { overflow-wrap: anywhere; }
-.fluxo-licoes li::marker { color: var(--acao); font-weight: 800; }
 .licao-origem { color: var(--texto2); font-size: 0.875rem; }
 
 .licao-codigo {
@@ -408,12 +386,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
   .estudo-cabecalho .logo { width: 102px; }
   .estudo-conta .botao { min-height: 44px; padding-inline: 8px; font-size: 0.875rem; }
   .estudo-principal { padding: 28px var(--espaco-pagina) calc(116px + env(safe-area-inset-bottom)); }
-  .painel--objetivo .formulario { margin-top: 24px; padding: 0; border: 0; }
-  .objetivo-exemplo .botao { padding-inline: 0; }
-  .objetivo-exemplo .botao:hover:not(:disabled) { background: transparent; text-decoration: underline; }
-  .fluxos { grid-template-columns: minmax(0, 1fr); }
-  .fluxo, .planos-ativos li { padding: 20px; }
-  .proposta-dados > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .planos-ativos li { padding: 20px; }
 
   .acao-principal {
     display: flex;

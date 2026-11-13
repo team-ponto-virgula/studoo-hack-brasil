@@ -351,7 +351,24 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   .caminho-balao__fechar:hover { color: var(--texto); background: var(--nevoa); }
 }
 
+/*
+ * Trilha em montagem (geração ao vivo): cada nó entra com um movimento curto, na ordem em que chega.
+ * O Stu "pensa" só enquanto a IA trabalha (DESIGN §6); o texto ao lado diz o mesmo para quem não vê o movimento.
+ */
+.caminho[data-montando] .caminho-no[data-estado='previa'] { animation: caminho-surgir 220ms ease-out backwards; }
+.caminho[data-montando] .caminho-stu .stu { animation: caminho-pensar 1400ms ease-in-out infinite alternate; }
+
+/* Onde a próxima lição vai aparecer: lente tracejada e linhas em esqueleto. A folga mantém esse nó, e depois a chegada, acima do rodapé fixo. */
+.caminho-no--vindo, .caminho-chegada { scroll-margin-block-end: calc(112px + env(safe-area-inset-bottom)); }
+.caminho-no--vindo .caminho-no__lente { border-style: dashed; background: var(--fundo); }
+.caminho-no--vindo .caminho-no__texto { gap: 8px; }
+.caminho-no--vindo .caminho-no__texto > span { display: block; width: 60%; height: 16px; border-radius: 8px; background: var(--gelo); }
+.caminho-no--vindo .caminho-no__texto > span + span { width: 30%; height: 12px; }
+.caminho-no--vindo[data-lado='direita'] .caminho-no__texto { align-items: flex-end; }
+
 @keyframes caminho-halo { from { opacity: 0; transform: scale(0.8); } }
+@keyframes caminho-surgir { from { opacity: 0; transform: translateY(8px) scale(0.96); } }
+@keyframes caminho-pensar { to { transform: translateY(-4px); } }
 @keyframes caminho-etiqueta { from { opacity: 0; transform: translateY(6px); } }
 @keyframes caminho-abrir { from { opacity: 1; } }
 @keyframes caminho-liberar { 0% { transform: scale(0.84); } 60% { transform: scale(1.08); } }

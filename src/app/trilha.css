@@ -59,6 +59,41 @@
 .conclusao-liberada { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--acao); font-weight: 800; }
 .conclusao-liberada .icone { width: 20px; height: 20px; }
 
+/*
+ * Geração ao vivo: o título entra quando chega (antes disso, um esqueleto com a forma dele) e a barra de ações
+ * fica presa ao fim da tela, com o andamento da IA e, no fim, Ajustar pedido e Começar.
+ */
+.painel--geracao .trilha-cabecalho { grid-template-columns: minmax(0, 1fr); }
+.geracao-titulo { display: block; animation: geracao-titulo 200ms ease-out backwards; }
+.geracao-ia { margin-top: 16px; color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+.geracao-origem { margin-top: 4px; color: var(--texto2); font-size: 0.875rem; overflow-wrap: anywhere; }
+.geracao-esqueleto { display: block; border-radius: 8px; background: var(--gelo); }
+.geracao-esqueleto--titulo { width: min(72%, 24rem); height: 28px; margin-block: 2px; }
+.geracao-esqueleto--origem { width: min(48%, 16rem); height: 12px; margin-top: 10px; }
+
+.geracao-acoes {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 16px 0 calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--gelo);
+  background: var(--fundo);
+}
+
+.geracao-acoes > .botao { flex: none; }
+.geracao-situacao { display: grid; flex: 1 1 auto; min-width: 0; }
+.geracao-situacao__rotulo { font-weight: 800; line-height: 1.3; }
+.geracao-situacao__contagem { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+
+@keyframes geracao-titulo { from { opacity: 0; transform: translateY(4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .geracao-titulo { animation: none; }
+}
+
 /* Celular: o próximo passo vira o rodapé fixo, ao alcance do polegar. */
 @media (max-width: 767px) {
   .painel--trilha { gap: 28px; }
@@ -82,6 +117,17 @@
   .trilha-proximo__titulo { grid-area: titulo; overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
   .trilha-proximo__detalhe { display: none; }
   .trilha-proximo > .botao { grid-area: botao; margin: 0; }
+
+  .geracao-acoes {
+    position: fixed;
+    inset: auto 0 0;
+    gap: 12px;
+    padding: 12px max(20px, env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  }
+
+  /* Trilha pronta: os dois botões dividem o rodapé; o andamento já foi dito no caminho e ao leitor de tela. */
+  .geracao-acoes[data-pronta] .geracao-situacao { display: none; }
+  .geracao-acoes[data-pronta] > .botao { flex: 1 1 0; min-width: 0; padding-inline: 12px; }
 }
 
 /* Tablet: coluna única centrada, com o próximo passo dentro da faixa do topo. */
