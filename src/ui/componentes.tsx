@@ -16,7 +16,7 @@ export function Stu() {
 }
 
 type BotaoProps = ButtonHTMLAttributes<HTMLButtonElement> & {
-  variante?: 'primario' | 'secundario' | 'texto';
+  variante?: 'primario' | 'secundario' | 'texto' | 'sucesso' | 'alerta';
 };
 
 export function Botao({ variante = 'primario', className = '', type = 'button', ...props }: BotaoProps) {

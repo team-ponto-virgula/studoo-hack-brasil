@@ -14,6 +14,9 @@
 }
 
 .mundo-fronteira__enfeite--fim { right: calc(var(--lateral, 0px) + var(--coluna, 100%) * var(--x)); left: auto; }
+.mundo-balanca { transform-origin: 50% 100%; animation: mundo-balancar 4200ms ease-in-out infinite alternate; }
+.mundo-balanca:nth-of-type(2n) { animation-delay: -1700ms; }
+@keyframes mundo-balancar { from { rotate: -2deg; } to { rotate: 2deg; } }
 
 /*
  * Paisagem vista de lado: céu, sol, nuvens que passam devagar, um balão, montanhas, colinas e árvores.

@@ -1,16 +1,16 @@
 'use client';
 
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react';
 import { LIMITES_GERACAO } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
 import './pedido.css';
 
 type Tema = (typeof mensagens.pedido.temas)[number];
-type IdTema = Tema['id'];
+export type IdTema = Tema['id'];
 
 /** Ícone de cada área de interesse, desenhado com as formas do mundo (o app usa os mesmos desenhos). */
-const iconesDosTemas: Record<IdTema, NomeDesenho> = {
+export const iconesDosTemas: Record<IdTema, NomeDesenho> = {
   populares: 'temaPopulares',
   idiomas: 'temaIdiomas',
   musica: 'temaMusica',
@@ -32,12 +32,57 @@ function iconeDoExemplo(tema: Tema, exemplo: string): NomeDesenho {
 const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema) => tema.exemplos as readonly string[])));
 
 /**
+ * Exemplo que se escreve sozinho no campo vazio, letra por letra, e se apaga para dar lugar ao próximo. Muda só o
+ * placeholder do campo, sem redesenhar a tela. Para quando a pessoa escreve; com movimento reduzido, fica o primeiro
+ * exemplo, parado.
+ */
+function useExemploDigitado(campo: RefObject<HTMLTextAreaElement | null>, ativo: boolean) {
+  useEffect(() => {
+    const elemento = campo.current;
+    if (!elemento) return;
+    const exemplos = mensagens.pedido.exemplosDigitados;
+    const mostrar = (texto: string) => elemento.setAttribute('placeholder', `${mensagens.pedido.exemploPrefixo}${texto}`);
+    if (!ativo || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      mostrar(exemplos[0]);
+      return;
+    }
+    let indice = 0;
+    let letras = 0;
+    let apagando = false;
+    let espera = 0;
+    function passo() {
+      const atual = exemplos[indice];
+      if (!apagando && letras < atual.length) {
+        letras += 1;
+        espera = window.setTimeout(passo, 55);
+      } else if (!apagando) {
+        apagando = true;
+        espera = window.setTimeout(passo, 1700);
+      } else if (letras > 0) {
+        letras -= 1;
+        espera = window.setTimeout(passo, 22);
+      } else {
+        apagando = false;
+        indice = (indice + 1) % exemplos.length;
+        espera = window.setTimeout(passo, 350);
+      }
+      mostrar(exemplos[indice].slice(0, letras));
+    }
+    mostrar('');
+    espera = window.setTimeout(passo, 600);
+    return () => window.clearTimeout(espera);
+  }, [campo, ativo]);
+}
+
+/**
  * Pedido da trilha: a pessoa escreve o que quer aprender, ou escolhe uma ideia, e gera a trilha ao vivo.
  * As ideias vêm por área de interesse (idiomas, música, matemática…), para mostrar que vale qualquer assunto;
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
-export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, aoMudar, anunciar, gerar, verPlanos, comoFunciona }: {
+export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona }: {
   objetivo: string;
+  /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
+  areaInicial?: IdTema;
   ocupado: boolean;
   aviso: string | null;
   falha: string | null;
@@ -49,9 +94,17 @@ export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, aoMudar, an
   comoFunciona: () => void;
 }) {
   const [curto, setCurto] = useState(false);
-  const [idTema, setIdTema] = useState<IdTema>('populares');
+  const [idTema, setIdTema] = useState<IdTema>(areaInicial ?? 'populares');
+  const [escolhida, setEscolhida] = useState<string | null>(null);
+  const [brilho, setBrilho] = useState(0);
   const campo = useRef<HTMLTextAreaElement>(null);
   const texto = objetivo.trim();
+  useExemploDigitado(campo, objetivo.length === 0 && !ocupado);
+  // O Stu reage ao pedido: convida, incentiva enquanto a pessoa escreve e comemora a ideia escolhida.
+  let fala: string = mensagens.pedido.falas.vazio;
+  if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
+  else if (texto.length >= 20) fala = mensagens.pedido.falas.pronto;
+  else if (texto.length > 0) fala = mensagens.pedido.falas.curto;
   const tema = mensagens.pedido.temas.find((item) => item.id === idTema) ?? mensagens.pedido.temas[0];
   const mostrarCurto = curto && texto.length < LIMITES_GERACAO.objetivoMin;
   const mostrarContador = objetivo.length >= LIMITES_GERACAO.objetivoMax - 100;
@@ -74,14 +127,16 @@ export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, aoMudar, an
     tentar();
   }
 
-  function sugerir(exemplo: string) {
-    aoMudar(exemplo);
+  function sugerir(ideia: string) {
+    aoMudar(ideia);
     setCurto(false);
-    anunciar(mensagens.pedido.sugestaoAplicada(exemplo));
+    setEscolhida(ideia);
+    setBrilho((anterior) => anterior + 1);
+    anunciar(mensagens.pedido.sugestaoAplicada(ideia));
   }
 
   function surpreender() {
-    const opcoes = todosOsExemplos.filter((exemplo) => exemplo !== texto);
+    const opcoes = todosOsExemplos.filter((ideia) => ideia !== texto);
     sugerir(opcoes[Math.floor(Math.random() * opcoes.length)]);
   }
 
@@ -95,10 +150,6 @@ export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, aoMudar, an
             <span className="pedido-como__sinal" aria-hidden="true">?</span>{mensagens.pedido.comoFunciona}
           </button>
         </div>
-        <div className="pedido-stu" aria-hidden="true">
-          <p className="pedido-stu__fala">{mensagens.pedido.stuFala}</p>
-          <Stu />
-        </div>
       </div>
       {aviso && <p className="pedido-aviso">{aviso}</p>}
       {falha && (
@@ -108,11 +159,16 @@ export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, aoMudar, an
         </EstadoErro>
       )}
       <form className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
+        <div className="pedido-stu" aria-hidden="true">
+          <Stu />
+          <p className="pedido-stu__fala" key={fala}>{fala}</p>
+        </div>
         <div className="campo pedido-campo">
           <label htmlFor="objetivo">{mensagens.pedido.objetivo}</label>
           <textarea ref={campo} id="objetivo" name="objetivo" rows={4} maxLength={LIMITES_GERACAO.objetivoMax} required
             value={objetivo} disabled={ocupado} aria-invalid={mostrarCurto || undefined} aria-describedby={descricao}
-            placeholder={mensagens.pedido.exemploCampo} onChange={(evento) => aoMudar(evento.target.value)} />
+            data-brilho={brilho ? (brilho % 2 ? 'a' : 'b') : undefined}
+            onChange={(evento) => aoMudar(evento.target.value)} />
           {mostrarCurto && (
             <p className="campo-erro" id="objetivo-erro">
               <span className="sinal" aria-hidden="true">!</span>{mensagens.pedido.curto(LIMITES_GERACAO.objetivoMin)}
