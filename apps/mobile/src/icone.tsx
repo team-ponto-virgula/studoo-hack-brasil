@@ -45,6 +45,20 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
     { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
+  olho: [
+    { left: 2.25, top: 5.75, width: 19.5, height: 12.5, borderWidth: 2.5, borderRadius: 6.25 },
+    { left: 9, top: 9, width: 6, height: 6, borderRadius: 3, traco: true },
+  ],
+  olhoFechado: [
+    { left: 2.25, top: 5.75, width: 19.5, height: 12.5, borderWidth: 2.5, borderRadius: 6.25 },
+    { left: 9, top: 9, width: 6, height: 6, borderRadius: 3, traco: true },
+    { left: 1.5, top: 10.75, width: 21, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
+  ],
+  seta: [
+    { left: 4.25, top: 10.75, width: 15.5, height: 2.5, borderRadius: 1.25, traco: true },
+    { left: 11.5, top: 7.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
+    { left: 11.5, top: 13.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
+  ],
 };
 
 const medidas = [
