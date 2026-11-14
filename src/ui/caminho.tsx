@@ -20,7 +20,8 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   livro: <path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5zM12 6.5V19" />,
   revisao: <path d="M19.5 12a7.5 7.5 0 0 1-13 5.1M4.5 12a7.5 7.5 0 0 1 13-5.1M17.5 3.5v3.6h-3.6M6.5 20.5v-3.6h3.6" />,
   cadeado: <><rect x="5.5" y="10.5" width="13" height="9" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></>,
-  bandeira: <path d="M6 20V4.5M6 5h10.5l-2 3.5 2 3.5H6" />,
+  // Bandeira cheia (pano preenchido), legível mesmo pequena; a mesma do app.
+  bandeira: <><path d="M6 20V4.5" /><path d="M6 5h10.5l-2 3.5 2 3.5H6z" fill="currentColor" /></>,
   trofeu: <path d="M8 4.5h8V10a4 4 0 0 1-8 0V4.5zM8 6.5H5.5a2.5 2.5 0 0 0 2.5 3.5M16 6.5h2.5a2.5 2.5 0 0 1-2.5 3.5M12 14v3.5M8.5 20h7" />,
   fechar: <path d="M7 7l10 10M17 7L7 17" />,
   olho: <><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" /><circle cx="12" cy="12" r="3" /></>,
@@ -461,7 +462,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             <span className="caminho-chegada__colina" />
             <Desenho nome="bandeira" className="caminho-chegada__bandeira caminho-chegada__bandeira--1" />
             <Desenho nome="bandeira" className="caminho-chegada__bandeira caminho-chegada__bandeira--2" />
-            {tudoFeito && (
+            {/* Estrelas também antes da conquista: o troféu já parece um prêmio desejável. */}
+            {(
               <>
                 <Desenho nome="estrela" className="caminho-chegada__brilho caminho-chegada__brilho--1" />
                 <Desenho nome="estrela" className="caminho-chegada__brilho caminho-chegada__brilho--2" />
