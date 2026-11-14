@@ -1,6 +1,6 @@
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
 
-const origem = "Conteúdo simulado do Studoo (IA falsa)";
+const origem = "Modo demonstração: conteúdo de exemplo";
 
 const estrutura = [
   { fluxo: "Primeiros passos", licoes: ["Mapa do assunto", "Vocabulário essencial", "Primeiro exemplo"] },
