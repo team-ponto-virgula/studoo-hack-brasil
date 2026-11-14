@@ -356,11 +356,12 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 {atual && <span className="caminho-no__etiqueta">{mensagens.trilha.comecar}</span>}
                 {no.estado === 'bloqueada' && <span className="caminho-no__selo"><Icone nome="cadeado" /></span>}
               </span>
-              <span className="caminho-no__texto" aria-hidden="true">
+              {/* Como nos melhores apps, o nome fica só no nó atual (e na prévia da geração); os outros mostram o nome ao toque. */}
+              {(atual || no.estado === 'previa' || no.ponte) && <span className="caminho-no__texto" aria-hidden="true">
                 <span className="caminho-no__titulo">{no.titulo}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
                 {no.ponte && <span className="caminho-ponte"><span className="caminho-ponte__desenho">{[0, 5, 9, 5, 0].map((altura, i) => <span key={i} style={{ marginBottom: altura, animationDelay: `${i * 70}ms` }} />)}</span>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</span>}
-              </span>
+              </span>}
             </>
           );
 

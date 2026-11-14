@@ -291,7 +291,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (seguinte?.estado === 'atual') depois += medidas.etiqueta;
           if (fimDoTrecho) depois += medidas.marco;
           // Título discreto embaixo dos nós sem rótulo ao lado: um pouco mais de espaço até o próximo.
-          const discreto = true;
+          const discreto = no.estado === 'atual' || no.estado === 'previa' || !!no.ponte;
           if (discreto) depois += 14;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
           if (discreto && seguinte?.estado === 'atual') depois += 38;
@@ -670,7 +670,8 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
       </View>
     </View>
   );
-  const discreto = !comRotulo && (
+  // Como na web: o nome fica só no nó atual (e na prévia da geração); os outros mostram o nome ao toque.
+  const discreto = !comRotulo && (atual || no.estado === 'previa' || !!no.ponte) && (
     <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 192, centro - 92)) }]}>
       {/* O fundo fica na caixa, não no texto: assim o corte em duas linhas não deixa vazar a terceira. */}
       <View style={[caminhoEstilos.discretoCaixa, atual && caminhoEstilos.discretoCaixaAtual]}>
