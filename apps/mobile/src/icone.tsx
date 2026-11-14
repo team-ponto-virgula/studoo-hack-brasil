@@ -13,8 +13,11 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 4.44, top: 6.98, width: 15, height: 7.25, borderLeftWidth: 2.5, borderBottomWidth: 2.5, transform: [{ rotate: '-45deg' }] },
   ],
   livro: [
-    { left: 3.25, top: 3.75, width: 10, height: 15.5, borderWidth: 2.5, borderTopLeftRadius: 2, borderBottomLeftRadius: 2 },
-    { left: 10.75, top: 3.75, width: 10, height: 15.5, borderWidth: 2.5, borderTopRightRadius: 2, borderBottomRightRadius: 2 },
+    // Livro aberto: as duas páginas descem em direção à lombada, como na web.
+    { left: 3.25, top: 4.25, width: 10, height: 14.5, borderWidth: 2.5, borderTopLeftRadius: 2, borderBottomLeftRadius: 2,
+      transform: [{ skewY: '9deg' }] },
+    { left: 10.75, top: 4.25, width: 10, height: 14.5, borderWidth: 2.5, borderTopRightRadius: 2, borderBottomRightRadius: 2,
+      transform: [{ skewY: '-9deg' }] },
   ],
   revisao: [
     { left: 3.25, top: 3.25, width: 17.5, height: 17.5, borderWidth: 2.5, borderRadius: 8.75,
@@ -27,10 +30,10 @@ const desenhos: Record<NomeIcone, Peca[]> = {
       borderTopLeftRadius: 4.75, borderTopRightRadius: 4.75 },
     { left: 4.25, top: 9.25, width: 15.5, height: 11.5, borderWidth: 2.5, borderRadius: 3.75 },
   ],
+  // Bandeira cheia: mastro e pano preenchido, legível mesmo pequena (a web preenche o mesmo desenho).
   bandeira: [
     { left: 4.75, top: 3.25, width: 2.5, height: 18, borderRadius: 1.25, traco: true },
-    { left: 6, top: 3.75, width: 11.75, height: 9.5, borderWidth: 2.5, borderLeftWidth: 0,
-      borderTopRightRadius: 1, borderBottomRightRadius: 1 },
+    { left: 6, top: 3.75, width: 11.75, height: 9.5, borderTopRightRadius: 2, borderBottomRightRadius: 2, traco: true },
   ],
   trofeu: [
     { left: 6.75, top: 3.25, width: 10.5, height: 12, borderWidth: 2.5, borderBottomLeftRadius: 5.25, borderBottomRightRadius: 5.25 },

@@ -1124,9 +1124,12 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   function rolar(topo: number, base: number, sempre = false) {
     requestAnimationFrame(() => {
       const altura = visivel.current || height;
-      if (!sempre && base <= altura) return;
-      // Rola só o necessário: o nó fica logo acima do pé da área visível (o topo da trilha tende a continuar à vista).
-      rolagem.current?.scrollTo({ y: Math.max(0, base - altura + 72), animated: reduzir === false });
+      // O card da próxima lição flutua sobre o pé da área: o nó e o título embaixo dele precisam ficar acima do card.
+      const pe = base + 48;
+      const limite = altura - (proximo ? 168 : 24);
+      if (!sempre && pe <= limite) return;
+      // Rola só o necessário: o nó fica logo acima do card (o topo da trilha tende a continuar à vista).
+      rolagem.current?.scrollTo({ y: Math.max(0, pe - limite), animated: reduzir === false });
     });
   }
 
