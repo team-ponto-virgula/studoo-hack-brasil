@@ -333,10 +333,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 {recem && <Confete quantidade={12} />}
                 {atual && <span className="caminho-no__etiqueta">{mensagens.trilha.comecar}</span>}
               </span>
-              <span className="caminho-no__texto" aria-hidden="true" hidden={!comRotulo}>
+              <span className="caminho-no__texto" aria-hidden="true">
                 {atual && <span className="caminho-no__posicao">{posicao}</span>}
                 <span className="caminho-no__titulo">{no.titulo}</span>
-                {!atual && <span className="caminho-no__estado">{linha}</span>}
+                {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
                 {no.ponte && <span className="caminho-ponte"><span className="caminho-ponte__desenho">{[0, 5, 9, 5, 0].map((altura, i) => <span key={i} style={{ marginBottom: altura, animationDelay: `${i * 70}ms` }} />)}</span>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</span>}
               </span>
             </>
@@ -345,7 +345,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           return (
             <li key={no.id} className="caminho-no" data-estado={no.estado} data-lado={lado}
               style={{ ...coresDaRegiao(no.trecho), '--ordem': indice, '--x': x } as CSSProperties}
-              data-ligado={ligado || undefined} data-fim-trecho={fimDoTrecho || undefined} data-rotulo={comRotulo || undefined} data-liberada={liberada || undefined}
+              data-ligado={ligado || undefined} data-fim-trecho={fimDoTrecho || undefined} data-rotulo={comRotulo || undefined} data-discreto={!comRotulo || undefined} data-liberada={liberada || undefined}
               data-aberto={estaAberto || undefined} data-recem={recem || undefined}
               onKeyDown={(evento) => {
                 if (evento.key !== 'Escape' || !estaAberto) return;
@@ -457,6 +457,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             {(festaNaChegada || (comRecem && tudoFeito)) && <Confete quantidade={18} />}
           </span>
           <p className="caminho-chegada__texto">{tudoFeito ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}</p>
+          {!tudoFeito && !montando && <p className="caminho-chegada__meta">{mensagens.trilha.chegadaMeta(total)}</p>}
         </div>
       )}
       <p className="somente-leitor" role="status">{anuncio}</p>

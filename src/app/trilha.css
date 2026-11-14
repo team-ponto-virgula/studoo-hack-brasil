@@ -349,3 +349,6 @@
 
   .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
 }
+
+/* Com um balão de nó aberto, o cartão da próxima lição sai da frente para não esconder a explicação. */
+.painel--trilha:has(.caminho-balao) .trilha-proximo { visibility: hidden; }
