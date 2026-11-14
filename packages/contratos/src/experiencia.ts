@@ -167,6 +167,7 @@ export const mensagens = {
         marcoVencido: (numero: number) => `Marco ${numero}, alcançado`,
         chegada: 'Fim da trilha',
         chegadaFeita: 'Trilha concluída',
+        chegadaMeta: (total: number) => `Conclua as ${total} lições para conquistar o troféu`,
         parte: (numero: number) => `Parte ${numero}`,
         parteLicoes: (total: number) => `${total} ${total === 1 ? 'lição' : 'lições'}`,
         parteProgresso: (feitas: number, total: number) => `${feitas} de ${total} concluídas`,

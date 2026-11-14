@@ -97,6 +97,7 @@
 }
 
 .caminho-no[data-ligado] { padding-bottom: var(--passo); }
+.caminho-no[data-discreto][data-ligado] { padding-bottom: calc(var(--passo) + 14px); }
 
 /* Pedaço de estrada que sai da faixa da Parte 1 e chega ao primeiro nó. */
 .caminho-no:first-child::before {
@@ -741,3 +742,26 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-ponte__desenho { display: flex; align-items: end; gap: 3px; height: 24px; margin-bottom: 4px; }
 .caminho-ponte__desenho > span { width: 14px; height: 8px; border-radius: 3px; background: var(--acao); box-shadow: 0 2px 0 var(--acao-escura); animation: ponte-no-entrar 400ms both; }
 @keyframes ponte-no-entrar { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+/* Título discreto embaixo dos nós concluídos e bloqueados: dá para ver o que vem pela frente sem poluir o mapa. */
+.caminho-no[data-discreto] .caminho-no__texto {
+  top: calc(var(--lente) + 12px);
+  left: calc(var(--lateral) + var(--coluna) * var(--x) / 100);
+  right: auto;
+  max-width: min(12rem, calc(var(--coluna) - 32px));
+  align-items: stretch;
+  padding: 3px 10px;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 0.82);
+  box-shadow: none;
+  text-align: center;
+  translate: -50% 0;
+}
+.caminho-no[data-discreto] .caminho-no__titulo { max-width: 100%; overflow: hidden; color: var(--texto2); font-size: 0.8125rem; font-weight: 800; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.caminho-no[data-estado='concluida'][data-discreto] .caminho-no__titulo { color: #9a5b00; }
+.caminho-no[data-discreto] .caminho-enfeite--miudo { display: none; }
+.caminho-chegada__meta { position: relative; z-index: 1; margin-top: -6px; color: var(--texto2); font-size: 0.8125rem; font-weight: 700; text-align: center; }
+/* Antes do nó atual, o título discreto precisa de folga para não encostar no balão "Começar". */
+.caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 70px); }
+.caminho-no[data-discreto][data-fim-trecho] { padding-bottom: calc(var(--passo) + 124px); }
+.caminho-no[data-discreto][data-fim-trecho]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 168px); }
