@@ -355,3 +355,9 @@
 
 /* O título da próxima lição aparece inteiro (até duas linhas) no cartão fixo. */
 .trilha-proximo__titulo { display: -webkit-box; overflow: hidden; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.25; }
+
+/* Celular: o mapa vai até o pé da tela; o fim (colina do troféu) cresce por baixo do cartão fixo e da navegação. */
+@media (max-width: 767px) {
+  .estudo-principal:has(> .painel--trilha) { padding-bottom: 0; }
+  .painel--trilha .caminho-chegada { --extra: calc(130px + var(--altura-navegacao, 0px)); }
+}
