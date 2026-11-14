@@ -56,7 +56,7 @@ function estradaSobre(chao: string) {
 const corEstradaFeita = '#FFE8A6';
 const ouroFace = '#FFCF4D';
 const ouroLabio = '#E0A12A';
-const corPontilhado = 'rgba(27, 42, 94, 0.24)';
+const corPontilhado = 'rgba(27, 42, 94, 0.34)';
 
 /** Mesmas medidas da web: celular, tablet e telas a partir de 1024 px. */
 function useMedidas(): Medidas {
@@ -747,9 +747,9 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
 }) {
   const { lente } = medidas;
   const atual = no.estado === 'atual';
-  // Lições à frente: moeda branca com o lábio no tom da região, bem visível sobre o chão claro (como na web).
+  // Lições à frente: cinza neutro e frio com lábio escuro, separado de qualquer terreno (como na web).
   const visual = no.estado === 'bloqueada'
-    ? { face: misturar(coresDaRegiao(no.trecho).chao, '#1B2A5E', 0.09), labio: misturar(coresDaRegiao(no.trecho).relevo, '#1B2A5E', 0.26), icone: '#6F7898' }
+    ? { face: '#DFE3EE', labio: '#A9B1CA', icone: '#66708F' }
     : coresDaLente[no.estado];
   const halo = useRef(new Animated.Value(0)).current;
   const respiro = useRef(new Animated.Value(0)).current;
@@ -814,6 +814,8 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
   }, [atual, reduzir, respiro]);
 
   const tamanhoIcone = Math.round(lente * 0.44);
+  // A revisão tem formato próprio: quadrado arredondado, não moeda (como na web).
+  const forma = iconeDoNo(no) === 'revisao' ? { borderRadius: Math.round(lente * 0.32) } : null;
   const anel = atual ? 18 : 8;
   const afundar = pressionado ? 4 : 0;
 
@@ -828,8 +830,8 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
           ],
         }]} />
       )}
-      <View style={[caminhoEstilos.camada, circulo(lente), { top: 8, backgroundColor: visual.labio }]} />
-      <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), {
+      <View style={[caminhoEstilos.camada, circulo(lente), forma, { top: 8, backgroundColor: visual.labio }]} />
+      <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), forma, {
         top: afundar, backgroundColor: visual.face, transform: [{ scale: escala }],
       }]}>
         <View><Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} /></View>
@@ -1046,12 +1048,12 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
     return () => animacao.stop();
   }, [festa, reduzir, pop]);
   return (
-    <View style={[caminhoEstilos.chegada, { backgroundColor: chao, minHeight: 280 + extra, paddingBottom: 30 + extra }]}
+    <View style={[caminhoEstilos.chegada, { backgroundColor: chao, minHeight: 252 + extra, paddingBottom: 30 + extra }]}
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
         <View style={[caminhoEstilos.chegadaEstrada, { backgroundColor: estradaSobre(chao) }]} />
         {/* O mesmo pontilhado da estrada, sem emenda até o troféu. */}
-        {!feita && Array.from({ length: 9 }, (_, indice) => <View key={indice} style={[caminhoEstilos.pontoEstrada, { top: 7 + indice * 14 }]} />)}
+        {!feita && Array.from({ length: 7 }, (_, indice) => <View key={indice} style={[caminhoEstilos.pontoEstrada, { top: 7 + indice * 14 }]} />)}
         <View style={[caminhoEstilos.chegadaColina, { backgroundColor: relevo, bottom: -48 + extra }]} />
         {extra > 0 && <View style={[caminhoEstilos.chegadaBase, { height: extra, backgroundColor: relevo }]} />}
         <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { bottom: 96 + extra, left: '50%', marginLeft: -104 }]} />
@@ -1089,18 +1091,18 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
       <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
         style={{ width: tamanho, height: tamanho + 7, transform: [{ scale: pop }] }}>
         {/* Halo dourado em volta do troféu. */}
-        <View style={[caminhoEstilos.camada, circulo(tamanho + 28), { left: -14, top: -14, backgroundColor: 'rgba(255, 214, 102, 0.3)' }]} />
+        <View style={[caminhoEstilos.camada, circulo(tamanho + 28), { left: -14, top: -14, backgroundColor: 'rgba(255, 207, 77, 0.42)' }]} />
         <View style={[caminhoEstilos.camada, circulo(tamanho), { top: 8, backgroundColor: feita ? ouroLabio : '#EBCB72' }]} />
         <View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(tamanho), feita ? { backgroundColor: ouroFace }
           : { backgroundColor: cores.fundo, borderWidth: 5, borderColor: '#FFE9A8' }]}>
-          <Icone nome="trofeu" tamanho={Math.round(tamanho * 0.46)} cor={feita ? cores.ouroTexto : '#C98A0E'} />
+          <Icone nome="trofeu" cheio tamanho={Math.round(tamanho * 0.5)} cor={feita ? cores.ouroTexto : '#C98A0E'} />
         </View>
         {festa && <Confete quantidade={18} />}
         {bolha && feita && <Confete key={bolha + toques} quantidade={14} />}
       </Animated.View>
       </Pressable>
       <View style={caminhoEstilos.chegadaPlaca}>
-        <Text style={[caminhoEstilos.chegadaTexto, feita && { color: cores.alerta }]}>
+        <Text style={[caminhoEstilos.chegadaTexto, { color: cores.ouroTexto }]}>
           {feita ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}
         </Text>
       </View>
@@ -1262,9 +1264,9 @@ const caminhoEstilos = StyleSheet.create({
   parteTopo: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
   parteNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   parteAndamento: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
-  chegada: { minHeight: 280, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 36, paddingBottom: 30, overflow: 'hidden' },
-  pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(27, 42, 94, 0.22)' },
-  chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 132,
+  chegada: { minHeight: 280, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 8, paddingBottom: 30, overflow: 'hidden' },
+  pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(27, 42, 94, 0.34)' },
+  chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 104,
     borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
   chegadaColina: { position: 'absolute', bottom: -48, left: '50%', marginLeft: -200, width: 400, height: 190,
     borderTopLeftRadius: 200, borderTopRightRadius: 200 },

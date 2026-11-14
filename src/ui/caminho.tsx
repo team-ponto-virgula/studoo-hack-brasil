@@ -386,7 +386,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           );
 
           return (
-            <li key={no.id} className="caminho-no" data-estado={no.estado} data-lado={lado}
+            <li key={no.id} className="caminho-no" data-estado={no.estado} data-lado={lado} data-revisao={iconeDoNo(no) === 'revisao' || undefined}
               style={{ ...coresDaRegiao(no.trecho), '--ordem': indice, '--x': x } as CSSProperties}
               data-ligado={ligado || undefined} data-fim-trecho={fimDoTrecho || undefined} data-rotulo={comRotulo || undefined} data-discreto={!comRotulo || undefined} data-liberada={liberada || undefined}
               data-aberto={estaAberto || undefined} data-recem={recem || undefined}
