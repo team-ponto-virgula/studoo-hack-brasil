@@ -18,7 +18,8 @@ export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' |
 const desenhos: Record<NomeIcone, ReactNode> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
   livro: <path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5zM12 6.5V19" />,
-  revisao: <path d="M19.5 12a7.5 7.5 0 0 1-13 5.1M4.5 12a7.5 7.5 0 0 1 13-5.1M17.5 3.5v3.6h-3.6M6.5 20.5v-3.6h3.6" />,
+  // Repetir: arco de três quartos com uma seta, o mesmo desenho do app.
+  revisao: <path d="M6.7 6.7A7.5 7.5 0 1 1 6.7 17.3M10.6 15.5H5.8v4.7" />,
   cadeado: <><rect x="5.5" y="10.5" width="13" height="9" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></>,
   // Bandeira cheia (pano preenchido), legível mesmo pequena; a mesma do app.
   bandeira: <><path d="M6 20V4.5" /><path d="M6 5h10.5l-2 3.5 2 3.5H6z" fill="currentColor" /></>,
@@ -90,9 +91,6 @@ function FaixaParte({ numero, resumo }: { numero: number; resumo?: { total: numb
         <span className="caminho-parte__numero">{mensagens.trilha.parte(numero)}</span>
         <span className="caminho-parte__andamento">{texto}</span>
       </span>
-      {!resumo.previa && (
-        <span className="caminho-parte__barra"><span style={{ width: `${(resumo.feitas / resumo.total) * 100}%` }} /></span>
-      )}
     </span>
   );
 }
@@ -196,6 +194,15 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       // Considera o cartão fixo da próxima lição e a navegação de baixo, que cobrem o pé da tela.
       // Rola só o necessário: o nó para logo acima do cartão fixo, e o topo da trilha tende a continuar à vista.
       if (caixa.top < 0 || caixa.bottom > window.innerHeight - 240) item.scrollIntoView({ block: 'end' });
+      // Se a rolagem parou no meio do céu (a placa cortada no alto), segue até a faixa da Parte 1 ficar no topo,
+      // desde que o nó continue bem à vista.
+      const inicio = item.closest('.caminho')?.querySelector('.caminho-inicio');
+      const faixa = inicio?.querySelector('.caminho-parte');
+      const botao = botoes.current.get(rolarPara);
+      if (!inicio || !faixa || !botao) return;
+      const ceu = inicio.getBoundingClientRect();
+      const resto = faixa.getBoundingClientRect().top - 12;
+      if (ceu.top < 0 && resto > 0 && botao.getBoundingClientRect().top - resto > 72) window.scrollBy(0, resto);
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [rolarPara]);
@@ -203,6 +210,21 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   useEffect(() => {
     if (ocupado) setAberto(null);
   }, [ocupado]);
+
+  // Com o nó atual (e o balão "Começar") à vista, o cartão fixo da próxima lição sai de cena: uma ação só por vez.
+  const idAtual = nos.find((no) => no.estado === 'atual')?.id ?? null;
+  useEffect(() => {
+    const raiz = document.documentElement;
+    const lente = idAtual ? botoes.current.get(idAtual) : undefined;
+    if (!lente || typeof IntersectionObserver === 'undefined') return;
+    const observador = new IntersectionObserver(([entrada]) => raiz.toggleAttribute('data-atual-visivel', entrada.isIntersecting),
+      { rootMargin: '-40px 0px -200px 0px', threshold: 1 });
+    observador.observe(lente);
+    return () => {
+      observador.disconnect();
+      raiz.removeAttribute('data-atual-visivel');
+    };
+  }, [idAtual]);
 
   // Enquanto a trilha é montada, o nó em esqueleto fica à vista se a pessoa estava vendo o último nó que chegou.
   useEffect(() => {
@@ -347,14 +369,16 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 <Icone nome={iconeDoNo(no)} />
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {recem && <Confete quantidade={12} />}
-                {atual && <span className="caminho-no__etiqueta">{mensagens.trilha.comecar}</span>}
+                {/* Um balão só no nó atual: a ação e o nome da lição juntos. */}
+                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{mensagens.trilha.comecar}</span><span className="caminho-no__etiqueta-titulo">{no.titulo}</span></span>}
                 {no.estado === 'bloqueada' && <span className="caminho-no__selo"><Icone nome="cadeado" /></span>}
               </span>
-              <span className="caminho-no__texto" aria-hidden="true">
+              {/* Como nos melhores apps, o nome fica só no nó atual (e na prévia da geração); os outros mostram o nome ao toque. */}
+              {(no.estado === 'previa' || no.ponte) && <span className="caminho-no__texto" aria-hidden="true">
                 <span className="caminho-no__titulo">{no.titulo}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
                 {no.ponte && <span className="caminho-ponte"><span className="caminho-ponte__desenho">{[0, 5, 9, 5, 0].map((altura, i) => <span key={i} style={{ marginBottom: altura, animationDelay: `${i * 70}ms` }} />)}</span>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</span>}
-              </span>
+              </span>}
             </>
           );
 

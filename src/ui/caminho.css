@@ -893,3 +893,49 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
   box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 0 0 14px rgb(255 214 102 / 0.3), 0 16px 24px rgb(27 42 94 / 0.14);
 }
 .caminho-chegada:not([data-feita]) .caminho-chegada__brilho { animation: none; opacity: 0.85; }
+
+/*
+ * Divisor de parte, no lugar do card largo: uma pílula pequena entre duas linhas finas, como os divisores de unidade
+ * dos melhores apps. A estrada continua visível e o mapa ganha espaço.
+ */
+/* A borda ondulada entre as regiões já é o divisor; a pílula fica sobre ela, um pouco abaixo do título anterior. */
+.caminho-marco { top: calc(var(--lente) + (100% - var(--lente)) / 2 + 14px); }
+.caminho-parte {
+  display: inline-flex; align-items: center; gap: 8px; width: auto; white-space: nowrap; padding: 4px 14px 4px 4px;
+  border: 2px solid var(--fundo); border-radius: 999px; background: var(--fundo);
+  box-shadow: 0 3px 0 rgb(27 42 94 / 0.1); backdrop-filter: none;
+}
+.caminho-parte__selo { width: 28px; height: 28px; border-radius: 50%; box-shadow: none; }
+.caminho-parte__selo .icone { width: 16px; height: 16px; }
+.caminho-parte[data-vencida] .caminho-parte__selo { box-shadow: none; }
+.caminho-parte__texto { gap: 8px; }
+.caminho-parte__numero { font-size: 0.9375rem; }
+/* Sem o card largo, a fronteira entre as partes precisa de bem menos espaço. */
+.caminho .caminho-no[data-fim-trecho][data-ligado] { padding-bottom: calc(var(--passo) + 136px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado][data-estado='atual'] { padding-bottom: calc(var(--passo) + 112px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 188px); }
+
+/* Lições à frente: moeda branca com o lábio no tom da região, bem visível sobre o chão claro (antes, cinza sobre claro). */
+.caminho-no[data-estado='bloqueada'] .caminho-no__lente { --face: var(--fundo); --labio: color-mix(in srgb, var(--relevo), #1b2a5e 22%); --tinta: #7d87a6; }
+.caminho-no[data-estado='bloqueada'] .caminho-no__lente > .icone { opacity: 1; }
+/* Estrada opaca (o mesmo branco a 72% já misturado ao chão da região): pedaços sobrepostos não ficam mais claros na emenda. */
+.caminho-no, .caminho-chegada { --estrada: color-mix(in srgb, #fff 72%, var(--chao, #fff)); }
+
+/* Balão do nó atual com a ação e o nome juntos (antes eram duas caixas: "Começar" em cima e o nome embaixo). */
+.caminho-no__etiqueta {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; width: max-content; max-width: 210px;
+  padding: 8px 14px 10px; text-align: center; text-transform: none; letter-spacing: normal; white-space: normal;
+}
+.caminho-no__etiqueta-acao { color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.caminho-no__etiqueta-titulo { color: var(--texto); font-size: 0.9375rem; font-weight: 800; line-height: 1.25; }
+/* O balão puxa para o centro conforme o lado do nó (x de 27 a 73), para não encostar na borda; a seta segue no nó. */
+.caminho-no__etiqueta { --puxa: calc((50 - var(--x)) * 1.7px); translate: calc(-50% + var(--puxa)) 0; }
+.caminho-no__etiqueta::after { left: calc(50% - var(--puxa)); }
+
+/* Lições à frente num tom um pouco mais escuro que o chão: visíveis, mas claramente inativas (nem brancas nem apagadas). */
+.caminho-no[data-estado='bloqueada'] .caminho-no__lente {
+  --face: color-mix(in srgb, var(--chao), #1b2a5e 9%); --labio: color-mix(in srgb, var(--relevo), #1b2a5e 26%); --tinta: #6f7898;
+}
+/* "Começar" com cara de botão: pílula azul no alto do balão. */
+.caminho-no__etiqueta { gap: 6px; padding-top: 10px; }
+.caminho-no__etiqueta-acao { padding: 3px 12px; border-radius: 999px; color: var(--fundo); background: var(--acao); box-shadow: 0 2px 0 #2a44a8; }

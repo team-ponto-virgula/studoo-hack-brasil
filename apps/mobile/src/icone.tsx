@@ -19,11 +19,10 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 10.75, top: 4.25, width: 10, height: 14.5, borderWidth: 2.5, borderTopRightRadius: 2, borderBottomRightRadius: 2,
       transform: [{ skewY: '-9deg' }] },
   ],
+  // Repetir: um arco de três quartos com uma seta (dois arcos curtos ficavam picotados nesse tamanho).
   revisao: [
-    { left: 3.25, top: 3.25, width: 17.5, height: 17.5, borderWidth: 2.5, borderRadius: 8.75,
-      borderLeftColor: 'transparent', borderRightColor: 'transparent' },
-    { left: 12.65, top: 2.25, width: 6.1, height: 6.1, borderRightWidth: 2.5, borderBottomWidth: 2.5 },
-    { left: 5.25, top: 15.65, width: 6.1, height: 6.1, borderLeftWidth: 2.5, borderTopWidth: 2.5 },
+    { left: 3.25, top: 3.25, width: 17.5, height: 17.5, borderWidth: 2.5, borderRadius: 8.75, borderLeftColor: 'transparent' },
+    { left: 4.6, top: 14.2, width: 6.5, height: 6.5, borderLeftWidth: 2.5, borderTopWidth: 2.5, borderTopLeftRadius: 1 },
   ],
   cadeado: [
     { left: 7.25, top: 3.25, width: 9.5, height: 7.25, borderWidth: 2.5, borderBottomWidth: 0,
