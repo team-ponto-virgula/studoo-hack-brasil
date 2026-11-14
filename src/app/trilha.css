@@ -360,3 +360,10 @@
 @media (max-width: 767px) {
   .painel--trilha > .caminho { overflow: hidden; border-radius: 0 0 32px 32px; }
 }
+
+/* Com o nó atual à vista, o cartão fixo da próxima lição desce e some: o balão "Começar" já faz esse papel. */
+@media (max-width: 767px) {
+  .trilha-proximo { transition: translate 240ms ease, opacity 240ms ease, visibility 240ms; }
+  html[data-atual-visivel] .trilha-proximo { translate: 0 calc(100% + 40px); opacity: 0; visibility: hidden; }
+}
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) { .trilha-proximo { transition: none; } }

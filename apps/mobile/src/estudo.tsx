@@ -1114,6 +1114,18 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   const reduzir = useMovimentoReduzido();
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const visivel = useRef(0);
+  // Com o nó atual (e o balão "Começar") à vista, o cartão fixo sai: uma ação só por vez, como na web.
+  const atualNaRolagem = useRef<{ topo: number; base: number } | null>(null);
+  const alturaComCartao = useRef(0);
+  const rolagemY = useRef(0);
+  const [atualVisivel, setAtualVisivel] = useState(false);
+  function avaliarAtual() {
+    const atual = atualNaRolagem.current;
+    const altura = alturaComCartao.current;
+    if (!atual || !altura) return;
+    const visto = atual.topo - rolagemY.current >= -10 && atual.base + 48 - rolagemY.current <= altura;
+    setAtualVisivel((antes) => (antes === visto ? antes : visto));
+  }
 
   // O erro aparece no topo, como na web; a tela sobe até ele.
   useEffect(() => {
@@ -1143,8 +1155,16 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   );
 
   return (
-    <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo ? null : passo || novo} rolagem={rolagem}
-      aoMedir={(altura) => { visivel.current = altura; }}>
+    <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo || (atualVisivel && passo) ? null : passo || novo} rolagem={rolagem}
+      aoMedir={(altura) => {
+        visivel.current = altura;
+        if (!atualVisivel || !alturaComCartao.current) alturaComCartao.current = altura;
+        avaliarAtual();
+      }}
+      aoRolar={(y) => {
+        rolagemY.current = y;
+        avaliarAtual();
+      }}>
       {erro && <EstadoMensagem mensagem={erro} foco />}
       <View style={estudoEstilos.topoTrilha}>
         <View style={estudoEstilos.topoTrilhaTexto}>
@@ -1166,7 +1186,11 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
       )}
       {nos.length > 0 ? (
         <Caminho nos={nos} stu={falaDoStu(nos)} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} recemConcluida={etapa.concluida ?? null}
-          rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)} />
+          rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)}
+          aoMedirAtual={(topo, base) => {
+            atualNaRolagem.current = { topo, base };
+            avaliarAtual();
+          }} />
       ) : (
         <View style={estudoEstilos.vazio}>
           <Text style={estilos.textoSecundario}>{mensagens.trilha.semLicoes}</Text>

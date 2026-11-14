@@ -42,6 +42,13 @@ const corEstrada = 'rgba(255, 255, 255, 0.72)';
  * A estrada é feita de cápsulas que se sobrepõem; com cor translúcida, a sobreposição dobra a opacidade e aparecem
  * bolhas. Por isso cada região usa o mesmo branco a 72% já misturado ao seu chão, opaco.
  */
+function misturar(base: string, outra: string, fracao: number) {
+  if (!/^#[0-9a-f]{6}$/i.test(base) || !/^#[0-9a-f]{6}$/i.test(outra)) return base;
+  const canal = (inicio: number) => Math.round(parseInt(base.slice(inicio, inicio + 2), 16) * (1 - fracao)
+    + parseInt(outra.slice(inicio, inicio + 2), 16) * fracao);
+  return `rgb(${canal(1)}, ${canal(3)}, ${canal(5)})`;
+}
+
 function estradaSobre(chao: string) {
   const canal = (inicio: number) => Math.round(255 * 0.72 + parseInt(chao.slice(inicio, inicio + 2), 16) * 0.28);
   return /^#[0-9a-f]{6}$/i.test(chao) ? `rgb(${canal(1)}, ${canal(3)}, ${canal(5)})` : corEstrada;
@@ -110,7 +117,7 @@ function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
  * comemora, a linha até o próximo se desenha e só então o próximo nó se abre. Árvores e flores balançam com o vento.
  */
 export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
-  rolarPara = null, recemConcluida = null, aoRolar, acompanhar, aoAbrir }: {
+  rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir }: {
   nos: readonly NoCaminho[];
   stu?: string;
   dicas?: readonly string[];
@@ -123,6 +130,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   rolarPara?: string | null;
   /** `sempre`: rola mesmo que o nó já esteja na tela (pedido explícito da pessoa). */
   aoRolar?: (topo: number, base: number, sempre?: boolean, piso?: number) => void;
+  /** Posição da lente do nó atual na rolagem (topo e base), para a tela esconder o cartão fixo enquanto ele está à vista. */
+  aoMedirAtual?: (topo: number, base: number) => void;
   acompanhar?: (ultimo: Faixa, alvo: Faixa) => void;
   aoAbrir?: (no: NoCaminho) => void;
 }) {
@@ -186,6 +195,12 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   }, [montando]);
 
   function tentarRolar() {
+    const atual = nos.find((no) => no.estado === 'atual');
+    const medidaAtual = atual && posicoes.current.linhas.get(atual.id);
+    if (aoMedirAtual && medidaAtual && posicoes.current.caminho !== null && posicoes.current.lista !== null) {
+      const topoAtual = posicoes.current.caminho + posicoes.current.lista + medidaAtual.y;
+      aoMedirAtual(topoAtual, topoAtual + medidas.lente);
+    }
     if (!rolarPara || !aoRolar || rolado.current === rolarPara) return;
     const { caminho, lista, linhas } = posicoes.current;
     const linha = linhas.get(rolarPara);
@@ -728,7 +743,10 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
 }) {
   const { lente } = medidas;
   const atual = no.estado === 'atual';
-  const visual = coresDaLente[no.estado];
+  // Lições à frente: moeda branca com o lábio no tom da região, bem visível sobre o chão claro (como na web).
+  const visual = no.estado === 'bloqueada'
+    ? { face: cores.fundo, labio: misturar(coresDaRegiao(no.trecho).relevo, '#1B2A5E', 0.22), icone: cores.tintaNeutra }
+    : coresDaLente[no.estado];
   const halo = useRef(new Animated.Value(0)).current;
   const respiro = useRef(new Animated.Value(0)).current;
   const etiqueta = useRef(new Animated.Value(0)).current;

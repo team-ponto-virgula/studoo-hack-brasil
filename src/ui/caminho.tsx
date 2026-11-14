@@ -210,6 +210,21 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     if (ocupado) setAberto(null);
   }, [ocupado]);
 
+  // Com o nó atual (e o balão "Começar") à vista, o cartão fixo da próxima lição sai de cena: uma ação só por vez.
+  const idAtual = nos.find((no) => no.estado === 'atual')?.id ?? null;
+  useEffect(() => {
+    const raiz = document.documentElement;
+    const lente = idAtual ? botoes.current.get(idAtual) : undefined;
+    if (!lente || typeof IntersectionObserver === 'undefined') return;
+    const observador = new IntersectionObserver(([entrada]) => raiz.toggleAttribute('data-atual-visivel', entrada.isIntersecting),
+      { rootMargin: '-40px 0px -200px 0px', threshold: 1 });
+    observador.observe(lente);
+    return () => {
+      observador.disconnect();
+      raiz.removeAttribute('data-atual-visivel');
+    };
+  }, [idAtual]);
+
   // Enquanto a trilha é montada, o nó em esqueleto fica à vista se a pessoa estava vendo o último nó que chegou.
   useEffect(() => {
     const item = vindo.current;
