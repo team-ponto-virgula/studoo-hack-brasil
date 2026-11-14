@@ -17,6 +17,7 @@ import {
   TextInput,
   View,
   useWindowDimensions,
+  type ViewStyle,
 } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
 import { codigoDaFalha, sessaoInvalida, type ClienteNativo } from './api-nativa';
@@ -105,6 +106,17 @@ export function Estudo({ cliente, sair, expirar }: {
         // A apresentação é opcional, como na web.
         if (!ativo) return;
         setPlanos(lista);
+        // Como na web: com planos salvos, abre direto na trilha em andamento (só se a pessoa ainda está em Meus planos).
+        const inicial = planoInicial(lista);
+        if (inicial) {
+          try {
+            const plano = await cliente.obterPlano(inicial.id);
+            if (!ativo) return;
+            setEtapa((atual) => atual.tipo === 'planos' ? { tipo: 'plano', plano } : atual);
+          } catch {
+            // Sem o detalhe, a pessoa fica em Meus planos e escolhe de lá.
+          }
+        }
       } catch (falha) {
         if (!ativo) return;
         if (sessaoInvalida(falha)) await expirar();
@@ -376,7 +388,6 @@ export function Estudo({ cliente, sair, expirar }: {
         <Text style={estilos.introducao}>{mensagens.planos.subtitulo}</Text>
         {mensagem}
         {!planos && !erro && <Skeleton />}
-        {planos && <Retomada planos={planos} ocupado={ocupado} abrir={(id) => void abrirPlano(id)} />}
         {planos?.map((plano, indice) => (
           <CartaoPlano key={plano.id} plano={plano} indice={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)} />
         ))}
@@ -385,32 +396,12 @@ export function Estudo({ cliente, sair, expirar }: {
   }
 }
 
-/** A mesma prioridade da web: retomar uma trilha já iniciada antes de começar outra. */
-function Retomada({ planos, ocupado, abrir }: { planos: PlanoResumo[]; ocupado: boolean; abrir: (id: string) => void }) {
-  const entrada = useAparecer(60, 300);
-  const emAndamento = planos.find(({ progresso: p }) => p.concluidas > 0 && p.concluidas < p.total)
-    ?? planos.find(({ progresso: p }) => p.concluidas < p.total);
-  const concluidas = planos.reduce((soma, plano) => soma + plano.progresso.concluidas, 0);
-  return <Animated.View style={[retomadaEstilos.cartao, estiloDeEntrada(entrada, 8, 1)]}>
-    <View style={retomadaEstilos.cabecalho}>
-      <View style={retomadaEstilos.simbolo}><Icone nome={emAndamento ? 'bandeira' : 'trofeu'} tamanho={26} cor={cores.acao} /></View>
-      <Text style={retomadaEstilos.etiqueta}>{emAndamento ? mensagens.retomada.titulo : mensagens.retomada.concluido}</Text>
-    </View>
-    {emAndamento && <Text accessibilityRole="header" style={estilos.subtitulo}>{emAndamento.titulo}</Text>}
-    <Text style={estilos.textoSecundario}>{emAndamento ? mensagens.retomada.texto : mensagens.retomada.revisar}</Text>
-    <View style={retomadaEstilos.conquista}><Icone nome="check" tamanho={18} cor={cores.sucesso} />
-      <Text style={retomadaEstilos.conquistaTexto}>{mensagens.retomada.licoes(concluidas)}</Text></View>
-    {emAndamento && <Botao rotulo={mensagens.retomada.acao} icone="seta" desativado={ocupado} acao={() => abrir(emAndamento.id)} />}
-  </Animated.View>;
+/** Plano para abrir ao entrar, como na web: o que está em andamento, senão o primeiro não concluído, senão o mais recente. */
+function planoInicial(planos: PlanoResumo[]) {
+  return planos.find(({ progresso: p }) => p.concluidas > 0 && p.concluidas < p.total)
+    ?? planos.find(({ progresso: p }) => p.concluidas < p.total)
+    ?? planos[0] ?? null;
 }
-const retomadaEstilos = StyleSheet.create({
-  cartao: { marginTop: 24, padding: 20, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.ceu, gap: 12 },
-  cabecalho: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  simbolo: { width: 48, height: 48, borderRadius: 16, backgroundColor: cores.fundo, alignItems: 'center', justifyContent: 'center' },
-  etiqueta: { flex: 1, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, color: cores.acao },
-  conquista: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
-  conquistaTexto: { flex: 1, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, color: cores.sucesso },
-});
 
 /**
  * Pedido da trilha: a pessoa escreve o que quer aprender, ou escolhe uma ideia, e gera a trilha ao vivo.
@@ -438,16 +429,15 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
 }) {
   const [modo, setModo] = useState<'ideia' | 'material'>('ideia');
   const balancoInicio = useBalanco(3, 1800);
-  const [maisIdeias, setMaisIdeias] = useState(Boolean(areaInicial && areaInicial !== 'populares'));
   const [curto, setCurto] = useState(false);
-  const [idTema, setIdTema] = useState<IdTema>(areaInicial ?? 'populares');
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [brilho, setBrilho] = useState(0);
   // Decidido uma vez: o erro que some enquanto a pessoa digita não devolve o foco ao título.
   const [focarTitulo] = useState(() => !erro && !falha);
   const campo = useRef<ComponentRef<typeof TextInput>>(null);
   const texto = objetivo.trim();
-  const tema = mensagens.pedido.temas.find((item) => item.id === idTema) ?? mensagens.pedido.temas[0];
+  // As ideias vêm da área escolhida na apresentação; sem ela, das mais populares (como na web).
+  const tema = mensagens.pedido.temas.find((item) => item.id === (areaInicial ?? 'populares')) ?? mensagens.pedido.temas[0];
   const minimo = LIMITES_GERACAO.objetivoMin;
   const mostrarCurto = curto && texto.length < minimo;
   const mostrarContador = objetivo.length >= LIMITES_GERACAO.objetivoMax - 100;
@@ -491,19 +481,17 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
   return (
     <Tela pagina="objetivo" acoes={acoes} rodape={modo === 'ideia' ? <Botao rotulo={mensagens.inicio.criar} testID="gerar-trilha"
       desativado={ocupado || !texto} acao={tentar} /> : undefined}>
-      <View style={estudoEstilos.descobertaHero}>
-        <View style={{flex:1}}><Text style={estudoEstilos.descobertaSelo}>{mensagens.inicio.selo}</Text>
-          <Titulo testID="titulo-objetivo" foco={focarTitulo} estilo={{fontSize:26,lineHeight:30}}>{mensagens.inicio.titulo}</Titulo>
-          <Text style={estilos.introducao}>{mensagens.inicio.texto}</Text></View>
-        <View style={estudoEstilos.descobertaMascote}><Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" style={{width:86,height:110,transform:[{translateY:balancoInicio}]}} accessible={false}/></View>
+      <View style={estudoEstilos.pedidoHeroi}>
+        <View style={estudoEstilos.pedidoHalo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+            style={{ width: 92, height: 104, transform: [{ translateY: balancoInicio }] }} />
+          <Text style={estudoEstilos.pedidoEstrela}>✦</Text>
+        </View>
+        <Titulo testID="titulo-objetivo" foco={focarTitulo} estilo={estudoEstilos.pedidoTitulo}>
+          {modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}
+        </Titulo>
+        <Text accessibilityLiveRegion="polite" style={estudoEstilos.pedidoFala}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>
       </View>
-      <View style={estudoEstilos.descobertaModos}>{(['ideia','material'] as const).map(item =>
-        <Pressable key={item} accessibilityRole="button" accessibilityState={{selected:modo===item,disabled:ocupado}} disabled={ocupado} onPress={()=>setModo(item)}
-          style={({pressed})=>[estudoEstilos.descobertaModo,modo===item && estudoEstilos.descobertaModoAtivo,pressed && {opacity:.8}]}>
-          <Text style={estudoEstilos.descobertaSelo}>{modo===item ? '✓' : '○'}</Text>
-          <Text style={{fontFamily:fontes.corpo,fontSize:14,fontWeight:'800',color:cores.texto}}>{mensagens.inicio[item]}</Text>
-          <Text style={[estilos.legenda,{fontSize:12,lineHeight:17}]}>{item==='ideia'?mensagens.inicio.ideiaDica:mensagens.inicio.materialDica}</Text>
-        </Pressable>)}</View>
       {aviso && <Text style={estudoEstilos.aviso}>{aviso}</Text>}
       {erro && <EstadoMensagem mensagem={erro} foco />}
       {falha && <EstadoMensagem mensagem={mensagemDoCodigo(falha)} testID="erro-geracao" foco />}
@@ -514,44 +502,44 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
             desativado={ocupado} acao={verPlanos} />}
         </View>
       )}
-      <View style={modo !== 'material' && {display:'none'}}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} /></View>
-      <View style={modo !== 'ideia' && {display:'none'}}>
-      <View style={[estudoEstilos.campoPedido, estudoEstilos.descobertaCaderno]}>
-        <Text style={{color:'#715118',fontWeight:'800',fontSize:13,marginBottom:12}}>✦  {texto ? fala : mensagens.inicio.convite}</Text>
-        <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} />
-        {mostrarCurto && (
-          <View style={estudoEstilos.campoErro}>
-            <Text importantForAccessibility="no" style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro }]}>!</Text>
-            <Text style={estudoEstilos.campoErroTexto}>{mensagens.pedido.curto(minimo)}</Text>
+      <View style={modo !== 'material' && { display: 'none' }}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} /></View>
+      <View style={modo !== 'ideia' && { display: 'none' }}>
+        <View style={estudoEstilos.campoPedido}>
+          <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} />
+          {mostrarCurto && (
+            <View style={estudoEstilos.campoErro}>
+              <Text importantForAccessibility="no" style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro }]}>!</Text>
+              <Text style={estudoEstilos.campoErroTexto}>{mensagens.pedido.curto(minimo)}</Text>
+            </View>
+          )}
+          {mostrarContador && <Text style={[estilos.legenda, estudoEstilos.contador]}>{contador}</Text>}
+        </View>
+        <View style={estudoEstilos.sugestoes}>
+          <View style={estudoEstilos.sugestoesTopo}>
+            <Text accessibilityRole="header" style={estudoEstilos.sugestoesTitulo}>{mensagens.pedido.sugestoes}</Text>
+            <Surpresa desativada={ocupado} acao={surpreender} />
           </View>
-        )}
-        <Text style={estudoEstilos.dica}>{mensagens.inicio.ajuda}</Text>
-
-        {mostrarContador && <Text style={[estilos.legenda, estudoEstilos.contador]}>{contador}</Text>}
-      </View>
-      <View style={estudoEstilos.sugestoes}>
-        <View style={estudoEstilos.sugestoesTopo}>
-          <Text accessibilityRole="header" style={estudoEstilos.sugestoesTitulo}>{mensagens.pedido.sugestoes}</Text>
-          <Surpresa desativada={ocupado} acao={surpreender} />
+          <View key={tema.id} style={estudoEstilos.exemplos}>
+            {tema.exemplos.slice(0, 4).map((exemplo, indice) => (
+              <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(tema, exemplo)} testID={`sugestao-${indice}`} ordem={indice}
+                escolhida={texto === exemplo} desativada={ocupado} acao={() => sugerir(exemplo)} />
+            ))}
+          </View>
         </View>
-        {maisIdeias && <ScrollView horizontal showsHorizontalScrollIndicator={false} style={estudoEstilos.areasRolagem}
-          contentContainerStyle={estudoEstilos.areas} accessibilityLabel={mensagens.pedido.areas}>
-          {mensagens.pedido.temas.map((item) => (
-            <Area key={item.id} nome={item.nome} icone={iconesDosTemas[item.id]} testID={`area-${item.id}`}
-              escolhida={item.id === idTema} desativada={ocupado} acao={() => setIdTema(item.id)} />
-          ))}
-        </ScrollView>}
-        <View key={tema.id} style={estudoEstilos.exemplos}>
-          {(maisIdeias ? tema.exemplos : mensagens.pedido.temas[0].exemplos.slice(0,3)).map((exemplo, indice) => (
-            <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(maisIdeias ? tema : mensagens.pedido.temas[0], exemplo)} testID={`sugestao-${indice}`} ordem={indice}
-              escolhida={texto === exemplo} desativada={ocupado} acao={() => sugerir(exemplo)} />
-          ))}
+      </View>
+      <Pressable testID="alternar-modo" accessibilityRole="button" accessibilityState={{ disabled: ocupado }} disabled={ocupado}
+        onPress={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}
+        style={({ pressed }) => [estudoEstilos.alternar, pressed && { opacity: 0.85 }]}>
+        <View style={estudoEstilos.alternarIcone} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} tamanho={22} cor={cores.acao} />
         </View>
-        <Botao variante="texto" rotulo={maisIdeias ? mensagens.inicio.menos : mensagens.inicio.mais} acao={()=>setMaisIdeias(!maisIdeias)} />
-      </View>
-      </View>
-      <View style={estudoEstilos.descobertaPassos}>{mensagens.inicio.etapas.map((etapa,i)=><Text key={etapa} style={estilos.legenda}>{i+1} · {etapa}</Text>)}</View>
-      <Botao variante="texto" rotulo={mensagens.inicio.saberMais} acao={comoFunciona}/>
+        <View style={estudoEstilos.alternarTextos}>
+          <Text style={estudoEstilos.alternarTitulo}>{modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}</Text>
+          <Text style={estilos.legenda}>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</Text>
+        </View>
+        <Icone nome="seta" tamanho={20} cor={cores.textoSecundario} />
+      </Pressable>
+      <LinkComoFunciona desativado={ocupado} acao={comoFunciona} />
     </Tela>
   );
 }
@@ -1150,27 +1138,24 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
     <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo ? null : passo || novo} rolagem={rolagem}
       aoMedir={(altura) => { visivel.current = altura; }}>
       {erro && <EstadoMensagem mensagem={erro} foco />}
-      <View style={[estudoEstilos.faixa, largo && estudoEstilos.faixaLarga]}>
-        <Titulo testID="titulo-plano" foco estilo={estudoEstilos.tituloFaixa}>{plano.titulo}</Titulo>
-        {/* Na faixa ficam três linhas do objetivo, só quando ele acrescenta algo ao título; o leitor de tela lê o texto inteiro. */}
-        {!repeteTitulo(plano.titulo, plano.objetivo) && (
-          <Text numberOfLines={3} accessibilityLabel={plano.objetivo} style={[estilos.introducao, estudoEstilos.objetivoFaixa]}>
-            {plano.objetivo}
-          </Text>
-        )}
-        <BarraProgresso progresso={plano.progresso} testID="progresso-plano" naFaixa comPercentual />
-        {largo && passo}
-        {nos.length > 0 && !proximo && (
-          <View style={[estudoEstilos.divisao, estudoEstilos.concluido]}>
-            <View style={estudoEstilos.concluidoTitulo}>
-              <Icone nome="check" tamanho={20} cor={cores.sucesso} />
-              <Text style={estudoEstilos.concluidoTexto}>{mensagens.trilha.concluido}</Text>
-            </View>
-            <Text style={estilos.textoSecundario}>{mensagens.trilha.concluidoTexto}</Text>
-            {largo && <View style={estudoEstilos.acaoNaTela}>{novo}</View>}
-          </View>
-        )}
+      <View style={estudoEstilos.topoTrilha}>
+        <View style={estudoEstilos.topoTrilhaTexto}>
+          <Text style={estudoEstilos.topoTrilhaRotulo}>{mensagens.trilha.suaTrilha.toLocaleUpperCase('pt-BR')}</Text>
+          <Titulo testID="titulo-plano" foco estilo={estudoEstilos.tituloTopo}>{plano.titulo}</Titulo>
+        </View>
+        <AnelProgresso progresso={plano.progresso} />
       </View>
+      {largo && passo}
+      {nos.length > 0 && !proximo && (
+        <View style={estudoEstilos.concluidoCartao}>
+          <View style={estudoEstilos.concluidoTitulo}>
+            <Icone nome="trofeu" tamanho={22} cor={cores.alerta} />
+            <Text style={[estudoEstilos.concluidoTexto, { color: cores.alerta }]}>{mensagens.trilha.concluido}</Text>
+          </View>
+          <Text style={estilos.textoSecundario}>{mensagens.trilha.concluidoTexto}</Text>
+          {largo && <View style={estudoEstilos.acaoNaTela}>{novo}</View>}
+        </View>
+      )}
       {nos.length > 0 ? (
         <Caminho nos={nos} stu={falaDoStu(nos)} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} recemConcluida={etapa.concluida ?? null}
           rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)} />
@@ -1181,6 +1166,33 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
         </View>
       )}
     </Tela>
+  );
+}
+
+/**
+ * Anel de progresso do plano, como na web: enche em volta do número de lições concluídas. Sem gradiente cônico no
+ * React Native, o arco é feito de duas metades recortadas, cada uma girando até a sua parte do progresso.
+ */
+function AnelProgresso({ progresso }: { progresso: Progresso }) {
+  const tamanho = 68;
+  const espessura = 8;
+  const fracao = progresso.total > 0 ? Math.min(1, progresso.concluidas / progresso.total) : 0;
+  const arco = (rotacao: number): ViewStyle => ({
+    position: 'absolute', top: 0, width: tamanho, height: tamanho, borderRadius: tamanho / 2, borderWidth: espessura,
+    borderColor: 'transparent', borderTopColor: cores.ouroEscuro, borderRightColor: cores.ouroEscuro, transform: [{ rotate: `${rotacao}deg` }],
+  });
+  return (
+    <View accessible accessibilityRole="progressbar" accessibilityLabel={mensagens.planos.contagem(progresso.concluidas, progresso.total)}
+      accessibilityValue={{ min: 0, max: progresso.total, now: progresso.concluidas }}
+      style={[estudoEstilos.anel, { width: tamanho, height: tamanho, borderRadius: tamanho / 2, borderWidth: espessura }]}>
+      <View style={[estudoEstilos.anelMetade, { left: tamanho / 2 - espessura, width: tamanho / 2, height: tamanho, top: -espessura }]}>
+        <View style={[arco(-135 + Math.min(fracao, 0.5) * 360), { left: -tamanho / 2 }]} />
+      </View>
+      <View style={[estudoEstilos.anelMetade, { left: -espessura, width: tamanho / 2, height: tamanho, top: -espessura }]}>
+        {fracao > 0.5 && <View style={[arco(45 + (fracao - 0.5) * 360), { left: 0 }]} />}
+      </View>
+      <Text style={estudoEstilos.anelNumero}>{progresso.concluidas}<Text style={estudoEstilos.anelTotal}>/{progresso.total}</Text></Text>
+    </View>
   );
 }
 
@@ -1446,6 +1458,29 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem }: { icone: NomeIcone; 
 }
 
 const estudoEstilos = StyleSheet.create({
+  // Pedido simplificado
+  pedidoHeroi: { alignItems: 'center', gap: 6, marginBottom: 4, paddingTop: 4 },
+  pedidoHalo: { width: 124, height: 124, alignItems: 'center', justifyContent: 'center', borderRadius: 62, borderWidth: 10,
+    borderColor: '#FFE08A', backgroundColor: '#FFF3C4' },
+  pedidoEstrela: { position: 'absolute', top: -2, right: 4, color: '#FFB703', fontSize: 24, lineHeight: 28 },
+  pedidoTitulo: { fontSize: 30, lineHeight: 34, textAlign: 'center' },
+  pedidoFala: { minHeight: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24, textAlign: 'center' },
+  alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 20, paddingVertical: 14, paddingLeft: 14, paddingRight: 18,
+    borderRadius: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.bordaCampo },
+  alternarIcone: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
+  alternarTextos: { flex: 1, gap: 2 },
+  alternarTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 21 },
+  // Topo da trilha e anel de progresso
+  topoTrilha: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12, paddingTop: 4 },
+  topoTrilhaTexto: { flex: 1, minWidth: 0 },
+  topoTrilhaRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 1 },
+  tituloTopo: { fontSize: 26, lineHeight: 30 },
+  anel: { alignItems: 'center', justifyContent: 'center', borderColor: cores.gelo, backgroundColor: cores.fundo },
+  anelMetade: { position: 'absolute', overflow: 'hidden' },
+  anelNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 26 },
+  anelTotal: { color: cores.textoSecundario, fontSize: 13 },
+  concluidoCartao: { gap: 8, marginBottom: 12, padding: 18, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5,
+    borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   descobertaHero:{flexDirection:'row',alignItems:'center',gap:8,marginBottom:20},
   descobertaSelo:{fontSize:10,fontWeight:'800',color:cores.acao,letterSpacing:1,marginBottom:8},
   descobertaMascote:{backgroundColor:'#fff1c9',borderRadius:45},

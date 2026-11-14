@@ -95,7 +95,17 @@ export function Estudo() {
       const ativos = await cliente.listarPlanos();
       if (cancelado()) return;
       setPlanos(ativos);
-      // Começa pela ação; a apresentação continua disponível em Ver como funciona.
+      // Com planos salvos, abre direto na trilha em andamento, como os apps de estudo; senão, começa pelo pedido.
+      const inicial = planoInicial(ativos);
+      if (inicial) {
+        try {
+          const plano = await cliente.obterPlano(inicial.id);
+          if (cancelado()) return;
+          setTela({ tipo: 'plano', plano });
+        } catch {
+          // Sem o detalhe do plano, a pessoa cai em Meus planos e escolhe de lá.
+        }
+      }
       setInicio('pronto');
     } catch (falha) {
       if (cancelado()) return;
@@ -403,7 +413,6 @@ export function Estudo() {
             <section className="painel painel--planos">
               <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
               <p className="introducao">{mensagens.planos.subtitulo}</p>
-              <Retomada planos={planos} ocupado={ocupado} abrir={(id) => void abrirPlano(id)} />
               <ul className="planos-ativos">
                 {planos.map((plano, indice) => (
                   <li key={plano.id} style={{ '--ordem': indice } as CSSProperties}>
@@ -444,23 +453,6 @@ export function Estudo() {
       </div>
     </div>
   );
-}
-
-/** Destaca uma trilha em andamento e o progresso real já salvo. */
-function Retomada({ planos, ocupado, abrir }: { planos: PlanoResumo[]; ocupado: boolean; abrir: (id: string) => void }) {
-  const emAndamento = planos.find(({ progresso: p }) => p.concluidas > 0 && p.concluidas < p.total)
-    ?? planos.find(({ progresso: p }) => p.concluidas < p.total);
-  const concluidas = planos.reduce((soma, plano) => soma + plano.progresso.concluidas, 0);
-  return <section className="retomada" aria-label={mensagens.retomada.titulo}>
-    <div className="retomada__simbolo" aria-hidden="true"><Icone nome={emAndamento ? 'bandeira' : 'trofeu'} /></div>
-    <div className="retomada__texto">
-      <p className="retomada__etiqueta">{emAndamento ? mensagens.retomada.titulo : mensagens.retomada.concluido}</p>
-      {emAndamento && <h2>{emAndamento.titulo}</h2>}
-      <p>{emAndamento ? mensagens.retomada.texto : mensagens.retomada.revisar}</p>
-      <span className="retomada__conquista"><Icone nome="check" />{mensagens.retomada.licoes(concluidas)}</span>
-    </div>
-    {emAndamento && <Botao disabled={ocupado} onClick={() => abrir(emAndamento.id)}>{mensagens.retomada.acao}<Icone nome="seta" /></Botao>}
-  </section>;
 }
 
 /**
@@ -710,24 +702,20 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
 
   return (
     <section className="painel painel--trilha">
-      <header className="trilha-cabecalho">
-        <div className="trilha-resumo">
+      <header className="trilha-topo">
+        <div className="trilha-topo__texto">
+          <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
           <h1 tabIndex={-1}>{plano.titulo}</h1>
-          {!repeteTitulo(plano.titulo, plano.objetivo) && <p className="introducao">{plano.objetivo}</p>}
-          <div className="plano-progresso"><BarraProgresso progresso={plano.progresso} comPercentual /></div>
         </div>
-        {proximo && (
-          <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id}
-            ocupado={ocupado} aoAbrir={() => abrirLicao(proximo.no.id)} />
-        )}
-        {nos.length > 0 && !proximo && (
-          <div className="trilha-concluida">
-            <p className="trilha-concluida__titulo"><Icone nome="check" />{mensagens.trilha.concluido}</p>
-            <p>{mensagens.trilha.concluidoTexto}</p>
-            <AcaoPrincipal><Botao disabled={ocupado} onClick={novoPlano}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
-          </div>
-        )}
+        <AnelProgresso progresso={plano.progresso} />
       </header>
+      {nos.length > 0 && !proximo && (
+        <div className="trilha-concluida">
+          <p className="trilha-concluida__titulo"><Icone nome="trofeu" />{mensagens.trilha.concluido}</p>
+          <p>{mensagens.trilha.concluidoTexto}</p>
+          <Botao disabled={ocupado} onClick={novoPlano}>{mensagens.planos.novo}</Botao>
+        </div>
+      )}
       {nos.length > 0 ? (
         <Caminho nos={nos} stu={falaStu} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} rolarPara={rolarPara}
           recemConcluida={tela.concluida ?? null}
@@ -738,8 +726,31 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
           <AcaoPrincipal><Botao disabled={ocupado} onClick={novoPlano}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
         </div>
       )}
+      {proximo && (
+        <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id}
+          ocupado={ocupado} aoAbrir={() => abrirLicao(proximo.no.id)} />
+      )}
     </section>
   );
+}
+
+/** Anel de progresso do plano: enche em volta do número de lições concluídas. */
+function AnelProgresso({ progresso }: { progresso: Progresso }) {
+  const texto = mensagens.planos.contagem(progresso.concluidas, progresso.total);
+  const valor = progresso.percentual ?? 0;
+  return (
+    <div className="anel" role="progressbar" aria-label={texto} aria-valuemin={0} aria-valuemax={progresso.total}
+      aria-valuenow={progresso.concluidas} style={{ '--valor': `${valor}%` } as CSSProperties}>
+      <span className="anel__numero" aria-hidden="true">{progresso.concluidas}<small>/{progresso.total}</small></span>
+    </div>
+  );
+}
+
+/** Plano para abrir ao entrar: o que está em andamento, senão o primeiro ainda não concluído, senão o mais recente. */
+function planoInicial(planos: PlanoResumo[]) {
+  return planos.find(({ progresso: p }) => p.concluidas > 0 && p.concluidas < p.total)
+    ?? planos.find(({ progresso: p }) => p.concluidas < p.total)
+    ?? planos[0] ?? null;
 }
 
 /** Próxima lição do plano; no celular vira o rodapé fixo da tela. */

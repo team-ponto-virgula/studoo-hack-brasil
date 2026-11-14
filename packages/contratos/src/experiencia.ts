@@ -132,6 +132,7 @@ export const mensagens = {
     },
     trilha: {
         carregando: 'Carregando sua trilha',
+        suaTrilha: 'Sua trilha',
         licoes: 'Lições da trilha',
         semLicoes: 'Este plano ainda está sem lições. Crie um novo plano para começar a estudar.',
         posicao: (licao: number, total: number) => `Lição ${licao} de ${total}`,
@@ -166,6 +167,10 @@ export const mensagens = {
         marcoVencido: (numero: number) => `Marco ${numero}, alcançado`,
         chegada: 'Fim da trilha',
         chegadaFeita: 'Trilha concluída',
+        parte: (numero: number) => `Parte ${numero}`,
+        parteLicoes: (total: number) => `${total} ${total === 1 ? 'lição' : 'lições'}`,
+        parteProgresso: (feitas: number, total: number) => `${feitas} de ${total} concluídas`,
+        parteVencida: 'Parte concluída',
         percentual: (valor: number) => `${Math.round(valor)}%`
     },
     inicio: {
@@ -174,7 +179,8 @@ export const mensagens = {
         texto: 'Você traz a curiosidade. O Stu ajuda com o próximo passo.',
         escolha: 'Como você quer começar?',
         ideia: 'Tenho uma ideia', ideiaDica: 'Um assunto que quero explorar',
-        material: 'Tenho um material', materialDica: 'Uma foto, documento ou tabela',
+        material: 'Tenho um material', materialDica: 'Foto, PDF, DOCX ou CSV',
+        voltarIdeia: 'Prefiro escrever o assunto',
         campo: 'Quero aprender…', exemplo: 'Ex.: tocar minha primeira música no violão',
         ajuda: 'Pode começar com poucas palavras. Você confere a trilha antes de estudar.',
         criar: 'Montar meu caminho',
