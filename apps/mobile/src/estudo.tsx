@@ -1157,6 +1157,17 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
 
   return (
     <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo || (atualVisivel && passo) ? null : passo || novo} rolagem={rolagem}
+      // No celular, o nome do plano fica na barra de cima, sempre à vista (como a faixa da unidade nos melhores apps).
+      topo={largo ? undefined : (
+        <View style={estudoEstilos.barraPlano}>
+          <View style={estudoEstilos.barraPlanoTexto}>
+            <Text style={estudoEstilos.barraPlanoRotulo}>{mensagens.trilha.suaTrilha.toLocaleUpperCase('pt-BR')}</Text>
+            <Titulo testID="titulo-plano" foco linhas={1} estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
+          </View>
+          <AnelProgresso progresso={plano.progresso} tamanho={40} />
+          {acoes}
+        </View>
+      )}
       // No celular, o cartão da próxima lição flutua sobre o mapa, como na web; o conteúdo ganha folga para passar por baixo.
       estiloRodape={largo ? undefined : estudoEstilos.rodapeFlutuante} estiloConteudo={largo ? undefined : estudoEstilos.conteudoComFlutuante}
       aoMedir={(altura) => {
@@ -1169,13 +1180,15 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
         avaliarAtual();
       }}>
       {erro && <EstadoMensagem mensagem={erro} foco />}
-      <View style={estudoEstilos.topoTrilha}>
-        <View style={estudoEstilos.topoTrilhaTexto}>
-          <Text style={estudoEstilos.topoTrilhaRotulo}>{mensagens.trilha.suaTrilha.toLocaleUpperCase('pt-BR')}</Text>
-          <Titulo testID="titulo-plano" foco estilo={estudoEstilos.tituloTopo}>{plano.titulo}</Titulo>
+      {largo && (
+        <View style={estudoEstilos.topoTrilha}>
+          <View style={estudoEstilos.topoTrilhaTexto}>
+            <Text style={estudoEstilos.topoTrilhaRotulo}>{mensagens.trilha.suaTrilha.toLocaleUpperCase('pt-BR')}</Text>
+            <Titulo testID="titulo-plano" foco estilo={estudoEstilos.tituloTopo}>{plano.titulo}</Titulo>
+          </View>
+          <AnelProgresso progresso={plano.progresso} />
         </View>
-        <AnelProgresso progresso={plano.progresso} />
-      </View>
+      )}
       {largo && passo}
       {nos.length > 0 && !proximo && (
         <View style={estudoEstilos.concluidoCartao}>
@@ -1208,9 +1221,8 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
  * Anel de progresso do plano, como na web: enche em volta do número de lições concluídas. Sem gradiente cônico no
  * React Native, o arco é feito de duas metades recortadas, cada uma girando até a sua parte do progresso.
  */
-function AnelProgresso({ progresso }: { progresso: Progresso }) {
-  const tamanho = 68;
-  const espessura = 8;
+function AnelProgresso({ progresso, tamanho = 68 }: { progresso: Progresso; tamanho?: number }) {
+  const espessura = tamanho >= 60 ? 8 : 5;
   const fracao = progresso.total > 0 ? Math.min(1, progresso.concluidas / progresso.total) : 0;
   const arco = (rotacao: number): ViewStyle => ({
     position: 'absolute', top: 0, width: tamanho, height: tamanho, borderRadius: tamanho / 2, borderWidth: espessura,
@@ -1226,7 +1238,7 @@ function AnelProgresso({ progresso }: { progresso: Progresso }) {
       <View style={[estudoEstilos.anelMetade, { left: -espessura, width: tamanho / 2, height: tamanho, top: -espessura }]}>
         {fracao > 0.5 && <View style={[arco(45 + (fracao - 0.5) * 360), { left: 0 }]} />}
       </View>
-      <Text style={estudoEstilos.anelNumero}>{progresso.concluidas}<Text style={estudoEstilos.anelTotal}>/{progresso.total}</Text></Text>
+      <Text style={[estudoEstilos.anelNumero, tamanho < 60 && estudoEstilos.anelNumeroPequeno]}>{progresso.concluidas}<Text style={estudoEstilos.anelTotal}>/{progresso.total}</Text></Text>
     </View>
   );
 }
@@ -1514,6 +1526,11 @@ const estudoEstilos = StyleSheet.create({
   anelMetade: { position: 'absolute', overflow: 'hidden' },
   anelNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 26 },
   anelTotal: { color: cores.textoSecundario, fontSize: 13 },
+  anelNumeroPequeno: { fontSize: 15, lineHeight: 18 },
+  barraPlano: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 },
+  barraPlanoTexto: { flex: 1, minWidth: 0 },
+  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 11, lineHeight: 14, letterSpacing: 1 },
+  barraPlanoTitulo: { fontSize: 18, lineHeight: 23 },
   concluidoCartao: { gap: 8, marginBottom: 12, padding: 18, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5,
     borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   descobertaHero:{flexDirection:'row',alignItems:'center',gap:8,marginBottom:20},
