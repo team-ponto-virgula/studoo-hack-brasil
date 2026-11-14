@@ -236,6 +236,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       tentarRolar();
     }}>
       <Inicio texto={stu} trecho={primeiroTrecho} lente={medidas.lente} pensando={montando} placa={guiaNoCaminho || stuNaChegada} dicas={dicas}
+        comecoAtual={nos[0]?.estado === 'atual'}
         parte={total > 0 ? <Parte numero={1} resumo={resumoTrechos.get(primeiroTrecho)} /> : null} />
       <View accessibilityRole="list" accessibilityLabel={mensagens.trilha.licoes}
         onLayout={(evento) => {
@@ -251,13 +252,18 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const vaiAteVindo = seguinte === undefined && montando;
           const x = posicaoX(indice);
           const xSeguinte = seguinte !== undefined || vaiAteVindo ? posicaoX(indice + 1) : 50;
-          const comRotulo = no.estado === 'previa' || no.estado === 'atual';
+          // Como na web: só a prévia mostra o título ao lado; as outras mostram um título curto embaixo.
+          const comRotulo = no.estado === 'previa';
           let depois = 0;
           if (seguinte?.estado === 'atual') depois += medidas.etiqueta;
           if (fimDoTrecho) depois += medidas.marco;
           // Título discreto embaixo dos nós sem rótulo ao lado: um pouco mais de espaço até o próximo.
-          const discreto = no.estado === 'concluida' || no.estado === 'bloqueada';
-          const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois + (discreto ? 14 : 0) : 32;
+          const discreto = no.estado !== 'previa';
+          if (discreto) depois += 14;
+          // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
+          if (discreto && seguinte?.estado === 'atual') depois += 26;
+          if (no.estado === 'atual' && fimDoTrecho) depois += 60;
+          const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
           const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
           const recem = no.id === recemConcluida;
@@ -272,7 +278,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 tentarRolar();
                 tentarAcompanhar();
               }}>
-              {indice === 0 && <View pointerEvents="none" style={[caminhoEstilos.estradaInicial, { left: (largura * x) / 100 - 12, height: 22 + medidas.lente / 2 }]} />}
+              {indice === 0 && <View pointerEvents="none" style={[caminhoEstilos.estradaInicial, { left: (largura * x) / 100 - 12,
+                top: no.estado === 'atual' ? -70 : -22, height: (no.estado === 'atual' ? 70 : 22) + medidas.lente / 2 }]} />}
               <Terreno x={x} largura={largura} semEnfeites={comRotulo} trecho={no.trecho} indice={indice} medidas={medidas} brotar={surgir || comEntrada}
                 atraso={surgir ? 160 : atrasoEntrada + 160} guia={guia} atrasoGuia={comRecem ? 1350 : 300}
                 vento={indice % 2 ? ventoImpar : ventoPar} />
@@ -331,7 +338,9 @@ function circulo(tamanho: number) {
  * senão, o Stu abre o mapa com a frase num balão. Enquanto a IA monta a trilha, o Stu "pensa" (sobe e desce devagar),
  * pontinhos digitam no balão e as dicas se revezam embaixo da frase.
  */
-function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte }: {
+function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtual }: {
+  /** O primeiro nó é o atual: a faixa sobe para o balão "Começar" não cobri-la. */
+  comecoAtual: boolean;
   texto?: string;
   trecho: number;
   lente: number;
@@ -346,7 +355,7 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte }: {
   const stu = Math.round(lente * 1.28);
 
   return (
-    <View style={caminhoEstilos.inicio}>
+    <View style={[caminhoEstilos.inicio, comecoAtual && { paddingBottom: 150 }]}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
         <View style={caminhoEstilos.inicioCeuBaixo} />
         <Desenho nome="sol" largura={44} estilo={{ position: 'absolute', top: 14, left: 18 }} />
@@ -373,7 +382,7 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte }: {
             style={{ width: stu, height: Math.round(stu * 1.1), transform: [{ translateY: subida }] }} />
         </View>
       )}
-      {parte && <View pointerEvents="none" style={caminhoEstilos.inicioParte}>{parte}</View>}
+      {parte && <View pointerEvents="none" style={[caminhoEstilos.inicioParte, comecoAtual && { bottom: 70 }]}>{parte}</View>}
     </View>
   );
 }
@@ -625,8 +634,9 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
     </View>
   );
   const discreto = !comRotulo && (
-    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + 12, left: Math.max(8, Math.min(largura - 168, centro - 80)) }]}>
-      <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta }]}>{no.titulo}</Text>
+    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 168, centro - 80)) }]}>
+      <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta },
+        atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
     </View>
   );
   const moeda = (pressionado: boolean) => (
@@ -759,7 +769,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
       <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), {
         top: afundar, backgroundColor: visual.face, transform: [{ scale: escala }],
       }]}>
-        <Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} />
+        <View style={no.estado === 'bloqueada' ? { opacity: 0.55 } : null}><Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} /></View>
         {liberada && (
           <Animated.View style={[caminhoEstilos.cadeado, { borderRadius: lente / 2, opacity: cadeado }]}>
             <Icone nome="cadeado" tamanho={tamanhoIcone} cor={cores.tintaNeutra} />
@@ -768,6 +778,11 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
         {recem && <Confete quantidade={12} />}
       </Animated.View>
       {no.estado === 'concluida' && <Text style={caminhoEstilos.brilho}>✦</Text>}
+      {no.estado === 'bloqueada' && (
+        <View style={caminhoEstilos.seloCadeado} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Icone nome="cadeado" tamanho={14} cor={cores.fundo} />
+        </View>
+      )}
       {focado && <View style={[caminhoEstilos.anelFoco, circulo(lente + anel * 2), { left: -anel, top: -anel }]} />}
       {atual && (
         <Animated.View style={[caminhoEstilos.etiquetaCaixa, { bottom: lente + 22 }, {
@@ -1105,6 +1120,9 @@ const caminhoEstilos = StyleSheet.create({
   tituloAtual: { fontSize: 17, lineHeight: 22 },
   tituloPrevia: { fontSize: 15, lineHeight: 20 },
   discreto: { position: 'absolute', width: 160, alignItems: 'center', zIndex: 2 },
+  discretoAtual: { color: cores.acao, fontWeight: '800', fontSize: 14, borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)', backgroundColor: cores.fundo },
+  seloCadeado: { position: 'absolute', right: -4, bottom: -4, width: 28, height: 28, borderRadius: 14, borderWidth: 3, borderColor: cores.fundo,
+    alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
   discretoTexto: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, overflow: 'hidden', backgroundColor: 'rgba(255, 255, 255, 0.82)',
     color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
   chegadaMeta: { marginTop: -6, paddingHorizontal: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18, textAlign: 'center' },
