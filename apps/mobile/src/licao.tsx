@@ -61,7 +61,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, avaliar, conclui
   const tremor = useTremor(errosSeguidos);
   const exercicio = licao.exercicio;
   const ocupado = pendente !== null;
-  const posicao = avaliacao ? posicoes.feedback : posicoes[etapa];
+  const posicao = avaliacao?.correta ? posicoes.feedback : posicoes[etapa];
   const andamento = mensagens.licao.posicao(posicao, posicoes.feedback);
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : null;
   const nomeEtapa = { conceito: mensagens.licao.conceito, exemplo: mensagens.licao.exemplo, exercicio: mensagens.licao.exercicio }[etapa];
@@ -107,7 +107,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, avaliar, conclui
   if (avaliacao) {
     rodape = (
       <PainelRetorno avaliacao={avaliacao} titulo={avaliacao.correta ? tituloDoAcerto(licao.id) : mensagens.licao.errada}
-        ocupado={ocupado} concluindo={pendente === 'concluir'} tentarDeNovo={() => setAvaliacao(null)}
+        ocupado={ocupado} concluindo={pendente === 'concluir'} tentarDeNovo={() => { setAvaliacao(null); setResposta(""); }}
         verReforco={() => rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false })}
         continuar={() => void continuar(avaliacao.comprovante)} />
     );
@@ -176,7 +176,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, avaliar, conclui
         )}
         {erro && <EstadoMensagem mensagem={erro} />}
       </EntradaDaEtapa>
-      <View onLayout={e => { apoioPosicao.current = e.nativeEvent.layout.y; }}><ApoioDaLicao cliente={cliente} licao={licao} avaliacao={avaliacao} /></View>
+      {(etapa === 'exercicio' || avaliacao) && <View onLayout={e => { apoioPosicao.current = e.nativeEvent.layout.y; }}><ApoioDaLicao cliente={cliente} licao={licao} avaliacao={avaliacao} /></View>}
     </Tela>
   );
 }

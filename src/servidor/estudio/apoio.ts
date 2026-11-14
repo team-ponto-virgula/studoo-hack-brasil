@@ -54,7 +54,7 @@ function reforcoFalso(licao: LicaoDetalhe): Reforco {
   const fracao = /numerador|denominador/i.test(licao.titulo);
   return {
     objetivo: licao.objetivo,
-    origem: 'Demonstração simulada',
+    origem: 'Modo demonstração',
     motivo:
       'Uma resposta incorreta indica que vale revisar esta ideia antes de continuar.',
     simulado: true,

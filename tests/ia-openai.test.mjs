@@ -216,7 +216,7 @@ test("se a OpenAI falha antes do primeiro evento, a IA falsa monta a trilha (res
   const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Frações"));
   const pronto = eventos.at(-1);
   assert.equal(pronto.tipo, "pronto");
-  assert.match(pronto.proposta.origem, /IA falsa/);
+  assert.match(pronto.proposta.origem, /Modo demonstração/);
 });
 
 test("sem reserva, a falha da OpenAI vira o evento de erro ia_indisponivel", async () => {

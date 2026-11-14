@@ -804,7 +804,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const continuarAgora = useRef<() => void>(() => undefined);
   const { exercicio } = licao;
   const ocupado = pendente !== null;
-  const posicao = avaliacao ? posicoesAula.feedback : posicoesAula[etapa];
+  const posicao = avaliacao?.correta ? posicoesAula.feedback : posicoesAula[etapa];
   const andamento = mensagens.licao.posicao(posicao, posicoesAula.feedback);
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : undefined;
   const nomeEtapa = { conceito: mensagens.licao.conceito, exemplo: mensagens.licao.exemplo, exercicio: mensagens.licao.exercicio }[etapa];
@@ -853,6 +853,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   function tentarDeNovo() {
     setAvaliacao(null);
+    setResposta('');
     window.requestAnimationFrame(() => {
       const campo = formulario.current?.querySelector<HTMLInputElement>('input[type="text"], input:checked, input');
       campo?.focus();
@@ -955,7 +956,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           </section>
         )}
       </div>
-      <ApoioDaLicao licao={licao} avaliacao={avaliacao} />
+      {(etapa === 'exercicio' || avaliacao) && <ApoioDaLicao licao={licao} avaliacao={avaliacao} />}
       <footer className="aula-rodape" data-retorno={retorno}>
         <div className="aula-rodape__conteudo">
           {avaliacao && (
