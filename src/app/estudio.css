@@ -216,3 +216,18 @@
   text-align: left;
   padding-bottom: 12px;
 }
+
+/* Abre-e-fecha com a seta do Studoo, no lugar do triângulo padrão do navegador. */
+.painel--aula details > summary, .estudio-card details > summary { display: flex; align-items: center; gap: 8px; list-style: none; cursor: pointer; }
+.painel--aula details > summary::-webkit-details-marker, .estudio-card details > summary::-webkit-details-marker { display: none; }
+.painel--aula details > summary::before, .estudio-card details > summary::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  rotate: -45deg;
+  transition: rotate 160ms ease-out;
+}
+.painel--aula details[open] > summary::before, .estudio-card details[open] > summary::before { rotate: 45deg; }

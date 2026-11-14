@@ -1052,7 +1052,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
           {feita ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}
         </Text>
       </View>
-      {!feita && total > 0 && <Text style={caminhoEstilos.chegadaMeta}>{mensagens.trilha.chegadaMeta(total)}</Text>}
+      {!feita && total > 0 && <Text style={caminhoEstilos.chegadaMeta}>{mensagens.trilha.faltamTrofeu(faltam)}</Text>}
     </View>
   );
 }
@@ -1207,7 +1207,7 @@ const caminhoEstilos = StyleSheet.create({
   parteBarra: { height: 8, overflow: 'hidden', borderRadius: 999, backgroundColor: cores.gelo },
   parteBarraCheia: { height: '100%', borderRadius: 999, backgroundColor: cores.acao },
   chegada: { minHeight: 280, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 36, paddingBottom: 30, overflow: 'hidden' },
-  chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 64,
+  chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 132,
     borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
   chegadaColina: { position: 'absolute', bottom: -48, left: '50%', marginLeft: -200, width: 400, height: 190,
     borderTopLeftRadius: 200, borderTopRightRadius: 200 },
