@@ -810,3 +810,11 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 }
 .caminho-no[data-discreto][data-ligado] { padding-bottom: calc(var(--passo) + 30px); }
 .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 86px); }
+
+/*
+ * Fim de trecho por último (vence as folgas acima): o título embaixo do nó e a faixa da próxima parte não podem se
+ * cobrir. A faixa fica no meio do espaço, então o espaço precisa caber o título (até duas linhas) e a faixa.
+ */
+.caminho .caminho-no[data-fim-trecho][data-ligado] { padding-bottom: calc(var(--passo) + 176px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado][data-estado='atual'] { padding-bottom: calc(var(--passo) + 196px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 220px); }
