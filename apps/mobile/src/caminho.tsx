@@ -255,7 +255,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           let depois = 0;
           if (seguinte?.estado === 'atual') depois += medidas.etiqueta;
           if (fimDoTrecho) depois += medidas.marco;
-          const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
+          // Título discreto embaixo dos nós sem rótulo ao lado: um pouco mais de espaço até o próximo.
+          const discreto = no.estado === 'concluida' || no.estado === 'bloqueada';
+          const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois + (discreto ? 14 : 0) : 32;
           const surgir = montando && no.estado === 'previa';
           const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
           const recem = no.id === recemConcluida;
@@ -301,7 +303,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         )}
       </View>
       {comChegada && (
-        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} stu={stuNaChegada} festa={festaNaChegada || (comRecem && tudoFeito)}
+        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} stu={stuNaChegada} festa={festaNaChegada || (comRecem && tudoFeito)}
           aoMedir={(caixa) => {
           posicoes.current.chegada = caixa;
           tentarAcompanhar();
@@ -622,6 +624,11 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
       </View>
     </View>
   );
+  const discreto = !comRotulo && (
+    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + 12, left: Math.max(8, Math.min(largura - 168, centro - 80)) }]}>
+      <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta }]}>{no.titulo}</Text>
+    </View>
+  );
   const moeda = (pressionado: boolean) => (
     <View style={atual ? { transform: [{ scale: 1.14 }] } : null}>
       <Lente no={no} medidas={medidas} reduzir={reduzir} liberada={liberada} recem={recem} atrasoLiberacao={atrasoLiberacao}
@@ -646,6 +653,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
         {({ pressed }) => moeda(pressed)}
       </Pressable>
       {rotulo}
+      {discreto}
     </View>
   );
 }
@@ -922,8 +930,10 @@ function Parte({ numero, resumo }: { numero: number; resumo?: ResumoTrecho }) {
 }
 
 /** Chegada: o topo do caminho, com o troféu numa colina e bandeiras; fica dourada quando todas as lições estão concluídas. */
-function Chegada({ trecho, lente, feita, stu, festa, aoMedir }: {
+function Chegada({ trecho, lente, feita, stu, festa, total, aoMedir }: {
   trecho: number;
+  /** Lições da trilha, para a meta embaixo do troféu. */
+  total: number;
   lente: number;
   feita: boolean;
   stu: boolean;
@@ -985,6 +995,7 @@ function Chegada({ trecho, lente, feita, stu, festa, aoMedir }: {
           {feita ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}
         </Text>
       </View>
+      {!feita && total > 0 && <Text style={caminhoEstilos.chegadaMeta}>{mensagens.trilha.chegadaMeta(total)}</Text>}
     </View>
   );
 }
@@ -1093,6 +1104,10 @@ const caminhoEstilos = StyleSheet.create({
   titulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 21 },
   tituloAtual: { fontSize: 17, lineHeight: 22 },
   tituloPrevia: { fontSize: 15, lineHeight: 20 },
+  discreto: { position: 'absolute', width: 160, alignItems: 'center', zIndex: 2 },
+  discretoTexto: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, overflow: 'hidden', backgroundColor: 'rgba(255, 255, 255, 0.82)',
+    color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
+  chegadaMeta: { marginTop: -6, paddingHorizontal: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18, textAlign: 'center' },
   estradaInicial: { position: 'absolute', top: -22, width: 24, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: corEstrada },
   brilho: { position: 'absolute', top: -6, right: -2, color: '#FFB703', fontSize: 18, lineHeight: 20 },
   tituloFocado: { textDecorationLine: 'underline' },
