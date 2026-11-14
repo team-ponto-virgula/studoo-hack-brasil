@@ -939,3 +939,5 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 /* "Começar" com cara de botão: pílula azul no alto do balão. */
 .caminho-no__etiqueta { gap: 6px; padding-top: 10px; }
 .caminho-no__etiqueta-acao { padding: 3px 12px; border-radius: 999px; color: var(--fundo); background: var(--acao); box-shadow: 0 2px 0 #2a44a8; }
+/* Respiro acima do nó atual: o balão (ação + nome) fica no espaço livre, sem cobrir a estrada até o nó anterior. */
+.caminho .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 140px); }

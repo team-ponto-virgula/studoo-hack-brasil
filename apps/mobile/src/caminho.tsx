@@ -308,7 +308,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           // Título discreto embaixo dos nós sem rótulo ao lado: um pouco mais de espaço até o próximo.
           const discreto = no.estado === 'previa' || !!no.ponte;
           // O balão do nó atual traz o nome: precisa de mais espaço acima dele.
-          if (seguinte?.estado === 'atual') depois += 40;
+          if (seguinte?.estado === 'atual') depois += 80;
           if (discreto) depois += 14;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
           if (discreto && seguinte?.estado === 'atual') depois += 38;

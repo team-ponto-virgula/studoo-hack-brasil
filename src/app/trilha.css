@@ -369,3 +369,15 @@
   html[data-atual-visivel] .trilha-proximo { translate: 0 calc(100% + 40px); opacity: 0; visibility: hidden; }
 }
 @media (max-width: 767px) and (prefers-reduced-motion: reduce) { .trilha-proximo { transition: none; } }
+
+/* Celular: o nome do plano fica numa barra compacta presa no topo, como a faixa da unidade nos melhores apps. */
+@media (max-width: 767px) {
+  .trilha-topo {
+    position: sticky; top: 0; z-index: 6; margin: -8px calc(-1 * var(--espaco-pagina)) 0; padding: 10px var(--espaco-pagina);
+    background: rgb(255 255 255 / 0.96); box-shadow: 0 2px 0 var(--gelo); backdrop-filter: blur(8px);
+  }
+  .trilha-topo__rotulo { font-size: 0.6875rem; }
+  .trilha-topo h1 { overflow: hidden; font-size: 1.125rem; text-overflow: ellipsis; white-space: nowrap; }
+  .trilha-topo .anel { width: 44px; height: 44px; }
+  .trilha-topo .anel__numero { font-size: 1rem; }
+}

@@ -141,7 +141,9 @@ export function Logo({ decorativo = false, estilo }: { decorativo?: boolean; est
   );
 }
 
-export function Titulo({ children, testID, foco = false, estilo }: {
+export function Titulo({ children, testID, foco = false, estilo, linhas }: {
+  /** Corta o título em tantas linhas (a barra do plano usa uma). */
+  linhas?: number;
   children: ReactNode;
   testID?: string;
   foco?: boolean;
@@ -154,7 +156,7 @@ export function Titulo({ children, testID, foco = false, estilo }: {
     if (foco && titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus');
   }, [foco]);
 
-  return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" style={[estilos.titulo, estilo]}>{children}</Text>;
+  return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" numberOfLines={linhas} style={[estilos.titulo, estilo]}>{children}</Text>;
 }
 
 /**

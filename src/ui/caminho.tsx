@@ -201,7 +201,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       const botao = botoes.current.get(rolarPara);
       if (!inicio || !faixa || !botao) return;
       const ceu = inicio.getBoundingClientRect();
-      const resto = faixa.getBoundingClientRect().top - 12;
+      // Desconta a barra do plano presa no topo (celular), se houver.
+      const barra = document.querySelector('.trilha-topo');
+      const coberto = barra && getComputedStyle(barra).position === 'sticky' ? barra.getBoundingClientRect().height : 0;
+      const resto = faixa.getBoundingClientRect().top - 12 - coberto;
       if (ceu.top < 0 && resto > 0 && botao.getBoundingClientRect().top - resto > 72) window.scrollBy(0, resto);
     });
     return () => window.cancelAnimationFrame(quadro);
