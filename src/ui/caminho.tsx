@@ -152,6 +152,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const [entrada] = useState(() => !montando);
   const [dica, setDica] = useState(0);
   const [festaNaChegada, setFestaNaChegada] = useState(false);
+  const [trofeuTocado, setTrofeuTocado] = useState(0);
   const botoes = useRef(new Map<string, HTMLButtonElement>());
   const balao = useRef<HTMLDivElement>(null);
   const vindo = useRef<HTMLLIElement>(null);
@@ -318,7 +319,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           // Lado para onde o nó pende: o rótulo e o cenário vão para o lado livre, o Stu fica do lado do nó.
           const lado = x >= 50 ? 'direita' : 'esquerda';
           // Só a prévia mostra o título ao lado; as outras mostram um título curto embaixo (o atual, em destaque).
-          const comRotulo = no.estado === 'previa';
+          // Prévia e trilha mostram o título do mesmo jeito: curto, embaixo do nó.
+          const comRotulo = false;
           const atual = no.estado === 'atual';
           const estaAberto = aberto === no.id;
           const liberada = liberadas.includes(no.id);
@@ -467,10 +469,21 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             )}
           </span>
           {stuNaChegada && <span className="caminho-chegada__stu" aria-hidden="true"><Stu /></span>}
-          <span className="caminho-chegada__lente" aria-hidden="true">
+          <button type="button" className="caminho-chegada__lente" aria-label={mensagens.trilha.trofeu} disabled={montando}
+            data-tocado={trofeuTocado ? (trofeuTocado % 2 ? 'a' : 'b') : undefined}
+            onClick={() => {
+              setTrofeuTocado((anterior) => anterior + 1);
+              const faltam = nos.filter((no) => no.estado !== 'concluida').length;
+              setAnuncio(tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.faltamTrofeu(faltam));
+            }}>
             <Icone nome="trofeu" />
             {(festaNaChegada || (comRecem && tudoFeito)) && <Confete quantidade={18} />}
-          </span>
+            {trofeuTocado > 0 && (
+              <span key={trofeuTocado} className="caminho-chegada__bolha" aria-hidden="true">
+                {tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.faltamTrofeu(nos.filter((no) => no.estado !== 'concluida').length)}
+              </span>
+            )}
+          </button>
           <p className="caminho-chegada__texto">{tudoFeito ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}</p>
           {!tudoFeito && !montando && <p className="caminho-chegada__meta">{mensagens.trilha.chegadaMeta(total)}</p>}
         </div>
