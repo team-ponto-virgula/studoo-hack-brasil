@@ -794,3 +794,19 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho[data-comeco-atual] .caminho-no:first-child::before { top: -70px; height: calc(70px + var(--lente) / 2); }
 /* Nó atual que fecha um trecho: o título embaixo e a faixa da próxima parte precisam de espaço. */
 .caminho-no[data-estado='atual'][data-fim-trecho] { padding-bottom: calc(var(--passo) + 156px); }
+
+/* Títulos embaixo dos nós: até duas linhas, sempre dentro da coluna (a largura cabe dos dois lados do nó). */
+.caminho-no[data-discreto] .caminho-no__texto {
+  max-width: min(14rem, calc(2 * min(var(--coluna) * var(--x) / 100, var(--coluna) * (100 - var(--x)) / 100) - 16px));
+}
+.caminho-no[data-discreto] .caminho-no__titulo {
+  display: -webkit-box;
+  overflow: hidden;
+  white-space: normal;
+  text-overflow: clip;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+.caminho-no[data-discreto][data-ligado] { padding-bottom: calc(var(--passo) + 30px); }
+.caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 86px); }

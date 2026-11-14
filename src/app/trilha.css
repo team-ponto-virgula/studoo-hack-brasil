@@ -352,3 +352,6 @@
 
 /* Com um balão de nó aberto, o cartão da próxima lição sai da frente para não esconder a explicação. */
 .painel--trilha:has(.caminho-balao) .trilha-proximo { visibility: hidden; }
+
+/* O título da próxima lição aparece inteiro (até duas linhas) no cartão fixo. */
+.trilha-proximo__titulo { display: -webkit-box; overflow: hidden; white-space: normal; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; line-height: 1.25; }
