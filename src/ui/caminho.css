@@ -882,3 +882,14 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-chegada::before { top: calc(var(--lente-base) / 2); height: calc(140px - var(--lente-base) / 2); border-radius: 0 0 12px 12px; }
 /* Títulos com fundo opaco: a estrada não aparece por trás do texto. */
 .caminho-no[data-discreto] .caminho-no__texto { background: var(--fundo); box-shadow: 0 2px 0 rgb(27 42 94 / 0.06); }
+
+/* O troféu ainda por conquistar já tem cara de prêmio: aro e ícone dourados sobre a face branca. */
+.caminho-chegada:not([data-feita]) .caminho-chegada__lente {
+  color: #c98a0e;
+  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 16px 24px rgb(27 42 94 / 0.14);
+}
+/* Halo dourado em volta do troféu, antes e depois da conquista. */
+.caminho-chegada:not([data-feita]) .caminho-chegada__lente {
+  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 0 0 14px rgb(255 214 102 / 0.3), 0 16px 24px rgb(27 42 94 / 0.14);
+}
+.caminho-chegada:not([data-feita]) .caminho-chegada__brilho { animation: none; opacity: 0.85; }
