@@ -41,12 +41,11 @@ export function Icone({ nome }: { nome: NomeIcone }) {
 }
 
 /**
- * Ícone do nó: concluída mostra o visto e bloqueada o cadeado; a atual e a prévia mostram o tipo da lição.
+ * Ícone do nó: concluída mostra o visto; as outras mostram o tipo da lição (a bloqueada ganha o cadeado como selo).
  * O contrato ainda não tem o tipo da lição, então a revisão é reconhecida pelo título ("Revisão…").
  */
 function iconeDoNo(no: NoCaminho): NomeIcone {
   if (no.estado === 'concluida') return 'check';
-  if (no.estado === 'bloqueada') return 'cadeado';
   return no.titulo.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro';
 }
 
@@ -267,7 +266,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   }
 
   return (
-    <div className="caminho" data-montando={montando || undefined} data-entrada={(entrada && !comRecem) || undefined}
+    <div className="caminho" data-montando={montando || undefined} data-comeco-atual={nos[0]?.estado === 'atual' || undefined} data-entrada={(entrada && !comRecem) || undefined}
       data-recem={comRecem || undefined}>
       <div className="caminho-inicio" style={coresDaRegiao(primeiroTrecho)} data-regiao={regiaoDoTrecho(primeiroTrecho).id}>
         <span className="caminho-inicio__ceu" aria-hidden="true">
@@ -306,7 +305,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const xSeguinte = seguinte !== undefined || vaiAteVindo ? posicaoX(indice + 1) : 50;
           // Lado para onde o nó pende: o rótulo e o cenário vão para o lado livre, o Stu fica do lado do nó.
           const lado = x >= 50 ? 'direita' : 'esquerda';
-          const comRotulo = no.estado === 'previa' || no.estado === 'atual';
+          // Só a prévia mostra o título ao lado; as outras mostram um título curto embaixo (o atual, em destaque).
+          const comRotulo = no.estado === 'previa';
           const atual = no.estado === 'atual';
           const estaAberto = aberto === no.id;
           const liberada = liberadas.includes(no.id);
@@ -332,9 +332,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {recem && <Confete quantidade={12} />}
                 {atual && <span className="caminho-no__etiqueta">{mensagens.trilha.comecar}</span>}
+                {no.estado === 'bloqueada' && <span className="caminho-no__selo"><Icone nome="cadeado" /></span>}
               </span>
               <span className="caminho-no__texto" aria-hidden="true">
-                {atual && <span className="caminho-no__posicao">{posicao}</span>}
                 <span className="caminho-no__titulo">{no.titulo}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
                 {no.ponte && <span className="caminho-ponte"><span className="caminho-ponte__desenho">{[0, 5, 9, 5, 0].map((altura, i) => <span key={i} style={{ marginBottom: altura, animationDelay: `${i * 70}ms` }} />)}</span>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</span>}
