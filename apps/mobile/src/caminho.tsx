@@ -263,6 +263,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
           if (discreto && seguinte?.estado === 'atual') depois += 26;
           if (no.estado === 'atual' && fimDoTrecho) depois += 60;
+          if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 24;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
           const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
