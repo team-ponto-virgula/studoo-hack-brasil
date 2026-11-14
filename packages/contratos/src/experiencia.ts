@@ -294,7 +294,7 @@ export const mensagens = {
         resumo: {
             titulo: 'Resumo da lição',
             tempo: 'Tempo',
-            acerto: 'Acerto',
+            acerto: 'Tentativas',
             etapas: 'Etapas',
             dePrimeira: 'De primeira!',
             tentativas: (total: number) => `${total} tentativas`,
