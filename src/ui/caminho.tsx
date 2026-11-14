@@ -90,9 +90,6 @@ function FaixaParte({ numero, resumo }: { numero: number; resumo?: { total: numb
         <span className="caminho-parte__numero">{mensagens.trilha.parte(numero)}</span>
         <span className="caminho-parte__andamento">{texto}</span>
       </span>
-      {!resumo.previa && (
-        <span className="caminho-parte__barra"><span style={{ width: `${(resumo.feitas / resumo.total) * 100}%` }} /></span>
-      )}
     </span>
   );
 }
@@ -196,6 +193,15 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       // Considera o cartão fixo da próxima lição e a navegação de baixo, que cobrem o pé da tela.
       // Rola só o necessário: o nó para logo acima do cartão fixo, e o topo da trilha tende a continuar à vista.
       if (caixa.top < 0 || caixa.bottom > window.innerHeight - 240) item.scrollIntoView({ block: 'end' });
+      // Se a rolagem parou no meio do céu (a placa cortada no alto), segue até a faixa da Parte 1 ficar no topo,
+      // desde que o nó continue bem à vista.
+      const inicio = item.closest('.caminho')?.querySelector('.caminho-inicio');
+      const faixa = inicio?.querySelector('.caminho-parte');
+      const botao = botoes.current.get(rolarPara);
+      if (!inicio || !faixa || !botao) return;
+      const ceu = inicio.getBoundingClientRect();
+      const resto = faixa.getBoundingClientRect().top - 12;
+      if (ceu.top < 0 && resto > 0 && botao.getBoundingClientRect().top - resto > 72) window.scrollBy(0, resto);
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [rolarPara]);

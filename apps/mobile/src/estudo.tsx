@@ -1121,7 +1121,7 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   }, [erro, reduzir]);
 
   /** Centraliza o nó só quando ele está fora da vista, como o scrollIntoView da web. Com movimento reduzido, salta direto. */
-  function rolar(topo: number, base: number, sempre = false) {
+  function rolar(topo: number, base: number, sempre = false, piso?: number) {
     requestAnimationFrame(() => {
       const altura = visivel.current || height;
       // O card da próxima lição flutua sobre o pé da área: o nó e o título embaixo dele precisam ficar acima do card.
@@ -1129,7 +1129,10 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
       const limite = altura - (proximo ? 168 : 24);
       if (!sempre && pe <= limite) return;
       // Rola só o necessário: o nó fica logo acima do card (o topo da trilha tende a continuar à vista).
-      rolagem.current?.scrollTo({ y: Math.max(0, pe - limite), animated: reduzir === false });
+      let y = Math.max(0, pe - limite);
+      // Não para no meio do céu: com a placa cortada, segue até o piso, se o nó continuar à vista.
+      if (piso !== undefined && y > 0 && y < piso && topo - piso > 24) y = piso;
+      rolagem.current?.scrollTo({ y, animated: reduzir === false });
     });
   }
 
