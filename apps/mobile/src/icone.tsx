@@ -94,12 +94,12 @@ function escalar({ traco, ...peca }: Peca, escala: number, cor: string): ViewSty
 }
 
 /** Ícone decorativo: o significado vai sempre no texto ou no nome acessível de quem o usa. */
-export function Icone({ nome, tamanho = 24, cor }: { nome: NomeIcone; tamanho?: number; cor: string }) {
+export function Icone({ nome, tamanho = 24, cor, cheio = false }: { nome: NomeIcone; tamanho?: number; cor: string; cheio?: boolean }) {
   const escala = tamanho / 24;
   return (
     <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
       style={{ width: tamanho, height: tamanho }}>
-      {desenhos[nome].map((peca, indice) => <View key={indice} style={escalar(peca, escala, cor)} />)}
+      {desenhos[nome].map((peca, indice) => <View key={indice} style={[escalar(peca, escala, cor), cheio && indice === 0 && { backgroundColor: cor }]} />)}
     </View>
   );
 }

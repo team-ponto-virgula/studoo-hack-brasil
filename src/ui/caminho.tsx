@@ -78,14 +78,14 @@ function resumoDosTrechos(nos: readonly NoCaminho[]) {
 }
 
 /** Faixa que abre cada parte da trilha: número, andamento e, quando vencida, o dourado. Sem nome de assunto. */
-function FaixaParte({ numero, resumo }: { numero: number; resumo?: { total: number; feitas: number; previa: boolean } }) {
+function FaixaParte({ numero, resumo, trecho }: { numero: number; trecho: number; resumo?: { total: number; feitas: number; previa: boolean } }) {
   if (!resumo) return null;
   const vencida = !resumo.previa && resumo.feitas === resumo.total;
   const texto = resumo.previa
     ? mensagens.trilha.parteLicoes(resumo.total)
     : vencida ? mensagens.trilha.parteVencida : mensagens.trilha.parteProgresso(resumo.feitas, resumo.total);
   return (
-    <span className="caminho-parte" data-vencida={vencida || undefined} aria-hidden="true">
+    <span className="caminho-parte" data-vencida={vencida || undefined} aria-hidden="true" style={coresDaRegiao(trecho)}>
       <span className="caminho-parte__selo"><Icone nome={vencida ? 'trofeu' : 'bandeira'} /></span>
       <span className="caminho-parte__texto">
         <span className="caminho-parte__numero">{mensagens.trilha.parte(numero)}</span>
@@ -201,7 +201,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       const botao = botoes.current.get(rolarPara);
       if (!inicio || !faixa || !botao) return;
       const ceu = inicio.getBoundingClientRect();
-      const resto = faixa.getBoundingClientRect().top - 12;
+      // Desconta a barra do plano presa no topo (celular), se houver.
+      const barra = document.querySelector('.trilha-topo');
+      const coberto = barra && getComputedStyle(barra).position === 'sticky' ? barra.getBoundingClientRect().height : 0;
+      const resto = faixa.getBoundingClientRect().top - 12 - coberto;
       if (ceu.top < 0 && resto > 0 && botao.getBoundingClientRect().top - resto > 72) window.scrollBy(0, resto);
     });
     return () => window.cancelAnimationFrame(quadro);
@@ -329,7 +332,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             <Stu />
           </div>
         )}
-        {total > 0 && <FaixaParte numero={1} resumo={resumoTrechos.get(primeiroTrecho)} />}
+        {total > 0 && <FaixaParte numero={1} trecho={primeiroTrecho} resumo={resumoTrechos.get(primeiroTrecho)} />}
       </div>
       <ol className="caminho-nos" role="list" aria-label={mensagens.trilha.licoes}>
         {nos.map((no, indice) => {
@@ -383,7 +386,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           );
 
           return (
-            <li key={no.id} className="caminho-no" data-estado={no.estado} data-lado={lado}
+            <li key={no.id} className="caminho-no" data-estado={no.estado} data-lado={lado} data-revisao={iconeDoNo(no) === 'revisao' || undefined}
               style={{ ...coresDaRegiao(no.trecho), '--ordem': indice, '--x': x } as CSSProperties}
               data-ligado={ligado || undefined} data-fim-trecho={fimDoTrecho || undefined} data-rotulo={comRotulo || undefined} data-discreto={!comRotulo || undefined} data-liberada={liberada || undefined}
               data-aberto={estaAberto || undefined} data-recem={recem || undefined}
@@ -422,7 +425,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               )}
               {fimDoTrecho && (
                 <span className="caminho-marco" data-vencido={marcoVencido || undefined}>
-                  <FaixaParte numero={numeroMarco + 1} resumo={resumoTrechos.get(seguinte.trecho)} />
+                  <FaixaParte numero={numeroMarco + 1} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </span>
               )}
               {no.estado === 'previa' ? (

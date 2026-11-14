@@ -11,7 +11,7 @@
 
 .caminho {
   --lente-base: 72px;
-  --passo: 46px;
+  --passo: 36px;
   --coluna: 100%;
   --lateral: 0px;
   --tam-enfeite: 46px;
@@ -911,7 +911,7 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-parte__texto { gap: 8px; }
 .caminho-parte__numero { font-size: 0.9375rem; }
 /* Sem o card largo, a fronteira entre as partes precisa de bem menos espaço. */
-.caminho .caminho-no[data-fim-trecho][data-ligado] { padding-bottom: calc(var(--passo) + 136px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado] { padding-bottom: calc(var(--passo) + 116px); }
 .caminho .caminho-no[data-fim-trecho][data-ligado][data-estado='atual'] { padding-bottom: calc(var(--passo) + 112px); }
 .caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 188px); }
 
@@ -939,3 +939,26 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 /* "Começar" com cara de botão: pílula azul no alto do balão. */
 .caminho-no__etiqueta { gap: 6px; padding-top: 10px; }
 .caminho-no__etiqueta-acao { padding: 3px 12px; border-radius: 999px; color: var(--fundo); background: var(--acao); box-shadow: 0 2px 0 #2a44a8; }
+/* Respiro acima do nó atual: o balão (ação + nome) fica no espaço livre, sem cobrir a estrada até o nó anterior. */
+.caminho .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 140px); }
+
+/* Lições à frente: cinza neutro e frio com lábio escuro, separado de qualquer terreno. */
+.caminho-no[data-estado='bloqueada'] .caminho-no__lente { --face: #dfe3ee; --labio: #a9b1ca; --tinta: #66708f; }
+/* A revisão tem formato próprio: quadrado arredondado, não moeda. */
+.caminho-no[data-revisao] .caminho-no__lente { border-radius: 32%; }
+/* Pontilhado da estrada mais visível em qualquer terreno. */
+.caminho-conector__linha { stroke: rgb(27 42 94 / 0.34); }
+/* Troféu cheio e dourado, com halo mais quente; o rótulo da chegada fala em dourado. */
+.caminho-chegada__lente > .icone { width: 50%; height: 50%; }
+.caminho-chegada__lente > .icone path { fill: currentColor; }
+.caminho-chegada:not([data-feita]) .caminho-chegada__lente {
+  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 0 0 14px rgb(255 207 77 / 0.42), 0 16px 24px rgb(27 42 94 / 0.14);
+}
+.caminho-chegada__texto { color: #9a5b00; }
+/* Trecho final mais curto até o troféu. */
+.caminho-chegada { padding-top: 8px; }
+.caminho-chegada { min-height: calc(252px + var(--extra, 0px)); }
+.caminho-chegada::before { height: calc(112px - var(--lente-base) / 2); }
+
+/* Cada pílula de parte na cor do seu bioma: a mudança de capítulo fica marcada. */
+.caminho-parte { border-color: var(--relevo); background: var(--relevo); }
