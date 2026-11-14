@@ -1550,7 +1550,8 @@ const estudoEstilos = StyleSheet.create({
   rodapeFlutuante: { position: 'absolute', left: 12, right: 12, bottom: 10, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6,
     borderColor: cores.gelo, backgroundColor: cores.fundo, shadowColor: '#1B2A5E', shadowOpacity: 0.16, shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 }, elevation: 8 },
-  conteudoComFlutuante: { paddingBottom: 150 },
+  // O morro do troféu já desce por baixo do cartão flutuante; sem folga branca no fim.
+  conteudoComFlutuante: { paddingBottom: 0 },
   proximoTextos: { flex: 1, minWidth: 0 },
   proximoRotuloRodape: { fontSize: 12, lineHeight: 16 },
   proximoTituloRodape: { fontSize: 16, lineHeight: 22 },

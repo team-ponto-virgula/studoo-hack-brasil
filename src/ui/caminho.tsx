@@ -18,7 +18,8 @@ export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' |
 const desenhos: Record<NomeIcone, ReactNode> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
   livro: <path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5zM12 6.5V19" />,
-  revisao: <path d="M19.5 12a7.5 7.5 0 0 1-13 5.1M4.5 12a7.5 7.5 0 0 1 13-5.1M17.5 3.5v3.6h-3.6M6.5 20.5v-3.6h3.6" />,
+  // Repetir: arco de três quartos com uma seta, o mesmo desenho do app.
+  revisao: <path d="M6.7 6.7A7.5 7.5 0 1 1 6.7 17.3M10.6 15.5H5.8v4.7" />,
   cadeado: <><rect x="5.5" y="10.5" width="13" height="9" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></>,
   // Bandeira cheia (pano preenchido), legível mesmo pequena; a mesma do app.
   bandeira: <><path d="M6 20V4.5" /><path d="M6 5h10.5l-2 3.5 2 3.5H6z" fill="currentColor" /></>,

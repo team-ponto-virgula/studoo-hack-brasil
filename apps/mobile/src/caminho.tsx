@@ -361,7 +361,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         )}
       </View>
       {comChegada && (
-        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total}
+        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : 130}
           faltam={nos.filter((no) => no.estado !== 'concluida').length} stu={stuNaChegada} festa={festaNaChegada || (comRecem && tudoFeito)}
           aoMedir={(caixa) => {
           posicoes.current.chegada = caixa;
@@ -832,7 +832,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
       <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), {
         top: afundar, backgroundColor: visual.face, transform: [{ scale: escala }],
       }]}>
-        <View style={no.estado === 'bloqueada' ? { opacity: 0.55 } : null}><Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} /></View>
+        <View><Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} /></View>
         {liberada && (
           <Animated.View style={[caminhoEstilos.cadeado, { borderRadius: lente / 2, opacity: cadeado }]}>
             <Icone nome="cadeado" tamanho={tamanhoIcone} cor={cores.tintaNeutra} />
@@ -1007,7 +1007,9 @@ function Parte({ numero, resumo }: { numero: number; resumo?: ResumoTrecho }) {
 }
 
 /** Chegada: o topo do caminho, com o troféu numa colina e bandeiras; fica dourada quando todas as lições estão concluídas. */
-function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
+function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, extra = 0 }: {
+  /** No celular, o morro continua por baixo do cartão flutuante (pontos a mais embaixo). */
+  extra?: number;
   trecho: number;
   /** Lições que faltam: o troféu tocado diz quantas. */
   faltam: number;
@@ -1044,27 +1046,28 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
     return () => animacao.stop();
   }, [festa, reduzir, pop]);
   return (
-    <View style={[caminhoEstilos.chegada, { backgroundColor: chao }]}
+    <View style={[caminhoEstilos.chegada, { backgroundColor: chao, minHeight: 280 + extra, paddingBottom: 30 + extra }]}
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
         <View style={[caminhoEstilos.chegadaEstrada, { backgroundColor: estradaSobre(chao) }]} />
         {/* O mesmo pontilhado da estrada, sem emenda até o troféu. */}
         {!feita && Array.from({ length: 9 }, (_, indice) => <View key={indice} style={[caminhoEstilos.pontoEstrada, { top: 7 + indice * 14 }]} />)}
-        <View style={[caminhoEstilos.chegadaColina, { backgroundColor: relevo }]} />
-        <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { left: '50%', marginLeft: -104 }]} />
-        <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { right: '50%', marginRight: -104, transform: [{ scaleX: -1 }] }]} />
+        <View style={[caminhoEstilos.chegadaColina, { backgroundColor: relevo, bottom: -48 + extra }]} />
+        {extra > 0 && <View style={[caminhoEstilos.chegadaBase, { height: extra, backgroundColor: relevo }]} />}
+        <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { bottom: 96 + extra, left: '50%', marginLeft: -104 }]} />
+        <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { bottom: 96 + extra, right: '50%', marginRight: -104, transform: [{ scaleX: -1 }] }]} />
         {/* Estrelas também antes da conquista: o troféu já parece um prêmio desejável. */}
         {(
           <>
-            <Desenho nome="estrela" largura={22} estilo={{ position: 'absolute', bottom: 150, left: '50%', marginLeft: -72 }} />
-            <Desenho nome="estrela" largura={16} estilo={{ position: 'absolute', bottom: 172, right: '50%', marginRight: -66 }} />
-            <Desenho nome="estrela" largura={14} estilo={{ position: 'absolute', bottom: 118, right: '50%', marginRight: -98 }} />
+            <Desenho nome="estrela" largura={22} estilo={{ position: 'absolute', bottom: 150 + extra, left: '50%', marginLeft: -72 }} />
+            <Desenho nome="estrela" largura={16} estilo={{ position: 'absolute', bottom: 172 + extra, right: '50%', marginRight: -66 }} />
+            <Desenho nome="estrela" largura={14} estilo={{ position: 'absolute', bottom: 118 + extra, right: '50%', marginRight: -98 }} />
           </>
         )}
       </View>
       {stu && (
         <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-          importantForAccessibility="no" style={[caminhoEstilos.chegadaStu, {
+          importantForAccessibility="no" style={[caminhoEstilos.chegadaStu, { bottom: 74 + extra,
             transform: [
               { translateY: pulo.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) },
               { rotate: pulo.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '4deg'] }) },
@@ -1182,7 +1185,7 @@ export function SkeletonTrilha() {
 const caminhoEstilos = StyleSheet.create({
   caminho: { marginTop: 8 },
   // No celular o mapa termina com cantos arredondados, como na web.
-  caminhoTela: { marginHorizontal: -20, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden' },
+  caminhoTela: { marginHorizontal: -20 },
   caminhoLargo: { borderRadius: 28, overflow: 'hidden' },
   // Começo do mapa
   inicio: { minHeight: 210, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', paddingHorizontal: 16,
@@ -1265,6 +1268,7 @@ const caminhoEstilos = StyleSheet.create({
   chegadaColina: { position: 'absolute', bottom: -48, left: '50%', marginLeft: -200, width: 400, height: 190,
     borderTopLeftRadius: 200, borderTopRightRadius: 200 },
   chegadaBandeira: { position: 'absolute', bottom: 96 },
+  chegadaBase: { position: 'absolute', bottom: 0, left: '50%', marginLeft: -200, width: 400 },
   chegadaStu: { position: 'absolute', bottom: 74, left: '50%', marginLeft: 50, width: 62, height: 68 },
   chegadaPlaca: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.9)' },
   chegadaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },

@@ -358,7 +358,9 @@
 
 /* Celular: o mapa termina com cantos arredondados, como um cartão, em vez de um corte reto. */
 @media (max-width: 767px) {
-  .painel--trilha > .caminho { overflow: hidden; border-radius: 0 0 32px 32px; }
+  /* O morro do troféu continua por baixo do cartão flutuante até a navegação: o mapa não termina num corte branco. */
+  .painel--trilha > .caminho { margin-bottom: -120px; }
+  .painel--trilha .caminho-chegada { --extra: 120px; }
 }
 
 /* Com o nó atual à vista, o cartão fixo da próxima lição desce e some: o balão "Começar" já faz esse papel. */
