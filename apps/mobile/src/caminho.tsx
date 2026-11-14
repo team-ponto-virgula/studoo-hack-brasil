@@ -63,7 +63,7 @@ function useMedidas(): Medidas {
   const { width } = useWindowDimensions();
   if (width >= 1024) return { lente: 82, linhas: 56, etiqueta: 38, marco: 72, enfeite: 62, miudo: 28, guia: 70 };
   if (width >= 768) return { lente: 78, linhas: 52, etiqueta: 38, marco: 72, enfeite: 56, miudo: 28, guia: 64 };
-  return { lente: 72, linhas: 46, etiqueta: 38, marco: 72, enfeite: 46, miudo: 24, guia: 56 };
+  return { lente: 72, linhas: 36, etiqueta: 38, marco: 60, enfeite: 46, miudo: 24, guia: 56 };
 }
 
 /** Cores da lente por estado: a face, o lábio embaixo (o relevo) e o ícone. */
@@ -284,7 +284,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           posicoes.current.inicio = altura;
           tentarRolar();
         }}
-        parte={total > 0 ? <Parte numero={1} resumo={resumoTrechos.get(primeiroTrecho)} /> : null} />
+        parte={total > 0 ? <Parte numero={1} trecho={primeiroTrecho} resumo={resumoTrechos.get(primeiroTrecho)} /> : null} />
       <View accessibilityRole="list" accessibilityLabel={mensagens.trilha.licoes}
         onLayout={(evento) => {
           posicoes.current.lista = evento.nativeEvent.layout.y;
@@ -346,7 +346,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               </Entra>
               {fimDoTrecho && (
                 <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + 28}>
-                  <Parte numero={trechos.indexOf(no.trecho) + 2} resumo={resumoTrechos.get(seguinte.trecho)} />
+                  <Parte numero={trechos.indexOf(no.trecho) + 2} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </Marco>
               )}
             </Linha>
@@ -987,14 +987,14 @@ function Marco({ numero, vencido, topo, children }: { numero: number; vencido: b
 }
 
 /** Faixa que abre cada parte da trilha: número, andamento e barra; dourada quando vencida. Sem nome de assunto. */
-function Parte({ numero, resumo }: { numero: number; resumo?: ResumoTrecho }) {
+function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; resumo?: ResumoTrecho }) {
   if (!resumo) return null;
   const vencida = !resumo.previa && resumo.feitas === resumo.total;
   let texto = mensagens.trilha.parteProgresso(resumo.feitas, resumo.total);
   if (resumo.previa) texto = mensagens.trilha.parteLicoes(resumo.total);
   else if (vencida) texto = mensagens.trilha.parteVencida;
   return (
-    <View style={caminhoEstilos.parte} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+    <View style={[caminhoEstilos.parte, { backgroundColor: coresDaRegiao(trecho).relevo, borderColor: coresDaRegiao(trecho).relevo }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       <View style={[caminhoEstilos.parteSelo, vencida && caminhoEstilos.parteSeloVencida]}>
         <Icone nome={vencida ? 'trofeu' : 'bandeira'} tamanho={16} cor={vencida ? cores.ouroTexto : cores.fundo} />
       </View>

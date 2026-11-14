@@ -11,7 +11,7 @@
 
 .caminho {
   --lente-base: 72px;
-  --passo: 46px;
+  --passo: 36px;
   --coluna: 100%;
   --lateral: 0px;
   --tam-enfeite: 46px;
@@ -911,7 +911,7 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-parte__texto { gap: 8px; }
 .caminho-parte__numero { font-size: 0.9375rem; }
 /* Sem o card largo, a fronteira entre as partes precisa de bem menos espaço. */
-.caminho .caminho-no[data-fim-trecho][data-ligado] { padding-bottom: calc(var(--passo) + 136px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado] { padding-bottom: calc(var(--passo) + 116px); }
 .caminho .caminho-no[data-fim-trecho][data-ligado][data-estado='atual'] { padding-bottom: calc(var(--passo) + 112px); }
 .caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 188px); }
 
@@ -959,3 +959,6 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-chegada { padding-top: 8px; }
 .caminho-chegada { min-height: calc(252px + var(--extra, 0px)); }
 .caminho-chegada::before { height: calc(112px - var(--lente-base) / 2); }
+
+/* Cada pílula de parte na cor do seu bioma: a mudança de capítulo fica marcada. */
+.caminho-parte { border-color: var(--relevo); background: var(--relevo); }
