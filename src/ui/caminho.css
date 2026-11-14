@@ -748,7 +748,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   top: calc(var(--lente) + 12px);
   left: calc(var(--lateral) + var(--coluna) * var(--x) / 100);
   right: auto;
-  max-width: min(12rem, calc(var(--coluna) - 32px));
+  max-width: min(14rem, calc(var(--coluna) - 32px));
   align-items: stretch;
   padding: 3px 10px;
   border-radius: 10px;
@@ -765,3 +765,32 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 70px); }
 .caminho-no[data-discreto][data-fim-trecho] { padding-bottom: calc(var(--passo) + 124px); }
 .caminho-no[data-discreto][data-fim-trecho]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 168px); }
+
+/* Bloqueada: o ícone do tipo de lição continua visível, com o cadeado num selo pequeno. */
+.caminho-no[data-estado='bloqueada'] .caminho-no__lente > .icone { opacity: 0.55; }
+.caminho-no__selo {
+  position: absolute;
+  right: -4px;
+  bottom: -2px;
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 3px solid var(--fundo);
+  border-radius: 50%;
+  color: var(--fundo);
+  background: #98a1bd;
+}
+.caminho-no__selo > .icone { width: 14px; height: 14px; stroke-width: 3; }
+
+/* Nó atual: o título curto embaixo, em destaque, no lugar do cartão ao lado. */
+.caminho-no[data-estado='atual'][data-discreto] .caminho-no__texto { top: calc(var(--lente) + 20px); border: 2px solid rgb(68 102 228 / 0.28); background: var(--fundo); }
+.caminho-no[data-estado='atual'][data-discreto] .caminho-no__titulo { color: var(--acao); font-size: 0.875rem; font-weight: 900; }
+.caminho-no[data-estado='atual'][data-ligado] { padding-bottom: calc(var(--passo) + 28px); }
+
+/* Começo no primeiro nó: a faixa da Parte 1 sobe para o balão "Começar" não cobri-la. */
+.caminho[data-comeco-atual] .caminho-inicio { padding-bottom: 150px; }
+.caminho[data-comeco-atual] .caminho-inicio > .caminho-parte { bottom: 70px; }
+.caminho[data-comeco-atual] .caminho-no:first-child::before { top: -70px; height: calc(70px + var(--lente) / 2); }
+/* Nó atual que fecha um trecho: o título embaixo e a faixa da próxima parte precisam de espaço. */
+.caminho-no[data-estado='atual'][data-fim-trecho] { padding-bottom: calc(var(--passo) + 156px); }

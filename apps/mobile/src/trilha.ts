@@ -67,7 +67,6 @@ export function explicar(nos: readonly NoCaminho[], indice: number) {
  */
 export function iconeDoNo(no: NoCaminho): NomeIcone {
   if (no.estado === 'concluida') return 'check';
-  if (no.estado === 'bloqueada') return 'cadeado';
   return no.titulo.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro';
 }
 
