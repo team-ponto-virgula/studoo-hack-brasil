@@ -912,9 +912,22 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-parte__numero { font-size: 0.9375rem; }
 /* Sem o card largo, a fronteira entre as partes precisa de bem menos espaço. */
 .caminho .caminho-no[data-fim-trecho][data-ligado] { padding-bottom: calc(var(--passo) + 136px); }
-.caminho .caminho-no[data-fim-trecho][data-ligado][data-estado='atual'] { padding-bottom: calc(var(--passo) + 156px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado][data-estado='atual'] { padding-bottom: calc(var(--passo) + 112px); }
 .caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 188px); }
 
 /* Lições à frente: moeda branca com o lábio no tom da região, bem visível sobre o chão claro (antes, cinza sobre claro). */
 .caminho-no[data-estado='bloqueada'] .caminho-no__lente { --face: var(--fundo); --labio: color-mix(in srgb, var(--relevo), #1b2a5e 22%); --tinta: #7d87a6; }
 .caminho-no[data-estado='bloqueada'] .caminho-no__lente > .icone { opacity: 1; }
+/* Estrada opaca (o mesmo branco a 72% já misturado ao chão da região): pedaços sobrepostos não ficam mais claros na emenda. */
+.caminho-no, .caminho-chegada { --estrada: color-mix(in srgb, #fff 72%, var(--chao, #fff)); }
+
+/* Balão do nó atual com a ação e o nome juntos (antes eram duas caixas: "Começar" em cima e o nome embaixo). */
+.caminho-no__etiqueta {
+  display: flex; flex-direction: column; align-items: center; gap: 2px; width: max-content; max-width: 210px;
+  padding: 8px 14px 10px; text-align: center; text-transform: none; letter-spacing: normal; white-space: normal;
+}
+.caminho-no__etiqueta-acao { color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.caminho-no__etiqueta-titulo { color: var(--texto); font-size: 0.9375rem; font-weight: 800; line-height: 1.25; }
+/* O balão puxa para o centro conforme o lado do nó (x de 27 a 73), para não encostar na borda; a seta segue no nó. */
+.caminho-no__etiqueta { --puxa: calc((50 - var(--x)) * 1.7px); translate: calc(-50% + var(--puxa)) 0; }
+.caminho-no__etiqueta::after { left: calc(50% - var(--puxa)); }

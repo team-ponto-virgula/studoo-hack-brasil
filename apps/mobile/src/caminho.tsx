@@ -306,11 +306,13 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (seguinte?.estado === 'atual') depois += medidas.etiqueta;
           if (fimDoTrecho) depois += medidas.marco;
           // Título discreto embaixo dos nós sem rótulo ao lado: um pouco mais de espaço até o próximo.
-          const discreto = no.estado === 'atual' || no.estado === 'previa' || !!no.ponte;
+          const discreto = no.estado === 'previa' || !!no.ponte;
+          // O balão do nó atual traz o nome: precisa de mais espaço acima dele.
+          if (seguinte?.estado === 'atual') depois += 40;
           if (discreto) depois += 14;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
           if (discreto && seguinte?.estado === 'atual') depois += 38;
-          if (no.estado === 'atual' && fimDoTrecho) depois += 60;
+          if (no.estado === 'atual' && fimDoTrecho) depois += 16;
           if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 24;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
@@ -686,7 +688,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
     </View>
   );
   // Como na web: o nome fica só no nó atual (e na prévia da geração); os outros mostram o nome ao toque.
-  const discreto = !comRotulo && (atual || no.estado === 'previa' || !!no.ponte) && (
+  const discreto = !comRotulo && (no.estado === 'previa' || !!no.ponte) && (
     <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 192, centro - 92)) }]}>
       {/* O fundo fica na caixa, não no texto: assim o corte em duas linhas não deixa vazar a terceira. */}
       <View style={[caminhoEstilos.discretoCaixa, atual && caminhoEstilos.discretoCaixaAtual]}>
@@ -698,7 +700,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const moeda = (pressionado: boolean) => (
     <View style={atual ? { transform: [{ scale: 1.14 }] } : null}>
       <Lente no={no} medidas={medidas} reduzir={reduzir} liberada={liberada} recem={recem} atrasoLiberacao={atrasoLiberacao}
-        pressionado={pressionado} focado={focado} />
+        pressionado={pressionado} focado={focado} puxa={(50 - x) * 1.5} />
     </View>
   );
 
@@ -729,7 +731,9 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
  * uma vez e depois respira devagar, e a etiqueta "Começar", que flutua. A recém-liberada mostra o cadeado se abrindo.
  * Com movimento reduzido, tudo já aparece no estado final, parado.
  */
-function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressionado, focado }: {
+function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressionado, focado, puxa = 0 }: {
+  /** Deslocamento do balão para o centro da tela (o nó fica de um lado): não encosta na borda; a seta segue no nó. */
+  puxa?: number;
   no: NoCaminho;
   medidas: Medidas;
   reduzir: boolean | null;
@@ -844,13 +848,15 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
       )}
       {focado && <View style={[caminhoEstilos.anelFoco, circulo(lente + anel * 2), { left: -anel, top: -anel }]} />}
       {atual && (
-        <Animated.View style={[caminhoEstilos.etiquetaCaixa, { bottom: lente + 22 }, {
+        <Animated.View style={[caminhoEstilos.etiquetaCaixa, { bottom: lente + 22, left: -110 + puxa, right: -110 - puxa }, {
           opacity: etiqueta,
           transform: [{ translateY: etiqueta.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }, { translateY: flutuar }],
         }]}>
+          {/* Um balão só no nó atual: a ação e o nome da lição juntos, como na web. */}
           <View style={caminhoEstilos.etiqueta}>
-            <View style={caminhoEstilos.etiquetaSeta} />
+            <View style={[caminhoEstilos.etiquetaSeta, { marginLeft: -6 - puxa }]} />
             <Text style={caminhoEstilos.etiquetaTexto}>{mensagens.trilha.comecar.toLocaleUpperCase('pt-BR')}</Text>
+            <Text numberOfLines={2} style={caminhoEstilos.etiquetaTitulo}>{no.titulo}</Text>
           </View>
         </Animated.View>
       )}
@@ -1233,11 +1239,12 @@ const caminhoEstilos = StyleSheet.create({
     backgroundColor: cores.faceNeutra },
   anelFoco: { position: 'absolute', borderWidth: 3, borderColor: cores.acao },
   etiquetaCaixa: { position: 'absolute', left: -60, right: -60, alignItems: 'center' },
-  etiqueta: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 12, borderWidth: 2, borderBottomWidth: 4,
+  etiqueta: { maxWidth: 210, alignItems: 'center', gap: 2, paddingHorizontal: 14, paddingTop: 7, paddingBottom: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4,
     borderColor: cores.gelo, backgroundColor: cores.fundo },
   etiquetaSeta: { position: 'absolute', bottom: -8, left: '50%', marginLeft: -6, width: 12, height: 12, borderRadius: 2,
     borderRightWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
-  etiquetaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18, letterSpacing: 0.6 },
+  etiquetaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.9 },
+  etiquetaTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 19, textAlign: 'center' },
   // Ligação, marco e chegada
   ligacao: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   marcoArea: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, zIndex: 3 },

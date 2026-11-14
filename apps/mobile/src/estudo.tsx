@@ -1121,7 +1121,8 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   const [atualVisivel, setAtualVisivel] = useState(false);
   function avaliarAtual() {
     const atual = atualNaRolagem.current;
-    const altura = alturaComCartao.current;
+    // O cartão flutua sobre o pé da área (cerca de 120 pontos).
+    const altura = alturaComCartao.current - 120;
     if (!atual || !altura) return;
     const visto = atual.topo - rolagemY.current >= -10 && atual.base + 48 - rolagemY.current <= altura;
     setAtualVisivel((antes) => (antes === visto ? antes : visto));
@@ -1156,6 +1157,8 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
 
   return (
     <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo || (atualVisivel && passo) ? null : passo || novo} rolagem={rolagem}
+      // No celular, o cartão da próxima lição flutua sobre o mapa, como na web; o conteúdo ganha folga para passar por baixo.
+      estiloRodape={largo ? undefined : estudoEstilos.rodapeFlutuante} estiloConteudo={largo ? undefined : estudoEstilos.conteudoComFlutuante}
       aoMedir={(altura) => {
         visivel.current = altura;
         if (!atualVisivel || !alturaComCartao.current) alturaComCartao.current = altura;
@@ -1544,6 +1547,10 @@ const estudoEstilos = StyleSheet.create({
   proximoTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24 },
   proximoAcao: { alignItems: 'flex-start', marginTop: 12 },
   proximoRodape: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rodapeFlutuante: { position: 'absolute', left: 12, right: 12, bottom: 10, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6,
+    borderColor: cores.gelo, backgroundColor: cores.fundo, shadowColor: '#1B2A5E', shadowOpacity: 0.16, shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 }, elevation: 8 },
+  conteudoComFlutuante: { paddingBottom: 150 },
   proximoTextos: { flex: 1, minWidth: 0 },
   proximoRotuloRodape: { fontSize: 12, lineHeight: 16 },
   proximoTituloRodape: { fontSize: 16, lineHeight: 22 },
