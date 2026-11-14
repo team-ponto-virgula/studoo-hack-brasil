@@ -298,7 +298,7 @@ export const mensagens = {
             etapas: 'Etapas',
             dePrimeira: 'De primeira!',
             tentativas: (total: number) => `${total} tentativas`,
-            etapasFeitas: '4 de 4'
+            etapasFeitas: '3 de 3'
         },
         avancar: 'Ir para a próxima lição',
         origem: 'Origem',

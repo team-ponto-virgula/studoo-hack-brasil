@@ -775,7 +775,8 @@ function ProximoPasso({ titulo, detalhe, abrindo, ocupado, aoAbrir }: {
   );
 }
 
-const posicoesAula = { conceito: 1, exemplo: 2, exercicio: 3, feedback: 4 } as const;
+// Três etapas de verdade: conceito, exemplo e exercício; o retorno acontece na própria etapa do exercício.
+const posicoesAula = { conceito: 1, exemplo: 2, exercicio: 3, feedback: 3 } as const;
 type EtapaAula = 'conceito' | 'exemplo' | 'exercicio';
 /** O que a pessoa fez na lição, para o resumo da conclusão: tempo, tentativas e se acertou de primeira. */
 export type ResumoLicao = { segundos: number; tentativas: number; dePrimeira: boolean };
@@ -907,7 +908,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         <div className="aula-andamento">
           <div className="aula-barra" role="progressbar" aria-label={andamento} aria-valuemin={0} aria-valuemax={posicoesAula.feedback}
             aria-valuenow={posicao}>
-            <span className="aula-barra__preenchimento" style={{ '--progresso': posicao / posicoesAula.feedback } as CSSProperties} />
+            <span className="aula-barra__preenchimento" style={{ '--progresso': (avaliacao?.correta ? posicao : posicao - 0.5) / posicoesAula.feedback } as CSSProperties} />
           </div>
           <span className="aula-posicao" aria-hidden="true">{andamento}</span>
         </div>
@@ -982,12 +983,13 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                   <span className="somente-leitor"> {avaliacao.correta ? mensagens.licao.correta : mensagens.licao.incorreta}.</span>
                 </h2>
                 <p>{avaliacao.feedback}</p>
+                {!avaliacao.correta && <span className="aula-retorno__link"><Botao variante="texto" disabled={ocupado} onClick={() => { const alvo = document.querySelector<HTMLElement>('.estudio-ponte'); alvo?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); alvo?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true }); }}>{mensagens.estudio.verPonte}</Botao></span>}
               </div>
             </section>
           )}
           <div className="aula-rodape__acoes">
             {avaliacao && !avaliacao.correta && (
-              <><Botao disabled={ocupado} onClick={tentarDeNovo}>{mensagens.licao.tentarDeNovo}</Botao><Botao variante="texto" disabled={ocupado} onClick={() => { const alvo = document.querySelector<HTMLElement>('.estudio-ponte'); alvo?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); alvo?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true }); }}>{mensagens.estudio.verPonte}</Botao></>
+              <Botao disabled={ocupado} onClick={tentarDeNovo}>{mensagens.licao.tentarDeNovo}</Botao>
             )}
             {acao}
           </div>

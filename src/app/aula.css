@@ -309,3 +309,7 @@
 @media (max-width: 767px) {
   .skeleton-licao__botao { width: 100%; }
 }
+
+/* "Ver outro exemplo" fica como link no texto do retorno; o rodapé fica com duas ações. */
+.aula-retorno__link { display: block; margin-top: 4px; }
+.aula-retorno__link .botao { min-height: 36px; padding-inline: 0; }
