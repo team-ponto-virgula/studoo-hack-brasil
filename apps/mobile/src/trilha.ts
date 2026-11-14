@@ -75,6 +75,14 @@ export function iconeDoNo(no: NoCaminho): NomeIcone {
  * Posição do nó no caminho. Enquanto a trilha ainda está sendo montada, o total muda a cada lição que chega,
  * então a posição mostra só o número ("Lição 3"); com a trilha completa, mostra também o total ("Lição 3 de 9").
  */
+/**
+ * Posição horizontal do nó, em % da largura do caminho: a mesma serpentina da web (src/ui/caminho.tsx), deslocada meio
+ * passo para nenhum nó ficar exatamente no centro.
+ */
+export function posicaoX(indice: number) {
+  return Math.round((50 + 23 * Math.sin(((indice + 0.5) * Math.PI) / 4)) * 10) / 10;
+}
+
 export function posicaoDoNo(indice: number, total: number, montando = false) {
   return montando ? mensagens.trilha.posicaoParcial(indice + 1) : mensagens.trilha.posicao(indice + 1, total);
 }
