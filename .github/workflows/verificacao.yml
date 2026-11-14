@@ -72,6 +72,7 @@ jobs:
           npm run test:paridade
           npm run test:movimento
           npm run test:google-mobile
+          npm run test:email
           npm run test:ia
 
       - name: Build

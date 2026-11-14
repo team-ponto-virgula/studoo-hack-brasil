@@ -1,24 +1,20 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
-import nodemailer from 'nodemailer';
 import { origemStudoo } from '../acesso/origem';
 
 function local() {
   const origem = origemStudoo();
   return origem && ['localhost', '127.0.0.1', '[::1]'].includes(new URL(origem).hostname);
 }
-function configuracaoSmtp() {
-  const host = process.env.SMTP_HOST?.trim();
-  const port = Number(process.env.SMTP_PORT ?? '587');
+function configuracaoResend() {
+  const chave = process.env.RESEND_API_KEY?.trim();
   const from = process.env.EMAIL_FROM?.trim();
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASSWORD;
-  if (!host || !from || /[\r\n]/.test(from) || !Number.isInteger(port) || port < 1 || port > 65535 || (!!user !== !!pass)) return null;
-  return { host, port, from, user, pass };
+  if (!chave || /[\r\n]/.test(chave) || !from || /[\r\n]/.test(from)) return null;
+  return { chave, from };
 }
 export function recuperacaoDisponivel() {
-  return !!origemStudoo() && (process.env.EMAIL === 'falso' ? !!local() : process.env.EMAIL === 'smtp' && !!configuracaoSmtp());
+  return !!origemStudoo() && (process.env.EMAIL === 'falso' ? !!local() : process.env.EMAIL === 'resend' && !!configuracaoResend());
 }
 export async function enviarRecuperacao(email: string, codigo: string) {
   if (!recuperacaoDisponivel()) throw new Error('E-mail indisponível');
@@ -34,15 +30,21 @@ export async function enviarRecuperacao(email: string, codigo: string) {
     await writeFile(join(pasta, `${randomUUID()}.json`), JSON.stringify(mensagem, null, 2), { mode: 0o600 });
     return;
   }
-  const config = configuracaoSmtp()!;
-  const secure = process.env.SMTP_SECURE === 'true' || config.port === 465;
-  const transporte = nodemailer.createTransport({
-    host: config.host, port: config.port, secure, requireTLS: !secure,
-    auth: config.user ? { user: config.user, pass: config.pass! } : undefined,
-    connectionTimeout: 5000, greetingTimeout: 5000, socketTimeout: 10000,
-    tls: { minVersion: 'TLSv1.2' },
-    logger: false, debug: false,
-  });
-  try { await transporte.sendMail({ ...mensagem, from: config.from }); }
-  finally { transporte.close(); }
+  const config = configuracaoResend()!;
+  try {
+    const resposta = await fetch('https://api.resend.com/emails', {
+      method: 'POST', cache: 'no-store', redirect: 'error',
+      signal: AbortSignal.timeout(10_000),
+      headers: { Authorization: `Bearer ${config.chave}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...mensagem, to: [email], from: config.from }),
+    });
+    if (!resposta.ok) throw new Error('Envio recusado');
+    const dados: unknown = await resposta.json();
+    if (!dados || typeof dados !== 'object' || !('id' in dados) || typeof dados.id !== 'string' || !dados.id.trim()) {
+      throw new Error('Resposta inválida');
+    }
+  } catch {
+    // Não propaga respostas do provedor, destinatários, códigos ou chaves para logs/API.
+    throw new Error('E-mail indisponível');
+  }
 }

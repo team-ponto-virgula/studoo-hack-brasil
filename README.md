@@ -25,7 +25,7 @@ O ambiente local usa `IA=falsa` e `EMAIL=falso`; para a IA da OpenAI, basta um `
 
 ## Acesso
 
-Web e Android oferecem login com Google e recuperação de senha por código enviado por e-mail. Configure as credenciais Google e o SMTP usando os `.env.example`; veja o [guia de configuração e testes](docs/specs/06-acesso-google-recuperacao.md). O app precisa de um novo build de desenvolvimento para o retorno do navegador.
+Web e Android oferecem login com Google e recuperação de senha por código enviado por e-mail. Configure as credenciais Google e o Resend usando os `.env.example`; veja o [guia de configuração e testes](docs/specs/06-acesso-google-recuperacao.md). O app precisa de um novo build de desenvolvimento para o retorno do navegador.
 
 ## Código e origem
 

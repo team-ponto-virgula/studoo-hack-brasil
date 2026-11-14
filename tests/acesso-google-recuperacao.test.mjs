@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { randomBytes, randomUUID } from 'node:crypto';
 import { readdir, readFile, unlink } from 'node:fs/promises';
-import { test, beforeEach, after } from 'node:test';
+import { test, beforeEach, after, mock } from 'node:test';
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { banco } from '../src/servidor/banco/cliente.ts';
 import { criarHashSenha, verificarSenha } from '../src/servidor/acesso/credenciais.ts';
@@ -15,7 +15,7 @@ import { POST as recuperarMobile } from '../src/app/api/mobile/senha/recuperar/r
 import { POST as redefinirMobile } from '../src/app/api/mobile/senha/redefinir/route.ts';
 import { POST as googleMobile } from '../src/app/api/mobile/google/route.ts';
 
-// Só contas efêmeras, sem Google ou SMTP reais. Requer migrações aplicadas no banco de testes/local.
+// Só contas efêmeras, sem Google ou Resend reais. Requer migrações aplicadas no banco de testes/local.
 const prefixo = `auth-${randomUUID()}`;
 const emails = [];
 const estados = [];
@@ -203,6 +203,23 @@ test('JWT Google valida assinatura, emissor, público, validade, nonce e e-mail 
   const outro = await generateKeyPair('RS256');
   const forjado = await new SignJWT({ email, email_verified: true, nonce }).setProtectedHeader({ alg: 'RS256', kid: 'teste' }).sign(outro.privateKey);
   await assert.rejects(verificarTokenGoogle(forjado, nonce, resolver));
+});
+
+test('falha no Resend mantém resposta neutra e invalida o código não enviado', async () => {
+  const usuario = await conta();
+  process.env.EMAIL = 'resend';
+  process.env.RESEND_API_KEY = 're_teste';
+  process.env.EMAIL_FROM = 'Studoo <acesso@example.test>';
+  const fetchMock = mock.method(globalThis, 'fetch', async () => Response.json({ message: 'falha-sintetica' }, { status: 503 }));
+  const log = mock.method(console, 'error', () => {});
+  try {
+    assert.deepEqual(await solicitarRecuperacao(usuario.email), { enviado: true });
+    assert.equal(await banco.recuperacaoSenha.count({ where: { usuarioId: usuario.id } }), 0);
+    assert.equal(fetchMock.mock.callCount(), 1);
+    assert.deepEqual(await solicitarRecuperacao(emailNovo()), { enviado: true });
+    assert.equal(fetchMock.mock.callCount(), 1);
+    assert.equal(log.mock.calls[0].arguments[0], JSON.stringify({ rota: 'recuperar-senha', codigo: 'envio_indisponivel' }));
+  } finally { fetchMock.mock.restore(); log.mock.restore(); }
 });
 
 test('rotas mantêm proteção de origem/canal; e-mail falso não opera em domínio público', async () => {

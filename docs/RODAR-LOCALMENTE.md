@@ -149,6 +149,6 @@ npm run test:mobile
 
 ## Google e recuperação de senha
 
-O login Google e o fluxo **Esqueci minha senha** estão disponíveis na web e no Android. Consulte a [configuração completa de acesso](specs/06-acesso-google-recuperacao.md) para cadastrar o callback Google, configurar SMTP e reconstruir o app. Os campos estão nos `.env.example` da raiz e do app.
+O login Google e o fluxo **Esqueci minha senha** estão disponíveis na web e no Android. Consulte a [configuração completa de acesso](specs/06-acesso-google-recuperacao.md) para cadastrar o callback Google, configurar Resend e reconstruir o app. Os campos estão nos `.env.example` da raiz e do app.
 
-Localmente, `EMAIL=falso` grava o código de recuperação em `.studoo-local/emails/`, somente para origem loopback. `npm run test:acesso` testa os fluxos com o banco migrado, sem Google ou SMTP externos; `npm run test:google-mobile` testa o retorno ao app com módulos nativos simulados.
+Localmente, `EMAIL=falso` grava o código de recuperação em `.studoo-local/emails/`, somente para origem loopback. `npm run test:acesso` testa os fluxos com o banco migrado, sem Google ou Resend externos; `npm run test:google-mobile` testa o retorno ao app com módulos nativos simulados.

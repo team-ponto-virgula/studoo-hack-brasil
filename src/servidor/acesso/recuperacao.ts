@@ -26,7 +26,7 @@ export async function solicitarRecuperacao(entrada: unknown) {
     try { await enviarRecuperacao(email, codigo); }
     catch {
       await banco.recuperacaoSenha.deleteMany({ where: { usuarioId: resultado.usuarioId, codigoHash } });
-      // Resposta neutra também quando SMTP falha, para não revelar quais e-mails existem.
+      // Resposta neutra também quando o provedor de e-mail falha, para não revelar quais e-mails existem.
       console.error(JSON.stringify({ rota: 'recuperar-senha', codigo: 'envio_indisponivel' }));
     }
   }
