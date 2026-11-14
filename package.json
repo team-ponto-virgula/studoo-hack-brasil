@@ -32,21 +32,30 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node --env-file-if-exists=.env --import tsx prisma/seed.ts",
     "db:local": "node scripts/banco-local.mjs",
-    "test:email": "node --import tsx --test tests/email-resend.test.mjs"
+    "test:email": "node --import tsx --test tests/email-resend.test.mjs",
+    "test:estudio": "node --env-file=.env --import tsx --test tests/estudio.test.mjs",
+    "estudio:limpar": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/limpar-materiais.ts",
+    "test:estudio:interface": "node --test tests/estudio-interface.test.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
     "@studoo/contratos": "0.1.0",
     "dotenv": "^17.0.0",
+    "fflate": "^0.8.3",
     "jose": "^6.2.17",
+    "mammoth": "^1.13.0",
     "next": "^16.1.0",
+    "papaparse": "^5.7.1",
+    "pdfjs-dist": "^6.5.438",
     "pg": "^8.16.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
+    "@types/papaparse": "^5.5.2",
     "@types/pg": "^8.15.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

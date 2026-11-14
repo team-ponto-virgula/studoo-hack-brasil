@@ -5,6 +5,7 @@ import { lerCookieSessao, origemStudoo } from "./origem";
 import { usuarioDaSessao } from "./sessao";
 
 const statusErros: Record<CodigoErro, number> = {
+  material_invalido: 400, material_ilegivel: 422, reforco_indisponivel: 409, limite_estudio: 429, voz_indisponivel: 503,
   google_indisponivel: 503,
   google_invalido: 400,
   google_conta_existente: 409,
@@ -44,8 +45,7 @@ export function responder(dados: unknown, status = 200) {
   return status === 204 ? new Response(null, { status, headers }) : Response.json(dados, { status, headers });
 }
 
-export async function lerJson(request: Request): Promise<unknown> {
-  const maximo = 8192;
+export async function lerJson(request: Request, maximo = 8192): Promise<unknown> {
   const tipo = request.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
   if (tipo !== "application/json" || !request.body || Number(request.headers.get("content-length")) > maximo) {
     throw new FalhaApi("invalido");

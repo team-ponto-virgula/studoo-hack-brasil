@@ -572,6 +572,7 @@ function No({ no, posicao, lado, medidas, reduzir, ocupado, abrindo, liberada, r
           <Text style={[caminhoEstilos.titulo, no.estado === 'bloqueada' && caminhoEstilos.tituloBloqueado,
             direita && caminhoEstilos.alinharFim, focado && caminhoEstilos.tituloFocado]}>{no.titulo}</Text>
           <Text style={[caminhoEstilos.estado, { color: corDoEstado[no.estado] }, direita && caminhoEstilos.alinharFim]}>{linha}</Text>
+          {no.ponte && <><PonteNoMapa /><Text style={[caminhoEstilos.estado, { color: cores.acao }]}>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</Text></>}
         </View>
       </View>
     </>
@@ -579,14 +580,14 @@ function No({ no, posicao, lado, medidas, reduzir, ocupado, abrindo, liberada, r
 
   if (no.estado === 'previa') {
     return (
-      <View accessible accessibilityLabel={nome} style={[caminhoEstilos.alvo, direita && caminhoEstilos.alvoDireita]}>
+      <View accessible accessibilityLabel={no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}` : nome} style={[caminhoEstilos.alvo, direita && caminhoEstilos.alvoDireita]}>
         {conteudo(false)}
       </View>
     );
   }
 
   return (
-    <Pressable ref={guardar} accessibilityRole="button" accessibilityLabel={nome}
+    <Pressable ref={guardar} accessibilityRole="button" accessibilityLabel={no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}` : nome}
       accessibilityState={{ disabled: ocupado, busy: abrindo }} disabled={ocupado} onPress={tocar}
       onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
       style={[caminhoEstilos.alvo, direita && caminhoEstilos.alvoDireita]}>
@@ -1072,3 +1073,10 @@ const caminhoEstilos = StyleSheet.create({
   vindoEstado: { width: '45%', height: 10, borderRadius: 8, backgroundColor: cores.gelo },
 });
 
+
+function PonteNoMapa() {
+  const entrada = useAparecer(0, 400);
+  return <Animated.View accessible={false} importantForAccessibility="no-hide-descendants" style={{ flexDirection: 'row', alignItems: 'flex-end', height: 24, gap: 3, opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }}>
+    {[0, 5, 9, 5, 0].map((altura, i) => <View key={i} style={{ marginBottom: altura, width: 14, height: 8, borderRadius: 3, borderBottomWidth: 2, borderColor: cores.acaoEscura, backgroundColor: cores.acao }} />)}
+  </Animated.View>;
+}

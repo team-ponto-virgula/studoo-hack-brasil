@@ -1,3 +1,5 @@
+import { ApoioDaLicao } from './estudio-adaptativo';
+import type { ClienteEstudio } from '@studoo/contratos';
 import type { Avaliacao, LicaoDetalhe } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -36,7 +38,8 @@ function tituloDoAcerto(id: string) {
  * de novo ou continuar. Continuar registra a conclusão; se a confirmação expirar, a aula volta ao exercício.
  * O título de cada etapa e o do retorno recebem o foco do leitor de tela.
  */
-export function Licao({ licao, erro, pendente, voltar, avaliar, concluir }: {
+export function Licao({ cliente, licao, erro, pendente, voltar, avaliar, concluir }: {
+  cliente: ClienteEstudio;
   licao: LicaoDetalhe;
   erro: string | null;
   pendente: string | null;
@@ -53,6 +56,8 @@ export function Licao({ licao, erro, pendente, voltar, avaliar, concluir }: {
   const [inicio] = useState(() => Date.now());
   const tituloEtapa = useRef<ComponentRef<typeof Text>>(null);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
+  const apoioPosicao = useRef(0);
+  const reduzir = useMovimentoReduzido();
   const tremor = useTremor(errosSeguidos);
   const exercicio = licao.exercicio;
   const ocupado = pendente !== null;
@@ -103,6 +108,7 @@ export function Licao({ licao, erro, pendente, voltar, avaliar, concluir }: {
     rodape = (
       <PainelRetorno avaliacao={avaliacao} titulo={avaliacao.correta ? tituloDoAcerto(licao.id) : mensagens.licao.errada}
         ocupado={ocupado} concluindo={pendente === 'concluir'} tentarDeNovo={() => setAvaliacao(null)}
+        verReforco={() => rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false })}
         continuar={() => void continuar(avaliacao.comprovante)} />
     );
   } else if (etapa === 'exercicio') {
@@ -170,6 +176,7 @@ export function Licao({ licao, erro, pendente, voltar, avaliar, concluir }: {
         )}
         {erro && <EstadoMensagem mensagem={erro} />}
       </EntradaDaEtapa>
+      <View onLayout={e => { apoioPosicao.current = e.nativeEvent.layout.y; }}><ApoioDaLicao cliente={cliente} licao={licao} avaliacao={avaliacao} /></View>
     </Tela>
   );
 }
@@ -234,12 +241,13 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
  * Painel de retorno no rodapé: sobe com a cor do resultado; o ícone entra com um giro e, no acerto, solta confete.
  * No erro, "Tentar de novo" volta ao exercício e Continuar segue, como na web.
  */
-function PainelRetorno({ avaliacao, titulo, ocupado, concluindo, tentarDeNovo, continuar }: {
+function PainelRetorno({ avaliacao, titulo, ocupado, concluindo, tentarDeNovo, continuar, verReforco }: {
   avaliacao: Avaliacao;
   titulo: string;
   ocupado: boolean;
   concluindo: boolean;
   tentarDeNovo: () => void;
+  verReforco: () => void;
   continuar: () => void;
 }) {
   const certa = avaliacao.correta;
@@ -270,15 +278,16 @@ function PainelRetorno({ avaliacao, titulo, ocupado, concluindo, tentarDeNovo, c
           <Text style={estilos.texto}>{avaliacao.feedback}</Text>
         </View>
       </View>
+      {!certa && <Botao variante="texto" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
       <View style={licaoEstilos.retornoAcoes}>
         {!certa && (
           <View style={licaoEstilos.metade}>
-            <Botao testID="tentar-de-novo" rotulo={mensagens.licao.tentarDeNovo} variante="secundario" desativado={ocupado} acao={tentarDeNovo} />
+            <Botao testID="tentar-de-novo" rotulo={mensagens.licao.tentarDeNovo} desativado={ocupado} acao={tentarDeNovo} />
           </View>
         )}
         <View style={licaoEstilos.metade}>
           <Botao testID="continuar-licao" rotulo={concluindo ? mensagens.licao.concluindo : mensagens.licao.continuar}
-            variante={certa ? 'sucesso' : 'alerta'} desativado={ocupado} ocupado={concluindo} carregando={concluindo} acao={continuar} />
+            variante={certa ? 'sucesso' : 'texto'} desativado={ocupado} ocupado={concluindo} carregando={concluindo} acao={continuar} />
         </View>
       </View>
     </Animated.View>

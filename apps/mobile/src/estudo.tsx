@@ -1,3 +1,5 @@
+import { MaterialParaTrilha } from './estudio-adaptativo';
+import type { ClienteEstudio } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
@@ -29,7 +31,7 @@ import { Licao, type ResumoLicao } from './licao';
 import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, coresDaRegiao } from './mundo';
-import { apresentacaoVista, marcarApresentacaoVista } from './preferencias';
+import { marcarApresentacaoVista } from './preferencias';
 import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NomeIcone } from './trilha';
@@ -100,10 +102,8 @@ export function Estudo({ cliente, sair, expirar }: {
     async function carregarPlanos() {
       try {
         const lista = await cliente.listarPlanos();
-        // No primeiro acesso, sem planos, a apresentação vem antes do pedido, como na web.
-        const vista = lista.length > 0 || await apresentacaoVista();
+        // A apresentação é opcional, como na web.
         if (!ativo) return;
-        if (!vista) setEtapa({ tipo: 'apresentacao', primeiraVez: true });
         setPlanos(lista);
       } catch (falha) {
         if (!ativo) return;
@@ -131,7 +131,8 @@ export function Estudo({ cliente, sair, expirar }: {
       if (etapa.tipo === 'geracao') {
         if (geracao?.proposta) navegar({ tipo: 'objetivo' });
         else cancelarGeracao();
-      } else if (etapa.tipo === 'licao' || etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
+      } else if (etapa.tipo === 'licao') void abrirPlano(etapa.plano.id, etapa.licao.id);
+      else if (etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
       else navegar({ tipo: 'planos' });
       return true;
     });
@@ -273,11 +274,11 @@ export function Estudo({ cliente, sair, expirar }: {
     setErro(mensagemDoCodigo(licao.codigo));
   }
 
-  async function abrirPlano(id: string) {
+  async function abrirPlano(id: string, origem?: string) {
     const resultado = await executar('plano', () => cliente.obterPlano(id));
     if (!resultado.ok) return;
     atualizarPlano(resultado.dados);
-    navegar({ tipo: 'plano', plano: resultado.dados });
+    navegar({ tipo: 'plano', plano: resultado.dados, origem });
   }
 
   /** Abre a lição guardando qual nó está abrindo, para o caminho e o próximo passo mostrarem "Abrindo…". */
@@ -330,8 +331,8 @@ export function Estudo({ cliente, sair, expirar }: {
     }
 
     if (etapa.tipo === 'licao') {
-      return <Licao key={etapa.licao.id} licao={etapa.licao} erro={erro} pendente={pendente}
-        voltar={() => abrir(voltarATrilha(etapa))}
+      return <Licao cliente={cliente} key={etapa.licao.id} licao={etapa.licao} erro={erro} pendente={pendente}
+        voltar={() => void abrirPlano(etapa.plano.id, etapa.licao.id)}
         avaliar={async (resposta) => {
           const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta));
           return resultado.ok ? resultado.dados : null;
@@ -361,7 +362,7 @@ export function Estudo({ cliente, sair, expirar }: {
     }
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
-      return <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} erro={erro} areaInicial={areaInicial}
+      return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} erro={erro} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })} />;
     }
@@ -418,7 +419,9 @@ const retomadaEstilos = StyleSheet.create({
  * Um objetivo curto demais não sai do aparelho: o campo mostra o que falta e recebe o foco.
  * O foco da tela vai ao erro, quando há um, e senão ao título; o aviso de geração cancelada é anunciado.
  */
-function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona }: {
+function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona }: {
+  cliente: ClienteEstudio;
+  onProposta: (p: PropostaPlano) => void;
   objetivo: string;
   ocupado: boolean;
   aviso: string | null;
@@ -433,6 +436,9 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial,
   verPlanos: () => void;
   comoFunciona: () => void;
 }) {
+  const [modo, setModo] = useState<'ideia' | 'material'>('ideia');
+  const balancoInicio = useBalanco(3, 1800);
+  const [maisIdeias, setMaisIdeias] = useState(Boolean(areaInicial && areaInicial !== 'populares'));
   const [curto, setCurto] = useState(false);
   const [idTema, setIdTema] = useState<IdTema>(areaInicial ?? 'populares');
   const [escolhida, setEscolhida] = useState<string | null>(null);
@@ -483,11 +489,21 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial,
   }
 
   return (
-    <Tela pagina="objetivo" acoes={acoes} rodape={<Botao rotulo={mensagens.pedido.gerar} testID="gerar-trilha"
-      desativado={ocupado || !texto} acao={tentar} />}>
-      <Titulo testID="titulo-objetivo" foco={focarTitulo}>{mensagens.pedido.titulo}</Titulo>
-      <Text style={estilos.introducao}>{mensagens.pedido.instrucoes}</Text>
-      <LinkComoFunciona desativado={ocupado} acao={comoFunciona} />
+    <Tela pagina="objetivo" acoes={acoes} rodape={modo === 'ideia' ? <Botao rotulo={mensagens.inicio.criar} testID="gerar-trilha"
+      desativado={ocupado || !texto} acao={tentar} /> : undefined}>
+      <View style={estudoEstilos.descobertaHero}>
+        <View style={{flex:1}}><Text style={estudoEstilos.descobertaSelo}>{mensagens.inicio.selo}</Text>
+          <Titulo testID="titulo-objetivo" foco={focarTitulo} estilo={{fontSize:26,lineHeight:30}}>{mensagens.inicio.titulo}</Titulo>
+          <Text style={estilos.introducao}>{mensagens.inicio.texto}</Text></View>
+        <View style={estudoEstilos.descobertaMascote}><Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" style={{width:86,height:110,transform:[{translateY:balancoInicio}]}} accessible={false}/></View>
+      </View>
+      <View style={estudoEstilos.descobertaModos}>{(['ideia','material'] as const).map(item =>
+        <Pressable key={item} accessibilityRole="button" accessibilityState={{selected:modo===item,disabled:ocupado}} disabled={ocupado} onPress={()=>setModo(item)}
+          style={({pressed})=>[estudoEstilos.descobertaModo,modo===item && estudoEstilos.descobertaModoAtivo,pressed && {opacity:.8}]}>
+          <Text style={estudoEstilos.descobertaSelo}>{modo===item ? '✓' : '○'}</Text>
+          <Text style={{fontFamily:fontes.corpo,fontSize:14,fontWeight:'800',color:cores.texto}}>{mensagens.inicio[item]}</Text>
+          <Text style={[estilos.legenda,{fontSize:12,lineHeight:17}]}>{item==='ideia'?mensagens.inicio.ideiaDica:mensagens.inicio.materialDica}</Text>
+        </Pressable>)}</View>
       {aviso && <Text style={estudoEstilos.aviso}>{aviso}</Text>}
       {erro && <EstadoMensagem mensagem={erro} foco />}
       {falha && <EstadoMensagem mensagem={mensagemDoCodigo(falha)} testID="erro-geracao" foco />}
@@ -498,8 +514,10 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial,
             desativado={ocupado} acao={verPlanos} />}
         </View>
       )}
-      <StuQueReage fala={fala} />
-      <View style={estudoEstilos.campoPedido}>
+      <View style={modo !== 'material' && {display:'none'}}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} /></View>
+      <View style={modo !== 'ideia' && {display:'none'}}>
+      <View style={[estudoEstilos.campoPedido, estudoEstilos.descobertaCaderno]}>
+        <Text style={{color:'#715118',fontWeight:'800',fontSize:13,marginBottom:12}}>✦  {texto ? fala : mensagens.inicio.convite}</Text>
         <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} />
         {mostrarCurto && (
           <View style={estudoEstilos.campoErro}>
@@ -507,8 +525,8 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial,
             <Text style={estudoEstilos.campoErroTexto}>{mensagens.pedido.curto(minimo)}</Text>
           </View>
         )}
-        <Text style={estudoEstilos.dica}>{mensagens.pedido.dica}</Text>
-        <Text style={estilos.legenda}>{mensagens.pedido.privacidade}</Text>
+        <Text style={estudoEstilos.dica}>{mensagens.inicio.ajuda}</Text>
+
         {mostrarContador && <Text style={[estilos.legenda, estudoEstilos.contador]}>{contador}</Text>}
       </View>
       <View style={estudoEstilos.sugestoes}>
@@ -516,20 +534,24 @@ function Pedido({ objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial,
           <Text accessibilityRole="header" style={estudoEstilos.sugestoesTitulo}>{mensagens.pedido.sugestoes}</Text>
           <Surpresa desativada={ocupado} acao={surpreender} />
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={estudoEstilos.areasRolagem}
+        {maisIdeias && <ScrollView horizontal showsHorizontalScrollIndicator={false} style={estudoEstilos.areasRolagem}
           contentContainerStyle={estudoEstilos.areas} accessibilityLabel={mensagens.pedido.areas}>
           {mensagens.pedido.temas.map((item) => (
             <Area key={item.id} nome={item.nome} icone={iconesDosTemas[item.id]} testID={`area-${item.id}`}
               escolhida={item.id === idTema} desativada={ocupado} acao={() => setIdTema(item.id)} />
           ))}
-        </ScrollView>
+        </ScrollView>}
         <View key={tema.id} style={estudoEstilos.exemplos}>
-          {tema.exemplos.map((exemplo, indice) => (
-            <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(tema, exemplo)} testID={`sugestao-${indice}`} ordem={indice}
+          {(maisIdeias ? tema.exemplos : mensagens.pedido.temas[0].exemplos.slice(0,3)).map((exemplo, indice) => (
+            <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(maisIdeias ? tema : mensagens.pedido.temas[0], exemplo)} testID={`sugestao-${indice}`} ordem={indice}
               escolhida={texto === exemplo} desativada={ocupado} acao={() => sugerir(exemplo)} />
           ))}
         </View>
+        <Botao variante="texto" rotulo={maisIdeias ? mensagens.inicio.menos : mensagens.inicio.mais} acao={()=>setMaisIdeias(!maisIdeias)} />
       </View>
+      </View>
+      <View style={estudoEstilos.descobertaPassos}>{mensagens.inicio.etapas.map((etapa,i)=><Text key={etapa} style={estilos.legenda}>{i+1} · {etapa}</Text>)}</View>
+      <Botao variante="texto" rotulo={mensagens.inicio.saberMais} acao={comoFunciona}/>
     </Tela>
   );
 }
@@ -614,7 +636,6 @@ function CampoObjetivo({ campoRef, valor, aoMudar, editavel, dica, brilho }: {
   brilho: number;
 }) {
   const [focado, setFocado] = useState(false);
-  const exemplo = useExemploDigitado(valor.length === 0 && editavel && !focado);
   const reduzir = useMovimentoReduzido();
   const [luz] = useState(() => new Animated.Value(0));
 
@@ -628,9 +649,9 @@ function CampoObjetivo({ campoRef, valor, aoMudar, editavel, dica, brilho }: {
 
   return (
     <View>
-      <Campo campoRef={campoRef} testID="objetivo-estudo" rotulo={mensagens.pedido.objetivo} value={valor}
+      <Campo campoRef={campoRef} testID="objetivo-estudo" rotulo={mensagens.inicio.campo} value={valor}
         onChangeText={aoMudar} editable={editavel} multiline maxLength={LIMITES_GERACAO.objetivoMax}
-        placeholder={`${mensagens.pedido.exemploPrefixo}${exemplo}`} accessibilityHint={dica} style={estudoEstilos.entradaPedido}
+        placeholder={mensagens.inicio.exemplo} accessibilityHint={dica} style={estudoEstilos.entradaPedido}
         onFocus={() => setFocado(true)} onBlur={() => setFocado(false)} />
       <Animated.View pointerEvents="none" style={[estudoEstilos.luzCampo, { opacity: luz }]} />
     </View>
@@ -1425,6 +1446,14 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem }: { icone: NomeIcone; 
 }
 
 const estudoEstilos = StyleSheet.create({
+  descobertaHero:{flexDirection:'row',alignItems:'center',gap:8,marginBottom:20},
+  descobertaSelo:{fontSize:10,fontWeight:'800',color:cores.acao,letterSpacing:1,marginBottom:8},
+  descobertaMascote:{backgroundColor:'#fff1c9',borderRadius:45},
+  descobertaModos:{flexDirection:'row',gap:8,marginBottom:16},
+  descobertaModo:{flex:1,padding:12,gap:5,borderWidth:2,borderColor:cores.gelo,borderRadius:18},
+  descobertaModoAtivo:{borderColor:cores.acao,backgroundColor:'#f0f3ff'},
+  descobertaCaderno:{padding:16,backgroundColor:'#fffcf6',borderWidth:1,borderColor:'#e8dfcf',borderRadius:20},
+  descobertaPassos:{flexDirection:'row',justifyContent:'space-between',marginTop:24,paddingTop:20,borderTopWidth:1,borderColor:cores.gelo},
   bloco: { gap: 12, marginTop: 16, padding: 16, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo },
   blocoConclusao: { marginTop: 24, padding: 20 },
   progresso: { gap: 8, marginTop: 12 },
@@ -1504,7 +1533,7 @@ const estudoEstilos = StyleSheet.create({
     color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   acoesErro: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   campoPedido: { marginTop: 20, gap: 8 },
-  entradaPedido: { minHeight: 148, fontSize: 18, lineHeight: 26, backgroundColor: '#FBFCFF' },
+  entradaPedido: { minHeight: 100, fontSize: 18, lineHeight: 26, backgroundColor: '#FBFCFF' },
   campoErro: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   campoErroTexto: { flex: 1, color: cores.erro, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   dica: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },

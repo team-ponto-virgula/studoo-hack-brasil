@@ -10,7 +10,7 @@ import './caminho.css';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco e a região do mundo. */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number };
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean } };
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo';
@@ -290,6 +290,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               <span className="caminho-no__texto" aria-hidden="true">
                 <span className="caminho-no__titulo">{no.titulo}</span>
                 <span className="caminho-no__estado">{linha}</span>
+                {no.ponte && <span className="caminho-ponte"><span className="caminho-ponte__desenho">{[0, 5, 9, 5, 0].map((altura, i) => <span key={i} style={{ marginBottom: altura, animationDelay: `${i * 70}ms` }} />)}</span>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</span>}
               </span>
             </>
           );
@@ -344,7 +345,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 </div>
               ) : (
                 <button type="button" className="caminho-no__alvo" ref={(elemento) => guardarBotao(no.id, elemento)}
-                  aria-label={nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
+                  aria-label={no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}` : nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
                   aria-controls={estaAberto ? idBalao : undefined} disabled={ocupado} onClick={() => tocar(no)}>
                   {conteudo}
                 </button>

@@ -30,8 +30,9 @@ import {
   type NoCaminho,
   type NomeIcone,
 } from '../ui';
-import { Apresentacao, apresentacaoVista, marcarApresentacaoVista } from './apresentacao';
+import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
+import { ApoioDaLicao } from './estudio';
 import { Pedido, type IdTema } from './pedido';
 import './aula.css';
 import './trilha.css';
@@ -94,8 +95,7 @@ export function Estudo() {
       const ativos = await cliente.listarPlanos();
       if (cancelado()) return;
       setPlanos(ativos);
-      // No primeiro acesso, sem planos, a apresentação vem antes do pedido.
-      if (ativos.length === 0 && !apresentacaoVista()) setTela({ tipo: 'apresentacao', primeiraVez: true });
+      // Começa pela ação; a apresentação continua disponível em Ver como funciona.
       setInicio('pronto');
     } catch (falha) {
       if (cancelado()) return;
@@ -278,13 +278,13 @@ export function Estudo() {
     setErro(licao.codigo);
   }
 
-  async function abrirPlano(id: string) {
+  async function abrirPlano(id: string, origem?: string) {
     if (emExecucao.current) return;
     if (tela.tipo === 'geracao') navegar({ tipo: 'planos' });
     const resultado = await executar('plano', () => cliente.obterPlano(id));
     if (resultado.ok) {
       atualizarPlano(resultado.dados);
-      navegar({ tipo: 'plano', plano: resultado.dados });
+      navegar({ tipo: 'plano', plano: resultado.dados, origem });
     }
   }
 
@@ -394,7 +394,7 @@ export function Estudo() {
             <Apresentacao primeiraVez={tela.primeiraVez} concluir={concluirApresentacao} />
           )}
           {visivel && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
-            <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
+            <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
               aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} />
@@ -427,7 +427,7 @@ export function Estudo() {
             <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}
               avaliar={(resposta) => executar('avaliar', () => cliente.avaliarLicao(tela.licao.id, resposta))}
               concluir={(comprovante, resumo) => concluir(tela.plano, tela.licao, comprovante, resumo)}
-              voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id })} />
+              voltar={() => void abrirPlano(tela.plano.id, tela.licao.id)} />
           )}
           {visivel && tela.tipo === 'concluida' && (
             <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado}
@@ -686,7 +686,7 @@ function montarTrilha(plano: PlanoDetalhe) {
     let estado: NoCaminho['estado'] = 'bloqueada';
     if (licao.concluida) estado = 'concluida';
     else if (licao.id === atual) estado = 'atual';
-    return { id: licao.id, titulo: licao.titulo, estado, trecho };
+    return { id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
   const proximo = indice >= 0 ? { no: nos[indice], posicao: mensagens.trilha.posicao(indice + 1, nos.length) } : null;
@@ -822,6 +822,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     function teclas(evento: KeyboardEvent) {
       if (evento.altKey || evento.ctrlKey || evento.metaKey) return;
       const alvo = evento.target instanceof HTMLElement ? evento.target : null;
+      if (alvo?.closest('.estudio-apoio')) return;
       if (avaliacao) {
         if (evento.key === 'Enter' && !alvo?.closest('button, a')) {
           evento.preventDefault();
@@ -871,7 +872,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   let acao;
   if (avaliacao) {
     acao = (
-      <Botao variante={avaliacao.correta ? 'sucesso' : 'alerta'} disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>
+      <Botao variante={avaliacao.correta ? 'sucesso' : 'texto'} disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>
         {pendente === 'concluir' ? mensagens.licao.concluindo : mensagens.licao.continuar}
       </Botao>
     );
@@ -954,6 +955,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           </section>
         )}
       </div>
+      <ApoioDaLicao licao={licao} avaliacao={avaliacao} />
       <footer className="aula-rodape" data-retorno={retorno}>
         <div className="aula-rodape__conteudo">
           {avaliacao && (
@@ -973,7 +975,7 @@ function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           )}
           <div className="aula-rodape__acoes">
             {avaliacao && !avaliacao.correta && (
-              <Botao variante="secundario" disabled={ocupado} onClick={tentarDeNovo}>{mensagens.licao.tentarDeNovo}</Botao>
+              <><Botao disabled={ocupado} onClick={tentarDeNovo}>{mensagens.licao.tentarDeNovo}</Botao><Botao variante="texto" disabled={ocupado} onClick={() => { const alvo = document.querySelector<HTMLElement>('.estudio-ponte'); alvo?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); alvo?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true }); }}>{mensagens.estudio.verPonte}</Botao></>
             )}
             {acao}
           </div>

@@ -1,4 +1,4 @@
-import type { ExercicioPublico, Progresso } from "@studoo/contratos";
+import type { ExercicioPublico, Progresso, ReferenciaMaterial } from "@studoo/contratos";
 
 export type ExercicioInterno = ExercicioPublico & {
   gabarito: string[];
@@ -7,6 +7,7 @@ export type ExercicioInterno = ExercicioPublico & {
 };
 
 export type ConteudoLicao = {
+  referencias?: ReferenciaMaterial[];
   objetivo: string;
   conceito: string;
   exemplo: string;
@@ -113,6 +114,7 @@ export function calcularProgresso(concluidas: number, total: number): Progresso 
 
 /** Estrutura de uma proposta: títulos, sem o conteúdo das lições. É o que o token da proposta carrega. */
 export type EsqueletoPlano = {
+  materialId?: string;
   gerador: string;
   titulo: string;
   objetivo: string;

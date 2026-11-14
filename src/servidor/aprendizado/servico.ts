@@ -1,3 +1,4 @@
+import { conteudosDoMaterial } from '../estudio/materiais';
 import type {
   Avaliacao,
   Conclusao,
@@ -37,7 +38,7 @@ const selecaoPlano = {
       titulo: true,
       licoes: {
         orderBy: { ordem: "asc" },
-        select: { id: true, titulo: true, conclusao: { select: { licaoId: true } } },
+        select: { id: true, titulo: true, conclusao: { select: { licaoId: true } }, apoio: { select: { reforco: true, reforcoConcluido: true } } },
       },
     },
   },
@@ -57,10 +58,11 @@ export async function gerarProposta(usuarioId: string, objetivo: string): Promis
 
 function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
   const fluxos = plano.fluxos.map(({ id, titulo, licoes }) => {
-    const licoesPublicas = licoes.map(({ id, titulo, conclusao }) => ({
+    const licoesPublicas = licoes.map(({ id, titulo, conclusao, apoio }) => ({
       id,
       titulo,
       concluida: conclusao !== null,
+      ...(apoio?.reforco ? { ponte: { concluida: apoio.reforcoConcluido } } : {}),
     }));
     const concluidas = licoesPublicas.filter((licao) => licao.concluida).length;
     const proximaLicao = licoesPublicas.find((licao) => !licao.concluida);
@@ -114,7 +116,8 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
 }
 
 /** Pede ao gerador o conteúdo de cada lição do esqueleto aceito e valida o que voltou. */
-async function gerarConteudos(plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
+async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
+  if (plano.gerador === "material-v1" && plano.materialId) return conteudosDoMaterial(usuarioId, plano.materialId);
   const gerador = obterGerador();
   const sinal = AbortSignal.timeout(TEMPO_CONTEUDO);
   const conteudos = await Promise.all(plano.fluxos.map((fluxo, indiceFluxo) =>
@@ -156,7 +159,7 @@ export async function aceitarProposta(usuarioId: string, token: string): Promise
 }
 
 async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoPlano): Promise<PlanoDetalhe> {
-  const conteudos = await gerarConteudos(plano);
+  const conteudos = await gerarConteudos(usuarioId, plano);
   const fluxos = plano.fluxos.map(({ titulo }, indice) => ({
     usuarioId,
     id: `${id}-${indice + 1}`,
@@ -237,6 +240,7 @@ export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoD
     exemplo,
     origem,
     exercicio: apresentarExercicio(exercicio),
+    ...(licao.conteudo.referencias ? { referencias: licao.conteudo.referencias } : {}),
     concluida: licao.conclusao !== null,
   };
 }
@@ -248,6 +252,11 @@ export async function avaliarLicao(usuarioId: string, id: string, resposta: stri
     throw new FalhaApi("invalido");
   }
 
+  if (!avaliacao.correta) await banco.apoioLicao.upsert({
+    where: { usuarioId_licaoId: { usuarioId, licaoId: id } },
+    create: { usuarioId, licaoId: id, erros: 1, ultimaResposta: resposta },
+    update: { erros: { increment: 1 }, ultimaResposta: resposta },
+  });
   const comprovante = emitirComprovante("avaliacao", usuarioId, {
     id,
     expiraEm: Date.now() + DURACAO_AVALIACAO,
