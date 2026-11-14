@@ -225,7 +225,7 @@ async function criarProposta(
     titulo = x.titulo;
   }
   const origem =
-    `${simulado ? 'Demonstração simulada · ' : 'Material enviado · '}${material.nome}`.slice(
+    `${simulado ? 'Modo demonstração · ' : 'Material enviado · '}${material.nome}`.slice(
       0,
       200,
     );
