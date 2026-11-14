@@ -1114,6 +1114,19 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   const reduzir = useMovimentoReduzido();
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const visivel = useRef(0);
+  // Com o nó atual (e o balão "Começar") à vista, o cartão fixo sai: uma ação só por vez, como na web.
+  const atualNaRolagem = useRef<{ topo: number; base: number } | null>(null);
+  const alturaComCartao = useRef(0);
+  const rolagemY = useRef(0);
+  const [atualVisivel, setAtualVisivel] = useState(false);
+  function avaliarAtual() {
+    const atual = atualNaRolagem.current;
+    // O cartão flutua sobre o pé da área (cerca de 120 pontos).
+    const altura = alturaComCartao.current - 120;
+    if (!atual || !altura) return;
+    const visto = atual.topo - rolagemY.current >= -10 && atual.base + 48 - rolagemY.current <= altura;
+    setAtualVisivel((antes) => (antes === visto ? antes : visto));
+  }
 
   // O erro aparece no topo, como na web; a tela sobe até ele.
   useEffect(() => {
@@ -1121,7 +1134,7 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   }, [erro, reduzir]);
 
   /** Centraliza o nó só quando ele está fora da vista, como o scrollIntoView da web. Com movimento reduzido, salta direto. */
-  function rolar(topo: number, base: number, sempre = false) {
+  function rolar(topo: number, base: number, sempre = false, piso?: number) {
     requestAnimationFrame(() => {
       const altura = visivel.current || height;
       // O card da próxima lição flutua sobre o pé da área: o nó e o título embaixo dele precisam ficar acima do card.
@@ -1129,7 +1142,10 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
       const limite = altura - (proximo ? 168 : 24);
       if (!sempre && pe <= limite) return;
       // Rola só o necessário: o nó fica logo acima do card (o topo da trilha tende a continuar à vista).
-      rolagem.current?.scrollTo({ y: Math.max(0, pe - limite), animated: reduzir === false });
+      let y = Math.max(0, pe - limite);
+      // Não para no meio do céu: com a placa cortada, segue até o piso, se o nó continuar à vista.
+      if (piso !== undefined && y > 0 && y < piso && topo - piso > 24) y = piso;
+      rolagem.current?.scrollTo({ y, animated: reduzir === false });
     });
   }
 
@@ -1140,8 +1156,18 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   );
 
   return (
-    <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo ? null : passo || novo} rolagem={rolagem}
-      aoMedir={(altura) => { visivel.current = altura; }}>
+    <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo || (atualVisivel && passo) ? null : passo || novo} rolagem={rolagem}
+      // No celular, o cartão da próxima lição flutua sobre o mapa, como na web; o conteúdo ganha folga para passar por baixo.
+      estiloRodape={largo ? undefined : estudoEstilos.rodapeFlutuante} estiloConteudo={largo ? undefined : estudoEstilos.conteudoComFlutuante}
+      aoMedir={(altura) => {
+        visivel.current = altura;
+        if (!atualVisivel || !alturaComCartao.current) alturaComCartao.current = altura;
+        avaliarAtual();
+      }}
+      aoRolar={(y) => {
+        rolagemY.current = y;
+        avaliarAtual();
+      }}>
       {erro && <EstadoMensagem mensagem={erro} foco />}
       <View style={estudoEstilos.topoTrilha}>
         <View style={estudoEstilos.topoTrilhaTexto}>
@@ -1163,7 +1189,11 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
       )}
       {nos.length > 0 ? (
         <Caminho nos={nos} stu={falaDoStu(nos)} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} recemConcluida={etapa.concluida ?? null}
-          rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)} />
+          rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)}
+          aoMedirAtual={(topo, base) => {
+            atualNaRolagem.current = { topo, base };
+            avaliarAtual();
+          }} />
       ) : (
         <View style={estudoEstilos.vazio}>
           <Text style={estilos.textoSecundario}>{mensagens.trilha.semLicoes}</Text>
@@ -1517,6 +1547,11 @@ const estudoEstilos = StyleSheet.create({
   proximoTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24 },
   proximoAcao: { alignItems: 'flex-start', marginTop: 12 },
   proximoRodape: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  rodapeFlutuante: { position: 'absolute', left: 12, right: 12, bottom: 10, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6,
+    borderColor: cores.gelo, backgroundColor: cores.fundo, shadowColor: '#1B2A5E', shadowOpacity: 0.16, shadowRadius: 18,
+    shadowOffset: { width: 0, height: 10 }, elevation: 8 },
+  // O morro do troféu já desce por baixo do cartão flutuante; sem folga branca no fim.
+  conteudoComFlutuante: { paddingBottom: 0 },
   proximoTextos: { flex: 1, minWidth: 0 },
   proximoRotuloRodape: { fontSize: 12, lineHeight: 16 },
   proximoTituloRodape: { fontSize: 16, lineHeight: 22 },
