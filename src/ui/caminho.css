@@ -858,3 +858,22 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-no[data-discreto] .caminho-no__texto {
   max-width: min(14rem, calc(2 * min(var(--coluna) * var(--x) / 100, var(--coluna) * (100 - var(--x)) / 100) - 32px));
 }
+
+/* Rolagem até o nó: deixa espaço para o cartão fixo e a navegação embaixo. */
+.caminho-no { scroll-margin-bottom: 200px; }
+/* Estrada até o troféu com o mesmo pontilhado do resto (sem emenda); dourada quando a trilha foi vencida. */
+.caminho-chegada::before {
+  background:
+    radial-gradient(circle, rgb(27 42 94 / 0.22) 0 3px, transparent 3.5px) center 7px / 24px 14px repeat-y,
+    var(--estrada);
+}
+.caminho-chegada[data-feita]::before { background: var(--ouro-labio) linear-gradient(#ffe8a6, #ffe8a6) center / 12px 100% no-repeat; }
+
+/* Espaço extra no pé do mapa (no celular, o fim cresce por baixo do cartão fixo): tudo da chegada sobe junto. */
+.caminho-chegada { --extra: 0px; min-height: calc(280px + var(--extra)); padding-bottom: calc(30px + var(--extra)); }
+.caminho-chegada__colina { height: calc(190px + var(--extra)); border-radius: 50% 50% 0 0 / 190px 190px 0 0; }
+.caminho-chegada__bandeira { bottom: calc(96px + var(--extra)); }
+.caminho-chegada__brilho--1 { bottom: calc(150px + var(--extra)); }
+.caminho-chegada__brilho--2 { bottom: calc(172px + var(--extra)); }
+.caminho-chegada__brilho--3 { bottom: calc(118px + var(--extra)); }
+.caminho-chegada__stu { bottom: calc(74px + var(--extra)); }

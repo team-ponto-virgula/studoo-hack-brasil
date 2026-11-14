@@ -193,7 +193,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       if (!item) return;
       const caixa = item.getBoundingClientRect();
       // Considera o cartão fixo da próxima lição e a navegação de baixo, que cobrem o pé da tela.
-      if (caixa.top < 0 || caixa.bottom > window.innerHeight - 240) item.scrollIntoView({ block: 'center' });
+      // Rola só o necessário: o nó para logo acima do cartão fixo, e o topo da trilha tende a continuar à vista.
+      if (caixa.top < 0 || caixa.bottom > window.innerHeight - 240) item.scrollIntoView({ block: 'end' });
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [rolarPara]);
@@ -474,15 +475,16 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             onClick={() => {
               setTrofeuTocado((anterior) => anterior + 1);
               const faltam = nos.filter((no) => no.estado !== 'concluida').length;
-              setAnuncio(tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.faltamTrofeu(faltam));
+              setAnuncio(tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.trofeuProgresso(total - faltam, total));
             }}>
             <Icone nome="trofeu" />
             {(festaNaChegada || (comRecem && tudoFeito)) && <Confete quantidade={18} />}
             {trofeuTocado > 0 && (
               <span key={trofeuTocado} className="caminho-chegada__bolha" aria-hidden="true">
-                {tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.faltamTrofeu(nos.filter((no) => no.estado !== 'concluida').length)}
+                {tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.trofeuProgresso(nos.filter((no) => no.estado === 'concluida').length, total)}
               </span>
             )}
+            {trofeuTocado > 0 && <Confete key={`t${trofeuTocado}`} quantidade={14} />}
           </button>
           <p className="caminho-chegada__texto">{tudoFeito ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}</p>
           {!tudoFeito && !montando && <p className="caminho-chegada__meta">{mensagens.trilha.faltamTrofeu(nos.filter((no) => no.estado !== 'concluida').length)}</p>}

@@ -171,6 +171,7 @@ export const mensagens = {
         chegadaMeta: (total: number) => `Conclua as ${total} lições para conquistar o troféu`,
         faltamTrofeu: (faltam: number) => faltam === 1 ? 'Falta 1 lição para o troféu!' : `Faltam ${faltam} lições para o troféu!`,
         trofeuConquistado: 'Troféu conquistado!',
+        trofeuProgresso: (feitas: number, total: number) => feitas === 0 ? 'Bora? A primeira lição já está liberada!' : `Você já fez ${feitas} de ${total}. Continue!`,
         trofeu: 'Troféu da trilha',
         parte: (numero: number) => `Parte ${numero}`,
         parteLicoes: (total: number) => `${total} ${total === 1 ? 'lição' : 'lições'}`,

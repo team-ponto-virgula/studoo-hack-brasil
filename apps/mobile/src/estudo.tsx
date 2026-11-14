@@ -1125,7 +1125,8 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
     requestAnimationFrame(() => {
       const altura = visivel.current || height;
       if (!sempre && base <= altura) return;
-      rolagem.current?.scrollTo({ y: Math.max(0, (topo + base - altura) / 2), animated: reduzir === false });
+      // Rola só o necessário: o nó fica logo acima do pé da área visível (o topo da trilha tende a continuar à vista).
+      rolagem.current?.scrollTo({ y: Math.max(0, base - altura + 72), animated: reduzir === false });
     });
   }
 
