@@ -21,47 +21,65 @@ import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
 import { cores, fontes } from './tema';
-import { explicar, iconeDoNo, nomeDoNo, posicaoDoNo, type EstadoNo, type NoCaminho } from './trilha';
+import { explicar, iconeDoNo, nomeDoNo, posicaoDoNo, posicaoX, type EstadoNo, type NoCaminho } from './trilha';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
- * Um só caminho contínuo sobre um mapa ilustrado: cada trecho é uma região (campos, floresta, montanhas…), os nós têm
- * relevo e alternam de lado, a estrada liga um nó ao outro e o marco fica na fronteira entre regiões. O Stu abre o mapa e
- * o troféu fecha o caminho no topo. No toque, a explicação do nó abre numa folha que sobe do rodapé.
+ * Um só caminho contínuo sobre um mapa ilustrado: cada trecho é uma região (campos, floresta, montanhas…). Os nós são
+ * moedas com relevo numa serpentina, a estrada liga o centro de um ao do próximo (dourada no que já foi feito) e cada
+ * parte abre com uma faixa sobre a fronteira. Só o nó atual (e a prévia) mostra o título ao lado; nos outros, o título
+ * abre numa folha que sobe do rodapé. O Stu acompanha o nó atual e o troféu fecha o caminho.
  */
 
-type Lado = 'esquerda' | 'direita';
 type Medidas = { lente: number; linhas: number; etiqueta: number; marco: number; enfeite: number; miudo: number; guia: number };
 type Ponto = { x: number; y: number };
 type Caixa = { y: number; altura: number };
 /** Topo e base de um trecho do caminho na rolagem da tela. */
 export type Faixa = { topo: number; base: number };
 
-const corEstrada = 'rgba(255, 255, 255, 0.66)';
+const corEstrada = 'rgba(255, 255, 255, 0.72)';
+const corEstradaFeita = '#FFE8A6';
+const ouroFace = '#FFCF4D';
+const ouroLabio = '#E0A12A';
 const corPontilhado = 'rgba(27, 42, 94, 0.24)';
 
 /** Mesmas medidas da web: celular, tablet e telas a partir de 1024 px. */
 function useMedidas(): Medidas {
   const { width } = useWindowDimensions();
-  if (width >= 1024) return { lente: 76, linhas: 60, etiqueta: 56, marco: 84, enfeite: 60, miudo: 28, guia: 68 };
-  if (width >= 768) return { lente: 72, linhas: 56, etiqueta: 56, marco: 76, enfeite: 54, miudo: 28, guia: 62 };
-  return { lente: 64, linhas: 52, etiqueta: 56, marco: 76, enfeite: 44, miudo: 24, guia: 54 };
+  if (width >= 1024) return { lente: 82, linhas: 56, etiqueta: 38, marco: 108, enfeite: 62, miudo: 28, guia: 70 };
+  if (width >= 768) return { lente: 78, linhas: 52, etiqueta: 38, marco: 108, enfeite: 56, miudo: 28, guia: 64 };
+  return { lente: 72, linhas: 46, etiqueta: 38, marco: 108, enfeite: 46, miudo: 24, guia: 56 };
 }
 
 /** Cores da lente por estado: a face, o lábio embaixo (o relevo) e o ícone. */
 const coresDaLente: Record<EstadoNo, { face: string; labio: string; icone: string }> = {
-  concluida: { face: cores.sucessoClaro, labio: cores.sucesso, icone: cores.fundo },
-  atual: { face: cores.acao, labio: cores.acaoEscura, icone: cores.fundo },
+  concluida: { face: ouroFace, labio: ouroLabio, icone: cores.ouroTexto },
+  atual: { face: '#4466E4', labio: cores.acaoEscura, icone: cores.fundo },
   bloqueada: { face: cores.faceNeutra, labio: cores.labioNeutro, icone: cores.tintaNeutra },
   previa: { face: cores.fundo, labio: '#CDD6F2', icone: cores.acao },
 };
 
 const corDoEstado: Record<EstadoNo, string> = {
-  concluida: cores.sucesso,
+  concluida: cores.alerta,
   atual: cores.acao,
   bloqueada: cores.textoSecundario,
   previa: cores.textoSecundario,
 };
+
+type ResumoTrecho = { total: number; feitas: number; previa: boolean };
+
+/** Lições de cada trecho e quantas já foram concluídas, para as faixas de "Parte" (como na web). */
+function resumoDosTrechos(nos: readonly NoCaminho[]) {
+  const resumo = new Map<number, ResumoTrecho>();
+  for (const no of nos) {
+    const atual = resumo.get(no.trecho) ?? { total: 0, feitas: 0, previa: false };
+    atual.total += 1;
+    if (no.estado === 'concluida') atual.feitas += 1;
+    if (no.estado === 'previa') atual.previa = true;
+    resumo.set(no.trecho, atual);
+  }
+  return resumo;
+}
 
 /** Um trecho está vencido quando todas as suas lições estão concluídas: o marco que o fecha fica dourado. */
 function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
@@ -104,6 +122,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const { width } = useWindowDimensions();
   const largo = width >= 768;
   const [aberto, setAberto] = useState<string | null>(null);
+  // Largura do caminho (a serpentina usa pixels): começa pela tela e se ajusta quando a lista mede.
+  const [largura, setLargura] = useState(() => (largo ? Math.min(width, 620) : width));
   // A entrada em sequência só acontece numa trilha que já abre pronta, não quando a geração termina.
   const [entrada] = useState(() => !montando);
   const [festaNaChegada, setFestaNaChegada] = useState(false);
@@ -127,6 +147,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const stuNaChegada = !montando && tudoFeito;
   const comRecem = recemConcluida !== null && nos.some((no) => no.id === recemConcluida);
   const comEntrada = entrada && !comRecem;
+  const resumoTrechos = resumoDosTrechos(nos);
 
   useEffect(() => {
     if (!tituloLiberada) return;
@@ -214,10 +235,13 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       posicoes.current.caminho = evento.nativeEvent.layout.y;
       tentarRolar();
     }}>
-      <Inicio texto={stu} trecho={primeiroTrecho} lente={medidas.lente} pensando={montando} placa={guiaNoCaminho || stuNaChegada} dicas={dicas} />
+      <Inicio texto={stu} trecho={primeiroTrecho} lente={medidas.lente} pensando={montando} placa={guiaNoCaminho || stuNaChegada} dicas={dicas}
+        parte={total > 0 ? <Parte numero={1} resumo={resumoTrechos.get(primeiroTrecho)} /> : null} />
       <View accessibilityRole="list" accessibilityLabel={mensagens.trilha.licoes}
         onLayout={(evento) => {
           posicoes.current.lista = evento.nativeEvent.layout.y;
+          const medida = Math.round(evento.nativeEvent.layout.width);
+          if (medida > 0) setLargura((anterior) => anterior === medida ? anterior : medida);
           tentarRolar();
         }}>
         {nos.map((no, indice) => {
@@ -225,7 +249,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const fimDoTrecho = seguinte !== undefined && seguinte.trecho !== no.trecho;
           const vaiAteChegada = seguinte === undefined && comChegada;
           const vaiAteVindo = seguinte === undefined && montando;
-          const lado: Lado = indice % 2 === 0 ? 'esquerda' : 'direita';
+          const x = posicaoX(indice);
+          const xSeguinte = seguinte !== undefined || vaiAteVindo ? posicaoX(indice + 1) : 50;
+          const comRotulo = no.estado === 'previa' || no.estado === 'atual';
           let depois = 0;
           if (seguinte?.estado === 'atual') depois += medidas.etiqueta;
           if (fimDoTrecho) depois += medidas.marco;
@@ -244,25 +270,30 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 tentarRolar();
                 tentarAcompanhar();
               }}>
-              <Terreno lado={lado} trecho={no.trecho} indice={indice} medidas={medidas} brotar={surgir || comEntrada}
+              {indice === 0 && <View pointerEvents="none" style={[caminhoEstilos.estradaInicial, { left: (largura * x) / 100 - 12, height: 22 + medidas.lente / 2 }]} />}
+              <Terreno x={x} largura={largura} semEnfeites={comRotulo} trecho={no.trecho} indice={indice} medidas={medidas} brotar={surgir || comEntrada}
                 atraso={surgir ? 160 : atrasoEntrada + 160} guia={guia} atrasoGuia={comRecem ? 1350 : 300}
                 vento={indice % 2 ? ventoImpar : ventoPar} />
               {fimDoTrecho && <Fronteira trechoSeguinte={seguinte.trecho} topo={medidas.lente} />}
               {(seguinte || vaiAteChegada || vaiAteVindo) && (
-                <Ligacao lado={lado} ateChegada={vaiAteChegada} feita={no.estado === 'concluida'} topo={medidas.lente}
+                <Ligacao de={x / 100} ate={xSeguinte / 100} feita={no.estado === 'concluida'} topo={medidas.lente / 2}
                   desenhar={recem && no.estado === 'concluida'} />
               )}
               <Entra ativo={surgir || comEntrada} atraso={atrasoEntrada} reduzir={reduzir}>
-                <No no={no} posicao={posicaoDoNo(indice, total, montando)} lado={lado} medidas={medidas} reduzir={reduzir}
+                <No no={no} posicao={posicaoDoNo(indice, total, montando)} x={x} largura={largura} comRotulo={comRotulo} medidas={medidas} reduzir={reduzir}
                   ocupado={ocupado} abrindo={abrindo === no.id} liberada={liberadas.includes(no.id)} recem={recem}
                   atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => guardarAlvo(no.id, alvo)} tocar={() => tocar(no)} />
               </Entra>
-              {fimDoTrecho && <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente} />}
+              {fimDoTrecho && (
+                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente}>
+                  <Parte numero={trechos.indexOf(no.trecho) + 2} resumo={resumoTrechos.get(seguinte.trecho)} />
+                </Marco>
+              )}
             </Linha>
           );
         })}
         {montando && (
-          <Vindo lado={total % 2 === 0 ? 'esquerda' : 'direita'} medidas={medidas} chao={coresDaRegiao(ultimoTrecho).chao}
+          <Vindo x={posicaoX(total)} largura={largura} medidas={medidas} chao={coresDaRegiao(ultimoTrecho).chao}
             aoMedir={(caixa) => {
               posicoes.current.vindo = caixa;
               tentarAcompanhar();
@@ -298,13 +329,15 @@ function circulo(tamanho: number) {
  * senão, o Stu abre o mapa com a frase num balão. Enquanto a IA monta a trilha, o Stu "pensa" (sobe e desce devagar),
  * pontinhos digitam no balão e as dicas se revezam embaixo da frase.
  */
-function Inicio({ texto, trecho, lente, pensando, placa, dicas }: {
+function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte }: {
   texto?: string;
   trecho: number;
   lente: number;
   pensando: boolean;
   placa: boolean;
   dicas: readonly string[];
+  /** Faixa da Parte 1, no pé do céu. */
+  parte: ReactNode;
 }) {
   const { chao, relevo } = coresDaRegiao(trecho);
   const subida = useBalanco(4, 1400, pensando);
@@ -338,6 +371,7 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas }: {
             style={{ width: stu, height: Math.round(stu * 1.1), transform: [{ translateY: subida }] }} />
         </View>
       )}
+      {parte && <View pointerEvents="none" style={caminhoEstilos.inicioParte}>{parte}</View>}
     </View>
   );
 }
@@ -431,8 +465,12 @@ function Entra({ ativo, atraso, reduzir, children }: { ativo: boolean; atraso: n
  * Cenário da linha: um enfeite grande e um miúdo no lado livre do nó; no nó atual, o Stu guia no lugar do enfeite grande.
  * Árvores e flores balançam com o `vento`. Na montagem e na entrada, o cenário brota depois do nó.
  */
-function Terreno({ lado, trecho, indice, medidas, brotar, atraso, guia, atrasoGuia, vento }: {
-  lado: Lado;
+function Terreno({ x, largura, semEnfeites, trecho, indice, medidas, brotar, atraso, guia, atrasoGuia, vento }: {
+  /** Posição do nó, em % da largura: o cenário vai para o lado livre e o Stu, para o lado do nó. */
+  x: number;
+  largura: number;
+  /** O nó tem rótulo no lado livre: sem enfeites ali. */
+  semEnfeites: boolean;
   trecho: number;
   indice: number;
   medidas: Medidas;
@@ -445,7 +483,8 @@ function Terreno({ lado, trecho, indice, medidas, brotar, atraso, guia, atrasoGu
   const { grande, miudo } = enfeitesDaLinha(trecho, indice);
   const reduzir = useMovimentoReduzido();
   const [crescer] = useState(() => brotar ? new Animated.Value(0) : null);
-  const direita = lado === 'direita';
+  const direita = x >= 50;
+  const centro = (largura * x) / 100;
   const { lente, enfeite, miudo: tamMiudo, guia: tamGuia } = medidas;
 
   useEffect(() => {
@@ -459,23 +498,25 @@ function Terreno({ lado, trecho, indice, medidas, brotar, atraso, guia, atrasoGu
     return () => animacao.stop();
   }, [crescer, atraso, reduzir]);
 
-  const ladoLivre = (deslocamento: number, base: DimensionValue): ViewStyle => direita
-    ? { right: base, marginRight: -deslocamento }
-    : { left: base, marginLeft: -deslocamento };
+  const ladoLivre = (distancia: number): ViewStyle => direita ? { left: distancia } : { right: distancia };
   const animacao = crescer ? { opacity: crescer, transform: [{ scale: crescer.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }] } : null;
 
   return (
     <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
-      {guia ? (
-        <GuiaStu tamanho={tamGuia} atraso={atrasoGuia} estilo={[{ position: 'absolute', top: -12 }, ladoLivre(lente / 4 + tamGuia / 2, '12.5%')]} />
-      ) : (
-        <Animated.View style={[{ position: 'absolute', top: 4 }, ladoLivre(lente / 4 + enfeite / 2, '12.5%'), animacao]}>
-          <Balanca nome={grande} vento={vento}><Desenho nome={grande} largura={enfeite} /></Balanca>
-        </Animated.View>
+      {guia && (
+        <GuiaStu tamanho={tamGuia} atraso={atrasoGuia} estilo={[{ position: 'absolute', top: lente / 2 - tamGuia * 0.9 },
+          direita ? { left: centro + lente / 2 + 10 } : { right: largura - centro + lente / 2 + 10 }]} />
       )}
-      <Animated.View style={[{ position: 'absolute', top: lente + 16 }, ladoLivre(lente / 2 + tamMiudo + 6, '25%'), animacao]}>
-        <Balanca nome={miudo} vento={vento}><Desenho nome={miudo} largura={tamMiudo} /></Balanca>
-      </Animated.View>
+      {!semEnfeites && (
+        <>
+          <Animated.View style={[{ position: 'absolute', top: 6 }, ladoLivre(largura * 0.06), animacao]}>
+            <Balanca nome={grande} vento={vento}><Desenho nome={grande} largura={enfeite} /></Balanca>
+          </Animated.View>
+          <Animated.View style={[{ position: 'absolute', top: lente + 4 }, ladoLivre(largura * 0.2), animacao]}>
+            <Balanca nome={miudo} vento={vento}><Desenho nome={miudo} largura={tamMiudo} /></Balanca>
+          </Animated.View>
+        </>
+      )}
     </View>
   );
 }
@@ -508,10 +549,12 @@ function GuiaStu({ tamanho, atraso, estilo }: { tamanho: number; atraso: number;
 }
 
 /** Onde a próxima lição vai aparecer: lente tracejada e placa em esqueleto, fora do leitor de tela (a contagem diz o mesmo). */
-function Vindo({ lado, medidas, chao, aoMedir }: { lado: Lado; medidas: Medidas; chao: string; aoMedir: (caixa: Caixa) => void }) {
-  const direita = lado === 'direita';
+function Vindo({ x, largura, medidas, chao, aoMedir }: { x: number; largura: number; medidas: Medidas; chao: string; aoMedir: (caixa: Caixa) => void }) {
   const reduzir = useMovimentoReduzido();
   const [giro] = useState(() => new Animated.Value(0));
+  const centro = (largura * x) / 100;
+  const direita = x >= 50;
+  const { lente } = medidas;
 
   useEffect(() => {
     if (reduzir !== false) return;
@@ -521,15 +564,12 @@ function Vindo({ lado, medidas, chao, aoMedir }: { lado: Lado; medidas: Medidas;
   }, [reduzir, giro]);
   return (
     <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-      style={[caminhoEstilos.alvo, direita && caminhoEstilos.alvoDireita, { paddingBottom: 32, backgroundColor: chao }]}
+      style={{ height: lente + 32, backgroundColor: chao }}
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
-      <View style={caminhoEstilos.margem} />
-      <View style={direita ? { marginRight: -medidas.lente / 2 } : { marginLeft: -medidas.lente / 2 }}>
-        <Animated.View style={[circulo(medidas.lente), caminhoEstilos.vindoLente, {
-          transform: [{ rotate: giro.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }],
-        }]} />
-      </View>
-      <View style={[caminhoEstilos.texto, direita ? caminhoEstilos.textoDireita : caminhoEstilos.textoEsquerda, { minHeight: medidas.lente }]}>
+      <Animated.View style={[circulo(lente), caminhoEstilos.vindoLente, { position: 'absolute', top: 0, left: centro - lente / 2,
+        transform: [{ rotate: giro.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }]} />
+      <View style={[caminhoEstilos.rotulo, { height: lente },
+        direita ? { right: largura - centro + lente / 2 + 16, alignItems: 'flex-end' } : { left: centro + lente / 2 + 16, alignItems: 'flex-start' }]}>
         <View style={[caminhoEstilos.placa, caminhoEstilos.vindoPlaca, direita && caminhoEstilos.vindoPlacaDireita]}>
           <View style={caminhoEstilos.vindoTitulo} />
           <View style={caminhoEstilos.vindoEstado} />
@@ -539,11 +579,15 @@ function Vindo({ lado, medidas, chao, aoMedir }: { lado: Lado; medidas: Medidas;
   );
 }
 
-function No({ no, posicao, lado, medidas, reduzir, ocupado, abrindo, liberada, recem, atrasoLiberacao, guardar, tocar }: {
+function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abrindo, liberada, recem, atrasoLiberacao, guardar, tocar }: {
   no: NoCaminho;
   /** "Lição 3 de 9", ou só "Lição 3" enquanto a trilha é montada. */
   posicao: string;
-  lado: Lado;
+  /** Posição do nó, em % da largura do caminho. */
+  x: number;
+  largura: number;
+  /** Mostra o título ao lado (nó atual e prévia); nos outros, o título abre na folha. */
+  comRotulo: boolean;
   medidas: Medidas;
   reduzir: boolean | null;
   ocupado: boolean;
@@ -558,41 +602,51 @@ function No({ no, posicao, lado, medidas, reduzir, ocupado, abrindo, liberada, r
   const nome = nomeDoNo(no, posicao);
   let linha: string = no.estado === 'previa' ? posicao : mensagens.trilha.estados[no.estado];
   if (abrindo) linha = mensagens.trilha.abrindo;
-  const direita = lado === 'direita';
+  const { lente } = medidas;
+  const centro = (largura * x) / 100;
+  const direita = x >= 50;
+  const atual = no.estado === 'atual';
+  const rotuloA11y = no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}` : nome;
+  const lugar = [caminhoEstilos.noLugar, { left: centro - lente / 2, width: lente, height: lente }];
 
-  const conteudo = (pressionado: boolean) => (
-    <>
-      <View style={caminhoEstilos.margem} />
-      <View style={direita ? { marginRight: -medidas.lente / 2 } : { marginLeft: -medidas.lente / 2 }}>
-        <Lente no={no} medidas={medidas} reduzir={reduzir} liberada={liberada} recem={recem} atrasoLiberacao={atrasoLiberacao}
-          pressionado={pressionado} focado={focado} />
+  const rotulo = comRotulo && (
+    <View pointerEvents="none" style={[caminhoEstilos.rotulo, { height: lente }, direita
+      ? { right: largura - centro + lente / 2 + 16, alignItems: 'flex-end', maxWidth: Math.max(96, centro - lente / 2 - 28) }
+      : { left: centro + lente / 2 + 16, alignItems: 'flex-start', maxWidth: Math.max(96, largura - centro - lente / 2 - 28) }]}>
+      <View style={[caminhoEstilos.placa, atual && caminhoEstilos.placaAtual]}>
+        {atual && <Text style={[caminhoEstilos.posicao, direita && caminhoEstilos.alinharFim]}>{posicao.toLocaleUpperCase('pt-BR')}</Text>}
+        <Text style={[caminhoEstilos.titulo, atual && caminhoEstilos.tituloAtual, no.estado === 'previa' && caminhoEstilos.tituloPrevia,
+          direita && caminhoEstilos.alinharFim, focado && caminhoEstilos.tituloFocado]}>{no.titulo}</Text>
+        {!atual && <Text style={[caminhoEstilos.estado, { color: corDoEstado[no.estado] }, direita && caminhoEstilos.alinharFim]}>{linha}</Text>}
+        {no.ponte && <><PonteNoMapa /><Text style={[caminhoEstilos.estado, { color: cores.acao }]}>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</Text></>}
       </View>
-      <View style={[caminhoEstilos.texto, direita ? caminhoEstilos.textoDireita : caminhoEstilos.textoEsquerda, { minHeight: medidas.lente }]}>
-        <View style={[caminhoEstilos.placa, no.estado === 'bloqueada' && caminhoEstilos.placaApagada, no.estado === 'atual' && caminhoEstilos.placaAtual]}>
-          <Text style={[caminhoEstilos.titulo, no.estado === 'bloqueada' && caminhoEstilos.tituloBloqueado,
-            direita && caminhoEstilos.alinharFim, focado && caminhoEstilos.tituloFocado]}>{no.titulo}</Text>
-          <Text style={[caminhoEstilos.estado, { color: corDoEstado[no.estado] }, direita && caminhoEstilos.alinharFim]}>{linha}</Text>
-          {no.ponte && <><PonteNoMapa /><Text style={[caminhoEstilos.estado, { color: cores.acao }]}>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</Text></>}
-        </View>
-      </View>
-    </>
+    </View>
+  );
+  const moeda = (pressionado: boolean) => (
+    <View style={atual ? { transform: [{ scale: 1.14 }] } : null}>
+      <Lente no={no} medidas={medidas} reduzir={reduzir} liberada={liberada} recem={recem} atrasoLiberacao={atrasoLiberacao}
+        pressionado={pressionado} focado={focado} />
+    </View>
   );
 
   if (no.estado === 'previa') {
     return (
-      <View accessible accessibilityLabel={no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}` : nome} style={[caminhoEstilos.alvo, direita && caminhoEstilos.alvoDireita]}>
-        {conteudo(false)}
+      <View accessible accessibilityLabel={rotuloA11y} style={{ height: lente }}>
+        <View style={lugar}>{moeda(false)}</View>
+        {rotulo}
       </View>
     );
   }
 
   return (
-    <Pressable ref={guardar} accessibilityRole="button" accessibilityLabel={no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}` : nome}
-      accessibilityState={{ disabled: ocupado, busy: abrindo }} disabled={ocupado} onPress={tocar}
-      onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
-      style={[caminhoEstilos.alvo, direita && caminhoEstilos.alvoDireita]}>
-      {({ pressed }) => conteudo(pressed)}
-    </Pressable>
+    <View style={{ height: lente }}>
+      <Pressable ref={guardar} accessibilityRole="button" accessibilityLabel={rotuloA11y}
+        accessibilityState={{ disabled: ocupado, busy: abrindo }} disabled={ocupado} onPress={tocar} hitSlop={8}
+        onFocus={() => setFocado(true)} onBlur={() => setFocado(false)} style={lugar}>
+        {({ pressed }) => moeda(pressed)}
+      </Pressable>
+      {rotulo}
+    </View>
   );
 }
 
@@ -693,7 +747,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
           ],
         }]} />
       )}
-      <View style={[caminhoEstilos.camada, circulo(lente), { top: 6, backgroundColor: visual.labio }]} />
+      <View style={[caminhoEstilos.camada, circulo(lente), { top: 8, backgroundColor: visual.labio }]} />
       <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), {
         top: afundar, backgroundColor: visual.face, transform: [{ scale: escala }],
       }]}>
@@ -705,6 +759,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
         )}
         {recem && <Confete quantidade={12} />}
       </Animated.View>
+      {no.estado === 'concluida' && <Text style={caminhoEstilos.brilho}>✦</Text>}
       {focado && <View style={[caminhoEstilos.anelFoco, circulo(lente + anel * 2), { left: -anel, top: -anel }]} />}
       {atual && (
         <Animated.View style={[caminhoEstilos.etiquetaCaixa, { bottom: lente + 22 }, {
@@ -772,9 +827,10 @@ export function tracoGrosso(pontos: readonly Ponto[], espessura: number, cor: st
  * Ligação até o próximo nó: a estrada clara e, por cima, a linha pontilhada adiante e contínua depois de concluída.
  * Vai do pé da lente até o fim da linha.
  */
-function Ligacao({ lado, ateChegada, feita, topo, desenhar = false }: {
-  lado: Lado;
-  ateChegada: boolean;
+function Ligacao({ de, ate, feita, topo, desenhar = false }: {
+  /** Posições do nó e do próximo (ou da chegada), em fração da largura. */
+  de: number;
+  ate: number;
   feita: boolean;
   topo: number;
   /** A linha verde se desenha do nó até o próximo, pedaço por pedaço (a lição acabou de ser concluída). */
@@ -794,15 +850,13 @@ function Ligacao({ lado, ateChegada, feita, topo, desenhar = false }: {
     animacao.start();
     return () => animacao.stop();
   }, [desenhar, reduzir, traco]);
-  const de = lado === 'esquerda' ? 0.25 : 0.75;
-  const ate = ateChegada ? 0.5 : 1 - de;
   const desenho = useMemo(() => {
     if (!caixa) return { base: [], verde: [] };
-    const estrada = tracoGrosso(tracado(caixa.largura, caixa.altura, de, ate, 12), 26, corEstrada);
+    const estrada = tracoGrosso(tracado(caixa.largura, caixa.altura, de, ate, 12), 24, feita && !desenhar ? corEstradaFeita : corEstrada);
     const pontos = pontilhar(tracado(caixa.largura, caixa.altura, de, ate, 48), 13).map((ponto): ViewStyle => ({
       left: ponto.x - 2.5, top: ponto.y - 2.5, width: 5, height: 5, borderRadius: 2.5, backgroundColor: corPontilhado,
     }));
-    const verde = feita ? tracoGrosso(tracado(caixa.largura, caixa.altura, de, ate, 12), 6, cores.sucessoClaro) : [];
+    const verde = feita ? tracoGrosso(tracado(caixa.largura, caixa.altura, de, ate, 12), 6, ouroLabio) : [];
     // Enquanto a linha verde se desenha, o pontilhado aparece embaixo dela.
     return { base: feita && !desenhar ? estrada : [...estrada, ...pontos], verde };
   }, [caixa, feita, desenhar, de, ate]);
@@ -830,15 +884,38 @@ function Ligacao({ lado, ateChegada, feita, topo, desenhar = false }: {
  * o trecho foi vencido. Vem depois do nó na árvore, então o leitor de tela lê "Marco 1", "Marco 2"… logo depois do
  * último nó do trecho.
  */
-function Marco({ numero, vencido, topo }: { numero: number; vencido: boolean; topo: number }) {
-  const aceno = useVaiVem(900, vencido);
+function Marco({ numero, vencido, topo, children }: { numero: number; vencido: boolean; topo: number; children: ReactNode }) {
   return (
-    <View pointerEvents="box-none" style={[caminhoEstilos.ligacao, { top: topo }]}>
-      <View accessible accessibilityRole="text" accessibilityLabel={vencido ? mensagens.trilha.marcoVencido(numero) : mensagens.trilha.marco(numero)}
-        style={[caminhoEstilos.marco, vencido && caminhoEstilos.marcoVencido]}>
-        <Animated.View style={vencido ? { transformOrigin: '25% 85%', transform: [{ rotate: aceno.interpolate({ inputRange: [0, 1], outputRange: ['-6deg', '9deg'] }) }] } : null}>
-          <Icone nome="bandeira" tamanho={20} cor={vencido ? cores.ouroTexto : cores.textoSecundario} />
-        </Animated.View>
+    <View pointerEvents="box-none" style={[caminhoEstilos.ligacao, caminhoEstilos.marcoArea, { top: topo }]}>
+      <View accessible accessibilityRole="text" accessibilityLabel={vencido ? mensagens.trilha.marcoVencido(numero) : mensagens.trilha.marco(numero)}>
+        {children}
+      </View>
+    </View>
+  );
+}
+
+/** Faixa que abre cada parte da trilha: número, andamento e barra; dourada quando vencida. Sem nome de assunto. */
+function Parte({ numero, resumo }: { numero: number; resumo?: ResumoTrecho }) {
+  if (!resumo) return null;
+  const vencida = !resumo.previa && resumo.feitas === resumo.total;
+  let texto = mensagens.trilha.parteProgresso(resumo.feitas, resumo.total);
+  if (resumo.previa) texto = mensagens.trilha.parteLicoes(resumo.total);
+  else if (vencida) texto = mensagens.trilha.parteVencida;
+  return (
+    <View style={caminhoEstilos.parte} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <View style={[caminhoEstilos.parteSelo, vencida && caminhoEstilos.parteSeloVencida]}>
+        <Icone nome={vencida ? 'trofeu' : 'bandeira'} tamanho={22} cor={vencida ? cores.ouroTexto : cores.fundo} />
+      </View>
+      <View style={caminhoEstilos.parteCorpo}>
+        <View style={caminhoEstilos.parteTopo}>
+          <Text style={caminhoEstilos.parteNumero}>{mensagens.trilha.parte(numero)}</Text>
+          <Text style={[caminhoEstilos.parteAndamento, vencida && { color: cores.alerta }]}>{texto}</Text>
+        </View>
+        {!resumo.previa && (
+          <View style={caminhoEstilos.parteBarra}>
+            <View style={[caminhoEstilos.parteBarraCheia, { width: `${(resumo.feitas / resumo.total) * 100}%` }, vencida && { backgroundColor: ouroLabio }]} />
+          </View>
+        )}
       </View>
     </View>
   );
@@ -897,14 +974,14 @@ function Chegada({ trecho, lente, feita, stu, festa, aoMedir }: {
       )}
       <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
         style={{ width: tamanho, height: tamanho + 7, transform: [{ scale: pop }] }}>
-        <View style={[caminhoEstilos.camada, circulo(tamanho), { top: 7, backgroundColor: feita ? cores.ouroEscuro : '#CDD6F2' }]} />
-        <View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(tamanho), { backgroundColor: feita ? cores.ouro : cores.fundo }]}>
+        <View style={[caminhoEstilos.camada, circulo(tamanho), { top: 8, backgroundColor: feita ? ouroLabio : '#CDD6F2' }]} />
+        <View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(tamanho), { backgroundColor: feita ? ouroFace : cores.fundo }]}>
           <Icone nome="trofeu" tamanho={Math.round(tamanho * 0.46)} cor={feita ? cores.ouroTexto : cores.textoSecundario} />
         </View>
         {festa && <Confete quantidade={18} />}
       </Animated.View>
       <View style={caminhoEstilos.chegadaPlaca}>
-        <Text style={[caminhoEstilos.chegadaTexto, feita && { color: cores.sucesso }]}>
+        <Text style={[caminhoEstilos.chegadaTexto, feita && { color: cores.alerta }]}>
           {feita ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}
         </Text>
       </View>
@@ -968,15 +1045,14 @@ export function SkeletonTrilha() {
     <View accessible accessibilityRole="progressbar" accessibilityLabel={mensagens.trilha.carregando} accessibilityLiveRegion="polite"
       style={caminhoEstilos.skeleton}>
       <View style={caminhoEstilos.skeletonCabecalho}>
-        <View style={[caminhoEstilos.skeletonLinha, { width: '72%', height: 32 }]} />
-        <View style={caminhoEstilos.skeletonLinha} />
-        <View style={[caminhoEstilos.skeletonLinha, { width: '48%', height: 12, marginTop: 12 }]} />
+        <View style={[caminhoEstilos.skeletonLinha, { width: '40%', height: 12 }]} />
+        <View style={[caminhoEstilos.skeletonLinha, { width: '64%', height: 28 }]} />
       </View>
       <View style={[{ gap: linhas, paddingVertical: 56, backgroundColor: coresDaRegiao(0).chao },
         width >= 768 ? caminhoEstilos.caminhoLargo : caminhoEstilos.caminhoTela]}>
-        {(['esquerda', 'direita', 'esquerda', 'direita'] as const).map((lado, indice) => (
+        {[0, 1, 2, 3].map((indice) => (
           <View key={indice} style={[circulo(lente), caminhoEstilos.skeletonNo,
-            { marginLeft: (lado === 'esquerda' ? '25%' : '75%') as DimensionValue, transform: [{ translateX: -lente / 2 }] }]} />
+            { marginLeft: `${posicaoX(indice)}%` as DimensionValue, transform: [{ translateX: -lente / 2 }] }]} />
         ))}
       </View>
     </View>
@@ -988,43 +1064,43 @@ const caminhoEstilos = StyleSheet.create({
   caminhoTela: { marginHorizontal: -20 },
   caminhoLargo: { borderRadius: 28, overflow: 'hidden' },
   // Começo do mapa
-  inicio: { minHeight: 176, flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'flex-end', paddingHorizontal: 16,
-    paddingTop: 24, paddingBottom: 26, overflow: 'hidden', backgroundColor: '#DCE8FF' },
+  inicio: { minHeight: 210, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', paddingHorizontal: 16,
+    paddingTop: 22, paddingBottom: 104, overflow: 'hidden', backgroundColor: '#D6E4FF' },
+  inicioParte: { position: 'absolute', left: 16, right: 16, bottom: 22, alignItems: 'center', zIndex: 2 },
   inicioCeuBaixo: { position: 'absolute', left: 0, right: 0, top: '55%', bottom: 0, backgroundColor: '#EAF1FF' },
   inicioColinas: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 76 },
   inicioChao: { position: 'absolute', left: 0, right: 0, top: 52, bottom: 0 },
   inicioConteudo: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, flexShrink: 1 },
-  fala: { flexShrink: 1, maxWidth: 272, marginBottom: 46, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18,
+  fala: { flexShrink: 1, maxWidth: 272, marginBottom: 30, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18,
     backgroundColor: cores.fundo, borderBottomWidth: 3, borderBottomColor: 'rgba(27, 42, 94, 0.08)' },
   falaTexto: { flexShrink: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   falaLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6 },
   dica: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18 },
-  placaMadeira: { maxWidth: 272, marginBottom: 22, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 3,
+  placaMadeira: { maxWidth: 272, marginTop: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 3,
     borderBottomWidth: 7, borderColor: '#C79A62', borderBottomColor: '#B0844D', backgroundColor: '#F7E3C2' },
-  poste: { position: 'absolute', bottom: -38, width: 8, height: 30, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, backgroundColor: '#A87650' },
-  placaTexto: { color: '#5B3A17', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
+  poste: { position: 'absolute', bottom: -30, width: 8, height: 22, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, backgroundColor: '#A87650' },
+  placaTexto: { color: '#5B3A17', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
   guiaSombra: { position: 'absolute', left: '18%', right: '18%', bottom: -2, height: 8, borderRadius: 999, backgroundColor: 'rgba(27, 42, 94, 0.14)' },
   falaSeta: { position: 'absolute', right: -6, bottom: 18, width: 16, height: 16, borderRadius: 3, backgroundColor: cores.fundo,
     transform: [{ rotate: '45deg' }] },
-  // Nó e placa
-  alvo: { flexDirection: 'row', alignItems: 'flex-start', minWidth: 0 },
-  alvoDireita: { flexDirection: 'row-reverse' },
-  margem: { width: '25%' },
-  texto: { flex: 1, minWidth: 0, justifyContent: 'center' },
-  textoEsquerda: { alignItems: 'flex-start', paddingLeft: 14, paddingRight: 12 },
-  textoDireita: { alignItems: 'flex-end', paddingRight: 14, paddingLeft: 12 },
-  placa: { maxWidth: '100%', gap: 1, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', borderBottomWidth: 2, borderBottomColor: 'rgba(27, 42, 94, 0.07)' },
-  placaApagada: { backgroundColor: 'rgba(255, 255, 255, 0.74)' },
-  placaAtual: { borderWidth: 2, borderColor: 'rgba(56, 88, 214, 0.18)', borderBottomColor: 'rgba(56, 88, 214, 0.18)' },
+  // Nó e rótulo
+  noLugar: { position: 'absolute', top: 0 },
+  rotulo: { position: 'absolute', top: 0, justifyContent: 'center', zIndex: 2 },
+  placa: { maxWidth: '100%', gap: 2, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.94)', borderBottomWidth: 3, borderBottomColor: 'rgba(27, 42, 94, 0.08)' },
+  placaAtual: { borderWidth: 2, borderBottomWidth: 4, borderColor: 'rgba(68, 102, 228, 0.28)', borderBottomColor: 'rgba(68, 102, 228, 0.28)' },
+  posicao: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
   titulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 21 },
-  tituloBloqueado: { color: cores.textoSecundario },
+  tituloAtual: { fontSize: 17, lineHeight: 22 },
+  tituloPrevia: { fontSize: 15, lineHeight: 20 },
+  estradaInicial: { position: 'absolute', top: -22, width: 24, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: corEstrada },
+  brilho: { position: 'absolute', top: -6, right: -2, color: '#FFB703', fontSize: 18, lineHeight: 20 },
   tituloFocado: { textDecorationLine: 'underline' },
   estado: { fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18 },
   alinharFim: { textAlign: 'right' },
   camada: { position: 'absolute', left: 0, top: 0 },
   face: { alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: 'rgba(255, 255, 255, 0.2)' },
-  halo: { position: 'absolute', left: -12, top: -12, borderWidth: 5, borderColor: 'rgba(56, 88, 214, 0.24)' },
+  halo: { position: 'absolute', left: -12, top: -12, borderWidth: 6, borderColor: 'rgba(68, 102, 228, 0.22)' },
   cadeado: { position: 'absolute', left: -4, top: -4, right: -4, bottom: -4, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.faceNeutra },
   anelFoco: { position: 'absolute', borderWidth: 3, borderColor: cores.acao },
@@ -1036,12 +1112,22 @@ const caminhoEstilos = StyleSheet.create({
   etiquetaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18, letterSpacing: 0.6 },
   // Ligação, marco e chegada
   ligacao: { position: 'absolute', left: 0, right: 0, bottom: 0 },
-  marco: { position: 'absolute', left: '50%', top: '50%', marginLeft: -22, marginTop: -22, width: 44, height: 44, borderRadius: 22,
-    alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4, borderColor: cores.labioNeutro, backgroundColor: cores.fundo },
-  marcoVencido: { borderColor: cores.ouroEscuro, backgroundColor: cores.ouro },
+  marcoArea: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, zIndex: 3 },
+  parte: { width: 272, maxWidth: '100%', flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingLeft: 10, paddingRight: 16,
+    borderRadius: 20, borderWidth: 2, borderBottomWidth: 6, borderColor: 'rgba(255, 255, 255, 0.95)', borderBottomColor: 'rgba(27, 42, 94, 0.1)',
+    backgroundColor: 'rgba(255, 255, 255, 0.94)' },
+  parteSelo: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4,
+    borderColor: cores.acaoEscura, backgroundColor: cores.acao },
+  parteSeloVencida: { borderColor: ouroLabio, backgroundColor: ouroFace },
+  parteCorpo: { flex: 1, gap: 6 },
+  parteTopo: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
+  parteNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 17, lineHeight: 22 },
+  parteAndamento: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  parteBarra: { height: 8, overflow: 'hidden', borderRadius: 999, backgroundColor: cores.gelo },
+  parteBarraCheia: { height: '100%', borderRadius: 999, backgroundColor: cores.acao },
   chegada: { minHeight: 220, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 36, paddingBottom: 30, overflow: 'hidden' },
-  chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -13, width: 26, height: 64,
-    borderBottomLeftRadius: 13, borderBottomRightRadius: 13, backgroundColor: corEstrada },
+  chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 64,
+    borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
   chegadaColina: { position: 'absolute', bottom: -48, left: '50%', marginLeft: -200, width: 400, height: 190,
     borderTopLeftRadius: 200, borderTopRightRadius: 200 },
   chegadaBandeira: { position: 'absolute', bottom: 96 },
@@ -1052,22 +1138,22 @@ const caminhoEstilos = StyleSheet.create({
   fundoFolha: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(27, 42, 94, 0.32)' },
   folha: { width: '100%', maxWidth: 620, alignSelf: 'center', gap: 12, paddingTop: 10, paddingLeft: 20, paddingRight: 12,
     borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: cores.fundo },
-  folhaConcluida: { borderTopWidth: 6, borderColor: '#B6E3C8' },
+  folhaConcluida: { borderTopWidth: 6, borderColor: '#FFE08A' },
   folhaPuxador: { alignSelf: 'center', width: 40, height: 5, marginLeft: 8, borderRadius: 3, backgroundColor: cores.gelo },
   folhaTopo: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   folhaIcone: { width: 36, height: 36, marginTop: 4, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.faceNeutra },
-  folhaIconeConcluida: { backgroundColor: cores.sucessoClaro },
+  folhaIconeConcluida: { backgroundColor: ouroFace },
   folhaTitulo: { flex: 1, paddingTop: 9 },
   folhaAcao: { paddingRight: 8, paddingTop: 4 },
   fechar: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   fecharPressionado: { backgroundColor: cores.nevoa },
   // Esqueletos
   skeleton: { marginTop: 24, gap: 28 },
-  skeletonCabecalho: { gap: 12, padding: 24, borderRadius: 24, borderWidth: 2, borderColor: cores.gelo },
+  skeletonCabecalho: { gap: 10, paddingVertical: 8, paddingHorizontal: 4 },
   skeletonLinha: { height: 16, borderRadius: 8, backgroundColor: cores.gelo },
   skeletonNo: { backgroundColor: 'rgba(255, 255, 255, 0.75)' },
   vindoLente: { borderWidth: 3, borderStyle: 'dashed', borderColor: '#C3CDEE', backgroundColor: 'rgba(255, 255, 255, 0.7)' },
-  vindoPlaca: { width: '70%', gap: 8 },
+  vindoPlaca: { width: 144, gap: 8 },
   vindoPlacaDireita: { alignItems: 'flex-end' },
   vindoTitulo: { width: '80%', height: 14, borderRadius: 8, backgroundColor: cores.gelo },
   vindoEstado: { width: '45%', height: 10, borderRadius: 8, backgroundColor: cores.gelo },

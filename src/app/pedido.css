@@ -287,3 +287,112 @@
  .descoberta-rodape { flex-direction:column; }
 }
 @media(prefers-reduced-motion:reduce) { .descoberta-stu .stu,.descoberta-painel { animation:none; } .descoberta-modo { transition:none; } }
+
+/*
+ * Pedido simplificado: o Stu e uma pergunta grande, um campo, o botão e uma fileira de ideias.
+ * Ter um material é a alternativa discreta embaixo; a tela troca de modo sem perder o que foi escrito.
+ */
+.painel--pedido.pedido-novo { display: grid; gap: 18px; width: min(100%, 36rem); margin-inline: auto; }
+
+.pedido-heroi { display: grid; justify-items: center; gap: 8px; padding-top: 8px; text-align: center; }
+.pedido-heroi h1 { font-size: clamp(1.875rem, 6vw, 2.5rem); line-height: 1.08; text-wrap: balance; }
+.pedido-heroi__fala { min-height: 1.5em; color: var(--texto2); font-size: 1.0625rem; font-weight: 700; animation: dica-entrar 320ms ease-out backwards; }
+
+.pedido-heroi__stu { position: relative; display: grid; width: 120px; height: 120px; place-items: center; }
+.pedido-heroi__stu .stu { position: relative; z-index: 1; width: 96px; height: auto; transform-origin: 50% 100%; animation: stu-acenar 4200ms ease-in-out 600ms infinite; }
+.pedido-heroi__halo { position: absolute; inset: 6px; border-radius: 50%; background: radial-gradient(circle, #fff3c4 0 45%, #ffe08a 46% 60%, transparent 61%); animation: caminho-respirar 2600ms ease-in-out infinite; }
+.pedido-heroi__estrela { position: absolute; top: 6px; right: 8px; z-index: 2; color: #ffb703; font-size: 1.5rem; animation: caminho-cintilar 1800ms ease-in-out infinite; }
+
+.pedido-novo .pedido-formulario { display: grid; gap: 14px; margin: 0; }
+.pedido-novo .pedido-campo { margin: 0; }
+
+.pedido-novo .pedido-campo textarea {
+  min-height: 112px;
+  padding: 18px 20px;
+  border: 3px solid var(--gelo);
+  border-radius: 24px;
+  background: var(--fundo);
+  box-shadow: 0 5px 0 var(--gelo);
+  font-size: 1.1875rem;
+  font-weight: 700;
+  line-height: 1.4;
+  resize: none;
+  transition: border-color 160ms ease-out, box-shadow 160ms ease-out;
+}
+
+.pedido-novo .pedido-campo textarea:focus { border-color: var(--acao); box-shadow: 0 5px 0 #b9c7f5; outline: none; }
+.pedido-novo .pedido-campo textarea::placeholder { color: #9aa3bf; font-weight: 600; }
+.pedido-novo .pedido-criar { width: 100%; min-height: 56px; font-size: 1.0625rem; }
+
+/* Ideias: fichas que rolam para o lado no celular e quebram linha na tela larga. */
+.pedido-ideias {
+  display: flex;
+  gap: 10px;
+  margin: 2px calc(-1 * var(--espaco-pagina)) 0;
+  padding: 4px var(--espaco-pagina) 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.pedido-ideias::-webkit-scrollbar { display: none; }
+
+.pedido-ideia {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 8px 16px 8px 10px;
+  border: 2px solid var(--gelo);
+  border-radius: 999px;
+  color: var(--texto);
+  background: var(--fundo);
+  box-shadow: 0 3px 0 var(--gelo);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  scroll-snap-align: start;
+  transition: transform 110ms ease-out, box-shadow 110ms ease-out, border-color 140ms ease-out;
+}
+
+.pedido-ideia .desenho { --tam: 24px; }
+.pedido-ideia:active:not(:disabled) { box-shadow: 0 0 0 var(--gelo); transform: translateY(3px); }
+.pedido-ideia[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f3f6ff; box-shadow: 0 3px 0 #b9c7f5; }
+.pedido-ideia--surpresa { border-color: #ffe08a; color: #7a4a00; background: #fff8e1; box-shadow: 0 3px 0 #ffe08a; }
+
+/* Alternativa: trazer um material (ou voltar a escrever). */
+.pedido-alternar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 18px 14px 14px;
+  border: 2px dashed #c9d1ea;
+  border-radius: 22px;
+  color: var(--texto);
+  background: transparent;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.pedido-alternar__icone { display: grid; width: 44px; height: 44px; place-items: center; border-radius: 14px; color: var(--acao); background: var(--nevoa); }
+.pedido-alternar__icone .icone { width: 22px; height: 22px; }
+.pedido-alternar__texto { display: grid; gap: 2px; min-width: 0; }
+.pedido-alternar__texto strong { font-weight: 800; }
+.pedido-alternar__texto small { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
+.pedido-alternar > .icone { width: 20px; height: 20px; color: var(--texto2); }
+.pedido-novo .pedido-como { justify-self: center; }
+
+@media (hover: hover) {
+  .pedido-ideia:hover:not(:disabled) { border-color: #b9c7f5; }
+  .pedido-alternar:hover:not(:disabled) { border-color: var(--acao); background: #f8faff; }
+}
+
+@media (min-width: 768px) {
+  .pedido-ideias { flex-wrap: wrap; justify-content: center; margin-inline: 0; padding-inline: 0; overflow: visible; }
+}

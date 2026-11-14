@@ -3,66 +3,80 @@
  * (src/ui/caminho.css). No celular o mapa vai de uma borda à outra; no tablet e no computador, tem cantos arredondados.
  */
 
-.painel--trilha { display: grid; gap: 24px; min-width: 0; }
+.painel--trilha { display: grid; gap: 16px; min-width: 0; }
 
-.trilha-cabecalho {
+/* Topo da trilha: o título e o anel de progresso; o caminho logo abaixo é o protagonista. */
+.trilha-topo { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-width: 0; padding: 4px 4px 0; }
+.trilha-topo__texto { min-width: 0; }
+.trilha-topo__rotulo { color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; }
+.trilha-topo h1 { margin-top: 2px; font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.12; text-wrap: balance; overflow-wrap: anywhere; }
+
+.anel {
+  --valor: 0%;
+  position: relative;
   display: grid;
-  align-content: start;
-  min-width: 0;
-  padding: 22px 24px 24px;
+  flex: none;
+  width: 68px;
+  height: 68px;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(var(--ouro-escuro) var(--valor), var(--gelo) 0);
+  box-shadow: 0 4px 0 rgb(27 42 94 / 0.08);
+}
+
+.anel::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: var(--fundo); }
+.anel__numero { position: relative; font-family: Quicksand, sans-serif; font-size: 1.375rem; font-weight: 700; letter-spacing: -0.03em; }
+.anel__numero small { color: var(--texto2); font-size: 0.8125rem; font-weight: 700; }
+
+/* Próxima lição: um cartão que flutua no pé da tela, sempre ao alcance. */
+.trilha-proximo {
+  position: sticky;
+  bottom: 18px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'rotulo botao' 'titulo botao';
+  align-items: center;
+  column-gap: 16px;
+  width: min(100%, 34rem);
+  margin: 0 auto;
+  padding: 14px 14px 14px 20px;
   border: 2px solid var(--gelo);
   border-radius: 24px;
   background: var(--fundo);
-  box-shadow: 0 4px 0 var(--gelo);
+  box-shadow: 0 5px 0 var(--gelo), 0 18px 36px rgb(27 42 94 / 0.16);
 }
 
-.trilha-resumo { min-width: 0; }
-.trilha-cabecalho h1 { font-size: 1.75rem; line-height: 1.15; text-wrap: balance; overflow-wrap: anywhere; }
-
-/* O objetivo pode ter até 500 caracteres: na faixa ficam três linhas; o leitor de tela lê o texto inteiro. */
-.trilha-cabecalho .introducao {
-  display: -webkit-box;
-  margin-top: 8px;
-  overflow: hidden;
-  font-size: 1rem;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-}
-
-.trilha-cabecalho .plano-progresso { max-width: none; margin-block: 18px 0; }
-.trilha-cabecalho .barra { height: 16px; }
-.trilha-cabecalho .barra__preenchimento { background: linear-gradient(90deg, var(--acao), #5b7cf0); }
-.progresso__legenda { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
-.progresso__percentual { color: var(--acao) !important; font-weight: 900 !important; }
-
-.trilha-proximo {
-  display: grid;
-  gap: 2px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid var(--nevoa);
-}
-
-.trilha-proximo__rotulo, .trilha-proximo__detalhe { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
-.trilha-proximo__rotulo { color: var(--acao); font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.8125rem; }
-.trilha-proximo__titulo { font-size: 1.0625rem; font-weight: 800; overflow-wrap: anywhere; }
-.trilha-proximo > .botao { justify-self: start; margin-top: 14px; }
+.trilha-proximo__rotulo { grid-area: rotulo; color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+.trilha-proximo__titulo { grid-area: titulo; overflow: hidden; font-size: 1rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.trilha-proximo__detalhe { display: none; }
+.trilha-proximo > .botao { grid-area: botao; margin: 0; }
 
 .trilha-concluida {
   display: grid;
+  justify-items: start;
   gap: 8px;
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid var(--nevoa);
+  padding: 18px 20px;
+  border: 2px solid #ffe08a;
+  border-radius: 22px;
+  background: #fff8e1;
+  box-shadow: 0 4px 0 #ffe08a;
 }
 
-.trilha-concluida__titulo { display: flex; align-items: center; gap: 8px; color: var(--sucesso); font-weight: 800; }
-.trilha-concluida__titulo .icone { width: 20px; height: 20px; }
+.trilha-concluida__titulo { display: flex; align-items: center; gap: 8px; color: #9a5b00; font-weight: 900; }
+.trilha-concluida__titulo .icone { width: 22px; height: 22px; }
 .trilha-concluida > p:not(.trilha-concluida__titulo) { color: var(--texto2); }
-.trilha-concluida .acao-principal, .trilha-vazia .acao-principal { margin-top: 8px; }
+.trilha-concluida .botao { margin-top: 6px; }
+.trilha-vazia .acao-principal { margin-top: 8px; }
 .trilha-vazia { display: grid; justify-items: start; gap: 16px; }
+
+/* Faixa da geração ao vivo (título que chega e a origem). */
+.trilha-cabecalho { display: grid; align-content: start; min-width: 0; padding: 4px 4px 0; }
+.trilha-resumo { min-width: 0; }
+.trilha-cabecalho h1 { font-size: clamp(1.5rem, 4vw, 2rem); line-height: 1.12; text-wrap: balance; overflow-wrap: anywhere; }
+.trilha-cabecalho .introducao { margin-top: 6px; font-size: 1rem; overflow-wrap: anywhere; }
+.progresso__legenda { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.progresso__percentual { color: var(--acao) !important; font-weight: 900 !important; }
 
 .conclusao-liberada { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--acao); font-weight: 800; }
 .conclusao-liberada .icone { width: 20px; height: 20px; }
@@ -300,27 +314,17 @@
 /* Celular: o mapa ocupa a largura da tela e o próximo passo vira o rodapé fixo, ao alcance do polegar. */
 @media (max-width: 767px) {
   .painel--trilha { gap: 20px; }
-  .trilha-cabecalho { padding: 18px 20px 20px; }
   .painel--trilha > .caminho { margin-inline: calc(-1 * var(--espaco-pagina)); }
 
   .trilha-proximo {
     position: fixed;
-    inset: auto 0 0;
-    z-index: 2;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas: 'rotulo botao' 'titulo botao';
-    align-items: center;
-    column-gap: 12px;
-    margin: 0;
-    padding: 12px max(20px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-    border-top: 2px solid var(--nevoa);
-    background: var(--fundo);
+    right: 12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    left: 12px;
+    width: auto;
   }
 
-  .trilha-proximo__rotulo { grid-area: rotulo; font-size: 0.75rem; }
-  .trilha-proximo__titulo { grid-area: titulo; overflow: hidden; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
-  .trilha-proximo__detalhe { display: none; }
-  .trilha-proximo > .botao { grid-area: botao; margin: 0; }
+  .estudo[data-navegacao] .trilha-proximo { bottom: calc(var(--altura-navegacao) + 10px); }
 
   .geracao-acoes {
     position: fixed;
@@ -343,22 +347,5 @@
 @media (min-width: 1024px) {
   .painel--trilha { width: min(100%, 52rem); justify-self: center; }
 
-  .trilha-cabecalho {
-    grid-template-columns: minmax(0, 1fr) 16rem;
-    align-items: center;
-    column-gap: 32px;
-    padding: 26px 32px 28px;
-  }
-
-  .trilha-cabecalho .introducao { max-width: 60ch; }
-
-  .trilha-proximo, .trilha-concluida {
-    margin: 0;
-    padding: 4px 0 4px 32px;
-    border-top: 0;
-    border-left: 2px solid var(--nevoa);
-  }
-
-  .trilha-proximo > .botao { justify-self: stretch; }
   .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
 }

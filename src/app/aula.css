@@ -96,7 +96,7 @@
 .aula-etapa[data-etapa='exemplo'] .icone { background: #fff1cc; }
 .aula-etapa[data-etapa='exercicio'] { color: var(--sucesso); }
 .aula-etapa[data-etapa='exercicio'] .icone { background: #e3f6ea; }
-.aula-miolo h1 { margin-top: -6px; text-wrap: balance; }
+.aula-miolo h1 { margin-top: -6px; font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.15; text-wrap: balance; }
 .aula-miolo .introducao { margin-top: 0; }
 
 /* Conceito: o Stu explica, num balão. */

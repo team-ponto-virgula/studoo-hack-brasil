@@ -50,11 +50,51 @@ function iconeDoNo(no: NoCaminho): NomeIcone {
   return no.titulo.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro';
 }
 
-/** Curva da ligação: de um lado ao outro entre dois nós, ou do último nó até a chegada, no centro. */
-function tracado(lado: 'esquerda' | 'direita', ateChegada: boolean) {
-  const de = lado === 'esquerda' ? 25 : 75;
-  const ate = ateChegada ? 50 : 100 - de;
-  return `M${de} 0C${de} 50 ${ate} 50 ${ate} 100`;
+/**
+ * Posição horizontal do nó, em % da coluna do caminho: uma serpentina suave (como as trilhas dos apps de idiomas),
+ * deslocada meio passo para nenhum nó ficar exatamente no centro (o rótulo ao lado sempre tem espaço).
+ */
+export function posicaoX(indice: number) {
+  return Math.round((50 + 23 * Math.sin(((indice + 0.5) * Math.PI) / 4)) * 10) / 10;
+}
+
+/** Curva da ligação: do centro de um nó ao centro do próximo (ou da chegada, no meio). */
+function tracado(de: number, ate: number) {
+  return `M${de} 0C${de} 55 ${ate} 45 ${ate} 100`;
+}
+
+/** Lições de cada trecho e quantas já foram concluídas, para as faixas de "Parte". */
+function resumoDosTrechos(nos: readonly NoCaminho[]) {
+  const resumo = new Map<number, { total: number; feitas: number; previa: boolean }>();
+  for (const no of nos) {
+    const atual = resumo.get(no.trecho) ?? { total: 0, feitas: 0, previa: false };
+    atual.total += 1;
+    if (no.estado === 'concluida') atual.feitas += 1;
+    if (no.estado === 'previa') atual.previa = true;
+    resumo.set(no.trecho, atual);
+  }
+  return resumo;
+}
+
+/** Faixa que abre cada parte da trilha: número, andamento e, quando vencida, o dourado. Sem nome de assunto. */
+function FaixaParte({ numero, resumo }: { numero: number; resumo?: { total: number; feitas: number; previa: boolean } }) {
+  if (!resumo) return null;
+  const vencida = !resumo.previa && resumo.feitas === resumo.total;
+  const texto = resumo.previa
+    ? mensagens.trilha.parteLicoes(resumo.total)
+    : vencida ? mensagens.trilha.parteVencida : mensagens.trilha.parteProgresso(resumo.feitas, resumo.total);
+  return (
+    <span className="caminho-parte" data-vencida={vencida || undefined} aria-hidden="true">
+      <span className="caminho-parte__selo"><Icone nome={vencida ? 'trofeu' : 'bandeira'} /></span>
+      <span className="caminho-parte__texto">
+        <span className="caminho-parte__numero">{mensagens.trilha.parte(numero)}</span>
+        <span className="caminho-parte__andamento">{texto}</span>
+      </span>
+      {!resumo.previa && (
+        <span className="caminho-parte__barra"><span style={{ width: `${(resumo.feitas / resumo.total) * 100}%` }} /></span>
+      )}
+    </span>
+  );
 }
 
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
@@ -129,6 +169,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const guiaNoCaminho = !montando && nos.some((no) => no.estado === 'atual');
   const stuNaChegada = !montando && tudoFeito;
   const comRecem = recemConcluida !== null && nos.some((no) => no.id === recemConcluida);
+  const resumoTrechos = resumoDosTrechos(nos);
 
   // Enquanto a IA monta a trilha, uma dica nova a cada poucos segundos.
   useEffect(() => {
@@ -252,6 +293,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             <Stu />
           </div>
         )}
+        {total > 0 && <FaixaParte numero={1} resumo={resumoTrechos.get(primeiroTrecho)} />}
       </div>
       <ol className="caminho-nos" role="list" aria-label={mensagens.trilha.licoes}>
         {nos.map((no, indice) => {
@@ -260,7 +302,11 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const vaiAteChegada = seguinte === undefined && comChegada;
           const vaiAteVindo = seguinte === undefined && montando;
           const ligado = seguinte !== undefined || vaiAteChegada || vaiAteVindo;
-          const lado = indice % 2 === 0 ? 'esquerda' : 'direita';
+          const x = posicaoX(indice);
+          const xSeguinte = seguinte !== undefined || vaiAteVindo ? posicaoX(indice + 1) : 50;
+          // Lado para onde o nó pende: o rótulo e o cenário vão para o lado livre, o Stu fica do lado do nó.
+          const lado = x >= 50 ? 'direita' : 'esquerda';
+          const comRotulo = no.estado === 'previa' || no.estado === 'atual';
           const atual = no.estado === 'atual';
           const estaAberto = aberto === no.id;
           const liberada = liberadas.includes(no.id);
@@ -287,9 +333,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 {recem && <Confete quantidade={12} />}
                 {atual && <span className="caminho-no__etiqueta">{mensagens.trilha.comecar}</span>}
               </span>
-              <span className="caminho-no__texto" aria-hidden="true">
+              <span className="caminho-no__texto" aria-hidden="true" hidden={!comRotulo}>
+                {atual && <span className="caminho-no__posicao">{posicao}</span>}
                 <span className="caminho-no__titulo">{no.titulo}</span>
-                <span className="caminho-no__estado">{linha}</span>
+                {!atual && <span className="caminho-no__estado">{linha}</span>}
                 {no.ponte && <span className="caminho-ponte"><span className="caminho-ponte__desenho">{[0, 5, 9, 5, 0].map((altura, i) => <span key={i} style={{ marginBottom: altura, animationDelay: `${i * 70}ms` }} />)}</span>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</span>}
               </span>
             </>
@@ -297,8 +344,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
 
           return (
             <li key={no.id} className="caminho-no" data-estado={no.estado} data-lado={lado}
-              style={{ ...coresDaRegiao(no.trecho), '--ordem': indice } as CSSProperties}
-              data-ligado={ligado || undefined} data-fim-trecho={fimDoTrecho || undefined} data-liberada={liberada || undefined}
+              style={{ ...coresDaRegiao(no.trecho), '--ordem': indice, '--x': x } as CSSProperties}
+              data-ligado={ligado || undefined} data-fim-trecho={fimDoTrecho || undefined} data-rotulo={comRotulo || undefined} data-liberada={liberada || undefined}
               data-aberto={estaAberto || undefined} data-recem={recem || undefined}
               onKeyDown={(evento) => {
                 if (evento.key !== 'Escape' || !estaAberto) return;
@@ -312,7 +359,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               <span className="caminho-terreno" aria-hidden="true">
                 {atual && guiaNoCaminho
                   ? <span className="caminho-guia"><Stu /></span>
-                  : <Desenho nome={enfeites.grande} className={classeDoEnfeite(enfeites.grande, 'caminho-enfeite caminho-enfeite--grande')} />}
+                  : !comRotulo && <Desenho nome={enfeites.grande} className={classeDoEnfeite(enfeites.grande, 'caminho-enfeite caminho-enfeite--grande')} />}
                 <Desenho nome={enfeites.miudo} className={classeDoEnfeite(enfeites.miudo, 'caminho-enfeite caminho-enfeite--miudo')} />
                 <Desenho nome={lateral.grande} className={classeDoEnfeite(lateral.grande, 'caminho-enfeite caminho-enfeite--lateral')} />
                 <Desenho nome={lateral.miudo} className={classeDoEnfeite(lateral.miudo, 'caminho-enfeite caminho-enfeite--lateral-miudo')} />
@@ -321,21 +368,21 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               {ligado && (
                 <span className="caminho-ligacao" data-feita={(no.estado === 'concluida' && !desenhar) || undefined} aria-hidden="true">
                   <svg className="caminho-conector" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
-                    <path className="caminho-conector__estrada" d={tracado(lado, vaiAteChegada)} />
-                    <path className="caminho-conector__linha" d={tracado(lado, vaiAteChegada)} />
+                    <path className="caminho-conector__estrada" d={tracado(x, xSeguinte)} />
+                    <path className="caminho-conector__linha" d={tracado(x, xSeguinte)} />
                   </svg>
                   {desenhar && (
                     <span className="caminho-ligacao__desenho">
                       <svg className="caminho-conector" viewBox="0 0 100 100" preserveAspectRatio="none" focusable="false">
-                        <path className="caminho-conector__linha caminho-conector__linha--feita" d={tracado(lado, vaiAteChegada)} />
+                        <path className="caminho-conector__linha caminho-conector__linha--feita" d={tracado(x, xSeguinte)} />
                       </svg>
                     </span>
                   )}
                 </span>
               )}
               {fimDoTrecho && (
-                <span className="caminho-marco" data-vencido={marcoVencido || undefined} aria-hidden="true">
-                  <Icone nome="bandeira" />
+                <span className="caminho-marco" data-vencido={marcoVencido || undefined}>
+                  <FaixaParte numero={numeroMarco + 1} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </span>
               )}
               {no.estado === 'previa' ? (
@@ -380,8 +427,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           );
         })}
         {montando && (
-          <li className="caminho-no caminho-no--vindo" data-lado={total % 2 === 0 ? 'esquerda' : 'direita'} ref={vindo}
-            style={coresDaRegiao(ultimoTrecho)} aria-hidden="true">
+          <li className="caminho-no caminho-no--vindo" data-lado={posicaoX(total) >= 50 ? 'direita' : 'esquerda'} data-rotulo ref={vindo}
+            style={{ ...coresDaRegiao(ultimoTrecho), '--x': posicaoX(total) } as CSSProperties} aria-hidden="true">
             <div className="caminho-no__alvo">
               <span className="caminho-no__lente" />
               <span className="caminho-no__texto"><span /><span /></span>
