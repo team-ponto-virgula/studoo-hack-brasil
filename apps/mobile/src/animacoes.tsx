@@ -45,12 +45,12 @@ export function useTremor(gatilho: number) {
   const [valor] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
-    if (!gatilho || reduzir !== false) return;
+    if (!gatilho || reduzir !== false) { valor.setValue(0); return; }
     const passo = (destino: number, duracao: number) =>
       Animated.timing(valor, { toValue: destino, duration: duracao, easing: Easing.linear, useNativeDriver: true });
     const sequencia = Animated.sequence([passo(-8, 50), passo(8, 70), passo(-8, 70), passo(6, 60), passo(-4, 50), passo(0, 40)]);
     sequencia.start();
-    return () => sequencia.stop();
+    return () => { sequencia.stop(); valor.setValue(0); };
   }, [gatilho, reduzir, valor]);
 
   return valor;
@@ -68,13 +68,13 @@ export function usePulinho(gatilho: unknown, intensidade = 1.25) {
       return;
     }
     // Só pula quando o gatilho liga (escolher, acertar); desligar não pula.
-    if (!gatilho || reduzir !== false) return;
+    if (!gatilho || reduzir !== false) { valor.setValue(1); return; }
     const sequencia = Animated.sequence([
       Animated.timing(valor, { toValue: intensidade, duration: 140, easing: Easing.out(Easing.quad), useNativeDriver: true }),
       Animated.spring(valor, { toValue: 1, friction: 4, tension: 160, useNativeDriver: true }),
     ]);
     sequencia.start();
-    return () => sequencia.stop();
+    return () => { sequencia.stop(); valor.setValue(1); };
   }, [gatilho, reduzir, valor, intensidade]);
 
   return valor;

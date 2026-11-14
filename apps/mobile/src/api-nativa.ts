@@ -13,7 +13,7 @@ export class FalhaMobile extends Error {
   }
 }
 
-function origemConfigurada() {
+export function origemConfigurada() {
   try {
     const url = new URL(process.env.EXPO_PUBLIC_STUDOO_API_URL ?? '');
     if (url.protocol === 'https:' && url.pathname === '/' && !url.username && !url.password && !url.search && !url.hash) {

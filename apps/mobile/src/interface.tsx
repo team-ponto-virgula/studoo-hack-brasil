@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
   Animated,
   Easing,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -18,6 +19,10 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { NavegacaoContexto } from './navegacao';
+import { useMovimentoReduzido } from './movimento';
+export { useMovimentoReduzido } from './movimento';
+
 import { Icone } from './icone';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
@@ -40,6 +45,13 @@ export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, 
   /** Fundo do rodapé, como o verde ou o âmbar do retorno da aula. */
   estiloRodape?: StyleProp<ViewStyle>;
 }) {
+  const navegacao = useContext(NavegacaoContexto);
+  const [teclado, setTeclado] = useState(false);
+  useEffect(() => {
+    const abriu = Keyboard.addListener('keyboardDidShow', () => setTeclado(true));
+    const fechou = Keyboard.addListener('keyboardDidHide', () => setTeclado(false));
+    return () => { abriu.remove(); fechou.remove(); };
+  }, []);
   return (
     <SafeAreaView style={estilos.tela}>
       <View style={estilos.cabecalho}>
@@ -54,13 +66,14 @@ export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, 
       </View>
 
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" contentContainerStyle={[estilos.conteudo, estiloConteudo]}
+        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[estilos.conteudo, estiloConteudo]}
           onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
           onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}>
           <Entrada>{children}</Entrada>
         </ScrollView>
         {rodape && <View style={[estilos.rodape, estiloRodape]}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}
       </KeyboardAvoidingView>
+      {navegacao && !teclado && <NavegacaoInferior />}
     </SafeAreaView>
   );
 }
@@ -86,28 +99,6 @@ function Entrada({ children }: { children: ReactNode }) {
       {children}
     </Animated.View>
   );
-}
-
-/**
- * Preferência de movimento reduzido do aparelho; `null` enquanto a resposta não chega.
- * Quem anima espera a resposta e, com movimento reduzido, mostra o estado final com a mesma informação.
- */
-export function useMovimentoReduzido() {
-  const [reduzir, setReduzir] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    let ativo = true;
-    AccessibilityInfo.isReduceMotionEnabled()
-      .then((valor) => { if (ativo) setReduzir(valor); })
-      .catch(() => { if (ativo) setReduzir(false); });
-    const assinatura = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduzir);
-    return () => {
-      ativo = false;
-      assinatura.remove();
-    };
-  }, []);
-
-  return reduzir;
 }
 
 /**
@@ -187,6 +178,18 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
   compacto?: boolean;
 }) {
   const [focado, setFocado] = useState(false);
+  const reduzir = useMovimentoReduzido();
+  const [pressao] = useState(() => new Animated.Value(1));
+  const bloqueado = desativado || ocupado || carregando;
+  function pressionar(destino: number) {
+    pressao.stopAnimation();
+    if (reduzir !== false) { pressao.setValue(1); return; }
+    Animated.spring(pressao, { toValue: destino, speed: 36, bounciness: 2, useNativeDriver: true }).start();
+  }
+  useEffect(() => {
+    if (bloqueado || reduzir !== false) { pressao.stopAnimation(); pressao.setValue(1); }
+    return () => pressao.stopAnimation();
+  }, [bloqueado, reduzir, pressao]);
   let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' ? cores.fundo : cores.acao;
   if (desativado) corTexto = cores.textoSecundario;
 
@@ -196,8 +199,10 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
       accessibilityRole="button"
       accessibilityLabel={rotulo}
       accessibilityHint={dica}
-      accessibilityState={{ disabled: desativado, busy: ocupado }}
-      disabled={desativado}
+      accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }}
+      disabled={bloqueado}
+      onPressIn={() => pressionar(0.97)}
+      onPressOut={() => pressionar(1)}
       onPress={acao}
       onFocus={() => setFocado(true)}
       onBlur={() => setFocado(false)}
@@ -208,18 +213,20 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
         variante === 'alerta' && estilos.botaoAlerta,
         variante === 'texto' && estilos.botaoTextoLivre,
         compacto && estilos.botaoCompacto,
-        pressed && variante !== 'texto' && estilos.botaoAfundado,
+        pressed && variante !== 'texto' && estilos.botaoPressionado,
         pressed && variante === 'texto' && estilos.botaoPressionado,
         focado && estilos.foco,
         desativado && variante !== 'texto' && estilos.botaoDesativado,
       ]}
     >
+      <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">
       {carregando ? <Pontinhos cor={corTexto} /> : (
         <>
           <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto]}>{rotulo}</Text>
           {icone && <Icone nome={icone} tamanho={18} cor={corTexto} />}
         </>
       )}
+      </Animated.View>
     </Pressable>
   );
 }
@@ -422,7 +429,7 @@ export const estilos = StyleSheet.create({
   pontinho: { width: 8, height: 8, borderRadius: 4 },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
   botaoCompacto: { alignSelf: 'flex-start', minHeight: 44, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
-  botaoAfundado: { borderBottomWidth: 2, marginTop: 3 },
+  botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 1 },
   botaoPressionado: { opacity: 0.82 },
   foco: { outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
   botaoDesativado: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.nevoa },
@@ -430,4 +437,45 @@ export const estilos = StyleSheet.create({
   botaoTextoCompacto: { fontSize: 14, lineHeight: 20 },
   botaoIcone: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   botaoIconePressionado: { backgroundColor: cores.nevoa },
+});
+
+/** Dois destinos persistentes, fora das aulas e da geração para preservar o foco. */
+function NavegacaoInferior() {
+  const nav = useContext(NavegacaoContexto);
+  if (!nav) return null;
+  return <View style={navegacaoEstilos.faixa}>
+    {([
+      { id: 'planos', rotulo: mensagens.planos.titulo, icone: 'livro', acao: nav.planos },
+      { id: 'objetivo', rotulo: mensagens.planos.novo, icone: 'lampada', acao: nav.criar },
+    ] as const).map((item) => {
+      const selecionado = item.id === nav.atual || item.id === 'planos' && nav.atual === 'plano';
+      return <Pressable key={item.id} testID={`nav-${item.id}`} accessibilityRole="tab" accessibilityState={{ selected: selecionado, disabled: nav.ocupado }}
+        aria-selected={selecionado} aria-disabled={nav.ocupado}
+        accessibilityLabel={item.rotulo} disabled={nav.ocupado} onPress={item.acao}
+        style={({ pressed }) => [navegacaoEstilos.item, selecionado && navegacaoEstilos.ativo, pressed && { opacity: 0.7 }]}>
+        <IndicadorNavegacao icone={item.icone} selecionado={selecionado} />
+        <Text style={[navegacaoEstilos.rotulo, selecionado && { color: cores.acao }]}>{item.rotulo}</Text>
+      </Pressable>;
+    })}
+  </View>;
+}
+function IndicadorNavegacao({ icone, selecionado }: { icone: NomeIcone; selecionado: boolean }) {
+  const reduzir = useMovimentoReduzido();
+  const [escala] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    if (!selecionado || reduzir !== false) { escala.setValue(1); return; }
+    escala.setValue(0.85);
+    const animacao = Animated.spring(escala, { toValue: 1, speed: 24, bounciness: 5, useNativeDriver: true });
+    animacao.start();
+    return () => { animacao.stop(); escala.setValue(1); };
+  }, [selecionado, reduzir, escala]);
+  return <Animated.View style={{ transform: [{ scale: escala }] }}>
+    <Icone nome={icone} tamanho={22} cor={selecionado ? cores.acao : cores.textoSecundario} />
+  </Animated.View>;
+}
+const navegacaoEstilos = StyleSheet.create({
+  faixa: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 8, borderTopWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  item: { flex: 1, minHeight: 56, borderRadius: 18, padding: 6, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  ativo: { backgroundColor: cores.nevoa },
+  rotulo: { fontFamily: fontes.corpo, fontSize: 12, fontWeight: '700', color: cores.textoSecundario, textAlign: 'center' },
 });

@@ -70,6 +70,8 @@ jobs:
         run: |
           npm run test:dominio
           npm run test:paridade
+          npm run test:movimento
+          npm run test:google-mobile
           npm run test:ia
 
       - name: Build
@@ -79,6 +81,9 @@ jobs:
         run: |
           npm run db:migrate
           npm run db:seed
+
+      - name: Google e recuperação (provedores simulados, banco real)
+        run: npm run test:acesso
 
       - name: Percursos HTTP (marco e trilha ao vivo)
         run: |

@@ -3,6 +3,8 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { Animated, BackHandler, Keyboard, Platform, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
 import { estiloDeEntrada, useAparecer, useTremor, useVaiVem } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
+import { entrarComGoogle } from './google-nativo';
+import { RecuperarAcesso } from './recuperar';
 import { Estudo } from './estudo';
 import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos } from './interface';
@@ -16,6 +18,7 @@ type Sessao =
   | { tipo: 'verificando' }
   | { tipo: 'boas-vindas' }
   | { tipo: 'entrada'; erro?: string }
+  | { tipo: 'recuperar'; email: string }
   | { tipo: 'falha'; erro: string }
   | { tipo: 'ativa'; cliente: ClienteNativo };
 
@@ -88,7 +91,12 @@ export function AppMobile() {
     case 'boas-vindas':
       return <BoasVindas entrar={() => setSessao({ tipo: 'entrada' })} />;
     case 'entrada':
-      return <Entrada erroInicial={sessao.erro} entrar={entrar} voltar={() => setSessao({ tipo: 'boas-vindas' })} />;
+      return <Entrada erroInicial={sessao.erro} entrar={entrar}
+        google={async () => { const token = await entrarComGoogle(); if (token) setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) }); }}
+        recuperar={(email) => setSessao({ tipo: 'recuperar', email })}
+        voltar={() => setSessao({ tipo: 'boas-vindas' })} />;
+    case 'recuperar':
+      return <RecuperarAcesso emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} />;
     case 'falha':
       return (
         <Tela pagina="falha" rodape={<Botao rotulo={mensagens.tentar} testID="tentar-sessao" acao={() => {
@@ -171,11 +179,15 @@ function StuAcenando({ largura, esquerda }: { largura: number; esquerda: number 
   );
 }
 
-function Entrada({ erroInicial, entrar, voltar }: {
+function Entrada({ erroInicial, entrar, voltar, google, recuperar }: {
+  google: () => Promise<void>;
+  recuperar: (email: string) => void;
   erroInicial?: string;
   entrar: (email: string, senha: string) => Promise<void>;
   voltar: () => void;
 }) {
+  const [googleDisponivel, setGoogleDisponivel] = useState(false);
+  useEffect(() => { let ativo = true; void criarClienteNativo().configuracaoAcesso().then(c => { if (ativo) setGoogleDisponivel(c.google); }).catch(() => {}); return () => { ativo = false; }; }, []);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState(erroInicial);
@@ -191,12 +203,21 @@ function Entrada({ erroInicial, entrar, voltar }: {
   const podeEntrar = !!email.trim() && !!senha && !ocupado;
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
     const assinatura = BackHandler.addEventListener('hardwareBackPress', () => {
       if (!emEnvio.current) voltar();
       return true;
     });
     return () => assinatura.remove();
   }, [voltar]);
+
+  async function abrirGoogle() {
+    if (emEnvio.current) return;
+    emEnvio.current = true; setOcupado(true); setErro(undefined); Keyboard.dismiss();
+    try { await google(); }
+    catch (e) { setErro(mensagemDeErro(e)); }
+    finally { emEnvio.current = false; setOcupado(false); }
+  }
 
   async function enviar() {
     if (emEnvio.current || !podeEntrar) return;
@@ -237,6 +258,9 @@ function Entrada({ erroInicial, entrar, voltar }: {
       <Titulo foco testID="titulo-entrada">{mensagens.entrada.titulo}</Titulo>
       <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
       <Animated.View style={[entradaEstilos.formulario, { transform: [{ translateX: tremor }] }]}>
+        <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" desativado={!googleDisponivel || ocupado} acao={() => void abrirGoogle()} />
+        {!googleDisponivel && <Text style={estilos.legenda}>{mensagens.acesso.googleIndisponivel}</Text>}
+        <Text style={estilos.legenda}>{mensagens.acesso.ou}</Text>
         <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email} campoRef={campoEmail} erro={erroEmail}
           onChangeText={(valor) => { setEmail(valor); setErro(undefined); setErroEmail(undefined); }}
           autoCapitalize="none" autoCorrect={false} keyboardType="email-address" returnKeyType="next"
@@ -253,6 +277,7 @@ function Entrada({ erroInicial, entrar, voltar }: {
             rotulo={mensagens.entrada.mostrarSenha} desativado={ocupado}
             acao={() => setMostrarSenha((atual) => !atual)} />} />
       </Animated.View>
+      <Botao rotulo={mensagens.acesso.esqueci} testID="esqueci-senha" variante="texto" desativado={ocupado} acao={() => recuperar(email)} />
       {erro && <EstadoMensagem mensagem={erro} />}
     </Tela>
   );

@@ -16,6 +16,8 @@ const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * no celular, vira uma faixa acima do título.
  */
 export function Entrada() {
+  const [googleDisponivel, setGoogleDisponivel] = useState(false);
+  const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
   const [verificando, setVerificando] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -40,6 +42,10 @@ export function Entrada() {
       }
     }
 
+    const codigo = new URLSearchParams(window.location.search).get('erro');
+    if (codigo && ['google_invalido', 'google_indisponivel', 'google_conta_existente'].includes(codigo)) setErro(codigo);
+    void cliente.configuracaoAcesso().then(config => { if (ativo) setGoogleDisponivel(config.google); })
+      .catch(() => undefined).finally(() => { if (ativo) setConfiguracaoCarregada(true); });
     void verificarSessao();
     return () => { ativo = false; };
   }, []);
@@ -105,6 +111,10 @@ export function Entrada() {
           {verificando ? <Skeleton /> : (
             <form className="formulario" method="post" noValidate onSubmit={entrar} aria-busy={enviando}
               data-tremor={tremor ? (tremor % 2 ? 'a' : 'b') : undefined}>
+              <Botao variante="secundario" disabled={!googleDisponivel || enviando}
+                onClick={() => { window.location.assign('/api/auth/google/iniciar'); }}>{mensagens.acesso.google}</Botao>
+              {configuracaoCarregada && !googleDisponivel && <p className="acesso-ajuda">{mensagens.acesso.googleIndisponivel}</p>}
+              <p className="acesso-divisor">{mensagens.acesso.ou}</p>
               <div className="campo">
                 <label htmlFor="email">{mensagens.login.email}</label>
                 <input ref={campoEmail} id="email" name="email" type="email" inputMode="email" autoComplete="username"
@@ -133,6 +143,7 @@ export function Entrada() {
                   <p className="campo-erro" id="senha-erro"><span className="sinal" aria-hidden="true">!</span>{errosCampo.senha}</p>
                 )}
               </div>
+              <a className="acesso-link" href="/recuperar">{mensagens.acesso.esqueci}</a>
               {erro && <EstadoErro codigo={erro} />}
               <AcaoPrincipal>
                 <Botao type="submit" disabled={enviando}>

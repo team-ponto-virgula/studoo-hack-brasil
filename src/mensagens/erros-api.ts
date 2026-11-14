@@ -1,6 +1,13 @@
 import type { CodigoErro } from "@studoo/contratos";
 
 export const mensagensApi: Record<CodigoErro, string> = {
+  google_indisponivel: "O login com Google está indisponível no momento.",
+  google_invalido: "Não foi possível confirmar o login com Google. Tente novamente.",
+  google_conta_existente: "Este e-mail já tem uma conta. Entre com sua senha ou recupere o acesso.",
+  recuperacao_indisponivel: "A recuperação de senha está indisponível no momento.",
+  codigo_invalido: "Código inválido ou expirado. Confira o código ou solicite outro.",
+  limite_recuperacao: "Aguarde alguns minutos antes de tentar novamente.",
+
   invalido: "Confira os dados e tente de novo.",
   nao_autenticado: "Entre para continuar.",
   nao_encontrado: "Este conteúdo não está disponível.",

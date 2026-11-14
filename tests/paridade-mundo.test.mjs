@@ -42,3 +42,15 @@ test("a tela que escreve as lições e as dicas da geração dizem o mesmo na we
   assert.equal(bloco(app, "preparo"), bloco(web, "preparo"));
   assert.equal(lista(app, "dicas"), lista(web, "dicas"));
 });
+
+
+test("o resumo de retomada diz o mesmo na web e no app", async () => {
+  const [web, app] = await Promise.all([ler("src/mensagens/pt-BR.ts"), ler("apps/mobile/src/mensagens.ts")]);
+  assert.equal(bloco(app, "retomada"), bloco(web, "retomada"));
+});
+
+
+test("login Google e recuperação têm os mesmos textos na web e no app", async () => {
+  const [web, app] = await Promise.all([ler("src/mensagens/pt-BR.ts"), ler("apps/mobile/src/mensagens.ts")]);
+  assert.equal(bloco(app, "acesso"), bloco(web, "acesso"));
+});

@@ -4,10 +4,18 @@
     "slug": "studoo-mobile",
     "version": "0.1.0",
     "scheme": "studoo-dev",
-    "platforms": ["android", "ios"],
+    "platforms": [
+      "android",
+      "ios"
+    ],
     "icon": "./assets/marca/icone-1024.png",
     "userInterfaceStyle": "light",
-    "plugins": ["expo-router", "expo-secure-store", "./plugins/with-android-piloto-ca.cjs"],
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "./plugins/with-android-piloto-ca.cjs",
+      "expo-web-browser"
+    ],
     "android": {
       "package": "com.studoo.mobile.dev"
     },

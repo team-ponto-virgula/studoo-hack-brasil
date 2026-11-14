@@ -23,6 +23,10 @@ Mantenha o primeiro terminal aberto. Em outro terminal, rode `npm run dev` e abr
 
 O ambiente local usa `IA=falsa` e `EMAIL=falso`; para a IA da OpenAI, basta um `.env.local` com a chave, e `npm run ia:conferir` confere se ela funciona ([passo a passo](docs/RODAR-LOCALMENTE.md#ia-da-openai)). Para ver a apresentação de novo, toque em **Como funciona?** no pedido. [Guia do banco, dos testes e do app Android](docs/RODAR-LOCALMENTE.md) · [Experiência ilustrada (spec 04)](docs/specs/04-experiencia-ilustrada.md)
 
+## Acesso
+
+Web e Android oferecem login com Google e recuperação de senha por código enviado por e-mail. Configure as credenciais Google e o SMTP usando os `.env.example`; veja o [guia de configuração e testes](docs/specs/06-acesso-google-recuperacao.md). O app precisa de um novo build de desenvolvimento para o retorno do navegador.
+
 ## Código e origem
 
 - `src/` reúne a interface web e a API Next.js. `prisma/` contém o esquema e as migrações do PostgreSQL.

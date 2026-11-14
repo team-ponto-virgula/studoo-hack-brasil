@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
 import './globals.css';
+import { AmbienteMovimento } from '../ui/movimento';
 
 export const metadata: Metadata = {
   title: mensagens.nome,
@@ -19,5 +20,5 @@ export const viewport: Viewport = {
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
-  return <html lang="pt-BR"><body>{children}</body></html>;
+  return <html lang="pt-BR"><body><AmbienteMovimento />{children}</body></html>;
 }

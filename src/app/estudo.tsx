@@ -325,6 +325,7 @@ export function Estudo() {
   // Começar, na trilha gerada, já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só.
   const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || (pendente === 'aceitar' && tela.tipo === 'geracao');
   const visivel = !carregandoTrilha && !carregandoLicao;
+  const comNavegacao = planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(tela.tipo) && visivel;
 
   if (inicio !== 'pronto') {
     return (
@@ -344,7 +345,7 @@ export function Estudo() {
   }
 
   return (
-    <div className="estudo">
+    <div className="estudo" data-navegacao={comNavegacao || undefined}>
       <a className="pular" href="#conteudo-principal">{mensagens.pular}</a>
       <aside className="barra-lateral">
         <div className="barra-marca"><Logo /></div>
@@ -402,6 +403,7 @@ export function Estudo() {
             <section className="painel painel--planos">
               <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
               <p className="introducao">{mensagens.planos.subtitulo}</p>
+              <Retomada planos={planos} ocupado={ocupado} abrir={(id) => void abrirPlano(id)} />
               <ul className="planos-ativos">
                 {planos.map((plano, indice) => (
                   <li key={plano.id} style={{ '--ordem': indice } as CSSProperties}>
@@ -433,9 +435,32 @@ export function Estudo() {
               voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas, concluida: tela.licao.id })} />
           )}
         </main>
+        {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao}>
+          <button type="button" disabled={ocupado} aria-current={tela.tipo !== 'objetivo' ? 'page' : undefined}
+            onClick={() => navegar({ tipo: 'planos' })}><Icone nome="livro" />{mensagens.planos.titulo}</button>
+          <button type="button" disabled={ocupado} aria-current={tela.tipo === 'objetivo' ? 'page' : undefined}
+            onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
+        </nav>}
       </div>
     </div>
   );
+}
+
+/** Destaca uma trilha em andamento e o progresso real já salvo. */
+function Retomada({ planos, ocupado, abrir }: { planos: PlanoResumo[]; ocupado: boolean; abrir: (id: string) => void }) {
+  const emAndamento = planos.find(({ progresso: p }) => p.concluidas > 0 && p.concluidas < p.total)
+    ?? planos.find(({ progresso: p }) => p.concluidas < p.total);
+  const concluidas = planos.reduce((soma, plano) => soma + plano.progresso.concluidas, 0);
+  return <section className="retomada" aria-label={mensagens.retomada.titulo}>
+    <div className="retomada__simbolo" aria-hidden="true"><Icone nome={emAndamento ? 'bandeira' : 'trofeu'} /></div>
+    <div className="retomada__texto">
+      <p className="retomada__etiqueta">{emAndamento ? mensagens.retomada.titulo : mensagens.retomada.concluido}</p>
+      {emAndamento && <h2>{emAndamento.titulo}</h2>}
+      <p>{emAndamento ? mensagens.retomada.texto : mensagens.retomada.revisar}</p>
+      <span className="retomada__conquista"><Icone nome="check" />{mensagens.retomada.licoes(concluidas)}</span>
+    </div>
+    {emAndamento && <Botao disabled={ocupado} onClick={() => abrir(emAndamento.id)}>{mensagens.retomada.acao}<Icone nome="seta" /></Botao>}
+  </section>;
 }
 
 /**

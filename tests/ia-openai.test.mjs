@@ -84,6 +84,7 @@ before(async () => {
     let corpo = "";
     pedido.on("data", (parte) => { corpo += parte; });
     pedido.on("end", () => {
+      if (!pedido.complete || !corpo) { resposta.writeHead(400); resposta.end(); return; }
       const dados = JSON.parse(corpo);
       pedidos.push({ caminho: pedido.url, autorizacao: pedido.headers.authorization, dados });
       if (modo === "falha") {

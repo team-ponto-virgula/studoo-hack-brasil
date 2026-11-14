@@ -4,6 +4,7 @@ import {
   AccessibilityInfo,
   Animated,
   BackHandler,
+  Platform,
   Easing,
   Image,
   Keyboard,
@@ -23,6 +24,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
+import { NavegacaoContexto } from './navegacao';
 import { Licao, type ResumoLicao } from './licao';
 import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
@@ -118,6 +120,7 @@ export function Estudo({ cliente, sair, expirar }: {
   useEffect(() => () => geracaoAtiva.current?.abort(), []);
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
     const assinatura = BackHandler.addEventListener('hardwareBackPress', () => {
       if (emCurso.current) return true;
       if (etapa.tipo === 'planos') return false;
@@ -299,7 +302,7 @@ export function Estudo({ cliente, sair, expirar }: {
 
   const acoes = (
     <>
-      {etapa.tipo !== 'planos' && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
+      {etapa.tipo !== 'planos' && !['objetivo', 'plano'].includes(etapa.tipo) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
         desativado={ocupado} acao={() => abrir({ tipo: 'planos' })} />}
       <Botao rotulo={mensagens.sair} testID="sair" compacto variante="texto" desativado={ocupado}
         acao={() => void executar('sair', sair)} />
@@ -307,72 +310,106 @@ export function Estudo({ cliente, sair, expirar }: {
   );
   const mensagem = erro && <EstadoMensagem mensagem={erro} />;
 
-  // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. Começar, na trilha gerada,
-  // mostra o Stu escrevendo as lições até a primeira abrir: salvar o plano e abrir a lição é uma espera só.
-  if (pendente === 'plano') return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
-  if (etapa.tipo === 'geracao' && geracao?.proposta && (pendente === 'aceitar' || pendente === 'abrir')) {
-    return <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />;
-  }
-  if (pendente === 'abrir' && etapa.tipo !== 'plano') return <SkeletonLicao texto={mensagens.licao.carregando} />;
+  const comNavegacao = planos !== null && planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(etapa.tipo) && !pendente;
+  return <NavegacaoContexto.Provider value={comNavegacao ? {
+    atual: etapa.tipo as 'planos' | 'objetivo' | 'plano', ocupado,
+    planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
+  } : null}>{renderizarTela()}</NavegacaoContexto.Provider>;
 
-  if (etapa.tipo === 'apresentacao') {
-    return <Apresentacao primeiraVez={etapa.primeiraVez} concluir={(area) => void concluirApresentacao(area)} />;
-  }
+  function renderizarTela() {
+    // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. Começar, na trilha gerada,
+    // mostra o Stu escrevendo as lições até a primeira abrir: salvar o plano e abrir a lição é uma espera só.
+    if (pendente === 'plano') return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
+    if (etapa.tipo === 'geracao' && geracao?.proposta && (pendente === 'aceitar' || pendente === 'abrir')) {
+      return <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />;
+    }
+    if (pendente === 'abrir' && etapa.tipo !== 'plano') return <SkeletonLicao texto={mensagens.licao.carregando} />;
 
-  if (etapa.tipo === 'licao') {
-    return <Licao key={etapa.licao.id} licao={etapa.licao} erro={erro} pendente={pendente}
-      voltar={() => abrir(voltarATrilha(etapa))}
-      avaliar={async (resposta) => {
-        const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta));
-        return resultado.ok ? resultado.dados : null;
-      }}
-      concluir={(comprovante, resumo) => concluir(etapa.plano, etapa.licao, comprovante, resumo)} />;
-  }
+    if (etapa.tipo === 'apresentacao') {
+      return <Apresentacao primeiraVez={etapa.primeiraVez} concluir={(area) => void concluirApresentacao(area)} />;
+    }
 
-  if (etapa.tipo === 'concluida') {
-    const proxima = proximaDoCaminho(etapa.plano);
+    if (etapa.tipo === 'licao') {
+      return <Licao key={etapa.licao.id} licao={etapa.licao} erro={erro} pendente={pendente}
+        voltar={() => abrir(voltarATrilha(etapa))}
+        avaliar={async (resposta) => {
+          const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta));
+          return resultado.ok ? resultado.dados : null;
+        }}
+        concluir={(comprovante, resumo) => concluir(etapa.plano, etapa.licao, comprovante, resumo)} />;
+    }
+
+    if (etapa.tipo === 'concluida') {
+      const proxima = proximaDoCaminho(etapa.plano);
+      return (
+        <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} rodape={<>
+          {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" variante="secundario" desativado={ocupado}
+            acao={() => void abrirLicao(etapa.plano, proxima)} />}
+          <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" desativado={ocupado} acao={() => abrir(voltarATrilha(etapa))} />
+        </>} />
+      );
+    }
+
+    if (etapa.tipo === 'plano') {
+      return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} ocupado={ocupado} abrindo={abrindo}
+        abrirLicao={(id) => void abrirLicao(etapa.plano, id)} novoPlano={() => abrir({ tipo: 'objetivo' })} />;
+    }
+
+    if (etapa.tipo === 'geracao' && geracao) {
+      return <GeracaoAoVivo geracao={geracao} erro={erro} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
+        comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })} />;
+    }
+
+    if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
+      return <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} erro={erro} areaInicial={areaInicial}
+        temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
+        verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })} />;
+    }
+
     return (
-      <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} rodape={<>
-        {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" variante="secundario" desativado={ocupado}
-          acao={() => void abrirLicao(etapa.plano, proxima)} />}
-        <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" desativado={ocupado} acao={() => abrir(voltarATrilha(etapa))} />
-      </>} />
+      <Tela pagina="planos" acoes={acoes} rodape={!planos && erro && <Botao rotulo={mensagens.tentar} testID="tentar-planos" desativado={ocupado} acao={() => {
+          setErro(null);
+          setTentativa((anterior) => anterior + 1);
+        }} />}>
+        <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
+        <Text style={estilos.introducao}>{mensagens.planos.subtitulo}</Text>
+        {mensagem}
+        {!planos && !erro && <Skeleton />}
+        {planos && <Retomada planos={planos} ocupado={ocupado} abrir={(id) => void abrirPlano(id)} />}
+        {planos?.map((plano, indice) => (
+          <CartaoPlano key={plano.id} plano={plano} indice={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)} />
+        ))}
+      </Tela>
     );
   }
-
-  if (etapa.tipo === 'plano') {
-    return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} ocupado={ocupado} abrindo={abrindo}
-      abrirLicao={(id) => void abrirLicao(etapa.plano, id)} novoPlano={() => abrir({ tipo: 'objetivo' })} />;
-  }
-
-  if (etapa.tipo === 'geracao' && geracao) {
-    return <GeracaoAoVivo geracao={geracao} erro={erro} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
-      comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })} />;
-  }
-
-  if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
-    return <Pedido objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} erro={erro} areaInicial={areaInicial}
-      temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
-      verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })} />;
-  }
-
-  return (
-    <Tela pagina="planos" acoes={acoes} rodape={planos
-      ? <Botao rotulo={mensagens.planos.novo} testID="novo-plano" desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />
-      : erro && <Botao rotulo={mensagens.tentar} testID="tentar-planos" desativado={ocupado} acao={() => {
-        setErro(null);
-        setTentativa((anterior) => anterior + 1);
-      }} />}>
-      <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
-      <Text style={estilos.introducao}>{mensagens.planos.subtitulo}</Text>
-      {mensagem}
-      {!planos && !erro && <Skeleton />}
-      {planos?.map((plano, indice) => (
-        <CartaoPlano key={plano.id} plano={plano} indice={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)} />
-      ))}
-    </Tela>
-  );
 }
+
+/** A mesma prioridade da web: retomar uma trilha já iniciada antes de começar outra. */
+function Retomada({ planos, ocupado, abrir }: { planos: PlanoResumo[]; ocupado: boolean; abrir: (id: string) => void }) {
+  const entrada = useAparecer(60, 300);
+  const emAndamento = planos.find(({ progresso: p }) => p.concluidas > 0 && p.concluidas < p.total)
+    ?? planos.find(({ progresso: p }) => p.concluidas < p.total);
+  const concluidas = planos.reduce((soma, plano) => soma + plano.progresso.concluidas, 0);
+  return <Animated.View style={[retomadaEstilos.cartao, estiloDeEntrada(entrada, 8, 1)]}>
+    <View style={retomadaEstilos.cabecalho}>
+      <View style={retomadaEstilos.simbolo}><Icone nome={emAndamento ? 'bandeira' : 'trofeu'} tamanho={26} cor={cores.acao} /></View>
+      <Text style={retomadaEstilos.etiqueta}>{emAndamento ? mensagens.retomada.titulo : mensagens.retomada.concluido}</Text>
+    </View>
+    {emAndamento && <Text accessibilityRole="header" style={estilos.subtitulo}>{emAndamento.titulo}</Text>}
+    <Text style={estilos.textoSecundario}>{emAndamento ? mensagens.retomada.texto : mensagens.retomada.revisar}</Text>
+    <View style={retomadaEstilos.conquista}><Icone nome="check" tamanho={18} cor={cores.sucesso} />
+      <Text style={retomadaEstilos.conquistaTexto}>{mensagens.retomada.licoes(concluidas)}</Text></View>
+    {emAndamento && <Botao rotulo={mensagens.retomada.acao} icone="seta" desativado={ocupado} acao={() => abrir(emAndamento.id)} />}
+  </Animated.View>;
+}
+const retomadaEstilos = StyleSheet.create({
+  cartao: { marginTop: 24, padding: 20, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.ceu, gap: 12 },
+  cabecalho: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  simbolo: { width: 48, height: 48, borderRadius: 16, backgroundColor: cores.fundo, alignItems: 'center', justifyContent: 'center' },
+  etiqueta: { flex: 1, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, color: cores.acao },
+  conquista: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  conquistaTexto: { flex: 1, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, color: cores.sucesso },
+});
 
 /**
  * Pedido da trilha: a pessoa escreve o que quer aprender, ou escolhe uma ideia, e gera a trilha ao vivo.

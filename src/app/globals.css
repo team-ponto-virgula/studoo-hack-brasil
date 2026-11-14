@@ -682,3 +682,108 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 
   .botao:active:not(:disabled) { transform: none !important; }
 }
+
+/* Navegação ao alcance do polegar. A aula e a geração mantêm suas próprias ações. */
+.navegacao-mobile { display: none; }
+html[data-pausado='true'] *, html[data-pausado='true'] *::before, html[data-pausado='true'] *::after {
+  animation-play-state: paused !important;
+}
+button, a, label { -webkit-tap-highlight-color: transparent; }
+button { touch-action: manipulation; }
+@media (max-width: 767px) {
+  .estudo[data-navegacao] { --altura-navegacao: calc(73px + env(safe-area-inset-bottom)); }
+  .estudo[data-navegacao] .planos-movel { display: none; }
+  .estudo[data-navegacao] .estudo-principal { padding-bottom: calc(120px + var(--altura-navegacao)); }
+  .estudo[data-navegacao] .acao-principal {
+    bottom: var(--altura-navegacao);
+    padding-bottom: 14px;
+  }
+  .navegacao-mobile {
+    position: fixed;
+    z-index: 4;
+    inset: auto 0 0;
+    display: flex;
+    gap: 12px;
+    padding: 8px max(20px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    border-top: 1px solid var(--gelo);
+    background: var(--fundo);
+  }
+  .navegacao-mobile button {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    gap: 3px;
+    padding: 6px;
+    border: 0;
+    border-radius: 18px;
+    color: var(--texto2);
+    background: transparent;
+    font-size: 0.75rem;
+    font-weight: 800;
+    transition: background-color 180ms ease-out, color 180ms ease-out;
+  }
+  .navegacao-mobile .icone { width: 22px; height: 22px; transition: transform 180ms ease-out; }
+  .navegacao-mobile button[aria-current] { color: var(--acao); background: var(--nevoa); }
+  .navegacao-mobile button:active:not(:disabled) .icone { transform: scale(0.9); }
+  .navegacao-mobile button:disabled { opacity: 0.6; }
+  html[data-teclado='true'] .navegacao-mobile { display: none; }
+  html[data-teclado='true'] .estudo[data-navegacao] { --altura-navegacao: 0px; }
+  /* O teclado não cobre o envio: com campo ativo a ação volta ao fluxo de leitura. */
+  html[data-teclado='true'] .estudo[data-navegacao] .acao-principal { position: static; margin-top: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .navegacao-mobile button, .navegacao-mobile .icone { transition: none; }
+}
+
+.retomada {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 24px;
+  padding: 24px;
+  border: 2px solid var(--gelo);
+  border-radius: 24px;
+  background: var(--ceu);
+  animation: painel-entrar 300ms ease-out 60ms backwards;
+}
+.retomada__simbolo { display: grid; flex: none; place-items: center; width: 52px; height: 52px; border-radius: 16px; background: var(--fundo); color: var(--acao); }
+.retomada__simbolo .icone { width: 28px; height: 28px; }
+.retomada__texto { display: grid; min-width: 0; flex: 1; gap: 8px; }
+.retomada__etiqueta { color: var(--acao); font-size: 0.875rem; font-weight: 900; }
+.retomada__texto > p:not(.retomada__etiqueta) { color: var(--texto2); }
+.retomada__conquista { display: flex; gap: 8px; align-items: center; color: var(--sucesso); font-size: 0.875rem; font-weight: 800; }
+.retomada__conquista .icone { width: 18px; height: 18px; flex: none; }
+.retomada > .botao { flex: none; }
+@media (max-width: 767px) {
+  .retomada { flex-wrap: wrap; align-items: flex-start; padding: 20px; gap: 16px; }
+  .retomada__texto { flex-basis: calc(100% - 72px); }
+  .retomada > .botao { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .retomada { animation: none; } }
+@media (max-width: 767px) {
+  .estudo[data-navegacao] .painel--planos > .acao-principal { display: none; }
+  .estudo[data-navegacao] .estudo-principal:has(.painel--planos) { padding-bottom: calc(32px + var(--altura-navegacao)); }
+}
+
+/* A entrada lateral da aula/trilha não cria rolagem horizontal durante a transição. */
+.estudo { overflow-x: clip; }
+@media (prefers-reduced-motion: no-preference) {
+  .navegacao-mobile button[aria-current] .icone { animation: navegacao-selecionar 260ms cubic-bezier(0.2, 0.8, 0.3, 1.3); }
+}
+@keyframes navegacao-selecionar { from { transform: scale(0.85); } to { transform: scale(1); } }
+
+.acesso-divisor { display: flex; align-items: center; gap: 12px; color: var(--texto2); font-size: .875rem; }
+.acesso-divisor::before, .acesso-divisor::after { content: ''; flex: 1; height: 1px; background: var(--gelo); }
+.acesso-ajuda { font-size: .875rem; color: var(--texto2); }
+.acesso-link { display: inline-flex; min-height: 44px; align-items: center; color: var(--acao); font-weight: 800; text-underline-offset: 4px; }
+.recuperar { max-width: 540px; margin: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); }
+.recuperar-cartao { margin-top: 32px; padding: 28px; border: 2px solid var(--gelo); border-radius: 24px; background: var(--fundo); }
+.recuperar-cartao .formulario { margin-top: 24px; }
+.recuperar-cartao > .acesso-link { margin-top: 16px; }
+.recuperar-simbolo { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 20px; border-radius: 18px; color: var(--acao); background: var(--nevoa); }
+.recuperar-simbolo .icone { width: 28px; height: 28px; }
+.recuperar-aviso { padding: 14px; border-radius: 14px; color: var(--texto); background: var(--nevoa); }
+@media (max-width: 480px) { .recuperar-cartao { padding: 20px; } }

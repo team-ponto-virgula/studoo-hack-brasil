@@ -1,13 +1,14 @@
 import { createHash, createHmac, randomBytes } from "node:crypto";
 import { banco } from "@/servidor/banco/cliente";
-import type { CanalSessao } from "@/servidor/banco/gerado/client";
+import type { CanalSessao, Prisma } from "@/servidor/banco/gerado/client";
 import { normalizarEmail, verificarSenha } from "./credenciais";
+import { emailPermitido } from "./seguranca";
 import { duracaoSessao } from "./origem";
 
 const janelaLoginMs = 60_000;
 const limiteFalhas = 5;
 
-function hashToken(token: string) {
+export function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
 }
 
@@ -15,7 +16,6 @@ type ResultadoLogin = { estado: "ok"; token: string; expiraEm: Date } | { estado
 
 export async function entrar(emailEntrada: unknown, senha: unknown, canal: CanalSessao = "WEB"): Promise<ResultadoLogin> {
   const email = normalizarEmail(emailEntrada);
-  const dominioPermitido = process.env.STUDOO_DOMINIO_EMAIL?.toLowerCase();
   const segredo = process.env.STUDOO_CHAVE_ASSINATURA ?? "";
   if (!/^(?:[a-fA-F0-9]{2}){32,}$/.test(segredo)) throw new Error("Configuração de autenticação ausente");
 
@@ -30,10 +30,10 @@ export async function entrar(emailEntrada: unknown, senha: unknown, canal: Canal
     const vigente = tentativa && agora.getTime() - tentativa.janelaInicio.getTime() < janelaLoginMs;
     if (vigente && tentativa.falhas >= limiteFalhas) return { estado: "limite_login" };
 
-    const usuario = email && dominioPermitido && email.split("@")[1] === dominioPermitido
+    const usuario = email && emailPermitido(email)
       ? await transacao.usuario.findUnique({ where: { email }, select: { id: true, senhaHash: true } })
       : null;
-    const senhaCorreta = await verificarSenha(senha, usuario?.senhaHash);
+    const senhaCorreta = await verificarSenha(senha, usuario?.senhaHash ?? undefined);
     if (!usuario || !senhaCorreta) {
       const dados = vigente
         ? { falhas: tentativa.falhas + 1, janelaInicio: tentativa.janelaInicio }
@@ -42,20 +42,9 @@ export async function entrar(emailEntrada: unknown, senha: unknown, canal: Canal
       return { estado: "credenciais_invalidas" };
     }
 
-    const token = randomBytes(32).toString("base64url");
-    const expiraEm = new Date(agora.getTime() + duracaoSessao * 1000);
     await transacao.tentativaLogin.deleteMany({ where: { chave } });
-    await transacao.sessao.deleteMany({ where: { usuarioId: usuario.id, expiraEm: { lte: agora } } });
-    await transacao.sessao.create({
-      data: {
-        tokenHash: hashToken(token),
-        usuarioId: usuario.id,
-        canal,
-        criadaEm: agora,
-        expiraEm,
-      },
-    });
-    return { estado: "ok", token, expiraEm };
+    return { estado: "ok", ...await criarSessao(usuario.id, canal, transacao) };
+
   });
 }
 
@@ -69,4 +58,13 @@ export async function usuarioDaSessao(token: string, canal: CanalSessao) {
 
 export async function revogarSessao(usuarioId: string, token: string, canal: CanalSessao) {
   await banco.sessao.deleteMany({ where: { usuarioId, tokenHash: hashToken(token), canal } });
+}
+
+export async function criarSessao(usuarioId: string, canal: CanalSessao, transacao: Prisma.TransactionClient = banco) {
+  const token = randomBytes(32).toString('base64url');
+  const agora = new Date();
+  const expiraEm = new Date(agora.getTime() + duracaoSessao * 1000);
+  await transacao.sessao.deleteMany({ where: { usuarioId, expiraEm: { lte: agora } } });
+  await transacao.sessao.create({ data: { tokenHash: hashToken(token), usuarioId, canal, criadaEm: agora, expiraEm } });
+  return { token, expiraEm };
 }

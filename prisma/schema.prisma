@@ -16,7 +16,10 @@ enum CanalSessao {
 model Usuario {
   id        String             @id @default(uuid())
   email     String             @unique
-  senhaHash String
+  senhaHash String?
+  googleSub String? @unique
+  recuperacao RecuperacaoSenha?
+  codigosMobile CodigoGoogleMobile[]
   fuso      String
   sessoes   Sessao[]
   planos    PlanoAprendizado[]
@@ -86,4 +89,33 @@ model RegistroEstudo {
   licao       Licao    @relation(fields: [usuarioId, licaoId], references: [usuarioId, id])
 
   @@id([usuarioId, licaoId])
+}
+
+// Estado curto da autorização; o cookie vincula o retorno ao navegador que iniciou.
+model AutorizacaoGoogle {
+  estadoHash String @id
+  navegadorHash String
+  nonce String
+  verificador String
+  desafioMobile String?
+  expiraEm DateTime @db.Timestamptz(3)
+  @@index([expiraEm])
+}
+
+// Apenas um código de troca, nunca uma sessão, é enviado pelo deep link ao app.
+model CodigoGoogleMobile {
+  codigoHash String @id
+  usuarioId String
+  desafio String
+  expiraEm DateTime @db.Timestamptz(3)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  @@index([expiraEm])
+}
+
+model RecuperacaoSenha {
+  usuarioId String @id
+  codigoHash String
+  expiraEm DateTime @db.Timestamptz(3)
+  tentativas Int @default(0)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }
