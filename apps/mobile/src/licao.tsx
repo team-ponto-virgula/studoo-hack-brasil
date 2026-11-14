@@ -12,7 +12,8 @@ import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
 type Etapa = 'conceito' | 'exemplo' | 'exercicio';
-const posicoes = { conceito: 1, exemplo: 2, exercicio: 3, feedback: 4 } as const;
+// Como na web: três etapas de verdade; o retorno acontece na etapa do exercício.
+const posicoes = { conceito: 1, exemplo: 2, exercicio: 3, feedback: 3 } as const;
 /** O que a pessoa fez na lição, para o resumo da conclusão: tempo, tentativas e se acertou de primeira. */
 export type ResumoLicao = { segundos: number; tentativas: number; dePrimeira: boolean };
 

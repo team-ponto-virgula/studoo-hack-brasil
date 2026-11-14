@@ -1216,7 +1216,7 @@ function ProximoPasso({ titulo, detalhe, abrindo, ocupado, rodape, aoAbrir }: {
       <View style={estudoEstilos.proximoRodape}>
         <View style={estudoEstilos.proximoTextos}>
           <Text style={[estudoEstilos.proximoRotulo, estudoEstilos.proximoRotuloRodape]}>{mensagens.trilha.proxima}</Text>
-          <Text numberOfLines={1} accessibilityLabel={titulo} style={[estudoEstilos.proximoTitulo, estudoEstilos.proximoTituloRodape]}>
+          <Text numberOfLines={2} accessibilityLabel={titulo} style={[estudoEstilos.proximoTitulo, estudoEstilos.proximoTituloRodape]}>
             {titulo}
           </Text>
         </View>
