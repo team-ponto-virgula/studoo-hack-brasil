@@ -8,7 +8,7 @@ import { mensagens } from './mensagens';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco entre um trecho e outro. */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number };
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean } };
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo';
 
@@ -36,7 +36,7 @@ export function montarTrilha(plano: PlanoDetalhe) {
     let estado: EstadoNo = 'bloqueada';
     if (licao.concluida) estado = 'concluida';
     else if (licao.id === atual) estado = 'atual';
-    return { id: licao.id, titulo: licao.titulo, estado, trecho };
+    return { id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
   const proximo = indice >= 0 ? { no: nos[indice], posicao: posicaoDoNo(indice, nos.length) } : null;

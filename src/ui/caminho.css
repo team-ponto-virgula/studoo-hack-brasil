@@ -709,3 +709,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 @media (prefers-reduced-motion: reduce) {
   .caminho *, .caminho *::before, .caminho *::after { animation: none !important; }
 }
+
+.caminho-ponte{display:block;color:var(--acao);font-size:.75rem;font-weight:800;margin-top:6px}
+
+.caminho-ponte__desenho{display:flex;gap:3px;align-items:end;height:24px;margin-bottom:4px}.caminho-ponte__desenho>span{width:14px;height:8px;border-radius:3px;background:var(--acao);box-shadow:0 2px 0 var(--acao-escura);animation:ponte-no-entrar 400ms both}@keyframes ponte-no-entrar{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){.caminho-ponte__desenho>span{animation:none}}

@@ -5,6 +5,7 @@ const config: NextConfig = {
   devIndicators: false,
   logging: false,
   poweredByHeader: false,
+  serverExternalPackages: ["pdfjs-dist", "sharp"],
   transpilePackages: ["@studoo/contratos"],
 };
 

@@ -41,7 +41,7 @@ Depois, reinicie o `npm run dev`. Na trilha gerada, a origem passa a mostrar "IA
 | Variável | Padrão | Efeito |
 | --- | --- | --- |
 | `OPENAI_API_KEY` | (nenhum) | Chave da API. Sem ela, vale a reserva. |
-| `OPENAI_MODELO` | `gpt-5.6-luna` | Modelo da Responses API. O padrão é o de menor custo e latência. |
+| `OPENAI_MODELO` | `gpt-4.1` | Modelo da Responses API. O padrão aceita Structured Outputs. |
 | `OPENAI_ESFORCO` | `low` nos modelos de raciocínio | Esforço de raciocínio (`reasoning.effort`). Vazio tira o campo do pedido. Se o modelo recusar o valor, o Studoo pede de novo sem ele. |
 | `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Outro endereço compatível. Só HTTPS, ou HTTP no próprio computador. |
 | `STUDOO_IA_RESERVA` | `falsa` | Sem chave, ou se a OpenAI falhar antes da primeira linha da trilha, `falsa` usa a IA falsa, para a demonstração não parar. `nenhuma` mostra o erro de IA indisponível. |

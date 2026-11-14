@@ -70,6 +70,7 @@ jobs:
         run: |
           npm run test:dominio
           npm run test:paridade
+          npm run test:estudio:interface
           npm run test:movimento
           npm run test:google-mobile
           npm run test:email
@@ -82,6 +83,9 @@ jobs:
         run: |
           npm run db:migrate
           npm run db:seed
+
+      - name: Material, reforço e ensino (provedores simulados, banco real)
+        run: npm run test:estudio
 
       - name: Google e recuperação (provedores simulados, banco real)
         run: npm run test:acesso
