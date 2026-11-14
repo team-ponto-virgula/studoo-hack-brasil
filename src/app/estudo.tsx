@@ -694,7 +694,8 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
 }) {
   const { plano, origem, liberadas = [] } = tela;
   const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
-  const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : null;
+  // Ao abrir (ou recarregar), a tela vai até a lição atual; na volta de uma lição, até a liberada.
+  const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : proximo?.no.id ?? null;
   const concluidas = nos.filter((no) => no.estado === 'concluida').length;
   let falaStu: string = mensagens.trilha.stuMeio;
   if (!proximo) falaStu = mensagens.trilha.stuFim;

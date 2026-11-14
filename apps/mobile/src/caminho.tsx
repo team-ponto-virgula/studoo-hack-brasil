@@ -113,7 +113,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   abrindo?: string | null;
   liberadas?: readonly string[];
   rolarPara?: string | null;
-  aoRolar?: (topo: number, base: number) => void;
+  /** `sempre`: rola mesmo que o nó já esteja na tela (pedido explícito da pessoa). */
+  aoRolar?: (topo: number, base: number, sempre?: boolean) => void;
   acompanhar?: (ultimo: Faixa, alvo: Faixa) => void;
   aoAbrir?: (no: NoCaminho) => void;
 }) {
@@ -213,6 +214,23 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       return;
     }
     setAberto(no.id);
+  }
+
+  /** Da folha de um nó bloqueado até a lição atual: fecha a folha, rola até o nó atual e põe o foco nele. */
+  function irParaAtual() {
+    const atual = nos.find((no) => no.estado === 'atual');
+    setAberto(null);
+    if (!atual) return;
+    const { caminho, lista, linhas } = posicoes.current;
+    const linha = linhas.get(atual.id);
+    if (aoRolar && caminho !== null && lista !== null && linha) {
+      const topo = caminho + lista + linha.y;
+      aoRolar(topo, topo + medidas.lente, true);
+    }
+    setTimeout(() => {
+      const alvo = alvos.current.get(atual.id);
+      if (alvo) AccessibilityInfo.sendAccessibilityEvent(alvo, 'focus');
+    }, 350);
   }
 
   function fechar(devolverFoco = true) {
@@ -324,6 +342,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             fechar(false);
             aoAbrir(no);
           } : undefined}
+          irParaAtual={nos[indiceAberto].estado === 'bloqueada' && nos.some((no) => no.estado === 'atual') ? irParaAtual : undefined}
           fechar={() => fechar()} />
       )}
     </View>
@@ -1017,7 +1036,9 @@ function Chegada({ trecho, lente, feita, stu, festa, total, aoMedir }: {
 }
 
 /** Explicação do nó concluído ou bloqueado, numa folha que sobe do rodapé, com área segura. */
-function Folha({ titulo, texto, reduzir, estado, refazer, fechar }: {
+function Folha({ titulo, texto, reduzir, estado, refazer, irParaAtual, fechar }: {
+  /** Nó bloqueado: leva até a lição atual. */
+  irParaAtual?: () => void;
   titulo: string;
   texto: string;
   reduzir: boolean | null;
@@ -1058,6 +1079,7 @@ function Folha({ titulo, texto, reduzir, estado, refazer, fechar }: {
           </View>
           <Text style={estilos.textoSecundario}>{texto}</Text>
           {refazer && <View style={caminhoEstilos.folhaAcao}><Botao rotulo={mensagens.trilha.refazer} variante="secundario" acao={refazer} /></View>}
+          {irParaAtual && <View style={caminhoEstilos.folhaAcao}><Botao rotulo={mensagens.trilha.irParaAtual} icone="seta" variante="secundario" acao={irParaAtual} /></View>}
         </Animated.View>
       </View>
     </Modal>

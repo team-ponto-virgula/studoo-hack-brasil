@@ -818,3 +818,8 @@ button { touch-action: manipulation; }
   .entrada-forma .formulario { margin-top: 28px; }
   .entrada-forma .acesso-link { justify-content: center; text-decoration: none; }
 }
+
+/* Resumo da lição: rótulos que cabem nas três caixas do celular; "Liberada na trilha" alinhada com o ícone. */
+.conclusao-numeros__rotulo { padding-inline: 4px; letter-spacing: 0.02em; white-space: nowrap; }
+.painel--concluida .conclusao-liberada { max-width: 24rem; margin-inline: auto; text-align: start; }
+@media (max-width: 767px) { .conclusao-numeros__rotulo { font-size: 0.6875rem; gap: 4px; } }
