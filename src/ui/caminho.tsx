@@ -191,7 +191,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       const item = botoes.current.get(rolarPara)?.closest('li');
       if (!item) return;
       const caixa = item.getBoundingClientRect();
-      if (caixa.top < 0 || caixa.bottom > window.innerHeight - 128) item.scrollIntoView({ block: 'center' });
+      // Considera o cartão fixo da próxima lição e a navegação de baixo, que cobrem o pé da tela.
+      if (caixa.top < 0 || caixa.bottom > window.innerHeight - 240) item.scrollIntoView({ block: 'center' });
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [rolarPara]);
@@ -252,6 +253,17 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       return;
     }
     setAberto((atual) => atual === no.id ? null : no.id);
+  }
+
+  /** Do balão de um nó bloqueado até a lição atual: fecha o balão, centraliza o nó atual e põe o foco nele. */
+  function irParaAtual() {
+    const atual = nos.find((item) => item.estado === 'atual');
+    setAberto(null);
+    if (!atual) return;
+    const botao = botoes.current.get(atual.id);
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    botao?.closest('li')?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    botao?.focus({ preventScroll: true });
   }
 
   function fechar() {
@@ -414,6 +426,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                         setAberto(null);
                         aoAbrir(no);
                       }}>{mensagens.trilha.refazer}</Botao>
+                    )}
+                    {no.estado === 'bloqueada' && nos.some((item) => item.estado === 'atual') && (
+                      <Botao variante="secundario" onClick={irParaAtual}>{mensagens.trilha.irParaAtual}<Icone nome="seta" /></Botao>
                     )}
                   </div>
                 </>

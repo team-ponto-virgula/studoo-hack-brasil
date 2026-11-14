@@ -150,6 +150,7 @@ export const mensagens = {
         fechar: 'Fechar',
         concluidaTexto: 'Você concluiu esta lição. Refazer não muda seu progresso.',
         refazer: 'Refazer lição',
+        irParaAtual: 'Ir para a próxima lição',
         bloqueadaUma: (anterior: string) => `Conclua “${anterior}” para liberar esta lição.`,
         bloqueadaVarias: (faltam: number, anterior: string) => `Faltam ${faltam} lições antes desta. Comece por “${anterior}”.`,
         bloqueadaSemPasso: 'Conclua as lições anteriores do caminho para liberar esta.',
@@ -297,7 +298,7 @@ export const mensagens = {
             acerto: 'Tentativas',
             etapas: 'Etapas',
             dePrimeira: 'De primeira!',
-            tentativas: (total: number) => `${total} tentativas`,
+            tentativas: (total: number) => `${total}`,
             etapasFeitas: '3 de 3'
         },
         avancar: 'Ir para a próxima lição',

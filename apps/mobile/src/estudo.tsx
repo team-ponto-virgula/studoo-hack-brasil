@@ -1107,7 +1107,8 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
 }) {
   const { plano, origem, liberadas = [] } = etapa;
   const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
-  const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : null;
+  // Ao abrir (ou recarregar), a tela vai até a lição atual; na volta de uma lição, até a liberada, como na web.
+  const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : proximo?.no.id ?? null;
   const { width, height } = useWindowDimensions();
   const largo = width >= 768;
   const reduzir = useMovimentoReduzido();
@@ -1120,10 +1121,10 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   }, [erro, reduzir]);
 
   /** Centraliza o nó só quando ele está fora da vista, como o scrollIntoView da web. Com movimento reduzido, salta direto. */
-  function rolar(topo: number, base: number) {
+  function rolar(topo: number, base: number, sempre = false) {
     requestAnimationFrame(() => {
       const altura = visivel.current || height;
-      if (base <= altura) return;
+      if (!sempre && base <= altura) return;
       rolagem.current?.scrollTo({ y: Math.max(0, (topo + base - altura) / 2), animated: reduzir === false });
     });
   }
@@ -1535,7 +1536,7 @@ const estudoEstilos = StyleSheet.create({
   numeros: { flexDirection: 'row', gap: 8, marginTop: 24 },
   numero: { flex: 1, minWidth: 0, overflow: 'hidden', borderRadius: 16, borderWidth: 2 },
   numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 6, paddingVertical: 6 },
-  numeroRotuloTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 11, lineHeight: 14, letterSpacing: 0.5 },
+  numeroRotuloTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 10, lineHeight: 14, letterSpacing: 0.2 },
   numeroValor: { alignItems: 'center', marginHorizontal: 2, marginBottom: 2, paddingHorizontal: 4, paddingVertical: 10, borderRadius: 13,
     backgroundColor: cores.fundo },
   numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
