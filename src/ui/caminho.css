@@ -877,3 +877,8 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-chegada__brilho--2 { bottom: calc(172px + var(--extra)); }
 .caminho-chegada__brilho--3 { bottom: calc(118px + var(--extra)); }
 .caminho-chegada__stu { bottom: calc(74px + var(--extra)); }
+
+/* A reta até o troféu começa onde a curva da última lição termina (sem sobreposição nem pontos duplicados). */
+.caminho-chegada::before { top: calc(var(--lente-base) / 2); height: calc(140px - var(--lente-base) / 2); border-radius: 0 0 12px 12px; }
+/* Títulos com fundo opaco: a estrada não aparece por trás do texto. */
+.caminho-no[data-discreto] .caminho-no__texto { background: var(--fundo); box-shadow: 0 2px 0 rgb(27 42 94 / 0.06); }

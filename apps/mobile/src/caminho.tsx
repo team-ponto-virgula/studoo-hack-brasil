@@ -1057,7 +1057,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
           {feita ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}
         </Text>
       </View>
-      {!feita && total > 0 && <Text style={caminhoEstilos.chegadaMeta}>{mensagens.trilha.faltamTrofeu(faltam)}</Text>}
+      {!feita && total > 0 && <Text style={caminhoEstilos.chegadaMeta}>{mensagens.trilha.chegadaMeta(total)}</Text>}
     </View>
   );
 }
@@ -1173,7 +1173,7 @@ const caminhoEstilos = StyleSheet.create({
   discretoAtual: { color: cores.acao, fontWeight: '800', fontSize: 14, borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)', backgroundColor: cores.fundo },
   seloCadeado: { position: 'absolute', right: -4, bottom: -4, width: 28, height: 28, borderRadius: 14, borderWidth: 3, borderColor: cores.fundo,
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
-  discretoTexto: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, overflow: 'hidden', backgroundColor: 'rgba(255, 255, 255, 0.82)',
+  discretoTexto: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, overflow: 'hidden', backgroundColor: cores.fundo,
     color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
   bolhaTrofeu: { position: 'absolute', bottom: '100%', left: -80, right: -80, marginBottom: 12, alignItems: 'center', zIndex: 3 },
   bolhaTrofeuTexto: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE08A',
