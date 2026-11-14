@@ -26,8 +26,8 @@ import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
 /*
- * Apresentação do Studoo no app, com os mesmos quatro passos da web (src/app/apresentacao.tsx): o Stu, qualquer assunto,
- * a trilha que nasce e o progresso salvo. No celular, os passos são páginas que a pessoa também pode deslizar para o lado.
+ * Apresentação do Studoo no app, com os mesmos cinco passos da web (src/app/apresentacao.tsx): o Stu, qualquer assunto,
+ * a trilha que nasce, o progresso salvo e a área de interesse. No celular, os passos são páginas que a pessoa também pode deslizar para o lado.
  */
 
 const temasDaArte: readonly { nome: string; icone: NomeDesenho; posicao: ViewStyle }[] = [

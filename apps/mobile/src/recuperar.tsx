@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { BackHandler, Keyboard, Platform, Text, View } from 'react-native';
+import { BackHandler, Keyboard, Platform, StyleSheet, Text, View } from 'react-native';
+import { Icone } from './icone';
+import { cores } from './tema';
 import { criarClienteNativo } from './api-nativa';
 import { Botao, BotaoIcone, Campo, EstadoMensagem, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
@@ -52,20 +54,21 @@ export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string
     });
   }
   return <Tela pagina={`recuperar-${etapa}`} acoes={<Botao variante="texto" compacto rotulo={mensagens.voltar} desativado={ocupado} acao={voltar} />}
-    rodape={<Botao rotulo={etapa === 'pronto' ? m.entrar : etapa === 'email' ? m.enviar : m.salvar}
+    rodape={<Botao rotulo={etapa === 'pronto' ? m.entrar : etapa === 'email' ? ocupado ? m.enviando : m.enviar : ocupado ? m.salvando : m.salvar}
       testID="recuperar-enviar" ocupado={ocupado} carregando={ocupado} acao={etapa === 'pronto' ? voltar : etapa === 'email' ? enviar : salvar} />}>
-    <Titulo foco>{etapa === 'pronto' ? m.sucesso : m.recuperar}</Titulo>
+    <View style={visual.simbolo} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Icone nome={etapa === 'pronto' ? 'check' : 'cadeado'} tamanho={28} cor={cores.acao} /></View>
+    <Titulo key={etapa} foco>{etapa === 'pronto' ? m.sucesso : m.recuperar}</Titulo>
     <Text style={estilos.introducao}>{etapa === 'pronto' ? m.sucessoTexto : etapa === 'email' ? m.instrucao : m.validade}</Text>
     {etapa !== 'pronto' && <View style={{ gap: 20, marginTop: 24 }}>
-      <Campo rotulo={m.email} testID="recuperar-email" value={email} onChangeText={v => { setEmail(v); setEnviado(false); }}
+      <Campo rotulo={m.email} testID="recuperar-email" value={email} onChangeText={v => { setEmail(v); setEnviado(false); setErro(undefined); }}
         autoCapitalize="none" keyboardType="email-address" autoComplete="email" maxLength={254} editable={!ocupado} />
-      {enviado && <Text accessibilityLiveRegion="polite" style={estilos.texto}>{m.enviado}</Text>}
+      {enviado && <Text accessibilityLiveRegion="polite" style={[estilos.texto, visual.aviso]}>{m.enviado}</Text>}
       {etapa === 'codigo' && <>
-        <Campo rotulo={m.codigo} testID="recuperar-codigo" value={codigo} onChangeText={v => setCodigo(v.replace(/\D/g, ''))}
+        <Campo rotulo={m.codigo} testID="recuperar-codigo" value={codigo} onChangeText={v => { setCodigo(v.replace(/\D/g, '')); setErro(undefined); }}
           keyboardType="number-pad" textContentType="oneTimeCode" autoComplete="one-time-code" maxLength={6} editable={!ocupado} />
         <Campo rotulo={m.novaSenha} testID="recuperar-senha" value={senha} onChangeText={setSenha} secureTextEntry={!mostrar}
           autoCapitalize="none" autoCorrect={false} autoComplete="new-password" maxLength={256} editable={!ocupado}
-          acessorio={<BotaoIcone icone={mostrar ? 'olhoFechado' : 'olho'} rotulo={mensagens.entrada.mostrarSenha} selecionado={mostrar} acao={() => setMostrar(v => !v)} />} />
+          acessorio={<BotaoIcone icone={mostrar ? 'olhoFechado' : 'olho'} rotulo={mensagens.entrada.mostrarSenha} selecionado={mostrar} desativado={ocupado} acao={() => setMostrar(v => !v)} />} />
         <Text style={estilos.legenda}>{m.dicaSenha}</Text>
         <Campo rotulo={m.confirmarSenha} testID="recuperar-confirmacao" value={confirmacao} onChangeText={setConfirmacao}
           secureTextEntry={!mostrar} autoCapitalize="none" autoCorrect={false} autoComplete="new-password" maxLength={256} editable={!ocupado} />
@@ -76,3 +79,8 @@ export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string
     {erro && <EstadoMensagem mensagem={erro} foco />}
   </Tela>;
 }
+
+const visual = StyleSheet.create({
+  simbolo: { width: 56, height: 56, borderRadius: 18, backgroundColor: cores.nevoa, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  aviso: { padding: 14, borderRadius: 14, backgroundColor: cores.nevoa },
+});

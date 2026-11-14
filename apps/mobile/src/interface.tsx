@@ -28,13 +28,14 @@ import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
-export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, aoRolar, estiloConteudo, estiloRodape }: {
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, rolagem, aoMedir, aoRolar, estiloConteudo, estiloRodape }: {
   children: ReactNode;
   acoes?: ReactNode;
   /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
   topo?: ReactNode;
   rodape?: ReactNode;
   pagina: string;
+  semCabecalho?: boolean;
   /** Referência da rolagem, para a tela levar a pessoa até um ponto do conteúdo (como o nó liberado na trilha). */
   rolagem?: Ref<ComponentRef<typeof ScrollView>>;
   /** Altura visível da rolagem, para a tela saber se um ponto do conteúdo já está à vista. */
@@ -54,7 +55,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, 
   }, []);
   return (
     <SafeAreaView style={estilos.tela}>
-      <View style={estilos.cabecalho}>
+      {!semCabecalho && <View style={estilos.cabecalho}>
         <View style={estilos.marcaConteudo}>
           {topo ?? (
             <>
@@ -63,7 +64,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, rolagem, aoMedir, 
             </>
           )}
         </View>
-      </View>
+      </View>}
 
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[estilos.conteudo, estiloConteudo]}

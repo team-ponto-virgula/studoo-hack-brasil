@@ -1062,8 +1062,10 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
         <BarraProgresso progresso={plano.progresso} de={antes} comPercentual />
       </div>
       <div className="acoes-tela">
-        {proxima && <Botao variante="secundario" disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
-        <AcaoPrincipal><Botao disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao></AcaoPrincipal>
+        <AcaoPrincipal>
+          {proxima && <Botao variante="secundario" disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
+          <Botao disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>
+        </AcaoPrincipal>
       </div>
     </section>
   );

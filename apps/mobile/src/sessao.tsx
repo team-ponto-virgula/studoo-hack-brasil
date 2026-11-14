@@ -1,22 +1,20 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Animated, BackHandler, Keyboard, Platform, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
-import { estiloDeEntrada, useAparecer, useTremor, useVaiVem } from './animacoes';
+import { Animated, Keyboard, Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
+import { useTremor, useVaiVem } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { entrarComGoogle } from './google-nativo';
 import { RecuperarAcesso } from './recuperar';
 import { Estudo } from './estudo';
-import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
-import { Desenho, Paisagem } from './mundo';
-import { cores, fontes } from './tema';
+import { Paisagem } from './mundo';
+import { cores } from './tema';
 
 const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Sessao =
   | { tipo: 'verificando' }
-  | { tipo: 'boas-vindas' }
   | { tipo: 'entrada'; erro?: string }
   | { tipo: 'recuperar'; email: string }
   | { tipo: 'falha'; erro: string }
@@ -34,7 +32,7 @@ export function AppMobile() {
         const token = await lerToken();
         if (!ativo) return;
         if (!token) {
-          setSessao({ tipo: 'boas-vindas' });
+          setSessao({ tipo: 'entrada' });
           return;
         }
 
@@ -88,13 +86,10 @@ export function AppMobile() {
   switch (sessao.tipo) {
     case 'ativa':
       return <Estudo cliente={sessao.cliente} sair={() => sair(sessao.cliente)} expirar={expirar} />;
-    case 'boas-vindas':
-      return <BoasVindas entrar={() => setSessao({ tipo: 'entrada' })} />;
     case 'entrada':
       return <Entrada erroInicial={sessao.erro} entrar={entrar}
         google={async () => { const token = await entrarComGoogle(); if (token) setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) }); }}
-        recuperar={(email) => setSessao({ tipo: 'recuperar', email })}
-        voltar={() => setSessao({ tipo: 'boas-vindas' })} />;
+        recuperar={(email) => setSessao({ tipo: 'recuperar', email })} />;
     case 'recuperar':
       return <RecuperarAcesso emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} />;
     case 'falha':
@@ -121,53 +116,6 @@ async function encerrarNoAparelho(erro?: string): Promise<Sessao> {
   }
 }
 
-/**
- * Boas-vindas: a paisagem do mundo com o Stu, a promessa do Studoo e três destaques (qualquer assunto, a trilha montada
- * pela IA e o progresso salvo), como o painel da entrada na web.
- */
-function BoasVindas({ entrar }: { entrar: () => void }) {
-  const { width } = useWindowDimensions();
-  const largura = Math.min(width, 620) - 40;
-  const arte = useAparecer(0, 420);
-  const titulo = useAparecer(140, 420);
-  const texto = useAparecer(220, 420);
-
-  return (
-    <Tela pagina="boas-vindas" rodape={<Botao rotulo={mensagens.boasVindas.entrar} testID="entrar-no-piloto" icone="seta" acao={entrar} />}>
-      <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={estiloDeEntrada(arte, 14, 0.97)}>
-        <Paisagem altura={Math.round(largura * 0.7)} estilo={entradaEstilos.arte}>
-          {(l) => <StuAcenando largura={l * 0.3} esquerda={l * 0.35} />}
-        </Paisagem>
-      </Animated.View>
-      <Animated.View style={estiloDeEntrada(titulo, 10, 1)}>
-        <Titulo testID="boas-vindas">{mensagens.boasVindas.titulo}</Titulo>
-      </Animated.View>
-      <Animated.View style={estiloDeEntrada(texto, 10, 1)}>
-        <Text style={estilos.introducao}>{mensagens.boasVindas.texto}</Text>
-      </Animated.View>
-      <View style={entradaEstilos.destaques}>
-        {mensagens.boasVindas.destaques.map((destaque, indice) => <Destaque key={destaque} texto={destaque} indice={indice} />)}
-      </View>
-    </Tela>
-  );
-}
-
-/** Destaque das boas-vindas: entra em sequência, com o ícone que aparece com um pulinho. */
-function Destaque({ texto, indice }: { texto: string; indice: number }) {
-  const entrada = useAparecer(320 + indice * 90, 420, true);
-  return (
-    <Animated.View style={[entradaEstilos.destaque, estiloDeEntrada(entrada, 12, 0.94)]}>
-      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-        style={[entradaEstilos.destaqueIcone, entradaEstilos[`destaque${indice}` as 'destaque0']]}>
-        {indice === 0 && <Desenho nome="temaPopulares" largura={22} />}
-        {indice === 1 && <Icone nome="livro" tamanho={20} cor={cores.fundo} />}
-        {indice === 2 && <Icone nome="check" tamanho={20} cor={cores.fundo} />}
-      </View>
-      <Text style={entradaEstilos.destaqueTexto}>{texto}</Text>
-    </Animated.View>
-  );
-}
-
 /** O Stu na paisagem: sobe e desce devagar e acena de vez em quando. */
 function StuAcenando({ largura, esquerda }: { largura: number; esquerda: number }) {
   const aceno = useVaiVem(2400);
@@ -179,19 +127,20 @@ function StuAcenando({ largura, esquerda }: { largura: number; esquerda: number 
   );
 }
 
-function Entrada({ erroInicial, entrar, voltar, google, recuperar }: {
+function Entrada({ erroInicial, entrar, google, recuperar }: {
   google: () => Promise<void>;
   recuperar: (email: string) => void;
   erroInicial?: string;
   entrar: (email: string, senha: string) => Promise<void>;
-  voltar: () => void;
 }) {
   const [googleDisponivel, setGoogleDisponivel] = useState(false);
-  useEffect(() => { let ativo = true; void criarClienteNativo().configuracaoAcesso().then(c => { if (ativo) setGoogleDisponivel(c.google); }).catch(() => {}); return () => { ativo = false; }; }, []);
+  const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
+  useEffect(() => { let ativo = true; void criarClienteNativo().configuracaoAcesso().then(c => { if (ativo) setGoogleDisponivel(c.google); }).catch(() => {}).finally(() => { if (ativo) setConfiguracaoCarregada(true); }); return () => { ativo = false; }; }, []);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState(erroInicial);
   const [erroEmail, setErroEmail] = useState<string | undefined>();
+  const [erroSenha, setErroSenha] = useState<string | undefined>();
   const [mostrarSenha, setMostrarSenha] = useState(false);
   const [ocupado, setOcupado] = useState(false);
   /** Conta os erros: a cada um, o formulário treme de novo, como na web. */
@@ -200,16 +149,7 @@ function Entrada({ erroInicial, entrar, voltar, google, recuperar }: {
   const emEnvio = useRef(false);
   const campoEmail = useRef<ComponentRef<typeof TextInput>>(null);
   const campoSenha = useRef<ComponentRef<typeof TextInput>>(null);
-  const podeEntrar = !!email.trim() && !!senha && !ocupado;
-
-  useEffect(() => {
-    if (Platform.OS === 'web') return;
-    const assinatura = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (!emEnvio.current) voltar();
-      return true;
-    });
-    return () => assinatura.remove();
-  }, [voltar]);
+  const podeEntrar = !ocupado;
 
   async function abrirGoogle() {
     if (emEnvio.current) return;
@@ -221,11 +161,13 @@ function Entrada({ erroInicial, entrar, voltar, google, recuperar }: {
 
   async function enviar() {
     if (emEnvio.current || !podeEntrar) return;
-    // O e-mail é conferido no aparelho, como na web: o erro fica no campo, que recebe o foco.
-    if (!formatoEmail.test(email.trim())) {
-      setErroEmail(mensagens.entrada.emailInvalido);
-      setErros((total) => total + 1);
-      campoEmail.current?.focus();
+    const emailInvalido = !formatoEmail.test(email.trim());
+    const senhaVazia = !senha;
+    setErroEmail(emailInvalido ? mensagens.entrada.emailInvalido : undefined);
+    setErroSenha(senhaVazia ? mensagens.entrada.senhaVazia : undefined);
+    if (emailInvalido || senhaVazia) {
+      setErros(total => total + 1);
+      (emailInvalido ? campoEmail : campoSenha).current?.focus();
       return;
     }
     Keyboard.dismiss();
@@ -247,7 +189,6 @@ function Entrada({ erroInicial, entrar, voltar, google, recuperar }: {
 
   return (
     <Tela pagina="entrada"
-      acoes={<Botao rotulo={mensagens.voltar} testID="voltar-boas-vindas" variante="texto" compacto desativado={ocupado} acao={voltar} />}
       rodape={<Botao rotulo={ocupado ? mensagens.entrada.entrando : mensagens.entrada.entrar}
         testID="entrar" desativado={!podeEntrar} ocupado={ocupado} carregando={ocupado} acao={() => void enviar()} />}>
       <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
@@ -259,16 +200,16 @@ function Entrada({ erroInicial, entrar, voltar, google, recuperar }: {
       <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
       <Animated.View style={[entradaEstilos.formulario, { transform: [{ translateX: tremor }] }]}>
         <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" desativado={!googleDisponivel || ocupado} acao={() => void abrirGoogle()} />
-        {!googleDisponivel && <Text style={estilos.legenda}>{mensagens.acesso.googleIndisponivel}</Text>}
-        <Text style={estilos.legenda}>{mensagens.acesso.ou}</Text>
+        {configuracaoCarregada && !googleDisponivel && <Text style={estilos.legenda}>{mensagens.acesso.googleIndisponivel}</Text>}
+        <View style={entradaEstilos.divisor}><View style={entradaEstilos.linha} /><Text style={estilos.legenda}>{mensagens.acesso.ou}</Text><View style={entradaEstilos.linha} /></View>
         <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email} campoRef={campoEmail} erro={erroEmail}
           onChangeText={(valor) => { setEmail(valor); setErro(undefined); setErroEmail(undefined); }}
           autoCapitalize="none" autoCorrect={false} keyboardType="email-address" returnKeyType="next"
           textContentType={Platform.OS === 'ios' ? 'username' : undefined}
           autoComplete={Platform.OS === 'android' ? 'email' : undefined}
           editable={!ocupado} onSubmitEditing={() => campoSenha.current?.focus()} />
-        <Campo testID="login-senha" rotulo={mensagens.entrada.senha} value={senha} campoRef={campoSenha}
-          onChangeText={(valor) => { setSenha(valor); setErro(undefined); }} secureTextEntry={!mostrarSenha} returnKeyType="go"
+        <Campo testID="login-senha" rotulo={mensagens.entrada.senha} value={senha} campoRef={campoSenha} erro={erroSenha}
+          onChangeText={(valor) => { setSenha(valor); setErro(undefined); setErroSenha(undefined); }} secureTextEntry={!mostrarSenha} returnKeyType="go"
           autoCapitalize="none" autoCorrect={false}
           textContentType={Platform.OS === 'ios' ? 'password' : undefined}
           autoComplete={Platform.OS === 'android' ? 'current-password' : undefined}
@@ -284,14 +225,8 @@ function Entrada({ erroInicial, entrar, voltar, google, recuperar }: {
 }
 
 const entradaEstilos = StyleSheet.create({
-  arte: { marginBottom: 24, borderRadius: 28 },
+  divisor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
   banner: { marginBottom: 24, borderRadius: 24 },
   formulario: { gap: 20, marginTop: 28 },
-  destaques: { gap: 12, marginTop: 24 },
-  destaque: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  destaqueIcone: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3 },
-  destaque0: { backgroundColor: '#FFF3D1', borderBottomColor: '#FFE3A3' },
-  destaque1: { backgroundColor: cores.acao, borderBottomColor: cores.acaoEscura },
-  destaque2: { backgroundColor: cores.sucessoClaro, borderBottomColor: cores.sucesso },
-  destaqueTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
 });

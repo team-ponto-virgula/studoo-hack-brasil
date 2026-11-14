@@ -787,3 +787,34 @@ button { touch-action: manipulation; }
 .recuperar-simbolo .icone { width: 28px; height: 28px; }
 .recuperar-aviso { padding: 14px; border-radius: 14px; color: var(--texto); background: var(--nevoa); }
 @media (max-width: 480px) { .recuperar-cartao { padding: 20px; } }
+
+/* A mesma hierarquia e medidas do app, com o rodapé ao alcance do polegar. */
+.recuperar-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+@media (max-width: 767px) {
+  h1 { font-size: 32px; line-height: 40px; letter-spacing: -1px; }
+  .introducao { font-size: 17px; line-height: 24px; }
+  .entrada-conteudo { padding-inline: 20px; padding-top: 16px; }
+  .entrada-cabecalho .logo { width: 112px; }
+  .entrada-banner { height: 140px; margin-bottom: 24px; }
+  .entrada-banner .stu { width: 72px; }
+  .recuperar { max-width: 620px; padding: 0 20px calc(108px + env(safe-area-inset-bottom)); }
+  .recuperar-topo { min-height: 60px; padding: max(8px, env(safe-area-inset-top)) 0 8px; border-bottom: 2px solid var(--nevoa); }
+  .recuperar-topo .logo { width: 112px; }
+  .recuperar-cartao { margin-top: 24px; padding: 0; border: 0; border-radius: 0; }
+  .recuperar-voltar { display: none; }
+  .recuperar .acao-principal { padding: 16px 16px max(16px, env(safe-area-inset-bottom)); }
+  .recuperar .acao-principal > .botao { width: 100%; }
+}
+@media (max-width: 767px) {
+  .entrada-cabecalho .logo-quadro { width: calc(100% + 40px); margin: -16px -20px 24px; padding: 8px 20px; min-height: 60px; border-bottom: 2px solid var(--nevoa); }
+  .entrada-banner { margin-top: 0; }
+  .aula-miolo h1 { text-wrap: wrap; }
+  .painel--concluida .acao-principal { display: flex; flex-direction: column; gap: 10px; }
+  .painel--concluida { padding-bottom: 180px; }
+}
+.recuperar .botao { text-decoration: none; }
+@media (max-width: 767px) {
+  .entrada-cabecalho h1 { text-wrap: wrap; }
+  .entrada-forma .formulario { margin-top: 28px; }
+  .entrada-forma .acesso-link { justify-content: center; text-decoration: none; }
+}

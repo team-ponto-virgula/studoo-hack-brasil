@@ -7,6 +7,10 @@
     ".": {
       "types": "./src/aprendizado.ts",
       "default": "./src/aprendizado.ts"
+    },
+    "./experiencia": {
+      "types": "./src/experiencia.ts",
+      "default": "./src/experiencia.ts"
     }
   }
 }

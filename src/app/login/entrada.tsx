@@ -80,6 +80,7 @@ export function Entrada() {
       window.location.replace('/');
     } catch (falha) {
       setErro(falha instanceof ErroStudoo ? falha.codigo : 'rede');
+      if (falha instanceof ErroStudoo && falha.codigo === 'credenciais_invalidas' && campoSenha.current) campoSenha.current.value = '';
       setTremor((anterior) => anterior + 1);
       setEnviando(false);
       emEnvio.current = false;
@@ -143,7 +144,9 @@ export function Entrada() {
                   <p className="campo-erro" id="senha-erro"><span className="sinal" aria-hidden="true">!</span>{errosCampo.senha}</p>
                 )}
               </div>
-              <a className="acesso-link" href="/recuperar">{mensagens.acesso.esqueci}</a>
+              <a className="acesso-link" href="/recuperar" onClick={() => {
+                try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
+              }}>{mensagens.acesso.esqueci}</a>
               {erro && <EstadoErro codigo={erro} />}
               <AcaoPrincipal>
                 <Botao type="submit" disabled={enviando}>

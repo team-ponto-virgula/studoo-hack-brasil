@@ -17,6 +17,8 @@ export function proxy(request: NextRequest) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${desenvolvimento ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' ${estilo}`,
+    // React usa atributos style para cores, posições e progresso. O nonce continua exigido nas tags style.
+    "style-src-attr 'unsafe-inline'",
     `connect-src 'self'${websocket}`,
     "img-src 'self' data:",
     "font-src 'self'",

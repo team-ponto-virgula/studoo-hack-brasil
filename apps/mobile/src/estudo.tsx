@@ -1314,8 +1314,8 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
   const entradaLiberada = useAparecer(1000, 420, true);
 
   return (
-    <Tela pagina="concluida" acoes={acoes} rodape={rodape}>
-      <Confete chuva quantidade={36} />
+    <Tela pagina="concluida" semCabecalho rodape={rodape}>
+      <Confete chuva quantidade={44} />
       <View style={estudoEstilos.conclusaoTopo}>
         <CenaConclusao />
         <Titulo testID="titulo-conclusao" foco estilo={estudoEstilos.textoCentro}>{mensagens.licao.concluida}</Titulo>

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
-import { Botao, EstadoErro, Icone, Logo } from '../../ui';
+import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo } from '../../ui';
 
 const m = mensagens.acesso;
 export function Recuperar() {
@@ -20,6 +20,12 @@ export function Recuperar() {
   const [espera, setEspera] = useState(0);
   const emCurso = useRef(false);
   const titulo = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    try {
+      setEmail(sessionStorage.getItem('studoo.recuperar.email') ?? '');
+      sessionStorage.removeItem('studoo.recuperar.email');
+    } catch { /* Sem armazenamento, a pessoa informa o e-mail novamente. */ }
+  }, []);
   useEffect(() => { titulo.current?.focus(); }, [etapa]);
   useEffect(() => {
     if (!espera) return;
@@ -53,7 +59,7 @@ export function Recuperar() {
     });
   }
   return <main className="recuperar" id="conteudo-principal">
-    <Logo />
+    <header className="recuperar-topo"><Logo /><a className="botao botao--texto" href="/login">{mensagens.voltar}</a></header>
     <section className="recuperar-cartao">
       <div className="recuperar-simbolo" aria-hidden="true"><Icone nome={etapa === 'pronto' ? 'check' : 'cadeado'} /></div>
       <h1 ref={titulo} tabIndex={-1}>{etapa === 'pronto' ? m.sucesso : m.recuperar}</h1>
@@ -62,17 +68,17 @@ export function Recuperar() {
         onSubmit={etapa === 'email' ? (e) => { e.preventDefault(); enviar(); } : salvar}>
         <div className="campo"><label htmlFor="recuperar-email">{m.email}</label>
           <input id="recuperar-email" type="email" autoComplete="email" autoCapitalize="none" value={email}
-            disabled={ocupado} onChange={e => { setEmail(e.target.value); setEnviado(false); }} maxLength={254} required /></div>
+            disabled={ocupado} onChange={e => { setEmail(e.target.value); setEnviado(false); setValidacao(''); setErro(null); }} maxLength={254} required /></div>
         {enviado && <p role="status" className="recuperar-aviso">{m.enviado}</p>}
         {etapa === 'codigo' && <>
           <div className="campo"><label htmlFor="recuperar-codigo">{m.codigo}</label>
             <input id="recuperar-codigo" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6}
-              value={codigo} onChange={e => setCodigo(e.target.value.replace(/\D/g, ''))} disabled={ocupado} required /></div>
+              value={codigo} onChange={e => { setCodigo(e.target.value.replace(/\D/g, '')); setValidacao(''); setErro(null); }} disabled={ocupado} required /></div>
           <div className="campo"><label htmlFor="nova-senha">{m.novaSenha}</label><div className="campo-senha">
             <input id="nova-senha" type={mostrar ? 'text' : 'password'} autoComplete="new-password" minLength={8} maxLength={256}
               value={senha} onChange={e => setSenha(e.target.value)} disabled={ocupado} aria-describedby="dica-senha" required />
             <button type="button" className="campo-senha__alternar" aria-label={mensagens.login.mostrarSenha} aria-pressed={mostrar}
-              onClick={() => setMostrar(v => !v)}><Icone nome={mostrar ? 'olhoFechado' : 'olho'} /></button>
+              disabled={ocupado} onClick={() => setMostrar(v => !v)}><Icone nome={mostrar ? 'olhoFechado' : 'olho'} /></button>
           </div><small id="dica-senha">{m.dicaSenha}</small></div>
           <div className="campo"><label htmlFor="confirmar-senha">{m.confirmarSenha}</label>
             <input id="confirmar-senha" type={mostrar ? 'text' : 'password'} autoComplete="new-password" maxLength={256}
@@ -80,12 +86,12 @@ export function Recuperar() {
         </>}
         {validacao && <p role="alert" className="campo-erro">{validacao}</p>}
         {erro && <EstadoErro codigo={erro} />}
-        <Botao type="submit" disabled={ocupado}>{etapa === 'email' ? ocupado ? m.enviando : m.enviar : ocupado ? m.salvando : m.salvar}</Botao>
+        <AcaoPrincipal><Botao type="submit" disabled={ocupado}>{etapa === 'email' ? ocupado ? m.enviando : m.enviar : ocupado ? m.salvando : m.salvar}</Botao></AcaoPrincipal>
         {etapa === 'email'
           ? <Botao variante="texto" disabled={ocupado} onClick={() => { setEtapa('codigo'); setValidacao(''); setErro(null); }}>{m.tenhoCodigo}</Botao>
           : <Botao variante="texto" disabled={ocupado || espera > 0} onClick={enviar}>{espera ? m.aguarde(espera) : m.reenviar}</Botao>}
       </form>}
-      <a className="acesso-link" href="/login">{m.entrar}</a>
+      <div className={etapa === 'pronto' ? 'acao-principal' : 'recuperar-voltar'}><a className={etapa === 'pronto' ? 'botao botao--primario' : 'acesso-link'} href="/login">{m.entrar}</a></div>
     </section>
   </main>;
 }
