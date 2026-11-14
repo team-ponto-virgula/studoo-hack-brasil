@@ -485,7 +485,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             )}
           </button>
           <p className="caminho-chegada__texto">{tudoFeito ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}</p>
-          {!tudoFeito && !montando && <p className="caminho-chegada__meta">{mensagens.trilha.chegadaMeta(total)}</p>}
+          {!tudoFeito && !montando && <p className="caminho-chegada__meta">{mensagens.trilha.faltamTrofeu(nos.filter((no) => no.estado !== 'concluida').length)}</p>}
         </div>
       )}
       <p className="somente-leitor" role="status">{anuncio}</p>

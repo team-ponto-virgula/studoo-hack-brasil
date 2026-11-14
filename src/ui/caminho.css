@@ -851,3 +851,10 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 @keyframes chegada-bolha-sumir { to { opacity: 0; visibility: hidden; } }
 /* Espaço acima do troféu para a bolha de "faltam N lições" não ser cortada. */
 .caminho-chegada { min-height: 280px; }
+
+/* A estrada chega até o troféu. */
+.caminho-chegada::before { height: 140px; }
+/* Títulos embaixo dos nós com 16px de folga das bordas. */
+.caminho-no[data-discreto] .caminho-no__texto {
+  max-width: min(14rem, calc(2 * min(var(--coluna) * var(--x) / 100, var(--coluna) * (100 - var(--x)) / 100) - 32px));
+}

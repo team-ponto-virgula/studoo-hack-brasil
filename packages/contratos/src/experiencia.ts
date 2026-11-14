@@ -174,7 +174,7 @@ export const mensagens = {
         trofeu: 'Troféu da trilha',
         parte: (numero: number) => `Parte ${numero}`,
         parteLicoes: (total: number) => `${total} ${total === 1 ? 'lição' : 'lições'}`,
-        parteProgresso: (feitas: number, total: number) => `${feitas} de ${total} concluídas`,
+        parteProgresso: (feitas: number, total: number) => `${feitas} de ${total} ${total === 1 ? 'concluída' : 'concluídas'}`,
         parteVencida: 'Parte concluída',
         percentual: (valor: number) => `${Math.round(valor)}%`
     },
