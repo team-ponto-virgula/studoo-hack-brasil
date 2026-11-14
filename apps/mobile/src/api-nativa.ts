@@ -61,7 +61,7 @@ export function criarClienteNativo(token?: string) {
   const cliente = criarClienteStudoo(async (caminho, opcoes) => {
     const origem = origemConfigurada().origin;
     const controle = new AbortController();
-    const aceite = opcoes.method === 'POST' && caminho === '/api/aprendizado/planos';
+    const aceite = opcoes.method === 'POST' && (caminho === '/api/aprendizado/planos' || caminho.startsWith('/api/estudio/'));
     const limite = setTimeout(() => controle.abort(), aceite ? tempoLimiteDoAceiteMs : tempoLimiteMs);
 
     try {

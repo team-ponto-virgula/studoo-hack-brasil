@@ -23,6 +23,7 @@ model Usuario {
   fuso      String
   sessoes   Sessao[]
   planos    PlanoAprendizado[]
+  materiais MaterialEstudo[]
 }
 
 model Sessao {
@@ -77,6 +78,7 @@ model Licao {
   conteudo  Json
   fluxo     Fluxo           @relation(fields: [usuarioId, fluxoId], references: [usuarioId, id])
   conclusao RegistroEstudo?
+  apoio ApoioLicao?
 
   @@id([usuarioId, id])
   @@unique([usuarioId, fluxoId, ordem])
@@ -118,4 +120,30 @@ model RecuperacaoSenha {
   expiraEm DateTime @db.Timestamptz(3)
   tentativas Int @default(0)
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+}
+
+model MaterialEstudo {
+  usuarioId String
+  id String @default(uuid())
+  nome String
+  paginas Json
+  leitura String
+  rascunho Json?
+  expiraEm DateTime @db.Timestamptz(3)
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  @@id([usuarioId, id])
+  @@index([expiraEm])
+}
+
+model ApoioLicao {
+  usuarioId String
+  licaoId String
+  erros Int @default(0)
+  ultimaResposta String?
+  reforco Json?
+  reforcoConcluido Boolean @default(false)
+  ensino Json?
+  atualizadoEm DateTime @updatedAt @db.Timestamptz(3)
+  licao Licao @relation(fields: [usuarioId, licaoId], references: [usuarioId, id], onDelete: Cascade)
+  @@id([usuarioId, licaoId])
 }

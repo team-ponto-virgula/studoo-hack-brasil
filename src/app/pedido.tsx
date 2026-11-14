@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent, type RefObject } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { LIMITES_GERACAO } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
-import { AcaoPrincipal, Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
+import { Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
 import './pedido.css';
+import { MaterialParaTrilha } from './estudio';
+import type { PropostaPlano } from '@studoo/contratos';
 
 type Tema = (typeof mensagens.pedido.temas)[number];
 export type IdTema = Tema['id'];
@@ -32,54 +34,12 @@ function iconeDoExemplo(tema: Tema, exemplo: string): NomeDesenho {
 const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema) => tema.exemplos as readonly string[])));
 
 /**
- * Exemplo que se escreve sozinho no campo vazio, letra por letra, e se apaga para dar lugar ao próximo. Muda só o
- * placeholder do campo, sem redesenhar a tela. Para quando a pessoa escreve; com movimento reduzido, fica o primeiro
- * exemplo, parado.
- */
-function useExemploDigitado(campo: RefObject<HTMLTextAreaElement | null>, ativo: boolean) {
-  useEffect(() => {
-    const elemento = campo.current;
-    if (!elemento) return;
-    const exemplos = mensagens.pedido.exemplosDigitados;
-    const mostrar = (texto: string) => elemento.setAttribute('placeholder', `${mensagens.pedido.exemploPrefixo}${texto}`);
-    if (!ativo || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      mostrar(exemplos[0]);
-      return;
-    }
-    let indice = 0;
-    let letras = 0;
-    let apagando = false;
-    let espera = 0;
-    function passo() {
-      const atual = exemplos[indice];
-      if (!apagando && letras < atual.length) {
-        letras += 1;
-        espera = window.setTimeout(passo, 55);
-      } else if (!apagando) {
-        apagando = true;
-        espera = window.setTimeout(passo, 1700);
-      } else if (letras > 0) {
-        letras -= 1;
-        espera = window.setTimeout(passo, 22);
-      } else {
-        apagando = false;
-        indice = (indice + 1) % exemplos.length;
-        espera = window.setTimeout(passo, 350);
-      }
-      mostrar(exemplos[indice].slice(0, letras));
-    }
-    mostrar('');
-    espera = window.setTimeout(passo, 600);
-    return () => window.clearTimeout(espera);
-  }, [campo, ativo]);
-}
-
-/**
  * Pedido da trilha: a pessoa escreve o que quer aprender, ou escolhe uma ideia, e gera a trilha ao vivo.
  * As ideias vêm por área de interesse (idiomas, música, matemática…), para mostrar que vale qualquer assunto;
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
-export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona }: {
+export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona }: {
+  onProposta: (p: PropostaPlano) => void;
   objetivo: string;
   /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
   areaInicial?: IdTema;
@@ -93,13 +53,15 @@ export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, areaInicial
   verPlanos: () => void;
   comoFunciona: () => void;
 }) {
+  const [modo, setModo] = useState<'ideia' | 'material'>('ideia');
+  const [maisIdeias, setMaisIdeias] = useState(Boolean(areaInicial && areaInicial !== 'populares'));
   const [curto, setCurto] = useState(false);
   const [idTema, setIdTema] = useState<IdTema>(areaInicial ?? 'populares');
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [brilho, setBrilho] = useState(0);
   const campo = useRef<HTMLTextAreaElement>(null);
   const texto = objetivo.trim();
-  useExemploDigitado(campo, objetivo.length === 0 && !ocupado);
+
   // O Stu reage ao pedido: convida, incentiva enquanto a pessoa escreve e comemora a ideia escolhida.
   let fala: string = mensagens.pedido.falas.vazio;
   if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
@@ -141,81 +103,62 @@ export function Pedido({ objetivo, ocupado, aviso, falha, temPlanos, areaInicial
   }
 
   return (
-    <section className="painel painel--pedido">
-      <div className="pedido-topo">
-        <div className="pedido-topo__textos">
-          <h1 tabIndex={-1}>{mensagens.pedido.titulo}</h1>
-          <p className="introducao">{mensagens.pedido.instrucoes}</p>
-          <button type="button" className="pedido-como" onClick={comoFunciona} disabled={ocupado}>
-            <span className="pedido-como__sinal" aria-hidden="true">?</span>{mensagens.pedido.comoFunciona}
-          </button>
+    <section className="painel painel--pedido pedido-novo">
+      <header className="descoberta-hero">
+        <div className="descoberta-hero__texto">
+          <p className="descoberta-selo">{mensagens.inicio.selo}</p>
+          <h1 tabIndex={-1}>{mensagens.inicio.titulo}</h1>
+          <p>{mensagens.inicio.texto}</p>
         </div>
+        <div className="descoberta-stu" aria-hidden="true"><span className="descoberta-orbita"/><Stu /><span className="descoberta-estrela">✦</span><span className="descoberta-ponto"/></div>
+      </header>
+      <div className="descoberta-modos" role="group" aria-label={mensagens.inicio.escolha}>
+        {(['ideia', 'material'] as const).map(item => <button key={item} type="button" aria-pressed={modo === item} disabled={ocupado}
+          className="descoberta-modo" onClick={() => setModo(item)}>
+          <span className="descoberta-modo__icone"><Icone nome={item === 'ideia' ? 'lampada' : 'livro'} /></span>
+          <span><strong>{mensagens.inicio[item]}</strong><small>{item === 'ideia' ? mensagens.inicio.ideiaDica : mensagens.inicio.materialDica}</small></span>
+          <span className="descoberta-modo__check" aria-hidden="true">{modo === item ? '✓' : ''}</span>
+        </button>)}
       </div>
+      {falha === 'limite_geracoes' && temPlanos && <Botao variante="secundario" onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>}
       {aviso && <p className="pedido-aviso">{aviso}</p>}
-      {falha && (
-        <EstadoErro codigo={falha}>
-          {repetivel && <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>}
-          {falha === 'limite_geracoes' && temPlanos && <Botao variante="secundario" disabled={ocupado} onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>}
-        </EstadoErro>
-      )}
-      <form className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
-        <div className="pedido-stu" aria-hidden="true">
-          <Stu />
-          <p className="pedido-stu__fala" key={fala}>{fala}</p>
-        </div>
-        <div className="campo pedido-campo">
-          <label htmlFor="objetivo">{mensagens.pedido.objetivo}</label>
-          <textarea ref={campo} id="objetivo" name="objetivo" rows={4} maxLength={LIMITES_GERACAO.objetivoMax} required
-            value={objetivo} disabled={ocupado} aria-invalid={mostrarCurto || undefined} aria-describedby={descricao}
-            data-brilho={brilho ? (brilho % 2 ? 'a' : 'b') : undefined}
-            onChange={(evento) => aoMudar(evento.target.value)} />
-          {mostrarCurto && (
-            <p className="campo-erro" id="objetivo-erro">
-              <span className="sinal" aria-hidden="true">!</span>{mensagens.pedido.curto(LIMITES_GERACAO.objetivoMin)}
-            </p>
-          )}
-          <small className="pedido-dica" id="objetivo-dica">{mensagens.pedido.dica}</small>
-          <small id="objetivo-privacidade">{mensagens.pedido.privacidade}</small>
-          {mostrarContador && (
-            <small className="pedido-contador" id="objetivo-contador">
-              {mensagens.pedido.contador(objetivo.length, LIMITES_GERACAO.objetivoMax)}
-            </small>
-          )}
-        </div>
-        <div className="pedido-sugestoes" role="group" aria-labelledby="pedido-sugestoes">
-          <div className="pedido-sugestoes__topo">
-            <p className="pedido-sugestoes__titulo" id="pedido-sugestoes">{mensagens.pedido.sugestoes}</p>
-            <button type="button" className="pedido-surpresa" disabled={ocupado} onClick={surpreender}>
-              <Desenho nome="estrela" />{mensagens.pedido.surpresa}
-            </button>
+      {falha && <EstadoErro codigo={falha}>{repetivel && <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>}</EstadoErro>}
+      <div hidden={modo !== 'material'} className="descoberta-painel">
+        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} />
+      </div>
+      <form hidden={modo !== 'ideia'} className="formulario pedido-formulario descoberta-painel" method="post" noValidate onSubmit={enviar}>
+        <div className="descoberta-caderno">
+          <div className="descoberta-caderno__topo"><span aria-hidden="true">✦</span><span>{texto ? fala : mensagens.inicio.convite}</span></div>
+          <div className="campo pedido-campo">
+            <label htmlFor="objetivo">{mensagens.inicio.campo}</label>
+            <textarea ref={campo} id="objetivo" name="objetivo" rows={2} maxLength={LIMITES_GERACAO.objetivoMax} required
+              value={objetivo} disabled={ocupado} aria-invalid={mostrarCurto || undefined} aria-describedby={descricao}
+              placeholder={mensagens.inicio.exemplo} data-brilho={brilho ? (brilho % 2 ? 'a' : 'b') : undefined}
+              onChange={evento => aoMudar(evento.target.value)} />
+            {mostrarCurto && <p className="campo-erro" id="objetivo-erro">{mensagens.pedido.curto(LIMITES_GERACAO.objetivoMin)}</p>}
+            <small id="objetivo-dica">{mensagens.inicio.ajuda}</small>
+            <small id="objetivo-privacidade" className="somente-leitor">{mensagens.pedido.privacidade}</small>
+            {mostrarContador && <small id="objetivo-contador">{mensagens.pedido.contador(objetivo.length, LIMITES_GERACAO.objetivoMax)}</small>}
           </div>
-          <div className="pedido-temas" role="group" aria-label={mensagens.pedido.areas}>
-            {mensagens.pedido.temas.map((item) => (
-              <button key={item.id} type="button" className="pedido-tema" aria-pressed={item.id === idTema} disabled={ocupado}
-                onClick={() => setIdTema(item.id)}>
-                <Desenho nome={iconesDosTemas[item.id]} />
-                {item.nome}
-              </button>
-            ))}
-          </div>
-          <ul className="pedido-exemplos" aria-label={tema.nome}>
-            {tema.exemplos.map((exemplo) => {
-              const escolhida = texto === exemplo;
-              return (
-                <li key={exemplo}>
-                  <button type="button" className="pedido-exemplo" data-escolhida={escolhida || undefined} aria-pressed={escolhida}
-                    disabled={ocupado} onClick={() => sugerir(exemplo)}>
-                    <span className="pedido-exemplo__icone"><Desenho nome={iconeDoExemplo(tema, exemplo)} /></span>
-                    <span className="pedido-exemplo__texto">{exemplo}</span>
-                    <span className="pedido-exemplo__acao"><Icone nome={escolhida ? 'check' : 'seta'} /></span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <Botao type="submit" disabled={ocupado || !texto}>{mensagens.inicio.criar}<Icone nome="seta" /></Botao>
         </div>
-        <AcaoPrincipal><Botao type="submit" disabled={ocupado || !texto}>{mensagens.pedido.gerar}</Botao></AcaoPrincipal>
+        <div className="descoberta-inspiracao">
+          <div className="pedido-sugestoes__topo"><p className="pedido-sugestoes__titulo">{mensagens.pedido.sugestoes}</p>
+            <button type="button" className="pedido-surpresa" disabled={ocupado} onClick={surpreender}><Desenho nome="estrela" />{mensagens.pedido.surpresa}</button></div>
+          <div className="descoberta-ideias" role="group" aria-label={mensagens.pedido.sugestoes}>
+            {(maisIdeias ? tema.exemplos : mensagens.pedido.temas[0].exemplos.slice(0, 3)).map(exemplo => <button key={exemplo} type="button" aria-pressed={texto === exemplo} disabled={ocupado} onClick={() => sugerir(exemplo)}>
+              <Desenho nome={iconeDoExemplo(maisIdeias ? tema : mensagens.pedido.temas[0], exemplo)} />{exemplo}
+            </button>)}
+          </div>
+          <button type="button" className="descoberta-expandir" aria-expanded={maisIdeias} aria-controls="outras-ideias" onClick={() => setMaisIdeias(!maisIdeias)}>{maisIdeias ? mensagens.inicio.menos : mensagens.inicio.mais}<span aria-hidden="true">{maisIdeias ? '−' : '+'}</span></button>
+          <div hidden={!maisIdeias} id="outras-ideias" className="pedido-temas" role="group" aria-label={mensagens.pedido.areas}>
+            {mensagens.pedido.temas.map(item => <button key={item.id} type="button" className="pedido-tema" aria-pressed={item.id === idTema} disabled={ocupado} onClick={() => setIdTema(item.id)}><Desenho nome={iconesDosTemas[item.id]} />{item.nome}</button>)}
+          </div>
+        </div>
       </form>
+      <footer className="descoberta-rodape"><div className="descoberta-passos" aria-label={mensagens.inicio.passos}>{mensagens.inicio.etapas.map((etapa,i) => <span key={etapa}><b aria-hidden="true">{i+1}</b>{etapa}</span>)}</div>
+        <button type="button" className="pedido-como" onClick={comoFunciona}>{mensagens.inicio.saberMais}<span aria-hidden="true">↗</span></button>
+      </footer>
     </section>
   );
 }

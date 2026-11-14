@@ -230,3 +230,60 @@
   .pedido-exemplo:active:not(:disabled), .pedido-surpresa:active:not(:disabled) { transform: none; }
   .pedido-formulario .acao-principal .botao::after { display: none; }
 }
+
+/* A descoberta tem uma escolha por vez e um caderno como ponto de partida. */
+.pedido-novo { width:min(100%, 58rem); gap:28px; }
+.pedido-novo [hidden] { display:none!important; }
+.descoberta-hero { display:flex; align-items:center; gap:24px; min-width:0; }
+.descoberta-hero__texto { flex:1; }
+.descoberta-selo { color:var(--acao); font-size:.7rem; font-weight:900; letter-spacing:.12em; margin-bottom:12px; }
+.descoberta-hero h1 { font-size:clamp(1.8rem,3vw,2.7rem); line-height:1.12; letter-spacing:-.04em; max-width:15ch; }
+.descoberta-hero__texto > p:last-child { color:var(--texto2); margin-top:14px; max-width:40ch; line-height:1.6; }
+.descoberta-stu { position:relative; width:170px; height:170px; display:grid; place-items:center; flex:none; }
+.descoberta-stu .stu { width:125px; z-index:1; animation:pedido-stu 4s ease-in-out infinite; }
+.descoberta-orbita { position:absolute; inset:7px; background:#fff1c9; border-radius:47% 53% 62% 38%; transform:rotate(-12deg); }
+.descoberta-estrela { position:absolute; top:3px; right:8px; font-size:32px; color:#9a6700; }
+.descoberta-ponto { position:absolute; bottom:10px; left:9px; width:17px; height:17px; background:#a9dbc7; border-radius:50%; }
+.descoberta-modos { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.descoberta-modo { display:flex; align-items:center; text-align:left; gap:12px; min-height:90px; padding:17px; background:white; border:2px solid var(--gelo); border-radius:20px; color:var(--texto); cursor:pointer; transition:background .18s,border-color .18s,transform .18s; }
+.descoberta-modo:hover { transform:translateY(-2px); }
+.descoberta-modo[aria-pressed=true] { border-color:var(--acao); background:#f0f3ff; }
+.descoberta-modo strong { display:block; font-size:1rem; }
+.descoberta-modo small { display:block; margin-top:5px; color:var(--texto2); line-height:1.3; }
+.descoberta-modo__icone { display:grid; place-items:center; width:42px; height:42px; border-radius:14px; background:#fff1c9; flex:none; }
+.descoberta-modo__check { margin-left:auto; width:21px; height:21px; border:2px solid var(--gelo); border-radius:50%; flex:none; text-align:center; font-size:12px; }
+.descoberta-modo[aria-pressed=true] .descoberta-modo__check { background:var(--acao); border-color:var(--acao); color:white; }
+.descoberta-caderno { border:1px solid #e8dfcf; border-radius:24px; padding:24px; background:#fffcf6; box-shadow:0 5px 0 #f0eadf; }
+.descoberta-caderno__topo { display:flex; gap:9px; color:#715118; font-size:.85rem; font-weight:800; margin-bottom:20px; }
+.descoberta-caderno .pedido-campo { margin:0; }
+.descoberta-caderno textarea { min-height:100px; background:white; font-size:1.15rem; }
+.descoberta-caderno .botao { margin-top:20px; width:100%; justify-content:center; gap:12px; }
+.descoberta-inspiracao { display:grid; gap:14px; margin-top:26px; }
+.descoberta-ideias { display:flex; flex-wrap:wrap; gap:8px; }
+.descoberta-ideias button { display:flex; align-items:center; gap:8px; border:1px solid var(--gelo); border-radius:14px; background:white; color:var(--texto); padding:10px 12px; min-height:48px; font-weight:700; text-align:left; cursor:pointer; }
+.descoberta-ideias svg { width:28px; height:28px; flex:none; }
+.descoberta-ideias button[aria-pressed=true] { background:#edf6f0; border-color:#4c8d6f; }
+.descoberta-expandir { display:flex; justify-content:space-between; align-items:center; min-height:44px; background:none; border:0; color:var(--acao); font-weight:800; cursor:pointer; }
+.descoberta-rodape { display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid var(--gelo); padding-top:18px; }
+.descoberta-passos { display:flex; gap:16px; color:var(--texto2); font-size:.8rem; }
+.descoberta-passos span { display:flex; align-items:center; gap:6px; }
+.descoberta-passos b { display:grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#edf4ef; color:#246549; font-size:.7rem; }
+.descoberta-painel { animation:descobrir .25s ease-out; }
+@keyframes descobrir { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+@media(max-width:600px) {
+ .pedido-novo { gap:20px; }
+ .descoberta-hero { gap:8px; }
+ .descoberta-stu { width:96px; height:118px; }
+ .descoberta-stu .stu { width:85px; }
+ .descoberta-selo { font-size:.6rem; letter-spacing:.06em; }
+ .descoberta-hero__texto > p:last-child { font-size:.9rem; }
+ .descoberta-modos { gap:8px; }
+ .descoberta-modo { flex-wrap:wrap; padding:12px; gap:8px; }
+ .descoberta-modo__icone { width:32px; height:32px; }
+ .descoberta-modo > span:nth-child(2) { order:3; width:100%; }
+ .descoberta-modo strong { font-size:.9rem; }
+ .descoberta-modo small { font-size:.75rem; }
+ .descoberta-caderno { padding:18px; border-radius:20px; }
+ .descoberta-rodape { flex-direction:column; }
+}
+@media(prefers-reduced-motion:reduce) { .descoberta-stu .stu,.descoberta-painel { animation:none; } .descoberta-modo { transition:none; } }

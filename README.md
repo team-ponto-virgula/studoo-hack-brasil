@@ -34,3 +34,7 @@ Web e Android oferecem login com Google e recuperação de senha por código env
 - Tudo o que se faz na web deve ser replicado no app mobile, adaptado ao celular: veja as [regras do projeto](docs/REGRAS-DO-PROJETO.md).
 
 Esta entrega retoma a ideia do Studoo com a implementação feita após a abertura de 4 de novembro de 2026, às 21h, no horário de Brasília. O histórico Git foi iniciado para esta entrega. O logo, o ícone e o Stu das boas-vindas são novas exportações raster do kit visual existente do Studoo. Na entrada, a marca aparece uma vez, acima do título, com movimento contínuo na web e no app. A preferência de movimento reduzido exibe a marca estática. Nunito e Quicksand são distribuídas com suas licenças SIL Open Font License. [Nunito](https://github.com/google/fonts/tree/main/ofl/nunito) · [Quicksand](https://github.com/google/fonts/tree/main/ofl/quicksand)
+
+## Material, reforço e Ensine ao Stu
+
+Web e app aceitam imagens JPG/PNG/WebP, PDF, DOCX e CSV, oferecem uma ponte de reforço após erros e permitem explicar a lição ao Stu por texto ou voz com revisão da transcrição. Consulte a [spec 05](docs/specs/05-estudio-adaptativo.md) e o [roteiro do hackathon](docs/DEMO-HACKATHON.md). Validação: `npm run test:estudio` (banco local e provedores simulados). Após atualizar, aplique `npm run db:migrate` e gere um novo build nativo para câmera e áudio.

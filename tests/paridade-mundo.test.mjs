@@ -22,7 +22,7 @@ test('os desenhos do mundo são iguais na web e no app', async () => {
   assert.equal(await ler('src/ui/mundo-desenhos.ts'), await ler('apps/mobile/src/mundo-desenhos.ts'));
 });
 test('apresentação, pedido, trilha, aula, geração e acesso usam uma única fonte de textos', () => {
-  for (const chave of ['apresentacao', 'pedido', 'trilha', 'licao', 'geracao', 'preparo', 'retomada', 'acesso', 'erros']) {
+  for (const chave of ['apresentacao', 'pedido', 'trilha', 'licao', 'geracao', 'preparo', 'retomada', 'acesso', 'erros', 'estudio']) {
     assert.equal(web.mensagens[chave], app.mensagens[chave], chave);
   }
   assert.equal(web.mensagens.planos.contagem(1, 5), app.mensagens.planos.progresso(1, 5));

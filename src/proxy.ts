@@ -34,7 +34,7 @@ export function proxy(request: NextRequest) {
   const resposta = NextResponse.next({ request: { headers } });
   resposta.headers.set("Content-Security-Policy", politica);
   resposta.headers.set("Cache-Control", "no-store");
-  resposta.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  resposta.headers.set("Permissions-Policy", "camera=(), microphone=(self), geolocation=()");
   resposta.headers.set("Referrer-Policy", "no-referrer");
   resposta.headers.set("X-Content-Type-Options", "nosniff");
   resposta.headers.set("X-Frame-Options", "DENY");

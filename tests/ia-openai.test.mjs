@@ -135,20 +135,23 @@ async function coletar(geracao, sinal = new AbortController().signal) {
   return eventos;
 }
 
+const MODELO_RACIOCINIO = "gpt-5.6-luna";
+
 test("a estrutura vem por streaming e vira eventos válidos, com índices calculados e sem trecho vazio", async () => {
+  process.env.OPENAI_MODELO = MODELO_RACIOCINIO;
   const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
   for (const evento of eventos) assert.deepEqual(interpretarEventoGeracao(JSON.stringify(evento)), evento);
   assert.deepEqual(eventos.map(({ tipo }) => tipo), ["plano", "fluxo", "licao", "licao", "fluxo", "licao", "licao", "fluxo", "licao", "pronto"]);
   assert.deepEqual(eventos.filter(({ tipo }) => tipo === "licao").map(({ fluxo, licao }) => [fluxo, licao]), [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0]]);
   const pronto = eventos.at(-1);
   assert.equal(pronto.proposta.titulo, "Violão do zero");
-  assert.equal(pronto.proposta.origem, `IA da OpenAI (${MODELO_PADRAO})`);
+  assert.equal(pronto.proposta.origem, `IA da OpenAI (${MODELO_RACIOCINIO})`);
   assert.ok(pronto.proposta.fluxos.flatMap(({ licoes }) => licoes).some(({ titulo }) => titulo.startsWith("Revisão")));
 
   const [pedido] = pedidos;
   assert.equal(pedido.caminho, "/v1/responses");
   assert.equal(pedido.autorizacao, "Bearer chave-de-teste");
-  assert.equal(pedido.dados.model, MODELO_PADRAO);
+  assert.equal(pedido.dados.model, MODELO_RACIOCINIO);
   assert.equal(pedido.dados.stream, true);
   assert.deepEqual(pedido.dados.reasoning, { effort: "low" });
   // Só o objetivo vai para a IA, com as regras de ordem no prompt de sistema.
@@ -192,7 +195,15 @@ test("a lacuna mantém as respostas aceitas e a normalização recusa o que não
   assert.equal(normalizarConteudo({ ...licaoDeEscolha, conceito: "" }, "IA"), null);
 });
 
+test("o modelo padrão não recebe o campo de raciocínio", async () => {
+  const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
+  assert.equal(eventos.at(-1).proposta.origem, `IA da OpenAI (${MODELO_PADRAO})`);
+  assert.equal(pedidos[0].dados.model, MODELO_PADRAO);
+  assert.equal(pedidos[0].dados.reasoning, undefined);
+});
+
 test("sem o campo de raciocínio aceito pelo modelo, o pedido é repetido sem ele", async () => {
+  process.env.OPENAI_MODELO = MODELO_RACIOCINIO;
   modo = "sem-raciocinio";
   const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
   assert.equal(eventos.at(-1).tipo, "pronto");

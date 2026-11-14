@@ -15,8 +15,8 @@ import { instrucoesDeOrdem } from "./ordem";
 
 export const GERADOR_OPENAI = "openai-v1";
 const BASE_PADRAO = "https://api.openai.com/v1";
-/** Modelo padrão: o de menor custo e latência indicado pela OpenAI; troque por OPENAI_MODELO. */
-export const MODELO_PADRAO = "gpt-5.6-luna";
+/** Modelo padrão com suporte a Structured Outputs; troque por OPENAI_MODELO. */
+export const MODELO_PADRAO = "gpt-4.1";
 const TEMPO_ESTRUTURA_MS = 45_000;
 const TEMPO_CONTEUDO_MS = 40_000;
 const TITULO_MAXIMO = 120;

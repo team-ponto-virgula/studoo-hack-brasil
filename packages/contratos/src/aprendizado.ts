@@ -1,3 +1,5 @@
+import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino } from './estudio';
+export * from './estudio';
 export interface Progresso {
   concluidas: number;
   total: number;
@@ -26,7 +28,7 @@ export interface PlanoDetalhe extends PlanoResumo {
     titulo: string;
     progresso: Progresso;
     proximaLicaoId: string | null;
-    licoes: { id: string; titulo: string; concluida: boolean }[];
+    licoes: { id: string; titulo: string; concluida: boolean; ponte?: { concluida: boolean } }[];
   }[];
 }
 
@@ -42,6 +44,7 @@ export type ExercicioPublico = Enunciado & (
 );
 
 export interface LicaoDetalhe {
+  referencias?: ReferenciaMaterial[];
   id: string;
   planoId: string;
   fluxoId: string;
@@ -66,6 +69,7 @@ export interface Conclusao {
 }
 
 const codigosErro = [
+  "material_invalido", "material_ilegivel", "reforco_indisponivel", "limite_estudio", "voz_indisponivel",
   "google_indisponivel",
   "google_invalido",
   "google_conta_existente",
@@ -187,6 +191,15 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
   }
 
   return {
+    enviarMaterial: (arquivo: ArquivoEstudo) => solicitar<MaterialEstudo>('/estudio/materiais', 'POST', arquivo),
+    materialDemo: () => solicitar<MaterialEstudo>('/estudio/materiais/demo', 'POST', {}),
+    excluirMaterial: (id: string) => solicitar<null>(`/estudio/materiais/${encodeURIComponent(id)}`, 'DELETE'),
+    proporMaterial: (id: string, objetivo: string) => solicitar<PropostaPlano>(`/estudio/materiais/${encodeURIComponent(id)}/proposta`, 'POST', { objetivo }),
+    apoioLicao: (id: string) => solicitar<ApoioEstudo>(`/estudio/licoes/${encodeURIComponent(id)}`),
+    criarPonte: (id: string) => solicitar<ApoioEstudo>(`/estudio/licoes/${encodeURIComponent(id)}/ponte`, 'POST', {}),
+    avaliarPonte: (id: string, resposta: string) => solicitar<{ correta: boolean; feedback: string; apoio: ApoioEstudo }>(`/estudio/licoes/${encodeURIComponent(id)}/ponte/avaliar`, 'POST', { resposta }),
+    ensinarStu: (id: string, texto: string) => solicitar<FeedbackEnsino>(`/estudio/licoes/${encodeURIComponent(id)}/ensinar`, 'POST', { texto }),
+    transcrever: (arquivo: ArquivoEstudo) => solicitar<{ texto: string }>('/estudio/voz', 'POST', arquivo),
     login: (email: string, senha: string) => solicitar<Autenticacao>("/login", "POST", { email, senha }),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
     configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean }>("/auth/config"),
