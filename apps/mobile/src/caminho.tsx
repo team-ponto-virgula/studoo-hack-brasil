@@ -985,6 +985,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
   const [pop] = useState(() => new Animated.Value(festa ? 0.5 : 1));
   const pulo = useVaiVem(380, stu);
   const [bolha, setBolha] = useState<string | null>(null);
+  const [toques, setToques] = useState(0);
   useEffect(() => {
     if (!bolha) return;
     const espera = setTimeout(() => setBolha(null), 3000);
@@ -1007,6 +1008,8 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
         <View style={caminhoEstilos.chegadaEstrada} />
+        {/* O mesmo pontilhado da estrada, sem emenda até o troféu. */}
+        {!feita && Array.from({ length: 9 }, (_, indice) => <View key={indice} style={[caminhoEstilos.pontoEstrada, { top: 7 + indice * 14 }]} />)}
         <View style={[caminhoEstilos.chegadaColina, { backgroundColor: relevo }]} />
         <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { left: '50%', marginLeft: -104 }]} />
         <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { right: '50%', marginRight: -104, transform: [{ scaleX: -1 }] }]} />
@@ -1029,8 +1032,9 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
       )}
       <Pressable accessibilityRole="button" accessibilityLabel={mensagens.trilha.trofeu} disabled={total === 0 && !feita}
         onPress={() => {
-          const texto = feita ? mensagens.trilha.trofeuConquistado : mensagens.trilha.faltamTrofeu(faltam);
+          const texto = feita ? mensagens.trilha.trofeuConquistado : mensagens.trilha.trofeuProgresso(total - faltam, total);
           setBolha(texto);
+          setToques((anterior) => anterior + 1);
           AccessibilityInfo.announceForAccessibility(texto);
           if (reduzir === false) {
             pop.setValue(0.6);
@@ -1045,6 +1049,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
           <Icone nome="trofeu" tamanho={Math.round(tamanho * 0.46)} cor={feita ? cores.ouroTexto : cores.textoSecundario} />
         </View>
         {festa && <Confete quantidade={18} />}
+        {bolha && <Confete key={bolha + toques} quantidade={14} />}
       </Animated.View>
       </Pressable>
       <View style={caminhoEstilos.chegadaPlaca}>
@@ -1207,6 +1212,7 @@ const caminhoEstilos = StyleSheet.create({
   parteBarra: { height: 8, overflow: 'hidden', borderRadius: 999, backgroundColor: cores.gelo },
   parteBarraCheia: { height: '100%', borderRadius: 999, backgroundColor: cores.acao },
   chegada: { minHeight: 280, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 36, paddingBottom: 30, overflow: 'hidden' },
+  pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(27, 42, 94, 0.22)' },
   chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 132,
     borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
   chegadaColina: { position: 'absolute', bottom: -48, left: '50%', marginLeft: -200, width: 400, height: 190,
