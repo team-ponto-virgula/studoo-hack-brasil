@@ -823,3 +823,5 @@ button { touch-action: manipulation; }
 .conclusao-numeros__rotulo { padding-inline: 4px; letter-spacing: 0.02em; white-space: nowrap; }
 .painel--concluida .conclusao-liberada { max-width: 24rem; margin-inline: auto; text-align: start; }
 @media (max-width: 767px) { .conclusao-numeros__rotulo { font-size: 0.6875rem; gap: 4px; } }
+.painel--concluida .conclusao-liberada { color: var(--texto); }
+.painel--concluida .conclusao-liberada .icone { color: var(--acao); }

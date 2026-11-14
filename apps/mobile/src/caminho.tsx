@@ -271,15 +271,16 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const x = posicaoX(indice);
           const xSeguinte = seguinte !== undefined || vaiAteVindo ? posicaoX(indice + 1) : 50;
           // Como na web: só a prévia mostra o título ao lado; as outras mostram um título curto embaixo.
-          const comRotulo = no.estado === 'previa';
+          // Como na web: prévia e trilha mostram o título do mesmo jeito, curto, embaixo do nó.
+          const comRotulo = false;
           let depois = 0;
           if (seguinte?.estado === 'atual') depois += medidas.etiqueta;
           if (fimDoTrecho) depois += medidas.marco;
           // Título discreto embaixo dos nós sem rótulo ao lado: um pouco mais de espaço até o próximo.
-          const discreto = no.estado !== 'previa';
+          const discreto = true;
           if (discreto) depois += 14;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
-          if (discreto && seguinte?.estado === 'atual') depois += 26;
+          if (discreto && seguinte?.estado === 'atual') depois += 38;
           if (no.estado === 'atual' && fimDoTrecho) depois += 60;
           if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 24;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
@@ -329,7 +330,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         )}
       </View>
       {comChegada && (
-        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} stu={stuNaChegada} festa={festaNaChegada || (comRecem && tudoFeito)}
+        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total}
+          faltam={nos.filter((no) => no.estado !== 'concluida').length} stu={stuNaChegada} festa={festaNaChegada || (comRecem && tudoFeito)}
           aoMedir={(caixa) => {
           posicoes.current.chegada = caixa;
           tentarAcompanhar();
@@ -965,8 +967,10 @@ function Parte({ numero, resumo }: { numero: number; resumo?: ResumoTrecho }) {
 }
 
 /** Chegada: o topo do caminho, com o troféu numa colina e bandeiras; fica dourada quando todas as lições estão concluídas. */
-function Chegada({ trecho, lente, feita, stu, festa, total, aoMedir }: {
+function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
   trecho: number;
+  /** Lições que faltam: o troféu tocado diz quantas. */
+  faltam: number;
   /** Lições da trilha, para a meta embaixo do troféu. */
   total: number;
   lente: number;
@@ -980,6 +984,12 @@ function Chegada({ trecho, lente, feita, stu, festa, total, aoMedir }: {
   const reduzir = useMovimentoReduzido();
   const [pop] = useState(() => new Animated.Value(festa ? 0.5 : 1));
   const pulo = useVaiVem(380, stu);
+  const [bolha, setBolha] = useState<string | null>(null);
+  useEffect(() => {
+    if (!bolha) return;
+    const espera = setTimeout(() => setBolha(null), 3000);
+    return () => clearTimeout(espera);
+  }, [bolha]);
 
   useEffect(() => {
     if (!festa || reduzir === null) return;
@@ -1017,6 +1027,17 @@ function Chegada({ trecho, lente, feita, stu, festa, total, aoMedir }: {
             ],
           }]} />
       )}
+      <Pressable accessibilityRole="button" accessibilityLabel={mensagens.trilha.trofeu} disabled={total === 0 && !feita}
+        onPress={() => {
+          const texto = feita ? mensagens.trilha.trofeuConquistado : mensagens.trilha.faltamTrofeu(faltam);
+          setBolha(texto);
+          AccessibilityInfo.announceForAccessibility(texto);
+          if (reduzir === false) {
+            pop.setValue(0.6);
+            Animated.spring(pop, { toValue: 1, friction: 4, tension: 120, useNativeDriver: true }).start();
+          }
+        }}>
+      {bolha && <View pointerEvents="none" style={caminhoEstilos.bolhaTrofeu}><Text style={caminhoEstilos.bolhaTrofeuTexto}>{bolha}</Text></View>}
       <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
         style={{ width: tamanho, height: tamanho + 7, transform: [{ scale: pop }] }}>
         <View style={[caminhoEstilos.camada, circulo(tamanho), { top: 8, backgroundColor: feita ? ouroLabio : '#CDD6F2' }]} />
@@ -1025,6 +1046,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, aoMedir }: {
         </View>
         {festa && <Confete quantidade={18} />}
       </Animated.View>
+      </Pressable>
       <View style={caminhoEstilos.chegadaPlaca}>
         <Text style={[caminhoEstilos.chegadaTexto, feita && { color: cores.alerta }]}>
           {feita ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}
@@ -1148,6 +1170,9 @@ const caminhoEstilos = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
   discretoTexto: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, overflow: 'hidden', backgroundColor: 'rgba(255, 255, 255, 0.82)',
     color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
+  bolhaTrofeu: { position: 'absolute', bottom: '100%', left: -80, right: -80, marginBottom: 12, alignItems: 'center', zIndex: 3 },
+  bolhaTrofeuTexto: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE08A',
+    overflow: 'hidden', backgroundColor: '#FFF8E1', color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
   chegadaMeta: { marginTop: -6, paddingHorizontal: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18, textAlign: 'center' },
   estradaInicial: { position: 'absolute', top: -22, width: 24, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: corEstrada },
   brilho: { position: 'absolute', top: -6, right: -2, color: '#FFB703', fontSize: 18, lineHeight: 20 },
@@ -1181,7 +1206,7 @@ const caminhoEstilos = StyleSheet.create({
   parteAndamento: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
   parteBarra: { height: 8, overflow: 'hidden', borderRadius: 999, backgroundColor: cores.gelo },
   parteBarraCheia: { height: '100%', borderRadius: 999, backgroundColor: cores.acao },
-  chegada: { minHeight: 220, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 36, paddingBottom: 30, overflow: 'hidden' },
+  chegada: { minHeight: 280, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 36, paddingBottom: 30, overflow: 'hidden' },
   chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 64,
     borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
   chegadaColina: { position: 'absolute', bottom: -48, left: '50%', marginLeft: -200, width: 400, height: 190,

@@ -818,3 +818,36 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho .caminho-no[data-fim-trecho][data-ligado] { padding-bottom: calc(var(--passo) + 176px); }
 .caminho .caminho-no[data-fim-trecho][data-ligado][data-estado='atual'] { padding-bottom: calc(var(--passo) + 196px); }
 .caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 220px); }
+
+/* Com o balão aberto, o título do nó sai da frente. */
+.caminho-no[data-aberto] .caminho-no__texto { visibility: hidden; }
+/* Mais folga entre o título discreto e o balão "Começar" do nó seguinte. */
+.caminho .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 98px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 232px); }
+/* Troféu tocável: pula e mostra quantas lições faltam. */
+button.caminho-chegada__lente { padding: 0; border: 0; cursor: pointer; }
+button.caminho-chegada__lente:disabled { cursor: default; }
+button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); outline-offset: 6px; }
+.caminho-chegada__lente[data-tocado='a'] { animation: chegada-festa 520ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+.caminho-chegada__lente[data-tocado='b'] { animation: chegada-festa-b 520ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+@keyframes chegada-festa-b { 0% { transform: scale(0.5); } 60% { transform: scale(1.16); } 100% { transform: scale(1); } }
+.caminho-chegada__bolha {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  z-index: 3;
+  padding: 8px 14px;
+  border: 2px solid #ffe08a;
+  border-radius: 14px;
+  color: #7a4a00;
+  background: #fff8e1;
+  box-shadow: 0 4px 0 #ffe08a;
+  font-size: 0.875rem;
+  font-weight: 900;
+  white-space: nowrap;
+  translate: -50% 0;
+  animation: caminho-etiqueta 220ms ease-out backwards, chegada-bolha-sumir 400ms ease-in 2800ms forwards;
+}
+@keyframes chegada-bolha-sumir { to { opacity: 0; visibility: hidden; } }
+/* Espaço acima do troféu para a bolha de "faltam N lições" não ser cortada. */
+.caminho-chegada { min-height: 280px; }

@@ -1522,7 +1522,7 @@ const estudoEstilos = StyleSheet.create({
   acaoNaTela: { alignItems: 'flex-start', marginTop: 8 },
   vazio: { gap: 16, marginTop: 24 },
   liberada: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
-  liberadaTexto: { flex: 1, color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
+  liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   // Lição concluída
   conclusaoTopo: { alignItems: 'center' },
   textoCentro: { textAlign: 'center' },
