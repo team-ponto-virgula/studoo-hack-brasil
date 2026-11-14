@@ -656,9 +656,12 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
     </View>
   );
   const discreto = !comRotulo && (
-    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 168, centro - 80)) }]}>
-      <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta },
-        atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
+    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 192, centro - 92)) }]}>
+      {/* O fundo fica na caixa, não no texto: assim o corte em duas linhas não deixa vazar a terceira. */}
+      <View style={[caminhoEstilos.discretoCaixa, atual && caminhoEstilos.discretoCaixaAtual]}>
+        <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta },
+          atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
+      </View>
     </View>
   );
   const moeda = (pressionado: boolean) => (
@@ -1044,12 +1047,13 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir }: {
       {bolha && <View pointerEvents="none" style={caminhoEstilos.bolhaTrofeu}><Text style={caminhoEstilos.bolhaTrofeuTexto}>{bolha}</Text></View>}
       <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
         style={{ width: tamanho, height: tamanho + 7, transform: [{ scale: pop }] }}>
-        <View style={[caminhoEstilos.camada, circulo(tamanho), { top: 8, backgroundColor: feita ? ouroLabio : '#CDD6F2' }]} />
-        <View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(tamanho), { backgroundColor: feita ? ouroFace : cores.fundo }]}>
-          <Icone nome="trofeu" tamanho={Math.round(tamanho * 0.46)} cor={feita ? cores.ouroTexto : cores.textoSecundario} />
+        <View style={[caminhoEstilos.camada, circulo(tamanho), { top: 8, backgroundColor: feita ? ouroLabio : '#EBCB72' }]} />
+        <View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(tamanho), feita ? { backgroundColor: ouroFace }
+          : { backgroundColor: cores.fundo, borderWidth: 5, borderColor: '#FFE9A8' }]}>
+          <Icone nome="trofeu" tamanho={Math.round(tamanho * 0.46)} cor={feita ? cores.ouroTexto : '#C98A0E'} />
         </View>
         {festa && <Confete quantidade={18} />}
-        {bolha && <Confete key={bolha + toques} quantidade={14} />}
+        {bolha && feita && <Confete key={bolha + toques} quantidade={14} />}
       </Animated.View>
       </Pressable>
       <View style={caminhoEstilos.chegadaPlaca}>
@@ -1137,7 +1141,8 @@ export function SkeletonTrilha() {
 
 const caminhoEstilos = StyleSheet.create({
   caminho: { marginTop: 8 },
-  caminhoTela: { marginHorizontal: -20 },
+  // No celular o mapa termina com cantos arredondados, como na web.
+  caminhoTela: { marginHorizontal: -20, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, overflow: 'hidden' },
   caminhoLargo: { borderRadius: 28, overflow: 'hidden' },
   // Começo do mapa
   inicio: { minHeight: 210, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', paddingHorizontal: 16,
@@ -1169,11 +1174,14 @@ const caminhoEstilos = StyleSheet.create({
   titulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 21 },
   tituloAtual: { fontSize: 17, lineHeight: 22 },
   tituloPrevia: { fontSize: 15, lineHeight: 20 },
-  discreto: { position: 'absolute', width: 160, alignItems: 'center', zIndex: 2 },
-  discretoAtual: { color: cores.acao, fontWeight: '800', fontSize: 14, borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)', backgroundColor: cores.fundo },
+  discreto: { position: 'absolute', width: 184, alignItems: 'center', zIndex: 2 },
+  discretoAtual: { color: cores.acao, fontWeight: '800', fontSize: 14 },
+  discretoCaixa: { maxWidth: 184, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: cores.fundo,
+    shadowColor: '#1B2A5E', shadowOpacity: 0.06, shadowRadius: 0, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+  discretoCaixaAtual: { borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)' },
   seloCadeado: { position: 'absolute', right: -4, bottom: -4, width: 28, height: 28, borderRadius: 14, borderWidth: 3, borderColor: cores.fundo,
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
-  discretoTexto: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, overflow: 'hidden', backgroundColor: cores.fundo,
+  discretoTexto: {
     color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
   bolhaTrofeu: { position: 'absolute', bottom: '100%', left: -80, right: -80, marginBottom: 12, alignItems: 'center', zIndex: 3 },
   bolhaTrofeuTexto: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE08A',

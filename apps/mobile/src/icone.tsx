@@ -13,8 +13,11 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 4.44, top: 6.98, width: 15, height: 7.25, borderLeftWidth: 2.5, borderBottomWidth: 2.5, transform: [{ rotate: '-45deg' }] },
   ],
   livro: [
-    { left: 3.25, top: 3.75, width: 10, height: 15.5, borderWidth: 2.5, borderTopLeftRadius: 2, borderBottomLeftRadius: 2 },
-    { left: 10.75, top: 3.75, width: 10, height: 15.5, borderWidth: 2.5, borderTopRightRadius: 2, borderBottomRightRadius: 2 },
+    // Livro aberto: as duas páginas descem em direção à lombada, como na web.
+    { left: 3.25, top: 4.25, width: 10, height: 14.5, borderWidth: 2.5, borderTopLeftRadius: 2, borderBottomLeftRadius: 2,
+      transform: [{ skewY: '9deg' }] },
+    { left: 10.75, top: 4.25, width: 10, height: 14.5, borderWidth: 2.5, borderTopRightRadius: 2, borderBottomRightRadius: 2,
+      transform: [{ skewY: '-9deg' }] },
   ],
   revisao: [
     { left: 3.25, top: 3.25, width: 17.5, height: 17.5, borderWidth: 2.5, borderRadius: 8.75,
