@@ -749,7 +749,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
   const atual = no.estado === 'atual';
   // Lições à frente: moeda branca com o lábio no tom da região, bem visível sobre o chão claro (como na web).
   const visual = no.estado === 'bloqueada'
-    ? { face: cores.fundo, labio: misturar(coresDaRegiao(no.trecho).relevo, '#1B2A5E', 0.22), icone: cores.tintaNeutra }
+    ? { face: misturar(coresDaRegiao(no.trecho).chao, '#1B2A5E', 0.09), labio: misturar(coresDaRegiao(no.trecho).relevo, '#1B2A5E', 0.26), icone: '#6F7898' }
     : coresDaLente[no.estado];
   const halo = useRef(new Animated.Value(0)).current;
   const respiro = useRef(new Animated.Value(0)).current;
@@ -855,7 +855,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
           {/* Um balão só no nó atual: a ação e o nome da lição juntos, como na web. */}
           <View style={caminhoEstilos.etiqueta}>
             <View style={[caminhoEstilos.etiquetaSeta, { marginLeft: -6 - puxa }]} />
-            <Text style={caminhoEstilos.etiquetaTexto}>{mensagens.trilha.comecar.toLocaleUpperCase('pt-BR')}</Text>
+            <View style={caminhoEstilos.etiquetaAcao}><Text style={caminhoEstilos.etiquetaTexto}>{mensagens.trilha.comecar.toLocaleUpperCase('pt-BR')}</Text></View>
             <Text numberOfLines={2} style={caminhoEstilos.etiquetaTitulo}>{no.titulo}</Text>
           </View>
         </Animated.View>
@@ -1242,11 +1242,12 @@ const caminhoEstilos = StyleSheet.create({
     backgroundColor: cores.faceNeutra },
   anelFoco: { position: 'absolute', borderWidth: 3, borderColor: cores.acao },
   etiquetaCaixa: { position: 'absolute', left: -60, right: -60, alignItems: 'center' },
-  etiqueta: { maxWidth: 210, alignItems: 'center', gap: 2, paddingHorizontal: 14, paddingTop: 7, paddingBottom: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4,
+  etiqueta: { maxWidth: 210, alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingTop: 9, paddingBottom: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4,
     borderColor: cores.gelo, backgroundColor: cores.fundo },
   etiquetaSeta: { position: 'absolute', bottom: -8, left: '50%', marginLeft: -6, width: 12, height: 12, borderRadius: 2,
     borderRightWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
-  etiquetaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.9 },
+  etiquetaAcao: { paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999, borderBottomWidth: 2, borderColor: cores.acaoEscura, backgroundColor: cores.acao },
+  etiquetaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.9 },
   etiquetaTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 19, textAlign: 'center' },
   // Ligação, marco e chegada
   ligacao: { position: 'absolute', left: 0, right: 0, bottom: 0 },

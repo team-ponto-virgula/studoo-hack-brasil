@@ -931,3 +931,11 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 /* O balão puxa para o centro conforme o lado do nó (x de 27 a 73), para não encostar na borda; a seta segue no nó. */
 .caminho-no__etiqueta { --puxa: calc((50 - var(--x)) * 1.7px); translate: calc(-50% + var(--puxa)) 0; }
 .caminho-no__etiqueta::after { left: calc(50% - var(--puxa)); }
+
+/* Lições à frente num tom um pouco mais escuro que o chão: visíveis, mas claramente inativas (nem brancas nem apagadas). */
+.caminho-no[data-estado='bloqueada'] .caminho-no__lente {
+  --face: color-mix(in srgb, var(--chao), #1b2a5e 9%); --labio: color-mix(in srgb, var(--relevo), #1b2a5e 26%); --tinta: #6f7898;
+}
+/* "Começar" com cara de botão: pílula azul no alto do balão. */
+.caminho-no__etiqueta { gap: 6px; padding-top: 10px; }
+.caminho-no__etiqueta-acao { padding: 3px 12px; border-radius: 999px; color: var(--fundo); background: var(--acao); box-shadow: 0 2px 0 #2a44a8; }
