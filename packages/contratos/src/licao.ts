@@ -93,6 +93,43 @@ export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string
   }
 }
 
+/** Embaralha uma lista sempre do mesmo jeito para a mesma semente (mulberry32): cada visita à lição tem a sua ordem. */
+export function embaralharComSemente<T>(lista: readonly T[], semente: number): T[] {
+  let estado = semente >>> 0;
+  const aleatorio = () => {
+    estado = (estado + 0x6d2b79f5) >>> 0;
+    let valor = estado;
+    valor = Math.imul(valor ^ (valor >>> 15), valor | 1);
+    valor ^= valor + Math.imul(valor ^ (valor >>> 7), valor | 61);
+    return ((valor ^ (valor >>> 14)) >>> 0) / 4294967296;
+  };
+  const copia = [...lista];
+  for (let indice = copia.length - 1; indice > 0; indice -= 1) {
+    const outro = Math.floor(aleatorio() * (indice + 1));
+    [copia[indice], copia[outro]] = [copia[outro], copia[indice]];
+  }
+  return copia;
+}
+
+/**
+ * O exercício com as opções numa ordem nova (as da escolha, os porquês, a coluna da direita e os itens de ordenar), para
+ * a resposta certa não ficar sempre no mesmo lugar nem dar para decorar a posição ao refazer. As respostas são por id.
+ */
+export function embaralharExercicio(exercicio: ExercicioPublico, semente: number): ExercicioPublico {
+  switch (exercicio.tipo) {
+    case 'multipla_escolha':
+      return { ...exercicio, opcoes: embaralharComSemente(exercicio.opcoes, semente) };
+    case 'verdadeiro_falso':
+      return { ...exercicio, justificativas: embaralharComSemente(exercicio.justificativas, semente) };
+    case 'associar':
+      return { ...exercicio, direita: embaralharComSemente(exercicio.direita, semente) };
+    case 'ordenar':
+      return { ...exercicio, itens: embaralharComSemente(exercicio.itens, semente) };
+    default:
+      return exercicio;
+  }
+}
+
 /** Por que vale rever uma lição concluída: muitos erros antes do acerto, a prática que ainda não saiu, ou os dois. */
 export type MotivoRever = 'erros' | 'pratica' | 'erros_e_pratica';
 
@@ -195,13 +232,9 @@ export function respostaParaTentarDeNovo(exercicio: ExercicioPublico, resposta: 
       return `${certos.has('valor') ? valor : ''}:${certos.has('justificativa') ? justificativa : ''}`.replace(/^:$/, '');
     }
     case 'ordenar': {
-      const ids = resposta.split(',').filter(Boolean);
-      const comeco: string[] = [];
-      for (const id of ids) {
-        if (!certos.has(id)) break;
-        comeco.push(id);
-      }
-      return comeco.join(',');
+      // Cada item que estava na posição certa fica onde estava; as outras posições ficam vagas (",,") para a nova tentativa.
+      const ids = resposta.split(',');
+      return ids.some((id) => certos.has(id)) ? ids.map((id) => (certos.has(id) ? id : '')).join(',') : '';
     }
     default:
       return '';

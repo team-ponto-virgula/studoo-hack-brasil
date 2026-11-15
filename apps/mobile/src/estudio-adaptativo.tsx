@@ -269,6 +269,7 @@ export function ApoioDaLicao({
   pedidoPonte = 0,
   ultimo = true,
   aoMostrarEnsino,
+  aoConcluirPonte,
 }: {
   cliente: ClienteEstudio;
   licao: LicaoDetalhe;
@@ -279,6 +280,8 @@ export function ApoioDaLicao({
   ultimo?: boolean;
   /** O retorno do "Ensine ao Stu" chegou: onde ele começa, a partir do topo do apoio (a lição rola até lá). */
   aoMostrarEnsino?: (y: number) => void;
+  /** A pessoa acertou a pergunta do reforço: a lição troca o "Quase lá!" do painel. Como na web. */
+  aoConcluirPonte?: () => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // Como na web: o retorno do "Ensine ao Stu" é o desta visita.
@@ -424,6 +427,12 @@ export function ApoioDaLicao({
       }
     });
   }
+  const ponteConcluida = apoio?.ponte?.concluida === true;
+  useEffect(() => {
+    if (ponteConcluida && pedidoPonte > 0) aoConcluirPonte?.();
+    // Só a conclusão do reforço dispara.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ponteConcluida]);
   const ponte = apoio?.ponte;
   // "Ver outro exemplo" no painel de retorno: um toque já pede o reforço, se ainda não existe (durante uma gravação, espera
   // ela acabar). Como na web.

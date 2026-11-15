@@ -907,13 +907,13 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
           {textoParaRever(resumo)}
         </p>
       )}
+      {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo (no fim, ficavam atrás dos botões fixos). */}
+      {licao.falas && licao.falas.length > 0 && <FrasesDaLicao falas={licao.falas} />}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}
       <div className="conclusao-progresso">
         <h2>{mensagens.planos.progressoPlano}</h2>
         <BarraProgresso progresso={plano.progresso} de={antes} comPercentual />
       </div>
-      {/* Lição de idioma: as frases que a pessoa aprendeu, para ouvir mais uma vez antes de seguir. */}
-      {licao.falas && licao.falas.length > 0 && <FrasesDaLicao falas={licao.falas} />}
       <div className="acoes-tela">
         <AcaoPrincipal>
           {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}

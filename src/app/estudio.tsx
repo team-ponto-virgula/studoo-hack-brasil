@@ -208,6 +208,7 @@ export function ApoioDaLicao({
   avaliacao,
   pedidoPonte = 0,
   ultimo = true,
+  aoConcluirPonte,
 }: {
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
@@ -215,6 +216,8 @@ export function ApoioDaLicao({
   pedidoPonte?: number;
   /** Último exercício da lição: só nele aparece o "Ensine ao Stu", quando a pessoa já viu a lição toda. */
   ultimo?: boolean;
+  /** A pessoa acertou a pergunta do reforço: a lição troca o "Quase lá!" do painel pelo convite a tentar de novo. */
+  aoConcluirPonte?: () => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
@@ -357,6 +360,12 @@ export function ApoioDaLicao({
   // ... e leva ao alto do cartão, acima do painel de retorno. Rola de novo quando o reforço chega: antes, a página ainda
   // é curta e a rolagem para no meio do caminho.
   const pontePronta = Boolean(ponte);
+  const ponteConcluida = ponte?.concluida === true;
+  useEffect(() => {
+    if (ponteConcluida && pedidoPonte > 0) aoConcluirPonte?.();
+    // Só a conclusão do reforço dispara.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ponteConcluida]);
   useEffect(() => {
     if (pedidoPonte === 0) return;
     const quadro = window.requestAnimationFrame(() => {

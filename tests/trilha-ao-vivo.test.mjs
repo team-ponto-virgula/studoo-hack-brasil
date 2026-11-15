@@ -326,6 +326,13 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
     const { rows } = await banco.query(
       'SELECT "pratica", "segundos", "acertosDePrimeira", "exercicios" FROM "RegistroEstudo" WHERE "usuarioId" = $1 AND "licaoId" = $2', [contas[0].id, segunda.id]);
     assert.deepEqual(rows[0], { pratica: "ainda_nao", segundos: 125, acertosDePrimeira: 0, exercicios: 2 });
+    // Refez a lição sem erro e a prática saiu: fica a vez mais recente, e o mapa deixa de marcar a lição.
+    const nova = await (await enviar(`/licoes/${segunda.id}/avaliar`, { resposta: acorde.exercicio.opcoes[0].id })).json();
+    const refeita = await (await enviar(`/licoes/${segunda.id}/concluir`, {
+      comprovante: nova.comprovante, pratica: "consegui", resumo: { segundos: 90, acertosDePrimeira: 2, exercicios: 2 },
+    })).json();
+    assert.equal(refeita.plano.fluxos[0].licoes.find(({ id }) => id === segunda.id).rever, undefined);
+    assert.deepEqual(refeita.plano.estatisticas, { segundos: 90, acertosDePrimeira: 2, exercicios: 2 });
   });
 
   await t.test("a rota de proposta de uma vez também aceita objetivo livre", async () => {
