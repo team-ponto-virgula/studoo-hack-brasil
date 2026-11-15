@@ -295,10 +295,9 @@
   .aula-rodape__acoes > .botao { min-height: 48px; }
 }
 
-/* "Mais abaixo": um aviso pequeno logo acima do painel, quando há conteúdo atrás dele. */
-.aula-mais-abaixo { position: absolute; top: -44px; right: 16px; display: inline-flex; align-items: center; gap: 4px; min-height: 34px;
-  padding: 6px 12px; border: 2px solid var(--gelo); border-radius: 999px; background: var(--fundo); color: var(--acao);
-  font: inherit; font-size: 0.875rem; font-weight: 800; box-shadow: 0 3px 0 var(--gelo); cursor: pointer; }
+/* "Mais abaixo": a primeira linha do rodapé quando há conteúdo atrás dele (não cobre nada do exercício). */
+.aula-mais-abaixo { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; min-height: 30px; margin: -6px 0 6px;
+  padding: 2px 8px; border: 0; background: none; color: var(--acao); font: inherit; font-size: 0.875rem; font-weight: 800; cursor: pointer; }
 .aula-mais-abaixo .icone { width: 16px; height: 16px; transform: rotate(90deg); }
 
 @media (max-width: 767px) {
@@ -549,7 +548,8 @@
 .acorde__solta { fill: var(--sucesso); font: 900 16px system-ui, sans-serif; }
 .acorde__base { fill: var(--texto2); font: 800 13px system-ui, sans-serif; }
 /* O número de cada corda (embaixo) e de cada casa (à direita): não é preciso contar as linhas. */
-.acorde__rotulo { fill: var(--texto2); font: 700 11px system-ui, sans-serif; }
+.acorde__rotulo { fill: var(--texto2); font: 800 15px system-ui, sans-serif; }
+.acorde__legenda-eixo { fill: var(--texto2); font: 700 12px system-ui, sans-serif; letter-spacing: 0.02em; }
 
 /* Foto do material. */
 .recurso-imagem { display: grid; gap: 8px; margin: 0; }
@@ -836,7 +836,7 @@
   text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
 }
 .aula-aviso__acao:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 6px; }
-.ouvir__aviso { flex-basis: 100%; margin: 4px 0 0; color: var(--alerta); font-size: 0.875rem; font-weight: 800; }
+.ouvir__aviso { flex-basis: 100%; order: 10; margin: 4px 0 0; color: var(--alerta); font-size: 0.875rem; font-weight: 800; }
 
 /* Troca de acorde: os dois diagramas lado a lado, com a seta entre eles. */
 .acorde[data-comparacao] { grid-template-columns: minmax(0, 1fr); justify-items: center; }

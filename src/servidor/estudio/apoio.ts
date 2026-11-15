@@ -84,7 +84,7 @@ function palavrasDoConceito(conceito: string, explicacao: string, titulo = ''): 
   const comparavel = (palavra: string) => palavra.normalize('NFD').replace(/\p{M}+/gu, '').toLocaleLowerCase('pt-BR');
   const usadas = new Set((explicacao.match(/\p{L}+/gu) ?? []).map(comparavel));
   const vistas = new Set((titulo.match(/\p{L}+/gu) ?? []).map(comparavel));
-  return (conceito.match(/\p{L}{5,}/gu) ?? []).filter((palavra) => {
+  return (conceito.replace(/“[^”]*”/g, ' ').match(/\p{L}{5,}/gu) ?? []).filter((palavra) => {
     const chave = comparavel(palavra);
     if (PALAVRAS_COMUNS.has(chave) || vistas.has(chave) || !usadas.has(chave)) return false;
     vistas.add(chave);
@@ -244,7 +244,8 @@ export async function ensinarStu(
         ...(trouxe.length > 0
           ? [`Você falou de ${lista(trouxe)}, ${trouxe.length === 1 ? 'uma ideia-chave' : 'ideias-chave'} desta lição.`]
           : []),
-        ...(doConceito.length > 0 ? [`Você usou ideias da explicação da lição, como ${lista(doConceito.slice(0, 3))}.`] : []),
+        // As palavras da explicação só entram quando nenhuma ideia-chave apareceu (senão, a lista soava mecânica).
+        ...(trouxe.length === 0 && doConceito.length > 0 ? [`Você usou ideias da explicação da lição, como ${lista(doConceito.slice(0, 3))}.`] : []),
         ...(trouxe.length === 0 && doConceito.length === 0 ? ['Você explicou com as suas palavras.'] : []),
         ...(comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
       ],
@@ -265,6 +266,8 @@ export async function ensinarStu(
         ? 'Reescreva a frase com a correção acima e leia em voz alta: é assim que a forma certa fica.'
         : faltou.length > 0 && !cobriu
         ? `Releia a explicação do Stu procurando “${faltou[0]}” e reescreva a sua com essa ideia, em uma frase.`
+        : faltou.length > 0
+        ? `Amanhã, tente explicar de novo sem olhar, incluindo “${faltou[0]}”.`
         : 'Sua explicação já cobre as ideias da lição. Amanhã, tente explicar de novo sem olhar: é assim que a ideia fica.',
       simulado: true,
     };
