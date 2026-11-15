@@ -18,6 +18,11 @@ export type ExercicioInterno = ExercicioPublico & {
   criterios?: string[];
   /** Resposta aberta: um exemplo de boa resposta, mostrado depois da correção. */
   modelo?: string;
+  /**
+   * Resposta aberta: os critérios (pelo índice do gabarito) sem os quais a resposta não passa, mesmo com os outros: o ponto
+   * da lição (“I'd like”, e não “I like”).
+   */
+  essenciais?: number[];
   /** Lacuna: a grafia é o que se ensina (palavra de outro idioma, ortografia). Sem tolerância a deslize de digitação. */
   exata?: boolean;
 };
@@ -187,7 +192,9 @@ function exercicioValido(valor: unknown): valor is ExercicioInterno {
     case "aberta":
       return inteiroEntre(valor.minimo, 10, 400) && gabarito.length <= 6 && gruposDoGabarito(gabarito).every((grupo) => grupo.length > 0) &&
         opcional(valor.criterios, (criterios) => Array.isArray(criterios) && criterios.length === gabarito.length && criterios.every((item) => textoAte(item, 200))) &&
-        opcional(valor.modelo, (modelo) => textoAte(modelo, 1200));
+        opcional(valor.modelo, (modelo) => textoAte(modelo, 1200)) &&
+        opcional(valor.essenciais, (essenciais) => Array.isArray(essenciais) && essenciais.length <= gabarito.length &&
+          essenciais.every((indice) => inteiroEntre(indice, 0, gabarito.length - 1)));
     default:
       return false;
   }
@@ -367,7 +374,8 @@ function conferirLacuna(gabarito: readonly string[], resposta: string, exata = f
   for (const esperado of exata ? gabarito : []) {
     const alvo = normalizarResposta(esperado).replace(ARTIGO, "");
     if (alvo.length < 4 || !/^[\p{L} ]+$/u.test(alvo)) continue;
-    if (distancia(semArtigo, alvo, 1) <= 1) return { correta: false, observacao: "Quase! Confira a grafia: falta ou sobra uma letra." };
+    const perto = alvo.length >= 6 ? 2 : 1;
+    if (distancia(semArtigo, alvo, perto) <= perto) return { correta: false, observacao: "Quase! Confira a grafia: a palavra está quase certa." };
   }
   return { correta: false };
 }
@@ -440,7 +448,8 @@ function conferirAberta(exercicio: Extract<ExercicioInterno, { tipo: "aberta" }>
   const palavras = palavrasDe(resposta);
   const atendidos = gruposDoGabarito(exercicio.gabarito).map((grupo) => grupo.some((termo) => temTermo(palavras, termo)));
   const total = atendidos.filter(Boolean).length;
-  const correta = total >= Math.ceil(atendidos.length * 0.6);
+  // Passa com 60% das ideias, desde que as essenciais (o ponto da lição) estejam lá.
+  const correta = total >= Math.ceil(atendidos.length * 0.6) && (exercicio.essenciais ?? []).every((indice) => atendidos[indice]);
   const criterios = atendidos.map((atendido, indice) => ({
     texto: exercicio.criterios?.[indice] ?? exercicio.gabarito[indice].split("|")[0],
     atendido,
@@ -603,6 +612,8 @@ export function termosDaLicao(conteudo: ConteudoLicao): string[] {
         termos.push(exercicio.gabarito[0]);
         break;
       case "multipla_escolha": {
+        // Na escuta, as opções são traduções (“A conta”): não são as ideias da lição.
+        if (exercicio.fala) break;
         const certa = exercicio.opcoes.find(({ id }) => id === exercicio.gabarito[0])?.texto ?? "";
         if (certa.split(/\s+/).length <= 4) termos.push(certa);
         break;

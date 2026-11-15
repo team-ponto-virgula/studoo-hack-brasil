@@ -80,12 +80,16 @@ export function pararVoz() {
  * Toca o acorde: o WAV sintetizado (o mesmo da web) vai para um arquivo temporário e toca com o expo-audio. Na prévia
  * web do app, toca direto como Blob.
  */
-async function tocarSom(som: 'acorde' | 'batida', casas: number[]) {
+/** O som que está tocando: dá para parar e saber em que segundo ele está (para o guia da batida). */
+type SomTocando = { parar: () => void; tempo: () => number };
+
+async function tocarSom(som: 'acorde' | 'batida', casas: number[]): Promise<SomTocando> {
   const bytes = som === 'acorde' ? sintetizarAcorde(casas) : sintetizarBatida(casas);
   if (Platform.OS === 'web') {
-    const Reprodutor = (globalThis as unknown as { Audio: new (url: string) => { play: () => Promise<void> } }).Audio;
-    await new Reprodutor(URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'audio/wav' }))).play();
-    return;
+    const Reprodutor = (globalThis as unknown as { Audio: new (url: string) => { play: () => Promise<void>; pause: () => void; currentTime: number } }).Audio;
+    const audio = new Reprodutor(URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'audio/wav' })));
+    await audio.play();
+    return { parar: () => audio.pause(), tempo: () => audio.currentTime };
   }
   const arquivo = new File(Paths.cache, `${som}-${casas.map((casa) => casa + 1).join('')}.wav`);
   if (!arquivo.exists) {
@@ -95,7 +99,15 @@ async function tocarSom(som: 'acorde' | 'batida', casas: number[]) {
   await setAudioModeAsync({ playsInSilentMode: true }).catch(() => undefined);
   const reprodutor = createAudioPlayer({ uri: arquivo.uri });
   reprodutor.play();
-  setTimeout(() => reprodutor.remove(), som === 'acorde' ? 4000 : 10_000);
+  const liberar = setTimeout(() => reprodutor.remove(), som === 'acorde' ? 4000 : 10_000);
+  return {
+    parar: () => {
+      clearTimeout(liberar);
+      reprodutor.pause();
+      reprodutor.remove();
+    },
+    tempo: () => reprodutor.currentTime,
+  };
 }
 
 /** Chip de ação pequeno, com relevo: ouvir, devagar, mostrar o texto. */
@@ -190,17 +202,30 @@ function FalarNoNavegador({ fala }: { fala: Fala }) {
   const [resultado, setResultado] = useState<Conferido>(null);
   const [erro, setErro] = useState<string | null>(null);
   const reconhecimento = useRef<Reconhecimento | null>(null);
-  useEffect(() => () => reconhecimento.current?.abort(), []);
+  const prazo = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const recebeu = useRef(false);
+  useEffect(() => () => {
+    reconhecimento.current?.abort();
+    clearTimeout(prazo.current);
+  }, []);
   const Classe = classeDoReconhecimento();
   if (!Classe) return null;
+  /** Termina a escuta; sem nada ouvido, avisa (como na web). */
+  function encerrar() {
+    clearTimeout(prazo.current);
+    setOuvindo(false);
+    if (!recebeu.current) setErro((atual) => atual ?? t.audio.naoOuviu);
+  }
   function ouvir() {
     if (!Classe) return;
+    recebeu.current = false;
     const novo = new Classe();
     novo.lang = fala.idioma;
     novo.interimResults = false;
     novo.maxAlternatives = 3;
     novo.continuous = false;
     novo.onresult = (evento) => {
+      recebeu.current = true;
       const melhor = Array.from(evento.results[0] ?? [], ({ transcript }) => transcript.trim()).filter(Boolean)
         .map((dito) => ({ dito, conferencia: conferirFala(fala.texto, dito, fala.idioma) }))
         .sort((a, b) => b.conferencia.acertos - a.conferencia.acertos)[0];
@@ -208,22 +233,30 @@ function FalarNoNavegador({ fala }: { fala: Fala }) {
       else setErro(t.audio.naoOuviu);
     };
     novo.onerror = (evento) => setErro(evento.error === 'not-allowed' ? t.audio.semMicrofone : t.audio.naoOuviu);
-    novo.onend = () => setOuvindo(false);
+    novo.onend = encerrar;
     reconhecimento.current = novo;
     setErro(null);
     setResultado(null);
     setOuvindo(true);
+    prazo.current = setTimeout(() => {
+      novo.abort();
+      encerrar();
+    }, 8000);
     try {
       novo.start();
     } catch {
-      setOuvindo(false);
-      setErro(t.audio.naoOuviu);
+      encerrar();
     }
+  }
+  function parar() {
+    reconhecimento.current?.stop();
+    clearTimeout(prazo.current);
+    prazo.current = setTimeout(encerrar, 1500);
   }
   return (
     <>
       <Chip rotulo={ouvindo ? t.audio.ouvindo : t.audio.falar} nomeAcessivel={t.audio.falarFrase(fala.texto)}
-        acao={() => (ouvindo ? reconhecimento.current?.stop() : ouvir())} />
+        acao={() => (ouvindo ? parar() : ouvir())} />
       <ResultadoDaFala resultado={resultado} erro={erro} />
     </>
   );
@@ -459,18 +492,52 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
   type Som = 'acorde' | 'batida' | 'anterior';
   const [tocando, setTocando] = useState<Som | null>(null);
   const [semSom, setSemSom] = useState(false);
+  /** Na batida, qual dos oito tempos do compasso (1, e, 2, e…) está soando agora. Como na web. */
+  const [tempoAtual, setTempoAtual] = useState<number | null>(null);
+  const controle = useRef<SomTocando | null>(null);
+  const fim = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const acompanhar = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const { anterior } = recurso;
 
+  function limpar() {
+    clearTimeout(fim.current);
+    clearInterval(acompanhar.current);
+    setTocando(null);
+    setTempoAtual(null);
+  }
+  function parar() {
+    controle.current?.parar();
+    controle.current = null;
+    limpar();
+  }
+  useEffect(() => () => {
+    controle.current?.parar();
+    clearTimeout(fim.current);
+    clearInterval(acompanhar.current);
+  }, []);
+
   function tocar(som: Som) {
+    parar();
     setTocando(som);
     setSemSom(false);
     const casas = som === 'anterior' && anterior ? anterior.casas : recurso.casas;
     tocarSom(som === 'batida' ? 'batida' : 'acorde', casas)
+      .then((tocandoAgora) => {
+        controle.current = tocandoAgora;
+        fim.current = setTimeout(limpar, som === 'batida' ? 8000 : 2600);
+        // A batida tem uma colcheia a cada 30/72 s: o guia destaca a que soa.
+        if (som === 'batida') {
+          acompanhar.current = setInterval(() => {
+            const indice = Math.floor(tocandoAgora.tempo() / (30 / 72));
+            setTempoAtual(indice < 16 ? indice % 8 : null);
+          }, 80);
+        }
+      })
       .catch(() => {
+        limpar();
         setSemSom(true);
         AccessibilityInfo.announceForAccessibility(t.recursos.semSom);
-      })
-      .finally(() => setTimeout(() => setTocando(null), som === 'batida' ? 8000 : 2600));
+      });
   }
 
   return (
@@ -500,6 +567,20 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
         {recurso.batida && (
           <Botao rotulo={tocando === 'batida' ? t.recursos.tocando : t.recursos.ouvirBatida} variante="secundario" compacto
             desativado={tocando !== null} acao={() => tocar('batida')} />
+        )}
+        {tocando && <Botao rotulo={t.audio.pararSom} variante="texto" compacto acao={parar} />}
+        {recurso.batida && (
+          <>
+            <View style={formatos.batida} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              {['1', 'e', '2', 'e', '3', 'e', '4', 'e'].map((rotulo, indice) => (
+                <View key={indice} style={[formatos.batidaTempo, indice % 2 === 1 && formatos.batidaSobe, tempoAtual === indice && formatos.batidaAtiva]}>
+                  <Text style={[formatos.batidaTexto, tempoAtual === indice && { color: cores.fundo }]}>{indice % 2 ? '↑' : '↓'}</Text>
+                  <Text style={[formatos.batidaTexto, tempoAtual === indice && { color: cores.fundo }]}>{rotulo}</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={estilos.legenda}>{t.audio.batidaGuia}</Text>
+          </>
         )}
         {semSom && <Text style={[estilos.legenda, { color: cores.alerta, fontWeight: '700' }]}>{t.recursos.semSom}</Text>}
       </View>
@@ -893,6 +974,11 @@ const formatos = StyleSheet.create({
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   acordeDesenho: { width: 176, height: 182 },
+  batida: { flexDirection: 'row', gap: 4, width: '100%' },
+  batidaTempo: { flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 10, backgroundColor: '#EEF2FF' },
+  batidaSobe: { backgroundColor: '#F6F7FB' },
+  batidaAtiva: { backgroundColor: cores.acao, transform: [{ translateY: -2 }] },
+  batidaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 18 },
   falaResultado: { flexBasis: '100%', marginTop: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, overflow: 'hidden',
     fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
   falaOtima: { backgroundColor: '#EEFAF3', color: cores.sucesso },

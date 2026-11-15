@@ -26,8 +26,10 @@ import {
   ensinarStu,
 } from '../src/servidor/estudio/apoio.ts';
 import { transcrever } from '../src/servidor/estudio/voz.ts';
+import { DEMOS } from '../src/servidor/ia/demos.ts';
 import {
   aceitarProposta,
+  gerarProposta,
   buscarLicao,
   buscarPlano,
   avaliarLicao,
@@ -147,6 +149,24 @@ test('material → proposta → lição → reforço → explicação; progresso
   licao = await buscarLicao(u, id);
   assert.equal(licao.referencias[0].pagina, 1);
 });
+test('o reforço é do último erro: errar outro exercício pede outro reforço, e o mesmo erro reaproveita', async () => {
+  const u = await pessoa();
+  const plano = await aceitarProposta(u, (await gerarProposta(u, 'Quero aprender violão do zero')).token);
+  const id = plano.fluxos[0].licoes[0].id;
+  // Lição 1 do violão: ligar as partes (exercício 0) e a lacuna da tarraxa (exercício 1).
+  const pares = DEMOS.find(({ chave }) => chave === 'violao').plano.fluxos[0].licoes[0].exercicio.gabarito.map((par) => par.split('='));
+  const ligacaoErrada = pares.map(([esquerda], posicao) => `${esquerda}=${pares[(posicao + 1) % pares.length][1]}`).join(',');
+  assert.equal((await avaliarLicao(u, id, ligacaoErrada, 0)).correta, false);
+  const primeiro = await criarPonte(u, id);
+  assert.match(primeiro.ponte.motivo, /^Você ligou/);
+  assert.equal((await avaliarPonte(u, id, primeiro.ponte.exercicio.opcoes[0].id)).correta !== undefined, true);
+  assert.equal((await avaliarLicao(u, id, 'zzzz', 1)).correta, false);
+  const segundo = await criarPonte(u, id);
+  assert.match(segundo.ponte.motivo, /^Você escreveu “zzzz”/, 'o reforço novo é do exercício que acabou de errar');
+  assert.equal(segundo.ponte.concluida, false);
+  assert.deepEqual(await criarPonte(u, id), segundo, 'o mesmo erro reaproveita o reforço');
+});
+
 test('material expirado não gera proposta', async () => {
   const u = await pessoa();
   const m = await criarMaterial(u, null, true);

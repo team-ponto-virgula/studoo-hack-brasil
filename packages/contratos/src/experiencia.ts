@@ -13,8 +13,8 @@ export const mensagens = {
       pagina: (n: number) => `Página ${n}`, simulado: 'Modo demonstração', origem: 'De onde veio esta ideia',
       verPonte: 'Ver outro exemplo', ponte: 'Outro jeito de entender', construir: 'Mostrar outro exemplo', ponteDica: 'Vamos explorar a mesma ideia por outro caminho, com um exemplo e um desafio novos.',
       pontePronta: 'Entendi!', ponteVoltar: 'Agora tente o exercício original novamente.', ponteMapa: 'Reforço', ponteMapaFeita: 'Reforço feito',
-      retornoAutomatico: 'Retorno automático',
-      verificar: 'Conferir este exemplo', ensinar: 'Ensine ao Stu', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo (o Stu é o mascote do Studoo). Dê um exemplo seu: ele aponta o que faz sentido e propõe uma situação nova.',
+      retornoAutomatico: 'Dica do Stu',
+      verificar: 'Conferir este exemplo', ensinar: 'Ensine ao Stu (opcional)', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo (o Stu é o mascote do Studoo). Dê um exemplo seu: ele aponta o que faz sentido e propõe uma situação nova.',
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
       vozDica: 'Até 60 segundos. Sua voz vira texto para o Stu entender, e você confere antes de enviar.',
@@ -158,6 +158,10 @@ export const mensagens = {
         nomeNoAtual: (titulo: string, posicao: string) => `Começar: ${titulo}. ${posicao}, atual.`,
         fechar: 'Fechar',
         concluidaTexto: 'Você concluiu esta lição. Refazer não muda seu progresso.',
+        concluidaComReforco: 'Você concluiu esta lição e fez um reforço nela (outro exemplo e uma pergunta mais simples). Refazer não muda seu progresso e ajuda a fixar.',
+        continuarNo: 'Continuar',
+        continuarLicao: 'Continuar lição',
+        nomeNoContinuar: (titulo: string, posicao: string) => `Continuar: ${titulo}. ${posicao}, em andamento.`,
         refazer: 'Refazer lição',
         irParaAtual: 'Ir para a próxima lição',
         bloqueadaUma: (anterior: string) => `Conclua “${anterior}” para liberar esta lição.`,
@@ -319,10 +323,10 @@ export const mensagens = {
         comemoracao: 'Mais um passo na sua trilha.',
         trilhaConcluida: 'Trilha concluída!',
         revisarErros: (semAcerto: number) =>
-            `Você seguiu sem acertar ${semAcerto === 1 ? '1 exercício' : `${semAcerto} exercícios`}. Vale rever esta lição amanhã: rever fixa o que você aprendeu.`,
+            `Você seguiu sem acertar ${semAcerto === 1 ? '1 exercício' : `${semAcerto} exercícios`}. Vale rever esta lição amanhã: no mapa, toque nela e escolha Refazer lição.`,
         revisarTentativas: (comErro: number) =>
-            `Você errou ${comErro === 1 ? '1 exercício' : `${comErro} exercícios`} antes de acertar. Vale rever esta lição amanhã: rever fixa o que você aprendeu.`,
-        revisarPratica: 'A prática ainda não saiu? Vale rever esta lição amanhã e tentar de novo, com calma.',
+            `Você errou ${comErro === 1 ? '1 exercício' : `${comErro} exercícios`} antes de acertar. Vale rever esta lição amanhã: no mapa, toque nela e escolha Refazer lição.`,
+        revisarPratica: 'A prática ainda não saiu? Amanhã, no mapa, toque nesta lição, escolha Refazer lição e tente de novo, com calma.',
         trilhaResumo: (licoes: number, partes: number, estatisticas?: { segundos: number; acertosDePrimeira: number; exercicios: number }) => {
             const base = `Você concluiu ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}`;
             if (!estatisticas) return `${base}.`;
@@ -381,6 +385,8 @@ export const mensagens = {
             falaTente: (palavras: string) => `Tente de novo, mais devagar. Faltou: ${palavras}.`,
             semMicrofone: 'Não deu para usar o microfone. Confira a permissão e tente de novo.',
             naoOuviu: 'Não deu para ouvir. Tente de novo, perto do microfone.',
+            pararSom: 'Parar',
+            batidaGuia: 'Conte junto: no número a mão desce (↓), no “e” ela sobe (↑).',
             falaPrecisaIa: 'A conferência da fala no app precisa da IA ligada. Na web, ela funciona com o reconhecimento de voz do navegador.',
             traducao: 'Tradução'
         },

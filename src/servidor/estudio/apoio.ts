@@ -10,7 +10,6 @@ import {
   type ConteudoLicao,
 } from '@/dominio/aprendizado/plano';
 import { banco } from '../banco/cliente';
-import { Prisma } from '../banco/gerado/client';
 import { FalhaApi } from '../acesso/http';
 import { buscarLicao, conteudoDaLicao } from '../aprendizado/servico';
 import { exercicioDaResposta, reforcoDoExercicio } from '@/dominio/aprendizado/reforco';
@@ -26,7 +25,8 @@ import {
   texto,
 } from './ia';
 
-type Reforco = ConteudoLicao & { motivo: string; simulado: boolean };
+/** O reforço guardado: `resposta` é o erro de onde ele veio (um erro novo, em outro exercício, pede outro reforço). */
+type Reforco = ConteudoLicao & { motivo: string; simulado: boolean; resposta?: string | null };
 export async function buscarApoio(
   usuarioId: string,
   licaoId: string,
@@ -127,7 +127,8 @@ async function gerarPonte(
     where: { usuarioId_licaoId: { usuarioId, licaoId } },
   });
   if (!apoio || apoio.erros < 1) throw new FalhaApi('reforco_indisponivel');
-  if (apoio.reforco) return buscarApoio(usuarioId, licaoId);
+  // O reforço é do último erro: se o guardado veio de outro erro (outro exercício), faz um novo.
+  if (apoio.reforco && (apoio.reforco as unknown as Reforco).resposta === apoio.ultimaResposta) return buscarApoio(usuarioId, licaoId);
   await quota(usuarioId, 'ponte');
   let ponte: Reforco;
   if (process.env.IA === 'falsa') ponte = reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta);
@@ -155,8 +156,8 @@ async function gerarPonte(
     };
   }
   await banco.apoioLicao.updateMany({
-    where: { usuarioId, licaoId, reforco: { equals: Prisma.DbNull } },
-    data: { reforco: JSON.parse(JSON.stringify(ponte)) },
+    where: { usuarioId, licaoId },
+    data: { reforco: JSON.parse(JSON.stringify({ ...ponte, resposta: apoio.ultimaResposta })), reforcoConcluido: false },
   });
   return buscarApoio(usuarioId, licaoId);
 }
@@ -215,8 +216,8 @@ export async function ensinarStu(
           : `Você cobriu as ideias-chave; agora acrescente um exemplo concreto. A ideia central da lição é: ${licao.objetivo}`,
       pergunta: faltou.length > 0
         ? `Se alguém te perguntasse sobre “${faltou[0]}”, o que você diria, com um exemplo seu?`
-        : comExemplo
-          ? `E se a situação fosse outra? Como “${licao.titulo}” funcionaria num caso diferente do seu exemplo?`
+        : trouxe.length > 0
+          ? `E numa situação diferente da sua explicação? Conte como “${trouxe[0]}” aparece num caso novo, com um exemplo seu.`
           : `Como você usaria “${licao.titulo}” num exemplo do dia a dia?`,
       proximoPasso:
         'Este retorno é automático e não confere se o texto está certo. Compare com a explicação da lição.',

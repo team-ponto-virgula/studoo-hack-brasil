@@ -29,7 +29,7 @@ import { Icone } from './icone';
 import { Confete } from './festa';
 import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
 import { NavegacaoContexto } from './navegacao';
-import { Licao, type ResumoLicao } from './licao';
+import { Licao, temAndamento, type ResumoLicao } from './licao';
 import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, coresDaRegiao } from './mundo';
@@ -383,11 +383,13 @@ export function Estudo({ cliente, sair, expirar }: {
       const { concluidas, total } = etapa.plano.progresso;
       return (
         <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} rodape={<>
-          {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" variante="secundario" desativado={ocupado}
-            acao={() => void abrirLicao(etapa.plano, proxima)} />}
+          {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}
           {total > 0 && concluidas === total && <Botao rotulo={mensagens.licao.novoAssunto} testID="novo-assunto" variante="secundario"
             desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />}
-          <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" desativado={ocupado} acao={() => abrir(voltarATrilha(etapa))} />
+          <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" variante={proxima ? 'secundario' : 'primario'} desativado={ocupado}
+            acao={() => abrir(voltarATrilha(etapa))} />
+          {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" desativado={ocupado}
+            acao={() => void abrirLicao(etapa.plano, proxima)} />}
         </>} />
       );
     }
@@ -1152,7 +1154,7 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
   novoPlano: () => void;
 }) {
   const { plano, origem, liberadas = [] } = etapa;
-  const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
+  const { nos, proximo } = useMemo(() => montarTrilha(plano, temAndamento), [plano]);
   // Ao abrir (ou recarregar), a tela vai até a lição atual; na volta de uma lição, até a liberada, como na web.
   const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : proximo?.no.id ?? null;
   const { width, height } = useWindowDimensions();
@@ -1197,7 +1199,7 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
 
   const novo = <Botao rotulo={mensagens.planos.novo} testID="novo-plano" desativado={ocupado} acao={novoPlano} />;
   const passo = proximo && (
-    <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id}
+    <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id} andamento={proximo.no.andamento}
       ocupado={ocupado} rodape={!largo} aoAbrir={() => abrirLicao(proximo.no.id)} />
   );
 
@@ -1293,15 +1295,16 @@ function AnelProgresso({ progresso, tamanho = 68 }: { progresso: Progresso; tama
  * Próxima lição do plano. No rodapé do celular, ao alcance do polegar, mostra só o rótulo e o título numa linha;
  * o leitor de tela lê o título inteiro e ouve o título também como dica do botão, como o aria-describedby da web.
  */
-function ProximoPasso({ titulo, detalhe, abrindo, ocupado, rodape, aoAbrir }: {
+function ProximoPasso({ titulo, detalhe, abrindo, ocupado, rodape, aoAbrir, andamento = false }: {
   titulo: string;
   detalhe: string;
+  andamento?: boolean;
   abrindo: boolean;
   ocupado: boolean;
   rodape: boolean;
   aoAbrir: () => void;
 }) {
-  const botao = <Botao rotulo={abrindo ? mensagens.trilha.abrindo : mensagens.trilha.comecarLicao} testID="comecar-licao"
+  const botao = <Botao rotulo={abrindo ? mensagens.trilha.abrindo : andamento ? mensagens.trilha.continuarLicao : mensagens.trilha.comecarLicao} testID="comecar-licao"
     dica={titulo} desativado={ocupado} ocupado={abrindo} acao={aoAbrir} />;
 
   if (rodape) {

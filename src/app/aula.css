@@ -789,3 +789,14 @@
 .falar__resultado[data-nota='otima'] { background: #eefaf3; color: var(--sucesso); }
 .falar__resultado[data-nota='quase'] { background: #fff6d9; color: #7a4a00; }
 .falar__resultado[data-nota='tente'], .falar__resultado[data-nota='erro'] { background: #fff1e0; color: var(--alerta); }
+
+/* Guia da batida: os oito tempos do compasso, com o que soa agora em destaque. */
+.batida { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; width: 100%; margin-top: 4px; }
+.batida__tempo {
+  display: grid; justify-items: center; gap: 0; padding: 6px 0; border-radius: 10px; background: #eef2ff; color: var(--texto2);
+  font-weight: 900; font-size: 0.875rem; transition: background-color 120ms ease, transform 120ms ease;
+}
+.batida__tempo[data-sobe] { background: #f6f7fb; }
+.batida__seta { font-size: 1.125rem; line-height: 1.1; }
+.batida__tempo[data-ativo] { background: var(--acao); color: #fff; transform: translateY(-2px); }
+.acorde__guia { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }

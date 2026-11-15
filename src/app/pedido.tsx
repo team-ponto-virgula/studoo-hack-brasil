@@ -150,7 +150,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         </span>
         <Icone nome="seta" />
       </button>
-      <button type="button" className="pedido-como" onClick={comoFunciona}>{mensagens.inicio.saberMais}<span aria-hidden="true">↗</span></button>
+      <button type="button" className="pedido-como" onClick={comoFunciona}>{mensagens.inicio.saberMais}</button>
     </section>
   );
 }
