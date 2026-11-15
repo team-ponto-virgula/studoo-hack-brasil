@@ -33,7 +33,7 @@ import {
 } from '../ui';
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
-import { Licao, formatarTempo, temAndamento, type ResumoLicao } from './aula';
+import { FrasesDaLicao, Licao, formatarTempo, temAndamento, type ResumoLicao } from './aula';
 import { Pedido, type IdTema } from './pedido';
 import './aula.css';
 import './trilha.css';
@@ -718,7 +718,11 @@ function montarTrilha(plano: PlanoDetalhe) {
     let estado: NoCaminho['estado'] = 'bloqueada';
     if (licao.concluida) estado = 'concluida';
     else if (licao.id === atual) estado = 'atual';
-    return { id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte, ...(estado === 'atual' && temAndamento(licao.id) ? { andamento: true } : {}) };
+    return {
+      id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte,
+      ...(estado === 'atual' && temAndamento(licao.id) ? { andamento: true } : {}),
+      ...(licao.rever ? { rever: true } : {}),
+    };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
   const proximo = indice >= 0 ? { no: nos[indice], posicao: mensagens.trilha.posicao(indice + 1, nos.length) } : null;
@@ -912,6 +916,8 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
         <h2>{mensagens.planos.progressoPlano}</h2>
         <BarraProgresso progresso={plano.progresso} de={antes} comPercentual />
       </div>
+      {/* Lição de idioma: as frases que a pessoa aprendeu, para ouvir mais uma vez antes de seguir. */}
+      {licao.falas && licao.falas.length > 0 && <FrasesDaLicao falas={licao.falas} />}
       <div className="acoes-tela">
         <AcaoPrincipal>
           {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}

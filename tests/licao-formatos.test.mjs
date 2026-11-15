@@ -499,7 +499,35 @@ test("tentar de novo mantém o que estava certo", () => {
   const vf = { tipo: "verdadeiro_falso", enunciado: "VF", afirmacao: "X", justificativas: itens };
   assert.equal(respostaParaTentarDeNovo(vf, "falso:b", avaliacao(["valor"])), "falso:");
   assert.equal(respostaParaTentarDeNovo({ tipo: "aberta", enunciado: "E", minimo: 10 }, "meu texto", avaliacao([])), "meu texto");
-  assert.equal(respostaParaTentarDeNovo({ tipo: "lacuna", enunciado: "L" }, "zzz", avaliacao([])), "");
+  // Na lacuna, o que foi escrito fica para corrigir a grafia; a escolha recomeça.
+  assert.equal(respostaParaTentarDeNovo({ tipo: "lacuna", enunciado: "L" }, "repit", avaliacao([])), "repit");
+  assert.equal(respostaParaTentarDeNovo({ tipo: "multipla_escolha", enunciado: "M", opcoes: itens }, "b", avaliacao([])), "");
+});
+
+test("lacuna: uma palavra de cortesia junto não tira o acerto", () => {
+  const lacuna = { tipo: "lacuna", enunciado: "Complete", trecho: "Sorry, can you ___?", gabarito: ["repeat"], exata: true, feedbackCorreto: "ok", feedbackIncorreto: "não" };
+  for (const resposta of ["repeat please", "Please repeat", "Sorry, can you repeat, please?", "repeat, por favor"]) {
+    const avaliacao = avaliarResposta(lacuna, resposta);
+    assert.equal(avaliacao.correta, true, resposta);
+    assert.match(avaliacao.observacao, /basta escrever o que falta/, resposta);
+  }
+  assert.equal(avaliarResposta(lacuna, "please").correta, false, "só a cortesia não é a resposta");
+  assert.equal(avaliarResposta(lacuna, "speak please").correta, false, "a palavra errada continua errada");
+});
+
+test("demonstração: escutas com tradução e a lição de direções cobra o caminho", () => {
+  const licoes = DEMOS.flatMap(({ plano }) => plano.fluxos.flatMap(({ licoes }) => licoes));
+  for (const licao of licoes) {
+    for (const exercicio of [licao.exercicio, ...(licao.extras ?? [])]) {
+      if (exercicio.fala && !exercicio.trecho) assert.ok(exercicio.fala.traducao, `${licao.titulo}: a escuta "${exercicio.fala.texto}" tem tradução`);
+    }
+  }
+  const direcoes = licoes.find(({ titulo }) => titulo === "Pedir informações na rua");
+  const exercicios = [direcoes.exercicio, ...direcoes.extras];
+  assert.equal(exercicios.length, 3);
+  assert.ok(exercicios.some(({ fala }) => /turn left/i.test(fala?.texto ?? "")), "um exercício cobra virar à esquerda");
+  const violao = licoes.find(({ titulo }) => /partes do violão/i.test(titulo)) ?? licoes.find(({ recurso }) => recurso?.tipo === "imagem");
+  assert.match(violao.recurso.descricao, /Cabeça: 1 tarraxa/);
 });
 
 test("dica de grafia com até duas letras de diferença em palavras de 6 ou mais (continua errada quando é a lição)", () => {

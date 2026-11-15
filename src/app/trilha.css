@@ -363,12 +363,11 @@
   .painel--trilha .caminho-chegada { --extra: 120px; }
 }
 
-/* Com o nó atual à vista, o cartão fixo da próxima lição desce e some: o balão "Começar" já faz esse papel. */
-@media (max-width: 767px) {
-  .trilha-proximo { transition: translate 240ms ease, opacity 240ms ease, visibility 240ms; }
-  html[data-atual-visivel] .trilha-proximo { translate: 0 calc(100% + 40px); opacity: 0; visibility: hidden; }
-}
-@media (max-width: 767px) and (prefers-reduced-motion: reduce) { .trilha-proximo { transition: none; } }
+/* Com o nó atual à vista, o cartão fixo da próxima lição desce e some (em qualquer tela): o balão "Começar" já faz esse
+   papel, e o cartão por cima dele escondia o nome da lição. */
+.trilha-proximo { transition: translate 240ms ease, opacity 240ms ease, visibility 240ms; }
+html[data-atual-visivel] .trilha-proximo { translate: 0 calc(100% + 40px); opacity: 0; visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .trilha-proximo { transition: none; } }
 
 /* Celular: o nome do plano fica numa barra compacta presa no topo, como a faixa da unidade nos melhores apps. */
 @media (max-width: 767px) {

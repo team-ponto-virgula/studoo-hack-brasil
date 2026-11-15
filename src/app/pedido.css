@@ -324,7 +324,7 @@
 .pedido-novo .pedido-campo textarea::placeholder { color: #9aa3bf; font-weight: 600; }
 .pedido-novo .pedido-criar { width: 100%; min-height: 56px; font-size: 1.0625rem; }
 
-/* Ideias: fichas que rolam para o lado no celular e quebram linha na tela larga. */
+/* Ideias: fichas que quebram linha (veja abaixo). */
 .pedido-ideias {
   display: flex;
   gap: 10px;
@@ -393,6 +393,6 @@
   .pedido-alternar:hover:not(:disabled) { border-color: var(--acao); background: #f8faff; }
 }
 
-@media (min-width: 768px) {
-  .pedido-ideias { flex-wrap: wrap; justify-content: center; margin-inline: 0; padding-inline: 0; overflow: visible; }
-}
+/* As fichas quebram linha em qualquer tela: rolando para o lado (com a barra escondida), as últimas ideias passavam
+   despercebidas no celular. */
+.pedido-ideias { flex-wrap: wrap; justify-content: center; margin-inline: 0; padding-inline: 0; overflow: visible; }

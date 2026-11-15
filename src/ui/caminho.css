@@ -981,3 +981,5 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 /* Selo do reforço: ícone e texto numa linha. */
 .caminho-ponte { display: inline-flex; align-items: center; gap: 4px; }
 .caminho-ponte .icone { flex: none; width: 14px; height: 14px; stroke-width: 3; }
+/* "Vale rever": a lição foi concluída com um erro antes do acerto; o âmbar chama sem alarmar. */
+.caminho-ponte[data-rever] { color: var(--alerta); }

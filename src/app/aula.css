@@ -438,6 +438,19 @@
 .falas__textos { min-width: 0; }
 .falas__texto { margin: 0; font-size: 1.125rem; font-weight: 800; }
 .falas__traducao { margin: 2px 0 0; color: var(--texto2); font-size: 0.9rem; }
+/* Depois do acerto na escuta: a tradução embaixo da frase. */
+.escuta__traducao { margin: -2px 0 0; color: var(--texto2); font-weight: 700; }
+
+/* Conclusão: as frases da lição numa lista compacta, alinhada à esquerda dentro da tela centrada. */
+.falas--conclusao { width: min(100%, 30rem); margin-top: 24px; text-align: start; }
+.falas--conclusao h2 { margin: 0 0 8px; font-size: 1.0625rem; text-align: center; }
+.painel--concluida .falas--conclusao p { margin-inline: 0; }
+
+/* A dica da tentativa anterior, embaixo do campo, enquanto a pessoa tenta de novo. */
+.aula-dica { display: grid; gap: 4px; margin-top: 14px; padding: 12px 14px; border-left: 4px solid #e0a92e; border-radius: 12px; background: #fff8e6; color: #5c3b00; }
+.aula-dica p { margin: 0; }
+.aula-dica__titulo { display: flex; align-items: center; gap: 6px; color: #7a4a00; font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
+.aula-dica__titulo .icone { width: 16px; height: 16px; }
 
 /* Passo a passo da demonstração: números grandes. */
 .aula-passos { display: grid; gap: 10px; }
@@ -746,6 +759,10 @@
 .aula-consulta { display: grid; gap: 10px; padding: 12px; border: 2px dashed #ffe3a3; border-radius: 18px; background: #fffaf0; }
 .aula-consulta__rotulo { color: #8a5a00; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
 .acorde__botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Na troca (Am → C), os dois botões de ouvir têm a mesma largura, cada um embaixo do seu acorde; o Parar ocupa a linha. */
+.acorde[data-comparacao] .acorde__botoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; max-width: 400px; }
+.acorde[data-comparacao] .acorde__botoes > .botao { justify-content: center; }
+.acorde[data-comparacao] .acorde__botoes > :nth-child(n + 3) { grid-column: 1 / -1; }
 
 /* Consulta recolhível no exercício: a pergunta fica no alto; o diagrama abre quando a pessoa quer. */
 .aula-consulta--recolhivel { padding: 0; gap: 0; }

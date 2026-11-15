@@ -267,16 +267,25 @@ export function ApoioDaLicao({
   licao,
   avaliacao,
   pedidoPonte = 0,
+  ultimo = true,
+  aoMostrarEnsino,
 }: {
   cliente: ClienteEstudio;
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
-  /** Cada vez que muda, o reforço é pedido (o "Ver outro exemplo" do painel de retorno), se ainda não existir. */
+  /** Cada vez que muda, o reforço é pedido (o "Ver outro jeito de entender" do painel de retorno), se ainda não existir. */
   pedidoPonte?: number;
+  /** Último exercício da lição: só nele aparece o "Ensine ao Stu", como na web. */
+  ultimo?: boolean;
+  /** O retorno do "Ensine ao Stu" chegou: onde ele começa, a partir do topo do apoio (a lição rola até lá). */
+  aoMostrarEnsino?: (y: number) => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // Como na web: o retorno do "Ensine ao Stu" é o desta visita.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
+  const cartaoEnsinoY = useRef(0);
+  /** O retorno até onde a tela já rolou: rola uma vez por retorno, não a cada nova medida. */
+  const ensinoRolado = useRef<ApoioEstudo['ensino']>(null);
   const revisaoApoio = useRef(0);
   function atualizarApoio(valor: Parameters<typeof setApoio>[0]) {
     revisaoApoio.current += 1;
@@ -493,7 +502,7 @@ export function ApoioDaLicao({
           )}
         </Card>
       )}
-      <Card>
+      {ultimo && <View onLayout={(evento) => { cartaoEnsinoY.current = evento.nativeEvent.layout.y; }}><Card>
         <Botao
           variante="texto"
           rotulo={m.ensinar}
@@ -542,8 +551,12 @@ export function ApoioDaLicao({
               }
             />
             {ensino && (
-              <View accessibilityLiveRegion="polite" style={{ gap: 12 }}>
-                {ensino.simulado && <T>{m.retornoAutomatico}</T>}
+              <View accessibilityLiveRegion="polite" style={{ gap: 12 }}
+                onLayout={(evento) => {
+                  if (ensinoRolado.current === ensino) return;
+                  ensinoRolado.current = ensino;
+                  aoMostrarEnsino?.(cartaoEnsinoY.current + evento.nativeEvent.layout.y);
+                }}>
                 <H>{m.acertos}</H>
                 {ensino.acertos.map((x, i) => (
                   <T key={i}>{x}</T>
@@ -554,11 +567,13 @@ export function ApoioDaLicao({
                 <T>{ensino.pergunta}</T>
                 <H>{m.proximo}</H>
                 <T>{ensino.proximoPasso}</T>
+                {/* Sem a IA, o retorno confere as ideias-chave da lição: a nota fica no pé, como legenda. Como na web. */}
+                {ensino.simulado && <Text style={estilos.legenda}>{m.ensinoAutomatico}</Text>}
               </View>
             )}
           </>
         )}
-      </Card>
+      </Card></View>}
       {ocupado && <T>{m.pensando}</T>}
       {!!erro && (
         <Text accessibilityRole="alert" style={estilos.texto}>

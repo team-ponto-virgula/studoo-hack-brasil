@@ -144,6 +144,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   /** Revisão antes de concluir: os exercícios que ficaram sem acerto voltam uma vez, nesta ordem. */
   const [revisao, setRevisao] = useState<number[] | null>(retomada?.revisao ?? null);
   const [avisoRetomada, setAvisoRetomada] = useState(retomada !== null);
+  /** A última correção errada de cada exercício: a dica fica à vista embaixo do campo na nova tentativa. */
+  const [errosAnteriores, setErrosAnteriores] = useState<(Avaliacao | null)[]>(() => exercicios.map(() => null));
   const [pedidoPonte, setPedidoPonte] = useState(0);
   const [inicio] = useState(() => Date.now());
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
@@ -161,17 +163,26 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const total = etapas.length;
   const ultima = passo === total - 1;
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : undefined;
-  const andamento = t.posicao(passo + 1, total);
+  // Na revisão, o contador de etapas voltaria para trás: o topo diz "Revisão rápida" e a barra fica cheia.
+  const andamento = revisao && exercicio ? t.revisaoAndamento : t.posicao(passo + 1, total);
   let nomeEtapa: string = t.conceito;
   if (etapa.tipo === 'exemplo') nomeEtapa = licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
   else if (etapa.tipo === 'exercicio') nomeEtapa = exercicios.length > 1 ? t.exercicioDe(indice + 1, exercicios.length) : t.exercicio;
 
   useEffect(() => {
-    if (passo > 0) tituloEtapa.current?.focus();
+    // Cada etapa começa do topo (também ao recomeçar). O foco vai para o título (escondido, para o leitor de tela) sem
+    // rolar até ele, senão a tela abriria no meio do quadro.
+    window.scrollTo(0, 0);
+    if (passo > 0) tituloEtapa.current?.focus({ preventScroll: true });
     // O reforço é de cada exercício: um pedido antigo não vale para o próximo.
     setPedidoPonte(0);
-  }, [passo]);
+  }, [passo, revisao]);
+
+  // O aviso de "continuou de onde parou" vale para a etapa em que a pessoa voltou; na seguinte, sai.
+  useEffect(() => {
+    if (retomada && passo !== retomada.passo) setAvisoRetomada(false);
+  }, [passo, retomada]);
 
   // Guarda o andamento a cada passo; o começo intocado não precisa.
   useEffect(() => {
@@ -271,6 +282,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   function tentarDeNovo() {
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
+    setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (posicao === indice ? avaliacao : atual)));
     // Fica o que estava certo (na aberta, o texto todo); o resto recomeça.
     if (exercicio && avaliacao) mudarResposta(respostaParaTentarDeNovo(exercicio, resposta, avaliacao));
     window.requestAnimationFrame(() => {
@@ -284,6 +296,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   /** Volta aos exercícios sem acerto, limpando a resposta de cada um, para mais uma tentativa antes de concluir. */
   function revisar(pendentes: number[]) {
     setRevisao(pendentes);
+    setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? null : atual)));
     setRespostas((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? '' : atual)));
     setPasso(etapaDoExercicio(pendentes[0]));
@@ -345,6 +358,16 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     setAutoAvaliacao(null);
     setRevisao(null);
     setAvisoRetomada(false);
+    setErrosAnteriores(exercicios.map(() => null));
+  }
+
+  /** Concluir sem contar como foi: a tela leva até a pergunta, em vez de um botão apagado sem explicação. */
+  function mostrarComoFoi() {
+    const pergunta = document.querySelector<HTMLElement>('.como-foi legend');
+    if (!pergunta) return;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    pergunta.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    pergunta.focus({ preventScroll: true });
   }
 
   continuarAgora.current = () => {
@@ -373,7 +396,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     );
   } else if (etapa.tipo === 'pratica') {
     acao = (
-      <Botao variante="sucesso" disabled={ocupado || !autoAvaliacao} onClick={() => void avancar()}>
+      <Botao variante="sucesso" disabled={ocupado} aria-disabled={!autoAvaliacao || undefined}
+        onClick={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())}>
         {pendente === 'concluir' ? t.concluindo : t.pratica.concluir}
       </Botao>
     );
@@ -388,9 +412,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           <Icone nome="fechar" />
         </button>
         <div className="aula-andamento">
-          <div className="aula-barra" role="progressbar" aria-label={andamento} aria-valuemin={0} aria-valuemax={total} aria-valuenow={passo + 1}>
+          <div className="aula-barra" role="progressbar" aria-label={andamento} aria-valuemin={0} aria-valuemax={total}
+            aria-valuenow={revisao ? total : passo + 1}>
             <span className="aula-barra__preenchimento"
-              style={{ '--progresso': (avaliacao?.correta ? passo + 1 : passo + 0.5) / total } as CSSProperties} />
+              style={{ '--progresso': revisao ? 1 : (avaliacao?.correta ? passo + 1 : passo + 0.5) / total } as CSSProperties} />
           </div>
           <span className="aula-posicao" aria-hidden="true">{andamento}</span>
         </div>
@@ -417,20 +442,22 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 <p className="licao-origem">{t.origem} · {origemLegivel(licao.origem)}</p>
               </section>
             </div>
+            {(licao.recurso?.tipo === 'imagem' || licao.recurso?.tipo === 'acorde') && <RecursoDaLicao recurso={licao.recurso} />}
           </>
         )}
         {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
         {exercicio && (
           <EtapaExercicio exercicio={exercicio} indice={indice} total={exercicios.length} resposta={resposta} mudar={mudarResposta}
             consulta={licao.recurso?.tipo === 'acorde' || licao.recurso?.tipo === 'fracao' ? licao.recurso : undefined}
-            avaliacao={avaliacao} ocupado={ocupado} responder={responder} formulario={formulario} titulo={tituloEtapa} />
+            avaliacao={avaliacao} ocupado={ocupado} responder={responder} formulario={formulario} titulo={tituloEtapa}
+            dica={avaliacao ? null : errosAnteriores[indice]} />
         )}
         {etapa.tipo === 'pratica' && licao.pratica && (
           <EtapaPratica pratica={licao.pratica} titulo={tituloEtapa} escolha={autoAvaliacao} escolher={setAutoAvaliacao}
             recurso={licao.recurso} passos={licao.passos} falas={licao.falas} />
         )}
       </div>
-      {exercicio && <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} />}
+      {exercicio && <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1} />}
       <footer className="aula-rodape" data-retorno={retorno}>
         <div className="aula-rodape__conteudo">
           {avaliacao && (
@@ -465,6 +492,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             </section>
           )}
           {etapa.tipo === 'pratica' && !autoAvaliacao && <p className="aula-rodape__nota">{t.pratica.escolha}</p>}
+          {/* Quem erra vê o que acontece ao pular: o exercício não some, volta no fim da lição. */}
+          {avaliacao && !avaliacao.correta && !revisao && pedidoPonte === 0 && <p className="aula-rodape__nota">{t.pularAviso}</p>}
           {exercicio && !avaliacao && (() => {
             const falta = faltaParaVerificar(exercicio, resposta);
             return falta && <p className="aula-rodape__nota" aria-live="polite">{textoDaFalta(falta)}</p>;
@@ -502,8 +531,9 @@ function EtapaExemplo({ licao, titulo }: { licao: LicaoDetalhe; titulo: Ref<HTML
   );
 }
 
-function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
-  if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} />;
+/** `longa`: na prática, a batida toca oito compassos (uns 30 s) para a pessoa tocar junto. */
+function RecursoDaLicao({ recurso, longa = false }: { recurso: Recurso; longa?: boolean }) {
+  if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} longa={longa} />;
   if (recurso.tipo === 'fracao') {
     const descricao = t.recursos.fracaoDescricao(recurso.numerador, recurso.denominador);
     return (
@@ -584,8 +614,9 @@ function BracoDoAcorde({ nome, casas, dedos }: { nome: string; casas: number[]; 
  * Diagrama do acorde com o som sintetizado na hora. Com `anterior`, os dois acordes da troca ficam lado a lado (Am → C),
  * cada um com o seu botão de ouvir.
  */
-function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde' }> }) {
+function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, { tipo: 'acorde' }>; longa?: boolean }) {
   type Som = 'acorde' | 'batida' | 'anterior';
+  const compassos = longa ? 8 : 2;
   const [tocando, setTocando] = useState<Som | null>(null);
   const [semSom, setSemSom] = useState(false);
   /** Na batida, qual dos oito tempos do compasso (1, e, 2, e…) está soando agora. */
@@ -610,7 +641,7 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
         return;
       }
       const indice = Math.floor(audio.currentTime / colcheia);
-      setTempoAtual(indice < 16 ? indice % 8 : null);
+      setTempoAtual(indice < compassos * 8 ? indice % 8 : null);
       quadro.current = window.requestAnimationFrame(passo);
     };
     quadro.current = window.requestAnimationFrame(passo);
@@ -625,7 +656,7 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
 
   function tocar(som: Som) {
     const bytes = () => {
-      if (som === 'batida') return sintetizarBatida(recurso.casas);
+      if (som === 'batida') return sintetizarBatida(recurso.casas, { compassos });
       return sintetizarAcorde(som === 'anterior' && anterior ? anterior.casas : recurso.casas);
     };
     enderecos.current[som] ??= URL.createObjectURL(new Blob([bytes() as BlobPart], { type: 'audio/wav' }));
@@ -670,7 +701,7 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
           </Botao>
           {recurso.batida && (
             <Botao variante="secundario" disabled={tocando !== null} onClick={() => tocar('batida')}>
-              <Icone nome="som" />{tocando === 'batida' ? t.recursos.tocando : t.recursos.ouvirBatida}
+              <Icone nome="som" />{tocando === 'batida' ? t.recursos.tocando : longa ? t.recursos.tocarJunto : t.recursos.ouvirBatida}
             </Botao>
           )}
           {tocando && <Botao variante="texto" onClick={parar}>{t.audio.pararSom}</Botao>}
@@ -908,8 +939,31 @@ function Falas({ falas }: { falas: Fala[] }) {
   );
 }
 
-/** Exercício de escuta: o áudio primeiro; o texto aparece só quando a pessoa pede (ou quando não há voz). */
-function Escuta({ fala }: { fala: Fala }) {
+/** Na conclusão: as frases da lição, com a tradução, para ouvir mais uma vez (o "Falar" fica na aula). */
+export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
+  return (
+    <section className="falas falas--conclusao" aria-labelledby="frases-da-licao">
+      <h2 id="frases-da-licao">{t.frasesDaLicao}</h2>
+      <ul>
+        {falas.map((fala, posicao) => (
+          <li key={posicao}>
+            <div className="falas__textos">
+              <p className="falas__texto" lang={fala.idioma}>{fala.texto}</p>
+              {fala.traducao && <p className="falas__traducao">{fala.traducao}</p>}
+            </div>
+            <BotoesOuvir fala={fala} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+/**
+ * Exercício de escuta: o áudio primeiro; o texto aparece só quando a pessoa pede (ou quando não há voz). Depois do
+ * acerto, o texto e a tradução ficam à vista, para fixar o que foi ouvido.
+ */
+function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolean }) {
   const disponivel = useVozDisponivel();
   const [mostrar, setMostrar] = useState(false);
   const [tocando, tocar, semVoz] = useTocando(fala);
@@ -932,10 +986,14 @@ function Escuta({ fala }: { fala: Fala }) {
         )
         : <p className="escuta__aviso">{t.audio.semVoz}</p>}
       {disponivel && semVoz && <p className="escuta__aviso" role="status">{t.audio.semVozFrase}</p>}
-      <button type="button" className="escuta__texto" aria-expanded={mostrar} onClick={() => setMostrar((atual) => !atual)}>
-        {mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}
-      </button>
-      {mostrar && <p className="trecho trecho--frase" lang={fala.idioma}>{fala.texto}</p>}
+      {/* Depois do acerto, o texto já está à vista: o botão de mostrar sai. */}
+      {!acertou && (
+        <button type="button" className="escuta__texto" aria-expanded={mostrar} onClick={() => setMostrar((atual) => !atual)}>
+          {mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}
+        </button>
+      )}
+      {(mostrar || acertou) && <p className="trecho trecho--frase" lang={fala.idioma}>{fala.texto}</p>}
+      {acertou && fala.traducao && <p className="escuta__traducao">{fala.traducao}</p>}
     </div>
   );
 }
@@ -976,9 +1034,11 @@ function Trecho({ texto, tipo = 'frase', fala }: { texto: string; tipo?: TipoTre
   }
 }
 
-function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, ocupado, responder, formulario, titulo, consulta }: {
+function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, ocupado, responder, formulario, titulo, consulta, dica }: {
   /** Recurso para consultar durante o exercício (diagrama do acorde, barra de fração). A linha do tempo não aparece: entregaria a ordem. */
   consulta?: Recurso;
+  /** A correção da tentativa anterior (errada): a dica fica embaixo do campo enquanto a pessoa tenta de novo. */
+  dica?: Avaliacao | null;
   exercicio: ExercicioPublico;
   indice: number;
   total: number;
@@ -1057,10 +1117,17 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
       <p>{exercicio.enunciado}</p>
       {exercicio.contexto && <p>{exercicio.contexto}</p>}
       {exercicio.trecho && <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala} />}
-      {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} />}
+      {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
       <form id="resposta-licao" ref={formulario} className="formulario" method="post" onSubmit={responder}>
         {campo}
       </form>
+      {dica && (
+        <div className="aula-dica" role="note" aria-label={t.dicaAnterior}>
+          <p className="aula-dica__titulo"><Icone nome="lampada" />{t.dicaAnterior}</p>
+          <p>{dica.feedback}</p>
+          {dica.observacao && <p>{dica.observacao}</p>}
+        </div>
+      )}
       {/* Para consultar, depois da resposta e recolhido: a pergunta e as opções ficam no alto. */}
       {consulta && (
         <details className="aula-consulta aula-consulta--recolhivel">
@@ -1223,7 +1290,6 @@ function VerdadeiroFalso({ afirmacao, justificativas, valor, mudar, desativado, 
         {(['verdadeiro', 'falso'] as const).map((opcao) => (
           <label key={opcao} data-valor={opcao} data-retorno={escolha === opcao ? corDaParte('valor') : undefined}>
             <input type="radio" name="vf-valor" value={opcao} checked={escolha === opcao} onChange={() => salvar(opcao, justificativa)} />
-            <Icone nome={opcao === 'verdadeiro' ? 'check' : 'fechar'} />
             <span>{opcao === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : t.verdadeiroFalso.falso}</span>
           </label>
         ))}
@@ -1345,18 +1411,8 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
           {restante < total && <Botao variante="texto" onClick={() => { setRodando(false); setRestante(total); }}>{t.pratica.recomecar}</Botao>}
         </div>
       </div>
-      {(recurso || passos || falas) && (
-        <div className="aula-consulta">
-          <p className="aula-consulta__rotulo">{t.recursos.consultar}</p>
-          {recurso && <RecursoDaLicao recurso={recurso} />}
-          {passos && (
-            <ol className="trecho trecho--passos">{passos.map((passo, posicao) => <li key={posicao}>{passo}</li>)}</ol>
-          )}
-          {falas && <Falas falas={falas} />}
-        </div>
-      )}
       <fieldset className="como-foi" disabled={!comecou && !escolha}>
-        <legend ref={comoFoi}>{acabou ? t.pratica.acabou : comecou || escolha ? t.pratica.comoFoi : t.pratica.comeceAntes}</legend>
+        <legend ref={comoFoi} tabIndex={-1}>{acabou ? t.pratica.acabou : comecou || escolha ? t.pratica.comoFoi : t.pratica.comeceAntes}</legend>
         <div className="como-foi__opcoes">
           {AUTOAVALIACOES.map((valor) => (
             <label key={valor} data-valor={valor}>
@@ -1370,6 +1426,17 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
         <div className="aula-explicacao aula-pratica__resposta" role="status" ref={respostaDoStu}>
           <Stu />
           <p className="aula-balao">{t.pratica.respostas[escolha]}</p>
+        </div>
+      )}
+      {/* O material da lição fica no fim, para consultar: o cronômetro e o "Como foi?" vêm logo depois da tarefa. */}
+      {(recurso || passos || falas) && (
+        <div className="aula-consulta">
+          <p className="aula-consulta__rotulo">{t.recursos.consultar}</p>
+          {recurso && <RecursoDaLicao recurso={recurso} longa />}
+          {passos && (
+            <ol className="trecho trecho--passos">{passos.map((passo, posicao) => <li key={posicao}>{passo}</li>)}</ol>
+          )}
+          {falas && <Falas falas={falas} />}
         </div>
       )}
     </section>

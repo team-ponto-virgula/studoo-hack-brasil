@@ -29,6 +29,7 @@ import { Icone } from './icone';
 import { Confete } from './festa';
 import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
 import { NavegacaoContexto } from './navegacao';
+import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, type ResumoLicao } from './licao';
 import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
@@ -1498,6 +1499,10 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
         <Text accessibilityRole="header" style={estilos.tituloBloco}>{mensagens.licao.progresso}</Text>
         <BarraProgresso progresso={plano.progresso} de={antes} testID="progresso-plano" comPercentual />
       </View>
+      {/* Lição de idioma: as frases que a pessoa aprendeu, para ouvir mais uma vez antes de seguir. Como na web. */}
+      {licao.falas && licao.falas.length > 0 && (
+        <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}><FrasesDaLicao falas={licao.falas} /></View>
+      )}
       {mensagem}
     </Tela>
   );
