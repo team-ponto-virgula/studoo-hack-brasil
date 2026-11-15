@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type Ref } from 'react';
 import {
   AUTOAVALIACOES,
+  acertouParte,
   codificarResposta,
   etapasDaLicao,
   faltaParaVerificar,
   exerciciosDaLicao,
   linhasDePassos,
+  origemLegivel,
   partesDaLacuna,
   respostaCompleta,
   semAspas,
@@ -30,9 +32,23 @@ import { Botao, Confete, Icone, Stu, type NomeIcone } from '../ui';
 import { ApoioDaLicao } from './estudio';
 
 const t = mensagens.licao;
+/** Quantas vezes uma aula montou: separa a saída de verdade da remontagem do modo estrito do React. */
+let montagensDaAula = 0;
 
-/** O que a pessoa fez na lição, para o resumo da conclusão. `rever`: terminou com erro ou com a prática em "ainda não". */
-export type ResumoLicao = { segundos: number; tentativas: number; dePrimeira: boolean; etapas: number; pratica?: AutoAvaliacao; rever: boolean };
+/**
+ * O que a pessoa fez na lição, para o resumo da conclusão: `acertos` de `exercicios` (quem segue com um erro termina com
+ * menos acertos) e `rever` quando ficou exercício sem acerto ou a prática em "ainda não".
+ */
+export type ResumoLicao = {
+  segundos: number;
+  tentativas: number;
+  dePrimeira: boolean;
+  etapas: number;
+  acertos: number;
+  exercicios: number;
+  pratica?: AutoAvaliacao;
+  rever: boolean;
+};
 
 const iconesDaEtapa: Record<EtapaAula['tipo'], NomeIcone> = { conceito: 'livro', exemplo: 'lampada', exercicio: 'alvo', pratica: 'relogio' };
 
@@ -76,6 +92,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
   const formulario = useRef<HTMLFormElement>(null);
   const continuarAgora = useRef<() => void>(() => undefined);
+  const sairAgora = useRef<(peloVoltar?: boolean) => boolean>(() => false);
 
   const etapa = etapas[passo];
   const indice = etapa.tipo === 'exercicio' ? etapa.indice : -1;
@@ -116,6 +133,35 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   useEffect(() => () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
   }, []);
+
+  // O voltar do navegador (ou do celular) faz o mesmo que o X: a aula ganha um passo no histórico, e voltar pede a
+  // confirmação no meio da lição em vez de sair do Studoo e perder o que foi feito.
+  useEffect(() => {
+    montagensDaAula += 1;
+    const montagem = montagensDaAula;
+    const marca = { studooLicao: licao.id };
+    const naMarca = () => (window.history.state as { studooLicao?: string } | null)?.studooLicao === licao.id;
+    if (!naMarca()) window.history.pushState(marca, '');
+    let saiuPeloVoltar = false;
+    function aoVoltar(evento: PopStateEvent) {
+      if ((evento.state as { studooLicao?: string } | null)?.studooLicao === licao.id) return;
+      if (!sairAgora.current(true)) {
+        window.history.pushState(marca, '');
+        return;
+      }
+      saiuPeloVoltar = true;
+    }
+    window.addEventListener('popstate', aoVoltar);
+    return () => {
+      window.removeEventListener('popstate', aoVoltar);
+      if (saiuPeloVoltar) return;
+      // Saiu pelo X ou pela conclusão: tira o passo extra do histórico. Espera um instante, porque o modo estrito do
+      // React desmonta e monta de novo na mesma hora (no desenvolvimento), e aí a aula continua aberta.
+      window.setTimeout(() => {
+        if (montagensDaAula === montagem && naMarca()) window.history.back();
+      }, 0);
+    };
+  }, [licao.id]);
 
   // Atalhos: no exercício de escolha, 1, 2, 3… marcam a opção; depois do retorno, Enter continua.
   useEffect(() => {
@@ -158,7 +204,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   function tentarDeNovo() {
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
-    mudarResposta('');
+    // Na resposta aberta, o texto fica para a pessoa corrigir; nos outros formatos, recomeça do zero.
+    if (exercicio?.tipo !== 'aberta') mudarResposta('');
     window.requestAnimationFrame(() => {
       formulario.current?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, button')?.focus();
     });
@@ -176,8 +223,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       tentativas,
       dePrimeira: primeiras.every((primeira) => primeira === true),
       etapas: total,
+      acertos: avaliacoes.filter((item) => item?.correta).length,
+      exercicios: exercicios.length,
       ...(autoAvaliacao ? { pratica: autoAvaliacao } : {}),
-      rever: avaliacoes.some((item) => item !== null && !item.correta) || autoAvaliacao === 'ainda_nao',
+      rever: avaliacoes.some((item) => !item?.correta) || autoAvaliacao === 'ainda_nao',
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) return;
     // A confirmação expirou: a aula volta ao último exercício para a pessoa responder de novo.
@@ -189,11 +238,19 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     if (avaliacao) void avancar();
   };
 
+  /** Sair da lição: no meio dela, pede confirmação (o que foi feito ainda não foi salvo). Devolve se saiu. */
+  sairAgora.current = (peloVoltar = false) => {
+    if (ocupado && !peloVoltar) return false;
+    if (!licao.concluida && (passo > 0 || tentativas > 0) && !window.confirm(t.sair.pergunta)) return false;
+    voltar();
+    return true;
+  };
+
   let acao: ReactNode;
   if (etapa.tipo === 'exercicio' && avaliacao) {
     acao = (
       <Botao variante={avaliacao.correta ? 'sucesso' : 'texto'} disabled={ocupado} onClick={() => void avancar()}>
-        {pendente === 'concluir' ? t.concluindo : t.continuar}
+        {pendente === 'concluir' ? t.concluindo : avaliacao.correta ? t.continuar : t.pular}
       </Botao>
     );
   } else if (exercicio) {
@@ -215,11 +272,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   return (
     <article className="painel painel--aula" data-retorno={retorno}>
       <header className="aula-topo">
-        <button type="button" className="aula-fechar" aria-label={t.voltar} disabled={ocupado} onClick={() => {
-          // No meio da lição, sair perde o que foi feito nela: pede confirmação.
-          if (!licao.concluida && (passo > 0 || tentativas > 0) && !window.confirm(t.sair.pergunta)) return;
-          voltar();
-        }}>
+        <button type="button" className="aula-fechar" aria-label={t.voltar} disabled={ocupado} onClick={() => sairAgora.current()}>
           <Icone nome="fechar" />
         </button>
         <div className="aula-andamento">
@@ -240,9 +293,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             <div className="aula-explicacao">
               <Stu />
               <section className="aula-balao" aria-labelledby="etapa-aula">
-                <h2 id="etapa-aula">{t.conceito}</h2>
+                <h2 id="etapa-aula">{t.explicacaoDoStu}</h2>
                 <p>{licao.conceito}</p>
-                <p className="licao-origem">{t.origem} · {licao.origem}</p>
+                <p className="licao-origem">{t.origem} · {origemLegivel(licao.origem)}</p>
               </section>
             </div>
           </>
@@ -271,7 +324,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 <h2 id="aula-retorno-titulo" ref={tituloRetorno} tabIndex={-1}>
                   {avaliacao.correta
                     ? avaliacao.criterios?.some(({ atendido }) => !atendido) ? t.quaseCompleta : tituloDoAcerto(`${licao.id}-${indice}`)
-                    : t.errada}
+                    : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
                   <span className="somente-leitor"> {avaliacao.correta ? t.correta : t.incorreta}.</span>
                 </h2>
                 <p>{avaliacao.feedback}</p>
@@ -317,7 +370,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 function EtapaExemplo({ licao, titulo }: { licao: LicaoDetalhe; titulo: Ref<HTMLHeadingElement> }) {
   return (
     <section className="aula-quadro" data-etapa="exemplo" aria-labelledby="etapa-aula">
-      <h2 id="etapa-aula" ref={titulo} tabIndex={-1}>{licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}</h2>
+      {/* O selo da etapa já diz "Exemplo" no alto: o título do quadro fica para o leitor de tela (e recebe o foco). */}
+      <h2 id="etapa-aula" ref={titulo} tabIndex={-1} className="somente-leitor">{licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}</h2>
       <p>{licao.exemplo}</p>
       {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
       {licao.passos && (
@@ -461,12 +515,22 @@ function useVozDisponivel() {
   return disponivel;
 }
 
-/** Lê a fala em voz alta, no idioma dela, com a voz do próprio navegador (sem rede). */
-function falar(fala: Fala, devagar: boolean) {
+/**
+ * Lê a fala em voz alta, no idioma dela, com a voz do próprio navegador (sem rede). `aoTerminar` avisa quando a voz
+ * acaba (ou é interrompida), com uma reserva pelo tamanho da frase para navegadores que não avisam.
+ */
+function falar(fala: Fala, devagar: boolean, aoTerminar?: () => void) {
   if (!vozDisponivel()) return;
   const sintese = window.speechSynthesis;
   sintese.cancel();
   const frase = new SpeechSynthesisUtterance(fala.texto);
+  if (aoTerminar) {
+    const reserva = window.setTimeout(aoTerminar, Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
+    frase.onend = frase.onerror = () => {
+      window.clearTimeout(reserva);
+      aoTerminar();
+    };
+  }
   frase.lang = fala.idioma;
   frase.rate = devagar ? 0.6 : 0.95;
   const idioma = fala.idioma.toLowerCase();
@@ -477,15 +541,29 @@ function falar(fala: Fala, devagar: boolean) {
   sintese.speak(frase);
 }
 
+/** O que está tocando agora (normal ou devagar), para o botão mostrar "Tocando…". */
+function useTocando(fala: Fala) {
+  const [tocando, setTocando] = useState<'normal' | 'devagar' | null>(null);
+  const tocar = (devagar: boolean) => {
+    setTocando(devagar ? 'devagar' : 'normal');
+    falar(fala, devagar, () => setTocando(null));
+  };
+  return [tocando, tocar] as const;
+}
+
 function BotoesOuvir({ fala }: { fala: Fala }) {
-  if (!useVozDisponivel()) return null;
+  const disponivel = useVozDisponivel();
+  const [tocando, tocar] = useTocando(fala);
+  if (!disponivel) return null;
   return (
     <span className="ouvir">
-      <button type="button" className="ouvir__botao" aria-label={t.audio.ouvirFrase(fala.texto)} onClick={() => falar(fala, false)}>
-        <Icone nome="som" /><span aria-hidden="true">{t.audio.ouvir}</span>
+      <button type="button" className="ouvir__botao" aria-label={t.audio.ouvirFrase(fala.texto)} data-tocando={tocando === 'normal' || undefined}
+        onClick={() => tocar(false)}>
+        <Icone nome="som" /><span aria-hidden="true">{tocando === 'normal' ? t.audio.tocando : t.audio.ouvir}</span>
       </button>
-      <button type="button" className="ouvir__botao ouvir__botao--devagar" aria-label={t.audio.ouvirDevagar(fala.texto)} onClick={() => falar(fala, true)}>
-        <span aria-hidden="true">{t.audio.devagar}</span>
+      <button type="button" className="ouvir__botao ouvir__botao--devagar" aria-label={t.audio.ouvirDevagar(fala.texto)}
+        data-tocando={tocando === 'devagar' || undefined} onClick={() => tocar(true)}>
+        <span aria-hidden="true">{tocando === 'devagar' ? t.audio.tocando : t.audio.devagar}</span>
       </button>
     </span>
   );
@@ -515,14 +593,18 @@ function Falas({ falas }: { falas: Fala[] }) {
 function Escuta({ fala }: { fala: Fala }) {
   const disponivel = useVozDisponivel();
   const [mostrar, setMostrar] = useState(false);
+  const [tocando, tocar] = useTocando(fala);
   return (
     <div className="escuta">
       <p className="escuta__rotulo"><Icone nome="som" />{t.audio.escuta}</p>
       {disponivel
         ? (
           <span className="ouvir ouvir--grande">
-            <button type="button" className="ouvir__botao" onClick={() => falar(fala, false)}><Icone nome="som" />{t.audio.ouvirExercicio}</button>
-            <button type="button" className="ouvir__botao ouvir__botao--devagar" onClick={() => falar(fala, true)}>{t.audio.devagar}</button>
+            <button type="button" className="ouvir__botao" data-tocando={tocando === 'normal' || undefined} onClick={() => tocar(false)}>
+              <Icone nome="som" />{tocando === 'normal' ? t.audio.tocando : t.audio.ouvirExercicio}
+            </button>
+            <button type="button" className="ouvir__botao ouvir__botao--devagar" data-tocando={tocando === 'devagar' || undefined}
+              onClick={() => tocar(true)}>{tocando === 'devagar' ? t.audio.tocando : t.audio.devagar}</button>
           </span>
         )
         : <p className="escuta__aviso">{t.audio.semVoz}</p>}
@@ -646,20 +728,22 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
 
   return (
     <section className="aula-quadro" data-etapa="exercicio" data-tipo={exercicio.tipo} aria-labelledby="etapa-aula">
-      <h2 id="etapa-aula" ref={titulo} tabIndex={-1}>{total > 1 ? t.exercicioDe(indice + 1, total) : t.exercicio}</h2>
+      {/* O selo da etapa já diz "Exercício 1 de 2" no alto: o título do quadro fica para o leitor de tela (e recebe o foco). */}
+      <h2 id="etapa-aula" ref={titulo} tabIndex={-1} className="somente-leitor">{total > 1 ? t.exercicioDe(indice + 1, total) : t.exercicio}</h2>
       <p>{exercicio.enunciado}</p>
       {exercicio.contexto && <p>{exercicio.contexto}</p>}
       {exercicio.trecho && <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala} />}
       {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} />}
-      {consulta && (
-        <div className="aula-consulta">
-          <p className="aula-consulta__rotulo">{t.recursos.consultar}</p>
-          <RecursoDaLicao recurso={consulta} />
-        </div>
-      )}
       <form id="resposta-licao" ref={formulario} className="formulario" method="post" onSubmit={responder}>
         {campo}
       </form>
+      {/* Para consultar, depois da resposta e recolhido: a pergunta e as opções ficam no alto. */}
+      {consulta && (
+        <details className="aula-consulta aula-consulta--recolhivel">
+          <summary>{consulta.tipo === 'acorde' ? t.recursos.verAcorde(consulta.nome) : t.recursos.verFracao}</summary>
+          <RecursoDaLicao recurso={consulta} />
+        </details>
+      )}
       {exercicio.tipo === 'aberta' && avaliacao && <CorrecaoAberta avaliacao={avaliacao} />}
     </section>
   );
@@ -878,6 +962,7 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   const [rodando, setRodando] = useState(false);
   const comoFoi = useRef<HTMLLegendElement>(null);
   const acabou = restante === 0;
+  const comecou = restante < total;
 
   useEffect(() => {
     if (!rodando) return;
@@ -914,16 +999,6 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
         </ul>
       )}
       {pratica.dica && <p className="aula-pratica__dica"><Icone nome="lampada" /><span><strong>{t.pratica.dica}:</strong> {pratica.dica}</span></p>}
-      {(recurso || passos || falas) && (
-        <div className="aula-consulta">
-          <p className="aula-consulta__rotulo">{t.recursos.consultar}</p>
-          {recurso && <RecursoDaLicao recurso={recurso} />}
-          {passos && (
-            <ol className="trecho trecho--passos">{passos.map((passo, posicao) => <li key={posicao}>{passo}</li>)}</ol>
-          )}
-          {falas && <Falas falas={falas} />}
-        </div>
-      )}
       <div className="cronometro" data-estado={acabou ? 'fim' : rodando ? 'rodando' : 'parado'}
         style={{ '--andamento': 1 - restante / total } as CSSProperties}>
         <div className="cronometro__mostrador" role="timer" aria-label={`${t.pratica.cronometro}: ${t.pratica.restante(formatarTempo(restante))}`}>
@@ -934,8 +1009,18 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
           {restante < total && <Botao variante="texto" onClick={() => { setRodando(false); setRestante(total); }}>{t.pratica.recomecar}</Botao>}
         </div>
       </div>
-      <fieldset className="como-foi">
-        <legend ref={comoFoi}>{acabou ? t.pratica.acabou : t.pratica.comoFoi}</legend>
+      {(recurso || passos || falas) && (
+        <div className="aula-consulta">
+          <p className="aula-consulta__rotulo">{t.recursos.consultar}</p>
+          {recurso && <RecursoDaLicao recurso={recurso} />}
+          {passos && (
+            <ol className="trecho trecho--passos">{passos.map((passo, posicao) => <li key={posicao}>{passo}</li>)}</ol>
+          )}
+          {falas && <Falas falas={falas} />}
+        </div>
+      )}
+      <fieldset className="como-foi" disabled={!comecou && !escolha}>
+        <legend ref={comoFoi}>{acabou ? t.pratica.acabou : comecou || escolha ? t.pratica.comoFoi : t.pratica.comeceAntes}</legend>
         <div className="como-foi__opcoes">
           {AUTOAVALIACOES.map((valor) => (
             <label key={valor} data-valor={valor}>

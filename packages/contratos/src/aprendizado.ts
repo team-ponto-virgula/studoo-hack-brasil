@@ -297,6 +297,8 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     aceitarProposta: (token: string) => solicitar<PlanoDetalhe>("/aprendizado/planos", "POST", { token }),
     listarPlanos: () => solicitar<PlanoResumo[]>("/aprendizado/planos"),
     obterPlano: (id: string) => solicitar<PlanoDetalhe>(`/aprendizado/planos/${encodeURIComponent(id)}`),
+    /** Apaga a trilha, com as lições e o progresso dela. */
+    apagarPlano: (id: string) => solicitar<{ apagado: true }>(`/aprendizado/planos/${encodeURIComponent(id)}`, "DELETE"),
     obterLicao: (id: string) => solicitar<LicaoDetalhe>(`/aprendizado/licoes/${encodeURIComponent(id)}`),
     /** `indice`: qual exercício da lição (0 é o primeiro). */
     avaliarLicao: (id: string, resposta: string, indice = 0) => solicitar<Avaliacao>(`/aprendizado/licoes/${encodeURIComponent(id)}/avaliar`, "POST", { resposta, indice }),

@@ -746,3 +746,19 @@
 .aula-consulta { display: grid; gap: 10px; padding: 12px; border: 2px dashed #ffe3a3; border-radius: 18px; background: #fffaf0; }
 .aula-consulta__rotulo { color: #8a5a00; font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
 .acorde__botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Consulta recolhível no exercício: a pergunta fica no alto; o diagrama abre quando a pessoa quer. */
+.aula-consulta--recolhivel { padding: 0; gap: 0; }
+.aula-consulta--recolhivel > summary {
+  display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px 14px; cursor: pointer; list-style: none;
+  color: #8a5a00; font-weight: 900; border-radius: 16px;
+}
+/* A seta é a mesma dos outros abre-e-fecha da aula (estudio.css). */
+.aula-consulta--recolhivel > summary:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+.aula-consulta--recolhivel[open] > :not(summary) { margin: 0 12px 12px; }
+
+/* Ouvir: enquanto a voz fala, o botão diz "Tocando…" e fica marcado. */
+.ouvir__botao[data-tocando] { border-color: var(--acao); color: var(--acao-escura); background: #eef2ff; }
+
+/* "Como foi?" espera o cronômetro começar. */
+.como-foi:disabled label { opacity: 0.55; cursor: not-allowed; }

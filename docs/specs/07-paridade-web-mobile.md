@@ -24,7 +24,7 @@ Web e app devem oferecer o mesmo percurso, conteúdo, identidade visual e açõe
 | Aula | Conceito, exemplo, exercício, erro, nova tentativa e acerto |
 | Conclusão | Resumo, progresso e ações para continuar |
 | Trilha | Caminho, marcos, próximo passo e retorno aos planos |
-| Meus planos | Cartões e retomada |
+| Minhas trilhas | Cartões e retomada |
 
 As capturas locais ficam em `artifacts/paridade/`. A web usa API e banco locais com IA falsa; a prévia do app usa React Native Web e API simulada. Quantidade de planos e conteúdo gerado dependem da conta e dos dados de cada ambiente, e não são diferenças de interface.
 

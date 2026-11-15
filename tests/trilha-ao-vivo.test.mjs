@@ -327,6 +327,33 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
     assert.equal((await aceito.json()).progresso.total, 9);
   });
 
+  await t.test("apagar a trilha: só a dona, com a origem do Studoo, e as lições e o progresso vão junto", async () => {
+    const [plano] = await listar(outroCookie);
+    assert.ok(plano, "a trilha da rota de uma vez");
+    const caminho = `${prefixo}/planos/${plano.id}`;
+    assert.equal((await chamar(caminho, { metodo: "DELETE", cookie: outroCookie, origemPedido: "https://outro.example" })).status, 403);
+    assert.equal((await chamar(caminho, { metodo: "DELETE", cookie })).status, 404, "trilha de outra pessoa");
+    // Uma lição concluída antes, para conferir que o progresso também sai.
+    const detalhe = await (await chamar(caminho, { cookie: outroCookie })).json();
+    const { id: licaoId } = detalhe.fluxos[0].licoes[0];
+    const { rows } = await banco.query('SELECT "conteudo" FROM "Licao" WHERE "usuarioId" = $1 AND "id" = $2', [contas[1].id, licaoId]);
+    const acerto = await (await enviar(`/licoes/${licaoId}/avaliar`, { resposta: respostaCerta(rows[0].conteudo.exercicio) }, outroCookie)).json();
+    assert.equal((await enviar(`/licoes/${licaoId}/concluir`, { comprovante: acerto.comprovante }, outroCookie)).status, 200);
+
+    const apagada = await chamar(caminho, { metodo: "DELETE", cookie: outroCookie });
+    assert.equal(apagada.status, 200);
+    assert.deepEqual(await apagada.json(), { apagado: true });
+    assert.equal((await chamar(caminho, { cookie: outroCookie })).status, 404);
+    assert.ok(!(await listar(outroCookie)).some(({ id }) => id === plano.id));
+    const restos = await banco.query(
+      `SELECT (SELECT count(*) FROM "Fluxo" WHERE "usuarioId" = $1 AND "planoId" = $2) AS fluxos,
+              (SELECT count(*) FROM "Licao" WHERE "usuarioId" = $1 AND "id" = $3) AS licoes,
+              (SELECT count(*) FROM "RegistroEstudo" WHERE "usuarioId" = $1 AND "licaoId" = $3) AS registros`,
+      [contas[1].id, plano.id, licaoId]);
+    assert.deepEqual(restos.rows[0], { fluxos: "0", licoes: "0", registros: "0" });
+    assert.equal((await chamar(caminho, { metodo: "DELETE", cookie: outroCookie })).status, 404, "apagar de novo");
+  });
+
   await t.test("o teto provisório de gerações responde 429 em JSON, só para quem passou dele", async () => {
     const limite = Number(process.env.STUDOO_LIMITE_GERACOES ?? 20);
     if (!Number.isInteger(limite) || limite > 100) {
