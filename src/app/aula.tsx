@@ -70,6 +70,8 @@ type Andamento = {
   revisao: number[] | null;
   /** Segundos já estudados nesta lição, para o tempo do resumo seguir de onde parou. */
   segundos?: number;
+  /** O que faltava no cronômetro da prática, para ele seguir de onde parou. */
+  praticaRestante?: number;
 };
 const chaveDoAndamento = (id: string) => `studoo.aula.${id}`;
 
@@ -79,6 +81,17 @@ export function temAndamento(id: string): boolean {
   try {
     const salvo = JSON.parse(window.localStorage.getItem(chaveDoAndamento(id)) ?? 'null') as { salvoEm?: number; passo?: number } | null;
     return Boolean(salvo && (salvo.passo ?? 0) > 0 && Date.now() - (salvo.salvoEm ?? 0) < 86_400_000);
+  } catch {
+    return false;
+  }
+}
+
+/** Se alguma lição desta trilha foi começada neste navegador (menos de um dia): o cartão da trilha diz Continuar. */
+export function temAndamentoNoPlano(planoId: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const salvo = Number(window.localStorage.getItem(`studoo.plano.${planoId}`) ?? 0);
+    return salvo > 0 && Date.now() - salvo < 86_400_000;
   } catch {
     return false;
   }
@@ -163,6 +176,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [inicio] = useState(() => Date.now() - (retomada?.segundos ?? 0) * 1000);
   /** Cada "Praticar mais um pouco" recomeça o cronômetro da prática. */
   const [voltasPratica, setVoltasPratica] = useState(0);
+  /** O que falta no cronômetro da prática (guardado no andamento ao sair). */
+  const praticaRestante = useRef<number | undefined>(retomada?.praticaRestante);
+  /** Quantos exercícios a revisão rápida trouxe de volta, para o contador "Revisão 1 de 2". */
+  const [revisaoTotal, setRevisaoTotal] = useState(retomada?.revisao?.length ?? 0);
   /** O "Explique com suas palavras" já foi enviado: o convite no acerto do último exercício sai. */
   const [ensinou, setEnsinou] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
@@ -185,7 +202,12 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   let nomeEtapa: string = t.conceito;
   if (etapa.tipo === 'exemplo') nomeEtapa = licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
-  else if (etapa.tipo === 'exercicio') nomeEtapa = exercicios.length > 1 ? t.exercicioDe(indice + 1, exercicios.length) : t.exercicio;
+  else if (etapa.tipo === 'exercicio') {
+    // Na revisão, o contador é o da revisão ("Revisão 1 de 1"), não o dos exercícios da lição.
+    nomeEtapa = revisao
+      ? t.revisaoDe(Math.max(1, revisaoTotal - revisao.length + 1), Math.max(revisaoTotal, revisao.length))
+      : exercicios.length > 1 ? t.exercicioDe(indice + 1, exercicios.length) : t.exercicio;
+  }
 
   useEffect(() => {
     // Cada etapa começa do topo (também ao recomeçar). O foco vai para o título (escondido, para o leitor de tela) sem
@@ -264,9 +286,15 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   useEffect(() => {
     if (licao.concluida) return;
     if (passo === 0 && tentativas === 0) return;
+    try {
+      window.localStorage.setItem(`studoo.plano.${licao.planoId}`, String(Date.now()));
+    } catch {
+      // Sem armazenamento: o cartão da trilha só não diz Continuar.
+    }
     guardarAndamento(licao.id, {
       passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao,
       segundos: Math.round((Date.now() - inicio) / 1000),
+      ...(praticaRestante.current !== undefined ? { praticaRestante: praticaRestante.current } : {}),
     });
   }, [licao.id, licao.concluida, passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao]);
 
@@ -368,7 +396,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     // Fica o que estava certo (na aberta, o texto todo); o resto recomeça.
     if (exercicio && avaliacao) mudarResposta(respostaParaTentarDeNovo(exercicio, resposta, avaliacao));
     window.requestAnimationFrame(() => {
-      formulario.current?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, button')?.focus();
+      const campo = formulario.current?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, button');
+      campo?.focus();
+      if (campo instanceof HTMLInputElement && campo.type === 'text') campo.select();
     });
   }
 
@@ -378,6 +408,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   /** Volta aos exercícios sem acerto, limpando a resposta de cada um, para mais uma tentativa antes de concluir. */
   function revisar(pendentes: number[]) {
     setRevisao(pendentes);
+    setRevisaoTotal(pendentes.length);
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? null : atual)));
     setRespostas((atuais) => atuais.map((atual, posicao) => {
@@ -573,6 +604,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         )}
         {etapa.tipo === 'pratica' && licao.pratica && (
           <EtapaPratica pratica={licao.pratica} titulo={tituloEtapa} escolha={autoAvaliacao} escolher={setAutoAvaliacao} reinicio={voltasPratica}
+            restanteInicial={praticaRestante.current} aoMudarRestante={(valor) => { praticaRestante.current = valor; }}
             recurso={licao.recurso} passos={licao.passos} falas={licao.falas} />
         )}
       </div>
@@ -724,12 +756,14 @@ function BracoDoAcorde({ nome, casas, dedos }: { nome: string; casas: number[]; 
     .map((casa, corda) => t.recursos.corda(6 - corda, casa, t.recursos.dedos[dedos?.[corda] ?? 0] ?? ''))
     .join('; ');
   return (
-    <svg viewBox="0 0 190 216" role="img" aria-label={`${t.recursos.acorde(nome)}: ${descricao}.`}>
+    <svg viewBox="0 0 196 232" role="img" aria-label={`${t.recursos.acorde(nome)}: ${descricao}.`}>
       {[6, 5, 4, 3, 2, 1].map((numero, corda) => (
-        <text key={`c${numero}`} x={x(corda)} y={204} textAnchor="middle" className="acorde__rotulo">{numero}</text>
+        <text key={`c${numero}`} x={x(corda)} y={206} textAnchor="middle" className="acorde__rotulo">{numero}</text>
       ))}
+      <text x={95} y={226} textAnchor="middle" className="acorde__legenda-eixo">{t.recursos.eixoCorda}</text>
+      <text x={180} y={40} textAnchor="middle" className="acorde__legenda-eixo">{t.recursos.eixoCasa}</text>
       {[0, 1, 2, 3].map((linha) => (
-        <text key={`t${linha}`} x={176} y={48 + (linha + 0.5) * 34 + 5} textAnchor="middle" className="acorde__rotulo">{base + linha}ª</text>
+        <text key={`t${linha}`} x={180} y={48 + (linha + 0.5) * 34 + 6} textAnchor="middle" className="acorde__rotulo">{base + linha}</text>
       ))}
       {base === 1
         ? <rect x={27} y={43} width={136} height={7} rx={3.5} className="acorde__pestana" />
@@ -1387,7 +1421,7 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
       {exercicio.contexto && <p>{exercicio.contexto}</p>}
       {exercicio.trecho && (
         <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}
-          preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim() : undefined} />
+          preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
       )}
       {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
       <form id="resposta-licao" ref={formulario} className="formulario" method="post" onSubmit={responder}>
@@ -1511,7 +1545,10 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
   const travado = (idEsquerda?: string) => Boolean(idEsquerda && fixos?.includes(idEsquerda) && pares.some(([item]) => item === idEsquerda));
   const parDaEsquerda = (id: string) => pares.find(([item]) => item === id);
   const parDaDireita = (id: string) => pares.find(([, item]) => item === id);
-  const numero = (id: string) => pares.findIndex(([item, outro]) => item === id || outro === id) + 1;
+  const numero = (id: string) => {
+    const esquerdaDoPar = pares.find(([item, outro]) => item === id || outro === id)?.[0];
+    return esquerda.findIndex((item) => item.id === esquerdaDoPar) + 1;
+  };
   const texto = (lista: Opcao[], id: string) => lista.find((item) => item.id === id)?.texto ?? '';
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
 
@@ -1655,7 +1692,11 @@ function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao: Avalia
  * Prática no mundo real: a tarefa, os passos para conferir, a dica e um cronômetro; na volta, a pessoa conta como foi e
  * o Stu responde. A lição só conclui depois dessa resposta.
  */
-function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, falas, reinicio = 0 }: {
+function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, falas, reinicio = 0, restanteInicial, aoMudarRestante }: {
+  /** O que faltava no cronômetro na última visita (a pessoa saiu no meio da prática). */
+  restanteInicial?: number;
+  /** A cada segundo, o que falta: a lição guarda no andamento. */
+  aoMudarRestante?: (restante: number) => void;
   /** Muda a cada "Praticar mais um pouco": o cronômetro recomeça e a tela volta até ele. */
   reinicio?: number;
   /** O que a lição mostrou no exemplo, para consultar enquanto pratica. */
@@ -1668,7 +1709,13 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   escolher: (valor: AutoAvaliacao) => void;
 }) {
   const total = pratica.minutos * 60;
-  const [restante, setRestante] = useState(total);
+  const [restante, setRestante] = useState(() =>
+    restanteInicial !== undefined && restanteInicial >= 0 && restanteInicial <= total ? restanteInicial : total);
+  useEffect(() => {
+    aoMudarRestante?.(restante);
+    // Só o tempo dispara.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restante]);
   const [rodando, setRodando] = useState(false);
   const cronometro = useRef<HTMLDivElement>(null);
   useEffect(() => {

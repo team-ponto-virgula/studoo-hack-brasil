@@ -30,7 +30,7 @@ import { Confete } from './festa';
 import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
-import { Licao, temAndamento, type ResumoLicao } from './licao';
+import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
 import { mensagemDeErro, mensagemDoCodigo, mensagens, textoParaRever } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, coresDaRegiao } from './mundo';
@@ -308,11 +308,13 @@ export function Estudo({ cliente, sair, expirar }: {
   /** Apaga uma trilha depois da confirmação (na prévia no navegador, o Alert não aparece: usa a caixa do navegador). */
   function pedirParaApagar(plano: PlanoResumo) {
     const apagar = () => void apagarPlano(plano);
+    // Com o progresso, duas trilhas de mesmo nome não se confundem. Como na web.
+    const pergunta = mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total));
     if (Platform.OS === 'web') {
-      if ((globalThis as { confirm?: (texto: string) => boolean }).confirm?.(mensagens.planos.apagarPergunta(plano.titulo))) apagar();
+      if ((globalThis as { confirm?: (texto: string) => boolean }).confirm?.(pergunta)) apagar();
       return;
     }
-    Alert.alert(mensagens.planos.apagarPergunta(plano.titulo), undefined, [
+    Alert.alert(pergunta, undefined, [
       { text: mensagens.planos.manter, style: 'cancel' },
       { text: mensagens.planos.apagar, style: 'destructive', onPress: apagar },
     ]);
@@ -421,7 +423,8 @@ export function Estudo({ cliente, sair, expirar }: {
     }
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
-      return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} erro={erro} areaInicial={areaInicial}
+      return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
+        aviso={etapa.tipo === 'planos' && planos?.length === 0 ? mensagens.planos.semTrilhas : aviso} falha={falhaGeracao} erro={erro} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })} />;
     }
@@ -1411,7 +1414,7 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar }: {
   const concluido = total > 0 && concluidas === total;
   let acao: string = mensagens.planos.continuar;
   if (concluido) acao = mensagens.planos.rever;
-  else if (concluidas === 0) acao = mensagens.planos.comecar;
+  else if (concluidas === 0 && !temAndamentoNoPlano(plano.id)) acao = mensagens.planos.comecar;
   const { chao, relevo } = coresDaRegiao(indice);
   const enfeites = regiaoDoTrecho(indice).enfeites;
   const entrada = useAparecer(120 + indice * 80, 420);

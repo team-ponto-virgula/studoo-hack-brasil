@@ -37,7 +37,7 @@ const violao: Demo = {
             titulo: "Conhecer as partes do violão",
             objetivo: "Reconhecer as partes do violão que você usa para afinar e tocar.",
             conceito: "O violão tem três partes principais: a cabeça, onde ficam as tarraxas que afinam as cordas; o braço, dividido em casas pelos trastes; e o corpo, com a boca, por onde o som sai. As cordas são contadas de baixo para cima: a 1ª é a mais fina e a 6ª, a mais grossa. Quem é destro aperta as cordas no braço com a mão esquerda e toca as cordas sobre a boca com a direita (quem é canhoto, ao contrário).",
-            exemplo: "Para afinar a 5ª corda, você gira a tarraxa dela, na cabeça. Para tocar uma nota mais aguda nessa mesma corda, aperta a corda numa casa do braço, mais perto do corpo.",
+            exemplo: "Para afinar a 6ª corda (a mais grossa, o número 4 da ilustração), você gira a tarraxa dela, na cabeça. Para tocar uma nota mais aguda nessa mesma corda, aperta a corda numa casa do braço, mais perto do corpo.",
             recurso: { tipo: "imagem", src: ILUSTRACAO_VIOLAO, descricao: "① tarraxa, na cabeça · ② casa, no braço (entre dois trastes) · ③ boca, no corpo · ④ 6ª corda, a mais grossa", fonte: "Ilustração" },
             origem: origemViolao,
             exercicio: {
@@ -74,10 +74,10 @@ const violao: Demo = {
               passos: [
                 "Sente-se e apoie a curva do corpo do violão na perna direita (canhoto: na esquerda).",
                 "A mão esquerda segura o braço, com o polegar atrás dele; a direita fica sobre a boca, para tocar.",
-                "Toque “Ouvir o Mi”, toque a sua 6ª corda e gire a tarraxa dela até os dois sons ficarem iguais.",
-                "Se a sua corda soa mais grave (mais grossa) que o Mi, aperte a tarraxa para esticar a corda; se soa mais aguda, afrouxe.",
+                "Abra um app afinador gratuito, toque a 6ª corda e gire a tarraxa até o app marcar E (Mi). Sem app? Toque “Ouvir o Mi” e compare os dois sons.",
+                "Se a sua corda soa mais grave que o Mi, aperte a tarraxa para esticar a corda; se soa mais aguda, afrouxe.",
               ],
-              dica: "Gire devagar, um quarto de volta por vez: corda esticada demais pode arrebentar. Se tiver um app afinador, ele mostra quando a corda chega ao Mi (E).",
+              dica: "Gire devagar, um quarto de volta por vez: corda esticada demais pode arrebentar. Se ainda não der para afinar, tudo bem: pratique a postura e siga.",
               som: { rotulo: "Ouvir o Mi (6ª corda solta)", casas: [0, -1, -1, -1, -1, -1] },
             },
             outroJeito: "Pense no violão como uma pessoa deitada: a cabeça fica numa ponta, com as tarraxas como orelhas que você gira para afinar; o braço é comprido e marcado em casas, como uma régua; e o corpo é a barriga oca, com a boca no meio, por onde o som sai.",
@@ -174,7 +174,7 @@ const violao: Demo = {
           {
             titulo: "Ritmo: batida para baixo e para cima",
             objetivo: "Tocar uma batida simples, para baixo e para cima, em quatro tempos.",
-            conceito: "A batida marca o pulso da música e é feita pela mão que toca as cordas, perto da boca do violão. Na batida mais simples, essa mão desce em cada tempo e sobe entre eles, sem parar, como um pêndulo. Um compasso é um grupo de 4 tempos: tocar 8 compassos é contar de 1 a 4 oito vezes.",
+            conceito: "A batida marca o pulso da música e é feita pela mão que toca as cordas, perto da boca do violão. Na batida mais simples, essa mão desce em cada tempo e sobe entre eles, sem parar, como um pêndulo. Um compasso é um grupo de tempos; nesta batida, cada compasso tem 4 tempos (o mais comum na música popular), e tocar 8 compassos é contar de 1 a 4 oito vezes.",
             exemploTipo: "demonstracao",
             exemplo: "Ouça a batida com o Lá menor e conte junto: 1 e 2 e 3 e 4 e. No número, a mão desce (↓); no “e”, a mão sobe (↑).",
             recurso: { tipo: "acorde", nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0], batida: true },
@@ -202,10 +202,10 @@ const violao: Demo = {
               {
                 tipo: "lacuna",
                 enunciado: 'Complete com o número de tempos.',
-                trecho: 'Um compasso tem ___ tempos.',
+                trecho: 'Nesta batida, cada compasso tem ___ tempos.',
                 trechoTipo: "frase",
                 gabarito: ['4', 'quatro'],
-                feedbackCorreto: 'Isso: um compasso tem 4 tempos, e 8 compassos são 8 contagens de 1 a 4.',
+                feedbackCorreto: 'Isso: nesta batida, o compasso tem 4 tempos, e 8 compassos são 8 contagens de 1 a 4.',
                 feedbackIncorreto: 'É quanto você conta antes de recomeçar a contagem da batida.',
               },
             ],
@@ -329,6 +329,11 @@ const PRONUNCIA_EN: Record<string, string> = {
   "Where is the bus stop?": "UÉR iz dâ BÂS STÓP?",
   "How much is the ticket?": "RÁU MÂTCH iz dâ TÍ-ket?",
   "Sorry, can you repeat?": "SÓ-ri, kén iu ri-PÍT?",
+  "I'm flying to London.": "áim FLÁI-in tu LÂN-don",
+  "Any bags to check?": "É-ni BÉGZ tu TCHÉK?",
+  "Yes, one bag.": "IÉS, UÂN BÉG",
+  "Here's your boarding pass.": "RÍRZ iór BÓR-din PÉS",
+  "Where is gate twelve?": "UÉR iz GUÊIT TUÉLV?",
 };
 const falaEn = (texto: string, traducao: string) =>
   ({ texto, idioma: "en-US", traducao, ...(PRONUNCIA_EN[texto] ? { pronuncia: PRONUNCIA_EN[texto] } : {}) });
@@ -382,6 +387,41 @@ const ingles: Demo = {
             armadilhas: [
               { termos: "i here|i from|i staying|i happy", aviso: "Em inglês, o verbo não some: “I'm here” (I am here), “I'm from Brazil”, “I'm staying…”." },
             ],
+          },
+          {
+            titulo: "No aeroporto: check-in e embarque",
+            objetivo: "Fazer o check-in do voo e achar o portão de embarque.",
+            conceito: "No balcão da companhia aérea, mostre o passaporte e diga para onde vai: “I'm flying to London” (vou voar para Londres). A atendente pode perguntar “Any bags to check?” (alguma mala para despachar?). No cartão de embarque (“boarding pass”), procure o portão (“gate”) e o horário de embarque (“boarding time”).",
+            exemplo: "“Hi! I'm flying to London. Here's my passport.” — “Any bags to check?” — “Yes, one bag.” — “Here's your boarding pass. Gate twelve.”",
+            falas: [
+              falaEn("I'm flying to London.", "Vou voar para Londres."),
+              falaEn("Any bags to check?", "Alguma mala para despachar?"),
+              falaEn("Yes, one bag.", "Sim, uma mala."),
+              falaEn("Here's your boarding pass.", "Aqui está seu cartão de embarque."),
+              falaEn("Where is gate twelve?", "Onde fica o portão doze?"),
+            ],
+            origem: origemIngles,
+            exercicio: {
+              tipo: "associar",
+              enunciado: "Ligue cada palavra do aeroporto ao que ela quer dizer.",
+              esquerda: [op("gate", "Gate"), op("cartao", "Boarding pass"), op("mala", "Bag")],
+              direita: [op("portao", "Portão de embarque"), op("passe", "Cartão de embarque"), op("bolsa", "Mala")],
+              gabarito: ["gate=portao", "cartao=passe", "mala=bolsa"],
+              feedbackCorreto: "Isso! No cartão de embarque você acha o portão, e a mala vai no balcão.",
+              feedbackIncorreto: "Releia a explicação: o “boarding pass” é o papel (ou a tela) que mostra para onde ir. Comece por ele.",
+            },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: "No balcão, ouça a pergunta da atendente e escolha a resposta.",
+                fala: falaEn("Any bags to check?", "Alguma mala para despachar?"),
+                opcoes: [op("a", "Yes, one bag."), op("b", "Gate twelve."), op("c", "Nice to meet you!")],
+                gabarito: ["a"],
+                feedbackCorreto: "Isso: “bags” são malas, e “Yes, one bag” diz que você vai despachar uma.",
+                feedbackIncorreto: "Ouça (ou leia) de novo: “bags” são malas. Qual resposta fala de mala?",
+              },
+            ],
+            outroJeito: "Pense no aeroporto em três paradas: o balcão (passaporte e malas, “bags”), o cartão de embarque (“boarding pass”, com o portão e o horário) e o portão (“gate”), onde você espera chamarem o seu voo.",
           },
           {
             titulo: "Pedir informações na rua",
@@ -512,9 +552,9 @@ const ingles: Demo = {
               tarefa: "Diga em voz alta, devagar, estes preços em inglês. Repita até cada um soar natural.",
               minutos: 2,
               passos: ["Fifteen dollars (15)", "Fifty dollars (50)", "Thirteen dollars (13)", "Thirty dollars (30)"],
-              dica: "Em “fifteen”, a força fica no fim: fif‑TEEN. Em “fifty”, fica no começo: FIF‑ty.",
+              dica: "Em “fifteen” (fif-TÍN), a força fica no fim. Em “fifty” (FÍF-ti), fica no começo.",
             },
-            outroJeito: "Truque para não confundir: no ‑teen, a força da voz vai no fim (thir‑TEEN, fif‑TEEN) e o número fica entre 13 e 19. No ‑ty, a força vai no começo (THIR‑ty, FIF‑ty) e é uma dezena redonda: 30, 50. Na dúvida, peça para a pessoa mostrar o preço escrito.",
+            outroJeito: "Truque para não confundir: no ‑teen, a força da voz vai no fim (târ-TÍN, fif-TÍN) e o número fica entre 13 e 19. No ‑ty, a força vai no começo (TÂR-ti, FÍF-ti) e é uma dezena redonda: 30, 50. Na dúvida, peça para a pessoa mostrar o preço escrito.",
           },
         ],
       },
@@ -586,7 +626,7 @@ const ingles: Demo = {
               ],
               gabarito: ["falso", "teen"],
               feedbackCorreto: "Isso: o fim da palavra muda tudo. 15 é “fifteen” e 50 é “fifty”.",
-              feedbackIncorreto: "Fale as duas palavras devagar e repare no fim: fif‑TEEN e FIF‑ty. O fim muda o número?",
+              feedbackIncorreto: "Fale as duas palavras devagar e repare no fim: fif-TÍN e FÍF-ti. O fim muda o número?",
             },
             extras: [
               {

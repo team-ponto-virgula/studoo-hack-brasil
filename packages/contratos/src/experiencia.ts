@@ -18,7 +18,7 @@ export const mensagens = {
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       ensinoAutomatico: 'Retorno automático: o Stu procura na sua explicação as ideias-chave desta lição.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
-      vozDica: 'Até 60 segundos. Sua voz vira texto para o Stu entender, e você confere antes de enviar.',
+      vozDica: 'Escreva ou, se preferir, grave até 60 segundos: a gravação vira texto, e você confere antes de enviar.',
       vozErro: 'Não foi possível usar o microfone. Você pode digitar sua explicação.',
       vozRevisar: 'Transcrição pronta. Confira o texto antes de enviar.', gravando: 'Gravando…',
       acertos: 'O que fez sentido', lacuna: 'O que revisar', pergunta: 'Leve a ideia adiante', proximo: 'Próximo passo',
@@ -137,7 +137,9 @@ export const mensagens = {
         concluido: 'Concluída',
         apagar: 'Apagar',
         apagarRotulo: (titulo: string) => `Apagar a trilha “${titulo}”`,
-        apagarPergunta: (titulo: string) => `Apagar a trilha “${titulo}”? As lições e o progresso dela também serão apagados.`,
+        apagarPergunta: (titulo: string, detalhe?: string) =>
+            `Apagar a trilha “${titulo}”${detalhe ? ` (${detalhe})` : ''}? As lições e o progresso dela também serão apagados.`,
+        semTrilhas: 'Você ainda não tem trilhas. Comece uma aqui: escreva o que quer aprender.',
         apagada: (titulo: string) => `Trilha “${titulo}” apagada.`,
         manter: 'Manter',
         progresso: (concluidas: number, total: number) => `${concluidas} de ${total} ${total === 1 ? 'lição concluída' : 'lições concluídas'}`
@@ -283,9 +285,9 @@ export const mensagens = {
         ia: 'Gerada por IA a partir do seu pedido. Confira as lições antes de começar.',
         repetida: (titulo: string) => `Você já tem a trilha “${titulo}”. Quer continuar nela em vez de criar outra igual?`,
         abrirExistente: 'Abrir a que já existe',
-        montadaDoPedido: 'Montada a partir do seu pedido. Confira as lições antes de começar.',
-        demonstracao: 'Trilha pronta do Studoo para este assunto. Confira as lições antes de começar.',
-        origem: (origem: string) => `Origem: ${origem}`,
+        montadaDoPedido: 'Preparando a trilha para o seu pedido…',
+        demonstracao: 'Trilha pronta do Studoo, a mais próxima do seu pedido. Confira as lições antes de começar.',
+        origem: (origem: string) => `Fonte: ${origem}`,
         cancelar: 'Cancelar',
         comecar: 'Começar',
         ajustar: 'Ajustar pedido',
@@ -331,6 +333,7 @@ export const mensagens = {
         maisAbaixo: 'Mais abaixo',
         revisaoRapida: 'Revisão rápida: antes de concluir, tente de novo o que ficou sem acerto.',
         revisaoAndamento: 'Revisão rápida',
+        revisaoDe: (posicao: number, total: number) => `Revisão ${posicao} de ${total}`,
         pularAviso: 'Se pular, este exercício volta no fim da lição.',
         dicaAnterior: 'Dica da tentativa anterior',
         frasesDaLicao: 'Frases desta lição',
@@ -365,7 +368,7 @@ export const mensagens = {
             associar: (faltam: number) => `${faltam === 1 ? 'Falta 1 par' : `Faltam ${faltam} pares`} para ligar.`,
             valor: 'Diga se a frase é verdadeira ou falsa.',
             justificativa: 'Agora escolha o porquê.',
-            caracteres: (faltam: number) => `Escreva mais ${faltam} ${faltam === 1 ? 'caractere' : 'caracteres'}.`
+            caracteres: (faltam: number) => `Escreva mais um pouco: ${faltam === 1 ? 'falta 1 letra' : `faltam ${faltam} letras`}.`
         },
         resumo: {
             titulo: 'Resumo da lição',
@@ -379,7 +382,7 @@ export const mensagens = {
             pratica: 'Prática'
         },
         avancar: 'Ir para a próxima lição',
-        origem: 'Origem',
+        origem: 'Fonte',
         progresso: 'Progresso na trilha',
         demonstracao: 'Demonstração',
         exercicioDe: (atual: number, total: number) => `Exercício ${atual} de ${total}`,
@@ -436,13 +439,15 @@ export const mensagens = {
             tocarJunto: 'Tocar junto (30 s)',
             verBatida: (nome: string) => `Ver a batida no ${nome}`,
             verIlustracao: 'Ver a ilustração',
+            eixoCorda: 'corda',
+            eixoCasa: 'casa',
             semSom: 'Não foi possível tocar o som neste aparelho.',
             tocando: 'Tocando…',
             dedos: ['', 'indicador', 'médio', 'anelar', 'mínimo'],
             corda: (corda: number, casa: number, dedo: string) => casa < 0
                 ? `${corda}ª corda não toca`
                 : casa === 0 ? `${corda}ª corda solta` : `${corda}ª corda na casa ${casa}${dedo ? `, com o ${dedo}` : ''}`,
-            legendaAcorde: 'X: não toca. O: solta. Nas bolinhas, o dedo; embaixo, o número da corda (a 6ª é a mais grossa); ao lado, a casa.'
+            legendaAcorde: 'X: não toca. O: solta. Nas bolinhas, o dedo. Embaixo, o número da corda (a 6ª é a mais grossa); ao lado, o número da casa.'
         },
         ordenar: {
             instrucao: 'Toque nos itens na ordem certa. Toque de novo para tirar.',

@@ -38,7 +38,10 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * As ideias vêm por área de interesse (idiomas, música, matemática…), para mostrar que vale qualquer assunto;
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
-export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona }: {
+export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona,
+  avisoSemTrilhas = false }: {
+  /** Veio de "Minhas trilhas" sem nenhuma trilha: um aviso diz isso (antes, a tela não mudava e parecia travada). */
+  avisoSemTrilhas?: boolean;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
   /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
@@ -113,6 +116,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         <p className="pedido-heroi__fala" aria-live="polite">{modo === 'material' ? mensagens.inicio.materialTexto : fala}</p>
       </header>
       {falha === 'limite_geracoes' && temPlanos && <Botao variante="secundario" onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>}
+      {avisoSemTrilhas && <p className="pedido-aviso" role="status">{mensagens.planos.semTrilhas}</p>}
       {aviso && <p className="pedido-aviso">{aviso}</p>}
       {falha && <EstadoErro codigo={falha}>{repetivel && <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>}</EstadoErro>}
       <div hidden={modo !== 'material'} className="pedido-material">
