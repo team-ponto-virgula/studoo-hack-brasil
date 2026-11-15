@@ -13,7 +13,7 @@ import {
   type PropostaPlano,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
-import { mensagens } from '../mensagens/pt-BR';
+import { mensagens, textoParaRever } from '../mensagens/pt-BR';
 import {
   AcaoPrincipal,
   Botao,
@@ -721,7 +721,7 @@ function montarTrilha(plano: PlanoDetalhe) {
     return {
       id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte,
       ...(estado === 'atual' && temAndamento(licao.id) ? { andamento: true } : {}),
-      ...(licao.rever ? { rever: true } : {}),
+      ...(licao.rever ? { rever: licao.rever } : {}),
     };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
@@ -904,11 +904,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       {resumo?.rever && (
         <p className="conclusao-rever">
           <Icone nome="revisao" />
-          {resumo.acertos < resumo.exercicios
-            ? mensagens.licao.revisarErros(resumo.exercicios - resumo.acertos)
-            : resumo.acertosDePrimeira < resumo.exercicios
-              ? mensagens.licao.revisarTentativas(resumo.exercicios - resumo.acertosDePrimeira)
-              : mensagens.licao.revisarPratica}
+          {textoParaRever(resumo)}
         </p>
       )}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}

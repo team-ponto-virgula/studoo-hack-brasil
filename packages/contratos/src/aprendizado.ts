@@ -1,4 +1,5 @@
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino } from './estudio';
+import type { MotivoRever } from './licao';
 export * from './estudio';
 export * from './licao';
 export * from './som';
@@ -31,8 +32,8 @@ export interface PlanoDetalhe extends PlanoResumo {
     titulo: string;
     progresso: Progresso;
     proximaLicaoId: string | null;
-    /** `rever`: concluída com erro antes do acerto, exercício sem acerto ou a prática em "ainda não" (o mapa marca). */
-    licoes: { id: string; titulo: string; concluida: boolean; ponte?: { concluida: boolean }; rever?: boolean }[];
+    /** `rever`: por que vale rever a lição concluída (`motivoParaRever`); o mapa marca "Vale rever" e diz o motivo. */
+    licoes: { id: string; titulo: string; concluida: boolean; ponte?: { concluida: boolean }; rever?: MotivoRever }[];
   }[];
   /** Somas das lições concluídas com resumo: tempo e exercícios de primeira (para o fim da trilha). */
   estatisticas?: { segundos: number; acertosDePrimeira: number; exercicios: number };

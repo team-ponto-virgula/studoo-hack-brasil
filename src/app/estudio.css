@@ -93,6 +93,7 @@
   font-weight: 800;
 }
 .estudio-exemplo {
+  white-space: pre-line;
   background: #eef2ff;
   padding: 18px;
   border-radius: 16px;

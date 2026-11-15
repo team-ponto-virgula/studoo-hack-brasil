@@ -1,4 +1,4 @@
-import type { PlanoDetalhe } from '@studoo/contratos';
+import type { MotivoRever, PlanoDetalhe } from '@studoo/contratos';
 import { mensagens } from './mensagens';
 
 /*
@@ -9,8 +9,8 @@ import { mensagens } from './mensagens';
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco entre um trecho e outro. */
 /** `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar). Como na web. */
-/** `rever`: concluída com um erro antes do acerto (ou a prática em "ainda não"); o mapa marca "Vale rever". Como na web. */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: boolean };
+/** `rever`: por que vale rever a lição concluída (`motivoParaRever`); o mapa marca "Vale rever". Como na web. */
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever };
 
 /** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. Como na web. */
 export function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string; rever: boolean } | null {
@@ -49,7 +49,7 @@ export function montarTrilha(plano: PlanoDetalhe, temAndamento: (id: string) => 
     return {
       id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte,
       ...(estado === 'atual' && temAndamento(licao.id) ? { andamento: true } : {}),
-      ...(licao.rever ? { rever: true } : {}),
+      ...(licao.rever ? { rever: licao.rever } : {}),
     };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
@@ -67,7 +67,8 @@ export function falaDoStu(nos: readonly NoCaminho[]) {
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 export function explicar(nos: readonly NoCaminho[], indice: number) {
   if (nos[indice].estado === 'concluida') {
-    if (nos[indice].rever) return mensagens.trilha.concluidaRever;
+    const motivo = nos[indice].rever;
+    if (motivo) return mensagens.trilha.concluidaRever(motivo);
     return nos[indice].ponte ? mensagens.trilha.concluidaComReforco : mensagens.trilha.concluidaTexto;
   }
   const pendentes = nos.slice(0, indice).filter((anterior) => anterior.estado !== 'concluida');

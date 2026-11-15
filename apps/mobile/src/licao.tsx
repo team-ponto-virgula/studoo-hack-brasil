@@ -5,6 +5,7 @@ import {
   etapasDaLicao,
   exerciciosDaLicao,
   faltaParaVerificar,
+  motivoParaRever,
   origemLegivel,
   respostaParaTentarDeNovo,
   respostaCompleta,
@@ -29,6 +30,7 @@ import {
   Ordenar,
   Passos,
   RecursoDaLicao,
+  TextoComFalas,
   Trecho,
   VerdadeiroFalso,
   pararVoz,
@@ -146,6 +148,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   // Onde fica a prática e, dentro dela, o "Como foi?": para rolar até a pergunta.
   const praticaY = useRef(0);
   const comoFoiY = useRef(0);
+  /** Nas etapas de leitura: ainda tem conteúdo abaixo da parte visível (o botão diz "Continuar lendo"). Como na web. */
+  const [temMais, setTemMais] = useState(false);
+  const alturaConteudo = useRef(0);
   const [errosSeguidos, setErrosSeguidos] = useState(0);
   const [pedidoPonte, setPedidoPonte] = useState(0);
   const [consultaAberta, setConsultaAberta] = useState(false);
@@ -153,6 +158,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const tituloEtapa = useRef<ComponentRef<typeof Text>>(null);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const apoioPosicao = useRef(0);
+  /** Pediu o reforço: quando o cartão crescer (o reforço chegou), a tela rola de novo até ele. */
+  const rolarParaApoio = useRef(0);
   // Para rolar até o fim do exercício depois da correção: onde ele termina, quanto já rolou e a altura visível.
   const fimDoExercicio = useRef(0);
   const posicaoRolagem = useRef(0);
@@ -179,20 +186,40 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   useEffect(() => {
     // Cada etapa começa do topo, como uma tela nova; a voz de uma etapa não continua na outra.
     rolagem.current?.scrollTo({ y: 0, animated: false });
+    posicaoRolagem.current = 0;
+    const medida = setTimeout(medirMais, 250);
     pararVoz();
     // O reforço é de cada exercício: um pedido antigo não vale para o próximo.
     setPedidoPonte(0);
-    if (passo === 0) return;
+    if (passo === 0) return () => clearTimeout(medida);
     const espera = setTimeout(() => {
       if (tituloEtapa.current) AccessibilityInfo.sendAccessibilityEvent(tituloEtapa.current, 'focus');
     }, 120);
-    return () => clearTimeout(espera);
+    return () => {
+      clearTimeout(espera);
+      clearTimeout(medida);
+    };
+    // medirMais lê as medidas do momento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [passo, revisao]);
 
   // O aviso de "continuou de onde parou" vale para a etapa em que a pessoa voltou; na seguinte, sai.
   useEffect(() => {
     if (retomada && passo !== retomada.passo) setAvisoRetomada(false);
   }, [passo, retomada]);
+
+  /** Confere se o fim do conteúdo (a legenda, o passo a passo) ainda está abaixo da parte visível. */
+  function medirMais() {
+    const leitura = etapa.tipo === 'conceito' || etapa.tipo === 'exemplo';
+    const falta = alturaConteudo.current - (posicaoRolagem.current + alturaVisivel.current);
+    const novo = leitura && alturaVisivel.current > 0 && falta > 24;
+    setTemMais((antes) => (antes === novo ? antes : novo));
+  }
+
+  /** "Continuar lendo": rola mais um pedaço do conteúdo. */
+  function lerMais() {
+    rolagem.current?.scrollTo({ y: posicaoRolagem.current + alturaVisivel.current * 0.75, animated: reduzir === false });
+  }
 
   /** Leva até o "Como foi?" da prática (no fim do cronômetro ou ao concluir sem contar como foi). */
   function mostrarComoFoi() {
@@ -275,7 +302,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setRevisao(pendentes);
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? null : atual)));
-    setRespostas((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? '' : atual)));
+    setRespostas((atuais) => atuais.map((atual, posicao) => {
+      const anterior = avaliacoes[posicao];
+      if (!pendentes.includes(posicao)) return atual;
+      return anterior ? respostaParaTentarDeNovo(exercicios[posicao], atual, anterior) : '';
+    }));
     setPasso(etapaDoExercicio(pendentes[0]));
   }
 
@@ -311,7 +342,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       acertosDePrimeira,
       exercicios: exercicios.length,
       ...(autoAvaliacao ? { pratica: autoAvaliacao } : {}),
-      rever: acertosDePrimeira < exercicios.length || autoAvaliacao === 'ainda_nao',
+      // Vale rever: ficou exercício sem acerto, a maior parte saiu errada antes do acerto ou a prática não saiu (como o mapa).
+      rever: acertos < exercicios.length || motivoParaRever({ acertosDePrimeira, exercicios: exercicios.length, pratica: autoAvaliacao }) !== null,
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) {
       andamentos.delete(licao.id);
@@ -344,6 +376,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         rotuloPular={revisao ? t.seguirSemAcertar : t.pular} compacto={pedidoPonte > 0} avisoPular={revisao ? undefined : t.pularAviso}
         verReforco={() => {
           rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
+          rolarParaApoio.current = Date.now();
           setPedidoPonte((atual) => atual + 1);
         }}
         continuar={() => void avancar()} />
@@ -364,10 +397,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {!autoAvaliacao && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.escolha}</Text>}
         {/* Sem contar como foi, o botão leva até a pergunta, em vez de ficar apagado sem explicação. Como na web. */}
         <Botao testID="concluir-pratica" rotulo={pendente === 'concluir' ? t.concluindo : t.pratica.concluir} variante="sucesso"
-          desativado={ocupado} ocupado={pendente === 'concluir'} carregando={pendente === 'concluir'}
+          desativado={ocupado} esmaecido={!autoAvaliacao} dica={autoAvaliacao ? undefined : t.pratica.escolha}
+          ocupado={pendente === 'concluir'} carregando={pendente === 'concluir'}
           acao={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())} />
       </View>
     );
+  } else if (temMais) {
+    rodape = <Botao testID="ler-mais" rotulo={t.continuarLendo} acao={lerMais} />;
   } else {
     rodape = <Botao testID="avancar-licao" rotulo={t.seguir} icone="seta" desativado={ocupado} acao={() => setPasso((atual) => atual + 1)} />;
   }
@@ -397,10 +433,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           </View>
         );
       case 'ordenar':
-        return <Ordenar itens={atual.itens} valor={resposta} mudar={mudarResposta} desativado={ocupado || respondido} certos={avaliacao?.certos} />;
+        return <Ordenar itens={atual.itens} valor={resposta} mudar={mudarResposta} desativado={ocupado || respondido} certos={avaliacao?.certos}
+          fixos={avaliacao ? undefined : errosAnteriores[indice]?.certos} />;
       case 'associar':
         return <Associar esquerda={atual.esquerda} direita={atual.direita} valor={resposta} mudar={mudarResposta}
-          desativado={ocupado || respondido} certos={avaliacao?.certos} />;
+          desativado={ocupado || respondido} certos={avaliacao?.certos} fixos={avaliacao ? undefined : errosAnteriores[indice]?.certos} />;
       case 'verdadeiro_falso':
         return (
           <VerdadeiroFalso afirmacao={atual.afirmacao} valor={resposta} mudar={mudarResposta} desativado={ocupado || respondido}
@@ -424,7 +461,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     // A conferência da fala grava e manda para a rota de voz do servidor (no aparelho).
     <TranscritorContexto.Provider value={cliente.transcrever}>
     <Tela pagina={`licao-${licao.id}`} topo={topo} rodape={rodape} rolagem={rolagem}
-      aoMedir={(altura) => { alturaVisivel.current = altura; }} aoRolar={(y) => { posicaoRolagem.current = y; }}
+      aoMedir={(altura) => { alturaVisivel.current = altura; medirMais(); }} aoRolar={(y) => { posicaoRolagem.current = y; medirMais(); }}
+      aoMedirConteudo={(altura) => { alturaConteudo.current = altura; medirMais(); }}
       estiloRodape={retorno === 'certa' ? licaoEstilos.rodapeCerto : retorno === 'errada' ? licaoEstilos.rodapeErrado : undefined}>
       <EntradaDaEtapa key={passo}>
         <View style={licaoEstilos.etapa}>
@@ -458,7 +496,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <Text style={estilos.introducao}>{licao.objetivo}</Text>
             <ExplicacaoDoStu>
               <Text accessibilityRole="header" style={licaoEstilos.balaoTitulo}>{t.explicacaoDoStu}</Text>
-              <Text style={estilos.texto}>{licao.conceito}</Text>
+              <TextoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} estilo={estilos.texto} />
               <Text style={estilos.legenda}>{t.origem} · {origemLegivel(licao.origem)}</Text>
             </ExplicacaoDoStu>
             {(licao.recurso?.tipo === 'imagem' || licao.recurso?.tipo === 'acorde') && (
@@ -511,7 +549,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   <Text style={licaoEstilos.consultaBotaoTexto}>
                     {consultaAberta ? t.recursos.esconder
                       : licao.recurso.tipo === 'acorde'
-                        ? licao.recurso.anterior ? t.recursos.verTroca(licao.recurso.anterior.nome, licao.recurso.nome) : t.recursos.verAcorde(licao.recurso.nome)
+                        ? licao.recurso.anterior
+                          ? t.recursos.verTroca(licao.recurso.anterior.nome, licao.recurso.nome)
+                          : licao.recurso.batida ? t.recursos.verBatida(licao.recurso.nome) : t.recursos.verAcorde(licao.recurso.nome)
                         : t.recursos.verFracao}
                   </Text>
                 </Pressable>
@@ -544,7 +584,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         )}
         {erro && <EstadoMensagem mensagem={erro} />}
       </EntradaDaEtapa>
-      {exercicio && <View onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
+      {exercicio && <View onLayout={(evento) => {
+        apoioPosicao.current = evento.nativeEvent.layout.y;
+        // O reforço chegou e o apoio cresceu: leva ao alto dele (antes, a rolagem parava no fim da página curta).
+        if (Date.now() - rolarParaApoio.current < 4000) rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
+      }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
         ultimo={indice === exercicios.length - 1}
         aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })} /></View>}
     </Tela>

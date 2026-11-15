@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import type { MotivoRever } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Stu } from './componentes';
 import { Confete } from './festa';
@@ -12,9 +13,15 @@ export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco e a região do mundo. */
 /**
  * `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar, não Começar).
- * `rever`: concluída com um erro antes do acerto (ou a prática em "ainda não"); o mapa marca "Vale rever".
+ * `rever`: por que vale rever a lição concluída (`motivoParaRever`); o mapa marca "Vale rever" e o balão diz o motivo.
  */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: boolean };
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever };
+
+/** O título sem quebra no meio de uma palavra com hífen (“check-" numa linha e “in” na outra). */
+function semQuebrarHifen(texto: string): ReactNode {
+  const partes = texto.split(/(\S*\p{L}-\p{L}\S*)/u);
+  return partes.length === 1 ? texto : partes.map((parte, indice) => (indice % 2 ? <span key={indice} className="sem-quebra">{parte}</span> : parte));
+}
 
 /** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. */
 function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string } | null {
@@ -112,7 +119,8 @@ function FaixaParte({ numero, resumo, trecho }: { numero: number; trecho: number
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 function explicar(nos: readonly NoCaminho[], indice: number) {
   if (nos[indice].estado === 'concluida') {
-    if (nos[indice].rever) return mensagens.trilha.concluidaRever;
+    const motivo = nos[indice].rever;
+    if (motivo) return mensagens.trilha.concluidaRever(motivo);
     return nos[indice].ponte ? mensagens.trilha.concluidaComReforco : mensagens.trilha.concluidaTexto;
   }
   const pendentes = nos.slice(0, indice).filter((anterior) => anterior.estado !== 'concluida');
@@ -400,12 +408,12 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {recem && <Confete quantidade={12} />}
                 {/* Um balão só no nó atual: a ação e o nome da lição juntos. */}
-                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar}</span><span className="caminho-no__etiqueta-titulo">{no.titulo}</span></span>}
+                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar}</span><span className="caminho-no__etiqueta-titulo">{semQuebrarHifen(no.titulo)}</span></span>}
                 {no.estado === 'bloqueada' && <span className="caminho-no__selo"><Icone nome="cadeado" /></span>}
               </span>
               {/* O nome de cada lição fica à vista embaixo do nó (o atual já mostra o nome no balão "Começar"): dá para achar uma lição para rever sem tocar uma por uma. */}
               {(!atual || no.estado === 'previa') && <span className="caminho-no__texto" aria-hidden="true">
-                <span className="caminho-no__titulo">{no.titulo}</span>
+                <span className="caminho-no__titulo">{semQuebrarHifen(no.titulo)}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
                 {/* O reforço e o "vale rever" são um selo com ícone (o desenho de blocos parecia um carregamento travado). */}
                 {selo && <span className="caminho-ponte" data-rever={selo.texto === mensagens.trilha.valeRever || undefined}><Icone nome={selo.icone} />{selo.texto}</span>}

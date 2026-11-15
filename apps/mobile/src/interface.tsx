@@ -28,7 +28,7 @@ import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, rolagem, aoMedir, aoRolar, estiloConteudo, estiloRodape }: {
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, estiloConteudo, estiloRodape }: {
   children: ReactNode;
   acoes?: ReactNode;
   /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
@@ -42,6 +42,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   aoMedir?: (altura: number) => void;
   /** Quanto a pessoa já rolou, para a tela acompanhar o conteúdo que chega sem tirar a pessoa do lugar. */
   aoRolar?: (y: number) => void;
+  /** Altura de todo o conteúdo, para a tela saber se ainda tem coisa abaixo da parte visível. */
+  aoMedirConteudo?: (altura: number) => void;
   estiloConteudo?: StyleProp<ViewStyle>;
   /** Fundo do rodapé, como o verde ou o âmbar do retorno da aula. */
   estiloRodape?: StyleProp<ViewStyle>;
@@ -69,7 +71,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[estilos.conteudo, estiloConteudo]}
           onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
-          onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}>
+          onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}
+          onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura))}>
           <Entrada>{children}</Entrada>
         </ScrollView>
         {rodape && <View style={[estilos.rodape, estiloRodape]}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}
@@ -164,7 +167,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas }: {
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false }: {
+  compacto = false, esmaecido = false }: {
+  /** Parece desativado, mas responde ao toque e leva ao que falta (como contar como foi a prática). Como na web. */
+  esmaecido?: boolean;
   rotulo: string;
   acao: () => void;
   testID?: string;
@@ -194,7 +199,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
     return () => pressao.stopAnimation();
   }, [bloqueado, reduzir, pressao]);
   let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' ? cores.fundo : cores.acao;
-  if (desativado) corTexto = cores.textoSecundario;
+  if (desativado || esmaecido) corTexto = cores.textoSecundario;
 
   return (
     <Pressable
@@ -219,7 +224,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
         pressed && variante !== 'texto' && estilos.botaoPressionado,
         pressed && variante === 'texto' && estilos.botaoPressionado,
         focado && estilos.foco,
-        desativado && variante !== 'texto' && estilos.botaoDesativado,
+        (desativado || esmaecido) && variante !== 'texto' && estilos.botaoDesativado,
       ]}
     >
       <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">

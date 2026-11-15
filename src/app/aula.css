@@ -438,6 +438,12 @@
 .falas__textos { min-width: 0; }
 .falas__texto { margin: 0; font-size: 1.125rem; font-weight: 800; }
 .falas__traducao { margin: 2px 0 0; color: var(--texto2); font-size: 0.9rem; }
+/* Frase entre aspas na explicação (idiomas): um toque e a voz fala. Fica no fluxo do texto, com um sublinhado pontilhado. */
+.fala-inline { display: inline; margin: 0; padding: 0 1px; border: 0; border-bottom: 2px dotted var(--acao); background: none;
+  color: var(--acao-escura); font: inherit; font-weight: 800; text-align: inherit; cursor: pointer; }
+.fala-inline .icone { display: inline-block; width: 15px; height: 15px; margin-left: 3px; vertical-align: -2px; }
+.fala-inline:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 4px; }
+
 /* Depois do acerto na escuta: a tradução embaixo da frase. */
 .escuta__traducao { margin: -2px 0 0; color: var(--texto2); font-weight: 700; }
 
@@ -445,6 +451,9 @@
 .falas--conclusao { width: min(100%, 30rem); margin-top: 24px; text-align: start; }
 .falas--conclusao h2 { margin: 0 0 8px; font-size: 1.0625rem; text-align: center; }
 .painel--concluida .falas--conclusao p { margin-inline: 0; }
+
+/* "Continuar lendo": a seta aponta para baixo, onde está o resto do conteúdo. */
+.botao--ler-mais .icone { transform: rotate(90deg); }
 
 /* A dica da tentativa anterior, embaixo do campo, enquanto a pessoa tenta de novo. */
 .aula-dica { display: grid; gap: 4px; margin-top: 14px; padding: 12px 14px; border-left: 4px solid #e0a92e; border-radius: 12px; background: #fff8e6; color: #5c3b00; }
@@ -685,6 +694,10 @@
 
 .como-foi { margin: 0; padding: 0; border: 0; }
 .como-foi legend { margin-bottom: 10px; font-size: 1.125rem; font-weight: 900; }
+/* Concluir sem contar como foi: a pergunta ganha um realce rápido, para ficar claro por que a tela rolou até ela. */
+.como-foi[data-chamar] legend { animation: como-foi-chamar 0.8s ease 2; border-radius: 10px; }
+@keyframes como-foi-chamar { 50% { background: #fff1c2; box-shadow: 0 0 0 6px #fff1c2; } }
+@media (prefers-reduced-motion: reduce) { .como-foi[data-chamar] legend { animation: none; background: #fff1c2; } }
 .como-foi__opcoes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .como-foi input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .como-foi label {
@@ -761,7 +774,7 @@
 .acorde__botoes { display: flex; flex-wrap: wrap; gap: 8px; }
 /* Na troca (Am → C), os dois botões de ouvir têm a mesma largura, cada um embaixo do seu acorde; o Parar ocupa a linha. */
 .acorde[data-comparacao] .acorde__botoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; max-width: 400px; }
-.acorde[data-comparacao] .acorde__botoes > .botao { justify-content: center; }
+.acorde[data-comparacao] .acorde__botoes > .botao { justify-content: center; gap: 6px; padding-inline: 10px; white-space: nowrap; }
 .acorde[data-comparacao] .acorde__botoes > :nth-child(n + 3) { grid-column: 1 / -1; }
 
 /* Consulta recolhível no exercício: a pergunta fica no alto; o diagrama abre quando a pessoa quer. */

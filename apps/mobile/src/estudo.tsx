@@ -31,7 +31,7 @@ import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos, useBalan
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, type ResumoLicao } from './licao';
-import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
+import { mensagemDeErro, mensagemDoCodigo, mensagens, textoParaRever } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, coresDaRegiao } from './mundo';
 import { marcarApresentacaoVista } from './preferencias';
@@ -1481,11 +1481,7 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
         <View testID="conclusao-rever" style={estudoEstilos.rever}>
           <Icone nome="revisao" tamanho={20} cor={cores.alerta} />
           <Text style={estudoEstilos.reverTexto}>
-            {resumo.acertos < resumo.exercicios
-              ? mensagens.licao.revisarErros(resumo.exercicios - resumo.acertos)
-              : resumo.acertosDePrimeira < resumo.exercicios
-                ? mensagens.licao.revisarTentativas(resumo.exercicios - resumo.acertosDePrimeira)
-                : mensagens.licao.revisarPratica}
+            {textoParaRever(resumo)}
           </Text>
         </View>
       )}
