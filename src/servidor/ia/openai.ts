@@ -313,6 +313,12 @@ const esquemaDaLicao = objetoEstrito({
         casas: { type: ["array", "null"], items: { type: "integer" } },
         dedos: { type: ["array", "null"], items: { type: "integer" } },
         batida: { type: ["boolean", "null"] },
+        anterior: {
+          anyOf: [
+            objetoEstrito({ nome: textoJson, casas: { type: "array", items: { type: "integer" } }, dedos: { type: ["array", "null"], items: { type: "integer" } } }),
+            nulo,
+          ],
+        },
         eventos: { type: ["array", "null"], items: objetoEstrito({ quando: textoJson, texto: textoJson }) },
         numerador: { type: ["integer", "null"] },
         denominador: { type: ["integer", "null"] },
@@ -342,7 +348,8 @@ const instrucoesDaLicao = [
   "Exemplo e recursos:",
   "- exemploTipo é \"demonstracao\" nas habilidades práticas (tocar, cozinhar, desenhar, praticar um esporte): o exemplo apresenta e passos traz de 3 a 6 passos curtos para fazer junto. Nos outros casos, exemploTipo é \"exemplo\" e passos é null.",
   "- outroJeito: a mesma ideia central por outro caminho, para quem errou um exercício: uma analogia do dia a dia ou uma regra prática, em 1 a 3 frases, sem repetir o conceito com outras palavras.",
-  "- recurso, só quando ajudar a ver: acorde de violão (tipo \"acorde\", nome como \"Am\", casas com 6 inteiros da 6ª corda à 1ª: -1 não toca, 0 solta, n é a casa; dedos com 6 inteiros de 0 a 4; batida true se a lição for de ritmo) ou linha_do_tempo (de 2 a 8 eventos com quando e texto, para história, processos e tempos de preparo) ou fracao (barra com denominador de 1 a 12 partes iguais e numerador partes pintadas; nome é o rótulo, como \"2/4 = 1/2\"). Nos campos que não se aplicam, use null. Sem recurso, null.",
+  "- recurso, só quando ajudar a ver: acorde de violão (tipo \"acorde\", nome como \"Am\", casas com 6 inteiros da 6ª corda à 1ª: -1 não toca, 0 solta, n é a casa; dedos com 6 inteiros de 0 a 4; batida true se a lição for de ritmo; anterior, só numa lição de troca de acordes, é o acorde de onde a mão sai, no mesmo formato, para os dois aparecerem lado a lado) ou linha_do_tempo (de 2 a 8 eventos com quando e texto, para história, processos e tempos de preparo) ou fracao (barra com denominador de 1 a 12 partes iguais e numerador partes pintadas; nome é o rótulo, como \"2/4 = 1/2\"). Nos campos que não se aplicam, use null. Sem recurso, null.",
+  "- Numa lição de idioma, escreva no conceito e no exemplo cada frase do idioma estudado entre aspas curvas (“Excuse me”): a pessoa toca nelas para ouvir.",
   "- falas, em lições de idioma: de 1 a 4 frases curtas no idioma estudado, com idioma no formato BCP 47 (como en-US, es-ES, fr-FR), a traducao em português e a pronuncia: como a frase soa, escrita com as letras do português, com hífen entre as sílabas das palavras longas e a sílaba mais forte em MAIÚSCULAS (\"Excuse me, where is the station?\" vira \"eks-KIÚZ mi, UÉR iz dâ STÊI-shan?\"). Nos outros assuntos, falas é null.",
   "- pratica, nas habilidades que se treinam fora do app: uma tarefa concreta e segura, minutos de 1 a 20 para o cronômetro, até 5 passos, uma dica (ou null) e som. som só existe em lições de violão: um som de referência para comparar enquanto pratica, com rotulo curto (como \"Ouvir o Mi (6ª corda solta)\") e casas com 6 inteiros da 6ª corda à 1ª, como no acorde (de -1 a 12); nos outros casos, som é null. Sem prática, pratica é null.",
   "Exercícios (use formatos variados; o primeiro é o principal):",
@@ -557,12 +564,22 @@ export function normalizarConteudo(bruto: unknown, origem: string): ConteudoLica
   const recursoBruto = dado.recurso as Record<string, unknown> | null | undefined;
   let recurso: Recurso | undefined;
   if (recursoBruto?.tipo === "acorde") {
+    const anteriorBruto = recursoBruto.anterior as Record<string, unknown> | null | undefined;
+    const anterior = anteriorBruto
+      ? {
+        nome: textoDe(anteriorBruto.nome),
+        casas: Array.isArray(anteriorBruto.casas) ? anteriorBruto.casas as number[] : [],
+        ...(Array.isArray(anteriorBruto.dedos) ? { dedos: anteriorBruto.dedos as number[] } : {}),
+      }
+      : undefined;
     recurso = {
       tipo: "acorde",
       nome: textoDe(recursoBruto.nome),
       casas: Array.isArray(recursoBruto.casas) ? recursoBruto.casas as number[] : [],
       ...(Array.isArray(recursoBruto.dedos) ? { dedos: recursoBruto.dedos as number[] } : {}),
       ...(recursoBruto.batida === true ? { batida: true } : {}),
+      // Um acorde anterior fora do formato sai; o acorde da lição continua.
+      ...(anterior && recursoValido({ tipo: "acorde", ...anterior }) ? { anterior } : {}),
     };
   } else if (recursoBruto?.tipo === "fracao") {
     recurso = {
@@ -594,10 +611,13 @@ export function normalizarConteudo(bruto: unknown, origem: string): ConteudoLica
     : undefined;
   const outroJeito = textoAte(dado.outroJeito, 600);
 
+  // Numa lição de idioma (com falas), as frases entre aspas retas viram aspas curvas, que o app torna tocáveis. Fora
+  // dos idiomas, as aspas ficam como vieram (podem ser parte de um código).
+  const aspas = (texto: string) => (falas.length > 0 ? texto.replace(/"([^"\n]{1,200})"/g, "“$1”") : texto);
   const conteudo: ConteudoLicao = {
     objetivo: textoDe(dado.objetivo),
-    conceito: textoDe(dado.conceito),
-    exemplo: textoDe(dado.exemplo),
+    conceito: aspas(textoDe(dado.conceito)),
+    exemplo: aspas(textoDe(dado.exemplo)),
     ...(dado.exemploTipo === "demonstracao" ? { exemploTipo: "demonstracao" as const } : {}),
     ...(passos.length > 0 ? { passos } : {}),
     ...(recurso && recursoValido(recurso) ? { recurso } : {}),

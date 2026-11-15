@@ -311,6 +311,30 @@ test("a IA também escreve a pronúncia, as armadilhas, os critérios essenciais
   assert.deepEqual(violao.falas, [{ texto: "Hello!", idioma: "en-US", traducao: "Olá!" }], "as falas continuam");
 });
 
+test("a troca de acordes vem com o acorde anterior, e as frases de idioma ficam entre aspas curvas para tocar", () => {
+  const retornos = { feedbackCorreto: "Isso.", feedbackIncorreto: "Ainda não." };
+  const nulos = { contexto: null, trecho: null, trechoTipo: null, fala: null, opcoes: null, itens: null, esquerda: null, direita: null, afirmacao: null, exata: null, criterios: null, modelo: null, armadilhas: null };
+  const exercicios = [{ ...nulos, tipo: "lacuna", enunciado: "Complete.", trecho: "Gire a ___.", gabarito: ["tarraxa"], ...retornos }];
+  const acorde = (anterior) => ({ tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0], batida: null, anterior, eventos: null, numerador: null, denominador: null });
+  const troca = normalizarConteudo({
+    objetivo: "Trocar de acorde.", conceito: "Do Am para o C, dois dedos ficam.", exemplo: "Am → C.",
+    recurso: acorde({ nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0] }), exercicios,
+  }, "IA");
+  assert.deepEqual(troca.recurso.anterior, { nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0] });
+  const semAnterior = normalizarConteudo({ objetivo: "Trocar.", conceito: "Dois dedos ficam.", exemplo: "Am → C.", recurso: acorde({ nome: "Am", casas: [0, 2], dedos: null }), exercicios }, "IA");
+  assert.equal(semAnterior.recurso.nome, "C", "o acorde da lição fica");
+  assert.equal("anterior" in semAnterior.recurso, false, "o anterior fora do formato sai");
+
+  const idioma = normalizarConteudo({
+    objetivo: "Pedir licença.", conceito: 'Para chamar alguém, diga "Excuse me".', exemplo: 'Na rua: "Excuse me, where is the bank?"',
+    falas: [{ texto: "Excuse me.", idioma: "en-US", traducao: "Com licença.", pronuncia: null }], exercicios,
+  }, "IA");
+  assert.equal(idioma.conceito, "Para chamar alguém, diga “Excuse me”.");
+  assert.equal(idioma.exemplo, "Na rua: “Excuse me, where is the bank?”");
+  const codigo = normalizarConteudo({ objetivo: "Filtrar.", conceito: 'Use WHERE nome = "Ana".', exemplo: "SELECT 1;", exercicios }, "IA");
+  assert.equal(codigo.conceito, 'Use WHERE nome = "Ana".', "fora dos idiomas, as aspas ficam como vieram");
+});
+
 test("a normalização aceita os formatos novos, refaz ids e descarta o opcional que não fecha", () => {
   const base = { objetivo: "Trocar de acorde.", conceito: "Dois dedos ficam.", exemplo: "Do Am para o C.", exemploTipo: "demonstracao" };
   const retornos = { feedbackCorreto: "Isso.", feedbackIncorreto: "Ainda não." };
