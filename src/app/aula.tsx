@@ -307,6 +307,23 @@ function EtapaExemplo({ licao, titulo }: { licao: LicaoDetalhe; titulo: Ref<HTML
 
 function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
   if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} />;
+  if (recurso.tipo === 'fracao') {
+    const descricao = t.recursos.fracaoDescricao(recurso.numerador, recurso.denominador);
+    return (
+      <figure className="fracao">
+        <div className="fracao__barra" role="img" aria-label={`${recurso.numerador}/${recurso.denominador}: ${descricao}`}
+          style={{ '--partes': recurso.denominador } as CSSProperties}>
+          {Array.from({ length: recurso.denominador }, (_, posicao) => (
+            <span key={posicao} data-cheia={posicao < recurso.numerador || undefined} />
+          ))}
+        </div>
+        <figcaption>
+          <strong>{recurso.rotulo ?? `${recurso.numerador}/${recurso.denominador}`}</strong>
+          <span>{descricao}</span>
+        </figcaption>
+      </figure>
+    );
+  }
   if (recurso.tipo === 'linha_do_tempo') {
     return (
       <section className="linha-tempo" aria-labelledby="linha-tempo-titulo">

@@ -20,13 +20,14 @@ O trecho de um exercício tem um tipo (`trechoTipo`): `codigo` (o único em font
 - **Falas**: frases para ouvir e repetir, com idioma BCP 47 e tradução. A web usa a voz do navegador e o app, a do aparelho (`expo-speech`). Um exercício pode ter uma fala sem trecho (escuta); o texto aparece quando a pessoa pede.
 - **Acorde**: diagrama desenhado pelo app (SVG na web, Views no app) e o som sintetizado na hora (Karplus-Strong, `sintetizarAcorde` em `packages/contratos/src/som.ts`), o mesmo WAV nas duas plataformas.
 - **Linha do tempo**: marcos com data ou tempo, para história, processos e tempos de preparo.
+- **Barra de fração**: um inteiro dividido em partes iguais (até 12), com algumas pintadas e um rótulo (como “2/4 = 1/2”).
 - **Imagem**: a foto do material enviado. O servidor guarda uma miniatura da foto e a lição mostra a página de onde veio a explicação. O material de demonstração (frações) tem uma ilustração gerada no servidor.
 - **Prática**: tarefa, minutos do cronômetro (1 a 30), passos para conferir e uma dica.
 
 ## Conteúdo
 
 - **IA da OpenAI**: o esquema estrito da lição pede `exemploTipo`, `passos`, `recurso`, `falas`, `pratica` e de 1 a 3 `exercicios` nos seis formatos. O normalizador refaz ids, monta o gabarito de ordenar e associar a partir da ordem do modelo e descarta o opcional que não fecha, mantendo a lição válida. O formato antigo (um `exercicio`) continua aceito.
-- **Modo demonstração** (IA falsa): trilhas prontas com conteúdo de verdade para violão, inglês para viagem, culinária básica e história do Brasil (`src/servidor/ia/demos.ts`), além de SQL. Outros assuntos recebem a trilha genérica, que também usa os formatos novos.
+- **Modo demonstração** (IA falsa): trilhas prontas com conteúdo de verdade para violão, inglês para viagem, culinária básica, história do Brasil, frações e fotografia com o celular (`src/servidor/ia/demos.ts`), além de SQL. Todas as ideias populares da tela inicial têm trilha pronta (um teste garante). Outros assuntos recebem a trilha genérica, que também usa os formatos novos.
 
 ## Limites
 

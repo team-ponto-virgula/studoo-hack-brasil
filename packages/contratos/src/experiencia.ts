@@ -328,6 +328,9 @@ export const mensagens = {
         recursos: {
             passos: 'Passo a passo',
             linhaDoTempo: 'Linha do tempo',
+            fracao: 'Fração',
+            fracaoDescricao: (numerador: number, denominador: number) =>
+                `${numerador} de ${denominador} ${denominador === 1 ? 'parte' : 'partes iguais'} ${numerador === 1 ? 'pintada' : 'pintadas'}`,
             doMaterial: 'Do seu material',
             acorde: (nome: string) => `Acorde ${nome}`,
             ouvirAcorde: 'Ouvir o acorde',

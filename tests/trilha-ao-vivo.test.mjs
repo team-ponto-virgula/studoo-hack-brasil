@@ -163,15 +163,16 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
     assert.equal(await planosNoBanco(contas[0].id), 0);
   });
 
+  // Assunto sem trilha pronta: cai na trilha genérica de 3 × 3 (Frações, violão etc. têm demo própria).
   let frações;
   await t.test("objetivo livre gera a trilha em NDJSON válido, em sequência, sem tocar no banco", async () => {
-    frações = await gerar(cookie, "Frações");
+    frações = await gerar(cookie, "Astronomia para curiosos");
     const { eventos, brutas } = frações;
     assert.ok(brutas.every((linha) => !linha.includes("\n")));
     assert.deepEqual(eventos.map(({ tipo }) => tipo), [
       "plano", "fluxo", "licao", "licao", "licao", "fluxo", "licao", "licao", "licao", "fluxo", "licao", "licao", "licao", "pronto",
     ]);
-    assert.equal(eventos[0].titulo, "Frações");
+    assert.equal(eventos[0].titulo, "Astronomia para curiosos");
     const estrutura = estruturaDosEventos(eventos);
     assert.equal(estrutura.length, 3);
     assert.ok(estrutura.every(({ licoes }) => licoes.length === 3));
@@ -195,7 +196,7 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
   });
 
   await t.test("a mesma entrada gera a mesma trilha, com outro token", async () => {
-    const outra = await gerar(cookie, "Frações");
+    const outra = await gerar(cookie, "Astronomia para curiosos");
     assert.deepEqual(estruturaDosEventos(outra.eventos), estruturaDosEventos(frações.eventos));
     assert.notEqual(outra.eventos.at(-1).proposta.token, frações.eventos.at(-1).proposta.token);
   });
@@ -235,7 +236,7 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
     plano = planos[0];
 
     const mostrado = estruturaDosEventos(frações.eventos);
-    assert.equal(plano.titulo, "Frações");
+    assert.equal(plano.titulo, "Astronomia para curiosos");
     assert.deepEqual(
       plano.fluxos.map(({ titulo, licoes }) => ({ titulo, licoes: licoes.map((l) => l.titulo) })),
       mostrado,

@@ -3,7 +3,7 @@ import type { PlanoInterno } from "@/dominio/aprendizado/plano";
 
 /*
  * Trilhas prontas do modo demonstração (IA falsa), com conteúdo de verdade sobre o assunto: violão, inglês para viagem,
- * culinária básica e história do Brasil. Elas mostram o que o Studoo faz além de programação, sem chave da IA: acorde com
+ * culinária básica, história do Brasil, frações e fotografia com o celular (todas as ideias populares da tela inicial). Elas mostram o que o Studoo faz além de programação, sem chave da IA: acorde com
  * diagrama e som, frases para ouvir, linha do tempo, prática com cronômetro e os formatos de exercício (ordenar,
  * associar, verdadeiro ou falso com justificativa, resposta aberta, lacuna tolerante).
  * Cada trilha segue as regras de ordem (spec 03): uma sequência de aprendizado, trechos sem nome de assunto e revisão.
@@ -753,8 +753,363 @@ const historia: Demo = {
   },
 };
 
+const origemFracoes = origem("frações");
+const fracoes: Demo = {
+  chave: "fracoes",
+  reconhecer: (objetivo) => /\bfra[cç](?:[aã]o|[oõ]es)\b/i.test(objetivo),
+  plano: {
+    titulo: "Frações: do inteiro à soma",
+    objetivo: "Entender, comparar e somar frações.",
+    origem: origemFracoes,
+    fluxos: [
+      {
+        titulo: trechos[0],
+        licoes: [
+          {
+            titulo: "O que o numerador e o denominador contam",
+            objetivo: "Ler uma fração dizendo o que cada número conta.",
+            conceito: "Uma fração mostra partes de um inteiro dividido em partes iguais. O número de baixo, o denominador, diz em quantas partes iguais o inteiro foi dividido. O número de cima, o numerador, diz quantas dessas partes estamos considerando.",
+            exemplo: "Uma pizza foi cortada em 8 fatias iguais e você comeu 3. Você comeu 3/8 da pizza: 8 é o total de fatias iguais e 3 são as que você comeu.",
+            recurso: { tipo: "fracao", numerador: 3, denominador: 8, rotulo: "3/8" },
+            origem: origemFracoes,
+            exercicio: {
+              tipo: "multipla_escolha",
+              enunciado: "Em 5/6, o que o número 6 indica?",
+              opcoes: [
+                op("a", "Em quantas partes iguais o inteiro foi dividido"),
+                op("b", "Quantas partes foram escolhidas"),
+                op("c", "Quantas partes sobraram"),
+              ],
+              gabarito: ["a"],
+              feedbackCorreto: "Isso: o denominador, embaixo, conta o total de partes iguais.",
+              feedbackIncorreto: "O 6 fica embaixo: é o denominador, o total de partes iguais. As escolhidas são as 5 de cima.",
+            },
+            extras: [
+              {
+                tipo: "lacuna",
+                enunciado: "Uma barra foi dividida em 5 partes iguais e 2 foram pintadas. Complete a fração pintada.",
+                trecho: "2/___",
+                trechoTipo: "formula",
+                gabarito: ["5"],
+                feedbackCorreto: "Certo: 2 pintadas de 5 partes iguais, 2/5.",
+                feedbackIncorreto: "O denominador é o total de partes iguais: 5. A fração pintada é 2/5.",
+              },
+            ],
+          },
+          {
+            titulo: "Frações equivalentes",
+            objetivo: "Reconhecer frações diferentes que valem a mesma quantidade.",
+            conceito: "Frações equivalentes representam a mesma quantidade com números diferentes. Multiplicando o numerador e o denominador pelo mesmo número, o valor não muda: 1/2 = 2/4 = 3/6.",
+            exemplo: "Se cada metade de uma barra for cortada ao meio, a barra passa a ter 4 partes e a metade vira 2 delas: 1/2 = 2/4.",
+            recurso: { tipo: "fracao", numerador: 2, denominador: 4, rotulo: "2/4 = 1/2" },
+            origem: origemFracoes,
+            exercicio: {
+              tipo: "associar",
+              enunciado: "Ligue cada fração à sua equivalente.",
+              esquerda: [op("meio", "1/2"), op("doisTercos", "2/3"), op("tresQuartos", "3/4")],
+              direita: [op("tresSextos", "3/6"), op("quatroSextos", "4/6"), op("seisOitavos", "6/8")],
+              gabarito: ["meio=tresSextos", "doisTercos=quatroSextos", "tresQuartos=seisOitavos"],
+              feedbackCorreto: "Isso! Em cada par, numerador e denominador foram multiplicados pelo mesmo número.",
+              feedbackIncorreto: "Procure o número que multiplica os dois termos: 1/2 × 3 = 3/6, 2/3 × 2 = 4/6 e 3/4 × 2 = 6/8.",
+            },
+          },
+        ],
+      },
+      {
+        titulo: trechos[1],
+        licoes: [
+          {
+            titulo: "Comparar frações com o mesmo denominador",
+            objetivo: "Ordenar frações que têm o mesmo denominador.",
+            conceito: "Quando o denominador é o mesmo, as partes têm o mesmo tamanho. Então é maior a fração com mais partes, ou seja, com o maior numerador.",
+            exemplo: "Entre 2/7 e 5/7, as partes são sétimos nos dois casos. Cinco sétimos são mais que dois sétimos: 5/7 > 2/7.",
+            origem: origemFracoes,
+            exercicio: {
+              tipo: "ordenar",
+              enunciado: "Coloque as frações da menor para a maior.",
+              itens: [op("um", "1/7"), op("tres", "3/7"), op("cinco", "5/7"), op("seis", "6/7")],
+              gabarito: ["um", "tres", "cinco", "seis"],
+              feedbackCorreto: "Perfeito: com o mesmo denominador, basta comparar os numeradores.",
+              feedbackIncorreto: "Todas são sétimos. Compare só os numeradores: 1, 3, 5 e 6.",
+            },
+          },
+          {
+            titulo: "Comparar frações com o mesmo numerador",
+            objetivo: "Comparar frações que têm o mesmo numerador.",
+            conceito: "Quando o numerador é o mesmo, compare o tamanho das partes. Quanto maior o denominador, mais partes o inteiro tem e menor é cada parte. Por isso 1/8 é menor que 1/4.",
+            exemplo: "Dividir uma pizza em 8 fatias deixa cada fatia menor do que dividi-la em 4. Uma fatia de 8 (1/8) é menor que uma fatia de 4 (1/4).",
+            recurso: { tipo: "fracao", numerador: 1, denominador: 8, rotulo: "1/8" },
+            origem: origemFracoes,
+            exercicio: {
+              tipo: "verdadeiro_falso",
+              enunciado: "A frase é verdadeira ou falsa? Escolha também o porquê.",
+              afirmacao: "1/8 é maior que 1/4, porque 8 é maior que 4.",
+              justificativas: [
+                op("partes", "Com o mesmo numerador, quanto maior o denominador, menores são as partes"),
+                op("numero", "O maior número de baixo sempre dá a maior fração"),
+                op("iguais", "As duas frações valem o mesmo, porque o numerador é 1"),
+              ],
+              gabarito: ["falso", "partes"],
+              feedbackCorreto: "Isso: oito partes são menores que quatro partes do mesmo inteiro. 1/8 < 1/4.",
+              feedbackIncorreto: "É falsa: com o mesmo numerador, o denominador maior divide o inteiro em partes menores. 1/8 < 1/4.",
+            },
+          },
+        ],
+      },
+      {
+        titulo: trechos[2],
+        licoes: [
+          {
+            titulo: "Somar frações com o mesmo denominador",
+            objetivo: "Somar frações que têm o mesmo denominador.",
+            conceito: "Para somar frações com o mesmo denominador, some os numeradores e mantenha o denominador. As partes continuam do mesmo tamanho; você só junta mais delas.",
+            exemplo: "2/9 + 5/9: as duas frações são nonos. Juntando 2 nonos com 5 nonos, ficam 7 nonos: 7/9.",
+            origem: origemFracoes,
+            exercicio: {
+              tipo: "lacuna",
+              enunciado: "Complete a soma.",
+              trecho: "2/9 + 5/9 = ___/9",
+              trechoTipo: "formula",
+              gabarito: ["7"],
+              feedbackCorreto: "Isso: 2 + 5 = 7, e o denominador continua 9.",
+              feedbackIncorreto: "Some só os numeradores: 2 + 5 = 7. O denominador continua 9.",
+            },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: "Quanto é 3/10 + 4/10?",
+                opcoes: [op("a", "7/10"), op("b", "7/20"), op("c", "12/10")],
+                gabarito: ["a"],
+                feedbackCorreto: "Certo: 3 + 4 = 7 décimos.",
+                feedbackIncorreto: "Os décimos continuam décimos: some os numeradores (3 + 4 = 7) e mantenha o 10.",
+              },
+            ],
+            pratica: {
+              tarefa: "Pegue uma folha, dobre ao meio três vezes e abra: ela fica com 8 partes iguais. Pinte 3/8 e depois mais 2/8. Quanto da folha ficou pintado?",
+              minutos: 5,
+              passos: ["Dobre a folha ao meio três vezes.", "Abra e conte as 8 partes iguais.", "Pinte 3 partes, depois mais 2.", "Escreva a fração pintada."],
+              dica: "Se as dobras não ficarem iguais, as partes não são oitavos. Capriche no vinco.",
+            },
+          },
+          {
+            titulo: "Revisão: explique uma soma de frações",
+            objetivo: "Explicar com suas palavras por que a soma de frações funciona assim.",
+            conceito: "Explicar a regra mostra que você entendeu, e não só decorou. Uma boa explicação fala do tamanho das partes (o denominador) e de quantas partes você juntou (os numeradores).",
+            exemplo: "Por exemplo: “Em 1/5 + 3/5 eu tenho quintos dos dois lados. Juntando 1 quinto com 3 quintos, ficam 4 quintos: 4/5.”",
+            origem: origemFracoes,
+            exercicio: {
+              tipo: "aberta",
+              enunciado: "Explique, em duas ou três frases, por que 1/4 + 2/4 = 3/4 e não 3/8.",
+              minimo: 40,
+              gabarito: [
+                "denominador|partes iguais|mesmo tamanho|quartos|tamanho",
+                "numerador|soma|somamos|juntamos|junto|1 + 2|1 mais 2",
+                "conserva|mantem|mantenho|continua|nao muda|o mesmo|igual",
+              ],
+              criterios: [
+                "Fala do denominador ou do tamanho das partes",
+                "Diz que se somam os numeradores",
+                "Diz que o denominador continua o mesmo",
+              ],
+              modelo: "As duas frações são de quartos, então as partes têm o mesmo tamanho. Somamos os numeradores, 1 + 2 = 3, e o denominador continua 4, porque as partes continuam sendo quartos.",
+              feedbackCorreto: "Ótima explicação: o tamanho das partes não muda e você só juntou mais partes.",
+              feedbackIncorreto: "Faltou alguma ideia: fale do denominador (o tamanho das partes), da soma dos numeradores e de por que o 4 não muda.",
+            },
+          },
+        ],
+      },
+    ],
+  },
+};
+
+const origemFotografia = origem("fotografia com o celular");
+const fotografia: Demo = {
+  chave: "fotografia",
+  reconhecer: (objetivo) => /\bfotograf\w*|\bfotos?\b/i.test(objetivo),
+  plano: {
+    titulo: "Fotografia com o celular",
+    objetivo: "Tirar fotos melhores com o celular: luz, enquadramento e foco.",
+    origem: origemFotografia,
+    fluxos: [
+      {
+        titulo: trechos[0],
+        licoes: [
+          {
+            titulo: "Lente limpa e mãos firmes",
+            objetivo: "Evitar fotos embaçadas antes mesmo de enquadrar.",
+            conceito: "Muitas fotos borradas não são culpa do celular. A lente fica engordurada no bolso e deixa tudo nebuloso, e a mão que treme na hora do toque borra a imagem. Limpe a lente e segure o celular com as duas mãos, cotovelos junto ao corpo.",
+            exemplo: "Uma foto de um prato no restaurante sai leitosa. Depois de passar a barra da camiseta na lente e apoiar os cotovelos na mesa, a mesma foto sai nítida.",
+            origem: origemFotografia,
+            exercicio: {
+              tipo: "verdadeiro_falso",
+              enunciado: "A frase é verdadeira ou falsa? Escolha também o porquê.",
+              afirmacao: "Foto embaçada é sempre culpa de um celular ruim.",
+              justificativas: [
+                op("lente", "Lente suja e mão tremendo deixam qualquer foto borrada"),
+                op("camera", "Só celulares caros conseguem fotos nítidas"),
+                op("luz", "Foto embaçada acontece só à noite"),
+              ],
+              gabarito: ["falso", "lente"],
+              feedbackCorreto: "Isso: limpar a lente e firmar as mãos resolve a maioria das fotos borradas.",
+              feedbackIncorreto: "É falsa: lente engordurada e mão tremendo borram fotos em qualquer celular.",
+            },
+            pratica: {
+              tarefa: "Tire uma foto de um objeto perto de você. Depois limpe a lente com um pano macio, segure o celular com as duas mãos e tire a mesma foto. Compare as duas.",
+              minutos: 2,
+              dica: "Use um pano de óculos ou a barra de uma camiseta de algodão. Evite papel, que pode riscar a lente.",
+            },
+          },
+          {
+            titulo: "A regra dos terços",
+            objetivo: "Posicionar o assunto da foto com a regra dos terços.",
+            conceito: "Imagine a tela dividida por duas linhas horizontais e duas verticais, como um jogo da velha. Colocar o assunto numa dessas linhas, ou num dos cruzamentos, deixa a foto mais equilibrada do que colocá-lo bem no meio. O horizonte também fica melhor numa das linhas horizontais.",
+            exemploTipo: "demonstracao",
+            exemplo: "A maioria dos celulares desenha essa grade na tela da câmera. Ative e use como guia.",
+            passos: [
+              "Abra a câmera e entre nas configurações.",
+              "Ative a opção “grade” ou “linhas de grade”.",
+              "Coloque o assunto num dos quatro cruzamentos.",
+              "Deixe o horizonte numa das linhas horizontais, não no meio.",
+            ],
+            origem: origemFotografia,
+            exercicio: {
+              tipo: "multipla_escolha",
+              enunciado: "Numa foto de praia, onde fica o horizonte pela regra dos terços?",
+              opcoes: [op("a", "Numa das linhas horizontais da grade"), op("b", "Exatamente no meio da foto"), op("c", "Na borda de baixo da foto")],
+              gabarito: ["a"],
+              feedbackCorreto: "Isso: numa das linhas, dando mais espaço para o céu ou para o mar.",
+              feedbackIncorreto: "Pela regra dos terços, o horizonte fica numa das linhas horizontais da grade, e não no meio.",
+            },
+            pratica: {
+              tarefa: "Ative a grade da câmera e fotografe um objeto três vezes: no meio, num cruzamento da esquerda e num da direita. Veja qual ficou mais interessante.",
+              minutos: 3,
+            },
+          },
+        ],
+      },
+      {
+        titulo: trechos[1],
+        licoes: [
+          {
+            titulo: "Usar a luz natural",
+            objetivo: "Escolher a luz certa para cada foto.",
+            conceito: "A luz muda tudo. A luz da janela, vinda de lado, é suave e valoriza rostos. O sol do meio-dia faz sombras duras e olhos apertados. Perto do nascer e do pôr do sol vem a hora dourada, com luz quente e suave.",
+            exemplo: "O mesmo retrato fica duro ao meio-dia no quintal e suave perto da janela, com a pessoa de lado para a luz.",
+            recurso: {
+              tipo: "linha_do_tempo",
+              eventos: [
+                { quando: "Manhã cedo", texto: "Luz dourada e suave" },
+                { quando: "Meio-dia", texto: "Sol a pino: sombras duras" },
+                { quando: "Fim de tarde", texto: "Hora dourada, luz quente" },
+              ],
+            },
+            origem: origemFotografia,
+            exercicio: {
+              tipo: "associar",
+              enunciado: "Ligue cada luz ao resultado que ela costuma dar.",
+              esquerda: [op("contraluz", "Contraluz"), op("janela", "Luz de janela, de lado"), op("meiodia", "Sol do meio-dia")],
+              direita: [
+                op("silhueta", "Silhueta escura do assunto"),
+                op("suave", "Rosto com sombra suave"),
+                op("dura", "Sombras duras e olhos franzidos"),
+              ],
+              gabarito: ["contraluz=silhueta", "janela=suave", "meiodia=dura"],
+              feedbackCorreto: "Isso! Escolher de onde vem a luz é metade da foto.",
+              feedbackIncorreto: "Reveja o conceito: contraluz faz silhueta, janela de lado suaviza e o sol do meio-dia endurece as sombras.",
+            },
+          },
+          {
+            titulo: "Foco e brilho com um toque",
+            objetivo: "Ajustar o foco e o brilho antes de fotografar.",
+            conceito: "Tocar na tela sobre o assunto diz ao celular o que deve ficar nítido. Depois do toque, a maioria das câmeras mostra um controle de brilho: deslizar o dedo para cima clareia e, para baixo, escurece a foto.",
+            exemplo: "Num retrato contra o céu, o rosto sai escuro. Tocando no rosto, o celular foca e clareia; se o céu estourar, é só deslizar um pouco para baixo.",
+            origem: origemFotografia,
+            exercicio: {
+              tipo: "ordenar",
+              enunciado: "Coloque os passos de uma boa foto na ordem.",
+              itens: [
+                op("enquadrar", "Enquadrar a cena"),
+                op("tocar", "Tocar no assunto para focar"),
+                op("brilho", "Ajustar o brilho deslizando o dedo"),
+                op("disparar", "Tirar a foto"),
+              ],
+              gabarito: ["enquadrar", "tocar", "brilho", "disparar"],
+              feedbackCorreto: "Perfeito: enquadra, foca, ajusta e só então dispara.",
+              feedbackIncorreto: "Primeiro você escolhe o que vai aparecer, depois foca, ajusta o brilho e por fim tira a foto.",
+            },
+            pratica: {
+              tarefa: "Fotografe algo perto de uma janela. Toque no assunto para focar, deslize o brilho para cima e para baixo e tire duas versões.",
+              minutos: 3,
+            },
+          },
+        ],
+      },
+      {
+        titulo: trechos[2],
+        licoes: [
+          {
+            titulo: "Revisão: um retrato perto da janela",
+            objetivo: "Juntar luz, enquadramento e foco num retrato.",
+            conceito: "Um bom retrato junta tudo: luz suave de lado, os olhos numa linha dos terços e o foco no rosto. E nada de zoom no máximo: é melhor se aproximar.",
+            exemploTipo: "demonstracao",
+            exemplo: "Siga os passos com alguém da sua casa.",
+            passos: [
+              "Coloque a pessoa de lado para a janela.",
+              "Ative a grade e deixe os olhos numa linha horizontal.",
+              "Toque no rosto para focar.",
+              "Ajuste o brilho e fotografe.",
+            ],
+            origem: origemFotografia,
+            exercicio: {
+              tipo: "lacuna",
+              enunciado: "Complete com o que você faz na tela para focar no rosto.",
+              trecho: "Para focar no rosto, eu ___ na tela sobre o rosto.",
+              trechoTipo: "frase",
+              gabarito: ["toco", "toque", "encosto", "clico"],
+              feedbackCorreto: "Isso: o toque diz ao celular o que deve ficar nítido.",
+              feedbackIncorreto: "Você toca na tela sobre o rosto: é assim que o celular sabe onde focar.",
+            },
+            extras: [
+              {
+                tipo: "verdadeiro_falso",
+                enunciado: "A frase é verdadeira ou falsa? Escolha também o porquê.",
+                afirmacao: "Usar o zoom digital no máximo deixa a foto mais nítida.",
+                justificativas: [
+                  op("pixels", "O zoom digital só amplia os pixels; é melhor se aproximar"),
+                  op("lente", "O zoom digital troca a lente por uma melhor"),
+                  op("luz", "O zoom digital deixa entrar mais luz"),
+                ],
+                gabarito: ["falso", "pixels"],
+                feedbackCorreto: "Isso: aproxime-se do assunto em vez de esticar o zoom.",
+                feedbackIncorreto: "É falsa: o zoom digital só amplia os pixels e a foto perde nitidez. Chegue mais perto.",
+              },
+            ],
+          },
+          {
+            titulo: "Explique suas escolhas",
+            objetivo: "Explicar como você planeja uma foto.",
+            conceito: "Saber explicar por que você fez cada escolha ajuda a repetir o acerto. Uma boa explicação diz de onde vem a luz, onde fica o assunto e onde você foca.",
+            exemplo: "Por exemplo: “Fotografei o vaso de lado para a janela, coloquei ele num cruzamento da grade e toquei nas flores para focar.”",
+            origem: origemFotografia,
+            exercicio: {
+              tipo: "aberta",
+              enunciado: "Descreva como você tiraria a foto de um amigo perto de uma janela: onde ele fica, de onde vem a luz e onde você toca para focar.",
+              minimo: 40,
+              gabarito: ["janela|luz natural|luz de lado|de lado", "rosto|olhos|amigo", "toc|foco|focar|encost", "terco|tercos|grade|cruzamento|linha"],
+              criterios: ["Usa a luz da janela", "Foca no rosto ou nos olhos", "Diz que toca na tela para focar", "Usa a grade ou a regra dos terços"],
+              modelo: "Coloco meu amigo de lado para a janela, para a luz suave bater no rosto. Ativo a grade, deixo os olhos numa linha dos terços e toco na tela sobre o rosto para focar antes de fotografar.",
+              feedbackCorreto: "Ótimo planejamento: luz, enquadramento e foco no lugar certo.",
+              feedbackIncorreto: "Faltou alguma escolha: diga de onde vem a luz, onde fica o rosto na grade e onde você toca para focar.",
+            },
+          },
+        ],
+      },
+    ],
+  },
+};
+
 /** Demos na ordem de reconhecimento. SQL tem a sua própria trilha em `falsa.ts`. */
-export const DEMOS: readonly Demo[] = [violao, ingles, culinaria, historia];
+export const DEMOS: readonly Demo[] = [violao, ingles, culinaria, historia, fracoes, fotografia];
 
 export function demoDoObjetivo(objetivo: string): Demo | undefined {
   return DEMOS.find((demo) => demo.reconhecer(objetivo));

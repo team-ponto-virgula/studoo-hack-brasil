@@ -111,6 +111,9 @@ export function recursoValido(valor: unknown): valor is Recurso {
     case "linha_do_tempo":
       return Array.isArray(valor.eventos) && valor.eventos.length >= 2 && valor.eventos.length <= 8 &&
         valor.eventos.every((evento) => objeto(evento) && textoAte(evento.quando, 40) && textoAte(evento.texto, 200));
+    case "fracao":
+      return inteiroEntre(valor.denominador, 1, 12) && inteiroEntre(valor.numerador, 0, valor.denominador) &&
+        opcional(valor.rotulo, (rotulo) => textoAte(rotulo, 40));
     case "imagem":
       return typeof valor.src === "string" && valor.src.length <= 700_000 && IMAGEM.test(valor.src) && textoAte(valor.descricao, 200);
     default:

@@ -294,11 +294,13 @@ const esquemaDaLicao = objetoEstrito({
   recurso: {
     anyOf: [
       objetoEstrito({
-        tipo: { type: "string", enum: ["acorde", "linha_do_tempo"] },
+        tipo: { type: "string", enum: ["acorde", "linha_do_tempo", "fracao"] },
         nome: textoOuNulo,
         casas: { type: ["array", "null"], items: { type: "integer" } },
         dedos: { type: ["array", "null"], items: { type: "integer" } },
         eventos: { type: ["array", "null"], items: objetoEstrito({ quando: textoJson, texto: textoJson }) },
+        numerador: { type: ["integer", "null"] },
+        denominador: { type: ["integer", "null"] },
       }),
       nulo,
     ],
@@ -318,7 +320,7 @@ const instrucoesDaLicao = [
   "A lição tem: objetivo (uma frase que começa com um verbo), conceito (de 2 a 4 frases simples, com um único conceito novo), exemplo (um caso concreto e resolvido) e de 1 a 3 exercícios com feedback.",
   "Exemplo e recursos:",
   "- exemploTipo é \"demonstracao\" nas habilidades práticas (tocar, cozinhar, desenhar, praticar um esporte): o exemplo apresenta e passos traz de 3 a 6 passos curtos para fazer junto. Nos outros casos, exemploTipo é \"exemplo\" e passos é null.",
-  "- recurso, só quando ajudar a ver: acorde de violão (tipo \"acorde\", nome como \"Am\", casas com 6 inteiros da 6ª corda à 1ª: -1 não toca, 0 solta, n é a casa; dedos com 6 inteiros de 0 a 4) ou linha_do_tempo (de 2 a 8 eventos com quando e texto, para história, processos e tempos de preparo). Nos campos que não se aplicam, use null. Sem recurso, null.",
+  "- recurso, só quando ajudar a ver: acorde de violão (tipo \"acorde\", nome como \"Am\", casas com 6 inteiros da 6ª corda à 1ª: -1 não toca, 0 solta, n é a casa; dedos com 6 inteiros de 0 a 4) ou linha_do_tempo (de 2 a 8 eventos com quando e texto, para história, processos e tempos de preparo) ou fracao (barra com denominador de 1 a 12 partes iguais e numerador partes pintadas; nome é o rótulo, como \"2/4 = 1/2\"). Nos campos que não se aplicam, use null. Sem recurso, null.",
   "- falas, em lições de idioma: de 1 a 4 frases curtas no idioma estudado, com idioma no formato BCP 47 (como en-US, es-ES, fr-FR) e a traducao em português. Nos outros assuntos, null.",
   "- pratica, nas habilidades que se treinam fora do app: uma tarefa concreta e segura, minutos de 1 a 20 para o cronômetro, até 5 passos e uma dica (ou null). Sem prática, null.",
   "Exercícios (use formatos variados; o primeiro é o principal):",
@@ -485,6 +487,13 @@ export function normalizarConteudo(bruto: unknown, origem: string): ConteudoLica
       nome: textoDe(recursoBruto.nome),
       casas: Array.isArray(recursoBruto.casas) ? recursoBruto.casas as number[] : [],
       ...(Array.isArray(recursoBruto.dedos) ? { dedos: recursoBruto.dedos as number[] } : {}),
+    };
+  } else if (recursoBruto?.tipo === "fracao") {
+    recurso = {
+      tipo: "fracao",
+      numerador: Number(recursoBruto.numerador),
+      denominador: Number(recursoBruto.denominador),
+      ...(textoDe(recursoBruto.nome) ? { rotulo: textoDe(recursoBruto.nome) } : {}),
     };
   } else if (recursoBruto?.tipo === "linha_do_tempo") {
     const eventos = Array.isArray(recursoBruto.eventos) ? recursoBruto.eventos : [];

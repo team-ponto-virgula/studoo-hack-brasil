@@ -49,14 +49,16 @@ export interface Fala {
 }
 
 /**
- * Recurso visual da lição, mostrado no exemplo. O acorde e a linha do tempo são desenhados pelo próprio app (e o acorde
- * também toca); a imagem é a foto do material que a pessoa enviou.
+ * Recurso visual da lição, mostrado no exemplo. O acorde, a linha do tempo e a barra de fração são desenhados pelo
+ * próprio app (e o acorde também toca); a imagem é a foto do material que a pessoa enviou.
+ * - `fracao`: uma barra com `denominador` partes iguais, `numerador` delas pintadas, e um rótulo opcional (como "2/4 = 1/2").
  * - `acorde.casas`: 6 números, da 6ª corda (mi grave) à 1ª (mi agudo): -1 não toca, 0 solta, n = casa apertada.
  * - `acorde.dedos`: o dedo de cada corda (1 indicador, 2 médio, 3 anelar, 4 mínimo; 0 nenhum).
  */
 export type Recurso =
   | { tipo: "acorde"; nome: string; casas: number[]; dedos?: number[] }
   | { tipo: "linha_do_tempo"; eventos: { quando: string; texto: string }[] }
+  | { tipo: "fracao"; numerador: number; denominador: number; rotulo?: string }
   | { tipo: "imagem"; src: string; descricao: string };
 
 /** Prática no mundo real (instrumento, cozinha, fala): a tarefa, o tempo do cronômetro e, se houver, passos e uma dica. */

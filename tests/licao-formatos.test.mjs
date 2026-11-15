@@ -168,6 +168,15 @@ test("apresentar embaralha sem entregar a ordem, esconde o gabarito e define o t
   assert.equal(respostaCompleta({ tipo: "aberta", enunciado: "x", minimo: 10 }, "curta"), false);
 });
 
+test("a barra de fração vale de 1 a 12 partes e nunca pinta mais que o total", () => {
+  const base = { objetivo: "o", conceito: "c", exemplo: "e", origem: "x", exercicio: lacuna(["2"]) };
+  assert.ok(conteudoValido({ ...base, recurso: { tipo: "fracao", numerador: 3, denominador: 8, rotulo: "3/8" } }));
+  assert.ok(conteudoValido({ ...base, recurso: { tipo: "fracao", numerador: 0, denominador: 1 } }));
+  for (const recurso of [{ tipo: "fracao", numerador: 9, denominador: 8 }, { tipo: "fracao", numerador: 1, denominador: 13 }, { tipo: "fracao", numerador: 1.5, denominador: 4 }]) {
+    assert.equal(conteudoValido({ ...base, recurso }), false, JSON.stringify(recurso));
+  }
+});
+
 test("as etapas da lição mudam com o número de exercícios e a prática", () => {
   const exercicio = { tipo: "lacuna", enunciado: "x" };
   assert.deepEqual(etapasDaLicao({ exercicio }).map(({ tipo }) => tipo), ["conceito", "exemplo", "exercicio"]);
@@ -197,6 +206,8 @@ const objetivosDasDemos = {
   ingles: "Inglês para conversar em viagens",
   culinaria: "Culinária: receitas básicas",
   historia: "História do Brasil para a prova",
+  fracoes: "Frações para a prova do 6º ano",
+  fotografia: "Fotografia com o celular",
 };
 
 test("cada demo com assunto monta a própria trilha e todas as lições passam pela aula", async () => {
@@ -204,6 +215,7 @@ test("cada demo com assunto monta a própria trilha e todas as lições passam p
   const sinal = new AbortController().signal;
   const tipos = new Set();
   const recursos = new Set();
+  assert.equal(DEMOS.length, Object.keys(objetivosDasDemos).length);
   let falas = 0;
   let praticas = 0;
   let extras = 0;
@@ -237,8 +249,18 @@ test("cada demo com assunto monta a própria trilha e todas as lições passam p
     }
   }
   assert.deepEqual([...tipos].sort(), ["aberta", "associar", "lacuna", "multipla_escolha", "ordenar", "verdadeiro_falso"]);
-  assert.deepEqual([...recursos].sort(), ["acorde", "linha_do_tempo"]);
+  assert.deepEqual([...recursos].sort(), ["acorde", "fracao", "linha_do_tempo"]);
   assert.ok(falas >= 8 && praticas >= 5 && extras >= 4, `${falas} falas, ${praticas} práticas, ${extras} extras`);
+});
+
+test("todas as ideias populares da tela inicial têm trilha pronta no modo demonstração", async () => {
+  const { mensagens } = await import("@studoo/contratos/experiencia");
+  const populares = mensagens.pedido.temas.find(({ id }) => id === "populares").exemplos;
+  for (const ideia of populares) {
+    const eventos = [];
+    for await (const evento of iniciarGeracao(`teste-${crypto.randomUUID()}`, ideia).eventos(new AbortController().signal)) eventos.push(evento);
+    assert.match(eventos.at(-1).proposta.origem, /trilha pronta sobre/, ideia);
+  }
 });
 
 test("cada objetivo cai na trilha certa: SQL, demo com assunto ou genérica", async () => {
@@ -253,5 +275,8 @@ test("cada objetivo cai na trilha certa: SQL, demo com assunto ou genérica", as
   assert.equal(await titulo("aprender a cozinhar o básico"), "Culinária: receitas básicas");
   assert.equal(await titulo("História do Brasil: Império"), "História do Brasil: da Colônia à República");
   assert.equal(await titulo("SQL para a prova"), "SQL para a prova");
+  assert.equal(await titulo("Frações"), "Frações: do inteiro à soma");
+  assert.equal(await titulo("quero tirar fotos melhores"), "Fotografia com o celular");
+  assert.equal(await titulo("Fotossíntese para a prova"), "Fotossíntese para a prova", "fotossíntese não é fotografia");
   assert.equal(await titulo("Jardinagem em apartamento"), "Jardinagem em apartamento");
 });

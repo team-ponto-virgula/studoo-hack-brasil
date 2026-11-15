@@ -20,7 +20,7 @@ async function coletar(geracao, sinal = new AbortController().signal) {
 const usuario = () => `teste-${crypto.randomUUID()}`;
 
 test("objetivo qualquer gera 3 fluxos com 3 lições, em ordem, e cada evento passa pelo contrato", async () => {
-  const eventos = await coletar(iniciarGeracao(usuario(), "Frações"));
+  const eventos = await coletar(iniciarGeracao(usuario(), "Astronomia para curiosos"));
   assert.deepEqual(eventos.map(({ tipo }) => tipo), [
     "plano", "fluxo", "licao", "licao", "licao", "fluxo", "licao", "licao", "licao", "fluxo", "licao", "licao", "licao", "pronto",
   ]);
@@ -39,7 +39,7 @@ test("objetivo qualquer gera 3 fluxos com 3 lições, em ordem, e cada evento pa
       licoes.filter((e) => e.fluxo === fluxo).map((e) => e.titulo),
     ]),
   );
-  assert.equal(pronto.proposta.titulo, "Frações");
+  assert.equal(pronto.proposta.titulo, "Astronomia para curiosos");
 });
 
 test("SQL continua com o plano de demonstração", async () => {
@@ -67,7 +67,7 @@ test("SQL vira uma sequência única de aprendizado, sem trechos por assunto e c
 });
 
 test("a trilha genérica tem trechos sem nome de assunto e ao menos uma lição de revisão", async () => {
-  for (const objetivo of ["Frações", "Inglês para entrevista"]) {
+  for (const objetivo of ["Astronomia para curiosos", "Inglês para entrevista"]) {
     const { proposta } = (await coletar(iniciarGeracao(usuario(), objetivo))).at(-1);
     assert.deepEqual(proposta.fluxos.map(({ titulo }) => titulo), ["Primeiros passos", "Praticando", "Indo além"]);
     assert.ok(proposta.fluxos.every(({ titulo }) => !titulo.toLowerCase().includes(objetivo.toLowerCase())));
@@ -79,14 +79,14 @@ test("a trilha é determinística por objetivo e muda de um objetivo para outro"
   const estrutura = async (objetivo) =>
     (await coletar(iniciarGeracao(usuario(), objetivo))).filter(({ tipo }) => tipo !== "pronto");
   assert.deepEqual(await estrutura("Inglês para entrevista"), await estrutura("  Inglês   para entrevista "));
-  const [um, outro] = [await estrutura("Frações"), await estrutura("Inglês para entrevista")];
+  const [um, outro] = [await estrutura("Astronomia para curiosos"), await estrutura("Inglês para entrevista")];
   assert.notEqual(um[0].titulo, outro[0].titulo);
 });
 
 test("todas as lições genéricas têm conteúdo válido e passam pela aula (certa e errada)", async () => {
   const gerador = criarGeradorFalso();
   const sinal = new AbortController().signal;
-  for (const objetivo of ["Frações", "Inglês para entrevista", "x".repeat(LIMITES_GERACAO.objetivoMax)]) {
+  for (const objetivo of ["Astronomia para curiosos", "Inglês para entrevista", "x".repeat(LIMITES_GERACAO.objetivoMax)]) {
     const eventos = await coletar(iniciarGeracao(usuario(), objetivo));
     const { token, ...proposta } = eventos.at(-1).proposta;
     const lido = lerComprovante("proposta", "nao-importa", token);

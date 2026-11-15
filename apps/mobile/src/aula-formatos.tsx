@@ -197,6 +197,22 @@ export function Passos({ passos, titulo }: { passos: string[]; titulo?: string }
 /** Recurso do exemplo: acorde (diagrama e som), linha do tempo ou a foto do material. */
 export function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
   if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} />;
+  if (recurso.tipo === 'fracao') {
+    const descricao = t.recursos.fracaoDescricao(recurso.numerador, recurso.denominador);
+    return (
+      <View style={formatos.fracao}>
+        <View style={formatos.fracaoBarra} accessible accessibilityRole="image" accessibilityLabel={`${recurso.numerador}/${recurso.denominador}: ${descricao}`}>
+          {Array.from({ length: recurso.denominador }, (_, posicao) => (
+            <View key={posicao} style={[formatos.fracaoParte, posicao < recurso.numerador && formatos.fracaoCheia]} />
+          ))}
+        </View>
+        <View style={formatos.fracaoLegenda}>
+          <Text style={formatos.fracaoRotulo}>{recurso.rotulo ?? `${recurso.numerador}/${recurso.denominador}`}</Text>
+          <Text style={estilos.legenda}>{descricao}</Text>
+        </View>
+      </View>
+    );
+  }
   if (recurso.tipo === 'linha_do_tempo') {
     return (
       <View style={formatos.secao}>
@@ -632,6 +648,12 @@ const formatos = StyleSheet.create({
   linhaTempoPonto: { position: 'absolute', left: -25, top: 4, width: 18, height: 18, borderRadius: 9, borderWidth: 4, borderColor: '#FFFAF0',
     backgroundColor: '#C88A12' },
   linhaTempoQuando: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 17, lineHeight: 22 },
+  fracao: { gap: 10, padding: 14, borderRadius: 20, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: cores.fundo },
+  fracaoBarra: { flexDirection: 'row', gap: 6, height: 60, padding: 8, borderRadius: 16, backgroundColor: '#F2DFC3' },
+  fracaoParte: { flex: 1, borderWidth: 3, borderColor: '#5C3A1A', borderRadius: 10, backgroundColor: cores.fundo },
+  fracaoCheia: { backgroundColor: '#8B5A2B' },
+  fracaoLegenda: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 10 },
+  fracaoRotulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 },
   imagem: { width: '100%', aspectRatio: 16 / 10, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
