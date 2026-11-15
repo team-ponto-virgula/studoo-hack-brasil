@@ -57,8 +57,11 @@ export function exercicioDaResposta(exercicios: readonly ExercicioInterno[], res
   return exercicios[0];
 }
 
+/** Para citar uma opção dentro de uma frase: sem a pontuação final dela (“Eu sou do Brasil.” vira “Eu sou do Brasil”). */
+const citar = (texto: string) => texto.trim().replace(/[.!?;:]+$/u, "");
+
 export function reforcoDoExercicio(exercicio: ExercicioInterno, resposta: string | null, exemplo: string): ReforcoSimples {
-  const motivo = "Vamos por um caminho mais curto: uma pergunta mais simples sobre o mesmo ponto.";
+  let motivo = "Vamos por um caminho mais curto: uma pergunta mais simples sobre o mesmo ponto.";
   const conceito = exercicio.feedbackIncorreto;
   const erro = exercicio.feedbackIncorreto;
   let simples: ExercicioInterno;
@@ -67,6 +70,7 @@ export function reforcoDoExercicio(exercicio: ExercicioInterno, resposta: string
       const certa = exercicio.opcoes.find(({ id }) => id === exercicio.gabarito[0])!;
       const marcada = exercicio.opcoes.find(({ id }) => id === resposta && id !== certa.id) ?? exercicio.opcoes.find(({ id }) => id !== certa.id)!;
       simples = escolha(`Agora com duas opções: ${exercicio.enunciado}`, certa.texto, [marcada.texto], erro);
+      if (resposta === marcada.id) motivo = `Você marcou “${citar(marcada.texto)}”. Agora são só duas opções: compare com calma.`;
       break;
     }
     case "lacuna": {
@@ -74,32 +78,40 @@ export function reforcoDoExercicio(exercicio: ExercicioInterno, resposta: string
       const escrita = resposta?.trim();
       const outra = escrita && normalizarResposta(escrita) !== normalizarResposta(exercicio.gabarito[0]) ? escrita : "Não sei ainda";
       simples = escolha(`Qual resposta completa a frase?${frase}`, exercicio.gabarito[0], [outra], erro);
+      if (escrita) motivo = `Você escreveu “${citar(escrita)}”. Veja qual das duas respostas completa a frase.`;
       break;
     }
     case "verdadeiro_falso": {
       const verdadeira = exercicio.gabarito[0] === "verdadeiro";
       simples = escolha(`Esqueça o porquê por enquanto. A frase “${exercicio.afirmacao}” é…`, verdadeira ? "Verdadeira" : "Falsa",
         [verdadeira ? "Falsa" : "Verdadeira"], erro);
+      motivo = "Um passo de cada vez: primeiro, só decida se a frase é verdadeira ou falsa.";
       break;
     }
     case "ordenar": {
       const textos = exercicio.gabarito.map((id) => exercicio.itens.find((item) => item.id === id)!.texto);
       simples = escolha("Comece pelo começo: qual destes vem primeiro?", textos[0], [textos.at(-1)!, textos[Math.floor(textos.length / 2)]], erro);
+      motivo = "Vamos por partes: antes da ordem inteira, só o primeiro passo.";
       break;
     }
     case "associar": {
       const pares = exercicio.gabarito.map((par) => par.split("=") as [string, string]);
       const escolhidos = new Map((resposta ?? "").split(",").map((par) => par.split("=") as [string, string]));
       const [esquerda, direita] = pares.find(([item, certo]) => escolhidos.has(item) && escolhidos.get(item) !== certo) ?? pares[0];
-      const texto = (lista: readonly Opcao[], id: string) => lista.find((item) => item.id === id)!.texto;
+      const texto = (lista: readonly Opcao[], id: string) => lista.find((item) => item.id === id)?.texto ?? "";
       const outros = pares.filter(([item]) => item !== esquerda).map(([, id]) => texto(exercicio.direita, id));
       simples = escolha(`Um par de cada vez: qual é o par de “${texto(exercicio.esquerda, esquerda)}”?`, texto(exercicio.direita, direita), outros, erro);
+      const ligado = escolhidos.get(esquerda);
+      if (ligado && ligado !== direita && texto(exercicio.direita, ligado)) {
+        motivo = `Você ligou “${citar(texto(exercicio.esquerda, esquerda))}” a “${citar(texto(exercicio.direita, ligado))}”. Vamos ver só esse par.`;
+      }
       break;
     }
     case "aberta": {
       const ideia = exercicio.criterios?.[0] ?? exercicio.gabarito[0].split("|")[0];
       simples = escolha("Qual destas ideias uma boa resposta precisa trazer?", ideia,
         ["Repetir o enunciado com outras palavras", "Dizer que é importante, sem explicar por quê"], erro);
+      motivo = `Faltou uma ideia-chave na sua resposta. Vamos ver qual ela é.`;
       break;
     }
   }

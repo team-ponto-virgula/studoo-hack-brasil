@@ -88,6 +88,16 @@ const violao: Demo = {
               feedbackCorreto: "Isso: o X em cima da 6ª corda diz que ela fica de fora. O acorde começa na 5ª corda.",
               feedbackIncorreto: "Procure o X no diagrama: ele fica sobre a 6ª corda, a mais grossa. É a única que não soa no Lá menor.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'No diagrama, o que quer dizer o O em cima de uma corda?',
+                opcoes: [op("a", 'A corda soa solta, sem dedo nenhum'), op("b", 'A corda não deve soar'), op("c", 'Use o dedo zero, o polegar')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: O é corda solta; X é a corda que fica de fora.',
+                feedbackIncorreto: 'O X e o O são opostos: um tira a corda do acorde, o outro a deixa soar.',
+              },
+            ],
             pratica: {
               tarefa: "Monte o Lá menor e toque as cordas uma a uma, da 5ª à 1ª. Se alguma soar abafada, aproxime o dedo do traste.",
               minutos: 3,
@@ -127,6 +137,16 @@ const violao: Demo = {
               feedbackCorreto: "Perfeito: do Lá menor, só o anelar sobe e desce no lugar novo, e o Dó soa.",
               feedbackIncorreto: "Siga o movimento da mão: você começa no Lá menor, levanta só o anelar, apoia ele na 3ª casa da 5ª corda e então toca o Dó.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Na troca de Lá menor para Dó, quais dedos ficam no lugar?',
+                opcoes: [op("a", 'O indicador e o médio'), op("b", 'O anelar e o médio'), op("c", 'Nenhum: todos mudam')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: indicador e médio são a âncora; só o anelar viaja.',
+                feedbackIncorreto: 'Compare os dois diagramas: só um dos números muda de lugar.',
+              },
+            ],
             pratica: {
               tarefa: "Alterne Lá menor e Dó contando até 4 em cada acorde, devagar. Pare quando a troca sair sem você olhar para a mão.",
               minutos: 4,
@@ -160,6 +180,17 @@ const violao: Demo = {
               feedbackCorreto: "Isso: o braço não para. Errar uma corda passa; perder o tempo atrapalha a música inteira.",
               feedbackIncorreto: "É falsa: o braço segue balançando como um pêndulo. Parar faz você perder o tempo da música.",
             },
+            extras: [
+              {
+                tipo: "lacuna",
+                enunciado: 'Complete com o número de tempos.',
+                trecho: 'Um compasso tem ___ tempos.',
+                trechoTipo: "frase",
+                gabarito: ['4', 'quatro'],
+                feedbackCorreto: 'Isso: um compasso tem 4 tempos, e 8 compassos são 8 contagens de 1 a 4.',
+                feedbackIncorreto: 'É quanto você conta antes de recomeçar a contagem da batida.',
+              },
+            ],
             pratica: {
               tarefa: "Com o Lá menor montado, faça a batida para baixo e para cima por 8 compassos (conte de 1 a 4 oito vezes), em voz alta.",
               minutos: 3,
@@ -223,6 +254,16 @@ const violao: Demo = {
               feedbackCorreto: "Ótima explicação: âncora, dedo que viaja e a batida que não para.",
               feedbackIncorreto: "Faltou alguma parte: diga quais dedos ficam, qual dedo se move e o que acontece com a batida.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Por que vale explicar um movimento com as suas palavras?',
+                opcoes: [op("a", 'Porque explicar ajuda a fixar o movimento'), op("b", 'Para decorar a ordem das cordas'), op("c", 'Porque assim o violão fica afinado')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: quem explica entende o que faz e repete o acerto.',
+                feedbackIncorreto: 'Releia o conceito: o que explicar faz com o que você aprendeu?',
+              },
+            ],
           },
         ],
       },
@@ -472,6 +513,17 @@ const ingles: Demo = {
               feedbackCorreto: "Pedido perfeito: educado, claro e com “please”.",
               feedbackIncorreto: "Quase: use “I'd like…” ou “Can I have…”, diga o que quer (coffee) e termine com “please”.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Ouça o pedido e escolha o que a pessoa quer.',
+                fala: { texto: 'Can I have the check, please?', idioma: "en-US" },
+                opcoes: [op("a", 'A conta'), op("b", 'Um café'), op("c", 'Um sanduíche')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: “check” é a conta do restaurante.',
+                feedbackIncorreto: 'Ouça de novo: a palavra-chave é “check”. Ela apareceu no exemplo desta lição.',
+              },
+            ],
           },
         ],
       },
@@ -510,6 +562,21 @@ const culinaria: Demo = {
               feedbackCorreto: "Isso: entender a receita, lavar, medir e cortar. Só então o fogo.",
               feedbackIncorreto: "O fogo é sempre o último: primeiro leia a receita, lave as mãos e os ingredientes, depois meça e corte.",
             },
+            extras: [
+              {
+                tipo: "verdadeiro_falso",
+                enunciado: 'A frase é verdadeira ou falsa? Escolha também o porquê.',
+                afirmacao: 'Mise en place é deixar tudo pronto antes de ligar o fogo.',
+                justificativas: [
+                  op("certa", 'Assim nada queima enquanto você procura um ingrediente'),
+                  op("e1", 'É o nome de um prato francês'),
+                  op("e2", 'Serve só para cozinhas de restaurante'),
+                ],
+                gabarito: ['verdadeiro', "certa"],
+                feedbackCorreto: 'Isso: com tudo à mão, a panela não fica esperando.',
+                feedbackIncorreto: 'Releia o conceito: o que acontece se você procura o tempero com a panela no fogo?',
+              },
+            ],
           },
           {
             titulo: "Cortes básicos de legumes",
@@ -574,6 +641,16 @@ const culinaria: Demo = {
               feedbackCorreto: "Isso: o dobro de água. É a proporção que deixa o grão macio e solto.",
               feedbackIncorreto: "Lembre da regra do conceito: a água é o dobro do arroz. Quanto é o dobro de 1 xícara?",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Por que refogar o arroz antes de pôr a água?',
+                opcoes: [op("a", 'A gordura envolve os grãos, e eles cozinham soltos'), op("b", 'Para o arroz cozinhar mais rápido'), op("c", 'Para a água ferver mais depressa')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: o grão envolvido em gordura não gruda no outro.',
+                feedbackIncorreto: 'O conceito diz o que deixa cada grão separado. O que envolve o grão no refogado?',
+              },
+            ],
             pratica: {
               tarefa: "Faça 1 xícara de arroz seguindo o passo a passo. Use o cronômetro para o tempo de cozimento.",
               minutos: 15,
@@ -602,6 +679,17 @@ const culinaria: Demo = {
               feedbackCorreto: "Isso: 8 minutos deixam a gema cremosa, nem mole nem firme.",
               feedbackIncorreto: "Olhe a linha do tempo: 6 minutos é gema mole, 8 é cremosa e 10 é firme.",
             },
+            extras: [
+              {
+                tipo: "lacuna",
+                enunciado: 'Complete o passo final.',
+                trecho: 'Para parar o cozimento, passe o ovo para a água ___.',
+                trechoTipo: "frase",
+                gabarito: ['fria', 'gelada'],
+                feedbackCorreto: 'Isso: a água fria para o cozimento na hora, e a gema fica no ponto.',
+                feedbackIncorreto: 'É o contrário da água fervente: ela esfria o ovo na hora.',
+              },
+            ],
             pratica: {
               tarefa: "Cozinhe um ovo no ponto que você prefere. Use o cronômetro e, no fim, passe o ovo para água fria.",
               minutos: 8,
@@ -631,6 +719,16 @@ const culinaria: Demo = {
               feedbackCorreto: "Isso: erva fresca vai no fim, para o aroma chegar ao prato.",
               feedbackIncorreto: "É falsa: o calor longo apaga o aroma das ervas frescas. Elas entram no fim.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Quando a salsinha fresca entra no prato?',
+                opcoes: [op("a", 'No fim, quando você desliga o fogo'), op("b", 'No começo, junto com o alho'), op("c", 'Na água do cozimento')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: no fim, ela guarda o aroma.',
+                feedbackIncorreto: 'Ervas frescas perdem o aroma no fogo. Quando ela fica menos tempo no calor?',
+              },
+            ],
           },
           {
             titulo: "Revisão: planejar um almoço simples",
@@ -648,6 +746,20 @@ const culinaria: Demo = {
               feedbackCorreto: "Ótimo plano: o que demora mais vem primeiro e o resto acontece enquanto isso.",
               feedbackIncorreto: "Faltou algo: cite os três preparos e explique a ordem pelo tempo de cada um (o arroz demora mais).",
             },
+            extras: [
+              {
+                tipo: "ordenar",
+                enunciado: 'Coloque o almoço na ordem que deixa tudo pronto junto.',
+                itens: [
+                  op("p1", 'Começar pelo arroz, que demora mais'),
+                  op("p2", 'Enquanto o arroz cozinha, preparar os ovos e a salada'),
+                  op("p3", 'Servir tudo junto'),
+                ],
+                gabarito: ["p1", "p2", "p3"],
+                feedbackCorreto: 'Isso: o que demora mais começa primeiro, e o resto cabe no tempo dele.',
+                feedbackIncorreto: 'Pense no que demora mais: ele começa primeiro.',
+              },
+            ],
           },
         ],
       },
@@ -687,6 +799,16 @@ const historia: Demo = {
               feedbackCorreto: "Isso: a história do território começa muito antes de 1500, com os povos originários.",
               feedbackIncorreto: "É falsa: milhões de indígenas, de centenas de povos, já viviam aqui quando Cabral chegou.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Qual destas palavras vem do tupi?',
+                opcoes: [op("a", 'Mandioca'), op("b", 'Escola'), op("c", 'Janela')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: mandioca vem do tupi, como pipoca e Ipiranga.',
+                feedbackIncorreto: 'O exemplo da lição cita palavras de origem tupi; uma delas está nas opções.',
+              },
+            ],
           },
           {
             titulo: "Colônia: o ciclo do açúcar",
@@ -702,6 +824,21 @@ const historia: Demo = {
               feedbackCorreto: "Isso: o clima e o solo do litoral nordestino favoreciam a cana.",
               feedbackIncorreto: "Os engenhos ficaram no Nordeste, principalmente em Pernambuco e na Bahia.",
             },
+            extras: [
+              {
+                tipo: "verdadeiro_falso",
+                enunciado: 'A frase é verdadeira ou falsa? Escolha também o porquê.',
+                afirmacao: 'Os engenhos de açúcar funcionavam com trabalho livre e assalariado.',
+                justificativas: [
+                  op("certa", 'Funcionavam com o trabalho forçado de africanos escravizados'),
+                  op("e1", 'Os engenhos não precisavam de trabalhadores'),
+                  op("e2", 'Só os senhores trabalhavam na moenda'),
+                ],
+                gabarito: ['falso', "certa"],
+                feedbackCorreto: 'Isso: a riqueza do açúcar dependia da escravidão.',
+                feedbackIncorreto: 'Releia o conceito: quem trabalhava nos engenhos, e em que condição?',
+              },
+            ],
           },
         ],
       },
@@ -737,6 +874,16 @@ const historia: Demo = {
               feedbackCorreto: "Perfeito: 1500, 1808, 1822 e 1889.",
               feedbackIncorreto: "Use a linha do tempo: 1500 (Cabral), 1808 (família real), 1822 (Independência) e 1889 (República).",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Qual acontecimento preparou o caminho para a Independência?',
+                opcoes: [op("a", 'A vinda da família real, em 1808'), op("b", 'A Lei Áurea, em 1888'), op("c", 'A Proclamação da República, em 1889')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: com a corte no Rio, o Brasil ganhou peso e autonomia.',
+                feedbackIncorreto: 'Procure o que veio antes de 1822 e fez do Rio a sede do governo.',
+              },
+            ],
           },
           {
             titulo: "Independência em 1822",
@@ -827,6 +974,17 @@ const historia: Demo = {
               feedbackCorreto: "Boa explicação: causa (a abolição), quem reagiu (os fazendeiros) e a consequência (a República).",
               feedbackIncorreto: "Faltou alguma ligação: diga quem ficou insatisfeito com a abolição e como isso enfraqueceu o Império.",
             },
+            extras: [
+              {
+                tipo: "lacuna",
+                enunciado: 'Complete com o ano.',
+                trecho: 'A Independência do Brasil foi em ___.',
+                trechoTipo: "frase",
+                gabarito: ['1822'],
+                feedbackCorreto: 'Isso: 1822, o ano do Grito do Ipiranga.',
+                feedbackIncorreto: 'Foi 14 anos depois da chegada da família real, em 1808.',
+              },
+            ],
           },
         ],
       },
@@ -893,6 +1051,17 @@ const fracoes: Demo = {
               feedbackCorreto: "Isso! Em cada par, numerador e denominador foram multiplicados pelo mesmo número.",
               feedbackIncorreto: "Procure o número que multiplica os dois termos: 1/2 × 3 = 3/6, 2/3 × 2 = 4/6 e 3/4 × 2 = 6/8.",
             },
+            extras: [
+              {
+                tipo: "lacuna",
+                enunciado: 'Complete a fração equivalente.',
+                trecho: '1/3 = ___/6',
+                trechoTipo: "frase",
+                gabarito: ['2'],
+                feedbackCorreto: 'Isso: 1/3 vezes 2 em cima e embaixo dá 2/6.',
+                feedbackIncorreto: 'Multiplique o numerador e o denominador pelo mesmo número: 3 vezes quanto dá 6?',
+              },
+            ],
           },
         ],
       },
@@ -913,6 +1082,16 @@ const fracoes: Demo = {
               feedbackCorreto: "Perfeito: com o mesmo denominador, basta comparar os numeradores.",
               feedbackIncorreto: "Todas são sétimos. Compare só os numeradores: 1, 3, 5 e 6.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Qual é maior: 3/8 ou 5/8?',
+                opcoes: [op("a", '5/8'), op("b", '3/8'), op("c", 'São iguais')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: oitavos dos dois lados, e 5 oitavos são mais que 3.',
+                feedbackIncorreto: 'Com o mesmo denominador, as partes têm o mesmo tamanho. Quem tem mais partes?',
+              },
+            ],
           },
           {
             titulo: "Comparar frações com o mesmo numerador",
@@ -934,6 +1113,16 @@ const fracoes: Demo = {
               feedbackCorreto: "Isso: oito partes são menores que quatro partes do mesmo inteiro. 1/8 < 1/4.",
               feedbackIncorreto: "É falsa: com o mesmo numerador, o denominador maior divide o inteiro em partes menores. 1/8 < 1/4.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Qual destas frações é a menor?',
+                opcoes: [op("a", '1/10'), op("b", '1/5'), op("c", '1/2')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: dividido em 10, cada parte é a menor de todas.',
+                feedbackIncorreto: 'Mesmo numerador: quanto mais partes o inteiro tem, menor é cada parte.',
+              },
+            ],
           },
         ],
       },
@@ -996,6 +1185,17 @@ const fracoes: Demo = {
               feedbackCorreto: "Ótima explicação: o tamanho das partes não muda e você só juntou mais partes.",
               feedbackIncorreto: "Faltou alguma ideia: fale do denominador (o tamanho das partes), da soma dos numeradores e de por que o 4 não muda.",
             },
+            extras: [
+              {
+                tipo: "lacuna",
+                enunciado: 'Complete a soma.',
+                trecho: '2/7 + 3/7 = ___/7',
+                trechoTipo: "frase",
+                gabarito: ['5'],
+                feedbackCorreto: 'Isso: sétimos dos dois lados, então junte os numeradores.',
+                feedbackIncorreto: 'Com o mesmo denominador, junte só os numeradores.',
+              },
+            ],
           },
         ],
       },
@@ -1034,6 +1234,16 @@ const fotografia: Demo = {
               feedbackCorreto: "Isso: limpar a lente e firmar as mãos resolve a maioria das fotos borradas.",
               feedbackIncorreto: "É falsa: lente engordurada e mão tremendo borram fotos em qualquer celular.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Como segurar o celular para a foto não tremer?',
+                opcoes: [op("a", 'Com as duas mãos e os cotovelos junto ao corpo'), op("b", 'Com uma mão, de braço esticado'), op("c", 'Pela ponta, com dois dedos')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: duas mãos e cotovelos firmes seguram o tremor.',
+                feedbackIncorreto: 'Releia o conceito: o que fazer com as mãos e com os cotovelos?',
+              },
+            ],
             pratica: {
               tarefa: "Tire uma foto de um objeto perto de você. Depois limpe a lente com um pano macio, segure o celular com as duas mãos e tire a mesma foto. Compare as duas.",
               minutos: 2,
@@ -1061,6 +1271,21 @@ const fotografia: Demo = {
               feedbackCorreto: "Isso: numa das linhas, dando mais espaço para o céu ou para o mar.",
               feedbackIncorreto: "Pela regra dos terços, o horizonte fica numa das linhas horizontais da grade, e não no meio.",
             },
+            extras: [
+              {
+                tipo: "verdadeiro_falso",
+                enunciado: 'A frase é verdadeira ou falsa? Escolha também o porquê.',
+                afirmacao: 'Pela regra dos terços, o assunto fica melhor bem no meio da foto.',
+                justificativas: [
+                  op("certa", 'Fica mais equilibrado numa das linhas ou cruzamentos da grade'),
+                  op("e1", 'O meio é sempre o lugar mais bonito'),
+                  op("e2", 'A grade só serve para paisagens'),
+                ],
+                gabarito: ['falso', "certa"],
+                feedbackCorreto: 'Isso: fora do centro, numa linha da grade, a foto respira.',
+                feedbackIncorreto: 'Pense no jogo da velha da tela: onde a lição manda pôr o assunto?',
+              },
+            ],
             pratica: {
               tarefa: "Ative a grade da câmera e fotografe um objeto três vezes: no meio, num cruzamento da esquerda e num da direita. Veja qual ficou mais interessante.",
               minutos: 3,
@@ -1098,6 +1323,16 @@ const fotografia: Demo = {
               feedbackCorreto: "Isso! Escolher de onde vem a luz é metade da foto.",
               feedbackIncorreto: "Reveja o conceito: contraluz faz silhueta, janela de lado suaviza e o sol do meio-dia endurece as sombras.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Quando acontece a hora dourada?',
+                opcoes: [op("a", 'Perto do nascer e do pôr do sol'), op("b", 'Ao meio-dia'), op("c", 'À meia-noite')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: com o sol baixo, a luz fica quente e suave.',
+                feedbackIncorreto: 'É quando o sol está baixo e a luz fica quente e suave.',
+              },
+            ],
           },
           {
             titulo: "Foco e brilho com um toque",
@@ -1118,6 +1353,17 @@ const fotografia: Demo = {
               feedbackCorreto: "Perfeito: enquadra, foca, ajusta e só então dispara.",
               feedbackIncorreto: "Primeiro você escolhe o que vai aparecer, depois foca, ajusta o brilho e por fim tira a foto.",
             },
+            extras: [
+              {
+                tipo: "lacuna",
+                enunciado: 'Complete o gesto.',
+                trecho: 'Depois de tocar no rosto, deslize o dedo para ___ para clarear a foto.',
+                trechoTipo: "frase",
+                gabarito: ['cima'],
+                feedbackCorreto: 'Isso: para cima clareia, para baixo escurece.',
+                feedbackIncorreto: 'Para baixo escurece; clarear é o movimento contrário.',
+              },
+            ],
             pratica: {
               tarefa: "Fotografe algo perto de uma janela. Toque no assunto para focar, deslize o brilho para cima e para baixo e tire duas versões.",
               minutos: 3,
@@ -1182,6 +1428,16 @@ const fotografia: Demo = {
               feedbackCorreto: "Ótimo planejamento: luz, enquadramento e foco no lugar certo.",
               feedbackIncorreto: "Faltou alguma escolha: diga de onde vem a luz, onde fica o rosto na grade e onde você toca para focar.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: 'Num retrato perto da janela, de onde a luz deve vir?',
+                opcoes: [op("a", 'De lado, da janela'), op("b", 'De trás da pessoa'), op("c", 'Do flash, de frente')],
+                gabarito: ["a"],
+                feedbackCorreto: 'Isso: a luz de lado é suave e valoriza o rosto.',
+                feedbackIncorreto: 'Lembre da lição de luz natural: qual luz é suave e valoriza rostos?',
+              },
+            ],
           },
         ],
       },

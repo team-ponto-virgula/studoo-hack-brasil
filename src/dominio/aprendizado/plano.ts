@@ -404,7 +404,13 @@ function tirarContexto(resposta: string, trecho: string): string | null {
 }
 
 const NEGACAO = new Set(["nao", "nunca", "nem"]);
-const palavrasDe = (valor: string) => normalizarResposta(valor).replace(/[^\p{L}\p{N}]+/gu, " ").trim().split(" ").filter(Boolean);
+/** Contrações do inglês sem o apóstrofo (a normalização tira as aspas): “I'm” vale como “I am”. */
+const CONTRACOES: Record<string, string> = {
+  im: "i am", its: "it is", whats: "what is", heres: "here is", youre: "you are", thats: "that is", theres: "there is",
+  cant: "cannot", dont: "do not", isnt: "is not", wheres: "where is", theyre: "they are", id: "i would",
+};
+const palavrasDe = (valor: string) => normalizarResposta(valor).replace(/[^\p{L}\p{N}]+/gu, " ").trim().split(" ").filter(Boolean)
+  .flatMap((palavra) => (CONTRACOES[palavra] ?? palavra).split(" "));
 
 /**
  * A ideia-chave aparece no texto? A última palavra do termo vale pelo começo (“continu” acha “continua”); palavras de
@@ -582,4 +588,46 @@ export function esqueletoValido(valor: unknown): valor is EsqueletoPlano {
     objeto(fluxo) && textoAte(fluxo.titulo, LIMITES_ESQUELETO.titulo) && Array.isArray(fluxo.licoes) &&
     fluxo.licoes.length > 0 && fluxo.licoes.length <= LIMITES_ESQUELETO.licoesPorFluxo &&
     fluxo.licoes.every((licao) => objeto(licao) && textoAte(licao.titulo, LIMITES_ESQUELETO.titulo)));
+}
+
+/**
+ * As ideias-chave de uma lição, tiradas das respostas dos exercícios: o que vai na lacuna, a opção certa curta, os itens
+ * de ligar e o primeiro termo de cada critério da resposta aberta. Servem para o retorno sem IA dizer o que a explicação
+ * da pessoa trouxe e o que faltou.
+ */
+export function termosDaLicao(conteudo: ConteudoLicao): string[] {
+  const termos: string[] = [];
+  for (const exercicio of [conteudo.exercicio, ...(conteudo.extras ?? [])]) {
+    switch (exercicio.tipo) {
+      case "lacuna":
+        termos.push(exercicio.gabarito[0]);
+        break;
+      case "multipla_escolha": {
+        const certa = exercicio.opcoes.find(({ id }) => id === exercicio.gabarito[0])?.texto ?? "";
+        if (certa.split(/\s+/).length <= 4) termos.push(certa);
+        break;
+      }
+      case "associar":
+        termos.push(...exercicio.esquerda.map(({ texto }) => texto));
+        break;
+      case "aberta":
+        termos.push(...exercicio.gabarito.map((grupo) => grupo.split("|")[0]));
+        break;
+      default:
+        break;
+    }
+  }
+  const vistos = new Set<string>();
+  return termos.map((termo) => termo.replace(/[.!?]+$/u, "").trim()).filter((termo) => {
+    const chave = normalizarResposta(termo);
+    if (chave.length < 3 || /^\d+$/.test(chave) || vistos.has(chave)) return false;
+    vistos.add(chave);
+    return true;
+  }).slice(0, 6);
+}
+
+/** Quais destes termos aparecem no texto (pelo começo da palavra, com um deslize, sem “não” antes). */
+export function termosPresentes(texto: string, termos: readonly string[]): string[] {
+  const palavras = palavrasDe(texto);
+  return termos.filter((termo) => temTermo(palavras, termo));
 }

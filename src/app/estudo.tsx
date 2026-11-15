@@ -317,7 +317,8 @@ export function Estudo() {
   }
 
   async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao, pratica?: AutoAvaliacao) {
-    const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante, pratica));
+    const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante, pratica,
+      resumo && { segundos: resumo.segundos, acertosDePrimeira: resumo.acertosDePrimeira, exercicios: resumo.exercicios }));
     if (resultado.ok) {
       const atualizado = resultado.dados.plano;
       atualizarPlano(atualizado);
@@ -871,7 +872,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       <h1 tabIndex={-1}>{trilhaFeita ? mensagens.licao.trilhaConcluida : mensagens.licao.concluida}</h1>
       <p className="conclusao-texto">{trilhaFeita ? mensagens.licao.trilhaConcluidaTexto(plano.titulo) : mensagens.licao.comemoracao}</p>
       <p className="conclusao-licao">{licao.titulo}</p>
-      {trilhaFeita && <p className="conclusao-trilha"><Icone nome="trofeu" />{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length)}</p>}
+      {trilhaFeita && <p className="conclusao-trilha"><Icone nome="trofeu" />{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length, plano.estatisticas)}</p>}
       {resumo && trilhaFeita && <p className="conclusao-numeros__legenda">{textos.ultimaLicao}</p>}
       {resumo && (
         <ul className="conclusao-numeros" aria-label={trilhaFeita ? `${textos.titulo}: ${textos.ultimaLicao}` : textos.titulo}>
