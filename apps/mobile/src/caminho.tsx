@@ -305,8 +305,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           let depois = 0;
           if (seguinte?.estado === 'atual') depois += medidas.etiqueta;
           if (fimDoTrecho) depois += medidas.marco;
-          // Título discreto embaixo dos nós sem rótulo ao lado: um pouco mais de espaço até o próximo.
-          const discreto = no.estado === 'previa' || !!no.ponte;
+          // Título discreto embaixo de cada nó (o atual já mostra o nome no balão "Começar"): um pouco mais de espaço até o próximo.
+          const discreto = no.estado !== 'atual' || !!no.ponte;
           // O balão do nó atual traz o nome: precisa de mais espaço acima dele.
           if (seguinte?.estado === 'atual') depois += 80;
           // Divisão de parte logo antes da lição atual: a pílula e o balão "Começar" (com o nome) precisam caber entre os nós.
@@ -673,7 +673,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const centro = (largura * x) / 100;
   const direita = x >= 50;
   const atual = no.estado === 'atual';
-  const rotuloA11y = no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}` : nome;
+  const rotuloA11y = no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}` : nome;
   const lugar = [caminhoEstilos.noLugar, { left: centro - lente / 2, width: lente, height: lente }];
 
   const rotulo = comRotulo && (
@@ -685,12 +685,13 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
         <Text style={[caminhoEstilos.titulo, atual && caminhoEstilos.tituloAtual, no.estado === 'previa' && caminhoEstilos.tituloPrevia,
           direita && caminhoEstilos.alinharFim, focado && caminhoEstilos.tituloFocado]}>{no.titulo}</Text>
         {!atual && <Text style={[caminhoEstilos.estado, { color: corDoEstado[no.estado] }, direita && caminhoEstilos.alinharFim]}>{linha}</Text>}
-        {no.ponte && <><PonteNoMapa /><Text style={[caminhoEstilos.estado, { color: cores.acao }]}>{no.ponte.concluida ? mensagens.estudio.pontePronta : mensagens.estudio.ponteMapa}</Text></>}
+        {no.ponte && <><PonteNoMapa /><Text style={[caminhoEstilos.estado, { color: cores.acao }]}>{no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}</Text></>}
       </View>
     </View>
   );
-  // Como na web: o nome fica só no nó atual (e na prévia da geração); os outros mostram o nome ao toque.
-  const discreto = !comRotulo && (no.estado === 'previa' || !!no.ponte) && (
+  // Como na web: o nome de cada lição fica à vista embaixo do nó (o atual já mostra o nome no balão "Começar"), para
+  // achar uma lição e rever sem tocar uma por uma.
+  const discreto = !comRotulo && (!atual || !!no.ponte) && (
     <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 192, centro - 92)) }]}>
       {/* O fundo fica na caixa, não no texto: assim o corte em duas linhas não deixa vazar a terceira. */}
       <View style={[caminhoEstilos.discretoCaixa, atual && caminhoEstilos.discretoCaixaAtual]}>

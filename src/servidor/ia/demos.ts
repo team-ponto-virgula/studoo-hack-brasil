@@ -60,7 +60,7 @@ const violao: Demo = {
                 trechoTipo: "frase",
                 gabarito: ["tarraxa"],
                 feedbackCorreto: "Exato: a tarraxa estica ou afrouxa a corda, e isso muda a afinação.",
-                feedbackIncorreto: "A palavra é tarraxa: a peça da cabeça do violão que estica ou afrouxa a corda.",
+                feedbackIncorreto: "Releia o conceito: é a peça da cabeça do violão que você gira para esticar ou afrouxar a corda.",
               },
             ],
           },
@@ -104,6 +104,12 @@ const violao: Demo = {
             conceito: "Trocar de acorde fica mais fácil quando você procura os dedos que não saem do lugar. Do Lá menor para o Dó, o indicador continua na 1ª casa da 2ª corda e o médio continua na 2ª casa da 4ª corda. Só o anelar muda: vai para a 3ª casa da 5ª corda.",
             exemploTipo: "demonstracao",
             exemplo: "Ouça o Dó e compare com o Lá menor: dois dedos ficam e um dedo anda.",
+            passos: [
+              "Lá menor (Am): indicador na 1ª casa da 2ª corda, médio na 2ª casa da 4ª e anelar na 2ª casa da 3ª.",
+              "Para o Dó (C), o indicador e o médio ficam onde estão.",
+              "Só o anelar viaja: da 2ª casa da 3ª corda para a 3ª casa da 5ª corda.",
+              "Para voltar ao Lá menor, o anelar faz o caminho de volta.",
+            ],
             recurso: { tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0] },
             origem: origemViolao,
             exercicio: {
@@ -166,9 +172,10 @@ const violao: Demo = {
           {
             titulo: "Revisão: Lá menor, Dó e a batida",
             objetivo: "Juntar os dois acordes e a batida numa sequência curta.",
-            conceito: "Agora você junta tudo: o Lá menor, o Dó e a batida. Uma sequência comum é Am, Am, C, C: dois compassos de cada acorde, sem parar o braço.",
+            conceito: "Agora você junta tudo: o Lá menor, o Dó e a batida. Uma sequência comum é Am, Am, C, C: cada nome é um compasso de 4 tempos, então são dois compassos (8 tempos) de cada acorde, sem parar o braço.",
             exemploTipo: "demonstracao",
-            exemplo: "Toque 4 tempos de Lá menor e 4 tempos de Dó, repetindo. Na troca, o anelar sai no último “e”, para o Dó soar já no tempo 1.",
+            exemplo: "Conte de 1 a 4 duas vezes no Lá menor e mais duas no Dó, repetindo. Na troca, o anelar sai no último “e”, para o Dó soar já no tempo 1. Ouça a batida no Dó.",
+            recurso: { tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0], batida: true },
             origem: origemViolao,
             exercicio: {
               tipo: "multipla_escolha",
@@ -182,11 +189,11 @@ const violao: Demo = {
               {
                 tipo: "lacuna",
                 enunciado: "Complete com o nome do dedo.",
-                trecho: "No diagrama, o número 1 indica o dedo ___.",
+                trecho: "Nos diagramas de acorde, o número 1 indica o dedo ___.",
                 trechoTipo: "frase",
                 gabarito: ["indicador"],
                 feedbackCorreto: "Certo: 1 é o indicador, 2 o médio, 3 o anelar e 4 o mínimo.",
-                feedbackIncorreto: "O 1 é o indicador. A contagem segue: 2 médio, 3 anelar, 4 mínimo.",
+                feedbackIncorreto: "Lembre da legenda do diagrama: os números contam os dedos a partir do que fica ao lado do polegar.",
               },
             ],
             pratica: {
@@ -198,7 +205,7 @@ const violao: Demo = {
             titulo: "Explique a troca com suas palavras",
             objetivo: "Explicar como trocar de acorde sem perder o ritmo.",
             conceito: "Explicar o que você faz ajuda a fixar o movimento. Uma boa explicação diz quais dedos servem de âncora, qual dedo se move e o que acontece com o braço da batida.",
-            exemplo: "Por exemplo: “Do Sol para o Mi menor, eu deixo um dedo parado e só levo os outros, sem parar a mão da batida.”",
+            exemplo: "Veja uma boa explicação de outro movimento, a batida: “Eu conto 1 e 2 e 3 e 4 e. No número, a mão desce; no ‘e’, ela sobe. O braço não para nem quando eu erro uma corda.”",
             origem: origemViolao,
             exercicio: {
               tipo: "aberta",
@@ -207,9 +214,9 @@ const violao: Demo = {
               gabarito: [
                 "anelar|dedo 3",
                 "indicador|medio|dedo 1|dedo 2|ficam|fica|parad|ancora|no lugar",
-                "batida|braco|ritmo|tempo|mao direita|pendulo",
+                "nao para|nao paro|nunca para|nunca paro|sem parar|continu|segue|seguindo|mantem|manter|mantenho|balanc|pendulo|no tempo",
               ],
-              criterios: ["Diz que o anelar é o dedo que se move", "Diz quais dedos ficam no lugar", "Fala da batida, que não para"],
+              criterios: ["Diz que o anelar é o dedo que se move", "Diz quais dedos ficam no lugar", "Diz que a batida não para (o braço segue no tempo)"],
               modelo: "Eu deixo o indicador e o médio no lugar, porque eles são iguais nos dois acordes, e só levo o anelar para a 3ª casa da 5ª corda. Enquanto isso, o braço da batida continua balançando, para o Dó entrar no tempo certo.",
               feedbackCorreto: "Ótima explicação: âncora, dedo que viaja e a batida que não para.",
               feedbackIncorreto: "Faltou alguma parte: diga quais dedos ficam, qual dedo se move e o que acontece com a batida.",
@@ -237,13 +244,15 @@ const ingles: Demo = {
         licoes: [
           {
             titulo: "Cumprimentar e se apresentar",
-            objetivo: "Cumprimentar alguém e dizer seu nome e de onde você é.",
-            conceito: "Para começar uma conversa em inglês, três frases curtas resolvem: um cumprimento, seu nome e de onde você vem. “Hello” serve em quase toda situação; “Nice to meet you” mostra simpatia ao conhecer alguém.",
+            objetivo: "Cumprimentar alguém, dizer seu nome, de onde você é e por que veio (até na imigração do aeroporto).",
+            conceito: "Para começar uma conversa em inglês, três frases curtas resolvem: um cumprimento, seu nome e de onde você vem. “Hello” serve em quase toda situação; “Nice to meet you” mostra simpatia ao conhecer alguém. Na imigração do aeroporto, diga também por que veio: “I'm here on vacation” (estou aqui de férias).",
             exemplo: "Na recepção de um hotel: “Hello! I'm Ana. I'm from Brazil.” A pessoa responde: “Nice to meet you, Ana!”",
             falas: [
               falaEn("Hello! I'm Ana.", "Olá! Eu sou a Ana."),
               falaEn("I'm from Brazil.", "Eu sou do Brasil."),
               falaEn("Nice to meet you!", "Prazer em conhecer você!"),
+              falaEn("I'm here on vacation.", "Estou aqui de férias."),
+              falaEn("I'm staying for ten days.", "Vou ficar dez dias."),
             ],
             origem: origemIngles,
             exercicio: {
@@ -255,6 +264,16 @@ const ingles: Demo = {
               feedbackCorreto: "Isso! Com essas três frases você já começa uma conversa.",
               feedbackIncorreto: "Ouça as frases do exemplo de novo: “Hello” é olá, “I'm from” diz de onde você é e “Nice to meet you” é prazer em conhecer.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: "Na imigração, o agente pergunta por que você veio. O que você responde?",
+                opcoes: [op("a", "I'm here on vacation."), op("b", "Nice to meet you!"), op("c", "How much is it?")],
+                gabarito: ["a"],
+                feedbackCorreto: "Isso: “I'm here on vacation” diz que você veio passear, de férias.",
+                feedbackIncorreto: "O agente quer saber o motivo da viagem. Qual frase fala de férias?",
+              },
+            ],
           },
           {
             titulo: "Pedir informações na rua",
@@ -277,7 +296,7 @@ const ingles: Demo = {
               // Em outro idioma, a grafia é a lição: "were" não vale por "where".
               exata: true,
               feedbackCorreto: "Isso: “Where is the museum?” pergunta onde fica o museu.",
-              feedbackIncorreto: "A palavra é “where” (onde): “Excuse me, where is the museum?”",
+              feedbackIncorreto: "É a palavra que pergunta por um lugar, o “onde” do inglês. Começa com “wh”, como “what” e “who”.",
             },
             extras: [
               {
@@ -325,13 +344,14 @@ const ingles: Demo = {
           {
             titulo: "Números e preços",
             objetivo: "Entender preços falados em inglês.",
-            conceito: "Primeiro, os números de 1 a 10: one, two, three, four, five, six, seven, eight, nine, ten. Os de 13 a 19 terminam em “-teen” (thirteen, fifteen) e as dezenas terminam em “-ty” (thirty, fifty). A diferença está no fim da palavra: fifteen é 15 e fifty é 50.",
-            exemplo: "“How much is it?” — “It's fifteen dollars.” São quinze dólares, não cinquenta: o “-teen” no fim indica a casa dos dez.",
+            conceito: "Primeiro, os números de 1 a 10: one, two, three, four, five, six, seven, eight, nine, ten. Os de 13 a 19 terminam em “‑teen” (thirteen, fifteen) e as dezenas terminam em “‑ty” (thirty, fifty). A diferença está no fim da palavra: fifteen é 15 e fifty é 50.",
+            exemplo: "“How much is it?” — “It's fifteen dollars.” São quinze dólares, não cinquenta: o “‑teen” no fim indica a casa dos dez.",
             falas: [
               falaEn("One, two, three, four, five, six, seven, eight, nine, ten.", "Um, dois, três, quatro, cinco, seis, sete, oito, nove, dez."),
               falaEn("How much is it?", "Quanto custa?"),
               falaEn("It's fifteen dollars.", "Custa quinze dólares."),
               falaEn("It's fifty dollars.", "Custa cinquenta dólares."),
+              falaEn("How much is the coffee?", "Quanto custa o café?"),
             ],
             origem: origemIngles,
             exercicio: {
@@ -340,14 +360,26 @@ const ingles: Demo = {
               fala: { texto: "It's thirteen dollars.", idioma: "en-US" },
               opcoes: [op("a", "13 dólares"), op("b", "30 dólares"), op("c", "3 dólares")],
               gabarito: ["a"],
-              feedbackCorreto: "Isso: “thirteen” termina em “-teen”, então é 13.",
-              feedbackIncorreto: "A frase é “It's thirteen dollars”: “thirteen” termina em “-teen” e vale 13. Trinta seria “thirty”.",
+              feedbackCorreto: "Isso: “thirteen” termina em “‑teen”, então é 13.",
+              feedbackIncorreto: "Ouça de novo o fim da palavra: “‑teen” é a casa dos dez (13 a 19); “‑ty” são as dezenas (30, 40…).",
             },
+            extras: [
+              {
+                tipo: "lacuna",
+                enunciado: "Complete a pergunta para saber o preço do café.",
+                trecho: "How ___ is the coffee?",
+                trechoTipo: "frase",
+                gabarito: ["much"],
+                exata: true,
+                feedbackCorreto: "Isso: “How much is…?” pergunta o preço de qualquer coisa.",
+                feedbackIncorreto: "É a pergunta de preço que você ouviu nesta lição, com a palavra que quer dizer “muito”.",
+              },
+            ],
             pratica: {
               tarefa: "Diga em voz alta, devagar, estes preços em inglês. Repita até cada um soar natural.",
               minutos: 2,
               passos: ["Fifteen dollars (15)", "Fifty dollars (50)", "Thirteen dollars (13)", "Thirty dollars (30)"],
-              dica: "Em “fifteen”, a força fica no fim: fif-TEEN. Em “fifty”, fica no começo: FIF-ty.",
+              dica: "Em “fifteen”, a força fica no fim: fif‑TEEN. Em “fifty”, fica no começo: FIF‑ty.",
             },
           },
         ],
@@ -371,14 +403,39 @@ const ingles: Demo = {
               enunciado: "A frase é verdadeira ou falsa? Escolha também o porquê.",
               afirmacao: "“Fifty dollars” e “fifteen dollars” são o mesmo preço.",
               justificativas: [
-                op("teen", "“Fifteen” termina em “-teen” e é 15; “fifty” termina em “-ty” e é 50"),
+                op("teen", "“Fifteen” termina em “‑teen” e é 15; “fifty” termina em “‑ty” e é 50"),
                 op("igual", "As duas palavras começam com “fif”, então valem o mesmo"),
                 op("moeda", "Só muda a moeda, não o valor"),
               ],
               gabarito: ["falso", "teen"],
               feedbackCorreto: "Isso: o fim da palavra muda tudo. 15 é “fifteen” e 50 é “fifty”.",
-              feedbackIncorreto: "É falsa: “fifteen” (15) termina em “-teen” e “fifty” (50) termina em “-ty”.",
+              feedbackIncorreto: "É falsa: “fifteen” (15) termina em “‑teen” e “fifty” (50) termina em “‑ty”.",
             },
+            extras: [
+              {
+                tipo: "ordenar",
+                enunciado: "Coloque a conversa no ponto de ônibus na ordem.",
+                itens: [
+                  op("onde", "Excuse me, where is the bus stop?"),
+                  op("perto", "It's next to the hotel."),
+                  op("preco", "Thank you! How much is the ticket?"),
+                  op("valor", "It's fifteen dollars."),
+                ],
+                gabarito: ["onde", "perto", "preco", "valor"],
+                feedbackCorreto: "Isso: pergunta, resposta, agradecimento e preço, como numa conversa de verdade.",
+                feedbackIncorreto: "Pense na conversa: primeiro você pede licença e pergunta onde fica; depois vêm a resposta, o agradecimento e a pergunta do preço.",
+              },
+              {
+                tipo: "lacuna",
+                enunciado: "Você não entendeu o preço. Complete o pedido para a pessoa repetir.",
+                trecho: "Sorry, can you ___?",
+                trechoTipo: "frase",
+                gabarito: ["repeat"],
+                exata: true,
+                feedbackCorreto: "Isso: “Sorry, can you repeat?” salva qualquer conversa.",
+                feedbackIncorreto: "É o verbo “repetir” em inglês, que apareceu no conceito desta lição. Ele se parece com o português.",
+              },
+            ],
           },
           {
             titulo: "Pedir comida no restaurante",
@@ -500,7 +557,7 @@ const culinaria: Demo = {
               trechoTipo: "formula",
               gabarito: ["2", "duas", "dois"],
               feedbackCorreto: "Isso: o dobro de água. É a proporção que deixa o grão macio e solto.",
-              feedbackIncorreto: "Use o dobro de água: para 1 xícara de arroz, 2 xícaras de água.",
+              feedbackIncorreto: "Lembre da regra do conceito: a água é o dobro do arroz. Quanto é o dobro de 1 xícara?",
             },
             pratica: {
               tarefa: "Faça 1 xícara de arroz seguindo o passo a passo. Use o cronômetro para o tempo de cozimento.",
@@ -694,7 +751,7 @@ const historia: Demo = {
                 trechoTipo: "citacao",
                 gabarito: ["morte"],
                 feedbackCorreto: "Isso: “Independência ou morte!”, o chamado Grito do Ipiranga.",
-                feedbackIncorreto: "A frase é “Independência ou morte!”, o Grito do Ipiranga.",
+                feedbackIncorreto: "Lembre do Grito do Ipiranga, em 1822: a frase opõe a independência ao pior destino possível.",
               },
             ],
           },
@@ -716,7 +773,7 @@ const historia: Demo = {
               trechoTipo: "frase",
               gabarito: ["1888"],
               feedbackCorreto: "Isso: 13 de maio de 1888.",
-              feedbackIncorreto: "A Lei Áurea é de 1888, um ano antes da Proclamação da República.",
+              feedbackIncorreto: "A Lei Áurea veio um ano antes da Proclamação da República, que foi em 1889.",
             },
             extras: [
               {
@@ -801,7 +858,7 @@ const fracoes: Demo = {
                 trechoTipo: "formula",
                 gabarito: ["5"],
                 feedbackCorreto: "Certo: 2 pintadas de 5 partes iguais, 2/5.",
-                feedbackIncorreto: "O denominador é o total de partes iguais: 5. A fração pintada é 2/5.",
+                feedbackIncorreto: "O denominador conta todas as partes iguais da barra, pintadas ou não. Conte de novo.",
               },
             ],
           },
@@ -881,7 +938,7 @@ const fracoes: Demo = {
               trechoTipo: "formula",
               gabarito: ["7"],
               feedbackCorreto: "Isso: 2 + 5 = 7, e o denominador continua 9.",
-              feedbackIncorreto: "Some só os numeradores: 2 + 5 = 7. O denominador continua 9.",
+              feedbackIncorreto: "Com o mesmo denominador, some só os numeradores; o denominador continua 9.",
             },
             extras: [
               {
@@ -1076,7 +1133,7 @@ const fotografia: Demo = {
               trechoTipo: "frase",
               gabarito: ["toco", "toque", "encosto", "clico"],
               feedbackCorreto: "Isso: o toque diz ao celular o que deve ficar nítido.",
-              feedbackIncorreto: "Você toca na tela sobre o rosto: é assim que o celular sabe onde focar.",
+              feedbackIncorreto: "Pense no gesto que você faz na tela, sobre o rosto da pessoa, para o celular focar ali.",
             },
             extras: [
               {

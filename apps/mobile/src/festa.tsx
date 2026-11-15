@@ -33,9 +33,10 @@ function Peca({ indice, quantidade, chuva, progresso, larguraTela, alturaTela }:
       <Animated.View style={{
         position: 'absolute', top: -24, left: ((indice * 53 + 7) % 100) / 100 * larguraTela, width: largura, height: altura,
         borderRadius: 2, backgroundColor: cor,
-        opacity: progresso.interpolate({ inputRange: [0, comeco, comeco + 0.001, fim - 0.04, fim], outputRange: [0, 0, 1, 1, 0], extrapolate: 'clamp' }),
+        // Como na web: cai sobre o Stu e o título e some antes dos números e dos botões (até ~60% da tela).
+        opacity: progresso.interpolate({ inputRange: [0, comeco, comeco + 0.001, comeco + (fim - comeco) * 0.6, fim], outputRange: [0, 0, 1, 1, 0], extrapolate: 'clamp' }),
         transform: [
-          { translateY: progresso.interpolate({ inputRange: [comeco, fim], outputRange: [0, alturaTela + 48], extrapolate: 'clamp' }) },
+          { translateY: progresso.interpolate({ inputRange: [comeco, fim], outputRange: [0, alturaTela * 0.6], extrapolate: 'clamp' }) },
           { translateX: progresso.interpolate({ inputRange: [comeco, fim], outputRange: [0, deriva], extrapolate: 'clamp' }) },
           { rotate: progresso.interpolate({ inputRange: [comeco, fim], outputRange: ['0deg', `${giro}deg`], extrapolate: 'clamp' }) },
         ],

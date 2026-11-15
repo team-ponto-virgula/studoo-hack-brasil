@@ -1,9 +1,10 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ClienteEstudio } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
+  Alert,
   Animated,
   BackHandler,
   Platform,
@@ -53,7 +54,7 @@ type Etapa =
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
 
 type EtapaPlano = Extract<Etapa, { tipo: 'plano' }>;
-type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair';
+type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'apagar';
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 
 /** Quanto "Escrevendo suas lições" fica na tela, no mínimo: com a IA falsa, o aceite volta rápido e o título piscaria. */
@@ -290,6 +291,26 @@ export function Estudo({ cliente, sair, expirar }: {
     setErro(mensagemDoCodigo(licao.codigo));
   }
 
+  /** Apaga uma trilha depois da confirmação (na prévia no navegador, o Alert não aparece: usa a caixa do navegador). */
+  function pedirParaApagar(plano: PlanoResumo) {
+    const apagar = () => void apagarPlano(plano);
+    if (Platform.OS === 'web') {
+      if ((globalThis as { confirm?: (texto: string) => boolean }).confirm?.(mensagens.planos.apagarPergunta(plano.titulo))) apagar();
+      return;
+    }
+    Alert.alert(mensagens.planos.apagarPergunta(plano.titulo), undefined, [
+      { text: mensagens.planos.manter, style: 'cancel' },
+      { text: mensagens.planos.apagar, style: 'destructive', onPress: apagar },
+    ]);
+  }
+
+  async function apagarPlano(plano: PlanoResumo) {
+    const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
+    if (!resultado.ok) return;
+    setPlanos((anteriores) => anteriores?.filter((item) => item.id !== plano.id) ?? null);
+    anunciar(mensagens.planos.apagada(plano.titulo));
+  }
+
   async function abrirPlano(id: string, origem?: string) {
     const resultado = await executar('plano', () => cliente.obterPlano(id));
     if (!resultado.ok) return;
@@ -396,7 +417,8 @@ export function Estudo({ cliente, sair, expirar }: {
         {mensagem}
         {!planos && !erro && <Skeleton />}
         {planos?.map((plano, indice) => (
-          <CartaoPlano key={plano.id} plano={plano} indice={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)} />
+          <CartaoPlano key={plano.id} plano={plano} indice={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)}
+            apagar={() => pedirParaApagar(plano)} />
         ))}
       </Tela>
     );
@@ -826,8 +848,9 @@ function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajust
         <Text style={estudoEstilos.geracaoIa}>
           {!proposta ? mensagens.geracao.montadaDoPedido : origemDemonstracao(proposta.origem) ? mensagens.geracao.demonstracao : mensagens.geracao.ia}
         </Text>
+        {/* A origem só aparece quando acrescenta algo: na trilha pronta, o aviso acima já diz de onde ela vem. */}
         {proposta
-          ? <Text style={estudoEstilos.geracaoOrigem}>{mensagens.geracao.origem(proposta.origem)}</Text>
+          ? !origemDemonstracao(proposta.origem) && <Text style={estudoEstilos.geracaoOrigem}>{mensagens.geracao.origem(origemLegivel(proposta.origem))}</Text>
           : <View importantForAccessibility="no" accessibilityElementsHidden style={estudoEstilos.esqueletoOrigem} />}
       </View>
       <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas}
@@ -1347,7 +1370,13 @@ function BarraProgresso({ progresso, testID, naFaixa = false, comPercentual = fa
  * Cartão de um plano em Meus planos, como na web: uma faixa do mundo (cada plano numa região), o título, o progresso e a
  * ação que cabe: começar, continuar ou rever a trilha concluída.
  */
-function CartaoPlano({ plano, indice, ocupado, abrir }: { plano: PlanoResumo; indice: number; ocupado: boolean; abrir: () => void }) {
+function CartaoPlano({ plano, indice, ocupado, abrir, apagar }: {
+  plano: PlanoResumo;
+  indice: number;
+  ocupado: boolean;
+  abrir: () => void;
+  apagar: () => void;
+}) {
   const { concluidas, total } = plano.progresso;
   const concluido = total > 0 && concluidas === total;
   let acao: string = mensagens.planos.continuar;
@@ -1379,6 +1408,10 @@ function CartaoPlano({ plano, indice, ocupado, abrir }: { plano: PlanoResumo; in
           <Botao rotulo={acao} testID={`abrir-plano-${indice}`} icone="seta" variante={concluido ? 'secundario' : 'primario'}
             dica={plano.titulo} desativado={ocupado} acao={abrir} />
         </View>
+        <Pressable testID={`apagar-plano-${indice}`} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(plano.titulo)}
+          disabled={ocupado} onPress={apagar} hitSlop={8} style={estudoEstilos.cartaoApagar}>
+          <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
+        </Pressable>
       </View>
     </Animated.View>
   );
@@ -1407,7 +1440,8 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
 
   return (
     <Tela pagina="concluida" semCabecalho rodape={rodape}>
-      <Confete chuva quantidade={44} />
+      {/* Sem chuva de confete quando ficou algo para rever: a conclusão vira um lembrete gentil, não uma festa. */}
+      {!resumo?.rever && <Confete chuva quantidade={44} />}
       <View style={estudoEstilos.conclusaoTopo}>
         <CenaConclusao />
         <Titulo testID="titulo-conclusao" foco estilo={estudoEstilos.textoCentro}>
@@ -1418,11 +1452,14 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
         </Text>
         <Text style={[estudoEstilos.conclusaoLicao, estudoEstilos.textoCentro]}>{licao.titulo}</Text>
       </View>
+      {resumo && trilhaFeita && <Text style={estudoEstilos.legendaNumeros}>{mensagens.licao.resumo.ultimaLicao.toLocaleUpperCase('pt-BR')}</Text>}
       {resumo && <NumerosDaLicao resumo={resumo} />}
       {resumo?.rever && (
         <View testID="conclusao-rever" style={estudoEstilos.rever}>
           <Icone nome="revisao" tamanho={20} cor={cores.alerta} />
-          <Text style={estudoEstilos.reverTexto}>{mensagens.licao.revisarDepois}</Text>
+          <Text style={estudoEstilos.reverTexto}>
+            {resumo.acertos < resumo.exercicios ? mensagens.licao.revisarErros(resumo.exercicios - resumo.acertos) : mensagens.licao.revisarPratica}
+          </Text>
         </View>
       )}
       {liberada && (
@@ -1500,7 +1537,7 @@ function NumerosDaLicao({ resumo }: { resumo: ResumoLicao }) {
   const itens = [
     { chave: 'tempo', icone: 'relogio' as const, rotulo: textos.tempo, valor: formatarTempo(segundos), cor: cores.acao },
     { chave: 'acerto', icone: 'alvo' as const, rotulo: textos.acerto,
-      valor: resumo.dePrimeira ? textos.dePrimeira : textos.tentativas(resumo.tentativas), cor: resumo.dePrimeira ? cores.sucesso : cores.alerta },
+      valor: resumo.dePrimeira ? textos.dePrimeira : textos.acertos(resumo.acertos, resumo.exercicios), cor: resumo.dePrimeira ? cores.sucesso : cores.alerta },
     { chave: 'etapas', icone: 'check' as const, rotulo: textos.etapas, valor: textos.etapasFeitas(resumo.etapas), cor: '#5B4BB7' },
     ...(resumo.pratica ? [{ chave: 'pratica', icone: 'relogio' as const, rotulo: textos.pratica, valor: mensagens.licao.pratica.opcoes[resumo.pratica], cor: '#6B3FA0' }] : []),
   ];
@@ -1607,7 +1644,10 @@ const estudoEstilos = StyleSheet.create({
   liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   // Lição concluída
   conclusaoTopo: { alignItems: 'center' },
+  cartaoApagar: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
+  cartaoApagarTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, textDecorationLine: 'underline' },
   rever: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
+  legendaNumeros: { marginTop: 18, marginBottom: -6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, letterSpacing: 0.8, textAlign: 'center' },
   reverTexto: { flexShrink: 1, color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21, textAlign: 'center' },
   textoCentro: { textAlign: 'center' },
   cena: { width: 190, height: 172, alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 },

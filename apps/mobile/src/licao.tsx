@@ -1,9 +1,11 @@
 import { ApoioDaLicao } from './estudio-adaptativo';
 import type { ClienteEstudio } from '@studoo/contratos';
 import {
+  acertouParte,
   etapasDaLicao,
   exerciciosDaLicao,
   faltaParaVerificar,
+  origemLegivel,
   respostaCompleta,
   ultimoExercicio,
   type AutoAvaliacao,
@@ -36,8 +38,20 @@ import { mensagens, textoDaFalta } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
-/** O que a pessoa fez na lição, para o resumo da conclusão. `rever`: terminou com erro ou com a prática em "ainda não". */
-export type ResumoLicao = { segundos: number; tentativas: number; dePrimeira: boolean; etapas: number; pratica?: AutoAvaliacao; rever: boolean };
+/**
+ * O que a pessoa fez na lição, para o resumo da conclusão: `acertos` de `exercicios` (quem segue com um erro termina com
+ * menos acertos) e `rever` quando ficou exercício sem acerto ou a prática em "ainda não". Como na web.
+ */
+export type ResumoLicao = {
+  segundos: number;
+  tentativas: number;
+  dePrimeira: boolean;
+  etapas: number;
+  acertos: number;
+  exercicios: number;
+  pratica?: AutoAvaliacao;
+  rever: boolean;
+};
 
 const t = mensagens.licao;
 const iconesDaEtapa: Record<EtapaAula['tipo'], NomeIcone> = { conceito: 'livro', exemplo: 'lampada', exercicio: 'alvo', pratica: 'relogio' };
@@ -94,6 +108,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [autoAvaliacao, setAutoAvaliacao] = useState<AutoAvaliacao | null>(null);
   const [errosSeguidos, setErrosSeguidos] = useState(0);
   const [pedidoPonte, setPedidoPonte] = useState(0);
+  const [consultaAberta, setConsultaAberta] = useState(false);
   const [inicio] = useState(() => Date.now());
   const tituloEtapa = useRef<ComponentRef<typeof Text>>(null);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
@@ -184,7 +199,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   function tentarDeNovo() {
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
-    mudarResposta('');
+    // Na resposta aberta, o texto fica para a pessoa corrigir; nos outros formatos, recomeça do zero.
+    if (exercicio?.tipo !== 'aberta') mudarResposta('');
   }
 
   async function avancar() {
@@ -199,8 +215,10 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       tentativas,
       dePrimeira: primeiras.every((primeira) => primeira === true),
       etapas: total,
+      acertos: avaliacoes.filter((item) => item?.correta).length,
+      exercicios: exercicios.length,
       ...(autoAvaliacao ? { pratica: autoAvaliacao } : {}),
-      rever: avaliacoes.some((item) => item !== null && !item.correta) || autoAvaliacao === 'ainda_nao',
+      rever: avaliacoes.some((item) => !item?.correta) || autoAvaliacao === 'ainda_nao',
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) return;
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === exercicios.length - 1 ? null : atual)));
@@ -224,7 +242,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       <PainelRetorno avaliacao={avaliacao}
         titulo={avaliacao.correta
           ? avaliacao.criterios?.some(({ atendido }) => !atendido) ? t.quaseCompleta : tituloDoAcerto(`${licao.id}-${indice}`)
-          : t.errada}
+          : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
         extras={extrasDoRetorno(avaliacao, exercicio)} ocupado={ocupado} concluindo={pendente === 'concluir'} tentarDeNovo={tentarDeNovo}
         verReforco={() => {
           rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
@@ -324,15 +342,16 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             )}
             <Text style={estilos.introducao}>{licao.objetivo}</Text>
             <ExplicacaoDoStu>
-              <Text accessibilityRole="header" style={licaoEstilos.balaoTitulo}>{t.conceito}</Text>
+              <Text accessibilityRole="header" style={licaoEstilos.balaoTitulo}>{t.explicacaoDoStu}</Text>
               <Text style={estilos.texto}>{licao.conceito}</Text>
-              <Text style={estilos.legenda}>{t.origem} · {licao.origem}</Text>
+              <Text style={estilos.legenda}>{t.origem} · {origemLegivel(licao.origem)}</Text>
             </ExplicacaoDoStu>
           </>
         )}
         {etapa.tipo === 'exemplo' && (
           <View style={[licaoEstilos.quadro, licaoEstilos.quadroExemplo]}>
-            <Text ref={tituloEtapa} accessible accessibilityRole="header" style={estilos.subtitulo}>
+            {/* O selo da etapa já diz "Exemplo" no alto: o título do quadro fica só para o leitor de tela (e recebe o foco). */}
+            <Text ref={tituloEtapa} accessible accessibilityRole="header" style={licaoEstilos.soLeitor}>
               {licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}
             </Text>
             <Text style={estilos.texto}>{licao.exemplo}</Text>
@@ -344,21 +363,31 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {exercicio && (
           <Animated.View style={[licaoEstilos.quadro, { transform: [{ translateX: tremor }] }]}
             onLayout={(evento) => { fimDoExercicio.current = evento.nativeEvent.layout.y + evento.nativeEvent.layout.height; }}>
-            <Text ref={tituloEtapa} accessible accessibilityRole="header" style={estilos.subtitulo}>
+            <Text ref={tituloEtapa} accessible accessibilityRole="header" style={licaoEstilos.soLeitor}>
               {exercicios.length > 1 ? t.exercicioDe(indice + 1, exercicios.length) : t.exercicio}
             </Text>
             <Text style={estilos.texto}>{exercicio.enunciado}</Text>
             {exercicio.contexto && <Text style={estilos.texto}>{exercicio.contexto}</Text>}
             {exercicio.trecho && <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala} />}
             {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} />}
-            {/* Para consultar durante o exercício: o acorde e a barra de fração (a linha do tempo entregaria a ordem). */}
+            {campoDoExercicio(exercicio)}
+            {/* Para consultar, depois da resposta e recolhido para a pergunta ficar no alto: o acorde e a barra de fração (a
+                linha do tempo entregaria a ordem). */}
             {(licao.recurso?.tipo === 'acorde' || licao.recurso?.tipo === 'fracao') && (
-              <View style={licaoEstilos.consulta}>
-                <Text style={licaoEstilos.consultaRotulo}>{t.recursos.consultar.toLocaleUpperCase('pt-BR')}</Text>
-                <RecursoDaLicao recurso={licao.recurso} />
+              <View style={[licaoEstilos.consulta, !consultaAberta && licaoEstilos.consultaFechada]}>
+                <Pressable testID="consultar-recurso" accessibilityRole="button" accessibilityState={{ expanded: consultaAberta }}
+                  onPress={() => setConsultaAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
+                  <View style={{ transform: [{ rotate: consultaAberta ? '90deg' : '0deg' }] }}>
+                    <Icone nome="seta" tamanho={16} cor="#8A5A00" />
+                  </View>
+                  <Text style={licaoEstilos.consultaBotaoTexto}>
+                    {consultaAberta ? t.recursos.esconder
+                      : licao.recurso.tipo === 'acorde' ? t.recursos.verAcorde(licao.recurso.nome) : t.recursos.verFracao}
+                  </Text>
+                </Pressable>
+                {consultaAberta && <RecursoDaLicao recurso={licao.recurso} />}
               </View>
             )}
-            {campoDoExercicio(exercicio)}
             {exercicio.tipo === 'aberta' && avaliacao && <CorrecaoAberta avaliacao={avaliacao} />}
           </Animated.View>
         )}
@@ -491,7 +520,7 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
           </View>
         )}
         <View style={licaoEstilos.metade}>
-          <Botao testID="continuar-licao" rotulo={concluindo ? mensagens.licao.concluindo : mensagens.licao.continuar}
+          <Botao testID="continuar-licao" rotulo={concluindo ? mensagens.licao.concluindo : certa ? mensagens.licao.continuar : mensagens.licao.pular}
             variante={certa ? 'sucesso' : 'texto'} desativado={ocupado} ocupado={concluindo} carregando={concluindo} acao={continuar} />
         </View>
       </View>
@@ -556,6 +585,11 @@ const licaoEstilos = StyleSheet.create({
   quadroExemplo: { borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
   quadroPratica: { borderColor: '#E2D1F5', backgroundColor: '#FBF8FF' },
   consulta: { gap: 10, padding: 12, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
+  consultaFechada: { paddingVertical: 4 },
+  /** Só para o leitor de tela: some da vista sem sair da ordem de leitura. */
+  soLeitor: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
+  consultaBotao: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 },
+  consultaBotaoTexto: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 15 },
   consultaRotulo: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
   respostaCampo: { minHeight: 58, fontSize: 20, lineHeight: 26, fontWeight: '700' },
   respostaCerta: { borderColor: cores.sucessoClaro, color: cores.sucesso, backgroundColor: '#EEFAF3' },

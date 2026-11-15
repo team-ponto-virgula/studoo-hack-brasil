@@ -38,7 +38,7 @@ function escolha(enunciado: string, certa: string, erradas: string[], retornoErr
     enunciado: enunciado.slice(0, 600),
     opcoes,
     gabarito: [opcoes[girados.indexOf(certa)].id],
-    feedbackCorreto: "Isso! Agora volte ao exercício e tente de novo.",
+    feedbackCorreto: "Isso! Você pegou a ideia.",
     feedbackIncorreto: retornoErro,
   };
 }

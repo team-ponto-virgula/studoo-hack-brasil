@@ -2,7 +2,7 @@
 
 A pessoa começa com duas opções: **Tenho uma ideia** e **Tenho um material**. Só o conteúdo escolhido aparece. Alternar mantém o texto e o material em memória enquanto a tela permanece aberta.
 
-A ideia ocupa um caderno de fundo quente, com uma frase do Stu, um campo e a ação **Montar meu caminho**. Três sugestões aparecem primeiro; as outras áreas ficam em **Explorar outras ideias**. A apresentação deixa de interromper o primeiro acesso e continua disponível em **Ver como funciona**.
+A ideia ocupa um caderno de fundo quente, com uma frase do Stu, um campo e a ação **Montar minha trilha**. Três sugestões aparecem primeiro; as outras áreas ficam em **Explorar outras ideias**. A apresentação deixa de interromper o primeiro acesso e continua disponível em **Ver como funciona**.
 
 O material tem uma explicação curta e um aviso visível sobre envio à IA e dados pessoais. Limites e política detalhada podem ser expandidos. Arquivo, câmera e demonstração continuam disponíveis; a seleção leva à revisão antes de criar a trilha.
 

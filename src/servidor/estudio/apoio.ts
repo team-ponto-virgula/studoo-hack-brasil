@@ -88,8 +88,8 @@ function reforcoFalso(licao: LicaoDetalhe, interno: ConteudoLicao, resposta: str
       ],
       gabarito: ['1'],
       feedbackCorreto: fracao
-        ? 'Isso! As seis fatias formam o inteiro. Agora volte ao exercício original.'
-        : 'Essa é a ideia central. Use-a para resolver o exercício original.',
+        ? 'Isso! As seis fatias formam o inteiro.'
+        : 'Isso: essa é a ideia central da lição.',
       feedbackIncorreto: fracao
         ? 'Conte todas as partes iguais do bolo: são seis. Duas é a quantidade servida.'
         : 'Compare com a explicação: a ideia central orienta a solução, em vez de adivinhar.',
@@ -181,7 +181,9 @@ export async function ensinarStu(
   let feedback: FeedbackEnsino;
   if (process.env.IA === 'falsa') {
     // Sem IA: o retorno não confere se o texto está certo, mas reconhece se a pessoa já trouxe um exemplo.
-    const comExemplo = /\b(?:exemplo|imagine|como quando|tipo quando|digamos)\b/i.test(explicacao.normalize('NFD').replace(/\p{M}+/gu, ''));
+    const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
+    const comExemplo = /\b(?:exemplos?|ex|imagine|como quando|tipo|digamos|quando|se eu|caso)\b/i.test(semAcento) ||
+      /["“”‘’']|\d/.test(semAcento);
     feedback = {
       acertos: [
         'Você explicou com as suas palavras.',

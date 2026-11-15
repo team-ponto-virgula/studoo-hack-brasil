@@ -1,4 +1,4 @@
-import type { ExercicioPublico, LicaoDetalhe, TipoTrecho } from './aprendizado';
+import type { Avaliacao, ExercicioPublico, LicaoDetalhe, TipoTrecho } from './aprendizado';
 
 /*
  * Regras da aula compartilhadas pela web e pelo app: as etapas de cada lição, o formato das respostas e o visual do
@@ -91,6 +91,28 @@ export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string
     default:
       return { tipo: 'escrever' };
   }
+}
+
+/**
+ * Errou, mas acertou uma parte (itens na posição, pares, o valor ou o porquê, critérios da resposta aberta): o retorno
+ * diz “Quase lá!”. Sem nenhuma parte certa, o título é outro, para não dizer “quase” a quem ainda está longe.
+ */
+export function acertouParte(avaliacao: Avaliacao): boolean {
+  if (avaliacao.correta) return false;
+  return (avaliacao.certos?.length ?? 0) > 0 || (avaliacao.criterios?.some(({ atendido }) => atendido) ?? false);
+}
+
+/**
+ * A origem como a pessoa lê, sem jargão técnico: a do modo demonstração (“Modo demonstração: trilha pronta sobre…”)
+ * vira “Trilha pronta do Studoo sobre…”. Vale também para trilhas salvas antes.
+ */
+export function origemLegivel(origem: string): string {
+  const texto = origem.trim();
+  const pronta = texto.match(/^modo demonstra[cç][aã]o:\s*trilha pronta sobre\s+(.+)$/i);
+  if (pronta) return `Trilha pronta do Studoo sobre ${pronta[1]}`;
+  if (/^modo demonstra[cç][aã]o:\s*conte[uú]do de exemplo/i.test(texto)) return 'Conteúdo de exemplo do Studoo';
+  const resto = texto.replace(/^modo demonstra[cç][aã]o:\s*/i, '');
+  return resto.charAt(0).toLocaleUpperCase('pt-BR') + resto.slice(1);
 }
 
 /** A origem da trilha é o modo demonstração (conteúdo pronto, sem a IA)? */

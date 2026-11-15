@@ -2,11 +2,11 @@
 
 ## Experiência
 
-Depois de criar a primeira trilha, a web em celular e o app têm dois destinos ao alcance do polegar: **Meus planos** e **Novo plano**. A seleção tem fundo azul claro e uma animação curta no ícone. A navegação fica fora da aula, da apresentação e da geração, que têm suas próprias ações. Em desktop, a web mantém a barra lateral.
+Depois de criar a primeira trilha, a web em celular e o app têm dois destinos ao alcance do polegar: **Minhas trilhas** e **Nova trilha**. A seleção tem fundo azul claro e uma animação curta no ícone. A navegação fica fora da aula, da apresentação e da geração, que têm suas próprias ações. Em desktop, a web mantém a barra lateral.
 
-Em Meus planos, **Seu próximo passo** destaca a primeira trilha em andamento na ordem da lista. Se nenhuma foi iniciada, destaca a primeira não concluída. **Retomar trilha** abre o caminho e permite continuar pela lição disponível. A contagem de lições concluídas soma os planos salvos; não é XP nem uma métrica inventada. Se todos foram concluídos, o destaque convida a revisar ou criar outro assunto.
+Em Minhas trilhas, **Seu próximo passo** destaca a primeira trilha em andamento na ordem da lista. Se nenhuma foi iniciada, destaca a primeira não concluída. **Retomar trilha** abre o caminho e permite continuar pela lição disponível. A contagem de lições concluídas soma os planos salvos; não é XP nem uma métrica inventada. Se todos foram concluídos, o destaque convida a revisar ou criar outro assunto.
 
-A ação de criar plano não fica duplicada no rodapé de Meus planos. Nas outras telas, a ação principal fica acima da navegação. As áreas seguras são respeitadas. Ao digitar, a navegação some; na web, a ação do formulário volta ao fluxo da página. No app, arrastar o conteúdo fecha o teclado.
+Cada cartão tem **Apagar**, discreto, depois da ação principal: pede confirmação (as lições e o progresso da trilha vão junto) e, sem trilhas, a tela volta ao pedido. A ação de criar trilha não fica duplicada no rodapé de Minhas trilhas. Nas outras telas, a ação principal fica acima da navegação. As áreas seguras são respeitadas. Ao digitar, a navegação some; na web, a ação do formulário volta ao fluxo da página. No app, arrastar o conteúdo fecha o teclado.
 
 ## Movimento e acessibilidade
 

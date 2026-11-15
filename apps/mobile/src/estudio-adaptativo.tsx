@@ -486,7 +486,7 @@ export function ApoioDaLicao({
             />
           ) : (
             <>
-              {ponte.simulado && <T>{m.simulado}</T>}
+              {ponte.simulado && <T>{m.retornoAutomatico}</T>}
               <T>{ponte.conceito}</T>
               <View style={s.exemplo}>
                 <T>{ponte.exemplo}</T>
@@ -571,7 +571,7 @@ export function ApoioDaLicao({
             />
             {ensino && (
               <View accessibilityLiveRegion="polite" style={{ gap: 12 }}>
-                {ensino.simulado && <T>{m.simulado}</T>}
+                {ensino.simulado && <T>{m.retornoAutomatico}</T>}
                 <H>{m.acertos}</H>
                 {ensino.acertos.map((x, i) => (
                   <T key={i}>{x}</T>

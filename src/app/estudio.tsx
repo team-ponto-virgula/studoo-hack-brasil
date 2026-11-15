@@ -380,7 +380,7 @@ export function ApoioDaLicao({
             </Botao>
           ) : (
             <>
-              {ponte.simulado && <p className="estudio-selo">{m.simulado}</p>}
+              {ponte.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
               <p>{ponte.conceito}</p>
               <div className="estudio-exemplo">{ponte.exemplo}</div>
               <fieldset disabled={ocupado || gravando || ponte.concluida}>
@@ -470,7 +470,7 @@ export function ApoioDaLicao({
         {aviso && <p role="status">{aviso}</p>}
         {ensino && (
           <div className="estudio-feedback" role="status">
-            {ensino.simulado && <p className="estudio-selo">{m.simulado}</p>}
+            {ensino.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
             <h3>{m.acertos}</h3>
             <ul>
               {ensino.acertos.map((x, i) => (

@@ -104,6 +104,24 @@ export async function buscarPlano(usuarioId: string, id: string): Promise<PlanoD
   return apresentarPlano(plano);
 }
 
+/**
+ * Apaga uma trilha da pessoa, com as partes, as lições, as conclusões e o apoio delas, tudo de uma vez. Trilha de outra
+ * pessoa (ou que não existe) responde `nao_encontrado`, como na leitura.
+ */
+export async function apagarPlano(usuarioId: string, id: string): Promise<void> {
+  await banco.$transaction(async (tx) => {
+    const plano = await tx.planoAprendizado.findUnique({ where: { usuarioId_id: { usuarioId, id } }, select: { id: true } });
+    if (!plano) throw new FalhaApi("nao_encontrado");
+    const fluxos = (await tx.fluxo.findMany({ where: { usuarioId, planoId: id }, select: { id: true } })).map((fluxo) => fluxo.id);
+    const licoes = (await tx.licao.findMany({ where: { usuarioId, fluxoId: { in: fluxos } }, select: { id: true } })).map((licao) => licao.id);
+    await tx.registroEstudo.deleteMany({ where: { usuarioId, licaoId: { in: licoes } } });
+    await tx.apoioLicao.deleteMany({ where: { usuarioId, licaoId: { in: licoes } } });
+    await tx.licao.deleteMany({ where: { usuarioId, id: { in: licoes } } });
+    await tx.fluxo.deleteMany({ where: { usuarioId, planoId: id } });
+    await tx.planoAprendizado.delete({ where: { usuarioId_id: { usuarioId, id } } });
+  });
+}
+
 export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
   const planos = await banco.planoAprendizado.findMany({
     where: { usuarioId },
