@@ -1,5 +1,6 @@
+import { TIPOS_TRECHO, type Recurso, type TipoTrecho } from "@studoo/contratos";
 import type { ConteudoLicao, EsqueletoPlano, ExercicioInterno } from "@/dominio/aprendizado/plano";
-import { LIMITES_ESQUELETO, conteudoValido } from "@/dominio/aprendizado/plano";
+import { LIMITES_ESQUELETO, conteudoValido, falaValida, recursoValido } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import type { EventoEstrutura, GeradorTrilha, MetaPlano } from "./gerador";
 import { instrucoesDeOrdem } from "./ordem";
@@ -98,6 +99,30 @@ function textoDaResposta(corpo: unknown): string {
     }
   }
   return texto;
+}
+
+/**
+ * Pedido curto com Structured Outputs, usado durante a aula (correção da resposta aberta e desempate da lacuna). Tem
+ * prazo próprio, curto: se a IA demorar ou falhar, quem chamou fica com a correção local.
+ */
+export async function pedirCorrecao(
+  config: ConfiguracaoOpenAi,
+  nome: string,
+  esquema: Record<string, unknown>,
+  instrucoes: string,
+  dados: unknown,
+  ms = 15_000,
+): Promise<unknown> {
+  const resposta = await pedir(config, {
+    input: [
+      { role: "system", content: instrucoes },
+      { role: "user", content: JSON.stringify(dados) },
+    ],
+    text: { format: { type: "json_schema", name: nome, schema: esquema, strict: true } },
+    max_output_tokens: 1500,
+    store: false,
+  }, AbortSignal.timeout(ms));
+  return JSON.parse(textoDaResposta(await resposta.json()));
 }
 
 /** Lê o streaming (SSE) e entrega os pedaços de texto à medida que chegam. */
@@ -228,50 +253,86 @@ function criarMontador(objetivo: string) {
   };
 }
 
-const esquemaDaLicao = {
+const textoJson = { type: "string" } as const;
+const textoOuNulo = { type: ["string", "null"] } as const;
+const nulo = { type: "null" } as const;
+const objetoEstrito = (propriedades: Record<string, unknown>) => ({
   type: "object",
   additionalProperties: false,
-  required: ["objetivo", "conceito", "exemplo", "exercicio"],
-  properties: {
-    objetivo: { type: "string" },
-    conceito: { type: "string" },
-    exemplo: { type: "string" },
-    exercicio: {
-      type: "object",
-      additionalProperties: false,
-      required: ["tipo", "enunciado", "contexto", "trecho", "opcoes", "gabarito", "feedbackCorreto", "feedbackIncorreto"],
-      properties: {
-        tipo: { type: "string", enum: ["lacuna", "multipla_escolha"] },
-        enunciado: { type: "string" },
-        contexto: { type: ["string", "null"] },
-        trecho: { type: ["string", "null"] },
-        opcoes: {
-          type: ["array", "null"],
-          items: {
-            type: "object",
-            additionalProperties: false,
-            required: ["id", "texto"],
-            properties: { id: { type: "string" }, texto: { type: "string" } },
-          },
-        },
-        gabarito: { type: "array", items: { type: "string" } },
-        feedbackCorreto: { type: "string" },
-        feedbackIncorreto: { type: "string" },
-      },
-    },
+  required: Object.keys(propriedades),
+  properties: propriedades,
+});
+const opcaoJson = objetoEstrito({ id: textoJson, texto: textoJson });
+const opcoesOuNulo = { type: ["array", "null"], items: opcaoJson } as const;
+
+const esquemaDoExercicio = objetoEstrito({
+  tipo: { type: "string", enum: ["lacuna", "multipla_escolha", "ordenar", "associar", "verdadeiro_falso", "aberta"] },
+  enunciado: textoJson,
+  contexto: textoOuNulo,
+  trecho: textoOuNulo,
+  trechoTipo: { anyOf: [{ type: "string", enum: ["codigo", "frase", "citacao", "formula", "passos"] }, nulo] },
+  fala: { anyOf: [objetoEstrito({ texto: textoJson, idioma: textoJson }), nulo] },
+  opcoes: opcoesOuNulo,
+  itens: opcoesOuNulo,
+  esquerda: opcoesOuNulo,
+  direita: opcoesOuNulo,
+  afirmacao: textoOuNulo,
+  gabarito: { type: "array", items: textoJson },
+  exata: { type: ["boolean", "null"] },
+  criterios: { type: ["array", "null"], items: textoJson },
+  modelo: textoOuNulo,
+  feedbackCorreto: textoJson,
+  feedbackIncorreto: textoJson,
+});
+
+const esquemaDaLicao = objetoEstrito({
+  objetivo: textoJson,
+  conceito: textoJson,
+  exemplo: textoJson,
+  exemploTipo: { type: "string", enum: ["exemplo", "demonstracao"] },
+  passos: { type: ["array", "null"], items: textoJson },
+  recurso: {
+    anyOf: [
+      objetoEstrito({
+        tipo: { type: "string", enum: ["acorde", "linha_do_tempo"] },
+        nome: textoOuNulo,
+        casas: { type: ["array", "null"], items: { type: "integer" } },
+        dedos: { type: ["array", "null"], items: { type: "integer" } },
+        eventos: { type: ["array", "null"], items: objetoEstrito({ quando: textoJson, texto: textoJson }) },
+      }),
+      nulo,
+    ],
   },
-} as const;
+  falas: { type: ["array", "null"], items: objetoEstrito({ texto: textoJson, idioma: textoJson, traducao: textoOuNulo }) },
+  pratica: {
+    anyOf: [
+      objetoEstrito({ tarefa: textoJson, minutos: { type: "integer" }, passos: { type: ["array", "null"], items: textoJson }, dica: textoOuNulo }),
+      nulo,
+    ],
+  },
+  exercicios: { type: "array", items: esquemaDoExercicio },
+});
 
 const instrucoesDaLicao = [
-  "Você é a IA do Studoo e escreve uma lição curta de uma trilha de estudo, em português do Brasil, para alguém que está aprendendo.",
-  "A lição tem: objetivo (uma frase que começa com um verbo), conceito (de 2 a 4 frases simples, com um único conceito novo), exemplo (um caso concreto e resolvido) e um exercício com feedback.",
-  "Exercício:",
-  "- Prefira multipla_escolha com 3 opções (ids \"a\", \"b\" e \"c\") e só uma correta; o gabarito é a lista com o id da correta.",
-  "- Use lacuna quando a resposta for uma palavra, um número ou um símbolo curto: o trecho mostra a frase com ___ no lugar da resposta, o gabarito lista as respostas aceitas (por exemplo, com e sem acento) e opcoes é null.",
-  "- contexto e trecho são opcionais: use null quando não ajudarem.",
+  "Você é a IA do Studoo e escreve uma lição curta de uma trilha de estudo, em português do Brasil, para alguém que está aprendendo. O assunto pode ser qualquer coisa: idioma, música, culinária, história, ciência, esporte, programação.",
+  "A lição tem: objetivo (uma frase que começa com um verbo), conceito (de 2 a 4 frases simples, com um único conceito novo), exemplo (um caso concreto e resolvido) e de 1 a 3 exercícios com feedback.",
+  "Exemplo e recursos:",
+  "- exemploTipo é \"demonstracao\" nas habilidades práticas (tocar, cozinhar, desenhar, praticar um esporte): o exemplo apresenta e passos traz de 3 a 6 passos curtos para fazer junto. Nos outros casos, exemploTipo é \"exemplo\" e passos é null.",
+  "- recurso, só quando ajudar a ver: acorde de violão (tipo \"acorde\", nome como \"Am\", casas com 6 inteiros da 6ª corda à 1ª: -1 não toca, 0 solta, n é a casa; dedos com 6 inteiros de 0 a 4) ou linha_do_tempo (de 2 a 8 eventos com quando e texto, para história, processos e tempos de preparo). Nos campos que não se aplicam, use null. Sem recurso, null.",
+  "- falas, em lições de idioma: de 1 a 4 frases curtas no idioma estudado, com idioma no formato BCP 47 (como en-US, es-ES, fr-FR) e a traducao em português. Nos outros assuntos, null.",
+  "- pratica, nas habilidades que se treinam fora do app: uma tarefa concreta e segura, minutos de 1 a 20 para o cronômetro, até 5 passos e uma dica (ou null). Sem prática, null.",
+  "Exercícios (use formatos variados; o primeiro é o principal):",
+  "- multipla_escolha: 3 opções em opcoes (ids \"a\", \"b\", \"c\"), só uma correta; gabarito é a lista com o id da correta.",
+  "- lacuna: o trecho mostra a frase com ___ no lugar da resposta, que é uma palavra, um número ou um símbolo curto; gabarito lista as respostas aceitas. exata é true quando a grafia é o que se ensina (palavra de outro idioma, ortografia); senão, false.",
+  "- ordenar: itens traz de 3 a 6 itens já na ordem certa (passos de um processo, acontecimentos, falas de um diálogo); o app embaralha. gabarito é [].",
+  "- associar: esquerda e direita com o mesmo número de itens (de 2 a 5), e direita[i] é o par de esquerda[i] (termo e definição, palavra e tradução, personagem e feito); o app embaralha. gabarito é [].",
+  "- verdadeiro_falso: afirmacao é a frase a julgar e opcoes traz 3 justificativas, só uma explica corretamente; gabarito é [\"verdadeiro\" ou \"falso\", id da justificativa certa].",
+  "- aberta: a pessoa explica com as próprias palavras (use em revisões e em lições de explicar). gabarito traz de 2 a 4 grupos de palavras-chave sem acento, com alternativas separadas por | (radicais valem, como fazendeir); criterios tem o mesmo número de itens e diz em linguagem simples o que cada grupo procura; modelo é uma boa resposta, de 2 ou 3 frases.",
+  "- trecho é opcional. trechoTipo diz o visual: codigo (só para código de programação), frase, citacao, formula ou passos (um passo por linha). fala, opcional, é um áudio para ouvir (texto e idioma); num exercício de escuta, deixe o trecho null para o texto não aparecer de cara.",
+  "- Nos campos que não se aplicam ao tipo, use null (e [] no gabarito de ordenar e associar).",
   "- feedbackCorreto explica por que a resposta está certa; feedbackIncorreto explica o erro e mostra o caminho certo, com gentileza.",
   "- Se o título da lição começar com \"Revisão\", misture conceitos das lições anteriores.",
-  "Não use markdown nem emojis. Não peça dados pessoais.",
+  "Não use markdown nem emojis. Não peça dados pessoais. Nada de práticas perigosas.",
 ].join("\n");
 
 function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number) {
@@ -287,57 +348,186 @@ function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number) {
       },
     ],
     text: { format: { type: "json_schema", name: "licao_studoo", schema: esquemaDaLicao, strict: true } },
-    max_output_tokens: 4000,
+    max_output_tokens: 6000,
   };
 }
 
-/** Ajusta o que o modelo devolveu ao formato interno: campos nulos saem, ids repetidos são refeitos e o gabarito segue o id. */
+/** Texto aparado, ou vazio. */
+function textoDe(valor: unknown) {
+  return typeof valor === "string" ? valor.trim() : "";
+}
+
+/** Opções com texto, até `maximo`, com ids refeitos quando vierem repetidos, vazios ou longos. */
+function opcoesDe(valor: unknown, maximo: number, prefixo: string): { id: string; texto: string; idOriginal: string }[] {
+  const brutas = Array.isArray(valor) ? valor : [];
+  const opcoes = brutas
+    .map((opcao) => ({ idOriginal: textoDe((opcao as { id?: unknown })?.id), texto: textoDe((opcao as { texto?: unknown })?.texto) }))
+    .filter((opcao) => opcao.texto)
+    .slice(0, maximo);
+  const ids = new Set(opcoes.map(({ idOriginal }) => idOriginal));
+  const refazer = ids.size !== opcoes.length || opcoes.some(({ idOriginal }) => !/^[\w-]{1,20}$/.test(idOriginal));
+  return opcoes.map((opcao, indice) => ({ ...opcao, id: refazer ? `${prefixo}${"abcdefgh"[indice]}` : opcao.idOriginal }));
+}
+
+/** A opção que o gabarito aponta: pelo id, pelo id antigo (antes de refazer) ou pelo texto. */
+function acharOpcao(opcoes: { id: string; texto: string; idOriginal: string }[], alvo: string | undefined) {
+  if (!alvo) return undefined;
+  return opcoes.find((opcao) => opcao.id === alvo || opcao.idOriginal === alvo ||
+    opcao.texto.toLocaleLowerCase("pt-BR") === alvo.toLocaleLowerCase("pt-BR"));
+}
+
+const limparOpcoes = (opcoes: { id: string; texto: string }[]) => opcoes.map(({ id, texto }) => ({ id, texto }));
+
+/** Um exercício do modelo no formato interno, ou null se não fechar (ids, gabarito, campos do tipo). */
+function normalizarExercicio(bruto: unknown): ExercicioInterno | null {
+  if (typeof bruto !== "object" || bruto === null) return null;
+  const exercicio = bruto as Record<string, unknown>;
+  const gabarito = Array.isArray(exercicio.gabarito)
+    ? Array.from(new Set(exercicio.gabarito.map(textoDe).filter((valor) => valor && valor.length <= 200)))
+    : [];
+  const fala = exercicio.fala as { texto?: unknown; idioma?: unknown } | null | undefined;
+  const trecho = textoDe(exercicio.trecho);
+  const trechoTipo = textoDe(exercicio.trechoTipo);
+  const base = {
+    enunciado: textoDe(exercicio.enunciado),
+    ...(textoDe(exercicio.contexto) ? { contexto: textoDe(exercicio.contexto) } : {}),
+    ...(trecho ? { trecho, ...((TIPOS_TRECHO as readonly string[]).includes(trechoTipo) ? { trechoTipo: trechoTipo as TipoTrecho } : {}) } : {}),
+    ...(fala && textoDe(fala.texto) && /^[a-z]{2,3}(?:-[A-Z]{2})?$/.test(textoDe(fala.idioma))
+      ? { fala: { texto: textoDe(fala.texto), idioma: textoDe(fala.idioma) } }
+      : {}),
+    feedbackCorreto: textoDe(exercicio.feedbackCorreto),
+    feedbackIncorreto: textoDe(exercicio.feedbackIncorreto),
+  };
+
+  switch (exercicio.tipo) {
+    case "multipla_escolha": {
+      const opcoes = opcoesDe(exercicio.opcoes, 6, "");
+      const certa = acharOpcao(opcoes, gabarito[0]);
+      return certa ? { tipo: "multipla_escolha", ...base, opcoes: limparOpcoes(opcoes), gabarito: [certa.id] } : null;
+    }
+    case "ordenar": {
+      // O modelo manda os itens já na ordem certa; o app embaralha ao mostrar.
+      const itens = opcoesDe(exercicio.itens, 7, "i");
+      return itens.length >= 3 ? { tipo: "ordenar", ...base, itens: limparOpcoes(itens), gabarito: itens.map(({ id }) => id) } : null;
+    }
+    case "associar": {
+      // direita[i] é o par de esquerda[i].
+      const esquerda = opcoesDe(exercicio.esquerda, 6, "e");
+      const direita = opcoesDe(exercicio.direita, 6, "d");
+      if (esquerda.length < 2 || esquerda.length !== direita.length) return null;
+      const ids = esquerda.map(({ id }) => id);
+      const corrigidas = direita.map((item, indice) => (ids.includes(item.id) ? { ...item, id: `d${"abcdefgh"[indice]}` } : item));
+      return {
+        tipo: "associar",
+        ...base,
+        esquerda: limparOpcoes(esquerda),
+        direita: limparOpcoes(corrigidas),
+        gabarito: esquerda.map((item, indice) => `${item.id}=${corrigidas[indice].id}`),
+      };
+    }
+    case "verdadeiro_falso": {
+      const justificativas = opcoesDe(exercicio.opcoes, 4, "");
+      const valor = gabarito[0]?.toLocaleLowerCase("pt-BR");
+      const certa = acharOpcao(justificativas, gabarito[1]);
+      const afirmacao = textoDe(exercicio.afirmacao);
+      if (!afirmacao || !certa || (valor !== "verdadeiro" && valor !== "falso")) return null;
+      return { tipo: "verdadeiro_falso", ...base, afirmacao, justificativas: limparOpcoes(justificativas), gabarito: [valor, certa.id] };
+    }
+    case "aberta": {
+      const grupos = gabarito.slice(0, 6);
+      const criterios = Array.isArray(exercicio.criterios) ? exercicio.criterios.map(textoDe).filter(Boolean) : [];
+      const modelo = textoDe(exercicio.modelo);
+      return {
+        tipo: "aberta",
+        ...base,
+        minimo: 30,
+        gabarito: grupos,
+        ...(criterios.length === grupos.length ? { criterios } : {}),
+        ...(modelo ? { modelo } : {}),
+      };
+    }
+    case "lacuna":
+      return { tipo: "lacuna", ...base, gabarito, ...(exercicio.exata === true ? { exata: true } : {}) };
+    default:
+      return null;
+  }
+}
+
+/**
+ * Ajusta o que o modelo devolveu ao formato interno: campos nulos saem, ids são refeitos quando preciso, o gabarito
+ * segue os ids, e recursos, falas e prática fora do formato são descartados (a lição continua válida sem eles).
+ * Aceita também o formato antigo, com um `exercicio` só.
+ */
 export function normalizarConteudo(bruto: unknown, origem: string): ConteudoLicao | null {
   if (typeof bruto !== "object" || bruto === null) return null;
   const dado = bruto as Record<string, unknown>;
-  const exercicio = dado.exercicio as Record<string, unknown> | undefined;
-  if (!exercicio || typeof exercicio !== "object") return null;
-  const texto = (valor: unknown) => (typeof valor === "string" ? valor.trim() : "");
-  const opcional = (valor: unknown) => texto(valor) || undefined;
-  const gabarito = Array.isArray(exercicio.gabarito)
-    ? Array.from(new Set(exercicio.gabarito.map(texto).filter((valor) => valor && valor.length <= 100)))
-    : [];
-  const base = {
-    enunciado: texto(exercicio.enunciado),
-    contexto: opcional(exercicio.contexto),
-    trecho: opcional(exercicio.trecho),
-    feedbackCorreto: texto(exercicio.feedbackCorreto),
-    feedbackIncorreto: texto(exercicio.feedbackIncorreto),
-  };
+  const brutos = Array.isArray(dado.exercicios) ? dado.exercicios : dado.exercicio ? [dado.exercicio] : [];
+  const exercicios = brutos.slice(0, 3).map(normalizarExercicio);
+  // O principal precisa fechar; um extra que não fecha é descartado.
+  if (!exercicios[0]) return null;
+  const extras = exercicios.slice(1).filter((exercicio): exercicio is ExercicioInterno => exercicio !== null);
 
-  let final: ExercicioInterno;
-  if (exercicio.tipo === "multipla_escolha") {
-    const brutas = Array.isArray(exercicio.opcoes) ? exercicio.opcoes : [];
-    const opcoes = brutas
-      .map((opcao) => ({ id: texto((opcao as { id?: unknown })?.id), texto: texto((opcao as { texto?: unknown })?.texto) }))
-      .filter((opcao) => opcao.texto)
-      .slice(0, 6);
-    const ids = new Set(opcoes.map(({ id }) => id));
-    const refazer = ids.size !== opcoes.length || opcoes.some(({ id }) => !id || id.length > 20);
-    const corrigidas = refazer ? opcoes.map((opcao, indice) => ({ ...opcao, id: "abcdef"[indice] })) : opcoes;
-    // O gabarito pode vir com o id, o texto da opção ou o id antigo (antes de refazer).
-    const alvo = gabarito[0];
-    const certa = corrigidas.find((opcao, indice) => opcao.id === alvo || opcoes[indice].id === alvo ||
-      opcao.texto.toLocaleLowerCase("pt-BR") === alvo?.toLocaleLowerCase("pt-BR"));
-    if (!certa) return null;
-    final = { tipo: "multipla_escolha", ...base, opcoes: corrigidas, gabarito: [certa.id] };
-  } else {
-    final = { tipo: "lacuna", ...base, gabarito };
+  const passos = Array.isArray(dado.passos) ? dado.passos.map(textoDe).filter(Boolean).slice(0, 8) : [];
+  const falas = Array.isArray(dado.falas)
+    ? dado.falas
+      .map((fala) => {
+        const { texto, idioma, traducao } = (fala ?? {}) as Record<string, unknown>;
+        return { texto: textoDe(texto), idioma: textoDe(idioma), ...(textoDe(traducao) ? { traducao: textoDe(traducao) } : {}) };
+      })
+      .filter(falaValida)
+      .slice(0, 6)
+    : [];
+  const recursoBruto = dado.recurso as Record<string, unknown> | null | undefined;
+  let recurso: Recurso | undefined;
+  if (recursoBruto?.tipo === "acorde") {
+    recurso = {
+      tipo: "acorde",
+      nome: textoDe(recursoBruto.nome),
+      casas: Array.isArray(recursoBruto.casas) ? recursoBruto.casas as number[] : [],
+      ...(Array.isArray(recursoBruto.dedos) ? { dedos: recursoBruto.dedos as number[] } : {}),
+    };
+  } else if (recursoBruto?.tipo === "linha_do_tempo") {
+    const eventos = Array.isArray(recursoBruto.eventos) ? recursoBruto.eventos : [];
+    recurso = {
+      tipo: "linha_do_tempo",
+      eventos: eventos.map((evento) => ({ quando: textoDe((evento as { quando?: unknown })?.quando), texto: textoDe((evento as { texto?: unknown })?.texto) })),
+    };
   }
+  const praticaBruta = dado.pratica as Record<string, unknown> | null | undefined;
+  const pratica = praticaBruta && textoDe(praticaBruta.tarefa)
+    ? {
+      tarefa: textoDe(praticaBruta.tarefa),
+      minutos: Math.min(20, Math.max(1, Math.round(Number(praticaBruta.minutos) || 3))),
+      ...(Array.isArray(praticaBruta.passos) && praticaBruta.passos.some(textoDe)
+        ? { passos: praticaBruta.passos.map(textoDe).filter(Boolean).slice(0, 5) }
+        : {}),
+      ...(textoDe(praticaBruta.dica) ? { dica: textoDe(praticaBruta.dica) } : {}),
+    }
+    : undefined;
 
   const conteudo: ConteudoLicao = {
-    objetivo: texto(dado.objetivo),
-    conceito: texto(dado.conceito),
-    exemplo: texto(dado.exemplo),
+    objetivo: textoDe(dado.objetivo),
+    conceito: textoDe(dado.conceito),
+    exemplo: textoDe(dado.exemplo),
+    ...(dado.exemploTipo === "demonstracao" ? { exemploTipo: "demonstracao" as const } : {}),
+    ...(passos.length > 0 ? { passos } : {}),
+    ...(recurso && recursoValido(recurso) ? { recurso } : {}),
+    ...(falas.length > 0 ? { falas } : {}),
     origem,
-    exercicio: final,
+    exercicio: exercicios[0],
+    ...(extras.length > 0 ? { extras } : {}),
+    ...(pratica ? { pratica } : {}),
   };
-  return conteudoValido(conteudo) ? conteudo : null;
+  if (conteudoValido(conteudo)) return conteudo;
+  // Se algo opcional não fechou, a lição ainda vale só com o essencial.
+  const essencial: ConteudoLicao = {
+    objetivo: textoDe(dado.objetivo),
+    conceito: textoDe(dado.conceito),
+    exemplo: textoDe(dado.exemplo),
+    origem,
+    exercicio: exercicios[0],
+  };
+  return conteudoValido(essencial) ? essencial : null;
 }
 
 /**

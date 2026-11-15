@@ -77,6 +77,13 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 7.5, top: 7.5, width: 9, height: 9, borderWidth: 2.5, borderRadius: 4.5 },
     { left: 11, top: 11, width: 2, height: 2, borderRadius: 1, traco: true },
   ],
+  // Alto-falante com duas ondas (a mesma ideia da web): ouvir uma frase, um áudio ou um acorde.
+  som: [
+    { left: 3, top: 8.5, width: 5.5, height: 7, borderWidth: 2.5, borderRadius: 1.5 },
+    { left: 7.25, top: 5, width: 5, height: 14, borderWidth: 2.5, borderLeftWidth: 0, borderTopRightRadius: 3, borderBottomRightRadius: 3 },
+    { left: 11.5, top: 8.25, width: 5.5, height: 7.5, borderRightWidth: 2.5, borderRadius: 3.75 },
+    { left: 13, top: 5, width: 8, height: 14, borderRightWidth: 2.5, borderRadius: 7 },
+  ],
 };
 
 const medidas = [

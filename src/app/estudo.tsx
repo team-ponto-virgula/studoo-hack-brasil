@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   ErroStudoo,
-  type Avaliacao,
+  type AutoAvaliacao,
   type LicaoDetalhe,
   type PlanoDetalhe,
   type PlanoResumo,
@@ -28,11 +28,10 @@ import {
   coresDaRegiao,
   regiaoDoTrecho,
   type NoCaminho,
-  type NomeIcone,
 } from '../ui';
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
-import { ApoioDaLicao } from './estudio';
+import { Licao, formatarTempo, type ResumoLicao } from './aula';
 import { Pedido, type IdTema } from './pedido';
 import './aula.css';
 import './trilha.css';
@@ -306,8 +305,8 @@ export function Estudo() {
     if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados });
   }
 
-  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao) {
-    const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante));
+  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao, pratica?: AutoAvaliacao) {
+    const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante, pratica));
     if (resultado.ok) {
       const atualizado = resultado.dados.plano;
       atualizarPlano(atualizado);
@@ -434,8 +433,11 @@ export function Estudo() {
           )}
           {visivel && tela.tipo === 'licao' && (
             <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}
-              avaliar={(resposta) => executar('avaliar', () => cliente.avaliarLicao(tela.licao.id, resposta))}
-              concluir={(comprovante, resumo) => concluir(tela.plano, tela.licao, comprovante, resumo)}
+              avaliar={async (resposta, indice) => {
+                const resultado = await executar('avaliar', () => cliente.avaliarLicao(tela.licao.id, resposta, indice));
+                return resultado.ok ? resultado.dados : null;
+              }}
+              concluir={(comprovante, resumo, pratica) => concluir(tela.plano, tela.licao, comprovante, resumo, pratica)}
               voltar={() => void abrirPlano(tela.plano.id, tela.licao.id)} />
           )}
           {visivel && tela.tipo === 'concluida' && (
@@ -776,235 +778,6 @@ function ProximoPasso({ titulo, detalhe, abrindo, ocupado, aoAbrir }: {
   );
 }
 
-// Três etapas de verdade: conceito, exemplo e exercício; o retorno acontece na própria etapa do exercício.
-const posicoesAula = { conceito: 1, exemplo: 2, exercicio: 3, feedback: 3 } as const;
-type EtapaAula = 'conceito' | 'exemplo' | 'exercicio';
-/** O que a pessoa fez na lição, para o resumo da conclusão: tempo, tentativas e se acertou de primeira. */
-export type ResumoLicao = { segundos: number; tentativas: number; dePrimeira: boolean };
-
-const iconesDaEtapa: Record<EtapaAula, NomeIcone> = { conceito: 'livro', exemplo: 'lampada', exercicio: 'alvo' };
-
-/** Título do acerto: varia entre as lições, sem sorteio (a mesma lição tem sempre o mesmo). */
-function tituloDoAcerto(id: string) {
-  let soma = 0;
-  for (const caractere of id) soma = (soma * 31 + caractere.charCodeAt(0)) >>> 0;
-  return mensagens.licao.certas[soma % mensagens.licao.certas.length];
-}
-
-/**
- * Aula por etapas (spec 02): conceito, exemplo e exercício, uma de cada vez, com a barra de andamento no topo.
- * O conceito vem num balão do Stu. No exercício de escolha, as teclas 1, 2, 3… marcam a opção e Enter verifica.
- * Depois da resposta, o rodapé vira o painel de retorno, que sobe verde no acerto (com confete) ou âmbar no erro
- * (o exercício treme). No erro, dá para tentar de novo ou continuar; Continuar registra a conclusão.
- * O título de cada etapa e o do retorno recebem o foco. Se a confirmação expirar, a aula volta ao exercício.
- */
-function Licao({ licao, pendente, avaliar, concluir, voltar }: {
-  licao: LicaoDetalhe;
-  pendente: Acao | null;
-  avaliar: (resposta: string) => Promise<Resultado<Avaliacao>>;
-  concluir: (comprovante: string, resumo: ResumoLicao) => Promise<boolean>;
-  voltar: () => void;
-}) {
-  const [etapa, setEtapa] = useState<EtapaAula>('conceito');
-  const [resposta, setResposta] = useState('');
-  const [avaliacao, setAvaliacao] = useState<Avaliacao | null>(null);
-  const [tentativas, setTentativas] = useState(0);
-  const [dePrimeira, setDePrimeira] = useState<boolean | null>(null);
-  const [inicio] = useState(() => Date.now());
-  const tituloEtapa = useRef<HTMLHeadingElement>(null);
-  const tituloRetorno = useRef<HTMLHeadingElement>(null);
-  const formulario = useRef<HTMLFormElement>(null);
-  const continuarAgora = useRef<() => void>(() => undefined);
-  const { exercicio } = licao;
-  const ocupado = pendente !== null;
-  const posicao = avaliacao?.correta ? posicoesAula.feedback : posicoesAula[etapa];
-  const andamento = mensagens.licao.posicao(posicao, posicoesAula.feedback);
-  const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : undefined;
-  const nomeEtapa = { conceito: mensagens.licao.conceito, exemplo: mensagens.licao.exemplo, exercicio: mensagens.licao.exercicio }[etapa];
-
-  useEffect(() => {
-    if (etapa !== 'conceito') tituloEtapa.current?.focus();
-  }, [etapa]);
-
-  useEffect(() => {
-    if (avaliacao) tituloRetorno.current?.focus();
-  }, [avaliacao]);
-
-  // Atalhos: no exercício de escolha, 1, 2, 3… marcam a opção; depois do retorno, Enter continua.
-  useEffect(() => {
-    function teclas(evento: KeyboardEvent) {
-      if (evento.altKey || evento.ctrlKey || evento.metaKey) return;
-      const alvo = evento.target instanceof HTMLElement ? evento.target : null;
-      if (alvo?.closest('.estudio-apoio')) return;
-      if (avaliacao) {
-        if (evento.key === 'Enter' && !alvo?.closest('button, a')) {
-          evento.preventDefault();
-          continuarAgora.current();
-        }
-        return;
-      }
-      if (etapa !== 'exercicio' || exercicio.tipo !== 'multipla_escolha' || alvo?.matches('input[type="text"], textarea')) return;
-      const indice = Number.parseInt(evento.key, 10) - 1;
-      if (indice >= 0 && indice < exercicio.opcoes.length) {
-        evento.preventDefault();
-        setResposta(exercicio.opcoes[indice].id);
-      }
-    }
-    window.addEventListener('keydown', teclas);
-    return () => window.removeEventListener('keydown', teclas);
-  }, [etapa, avaliacao, exercicio]);
-
-  async function responder(evento: FormEvent<HTMLFormElement>) {
-    evento.preventDefault();
-    if (ocupado || avaliacao || !resposta.trim()) return;
-    const resultado = await avaliar(resposta);
-    if (!resultado.ok) return;
-    setTentativas((total) => total + 1);
-    setDePrimeira((anterior) => anterior ?? resultado.dados.correta);
-    setAvaliacao(resultado.dados);
-  }
-
-  function tentarDeNovo() {
-    setAvaliacao(null);
-    setResposta('');
-    window.requestAnimationFrame(() => {
-      const campo = formulario.current?.querySelector<HTMLInputElement>('input[type="text"], input:checked, input');
-      campo?.focus();
-    });
-  }
-
-  async function continuar(comprovante: string) {
-    if (ocupado) return;
-    const resumo = { segundos: Math.max(1, Math.round((Date.now() - inicio) / 1000)), tentativas, dePrimeira: dePrimeira === true };
-    if (!await concluir(comprovante, resumo)) setAvaliacao(null);
-  }
-
-  continuarAgora.current = () => {
-    if (avaliacao) void continuar(avaliacao.comprovante);
-  };
-
-  let acao;
-  if (avaliacao) {
-    acao = (
-      <Botao variante={avaliacao.correta ? 'sucesso' : 'texto'} disabled={ocupado} onClick={() => void continuar(avaliacao.comprovante)}>
-        {pendente === 'concluir' ? mensagens.licao.concluindo : mensagens.licao.continuar}
-      </Botao>
-    );
-  } else if (etapa === 'exercicio') {
-    acao = <Botao type="submit" form="resposta-licao" disabled={ocupado || !resposta.trim()}>{pendente === 'avaliar' ? mensagens.licao.avaliando : mensagens.licao.avaliar}</Botao>;
-  } else {
-    acao = (
-      <Botao disabled={ocupado} onClick={() => setEtapa(etapa === 'conceito' ? 'exemplo' : 'exercicio')}>
-        {mensagens.licao.seguir}<Icone nome="seta" />
-      </Botao>
-    );
-  }
-
-  return (
-    <article className="painel painel--aula" data-retorno={retorno}>
-      <header className="aula-topo">
-        <button type="button" className="aula-fechar" aria-label={mensagens.licao.voltar} disabled={ocupado} onClick={voltar}>
-          <Icone nome="fechar" />
-        </button>
-        <div className="aula-andamento">
-          <div className="aula-barra" role="progressbar" aria-label={andamento} aria-valuemin={0} aria-valuemax={posicoesAula.feedback}
-            aria-valuenow={posicao}>
-            <span className="aula-barra__preenchimento" style={{ '--progresso': (avaliacao?.correta ? posicao : posicao - 0.5) / posicoesAula.feedback } as CSSProperties} />
-          </div>
-          <span className="aula-posicao" aria-hidden="true">{andamento}</span>
-        </div>
-      </header>
-      <div className="aula-miolo" key={etapa}>
-        <p className="aula-etapa" data-etapa={etapa}><Icone nome={iconesDaEtapa[etapa]} />{nomeEtapa}</p>
-        <h1 tabIndex={-1}>{licao.titulo}</h1>
-        {etapa === 'conceito' && (
-          <>
-            {licao.concluida && <p className="aula-revisao"><Icone nome="check" />{mensagens.trilha.revisitando}</p>}
-            <p className="introducao">{licao.objetivo}</p>
-            <div className="aula-explicacao">
-              <Stu />
-              <section className="aula-balao" aria-labelledby="etapa-aula">
-                <h2 id="etapa-aula">{mensagens.licao.conceito}</h2>
-                <p>{licao.conceito}</p>
-                <p className="licao-origem">{mensagens.licao.origem} · {licao.origem}</p>
-              </section>
-            </div>
-          </>
-        )}
-        {etapa === 'exemplo' && (
-          <section className="aula-quadro" data-etapa="exemplo" aria-labelledby="etapa-aula">
-            <h2 id="etapa-aula" ref={tituloEtapa} tabIndex={-1}>{mensagens.licao.exemplo}</h2>
-            <p>{licao.exemplo}</p>
-          </section>
-        )}
-        {etapa === 'exercicio' && (
-          <section className="aula-quadro" data-etapa="exercicio" aria-labelledby="etapa-aula">
-            <h2 id="etapa-aula" ref={tituloEtapa} tabIndex={-1}>{mensagens.licao.exercicio}</h2>
-            <p>{exercicio.enunciado}</p>
-            {exercicio.contexto && <p>{exercicio.contexto}</p>}
-            {exercicio.trecho && <pre className="licao-codigo"><code>{exercicio.trecho}</code></pre>}
-            <form id="resposta-licao" ref={formulario} className="formulario" method="post" onSubmit={responder}>
-              {exercicio.tipo === 'lacuna' ? (
-                <div className="campo campo--resposta">
-                  <label htmlFor="resposta">{mensagens.licao.resposta}</label>
-                  <input id="resposta" name="resposta" type="text" autoComplete="off" autoCapitalize="none" spellCheck={false}
-                    value={resposta} onChange={(evento) => setResposta(evento.target.value)} required disabled={ocupado}
-                    readOnly={avaliacao !== null} data-retorno={retorno} />
-                </div>
-              ) : (
-                <fieldset className="opcoes" disabled={ocupado || avaliacao !== null}>
-                  <legend>{mensagens.licao.resposta}</legend>
-                  {exercicio.opcoes.map((opcao, indice) => (
-                    <label key={opcao.id} data-retorno={resposta === opcao.id ? retorno : undefined}>
-                      <input type="radio" name="resposta" value={opcao.id} required checked={resposta === opcao.id}
-                        onChange={() => setResposta(opcao.id)} />
-                      <span className="opcao-tecla" aria-hidden="true">{indice + 1}</span>
-                      <span>{opcao.texto}</span>
-                    </label>
-                  ))}
-                  <p className="opcoes-atalho">{mensagens.licao.atalho(exercicio.opcoes.length)}</p>
-                </fieldset>
-              )}
-            </form>
-          </section>
-        )}
-      </div>
-      {(etapa === 'exercicio' || avaliacao) && <ApoioDaLicao licao={licao} avaliacao={avaliacao} />}
-      <footer className="aula-rodape" data-retorno={retorno}>
-        <div className="aula-rodape__conteudo">
-          {avaliacao && (
-            <section className="aula-retorno" aria-labelledby="aula-retorno-titulo">
-              <span className="aula-retorno__icone" aria-hidden="true">
-                <Icone nome={avaliacao.correta ? 'check' : 'fechar'} />
-                {avaliacao.correta && <Confete quantidade={14} />}
-              </span>
-              <div>
-                <h2 id="aula-retorno-titulo" ref={tituloRetorno} tabIndex={-1}>
-                  {avaliacao.correta ? tituloDoAcerto(licao.id) : mensagens.licao.errada}
-                  <span className="somente-leitor"> {avaliacao.correta ? mensagens.licao.correta : mensagens.licao.incorreta}.</span>
-                </h2>
-                <p>{avaliacao.feedback}</p>
-                {!avaliacao.correta && <span className="aula-retorno__link"><Botao variante="texto" disabled={ocupado} onClick={() => { const alvo = document.querySelector<HTMLElement>('.estudio-ponte'); alvo?.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }); alvo?.querySelector<HTMLButtonElement>('button')?.focus({ preventScroll: true }); }}>{mensagens.estudio.verPonte}</Botao></span>}
-              </div>
-            </section>
-          )}
-          <div className="aula-rodape__acoes">
-            {avaliacao && !avaliacao.correta && (
-              <Botao disabled={ocupado} onClick={tentarDeNovo}>{mensagens.licao.tentarDeNovo}</Botao>
-            )}
-            {acao}
-          </div>
-        </div>
-      </footer>
-    </article>
-  );
-}
-
-/** Tempo em minutos e segundos, como 1:05. */
-function formatarTempo(segundos: number) {
-  return `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
-}
-
 /** Número que conta de zero até o valor, uma vez; com movimento reduzido, já mostra o valor. */
 function Contador({ valor, formatar }: { valor: number; formatar: (valor: number) => string }) {
   const [atual, setAtual] = useState(0);
@@ -1069,8 +842,14 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
           </li>
           <li data-tipo="etapas">
             <span className="conclusao-numeros__rotulo"><Icone nome="check" />{textos.etapas}</span>
-            <span className="conclusao-numeros__valor">{textos.etapasFeitas}</span>
+            <span className="conclusao-numeros__valor">{textos.etapasFeitas(resumo.etapas)}</span>
           </li>
+          {resumo.pratica && (
+            <li data-tipo="pratica" data-valor={resumo.pratica}>
+              <span className="conclusao-numeros__rotulo"><Icone nome="relogio" />{textos.pratica}</span>
+              <span className="conclusao-numeros__valor">{mensagens.licao.pratica.opcoes[resumo.pratica]}</span>
+            </li>
+          )}
         </ul>
       )}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}

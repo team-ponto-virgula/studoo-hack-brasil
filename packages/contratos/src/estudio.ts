@@ -15,6 +15,8 @@ export type PaginaMaterial = {
   texto: string;
   rotulo?: string;
   tabela?: string[][];
+  /** Miniatura da foto enviada (data URL JPEG/PNG), para a lição mostrar a página de onde veio. */
+  imagem?: string;
 };
 export type ReferenciaMaterial = {
   materialId: string;

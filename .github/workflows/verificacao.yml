@@ -66,9 +66,10 @@ jobs:
       - name: Tipos do app
         run: npm run typecheck --workspace apps/mobile
 
-      - name: Testes sem servidor (domínio, paridade e IA da OpenAI simulada)
+      - name: Testes sem servidor (domínio, formatos da lição, paridade e IA da OpenAI simulada)
         run: |
           npm run test:dominio
+          npm run test:formatos
           npm run test:paridade
           npm run test:estudio:interface
           npm run test:movimento

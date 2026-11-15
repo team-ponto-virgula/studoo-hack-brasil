@@ -1,6 +1,6 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ClienteEstudio } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { ErroStudoo, LIMITES_GERACAO, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
@@ -302,8 +302,8 @@ export function Estudo({ cliente, sair, expirar }: {
     if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados });
   }
 
-  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao) {
-    const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante));
+  async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao, pratica?: AutoAvaliacao) {
+    const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante, pratica));
     if (resultado.ok) {
       const atualizado = resultado.dados.plano;
       atualizarPlano(atualizado);
@@ -345,11 +345,11 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'licao') {
       return <Licao cliente={cliente} key={etapa.licao.id} licao={etapa.licao} erro={erro} pendente={pendente}
         voltar={() => void abrirPlano(etapa.plano.id, etapa.licao.id)}
-        avaliar={async (resposta) => {
-          const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta));
+        avaliar={async (resposta, indice) => {
+          const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta, indice));
           return resultado.ok ? resultado.dados : null;
         }}
-        concluir={(comprovante, resumo) => concluir(etapa.plano, etapa.licao, comprovante, resumo)} />;
+        concluir={(comprovante, resumo, pratica) => concluir(etapa.plano, etapa.licao, comprovante, resumo, pratica)} />;
     }
 
     if (etapa.tipo === 'concluida') {
@@ -1479,20 +1479,24 @@ function NumerosDaLicao({ resumo }: { resumo: ResumoLicao }) {
     { chave: 'tempo', icone: 'relogio' as const, rotulo: textos.tempo, valor: formatarTempo(segundos), cor: cores.acao },
     { chave: 'acerto', icone: 'alvo' as const, rotulo: textos.acerto,
       valor: resumo.dePrimeira ? textos.dePrimeira : textos.tentativas(resumo.tentativas), cor: resumo.dePrimeira ? cores.sucesso : cores.alerta },
-    { chave: 'etapas', icone: 'check' as const, rotulo: textos.etapas, valor: textos.etapasFeitas, cor: '#5B4BB7' },
+    { chave: 'etapas', icone: 'check' as const, rotulo: textos.etapas, valor: textos.etapasFeitas(resumo.etapas), cor: '#5B4BB7' },
+    ...(resumo.pratica ? [{ chave: 'pratica', icone: 'relogio' as const, rotulo: textos.pratica, valor: mensagens.licao.pratica.opcoes[resumo.pratica], cor: '#6B3FA0' }] : []),
   ];
   return (
     <View style={estudoEstilos.numeros} accessible accessibilityLabel={`${textos.titulo}: ${itens.map((item) => `${item.rotulo} ${item.chave === 'tempo' ? formatarTempo(resumo.segundos) : item.valor}`).join(', ')}`}>
-      {itens.map((item, indice) => <CartaoNumero key={item.chave} {...item} ordem={indice} />)}
+      {/* Com a prática, quatro números: dois por linha. */}
+      {itens.map((item, indice) => <CartaoNumero key={item.chave} {...item} ordem={indice} base={itens.length > 3 ? '46%' : '30%'} />)}
     </View>
   );
 }
 
-function CartaoNumero({ icone, rotulo, valor, cor, ordem }: { icone: NomeIcone; rotulo: string; valor: string; cor: string; ordem: number }) {
+function CartaoNumero({ icone, rotulo, valor, cor, ordem, base }: {
+  icone: NomeIcone; rotulo: string; valor: string; cor: string; ordem: number; base: `${number}%`;
+}) {
   const entrada = useAparecer(600 + ordem * 120, 480, true);
   return (
     <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-      style={[estudoEstilos.numero, { backgroundColor: cor, borderColor: cor }, estiloDeEntrada(entrada, 14, 0.9)]}>
+      style={[estudoEstilos.numero, { backgroundColor: cor, borderColor: cor, flexBasis: base }, estiloDeEntrada(entrada, 14, 0.9)]}>
       <View style={estudoEstilos.numeroRotulo}>
         <Icone nome={icone} tamanho={14} cor={cores.fundo} />
         <Text style={estudoEstilos.numeroRotuloTexto}>{rotulo.toLocaleUpperCase('pt-BR')}</Text>
@@ -1589,7 +1593,7 @@ const estudoEstilos = StyleSheet.create({
     borderWidth: 4, borderColor: cores.fundo, backgroundColor: cores.sucessoClaro },
   comemoracao: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
   conclusaoLicao: { marginTop: 2, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
-  numeros: { flexDirection: 'row', gap: 8, marginTop: 24 },
+  numeros: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 24 },
   numero: { flex: 1, minWidth: 0, overflow: 'hidden', borderRadius: 16, borderWidth: 2 },
   numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 6, paddingVertical: 6 },
   numeroRotuloTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 10, lineHeight: 14, letterSpacing: 0.2 },

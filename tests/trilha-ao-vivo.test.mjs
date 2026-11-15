@@ -3,6 +3,7 @@ import { createHmac, randomUUID } from "node:crypto";
 import { test } from "node:test";
 import { LIMITES_GERACAO, interpretarEventoGeracao } from "@studoo/contratos";
 import pg from "pg";
+import { respostaCerta, respostaErrada } from "../src/dominio/aprendizado/plano.ts";
 
 const origem = process.env.STUDOO_ORIGEM;
 const prefixo = "/api/aprendizado";
@@ -256,10 +257,9 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
 
         const { rows } = await banco.query(
           'SELECT "conteudo" FROM "Licao" WHERE "usuarioId" = $1 AND "id" = $2', [contas[0].id, id]);
-        const certa = rows[0].conteudo.exercicio.gabarito[0];
-        const errada = licao.exercicio.tipo === "multipla_escolha"
-          ? licao.exercicio.opcoes.find((opcao) => opcao.id !== certa).id
-          : "palpite";
+        // Cada formato tem a sua resposta (escolha, ordem, pares, valor e justificativa, explicação…).
+        const certa = respostaCerta(rows[0].conteudo.exercicio);
+        const errada = respostaErrada(rows[0].conteudo.exercicio);
         const erro = await (await enviar(`/licoes/${id}/avaliar`, { resposta: errada })).json();
         assert.equal(erro.correta, false);
         assert.ok(erro.feedback.length > 0);
@@ -285,6 +285,35 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
     const correta = await (await enviar(`/licoes/${licaoId}/avaliar`, { resposta: ">=" })).json();
     assert.equal(correta.correta, true);
     assert.match(correta.feedback, /Bia e Caio/);
+  });
+
+  await t.test("uma demo com assunto: exercício extra pelo índice, lacuna tolerante, recurso e prática guardada", async () => {
+    const { eventos } = await gerar(cookie, "Quero aprender violão do zero");
+    const aceito = await (await enviar("/planos", { token: eventos.at(-1).proposta.token })).json();
+    assert.equal(aceito.titulo, "Violão do zero: primeiros acordes");
+    const [primeira, segunda] = aceito.fluxos[0].licoes;
+    const licao = await (await chamar(`${prefixo}/licoes/${primeira.id}`, { cookie })).json();
+    assert.deepEqual(licao.exercicios.map(({ tipo }) => tipo), ["associar", "lacuna"]);
+    assert.deepEqual(licao.exercicio, licao.exercicios[0], "o primeiro exercício segue em `exercicio` para clientes antigos");
+    assert.ok(!JSON.stringify(licao).includes("gabarito"));
+    // O exercício extra é avaliado pelo índice; a lacuna aceita um deslize de digitação, com aviso.
+    const lacuna = await (await enviar(`/licoes/${primeira.id}/avaliar`, { resposta: "Taraxa", indice: 1 })).json();
+    assert.equal(lacuna.correta, true);
+    assert.match(lacuna.observacao, /tarraxa/);
+    for (const invalido of [{ resposta: "x", indice: 5 }, { resposta: "x", indice: "1" }]) {
+      assert.equal((await enviar(`/licoes/${primeira.id}/avaliar`, invalido)).status, 400);
+    }
+    // A lição seguinte traz o acorde e a prática; a conclusão guarda como foi a prática.
+    const acorde = await (await chamar(`${prefixo}/licoes/${segunda.id}`, { cookie })).json();
+    assert.equal(acorde.recurso.tipo, "acorde");
+    assert.equal(acorde.exemploTipo, "demonstracao");
+    assert.ok(acorde.pratica.minutos > 0);
+    const { comprovante } = await (await enviar(`/licoes/${segunda.id}/avaliar`, { resposta: acorde.exercicio.opcoes[0].id })).json();
+    assert.equal((await enviar(`/licoes/${segunda.id}/concluir`, { comprovante, pratica: "talvez" })).status, 400);
+    assert.equal((await enviar(`/licoes/${segunda.id}/concluir`, { comprovante, pratica: "quase" })).status, 200);
+    const { rows } = await banco.query(
+      'SELECT "pratica" FROM "RegistroEstudo" WHERE "usuarioId" = $1 AND "licaoId" = $2', [contas[0].id, segunda.id]);
+    assert.equal(rows[0].pratica, "quase");
   });
 
   await t.test("a rota de proposta de uma vez também aceita objetivo livre", async () => {

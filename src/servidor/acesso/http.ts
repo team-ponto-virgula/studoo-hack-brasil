@@ -18,7 +18,6 @@ const statusErros: Record<CodigoErro, number> = {
   nao_encontrado: 404,
   origem_invalida: 403,
   falha: 500,
-  objetivo_fora_do_piloto: 422,
   proposta_invalida: 400,
   avaliacao_invalida: 400,
   credenciais_invalidas: 401,
