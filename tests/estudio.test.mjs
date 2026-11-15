@@ -35,7 +35,7 @@ import {
   avaliarLicao,
   concluirLicao,
 } from '../src/servidor/aprendizado/servico.ts';
-import { pedirJson, objeto, texto } from '../src/servidor/estudio/ia.ts';
+import { pedirJson, objeto, texto, conteudoDaGerada } from '../src/servidor/estudio/ia.ts';
 const codigo = (c) => (e) => e.codigo === c;
 const usuarios = [];
 async function pessoa() {
@@ -202,6 +202,19 @@ test('com a IA fora do ar, o reforço e o “Explique com suas palavras” caem 
     if (anterior.chave === undefined) delete process.env.OPENAI_API_KEY;
     else process.env.OPENAI_API_KEY = anterior.chave;
   }
+});
+
+test('a pergunta escrita pela IA (reforço e lição do material) não deixa a certa sempre na primeira posição', () => {
+  const base = { titulo: 'Frações', objetivo: 'Ler frações', conceito: 'Partes iguais.', exemplo: 'Metade.', feedbackCorreto: 'Isso.', feedbackIncorreto: 'Reveja.', pagina: 0, trecho: '' };
+  const posicoes = new Set();
+  for (const pergunta of ['Qual é a metade de 4?', 'Quanto é 1/2 + 1/2?', 'Qual fração é maior?', 'O que é o denominador?', 'O que é o numerador?', 'Quanto vale 2/4?']) {
+    const { exercicio } = conteudoDaGerada({ ...base, pergunta, opcoes: ['Certa', 'Errada um', 'Errada dois'], correta: 0 }, 'IA');
+    const certa = exercicio.opcoes.find(({ id }) => id === exercicio.gabarito[0]);
+    assert.equal(certa.texto, 'Certa', 'o gabarito continua apontando a certa');
+    assert.deepEqual(exercicio.opcoes.map(({ texto }) => texto).sort(), ['Certa', 'Errada dois', 'Errada um']);
+    posicoes.add(exercicio.opcoes.indexOf(certa));
+  }
+  assert.ok(posicoes.size > 1, 'a posição da certa varia de pergunta para pergunta');
 });
 
 test('material expirado não gera proposta', async () => {
