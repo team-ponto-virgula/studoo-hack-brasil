@@ -152,12 +152,16 @@ export function recursoValido(valor: unknown): valor is Recurso {
   }
 }
 
-function praticaValida(valor: unknown): valor is Pratica {
+/** O som de referência da prática: um rótulo curto e as seis casas (de -1, abafada, a 12), com ao menos uma corda que soa. */
+export function somValido(valor: unknown): valor is NonNullable<Pratica["som"]> {
+  return objeto(valor) && textoAte(valor.rotulo, 60) && Array.isArray(valor.casas) && valor.casas.length === 6 &&
+    valor.casas.every((casa) => inteiroEntre(casa, -1, 12)) && valor.casas.some((casa) => casa >= 0);
+}
+
+export function praticaValida(valor: unknown): valor is Pratica {
   return objeto(valor) && textoAte(valor.tarefa, 600) && inteiroEntre(valor.minutos, 1, 30) &&
     opcional(valor.passos, (passos) => Array.isArray(passos) && passos.length > 0 && passos.length <= 8 && passos.every((passo) => textoAte(passo, 200))) &&
-    opcional(valor.dica, (dica) => textoAte(dica, 300)) &&
-    opcional(valor.som, (som) => objeto(som) && textoAte(som.rotulo, 60) && Array.isArray(som.casas) && som.casas.length === 6 &&
-      som.casas.every((casa) => inteiroEntre(casa, -1, 12)) && som.casas.some((casa) => casa >= 0));
+    opcional(valor.dica, (dica) => textoAte(dica, 300)) && opcional(valor.som, somValido);
 }
 
 /** Os pares `esquerda=direita` de um gabarito de associar. */
@@ -173,7 +177,7 @@ function gruposDoGabarito(gabarito: readonly string[]) {
   return gabarito.map((grupo) => grupo.split("|").map((termo) => normalizarResposta(termo)).filter(Boolean));
 }
 
-function exercicioValido(valor: unknown): valor is ExercicioInterno {
+export function exercicioValido(valor: unknown): valor is ExercicioInterno {
   if (!objeto(valor) || !textoAte(valor.enunciado, 600) || !textoAte(valor.feedbackCorreto, 1200) ||
       !textoAte(valor.feedbackIncorreto, 1200) || !listaValida(valor.gabarito, (item): item is string => textoAte(item, 200))) {
     return false;
@@ -697,7 +701,6 @@ export function termosDaLicao(conteudo: ConteudoLicao): string[] {
   }).slice(0, 6);
 }
 
-/** Quais destes termos aparecem no texto (pelo começo da palavra, com um deslize, sem “não” antes). */
 /** O aviso da primeira armadilha (da lição ou dos exercícios) que o texto traz, como “I here” sem o verbo. */
 export function armadilhaNoTexto(conteudo: ConteudoLicao, texto: string): string | null {
   const palavras = palavrasDe(texto);
@@ -705,6 +708,7 @@ export function armadilhaNoTexto(conteudo: ConteudoLicao, texto: string): string
   return todas.find(({ termos }) => termos.split("|").some((termo) => temTermo(palavras, termo.trim())))?.aviso ?? null;
 }
 
+/** Quais destes termos aparecem no texto (pelo começo da palavra, com um deslize, sem “não” antes). */
 export function termosPresentes(texto: string, termos: readonly string[]): string[] {
   const palavras = palavrasDe(texto);
   return termos.filter((termo) => temTermo(palavras, termo));
