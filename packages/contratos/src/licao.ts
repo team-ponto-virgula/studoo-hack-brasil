@@ -27,6 +27,14 @@ export function etapasDaLicao(licao: Pick<LicaoDetalhe, 'exercicio'> & Partial<P
   ];
 }
 
+/** Posição da última etapa de exercício (a aula volta para ela se a confirmação da conclusão expirar). */
+export function ultimoExercicio(etapas: readonly EtapaAula[]): number {
+  for (let posicao = etapas.length - 1; posicao >= 0; posicao -= 1) {
+    if (etapas[posicao].tipo === 'exercicio') return posicao;
+  }
+  return 0;
+}
+
 /** Monta a resposta de cada formato do jeito que o servidor confere. */
 export const codificarResposta = {
   /** Ordenar: os ids na ordem escolhida. */

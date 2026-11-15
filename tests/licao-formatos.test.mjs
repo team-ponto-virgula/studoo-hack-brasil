@@ -11,6 +11,7 @@ import {
   respostaCompleta,
   semAspas,
   sintetizarAcorde,
+  ultimoExercicio,
 } from "@studoo/contratos";
 import {
   apresentarExercicio,
@@ -184,6 +185,7 @@ test("as etapas da lição mudam com o número de exercícios e a prática", () 
   assert.deepEqual(completa, [
     { tipo: "conceito" }, { tipo: "exemplo" }, { tipo: "exercicio", indice: 0 }, { tipo: "exercicio", indice: 1 }, { tipo: "pratica" },
   ]);
+  assert.equal(ultimoExercicio(completa), 3, "com prática, a aula volta ao último exercício, não à prática");
 });
 
 test("o acorde vira um WAV válido, determinístico e com som", () => {

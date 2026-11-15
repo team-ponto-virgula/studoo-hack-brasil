@@ -4,6 +4,7 @@ import {
   etapasDaLicao,
   exerciciosDaLicao,
   respostaCompleta,
+  ultimoExercicio,
   type AutoAvaliacao,
   type Avaliacao,
   type EtapaAula,
@@ -159,9 +160,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, avaliar, conclui
       ...(autoAvaliacao ? { pratica: autoAvaliacao } : {}),
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) return;
-    const ultimoExercicio = etapas.findLastIndex((item) => item.tipo === 'exercicio');
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === exercicios.length - 1 ? null : atual)));
-    setPasso(ultimoExercicio);
+    setPasso(ultimoExercicio(etapas));
   }
 
   const topo = (

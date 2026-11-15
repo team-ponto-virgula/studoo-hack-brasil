@@ -10,6 +10,7 @@ import {
   partesDaLacuna,
   respostaCompleta,
   semAspas,
+  ultimoExercicio,
   sintetizarAcorde,
   type AutoAvaliacao,
   type Avaliacao,
@@ -165,9 +166,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) return;
     // A confirmação expirou: a aula volta ao último exercício para a pessoa responder de novo.
-    const ultimoExercicio = etapas.findLastIndex((item) => item.tipo === 'exercicio');
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === exercicios.length - 1 ? null : atual)));
-    setPasso(ultimoExercicio);
+    setPasso(ultimoExercicio(etapas));
   }
 
   continuarAgora.current = () => {
@@ -831,7 +831,9 @@ function EtapaPratica({ pratica, titulo, escolha, escolher }: {
   }, [rodando]);
 
   useEffect(() => {
-    if (acabou) comoFoi.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (!acabou) return;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    comoFoi.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'instant' : 'smooth' });
   }, [acabou]);
 
   let rotuloPrincipal: string = t.pratica.comecar;
