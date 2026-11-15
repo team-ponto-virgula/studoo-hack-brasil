@@ -141,6 +141,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   /** Revisão antes de concluir: os exercícios que ficaram sem acerto voltam uma vez, nesta ordem. */
   const [revisao, setRevisao] = useState<number[] | null>(retomada?.revisao ?? null);
   const [avisoRetomada, setAvisoRetomada] = useState(retomada !== null);
+  /** A última correção errada de cada exercício: a dica fica embaixo do campo na nova tentativa. Como na web. */
+  const [errosAnteriores, setErrosAnteriores] = useState<(Avaliacao | null)[]>(() => exercicios.map(() => null));
+  // Onde fica a prática e, dentro dela, o "Como foi?": para rolar até a pergunta.
+  const praticaY = useRef(0);
+  const comoFoiY = useRef(0);
   const [errosSeguidos, setErrosSeguidos] = useState(0);
   const [pedidoPonte, setPedidoPonte] = useState(0);
   const [consultaAberta, setConsultaAberta] = useState(false);
@@ -163,7 +168,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const ocupado = pendente !== null;
   const total = etapas.length;
   const ultima = passo === total - 1;
-  const andamento = t.posicao(passo + 1, total);
+  // Na revisão, o contador voltaria para trás: o topo diz "Revisão rápida" e a barra fica cheia. Como na web.
+  const andamento = revisao && exercicio ? t.revisaoAndamento : t.posicao(passo + 1, total);
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : null;
   let nomeEtapa: string = t.conceito;
   if (etapa.tipo === 'exemplo') nomeEtapa = licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
@@ -181,7 +187,17 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       if (tituloEtapa.current) AccessibilityInfo.sendAccessibilityEvent(tituloEtapa.current, 'focus');
     }, 120);
     return () => clearTimeout(espera);
-  }, [passo]);
+  }, [passo, revisao]);
+
+  // O aviso de "continuou de onde parou" vale para a etapa em que a pessoa voltou; na seguinte, sai.
+  useEffect(() => {
+    if (retomada && passo !== retomada.passo) setAvisoRetomada(false);
+  }, [passo, retomada]);
+
+  /** Leva até o "Como foi?" da prática (no fim do cronômetro ou ao concluir sem contar como foi). */
+  function mostrarComoFoi() {
+    rolagem.current?.scrollTo({ y: Math.max(0, 24 + praticaY.current + comoFoiY.current - 80), animated: reduzir === false });
+  }
 
   useEffect(() => () => pararVoz(), []);
 
@@ -220,6 +236,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setAutoAvaliacao(null);
     setRevisao(null);
     setAvisoRetomada(false);
+    setErrosAnteriores(exercicios.map(() => null));
   }
 
   useEffect(() => {
@@ -245,6 +262,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   function tentarDeNovo() {
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
+    setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (posicao === indice ? avaliacao : atual)));
     // Fica o que estava certo (na aberta, o texto todo); o resto recomeça. Como na web.
     if (exercicio && avaliacao) mudarResposta(respostaParaTentarDeNovo(exercicio, resposta, avaliacao));
   }
@@ -255,6 +273,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   /** Volta aos exercícios sem acerto, limpando a resposta de cada um, para mais uma tentativa antes de concluir. */
   function revisar(pendentes: number[]) {
     setRevisao(pendentes);
+    setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? null : atual)));
     setRespostas((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? '' : atual)));
     setPasso(etapaDoExercicio(pendentes[0]));
@@ -307,8 +326,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     <View style={licaoEstilos.topo}>
       <BotaoIcone icone="fechar" rotulo={t.voltar} testID="voltar-plano" desativado={ocupado} acao={sair} />
       <View style={licaoEstilos.andamento} accessible accessibilityRole="progressbar" accessibilityLabel={andamento}
-        accessibilityValue={{ min: 0, max: total, now: passo + 1 }}>
-        <BarraDaAula fracao={(passo + 1) / total} certa={avaliacao?.correta === true} />
+        accessibilityValue={{ min: 0, max: total, now: revisao ? total : passo + 1 }}>
+        <BarraDaAula fracao={revisao ? 1 : (passo + 1) / total} certa={avaliacao?.correta === true} />
         <Text style={licaoEstilos.posicao}>{andamento}</Text>
       </View>
     </View>
@@ -322,7 +341,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           ? avaliacao.criterios?.some(({ atendido }) => !atendido) ? t.quaseCompleta : tituloDoAcerto(`${licao.id}-${indice}`)
           : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
         extras={extrasDoRetorno(avaliacao, exercicio)} ocupado={ocupado} concluindo={pendente === 'concluir'} tentarDeNovo={tentarDeNovo}
-        rotuloPular={revisao ? t.seguirSemAcertar : t.pular} compacto={pedidoPonte > 0}
+        rotuloPular={revisao ? t.seguirSemAcertar : t.pular} compacto={pedidoPonte > 0} avisoPular={revisao ? undefined : t.pularAviso}
         verReforco={() => {
           rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
           setPedidoPonte((atual) => atual + 1);
@@ -343,8 +362,10 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     rodape = (
       <View style={{ gap: 8 }}>
         {!autoAvaliacao && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.escolha}</Text>}
+        {/* Sem contar como foi, o botão leva até a pergunta, em vez de ficar apagado sem explicação. Como na web. */}
         <Botao testID="concluir-pratica" rotulo={pendente === 'concluir' ? t.concluindo : t.pratica.concluir} variante="sucesso"
-          desativado={ocupado || !autoAvaliacao} ocupado={pendente === 'concluir'} carregando={pendente === 'concluir'} acao={() => void avancar()} />
+          desativado={ocupado} ocupado={pendente === 'concluir'} carregando={pendente === 'concluir'}
+          acao={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())} />
       </View>
     );
   } else {
@@ -440,6 +461,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               <Text style={estilos.texto}>{licao.conceito}</Text>
               <Text style={estilos.legenda}>{t.origem} · {origemLegivel(licao.origem)}</Text>
             </ExplicacaoDoStu>
+            {(licao.recurso?.tipo === 'imagem' || licao.recurso?.tipo === 'acorde') && (
+              <View style={{ marginTop: 16 }}><RecursoDaLicao recurso={licao.recurso} /></View>
+            )}
           </>
         )}
         {etapa.tipo === 'exemplo' && (
@@ -463,8 +487,18 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <Text style={estilos.texto}>{exercicio.enunciado}</Text>
             {exercicio.contexto && <Text style={estilos.texto}>{exercicio.contexto}</Text>}
             {exercicio.trecho && <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala} />}
-            {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} />}
+            {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
             {campoDoExercicio(exercicio)}
+            {!avaliacao && errosAnteriores[indice] && (
+              <View testID="dica-anterior" accessible accessibilityRole="text" style={licaoEstilos.dica}>
+                <View style={licaoEstilos.dicaTopo}>
+                  <Icone nome="lampada" tamanho={16} cor="#7A4A00" />
+                  <Text style={licaoEstilos.dicaTitulo}>{t.dicaAnterior.toLocaleUpperCase('pt-BR')}</Text>
+                </View>
+                <Text style={licaoEstilos.dicaTexto}>{errosAnteriores[indice]?.feedback}</Text>
+                {errosAnteriores[indice]?.observacao && <Text style={licaoEstilos.dicaTexto}>{errosAnteriores[indice]?.observacao}</Text>}
+              </View>
+            )}
             {/* Para consultar, depois da resposta e recolhido para a pergunta ficar no alto: o acorde e a barra de fração (a
                 linha do tempo entregaria a ordem). */}
             {(licao.recurso?.tipo === 'acorde' || licao.recurso?.tipo === 'fracao') && (
@@ -488,18 +522,20 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           </Animated.View>
         )}
         {etapa.tipo === 'pratica' && licao.pratica && (
-          <View style={[licaoEstilos.quadro, licaoEstilos.quadroPratica]}>
+          <View style={[licaoEstilos.quadro, licaoEstilos.quadroPratica]} onLayout={(evento) => { praticaY.current = evento.nativeEvent.layout.y; }}>
             <Text ref={tituloEtapa} accessible accessibilityRole="header" style={estilos.subtitulo}>{t.pratica.titulo}</Text>
             <EtapaPratica pratica={licao.pratica} escolha={autoAvaliacao}
+              aoMedirComoFoi={(y) => { comoFoiY.current = y; }} aoAcabar={() => setTimeout(mostrarComoFoi, 120)}
               escolher={(valor) => {
                 setAutoAvaliacao(valor);
-                // A resposta do Stu aparece embaixo das opções: rola até ela, para não ficar atrás do rodapé.
-                setTimeout(() => rolagem.current?.scrollToEnd({ animated: reduzir === false }), 160);
+                // A resposta do Stu aparece embaixo das opções: rola até ela (a pergunta no alto da tela), para não ficar atrás
+                // do rodapé. A consulta vem depois, então não vale rolar até o fim.
+                setTimeout(() => rolagem.current?.scrollTo({ y: Math.max(0, 24 + praticaY.current + comoFoiY.current - 24), animated: reduzir === false }), 160);
               }}
               consulta={(licao.recurso || licao.passos || licao.falas) && (
                 <View style={licaoEstilos.consulta}>
                   <Text style={licaoEstilos.consultaRotulo}>{t.recursos.consultar.toLocaleUpperCase('pt-BR')}</Text>
-                  {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
+                  {licao.recurso && <RecursoDaLicao recurso={licao.recurso} longa />}
                   {licao.passos && <Passos passos={licao.passos} />}
                   {licao.falas && <Falas falas={licao.falas} />}
                 </View>
@@ -508,7 +544,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         )}
         {erro && <EstadoMensagem mensagem={erro} />}
       </EntradaDaEtapa>
-      {exercicio && <View onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} /></View>}
+      {exercicio && <View onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
+        ultimo={indice === exercicios.length - 1}
+        aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })} /></View>}
     </Tela>
     </TranscritorContexto.Provider>
   );
@@ -574,9 +612,11 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
  * Painel de retorno no rodapé: sobe com a cor do resultado; o ícone entra com um giro e, no acerto, solta confete.
  * No erro, "Tentar de novo" volta ao exercício e Continuar segue, como na web.
  */
-function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarDeNovo, continuar, verReforco, rotuloPular, compacto = false }: {
+function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarDeNovo, continuar, verReforco, rotuloPular, compacto = false, avisoPular }: {
   avaliacao: Avaliacao;
   titulo: string;
+  /** No erro (fora da revisão): o que acontece ao pular, o exercício volta no fim da lição. */
+  avisoPular?: string;
   /** Com o reforço aberto, o painel fica só com o título e as ações, para não cobrir a miniquestão. */
   compacto?: boolean;
   /** O botão de seguir no erro: "Pular por agora" ou, na revisão antes de concluir, "Seguir sem acertar". */
@@ -619,6 +659,7 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
         </View>
       </View>
       {!certa && !compacto && <Botao variante="texto" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
+      {!certa && !compacto && avisoPular && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{avisoPular}</Text>}
       <View style={licaoEstilos.retornoAcoes}>
         {!certa && (
           <View style={licaoEstilos.metade}>
@@ -680,6 +721,11 @@ const licaoEstilos = StyleSheet.create({
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   etapaTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
+  dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
+    backgroundColor: '#FFF8E6' },
+  dicaTopo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dicaTitulo: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
+  dicaTexto: { color: '#5C3B00', fontFamily: fontes.corpo, fontWeight: '600', fontSize: 15, lineHeight: 21 },
   revisaoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   explicacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 20 },
   stu: { width: 58, height: 64, marginTop: 6 },

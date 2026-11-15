@@ -38,7 +38,7 @@ const violao: Demo = {
             objetivo: "Reconhecer as partes do violão que você usa para afinar e tocar.",
             conceito: "O violão tem três partes principais: a cabeça, onde ficam as tarraxas que afinam as cordas; o braço, dividido em casas pelos trastes; e o corpo, com a boca, por onde o som sai. As cordas são contadas de baixo para cima: a 1ª é a mais fina e a 6ª, a mais grossa.",
             exemplo: "Para afinar a 5ª corda, você gira a tarraxa dela, na cabeça. Para tocar uma nota mais aguda nessa mesma corda, aperta a corda numa casa do braço, mais perto do corpo.",
-            recurso: { tipo: "imagem", src: ILUSTRACAO_VIOLAO, descricao: "1 tarraxa · 2 casa (entre dois trastes) · 3 boca · 4 6ª corda", fonte: "Ilustração" },
+            recurso: { tipo: "imagem", src: ILUSTRACAO_VIOLAO, descricao: "Cabeça: 1 tarraxa · Braço: 2 casa (entre dois trastes) · Corpo: 3 boca · 4 6ª corda, a mais grossa", fonte: "Ilustração" },
             origem: origemViolao,
             exercicio: {
               tipo: "associar",
@@ -69,7 +69,7 @@ const violao: Demo = {
           {
             titulo: "Montar o acorde Lá menor (Am)",
             objetivo: "Posicionar os dedos para tocar o acorde Lá menor.",
-            conceito: "Um acorde é um grupo de notas tocadas juntas. No diagrama do próximo passo, as linhas verticais são as cordas, com a 6ª à esquerda, e as horizontais são os trastes. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
+            conceito: "Um acorde é um grupo de notas tocadas juntas. No diagrama abaixo, as linhas verticais são as cordas, com a 6ª à esquerda, e as horizontais são os trastes. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
             exemploTipo: "demonstracao",
             exemplo: "Veja o Lá menor no diagrama e ouça como ele soa. Depois, siga os passos com o violão na mão.",
             passos: [
@@ -312,7 +312,7 @@ const ingles: Demo = {
               {
                 tipo: "multipla_escolha",
                 enunciado: "Na imigração, ouça a pergunta do agente e escolha a resposta.",
-                fala: { texto: "What is the purpose of your visit?", idioma: "en-US" },
+                fala: falaEn("What is the purpose of your visit?", "Qual é o motivo da sua visita?"),
                 opcoes: [op("a", "I'm here on vacation."), op("b", "Nice to meet you!"), op("c", "How much is it?")],
                 gabarito: ["a"],
                 feedbackCorreto: "Isso: “I'm here on vacation” diz que você veio passear, de férias.",
@@ -349,11 +349,20 @@ const ingles: Demo = {
               {
                 tipo: "multipla_escolha",
                 enunciado: "Ouça a resposta e escolha o que ela quer dizer.",
-                fala: { texto: "It's next to the bank.", idioma: "en-US" },
+                fala: falaEn("It's next to the bank.", "Fica ao lado do banco."),
                 opcoes: [op("a", "Fica ao lado do banco."), op("b", "Fica em frente ao banco."), op("c", "Fica longe do banco.")],
                 gabarito: ["a"],
                 feedbackCorreto: "Isso: “next to” quer dizer ao lado de.",
                 feedbackIncorreto: "A frase é “It's next to the bank”: “next to” quer dizer ao lado de.",
+              },
+              {
+                tipo: "multipla_escolha",
+                enunciado: "Ouça o caminho e escolha para onde ir.",
+                fala: falaEn("Turn left at the corner.", "Vire à esquerda na esquina."),
+                opcoes: [op("a", "Vire à esquerda na esquina."), op("b", "Vire à direita na esquina."), op("c", "Siga em frente até a esquina.")],
+                gabarito: ["a"],
+                feedbackCorreto: "Isso: “turn left” é virar à esquerda, e “at the corner”, na esquina.",
+                feedbackIncorreto: "Ouça de novo: “left” é esquerda e “right” é direita. “Go straight” seria seguir em frente.",
               },
             ],
           },
@@ -391,7 +400,7 @@ const ingles: Demo = {
               {
                 tipo: "multipla_escolha",
                 enunciado: "Ouça o que a recepcionista pergunta e escolha a melhor resposta.",
-                fala: { texto: "What's your name?", idioma: "en-US" },
+                fala: falaEn("What's your name?", "Qual é o seu nome?"),
                 opcoes: [op("a", "Ana Souza. Here's my passport."), op("b", "It's fifteen dollars."), op("c", "It's next to the hotel.")],
                 gabarito: ["a"],
                 feedbackCorreto: "Isso: ela perguntou o seu nome (“What's your name?”), e você já mostra o passaporte.",
@@ -415,7 +424,7 @@ const ingles: Demo = {
             exercicio: {
               tipo: "multipla_escolha",
               enunciado: "Ouça o preço e escolha o valor.",
-              fala: { texto: "It's thirteen dollars.", idioma: "en-US" },
+              fala: falaEn("It's thirteen dollars.", "Custa treze dólares."),
               opcoes: [op("a", "13 dólares"), op("b", "30 dólares"), op("c", "3 dólares")],
               gabarito: ["a"],
               feedbackCorreto: "Isso: “thirteen” termina em “‑teen”, então é 13.",
@@ -523,7 +532,7 @@ const ingles: Demo = {
               {
                 tipo: "multipla_escolha",
                 enunciado: 'Ouça o pedido e escolha o que a pessoa quer.',
-                fala: { texto: 'Can I have the check, please?', idioma: "en-US" },
+                fala: falaEn("Can I have the check, please?", "Pode me trazer a conta, por favor?"),
                 opcoes: [op("a", 'A conta'), op("b", 'Um café'), op("c", 'Um sanduíche')],
                 gabarito: ["a"],
                 feedbackCorreto: 'Isso: “check” é a conta do restaurante.',

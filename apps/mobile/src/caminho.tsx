@@ -21,7 +21,7 @@ import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
 import { cores, fontes } from './tema';
-import { explicar, iconeDoNo, nomeDoNo, posicaoDoNo, posicaoX, type EstadoNo, type NoCaminho } from './trilha';
+import { explicar, iconeDoNo, nomeDoNo, posicaoDoNo, posicaoX, seloDoNo, type EstadoNo, type NoCaminho } from './trilha';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
@@ -318,6 +318,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (discreto && seguinte?.estado === 'atual') depois += 80;
           if (no.estado === 'atual' && fimDoTrecho) depois += 16;
           if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 24;
+          // O selo embaixo do título ("Vale rever", "Reforço") ocupa mais uma linha.
+          if (discreto && seloDoNo(no)) depois += 22;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
           const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
@@ -675,7 +677,9 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const centro = (largura * x) / 100;
   const direita = x >= 50;
   const atual = no.estado === 'atual';
-  const rotuloA11y = no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}` : nome;
+  const selo = seloDoNo(no);
+  // O nome já termina em ponto: o selo entra sem ponto duplicado.
+  const rotuloA11y = selo ? `${nome} ${selo.texto}.` : nome;
   const lugar = [caminhoEstilos.noLugar, { left: centro - lente / 2, width: lente, height: lente }];
 
   const rotulo = comRotulo && (
@@ -700,6 +704,12 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
         <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta },
           atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
       </View>
+      {selo && (
+        <View style={caminhoEstilos.selo}>
+          <Icone nome={selo.icone} tamanho={13} cor={selo.rever ? cores.alerta : cores.acao} />
+          <Text style={[caminhoEstilos.seloTexto, { color: selo.rever ? cores.alerta : cores.acao }]}>{selo.texto}</Text>
+        </View>
+      )}
     </View>
   );
   const moeda = (pressionado: boolean) => (
@@ -1240,6 +1250,9 @@ const caminhoEstilos = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
   discretoTexto: {
     color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
+  selo: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
+    backgroundColor: cores.fundo },
+  seloTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
   bolhaTrofeu: { position: 'absolute', bottom: '100%', left: -80, right: -80, marginBottom: 12, alignItems: 'center', zIndex: 3 },
   bolhaTrofeuTexto: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE08A',
     overflow: 'hidden', backgroundColor: '#FFF8E1', color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },

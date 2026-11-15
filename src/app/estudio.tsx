@@ -207,16 +207,20 @@ export function ApoioDaLicao({
   licao,
   avaliacao,
   pedidoPonte = 0,
+  ultimo = true,
 }: {
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
-  /** Cada vez que muda, o reforço é pedido (o "Ver outro exemplo" do painel de retorno) e o cartão aparece. */
+  /** Cada vez que muda, o reforço é pedido (o "Ver outro jeito de entender" do painel de retorno) e o cartão aparece. */
   pedidoPonte?: number;
+  /** Último exercício da lição: só nele aparece o "Ensine ao Stu", quando a pessoa já viu a lição toda. */
+  ultimo?: boolean;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const cartaoPonte = useRef<HTMLElement>(null);
+  const retornoDoEnsino = useRef<HTMLDivElement>(null);
   const revisaoApoio = useRef(0);
   function atualizarApoio(valor: Parameters<typeof setApoio>[0]) {
     revisaoApoio.current += 1;
@@ -362,6 +366,12 @@ export function ApoioDaLicao({
     // Só o pedido dispara; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoPonte]);
+  // O retorno do "Ensine ao Stu" aparece embaixo do formulário: a tela rola até ele.
+  useEffect(() => {
+    if (!ensino) return;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
+  }, [ensino]);
   return (
     <div className="estudio-apoio">
       {!!licao.referencias?.length && (
@@ -427,7 +437,7 @@ export function ApoioDaLicao({
           )}
         </section>
       )}
-      <details
+      {ultimo && <details
         className="estudio-card"
         onToggle={(e) => {
           if (!e.currentTarget.open && recorder.current?.state === 'recording')
@@ -480,8 +490,7 @@ export function ApoioDaLicao({
         )}
         {aviso && <p role="status">{aviso}</p>}
         {ensino && (
-          <div className="estudio-feedback" role="status">
-            {ensino.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
+          <div className="estudio-feedback" role="status" ref={retornoDoEnsino}>
             <h3>{m.acertos}</h3>
             <ul>
               {ensino.acertos.map((x, i) => (
@@ -494,9 +503,11 @@ export function ApoioDaLicao({
             <p>{ensino.pergunta}</p>
             <h3>{m.proximo}</h3>
             <p>{ensino.proximoPasso}</p>
+            {/* Sem a IA, o retorno confere as ideias-chave da lição: a nota fica no pé, como legenda. */}
+            {ensino.simulado && <p className="estudio-legenda">{m.ensinoAutomatico}</p>}
           </div>
         )}
-      </details>
+      </details>}
       {ocupado && <p role="status">{m.pensando}</p>}
       {erro && <p role="alert">{erro}</p>}
     </div>

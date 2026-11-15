@@ -31,7 +31,8 @@ export interface PlanoDetalhe extends PlanoResumo {
     titulo: string;
     progresso: Progresso;
     proximaLicaoId: string | null;
-    licoes: { id: string; titulo: string; concluida: boolean; ponte?: { concluida: boolean } }[];
+    /** `rever`: concluída com erro antes do acerto, exercício sem acerto ou a prática em "ainda não" (o mapa marca). */
+    licoes: { id: string; titulo: string; concluida: boolean; ponte?: { concluida: boolean }; rever?: boolean }[];
   }[];
   /** Somas das lições concluídas com resumo: tempo e exercícios de primeira (para o fim da trilha). */
   estatisticas?: { segundos: number; acertosDePrimeira: number; exercicios: number };
