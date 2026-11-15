@@ -14,6 +14,7 @@ import {
   motivoParaRever,
   origemLegivel,
   respostaParaTentarDeNovo,
+  tamanhoDaResposta,
   partesDaLacuna,
   respostaCompleta,
   semAspas,
@@ -194,6 +195,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [expliqueAberto, setExpliqueAberto] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
+  /** Onde a pessoa estava em cada etapa ao sair dela: a "Etapa anterior" volta para lá, sem rolar tudo de novo. */
+  const posicoesDasEtapas = useRef<Record<number, number>>({});
+  const voltandoEtapa = useRef(false);
   const formulario = useRef<HTMLFormElement>(null);
   const continuarAgora = useRef<() => void>(() => undefined);
   const sairAgora = useRef<(peloVoltar?: boolean) => boolean>(() => false);
@@ -206,6 +210,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const ocupado = pendente !== null;
   const total = etapas.length;
   const ultima = passo === total - 1;
+  // O último exercício é o único sem acerto: pular leva direto à revisão rápida, com ele mesmo.
+  const soEsteFalta = ultima && exercicios.every((_, numero) => numero === indice || avaliacoes[numero]?.correta);
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : undefined;
   // Na revisão, o contador de etapas voltaria para trás: o topo diz "Revisão rápida" e a barra fica cheia.
   const andamento = revisao && exercicio ? t.revisaoAndamento : t.posicao(passo + 1, total);
@@ -220,9 +226,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   }
 
   useEffect(() => {
-    // Cada etapa começa do topo (também ao recomeçar). O foco vai para o título (escondido, para o leitor de tela) sem
-    // rolar até ele, senão a tela abriria no meio do quadro.
-    window.scrollTo(0, 0);
+    // Cada etapa começa do topo (também ao recomeçar), menos na volta pela "Etapa anterior", que reabre onde a pessoa
+    // estava. O foco vai para o título (escondido, para o leitor de tela) sem rolar até ele.
+    const destino = voltandoEtapa.current ? posicoesDasEtapas.current[passo] ?? 0 : 0;
+    voltandoEtapa.current = false;
+    window.scrollTo(0, destino);
     if (passo > 0) tituloEtapa.current?.focus({ preventScroll: true });
     // O reforço é de cada exercício: um pedido antigo não vale para o próximo.
     setPedidoPonte(0);
@@ -283,8 +291,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   /** "Continuar lendo": rola mais um pedaço do conteúdo (o rodapé fica). */
   function lerMais() {
     const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
+    const topo = document.querySelector<HTMLElement>('.aula-topo')?.getBoundingClientRect().height ?? 0;
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollBy({ top: Math.max(160, (window.innerHeight - rodape) * 0.75), behavior: reduzido ? 'auto' : 'smooth' });
+    window.scrollBy({ top: Math.max(160, (window.innerHeight - rodape - topo) * 0.75), behavior: reduzido ? 'auto' : 'smooth' });
   }
 
   // O aviso de "continuou de onde parou" vale para a etapa em que a pessoa voltou; na seguinte, sai.
@@ -425,6 +434,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     setRespostas((atuais) => atuais.map((atual, posicao) => {
       const anterior = avaliacoes[posicao];
       if (!pendentes.includes(posicao)) return atual;
+      // Na revisão, a lacuna volta vazia (a dica da tentativa anterior mostra o que foi escrito): com o texto errado de
+      // volta, parecia que o "Pular" não tinha feito nada.
+      if (exercicios[posicao].tipo === 'lacuna') return '';
       return anterior ? respostaParaTentarDeNovo(exercicios[posicao], atual, anterior) : '';
     }));
     setPasso(etapaDoExercicio(pendentes[0]));
@@ -432,6 +444,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   async function avancar() {
     if (ocupado) return;
+    posicoesDasEtapas.current[passo] = window.scrollY;
     // Na revisão, segue para o próximo exercício que ficou para trás; acabou a fila, conclui.
     if (revisao) {
       const resto = revisao.filter((numero) => numero !== indice);
@@ -556,7 +569,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   } else if (temMais) {
     acao = <Botao className="botao--ler-mais" onClick={lerMais}>{t.continuarLendo}<Icone nome="seta" /></Botao>;
   } else {
-    acao = <Botao disabled={ocupado} onClick={() => setPasso((atual) => atual + 1)}>{t.seguir}<Icone nome="seta" /></Botao>;
+    acao = (
+      <Botao disabled={ocupado} onClick={() => { posicoesDasEtapas.current[passo] = window.scrollY; setPasso((atual) => atual + 1); }}>
+        {t.seguir}<Icone nome="seta" />
+      </Botao>
+    );
   }
 
   return (
@@ -574,9 +591,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           <span className="aula-posicao" aria-hidden="true">{andamento}</span>
         </div>
       </header>
-      <div className="aula-miolo" key={passo}>
+      {/* Na revisão rápida, o quadro entra de novo, mesmo quando o exercício é o mesmo (o último, pulado agora). */}
+      <div className="aula-miolo" key={`${passo}-${rodadaDeOpcoes}`}>
         {passo > 0 && !revisao && (
-          <button type="button" className="aula-voltar-etapa" disabled={ocupado} onClick={() => setPasso((atual) => Math.max(0, atual - 1))}>
+          <button type="button" className="aula-voltar-etapa" disabled={ocupado}
+            onClick={() => { voltandoEtapa.current = true; setPasso((atual) => Math.max(0, atual - 1)); }}>
             <Icone nome="seta" />{t.etapaAnterior}
           </button>
         )}
@@ -668,7 +687,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           {etapa.tipo === 'pratica' && !autoAvaliacao && <p className="aula-rodape__nota">{t.pratica.escolha}</p>}
           {etapa.tipo === 'pratica' && autoAvaliacao === 'ainda_nao' && <p className="aula-rodape__nota">{t.pratica.aindaNaoNota}</p>}
           {/* Quem erra vê o que acontece ao pular: o exercício não some, volta no fim da lição. */}
-          {avaliacao && !avaliacao.correta && !revisao && pedidoPonte === 0 && <p className="aula-rodape__nota">{t.pularAviso}</p>}
+          {avaliacao && !avaliacao.correta && !revisao && pedidoPonte === 0 && <p className="aula-rodape__nota">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>}
           {exercicio && !avaliacao && (() => {
             const falta = faltaParaVerificar(exercicio, resposta);
             return falta && <p className="aula-rodape__nota" aria-live="polite">{textoDaFalta(falta)}</p>;
@@ -769,20 +788,22 @@ function BracoDoAcorde({ nome, casas, dedos }: { nome: string; casas: number[]; 
     .join('; ');
   return (
     <svg viewBox="0 0 196 232" role="img" aria-label={`${t.recursos.acorde(nome)}: ${descricao}.`}>
+      {/* Corda e casa com o ordinal (6ª, 1ª): o número simples fica só para o dedo, na bolinha, e não se confunde. */}
       {[6, 5, 4, 3, 2, 1].map((numero, corda) => (
-        <text key={`c${numero}`} x={x(corda)} y={206} textAnchor="middle" className="acorde__rotulo">{numero}</text>
+        <text key={`c${numero}`} x={x(corda)} y={206} textAnchor="middle" className="acorde__rotulo">{numero}ª</text>
       ))}
       <text x={95} y={226} textAnchor="middle" className="acorde__legenda-eixo">{t.recursos.eixoCorda}</text>
       <text x={182} y={16} textAnchor="middle" className="acorde__legenda-eixo">{t.recursos.eixoCasa}</text>
       {[0, 1, 2, 3].map((linha) => (
-        <text key={`t${linha}`} x={180} y={48 + (linha + 0.5) * 34 + 6} textAnchor="middle" className="acorde__rotulo">{base + linha}</text>
+        <text key={`t${linha}`} x={181} y={48 + (linha + 0.5) * 34 + 6} textAnchor="middle" className="acorde__rotulo">{base + linha}ª</text>
       ))}
       {base === 1
         ? <rect x={27} y={43} width={136} height={7} rx={3.5} className="acorde__pestana" />
-        : <text x={8} y={y(base) + 5} className="acorde__base">{base}</text>}
+        : <text x={4} y={y(base) + 5} className="acorde__base">{base}ª</text>}
       {[0, 1, 2, 3, 4].map((traste) => <line key={traste} x1={30} x2={160} y1={48 + traste * 34} y2={48 + traste * 34} className="acorde__traste" />)}
       {[0, 1, 2, 3, 4, 5].map((corda) => (
-        <line key={corda} x1={x(corda)} x2={x(corda)} y1={48} y2={184} className="acorde__corda" style={{ strokeWidth: 3.4 - corda * 0.4 }} />
+        // Da 6ª (a mais grossa, à esquerda) à 1ª: a mesma diferença de espessura da ilustração da lição 1.
+        <line key={corda} x1={x(corda)} x2={x(corda)} y1={48} y2={184} className="acorde__corda" style={{ strokeWidth: 4.4 - corda * 0.6 }} />
       ))}
       {casas.map((casa, corda) => (casa <= 0 ? (
         <text key={corda} x={x(corda)} y={33} textAnchor="middle" className={casa < 0 ? 'acorde__abafada' : 'acorde__solta'}>{casa < 0 ? 'X' : 'O'}</text>
@@ -1229,7 +1250,9 @@ function ExplicacaoComFalas({ texto, idioma }: { texto: string; idioma?: string 
           // Fora das aspas, ou uma citação em português (com acento), fica como texto.
           if (indice % 2 === 0) return parte;
           if (/[ãõçáéíóúâêôà]/i.test(parte)) return `“${parte}”`;
-          // Um span no fluxo do texto (o botão quebraria a linha antes de um parêntese ou de um ponto).
+          // Um span no fluxo do texto (o botão quebraria a linha antes de um parêntese ou de um ponto). A última palavra
+          // vai presa ao ícone de som, que assim nunca fica sozinho numa linha.
+          const corte = parte.lastIndexOf(' ');
           return (
             <span key={indice} role="button" tabIndex={0} className="fala-inline" lang={idioma} aria-label={t.audio.ouvirFrase(parte)}
               data-tocando={tocando === indice || undefined} onClick={() => ouvir(indice, parte)}
@@ -1238,7 +1261,7 @@ function ExplicacaoComFalas({ texto, idioma }: { texto: string; idioma?: string 
                 evento.preventDefault();
                 ouvir(indice, parte);
               }}>
-              “{parte}”<Icone nome="som" />
+              “{parte.slice(0, corte + 1)}<span className="sem-quebra">{parte.slice(corte + 1)}”<Icone nome="som" /></span>
             </span>
           );
         })}
@@ -1426,8 +1449,8 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
             readOnly={respondido} data-retorno={retorno} aria-describedby="aberta-dica aberta-contador"
             onChange={(evento) => mudar(evento.target.value)} />
           <p id="aberta-dica" className="campo__dica">{t.aberta.dica}</p>
-          <p id="aberta-contador" className="campo__contador" data-pronto={resposta.trim().length >= exercicio.minimo || undefined}>
-            {t.aberta.contador(resposta.trim().length, exercicio.minimo)}
+          <p id="aberta-contador" className="campo__contador" data-pronto={tamanhoDaResposta(resposta) >= exercicio.minimo || undefined}>
+            {t.aberta.contador(tamanhoDaResposta(resposta), exercicio.minimo)}
           </p>
         </div>
       );
@@ -1562,6 +1585,8 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
   fixos?: string[];
 }) {
   const [escolhida, setEscolhida] = useState<string | null>(null);
+  /** Quem começa pela direita: o item fica escolhido e o próximo toque, na esquerda, fecha o par. */
+  const [escolhidaDireita, setEscolhidaDireita] = useState<string | null>(null);
   const pares = valor.split(',').filter(Boolean).map((par) => par.split('=') as [string, string]);
   const travado = (idEsquerda?: string) => Boolean(idEsquerda && fixos?.includes(idEsquerda) && pares.some(([item]) => item === idEsquerda));
   const parDaEsquerda = (id: string) => pares.find(([item]) => item === id);
@@ -1574,6 +1599,11 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
 
   function tocarEsquerda(id: string) {
+    if (escolhidaDireita) {
+      salvar([...pares.filter(([item, outro]) => item !== id && outro !== escolhidaDireita), [id, escolhidaDireita]]);
+      setEscolhidaDireita(null);
+      return;
+    }
     if (parDaEsquerda(id)) {
       salvar(pares.filter(([item]) => item !== id));
       setEscolhida(null);
@@ -1585,6 +1615,7 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
   function tocarDireita(id: string) {
     if (!escolhida) {
       if (parDaDireita(id)) salvar(pares.filter(([, item]) => item !== id));
+      else setEscolhidaDireita((atual) => (atual === id ? null : id));
       return;
     }
     salvar([...pares.filter(([item, outro]) => item !== escolhida && outro !== id), [escolhida, id]]);
@@ -1594,7 +1625,8 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
   return (
     <div className="associar">
       <p className="associar__instrucao" aria-live="polite">
-        {escolhida ? t.associar.escolhido(texto(esquerda, escolhida)) : t.associar.instrucao}
+        {escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
+          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao}
       </p>
       <div className="associar__colunas">
         <div role="group" aria-label={t.associar.esquerda}>
@@ -1603,7 +1635,8 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
             const fixo = travado(item.id);
             return (
               <button key={item.id} type="button" disabled={desativado || fixo} aria-pressed={escolhida === item.id}
-                aria-label={par ? (fixo ? t.associar.travado(item.texto, texto(direita, par[1])) : t.associar.desfazer(item.texto, texto(direita, par[1]))) : item.texto}
+                aria-label={escolhidaDireita && !fixo ? t.associar.ligar(item.texto, texto(direita, escolhidaDireita))
+                  : par ? (fixo ? t.associar.travado(item.texto, texto(direita, par[1])) : t.associar.desfazer(item.texto, texto(direita, par[1]))) : item.texto}
                 data-par={par ? numero(item.id) : undefined} data-escolhida={escolhida === item.id || undefined}
                 data-estado={certos ? (certos.includes(item.id) ? 'certo' : 'errado') : fixo ? 'certo' : undefined}
                 onClick={() => tocarEsquerda(item.id)}>
@@ -1622,6 +1655,7 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
                 : par ? t.associar.desfazer(texto(esquerda, par[0]), item.texto) : item.texto;
             return (
               <button key={item.id} type="button" disabled={desativado || fixo} aria-label={rotulo} data-par={par ? numero(item.id) : undefined}
+                aria-pressed={escolhidaDireita === item.id} data-escolhida={escolhidaDireita === item.id || undefined}
                 data-estado={certos && par ? (certos.includes(par[0]) ? 'certo' : 'errado') : fixo ? 'certo' : undefined}
                 onClick={() => tocarDireita(item.id)}>
                 {par && <span className="associar__numero" aria-hidden="true">{numero(item.id)}</span>}
@@ -1741,8 +1775,10 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   const cronometro = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (reinicio === 0) return;
-    setRodando(false);
-    setRestante(total);
+    // "Praticar mais um pouco": o cronômetro continua de onde parou (ou recomeça, se tinha acabado) e já começa a contar,
+    // em vez de voltar parado e apagar o que já foi praticado.
+    setRestante((atual) => (atual > 0 ? atual : total));
+    setRodando(true);
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     cronometro.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
   }, [reinicio, total]);
@@ -1752,17 +1788,15 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   // Encerrar uma prática de minutos depois de 5 segundos não vale: o "Como foi?" espera um mínimo de prática.
   const minimo = Math.min(30, total);
   const [semCronometro, setSemCronometro] = useState(false);
-  // O que já foi praticado não se perde no "Recomeçar": vale o maior tempo corrido até agora.
-  const [maisPraticado, setMaisPraticado] = useState(total - restante);
-  const praticado = Math.max(maisPraticado, total - restante);
-  useEffect(() => {
-    setMaisPraticado((atual) => Math.max(atual, total - restante));
-  }, [restante, total]);
+  // O que já foi praticado não se perde no "Recomeçar" nem no "Praticar mais um pouco": conta todo o tempo corrido.
+  const [praticadoTotal, setPraticadoTotal] = useState(total - restante);
+  const praticado = Math.max(praticadoTotal, total - restante);
   const praticou = semCronometro || praticado >= minimo;
 
   useEffect(() => {
     if (!rodando) return;
     const intervalo = window.setInterval(() => {
+      setPraticadoTotal((atual) => atual + 1);
       setRestante((atual) => {
         if (atual > 1) return atual - 1;
         setRodando(false);
@@ -1812,6 +1846,8 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
           {!acabou && <Botao variante={rodando ? 'secundario' : 'primario'} onClick={() => setRodando((atual) => !atual)}>{rotuloPrincipal}</Botao>}
           {restante < total && <Botao variante="texto" onClick={() => { setRodando(false); setRestante(total); }}>{t.pratica.recomecar}</Botao>}
         </div>
+        {/* Depois de recomeçar, o mostrador volta ao início: o total praticado fica à vista. */}
+        {praticado > total - restante && <p className="cronometro__total">{t.pratica.jaPraticou(formatarTempo(praticado))}</p>}
       </div>
       {pratica.som && <TocarSom rotulo={pratica.som.rotulo} casas={pratica.som.casas} />}
       {recurso?.tipo === 'acorde' && recurso.batida && <DiagramaAcorde recurso={recurso} longa soBatida />}

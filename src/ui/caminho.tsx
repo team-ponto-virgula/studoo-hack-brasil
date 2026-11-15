@@ -15,7 +15,8 @@ export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
  * `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar, não Começar).
  * `rever`: por que vale rever a lição concluída (`motivoParaRever`); o mapa marca "Vale rever" e o balão diz o motivo.
  */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever };
+/** `resumo`: na prévia, o que a lição ensina (o balão do toque mostra). */
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever; resumo?: string };
 
 /** O título sem quebra no meio de uma palavra com hífen (“check-" numa linha e “in” na outra). */
 function semQuebrarHifen(texto: string): ReactNode {
@@ -119,7 +120,10 @@ function FaixaParte({ numero, resumo, trecho }: { numero: number; trecho: number
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 function explicar(nos: readonly NoCaminho[], indice: number) {
   // Na prévia, a lição ainda não existe: o balão diz como abri-la (antes, o toque não fazia nada).
-  if (nos[indice].estado === 'previa') return mensagens.licao.audio.previaAbre;
+  if (nos[indice].estado === 'previa') {
+    const { resumo } = nos[indice];
+    return resumo ? mensagens.licao.audio.previaResumo(resumo) : mensagens.licao.audio.previaAbre;
+  }
   if (nos[indice].estado === 'concluida') {
     const motivo = nos[indice].rever;
     if (motivo) return mensagens.trilha.concluidaRever(motivo);

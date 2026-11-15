@@ -58,10 +58,15 @@ export function respostaCompleta(exercicio: ExercicioPublico, resposta: string):
       return Boolean(escolha && justificativa);
     }
     case 'aberta':
-      return valor.length >= exercicio.minimo;
+      return tamanhoDaResposta(valor) >= exercicio.minimo;
     default:
       return valor.length > 0;
   }
+}
+
+/** Tamanho da resposta aberta, em letras e números (sem os espaços): é o que o contador mostra e o mínimo confere. */
+export function tamanhoDaResposta(texto: string): number {
+  return texto.replace(/\s+/gu, '').length;
 }
 
 /** O que ainda falta para a resposta poder ser verificada (null quando já pode). Cada plataforma diz isso com os seus textos. */
@@ -85,7 +90,7 @@ export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string
     case 'verdadeiro_falso':
       return valor.split(':')[0] ? { tipo: 'justificativa' } : { tipo: 'valor' };
     case 'aberta':
-      return { tipo: 'caracteres', faltam: exercicio.minimo - valor.length };
+      return { tipo: 'caracteres', faltam: exercicio.minimo - tamanhoDaResposta(valor) };
     case 'multipla_escolha':
       return { tipo: 'escolher' };
     default:

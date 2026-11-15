@@ -297,7 +297,10 @@ function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: s
     ],
     lacuna: armadilha
       ?? (faltou.length > 0 && !cobriu
-        ? `Que tal incluir ${lista(faltou.slice(0, 3))}? ${faltou.length === 1 ? 'É uma ideia-chave' : 'São ideias-chave'} desta lição.`
+        // Quem já trouxe parte das ideias ouve um “para ficar completa”, não uma lista de palavras que faltaram.
+        ? trouxe.length > 0 || doConceito.length > 0
+          ? `Boa base! Para ficar completa, fale também de ${lista(faltou.slice(0, 3))}: ${faltou.length === 1 ? 'é uma parte' : 'são partes'} importante${faltou.length === 1 ? '' : 's'} desta lição.`
+          : `Que tal incluir ${lista(faltou.slice(0, 3))}? ${faltou.length === 1 ? 'É uma ideia-chave' : 'São ideias-chave'} desta lição.`
         : faltou.length > 0
           ? `Você trouxe a maior parte das ideias. Para completar, se quiser: ${lista(faltou.slice(0, 2))}.`
           : comExemplo
