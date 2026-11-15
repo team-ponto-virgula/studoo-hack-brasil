@@ -16,50 +16,42 @@ function escreverTexto(visao: DataView, posicao: number, texto: string) {
   for (let indice = 0; indice < texto.length; indice += 1) visao.setUint8(posicao + indice, texto.charCodeAt(indice));
 }
 
-/**
- * WAV do acorde. `casas` tem 6 números, da 6ª à 1ª corda: -1 não toca, 0 solta, n é a casa apertada.
- * `taxa` é a taxa de amostragem; `segundos`, a duração; `intervalo`, o tempo entre uma corda e a próxima na batida.
- */
-export function sintetizarAcorde(casas: readonly number[], { taxa = 22050, segundos = 2.6, intervalo = 0.035 } = {}): Uint8Array {
-  const total = Math.round(taxa * segundos);
-  const mistura = new Float32Array(total);
+/** Gerador de ruído determinístico: o mesmo som sai sempre igual. */
+function criarRuido() {
   let semente = 0x2f6b4c1d;
-  const ruido = () => {
+  return () => {
     semente = (Math.imul(semente, 1664525) + 1013904223) >>> 0;
     return (semente / 0xffffffff) * 2 - 1;
   };
+}
 
-  let tocadas = 0;
-  casas.forEach((casa, corda) => {
-    if (casa < 0 || corda >= CORDAS_SOLTAS.length) return;
-    const frequencia = CORDAS_SOLTAS[corda] * 2 ** (casa / 12);
-    const periodo = Math.max(2, Math.round(taxa / frequencia));
-    // O ataque começa com ruído suavizado: a palheta (ou o dedo) solta todas as frequências de uma vez.
-    const vibracao = new Float32Array(periodo);
-    let anterior = 0;
-    for (let indice = 0; indice < periodo; indice += 1) {
-      anterior = 0.5 * (anterior + ruido());
-      vibracao[indice] = anterior;
-    }
-    const inicio = Math.round(tocadas * intervalo * taxa);
-    tocadas += 1;
-    // Cordas graves soam por mais tempo; o amortecimento cresce um pouco nas agudas.
-    const amortecimento = 0.9965 - corda * 0.0004;
-    let posicao = 0;
-    for (let amostra = inicio; amostra < total; amostra += 1) {
-      const atual = vibracao[posicao];
-      const seguinte = vibracao[(posicao + 1) % periodo];
-      vibracao[posicao] = amortecimento * 0.5 * (atual + seguinte);
-      mistura[amostra] += atual;
-      posicao = (posicao + 1) % periodo;
-    }
-  });
+/** Soma à mistura uma corda dedilhada (Karplus-Strong) que começa em `inicio` (em amostras). */
+function dedilhar(mistura: Float32Array, taxa: number, frequencia: number, inicio: number, ganho: number, amortecimento: number, ruido: () => number) {
+  const periodo = Math.max(2, Math.round(taxa / frequencia));
+  // O ataque começa com ruído suavizado: a palheta (ou o dedo) solta todas as frequências de uma vez.
+  const vibracao = new Float32Array(periodo);
+  let anterior = 0;
+  for (let indice = 0; indice < periodo; indice += 1) {
+    anterior = 0.5 * (anterior + ruido());
+    vibracao[indice] = anterior * ganho;
+  }
+  let posicao = 0;
+  for (let amostra = Math.max(0, inicio); amostra < mistura.length; amostra += 1) {
+    const atual = vibracao[posicao];
+    const seguinte = vibracao[(posicao + 1) % periodo];
+    vibracao[posicao] = amortecimento * 0.5 * (atual + seguinte);
+    mistura[amostra] += atual;
+    posicao = (posicao + 1) % periodo;
+  }
+}
 
+/** Normaliza a mistura, aplica uma saída suave e escreve o WAV (PCM de 16 bits, mono). */
+function paraWav(mistura: Float32Array, taxa: number): Uint8Array {
+  const total = mistura.length;
   let pico = 0;
   for (const valor of mistura) pico = Math.max(pico, Math.abs(valor));
   const ganho = pico > 0 ? 0.85 / pico : 0;
   const saida = Math.round(taxa * 0.3);
-
   const bytes = new Uint8Array(44 + total * 2);
   const visao = new DataView(bytes.buffer);
   escreverTexto(visao, 0, 'RIFF');
@@ -81,6 +73,41 @@ export function sintetizarAcorde(casas: readonly number[], { taxa = 22050, segun
     visao.setInt16(44 + indice * 2, Math.round(amostra * 32767), true);
   }
   return bytes;
+}
+
+/**
+ * WAV do acorde. `casas` tem 6 números, da 6ª à 1ª corda: -1 não toca, 0 solta, n é a casa apertada.
+ * `taxa` é a taxa de amostragem; `segundos`, a duração; `intervalo`, o tempo entre uma corda e a próxima na batida.
+ */
+export function sintetizarAcorde(casas: readonly number[], { taxa = 22050, segundos = 2.6, intervalo = 0.035 } = {}): Uint8Array {
+  const mistura = new Float32Array(Math.round(taxa * segundos));
+  const ruido = criarRuido();
+  frequenciasDoAcorde(casas).forEach((frequencia, ordem) => {
+    // Cordas graves soam por mais tempo; o amortecimento cresce um pouco nas agudas.
+    dedilhar(mistura, taxa, frequencia, Math.round(ordem * intervalo * taxa), 1, 0.9965 - ordem * 0.0004, ruido);
+  });
+  return paraWav(mistura, taxa);
+}
+
+/**
+ * WAV da batida mais simples, em 4 tempos: a mão desce em cada tempo (das cordas graves para as agudas) e sobe entre
+ * eles (das agudas para as graves, mais leve), com o primeiro tempo do compasso um pouco mais forte.
+ */
+export function sintetizarBatida(casas: readonly number[], { taxa = 22050, bpm = 72, compassos = 2 } = {}): Uint8Array {
+  const tempo = 60 / bpm;
+  const batidas = compassos * 4;
+  const mistura = new Float32Array(Math.round(taxa * (batidas * tempo + 1.6)));
+  const ruido = criarRuido();
+  const frequencias = frequenciasDoAcorde(casas);
+  for (let batida = 0; batida < batidas; batida += 1) {
+    const descida = Math.round(batida * tempo * taxa);
+    const forca = batida % 4 === 0 ? 1.15 : 1;
+    frequencias.forEach((frequencia, ordem) => dedilhar(mistura, taxa, frequencia, descida + Math.round(ordem * 0.012 * taxa), forca, 0.993, ruido));
+    const subida = descida + Math.round((tempo / 2) * taxa);
+    [...frequencias].reverse().slice(0, 4).forEach((frequencia, ordem) =>
+      dedilhar(mistura, taxa, frequencia, subida + Math.round(ordem * 0.01 * taxa), 0.55, 0.993, ruido));
+  }
+  return paraWav(mistura, taxa);
 }
 
 const ALFABETO_BASE64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';

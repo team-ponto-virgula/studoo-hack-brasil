@@ -293,10 +293,13 @@ export function ApoioDaLicao({
   cliente,
   licao,
   avaliacao,
+  pedidoPonte = 0,
 }: {
   cliente: ClienteEstudio;
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
+  /** Cada vez que muda, o reforço é pedido (o "Ver outro exemplo" do painel de retorno), se ainda não existir. */
+  pedidoPonte?: number;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   const revisaoApoio = useRef(0);
@@ -435,6 +438,14 @@ export function ApoioDaLicao({
     });
   }
   const ponte = apoio?.ponte;
+  // "Ver outro exemplo" no painel de retorno: um toque já pede o reforço.
+  useEffect(() => {
+    if (pedidoPonte > 0 && apoio && !apoio.ponte && !ocupado) {
+      void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
+    }
+    // Só o pedido dispara; o resto é lido no momento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedidoPonte]);
   const ensino = apoio?.ensino;
   return (
     <View>
@@ -457,7 +468,8 @@ export function ApoioDaLicao({
             ))}
         </Card>
       )}
-      {(!!apoio?.erros || avaliacao?.correta === false) && (
+      {/* Como na web: o reforço é do exercício errado agora (ou de um reforço começado e não terminado). */}
+      {avaliacao?.correta === false && (
         <Card>
           <PonteDesenho />
           <H>{ponte?.concluida ? m.pontePronta : m.ponte}</H>

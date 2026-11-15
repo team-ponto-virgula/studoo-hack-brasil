@@ -353,7 +353,9 @@ export function ApoioDaLicao({
           ))}
         </details>
       )}
-      {((apoio && apoio.erros > 0) || avaliacao?.correta === false) && (
+      {/* O reforço é do exercício que a pessoa acabou de errar (ou de um reforço começado e não terminado): não fica
+          sobrando em outros exercícios nem em outra visita à lição. */}
+      {avaliacao?.correta === false && (
         <section className="estudio-card estudio-ponte">
           <div className="ponte-desenho" aria-hidden="true">
             <span />
@@ -362,10 +364,11 @@ export function ApoioDaLicao({
             <span />
             <span />
           </div>
-          <h2>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
+          <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
           <p>{ponte?.motivo ?? m.ponteDica}</p>
           {!ponte ? (
             <Botao
+              data-acao="construir-ponte"
               disabled={ocupado || gravando}
               onClick={() =>
                 void executar(async () =>

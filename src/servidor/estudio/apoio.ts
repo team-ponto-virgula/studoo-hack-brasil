@@ -12,7 +12,8 @@ import {
 import { banco } from '../banco/cliente';
 import { Prisma } from '../banco/gerado/client';
 import { FalhaApi } from '../acesso/http';
-import { buscarLicao } from '../aprendizado/servico';
+import { buscarLicao, conteudoDaLicao } from '../aprendizado/servico';
+import { exercicioDaResposta, reforcoDoExercicio } from '@/dominio/aprendizado/reforco';
 import { quota } from './materiais';
 import {
   conteudoDaGerada,
@@ -50,8 +51,16 @@ export async function buscarApoio(
     ensino: (apoio?.ensino as FeedbackEnsino | null) ?? null,
   };
 }
-function reforcoFalso(licao: LicaoDetalhe): Reforco {
+/**
+ * Reforço sem IA. A lição de numerador e denominador mantém a explicação com chocolate da demonstração do material;
+ * as outras ganham uma pergunta mais simples sobre o exercício que a pessoa errou (veja `reforcoDoExercicio`).
+ */
+function reforcoFalso(licao: LicaoDetalhe, interno: ConteudoLicao, resposta: string | null): Reforco {
   const fracao = /numerador|denominador/i.test(licao.titulo);
+  if (!fracao) {
+    const exercicio = exercicioDaResposta([interno.exercicio, ...(interno.extras ?? [])], resposta);
+    return { objetivo: licao.objetivo, origem: 'Modo demonstração', simulado: true, ...reforcoDoExercicio(exercicio, resposta, licao.exemplo) };
+  }
   return {
     objetivo: licao.objetivo,
     origem: 'Modo demonstração',
@@ -110,7 +119,7 @@ async function gerarPonte(
   if (apoio.reforco) return buscarApoio(usuarioId, licaoId);
   await quota(usuarioId, 'ponte');
   let ponte: Reforco;
-  if (process.env.IA === 'falsa') ponte = reforcoFalso(licao);
+  if (process.env.IA === 'falsa') ponte = reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta);
   else {
     const result = await pedirJson(
       'ponte_reforco',
@@ -171,12 +180,21 @@ export async function ensinarStu(
   await quota(usuarioId, 'ensino');
   let feedback: FeedbackEnsino;
   if (process.env.IA === 'falsa') {
+    // Sem IA: o retorno não confere se o texto está certo, mas reconhece se a pessoa já trouxe um exemplo.
+    const comExemplo = /\b(?:exemplo|imagine|como quando|tipo quando|digamos)\b/i.test(explicacao.normalize('NFD').replace(/\p{M}+/gu, ''));
     feedback = {
-      acertos: ['Você formulou uma explicação com suas palavras.'],
-      lacuna: `Compare sua explicação com esta ideia: ${licao.conceito}`,
-      pergunta: `Como você aplicaria “${licao.titulo}” em outro exemplo?`,
+      acertos: [
+        'Você explicou com as suas palavras.',
+        ...(comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
+      ],
+      lacuna: comExemplo
+        ? `Confira se a sua explicação chega à ideia central da lição: ${licao.objetivo}`
+        : `Acrescente um exemplo concreto. A ideia central da lição é: ${licao.objetivo}`,
+      pergunta: comExemplo
+        ? `E se a situação fosse outra? Como “${licao.titulo}” funcionaria num caso diferente do seu exemplo?`
+        : `Como você usaria “${licao.titulo}” num exemplo do dia a dia?`,
       proximoPasso:
-        'Demonstração: este retorno não avalia a correção do texto. Revise a ideia e tente explicar com um exemplo concreto.',
+        'Modo demonstração: este retorno não confere se o texto está certo. Compare com a explicação da lição.',
       simulado: true,
     };
   } else {

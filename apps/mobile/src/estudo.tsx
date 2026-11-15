@@ -1,6 +1,6 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ClienteEstudio } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
@@ -94,6 +94,7 @@ export function Estudo({ cliente, sair, expirar }: {
   const [falhaGeracao, setFalhaGeracao] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const emCurso = useRef(false);
+  const saidaDaLicao = useRef<(() => void) | null>(null);
   const geracaoAtiva = useRef<AbortController | null>(null);
   const ocupado = pendente !== null;
 
@@ -143,7 +144,10 @@ export function Estudo({ cliente, sair, expirar }: {
       if (etapa.tipo === 'geracao') {
         if (geracao?.proposta) navegar({ tipo: 'objetivo' });
         else cancelarGeracao();
-      } else if (etapa.tipo === 'licao') void abrirPlano(etapa.plano.id, etapa.licao.id);
+      } else if (etapa.tipo === 'licao') {
+        if (saidaDaLicao.current) saidaDaLicao.current();
+        else void abrirPlano(etapa.plano.id, etapa.licao.id);
+      }
       else if (etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
       else navegar({ tipo: 'planos' });
       return true;
@@ -344,7 +348,7 @@ export function Estudo({ cliente, sair, expirar }: {
 
     if (etapa.tipo === 'licao') {
       return <Licao cliente={cliente} key={etapa.licao.id} licao={etapa.licao} erro={erro} pendente={pendente}
-        voltar={() => void abrirPlano(etapa.plano.id, etapa.licao.id)}
+        voltar={() => void abrirPlano(etapa.plano.id, etapa.licao.id)} saida={saidaDaLicao}
         avaliar={async (resposta, indice) => {
           const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta, indice));
           return resultado.ok ? resultado.dados : null;
@@ -354,10 +358,13 @@ export function Estudo({ cliente, sair, expirar }: {
 
     if (etapa.tipo === 'concluida') {
       const proxima = proximaDoCaminho(etapa.plano);
+      const { concluidas, total } = etapa.plano.progresso;
       return (
         <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} rodape={<>
           {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" variante="secundario" desativado={ocupado}
             acao={() => void abrirLicao(etapa.plano, proxima)} />}
+          {total > 0 && concluidas === total && <Botao rotulo={mensagens.licao.novoAssunto} testID="novo-assunto" variante="secundario"
+            desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />}
           <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" desativado={ocupado} acao={() => abrir(voltarATrilha(etapa))} />
         </>} />
       );
@@ -815,7 +822,10 @@ function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajust
             {geracao.objetivo}
           </Text>
         )}
-        <Text style={estudoEstilos.geracaoIa}>{mensagens.geracao.ia}</Text>
+        {/* Como na web: quem montou a trilha (a IA ou o modo demonstração); enquanto não se sabe, um texto neutro. */}
+        <Text style={estudoEstilos.geracaoIa}>
+          {!proposta ? mensagens.geracao.montadaDoPedido : origemDemonstracao(proposta.origem) ? mensagens.geracao.demonstracao : mensagens.geracao.ia}
+        </Text>
         {proposta
           ? <Text style={estudoEstilos.geracaoOrigem}>{mensagens.geracao.origem(proposta.origem)}</Text>
           : <View importantForAccessibility="no" accessibilityElementsHidden style={estudoEstilos.esqueletoOrigem} />}
@@ -1392,17 +1402,29 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
   const { plano, antes, licao, liberadas, resumo } = etapa;
   const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
   const entradaLiberada = useAparecer(1000, 420, true);
+  // A última lição fecha a trilha: a comemoração é da trilha inteira.
+  const trilhaFeita = plano.progresso.total > 0 && plano.progresso.concluidas === plano.progresso.total;
 
   return (
     <Tela pagina="concluida" semCabecalho rodape={rodape}>
       <Confete chuva quantidade={44} />
       <View style={estudoEstilos.conclusaoTopo}>
         <CenaConclusao />
-        <Titulo testID="titulo-conclusao" foco estilo={estudoEstilos.textoCentro}>{mensagens.licao.concluida}</Titulo>
-        <Text style={[estudoEstilos.comemoracao, estudoEstilos.textoCentro]}>{mensagens.licao.comemoracao}</Text>
+        <Titulo testID="titulo-conclusao" foco estilo={estudoEstilos.textoCentro}>
+          {trilhaFeita ? mensagens.licao.trilhaConcluida : mensagens.licao.concluida}
+        </Titulo>
+        <Text style={[estudoEstilos.comemoracao, estudoEstilos.textoCentro]}>
+          {trilhaFeita ? mensagens.licao.trilhaConcluidaTexto(plano.titulo) : mensagens.licao.comemoracao}
+        </Text>
         <Text style={[estudoEstilos.conclusaoLicao, estudoEstilos.textoCentro]}>{licao.titulo}</Text>
       </View>
       {resumo && <NumerosDaLicao resumo={resumo} />}
+      {resumo?.rever && (
+        <View testID="conclusao-rever" style={estudoEstilos.rever}>
+          <Icone nome="revisao" tamanho={20} cor={cores.alerta} />
+          <Text style={estudoEstilos.reverTexto}>{mensagens.licao.revisarDepois}</Text>
+        </View>
+      )}
       {liberada && (
         <Animated.View style={[estudoEstilos.liberada, estiloDeEntrada(entradaLiberada, 12)]}>
           <Icone nome="livro" tamanho={20} cor={cores.acao} />
@@ -1585,6 +1607,8 @@ const estudoEstilos = StyleSheet.create({
   liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   // Lição concluída
   conclusaoTopo: { alignItems: 'center' },
+  rever: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
+  reverTexto: { flexShrink: 1, color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21, textAlign: 'center' },
   textoCentro: { textAlign: 'center' },
   cena: { width: 190, height: 172, alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 },
   raios: { position: 'absolute', left: -6, top: -12, width: 202, height: 202, alignItems: 'center', justifyContent: 'center' },

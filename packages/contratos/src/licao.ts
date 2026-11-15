@@ -27,6 +27,14 @@ export function etapasDaLicao(licao: Pick<LicaoDetalhe, 'exercicio'> & Partial<P
   ];
 }
 
+/** Posição da última etapa de exercício (a aula volta para ela se a confirmação da conclusão expirar). */
+export function ultimoExercicio(etapas: readonly EtapaAula[]): number {
+  for (let posicao = etapas.length - 1; posicao >= 0; posicao -= 1) {
+    if (etapas[posicao].tipo === 'exercicio') return posicao;
+  }
+  return 0;
+}
+
 /** Monta a resposta de cada formato do jeito que o servidor confere. */
 export const codificarResposta = {
   /** Ordenar: os ids na ordem escolhida. */
@@ -54,6 +62,40 @@ export function respostaCompleta(exercicio: ExercicioPublico, resposta: string):
     default:
       return valor.length > 0;
   }
+}
+
+/** O que ainda falta para a resposta poder ser verificada (null quando já pode). Cada plataforma diz isso com os seus textos. */
+export type FaltaParaVerificar =
+  | { tipo: 'escrever' }
+  | { tipo: 'escolher' }
+  | { tipo: 'ordenar'; faltam: number }
+  | { tipo: 'associar'; faltam: number }
+  | { tipo: 'valor' }
+  | { tipo: 'justificativa' }
+  | { tipo: 'caracteres'; faltam: number };
+
+export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string): FaltaParaVerificar | null {
+  if (respostaCompleta(exercicio, resposta)) return null;
+  const valor = resposta.trim();
+  switch (exercicio.tipo) {
+    case 'ordenar':
+      return { tipo: 'ordenar', faltam: exercicio.itens.length - valor.split(',').filter(Boolean).length };
+    case 'associar':
+      return { tipo: 'associar', faltam: exercicio.esquerda.length - valor.split(',').filter(Boolean).length };
+    case 'verdadeiro_falso':
+      return valor.split(':')[0] ? { tipo: 'justificativa' } : { tipo: 'valor' };
+    case 'aberta':
+      return { tipo: 'caracteres', faltam: exercicio.minimo - valor.length };
+    case 'multipla_escolha':
+      return { tipo: 'escolher' };
+    default:
+      return { tipo: 'escrever' };
+  }
+}
+
+/** A origem da trilha é o modo demonstração (conteúdo pronto, sem a IA)? */
+export function origemDemonstracao(origem: string): boolean {
+  return /^modo demonstra[cç][aã]o/i.test(origem.trim());
 }
 
 /** Tamanho máximo da resposta: a aberta é uma explicação; as outras são curtas. */

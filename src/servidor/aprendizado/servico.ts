@@ -227,6 +227,11 @@ async function lerLicao(usuarioId: string, id: string) {
   return { ...licao, conteudo: licao.conteudo };
 }
 
+/** Conteúdo interno da lição (com gabarito), para o reforço sem IA montar uma pergunta sobre o exercício errado. */
+export async function conteudoDaLicao(usuarioId: string, id: string): Promise<ConteudoLicao> {
+  return (await lerLicao(usuarioId, id)).conteudo;
+}
+
 export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoDetalhe> {
   const licao = await lerLicao(usuarioId, id);
   const { objetivo, conceito, exemplo, origem, exercicio, extras, exemploTipo, passos, recurso, falas, pratica, referencias } = licao.conteudo;

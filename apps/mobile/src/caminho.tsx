@@ -309,6 +309,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const discreto = no.estado === 'previa' || !!no.ponte;
           // O balão do nó atual traz o nome: precisa de mais espaço acima dele.
           if (seguinte?.estado === 'atual') depois += 80;
+          // Divisão de parte logo antes da lição atual: a pílula e o balão "Começar" (com o nome) precisam caber entre os nós.
+          if (fimDoTrecho && seguinte?.estado === 'atual') depois += 56;
           if (discreto) depois += 14;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
           if (discreto && seguinte?.estado === 'atual') depois += 38;
@@ -345,7 +347,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                   atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => guardarAlvo(no.id, alvo)} tocar={() => tocar(no)} />
               </Entra>
               {fimDoTrecho && (
-                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + 28}>
+                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + 28} noAlto={seguinte?.estado === 'atual'}>
                   <Parte numero={trechos.indexOf(no.trecho) + 2} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </Marco>
               )}
@@ -976,9 +978,16 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false }: {
  * o trecho foi vencido. Vem depois do nó na árvore, então o leitor de tela lê "Marco 1", "Marco 2"… logo depois do
  * último nó do trecho.
  */
-function Marco({ numero, vencido, topo, children }: { numero: number; vencido: boolean; topo: number; children: ReactNode }) {
+function Marco({ numero, vencido, topo, noAlto = false, children }: {
+  numero: number;
+  vencido: boolean;
+  topo: number;
+  /** Com o balão "Começar" logo abaixo, a pílula fica no alto do vão, sem dividir espaço com ele. */
+  noAlto?: boolean;
+  children: ReactNode;
+}) {
   return (
-    <View pointerEvents="box-none" style={[caminhoEstilos.ligacao, caminhoEstilos.marcoArea, { top: topo }]}>
+    <View pointerEvents="box-none" style={[caminhoEstilos.ligacao, caminhoEstilos.marcoArea, { top: topo }, noAlto && caminhoEstilos.marcoNoAlto]}>
       <View accessible accessibilityRole="text" accessibilityLabel={vencido ? mensagens.trilha.marcoVencido(numero) : mensagens.trilha.marco(numero)}>
         {children}
       </View>
@@ -1254,6 +1263,7 @@ const caminhoEstilos = StyleSheet.create({
   // Ligação, marco e chegada
   ligacao: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   marcoArea: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, zIndex: 3 },
+  marcoNoAlto: { justifyContent: 'flex-start', paddingTop: 6 },
   // Divisor de parte: uma pílula pequena sobre a borda entre as regiões, como na web (antes era um card largo).
   parte: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingLeft: 4, paddingRight: 14,
     borderRadius: 999, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.fundo, borderBottomColor: 'rgba(27, 42, 94, 0.1)',

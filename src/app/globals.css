@@ -830,3 +830,7 @@ button { touch-action: manipulation; }
 @media (max-width: 767px) { .conclusao-numeros__rotulo { font-size: 0.6875rem; gap: 4px; } }
 .painel--concluida .conclusao-liberada { color: var(--texto); }
 .painel--concluida .conclusao-liberada .icone { color: var(--acao); }
+
+/* Lição terminada com erro ou com a prática em "ainda não": um lembrete gentil de rever. */
+.conclusao-rever { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; color: var(--alerta); font-weight: 800; text-align: center; }
+.conclusao-rever .icone { flex: none; width: 20px; height: 20px; }
