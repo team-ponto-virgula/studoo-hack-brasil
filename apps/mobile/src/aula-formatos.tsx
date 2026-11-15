@@ -32,14 +32,34 @@ import { cores, fontes } from './tema';
 
 const t = mensagens.licao;
 
-/** Lê a fala em voz alta com a voz do aparelho, no idioma dela. */
-function falar(fala: Fala, devagar: boolean) {
+/**
+ * Lê a fala em voz alta com a voz do aparelho, no idioma dela. `aoTerminar` avisa quando a voz acaba (ou é
+ * interrompida), com uma reserva pelo tamanho da frase, como na web.
+ */
+function falar(fala: Fala, devagar: boolean, aoTerminar?: () => void) {
+  let reserva: ReturnType<typeof setTimeout> | undefined;
+  const fim = () => {
+    if (reserva) clearTimeout(reserva);
+    aoTerminar?.();
+  };
   try {
     void Speech.stop();
-    Speech.speak(fala.texto, { language: fala.idioma, rate: devagar ? 0.6 : 0.95 });
+    if (aoTerminar) reserva = setTimeout(aoTerminar, Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
+    Speech.speak(fala.texto, { language: fala.idioma, rate: devagar ? 0.6 : 0.95, onDone: fim, onStopped: fim, onError: fim });
   } catch {
+    fim();
     AccessibilityInfo.announceForAccessibility(t.audio.semVoz);
   }
+}
+
+/** O que está tocando agora (normal ou devagar), para o chip mostrar "Tocando…". */
+function useTocando(fala: Fala) {
+  const [tocando, setTocando] = useState<'normal' | 'devagar' | null>(null);
+  const tocar = (devagar: boolean) => {
+    setTocando(devagar ? 'devagar' : 'normal');
+    falar(fala, devagar, () => setTocando(null));
+  };
+  return [tocando, tocar] as const;
 }
 
 /** Para a voz (ao sair da aula ou da etapa). */
@@ -92,10 +112,12 @@ function Chip({ rotulo, acao, icone, destaque = false, grande = false, nomeAcess
 }
 
 export function BotoesOuvir({ fala }: { fala: Fala }) {
+  const [tocando, tocar] = useTocando(fala);
   return (
     <View style={formatos.ouvir}>
-      <Chip rotulo={t.audio.ouvir} icone="som" destaque nomeAcessivel={t.audio.ouvirFrase(fala.texto)} acao={() => falar(fala, false)} />
-      <Chip rotulo={t.audio.devagar} nomeAcessivel={t.audio.ouvirDevagar(fala.texto)} acao={() => falar(fala, true)} />
+      <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvir} icone="som" destaque nomeAcessivel={t.audio.ouvirFrase(fala.texto)}
+        acao={() => tocar(false)} />
+      <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} nomeAcessivel={t.audio.ouvirDevagar(fala.texto)} acao={() => tocar(true)} />
     </View>
   );
 }
@@ -103,6 +125,7 @@ export function BotoesOuvir({ fala }: { fala: Fala }) {
 /** Exercício de escuta: o áudio primeiro; o texto aparece quando a pessoa pede. */
 export function Escuta({ fala }: { fala: Fala }) {
   const [mostrar, setMostrar] = useState(false);
+  const [tocando, tocar] = useTocando(fala);
   return (
     <View style={formatos.escuta}>
       <View style={formatos.rotuloLinha}>
@@ -110,8 +133,8 @@ export function Escuta({ fala }: { fala: Fala }) {
         <Text style={[formatos.rotuloCaixa, { color: cores.acaoEscura }]}>{t.audio.escuta.toLocaleUpperCase('pt-BR')}</Text>
       </View>
       <View style={formatos.ouvir}>
-        <Chip rotulo={t.audio.ouvirExercicio} icone="som" destaque grande acao={() => falar(fala, false)} />
-        <Chip rotulo={t.audio.devagar} grande acao={() => falar(fala, true)} />
+        <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvirExercicio} icone="som" destaque grande acao={() => tocar(false)} />
+        <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} grande acao={() => tocar(true)} />
       </View>
       <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} onPress={() => setMostrar((atual) => !atual)}>
         <Text style={formatos.link}>{mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}</Text>
@@ -581,7 +604,6 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta }: {
           <Text style={[estilos.texto, { flex: 1 }]}><Text style={{ fontWeight: '800' }}>{t.pratica.dica}: </Text>{pratica.dica}</Text>
         </View>
       )}
-      {consulta}
       <View style={formatos.cronometro}>
         <View style={formatos.mostrador} accessible accessibilityRole="timer"
           accessibilityLabel={`${t.pratica.cronometro}: ${t.pratica.restante(formatarTempo(restante))}`}>
@@ -603,14 +625,20 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta }: {
           )}
         </View>
       </View>
-      <Text accessibilityRole="header" style={formatos.comoFoi}>{acabou ? t.pratica.acabou : t.pratica.comoFoi}</Text>
+      {/* A consulta (recurso, passos, frases) vem depois do cronômetro: a ação principal fica perto da tarefa. */}
+      {consulta}
+      {/* "Como foi?" espera o cronômetro começar: a prática pede praticar. */}
+      <Text accessibilityRole="header" style={formatos.comoFoi}>
+        {acabou ? t.pratica.acabou : restante < total || escolha ? t.pratica.comoFoi : t.pratica.comeceAntes}
+      </Text>
       <View style={formatos.opcoesComoFoi} accessibilityRole="radiogroup" accessibilityLabel={t.pratica.comoFoi}>
         {AUTOAVALIACOES.map((valor) => {
           const marcada = escolha === valor;
+          const travada = restante === total && !escolha;
           return (
-            <Pressable key={valor} testID={`como-foi-${valor}`} accessibilityRole="radio" accessibilityState={{ checked: marcada }}
-              onPress={() => escolher(valor)}
-              style={({ pressed }) => [formatos.valor, { flex: 1 }, marcada && valor === 'consegui' && formatos.cartaoCerto,
+            <Pressable key={valor} testID={`como-foi-${valor}`} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: travada }}
+              disabled={travada} onPress={() => escolher(valor)}
+              style={({ pressed }) => [formatos.valor, { flex: 1 }, travada && { opacity: 0.55 }, marcada && valor === 'consegui' && formatos.cartaoCerto,
                 marcada && valor === 'quase' && formatos.cartaoQuase, marcada && valor === 'ainda_nao' && formatos.cartaoEscolhido,
                 pressed && formatos.cartaoAfundado]}>
               <Text style={[formatos.valorTexto, { fontSize: 15, textAlign: 'center' }]}>{t.pratica.opcoes[valor]}</Text>

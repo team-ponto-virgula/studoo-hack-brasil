@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
+  acertouParte,
   codificarResposta,
   etapasDaLicao,
   faltaParaVerificar,
   frequenciasDoAcorde,
   inferirTipoTrecho,
   linhasDePassos,
+  origemLegivel,
   paraBase64,
   partesDaLacuna,
   respostaCompleta,
@@ -20,6 +22,7 @@ import {
   avaliarResposta,
   conteudoValido,
   distancia,
+  normalizarResposta,
   respostaCerta,
   respostaErrada,
 } from "../src/dominio/aprendizado/plano.ts";
@@ -47,7 +50,8 @@ test("a lacuna tolera maiúscula, acento, pontuação, artigo e um deslize em pa
   const deslize = avaliarResposta(tarraxa, "taraxa");
   assert.equal(deslize.correta, true);
   assert.match(deslize.observacao, /Quase igual: a forma certa é “tarraxa”/);
-  assert.equal(avaliarResposta(tarraxa, "tarracha")?.correta, false, "dois erros numa palavra de 7 letras não passam");
+  assert.equal(avaliarResposta(tarraxa, "tirraxo")?.correta, false, "dois erros numa palavra de 7 letras não passam");
+  assert.match(avaliarResposta(tarraxa, "tarracha")?.observacao ?? "", /Atenção à grafia/, "ch e x soam igual: passa com aviso de grafia");
   assert.equal(avaliarResposta(lacuna(["saudade"]), "saudades")?.correta, true);
   assert.equal(avaliarResposta(lacuna(["indicador"]), "indcadr")?.correta, true, "até dois deslizes a partir de 9 letras");
 
@@ -357,4 +361,63 @@ test("o rodapé diz o que falta para verificar, em cada formato, e some com a re
   assert.equal(dica({ tipo: "multipla_escolha", enunciado: "Escolha", opcoes: itens }, ""), "Escolha uma opção para verificar.");
   assert.equal(dica({ tipo: "lacuna", enunciado: "Complete" }, "  "), "Escreva sua resposta para verificar.");
   assert.equal(dica({ tipo: "lacuna", enunciado: "Complete" }, "ok"), null);
+});
+
+test("a correção tolera grafia e digitação, mas não negação nem a grafia que é a lição", () => {
+  const lacuna = (gabarito, resposta, exata = false) =>
+    avaliarResposta({ tipo: "lacuna", enunciado: "Complete", gabarito, exata, feedbackCorreto: "ok", feedbackIncorreto: "não" }, resposta);
+  assert.deepEqual(lacuna(["tarraxa"], "tarracha"), { correta: true, feedback: "ok", observacao: "Atenção à grafia: escreve-se “tarraxa”." });
+  assert.equal(lacuna(["exceção"], "excessão").correta, true);
+  assert.equal(lacuna(["tarraxa"], "trastes").correta, false);
+  assert.equal(lacuna(["where"], "were", true).correta, false, "com exata, a grafia é a lição");
+
+  const aberta = (gabarito, resposta) => avaliarResposta(
+    { tipo: "aberta", enunciado: "Explique", minimo: 10, gabarito, feedbackCorreto: "ok", feedbackIncorreto: "não" }, resposta,
+  ).criterios.map(({ atendido }) => atendido);
+  assert.deepEqual(aberta(["coffee", "please"], "I like a coffe and pao de queijo please"), [true, true], "um deslize de digitação");
+  const batida = ["continu|nao para|nao paro|sem parar", "anelar"];
+  assert.deepEqual(aberta(batida, "Eu não continuo a batida e levo o anelar"), [false, true], "“não continuo” não é continuar");
+  assert.deepEqual(aberta(batida, "Eu não paro a batida e levo o anelar"), [true, true], "o termo que já começa com “não”");
+  assert.deepEqual(aberta(batida, "O braço continua e o anelar viaja"), [true, true]);
+});
+
+test("violão: a explicação que para a batida não ganha o critério da batida", () => {
+  const licao = DEMOS.find(({ chave }) => chave === "violao").plano.fluxos.flatMap(({ licoes }) => licoes).at(-1);
+  const resultado = avaliarResposta(licao.exercicio, "Eu deixo o indicador e o médio, levo o anelar para a 5ª corda e paro a batida.");
+  assert.deepEqual(resultado.criterios.map(({ atendido }) => atendido), [true, true, false]);
+});
+
+test("“Quase lá!” só para quem acertou uma parte", () => {
+  assert.equal(acertouParte({ correta: false, feedback: "", comprovante: "" }), false);
+  assert.equal(acertouParte({ correta: false, feedback: "", comprovante: "", certos: [] }), false);
+  assert.equal(acertouParte({ correta: false, feedback: "", comprovante: "", certos: ["a"] }), true);
+  assert.equal(acertouParte({ correta: false, feedback: "", comprovante: "", criterios: [{ texto: "x", atendido: true }] }), true);
+  assert.equal(acertouParte({ correta: true, feedback: "", comprovante: "", certos: ["a"] }), false);
+});
+
+test("a origem do modo demonstração aparece sem jargão", () => {
+  assert.equal(origemLegivel("Modo demonstração: trilha pronta sobre violão"), "Trilha pronta do Studoo sobre violão");
+  assert.equal(origemLegivel("Modo demonstração: conteúdo de exemplo"), "Conteúdo de exemplo do Studoo");
+  assert.equal(origemLegivel("Página 2 do seu material"), "Página 2 do seu material");
+});
+
+test("nas trilhas prontas, o retorno de erro da lacuna dá uma pista sem entregar a resposta", () => {
+  const exercicios = DEMOS.flatMap(({ plano }) => plano.fluxos.flatMap(({ licoes }) => licoes))
+    .flatMap((licao) => [licao.exercicio, ...(licao.extras ?? [])])
+    .filter(({ tipo }) => tipo === "lacuna");
+  assert.ok(exercicios.length >= 10, `${exercicios.length} lacunas`);
+  for (const exercicio of exercicios) {
+    const retorno = ` ${normalizarResposta(exercicio.feedbackIncorreto).replace(/[^\p{L}\p{N}]+/gu, " ")} `;
+    for (const resposta of exercicio.gabarito) {
+      assert.ok(!retorno.includes(` ${normalizarResposta(resposta)} `), `“${exercicio.feedbackIncorreto}” entrega “${resposta}”`);
+    }
+  }
+});
+
+test("inglês para viagem: imigração no começo e a revisão com mais prática", () => {
+  const licoes = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes);
+  assert.ok(licoes[0].falas.some(({ texto }) => /vacation/i.test(texto)));
+  const revisao = licoes.find(({ titulo }) => titulo.startsWith("Revisão"));
+  assert.equal(1 + (revisao.extras?.length ?? 0), 3);
+  assert.ok(licoes.slice(0, -1).some((licao) => licao.falas?.some(({ texto }) => /coffee/i.test(texto))), "o café aparece antes do restaurante");
 });

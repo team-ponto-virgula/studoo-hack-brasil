@@ -284,6 +284,19 @@ function compactar(valor: string): string {
 
 const ARTIGO = /^(?:o|a|os|as|um|uma|uns|umas|the|an?)\s+/;
 
+/**
+ * Grafias que soam igual em português (ch e x, ç, ss e s, sc e xc antes de e/i, z e s entre vogais): “tarracha” e
+ * “tarraxa” ficam iguais. Serve para aceitar a resposta com um aviso de grafia.
+ */
+function fonetica(valor: string): string {
+  return normalizarResposta(valor.replace(/ç/giu, "s"))
+    .replace(ARTIGO, "")
+    .replace(/ch/g, "x")
+    .replace(/[sx]c(?=[ei])/g, "s")
+    .replace(/ss/g, "s")
+    .replace(/(?<=[aeiou])z(?=[aeiou])/g, "s");
+}
+
 /** Distância de edição (inserir, apagar ou trocar uma letra), parando cedo quando passa do limite. */
 export function distancia(a: string, b: string, limite = 3): number {
   if (Math.abs(a.length - b.length) > limite) return limite + 1;
@@ -303,8 +316,9 @@ export function distancia(a: string, b: string, limite = 3): number {
 
 /**
  * Lacuna com tolerância: maiúsculas, acentos, aspas, pontuação nas pontas e artigo no começo não contam como erro.
- * Em palavras de 5 letras ou mais, um deslize de digitação (dois, a partir de 9 letras) também passa, com um aviso,
- * menos quando a grafia é o que se ensina (`exata`). Números e símbolos (como `>=`) continuam exatos.
+ * Uma grafia que soa igual em português (“tarracha” por “tarraxa”) passa com um aviso de grafia. Em palavras de 5 letras
+ * ou mais, um deslize de digitação (dois, a partir de 9 letras) também passa, com um aviso. Nada disso vale quando a
+ * grafia é o que se ensina (`exata`). Números e símbolos (como `>=`) continuam exatos.
  */
 function conferirLacuna(gabarito: readonly string[], resposta: string, exata = false): { correta: boolean; observacao?: string } {
   const recebida = compactar(resposta).toLocaleLowerCase("pt-BR");
@@ -322,22 +336,55 @@ function conferirLacuna(gabarito: readonly string[], resposta: string, exata = f
     }
     if (semArtigo && alvo.replace(ARTIGO, "") === semArtigo) return { correta: true };
   }
+  const recebidaFonetica = fonetica(resposta);
+  for (const esperado of exata ? [] : gabarito) {
+    const alvo = normalizarResposta(esperado).replace(ARTIGO, "");
+    if (alvo.length < 4 || !/^[\p{L} ]+$/u.test(alvo)) continue;
+    if (fonetica(esperado) === recebidaFonetica) {
+      return { correta: true, observacao: `Atenção à grafia: escreve-se “${compactar(esperado)}”.` };
+    }
+  }
   for (const esperado of exata ? [] : gabarito) {
     const alvo = normalizarResposta(esperado).replace(ARTIGO, "");
     if (alvo.length < 5 || !/^[\p{L} ]+$/u.test(alvo)) continue;
     const limite = alvo.length >= 9 ? 2 : 1;
-    if (distancia(semArtigo, alvo, limite) <= limite) {
+    if (distancia(semArtigo, alvo, limite) <= limite || distancia(recebidaFonetica, fonetica(esperado), limite) <= limite) {
       return { correta: true, observacao: `Quase igual: a forma certa é “${compactar(esperado)}”.` };
     }
   }
   return { correta: false };
 }
 
+const NEGACAO = new Set(["nao", "nunca", "nem"]);
+const palavrasDe = (valor: string) => normalizarResposta(valor).replace(/[^\p{L}\p{N}]+/gu, " ").trim().split(" ").filter(Boolean);
+
+/**
+ * A ideia-chave aparece no texto? A última palavra do termo vale pelo começo (“continu” acha “continua”); palavras de
+ * 5 letras ou mais aceitam um deslize de digitação (“coffe” acha “coffee”). Um “não” (ou “nunca”, “nem”) até três
+ * palavras antes desfaz o achado (“não continuo” não é “continua”), a menos que o próprio termo comece com ele.
+ */
+function temTermo(palavras: readonly string[], termo: string): boolean {
+  const partes = palavrasDe(termo);
+  if (partes.length === 0) return false;
+  const negavel = !NEGACAO.has(partes[0]);
+  const parecida = (palavra: string, parte: string, ultima: boolean) => {
+    if (ultima ? palavra.startsWith(parte) : palavra === parte) return true;
+    if (parte.length < 5 || !/^\p{L}+$/u.test(parte)) return false;
+    if (!ultima) return distancia(palavra, parte, 1) <= 1;
+    return distancia(palavra.slice(0, parte.length + 1), parte, 1) <= 1 || distancia(palavra.slice(0, parte.length), parte, 1) <= 1;
+  };
+  for (let inicio = 0; inicio + partes.length <= palavras.length; inicio += 1) {
+    if (!partes.every((parte, posicao) => parecida(palavras[inicio + posicao], parte, posicao === partes.length - 1))) continue;
+    if (negavel && palavras.slice(Math.max(0, inicio - 3), inicio).some((palavra) => NEGACAO.has(palavra))) continue;
+    return true;
+  }
+  return false;
+}
+
 /** Resposta aberta no modo demonstração: confere se cada ideia-chave aparece (pelo começo da palavra, sem acento). */
 function conferirAberta(exercicio: Extract<ExercicioInterno, { tipo: "aberta" }>, resposta: string): ResultadoAvaliacao {
-  const textoNormalizado = ` ${normalizarResposta(resposta).replace(/[^\p{L}\p{N}]+/gu, " ")} `;
-  const atendidos = gruposDoGabarito(exercicio.gabarito).map((grupo) =>
-    grupo.some((termo) => textoNormalizado.includes(` ${termo.replace(/[^\p{L}\p{N}]+/gu, " ").trim()}`)));
+  const palavras = palavrasDe(resposta);
+  const atendidos = gruposDoGabarito(exercicio.gabarito).map((grupo) => grupo.some((termo) => temTermo(palavras, termo)));
   const total = atendidos.filter(Boolean).length;
   const correta = total >= Math.ceil(atendidos.length * 0.6);
   const criterios = atendidos.map((atendido, indice) => ({
