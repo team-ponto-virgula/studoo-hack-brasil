@@ -26,8 +26,9 @@ export type ExercicioInterno = ExercicioPublico & {
   /** Lacuna: a grafia é o que se ensina (palavra de outro idioma, ortografia). Sem tolerância a deslize de digitação. */
   exata?: boolean;
   /**
-   * Resposta aberta: erros comuns, cada um com o seu aviso (“I want” soa brusco num pedido). Quando a resposta traz um
-   * deles (`termos`, como no gabarito: `i want|i wanna`), o retorno diz exatamente isso.
+   * Resposta aberta e lacuna: erros comuns, cada um com o seu aviso (“I want” soa brusco num pedido; “chave” é o nome
+   * popular da tarraxa). Quando a resposta traz um deles (`termos`, como no gabarito: `i want|i wanna`), o retorno diz
+   * exatamente isso. Na lacuna, vale a resposta inteira, e só quando ela está errada.
    */
   armadilhas?: { termos: string; aviso: string }[];
 };
@@ -111,6 +112,12 @@ function opcoesValidas(valor: unknown, minimo: number, maximo: number): valor is
     new Set(valor.map(({ id }) => id)).size === valor.length;
 }
 
+/** Até quatro armadilhas, cada uma com os termos e o aviso. */
+function armadilhasValidas(valor: unknown): boolean {
+  return opcional(valor, (armadilhas) => Array.isArray(armadilhas) && armadilhas.length <= 4 &&
+    armadilhas.every((item) => objeto(item) && textoAte(item.termos, 200) && textoAte(item.aviso, 300)));
+}
+
 export function falaValida(valor: unknown): valor is Fala {
   return objeto(valor) && textoAte(valor.texto, 300) && typeof valor.idioma === "string" && IDIOMA.test(valor.idioma) &&
     opcional(valor.traducao, (item) => textoAte(item, 300)) && opcional(valor.pronuncia, (item) => textoAte(item, 160));
@@ -179,7 +186,7 @@ function exercicioValido(valor: unknown): valor is ExercicioInterno {
   const gabarito = valor.gabarito;
   switch (valor.tipo) {
     case "lacuna":
-      return true;
+      return armadilhasValidas(valor.armadilhas);
     case "multipla_escolha":
       return opcoesValidas(valor.opcoes, 2, 6) && gabarito.length === 1 && valor.opcoes.some(({ id }) => id === gabarito[0]);
     case "ordenar": {
@@ -207,8 +214,7 @@ function exercicioValido(valor: unknown): valor is ExercicioInterno {
         opcional(valor.modelo, (modelo) => textoAte(modelo, 1200)) &&
         opcional(valor.essenciais, (essenciais) => Array.isArray(essenciais) && essenciais.length <= gabarito.length &&
           essenciais.every((indice) => inteiroEntre(indice, 0, gabarito.length - 1))) &&
-        opcional(valor.armadilhas, (armadilhas) => Array.isArray(armadilhas) && armadilhas.length <= 4 &&
-          armadilhas.every((item) => objeto(item) && textoAte(item.termos, 200) && textoAte(item.aviso, 300)));
+        armadilhasValidas(valor.armadilhas);
     default:
       return false;
   }
@@ -524,7 +530,12 @@ export function avaliarResposta(exercicio: ExercicioInterno, resposta: string): 
   switch (exercicio.tipo) {
     case "lacuna": {
       const { correta, observacao } = conferirLacuna(exercicio.gabarito, valor, exercicio.exata === true, exercicio.trecho);
-      return resultado(correta, observacao ? { observacao } : {});
+      // Um nome popular ou um erro comum (“chave” por tarraxa) ganha a sua dica, em vez de só repetir a pergunta.
+      const comparavel = normalizarResposta(valor);
+      const armadilha = correta ? undefined
+        : exercicio.armadilhas?.find(({ termos }) => termos.split("|").some((termo) => normalizarResposta(termo) === comparavel));
+      const aviso = armadilha?.aviso ?? observacao;
+      return resultado(correta, aviso ? { observacao: aviso } : {});
     }
     case "multipla_escolha":
       if (!exercicio.opcoes.some(({ id }) => id === valor)) return null;

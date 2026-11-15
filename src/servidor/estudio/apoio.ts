@@ -76,11 +76,14 @@ const PALAVRAS_COMUNS = new Set([
   'estou', 'estava', 'estar', 'estamos', 'tenho', 'temos', 'quero', 'queria', 'fazer', 'dizer', 'falar', 'usar', 'serve',
 ]);
 
-/** As palavras da explicação da lição (5 letras ou mais, sem as muito comuns) que também aparecem no texto da pessoa. */
-function palavrasDoConceito(conceito: string, explicacao: string): string[] {
+/**
+ * As palavras da explicação da lição (5 letras ou mais, sem as muito comuns nem as do título, como “violão”) que também
+ * aparecem no texto da pessoa: são as ideias que ela trouxe, não o nome do assunto.
+ */
+function palavrasDoConceito(conceito: string, explicacao: string, titulo = ''): string[] {
   const comparavel = (palavra: string) => palavra.normalize('NFD').replace(/\p{M}+/gu, '').toLocaleLowerCase('pt-BR');
   const usadas = new Set((explicacao.match(/\p{L}+/gu) ?? []).map(comparavel));
-  const vistas = new Set<string>();
+  const vistas = new Set((titulo.match(/\p{L}+/gu) ?? []).map(comparavel));
   return (conceito.match(/\p{L}{5,}/gu) ?? []).filter((palavra) => {
     const chave = comparavel(palavra);
     if (PALAVRAS_COMUNS.has(chave) || vistas.has(chave) || !usadas.has(chave)) return false;
@@ -229,7 +232,7 @@ export async function ensinarStu(
     };
     // As palavras da explicação do Stu que a pessoa também usou (“cabeça, braço e corpo”): contam como acerto, mesmo
     // quando não são as respostas dos exercícios.
-    const doConceito = palavrasDoConceito(licao.conceito, explicacao)
+    const doConceito = palavrasDoConceito(licao.conceito, explicacao, licao.titulo)
       .filter((palavra) => !trouxe.some((termo) => termo.toLocaleLowerCase('pt-BR').includes(palavra.toLocaleLowerCase('pt-BR'))));
     feedback = {
       acertos: [
