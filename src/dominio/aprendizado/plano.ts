@@ -25,6 +25,11 @@ export type ExercicioInterno = ExercicioPublico & {
   essenciais?: number[];
   /** Lacuna: a grafia é o que se ensina (palavra de outro idioma, ortografia). Sem tolerância a deslize de digitação. */
   exata?: boolean;
+  /**
+   * Resposta aberta: erros comuns, cada um com o seu aviso (“I want” soa brusco num pedido). Quando a resposta traz um
+   * deles (`termos`, como no gabarito: `i want|i wanna`), o retorno diz exatamente isso.
+   */
+  armadilhas?: { termos: string; aviso: string }[];
 };
 
 export type ConteudoLicao = {
@@ -108,7 +113,7 @@ function opcoesValidas(valor: unknown, minimo: number, maximo: number): valor is
 
 export function falaValida(valor: unknown): valor is Fala {
   return objeto(valor) && textoAte(valor.texto, 300) && typeof valor.idioma === "string" && IDIOMA.test(valor.idioma) &&
-    opcional(valor.traducao, (item) => textoAte(item, 300));
+    opcional(valor.traducao, (item) => textoAte(item, 300)) && opcional(valor.pronuncia, (item) => textoAte(item, 160));
 }
 
 /** Nome, as seis casas (de -1, abafada, a 15) e, se houver, os dedos (0 a 4) de um acorde. */
@@ -141,7 +146,9 @@ export function recursoValido(valor: unknown): valor is Recurso {
 function praticaValida(valor: unknown): valor is Pratica {
   return objeto(valor) && textoAte(valor.tarefa, 600) && inteiroEntre(valor.minutos, 1, 30) &&
     opcional(valor.passos, (passos) => Array.isArray(passos) && passos.length > 0 && passos.length <= 8 && passos.every((passo) => textoAte(passo, 200))) &&
-    opcional(valor.dica, (dica) => textoAte(dica, 300));
+    opcional(valor.dica, (dica) => textoAte(dica, 300)) &&
+    opcional(valor.som, (som) => objeto(som) && textoAte(som.rotulo, 60) && Array.isArray(som.casas) && som.casas.length === 6 &&
+      som.casas.every((casa) => inteiroEntre(casa, -1, 12)) && som.casas.some((casa) => casa >= 0));
 }
 
 /** Os pares `esquerda=direita` de um gabarito de associar. */
@@ -199,7 +206,9 @@ function exercicioValido(valor: unknown): valor is ExercicioInterno {
         opcional(valor.criterios, (criterios) => Array.isArray(criterios) && criterios.length === gabarito.length && criterios.every((item) => textoAte(item, 200))) &&
         opcional(valor.modelo, (modelo) => textoAte(modelo, 1200)) &&
         opcional(valor.essenciais, (essenciais) => Array.isArray(essenciais) && essenciais.length <= gabarito.length &&
-          essenciais.every((indice) => inteiroEntre(indice, 0, gabarito.length - 1)));
+          essenciais.every((indice) => inteiroEntre(indice, 0, gabarito.length - 1))) &&
+        opcional(valor.armadilhas, (armadilhas) => Array.isArray(armadilhas) && armadilhas.length <= 4 &&
+          armadilhas.every((item) => objeto(item) && textoAte(item.termos, 200) && textoAte(item.aviso, 300)));
     default:
       return false;
   }
@@ -482,9 +491,12 @@ function conferirAberta(exercicio: Extract<ExercicioInterno, { tipo: "aberta" }>
   const faltou = criterios.filter(({ atendido }) => !atendido).map(({ texto }) => texto.charAt(0).toLocaleLowerCase("pt-BR") + texto.slice(1));
   let feedback = correta ? exercicio.feedbackCorreto : exercicio.feedbackIncorreto;
   if (correta && faltou.length > 0) feedback = `Boa resposta! Para ficar completa, faltou: ${faltou.join("; ")}.`;
+  // Um erro comum na resposta (“I want”, “I like”): o retorno fala dele, e não de um erro que a pessoa não cometeu.
+  const armadilha = exercicio.armadilhas?.find(({ termos }) => termos.split("|").some((termo) => temTermo(palavras, termo.trim())));
   return {
     correta,
     feedback,
+    ...(armadilha ? { observacao: armadilha.aviso } : {}),
     criterios,
     ...(exercicio.modelo ? { modelo: exercicio.modelo } : {}),
     simulado: true,
@@ -522,7 +534,13 @@ export function avaliarResposta(exercicio: ExercicioInterno, resposta: string): 
       const validos = new Set(exercicio.itens.map(({ id }) => id));
       if (ids.length !== validos.size || new Set(ids).size !== ids.length || !ids.every((id) => validos.has(id))) return null;
       const certos = ids.filter((id, indice) => exercicio.gabarito[indice] === id);
-      return resultado(certos.length === ids.length, { certos });
+      // O retorno aponta a primeira posição errada da resposta da pessoa, em vez de uma dica sobre o começo ou o fim.
+      const errada = ids.findIndex((id, indice) => exercicio.gabarito[indice] !== id);
+      const texto = (id: string) => exercicio.itens.find((item) => item.id === id)?.texto ?? "";
+      const observacao = errada < 0 ? undefined
+        : errada === 0 ? "Confira o começo: qual item vem primeiro?"
+          : `Confira a ${errada + 1}ª posição: o que vem logo depois de “${texto(ids[errada - 1])}”?`;
+      return resultado(certos.length === ids.length, { certos, ...(observacao ? { observacao } : {}) });
     }
     case "associar": {
       const pares = lerPares(valor.split(","));

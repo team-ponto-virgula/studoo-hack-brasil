@@ -218,8 +218,8 @@ export async function ensinarStu(
     // Sem IA: o retorno não confere se o texto está certo, mas diz quais ideias-chave da lição (tiradas das respostas dos
     // exercícios) a explicação trouxe, quais faltaram e se a pessoa já deu um exemplo.
     const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
-    const comExemplo = /\b(?:exemplos?|ex|imagine|como quando|tipo|digamos|quando|se eu|caso)\b/i.test(semAcento) ||
-      /["“”‘’']|\d/.test(semAcento);
+    // Exemplo é o que a pessoa marca como exemplo (números e "quando" aparecem em qualquer explicação de violão).
+    const comExemplo = /\b(?:por exemplo|exemplo|ex\.|imagine|como quando|digamos|tipo assim|e o caso de|no caso de)\b/i.test(semAcento);
     const termos = termosDaLicao(await conteudoDaLicao(usuarioId, licaoId));
     const trouxe = termosPresentes(explicacao, termos);
     const faltou = termos.filter((termo) => !trouxe.includes(termo));
@@ -243,13 +243,13 @@ export async function ensinarStu(
       lacuna: faltou.length > 0
         ? `Que tal incluir ${lista(faltou.slice(0, 3))}? ${faltou.length === 1 ? 'É uma ideia-chave' : 'São ideias-chave'} desta lição.`
         : comExemplo
-          ? `Você cobriu as ideias-chave. Confira se a explicação chega à ideia central: ${licao.objetivo}`
-          : `Você cobriu as ideias-chave; agora acrescente um exemplo concreto. A ideia central da lição é: ${licao.objetivo}`,
+          ? 'Nenhuma ideia importante ficou de fora.'
+          : 'Faltou só um exemplo seu: uma situação concreta em que você usaria isso.',
       pergunta: faltou.length > 0
         ? `Se alguém te perguntasse sobre “${faltou[0]}”, o que você diria, com um exemplo seu?`
         : trouxe.length > 0
           ? `E numa situação diferente da sua explicação? Conte como “${trouxe[0]}” aparece num caso novo, com um exemplo seu.`
-          : `Como você usaria “${licao.titulo}” num exemplo do dia a dia?`,
+          : 'Se você fosse ensinar isso a alguém que nunca viu o assunto, por onde começaria?',
       proximoPasso: faltou.length > 0
         ? `Releia a explicação do Stu procurando “${faltou[0]}” e reescreva a sua com essa ideia, em uma frase.`
         : 'Sua explicação já cobre as ideias da lição. Amanhã, tente explicar de novo sem olhar: é assim que a ideia fica.',

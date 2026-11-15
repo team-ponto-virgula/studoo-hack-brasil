@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type Ref } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type Ref, type SyntheticEvent } from 'react';
 import {
   AUTOAVALIACOES,
   acertouParte,
   codificarResposta,
   conferirFala,
+  embaralharExercicio,
   etapasDaLicao,
   faltaParaVerificar,
   exerciciosDaLicao,
@@ -132,7 +133,12 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   voltar: () => void;
 }) {
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
-  const exercicios = useMemo(() => exerciciosDaLicao(licao), [licao]);
+  // As opções mudam de ordem a cada visita: a certa não fica sempre no mesmo lugar e não dá para decorar a posição.
+  const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
+  const exercicios = useMemo(
+    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicio(exercicio, semente + numero)),
+    [licao, semente],
+  );
   // Quem saiu no meio continua de onde parou (o andamento fica no navegador por um dia).
   const [retomada] = useState(() => lerAndamento(licao, etapas.length, exercicios.length));
   const [passo, setPasso] = useState(retomada?.passo ?? 0);
@@ -148,6 +154,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   /** A última correção errada de cada exercício: a dica fica à vista embaixo do campo na nova tentativa. */
   const [errosAnteriores, setErrosAnteriores] = useState<(Avaliacao | null)[]>(() => exercicios.map(() => null));
   const [pedidoPonte, setPedidoPonte] = useState(0);
+  /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. */
+  const [ponteFeita, setPonteFeita] = useState(false);
   /** Nas etapas de leitura: ainda tem conteúdo escondido atrás do rodapé (o botão diz "Continuar lendo"). */
   const [temMais, setTemMais] = useState(false);
   const [inicio] = useState(() => Date.now());
@@ -180,6 +188,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     if (passo > 0) tituloEtapa.current?.focus({ preventScroll: true });
     // O reforço é de cada exercício: um pedido antigo não vale para o próximo.
     setPedidoPonte(0);
+    setPonteFeita(false);
   }, [passo, revisao]);
 
   // Conceito e exemplo: se o fim do conteúdo (a legenda da ilustração, o passo a passo) está escondido atrás do rodapé,
@@ -318,6 +327,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   }
 
   function tentarDeNovo() {
+    setPonteFeita(false);
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (posicao === indice ? avaliacao : atual)));
     // Fica o que estava certo (na aberta, o texto todo); o resto recomeça.
@@ -403,6 +413,17 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     setErrosAnteriores(exercicios.map(() => null));
   }
 
+  /** Abre o "Explique com suas palavras" (no pé da página) e leva até ele. */
+  function abrirExplique() {
+    const caixas = document.querySelectorAll<HTMLDetailsElement>('.estudio-apoio details.estudio-card');
+    const caixa = caixas[caixas.length - 1];
+    if (!caixa) return;
+    caixa.open = true;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    caixa.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
+    caixa.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
+  }
+
   /** Concluir sem contar como foi: a tela leva até a pergunta, em vez de um botão apagado sem explicação. */
   function mostrarComoFoi() {
     const pergunta = document.querySelector<HTMLElement>('.como-foi legend');
@@ -486,8 +507,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
               <Stu />
               <section className="aula-balao" aria-labelledby="etapa-aula">
                 <h2 id="etapa-aula">{t.explicacaoDoStu}</h2>
-                <p><TextoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} /></p>
-                {temFalasNoTexto(licao.conceito, licao.falas?.[0]?.idioma) && <p className="licao-origem">{t.audio.toqueParaOuvir}</p>}
+                <ExplicacaoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} />
                 <p className="licao-origem">{t.origem} · {origemLegivel(licao.origem)}</p>
               </section>
             </div>
@@ -497,7 +517,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
         {exercicio && (
           <EtapaExercicio exercicio={exercicio} indice={indice} total={exercicios.length} resposta={resposta} mudar={mudarResposta}
-            consulta={licao.recurso?.tipo === 'acorde' || licao.recurso?.tipo === 'fracao' ? licao.recurso : undefined}
+            consulta={licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' ? licao.recurso : undefined}
+            explicacao={(avaliacao && !avaliacao.correta) || errosAnteriores[indice] ? licao.conceito : undefined}
+            errouAntes={Boolean(errosAnteriores[indice])}
             avaliacao={avaliacao} ocupado={ocupado} responder={responder} formulario={formulario} titulo={tituloEtapa}
             dica={avaliacao ? null : errosAnteriores[indice]} />
         )}
@@ -506,24 +528,32 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             recurso={licao.recurso} passos={licao.passos} falas={licao.falas} />
         )}
       </div>
-      {exercicio && <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1} />}
+      {exercicio && (
+        <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
+          aoConcluirPonte={() => setPonteFeita(true)} />
+      )}
       <footer className="aula-rodape" data-retorno={retorno}>
         <div className="aula-rodape__conteudo">
           {avaliacao && (
             <section className="aula-retorno" aria-labelledby="aula-retorno-titulo">
               <span className="aula-retorno__icone" aria-hidden="true">
-                <Icone nome={avaliacao.correta ? 'check' : 'fechar'} />
+                <Icone nome={avaliacao.correta ? 'check' : ponteFeita ? 'lampada' : 'fechar'} />
                 {avaliacao.correta && <Confete quantidade={14} />}
               </span>
               <div>
                 <h2 id="aula-retorno-titulo" ref={tituloRetorno} tabIndex={-1}>
                   {avaliacao.correta
                     ? avaliacao.criterios?.some(({ atendido }) => !atendido) ? t.quaseCompleta : tituloDoAcerto(`${licao.id}-${indice}`)
-                    : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
+                    : ponteFeita ? t.ponteFeita : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
                   <span className="somente-leitor"> {avaliacao.correta ? t.correta : t.incorreta}.</span>
                 </h2>
                 {pedidoPonte === 0 && <p>{avaliacao.feedback}</p>}
                 {pedidoPonte === 0 && avaliacao.observacao && <p className="aula-retorno__observacao">{avaliacao.observacao}</p>}
+                {avaliacao.correta && indice === exercicios.length - 1 && (
+                  <span className="aula-retorno__link">
+                    <Botao variante="texto" onClick={abrirExplique}>{t.expliqueConvite}</Botao>
+                  </span>
+                )}
                 {pedidoPonte === 0 && !avaliacao.correta && avaliacao.certos && exercicio && (exercicio.tipo === 'ordenar' || exercicio.tipo === 'associar') && (
                   <p className="aula-retorno__observacao">
                     {exercicio.tipo === 'ordenar'
@@ -663,7 +693,8 @@ function BracoDoAcorde({ nome, casas, dedos }: { nome: string; casas: number[]; 
  * Diagrama do acorde com o som sintetizado na hora. Com `anterior`, os dois acordes da troca ficam lado a lado (Am → C),
  * cada um com o seu botão de ouvir.
  */
-function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, { tipo: 'acorde' }>; longa?: boolean }) {
+/** `soBatida`: só o botão de tocar junto e o guia dos tempos (na prática, ao lado do cronômetro), sem o diagrama. */
+function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso: Extract<Recurso, { tipo: 'acorde' }>; longa?: boolean; soBatida?: boolean }) {
   type Som = 'acorde' | 'batida' | 'anterior';
   const compassos = longa ? 8 : 2;
   const [tocando, setTocando] = useState<Som | null>(null);
@@ -725,6 +756,33 @@ function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, 
     });
   }
 
+  const guia = (
+    <>
+      <span className="batida" aria-hidden="true">
+        {['1', 'e', '2', 'e', '3', 'e', '4', 'e'].map((rotulo, indice) => (
+          <span key={indice} className="batida__tempo" data-ativo={tempoAtual === indice || undefined} data-sobe={indice % 2 === 1 || undefined}>
+            <span className="batida__seta">{indice % 2 ? '↑' : '↓'}</span>{rotulo}
+          </span>
+        ))}
+      </span>
+      <span className="acorde__guia">{t.audio.batidaGuia}</span>
+    </>
+  );
+  if (soBatida) {
+    return (
+      <div className="acorde acorde--so-batida">
+        <span className="acorde__botoes">
+          <Botao variante="secundario" disabled={tocando !== null} onClick={() => tocar('batida')}>
+            <Icone nome="som" />{tocando === 'batida' ? t.recursos.tocando : t.recursos.tocarJunto}
+          </Botao>
+          {tocando && <Botao variante="texto" onClick={parar}>{t.audio.pararSom}</Botao>}
+        </span>
+        {guia}
+        {semSom && <span role="status" className="acorde__aviso">{t.recursos.semSom}</span>}
+      </div>
+    );
+  }
+
   return (
     <figure className="acorde" data-comparacao={anterior ? true : undefined}>
       {anterior ? (
@@ -755,21 +813,37 @@ function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, 
           )}
           {tocando && <Botao variante="texto" onClick={parar}>{t.audio.pararSom}</Botao>}
         </span>
-        {recurso.batida && (
-          <>
-            <span className="batida" aria-hidden="true">
-              {['1', 'e', '2', 'e', '3', 'e', '4', 'e'].map((rotulo, indice) => (
-                <span key={indice} className="batida__tempo" data-ativo={tempoAtual === indice || undefined} data-sobe={indice % 2 === 1 || undefined}>
-                  <span className="batida__seta">{indice % 2 ? '↑' : '↓'}</span>{rotulo}
-                </span>
-              ))}
-            </span>
-            <span className="acorde__guia">{t.audio.batidaGuia}</span>
-          </>
-        )}
+        {recurso.batida && guia}
         {semSom && <span role="status" className="acorde__aviso">{t.recursos.semSom}</span>}
       </figcaption>
     </figure>
+  );
+}
+
+/** Um som de referência para a prática (como o Mi da 6ª corda, para afinar), sintetizado como o acorde. */
+function TocarSom({ rotulo, casas }: { rotulo: string; casas: number[] }) {
+  const [tocando, setTocando] = useState(false);
+  const [semSom, setSemSom] = useState(false);
+  const endereco = useRef<string | null>(null);
+  useEffect(() => () => {
+    if (endereco.current) URL.revokeObjectURL(endereco.current);
+  }, []);
+  function tocar() {
+    endereco.current ??= URL.createObjectURL(new Blob([sintetizarAcorde(casas) as BlobPart], { type: 'audio/wav' }));
+    const audio = new Audio(endereco.current);
+    setTocando(true);
+    setSemSom(false);
+    audio.onended = () => setTocando(false);
+    audio.play().catch(() => {
+      setTocando(false);
+      setSemSom(true);
+    });
+  }
+  return (
+    <div className="aula-pratica__som">
+      <Botao variante="secundario" disabled={tocando} onClick={tocar}><Icone nome="som" />{tocando ? t.recursos.tocando : rotulo}</Botao>
+      {semSom && <span role="status" className="acorde__aviso">{t.recursos.semSom}</span>}
+    </div>
   );
 }
 
@@ -978,6 +1052,7 @@ function Falas({ falas }: { falas: Fala[] }) {
           <li key={posicao}>
             <div className="falas__textos">
               <p className="falas__texto" lang={fala.idioma}>{fala.texto}</p>
+              {fala.pronuncia && <p className="falas__pronuncia"><span className="somente-leitor">{t.audio.pronuncia}: </span>{fala.pronuncia}</p>}
               {fala.traducao && <p className="falas__traducao">{fala.traducao}</p>}
             </div>
             <BotoesOuvir fala={fala} falar />
@@ -986,6 +1061,22 @@ function Falas({ falas }: { falas: Fala[] }) {
       </ul>
     </section>
   );
+}
+
+/**
+ * Ao abrir uma consulta recolhida (o diagrama, a explicação), a tela rola até ela ficar acima do painel de retorno,
+ * que cobre o pé da tela depois da resposta.
+ */
+function mostrarAberto(evento: SyntheticEvent<HTMLDetailsElement>) {
+  const caixa = evento.currentTarget;
+  if (!caixa.open) return;
+  window.requestAnimationFrame(() => {
+    const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
+    const area = caixa.getBoundingClientRect();
+    const sobra = area.bottom - (window.innerHeight - rodape - 12);
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (sobra > 0) window.scrollBy({ top: Math.min(sobra, area.top - 72), behavior: reduzido ? 'auto' : 'smooth' });
+  });
 }
 
 /** Se o texto tem frases entre aspas no idioma da lição (fora do português), que viram botões de ouvir. */
@@ -997,23 +1088,39 @@ function temFalasNoTexto(texto: string, idioma?: string) {
  * Texto com as frases entre aspas no idioma da lição (“Hello”, “I'd like…”) tocáveis: um toque e a voz fala a frase.
  * Sem voz, ou numa lição em português, o texto fica como está.
  */
-function TextoComFalas({ texto, idioma }: { texto: string; idioma?: string }) {
+function ExplicacaoComFalas({ texto, idioma }: { texto: string; idioma?: string }) {
   const disponivel = useVozDisponivel();
-  if (!idioma || idioma.toLowerCase().startsWith('pt') || !disponivel) return <>{texto}</>;
+  const [tocando, setTocando] = useState<number | null>(null);
+  const [semVoz, setSemVoz] = useState(false);
+  if (!idioma || idioma.toLowerCase().startsWith('pt') || !disponivel || !temFalasNoTexto(texto, idioma)) return <p>{texto}</p>;
   const partes = texto.split(/“([^”]+)”/);
+  function ouvir(indice: number, frase: string) {
+    setTocando(indice);
+    setSemVoz(false);
+    falar({ texto: frase, idioma: idioma ?? 'en-US' }, false, () => setTocando(null), () => setSemVoz(true));
+  }
   return (
     <>
-      {partes.map((parte, indice) => {
-        // Fora das aspas, ou uma citação em português (com acento), fica como texto.
-        if (indice % 2 === 0) return parte;
-        if (/[ãõçáéíóúâêôà]/i.test(parte)) return `“${parte}”`;
-        return (
-          <button key={indice} type="button" className="fala-inline" lang={idioma} aria-label={t.audio.ouvirFrase(parte)}
-            onClick={() => falar({ texto: parte, idioma }, false)}>
-            “{parte}”<Icone nome="som" />
-          </button>
-        );
-      })}
+      <p>
+        {partes.map((parte, indice) => {
+          // Fora das aspas, ou uma citação em português (com acento), fica como texto.
+          if (indice % 2 === 0) return parte;
+          if (/[ãõçáéíóúâêôà]/i.test(parte)) return `“${parte}”`;
+          // Um span no fluxo do texto (o botão quebraria a linha antes de um parêntese ou de um ponto).
+          return (
+            <span key={indice} role="button" tabIndex={0} className="fala-inline" lang={idioma} aria-label={t.audio.ouvirFrase(parte)}
+              data-tocando={tocando === indice || undefined} onClick={() => ouvir(indice, parte)}
+              onKeyDown={(evento) => {
+                if (evento.key !== 'Enter' && evento.key !== ' ') return;
+                evento.preventDefault();
+                ouvir(indice, parte);
+              }}>
+              “{parte}”<Icone nome="som" />
+            </span>
+          );
+        })}
+      </p>
+      <p className="licao-origem" role="status">{semVoz ? t.audio.semVozTexto : t.audio.toqueParaOuvir}</p>
     </>
   );
 }
@@ -1028,6 +1135,7 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
           <li key={posicao}>
             <div className="falas__textos">
               <p className="falas__texto" lang={fala.idioma}>{fala.texto}</p>
+              {fala.pronuncia && <p className="falas__pronuncia"><span className="somente-leitor">{t.audio.pronuncia}: </span>{fala.pronuncia}</p>}
               {fala.traducao && <p className="falas__traducao">{fala.traducao}</p>}
             </div>
             <BotoesOuvir fala={fala} />
@@ -1113,9 +1221,14 @@ function Trecho({ texto, tipo = 'frase', fala }: { texto: string; tipo?: TipoTre
   }
 }
 
-function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, ocupado, responder, formulario, titulo, consulta, dica }: {
-  /** Recurso para consultar durante o exercício (diagrama do acorde, barra de fração). A linha do tempo não aparece: entregaria a ordem. */
+function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, ocupado, responder, formulario, titulo, consulta, dica,
+  explicacao, errouAntes = false }: {
+  /** Recurso para consultar durante o exercício (diagrama, barra de fração, ilustração). A linha do tempo não: entregaria a ordem. */
   consulta?: Recurso;
+  /** A explicação do Stu, para rever depois de um erro (recolhida). */
+  explicacao?: string;
+  /** Já errou este exercício antes: a resposta modelo da aberta só aparece na segunda vez. */
+  errouAntes?: boolean;
   /** A correção da tentativa anterior (errada): a dica fica embaixo do campo enquanto a pessoa tenta de novo. */
   dica?: Avaliacao | null;
   exercicio: ExercicioPublico;
@@ -1209,19 +1322,25 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
         </div>
       )}
       {/* Para consultar, depois da resposta e recolhido: a pergunta e as opções ficam no alto. */}
+      {explicacao && (
+        <details className="aula-consulta aula-consulta--recolhivel" onToggle={mostrarAberto}>
+          <summary>{t.reverExplicacao}</summary>
+          <p>{explicacao}</p>
+        </details>
+      )}
       {consulta && (
-        <details className="aula-consulta aula-consulta--recolhivel">
+        <details className="aula-consulta aula-consulta--recolhivel" onToggle={mostrarAberto}>
           <summary>
             {consulta.tipo === 'acorde'
               ? consulta.anterior
                 ? t.recursos.verTroca(consulta.anterior.nome, consulta.nome)
                 : consulta.batida ? t.recursos.verBatida(consulta.nome) : t.recursos.verAcorde(consulta.nome)
-              : t.recursos.verFracao}
+              : consulta.tipo === 'imagem' ? t.recursos.verIlustracao : t.recursos.verFracao}
           </summary>
           <RecursoDaLicao recurso={consulta} />
         </details>
       )}
-      {exercicio.tipo === 'aberta' && avaliacao && <CorrecaoAberta avaliacao={avaliacao} />}
+      {exercicio.tipo === 'aberta' && avaliacao && <CorrecaoAberta avaliacao={avaliacao} mostrarModelo={avaliacao.correta || errouAntes} />}
     </section>
   );
 }
@@ -1233,44 +1352,62 @@ function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
   mudar: (valor: string) => void;
   desativado: boolean;
   certos?: string[];
-  /** Na nova tentativa: os itens que já estavam na posição certa (o começo da ordem fica travado, em verde). */
+  /** Na nova tentativa: os itens que já estavam na posição certa ficam travados nela, em verde; o resto vira vaga. */
   fixos?: string[];
 }) {
-  const ordem = valor.split(',').filter((id) => itens.some((item) => item.id === id));
-  let travados = 0;
-  while (fixos && travados < ordem.length && fixos.includes(ordem[travados])) travados += 1;
+  // As posições da resposta: um id ou uma vaga ("") deixada por um item que saiu; os travados não se mexem.
+  const posicoes = valor ? valor.split(',').map((id) => (itens.some((item) => item.id === id) ? id : '')) : [];
+  const travado = (id: string) => Boolean(fixos?.includes(id));
+  const comTravados = posicoes.some(travado);
+  const ordem = posicoes.filter(Boolean);
   const restantes = itens.filter((item) => !ordem.includes(item.id));
   const texto = (id: string) => itens.find((item) => item.id === id)?.texto ?? '';
+  /** Um item entra na primeira vaga (ou no fim). */
+  function colocar(id: string) {
+    const vaga = posicoes.indexOf('');
+    mudar((vaga >= 0 ? posicoes.map((atual, posicao) => (posicao === vaga ? id : atual)) : [...posicoes, id]).join(','));
+  }
+  /** Tirar um item: com itens travados, a posição vira vaga (os outros não andam); sem eles, a ordem se fecha. */
+  function tirar(posicao: number) {
+    const novas = comTravados ? posicoes.map((atual, indice) => (indice === posicao ? '' : atual)) : posicoes.filter((_, indice) => indice !== posicao);
+    mudar(novas.some(Boolean) ? novas.join(',') : '');
+  }
   return (
     <div className="ordenar">
       <p className="ordenar__instrucao">{t.ordenar.instrucao}</p>
       <p className="ordenar__rotulo" id="ordenar-escolhidos">{t.ordenar.suaOrdem}</p>
       <ol className="ordenar__escolhidos" aria-labelledby="ordenar-escolhidos">
-        {ordem.length === 0 && <li className="ordenar__vazio">{t.ordenar.vazio}</li>}
-        {ordem.map((id, posicao) => (
+        {posicoes.length === 0 && <li className="ordenar__vazio">{t.ordenar.vazio}</li>}
+        {posicoes.map((id, posicao) => (id ? (
           <li key={id}>
-            <button type="button" disabled={desativado || posicao < travados}
-              aria-label={posicao < travados ? t.ordenar.travado(texto(id), posicao + 1) : t.ordenar.tirar(texto(id), posicao + 1)}
-              data-estado={certos ? (certos.includes(id) ? 'certo' : 'errado') : posicao < travados ? 'certo' : undefined}
-              onClick={() => mudar(codificarResposta.ordem(ordem.filter((item) => item !== id)))}>
+            <button type="button" disabled={desativado || travado(id)}
+              aria-label={travado(id) ? t.ordenar.travado(texto(id), posicao + 1) : t.ordenar.tirar(texto(id), posicao + 1)}
+              data-estado={certos ? (certos.includes(id) ? 'certo' : 'errado') : travado(id) ? 'certo' : undefined}
+              onClick={() => tirar(posicao)}>
               <span className="ordenar__numero" aria-hidden="true">{t.ordenar.posicao(posicao + 1)}</span>
               <span>{texto(id)}</span>
             </button>
           </li>
-        ))}
+        ) : (
+          <li key={`vaga-${posicao}`} className="ordenar__vaga">
+            <span className="ordenar__numero" aria-hidden="true">{t.ordenar.posicao(posicao + 1)}</span>
+            <span>{t.ordenar.vaga}</span>
+          </li>
+        )))}
       </ol>
       {restantes.length > 0 && (
         <div className="ordenar__disponiveis" role="group" aria-label={t.ordenar.disponiveis}>
           {restantes.map((item) => (
             <button key={item.id} type="button" disabled={desativado} aria-label={t.ordenar.colocar(item.texto)}
-              onClick={() => mudar(codificarResposta.ordem([...ordem, item.id]))}>
+              onClick={() => colocar(item.id)}>
               {item.texto}
             </button>
           ))}
         </div>
       )}
-      {ordem.length > travados && !desativado && (
-        <button type="button" className="exercicio-recomecar" onClick={() => mudar(codificarResposta.ordem(ordem.slice(0, travados)))}>
+      {ordem.some((id) => !travado(id)) && !desativado && (
+        <button type="button" className="exercicio-recomecar"
+          onClick={() => mudar(comTravados ? posicoes.map((id) => (travado(id) ? id : '')).join(',') : '')}>
           {t.ordenar.recomecar}
         </button>
       )}
@@ -1406,7 +1543,7 @@ function VerdadeiroFalso({ afirmacao, justificativas, valor, mudar, desativado, 
 }
 
 /** Depois da resposta aberta: o que a correção procurou, se a resposta trouxe, e uma boa resposta de exemplo. */
-function CorrecaoAberta({ avaliacao }: { avaliacao: Avaliacao }) {
+function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao: Avaliacao; mostrarModelo?: boolean }) {
   return (
     <section className="correcao-aberta" aria-labelledby="correcao-titulo">
       {avaliacao.criterios && (
@@ -1422,7 +1559,8 @@ function CorrecaoAberta({ avaliacao }: { avaliacao: Avaliacao }) {
           </ul>
         </>
       )}
-      {avaliacao.modelo && (
+      {avaliacao.modelo && !mostrarModelo && <p className="correcao-aberta__nota">{t.aberta.modeloDepois}</p>}
+      {avaliacao.modelo && mostrarModelo && (
         <div className="correcao-aberta__modelo">
           <h3>{t.aberta.modelo}</h3>
           <p>{avaliacao.modelo}</p>
@@ -1510,11 +1648,15 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
           {restante < total && <Botao variante="texto" onClick={() => { setRodando(false); setRestante(total); }}>{t.pratica.recomecar}</Botao>}
         </div>
       </div>
+      {pratica.som && <TocarSom rotulo={pratica.som.rotulo} casas={pratica.som.casas} />}
+      {recurso?.tipo === 'acorde' && recurso.batida && <DiagramaAcorde recurso={recurso} longa soBatida />}
       <fieldset className="como-foi" disabled={!praticou && !escolha}>
         <legend ref={comoFoi} tabIndex={-1}>
           {acabou ? t.pratica.acabou
             : praticou || escolha ? t.pratica.comoFoi
-              : comecou ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.comeceAntes}
+              : comecou
+                ? rodando ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.retomeParaContar(minimo - (total - restante))
+                : t.pratica.comeceAntes}
         </legend>
         <div className="como-foi__opcoes">
           {AUTOAVALIACOES.map((valor) => (
