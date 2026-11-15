@@ -160,12 +160,14 @@ export function linhasDePassos(texto: string): string[] {
 
 /**
  * O que fica ao tentar de novo: na aberta, o texto todo (para corrigir); no associar, os pares certos; no verdadeiro ou
- * falso, a parte certa; no ordenar, o começo que já estava na posição certa. Escolha e lacuna recomeçam.
+ * falso, a parte certa; no ordenar, o começo que já estava na posição certa; na lacuna, o que foi escrito (para corrigir
+ * a grafia). A escolha recomeça.
  */
 export function respostaParaTentarDeNovo(exercicio: ExercicioPublico, resposta: string, avaliacao: Avaliacao): string {
   const certos = new Set(avaliacao.certos ?? []);
   switch (exercicio.tipo) {
     case 'aberta':
+    case 'lacuna':
       return resposta;
     case 'associar':
       return resposta.split(',').filter((par) => certos.has(par.split('=')[0])).join(',');

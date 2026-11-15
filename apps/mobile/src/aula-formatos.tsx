@@ -83,15 +83,18 @@ export function pararVoz() {
 /** O som que está tocando: dá para parar e saber em que segundo ele está (para o guia da batida). */
 type SomTocando = { parar: () => void; tempo: () => number };
 
-async function tocarSom(som: 'acorde' | 'batida', casas: number[]): Promise<SomTocando> {
-  const bytes = som === 'acorde' ? sintetizarAcorde(casas) : sintetizarBatida(casas);
+/** Duração da batida (72 por minuto, quatro tempos por compasso), com o fim do som. */
+const duracaoDaBatida = (compassos: number) => compassos * 4 * (60 / 72) + 1.6;
+
+async function tocarSom(som: 'acorde' | 'batida', casas: number[], compassos = 2): Promise<SomTocando> {
+  const bytes = som === 'acorde' ? sintetizarAcorde(casas) : sintetizarBatida(casas, { compassos });
   if (Platform.OS === 'web') {
     const Reprodutor = (globalThis as unknown as { Audio: new (url: string) => { play: () => Promise<void>; pause: () => void; currentTime: number } }).Audio;
     const audio = new Reprodutor(URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'audio/wav' })));
     await audio.play();
     return { parar: () => audio.pause(), tempo: () => audio.currentTime };
   }
-  const arquivo = new File(Paths.cache, `${som}-${casas.map((casa) => casa + 1).join('')}.wav`);
+  const arquivo = new File(Paths.cache, `${som}-${som === 'batida' ? `${compassos}-` : ''}${casas.map((casa) => casa + 1).join('')}.wav`);
   if (!arquivo.exists) {
     arquivo.create({ overwrite: true });
     await arquivo.write(bytes);
@@ -99,7 +102,7 @@ async function tocarSom(som: 'acorde' | 'batida', casas: number[]): Promise<SomT
   await setAudioModeAsync({ playsInSilentMode: true }).catch(() => undefined);
   const reprodutor = createAudioPlayer({ uri: arquivo.uri });
   reprodutor.play();
-  const liberar = setTimeout(() => reprodutor.remove(), som === 'acorde' ? 4000 : 10_000);
+  const liberar = setTimeout(() => reprodutor.remove(), som === 'acorde' ? 4000 : (duracaoDaBatida(compassos) + 2) * 1000);
   return {
     parar: () => {
       clearTimeout(liberar);
@@ -139,8 +142,9 @@ export function BotoesOuvir({ fala }: { fala: Fala }) {
   );
 }
 
-/** Exercício de escuta: o áudio primeiro; o texto aparece quando a pessoa pede. */
-export function Escuta({ fala }: { fala: Fala }) {
+/** Exercício de escuta: o áudio primeiro; o texto aparece quando a pessoa pede. Depois do acerto, o texto e a tradução
+ * ficam à vista (antes, a tradução entregaria a resposta), como na web. */
+export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolean }) {
   const [mostrar, setMostrar] = useState(false);
   const [tocando, tocar] = useTocando(fala);
   return (
@@ -153,10 +157,13 @@ export function Escuta({ fala }: { fala: Fala }) {
         <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvirExercicio} icone="som" destaque grande acao={() => tocar(false)} />
         <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} grande acao={() => tocar(true)} />
       </View>
-      <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} onPress={() => setMostrar((atual) => !atual)}>
-        <Text style={formatos.link}>{mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}</Text>
-      </Pressable>
-      {mostrar && <Text selectable style={formatos.fraseGrande}>{fala.texto}</Text>}
+      {!acertou && (
+        <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} onPress={() => setMostrar((atual) => !atual)}>
+          <Text style={formatos.link}>{mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}</Text>
+        </Pressable>
+      )}
+      {(mostrar || acertou) && <Text selectable style={formatos.fraseGrande}>{fala.texto}</Text>}
+      {acertou && fala.traducao && <Text style={[estilos.legenda, { fontWeight: '700' }]}>{fala.traducao}</Text>}
     </View>
   );
 }
@@ -344,6 +351,22 @@ export function Falas({ falas }: { falas: Fala[] }) {
   );
 }
 
+/** Na conclusão: as frases da lição, com a tradução, para ouvir mais uma vez (o "Falar" fica na aula). Como na web. */
+export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
+  return (
+    <View testID="frases-da-licao" style={formatos.secao}>
+      <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.frasesDaLicao.toLocaleUpperCase('pt-BR')}</Text>
+      {falas.map((fala, posicao) => (
+        <View key={posicao} style={formatos.fala}>
+          <Text selectable style={formatos.falaTexto}>{fala.texto}</Text>
+          {fala.traducao && <Text style={estilos.legenda}>{fala.traducao}</Text>}
+          <BotoesOuvir fala={fala} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 /** Texto com as lacunas destacadas (um espaço sublinhado). */
 function ComLacunas({ texto, estilo }: { texto: string; estilo?: object }) {
   const partes = partesDaLacuna(texto);
@@ -402,9 +425,10 @@ export function Passos({ passos, titulo }: { passos: string[]; titulo?: string }
   );
 }
 
-/** Recurso do exemplo: acorde (diagrama e som), linha do tempo ou a foto do material. */
-export function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
-  if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} />;
+/** Recurso do exemplo: acorde (diagrama e som), linha do tempo ou a foto do material. `longa`: na prática, a batida toca
+ * oito compassos (uns 30 s) para tocar junto, como na web. */
+export function RecursoDaLicao({ recurso, longa = false }: { recurso: Recurso; longa?: boolean }) {
+  if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} longa={longa} />;
   if (recurso.tipo === 'fracao') {
     const descricao = t.recursos.fracaoDescricao(recurso.numerador, recurso.denominador);
     return (
@@ -488,8 +512,9 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
 }
 
 /** Diagrama do acorde com o som; com `anterior`, os dois acordes da troca lado a lado (Am → C), como na web. */
-function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde' }> }) {
+function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, { tipo: 'acorde' }>; longa?: boolean }) {
   type Som = 'acorde' | 'batida' | 'anterior';
+  const compassos = longa ? 8 : 2;
   const [tocando, setTocando] = useState<Som | null>(null);
   const [semSom, setSemSom] = useState(false);
   /** Na batida, qual dos oito tempos do compasso (1, e, 2, e…) está soando agora. Como na web. */
@@ -521,15 +546,15 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
     setTocando(som);
     setSemSom(false);
     const casas = som === 'anterior' && anterior ? anterior.casas : recurso.casas;
-    tocarSom(som === 'batida' ? 'batida' : 'acorde', casas)
+    tocarSom(som === 'batida' ? 'batida' : 'acorde', casas, compassos)
       .then((tocandoAgora) => {
         controle.current = tocandoAgora;
-        fim.current = setTimeout(limpar, som === 'batida' ? 8000 : 2600);
+        fim.current = setTimeout(limpar, som === 'batida' ? duracaoDaBatida(compassos) * 1000 : 2600);
         // A batida tem uma colcheia a cada 30/72 s: o guia destaca a que soa.
         if (som === 'batida') {
           acompanhar.current = setInterval(() => {
             const indice = Math.floor(tocandoAgora.tempo() / (30 / 72));
-            setTempoAtual(indice < 16 ? indice % 8 : null);
+            setTempoAtual(indice < compassos * 8 ? indice % 8 : null);
           }, 80);
         }
       })
@@ -565,7 +590,7 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
         <Botao rotulo={tocando === 'acorde' ? t.recursos.tocando : anterior ? t.recursos.ouvirNome(recurso.nome) : t.recursos.ouvirAcorde}
           variante="secundario" compacto desativado={tocando !== null} acao={() => tocar('acorde')} />
         {recurso.batida && (
-          <Botao rotulo={tocando === 'batida' ? t.recursos.tocando : t.recursos.ouvirBatida} variante="secundario" compacto
+          <Botao rotulo={tocando === 'batida' ? t.recursos.tocando : longa ? t.recursos.tocarJunto : t.recursos.ouvirBatida} variante="secundario" compacto
             desativado={tocando !== null} acao={() => tocar('batida')} />
         )}
         {tocando && <Botao rotulo={t.audio.pararSom} variante="texto" compacto acao={parar} />}
@@ -741,7 +766,6 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
               testID={`vf-${opcao}`} onPress={() => mudar(`${opcao}:${justificativa}`)}
               style={({ pressed }) => [formatos.valor, marcada && formatos.cartaoEscolhido, marcada && retorno === 'certa' && formatos.cartaoCerto,
                 marcada && retorno === 'errada' && formatos.cartaoErrado, desativado && !marcada && { opacity: 0.55 }, pressed && formatos.cartaoAfundado]}>
-              <Icone nome={opcao === 'verdadeiro' ? 'check' : 'fechar'} tamanho={20} cor={marcada ? cores.acaoEscura : cores.textoSecundario} />
               <Text style={formatos.valorTexto}>{opcao === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : t.verdadeiroFalso.falso}</Text>
             </Pressable>
           );
@@ -811,12 +835,16 @@ function formatarTempo(segundos: number) {
  * Prática no mundo real: a tarefa, a lista para conferir, a dica e o cronômetro; na volta, a pessoa conta como foi e o
  * Stu responde. A lição só conclui depois dessa resposta (o botão de concluir fica no rodapé da aula).
  */
-export function EtapaPratica({ pratica, escolha, escolher, consulta }: {
+export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComoFoi, aoAcabar }: {
   /** O que a lição mostrou no exemplo (recurso, passos, frases), para consultar enquanto pratica. */
   consulta?: ReactNode;
   pratica: Pratica;
   escolha: AutoAvaliacao | null;
   escolher: (valor: AutoAvaliacao) => void;
+  /** Onde fica o "Como foi?", medido a partir do topo da etapa: a lição rola até ele. */
+  aoMedirComoFoi?: (y: number) => void;
+  /** O cronômetro chegou a zero: a lição leva até o "Como foi?". */
+  aoAcabar?: () => void;
 }) {
   const total = pratica.minutos * 60;
   const [restante, setRestante] = useState(total);
@@ -841,8 +869,12 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta }: {
     if (acabou && !avisado.current) {
       avisado.current = true;
       AccessibilityInfo.announceForAccessibility(t.pratica.acabou);
+      aoAcabar?.();
     }
+    // Só o fim do cronômetro dispara.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [acabou]);
+  const raizY = useRef(0);
 
   let rotuloPrincipal: string = t.pratica.comecar;
   if (rodando) rotuloPrincipal = t.pratica.pausar;
@@ -850,7 +882,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta }: {
   const andamento = 1 - restante / total;
 
   return (
-    <View style={formatos.secao}>
+    <View style={formatos.secao} onLayout={(evento) => { raizY.current = evento.nativeEvent.layout.y; }}>
       <Text style={estilos.legenda}>{t.pratica.subtitulo}</Text>
       <Text style={formatos.tarefa}>{pratica.tarefa}</Text>
       {pratica.passos && (
@@ -895,10 +927,9 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta }: {
           )}
         </View>
       </View>
-      {/* A consulta (recurso, passos, frases) vem depois do cronômetro: a ação principal fica perto da tarefa. */}
-      {consulta}
       {/* "Como foi?" espera o cronômetro começar: a prática pede praticar. */}
-      <Text accessibilityRole="header" style={formatos.comoFoi}>
+      <Text accessibilityRole="header" style={formatos.comoFoi}
+        onLayout={(evento) => aoMedirComoFoi?.(raizY.current + evento.nativeEvent.layout.y)}>
         {acabou ? t.pratica.acabou : restante < total || escolha ? t.pratica.comoFoi : t.pratica.comeceAntes}
       </Text>
       <View style={formatos.opcoesComoFoi} accessibilityRole="radiogroup" accessibilityLabel={t.pratica.comoFoi}>
@@ -922,6 +953,8 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta }: {
           <View style={formatos.respostaBalao}><Text style={[estilos.texto, { fontWeight: '700' }]}>{t.pratica.respostas[escolha]}</Text></View>
         </View>
       )}
+      {/* A consulta (recurso, passos, frases) fica no fim: o cronômetro e o "Como foi?" vêm logo depois da tarefa. */}
+      {consulta}
     </View>
   );
 }

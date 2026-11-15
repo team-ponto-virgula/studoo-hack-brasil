@@ -129,6 +129,8 @@ button, input, textarea { font: inherit; }
 .botao--texto { padding-inline: 12px; background: transparent; box-shadow: none; }
 .botao:active:not(:disabled):not(.botao--texto) { box-shadow: 0 1px 0 var(--labio); transform: translateY(3px); }
 .botao:disabled { --labio: var(--gelo); color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); cursor: default; }
+/* Falta um passo (como contar como foi a prática): o botão fica esmaecido, mas responde ao toque e leva até o que falta. */
+.botao[aria-disabled='true']:not(:disabled) { opacity: 0.6; }
 .botao--texto:disabled { background: transparent; border-color: transparent; }
 
 .campo { display: grid; gap: 8px; }

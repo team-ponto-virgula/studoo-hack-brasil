@@ -9,7 +9,16 @@ import { mensagens } from './mensagens';
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco entre um trecho e outro. */
 /** `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar). Como na web. */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean };
+/** `rever`: concluída com um erro antes do acerto (ou a prática em "ainda não"); o mapa marca "Vale rever". Como na web. */
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: boolean };
+
+/** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. Como na web. */
+export function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string; rever: boolean } | null {
+  if (no.ponte && !no.ponte.concluida) return { icone: 'revisao', texto: mensagens.estudio.ponteMapa, rever: false };
+  if (no.rever && no.estado === 'concluida') return { icone: 'revisao', texto: mensagens.trilha.valeRever, rever: true };
+  if (no.ponte) return { icone: 'check', texto: mensagens.estudio.ponteMapaFeita, rever: false };
+  return null;
+}
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo' | 'som';
 
@@ -37,7 +46,11 @@ export function montarTrilha(plano: PlanoDetalhe, temAndamento: (id: string) => 
     let estado: EstadoNo = 'bloqueada';
     if (licao.concluida) estado = 'concluida';
     else if (licao.id === atual) estado = 'atual';
-    return { id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte, ...(estado === 'atual' && temAndamento(licao.id) ? { andamento: true } : {}) };
+    return {
+      id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte,
+      ...(estado === 'atual' && temAndamento(licao.id) ? { andamento: true } : {}),
+      ...(licao.rever ? { rever: true } : {}),
+    };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
   const proximo = indice >= 0 ? { no: nos[indice], posicao: posicaoDoNo(indice, nos.length) } : null;
@@ -53,7 +66,10 @@ export function falaDoStu(nos: readonly NoCaminho[]) {
 
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 export function explicar(nos: readonly NoCaminho[], indice: number) {
-  if (nos[indice].estado === 'concluida') return nos[indice].ponte ? mensagens.trilha.concluidaComReforco : mensagens.trilha.concluidaTexto;
+  if (nos[indice].estado === 'concluida') {
+    if (nos[indice].rever) return mensagens.trilha.concluidaRever;
+    return nos[indice].ponte ? mensagens.trilha.concluidaComReforco : mensagens.trilha.concluidaTexto;
+  }
   const pendentes = nos.slice(0, indice).filter((anterior) => anterior.estado !== 'concluida');
   const comeco = pendentes.find((anterior) => anterior.estado === 'atual') ?? pendentes[0];
   if (!comeco) return mensagens.trilha.bloqueadaSemPasso;

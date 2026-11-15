@@ -370,6 +370,11 @@ function conferirLacuna(gabarito: readonly string[], resposta: string, exata = f
   if (semContexto && conferirLacuna(gabarito, semContexto, exata).correta) {
     return { correta: true, observacao: "Certo! Na lacuna, basta escrever o que falta." };
   }
+  // Uma palavra de cortesia junto (“repeat please”) não tira o acerto: a palavra certa está lá.
+  const semCortesia = tirarCortesia(semContexto ?? resposta);
+  if (semCortesia && conferirLacuna(gabarito, semCortesia, exata).correta) {
+    return { correta: true, observacao: "Certo! Na lacuna, basta escrever o que falta." };
+  }
   // Quando a grafia é a lição, uma letra a mais ou a menos continua errada, mas o retorno diz que foi por pouco.
   for (const esperado of exata ? gabarito : []) {
     const alvo = normalizarResposta(esperado).replace(ARTIGO, "");
@@ -378,6 +383,19 @@ function conferirLacuna(gabarito: readonly string[], resposta: string, exata = f
     if (distancia(semArtigo, alvo, perto) <= perto) return { correta: false, observacao: "Quase! Confira a grafia: a palavra está quase certa." };
   }
   return { correta: false };
+}
+
+const CORTESIA = new Set(["please", "thanks", "por", "favor", "obrigado", "obrigada"]);
+
+/** Tira palavras de cortesia do começo e do fim da resposta (“repeat please”); null quando não havia nenhuma. */
+function tirarCortesia(resposta: string): string | null {
+  const palavras = normalizarResposta(resposta).replace(/[^\p{L}\p{N} ]+/gu, " ").split(" ").filter(Boolean);
+  let inicio = 0;
+  let fim = palavras.length;
+  while (inicio < fim - 1 && CORTESIA.has(palavras[inicio])) inicio += 1;
+  while (fim - 1 > inicio && CORTESIA.has(palavras[fim - 1])) fim -= 1;
+  if (inicio === 0 && fim === palavras.length) return null;
+  return palavras.slice(inicio, fim).join(" ");
 }
 
 /**

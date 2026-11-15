@@ -10,8 +10,19 @@ import './caminho.css';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco e a região do mundo. */
-/** `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar, não Começar). */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean };
+/**
+ * `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar, não Começar).
+ * `rever`: concluída com um erro antes do acerto (ou a prática em "ainda não"); o mapa marca "Vale rever".
+ */
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: boolean };
+
+/** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. */
+function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string } | null {
+  if (no.ponte && !no.ponte.concluida) return { icone: 'revisao', texto: mensagens.estudio.ponteMapa };
+  if (no.rever && no.estado === 'concluida') return { icone: 'revisao', texto: mensagens.trilha.valeRever };
+  if (no.ponte) return { icone: 'check', texto: mensagens.estudio.ponteMapaFeita };
+  return null;
+}
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo' | 'som';
@@ -100,7 +111,10 @@ function FaixaParte({ numero, resumo, trecho }: { numero: number; trecho: number
 
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 function explicar(nos: readonly NoCaminho[], indice: number) {
-  if (nos[indice].estado === 'concluida') return nos[indice].ponte ? mensagens.trilha.concluidaComReforco : mensagens.trilha.concluidaTexto;
+  if (nos[indice].estado === 'concluida') {
+    if (nos[indice].rever) return mensagens.trilha.concluidaRever;
+    return nos[indice].ponte ? mensagens.trilha.concluidaComReforco : mensagens.trilha.concluidaTexto;
+  }
   const pendentes = nos.slice(0, indice).filter((anterior) => anterior.estado !== 'concluida');
   const comeco = pendentes.find((anterior) => anterior.estado === 'atual') ?? pendentes[0];
   if (!comeco) return mensagens.trilha.bloqueadaSemPasso;
@@ -223,9 +237,18 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     const raiz = document.documentElement;
     const lente = idAtual ? botoes.current.get(idAtual) : undefined;
     if (!lente || typeof IntersectionObserver === 'undefined') return;
-    const observador = new IntersectionObserver(([entrada]) => raiz.toggleAttribute('data-atual-visivel', entrada.isIntersecting),
-      { rootMargin: '-40px 0px -200px 0px', threshold: 1 });
-    observador.observe(lente);
+    // Basta o balão ou a lente aparecer acima do pé da tela (onde o cartão flutua) para o cartão sair: com a lente só
+    // metade à vista, o cartão cobria o nó e o balão "Começar".
+    const alvos = [lente, lente.querySelector<HTMLElement>('.caminho-no__etiqueta')].filter((alvo): alvo is HTMLElement => alvo !== null);
+    const vistos = new Set<Element>();
+    const observador = new IntersectionObserver((entradas) => {
+      for (const entrada of entradas) {
+        if (entrada.isIntersecting) vistos.add(entrada.target);
+        else vistos.delete(entrada.target);
+      }
+      raiz.toggleAttribute('data-atual-visivel', vistos.size > 0);
+    }, { rootMargin: '-40px 0px -240px 0px', threshold: 0 });
+    alvos.forEach((alvo) => observador.observe(alvo));
     return () => {
       observador.disconnect();
       raiz.removeAttribute('data-atual-visivel');
@@ -368,6 +391,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const numeroMarco = trechos.indexOf(no.trecho) + 1;
           const recem = no.id === recemConcluida;
           const desenhar = recem && no.estado === 'concluida' && ligado;
+          const selo = seloDoNo(no);
 
           const conteudo = (
             <>
@@ -383,8 +407,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               {(!atual || no.estado === 'previa') && <span className="caminho-no__texto" aria-hidden="true">
                 <span className="caminho-no__titulo">{no.titulo}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
-                {/* O reforço é um selo com ícone (o desenho de blocos parecia um carregamento travado). */}
-                {no.ponte && <span className="caminho-ponte"><Icone nome={no.ponte.concluida ? 'check' : 'revisao'} />{no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}</span>}
+                {/* O reforço e o "vale rever" são um selo com ícone (o desenho de blocos parecia um carregamento travado). */}
+                {selo && <span className="caminho-ponte" data-rever={selo.texto === mensagens.trilha.valeRever || undefined}><Icone nome={selo.icone} />{selo.texto}</span>}
               </span>}
             </>
           );
@@ -434,7 +458,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 </div>
               ) : (
                 <button type="button" className="caminho-no__alvo" ref={(elemento) => guardarBotao(no.id, elemento)}
-                  aria-label={no.ponte ? `${nome}. ${no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}` : nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
+                  aria-label={selo ? `${nome} ${selo.texto}.` : nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
                   aria-controls={estaAberto ? idBalao : undefined} disabled={ocupado} onClick={() => tocar(no)}>
                   {conteudo}
                 </button>

@@ -44,7 +44,7 @@ const selecaoPlano = {
         select: {
           id: true,
           titulo: true,
-          conclusao: { select: { licaoId: true, segundos: true, acertosDePrimeira: true, exercicios: true } },
+          conclusao: { select: { licaoId: true, segundos: true, acertosDePrimeira: true, exercicios: true, pratica: true } },
           apoio: { select: { reforco: true, reforcoConcluido: true } },
         },
       },
@@ -71,6 +71,9 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
       titulo,
       concluida: conclusao !== null,
       ...(apoio?.reforco ? { ponte: { concluida: apoio.reforcoConcluido } } : {}),
+      // Vale rever: errou antes de acertar (ou ficou sem acerto) ou a prática ainda não saiu.
+      ...(conclusao && ((conclusao.exercicios != null && (conclusao.acertosDePrimeira ?? 0) < conclusao.exercicios) || conclusao.pratica === "ainda_nao")
+        ? { rever: true } : {}),
     }));
     const concluidas = licoesPublicas.filter((licao) => licao.concluida).length;
     const proximaLicao = licoesPublicas.find((licao) => !licao.concluida);

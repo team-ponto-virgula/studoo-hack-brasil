@@ -316,7 +316,12 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
     const concluida = await enviar(`/licoes/${segunda.id}/concluir`, { comprovante, pratica: "quase", resumo: { segundos: 125, acertosDePrimeira: 1, exercicios: 2 } });
     assert.equal(concluida.status, 200);
     // O plano soma o resumo das lições concluídas (aqui, só esta trouxe o resumo).
-    assert.deepEqual((await concluida.json()).plano.estatisticas, { segundos: 125, acertosDePrimeira: 1, exercicios: 2 });
+    const { plano: planoDepois } = await concluida.json();
+    assert.deepEqual(planoDepois.estatisticas, { segundos: 125, acertosDePrimeira: 1, exercicios: 2 });
+    // Um erro antes do acerto: o mapa marca a lição para rever; a que não foi concluída não ganha a marca.
+    const licoesDoPlano = planoDepois.fluxos[0].licoes;
+    assert.equal(licoesDoPlano.find(({ id }) => id === segunda.id).rever, true);
+    assert.equal(licoesDoPlano.find(({ id }) => id === primeira.id).rever, undefined);
     const { rows } = await banco.query(
       'SELECT "pratica", "segundos", "acertosDePrimeira", "exercicios" FROM "RegistroEstudo" WHERE "usuarioId" = $1 AND "licaoId" = $2', [contas[0].id, segunda.id]);
     assert.deepEqual(rows[0], { pratica: "quase", segundos: 125, acertosDePrimeira: 1, exercicios: 2 });
