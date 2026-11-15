@@ -10,6 +10,7 @@ import { consumirLimite } from '../acesso/seguranca';
 import { emitirComprovante } from '../aprendizado/comprovantes';
 import { planoValido, type PlanoInterno } from '@/dominio/aprendizado/plano';
 import { lerMaterial, paginasValidas } from './arquivos';
+import { ilustracaoDaDemo } from './ilustracao';
 import {
   conteudoDaGerada,
   esquemaLicao,
@@ -53,8 +54,13 @@ export async function criarMaterial(
   await banco.materialEstudo.deleteMany({
     where: { usuarioId, expiraEm: { lt: new Date() } },
   });
+  const ilustracao = demo ? await ilustracaoDaDemo() : null;
   const dados = demo
-    ? { paginas: paginasDemo, leitura: 'demonstracao' as const }
+    ? {
+        // A página 1 da demonstração vem com a ilustração da barra em quartos, como uma foto do material.
+        paginas: paginasDemo.map((p) => (p.numero === 1 && ilustracao ? { ...p, imagem: ilustracao } : p)),
+        leitura: 'demonstracao' as const,
+      }
     : await lerMaterial(entrada);
   const nome = demo
     ? 'Frações — material de demonstração'
@@ -240,6 +246,10 @@ async function criarProposta(
     return {
       titulo: x.titulo,
       ...conteudoDaGerada(x, origem),
+      // A página tem foto: a lição mostra a imagem de onde veio a explicação.
+      ...(pagina.imagem
+        ? { recurso: { tipo: 'imagem' as const, src: pagina.imagem, descricao: `${pagina.rotulo ?? `Página ${pagina.numero}`} do seu material` } }
+        : {}),
       referencias: [
         {
           materialId: id,

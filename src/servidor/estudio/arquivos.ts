@@ -51,6 +51,10 @@ export function paginasValidas(
         p.texto.length <= 12000 &&
         (p.rotulo === undefined ||
           (typeof p.rotulo === 'string' && p.rotulo.length <= 100)) &&
+        (p.imagem === undefined ||
+          (typeof p.imagem === 'string' &&
+            p.imagem.length <= 400_000 &&
+            /^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/]+=*$/.test(p.imagem))) &&
         (p.tabela === undefined ||
           (Array.isArray(p.tabela) &&
             p.tabela.length <= 40 &&
@@ -94,6 +98,8 @@ export async function lerMaterial(entrada: unknown) {
   let paginas: PaginaMaterial[] = [];
   let anexo: unknown;
   let total = 1;
+  // Foto enviada: uma miniatura acompanha a página, para a lição mostrar de onde veio a explicação.
+  let miniatura: string | undefined;
   if (
     arquivo.tipo === 'application/pdf' &&
     bytes.subarray(0, 5).toString() === '%PDF-'
@@ -165,6 +171,11 @@ export async function lerMaterial(entrada: unknown) {
         type: 'input_image',
         image_url: `data:image/jpeg;base64,${normalizada.toString('base64')}`,
       };
+      const pequena = await sharp(normalizada)
+        .resize({ width: 900, height: 900, fit: 'inside', withoutEnlargement: true })
+        .jpeg({ quality: 68 })
+        .toBuffer();
+      miniatura = `data:image/jpeg;base64,${pequena.toString('base64')}`;
     } catch {
       throw new FalhaApi('material_invalido');
     }
@@ -179,5 +190,7 @@ export async function lerMaterial(entrada: unknown) {
   paginas = (resultado as { paginas?: PaginaMaterial[] })?.paginas ?? [];
   if (!paginasValidas(paginas, total) || paginas.length !== total)
     throw new FalhaApi('material_ilegivel');
+  if (miniatura && miniatura.length <= 400_000)
+    paginas = paginas.map((p, i) => (i === 0 ? { ...p, imagem: miniatura } : p));
   return { paginas, leitura: 'ocr' as const };
 }

@@ -7,9 +7,9 @@ export const REGRAS_ORDEM_DA_TRILHA = [
   "Coloque os pré-requisitos antes do que depende deles.",
   "Cada lição ensina um único conceito novo.",
   "A dificuldade cresce ao longo da trilha.",
-  "Intercale assuntos quando isso ajudar a fixar, por exemplo uma junção simples logo depois dos filtros, antes de filtros mais difíceis.",
+  "Intercale assuntos quando isso ajudar a fixar, por exemplo um acorde novo logo depois de praticar a troca entre dois conhecidos, ou uma frase de restaurante logo depois dos números, antes de diálogos mais longos.",
   "De tempos em tempos, inclua uma lição de revisão que mistura o que já foi visto.",
-  "Não agrupe lições por assunto. Os trechos (fluxos) são partes da mesma sequência de aprendizado, e o título de um trecho nunca é um assunto, como 'Consultas' ou 'Junções'. Use títulos como 'Primeiros passos', 'Praticando' e 'Desafio'.",
+  "Não agrupe lições por assunto. Os trechos (fluxos) são partes da mesma sequência de aprendizado, e o título de um trecho nunca é um assunto, como 'Acordes', 'Verbos' ou 'Brasil Colônia'. Use títulos como 'Primeiros passos', 'Praticando' e 'Desafio'.",
 ] as const;
 
 /** Texto das regras para o prompt de sistema, uma por linha. */

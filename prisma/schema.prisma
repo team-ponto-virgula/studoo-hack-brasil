@@ -88,6 +88,8 @@ model RegistroEstudo {
   usuarioId   String
   licaoId     String
   concluidoEm DateTime @default(now()) @db.Timestamptz(3)
+  /// Como foi a prática no mundo real (consegui, quase, ainda_nao), quando a lição tem uma.
+  pratica     String?
   licao       Licao    @relation(fields: [usuarioId, licaoId], references: [usuarioId, id])
 
   @@id([usuarioId, licaoId])

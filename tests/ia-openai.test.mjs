@@ -174,7 +174,7 @@ test("o conteúdo da lição vem com Structured Outputs e é normalizado para o 
   assert.equal(conteudo.origem, "IA da OpenAI (teste)");
   assert.deepEqual(conteudo.exercicio.opcoes.map(({ id }) => id), ["a", "b", "c"]);
   assert.deepEqual(conteudo.exercicio.gabarito, ["a"]);
-  assert.equal("contexto" in conteudo.exercicio && conteudo.exercicio.contexto, undefined);
+  assert.equal("contexto" in conteudo.exercicio, false, "campo nulo sai do conteúdo");
 
   const { dados } = pedidos.at(-1);
   assert.equal(dados.text.format.type, "json_schema");
@@ -193,6 +193,73 @@ test("a lacuna mantém as respostas aceitas e a normalização recusa o que não
   assert.deepEqual(lacuna.exercicio.gabarito, ["tarraxa", "Tarraxa"]);
   assert.equal(normalizarConteudo({ ...licaoDeEscolha, exercicio: { ...licaoDeEscolha.exercicio, gabarito: ["nenhuma"] } }, "IA"), null);
   assert.equal(normalizarConteudo({ ...licaoDeEscolha, conceito: "" }, "IA"), null);
+});
+
+/** Confere o JSON Schema estrito: todo objeto lista todas as propriedades em required e fecha additionalProperties. */
+function conferirEstrito(esquema, caminho = "raiz") {
+  if (!esquema || typeof esquema !== "object") return;
+  if (esquema.anyOf) return esquema.anyOf.forEach((opcao, indice) => conferirEstrito(opcao, `${caminho}|${indice}`));
+  if (esquema.type === "object") {
+    assert.equal(esquema.additionalProperties, false, caminho);
+    assert.deepEqual([...esquema.required].sort(), Object.keys(esquema.properties).sort(), caminho);
+    for (const [nome, valor] of Object.entries(esquema.properties)) conferirEstrito(valor, `${caminho}.${nome}`);
+  }
+  if (esquema.items) conferirEstrito(esquema.items, `${caminho}[]`);
+}
+
+test("a lição pede formatos variados num esquema estrito: exercícios, recurso, falas e prática", async () => {
+  const gerador = obterGerador();
+  const esqueleto = {
+    gerador: GERADOR_OPENAI, titulo: "Violão", objetivo: "Tocar.", origem: "IA da OpenAI (teste)",
+    fluxos: [{ titulo: "Primeiros passos", licoes: [{ titulo: "Montar o Lá menor" }] }],
+  };
+  await gerador.gerarConteudo(esqueleto, 0, 0, new AbortController().signal);
+  const { dados } = pedidos.at(-1);
+  const esquema = dados.text.format.schema;
+  conferirEstrito(esquema);
+  assert.deepEqual(esquema.properties.exercicios.items.properties.tipo.enum,
+    ["lacuna", "multipla_escolha", "ordenar", "associar", "verdadeiro_falso", "aberta"]);
+  for (const campo of ["recurso", "falas", "pratica", "exemploTipo", "passos"]) assert.ok(campo in esquema.properties, campo);
+  const instrucoes = dados.input[0].content;
+  for (const trecho of ["ordenar", "associar", "verdadeiro_falso", "aberta", "acorde", "linha_do_tempo", "falas", "pratica", "codigo (só para código"]) {
+    assert.ok(instrucoes.includes(trecho), trecho);
+  }
+});
+
+test("a normalização aceita os formatos novos, refaz ids e descarta o opcional que não fecha", () => {
+  const base = { objetivo: "Trocar de acorde.", conceito: "Dois dedos ficam.", exemplo: "Do Am para o C.", exemploTipo: "demonstracao" };
+  const retornos = { feedbackCorreto: "Isso.", feedbackIncorreto: "Ainda não." };
+  const nulos = { contexto: null, trecho: null, trechoTipo: null, fala: null, opcoes: null, itens: null, esquerda: null, direita: null, afirmacao: null, exata: null, criterios: null, modelo: null };
+  const conteudo = normalizarConteudo({
+    ...base,
+    passos: ["Monte o Am.", "Leve o anelar.", "Toque."],
+    recurso: { tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0], eventos: null },
+    falas: [{ texto: "Hello!", idioma: "en-US", traducao: "Olá!" }, { texto: "Oi", idioma: "português", traducao: null }],
+    pratica: { tarefa: "Alterne Am e C.", minutos: 45, passos: null, dica: null },
+    exercicios: [
+      { ...nulos, tipo: "ordenar", enunciado: "Ordene.", itens: [{ id: "x", texto: "Um" }, { id: "x", texto: "Dois" }, { id: "x", texto: "Três" }], gabarito: [], ...retornos },
+      { ...nulos, tipo: "associar", enunciado: "Ligue.", esquerda: [{ id: "a", texto: "Am" }, { id: "b", texto: "C" }], direita: [{ id: "a", texto: "Lá menor" }, { id: "b", texto: "Dó" }], gabarito: [], ...retornos },
+      { ...nulos, tipo: "verdadeiro_falso", enunciado: "Julgue.", afirmacao: "O braço para.", opcoes: [{ id: "a", texto: "Pêndulo" }, { id: "b", texto: "Força" }], gabarito: ["Falso", "Pêndulo"], ...retornos },
+      { ...nulos, tipo: "aberta", enunciado: "Explique.", gabarito: ["anelar", "batida"], criterios: ["Fala do anelar"], modelo: "Movo o anelar sem parar a batida.", ...retornos },
+    ],
+  }, "IA");
+  assert.ok(conteudo);
+  assert.equal(conteudo.exemploTipo, "demonstracao");
+  assert.equal(conteudo.recurso.nome, "C");
+  assert.deepEqual(conteudo.falas, [{ texto: "Hello!", idioma: "en-US", traducao: "Olá!" }], "a fala com idioma inválido sai");
+  assert.equal(conteudo.pratica.minutos, 20, "o cronômetro fica entre 1 e 20 minutos");
+  assert.deepEqual(conteudo.exercicio.gabarito, ["ia", "ib", "ic"], "ordenar: os itens chegam na ordem certa e os ids são refeitos");
+  assert.equal(conteudo.extras.length, 2, "até 3 exercícios no total");
+  const [associar, vf] = conteudo.extras;
+  assert.deepEqual(associar.gabarito, ["a=da", "b=db"], "ids da direita que repetem os da esquerda são refeitos");
+  assert.deepEqual(vf.gabarito, ["falso", "a"], "o gabarito aponta a justificativa pelo texto");
+  // A aberta sem critérios na mesma quantidade dos grupos ainda vale, só sem os critérios.
+  const aberta = normalizarConteudo({ ...base, exercicios: [{ ...nulos, tipo: "aberta", enunciado: "Explique.", gabarito: ["anelar", "batida"], criterios: ["só um"], modelo: null, ...retornos }] }, "IA");
+  assert.equal(aberta.exercicio.criterios, undefined);
+  // Recurso fora do formato (acorde com 5 cordas) sai, e a lição continua.
+  const semRecurso = normalizarConteudo({ ...base, recurso: { tipo: "acorde", nome: "X", casas: [0, 1, 2, 3, 4], dedos: null, eventos: null }, exercicios: [{ ...nulos, tipo: "lacuna", enunciado: "Complete.", trecho: "Gire a ___.", gabarito: ["tarraxa"], ...retornos }] }, "IA");
+  assert.equal(semRecurso.recurso, undefined);
+  assert.equal(semRecurso.exercicio.tipo, "lacuna");
 });
 
 test("o modelo padrão não recebe o campo de raciocínio", async () => {

@@ -1,5 +1,7 @@
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino } from './estudio';
 export * from './estudio';
+export * from './licao';
+export * from './som';
 export interface Progresso {
   concluidas: number;
   total: number;
@@ -32,16 +34,76 @@ export interface PlanoDetalhe extends PlanoResumo {
   }[];
 }
 
+/**
+ * Como o trecho de um exercício aparece. Só `codigo` usa fonte monoespaçada; uma frase em inglês, uma citação histórica,
+ * uma fórmula ou o passo a passo de uma receita têm cada um o seu visual.
+ */
+export const TIPOS_TRECHO = ["codigo", "frase", "citacao", "formula", "passos"] as const;
+export type TipoTrecho = (typeof TIPOS_TRECHO)[number];
+
+/** Algo para ouvir em voz alta (pronúncia, diálogo): texto, idioma BCP 47 (como `en-US`) e a tradução, se houver. */
+export interface Fala {
+  texto: string;
+  idioma: string;
+  traducao?: string;
+}
+
+/**
+ * Recurso visual da lição, mostrado no exemplo. O acorde e a linha do tempo são desenhados pelo próprio app (e o acorde
+ * também toca); a imagem é a foto do material que a pessoa enviou.
+ * - `acorde.casas`: 6 números, da 6ª corda (mi grave) à 1ª (mi agudo): -1 não toca, 0 solta, n = casa apertada.
+ * - `acorde.dedos`: o dedo de cada corda (1 indicador, 2 médio, 3 anelar, 4 mínimo; 0 nenhum).
+ */
+export type Recurso =
+  | { tipo: "acorde"; nome: string; casas: number[]; dedos?: number[] }
+  | { tipo: "linha_do_tempo"; eventos: { quando: string; texto: string }[] }
+  | { tipo: "imagem"; src: string; descricao: string };
+
+/** Prática no mundo real (instrumento, cozinha, fala): a tarefa, o tempo do cronômetro e, se houver, passos e uma dica. */
+export interface Pratica {
+  tarefa: string;
+  minutos: number;
+  passos?: string[];
+  dica?: string;
+}
+
+/** Como a pessoa diz que foi a prática, na volta do cronômetro. */
+export const AUTOAVALIACOES = ["consegui", "quase", "ainda_nao"] as const;
+export type AutoAvaliacao = (typeof AUTOAVALIACOES)[number];
+
+export interface Opcao {
+  id: string;
+  texto: string;
+}
+
 interface Enunciado {
   enunciado: string;
   contexto?: string;
   trecho?: string;
+  /** Visual do trecho; sem ele, o app trata o trecho como frase. */
+  trechoTipo?: TipoTrecho;
+  /** Áudio do exercício (ouça e responda). Sem trecho, o texto fica escondido até a pessoa pedir para ler. */
+  fala?: Fala;
 }
 
+/**
+ * Exercício como a pessoa vê, sem gabarito. A resposta vai sempre como texto (veja `codificarResposta`):
+ * - `lacuna`: o que a pessoa escreveu (a correção tolera acento, maiúscula e um deslize de digitação em palavras longas);
+ * - `multipla_escolha`: o id da opção;
+ * - `ordenar`: os ids na ordem escolhida (os itens chegam embaralhados);
+ * - `associar`: os pares esquerda=direita (a coluna da direita chega embaralhada);
+ * - `verdadeiro_falso`: o valor e o id da justificativa;
+ * - `aberta`: a explicação, com pelo menos `minimo` caracteres.
+ */
 export type ExercicioPublico = Enunciado & (
   | { tipo: "lacuna" }
-  | { tipo: "multipla_escolha"; opcoes: { id: string; texto: string }[] }
+  | { tipo: "multipla_escolha"; opcoes: Opcao[] }
+  | { tipo: "ordenar"; itens: Opcao[] }
+  | { tipo: "associar"; esquerda: Opcao[]; direita: Opcao[] }
+  | { tipo: "verdadeiro_falso"; afirmacao: string; justificativas: Opcao[] }
+  | { tipo: "aberta"; minimo: number }
 );
+export type TipoExercicio = ExercicioPublico["tipo"];
 
 export interface LicaoDetalhe {
   referencias?: ReferenciaMaterial[];
@@ -52,8 +114,19 @@ export interface LicaoDetalhe {
   objetivo: string;
   conceito: string;
   exemplo: string;
+  /** `demonstracao` nas habilidades práticas: o exemplo vira um passo a passo para fazer junto. */
+  exemploTipo?: "exemplo" | "demonstracao";
+  passos?: string[];
+  recurso?: Recurso;
+  /** Frases para ouvir e repetir, no exemplo. */
+  falas?: Fala[];
   origem: string;
+  /** O primeiro exercício (clientes antigos usam só este). */
   exercicio: ExercicioPublico;
+  /** Todos os exercícios, na ordem: de 1 a 3. */
+  exercicios: ExercicioPublico[];
+  /** Prática no mundo real, depois dos exercícios. */
+  pratica?: Pratica;
   concluida: boolean;
 }
 
@@ -61,6 +134,16 @@ export interface Avaliacao {
   correta: boolean;
   feedback: string;
   comprovante: string;
+  /** Um aviso a mais: aceitou com um deslize de digitação, acertou o valor mas não a justificativa… */
+  observacao?: string;
+  /** Ordenar e associar: os ids dos itens (ou dos pares, pela esquerda) que já estão certos. */
+  certos?: string[];
+  /** Resposta aberta: o que a correção procurou e se a resposta trouxe. */
+  criterios?: { texto: string; atendido: boolean }[];
+  /** Resposta aberta: um exemplo de boa resposta. */
+  modelo?: string;
+  /** A correção da resposta aberta foi a do modo demonstração (ideias-chave, sem IA). */
+  simulado?: boolean;
 }
 
 export interface Conclusao {
@@ -82,7 +165,6 @@ const codigosErro = [
   "nao_encontrado",
   "origem_invalida",
   "falha",
-  "objetivo_fora_do_piloto",
   "proposta_invalida",
   "avaliacao_invalida",
   "credenciais_invalidas",
@@ -213,7 +295,9 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     listarPlanos: () => solicitar<PlanoResumo[]>("/aprendizado/planos"),
     obterPlano: (id: string) => solicitar<PlanoDetalhe>(`/aprendizado/planos/${encodeURIComponent(id)}`),
     obterLicao: (id: string) => solicitar<LicaoDetalhe>(`/aprendizado/licoes/${encodeURIComponent(id)}`),
-    avaliarLicao: (id: string, resposta: string) => solicitar<Avaliacao>(`/aprendizado/licoes/${encodeURIComponent(id)}/avaliar`, "POST", { resposta }),
-    concluirLicao: (id: string, comprovante: string) => solicitar<Conclusao>(`/aprendizado/licoes/${encodeURIComponent(id)}/concluir`, "POST", { comprovante }),
+    /** `indice`: qual exercício da lição (0 é o primeiro). */
+    avaliarLicao: (id: string, resposta: string, indice = 0) => solicitar<Avaliacao>(`/aprendizado/licoes/${encodeURIComponent(id)}/avaliar`, "POST", { resposta, indice }),
+    /** `pratica`: como foi a prática no mundo real, quando a lição tem uma. */
+    concluirLicao: (id: string, comprovante: string, pratica?: AutoAvaliacao) => solicitar<Conclusao>(`/aprendizado/licoes/${encodeURIComponent(id)}/concluir`, "POST", { comprovante, ...(pratica ? { pratica } : {}) }),
   };
 }

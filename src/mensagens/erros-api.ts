@@ -18,7 +18,6 @@ export const mensagensApi: Record<CodigoErro, string> = {
   nao_encontrado: "Este conteúdo não está disponível.",
   origem_invalida: "Esta solicitação não pôde ser confirmada.",
   falha: "Algo deu errado. Tente de novo.",
-  objetivo_fora_do_piloto: "Neste piloto, descreva o que você quer estudar em SQL.",
   proposta_invalida: "Gere outra proposta para continuar.",
   avaliacao_invalida: "Envie a resposta novamente para continuar.",
   credenciais_invalidas: "E-mail ou senha inválidos.",

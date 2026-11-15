@@ -328,7 +328,6 @@ export const mensagens = {
         invalido: 'Confira os dados e tente novamente.',
         nao_encontrado: 'Este conteúdo não está disponível. Volte aos seus planos.',
         origem_invalida: 'Abra o Studoo pelo endereço do piloto para continuar.',
-        objetivo_fora_do_piloto: 'Escreva um objetivo sobre SQL para gerar um plano neste piloto.',
         proposta_invalida: 'Esta prévia expirou. Ajuste o pedido e gere a trilha de novo.',
         avaliacao_invalida: 'A confirmação expirou. Envie a resposta novamente.',
         ia_indisponivel: 'A geração está indisponível agora. Tente novamente.',
