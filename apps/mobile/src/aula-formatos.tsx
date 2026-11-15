@@ -400,14 +400,19 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
 }
 
 /** Texto com as lacunas destacadas (um espaço sublinhado). */
-function ComLacunas({ texto, estilo }: { texto: string; estilo?: object }) {
+/** `preenchimento`: o que a pessoa escreve na lacuna, no lugar do espaço, enquanto digita. Como na web. */
+function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: object; preenchimento?: string }) {
   const partes = partesDaLacuna(texto);
   return (
     <Text selectable style={estilo}>
       {partes.map((parte, posicao) => (
         <Text key={posicao}>
           {parte}
-          {posicao < partes.length - 1 && <Text accessibilityLabel="lacuna" style={formatos.lacuna}>{'   '}</Text>}
+          {posicao < partes.length - 1 && (
+            <Text accessibilityLabel={preenchimento ? undefined : 'lacuna'} style={[formatos.lacuna, preenchimento ? formatos.lacunaPreenchida : null]}>
+              {preenchimento || '   '}
+            </Text>
+          )}
         </Text>
       ))}
     </Text>
@@ -415,25 +420,25 @@ function ComLacunas({ texto, estilo }: { texto: string; estilo?: object }) {
 }
 
 /** Trecho no visual do conteúdo: só o código usa fonte monoespaçada. */
-export function Trecho({ texto, tipo = 'frase', fala }: { texto: string; tipo?: TipoTrecho; fala?: Fala }) {
+export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: string; tipo?: TipoTrecho; fala?: Fala; preenchimento?: string }) {
   switch (tipo) {
     case 'codigo':
-      return <ComLacunas texto={texto} estilo={formatos.codigo} />;
+      return <ComLacunas texto={texto} estilo={formatos.codigo} preenchimento={preenchimento} />;
     case 'citacao':
       return (
         <View style={formatos.citacao}>
           <Text style={formatos.aspas} importantForAccessibility="no" accessibilityElementsHidden>“</Text>
-          <ComLacunas texto={semAspas(texto)} estilo={formatos.citacaoTexto} />
+          <ComLacunas texto={semAspas(texto)} estilo={formatos.citacaoTexto} preenchimento={preenchimento} />
         </View>
       );
     case 'formula':
-      return <View style={formatos.formula}><ComLacunas texto={texto} estilo={formatos.formulaTexto} /></View>;
+      return <View style={formatos.formula}><ComLacunas texto={texto} estilo={formatos.formulaTexto} preenchimento={preenchimento} /></View>;
     case 'passos':
       return <Passos passos={linhasDePassos(texto)} />;
     default:
       return (
         <View style={formatos.frase}>
-          <ComLacunas texto={texto} estilo={formatos.fraseTexto} />
+          <ComLacunas texto={texto} estilo={formatos.fraseTexto} preenchimento={preenchimento} />
           {fala && <BotoesOuvir fala={fala} />}
         </View>
       );
@@ -516,8 +521,8 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
     .map((casa, corda) => t.recursos.corda(6 - corda, casa, t.recursos.dedos[dedos?.[corda] ?? 0] ?? ''))
     .join('; ');
   // As medidas do desenho (as de formatos.acordeDesenho), em números: o StyleSheet não garante ler de volta.
-  const largura = 176;
-  const altura = 182;
+  const largura = 196;
+  const altura = 200;
   return (
     <View style={{ width: largura * escala, height: altura * escala }} accessible accessibilityRole="image"
       accessibilityLabel={`${t.recursos.acorde(nome)}: ${descricao}.`}>
@@ -530,6 +535,14 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
         {[0, 1, 2, 3, 4].map((traste) => <View key={traste} style={[formatos.traste, { top: 40 + traste * 30, left: x(0), width: x(5) - x(0) }]} />)}
         {[0, 1, 2, 3, 4, 5].map((corda) => (
           <View key={corda} style={[formatos.cordaVertical, { left: x(corda) - (3.4 - corda * 0.4) / 2, width: 3.4 - corda * 0.4 }]} />
+        ))}
+        {[6, 5, 4, 3, 2, 1].map((numero, corda) => (
+          <Text key={`c${numero}`} style={[formatos.rotuloDiagrama, { left: x(corda) - 8, top: 40 + 4 * 30 + 6 }]}>{numero}</Text>
+        ))}
+        {[0, 1, 2, 3].map((linha) => (
+          <Text key={`t${linha}`} style={[formatos.rotuloDiagrama, { left: x(5) + 10, top: 40 + (linha + 0.5) * 30 - 8, width: 26, textAlign: 'left' }]}>
+            {base + linha}ª
+          </Text>
         ))}
         {casas.map((casa, corda) => (casa <= 0 ? (
           <Text key={corda} style={[formatos.marcaCorda, { left: x(corda) - 8, color: casa < 0 ? cores.erro : cores.sucesso }]}>{casa < 0 ? 'X' : 'O'}</Text>
@@ -1108,6 +1121,7 @@ const formatos = StyleSheet.create({
   fala: { gap: 6, padding: 12, borderRadius: 16, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   falaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 18, lineHeight: 24 },
   lacuna: { textDecorationLine: 'underline', textDecorationStyle: 'solid' },
+  lacunaPreenchida: { color: cores.acaoEscura, fontWeight: '800' },
   codigo: { padding: 14, borderRadius: 14, color: cores.fundo, backgroundColor: cores.texto, fontFamily: 'monospace', fontSize: 15, lineHeight: 22 },
   citacao: { paddingVertical: 14, paddingRight: 14, paddingLeft: 44, borderLeftWidth: 5, borderLeftColor: '#C9A24A', borderRadius: 14,
     backgroundColor: '#FBF6EA' },
@@ -1137,7 +1151,9 @@ const formatos = StyleSheet.create({
   imagem: { width: '100%', aspectRatio: 16 / 10, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
-  acordeDesenho: { width: 176, height: 182 },
+  acordeDesenho: { width: 196, height: 200 },
+  rotuloDiagrama: { position: 'absolute', width: 16, textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700',
+    fontSize: 11, lineHeight: 16 },
   batida: { flexDirection: 'row', gap: 4, width: '100%' },
   batidaTempo: { flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 10, backgroundColor: '#EEF2FF' },
   batidaSobe: { backgroundColor: '#F6F7FB' },
@@ -1192,7 +1208,7 @@ const formatos = StyleSheet.create({
   tarefa: { padding: 14, borderRadius: 14, backgroundColor: cores.fundo, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800',
     fontSize: 18, lineHeight: 26 },
   conferir: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40 },
-  caixinha: { width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: '#B9A3D8', alignItems: 'center', justifyContent: 'center',
+  caixinha: { flexShrink: 0, width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: '#B9A3D8', alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.fundo },
   caixinhaMarcada: { borderColor: '#6B3FA0', backgroundColor: '#6B3FA0' },
   dica: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, padding: 12, borderRadius: 14, backgroundColor: '#FFF6D9' },

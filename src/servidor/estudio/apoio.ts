@@ -13,7 +13,7 @@ import { banco } from '../banco/cliente';
 import { FalhaApi } from '../acesso/http';
 import { buscarLicao, conteudoDaLicao } from '../aprendizado/servico';
 import { exercicioDaResposta, reforcoDoExercicio } from '@/dominio/aprendizado/reforco';
-import { termosDaLicao, termosPresentes } from '@/dominio/aprendizado/plano';
+import { armadilhaNoTexto, termosDaLicao, termosPresentes } from '@/dominio/aprendizado/plano';
 import { quota } from './materiais';
 import {
   conteudoDaGerada,
@@ -223,9 +223,14 @@ export async function ensinarStu(
     const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
     // Exemplo é o que a pessoa marca como exemplo (números e "quando" aparecem em qualquer explicação de violão).
     const comExemplo = /\b(?:por exemplo|exemplo|ex\.|imagine|como quando|digamos|tipo assim|e o caso de|no caso de)\b/i.test(semAcento);
-    const termos = termosDaLicao(await conteudoDaLicao(usuarioId, licaoId));
+    const conteudo = await conteudoDaLicao(usuarioId, licaoId);
+    const termos = termosDaLicao(conteudo);
     const trouxe = termosPresentes(explicacao, termos);
     const faltou = termos.filter((termo) => !trouxe.includes(termo));
+    // Trouxe a maior parte das ideias: o que falta vira um complemento opcional, não um "que tal incluir".
+    const cobriu = termos.length > 0 && trouxe.length * 2 >= termos.length;
+    // Um erro comum no próprio texto (“I here”, sem o verbo) vem antes de tudo no "O que revisar".
+    const armadilha = armadilhaNoTexto(conteudo, explicacao);
     const lista = (itens: string[]) => {
       const citados = itens.map((item) => `“${item}”`);
       return citados.length > 1 ? `${citados.slice(0, -1).join(', ')} e ${citados.at(-1)}` : citados[0] ?? '';
@@ -243,17 +248,22 @@ export async function ensinarStu(
         ...(trouxe.length === 0 && doConceito.length === 0 ? ['Você explicou com as suas palavras.'] : []),
         ...(comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
       ],
-      lacuna: faltou.length > 0
-        ? `Que tal incluir ${lista(faltou.slice(0, 3))}? ${faltou.length === 1 ? 'É uma ideia-chave' : 'São ideias-chave'} desta lição.`
-        : comExemplo
-          ? 'Nenhuma ideia importante ficou de fora.'
-          : 'Faltou só um exemplo seu: uma situação concreta em que você usaria isso.',
-      pergunta: faltou.length > 0
+      lacuna: armadilha
+        ?? (faltou.length > 0 && !cobriu
+          ? `Que tal incluir ${lista(faltou.slice(0, 3))}? ${faltou.length === 1 ? 'É uma ideia-chave' : 'São ideias-chave'} desta lição.`
+          : faltou.length > 0
+            ? `Você trouxe a maior parte das ideias. Para completar, se quiser: ${lista(faltou.slice(0, 2))}.`
+            : comExemplo
+              ? 'Nenhuma ideia importante ficou de fora.'
+              : 'Faltou só um exemplo seu: uma situação concreta em que você usaria isso.'),
+      pergunta: faltou.length > 0 && !cobriu
         ? `Se alguém te perguntasse sobre “${faltou[0]}”, o que você diria, com um exemplo seu?`
         : trouxe.length > 0
           ? `E numa situação diferente da sua explicação? Conte como “${trouxe[0]}” aparece num caso novo, com um exemplo seu.`
           : 'Se você fosse ensinar isso a alguém que nunca viu o assunto, por onde começaria?',
-      proximoPasso: faltou.length > 0
+      proximoPasso: armadilha
+        ? 'Reescreva a frase com a correção acima e leia em voz alta: é assim que a forma certa fica.'
+        : faltou.length > 0 && !cobriu
         ? `Releia a explicação do Stu procurando “${faltou[0]}” e reescreva a sua com essa ideia, em uma frase.`
         : 'Sua explicação já cobre as ideias da lição. Amanhã, tente explicar de novo sem olhar: é assim que a ideia fica.',
       simulado: true,

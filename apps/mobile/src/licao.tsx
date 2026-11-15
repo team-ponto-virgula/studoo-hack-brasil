@@ -18,7 +18,7 @@ import {
   type LicaoDetalhe,
 } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode } from 'react';
-import { AccessibilityInfo, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Alert, Animated, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAparecer, usePulinho, useTremor } from './animacoes';
 import {
   TranscritorContexto,
@@ -159,6 +159,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   /** Nas etapas de leitura: ainda tem conteúdo abaixo da parte visível (o botão diz "Continuar lendo"). Como na web. */
   const [temMais, setTemMais] = useState(false);
   const alturaConteudo = useRef(0);
+  /** Chegou ao fim desta etapa: o "Continuar lendo" não volta (um som tocando muda a altura do conteúdo). */
+  const chegouAoFim = useRef(false);
   const [errosSeguidos, setErrosSeguidos] = useState(0);
   const [pedidoPonte, setPedidoPonte] = useState(0);
   const [consultaAberta, setConsultaAberta] = useState(false);
@@ -202,6 +204,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     // Cada etapa começa do topo, como uma tela nova; a voz de uma etapa não continua na outra.
     rolagem.current?.scrollTo({ y: 0, animated: false });
     posicaoRolagem.current = 0;
+    chegouAoFim.current = false;
     const medida = setTimeout(medirMais, 250);
     pararVoz();
     // O reforço é de cada exercício: um pedido antigo não vale para o próximo.
@@ -227,9 +230,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   /** Confere se o fim do conteúdo (a legenda, o passo a passo) ainda está abaixo da parte visível. */
   function medirMais() {
+    if (chegouAoFim.current) return;
     const leitura = etapa.tipo === 'conceito' || etapa.tipo === 'exemplo';
     const falta = alturaConteudo.current - (posicaoRolagem.current + alturaVisivel.current);
     const novo = leitura && alturaVisivel.current > 0 && falta > 24;
+    if (leitura && alturaVisivel.current > 0 && !novo) chegouAoFim.current = true;
     setTemMais((antes) => (antes === novo ? antes : novo));
   }
 
@@ -273,6 +278,19 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   /** Recomeçar do zero (quem voltou no meio e prefere começar de novo). */
   function recomecar() {
+    // Como na web: pergunta antes, porque as respostas desta vez se perdem.
+    const confirmar = () => recomecarAgora();
+    if (Platform.OS === 'web') {
+      if ((globalThis as { confirm?: (texto: string) => boolean }).confirm?.(t.recomecarPergunta)) confirmar();
+      return;
+    }
+    Alert.alert(t.recomecarPergunta, undefined, [
+      { text: mensagens.ficar, style: 'cancel' },
+      { text: t.recomecarLicao, style: 'destructive', onPress: confirmar },
+    ]);
+  }
+
+  function recomecarAgora() {
     andamentos.delete(licao.id);
     setPasso(0);
     setRespostas(exercicios.map(() => ''));
@@ -419,12 +437,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {!autoAvaliacao && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.escolha}</Text>}
         {autoAvaliacao === 'ainda_nao' && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.aindaNaoNota}</Text>}
         {autoAvaliacao === 'ainda_nao' && (
-          <Botao testID="praticar-mais" rotulo={t.pratica.praticarMais} variante="secundario" desativado={ocupado}
+          <Botao testID="praticar-mais" rotulo={t.pratica.praticarMais} desativado={ocupado}
             acao={() => { setAutoAvaliacao(null); setVoltasPratica((atual) => atual + 1); mostrarComoFoi(); }} />
         )}
         {/* Sem contar como foi, o botão leva até a pergunta, em vez de ficar apagado sem explicação. Como na web. */}
         <Botao testID="concluir-pratica"
-          rotulo={pendente === 'concluir' ? t.concluindo : autoAvaliacao === 'ainda_nao' ? t.pratica.concluirAssim : t.pratica.concluir} variante="sucesso"
+          rotulo={pendente === 'concluir' ? t.concluindo : autoAvaliacao === 'ainda_nao' ? t.pratica.concluirAssim : t.pratica.concluir}
+          variante={autoAvaliacao === 'ainda_nao' ? 'texto' : 'sucesso'}
           desativado={ocupado} esmaecido={!autoAvaliacao} dica={autoAvaliacao ? undefined : t.pratica.escolha}
           ocupado={pendente === 'concluir'} carregando={pendente === 'concluir'}
           acao={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())} />
@@ -562,7 +581,10 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             </Text>
             <Text style={estilos.texto}>{exercicio.enunciado}</Text>
             {exercicio.contexto && <Text style={estilos.texto}>{exercicio.contexto}</Text>}
-            {exercicio.trecho && <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala} />}
+            {exercicio.trecho && (
+              <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}
+                preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim() : undefined} />
+            )}
             {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
             {campoDoExercicio(exercicio)}
             {!avaliacao && errosAnteriores[indice] && (
@@ -876,7 +898,7 @@ const licaoEstilos = StyleSheet.create({
   rodapeCerto: { borderTopColor: 'transparent', backgroundColor: '#E3F6EA' },
   rodapeErrado: { borderTopColor: 'transparent', backgroundColor: '#FFF1E0' },
   retorno: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  retornoIcone: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4,
+  retornoIcone: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4,
     borderColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
   retornoIconeErrado: { borderColor: '#B4650D', backgroundColor: '#E58A1F' },
   retornoTextos: { flex: 1, minWidth: 0, gap: 2 },
