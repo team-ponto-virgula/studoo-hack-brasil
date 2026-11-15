@@ -17,9 +17,13 @@
 .confete--chuva {
   position: fixed; z-index: 20; overflow: hidden;
   /* Cai sobre o Stu e o título e some antes dos números e dos botões, sem cobrir o que a pessoa vai ler ou tocar. */
-  -webkit-mask-image: linear-gradient(#000 0 40%, transparent 62%);
-  mask-image: linear-gradient(#000 0 40%, transparent 62%);
+  -webkit-mask-image: linear-gradient(#000 0 32%, transparent 52%);
+  mask-image: linear-gradient(#000 0 32%, transparent 52%);
 }
+
+/* Na conclusão, a chuva cai atrás do conteúdo: o texto e os números ficam sempre por cima dos papeizinhos. */
+.painel--concluida > :not(.confete) { position: relative; z-index: 1; }
+.painel--concluida > .confete--chuva { z-index: 0; }
 
 .confete--chuva > span {
   top: -24px;

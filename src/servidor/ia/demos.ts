@@ -36,9 +36,9 @@ const violao: Demo = {
           {
             titulo: "Conhecer as partes do violão",
             objetivo: "Reconhecer as partes do violão que você usa para afinar e tocar.",
-            conceito: "O violão tem três partes principais: a cabeça, onde ficam as tarraxas que afinam as cordas; o braço, dividido em casas pelos trastes; e o corpo, com a boca, por onde o som sai. As cordas são contadas de baixo para cima: a 1ª é a mais fina e a 6ª, a mais grossa.",
+            conceito: "O violão tem três partes principais: a cabeça, onde ficam as tarraxas que afinam as cordas; o braço, dividido em casas pelos trastes; e o corpo, com a boca, por onde o som sai. As cordas são contadas de baixo para cima: a 1ª é a mais fina e a 6ª, a mais grossa. Quem é destro aperta as cordas no braço com a mão esquerda e toca as cordas sobre a boca com a direita (quem é canhoto, ao contrário).",
             exemplo: "Para afinar a 5ª corda, você gira a tarraxa dela, na cabeça. Para tocar uma nota mais aguda nessa mesma corda, aperta a corda numa casa do braço, mais perto do corpo.",
-            recurso: { tipo: "imagem", src: ILUSTRACAO_VIOLAO, descricao: "Cabeça: 1 tarraxa · Braço: 2 casa (entre dois trastes) · Corpo: 3 boca · 4 6ª corda, a mais grossa", fonte: "Ilustração" },
+            recurso: { tipo: "imagem", src: ILUSTRACAO_VIOLAO, descricao: "① tarraxa, na cabeça · ② casa, no braço (entre dois trastes) · ③ boca, no corpo · ④ 6ª corda, a mais grossa", fonte: "Ilustração" },
             origem: origemViolao,
             exercicio: {
               tipo: "associar",
@@ -52,7 +52,7 @@ const violao: Demo = {
               ],
               gabarito: ["tarraxa=afina", "casa=nota", "boca=som", "sexta=grave"],
               feedbackCorreto: "Isso! A tarraxa afina, a casa muda a nota, a boca projeta o som e a 6ª corda é a mais grave.",
-              feedbackIncorreto: "Reveja a explicação: a tarraxa fica na cabeça e afina; a casa é um espaço do braço; a boca é a abertura do corpo; a 6ª corda é a mais grossa.",
+              feedbackIncorreto: "Volte à ilustração: cada número mostra onde a parte fica. Comece pelo que você gira para afinar e pela abertura do corpo; os outros pares saem por exclusão.",
             },
             extras: [
               {
@@ -65,6 +65,17 @@ const violao: Demo = {
                 feedbackIncorreto: "Releia o conceito: é a peça da cabeça do violão que você gira para esticar ou afrouxar a corda.",
               },
             ],
+            pratica: {
+              tarefa: "Pegue o violão, encontre a cabeça, o braço e o corpo e afine a 6ª corda com a ajuda de um app afinador.",
+              minutos: 5,
+              passos: [
+                "Sente-se e apoie a curva do corpo do violão na perna direita (canhoto: na esquerda).",
+                "A mão esquerda segura o braço, com o polegar atrás dele; a direita fica sobre a boca, para tocar.",
+                "Abra um app afinador gratuito, toque a 6ª corda e gire a tarraxa dela até o app marcar E (Mi).",
+              ],
+              dica: "Gire a tarraxa aos poucos, um quarto de volta por vez, e toque a corda de novo a cada ajuste.",
+            },
+            outroJeito: "Pense no violão como uma pessoa deitada: a cabeça fica numa ponta, com as tarraxas como orelhas que você gira para afinar; o braço é comprido e marcado em casas, como uma régua; e o corpo é a barriga oca, com a boca no meio, por onde o som sai.",
           },
           {
             titulo: "Montar o acorde Lá menor (Am)",
@@ -73,10 +84,10 @@ const violao: Demo = {
             exemploTipo: "demonstracao",
             exemplo: "Veja o Lá menor no diagrama e ouça como ele soa. Depois, siga os passos com o violão na mão.",
             passos: [
-              "Indicador (1) na 1ª casa da 2ª corda.",
+              "Com a mão esquerda (canhoto: a direita), indicador (1) na 1ª casa da 2ª corda.",
               "Médio (2) na 2ª casa da 4ª corda.",
               "Anelar (3) na 2ª casa da 3ª corda.",
-              "Toque da 5ª corda para baixo, sem tocar a 6ª.",
+              "Com a outra mão, toque da 5ª corda para baixo, sem tocar a 6ª.",
             ],
             recurso: { tipo: "acorde", nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0] },
             origem: origemViolao,
@@ -86,7 +97,7 @@ const violao: Demo = {
               opcoes: [op("a", "A 6ª corda, a mais grossa"), op("b", "A 1ª corda, a mais fina"), op("c", "A 3ª corda")],
               gabarito: ["a"],
               feedbackCorreto: "Isso: o X em cima da 6ª corda diz que ela fica de fora. O acorde começa na 5ª corda.",
-              feedbackIncorreto: "Procure o X no diagrama: ele fica sobre a 6ª corda, a mais grossa. É a única que não soa no Lá menor.",
+              feedbackIncorreto: "Procure o X no diagrama: ele marca a corda que fica de fora. As cordas vão da mais grossa, à esquerda, para a mais fina, à direita.",
             },
             extras: [
               {
@@ -104,6 +115,7 @@ const violao: Demo = {
               passos: ["Monte o acorde devagar, dedo por dedo.", "Toque cada corda e escute.", "Tire a mão e monte de novo, 5 vezes."],
               dica: "Use a ponta dos dedos, com as unhas curtas, e deixe o polegar atrás do braço do violão.",
             },
+            outroJeito: "Leia o diagrama como se o violão estivesse em pé na sua frente: a corda mais grossa fica à esquerda. Cada bolinha é um dedo apertando a corda logo antes do traste; o X diz “não toque esta” e o O, “toque solta”. No Lá menor, os três dedos formam um triângulo pequeno, perto da cabeça.",
           },
         ],
       },
@@ -135,7 +147,7 @@ const violao: Demo = {
               ],
               gabarito: ["montar", "levantar", "levar", "tocar"],
               feedbackCorreto: "Perfeito: do Lá menor, só o anelar sobe e desce no lugar novo, e o Dó soa.",
-              feedbackIncorreto: "Siga o movimento da mão: você começa no Lá menor, levanta só o anelar, apoia ele na 3ª casa da 5ª corda e então toca o Dó.",
+              feedbackIncorreto: "Siga o movimento da mão: em que acorde você está antes de trocar? E o que precisa sair do lugar antes de um dedo chegar à casa nova?",
             },
             extras: [
               {
@@ -152,6 +164,7 @@ const violao: Demo = {
               minutos: 4,
               dica: "Pense no anelar como o único dedo que viaja: o indicador e o médio são a âncora.",
             },
+            outroJeito: "Pense nos dedos como pés numa escada: dois ficam firmes no degrau (indicador e médio) e só um sobe para o próximo (o anelar). Treinar a troca é treinar esse único passo, sem tirar os outros do lugar.",
           },
           {
             titulo: "Ritmo: batida para baixo e para cima",
@@ -178,7 +191,7 @@ const violao: Demo = {
               ],
               gabarito: ["falso", "pendulo"],
               feedbackCorreto: "Isso: o braço não para. Errar uma corda passa; perder o tempo atrapalha a música inteira.",
-              feedbackIncorreto: "É falsa: o braço segue balançando como um pêndulo. Parar faz você perder o tempo da música.",
+              feedbackIncorreto: "Pense no pêndulo de um relógio: ele para quando alguém se distrai? O que acontece com o tempo da música se o braço parar?",
             },
             extras: [
               {
@@ -196,6 +209,7 @@ const violao: Demo = {
               minutos: 3,
               dica: "Ouça a batida no exemplo e toque junto. Devagar e no tempo vale mais do que rápido e atropelado.",
             },
+            outroJeito: "Imagine que você sacode uma gota de água da mão, para baixo e para cima, sem parar: é esse balanço que faz a batida. A mão desce no número e sobe no “e” mesmo quando não acerta as cordas, como um relógio que não para.",
           },
         ],
       },
@@ -233,6 +247,7 @@ const violao: Demo = {
               tarefa: "Toque a sequência Am, Am, C, C por 2 minutos, com a batida para baixo e para cima.",
               minutos: 2,
             },
+            outroJeito: "Pense numa caminhada: dois passos com um pé (Am, Am) e dois com o outro (C, C). O braço da batida é o ritmo dos passos, que não para; a troca de acorde acontece no último “e”, como quem já levanta o pé antes de pisar.",
           },
           {
             titulo: "Explique a troca com suas palavras",
@@ -265,6 +280,7 @@ const violao: Demo = {
                 feedbackIncorreto: 'Releia o conceito: o que explicar faz com o que você aprendeu?',
               },
             ],
+            outroJeito: "Uma boa explicação responde a três perguntas, como uma receita: o que fica parado, o que se mexe e o que nunca para. Se a sua responde às três, alguém que nunca tocou conseguiria repetir o movimento.",
           },
         ],
       },
@@ -306,7 +322,7 @@ const ingles: Demo = {
               direita: [op("ola", "Olá!"), op("brasil", "Eu sou do Brasil."), op("prazer", "Prazer em conhecer você!")],
               gabarito: ["hello=ola", "from=brasil", "nice=prazer"],
               feedbackCorreto: "Isso! Com essas três frases você já começa uma conversa.",
-              feedbackIncorreto: "Ouça as frases do exemplo de novo: “Hello” é olá, “I'm from” diz de onde você é e “Nice to meet you” é prazer em conhecer.",
+              feedbackIncorreto: "Ouça as frases do exemplo de novo e procure palavras conhecidas. Dica: “from” aparece quando alguém diz de onde é.",
             },
             extras: [
               {
@@ -319,6 +335,7 @@ const ingles: Demo = {
                 feedbackIncorreto: "Ouça de novo: “purpose of your visit” é o motivo da viagem. Qual frase fala de férias?",
               },
             ],
+            outroJeito: "Pense num cartão de visita falado, em três linhas: o cumprimento (“Hello!”), quem é você (“I'm Ana.”) e de onde vem (“I'm from Brazil.”). “Nice to meet you” é o aperto de mão do fim. Na imigração, entra uma quarta linha: por que veio (“I'm here on vacation.”).",
           },
           {
             titulo: "Pedir informações na rua",
@@ -365,6 +382,7 @@ const ingles: Demo = {
                 feedbackIncorreto: "Ouça de novo: “left” é esquerda e “right” é direita. “Go straight” seria seguir em frente.",
               },
             ],
+            outroJeito: "Pense no GPS do celular: ele diz para onde virar (“turn left”, “turn right”), quando seguir (“go straight”) e onde fica o destino (“next to”, “in front of”). Na rua, as pessoas falam do mesmo jeito: repare primeiro na direção, depois no lugar.",
           },
         ],
       },
@@ -394,7 +412,7 @@ const ingles: Demo = {
               ],
               gabarito: ["oi", "reserva", "passaporte", "chave"],
               feedbackCorreto: "Perfeito: cumprimento, reserva, documento e o agradecimento pela chave.",
-              feedbackIncorreto: "Pense na conversa real: primeiro você cumprimenta, depois fala da reserva, mostra o passaporte e só então recebe a chave.",
+              feedbackIncorreto: "Pense na conversa real: o que você diz ao chegar ao balcão? E o que só acontece no fim, quando tudo deu certo?",
             },
             extras: [
               {
@@ -407,11 +425,12 @@ const ingles: Demo = {
                 feedbackIncorreto: "Ouça de novo: “name” é nome. Qual resposta diz quem você é?",
               },
             ],
+            outroJeito: "Pense no check-in como uma fila de quatro passos, igual em quase todo hotel: cumprimentar, dizer que tem reserva, mostrar o documento e receber a chave. Sabendo em que passo você está, dá para imaginar a próxima pergunta, mesmo sem entender tudo.",
           },
           {
             titulo: "Números e preços",
             objetivo: "Entender preços falados em inglês.",
-            conceito: "Primeiro, os números de 1 a 10: one, two, three, four, five, six, seven, eight, nine, ten. Os de 13 a 19 terminam em “‑teen” (thirteen, fifteen) e as dezenas terminam em “‑ty” (thirty, fifty). A diferença está no fim da palavra: fifteen é 15 e fifty é 50.",
+            conceito: "Primeiro, os números de 1 a 10: “one, two, three, four, five, six, seven, eight, nine, ten”. Os de 13 a 19 terminam em ‑teen (“thirteen”, “fifteen”) e as dezenas terminam em ‑ty (“thirty”, “fifty”). A diferença está no fim da palavra: “fifteen” é 15 e “fifty” é 50.",
             exemplo: "“How much is it?” — “It's fifteen dollars.” São quinze dólares, não cinquenta: o “‑teen” no fim indica a casa dos dez.",
             falas: [
               falaEn("One, two, three, four, five, six, seven, eight, nine, ten.", "Um, dois, três, quatro, cinco, seis, sete, oito, nove, dez."),
@@ -448,62 +467,13 @@ const ingles: Demo = {
               passos: ["Fifteen dollars (15)", "Fifty dollars (50)", "Thirteen dollars (13)", "Thirty dollars (30)"],
               dica: "Em “fifteen”, a força fica no fim: fif‑TEEN. Em “fifty”, fica no começo: FIF‑ty.",
             },
+            outroJeito: "Truque para não confundir: no ‑teen, a força da voz vai no fim (thir‑TEEN, fif‑TEEN) e o número fica entre 13 e 19. No ‑ty, a força vai no começo (THIR‑ty, FIF‑ty) e é uma dezena redonda: 30, 50. Na dúvida, peça para a pessoa mostrar o preço escrito.",
           },
         ],
       },
       {
         titulo: trechos[2],
         licoes: [
-          {
-            titulo: "Revisão: um dia de viagem",
-            objetivo: "Juntar cumprimentos, informações e preços numa conversa.",
-            conceito: "Num dia de viagem você junta tudo: cumprimentar, pedir informações e entender preços. Ouça com atenção o fim das palavras e, se não entender, peça para repetir: “Sorry, can you repeat?”",
-            exemplo: "“Excuse me, where is the bus stop?” — “It's next to the hotel.” — “Thank you! How much is the ticket?” — “It's fifteen dollars.”",
-            falas: [
-              falaEn("Where is the bus stop?", "Onde fica o ponto de ônibus?"),
-              falaEn("How much is the ticket?", "Quanto custa a passagem?"),
-              falaEn("Sorry, can you repeat?", "Desculpe, pode repetir?"),
-            ],
-            origem: origemIngles,
-            exercicio: {
-              tipo: "verdadeiro_falso",
-              enunciado: "A frase é verdadeira ou falsa? Escolha também o porquê.",
-              afirmacao: "“Fifty dollars” e “fifteen dollars” são o mesmo preço.",
-              justificativas: [
-                op("teen", "“Fifteen” termina em “‑teen” e é 15; “fifty” termina em “‑ty” e é 50"),
-                op("igual", "As duas palavras começam com “fif”, então valem o mesmo"),
-                op("moeda", "Só muda a moeda, não o valor"),
-              ],
-              gabarito: ["falso", "teen"],
-              feedbackCorreto: "Isso: o fim da palavra muda tudo. 15 é “fifteen” e 50 é “fifty”.",
-              feedbackIncorreto: "É falsa: “fifteen” (15) termina em “‑teen” e “fifty” (50) termina em “‑ty”.",
-            },
-            extras: [
-              {
-                tipo: "ordenar",
-                enunciado: "Coloque a conversa no ponto de ônibus na ordem.",
-                itens: [
-                  op("onde", "Excuse me, where is the bus stop?"),
-                  op("perto", "It's next to the hotel."),
-                  op("preco", "Thank you! How much is the ticket?"),
-                  op("valor", "It's fifteen dollars."),
-                ],
-                gabarito: ["onde", "perto", "preco", "valor"],
-                feedbackCorreto: "Isso: pergunta, resposta, agradecimento e preço, como numa conversa de verdade.",
-                feedbackIncorreto: "Pense na conversa: primeiro você pede licença e pergunta onde fica; depois vêm a resposta, o agradecimento e a pergunta do preço.",
-              },
-              {
-                tipo: "lacuna",
-                enunciado: "Você não entendeu o preço. Complete o pedido para a pessoa repetir.",
-                trecho: "Sorry, can you ___?",
-                trechoTipo: "frase",
-                gabarito: ["repeat"],
-                exata: true,
-                feedbackCorreto: "Isso: “Sorry, can you repeat?” salva qualquer conversa.",
-                feedbackIncorreto: "É o verbo “repetir” em inglês, que apareceu no conceito desta lição. Ele se parece com o português.",
-              },
-            ],
-          },
           {
             titulo: "Pedir comida no restaurante",
             objetivo: "Fazer um pedido educado no restaurante.",
@@ -519,7 +489,7 @@ const ingles: Demo = {
             origem: origemIngles,
             exercicio: {
               tipo: "aberta",
-              enunciado: "Escreva em inglês como você pediria um café e um pão de queijo, de um jeito educado.",
+              enunciado: "Escreva em inglês como você pediria um café (coffee) e um pão de queijo (cheese bread), de um jeito educado.",
               minimo: 15,
               gabarito: ["i'd like|i would like|can i have|could i have|may i have", "please", "coffee"],
               criterios: ["Usa uma forma educada de pedir (I'd like, Can I have…)", "Termina com “please”", "Pede o café (coffee)"],
@@ -539,6 +509,59 @@ const ingles: Demo = {
                 feedbackIncorreto: 'Ouça de novo: a palavra-chave é “check”. Ela apareceu no exemplo desta lição.',
               },
             ],
+            outroJeito: "Pense no pedido como um sanduíche: o pão de cima é “I'd like…” (eu gostaria de), o recheio é o que você quer e o pão de baixo é “please”. Cuidado com “I like”, sem o ’d: quer dizer “eu gosto”, não “eu quero”.",
+          },
+          {
+            titulo: "Revisão: um dia de viagem",
+            objetivo: "Juntar cumprimentos, informações, preços e pedidos numa conversa.",
+            conceito: "Num dia de viagem você junta tudo: cumprimentar, pedir informações, entender preços e pedir comida. Ouça com atenção o fim das palavras e, se não entender, peça para repetir: “Sorry, can you repeat?”",
+            exemplo: "“Excuse me, where is the bus stop?” — “It's next to the hotel.” — “Thank you! How much is the ticket?” — “It's fifteen dollars.” No almoço: “I'd like a sandwich, please.”",
+            falas: [
+              falaEn("Where is the bus stop?", "Onde fica o ponto de ônibus?"),
+              falaEn("How much is the ticket?", "Quanto custa a passagem?"),
+              falaEn("I'd like a sandwich, please.", "Eu gostaria de um sanduíche, por favor."),
+              falaEn("Sorry, can you repeat?", "Desculpe, pode repetir?"),
+            ],
+            origem: origemIngles,
+            exercicio: {
+              tipo: "verdadeiro_falso",
+              enunciado: "A frase é verdadeira ou falsa? Escolha também o porquê.",
+              afirmacao: "“Fifty dollars” e “fifteen dollars” são o mesmo preço.",
+              justificativas: [
+                op("teen", "“Fifteen” termina em “‑teen” e é 15; “fifty” termina em “‑ty” e é 50"),
+                op("igual", "As duas palavras começam com “fif”, então valem o mesmo"),
+                op("moeda", "Só muda a moeda, não o valor"),
+              ],
+              gabarito: ["falso", "teen"],
+              feedbackCorreto: "Isso: o fim da palavra muda tudo. 15 é “fifteen” e 50 é “fifty”.",
+              feedbackIncorreto: "Fale as duas palavras devagar e repare no fim: fif‑TEEN e FIF‑ty. O fim muda o número?",
+            },
+            extras: [
+              {
+                tipo: "ordenar",
+                enunciado: "Coloque a conversa no ponto de ônibus na ordem.",
+                itens: [
+                  op("onde", "Excuse me, where is the bus stop?"),
+                  op("perto", "It's next to the hotel."),
+                  op("preco", "Thank you! How much is the ticket?"),
+                  op("valor", "It's fifteen dollars."),
+                ],
+                gabarito: ["onde", "perto", "preco", "valor"],
+                feedbackCorreto: "Isso: pergunta, resposta, agradecimento e preço, como numa conversa de verdade.",
+                feedbackIncorreto: "Pense na conversa: quem pergunta primeiro? Cada resposta vem logo depois da pergunta dela.",
+              },
+              {
+                tipo: "lacuna",
+                enunciado: "Você não entendeu o preço. Complete o pedido para a pessoa repetir.",
+                trecho: "Sorry, can you ___?",
+                trechoTipo: "frase",
+                gabarito: ["repeat"],
+                exata: true,
+                feedbackCorreto: "Isso: “Sorry, can you repeat?” salva qualquer conversa.",
+                feedbackIncorreto: "É o verbo “repetir” em inglês, que apareceu no conceito desta lição. Ele se parece com o português.",
+              },
+            ],
+            outroJeito: "Um dia de viagem é uma sequência de conversas curtas com a mesma forma: você pergunta, ouve com atenção o fim das palavras e agradece. Se algo escapar, “Sorry, can you repeat?” dá uma segunda chance a qualquer conversa.",
           },
         ],
       },
@@ -592,6 +615,7 @@ const culinaria: Demo = {
                 feedbackIncorreto: 'Releia o conceito: o que acontece se você procura o tempero com a panela no fogo?',
               },
             ],
+            outroJeito: "Pense num programa de culinária na TV: tudo já está em potinhos antes de a câmera ligar. Em casa funciona igual: separe, meça e corte tudo antes de acender o fogo, e na hora de cozinhar você só junta.",
           },
           {
             titulo: "Cortes básicos de legumes",
@@ -610,7 +634,7 @@ const culinaria: Demo = {
               ],
               gabarito: ["brunoise=cubinhos", "julienne=tiras", "rodelas=discos"],
               feedbackCorreto: "Isso! Brunoise são cubinhos, julienne são tiras e rodelas são discos.",
-              feedbackIncorreto: "Reveja o exemplo da cenoura: julienne são palitos finos, brunoise são cubinhos e rodelas são discos.",
+              feedbackIncorreto: "Pense no formato de cada corte: qual deles vira tiras, como palitos? Qual vira discos? O que sobrar é o dos cubinhos.",
             },
             extras: [
               {
@@ -624,9 +648,10 @@ const culinaria: Demo = {
                 ],
                 gabarito: ["falso", "escorrega"],
                 feedbackCorreto: "Isso: a faca afiada corta com pouca força e não escorrega. Acidente acontece com faca cega.",
-                feedbackIncorreto: "É falsa: a faca sem fio escorrega no alimento e exige força, e é aí que o corte acontece no dedo.",
+                feedbackIncorreto: "Pense no que acontece quando a faca não entra no alimento: você faz mais força. E para onde ela vai se escorregar?",
               },
             ],
+            outroJeito: "Pense no tamanho do pedaço: quanto menor, mais rápido cozinha e mais se mistura. Os cubinhos bem pequenos somem no refogado, as tiras finas cozinham num instante e os discos são o corte de quem tem pressa.",
           },
         ],
       },
@@ -671,6 +696,7 @@ const culinaria: Demo = {
               minutos: 15,
               dica: "Resista à vontade de mexer: mexer solta amido e deixa o arroz empapado.",
             },
+            outroJeito: "Pense em cada grão vestindo uma capa de óleo antes de entrar na água: a capa impede que os grãos grudem. Depois, deixe a panela trabalhar sozinha, porque mexer arranca a capa e solta o amido que gruda.",
           },
           {
             titulo: "O ponto do ovo cozido",
@@ -709,6 +735,7 @@ const culinaria: Demo = {
               tarefa: "Cozinhe um ovo no ponto que você prefere. Use o cronômetro e, no fim, passe o ovo para água fria.",
               minutos: 8,
             },
+            outroJeito: "Pense na gema como algo que vai firmando aos poucos: quanto mais minutos na água fervendo, mais dura ela fica. A água fria no fim é o freio: para o cozimento na hora certa.",
           },
         ],
       },
@@ -732,7 +759,7 @@ const culinaria: Demo = {
               ],
               gabarito: ["falso", "aroma"],
               feedbackCorreto: "Isso: erva fresca vai no fim, para o aroma chegar ao prato.",
-              feedbackIncorreto: "É falsa: o calor longo apaga o aroma das ervas frescas. Elas entram no fim.",
+              feedbackIncorreto: "Pense no cheiro da salsinha picada na hora: o que acontece com um perfume que fica muito tempo no calor?",
             },
             extras: [
               {
@@ -744,6 +771,7 @@ const culinaria: Demo = {
                 feedbackIncorreto: 'Ervas frescas perdem o aroma no fogo. Quando ela fica menos tempo no calor?',
               },
             ],
+            outroJeito: "Tempere como quem acerta o volume da música: aos poucos, provando no caminho. Aumentar é fácil; abaixar depois de passar do ponto é quase impossível. E as ervas frescas são o perfume do prato: entram no fim, para o cheiro não evaporar.",
           },
           {
             titulo: "Revisão: planejar um almoço simples",
@@ -775,6 +803,7 @@ const culinaria: Demo = {
                 feedbackIncorreto: 'Pense no que demora mais: ele começa primeiro.',
               },
             ],
+            outroJeito: "Planeje de trás para a frente: o que demora mais começa primeiro. Se o arroz leva uns 20 minutos e o ovo 8, o arroz vai ao fogo antes, e o resto acontece enquanto ele cozinha.",
           },
         ],
       },
@@ -812,7 +841,7 @@ const historia: Demo = {
               ],
               gabarito: ["falso", "povos"],
               feedbackCorreto: "Isso: a história do território começa muito antes de 1500, com os povos originários.",
-              feedbackIncorreto: "É falsa: milhões de indígenas, de centenas de povos, já viviam aqui quando Cabral chegou.",
+              feedbackIncorreto: "Releia o conceito: quem já vivia aqui quando a frota chegou? Muitas palavras que usamos até hoje vêm das línguas desses povos.",
             },
             extras: [
               {
@@ -824,6 +853,7 @@ const historia: Demo = {
                 feedbackIncorreto: 'O exemplo da lição cita palavras de origem tupi; uma delas está nas opções.',
               },
             ],
+            outroJeito: "Pense numa casa que já tinha moradores quando um visitante chegou: em 1500, o território não estava vazio. Os tupis, os guaranis e os jês, entre centenas de povos, já davam nome a rios e lugares, e muitos desses nomes usamos até hoje.",
           },
           {
             titulo: "Colônia: o ciclo do açúcar",
@@ -854,6 +884,7 @@ const historia: Demo = {
                 feedbackIncorreto: 'Releia o conceito: quem trabalhava nos engenhos, e em que condição?',
               },
             ],
+            outroJeito: "Pense no engenho como uma fábrica no meio da plantação: a cana entrava de um lado e o açúcar saía do outro, rumo à Europa. Essa riqueza dependia do trabalho forçado de africanos escravizados, e por isso o Nordeste foi o centro da colônia nesses séculos.",
           },
         ],
       },
@@ -887,7 +918,7 @@ const historia: Demo = {
               ],
               gabarito: ["cabral", "familia", "independencia", "republica"],
               feedbackCorreto: "Perfeito: 1500, 1808, 1822 e 1889.",
-              feedbackIncorreto: "Use a linha do tempo: 1500 (Cabral), 1808 (família real), 1822 (Independência) e 1889 (República).",
+              feedbackIncorreto: "Use a linha do tempo da lição: os marcos estão em ordem, do mais antigo ao mais recente. Comece pelo que aconteceu primeiro.",
             },
             extras: [
               {
@@ -899,6 +930,7 @@ const historia: Demo = {
                 feedbackIncorreto: 'Procure o que veio antes de 1822 e fez do Rio a sede do governo.',
               },
             ],
+            outroJeito: "Pense em peças de dominó em fila: uma derruba a outra. A família real chega ao Rio, o Rio vira sede do governo, o Brasil ganha autonomia, e isso empurra a Independência. A República vem logo depois do fim da escravidão.",
           },
           {
             titulo: "Independência em 1822",
@@ -931,6 +963,7 @@ const historia: Demo = {
                 feedbackIncorreto: "Lembre do Grito do Ipiranga, em 1822: a frase opõe a independência ao pior destino possível.",
               },
             ],
+            outroJeito: "Pense numa família em que o pai volta para a terra natal e deixa o filho cuidando da casa: Dom João voltou a Portugal e Dom Pedro ficou como regente. Quando Portugal quis mandar de novo, o filho declarou a casa independente, às margens do Ipiranga.",
           },
         ],
       },
@@ -962,6 +995,7 @@ const historia: Demo = {
                 feedbackIncorreto: "Em 15 de novembro de 1889 foi proclamada a República. A Independência é de 1822 e a família real chegou em 1808.",
               },
             ],
+            outroJeito: "Pense nas duas datas como causa e consequência coladas: a Lei Áurea acabou com a escravidão e tirou dos grandes fazendeiros o motivo para apoiar o imperador. Sem esse apoio, a monarquia caiu no ano seguinte, com a República.",
           },
           {
             titulo: "Revisão: explique uma mudança",
@@ -1000,6 +1034,7 @@ const historia: Demo = {
                 feedbackIncorreto: 'Foi 14 anos depois da chegada da família real, em 1808.',
               },
             ],
+            outroJeito: "Uma boa explicação histórica é como uma notícia: o que aconteceu, quem foi afetado e o que mudou depois. Se você responde às três perguntas com um fato e uma data, a explicação fica completa.",
           },
         ],
       },
@@ -1049,6 +1084,7 @@ const fracoes: Demo = {
                 feedbackIncorreto: "O denominador conta todas as partes iguais da barra, pintadas ou não. Conte de novo.",
               },
             ],
+            outroJeito: "Pense numa barra de chocolate: o número de baixo diz em quantos quadradinhos iguais ela foi dividida, e o de cima, quantos quadradinhos você pegou. 3/8 é “peguei 3 de 8 quadradinhos”.",
           },
           {
             titulo: "Frações equivalentes",
@@ -1064,7 +1100,7 @@ const fracoes: Demo = {
               direita: [op("tresSextos", "3/6"), op("quatroSextos", "4/6"), op("seisOitavos", "6/8")],
               gabarito: ["meio=tresSextos", "doisTercos=quatroSextos", "tresQuartos=seisOitavos"],
               feedbackCorreto: "Isso! Em cada par, numerador e denominador foram multiplicados pelo mesmo número.",
-              feedbackIncorreto: "Procure o número que multiplica os dois termos: 1/2 × 3 = 3/6, 2/3 × 2 = 4/6 e 3/4 × 2 = 6/8.",
+              feedbackIncorreto: "Procure o número que multiplica o numerador e o denominador ao mesmo tempo. Comece por 1/2: por quanto você multiplica o 2 para chegar a um denominador da direita?",
             },
             extras: [
               {
@@ -1077,6 +1113,7 @@ const fracoes: Demo = {
                 feedbackIncorreto: 'Multiplique o numerador e o denominador pelo mesmo número: 3 vezes quanto dá 6?',
               },
             ],
+            outroJeito: "Pense em trocar uma nota de 10 reais por duas de 5: o valor é o mesmo, só muda a quantidade de notas. Multiplicar em cima e embaixo pelo mesmo número corta as mesmas partes em pedaços menores, sem mudar o total.",
           },
         ],
       },
@@ -1107,6 +1144,7 @@ const fracoes: Demo = {
                 feedbackIncorreto: 'Com o mesmo denominador, as partes têm o mesmo tamanho. Quem tem mais partes?',
               },
             ],
+            outroJeito: "Se as fatias têm o mesmo tamanho, ganha quem tem mais fatias. Com o mesmo número embaixo, basta comparar o número de cima.",
           },
           {
             titulo: "Comparar frações com o mesmo numerador",
@@ -1126,7 +1164,7 @@ const fracoes: Demo = {
               ],
               gabarito: ["falso", "partes"],
               feedbackCorreto: "Isso: oito partes são menores que quatro partes do mesmo inteiro. 1/8 < 1/4.",
-              feedbackIncorreto: "É falsa: com o mesmo numerador, o denominador maior divide o inteiro em partes menores. 1/8 < 1/4.",
+              feedbackIncorreto: "Pense numa pizza: se você a divide em mais fatias, cada fatia fica maior ou menor?",
             },
             extras: [
               {
@@ -1138,6 +1176,7 @@ const fracoes: Demo = {
                 feedbackIncorreto: 'Mesmo numerador: quanto mais partes o inteiro tem, menor é cada parte.',
               },
             ],
+            outroJeito: "Pense em dividir uma pizza entre mais amigos: quanto mais gente, menor a fatia de cada um. Com o mesmo número em cima, a fração com o número de baixo maior tem pedaços menores, então vale menos.",
           },
         ],
       },
@@ -1175,6 +1214,7 @@ const fracoes: Demo = {
               passos: ["Dobre a folha ao meio três vezes.", "Abra e conte as 8 partes iguais.", "Pinte 3 partes, depois mais 2.", "Escreva a fração pintada."],
               dica: "Se as dobras não ficarem iguais, as partes não são oitavos. Capriche no vinco.",
             },
+            outroJeito: "Pense em somar maçãs: 2 maçãs + 5 maçãs = 7 maçãs. Nas frações com o mesmo denominador, “nonos” é o nome da fruta: 2 nonos + 5 nonos = 7 nonos. O nome não muda; só a quantidade.",
           },
           {
             titulo: "Revisão: explique uma soma de frações",
@@ -1211,6 +1251,7 @@ const fracoes: Demo = {
                 feedbackIncorreto: 'Com o mesmo denominador, junte só os numeradores.',
               },
             ],
+            outroJeito: "Uma boa explicação de soma de frações responde a duas perguntas: qual é o tamanho das partes (o denominador, que não muda) e quantas partes você juntou (a soma dos numeradores).",
           },
         ],
       },
@@ -1247,7 +1288,7 @@ const fotografia: Demo = {
               ],
               gabarito: ["falso", "lente"],
               feedbackCorreto: "Isso: limpar a lente e firmar as mãos resolve a maioria das fotos borradas.",
-              feedbackIncorreto: "É falsa: lente engordurada e mão tremendo borram fotos em qualquer celular.",
+              feedbackIncorreto: "Pense no que borra uma foto até num celular caro: o que fica entre a cena e a câmera? E se a mão se mexe na hora do toque?",
             },
             extras: [
               {
@@ -1264,6 +1305,7 @@ const fotografia: Demo = {
               minutos: 2,
               dica: "Use um pano de óculos ou a barra de uma camiseta de algodão. Evite papel, que pode riscar a lente.",
             },
+            outroJeito: "Pense na lente como os óculos do celular: com uma marca de dedo, tudo fica embaçado, por melhor que seja a câmera. E segurar firme é como fotografar prendendo a respiração: cotovelos colados no corpo viram um tripé.",
           },
           {
             titulo: "A regra dos terços",
@@ -1284,7 +1326,7 @@ const fotografia: Demo = {
               opcoes: [op("a", "Numa das linhas horizontais da grade"), op("b", "Exatamente no meio da foto"), op("c", "Na borda de baixo da foto")],
               gabarito: ["a"],
               feedbackCorreto: "Isso: numa das linhas, dando mais espaço para o céu ou para o mar.",
-              feedbackIncorreto: "Pela regra dos terços, o horizonte fica numa das linhas horizontais da grade, e não no meio.",
+              feedbackIncorreto: "Lembre da grade da câmera, como um jogo da velha: qual lugar a regra dos terços pede para evitar? O horizonte fica melhor longe dele.",
             },
             extras: [
               {
@@ -1305,6 +1347,7 @@ const fotografia: Demo = {
               tarefa: "Ative a grade da câmera e fotografe um objeto três vezes: no meio, num cruzamento da esquerda e num da direita. Veja qual ficou mais interessante.",
               minutos: 3,
             },
+            outroJeito: "Pense no jogo da velha: o centro é o lugar óbvio, mas as linhas e os cruzamentos dão mais movimento à foto. Coloque o assunto num cruzamento e o horizonte numa das linhas, deixando mais espaço para o que importa, o céu ou o mar.",
           },
         ],
       },
@@ -1348,6 +1391,7 @@ const fotografia: Demo = {
                 feedbackIncorreto: 'É quando o sol está baixo e a luz fica quente e suave.',
               },
             ],
+            outroJeito: "Pense na luz como uma lanterna: apontada de cima, como o sol do meio-dia, ela marca sombras duras; vinda de lado e suave, como a da janela, ela desenha o rosto. A hora dourada é a lanterna mais quente e baixa do dia.",
           },
           {
             titulo: "Foco e brilho com um toque",
@@ -1383,6 +1427,7 @@ const fotografia: Demo = {
               tarefa: "Fotografe algo perto de uma janela. Toque no assunto para focar, deslize o brilho para cima e para baixo e tire duas versões.",
               minutos: 3,
             },
+            outroJeito: "Tocar na tela é apontar com o dedo: “é isto que importa”. O celular foca e acerta a luz ali. Se ainda ficar claro ou escuro demais, o controle de brilho funciona como um regulador de luz: para cima clareia, para baixo escurece.",
           },
         ],
       },
@@ -1423,9 +1468,10 @@ const fotografia: Demo = {
                 ],
                 gabarito: ["falso", "pixels"],
                 feedbackCorreto: "Isso: aproxime-se do assunto em vez de esticar o zoom.",
-                feedbackIncorreto: "É falsa: o zoom digital só amplia os pixels e a foto perde nitidez. Chegue mais perto.",
+                feedbackIncorreto: "Pense no que o zoom digital faz: ele aproxima a lente ou só estica a imagem que já foi capturada?",
               },
             ],
+            outroJeito: "Antes de cada retrato, faça três perguntas: de onde vem a luz (de lado, suave), onde ficam os olhos (numa linha da grade) e onde está o foco (no rosto). Se precisar de mais perto, dê dois passos em vez de usar o zoom.",
           },
           {
             titulo: "Explique suas escolhas",
@@ -1453,6 +1499,7 @@ const fotografia: Demo = {
                 feedbackIncorreto: 'Lembre da lição de luz natural: qual luz é suave e valoriza rostos?',
               },
             ],
+            outroJeito: "Uma boa explicação de foto é como um bilhete: diz de onde vem a luz, onde ficou o assunto e onde você tocou para focar. Quem lê deve conseguir refazer a foto só com a sua explicação.",
           },
         ],
       },

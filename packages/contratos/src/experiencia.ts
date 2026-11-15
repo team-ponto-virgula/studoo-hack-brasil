@@ -1,4 +1,4 @@
-import type { FaltaParaVerificar } from './licao';
+import type { FaltaParaVerificar, MotivoRever } from './licao';
 
 /** Conteúdo compartilhado pelas interfaces web e nativa. */
 export const mensagens = {
@@ -14,7 +14,7 @@ export const mensagens = {
       verPonte: 'Ver outro jeito de entender', ponte: 'Outro jeito de entender', construir: 'Mostrar outro exemplo', ponteDica: 'Vamos explorar a mesma ideia por outro caminho, com um exemplo e um desafio novos.',
       pontePronta: 'Entendi!', ponteVoltar: 'Agora tente o exercício original novamente.', ponteMapa: 'Reforço', ponteMapaFeita: 'Reforço feito',
       retornoAutomatico: 'Dica do Stu',
-      verificar: 'Conferir este exemplo', ensinar: 'Ensine ao Stu (opcional)', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo (o Stu é o mascote do Studoo). Dê um exemplo seu: ele aponta o que faz sentido e propõe uma situação nova.',
+      verificar: 'Conferir este exemplo', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo (o Stu é o mascote do Studoo). Dê um exemplo seu: ele aponta o que faz sentido e propõe uma situação nova.',
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       ensinoAutomatico: 'Retorno automático: o Stu procura na sua explicação as ideias-chave desta lição.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
@@ -160,7 +160,11 @@ export const mensagens = {
         fechar: 'Fechar',
         concluidaTexto: 'Você concluiu esta lição. Refazer não muda seu progresso.',
         concluidaComReforco: 'Você concluiu esta lição e fez um reforço nela (outro exemplo e uma pergunta mais simples). Refazer não muda seu progresso e ajuda a fixar.',
-        concluidaRever: 'Você concluiu esta lição, mas algo ficou para trás: um erro antes do acerto ou a prática que ainda não saiu. Vale refazer para fixar (seu progresso não muda).',
+        concluidaRever: (motivo: MotivoRever) => ({
+            erros: 'Você concluiu esta lição, mas errou a maior parte dos exercícios antes de acertar. Refazer ajuda a fixar, e seu progresso não muda.',
+            pratica: 'Você concluiu esta lição, mas a prática ainda não saiu. Vale praticar de novo com calma; seu progresso não muda.',
+            erros_e_pratica: 'Você concluiu esta lição, mas errou a maior parte dos exercícios antes de acertar e a prática ainda não saiu. Vale refazer com calma; seu progresso não muda.',
+        })[motivo],
         valeRever: 'Vale rever',
         continuarNo: 'Continuar',
         continuarLicao: 'Continuar lição',
@@ -300,6 +304,7 @@ export const mensagens = {
         voltar: 'Voltar à trilha',
         posicao: (etapa: number, total: number) => `Etapa ${etapa} de ${total}`,
         seguir: 'Avançar',
+        continuarLendo: 'Continuar lendo',
         conceito: 'Conceito',
         explicacaoDoStu: 'O Stu explica',
         exemplo: 'Exemplo',
@@ -334,6 +339,8 @@ export const mensagens = {
         revisarTentativas: (comErro: number) =>
             `Você errou ${comErro === 1 ? '1 exercício' : `${comErro} exercícios`} antes de acertar. Vale rever esta lição amanhã: no mapa, toque nela e escolha Refazer lição.`,
         revisarPratica: 'A prática ainda não saiu? Amanhã, no mapa, toque nesta lição, escolha Refazer lição e tente de novo, com calma.',
+        revisarErrosEPratica: (comErro: number) =>
+            `Você errou ${comErro === 1 ? '1 exercício' : `${comErro} exercícios`} antes de acertar, e a prática ainda não saiu. Vale refazer esta lição amanhã, com calma: no mapa, toque nela e escolha Refazer lição.`,
         trilhaResumo: (licoes: number, partes: number, estatisticas?: { segundos: number; acertosDePrimeira: number; exercicios: number }) => {
             const base = `Você concluiu ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}`;
             if (!estatisticas) return `${base}.`;
@@ -380,6 +387,7 @@ export const mensagens = {
             esconderTexto: 'Esconder o texto',
             semVoz: 'Este aparelho não tem voz para ler em voz alta. Use “Mostrar o texto”.',
             falasTitulo: 'Ouça e repita',
+            toqueParaOuvir: 'Toque nas frases destacadas para ouvir.',
             tocando: 'Tocando…',
             semVozFrase: 'Este aparelho não tem voz para esta frase. Leia o texto.',
             falar: 'Falar',
@@ -415,6 +423,7 @@ export const mensagens = {
             ouvirAcorde: 'Ouvir o acorde',
             ouvirBatida: 'Ouvir a batida',
             tocarJunto: 'Tocar junto (cerca de 30 s)',
+            verBatida: (nome: string) => `Ver a batida no ${nome}`,
             semSom: 'Não foi possível tocar o som neste aparelho.',
             tocando: 'Tocando…',
             dedos: ['', 'indicador', 'médio', 'anelar', 'mínimo'],
@@ -431,6 +440,7 @@ export const mensagens = {
             posicao: (posicao: number) => `${posicao}º`,
             colocar: (texto: string) => `Colocar “${texto}” na ordem`,
             tirar: (texto: string, posicao: number) => `Tirar “${texto}” da posição ${posicao}`,
+            travado: (texto: string, posicao: number) => `“${texto}”, na posição ${posicao}: já está certo`,
             recomecar: 'Recomeçar',
             certos: (certos: number, total: number) => `${certos} de ${total} na posição certa.`
         },
@@ -441,6 +451,7 @@ export const mensagens = {
             escolhido: (texto: string) => `“${texto}” escolhido. Agora toque no par dele à direita.`,
             ligar: (esquerda: string, direita: string) => `Ligar “${esquerda}” a “${direita}”`,
             desfazer: (esquerda: string, direita: string) => `Desfazer o par “${esquerda}” e “${direita}”`,
+            travado: (esquerda: string, direita: string) => `“${esquerda}” ligado a “${direita}”: já está certo`,
             par: (numero: number) => `Par ${numero}`,
             recomecar: 'Recomeçar',
             certos: (certos: number, total: number) => `${certos} de ${total} pares certos.`
@@ -479,6 +490,7 @@ export const mensagens = {
             acabou: 'Tempo! Como foi?',
             comoFoi: 'Como foi?',
             comeceAntes: 'Comece o cronômetro e pratique. Depois, conte como foi.',
+            continuePraticando: (segundos: number) => `Continue praticando: em ${segundos} s você conta como foi.`,
             opcoes: { consegui: 'Consegui', quase: 'Quase lá', ainda_nao: 'Ainda não' },
             respostas: {
                 consegui: 'Que ótimo! Fazer de verdade é o que fixa a habilidade.',
@@ -532,6 +544,23 @@ export const mensagens = {
         entrar: 'Entrar no piloto',
     }
 } as const;
+
+/**
+ * O lembrete de rever na conclusão da lição, com o motivo: exercício sem acerto, a maior parte errada antes do acerto,
+ * a prática que não saiu, ou os dois últimos juntos (o mesmo critério do mapa, `motivoParaRever`).
+ */
+export function textoParaRever(resumo: { acertos: number; acertosDePrimeira: number; exercicios: number; pratica?: string }): string {
+  const textos = mensagens.licao;
+  const semAcerto = resumo.exercicios - resumo.acertos;
+  if (semAcerto > 0) return textos.revisarErros(semAcerto);
+  const comErro = resumo.exercicios - resumo.acertosDePrimeira;
+  // O mesmo critério de `motivoParaRever` (licao.ts), escrito aqui para os textos não dependerem de outro módulo.
+  const muitosErros = resumo.acertosDePrimeira * 2 < resumo.exercicios;
+  const praticaPendente = resumo.pratica === 'ainda_nao';
+  if (muitosErros && praticaPendente) return textos.revisarErrosEPratica(comErro);
+  if (muitosErros) return textos.revisarTentativas(comErro);
+  return textos.revisarPratica;
+}
 
 /** O que falta para o "Verificar" funcionar, em texto (a web e o app mostram no rodapé da aula). */
 export function textoDaFalta(falta: FaltaParaVerificar): string {

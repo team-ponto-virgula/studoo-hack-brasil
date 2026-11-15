@@ -1,4 +1,4 @@
-export { mensagens, textoDaFalta } from '@studoo/contratos/experiencia';
+export { mensagens, textoDaFalta, textoParaRever } from '@studoo/contratos/experiencia';
 import { mensagens } from '@studoo/contratos/experiencia';
 
 export function textoErro(codigo: string) {

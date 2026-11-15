@@ -93,6 +93,25 @@ export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string
   }
 }
 
+/** Por que vale rever uma lição concluída: muitos erros antes do acerto, a prática que ainda não saiu, ou os dois. */
+export type MotivoRever = 'erros' | 'pratica' | 'erros_e_pratica';
+
+/**
+ * Vale rever quando a maior parte dos exercícios saiu errada antes do acerto ou quando a prática ficou em "ainda não".
+ * Um erro só, numa lição de dois ou três exercícios, faz parte de aprender e não marca a lição.
+ */
+export function motivoParaRever({ acertosDePrimeira, exercicios, pratica }: {
+  acertosDePrimeira?: number | null;
+  exercicios?: number | null;
+  pratica?: string | null;
+}): MotivoRever | null {
+  const erros = typeof exercicios === 'number' && exercicios > 0 && (acertosDePrimeira ?? 0) * 2 < exercicios;
+  const praticaPendente = pratica === 'ainda_nao';
+  if (erros && praticaPendente) return 'erros_e_pratica';
+  if (erros) return 'erros';
+  return praticaPendente ? 'pratica' : null;
+}
+
 /**
  * Errou, mas acertou uma parte (itens na posição, pares, o valor ou o porquê, critérios da resposta aberta): o retorno
  * diz “Quase lá!”. Sem nenhuma parte certa, o título é outro, para não dizer “quase” a quem ainda está longe.
