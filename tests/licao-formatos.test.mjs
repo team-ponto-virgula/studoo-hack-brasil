@@ -8,6 +8,8 @@ import {
   linhasDePassos,
   paraBase64,
   partesDaLacuna,
+  respostaCompleta,
+  semAspas,
   sintetizarAcorde,
 } from "@studoo/contratos";
 import {
@@ -159,6 +161,11 @@ test("apresentar embaralha sem entregar a ordem, esconde o gabarito e define o t
   assert.equal(inferirTipoTrecho("1. Lave\n2. Corte\n3. Refogue"), "passos");
   assert.deepEqual(linhasDePassos("1. Lave\n2) Corte\n- Refogue"), ["Lave", "Corte", "Refogue"]);
   assert.deepEqual(partesDaLacuna("Eu giro a ___ na cabeça."), ["Eu giro a ", " na cabeça."]);
+  assert.equal(semAspas("“Independência ou ___!”"), "Independência ou ___!");
+  assert.equal(respostaCompleta(publico, "a,b"), false, "ordem incompleta não verifica");
+  assert.equal(respostaCompleta(publico, "d,c,b,a"), true);
+  assert.equal(respostaCompleta({ tipo: "verdadeiro_falso", enunciado: "x", afirmacao: "y", justificativas: [] }, "falso:"), false);
+  assert.equal(respostaCompleta({ tipo: "aberta", enunciado: "x", minimo: 10 }, "curta"), false);
 });
 
 test("as etapas da lição mudam com o número de exercícios e a prática", () => {

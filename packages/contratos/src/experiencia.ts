@@ -78,7 +78,7 @@ export const mensagens = {
         entrando: 'Entrando…',
         arteTitulo: 'Aprenda qualquer coisa, um passo de cada vez.',
         arteTexto: 'Conte o que quer estudar e o Studoo monta uma trilha de lições curtas, com exercícios e feedback.',
-        temas: ['Violão', 'Inglês', 'Frações', 'Fotografia', 'SQL', 'Culinária'],
+        temas: ['Violão', 'Inglês', 'Culinária', 'História', 'Fotografia', 'Frações'],
     },
     apresentacao: {
         rotulo: 'Como o Studoo funciona',
@@ -95,7 +95,7 @@ export const mensagens = {
             },
             {
                 titulo: 'Conte o que quer aprender',
-                texto: 'Pode ser qualquer coisa: violão, inglês para viagem, frações, fotografia, primeiros socorros ou SQL para a prova.',
+                texto: 'Pode ser qualquer coisa: violão, inglês para viagem, culinária, história do Brasil, fotografia ou primeiros socorros.',
             },
             {
                 titulo: 'Veja sua trilha nascer',
@@ -103,14 +103,14 @@ export const mensagens = {
             },
             {
                 titulo: 'Avance no seu ritmo',
-                texto: 'Cada lição tem conceito, exemplo e exercício com feedback. Seu progresso fica salvo na web e no celular.',
+                texto: 'Cada lição tem explicação, exemplo e exercícios de vários tipos, com áudio, imagens e prática fora da tela quando ajudam. Seu progresso fica salvo na web e no celular.',
             },
             {
                 titulo: 'O que te interessa?',
                 texto: 'Escolha uma área para ver ideias de trilha primeiro. Dá para mudar depois.',
             },
         ],
-        temas: ['Violão', 'Inglês', 'Frações', 'Fotografia', 'Primeiros socorros', 'SQL'],
+        temas: ['Violão', 'Inglês', 'Culinária', 'História', 'Fotografia', 'Primeiros socorros'],
         salvo: 'Progresso salvo',
         oi: 'Oi!',
         areas: 'Áreas de interesse'
@@ -216,7 +216,7 @@ export const mensagens = {
         sugestoes: 'Ideias para começar',
         areas: 'Áreas de interesse',
         temas: [
-            { id: 'populares', nome: 'Populares', exemplos: ['SQL para a prova', 'Frações', 'Inglês para entrevista', 'Violão do zero: primeiros acordes', 'Fotossíntese para a prova', 'Fotografia com o celular'] },
+            { id: 'populares', nome: 'Populares', exemplos: ['Violão do zero: primeiros acordes', 'Inglês para conversar em viagens', 'Culinária: receitas básicas', 'História do Brasil para a prova', 'Frações', 'Fotografia com o celular'] },
             { id: 'idiomas', nome: 'Idiomas', exemplos: ['Inglês para conversar em viagens', 'Espanhol básico para o trabalho', 'Libras: primeiras conversas'] },
             { id: 'musica', nome: 'Música', exemplos: ['Violão do zero: primeiros acordes', 'Ler partitura para piano', 'Teoria musical para iniciantes'] },
             { id: 'matematica', nome: 'Matemática', exemplos: ['Frações', 'Porcentagem no dia a dia', 'Equações do 1º grau para a prova'] },
@@ -238,7 +238,7 @@ export const mensagens = {
             pronto: 'Perfeito! Já dá para montar sua trilha.',
             escolhida: 'Boa escolha! Ajuste o texto se quiser.'
         },
-        exemplosDigitados: ['Quero aprender violão do zero', 'Inglês para conversar em viagens', 'Frações para a prova do 6º ano', 'Fotografia com o celular'],
+        exemplosDigitados: ['Quero aprender violão do zero', 'Inglês para conversar em viagens', 'Cozinhar o básico sem medo', 'História do Brasil para a prova'],
         exemploPrefixo: 'Ex.: '
     },
     geracao: {
@@ -303,11 +303,105 @@ export const mensagens = {
             etapas: 'Etapas',
             dePrimeira: 'De primeira!',
             tentativas: (total: number) => `${total}`,
-            etapasFeitas: '3 de 3'
+            etapasFeitas: (total: number) => `${total} de ${total}`,
+            pratica: 'Prática'
         },
         avancar: 'Ir para a próxima lição',
         origem: 'Origem',
-        progresso: 'Progresso no plano'
+        progresso: 'Progresso no plano',
+        demonstracao: 'Demonstração',
+        exercicioDe: (atual: number, total: number) => `Exercício ${atual} de ${total}`,
+        observacao: 'Atenção',
+        audio: {
+            ouvir: 'Ouvir',
+            devagar: 'Devagar',
+            ouvirFrase: (texto: string) => `Ouvir “${texto}”`,
+            ouvirDevagar: (texto: string) => `Ouvir “${texto}” devagar`,
+            escuta: 'Ouça e responda',
+            ouvirExercicio: 'Ouvir o áudio',
+            mostrarTexto: 'Mostrar o texto',
+            esconderTexto: 'Esconder o texto',
+            semVoz: 'Este aparelho não tem voz para ler em voz alta. Use “Mostrar o texto”.',
+            falasTitulo: 'Ouça e repita',
+            traducao: 'Tradução'
+        },
+        recursos: {
+            passos: 'Passo a passo',
+            linhaDoTempo: 'Linha do tempo',
+            doMaterial: 'Do seu material',
+            acorde: (nome: string) => `Acorde ${nome}`,
+            ouvirAcorde: 'Ouvir o acorde',
+            tocando: 'Tocando…',
+            dedos: ['', 'indicador', 'médio', 'anelar', 'mínimo'],
+            corda: (corda: number, casa: number, dedo: string) => casa < 0
+                ? `${corda}ª corda não toca`
+                : casa === 0 ? `${corda}ª corda solta` : `${corda}ª corda na casa ${casa}${dedo ? `, com o ${dedo}` : ''}`,
+            legendaAcorde: 'Cordas da 6ª (mais grossa) à 1ª. X: não toca. O: solta. Os números são os dedos.'
+        },
+        ordenar: {
+            instrucao: 'Toque nos itens na ordem certa. Toque de novo para tirar.',
+            suaOrdem: 'Sua ordem',
+            disponiveis: 'Itens para ordenar',
+            vazio: 'Toque num item abaixo para começar.',
+            posicao: (posicao: number) => `${posicao}º`,
+            colocar: (texto: string) => `Colocar “${texto}” na ordem`,
+            tirar: (texto: string, posicao: number) => `Tirar “${texto}” da posição ${posicao}`,
+            recomecar: 'Recomeçar',
+            certos: (certos: number, total: number) => `${certos} de ${total} na posição certa.`
+        },
+        associar: {
+            instrucao: 'Toque num item da esquerda e depois no par dele à direita.',
+            esquerda: 'Itens',
+            direita: 'Pares',
+            escolhido: (texto: string) => `“${texto}” escolhido. Agora toque no par dele à direita.`,
+            ligar: (esquerda: string, direita: string) => `Ligar “${esquerda}” a “${direita}”`,
+            desfazer: (esquerda: string, direita: string) => `Desfazer o par “${esquerda}” e “${direita}”`,
+            par: (numero: number) => `Par ${numero}`,
+            recomecar: 'Recomeçar',
+            certos: (certos: number, total: number) => `${certos} de ${total} pares certos.`
+        },
+        verdadeiroFalso: {
+            afirmacao: 'Afirmação',
+            valor: 'A frase é…',
+            verdadeiro: 'Verdadeira',
+            falso: 'Falsa',
+            porque: 'Por quê?'
+        },
+        aberta: {
+            rotulo: 'Sua explicação',
+            dica: 'Escreva com as suas palavras. Vale um exemplo do dia a dia.',
+            contador: (usados: number, minimo: number) => usados < minimo
+                ? `Faltam ${minimo - usados} ${minimo - usados === 1 ? 'caractere' : 'caracteres'}`
+                : `${usados} caracteres`,
+            criterios: 'O que a correção procurou',
+            atendido: 'Tem',
+            faltou: 'Faltou',
+            modelo: 'Uma boa resposta',
+            simulada: 'Correção do modo demonstração: confere as ideias-chave, não a redação.'
+        },
+        pratica: {
+            etapa: 'Prática',
+            titulo: 'Agora pratique',
+            subtitulo: 'Fora da tela, com as mãos: é assim que a habilidade fica.',
+            passos: 'Confira',
+            dica: 'Dica',
+            cronometro: 'Cronômetro',
+            comecar: 'Começar',
+            pausar: 'Pausar',
+            retomar: 'Continuar',
+            recomecar: 'Recomeçar',
+            restante: (tempo: string) => `Faltam ${tempo}`,
+            acabou: 'Tempo! Como foi?',
+            comoFoi: 'Como foi?',
+            opcoes: { consegui: 'Consegui', quase: 'Quase lá', ainda_nao: 'Ainda não' },
+            respostas: {
+                consegui: 'Que ótimo! Fazer de verdade é o que fixa a habilidade.',
+                quase: 'Quase lá já é muito. Repita amanhã e vai sair.',
+                ainda_nao: 'Tudo bem: toda habilidade começa assim. Reveja a demonstração e tente de novo amanhã.'
+            },
+            concluir: 'Concluir lição',
+            escolha: 'Conte como foi para concluir a lição.'
+        }
     },
     erros: {
         material_invalido: 'Use imagem JPG/PNG/WebP, PDF, DOCX ou CSV de até 5 MB, respeitando os limites de páginas, texto e tabela.',
@@ -345,7 +439,7 @@ export const mensagens = {
         titulo: 'Aprenda qualquer coisa, um passo de cada vez',
         texto: 'Conte o que quer estudar e o Studoo monta uma trilha de lições curtas, com exercícios e feedback.',
         destaques: [
-            'Qualquer assunto: de violão a SQL',
+            'Qualquer assunto: de violão a história do Brasil',
             'A IA monta a trilha, lição por lição',
             'Progresso salvo na web e no celular',
         ],

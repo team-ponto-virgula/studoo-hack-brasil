@@ -37,6 +37,25 @@ export const codificarResposta = {
   verdadeiroFalso: (verdadeiro: boolean, justificativa: string) => `${verdadeiro ? 'verdadeiro' : 'falso'}:${justificativa}`,
 };
 
+/** A resposta já pode ser verificada: ordem completa, todos os pares, valor e justificativa, mínimo de caracteres… */
+export function respostaCompleta(exercicio: ExercicioPublico, resposta: string): boolean {
+  const valor = resposta.trim();
+  switch (exercicio.tipo) {
+    case 'ordenar':
+      return valor.split(',').filter(Boolean).length === exercicio.itens.length;
+    case 'associar':
+      return valor.split(',').filter(Boolean).length === exercicio.esquerda.length;
+    case 'verdadeiro_falso': {
+      const [escolha, justificativa] = valor.split(':');
+      return Boolean(escolha && justificativa);
+    }
+    case 'aberta':
+      return valor.length >= exercicio.minimo;
+    default:
+      return valor.length > 0;
+  }
+}
+
 /** Tamanho máximo da resposta: a aberta é uma explicação; as outras são curtas. */
 export const LIMITES_RESPOSTA = { curta: 300, aberta: 1000 } as const;
 
@@ -59,6 +78,11 @@ export function inferirTipoTrecho(trecho: string): TipoTrecho {
 /** Divide o texto nas lacunas (três ou mais sublinhados), para o app destacar o espaço da resposta. */
 export function partesDaLacuna(texto: string): string[] {
   return texto.split(/_{3,}/);
+}
+
+/** Texto da citação sem as aspas das pontas: o app desenha a aspa decorativa. */
+export function semAspas(texto: string): string {
+  return texto.trim().replace(/^[“"«]\s*/, '').replace(/\s*[”"»]$/, '');
 }
 
 /** Passos de um texto em linhas, sem a numeração que já vier nele (o app numera). */

@@ -480,7 +480,7 @@ export function ApoioDaLicao({
                 <T>{ponte.exemplo}</T>
               </View>
               <H>{ponte.exercicio.enunciado}</H>
-              {ponte.exercicio.tipo !== 'lacuna' &&
+              {ponte.exercicio.tipo === 'multipla_escolha' &&
                 ponte.exercicio.opcoes.map((o) => (
                   <Botao
                     key={o.id}
