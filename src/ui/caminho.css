@@ -962,3 +962,17 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 
 /* Cada pílula de parte na cor do seu bioma: a mudança de capítulo fica marcada. */
 .caminho-parte { border-color: var(--relevo); background: var(--relevo); }
+
+/*
+ * Espaço extra onde o mapa mostra mais coisa embaixo ou em cima do nó:
+ * - a lição com reforço mostra o título, a ponte e o estado embaixo dela;
+ * - a lição atual logo depois de uma divisão de parte precisa da pílula e do balão "Começar" (com o nome) entre os nós.
+ */
+.caminho .caminho-no[data-ligado]:has(.caminho-ponte) { padding-bottom: calc(var(--passo) + 128px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado]:has(.caminho-ponte) { padding-bottom: calc(var(--passo) + 196px); }
+.caminho .caminho-no[data-ligado]:has(.caminho-ponte):has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 236px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 248px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado]:has(.caminho-ponte):has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 300px); }
+/* Com o balão "Começar" logo abaixo, a pílula da parte sobe para o alto do vão (embaixo do nó, ou do rótulo dele). */
+.caminho .caminho-no[data-fim-trecho]:has(+ .caminho-no[data-estado='atual']) > .caminho-marco { top: calc(var(--lente) + 44px); }
+.caminho .caminho-no[data-fim-trecho]:has(.caminho-ponte):has(+ .caminho-no[data-estado='atual']) > .caminho-marco { top: calc(var(--lente) + 132px); }

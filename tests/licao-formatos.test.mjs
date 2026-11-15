@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   codificarResposta,
   etapasDaLicao,
+  faltaParaVerificar,
   frequenciasDoAcorde,
   inferirTipoTrecho,
   linhasDePassos,
@@ -11,6 +12,8 @@ import {
   respostaCompleta,
   semAspas,
   sintetizarAcorde,
+  sintetizarBatida,
+  ultimoExercicio,
 } from "@studoo/contratos";
 import {
   apresentarExercicio,
@@ -20,6 +23,7 @@ import {
   respostaCerta,
   respostaErrada,
 } from "../src/dominio/aprendizado/plano.ts";
+import { exercicioDaResposta, reforcoDoExercicio } from "../src/dominio/aprendizado/reforco.ts";
 import { iniciarGeracao } from "../src/servidor/aprendizado/geracao.ts";
 import { DEMOS } from "../src/servidor/ia/demos.ts";
 import { criarGeradorFalso } from "../src/servidor/ia/falsa.ts";
@@ -111,7 +115,9 @@ test("verdadeiro ou falso exige o valor e a justificativa certos", () => {
   const semJustificativa = avaliarResposta(vf, "falso:cor");
   assert.equal(semJustificativa.correta, false);
   assert.match(semJustificativa.observacao, /justificativa/);
-  assert.deepEqual(avaliarResposta(vf, "verdadeiro:aroma"), { correta: false, feedback: "Ainda não." });
+  assert.deepEqual(semJustificativa.certos, ["valor"], "o valor certo não fica com a cor do erro");
+  assert.deepEqual(avaliarResposta(vf, "verdadeiro:aroma"), { correta: false, feedback: "Ainda não.", certos: ["justificativa"] });
+  assert.deepEqual(avaliarResposta(vf, "falso:aroma")?.certos, ["valor", "justificativa"]);
   for (const invalida of ["talvez:aroma", "falso:xyz", "falso", "falso:aroma:x"]) assert.equal(avaliarResposta(vf, invalida), null, invalida);
 });
 
@@ -131,6 +137,10 @@ test("a resposta aberta confere as ideias-chave no modo demonstração e mostra 
   assert.equal(boa.simulado, true);
   assert.deepEqual(boa.criterios.map(({ atendido }) => atendido), [true, true, true]);
   assert.equal(boa.modelo, aberta.modelo);
+  const parcial = avaliarResposta(aberta, "Com a Lei Áurea, os fazendeiros perderam a mão de obra escravizada.");
+  assert.equal(parcial.correta, true, "duas de três ideias passam");
+  assert.match(parcial.feedback, /^Boa resposta! Para ficar completa, faltou: liga à República\.$/);
+  assert.notEqual(parcial.feedback, aberta.feedbackCorreto, "sem o elogio de resposta completa");
   const fraca = avaliarResposta(aberta, "Foi um período de muitas mudanças importantes no país.");
   assert.equal(fraca.correta, false);
   assert.deepEqual(fraca.criterios.map(({ atendido }) => atendido), [false, false, false]);
@@ -168,6 +178,15 @@ test("apresentar embaralha sem entregar a ordem, esconde o gabarito e define o t
   assert.equal(respostaCompleta({ tipo: "aberta", enunciado: "x", minimo: 10 }, "curta"), false);
 });
 
+test("a barra de fração vale de 1 a 12 partes e nunca pinta mais que o total", () => {
+  const base = { objetivo: "o", conceito: "c", exemplo: "e", origem: "x", exercicio: lacuna(["2"]) };
+  assert.ok(conteudoValido({ ...base, recurso: { tipo: "fracao", numerador: 3, denominador: 8, rotulo: "3/8" } }));
+  assert.ok(conteudoValido({ ...base, recurso: { tipo: "fracao", numerador: 0, denominador: 1 } }));
+  for (const recurso of [{ tipo: "fracao", numerador: 9, denominador: 8 }, { tipo: "fracao", numerador: 1, denominador: 13 }, { tipo: "fracao", numerador: 1.5, denominador: 4 }]) {
+    assert.equal(conteudoValido({ ...base, recurso }), false, JSON.stringify(recurso));
+  }
+});
+
 test("as etapas da lição mudam com o número de exercícios e a prática", () => {
   const exercicio = { tipo: "lacuna", enunciado: "x" };
   assert.deepEqual(etapasDaLicao({ exercicio }).map(({ tipo }) => tipo), ["conceito", "exemplo", "exercicio"]);
@@ -175,6 +194,7 @@ test("as etapas da lição mudam com o número de exercícios e a prática", () 
   assert.deepEqual(completa, [
     { tipo: "conceito" }, { tipo: "exemplo" }, { tipo: "exercicio", indice: 0 }, { tipo: "exercicio", indice: 1 }, { tipo: "pratica" },
   ]);
+  assert.equal(ultimoExercicio(completa), 3, "com prática, a aula volta ao último exercício, não à prática");
 });
 
 test("o acorde vira um WAV válido, determinístico e com som", () => {
@@ -192,11 +212,54 @@ test("o acorde vira um WAV válido, determinístico e com som", () => {
   assert.equal(paraBase64(wav.slice(0, 300)), Buffer.from(wav.slice(0, 300)).toString("base64"));
 });
 
+test("a batida toca o acorde em cada tempo, para baixo e para cima", () => {
+  const am = [-1, 0, 2, 2, 1, 0];
+  const wav = sintetizarBatida(am, { bpm: 60, compassos: 1 });
+  const amostras = new Int16Array(wav.buffer.slice(44));
+  assert.equal(amostras.length, Math.round(22050 * (4 + 1.6)));
+  // Cada tempo (1 s a 60 bpm) começa com uma descida forte.
+  for (let tempo = 0; tempo < 4; tempo += 1) {
+    const inicio = tempo * 22050;
+    assert.ok(Math.max(...amostras.slice(inicio, inicio + 2000).map(Math.abs)) > 6000, `tempo ${tempo + 1}`);
+  }
+  assert.deepEqual(sintetizarBatida(am, { bpm: 60, compassos: 1 }), wav);
+});
+
+test("o reforço sem IA faz uma pergunta mais simples sobre o exercício errado, em cada formato", () => {
+  const exemplo = "Um exemplo da lição.";
+  const retornos = { feedbackCorreto: "Certo.", feedbackIncorreto: "Explicação do erro." };
+  const exercicios = [
+    { tipo: "multipla_escolha", enunciado: "Qual?", opcoes: [{ id: "a", texto: "Certa" }, { id: "b", texto: "Errada 1" }, { id: "c", texto: "Errada 2" }], gabarito: ["a"], ...retornos },
+    { tipo: "lacuna", enunciado: "Complete.", trecho: "Eu giro a ___.", gabarito: ["tarraxa"], ...retornos },
+    { tipo: "verdadeiro_falso", enunciado: "Julgue.", afirmacao: "O braço para.", justificativas: [{ id: "p", texto: "Pêndulo" }, { id: "f", texto: "Força" }], gabarito: ["falso", "p"], ...retornos },
+    { tipo: "ordenar", enunciado: "Ordene.", itens: ["a", "b", "c", "d"].map((id) => ({ id, texto: id.toUpperCase() })), gabarito: ["a", "b", "c", "d"], ...retornos },
+    { tipo: "associar", enunciado: "Ligue.", esquerda: [{ id: "e1", texto: "Hello" }, { id: "e2", texto: "Bye" }], direita: [{ id: "d1", texto: "Olá" }, { id: "d2", texto: "Tchau" }], gabarito: ["e1=d1", "e2=d2"], ...retornos },
+    { tipo: "aberta", enunciado: "Explique.", minimo: 20, gabarito: ["anelar", "batida"], criterios: ["Fala do anelar", "Fala da batida"], ...retornos },
+  ];
+  const erradas = ["c", "taracha", "verdadeiro:p", "b,a,c,d", "e1=d2,e2=d1", "não sei explicar isso ainda"];
+  const esperado = { multipla_escolha: ["Certa", "Errada 2"], lacuna: ["tarraxa", "taracha"], verdadeiro_falso: ["Falsa", "Verdadeira"], ordenar: ["A", "D", "C"], associar: ["Olá", "Tchau"] };
+  for (const [posicao, exercicio] of exercicios.entries()) {
+    const reforco = reforcoDoExercicio(exercicio, erradas[posicao], exemplo);
+    assert.ok(conteudoValido({ objetivo: "o", origem: "x", ...reforco }), exercicio.tipo);
+    assert.equal(reforco.conceito, "Explicação do erro.", "a explicação é a do erro");
+    assert.equal(reforco.exercicio.tipo, "multipla_escolha");
+    const textos = reforco.exercicio.opcoes.map(({ texto }) => texto);
+    if (esperado[exercicio.tipo]) assert.deepEqual([...textos].sort(), [...esperado[exercicio.tipo]].sort(), exercicio.tipo);
+    const certa = reforco.exercicio.opcoes.find(({ id }) => id === reforco.exercicio.gabarito[0]).texto;
+    assert.equal(certa, { multipla_escolha: "Certa", lacuna: "tarraxa", verdadeiro_falso: "Falsa", ordenar: "A", associar: "Olá", aberta: "Fala do anelar" }[exercicio.tipo]);
+  }
+  // A resposta errada aponta o exercício da lição a que ela pertence.
+  assert.equal(exercicioDaResposta(exercicios, "e1=d2,e2=d1").tipo, "associar");
+  assert.equal(exercicioDaResposta(exercicios, null).tipo, "multipla_escolha");
+});
+
 const objetivosDasDemos = {
   violao: "Violão do zero: primeiros acordes",
   ingles: "Inglês para conversar em viagens",
   culinaria: "Culinária: receitas básicas",
   historia: "História do Brasil para a prova",
+  fracoes: "Frações para a prova do 6º ano",
+  fotografia: "Fotografia com o celular",
 };
 
 test("cada demo com assunto monta a própria trilha e todas as lições passam pela aula", async () => {
@@ -204,6 +267,7 @@ test("cada demo com assunto monta a própria trilha e todas as lições passam p
   const sinal = new AbortController().signal;
   const tipos = new Set();
   const recursos = new Set();
+  assert.equal(DEMOS.length, Object.keys(objetivosDasDemos).length);
   let falas = 0;
   let praticas = 0;
   let extras = 0;
@@ -237,8 +301,18 @@ test("cada demo com assunto monta a própria trilha e todas as lições passam p
     }
   }
   assert.deepEqual([...tipos].sort(), ["aberta", "associar", "lacuna", "multipla_escolha", "ordenar", "verdadeiro_falso"]);
-  assert.deepEqual([...recursos].sort(), ["acorde", "linha_do_tempo"]);
+  assert.deepEqual([...recursos].sort(), ["acorde", "fracao", "linha_do_tempo"]);
   assert.ok(falas >= 8 && praticas >= 5 && extras >= 4, `${falas} falas, ${praticas} práticas, ${extras} extras`);
+});
+
+test("todas as ideias populares da tela inicial têm trilha pronta no modo demonstração", async () => {
+  const { mensagens } = await import("@studoo/contratos/experiencia");
+  const populares = mensagens.pedido.temas.find(({ id }) => id === "populares").exemplos;
+  for (const ideia of populares) {
+    const eventos = [];
+    for await (const evento of iniciarGeracao(`teste-${crypto.randomUUID()}`, ideia).eventos(new AbortController().signal)) eventos.push(evento);
+    assert.match(eventos.at(-1).proposta.origem, /trilha pronta sobre/, ideia);
+  }
 });
 
 test("cada objetivo cai na trilha certa: SQL, demo com assunto ou genérica", async () => {
@@ -253,5 +327,34 @@ test("cada objetivo cai na trilha certa: SQL, demo com assunto ou genérica", as
   assert.equal(await titulo("aprender a cozinhar o básico"), "Culinária: receitas básicas");
   assert.equal(await titulo("História do Brasil: Império"), "História do Brasil: da Colônia à República");
   assert.equal(await titulo("SQL para a prova"), "SQL para a prova");
+  assert.equal(await titulo("Frações"), "Frações: do inteiro à soma");
+  assert.equal(await titulo("quero tirar fotos melhores"), "Fotografia com o celular");
+  assert.equal(await titulo("Fotossíntese para a prova"), "Fotossíntese para a prova", "fotossíntese não é fotografia");
   assert.equal(await titulo("Jardinagem em apartamento"), "Jardinagem em apartamento");
+});
+
+test("o rodapé diz o que falta para verificar, em cada formato, e some com a resposta completa", async () => {
+  const { textoDaFalta } = await import("@studoo/contratos/experiencia");
+  const dica = (exercicio, resposta) => {
+    const falta = faltaParaVerificar(exercicio, resposta);
+    return falta && textoDaFalta(falta);
+  };
+  const itens = [{ id: "a", texto: "A" }, { id: "b", texto: "B" }, { id: "c", texto: "C" }];
+  const ordenar = { tipo: "ordenar", enunciado: "Ordene", itens };
+  assert.equal(dica(ordenar, ""), "Faltam 3 itens para colocar em ordem.");
+  assert.equal(dica(ordenar, "b,a"), "Falta 1 item para colocar em ordem.");
+  assert.equal(dica(ordenar, "b,a,c"), null);
+  const associar = { tipo: "associar", enunciado: "Ligue", esquerda: itens.slice(0, 2), direita: [{ id: "1", texto: "1" }, { id: "2", texto: "2" }] };
+  assert.equal(dica(associar, "a=2"), "Falta 1 par para ligar.");
+  assert.equal(dica(associar, "a=2,b=1"), null);
+  const vf = { tipo: "verdadeiro_falso", enunciado: "VF", afirmacao: "X", justificativas: itens };
+  assert.equal(dica(vf, ""), "Diga se a frase é verdadeira ou falsa.");
+  assert.equal(dica(vf, codificarResposta.verdadeiroFalso(true, "")), "Agora escolha o porquê.");
+  assert.equal(dica(vf, codificarResposta.verdadeiroFalso(false, "b")), null);
+  const aberta = { tipo: "aberta", enunciado: "Explique", minimo: 20 };
+  assert.equal(dica(aberta, "curta"), "Escreva mais 15 caracteres.");
+  assert.equal(dica(aberta, "uma resposta com mais de vinte"), null);
+  assert.equal(dica({ tipo: "multipla_escolha", enunciado: "Escolha", opcoes: itens }, ""), "Escolha uma opção para verificar.");
+  assert.equal(dica({ tipo: "lacuna", enunciado: "Complete" }, "  "), "Escreva sua resposta para verificar.");
+  assert.equal(dica({ tipo: "lacuna", enunciado: "Complete" }, "ok"), null);
 });

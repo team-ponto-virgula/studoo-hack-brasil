@@ -10,6 +10,7 @@ import {
   partesDaLacuna,
   semAspas,
   sintetizarAcorde,
+  sintetizarBatida,
   type AutoAvaliacao,
   type Avaliacao,
   type Fala,
@@ -54,14 +55,14 @@ export function pararVoz() {
  * Toca o acorde: o WAV sintetizado (o mesmo da web) vai para um arquivo temporário e toca com o expo-audio. Na prévia
  * web do app, toca direto como Blob.
  */
-async function tocarAcorde(casas: number[]) {
-  const bytes = sintetizarAcorde(casas);
+async function tocarSom(som: 'acorde' | 'batida', casas: number[]) {
+  const bytes = som === 'acorde' ? sintetizarAcorde(casas) : sintetizarBatida(casas);
   if (Platform.OS === 'web') {
     const Reprodutor = (globalThis as unknown as { Audio: new (url: string) => { play: () => Promise<void> } }).Audio;
     await new Reprodutor(URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'audio/wav' }))).play();
     return;
   }
-  const arquivo = new File(Paths.cache, `acorde-${casas.map((casa) => casa + 1).join('')}.wav`);
+  const arquivo = new File(Paths.cache, `${som}-${casas.map((casa) => casa + 1).join('')}.wav`);
   if (!arquivo.exists) {
     arquivo.create({ overwrite: true });
     await arquivo.write(bytes);
@@ -69,7 +70,7 @@ async function tocarAcorde(casas: number[]) {
   await setAudioModeAsync({ playsInSilentMode: true }).catch(() => undefined);
   const reprodutor = createAudioPlayer({ uri: arquivo.uri });
   reprodutor.play();
-  setTimeout(() => reprodutor.remove(), 4000);
+  setTimeout(() => reprodutor.remove(), som === 'acorde' ? 4000 : 10_000);
 }
 
 /** Chip de ação pequeno, com relevo: ouvir, devagar, mostrar o texto. */
@@ -197,6 +198,22 @@ export function Passos({ passos, titulo }: { passos: string[]; titulo?: string }
 /** Recurso do exemplo: acorde (diagrama e som), linha do tempo ou a foto do material. */
 export function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
   if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} />;
+  if (recurso.tipo === 'fracao') {
+    const descricao = t.recursos.fracaoDescricao(recurso.numerador, recurso.denominador);
+    return (
+      <View style={formatos.fracao}>
+        <View style={formatos.fracaoBarra} accessible accessibilityRole="image" accessibilityLabel={`${recurso.numerador}/${recurso.denominador}: ${descricao}`}>
+          {Array.from({ length: recurso.denominador }, (_, posicao) => (
+            <View key={posicao} style={[formatos.fracaoParte, posicao < recurso.numerador && formatos.fracaoCheia]} />
+          ))}
+        </View>
+        <View style={formatos.fracaoLegenda}>
+          <Text style={formatos.fracaoRotulo}>{recurso.rotulo ?? `${recurso.numerador}/${recurso.denominador}`}</Text>
+          <Text style={estilos.legenda}>{descricao}</Text>
+        </View>
+      </View>
+    );
+  }
   if (recurso.tipo === 'linha_do_tempo') {
     return (
       <View style={formatos.secao}>
@@ -224,7 +241,8 @@ export function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
 
 /** Diagrama do acorde com Views (o app não usa SVG) e o botão de ouvir o acorde. */
 function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde' }> }) {
-  const [tocando, setTocando] = useState(false);
+  const [tocando, setTocando] = useState<'acorde' | 'batida' | null>(null);
+  const [semSom, setSemSom] = useState(false);
   const tocadas = recurso.casas.filter((casa) => casa > 0);
   const base = Math.max(0, ...tocadas) > 4 ? Math.min(...tocadas) : 1;
   const x = (corda: number) => 22 + corda * 26;
@@ -233,9 +251,15 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
     .map((casa, corda) => t.recursos.corda(6 - corda, casa, t.recursos.dedos[recurso.dedos?.[corda] ?? 0] ?? ''))
     .join('; ');
 
-  function tocar() {
-    setTocando(true);
-    tocarAcorde(recurso.casas).catch(() => undefined).finally(() => setTimeout(() => setTocando(false), 2600));
+  function tocar(som: 'acorde' | 'batida') {
+    setTocando(som);
+    setSemSom(false);
+    tocarSom(som, recurso.casas)
+      .catch(() => {
+        setSemSom(true);
+        AccessibilityInfo.announceForAccessibility(t.recursos.semSom);
+      })
+      .finally(() => setTimeout(() => setTocando(null), som === 'acorde' ? 2600 : 8000));
   }
 
   return (
@@ -259,7 +283,13 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
       <View style={formatos.acordeLegenda}>
         <Text style={formatos.acordeNome}>{t.recursos.acorde(recurso.nome)}</Text>
         <Text style={estilos.legenda}>{t.recursos.legendaAcorde}</Text>
-        <Botao rotulo={tocando ? t.recursos.tocando : t.recursos.ouvirAcorde} variante="secundario" compacto desativado={tocando} acao={tocar} />
+        <Botao rotulo={tocando === 'acorde' ? t.recursos.tocando : t.recursos.ouvirAcorde} variante="secundario" compacto
+          desativado={tocando !== null} acao={() => tocar('acorde')} />
+        {recurso.batida && (
+          <Botao rotulo={tocando === 'batida' ? t.recursos.tocando : t.recursos.ouvirBatida} variante="secundario" compacto
+            desativado={tocando !== null} acao={() => tocar('batida')} />
+        )}
+        {semSom && <Text style={[estilos.legenda, { color: cores.alerta, fontWeight: '700' }]}>{t.recursos.semSom}</Text>}
       </View>
     </View>
   );
@@ -396,6 +426,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos }
 
 /** Verdadeiro ou falso com justificativa: a afirmação em destaque, os dois valores e o porquê (com `Opcao` da aula). */
 export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, justificativas }: {
+  /** Cor do valor depois da correção (a do porquê vem da aula, em `justificativas`). */
   afirmacao: string;
   valor: string;
   mudar: (valor: string) => void;
@@ -487,7 +518,9 @@ function formatarTempo(segundos: number) {
  * Prática no mundo real: a tarefa, a lista para conferir, a dica e o cronômetro; na volta, a pessoa conta como foi e o
  * Stu responde. A lição só conclui depois dessa resposta (o botão de concluir fica no rodapé da aula).
  */
-export function EtapaPratica({ pratica, escolha, escolher }: {
+export function EtapaPratica({ pratica, escolha, escolher, consulta }: {
+  /** O que a lição mostrou no exemplo (recurso, passos, frases), para consultar enquanto pratica. */
+  consulta?: ReactNode;
   pratica: Pratica;
   escolha: AutoAvaliacao | null;
   escolher: (valor: AutoAvaliacao) => void;
@@ -548,6 +581,7 @@ export function EtapaPratica({ pratica, escolha, escolher }: {
           <Text style={[estilos.texto, { flex: 1 }]}><Text style={{ fontWeight: '800' }}>{t.pratica.dica}: </Text>{pratica.dica}</Text>
         </View>
       )}
+      {consulta}
       <View style={formatos.cronometro}>
         <View style={formatos.mostrador} accessible accessibilityRole="timer"
           accessibilityLabel={`${t.pratica.cronometro}: ${t.pratica.restante(formatarTempo(restante))}`}>
@@ -632,6 +666,12 @@ const formatos = StyleSheet.create({
   linhaTempoPonto: { position: 'absolute', left: -25, top: 4, width: 18, height: 18, borderRadius: 9, borderWidth: 4, borderColor: '#FFFAF0',
     backgroundColor: '#C88A12' },
   linhaTempoQuando: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 17, lineHeight: 22 },
+  fracao: { gap: 10, padding: 14, borderRadius: 20, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: cores.fundo },
+  fracaoBarra: { flexDirection: 'row', gap: 6, height: 60, padding: 8, borderRadius: 16, backgroundColor: '#F2DFC3' },
+  fracaoParte: { flex: 1, borderWidth: 3, borderColor: '#5C3A1A', borderRadius: 10, backgroundColor: cores.fundo },
+  fracaoCheia: { backgroundColor: '#8B5A2B' },
+  fracaoLegenda: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 10 },
+  fracaoRotulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 },
   imagem: { width: '100%', aspectRatio: 16 / 10, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },

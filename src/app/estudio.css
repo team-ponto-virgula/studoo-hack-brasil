@@ -231,3 +231,4 @@
   transition: rotate 160ms ease-out;
 }
 .painel--aula details[open] > summary::before, .estudio-card details[open] > summary::before { rotate: 45deg; }
+.estudio-ponte h2:focus { outline: none; }

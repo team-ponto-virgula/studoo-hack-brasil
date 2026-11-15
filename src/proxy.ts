@@ -21,6 +21,8 @@ export function proxy(request: NextRequest) {
     "style-src-attr 'unsafe-inline'",
     `connect-src 'self'${websocket}`,
     "img-src 'self' data:",
+    // O som do acorde é sintetizado no navegador e tocado de um Blob.
+    "media-src 'self' blob:",
     "font-src 'self'",
     "manifest-src 'self'",
     "object-src 'none'",

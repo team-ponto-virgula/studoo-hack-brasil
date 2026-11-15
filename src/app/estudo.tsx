@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   ErroStudoo,
+  origemDemonstracao,
   type AutoAvaliacao,
   type LicaoDetalhe,
   type PlanoDetalhe,
@@ -443,7 +444,8 @@ export function Estudo() {
           {visivel && tela.tipo === 'concluida' && (
             <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
-              voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas, concluida: tela.licao.id })} />
+              voltar={() => navegar({ tipo: 'plano', plano: tela.plano, origem: tela.licao.id, liberadas: tela.liberadas, concluida: tela.licao.id })}
+              novoAssunto={() => navegar({ tipo: 'objetivo' })} />
           )}
         </main>
         {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao}>
@@ -546,7 +548,10 @@ function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar }: {
             )}
           </h1>
           {titulo !== null && !repeteTitulo(titulo, geracao.objetivo) && <p className="introducao">{geracao.objetivo}</p>}
-          <p className="geracao-ia">{mensagens.geracao.ia}</p>
+          {/* Quem montou: a IA ou o modo demonstração (trilha pronta). Enquanto não se sabe, um texto neutro. */}
+          <p className="geracao-ia">
+            {!proposta ? mensagens.geracao.montadaDoPedido : origemDemonstracao(proposta.origem) ? mensagens.geracao.demonstracao : mensagens.geracao.ia}
+          </p>
           {proposta
             ? <p className="geracao-origem">{mensagens.geracao.origem(proposta.origem)}</p>
             : <span className="geracao-esqueleto geracao-esqueleto--origem" aria-hidden="true" />}
@@ -805,7 +810,7 @@ function Contador({ valor, formatar }: { valor: number; formatar: (valor: number
  * Lição concluída: chuva de confete, o Stu pulando, o resumo da lição (tempo, acerto e etapas), a lição liberada e o
  * progresso do plano, que enche a partir de onde estava. Tela inteira, como a aula.
  */
-function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrirLicao, voltar }: {
+function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrirLicao, voltar, novoAssunto }: {
   plano: PlanoDetalhe;
   antes: Progresso;
   licao: LicaoDetalhe;
@@ -814,10 +819,13 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
   ocupado: boolean;
   abrirLicao: (id: string) => void;
   voltar: () => void;
+  novoAssunto: () => void;
 }) {
   const proxima = proximaDoCaminho(plano);
   const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
   const textos = mensagens.licao.resumo;
+  // A última lição fecha a trilha: a comemoração é da trilha inteira.
+  const trilhaFeita = plano.progresso.total > 0 && plano.progresso.concluidas === plano.progresso.total;
 
   return (
     <section className="painel painel--concluida">
@@ -827,8 +835,8 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
         <Stu />
         <span className="conclusao-selo"><Icone nome="check" /></span>
       </div>
-      <h1 tabIndex={-1}>{mensagens.licao.concluida}</h1>
-      <p className="conclusao-texto">{mensagens.licao.comemoracao}</p>
+      <h1 tabIndex={-1}>{trilhaFeita ? mensagens.licao.trilhaConcluida : mensagens.licao.concluida}</h1>
+      <p className="conclusao-texto">{trilhaFeita ? mensagens.licao.trilhaConcluidaTexto(plano.titulo) : mensagens.licao.comemoracao}</p>
       <p className="conclusao-licao">{licao.titulo}</p>
       {resumo && (
         <ul className="conclusao-numeros" aria-label={textos.titulo}>
@@ -852,6 +860,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
           )}
         </ul>
       )}
+      {resumo?.rever && <p className="conclusao-rever"><Icone nome="revisao" />{mensagens.licao.revisarDepois}</p>}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}
       <div className="conclusao-progresso">
         <h2>{mensagens.planos.progressoPlano}</h2>
@@ -860,6 +869,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       <div className="acoes-tela">
         <AcaoPrincipal>
           {proxima && <Botao variante="secundario" disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
+          {trilhaFeita && <Botao variante="secundario" disabled={ocupado} onClick={novoAssunto}>{mensagens.licao.novoAssunto}</Botao>}
           <Botao disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>
         </AcaoPrincipal>
       </div>

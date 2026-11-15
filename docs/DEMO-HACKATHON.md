@@ -20,6 +20,8 @@ Sem a OpenAI, as trilhas prontas do modo demonstração mostram assuntos além d
 3. Peça “Inglês para conversar em viagens”: ouça as frases e faça o exercício de escuta.
 4. Em “História do Brasil para a prova”, mostre a linha do tempo e a resposta aberta, com os critérios e a resposta modelo.
 
+Todas as ideias populares da tela inicial (violão, inglês, culinária, história do Brasil, frações e fotografia) abrem trilhas prontas. Outros assuntos, sem a OpenAI, recebem a trilha genérica de demonstração.
+
 ## Conferência antes de apresentar
 
 - Migrações aplicadas, conta funcionando, domínio HTTPS, Google/Resend configurados se usados na demo.
