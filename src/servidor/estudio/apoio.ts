@@ -57,20 +57,43 @@ export async function buscarApoio(
  * as outras ganham uma pergunta mais simples sobre o exercício que a pessoa errou (veja `reforcoDoExercicio`).
  */
 /**
- * O “outro exemplo” sem IA usa o passo a passo ou as frases para ouvir (o mesmo conteúdo por outro caminho) e, sem eles,
- * lembra o exemplo da lição: a explicação já está repetida no painel de retorno e no balão do Stu.
+ * O “outro jeito” sem IA: o que a lição traz escrito para isso (`outroJeito`, uma analogia ou regra prática); sem ele,
+ * o passo a passo ou as frases (uma por linha) e, por último, o exemplo da lição.
  */
-function outroExemplo(licao: LicaoDetalhe): string {
-  if (licao.passos?.length) return `Pelo passo a passo: ${licao.passos.map((passo, posicao) => `${posicao + 1}) ${passo}`).join(' ')}`;
-  if (licao.falas?.length) return `Ouça de novo: ${licao.falas.map(({ texto, traducao }) => (traducao ? `“${texto}” (${traducao})` : `“${texto}”`)).join(' · ')}`;
+function outroExemplo(licao: LicaoDetalhe, interno: ConteudoLicao): string {
+  if (interno.outroJeito) return interno.outroJeito;
+  if (licao.passos?.length) return `Pelo passo a passo:\n${licao.passos.map((passo, posicao) => `${posicao + 1}) ${passo}`).join('\n')}`;
+  if (licao.falas?.length) return `Frases da lição:\n${licao.falas.map(({ texto, traducao }) => (traducao ? `“${texto}” (${traducao})` : `“${texto}”`)).join('\n')}`;
   return `Lembre do exemplo da lição: ${licao.exemplo}`;
+}
+
+const PALAVRAS_COMUNS = new Set([
+  'quando', 'sobre', 'porque', 'entre', 'depois', 'antes', 'assim', 'ainda', 'muito', 'muita', 'mesmo', 'mesma', 'outra',
+  'outro', 'outras', 'outros', 'todas', 'todos', 'sempre', 'pelos', 'pelas', 'desta', 'deste', 'dessa', 'desse', 'nessa',
+  'nesse', 'nesta', 'neste', 'essas', 'esses', 'estas', 'estes', 'aquela', 'aquele', 'tambem', 'apenas', 'podem', 'devem',
+  'fazem', 'estao', 'ficam', 'tinha', 'tinham', 'cada', 'principais', 'primeiro', 'primeira', 'segundo', 'segunda',
+  'coisa', 'coisas', 'parte', 'partes', 'forma', 'formas', 'tempo', 'vezes', 'lugar', 'grande', 'grandes', 'menos',
+  'estou', 'estava', 'estar', 'estamos', 'tenho', 'temos', 'quero', 'queria', 'fazer', 'dizer', 'falar', 'usar', 'serve',
+]);
+
+/** As palavras da explicação da lição (5 letras ou mais, sem as muito comuns) que também aparecem no texto da pessoa. */
+function palavrasDoConceito(conceito: string, explicacao: string): string[] {
+  const comparavel = (palavra: string) => palavra.normalize('NFD').replace(/\p{M}+/gu, '').toLocaleLowerCase('pt-BR');
+  const usadas = new Set((explicacao.match(/\p{L}+/gu) ?? []).map(comparavel));
+  const vistas = new Set<string>();
+  return (conceito.match(/\p{L}{5,}/gu) ?? []).filter((palavra) => {
+    const chave = comparavel(palavra);
+    if (PALAVRAS_COMUNS.has(chave) || vistas.has(chave) || !usadas.has(chave)) return false;
+    vistas.add(chave);
+    return true;
+  }).map((palavra) => palavra.toLocaleLowerCase('pt-BR'));
 }
 
 function reforcoFalso(licao: LicaoDetalhe, interno: ConteudoLicao, resposta: string | null): Reforco {
   const fracao = /numerador|denominador/i.test(licao.titulo);
   if (!fracao) {
     const exercicio = exercicioDaResposta([interno.exercicio, ...(interno.extras ?? [])], resposta);
-    return { objetivo: licao.objetivo, origem: 'Modo demonstração', simulado: true, ...reforcoDoExercicio(exercicio, resposta, outroExemplo(licao)) };
+    return { objetivo: licao.objetivo, origem: 'Modo demonstração', simulado: true, ...reforcoDoExercicio(exercicio, resposta, outroExemplo(licao, interno)) };
   }
   return {
     objetivo: licao.objetivo,
@@ -204,9 +227,17 @@ export async function ensinarStu(
       const citados = itens.map((item) => `“${item}”`);
       return citados.length > 1 ? `${citados.slice(0, -1).join(', ')} e ${citados.at(-1)}` : citados[0] ?? '';
     };
+    // As palavras da explicação do Stu que a pessoa também usou (“cabeça, braço e corpo”): contam como acerto, mesmo
+    // quando não são as respostas dos exercícios.
+    const doConceito = palavrasDoConceito(licao.conceito, explicacao)
+      .filter((palavra) => !trouxe.some((termo) => termo.toLocaleLowerCase('pt-BR').includes(palavra.toLocaleLowerCase('pt-BR'))));
     feedback = {
       acertos: [
-        trouxe.length > 0 ? `Você falou de ${lista(trouxe)}, ideias-chave desta lição.` : 'Você explicou com as suas palavras.',
+        ...(trouxe.length > 0
+          ? [`Você falou de ${lista(trouxe)}, ${trouxe.length === 1 ? 'uma ideia-chave' : 'ideias-chave'} desta lição.`]
+          : []),
+        ...(doConceito.length > 0 ? [`Você usou ideias da explicação da lição, como ${lista(doConceito.slice(0, 3))}.`] : []),
+        ...(trouxe.length === 0 && doConceito.length === 0 ? ['Você explicou com as suas palavras.'] : []),
         ...(comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
       ],
       lacuna: faltou.length > 0
@@ -219,8 +250,9 @@ export async function ensinarStu(
         : trouxe.length > 0
           ? `E numa situação diferente da sua explicação? Conte como “${trouxe[0]}” aparece num caso novo, com um exemplo seu.`
           : `Como você usaria “${licao.titulo}” num exemplo do dia a dia?`,
-      proximoPasso:
-        'Este retorno é automático e não confere se o texto está certo. Compare com a explicação da lição.',
+      proximoPasso: faltou.length > 0
+        ? `Releia a explicação do Stu procurando “${faltou[0]}” e reescreva a sua com essa ideia, em uma frase.`
+        : 'Sua explicação já cobre as ideias da lição. Amanhã, tente explicar de novo sem olhar: é assim que a ideia fica.',
       simulado: true,
     };
   } else {

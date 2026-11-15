@@ -41,6 +41,11 @@ export type ConteudoLicao = {
   /** Exercícios além do principal (até 2). */
   extras?: ExercicioInterno[];
   pratica?: Pratica;
+  /**
+   * Outro jeito de entender a mesma ideia (uma analogia, uma regra prática), escrito para o reforço sem IA. Fica no
+   * servidor: a lição pública não o traz.
+   */
+  outroJeito?: string;
 };
 
 export type LicaoInterna = ConteudoLicao & { titulo: string };
@@ -208,7 +213,8 @@ export function conteudoValido(valor: unknown): valor is ConteudoLicao {
     opcional(valor.passos, (passos) => Array.isArray(passos) && passos.length > 0 && passos.length <= 10 && passos.every((passo) => textoAte(passo, 300))) &&
     opcional(valor.recurso, recursoValido) &&
     opcional(valor.falas, (falas) => Array.isArray(falas) && falas.length > 0 && falas.length <= 6 && falas.every(falaValida)) &&
-    opcional(valor.pratica, praticaValida);
+    opcional(valor.pratica, praticaValida) &&
+    opcional(valor.outroJeito, (outro) => textoAte(outro, 600));
 }
 
 function licaoValida(valor: unknown): valor is LicaoInterna {

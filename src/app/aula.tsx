@@ -10,6 +10,7 @@ import {
   faltaParaVerificar,
   exerciciosDaLicao,
   linhasDePassos,
+  motivoParaRever,
   origemLegivel,
   respostaParaTentarDeNovo,
   partesDaLacuna,
@@ -147,6 +148,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   /** A última correção errada de cada exercício: a dica fica à vista embaixo do campo na nova tentativa. */
   const [errosAnteriores, setErrosAnteriores] = useState<(Avaliacao | null)[]>(() => exercicios.map(() => null));
   const [pedidoPonte, setPedidoPonte] = useState(0);
+  /** Nas etapas de leitura: ainda tem conteúdo escondido atrás do rodapé (o botão diz "Continuar lendo"). */
+  const [temMais, setTemMais] = useState(false);
   const [inicio] = useState(() => Date.now());
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
@@ -178,6 +181,40 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     // O reforço é de cada exercício: um pedido antigo não vale para o próximo.
     setPedidoPonte(0);
   }, [passo, revisao]);
+
+  // Conceito e exemplo: se o fim do conteúdo (a legenda da ilustração, o passo a passo) está escondido atrás do rodapé,
+  // o botão principal leva até ele antes de avançar. A tela parecia acabar ali, e a pessoa avançava sem ler.
+  useEffect(() => {
+    if (etapa.tipo !== 'conceito' && etapa.tipo !== 'exemplo') {
+      setTemMais(false);
+      return;
+    }
+    const medir = () => {
+      const miolo = document.querySelector<HTMLElement>('.aula-miolo');
+      const rodape = document.querySelector<HTMLElement>('.aula-rodape');
+      if (!miolo || !rodape) return;
+      setTemMais(miolo.getBoundingClientRect().bottom - rodape.getBoundingClientRect().top > 24);
+    };
+    medir();
+    window.addEventListener('scroll', medir, { passive: true });
+    window.addEventListener('resize', medir);
+    // A imagem e o diagrama mudam a altura quando carregam.
+    const observador = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(medir);
+    const miolo = document.querySelector('.aula-miolo');
+    if (miolo) observador?.observe(miolo);
+    return () => {
+      window.removeEventListener('scroll', medir);
+      window.removeEventListener('resize', medir);
+      observador?.disconnect();
+    };
+  }, [passo, etapa.tipo]);
+
+  /** "Continuar lendo": rola mais um pedaço do conteúdo (o rodapé fica). */
+  function lerMais() {
+    const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollBy({ top: Math.max(160, (window.innerHeight - rodape) * 0.75), behavior: reduzido ? 'auto' : 'smooth' });
+  }
 
   // O aviso de "continuou de onde parou" vale para a etapa em que a pessoa voltou; na seguinte, sai.
   useEffect(() => {
@@ -298,7 +335,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     setRevisao(pendentes);
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? null : atual)));
-    setRespostas((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? '' : atual)));
+    setRespostas((atuais) => atuais.map((atual, posicao) => {
+      const anterior = avaliacoes[posicao];
+      if (!pendentes.includes(posicao)) return atual;
+      return anterior ? respostaParaTentarDeNovo(exercicios[posicao], atual, anterior) : '';
+    }));
     setPasso(etapaDoExercicio(pendentes[0]));
   }
 
@@ -334,7 +375,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       acertosDePrimeira,
       exercicios: exercicios.length,
       ...(autoAvaliacao ? { pratica: autoAvaliacao } : {}),
-      rever: acertosDePrimeira < exercicios.length || autoAvaliacao === 'ainda_nao',
+      // Vale rever: ficou exercício sem acerto, a maior parte saiu errada antes do acerto ou a prática não saiu (como o mapa).
+      rever: acertos < exercicios.length || motivoParaRever({ acertosDePrimeira, exercicios: exercicios.length, pratica: autoAvaliacao }) !== null,
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) {
       guardarAndamento(licao.id, null);
@@ -368,6 +410,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     pergunta.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
     pergunta.focus({ preventScroll: true });
+    const grupo = pergunta.closest<HTMLElement>('.como-foi');
+    grupo?.removeAttribute('data-chamar');
+    window.requestAnimationFrame(() => grupo?.setAttribute('data-chamar', ''));
+    window.setTimeout(() => grupo?.removeAttribute('data-chamar'), 1600);
   }
 
   continuarAgora.current = () => {
@@ -401,6 +447,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         {pendente === 'concluir' ? t.concluindo : t.pratica.concluir}
       </Botao>
     );
+  } else if (temMais) {
+    acao = <Botao className="botao--ler-mais" onClick={lerMais}>{t.continuarLendo}<Icone nome="seta" /></Botao>;
   } else {
     acao = <Botao disabled={ocupado} onClick={() => setPasso((atual) => atual + 1)}>{t.seguir}<Icone nome="seta" /></Botao>;
   }
@@ -438,7 +486,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
               <Stu />
               <section className="aula-balao" aria-labelledby="etapa-aula">
                 <h2 id="etapa-aula">{t.explicacaoDoStu}</h2>
-                <p>{licao.conceito}</p>
+                <p><TextoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} /></p>
+                {temFalasNoTexto(licao.conceito, licao.falas?.[0]?.idioma) && <p className="licao-origem">{t.audio.toqueParaOuvir}</p>}
                 <p className="licao-origem">{t.origem} · {origemLegivel(licao.origem)}</p>
               </section>
             </div>
@@ -939,6 +988,36 @@ function Falas({ falas }: { falas: Fala[] }) {
   );
 }
 
+/** Se o texto tem frases entre aspas no idioma da lição (fora do português), que viram botões de ouvir. */
+function temFalasNoTexto(texto: string, idioma?: string) {
+  return Boolean(idioma && !idioma.toLowerCase().startsWith('pt') && /“[^”ãõçáéíóúâêôà]+”/i.test(texto));
+}
+
+/**
+ * Texto com as frases entre aspas no idioma da lição (“Hello”, “I'd like…”) tocáveis: um toque e a voz fala a frase.
+ * Sem voz, ou numa lição em português, o texto fica como está.
+ */
+function TextoComFalas({ texto, idioma }: { texto: string; idioma?: string }) {
+  const disponivel = useVozDisponivel();
+  if (!idioma || idioma.toLowerCase().startsWith('pt') || !disponivel) return <>{texto}</>;
+  const partes = texto.split(/“([^”]+)”/);
+  return (
+    <>
+      {partes.map((parte, indice) => {
+        // Fora das aspas, ou uma citação em português (com acento), fica como texto.
+        if (indice % 2 === 0) return parte;
+        if (/[ãõçáéíóúâêôà]/i.test(parte)) return `“${parte}”`;
+        return (
+          <button key={indice} type="button" className="fala-inline" lang={idioma} aria-label={t.audio.ouvirFrase(parte)}
+            onClick={() => falar({ texto: parte, idioma }, false)}>
+            “{parte}”<Icone nome="som" />
+          </button>
+        );
+      })}
+    </>
+  );
+}
+
 /** Na conclusão: as frases da lição, com a tradução, para ouvir mais uma vez (o "Falar" fica na aula). */
 export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
   return (
@@ -1080,12 +1159,13 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
       );
       break;
     case 'ordenar':
-      campo = <Ordenar itens={exercicio.itens} valor={resposta} mudar={mudar} desativado={ocupado || respondido} certos={avaliacao?.certos} />;
+      campo = <Ordenar itens={exercicio.itens} valor={resposta} mudar={mudar} desativado={ocupado || respondido} certos={avaliacao?.certos}
+        fixos={avaliacao ? undefined : dica?.certos} />;
       break;
     case 'associar':
       campo = (
         <Associar esquerda={exercicio.esquerda} direita={exercicio.direita} valor={resposta} mudar={mudar}
-          desativado={ocupado || respondido} certos={avaliacao?.certos} />
+          desativado={ocupado || respondido} certos={avaliacao?.certos} fixos={avaliacao ? undefined : dica?.certos} />
       );
       break;
     case 'verdadeiro_falso':
@@ -1133,7 +1213,9 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
         <details className="aula-consulta aula-consulta--recolhivel">
           <summary>
             {consulta.tipo === 'acorde'
-              ? consulta.anterior ? t.recursos.verTroca(consulta.anterior.nome, consulta.nome) : t.recursos.verAcorde(consulta.nome)
+              ? consulta.anterior
+                ? t.recursos.verTroca(consulta.anterior.nome, consulta.nome)
+                : consulta.batida ? t.recursos.verBatida(consulta.nome) : t.recursos.verAcorde(consulta.nome)
               : t.recursos.verFracao}
           </summary>
           <RecursoDaLicao recurso={consulta} />
@@ -1145,14 +1227,18 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
 }
 
 /** Ordenar tocando: cada toque coloca o item na próxima posição; tocar num item já colocado tira ele da ordem. */
-function Ordenar({ itens, valor, mudar, desativado, certos }: {
+function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
   itens: Opcao[];
   valor: string;
   mudar: (valor: string) => void;
   desativado: boolean;
   certos?: string[];
+  /** Na nova tentativa: os itens que já estavam na posição certa (o começo da ordem fica travado, em verde). */
+  fixos?: string[];
 }) {
   const ordem = valor.split(',').filter((id) => itens.some((item) => item.id === id));
+  let travados = 0;
+  while (fixos && travados < ordem.length && fixos.includes(ordem[travados])) travados += 1;
   const restantes = itens.filter((item) => !ordem.includes(item.id));
   const texto = (id: string) => itens.find((item) => item.id === id)?.texto ?? '';
   return (
@@ -1163,8 +1249,9 @@ function Ordenar({ itens, valor, mudar, desativado, certos }: {
         {ordem.length === 0 && <li className="ordenar__vazio">{t.ordenar.vazio}</li>}
         {ordem.map((id, posicao) => (
           <li key={id}>
-            <button type="button" disabled={desativado} aria-label={t.ordenar.tirar(texto(id), posicao + 1)}
-              data-estado={certos ? (certos.includes(id) ? 'certo' : 'errado') : undefined}
+            <button type="button" disabled={desativado || posicao < travados}
+              aria-label={posicao < travados ? t.ordenar.travado(texto(id), posicao + 1) : t.ordenar.tirar(texto(id), posicao + 1)}
+              data-estado={certos ? (certos.includes(id) ? 'certo' : 'errado') : posicao < travados ? 'certo' : undefined}
               onClick={() => mudar(codificarResposta.ordem(ordem.filter((item) => item !== id)))}>
               <span className="ordenar__numero" aria-hidden="true">{t.ordenar.posicao(posicao + 1)}</span>
               <span>{texto(id)}</span>
@@ -1182,24 +1269,29 @@ function Ordenar({ itens, valor, mudar, desativado, certos }: {
           ))}
         </div>
       )}
-      {ordem.length > 0 && !desativado && (
-        <button type="button" className="exercicio-recomecar" onClick={() => mudar('')}>{t.ordenar.recomecar}</button>
+      {ordem.length > travados && !desativado && (
+        <button type="button" className="exercicio-recomecar" onClick={() => mudar(codificarResposta.ordem(ordem.slice(0, travados)))}>
+          {t.ordenar.recomecar}
+        </button>
       )}
     </div>
   );
 }
 
 /** Associar tocando: escolha um item da esquerda e depois o par na direita. Cada par ganha um número e uma cor. */
-function Associar({ esquerda, direita, valor, mudar, desativado, certos }: {
+function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }: {
   esquerda: Opcao[];
   direita: Opcao[];
   valor: string;
   mudar: (valor: string) => void;
   desativado: boolean;
   certos?: string[];
+  /** Na nova tentativa: os itens da esquerda cujo par já estava certo (o par fica travado, em verde). */
+  fixos?: string[];
 }) {
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const pares = valor.split(',').filter(Boolean).map((par) => par.split('=') as [string, string]);
+  const travado = (idEsquerda?: string) => Boolean(idEsquerda && fixos?.includes(idEsquerda) && pares.some(([item]) => item === idEsquerda));
   const parDaEsquerda = (id: string) => pares.find(([item]) => item === id);
   const parDaDireita = (id: string) => pares.find(([, item]) => item === id);
   const numero = (id: string) => pares.findIndex(([item, outro]) => item === id || outro === id) + 1;
@@ -1233,11 +1325,12 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos }: {
         <div role="group" aria-label={t.associar.esquerda}>
           {esquerda.map((item) => {
             const par = parDaEsquerda(item.id);
+            const fixo = travado(item.id);
             return (
-              <button key={item.id} type="button" disabled={desativado} aria-pressed={escolhida === item.id}
-                aria-label={par ? t.associar.desfazer(item.texto, texto(direita, par[1])) : item.texto}
+              <button key={item.id} type="button" disabled={desativado || fixo} aria-pressed={escolhida === item.id}
+                aria-label={par ? (fixo ? t.associar.travado(item.texto, texto(direita, par[1])) : t.associar.desfazer(item.texto, texto(direita, par[1]))) : item.texto}
                 data-par={par ? numero(item.id) : undefined} data-escolhida={escolhida === item.id || undefined}
-                data-estado={certos ? (certos.includes(item.id) ? 'certo' : 'errado') : undefined}
+                data-estado={certos ? (certos.includes(item.id) ? 'certo' : 'errado') : fixo ? 'certo' : undefined}
                 onClick={() => tocarEsquerda(item.id)}>
                 {par && <span className="associar__numero" aria-hidden="true">{numero(item.id)}</span>}
                 <span>{item.texto}</span>
@@ -1248,11 +1341,13 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos }: {
         <div role="group" aria-label={t.associar.direita}>
           {direita.map((item) => {
             const par = parDaDireita(item.id);
-            const rotulo = escolhida ? t.associar.ligar(texto(esquerda, escolhida), item.texto)
-              : par ? t.associar.desfazer(texto(esquerda, par[0]), item.texto) : item.texto;
+            const fixo = travado(par?.[0]);
+            const rotulo = fixo && par ? t.associar.travado(texto(esquerda, par[0]), item.texto)
+              : escolhida ? t.associar.ligar(texto(esquerda, escolhida), item.texto)
+                : par ? t.associar.desfazer(texto(esquerda, par[0]), item.texto) : item.texto;
             return (
-              <button key={item.id} type="button" disabled={desativado} aria-label={rotulo} data-par={par ? numero(item.id) : undefined}
-                data-estado={certos && par ? (certos.includes(par[0]) ? 'certo' : 'errado') : undefined}
+              <button key={item.id} type="button" disabled={desativado || fixo} aria-label={rotulo} data-par={par ? numero(item.id) : undefined}
+                data-estado={certos && par ? (certos.includes(par[0]) ? 'certo' : 'errado') : fixo ? 'certo' : undefined}
                 onClick={() => tocarDireita(item.id)}>
                 {par && <span className="associar__numero" aria-hidden="true">{numero(item.id)}</span>}
                 <span>{item.texto}</span>
@@ -1261,8 +1356,9 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos }: {
           })}
         </div>
       </div>
-      {pares.length > 0 && !desativado && (
-        <button type="button" className="exercicio-recomecar" onClick={() => { mudar(''); setEscolhida(null); }}>{t.associar.recomecar}</button>
+      {pares.some(([item]) => !travado(item)) && !desativado && (
+        <button type="button" className="exercicio-recomecar"
+          onClick={() => { salvar(pares.filter(([item]) => travado(item))); setEscolhida(null); }}>{t.associar.recomecar}</button>
       )}
     </div>
   );
@@ -1357,6 +1453,9 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   const comoFoi = useRef<HTMLLegendElement>(null);
   const acabou = restante === 0;
   const comecou = restante < total;
+  // Encerrar uma prática de minutos depois de 5 segundos não vale: o "Como foi?" espera um mínimo de prática.
+  const minimo = Math.min(30, total);
+  const praticou = total - restante >= minimo;
 
   useEffect(() => {
     if (!rodando) return;
@@ -1411,8 +1510,12 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
           {restante < total && <Botao variante="texto" onClick={() => { setRodando(false); setRestante(total); }}>{t.pratica.recomecar}</Botao>}
         </div>
       </div>
-      <fieldset className="como-foi" disabled={!comecou && !escolha}>
-        <legend ref={comoFoi} tabIndex={-1}>{acabou ? t.pratica.acabou : comecou || escolha ? t.pratica.comoFoi : t.pratica.comeceAntes}</legend>
+      <fieldset className="como-foi" disabled={!praticou && !escolha}>
+        <legend ref={comoFoi} tabIndex={-1}>
+          {acabou ? t.pratica.acabou
+            : praticou || escolha ? t.pratica.comoFoi
+              : comecou ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.comeceAntes}
+        </legend>
         <div className="como-foi__opcoes">
           {AUTOAVALIACOES.map((valor) => (
             <label key={valor} data-valor={valor}>
@@ -1422,6 +1525,8 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
           ))}
         </div>
       </fieldset>
+      {/* Para o leitor de tela, um aviso só quando o "Como foi?" libera (a contagem visível mudaria a cada segundo). */}
+      <p className="somente-leitor" role="status">{praticou && !escolha ? t.pratica.comoFoi : ''}</p>
       {escolha && (
         <div className="aula-explicacao aula-pratica__resposta" role="status" ref={respostaDoStu}>
           <Stu />

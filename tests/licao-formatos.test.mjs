@@ -10,6 +10,7 @@ import {
   frequenciasDoAcorde,
   inferirTipoTrecho,
   linhasDePassos,
+  motivoParaRever,
   origemLegivel,
   paraBase64,
   partesDaLacuna,
@@ -31,6 +32,7 @@ import {
   termosPresentes,
 } from "../src/dominio/aprendizado/plano.ts";
 import { exercicioDaResposta, reforcoDoExercicio } from "../src/dominio/aprendizado/reforco.ts";
+import { textoParaRever } from "../packages/contratos/src/experiencia.ts";
 import { iniciarGeracao } from "../src/servidor/aprendizado/geracao.ts";
 import { DEMOS } from "../src/servidor/ia/demos.ts";
 import { criarGeradorFalso } from "../src/servidor/ia/falsa.ts";
@@ -480,7 +482,8 @@ test("reforço sem IA: o motivo cita o que a pessoa fez", () => {
 });
 
 test("resposta aberta: sem o critério essencial não passa, mesmo com os outros (“I like” não é “I'd like”)", () => {
-  const exercicio = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes).at(-1).exercicio;
+  const exercicio = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes)
+    .find(({ titulo }) => titulo === "Pedir comida no restaurante").exercicio;
   const semEducacao = avaliarResposta(exercicio, "I like one coffee and cheese bread please");
   assert.equal(semEducacao.correta, false);
   assert.deepEqual(semEducacao.criterios.map(({ atendido }) => atendido), [false, true, true]);
@@ -527,7 +530,7 @@ test("demonstração: escutas com tradução e a lição de direções cobra o c
   assert.equal(exercicios.length, 3);
   assert.ok(exercicios.some(({ fala }) => /turn left/i.test(fala?.texto ?? "")), "um exercício cobra virar à esquerda");
   const violao = licoes.find(({ titulo }) => /partes do violão/i.test(titulo)) ?? licoes.find(({ recurso }) => recurso?.tipo === "imagem");
-  assert.match(violao.recurso.descricao, /Cabeça: 1 tarraxa/);
+  assert.match(violao.recurso.descricao, /① tarraxa, na cabeça/);
 });
 
 test("dica de grafia com até duas letras de diferença em palavras de 6 ou mais (continua errada quando é a lição)", () => {
@@ -538,6 +541,62 @@ test("dica de grafia com até duas letras de diferença em palavras de 6 ou mais
 });
 
 test("ideias do Stu: as opções de um exercício de escuta (traduções) não contam", () => {
-  const restaurante = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes).at(-1);
+  const restaurante = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes)
+    .find(({ titulo }) => titulo === "Pedir comida no restaurante");
   assert.ok(!termosDaLicao(restaurante).includes("A conta"));
+});
+
+test("trilhas prontas: o retorno do erro dá uma pista sem entregar a resposta", () => {
+  const comparavel = (texto) => texto.normalize("NFD").replace(/\p{M}+/gu, "").toLowerCase().replace(/[“”"‘’.,!?:;()]/g, " ").replace(/\s+/g, " ").trim();
+  for (const { chave, plano } of DEMOS) {
+    for (const licao of plano.fluxos.flatMap(({ licoes }) => licoes)) {
+      for (const exercicio of [licao.exercicio, ...(licao.extras ?? [])]) {
+        const dica = comparavel(exercicio.feedbackIncorreto);
+        const onde = `${chave} · ${licao.titulo} · ${exercicio.tipo}`;
+        if (exercicio.tipo === "multipla_escolha") {
+          const certa = comparavel(exercicio.opcoes.find(({ id }) => id === exercicio.gabarito[0]).texto).replace(/^(a|o|as|os|um|uma) /, "");
+          if (certa.split(" ").length >= 2) assert.ok(!dica.includes(certa), `${onde}: a dica repete a opção certa`);
+        }
+        if (exercicio.tipo === "verdadeiro_falso") assert.doesNotMatch(dica, /^e (falsa|verdadeira)/, `${onde}: a dica começa pela resposta`);
+        if (exercicio.tipo === "associar") {
+          const citados = exercicio.esquerda.filter(({ texto }) => dica.includes(comparavel(texto))).length;
+          assert.ok(citados < exercicio.esquerda.length, `${onde}: a dica cita todos os pares`);
+        }
+      }
+    }
+  }
+});
+
+test("trilhas prontas: cada lição tem o seu “outro jeito de entender”, diferente da explicação e do exemplo", () => {
+  for (const { chave, plano } of DEMOS) {
+    for (const licao of plano.fluxos.flatMap(({ licoes }) => licoes)) {
+      assert.ok(licao.outroJeito && licao.outroJeito.length <= 600, `${chave} · ${licao.titulo}`);
+      assert.notEqual(licao.outroJeito, licao.conceito);
+      assert.notEqual(licao.outroJeito, licao.exemplo);
+      assert.ok(conteudoValido(licao), `${chave} · ${licao.titulo} continua válida`);
+    }
+  }
+  // A trilha de inglês fecha com a revisão, depois do restaurante.
+  const ingles = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes);
+  assert.equal(ingles.at(-1).titulo, "Revisão: um dia de viagem");
+  assert.match(ingles.find(({ titulo }) => titulo === "Pedir comida no restaurante").exercicio.enunciado, /cheese bread/);
+  // O violão ensina as mãos e a afinação logo na primeira lição.
+  const violao = DEMOS.find(({ chave }) => chave === "violao").plano.fluxos[0].licoes[0];
+  assert.match(violao.conceito, /mão esquerda/);
+  assert.match(violao.pratica.passos.join(" "), /afinador/);
+});
+
+test("vale rever: a maior parte errada antes do acerto ou a prática em “ainda não”; um erro só não marca", () => {
+  assert.equal(motivoParaRever({ acertosDePrimeira: 1, exercicios: 2 }), null, "um erro em dois faz parte de aprender");
+  assert.equal(motivoParaRever({ acertosDePrimeira: 2, exercicios: 3 }), null);
+  assert.equal(motivoParaRever({ acertosDePrimeira: 0, exercicios: 2 }), "erros");
+  assert.equal(motivoParaRever({ acertosDePrimeira: 1, exercicios: 3 }), "erros");
+  assert.equal(motivoParaRever({ acertosDePrimeira: 2, exercicios: 2, pratica: "ainda_nao" }), "pratica");
+  assert.equal(motivoParaRever({ acertosDePrimeira: 0, exercicios: 2, pratica: "ainda_nao" }), "erros_e_pratica");
+  assert.equal(motivoParaRever({ acertosDePrimeira: null, exercicios: null }), null, "conclusão antiga, sem resumo");
+  // O lembrete da conclusão usa o mesmo critério do mapa.
+  assert.match(textoParaRever({ acertos: 2, acertosDePrimeira: 0, exercicios: 2 }), /errou 2 exercícios antes de acertar\./);
+  assert.match(textoParaRever({ acertos: 2, acertosDePrimeira: 0, exercicios: 2, pratica: "ainda_nao" }), /e a prática ainda não saiu/);
+  assert.match(textoParaRever({ acertos: 2, acertosDePrimeira: 2, exercicios: 2, pratica: "ainda_nao" }), /A prática ainda não saiu\?/);
+  assert.match(textoParaRever({ acertos: 1, acertosDePrimeira: 1, exercicios: 2 }), /seguiu sem acertar 1 exercício/);
 });

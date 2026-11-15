@@ -354,7 +354,9 @@ export function ApoioDaLicao({
     // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoPonte, gravando]);
-  // ... e leva ao alto do cartão, acima do painel de retorno.
+  // ... e leva ao alto do cartão, acima do painel de retorno. Rola de novo quando o reforço chega: antes, a página ainda
+  // é curta e a rolagem para no meio do caminho.
+  const pontePronta = Boolean(ponte);
   useEffect(() => {
     if (pedidoPonte === 0) return;
     const quadro = window.requestAnimationFrame(() => {
@@ -363,9 +365,9 @@ export function ApoioDaLicao({
       cartaoPonte.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(quadro);
-    // Só o pedido dispara; o resto é lido no momento.
+    // Só o pedido e a chegada do reforço disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pedidoPonte]);
+  }, [pedidoPonte, pontePronta]);
   // O retorno do "Ensine ao Stu" aparece embaixo do formulário: a tela rola até ele.
   useEffect(() => {
     if (!ensino) return;

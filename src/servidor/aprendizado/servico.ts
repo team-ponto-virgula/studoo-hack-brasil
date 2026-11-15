@@ -9,6 +9,7 @@ import type {
   PlanoResumo,
   PropostaPlano,
 } from "@studoo/contratos";
+import { motivoParaRever } from "@studoo/contratos";
 import {
   apresentarExercicio,
   avaliarResposta,
@@ -66,15 +67,17 @@ export async function gerarProposta(usuarioId: string, objetivo: string): Promis
 
 function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
   const fluxos = plano.fluxos.map(({ id, titulo, licoes }) => {
-    const licoesPublicas = licoes.map(({ id, titulo, conclusao, apoio }) => ({
-      id,
-      titulo,
-      concluida: conclusao !== null,
-      ...(apoio?.reforco ? { ponte: { concluida: apoio.reforcoConcluido } } : {}),
-      // Vale rever: errou antes de acertar (ou ficou sem acerto) ou a prática ainda não saiu.
-      ...(conclusao && ((conclusao.exercicios != null && (conclusao.acertosDePrimeira ?? 0) < conclusao.exercicios) || conclusao.pratica === "ainda_nao")
-        ? { rever: true } : {}),
-    }));
+    const licoesPublicas = licoes.map(({ id, titulo, conclusao, apoio }) => {
+      // Vale rever: a maior parte dos exercícios saiu errada antes do acerto ou a prática ainda não saiu.
+      const rever = conclusao ? motivoParaRever(conclusao) : null;
+      return {
+        id,
+        titulo,
+        concluida: conclusao !== null,
+        ...(apoio?.reforco ? { ponte: { concluida: apoio.reforcoConcluido } } : {}),
+        ...(rever ? { rever } : {}),
+      };
+    });
     const concluidas = licoesPublicas.filter((licao) => licao.concluida).length;
     const proximaLicao = licoesPublicas.find((licao) => !licao.concluida);
     return {

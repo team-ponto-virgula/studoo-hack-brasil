@@ -136,6 +136,11 @@ test('material → proposta → lição → reforço → explicação; progresso
     'O denominador indica o total de partes iguais.',
   );
   assert.equal(feedback.simulado, true);
+  // Sem IA, o retorno reconhece o que a pessoa trouxe e dá um próximo passo de verdade (o aviso de automático fica na
+  // legenda da tela, não no texto).
+  assert.ok(feedback.acertos.length > 0);
+  assert.doesNotMatch(feedback.proximoPasso, /não confere/);
+  assert.doesNotMatch(feedback.acertos.join(' '), /“[^”]+”, ideias-chave/, 'um termo só: “uma ideia-chave”');
   await assert.rejects(ensinarStu(u, id, 'oi'), codigo('invalido'));
   const avaliacao = await avaliarLicao(u, id, '1');
   assert.equal(avaliacao.correta, true);

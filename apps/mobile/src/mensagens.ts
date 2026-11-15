@@ -1,5 +1,5 @@
 import { mensagens as comuns } from '@studoo/contratos/experiencia';
-export { textoDaFalta } from '@studoo/contratos/experiencia';
+export { textoDaFalta, textoParaRever } from '@studoo/contratos/experiencia';
 import { codigoDaFalha } from './api-nativa';
 
 export const mensagens = {

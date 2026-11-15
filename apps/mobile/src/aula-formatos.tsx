@@ -351,6 +351,33 @@ export function Falas({ falas }: { falas: Fala[] }) {
   );
 }
 
+/**
+ * Texto com as frases entre aspas no idioma da lição tocáveis: um toque e a voz do aparelho fala a frase. Como na web.
+ * Numa lição em português, o texto fica como está.
+ */
+export function TextoComFalas({ texto, idioma, estilo }: { texto: string; idioma?: string; estilo?: object }) {
+  if (!idioma || idioma.toLowerCase().startsWith('pt')) return <Text style={estilo}>{texto}</Text>;
+  const partes = texto.split(/“([^”]+)”/);
+  const tocaveis = partes.some((parte, indice) => indice % 2 === 1 && !/[ãõçáéíóúâêôà]/i.test(parte));
+  return (
+    <>
+    <Text style={estilo}>
+      {partes.map((parte, indice) => {
+        if (indice % 2 === 0) return parte;
+        if (/[ãõçáéíóúâêôà]/i.test(parte)) return `“${parte}”`;
+        return (
+          <Text key={indice} accessibilityRole="button" accessibilityLabel={t.audio.ouvirFrase(parte)} suppressHighlighting={false}
+            onPress={() => falar({ texto: parte, idioma }, false)} style={formatos.falaInline}>
+            “{parte}”
+          </Text>
+        );
+      })}
+    </Text>
+    {tocaveis && <Text style={estilos.legenda}>{t.audio.toqueParaOuvir}</Text>}
+    </>
+  );
+}
+
 /** Na conclusão: as frases da lição, com a tradução, para ouvir mais uma vez (o "Falar" fica na aula). Como na web. */
 export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
   return (
@@ -614,14 +641,18 @@ function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, 
 }
 
 /** Ordenar tocando: cada toque coloca o item na próxima posição; tocar num item colocado tira ele da ordem. */
-export function Ordenar({ itens, valor, mudar, desativado, certos }: {
+export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
   itens: Opcao[];
   valor: string;
   mudar: (valor: string) => void;
   desativado: boolean;
   certos?: string[];
+  /** Na nova tentativa: os itens que já estavam na posição certa (o começo da ordem fica travado). Como na web. */
+  fixos?: string[];
 }) {
   const ordem = valor.split(',').filter((id) => itens.some((item) => item.id === id));
+  let travados = 0;
+  while (fixos && travados < ordem.length && fixos.includes(ordem[travados])) travados += 1;
   const restantes = itens.filter((item) => !ordem.includes(item.id));
   const texto = (id: string) => itens.find((item) => item.id === id)?.texto ?? '';
   return (
@@ -631,9 +662,10 @@ export function Ordenar({ itens, valor, mudar, desativado, certos }: {
       <View style={formatos.ordemCaixa}>
         {ordem.length === 0 && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.ordenar.vazio}</Text>}
         {ordem.map((id, posicao) => {
-          const estado = certos ? (certos.includes(id) ? 'certo' : 'errado') : null;
+          const estado = certos ? (certos.includes(id) ? 'certo' : 'errado') : posicao < travados ? 'certo' : null;
           return (
-            <Pressable key={id} accessibilityRole="button" accessibilityLabel={t.ordenar.tirar(texto(id), posicao + 1)} disabled={desativado}
+            <Pressable key={id} accessibilityRole="button" disabled={desativado || posicao < travados}
+              accessibilityLabel={posicao < travados ? t.ordenar.travado(texto(id), posicao + 1) : t.ordenar.tirar(texto(id), posicao + 1)}
               onPress={() => mudar(codificarResposta.ordem(ordem.filter((item) => item !== id)))}
               style={({ pressed }) => [formatos.cartao, formatos.cartaoEscolhido, estado === 'certo' && formatos.cartaoCerto,
                 estado === 'errado' && formatos.cartaoErrado, pressed && formatos.cartaoAfundado]}>
@@ -654,8 +686,10 @@ export function Ordenar({ itens, valor, mudar, desativado, certos }: {
           </Pressable>
         ))}
       </View>}
-      {ordem.length > 0 && !desativado && (
-        <Pressable accessibilityRole="button" onPress={() => mudar('')}><Text style={formatos.link}>{t.ordenar.recomecar}</Text></Pressable>
+      {ordem.length > travados && !desativado && (
+        <Pressable accessibilityRole="button" onPress={() => mudar(codificarResposta.ordem(ordem.slice(0, travados)))}>
+          <Text style={formatos.link}>{t.ordenar.recomecar}</Text>
+        </Pressable>
       )}
     </View>
   );
@@ -664,16 +698,19 @@ export function Ordenar({ itens, valor, mudar, desativado, certos }: {
 const coresDosPares = [cores.acao, '#C25A8A', '#1F8A8A', '#B7791F', '#6B3FA0', '#5E6A85'];
 
 /** Associar tocando: um item da esquerda e depois o par na direita; cada par ganha um número e uma cor. */
-export function Associar({ esquerda, direita, valor, mudar, desativado, certos }: {
+export function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }: {
   esquerda: Opcao[];
   direita: Opcao[];
   valor: string;
   mudar: (valor: string) => void;
   desativado: boolean;
   certos?: string[];
+  /** Na nova tentativa: os itens da esquerda cujo par já estava certo (o par fica travado, em verde). Como na web. */
+  fixos?: string[];
 }) {
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const pares = valor.split(',').filter(Boolean).map((par) => par.split('=') as [string, string]);
+  const travado = (idEsquerda?: string | null) => Boolean(idEsquerda && fixos?.includes(idEsquerda) && pares.some(([item]) => item === idEsquerda));
   const numero = (id: string) => pares.findIndex(([item, outro]) => item === id || outro === id) + 1;
   const texto = (lista: Opcao[], id: string) => lista.find((item) => item.id === id)?.texto ?? '';
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
@@ -705,12 +742,14 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos }
     const indice = par ? numero(item.id) : 0;
     const cor = coresDosPares[(indice - 1) % coresDosPares.length];
     const chave = par ? par[0] : null;
-    const estado = certos && chave ? (certos.includes(chave) ? 'certo' : 'errado') : null;
+    const fixo = travado(chave);
+    const estado = certos && chave ? (certos.includes(chave) ? 'certo' : 'errado') : fixo ? 'certo' : null;
     let rotulo = item.texto;
-    if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(texto(esquerda, escolhida), item.texto);
+    if (fixo && par) rotulo = t.associar.travado(texto(esquerda, par[0]), texto(direita, par[1]));
+    else if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(texto(esquerda, escolhida), item.texto);
     else if (par) rotulo = t.associar.desfazer(texto(esquerda, par[0]), texto(direita, par[1]));
     return (
-      <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={rotulo} disabled={desativado}
+      <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={rotulo} disabled={desativado || fixo}
         accessibilityState={{ selected: escolhida === item.id }}
         onPress={() => (lado === 'esquerda' ? tocarEsquerda(item.id) : tocarDireita(item.id))}
         style={({ pressed }) => [formatos.cartao, formatos.cartaoPar, par && { borderColor: cor, borderBottomColor: cor },
@@ -735,8 +774,10 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos }
         <View style={formatos.coluna} accessibilityLabel={t.associar.esquerda}>{esquerda.map((item) => cartao(item, 'esquerda'))}</View>
         <View style={formatos.coluna} accessibilityLabel={t.associar.direita}>{direita.map((item) => cartao(item, 'direita'))}</View>
       </View>
-      {pares.length > 0 && !desativado && (
-        <Pressable accessibilityRole="button" onPress={() => { mudar(''); setEscolhida(null); }}><Text style={formatos.link}>{t.associar.recomecar}</Text></Pressable>
+      {pares.some(([item]) => !travado(item)) && !desativado && (
+        <Pressable accessibilityRole="button" onPress={() => { salvar(pares.filter(([item]) => travado(item))); setEscolhida(null); }}>
+          <Text style={formatos.link}>{t.associar.recomecar}</Text>
+        </Pressable>
       )}
     </View>
   );
@@ -880,6 +921,9 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   if (rodando) rotuloPrincipal = t.pratica.pausar;
   else if (restante < total) rotuloPrincipal = t.pratica.retomar;
   const andamento = 1 - restante / total;
+  // Como na web: o "Como foi?" espera um mínimo de prática (30 s, ou o cronômetro inteiro se for menor).
+  const minimo = Math.min(30, total);
+  const praticou = total - restante >= minimo;
 
   return (
     <View style={formatos.secao} onLayout={(evento) => { raizY.current = evento.nativeEvent.layout.y; }}>
@@ -930,12 +974,14 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
       {/* "Como foi?" espera o cronômetro começar: a prática pede praticar. */}
       <Text accessibilityRole="header" style={formatos.comoFoi}
         onLayout={(evento) => aoMedirComoFoi?.(raizY.current + evento.nativeEvent.layout.y)}>
-        {acabou ? t.pratica.acabou : restante < total || escolha ? t.pratica.comoFoi : t.pratica.comeceAntes}
+        {acabou ? t.pratica.acabou
+          : praticou || escolha ? t.pratica.comoFoi
+            : restante < total ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.comeceAntes}
       </Text>
       <View style={formatos.opcoesComoFoi} accessibilityRole="radiogroup" accessibilityLabel={t.pratica.comoFoi}>
         {AUTOAVALIACOES.map((valor) => {
           const marcada = escolha === valor;
-          const travada = restante === total && !escolha;
+          const travada = !praticou && !escolha;
           return (
             <Pressable key={valor} testID={`como-foi-${valor}`} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: travada }}
               disabled={travada} onPress={() => escolher(valor)}
@@ -974,6 +1020,7 @@ const formatos = StyleSheet.create({
   ouvir: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   escuta: { gap: 12, padding: 14, borderRadius: 16, backgroundColor: cores.ceu },
   fraseGrande: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19, lineHeight: 26 },
+  falaInline: { color: cores.acaoEscura, fontWeight: '800', textDecorationLine: 'underline', textDecorationStyle: 'dotted' },
   fala: { gap: 6, padding: 12, borderRadius: 16, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   falaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 18, lineHeight: 24 },
   lacuna: { textDecorationLine: 'underline', textDecorationStyle: 'solid' },
