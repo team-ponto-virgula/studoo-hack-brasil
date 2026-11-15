@@ -210,6 +210,7 @@ export function ApoioDaLicao({
   ultimo = true,
   aoConcluirPonte,
   aoEnsinar,
+  aoAbrirExplique,
 }: {
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
@@ -221,6 +222,8 @@ export function ApoioDaLicao({
   aoConcluirPonte?: () => void;
   /** A explicação foi enviada: a lição tira o convite para explicar. */
   aoEnsinar?: () => void;
+  /** O "Explique" abriu ou fechou: a lição deixa o rodapé só com as ações enquanto ele está aberto. */
+  aoAbrirExplique?: (aberto: boolean) => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
@@ -471,6 +474,7 @@ export function ApoioDaLicao({
       {ultimo && <details
         className="estudio-card"
         onToggle={(e) => {
+          aoAbrirExplique?.(e.currentTarget.open);
           if (!e.currentTarget.open && recorder.current?.state === 'recording')
             recorder.current.stop();
         }}

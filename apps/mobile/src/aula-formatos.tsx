@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { AccessibilityInfo, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import * as Speech from 'expo-speech';
 import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { File, Paths } from 'expo-file-system';
@@ -540,7 +540,7 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
           <Text key={`c${numero}`} style={[formatos.rotuloDiagrama, { left: x(corda) - 8, top: 40 + 4 * 30 + 4 }]}>{numero}</Text>
         ))}
         <Text style={[formatos.eixoDiagrama, { left: x(0), width: x(5) - x(0), top: 40 + 4 * 30 + 22 }]}>{t.recursos.eixoCorda}</Text>
-        <Text style={[formatos.eixoDiagrama, { left: x(5) + 4, width: 34, top: 18 }]}>{t.recursos.eixoCasa}</Text>
+        <Text style={[formatos.eixoDiagrama, { left: x(5) + 4, width: 34, top: 0 }]}>{t.recursos.eixoCasa}</Text>
         {[0, 1, 2, 3].map((linha) => (
           <Text key={`t${linha}`} style={[formatos.rotuloDiagrama, { left: x(5) + 12, top: 40 + (linha + 0.5) * 30 - 9 }]}>{base + linha}</Text>
         ))}
@@ -561,6 +561,8 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
 function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso: Extract<Recurso, { tipo: 'acorde' }>; longa?: boolean; soBatida?: boolean }) {
   type Som = 'acorde' | 'batida' | 'anterior';
   const compassos = longa ? 8 : 2;
+  const { width } = useWindowDimensions();
+  const empilhar = width < 520;
   const [tocando, setTocando] = useState<Som | null>(null);
   const [semSom, setSemSom] = useState(false);
   /** Na batida, qual dos oito tempos do compasso (1, e, 2, e…) está soando agora. Como na web. */
@@ -639,14 +641,14 @@ function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso:
   return (
     <View style={formatos.acorde}>
       {anterior ? (
-        <View style={formatos.comparacao}>
+        <View style={[formatos.comparacao, empilhar && { flexDirection: 'column' }]}>
           <View style={formatos.lado}>
-            <BracoDoAcorde {...anterior} escala={0.72} />
+            <BracoDoAcorde {...anterior} escala={empilhar ? 1 : 0.72} />
             <Text style={formatos.ladoNome}>{anterior.nome}</Text>
           </View>
-          <Icone nome="seta" tamanho={20} cor={cores.textoSecundario} />
+          <View style={empilhar ? { transform: [{ rotate: '90deg' }] } : null}><Icone nome="seta" tamanho={20} cor={cores.textoSecundario} /></View>
           <View style={formatos.lado}>
-            <BracoDoAcorde nome={recurso.nome} casas={recurso.casas} dedos={recurso.dedos} escala={0.72} />
+            <BracoDoAcorde nome={recurso.nome} casas={recurso.casas} dedos={recurso.dedos} escala={empilhar ? 1 : 0.72} />
             <Text style={formatos.ladoNome}>{recurso.nome}</Text>
           </View>
         </View>
@@ -1023,7 +1025,8 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   const andamento = 1 - restante / total;
   // Como na web: o "Como foi?" espera um mínimo de prática (30 s, ou o cronômetro inteiro se for menor).
   const minimo = Math.min(30, total);
-  const praticou = total - restante >= minimo;
+  const [semCronometro, setSemCronometro] = useState(false);
+  const praticou = semCronometro || total - restante >= minimo;
 
   return (
     <View style={formatos.secao} onLayout={(evento) => { raizY.current = evento.nativeEvent.layout.y; }}>
@@ -1083,6 +1086,11 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
               ? rodando ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.retomeParaContar(minimo - (total - restante))
               : t.pratica.comeceAntes}
       </Text>
+      {!praticou && !escolha && (
+        <Pressable accessibilityRole="button" onPress={() => setSemCronometro(true)} hitSlop={8}>
+          <Text style={formatos.link}>{t.audio.jaPratiquei}</Text>
+        </Pressable>
+      )}
       <View style={formatos.opcoesComoFoi} accessibilityRole="radiogroup" accessibilityLabel={t.pratica.comoFoi}>
         {AUTOAVALIACOES.map((valor) => {
           const marcada = escolha === valor;

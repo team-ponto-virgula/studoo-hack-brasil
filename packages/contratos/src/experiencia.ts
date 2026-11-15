@@ -14,7 +14,7 @@ export const mensagens = {
       verPonte: 'Ver outro jeito de entender', ponte: 'Outro jeito de entender', construir: 'Mostrar outro exemplo', ponteDica: 'Vamos explorar a mesma ideia por outro caminho, com um exemplo e um desafio novos.',
       pontePronta: 'Entendi!', ponteVoltar: 'Agora tente o exercício original novamente.', ponteMapa: 'Reforço', ponteMapaFeita: 'Reforço feito',
       retornoAutomatico: 'Dica do Stu',
-      verificar: 'Conferir este exemplo', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo (o Stu é o mascote do Studoo). Dê um exemplo seu: ele aponta o que faz sentido e propõe uma situação nova.',
+      verificar: 'Conferir este exemplo', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo, e dê um exemplo seu. O Stu, o mascote do Studoo, aponta o que faz sentido e propõe uma situação nova.',
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       ensinoAutomatico: 'Retorno automático: o Stu procura na sua explicação as ideias-chave desta lição.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
@@ -330,7 +330,7 @@ export const mensagens = {
         retomada: 'Você continuou de onde parou.',
         recomecarLicao: 'Recomeçar do zero',
         recomecarPergunta: 'Recomeçar a lição do zero? As respostas desta vez serão apagadas.',
-        maisAbaixo: 'Mais abaixo',
+        maisAbaixo: 'Ver mais abaixo',
         revisaoRapida: 'Revisão rápida: antes de concluir, tente de novo o que ficou sem acerto.',
         revisaoAndamento: 'Revisão rápida',
         revisaoDe: (posicao: number, total: number) => `Revisão ${posicao} de ${total}`,
@@ -400,6 +400,8 @@ export const mensagens = {
             falasTitulo: 'Ouça e repita',
             toqueParaOuvir: 'Toque nas frases destacadas para ouvir.',
             semVozTexto: 'Este aparelho não tem voz para ler as frases. No próximo passo, cada frase tem a pronúncia escrita.',
+            jaPratiquei: 'Já pratiquei sem o cronômetro',
+            previaAbre: 'Esta lição abre quando você começar a trilha (botão Começar, no pé da tela).',
             comoLerPronuncia: 'Como ler a pronúncia: leia como em português; a parte em MAIÚSCULAS é a mais forte.',
             pronuncia: 'Pronúncia',
             tocando: 'Tocando…',
@@ -485,8 +487,8 @@ export const mensagens = {
             rotulo: 'Sua resposta',
             dica: 'Escreva com as suas palavras.',
             contador: (usados: number, minimo: number) => usados < minimo
-                ? `Faltam ${minimo - usados} ${minimo - usados === 1 ? 'caractere' : 'caracteres'}`
-                : `${usados} caracteres`,
+                ? `Faltam ${minimo - usados} ${minimo - usados === 1 ? 'letra' : 'letras'}`
+                : `${usados} letras`,
             criterios: 'O que a correção procurou',
             atendido: 'Tem',
             faltou: 'Faltou',
