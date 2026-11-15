@@ -436,7 +436,9 @@ export function Estudo() {
           )}
           {visivel && tela.tipo === 'geracao' && geracao && (
             <GeracaoAoVivo geracao={geracao} ocupado={ocupado}
-              cancelar={cancelarGeracao} comecar={(proposta) => void comecar(proposta)} ajustar={() => navegar({ tipo: 'objetivo' })} />
+              cancelar={cancelarGeracao} comecar={(proposta) => void comecar(proposta)} ajustar={() => navegar({ tipo: 'objetivo' })}
+              existente={geracao.proposta ? planos.find((plano) => plano.titulo === geracao.proposta?.titulo) : undefined}
+              abrirExistente={(id) => void abrirPlano(id)} />
           )}
           {visivel && tela.tipo === 'plano' && (
             <Plano tela={tela} ocupado={ocupado} abrindo={abrindo}
@@ -543,12 +545,15 @@ function CartaoPlano({ plano, regiao, ocupado, abrir, apagar }: {
  * O botão da esquerda é o mesmo do começo ao fim: Cancelar enquanto a IA monta e Ajustar pedido no fim; os dois voltam
  * ao pedido sem salvar nada. Começar aparece em outro lugar, então um toque atrasado em Cancelar não aceita a trilha.
  */
-function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar }: {
+function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar, existente, abrirExistente }: {
   geracao: TrilhaEmGeracao;
   ocupado: boolean;
   cancelar: () => void;
   comecar: (proposta: PropostaPlano) => void;
   ajustar: () => void;
+  /** Uma trilha da pessoa com o mesmo nome: a tela avisa e oferece abrir a que já existe, em vez de duplicar. */
+  existente?: PlanoResumo;
+  abrirExistente: (id: string) => void;
 }) {
   const nos = useMemo(() => nosDaPrevia(geracao), [geracao]);
   const { titulo, proposta } = geracao;
@@ -576,6 +581,12 @@ function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar }: {
           {proposta
             ? !origemDemonstracao(proposta.origem) && <p className="geracao-origem">{mensagens.geracao.origem(origemLegivel(proposta.origem))}</p>
             : <span className="geracao-esqueleto geracao-esqueleto--origem" aria-hidden="true" />}
+          {proposta && existente && (
+            <div className="geracao-repetida" role="status">
+              <p>{mensagens.geracao.repetida(existente.titulo)}</p>
+              <Botao variante="secundario" disabled={ocupado} onClick={() => abrirExistente(existente.id)}>{mensagens.geracao.abrirExistente}</Botao>
+            </div>
+          )}
         </div>
       </header>
       <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas}
@@ -850,8 +861,8 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
 
   return (
     <section className="painel painel--concluida">
-      {/* Sem chuva de confete quando ficou algo para rever: a conclusão vira um lembrete gentil, não uma festa. */}
-      {!resumo?.rever && <Confete chuva quantidade={44} />}
+      {/* Sem chuva de confete quando ficou exercício sem acerto ou a prática não saiu: a conclusão vira um lembrete gentil. */}
+      {!(resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao')) && <Confete chuva quantidade={44} />}
       <div className="conclusao-cena" aria-hidden="true">
         <span className="conclusao-raios" />
         <Stu />
@@ -860,6 +871,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       <h1 tabIndex={-1}>{trilhaFeita ? mensagens.licao.trilhaConcluida : mensagens.licao.concluida}</h1>
       <p className="conclusao-texto">{trilhaFeita ? mensagens.licao.trilhaConcluidaTexto(plano.titulo) : mensagens.licao.comemoracao}</p>
       <p className="conclusao-licao">{licao.titulo}</p>
+      {trilhaFeita && <p className="conclusao-trilha"><Icone nome="trofeu" />{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length)}</p>}
       {resumo && trilhaFeita && <p className="conclusao-numeros__legenda">{textos.ultimaLicao}</p>}
       {resumo && (
         <ul className="conclusao-numeros" aria-label={trilhaFeita ? `${textos.titulo}: ${textos.ultimaLicao}` : textos.titulo}>
@@ -869,7 +881,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
           </li>
           <li data-tipo="acerto" data-primeira={resumo.dePrimeira || undefined}>
             <span className="conclusao-numeros__rotulo"><Icone nome="alvo" />{textos.acerto}</span>
-            <span className="conclusao-numeros__valor">{resumo.dePrimeira ? textos.dePrimeira : textos.acertos(resumo.acertos, resumo.exercicios)}</span>
+            <span className="conclusao-numeros__valor">{textos.acertos(resumo.acertosDePrimeira, resumo.exercicios)}</span>
           </li>
           <li data-tipo="etapas">
             <span className="conclusao-numeros__rotulo"><Icone nome="check" />{textos.etapas}</span>
@@ -886,7 +898,11 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       {resumo?.rever && (
         <p className="conclusao-rever">
           <Icone nome="revisao" />
-          {resumo.acertos < resumo.exercicios ? mensagens.licao.revisarErros(resumo.exercicios - resumo.acertos) : mensagens.licao.revisarPratica}
+          {resumo.acertos < resumo.exercicios
+            ? mensagens.licao.revisarErros(resumo.exercicios - resumo.acertos)
+            : resumo.acertosDePrimeira < resumo.exercicios
+              ? mensagens.licao.revisarTentativas(resumo.exercicios - resumo.acertosDePrimeira)
+              : mensagens.licao.revisarPratica}
         </p>
       )}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}

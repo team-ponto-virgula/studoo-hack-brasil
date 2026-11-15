@@ -55,11 +55,21 @@ export async function buscarApoio(
  * Reforço sem IA. A lição de numerador e denominador mantém a explicação com chocolate da demonstração do material;
  * as outras ganham uma pergunta mais simples sobre o exercício que a pessoa errou (veja `reforcoDoExercicio`).
  */
+/**
+ * O “outro exemplo” sem IA não repete o exemplo da lição: usa o passo a passo ou as frases para ouvir (o mesmo conteúdo
+ * por outro caminho) e, sem eles, lembra a explicação.
+ */
+function outroExemplo(licao: LicaoDetalhe): string {
+  if (licao.passos?.length) return `Pelo passo a passo: ${licao.passos.map((passo, posicao) => `${posicao + 1}) ${passo}`).join(' ')}`;
+  if (licao.falas?.length) return `Ouça de novo: ${licao.falas.map(({ texto, traducao }) => (traducao ? `“${texto}” (${traducao})` : `“${texto}”`)).join(' · ')}`;
+  return `Lembre da explicação: ${licao.conceito}`;
+}
+
 function reforcoFalso(licao: LicaoDetalhe, interno: ConteudoLicao, resposta: string | null): Reforco {
   const fracao = /numerador|denominador/i.test(licao.titulo);
   if (!fracao) {
     const exercicio = exercicioDaResposta([interno.exercicio, ...(interno.extras ?? [])], resposta);
-    return { objetivo: licao.objetivo, origem: 'Modo demonstração', simulado: true, ...reforcoDoExercicio(exercicio, resposta, licao.exemplo) };
+    return { objetivo: licao.objetivo, origem: 'Modo demonstração', simulado: true, ...reforcoDoExercicio(exercicio, resposta, outroExemplo(licao)) };
   }
   return {
     objetivo: licao.objetivo,
@@ -196,7 +206,7 @@ export async function ensinarStu(
         ? `E se a situação fosse outra? Como “${licao.titulo}” funcionaria num caso diferente do seu exemplo?`
         : `Como você usaria “${licao.titulo}” num exemplo do dia a dia?`,
       proximoPasso:
-        'Modo demonstração: este retorno não confere se o texto está certo. Compare com a explicação da lição.',
+        'Este retorno é automático e não confere se o texto está certo. Compare com a explicação da lição.',
       simulado: true,
     };
   } else {

@@ -101,14 +101,19 @@ export function falaValida(valor: unknown): valor is Fala {
     opcional(valor.traducao, (item) => textoAte(item, 300));
 }
 
+/** Nome, as seis casas (de -1, abafada, a 15) e, se houver, os dedos (0 a 4) de um acorde. */
+function acordeValido(valor: Record<string, unknown>): boolean {
+  return textoAte(valor.nome, 20) && Array.isArray(valor.casas) && valor.casas.length === 6 &&
+    valor.casas.every((casa) => inteiroEntre(casa, -1, 15)) && valor.casas.some((casa) => casa >= 0) &&
+    opcional(valor.dedos, (dedos) => Array.isArray(dedos) && dedos.length === 6 && dedos.every((dedo) => inteiroEntre(dedo, 0, 4)));
+}
+
 export function recursoValido(valor: unknown): valor is Recurso {
   if (!objeto(valor)) return false;
   switch (valor.tipo) {
     case "acorde":
-      return textoAte(valor.nome, 20) && Array.isArray(valor.casas) && valor.casas.length === 6 &&
-        valor.casas.every((casa) => inteiroEntre(casa, -1, 15)) && valor.casas.some((casa) => casa >= 0) &&
-        opcional(valor.dedos, (dedos) => Array.isArray(dedos) && dedos.length === 6 && dedos.every((dedo) => inteiroEntre(dedo, 0, 4))) &&
-        opcional(valor.batida, (batida) => typeof batida === "boolean");
+      return acordeValido(valor) && opcional(valor.batida, (batida) => typeof batida === "boolean") &&
+        opcional(valor.anterior, (anterior) => objeto(anterior) && acordeValido(anterior));
     case "linha_do_tempo":
       return Array.isArray(valor.eventos) && valor.eventos.length >= 2 && valor.eventos.length <= 8 &&
         valor.eventos.every((evento) => objeto(evento) && textoAte(evento.quando, 40) && textoAte(evento.texto, 200));
@@ -116,7 +121,8 @@ export function recursoValido(valor: unknown): valor is Recurso {
       return inteiroEntre(valor.denominador, 1, 12) && inteiroEntre(valor.numerador, 0, valor.denominador) &&
         opcional(valor.rotulo, (rotulo) => textoAte(rotulo, 40));
     case "imagem":
-      return typeof valor.src === "string" && valor.src.length <= 700_000 && IMAGEM.test(valor.src) && textoAte(valor.descricao, 200);
+      return typeof valor.src === "string" && valor.src.length <= 700_000 && IMAGEM.test(valor.src) && textoAte(valor.descricao, 200) &&
+        opcional(valor.fonte, (fonte) => textoAte(fonte, 40));
     default:
       return false;
   }
@@ -320,7 +326,7 @@ export function distancia(a: string, b: string, limite = 3): number {
  * ou mais, um deslize de digitação (dois, a partir de 9 letras) também passa, com um aviso. Nada disso vale quando a
  * grafia é o que se ensina (`exata`). Números e símbolos (como `>=`) continuam exatos.
  */
-function conferirLacuna(gabarito: readonly string[], resposta: string, exata = false): { correta: boolean; observacao?: string } {
+function conferirLacuna(gabarito: readonly string[], resposta: string, exata = false, trecho?: string): { correta: boolean; observacao?: string } {
   const recebida = compactar(resposta).toLocaleLowerCase("pt-BR");
   const normalizada = normalizarResposta(resposta);
   const semArtigo = normalizada.replace(ARTIGO, "");
@@ -352,7 +358,49 @@ function conferirLacuna(gabarito: readonly string[], resposta: string, exata = f
       return { correta: true, observacao: `Quase igual: a forma certa é “${compactar(esperado)}”.` };
     }
   }
+  // Escreveu a frase em volta junto (“how much” na lacuna de “How ___ is…”): vale, com o aviso de que basta o que falta.
+  const semContexto = trecho ? tirarContexto(resposta, trecho) : null;
+  if (semContexto && conferirLacuna(gabarito, semContexto, exata).correta) {
+    return { correta: true, observacao: "Certo! Na lacuna, basta escrever o que falta." };
+  }
+  // Quando a grafia é a lição, uma letra a mais ou a menos continua errada, mas o retorno diz que foi por pouco.
+  for (const esperado of exata ? gabarito : []) {
+    const alvo = normalizarResposta(esperado).replace(ARTIGO, "");
+    if (alvo.length < 4 || !/^[\p{L} ]+$/u.test(alvo)) continue;
+    if (distancia(semArtigo, alvo, 1) <= 1) return { correta: false, observacao: "Quase! Confira a grafia: falta ou sobra uma letra." };
+  }
   return { correta: false };
+}
+
+/**
+ * Tira da resposta as palavras do trecho em volta da lacuna (as de antes, no começo; as de depois, no fim). Devolve null
+ * quando não havia nada a tirar.
+ */
+function tirarContexto(resposta: string, trecho: string): string | null {
+  const partes = trecho.split(/_{3,}/);
+  if (partes.length < 2) return null;
+  const palavras = (texto: string) => normalizarResposta(texto).replace(/[^\p{L}\p{N} ]+/gu, " ").split(" ").filter(Boolean);
+  const recebidas = palavras(resposta);
+  const antes = palavras(partes[0]);
+  const depois = palavras(partes[1]);
+  // Quantas palavras do começo da resposta repetem o fim do trecho antes da lacuna (sobra pelo menos uma).
+  let inicio = 0;
+  for (let quantas = Math.min(antes.length, recebidas.length - 1); quantas > 0; quantas -= 1) {
+    if (antes.slice(-quantas).every((palavra, posicao) => palavra === recebidas[posicao])) {
+      inicio = quantas;
+      break;
+    }
+  }
+  // Quantas palavras do fim da resposta repetem o começo do trecho depois da lacuna.
+  let fim = recebidas.length;
+  for (let quantas = Math.min(depois.length, recebidas.length - inicio - 1); quantas > 0; quantas -= 1) {
+    if (depois.slice(0, quantas).every((palavra, posicao) => palavra === recebidas[recebidas.length - quantas + posicao])) {
+      fim = recebidas.length - quantas;
+      break;
+    }
+  }
+  if (inicio === 0 && fim === recebidas.length) return null;
+  return recebidas.slice(inicio, fim).join(" ");
 }
 
 const NEGACAO = new Set(["nao", "nunca", "nem"]);
@@ -424,7 +472,7 @@ export function avaliarResposta(exercicio: ExercicioInterno, resposta: string): 
 
   switch (exercicio.tipo) {
     case "lacuna": {
-      const { correta, observacao } = conferirLacuna(exercicio.gabarito, valor, exercicio.exata === true);
+      const { correta, observacao } = conferirLacuna(exercicio.gabarito, valor, exercicio.exata === true, exercicio.trecho);
       return resultado(correta, observacao ? { observacao } : {});
     }
     case "multipla_escolha":

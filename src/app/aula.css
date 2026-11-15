@@ -762,3 +762,22 @@
 
 /* "Como foi?" espera o cronômetro começar. */
 .como-foi:disabled label { opacity: 0.55; cursor: not-allowed; }
+
+/* Avisos no alto da aula: voltou de onde parou (com "Recomeçar") e a revisão rápida antes de concluir. */
+.aula-aviso { margin: 4px 0 14px; padding: 10px 14px; border-radius: 14px; background: #eef2ff; color: var(--acao-escura); font-weight: 800; }
+.aula-aviso--revisao { background: #fff6d9; color: #7a4a00; }
+.aula-aviso__acao {
+  min-height: 44px; padding: 0 4px; border: 0; background: none; color: inherit; font: inherit; font-weight: 900;
+  text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.aula-aviso__acao:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 6px; }
+.ouvir__aviso { flex-basis: 100%; margin: 4px 0 0; color: var(--alerta); font-size: 0.875rem; font-weight: 800; }
+
+/* Troca de acorde: os dois diagramas lado a lado, com a seta entre eles. */
+.acorde[data-comparacao] { grid-template-columns: minmax(0, 1fr); justify-items: center; }
+.acorde__comparacao { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; }
+.acorde__lado { display: grid; flex: 1 1 0; justify-items: center; gap: 2px; max-width: 190px; }
+.acorde__lado svg { width: 100%; max-width: 180px; }
+.acorde__nome { color: var(--texto); font-size: 1.125rem; font-weight: 900; }
+.acorde__seta { display: grid; flex: none; color: var(--texto2); }
+.acorde__seta .icone { width: 22px; height: 22px; }

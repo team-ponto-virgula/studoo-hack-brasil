@@ -14,7 +14,8 @@ export const mensagens = {
       verPonte: 'Ver outro exemplo', ponte: 'Outro jeito de entender', construir: 'Mostrar outro exemplo', ponteDica: 'Vamos explorar a mesma ideia por outro caminho, com um exemplo e um desafio novos.',
       pontePronta: 'Entendi!', ponteVoltar: 'Agora tente o exercício original novamente.', ponteMapa: 'Reforço', ponteMapaFeita: 'Reforço feito',
       retornoAutomatico: 'Retorno automático',
-      verificar: 'Conferir este exemplo', ensinar: 'Ensine ao Stu', ensinoDica: 'Explique com suas palavras, como se ensinasse o Stu, o mascote do Studoo. Use um exemplo: ele aponta o que faz sentido e propõe uma nova situação.',
+      verificar: 'Conferir este exemplo', ensinar: 'Ensine ao Stu', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo (o Stu é o mascote do Studoo). Dê um exemplo seu: ele aponta o que faz sentido e propõe uma situação nova.',
+      ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
       vozDica: 'Até 60 segundos. Sua voz vira texto para o Stu entender, e você confere antes de enviar.',
       vozErro: 'Não foi possível usar o microfone. Você pode digitar sua explicação.',
@@ -267,6 +268,8 @@ export const mensagens = {
             'Dica: lições curtas cabem em qualquer intervalo do dia.',
         ],
         ia: 'Gerada por IA a partir do seu pedido. Confira as lições antes de começar.',
+        repetida: (titulo: string) => `Você já tem a trilha “${titulo}”. Quer continuar nela em vez de criar outra igual?`,
+        abrirExistente: 'Abrir a que já existe',
         montadaDoPedido: 'Montada a partir do seu pedido. Confira as lições antes de começar.',
         demonstracao: 'Trilha pronta do Studoo para este assunto. Confira as lições antes de começar.',
         origem: (origem: string) => `Origem: ${origem}`,
@@ -303,6 +306,10 @@ export const mensagens = {
         errada: 'Quase lá!',
         erradaLonge: 'Não foi dessa vez',
         pular: 'Pular por agora',
+        seguirSemAcertar: 'Seguir sem acertar',
+        retomada: 'Você continuou de onde parou.',
+        recomecarLicao: 'Recomeçar a lição',
+        revisaoRapida: 'Revisão rápida: antes de concluir, tente de novo o que ficou sem acerto.',
         quaseCompleta: 'Boa! Quase completa.',
         tentarDeNovo: 'Tentar de novo',
         atalho: (total: number) => `Dica: use as teclas de 1 a ${total} para escolher e Enter para verificar.`,
@@ -313,14 +320,13 @@ export const mensagens = {
         trilhaConcluida: 'Trilha concluída!',
         revisarErros: (semAcerto: number) =>
             `Você seguiu sem acertar ${semAcerto === 1 ? '1 exercício' : `${semAcerto} exercícios`}. Vale rever esta lição amanhã: rever fixa o que você aprendeu.`,
+        revisarTentativas: (comErro: number) =>
+            `Você errou ${comErro === 1 ? '1 exercício' : `${comErro} exercícios`} antes de acertar. Vale rever esta lição amanhã: rever fixa o que você aprendeu.`,
         revisarPratica: 'A prática ainda não saiu? Vale rever esta lição amanhã e tentar de novo, com calma.',
+        trilhaResumo: (licoes: number, partes: number) =>
+            `Você concluiu ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}.`,
         trilhaConcluidaTexto: (titulo: string) => `Você completou todas as lições de “${titulo}”. Reveja quando quiser ou comece um assunto novo.`,
         novoAssunto: 'Começar um assunto novo',
-        sair: {
-            pergunta: 'Sair da lição? O que você fez nesta lição ainda não foi salvo.',
-            sair: 'Sair',
-            ficar: 'Continuar a lição'
-        },
         falta: {
             escrever: 'Escreva sua resposta para verificar.',
             escolher: 'Escolha uma opção para verificar.',
@@ -333,7 +339,7 @@ export const mensagens = {
         resumo: {
             titulo: 'Resumo da lição',
             tempo: 'Tempo',
-            acerto: 'Acertos',
+            acerto: 'De primeira',
             etapas: 'Etapas',
             dePrimeira: 'De primeira!',
             acertos: (certos: number, total: number) => `${certos} de ${total}`,
@@ -359,6 +365,7 @@ export const mensagens = {
             semVoz: 'Este aparelho não tem voz para ler em voz alta. Use “Mostrar o texto”.',
             falasTitulo: 'Ouça e repita',
             tocando: 'Tocando…',
+            semVozFrase: 'Este aparelho não tem voz para esta frase. Leia o texto.',
             traducao: 'Tradução'
         },
         recursos: {
@@ -370,9 +377,12 @@ export const mensagens = {
             doMaterial: 'Do seu material',
             consultar: 'Para consultar',
             verAcorde: (nome: string) => `Ver o acorde ${nome}`,
+            verTroca: (de: string, para: string) => `Ver os acordes ${de} e ${para}`,
             verFracao: 'Ver a barra de fração',
             esconder: 'Esconder',
             acorde: (nome: string) => `Acorde ${nome}`,
+            troca: (de: string, para: string) => `De ${de} para ${para}`,
+            ouvirNome: (nome: string) => `Ouvir ${nome}`,
             ouvirAcorde: 'Ouvir o acorde',
             ouvirBatida: 'Ouvir a batida',
             semSom: 'Não foi possível tocar o som neste aparelho.',

@@ -971,8 +971,12 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho .caminho-no[data-ligado]:has(.caminho-ponte) { padding-bottom: calc(var(--passo) + 128px); }
 .caminho .caminho-no[data-fim-trecho][data-ligado]:has(.caminho-ponte) { padding-bottom: calc(var(--passo) + 196px); }
 .caminho .caminho-no[data-ligado]:has(.caminho-ponte):has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 236px); }
-.caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 248px); }
-.caminho .caminho-no[data-fim-trecho][data-ligado]:has(.caminho-ponte):has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 300px); }
-/* Com o balão "Começar" logo abaixo, a pílula da parte sobe para o alto do vão (embaixo do nó, ou do rótulo dele). */
-.caminho .caminho-no[data-fim-trecho]:has(+ .caminho-no[data-estado='atual']) > .caminho-marco { top: calc(var(--lente) + 44px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 308px); }
+.caminho .caminho-no[data-fim-trecho][data-ligado]:has(.caminho-ponte):has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 336px); }
+/* Com o balão "Começar" logo abaixo, a pílula da parte fica no alto do vão, logo embaixo do nome da lição (até duas linhas). */
+.caminho .caminho-no[data-fim-trecho]:has(+ .caminho-no[data-estado='atual']) > .caminho-marco { top: calc(var(--lente) + 104px); }
 .caminho .caminho-no[data-fim-trecho]:has(.caminho-ponte):has(+ .caminho-no[data-estado='atual']) > .caminho-marco { top: calc(var(--lente) + 132px); }
+
+/* Selo do reforço: ícone e texto numa linha. */
+.caminho-ponte { display: inline-flex; align-items: center; gap: 4px; }
+.caminho-ponte .icone { flex: none; width: 14px; height: 14px; stroke-width: 3; }

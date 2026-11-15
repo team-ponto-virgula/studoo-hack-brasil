@@ -6,7 +6,7 @@ Depois de criar a primeira trilha, a web em celular e o app têm dois destinos a
 
 Em Minhas trilhas, **Seu próximo passo** destaca a primeira trilha em andamento na ordem da lista. Se nenhuma foi iniciada, destaca a primeira não concluída. **Retomar trilha** abre o caminho e permite continuar pela lição disponível. A contagem de lições concluídas soma os planos salvos; não é XP nem uma métrica inventada. Se todos foram concluídos, o destaque convida a revisar ou criar outro assunto.
 
-Cada cartão tem **Apagar**, discreto, depois da ação principal: pede confirmação (as lições e o progresso da trilha vão junto) e, sem trilhas, a tela volta ao pedido. A ação de criar trilha não fica duplicada no rodapé de Minhas trilhas. Nas outras telas, a ação principal fica acima da navegação. As áreas seguras são respeitadas. Ao digitar, a navegação some; na web, a ação do formulário volta ao fluxo da página. No app, arrastar o conteúdo fecha o teclado.
+Se a proposta tem o mesmo nome de uma trilha que a pessoa já tem, a tela avisa e oferece **Abrir a que já existe**. Cada cartão tem **Apagar**, discreto, depois da ação principal: pede confirmação (as lições e o progresso da trilha vão junto) e, sem trilhas, a tela volta ao pedido. A ação de criar trilha não fica duplicada no rodapé de Minhas trilhas. Nas outras telas, a ação principal fica acima da navegação. As áreas seguras são respeitadas. Ao digitar, a navegação some; na web, a ação do formulário volta ao fluxo da página. No app, arrastar o conteúdo fecha o teclado.
 
 ## Movimento e acessibilidade
 

@@ -846,3 +846,14 @@ button { touch-action: manipulation; }
 .plano-cartao__apagar:hover:not(:disabled) { color: #b3261e; }
 .plano-cartao__apagar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 6px; }
 .plano-cartao__apagar:disabled { cursor: default; opacity: 0.6; }
+
+/* Fim da trilha: um resumo da trilha inteira antes dos números da última lição. */
+.conclusao-trilha {
+  display: flex; align-items: center; justify-content: center; gap: 8px; margin: 14px auto 0; padding: 8px 16px;
+  width: fit-content; border-radius: 999px; background: #fff6d9; color: #7a4a00; font-weight: 900; text-align: center;
+}
+.conclusao-trilha .icone { flex: none; width: 20px; height: 20px; }
+
+/* Proposta com o mesmo nome de uma trilha que a pessoa já tem: aviso e "Abrir a que já existe". */
+.geracao-repetida { display: grid; gap: 10px; margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: #fff6d9; color: #7a4a00; font-weight: 800; }
+.geracao-repetida .botao { justify-self: start; }

@@ -187,12 +187,14 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
     setInterval: () => 1,
     clearInterval() {},
     Blob,
+    window: { requestAnimationFrame: () => 1, cancelAnimationFrame() {}, matchMedia: () => ({ matches: true }) },
   };
   vm.runInNewContext(fontes[nativo ? 1 : 0], contexto);
   const props = {
     cliente,
-    licao: { id: 'licao', exercicio: {} },
+    licao: { id: 'licao', objetivo: 'Entender a lição', exercicio: {} },
     avaliacao: { correta: false },
+    pedidoPonte: 0,
   };
   function render() {
     cursor = 0;
@@ -233,6 +235,11 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
   return {
     render,
     clicar,
+    /** O "Ver outro exemplo" do painel de retorno: um pedido novo de reforço. */
+    pedirPonte() {
+      props.pedidoPonte += 1;
+      render();
+    },
     botao: (nome) => buscar(arvore, nome),
     texto: () => conteudo(arvore),
     documento,
@@ -245,11 +252,12 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
 
 for (const nativo of [false, true]) {
   const plataforma = nativo ? 'app' : 'web';
-  test(`${plataforma}: resposta atrasada não apaga reforço novo; clique duplicado só gera uma vez`, async () => {
+  test(`${plataforma}: resposta atrasada não apaga reforço novo; pedido duplicado só gera uma vez`, async () => {
     const carregar = adiado();
     const ui = montar(nativo, { carregar });
-    ui.clicar(mensagens.estudio.construir);
-    ui.clicar(mensagens.estudio.construir);
+    assert.doesNotMatch(ui.texto(), new RegExp(mensagens.estudio.ponte), 'o cartão só aparece quando pedido');
+    ui.pedirPonte();
+    ui.pedirPonte();
     await esperar();
     ui.render();
     assert.equal(ui.contagem.pontes, 1);
@@ -310,7 +318,8 @@ for (const nativo of [false, true])
     ui.clicar(mensagens.estudio.gravar);
     await esperar();
     ui.render();
-    const botao = ui.botao(mensagens.estudio.construir);
-    assert.equal(botao.props[nativo ? 'desativado' : 'disabled'], true);
+    ui.pedirPonte();
+    await esperar();
+    assert.equal(ui.contagem.pontes, 0, 'o reforço espera a gravação acabar');
     assert.ok(ui.botao(mensagens.estudio.parar));
   });
