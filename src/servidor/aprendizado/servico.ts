@@ -309,8 +309,8 @@ export async function avaliarLicao(usuarioId: string, id: string, resposta: stri
 
   if (!avaliacao.correta) await banco.apoioLicao.upsert({
     where: { usuarioId_licaoId: { usuarioId, licaoId: id } },
-    create: { usuarioId, licaoId: id, erros: 1, ultimaResposta: resposta },
-    update: { erros: { increment: 1 }, ultimaResposta: resposta },
+    create: { usuarioId, licaoId: id, erros: 1, ultimaResposta: resposta, ultimoIndice: indice },
+    update: { erros: { increment: 1 }, ultimaResposta: resposta, ultimoIndice: indice },
   });
   const comprovante = emitirComprovante("avaliacao", usuarioId, {
     id,

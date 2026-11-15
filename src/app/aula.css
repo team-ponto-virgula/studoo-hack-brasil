@@ -299,8 +299,14 @@
 .aula-mais-abaixo { display: flex; align-items: center; justify-content: center; gap: 6px; width: fit-content; min-height: 32px; margin: -6px auto 8px;
   padding: 4px 14px; border: 2px solid var(--gelo); border-radius: 999px; background: var(--fundo); color: var(--acao); font: inherit;
   font-size: 0.875rem; font-weight: 800; box-shadow: 0 2px 0 var(--gelo); cursor: pointer; }
-/* Reforço ou "Explique" abertos: o rodapé fica só com as ações (o retorno já foi lido). */
-.aula-rodape[data-compacto] .aula-retorno, .aula-rodape[data-compacto] .aula-rodape__nota { display: none; }
+/* Reforço ou "Explique" abertos: o rodapé fica com uma linha só, o ícone e o título (um acerto dado com o "Explique"
+   aberto ainda diz "Mandou bem!"), e as ações; o texto longo do retorno sai para não cobrir o cartão. */
+.aula-rodape[data-compacto] .aula-retorno { gap: 10px; align-items: center; }
+.aula-rodape[data-compacto] .aula-retorno p, .aula-rodape[data-compacto] .aula-retorno__link,
+.aula-rodape[data-compacto] .aula-rodape__nota { display: none; }
+.aula-rodape[data-compacto] .aula-retorno__icone { width: 32px; height: 32px; }
+.aula-rodape[data-compacto] .aula-retorno__icone .icone { width: 18px; height: 18px; }
+.aula-rodape[data-compacto] .aula-retorno h2 { font-size: 1.0625rem; }
 .aula-rodape[data-compacto] .aula-rodape__acoes > .botao { min-height: 42px; }
 .sem-quebra { white-space: nowrap; }
 .aula-aviso-voz { margin-top: 6px; color: var(--alerta); font-weight: 800; }
@@ -769,6 +775,11 @@
   .acorde figcaption { justify-items: center; text-align: center; }
   .associar__colunas { gap: 8px; }
   .associar button { padding: 10px; font-size: 0.95rem; }
+  /* No celular, o número do par na coluna da direita vira uma etiqueta no canto: o texto (as definições, mais longas)
+     usa a largura toda, em vez de espremer em quatro linhas ao lado do número. */
+  .associar__colunas > div:last-child button { position: relative; }
+  .associar__colunas > div:last-child .associar__numero { position: absolute; top: -10px; left: -8px; width: 24px; height: 24px;
+    font-size: 0.75rem; box-shadow: 0 0 0 3px var(--fundo); }
   .como-foi__opcoes { grid-template-columns: minmax(0, 1fr); }
 }
 
@@ -835,7 +846,7 @@
 .ouvir__botao[data-tocando] { border-color: var(--acao); color: var(--acao-escura); background: #eef2ff; }
 
 /* "Como foi?" espera o cronômetro começar. */
-.como-foi:disabled label { opacity: 0.55; cursor: not-allowed; }
+.como-foi[data-travado] label { opacity: 0.55; cursor: not-allowed; }
 
 /* Avisos no alto da aula: voltou de onde parou (com "Recomeçar") e a revisão rápida antes de concluir. */
 .aula-aviso { margin: 4px 0 14px; padding: 10px 14px; border-radius: 14px; background: #eef2ff; color: var(--acao-escura); font-weight: 800; }

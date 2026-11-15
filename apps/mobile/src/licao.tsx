@@ -695,6 +695,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         if (Date.now() - rolarParaApoio.current < 4000) rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
       }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
         ultimo={indice === exercicios.length - 1} aoConcluirPonte={() => setPonteFeita(true)}
+        aoMostrarRetornoPonte={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 220), animated: reduzir === false })}
         aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })} /></View>}
     </Tela>
     </TranscritorContexto.Provider>

@@ -96,6 +96,21 @@ export function Estudo() {
       const ativos = await cliente.listarPlanos();
       if (cancelado()) return;
       setPlanos(ativos);
+      // Recarregou no meio de uma aula (o histórico guarda a marca da lição aberta): reabre a lição, e o andamento salvo
+      // a retoma na etapa em que estava, em vez de voltar ao mapa e perder a etapa.
+      const marcada = (window.history.state as { studooLicao?: string } | null)?.studooLicao;
+      if (marcada) {
+        try {
+          const licao = await cliente.obterLicao(marcada);
+          const plano = await cliente.obterPlano(licao.planoId);
+          if (cancelado()) return;
+          setTela({ tipo: 'licao', plano, licao });
+          setInicio('pronto');
+          return;
+        } catch {
+          // A lição não existe mais (trilha apagada): segue para a trilha em andamento.
+        }
+      }
       // Com planos salvos, abre direto na trilha em andamento, como os apps de estudo; senão, começa pelo pedido.
       const inicial = planoInicial(ativos);
       if (inicial) {

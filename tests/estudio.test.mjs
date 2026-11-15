@@ -36,6 +36,7 @@ import {
   concluirLicao,
 } from '../src/servidor/aprendizado/servico.ts';
 import { pedirJson, objeto, texto, conteudoDaGerada } from '../src/servidor/estudio/ia.ts';
+import { termosDaLicao } from '../src/dominio/aprendizado/plano.ts';
 const codigo = (c) => (e) => e.codigo === c;
 const usuarios = [];
 async function pessoa() {
@@ -172,6 +173,43 @@ test('o reforço é do último erro: errar outro exercício pede outro reforço,
   assert.match(segundo.ponte.motivo, /^Você escreveu “zzzz”/, 'o reforço novo é do exercício que acabou de errar');
   assert.equal(segundo.ponte.concluida, false);
   assert.deepEqual(await criarPonte(u, id), segundo, 'o mesmo erro reaproveita o reforço');
+});
+
+test('duas escolhas erradas com a mesma letra, em exercícios diferentes, pedem reforços diferentes', async () => {
+  const u = await pessoa();
+  const plano = await aceitarProposta(u, (await gerarProposta(u, 'Inglês para conversar em viagens')).token);
+  const id = plano.fluxos[0].licoes[2].id;
+  // Lição de direções: os exercícios 1 e 2 são de escolha, e a opção "b" está errada nos dois.
+  const licao = DEMOS.find(({ chave }) => chave === 'ingles').plano.fluxos[0].licoes[2];
+  const exercicios = [licao.exercicio, ...licao.extras];
+  const marcada = (indice) => exercicios[indice].opcoes.find(({ id: opcao }) => opcao === 'b').texto.replace(/[.!?;:]+$/u, '');
+  assert.equal((await avaliarLicao(u, id, 'b', 1)).correta, false);
+  const primeiro = await criarPonte(u, id);
+  assert.ok(primeiro.ponte.motivo.includes(marcada(1)), primeiro.ponte.motivo);
+  assert.equal((await avaliarLicao(u, id, 'b', 2)).correta, false);
+  const segundo = await criarPonte(u, id);
+  assert.ok(segundo.ponte.motivo.includes(marcada(2)), `o reforço é do exercício que acabou de errar: ${segundo.ponte.motivo}`);
+  assert.notEqual(segundo.ponte.exercicio.enunciado, primeiro.ponte.exercicio.enunciado);
+});
+
+test('sem IA, o “Explique” reconhece frases da lição como exemplo e não se contradiz', async () => {
+  const u = await pessoa();
+  const ingles = await aceitarProposta(u, (await gerarProposta(u, 'Inglês para conversar em viagens')).token);
+  // Lição de direções: “excuse me where is the bank” usa o começo de uma frase da lição, e isso já é um exemplo.
+  const direcoes = await ensinarStu(u, ingles.fluxos[0].licoes[2].id, 'Quando estou perdido, digo excuse me where is the bank? e a pessoa me mostra o caminho.');
+  assert.match(direcoes.acertos.join(' '), /Você usou frases da lição, como “Excuse me, where is the train station”/);
+  assert.doesNotMatch(direcoes.lacuna, /Faltou só um exemplo/);
+
+  // Todas as ideias, mas sem exemplo: o próximo passo pede o exemplo, em vez de dizer que já cobre tudo.
+  const violao = await aceitarProposta(u, (await gerarProposta(u, 'Quero aprender violão do zero')).token);
+  const termos = termosDaLicao(DEMOS.find(({ chave }) => chave === 'violao').plano.fluxos[0].licoes[0]);
+  const semExemplo = await ensinarStu(u, violao.fluxos[0].licoes[0].id, `As partes que importam: ${termos.join(', ')}.`);
+  assert.match(semExemplo.lacuna, /Faltou só um exemplo/);
+  assert.doesNotMatch(semExemplo.proximoPasso, /já cobre/);
+  // O exemplo do jeito falado (“tipo quando…”) também conta.
+  const falado = await ensinarStu(u, violao.fluxos[0].licoes[0].id, `${termos.join(', ')}. Tipo quando a corda tá desafinada eu giro a tarraxa dela.`);
+  assert.match(falado.acertos.join(' '), /Você usou um exemplo/);
+  assert.doesNotMatch(falado.lacuna, /Faltou só um exemplo/);
 });
 
 test('com a IA fora do ar, o reforço e o “Explique com suas palavras” caem no retorno local', async () => {

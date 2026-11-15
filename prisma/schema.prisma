@@ -146,6 +146,8 @@ model ApoioLicao {
   licaoId String
   erros Int @default(0)
   ultimaResposta String?
+  /// O exercício (0 é o principal) de onde veio o último erro.
+  ultimoIndice Int?
   reforco Json?
   reforcoConcluido Boolean @default(false)
   ensino Json?

@@ -114,6 +114,13 @@
   padding: 0;
   margin: 18px 0;
 }
+/* A pergunta do reforço: a opção marcada, e depois de conferir, certa (verde) ou errada (âmbar), mesmo com o grupo travado. */
+.estudio-opcao:not([data-estado]):has(input:checked) { border-color: var(--acao); }
+.estudio-opcao[data-estado='certa'] { border-color: var(--sucesso-claro); background: #eefaf3; color: var(--sucesso); font-weight: 800; }
+.estudio-opcao[data-estado='errada'] { border-color: #e0a92e; background: #fff6d9; color: #7a4a00; }
+.estudio-card fieldset:disabled .estudio-opcao { cursor: default; }
+.estudio-retorno-ponte[data-estado='certa'] { color: var(--sucesso); font-weight: 800; }
+.estudio-retorno-ponte[data-estado='errada'] { color: #7a4a00; font-weight: 700; }
 .estudio-card blockquote {
   margin: 14px 0;
   padding-left: 16px;
