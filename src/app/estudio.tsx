@@ -463,7 +463,7 @@ export function ApoioDaLicao({
                 </Botao>
               )}
               <p role="status">{feedback}</p>
-              {ponte.concluida && <p>{m.ponteVoltar}</p>}
+              {/* O "tente de novo" já está no painel de retorno: aqui não repete. */}
             </>
           )}
         </section>

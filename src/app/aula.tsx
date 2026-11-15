@@ -204,11 +204,14 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       setTemMais(false);
       return;
     }
+    let chegouAoFim = false;
     const medir = () => {
       const miolo = document.querySelector<HTMLElement>('.aula-miolo');
       const rodape = document.querySelector<HTMLElement>('.aula-rodape');
-      if (!miolo || !rodape) return;
-      setTemMais(miolo.getBoundingClientRect().bottom - rodape.getBoundingClientRect().top > 24);
+      if (!miolo || !rodape || chegouAoFim) return;
+      const falta = miolo.getBoundingClientRect().bottom - rodape.getBoundingClientRect().top > 24;
+      if (!falta) chegouAoFim = true;
+      setTemMais(falta);
     };
     medir();
     window.addEventListener('scroll', medir, { passive: true });
@@ -217,6 +220,27 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     const observador = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(medir);
     const miolo = document.querySelector('.aula-miolo');
     if (miolo) observador?.observe(miolo);
+    return () => {
+      window.removeEventListener('scroll', medir);
+      window.removeEventListener('resize', medir);
+      observador?.disconnect();
+    };
+  }, [passo, etapa.tipo]);
+
+  // No exercício, com conteúdo escondido atrás do painel (o reforço, a consulta, o "Explique"), um aviso discreto
+  // leva até ele: o painel ocupa boa parte da tela e nada mostrava que havia mais abaixo.
+  const [temAbaixo, setTemAbaixo] = useState(false);
+  useEffect(() => {
+    if (etapa.tipo !== 'exercicio') {
+      setTemAbaixo(false);
+      return;
+    }
+    const medir = () => setTemAbaixo(document.documentElement.scrollHeight - (window.scrollY + window.innerHeight) > 48);
+    medir();
+    window.addEventListener('scroll', medir, { passive: true });
+    window.addEventListener('resize', medir);
+    const observador = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(medir);
+    observador?.observe(document.body);
     return () => {
       window.removeEventListener('scroll', medir);
       window.removeEventListener('resize', medir);
@@ -310,7 +334,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         return;
       }
       if (exercicio?.tipo !== 'multipla_escolha' || alvo?.matches('input[type="text"], textarea')) return;
-      const numero = Number.parseInt(evento.key, 10) - 1;
+      // As alternativas têm letras (A, B, C); os números também valem, como antes.
+      const letra = evento.key.length === 1 ? evento.key.toLowerCase().charCodeAt(0) - 97 : -1;
+      const numero = letra >= 0 && letra < 26 ? letra : Number.parseInt(evento.key, 10) - 1;
       if (numero >= 0 && numero < exercicio.opcoes.length) {
         evento.preventDefault();
         mudarResposta(exercicio.opcoes[numero].id);
@@ -407,8 +433,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     setPasso(ultimoExercicio(etapas));
   }
 
-  /** Recomeçar do zero (quem voltou no meio e prefere começar de novo). */
+  /** Recomeçar do zero (quem voltou no meio e prefere começar de novo), depois de confirmar: as respostas se perdem. */
   function recomecar() {
+    if (!window.confirm(t.recomecarPergunta)) return;
     guardarAndamento(licao.id, null);
     setPasso(0);
     setRespostas(exercicios.map(() => ''));
@@ -474,11 +501,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     acao = (
       <>
         {autoAvaliacao === 'ainda_nao' && (
-          <Botao variante="secundario" disabled={ocupado} onClick={() => { setAutoAvaliacao(null); setVoltasPratica((atual) => atual + 1); }}>
+          <Botao disabled={ocupado} onClick={() => { setAutoAvaliacao(null); setVoltasPratica((atual) => atual + 1); }}>
             {t.pratica.praticarMais}
           </Botao>
         )}
-        <Botao variante="sucesso" disabled={ocupado} aria-disabled={!autoAvaliacao || undefined}
+        <Botao variante={autoAvaliacao === 'ainda_nao' ? 'texto' : 'sucesso'} disabled={ocupado} aria-disabled={!autoAvaliacao || undefined}
           onClick={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())}>
           {pendente === 'concluir' ? t.concluindo : autoAvaliacao === 'ainda_nao' ? t.pratica.concluirAssim : t.pratica.concluir}
         </Botao>
@@ -554,6 +581,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           aoConcluirPonte={() => setPonteFeita(true)} aoEnsinar={() => setEnsinou(true)} />
       )}
       <footer className="aula-rodape" data-retorno={retorno}>
+        {temAbaixo && (
+          <button type="button" className="aula-mais-abaixo" onClick={lerMais}><Icone nome="seta" />{t.maisAbaixo}</button>
+        )}
         <div className="aula-rodape__conteudo">
           {avaliacao && (
             <section className="aula-retorno" aria-labelledby="aula-retorno-titulo">
@@ -694,7 +724,13 @@ function BracoDoAcorde({ nome, casas, dedos }: { nome: string; casas: number[]; 
     .map((casa, corda) => t.recursos.corda(6 - corda, casa, t.recursos.dedos[dedos?.[corda] ?? 0] ?? ''))
     .join('; ');
   return (
-    <svg viewBox="0 0 190 200" role="img" aria-label={`${t.recursos.acorde(nome)}: ${descricao}.`}>
+    <svg viewBox="0 0 190 216" role="img" aria-label={`${t.recursos.acorde(nome)}: ${descricao}.`}>
+      {[6, 5, 4, 3, 2, 1].map((numero, corda) => (
+        <text key={`c${numero}`} x={x(corda)} y={204} textAnchor="middle" className="acorde__rotulo">{numero}</text>
+      ))}
+      {[0, 1, 2, 3].map((linha) => (
+        <text key={`t${linha}`} x={176} y={48 + (linha + 0.5) * 34 + 5} textAnchor="middle" className="acorde__rotulo">{base + linha}ª</text>
+      ))}
       {base === 1
         ? <rect x={27} y={43} width={136} height={7} rx={3.5} className="acorde__pestana" />
         : <text x={8} y={y(base) + 5} className="acorde__base">{base}</text>}
@@ -983,9 +1019,15 @@ function BotaoFalar({ fala }: { fala: Fala }) {
     if (!recebeu.current) setErro((atual) => atual ?? t.audio.naoOuviu);
   }
 
-  function ouvir() {
+  async function ouvir() {
     const Classe = classeDoReconhecimento();
     if (!Classe) return;
+    const dispositivos = await navigator.mediaDevices?.enumerateDevices?.().catch(() => null);
+    if (dispositivos && !dispositivos.some(({ kind }) => kind === 'audioinput')) {
+      setResultado(null);
+      setErro(t.audio.semMicrofone);
+      return;
+    }
     recebeu.current = false;
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     const novo = new Classe();
@@ -1214,14 +1256,18 @@ function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolean }) {
 }
 
 /** Texto com as lacunas destacadas. */
-function ComLacunas({ texto }: { texto: string }) {
+function ComLacunas({ texto, preenchimento }: { texto: string; preenchimento?: string }) {
   const partes = partesDaLacuna(texto);
   return (
     <>
       {partes.map((parte, posicao) => (
         <span key={posicao}>
           {parte}
-          {posicao < partes.length - 1 && <span className="trecho-lacuna" aria-label="lacuna">{'  '}</span>}
+          {posicao < partes.length - 1 && (
+            <span className="trecho-lacuna" data-preenchida={preenchimento ? true : undefined} aria-label={preenchimento ? undefined : 'lacuna'}>
+              {preenchimento || '  '}
+            </span>
+          )}
         </span>
       ))}
     </>
@@ -1229,20 +1275,21 @@ function ComLacunas({ texto }: { texto: string }) {
 }
 
 /** Trecho no visual do conteúdo: código em fonte monoespaçada; frase, citação, fórmula e passos com o visual de cada um. */
-function Trecho({ texto, tipo = 'frase', fala }: { texto: string; tipo?: TipoTrecho; fala?: Fala }) {
+/** `preenchimento`: o que a pessoa escreve na lacuna, mostrado no lugar do espaço enquanto ela digita. */
+function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: string; tipo?: TipoTrecho; fala?: Fala; preenchimento?: string }) {
   switch (tipo) {
     case 'codigo':
-      return <pre className="licao-codigo"><code><ComLacunas texto={texto} /></code></pre>;
+      return <pre className="licao-codigo"><code><ComLacunas texto={texto} preenchimento={preenchimento} /></code></pre>;
     case 'citacao':
-      return <blockquote className="trecho trecho--citacao"><p><ComLacunas texto={semAspas(texto)} /></p></blockquote>;
+      return <blockquote className="trecho trecho--citacao"><p><ComLacunas texto={semAspas(texto)} preenchimento={preenchimento} /></p></blockquote>;
     case 'formula':
-      return <p className="trecho trecho--formula"><ComLacunas texto={texto} /></p>;
+      return <p className="trecho trecho--formula"><ComLacunas texto={texto} preenchimento={preenchimento} /></p>;
     case 'passos':
-      return <ol className="trecho trecho--passos">{linhasDePassos(texto).map((linha, posicao) => <li key={posicao}><ComLacunas texto={linha} /></li>)}</ol>;
+      return <ol className="trecho trecho--passos">{linhasDePassos(texto).map((linha, posicao) => <li key={posicao}><ComLacunas texto={linha} preenchimento={preenchimento} /></li>)}</ol>;
     default:
       return (
         <div className="trecho trecho--frase">
-          <p lang={fala?.idioma}><ComLacunas texto={texto} /></p>
+          <p lang={fala?.idioma}><ComLacunas texto={texto} preenchimento={preenchimento} /></p>
           {fala && <BotoesOuvir fala={fala} />}
         </div>
       );
@@ -1292,7 +1339,7 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
           {exercicio.opcoes.map((opcao, posicao) => (
             <label key={opcao.id} data-retorno={resposta === opcao.id ? retorno : undefined}>
               <input type="radio" name="resposta" value={opcao.id} required checked={resposta === opcao.id} onChange={() => mudar(opcao.id)} />
-              <span className="opcao-tecla" aria-hidden="true">{posicao + 1}</span>
+              <span className="opcao-tecla" aria-hidden="true">{String.fromCharCode(65 + posicao)}</span>
               <span>{opcao.texto}</span>
             </label>
           ))}
@@ -1338,7 +1385,10 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
       <h2 id="etapa-aula" ref={titulo} tabIndex={-1} className="somente-leitor">{total > 1 ? t.exercicioDe(indice + 1, total) : t.exercicio}</h2>
       <p>{exercicio.enunciado}</p>
       {exercicio.contexto && <p>{exercicio.contexto}</p>}
-      {exercicio.trecho && <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala} />}
+      {exercicio.trecho && (
+        <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}
+          preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim() : undefined} />
+      )}
       {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
       <form id="resposta-licao" ref={formulario} className="formulario" method="post" onSubmit={responder}>
         {campo}
@@ -1563,7 +1613,7 @@ function VerdadeiroFalso({ afirmacao, justificativas, valor, mudar, desativado, 
           <label key={opcao.id} data-retorno={justificativa === opcao.id ? corDaParte('justificativa') : undefined}>
             <input type="radio" name="vf-justificativa" value={opcao.id} checked={justificativa === opcao.id}
               onChange={() => salvar(escolha, opcao.id)} />
-            <span className="opcao-tecla" aria-hidden="true">{posicao + 1}</span>
+            <span className="opcao-tecla" aria-hidden="true">{String.fromCharCode(65 + posicao)}</span>
             <span>{opcao.texto}</span>
           </label>
         ))}

@@ -172,7 +172,7 @@ export const mensagens = {
         continuarLicao: 'Continuar lição',
         nomeNoContinuar: (titulo: string, posicao: string) => `Continuar: ${titulo}. ${posicao}, em andamento.`,
         refazer: 'Refazer lição',
-        irParaAtual: 'Ir para a próxima lição',
+        irParaAtual: 'Mostrar a lição atual no mapa',
         bloqueadaUma: (anterior: string) => `Conclua “${anterior}” para liberar esta lição.`,
         bloqueadaVarias: (faltam: number, anterior: string) => `Faltam ${faltam} lições antes desta. Comece por “${anterior}”.`,
         bloqueadaSemPasso: 'Conclua as lições anteriores da trilha para liberar esta.',
@@ -326,7 +326,9 @@ export const mensagens = {
         pular: 'Pular por agora',
         seguirSemAcertar: 'Seguir sem acertar',
         retomada: 'Você continuou de onde parou.',
-        recomecarLicao: 'Recomeçar a lição',
+        recomecarLicao: 'Recomeçar do zero',
+        recomecarPergunta: 'Recomeçar a lição do zero? As respostas desta vez serão apagadas.',
+        maisAbaixo: 'Mais abaixo',
         revisaoRapida: 'Revisão rápida: antes de concluir, tente de novo o que ficou sem acerto.',
         revisaoAndamento: 'Revisão rápida',
         pularAviso: 'Se pular, este exercício volta no fim da lição.',
@@ -334,7 +336,7 @@ export const mensagens = {
         frasesDaLicao: 'Frases desta lição',
         quaseCompleta: 'Boa! Quase completa.',
         tentarDeNovo: 'Tentar de novo',
-        atalho: (total: number) => `Dica: use as teclas de 1 a ${total} para escolher e Enter para verificar.`,
+        atalho: (total: number) => `Dica: use as teclas de A a ${String.fromCharCode(64 + total)} para escolher e Enter para verificar.`,
         continuar: 'Continuar',
         concluindo: 'Registrando conclusão…',
         concluida: 'Lição concluída!',
@@ -440,7 +442,7 @@ export const mensagens = {
             corda: (corda: number, casa: number, dedo: string) => casa < 0
                 ? `${corda}ª corda não toca`
                 : casa === 0 ? `${corda}ª corda solta` : `${corda}ª corda na casa ${casa}${dedo ? `, com o ${dedo}` : ''}`,
-            legendaAcorde: 'Cordas da 6ª (mais grossa) à 1ª. X: não toca. O: solta. Os números são os dedos.'
+            legendaAcorde: 'X: não toca. O: solta. Nas bolinhas, o dedo; embaixo, o número da corda (a 6ª é a mais grossa); ao lado, a casa.'
         },
         ordenar: {
             instrucao: 'Toque nos itens na ordem certa. Toque de novo para tirar.',
