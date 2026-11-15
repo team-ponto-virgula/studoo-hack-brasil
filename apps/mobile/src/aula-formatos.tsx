@@ -13,6 +13,7 @@ import {
   semAspas,
   sintetizarAcorde,
   sintetizarBatida,
+  tamanhoDaResposta,
   type ArquivoEstudo,
   type AutoAvaliacao,
   type Avaliacao,
@@ -532,18 +533,19 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
       }]}>
         {base === 1
           ? <View style={[formatos.pestana, { left: x(0) - 3, width: x(5) - x(0) + 6 }]} />
-          : <Text style={[formatos.acordeBase, { top: y(base) - 9 }]}>{base}</Text>}
+          : <Text style={[formatos.acordeBase, { top: y(base) - 9 }]}>{base}ª</Text>}
         {[0, 1, 2, 3, 4].map((traste) => <View key={traste} style={[formatos.traste, { top: 40 + traste * 30, left: x(0), width: x(5) - x(0) }]} />)}
         {[0, 1, 2, 3, 4, 5].map((corda) => (
-          <View key={corda} style={[formatos.cordaVertical, { left: x(corda) - (3.4 - corda * 0.4) / 2, width: 3.4 - corda * 0.4 }]} />
+          // Como na web: da 6ª (a mais grossa, à esquerda) à 1ª, com a mesma diferença de espessura da ilustração.
+          <View key={corda} style={[formatos.cordaVertical, { left: x(corda) - (4.4 - corda * 0.6) / 2, width: 4.4 - corda * 0.6 }]} />
         ))}
         {[6, 5, 4, 3, 2, 1].map((numero, corda) => (
-          <Text key={`c${numero}`} style={[formatos.rotuloDiagrama, { left: x(corda) - 8, top: 40 + 4 * 30 + 4 }]}>{numero}</Text>
+          <Text key={`c${numero}`} style={[formatos.rotuloDiagrama, { left: x(corda) - 11, top: 40 + 4 * 30 + 4 }]}>{numero}ª</Text>
         ))}
         <Text style={[formatos.eixoDiagrama, { left: x(0), width: x(5) - x(0), top: 40 + 4 * 30 + 22 }]}>{t.recursos.eixoCorda}</Text>
         <Text style={[formatos.eixoDiagrama, { left: x(5) + 4, width: 34, top: 0 }]}>{t.recursos.eixoCasa}</Text>
         {[0, 1, 2, 3].map((linha) => (
-          <Text key={`t${linha}`} style={[formatos.rotuloDiagrama, { left: x(5) + 12, top: 40 + (linha + 0.5) * 30 - 9 }]}>{base + linha}</Text>
+          <Text key={`t${linha}`} style={[formatos.rotuloDiagrama, { left: x(5) + 10, top: 40 + (linha + 0.5) * 30 - 9 }]}>{base + linha}ª</Text>
         ))}
         {casas.map((casa, corda) => (casa <= 0 ? (
           <Text key={corda} style={[formatos.marcaCorda, { left: x(corda) - 8, color: casa < 0 ? cores.erro : cores.sucesso }]}>{casa < 0 ? 'X' : 'O'}</Text>
@@ -789,6 +791,8 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
   fixos?: string[];
 }) {
   const [escolhida, setEscolhida] = useState<string | null>(null);
+  /** Como na web: quem começa pela direita deixa o item escolhido, e o toque na esquerda fecha o par. */
+  const [escolhidaDireita, setEscolhidaDireita] = useState<string | null>(null);
   const pares = valor.split(',').filter(Boolean).map((par) => par.split('=') as [string, string]);
   const travado = (idEsquerda?: string | null) => Boolean(idEsquerda && fixos?.includes(idEsquerda) && pares.some(([item]) => item === idEsquerda));
   const numero = (id: string) => {
@@ -799,6 +803,11 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
 
   function tocarEsquerda(id: string) {
+    if (escolhidaDireita) {
+      salvar([...pares.filter(([item, outro]) => item !== id && outro !== escolhidaDireita), [id, escolhidaDireita]]);
+      setEscolhidaDireita(null);
+      return;
+    }
     if (pares.some(([item]) => item === id)) {
       salvar(pares.filter(([item]) => item !== id));
       setEscolhida(null);
@@ -814,6 +823,13 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
   function tocarDireita(id: string) {
     if (!escolhida) {
       if (pares.some(([, item]) => item === id)) salvar(pares.filter(([, item]) => item !== id));
+      else {
+        setEscolhidaDireita((atual) => {
+          const nova = atual === id ? null : id;
+          if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhidoDireita(texto(direita, nova)));
+          return nova;
+        });
+      }
       return;
     }
     salvar([...pares.filter(([item, outro]) => item !== escolhida && outro !== id), [escolhida, id]]);
@@ -830,13 +846,14 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     let rotulo = item.texto;
     if (fixo && par) rotulo = t.associar.travado(texto(esquerda, par[0]), texto(direita, par[1]));
     else if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(texto(esquerda, escolhida), item.texto);
+    else if (lado === 'esquerda' && escolhidaDireita) rotulo = t.associar.ligar(item.texto, texto(direita, escolhidaDireita));
     else if (par) rotulo = t.associar.desfazer(texto(esquerda, par[0]), texto(direita, par[1]));
     return (
       <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={rotulo} disabled={desativado || fixo}
-        accessibilityState={{ selected: escolhida === item.id }}
+        accessibilityState={{ selected: escolhida === item.id || escolhidaDireita === item.id }}
         onPress={() => (lado === 'esquerda' ? tocarEsquerda(item.id) : tocarDireita(item.id))}
         style={({ pressed }) => [formatos.cartao, formatos.cartaoPar, { overflow: 'visible' }, par && { borderColor: cor, borderBottomColor: cor },
-          escolhida === item.id && formatos.cartaoEscolhido, estado === 'certo' && formatos.cartaoCerto,
+          (escolhida === item.id || escolhidaDireita === item.id) && formatos.cartaoEscolhido, estado === 'certo' && formatos.cartaoCerto,
           estado === 'errado' && formatos.cartaoErrado, pressed && formatos.cartaoAfundado]}>
         {par && (
           // Como na web: na coluna da direita, o número vira uma etiqueta no canto, e a definição usa a largura toda.
@@ -853,7 +870,8 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
   return (
     <View style={formatos.secao}>
       <Text style={formatos.instrucao} accessibilityLiveRegion="polite">
-        {escolhida ? t.associar.escolhido(texto(esquerda, escolhida)) : t.associar.instrucao}
+        {escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
+          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao}
       </Text>
       <View style={formatos.colunas}>
         <View style={formatos.coluna} accessibilityLabel={t.associar.esquerda}>{esquerda.map((item) => cartao(item, 'esquerda'))}</View>
@@ -911,7 +929,8 @@ export function CampoAberta({ valor, mudar, minimo, desativado, retorno }: {
   desativado: boolean;
   retorno: 'certa' | 'errada' | null;
 }) {
-  const usados = valor.trim().length;
+  // Como na web: letras e números, sem os espaços (o contador diz “letras”).
+  const usados = tamanhoDaResposta(valor);
   return (
     <View style={formatos.secao}>
       <Text style={estilos.rotulo}>{t.aberta.rotulo}</Text>
@@ -985,23 +1004,28 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   const [restante, setRestante] = useState(() =>
     restanteInicial !== undefined && restanteInicial >= 0 && restanteInicial <= total ? restanteInicial : total);
   const [rodando, setRodando] = useState(false);
+  const [praticadoTotal, setPraticadoTotal] = useState(() =>
+    total - (restanteInicial !== undefined && restanteInicial >= 0 && restanteInicial <= total ? restanteInicial : total));
   const [feitos, setFeitos] = useState<number[]>([]);
   useEffect(() => {
     aoMudarRestante?.(restante);
     // Só o tempo dispara.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restante]);
-  useEffect(() => {
-    if (reinicio === 0) return;
-    setRodando(false);
-    setRestante(total);
-  }, [reinicio, total]);
   const acabou = restante === 0;
   const avisado = useRef(false);
+  useEffect(() => {
+    if (reinicio === 0) return;
+    // Como na web: "Praticar mais um pouco" continua de onde parou (ou recomeça, se tinha acabado) e já começa a contar.
+    avisado.current = false;
+    setRestante((atual) => (atual > 0 ? atual : total));
+    setRodando(true);
+  }, [reinicio, total]);
 
   useEffect(() => {
     if (!rodando) return;
     const intervalo = setInterval(() => {
+      setPraticadoTotal((atual) => atual + 1);
       setRestante((atual) => {
         if (atual > 1) return atual - 1;
         setRodando(false);
@@ -1029,12 +1053,8 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   // Como na web: o "Como foi?" espera um mínimo de prática (30 s, ou o cronômetro inteiro se for menor).
   const minimo = Math.min(30, total);
   const [semCronometro, setSemCronometro] = useState(false);
-  // Como na web: o que já foi praticado não se perde no "Recomeçar" (vale o maior tempo corrido até agora).
-  const [maisPraticado, setMaisPraticado] = useState(total - restante);
-  const praticado = Math.max(maisPraticado, total - restante);
-  useEffect(() => {
-    setMaisPraticado((atual) => Math.max(atual, total - restante));
-  }, [restante, total]);
+  // Como na web: o que já foi praticado não se perde no "Recomeçar" nem no "Praticar mais um pouco" (conta todo o tempo).
+  const praticado = Math.max(praticadoTotal, total - restante);
   const praticou = semCronometro || praticado >= minimo;
 
   return (
@@ -1082,6 +1102,8 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
             </View>
           )}
         </View>
+        {/* Como na web: depois de recomeçar, o total praticado fica à vista. */}
+        {praticado > total - restante && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.jaPraticou(formatarTempo(praticado))}</Text>}
       </View>
       {/* Como na web: o som de referência (o Mi para afinar) e a batida para tocar junto ficam ao lado do cronômetro. */}
       {pratica.som && <TocarSom rotulo={pratica.som.rotulo} casas={pratica.som.casas} />}
@@ -1161,7 +1183,7 @@ const formatos = StyleSheet.create({
   frase: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.ceu },
   fraseTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19, lineHeight: 27 },
   passo: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
-  passoNumero: { width: 30, height: 30, borderRadius: 15, borderBottomWidth: 3, borderColor: '#9A6A08', alignItems: 'center', justifyContent: 'center',
+  passoNumero: { width: 30, height: 30, borderRadius: 8, borderBottomWidth: 3, borderColor: '#9A6A08', alignItems: 'center', justifyContent: 'center',
     backgroundColor: '#C88A12' },
   passoNumeroTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 18 },
   passoTexto: { flex: 1, fontWeight: '700' },
@@ -1181,7 +1203,7 @@ const formatos = StyleSheet.create({
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   acordeDesenho: { width: 200, height: 214 },
-  rotuloDiagrama: { position: 'absolute', width: 16, textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800',
+  rotuloDiagrama: { position: 'absolute', width: 22, textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800',
     fontSize: 14, lineHeight: 18 },
   eixoDiagrama: { position: 'absolute', textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700',
     fontSize: 11, lineHeight: 14 },

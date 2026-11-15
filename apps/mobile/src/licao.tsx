@@ -194,6 +194,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   // Para rolar até o fim do exercício depois da correção: onde ele termina, quanto já rolou e a altura visível.
   const fimDoExercicio = useRef(0);
   const posicaoRolagem = useRef(0);
+  /** Como na web: onde a pessoa estava em cada etapa ao sair dela, para a "Etapa anterior" voltar para lá. */
+  const posicoesDasEtapas = useRef<Record<number, number>>({});
+  const voltandoEtapa = useRef(false);
   const alturaVisivel = useRef(0);
   const reduzir = useMovimentoReduzido();
   const tremor = useTremor(errosSeguidos);
@@ -219,9 +222,14 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   }
 
   useEffect(() => {
-    // Cada etapa começa do topo, como uma tela nova; a voz de uma etapa não continua na outra.
+    // Cada etapa começa do topo, como uma tela nova (menos na volta pela "Etapa anterior", que reabre onde a pessoa
+    // estava); a voz de uma etapa não continua na outra.
+    const destino = voltandoEtapa.current ? posicoesDasEtapas.current[passo] ?? 0 : 0;
+    voltandoEtapa.current = false;
     rolagem.current?.scrollTo({ y: 0, animated: false });
     posicaoRolagem.current = 0;
+    // O conteúdo da etapa ainda está sendo medido: a volta à posição espera um instante.
+    const volta = destino > 0 ? setTimeout(() => { rolagem.current?.scrollTo({ y: destino, animated: false }); posicaoRolagem.current = destino; }, 80) : undefined;
     chegouAoFim.current = false;
     const medida = setTimeout(medirMais, 250);
     pararVoz();
@@ -229,13 +237,14 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setPedidoPonte(0);
     setPonteFeita(false);
     setExplicacaoAberta(false);
-    if (passo === 0) return () => clearTimeout(medida);
+    if (passo === 0) return () => { clearTimeout(medida); clearTimeout(volta); };
     const espera = setTimeout(() => {
       if (tituloEtapa.current) AccessibilityInfo.sendAccessibilityEvent(tituloEtapa.current, 'focus');
     }, 120);
     return () => {
       clearTimeout(espera);
       clearTimeout(medida);
+      clearTimeout(volta);
     };
     // medirMais lê as medidas do momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -366,6 +375,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setRespostas((atuais) => atuais.map((atual, posicao) => {
       const anterior = avaliacoes[posicao];
       if (!pendentes.includes(posicao)) return atual;
+      // Na revisão, a lacuna volta vazia (a dica da tentativa anterior mostra o que foi escrito): com o texto errado de
+      // volta, parecia que o "Pular" não tinha feito nada.
+      if (exercicios[posicao].tipo === 'lacuna') return '';
       return anterior ? respostaParaTentarDeNovo(exercicios[posicao], atual, anterior) : '';
     }));
     setPasso(etapaDoExercicio(pendentes[0]));
@@ -373,6 +385,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   async function avancar() {
     if (ocupado) return;
+    posicoesDasEtapas.current[passo] = posicaoRolagem.current;
     // Na revisão, segue para o próximo exercício que ficou para trás; acabou a fila, conclui. Como na web.
     if (revisao) {
       const resto = revisao.filter((numero) => numero !== indice);
@@ -435,7 +448,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           : ponteFeita ? t.ponteFeita : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
         iconeErro={ponteFeita ? 'lampada' : 'fechar'}
         extras={extrasDoRetorno(avaliacao, exercicio)} ocupado={ocupado} concluindo={pendente === 'concluir'} tentarDeNovo={tentarDeNovo}
-        rotuloPular={revisao ? t.seguirSemAcertar : t.pular} compacto={pedidoPonte > 0} avisoPular={revisao ? undefined : t.pularAviso}
+        rotuloPular={revisao ? t.seguirSemAcertar : t.pular} compacto={pedidoPonte > 0}
+        avisoPular={revisao ? undefined : passo === etapas.length - 1 && exercicios.every((_, numero) => numero === indice || avaliacoes[numero]?.correta) ? t.pularAvisoUltimo : t.pularAviso}
         verReforco={() => {
           rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
           rolarParaApoio.current = Date.now();
@@ -474,7 +488,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   } else if (temMais) {
     rodape = <Botao testID="ler-mais" rotulo={t.continuarLendo} acao={lerMais} />;
   } else {
-    rodape = <Botao testID="avancar-licao" rotulo={t.seguir} icone="seta" desativado={ocupado} acao={() => setPasso((atual) => atual + 1)} />;
+    rodape = <Botao testID="avancar-licao" rotulo={t.seguir} icone="seta" desativado={ocupado}
+      acao={() => { posicoesDasEtapas.current[passo] = posicaoRolagem.current; setPasso((atual) => atual + 1); }} />;
   }
 
   function campoDoExercicio(atual: ExercicioPublico): ReactNode {
@@ -533,10 +548,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       aoMedir={(altura) => { alturaVisivel.current = altura; medirMais(); }} aoRolar={(y) => { posicaoRolagem.current = y; medirMais(); }}
       aoMedirConteudo={(altura) => { alturaConteudo.current = altura; medirMais(); }}
       estiloRodape={retorno === 'certa' ? licaoEstilos.rodapeCerto : retorno === 'errada' ? licaoEstilos.rodapeErrado : undefined}>
-      <EntradaDaEtapa key={passo}>
+      {/* Como na web: na revisão rápida, a etapa entra de novo, mesmo com o mesmo exercício (o último, pulado agora). */}
+      <EntradaDaEtapa key={`${passo}-${rodadaDeOpcoes}`}>
         {passo > 0 && !revisao && (
           <Pressable testID="etapa-anterior" accessibilityRole="button" disabled={ocupado} hitSlop={8}
-            onPress={() => setPasso((atual) => Math.max(0, atual - 1))} style={licaoEstilos.voltarEtapa}>
+            onPress={() => { voltandoEtapa.current = true; setPasso((atual) => Math.max(0, atual - 1)); }} style={licaoEstilos.voltarEtapa}>
             <View style={{ transform: [{ rotate: '180deg' }] }}><Icone nome="seta" tamanho={16} cor={cores.acao} /></View>
             <Text style={licaoEstilos.voltarEtapaTexto}>{t.etapaAnterior}</Text>
           </Pressable>
@@ -796,20 +812,21 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
       <View ref={area} testID="feedback-licao" accessible accessibilityRole="alert"
         accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${avaliacao.feedback} ${extras.join(' ')}`}
         style={licaoEstilos.retorno}>
-        <Animated.View style={[licaoEstilos.retornoIcone, !certa && licaoEstilos.retornoIconeErrado, {
-          transform: [
-            { scale: icone.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
-            { rotate: icone.interpolate({ inputRange: [0, 1], outputRange: ['-30deg', '0deg'] }) },
-          ],
-        }]}>
-          <Icone nome={certa ? 'check' : iconeErro} tamanho={28} cor={cores.fundo} />
-          {certa && <Confete quantidade={14} />}
-        </Animated.View>
-        <View style={licaoEstilos.retornoTextos}>
-          <Text style={[licaoEstilos.retornoTitulo, !certa && licaoEstilos.retornoTituloErrado]}>{titulo}</Text>
-          {!compacto && <Text style={estilos.texto}>{avaliacao.feedback}</Text>}
-          {!compacto && extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
+        {/* Como na web: o ícone pequeno ao lado do título e o texto na largura toda, embaixo (o painel ocupava ~40% da tela). */}
+        <View style={licaoEstilos.retornoCabecalho}>
+          <Animated.View style={[licaoEstilos.retornoIcone, !certa && licaoEstilos.retornoIconeErrado, {
+            transform: [
+              { scale: icone.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
+              { rotate: icone.interpolate({ inputRange: [0, 1], outputRange: ['-30deg', '0deg'] }) },
+            ],
+          }]}>
+            <Icone nome={certa ? 'check' : iconeErro} tamanho={20} cor={cores.fundo} />
+            {certa && <Confete quantidade={14} />}
+          </Animated.View>
+          <Text style={[licaoEstilos.retornoTitulo, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 }]}>{titulo}</Text>
         </View>
+        {!compacto && <Text style={estilos.texto}>{avaliacao.feedback}</Text>}
+        {!compacto && extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
       </View>
       {!certa && !compacto && <Botao variante="texto" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
       {!certa && !compacto && avisoPular && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{avisoPular}</Text>}
@@ -921,11 +938,11 @@ const licaoEstilos = StyleSheet.create({
   letraTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
   rodapeCerto: { borderTopColor: 'transparent', backgroundColor: '#E3F6EA' },
   rodapeErrado: { borderTopColor: 'transparent', backgroundColor: '#FFF1E0' },
-  retorno: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  retornoIcone: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 4,
+  retorno: { gap: 6 },
+  retornoCabecalho: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  retornoIcone: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3,
     borderColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
   retornoIconeErrado: { borderColor: '#B4650D', backgroundColor: '#E58A1F' },
-  retornoTextos: { flex: 1, minWidth: 0, gap: 2 },
   retornoTitulo: { color: cores.sucesso, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 28 },
   retornoTituloErrado: { color: '#8A4B00' },
   retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },

@@ -10,7 +10,8 @@ import type { NoCaminho } from './trilha';
 export type TrilhaEmGeracao = {
   objetivo: string;
   titulo: string | null;
-  fluxos: { titulo: string; licoes: string[] }[];
+  /** `resumos[i]`: o que a lição i ensina, quando o gerador diz (aparece na prévia). */
+  fluxos: { titulo: string; licoes: string[]; resumos?: (string | undefined)[] }[];
   proposta: PropostaPlano | null;
 };
 
@@ -56,7 +57,7 @@ export function aplicarEvento(trilha: TrilhaEmGeracao, evento: EventoGeracao): T
       return { ...trilha, titulo: evento.titulo, objetivo: evento.objetivo };
     case 'fluxo': {
       const fluxos = [...trilha.fluxos];
-      fluxos[evento.fluxo] = { titulo: evento.titulo, licoes: fluxos[evento.fluxo]?.licoes ?? [] };
+      fluxos[evento.fluxo] = { titulo: evento.titulo, licoes: fluxos[evento.fluxo]?.licoes ?? [], resumos: fluxos[evento.fluxo]?.resumos };
       return { ...trilha, fluxos };
     }
     case 'licao': {
@@ -64,7 +65,9 @@ export function aplicarEvento(trilha: TrilhaEmGeracao, evento: EventoGeracao): T
       const fluxo = fluxos[evento.fluxo] ?? { titulo: '', licoes: [] };
       const licoes = [...fluxo.licoes];
       licoes[evento.licao] = evento.titulo;
-      fluxos[evento.fluxo] = { ...fluxo, licoes };
+      const resumos = [...(fluxo.resumos ?? [])];
+      resumos[evento.licao] = evento.resumo;
+      fluxos[evento.fluxo] = { ...fluxo, licoes, resumos };
       return { ...trilha, fluxos };
     }
     case 'pronto': {
@@ -72,7 +75,11 @@ export function aplicarEvento(trilha: TrilhaEmGeracao, evento: EventoGeracao): T
       return {
         objetivo: proposta.objetivo,
         titulo: proposta.titulo,
-        fluxos: proposta.fluxos.map((fluxo) => ({ titulo: fluxo.titulo, licoes: fluxo.licoes.map((licao) => licao.titulo) })),
+        fluxos: proposta.fluxos.map((fluxo) => ({
+          titulo: fluxo.titulo,
+          licoes: fluxo.licoes.map((licao) => licao.titulo),
+          resumos: fluxo.licoes.map((licao) => licao.resumo),
+        })),
         proposta,
       };
     }
@@ -88,5 +95,6 @@ export function nosDaPrevia(trilha: TrilhaEmGeracao): NoCaminho[] {
     titulo,
     estado: 'previa',
     trecho,
+    ...(fluxo.resumos?.[licao] ? { resumo: fluxo.resumos[licao] } : {}),
   })));
 }

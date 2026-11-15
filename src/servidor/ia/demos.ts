@@ -85,7 +85,7 @@ const violao: Demo = {
           {
             titulo: "Montar o acorde Lá menor (Am)",
             objetivo: "Posicionar os dedos para tocar o acorde Lá menor.",
-            conceito: "Um acorde é um grupo de notas tocadas juntas. O diagrama abaixo mostra o braço do violão em pé, com a cabeça para cima, como se você olhasse para ele de frente: as linhas verticais são as cordas, com a 6ª (a mais grossa) à esquerda, e as horizontais são os trastes. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
+            conceito: "Um acorde é um grupo de notas tocadas juntas. O diagrama abaixo mostra o braço do violão em pé, com a cabeça para cima, como se você olhasse para ele de frente: as linhas verticais são as cordas, com a 6ª (a mais grossa) à esquerda, e as horizontais são os trastes. É o mesmo violão da lição 1, só que em pé: a 6ª corda, que ficava no alto com o violão deitado, aparece à esquerda. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
             exemploTipo: "demonstracao",
             exemplo: "Veja o Lá menor no diagrama e ouça como ele soa. Depois, siga os passos com o violão na mão.",
             passos: [
@@ -339,6 +339,16 @@ const PRONUNCIA_EN: Record<string, string> = {
   "Here's your boarding pass.": "RÍRZ iór BÓR-din PÉS",
   "Where is gate twelve?": "UÉR iz GUÊIT TUÉLV?",
 };
+/** Erros comuns de quem começa no inglês, para o retorno do “Explique” sem IA (valem em todas as lições da trilha). */
+const verboQueSome = {
+  termos: "i here|i from|i staying|i happy|i flying|i going|i ready|i tired|i hungry",
+  aviso: "Em inglês, o verbo não some: “I'm here” (I am here), “I'm flying to…”, “I'm from Brazil”.",
+};
+const deFerias = {
+  // Sem “on vacations”: a tolerância a um deslize de digitação acharia o certo (“on vacation”).
+  termos: "for vacation|in vacation|in holiday",
+  aviso: "Para dizer que está de férias, o inglês usa “on vacation”: “I'm here on vacation”.",
+};
 const falaEn = (texto: string, traducao: string) =>
   ({ texto, idioma: "en-US", traducao, ...(PRONUNCIA_EN[texto] ? { pronuncia: PRONUNCIA_EN[texto] } : {}) });
 const ingles: Demo = {
@@ -401,9 +411,13 @@ const ingles: Demo = {
               },
             ],
             outroJeito: "Pense num cartão de visita falado, em três linhas: o cumprimento (“Hello!”), quem é você (“I'm Ana.”) e de onde vem (“I'm from Brazil.”). “Nice to meet you” é o aperto de mão do fim. Na imigração, entra uma quarta linha: por que veio (“I'm here on vacation.”).",
-            armadilhas: [
-              { termos: "i here|i from|i staying|i happy", aviso: "Em inglês, o verbo não some: “I'm here” (I am here), “I'm from Brazil”, “I'm staying…”." },
-            ],
+            armadilhas: [verboQueSome, deFerias],
+            pratica: {
+              tarefa: "Apresente-se em voz alta, como na imigração: diga as quatro frases da lição com o seu nome.",
+              minutos: 2,
+              passos: ["Hello! I'm (seu nome).", "I'm from Brazil.", "I'm here on vacation.", "I'm staying for ten days."],
+              dica: "Fale devagar e repita até sair sem olhar. Se puder, grave no celular e ouça.",
+            },
           },
           {
             titulo: "No aeroporto: check-in e embarque",
@@ -452,6 +466,13 @@ const ingles: Demo = {
               },
             ],
             outroJeito: "Pense no aeroporto em três paradas: o balcão (passaporte e malas, “bags”), o cartão de embarque (“boarding pass”, com o portão e o horário) e o portão (“gate”), onde você espera chamarem o seu voo.",
+            armadilhas: [verboQueSome],
+            pratica: {
+              tarefa: "Ensaie o balcão do aeroporto em voz alta, fazendo as duas partes da conversa.",
+              minutos: 2,
+              passos: ["Hi! I'm flying to New York. Here's my passport.", "Any bags to check? — Yes, one bag.", "Where is gate twelve?"],
+              dica: "Troque “New York” pela cidade da sua viagem: assim a frase já fica pronta para usar.",
+            },
           },
           {
             titulo: "Pedir informações na rua",
@@ -499,6 +520,10 @@ const ingles: Demo = {
               },
             ],
             outroJeito: "Pense no GPS do celular: ele diz para onde virar (“turn left”, “turn right”), quando seguir (“go straight”) e onde fica o destino (“next to”, “in front of”). Na rua, as pessoas falam do mesmo jeito: repare primeiro na direção, depois no lugar.",
+            armadilhas: [
+              verboQueSome,
+              { termos: "turn to left|turn to right|turn at left|turn at right", aviso: "Sem o “to”: em inglês é só “turn left” e “turn right”." },
+            ],
           },
         ],
       },
@@ -555,6 +580,16 @@ const ingles: Demo = {
               },
             ],
             outroJeito: "Pense no check-in como uma fila de quatro passos, igual em quase todo hotel: cumprimentar, dizer que tem reserva, mostrar o documento e receber a chave. Sabendo em que passo você está, dá para imaginar a próxima pergunta, mesmo sem entender tudo.",
+            armadilhas: [
+              verboQueSome,
+              { termos: "i have reservation|i have one reservation", aviso: "Com o “a”: “I have a reservation” (eu tenho uma reserva)." },
+            ],
+            pratica: {
+              tarefa: "Ensaie o check-in do hotel em voz alta, na ordem da conversa.",
+              minutos: 2,
+              passos: ["Good evening! I have a reservation.", "My name is (seu nome).", "Here's my passport.", "Thank you for the key!"],
+              dica: "Diga o seu nome devagar e soletre se precisar: é a parte que mais se repete no balcão.",
+            },
           },
           {
             titulo: "Números e preços",
@@ -608,6 +643,7 @@ const ingles: Demo = {
               dica: "Em “fifteen” (fif-TÍN), a força fica no fim. Em “fifty” (FÍF-ti), fica no começo.",
             },
             outroJeito: "Truque para não confundir: no ‑teen, a força da voz vai no fim (târ-TÍN, fif-TÍN) e o número fica entre 13 e 19. No ‑ty, a força vai no começo (TÂR-ti, FÍF-ti) e é uma dezena redonda: 30, 50. Na dúvida, peça para a pessoa mostrar o preço escrito.",
+            armadilhas: [verboQueSome],
           },
         ],
       },
@@ -665,11 +701,12 @@ const ingles: Demo = {
               },
             ],
             outroJeito: "Pense no pedido como um sanduíche: o pão de cima é “I'd like…” (eu gostaria de), o recheio é o que você quer e o pão de baixo é “please”. Cuidado com “I like”, sem o ’d: quer dizer “eu gosto”, não “eu quero”.",
+            armadilhas: [verboQueSome],
           },
           {
             titulo: "Revisão: um dia de viagem",
-            objetivo: "Juntar cumprimentos, informações, preços e pedidos numa conversa.",
-            conceito: "Num dia de viagem você junta tudo: cumprimentar, pedir informações, entender preços e pedir comida. Ouça com atenção o fim das palavras e, se não entender, peça para repetir: “Sorry, can you repeat?”",
+            objetivo: "Juntar cumprimentos, imigração, hotel, informações, preços e pedidos numa viagem.",
+            conceito: "Num dia de viagem você junta tudo: se apresentar na imigração, fazer o check-in do hotel, pedir informações, entender preços e pedir comida. Ouça com atenção o fim das palavras e, se não entender, peça para repetir: “Sorry, can you repeat?”",
             exemplo: "“Excuse me, where is the bus stop?” — “It's next to the hotel.” — “Thank you! How much is the ticket?” — “It's fifteen dollars.” No almoço: “I'd like a sandwich, please.”",
             falas: [
               falaEn("Where is the bus stop?", "Onde fica o ponto de ônibus?"),
@@ -679,17 +716,15 @@ const ingles: Demo = {
             ],
             origem: origemIngles,
             exercicio: {
-              tipo: "verdadeiro_falso",
-              enunciado: "A frase é verdadeira ou falsa? Escolha também o porquê.",
-              afirmacao: "“Fifty dollars” e “fifteen dollars” são o mesmo preço.",
-              justificativas: [
-                op("teen", "“Fifteen” termina em “‑teen” e é 15; “fifty” termina em “‑ty” e é 50"),
-                op("igual", "As duas palavras começam com “fif”, então valem o mesmo"),
-                op("moeda", "Só muda a moeda, não o valor"),
-              ],
-              gabarito: ["falso", "teen"],
-              feedbackCorreto: "Isso: o fim da palavra muda tudo. 15 é “fifteen” e 50 é “fifty”.",
-              feedbackIncorreto: "Fale as duas palavras devagar e repare no fim: fif-TÍN e FÍF-ti. O fim muda o número?",
+              tipo: "aberta",
+              enunciado: "Você chegou: escreva em inglês o que diria na imigração e no hotel (de onde você é, por que veio e que tem uma reserva).",
+              minimo: 30,
+              gabarito: ["i'm from|i am from", "on vacation|vacation", "reservation"],
+              criterios: ["Diz de onde é (I'm from…)", "Diz que está de férias (on vacation)", "Diz que tem uma reserva (I have a reservation)"],
+              modelo: "I'm from Brazil. I'm here on vacation. I have a reservation.",
+              feedbackCorreto: "Isso: com essas três frases você passa pela imigração e faz o check-in.",
+              feedbackIncorreto: "Junte as frases das lições: de onde você é (I'm from…), por que veio (I'm here on…) e que tem uma reserva (I have a…).",
+              armadilhas: [verboQueSome, deFerias],
             },
             extras: [
               {
@@ -717,6 +752,13 @@ const ingles: Demo = {
               },
             ],
             outroJeito: "Um dia de viagem é uma sequência de conversas curtas com a mesma forma: você pergunta, ouve com atenção o fim das palavras e agradece. Se algo escapar, “Sorry, can you repeat?” dá uma segunda chance a qualquer conversa.",
+            armadilhas: [verboQueSome, deFerias],
+            pratica: {
+              tarefa: "Faça a viagem inteira em voz alta, da imigração ao almoço, sem olhar se conseguir.",
+              minutos: 3,
+              passos: ["I'm from Brazil. I'm here on vacation.", "Good evening! I have a reservation.", "Excuse me, where is the bus stop?", "How much is the ticket?", "I'd like a sandwich, please."],
+              dica: "Se travar numa frase, diga “Sorry, can you repeat?” e siga: é isso que se faz na viagem.",
+            },
           },
         ],
       },

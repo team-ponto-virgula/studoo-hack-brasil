@@ -24,6 +24,10 @@
 }
 
 .aula-topo { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(10px, 3vw, 22px); }
+/* O X e a barra de andamento ficam à vista ao rolar uma etapa longa; o que a tela leva ao topo para abaixo deles. */
+.aula-topo { position: sticky; z-index: 3; inset-block-start: 0; margin: calc(-1 * clamp(16px, 4vw, 36px)) calc(-1 * clamp(20px, 5vw, 56px)) 0;
+  padding: clamp(10px, 2.5vw, 20px) clamp(20px, 5vw, 56px) 10px; background: var(--fundo); }
+:root:has(.painel--aula) { scroll-padding-top: 84px; }
 
 .aula-fechar {
   display: grid;
@@ -285,14 +289,22 @@
 @keyframes aula-tremer { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-8px); } 40%, 60% { transform: translateX(8px); } }
 @keyframes aula-pular { 40% { transform: translateY(-6px) scale(1.02); } }
 
-/* Celular: o painel de retorno mais compacto (ocupava uns 40% da tela e escondia o exercício). */
+/* Celular: o painel de retorno mais compacto (ocupava uns 40% da tela e escondia o exercício). O ícone fica pequeno, ao
+   lado do título, e o texto usa a largura toda embaixo, em vez de uma coluna estreita ao lado do ícone. */
 @media (max-width: 767px) {
-  .aula-retorno { gap: 10px; }
-  .aula-retorno__icone { width: 44px; height: 44px; }
-  .aula-retorno__icone .icone { width: 24px; height: 24px; }
-  .aula-retorno h2 { font-size: 1.1875rem; }
+  .aula-rodape { padding-top: 12px; }
+  .aula-retorno { display: block; }
+  .aula-retorno__icone { float: left; width: 34px; height: 34px; margin-right: 10px; box-shadow: 0 3px 0 var(--sucesso); }
+  .aula-rodape[data-retorno='errada'] .aula-retorno__icone { box-shadow: 0 3px 0 #b4650d; }
+  .aula-retorno__icone .icone { width: 20px; height: 20px; }
+  .aula-retorno h2 { font-size: 1.1875rem; line-height: 34px; }
   .aula-retorno p { font-size: 0.9375rem; line-height: 1.4; }
+  .aula-rodape__nota { font-size: 0.8125rem; }
   .aula-rodape__acoes > .botao { min-height: 48px; }
+  /* Menos espaço entre os blocos do painel (texto, link, aviso e botões). */
+  .aula-rodape__conteudo { gap: 6px 16px; }
+  .aula-retorno__link { margin-top: 0; }
+  .aula-retorno__link .botao { min-height: 32px; }
 }
 
 /* "Mais abaixo": a primeira linha do rodapé quando há conteúdo atrás dele (não cobre nada do exercício). */
@@ -513,7 +525,8 @@
   width: 32px;
   height: 32px;
   place-items: center;
-  border-radius: 50%;
+  /* Quadrado arredondado: os dedos do diagrama são bolinhas, e o número do passo não se confunde com eles. */
+  border-radius: 9px;
   color: var(--fundo);
   background: #c88a12;
   box-shadow: 0 3px 0 #9a6a08;
@@ -768,6 +781,7 @@
 .como-foi label[data-valor='quase']:has(input:checked) { border-color: #e0a92e; color: #7a4a00; background: #fff6d9; box-shadow: 0 4px 0 #f2cf96; }
 .como-foi label[data-valor='ainda_nao']:has(input:checked) { border-color: #9fb1f0; color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
 .aula-pratica__resposta .aula-balao { margin: 0; font-weight: 700; }
+.cronometro__total { margin: 4px 0 0; color: var(--texto2); font-size: 0.875rem; font-weight: 700; text-align: center; grid-column: 1 / -1; }
 
 @media (max-width: 560px) {
   .acorde { grid-template-columns: minmax(0, 1fr); justify-items: center; }

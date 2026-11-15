@@ -209,3 +209,17 @@ test("as regras de ordenação da trilha ficam registradas para o prompt da IA r
     assert.ok(texto.includes(trecho), trecho);
   }
 });
+
+test("a prévia diz o que cada lição ensina: o resumo vem no evento e na proposta, e o contrato o preserva", async () => {
+  const eventos = await coletar(iniciarGeracao(usuario(), "Quero aprender violão do zero"));
+  const licoes = eventos.filter(({ tipo }) => tipo === "licao");
+  assert.ok(licoes.length > 0 && licoes.every(({ resumo }) => typeof resumo === "string" && resumo.length > 10), "cada lição pronta tem resumo");
+  for (const evento of eventos) assert.deepEqual(interpretarEventoGeracao(JSON.stringify(evento)), evento);
+  const { proposta } = eventos.at(-1);
+  assert.equal(proposta.fluxos[0].licoes[0].resumo, licoes[0].resumo);
+  // O resumo é opcional e curto: longo demais, o contrato o descarta (a lição continua).
+  const longo = interpretarEventoGeracao(JSON.stringify({ tipo: "licao", fluxo: 0, licao: 0, titulo: "Tal", resumo: "x".repeat(201) }));
+  assert.deepEqual(longo, { tipo: "licao", fluxo: 0, licao: 0, titulo: "Tal" });
+  assert.ok(esqueletoValido({ gerador: "g", titulo: "T", objetivo: "O", origem: "o", fluxos: [{ titulo: "F", licoes: [{ titulo: "L", resumo: "Montar o acorde." }] }] }));
+  assert.equal(esqueletoValido({ gerador: "g", titulo: "T", objetivo: "O", origem: "o", fluxos: [{ titulo: "F", licoes: [{ titulo: "L", resumo: "x".repeat(201) }] }] }), false);
+});

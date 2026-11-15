@@ -44,7 +44,7 @@ function seguirEstrutura(esqueleto: { fluxos: EsqueletoPlano["fluxos"]; tem: boo
   }
   if (evento.tipo === "licao" && fluxos.length > 0 && evento.fluxo === fluxos.length - 1 &&
       evento.licao === fluxos[evento.fluxo].licoes.length) {
-    fluxos[evento.fluxo].licoes.push({ titulo: evento.titulo });
+    fluxos[evento.fluxo].licoes.push({ titulo: evento.titulo, ...(evento.resumo ? { resumo: evento.resumo } : {}) });
     return;
   }
   throw new FalhaApi("falha");
@@ -77,10 +77,15 @@ async function* emitirEventos(
     }
     if (sinal.aborted) return;
 
-    const esqueleto = { ...meta, ...plano, fluxos: acumulado.fluxos };
-    if (!esqueletoValido(esqueleto)) {
+    const completo = { ...meta, ...plano, fluxos: acumulado.fluxos };
+    if (!esqueletoValido(completo)) {
       throw new FalhaApi("falha");
     }
+    // O comprovante da proposta leva a trilha inteira e tem tamanho máximo: os resumos (só para a prévia) saem se a
+    // trilha ficar grande demais com eles.
+    const esqueleto = Buffer.byteLength(JSON.stringify(completo)) > 3600
+      ? { ...completo, fluxos: completo.fluxos.map((fluxo) => ({ ...fluxo, licoes: fluxo.licoes.map(({ titulo }) => ({ titulo })) })) }
+      : completo;
     const token = emitirComprovante("proposta", usuarioId, {
       id: randomUUID(),
       expiraEm: Date.now() + DURACAO_PROPOSTA,
