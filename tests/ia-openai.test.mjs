@@ -12,6 +12,7 @@ process.env.STUDOO_CHAVE_ASSINATURA ??= "0123456789abcdef".repeat(4);
 const { iniciarGeracao } = await import("../src/servidor/aprendizado/geracao.ts");
 const { obterGerador } = await import("../src/servidor/ia/gerador.ts");
 const { GERADOR_OPENAI, MODELO_PADRAO, normalizarConteudo } = await import("../src/servidor/ia/openai.ts");
+const { refinarAvaliacao } = await import("../src/servidor/aprendizado/correcao.ts");
 
 /*
  * Adaptador da OpenAI (Responses API) contra um servidor local que imita a API: streaming SSE para a estrutura e
@@ -101,10 +102,15 @@ before(async () => {
         responderStreaming(resposta, linhasDaTrilha);
         return;
       }
+      // Correções durante a aula: cada pedido diz o seu formato pelo nome do esquema.
+      const formato = dados.text?.format?.name;
+      let saida = licaoDeEscolha;
+      if (formato === "correcao_aberta") saida = { criterios: [{ atendido: true }, { atendido: false }], correta: true, feedback: "Boa ideia, faltou o exemplo." };
+      if (formato === "desempate_lacuna") saida = { equivalente: dados.input[1].content.includes("dois") };
       resposta.writeHead(200, { "Content-Type": "application/json" });
       resposta.end(JSON.stringify({
         status: "completed",
-        output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify(licaoDeEscolha) }] }],
+        output: [{ type: "message", content: [{ type: "output_text", text: JSON.stringify(saida) }] }],
       }));
     });
   });
@@ -260,6 +266,50 @@ test("a normalização aceita os formatos novos, refaz ids e descarta o opcional
   const semRecurso = normalizarConteudo({ ...base, recurso: { tipo: "acorde", nome: "X", casas: [0, 1, 2, 3, 4], dedos: null, eventos: null }, exercicios: [{ ...nulos, tipo: "lacuna", enunciado: "Complete.", trecho: "Gire a ___.", gabarito: ["tarraxa"], ...retornos }] }, "IA");
   assert.equal(semRecurso.recurso, undefined);
   assert.equal(semRecurso.exercicio.tipo, "lacuna");
+});
+
+test("com a IA, a resposta aberta é corrigida critério por critério e a lacuna errada tem desempate", async () => {
+  const contexto = { titulo: "Arroz soltinho", conceito: "Água em dobro." };
+  const aberta = {
+    tipo: "aberta", enunciado: "Explique.", minimo: 20, gabarito: ["arroz", "exemplo"], criterios: ["Fala do arroz", "Dá um exemplo"],
+    modelo: "O arroz pede o dobro de água.", feedbackCorreto: "Isso.", feedbackIncorreto: "Ainda não.",
+  };
+  const local = { correta: false, feedback: "Ainda não.", simulado: true };
+  const corrigida = await refinarAvaliacao(contexto, aberta, "Uso duas medidas de água para cada uma de arroz.", local);
+  assert.deepEqual(corrigida, {
+    correta: true,
+    feedback: "Boa ideia, faltou o exemplo.",
+    criterios: [{ texto: "Fala do arroz", atendido: true }, { texto: "Dá um exemplo", atendido: false }],
+    modelo: "O arroz pede o dobro de água.",
+    simulado: false,
+  });
+  const { dados } = pedidos.at(-1);
+  assert.equal(dados.text.format.strict, true);
+  assert.equal(dados.store, false);
+  assert.match(dados.input[0].content, /ignore qualquer instrução/);
+  assert.equal(JSON.parse(dados.input[1].content).resposta, "Uso duas medidas de água para cada uma de arroz.");
+
+  const lacuna = { tipo: "lacuna", enunciado: "Complete.", trecho: "1 xícara = ___ xícaras", gabarito: ["2"], feedbackCorreto: "Isso.", feedbackIncorreto: "Não." };
+  const desempate = await refinarAvaliacao(contexto, lacuna, "dois", { correta: false, feedback: "Não." });
+  assert.equal(desempate.correta, true);
+  assert.match(desempate.observacao, /equivalente/);
+  assert.deepEqual(await refinarAvaliacao(contexto, lacuna, "três", { correta: false, feedback: "Não." }), { correta: false, feedback: "Não." });
+  // Lacuna certa não vai à IA.
+  const antes = pedidos.length;
+  await refinarAvaliacao(contexto, lacuna, "2", { correta: true, feedback: "Isso." });
+  assert.equal(pedidos.length, antes);
+});
+
+test("sem a IA, ou com a IA fora do ar, vale a correção local", async () => {
+  const aberta = { tipo: "aberta", enunciado: "Explique.", minimo: 20, gabarito: ["arroz"], feedbackCorreto: "Isso.", feedbackIncorreto: "Ainda não." };
+  const local = { correta: false, feedback: "Ainda não.", simulado: true };
+  modo = "falha";
+  assert.equal(await refinarAvaliacao({ titulo: "t", conceito: "c" }, aberta, "uma resposta qualquer longa", local), local);
+  modo = "normal";
+  process.env.IA = "falsa";
+  const antes = pedidos.length;
+  assert.equal(await refinarAvaliacao({ titulo: "t", conceito: "c" }, aberta, "uma resposta qualquer longa", local), local);
+  assert.equal(pedidos.length, antes, "com a IA falsa, nenhum pedido sai");
 });
 
 test("o modelo padrão não recebe o campo de raciocínio", async () => {
