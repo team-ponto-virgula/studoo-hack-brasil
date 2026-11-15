@@ -365,7 +365,7 @@ test("o rodapé diz o que falta para verificar, em cada formato, e some com a re
   assert.equal(dica(vf, codificarResposta.verdadeiroFalso(true, "")), "Agora escolha o porquê.");
   assert.equal(dica(vf, codificarResposta.verdadeiroFalso(false, "b")), null);
   const aberta = { tipo: "aberta", enunciado: "Explique", minimo: 20 };
-  assert.equal(dica(aberta, "curta"), "Escreva mais 15 caracteres.");
+  assert.equal(dica(aberta, "curta"), "Escreva mais um pouco: faltam 15 letras.");
   assert.equal(dica(aberta, "uma resposta com mais de vinte"), null);
   assert.equal(dica({ tipo: "multipla_escolha", enunciado: "Escolha", opcoes: itens }, ""), "Escolha uma opção para verificar.");
   assert.equal(dica({ tipo: "lacuna", enunciado: "Complete" }, "  "), "Escreva sua resposta para verificar.");
@@ -588,8 +588,8 @@ test("trilhas prontas: cada lição tem o seu “outro jeito de entender”, dif
   // O violão ensina as mãos e a afinação logo na primeira lição.
   const violao = DEMOS.find(({ chave }) => chave === "violao").plano.fluxos[0].licoes[0];
   assert.match(violao.conceito, /mão esquerda/);
-  assert.match(violao.pratica.passos.join(" "), /Ouvir o Mi/, "a afinação usa o Mi que o próprio app toca");
-  assert.match(violao.pratica.dica, /afinador/, "o app afinador fica como opção");
+  assert.match(violao.pratica.passos.join(" "), /app afinador/, "a afinação começa pelo app afinador");
+  assert.match(violao.pratica.passos.join(" "), /Ouvir o Mi/, "sem app, o Mi que o próprio Studoo toca");
 });
 
 test("vale rever: a maior parte errada antes do acerto ou a prática em “ainda não”; um erro só não marca", () => {
@@ -660,4 +660,14 @@ test("“Explique com suas palavras”: o inglês sem o verbo (“I here”) vir
   assert.equal(armadilhaNoTexto(licao, "Eu digo I am from Brazil"), null);
   // A palavra que a escuta usa (“purpose”) agora está nas frases da lição.
   assert.ok(licao.falas.some(({ texto }) => /purpose/.test(texto)));
+});
+
+test("inglês para viagem tem a lição do aeroporto, e o compasso do violão é o desta batida", () => {
+  const ingles = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes);
+  const aeroporto = ingles.find(({ titulo }) => /aeroporto/i.test(titulo));
+  assert.ok(aeroporto, "uma lição de aeroporto (check-in e embarque)");
+  assert.ok(aeroporto.falas.some(({ texto }) => /boarding pass/i.test(texto)));
+  const ritmo = DEMOS.find(({ chave }) => chave === "violao").plano.fluxos.flatMap(({ licoes }) => licoes)
+    .find(({ titulo }) => /Ritmo/.test(titulo));
+  assert.match(ritmo.extras[0].trecho, /Nesta batida/, "nem todo compasso tem 4 tempos");
 });

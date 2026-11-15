@@ -33,7 +33,7 @@ import {
 } from '../ui';
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
-import { FrasesDaLicao, Licao, formatarTempo, temAndamento, type ResumoLicao } from './aula';
+import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
 import { Pedido, type IdTema } from './pedido';
 import './aula.css';
 import './trilha.css';
@@ -203,7 +203,7 @@ export function Estudo() {
 
   /** Apaga uma trilha depois da confirmação; o cartão sai da lista (sem trilhas, a tela volta ao pedido). */
   async function apagarPlano(plano: PlanoResumo) {
-    if (!window.confirm(mensagens.planos.apagarPergunta(plano.titulo))) return;
+    if (!window.confirm(mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total)))) return;
     const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
     if (!resultado.ok) return;
     setPlanos((anteriores) => anteriores.filter((item) => item.id !== plano.id));
@@ -418,6 +418,7 @@ export function Estudo() {
           )}
           {visivel && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
             <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
+              avisoSemTrilhas={tela.tipo === 'planos' && planos.length === 0 && inicio === 'pronto'}
               aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} />
@@ -514,7 +515,7 @@ function CartaoPlano({ plano, regiao, ocupado, abrir, apagar }: {
   const concluido = total > 0 && concluidas === total;
   let acao: string = mensagens.planos.continuar;
   if (concluido) acao = mensagens.planos.rever;
-  else if (concluidas === 0) acao = mensagens.planos.comecar;
+  else if (concluidas === 0 && !temAndamentoNoPlano(plano.id)) acao = mensagens.planos.comecar;
   const enfeites = regiaoDoTrecho(regiao).enfeites;
 
   return (

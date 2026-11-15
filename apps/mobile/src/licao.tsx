@@ -72,9 +72,18 @@ type Andamento = {
   revisao: number[] | null;
   /** Segundos já estudados, para o tempo do resumo seguir de onde parou. Como na web. */
   segundos?: number;
+  /** O que faltava no cronômetro da prática. Como na web. */
+  praticaRestante?: number;
   salvoEm: number;
 };
 const andamentos = new Map<string, Andamento>();
+/** As trilhas com alguma lição começada (e quando): o cartão da trilha diz Continuar. Como na web. */
+const planosComAndamento = new Map<string, number>();
+
+export function temAndamentoNoPlano(planoId: string): boolean {
+  const salvo = planosComAndamento.get(planoId);
+  return Boolean(salvo && Date.now() - salvo < 86_400_000);
+}
 
 /** Se a lição foi começada e tem andamento guardado (o mapa diz Continuar). */
 export function temAndamento(id: string): boolean {
@@ -172,6 +181,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [inicio] = useState(() => Date.now() - (retomada?.segundos ?? 0) * 1000);
   /** Cada "Praticar mais um pouco" recomeça o cronômetro da prática. Como na web. */
   const [voltasPratica, setVoltasPratica] = useState(0);
+  const praticaRestante = useRef<number | undefined>(retomada?.praticaRestante);
+  /** Quantos exercícios a revisão rápida trouxe, para o contador "Revisão 1 de 2". Como na web. */
+  const [revisaoTotal, setRevisaoTotal] = useState(retomada?.revisao?.length ?? 0);
   const tituloEtapa = useRef<ComponentRef<typeof Text>>(null);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const apoioPosicao = useRef(0);
@@ -198,7 +210,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   let nomeEtapa: string = t.conceito;
   if (etapa.tipo === 'exemplo') nomeEtapa = licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
-  else if (etapa.tipo === 'exercicio') nomeEtapa = exercicios.length > 1 ? t.exercicioDe(indice + 1, exercicios.length) : t.exercicio;
+  else if (etapa.tipo === 'exercicio') {
+    nomeEtapa = revisao
+      ? t.revisaoDe(Math.max(1, revisaoTotal - revisao.length + 1), Math.max(revisaoTotal, revisao.length))
+      : exercicios.length > 1 ? t.exercicioDe(indice + 1, exercicios.length) : t.exercicio;
+  }
 
   useEffect(() => {
     // Cada etapa começa do topo, como uma tela nova; a voz de uma etapa não continua na outra.
@@ -265,9 +281,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   // Guarda o andamento a cada passo; o começo intocado não precisa.
   useEffect(() => {
     if (licao.concluida || (passo === 0 && tentativas === 0)) return;
+    planosComAndamento.set(licao.planoId, Date.now());
     andamentos.set(licao.id, {
       passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao,
       segundos: Math.round((Date.now() - inicio) / 1000), salvoEm: Date.now(),
+      ...(praticaRestante.current !== undefined ? { praticaRestante: praticaRestante.current } : {}),
     });
   }, [licao.id, licao.concluida, passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao]);
 
@@ -339,6 +357,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   /** Volta aos exercícios sem acerto, limpando a resposta de cada um, para mais uma tentativa antes de concluir. */
   function revisar(pendentes: number[]) {
     setRevisao(pendentes);
+    setRevisaoTotal(pendentes.length);
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? null : atual)));
     setRespostas((atuais) => atuais.map((atual, posicao) => {
@@ -583,7 +602,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             {exercicio.contexto && <Text style={estilos.texto}>{exercicio.contexto}</Text>}
             {exercicio.trecho && (
               <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}
-                preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim() : undefined} />
+                preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
             )}
             {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
             {campoDoExercicio(exercicio)}
@@ -648,6 +667,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <Text ref={tituloEtapa} accessible accessibilityRole="header" style={estilos.subtitulo}>{t.pratica.titulo}</Text>
             <EtapaPratica pratica={licao.pratica} escolha={autoAvaliacao} recurso={licao.recurso}
               aoMedirComoFoi={(y) => { comoFoiY.current = y; }} aoAcabar={() => setTimeout(mostrarComoFoi, 120)} reinicio={voltasPratica}
+              restanteInicial={praticaRestante.current} aoMudarRestante={(valor) => { praticaRestante.current = valor; }}
               escolher={(valor) => {
                 setAutoAvaliacao(valor);
                 // A resposta do Stu aparece embaixo das opções: rola até ela (a pergunta no alto da tela), para não ficar atrás

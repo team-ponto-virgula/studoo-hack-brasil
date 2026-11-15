@@ -521,8 +521,8 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
     .map((casa, corda) => t.recursos.corda(6 - corda, casa, t.recursos.dedos[dedos?.[corda] ?? 0] ?? ''))
     .join('; ');
   // As medidas do desenho (as de formatos.acordeDesenho), em números: o StyleSheet não garante ler de volta.
-  const largura = 196;
-  const altura = 200;
+  const largura = 200;
+  const altura = 214;
   return (
     <View style={{ width: largura * escala, height: altura * escala }} accessible accessibilityRole="image"
       accessibilityLabel={`${t.recursos.acorde(nome)}: ${descricao}.`}>
@@ -537,12 +537,12 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
           <View key={corda} style={[formatos.cordaVertical, { left: x(corda) - (3.4 - corda * 0.4) / 2, width: 3.4 - corda * 0.4 }]} />
         ))}
         {[6, 5, 4, 3, 2, 1].map((numero, corda) => (
-          <Text key={`c${numero}`} style={[formatos.rotuloDiagrama, { left: x(corda) - 8, top: 40 + 4 * 30 + 6 }]}>{numero}</Text>
+          <Text key={`c${numero}`} style={[formatos.rotuloDiagrama, { left: x(corda) - 8, top: 40 + 4 * 30 + 4 }]}>{numero}</Text>
         ))}
+        <Text style={[formatos.eixoDiagrama, { left: x(0), width: x(5) - x(0), top: 40 + 4 * 30 + 22 }]}>{t.recursos.eixoCorda}</Text>
+        <Text style={[formatos.eixoDiagrama, { left: x(5) + 4, width: 34, top: 18 }]}>{t.recursos.eixoCasa}</Text>
         {[0, 1, 2, 3].map((linha) => (
-          <Text key={`t${linha}`} style={[formatos.rotuloDiagrama, { left: x(5) + 10, top: 40 + (linha + 0.5) * 30 - 8, width: 26, textAlign: 'left' }]}>
-            {base + linha}ª
-          </Text>
+          <Text key={`t${linha}`} style={[formatos.rotuloDiagrama, { left: x(5) + 12, top: 40 + (linha + 0.5) * 30 - 9 }]}>{base + linha}</Text>
         ))}
         {casas.map((casa, corda) => (casa <= 0 ? (
           <Text key={corda} style={[formatos.marcaCorda, { left: x(corda) - 8, color: casa < 0 ? cores.erro : cores.sucesso }]}>{casa < 0 ? 'X' : 'O'}</Text>
@@ -788,7 +788,10 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const pares = valor.split(',').filter(Boolean).map((par) => par.split('=') as [string, string]);
   const travado = (idEsquerda?: string | null) => Boolean(idEsquerda && fixos?.includes(idEsquerda) && pares.some(([item]) => item === idEsquerda));
-  const numero = (id: string) => pares.findIndex(([item, outro]) => item === id || outro === id) + 1;
+  const numero = (id: string) => {
+    const esquerdaDoPar = pares.find(([item, outro]) => item === id || outro === id)?.[0];
+    return esquerda.findIndex((item) => item.id === esquerdaDoPar) + 1;
+  };
   const texto = (lista: Opcao[], id: string) => lista.find((item) => item.id === id)?.texto ?? '';
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
 
@@ -955,7 +958,10 @@ function formatarTempo(segundos: number) {
  * Prática no mundo real: a tarefa, a lista para conferir, a dica e o cronômetro; na volta, a pessoa conta como foi e o
  * Stu responde. A lição só conclui depois dessa resposta (o botão de concluir fica no rodapé da aula).
  */
-export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComoFoi, aoAcabar, recurso, reinicio = 0 }: {
+export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComoFoi, aoAcabar, recurso, reinicio = 0, restanteInicial, aoMudarRestante }: {
+  /** O que faltava no cronômetro na última visita. Como na web. */
+  restanteInicial?: number;
+  aoMudarRestante?: (restante: number) => void;
   /** Muda a cada "Praticar mais um pouco": o cronômetro recomeça. Como na web. */
   reinicio?: number;
   /** O que a lição mostrou no exemplo (recurso, passos, frases), para consultar enquanto pratica. */
@@ -971,9 +977,15 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   aoAcabar?: () => void;
 }) {
   const total = pratica.minutos * 60;
-  const [restante, setRestante] = useState(total);
+  const [restante, setRestante] = useState(() =>
+    restanteInicial !== undefined && restanteInicial >= 0 && restanteInicial <= total ? restanteInicial : total);
   const [rodando, setRodando] = useState(false);
   const [feitos, setFeitos] = useState<number[]>([]);
+  useEffect(() => {
+    aoMudarRestante?.(restante);
+    // Só o tempo dispara.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restante]);
   useEffect(() => {
     if (reinicio === 0) return;
     setRodando(false);
@@ -1151,9 +1163,11 @@ const formatos = StyleSheet.create({
   imagem: { width: '100%', aspectRatio: 16 / 10, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
-  acordeDesenho: { width: 196, height: 200 },
-  rotuloDiagrama: { position: 'absolute', width: 16, textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700',
-    fontSize: 11, lineHeight: 16 },
+  acordeDesenho: { width: 200, height: 214 },
+  rotuloDiagrama: { position: 'absolute', width: 16, textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800',
+    fontSize: 14, lineHeight: 18 },
+  eixoDiagrama: { position: 'absolute', textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700',
+    fontSize: 11, lineHeight: 14 },
   batida: { flexDirection: 'row', gap: 4, width: '100%' },
   batidaTempo: { flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 10, backgroundColor: '#EEF2FF' },
   batidaSobe: { backgroundColor: '#F6F7FB' },
