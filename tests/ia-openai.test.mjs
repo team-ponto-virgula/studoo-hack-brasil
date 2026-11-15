@@ -225,11 +225,114 @@ test("a lição pede formatos variados num esquema estrito: exercícios, recurso
   conferirEstrito(esquema);
   assert.deepEqual(esquema.properties.exercicios.items.properties.tipo.enum,
     ["lacuna", "multipla_escolha", "ordenar", "associar", "verdadeiro_falso", "aberta"]);
-  for (const campo of ["recurso", "falas", "pratica", "exemploTipo", "passos"]) assert.ok(campo in esquema.properties, campo);
+  for (const campo of ["recurso", "falas", "pratica", "exemploTipo", "passos", "outroJeito"]) assert.ok(campo in esquema.properties, campo);
+  // O que antes só as trilhas prontas tinham agora também vem da IA: pronúncia, armadilhas, critérios essenciais e som.
+  const exercicio = esquema.properties.exercicios.items.properties;
+  assert.ok("armadilhas" in exercicio);
+  assert.deepEqual(Object.keys(exercicio.criterios.items.properties).sort(), ["essencial", "texto"]);
+  assert.ok("pronuncia" in exercicio.fala.anyOf[0].properties, "a fala do exercício de escuta também tem pronúncia");
+  assert.ok("pronuncia" in esquema.properties.falas.items.properties);
+  assert.ok("som" in esquema.properties.pratica.anyOf[0].properties);
   const instrucoes = dados.input[0].content;
-  for (const trecho of ["ordenar", "associar", "verdadeiro_falso", "aberta", "acorde", "linha_do_tempo", "falas", "pratica", "codigo (só para código"]) {
+  for (const trecho of ["ordenar", "associar", "verdadeiro_falso", "aberta", "acorde", "linha_do_tempo", "falas", "pratica", "codigo (só para código",
+    "pronuncia", "MAIÚSCULAS", "armadilhas", "essencial", "outroJeito", "som só existe em lições de violão"]) {
     assert.ok(instrucoes.includes(trecho), trecho);
   }
+});
+
+test("a IA também escreve a pronúncia, as armadilhas, os critérios essenciais, o outro jeito e o som da prática", () => {
+  const retornos = { feedbackCorreto: "Isso.", feedbackIncorreto: "Ainda não." };
+  const nulos = { contexto: null, trecho: null, trechoTipo: null, fala: null, opcoes: null, itens: null, esquerda: null, direita: null, afirmacao: null, exata: null, criterios: null, modelo: null, armadilhas: null };
+  const base = { objetivo: "Pedir um café.", conceito: "Para pedir com educação, use I'd like.", exemplo: "I'd like a coffee, please.", exemploTipo: "exemplo", passos: null, recurso: null };
+  const conteudo = normalizarConteudo({
+    ...base,
+    outroJeito: "Pense no I'd like como o “eu gostaria” de um pedido educado.",
+    falas: [
+      { texto: "I'd like a coffee, please.", idioma: "en-US", traducao: "Eu gostaria de um café, por favor.", pronuncia: "áid LÁIK a KÓ-fi, PLÍZ" },
+      { texto: "Thank you!", idioma: "en-US", traducao: "Obrigado!", pronuncia: "x".repeat(161) },
+    ],
+    pratica: { tarefa: "Peça um café em voz alta.", minutos: 2, passos: ["Diga a frase.", "y".repeat(201)], dica: null, som: { rotulo: "Mi", casas: [0, 1, 2] } },
+    exercicios: [
+      {
+        ...nulos, tipo: "aberta", enunciado: "Peça um café com educação.", gabarito: ["i'd like|i would like", "coffee", "please"],
+        criterios: [{ texto: "Usa I'd like", essencial: true }, { texto: "Pede o café", essencial: false }, { texto: "Diz please", essencial: false }],
+        modelo: "I'd like a coffee, please.",
+        armadilhas: [
+          { termos: "i want|i wanna", aviso: "“I want” soa brusco num pedido." },
+          { termos: "coffee", aviso: "Está na resposta certa, então não é armadilha." },
+          { termos: "i like", aviso: "“I like” quer dizer “eu gosto”." },
+        ],
+        ...retornos,
+      },
+      {
+        ...nulos, tipo: "lacuna", enunciado: "Complete o pedido.", trecho: "I'd ___ a coffee.", gabarito: ["like"], exata: true,
+        fala: { texto: "I'd like a coffee.", idioma: "en-US", pronuncia: "áid LÁIK a KÓ-fi" },
+        armadilhas: [{ termos: "want", aviso: "“Want” soa brusco num pedido." }, { termos: "Like", aviso: "É a resposta certa." }],
+        ...retornos,
+      },
+      { ...nulos, tipo: "multipla_escolha", enunciado: "Qual é o educado?", opcoes: [{ id: "a", texto: "I'd like" }, { id: "b", texto: "Give me" }], gabarito: ["a"], armadilhas: [{ termos: "give me", aviso: "Soa como ordem." }], ...retornos },
+    ],
+  }, "IA");
+  assert.ok(conteudo);
+  assert.equal(conteudo.outroJeito, "Pense no I'd like como o “eu gostaria” de um pedido educado.");
+  assert.equal(conteudo.falas[0].pronuncia, "áid LÁIK a KÓ-fi, PLÍZ");
+  assert.deepEqual(conteudo.falas[1], { texto: "Thank you!", idioma: "en-US", traducao: "Obrigado!" }, "pronúncia longa demais sai; a fala fica");
+  assert.deepEqual(conteudo.pratica, { tarefa: "Peça um café em voz alta.", minutos: 2, passos: ["Diga a frase."] }, "o som e o passo fora do formato saem; a prática fica");
+  const aberta = conteudo.exercicio;
+  assert.deepEqual(aberta.criterios, ["Usa I'd like", "Pede o café", "Diz please"]);
+  assert.deepEqual(aberta.essenciais, [0]);
+  assert.deepEqual(aberta.armadilhas.map(({ termos }) => termos), ["i want|i wanna", "i like"], "o que está na resposta certa não vira armadilha");
+  const [lacuna, escolha] = conteudo.extras;
+  assert.deepEqual(lacuna.armadilhas, [{ termos: "want", aviso: "“Want” soa brusco num pedido." }]);
+  assert.equal(lacuna.fala.pronuncia, "áid LÁIK a KÓ-fi");
+  assert.equal("armadilhas" in escolha, false, "armadilha só na lacuna e na aberta");
+  assert.ok(conteudoValido({ ...conteudo }));
+
+  // Essencial só quando se destaca: todos marcados, ou critérios que não casam com o gabarito, não viram essenciais.
+  const comCriterios = (criterios) => normalizarConteudo({ ...base, exercicios: [{ ...nulos, tipo: "aberta", enunciado: "Explique.", gabarito: ["a", "b", "c"], criterios, ...retornos }] }, "IA").exercicio;
+  assert.equal(comCriterios([{ texto: "A", essencial: true }, { texto: "B", essencial: true }, { texto: "C", essencial: true }]).essenciais, undefined);
+  assert.equal(comCriterios([{ texto: "A", essencial: true }, { texto: "B", essencial: false }]).criterios, undefined);
+  assert.deepEqual(comCriterios(["A", "B", "C"]).criterios, ["A", "B", "C"], "o formato antigo, só com o texto, continua valendo");
+
+  // Um som certo fica; um exercício extra fora do formato sai sozinho, sem levar o resto da lição junto.
+  const violao = normalizarConteudo({
+    ...base,
+    falas: [{ texto: "Hello!", idioma: "en-US", traducao: "Olá!", pronuncia: null }],
+    pratica: { tarefa: "Afine a 6ª corda.", minutos: 3, passos: null, dica: null, som: { rotulo: "Ouvir o Mi (6ª corda solta)", casas: [0, -1, -1, -1, -1, -1] } },
+    outroJeito: "z".repeat(601),
+    exercicios: [
+      { ...nulos, tipo: "lacuna", enunciado: "Complete.", trecho: "Gire a ___.", gabarito: ["tarraxa"], ...retornos },
+      { ...nulos, tipo: "multipla_escolha", enunciado: "x".repeat(700), opcoes: [{ id: "a", texto: "Sim" }, { id: "b", texto: "Não" }], gabarito: ["a"], ...retornos },
+    ],
+  }, "IA");
+  assert.deepEqual(violao.pratica.som, { rotulo: "Ouvir o Mi (6ª corda solta)", casas: [0, -1, -1, -1, -1, -1] });
+  assert.equal(violao.extras, undefined);
+  assert.equal(violao.outroJeito, undefined, "o outro jeito longo demais sai");
+  assert.deepEqual(violao.falas, [{ texto: "Hello!", idioma: "en-US", traducao: "Olá!" }], "as falas continuam");
+});
+
+test("a troca de acordes vem com o acorde anterior, e as frases de idioma ficam entre aspas curvas para tocar", () => {
+  const retornos = { feedbackCorreto: "Isso.", feedbackIncorreto: "Ainda não." };
+  const nulos = { contexto: null, trecho: null, trechoTipo: null, fala: null, opcoes: null, itens: null, esquerda: null, direita: null, afirmacao: null, exata: null, criterios: null, modelo: null, armadilhas: null };
+  const exercicios = [{ ...nulos, tipo: "lacuna", enunciado: "Complete.", trecho: "Gire a ___.", gabarito: ["tarraxa"], ...retornos }];
+  const acorde = (anterior) => ({ tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0], batida: null, anterior, eventos: null, numerador: null, denominador: null });
+  const troca = normalizarConteudo({
+    objetivo: "Trocar de acorde.", conceito: "Do Am para o C, dois dedos ficam.", exemplo: "Am → C.",
+    recurso: acorde({ nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0] }), exercicios,
+  }, "IA");
+  assert.deepEqual(troca.recurso.anterior, { nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0] });
+  const semAnterior = normalizarConteudo({ objetivo: "Trocar.", conceito: "Dois dedos ficam.", exemplo: "Am → C.", recurso: acorde({ nome: "Am", casas: [0, 2], dedos: null }), exercicios }, "IA");
+  assert.equal(semAnterior.recurso.nome, "C", "o acorde da lição fica");
+  assert.equal("anterior" in semAnterior.recurso, false, "o anterior fora do formato sai");
+
+  const idioma = normalizarConteudo({
+    objetivo: "Pedir licença.", conceito: 'Para chamar alguém, diga "Excuse me".', exemplo: 'Na rua: "Excuse me, where is the bank?"',
+    falas: [{ texto: "Excuse me.", idioma: "en-US", traducao: "Com licença.", pronuncia: null }], exercicios,
+  }, "IA");
+  assert.equal(idioma.conceito, "Para chamar alguém, diga “Excuse me”.");
+  assert.equal(idioma.exemplo, "Na rua: “Excuse me, where is the bank?”");
+  const codigo = normalizarConteudo({ objetivo: "Filtrar.", conceito: 'Use WHERE nome = "Ana".', exemplo: "SELECT 1;", exercicios }, "IA");
+  assert.equal(codigo.conceito, 'Use WHERE nome = "Ana".', "fora dos idiomas, as aspas ficam como vieram");
 });
 
 test("a normalização aceita os formatos novos, refaz ids e descarta o opcional que não fecha", () => {
@@ -298,6 +401,35 @@ test("com a IA, a resposta aberta é corrigida critério por critério e a lacun
   const antes = pedidos.length;
   await refinarAvaliacao(contexto, lacuna, "2", { correta: true, feedback: "Isso." });
   assert.equal(pedidos.length, antes);
+});
+
+test("com a IA, o critério essencial continua obrigatório, o erro comum vai junto e a armadilha da lacuna não tem desempate", async () => {
+  const contexto = { titulo: "Pedir no café", conceito: "Use I'd like." };
+  const aberta = {
+    tipo: "aberta", enunciado: "Peça um café.", minimo: 20, gabarito: ["coffee", "i'd like|i would like"], criterios: ["Pede o café", "Usa I'd like."],
+    essenciais: [1], armadilhas: [{ termos: "i want|i wanna", aviso: "“I want” soa brusco num pedido." }],
+    feedbackCorreto: "Isso.", feedbackIncorreto: "Ainda não.",
+  };
+  const local = { correta: false, feedback: "Ainda não.", observacao: "“I want” soa brusco num pedido.", simulado: true };
+  // O servidor de teste aprova, mas diz que o segundo critério (o essencial) não foi atendido.
+  const corrigida = await refinarAvaliacao(contexto, aberta, "I want a coffee, please, thank you very much.", local);
+  assert.equal(corrigida.correta, false);
+  assert.equal(corrigida.feedback, "Falta o ponto principal desta resposta: usa I'd like.");
+  assert.equal(corrigida.observacao, "“I want” soa brusco num pedido.", "o aviso do erro comum continua");
+  assert.equal(corrigida.simulado, false);
+  const enviado = JSON.parse(pedidos.at(-1).dados.input[1].content);
+  assert.deepEqual(enviado.criterios, [{ texto: "Pede o café", essencial: false }, { texto: "Usa I'd like.", essencial: true }]);
+  assert.deepEqual(enviado.errosComuns, [{ quando: "i want ou i wanna", aviso: "“I want” soa brusco num pedido." }]);
+  assert.match(pedidos.at(-1).dados.input[0].content, /essencial true/);
+
+  const lacuna = {
+    tipo: "lacuna", enunciado: "Complete.", trecho: "Gire a ___ para afinar.", gabarito: ["tarraxa"],
+    armadilhas: [{ termos: "chave|cravelha", aviso: "Muita gente chama essa peça assim!" }], feedbackCorreto: "Isso.", feedbackIncorreto: "Não.",
+  };
+  const antes = pedidos.length;
+  const armadilha = { correta: false, feedback: "Não.", observacao: "Muita gente chama essa peça assim!" };
+  assert.equal(await refinarAvaliacao(contexto, lacuna, "chave", armadilha), armadilha);
+  assert.equal(pedidos.length, antes, "a armadilha conhecida não vai ao desempate");
 });
 
 test("sem a IA, ou com a IA fora do ar, vale a correção local", async () => {

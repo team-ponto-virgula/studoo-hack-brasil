@@ -1,3 +1,4 @@
+import { embaralharComSemente } from '@studoo/contratos';
 import { FalhaApi } from '../acesso/http';
 import { configuracaoOpenAi } from '../ia/openai';
 
@@ -127,6 +128,10 @@ export async function pedirJson(
   }
 }
 export function conteudoDaGerada(x: LicaoGerada, origem: string) {
+  // Modelos tendem a pôr a certa em primeiro: a ordem mostrada gira por uma semente do enunciado (sempre a mesma para a
+  // mesma pergunta), e cada opção guarda como id o índice que o modelo deu, que é o que o gabarito aponta.
+  const semente = [...x.pergunta].reduce((soma, letra) => Math.imul(soma ^ letra.codePointAt(0)!, 16777619) >>> 0, 2166136261);
+  const ordem = embaralharComSemente(x.opcoes.map((_, indice) => indice), semente);
   return {
     objetivo: x.objetivo,
     conceito: x.conceito,
@@ -135,7 +140,7 @@ export function conteudoDaGerada(x: LicaoGerada, origem: string) {
     exercicio: {
       tipo: 'multipla_escolha' as const,
       enunciado: x.pergunta,
-      opcoes: x.opcoes.map((texto, i) => ({ id: String(i), texto })),
+      opcoes: ordem.map((indice) => ({ id: String(indice), texto: x.opcoes[indice] })),
       gabarito: [String(x.correta)],
       feedbackCorreto: x.feedbackCorreto,
       feedbackIncorreto: x.feedbackIncorreto,

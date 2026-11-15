@@ -159,27 +159,13 @@ async function gerarPonte(
   let ponte: Reforco;
   if (process.env.IA === 'falsa') ponte = reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta);
   else {
-    const result = await pedirJson(
-      'ponte_reforco',
-      objeto({ motivo: texto, licao: esquemaLicao }),
-      'Identifique uma possível dificuldade a partir da resposta, sem afirmar um diagnóstico. Explique com uma analogia diferente e um exemplo resolvido NOVO. Crie outro exercício, diferente do original, com 3 alternativas e correta como índice 0..2. Não copie o enunciado original. A motivação deve ser gentil e específica. pagina=0 e trecho="" pois este reforço deriva da lição fornecida. Textos até 1800 caracteres.',
-      { licao, resposta: apoio.ultimaResposta },
-    );
-    const r = result as { motivo: string; licao: unknown };
-    if (
-      !r ||
-      typeof r.motivo !== 'string' ||
-      !r.motivo.trim() ||
-      r.motivo.length > 600 ||
-      !licaoGeradaValida(r.licao) ||
-      r.licao.pergunta.trim() === licao.exercicio.enunciado.trim()
-    )
-      throw new FalhaApi('ia_indisponivel');
-    ponte = {
-      ...conteudoDaGerada(r.licao, 'Reforço gerado a partir da lição'),
-      motivo: r.motivo,
-      simulado: false,
-    };
+    try {
+      ponte = await reforcoDaIa(licao, apoio.ultimaResposta);
+    } catch {
+      // A IA fora do ar, uma recusa ou um formato errado não deixam a pessoa sem reforço: vale o local, com o outro
+      // jeito que a própria IA escreveu na lição (`outroJeito`).
+      ponte = reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta);
+    }
   }
   await banco.apoioLicao.updateMany({
     where: { usuarioId, licaoId },
@@ -187,6 +173,32 @@ async function gerarPonte(
   });
   return buscarApoio(usuarioId, licaoId);
 }
+
+/** O reforço escrito pela IA: outra analogia, um exemplo novo e outra pergunta. Formato fora do esperado é falha. */
+async function reforcoDaIa(licao: LicaoDetalhe, resposta: string | null): Promise<Reforco> {
+  const result = await pedirJson(
+    'ponte_reforco',
+    objeto({ motivo: texto, licao: esquemaLicao }),
+    'Identifique uma possível dificuldade a partir da resposta, sem afirmar um diagnóstico. Explique com uma analogia diferente e um exemplo resolvido NOVO. Crie outro exercício, diferente do original, com 3 alternativas e correta como índice 0..2. Não copie o enunciado original. A motivação deve ser gentil e específica. pagina=0 e trecho="" pois este reforço deriva da lição fornecida. Textos até 1800 caracteres.',
+    { licao, resposta },
+  );
+  const r = result as { motivo: string; licao: unknown };
+  if (
+    !r ||
+    typeof r.motivo !== 'string' ||
+    !r.motivo.trim() ||
+    r.motivo.length > 600 ||
+    !licaoGeradaValida(r.licao) ||
+    r.licao.pergunta.trim() === licao.exercicio.enunciado.trim()
+  )
+    throw new FalhaApi('ia_indisponivel');
+  return {
+    ...conteudoDaGerada(r.licao, 'Reforço gerado a partir da lição'),
+    motivo: r.motivo,
+    simulado: false,
+  };
+}
+
 export async function avaliarPonte(
   usuarioId: string,
   licaoId: string,
@@ -207,6 +219,99 @@ export async function avaliarPonte(
     });
   return { ...resultado, apoio: await buscarApoio(usuarioId, licaoId) };
 }
+
+/**
+ * O retorno do "Explique com suas palavras" sem IA: não confere se o texto está certo, mas diz quais ideias-chave da lição
+ * (tiradas das respostas dos exercícios) a explicação trouxe, quais faltaram e se a pessoa já deu um exemplo.
+ */
+function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: string): FeedbackEnsino {
+  const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
+  // Exemplo é o que a pessoa marca como exemplo (números e "quando" aparecem em qualquer explicação de violão).
+  const comExemplo = /\b(?:por exemplo|exemplo|ex\.|imagine|como quando|digamos|tipo assim|e o caso de|no caso de)\b/i.test(semAcento);
+  const termos = termosDaLicao(conteudo);
+  const trouxe = termosPresentes(explicacao, termos);
+  const faltou = termos.filter((termo) => !trouxe.includes(termo));
+  // Trouxe a maior parte das ideias: o que falta vira um complemento opcional, não um "que tal incluir".
+  const cobriu = termos.length > 0 && trouxe.length * 2 > termos.length;
+  // Um erro comum no próprio texto (“I here”, sem o verbo) vem antes de tudo no "O que revisar".
+  const armadilha = armadilhaNoTexto(conteudo, explicacao);
+  const lista = (itens: string[]) => {
+    const citados = itens.map((item) => `“${item}”`);
+    return citados.length > 1 ? `${citados.slice(0, -1).join(', ')} e ${citados.at(-1)}` : citados[0] ?? '';
+  };
+  // As palavras da explicação do Stu que a pessoa também usou (“cabeça, braço e corpo”): contam como acerto, mesmo
+  // quando não são as respostas dos exercícios.
+  const doConceito = palavrasDoConceito(licao.conceito, explicacao, licao.titulo)
+    .filter((palavra) => !trouxe.some((termo) => termo.toLocaleLowerCase('pt-BR').includes(palavra.toLocaleLowerCase('pt-BR'))));
+  return {
+    acertos: [
+      ...(trouxe.length > 0
+        ? [`Você falou de ${lista(trouxe)}, ${trouxe.length === 1 ? 'uma ideia-chave' : 'ideias-chave'} desta lição.`]
+        : []),
+      // As palavras da explicação só entram quando nenhuma ideia-chave apareceu (senão, a lista soava mecânica).
+      ...(trouxe.length === 0 && doConceito.length > 0 ? [`Você usou ideias da explicação da lição, como ${lista(doConceito.slice(0, 3))}.`] : []),
+      ...(trouxe.length === 0 && doConceito.length === 0 ? ['Você explicou com as suas palavras.'] : []),
+      ...(comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
+    ],
+    lacuna: armadilha
+      ?? (faltou.length > 0 && !cobriu
+        ? `Que tal incluir ${lista(faltou.slice(0, 3))}? ${faltou.length === 1 ? 'É uma ideia-chave' : 'São ideias-chave'} desta lição.`
+        : faltou.length > 0
+          ? `Você trouxe a maior parte das ideias. Para completar, se quiser: ${lista(faltou.slice(0, 2))}.`
+          : comExemplo
+            ? 'Nenhuma ideia importante ficou de fora.'
+            : 'Faltou só um exemplo seu: uma situação concreta em que você usaria isso.'),
+    pergunta: faltou.length > 0 && !cobriu
+      ? `Se alguém te perguntasse sobre “${faltou[0]}”, o que você diria, com um exemplo seu?`
+      : trouxe.length > 0
+        ? `E numa situação diferente da sua explicação? Conte como “${trouxe[0]}” aparece num caso novo, com um exemplo seu.`
+        : 'Se você fosse ensinar isso a alguém que nunca viu o assunto, por onde começaria?',
+    proximoPasso: armadilha
+      ? 'Reescreva a frase com a correção acima e leia em voz alta: é assim que a forma certa fica.'
+      : faltou.length > 0 && !cobriu
+      ? `Releia a explicação do Stu procurando “${faltou[0]}” e reescreva a sua com essa ideia, em uma frase.`
+      : faltou.length > 0
+      ? `Amanhã, tente explicar de novo sem olhar, incluindo “${faltou[0]}”.`
+      : 'Sua explicação já cobre as ideias da lição. Amanhã, tente explicar de novo sem olhar: é assim que a ideia fica.',
+    simulado: true,
+  };
+}
+
+/** O retorno do "Explique com suas palavras" pela IA. Formato fora do esperado é falha. */
+async function ensinoDaIa(licao: LicaoDetalhe, explicacao: string): Promise<FeedbackEnsino> {
+  const result = await pedirJson(
+    'ensine_ao_stu',
+    objeto({
+      acertos: lista(texto),
+      lacuna: texto,
+      pergunta: texto,
+      proximoPasso: texto,
+    }),
+    'Avalie a explicação em relação à lição. Liste de zero a três pontos realmente corretos; não elogie afirmações falsas. Identifique uma lacuna ou diga que não identificou lacuna neste recorte. Faça uma pergunta de transferência para um contexto novo e proponha uma ação curta. Não atribua nota nem declare domínio do assunto. Se o texto for alheio ao tema, diga isso. Cada texto até 800 caracteres.',
+    { licao, explicacao },
+  );
+  const x = result as FeedbackEnsino;
+  if (
+    !x ||
+    !Array.isArray(x.acertos) ||
+    x.acertos.length > 3 ||
+    !x.acertos.every(
+      (s) => typeof s === 'string' && s.trim() && s.length <= 800,
+    ) ||
+    ![x.lacuna, x.pergunta, x.proximoPasso].every(
+      (s) => typeof s === 'string' && s.trim() && s.length <= 800,
+    )
+  )
+    throw new FalhaApi('ia_indisponivel');
+  return {
+    acertos: x.acertos,
+    lacuna: x.lacuna,
+    pergunta: x.pergunta,
+    proximoPasso: x.proximoPasso,
+    simulado: false,
+  };
+}
+
 export async function ensinarStu(
   usuarioId: string,
   licaoId: string,
@@ -216,93 +321,16 @@ export async function ensinarStu(
     throw new FalhaApi('invalido');
   const licao = await buscarLicao(usuarioId, licaoId);
   await quota(usuarioId, 'ensino');
+  const conteudo = () => conteudoDaLicao(usuarioId, licaoId);
   let feedback: FeedbackEnsino;
-  if (process.env.IA === 'falsa') {
-    // Sem IA: o retorno não confere se o texto está certo, mas diz quais ideias-chave da lição (tiradas das respostas dos
-    // exercícios) a explicação trouxe, quais faltaram e se a pessoa já deu um exemplo.
-    const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
-    // Exemplo é o que a pessoa marca como exemplo (números e "quando" aparecem em qualquer explicação de violão).
-    const comExemplo = /\b(?:por exemplo|exemplo|ex\.|imagine|como quando|digamos|tipo assim|e o caso de|no caso de)\b/i.test(semAcento);
-    const conteudo = await conteudoDaLicao(usuarioId, licaoId);
-    const termos = termosDaLicao(conteudo);
-    const trouxe = termosPresentes(explicacao, termos);
-    const faltou = termos.filter((termo) => !trouxe.includes(termo));
-    // Trouxe a maior parte das ideias: o que falta vira um complemento opcional, não um "que tal incluir".
-    const cobriu = termos.length > 0 && trouxe.length * 2 > termos.length;
-    // Um erro comum no próprio texto (“I here”, sem o verbo) vem antes de tudo no "O que revisar".
-    const armadilha = armadilhaNoTexto(conteudo, explicacao);
-    const lista = (itens: string[]) => {
-      const citados = itens.map((item) => `“${item}”`);
-      return citados.length > 1 ? `${citados.slice(0, -1).join(', ')} e ${citados.at(-1)}` : citados[0] ?? '';
-    };
-    // As palavras da explicação do Stu que a pessoa também usou (“cabeça, braço e corpo”): contam como acerto, mesmo
-    // quando não são as respostas dos exercícios.
-    const doConceito = palavrasDoConceito(licao.conceito, explicacao, licao.titulo)
-      .filter((palavra) => !trouxe.some((termo) => termo.toLocaleLowerCase('pt-BR').includes(palavra.toLocaleLowerCase('pt-BR'))));
-    feedback = {
-      acertos: [
-        ...(trouxe.length > 0
-          ? [`Você falou de ${lista(trouxe)}, ${trouxe.length === 1 ? 'uma ideia-chave' : 'ideias-chave'} desta lição.`]
-          : []),
-        // As palavras da explicação só entram quando nenhuma ideia-chave apareceu (senão, a lista soava mecânica).
-        ...(trouxe.length === 0 && doConceito.length > 0 ? [`Você usou ideias da explicação da lição, como ${lista(doConceito.slice(0, 3))}.`] : []),
-        ...(trouxe.length === 0 && doConceito.length === 0 ? ['Você explicou com as suas palavras.'] : []),
-        ...(comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
-      ],
-      lacuna: armadilha
-        ?? (faltou.length > 0 && !cobriu
-          ? `Que tal incluir ${lista(faltou.slice(0, 3))}? ${faltou.length === 1 ? 'É uma ideia-chave' : 'São ideias-chave'} desta lição.`
-          : faltou.length > 0
-            ? `Você trouxe a maior parte das ideias. Para completar, se quiser: ${lista(faltou.slice(0, 2))}.`
-            : comExemplo
-              ? 'Nenhuma ideia importante ficou de fora.'
-              : 'Faltou só um exemplo seu: uma situação concreta em que você usaria isso.'),
-      pergunta: faltou.length > 0 && !cobriu
-        ? `Se alguém te perguntasse sobre “${faltou[0]}”, o que você diria, com um exemplo seu?`
-        : trouxe.length > 0
-          ? `E numa situação diferente da sua explicação? Conte como “${trouxe[0]}” aparece num caso novo, com um exemplo seu.`
-          : 'Se você fosse ensinar isso a alguém que nunca viu o assunto, por onde começaria?',
-      proximoPasso: armadilha
-        ? 'Reescreva a frase com a correção acima e leia em voz alta: é assim que a forma certa fica.'
-        : faltou.length > 0 && !cobriu
-        ? `Releia a explicação do Stu procurando “${faltou[0]}” e reescreva a sua com essa ideia, em uma frase.`
-        : faltou.length > 0
-        ? `Amanhã, tente explicar de novo sem olhar, incluindo “${faltou[0]}”.`
-        : 'Sua explicação já cobre as ideias da lição. Amanhã, tente explicar de novo sem olhar: é assim que a ideia fica.',
-      simulado: true,
-    };
-  } else {
-    const result = await pedirJson(
-      'ensine_ao_stu',
-      objeto({
-        acertos: lista(texto),
-        lacuna: texto,
-        pergunta: texto,
-        proximoPasso: texto,
-      }),
-      'Avalie a explicação em relação à lição. Liste de zero a três pontos realmente corretos; não elogie afirmações falsas. Identifique uma lacuna ou diga que não identificou lacuna neste recorte. Faça uma pergunta de transferência para um contexto novo e proponha uma ação curta. Não atribua nota nem declare domínio do assunto. Se o texto for alheio ao tema, diga isso. Cada texto até 800 caracteres.',
-      { licao, explicacao },
-    );
-    const x = result as FeedbackEnsino;
-    if (
-      !x ||
-      !Array.isArray(x.acertos) ||
-      x.acertos.length > 3 ||
-      !x.acertos.every(
-        (s) => typeof s === 'string' && s.trim() && s.length <= 800,
-      ) ||
-      ![x.lacuna, x.pergunta, x.proximoPasso].every(
-        (s) => typeof s === 'string' && s.trim() && s.length <= 800,
-      )
-    )
-      throw new FalhaApi('ia_indisponivel');
-    feedback = {
-      acertos: x.acertos,
-      lacuna: x.lacuna,
-      pergunta: x.pergunta,
-      proximoPasso: x.proximoPasso,
-      simulado: false,
-    };
+  if (process.env.IA === 'falsa') feedback = ensinoFalso(licao, await conteudo(), explicacao);
+  else {
+    try {
+      feedback = await ensinoDaIa(licao, explicacao);
+    } catch {
+      // Sem resposta da IA, a pessoa ainda recebe o retorno local (identificado como automático).
+      feedback = ensinoFalso(licao, await conteudo(), explicacao);
+    }
   }
   await banco.apoioLicao.upsert({
     where: { usuarioId_licaoId: { usuarioId, licaoId } },
