@@ -228,7 +228,7 @@ export async function ensinarStu(
     const trouxe = termosPresentes(explicacao, termos);
     const faltou = termos.filter((termo) => !trouxe.includes(termo));
     // Trouxe a maior parte das ideias: o que falta vira um complemento opcional, não um "que tal incluir".
-    const cobriu = termos.length > 0 && trouxe.length * 2 >= termos.length;
+    const cobriu = termos.length > 0 && trouxe.length * 2 > termos.length;
     // Um erro comum no próprio texto (“I here”, sem o verbo) vem antes de tudo no "O que revisar".
     const armadilha = armadilhaNoTexto(conteudo, explicacao);
     const lista = (itens: string[]) => {

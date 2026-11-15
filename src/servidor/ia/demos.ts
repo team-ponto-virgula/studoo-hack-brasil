@@ -75,7 +75,7 @@ const violao: Demo = {
                 "Sente-se e apoie a curva do corpo do violão na perna direita (canhoto: na esquerda).",
                 "A mão esquerda segura o braço, com o polegar atrás dele; a direita fica sobre a boca, para tocar.",
                 "Abra um app afinador gratuito, toque a 6ª corda e gire a tarraxa até o app marcar E (Mi). Sem app? Toque “Ouvir o Mi” e compare os dois sons.",
-                "Se a sua corda soa mais grave que o Mi, aperte a tarraxa para esticar a corda; se soa mais aguda, afrouxe.",
+                "Se a sua corda soa mais grave que o Mi, gire a tarraxa para esticar a corda (o som sobe); se soa mais aguda, gire para o outro lado.",
               ],
               dica: "Gire devagar, um quarto de volta por vez: corda esticada demais pode arrebentar. Se ainda não der para afinar, tudo bem: pratique a postura e siga.",
               som: { rotulo: "Ouvir o Mi (6ª corda solta)", casas: [0, -1, -1, -1, -1, -1] },
@@ -102,7 +102,7 @@ const violao: Demo = {
               opcoes: [op("a", "A 6ª corda, a mais grossa"), op("b", "A 1ª corda, a mais fina"), op("c", "A 3ª corda")],
               gabarito: ["a"],
               feedbackCorreto: "Isso: o X em cima da 6ª corda diz que ela fica de fora. O acorde começa na 5ª corda.",
-              feedbackIncorreto: "Procure o X no diagrama: ele marca a corda que fica de fora. As cordas vão da mais grossa, à esquerda, para a mais fina, à direita.",
+              feedbackIncorreto: "Abra “Ver o acorde Am”, embaixo do exercício, e procure o X: ele marca a corda que fica de fora. As cordas vão da mais grossa, à esquerda, para a mais fina, à direita.",
             },
             extras: [
               {
@@ -329,7 +329,11 @@ const PRONUNCIA_EN: Record<string, string> = {
   "Where is the bus stop?": "UÉR iz dâ BÂS STÓP?",
   "How much is the ticket?": "RÁU MÂTCH iz dâ TÍ-ket?",
   "Sorry, can you repeat?": "SÓ-ri, kén iu ri-PÍT?",
-  "I'm flying to London.": "áim FLÁI-in tu LÂN-don",
+  "I'm flying to New York.": "áim FLÁI-in tu NIÚ IÓRK",
+  "It's next to the bank.": "its NÉKST tu dâ BÉNK",
+  "Turn left at the corner.": "TÂRN LÉFT ét dâ KÓR-ner",
+  "It's thirteen dollars.": "its târ-TÍN DÓ-lars",
+  "The coffee is four ninety-nine.": "dâ KÓ-fi iz FÓR NÁIN-ti NÁIN",
   "Any bags to check?": "É-ni BÉGZ tu TCHÉK?",
   "Yes, one bag.": "IÉS, UÂN BÉG",
   "Here's your boarding pass.": "RÍRZ iór BÓR-din PÉS",
@@ -370,7 +374,7 @@ const ingles: Demo = {
               direita: [op("ola", "Olá!"), op("brasil", "Eu sou do Brasil."), op("prazer", "Prazer em conhecer você!")],
               gabarito: ["hello=ola", "from=brasil", "nice=prazer"],
               feedbackCorreto: "Isso! Com essas três frases você já começa uma conversa.",
-              feedbackIncorreto: "Ouça as frases do exemplo de novo e procure palavras conhecidas. Dica: “from” aparece quando alguém diz de onde é.",
+              feedbackIncorreto: "Volte às frases do exemplo (ouça ou leia) e procure palavras conhecidas. Dica: “from” aparece quando alguém diz de onde é.",
             },
             extras: [
               {
@@ -391,10 +395,10 @@ const ingles: Demo = {
           {
             titulo: "No aeroporto: check-in e embarque",
             objetivo: "Fazer o check-in do voo e achar o portão de embarque.",
-            conceito: "No balcão da companhia aérea, mostre o passaporte e diga para onde vai: “I'm flying to London” (vou voar para Londres). A atendente pode perguntar “Any bags to check?” (alguma mala para despachar?). No cartão de embarque (“boarding pass”), procure o portão (“gate”) e o horário de embarque (“boarding time”).",
-            exemplo: "“Hi! I'm flying to London. Here's my passport.” — “Any bags to check?” — “Yes, one bag.” — “Here's your boarding pass. Gate twelve.”",
+            conceito: "No balcão da companhia aérea, mostre o passaporte e diga para onde vai: “I'm flying to New York” (vou voar para Nova York). A atendente pode perguntar “Any bags to check?” (alguma mala para despachar?). No cartão de embarque (“boarding pass”), procure o portão (“gate”) e o horário de embarque (“boarding time”).",
+            exemplo: "“Hi! I'm flying to New York. Here's my passport.” — “Any bags to check?” — “Yes, one bag.” — “Here's your boarding pass. Gate twelve.”",
             falas: [
-              falaEn("I'm flying to London.", "Vou voar para Londres."),
+              falaEn("I'm flying to New York.", "Vou voar para Nova York."),
               falaEn("Any bags to check?", "Alguma mala para despachar?"),
               falaEn("Yes, one bag.", "Sim, uma mala."),
               falaEn("Here's your boarding pass.", "Aqui está seu cartão de embarque."),
@@ -516,7 +520,7 @@ const ingles: Demo = {
           {
             titulo: "Números e preços",
             objetivo: "Entender preços falados em inglês.",
-            conceito: "Primeiro, os números de 1 a 10: “one, two, three, four, five, six, seven, eight, nine, ten”. Depois vêm “eleven” (11) e “twelve” (12). De 13 a 19, eles terminam em ‑teen (“thirteen”, 13; “fifteen”, 15), e as dezenas terminam em ‑ty (“twenty”, 20; “thirty”, 30; “fifty”, 50). A diferença está no fim da palavra: “fifteen” é 15 e “fifty” é 50.",
+            conceito: "Primeiro, os números de 1 a 10: “one, two, three, four, five, six, seven, eight, nine, ten”. Depois vêm “eleven” (11) e “twelve” (12). De 13 a 19, eles terminam em ‑teen (“thirteen”, 13; “fifteen”, 15), e as dezenas terminam em ‑ty (“twenty”, 20; “thirty”, 30; “fifty”, 50). A diferença está no fim da palavra: “fifteen” é 15 e “fifty” é 50. Preço com centavos se diz em duas partes: “four ninety-nine” é 4,99.",
             exemplo: "“How much is it?” — “It's fifteen dollars.” São quinze dólares, não cinquenta: o “‑teen” no fim indica a casa dos dez.",
             falas: [
               falaEn("One, two, three, four, five, six, seven, eight, nine, ten.", "Um, dois, três, quatro, cinco, seis, sete, oito, nove, dez."),
@@ -524,7 +528,7 @@ const ingles: Demo = {
               falaEn("How much is it?", "Quanto custa?"),
               falaEn("It's fifteen dollars.", "Custa quinze dólares."),
               falaEn("It's fifty dollars.", "Custa cinquenta dólares."),
-              falaEn("How much is the coffee?", "Quanto custa o café?"),
+              falaEn("The coffee is four ninety-nine.", "O café custa 4,99."),
             ],
             origem: origemIngles,
             exercicio: {

@@ -671,3 +671,21 @@ test("inglês para viagem tem a lição do aeroporto, e o compasso do violão é
     .find(({ titulo }) => /Ritmo/.test(titulo));
   assert.match(ritmo.extras[0].trecho, /Nesta batida/, "nem todo compasso tem 4 tempos");
 });
+
+test("rodada 11: pronúncia em toda frase de inglês, pares e ordem como o servidor manda, grafia na aberta", () => {
+  const ingles = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes);
+  for (const licao of ingles) {
+    for (const fala of [...(licao.falas ?? []), ...[licao.exercicio, ...(licao.extras ?? [])].flatMap(({ fala }) => (fala ? [fala] : []))]) {
+      assert.ok(fala.pronuncia, `“${fala.texto}” tem pronúncia escrita`);
+    }
+  }
+  const itens = [{ id: "a", texto: "A" }, { id: "b", texto: "B" }, { id: "c", texto: "C" }];
+  const associar = { tipo: "associar", enunciado: "L", esquerda: itens, direita: [...itens].reverse() };
+  assert.deepEqual(embaralharExercicio(associar, 5).direita, associar.direita, "a ordem do servidor nunca é a resposta: o cliente não mexe");
+  const ordenar = { tipo: "ordenar", enunciado: "O", itens };
+  assert.deepEqual(embaralharExercicio(ordenar, 5).itens, itens);
+  const pedido = ingles.find(({ titulo }) => titulo === "Pedir comida no restaurante").exercicio;
+  const comDeslize = avaliarResposta(pedido, "I would like a coffe and a cheese bread, please");
+  assert.equal(comDeslize.correta, true);
+  assert.match(comDeslize.observacao, /confira a grafia de “coffee”/);
+});

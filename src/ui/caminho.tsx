@@ -118,6 +118,8 @@ function FaixaParte({ numero, resumo, trecho }: { numero: number; trecho: number
 
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 function explicar(nos: readonly NoCaminho[], indice: number) {
+  // Na prévia, a lição ainda não existe: o balão diz como abri-la (antes, o toque não fazia nada).
+  if (nos[indice].estado === 'previa') return mensagens.licao.audio.previaAbre;
   if (nos[indice].estado === 'concluida') {
     const motivo = nos[indice].rever;
     if (motivo) return mensagens.trilha.concluidaRever(motivo);
@@ -460,10 +462,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 </span>
               )}
               {no.estado === 'previa' ? (
-                <div className="caminho-no__alvo">
+                <button type="button" className="caminho-no__alvo" aria-label={nome} aria-haspopup="dialog" aria-expanded={estaAberto}
+                  aria-controls={estaAberto ? idBalao : undefined} onClick={() => tocar(no)}>
                   {conteudo}
-                  <span className="somente-leitor">{nome}</span>
-                </div>
+                </button>
               ) : (
                 <button type="button" className="caminho-no__alvo" ref={(elemento) => guardarBotao(no.id, elemento)}
                   aria-label={selo ? `${nome} ${selo.texto}.` : nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}

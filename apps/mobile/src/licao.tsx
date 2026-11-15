@@ -144,9 +144,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   // Como na web: as opções mudam de ordem a cada visita.
   const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
+  /** Cada revisão rápida embaralha de novo. Como na web. */
+  const [rodadaDeOpcoes, setRodadaDeOpcoes] = useState(0);
   const exercicios = useMemo(
-    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicio(exercicio, semente + numero)),
-    [licao, semente],
+    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicio(exercicio, semente + numero + rodadaDeOpcoes * 7919)),
+    [licao, semente, rodadaDeOpcoes],
   );
   // Quem saiu no meio continua de onde parou.
   const [retomada] = useState(() => lerAndamento(licao, etapas.length, exercicios.length));
@@ -356,6 +358,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   /** Volta aos exercícios sem acerto, limpando a resposta de cada um, para mais uma tentativa antes de concluir. */
   function revisar(pendentes: number[]) {
+    setRodadaDeOpcoes((atual) => atual + 1);
     setRevisao(pendentes);
     setRevisaoTotal(pendentes.length);
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));

@@ -467,13 +467,13 @@ const palavrasDe = (valor: string) => normalizarResposta(valor).replace(/[^\p{L}
  * 5 letras ou mais aceitam um deslize de digitação (“coffe” acha “coffee”). Um “não” (ou “nunca”, “nem”) até três
  * palavras antes desfaz o achado (“não continuo” não é “continua”), a menos que o próprio termo comece com ele.
  */
-function temTermo(palavras: readonly string[], termo: string): boolean {
+function temTermo(palavras: readonly string[], termo: string, exato = false): boolean {
   const partes = palavrasDe(termo);
   if (partes.length === 0) return false;
   const negavel = !NEGACAO.has(partes[0]);
   const parecida = (palavra: string, parte: string, ultima: boolean) => {
     if (ultima ? palavra.startsWith(parte) : palavra === parte) return true;
-    if (parte.length < 5 || !/^\p{L}+$/u.test(parte)) return false;
+    if (exato || parte.length < 5 || !/^\p{L}+$/u.test(parte)) return false;
     if (!ultima) return distancia(palavra, parte, 1) <= 1;
     return distancia(palavra.slice(0, parte.length + 1), parte, 1) <= 1 || distancia(palavra.slice(0, parte.length), parte, 1) <= 1;
   };
@@ -502,10 +502,14 @@ function conferirAberta(exercicio: Extract<ExercicioInterno, { tipo: "aberta" }>
   if (correta && faltou.length > 0) feedback = `Boa resposta! Para ficar completa, faltou: ${faltou.join("; ")}.`;
   // Um erro comum na resposta (“I want”, “I like”): o retorno fala dele, e não de um erro que a pessoa não cometeu.
   const armadilha = exercicio.armadilhas?.find(({ termos }) => termos.split("|").some((termo) => temTermo(palavras, termo.trim())));
+  // Uma ideia achada só com um deslize de digitação (“coffe”): vale, mas o retorno mostra a grafia certa.
+  const comDeslize = gruposDoGabarito(exercicio.gabarito).map((grupo, indice) => atendidos[indice] && !grupo.some((termo) => temTermo(palavras, termo, true))
+    ? grupo[0] : null).find(Boolean);
+  const aviso = armadilha?.aviso ?? (comDeslize ? `Quase: confira a grafia de “${comDeslize}”.` : null);
   return {
     correta,
     feedback,
-    ...(armadilha ? { observacao: armadilha.aviso } : {}),
+    ...(aviso ? { observacao: aviso } : {}),
     criterios,
     ...(exercicio.modelo ? { modelo: exercicio.modelo } : {}),
     simulado: true,

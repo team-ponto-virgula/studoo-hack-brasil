@@ -296,8 +296,16 @@
 }
 
 /* "Mais abaixo": a primeira linha do rodapé quando há conteúdo atrás dele (não cobre nada do exercício). */
-.aula-mais-abaixo { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; min-height: 30px; margin: -6px 0 6px;
-  padding: 2px 8px; border: 0; background: none; color: var(--acao); font: inherit; font-size: 0.875rem; font-weight: 800; cursor: pointer; }
+.aula-mais-abaixo { display: flex; align-items: center; justify-content: center; gap: 6px; width: fit-content; min-height: 32px; margin: -6px auto 8px;
+  padding: 4px 14px; border: 2px solid var(--gelo); border-radius: 999px; background: var(--fundo); color: var(--acao); font: inherit;
+  font-size: 0.875rem; font-weight: 800; box-shadow: 0 2px 0 var(--gelo); cursor: pointer; }
+/* Reforço ou "Explique" abertos: o rodapé fica só com as ações (o retorno já foi lido). */
+.aula-rodape[data-compacto] .aula-retorno, .aula-rodape[data-compacto] .aula-rodape__nota { display: none; }
+.aula-rodape[data-compacto] .aula-rodape__acoes > .botao { min-height: 42px; }
+.sem-quebra { white-space: nowrap; }
+.aula-aviso-voz { margin-top: 6px; color: var(--alerta); font-weight: 800; }
+.como-foi__sem-cronometro { margin: -4px 0 10px; padding: 4px 0; border: 0; background: none; color: var(--acao); font: inherit;
+  font-size: 0.9rem; font-weight: 800; text-decoration: underline; cursor: pointer; }
 .aula-mais-abaixo .icone { width: 16px; height: 16px; transform: rotate(90deg); }
 
 @media (max-width: 767px) {
@@ -442,8 +450,9 @@
 .falas ul { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .falas li {
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
   gap: 10px 14px;
   padding: 12px 14px;
@@ -841,6 +850,12 @@
 /* Troca de acorde: os dois diagramas lado a lado, com a seta entre eles. */
 .acorde[data-comparacao] { grid-template-columns: minmax(0, 1fr); justify-items: center; }
 .acorde__comparacao { display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; }
+/* Celular: os dois acordes da troca um embaixo do outro, em tamanho inteiro (lado a lado, os números ficavam miúdos). */
+@media (max-width: 520px) {
+  .acorde__comparacao { flex-direction: column; gap: 0; }
+  .acorde__comparacao .acorde__lado { width: min(100%, 210px); max-width: 210px; }
+  .acorde__comparacao .acorde__seta { transform: rotate(90deg); }
+}
 .acorde__lado { display: grid; flex: 1 1 0; justify-items: center; gap: 2px; max-width: 190px; }
 .acorde__lado svg { width: 100%; max-width: 180px; }
 .acorde__nome { color: var(--texto); font-size: 1.125rem; font-weight: 900; }

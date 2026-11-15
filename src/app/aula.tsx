@@ -121,6 +121,12 @@ function guardarAndamento(id: string, andamento: Andamento | null) {
 
 const iconesDaEtapa: Record<EtapaAula['tipo'], NomeIcone> = { conceito: 'livro', exemplo: 'lampada', exercicio: 'alvo', pratica: 'relogio' };
 
+/** O título sem quebra no meio de uma palavra com hífen (“check-” numa linha e “in” na outra). */
+function semQuebrarHifen(texto: string): ReactNode {
+  const partes = texto.split(/(\S*\p{L}-\p{L}\S*)/u);
+  return partes.length === 1 ? texto : partes.map((parte, indice) => (indice % 2 ? <span key={indice} className="sem-quebra">{parte}</span> : parte));
+}
+
 /** Título do acerto: varia entre as lições, sem sorteio (a mesma lição tem sempre o mesmo). */
 function tituloDoAcerto(id: string) {
   let soma = 0;
@@ -150,9 +156,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   // As opções mudam de ordem a cada visita: a certa não fica sempre no mesmo lugar e não dá para decorar a posição.
   const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
+  /** Cada revisão rápida embaralha de novo (antes, as opções voltavam na mesma ordem). */
+  const [rodadaDeOpcoes, setRodadaDeOpcoes] = useState(0);
   const exercicios = useMemo(
-    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicio(exercicio, semente + numero)),
-    [licao, semente],
+    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicio(exercicio, semente + numero + rodadaDeOpcoes * 7919)),
+    [licao, semente, rodadaDeOpcoes],
   );
   // Quem saiu no meio continua de onde parou (o andamento fica no navegador por um dia).
   const [retomada] = useState(() => lerAndamento(licao, etapas.length, exercicios.length));
@@ -182,6 +190,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [revisaoTotal, setRevisaoTotal] = useState(retomada?.revisao?.length ?? 0);
   /** O "Explique com suas palavras" já foi enviado: o convite no acerto do último exercício sai. */
   const [ensinou, setEnsinou] = useState(false);
+  /** O "Explique com suas palavras" está aberto: o rodapé fica só com as ações. */
+  const [expliqueAberto, setExpliqueAberto] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
   const formulario = useRef<HTMLFormElement>(null);
@@ -407,6 +417,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   /** Volta aos exercícios sem acerto, limpando a resposta de cada um, para mais uma tentativa antes de concluir. */
   function revisar(pendentes: number[]) {
+    setRodadaDeOpcoes((atual) => atual + 1);
     setRevisao(pendentes);
     setRevisaoTotal(pendentes.length);
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));
@@ -570,7 +581,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           </button>
         )}
         <p className="aula-etapa" data-etapa={etapa.tipo}><Icone nome={iconesDaEtapa[etapa.tipo]} />{nomeEtapa}</p>
-        <h1 tabIndex={-1}>{licao.titulo}</h1>
+        <h1 tabIndex={-1}>{semQuebrarHifen(licao.titulo)}</h1>
         {avisoRetomada && (
           <p className="aula-aviso" role="status">
             {t.retomada}{' '}
@@ -610,9 +621,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       </div>
       {exercicio && (
         <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
-          aoConcluirPonte={() => setPonteFeita(true)} aoEnsinar={() => setEnsinou(true)} />
+          aoConcluirPonte={() => setPonteFeita(true)} aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
       )}
-      <footer className="aula-rodape" data-retorno={retorno}>
+      <footer className="aula-rodape" data-retorno={retorno}
+        data-compacto={(avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita) || (expliqueAberto && avaliacao) || undefined}>
         {temAbaixo && (
           <button type="button" className="aula-mais-abaixo" onClick={lerMais}><Icone nome="seta" />{t.maisAbaixo}</button>
         )}
@@ -761,7 +773,7 @@ function BracoDoAcorde({ nome, casas, dedos }: { nome: string; casas: number[]; 
         <text key={`c${numero}`} x={x(corda)} y={206} textAnchor="middle" className="acorde__rotulo">{numero}</text>
       ))}
       <text x={95} y={226} textAnchor="middle" className="acorde__legenda-eixo">{t.recursos.eixoCorda}</text>
-      <text x={180} y={40} textAnchor="middle" className="acorde__legenda-eixo">{t.recursos.eixoCasa}</text>
+      <text x={182} y={16} textAnchor="middle" className="acorde__legenda-eixo">{t.recursos.eixoCasa}</text>
       {[0, 1, 2, 3].map((linha) => (
         <text key={`t${linha}`} x={180} y={48 + (linha + 0.5) * 34 + 6} textAnchor="middle" className="acorde__rotulo">{base + linha}</text>
       ))}
@@ -1222,7 +1234,7 @@ function ExplicacaoComFalas({ texto, idioma }: { texto: string; idioma?: string 
           );
         })}
       </p>
-      <p className="licao-origem" role="status">{semVoz ? t.audio.semVozTexto : t.audio.toqueParaOuvir}</p>
+      <p className={semVoz ? 'aula-aviso-voz' : 'licao-origem'} role="status">{semVoz ? t.audio.semVozTexto : t.audio.toqueParaOuvir}</p>
     </>
   );
 }
@@ -1730,7 +1742,8 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   const comecou = restante < total;
   // Encerrar uma prática de minutos depois de 5 segundos não vale: o "Como foi?" espera um mínimo de prática.
   const minimo = Math.min(30, total);
-  const praticou = total - restante >= minimo;
+  const [semCronometro, setSemCronometro] = useState(false);
+  const praticou = semCronometro || total - restante >= minimo;
 
   useEffect(() => {
     if (!rodando) return;
@@ -1795,6 +1808,9 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
                 ? rodando ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.retomeParaContar(minimo - (total - restante))
                 : t.pratica.comeceAntes}
         </legend>
+        {!praticou && !escolha && (
+          <button type="button" className="como-foi__sem-cronometro" onClick={() => setSemCronometro(true)}>{t.audio.jaPratiquei}</button>
+        )}
         <div className="como-foi__opcoes">
           {AUTOAVALIACOES.map((valor) => (
             <label key={valor} data-valor={valor}>
