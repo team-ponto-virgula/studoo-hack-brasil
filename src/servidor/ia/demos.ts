@@ -63,6 +63,9 @@ const violao: Demo = {
                 gabarito: ["tarraxa"],
                 feedbackCorreto: "Exato: a tarraxa estica ou afrouxa a corda, e isso muda a afinação.",
                 feedbackIncorreto: "Abra “Rever a explicação”, embaixo do exercício: é a peça da cabeça do violão que você gira para esticar ou afrouxar a corda.",
+                armadilhas: [
+                  { termos: "chave|chaves|cravelha", aviso: "Muita gente chama essa peça assim! O nome que a lição usa é o da ilustração, no número 1." },
+                ],
               },
             ],
             pratica: {
@@ -81,7 +84,7 @@ const violao: Demo = {
           {
             titulo: "Montar o acorde Lá menor (Am)",
             objetivo: "Posicionar os dedos para tocar o acorde Lá menor.",
-            conceito: "Um acorde é um grupo de notas tocadas juntas. No diagrama abaixo, as linhas verticais são as cordas, com a 6ª à esquerda, e as horizontais são os trastes. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
+            conceito: "Um acorde é um grupo de notas tocadas juntas. O diagrama abaixo mostra o braço do violão em pé, com a cabeça para cima, como se você olhasse para ele de frente: as linhas verticais são as cordas, com a 6ª (a mais grossa) à esquerda, e as horizontais são os trastes. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
             exemploTipo: "demonstracao",
             exemplo: "Veja o Lá menor no diagrama e ouça como ele soa. Depois, siga os passos com o violão na mão.",
             passos: [
@@ -527,8 +530,8 @@ const ingles: Demo = {
               tipo: "aberta",
               enunciado: "Escreva em inglês como você pediria um café (coffee) e um pão de queijo (cheese bread), de um jeito educado.",
               minimo: 15,
-              gabarito: ["i'd like|i would like|can i have|could i have|may i have", "please", "coffee"],
-              criterios: ["Usa uma forma educada de pedir (I'd like, Can I have…)", "Termina com “please”", "Pede o café (coffee)"],
+              gabarito: ["i'd like|i would like|can i have|could i have|may i have", "please", "coffee", "cheese bread|cheesebread"],
+              criterios: ["Usa uma forma educada de pedir (I'd like, Can I have…)", "Termina com “please”", "Pede o café (coffee)", "Pede o pão de queijo (cheese bread)"],
               essenciais: [0],
               modelo: "I'd like a coffee and a cheese bread, please.",
               feedbackCorreto: "Pedido perfeito: educado, claro e com “please”.",

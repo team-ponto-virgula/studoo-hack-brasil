@@ -292,6 +292,19 @@ export function Estudo({ cliente, sair, expirar }: {
     setErro(mensagemDoCodigo(licao.codigo));
   }
 
+  /** Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão. Como na web. */
+  function pedirParaSair() {
+    const confirmar = () => void executar('sair', sair);
+    if (Platform.OS === 'web') {
+      if ((globalThis as { confirm?: (texto: string) => boolean }).confirm?.(mensagens.sairPergunta)) confirmar();
+      return;
+    }
+    Alert.alert(mensagens.sairPergunta, undefined, [
+      { text: mensagens.ficar, style: 'cancel' },
+      { text: mensagens.sair, style: 'destructive', onPress: confirmar },
+    ]);
+  }
+
   /** Apaga uma trilha depois da confirmação (na prévia no navegador, o Alert não aparece: usa a caixa do navegador). */
   function pedirParaApagar(plano: PlanoResumo) {
     const apagar = () => void apagarPlano(plano);
@@ -345,7 +358,7 @@ export function Estudo({ cliente, sair, expirar }: {
       {etapa.tipo !== 'planos' && !['objetivo', 'plano'].includes(etapa.tipo) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
         desativado={ocupado} acao={() => abrir({ tipo: 'planos' })} />}
       <Botao rotulo={mensagens.sair} testID="sair" compacto variante="texto" desativado={ocupado}
-        acao={() => void executar('sair', sair)} />
+        acao={pedirParaSair} />
     </>
   );
   const mensagem = erro && <EstadoMensagem mensagem={erro} />;
@@ -1069,13 +1082,13 @@ function IconePreparo({ pronta, atraso, nome }: { pronta: boolean; atraso: numbe
     return <View style={estudoEstilos.preparoIcone}><Icone nome={nome} tamanho={20} cor={cores.acao} /></View>;
   }
   return (
-    <Animated.View style={[estudoEstilos.preparoIcone, estudoEstilos.preparoIconePronto, {
+    <Animated.View style={[estudoEstilos.preparoIcone, {
       transform: [
         { scale: visto.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
         { rotate: visto.interpolate({ inputRange: [0, 1], outputRange: ['-30deg', '0deg'] }) },
       ],
     }]}>
-      <Icone nome="check" tamanho={20} cor={cores.fundo} />
+      <Icone nome={nome} tamanho={20} cor={cores.acao} />
     </Animated.View>
   );
 }

@@ -329,6 +329,8 @@ export function Estudo() {
   }
 
   async function sair() {
+    // Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão.
+    if (!window.confirm(mensagens.sairPergunta)) return;
     const resultado = await executar('sair', () => cliente.logout());
     if (resultado.ok) irParaLogin();
   }
@@ -653,7 +655,7 @@ function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; pron
         {licoes.map((nome, indice) => (
           <li key={indice} style={{ '--ordem': indice } as CSSProperties}>
             <span className="preparo-lista__icone">
-              <Icone nome={prontas ? 'check' : nome.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro'} />
+              <Icone nome={nome.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro'} />
             </span>
             <span className="preparo-lista__titulo">{nome}</span>
           </li>
