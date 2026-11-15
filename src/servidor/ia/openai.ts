@@ -1,6 +1,16 @@
 import { TIPOS_TRECHO, type Recurso, type TipoTrecho } from "@studoo/contratos";
 import type { ConteudoLicao, EsqueletoPlano, ExercicioInterno } from "@/dominio/aprendizado/plano";
-import { LIMITES_ESQUELETO, conteudoValido, falaValida, recursoValido } from "@/dominio/aprendizado/plano";
+import {
+  LIMITES_ESQUELETO,
+  conteudoValido,
+  exercicioValido,
+  falaValida,
+  normalizarResposta,
+  praticaValida,
+  recursoValido,
+  somValido,
+  termosPresentes,
+} from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import type { EventoEstrutura, GeradorTrilha, MetaPlano } from "./gerador";
 import { instrucoesDeOrdem } from "./ordem";
@@ -264,6 +274,8 @@ const objetoEstrito = (propriedades: Record<string, unknown>) => ({
 });
 const opcaoJson = objetoEstrito({ id: textoJson, texto: textoJson });
 const opcoesOuNulo = { type: ["array", "null"], items: opcaoJson } as const;
+/** Erros comuns de quem aprende, cada um com os termos que o denunciam e o aviso certeiro. */
+const armadilhasOuNulo = { type: ["array", "null"], items: objetoEstrito({ termos: textoJson, aviso: textoJson }) } as const;
 
 const esquemaDoExercicio = objetoEstrito({
   tipo: { type: "string", enum: ["lacuna", "multipla_escolha", "ordenar", "associar", "verdadeiro_falso", "aberta"] },
@@ -271,7 +283,7 @@ const esquemaDoExercicio = objetoEstrito({
   contexto: textoOuNulo,
   trecho: textoOuNulo,
   trechoTipo: { anyOf: [{ type: "string", enum: ["codigo", "frase", "citacao", "formula", "passos"] }, nulo] },
-  fala: { anyOf: [objetoEstrito({ texto: textoJson, idioma: textoJson }), nulo] },
+  fala: { anyOf: [objetoEstrito({ texto: textoJson, idioma: textoJson, pronuncia: textoOuNulo }), nulo] },
   opcoes: opcoesOuNulo,
   itens: opcoesOuNulo,
   esquerda: opcoesOuNulo,
@@ -279,8 +291,9 @@ const esquemaDoExercicio = objetoEstrito({
   afirmacao: textoOuNulo,
   gabarito: { type: "array", items: textoJson },
   exata: { type: ["boolean", "null"] },
-  criterios: { type: ["array", "null"], items: textoJson },
+  criterios: { type: ["array", "null"], items: objetoEstrito({ texto: textoJson, essencial: { type: "boolean" } }) },
   modelo: textoOuNulo,
+  armadilhas: armadilhasOuNulo,
   feedbackCorreto: textoJson,
   feedbackIncorreto: textoJson,
 });
@@ -291,6 +304,7 @@ const esquemaDaLicao = objetoEstrito({
   exemplo: textoJson,
   exemploTipo: { type: "string", enum: ["exemplo", "demonstracao"] },
   passos: { type: ["array", "null"], items: textoJson },
+  outroJeito: textoOuNulo,
   recurso: {
     anyOf: [
       objetoEstrito({
@@ -306,10 +320,16 @@ const esquemaDaLicao = objetoEstrito({
       nulo,
     ],
   },
-  falas: { type: ["array", "null"], items: objetoEstrito({ texto: textoJson, idioma: textoJson, traducao: textoOuNulo }) },
+  falas: { type: ["array", "null"], items: objetoEstrito({ texto: textoJson, idioma: textoJson, traducao: textoOuNulo, pronuncia: textoOuNulo }) },
   pratica: {
     anyOf: [
-      objetoEstrito({ tarefa: textoJson, minutos: { type: "integer" }, passos: { type: ["array", "null"], items: textoJson }, dica: textoOuNulo }),
+      objetoEstrito({
+        tarefa: textoJson,
+        minutos: { type: "integer" },
+        passos: { type: ["array", "null"], items: textoJson },
+        dica: textoOuNulo,
+        som: { anyOf: [objetoEstrito({ rotulo: textoJson, casas: { type: "array", items: { type: "integer" } } }), nulo] },
+      }),
       nulo,
     ],
   },
@@ -321,17 +341,19 @@ const instrucoesDaLicao = [
   "A lição tem: objetivo (uma frase que começa com um verbo), conceito (de 2 a 4 frases simples, com um único conceito novo), exemplo (um caso concreto e resolvido) e de 1 a 3 exercícios com feedback.",
   "Exemplo e recursos:",
   "- exemploTipo é \"demonstracao\" nas habilidades práticas (tocar, cozinhar, desenhar, praticar um esporte): o exemplo apresenta e passos traz de 3 a 6 passos curtos para fazer junto. Nos outros casos, exemploTipo é \"exemplo\" e passos é null.",
+  "- outroJeito: a mesma ideia central por outro caminho, para quem errou um exercício: uma analogia do dia a dia ou uma regra prática, em 1 a 3 frases, sem repetir o conceito com outras palavras.",
   "- recurso, só quando ajudar a ver: acorde de violão (tipo \"acorde\", nome como \"Am\", casas com 6 inteiros da 6ª corda à 1ª: -1 não toca, 0 solta, n é a casa; dedos com 6 inteiros de 0 a 4; batida true se a lição for de ritmo) ou linha_do_tempo (de 2 a 8 eventos com quando e texto, para história, processos e tempos de preparo) ou fracao (barra com denominador de 1 a 12 partes iguais e numerador partes pintadas; nome é o rótulo, como \"2/4 = 1/2\"). Nos campos que não se aplicam, use null. Sem recurso, null.",
-  "- falas, em lições de idioma: de 1 a 4 frases curtas no idioma estudado, com idioma no formato BCP 47 (como en-US, es-ES, fr-FR) e a traducao em português. Nos outros assuntos, null.",
-  "- pratica, nas habilidades que se treinam fora do app: uma tarefa concreta e segura, minutos de 1 a 20 para o cronômetro, até 5 passos e uma dica (ou null). Sem prática, null.",
+  "- falas, em lições de idioma: de 1 a 4 frases curtas no idioma estudado, com idioma no formato BCP 47 (como en-US, es-ES, fr-FR), a traducao em português e a pronuncia: como a frase soa, escrita com as letras do português, com hífen entre as sílabas das palavras longas e a sílaba mais forte em MAIÚSCULAS (\"Excuse me, where is the station?\" vira \"eks-KIÚZ mi, UÉR iz dâ STÊI-shan?\"). Nos outros assuntos, falas é null.",
+  "- pratica, nas habilidades que se treinam fora do app: uma tarefa concreta e segura, minutos de 1 a 20 para o cronômetro, até 5 passos, uma dica (ou null) e som. som só existe em lições de violão: um som de referência para comparar enquanto pratica, com rotulo curto (como \"Ouvir o Mi (6ª corda solta)\") e casas com 6 inteiros da 6ª corda à 1ª, como no acorde (de -1 a 12); nos outros casos, som é null. Sem prática, pratica é null.",
   "Exercícios (use formatos variados; o primeiro é o principal):",
   "- multipla_escolha: 3 opções em opcoes (ids \"a\", \"b\", \"c\"), só uma correta; gabarito é a lista com o id da correta.",
   "- lacuna: o trecho mostra a frase com ___ no lugar da resposta, que é uma palavra, um número ou um símbolo curto; gabarito lista as respostas aceitas. exata é true quando a grafia é o que se ensina (palavra de outro idioma, ortografia); senão, false.",
   "- ordenar: itens traz de 3 a 6 itens já na ordem certa (passos de um processo, acontecimentos, falas de um diálogo); o app embaralha. gabarito é [].",
   "- associar: esquerda e direita com o mesmo número de itens (de 2 a 5), e direita[i] é o par de esquerda[i] (termo e definição, palavra e tradução, personagem e feito); o app embaralha. gabarito é [].",
   "- verdadeiro_falso: afirmacao é a frase a julgar e opcoes traz 3 justificativas, só uma explica corretamente; gabarito é [\"verdadeiro\" ou \"falso\", id da justificativa certa].",
-  "- aberta: a pessoa explica com as próprias palavras (use em revisões e em lições de explicar). gabarito traz de 2 a 4 grupos de palavras-chave sem acento, com alternativas separadas por | (radicais valem, como fazendeir); criterios tem o mesmo número de itens e diz em linguagem simples o que cada grupo procura; modelo é uma boa resposta, de 2 ou 3 frases.",
-  "- trecho é opcional. trechoTipo diz o visual: codigo (só para código de programação), frase, citacao, formula ou passos (um passo por linha). fala, opcional, é um áudio para ouvir (texto e idioma); num exercício de escuta, deixe o trecho null para o texto não aparecer de cara.",
+  "- aberta: a pessoa explica com as próprias palavras (use em revisões e em lições de explicar). gabarito traz de 2 a 4 grupos de palavras-chave sem acento, com alternativas separadas por | (radicais valem, como fazendeir); criterios tem o mesmo número de itens, na mesma ordem, cada um com texto (o que o grupo procura, em linguagem simples) e essencial (true só no ponto da lição, sem o qual a resposta não serve, como \"I'd like\" e não \"I like\" num pedido; no máximo 2, e os outros false); modelo é uma boa resposta, de 2 ou 3 frases.",
+  "- armadilhas, só na lacuna e na aberta (nos outros tipos, null): até 3 erros comuns de quem aprende o assunto, cada um com termos (minúsculas e sem acento, alternativas separadas por |; na lacuna, a resposta errada inteira, como um nome popular ou um falso cognato; na aberta, a expressão errada que pode aparecer no texto, como \"i want\") e aviso (uma frase gentil que explica o erro; na lacuna, sem dar a resposta). Os termos nunca aparecem no gabarito nem no modelo. Sem um erro comum claro, null.",
+  "- trecho é opcional. trechoTipo diz o visual: codigo (só para código de programação), frase, citacao, formula ou passos (um passo por linha). fala, opcional, é um áudio para ouvir (texto, idioma e pronuncia, como nas falas da lição; pronuncia null fora de idiomas); num exercício de escuta, deixe o trecho null para o texto não aparecer de cara.",
   "- Nos campos que não se aplicam ao tipo, use null (e [] no gabarito de ordenar e associar).",
   "- feedbackCorreto explica por que a resposta está certa; feedbackIncorreto explica o erro e mostra o caminho certo, com gentileza.",
   "- Se o título da lição começar com \"Revisão\", misture conceitos das lições anteriores.",
@@ -381,6 +403,46 @@ function acharOpcao(opcoes: { id: string; texto: string; idOriginal: string }[],
 
 const limparOpcoes = (opcoes: { id: string; texto: string }[]) => opcoes.map(({ id, texto }) => ({ id, texto }));
 
+/** Texto aparado até `maximo` caracteres, ou vazio (o campo opcional sai em vez de invalidar a lição). */
+function textoAte(valor: unknown, maximo: number) {
+  const texto = textoDe(valor);
+  return texto.length <= maximo ? texto : "";
+}
+
+/** A pronúncia escrita de uma fala (“eks-KIÚZ mi”), quando vem e cabe. */
+const pronunciaDe = (valor: unknown) => (textoAte(valor, 160) ? { pronuncia: textoAte(valor, 160) } : {});
+
+/**
+ * Erros comuns da lacuna e da aberta: até quatro, com termos e aviso nos limites. Sai o termo que `vale` (uma resposta
+ * aceita, ou o que a resposta modelo traz): o aviso de erro nunca aparece para quem acertou.
+ */
+function armadilhasDe(valor: unknown, vale: (termo: string) => boolean) {
+  if (!Array.isArray(valor)) return undefined;
+  const armadilhas = valor.flatMap((item) => {
+    const { termos, aviso } = (item ?? {}) as Record<string, unknown>;
+    const juntos = textoDe(termos).split("|").map((termo) => termo.trim()).filter((termo) => termo && !vale(termo)).join("|");
+    return juntos && juntos.length <= 200 && textoAte(aviso, 300) ? [{ termos: juntos, aviso: textoAte(aviso, 300) }] : [];
+  }).slice(0, 4);
+  return armadilhas.length > 0 ? armadilhas : undefined;
+}
+
+/**
+ * Os critérios da aberta, no formato novo (texto e essencial) ou no antigo (só o texto). Só ficam se casarem com os
+ * grupos do gabarito; os essenciais, só quando se destacam (no máximo dois, e nunca todos).
+ */
+function criteriosDe(valor: unknown, grupos: number) {
+  const lidos = (Array.isArray(valor) ? valor : []).map((item) => typeof item === "string"
+    ? { texto: textoAte(item, 200), essencial: false }
+    : { texto: textoAte((item as { texto?: unknown })?.texto, 200), essencial: (item as { essencial?: unknown })?.essencial === true })
+    .filter(({ texto }) => texto);
+  if (lidos.length === 0 || lidos.length !== grupos) return {};
+  const essenciais = lidos.flatMap(({ essencial }, indice) => (essencial ? [indice] : []));
+  return {
+    criterios: lidos.map(({ texto }) => texto),
+    ...(essenciais.length > 0 && essenciais.length <= 2 && essenciais.length < grupos ? { essenciais } : {}),
+  };
+}
+
 /** Um exercício do modelo no formato interno, ou null se não fechar (ids, gabarito, campos do tipo). */
 function normalizarExercicio(bruto: unknown): ExercicioInterno | null {
   if (typeof bruto !== "object" || bruto === null) return null;
@@ -388,7 +450,7 @@ function normalizarExercicio(bruto: unknown): ExercicioInterno | null {
   const gabarito = Array.isArray(exercicio.gabarito)
     ? Array.from(new Set(exercicio.gabarito.map(textoDe).filter((valor) => valor && valor.length <= 200)))
     : [];
-  const fala = exercicio.fala as { texto?: unknown; idioma?: unknown } | null | undefined;
+  const fala = exercicio.fala as { texto?: unknown; idioma?: unknown; pronuncia?: unknown } | null | undefined;
   const trecho = textoDe(exercicio.trecho);
   const trechoTipo = textoDe(exercicio.trechoTipo);
   const base = {
@@ -396,7 +458,7 @@ function normalizarExercicio(bruto: unknown): ExercicioInterno | null {
     ...(textoDe(exercicio.contexto) ? { contexto: textoDe(exercicio.contexto) } : {}),
     ...(trecho ? { trecho, ...((TIPOS_TRECHO as readonly string[]).includes(trechoTipo) ? { trechoTipo: trechoTipo as TipoTrecho } : {}) } : {}),
     ...(fala && textoDe(fala.texto) && /^[a-z]{2,3}(?:-[A-Z]{2})?$/.test(textoDe(fala.idioma))
-      ? { fala: { texto: textoDe(fala.texto), idioma: textoDe(fala.idioma) } }
+      ? { fala: { texto: textoDe(fala.texto), idioma: textoDe(fala.idioma), ...pronunciaDe(fala.pronuncia) } }
       : {}),
     feedbackCorreto: textoDe(exercicio.feedbackCorreto),
     feedbackIncorreto: textoDe(exercicio.feedbackIncorreto),
@@ -438,19 +500,26 @@ function normalizarExercicio(bruto: unknown): ExercicioInterno | null {
     }
     case "aberta": {
       const grupos = gabarito.slice(0, 6);
-      const criterios = Array.isArray(exercicio.criterios) ? exercicio.criterios.map(textoDe).filter(Boolean) : [];
-      const modelo = textoDe(exercicio.modelo);
+      const modelo = textoAte(exercicio.modelo, 1200);
+      // A armadilha não pode estar numa resposta certa: nem num grupo do gabarito, nem na resposta modelo.
+      const certos = [...grupos.flatMap((grupo) => grupo.split("|")), modelo].filter(Boolean);
+      const armadilhas = armadilhasDe(exercicio.armadilhas, (termo) => certos.some((certo) => termosPresentes(certo, [termo]).length > 0));
       return {
         tipo: "aberta",
         ...base,
         minimo: 30,
         gabarito: grupos,
-        ...(criterios.length === grupos.length ? { criterios } : {}),
+        ...criteriosDe(exercicio.criterios, grupos.length),
         ...(modelo ? { modelo } : {}),
+        ...(armadilhas ? { armadilhas } : {}),
       };
     }
-    case "lacuna":
-      return { tipo: "lacuna", ...base, gabarito, ...(exercicio.exata === true ? { exata: true } : {}) };
+    case "lacuna": {
+      // Na lacuna, a armadilha é uma resposta errada inteira; uma resposta aceita nunca vira armadilha.
+      const aceitas = new Set(gabarito.map(normalizarResposta));
+      const armadilhas = armadilhasDe(exercicio.armadilhas, (termo) => aceitas.has(normalizarResposta(termo)));
+      return { tipo: "lacuna", ...base, gabarito, ...(exercicio.exata === true ? { exata: true } : {}), ...(armadilhas ? { armadilhas } : {}) };
+    }
     default:
       return null;
   }
@@ -466,16 +535,21 @@ export function normalizarConteudo(bruto: unknown, origem: string): ConteudoLica
   const dado = bruto as Record<string, unknown>;
   const brutos = Array.isArray(dado.exercicios) ? dado.exercicios : dado.exercicio ? [dado.exercicio] : [];
   const exercicios = brutos.slice(0, 3).map(normalizarExercicio);
-  // O principal precisa fechar; um extra que não fecha é descartado.
+  // O principal precisa fechar; um extra que não fecha é descartado (sem levar junto o resto da lição).
   if (!exercicios[0]) return null;
-  const extras = exercicios.slice(1).filter((exercicio): exercicio is ExercicioInterno => exercicio !== null);
+  const extras = exercicios.slice(1).filter((exercicio): exercicio is ExercicioInterno => exercicio !== null && exercicioValido(exercicio));
 
-  const passos = Array.isArray(dado.passos) ? dado.passos.map(textoDe).filter(Boolean).slice(0, 8) : [];
+  const passos = Array.isArray(dado.passos) ? dado.passos.map((passo) => textoAte(passo, 300)).filter(Boolean).slice(0, 8) : [];
   const falas = Array.isArray(dado.falas)
     ? dado.falas
       .map((fala) => {
-        const { texto, idioma, traducao } = (fala ?? {}) as Record<string, unknown>;
-        return { texto: textoDe(texto), idioma: textoDe(idioma), ...(textoDe(traducao) ? { traducao: textoDe(traducao) } : {}) };
+        const { texto, idioma, traducao, pronuncia } = (fala ?? {}) as Record<string, unknown>;
+        return {
+          texto: textoDe(texto),
+          idioma: textoDe(idioma),
+          ...(textoDe(traducao) ? { traducao: textoDe(traducao) } : {}),
+          ...pronunciaDe(pronuncia),
+        };
       })
       .filter(falaValida)
       .slice(0, 6)
@@ -505,16 +579,20 @@ export function normalizarConteudo(bruto: unknown, origem: string): ConteudoLica
     };
   }
   const praticaBruta = dado.pratica as Record<string, unknown> | null | undefined;
+  const somBruto = praticaBruta?.som as { rotulo?: unknown; casas?: unknown } | null | undefined;
+  const som = somBruto ? { rotulo: textoDe(somBruto.rotulo), casas: somBruto.casas } : undefined;
+  const passosDaPratica = Array.isArray(praticaBruta?.passos) ? praticaBruta.passos.map((passo) => textoAte(passo, 200)).filter(Boolean).slice(0, 5) : [];
   const pratica = praticaBruta && textoDe(praticaBruta.tarefa)
     ? {
       tarefa: textoDe(praticaBruta.tarefa),
       minutos: Math.min(20, Math.max(1, Math.round(Number(praticaBruta.minutos) || 3))),
-      ...(Array.isArray(praticaBruta.passos) && praticaBruta.passos.some(textoDe)
-        ? { passos: praticaBruta.passos.map(textoDe).filter(Boolean).slice(0, 5) }
-        : {}),
-      ...(textoDe(praticaBruta.dica) ? { dica: textoDe(praticaBruta.dica) } : {}),
+      ...(passosDaPratica.length > 0 ? { passos: passosDaPratica } : {}),
+      ...(textoAte(praticaBruta.dica, 300) ? { dica: textoAte(praticaBruta.dica, 300) } : {}),
+      // Um som fora do formato (cinco cordas, casa 20) sai, e a prática continua.
+      ...(somValido(som) ? { som } : {}),
     }
     : undefined;
+  const outroJeito = textoAte(dado.outroJeito, 600);
 
   const conteudo: ConteudoLicao = {
     objetivo: textoDe(dado.objetivo),
@@ -527,7 +605,8 @@ export function normalizarConteudo(bruto: unknown, origem: string): ConteudoLica
     origem,
     exercicio: exercicios[0],
     ...(extras.length > 0 ? { extras } : {}),
-    ...(pratica ? { pratica } : {}),
+    ...(pratica && praticaValida(pratica) ? { pratica } : {}),
+    ...(outroJeito ? { outroJeito } : {}),
   };
   if (conteudoValido(conteudo)) return conteudo;
   // Se algo opcional não fechou, a lição ainda vale só com o essencial.
