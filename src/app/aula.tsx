@@ -5,6 +5,7 @@ import {
   AUTOAVALIACOES,
   acertouParte,
   codificarResposta,
+  conferirFala,
   etapasDaLicao,
   faltaParaVerificar,
   exerciciosDaLicao,
@@ -18,6 +19,7 @@ import {
   sintetizarBatida,
   type AutoAvaliacao,
   type Avaliacao,
+  type ConferenciaDaFala,
   type EtapaAula,
   type ExercicioPublico,
   type Fala,
@@ -688,10 +690,103 @@ function useTocando(fala: Fala) {
   return [tocando, tocar, semVoz] as const;
 }
 
-function BotoesOuvir({ fala }: { fala: Fala }) {
+/** Reconhecimento de voz do navegador (Chrome, Edge, Safari): ouve a pessoa sem precisar da IA nem de rede própria. */
+type Reconhecimento = {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  continuous: boolean;
+  onresult: ((evento: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: ((evento: { error: string }) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+};
+function classeDoReconhecimento(): (new () => Reconhecimento) | null {
+  if (typeof window === 'undefined') return null;
+  const janela = window as unknown as { SpeechRecognition?: new () => Reconhecimento; webkitSpeechRecognition?: new () => Reconhecimento };
+  return janela.SpeechRecognition ?? janela.webkitSpeechRecognition ?? null;
+}
+function useReconhecimentoDisponivel() {
+  const [disponivel, setDisponivel] = useState(false);
+  useEffect(() => setDisponivel(classeDoReconhecimento() !== null), []);
+  return disponivel;
+}
+
+/** O resultado da conferência da fala, em texto: o que foi dito, quantas palavras e o que conferir. */
+function textoDaConferencia(conferencia: ConferenciaDaFala): string {
+  const palavras = conferencia.faltaram.map((palavra) => `“${palavra}”`).join(', ');
+  if (conferencia.nota === 'otima') return t.audio.falaOtima;
+  return conferencia.nota === 'quase' ? t.audio.falaQuase(palavras) : t.audio.falaTente(palavras);
+}
+
+/**
+ * Falar e conferir: a pessoa fala a frase, o reconhecimento de voz do navegador transcreve e a frase é conferida palavra
+ * por palavra (números por extenso, contrações, uma letra trocada). Das alternativas do reconhecimento, fica a mais perto.
+ */
+function BotaoFalar({ fala }: { fala: Fala }) {
+  const [ouvindo, setOuvindo] = useState(false);
+  const [resultado, setResultado] = useState<{ dito: string; conferencia: ConferenciaDaFala } | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const reconhecimento = useRef<Reconhecimento | null>(null);
+  useEffect(() => () => reconhecimento.current?.abort(), []);
+
+  function ouvir() {
+    const Classe = classeDoReconhecimento();
+    if (!Classe) return;
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    const novo = new Classe();
+    novo.lang = fala.idioma;
+    novo.interimResults = false;
+    novo.maxAlternatives = 3;
+    novo.continuous = false;
+    novo.onresult = (evento) => {
+      const alternativas = Array.from(evento.results[0] ?? [], ({ transcript }) => transcript.trim()).filter(Boolean);
+      const melhor = alternativas
+        .map((dito) => ({ dito, conferencia: conferirFala(fala.texto, dito, fala.idioma) }))
+        .sort((a, b) => b.conferencia.acertos - a.conferencia.acertos)[0];
+      if (melhor) setResultado(melhor);
+      else setErro(t.audio.naoOuviu);
+    };
+    novo.onerror = (evento) => {
+      setErro(evento.error === 'not-allowed' || evento.error === 'service-not-allowed' ? t.audio.semMicrofone : t.audio.naoOuviu);
+    };
+    novo.onend = () => setOuvindo(false);
+    reconhecimento.current = novo;
+    setErro(null);
+    setResultado(null);
+    setOuvindo(true);
+    try {
+      novo.start();
+    } catch {
+      setOuvindo(false);
+      setErro(t.audio.naoOuviu);
+    }
+  }
+
+  return (
+    <>
+      <button type="button" className="ouvir__botao ouvir__botao--falar" aria-label={t.audio.falarFrase(fala.texto)}
+        data-tocando={ouvindo || undefined} onClick={() => (ouvindo ? reconhecimento.current?.stop() : ouvir())}>
+        <span aria-hidden="true">{ouvindo ? t.audio.ouvindo : t.audio.falar}</span>
+      </button>
+      {(resultado || erro) && (
+        <span className="falar__resultado" role="status" data-nota={resultado?.conferencia.nota ?? 'erro'}>
+          {resultado
+            ? <>{t.audio.voceDisse(resultado.dito)} · <strong>{t.audio.acertosFala(resultado.conferencia.acertos, resultado.conferencia.total)}</strong>. {textoDaConferencia(resultado.conferencia)}</>
+            : erro}
+        </span>
+      )}
+    </>
+  );
+}
+
+function BotoesOuvir({ fala, falar = false }: { fala: Fala; falar?: boolean }) {
   const disponivel = useVozDisponivel();
+  const reconhece = useReconhecimentoDisponivel();
   const [tocando, tocar, semVoz] = useTocando(fala);
-  if (!disponivel) return null;
+  if (!disponivel && !(falar && reconhece)) return null;
   return (
     <span className="ouvir">
       <button type="button" className="ouvir__botao" aria-label={t.audio.ouvirFrase(fala.texto)} data-tocando={tocando === 'normal' || undefined}
@@ -703,6 +798,7 @@ function BotoesOuvir({ fala }: { fala: Fala }) {
         <span aria-hidden="true">{tocando === 'devagar' ? t.audio.tocando : t.audio.devagar}</span>
       </button>
       {semVoz && <span className="ouvir__aviso" role="status">{t.audio.semVozFrase}</span>}
+      {falar && reconhece && <BotaoFalar fala={fala} />}
     </span>
   );
 }
@@ -719,7 +815,7 @@ function Falas({ falas }: { falas: Fala[] }) {
               <p className="falas__texto" lang={fala.idioma}>{fala.texto}</p>
               {fala.traducao && <p className="falas__traducao">{fala.traducao}</p>}
             </div>
-            <BotoesOuvir fala={fala} />
+            <BotoesOuvir fala={fala} falar />
           </li>
         ))}
       </ul>

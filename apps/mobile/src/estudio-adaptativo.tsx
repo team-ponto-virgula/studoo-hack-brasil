@@ -50,7 +50,7 @@ function H({ children }: { children: ReactNode }) {
     </Text>
   );
 }
-async function arquivo(uri: string, nome: string, tipo: string) {
+export async function arquivo(uri: string, nome: string, tipo: string) {
   if (Platform.OS === 'web') {
     const b = await (await fetch(uri)).blob();
     if (b.size > LIMITES_ESTUDIO.arquivoBytes)

@@ -1,24 +1,29 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AccessibilityInfo, Image, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import * as Speech from 'expo-speech';
-import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { File, Paths } from 'expo-file-system';
 import {
   AUTOAVALIACOES,
+  ErroStudoo,
   codificarResposta,
+  conferirFala,
   linhasDePassos,
   partesDaLacuna,
   semAspas,
   sintetizarAcorde,
   sintetizarBatida,
+  type ArquivoEstudo,
   type AutoAvaliacao,
   type Avaliacao,
+  type ConferenciaDaFala,
   type Fala,
   type Opcao,
   type Pratica,
   type Recurso,
   type TipoTrecho,
 } from '@studoo/contratos';
+import { arquivo } from './estudio-adaptativo';
 import { Icone } from './icone';
 import { Botao, estilos } from './interface';
 import { mensagens } from './mensagens';
@@ -145,6 +150,151 @@ export function Escuta({ fala }: { fala: Fala }) {
 }
 
 /** Ouça e repita: cada frase com a tradução e os botões de ouvir. */
+/** Quem transcreve a fala gravada (a rota de voz do servidor), dado pela lição; sem ela, o "Falar" não aparece. */
+export const TranscritorContexto = createContext<((entrada: ArquivoEstudo) => Promise<{ texto: string }>) | null>(null);
+
+function textoDaConferencia(conferencia: ConferenciaDaFala): string {
+  const palavras = conferencia.faltaram.map((palavra) => `“${palavra}”`).join(', ');
+  if (conferencia.nota === 'otima') return t.audio.falaOtima;
+  return conferencia.nota === 'quase' ? t.audio.falaQuase(palavras) : t.audio.falaTente(palavras);
+}
+
+type Conferido = { dito: string; conferencia: ConferenciaDaFala } | null;
+
+function ResultadoDaFala({ resultado, erro }: { resultado: Conferido; erro: string | null }) {
+  if (!resultado && !erro) return null;
+  const nota = resultado?.conferencia.nota ?? 'erro';
+  return (
+    <Text accessibilityLiveRegion="polite" style={[formatos.falaResultado, nota === 'otima' ? formatos.falaOtima : nota === 'quase' ? formatos.falaQuase : formatos.falaTente]}>
+      {resultado
+        ? `${t.audio.voceDisse(resultado.dito)} · ${t.audio.acertosFala(resultado.conferencia.acertos, resultado.conferencia.total)}. ${textoDaConferencia(resultado.conferencia)}`
+        : erro}
+    </Text>
+  );
+}
+
+type Reconhecimento = {
+  lang: string; interimResults: boolean; maxAlternatives: number; continuous: boolean;
+  onresult: ((evento: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null;
+  onerror: ((evento: { error: string }) => void) | null; onend: (() => void) | null;
+  start: () => void; stop: () => void; abort: () => void;
+};
+const classeDoReconhecimento = () => {
+  const janela = globalThis as unknown as { SpeechRecognition?: new () => Reconhecimento; webkitSpeechRecognition?: new () => Reconhecimento };
+  return janela.SpeechRecognition ?? janela.webkitSpeechRecognition ?? null;
+};
+
+/** Na prévia no navegador: o reconhecimento de voz do navegador, como na web. */
+function FalarNoNavegador({ fala }: { fala: Fala }) {
+  const [ouvindo, setOuvindo] = useState(false);
+  const [resultado, setResultado] = useState<Conferido>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const reconhecimento = useRef<Reconhecimento | null>(null);
+  useEffect(() => () => reconhecimento.current?.abort(), []);
+  const Classe = classeDoReconhecimento();
+  if (!Classe) return null;
+  function ouvir() {
+    if (!Classe) return;
+    const novo = new Classe();
+    novo.lang = fala.idioma;
+    novo.interimResults = false;
+    novo.maxAlternatives = 3;
+    novo.continuous = false;
+    novo.onresult = (evento) => {
+      const melhor = Array.from(evento.results[0] ?? [], ({ transcript }) => transcript.trim()).filter(Boolean)
+        .map((dito) => ({ dito, conferencia: conferirFala(fala.texto, dito, fala.idioma) }))
+        .sort((a, b) => b.conferencia.acertos - a.conferencia.acertos)[0];
+      if (melhor) setResultado(melhor);
+      else setErro(t.audio.naoOuviu);
+    };
+    novo.onerror = (evento) => setErro(evento.error === 'not-allowed' ? t.audio.semMicrofone : t.audio.naoOuviu);
+    novo.onend = () => setOuvindo(false);
+    reconhecimento.current = novo;
+    setErro(null);
+    setResultado(null);
+    setOuvindo(true);
+    try {
+      novo.start();
+    } catch {
+      setOuvindo(false);
+      setErro(t.audio.naoOuviu);
+    }
+  }
+  return (
+    <>
+      <Chip rotulo={ouvindo ? t.audio.ouvindo : t.audio.falar} nomeAcessivel={t.audio.falarFrase(fala.texto)}
+        acao={() => (ouvindo ? reconhecimento.current?.stop() : ouvir())} />
+      <ResultadoDaFala resultado={resultado} erro={erro} />
+    </>
+  );
+}
+
+/** No aparelho: grava (até 10 s), a rota de voz transcreve e a frase é conferida. Sem a IA ligada, avisa. */
+function FalarNoAparelho({ fala, transcrever }: { fala: Fala; transcrever: (entrada: ArquivoEstudo) => Promise<{ texto: string }> }) {
+  const gravador = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  const [estado, setEstado] = useState<'parado' | 'ouvindo' | 'conferindo'>('parado');
+  const [resultado, setResultado] = useState<Conferido>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const limite = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => {
+    if (limite.current) clearTimeout(limite.current);
+    void gravador.stop().catch(() => undefined);
+  }, [gravador]);
+
+  async function comecar() {
+    setErro(null);
+    setResultado(null);
+    const permissao = await requestRecordingPermissionsAsync().catch(() => ({ granted: false }));
+    if (!permissao.granted) {
+      setErro(t.audio.semMicrofone);
+      return;
+    }
+    try {
+      pararVoz();
+      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+      await gravador.prepareToRecordAsync();
+      gravador.record();
+      setEstado('ouvindo');
+      limite.current = setTimeout(() => void terminar(), 10_000);
+    } catch {
+      setErro(t.audio.semMicrofone);
+      await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+    }
+  }
+
+  async function terminar() {
+    if (limite.current) clearTimeout(limite.current);
+    setEstado('conferindo');
+    try {
+      await gravador.stop();
+      await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+      if (!gravador.uri) throw new Error();
+      const { texto } = await transcrever(await arquivo(gravador.uri, 'fala.m4a', 'audio/mp4'));
+      setResultado({ dito: texto, conferencia: conferirFala(fala.texto, texto, fala.idioma) });
+    } catch (falha) {
+      setErro(falha instanceof ErroStudoo && falha.codigo === 'voz_indisponivel' ? t.audio.falaPrecisaIa : t.audio.naoOuviu);
+    } finally {
+      setEstado('parado');
+    }
+  }
+
+  return (
+    <>
+      <Chip rotulo={estado === 'ouvindo' ? t.audio.ouvindo : estado === 'conferindo' ? t.avaliando : t.audio.falar}
+        nomeAcessivel={t.audio.falarFrase(fala.texto)}
+        acao={() => void (estado === 'ouvindo' ? terminar() : estado === 'parado' ? comecar() : undefined)} />
+      <ResultadoDaFala resultado={resultado} erro={erro} />
+    </>
+  );
+}
+
+/** Falar e conferir a pronúncia: no navegador, pelo reconhecimento de voz; no aparelho, pela rota de voz (com a IA). */
+function BotaoFalar({ fala }: { fala: Fala }) {
+  const transcrever = useContext(TranscritorContexto);
+  if (Platform.OS === 'web') return <FalarNoNavegador fala={fala} />;
+  return transcrever ? <FalarNoAparelho fala={fala} transcrever={transcrever} /> : null;
+}
+
 export function Falas({ falas }: { falas: Fala[] }) {
   return (
     <View style={formatos.secao}>
@@ -154,6 +304,7 @@ export function Falas({ falas }: { falas: Fala[] }) {
           <Text selectable style={formatos.falaTexto}>{fala.texto}</Text>
           {fala.traducao && <Text style={estilos.legenda}>{fala.traducao}</Text>}
           <BotoesOuvir fala={fala} />
+          <View style={formatos.ouvir}><BotaoFalar fala={fala} /></View>
         </View>
       ))}
     </View>
@@ -742,6 +893,11 @@ const formatos = StyleSheet.create({
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   acordeDesenho: { width: 176, height: 182 },
+  falaResultado: { flexBasis: '100%', marginTop: 4, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, overflow: 'hidden',
+    fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
+  falaOtima: { backgroundColor: '#EEFAF3', color: cores.sucesso },
+  falaQuase: { backgroundColor: '#FFF6D9', color: '#7A4A00' },
+  falaTente: { backgroundColor: '#FFF1E0', color: cores.alerta },
   comparacao: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%' },
   lado: { alignItems: 'center', gap: 2 },
   ladoNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 17 },

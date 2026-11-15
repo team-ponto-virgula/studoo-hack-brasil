@@ -311,10 +311,15 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
     assert.ok(acorde.pratica.minutos > 0);
     const { comprovante } = await (await enviar(`/licoes/${segunda.id}/avaliar`, { resposta: acorde.exercicio.opcoes[0].id })).json();
     assert.equal((await enviar(`/licoes/${segunda.id}/concluir`, { comprovante, pratica: "talvez" })).status, 400);
-    assert.equal((await enviar(`/licoes/${segunda.id}/concluir`, { comprovante, pratica: "quase" })).status, 200);
+    const resumoInvalido = { segundos: 30, acertosDePrimeira: 3, exercicios: 2 };
+    assert.equal((await enviar(`/licoes/${segunda.id}/concluir`, { comprovante, resumo: resumoInvalido })).status, 400, "acertos acima dos exercícios");
+    const concluida = await enviar(`/licoes/${segunda.id}/concluir`, { comprovante, pratica: "quase", resumo: { segundos: 125, acertosDePrimeira: 1, exercicios: 2 } });
+    assert.equal(concluida.status, 200);
+    // O plano soma o resumo das lições concluídas (aqui, só esta trouxe o resumo).
+    assert.deepEqual((await concluida.json()).plano.estatisticas, { segundos: 125, acertosDePrimeira: 1, exercicios: 2 });
     const { rows } = await banco.query(
-      'SELECT "pratica" FROM "RegistroEstudo" WHERE "usuarioId" = $1 AND "licaoId" = $2', [contas[0].id, segunda.id]);
-    assert.equal(rows[0].pratica, "quase");
+      'SELECT "pratica", "segundos", "acertosDePrimeira", "exercicios" FROM "RegistroEstudo" WHERE "usuarioId" = $1 AND "licaoId" = $2', [contas[0].id, segunda.id]);
+    assert.deepEqual(rows[0], { pratica: "quase", segundos: 125, acertosDePrimeira: 1, exercicios: 2 });
   });
 
   await t.test("a rota de proposta de uma vez também aceita objetivo livre", async () => {

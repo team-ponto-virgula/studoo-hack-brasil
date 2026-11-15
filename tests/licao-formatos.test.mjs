@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   acertouParte,
   codificarResposta,
+  conferirFala,
   etapasDaLicao,
   faltaParaVerificar,
   frequenciasDoAcorde,
@@ -25,6 +26,8 @@ import {
   normalizarResposta,
   respostaCerta,
   respostaErrada,
+  termosDaLicao,
+  termosPresentes,
 } from "../src/dominio/aprendizado/plano.ts";
 import { exercicioDaResposta, reforcoDoExercicio } from "../src/dominio/aprendizado/reforco.ts";
 import { iniciarGeracao } from "../src/servidor/aprendizado/geracao.ts";
@@ -446,4 +449,31 @@ test("recursos: a troca de acorde desenha os dois, e a imagem diz de onde veio",
   assert.equal(violao[0].recurso.tipo, "imagem");
   assert.equal(violao[0].recurso.fonte, "Ilustração");
   assert.equal(violao[2].recurso.anterior.nome, "Am", "a troca mostra o Lá menor ao lado do Dó");
+});
+
+test("conferência da fala: números por extenso, contrações e o que faltou, na ordem da frase", () => {
+  assert.deepEqual(conferirFala("It's fifteen dollars.", "it is 15 dollars", "en-US"), { acertos: 4, total: 4, faltaram: [], nota: "otima" });
+  assert.deepEqual(conferirFala("It's fifteen dollars.", "its fifty dollars", "en-US"), { acertos: 3, total: 4, faltaram: ["fifteen"], nota: "quase" });
+  assert.equal(conferirFala("Nice to meet you!", "nice to meat you", "en-US").nota, "quase");
+  assert.deepEqual(conferirFala("Excuse me, where is the train station?", "excuse me where train", "en-US").faltaram, ["is", "the", "station"]);
+  assert.equal(conferirFala("Fica ao lado do hotel.", "fica ao lado do hotel", "pt-BR").nota, "otima");
+  assert.equal(conferirFala("Hello! I'm Ana.", "", "en-US").nota, "tente");
+});
+
+test("“Ensine ao Stu” sem IA: as ideias-chave vêm dos exercícios e o retorno diz o que veio e o que faltou", () => {
+  const licoes = (chave) => DEMOS.find((demo) => demo.chave === chave).plano.fluxos.flatMap(({ licoes }) => licoes);
+  const ingles = termosDaLicao(licoes("ingles")[0]);
+  assert.ok(ingles.includes("Hello") && ingles.includes("I'm from Brazil"));
+  const fala = "pra cumprimentar fala Hello, pra dizer de onde vc é fala I am from Brazil e quando conhece alguem fala Nice to meet you";
+  assert.deepEqual(termosPresentes(fala, ingles), ["Hello", "I'm from Brazil", "Nice to meet you"], "“I am” vale como “I'm”");
+  const violao = termosDaLicao(licoes("violao")[0]);
+  assert.deepEqual(termosPresentes("a tarraxa afina e a boca solta o som", violao), ["Tarraxa", "Boca"]);
+});
+
+test("reforço sem IA: o motivo cita o que a pessoa fez", () => {
+  const licao = DEMOS.find((demo) => demo.chave === "violao").plano.fluxos[0].licoes[0];
+  const direita = licao.exercicio.direita.map(({ id }) => id);
+  const errada = licao.exercicio.esquerda.map(({ id }, posicao) => `${id}=${direita[(posicao + 1) % direita.length]}`).join(",");
+  assert.match(reforcoDoExercicio(licao.exercicio, errada, licao.exemplo).motivo, /^Você ligou “Tarraxa” a “/);
+  assert.match(reforcoDoExercicio(licao.exercicio, "tarraxa=inexistente", licao.exemplo).motivo, /caminho mais curto/, "id que não existe não quebra");
 });
