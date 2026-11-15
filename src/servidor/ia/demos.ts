@@ -1,3 +1,4 @@
+import { ILUSTRACAO_VIOLAO } from "./ilustracao-violao";
 import type { Opcao } from "@studoo/contratos";
 import type { PlanoInterno } from "@/dominio/aprendizado/plano";
 
@@ -37,6 +38,7 @@ const violao: Demo = {
             objetivo: "Reconhecer as partes do violão que você usa para afinar e tocar.",
             conceito: "O violão tem três partes principais: a cabeça, onde ficam as tarraxas que afinam as cordas; o braço, dividido em casas pelos trastes; e o corpo, com a boca, por onde o som sai. As cordas são contadas de baixo para cima: a 1ª é a mais fina e a 6ª, a mais grossa.",
             exemplo: "Para afinar a 5ª corda, você gira a tarraxa dela, na cabeça. Para tocar uma nota mais aguda nessa mesma corda, aperta a corda numa casa do braço, mais perto do corpo.",
+            recurso: { tipo: "imagem", src: ILUSTRACAO_VIOLAO, descricao: "1 tarraxa · 2 casa (entre dois trastes) · 3 boca · 4 6ª corda", fonte: "Ilustração" },
             origem: origemViolao,
             exercicio: {
               tipo: "associar",
@@ -110,7 +112,7 @@ const violao: Demo = {
               "Só o anelar viaja: da 2ª casa da 3ª corda para a 3ª casa da 5ª corda.",
               "Para voltar ao Lá menor, o anelar faz o caminho de volta.",
             ],
-            recurso: { tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0] },
+            recurso: { tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0], anterior: { nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0] } },
             origem: origemViolao,
             exercicio: {
               tipo: "ordenar",
@@ -175,7 +177,7 @@ const violao: Demo = {
             conceito: "Agora você junta tudo: o Lá menor, o Dó e a batida. Uma sequência comum é Am, Am, C, C: cada nome é um compasso de 4 tempos, então são dois compassos (8 tempos) de cada acorde, sem parar o braço.",
             exemploTipo: "demonstracao",
             exemplo: "Conte de 1 a 4 duas vezes no Lá menor e mais duas no Dó, repetindo. Na troca, o anelar sai no último “e”, para o Dó soar já no tempo 1. Ouça a batida no Dó.",
-            recurso: { tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0], batida: true },
+            recurso: { tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], dedos: [0, 3, 2, 0, 1, 0], batida: true, anterior: { nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0] } },
             origem: origemViolao,
             exercicio: {
               tipo: "multipla_escolha",
@@ -284,6 +286,8 @@ const ingles: Demo = {
               falaEn("Excuse me, where is the train station?", "Com licença, onde fica a estação de trem?"),
               falaEn("It's on the next corner.", "Fica na próxima esquina."),
               falaEn("It's next to the hotel.", "Fica ao lado do hotel."),
+              falaEn("It's in front of the bank.", "Fica em frente ao banco."),
+              falaEn("It's far from here.", "Fica longe daqui."),
               falaEn("Thank you!", "Obrigado!"),
             ],
             origem: origemIngles,
@@ -318,7 +322,7 @@ const ingles: Demo = {
           {
             titulo: "No hotel: fazer o check-in",
             objetivo: "Fazer o check-in com frases simples.",
-            conceito: "No check-in, a conversa segue uma ordem: você cumprimenta, diz que tem uma reserva, mostra o documento e recebe a chave. Saber a ordem ajuda a prever o que a pessoa vai dizer depois.",
+            conceito: "No check-in, a conversa segue uma ordem: você cumprimenta (“Good evening!”), diz que tem uma reserva (“I have a reservation.”), mostra o documento (“Here's my passport.”) e recebe a chave. Saber a ordem ajuda a prever o que a pessoa vai dizer depois, como “What's your name?” (qual é o seu nome?).",
             exemplo: "“Good evening! I have a reservation.” — “What's your name?” — “Ana Souza. Here's my passport.” — “Here's your key. Your room is 204.”",
             falas: [
               falaEn("Good evening! I have a reservation.", "Boa noite! Eu tenho uma reserva."),
@@ -340,6 +344,17 @@ const ingles: Demo = {
               feedbackCorreto: "Perfeito: cumprimento, reserva, documento e o agradecimento pela chave.",
               feedbackIncorreto: "Pense na conversa real: primeiro você cumprimenta, depois fala da reserva, mostra o passaporte e só então recebe a chave.",
             },
+            extras: [
+              {
+                tipo: "multipla_escolha",
+                enunciado: "Ouça o que a recepcionista pergunta e escolha a melhor resposta.",
+                fala: { texto: "What's your name?", idioma: "en-US" },
+                opcoes: [op("a", "Ana Souza. Here's my passport."), op("b", "It's fifteen dollars."), op("c", "It's next to the hotel.")],
+                gabarito: ["a"],
+                feedbackCorreto: "Isso: ela perguntou o seu nome (“What's your name?”), e você já mostra o passaporte.",
+                feedbackIncorreto: "Ouça de novo: “name” é nome. Qual resposta diz quem você é?",
+              },
+            ],
           },
           {
             titulo: "Números e preços",

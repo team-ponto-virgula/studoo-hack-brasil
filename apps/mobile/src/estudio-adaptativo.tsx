@@ -302,6 +302,8 @@ export function ApoioDaLicao({
   pedidoPonte?: number;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
+  // Como na web: o retorno do "Ensine ao Stu" é o desta visita.
+  const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const revisaoApoio = useRef(0);
   function atualizarApoio(valor: Parameters<typeof setApoio>[0]) {
     revisaoApoio.current += 1;
@@ -384,9 +386,10 @@ export function ApoioDaLicao({
   }
   async function gravar() {
     await executar(async () => {
-      const p = await requestRecordingPermissionsAsync();
+      const p = await requestRecordingPermissionsAsync().catch(() => ({ granted: false }));
       if (!p.granted) {
-        setErro(m.vozErro);
+        // O aviso fica junto do botão Gravar, onde a pessoa está olhando.
+        setAviso(m.vozErro);
         return;
       }
       const podeGravar = () =>
@@ -404,6 +407,8 @@ export function ApoioDaLicao({
         ativo.current = true;
         setSegundos(0);
         setGravando(true);
+      } catch {
+        setAviso(m.vozErro);
       } finally {
         if (!ativo.current) {
           await gravador.stop().catch(() => {});
@@ -438,15 +443,14 @@ export function ApoioDaLicao({
     });
   }
   const ponte = apoio?.ponte;
-  // "Ver outro exemplo" no painel de retorno: um toque já pede o reforço.
+  // "Ver outro exemplo" no painel de retorno: um toque já pede o reforço, se ainda não existe (durante uma gravação, espera
+  // ela acabar). Como na web.
   useEffect(() => {
-    if (pedidoPonte > 0 && apoio && !apoio.ponte && !ocupado) {
-      void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
-    }
-    // Só o pedido dispara; o resto é lido no momento.
+    if (pedidoPonte === 0 || gravando || apoio?.ponte) return;
+    void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
+    // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pedidoPonte]);
-  const ensino = apoio?.ensino;
+  }, [pedidoPonte, gravando]);
   return (
     <View>
       {!!licao.referencias?.length && (
@@ -469,21 +473,14 @@ export function ApoioDaLicao({
         </Card>
       )}
       {/* Como na web: o reforço é do exercício errado agora (ou de um reforço começado e não terminado). */}
-      {avaliacao?.correta === false && (
+      {/* O cartão aparece quando a pessoa pede "Ver outro exemplo" no painel (ou se já há um reforço): sem botão repetido. */}
+      {avaliacao?.correta === false && (pedidoPonte > 0 || !!ponte) && (
         <Card>
           <PonteDesenho />
           <H>{ponte?.concluida ? m.pontePronta : m.ponte}</H>
           <T>{ponte?.motivo ?? m.ponteDica}</T>
           {!ponte ? (
-            <Botao
-              rotulo={m.construir}
-              desativado={ocupado || gravando}
-              acao={() =>
-                void executar(async () =>
-                  atualizarApoio(await cliente.criarPonte(licao.id)),
-                )
-              }
-            />
+            <Text accessibilityLiveRegion="polite" style={estilos.texto}>{erro || m.pensando}</Text>
           ) : (
             <>
               {ponte.simulado && <T>{m.retornoAutomatico}</T>}
@@ -533,6 +530,7 @@ export function ApoioDaLicao({
         {ensinar && (
           <>
             <T>{m.ensinoDica}</T>
+            <Text style={estilos.legenda}>{m.ensinoIdeia(licao.objetivo)}</Text>
             <Campo
               rotulo={m.explicacao}
               multiline
@@ -566,6 +564,7 @@ export function ApoioDaLicao({
                     ...(a ?? { erros: 0, ponte: null }),
                     ensino: r,
                   }));
+                  setEnsino(r);
                 })
               }
             />

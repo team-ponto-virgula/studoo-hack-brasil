@@ -256,38 +256,34 @@ export function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
   }
   return (
     <View style={formatos.secao}>
-      <Image source={{ uri: recurso.src }} accessibilityLabel={`${t.recursos.doMaterial}: ${recurso.descricao}`} resizeMode="contain" style={formatos.imagem} />
-      <Text style={estilos.legenda}><Text style={{ fontWeight: '800' }}>{t.recursos.doMaterial}</Text> · {recurso.descricao}</Text>
+      <Image source={{ uri: recurso.src }} accessibilityLabel={`${recurso.fonte ?? t.recursos.doMaterial}: ${recurso.descricao}`} resizeMode="contain" style={formatos.imagem} />
+      <Text style={estilos.legenda}><Text style={{ fontWeight: '800' }}>{recurso.fonte ?? t.recursos.doMaterial}</Text> · {recurso.descricao}</Text>
     </View>
   );
 }
 
 /** Diagrama do acorde com Views (o app não usa SVG) e o botão de ouvir o acorde. */
-function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde' }> }) {
-  const [tocando, setTocando] = useState<'acorde' | 'batida' | null>(null);
-  const [semSom, setSemSom] = useState(false);
-  const tocadas = recurso.casas.filter((casa) => casa > 0);
+/**
+ * O braço de um acorde (cordas, trastes, X e O, dedos numerados). `escala` encolhe o desenho por inteiro, para dois
+ * acordes caberem lado a lado.
+ */
+function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas: number[]; dedos?: number[]; escala?: number }) {
+  const tocadas = casas.filter((casa) => casa > 0);
   const base = Math.max(0, ...tocadas) > 4 ? Math.min(...tocadas) : 1;
   const x = (corda: number) => 22 + corda * 26;
   const y = (casa: number) => 40 + (casa - base + 0.5) * 30;
-  const descricao = recurso.casas
-    .map((casa, corda) => t.recursos.corda(6 - corda, casa, t.recursos.dedos[recurso.dedos?.[corda] ?? 0] ?? ''))
+  const descricao = casas
+    .map((casa, corda) => t.recursos.corda(6 - corda, casa, t.recursos.dedos[dedos?.[corda] ?? 0] ?? ''))
     .join('; ');
-
-  function tocar(som: 'acorde' | 'batida') {
-    setTocando(som);
-    setSemSom(false);
-    tocarSom(som, recurso.casas)
-      .catch(() => {
-        setSemSom(true);
-        AccessibilityInfo.announceForAccessibility(t.recursos.semSom);
-      })
-      .finally(() => setTimeout(() => setTocando(null), som === 'acorde' ? 2600 : 8000));
-  }
-
+  // As medidas do desenho (as de formatos.acordeDesenho), em números: o StyleSheet não garante ler de volta.
+  const largura = 176;
+  const altura = 182;
   return (
-    <View style={formatos.acorde}>
-      <View style={formatos.acordeDesenho} accessible accessibilityRole="image" accessibilityLabel={`${t.recursos.acorde(recurso.nome)}: ${descricao}.`}>
+    <View style={{ width: largura * escala, height: altura * escala }} accessible accessibilityRole="image"
+      accessibilityLabel={`${t.recursos.acorde(nome)}: ${descricao}.`}>
+      <View style={[formatos.acordeDesenho, escala !== 1 && {
+        transform: [{ translateX: (-largura * (1 - escala)) / 2 }, { translateY: (-altura * (1 - escala)) / 2 }, { scale: escala }],
+      }]}>
         {base === 1
           ? <View style={[formatos.pestana, { left: x(0) - 3, width: x(5) - x(0) + 6 }]} />
           : <Text style={[formatos.acordeBase, { top: y(base) - 9 }]}>{base}</Text>}
@@ -295,19 +291,61 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
         {[0, 1, 2, 3, 4, 5].map((corda) => (
           <View key={corda} style={[formatos.cordaVertical, { left: x(corda) - (3.4 - corda * 0.4) / 2, width: 3.4 - corda * 0.4 }]} />
         ))}
-        {recurso.casas.map((casa, corda) => (casa <= 0 ? (
+        {casas.map((casa, corda) => (casa <= 0 ? (
           <Text key={corda} style={[formatos.marcaCorda, { left: x(corda) - 8, color: casa < 0 ? cores.erro : cores.sucesso }]}>{casa < 0 ? 'X' : 'O'}</Text>
         ) : (
           <View key={corda} style={[formatos.dedo, { left: x(corda) - 11, top: y(casa) - 11 }]}>
-            {Boolean(recurso.dedos?.[corda]) && <Text style={formatos.dedoTexto}>{recurso.dedos?.[corda]}</Text>}
+            {Boolean(dedos?.[corda]) && <Text style={formatos.dedoTexto}>{dedos?.[corda]}</Text>}
           </View>
         )))}
       </View>
+    </View>
+  );
+}
+
+/** Diagrama do acorde com o som; com `anterior`, os dois acordes da troca lado a lado (Am → C), como na web. */
+function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde' }> }) {
+  type Som = 'acorde' | 'batida' | 'anterior';
+  const [tocando, setTocando] = useState<Som | null>(null);
+  const [semSom, setSemSom] = useState(false);
+  const { anterior } = recurso;
+
+  function tocar(som: Som) {
+    setTocando(som);
+    setSemSom(false);
+    const casas = som === 'anterior' && anterior ? anterior.casas : recurso.casas;
+    tocarSom(som === 'batida' ? 'batida' : 'acorde', casas)
+      .catch(() => {
+        setSemSom(true);
+        AccessibilityInfo.announceForAccessibility(t.recursos.semSom);
+      })
+      .finally(() => setTimeout(() => setTocando(null), som === 'batida' ? 8000 : 2600));
+  }
+
+  return (
+    <View style={formatos.acorde}>
+      {anterior ? (
+        <View style={formatos.comparacao}>
+          <View style={formatos.lado}>
+            <BracoDoAcorde {...anterior} escala={0.72} />
+            <Text style={formatos.ladoNome}>{anterior.nome}</Text>
+          </View>
+          <Icone nome="seta" tamanho={20} cor={cores.textoSecundario} />
+          <View style={formatos.lado}>
+            <BracoDoAcorde nome={recurso.nome} casas={recurso.casas} dedos={recurso.dedos} escala={0.72} />
+            <Text style={formatos.ladoNome}>{recurso.nome}</Text>
+          </View>
+        </View>
+      ) : <BracoDoAcorde nome={recurso.nome} casas={recurso.casas} dedos={recurso.dedos} />}
       <View style={formatos.acordeLegenda}>
-        <Text style={formatos.acordeNome}>{t.recursos.acorde(recurso.nome)}</Text>
+        <Text style={formatos.acordeNome}>{anterior ? t.recursos.troca(anterior.nome, recurso.nome) : t.recursos.acorde(recurso.nome)}</Text>
         <Text style={estilos.legenda}>{t.recursos.legendaAcorde}</Text>
-        <Botao rotulo={tocando === 'acorde' ? t.recursos.tocando : t.recursos.ouvirAcorde} variante="secundario" compacto
-          desativado={tocando !== null} acao={() => tocar('acorde')} />
+        {anterior && (
+          <Botao rotulo={tocando === 'anterior' ? t.recursos.tocando : t.recursos.ouvirNome(anterior.nome)} variante="secundario" compacto
+            desativado={tocando !== null} acao={() => tocar('anterior')} />
+        )}
+        <Botao rotulo={tocando === 'acorde' ? t.recursos.tocando : anterior ? t.recursos.ouvirNome(recurso.nome) : t.recursos.ouvirAcorde}
+          variante="secundario" compacto desativado={tocando !== null} acao={() => tocar('acorde')} />
         {recurso.batida && (
           <Botao rotulo={tocando === 'batida' ? t.recursos.tocando : t.recursos.ouvirBatida} variante="secundario" compacto
             desativado={tocando !== null} acao={() => tocar('batida')} />
@@ -704,6 +742,9 @@ const formatos = StyleSheet.create({
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   acordeDesenho: { width: 176, height: 182 },
+  comparacao: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, width: '100%' },
+  lado: { alignItems: 'center', gap: 2 },
+  ladoNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 17 },
   pestana: { position: 'absolute', top: 36, height: 7, borderRadius: 3.5, backgroundColor: cores.texto },
   acordeBase: { position: 'absolute', left: 0, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13 },
   traste: { position: 'absolute', height: 2.5, backgroundColor: '#C9B48A' },

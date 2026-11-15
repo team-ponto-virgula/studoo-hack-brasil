@@ -310,7 +310,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           // O balão do nó atual traz o nome: precisa de mais espaço acima dele.
           if (seguinte?.estado === 'atual') depois += 80;
           // Divisão de parte logo antes da lição atual: a pílula e o balão "Começar" (com o nome) precisam caber entre os nós.
-          if (fimDoTrecho && seguinte?.estado === 'atual') depois += 56;
+          // Com o nome embaixo do nó, a pílula desce: o vão cresce na mesma medida.
+          if (fimDoTrecho && seguinte?.estado === 'atual') depois += 56 + 56;
           if (discreto) depois += 14;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
           if (discreto && seguinte?.estado === 'atual') depois += 38;
@@ -1264,7 +1265,8 @@ const caminhoEstilos = StyleSheet.create({
   // Ligação, marco e chegada
   ligacao: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   marcoArea: { alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, zIndex: 3 },
-  marcoNoAlto: { justifyContent: 'flex-start', paddingTop: 6 },
+  // No alto do vão, mas embaixo do nome da lição (até duas linhas), que agora aparece embaixo de cada nó.
+  marcoNoAlto: { justifyContent: 'flex-start', paddingTop: 62 },
   // Divisor de parte: uma pílula pequena sobre a borda entre as regiões, como na web (antes era um card largo).
   parte: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingLeft: 4, paddingRight: 14,
     borderRadius: 999, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.fundo, borderBottomColor: 'rgba(27, 42, 94, 0.1)',
