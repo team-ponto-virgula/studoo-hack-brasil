@@ -4,6 +4,8 @@ import {
   acertouParte,
   codificarResposta,
   conferirFala,
+  embaralharComSemente,
+  embaralharExercicio,
   respostaParaTentarDeNovo,
   etapasDaLicao,
   faltaParaVerificar,
@@ -487,7 +489,7 @@ test("resposta aberta: sem o critério essencial não passa, mesmo com os outros
   const semEducacao = avaliarResposta(exercicio, "I like one coffee and cheese bread please");
   assert.equal(semEducacao.correta, false);
   assert.deepEqual(semEducacao.criterios.map(({ atendido }) => atendido), [false, true, true]);
-  assert.match(semEducacao.feedback, /“I like” quer dizer “eu gosto”/);
+  assert.match(semEducacao.observacao, /“I like” quer dizer “eu gosto”/, "a armadilha da resposta vira o aviso");
   assert.equal(avaliarResposta(exercicio, "I would like a coffee and a cheese bread, please").correta, true);
 });
 
@@ -497,8 +499,10 @@ test("tentar de novo mantém o que estava certo", () => {
   const avaliacao = (certos) => ({ correta: false, feedback: "", comprovante: "", certos });
   assert.equal(respostaParaTentarDeNovo(associar, "a=a,b=c,c=b", avaliacao(["a"])), "a=a");
   const ordenar = { tipo: "ordenar", enunciado: "Ordene", itens };
-  assert.equal(respostaParaTentarDeNovo(ordenar, "a,c,b", avaliacao(["a"])), "a", "só o começo certo fica");
-  assert.equal(respostaParaTentarDeNovo(ordenar, "c,b,a", avaliacao(["b"])), "", "o meio certo sozinho não vira começo");
+  assert.equal(respostaParaTentarDeNovo(ordenar, "a,c,b", avaliacao(["a"])), "a,,", "o certo fica; as outras posições viram vaga");
+  assert.equal(respostaParaTentarDeNovo(ordenar, "c,b,a", avaliacao(["b"])), ",b,", "o do meio também fica no lugar");
+  assert.equal(respostaParaTentarDeNovo(ordenar, "c,a,b", avaliacao([])), "", "sem nada certo, recomeça");
+  assert.equal(respostaCompleta(ordenar, "a,,"), false, "com vaga, ainda não dá para verificar");
   const vf = { tipo: "verdadeiro_falso", enunciado: "VF", afirmacao: "X", justificativas: itens };
   assert.equal(respostaParaTentarDeNovo(vf, "falso:b", avaliacao(["valor"])), "falso:");
   assert.equal(respostaParaTentarDeNovo({ tipo: "aberta", enunciado: "E", minimo: 10 }, "meu texto", avaliacao([])), "meu texto");
@@ -583,7 +587,8 @@ test("trilhas prontas: cada lição tem o seu “outro jeito de entender”, dif
   // O violão ensina as mãos e a afinação logo na primeira lição.
   const violao = DEMOS.find(({ chave }) => chave === "violao").plano.fluxos[0].licoes[0];
   assert.match(violao.conceito, /mão esquerda/);
-  assert.match(violao.pratica.passos.join(" "), /afinador/);
+  assert.match(violao.pratica.passos.join(" "), /Ouvir o Mi/, "a afinação usa o Mi que o próprio app toca");
+  assert.match(violao.pratica.dica, /afinador/, "o app afinador fica como opção");
 });
 
 test("vale rever: a maior parte errada antes do acerto ou a prática em “ainda não”; um erro só não marca", () => {
@@ -599,4 +604,41 @@ test("vale rever: a maior parte errada antes do acerto ou a prática em “ainda
   assert.match(textoParaRever({ acertos: 2, acertosDePrimeira: 0, exercicios: 2, pratica: "ainda_nao" }), /e a prática ainda não saiu/);
   assert.match(textoParaRever({ acertos: 2, acertosDePrimeira: 2, exercicios: 2, pratica: "ainda_nao" }), /A prática ainda não saiu\?/);
   assert.match(textoParaRever({ acertos: 1, acertosDePrimeira: 1, exercicios: 2 }), /seguiu sem acertar 1 exercício/);
+});
+
+test("cada visita embaralha as opções do mesmo jeito para a mesma semente, sem perder nenhuma", () => {
+  const lista = ["a", "b", "c", "d", "e"];
+  assert.deepEqual(embaralharComSemente(lista, 42), embaralharComSemente(lista, 42));
+  assert.deepEqual([...embaralharComSemente(lista, 7)].sort(), lista);
+  const sementes = Array.from({ length: 20 }, (_, semente) => embaralharComSemente(lista, semente)[0]);
+  assert.ok(new Set(sementes).size > 1, "a primeira posição muda entre as visitas");
+  const escolha = { tipo: "multipla_escolha", enunciado: "E", opcoes: lista.map((id) => ({ id, texto: id.toUpperCase() })) };
+  const embaralhado = embaralharExercicio(escolha, 3);
+  assert.deepEqual(embaralhado.opcoes.map(({ id }) => id).sort(), lista);
+  assert.equal(escolha.opcoes[0].id, "a", "o exercício original não muda");
+});
+
+test("ordenar: o retorno aponta a primeira posição errada da resposta da pessoa", () => {
+  const checkin = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes)
+    .find(({ titulo }) => titulo === "No hotel: fazer o check-in").exercicio;
+  assert.match(avaliarResposta(checkin, "oi,passaporte,reserva,chave").observacao, /2ª posição: o que vem logo depois de “Good evening!”/);
+  assert.match(avaliarResposta(checkin, "chave,oi,reserva,passaporte").observacao, /Confira o começo/);
+  assert.equal(avaliarResposta(checkin, "oi,reserva,passaporte,chave").observacao, undefined);
+});
+
+test("resposta aberta: a armadilha da resposta (“I want”) vira um aviso específico", () => {
+  const pedido = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes)
+    .find(({ titulo }) => titulo === "Pedir comida no restaurante").exercicio;
+  assert.match(avaliarResposta(pedido, "I want a coffee and a cheese bread please").observacao, /“I want” \(eu quero\) soa brusco/);
+  assert.match(avaliarResposta(pedido, "Give me a coffee please, thank you").observacao, /“Give me”/);
+  assert.equal(avaliarResposta(pedido, "I'd like a coffee and a cheese bread, please").observacao, undefined, "“I'd like” não cai no “I like”");
+});
+
+test("inglês tem pronúncia escrita nas frases e o violão toca o Mi para afinar", () => {
+  const ingles = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes);
+  for (const licao of ingles) for (const fala of licao.falas ?? []) assert.ok(fala.pronuncia, `“${fala.texto}” tem pronúncia`);
+  const violao = DEMOS.find(({ chave }) => chave === "violao").plano.fluxos[0].licoes[0];
+  assert.deepEqual(violao.pratica.som.casas, [0, -1, -1, -1, -1, -1], "só a 6ª corda, solta");
+  assert.ok(conteudoValido({ ...violao, pratica: { ...violao.pratica, som: { rotulo: "x", casas: [-1, -1, -1, -1, -1, -1] } } }) === false,
+    "um som sem nenhuma corda não vale");
 });

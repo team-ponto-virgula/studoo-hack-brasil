@@ -52,7 +52,7 @@ const violao: Demo = {
               ],
               gabarito: ["tarraxa=afina", "casa=nota", "boca=som", "sexta=grave"],
               feedbackCorreto: "Isso! A tarraxa afina, a casa muda a nota, a boca projeta o som e a 6ª corda é a mais grave.",
-              feedbackIncorreto: "Volte à ilustração: cada número mostra onde a parte fica. Comece pelo que você gira para afinar e pela abertura do corpo; os outros pares saem por exclusão.",
+              feedbackIncorreto: "Abra “Ver a ilustração”, embaixo do exercício: cada número mostra onde a parte fica. Comece pelo que você gira para afinar e pela abertura do corpo; os outros pares saem por exclusão.",
             },
             extras: [
               {
@@ -62,18 +62,19 @@ const violao: Demo = {
                 trechoTipo: "frase",
                 gabarito: ["tarraxa"],
                 feedbackCorreto: "Exato: a tarraxa estica ou afrouxa a corda, e isso muda a afinação.",
-                feedbackIncorreto: "Releia o conceito: é a peça da cabeça do violão que você gira para esticar ou afrouxar a corda.",
+                feedbackIncorreto: "Abra “Rever a explicação”, embaixo do exercício: é a peça da cabeça do violão que você gira para esticar ou afrouxar a corda.",
               },
             ],
             pratica: {
-              tarefa: "Pegue o violão, encontre a cabeça, o braço e o corpo e afine a 6ª corda com a ajuda de um app afinador.",
+              tarefa: "Pegue o violão, encontre a cabeça, o braço e o corpo e afine a 6ª corda comparando com o Mi que o Studoo toca.",
               minutos: 5,
               passos: [
                 "Sente-se e apoie a curva do corpo do violão na perna direita (canhoto: na esquerda).",
                 "A mão esquerda segura o braço, com o polegar atrás dele; a direita fica sobre a boca, para tocar.",
-                "Abra um app afinador gratuito, toque a 6ª corda e gire a tarraxa dela até o app marcar E (Mi).",
+                "Toque “Ouvir o Mi”, toque a sua 6ª corda e gire a tarraxa dela até os dois sons ficarem iguais.",
               ],
-              dica: "Gire a tarraxa aos poucos, um quarto de volta por vez, e toque a corda de novo a cada ajuste.",
+              dica: "Gire a tarraxa aos poucos, um quarto de volta por vez. Se tiver um app afinador, ele mostra quando a corda chega ao Mi (E).",
+              som: { rotulo: "Ouvir o Mi (6ª corda solta)", casas: [0, -1, -1, -1, -1, -1] },
             },
             outroJeito: "Pense no violão como uma pessoa deitada: a cabeça fica numa ponta, com as tarraxas como orelhas que você gira para afinar; o braço é comprido e marcado em casas, como uma régua; e o corpo é a barriga oca, com a boca no meio, por onde o som sai.",
           },
@@ -289,7 +290,42 @@ const violao: Demo = {
 };
 
 const origemIngles = origem("inglês para viagem");
-const falaEn = (texto: string, traducao: string) => ({ texto, idioma: "en-US", traducao });
+/**
+ * Pronúncia escrita do jeito que se lê em português, com a sílaba forte em maiúsculas: ajuda quem está sem voz no
+ * aparelho e quem nunca ouviu a palavra (é uma aproximação; o áudio continua sendo a referência).
+ */
+const PRONUNCIA_EN: Record<string, string> = {
+  "Hello! I'm Ana.": "rê-LOU! áim É-na",
+  "I'm from Brazil.": "áim from bra-ZIL",
+  "Nice to meet you!": "NÁIS tu MÍT iu",
+  "I'm here on vacation.": "áim RÍR on vei-KÊI-shan",
+  "I'm staying for ten days.": "áim STÊI-in for TÉN dêiz",
+  "Excuse me, where is the train station?": "eks-KIÚZ mi, UÉR iz dâ TRÊIN STÊI-shan?",
+  "Go straight, then turn left.": "GOU STRÊIT, dén TÂRN LÉFT",
+  "Turn right at the corner.": "TÂRN RÁIT ét dâ KÓR-ner",
+  "It's next to the hotel.": "its NÉKST tu dâ rou-TÉL",
+  "It's in front of the bank.": "its in FRÂNT ov dâ BÉNK",
+  "It's far from here.": "its FÁR from RÍR",
+  "Good evening! I have a reservation.": "gud ÍV-nin! ái RÉV a ré-zer-VÊI-shan",
+  "What's your name?": "UÓTS iór NÊIM?",
+  "Here's my passport.": "RÍRZ mái PÉS-port",
+  "Thank you for the key!": "TÊNK iu for dâ KÍ!",
+  "One, two, three, four, five, six, seven, eight, nine, ten.": "UÂN, TU, TRÍ, FÓR, FÁIV, SÍKS, SÉ-ven, ÊIT, NÁIN, TÉN",
+  "How much is it?": "RÁU MÂTCH iz it?",
+  "It's fifteen dollars.": "its fif-TÍN DÓ-lars",
+  "It's fifty dollars.": "its FÍF-ti DÓ-lars",
+  "How much is the coffee?": "RÁU MÂTCH iz dâ KÓ-fi?",
+  "Can I have the menu, please?": "kén ái RÉV dâ MÉ-niu, PLÍZ?",
+  "I'd like a sandwich, please.": "áid LÁIK a SÉND-uitch, PLÍZ",
+  "Water, please.": "UÓ-ter, PLÍZ",
+  "It was delicious!": "it uóz de-LÍ-shas!",
+  "Can I have the check, please?": "kén ái RÉV dâ TCHÉK, PLÍZ?",
+  "Where is the bus stop?": "UÉR iz dâ BÂS STÓP?",
+  "How much is the ticket?": "RÁU MÂTCH iz dâ TÍ-ket?",
+  "Sorry, can you repeat?": "SÓ-ri, kén iu ri-PÍT?",
+};
+const falaEn = (texto: string, traducao: string) =>
+  ({ texto, idioma: "en-US", traducao, ...(PRONUNCIA_EN[texto] ? { pronuncia: PRONUNCIA_EN[texto] } : {}) });
 const ingles: Demo = {
   chave: "ingles",
   reconhecer: (objetivo) =>
@@ -340,8 +376,8 @@ const ingles: Demo = {
           {
             titulo: "Pedir informações na rua",
             objetivo: "Perguntar onde fica um lugar e entender a resposta.",
-            conceito: "Para pedir ajuda, comece com “Excuse me” (com licença) e pergunte “Where is…?” (onde fica…?). Na resposta, preste atenção no caminho, “turn left” (vire à esquerda), “turn right” (vire à direita) e “go straight” (siga em frente), e no lugar: “next to” (ao lado de), “in front of” (em frente a) e “far from” (longe de). No fim, “Thank you!” agradece.",
-            exemplo: "“Excuse me, where is the train station?” — “It's on the next corner.” — “Thank you!”",
+            conceito: "Para pedir ajuda, comece com “Excuse me” (com licença) e pergunte “Where is…?” (onde fica…?). Na resposta, preste atenção na direção: “turn left” (vire à esquerda), “turn right” (vire à direita) ou “go straight” (siga em frente). No fim, agradeça: “Thank you!”",
+            exemplo: "“Excuse me, where is the train station?” — “Go straight, then turn left. It's next to the hotel.” — “Thank you!” Para dizer onde fica um lugar: “next to” (ao lado de), “in front of” (em frente a) e “far from” (longe de).",
             falas: [
               falaEn("Excuse me, where is the train station?", "Com licença, onde fica a estação de trem?"),
               falaEn("Go straight, then turn left.", "Siga em frente e depois vire à esquerda."),
@@ -412,7 +448,7 @@ const ingles: Demo = {
               ],
               gabarito: ["oi", "reserva", "passaporte", "chave"],
               feedbackCorreto: "Perfeito: cumprimento, reserva, documento e o agradecimento pela chave.",
-              feedbackIncorreto: "Pense na conversa real: o que você diz ao chegar ao balcão? E o que só acontece no fim, quando tudo deu certo?",
+              feedbackIncorreto: "Imagine a conversa real no balcão do hotel, uma fala de cada vez.",
             },
             extras: [
               {
@@ -496,7 +532,12 @@ const ingles: Demo = {
               essenciais: [0],
               modelo: "I'd like a coffee and a cheese bread, please.",
               feedbackCorreto: "Pedido perfeito: educado, claro e com “please”.",
-              feedbackIncorreto: "Para pedir com educação, use “I'd like…” (eu gostaria de) ou “Can I have…”. Cuidado: “I like” quer dizer “eu gosto”. Diga o que quer (coffee) e termine com “please”.",
+              feedbackIncorreto: "Para pedir com educação, use “I'd like…” (eu gostaria de) ou “Can I have…”, diga o que quer (coffee) e termine com “please”.",
+              armadilhas: [
+                { termos: "i like", aviso: "Cuidado: “I like” quer dizer “eu gosto”. Para pedir, use “I'd like” (eu gostaria de)." },
+                { termos: "i want|i wanna", aviso: "“I want” (eu quero) soa brusco num pedido. O jeito educado é “I'd like…” ou “Can I have…”." },
+                { termos: "give me", aviso: "“Give me” (me dá) soa como ordem. Prefira “Can I have…, please?”." },
+              ],
             },
             extras: [
               {

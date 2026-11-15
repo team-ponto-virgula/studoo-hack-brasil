@@ -343,8 +343,12 @@ export async function concluirLicao(
       where: { usuarioId_licaoId: { usuarioId, licaoId: id } },
       select: { concluidoEm: true },
     });
-  } else if (pratica) {
-    await banco.registroEstudo.update({ where: { usuarioId_licaoId: { usuarioId, licaoId: id } }, data: { pratica } });
+  } else if (pratica || resumo) {
+    // Refazer a lição vale: fica o resultado da vez mais recente (o "Vale rever" some quando a pessoa refaz sem erro).
+    await banco.registroEstudo.update({
+      where: { usuarioId_licaoId: { usuarioId, licaoId: id } },
+      data: { ...(pratica ? { pratica } : {}), ...(resumo ?? {}) },
+    });
   }
 
   return {

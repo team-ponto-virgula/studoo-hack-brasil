@@ -53,11 +53,15 @@ export interface ResumoConclusao {
 export const TIPOS_TRECHO = ["codigo", "frase", "citacao", "formula", "passos"] as const;
 export type TipoTrecho = (typeof TIPOS_TRECHO)[number];
 
-/** Algo para ouvir em voz alta (pronúncia, diálogo): texto, idioma BCP 47 (como `en-US`) e a tradução, se houver. */
+/**
+ * Algo para ouvir em voz alta (pronúncia, diálogo): texto, idioma BCP 47 (como `en-US`), a tradução e, se houver, a
+ * pronúncia escrita do jeito que se lê em português (`ek-SKIÚZ mi`), para quem está sem voz no aparelho.
+ */
 export interface Fala {
   texto: string;
   idioma: string;
   traducao?: string;
+  pronuncia?: string;
 }
 
 /**
@@ -82,6 +86,8 @@ export interface Pratica {
   minutos: number;
   passos?: string[];
   dica?: string;
+  /** Um som de referência para a prática (a 6ª corda solta, para afinar), tocado pelo app: o rótulo e as casas. */
+  som?: { rotulo: string; casas: number[] };
 }
 
 /** Como a pessoa diz que foi a prática, na volta do cronômetro. */

@@ -342,6 +342,7 @@ export function Falas({ falas }: { falas: Fala[] }) {
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
           <Text selectable style={formatos.falaTexto}>{fala.texto}</Text>
+          {fala.pronuncia && <Text accessibilityLabel={`${t.audio.pronuncia}: ${fala.pronuncia}`} style={formatos.pronuncia}>{fala.pronuncia}</Text>}
           {fala.traducao && <Text style={estilos.legenda}>{fala.traducao}</Text>}
           <BotoesOuvir fala={fala} />
           <View style={formatos.ouvir}><BotaoFalar fala={fala} /></View>
@@ -386,6 +387,7 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
           <Text selectable style={formatos.falaTexto}>{fala.texto}</Text>
+          {fala.pronuncia && <Text accessibilityLabel={`${t.audio.pronuncia}: ${fala.pronuncia}`} style={formatos.pronuncia}>{fala.pronuncia}</Text>}
           {fala.traducao && <Text style={estilos.legenda}>{fala.traducao}</Text>}
           <BotoesOuvir fala={fala} />
         </View>
@@ -539,7 +541,8 @@ function BracoDoAcorde({ nome, casas, dedos, escala = 1 }: { nome: string; casas
 }
 
 /** Diagrama do acorde com o som; com `anterior`, os dois acordes da troca lado a lado (Am → C), como na web. */
-function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, { tipo: 'acorde' }>; longa?: boolean }) {
+/** `soBatida`: só o botão de tocar junto e o guia dos tempos (na prática, ao lado do cronômetro). Como na web. */
+function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso: Extract<Recurso, { tipo: 'acorde' }>; longa?: boolean; soBatida?: boolean }) {
   type Som = 'acorde' | 'batida' | 'anterior';
   const compassos = longa ? 8 : 2;
   const [tocando, setTocando] = useState<Som | null>(null);
@@ -592,6 +595,31 @@ function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, 
       });
   }
 
+  const guia = (
+    <>
+      <View style={formatos.batida} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        {['1', 'e', '2', 'e', '3', 'e', '4', 'e'].map((rotulo, indice) => (
+          <View key={indice} style={[formatos.batidaTempo, indice % 2 === 1 && formatos.batidaSobe, tempoAtual === indice && formatos.batidaAtiva]}>
+            <Text style={[formatos.batidaTexto, tempoAtual === indice && { color: cores.fundo }]}>{indice % 2 ? '↑' : '↓'}</Text>
+            <Text style={[formatos.batidaTexto, tempoAtual === indice && { color: cores.fundo }]}>{rotulo}</Text>
+          </View>
+        ))}
+      </View>
+      <Text style={estilos.legenda}>{t.audio.batidaGuia}</Text>
+    </>
+  );
+  if (soBatida) {
+    return (
+      <View style={[formatos.acordeLegenda, formatos.soBatida]}>
+        <Botao rotulo={tocando === 'batida' ? t.recursos.tocando : t.recursos.tocarJunto} variante="secundario" compacto
+          desativado={tocando !== null} acao={() => tocar('batida')} />
+        {tocando && <Botao rotulo={t.audio.pararSom} variante="texto" compacto acao={parar} />}
+        {guia}
+        {semSom && <Text style={[estilos.legenda, { color: cores.alerta, fontWeight: '700' }]}>{t.recursos.semSom}</Text>}
+      </View>
+    );
+  }
+
   return (
     <View style={formatos.acorde}>
       {anterior ? (
@@ -621,21 +649,36 @@ function DiagramaAcorde({ recurso, longa = false }: { recurso: Extract<Recurso, 
             desativado={tocando !== null} acao={() => tocar('batida')} />
         )}
         {tocando && <Botao rotulo={t.audio.pararSom} variante="texto" compacto acao={parar} />}
-        {recurso.batida && (
-          <>
-            <View style={formatos.batida} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-              {['1', 'e', '2', 'e', '3', 'e', '4', 'e'].map((rotulo, indice) => (
-                <View key={indice} style={[formatos.batidaTempo, indice % 2 === 1 && formatos.batidaSobe, tempoAtual === indice && formatos.batidaAtiva]}>
-                  <Text style={[formatos.batidaTexto, tempoAtual === indice && { color: cores.fundo }]}>{indice % 2 ? '↑' : '↓'}</Text>
-                  <Text style={[formatos.batidaTexto, tempoAtual === indice && { color: cores.fundo }]}>{rotulo}</Text>
-                </View>
-              ))}
-            </View>
-            <Text style={estilos.legenda}>{t.audio.batidaGuia}</Text>
-          </>
-        )}
+        {recurso.batida && guia}
         {semSom && <Text style={[estilos.legenda, { color: cores.alerta, fontWeight: '700' }]}>{t.recursos.semSom}</Text>}
       </View>
+    </View>
+  );
+}
+
+/** Um som de referência para a prática (como o Mi da 6ª corda, para afinar), sintetizado como o acorde. Como na web. */
+function TocarSom({ rotulo, casas }: { rotulo: string; casas: number[] }) {
+  const [tocando, setTocando] = useState(false);
+  const [semSom, setSemSom] = useState(false);
+  const controle = useRef<SomTocando | null>(null);
+  useEffect(() => () => controle.current?.parar(), []);
+  function tocar() {
+    setTocando(true);
+    setSemSom(false);
+    tocarSom('acorde', casas)
+      .then((som) => {
+        controle.current = som;
+        setTimeout(() => setTocando(false), 2600);
+      })
+      .catch(() => {
+        setTocando(false);
+        setSemSom(true);
+      });
+  }
+  return (
+    <View style={{ gap: 6 }}>
+      <Botao rotulo={tocando ? t.recursos.tocando : rotulo} variante="secundario" compacto desativado={tocando} acao={tocar} />
+      {semSom && <Text style={[estilos.legenda, { color: cores.alerta, fontWeight: '700' }]}>{t.recursos.semSom}</Text>}
     </View>
   );
 }
@@ -647,26 +690,44 @@ export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
   mudar: (valor: string) => void;
   desativado: boolean;
   certos?: string[];
-  /** Na nova tentativa: os itens que já estavam na posição certa (o começo da ordem fica travado). Como na web. */
+  /** Na nova tentativa: os itens que já estavam na posição certa ficam travados nela; o resto vira vaga. Como na web. */
   fixos?: string[];
 }) {
-  const ordem = valor.split(',').filter((id) => itens.some((item) => item.id === id));
-  let travados = 0;
-  while (fixos && travados < ordem.length && fixos.includes(ordem[travados])) travados += 1;
+  const posicoes = valor ? valor.split(',').map((id) => (itens.some((item) => item.id === id) ? id : '')) : [];
+  const travado = (id: string) => Boolean(fixos?.includes(id));
+  const comTravados = posicoes.some(travado);
+  const ordem = posicoes.filter(Boolean);
   const restantes = itens.filter((item) => !ordem.includes(item.id));
   const texto = (id: string) => itens.find((item) => item.id === id)?.texto ?? '';
+  function colocar(id: string) {
+    const vaga = posicoes.indexOf('');
+    mudar((vaga >= 0 ? posicoes.map((atual, posicao) => (posicao === vaga ? id : atual)) : [...posicoes, id]).join(','));
+  }
+  function tirar(posicao: number) {
+    const novas = comTravados ? posicoes.map((atual, indice) => (indice === posicao ? '' : atual)) : posicoes.filter((_, indice) => indice !== posicao);
+    mudar(novas.some(Boolean) ? novas.join(',') : '');
+  }
   return (
     <View style={formatos.secao}>
       <Text style={formatos.instrucao}>{t.ordenar.instrucao}</Text>
       <Text style={formatos.rotuloCaixa}>{t.ordenar.suaOrdem.toLocaleUpperCase('pt-BR')}</Text>
       <View style={formatos.ordemCaixa}>
-        {ordem.length === 0 && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.ordenar.vazio}</Text>}
-        {ordem.map((id, posicao) => {
-          const estado = certos ? (certos.includes(id) ? 'certo' : 'errado') : posicao < travados ? 'certo' : null;
+        {posicoes.length === 0 && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.ordenar.vazio}</Text>}
+        {posicoes.map((id, posicao) => {
+          if (!id) {
+            return (
+              <View key={`vaga-${posicao}`} style={formatos.vaga} accessible accessibilityLabel={`${t.ordenar.posicao(posicao + 1)}: ${t.ordenar.vaga}`}>
+                <View style={[formatos.posicao, { opacity: 0.5 }]}><Text style={formatos.posicaoTexto}>{t.ordenar.posicao(posicao + 1)}</Text></View>
+                <Text style={[estilos.legenda, { flex: 1 }]}>{t.ordenar.vaga}</Text>
+              </View>
+            );
+          }
+          const fixo = travado(id);
+          const estado = certos ? (certos.includes(id) ? 'certo' : 'errado') : fixo ? 'certo' : null;
           return (
-            <Pressable key={id} accessibilityRole="button" disabled={desativado || posicao < travados}
-              accessibilityLabel={posicao < travados ? t.ordenar.travado(texto(id), posicao + 1) : t.ordenar.tirar(texto(id), posicao + 1)}
-              onPress={() => mudar(codificarResposta.ordem(ordem.filter((item) => item !== id)))}
+            <Pressable key={id} accessibilityRole="button" disabled={desativado || fixo}
+              accessibilityLabel={fixo ? t.ordenar.travado(texto(id), posicao + 1) : t.ordenar.tirar(texto(id), posicao + 1)}
+              onPress={() => tirar(posicao)}
               style={({ pressed }) => [formatos.cartao, formatos.cartaoEscolhido, estado === 'certo' && formatos.cartaoCerto,
                 estado === 'errado' && formatos.cartaoErrado, pressed && formatos.cartaoAfundado]}>
               <View style={[formatos.posicao, estado === 'certo' && { backgroundColor: cores.sucessoClaro }, estado === 'errado' && { backgroundColor: '#E3A24A' }]}>
@@ -680,14 +741,14 @@ export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
       {restantes.length > 0 && <View style={formatos.disponiveis} accessibilityRole="none" accessibilityLabel={t.ordenar.disponiveis}>
         {restantes.map((item) => (
           <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={t.ordenar.colocar(item.texto)} disabled={desativado}
-            onPress={() => mudar(codificarResposta.ordem([...ordem, item.id]))}
+            onPress={() => colocar(item.id)}
             style={({ pressed }) => [formatos.cartao, pressed && formatos.cartaoAfundado]}>
             <Text style={[estilos.texto, formatos.cartaoTexto]}>{item.texto}</Text>
           </Pressable>
         ))}
       </View>}
-      {ordem.length > travados && !desativado && (
-        <Pressable accessibilityRole="button" onPress={() => mudar(codificarResposta.ordem(ordem.slice(0, travados)))}>
+      {ordem.some((id) => !travado(id)) && !desativado && (
+        <Pressable accessibilityRole="button" onPress={() => mudar(comTravados ? posicoes.map((id) => (travado(id) ? id : '')).join(',') : '')}>
           <Text style={formatos.link}>{t.ordenar.recomecar}</Text>
         </Pressable>
       )}
@@ -840,7 +901,8 @@ export function CampoAberta({ valor, mudar, minimo, desativado, retorno }: {
 }
 
 /** Depois da resposta aberta: o que a correção procurou, uma boa resposta e o aviso do modo demonstração. */
-export function CorrecaoAberta({ avaliacao }: { avaliacao: Avaliacao }) {
+/** `mostrarModelo`: a resposta modelo só aparece no acerto ou na segunda tentativa errada (antes, virava copiar). Como na web. */
+export function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao: Avaliacao; mostrarModelo?: boolean }) {
   return (
     <View style={formatos.correcao}>
       {avaliacao.criterios && (
@@ -857,7 +919,8 @@ export function CorrecaoAberta({ avaliacao }: { avaliacao: Avaliacao }) {
           ))}
         </>
       )}
-      {avaliacao.modelo && (
+      {avaliacao.modelo && !mostrarModelo && <Text style={estilos.legenda}>{t.aberta.modeloDepois}</Text>}
+      {avaliacao.modelo && mostrarModelo && (
         <View style={formatos.modelo}>
           <Text style={formatos.rotuloCaixa}>{t.aberta.modelo.toLocaleUpperCase('pt-BR')}</Text>
           <Text style={estilos.texto}>{avaliacao.modelo}</Text>
@@ -876,9 +939,11 @@ function formatarTempo(segundos: number) {
  * Prática no mundo real: a tarefa, a lista para conferir, a dica e o cronômetro; na volta, a pessoa conta como foi e o
  * Stu responde. A lição só conclui depois dessa resposta (o botão de concluir fica no rodapé da aula).
  */
-export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComoFoi, aoAcabar }: {
+export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComoFoi, aoAcabar, recurso }: {
   /** O que a lição mostrou no exemplo (recurso, passos, frases), para consultar enquanto pratica. */
   consulta?: ReactNode;
+  /** O recurso da lição: com batida, o botão de tocar junto fica logo depois do cronômetro. */
+  recurso?: Recurso;
   pratica: Pratica;
   escolha: AutoAvaliacao | null;
   escolher: (valor: AutoAvaliacao) => void;
@@ -971,12 +1036,17 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
           )}
         </View>
       </View>
+      {/* Como na web: o som de referência (o Mi para afinar) e a batida para tocar junto ficam ao lado do cronômetro. */}
+      {pratica.som && <TocarSom rotulo={pratica.som.rotulo} casas={pratica.som.casas} />}
+      {recurso?.tipo === 'acorde' && recurso.batida && <DiagramaAcorde recurso={recurso} longa soBatida />}
       {/* "Como foi?" espera o cronômetro começar: a prática pede praticar. */}
       <Text accessibilityRole="header" style={formatos.comoFoi}
         onLayout={(evento) => aoMedirComoFoi?.(raizY.current + evento.nativeEvent.layout.y)}>
         {acabou ? t.pratica.acabou
           : praticou || escolha ? t.pratica.comoFoi
-            : restante < total ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.comeceAntes}
+            : restante < total
+              ? rodando ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.retomeParaContar(minimo - (total - restante))
+              : t.pratica.comeceAntes}
       </Text>
       <View style={formatos.opcoesComoFoi} accessibilityRole="radiogroup" accessibilityLabel={t.pratica.comoFoi}>
         {AUTOAVALIACOES.map((valor) => {
@@ -1021,6 +1091,10 @@ const formatos = StyleSheet.create({
   escuta: { gap: 12, padding: 14, borderRadius: 16, backgroundColor: cores.ceu },
   fraseGrande: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19, lineHeight: 26 },
   falaInline: { color: cores.acaoEscura, fontWeight: '800', textDecorationLine: 'underline', textDecorationStyle: 'dotted' },
+  pronuncia: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontStyle: 'italic', fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  soBatida: { alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: '#FFFAF0' },
+  vaga: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 14, borderRadius: 16, borderWidth: 2,
+    borderStyle: 'dashed', borderColor: cores.gelo },
   fala: { gap: 6, padding: 12, borderRadius: 16, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   falaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 18, lineHeight: 24 },
   lacuna: { textDecorationLine: 'underline', textDecorationStyle: 'solid' },

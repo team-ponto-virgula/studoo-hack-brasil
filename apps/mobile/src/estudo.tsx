@@ -1485,6 +1485,10 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
           </Text>
         </View>
       )}
+      {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo. Como na web. */}
+      {licao.falas && licao.falas.length > 0 && (
+        <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}><FrasesDaLicao falas={licao.falas} /></View>
+      )}
       {liberada && (
         <Animated.View style={[estudoEstilos.liberada, estiloDeEntrada(entradaLiberada, 12)]}>
           <Icone nome="livro" tamanho={20} cor={cores.acao} />
@@ -1495,10 +1499,6 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
         <Text accessibilityRole="header" style={estilos.tituloBloco}>{mensagens.licao.progresso}</Text>
         <BarraProgresso progresso={plano.progresso} de={antes} testID="progresso-plano" comPercentual />
       </View>
-      {/* Lição de idioma: as frases que a pessoa aprendeu, para ouvir mais uma vez antes de seguir. Como na web. */}
-      {licao.falas && licao.falas.length > 0 && (
-        <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}><FrasesDaLicao falas={licao.falas} /></View>
-      )}
       {mensagem}
     </Tela>
   );

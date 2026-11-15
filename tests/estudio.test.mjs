@@ -141,6 +141,8 @@ test('material → proposta → lição → reforço → explicação; progresso
   assert.ok(feedback.acertos.length > 0);
   assert.doesNotMatch(feedback.proximoPasso, /não confere/);
   assert.doesNotMatch(feedback.acertos.join(' '), /“[^”]+”, ideias-chave/, 'um termo só: “uma ideia-chave”');
+  assert.doesNotMatch(feedback.acertos.join(' '), /exemplo/, 'sem “por exemplo” no texto, não diz que usou exemplo');
+  assert.doesNotMatch(feedback.lacuna, /Você cobriu/, '“O que revisar” não diz que está tudo coberto');
   await assert.rejects(ensinarStu(u, id, 'oi'), codigo('invalido'));
   const avaliacao = await avaliarLicao(u, id, '1');
   assert.equal(avaliacao.correta, true);

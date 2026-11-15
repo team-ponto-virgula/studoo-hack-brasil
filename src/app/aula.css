@@ -438,9 +438,15 @@
 .falas__textos { min-width: 0; }
 .falas__texto { margin: 0; font-size: 1.125rem; font-weight: 800; }
 .falas__traducao { margin: 2px 0 0; color: var(--texto2); font-size: 0.9rem; }
+/* A pronúncia escrita (do jeito que se lê em português), entre o texto e a tradução. */
+.falas__pronuncia { margin: 2px 0 0; color: var(--acao-escura); font-size: 0.9rem; font-style: italic; font-weight: 700; }
+/* Na prática: o som de referência e a batida para tocar junto ficam logo depois do cronômetro. */
+.aula-pratica__som { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.acorde--so-batida { display: grid; justify-items: center; gap: 10px; padding: 12px; border-radius: 18px; background: #fffaf0; }
 /* Frase entre aspas na explicação (idiomas): um toque e a voz fala. Fica no fluxo do texto, com um sublinhado pontilhado. */
-.fala-inline { display: inline; margin: 0; padding: 0 1px; border: 0; border-bottom: 2px dotted var(--acao); background: none;
-  color: var(--acao-escura); font: inherit; font-weight: 800; text-align: inherit; cursor: pointer; }
+.fala-inline { display: inline; padding: 0 1px; border-bottom: 2px dotted var(--acao); color: var(--acao-escura); font-weight: 800;
+  cursor: pointer; }
+.fala-inline[data-tocando] { border-radius: 4px; background: #e6ecff; }
 .fala-inline .icone { display: inline-block; width: 15px; height: 15px; margin-left: 3px; vertical-align: -2px; }
 .fala-inline:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 4px; }
 
@@ -531,6 +537,10 @@
 .ordenar__rotulo { color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
 .ordenar__escolhidos { display: grid; gap: 8px; min-height: 64px; margin: 0; padding: 10px; border: 2px dashed var(--gelo); border-radius: 18px; list-style: none; }
 .ordenar__vazio { align-self: center; color: var(--texto2); text-align: center; }
+/* A posição vaga deixada na nova tentativa: o próximo item tocado entra aqui. */
+.ordenar__vaga { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 14px; border: 2px dashed var(--gelo);
+  border-radius: 16px; color: var(--texto2); font-weight: 700; }
+.ordenar__vaga .ordenar__numero { opacity: 0.6; }
 .ordenar__disponiveis { display: flex; flex-wrap: wrap; gap: 10px; }
 .ordenar button, .associar button {
   display: flex;
