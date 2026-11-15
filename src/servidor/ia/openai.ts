@@ -344,7 +344,7 @@ const esquemaDaLicao = objetoEstrito({
 
 const instrucoesDaLicao = [
   "Você é a IA do Studoo e escreve uma lição curta de uma trilha de estudo, em português do Brasil, para alguém que está aprendendo. O assunto pode ser qualquer coisa: idioma, música, culinária, história, ciência, esporte, programação.",
-  "A lição tem: objetivo (uma frase que começa com um verbo), conceito (de 2 a 4 frases simples, com um único conceito novo), exemplo (um caso concreto e resolvido) e de 1 a 3 exercícios com feedback.",
+  "A lição tem: objetivo (uma frase que começa com um verbo), conceito (de 2 a 4 frases simples, com um único conceito novo), exemplo (um caso concreto e resolvido) e 2 ou 3 exercícios com feedback.",
   "Exemplo e recursos:",
   "- exemploTipo é \"demonstracao\" nas habilidades práticas (tocar, cozinhar, desenhar, praticar um esporte): o exemplo apresenta e passos traz de 3 a 6 passos curtos para fazer junto. Nos outros casos, exemploTipo é \"exemplo\" e passos é null.",
   "- outroJeito: a mesma ideia central por outro caminho, para quem errou um exercício: uma analogia do dia a dia ou uma regra prática, em 1 a 3 frases, sem repetir o conceito com outras palavras.",
@@ -352,7 +352,7 @@ const instrucoesDaLicao = [
   "- Numa lição de idioma, escreva no conceito e no exemplo cada frase do idioma estudado entre aspas curvas (“Excuse me”): a pessoa toca nelas para ouvir.",
   "- falas, em lições de idioma: de 1 a 4 frases curtas no idioma estudado, com idioma no formato BCP 47 (como en-US, es-ES, fr-FR), a traducao em português e a pronuncia: como a frase soa, escrita com as letras do português, com hífen entre as sílabas das palavras longas e a sílaba mais forte em MAIÚSCULAS (\"Excuse me, where is the station?\" vira \"eks-KIÚZ mi, UÉR iz dâ STÊI-shan?\"). Nos outros assuntos, falas é null.",
   "- pratica, nas habilidades que se treinam fora do app: uma tarefa concreta e segura, minutos de 1 a 20 para o cronômetro, até 5 passos, uma dica (ou null) e som. som só existe em lições de violão: um som de referência para comparar enquanto pratica, com rotulo curto (como \"Ouvir o Mi (6ª corda solta)\") e casas com 6 inteiros da 6ª corda à 1ª, como no acorde (de -1 a 12); nos outros casos, som é null. Sem prática, pratica é null.",
-  "Exercícios (use formatos variados; o primeiro é o principal):",
+  "Exercícios (2 ou 3, em formatos variados; o primeiro é o principal). Pelo menos um pede que a pessoa produza a resposta (lacuna, ordenar ou aberta), e não só reconheça a certa:",
   "- multipla_escolha: 3 opções em opcoes (ids \"a\", \"b\", \"c\"), só uma correta; gabarito é a lista com o id da correta.",
   "- lacuna: o trecho mostra a frase com ___ no lugar da resposta, que é uma palavra, um número ou um símbolo curto; gabarito lista as respostas aceitas. exata é true quando a grafia é o que se ensina (palavra de outro idioma, ortografia); senão, false.",
   "- ordenar: itens traz de 3 a 6 itens já na ordem certa (passos de um processo, acontecimentos, falas de um diálogo); o app embaralha. gabarito é [].",
