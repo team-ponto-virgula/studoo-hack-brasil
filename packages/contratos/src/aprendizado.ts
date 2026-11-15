@@ -15,7 +15,8 @@ export interface PropostaPlano {
   titulo: string;
   objetivo: string;
   origem: string;
-  fluxos: { titulo: string; licoes: { titulo: string }[] }[];
+  /** `resumo`: o que a lição ensina, numa frase curta, para a prévia (opcional: trilhas antigas não têm). */
+  fluxos: { titulo: string; licoes: { titulo: string; resumo?: string }[] }[];
 }
 
 export interface PlanoResumo {
@@ -211,7 +212,7 @@ export const LIMITES_GERACAO = { objetivoMin: 3, objetivoMax: 500 } as const;
 export type EventoGeracao =
   | { tipo: "plano"; titulo: string; objetivo: string }
   | { tipo: "fluxo"; fluxo: number; titulo: string }
-  | { tipo: "licao"; fluxo: number; licao: number; titulo: string }
+  | { tipo: "licao"; fluxo: number; licao: number; titulo: string; resumo?: string }
   | { tipo: "pronto"; proposta: PropostaPlano }
   | { tipo: "erro"; codigo: CodigoErro };
 
@@ -245,7 +246,10 @@ export function interpretarEventoGeracao(linha: string): EventoGeracao | null {
         : null;
     case "licao":
       return indice(dado.fluxo) && indice(dado.licao) && texto(dado.titulo)
-        ? { tipo: "licao", fluxo: dado.fluxo, licao: dado.licao, titulo: dado.titulo }
+        ? {
+          tipo: "licao", fluxo: dado.fluxo, licao: dado.licao, titulo: dado.titulo,
+          ...(texto(dado.resumo) && dado.resumo.length <= 200 ? { resumo: dado.resumo } : {}),
+        }
         : null;
     case "pronto": {
       const proposta = dado.proposta as PropostaPlano | undefined;

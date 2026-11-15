@@ -335,6 +335,7 @@ export const mensagens = {
         revisaoAndamento: 'Revisão rápida',
         revisaoDe: (posicao: number, total: number) => `Revisão ${posicao} de ${total}`,
         pularAviso: 'Se pular, este exercício volta no fim da lição.',
+        pularAvisoUltimo: 'É o último exercício: se pular, ele volta já, na revisão rápida.',
         dicaAnterior: 'Dica da tentativa anterior',
         frasesDaLicao: 'Frases desta lição',
         quaseCompleta: 'Boa! Quase completa.',
@@ -402,6 +403,7 @@ export const mensagens = {
             semVozTexto: 'Este aparelho não tem voz para ler as frases. No próximo passo, cada frase tem a pronúncia escrita.',
             jaPratiquei: 'Já pratiquei sem o cronômetro',
             previaAbre: 'Esta lição abre quando você começar a trilha (botão Começar, no pé da tela).',
+            previaResumo: (resumo: string) => `${resumo.replace(/[.!]+$/u, '')}. A lição abre quando você começar a trilha (botão Começar, no pé da tela).`,
             comoLerPronuncia: 'Como ler a pronúncia: leia como em português; a parte em MAIÚSCULAS é a mais forte.',
             pronuncia: 'Pronúncia',
             tocando: 'Tocando…',
@@ -450,7 +452,7 @@ export const mensagens = {
             corda: (corda: number, casa: number, dedo: string) => casa < 0
                 ? `${corda}ª corda não toca`
                 : casa === 0 ? `${corda}ª corda solta` : `${corda}ª corda na casa ${casa}${dedo ? `, com o ${dedo}` : ''}`,
-            legendaAcorde: 'X: não toca. O: solta. Nas bolinhas, o dedo. Embaixo, o número da corda (a 6ª é a mais grossa); ao lado, o número da casa.'
+            legendaAcorde: 'X: não toca. O: solta. Na bolinha, o número do dedo (1 é o indicador). Embaixo, a corda (6ª, a mais grossa, à esquerda); ao lado, a casa (1ª, 2ª…).'
         },
         ordenar: {
             instrucao: 'Toque nos itens na ordem certa. Toque de novo para tirar.',
@@ -470,6 +472,7 @@ export const mensagens = {
             esquerda: 'Itens',
             direita: 'Pares',
             escolhido: (texto: string) => `“${texto}” escolhido. Agora toque no par dele à direita.`,
+            escolhidoDireita: (texto: string) => `“${texto}” escolhido. Agora toque, na esquerda, no item que combina com ele.`,
             ligar: (esquerda: string, direita: string) => `Ligar “${esquerda}” a “${direita}”`,
             desfazer: (esquerda: string, direita: string) => `Desfazer o par “${esquerda}” e “${direita}”`,
             travado: (esquerda: string, direita: string) => `“${esquerda}” ligado a “${direita}”: já está certo`,
@@ -512,6 +515,7 @@ export const mensagens = {
             acabou: 'Tempo! Como foi?',
             comoFoi: 'Como foi?',
             comeceAntes: 'Comece o cronômetro e pratique. Depois, conte como foi.',
+            jaPraticou: (tempo: string) => `Você já praticou ${tempo} nesta lição.`,
             continuePraticando: (segundos: number) => `Continue praticando: em ${segundos} s você conta como foi.`,
             retomeParaContar: (segundos: number) => `Cronômetro pausado. Retome e pratique mais ${segundos} s para contar como foi.`,
             praticarMais: 'Praticar mais um pouco',

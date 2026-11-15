@@ -176,13 +176,18 @@ function aparar(texto: string, maximo: number) {
 }
 
 /** Uma linha JSON do modelo, aceitando cercas de código, vírgulas no fim e marcadores de lista. */
-function lerLinha(bruta: string): { tipo: string; titulo: string; objetivo?: string } | null {
+function lerLinha(bruta: string): { tipo: string; titulo: string; objetivo?: string; resumo?: string } | null {
   const linha = bruta.trim().replace(/^```\w*|```$/g, "").replace(/^[-*]\s+/, "").replace(/,\s*$/, "").trim();
   if (!linha.startsWith("{")) return null;
   try {
     const dado = JSON.parse(linha) as Record<string, unknown>;
     if (typeof dado.tipo !== "string" || typeof dado.titulo !== "string" || !dado.titulo.trim()) return null;
-    return { tipo: dado.tipo, titulo: dado.titulo, objetivo: typeof dado.objetivo === "string" ? dado.objetivo : undefined };
+    return {
+      tipo: dado.tipo,
+      titulo: dado.titulo,
+      objetivo: typeof dado.objetivo === "string" ? dado.objetivo : undefined,
+      resumo: typeof dado.resumo === "string" && dado.resumo.trim() ? dado.resumo : undefined,
+    };
   } catch {
     return null;
   }
@@ -193,7 +198,7 @@ const instrucoesDaEstrutura = [
   "Monte a trilha para o objetivo da pessoa. Responda somente com linhas JSON, uma por linha, sem texto antes ou depois e sem blocos de código, neste formato:",
   '{"tipo":"plano","titulo":"<título curto da trilha>","objetivo":"<o objetivo da pessoa numa frase>"}',
   '{"tipo":"fluxo","titulo":"<nome do trecho>"}',
-  '{"tipo":"licao","titulo":"<título da lição>"}',
+  '{"tipo":"licao","titulo":"<título da lição>","resumo":"<o que a pessoa vai saber fazer depois dela, numa frase curta que começa com um verbo>"}',
   "Regras:",
   "- Escreva em português do Brasil. Títulos curtos (até 60 caracteres), concretos, sem numeração e sem emojis.",
   "- A primeira linha é a do plano. Depois, 3 trechos com 2 a 4 lições cada (de 7 a 10 lições no total): cada trecho começa com a sua linha de fluxo, seguida das linhas de lição dele.",
@@ -238,7 +243,7 @@ function criarMontador(objetivo: string) {
     get total() {
       return total;
     },
-    linha(dado: { tipo: string; titulo: string; objetivo?: string }): EventoEstrutura[] {
+    linha(dado: { tipo: string; titulo: string; objetivo?: string; resumo?: string }): EventoEstrutura[] {
       const eventos: EventoEstrutura[] = [];
       if (dado.tipo === "plano") return plano ? [] : iniciarPlano(dado.titulo, dado.objetivo);
       if (!plano) eventos.push(...iniciarPlano());
@@ -255,7 +260,10 @@ function criarMontador(objetivo: string) {
         pendente = null;
       }
       if (licoesNoFluxo >= LIMITES_ESQUELETO.licoesPorFluxo) return eventos;
-      eventos.push({ tipo: "licao", fluxo: fluxos - 1, licao: licoesNoFluxo, titulo: aparar(dado.titulo, TITULO_MAXIMO) });
+      eventos.push({
+        tipo: "licao", fluxo: fluxos - 1, licao: licoesNoFluxo, titulo: aparar(dado.titulo, TITULO_MAXIMO),
+        ...(dado.resumo ? { resumo: aparar(dado.resumo, 160) } : {}),
+      });
       licoesNoFluxo += 1;
       total += 1;
       return eventos;

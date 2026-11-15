@@ -23,7 +23,7 @@ const linhasDaTrilha = [
   '```json',
   '{"tipo":"plano","titulo":"Violão do zero","objetivo":"Tocar as primeiras músicas no violão."}',
   '{"tipo":"fluxo","titulo":"Primeiros passos"}',
-  '{"tipo":"licao","titulo":"Conhecer as partes do violão"}',
+  '{"tipo":"licao","titulo":"Conhecer as partes do violão","resumo":"Reconhecer a cabeça, o braço e o corpo do violão."}',
   '{"tipo":"licao","titulo":"Afinar as cordas"}',
   '{"tipo":"fluxo","titulo":"Praticando"}',
   '- {"tipo":"licao","titulo":"Primeiros acordes: Mi menor e Lá menor"},',
@@ -153,6 +153,11 @@ test("a estrutura vem por streaming e vira eventos válidos, com índices calcul
   assert.equal(pronto.proposta.titulo, "Violão do zero");
   assert.equal(pronto.proposta.origem, `IA da OpenAI (${MODELO_RACIOCINIO})`);
   assert.ok(pronto.proposta.fluxos.flatMap(({ licoes }) => licoes).some(({ titulo }) => titulo.startsWith("Revisão")));
+  // O resumo que o modelo escreve para a prévia vai junto, no evento e na proposta; sem ele, a lição vem só com o título.
+  const [primeira, segunda] = eventos.filter(({ tipo }) => tipo === "licao");
+  assert.equal(primeira.resumo, "Reconhecer a cabeça, o braço e o corpo do violão.");
+  assert.equal("resumo" in segunda, false);
+  assert.equal(pronto.proposta.fluxos[0].licoes[0].resumo, primeira.resumo);
 
   const [pedido] = pedidos;
   assert.equal(pedido.caminho, "/v1/responses");
@@ -162,6 +167,7 @@ test("a estrutura vem por streaming e vira eventos válidos, com índices calcul
   assert.deepEqual(pedido.dados.reasoning, { effort: "low" });
   // Só o objetivo vai para a IA, com as regras de ordem no prompt de sistema.
   assert.match(pedido.dados.input[0].content, /pré-requisitos/);
+  assert.match(pedido.dados.input[0].content, /"resumo"/);
   assert.equal(pedido.dados.input[1].content, "Objetivo de estudo: Quero aprender violão do zero");
 });
 

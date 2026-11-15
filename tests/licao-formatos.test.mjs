@@ -707,3 +707,29 @@ test("rodada 12: lições de inglês com três exercícios, menos “ouça e esc
   // A ideia contida em outra não conta duas vezes no “Explique”.
   assert.ok(!termosDaLicao(ingles[0]).includes("from"));
 });
+
+test("rodada 13: “Explique” sem falso alarme, armadilhas de iniciante, “repeat it” e mais prática no inglês", () => {
+  const ingles = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes);
+  const [apresentacao, aeroporto] = ingles;
+  // A armadilha da lacuna (“de”, “do”) vale para a resposta inteira: num texto em português, não dispara.
+  assert.equal(armadilhaNoTexto(apresentacao, "Eu digo I'm from Brazil, que quer dizer que sou do Brasil."), null);
+  assert.match(armadilhaNoTexto(apresentacao, "Na imigração eu digo I am here for vacation."), /on vacation/);
+  assert.match(armadilhaNoTexto(aeroporto, "No balcão eu falo I flying to Miami."), /o verbo não some/);
+  assert.equal(armadilhaNoTexto(aeroporto, "No balcão eu falo I'm flying to Miami."), null);
+  // Lacuna no fim da frase: “repeat it” é inglês certo; com outras palavras, o retorno diz que a certa está lá.
+  const repetir = ingles.at(-1).extras.find(({ tipo }) => tipo === "lacuna");
+  assert.deepEqual(avaliarResposta(repetir, "repeat it"), { correta: true, feedback: repetir.feedbackCorreto, observacao: "Certo! Na lacuna, basta escrever o que falta." });
+  assert.equal(avaliarResposta(repetir, "repeat")?.correta, true);
+  const misturada = avaliarResposta(repetir, "you repeat to me");
+  assert.equal(misturada.correta, false);
+  assert.match(misturada.observacao, /a palavra certa está na sua resposta/);
+  // No meio da frase, o complemento não vale (“Excuse me, ___ is the museum?”: “where it” não é a resposta).
+  const onde = ingles[2].exercicio;
+  assert.equal(avaliarResposta(onde, "where it")?.correta, false);
+  // Mais prática de verdade e a revisão retoma imigração e hotel numa resposta aberta.
+  assert.ok(ingles.filter(({ pratica }) => pratica).length >= 5, "prática com cronômetro na maioria das lições");
+  const revisao = ingles.at(-1);
+  assert.equal(revisao.exercicio.tipo, "aberta");
+  assert.ok(avaliarResposta(revisao.exercicio, "I'm from Brazil. I'm here on vacation. I have a reservation.").correta);
+  for (const licao of ingles) assert.ok(licao.armadilhas?.length, `${licao.titulo} tem armadilhas para o “Explique”`);
+});

@@ -313,6 +313,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           // Com o nome embaixo do nó, a pílula desce: o vão cresce na mesma medida.
           if (fimDoTrecho && seguinte?.estado === 'atual') depois += 56 + 56;
           if (discreto) depois += 14;
+          // Na prévia, o resumo da lição (até duas linhas) vem embaixo do nome.
+          if (no.estado === 'previa' && no.resumo) depois += 36;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
           // O nome embaixo do nó (até duas linhas) e o balão "Começar" do próximo não podem se encostar.
           if (discreto && seguinte?.estado === 'atual') depois += 80;
@@ -671,7 +673,8 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
 }) {
   const [focado, setFocado] = useState(false);
   const nome = nomeDoNo(no, posicao);
-  let linha: string = no.estado === 'previa' ? posicao : mensagens.trilha.estados[no.estado];
+  // Na prévia, a linha embaixo do título diz o que a lição ensina (quando o gerador diz); senão, a posição.
+  let linha: string = no.estado === 'previa' ? no.resumo ?? posicao : mensagens.trilha.estados[no.estado];
   if (abrindo) linha = mensagens.trilha.abrindo;
   const { lente } = medidas;
   const centro = (largura * x) / 100;
@@ -679,7 +682,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const atual = no.estado === 'atual';
   const selo = seloDoNo(no);
   // O nome já termina em ponto: o selo entra sem ponto duplicado.
-  const rotuloA11y = selo ? `${nome} ${selo.texto}.` : nome;
+  const rotuloA11y = selo ? `${nome} ${selo.texto}.` : no.estado === 'previa' && no.resumo ? `${nome} ${no.resumo}` : nome;
   const lugar = [caminhoEstilos.noLugar, { left: centro - lente / 2, width: lente, height: lente }];
 
   const rotulo = comRotulo && (
@@ -690,7 +693,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
         {atual && <Text style={[caminhoEstilos.posicao, direita && caminhoEstilos.alinharFim]}>{posicao.toLocaleUpperCase('pt-BR')}</Text>}
         <Text style={[caminhoEstilos.titulo, atual && caminhoEstilos.tituloAtual, no.estado === 'previa' && caminhoEstilos.tituloPrevia,
           direita && caminhoEstilos.alinharFim, focado && caminhoEstilos.tituloFocado]}>{no.titulo}</Text>
-        {!atual && <Text style={[caminhoEstilos.estado, { color: corDoEstado[no.estado] }, direita && caminhoEstilos.alinharFim]}>{linha}</Text>}
+        {!atual && <Text numberOfLines={3} style={[caminhoEstilos.estado, { color: corDoEstado[no.estado] }, direita && caminhoEstilos.alinharFim]}>{linha}</Text>}
         {no.ponte && <><PonteNoMapa /><Text style={[caminhoEstilos.estado, { color: cores.acao }]}>{no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}</Text></>}
       </View>
     </View>
@@ -703,6 +706,8 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
       <View style={[caminhoEstilos.discretoCaixa, atual && caminhoEstilos.discretoCaixaAtual]}>
         <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta },
           atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
+        {/* Como na web (no balão do toque): na prévia, o que a lição ensina. */}
+        {no.estado === 'previa' && no.resumo && <Text numberOfLines={2} style={caminhoEstilos.discretoResumo}>{no.resumo}</Text>}
       </View>
       {selo && (
         <View style={caminhoEstilos.selo}>
@@ -724,6 +729,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
       <View accessible accessibilityLabel={rotuloA11y} style={{ height: lente }}>
         <View style={lugar}>{moeda(false)}</View>
         {rotulo}
+        {discreto}
       </View>
     );
   }
@@ -1250,6 +1256,7 @@ const caminhoEstilos = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
   discretoTexto: {
     color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
+  discretoResumo: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 12, lineHeight: 16, textAlign: 'center' },
   selo: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
     backgroundColor: cores.fundo },
   seloTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },

@@ -4,7 +4,8 @@ import type { EventoEstrutura, GeradorTrilha, MetaPlano } from "./gerador";
 import { conteudoGenerico, planoGenerico } from "./falsa-generica";
 import { demoDoObjetivo, demoPelaChave } from "./demos";
 
-type EstruturaDoPlano = { titulo: string; objetivo: string; fluxos: { titulo: string; licoes: { titulo: string }[] }[] };
+/** As lições das trilhas prontas têm objetivo: ele vira o resumo da prévia (o que a lição ensina). */
+type EstruturaDoPlano = { titulo: string; objetivo: string; fluxos: { titulo: string; licoes: { titulo: string; objetivo?: string }[] }[] };
 
 const GERADOR_SQL = "falsa-sql-v1";
 const GERADOR_GENERICO = "falsa-generica-v1";
@@ -177,7 +178,7 @@ function eventosDoPlano(plano: EstruturaDoPlano): EventoEstrutura[] {
     ...plano.fluxos.flatMap((fluxo, indiceFluxo): EventoEstrutura[] => [
       { tipo: "fluxo", fluxo: indiceFluxo, titulo: fluxo.titulo },
       ...fluxo.licoes.map((licao, indiceLicao): EventoEstrutura => (
-        { tipo: "licao", fluxo: indiceFluxo, licao: indiceLicao, titulo: licao.titulo }
+        { tipo: "licao", fluxo: indiceFluxo, licao: indiceLicao, titulo: licao.titulo, ...(licao.objetivo ? { resumo: licao.objetivo } : {}) }
       )),
     ]),
   ];

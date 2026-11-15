@@ -1,5 +1,5 @@
 import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial } from "@studoo/contratos";
-import { LIMITES_RESPOSTA, TIPOS_TRECHO, inferirTipoTrecho } from "@studoo/contratos";
+import { LIMITES_RESPOSTA, TIPOS_TRECHO, inferirTipoTrecho, tamanhoDaResposta } from "@studoo/contratos";
 
 /**
  * Exercício como fica guardado: o que a pessoa vê, mais o gabarito e os retornos.
@@ -403,6 +403,11 @@ function conferirLacuna(gabarito: readonly string[], resposta: string, exata = f
   if (semCortesia && conferirLacuna(gabarito, semCortesia, exata).correta) {
     return { correta: true, observacao: "Certo! Na lacuna, basta escrever o que falta." };
   }
+  // Com a lacuna no fim da frase, um complemento depois da palavra (“repeat it”, “say that again”) também é inglês certo.
+  const semComplemento = tirarComplemento(semCortesia ?? semContexto ?? resposta, trecho);
+  if (semComplemento && conferirLacuna(gabarito, semComplemento, exata).correta) {
+    return { correta: true, observacao: "Certo! Na lacuna, basta escrever o que falta." };
+  }
   // Quando a grafia é a lição, uma letra a mais ou a menos continua errada, mas o retorno diz que foi por pouco.
   for (const esperado of exata ? gabarito : []) {
     const alvo = normalizarResposta(esperado).replace(ARTIGO, "");
@@ -410,10 +415,26 @@ function conferirLacuna(gabarito: readonly string[], resposta: string, exata = f
     const perto = alvo.length >= 6 ? 2 : 1;
     if (distancia(semArtigo, alvo, perto) <= perto) return { correta: false, observacao: "Quase! Confira a grafia: a palavra está quase certa." };
   }
+  // A palavra certa está lá, mas com outras que mudam a frase: o retorno diz isso, em vez de só repetir a dica.
+  const comoFrase = ` ${normalizada.replace(/[^\p{L}\p{N} ]+/gu, " ").replace(/\s+/g, " ").trim()} `;
+  if (comoFrase.trim().includes(" ") && gabarito.some((esperado) => comoFrase.includes(` ${normalizarResposta(esperado)} `))) {
+    return { correta: false, observacao: "Quase: a palavra certa está na sua resposta, mas a lacuna pede só o que falta." };
+  }
   return { correta: false };
 }
 
 const CORTESIA = new Set(["please", "thanks", "por", "favor", "obrigado", "obrigada"]);
+/** Complementos que podem vir depois da palavra quando a lacuna fecha a frase (“Can you ___?”: “repeat it”). */
+const COMPLEMENTOS = new Set(["it", "that", "this", "again"]);
+
+/** Tira complementos do fim da resposta, só quando a lacuna é a última coisa da frase; null quando não havia nenhum. */
+function tirarComplemento(resposta: string, trecho?: string): string | null {
+  if (!trecho || !/_{3,}\s*[?.!]*\s*$/u.test(trecho)) return null;
+  const palavras = normalizarResposta(resposta).replace(/[^\p{L}\p{N} ]+/gu, " ").split(" ").filter(Boolean);
+  let fim = palavras.length;
+  while (fim > 1 && COMPLEMENTOS.has(palavras[fim - 1])) fim -= 1;
+  return fim === palavras.length ? null : palavras.slice(0, fim).join(" ");
+}
 
 /** Tira palavras de cortesia do começo e do fim da resposta (“repeat please”); null quando não havia nenhuma. */
 function tirarCortesia(resposta: string): string | null {
@@ -592,7 +613,8 @@ export function avaliarResposta(exercicio: ExercicioInterno, resposta: string): 
         : { certos });
     }
     case "aberta":
-      if (valor.length < exercicio.minimo) return null;
+      // O mínimo conta letras e números, sem os espaços (como o contador da tela).
+      if (tamanhoDaResposta(valor) < exercicio.minimo) return null;
       return conferirAberta(exercicio, valor);
     default:
       return null;
@@ -645,7 +667,8 @@ export type EsqueletoPlano = {
   titulo: string;
   objetivo: string;
   origem: string;
-  fluxos: { titulo: string; licoes: { titulo: string }[] }[];
+  /** `resumo`: o que a lição ensina, para a prévia da trilha. */
+  fluxos: { titulo: string; licoes: { titulo: string; resumo?: string }[] }[];
 };
 
 export const LIMITES_ESQUELETO = { fluxos: 8, licoesPorFluxo: 8, titulo: 200, objetivo: 1000 } as const;
@@ -660,7 +683,8 @@ export function esqueletoValido(valor: unknown): valor is EsqueletoPlano {
   return valor.fluxos.every((fluxo) =>
     objeto(fluxo) && textoAte(fluxo.titulo, LIMITES_ESQUELETO.titulo) && Array.isArray(fluxo.licoes) &&
     fluxo.licoes.length > 0 && fluxo.licoes.length <= LIMITES_ESQUELETO.licoesPorFluxo &&
-    fluxo.licoes.every((licao) => objeto(licao) && textoAte(licao.titulo, LIMITES_ESQUELETO.titulo)));
+    fluxo.licoes.every((licao) => objeto(licao) && textoAte(licao.titulo, LIMITES_ESQUELETO.titulo) &&
+      opcional(licao.resumo, (resumo) => textoAte(resumo, 200))));
 }
 
 /**
@@ -708,7 +732,10 @@ export function termosDaLicao(conteudo: ConteudoLicao): string[] {
 /** O aviso da primeira armadilha (da lição ou dos exercícios) que o texto traz, como “I here” sem o verbo. */
 export function armadilhaNoTexto(conteudo: ConteudoLicao, texto: string): string | null {
   const palavras = palavrasDe(texto);
-  const todas = [...(conteudo.armadilhas ?? []), ...[conteudo.exercicio, ...(conteudo.extras ?? [])].flatMap(({ armadilhas }) => armadilhas ?? [])];
+  // As da lacuna ficam de fora: elas valem para a resposta inteira (“de”, “do”), e num texto livre em português
+  // apareceriam em qualquer frase.
+  const exercicios = [conteudo.exercicio, ...(conteudo.extras ?? [])].filter(({ tipo }) => tipo === "aberta");
+  const todas = [...(conteudo.armadilhas ?? []), ...exercicios.flatMap(({ armadilhas }) => armadilhas ?? [])];
   return todas.find(({ termos }) => termos.split("|").some((termo) => temTermo(palavras, termo.trim())))?.aviso ?? null;
 }
 

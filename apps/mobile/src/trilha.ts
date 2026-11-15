@@ -10,7 +10,8 @@ export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco entre um trecho e outro. */
 /** `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar). Como na web. */
 /** `rever`: por que vale rever a lição concluída (`motivoParaRever`); o mapa marca "Vale rever". Como na web. */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever };
+/** `resumo`: na prévia, o que a lição ensina (aparece embaixo do título). Como na web. */
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever; resumo?: string };
 
 /** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. Como na web. */
 export function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string; rever: boolean } | null {
