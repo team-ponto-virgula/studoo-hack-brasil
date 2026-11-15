@@ -1800,7 +1800,9 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
       </div>
       {pratica.som && <TocarSom rotulo={pratica.som.rotulo} casas={pratica.som.casas} />}
       {recurso?.tipo === 'acorde' && recurso.batida && <DiagramaAcorde recurso={recurso} longa soBatida />}
-      <fieldset className="como-foi" disabled={!praticou && !escolha}>
+      {/* As opções ficam travadas até o mínimo de prática, mas o grupo não: um fieldset desativado desativaria também o
+          "Já pratiquei sem o cronômetro", que existe justamente para esse momento. */}
+      <fieldset className="como-foi" data-travado={!praticou && !escolha ? '' : undefined}>
         <legend ref={comoFoi} tabIndex={-1}>
           {acabou ? t.pratica.acabou
             : praticou || escolha ? t.pratica.comoFoi
@@ -1814,7 +1816,8 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
         <div className="como-foi__opcoes">
           {AUTOAVALIACOES.map((valor) => (
             <label key={valor} data-valor={valor}>
-              <input type="radio" name="como-foi" value={valor} checked={escolha === valor} onChange={() => escolher(valor)} />
+              <input type="radio" name="como-foi" value={valor} checked={escolha === valor} disabled={!praticou && !escolha}
+                onChange={() => escolher(valor)} />
               <span>{t.pratica.opcoes[valor]}</span>
             </label>
           ))}

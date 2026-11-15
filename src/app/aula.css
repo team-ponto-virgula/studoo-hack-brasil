@@ -835,7 +835,7 @@
 .ouvir__botao[data-tocando] { border-color: var(--acao); color: var(--acao-escura); background: #eef2ff; }
 
 /* "Como foi?" espera o cronômetro começar. */
-.como-foi:disabled label { opacity: 0.55; cursor: not-allowed; }
+.como-foi[data-travado] label { opacity: 0.55; cursor: not-allowed; }
 
 /* Avisos no alto da aula: voltou de onde parou (com "Recomeçar") e a revisão rápida antes de concluir. */
 .aula-aviso { margin: 4px 0 14px; padding: 10px 14px; border-radius: 14px; background: #eef2ff; color: var(--acao-escura); font-weight: 800; }
