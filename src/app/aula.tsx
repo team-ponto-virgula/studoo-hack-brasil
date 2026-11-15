@@ -11,6 +11,7 @@ import {
   exerciciosDaLicao,
   linhasDePassos,
   origemLegivel,
+  respostaParaTentarDeNovo,
   partesDaLacuna,
   respostaCompleta,
   semAspas,
@@ -34,6 +35,7 @@ import { Botao, Confete, Icone, Stu, type NomeIcone } from '../ui';
 import { ApoioDaLicao } from './estudio';
 
 const t = mensagens.licao;
+
 /** Quantas vezes uma aula montou: separa a saída de verdade da remontagem do modo estrito do React. */
 let montagensDaAula = 0;
 
@@ -66,6 +68,17 @@ type Andamento = {
   revisao: number[] | null;
 };
 const chaveDoAndamento = (id: string) => `studoo.aula.${id}`;
+
+/** Se a lição foi começada e tem andamento guardado neste navegador (menos de um dia): o mapa diz Continuar. */
+export function temAndamento(id: string): boolean {
+  if (typeof window === 'undefined') return false;
+  try {
+    const salvo = JSON.parse(window.localStorage.getItem(chaveDoAndamento(id)) ?? 'null') as { salvoEm?: number; passo?: number } | null;
+    return Boolean(salvo && (salvo.passo ?? 0) > 0 && Date.now() - (salvo.salvoEm ?? 0) < 86_400_000);
+  } catch {
+    return false;
+  }
+}
 
 /** O andamento guardado desta lição, se ainda servir (mesmo número de etapas e exercícios, menos de um dia). */
 function lerAndamento(licao: LicaoDetalhe, etapas: number, exercicios: number): Andamento | null {
@@ -258,8 +271,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   function tentarDeNovo() {
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
-    // Na resposta aberta, o texto fica para a pessoa corrigir; nos outros formatos, recomeça do zero.
-    if (exercicio?.tipo !== 'aberta') mudarResposta('');
+    // Fica o que estava certo (na aberta, o texto todo); o resto recomeça.
+    if (exercicio && avaliacao) mudarResposta(respostaParaTentarDeNovo(exercicio, resposta, avaliacao));
     window.requestAnimationFrame(() => {
       formulario.current?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, button')?.focus();
     });
@@ -433,16 +446,16 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                     : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
                   <span className="somente-leitor"> {avaliacao.correta ? t.correta : t.incorreta}.</span>
                 </h2>
-                <p>{avaliacao.feedback}</p>
-                {avaliacao.observacao && <p className="aula-retorno__observacao">{avaliacao.observacao}</p>}
-                {!avaliacao.correta && avaliacao.certos && exercicio && (exercicio.tipo === 'ordenar' || exercicio.tipo === 'associar') && (
+                {pedidoPonte === 0 && <p>{avaliacao.feedback}</p>}
+                {pedidoPonte === 0 && avaliacao.observacao && <p className="aula-retorno__observacao">{avaliacao.observacao}</p>}
+                {pedidoPonte === 0 && !avaliacao.correta && avaliacao.certos && exercicio && (exercicio.tipo === 'ordenar' || exercicio.tipo === 'associar') && (
                   <p className="aula-retorno__observacao">
                     {exercicio.tipo === 'ordenar'
                       ? t.ordenar.certos(avaliacao.certos.length, exercicio.itens.length)
                       : t.associar.certos(avaliacao.certos.length, exercicio.esquerda.length)}
                   </p>
                 )}
-                {!avaliacao.correta && (
+                {!avaliacao.correta && pedidoPonte === 0 && (
                   <span className="aula-retorno__link">
                     {/* Um toque só: pede o outro exemplo e mostra o cartão, que rola até ficar acima do painel. */}
                     <Botao variante="texto" disabled={ocupado} onClick={() => setPedidoPonte((atual) => atual + 1)}>{mensagens.estudio.verPonte}</Botao>
@@ -575,12 +588,40 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
   type Som = 'acorde' | 'batida' | 'anterior';
   const [tocando, setTocando] = useState<Som | null>(null);
   const [semSom, setSemSom] = useState(false);
+  /** Na batida, qual dos oito tempos do compasso (1, e, 2, e…) está soando agora. */
+  const [tempoAtual, setTempoAtual] = useState<number | null>(null);
   const enderecos = useRef<Partial<Record<Som, string>>>({});
+  const audioAtual = useRef<HTMLAudioElement | null>(null);
+  const quadro = useRef(0);
   const { anterior } = recurso;
 
   useEffect(() => () => {
     Object.values(enderecos.current).forEach((endereco) => URL.revokeObjectURL(endereco));
+    audioAtual.current?.pause();
+    window.cancelAnimationFrame(quadro.current);
   }, []);
+
+  /** Acompanha a batida (72 por minuto, uma colcheia a cada 30/72 s) e destaca o tempo que soa. */
+  function acompanhar(audio: HTMLAudioElement) {
+    const colcheia = 30 / 72;
+    const passo = () => {
+      if (audio.paused || audio.ended) {
+        setTempoAtual(null);
+        return;
+      }
+      const indice = Math.floor(audio.currentTime / colcheia);
+      setTempoAtual(indice < 16 ? indice % 8 : null);
+      quadro.current = window.requestAnimationFrame(passo);
+    };
+    quadro.current = window.requestAnimationFrame(passo);
+  }
+
+  function parar() {
+    audioAtual.current?.pause();
+    window.cancelAnimationFrame(quadro.current);
+    setTocando(null);
+    setTempoAtual(null);
+  }
 
   function tocar(som: Som) {
     const bytes = () => {
@@ -589,10 +630,16 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
     };
     enderecos.current[som] ??= URL.createObjectURL(new Blob([bytes() as BlobPart], { type: 'audio/wav' }));
     const audio = new Audio(enderecos.current[som]);
+    audioAtual.current = audio;
     setTocando(som);
     setSemSom(false);
-    audio.onended = () => setTocando(null);
-    audio.play().catch(() => {
+    audio.onended = () => {
+      setTocando(null);
+      setTempoAtual(null);
+    };
+    audio.play().then(() => {
+      if (som === 'batida') acompanhar(audio);
+    }).catch(() => {
       setTocando(null);
       setSemSom(true);
     });
@@ -626,7 +673,20 @@ function DiagramaAcorde({ recurso }: { recurso: Extract<Recurso, { tipo: 'acorde
               <Icone nome="som" />{tocando === 'batida' ? t.recursos.tocando : t.recursos.ouvirBatida}
             </Botao>
           )}
+          {tocando && <Botao variante="texto" onClick={parar}>{t.audio.pararSom}</Botao>}
         </span>
+        {recurso.batida && (
+          <>
+            <span className="batida" aria-hidden="true">
+              {['1', 'e', '2', 'e', '3', 'e', '4', 'e'].map((rotulo, indice) => (
+                <span key={indice} className="batida__tempo" data-ativo={tempoAtual === indice || undefined} data-sobe={indice % 2 === 1 || undefined}>
+                  <span className="batida__seta">{indice % 2 ? '↑' : '↓'}</span>{rotulo}
+                </span>
+              ))}
+            </span>
+            <span className="acorde__guia">{t.audio.batidaGuia}</span>
+          </>
+        )}
         {semSom && <span role="status" className="acorde__aviso">{t.recursos.semSom}</span>}
       </figcaption>
     </figure>
@@ -730,11 +790,24 @@ function BotaoFalar({ fala }: { fala: Fala }) {
   const [resultado, setResultado] = useState<{ dito: string; conferencia: ConferenciaDaFala } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const reconhecimento = useRef<Reconhecimento | null>(null);
-  useEffect(() => () => reconhecimento.current?.abort(), []);
+  const prazo = useRef<number | undefined>(undefined);
+  const recebeu = useRef(false);
+  useEffect(() => () => {
+    reconhecimento.current?.abort();
+    window.clearTimeout(prazo.current);
+  }, []);
+
+  /** Termina a escuta; sem nada ouvido, avisa (o reconhecimento às vezes não devolve nada, nem erro). */
+  function encerrar() {
+    window.clearTimeout(prazo.current);
+    setOuvindo(false);
+    if (!recebeu.current) setErro((atual) => atual ?? t.audio.naoOuviu);
+  }
 
   function ouvir() {
     const Classe = classeDoReconhecimento();
     if (!Classe) return;
+    recebeu.current = false;
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     const novo = new Classe();
     novo.lang = fala.idioma;
@@ -742,6 +815,7 @@ function BotaoFalar({ fala }: { fala: Fala }) {
     novo.maxAlternatives = 3;
     novo.continuous = false;
     novo.onresult = (evento) => {
+      recebeu.current = true;
       const alternativas = Array.from(evento.results[0] ?? [], ({ transcript }) => transcript.trim()).filter(Boolean);
       const melhor = alternativas
         .map((dito) => ({ dito, conferencia: conferirFala(fala.texto, dito, fala.idioma) }))
@@ -752,23 +826,34 @@ function BotaoFalar({ fala }: { fala: Fala }) {
     novo.onerror = (evento) => {
       setErro(evento.error === 'not-allowed' || evento.error === 'service-not-allowed' ? t.audio.semMicrofone : t.audio.naoOuviu);
     };
-    novo.onend = () => setOuvindo(false);
+    novo.onend = encerrar;
     reconhecimento.current = novo;
     setErro(null);
     setResultado(null);
     setOuvindo(true);
+    // Sem resposta em 8 s, para e avisa.
+    prazo.current = window.setTimeout(() => {
+      novo.abort();
+      encerrar();
+    }, 8000);
     try {
       novo.start();
     } catch {
-      setOuvindo(false);
-      setErro(t.audio.naoOuviu);
+      encerrar();
     }
+  }
+
+  /** Parar pelo botão: pede o fim e, se o reconhecimento não responder, encerra mesmo assim. */
+  function parar() {
+    reconhecimento.current?.stop();
+    window.clearTimeout(prazo.current);
+    prazo.current = window.setTimeout(encerrar, 1500);
   }
 
   return (
     <>
       <button type="button" className="ouvir__botao ouvir__botao--falar" aria-label={t.audio.falarFrase(fala.texto)}
-        data-tocando={ouvindo || undefined} onClick={() => (ouvindo ? reconhecimento.current?.stop() : ouvir())}>
+        data-tocando={ouvindo || undefined} onClick={() => (ouvindo ? parar() : ouvir())}>
         <span aria-hidden="true">{ouvindo ? t.audio.ouvindo : t.audio.falar}</span>
       </button>
       {(resultado || erro) && (

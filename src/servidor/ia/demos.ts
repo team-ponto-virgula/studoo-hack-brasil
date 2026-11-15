@@ -250,6 +250,7 @@ const violao: Demo = {
                 "nao para|nao paro|nunca para|nunca paro|sem parar|continu|segue|seguindo|mantem|manter|mantenho|balanc|pendulo|no tempo",
               ],
               criterios: ["Diz que o anelar é o dedo que se move", "Diz quais dedos ficam no lugar", "Diz que a batida não para (o braço segue no tempo)"],
+              essenciais: [0],
               modelo: "Eu deixo o indicador e o médio no lugar, porque eles são iguais nos dois acordes, e só levo o anelar para a 3ª casa da 5ª corda. Enquanto isso, o braço da batida continua balançando, para o Dó entrar no tempo certo.",
               feedbackCorreto: "Ótima explicação: âncora, dedo que viaja e a batida que não para.",
               feedbackIncorreto: "Faltou alguma parte: diga quais dedos ficam, qual dedo se move e o que acontece com a batida.",
@@ -310,26 +311,27 @@ const ingles: Demo = {
             extras: [
               {
                 tipo: "multipla_escolha",
-                enunciado: "Na imigração, o agente pergunta por que você veio. O que você responde?",
+                enunciado: "Na imigração, ouça a pergunta do agente e escolha a resposta.",
+                fala: { texto: "What is the purpose of your visit?", idioma: "en-US" },
                 opcoes: [op("a", "I'm here on vacation."), op("b", "Nice to meet you!"), op("c", "How much is it?")],
                 gabarito: ["a"],
                 feedbackCorreto: "Isso: “I'm here on vacation” diz que você veio passear, de férias.",
-                feedbackIncorreto: "O agente quer saber o motivo da viagem. Qual frase fala de férias?",
+                feedbackIncorreto: "Ouça de novo: “purpose of your visit” é o motivo da viagem. Qual frase fala de férias?",
               },
             ],
           },
           {
             titulo: "Pedir informações na rua",
             objetivo: "Perguntar onde fica um lugar e entender a resposta.",
-            conceito: "Para pedir ajuda, comece com “Excuse me” (com licença) e pergunte “Where is…?” (onde fica…?). Na resposta, preste atenção em “next to” (ao lado de), “in front of” (em frente a) e “far from” (longe de). No fim, “Thank you!” agradece.",
+            conceito: "Para pedir ajuda, comece com “Excuse me” (com licença) e pergunte “Where is…?” (onde fica…?). Na resposta, preste atenção no caminho, “turn left” (vire à esquerda), “turn right” (vire à direita) e “go straight” (siga em frente), e no lugar: “next to” (ao lado de), “in front of” (em frente a) e “far from” (longe de). No fim, “Thank you!” agradece.",
             exemplo: "“Excuse me, where is the train station?” — “It's on the next corner.” — “Thank you!”",
             falas: [
               falaEn("Excuse me, where is the train station?", "Com licença, onde fica a estação de trem?"),
-              falaEn("It's on the next corner.", "Fica na próxima esquina."),
+              falaEn("Go straight, then turn left.", "Siga em frente e depois vire à esquerda."),
+              falaEn("Turn right at the corner.", "Vire à direita na esquina."),
               falaEn("It's next to the hotel.", "Fica ao lado do hotel."),
               falaEn("It's in front of the bank.", "Fica em frente ao banco."),
               falaEn("It's far from here.", "Fica longe daqui."),
-              falaEn("Thank you!", "Obrigado!"),
             ],
             origem: origemIngles,
             exercicio: {
@@ -499,7 +501,10 @@ const ingles: Demo = {
             conceito: "Para pedir, use “I would like…” ou a forma curta “I'd like…” (eu gostaria de…), seguida do prato, e termine com “please”. É educado e funciona em qualquer lugar.",
             exemplo: "“I'd like a sandwich and an orange juice, please.” Para pedir a conta: “Can I have the check, please?”",
             falas: [
+              falaEn("Can I have the menu, please?", "Pode me trazer o cardápio, por favor?"),
               falaEn("I'd like a sandwich, please.", "Eu gostaria de um sanduíche, por favor."),
+              falaEn("Water, please.", "Água, por favor."),
+              falaEn("It was delicious!", "Estava delicioso!"),
               falaEn("Can I have the check, please?", "Pode me trazer a conta, por favor?"),
             ],
             origem: origemIngles,
@@ -509,9 +514,10 @@ const ingles: Demo = {
               minimo: 15,
               gabarito: ["i'd like|i would like|can i have|could i have|may i have", "please", "coffee"],
               criterios: ["Usa uma forma educada de pedir (I'd like, Can I have…)", "Termina com “please”", "Pede o café (coffee)"],
+              essenciais: [0],
               modelo: "I'd like a coffee and a cheese bread, please.",
               feedbackCorreto: "Pedido perfeito: educado, claro e com “please”.",
-              feedbackIncorreto: "Quase: use “I'd like…” ou “Can I have…”, diga o que quer (coffee) e termine com “please”.",
+              feedbackIncorreto: "Para pedir com educação, use “I'd like…” (eu gostaria de) ou “Can I have…”. Cuidado: “I like” quer dizer “eu gosto”. Diga o que quer (coffee) e termine com “please”.",
             },
             extras: [
               {
