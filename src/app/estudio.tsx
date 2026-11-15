@@ -209,6 +209,7 @@ export function ApoioDaLicao({
   pedidoPonte = 0,
   ultimo = true,
   aoConcluirPonte,
+  aoEnsinar,
 }: {
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
@@ -218,12 +219,16 @@ export function ApoioDaLicao({
   ultimo?: boolean;
   /** A pessoa acertou a pergunta do reforço: a lição troca o "Quase lá!" do painel pelo convite a tentar de novo. */
   aoConcluirPonte?: () => void;
+  /** A explicação foi enviada: a lição tira o convite para explicar. */
+  aoEnsinar?: () => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const cartaoPonte = useRef<HTMLElement>(null);
   const retornoDoEnsino = useRef<HTMLDivElement>(null);
+  // O aviso do microfone (ou da transcrição) aparece junto do botão Gravar, no pé da página: a tela leva até ele.
+  const avisoRef = useRef<HTMLParagraphElement>(null);
   const revisaoApoio = useRef(0);
   function atualizarApoio(valor: Parameters<typeof setApoio>[0]) {
     revisaoApoio.current += 1;
@@ -377,6 +382,11 @@ export function ApoioDaLicao({
     // Só o pedido e a chegada do reforço disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoPonte, pontePronta]);
+  useEffect(() => {
+    if (!aviso) return;
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    avisoRef.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+  }, [aviso]);
   // O retorno do "Ensine ao Stu" aparece embaixo do formulário: a tela rola até ele.
   useEffect(() => {
     if (!ensino) return;
@@ -422,7 +432,17 @@ export function ApoioDaLicao({
                         type="radio"
                         name="reforco"
                         checked={resposta === o.id}
-                        onChange={() => setResposta(o.id)}
+                        onChange={() => {
+                          setResposta(o.id);
+                          // O "Conferir" fica embaixo das opções, às vezes atrás do painel: a tela leva até ele.
+                          window.requestAnimationFrame(() => {
+                            const botao = cartaoPonte.current?.querySelector<HTMLElement>('.botao');
+                            const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
+                            if (!botao) return;
+                            const sobra = botao.getBoundingClientRect().bottom - (window.innerHeight - rodape - 16);
+                            if (sobra > 0) window.scrollBy({ top: sobra, behavior: 'smooth' });
+                          });
+                        }}
                       />
                       {o.texto}
                     </label>
@@ -488,6 +508,8 @@ export function ApoioDaLicao({
                   ensino: r,
                 }));
                 setEnsino(r);
+                setAviso('');
+                aoEnsinar?.();
               })
             }
           >
@@ -499,7 +521,7 @@ export function ApoioDaLicao({
             {m.gravando} {segundos}/60 s
           </p>
         )}
-        {aviso && <p role="status">{aviso}</p>}
+        {aviso && <p role="status" ref={avisoRef}>{aviso}</p>}
         {ensino && (
           <div className="estudio-feedback" role="status" ref={retornoDoEnsino}>
             <h3>{m.acertos}</h3>

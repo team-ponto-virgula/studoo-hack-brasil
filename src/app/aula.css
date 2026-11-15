@@ -440,6 +440,12 @@
 .falas__traducao { margin: 2px 0 0; color: var(--texto2); font-size: 0.9rem; }
 /* A pronúncia escrita (do jeito que se lê em português), entre o texto e a tradução. */
 .falas__pronuncia { margin: 2px 0 0; color: var(--acao-escura); font-size: 0.9rem; font-style: italic; font-weight: 700; }
+.falas__legenda { margin: -4px 0 2px; color: var(--texto2); font-size: 0.85rem; }
+/* Voltar uma etapa: um link discreto acima do selo da etapa. */
+.aula-voltar-etapa { display: inline-flex; align-items: center; gap: 4px; margin: 0 0 6px; padding: 4px 0; border: 0; background: none;
+  color: var(--acao); font: inherit; font-size: 0.875rem; font-weight: 800; cursor: pointer; }
+.aula-voltar-etapa .icone { width: 16px; height: 16px; transform: rotate(180deg); }
+.aula-voltar-etapa:disabled { opacity: 0.5; cursor: default; }
 /* Na prática: o som de referência e a batida para tocar junto ficam logo depois do cronômetro. */
 .aula-pratica__som { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .acorde--so-batida { display: grid; justify-items: center; gap: 10px; padding: 12px; border-radius: 18px; background: #fffaf0; }

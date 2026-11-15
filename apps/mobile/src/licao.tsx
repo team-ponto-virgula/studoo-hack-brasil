@@ -70,6 +70,8 @@ type Andamento = {
   comprovante: string | null;
   autoAvaliacao: AutoAvaliacao | null;
   revisao: number[] | null;
+  /** Segundos já estudados, para o tempo do resumo seguir de onde parou. Como na web. */
+  segundos?: number;
   salvoEm: number;
 };
 const andamentos = new Map<string, Andamento>();
@@ -165,7 +167,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [ponteFeita, setPonteFeita] = useState(false);
   // Onde fica o exercício: para levar a consulta aberta para cima do painel de retorno.
   const exercicioY = useRef(0);
-  const [inicio] = useState(() => Date.now());
+  const [inicio] = useState(() => Date.now() - (retomada?.segundos ?? 0) * 1000);
+  /** Cada "Praticar mais um pouco" recomeça o cronômetro da prática. Como na web. */
+  const [voltasPratica, setVoltasPratica] = useState(0);
   const tituloEtapa = useRef<ComponentRef<typeof Text>>(null);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const apoioPosicao = useRef(0);
@@ -256,7 +260,10 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   // Guarda o andamento a cada passo; o começo intocado não precisa.
   useEffect(() => {
     if (licao.concluida || (passo === 0 && tentativas === 0)) return;
-    andamentos.set(licao.id, { passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao, salvoEm: Date.now() });
+    andamentos.set(licao.id, {
+      passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao,
+      segundos: Math.round((Date.now() - inicio) / 1000), salvoEm: Date.now(),
+    });
   }, [licao.id, licao.concluida, passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao]);
 
   /** Sair da lição: o andamento fica guardado, então sai direto (e continua de onde parou na volta). */
@@ -410,8 +417,14 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     rodape = (
       <View style={{ gap: 8 }}>
         {!autoAvaliacao && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.escolha}</Text>}
+        {autoAvaliacao === 'ainda_nao' && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.aindaNaoNota}</Text>}
+        {autoAvaliacao === 'ainda_nao' && (
+          <Botao testID="praticar-mais" rotulo={t.pratica.praticarMais} variante="secundario" desativado={ocupado}
+            acao={() => { setAutoAvaliacao(null); setVoltasPratica((atual) => atual + 1); mostrarComoFoi(); }} />
+        )}
         {/* Sem contar como foi, o botão leva até a pergunta, em vez de ficar apagado sem explicação. Como na web. */}
-        <Botao testID="concluir-pratica" rotulo={pendente === 'concluir' ? t.concluindo : t.pratica.concluir} variante="sucesso"
+        <Botao testID="concluir-pratica"
+          rotulo={pendente === 'concluir' ? t.concluindo : autoAvaliacao === 'ainda_nao' ? t.pratica.concluirAssim : t.pratica.concluir} variante="sucesso"
           desativado={ocupado} esmaecido={!autoAvaliacao} dica={autoAvaliacao ? undefined : t.pratica.escolha}
           ocupado={pendente === 'concluir'} carregando={pendente === 'concluir'}
           acao={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())} />
@@ -480,6 +493,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       aoMedirConteudo={(altura) => { alturaConteudo.current = altura; medirMais(); }}
       estiloRodape={retorno === 'certa' ? licaoEstilos.rodapeCerto : retorno === 'errada' ? licaoEstilos.rodapeErrado : undefined}>
       <EntradaDaEtapa key={passo}>
+        {passo > 0 && !revisao && (
+          <Pressable testID="etapa-anterior" accessibilityRole="button" disabled={ocupado} hitSlop={8}
+            onPress={() => setPasso((atual) => Math.max(0, atual - 1))} style={licaoEstilos.voltarEtapa}>
+            <View style={{ transform: [{ rotate: '180deg' }] }}><Icone nome="seta" tamanho={16} cor={cores.acao} /></View>
+            <Text style={licaoEstilos.voltarEtapaTexto}>{t.etapaAnterior}</Text>
+          </Pressable>
+        )}
         <View style={licaoEstilos.etapa}>
           <View style={[licaoEstilos.etapaIcone, { backgroundColor: coresDaEtapa[etapa.tipo].fundo }]}>
             <Icone nome={iconesDaEtapa[etapa.tipo]} tamanho={18} cor={coresDaEtapa[etapa.tipo].texto} />
@@ -557,7 +577,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             )}
             {/* Para consultar, depois da resposta e recolhido para a pergunta ficar no alto: o acorde e a barra de fração (a
                 linha do tempo entregaria a ordem). */}
-            {((avaliacao && !avaliacao.correta) || errosAnteriores[indice]) && (
+            {exercicio && (
               <View style={[licaoEstilos.consulta, !explicacaoAberta && licaoEstilos.consultaFechada]}>
                 <Pressable testID="rever-explicacao" accessibilityRole="button" accessibilityState={{ expanded: explicacaoAberta }}
                   onPress={() => setExplicacaoAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
@@ -567,6 +587,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   <Text style={licaoEstilos.consultaBotaoTexto}>{explicacaoAberta ? t.recursos.esconder : t.reverExplicacao}</Text>
                 </Pressable>
                 {explicacaoAberta && <Text style={estilos.texto}>{licao.conceito}</Text>}
+                {explicacaoAberta && <Text style={estilos.texto}><Text style={{ fontWeight: '800' }}>{t.exemplo}: </Text>{licao.exemplo}</Text>}
               </View>
             )}
             {licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' && (
@@ -604,7 +625,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           <View style={[licaoEstilos.quadro, licaoEstilos.quadroPratica]} onLayout={(evento) => { praticaY.current = evento.nativeEvent.layout.y; }}>
             <Text ref={tituloEtapa} accessible accessibilityRole="header" style={estilos.subtitulo}>{t.pratica.titulo}</Text>
             <EtapaPratica pratica={licao.pratica} escolha={autoAvaliacao} recurso={licao.recurso}
-              aoMedirComoFoi={(y) => { comoFoiY.current = y; }} aoAcabar={() => setTimeout(mostrarComoFoi, 120)}
+              aoMedirComoFoi={(y) => { comoFoiY.current = y; }} aoAcabar={() => setTimeout(mostrarComoFoi, 120)} reinicio={voltasPratica}
               escolher={(valor) => {
                 setAutoAvaliacao(valor);
                 // A resposta do Stu aparece embaixo das opções: rola até ela (a pergunta no alto da tela), para não ficar atrás
@@ -614,7 +635,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               consulta={(licao.recurso || licao.passos || licao.falas) && (
                 <View style={licaoEstilos.consulta}>
                   <Text style={licaoEstilos.consultaRotulo}>{t.recursos.consultar.toLocaleUpperCase('pt-BR')}</Text>
-                  {licao.recurso && <RecursoDaLicao recurso={licao.recurso} longa />}
+                  {licao.recurso && <RecursoDaLicao recurso={licao.recurso} longa semBatida={licao.recurso.tipo === 'acorde' && licao.recurso.batida} />}
                   {licao.passos && <Passos passos={licao.passos} />}
                   {licao.falas && <Falas falas={licao.falas} />}
                 </View>
@@ -807,6 +828,8 @@ const licaoEstilos = StyleSheet.create({
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   etapaTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
+  voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginBottom: 6, minHeight: 32 },
+  voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
     backgroundColor: '#FFF8E6' },
   dicaTopo: { flexDirection: 'row', alignItems: 'center', gap: 6 },

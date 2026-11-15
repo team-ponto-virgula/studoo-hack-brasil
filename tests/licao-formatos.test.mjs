@@ -488,7 +488,7 @@ test("resposta aberta: sem o critério essencial não passa, mesmo com os outros
     .find(({ titulo }) => titulo === "Pedir comida no restaurante").exercicio;
   const semEducacao = avaliarResposta(exercicio, "I like one coffee and cheese bread please");
   assert.equal(semEducacao.correta, false);
-  assert.deepEqual(semEducacao.criterios.map(({ atendido }) => atendido), [false, true, true]);
+  assert.deepEqual(semEducacao.criterios.map(({ atendido }) => atendido), [false, true, true, true], "o pão de queijo também é conferido");
   assert.match(semEducacao.observacao, /“I like” quer dizer “eu gosto”/, "a armadilha da resposta vira o aviso");
   assert.equal(avaliarResposta(exercicio, "I would like a coffee and a cheese bread, please").correta, true);
 });
@@ -641,4 +641,13 @@ test("inglês tem pronúncia escrita nas frases e o violão toca o Mi para afina
   assert.deepEqual(violao.pratica.som.casas, [0, -1, -1, -1, -1, -1], "só a 6ª corda, solta");
   assert.ok(conteudoValido({ ...violao, pratica: { ...violao.pratica, som: { rotulo: "x", casas: [-1, -1, -1, -1, -1, -1] } } }) === false,
     "um som sem nenhuma corda não vale");
+});
+
+test("lacuna: o nome popular (“chave”) ganha a sua dica, sem virar acerto", () => {
+  const lacuna = DEMOS.find(({ chave }) => chave === "violao").plano.fluxos[0].licoes[0].extras[0];
+  const chave = avaliarResposta(lacuna, "Chave");
+  assert.equal(chave.correta, false);
+  assert.match(chave.observacao, /Muita gente chama essa peça assim/);
+  assert.equal(avaliarResposta(lacuna, "tarraxa").observacao, undefined);
+  assert.equal(avaliarResposta(lacuna, "corda").observacao, undefined, "outra resposta errada não ganha a dica do apelido");
 });

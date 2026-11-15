@@ -163,6 +163,7 @@ export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolea
         </Pressable>
       )}
       {(mostrar || acertou) && <Text selectable style={formatos.fraseGrande}>{fala.texto}</Text>}
+      {(mostrar || acertou) && fala.pronuncia && <Text style={formatos.pronuncia}>{fala.pronuncia}</Text>}
       {acertou && fala.traducao && <Text style={[estilos.legenda, { fontWeight: '700' }]}>{fala.traducao}</Text>}
     </View>
   );
@@ -339,6 +340,7 @@ export function Falas({ falas }: { falas: Fala[] }) {
   return (
     <View style={formatos.secao}>
       <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.audio.falasTitulo.toLocaleUpperCase('pt-BR')}</Text>
+      {falas.some(({ pronuncia }) => pronuncia) && <Text style={estilos.legenda}>{t.audio.comoLerPronuncia}</Text>}
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
           <Text selectable style={formatos.falaTexto}>{fala.texto}</Text>
@@ -384,6 +386,7 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
   return (
     <View testID="frases-da-licao" style={formatos.secao}>
       <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.frasesDaLicao.toLocaleUpperCase('pt-BR')}</Text>
+      {falas.some(({ pronuncia }) => pronuncia) && <Text style={estilos.legenda}>{t.audio.comoLerPronuncia}</Text>}
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
           <Text selectable style={formatos.falaTexto}>{fala.texto}</Text>
@@ -456,8 +459,8 @@ export function Passos({ passos, titulo }: { passos: string[]; titulo?: string }
 
 /** Recurso do exemplo: acorde (diagrama e som), linha do tempo ou a foto do material. `longa`: na prática, a batida toca
  * oito compassos (uns 30 s) para tocar junto, como na web. */
-export function RecursoDaLicao({ recurso, longa = false }: { recurso: Recurso; longa?: boolean }) {
-  if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} longa={longa} />;
+export function RecursoDaLicao({ recurso, longa = false, semBatida = false }: { recurso: Recurso; longa?: boolean; semBatida?: boolean }) {
+  if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={semBatida ? { ...recurso, batida: false } : recurso} longa={longa} />;
   if (recurso.tipo === 'fracao') {
     const descricao = t.recursos.fracaoDescricao(recurso.numerador, recurso.denominador);
     return (
@@ -939,7 +942,9 @@ function formatarTempo(segundos: number) {
  * Prática no mundo real: a tarefa, a lista para conferir, a dica e o cronômetro; na volta, a pessoa conta como foi e o
  * Stu responde. A lição só conclui depois dessa resposta (o botão de concluir fica no rodapé da aula).
  */
-export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComoFoi, aoAcabar, recurso }: {
+export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComoFoi, aoAcabar, recurso, reinicio = 0 }: {
+  /** Muda a cada "Praticar mais um pouco": o cronômetro recomeça. Como na web. */
+  reinicio?: number;
   /** O que a lição mostrou no exemplo (recurso, passos, frases), para consultar enquanto pratica. */
   consulta?: ReactNode;
   /** O recurso da lição: com batida, o botão de tocar junto fica logo depois do cronômetro. */
@@ -956,6 +961,11 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   const [restante, setRestante] = useState(total);
   const [rodando, setRodando] = useState(false);
   const [feitos, setFeitos] = useState<number[]>([]);
+  useEffect(() => {
+    if (reinicio === 0) return;
+    setRodando(false);
+    setRestante(total);
+  }, [reinicio, total]);
   const acabou = restante === 0;
   const avisado = useRef(false);
 

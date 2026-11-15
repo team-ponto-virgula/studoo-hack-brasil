@@ -68,6 +68,8 @@ type Andamento = {
   comprovante: string | null;
   autoAvaliacao: AutoAvaliacao | null;
   revisao: number[] | null;
+  /** Segundos já estudados nesta lição, para o tempo do resumo seguir de onde parou. */
+  segundos?: number;
 };
 const chaveDoAndamento = (id: string) => `studoo.aula.${id}`;
 
@@ -158,7 +160,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [ponteFeita, setPonteFeita] = useState(false);
   /** Nas etapas de leitura: ainda tem conteúdo escondido atrás do rodapé (o botão diz "Continuar lendo"). */
   const [temMais, setTemMais] = useState(false);
-  const [inicio] = useState(() => Date.now());
+  const [inicio] = useState(() => Date.now() - (retomada?.segundos ?? 0) * 1000);
+  /** Cada "Praticar mais um pouco" recomeça o cronômetro da prática. */
+  const [voltasPratica, setVoltasPratica] = useState(0);
+  /** O "Explique com suas palavras" já foi enviado: o convite no acerto do último exercício sai. */
+  const [ensinou, setEnsinou] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
   const formulario = useRef<HTMLFormElement>(null);
@@ -234,7 +240,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   useEffect(() => {
     if (licao.concluida) return;
     if (passo === 0 && tentativas === 0) return;
-    guardarAndamento(licao.id, { passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao });
+    guardarAndamento(licao.id, {
+      passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao,
+      segundos: Math.round((Date.now() - inicio) / 1000),
+    });
   }, [licao.id, licao.concluida, passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao]);
 
   useEffect(() => {
@@ -463,10 +472,17 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     );
   } else if (etapa.tipo === 'pratica') {
     acao = (
-      <Botao variante="sucesso" disabled={ocupado} aria-disabled={!autoAvaliacao || undefined}
-        onClick={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())}>
-        {pendente === 'concluir' ? t.concluindo : t.pratica.concluir}
-      </Botao>
+      <>
+        {autoAvaliacao === 'ainda_nao' && (
+          <Botao variante="secundario" disabled={ocupado} onClick={() => { setAutoAvaliacao(null); setVoltasPratica((atual) => atual + 1); }}>
+            {t.pratica.praticarMais}
+          </Botao>
+        )}
+        <Botao variante="sucesso" disabled={ocupado} aria-disabled={!autoAvaliacao || undefined}
+          onClick={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())}>
+          {pendente === 'concluir' ? t.concluindo : autoAvaliacao === 'ainda_nao' ? t.pratica.concluirAssim : t.pratica.concluir}
+        </Botao>
+      </>
     );
   } else if (temMais) {
     acao = <Botao className="botao--ler-mais" onClick={lerMais}>{t.continuarLendo}<Icone nome="seta" /></Botao>;
@@ -490,6 +506,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         </div>
       </header>
       <div className="aula-miolo" key={passo}>
+        {passo > 0 && !revisao && (
+          <button type="button" className="aula-voltar-etapa" disabled={ocupado} onClick={() => setPasso((atual) => Math.max(0, atual - 1))}>
+            <Icone nome="seta" />{t.etapaAnterior}
+          </button>
+        )}
         <p className="aula-etapa" data-etapa={etapa.tipo}><Icone nome={iconesDaEtapa[etapa.tipo]} />{nomeEtapa}</p>
         <h1 tabIndex={-1}>{licao.titulo}</h1>
         {avisoRetomada && (
@@ -518,19 +539,19 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         {exercicio && (
           <EtapaExercicio exercicio={exercicio} indice={indice} total={exercicios.length} resposta={resposta} mudar={mudarResposta}
             consulta={licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' ? licao.recurso : undefined}
-            explicacao={(avaliacao && !avaliacao.correta) || errosAnteriores[indice] ? licao.conceito : undefined}
+            explicacao={licao.conceito} exemplo={licao.exemplo}
             errouAntes={Boolean(errosAnteriores[indice])}
             avaliacao={avaliacao} ocupado={ocupado} responder={responder} formulario={formulario} titulo={tituloEtapa}
             dica={avaliacao ? null : errosAnteriores[indice]} />
         )}
         {etapa.tipo === 'pratica' && licao.pratica && (
-          <EtapaPratica pratica={licao.pratica} titulo={tituloEtapa} escolha={autoAvaliacao} escolher={setAutoAvaliacao}
+          <EtapaPratica pratica={licao.pratica} titulo={tituloEtapa} escolha={autoAvaliacao} escolher={setAutoAvaliacao} reinicio={voltasPratica}
             recurso={licao.recurso} passos={licao.passos} falas={licao.falas} />
         )}
       </div>
       {exercicio && (
         <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
-          aoConcluirPonte={() => setPonteFeita(true)} />
+          aoConcluirPonte={() => setPonteFeita(true)} aoEnsinar={() => setEnsinou(true)} />
       )}
       <footer className="aula-rodape" data-retorno={retorno}>
         <div className="aula-rodape__conteudo">
@@ -549,7 +570,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 </h2>
                 {pedidoPonte === 0 && <p>{avaliacao.feedback}</p>}
                 {pedidoPonte === 0 && avaliacao.observacao && <p className="aula-retorno__observacao">{avaliacao.observacao}</p>}
-                {avaliacao.correta && indice === exercicios.length - 1 && (
+                {avaliacao.correta && indice === exercicios.length - 1 && !ensinou && (
                   <span className="aula-retorno__link">
                     <Botao variante="texto" onClick={abrirExplique}>{t.expliqueConvite}</Botao>
                   </span>
@@ -571,6 +592,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             </section>
           )}
           {etapa.tipo === 'pratica' && !autoAvaliacao && <p className="aula-rodape__nota">{t.pratica.escolha}</p>}
+          {etapa.tipo === 'pratica' && autoAvaliacao === 'ainda_nao' && <p className="aula-rodape__nota">{t.pratica.aindaNaoNota}</p>}
           {/* Quem erra vê o que acontece ao pular: o exercício não some, volta no fim da lição. */}
           {avaliacao && !avaliacao.correta && !revisao && pedidoPonte === 0 && <p className="aula-rodape__nota">{t.pularAviso}</p>}
           {exercicio && !avaliacao && (() => {
@@ -610,9 +632,12 @@ function EtapaExemplo({ licao, titulo }: { licao: LicaoDetalhe; titulo: Ref<HTML
   );
 }
 
-/** `longa`: na prática, a batida toca oito compassos (uns 30 s) para a pessoa tocar junto. */
-function RecursoDaLicao({ recurso, longa = false }: { recurso: Recurso; longa?: boolean }) {
-  if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={recurso} longa={longa} />;
+/**
+ * `longa`: na prática, a batida toca oito compassos (uns 30 s) para a pessoa tocar junto. `semBatida`: o diagrama sem o
+ * botão da batida e o guia (na prática, eles já estão ao lado do cronômetro).
+ */
+function RecursoDaLicao({ recurso, longa = false, semBatida = false }: { recurso: Recurso; longa?: boolean; semBatida?: boolean }) {
+  if (recurso.tipo === 'acorde') return <DiagramaAcorde recurso={semBatida ? { ...recurso, batida: false } : recurso} longa={longa} />;
   if (recurso.tipo === 'fracao') {
     const descricao = t.recursos.fracaoDescricao(recurso.numerador, recurso.denominador);
     return (
@@ -1047,6 +1072,7 @@ function Falas({ falas }: { falas: Fala[] }) {
   return (
     <section className="falas" aria-labelledby="falas-titulo">
       <h3 id="falas-titulo">{t.audio.falasTitulo}</h3>
+      {falas.some(({ pronuncia }) => pronuncia) && <p className="falas__legenda">{t.audio.comoLerPronuncia}</p>}
       <ul>
         {falas.map((fala, posicao) => (
           <li key={posicao}>
@@ -1130,6 +1156,7 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
   return (
     <section className="falas falas--conclusao" aria-labelledby="frases-da-licao">
       <h2 id="frases-da-licao">{t.frasesDaLicao}</h2>
+      {falas.some(({ pronuncia }) => pronuncia) && <p className="falas__legenda">{t.audio.comoLerPronuncia}</p>}
       <ul>
         {falas.map((fala, posicao) => (
           <li key={posicao}>
@@ -1180,6 +1207,7 @@ function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolean }) {
         </button>
       )}
       {(mostrar || acertou) && <p className="trecho trecho--frase" lang={fala.idioma}>{fala.texto}</p>}
+      {(mostrar || acertou) && fala.pronuncia && <p className="falas__pronuncia">{fala.pronuncia}</p>}
       {acertou && fala.traducao && <p className="escuta__traducao">{fala.traducao}</p>}
     </div>
   );
@@ -1222,11 +1250,12 @@ function Trecho({ texto, tipo = 'frase', fala }: { texto: string; tipo?: TipoTre
 }
 
 function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, ocupado, responder, formulario, titulo, consulta, dica,
-  explicacao, errouAntes = false }: {
+  explicacao, exemplo, errouAntes = false }: {
   /** Recurso para consultar durante o exercício (diagrama, barra de fração, ilustração). A linha do tempo não: entregaria a ordem. */
   consulta?: Recurso;
-  /** A explicação do Stu, para rever depois de um erro (recolhida). */
+  /** A explicação do Stu e o exemplo, para rever durante o exercício (recolhidos). */
   explicacao?: string;
+  exemplo?: string;
   /** Já errou este exercício antes: a resposta modelo da aberta só aparece na segunda vez. */
   errouAntes?: boolean;
   /** A correção da tentativa anterior (errada): a dica fica embaixo do campo enquanto a pessoa tenta de novo. */
@@ -1326,6 +1355,7 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
         <details className="aula-consulta aula-consulta--recolhivel" onToggle={mostrarAberto}>
           <summary>{t.reverExplicacao}</summary>
           <p>{explicacao}</p>
+          {exemplo && <p><strong>{t.exemplo}:</strong> {exemplo}</p>}
         </details>
       )}
       {consulta && (
@@ -1575,7 +1605,9 @@ function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao: Avalia
  * Prática no mundo real: a tarefa, os passos para conferir, a dica e um cronômetro; na volta, a pessoa conta como foi e
  * o Stu responde. A lição só conclui depois dessa resposta.
  */
-function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, falas }: {
+function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, falas, reinicio = 0 }: {
+  /** Muda a cada "Praticar mais um pouco": o cronômetro recomeça e a tela volta até ele. */
+  reinicio?: number;
   /** O que a lição mostrou no exemplo, para consultar enquanto pratica. */
   recurso?: Recurso;
   passos?: string[];
@@ -1588,6 +1620,14 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   const total = pratica.minutos * 60;
   const [restante, setRestante] = useState(total);
   const [rodando, setRodando] = useState(false);
+  const cronometro = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (reinicio === 0) return;
+    setRodando(false);
+    setRestante(total);
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    cronometro.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+  }, [reinicio, total]);
   const comoFoi = useRef<HTMLLegendElement>(null);
   const acabou = restante === 0;
   const comecou = restante < total;
@@ -1638,7 +1678,7 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
         </ul>
       )}
       {pratica.dica && <p className="aula-pratica__dica"><Icone nome="lampada" /><span><strong>{t.pratica.dica}:</strong> {pratica.dica}</span></p>}
-      <div className="cronometro" data-estado={acabou ? 'fim' : rodando ? 'rodando' : 'parado'}
+      <div className="cronometro" ref={cronometro} data-estado={acabou ? 'fim' : rodando ? 'rodando' : 'parado'}
         style={{ '--andamento': 1 - restante / total } as CSSProperties}>
         <div className="cronometro__mostrador" role="timer" aria-label={`${t.pratica.cronometro}: ${t.pratica.restante(formatarTempo(restante))}`}>
           <span aria-hidden="true">{formatarTempo(restante)}</span>
@@ -1679,7 +1719,7 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
       {(recurso || passos || falas) && (
         <div className="aula-consulta">
           <p className="aula-consulta__rotulo">{t.recursos.consultar}</p>
-          {recurso && <RecursoDaLicao recurso={recurso} longa />}
+          {recurso && <RecursoDaLicao recurso={recurso} longa semBatida={recurso.tipo === 'acorde' && recurso.batida} />}
           {passos && (
             <ol className="trecho trecho--passos">{passos.map((passo, posicao) => <li key={posicao}>{passo}</li>)}</ol>
           )}

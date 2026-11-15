@@ -32,6 +32,8 @@ export const mensagens = {
     carregando: 'Carregando',
     tentarNovamente: 'Tentar novamente',
     sair: 'Sair',
+    sairPergunta: 'Sair da sua conta? Para voltar, você vai precisar entrar de novo.',
+    ficar: 'Ficar',
     acesso: {
         google: 'Continuar com Google',
         googleIndisponivel: 'O login com Google está indisponível no momento.',
@@ -306,6 +308,7 @@ export const mensagens = {
         seguir: 'Avançar',
         continuarLendo: 'Continuar lendo',
         reverExplicacao: 'Rever a explicação',
+        etapaAnterior: 'Etapa anterior',
         ponteFeita: 'Entendeu? Agora tente o exercício de novo.',
         expliqueConvite: 'Quer fixar? Explique com suas palavras',
         conceito: 'Conceito',
@@ -391,7 +394,8 @@ export const mensagens = {
             semVoz: 'Este aparelho não tem voz para ler em voz alta. Use “Mostrar o texto”.',
             falasTitulo: 'Ouça e repita',
             toqueParaOuvir: 'Toque nas frases destacadas para ouvir.',
-            semVozTexto: 'Este aparelho não tem voz para ler as frases. Leia a pronúncia escrita nas frases do exemplo.',
+            semVozTexto: 'Este aparelho não tem voz para ler as frases. No próximo passo, cada frase tem a pronúncia escrita.',
+            comoLerPronuncia: 'Como ler a pronúncia: leia como em português; a parte em MAIÚSCULAS é a mais forte.',
             pronuncia: 'Pronúncia',
             tocando: 'Tocando…',
             semVozFrase: 'Este aparelho não tem voz para esta frase. Leia o texto.',
@@ -427,7 +431,7 @@ export const mensagens = {
             ouvirNome: (nome: string) => `Ouvir ${nome}`,
             ouvirAcorde: 'Ouvir o acorde',
             ouvirBatida: 'Ouvir a batida',
-            tocarJunto: 'Tocar junto (cerca de 30 s)',
+            tocarJunto: 'Tocar junto (30 s)',
             verBatida: (nome: string) => `Ver a batida no ${nome}`,
             verIlustracao: 'Ver a ilustração',
             semSom: 'Não foi possível tocar o som neste aparelho.',
@@ -500,11 +504,14 @@ export const mensagens = {
             comeceAntes: 'Comece o cronômetro e pratique. Depois, conte como foi.',
             continuePraticando: (segundos: number) => `Continue praticando: em ${segundos} s você conta como foi.`,
             retomeParaContar: (segundos: number) => `Cronômetro pausado. Retome e pratique mais ${segundos} s para contar como foi.`,
+            praticarMais: 'Praticar mais um pouco',
+            concluirAssim: 'Concluir mesmo assim',
+            aindaNaoNota: 'Sem pressa: a próxima lição usa o que você praticou aqui. Praticar mais um pouco agora ajuda.',
             opcoes: { consegui: 'Consegui', quase: 'Quase lá', ainda_nao: 'Ainda não' },
             respostas: {
                 consegui: 'Que ótimo! Fazer de verdade é o que fixa a habilidade.',
                 quase: 'Quase lá já é muito! Mais algumas repetições e vai sair. Se quiser, refaça esta prática amanhã.',
-                ainda_nao: 'Tudo bem: toda habilidade começa assim. Use o que está acima como guia e tente de novo amanhã, com calma.'
+                ainda_nao: 'Tudo bem: toda habilidade começa assim. Use o que está acima como guia e pratique mais um pouco, com calma. Se cansar, tente de novo amanhã.'
             },
             concluir: 'Concluir lição',
             escolha: 'Conte como foi para concluir a lição.'
