@@ -328,7 +328,8 @@ export function Estudo({ cliente, sair, expirar }: {
   }
 
   async function concluir(plano: PlanoDetalhe, licao: LicaoDetalhe, comprovante: string, resumo?: ResumoLicao, pratica?: AutoAvaliacao) {
-    const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante, pratica));
+    const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante, pratica,
+      resumo && { segundos: resumo.segundos, acertosDePrimeira: resumo.acertosDePrimeira, exercicios: resumo.exercicios }));
     if (resultado.ok) {
       const atualizado = resultado.dados.plano;
       atualizarPlano(atualizado);
@@ -1467,7 +1468,7 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
       {trilhaFeita && (
         <View testID="resumo-trilha" style={estudoEstilos.resumoTrilha}>
           <Icone nome="trofeu" tamanho={18} cor="#7A4A00" />
-          <Text style={estudoEstilos.resumoTrilhaTexto}>{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length)}</Text>
+          <Text style={estudoEstilos.resumoTrilhaTexto}>{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length, plano.estatisticas)}</Text>
         </View>
       )}
       {resumo && trilhaFeita && <Text style={estudoEstilos.legendaNumeros}>{mensagens.licao.resumo.ultimaLicao.toLocaleUpperCase('pt-BR')}</Text>}

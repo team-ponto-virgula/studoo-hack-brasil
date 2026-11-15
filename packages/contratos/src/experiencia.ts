@@ -323,8 +323,13 @@ export const mensagens = {
         revisarTentativas: (comErro: number) =>
             `Você errou ${comErro === 1 ? '1 exercício' : `${comErro} exercícios`} antes de acertar. Vale rever esta lição amanhã: rever fixa o que você aprendeu.`,
         revisarPratica: 'A prática ainda não saiu? Vale rever esta lição amanhã e tentar de novo, com calma.',
-        trilhaResumo: (licoes: number, partes: number) =>
-            `Você concluiu ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}.`,
+        trilhaResumo: (licoes: number, partes: number, estatisticas?: { segundos: number; acertosDePrimeira: number; exercicios: number }) => {
+            const base = `Você concluiu ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}`;
+            if (!estatisticas) return `${base}.`;
+            const minutos = Math.round(estatisticas.segundos / 60);
+            const tempo = minutos < 1 ? 'menos de 1 min' : minutos < 60 ? `${minutos} min` : `${Math.floor(minutos / 60)} h ${String(minutos % 60).padStart(2, '0')} min`;
+            return `${base}, em ${tempo}, com ${estatisticas.acertosDePrimeira} de ${estatisticas.exercicios} exercícios de primeira.`;
+        },
         trilhaConcluidaTexto: (titulo: string) => `Você completou todas as lições de “${titulo}”. Reveja quando quiser ou comece um assunto novo.`,
         novoAssunto: 'Começar um assunto novo',
         falta: {
@@ -366,6 +371,17 @@ export const mensagens = {
             falasTitulo: 'Ouça e repita',
             tocando: 'Tocando…',
             semVozFrase: 'Este aparelho não tem voz para esta frase. Leia o texto.',
+            falar: 'Falar',
+            ouvindo: 'Ouvindo… toque para parar',
+            falarFrase: (texto: string) => `Falar “${texto}” e conferir a pronúncia`,
+            voceDisse: (texto: string) => `Você disse: “${texto}”`,
+            acertosFala: (acertos: number, total: number) => `${acertos} de ${total} palavras`,
+            falaOtima: 'Ótimo! Deu para entender tudo.',
+            falaQuase: (palavras: string) => `Quase! Confira: ${palavras}.`,
+            falaTente: (palavras: string) => `Tente de novo, mais devagar. Faltou: ${palavras}.`,
+            semMicrofone: 'Não deu para usar o microfone. Confira a permissão e tente de novo.',
+            naoOuviu: 'Não deu para ouvir. Tente de novo, perto do microfone.',
+            falaPrecisaIa: 'A conferência da fala no app precisa da IA ligada. Na web, ela funciona com o reconhecimento de voz do navegador.',
             traducao: 'Tradução'
         },
         recursos: {

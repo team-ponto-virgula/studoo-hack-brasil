@@ -90,6 +90,10 @@ model RegistroEstudo {
   concluidoEm DateTime @default(now()) @db.Timestamptz(3)
   /// Como foi a prática no mundo real (consegui, quase, ainda_nao), quando a lição tem uma.
   pratica     String?
+  /// O resumo da lição: quanto tempo levou e quantos exercícios saíram de primeira (o fim da trilha soma).
+  segundos          Int?
+  acertosDePrimeira Int?
+  exercicios        Int?
   licao       Licao    @relation(fields: [usuarioId, licaoId], references: [usuarioId, id])
 
   @@id([usuarioId, licaoId])

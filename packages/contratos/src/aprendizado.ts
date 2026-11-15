@@ -2,6 +2,7 @@ import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, Fe
 export * from './estudio';
 export * from './licao';
 export * from './som';
+export * from './fala';
 export interface Progresso {
   concluidas: number;
   total: number;
@@ -32,6 +33,15 @@ export interface PlanoDetalhe extends PlanoResumo {
     proximaLicaoId: string | null;
     licoes: { id: string; titulo: string; concluida: boolean; ponte?: { concluida: boolean } }[];
   }[];
+  /** Somas das lições concluídas com resumo: tempo e exercícios de primeira (para o fim da trilha). */
+  estatisticas?: { segundos: number; acertosDePrimeira: number; exercicios: number };
+}
+
+/** O resumo de uma lição concluída, guardado para o total da trilha. */
+export interface ResumoConclusao {
+  segundos: number;
+  acertosDePrimeira: number;
+  exercicios: number;
 }
 
 /**
@@ -305,6 +315,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     /** `indice`: qual exercício da lição (0 é o primeiro). */
     avaliarLicao: (id: string, resposta: string, indice = 0) => solicitar<Avaliacao>(`/aprendizado/licoes/${encodeURIComponent(id)}/avaliar`, "POST", { resposta, indice }),
     /** `pratica`: como foi a prática no mundo real, quando a lição tem uma. */
-    concluirLicao: (id: string, comprovante: string, pratica?: AutoAvaliacao) => solicitar<Conclusao>(`/aprendizado/licoes/${encodeURIComponent(id)}/concluir`, "POST", { comprovante, ...(pratica ? { pratica } : {}) }),
+    concluirLicao: (id: string, comprovante: string, pratica?: AutoAvaliacao, resumo?: ResumoConclusao) =>
+      solicitar<Conclusao>(`/aprendizado/licoes/${encodeURIComponent(id)}/concluir`, "POST", { comprovante, ...(pratica ? { pratica } : {}), ...(resumo ? { resumo } : {}) }),
   };
 }

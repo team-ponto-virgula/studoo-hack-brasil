@@ -14,6 +14,7 @@ import { Prisma } from '../banco/gerado/client';
 import { FalhaApi } from '../acesso/http';
 import { buscarLicao, conteudoDaLicao } from '../aprendizado/servico';
 import { exercicioDaResposta, reforcoDoExercicio } from '@/dominio/aprendizado/reforco';
+import { termosDaLicao, termosPresentes } from '@/dominio/aprendizado/plano';
 import { quota } from './materiais';
 import {
   conteudoDaGerada,
@@ -190,21 +191,33 @@ export async function ensinarStu(
   await quota(usuarioId, 'ensino');
   let feedback: FeedbackEnsino;
   if (process.env.IA === 'falsa') {
-    // Sem IA: o retorno não confere se o texto está certo, mas reconhece se a pessoa já trouxe um exemplo.
+    // Sem IA: o retorno não confere se o texto está certo, mas diz quais ideias-chave da lição (tiradas das respostas dos
+    // exercícios) a explicação trouxe, quais faltaram e se a pessoa já deu um exemplo.
     const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
     const comExemplo = /\b(?:exemplos?|ex|imagine|como quando|tipo|digamos|quando|se eu|caso)\b/i.test(semAcento) ||
       /["“”‘’']|\d/.test(semAcento);
+    const termos = termosDaLicao(await conteudoDaLicao(usuarioId, licaoId));
+    const trouxe = termosPresentes(explicacao, termos);
+    const faltou = termos.filter((termo) => !trouxe.includes(termo));
+    const lista = (itens: string[]) => {
+      const citados = itens.map((item) => `“${item}”`);
+      return citados.length > 1 ? `${citados.slice(0, -1).join(', ')} e ${citados.at(-1)}` : citados[0] ?? '';
+    };
     feedback = {
       acertos: [
-        'Você explicou com as suas palavras.',
+        trouxe.length > 0 ? `Você falou de ${lista(trouxe)}, ideias-chave desta lição.` : 'Você explicou com as suas palavras.',
         ...(comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
       ],
-      lacuna: comExemplo
-        ? `Confira se a sua explicação chega à ideia central da lição: ${licao.objetivo}`
-        : `Acrescente um exemplo concreto. A ideia central da lição é: ${licao.objetivo}`,
-      pergunta: comExemplo
-        ? `E se a situação fosse outra? Como “${licao.titulo}” funcionaria num caso diferente do seu exemplo?`
-        : `Como você usaria “${licao.titulo}” num exemplo do dia a dia?`,
+      lacuna: faltou.length > 0
+        ? `Que tal incluir ${lista(faltou.slice(0, 3))}? ${faltou.length === 1 ? 'É uma ideia-chave' : 'São ideias-chave'} desta lição.`
+        : comExemplo
+          ? `Você cobriu as ideias-chave. Confira se a explicação chega à ideia central: ${licao.objetivo}`
+          : `Você cobriu as ideias-chave; agora acrescente um exemplo concreto. A ideia central da lição é: ${licao.objetivo}`,
+      pergunta: faltou.length > 0
+        ? `Se alguém te perguntasse sobre “${faltou[0]}”, o que você diria, com um exemplo seu?`
+        : comExemplo
+          ? `E se a situação fosse outra? Como “${licao.titulo}” funcionaria num caso diferente do seu exemplo?`
+          : `Como você usaria “${licao.titulo}” num exemplo do dia a dia?`,
       proximoPasso:
         'Este retorno é automático e não confere se o texto está certo. Compare com a explicação da lição.',
       simulado: true,

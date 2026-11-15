@@ -781,3 +781,11 @@
 .acorde__nome { color: var(--texto); font-size: 1.125rem; font-weight: 900; }
 .acorde__seta { display: grid; flex: none; color: var(--texto2); }
 .acorde__seta .icone { width: 22px; height: 22px; }
+
+/* Falar e conferir: o botão de microfone e o resultado da conferência embaixo da frase. */
+.ouvir__botao--falar { border-color: #c8b4ec; color: #5b2f98; box-shadow: 0 3px 0 #c8b4ec; }
+.ouvir__botao--falar[data-tocando] { border-color: #6b3fa0; background: #f1e8fb; }
+.falar__resultado { flex-basis: 100%; margin-top: 4px; padding: 8px 12px; border-radius: 12px; font-size: 0.9375rem; font-weight: 700; }
+.falar__resultado[data-nota='otima'] { background: #eefaf3; color: var(--sucesso); }
+.falar__resultado[data-nota='quase'] { background: #fff6d9; color: #7a4a00; }
+.falar__resultado[data-nota='tente'], .falar__resultado[data-nota='erro'] { background: #fff1e0; color: var(--alerta); }

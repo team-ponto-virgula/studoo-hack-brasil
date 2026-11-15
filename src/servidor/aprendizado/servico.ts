@@ -1,6 +1,7 @@
 import { conteudosDoMaterial } from '../estudio/materiais';
 import type {
   AutoAvaliacao,
+  ResumoConclusao,
   Avaliacao,
   Conclusao,
   LicaoDetalhe,
@@ -40,7 +41,12 @@ const selecaoPlano = {
       titulo: true,
       licoes: {
         orderBy: { ordem: "asc" },
-        select: { id: true, titulo: true, conclusao: { select: { licaoId: true } }, apoio: { select: { reforco: true, reforcoConcluido: true } } },
+        select: {
+          id: true,
+          titulo: true,
+          conclusao: { select: { licaoId: true, segundos: true, acertosDePrimeira: true, exercicios: true } },
+          apoio: { select: { reforco: true, reforcoConcluido: true } },
+        },
       },
     },
   },
@@ -79,6 +85,9 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
 
   const concluidas = fluxos.reduce((total, fluxo) => total + fluxo.progresso.concluidas, 0);
   const total = fluxos.reduce((total, fluxo) => total + fluxo.progresso.total, 0);
+  // Somas das lições concluídas que trouxeram o resumo (as de antes desta versão ficam de fora).
+  const resumos = plano.fluxos.flatMap(({ licoes }) => licoes.map(({ conclusao }) => conclusao))
+    .filter((conclusao) => conclusao?.segundos != null && conclusao.exercicios != null && conclusao.acertosDePrimeira != null);
   return {
     id: plano.id,
     titulo: plano.titulo,
@@ -86,6 +95,13 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
     origem: plano.origem,
     progresso: calcularProgresso(concluidas, total),
     fluxos,
+    ...(resumos.length > 0 ? {
+      estatisticas: {
+        segundos: resumos.reduce((soma, item) => soma + (item?.segundos ?? 0), 0),
+        acertosDePrimeira: resumos.reduce((soma, item) => soma + (item?.acertosDePrimeira ?? 0), 0),
+        exercicios: resumos.reduce((soma, item) => soma + (item?.exercicios ?? 0), 0),
+      },
+    } : {}),
   };
 }
 
@@ -298,7 +314,9 @@ export async function avaliarLicao(usuarioId: string, id: string, resposta: stri
 }
 
 /** Registra a conclusão (uma vez) e, quando a lição tem prática, como ela foi (a mais recente fica). */
-export async function concluirLicao(usuarioId: string, id: string, token: string, pratica?: AutoAvaliacao): Promise<Conclusao> {
+export async function concluirLicao(
+  usuarioId: string, id: string, token: string, pratica?: AutoAvaliacao, resumo?: ResumoConclusao,
+): Promise<Conclusao> {
   const licao = await lerLicao(usuarioId, id);
   const comprovante = lerComprovante("avaliacao", usuarioId, token);
   if (comprovante?.id !== id) {
@@ -311,7 +329,10 @@ export async function concluirLicao(usuarioId: string, id: string, token: string
       throw new FalhaApi("avaliacao_invalida");
     }
 
-    await banco.registroEstudo.createMany({ data: [{ usuarioId, licaoId: id, pratica: pratica ?? null }], skipDuplicates: true });
+    await banco.registroEstudo.createMany({
+      data: [{ usuarioId, licaoId: id, pratica: pratica ?? null, ...(resumo ?? {}) }],
+      skipDuplicates: true,
+    });
     conclusao = await banco.registroEstudo.findUniqueOrThrow({
       where: { usuarioId_licaoId: { usuarioId, licaoId: id } },
       select: { concluidoEm: true },

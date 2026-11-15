@@ -18,6 +18,7 @@ import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRe
 import { AccessibilityInfo, Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAparecer, usePulinho, useTremor } from './animacoes';
 import {
+  TranscritorContexto,
   Associar,
   CampoAberta,
   CorrecaoAberta,
@@ -392,6 +393,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   }
 
   return (
+    // A conferência da fala grava e manda para a rota de voz do servidor (no aparelho).
+    <TranscritorContexto.Provider value={cliente.transcrever}>
     <Tela pagina={`licao-${licao.id}`} topo={topo} rodape={rodape} rolagem={rolagem}
       aoMedir={(altura) => { alturaVisivel.current = altura; }} aoRolar={(y) => { posicaoRolagem.current = y; }}
       estiloRodape={retorno === 'certa' ? licaoEstilos.rodapeCerto : retorno === 'errada' ? licaoEstilos.rodapeErrado : undefined}>
@@ -500,6 +503,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       </EntradaDaEtapa>
       {exercicio && <View onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} /></View>}
     </Tela>
+    </TranscritorContexto.Provider>
   );
 }
 
