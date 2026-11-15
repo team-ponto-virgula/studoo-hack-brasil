@@ -112,8 +112,9 @@ export function embaralharComSemente<T>(lista: readonly T[], semente: number): T
 }
 
 /**
- * O exercício com as opções numa ordem nova (as da escolha, os porquês, a coluna da direita e os itens de ordenar), para
- * a resposta certa não ficar sempre no mesmo lugar nem dar para decorar a posição ao refazer. As respostas são por id.
+ * O exercício com as opções numa ordem nova (as da escolha e os porquês), para a resposta certa não ficar sempre no mesmo
+ * lugar nem dar para decorar a posição ao refazer. As respostas são por id. Os pares do associar e os itens de ordenar
+ * ficam na ordem do servidor, que garante que a ordem mostrada nunca é a própria resposta.
  */
 export function embaralharExercicio(exercicio: ExercicioPublico, semente: number): ExercicioPublico {
   switch (exercicio.tipo) {
@@ -121,10 +122,6 @@ export function embaralharExercicio(exercicio: ExercicioPublico, semente: number
       return { ...exercicio, opcoes: embaralharComSemente(exercicio.opcoes, semente) };
     case 'verdadeiro_falso':
       return { ...exercicio, justificativas: embaralharComSemente(exercicio.justificativas, semente) };
-    case 'associar':
-      return { ...exercicio, direita: embaralharComSemente(exercicio.direita, semente) };
-    case 'ordenar':
-      return { ...exercicio, itens: embaralharComSemente(exercicio.itens, semente) };
     default:
       return exercicio;
   }
