@@ -235,7 +235,8 @@ test("a lição pede formatos variados num esquema estrito: exercícios, recurso
   assert.ok("som" in esquema.properties.pratica.anyOf[0].properties);
   const instrucoes = dados.input[0].content;
   for (const trecho of ["ordenar", "associar", "verdadeiro_falso", "aberta", "acorde", "linha_do_tempo", "falas", "pratica", "codigo (só para código",
-    "pronuncia", "MAIÚSCULAS", "armadilhas", "essencial", "outroJeito", "som só existe em lições de violão"]) {
+    "pronuncia", "MAIÚSCULAS", "armadilhas", "essencial", "outroJeito", "som só existe em lições de violão",
+    "2 ou 3 exercícios", "produza a resposta"]) {
     assert.ok(instrucoes.includes(trecho), trecho);
   }
 });
@@ -430,6 +431,12 @@ test("com a IA, o critério essencial continua obrigatório, o erro comum vai ju
   const armadilha = { correta: false, feedback: "Não.", observacao: "Muita gente chama essa peça assim!" };
   assert.equal(await refinarAvaliacao(contexto, lacuna, "chave", armadilha), armadilha);
   assert.equal(pedidos.length, antes, "a armadilha conhecida não vai ao desempate");
+
+  // Quando a grafia é a lição (idioma), o desempate sabe disso: escrever errado não vira sinônimo.
+  const exata = { tipo: "lacuna", enunciado: "Complete.", trecho: "How ___ is it?", gabarito: ["much"], exata: true, feedbackCorreto: "Isso.", feedbackIncorreto: "Não." };
+  await refinarAvaliacao(contexto, exata, "mutch", { correta: false, feedback: "Não." });
+  assert.equal(JSON.parse(pedidos.at(-1).dados.input[1].content).grafiaImporta, true);
+  assert.match(pedidos.at(-1).dados.input[0].content, /grafiaImporta/);
 });
 
 test("sem a IA, ou com a IA fora do ar, vale a correção local", async () => {
