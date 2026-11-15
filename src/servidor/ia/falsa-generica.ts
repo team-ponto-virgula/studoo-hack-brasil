@@ -1,3 +1,4 @@
+import type { Opcao } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
 
 const origem = "Modo demonstração: conteúdo de exemplo";
@@ -58,6 +59,7 @@ function lacuna(
     tipo: "lacuna",
     enunciado: `${enunciado} Responda com uma palavra.`,
     trecho,
+    trechoTipo: "frase",
     gabarito: [gabarito],
     feedbackCorreto,
     feedbackIncorreto,
@@ -88,6 +90,8 @@ function multiplaEscolha(
     feedbackIncorreto,
   };
 }
+
+const op = (id: string, texto: string): Opcao => ({ id, texto });
 
 function montar(assunto: string, semente: number, fluxo: number, licao: number): ConteudoLicao | null {
   const s = (n: number) => semente + n;
@@ -144,17 +148,20 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
         conceito: "Um exercício guiado divide o problema em passos pequenos. Em cada passo você decide algo simples, e a soma dos passos resolve o problema inteiro.",
         exemplo: `Em um problema sobre ${aspas}, primeiro diga o que é pedido. Depois liste o que você já sabe e só então escolha a primeira ação.`,
         origem,
-        exercicio: multiplaEscolha(
-          s(2),
-          "Qual é o primeiro passo de um exercício guiado?",
-          {
-            certa: "Dizer com as suas palavras o que é pedido",
-            erradas: ["Escolher a resposta que parece mais provável", "Copiar a solução de um exemplo parecido"],
-          },
-          "Entender o pedido evita resolver o problema errado.",
-          "Escolher no palpite ou copiar não mostra o que o problema pede. Comece dizendo com as suas palavras o que é pedido.",
-          `Você está praticando ${aspas}.`,
-        ),
+        exercicio: {
+          tipo: "ordenar",
+          enunciado: "Coloque os passos de um exercício guiado na ordem certa.",
+          contexto: `Você está praticando ${aspas}.`,
+          itens: [
+            op("pedido", "Dizer com as suas palavras o que é pedido"),
+            op("sabe", "Listar o que você já sabe"),
+            op("acao", "Escolher a primeira ação"),
+            op("conferir", "Conferir o resultado"),
+          ],
+          gabarito: ["pedido", "sabe", "acao", "conferir"],
+          feedbackCorreto: "Isso: entender o pedido, juntar o que já sabe, agir e conferir.",
+          feedbackIncorreto: "Comece pelo pedido: diga o que o problema quer. Depois liste o que já sabe, escolha a primeira ação e confira no fim.",
+        },
       };
     case "1.1":
       return {
@@ -162,13 +169,19 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
         conceito: "Errar faz parte de aprender. Anotar o erro e a causa dele transforma a tentativa que falhou em um guia do que revisar.",
         exemplo: `Quando errar um exercício de ${aspas}, escreva o que respondeu, o que era certo e o que fez você se enganar.`,
         origem,
-        exercicio: lacuna(
-          "Complete a frase sobre como lidar com um erro.",
-          "Cada ___ que você anota vira uma pista do que revisar.",
-          "erro",
-          "Exatamente: o erro anotado mostra onde vale a pena voltar.",
-          "A palavra é erro. Anotar o erro e a causa dele indica o que revisar.",
-        ),
+        exercicio: {
+          tipo: "verdadeiro_falso",
+          enunciado: "A frase é verdadeira ou falsa? Escolha também o porquê.",
+          afirmacao: `Errar um exercício de ${aspas} mostra que você não leva jeito para o assunto.`,
+          justificativas: [
+            op("pista", "O erro anotado mostra exatamente o que revisar"),
+            op("talento", "Quem tem talento acerta tudo de primeira"),
+            op("sorte", "Acertar ou errar depende só de sorte"),
+          ],
+          gabarito: ["falso", "pista"],
+          feedbackCorreto: "Isso: errar faz parte. O erro anotado vira um guia do que revisar.",
+          feedbackIncorreto: "É falsa: o erro não mede talento. Anotado, ele mostra exatamente onde vale a pena voltar.",
+        },
       };
     case "1.2":
       return {
@@ -203,6 +216,11 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           "Uma situação real dá um motivo para lembrar do assunto.",
           "Decorar ou evitar usos práticos não cria ligação. Descreva uma situação real em que o assunto ajudaria.",
         ),
+        pratica: {
+          tarefa: `Hoje, procure uma situação da sua rotina em que ${aspas} aparece ou ajudaria. Anote a situação em duas frases.`,
+          minutos: 5,
+          passos: ["Pense no que você fez hoje.", "Escolha um momento em que o assunto apareceu.", "Escreva o que aconteceu e como o assunto ajudaria."],
+        },
       };
     case "2.1":
       return {
@@ -224,16 +242,16 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
         conceito: "O desafio final junta as partes do mapa, os termos e os erros que você anotou. Resolvê-lo sem ajuda mostra o que você já domina e o que ainda merece revisão.",
         exemplo: `Monte um problema sobre ${aspas} que use pelo menos duas partes do seu mapa. Resolva sem consultar e depois confira com as anotações.`,
         origem,
-        exercicio: multiplaEscolha(
-          s(5),
-          "O que fazer ao terminar o desafio final?",
-          {
-            certa: "Conferir com as anotações e marcar o que revisar",
-            erradas: ["Dar o assunto por encerrado sem conferir", "Apagar as anotações de erros"],
-          },
-          "Conferir e marcar o que revisar fecha o ciclo de estudo.",
-          "Encerrar sem conferir ou apagar os erros joga fora o que você aprendeu. Confira com as anotações e marque o que revisar.",
-        ),
+        exercicio: {
+          tipo: "aberta",
+          enunciado: `Explique com as suas palavras uma ideia de ${aspas} que você aprendeu e dê um exemplo.`,
+          minimo: 40,
+          gabarito: ["exemplo|por exemplo|como quando|imagine|tipo quando", "porque|por que|pois|entao|assim|isso faz"],
+          criterios: ["Dá um exemplo concreto", "Explica o porquê da ideia"],
+          modelo: `Uma ideia de ${aspas} que aprendi é começar pelo mapa do assunto. Por exemplo, antes de estudar, eu listo as partes e vejo qual depende de qual, porque assim sei por onde começar.`,
+          feedbackCorreto: "Boa explicação: tem uma ideia, um exemplo e o porquê.",
+          feedbackIncorreto: "Tente de novo com um exemplo concreto (“por exemplo…”) e explique o porquê (“porque…”).",
+        },
       };
     default:
       return null;

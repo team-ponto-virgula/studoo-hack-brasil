@@ -13,3 +13,12 @@ export async function lerCampoTexto(request: Request, campo: string): Promise<st
 
   return texto;
 }
+
+/** Corpo JSON como objeto (para rotas com mais de um campo). */
+export async function lerObjeto(request: Request): Promise<Record<string, unknown>> {
+  const corpo = await lerJson(request);
+  if (typeof corpo !== "object" || corpo === null || Array.isArray(corpo)) {
+    throw new FalhaApi("invalido");
+  }
+  return corpo as Record<string, unknown>;
+}

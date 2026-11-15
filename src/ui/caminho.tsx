@@ -13,7 +13,7 @@ export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean } };
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
-  | 'lampada' | 'relogio' | 'alvo';
+  | 'lampada' | 'relogio' | 'alvo' | 'som';
 
 const desenhos: Record<NomeIcone, ReactNode> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
@@ -31,6 +31,8 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   lampada: <path d="M9.5 18h5M10.5 21h3M12 3.5a5.5 5.5 0 0 0-3.2 10c.7.5 1.2 1.3 1.2 2.2v.3h4v-.3c0-.9.5-1.7 1.2-2.2A5.5 5.5 0 0 0 12 3.5z" />,
   relogio: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></>,
   alvo: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="0.8" /></>,
+  // Alto-falante com duas ondas: ouvir uma frase, um áudio ou um acorde.
+  som: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18.3 6.3a8 8 0 0 1 0 11.4" /></>,
 };
 
 export function Icone({ nome }: { nome: NomeIcone }) {

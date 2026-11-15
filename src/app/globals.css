@@ -525,6 +525,11 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 .conclusao-numeros li[data-tipo='acerto'] { --cor-numero: var(--alerta); }
 .conclusao-numeros li[data-tipo='acerto'][data-primeira] { --cor-numero: var(--sucesso); }
 .conclusao-numeros li[data-tipo='etapas'] { --cor-numero: #5b4bb7; }
+.conclusao-numeros li[data-tipo='pratica'] { --cor-numero: #6b3fa0; }
+.conclusao-numeros li:nth-child(4) { animation-delay: 960ms; }
+/* Com a prática, quatro números: lado a lado no computador, dois por linha no celular. */
+.conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 560px) { .conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .conclusao-numeros__rotulo {
   display: flex;

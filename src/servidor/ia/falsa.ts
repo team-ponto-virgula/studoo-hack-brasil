@@ -2,11 +2,15 @@ import type { ConteudoLicao, EsqueletoPlano, PlanoInterno } from "@/dominio/apre
 import { FalhaApi } from "@/servidor/acesso/http";
 import type { EventoEstrutura, GeradorTrilha, MetaPlano } from "./gerador";
 import { conteudoGenerico, planoGenerico } from "./falsa-generica";
+import { demoDoObjetivo, demoPelaChave } from "./demos";
 
 type EstruturaDoPlano = { titulo: string; objetivo: string; fluxos: { titulo: string; licoes: { titulo: string }[] }[] };
 
 const GERADOR_SQL = "falsa-sql-v1";
 const GERADOR_GENERICO = "falsa-generica-v1";
+/** As demos com assunto (violão, inglês, culinária, história) usam `falsa-<chave>-v1`. */
+const geradorDaDemo = (chave: string) => `falsa-${chave}-v1`;
+const chaveDoGerador = (gerador: string) => /^falsa-([a-z]+)-v1$/.exec(gerador)?.[1];
 const PAUSA_PADRAO_MS = 450;
 
 const origem = "Conhecimento geral de SQL";
@@ -31,6 +35,7 @@ const planoSql: PlanoInterno = {
             enunciado: "Complete a consulta com um operador de comparação para listar alunos com nota de pelo menos 7.",
             contexto: "Na tabela alunos, Ana tem nota 6, Bia tem nota 7 e Caio tem nota 9.",
             trecho: "SELECT nome FROM alunos WHERE nota ___ 7;",
+            trechoTipo: "codigo",
             gabarito: [">="],
             feedbackCorreto: ">= inclui notas iguais ou maiores que 7. Bia e Caio aparecem no resultado.",
             feedbackIncorreto: "Use >= para incluir a nota 7 de Bia e a nota 9 de Caio. Com >, apenas Caio aparece porque a condição exige uma nota acima de 7.",
@@ -47,6 +52,7 @@ const planoSql: PlanoInterno = {
             enunciado: "Qual nome aparece no resultado?",
             contexto: "A tabela alunos tem Ana com id 1 e Bia com id 2. A tabela matriculas tem uma matrícula com aluno_id 2.",
             trecho: "SELECT alunos.nome FROM alunos INNER JOIN matriculas ON alunos.id = matriculas.aluno_id;",
+            trechoTipo: "codigo",
             opcoes: [
               { id: "ana", texto: "Apenas Ana" },
               { id: "bia", texto: "Apenas Bia" },
@@ -72,6 +78,7 @@ const planoSql: PlanoInterno = {
             tipo: "multipla_escolha",
             enunciado: "Qual produto passa pelos dois filtros da consulta?",
             trecho: "SELECT produto FROM itens WHERE preco < 30 AND estoque >= 2;",
+            trechoTipo: "codigo",
             opcoes: [
               { id: "caderno", texto: "Caderno, preço 24 e estoque 2" },
               { id: "lapis", texto: "Lápis, preço 5 e estoque 1" },
@@ -93,6 +100,7 @@ const planoSql: PlanoInterno = {
             enunciado: "Quais clientes aparecem no resultado?",
             contexto: "A tabela clientes tem Joana com id 3 e Marcos com id 4. A tabela pedidos tem o pedido 50 de cliente_id 3 com total 80, o pedido 51 de cliente_id 3 com total 20 e o pedido 52 de cliente_id 4 com total 50.",
             trecho: "SELECT clientes.nome FROM clientes INNER JOIN pedidos ON clientes.id = pedidos.cliente_id WHERE pedidos.total >= 50;",
+            trechoTipo: "codigo",
             opcoes: [
               { id: "joana", texto: "Apenas Joana" },
               { id: "marcos", texto: "Apenas Marcos" },
@@ -119,6 +127,7 @@ const planoSql: PlanoInterno = {
             enunciado: "Qual é o resultado da consulta para os dois livros?",
             contexto: "A tabela livros tem Guia, com id 1, e Atlas, com id 2. A tabela emprestimos tem o registro de id 8 para livro_id 1.",
             trecho: "SELECT livros.titulo, emprestimos.id FROM livros LEFT JOIN emprestimos ON livros.id = emprestimos.livro_id;",
+            trechoTipo: "codigo",
             opcoes: [
               { id: "guia", texto: "Apenas Guia, com empréstimo 8" },
               { id: "atlas", texto: "Apenas Atlas, com empréstimo NULL" },
@@ -174,39 +183,49 @@ function eventosDoPlano(plano: EstruturaDoPlano): EventoEstrutura[] {
   ];
 }
 
-function conteudoDoSql(fluxo: number, licao: number): ConteudoLicao {
-  const alvo = planoSql.fluxos[fluxo]?.licoes[licao];
+function conteudoDoPlano(plano: PlanoInterno, fluxo: number, licao: number): ConteudoLicao {
+  const alvo = plano.fluxos[fluxo]?.licoes[licao];
   if (!alvo) throw new FalhaApi("proposta_invalida");
   const { titulo: _titulo, ...conteudo } = alvo;
   return conteudo;
 }
 
+/** Trilha e gerador para o objetivo: SQL, uma das demos com assunto ou a trilha genérica. */
+function planoDoObjetivo(objetivo: string): { plano: EstruturaDoPlano & { origem: string }; gerador: string } {
+  if (reconhecerObjetivoSql(objetivo)) return { plano: planoSql, gerador: GERADOR_SQL };
+  const demo = demoDoObjetivo(objetivo);
+  if (demo) return { plano: demo.plano, gerador: geradorDaDemo(demo.chave) };
+  return { plano: planoGenerico(objetivo), gerador: GERADOR_GENERICO };
+}
+
 /**
- * IA falsa: nenhuma chamada externa. SQL devolve o plano de demonstração; qualquer outro objetivo
- * ganha uma trilha genérica e determinística de 3 trechos com 3 lições, já na ordem de aprendizado.
+ * IA falsa: nenhuma chamada externa. SQL e os assuntos das demos (violão, inglês para viagem, culinária, história do
+ * Brasil) devolvem trilhas prontas, com conteúdo de verdade; qualquer outro objetivo ganha uma trilha genérica e
+ * determinística de 3 trechos com 3 lições, já na ordem de aprendizado.
  */
 export function criarGeradorFalso(): GeradorTrilha {
   return {
     async *gerarEstrutura(objetivo, sinal, { aoVivo }) {
-      const sql = reconhecerObjetivoSql(objetivo);
-      const plano = sql ? planoSql : planoGenerico(objetivo);
+      const { plano, gerador } = planoDoObjetivo(objetivo);
       const pausa = aoVivo ? pausaConfigurada() : 0;
       for (const evento of eventosDoPlano(plano)) {
         if (!await dormir(pausa, sinal)) return undefined;
         yield evento;
       }
-      const meta: MetaPlano = { gerador: sql ? GERADOR_SQL : GERADOR_GENERICO, origem: plano.origem };
+      const meta: MetaPlano = { gerador, origem: plano.origem };
       return meta;
     },
 
     async gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal) {
       sinal.throwIfAborted();
-      if (esqueleto.gerador === GERADOR_SQL) return conteudoDoSql(fluxo, licao);
+      if (esqueleto.gerador === GERADOR_SQL) return conteudoDoPlano(planoSql, fluxo, licao);
       if (esqueleto.gerador === GERADOR_GENERICO) {
         const conteudo = conteudoGenerico(esqueleto.objetivo, fluxo, licao);
         if (!conteudo) throw new FalhaApi("proposta_invalida");
         return conteudo;
       }
+      const demo = demoPelaChave(chaveDoGerador(esqueleto.gerador) ?? "");
+      if (demo) return conteudoDoPlano(demo.plano, fluxo, licao);
       throw new FalhaApi("proposta_invalida");
     },
   };

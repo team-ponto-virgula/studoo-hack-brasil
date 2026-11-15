@@ -1,5 +1,6 @@
 import { conteudosDoMaterial } from '../estudio/materiais';
 import type {
+  AutoAvaliacao,
   Avaliacao,
   Conclusao,
   LicaoDetalhe,
@@ -20,6 +21,7 @@ import { banco } from "@/servidor/banco/cliente";
 import type { Prisma } from "@/servidor/banco/gerado/client";
 import { obterGerador } from "@/servidor/ia/gerador";
 import { emitirComprovante, lerComprovante } from "./comprovantes";
+import { refinarAvaliacao } from "./correcao";
 import { iniciarGeracao } from "./geracao";
 
 /** Tempo para criar o conteúdo de todas as lições no aceite (com a IA real, em paralelo e com uma segunda tentativa). */
@@ -169,17 +171,15 @@ async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoP
   }));
   const licoes = plano.fluxos.flatMap((fluxo, indiceFluxo) => {
     const fluxoId = fluxos[indiceFluxo].id;
-    return fluxo.licoes.map(({ titulo }, indiceLicao) => {
-      const { exercicio, ...conteudo } = conteudos[indiceFluxo][indiceLicao];
-      return {
-        usuarioId,
-        id: `${fluxoId}-${indiceLicao + 1}`,
-        fluxoId,
-        titulo,
-        ordem: indiceLicao + 1,
-        conteudo: { ...conteudo, exercicio: { ...exercicio } },
-      };
-    });
+    return fluxo.licoes.map(({ titulo }, indiceLicao) => ({
+      usuarioId,
+      id: `${fluxoId}-${indiceLicao + 1}`,
+      fluxoId,
+      titulo,
+      ordem: indiceLicao + 1,
+      // Cópia JSON pura: campos opcionais ausentes não viram `undefined` no banco.
+      conteudo: JSON.parse(JSON.stringify(conteudos[indiceFluxo][indiceLicao])) as Prisma.InputJsonValue,
+    }));
   });
 
   try {
@@ -229,7 +229,8 @@ async function lerLicao(usuarioId: string, id: string) {
 
 export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoDetalhe> {
   const licao = await lerLicao(usuarioId, id);
-  const { objetivo, conceito, exemplo, origem, exercicio } = licao.conteudo;
+  const { objetivo, conceito, exemplo, origem, exercicio, extras, exemploTipo, passos, recurso, falas, pratica, referencias } = licao.conteudo;
+  const exercicios = [exercicio, ...(extras ?? [])].map(apresentarExercicio);
   return {
     id: licao.id,
     planoId: licao.fluxo.planoId,
@@ -238,19 +239,28 @@ export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoD
     objetivo,
     conceito,
     exemplo,
+    ...(exemploTipo ? { exemploTipo } : {}),
+    ...(passos ? { passos } : {}),
+    ...(recurso ? { recurso } : {}),
+    ...(falas ? { falas } : {}),
     origem,
-    exercicio: apresentarExercicio(exercicio),
-    ...(licao.conteudo.referencias ? { referencias: licao.conteudo.referencias } : {}),
+    exercicio: exercicios[0],
+    exercicios,
+    ...(pratica ? { pratica } : {}),
+    ...(referencias ? { referencias } : {}),
     concluida: licao.conclusao !== null,
   };
 }
 
-export async function avaliarLicao(usuarioId: string, id: string, resposta: string): Promise<Avaliacao> {
+/** Avalia a resposta do exercício `indice` da lição (0 é o principal). */
+export async function avaliarLicao(usuarioId: string, id: string, resposta: string, indice = 0): Promise<Avaliacao> {
   const licao = await lerLicao(usuarioId, id);
-  const avaliacao = avaliarResposta(licao.conteudo.exercicio, resposta);
-  if (!avaliacao) {
+  const exercicio = [licao.conteudo.exercicio, ...(licao.conteudo.extras ?? [])][indice];
+  const local = exercicio ? avaliarResposta(exercicio, resposta) : null;
+  if (!exercicio || !local) {
     throw new FalhaApi("invalido");
   }
+  const avaliacao = await refinarAvaliacao({ titulo: licao.titulo, conceito: licao.conteudo.conceito }, exercicio, resposta, local);
 
   if (!avaliacao.correta) await banco.apoioLicao.upsert({
     where: { usuarioId_licaoId: { usuarioId, licaoId: id } },
@@ -264,7 +274,8 @@ export async function avaliarLicao(usuarioId: string, id: string, resposta: stri
   return { ...avaliacao, comprovante };
 }
 
-export async function concluirLicao(usuarioId: string, id: string, token: string): Promise<Conclusao> {
+/** Registra a conclusão (uma vez) e, quando a lição tem prática, como ela foi (a mais recente fica). */
+export async function concluirLicao(usuarioId: string, id: string, token: string, pratica?: AutoAvaliacao): Promise<Conclusao> {
   const licao = await lerLicao(usuarioId, id);
   const comprovante = lerComprovante("avaliacao", usuarioId, token);
   if (comprovante?.id !== id) {
@@ -277,11 +288,13 @@ export async function concluirLicao(usuarioId: string, id: string, token: string
       throw new FalhaApi("avaliacao_invalida");
     }
 
-    await banco.registroEstudo.createMany({ data: [{ usuarioId, licaoId: id }], skipDuplicates: true });
+    await banco.registroEstudo.createMany({ data: [{ usuarioId, licaoId: id, pratica: pratica ?? null }], skipDuplicates: true });
     conclusao = await banco.registroEstudo.findUniqueOrThrow({
       where: { usuarioId_licaoId: { usuarioId, licaoId: id } },
       select: { concluidoEm: true },
     });
+  } else if (pratica) {
+    await banco.registroEstudo.update({ where: { usuarioId_licaoId: { usuarioId, licaoId: id } }, data: { pratica } });
   }
 
   return {

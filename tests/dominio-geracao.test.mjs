@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { LIMITES_GERACAO, interpretarEventoGeracao } from "@studoo/contratos";
-import { avaliarResposta, conteudoValido, esqueletoValido } from "../src/dominio/aprendizado/plano.ts";
+import { avaliarResposta, conteudoValido, esqueletoValido, respostaCerta, respostaErrada } from "../src/dominio/aprendizado/plano.ts";
 import { emitirComprovante, lerComprovante } from "../src/servidor/aprendizado/comprovantes.ts";
 import { iniciarGeracao } from "../src/servidor/aprendizado/geracao.ts";
 import { criarGeradorFalso } from "../src/servidor/ia/falsa.ts";
@@ -98,14 +98,11 @@ test("todas as lições genéricas têm conteúdo válido e passam pela aula (ce
         const conteudo = await gerador.gerarConteudo(esqueleto, fluxo, licao, sinal);
         assert.ok(conteudoValido(conteudo), `${objetivo.slice(0, 10)} ${fluxo}.${licao}`);
         const { exercicio } = conteudo;
-        const certa = exercicio.gabarito[0];
-        assert.equal(avaliarResposta(exercicio, certa)?.correta, true);
+        const certa = respostaCerta(exercicio);
+        assert.equal(avaliarResposta(exercicio, certa)?.correta, true, `${fluxo}.${licao} certa`);
+        assert.equal(avaliarResposta(exercicio, respostaErrada(exercicio))?.correta, false, `${fluxo}.${licao} errada`);
         if (exercicio.tipo === "lacuna") assert.equal(avaliarResposta(exercicio, certa.toUpperCase())?.correta, true);
-        else assert.equal(avaliarResposta(exercicio, "z"), null);
-        if (exercicio.tipo === "multipla_escolha") {
-          const errada = exercicio.opcoes.find(({ id }) => id !== certa).id;
-          assert.equal(avaliarResposta(exercicio, errada)?.correta, false);
-        }
+        else if (exercicio.tipo !== "aberta") assert.equal(avaliarResposta(exercicio, "z"), null);
       }
     }
     assert.equal(await gerador.gerarConteudo(esqueleto, 3, 0, sinal).catch(() => "recusado"), "recusado");
@@ -117,7 +114,7 @@ test("a posição da opção certa varia entre as lições", async () => {
   const sinal = new AbortController().signal;
   const esqueleto = { gerador: "falsa-generica-v1", origem: "o", titulo: "t", objetivo: "Frações", fluxos: [] };
   const posicoes = new Set();
-  for (const [fluxo, licao] of [[0, 1], [1, 0], [1, 2], [2, 0], [2, 2]]) {
+  for (const [fluxo, licao] of [[0, 1], [1, 2], [2, 0]]) {
     const { exercicio } = await gerador.gerarConteudo(esqueleto, fluxo, licao, sinal);
     posicoes.add(exercicio.opcoes.findIndex(({ id }) => id === exercicio.gabarito[0]));
   }

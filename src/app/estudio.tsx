@@ -382,7 +382,7 @@ export function ApoioDaLicao({
               <div className="estudio-exemplo">{ponte.exemplo}</div>
               <fieldset disabled={ocupado || gravando || ponte.concluida}>
                 <legend>{ponte.exercicio.enunciado}</legend>
-                {ponte.exercicio.tipo !== 'lacuna' &&
+                {ponte.exercicio.tipo === 'multipla_escolha' &&
                   ponte.exercicio.opcoes.map((o) => (
                     <label className="estudio-opcao" key={o.id}>
                       <input

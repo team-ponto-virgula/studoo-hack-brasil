@@ -11,13 +11,22 @@ Prepare uma conta de demonstração, conexão estável e três páginas sobre fr
 
 Uma frase para o pitch: **“O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.”**
 
+## Qualquer assunto, em um minuto
+
+Sem a OpenAI, as trilhas prontas do modo demonstração mostram assuntos além de programação. Diga que o conteúdo é de demonstração.
+
+1. Peça “Quero aprender violão do zero”. No exemplo do Lá menor, mostre o diagrama, toque em **Ouvir o acorde** e faça a prática com o cronômetro.
+2. Na troca de Lá menor para Dó, ordene os movimentos; erre de propósito para mostrar as posições certas e erradas.
+3. Peça “Inglês para conversar em viagens”: ouça as frases e faça o exercício de escuta.
+4. Em “História do Brasil para a prova”, mostre a linha do tempo e a resposta aberta, com os critérios e a resposta modelo.
+
 ## Conferência antes de apresentar
 
 - Migrações aplicadas, conta funcionando, domínio HTTPS, Google/Resend configurados se usados na demo.
 - `.env.local` com chave válida; `IA=openai`. Não mostrar o arquivo em transmissão ou screenshots.
 - `npm run ia:conferir`: valida a integração de geração existente. Depois percorrer material, reforço, ensino e voz com a configuração real; o comando antigo não cobre os recursos novos.
 - Citação existe e sustenta a ideia; números/fórmulas extraídos foram conferidos por uma pessoa.
-- Android: gerar novo development build, permitir câmera/microfone somente quando solicitado, testar negar permissão, gravar/parar, segundo plano, voltar à tela, upload pelo seletor e texto com teclado aberto.
+- Android: gerar novo development build (o app passou a usar `expo-speech` para a voz), permitir câmera/microfone somente quando solicitado, testar negar permissão, gravar/parar, segundo plano, voltar à tela, upload pelo seletor e texto com teclado aberto.
 - Web: testar em 360 px e computador, navegação por teclado, movimento reduzido e falha de rede.
 - Agendar `npm run estudio:limpar` de hora em hora.
 - Usar um vídeo curto previamente gravado como reserva, identificado como gravação; nunca fingir que é uma execução ao vivo.
