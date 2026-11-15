@@ -382,7 +382,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               {(!atual || no.estado === 'previa') && <span className="caminho-no__texto" aria-hidden="true">
                 <span className="caminho-no__titulo">{no.titulo}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
-                {no.ponte && <span className="caminho-ponte"><span className="caminho-ponte__desenho">{[0, 5, 9, 5, 0].map((altura, i) => <span key={i} style={{ marginBottom: altura, animationDelay: `${i * 70}ms` }} />)}</span>{no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}</span>}
+                {/* O reforço é um selo com ícone (o desenho de blocos parecia um carregamento travado). */}
+                {no.ponte && <span className="caminho-ponte"><Icone nome={no.ponte.concluida ? 'check' : 'revisao'} />{no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}</span>}
               </span>}
             </>
           );
@@ -425,11 +426,6 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                   )}
                 </span>
               )}
-              {fimDoTrecho && (
-                <span className="caminho-marco" data-vencido={marcoVencido || undefined}>
-                  <FaixaParte numero={numeroMarco + 1} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
-                </span>
-              )}
               {no.estado === 'previa' ? (
                 <div className="caminho-no__alvo">
                   {conteudo}
@@ -465,6 +461,12 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                     )}
                   </div>
                 </>
+              )}
+              {/* A faixa da próxima parte vem depois do nó na leitura: quem usa leitor de tela ouve a lição antes da parte seguinte. */}
+              {fimDoTrecho && (
+                <span className="caminho-marco" data-vencido={marcoVencido || undefined}>
+                  <FaixaParte numero={numeroMarco + 1} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
+                </span>
               )}
               {fimDoTrecho && (
                 <span className="somente-leitor">

@@ -206,11 +206,17 @@ export function MaterialParaTrilha({
 export function ApoioDaLicao({
   licao,
   avaliacao,
+  pedidoPonte = 0,
 }: {
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
+  /** Cada vez que muda, o reforço é pedido (o "Ver outro exemplo" do painel de retorno) e o cartão aparece. */
+  pedidoPonte?: number;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
+  // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
+  const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
+  const cartaoPonte = useRef<HTMLElement>(null);
   const revisaoApoio = useRef(0);
   function atualizarApoio(valor: Parameters<typeof setApoio>[0]) {
     revisaoApoio.current += 1;
@@ -331,12 +337,31 @@ export function ApoioDaLicao({
         setGravando(true);
       } catch {
         stream.current?.getTracks().forEach((t) => t.stop());
-        throw new ErroStudoo('voz_indisponivel');
+        // O aviso fica junto do botão Gravar, onde a pessoa está olhando.
+        setAviso(m.vozErro);
       }
     });
   }
   const ponte = apoio?.ponte;
-  const ensino = apoio?.ensino;
+  // "Ver outro exemplo" no painel de retorno: pede o reforço, se ainda não existe (durante uma gravação, espera ela acabar).
+  useEffect(() => {
+    if (pedidoPonte === 0 || gravando || apoio?.ponte) return;
+    void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
+    // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedidoPonte, gravando]);
+  // ... e leva ao alto do cartão, acima do painel de retorno.
+  useEffect(() => {
+    if (pedidoPonte === 0) return;
+    const quadro = window.requestAnimationFrame(() => {
+      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      cartaoPonte.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
+      cartaoPonte.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(quadro);
+    // Só o pedido dispara; o resto é lido no momento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedidoPonte]);
   return (
     <div className="estudio-apoio">
       {!!licao.referencias?.length && (
@@ -355,8 +380,8 @@ export function ApoioDaLicao({
       )}
       {/* O reforço é do exercício que a pessoa acabou de errar (ou de um reforço começado e não terminado): não fica
           sobrando em outros exercícios nem em outra visita à lição. */}
-      {avaliacao?.correta === false && (
-        <section className="estudio-card estudio-ponte">
+      {avaliacao?.correta === false && (pedidoPonte > 0 || ponte) && (
+        <section className="estudio-card estudio-ponte" ref={cartaoPonte}>
           <div className="ponte-desenho" aria-hidden="true">
             <span />
             <span />
@@ -367,17 +392,7 @@ export function ApoioDaLicao({
           <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
           <p>{ponte?.motivo ?? m.ponteDica}</p>
           {!ponte ? (
-            <Botao
-              data-acao="construir-ponte"
-              disabled={ocupado || gravando}
-              onClick={() =>
-                void executar(async () =>
-                  atualizarApoio(await cliente.criarPonte(licao.id)),
-                )
-              }
-            >
-              {m.construir}
-            </Botao>
+            <p role="status">{erro || m.pensando}</p>
           ) : (
             <>
               {ponte.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
@@ -427,6 +442,7 @@ export function ApoioDaLicao({
       >
         <summary>{m.ensinar}</summary>
         <p>{m.ensinoDica}</p>
+        <p className="estudio-legenda">{m.ensinoIdeia(licao.objetivo)}</p>
         <label htmlFor="ensino-texto">{m.explicacao}</label>
         <textarea
           id="ensino-texto"
@@ -456,6 +472,7 @@ export function ApoioDaLicao({
                   ...(a ?? { erros: 0, ponte: null }),
                   ensino: r,
                 }));
+                setEnsino(r);
               })
             }
           >

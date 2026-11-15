@@ -57,10 +57,12 @@ export interface Fala {
  * - `acorde.batida`: a lição é de ritmo; o app também toca o acorde numa batida para baixo e para cima.
  */
 export type Recurso =
-  | { tipo: "acorde"; nome: string; casas: number[]; dedos?: number[]; batida?: boolean }
+  /** `anterior`: o acorde de onde a troca parte, desenhado ao lado para comparar (Am → C). */
+  | { tipo: "acorde"; nome: string; casas: number[]; dedos?: number[]; batida?: boolean; anterior?: { nome: string; casas: number[]; dedos?: number[] } }
   | { tipo: "linha_do_tempo"; eventos: { quando: string; texto: string }[] }
   | { tipo: "fracao"; numerador: number; denominador: number; rotulo?: string }
-  | { tipo: "imagem"; src: string; descricao: string };
+  /** `fonte`: de onde vem a imagem (sem ela, é a página do material da pessoa). */
+  | { tipo: "imagem"; src: string; descricao: string; fonte?: string };
 
 /** Prática no mundo real (instrumento, cozinha, fala): a tarefa, o tempo do cronômetro e, se houver, passos e uma dica. */
 export interface Pratica {

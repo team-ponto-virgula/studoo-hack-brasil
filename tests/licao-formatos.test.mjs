@@ -305,7 +305,7 @@ test("cada demo com assunto monta a própria trilha e todas as lições passam p
     }
   }
   assert.deepEqual([...tipos].sort(), ["aberta", "associar", "lacuna", "multipla_escolha", "ordenar", "verdadeiro_falso"]);
-  assert.deepEqual([...recursos].sort(), ["acorde", "fracao", "linha_do_tempo"]);
+  assert.deepEqual([...recursos].sort(), ["acorde", "fracao", "imagem", "linha_do_tempo"]);
   assert.ok(falas >= 8 && praticas >= 5 && extras >= 4, `${falas} falas, ${praticas} práticas, ${extras} extras`);
 });
 
@@ -420,4 +420,30 @@ test("inglês para viagem: imigração no começo e a revisão com mais prática
   const revisao = licoes.find(({ titulo }) => titulo.startsWith("Revisão"));
   assert.equal(1 + (revisao.extras?.length ?? 0), 3);
   assert.ok(licoes.slice(0, -1).some((licao) => licao.falas?.some(({ texto }) => /coffee/i.test(texto))), "o café aparece antes do restaurante");
+});
+
+test("lacuna: a frase em volta junto vale, e a grafia por um triz (quando é a lição) ganha a dica", () => {
+  const lacuna = (gabarito, resposta, extra = {}) =>
+    avaliarResposta({ tipo: "lacuna", enunciado: "Complete", gabarito, feedbackCorreto: "ok", feedbackIncorreto: "não", ...extra }, resposta);
+  const preco = { exata: true, trecho: "How ___ is the coffee?" };
+  assert.deepEqual(lacuna(["much"], "how much", preco), { correta: true, feedback: "ok", observacao: "Certo! Na lacuna, basta escrever o que falta." });
+  assert.equal(lacuna(["much"], "How much is the coffee?", preco).correta, true);
+  assert.equal(lacuna(["much"], "how", preco).correta, false, "só o contexto não é a resposta");
+  const quase = lacuna(["repeat"], "repet", { exata: true });
+  assert.equal(quase.correta, false, "com exata, a grafia continua sendo a lição");
+  assert.match(quase.observacao, /Confira a grafia/);
+  assert.equal(acertouParte(quase), true, "o título vira “Quase lá!”");
+  assert.equal(lacuna(["where"], "what", { exata: true }).observacao, undefined, "longe demais: sem dica de grafia");
+});
+
+test("recursos: a troca de acorde desenha os dois, e a imagem diz de onde veio", () => {
+  const am = { nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0] };
+  const base = { tipo: "lacuna", enunciado: "x", gabarito: ["a"], feedbackCorreto: "a", feedbackIncorreto: "b" };
+  const licao = (recurso) => conteudoValido({ objetivo: "o", conceito: "c", exemplo: "e", origem: "teste", exercicio: base, recurso });
+  assert.equal(licao({ tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], anterior: am }), true);
+  assert.equal(licao({ tipo: "acorde", nome: "C", casas: [-1, 3, 2, 0, 1, 0], anterior: { nome: "Am", casas: [0, 0] } }), false);
+  const violao = DEMOS.find(({ chave }) => chave === "violao").plano.fluxos.flatMap(({ licoes }) => licoes);
+  assert.equal(violao[0].recurso.tipo, "imagem");
+  assert.equal(violao[0].recurso.fonte, "Ilustração");
+  assert.equal(violao[2].recurso.anterior.nome, "Am", "a troca mostra o Lá menor ao lado do Dó");
 });

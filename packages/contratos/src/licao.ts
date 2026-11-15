@@ -99,7 +99,8 @@ export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string
  */
 export function acertouParte(avaliacao: Avaliacao): boolean {
   if (avaliacao.correta) return false;
-  return (avaliacao.certos?.length ?? 0) > 0 || (avaliacao.criterios?.some(({ atendido }) => atendido) ?? false);
+  // Um aviso no erro é um “foi por pouco” (grafia quase certa, valor certo e porquê errado…).
+  return (avaliacao.certos?.length ?? 0) > 0 || (avaliacao.criterios?.some(({ atendido }) => atendido) ?? false) || Boolean(avaliacao.observacao);
 }
 
 /**

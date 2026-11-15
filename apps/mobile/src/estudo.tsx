@@ -398,7 +398,9 @@ export function Estudo({ cliente, sair, expirar }: {
 
     if (etapa.tipo === 'geracao' && geracao) {
       return <GeracaoAoVivo geracao={geracao} erro={erro} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
-        comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })} />;
+        comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })}
+        existente={geracao.proposta ? planos?.find((plano) => plano.titulo === geracao.proposta?.titulo) : undefined}
+        abrirExistente={(id) => void abrirPlano(id)} />;
     }
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
@@ -768,7 +770,7 @@ function Sugestao({ texto, icone, testID, ordem, escolhida, desativada, acao }: 
  * No celular, com a trilha pronta, os dois botões dividem o rodapé e a contagem sai, como na web.
  * Se a pessoa está vendo o fim do caminho, a tela acompanha cada nó que chega; se rolou para cima, fica onde está.
  */
-function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajustar }: {
+function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente }: {
   geracao: TrilhaEmGeracao;
   erro: string | null;
   ocupado: boolean;
@@ -776,6 +778,9 @@ function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajust
   cancelar: () => void;
   comecar: (proposta: PropostaPlano) => void;
   ajustar: () => void;
+  /** Como na web: uma trilha com o mesmo nome; a tela avisa e oferece abrir a que já existe. */
+  existente?: PlanoResumo;
+  abrirExistente: (id: string) => void;
 }) {
   const nos = useMemo(() => nosDaPrevia(geracao), [geracao]);
   const { titulo, proposta } = geracao;
@@ -848,6 +853,13 @@ function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajust
         <Text style={estudoEstilos.geracaoIa}>
           {!proposta ? mensagens.geracao.montadaDoPedido : origemDemonstracao(proposta.origem) ? mensagens.geracao.demonstracao : mensagens.geracao.ia}
         </Text>
+        {proposta && existente && (
+          <View testID="trilha-repetida" accessibilityLiveRegion="polite" style={estudoEstilos.repetida}>
+            <Text style={estudoEstilos.repetidaTexto}>{mensagens.geracao.repetida(existente.titulo)}</Text>
+            <Botao rotulo={mensagens.geracao.abrirExistente} testID="abrir-existente" variante="secundario" compacto desativado={ocupado}
+              acao={() => abrirExistente(existente.id)} />
+          </View>
+        )}
         {/* A origem só aparece quando acrescenta algo: na trilha pronta, o aviso acima já diz de onde ela vem. */}
         {proposta
           ? !origemDemonstracao(proposta.origem) && <Text style={estudoEstilos.geracaoOrigem}>{mensagens.geracao.origem(origemLegivel(proposta.origem))}</Text>
@@ -1440,8 +1452,8 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
 
   return (
     <Tela pagina="concluida" semCabecalho rodape={rodape}>
-      {/* Sem chuva de confete quando ficou algo para rever: a conclusão vira um lembrete gentil, não uma festa. */}
-      {!resumo?.rever && <Confete chuva quantidade={44} />}
+      {/* Sem chuva de confete quando ficou exercício sem acerto ou a prática não saiu: a conclusão vira um lembrete gentil. */}
+      {!(resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao')) && <Confete chuva quantidade={44} />}
       <View style={estudoEstilos.conclusaoTopo}>
         <CenaConclusao />
         <Titulo testID="titulo-conclusao" foco estilo={estudoEstilos.textoCentro}>
@@ -1452,13 +1464,23 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
         </Text>
         <Text style={[estudoEstilos.conclusaoLicao, estudoEstilos.textoCentro]}>{licao.titulo}</Text>
       </View>
+      {trilhaFeita && (
+        <View testID="resumo-trilha" style={estudoEstilos.resumoTrilha}>
+          <Icone nome="trofeu" tamanho={18} cor="#7A4A00" />
+          <Text style={estudoEstilos.resumoTrilhaTexto}>{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length)}</Text>
+        </View>
+      )}
       {resumo && trilhaFeita && <Text style={estudoEstilos.legendaNumeros}>{mensagens.licao.resumo.ultimaLicao.toLocaleUpperCase('pt-BR')}</Text>}
       {resumo && <NumerosDaLicao resumo={resumo} />}
       {resumo?.rever && (
         <View testID="conclusao-rever" style={estudoEstilos.rever}>
           <Icone nome="revisao" tamanho={20} cor={cores.alerta} />
           <Text style={estudoEstilos.reverTexto}>
-            {resumo.acertos < resumo.exercicios ? mensagens.licao.revisarErros(resumo.exercicios - resumo.acertos) : mensagens.licao.revisarPratica}
+            {resumo.acertos < resumo.exercicios
+              ? mensagens.licao.revisarErros(resumo.exercicios - resumo.acertos)
+              : resumo.acertosDePrimeira < resumo.exercicios
+                ? mensagens.licao.revisarTentativas(resumo.exercicios - resumo.acertosDePrimeira)
+                : mensagens.licao.revisarPratica}
           </Text>
         </View>
       )}
@@ -1537,7 +1559,7 @@ function NumerosDaLicao({ resumo }: { resumo: ResumoLicao }) {
   const itens = [
     { chave: 'tempo', icone: 'relogio' as const, rotulo: textos.tempo, valor: formatarTempo(segundos), cor: cores.acao },
     { chave: 'acerto', icone: 'alvo' as const, rotulo: textos.acerto,
-      valor: resumo.dePrimeira ? textos.dePrimeira : textos.acertos(resumo.acertos, resumo.exercicios), cor: resumo.dePrimeira ? cores.sucesso : cores.alerta },
+      valor: textos.acertos(resumo.acertosDePrimeira, resumo.exercicios), cor: resumo.dePrimeira ? cores.sucesso : cores.alerta },
     { chave: 'etapas', icone: 'check' as const, rotulo: textos.etapas, valor: textos.etapasFeitas(resumo.etapas), cor: '#5B4BB7' },
     ...(resumo.pratica ? [{ chave: 'pratica', icone: 'relogio' as const, rotulo: textos.pratica, valor: mensagens.licao.pratica.opcoes[resumo.pratica], cor: '#6B3FA0' }] : []),
   ];
@@ -1644,9 +1666,14 @@ const estudoEstilos = StyleSheet.create({
   liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   // Lição concluída
   conclusaoTopo: { alignItems: 'center' },
+  repetida: { gap: 10, marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: '#FFF6D9' },
+  repetidaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
   cartaoApagar: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
   cartaoApagarTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, textDecorationLine: 'underline' },
   rever: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
+  resumoTrilha: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: 8, marginTop: 14, paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: 999, backgroundColor: '#FFF6D9' },
+  resumoTrilhaTexto: { flexShrink: 1, color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 15, textAlign: 'center' },
   legendaNumeros: { marginTop: 18, marginBottom: -6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, letterSpacing: 0.8, textAlign: 'center' },
   reverTexto: { flexShrink: 1, color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21, textAlign: 'center' },
   textoCentro: { textAlign: 'center' },
