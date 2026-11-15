@@ -107,7 +107,8 @@ export function recursoValido(valor: unknown): valor is Recurso {
     case "acorde":
       return textoAte(valor.nome, 20) && Array.isArray(valor.casas) && valor.casas.length === 6 &&
         valor.casas.every((casa) => inteiroEntre(casa, -1, 15)) && valor.casas.some((casa) => casa >= 0) &&
-        opcional(valor.dedos, (dedos) => Array.isArray(dedos) && dedos.length === 6 && dedos.every((dedo) => inteiroEntre(dedo, 0, 4)));
+        opcional(valor.dedos, (dedos) => Array.isArray(dedos) && dedos.length === 6 && dedos.every((dedo) => inteiroEntre(dedo, 0, 4))) &&
+        opcional(valor.batida, (batida) => typeof batida === "boolean");
     case "linha_do_tempo":
       return Array.isArray(valor.eventos) && valor.eventos.length >= 2 && valor.eventos.length <= 8 &&
         valor.eventos.every((evento) => objeto(evento) && textoAte(evento.quando, 40) && textoAte(evento.texto, 200));
@@ -339,13 +340,18 @@ function conferirAberta(exercicio: Extract<ExercicioInterno, { tipo: "aberta" }>
     grupo.some((termo) => textoNormalizado.includes(` ${termo.replace(/[^\p{L}\p{N}]+/gu, " ").trim()}`)));
   const total = atendidos.filter(Boolean).length;
   const correta = total >= Math.ceil(atendidos.length * 0.6);
+  const criterios = atendidos.map((atendido, indice) => ({
+    texto: exercicio.criterios?.[indice] ?? exercicio.gabarito[indice].split("|")[0],
+    atendido,
+  }));
+  // Aprovada com algo faltando: o retorno diz o que faltou, em vez do elogio de resposta completa.
+  const faltou = criterios.filter(({ atendido }) => !atendido).map(({ texto }) => texto.charAt(0).toLocaleLowerCase("pt-BR") + texto.slice(1));
+  let feedback = correta ? exercicio.feedbackCorreto : exercicio.feedbackIncorreto;
+  if (correta && faltou.length > 0) feedback = `Boa resposta! Para ficar completa, faltou: ${faltou.join("; ")}.`;
   return {
     correta,
-    feedback: correta ? exercicio.feedbackCorreto : exercicio.feedbackIncorreto,
-    criterios: atendidos.map((atendido, indice) => ({
-      texto: exercicio.criterios?.[indice] ?? exercicio.gabarito[indice].split("|")[0],
-      atendido,
-    })),
+    feedback,
+    criterios,
     ...(exercicio.modelo ? { modelo: exercicio.modelo } : {}),
     simulado: true,
   };
@@ -403,10 +409,13 @@ export function avaliarResposta(exercicio: ExercicioInterno, resposta: string): 
         return null;
       }
       const valorCerto = escolha === exercicio.gabarito[0];
-      const correta = valorCerto && justificativa === exercicio.gabarito[1];
+      const justificativaCerta = justificativa === exercicio.gabarito[1];
+      const correta = valorCerto && justificativaCerta;
+      // Cada parte com a sua cor: acertar o valor e errar o porquê não pinta o valor de erro.
+      const certos = [...(valorCerto ? ["valor"] : []), ...(justificativaCerta ? ["justificativa"] : [])];
       return resultado(correta, valorCerto && !correta
-        ? { observacao: "Você acertou se a frase é verdadeira ou falsa, mas a justificativa escolhida não explica o porquê." }
-        : {});
+        ? { certos, observacao: "Você acertou se a frase é verdadeira ou falsa, mas a justificativa escolhida não explica o porquê." }
+        : { certos });
     }
     case "aberta":
       if (valor.length < exercicio.minimo) return null;

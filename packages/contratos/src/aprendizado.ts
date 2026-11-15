@@ -54,9 +54,10 @@ export interface Fala {
  * - `fracao`: uma barra com `denominador` partes iguais, `numerador` delas pintadas, e um rótulo opcional (como "2/4 = 1/2").
  * - `acorde.casas`: 6 números, da 6ª corda (mi grave) à 1ª (mi agudo): -1 não toca, 0 solta, n = casa apertada.
  * - `acorde.dedos`: o dedo de cada corda (1 indicador, 2 médio, 3 anelar, 4 mínimo; 0 nenhum).
+ * - `acorde.batida`: a lição é de ritmo; o app também toca o acorde numa batida para baixo e para cima.
  */
 export type Recurso =
-  | { tipo: "acorde"; nome: string; casas: number[]; dedos?: number[] }
+  | { tipo: "acorde"; nome: string; casas: number[]; dedos?: number[]; batida?: boolean }
   | { tipo: "linha_do_tempo"; eventos: { quando: string; texto: string }[] }
   | { tipo: "fracao"; numerador: number; denominador: number; rotulo?: string }
   | { tipo: "imagem"; src: string; descricao: string };

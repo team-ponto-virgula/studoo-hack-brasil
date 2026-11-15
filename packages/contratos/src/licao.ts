@@ -64,6 +64,40 @@ export function respostaCompleta(exercicio: ExercicioPublico, resposta: string):
   }
 }
 
+/** O que ainda falta para a resposta poder ser verificada (null quando já pode). Cada plataforma diz isso com os seus textos. */
+export type FaltaParaVerificar =
+  | { tipo: 'escrever' }
+  | { tipo: 'escolher' }
+  | { tipo: 'ordenar'; faltam: number }
+  | { tipo: 'associar'; faltam: number }
+  | { tipo: 'valor' }
+  | { tipo: 'justificativa' }
+  | { tipo: 'caracteres'; faltam: number };
+
+export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string): FaltaParaVerificar | null {
+  if (respostaCompleta(exercicio, resposta)) return null;
+  const valor = resposta.trim();
+  switch (exercicio.tipo) {
+    case 'ordenar':
+      return { tipo: 'ordenar', faltam: exercicio.itens.length - valor.split(',').filter(Boolean).length };
+    case 'associar':
+      return { tipo: 'associar', faltam: exercicio.esquerda.length - valor.split(',').filter(Boolean).length };
+    case 'verdadeiro_falso':
+      return valor.split(':')[0] ? { tipo: 'justificativa' } : { tipo: 'valor' };
+    case 'aberta':
+      return { tipo: 'caracteres', faltam: exercicio.minimo - valor.length };
+    case 'multipla_escolha':
+      return { tipo: 'escolher' };
+    default:
+      return { tipo: 'escrever' };
+  }
+}
+
+/** A origem da trilha é o modo demonstração (conteúdo pronto, sem a IA)? */
+export function origemDemonstracao(origem: string): boolean {
+  return /^modo demonstra[cç][aã]o/i.test(origem.trim());
+}
+
 /** Tamanho máximo da resposta: a aberta é uma explicação; as outras são curtas. */
 export const LIMITES_RESPOSTA = { curta: 300, aberta: 1000 } as const;
 

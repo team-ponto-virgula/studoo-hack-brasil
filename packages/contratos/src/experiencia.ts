@@ -1,3 +1,5 @@
+import type { FaltaParaVerificar } from './licao';
+
 /** Conteúdo compartilhado pelas interfaces web e nativa. */
 export const mensagens = {
     estudio: {
@@ -11,7 +13,7 @@ export const mensagens = {
       pagina: (n: number) => `Página ${n}`, simulado: 'Modo demonstração', origem: 'De onde veio esta ideia',
       verPonte: 'Ver outro exemplo', ponte: 'Outro jeito de entender', construir: 'Mostrar outro exemplo', ponteDica: 'Vamos explorar a mesma ideia por outro caminho, com um exemplo e um desafio novos.',
       pontePronta: 'Entendi!', ponteVoltar: 'Agora tente o exercício original novamente.', ponteMapa: 'Reforço',
-      verificar: 'Verificar', ensinar: 'Ensine ao Stu', ensinoDica: 'Explique com suas palavras e use um exemplo. O Stu aponta o que faz sentido e propõe uma nova situação.',
+      verificar: 'Conferir este exemplo', ensinar: 'Ensine ao Stu', ensinoDica: 'Explique com suas palavras e use um exemplo. O Stu aponta o que faz sentido e propõe uma nova situação.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
       vozDica: 'Até 60 segundos. Sua voz vira texto para o Stu entender, e você confere antes de enviar.',
       vozErro: 'Não foi possível usar o microfone. Você pode digitar sua explicação.',
@@ -259,6 +261,8 @@ export const mensagens = {
             'Dica: lições curtas cabem em qualquer intervalo do dia.',
         ],
         ia: 'Gerada por IA a partir do seu pedido. Confira as lições antes de começar.',
+        montadaDoPedido: 'Montada a partir do seu pedido. Confira as lições antes de começar.',
+        demonstracao: 'Modo demonstração: uma trilha pronta para este assunto, sem a IA. Confira as lições antes de começar.',
         origem: (origem: string) => `Origem: ${origem}`,
         cancelar: 'Cancelar',
         comecar: 'Começar',
@@ -290,12 +294,31 @@ export const mensagens = {
         incorreta: 'Resposta incorreta',
         certas: ['Mandou bem!', 'Isso aí!', 'Perfeito!'],
         errada: 'Quase lá!',
+        quaseCompleta: 'Boa! Quase completa.',
         tentarDeNovo: 'Tentar de novo',
         atalho: (total: number) => `Dica: use as teclas de 1 a ${total} para escolher e Enter para verificar.`,
         continuar: 'Continuar',
         concluindo: 'Registrando conclusão…',
         concluida: 'Lição concluída!',
         comemoracao: 'Mais um passo na sua trilha.',
+        trilhaConcluida: 'Trilha concluída!',
+        revisarDepois: 'Vale rever esta lição amanhã: errar faz parte, e rever fixa o que você aprendeu.',
+        trilhaConcluidaTexto: (titulo: string) => `Você completou todas as lições de “${titulo}”. Reveja quando quiser ou comece um assunto novo.`,
+        novoAssunto: 'Começar um assunto novo',
+        sair: {
+            pergunta: 'Sair da lição? O que você fez nesta lição ainda não foi salvo.',
+            sair: 'Sair',
+            ficar: 'Continuar a lição'
+        },
+        falta: {
+            escrever: 'Escreva sua resposta para verificar.',
+            escolher: 'Escolha uma opção para verificar.',
+            ordenar: (faltam: number) => `${faltam === 1 ? 'Falta 1 item' : `Faltam ${faltam} itens`} para colocar em ordem.`,
+            associar: (faltam: number) => `${faltam === 1 ? 'Falta 1 par' : `Faltam ${faltam} pares`} para ligar.`,
+            valor: 'Diga se a frase é verdadeira ou falsa.',
+            justificativa: 'Agora escolha o porquê.',
+            caracteres: (faltam: number) => `Escreva mais ${faltam} ${faltam === 1 ? 'caractere' : 'caracteres'}.`
+        },
         resumo: {
             titulo: 'Resumo da lição',
             tempo: 'Tempo',
@@ -332,8 +355,11 @@ export const mensagens = {
             fracaoDescricao: (numerador: number, denominador: number) =>
                 `${numerador} de ${denominador} ${denominador === 1 ? 'parte' : 'partes iguais'} ${numerador === 1 ? 'pintada' : 'pintadas'}`,
             doMaterial: 'Do seu material',
+            consultar: 'Para consultar',
             acorde: (nome: string) => `Acorde ${nome}`,
             ouvirAcorde: 'Ouvir o acorde',
+            ouvirBatida: 'Ouvir a batida',
+            semSom: 'Não foi possível tocar o som neste aparelho.',
             tocando: 'Tocando…',
             dedos: ['', 'indicador', 'médio', 'anelar', 'mínimo'],
             corda: (corda: number, casa: number, dedo: string) => casa < 0
@@ -371,8 +397,8 @@ export const mensagens = {
             porque: 'Por quê?'
         },
         aberta: {
-            rotulo: 'Sua explicação',
-            dica: 'Escreva com as suas palavras. Vale um exemplo do dia a dia.',
+            rotulo: 'Sua resposta',
+            dica: 'Escreva com as suas palavras.',
             contador: (usados: number, minimo: number) => usados < minimo
                 ? `Faltam ${minimo - usados} ${minimo - usados === 1 ? 'caractere' : 'caracteres'}`
                 : `${usados} caracteres`,
@@ -385,7 +411,7 @@ export const mensagens = {
         pratica: {
             etapa: 'Prática',
             titulo: 'Agora pratique',
-            subtitulo: 'Fora da tela, com as mãos: é assim que a habilidade fica.',
+            subtitulo: 'Fora da tela, na vida real: é assim que a habilidade fica.',
             passos: 'Confira',
             dica: 'Dica',
             cronometro: 'Cronômetro',
@@ -400,7 +426,7 @@ export const mensagens = {
             respostas: {
                 consegui: 'Que ótimo! Fazer de verdade é o que fixa a habilidade.',
                 quase: 'Quase lá já é muito. Repita amanhã e vai sair.',
-                ainda_nao: 'Tudo bem: toda habilidade começa assim. Reveja a demonstração e tente de novo amanhã.'
+                ainda_nao: 'Tudo bem: toda habilidade começa assim. Use o que está acima como guia e tente de novo amanhã, com calma.'
             },
             concluir: 'Concluir lição',
             escolha: 'Conte como foi para concluir a lição.'
@@ -449,3 +475,18 @@ export const mensagens = {
         entrar: 'Entrar no piloto',
     }
 } as const;
+
+/** O que falta para o "Verificar" funcionar, em texto (a web e o app mostram no rodapé da aula). */
+export function textoDaFalta(falta: FaltaParaVerificar): string {
+  const textos = mensagens.licao.falta;
+  switch (falta.tipo) {
+    case 'ordenar':
+      return textos.ordenar(falta.faltam);
+    case 'associar':
+      return textos.associar(falta.faltam);
+    case 'caracteres':
+      return textos.caracteres(falta.faltam);
+    default:
+      return textos[falta.tipo];
+  }
+}

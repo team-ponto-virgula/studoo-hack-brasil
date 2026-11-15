@@ -67,7 +67,7 @@ const violao: Demo = {
           {
             titulo: "Montar o acorde Lá menor (Am)",
             objetivo: "Posicionar os dedos para tocar o acorde Lá menor.",
-            conceito: "Um acorde é um grupo de notas tocadas juntas. No diagrama, as linhas verticais são as cordas, com a 6ª à esquerda, e as horizontais são os trastes. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
+            conceito: "Um acorde é um grupo de notas tocadas juntas. No diagrama do próximo passo, as linhas verticais são as cordas, com a 6ª à esquerda, e as horizontais são os trastes. Os números dizem qual dedo usar: 1 é o indicador, 2 o médio e 3 o anelar. O X marca a corda que não deve soar e o O, a corda solta.",
             exemploTipo: "demonstracao",
             exemplo: "Veja o Lá menor no diagrama e ouça como ele soa. Depois, siga os passos com o violão na mão.",
             passos: [
@@ -108,16 +108,16 @@ const violao: Demo = {
             origem: origemViolao,
             exercicio: {
               tipo: "ordenar",
-              enunciado: "Coloque os movimentos da troca de Lá menor para Dó na ordem certa.",
+              enunciado: "Coloque os passos da troca de Lá menor para Dó na ordem em que acontecem.",
               itens: [
-                op("firmes", "Mantenha indicador e médio no lugar"),
-                op("anelar", "Leve o anelar para a 3ª casa da 5ª corda"),
-                op("tocar", "Toque a partir da 5ª corda"),
-                op("conferir", "Confira se alguma corda soa abafada"),
+                op("montar", "Monte o Lá menor"),
+                op("levantar", "Levante só o anelar, sem tirar o indicador e o médio"),
+                op("levar", "Apoie o anelar na 3ª casa da 5ª corda"),
+                op("tocar", "Toque o Dó a partir da 5ª corda"),
               ],
-              gabarito: ["firmes", "anelar", "tocar", "conferir"],
-              feedbackCorreto: "Perfeito: primeiro a âncora, depois o dedo que viaja, então o som e a conferência.",
-              feedbackIncorreto: "Comece pelo que não muda: indicador e médio ficam. Depois o anelar viaja, você toca e confere o som.",
+              gabarito: ["montar", "levantar", "levar", "tocar"],
+              feedbackCorreto: "Perfeito: do Lá menor, só o anelar sobe e desce no lugar novo, e o Dó soa.",
+              feedbackIncorreto: "Siga o movimento da mão: você começa no Lá menor, levanta só o anelar, apoia ele na 3ª casa da 5ª corda e então toca o Dó.",
             },
             pratica: {
               tarefa: "Alterne Lá menor e Dó contando até 4 em cada acorde, devagar. Pare quando a troca sair sem você olhar para a mão.",
@@ -128,13 +128,14 @@ const violao: Demo = {
           {
             titulo: "Ritmo: batida para baixo e para cima",
             objetivo: "Tocar uma batida simples, para baixo e para cima, em quatro tempos.",
-            conceito: "A batida marca o pulso da música. Na batida mais simples, a mão desce em cada tempo e sobe entre eles, sem parar, como um pêndulo. O braço balança sempre, mesmo quando você não encosta nas cordas.",
+            conceito: "A batida marca o pulso da música e é feita pela mão que toca as cordas, perto da boca do violão. Na batida mais simples, essa mão desce em cada tempo e sobe entre eles, sem parar, como um pêndulo. Um compasso é um grupo de 4 tempos: tocar 8 compassos é contar de 1 a 4 oito vezes.",
             exemploTipo: "demonstracao",
-            exemplo: "Conte em voz alta: 1 e 2 e 3 e 4 e. No número, a mão desce; no “e”, a mão sobe.",
+            exemplo: "Ouça a batida com o Lá menor e conte junto: 1 e 2 e 3 e 4 e. No número, a mão desce (↓); no “e”, a mão sobe (↑).",
+            recurso: { tipo: "acorde", nome: "Am", casas: [-1, 0, 2, 2, 1, 0], dedos: [0, 0, 2, 3, 1, 0], batida: true },
             passos: [
               "Conte 1, 2, 3, 4 em voz alta, num ritmo lento.",
-              "Desça a mão em cada número.",
-              "Suba a mão em cada “e”.",
+              "↓ Desça a mão em cada número, passando pelas cordas.",
+              "↑ Suba a mão em cada “e”, mais leve.",
               "Mantenha o braço balançando, mesmo se errar uma corda.",
             ],
             origem: origemViolao,
@@ -152,8 +153,9 @@ const violao: Demo = {
               feedbackIncorreto: "É falsa: o braço segue balançando como um pêndulo. Parar faz você perder o tempo da música.",
             },
             pratica: {
-              tarefa: "Com o Lá menor montado, faça a batida para baixo e para cima por 8 compassos, contando em voz alta.",
+              tarefa: "Com o Lá menor montado, faça a batida para baixo e para cima por 8 compassos (conte de 1 a 4 oito vezes), em voz alta.",
               minutos: 3,
+              dica: "Ouça a batida no exemplo e toque junto. Devagar e no tempo vale mais do que rápido e atropelado.",
             },
           },
         ],
@@ -257,11 +259,12 @@ const ingles: Demo = {
           {
             titulo: "Pedir informações na rua",
             objetivo: "Perguntar onde fica um lugar e entender a resposta.",
-            conceito: "Para pedir ajuda, comece com “Excuse me” (com licença) e pergunte “Where is…?” (onde fica…?). No fim, “Thank you!” agradece.",
+            conceito: "Para pedir ajuda, comece com “Excuse me” (com licença) e pergunte “Where is…?” (onde fica…?). Na resposta, preste atenção em “next to” (ao lado de), “in front of” (em frente a) e “far from” (longe de). No fim, “Thank you!” agradece.",
             exemplo: "“Excuse me, where is the train station?” — “It's on the next corner.” — “Thank you!”",
             falas: [
               falaEn("Excuse me, where is the train station?", "Com licença, onde fica a estação de trem?"),
               falaEn("It's on the next corner.", "Fica na próxima esquina."),
+              falaEn("It's next to the hotel.", "Fica ao lado do hotel."),
               falaEn("Thank you!", "Obrigado!"),
             ],
             origem: origemIngles,
@@ -300,6 +303,7 @@ const ingles: Demo = {
             exemplo: "“Good evening! I have a reservation.” — “What's your name?” — “Ana Souza. Here's my passport.” — “Here's your key. Your room is 204.”",
             falas: [
               falaEn("Good evening! I have a reservation.", "Boa noite! Eu tenho uma reserva."),
+              falaEn("What's your name?", "Qual é o seu nome?"),
               falaEn("Here's my passport.", "Aqui está meu passaporte."),
               falaEn("Thank you for the key!", "Obrigada pela chave!"),
             ],
@@ -321,9 +325,10 @@ const ingles: Demo = {
           {
             titulo: "Números e preços",
             objetivo: "Entender preços falados em inglês.",
-            conceito: "Os números de 13 a 19 terminam em “-teen” (thirteen, fifteen) e as dezenas terminam em “-ty” (thirty, fifty). A diferença está no fim da palavra: fifteen é 15 e fifty é 50.",
+            conceito: "Primeiro, os números de 1 a 10: one, two, three, four, five, six, seven, eight, nine, ten. Os de 13 a 19 terminam em “-teen” (thirteen, fifteen) e as dezenas terminam em “-ty” (thirty, fifty). A diferença está no fim da palavra: fifteen é 15 e fifty é 50.",
             exemplo: "“How much is it?” — “It's fifteen dollars.” São quinze dólares, não cinquenta: o “-teen” no fim indica a casa dos dez.",
             falas: [
+              falaEn("One, two, three, four, five, six, seven, eight, nine, ten.", "Um, dois, três, quatro, cinco, seis, sete, oito, nove, dez."),
               falaEn("How much is it?", "Quanto custa?"),
               falaEn("It's fifteen dollars.", "Custa quinze dólares."),
               falaEn("It's fifty dollars.", "Custa cinquenta dólares."),
@@ -355,7 +360,11 @@ const ingles: Demo = {
             objetivo: "Juntar cumprimentos, informações e preços numa conversa.",
             conceito: "Num dia de viagem você junta tudo: cumprimentar, pedir informações e entender preços. Ouça com atenção o fim das palavras e, se não entender, peça para repetir: “Sorry, can you repeat?”",
             exemplo: "“Excuse me, where is the bus stop?” — “It's next to the hotel.” — “Thank you! How much is the ticket?” — “It's fifteen dollars.”",
-            falas: [falaEn("Sorry, can you repeat?", "Desculpe, pode repetir?")],
+            falas: [
+              falaEn("Where is the bus stop?", "Onde fica o ponto de ônibus?"),
+              falaEn("How much is the ticket?", "Quanto custa a passagem?"),
+              falaEn("Sorry, can you repeat?", "Desculpe, pode repetir?"),
+            ],
             origem: origemIngles,
             exercicio: {
               tipo: "verdadeiro_falso",
