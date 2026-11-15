@@ -314,7 +314,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (fimDoTrecho && seguinte?.estado === 'atual') depois += 56 + 56;
           if (discreto) depois += 14;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
-          if (discreto && seguinte?.estado === 'atual') depois += 38;
+          // O nome embaixo do nó (até duas linhas) e o balão "Começar" do próximo não podem se encostar.
+          if (discreto && seguinte?.estado === 'atual') depois += 80;
           if (no.estado === 'atual' && fimDoTrecho) depois += 16;
           if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 24;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
@@ -861,7 +862,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
           {/* Um balão só no nó atual: a ação e o nome da lição juntos, como na web. */}
           <View style={caminhoEstilos.etiqueta}>
             <View style={[caminhoEstilos.etiquetaSeta, { marginLeft: -6 - puxa }]} />
-            <View style={caminhoEstilos.etiquetaAcao}><Text style={caminhoEstilos.etiquetaTexto}>{mensagens.trilha.comecar.toLocaleUpperCase('pt-BR')}</Text></View>
+            <View style={caminhoEstilos.etiquetaAcao}><Text style={caminhoEstilos.etiquetaTexto}>{(no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar).toLocaleUpperCase('pt-BR')}</Text></View>
             <Text numberOfLines={2} style={caminhoEstilos.etiquetaTitulo}>{no.titulo}</Text>
           </View>
         </Animated.View>

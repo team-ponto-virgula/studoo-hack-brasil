@@ -157,3 +157,32 @@ export function linhasDePassos(texto: string): string[] {
     .map((linha) => linha.replace(/^\s*(?:\d+[.)]|[-•])\s*/, '').trim())
     .filter(Boolean);
 }
+
+/**
+ * O que fica ao tentar de novo: na aberta, o texto todo (para corrigir); no associar, os pares certos; no verdadeiro ou
+ * falso, a parte certa; no ordenar, o começo que já estava na posição certa. Escolha e lacuna recomeçam.
+ */
+export function respostaParaTentarDeNovo(exercicio: ExercicioPublico, resposta: string, avaliacao: Avaliacao): string {
+  const certos = new Set(avaliacao.certos ?? []);
+  switch (exercicio.tipo) {
+    case 'aberta':
+      return resposta;
+    case 'associar':
+      return resposta.split(',').filter((par) => certos.has(par.split('=')[0])).join(',');
+    case 'verdadeiro_falso': {
+      const [valor = '', justificativa = ''] = resposta.split(':');
+      return `${certos.has('valor') ? valor : ''}:${certos.has('justificativa') ? justificativa : ''}`.replace(/^:$/, '');
+    }
+    case 'ordenar': {
+      const ids = resposta.split(',').filter(Boolean);
+      const comeco: string[] = [];
+      for (const id of ids) {
+        if (!certos.has(id)) break;
+        comeco.push(id);
+      }
+      return comeco.join(',');
+    }
+    default:
+      return '';
+  }
+}

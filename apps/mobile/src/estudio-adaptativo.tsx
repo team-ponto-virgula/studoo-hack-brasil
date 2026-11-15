@@ -262,33 +262,6 @@ export function MaterialParaTrilha({
     </Card>
   );
 }
-function PonteDesenho() {
-  const a = useAparecer(0, 500);
-  return (
-    <Animated.View
-      accessible={false}
-      importantForAccessibility="no-hide-descendants"
-      style={[
-        s.ponte,
-        {
-          opacity: a,
-          transform: [
-            {
-              translateY: a.interpolate({
-                inputRange: [0, 1],
-                outputRange: [24, 0],
-              }),
-            },
-          ],
-        },
-      ]}
-    >
-      {[0, 12, 20, 12, 0].map((h, i) => (
-        <View key={i} style={[s.tabua, { marginBottom: h }]} />
-      ))}
-    </Animated.View>
-  );
-}
 export function ApoioDaLicao({
   cliente,
   licao,
@@ -446,7 +419,7 @@ export function ApoioDaLicao({
   // "Ver outro exemplo" no painel de retorno: um toque já pede o reforço, se ainda não existe (durante uma gravação, espera
   // ela acabar). Como na web.
   useEffect(() => {
-    if (pedidoPonte === 0 || gravando || apoio?.ponte) return;
+    if (pedidoPonte === 0 || gravando) return;
     void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
     // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -474,9 +447,8 @@ export function ApoioDaLicao({
       )}
       {/* Como na web: o reforço é do exercício errado agora (ou de um reforço começado e não terminado). */}
       {/* O cartão aparece quando a pessoa pede "Ver outro exemplo" no painel (ou se já há um reforço): sem botão repetido. */}
-      {avaliacao?.correta === false && (pedidoPonte > 0 || !!ponte) && (
+      {avaliacao?.correta === false && pedidoPonte > 0 && (
         <Card>
-          <PonteDesenho />
           <H>{ponte?.concluida ? m.pontePronta : m.ponte}</H>
           <T>{ponte?.motivo ?? m.ponteDica}</T>
           {!ponte ? (
@@ -484,7 +456,8 @@ export function ApoioDaLicao({
           ) : (
             <>
               {ponte.simulado && <T>{m.retornoAutomatico}</T>}
-              <T>{ponte.conceito}</T>
+              {/* A explicação do erro já está no painel de retorno: aqui só aparece se for outra. */}
+              {ponte.conceito !== avaliacao?.feedback && <T>{ponte.conceito}</T>}
               <View style={s.exemplo}>
                 <T>{ponte.exemplo}</T>
               </View>

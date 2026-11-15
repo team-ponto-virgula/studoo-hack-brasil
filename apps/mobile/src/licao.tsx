@@ -6,6 +6,7 @@ import {
   exerciciosDaLicao,
   faltaParaVerificar,
   origemLegivel,
+  respostaParaTentarDeNovo,
   respostaCompleta,
   ultimoExercicio,
   type AutoAvaliacao,
@@ -69,6 +70,12 @@ type Andamento = {
   salvoEm: number;
 };
 const andamentos = new Map<string, Andamento>();
+
+/** Se a lição foi começada e tem andamento guardado (o mapa diz Continuar). */
+export function temAndamento(id: string): boolean {
+  const salvo = andamentos.get(id);
+  return Boolean(salvo && salvo.passo > 0 && Date.now() - salvo.salvoEm < 86_400_000);
+}
 
 function lerAndamento(licao: LicaoDetalhe, etapas: number, exercicios: number): Andamento | null {
   const salvo = andamentos.get(licao.id);
@@ -238,8 +245,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   function tentarDeNovo() {
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
-    // Na resposta aberta, o texto fica para a pessoa corrigir; nos outros formatos, recomeça do zero.
-    if (exercicio?.tipo !== 'aberta') mudarResposta('');
+    // Fica o que estava certo (na aberta, o texto todo); o resto recomeça. Como na web.
+    if (exercicio && avaliacao) mudarResposta(respostaParaTentarDeNovo(exercicio, resposta, avaliacao));
   }
 
   /** A etapa de um exercício (pelo índice dele). */
@@ -315,7 +322,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           ? avaliacao.criterios?.some(({ atendido }) => !atendido) ? t.quaseCompleta : tituloDoAcerto(`${licao.id}-${indice}`)
           : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
         extras={extrasDoRetorno(avaliacao, exercicio)} ocupado={ocupado} concluindo={pendente === 'concluir'} tentarDeNovo={tentarDeNovo}
-        rotuloPular={revisao ? t.seguirSemAcertar : t.pular}
+        rotuloPular={revisao ? t.seguirSemAcertar : t.pular} compacto={pedidoPonte > 0}
         verReforco={() => {
           rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
           setPedidoPonte((atual) => atual + 1);
@@ -567,9 +574,11 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
  * Painel de retorno no rodapé: sobe com a cor do resultado; o ícone entra com um giro e, no acerto, solta confete.
  * No erro, "Tentar de novo" volta ao exercício e Continuar segue, como na web.
  */
-function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarDeNovo, continuar, verReforco, rotuloPular }: {
+function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarDeNovo, continuar, verReforco, rotuloPular, compacto = false }: {
   avaliacao: Avaliacao;
   titulo: string;
+  /** Com o reforço aberto, o painel fica só com o título e as ações, para não cobrir a miniquestão. */
+  compacto?: boolean;
   /** O botão de seguir no erro: "Pular por agora" ou, na revisão antes de concluir, "Seguir sem acertar". */
   rotuloPular: string;
   /** Linhas a mais: o aviso da correção e quantos itens já estão certos. */
@@ -605,11 +614,11 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
         </Animated.View>
         <View style={licaoEstilos.retornoTextos}>
           <Text style={[licaoEstilos.retornoTitulo, !certa && licaoEstilos.retornoTituloErrado]}>{titulo}</Text>
-          <Text style={estilos.texto}>{avaliacao.feedback}</Text>
-          {extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
+          {!compacto && <Text style={estilos.texto}>{avaliacao.feedback}</Text>}
+          {!compacto && extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
         </View>
       </View>
-      {!certa && <Botao variante="texto" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
+      {!certa && !compacto && <Botao variante="texto" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
       <View style={licaoEstilos.retornoAcoes}>
         {!certa && (
           <View style={licaoEstilos.metade}>

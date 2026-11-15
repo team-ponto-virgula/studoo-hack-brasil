@@ -940,7 +940,8 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-no__etiqueta { gap: 6px; padding-top: 10px; }
 .caminho-no__etiqueta-acao { padding: 3px 12px; border-radius: 999px; color: var(--fundo); background: var(--acao); box-shadow: 0 2px 0 #2a44a8; }
 /* Respiro acima do nó atual: o balão (ação + nome) fica no espaço livre, sem cobrir a estrada até o nó anterior. */
-.caminho .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 140px); }
+/* O nome embaixo do nó (até duas linhas) e o balão "Começar" do próximo não podem se encostar. */
+.caminho .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 172px); }
 
 /* Lições à frente: cinza neutro e frio com lábio escuro, separado de qualquer terreno. */
 .caminho-no[data-estado='bloqueada'] .caminho-no__lente { --face: #dfe3ee; --labio: #a9b1ca; --tinta: #66708f; }

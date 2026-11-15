@@ -10,7 +10,8 @@ import './caminho.css';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco e a região do mundo. */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean } };
+/** `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar, não Começar). */
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean };
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo' | 'som';
@@ -99,7 +100,7 @@ function FaixaParte({ numero, resumo, trecho }: { numero: number; trecho: number
 
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 function explicar(nos: readonly NoCaminho[], indice: number) {
-  if (nos[indice].estado === 'concluida') return mensagens.trilha.concluidaTexto;
+  if (nos[indice].estado === 'concluida') return nos[indice].ponte ? mensagens.trilha.concluidaComReforco : mensagens.trilha.concluidaTexto;
   const pendentes = nos.slice(0, indice).filter((anterior) => anterior.estado !== 'concluida');
   const comeco = pendentes.find((anterior) => anterior.estado === 'atual') ?? pendentes[0];
   if (!comeco) return mensagens.trilha.bloqueadaSemPasso;
@@ -357,7 +358,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const posicao = montando ? mensagens.trilha.posicaoParcial(indice + 1) : mensagens.trilha.posicao(indice + 1, total);
           const estado = mensagens.trilha.estados[no.estado];
           const nome = atual
-            ? mensagens.trilha.nomeNoAtual(no.titulo, posicao)
+            ? (no.andamento ? mensagens.trilha.nomeNoContinuar(no.titulo, posicao) : mensagens.trilha.nomeNoAtual(no.titulo, posicao))
             : mensagens.trilha.nomeNo(no.titulo, posicao, estado.toLocaleLowerCase('pt-BR'));
           let linha = no.estado === 'previa' ? posicao : estado;
           if (abrindo === no.id) linha = mensagens.trilha.abrindo;
@@ -375,7 +376,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {recem && <Confete quantidade={12} />}
                 {/* Um balão só no nó atual: a ação e o nome da lição juntos. */}
-                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{mensagens.trilha.comecar}</span><span className="caminho-no__etiqueta-titulo">{no.titulo}</span></span>}
+                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar}</span><span className="caminho-no__etiqueta-titulo">{no.titulo}</span></span>}
                 {no.estado === 'bloqueada' && <span className="caminho-no__selo"><Icone nome="cadeado" /></span>}
               </span>
               {/* O nome de cada lição fica à vista embaixo do nó (o atual já mostra o nome no balão "Começar"): dá para achar uma lição para rever sem tocar uma por uma. */}

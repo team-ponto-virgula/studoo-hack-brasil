@@ -33,7 +33,7 @@ import {
 } from '../ui';
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
-import { Licao, formatarTempo, type ResumoLicao } from './aula';
+import { Licao, formatarTempo, temAndamento, type ResumoLicao } from './aula';
 import { Pedido, type IdTema } from './pedido';
 import './aula.css';
 import './trilha.css';
@@ -718,7 +718,7 @@ function montarTrilha(plano: PlanoDetalhe) {
     let estado: NoCaminho['estado'] = 'bloqueada';
     if (licao.concluida) estado = 'concluida';
     else if (licao.id === atual) estado = 'atual';
-    return { id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte };
+    return { id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte, ...(estado === 'atual' && temAndamento(licao.id) ? { andamento: true } : {}) };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
   const proximo = indice >= 0 ? { no: nos[indice], posicao: mensagens.trilha.posicao(indice + 1, nos.length) } : null;
@@ -768,7 +768,7 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
         </div>
       )}
       {proximo && (
-        <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id}
+        <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id} andamento={proximo.no.andamento}
           ocupado={ocupado} aoAbrir={() => abrirLicao(proximo.no.id)} />
       )}
     </section>
@@ -795,9 +795,10 @@ function planoInicial(planos: PlanoResumo[]) {
 }
 
 /** Próxima lição do plano; no celular vira o rodapé fixo da tela. */
-function ProximoPasso({ titulo, detalhe, abrindo, ocupado, aoAbrir }: {
+function ProximoPasso({ titulo, detalhe, abrindo, ocupado, aoAbrir, andamento = false }: {
   titulo: string;
   detalhe: string;
+  andamento?: boolean;
   abrindo: boolean;
   ocupado: boolean;
   aoAbrir: () => void;
@@ -810,7 +811,7 @@ function ProximoPasso({ titulo, detalhe, abrindo, ocupado, aoAbrir }: {
       <p className="trilha-proximo__titulo" id={idTitulo}>{titulo}</p>
       <p className="trilha-proximo__detalhe">{detalhe}</p>
       <Botao disabled={ocupado} aria-describedby={idTitulo} onClick={aoAbrir}>
-        {abrindo ? mensagens.trilha.abrindo : mensagens.trilha.comecarLicao}
+        {abrindo ? mensagens.trilha.abrindo : andamento ? mensagens.trilha.continuarLicao : mensagens.trilha.comecarLicao}
       </Botao>
     </div>
   );
@@ -913,9 +914,10 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       </div>
       <div className="acoes-tela">
         <AcaoPrincipal>
-          {proxima && <Botao variante="secundario" disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
+          {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}
           {trilhaFeita && <Botao variante="secundario" disabled={ocupado} onClick={novoAssunto}>{mensagens.licao.novoAssunto}</Botao>}
-          <Botao disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>
+          <Botao variante={proxima ? 'secundario' : 'primario'} disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>
+          {proxima && <Botao disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
         </AcaoPrincipal>
       </div>
     </section>

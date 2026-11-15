@@ -4,6 +4,7 @@ import {
   acertouParte,
   codificarResposta,
   conferirFala,
+  respostaParaTentarDeNovo,
   etapasDaLicao,
   faltaParaVerificar,
   frequenciasDoAcorde,
@@ -476,4 +477,39 @@ test("reforço sem IA: o motivo cita o que a pessoa fez", () => {
   const errada = licao.exercicio.esquerda.map(({ id }, posicao) => `${id}=${direita[(posicao + 1) % direita.length]}`).join(",");
   assert.match(reforcoDoExercicio(licao.exercicio, errada, licao.exemplo).motivo, /^Você ligou “Tarraxa” a “/);
   assert.match(reforcoDoExercicio(licao.exercicio, "tarraxa=inexistente", licao.exemplo).motivo, /caminho mais curto/, "id que não existe não quebra");
+});
+
+test("resposta aberta: sem o critério essencial não passa, mesmo com os outros (“I like” não é “I'd like”)", () => {
+  const exercicio = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes).at(-1).exercicio;
+  const semEducacao = avaliarResposta(exercicio, "I like one coffee and cheese bread please");
+  assert.equal(semEducacao.correta, false);
+  assert.deepEqual(semEducacao.criterios.map(({ atendido }) => atendido), [false, true, true]);
+  assert.match(semEducacao.feedback, /“I like” quer dizer “eu gosto”/);
+  assert.equal(avaliarResposta(exercicio, "I would like a coffee and a cheese bread, please").correta, true);
+});
+
+test("tentar de novo mantém o que estava certo", () => {
+  const itens = [{ id: "a", texto: "A" }, { id: "b", texto: "B" }, { id: "c", texto: "C" }];
+  const associar = { tipo: "associar", enunciado: "Ligue", esquerda: itens, direita: itens };
+  const avaliacao = (certos) => ({ correta: false, feedback: "", comprovante: "", certos });
+  assert.equal(respostaParaTentarDeNovo(associar, "a=a,b=c,c=b", avaliacao(["a"])), "a=a");
+  const ordenar = { tipo: "ordenar", enunciado: "Ordene", itens };
+  assert.equal(respostaParaTentarDeNovo(ordenar, "a,c,b", avaliacao(["a"])), "a", "só o começo certo fica");
+  assert.equal(respostaParaTentarDeNovo(ordenar, "c,b,a", avaliacao(["b"])), "", "o meio certo sozinho não vira começo");
+  const vf = { tipo: "verdadeiro_falso", enunciado: "VF", afirmacao: "X", justificativas: itens };
+  assert.equal(respostaParaTentarDeNovo(vf, "falso:b", avaliacao(["valor"])), "falso:");
+  assert.equal(respostaParaTentarDeNovo({ tipo: "aberta", enunciado: "E", minimo: 10 }, "meu texto", avaliacao([])), "meu texto");
+  assert.equal(respostaParaTentarDeNovo({ tipo: "lacuna", enunciado: "L" }, "zzz", avaliacao([])), "");
+});
+
+test("dica de grafia com até duas letras de diferença em palavras de 6 ou mais (continua errada quando é a lição)", () => {
+  const lacuna = { tipo: "lacuna", enunciado: "Complete", gabarito: ["repeat"], exata: true, feedbackCorreto: "ok", feedbackIncorreto: "não" };
+  const repit = avaliarResposta(lacuna, "repit");
+  assert.equal(repit.correta, false);
+  assert.match(repit.observacao, /Confira a grafia/);
+});
+
+test("ideias do Stu: as opções de um exercício de escuta (traduções) não contam", () => {
+  const restaurante = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes).at(-1);
+  assert.ok(!termosDaLicao(restaurante).includes("A conta"));
 });

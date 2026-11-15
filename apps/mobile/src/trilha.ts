@@ -8,7 +8,8 @@ import { mensagens } from './mensagens';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** Lição no caminho; `trecho` é a posição do fluxo e só serve para desenhar o marco entre um trecho e outro. */
-export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean } };
+/** `andamento`: a lição atual foi começada e tem o andamento guardado (o balão diz Continuar). Como na web. */
+export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean };
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo' | 'som';
 
@@ -30,13 +31,13 @@ export function liberadasEntre(antes: PlanoDetalhe, depois: PlanoDetalhe) {
  * Achata os trechos num caminho único, na ordem da trilha. Só a próxima lição fica disponível (atual);
  * as pendentes depois dela ficam bloqueadas e as concluídas podem ser refeitas.
  */
-export function montarTrilha(plano: PlanoDetalhe) {
+export function montarTrilha(plano: PlanoDetalhe, temAndamento: (id: string) => boolean = () => false) {
   const atual = proximaDoCaminho(plano);
   const nos = plano.fluxos.flatMap((fluxo, trecho) => fluxo.licoes.map((licao): NoCaminho => {
     let estado: EstadoNo = 'bloqueada';
     if (licao.concluida) estado = 'concluida';
     else if (licao.id === atual) estado = 'atual';
-    return { id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte };
+    return { id: licao.id, titulo: licao.titulo, estado, trecho, ponte: licao.ponte, ...(estado === 'atual' && temAndamento(licao.id) ? { andamento: true } : {}) };
   }));
   const indice = nos.findIndex((no) => no.estado === 'atual');
   const proximo = indice >= 0 ? { no: nos[indice], posicao: posicaoDoNo(indice, nos.length) } : null;
@@ -52,7 +53,7 @@ export function falaDoStu(nos: readonly NoCaminho[]) {
 
 /** O que falta para liberar um nó: as lições pendentes antes dele, a começar pela atual. */
 export function explicar(nos: readonly NoCaminho[], indice: number) {
-  if (nos[indice].estado === 'concluida') return mensagens.trilha.concluidaTexto;
+  if (nos[indice].estado === 'concluida') return nos[indice].ponte ? mensagens.trilha.concluidaComReforco : mensagens.trilha.concluidaTexto;
   const pendentes = nos.slice(0, indice).filter((anterior) => anterior.estado !== 'concluida');
   const comeco = pendentes.find((anterior) => anterior.estado === 'atual') ?? pendentes[0];
   if (!comeco) return mensagens.trilha.bloqueadaSemPasso;
@@ -88,7 +89,7 @@ export function posicaoDoNo(indice: number, total: number, montando = false) {
 
 /** Nome que o leitor de tela lê no nó: título, posição e estado; o atual começa pela ação. */
 export function nomeDoNo(no: NoCaminho, posicao: string) {
-  if (no.estado === 'atual') return mensagens.trilha.nomeNoAtual(no.titulo, posicao);
+  if (no.estado === 'atual') return no.andamento ? mensagens.trilha.nomeNoContinuar(no.titulo, posicao) : mensagens.trilha.nomeNoAtual(no.titulo, posicao);
   return mensagens.trilha.nomeNo(no.titulo, posicao, mensagens.trilha.estados[no.estado].toLocaleLowerCase('pt-BR'));
 }
 

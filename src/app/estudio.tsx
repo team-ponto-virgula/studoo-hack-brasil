@@ -345,7 +345,7 @@ export function ApoioDaLicao({
   const ponte = apoio?.ponte;
   // "Ver outro exemplo" no painel de retorno: pede o reforço, se ainda não existe (durante uma gravação, espera ela acabar).
   useEffect(() => {
-    if (pedidoPonte === 0 || gravando || apoio?.ponte) return;
+    if (pedidoPonte === 0 || gravando) return;
     void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
     // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -380,15 +380,8 @@ export function ApoioDaLicao({
       )}
       {/* O reforço é do exercício que a pessoa acabou de errar (ou de um reforço começado e não terminado): não fica
           sobrando em outros exercícios nem em outra visita à lição. */}
-      {avaliacao?.correta === false && (pedidoPonte > 0 || ponte) && (
+      {avaliacao?.correta === false && pedidoPonte > 0 && (
         <section className="estudio-card estudio-ponte" ref={cartaoPonte}>
-          <div className="ponte-desenho" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
-          </div>
           <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
           <p>{ponte?.motivo ?? m.ponteDica}</p>
           {!ponte ? (
@@ -396,7 +389,8 @@ export function ApoioDaLicao({
           ) : (
             <>
               {ponte.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
-              <p>{ponte.conceito}</p>
+              {/* A explicação do erro já está no painel de retorno: aqui só aparece se for outra. */}
+              {ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
               <div className="estudio-exemplo">{ponte.exemplo}</div>
               <fieldset disabled={ocupado || gravando || ponte.concluida}>
                 <legend>{ponte.exercicio.enunciado}</legend>
