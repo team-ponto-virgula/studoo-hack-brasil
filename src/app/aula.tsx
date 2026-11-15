@@ -326,7 +326,7 @@ function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
     <figure className="recurso-imagem">
       {/* A foto vem do próprio material da pessoa, como data URL: não passa pelo otimizador de imagens. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={recurso.src} alt={recurso.descricao} />
+      <img src={recurso.src} alt={`${t.recursos.doMaterial}: ${recurso.descricao}`} />
       <figcaption><strong>{t.recursos.doMaterial}</strong> · {recurso.descricao}</figcaption>
     </figure>
   );

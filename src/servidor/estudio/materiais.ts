@@ -248,7 +248,7 @@ async function criarProposta(
       ...conteudoDaGerada(x, origem),
       // A página tem foto: a lição mostra a imagem de onde veio a explicação.
       ...(pagina.imagem
-        ? { recurso: { tipo: 'imagem' as const, src: pagina.imagem, descricao: `${pagina.rotulo ?? `Página ${pagina.numero}`} do seu material` } }
+        ? { recurso: { tipo: 'imagem' as const, src: pagina.imagem, descricao: pagina.rotulo ?? `Página ${pagina.numero}` } }
         : {}),
       referencias: [
         {

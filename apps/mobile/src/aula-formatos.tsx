@@ -216,7 +216,7 @@ export function RecursoDaLicao({ recurso }: { recurso: Recurso }) {
   }
   return (
     <View style={formatos.secao}>
-      <Image source={{ uri: recurso.src }} accessibilityLabel={recurso.descricao} resizeMode="contain" style={formatos.imagem} />
+      <Image source={{ uri: recurso.src }} accessibilityLabel={`${t.recursos.doMaterial}: ${recurso.descricao}`} resizeMode="contain" style={formatos.imagem} />
       <Text style={estilos.legenda}><Text style={{ fontWeight: '800' }}>{t.recursos.doMaterial}</Text> · {recurso.descricao}</Text>
     </View>
   );
