@@ -285,6 +285,22 @@
 @keyframes aula-tremer { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-8px); } 40%, 60% { transform: translateX(8px); } }
 @keyframes aula-pular { 40% { transform: translateY(-6px) scale(1.02); } }
 
+/* Celular: o painel de retorno mais compacto (ocupava uns 40% da tela e escondia o exercício). */
+@media (max-width: 767px) {
+  .aula-retorno { gap: 10px; }
+  .aula-retorno__icone { width: 44px; height: 44px; }
+  .aula-retorno__icone .icone { width: 24px; height: 24px; }
+  .aula-retorno h2 { font-size: 1.1875rem; }
+  .aula-retorno p { font-size: 0.9375rem; line-height: 1.4; }
+  .aula-rodape__acoes > .botao { min-height: 48px; }
+}
+
+/* "Mais abaixo": um aviso pequeno logo acima do painel, quando há conteúdo atrás dele. */
+.aula-mais-abaixo { position: absolute; top: -44px; right: 16px; display: inline-flex; align-items: center; gap: 4px; min-height: 34px;
+  padding: 6px 12px; border: 2px solid var(--gelo); border-radius: 999px; background: var(--fundo); color: var(--acao);
+  font: inherit; font-size: 0.875rem; font-weight: 800; box-shadow: 0 3px 0 var(--gelo); cursor: pointer; }
+.aula-mais-abaixo .icone { width: 16px; height: 16px; transform: rotate(90deg); }
+
 @media (max-width: 767px) {
   .estudo-principal:has(.painel--aula) { padding-top: max(14px, env(safe-area-inset-top)); }
   .painel--aula { gap: 22px; min-height: calc(100svh - max(14px, env(safe-area-inset-top))); }
@@ -323,6 +339,7 @@
 .aula-etapa[data-etapa='pratica'] .icone { background: #f1e8fb; }
 
 /* Lacuna: um espaço em branco sublinhado no meio do texto. */
+.trecho-lacuna[data-preenchida] { min-width: 0; padding-inline: 0.15em; color: var(--acao-escura); font-weight: 800; opacity: 1; }
 .trecho-lacuna {
   display: inline-block;
   min-width: 3.2em;
@@ -531,6 +548,8 @@
 .acorde__abafada { fill: var(--erro); font: 900 16px system-ui, sans-serif; }
 .acorde__solta { fill: var(--sucesso); font: 900 16px system-ui, sans-serif; }
 .acorde__base { fill: var(--texto2); font: 800 13px system-ui, sans-serif; }
+/* O número de cada corda (embaixo) e de cada casa (à direita): não é preciso contar as linhas. */
+.acorde__rotulo { fill: var(--texto2); font: 700 11px system-ui, sans-serif; }
 
 /* Foto do material. */
 .recurso-imagem { display: grid; gap: 8px; margin: 0; }
@@ -677,7 +696,7 @@
 .aula-pratica__tarefa { padding: 14px 16px; border-radius: 14px; background: var(--fundo); font-size: 1.15rem; font-weight: 800; line-height: 1.45; }
 .aula-pratica__passos { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .aula-pratica__passos label { display: flex; align-items: center; gap: 10px; font-weight: 700; cursor: pointer; }
-.aula-pratica__passos input { width: 22px; height: 22px; accent-color: #6b3fa0; }
+.aula-pratica__passos input { flex: none; width: 22px; height: 22px; accent-color: #6b3fa0; }
 .aula-pratica__passos label:has(input:checked) span { color: var(--texto2); text-decoration: line-through; }
 .aula-pratica__dica { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 10px; padding: 12px 14px; border-radius: 14px; background: #fff6d9; }
 .aula-pratica__dica .icone { width: 22px; height: 22px; color: #8a5a00; }

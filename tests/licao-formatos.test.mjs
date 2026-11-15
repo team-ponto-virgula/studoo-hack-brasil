@@ -30,6 +30,7 @@ import {
   normalizarResposta,
   respostaCerta,
   respostaErrada,
+  armadilhaNoTexto,
   termosDaLicao,
   termosPresentes,
 } from "../src/dominio/aprendizado/plano.ts";
@@ -650,4 +651,13 @@ test("lacuna: o nome popular (“chave”) ganha a sua dica, sem virar acerto", 
   assert.match(chave.observacao, /Muita gente chama essa peça assim/);
   assert.equal(avaliarResposta(lacuna, "tarraxa").observacao, undefined);
   assert.equal(avaliarResposta(lacuna, "corda").observacao, undefined, "outra resposta errada não ganha a dica do apelido");
+});
+
+test("“Explique com suas palavras”: o inglês sem o verbo (“I here”) vira o “O que revisar”", () => {
+  const licao = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos[0].licoes[0];
+  assert.match(armadilhaNoTexto(licao, "Na imigração eu digo I here on vacation e I from Brazil"), /o verbo não some/);
+  assert.equal(armadilhaNoTexto(licao, "Na imigração eu digo I'm here on vacation"), null, "com “I'm”, está certo");
+  assert.equal(armadilhaNoTexto(licao, "Eu digo I am from Brazil"), null);
+  // A palavra que a escuta usa (“purpose”) agora está nas frases da lição.
+  assert.ok(licao.falas.some(({ texto }) => /purpose/.test(texto)));
 });

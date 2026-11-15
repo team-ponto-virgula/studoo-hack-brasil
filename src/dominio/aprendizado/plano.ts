@@ -52,6 +52,8 @@ export type ConteudoLicao = {
    * servidor: a lição pública não o traz.
    */
   outroJeito?: string;
+  /** Erros comuns ao explicar a lição (“I here”, sem o verbo), para o retorno do "Explique com suas palavras" sem IA. */
+  armadilhas?: { termos: string; aviso: string }[];
 };
 
 export type LicaoInterna = ConteudoLicao & { titulo: string };
@@ -229,7 +231,8 @@ export function conteudoValido(valor: unknown): valor is ConteudoLicao {
     opcional(valor.recurso, recursoValido) &&
     opcional(valor.falas, (falas) => Array.isArray(falas) && falas.length > 0 && falas.length <= 6 && falas.every(falaValida)) &&
     opcional(valor.pratica, praticaValida) &&
-    opcional(valor.outroJeito, (outro) => textoAte(outro, 600));
+    opcional(valor.outroJeito, (outro) => textoAte(outro, 600)) &&
+    armadilhasValidas(valor.armadilhas);
 }
 
 function licaoValida(valor: unknown): valor is LicaoInterna {
@@ -691,6 +694,13 @@ export function termosDaLicao(conteudo: ConteudoLicao): string[] {
 }
 
 /** Quais destes termos aparecem no texto (pelo começo da palavra, com um deslize, sem “não” antes). */
+/** O aviso da primeira armadilha (da lição ou dos exercícios) que o texto traz, como “I here” sem o verbo. */
+export function armadilhaNoTexto(conteudo: ConteudoLicao, texto: string): string | null {
+  const palavras = palavrasDe(texto);
+  const todas = [...(conteudo.armadilhas ?? []), ...[conteudo.exercicio, ...(conteudo.extras ?? [])].flatMap(({ armadilhas }) => armadilhas ?? [])];
+  return todas.find(({ termos }) => termos.split("|").some((termo) => temTermo(palavras, termo.trim())))?.aviso ?? null;
+}
+
 export function termosPresentes(texto: string, termos: readonly string[]): string[] {
   const palavras = palavrasDe(texto);
   return termos.filter((termo) => temTermo(palavras, termo));

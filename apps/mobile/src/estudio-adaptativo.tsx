@@ -506,7 +506,7 @@ export function ApoioDaLicao({
               <Text accessibilityLiveRegion="polite" style={estilos.texto}>
                 {retorno}
               </Text>
-              {ponte.concluida && <T>{m.ponteVoltar}</T>}
+              {/* O "tente de novo" já está no painel de retorno: aqui não repete. Como na web. */}
             </>
           )}
         </Card>
