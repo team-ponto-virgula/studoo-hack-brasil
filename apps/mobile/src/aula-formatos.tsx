@@ -240,7 +240,7 @@ function FalarNoNavegador({ fala }: { fala: Fala }) {
       if (melhor) setResultado(melhor);
       else setErro(t.audio.naoOuviu);
     };
-    novo.onerror = (evento) => setErro(evento.error === 'not-allowed' ? t.audio.semMicrofone : t.audio.naoOuviu);
+    novo.onerror = (evento) => setErro(evento.error === 'not-allowed' || evento.error === 'service-not-allowed' ? t.audio.microfoneBloqueado : t.audio.naoOuviu);
     novo.onend = encerrar;
     reconhecimento.current = novo;
     setErro(null);
@@ -287,7 +287,8 @@ function FalarNoAparelho({ fala, transcrever }: { fala: Fala; transcrever: (entr
     setResultado(null);
     const permissao = await requestRecordingPermissionsAsync().catch(() => ({ granted: false }));
     if (!permissao.granted) {
-      setErro(t.audio.semMicrofone);
+      // Como na web: sem a permissão, o aviso diz onde liberar (nos ajustes do app), em vez de "confira a permissão".
+      setErro(t.audio.microfoneBloqueado);
       return;
     }
     try {
@@ -834,11 +835,13 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
       <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={rotulo} disabled={desativado || fixo}
         accessibilityState={{ selected: escolhida === item.id }}
         onPress={() => (lado === 'esquerda' ? tocarEsquerda(item.id) : tocarDireita(item.id))}
-        style={({ pressed }) => [formatos.cartao, formatos.cartaoPar, par && { borderColor: cor, borderBottomColor: cor },
+        style={({ pressed }) => [formatos.cartao, formatos.cartaoPar, { overflow: 'visible' }, par && { borderColor: cor, borderBottomColor: cor },
           escolhida === item.id && formatos.cartaoEscolhido, estado === 'certo' && formatos.cartaoCerto,
           estado === 'errado' && formatos.cartaoErrado, pressed && formatos.cartaoAfundado]}>
         {par && (
-          <View style={[formatos.numeroPar, { backgroundColor: estado === 'certo' ? cores.sucessoClaro : estado === 'errado' ? '#E3A24A' : cor }]}>
+          // Como na web: na coluna da direita, o número vira uma etiqueta no canto, e a definição usa a largura toda.
+          <View style={[formatos.numeroPar, lado === 'direita' && formatos.numeroParCanto,
+            { backgroundColor: estado === 'certo' ? cores.sucessoClaro : estado === 'errado' ? '#E3A24A' : cor }]}>
             <Text style={formatos.posicaoTexto}>{indice}</Text>
           </View>
         )}
@@ -1026,7 +1029,13 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   // Como na web: o "Como foi?" espera um mínimo de prática (30 s, ou o cronômetro inteiro se for menor).
   const minimo = Math.min(30, total);
   const [semCronometro, setSemCronometro] = useState(false);
-  const praticou = semCronometro || total - restante >= minimo;
+  // Como na web: o que já foi praticado não se perde no "Recomeçar" (vale o maior tempo corrido até agora).
+  const [maisPraticado, setMaisPraticado] = useState(total - restante);
+  const praticado = Math.max(maisPraticado, total - restante);
+  useEffect(() => {
+    setMaisPraticado((atual) => Math.max(atual, total - restante));
+  }, [restante, total]);
+  const praticou = semCronometro || praticado >= minimo;
 
   return (
     <View style={formatos.secao} onLayout={(evento) => { raizY.current = evento.nativeEvent.layout.y; }}>
@@ -1083,7 +1092,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
         {acabou ? t.pratica.acabou
           : praticou || escolha ? t.pratica.comoFoi
             : restante < total
-              ? rodando ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.retomeParaContar(minimo - (total - restante))
+              ? rodando ? t.pratica.continuePraticando(minimo - praticado) : t.pratica.retomeParaContar(minimo - praticado)
               : t.pratica.comeceAntes}
       </Text>
       {!praticou && !escolha && (
@@ -1212,6 +1221,7 @@ const formatos = StyleSheet.create({
   posicao: { minWidth: 34, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, backgroundColor: cores.acao },
   posicaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17 },
   numeroPar: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
+  numeroParCanto: { position: 'absolute', top: -10, left: -8, width: 24, height: 24, borderRadius: 12, borderWidth: 3, borderColor: cores.fundo, zIndex: 1 },
   colunas: { flexDirection: 'row', gap: 8 },
   coluna: { flex: 1, gap: 8 },
   afirmacao: { padding: 14, borderLeftWidth: 5, borderLeftColor: cores.acao, borderRadius: 14, backgroundColor: cores.ceu },

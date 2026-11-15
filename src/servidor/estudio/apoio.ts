@@ -13,7 +13,7 @@ import { banco } from '../banco/cliente';
 import { FalhaApi } from '../acesso/http';
 import { buscarLicao, conteudoDaLicao } from '../aprendizado/servico';
 import { exercicioDaResposta, reforcoDoExercicio } from '@/dominio/aprendizado/reforco';
-import { armadilhaNoTexto, termosDaLicao, termosPresentes } from '@/dominio/aprendizado/plano';
+import { armadilhaNoTexto, normalizarResposta, termosDaLicao, termosPresentes } from '@/dominio/aprendizado/plano';
 import { quota } from './materiais';
 import {
   conteudoDaGerada,
@@ -25,8 +25,11 @@ import {
   texto,
 } from './ia';
 
-/** O reforço guardado: `resposta` é o erro de onde ele veio (um erro novo, em outro exercício, pede outro reforço). */
-type Reforco = ConteudoLicao & { motivo: string; simulado: boolean; resposta?: string | null };
+/**
+ * O reforço guardado: `resposta` e `indice` são o erro de onde ele veio (um erro novo, ou o mesmo texto em outro
+ * exercício, pede outro reforço).
+ */
+type Reforco = ConteudoLicao & { motivo: string; simulado: boolean; resposta?: string | null; indice?: number | null };
 export async function buscarApoio(
   usuarioId: string,
   licaoId: string,
@@ -92,10 +95,12 @@ function palavrasDoConceito(conceito: string, explicacao: string, titulo = ''): 
   }).map((palavra) => palavra.toLocaleLowerCase('pt-BR'));
 }
 
-function reforcoFalso(licao: LicaoDetalhe, interno: ConteudoLicao, resposta: string | null): Reforco {
+function reforcoFalso(licao: LicaoDetalhe, interno: ConteudoLicao, resposta: string | null, indice: number | null): Reforco {
   const fracao = /numerador|denominador/i.test(licao.titulo);
   if (!fracao) {
-    const exercicio = exercicioDaResposta([interno.exercicio, ...(interno.extras ?? [])], resposta);
+    // O exercício do erro é o que a avaliação registrou; sem o registro (erros antigos), o primeiro em que a resposta não serve.
+    const exercicios = [interno.exercicio, ...(interno.extras ?? [])];
+    const exercicio = (indice !== null ? exercicios[indice] : undefined) ?? exercicioDaResposta(exercicios, resposta);
     return { objetivo: licao.objetivo, origem: 'Modo demonstração', simulado: true, ...reforcoDoExercicio(exercicio, resposta, outroExemplo(licao, interno)) };
   }
   return {
@@ -153,34 +158,43 @@ async function gerarPonte(
     where: { usuarioId_licaoId: { usuarioId, licaoId } },
   });
   if (!apoio || apoio.erros < 1) throw new FalhaApi('reforco_indisponivel');
-  // O reforço é do último erro: se o guardado veio de outro erro (outro exercício), faz um novo.
-  if (apoio.reforco && (apoio.reforco as unknown as Reforco).resposta === apoio.ultimaResposta) return buscarApoio(usuarioId, licaoId);
+  // O reforço é do último erro: se o guardado veio de outro erro (outra resposta ou outro exercício), faz um novo.
+  const guardado = apoio.reforco as unknown as Reforco | null;
+  if (guardado && guardado.resposta === apoio.ultimaResposta && (guardado.indice ?? null) === apoio.ultimoIndice) {
+    return buscarApoio(usuarioId, licaoId);
+  }
   await quota(usuarioId, 'ponte');
   let ponte: Reforco;
-  if (process.env.IA === 'falsa') ponte = reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta);
+  const local = async () => reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta, apoio.ultimoIndice);
+  if (process.env.IA === 'falsa') ponte = await local();
   else {
     try {
-      ponte = await reforcoDaIa(licao, apoio.ultimaResposta);
+      ponte = await reforcoDaIa(licao, apoio.ultimaResposta, apoio.ultimoIndice);
     } catch {
       // A IA fora do ar, uma recusa ou um formato errado não deixam a pessoa sem reforço: vale o local, com o outro
       // jeito que a própria IA escreveu na lição (`outroJeito`).
-      ponte = reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta);
+      ponte = await local();
     }
   }
   await banco.apoioLicao.updateMany({
     where: { usuarioId, licaoId },
-    data: { reforco: JSON.parse(JSON.stringify({ ...ponte, resposta: apoio.ultimaResposta })), reforcoConcluido: false },
+    data: {
+      reforco: JSON.parse(JSON.stringify({ ...ponte, resposta: apoio.ultimaResposta, indice: apoio.ultimoIndice })),
+      reforcoConcluido: false,
+    },
   });
   return buscarApoio(usuarioId, licaoId);
 }
 
 /** O reforço escrito pela IA: outra analogia, um exemplo novo e outra pergunta. Formato fora do esperado é falha. */
-async function reforcoDaIa(licao: LicaoDetalhe, resposta: string | null): Promise<Reforco> {
+async function reforcoDaIa(licao: LicaoDetalhe, resposta: string | null, indice: number | null): Promise<Reforco> {
+  // A IA recebe o exercício do erro (não só o principal), para o reforço falar do que a pessoa errou.
+  const exercicioErrado = licao.exercicios[indice ?? 0] ?? licao.exercicio;
   const result = await pedirJson(
     'ponte_reforco',
     objeto({ motivo: texto, licao: esquemaLicao }),
-    'Identifique uma possível dificuldade a partir da resposta, sem afirmar um diagnóstico. Explique com uma analogia diferente e um exemplo resolvido NOVO. Crie outro exercício, diferente do original, com 3 alternativas e correta como índice 0..2. Não copie o enunciado original. A motivação deve ser gentil e específica. pagina=0 e trecho="" pois este reforço deriva da lição fornecida. Textos até 1800 caracteres.',
-    { licao, resposta },
+    'A resposta é do exercício exercicioErrado. Identifique uma possível dificuldade a partir da resposta, sem afirmar um diagnóstico. Explique com uma analogia diferente e um exemplo resolvido NOVO. Crie outro exercício, diferente do original, com 3 alternativas e correta como índice 0..2. Não copie o enunciado original. A motivação deve ser gentil e específica. pagina=0 e trecho="" pois este reforço deriva da lição fornecida. Textos até 1800 caracteres.',
+    { licao, exercicioErrado, resposta },
   );
   const r = result as { motivo: string; licao: unknown };
   if (
@@ -189,7 +203,7 @@ async function reforcoDaIa(licao: LicaoDetalhe, resposta: string | null): Promis
     !r.motivo.trim() ||
     r.motivo.length > 600 ||
     !licaoGeradaValida(r.licao) ||
-    r.licao.pergunta.trim() === licao.exercicio.enunciado.trim()
+    r.licao.pergunta.trim() === exercicioErrado.enunciado.trim()
   )
     throw new FalhaApi('ia_indisponivel');
   return {
@@ -224,10 +238,36 @@ export async function avaliarPonte(
  * O retorno do "Explique com suas palavras" sem IA: não confere se o texto está certo, mas diz quais ideias-chave da lição
  * (tiradas das respostas dos exercícios) a explicação trouxe, quais faltaram e se a pessoa já deu um exemplo.
  */
+/** Só letras e números, em minúsculas e sem acento, separados por um espaço: para achar uma frase dentro de outra. */
+const soPalavras = (texto: string) => ` ${normalizarResposta(texto).replace(/[^\p{L}\p{N}]+/gu, ' ').trim()} `;
+
+/**
+ * As frases da lição (as falas e as escutas, numa lição de idioma) que a explicação usa: a frase inteira ou três
+ * palavras seguidas dela (“excuse me where” vale para “Excuse me, where is the train station?”).
+ */
+function frasesDaLicaoNoTexto(conteudo: ConteudoLicao, explicacao: string): string[] {
+  const texto = soPalavras(explicacao);
+  const falas = [...(conteudo.falas ?? []), ...[conteudo.exercicio, ...(conteudo.extras ?? [])].flatMap(({ fala }) => (fala ? [fala] : []))];
+  const vistas = new Set<string>();
+  return falas.map(({ texto: frase }) => frase).filter((frase) => {
+    const palavras = soPalavras(frase).trim().split(' ');
+    if (vistas.has(palavras.join(' ')) || palavras.length < 2) return false;
+    vistas.add(palavras.join(' '));
+    const janela = Math.min(3, palavras.length);
+    return palavras.slice(0, palavras.length - janela + 1).some((_, inicio) => texto.includes(` ${palavras.slice(inicio, inicio + janela).join(' ')} `));
+  });
+}
+
 function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: string): FeedbackEnsino {
   const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
-  // Exemplo é o que a pessoa marca como exemplo (números e "quando" aparecem em qualquer explicação de violão).
-  const comExemplo = /\b(?:por exemplo|exemplo|ex\.|imagine|como quando|digamos|tipo assim|e o caso de|no caso de)\b/i.test(semAcento);
+  // Numa lição de idioma, usar uma frase da lição (“I'm here on vacation”) ou citar uma frase entre aspas já é dar um
+  // exemplo, mesmo sem escrever “por exemplo”.
+  const frasesUsadas = frasesDaLicaoNoTexto(conteudo, explicacao);
+  const citou = (conteudo.falas?.length ?? 0) > 0 && /[“"][^”"]*\p{L}+\s+\p{L}+[^”"]*[”"]/u.test(explicacao);
+  // Exemplo é o que a pessoa marca como exemplo, inclusive do jeito falado (“tipo quando…”, “quando eu…”). Um “quando”
+  // solto não conta: números e “quando” aparecem em qualquer explicação de violão.
+  const marcouExemplo = /\b(?:por exemplo|exemplo|ex\.|imagine|como quando|digamos|tipo assim|tipo quando|tipo se|tipo:|quando eu|se eu|no meu caso|comigo|e o caso de|no caso de)(?=\W|$)/i.test(semAcento);
+  const comExemplo = marcouExemplo || citou || frasesUsadas.length > 0;
   const termos = termosDaLicao(conteudo);
   const trouxe = termosPresentes(explicacao, termos);
   const faltou = termos.filter((termo) => !trouxe.includes(termo));
@@ -250,8 +290,10 @@ function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: s
         : []),
       // As palavras da explicação só entram quando nenhuma ideia-chave apareceu (senão, a lista soava mecânica).
       ...(trouxe.length === 0 && doConceito.length > 0 ? [`Você usou ideias da explicação da lição, como ${lista(doConceito.slice(0, 3))}.`] : []),
-      ...(trouxe.length === 0 && doConceito.length === 0 ? ['Você explicou com as suas palavras.'] : []),
-      ...(comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
+      ...(trouxe.length === 0 && doConceito.length === 0 && frasesUsadas.length === 0 ? ['Você explicou com as suas palavras.'] : []),
+      ...(frasesUsadas.length > 0
+        ? [`Você usou frases da lição, como “${frasesUsadas[0].replace(/[.!?]+$/u, '')}”: exemplos assim ajudam a lembrar.`]
+        : comExemplo ? ['Você usou um exemplo, e isso ajuda a lembrar.'] : []),
     ],
     lacuna: armadilha
       ?? (faltou.length > 0 && !cobriu
@@ -262,9 +304,9 @@ function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: s
             ? 'Nenhuma ideia importante ficou de fora.'
             : 'Faltou só um exemplo seu: uma situação concreta em que você usaria isso.'),
     pergunta: faltou.length > 0 && !cobriu
-      ? `Se alguém te perguntasse sobre “${faltou[0]}”, o que você diria, com um exemplo seu?`
+      ? `Se alguém te perguntasse o que é “${faltou[0]}”, o que você responderia? Tente com um exemplo seu.`
       : trouxe.length > 0
-        ? `E numa situação diferente da sua explicação? Conte como “${trouxe[0]}” aparece num caso novo, com um exemplo seu.`
+        ? `Para fixar: como você explicaria “${trouxe[0]}” a alguém que nunca viu o assunto, com um exemplo diferente do seu?`
         : 'Se você fosse ensinar isso a alguém que nunca viu o assunto, por onde começaria?',
     proximoPasso: armadilha
       ? 'Reescreva a frase com a correção acima e leia em voz alta: é assim que a forma certa fica.'
@@ -272,6 +314,9 @@ function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: s
       ? `Releia a explicação do Stu procurando “${faltou[0]}” e reescreva a sua com essa ideia, em uma frase.`
       : faltou.length > 0
       ? `Amanhã, tente explicar de novo sem olhar, incluindo “${faltou[0]}”.`
+      // Sem exemplo, o próximo passo é o exemplo (e não “já cobre as ideias”, que soava como o contrário do “O que revisar”).
+      : !comExemplo
+      ? (conteudo.falas?.length ? 'Escreva uma frase sua no idioma da lição, numa situação real, e leia em voz alta.' : 'Escreva uma situação sua em que você usaria isso, em uma frase.')
       : 'Sua explicação já cobre as ideias da lição. Amanhã, tente explicar de novo sem olhar: é assim que a ideia fica.',
     simulado: true,
   };

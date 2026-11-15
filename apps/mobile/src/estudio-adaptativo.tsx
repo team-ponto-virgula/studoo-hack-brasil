@@ -270,6 +270,7 @@ export function ApoioDaLicao({
   ultimo = true,
   aoMostrarEnsino,
   aoConcluirPonte,
+  aoMostrarRetornoPonte,
 }: {
   cliente: ClienteEstudio;
   licao: LicaoDetalhe;
@@ -282,6 +283,8 @@ export function ApoioDaLicao({
   aoMostrarEnsino?: (y: number) => void;
   /** A pessoa acertou a pergunta do reforço: a lição troca o "Quase lá!" do painel. Como na web. */
   aoConcluirPonte?: () => void;
+  /** O retorno da pergunta do reforço apareceu: onde ele está, a partir do topo do apoio (a lição rola até lá). */
+  aoMostrarRetornoPonte?: (y: number) => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // Como na web: o retorno do "Ensine ao Stu" é o desta visita.
@@ -297,6 +300,10 @@ export function ApoioDaLicao({
   const [texto, setTexto] = useState('');
   const [resposta, setResposta] = useState('');
   const [retorno, setRetorno] = useState('');
+  /** Como na web: o resultado da pergunta do reforço deixa a opção marcada verde (certa) ou âmbar (errada). */
+  const [resultadoPonte, setResultadoPonte] = useState<{ id: string; correta: boolean } | null>(null);
+  const cartaoPonteY = useRef(0);
+  const retornoRolado = useRef('');
   const [erro, setErro] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
@@ -466,7 +473,7 @@ export function ApoioDaLicao({
       {/* Como na web: o reforço é do exercício errado agora (ou de um reforço começado e não terminado). */}
       {/* O cartão aparece quando a pessoa pede "Ver outro exemplo" no painel (ou se já há um reforço): sem botão repetido. */}
       {avaliacao?.correta === false && pedidoPonte > 0 && (
-        <Card>
+        <View onLayout={(evento) => { cartaoPonteY.current = evento.nativeEvent.layout.y; }}><Card>
           <H>{ponte?.concluida ? m.pontePronta : m.ponte}</H>
           <T>{ponte?.motivo ?? m.ponteDica}</T>
           {!ponte ? (
@@ -481,15 +488,24 @@ export function ApoioDaLicao({
               </View>
               <H>{ponte.exercicio.enunciado}</H>
               {ponte.exercicio.tipo === 'multipla_escolha' &&
-                ponte.exercicio.opcoes.map((o) => (
-                  <Botao
-                    key={o.id}
-                    rotulo={`${resposta === o.id ? '✓ ' : ''}${o.texto}`}
-                    variante={resposta === o.id ? 'primario' : 'secundario'}
-                    desativado={ocupado || gravando || ponte.concluida}
-                    acao={() => setResposta(o.id)}
-                  />
-                ))}
+                ponte.exercicio.opcoes.map((o) => {
+                  const conferida = resultadoPonte?.id === o.id ? resultadoPonte : null;
+                  return (
+                    <Botao
+                      key={o.id}
+                      rotulo={`${resposta === o.id ? '✓ ' : ''}${o.texto}`}
+                      variante={conferida ? (conferida.correta ? 'sucesso' : 'alerta') : resposta === o.id ? 'primario' : 'secundario'}
+                      // A opção certa já conferida fica à vista (verde, sem esmaecer); as outras travam.
+                      desativado={ocupado || gravando || (ponte.concluida && !conferida)}
+                      acao={() => {
+                        if (ponte.concluida) return;
+                        setResposta(o.id);
+                        setResultadoPonte(null);
+                        setRetorno('');
+                      }}
+                    />
+                  );
+                })}
               {!ponte.concluida && (
                 <Botao
                   rotulo={m.verificar}
@@ -498,18 +514,26 @@ export function ApoioDaLicao({
                     void executar(async () => {
                       const r = await cliente.avaliarPonte(licao.id, resposta);
                       atualizarApoio(r.apoio);
+                      setResultadoPonte({ id: resposta, correta: r.correta });
                       setRetorno(r.feedback);
                     })
                   }
                 />
               )}
-              <Text accessibilityLiveRegion="polite" style={estilos.texto}>
+              <Text accessibilityLiveRegion="polite"
+                style={[estilos.texto, resultadoPonte && retorno ? { color: resultadoPonte.correta ? cores.sucesso : cores.alerta, fontWeight: '800' } : null]}
+                onLayout={(evento) => {
+                  // Como na web: o retorno aparece no fim do cartão, às vezes atrás do painel; a lição rola até ele.
+                  if (!retorno || retornoRolado.current === retorno) return;
+                  retornoRolado.current = retorno;
+                  aoMostrarRetornoPonte?.(cartaoPonteY.current + evento.nativeEvent.layout.y);
+                }}>
                 {retorno}
               </Text>
               {/* O "tente de novo" já está no painel de retorno: aqui não repete. Como na web. */}
             </>
           )}
-        </Card>
+        </Card></View>
       )}
       {ultimo && <View onLayout={(evento) => { cartaoEnsinoY.current = evento.nativeEvent.layout.y; }}><Card>
         <Botao

@@ -590,6 +590,9 @@ test("trilhas prontas: cada lição tem o seu “outro jeito de entender”, dif
   assert.match(violao.conceito, /mão esquerda/);
   assert.match(violao.pratica.passos.join(" "), /app afinador/, "a afinação começa pelo app afinador");
   assert.match(violao.pratica.passos.join(" "), /Ouvir o Mi/, "sem app, o Mi que o próprio Studoo toca");
+  // No primeiro dia, a vitória fácil vem antes (postura e tocar as cordas soltas); afinar é um bônus, sem pressão.
+  assert.match(violao.pratica.tarefa, /toque cada corda solta/);
+  assert.match(violao.pratica.passos.at(-1), /^Bônus, se quiser/);
 });
 
 test("vale rever: a maior parte errada antes do acerto ou a prática em “ainda não”; um erro só não marca", () => {
@@ -688,4 +691,19 @@ test("rodada 11: pronúncia em toda frase de inglês, pares e ordem como o servi
   const comDeslize = avaliarResposta(pedido, "I would like a coffe and a cheese bread, please");
   assert.equal(comDeslize.correta, true);
   assert.match(comDeslize.observacao, /confira a grafia de “coffee”/);
+});
+
+test("rodada 12: lições de inglês com três exercícios, menos “ouça e escolha” e números mais leves", () => {
+  const ingles = DEMOS.find(({ chave }) => chave === "ingles").plano.fluxos.flatMap(({ licoes }) => licoes);
+  for (const licao of ingles) assert.equal(1 + (licao.extras?.length ?? 0), 3, `${licao.titulo} tem três exercícios`);
+  const exercicios = ingles.flatMap((licao) => [licao.exercicio, ...(licao.extras ?? [])]);
+  const escutas = exercicios.filter(({ tipo, fala }) => tipo === "multipla_escolha" && fala).length;
+  assert.ok(escutas / exercicios.length < 0.4, `${escutas} de ${exercicios.length} exercícios são “ouça e escolha”`);
+  const producao = exercicios.filter(({ tipo }) => ["lacuna", "ordenar", "aberta"].includes(tipo)).length;
+  assert.ok(producao / exercicios.length >= 0.45, `${producao} de ${exercicios.length} pedem para produzir a resposta`);
+  const numeros = ingles.find(({ titulo }) => titulo === "Números e preços");
+  assert.ok((numeros.conceito.match(/“/g) ?? []).length <= 4, "a explicação dos números não vira uma fila de ícones de som");
+  assert.equal(numeros.falas[0].traducao, "1, 2, 3, 4, 5, 6, 7, 8, 9, 10.", "os algarismos ao lado das palavras");
+  // A ideia contida em outra não conta duas vezes no “Explique”.
+  assert.ok(!termosDaLicao(ingles[0]).includes("from"));
 });
