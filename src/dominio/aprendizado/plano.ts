@@ -693,12 +693,16 @@ export function termosDaLicao(conteudo: ConteudoLicao): string[] {
     }
   }
   const vistos = new Set<string>();
-  return termos.map((termo) => termo.replace(/[.!?]+$/u, "").trim()).filter((termo) => {
+  const unicos = termos.map((termo) => termo.replace(/[.!?]+$/u, "").trim()).filter((termo) => {
     const chave = normalizarResposta(termo);
     if (chave.length < 3 || /^\d+$/.test(chave) || vistos.has(chave)) return false;
     vistos.add(chave);
     return true;
-  }).slice(0, 6);
+  });
+  // Uma ideia que já está dentro de outra (“from”, em “I'm from Brazil”) não conta duas vezes.
+  const comoFrase = (termo: string) => ` ${palavrasDe(termo).join(" ")} `;
+  return unicos.filter((termo) => !unicos.some((outro) => outro !== termo && comoFrase(outro).length > comoFrase(termo).length &&
+    comoFrase(outro).includes(comoFrase(termo)))).slice(0, 6);
 }
 
 /** O aviso da primeira armadilha (da lição ou dos exercícios) que o texto traz, como “I here” sem o verbo. */

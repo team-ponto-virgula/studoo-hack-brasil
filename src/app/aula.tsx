@@ -259,11 +259,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     };
   }, [passo, etapa.tipo]);
 
-  // No exercício, com conteúdo escondido atrás do painel (o reforço, a consulta, o "Explique"), um aviso discreto
-  // leva até ele: o painel ocupa boa parte da tela e nada mostrava que havia mais abaixo.
+  // No exercício, com conteúdo escondido atrás do painel (o reforço, a consulta, o "Explique"), e na prática (o
+  // cronômetro e o "Como foi?" ficam abaixo da tarefa), um aviso discreto leva até ele: nada mostrava que havia mais.
   const [temAbaixo, setTemAbaixo] = useState(false);
   useEffect(() => {
-    if (etapa.tipo !== 'exercicio') {
+    if (etapa.tipo !== 'exercicio' && etapa.tipo !== 'pratica') {
       setTemAbaixo(false);
       return;
     }
@@ -1046,7 +1046,7 @@ function textoDaConferencia(conferencia: ConferenciaDaFala): string {
  * Falar e conferir: a pessoa fala a frase, o reconhecimento de voz do navegador transcreve e a frase é conferida palavra
  * por palavra (números por extenso, contrações, uma letra trocada). Das alternativas do reconhecimento, fica a mais perto.
  */
-function BotaoFalar({ fala }: { fala: Fala }) {
+function BotaoFalar({ fala, aoFalar }: { fala: Fala; /** A pessoa tocou em Falar: o aviso de voz do "Ouvir" sai. */ aoFalar?: () => void }) {
   const [ouvindo, setOuvindo] = useState(false);
   const [resultado, setResultado] = useState<{ dito: string; conferencia: ConferenciaDaFala } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -1068,6 +1068,7 @@ function BotaoFalar({ fala }: { fala: Fala }) {
   async function ouvir() {
     const Classe = classeDoReconhecimento();
     if (!Classe) return;
+    aoFalar?.();
     const dispositivos = await navigator.mediaDevices?.enumerateDevices?.().catch(() => null);
     if (dispositivos && !dispositivos.some(({ kind }) => kind === 'audioinput')) {
       setResultado(null);
@@ -1091,7 +1092,7 @@ function BotaoFalar({ fala }: { fala: Fala }) {
       else setErro(t.audio.naoOuviu);
     };
     novo.onerror = (evento) => {
-      setErro(evento.error === 'not-allowed' || evento.error === 'service-not-allowed' ? t.audio.semMicrofone : t.audio.naoOuviu);
+      setErro(evento.error === 'not-allowed' || evento.error === 'service-not-allowed' ? t.audio.microfoneBloqueado : t.audio.naoOuviu);
     };
     novo.onend = encerrar;
     reconhecimento.current = novo;
@@ -1137,7 +1138,15 @@ function BotaoFalar({ fala }: { fala: Fala }) {
 function BotoesOuvir({ fala, falar = false }: { fala: Fala; falar?: boolean }) {
   const disponivel = useVozDisponivel();
   const reconhece = useReconhecimentoDisponivel();
-  const [tocando, tocar, semVoz] = useTocando(fala);
+  const [tocando, tocarFrase, semVoz] = useTocando(fala);
+  // Um aviso por vez, o da última ação: "Ouvir" limpa o retorno do "Falar" (que recomeça), e "Falar" esconde o aviso de voz.
+  const [falou, setFalou] = useState(false);
+  const [rodadaFalar, setRodadaFalar] = useState(0);
+  const tocar = (devagar: boolean) => {
+    setFalou(false);
+    setRodadaFalar((atual) => atual + 1);
+    tocarFrase(devagar);
+  };
   if (!disponivel && !(falar && reconhece)) return null;
   return (
     <span className="ouvir">
@@ -1149,8 +1158,8 @@ function BotoesOuvir({ fala, falar = false }: { fala: Fala; falar?: boolean }) {
         data-tocando={tocando === 'devagar' || undefined} onClick={() => tocar(true)}>
         <span aria-hidden="true">{tocando === 'devagar' ? t.audio.tocando : t.audio.devagar}</span>
       </button>
-      {semVoz && <span className="ouvir__aviso" role="status">{t.audio.semVozFrase}</span>}
-      {falar && reconhece && <BotaoFalar fala={fala} />}
+      {semVoz && !falou && <span className="ouvir__aviso" role="status">{t.audio.semVozFrase}</span>}
+      {falar && reconhece && <BotaoFalar key={rodadaFalar} fala={fala} aoFalar={() => setFalou(true)} />}
     </span>
   );
 }
@@ -1743,7 +1752,13 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   // Encerrar uma prática de minutos depois de 5 segundos não vale: o "Como foi?" espera um mínimo de prática.
   const minimo = Math.min(30, total);
   const [semCronometro, setSemCronometro] = useState(false);
-  const praticou = semCronometro || total - restante >= minimo;
+  // O que já foi praticado não se perde no "Recomeçar": vale o maior tempo corrido até agora.
+  const [maisPraticado, setMaisPraticado] = useState(total - restante);
+  const praticado = Math.max(maisPraticado, total - restante);
+  useEffect(() => {
+    setMaisPraticado((atual) => Math.max(atual, total - restante));
+  }, [restante, total]);
+  const praticou = semCronometro || praticado >= minimo;
 
   useEffect(() => {
     if (!rodando) return;
@@ -1807,7 +1822,7 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
           {acabou ? t.pratica.acabou
             : praticou || escolha ? t.pratica.comoFoi
               : comecou
-                ? rodando ? t.pratica.continuePraticando(minimo - (total - restante)) : t.pratica.retomeParaContar(minimo - (total - restante))
+                ? rodando ? t.pratica.continuePraticando(minimo - praticado) : t.pratica.retomeParaContar(minimo - praticado)
                 : t.pratica.comeceAntes}
         </legend>
         {!praticou && !escolha && (

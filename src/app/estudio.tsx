@@ -240,6 +240,21 @@ export function ApoioDaLicao({
   const [texto, setTexto] = useState('');
   const [resposta, setResposta] = useState('');
   const [feedback, setFeedback] = useState('');
+  /** O resultado da pergunta do reforço, para a opção marcada ficar verde (certa) ou âmbar (errada). */
+  const [resultadoPonte, setResultadoPonte] = useState<{ id: string; correta: boolean } | null>(null);
+  const retornoPonte = useRef<HTMLParagraphElement>(null);
+  // O "Isso! Você pegou a ideia." aparece no fim do cartão, às vezes atrás do painel de retorno: a tela leva até ele.
+  useEffect(() => {
+    if (!feedback) return;
+    window.requestAnimationFrame(() => {
+      const alvo = retornoPonte.current;
+      if (!alvo) return;
+      const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
+      const sobra = alvo.getBoundingClientRect().bottom - (window.innerHeight - rodape - 16);
+      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (sobra > 0) window.scrollBy({ top: sobra, behavior: reduzido ? 'auto' : 'smooth' });
+    });
+  }, [feedback]);
   const [erro, setErro] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
@@ -430,13 +445,17 @@ export function ApoioDaLicao({
                 <legend>{ponte.exercicio.enunciado}</legend>
                 {ponte.exercicio.tipo === 'multipla_escolha' &&
                   ponte.exercicio.opcoes.map((o) => (
-                    <label className="estudio-opcao" key={o.id}>
+                    <label className="estudio-opcao" key={o.id}
+                      data-estado={resultadoPonte?.id === o.id ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>
                       <input
                         type="radio"
                         name="reforco"
                         checked={resposta === o.id}
                         onChange={() => {
                           setResposta(o.id);
+                          // Outra escolha depois de um erro: o retorno anterior sai, para não parecer que é desta.
+                          setResultadoPonte(null);
+                          setFeedback('');
                           // O "Conferir" fica embaixo das opções, às vezes atrás do painel: a tela leva até ele.
                           window.requestAnimationFrame(() => {
                             const botao = cartaoPonte.current?.querySelector<HTMLElement>('.botao');
@@ -458,6 +477,7 @@ export function ApoioDaLicao({
                     void executar(async () => {
                       const r = await cliente.avaliarPonte(licao.id, resposta);
                       atualizarApoio(r.apoio);
+                      setResultadoPonte({ id: resposta, correta: r.correta });
                       setFeedback(r.feedback);
                     })
                   }
@@ -465,7 +485,8 @@ export function ApoioDaLicao({
                   {m.verificar}
                 </Botao>
               )}
-              <p role="status">{feedback}</p>
+              <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
+                data-estado={resultadoPonte && feedback ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
               {/* O "tente de novo" já está no painel de retorno: aqui não repete. */}
             </>
           )}
