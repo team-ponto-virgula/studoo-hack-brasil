@@ -32,6 +32,7 @@ Web e Android oferecem login com Google e recuperação de senha por código env
 - `src/` reúne a interface web e a API Next.js. `prisma/` contém o esquema e as migrações do PostgreSQL.
 - `apps/mobile/` contém o app Expo. `packages/contratos/` compartilha tipos e o cliente HTTP entre a web e o app.
 - Tudo o que se faz na web deve ser replicado no app mobile, adaptado ao celular: veja as [regras do projeto](docs/REGRAS-DO-PROJETO.md).
+- `video/` guarda o que gera o filme de lançamento: a gravação do app quadro a quadro, a composição e a trilha sonora ([como é feito](video/LEIA-ME.md)).
 
 Esta entrega retoma a ideia do Studoo com a implementação feita após a abertura de 4 de novembro de 2026, às 21h, no horário de Brasília. O histórico Git foi iniciado para esta entrega. O logo, o ícone e o Stu das boas-vindas são novas exportações raster do kit visual existente do Studoo. Na entrada, a marca aparece uma vez, acima do título, com movimento contínuo na web e no app. A preferência de movimento reduzido exibe a marca estática. Nunito e Quicksand são distribuídas com suas licenças SIL Open Font License. [Nunito](https://github.com/google/fonts/tree/main/ofl/nunito) · [Quicksand](https://github.com/google/fonts/tree/main/ofl/quicksand)
 
