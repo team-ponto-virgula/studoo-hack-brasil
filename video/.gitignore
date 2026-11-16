@@ -1,0 +1,14 @@
+# O ambiente desta máquina (caminhos de ferramentas) e tudo o que é gerado: gravações, quadros de conferência e o filme.
+ambiente.local.json
+captura/clipes/
+captura/folhas/
+captura/respostas.json
+captura/log-*.txt
+filme/node_modules/
+filme/public/clipes/
+filme/public/fontes/
+filme/public/falas/*.mp4
+filme/src/clipes.js
+filme/src/mundo-desenhos.js
+filme/saida-fotos/
+saida/

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studoo · filme de lançamento</title>
+<style>
+  @font-face { font-family: Quicksand; src: url(fontes/Quicksand.ttf); font-weight: 300 700; font-display: swap; }
+  @font-face { font-family: Nunito; src: url(fontes/Nunito.ttf); font-weight: 200 1000; font-display: swap; }
+  :root { --fundo: #f1f4fd; --cartao: #fff; --texto: #1b2a5e; --texto2: #5e6a85; --acao: #3858d6; --gelo: #e1e7fa; --ouro: #ffd166; --verde: #1f7a5a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font: 600 17px/1.5 Nunito, system-ui, sans-serif; }
+  main { max-width: 1120px; margin: 0 auto; padding: 28px 16px 56px; }
+  h1 { font: 700 clamp(28px, 4.4vw, 44px)/1.1 Quicksand, system-ui, sans-serif; letter-spacing: -0.02em; margin: 0 0 6px; text-wrap: balance; }
+  h1 span { color: var(--acao); }
+  h2 { font: 700 22px/1.2 Quicksand, system-ui, sans-serif; margin: 0 0 12px; }
+  p { margin: 0 0 12px; color: var(--texto2); }
+  .palco { margin-top: 18px; border-radius: 22px; overflow: hidden; background: #0d1536; box-shadow: 0 30px 60px -30px rgba(27, 42, 94, .55); }
+  video { display: block; width: 100%; aspect-ratio: 16 / 9; background: #0d1536; }
+  .capitulos { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 26px; }
+  button { font: 800 15px Nunito, system-ui, sans-serif; color: var(--acao); background: var(--cartao); border: 2px solid var(--gelo); border-radius: 999px; padding: 9px 15px; cursor: pointer; }
+  button:hover, button:focus-visible { border-color: var(--acao); outline: none; }
+  button[data-fala] { background: var(--ouro); border-color: var(--ouro); color: var(--texto); }
+  button small { font-weight: 700; color: var(--texto2); margin-left: 6px; font-variant-numeric: tabular-nums; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .cartao { background: var(--cartao); border-radius: 20px; padding: 20px 22px; border: 2px solid var(--gelo); }
+  .cartao ol, .cartao ul { margin: 0; padding-left: 20px; color: var(--texto2); }
+  .cartao li { margin-bottom: 8px; }
+  .cartao li b, p b { color: var(--texto); }
+  .tempo { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--acao); }
+  a { color: var(--acao); font-weight: 800; }
+  .nota { margin-top: 22px; font-size: 15px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Studoo: <span>aprenda qualquer coisa, uma lição por vez.</span></h1>
+  <p>Filme de lançamento para o HackBrasil · 2:00 · 1920×1080 a 60 quadros por segundo.</p>
+  <div class="palco"><video id="filme" controls playsinline preload="metadata" poster="capa.jpg" src="studoo-lancamento-web.mp4"></video></div>
+  <div class="capitulos" id="capitulos"></div>
+
+  <div class="grade">
+    <section class="cartao">
+      <h2>Os dois espaços de fala</h2>
+      <ul>
+        <li><b>Júlio</b>, de <span class="tempo">0:06,7</span> a <span class="tempo">0:26,7</span> (20 s): o problema.</li>
+        <li><b>Miguel</b>, de <span class="tempo">1:30,0</span> a <span class="tempo">1:50,0</span> (20 s): como o Studoo funciona.</li>
+      </ul>
+      <p style="margin-top:12px">Enquanto o vídeo de vocês não entra, cada espaço mostra o nome, o relógio e a sugestão de fala. O passo a passo para gravar e encaixar está no <a href="ROTEIRO.md">roteiro</a>.</p>
+    </section>
+    <section class="cartao">
+      <h2>Arquivos</h2>
+      <ul>
+        <li><a href="studoo-lancamento.mp4" download>studoo-lancamento.mp4</a>: o arquivo para enviar (qualidade alta).</li>
+        <li><a href="studoo-lancamento-web.mp4" download>studoo-lancamento-web.mp4</a>: versão leve, a que toca nesta página.</li>
+        <li><a href="ROTEIRO.md">ROTEIRO.md</a> e <a href="LEIA-ME.md">LEIA-ME.md</a>: a fala sugerida e como o filme foi feito.</li>
+        <li>Som separado: <a href="audio/trilha.wav" download>mistura</a>, <a href="audio/so-musica.wav" download>só a música</a> e <a href="audio/so-efeitos.wav" download>só os efeitos</a>.</li>
+      </ul>
+    </section>
+  </div>
+  <p class="nota">As telas do app são gravações reais, feitas em modo demonstração: as trilhas mostradas são as prontas, sem IA ao vivo. A música e os efeitos foram sintetizados para o filme; o acorde e a batida de violão que tocam nas cenas são o som do próprio app.</p>
+</main>
+<script>
+  const capitulos = [
+    ['Abertura', 0], ['Fala do Júlio', 6.67, true], ['O logo', 26.67], ['O pedido', 33.33], ['A lição', 43.33], ['Errou?', 53.33], ['A prática', 63.33],
+    ['Qualquer assunto', 73.33], ['Seu material', 80], ['Web e app', 86.67], ['Fala do Miguel', 90, true], ['Fecho', 110],
+  ];
+  const filme = document.getElementById('filme');
+  const lista = document.getElementById('capitulos');
+  for (const [nome, segundo, fala] of capitulos) {
+    const botao = document.createElement('button');
+    botao.type = 'button';
+    if (fala) botao.dataset.fala = '1';
+    const minutos = Math.floor(segundo / 60);
+    const resto = String(Math.floor(segundo % 60)).padStart(2, '0');
+    botao.innerHTML = `${nome}<small>${minutos}:${resto}</small>`;
+    botao.addEventListener('click', () => { filme.currentTime = segundo; filme.play(); });
+    lista.append(botao);
+  }
+</script>
+</body>
+</html>
