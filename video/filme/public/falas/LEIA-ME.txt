@@ -1,0 +1,3 @@
+Coloque aqui as falas gravadas: julio.mp4 e miguel.mp4 (20 s cada, deitado, rosto no centro).
+Depois rode, na pasta filme:  node montar.mjs
+Só as cenas de fala são refeitas. Veja o ROTEIRO.md na pasta de entrega.

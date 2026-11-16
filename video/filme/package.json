@@ -1,0 +1,15 @@
+{
+  "name": "studoo-filme-lancamento",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Filme de lançamento do Studoo para o HackBrasil (Remotion).",
+  "type": "module",
+  "dependencies": {
+    "@remotion/bundler": "^4.0.543",
+    "@remotion/cli": "^4.0.543",
+    "@remotion/renderer": "^4.0.543",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remotion": "^4.0.543"
+  }
+}
