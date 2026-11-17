@@ -20,11 +20,11 @@ Em `IA=falsa`, o botão **Experimentar com frações** usa três páginas autora
 
 ## Ponte de reforço
 
-Após uma resposta incorreta, **Ver reforço** leva à seção de apoio. **Construir minha ponte** cria uma explicação por outro caminho, exemplo e exercício novos. O mapa marca a ponte na lição de origem e indica quando foi atravessada.
+Após uma resposta incorreta, **Ver outro jeito de entender** abre a seção de apoio e constrói a ponte com uma explicação por outro caminho, exemplo e exercício novos. O mapa marca a ponte na lição de origem e indica quando foi atravessada.
 
 Acertar o reforço não conclui a lição nem infla o progresso. A pessoa retorna ao exercício original. A ponte é persistida e reaproveitada; falhas do provedor permitem nova tentativa. O motivo descreve uma possível dificuldade, sem afirmar um diagnóstico do aluno. O comportamento existente de continuar a lição após ler o feedback permanece disponível.
 
-## Ensine ao Stu
+## Explique com suas palavras (opcional)
 
 A pessoa escreve de 20 a 3.000 caracteres ou grava até 60 segundos. O limite de duração é aplicado pelo cliente; o servidor limita a 5 MB e confere o formato. O áudio vai à transcrição, volta como texto editável e só é avaliado quando a pessoa toca em **Enviar minha explicação**. A gravação para ao sair da tela ou colocar o app em segundo plano. Negar acesso ao microfone não impede digitar.
 

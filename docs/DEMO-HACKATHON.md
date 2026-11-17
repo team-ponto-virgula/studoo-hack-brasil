@@ -5,8 +5,8 @@
 Prepare uma conta de demonstração, conexão estável e três páginas sobre frações. Se a OpenAI real não estiver configurada, use **Experimentar com frações** e diga claramente que o conteúdo é simulado. Não apresente a simulação como geração real.
 
 1. **0:00–0:25 — Seu próprio material.** Abra Nova trilha. Envie PDF, DOCX, CSV ou fotografe uma página. Em DOCX, mostre a referência por parágrafo; em CSV, a prévia da tabela e a referência por linha. Confira o texto e crie a trilha. Mostre a página e a citação na primeira lição.
-2. **0:25–0:55 — O erro muda o caminho.** Na lição de numerador e denominador da demonstração, responda “3” à pergunta sobre o total de partes em 3/8. Toque em Ver reforço e Construir minha ponte. Mostre a explicação com chocolate e o novo desafio. Escolha “6”.
-3. **0:55–1:30 — Aprender explicando.** Abra Ensine ao Stu. Escreva uma explicação com exemplo, ou grave com a IA real configurada. Confira a transcrição, envie e mostre a pergunta para outra situação. No modo simulado, explique a limitação do feedback.
+2. **0:25–0:55 — O erro muda o caminho.** Na lição de numerador e denominador da demonstração, responda “3” à pergunta sobre o total de partes em 3/8. Toque em **Ver outro jeito de entender**. Mostre a ponte com a explicação do chocolate e o novo desafio. Escolha “6”.
+3. **0:55–1:30 — Aprender explicando.** Abra **Explique com suas palavras (opcional)**. Escreva uma explicação com exemplo, ou grave com a IA real configurada. Confira a transcrição, envie e mostre o caderno do Stu com a pergunta para outra situação. No modo simulado, explique a limitação do feedback.
 4. **1:30–2:00 — Evidência visível.** Volte ao exercício, escolha “8”, conclua e mostre a ponte no mapa. Abra a mesma conta no outro dispositivo para demonstrar o progresso salvo no servidor.
 
 Uma frase para o pitch: **“O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.”**

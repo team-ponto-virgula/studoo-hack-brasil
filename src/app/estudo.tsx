@@ -54,12 +54,12 @@ type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 type Sincronia = { estado: 'atualizando' | 'atualizado' | 'offline'; em: number | null };
 
 function textoSincronia(s: Sincronia, agora: number) {
-  if (s.estado === 'atualizando') return 'Atualizando…';
-  if (s.estado === 'offline') return 'Sem conexão: mostrando o último progresso salvo';
-  if (!s.em) return 'Salvo na nuvem';
+  if (s.estado === 'atualizando') return mensagens.sincronia.atualizando;
+  if (s.estado === 'offline') return mensagens.sincronia.offline;
+  if (!s.em) return mensagens.sincronia.salvo;
   const min = Math.floor((agora - s.em) / 60_000);
-  if (min < 1) return 'Atualizado agora';
-  return `Atualizado há ${min} min`;
+  if (min < 1) return mensagens.sincronia.agora;
+  return mensagens.sincronia.minutos(min);
 }
 
 function SeloSincronia({ sincronia, agora }: { sincronia: Sincronia; agora: number }) {
@@ -518,11 +518,11 @@ export function Estudo() {
                 <p className="introducao">{mensagens.planos.subtitulo}</p>
                 {destaque && (
                   <CartaoDestaque plano={destaque} regiao={planos.findIndex((p) => p.id === destaque.id)}
-                    sincronia={sincronia} agora={agora} ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} />
+                    ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} />
                 )}
                 {restantes.length > 0 && (
                   <>
-                    <p className="planos-secao-titulo">Outras trilhas</p>
+                    <p className="planos-secao-titulo">{mensagens.planos.outrasTrilhas}</p>
                     <ul className="planos-ativos">
                       {restantes.map((plano, indice) => (
                         <li key={plano.id} style={{ '--ordem': indice } as CSSProperties}>
@@ -603,11 +603,9 @@ function BarraProgresso({ progresso, comPercentual = false, de }: { progresso: P
  * Cartão de um plano em Meus planos: uma faixa do mundo (cada plano numa região, para os cartões não ficarem iguais),
  * o título, o progresso e a ação que cabe: começar, continuar ou rever a trilha concluída.
  */
-function CartaoDestaque({ plano, regiao, sincronia, agora, ocupado, abrir }: {
+function CartaoDestaque({ plano, regiao, ocupado, abrir }: {
   plano: PlanoResumo;
   regiao: number;
-  sincronia: Sincronia;
-  agora: number;
   ocupado: boolean;
   abrir: () => void;
 }) {
@@ -629,7 +627,6 @@ function CartaoDestaque({ plano, regiao, sincronia, agora, ocupado, abrir }: {
       <div className="plano-destaque__corpo">
         <div className="plano-destaque__topo">
           <span className="plano-destaque__rotulo">{concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo}</span>
-          <SeloSincronia sincronia={sincronia} agora={agora} />
         </div>
         <h2>{plano.titulo}</h2>
         <BarraProgresso progresso={plano.progresso} comPercentual />
@@ -1050,25 +1047,25 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
           {textoParaRever(resumo)}
         </p>
       )}
-      <ul className="conclusao-historia" aria-label="Resumo qualitativo da lição">
+      <ul className="conclusao-historia" aria-label={mensagens.licao.historia.titulo}>
         <li>
-          <strong>O que você praticou</strong>
+          <strong>{mensagens.licao.historia.praticou}</strong>
           <p>{licao.objetivo}</p>
         </li>
         {resumo?.ponteConstruida && (
           <li data-tipo="ponte">
-            <strong>Ponte construída</strong>
-            <p>Você transformou o erro em degrau, atravessou o reforço e voltou para vencer.</p>
+            <strong>{mensagens.licao.historia.ponteTitulo}</strong>
+            <p>{mensagens.licao.historia.ponteTexto}</p>
           </li>
         )}
         {resumo?.ensinouStu && (
           <li data-tipo="ensino">
-            <strong>Você ensinou ao Stu</strong>
-            <p>Você explicou a ideia com suas palavras e testou seu entendimento.</p>
+            <strong>{mensagens.licao.historia.ensinoTitulo}</strong>
+            <p>{mensagens.licao.historia.ensinoTexto}</p>
           </li>
         )}
       </ul>
-      <p className="conclusao-sincronia">Progresso salvo na sua conta · pronto para continuar em outro dispositivo</p>
+      <p className="conclusao-sincronia">{mensagens.licao.historia.sincronia}</p>
       {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo (no fim, ficavam atrás dos botões fixos). */}
       {licao.falas && licao.falas.length > 0 && <FrasesDaLicao falas={licao.falas} />}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}

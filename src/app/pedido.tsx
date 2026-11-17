@@ -120,7 +120,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
       {aviso && <p className="pedido-aviso">{aviso}</p>}
       {falha && <EstadoErro codigo={falha}>{repetivel && <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>}</EstadoErro>}
       <div hidden={modo !== 'material'} className="pedido-material">
-        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} />
+        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} mostrarCabeca={false} />
       </div>
       <form hidden={modo !== 'ideia'} className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
         <div className="campo pedido-campo">
@@ -141,7 +141,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         <span className="pedido-alternar__texto">
           <strong>
             {modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}
-            {modo === 'ideia' && <span className="pedido-alternar__selo">Seu material</span>}
+            {modo === 'ideia' && <span className="pedido-alternar__selo">{mensagens.pedido.seuMaterial}</span>}
           </strong>
           <small>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</small>
         </span>
