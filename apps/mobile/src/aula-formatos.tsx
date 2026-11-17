@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, AppState, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import * as Speech from 'expo-speech';
 import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { File, Paths } from 'expo-file-system';
@@ -271,53 +271,96 @@ function FalarNoNavegador({ fala }: { fala: Fala }) {
   );
 }
 
-/** No aparelho: grava (até 10 s), a rota de voz transcreve e a frase é conferida. Sem a IA ligada, avisa. */
+/**
+ * No aparelho: grava (até 8 s, como o reconhecimento da web), a rota de voz transcreve e a frase é conferida. Sem a IA
+ * ligada, avisa. Um toque duplo não abre duas gravações; ir para o segundo plano ou sair da etapa para a gravação sem
+ * enviar e devolve o modo de áudio, como no "Explique".
+ */
 function FalarNoAparelho({ fala, transcrever }: { fala: Fala; transcrever: (entrada: ArquivoEstudo) => Promise<{ texto: string }> }) {
   const gravador = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [estado, setEstado] = useState<'parado' | 'ouvindo' | 'conferindo'>('parado');
   const [resultado, setResultado] = useState<Conferido>(null);
   const [erro, setErro] = useState<string | null>(null);
   const limite = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => {
+  /** Uma ação por vez: começar, terminar ou descartar (o estado só muda depois das esperas). */
+  const emCurso = useRef(false);
+  const gravando = useRef(false);
+  const vivo = useRef(true);
+
+  /** Para a gravação sem enviar nada (segundo plano, fim da etapa) e devolve o modo de áudio. */
+  async function descartar() {
     if (limite.current) clearTimeout(limite.current);
-    void gravador.stop().catch(() => undefined);
+    if (!gravando.current) return;
+    gravando.current = false;
+    await gravador.stop().catch(() => undefined);
+    await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+    if (vivo.current) setEstado('parado');
+  }
+
+  useEffect(() => {
+    vivo.current = true;
+    const assinatura = AppState.addEventListener('change', (atual) => { if (atual !== 'active') void descartar(); });
+    return () => {
+      vivo.current = false;
+      assinatura.remove();
+      void descartar();
+    };
+    // descartar lê as referências do momento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gravador]);
 
   async function comecar() {
+    if (emCurso.current || gravando.current) return;
+    emCurso.current = true;
     setErro(null);
     setResultado(null);
-    const permissao = await requestRecordingPermissionsAsync().catch(() => ({ granted: false }));
-    if (!permissao.granted) {
-      // Como na web: sem a permissão, o aviso diz onde liberar (nos ajustes do app), em vez de "confira a permissão".
-      setErro(t.audio.microfoneBloqueado);
-      return;
-    }
     try {
-      pararVoz();
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      await gravador.prepareToRecordAsync();
-      gravador.record();
-      setEstado('ouvindo');
-      limite.current = setTimeout(() => void terminar(), 10_000);
-    } catch {
-      setErro(t.audio.semMicrofone);
-      await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+      const permissao = await requestRecordingPermissionsAsync().catch(() => ({ granted: false }));
+      if (!permissao.granted) {
+        // Como na web: sem a permissão, o aviso diz onde liberar (nos ajustes do app), em vez de "confira a permissão".
+        setErro(t.audio.microfoneBloqueado);
+        return;
+      }
+      // A permissão pode chegar com o app já em segundo plano ou a etapa fechada: aí não grava.
+      if (!vivo.current || AppState.currentState !== 'active') return;
+      try {
+        pararVoz();
+        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+        await gravador.prepareToRecordAsync();
+        if (!vivo.current || AppState.currentState !== 'active') {
+          await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+          return;
+        }
+        gravador.record();
+        gravando.current = true;
+        setEstado('ouvindo');
+        limite.current = setTimeout(() => void terminar(), 8_000);
+      } catch {
+        setErro(t.audio.semMicrofone);
+        await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+      }
+    } finally {
+      emCurso.current = false;
     }
   }
 
   async function terminar() {
     if (limite.current) clearTimeout(limite.current);
+    if (emCurso.current || !gravando.current) return;
+    emCurso.current = true;
+    gravando.current = false;
     setEstado('conferindo');
     try {
       await gravador.stop();
       await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
       if (!gravador.uri) throw new Error();
       const { texto } = await transcrever(await arquivo(gravador.uri, 'fala.m4a', 'audio/mp4'));
-      setResultado({ dito: texto, conferencia: conferirFala(fala.texto, texto, fala.idioma) });
+      if (vivo.current) setResultado({ dito: texto, conferencia: conferirFala(fala.texto, texto, fala.idioma) });
     } catch (falha) {
-      setErro(falha instanceof ErroStudoo && falha.codigo === 'voz_indisponivel' ? t.audio.falaPrecisaIa : t.audio.naoOuviu);
+      if (vivo.current) setErro(falha instanceof ErroStudoo && falha.codigo === 'voz_indisponivel' ? t.audio.falaPrecisaIa : t.audio.naoOuviu);
     } finally {
-      setEstado('parado');
+      emCurso.current = false;
+      if (vivo.current) setEstado('parado');
     }
   }
 
