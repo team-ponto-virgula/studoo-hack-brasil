@@ -40,7 +40,13 @@ Referências de mercado avaliadas em `docs/ui/REFERENCIAS-UI.md`.
 - **Espaçamento, Raio e Relevo:**
   - Escala: `4, 8, 12, 16, 20, 24, 32, 44px`.
   - Raios: `--raio-campo: 14px`, `--raio-bloco: 22px`, `--raio-pilula: 999px`.
-  - Relevo tátil: `box-shadow: 0 4px 0 var(--labio)`; ao pressionar (`:active`), `translateY(3px)` e `box-shadow: 0 1px 0 var(--labio)`.
+  - Relevo tátil (`--labio` por variante):
+    - `neutro` / `secundario`: `#e1e7fa` (cartões/botões secundários) e `#c3cbe4` (moedas da trilha)
+    - `acao` (`primario`): `#2a44a8`
+    - `sucesso`: `#145a42`
+    - `alerta`: `#6e4100`
+    - `ouro`: `#e0a12a`
+  - Ao pressionar (`:active`), `translateY(3px)` e `box-shadow: 0 1px 0 var(--labio)`.
 - **Movimento (curvas e durações):**
   - Entrada / mola tátil: `cubic-bezier(0.2, 0.9, 0.3, 1.3)` em `320ms–420ms`.
   - Microinteração / hover / saída: `cubic-bezier(0.2, 0.8, 0.3, 1)` em `140ms–220ms`.
@@ -56,31 +62,30 @@ Referências de mercado avaliadas em `docs/ui/REFERENCIAS-UI.md`.
   - Quando há >= 1 trilha: cartão hero **"Continue de onde parou"** no topo (com ilustração da região, título da trilha, próxima lição, progresso e um único botão azul primário + selo discreto de sincronia). Demais trilhas em grade secundária.
 - **Pedido (Raycast + Arc):** campo de pedido dominante acima da dobra, botão "Gerar trilha" visível sem rolar em 1440 px, e cartão de destaque para **"Tenho um material (PDF, DOCX, CSV ou foto)"** logo ao lado/abaixo do campo, colocando o 1º passo da demo em evidência.
 - **Aula (Raycast + Brilliant):**
-  - Largura confortável (`46rem`), Stu presente também no cabeçalho/lateral do exercício com reação ao estado (neutro, pensando, comemorando, atento no erro).
-  - Sem repetição do rótulo "Exercício": a etiqueta da etapa identifica o tipo e o `h1` traz direto o enunciado/pergunta.
-  - Rodapé como barra de ação fixa com atalhos de teclado visíveis no desktop (`1–4` opções, `Enter` confirmar/continuar).
-- **Trilha (mapa):** no desktop, aproveitar melhor a largura (`max-width: 52rem` com faixas de região integradas) e diferenciar ícones dos nós por natureza (conceito/livro, prática/alvo, revisão/revisão, concluída/check, bloqueada/cadeado).
+  - Largura confortável (`46rem`), Stu presente também no cabeçalho/lateral do exercício com estados definidos sobre `stu-oi.svg` (sem redesenhar rosto/corpo): movimento do corpo + adereço CSS/SVG ao lado + balão de fala (`neutro`, `pensando`, `atento no erro`, `comemorando de primeira`, `comemorando depois da ponte`, `aluno com dúvida`).
+  - Sem repetição do rótulo "Exercício": a etiqueta da etapa identifica o exercício e o `h1` mantém o título da lição (preservando a regra de foco da spec 02).
+  - Rodapé como barra de ação fixa com atalhos de teclado visíveis no desktop (`A–D` / `1–4` opções, `Enter` confirmar/continuar).
+- **Trilha (mapa):** no desktop, aproveitar melhor a largura (`max-width: 60rem` com coluna de `38rem`) e diferenciar nós apenas por campos reais já existentes nos dados (`estado`, `ponte`, `rever`), sem deduzir tipo pelo título.
 
 ---
 
 ## 4. Momentos-Assinatura (Padrões de `REFERENCIAS-UI.md`)
 
 ### Momento 1 — Seu próprio material → Trilha → Citação
-- **Adotado:** **Perplexity** (marcador numerado `[1]` discreto na explicação da lição quando há `referencias`) + **NotebookLM** (ao tocar no marcador ou no cartão de fonte, abre/destaca a citação exata com `nome`, `página / parágrafo / linha`, trecho literal em destaque e miniatura quando for foto; lista "Fontes desta lição" recolhível no pé).
-- **Descartado:** painel lateral fixo 50/50 do material inteiro (quebra em 360 px e no mobile; o cartão expansível em destaque preserva paridade web/app).
+- **Adotado:** **Perplexity** (marcador numerado `[1] [2]` ao nível do bloco — ex.: "Baseado no seu material [1] [2]" ao fim da explicação ou do exemplo, pois `ReferenciaMaterial` é por lição e não tem âncora por frase) + **NotebookLM** (ao tocar no marcador ou no cartão de fonte, abre/destaca a citação exata com `nome`, `página / parágrafo / linha`, trecho literal em destaque e miniatura quando for foto; lista "Fontes desta lição" recolhível no pé).
+- **Descartado:** painel lateral fixo 50/50 do material inteiro (quebra em 360 px e no mobile) e marcadores por frase (o dado não garante apoio por frase).
 - **Estados:** carregando prévia, prévia por parágrafo (DOCX) / tabela rolável (CSV) / miniatura (foto), citação aberta com destaque, selo "Modo demonstração" quando `leitura === 'demonstracao'`.
 
 ### Momento 2 — O erro muda o caminho (Ponte de Reforço)
-- **Adotado:** **Brilliant** (o Stu reage ao esforço: expressão atenta ao errar, celebração distinta quando a pessoa acerta *após* construir a ponte vs. de primeira) + **Family** (continuidade física: o erro não é punição, vira o 1º degrau/tábua da ponte; a animação grande de tábuas se encaixando acontece aqui ao construir a ponte).
-- **Descartado:** Rive (sem dependências externas; implementado com CSS/SVG na web e Views/Animated no mobile).
-- **Estados:** erro no exercício → CTA em destaque "Ver outro jeito de entender" → construção animada da ponte (`.ponte-desenho` com tábuas sequenciais) → desafio da ponte → ponte concluída ("Ponte atravessada!") → retorno ao exercício original → marca visual da ponte no mapa da trilha.
+- **Adotado:** **Brilliant** (o Stu reage ao esforço: balão atento ao errar, celebração distinta quando a pessoa acerta *após* construir a ponte vs. de primeira) + **Family** (continuidade física: o erro não é punição, vira o 1º degrau/tábua da ponte; a animação grande de tábuas se encaixando acontece aqui ao construir a ponte).
+- **Descartado:** Rive (sem dependências externas; implementado com CSS/SVG na web e Views/Animated no mobile) e troca dos rótulos do roteiro (chaves atuais de `experiencia.ts` mantidas).
+- **Estados:** erro no exercício → CTA em destaque → construção animada da ponte (`.ponte-desenho` com 5 tábuas sequenciais) + selo `ponte.simulado` quando simulado → desafio da ponte → ponte concluída → retorno ao exercício original → marca visual da ponte no mapa da trilha.
 
 ### Momento 3 — Ensine ao Stu
-- **Adotado:** **Brilliant** (inversão de papéis: Stu aparece como aluno atento com balão de dúvida; durante a gravação, barras de onda/movimento reagem ao volume real do microfone via Web Audio `AnalyserNode` na web e metering no Expo) + **Family** (uma coisa por vez: 1. Gravar ou escrever → 2. Revisar transcrição editável → 3. Enviar para o Stu) + **Raycast** (atalhos na barra de ação).
+- **Adotado:** **Brilliant** (inversão de papéis: Stu aparece como aluno curioso com balão de dúvida; durante a gravação, 5 barras de onda sonora reagem ao volume real do microfone via Web Audio `AnalyserNode` na web e metering no Expo) + **Family** (uma coisa por vez: 1. Gravar ou escrever → 2. Revisar transcrição editável → 3. Enviar para o Stu) + **Raycast** (atalhos na barra de ação).
 - **Descartado:** envio automático logo após parar de gravar (spec 05 exige revisão explícita da transcrição antes de enviar).
 - **Estados:** pronto para explicar, gravando com onda sonora + contador `0–60s`, revisão de transcrição, enviando, feedback estruturado em cartões (pontos corretos, lacuna, pergunta para outra situação, próximo passo) com selo de modo automático quando `simulado === true`.
 
 ### Momento 4 — Evidência visível e Outro dispositivo
-- **Adotado:** **Spotify Wrapped** (tela de conclusão em 3 cartões de história qualitativa: o que aprendeu, a ponte/esforço da lição, o que explicou ao Stu — sem pontuação, D16) + **Apple Handoff** (cartão "Continue de onde parou" em Meus planos) + **Figma** (selo discreto **"Salvo na nuvem · atualizado agora"** ao carregar progresso do servidor).
-- **Descartado:** cursores em tempo real ou placares numéricos (D16).
-- **Estados:** conclusão com confete e cartões de história, mapa atualizado com ponte concluída, retorno em outro dispositivo mostrando progresso sincronizado.
+- **Adotado:** **Spotify Wrapped** (tela de conclusão preserva os indicadores de tempo/acertos/etapas/prática e adiciona cartões qualitativos *somente* quando há conteúdo real naquela lição — cartão de ponte se houve reforço, cartão de ensino se houve explicação ao Stu; sem chuva de confete e com lembrete de rever quando ficou exercício sem acerto, spec 04) + **Apple Handoff** (cartão "Continue de onde parou" em Meus planos) + **Figma** (selo real de sincronia refletindo busca no servidor: `"Atualizando…"`, `"Atualizado agora"` / `"há N min"`, `"Sem conexão: mostrando o último progresso salvo"`, com rebusca automática ao voltar ao foco/primeiro plano).
+- **Descartado:** cursores em tempo real, placares numéricos (D16) e cartões de história vazios.

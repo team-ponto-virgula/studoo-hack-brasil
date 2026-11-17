@@ -51,6 +51,25 @@ type Tela =
 type TelaPlano = Extract<Tela, { tipo: 'plano' }>;
 type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'apagar';
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
+type Sincronia = { estado: 'atualizando' | 'atualizado' | 'offline'; em: number | null };
+
+function textoSincronia(s: Sincronia, agora: number) {
+  if (s.estado === 'atualizando') return 'Atualizando…';
+  if (s.estado === 'offline') return 'Sem conexão: mostrando o último progresso salvo';
+  if (!s.em) return 'Salvo na nuvem';
+  const min = Math.floor((agora - s.em) / 60_000);
+  if (min < 1) return 'Atualizado agora';
+  return `Atualizado há ${min} min`;
+}
+
+function SeloSincronia({ sincronia, agora }: { sincronia: Sincronia; agora: number }) {
+  return (
+    <span className="selo-sincronia" data-estado={sincronia.estado} role="status" aria-live="polite">
+      <span className="selo-sincronia__ponto" aria-hidden="true" />
+      <span>{textoSincronia(sincronia, agora)}</span>
+    </span>
+  );
+}
 
 /** Quanto "Escrevendo suas lições" fica na tela, no mínimo: com a IA falsa, o aceite volta rápido e o título piscaria. */
 const ESCRITA_MINIMA_MS = 1200;
@@ -81,7 +100,10 @@ export function Estudo() {
   const [falhaGeracao, setFalhaGeracao] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState('');
+  const [sincronia, setSincronia] = useState<Sincronia>({ estado: 'atualizando', em: null });
+  const [agora, setAgora] = useState(() => Date.now());
   const emExecucao = useRef(false);
+  const ultimaBusca = useRef(0);
   const geracaoAtiva = useRef<AbortController | null>(null);
   const principal = useRef<HTMLElement>(null);
 
@@ -91,11 +113,16 @@ export function Estudo() {
   }, []);
 
   const carregar = useCallback(async (cancelado: () => boolean) => {
+    setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
     try {
       await cliente.sessao();
       const ativos = await cliente.listarPlanos();
       if (cancelado()) return;
       setPlanos(ativos);
+      const momento = Date.now();
+      ultimaBusca.current = momento;
+      setAgora(momento);
+      setSincronia({ estado: 'atualizado', em: momento });
       // Recarregou no meio de uma aula (o histórico guarda a marca da lição aberta): reabre a lição, e o andamento salvo
       // a retoma na etapa em que estava, em vez de voltar ao mapa e perder a etapa.
       const marcada = (window.history.state as { studooLicao?: string } | null)?.studooLicao;
@@ -131,9 +158,48 @@ export function Estudo() {
         return;
       }
       setErro(codigo);
+      setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
       setInicio('falha');
     }
   }, [irParaLogin]);
+
+  const sincronizarAgora = useCallback(async () => {
+    if (emExecucao.current || inicio !== 'pronto') return;
+    if (tela.tipo !== 'planos' && tela.tipo !== 'plano') return;
+    if (Date.now() - ultimaBusca.current < 5_000) return;
+    setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
+    try {
+      const ativos = await cliente.listarPlanos();
+      setPlanos(ativos);
+      if (tela.tipo === 'plano') {
+        const atualizado = await cliente.obterPlano(tela.plano.id);
+        setTela((atual) => (atual.tipo === 'plano' && atual.plano.id === atualizado.id ? { ...atual, plano: atualizado } : atual));
+      }
+      const momento = Date.now();
+      ultimaBusca.current = momento;
+      setAgora(momento);
+      setSincronia({ estado: 'atualizado', em: momento });
+    } catch {
+      setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
+    }
+  }, [inicio, tela]);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setAgora(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const aoFocar = () => {
+      if (document.visibilityState === 'visible') void sincronizarAgora();
+    };
+    window.addEventListener('focus', aoFocar);
+    document.addEventListener('visibilitychange', aoFocar);
+    return () => {
+      window.removeEventListener('focus', aoFocar);
+      document.removeEventListener('visibilitychange', aoFocar);
+    };
+  }, [sincronizarAgora]);
 
   useEffect(() => {
     let cancelado = false;
@@ -413,7 +479,12 @@ export function Estudo() {
 
       <div className="estudo-pagina">
         <header className="estudo-cabecalho">
-          <span className="estudo-identificacao">{mensagens.estudos}</span>
+          <span className="estudo-identificacao">
+            <span className="estudo-identificacao__contexto">
+              {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
+            </span>
+            <SeloSincronia sincronia={sincronia} agora={agora} />
+          </span>
           <div className="estudo-marca"><Logo /></div>
           <div className="estudo-conta">
             <Botao variante="texto" className="planos-movel" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
@@ -438,21 +509,34 @@ export function Estudo() {
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} />
           )}
-          {visivel && tela.tipo === 'planos' && planos.length > 0 && (
-            <section className="painel painel--planos">
-              <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
-              <p className="introducao">{mensagens.planos.subtitulo}</p>
-              <ul className="planos-ativos">
-                {planos.map((plano, indice) => (
-                  <li key={plano.id} style={{ '--ordem': indice } as CSSProperties}>
-                    <CartaoPlano plano={plano} regiao={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)}
-                      apagar={() => void apagarPlano(plano)} />
-                  </li>
-                ))}
-              </ul>
-              <AcaoPrincipal><Botao disabled={ocupado} onClick={() => navegar({ tipo: 'objetivo' })}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
-            </section>
-          )}
+          {visivel && tela.tipo === 'planos' && planos.length > 0 && (() => {
+            const destaque = planoInicial(planos);
+            const restantes = destaque ? planos.filter((item) => item.id !== destaque.id) : planos;
+            return (
+              <section className="painel painel--planos">
+                <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
+                <p className="introducao">{mensagens.planos.subtitulo}</p>
+                {destaque && (
+                  <CartaoDestaque plano={destaque} regiao={planos.findIndex((p) => p.id === destaque.id)}
+                    sincronia={sincronia} agora={agora} ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} />
+                )}
+                {restantes.length > 0 && (
+                  <>
+                    <p className="planos-secao-titulo">Outras trilhas</p>
+                    <ul className="planos-ativos">
+                      {restantes.map((plano, indice) => (
+                        <li key={plano.id} style={{ '--ordem': indice } as CSSProperties}>
+                          <CartaoPlano plano={plano} regiao={planos.findIndex((p) => p.id === plano.id)} ocupado={ocupado}
+                            secundario abrir={() => void abrirPlano(plano.id)} apagar={() => void apagarPlano(plano)} />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <AcaoPrincipal><Botao variante={destaque ? 'secundario' : 'primario'} disabled={ocupado} onClick={() => navegar({ tipo: 'objetivo' })}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
+              </section>
+            );
+          })()}
           {visivel && tela.tipo === 'geracao' && geracao && (
             <GeracaoAoVivo geracao={geracao} ocupado={ocupado}
               cancelar={cancelarGeracao} comecar={(proposta) => void comecar(proposta)} ajustar={() => navegar({ tipo: 'objetivo' })}
@@ -519,10 +603,51 @@ function BarraProgresso({ progresso, comPercentual = false, de }: { progresso: P
  * Cartão de um plano em Meus planos: uma faixa do mundo (cada plano numa região, para os cartões não ficarem iguais),
  * o título, o progresso e a ação que cabe: começar, continuar ou rever a trilha concluída.
  */
-function CartaoPlano({ plano, regiao, ocupado, abrir, apagar }: {
+function CartaoDestaque({ plano, regiao, sincronia, agora, ocupado, abrir }: {
+  plano: PlanoResumo;
+  regiao: number;
+  sincronia: Sincronia;
+  agora: number;
+  ocupado: boolean;
+  abrir: () => void;
+}) {
+  const { concluidas, total } = plano.progresso;
+  const concluido = total > 0 && concluidas === total;
+  let acao: string = mensagens.planos.continuar;
+  if (concluido) acao = mensagens.planos.rever;
+  else if (concluidas === 0 && !temAndamentoNoPlano(plano.id)) acao = mensagens.planos.comecar;
+  const enfeites = regiaoDoTrecho(Math.max(0, regiao)).enfeites;
+
+  return (
+    <article className="plano-destaque">
+      <div className="plano-destaque__cena" style={coresDaRegiao(Math.max(0, regiao))} aria-hidden="true">
+        <span className="plano-cartao__colina" />
+        <Desenho nome={enfeites[0]} />
+        <Desenho nome={enfeites[2]} />
+        <Stu />
+      </div>
+      <div className="plano-destaque__corpo">
+        <div className="plano-destaque__topo">
+          <span className="plano-destaque__rotulo">{concluido ? mensagens.planos.concluido : 'Continue de onde parou'}</span>
+          <SeloSincronia sincronia={sincronia} agora={agora} />
+        </div>
+        <h2>{plano.titulo}</h2>
+        <BarraProgresso progresso={plano.progresso} comPercentual />
+      </div>
+      <div className="plano-destaque__acoes">
+        <Botao variante="primario" aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
+          {acao}<Icone nome="seta" />
+        </Botao>
+      </div>
+    </article>
+  );
+}
+
+function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar }: {
   plano: PlanoResumo;
   regiao: number;
   ocupado: boolean;
+  secundario?: boolean;
   abrir: () => void;
   apagar: () => void;
 }) {
@@ -531,11 +656,11 @@ function CartaoPlano({ plano, regiao, ocupado, abrir, apagar }: {
   let acao: string = mensagens.planos.continuar;
   if (concluido) acao = mensagens.planos.rever;
   else if (concluidas === 0 && !temAndamentoNoPlano(plano.id)) acao = mensagens.planos.comecar;
-  const enfeites = regiaoDoTrecho(regiao).enfeites;
+  const enfeites = regiaoDoTrecho(Math.max(0, regiao)).enfeites;
 
   return (
     <article className="plano-cartao">
-      <div className="plano-cartao__cena" style={coresDaRegiao(regiao)} aria-hidden="true">
+      <div className="plano-cartao__cena" style={coresDaRegiao(Math.max(0, regiao))} aria-hidden="true">
         <span className="plano-cartao__colina" />
         <Desenho nome={enfeites[0]} />
         <Desenho nome={enfeites[1]} />
@@ -548,7 +673,7 @@ function CartaoPlano({ plano, regiao, ocupado, abrir, apagar }: {
           <h2>{plano.titulo}</h2>
           <BarraProgresso progresso={plano.progresso} />
         </div>
-        <Botao variante={concluido ? 'secundario' : 'primario'} aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
+        <Botao variante={concluido || secundario ? 'secundario' : 'primario'} aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
           {acao}<Icone nome="seta" />
         </Botao>
         {/* Apagar fica depois da ação principal, discreto, como no app. */}

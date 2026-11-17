@@ -345,7 +345,7 @@
 
 /* Computador: faixa larga no topo, com o próximo passo à direita; o mapa usa a largura toda, com o caminho no centro. */
 @media (min-width: 1024px) {
-  .painel--trilha { width: min(100%, 52rem); justify-self: center; }
+  .painel--trilha { width: min(100%, 60rem); justify-self: center; }
 
   .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
 }

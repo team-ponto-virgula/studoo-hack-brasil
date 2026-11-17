@@ -135,6 +135,19 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
           {mostrarContador && <small id="objetivo-contador">{mensagens.pedido.contador(objetivo.length, LIMITES_GERACAO.objetivoMax)}</small>}
         </div>
         <Botao type="submit" className="pedido-criar" disabled={ocupado || !texto}>{mensagens.inicio.criar}<Icone nome="seta" /></Botao>
+      </form>
+      <button type="button" className="pedido-alternar" disabled={ocupado} onClick={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}>
+        <span className="pedido-alternar__icone" aria-hidden="true"><Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} /></span>
+        <span className="pedido-alternar__texto">
+          <strong>
+            {modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}
+            {modo === 'ideia' && <span className="pedido-alternar__selo">Seu material</span>}
+          </strong>
+          <small>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</small>
+        </span>
+        <Icone nome="seta" />
+      </button>
+      {modo === 'ideia' && (
         <div className="pedido-ideias" role="group" aria-label={mensagens.pedido.sugestoes}>
           <button type="button" className="pedido-ideia pedido-ideia--surpresa" disabled={ocupado} onClick={surpreender}>
             <Desenho nome="estrela" />{mensagens.pedido.surpresa}
@@ -145,15 +158,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
             </button>
           ))}
         </div>
-      </form>
-      <button type="button" className="pedido-alternar" disabled={ocupado} onClick={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}>
-        <span className="pedido-alternar__icone" aria-hidden="true"><Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} /></span>
-        <span className="pedido-alternar__texto">
-          <strong>{modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}</strong>
-          <small>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</small>
-        </span>
-        <Icone nome="seta" />
-      </button>
+      )}
       <button type="button" className="pedido-como" onClick={comoFunciona}>{mensagens.inicio.saberMais}</button>
     </section>
   );

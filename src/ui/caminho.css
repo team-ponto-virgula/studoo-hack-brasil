@@ -704,8 +704,8 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   .caminho {
     --lente-base: 82px;
     --passo: 56px;
-    --coluna: min(100%, 34rem);
-    --lateral: calc((100% - min(100%, 34rem)) / 2);
+    --coluna: min(100%, 38rem);
+    --lateral: calc((100% - min(100%, 38rem)) / 2);
     --tam-enfeite: 62px;
     --tam-guia: 70px;
   }

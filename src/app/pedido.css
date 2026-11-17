@@ -216,6 +216,8 @@
 }
 
 /* Tablet e computador: coluna centrada, Stu maior, áreas em linhas e ideias em duas colunas. */
+.pedido-ideias { flex-wrap: wrap; justify-content: center; margin-inline: 0; padding-inline: 0; overflow: visible; }
+
 @media (min-width: 768px) {
   .painel--pedido { justify-self: center; gap: 28px; }
   .pedido-stu .stu { width: 76px; }
@@ -393,6 +395,39 @@
   .pedido-alternar:hover:not(:disabled) { border-color: var(--acao); background: #f8faff; }
 }
 
-/* As fichas quebram linha em qualquer tela: rolando para o lado (com a barra escondida), as últimas ideias passavam
-   despercebidas no celular. */
 .pedido-ideias { flex-wrap: wrap; justify-content: center; margin-inline: 0; padding-inline: 0; overflow: visible; }
+
+@media (min-width: 768px) {
+  .painel--pedido.pedido-novo { width: min(100%, 44rem); gap: 16px; }
+  .pedido-heroi {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    justify-items: start;
+    align-items: center;
+    column-gap: 18px;
+    row-gap: 4px;
+    padding-top: 0;
+    text-align: start;
+  }
+  .pedido-heroi__stu { grid-row: 1 / span 2; width: 88px; height: 88px; }
+  .pedido-heroi__stu .stu { width: 72px; }
+  .pedido-heroi h1 { font-size: clamp(1.625rem, 3vw, 2.125rem); }
+}
+
+.pedido-alternar {
+  border-style: solid;
+  border-color: #c3cdf2;
+  background: linear-gradient(135deg, #f4f7ff 0%, var(--fundo) 70%);
+  box-shadow: 0 3px 0 var(--gelo);
+}
+.pedido-alternar__selo {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--acao);
+  background: #e5ebff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  vertical-align: middle;
+}
