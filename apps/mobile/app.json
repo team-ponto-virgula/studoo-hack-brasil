@@ -26,7 +26,7 @@
         {
           "cameraPermission": "Permitir que o Studoo fotografe seu material de estudo?",
           "photosPermission": "Permitir que o Studoo selecione uma foto do seu material?",
-          "microphonePermission": false
+          "microphonePermission": "Permitir que o Studoo grave sua explicação para transcrever e revisar?"
         }
       ]
     ],
