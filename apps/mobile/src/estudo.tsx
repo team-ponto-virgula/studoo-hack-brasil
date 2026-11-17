@@ -352,7 +352,9 @@ export function Estudo({ cliente, sair, expirar }: {
       navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
       return true;
     }
-    return resultado.codigo !== 'avaliacao_invalida';
+    // Como na web: sem a conclusão registrada (rede, confirmação expirada), a aula guarda o andamento e volta ao último
+    // exercício; antes, uma falha de rede contava como sucesso e o andamento era apagado sem a lição ter sido concluída.
+    return false;
   }
 
   const acoes = (
