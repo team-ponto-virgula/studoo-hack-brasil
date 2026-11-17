@@ -260,10 +260,24 @@ export function ApoioDaLicao({
   const emExecucao = useRef(false);
   const [gravando, setGravando] = useState(false);
   const [segundos, setSegundos] = useState(0);
+  const [ondas, setOndas] = useState<number[]>([0.2, 0.35, 0.5, 0.35, 0.2]);
   const [aviso, setAviso] = useState('');
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
+  const audioCtx = useRef<AudioContext | null>(null);
+  const audioTimer = useRef<number | null>(null);
   const vivo = useRef(true);
+  function pararOndas() {
+    if (audioTimer.current !== null) {
+      window.clearInterval(audioTimer.current);
+      audioTimer.current = null;
+    }
+    if (audioCtx.current) {
+      void audioCtx.current.close().catch(() => undefined);
+      audioCtx.current = null;
+    }
+    setOndas([0.2, 0.35, 0.5, 0.35, 0.2]);
+  }
   useEffect(() => {
     vivo.current = true;
     const parar = () => {
@@ -276,6 +290,7 @@ export function ApoioDaLicao({
       document.removeEventListener('visibilitychange', parar);
       if (recorder.current?.state === 'recording') recorder.current.stop();
       stream.current?.getTracks().forEach((t) => t.stop());
+      pararOndas();
     };
   }, []);
   useEffect(() => {
@@ -334,6 +349,7 @@ export function ApoioDaLicao({
         rec.onerror = () => {
           falhou = true;
           midia.getTracks().forEach((t) => t.stop());
+          pararOndas();
           if (vivo.current) {
             setGravando(false);
             setErro(m.vozErro);
@@ -344,6 +360,7 @@ export function ApoioDaLicao({
         };
         rec.onstop = () => {
           midia.getTracks().forEach((t) => t.stop());
+          pararOndas();
           if (!vivo.current || falhou) return;
           setGravando(false);
           void executar(async () => {
@@ -365,6 +382,25 @@ export function ApoioDaLicao({
         rec.start();
         setSegundos(0);
         setGravando(true);
+        try {
+          const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+          if (Ctx) {
+            const ctx = new Ctx();
+            audioCtx.current = ctx;
+            const fonte = ctx.createMediaStreamSource(midia);
+            const analisador = ctx.createAnalyser();
+            analisador.fftSize = 32;
+            fonte.connect(analisador);
+            const dados = new Uint8Array(analisador.frequencyBinCount);
+            audioTimer.current = window.setInterval(() => {
+              analisador.getByteFrequencyData(dados);
+              const n = [0, 1, 2, 3, 4].map((i) => Math.max(0.18, Math.min(1, (dados[i] ?? 0) / 180)));
+              if (vivo.current) setOndas(n);
+            }, 70);
+          }
+        } catch {
+          // Sem Web Audio: as barras usam pulso CSS padrão.
+        }
       } catch {
         stream.current?.getTracks().forEach((t) => t.stop());
         // O aviso fica junto do botão Gravar, onde a pessoa está olhando.
@@ -431,6 +467,13 @@ export function ApoioDaLicao({
           sobrando em outros exercícios nem em outra visita à lição. */}
       {avaliacao?.correta === false && pedidoPonte > 0 && (
         <section className="estudio-card estudio-ponte" ref={cartaoPonte}>
+          <div className="ponte-desenho" data-concluida={ponte?.concluida || undefined} aria-hidden="true">
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+          </div>
           <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
           <p>{ponte?.motivo ?? m.ponteDica}</p>
           {!ponte ? (
@@ -493,7 +536,7 @@ export function ApoioDaLicao({
         </section>
       )}
       {ultimo && <details
-        className="estudio-card"
+        className="estudio-card estudio-ensino"
         onToggle={(e) => {
           aoAbrirExplique?.(e.currentTarget.open);
           if (!e.currentTarget.open && recorder.current?.state === 'recording')
@@ -501,6 +544,21 @@ export function ApoioDaLicao({
         }}
       >
         <summary>{m.ensinar}</summary>
+        <div className="ensino-stu" data-gravando={gravando || undefined}>
+          <Stu />
+          <p className="ensino-stu__balao">
+            {gravando
+              ? 'Estou ouvindo você explicar…'
+              : ensino
+                ? 'Boa explicação! Veja o que anotei:'
+                : 'Agora eu sou o aluno: me explique com suas palavras!'}
+          </p>
+        </div>
+        <ol className="ensino-passos" aria-label="Etapas para explicar">
+          <li data-ativo={!texto.trim() || gravando || undefined}>1. Gravar ou escrever</li>
+          <li data-ativo={Boolean(texto.trim()) && !gravando && !ensino || undefined}>2. Revisar texto</li>
+          <li data-ativo={Boolean(ensino) || undefined}>3. Ver retorno do Stu</li>
+        </ol>
         <p>{m.ensinoDica}</p>
         <p className="estudio-legenda">{m.ensinoIdeia(licao.objetivo)}</p>
         <label htmlFor="ensino-texto">{m.explicacao}</label>
@@ -542,9 +600,14 @@ export function ApoioDaLicao({
           </Botao>
         </div>
         {gravando && (
-          <p role="status">
-            {m.gravando} {segundos}/60 s
-          </p>
+          <div className="ensino-gravando" role="status">
+            <div className="ensino-ondas" aria-hidden="true">
+              {ondas.map((v, i) => (
+                <span key={i} style={{ transform: `scaleY(${v.toFixed(2)})` }} />
+              ))}
+            </div>
+            <span>{m.gravando} {segundos}/60 s</span>
+          </div>
         )}
         {aviso && <p role="status" ref={avisoRef}>{aviso}</p>}
         {ensino && (

@@ -240,3 +240,72 @@
 }
 .painel--aula details[open] > summary::before, .estudio-card details[open] > summary::before { rotate: 45deg; }
 .estudio-ponte h2:focus { outline: none; }
+.ponte-desenho[data-concluida='true'] span {
+  background: var(--sucesso-claro);
+  box-shadow: 0 5px 0 var(--sucesso);
+}
+
+/* Momento 3: Ensine ao Stu (papéis invertidos + etapas + ondas de voz). */
+.ensino-stu {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 14px 0 12px;
+  padding: 12px 16px;
+  border: 2px solid var(--gelo);
+  border-radius: 18px;
+  background: var(--nevoa);
+}
+.ensino-stu .stu { width: 52px; height: auto; flex: none; transition: transform 240ms ease-out; }
+.ensino-stu[data-gravando='true'] { border-color: var(--acao); background: #eef3ff; }
+.ensino-stu[data-gravando='true'] .stu { animation: pedido-stu 1200ms ease-in-out infinite; }
+.ensino-stu__balao { margin: 0 !important; font-weight: 800; color: var(--texto); }
+
+.ensino-passos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.ensino-passos li {
+  padding: 4px 12px;
+  border: 1.5px solid var(--gelo);
+  border-radius: 999px;
+  color: var(--texto2);
+  font-size: 0.8125rem;
+  font-weight: 800;
+}
+.ensino-passos li[data-ativo='true'] {
+  border-color: var(--acao);
+  color: var(--acao);
+  background: #eef3ff;
+}
+
+.ensino-gravando {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: #eef3ff;
+  color: var(--acao);
+  font-weight: 800;
+}
+.ensino-ondas {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+}
+.ensino-ondas span {
+  display: block;
+  width: 5px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--acao);
+  transform-origin: center;
+  transition: transform 70ms linear;
+}
