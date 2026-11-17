@@ -178,6 +178,14 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [explicacaoAberta, setExplicacaoAberta] = useState(false);
   /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. Como na web. */
   const [ponteFeita, setPonteFeita] = useState(false);
+  /** O "Explique com suas palavras" está aberto: o painel de retorno fica só com o título e as ações. Como na web. */
+  const [expliqueAberto, setExpliqueAberto] = useState(false);
+  /** A pessoa já explicou ao Stu nesta visita: o convite do acerto sai. Como na web. */
+  const [ensinou, setEnsinou] = useState(false);
+  /** Cada toque no convite "Quer fixar? Explique com suas palavras" abre o "Explique" e leva até ele. */
+  const [pedidoEnsino, setPedidoEnsino] = useState(0);
+  /** No exercício e na prática, há conteúdo abaixo da parte visível (reforço, consulta, "Explique", "Como foi?"). */
+  const [temAbaixo, setTemAbaixo] = useState(false);
   // Onde fica o exercício: para levar a consulta aberta para cima do painel de retorno.
   const exercicioY = useRef(0);
   const [inicio] = useState(() => Date.now() - (retomada?.segundos ?? 0) * 1000);
@@ -257,9 +265,12 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   /** Confere se o fim do conteúdo (a legenda, o passo a passo) ainda está abaixo da parte visível. */
   function medirMais() {
+    const falta = alturaConteudo.current - (posicaoRolagem.current + alturaVisivel.current);
+    // Como na web: no exercício e na prática, um aviso discreto no rodapé leva ao que ficou abaixo (antes, nada mostrava).
+    const abaixo = (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica') && alturaVisivel.current > 0 && falta > 48;
+    setTemAbaixo((antes) => (antes === abaixo ? antes : abaixo));
     if (chegouAoFim.current) return;
     const leitura = etapa.tipo === 'conceito' || etapa.tipo === 'exemplo';
-    const falta = alturaConteudo.current - (posicaoRolagem.current + alturaVisivel.current);
     const novo = leitura && alturaVisivel.current > 0 && falta > 24;
     if (leitura && alturaVisivel.current > 0 && !novo) chegouAoFim.current = true;
     setTemMais((antes) => (antes === novo ? antes : novo));
@@ -276,6 +287,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   }
 
   useEffect(() => () => pararVoz(), []);
+
+  // Um erro novo (rede no Verificar, conclusão que não foi registrada) aparece no alto: a tela sobe até ele.
+  useEffect(() => {
+    if (erro) rolagem.current?.scrollTo({ y: 0, animated: reduzir === false });
+  }, [erro, reduzir]);
 
   useEffect(() => {
     if (!avaliacao) return;
@@ -448,7 +464,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           : ponteFeita ? t.ponteFeita : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
         iconeErro={ponteFeita ? 'lampada' : 'fechar'}
         extras={extrasDoRetorno(avaliacao, exercicio)} ocupado={ocupado} concluindo={pendente === 'concluir'} tentarDeNovo={tentarDeNovo}
-        rotuloPular={revisao ? t.seguirSemAcertar : t.pular} compacto={pedidoPonte > 0}
+        rotuloPular={revisao ? t.seguirSemAcertar : t.pular} compacto={pedidoPonte > 0 || expliqueAberto}
+        convite={avaliacao.correta && indice === exercicios.length - 1 && !ensinou && !expliqueAberto
+          ? () => setPedidoEnsino((atual) => atual + 1) : undefined}
         avisoPular={revisao ? undefined : passo === etapas.length - 1 && exercicios.every((_, numero) => numero === indice || avaliacoes[numero]?.correta) ? t.pularAvisoUltimo : t.pularAviso}
         verReforco={() => {
           rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
@@ -490,6 +508,18 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   } else {
     rodape = <Botao testID="avancar-licao" rotulo={t.seguir} icone="seta" desativado={ocupado}
       acao={() => { posicoesDasEtapas.current[passo] = posicaoRolagem.current; setPasso((atual) => atual + 1); }} />;
+  }
+  if (temAbaixo && (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica')) {
+    rodape = (
+      <>
+        <Pressable testID="mais-abaixo" accessibilityRole="button" accessibilityLabel={t.maisAbaixo} onPress={lerMais} hitSlop={8}
+          style={({ pressed }) => [licaoEstilos.maisAbaixo, pressed && { opacity: 0.7 }]}>
+          <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={14} cor={cores.acao} /></View>
+          <Text style={licaoEstilos.maisAbaixoTexto}>{t.maisAbaixo}</Text>
+        </Pressable>
+        {rodape}
+      </>
+    );
   }
 
   function campoDoExercicio(atual: ExercicioPublico): ReactNode {
@@ -564,6 +594,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           <Text style={[licaoEstilos.etapaTexto, { color: coresDaEtapa[etapa.tipo].texto }]}>{nomeEtapa.toLocaleUpperCase('pt-BR')}</Text>
         </View>
         <Titulo testID="titulo-licao" foco={passo === 0}>{licao.titulo}</Titulo>
+        {/* Como na web: o erro (rede no Verificar, conclusão) fica no alto, em foco, e a tela sobe até ele. */}
+        {erro && <EstadoMensagem mensagem={erro} testID="erro-licao" foco />}
         {avisoRetomada && (
           <View testID="aviso-retomada" accessibilityLiveRegion="polite" style={licaoEstilos.aviso}>
             <Text style={licaoEstilos.avisoTexto}>{t.retomada}</Text>
@@ -703,7 +735,6 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               )} />
           </View>
         )}
-        {erro && <EstadoMensagem mensagem={erro} />}
       </EntradaDaEtapa>
       {exercicio && <View onLayout={(evento) => {
         apoioPosicao.current = evento.nativeEvent.layout.y;
@@ -711,6 +742,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         if (Date.now() - rolarParaApoio.current < 4000) rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
       }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
         ultimo={indice === exercicios.length - 1} aoConcluirPonte={() => setPonteFeita(true)}
+        pedidoEnsino={pedidoEnsino} aoAbrirExplique={setExpliqueAberto} aoEnsinar={() => setEnsinou(true)}
+        aoPedirEnsino={(y) => setTimeout(() => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false }), 60)}
         aoMostrarRetornoPonte={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 220), animated: reduzir === false })}
         aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })} /></View>}
     </Tela>
@@ -779,7 +812,9 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
  * No erro, "Tentar de novo" volta ao exercício e Continuar segue, como na web.
  */
 function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarDeNovo, continuar, verReforco, rotuloPular, compacto = false, avisoPular,
-  iconeErro = 'fechar' }: {
+  iconeErro = 'fechar', convite }: {
+  /** No acerto do último exercício, antes de explicar: "Quer fixar? Explique com suas palavras" abre o "Explique". Como na web. */
+  convite?: () => void;
   avaliacao: Avaliacao;
   titulo: string;
   /** No erro: o X; depois do reforço feito, a lâmpada (o painel convida a tentar de novo). */
@@ -829,6 +864,7 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
         {!compacto && extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
       </View>
       {!certa && !compacto && <Botao variante="texto" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
+      {certa && convite && <Botao testID="convite-explique" variante="texto" rotulo={t.expliqueConvite} desativado={ocupado} acao={convite} />}
       {!certa && !compacto && avisoPular && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{avisoPular}</Text>}
       <View style={licaoEstilos.retornoAcoes}>
         {!certa && (
@@ -893,6 +929,8 @@ const licaoEstilos = StyleSheet.create({
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginBottom: 6, minHeight: 32 },
   voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: cores.nevoa },
+  maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
     backgroundColor: '#FFF8E6' },
   dicaTopo: { flexDirection: 'row', alignItems: 'center', gap: 6 },

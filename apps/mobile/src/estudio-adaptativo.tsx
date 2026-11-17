@@ -271,6 +271,10 @@ export function ApoioDaLicao({
   aoMostrarEnsino,
   aoConcluirPonte,
   aoMostrarRetornoPonte,
+  pedidoEnsino = 0,
+  aoPedirEnsino,
+  aoAbrirExplique,
+  aoEnsinar,
 }: {
   cliente: ClienteEstudio;
   licao: LicaoDetalhe;
@@ -285,6 +289,14 @@ export function ApoioDaLicao({
   aoConcluirPonte?: () => void;
   /** O retorno da pergunta do reforço apareceu: onde ele está, a partir do topo do apoio (a lição rola até lá). */
   aoMostrarRetornoPonte?: (y: number) => void;
+  /** Cada vez que muda, o "Explique" abre (o convite do painel de retorno no acerto). Como na web. */
+  pedidoEnsino?: number;
+  /** O "Explique" abriu pelo convite: onde o cartão começa, a partir do topo do apoio (a lição rola até lá). */
+  aoPedirEnsino?: (y: number) => void;
+  /** O "Explique" abriu ou fechou: a lição deixa o painel de retorno só com as ações enquanto ele está aberto. Como na web. */
+  aoAbrirExplique?: (aberto: boolean) => void;
+  /** A explicação foi enviada: a lição tira o convite para explicar. Como na web. */
+  aoEnsinar?: () => void;
 }) {
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // Como na web: o retorno do "Ensine ao Stu" é o desta visita.
@@ -434,6 +446,18 @@ export function ApoioDaLicao({
       }
     });
   }
+  useEffect(() => {
+    aoAbrirExplique?.(ensinar);
+    // Só a abertura e o fechamento avisam a lição.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ensinar]);
+  useEffect(() => {
+    if (pedidoEnsino === 0) return;
+    setEnsinar(true);
+    aoPedirEnsino?.(cartaoEnsinoY.current);
+    // Só o pedido do convite dispara.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pedidoEnsino]);
   const ponteConcluida = apoio?.ponte?.concluida === true;
   useEffect(() => {
     if (ponteConcluida && pedidoPonte > 0) aoConcluirPonte?.();
@@ -580,6 +604,9 @@ export function ApoioDaLicao({
                     ensino: r,
                   }));
                   setEnsino(r);
+                  // Como na web: o aviso da gravação sai e a lição tira o convite para explicar.
+                  setAviso('');
+                  aoEnsinar?.();
                 })
               }
             />
