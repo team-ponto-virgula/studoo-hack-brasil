@@ -6,6 +6,7 @@ import {
   AccessibilityInfo,
   Alert,
   Animated,
+  AppState,
   BackHandler,
   Platform,
   Easing,
@@ -27,7 +28,7 @@ import { Caminho, SkeletonTrilha, type Faixa } from './caminho';
 import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { Icone } from './icone';
 import { Confete } from './festa';
-import { Botao, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
+import { Botao, Campo, EstadoMensagem, SeloSincronia, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type Sincronia } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -95,6 +96,9 @@ export function Estudo({ cliente, sair, expirar }: {
   /** Código do erro da geração; o pedido mostra a mensagem e a ação que cabe (tentar de novo, ver os planos). */
   const [falhaGeracao, setFalhaGeracao] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
+  /** A última busca real de progresso no servidor, para o selo de sincronia (Minhas trilhas e trilha aberta). */
+  const [sincronia, setSincronia] = useState<Sincronia>({ estado: 'atualizando', em: null });
+  const ultimaBusca = useRef(0);
   const emCurso = useRef(false);
   const saidaDaLicao = useRef<(() => void) | null>(null);
   const geracaoAtiva = useRef<AbortController | null>(null);
@@ -104,11 +108,13 @@ export function Estudo({ cliente, sair, expirar }: {
     let ativo = true;
 
     async function carregarPlanos() {
+      setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
       try {
         const lista = await cliente.listarPlanos();
         // A apresentação é opcional, como na web.
         if (!ativo) return;
         setPlanos(lista);
+        marcarSincronia();
         // Como na web: com planos salvos, abre direto na trilha em andamento (só se a pessoa ainda está em Meus planos).
         const inicial = planoInicial(lista);
         if (inicial) {
@@ -123,7 +129,10 @@ export function Estudo({ cliente, sair, expirar }: {
       } catch (falha) {
         if (!ativo) return;
         if (sessaoInvalida(falha)) await expirar();
-        else setErro(mensagemDeErro(falha));
+        else {
+          setErro(mensagemDeErro(falha));
+          setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
+        }
       }
     }
 
@@ -133,6 +142,43 @@ export function Estudo({ cliente, sair, expirar }: {
 
   // Sair do estudo no meio da geração interrompe o pedido; o servidor não guarda nada.
   useEffect(() => () => geracaoAtiva.current?.abort(), []);
+
+  /** O progresso acabou de vir do servidor: o selo diz "Atualizado agora". */
+  function marcarSincronia() {
+    ultimaBusca.current = Date.now();
+    setSincronia({ estado: 'atualizado', em: ultimaBusca.current });
+  }
+
+  /**
+   * Busca de novo o progresso quando o app volta ao primeiro plano (em Minhas trilhas ou na trilha aberta), para o
+   * segundo aparelho se atualizar sozinho na demonstração. Como a web no foco da aba, com intervalo mínimo de 5 s.
+   */
+  async function sincronizarAgora() {
+    const atual = etapaAtual.current;
+    if (emCurso.current || (atual.tipo !== 'planos' && atual.tipo !== 'plano')) return;
+    if (Date.now() - ultimaBusca.current < 5_000) return;
+    setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
+    try {
+      const lista = await cliente.listarPlanos();
+      setPlanos(lista);
+      if (atual.tipo === 'plano') {
+        const plano = await cliente.obterPlano(atual.plano.id);
+        setEtapa((agora) => (agora.tipo === 'plano' && agora.plano.id === plano.id ? { ...agora, plano } : agora));
+      }
+      marcarSincronia();
+    } catch (falha) {
+      if (sessaoInvalida(falha)) await expirar();
+      else setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
+    }
+  }
+  const etapaAtual = useRef(etapa);
+  etapaAtual.current = etapa;
+  const sincronizar = useRef(sincronizarAgora);
+  sincronizar.current = sincronizarAgora;
+  useEffect(() => {
+    const assinatura = AppState.addEventListener('change', (estado) => { if (estado === 'active') void sincronizar.current(); });
+    return () => assinatura.remove();
+  }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
@@ -210,6 +256,8 @@ export function Estudo({ cliente, sair, expirar }: {
   }
 
   function atualizarPlano(plano: PlanoDetalhe) {
+    // Toda trilha que chega aqui veio agora do servidor (abrir, aceitar, concluir).
+    marcarSincronia();
     const resumo = { id: plano.id, titulo: plano.titulo, progresso: plano.progresso };
     setPlanos((anteriores) => anteriores?.some((item) => item.id === resumo.id)
       ? anteriores.map((item) => item.id === resumo.id ? resumo : item)
@@ -413,7 +461,7 @@ export function Estudo({ cliente, sair, expirar }: {
     }
 
     if (etapa.tipo === 'plano') {
-      return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} ocupado={ocupado} abrindo={abrindo}
+      return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} ocupado={ocupado} abrindo={abrindo} sincronia={sincronia}
         abrirLicao={(id) => void abrirLicao(etapa.plano, id)} novoPlano={() => abrir({ tipo: 'objetivo' })} />;
     }
 
@@ -440,10 +488,26 @@ export function Estudo({ cliente, sair, expirar }: {
         <Text style={estilos.introducao}>{mensagens.planos.subtitulo}</Text>
         {mensagem}
         {!planos && !erro && <Skeleton />}
-        {planos?.map((plano, indice) => (
-          <CartaoPlano key={plano.id} plano={plano} indice={indice} ocupado={ocupado} abrir={() => void abrirPlano(plano.id)}
-            apagar={() => pedirParaApagar(plano)} />
-        ))}
+        {planos && planos.length > 0 && (() => {
+          // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
+          const destaque = planoInicial(planos);
+          const restantes = planos.filter((plano) => plano.id !== destaque?.id);
+          return (
+            <>
+              {destaque && (
+                <CartaoDestaque plano={destaque} indice={planos.indexOf(destaque)} sincronia={sincronia} ocupado={ocupado}
+                  abrir={() => void abrirPlano(destaque.id)} apagar={() => pedirParaApagar(destaque)} />
+              )}
+              {restantes.length > 0 && (
+                <Text accessibilityRole="header" style={estudoEstilos.secaoTitulo}>{mensagens.planos.outrasTrilhas.toLocaleUpperCase('pt-BR')}</Text>
+              )}
+              {restantes.map((plano) => (
+                <CartaoPlano key={plano.id} plano={plano} indice={planos.indexOf(plano)} ocupado={ocupado} secundario
+                  abrir={() => void abrirPlano(plano.id)} apagar={() => pedirParaApagar(plano)} />
+              ))}
+            </>
+          );
+        })()}
       </Tela>
     );
   }
@@ -537,7 +601,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
       <View style={estudoEstilos.pedidoHeroi}>
         <View style={estudoEstilos.pedidoHalo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
           <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            style={{ width: 92, height: 104, transform: [{ translateY: balancoInicio }] }} />
+            style={{ width: 70, height: 80, transform: [{ translateY: balancoInicio }] }} />
           <Text style={estudoEstilos.pedidoEstrela}>✦</Text>
         </View>
         <Titulo testID="titulo-objetivo" foco={focarTitulo} estilo={estudoEstilos.pedidoTitulo}>
@@ -567,6 +631,25 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
           )}
           {mostrarContador && <Text style={[estilos.legenda, estudoEstilos.contador]}>{contador}</Text>}
         </View>
+      </View>
+      {/* Como na web (rodada 1): a entrada do material próprio, 1º passo da demonstração, fica logo abaixo do campo, à vista
+          sem rolar, com o selo "Seu material". */}
+      <Pressable testID="alternar-modo" accessibilityRole="button" accessibilityState={{ disabled: ocupado }} disabled={ocupado}
+        onPress={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}
+        style={({ pressed }) => [estudoEstilos.alternar, pressed && { opacity: 0.85 }]}>
+        <View style={estudoEstilos.alternarIcone} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} tamanho={22} cor={cores.acao} />
+        </View>
+        <View style={estudoEstilos.alternarTextos}>
+          <View style={estudoEstilos.alternarLinha}>
+            <Text style={estudoEstilos.alternarTitulo}>{modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}</Text>
+            {modo === 'ideia' && <Text style={estudoEstilos.alternarSelo}>{mensagens.pedido.seuMaterial}</Text>}
+          </View>
+          <Text style={estilos.legenda}>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</Text>
+        </View>
+        <Icone nome="seta" tamanho={20} cor={cores.textoSecundario} />
+      </Pressable>
+      <View style={modo !== 'ideia' && { display: 'none' }}>
         <View style={estudoEstilos.sugestoes}>
           <View style={estudoEstilos.sugestoesTopo}>
             <Text accessibilityRole="header" style={estudoEstilos.sugestoesTitulo}>{mensagens.pedido.sugestoes}</Text>
@@ -580,18 +663,6 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
           </View>
         </View>
       </View>
-      <Pressable testID="alternar-modo" accessibilityRole="button" accessibilityState={{ disabled: ocupado }} disabled={ocupado}
-        onPress={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}
-        style={({ pressed }) => [estudoEstilos.alternar, pressed && { opacity: 0.85 }]}>
-        <View style={estudoEstilos.alternarIcone} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} tamanho={22} cor={cores.acao} />
-        </View>
-        <View style={estudoEstilos.alternarTextos}>
-          <Text style={estudoEstilos.alternarTitulo}>{modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}</Text>
-          <Text style={estilos.legenda}>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</Text>
-        </View>
-        <Icone nome="seta" tamanho={20} cor={cores.textoSecundario} />
-      </Pressable>
       <LinkComoFunciona desativado={ocupado} acao={comoFunciona} />
     </Tela>
   );
@@ -1163,7 +1234,9 @@ function SkeletonLicao({ texto }: { texto: string }) {
  * Como na web, no celular o próximo passo vira o rodapé fixo e, a partir de 768 px, fica dentro da faixa.
  * Voltando de uma lição, a trilha rola até o nó liberado, o próximo ou a lição de origem, se ele estiver fora da vista.
  */
-function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano }: {
+function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano, sincronia }: {
+  /** O selo da tela: a trilha aberta também se atualiza quando o app volta ao primeiro plano. */
+  sincronia: Sincronia;
   etapa: EtapaPlano;
   acoes: ReactNode;
   erro: string | null;
@@ -1247,6 +1320,7 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
         avaliarAtual();
       }}>
       {erro && <EstadoMensagem mensagem={erro} foco />}
+      <View style={estudoEstilos.seloTrilha}><SeloSincronia sincronia={sincronia} /></View>
       {largo && (
         <View style={estudoEstilos.topoTrilha}>
           <View style={estudoEstilos.topoTrilhaTexto}>
@@ -1402,10 +1476,62 @@ function BarraProgresso({ progresso, testID, naFaixa = false, comPercentual = fa
 }
 
 /**
+ * "Seu próximo passo" (Minhas trilhas), como o `.plano-destaque` da web: a cena da região com o Stu, o rótulo, o selo de
+ * sincronia, o título, o progresso com a porcentagem e o único botão primário da tela. Com tudo concluído, o rótulo vira
+ * "Você concluiu suas trilhas!" e a ação, rever. O "Apagar" continua discreto, como nos outros cartões.
+ */
+function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
+  plano: PlanoResumo;
+  indice: number;
+  sincronia: Sincronia;
+  ocupado: boolean;
+  abrir: () => void;
+  apagar: () => void;
+}) {
+  const { concluidas, total } = plano.progresso;
+  const concluido = total > 0 && concluidas === total;
+  let acao: string = mensagens.planos.continuar;
+  if (concluido) acao = mensagens.planos.rever;
+  else if (concluidas === 0 && !temAndamentoNoPlano(plano.id)) acao = mensagens.planos.comecar;
+  const { chao, relevo } = coresDaRegiao(Math.max(0, indice));
+  const enfeites = regiaoDoTrecho(Math.max(0, indice)).enfeites;
+  const entrada = useAparecer(80, 420, true);
+  const balanco = useBalanco(3, 1600);
+
+  return (
+    <Animated.View testID="plano-destaque" style={[estudoEstilos.destaque, estiloDeEntrada(entrada)]}>
+      <View style={[estudoEstilos.destaqueCena, { backgroundColor: chao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <View style={[estudoEstilos.cartaoColina, { backgroundColor: relevo }]} />
+        <Desenho nome={enfeites[0]} largura={40} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%' }]} />
+        <Desenho nome={enfeites[2]} largura={36} estilo={[estudoEstilos.cartaoEnfeite, { right: '9%' }]} />
+        <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+          style={[estudoEstilos.destaqueStu, { transform: [{ translateY: balanco }] }]} />
+      </View>
+      <View style={estudoEstilos.destaqueCorpo}>
+        <View style={estudoEstilos.destaqueTopo}>
+          <Text style={estudoEstilos.destaqueRotulo}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo).toLocaleUpperCase('pt-BR')}</Text>
+          <SeloSincronia sincronia={sincronia} />
+        </View>
+        <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo]}>{plano.titulo}</Text>
+        <Text style={estilos.legenda}>{concluido ? mensagens.retomada.revisar : mensagens.retomada.texto}</Text>
+        <BarraProgresso progresso={plano.progresso} comPercentual />
+        <Botao rotulo={acao} testID="abrir-destaque" icone="seta" dica={plano.titulo} desativado={ocupado} acao={abrir} />
+        <Pressable testID="apagar-destaque" accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(plano.titulo)}
+          disabled={ocupado} onPress={apagar} hitSlop={8} style={estudoEstilos.cartaoApagar}>
+          <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
+        </Pressable>
+      </View>
+    </Animated.View>
+  );
+}
+
+/**
  * Cartão de um plano em Meus planos, como na web: uma faixa do mundo (cada plano numa região), o título, o progresso e a
  * ação que cabe: começar, continuar ou rever a trilha concluída.
  */
-function CartaoPlano({ plano, indice, ocupado, abrir, apagar }: {
+function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false }: {
+  /** Abaixo do destaque, a ação é secundária: o único botão azul da tela fica no "Seu próximo passo". Como na web. */
+  secundario?: boolean;
   plano: PlanoResumo;
   indice: number;
   ocupado: boolean;
@@ -1440,7 +1566,7 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar }: {
         <Text accessibilityRole="header" style={estilos.tituloBloco}>{plano.titulo}</Text>
         <BarraProgresso progresso={plano.progresso} />
         <View style={estudoEstilos.cartaoAcao}>
-          <Botao rotulo={acao} testID={`abrir-plano-${indice}`} icone="seta" variante={concluido ? 'secundario' : 'primario'}
+          <Botao rotulo={acao} testID={`abrir-plano-${indice}`} icone="seta" variante={concluido || secundario ? 'secundario' : 'primario'}
             dica={plano.titulo} desativado={ocupado} acao={abrir} />
         </View>
         <Pressable testID={`apagar-plano-${indice}`} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(plano.titulo)}
@@ -1613,15 +1739,32 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem, base }: {
 }
 
 const estudoEstilos = StyleSheet.create({
+  destaque: {
+    marginTop: 20, borderWidth: 2, borderBottomWidth: 5, borderRadius: 24, borderColor: cores.destaqueBorda,
+    backgroundColor: cores.superficieSutil, overflow: 'hidden',
+  },
+  destaqueCena: { height: 96, overflow: 'hidden' },
+  destaqueStu: { position: 'absolute', bottom: 6, left: '50%', marginLeft: -30, width: 60, height: 66 },
+  destaqueCorpo: { padding: 16, gap: 10 },
+  destaqueTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  destaqueRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.7 },
+  destaqueTitulo: { marginTop: 2 },
+  secaoTitulo: {
+    marginTop: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.8,
+  },
+  seloTrilha: { marginBottom: 12 },
   // Pedido simplificado
   pedidoHeroi: { alignItems: 'center', gap: 6, marginBottom: 4, paddingTop: 4 },
-  pedidoHalo: { width: 124, height: 124, alignItems: 'center', justifyContent: 'center', borderRadius: 62, borderWidth: 10,
+  pedidoHalo: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center', borderRadius: 48, borderWidth: 8,
     borderColor: '#FFE08A', backgroundColor: '#FFF3C4' },
   pedidoEstrela: { position: 'absolute', top: -2, right: 4, color: '#FFB703', fontSize: 24, lineHeight: 28 },
-  pedidoTitulo: { fontSize: 30, lineHeight: 34, textAlign: 'center' },
+  pedidoTitulo: { fontSize: 28, lineHeight: 32, textAlign: 'center' },
   pedidoFala: { minHeight: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24, textAlign: 'center' },
-  alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 20, paddingVertical: 14, paddingLeft: 14, paddingRight: 18,
-    borderRadius: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.bordaCampo },
+  alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14, paddingVertical: 12, paddingLeft: 12, paddingRight: 16,
+    borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.destaqueBorda, backgroundColor: cores.superficieSutil },
+  alternarLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  alternarSelo: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', backgroundColor: '#E5EBFF',
+    color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
   alternarIcone: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
   alternarTextos: { flex: 1, gap: 2 },
   alternarTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 21 },
@@ -1739,16 +1882,16 @@ const estudoEstilos = StyleSheet.create({
   comoSinal: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5EBFF' },
   comoSinalTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16 },
   comoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
-  aviso: { marginTop: 24, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 12, backgroundColor: cores.nevoa,
+  aviso: { marginTop: 14, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: cores.nevoa,
     color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   acoesErro: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
-  campoPedido: { marginTop: 20, gap: 8 },
+  campoPedido: { marginTop: 14, gap: 8 },
   entradaPedido: { minHeight: 100, fontSize: 18, lineHeight: 26, backgroundColor: '#FBFCFF' },
   campoErro: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   campoErroTexto: { flex: 1, color: cores.erro, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   dica: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   contador: { alignSelf: 'flex-end' },
-  sugestoes: { marginTop: 28, gap: 14 },
+  sugestoes: { marginTop: 22, gap: 14 },
   sugestoesTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   sugestoesTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 24 },
   surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 14, borderRadius: 999,

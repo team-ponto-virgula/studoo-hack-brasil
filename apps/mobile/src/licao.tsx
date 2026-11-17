@@ -178,6 +178,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [explicacaoAberta, setExplicacaoAberta] = useState(false);
   /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. Como na web. */
   const [ponteFeita, setPonteFeita] = useState(false);
+  /** Citação aberta no conceito (a primeira, quando a lição veio do material), como na web. */
+  const [citacaoAberta, setCitacaoAberta] = useState<number | null>(() => (licao.referencias?.length ? 0 : null));
   /** O "Explique com suas palavras" está aberto: o painel de retorno fica só com o título e as ações. Como na web. */
   const [expliqueAberto, setExpliqueAberto] = useState(false);
   /** A pessoa já explicou ao Stu nesta visita: o convite do acerto sai. Como na web. */
@@ -621,8 +623,25 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <ExplicacaoDoStu>
               <Text accessibilityRole="header" style={licaoEstilos.balaoTitulo}>{t.explicacaoDoStu}</Text>
               <TextoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} estilo={estilos.texto} />
+              {/* O marcador fica no bloco, não numa frase: a referência é da lição inteira (não garante o apoio de uma frase). */}
+              {!!licao.referencias?.length && (
+                <View style={licaoEstilos.marcadores}>
+                  <Text style={licaoEstilos.marcadoresTexto}>{mensagens.estudio.baseadoMaterial}</Text>
+                  {licao.referencias.map((_, numero) => (
+                    <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button" hitSlop={8}
+                      accessibilityLabel={`${mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }}
+                      onPress={() => setCitacaoAberta((atual) => (atual === numero ? null : numero))}
+                      style={({ pressed }) => [licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto, pressed && { opacity: 0.8 }]}>
+                      <Text style={[licaoEstilos.marcadorTexto, citacaoAberta === numero && { color: cores.fundo }]}>[{numero + 1}]</Text>
+                    </Pressable>
+                  ))}
+                </View>
+              )}
               <Text style={estilos.legenda}>{t.origem} · {origemLegivel(licao.origem)}</Text>
             </ExplicacaoDoStu>
+            {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (
+              <CartaoFonte referencia={licao.referencias[citacaoAberta]} numero={citacaoAberta + 1} />
+            )}
             {(licao.recurso?.tipo === 'imagem' || licao.recurso?.tipo === 'acorde') && (
               <View style={{ marginTop: 16 }}><RecursoDaLicao recurso={licao.recurso} /></View>
             )}
@@ -808,6 +827,33 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
 }
 
 /**
+ * A fonte da lição em destaque (o trecho exato do material, com página, parágrafo ou linha), como o cartão da web:
+ * o número do marcador, o material, o selo de demonstração quando o material é simulado e a leitura por OCR.
+ */
+function CartaoFonte({ referencia, numero }: { referencia: NonNullable<LicaoDetalhe['referencias']>[number]; numero: number }) {
+  const entrada = useAparecer(0, 320, true);
+  const m = mensagens.estudio;
+  return (
+    <Animated.View testID="cartao-fonte" accessible accessibilityRole="summary"
+      accessibilityLabel={`${m.fonteMaterial} ${numero}. ${referencia.nome}, ${referencia.localizacao ?? m.pagina(referencia.pagina)}. ${referencia.trecho}`}
+      style={[licaoEstilos.fonte, { opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
+      <View style={licaoEstilos.fonteTopo}>
+        <View style={licaoEstilos.fonteNumero}><Text style={licaoEstilos.fonteNumeroTexto}>[{numero}]</Text></View>
+        <Text style={licaoEstilos.fonteRotulo}>{m.fonteMaterial.toLocaleUpperCase('pt-BR')}</Text>
+      </View>
+      <Text style={estilos.tituloBloco}>{referencia.nome} · {referencia.localizacao ?? m.pagina(referencia.pagina)}</Text>
+      {referencia.leitura === 'demonstracao' && (
+        <View style={licaoEstilos.fonteSelo}><Text style={licaoEstilos.fonteSeloTexto}>{m.simulado}</Text></View>
+      )}
+      <View style={licaoEstilos.fonteTrecho}>
+        <Text selectable style={estilos.texto}>“{referencia.trecho}”</Text>
+      </View>
+      {referencia.leitura === 'ocr' && <Text style={estilos.legenda}>{m.ocr}</Text>}
+    </Animated.View>
+  );
+}
+
+/**
  * Painel de retorno no rodapé: sobe com a cor do resultado; o ícone entra com um giro e, no acerto, solta confete.
  * No erro, "Tentar de novo" volta ao exercício e Continuar segue, como na web.
  */
@@ -929,6 +975,22 @@ const licaoEstilos = StyleSheet.create({
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginBottom: 6, minHeight: 32 },
   voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  marcadores: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
+  marcadoresTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  marcador: { minWidth: 36, minHeight: 32, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
+    borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: cores.fundo },
+  marcadorAberto: { borderColor: cores.acao, backgroundColor: cores.acao },
+  marcadorTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
+  fonte: { marginTop: 14, padding: 16, gap: 8, borderRadius: 20, borderWidth: 2, borderBottomWidth: 4, borderColor: cores.destaqueBorda,
+    backgroundColor: cores.superficieSutil },
+  fonteTopo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  fonteNumero: { paddingHorizontal: 8, minHeight: 24, borderRadius: 999, justifyContent: 'center', backgroundColor: cores.acao },
+  fonteNumeroTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16 },
+  fonteRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
+  fonteSelo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, borderWidth: 1,
+    borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
+  fonteSeloTexto: { color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  fonteTrecho: { borderLeftWidth: 4, borderColor: cores.ouroEscuro, backgroundColor: '#FFFBEF', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 12 },
   maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: cores.nevoa },
   maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
