@@ -40,32 +40,42 @@ const t = mensagens.licao;
 
 /**
  * Lê a fala em voz alta com a voz do aparelho, no idioma dela. `aoTerminar` avisa quando a voz acaba (ou é
- * interrompida), com uma reserva pelo tamanho da frase, como na web.
+ * interrompida), com uma reserva pelo tamanho da frase, como na web. Como na web, uma fala que falha ou acaba em menos
+ * de 250 ms conta como "sem voz" (o aparelho não tem voz para o idioma): `aoTerminar(true)`.
  */
-function falar(fala: Fala, devagar: boolean, aoTerminar?: () => void) {
+function falar(fala: Fala, devagar: boolean, aoTerminar?: (semVoz: boolean) => void) {
   let reserva: ReturnType<typeof setTimeout> | undefined;
-  const fim = () => {
+  let terminou = false;
+  const inicio = Date.now();
+  const fim = (falhou: boolean) => {
+    if (terminou) return;
+    terminou = true;
     if (reserva) clearTimeout(reserva);
-    aoTerminar?.();
+    aoTerminar?.(falhou || Date.now() - inicio < 250);
   };
   try {
     void Speech.stop();
-    if (aoTerminar) reserva = setTimeout(aoTerminar, Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
-    Speech.speak(fala.texto, { language: fala.idioma, rate: devagar ? 0.6 : 0.95, onDone: fim, onStopped: fim, onError: fim });
+    if (aoTerminar) reserva = setTimeout(() => fim(false), Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
+    Speech.speak(fala.texto, {
+      language: fala.idioma, rate: devagar ? 0.6 : 0.95,
+      onDone: () => fim(false), onStopped: () => { terminou = true; if (reserva) clearTimeout(reserva); aoTerminar?.(false); }, onError: () => fim(true),
+    });
   } catch {
-    fim();
+    fim(true);
     AccessibilityInfo.announceForAccessibility(t.audio.semVoz);
   }
 }
 
-/** O que está tocando agora (normal ou devagar), para o chip mostrar "Tocando…". */
+/** O que está tocando agora (normal ou devagar), para o chip mostrar "Tocando…", e se o aparelho ficou sem voz. */
 function useTocando(fala: Fala) {
   const [tocando, setTocando] = useState<'normal' | 'devagar' | null>(null);
+  const [semVoz, setSemVoz] = useState(false);
   const tocar = (devagar: boolean) => {
     setTocando(devagar ? 'devagar' : 'normal');
-    falar(fala, devagar, () => setTocando(null));
+    setSemVoz(false);
+    falar(fala, devagar, (faltou) => { setTocando(null); if (faltou) setSemVoz(true); });
   };
-  return [tocando, tocar] as const;
+  return [tocando, tocar, semVoz] as const;
 }
 
 /** Para a voz (ao sair da aula ou da etapa). */
@@ -133,12 +143,16 @@ function Chip({ rotulo, acao, icone, destaque = false, grande = false, nomeAcess
 }
 
 export function BotoesOuvir({ fala }: { fala: Fala }) {
-  const [tocando, tocar] = useTocando(fala);
+  const [tocando, tocar, semVoz] = useTocando(fala);
   return (
-    <View style={formatos.ouvir}>
-      <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvir} icone="som" destaque nomeAcessivel={t.audio.ouvirFrase(fala.texto)}
-        acao={() => tocar(false)} />
-      <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} nomeAcessivel={t.audio.ouvirDevagar(fala.texto)} acao={() => tocar(true)} />
+    <View style={{ gap: 6 }}>
+      <View style={formatos.ouvir}>
+        <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvir} icone="som" destaque nomeAcessivel={t.audio.ouvirFrase(fala.texto)}
+          acao={() => tocar(false)} />
+        <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} nomeAcessivel={t.audio.ouvirDevagar(fala.texto)} acao={() => tocar(true)} />
+      </View>
+      {/* Como na web: sem voz para a frase no aparelho, o aviso aparece no lugar do silêncio. */}
+      {semVoz && <Text accessibilityLiveRegion="polite" style={formatos.avisoSemVoz}>{t.audio.semVozFrase}</Text>}
     </View>
   );
 }
@@ -147,7 +161,9 @@ export function BotoesOuvir({ fala }: { fala: Fala }) {
  * ficam à vista (antes, a tradução entregaria a resposta), como na web. */
 export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolean }) {
   const [mostrar, setMostrar] = useState(false);
-  const [tocando, tocar] = useTocando(fala);
+  const [tocando, tocar, semVoz] = useTocando(fala);
+  // Como na web: sem voz no aparelho, o texto da escuta aparece sozinho (a pessoa não fica sem a frase).
+  const verTexto = mostrar || acertou || semVoz;
   return (
     <View style={formatos.escuta}>
       <View style={formatos.rotuloLinha}>
@@ -158,13 +174,14 @@ export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolea
         <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvirExercicio} icone="som" destaque grande acao={() => tocar(false)} />
         <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} grande acao={() => tocar(true)} />
       </View>
-      {!acertou && (
+      {semVoz && <Text accessibilityLiveRegion="polite" style={formatos.avisoSemVoz}>{t.audio.semVozFrase}</Text>}
+      {!acertou && !semVoz && (
         <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} onPress={() => setMostrar((atual) => !atual)}>
           <Text style={formatos.link}>{mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}</Text>
         </Pressable>
       )}
-      {(mostrar || acertou) && <Text selectable style={formatos.fraseGrande}>{fala.texto}</Text>}
-      {(mostrar || acertou) && fala.pronuncia && <Text style={formatos.pronuncia}>{fala.pronuncia}</Text>}
+      {verTexto && <Text selectable style={formatos.fraseGrande}>{fala.texto}</Text>}
+      {verTexto && fala.pronuncia && <Text style={formatos.pronuncia}>{fala.pronuncia}</Text>}
       {acertou && fala.traducao && <Text style={[estilos.legenda, { fontWeight: '700' }]}>{fala.traducao}</Text>}
     </View>
   );
@@ -479,7 +496,8 @@ export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: 
     case 'formula':
       return <View style={formatos.formula}><ComLacunas texto={texto} estilo={formatos.formulaTexto} preenchimento={preenchimento} /></View>;
     case 'passos':
-      return <Passos passos={linhasDePassos(texto)} />;
+      // Como na web: a lacuna de cada passo aparece como espaço sublinhado e recebe o que a pessoa digita.
+      return <Passos passos={linhasDePassos(texto)} preenchimento={preenchimento} />;
     default:
       return (
         <View style={formatos.frase}>
@@ -491,7 +509,7 @@ export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: 
 }
 
 /** Passo a passo numerado (demonstração e trechos em passos). */
-export function Passos({ passos, titulo }: { passos: string[]; titulo?: string }) {
+export function Passos({ passos, titulo, preenchimento }: { passos: string[]; titulo?: string; preenchimento?: string }) {
   return (
     <View style={formatos.secao}>
       {titulo && <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{titulo.toLocaleUpperCase('pt-BR')}</Text>}
@@ -500,7 +518,7 @@ export function Passos({ passos, titulo }: { passos: string[]; titulo?: string }
           <View style={formatos.passoNumero} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <Text style={formatos.passoNumeroTexto}>{posicao + 1}</Text>
           </View>
-          <Text style={[estilos.texto, formatos.passoTexto]}>{passo}</Text>
+          <ComLacunas texto={passo} estilo={[estilos.texto, formatos.passoTexto]} preenchimento={preenchimento} />
         </View>
       ))}
     </View>
@@ -1198,6 +1216,7 @@ const formatos = StyleSheet.create({
   rotuloCaixa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
   instrucao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
   link: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22, textDecorationLine: 'underline' },
+  avisoSemVoz: { color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 2,
     borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
   chipDestaque: { borderColor: '#B9C6F3' },

@@ -111,7 +111,11 @@ export function MaterialParaTrilha({
         tipo = '';
       if (camera) {
         const p = await ImagePicker.requestCameraPermissionsAsync();
-        if (!p.granted) throw new Error();
+        if (!p.granted) {
+          // Diz como liberar, em vez do erro genérico; com "não perguntar de novo", só os ajustes do aparelho liberam.
+          if (vivo.current) setErro(p.canAskAgain === false ? m.cameraBloqueada : m.cameraNegada);
+          return;
+        }
         const r = await ImagePicker.launchCameraAsync({
           mediaTypes: ['images'],
           quality: 0.85,
