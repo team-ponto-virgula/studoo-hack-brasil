@@ -59,7 +59,8 @@ Referências de mercado avaliadas em `docs/ui/REFERENCIAS-UI.md`.
 - **Barra lateral e topo (Linear):** barra lateral limpa com logo, "Minhas trilhas", lista de trilhas com indicador de progresso discreto e "+ Nova trilha"; topo com contexto real da tela (não "Área de estudo" genérico) + selo de sincronia.
 - **Meus planos (Notion + Apple Handoff + Linear):**
   - Nunca vazio: quando há 0 trilhas, abre entrada guiada com ideias prontas e "Experimentar com frações".
-  - Quando há >= 1 trilha: cartão hero **"Continue de onde parou"** no topo (com ilustração da região, título da trilha, próxima lição, progresso e um único botão azul primário + selo discreto de sincronia). Demais trilhas em grade secundária.
+  - Quando há >= 1 trilha: cartão hero usando `mensagens.retomada.titulo` ("Seu próximo passo") / `mensagens.retomada.concluido` no topo (com ilustração da região, Stu, título da trilha, progresso e um único botão azul primário + selo real de sincronia). Demais trilhas em grade secundária com botão secundário.
+  - Chaves de permissão de câmera adicionadas em `packages/contratos/src/experiencia.ts`: `mensagens.estudio.cameraNegada` e `mensagens.estudio.cameraBloqueada`.
 - **Pedido (Raycast + Arc):** campo de pedido dominante acima da dobra, botão "Gerar trilha" visível sem rolar em 1440 px, e cartão de destaque para **"Tenho um material (PDF, DOCX, CSV ou foto)"** logo ao lado/abaixo do campo, colocando o 1º passo da demo em evidência.
 - **Aula (Raycast + Brilliant):**
   - Largura confortável (`46rem`), Stu presente também no cabeçalho/lateral do exercício com estados definidos sobre `stu-oi.svg` (sem redesenhar rosto/corpo): movimento do corpo + adereço CSS/SVG ao lado + balão de fala (`neutro`, `pensando`, `atento no erro`, `comemorando de primeira`, `comemorando depois da ponte`, `aluno com dúvida`).

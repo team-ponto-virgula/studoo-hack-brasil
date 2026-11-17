@@ -406,7 +406,7 @@ export function Estudo() {
       navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
       return true;
     }
-    return resultado.codigo !== 'avaliacao_invalida';
+    return false;
   }
 
   async function sair() {
@@ -628,7 +628,7 @@ function CartaoDestaque({ plano, regiao, sincronia, agora, ocupado, abrir }: {
       </div>
       <div className="plano-destaque__corpo">
         <div className="plano-destaque__topo">
-          <span className="plano-destaque__rotulo">{concluido ? mensagens.planos.concluido : 'Continue de onde parou'}</span>
+          <span className="plano-destaque__rotulo">{concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo}</span>
           <SeloSincronia sincronia={sincronia} agora={agora} />
         </div>
         <h2>{plano.titulo}</h2>
@@ -1050,6 +1050,25 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
           {textoParaRever(resumo)}
         </p>
       )}
+      <ul className="conclusao-historia" aria-label="Resumo qualitativo da lição">
+        <li>
+          <strong>O que você praticou</strong>
+          <p>{licao.objetivo}</p>
+        </li>
+        {resumo?.ponteConstruida && (
+          <li data-tipo="ponte">
+            <strong>Ponte construída</strong>
+            <p>Você transformou o erro em degrau, atravessou o reforço e voltou para vencer.</p>
+          </li>
+        )}
+        {resumo?.ensinouStu && (
+          <li data-tipo="ensino">
+            <strong>Você ensinou ao Stu</strong>
+            <p>Você explicou a ideia com suas palavras e testou seu entendimento.</p>
+          </li>
+        )}
+      </ul>
+      <p className="conclusao-sincronia">Progresso salvo na sua conta · pronto para continuar em outro dispositivo</p>
       {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo (no fim, ficavam atrás dos botões fixos). */}
       {licao.falas && licao.falas.length > 0 && <FrasesDaLicao falas={licao.falas} />}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}

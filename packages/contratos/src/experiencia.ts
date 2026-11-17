@@ -20,6 +20,8 @@ export const mensagens = {
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
       vozDica: 'Escreva ou, se preferir, grave até 60 segundos: a gravação vira texto, e você confere antes de enviar.',
       vozErro: 'Não foi possível usar o microfone. Você pode digitar sua explicação.',
+      cameraNegada: 'Permita o acesso à câmera para fotografar o seu material.',
+      cameraBloqueada: 'Câmera bloqueada nas permissões do aparelho. Libere o acesso nas configurações para fotografar.',
       vozRevisar: 'Transcrição pronta. Confira o texto antes de enviar.', gravando: 'Gravando…',
       acertos: 'O que fez sentido', lacuna: 'O que revisar', pergunta: 'Leve a ideia adiante', proximo: 'Próximo passo',
       pensando: 'O Stu está preparando…', erro: 'Não foi possível concluir. Tente novamente.',

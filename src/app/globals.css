@@ -918,3 +918,29 @@ button { touch-action: manipulation; }
 /* Proposta com o mesmo nome de uma trilha que a pessoa já tem: aviso e "Abrir a que já existe". */
 .geracao-repetida { display: grid; gap: 10px; margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: #fff6d9; color: #7a4a00; font-weight: 800; }
 .geracao-repetida .botao { justify-self: start; }
+
+/* Momento 4: Cartões qualitativos na conclusão e confirmação de sincronia entre dispositivos. */
+.conclusao-historia {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: start;
+}
+.conclusao-historia li {
+  display: grid;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 2px solid var(--gelo);
+  border-radius: 18px;
+  background: var(--nevoa);
+}
+.conclusao-historia li[data-tipo='ponte'] { border-color: #c3cdf2; background: #eef3ff; }
+.conclusao-historia li[data-tipo='ensino'] { border-color: #9ad8b5; background: #eefaf3; }
+.conclusao-historia strong { font-size: 0.8125rem; font-weight: 900; color: var(--acao); text-transform: uppercase; letter-spacing: 0.04em; }
+.conclusao-historia li[data-tipo='ensino'] strong { color: var(--sucesso); }
+.conclusao-historia p { font-size: 0.9375rem; font-weight: 700; color: var(--texto); }
+.conclusao-sincronia { margin-top: 14px; color: var(--texto2); font-size: 0.875rem; font-weight: 800; text-align: center; }

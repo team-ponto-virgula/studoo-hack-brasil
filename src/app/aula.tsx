@@ -57,6 +57,8 @@ export type ResumoLicao = {
   exercicios: number;
   pratica?: AutoAvaliacao;
   rever: boolean;
+  ponteConstruida?: boolean;
+  ensinouStu?: boolean;
 };
 
 /** O andamento de uma lição, guardado no navegador para a pessoa continuar de onde parou. */
@@ -180,6 +182,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [pedidoPonte, setPedidoPonte] = useState(0);
   /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. */
   const [ponteFeita, setPonteFeita] = useState(false);
+  /** Alguma ponte de reforço foi concluída nesta visita à lição (para a história na conclusão e reação do Stu). */
+  const [ponteUsada, setPonteUsada] = useState(false);
+  /** Índice da citação aberta na etapa de conceito (0 por padrão quando há referências do material). */
+  const [citacaoAberta, setCitacaoAberta] = useState<number | null>(() => (licao.referencias?.length ? 0 : null));
   /** Nas etapas de leitura: ainda tem conteúdo escondido atrás do rodapé (o botão diz "Continuar lendo"). */
   const [temMais, setTemMais] = useState(false);
   const [inicio] = useState(() => Date.now() - (retomada?.segundos ?? 0) * 1000);
@@ -477,6 +483,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       ...(autoAvaliacao ? { pratica: autoAvaliacao } : {}),
       // Vale rever: ficou exercício sem acerto, a maior parte saiu errada antes do acerto ou a prática não saiu (como o mapa).
       rever: acertos < exercicios.length || motivoParaRever({ acertosDePrimeira, exercicios: exercicios.length, pratica: autoAvaliacao }) !== null,
+      ponteConstruida: ponteUsada,
+      ensinouStu: ensinou,
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) {
       guardarAndamento(licao.id, null);
@@ -617,21 +625,74 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
               <section className="aula-balao" aria-labelledby="etapa-aula">
                 <h2 id="etapa-aula">{t.explicacaoDoStu}</h2>
                 <ExplicacaoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} />
+                {!!licao.referencias?.length && (
+                  <div className="aula-citacao-marcadores">
+                    <span>Baseado no seu material</span>
+                    {licao.referencias.map((ref, idx) => (
+                      <button key={idx} type="button" className="aula-citacao-marcador"
+                        aria-expanded={citacaoAberta === idx}
+                        onClick={() => setCitacaoAberta((atual) => (atual === idx ? null : idx))}>
+                        [{idx + 1}]
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <p className="licao-origem">{t.origem} · {origemLegivel(licao.origem)}</p>
               </section>
             </div>
+            {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (() => {
+              const ref = licao.referencias[citacaoAberta];
+              return (
+                <aside className="aula-citacao" aria-label="Fonte do seu material">
+                  <div className="aula-citacao__topo">
+                    <span className="aula-citacao__selo">[{citacaoAberta + 1}] Fonte do seu material</span>
+                    <strong>{ref.nome} · {ref.localizacao ?? `Página ${ref.pagina}`}</strong>
+                    {ref.leitura === 'demonstracao' && <span className="estudio-selo">Modo demonstração</span>}
+                  </div>
+                  <blockquote>{ref.trecho}</blockquote>
+                </aside>
+              );
+            })()}
             {(licao.recurso?.tipo === 'imagem' || licao.recurso?.tipo === 'acorde') && <RecursoDaLicao recurso={licao.recurso} />}
           </>
         )}
         {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
-        {exercicio && (
-          <EtapaExercicio exercicio={exercicio} indice={indice} total={exercicios.length} resposta={resposta} mudar={mudarResposta}
-            consulta={licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' ? licao.recurso : undefined}
-            explicacao={licao.conceito} exemplo={licao.exemplo}
-            errouAntes={Boolean(errosAnteriores[indice])}
-            avaliacao={avaliacao} ocupado={ocupado} responder={responder} formulario={formulario} titulo={tituloEtapa}
-            dica={avaliacao ? null : errosAnteriores[indice]} />
-        )}
+        {exercicio && (() => {
+          let stuEstado: 'neutro' | 'pensando' | 'atento' | 'comemorando_primeira' | 'comemorando_ponte' = 'neutro';
+          let stuFala = 'Leia com calma e confira sua resposta.';
+          if (avaliacao?.correta) {
+            if (ponteUsada) {
+              stuEstado = 'comemorando_ponte';
+              stuFala = 'Você construiu a ponte e venceu o desafio!';
+            } else {
+              stuEstado = 'comemorando_primeira';
+              stuFala = 'Mandou bem logo de primeira!';
+            }
+          } else if (avaliacao && !avaliacao.correta) {
+            stuEstado = 'atento';
+            stuFala = 'O erro mostra o próximo degrau. Que tal ver outro jeito?';
+          } else if (errosAnteriores[indice]) {
+            stuEstado = 'pensando';
+            stuFala = 'Sem pressa — tente de novo com a dica abaixo.';
+          }
+          return (
+            <>
+              <div className="aula-stu-estado" data-estado={stuEstado}>
+                <div className="aula-stu-estado__avatar" aria-hidden="true">
+                  <Stu />
+                  <span className="aula-stu-estado__adereco" />
+                </div>
+                <p className="aula-stu-estado__balao">{stuFala}</p>
+              </div>
+              <EtapaExercicio exercicio={exercicio} indice={indice} total={exercicios.length} resposta={resposta} mudar={mudarResposta}
+                consulta={licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' ? licao.recurso : undefined}
+                explicacao={licao.conceito} exemplo={licao.exemplo}
+                errouAntes={Boolean(errosAnteriores[indice])}
+                avaliacao={avaliacao} ocupado={ocupado} responder={responder} formulario={formulario} titulo={tituloEtapa}
+                dica={avaliacao ? null : errosAnteriores[indice]} />
+            </>
+          );
+        })()}
         {etapa.tipo === 'pratica' && licao.pratica && (
           <EtapaPratica pratica={licao.pratica} titulo={tituloEtapa} escolha={autoAvaliacao} escolher={setAutoAvaliacao} reinicio={voltasPratica}
             restanteInicial={praticaRestante.current} aoMudarRestante={(valor) => { praticaRestante.current = valor; }}
@@ -640,7 +701,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       </div>
       {exercicio && (
         <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
-          aoConcluirPonte={() => setPonteFeita(true)} aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
+          aoConcluirPonte={() => { setPonteFeita(true); setPonteUsada(true); }} aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
       )}
       <footer className="aula-rodape" data-retorno={retorno}
         data-compacto={(avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita) || (expliqueAberto && avaliacao) || undefined}>
