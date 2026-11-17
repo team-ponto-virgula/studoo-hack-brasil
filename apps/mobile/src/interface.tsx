@@ -375,6 +375,44 @@ export function usePulso() {
   return valor;
 }
 
+/** Busca de progresso no servidor: atualizando, atualizada (quando) ou sem conexão. Só cliente, sem mudança de API. */
+export type Sincronia = { estado: 'atualizando' | 'atualizado' | 'offline'; em: number | null };
+
+/** Texto do selo, como na web: "Atualizando…", "Atualizado agora / há N min" ou "Sem conexão: …". */
+export function textoSincronia(sincronia: Sincronia, agora: number) {
+  const m = mensagens.sincronia;
+  if (sincronia.estado === 'atualizando') return m.atualizando;
+  if (sincronia.estado === 'offline') return m.offline;
+  if (!sincronia.em) return m.salvo;
+  const minutos = Math.floor((agora - sincronia.em) / 60_000);
+  return minutos < 1 ? m.agora : m.minutos(minutos);
+}
+
+/**
+ * Selo discreto de sincronia (um por tela): reflete a última busca real no servidor. O ponto pulsa enquanto atualiza
+ * (parado com movimento reduzido) e o selo fica âmbar sem conexão. O "há N min" se atualiza sozinho.
+ */
+export function SeloSincronia({ sincronia }: { sincronia: Sincronia }) {
+  const [agora, setAgora] = useState(() => Date.now());
+  const pulso = usePulso();
+  useEffect(() => {
+    setAgora(Date.now());
+    const id = setInterval(() => setAgora(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, [sincronia]);
+  const texto = textoSincronia(sincronia, agora);
+  const offline = sincronia.estado === 'offline';
+  const atualizando = sincronia.estado === 'atualizando';
+  return (
+    <View testID="selo-sincronia" accessible accessibilityRole="text" accessibilityLiveRegion="polite" accessibilityLabel={texto}
+      style={[estilos.selo, offline && estilos.seloOffline]}>
+      <Animated.View style={[estilos.seloPonto, { backgroundColor: offline ? '#E58A1F' : atualizando ? cores.acao : cores.sucessoClaro },
+        atualizando && { opacity: pulso }]} />
+      <Text numberOfLines={1} style={[estilos.seloTexto, offline && { color: cores.ouroTexto }]}>{texto}</Text>
+    </View>
+  );
+}
+
 export function Skeleton({ texto = mensagens.carregando }: { texto?: string }) {
   const pulso = usePulso();
   return (
@@ -395,9 +433,11 @@ export const estilos = StyleSheet.create({
   logo: { width: 112, height: 38 },
   acoes: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   conteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 },
-  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 32, letterSpacing: -1, lineHeight: 40 },
-  subtitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 28 },
-  tituloBloco: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26 },
+  // Tipografia da rodada 1 (DIRECAO-UI.md §2), no tamanho que a web usa no celular: h1 com 28 px e -0,035em; h2/h3 com
+  // -0,015em (a compressão antiga apertava os subtítulos).
+  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 28, letterSpacing: -0.98, lineHeight: 32 },
+  subtitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, letterSpacing: -0.3, lineHeight: 26 },
+  tituloBloco: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, letterSpacing: -0.27, lineHeight: 24 },
   texto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
   textoSecundario: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
   introducao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24, marginTop: 8 },
@@ -447,6 +487,13 @@ export const estilos = StyleSheet.create({
   botaoTextoCompacto: { fontSize: 14, lineHeight: 20 },
   botaoIcone: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   botaoIconePressionado: { backgroundColor: cores.nevoa },
+  selo: {
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4,
+    borderWidth: 1, borderColor: cores.gelo, borderRadius: 999, backgroundColor: cores.nevoa, maxWidth: '100%',
+  },
+  seloOffline: { borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
+  seloPonto: { width: 8, height: 8, borderRadius: 4 },
+  seloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
 });
 
 /** Dois destinos persistentes, fora das aulas e da geração para preservar o foco. */
