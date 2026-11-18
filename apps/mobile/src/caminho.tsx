@@ -898,7 +898,10 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
           {/* Um balão só no nó atual: a ação e o nome da lição juntos, como na web. */}
           <View testID="balao-no-atual" style={caminhoEstilos.etiqueta}>
             <View style={[caminhoEstilos.etiquetaSeta, { marginLeft: -6 - puxa }]} />
-            <View style={caminhoEstilos.etiquetaAcao}><Text style={caminhoEstilos.etiquetaTexto}>{(no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar).toLocaleUpperCase('pt-BR')}</Text></View>
+            {/* O espaço de largura zero no fim separa a ação do título no texto visível do botão: sem ele, quem lê o texto
+                da tela (o axe, o controle por voz na web) junta "COMEÇAR" e o título numa palavra só, e o nome do nó deixa de
+                conter o texto visível (WCAG 2.5.3). Não ocupa largura: o balão fica igual. */}
+            <View style={caminhoEstilos.etiquetaAcao}><Text style={caminhoEstilos.etiquetaTexto}>{`${(no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar).toLocaleUpperCase('pt-BR')}​`}</Text></View>
             <Text numberOfLines={2} style={caminhoEstilos.etiquetaTitulo}>{no.titulo}</Text>
           </View>
         </Animated.View>
