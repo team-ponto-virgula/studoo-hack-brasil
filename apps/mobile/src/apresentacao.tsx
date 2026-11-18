@@ -17,7 +17,7 @@ import { usePulinho } from './animacoes';
 import { tracoGrosso } from './caminho';
 import { CadernoDoStu, CenaPonte } from './estudio-cenas';
 import { Icone } from './icone';
-import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao, degrauFora } from './interface';
+import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao, degrauFora, quebraEquilibrada } from './interface';
 import { CartaoFonte } from './licao';
 import { mensagens } from './mensagens';
 import { Desenho, coresDaRegiao } from './mundo';
@@ -154,7 +154,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
             )}
             <Text ref={(titulo) => { titulos.current[indice] = titulo; }} testID={`titulo-apresentacao-${indice}`} accessible
               accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`} textBreakStrategy="balanced"
-              style={[estilos.titulo, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
+              style={[estilos.titulo, quebraEquilibrada, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
             <Text style={[estilos.introducao, apresentacaoEstilos.texto]}>{item.texto}</Text>
           </ScrollView>
         ))}

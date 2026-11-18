@@ -1020,8 +1020,8 @@ const s = StyleSheet.create({
   // <p class="estudio-legenda"> dentro de .estudio-card: 0,85rem (13,6) com entrelinha 1,6.
   legendaCartao: { fontSize: 13.6, lineHeight: 21.76 },
   blocoVoz: { marginVertical: -2 },
-  // .ensino-caderno: 16 de respiro em cima, depois do aviso e das ações.
-  caderno: { marginTop: 21 },
+  // .estudio-feedback: 20 acima (o cartão já põe 14), a linha de 2 em gelo e 10 abaixo, mais os 16 de .ensino-caderno.
+  caderno: { marginTop: 6, borderTopWidth: 2, borderColor: cores.gelo, paddingTop: 26 },
   // .estudio-card: margem de 24 entre cartões (as margens se juntam na web; aqui, 12 + 12).
   card: {
     marginVertical: 12,

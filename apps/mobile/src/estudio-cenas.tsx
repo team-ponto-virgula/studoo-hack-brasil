@@ -342,11 +342,12 @@ const cena = StyleSheet.create({
   faixas: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 12, flexDirection: 'row', gap: 18 },
   faixa: { width: 18, height: 12, backgroundColor: 'rgba(255,255,255,0.35)' },
   linha: { position: 'relative', flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
+  // .ponte-margem: borda de 2 (o filete verde-claro embaixo), 6 em cima e o degrau de 3 por fora (box-shadow 0 3px 0 #5b9a30).
   margem: { position: 'relative', zIndex: 1, minWidth: 58, alignItems: 'center', gap: 4, paddingTop: 6, paddingHorizontal: 6, paddingBottom: 5,
-    borderRadius: 12, borderWidth: 2, borderTopWidth: 6, borderBottomWidth: 5, borderColor: '#76BF43', borderTopColor: '#58CC02',
-    borderBottomColor: '#5B9A30', backgroundColor: '#F6FBF1' },
+    borderRadius: 12, borderWidth: 2, borderTopWidth: 6, borderColor: '#76BF43', borderTopColor: '#58CC02',
+    backgroundColor: '#F6FBF1', boxShadow: '0 3px 0 #5B9A30' },
   margemEsquerda: { zIndex: 2 },
-  margemDireita: { borderColor: '#46A302', borderTopColor: '#58CC02', borderBottomColor: '#3B8A02', backgroundColor: '#ECF9E3' },
+  margemDireita: { borderColor: '#46A302', borderTopColor: '#58CC02', backgroundColor: '#ECF9E3' },
   lugarStu: { width: 32, height: 32 },
   margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14, textAlign: 'center' },
   vao: { position: 'relative', flex: 1, alignSelf: 'center', flexDirection: 'row', gap: 4, paddingVertical: 6 },
@@ -414,9 +415,11 @@ const caderno = StyleSheet.create({
   perguntaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 25.6 },
   textoCartao: { lineHeight: 25.6 },
   // Compacto (apresentação): como a web no celular, 8 × 10 de respiro, título de 12 e texto de 14.
-  cartaoCompacto: { paddingVertical: 8, paddingHorizontal: 10, gap: 2, borderRadius: 16 },
-  tituloCompacto: { fontSize: 12, lineHeight: 16 },
-  textoCompacto: { fontSize: 14, lineHeight: 19 },
+  // .apresentacao-caderno .ensino-caderno__cartao no celular: 8 × 10 de respiro e o vão de 6 do cartão; h3 de 0,75rem com
+  // entrelinha 1,3 (15,6) e texto de 0,875rem com 1,35 (18,9).
+  cartaoCompacto: { paddingVertical: 8, paddingHorizontal: 10, gap: 6, borderRadius: 16 },
+  tituloCompacto: { fontSize: 12, lineHeight: 15.6 },
+  textoCompacto: { fontSize: 14, lineHeight: 18.9 },
   perguntaStuCompacto: { width: 32, height: 36 },
   stuCompacto: { width: 30, height: 33 },
 });

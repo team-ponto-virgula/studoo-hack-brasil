@@ -189,6 +189,14 @@ export function Logo({ decorativo = false, estilo }: { decorativo?: boolean; est
   );
 }
 
+/**
+ * Linhas de tamanho parecido, como o `text-wrap: balance` da web. No Android vem do textBreakStrategy="balanced"; na prévia
+ * web, o React Native Web repassa o `textWrap` ao CSS. No iOS, quebra como sempre.
+ */
+export const quebraEquilibrada = (Platform.OS === 'web' ? { textWrap: 'balance' } : {}) as TextStyle;
+/** `text-wrap: pretty` da web (sem palavra sozinha na última linha), só na prévia web. */
+export const quebraSemViuva = (Platform.OS === 'web' ? { textWrap: 'pretty' } : {}) as TextStyle;
+
 export function Titulo({ children, testID, foco = false, estilo, linhas, equilibrado = false }: {
   /** Corta o título em tantas linhas (a barra do plano usa uma). */
   linhas?: number;
@@ -207,7 +215,7 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
   }, [foco]);
 
   return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" numberOfLines={linhas} textBreakStrategy={equilibrado ? 'balanced' : undefined}
-    style={[estilos.titulo, estilo]}>{children}</Text>;
+    style={[estilos.titulo, equilibrado && quebraEquilibrada, estilo]}>{children}</Text>;
 }
 
 /**
@@ -384,12 +392,24 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
   const [focado, setFocado] = useState(false);
   const rotuloId = props.testID ? `rotulo-${props.testID}` : undefined;
   const dica = [erro, props.accessibilityHint].filter(Boolean).join(' ') || undefined;
+  // O campo guarda a própria referência e repassa a de fora (quem usa o Campo também foca o campo).
+  const interno = useRef<ComponentRef<typeof TextInput> | null>(null);
+  const referencia = (no: ComponentRef<typeof TextInput> | null) => {
+    interno.current = no;
+    if (typeof campoRef === 'function') campoRef(no);
+    else if (campoRef) (campoRef as { current: ComponentRef<typeof TextInput> | null }).current = no;
+  };
 
   return (
     <View style={estilos.campo}>
-      {!rotuloOculto && <Text nativeID={rotuloId} style={[estilos.rotulo, estiloRotulo]}>{rotulo}</Text>}
+      {/* Como o <label> da web: tocar no rótulo leva o foco ao campo. Não é mais uma parada do leitor de tela: o campo já tem
+          o rótulo como nome. */}
+      {!rotuloOculto && (
+        <Text nativeID={rotuloId} style={[estilos.rotulo, estiloRotulo]} accessible={false} suppressHighlighting
+          onPress={() => interno.current?.focus()}>{rotulo}</Text>
+      )}
       <View>
-        <TextInput {...props} ref={campoRef} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
+        <TextInput {...props} ref={referencia} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
           placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'}
           style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, !!erro && estilos.entradaErro,
             focado && estilos.entradaFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
@@ -425,7 +445,7 @@ export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = fals
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={rotulo}
       accessibilityState={{ disabled: desativado, ...(selecionado === undefined ? null : { selected: selecionado }) }}
-      disabled={desativado} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      disabled={desativado} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)} hitSlop={2}
       style={({ pressed }) => [estilos.botaoIcone, pressed && estilos.botaoIconePressionado, focado && estilos.foco]}>
       <Icone nome={icone} tamanho={tamanho} cor={cor} traco={traco} />
     </Pressable>
@@ -717,7 +737,8 @@ export const estilos = StyleSheet.create({
   botaoDestrutivo: { borderColor: '#F3C4C0', borderBottomColor: '#F3C4C0', backgroundColor: cores.fundo },
   // .trilha-topo no celular: 20 abaixo da barra da marca (28 do respiro da página menos 8), colada no topo ao rolar.
   faixaVao: { height: 20 },
-  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', borderBottomWidth: 2, borderColor: cores.gelo },
+  // .trilha-topo no celular: a linha de baixo é sombra por fora (box-shadow 0 2px 0 gelo), não borda.
+  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', boxShadow: `0 2px 0 ${cores.gelo}` },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
   modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
   modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
@@ -743,7 +764,9 @@ export const estilos = StyleSheet.create({
   botaoDesativado: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.nevoa },
   botaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textAlign: 'center', flexShrink: 1 },
   botaoTextoCompacto: { fontSize: 14, lineHeight: 20 },
-  botaoIcone: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
+  // .aula-fechar e .campo-senha__alternar da web: 44 × 44. O toque chega a 48 dp por fora (hitSlop de 2), sem mudar o
+  // desenho (P8 da spec 07).
+  botaoIcone: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   botaoIconePressionado: { backgroundColor: cores.nevoa },
   selo: {
     // .selo-sincronia no celular (até 767 px): 3 × 8 de respiro e o texto de 12 na entrelinha normal (15): 23 × 159.

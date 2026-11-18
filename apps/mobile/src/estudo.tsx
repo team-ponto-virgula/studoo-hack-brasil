@@ -11,7 +11,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, degrauFora, degrade } from './interface';
+import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, degrauFora, degrade, quebraEquilibrada } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -644,7 +644,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   }
 
   return (
-    <Tela pagina="objetivo" acoes={acoes}>
+    <Tela pagina="objetivo" acoes={acoes} estiloConteudo={estudoEstilos.fimQuarenta}>
       <View style={estudoEstilos.pedidoHeroi}>
         <View style={estudoEstilos.pedidoStu} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
           <View style={estudoEstilos.pedidoHalo}><View style={estudoEstilos.pedidoHaloMiolo} /></View>
@@ -1009,7 +1009,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
           ? !origemDemonstracao(proposta.origem) && <Text style={estudoEstilos.geracaoOrigem}>{mensagens.geracao.origem(origemLegivel(proposta.origem))}</Text>
           : <View importantForAccessibility="no" accessibilityElementsHidden style={estudoEstilos.esqueletoOrigem} />}
       </View>
-      <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas}
+      <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas} extraChegada={44}
         chegada={proposta !== null} montando={proposta === null} acompanhar={acompanhar} />
     </Tela>
   );
@@ -1048,7 +1048,7 @@ function TextoQueChega({ texto, surgir }: { texto: string; surgir: boolean }) {
   }, [entrada]);
 
   return (
-    <Animated.Text textBreakStrategy="balanced" style={[estilos.titulo, estudoEstilos.tituloFaixa, entrada && {
+    <Animated.Text textBreakStrategy="balanced" style={[estilos.titulo, quebraEquilibrada, estudoEstilos.tituloFaixa, entrada && {
       opacity: entrada,
       transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
     }]}>
@@ -1361,7 +1361,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
         <View style={estudoEstilos.barraPlano}>
           <View style={estudoEstilos.barraPlanoTexto}>
             <Text style={[estudoEstilos.barraPlanoRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
-            <Titulo testID="titulo-plano" foco linhas={2} estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
+            <Titulo testID="titulo-plano" foco linhas={2} equilibrado estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
           </View>
           <AnelProgresso progresso={plano.progresso} tamanho={44} />
         </View>
@@ -1384,7 +1384,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
         <View style={estudoEstilos.topoTrilha}>
           <View style={estudoEstilos.topoTrilhaTexto}>
             <Text style={[estudoEstilos.topoTrilhaRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
-            <Titulo testID="titulo-plano" foco estilo={estudoEstilos.tituloTopo}>{plano.titulo}</Titulo>
+            <Titulo testID="titulo-plano" foco equilibrado estilo={estudoEstilos.tituloTopo}>{plano.titulo}</Titulo>
           </View>
           <AnelProgresso progresso={plano.progresso} />
         </View>
@@ -1402,7 +1402,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       )}
       {nos.length > 0 ? (
         <Caminho nos={nos} stu={falaDoStu(nos)} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} recemConcluida={etapa.concluida ?? null}
-          rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)} estilo={largo ? undefined : estudoEstilos.caminhoNaTrilha}
+          rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)} estilo={largo ? undefined : estudoEstilos.caminhoNaTrilha} extraChegada={120}
           aoMedirAtual={(topo, base) => {
             atualNaRolagem.current = { topo, base };
             avaliarAtual();
@@ -1560,7 +1560,10 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
   const balanco = useBalanco(3, 1600);
 
   return (
-    <Animated.View testID="plano-destaque" style={[estudoEstilos.destaque, estiloDeEntrada(entrada)]}>
+    // .plano-destaque: borda de 2 que fecha em volta e o degrau de 4 por fora (box-shadow 0 4px 0 #c3cdf2). A face recorta a
+    // cena (overflow hidden), então o degrau é a camada de fora.
+    <Animated.View testID="plano-destaque" style={[degrauFora(4, 24, cores.destaqueBorda), estudoEstilos.destaqueFora, estiloDeEntrada(entrada)]}>
+    <View style={estudoEstilos.destaque}>
       <View style={[estudoEstilos.destaqueCena, { backgroundColor: chao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <View style={[estudoEstilos.cartaoColina, estudoEstilos.cartaoColinaDestaque, { backgroundColor: relevo }]} />
         <Desenho nome={enfeites[0]} largura={40} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%' }]} />
@@ -1578,6 +1581,7 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
         <BarraProgresso progresso={plano.progresso} comPercentual />
         <Botao rotulo={acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir} />
       </View>
+    </View>
     </Animated.View>
   );
 }
@@ -1605,7 +1609,9 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false
   const entrada = useAparecer(120 + indice * 80, 420);
 
   return (
-    <Animated.View style={[estudoEstilos.cartao, estiloDeEntrada(entrada)]}>
+    // .plano-cartao: borda de 2 em volta e o degrau de 4 por fora (box-shadow 0 4px 0 gelo); a face recorta a cena.
+    <Animated.View style={[degrauFora(4, 24, cores.gelo), estudoEstilos.cartaoFora, estiloDeEntrada(entrada)]}>
+    <View style={estudoEstilos.cartao}>
       <View style={[estudoEstilos.cartaoCena, { backgroundColor: chao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <View style={[estudoEstilos.cartaoColina, { backgroundColor: relevo }]} />
         <Desenho nome={enfeites[0]} largura={46} estilo={[estudoEstilos.cartaoEnfeite, { left: '8%' }]} />
@@ -1628,6 +1634,7 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false
         </View>
       </View>
       <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID={`apagar-plano-${indice}`} />
+    </View>
     </Animated.View>
   );
 }
@@ -1889,7 +1896,8 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem, base }: {
 }
 
 const estudoEstilos = StyleSheet.create({
-  // Fim da rolagem como a web desde bf8cf37: 40 entre o último conteúdo e o rodapé ou a barra fixos (conclusão, minhas trilhas).
+  // Fim da rolagem como a web desde bf8cf37: 40 entre o último conteúdo e o rodapé ou a barra fixos (conclusão, minhas
+  // trilhas, nova trilha).
   fimQuarenta: { paddingBottom: 40 },
   // Na geração e na proposta, o verde do mapa vai até a barra dos botões, sem a tira branca de 24.
   fimSemRespiro: { paddingBottom: 0 },
@@ -1905,8 +1913,9 @@ const estudoEstilos = StyleSheet.create({
   historiaSincronia: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21, textAlign: 'center' },
   // .plano-destaque no celular: 16 de respiro, a cena de 96 com cantos de 18 dentro do cartão, 14 entre a cena e o corpo e o
   // fundo em degradê (135°, #f6f8ff até o branco aos 62%).
+  destaqueFora: { marginTop: 24 },
   destaque: {
-    marginTop: 24, padding: 16, gap: 14, borderWidth: 2, borderBottomWidth: 5, borderRadius: 24, borderColor: cores.destaqueBorda,
+    padding: 16, gap: 14, borderWidth: 2, borderRadius: 24, borderColor: cores.destaqueBorda,
     backgroundColor: cores.fundo, overflow: 'hidden',
     ...(Platform.OS === 'web'
       ? ({ backgroundImage: 'linear-gradient(135deg, #f6f8ff 0%, #ffffff 62%)' } as object)
@@ -1986,8 +1995,8 @@ const estudoEstilos = StyleSheet.create({
   descobertaModoAtivo:{borderColor:cores.acao,backgroundColor:'#f0f3ff'},
   descobertaCaderno:{padding:16,backgroundColor:'#fffcf6',borderWidth:1,borderColor:'#e8dfcf',borderRadius:20},
   descobertaPassos:{flexDirection:'row',justifyContent:'space-between',marginTop:24,paddingTop:20,borderTopWidth:1,borderColor:cores.gelo},
-  // Borda de 2 e degrau de 4 na mesma cor (gelo): a faixa de baixo soma 6, como na web.
-  bloco: { gap: 12, marginTop: 16, padding: 16, borderRadius: 24, borderWidth: 2, borderBottomWidth: 6, borderColor: cores.gelo },
+  // Borda de 2 que fecha em volta e o degrau de 4 por fora, na mesma cor (gelo), como na web (box-shadow 0 4px 0).
+  bloco: { gap: 12, marginTop: 16, padding: 16, borderRadius: 24, borderWidth: 2, borderColor: cores.gelo, boxShadow: `0 4px 0 ${cores.gelo}` },
   // "Progresso na trilha": 34 do título até "1 de 3 lições" na web.
   blocoConclusao: { marginTop: 24, padding: 20, gap: 2 },
   progresso: { gap: 8, marginTop: 12 },
@@ -2070,15 +2079,17 @@ const estudoEstilos = StyleSheet.create({
   conclusaoLicao: { marginTop: 2, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   numeros: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 24 },
   numero: { overflow: 'hidden', borderRadius: 16, borderWidth: 2 },
-  numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 4, paddingVertical: 6 },
+  // O rótulo ocupa a largura toda do bloco (97 em 360) e o conteúdo fica centrado, como na web: "DE PRIMEIRA" com o ícone
+  // mede 95 e cabe inteiro em 360 (com respiro de 4 dos lados, era cortado com reticências).
+  numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 0, paddingVertical: 6 },
   numeroRotuloTexto: { flexShrink: 1, color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, letterSpacing: 0.22 },
   numeroValor: { alignItems: 'center', marginHorizontal: 2, marginBottom: 2, paddingHorizontal: 4, paddingVertical: 10, borderRadius: 13,
     backgroundColor: cores.fundo },
   // .conclusao-numeros__valor: 16 px na entrelinha de 1,2 (a caixa tem 39 de altura).
   numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16, lineHeight: 19.2, textAlign: 'center' },
   // Meus planos
-  cartao: { marginTop: 16, overflow: 'hidden', borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo,
-    backgroundColor: cores.fundo },
+  cartaoFora: { marginTop: 16 },
+  cartao: { overflow: 'hidden', borderRadius: 24, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   cartaoCena: { height: 92, overflow: 'hidden' },
   // .plano-cartao__colina: meia elipse de 120% da largura com raio vertical de 72 (topo 36 acima do pé da cena). Sem raio
   // elíptico no React Native: um círculo de 440 achatado na vertical, com o centro 36 abaixo do pé.
@@ -2101,7 +2112,8 @@ const estudoEstilos = StyleSheet.create({
   balaoFalaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   luzCampo: { position: 'absolute', left: -3, right: -3, top: -3, bottom: -3, borderRadius: 27, borderWidth: 3, borderColor: '#F0B429' },
   // Como .pedido-como da web: 44 px, centralizado, 800.
-  como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', minHeight: 44, marginTop: 26, paddingHorizontal: 10, borderRadius: 12 },
+  // .pedido-como (bf8cf37): 34 da última ficha até a caixa de 44 do botão e, no fim da rolagem, 40 até a barra de baixo.
+  como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', minHeight: 44, marginTop: 34, paddingHorizontal: 10, borderRadius: 12 },
   comoPressionado: { backgroundColor: cores.nevoa },
   comoSinal: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5EBFF' },
   comoSinalTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16 },

@@ -10,7 +10,6 @@ import {
   View,
   useWindowDimensions,
   type DimensionValue,
-  type TextStyle,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -18,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAparecer, useVaiVem } from './animacoes';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { Botao, DeslocamentoDaRolagem, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade } from './interface';
+import { Botao, DeslocamentoDaRolagem, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
 import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { ColinaElipse, Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
@@ -68,8 +67,6 @@ function useMedidas(): Medidas {
   return { lente: 72, linhas: 36, etiqueta: 38, marco: 60, enfeite: 46, miudo: 24, guia: 56 };
 }
 
-/** `text-wrap: pretty` da web (o React Native Web repassa a propriedade ao CSS; no aparelho ela é ignorada). */
-const QUEBRA_SEM_VIUVA = { textWrap: 'pretty' } as unknown as TextStyle;
 
 /** O brilho da lente da web: radial-gradient(circle at 50% 28%, branco a 55% até 18%, transparente em 46%). */
 const BRILHO_DA_LENTE = 'radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.55) 18%, rgba(255, 255, 255, 0) 46%)';
@@ -125,9 +122,16 @@ function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
  * comemora, a linha até o próximo se desenha e só então o próximo nó se abre. Árvores e flores balançam com o vento.
  */
 export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
-  rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir, estilo }: {
+  rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir, estilo, extraChegada = 0 }: {
   /** Margens de fora do mapa (a tela da trilha tem o vão de 20 da web até a faixa do nome). */
   estilo?: StyleProp<ViewStyle>;
+  /**
+   * Quanto o morro do troféu cresce embaixo no celular (`--extra` de `.painel--trilha .caminho-chegada` na web, 120). Na
+   * trilha, o mapa passa por baixo do cartão flutuante, como na web: 120. Na geração e na proposta, a web também usa 120,
+   * mas os 76 de baixo ficam atrás da barra fixa dos botões; no app a barra fica fora da rolagem, então o mapa cresce só o
+   * que aparece (120 − 76 = 44).
+   */
+  extraChegada?: number;
   nos: readonly NoCaminho[];
   stu?: string;
   dicas?: readonly string[];
@@ -339,8 +343,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (discreto) depois += 14;
           // .caminho-no[data-discreto][data-ligado] (regra de baixo do caminho.css): passo + 30 entre dois nós discretos no mesmo
           // trecho (os casos antes da lição atual e no fim do trecho têm regras próprias, abaixo).
-          // O último nó também é "ligado" na web (vai até a chegada): a mesma regra vale para ele.
-          if (discreto && !fimDoTrecho && (seguinte ? seguinte.estado !== 'atual' : vaiAteChegada)) depois += 16;
+          if (discreto && !fimDoTrecho && seguinte && seguinte.estado !== 'atual') depois += 16;
           // M4 (paridade): como .caminho-no[data-estado='atual'][data-ligado] da web (passo + 28), o nó atual ligado ao próximo
           // ganha 28 embaixo; com a ponte ele já é discreto (+14), então completa até 28. Só acrescenta espaço.
           if (no.estado === 'atual' && !fimDoTrecho) depois += discreto ? 14 : 28;
@@ -403,7 +406,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         )}
       </View>
       {comChegada && (
-        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : 130}
+        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : extraChegada}
           faltam={nos.filter((no) => no.estado !== 'concluida').length} stu={stuNaChegada} festa={festaNaChegada || (comRecem && tudoFeito)}
           aoMedir={(caixa) => {
           posicoes.current.chegada = caixa;
@@ -757,7 +760,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
       <View style={[caminhoEstilos.discretoCaixa, { maxWidth: larguraRotulo }, atual && caminhoEstilos.discretoCaixaAtual]}>
         {/* Até três linhas no celular (line-clamp 3) e sem palavra sozinha na última linha (text-wrap: pretty da web; no
             Android, a quebra equilibrada). */}
-        <Text numberOfLines={3} textBreakStrategy="balanced" style={[caminhoEstilos.discretoTexto, QUEBRA_SEM_VIUVA,
+        <Text numberOfLines={3} textBreakStrategy="balanced" style={[caminhoEstilos.discretoTexto, quebraSemViuva,
           no.estado === 'concluida' && { color: cores.alerta }, atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
         {/* Como na web (no balão do toque): na prévia, o que a lição ensina. */}
         {no.estado === 'previa' && no.resumo && <Text numberOfLines={2} style={caminhoEstilos.discretoResumo}>{no.resumo}</Text>}
@@ -1300,13 +1303,15 @@ const caminhoEstilos = StyleSheet.create({
   inicioParte: { position: 'absolute', left: 16, right: 16, bottom: 22, alignItems: 'center', zIndex: 2 },
   inicioColinas: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 76 },
   inicioConteudo: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, flexShrink: 1 },
+  // .caminho-inicio__fala: o degrau de 3 é sombra por fora (box-shadow 0 3px 0 rgb(27 42 94 / 0.08)), não borda.
   fala: { flexShrink: 1, maxWidth: 272, marginBottom: 30, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18,
-    backgroundColor: cores.fundo, borderBottomWidth: 3, borderBottomColor: 'rgba(27, 42, 94, 0.08)' },
+    backgroundColor: cores.fundo, boxShadow: '0 3px 0 rgba(27, 42, 94, 0.08)' },
   falaTexto: { flexShrink: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
   falaPontinhos: { height: 14, justifyContent: 'center', paddingLeft: 6 },
   dica: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18 },
+  // .caminho-placa: borda de 3 em volta (#c79a62) e o degrau de 4 por fora (box-shadow 0 4px 0 #b0844d).
   placaMadeira: { maxWidth: 272, marginTop: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 3,
-    borderBottomWidth: 7, borderColor: '#C79A62', borderBottomColor: '#B0844D', backgroundColor: '#F7E3C2' },
+    borderColor: '#C79A62', backgroundColor: '#F7E3C2', boxShadow: '0 4px 0 #B0844D' },
   poste: { position: 'absolute', bottom: -30, width: 8, height: 22, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, backgroundColor: '#A87650' },
   placaTexto: { color: '#5B3A17', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
   // .caminho-guia::after: elipse (border-radius 50%), não barra arredondada.
@@ -1317,8 +1322,9 @@ const caminhoEstilos = StyleSheet.create({
   noLugar: { position: 'absolute', top: 0 },
   rotulo: { position: 'absolute', top: 0, justifyContent: 'center', zIndex: 2 },
   placa: { maxWidth: '100%', gap: 2, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.94)', borderBottomWidth: 3, borderBottomColor: 'rgba(27, 42, 94, 0.08)' },
-  placaAtual: { borderWidth: 2, borderBottomWidth: 4, borderColor: 'rgba(68, 102, 228, 0.28)', borderBottomColor: 'rgba(68, 102, 228, 0.28)' },
+    backgroundColor: 'rgba(255, 255, 255, 0.94)', boxShadow: '0 3px 0 rgba(27, 42, 94, 0.08)' },
+  // .caminho-no[data-estado='atual'] .caminho-no__texto: borda de 2 e degrau de 4 por fora em azul claro.
+  placaAtual: { borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)', boxShadow: '0 4px 0 rgba(68, 102, 228, 0.16)' },
   posicao: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
   titulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 21 },
   tituloAtual: { fontSize: 17, lineHeight: 22 },
@@ -1326,8 +1332,10 @@ const caminhoEstilos = StyleSheet.create({
   // .caminho-no[data-discreto] .caminho-no__texto: até 14rem (224) de largura, centrado no nó.
   discreto: { position: 'absolute', width: 224, alignItems: 'center', zIndex: 2 },
   discretoAtual: { color: cores.acao, fontWeight: '800', fontSize: 14 },
+  // .caminho-no[data-discreto] .caminho-no__texto: degrau chapado de 2 por fora (box-shadow 0 2px 0 rgb(27 42 94 / 0.06));
+  // a elevation do Android desenhava uma sombra borrada.
   discretoCaixa: { maxWidth: 224, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: cores.fundo,
-    shadowColor: '#1B2A5E', shadowOpacity: 0.06, shadowRadius: 0, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
+    boxShadow: '0 2px 0 rgba(27, 42, 94, 0.06)' },
   discretoCaixaAtual: { borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)' },
   seloCadeado: { position: 'absolute', right: -4, bottom: -4, width: 28, height: 28, borderRadius: 14, borderWidth: 3, borderColor: cores.fundo,
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
@@ -1343,7 +1351,8 @@ const caminhoEstilos = StyleSheet.create({
   bolhaTrofeu: { position: 'absolute', bottom: '100%', left: -80, right: -80, marginBottom: 12, alignItems: 'center', zIndex: 3 },
   bolhaTrofeuTexto: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE08A',
     overflow: 'hidden', backgroundColor: '#FFF8E1', color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
-  chegadaMeta: { marginTop: -6, paddingHorizontal: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  // .caminho-chegada__meta: 0,8125rem em 700 com a entrelinha do corpo (1,5): 19,5.
+  chegadaMeta: { marginTop: -6, paddingHorizontal: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 19.5, textAlign: 'center' },
   estradaInicial: { position: 'absolute', top: -22, width: 24, borderTopLeftRadius: 12, borderTopRightRadius: 12, backgroundColor: corEstrada },
   brilho: { position: 'absolute', top: -6, right: -2, color: '#FFB703', fontSize: 18, lineHeight: 20 },
   tituloFocado: { textDecorationLine: 'underline' },
@@ -1356,11 +1365,13 @@ const caminhoEstilos = StyleSheet.create({
     backgroundColor: cores.faceNeutra },
   anelFoco: { position: 'absolute', borderWidth: 3, borderColor: cores.acao },
   etiquetaCaixa: { position: 'absolute', left: -60, right: -60, alignItems: 'center' },
-  etiqueta: { maxWidth: 210, alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingTop: 9, paddingBottom: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4,
-    borderColor: cores.gelo, backgroundColor: cores.fundo },
+  // .caminho-no__etiqueta: borda de 2 em volta e o degrau de 4 por fora (box-shadow 0 4px 0 gelo).
+  etiqueta: { maxWidth: 210, alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingTop: 9, paddingBottom: 8, borderRadius: 14, borderWidth: 2,
+    borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: `0 4px 0 ${cores.gelo}` },
   etiquetaSeta: { position: 'absolute', bottom: -8, left: '50%', marginLeft: -6, width: 12, height: 12, borderRadius: 2,
     borderRightWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
-  etiquetaAcao: { paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999, borderBottomWidth: 2, borderColor: cores.acaoEscura, backgroundColor: cores.acao },
+  // .caminho-no__etiqueta-acao: sem borda, com o degrau de 2 por fora (box-shadow 0 2px 0 #2a44a8).
+  etiquetaAcao: { paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999, backgroundColor: cores.acao, boxShadow: `0 2px 0 ${cores.acaoEscura}` },
   etiquetaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.9 },
   etiquetaTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 19, textAlign: 'center' },
   // Ligação, marco e chegada
@@ -1369,9 +1380,9 @@ const caminhoEstilos = StyleSheet.create({
   // No alto do vão, mas embaixo do nome da lição (até duas linhas), que agora aparece embaixo de cada nó.
   marcoNoAlto: { justifyContent: 'flex-start', paddingTop: 62 },
   // Divisor de parte: uma pílula pequena sobre a borda entre as regiões, como na web (antes era um card largo).
+  // .caminho-parte: borda de 2 em volta e o degrau de 3 por fora (box-shadow 0 3px 0 rgb(27 42 94 / 0.1)).
   parte: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingLeft: 4, paddingRight: 14,
-    borderRadius: 999, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.fundo, borderBottomColor: 'rgba(27, 42, 94, 0.1)',
-    backgroundColor: cores.fundo },
+    borderRadius: 999, borderWidth: 2, borderColor: cores.fundo, backgroundColor: cores.fundo, boxShadow: '0 3px 0 rgba(27, 42, 94, 0.1)' },
   parteSelo: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.acao },
   parteSeloVencida: { backgroundColor: ouroFace },
   parteCorpo: {},
