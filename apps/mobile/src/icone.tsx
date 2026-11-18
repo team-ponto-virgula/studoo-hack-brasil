@@ -44,9 +44,10 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 10.75, top: 14, width: 2.5, height: 4.75, traco: true },
     { left: 7.25, top: 18.75, width: 9.5, height: 2.5, borderRadius: 1.25, traco: true },
   ],
+  // "M7 7l10 10M17 7L7 17" da web: cada diagonal com 14,14 + 2,5 das pontas redondas, centrada em (12, 12).
   fechar: [
-    { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
-    { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
+    { left: 3.68, top: 10.75, width: 16.64, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
+    { left: 3.68, top: 10.75, width: 16.64, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
   // Olho como o da web: a amêndoa de 2,5 a 21,5 (dois arcos de círculo de raio 10,2 que se encontram nas pontas, cada um
   // recortado na sua metade) e a pupila em contorno (círculo de raio 3), não cheia.
@@ -61,10 +62,12 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 7.75, top: 7.75, width: 8.5, height: 8.5, borderWidth: 2.5, borderRadius: 4.25 },
     { left: 1.5, top: 10.75, width: 21, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
   ],
+  // "M5 12h14M13 6l6 6-6 6" da web com as pontas redondas do traço: a haste de 3,75 a 20,25 e cada lado da ponta com
+  // 8,49 + 2,5 de comprimento, centrado em (16, 9) e (16, 15).
   seta: [
-    { left: 4.25, top: 10.75, width: 15.5, height: 2.5, borderRadius: 1.25, traco: true },
-    { left: 11.5, top: 7.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
-    { left: 11.5, top: 13.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
+    { left: 3.75, top: 10.75, width: 16.5, height: 2.5, borderRadius: 1.25, traco: true },
+    { left: 10.51, top: 7.75, width: 10.99, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
+    { left: 10.51, top: 13.75, width: 10.99, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
   // Lâmpada como o caminho da web: o bulbo (círculo de raio 5,5) aberto embaixo, o gargalo que afunila até a base cheia
   // (a linha do gargalo e a de y 18 juntas) e a tampinha em y 21.
