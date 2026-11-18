@@ -20,6 +20,7 @@ export async function transcrever(usuarioId: string, entrada: unknown) {
   const ogg =
     tipo === 'audio/ogg' && bytes.subarray(0, 4).toString() === 'OggS';
   if (!webm && !mp4 && !wav && !ogg) throw new FalhaApi('invalido');
+  // DeepSeek ASR (/v1/tools/asr) aceita apenas WAV PCM 16-bit ou Ogg Opus (não WebM/M4A da web/app); sem mistura entre provedores.
   const config = configuracaoOpenAi();
   if (process.env.IA !== 'openai' || !config)
     throw new FalhaApi('voz_indisponivel');

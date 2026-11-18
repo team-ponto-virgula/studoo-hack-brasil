@@ -2,6 +2,7 @@ import type { EventoGeracao } from "@studoo/contratos";
 import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { criarGeradorFalso } from "./falsa";
+import { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek } from "./deepseek";
 import { GERADOR_OPENAI, configuracaoOpenAi, criarGeradorOpenAi } from "./openai";
 
 export { REGRAS_ORDEM_DA_TRILHA, instrucoesDeOrdem } from "./ordem";
@@ -33,11 +34,20 @@ export interface GeradorTrilha {
   gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal): Promise<ConteudoLicao>;
 }
 
+export type ProvedorIa = "falsa" | "openai" | "deepseek";
+
+/** Provedor ativo conforme a flag `IA`. */
+export function provedorIaAtivo(): ProvedorIa {
+  if (process.env.IA === "openai") return "openai";
+  if (process.env.IA === "deepseek") return "deepseek";
+  return "falsa";
+}
+
 /**
- * Escolhe o gerador pela variável IA: `falsa` (padrão local, testes e CI) ou `openai` (Responses API da OpenAI, com
- * OPENAI_API_KEY; veja src/servidor/ia/openai.ts). Com `openai`, a IA falsa fica de reserva (STUDOO_IA_RESERVA, padrão
- * `falsa`; `nenhuma` desliga): sem chave, ou se a OpenAI falhar antes do primeiro evento, a trilha simulada entra no lugar
- * e a origem da proposta mostra isso.
+ * Escolhe o gerador pela variável IA: `falsa` (padrão local, testes e CI), `openai` (Responses API da OpenAI, com
+ * OPENAI_API_KEY) ou `deepseek` (Chat Completions da DeepSeek, com DEEPSEEK_API_KEY). Com provedor real, a IA falsa
+ * fica de reserva (STUDOO_IA_RESERVA, padrão `falsa`; `nenhuma` desliga): sem chave, ou se o provedor falhar antes do
+ * primeiro evento, a trilha simulada entra no lugar e a origem da proposta mostra isso.
  */
 export function obterGerador(): GeradorTrilha {
   if (process.env.IA === "falsa") {
@@ -51,7 +61,17 @@ export function obterGerador(): GeradorTrilha {
       console.error(JSON.stringify({ rota: "ia-openai", codigo: "reserva", motivo: "sem_configuracao" }));
       return reserva;
     }
-    return comReserva(criarGeradorOpenAi(config), reserva);
+    return comReserva(criarGeradorOpenAi(config), reserva, GERADOR_OPENAI, "ia-openai");
+  }
+  if (process.env.IA === "deepseek") {
+    const reserva = (process.env.STUDOO_IA_RESERVA ?? "falsa").trim() === "nenhuma" ? null : criarGeradorFalso();
+    const config = configuracaoDeepSeek();
+    if (!config) {
+      if (!reserva) throw new FalhaApi("ia_indisponivel");
+      console.error(JSON.stringify({ rota: "ia-deepseek", codigo: "reserva", motivo: "sem_configuracao" }));
+      return reserva;
+    }
+    return comReserva(criarGeradorDeepSeek(config), reserva, GERADOR_DEEPSEEK, "ia-deepseek");
   }
   throw new FalhaApi("ia_indisponivel");
 }
@@ -59,9 +79,14 @@ export function obterGerador(): GeradorTrilha {
 /**
  * Gerador principal com a IA falsa de reserva. A troca só acontece antes do primeiro evento: depois disso, a pessoa já
  * viu a trilha começar, e o erro segue para a tela. O conteúdo das lições segue quem gerou a estrutura (o `gerador` do
- * esqueleto), então uma proposta da IA falsa continua aceita mesmo com `IA=openai`.
+ * esqueleto), então uma proposta da IA falsa continua aceita mesmo com `IA=openai` ou `IA=deepseek`.
  */
-function comReserva(principal: GeradorTrilha, reserva: GeradorTrilha | null): GeradorTrilha {
+function comReserva(
+  principal: GeradorTrilha,
+  reserva: GeradorTrilha | null,
+  geradorPrincipal: string,
+  rota: string,
+): GeradorTrilha {
   const falsa = reserva ?? criarGeradorFalso();
   return {
     async *gerarEstrutura(objetivo, sinal, opcoes) {
@@ -76,14 +101,14 @@ function comReserva(principal: GeradorTrilha, reserva: GeradorTrilha | null): Ge
         }
       } catch (erro) {
         if (emitiu || !reserva || sinal.aborted) throw erro;
-        console.error(JSON.stringify({ rota: "ia-openai", codigo: "reserva", motivo: "falha_do_provedor" }));
+        console.error(JSON.stringify({ rota, codigo: "reserva", motivo: "falha_do_provedor" }));
         return yield* reserva.gerarEstrutura(objetivo, sinal, opcoes);
       } finally {
         await estrutura.return(undefined);
       }
     },
     gerarConteudo(esqueleto, fluxo, licao, sinal) {
-      if (esqueleto.gerador === GERADOR_OPENAI) return principal.gerarConteudo(esqueleto, fluxo, licao, sinal);
+      if (esqueleto.gerador === geradorPrincipal) return principal.gerarConteudo(esqueleto, fluxo, licao, sinal);
       return falsa.gerarConteudo(esqueleto, fluxo, licao, sinal);
     },
   };

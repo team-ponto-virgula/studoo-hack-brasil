@@ -14,7 +14,7 @@ CSV usa Papa Parse para reconhecer vírgula, ponto e vírgula, tabulação ou ba
 
 Cada lição gerada leva localização (página, parágrafos ou linhas) e trecho literal. O servidor rejeita citações ausentes do texto lido. Isso verifica a existência do trecho; não comprova que a interpretação da IA está correta. Referências de OCR são identificadas. Arquivos e falas são dados, nunca instruções do sistema; o modelo não recebe ferramentas de navegação ou execução.
 
-O upload bruto não é gravado pelo Studoo. O texto extraído fica acessível por 24 horas; uma proposta guarda cópia imutável por 30 minutos. As citações ficam nas lições aceitas. Execute `npm run estudio:limpar` a cada hora no ambiente do servidor para remover registros expirados. A expiração bloqueia o acesso mesmo antes da limpeza. O comando não remove planos ou citações salvas. O provedor externo segue sua própria política de tratamento de dados; `store:false` é usado nas chamadas Responses, sem prometer retenção zero pelo provedor.
+O upload bruto não é gravado pelo Studoo. O texto extraído fica acessível por 24 horas; uma proposta guarda cópia imutável por 30 minutos. As citações ficam nas lições aceitas. Execute `npm run estudio:limpar` a cada hora no ambiente do servidor para remover registros expirados. A expiração bloqueia o acesso mesmo antes da limpeza. O comando não remove planos ou citações salvas. O provedor externo segue sua própria política de tratamento de dados; na OpenAI, `store:false` é usado nas chamadas Responses, sem prometer retenção zero pelo provedor (na DeepSeek `/chat/completions`, não há `store:false`).
 
 Em `IA=falsa`, o botão **Experimentar com frações** usa três páginas autorais e três lições preparadas. PDF textual, DOCX e CSV também funcionam, com atividades de reconhecimento explicitamente simuladas. Fotos e voz exigem IA real; nunca há uma transcrição inventada.
 
@@ -32,10 +32,11 @@ O feedback traz pontos corretos, uma lacuna, pergunta de transferência e próxi
 
 ## Configuração e limites
 
-- `IA=openai`, `OPENAI_API_KEY`: somente no servidor.
-- `OPENAI_MODELO_ESTUDIO=gpt-4.1`: material, reforço e explicação, via Responses com JSON Schema estrito.
-- `OPENAI_MODELO_TRANSCRICAO=gpt-transcribe`: transcrição multipart.
-- `OPENAI_BASE_URL`: mantém a regra HTTPS, ou localhost para testes.
+- `IA=openai`, `OPENAI_API_KEY` (ou `IA=deepseek`, `DEEPSEEK_API_KEY`): somente no servidor, sem mistura entre provedores.
+- `OPENAI_MODELO_ESTUDIO=gpt-4.1`: material, reforço e explicação na OpenAI, via Responses com JSON Schema estrito.
+- `OPENAI_MODELO_TRANSCRICAO=gpt-transcribe`: transcrição multipart na OpenAI (com `IA=deepseek`, retorna `voz_indisponivel` porque `POST /v1/tools/asr` aceita apenas WAV PCM 16 bits ou Ogg Opus até 8 MiB e 120 s, sem parâmetro de idioma; o caminho mais barato no futuro é gravar WAV PCM mono 16 bits no cliente quando o provedor ativo for `deepseek`).
+- `DEEPSEEK_MODELO=deepseek-flash`: modelo padrão da DeepSeek (texto e imagem; `deepseek-v4-pro` é só texto).
+- `OPENAI_BASE_URL` / `DEEPSEEK_BASE_URL`: mantêm a regra HTTPS, ou localhost para testes.
 - Cotas persistentes por conta e hora: dez uploads, dez propostas, dez transcrições; vinte reforços e vinte avaliações de explicação.
 - Todos os endpoints `/api/estudio` exigem sessão, verificam propriedade e preservam a proteção de origem web ou autenticação bearer nativa. O gabarito nunca faz parte do retorno público.
 

@@ -27,7 +27,7 @@
     "test:paridade": "node --test tests/paridade-mundo.test.mjs",
     "test:google-mobile": "node --test tests/google-mobile.test.mjs",
     "test:acesso": "node --env-file=.env --import tsx --test tests/acesso-google-recuperacao.test.mjs",
-    "test:ia": "node --import tsx --test tests/ia-openai.test.mjs",
+    "test:ia": "node --import tsx --test tests/ia-openai.test.mjs tests/ia-deepseek.test.mjs",
     "ia:conferir": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/conferir-openai.ts",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
