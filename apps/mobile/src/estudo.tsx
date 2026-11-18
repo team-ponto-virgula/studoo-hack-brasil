@@ -1728,7 +1728,7 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
         </Animated.View>
       )}
       <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}>
-        <Text accessibilityRole="header" style={estilos.tituloBloco}>{mensagens.licao.progresso}</Text>
+        <Text accessibilityRole="header" style={[estilos.tituloBloco, estudoEstilos.tituloProgresso]}>{mensagens.licao.progresso}</Text>
         <BarraProgresso progresso={plano.progresso} de={antes} testID="progresso-plano" comPercentual />
       </View>
       {mensagem}
@@ -1753,6 +1753,14 @@ function CartaoHistoria({ titulo, texto, tipo, ordem }: { titulo: string; texto:
 }
 
 /** Raios dourados que giram devagar, o Stu que pula algumas vezes e depois flutua, e o selo de concluída. */
+/** Faixas de cada raio da conclusão, da ponta (raio 104) ao centro: a largura acompanha a cunha de 11° e o alfa, a máscara. */
+const FAIXAS_DO_RAIO = [
+  { topo: 0, altura: 20, largura: 18, alfa: 0.07 },
+  { topo: 20, altura: 20, largura: 14, alfa: 0.21 },
+  { topo: 40, altura: 20, largura: 10, alfa: 0.35 },
+  { topo: 60, altura: 44, largura: 6, alfa: 0.42 },
+];
+
 function CenaConclusao() {
   const reduzir = useMovimentoReduzido();
   const [giro] = useState(() => new Animated.Value(0));
@@ -1786,8 +1794,15 @@ function CenaConclusao() {
           { rotate: giro.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) },
         ],
       }]}>
+        {/* Como .conclusao-raios: cunhas de 11° a cada 30°, em amarelo a 42%, sob a máscara radial (cheias até 30% do raio da
+            máscara, 44 px, e sumindo até 70%, 104 px). Sem máscara no React Native, cada cunha é feita de faixas que esmaecem. */}
         {Array.from({ length: 12 }, (_, indice) => (
-          <View key={indice} style={[estudoEstilos.raio, { transform: [{ rotate: `${indice * 30}deg` }] }]} />
+          <View key={indice} style={[estudoEstilos.raio, { transform: [{ rotate: `${indice * 30}deg` }] }]}>
+            {FAIXAS_DO_RAIO.map((faixa) => (
+              <View key={faixa.topo} style={{ position: 'absolute', top: faixa.topo, height: faixa.altura, left: 104 - faixa.largura / 2, width: faixa.largura,
+                backgroundColor: `rgba(255, 209, 102, ${faixa.alfa})` }} />
+            ))}
+          </View>
         ))}
       </Animated.View>
       <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
@@ -1850,9 +1865,9 @@ const estudoEstilos = StyleSheet.create({
   historiaPonte: { borderColor: cores.destaqueBorda, backgroundColor: cores.ceu },
   historiaEnsino: { borderColor: '#9AD8B5', backgroundColor: cores.sucessoFundo },
   historiaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  historiaTitulo: { flexShrink: 1, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
+  historiaTitulo: { flexShrink: 1, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 19.5, letterSpacing: 0.52 },
   historiaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
-  historiaSincronia: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18, textAlign: 'center' },
+  historiaSincronia: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21, textAlign: 'center' },
   destaque: {
     marginTop: 20, borderWidth: 2, borderBottomWidth: 5, borderRadius: 24, borderColor: cores.destaqueBorda,
     backgroundColor: cores.superficieSutil, overflow: 'hidden',
@@ -1893,9 +1908,10 @@ const estudoEstilos = StyleSheet.create({
   tituloTopo: { fontSize: 26, lineHeight: 30 },
   anel: { alignItems: 'center', justifyContent: 'center', borderColor: cores.gelo, backgroundColor: cores.fundo },
   anelMetade: { position: 'absolute', overflow: 'hidden' },
-  anelNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 26 },
+  // .anel__numero: Quicksand 700, -0,03em; no alto da trilha, 1rem (.trilha-topo .anel__numero) com entrelinha 1,5.
+  anelNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 26, letterSpacing: -0.66 },
   anelTotal: { color: cores.textoSecundario, fontSize: 13 },
-  anelNumeroPequeno: { fontSize: 15, lineHeight: 18 },
+  anelNumeroPequeno: { fontSize: 16, lineHeight: 24, letterSpacing: -0.48 },
   // Como .trilha-topo da web no celular: 10 px de respiro, rótulo 11 px/900, nome em 18 px (até duas linhas) e anel de 44.
   barraPlano: { width: '100%', maxWidth: 620, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 20,
     paddingVertical: 10 },
@@ -1918,7 +1934,7 @@ const estudoEstilos = StyleSheet.create({
   progressoNaFaixa: { marginTop: 18 },
   progressoLegenda: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 },
   progressoTexto: { flexShrink: 1, fontWeight: '700' },
-  percentual: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  percentual: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 21 },
   trilha: { height: 10, borderRadius: 5, backgroundColor: cores.nevoa, overflow: 'hidden' },
   trilhaNaFaixa: { height: 14, borderRadius: 7 },
   preenchimento: { height: '100%', backgroundColor: cores.acao, borderRadius: 7, overflow: 'hidden' },
@@ -1951,7 +1967,7 @@ const estudoEstilos = StyleSheet.create({
   acaoNaTela: { alignItems: 'flex-start', marginTop: 8 },
   vazio: { gap: 16, marginTop: 24 },
   liberada: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
-  liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
+  liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   // Lição concluída
   conclusaoTopo: { alignItems: 'center' },
   repetida: { gap: 10, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFF6D9' },
@@ -1972,19 +1988,23 @@ const estudoEstilos = StyleSheet.create({
     borderRadius: 999, backgroundColor: '#FFF6D9' },
   resumoTrilhaTexto: { flexShrink: 1, color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 15, textAlign: 'center' },
   legendaNumeros: { marginTop: 18, marginBottom: -6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, letterSpacing: 0.8, textAlign: 'center' },
-  reverTexto: { flexShrink: 1, color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21, textAlign: 'left' },
+  reverTexto: { flexShrink: 1, color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textAlign: 'left' },
   textoCentro: { textAlign: 'center' },
   cena: { width: 190, height: 172, alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 },
-  raios: { position: 'absolute', left: -6, top: -12, width: 202, height: 202, alignItems: 'center', justifyContent: 'center' },
-  raio: { position: 'absolute', width: 18, height: 202, borderRadius: 9, backgroundColor: 'rgba(255, 209, 102, 0.28)' },
+  // O centro dos raios é o centro da cena (95, 86), como o inset de -14 da web; o círculo tem 104 de raio (o fim da máscara).
+  raios: { position: 'absolute', left: -9, top: -18, width: 208, height: 208 },
+  raio: { position: 'absolute', left: 0, top: 0, width: 208, height: 208 },
   seloConclusao: { position: 'absolute', right: 6, bottom: 28, width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center',
     borderWidth: 4, borderColor: cores.fundo, backgroundColor: cores.sucessoClaro },
-  comemoracao: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
-  conclusaoLicao: { marginTop: 2, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
+  // .conclusao-texto: 17 px em 800 (entrelinha 1,5) e .conclusao-licao: 16 px em 700 (entrelinha 1,5).
+  // "Progresso na trilha" na conclusão: h2 de 1,25rem (20 px), entrelinha 1,3, -0,015em.
+  tituloProgresso: { fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
+  comemoracao: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 17, lineHeight: 25.5 },
+  conclusaoLicao: { marginTop: 2, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   numeros: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 24 },
   numero: { flex: 1, minWidth: 0, overflow: 'hidden', borderRadius: 16, borderWidth: 2 },
   numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 4, paddingVertical: 6 },
-  numeroRotuloTexto: { flexShrink: 1, color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 15, letterSpacing: 0 },
+  numeroRotuloTexto: { flexShrink: 1, color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, letterSpacing: 0.22 },
   numeroValor: { alignItems: 'center', marginHorizontal: 2, marginBottom: 2, paddingHorizontal: 4, paddingVertical: 10, borderRadius: 13,
     backgroundColor: cores.fundo },
   numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16, lineHeight: 22, textAlign: 'center' },

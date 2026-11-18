@@ -177,22 +177,16 @@ export function StuAluno({ estado, fala: falaDaConversa }: { estado: 'aluno' | '
     // @keyframes stuFalando: de translateY(0) scale(1) a translateY(-2px) scale(1.04), 0,7 s, ida e volta.
     ? [{ translateY: balanco.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: balanco.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }]
     : [{ rotate: balanco.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) }];
-  const somando = estado === 'ouvindo' || estado === 'falando';
+  // Como .ensino-stu da web: uma caixa com borda e fundo névoa, o Stu de 52 px e a fala em 16 px/800 ao lado; ouvindo (gravação
+  // ou conversa), a borda fica azul e o fundo azul-claro (data-gravando).
+  const ouvindo = estado === 'ouvindo';
   return (
-    <View style={aluno.linha}>
+    <View style={[aluno.caixa, ouvindo && aluno.caixaOuvindo]}>
       <View style={aluno.avatar} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
           style={[aluno.stu, { transform: movimento }]} />
-        <View style={[aluno.adereco, estado === 'anotou' && { backgroundColor: cores.sucesso }, somando && { backgroundColor: cores.acao }]}>
-          {estado === 'anotou' ? <Icone nome="check" tamanho={12} cor={cores.fundo} />
-            : somando ? <Icone nome="som" tamanho={12} cor={cores.fundo} />
-              : <Text style={aluno.aderecoTexto}>?</Text>}
-        </View>
       </View>
-      <View style={aluno.balao}>
-        <View style={aluno.balaoSeta} />
-        <Text accessibilityLiveRegion="polite" style={aluno.balaoTexto}>{fala}</Text>
-      </View>
+      <Text accessibilityLiveRegion="polite" style={aluno.fala}>{fala}</Text>
     </View>
   );
 }
@@ -348,8 +342,13 @@ const cena = StyleSheet.create({
 
 const aluno = StyleSheet.create({
   linha: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: { width: 56, height: 60, alignItems: 'center', justifyContent: 'center' },
-  stu: { width: 50, height: 56 },
+  // .ensino-stu: flex, gap 14, respiro 12 × 16, borda 2 #E1E7FA, raio 18, fundo névoa; .ensino-stu .stu: 52 px de largura.
+  caixa: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderColor: cores.gelo,
+    borderRadius: 18, backgroundColor: cores.nevoa },
+  caixaOuvindo: { borderColor: cores.acao, backgroundColor: '#EEF3FF' },
+  fala: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 25.6 },
+  avatar: { width: 52, alignItems: 'center', justifyContent: 'center' },
+  stu: { width: 52, height: 58 },
   adereco: { position: 'absolute', top: -2, right: -2, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.ouroEscuro, borderWidth: 2, borderColor: cores.fundo },
   aderecoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 16 },

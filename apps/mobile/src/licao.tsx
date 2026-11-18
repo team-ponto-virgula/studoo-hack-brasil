@@ -19,7 +19,7 @@ import {
   type LicaoDetalhe,
 } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode, type Ref } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useAparecer, usePulinho, useTremor } from './animacoes';
 import {
   TranscritorContexto,
@@ -180,6 +180,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   avaliar: (resposta: string, indice: number) => Promise<Avaliacao | null>;
   concluir: (comprovante: string, resumo: ResumoLicao, pratica?: AutoAvaliacao) => Promise<boolean>;
 }) {
+  // .aula-quadro da web: respiro clamp(16px, 5vw, 28px) (19,5 px em 390, 18 em 360).
+  const { width: larguraJanela } = useWindowDimensions();
+  const respiroQuadro = { padding: Math.min(28, Math.max(16, larguraJanela * 0.05)) };
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   // Como na web: as opções mudam de ordem a cada visita.
   const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
@@ -589,8 +592,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   if (temAbaixo && (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica')) {
     rodape = (
       <>
-        {/* O alvo tem 48 dp e a pílula, 32: as margens negativas do alvo não deixam o rodapé crescer. */}
-        <Pressable testID="mais-abaixo" accessibilityRole="button" accessibilityLabel={t.maisAbaixo} onPress={lerMais}
+        {/* Como .aula-mais-abaixo: a pílula branca com borda; o alvo de 48 dp cresce por fora (hitSlop), sem mudar o desenho (P8). */}
+        <Pressable testID="mais-abaixo" accessibilityRole="button" accessibilityLabel={t.maisAbaixo} onPress={lerMais} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
           style={({ pressed }) => [licaoEstilos.maisAbaixoAlvo, pressed && { opacity: 0.7 }]}>
           <View style={licaoEstilos.maisAbaixo}>
             <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={14} cor={cores.acao} /></View>
@@ -745,7 +748,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           </>
         )}
         {etapa.tipo === 'exemplo' && (
-          <View style={[licaoEstilos.quadro, licaoEstilos.quadroExemplo]}>
+          <View style={[licaoEstilos.quadro, respiroQuadro, licaoEstilos.quadroExemplo]}>
             {/* Como na web 4B: o título do quadro aparece ("Exemplo" ou "Demonstração") e recebe o foco. */}
             <Text ref={tituloEtapa} testID="titulo-etapa" accessible accessibilityRole="header" style={licaoEstilos.tituloQuadro}>
               {licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}
@@ -759,7 +762,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {/* Como na web 4B: o Stu só aparece depois de uma resposta (antes, a pergunta fica sozinha no alto). */}
         {exercicio && estadoStu !== 'neutro' && <StuDoExercicio estado={estadoStu} />}
         {exercicio && (
-          <Animated.View style={[licaoEstilos.quadro, { transform: [{ translateX: tremor }] }]}
+          <Animated.View style={[licaoEstilos.quadro, respiroQuadro, { transform: [{ translateX: tremor }] }]}
             onLayout={(evento) => {
               exercicioY.current = evento.nativeEvent.layout.y;
               fimDoExercicio.current = evento.nativeEvent.layout.y + evento.nativeEvent.layout.height;
@@ -828,7 +831,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           </Animated.View>
         )}
         {etapa.tipo === 'pratica' && licao.pratica && (
-          <View style={[licaoEstilos.quadro, licaoEstilos.quadroPratica]} onLayout={(evento) => { praticaY.current = evento.nativeEvent.layout.y; }}>
+          <View style={[licaoEstilos.quadro, respiroQuadro, licaoEstilos.quadroPratica]} onLayout={(evento) => { praticaY.current = evento.nativeEvent.layout.y; }}>
             <Text ref={tituloEtapa} accessible accessibilityRole="header" style={estilos.subtitulo}>{t.pratica.titulo}</Text>
             <EtapaPratica pratica={licao.pratica} escolha={autoAvaliacao} recurso={licao.recurso}
               aoMedirComoFoi={(y) => { comoFoiY.current = y; }} aoAcabar={() => setTimeout(mostrarComoFoi, 120)} reinicio={voltasPratica}
@@ -1154,7 +1157,7 @@ const licaoEstilos = StyleSheet.create({
   voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: -8, marginBottom: -2, minHeight: 48 },
   voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   marcadores: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
-  marcadoresTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  marcadoresTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   marcadorAlvo: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', marginVertical: -8 },
   marcador: { minWidth: 36, minHeight: 32, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
     borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: cores.fundo },
@@ -1174,9 +1177,11 @@ const licaoEstilos = StyleSheet.create({
   stuEstadoImagem: { width: 42, height: 46 },
   stuEstadoTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
   adereco: { position: 'absolute', top: -2, right: -2, width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: cores.fundo },
-  maisAbaixoAlvo: { alignSelf: 'center', minHeight: 48, justifyContent: 'center', marginVertical: -8 },
-  maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: cores.nevoa },
-  maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  // .aula-mais-abaixo: margem -6 em cima e 8 embaixo; pílula com borda de 2, sombra de 2 (aqui, a borda de baixo) e texto de 14 px.
+  maisAbaixoAlvo: { alignSelf: 'center', marginTop: -6, marginBottom: -2 },
+  maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 4,
+    borderRadius: 999, borderWidth: 2, borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
     backgroundColor: '#FFF8E6' },
   dicaTopo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
@@ -1188,7 +1193,7 @@ const licaoEstilos = StyleSheet.create({
   balao: { flex: 1, gap: 10, padding: 16, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   balaoSeta: { position: 'absolute', top: 24, left: -10, width: 16, height: 16, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo,
     borderBottomLeftRadius: 3, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
-  balaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 24 },
+  balaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   quadro: { marginTop: 20, gap: 12, padding: 18, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   quadroExemplo: { borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
   quadroPratica: { borderColor: '#E2D1F5', backgroundColor: '#FBF8FF' },
@@ -1213,7 +1218,8 @@ const licaoEstilos = StyleSheet.create({
   retornoIcone: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3,
     borderColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
   retornoIconeErrado: { borderColor: '#B4650D', backgroundColor: '#E58A1F' },
-  retornoTitulo: { color: cores.sucesso, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 26 },
+  // .aula-retorno h2 no celular: 1,1875rem com entrelinha de 34 px (a altura do ícone) e -0,015em.
+  retornoTitulo: { color: cores.sucesso, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 34, letterSpacing: -0.285 },
   retornoTituloCompacto: { fontSize: 17, lineHeight: 24 },
   convite: { alignSelf: 'flex-start', paddingHorizontal: 2, minHeight: 44 },
   retornoTituloErrado: { color: '#8A4B00' },

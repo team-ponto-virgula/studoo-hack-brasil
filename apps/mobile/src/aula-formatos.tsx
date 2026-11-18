@@ -585,7 +585,7 @@ export function RecursoDaLicao({ recurso, longa = false, semBatida = false }: { 
   return (
     <View style={formatos.secao}>
       <Image source={{ uri: recurso.src }} accessibilityLabel={`${recurso.fonte ?? t.recursos.doMaterial}: ${recurso.descricao}`} resizeMode="contain" style={formatos.imagem} />
-      <Text style={estilos.legenda}><Text style={{ fontWeight: '800' }}>{recurso.fonte ?? t.recursos.doMaterial}</Text> · {recurso.descricao}</Text>
+      <Text style={[estilos.legenda, { lineHeight: 21 }]}><Text style={{ fontWeight: '700' }}>{recurso.fonte ?? t.recursos.doMaterial}</Text> · {recurso.descricao}</Text>
     </View>
   );
 }
@@ -814,7 +814,7 @@ export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
       <Text style={formatos.instrucao}>{t.ordenar.instrucao}</Text>
       <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.ordenar.suaOrdem}</Text>
       <View style={formatos.ordemCaixa}>
-        {posicoes.length === 0 && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.ordenar.vazio}</Text>}
+        {posicoes.length === 0 && <Text style={formatos.vazioOrdem}>{t.ordenar.vazio}</Text>}
         {posicoes.map((id, posicao) => {
           if (!id) {
             return (
@@ -1248,8 +1248,11 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
 const formatos = StyleSheet.create({
   secao: { gap: 10 },
   rotuloLinha: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  rotuloCaixa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
-  instrucao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
+  // .ordenar__rotulo e as legendas do V/F: 13 px em 900, 0,05em; .ordenar__instrucao: 16 px em 700.
+  rotuloCaixa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 19.5, letterSpacing: 0.65 },
+  instrucao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
+  // .ordenar__vazio: o texto do corpo (16 px) na cor secundária.
+  vazioOrdem: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, textAlign: 'center' },
   /** O toque de um link de texto: 48 dp de altura, mesmo com o texto numa linha só. */
   linkAlvo: { minHeight: 48, justifyContent: 'center', alignSelf: 'flex-start' },
   link: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22, textDecorationLine: 'underline' },
@@ -1281,7 +1284,7 @@ const formatos = StyleSheet.create({
   // Como a web 4.2 (`.trecho--formula`): a fonte da interface, forte, com algarismos de largura igual (antes, serifa).
   formulaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 21, lineHeight: 28, fontVariant: ['tabular-nums'], textAlign: 'center' },
   frase: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.ceu },
-  fraseTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19, lineHeight: 27 },
+  fraseTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 20, lineHeight: 28 },
   passo: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   passoNumero: { width: 30, height: 30, borderRadius: 8, borderBottomWidth: 3, borderColor: '#9A6A08', alignItems: 'center', justifyContent: 'center',
     backgroundColor: '#C88A12' },
@@ -1354,7 +1357,7 @@ const formatos = StyleSheet.create({
   valores: { flexDirection: 'row', gap: 10 },
   valor: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 2,
     borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo, paddingHorizontal: 6 },
-  valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 17, lineHeight: 22 },
+  valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 18, lineHeight: 27 },
   aberta: { minHeight: 140, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: cores.bordaCampo, color: cores.texto,
     backgroundColor: cores.fundo, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24 },
   contador: { alignSelf: 'flex-end', color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
