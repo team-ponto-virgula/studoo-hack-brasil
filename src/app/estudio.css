@@ -495,7 +495,10 @@
 }
 @media (max-width: 600px) {
   .ponte-cabeca__acoes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ponte-legenda { grid-template-columns: minmax(0, 1fr); }
+  .ponte-legenda { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px 12px; }
+  .estudio-ponte[data-concluida] .ponte-legenda { display: none; }
+  .ponte-margem--esquerda { width: 84px; padding: 10px; font-size: 0.78rem; }
+  .ponte-cena { padding: 10px 10px 0; }
 }
 .ponte-legenda li {
   display: flex;

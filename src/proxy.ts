@@ -12,7 +12,7 @@ export function proxy(request: NextRequest) {
   const desenvolvimento = process.env.NODE_ENV === "development";
   const origem = origemStudoo();
   const websocket = desenvolvimento && origem ? ` ${origem.replace(/^http/, "ws")}` : "";
-  const estilo = desenvolvimento ? "'unsafe-inline'" : `'nonce-${nonce}'`;
+  const estilo = "'unsafe-inline'";
   const politica = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${desenvolvimento ? " 'unsafe-eval'" : ""}`,

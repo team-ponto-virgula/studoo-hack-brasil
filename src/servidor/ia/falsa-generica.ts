@@ -159,7 +159,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
             op("conferir", "Conferir o resultado"),
           ],
           gabarito: ["pedido", "sabe", "acao", "conferir"],
-          feedbackCorreto: "Isso: entender o pedido, juntar o que já sabe, agir e conferir.",
+          feedbackCorreto: "Entender o pedido, juntar o que já sabe, agir e conferir.",
           feedbackIncorreto: "Comece pelo pedido: diga o que o problema quer. Depois liste o que já sabe, escolha a primeira ação e confira no fim.",
         },
       };
@@ -179,7 +179,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
             op("sorte", "Acertar ou errar depende só de sorte"),
           ],
           gabarito: ["falso", "pista"],
-          feedbackCorreto: "Isso: errar faz parte. O erro anotado vira um guia do que revisar.",
+          feedbackCorreto: "Errar faz parte. O erro anotado vira um guia do que revisar.",
           feedbackIncorreto: "É falsa: o erro não mede talento. Anotado, ele mostra exatamente onde vale a pena voltar.",
         },
       };
@@ -232,7 +232,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           "Complete a frase sobre revisão ativa.",
           "Na revisão ativa, você tenta lembrar antes de ___ as anotações.",
           "consultar",
-          "Isso: tentar lembrar primeiro dá mais resultado do que reler.",
+          "Tentar lembrar primeiro dá mais resultado do que reler.",
           "A palavra é consultar. A revisão ativa pede o esforço de lembrar antes de abrir as anotações.",
         ),
       };

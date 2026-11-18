@@ -320,7 +320,7 @@ button, input, textarea { font: inherit; }
 
 .barra-marca { min-height: 48px; margin-bottom: 32px; padding-inline: 4px; }
 .navegacao { display: grid; align-content: start; gap: 6px; }
-.navegacao-planos { display: grid; gap: 2px; margin: 0; padding: 0 0 8px 8px; list-style: none; }
+.navegacao-planos { display: grid; gap: 2px; max-height: 45vh; overflow-y: auto; margin: 0; padding: 0 0 8px 8px; list-style: none; }
 
 .navegacao .botao {
   min-width: 0;
@@ -349,7 +349,7 @@ button, input, textarea { font: inherit; }
 }
 
 .estudo-identificacao { display: inline-flex; align-items: center; gap: 10px; color: var(--texto); font-weight: 800; }
-.estudo-identificacao__contexto { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 36vw; }
+.estudo-identificacao__contexto { display: none; }
 .selo-sincronia {
   display: inline-flex;
   align-items: center;
@@ -915,14 +915,36 @@ button { touch-action: manipulation; }
 /* Fim da trilha: os números são da última lição, e a legenda diz isso. */
 .conclusao-numeros__legenda { margin: 18px 0 -8px; color: var(--texto2); font-weight: 800; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
 
-/* Apagar trilha: discreto, embaixo do progresso, para não competir com a ação principal do cartão. */
+/* Apagar trilha: menu discreto no cartão, para não competir com a ação principal. */
+.planos-cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.plano-cartao__menu { position: relative; justify-self: start; }
+.plano-cartao__menu > summary {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px;
+  padding: 0 10px; border-radius: 12px; color: var(--texto2); font-weight: 800; cursor: pointer; list-style: none;
+}
+.plano-cartao__menu > summary::-webkit-details-marker { display: none; }
+.plano-cartao__menu > summary:hover, .plano-cartao__menu[open] > summary { background: var(--nevoa); color: var(--texto); }
+.plano-cartao__menu[open] { display: flex; align-items: center; gap: 8px; }
 .plano-cartao__apagar {
-  justify-self: start; min-height: 44px; margin-top: -8px; padding: 0 2px; border: 0; background: none; color: var(--texto2);
+  justify-self: start; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--texto2);
   font: inherit; font-size: 0.875rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
 }
 .plano-cartao__apagar:hover:not(:disabled) { color: #b3261e; }
 .plano-cartao__apagar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 6px; }
 .plano-cartao__apagar:disabled { cursor: default; opacity: 0.6; }
+
+/* Diálogo de confirmação no próprio produto (Sair / Apagar trilha). */
+.modal-fundo {
+  position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 20px;
+  background: rgba(15, 23, 42, 0.45);
+}
+.modal-cartao {
+  width: min(100%, 440px); padding: 24px; border: 2px solid var(--gelo); border-radius: 24px;
+  background: var(--fundo); box-shadow: 0 20px 48px rgba(15, 23, 42, 0.24);
+}
+.modal-mensagem { margin: 0 0 20px; color: var(--texto); font-size: 1.05rem; font-weight: 800; line-height: 1.5; }
+.modal-acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
+.modal-confirmar--destrutivo { color: #b3261e; border-color: #f3c4c0; }
 
 /* Fim da trilha: um resumo da trilha inteira antes dos números da última lição. */
 .conclusao-trilha {
