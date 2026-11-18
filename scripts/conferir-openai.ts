@@ -71,7 +71,10 @@ async function conferir() {
 conferir().catch((erro: unknown) => {
   const rota = provedor === "deepseek" ? "ia-deepseek" : "ia-openai";
   const nomeProvedor = provedor === "deepseek" ? "DeepSeek" : "OpenAI";
-  const motivo = erro instanceof FalhaApi ? `${erro.codigo} (o status da ${nomeProvedor} aparece na linha "${rota}" acima)` : String(erro);
+  const detalhe = provedor === "deepseek"
+    ? `provedor ${nomeProvedor}, modelo "${config!.modelo}" — confira a linha "${rota}" acima (401 chave inválida, 404/modelo_inexistente para modelo inválido)`
+    : `o status da ${nomeProvedor} aparece na linha "${rota}" acima`;
+  const motivo = erro instanceof FalhaApi ? `${erro.codigo} (${detalhe})` : String(erro);
   console.error(`\nFalhou: ${motivo}`);
   process.exit(1);
 });

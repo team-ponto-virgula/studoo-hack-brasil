@@ -29,7 +29,7 @@ import {
 
 export const GERADOR_DEEPSEEK = "deepseek-v1";
 const BASE_PADRAO = "https://api.deepseek.com";
-export const MODELO_PADRAO = "deepseek-chat";
+export const MODELO_PADRAO = "deepseek-flash";
 
 export type ConfiguracaoDeepSeek = {
   chave: string;
@@ -78,12 +78,19 @@ async function pedir(config: ConfiguracaoDeepSeek, corpo: Record<string, unknown
     const texto = await resposta.text().catch(() => "");
     if (/thinking/i.test(texto)) resposta = await enviar(false);
     else {
-      registrar("ia_indisponivel", { status: 400 });
+      registrar("ia_indisponivel", {
+        status: 400,
+        ...(/model/i.test(texto) ? { motivo: "modelo_inexistente" } : {}),
+      });
       throw new FalhaApi("ia_indisponivel");
     }
   }
   if (!resposta.ok) {
-    registrar("ia_indisponivel", { status: resposta.status });
+    const texto = resposta.status === 404 ? await resposta.text().catch(() => "") : "";
+    registrar("ia_indisponivel", {
+      status: resposta.status,
+      ...(resposta.status === 404 || /model/i.test(texto) ? { motivo: "modelo_inexistente" } : {}),
+    });
     throw new FalhaApi("ia_indisponivel");
   }
   return resposta;

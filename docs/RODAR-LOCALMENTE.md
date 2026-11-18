@@ -61,7 +61,7 @@ DEEPSEEK_API_KEY=sua-chave
 | --- | --- | --- |
 | `DEEPSEEK_API_KEY` | (nenhum) | Chave da API da DeepSeek. Sem ela, vale a reserva (`STUDOO_IA_RESERVA`). |
 | `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | Outro endereço compatível. Só HTTPS, ou HTTP no próprio computador. |
-| `DEEPSEEK_MODELO` | `deepseek-chat` | Modelo usado nas gerações (`deepseek-flash` habilita leitura de imagens no Estúdio). |
+| `DEEPSEEK_MODELO` | `deepseek-flash` | Modelo usado nas gerações (`deepseek-flash` atende texto e imagem; `deepseek-v4-pro` é só texto). |
 | `DEEPSEEK_RACIOCINIO` | `false` | Quando `true`, ativa `thinking: { type: "enabled" }`; padrão `false` (`disabled`) para menor latência. |
 | `STUDOO_IA_RESERVA` | `falsa` | Sem chave, ou se a DeepSeek falhar antes da primeira linha, `falsa` assume. `nenhuma` retorna `ia_indisponivel`. |
 
@@ -72,8 +72,11 @@ DEEPSEEK_API_KEY=sua-chave
 | Trilha ao vivo + lições | Simulada | Sim (Responses API + JSON Schema) | Sim (Chat Completions + `json_object`) |
 | Correção aberta / desempate lacuna | Local | Sim | Sim |
 | Estúdio: PDF texto, DOCX, CSV, reforço, Ensine ao Stu | Simulado / local | Sim | Sim |
-| Estúdio: leitura de imagem | Não (só demo) | Sim | Somente com `DEEPSEEK_MODELO=deepseek-flash` |
-| Estúdio: transcrição de voz | Não (`voz_indisponivel`) | Sim | Não (`voz_indisponivel`: ASR da DeepSeek não aceita WebM/M4A) |
+| Estúdio: leitura de imagem | Não (só demo) | Sim | Sim com o padrão `deepseek-flash` (indisponível em `deepseek-v4-pro`) |
+| Estúdio: transcrição de voz | Não (`voz_indisponivel`) | Sim | Não (`voz_indisponivel`) |
+
+Motivo da voz indisponível na DeepSeek: o endpoint `POST /v1/tools/asr` aceita apenas WAV PCM de 16 bits ou Ogg Opus, até 8 MiB e 120 s, sem parâmetro de idioma — incompatível com WebM/M4A gravados pelo navegador e pelo app.
+Caminho mais barato para suportar voz na DeepSeek depois: gravar/codificar áudio WAV PCM mono de 16 bits direto no navegador/app quando o provedor ativo for `deepseek` e enviar para `/v1/tools/asr` no servidor.
 
 Observação de privacidade: diferentemente da Responses API da OpenAI (que envia `store: false`), o endpoint `/chat/completions` da DeepSeek não possui parâmetro `store: false`; o tratamento segue a política da plataforma DeepSeek. Quando `IA=deepseek`, nenhuma requisição é enviada à OpenAI mesmo que `OPENAI_API_KEY` esteja definida.
 

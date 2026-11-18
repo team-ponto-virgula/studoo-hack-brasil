@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { after, before, beforeEach, test } from "node:test";
 import { interpretarEventoGeracao } from "@studoo/contratos";
+import { mensagens } from "../src/mensagens/pt-BR.ts";
 import { conteudoValido, esqueletoValido } from "../src/dominio/aprendizado/plano.ts";
 import { reiniciarLimiteDeGeracoes } from "../src/servidor/ia/limite.ts";
 
@@ -15,6 +16,7 @@ const { refinarAvaliacao } = await import("../src/servidor/aprendizado/correcao.
 const { pedirJson } = await import("../src/servidor/estudio/ia.ts");
 const { transcrever } = await import("../src/servidor/estudio/voz.ts");
 const { banco } = await import("../src/servidor/banco/cliente.ts");
+const { GET: getAuthConfig } = await import("../src/app/api/auth/config/route.ts");
 
 const linhasDaTrilha = [
   '{"tipo":"plano","titulo":"Violão do zero","objetivo":"Tocar as primeiras músicas no violão."}',
@@ -134,6 +136,28 @@ before(async () => {
       res.end("erro interno");
       return;
     }
+    if (modo === "erro-401") {
+      res.writeHead(401, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: { message: "Authentication Fails" } }));
+      return;
+    }
+    if (modo === "erro-429") {
+      res.writeHead(429, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: { message: "Rate limit exceeded" } }));
+      return;
+    }
+    if (modo === "erro-404-modelo") {
+      res.writeHead(404, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ error: { message: "Model Not Exist" } }));
+      return;
+    }
+    if (modo === "erro-meio-stream" && corpo.stream) {
+      res.writeHead(200, { "Content-Type": "text/event-stream" });
+      res.write(`data: ${JSON.stringify({ choices: [{ delta: { content: `${linhasDaTrilha[0]}\n` } }] })}\n\n`);
+      res.write(`data: ${JSON.stringify({ error: { message: "stream failed" } })}\n\n`);
+      res.end();
+      return;
+    }
     if (modo === "recusa-thinking" && corpo.thinking) {
       res.writeHead(400, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: { message: "Unknown parameter: thinking" } }));
@@ -241,11 +265,13 @@ after(async () => {
 });
 
 test("gera trilha via SSE e conteúdo via json_object com origem e gerador da DeepSeek", async () => {
+  assert.equal(MODELO_PADRAO, "deepseek-flash");
   const eventos = await coletar(iniciarGeracao("u-ds-1", "Aprender violão"));
   const pronto = eventos.at(-1);
   assert.equal(pronto?.tipo, "pronto");
   assert.equal(pronto.proposta.origem, `IA da DeepSeek (${MODELO_PADRAO})`);
   assert.equal(pedidosDeepSeek[0].auth, "Bearer sk-deepseek-teste");
+  assert.equal(pedidosDeepSeek[0].corpo.model, "deepseek-flash");
   assert.deepEqual(pedidosDeepSeek[0].corpo.thinking, { type: "disabled" });
   assert.equal(pedidosDeepSeek[0].corpo.stream, true);
 
@@ -385,4 +411,64 @@ test("cancelar no meio para a leitura sem pronto e sem erro", async () => {
     if (eventos.length === 1) controlador.abort();
   }
   assert.equal(eventos.some((e) => e.tipo === "pronto" || e.tipo === "erro"), false);
+});
+
+test("401, 429, 404 (modelo inexistente) e 5xx registram log e falham sem repetição em laço", async () => {
+  process.env.STUDOO_IA_RESERVA = "nenhuma";
+  const logs = [];
+  const origErr = console.error;
+  console.error = (msg) => logs.push(String(msg));
+
+  try {
+    for (const [caso, statusEsperado] of [["erro-401", 401], ["erro-429", 429], ["erro-500", 500], ["erro-404-modelo", 404]]) {
+      pedidosDeepSeek = [];
+      logs.length = 0;
+      modo = caso;
+      const ev = await coletar(iniciarGeracao(`u-ds-${caso}`, "Aprender violão"));
+      assert.equal(ev.at(-1)?.tipo, "erro");
+      assert.equal(ev.at(-1)?.codigo, "ia_indisponivel");
+      assert.equal(pedidosDeepSeek.length, 1);
+
+      const registroDs = logs.map((l) => {
+        try { return JSON.parse(l); } catch { return null; }
+      }).find((o) => o?.rota === "ia-deepseek");
+      assert.equal(registroDs?.codigo, "ia_indisponivel");
+      assert.equal(registroDs?.status, statusEsperado);
+      if (statusEsperado === 404) {
+        assert.equal(registroDs?.motivo, "modelo_inexistente");
+      }
+    }
+  } finally {
+    console.error = origErr;
+  }
+});
+
+test("erro no meio do streaming após o primeiro evento não usa reserva e emite erro na tela", async () => {
+  process.env.STUDOO_IA_RESERVA = "falsa";
+  modo = "erro-meio-stream";
+  const eventos = await coletar(iniciarGeracao("u-ds-meio", "Aprender violão"));
+  assert.equal(eventos[0]?.tipo, "plano");
+  assert.equal(eventos.at(-1)?.tipo, "erro");
+  assert.equal(eventos.at(-1)?.codigo, "ia_indisponivel");
+  assert.equal(eventos.some((e) => e.tipo === "pronto"), false);
+});
+
+test("/api/auth/config expõe o provedor ativo e privacidadePorProvedor identifica OpenAI, DeepSeek ou demonstração", async () => {
+  process.env.IA = "deepseek";
+  const resDs = await getAuthConfig(new Request("http://127.0.0.1:3000/api/auth/config"));
+  const bodyDs = await resDs.json();
+  assert.equal(bodyDs.ia, "deepseek");
+  assert.match(mensagens.estudio.privacidadePorProvedor(bodyDs.ia), /pela DeepSeek/);
+
+  process.env.IA = "openai";
+  const resOa = await getAuthConfig(new Request("http://127.0.0.1:3000/api/auth/config"));
+  const bodyOa = await resOa.json();
+  assert.equal(bodyOa.ia, "openai");
+  assert.match(mensagens.estudio.privacidadePorProvedor(bodyOa.ia), /pela OpenAI/);
+
+  process.env.IA = "falsa";
+  const resFalsa = await getAuthConfig(new Request("http://127.0.0.1:3000/api/auth/config"));
+  const bodyFalsa = await resFalsa.json();
+  assert.equal(bodyFalsa.ia, "falsa");
+  assert.doesNotMatch(mensagens.estudio.privacidadePorProvedor(bodyFalsa.ia), /OpenAI|DeepSeek/);
 });

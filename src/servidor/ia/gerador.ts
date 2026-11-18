@@ -34,6 +34,15 @@ export interface GeradorTrilha {
   gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal): Promise<ConteudoLicao>;
 }
 
+export type ProvedorIa = "falsa" | "openai" | "deepseek";
+
+/** Provedor ativo conforme a flag `IA`. */
+export function provedorIaAtivo(): ProvedorIa {
+  if (process.env.IA === "openai") return "openai";
+  if (process.env.IA === "deepseek") return "deepseek";
+  return "falsa";
+}
+
 /**
  * Escolhe o gerador pela variável IA: `falsa` (padrão local, testes e CI), `openai` (Responses API da OpenAI, com
  * OPENAI_API_KEY) ou `deepseek` (Chat Completions da DeepSeek, com DEEPSEEK_API_KEY). Com provedor real, a IA falsa

@@ -8,6 +8,7 @@ import {
   type LicaoDetalhe,
   type MaterialEstudo,
   type PropostaPlano,
+  type ProvedorIa,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
@@ -36,12 +37,16 @@ export function MaterialParaTrilha({
   onProposta: (p: PropostaPlano) => void;
 }) {
   const [material, setMaterial] = useState<MaterialEstudo | null>(null);
+  const [provedorIa, setProvedorIa] = useState<ProvedorIa>('falsa');
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
   const [erro, setErro] = useState('');
   const vivo = useRef(true);
   useEffect(() => {
     vivo.current = true;
+    void cliente.configuracaoAcesso().then((cfg) => {
+      if (vivo.current) setProvedorIa(cfg.ia);
+    }).catch(() => undefined);
     return () => {
       vivo.current = false;
     };
@@ -87,7 +92,7 @@ export function MaterialParaTrilha({
         </div>
       </div>
       <p className="estudio-legenda">{mensagens.inicio.enviarSeguro}</p>
-      <details><summary>{mensagens.inicio.detalhes}</summary><p className="estudio-legenda">{m.limites}</p><p className="estudio-legenda">{m.privacidade}</p></details>
+      <details><summary>{mensagens.inicio.detalhes}</summary><p className="estudio-legenda">{m.limites}</p><p className="estudio-legenda">{m.privacidadePorProvedor(provedorIa)}</p></details>
       {!material ? (
         <div className="estudio-acoes">
           <label className="estudio-arquivo">
