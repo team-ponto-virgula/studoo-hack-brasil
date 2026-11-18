@@ -104,11 +104,11 @@ export const mensagens = {
         licoes: (total: number) => `${total} ${total === 1 ? 'lição concluída' : 'lições concluídas'}`
     },
     sincronia: {
-        atualizando: 'Atualizando…',
-        salvo: 'Salvo na nuvem',
-        agora: 'Atualizado agora',
-        minutos: (n: number) => `Atualizado há ${n} min`,
-        offline: 'Sem conexão: mostrando o último progresso salvo',
+        atualizando: 'Salvando progresso…',
+        salvo: 'Progresso salvo',
+        agora: 'Progresso salvo agora',
+        minutos: (n: number) => `Progresso salvo há ${n} min`,
+        offline: 'Sem conexão: mostrando seu último progresso salvo',
         offlineCurto: 'Sem conexão',
     },
     login: {

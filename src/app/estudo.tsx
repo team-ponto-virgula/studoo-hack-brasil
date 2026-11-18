@@ -490,7 +490,9 @@ export function Estudo() {
             <span className="estudo-identificacao__contexto">
               {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
             </span>
-            <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={inicio === 'pronto' && planos.length > 0} />
+            {inicio === 'pronto' && ((tela.tipo === 'planos' && planos.length > 0) || tela.tipo === 'plano') && (
+              <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={planos.length > 0} />
+            )}
           </span>
           <div className="estudo-marca"><Logo /></div>
           <div className="estudo-conta">
