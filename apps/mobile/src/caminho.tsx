@@ -333,10 +333,13 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
           // O nome embaixo do nó (até duas linhas) e o balão "Começar" do próximo não podem se encostar.
           if (discreto && seguinte?.estado === 'atual') depois += 80;
-          if (no.estado === 'atual' && fimDoTrecho) depois += 16;
-          if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 24;
+          // A1 (paridade, medido contra a web em 390): no fim do trecho, o vão até o próximo nó é o da web — 36 a mais depois do
+          // nó atual e 18 depois de um nó discreto (18 e 8 deles antes da faixa da parte, o resto depois dela).
+          if (no.estado === 'atual' && fimDoTrecho) depois += 52;
+          if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 42;
           // Cada selo embaixo do título ("Reforço feito", "Vale rever") ocupa uma linha; a ponte desenhada, mais uma.
-          if (discreto) depois += 22 * selosDoNo(no).length;
+          // Antes do nó atual, o balão "Começar" já reserva a folga: cada selo soma 12 (a web, 344 px de lente a lente com dois selos).
+          if (discreto) depois += (seguinte?.estado === 'atual' ? 12 : 22) * selosDoNo(no).length;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
           const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
@@ -368,7 +371,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                   atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => guardarAlvo(no.id, alvo)} tocar={() => tocar(no)} />
               </Entra>
               {fimDoTrecho && (
-                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + 28} noAlto={seguinte?.estado === 'atual'}>
+                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 46 : 36)} noAlto={seguinte?.estado === 'atual'}>
                   <Parte numero={trechos.indexOf(no.trecho) + 2} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </Marco>
               )}
@@ -1086,7 +1089,8 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
   aoMedir: (caixa: Caixa) => void;
 }) {
   const { chao, relevo } = coresDaRegiao(trecho);
-  const tamanho = lente + 16;
+  // .caminho-chegada__lente: lente-base + 20.
+  const tamanho = lente + 20;
   const reduzir = useMovimentoReduzido();
   const [pop] = useState(() => new Animated.Value(festa ? 0.5 : 1));
   const pulo = useVaiVem(380, stu);
@@ -1337,7 +1341,8 @@ const caminhoEstilos = StyleSheet.create({
   parteTopo: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
   parteNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   parteAndamento: { color: '#4A5568', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
-  chegada: { minHeight: 280, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 8, paddingBottom: 30, overflow: 'hidden' },
+  // A1: o troféu fica 16 px mais longe do último nó, como na web (193 px de lente a lente em 390).
+  chegada: { minHeight: 296, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 8, paddingBottom: 30, overflow: 'hidden' },
   pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(27, 42, 94, 0.34)' },
   chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 104,
     borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
