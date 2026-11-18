@@ -6,7 +6,7 @@ export const mensagens = {
       titulo: 'Seu material vira uma jornada', subtitulo: 'Traga uma foto, documento ou tabela. O Stu transforma suas ideias em uma trilha com referências.',
       arquivo: 'Escolher material', camera: 'Fotografar página', demo: 'Experimentar com frações',
       limites: 'Imagem JPG/PNG/WebP, PDF de até 6 páginas, DOCX ou CSV. Até 5 MB e 24 mil caracteres. CSV: até 200 linhas e 20 colunas, em UTF-8.',
-      privacidade: 'No modo demonstração, o material não é enviado para nenhum provedor externo de IA. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
+      privacidade: 'Com IA real ativa, você autoriza a leitura do material pelo provedor de IA configurado neste Studoo; no modo demonstração, o material não sai do Studoo. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
       privacidadePorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') => {
         if (ia === 'openai') {
           return 'Ao enviar, você autoriza a leitura pela OpenAI. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.';
