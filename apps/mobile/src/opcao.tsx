@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { usePulinho } from './animacoes';
-import { estilos } from './interface';
+import { degrauFora, estilos } from './interface';
 import { cores, fontes } from './tema';
+import { focoVisivel } from './foco';
 
 /** Letras das opções de múltipla escolha, como na web (A, B, C…). */
 export const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -12,7 +13,9 @@ export const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
  * Opção de múltipla escolha da aula: cartão com a letra à esquerda, o texto alinhado à esquerda e os estados de marcada,
  * certa e errada. O desafio da ponte usa o mesmo cartão, como decidido no levantamento de paridade (PT5).
  */
-export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apagada, acao }: {
+export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apagada, acao, corTextoErro = '#7A4A00' }: {
+  /** Cor do texto da opção errada: âmbar na aula; no desafio da ponte, a web mantém o azul da marcada. */
+  corTextoErro?: string;
   id: string;
   letra: string;
   texto: string;
@@ -25,34 +28,42 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
   const [focada, setFocada] = useState(false);
   const pulo = usePulinho(retorno === 'certa', 1.04);
   let estado = null;
-  if (retorno === 'certa') estado = opcaoEstilos.opcaoCerta;
-  else if (retorno === 'errada') estado = opcaoEstilos.opcaoErrada;
-  else if (selecionada) estado = opcaoEstilos.opcaoSelecionada;
+  // O degrau por fora tem a cor da sombra da web (0 4px 0): gelo; #9FB1F0 marcada; #9AD8B5 certa; #F2CF96 errada.
+  let corDegrau: string = cores.gelo;
+  if (retorno === 'certa') { estado = opcaoEstilos.opcaoCerta; corDegrau = '#9AD8B5'; }
+  else if (retorno === 'errada') { estado = opcaoEstilos.opcaoErrada; corDegrau = '#F2CF96'; }
+  else if (selecionada) { estado = opcaoEstilos.opcaoSelecionada; corDegrau = '#9FB1F0'; }
 
   return (
     <Animated.View style={{ transform: [{ scale: pulo }], opacity: apagada ? 0.55 : 1 }}>
       {/* aria-checked além do accessibilityState: o React Native Web só lê os atributos aria-* (o leitor de tela da web precisava do estado). */}
       <Pressable testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }} aria-checked={selecionada}
-        accessibilityLabel={texto} disabled={desativada} onPress={acao} onFocus={() => setFocada(true)} onBlur={() => setFocada(false)}
-        style={({ pressed }) => [opcaoEstilos.opcao, estado, pressed && opcaoEstilos.opcaoAfundada, focada && estilos.foco]}>
+        accessibilityLabel={texto} disabled={desativada} onPress={acao} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
+        style={({ pressed }) => [degrauFora(4, 16, corDegrau, pressed), focada && estilos.foco]}>
+        {/* A face: borda de 2 que fecha em volta (o degrau de 4 é o pai, por fora, como a sombra da web). */}
+        <View style={[opcaoEstilos.opcao, estado]}>
         <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
           style={[opcaoEstilos.letra, selecionada && opcaoEstilos.letraSelecionada, retorno === 'certa' && opcaoEstilos.letraCerta,
             retorno === 'errada' && opcaoEstilos.letraErrada]}>
           <Text style={[opcaoEstilos.letraTexto, (selecionada || retorno) && { color: cores.fundo }]}>{letra}</Text>
         </View>
-        <Text style={[estilos.texto, opcaoEstilos.opcaoTexto]}>{texto}</Text>
+        {/* Como na web: o texto da opção marcada fica verde no acerto e âmbar no erro. */}
+        {/* Marcada (antes de verificar), o texto vai para o azul escuro da web (.opcoes label:has(input:checked)). */}
+        <Text style={[estilos.texto, opcaoEstilos.opcaoTexto, selecionada && !retorno && { color: cores.acaoEscura },
+          retorno === 'certa' && { color: cores.sucesso }, retorno === 'errada' && { color: corTextoErro }]}>{texto}</Text>
+        </View>
       </Pressable>
     </Animated.View>
   );
 }
 
 const opcaoEstilos = StyleSheet.create({
-  opcao: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 16, borderWidth: 2, borderBottomWidth: 5,
-    borderColor: cores.gelo, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: cores.fundo },
-  opcaoAfundada: { borderBottomWidth: 2, marginTop: 3 },
+  // .opcoes label: 60 de altura mínima, 12 × 16 de respiro, borda de 2 em volta e raio de 16.
+  opcao: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 16, borderWidth: 2,
+    borderColor: cores.gelo, paddingHorizontal: 16, paddingVertical: 12, backgroundColor: cores.fundo },
   opcaoSelecionada: { borderColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
-  opcaoCerta: { borderColor: cores.sucessoClaro, borderBottomColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
-  opcaoErrada: { borderColor: '#E3A24A', borderBottomColor: '#F2CF96', backgroundColor: '#FFF6EA' },
+  opcaoCerta: { borderColor: cores.sucessoClaro, backgroundColor: '#EEFAF3' },
+  opcaoErrada: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
   opcaoTexto: { flex: 1, fontWeight: '700' },
   letra: { width: 30, height: 30, borderRadius: 9, borderWidth: 2, borderColor: cores.gelo, alignItems: 'center', justifyContent: 'center' },
   letraSelecionada: { borderColor: cores.acao, backgroundColor: cores.acao },

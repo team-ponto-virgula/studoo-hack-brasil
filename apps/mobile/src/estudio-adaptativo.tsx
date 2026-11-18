@@ -39,6 +39,7 @@ import { mensagens } from './mensagens';
 import { avisoVozVistoAgora, lerAvisoVozVisto, marcarAvisoVozVisto } from './preferencias';
 import { cores, fontes } from './tema';
 import { iniciarControladorVozAoVivo, type ControladorVozAoVivo } from './voz-ao-vivo';
+import { focoVisivel } from './foco';
 import {
   EntradaVozAoVivo, PainelVozAoVivo, PrivacidadeVozAoVivo, provedorDaGravacao, provedorDaVozAoVivo, type ClienteElegibilidadeVoz,
   type ProvedorTexto,
@@ -54,8 +55,9 @@ function erroTexto(e: unknown) {
 function Card({ children }: { children: ReactNode }) {
   return <View style={s.card}>{children}</View>;
 }
+// .estudio-card p: entrelinha de 1,6.
 function T({ children }: { children: ReactNode }) {
-  return <Text style={estilos.texto}>{children}</Text>;
+  return <Text style={[estilos.texto, s.paragrafo]}>{children}</Text>;
 }
 function H({ children }: { children: ReactNode }) {
   return (
@@ -178,11 +180,12 @@ export function MaterialParaTrilha({
     <Card>
       {mostrarCabeca && <H>{mensagens.inicio.materialTitulo}</H>}
       {mostrarCabeca && <T>{mensagens.inicio.materialTexto}</T>}
-      <Text style={estilos.legenda}>{mensagens.inicio.enviarSeguro}</Text>
+      {/* <p class="estudio-legenda">: 13,6 na entrelinha de 1,6 e 12 de margem (dentro do respiro do cartão). */}
+      <Text style={[estilos.legenda, s.legendaCartao, !mostrarCabeca && s.legendaPrimeira]}>{mensagens.inicio.enviarSeguro}</Text>
       <LinhaAbrir rotulo={mensagens.inicio.detalhes} aberto={detalhes} alternar={() => setDetalhes(!detalhes)} />
       {/* O aviso diz quem lê o material (OpenAI, DeepSeek ou ninguém, na demonstração). Antes de a configuração chegar, ou
           se ela falhar, vale o texto geral, verdadeiro em qualquer configuração. */}
-      {detalhes && <View><Text style={estilos.legenda}>{m.limites}</Text><Text style={estilos.legenda}>{ia ? m.privacidadePorProvedor(ia) : m.privacidade}</Text></View>}
+      {detalhes && <View><Text style={[estilos.legenda, s.legendaCartao]}>{m.limites}</Text><Text style={[estilos.legenda, s.legendaCartao]}>{ia ? m.privacidadePorProvedor(ia) : m.privacidade}</Text></View>}
       {!material ? (
         <View style={s.acoesMaterial}>
           {/* Como .estudio-arquivo da web: contorno tracejado azul, texto à esquerda; o seletor é o do sistema. */}
@@ -202,8 +205,9 @@ export function MaterialParaTrilha({
         </View>
       ) : (
         <>
-          <H>{material.nome}</H>
-          {material.leitura === 'demonstracao' && <SeloDemonstracao />}
+          {/* <h3> do cartão na web: 1,1rem, entrelinha 1,3 e 20 em cima; o selo é um <p> em linha, com 12 em cima e embaixo. */}
+          <Text accessibilityRole="header" style={[estilos.subtitulo, s.nomeMaterial]}>{material.nome}</Text>
+          {material.leitura === 'demonstracao' && <SeloDemonstracao estilo={s.seloMaterial} />}
           <T>{m.revisar}</T>
           {material.leitura === 'ocr' && <T>{m.ocr}</T>}
           {/* Como na web (rodada 1.1): cada página num cartão, com a miniatura da foto, a tabela do CSV ou as primeiras
@@ -258,7 +262,7 @@ function BotaoArquivo({ rotulo, testID, desativado, acao }: { rotulo: string; te
   const [focado, setFocado] = useState(false);
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ disabled: desativado }} disabled={desativado} onPress={acao}
-      onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
       style={({ pressed }) => [s.arquivo, pressed && { opacity: 0.8 }, desativado && { borderColor: cores.gelo }, focado && estilos.foco]}>
       <Text style={[s.arquivoTexto, desativado && { color: cores.textoSecundario }]}>{rotulo}</Text>
     </Pressable>
@@ -709,7 +713,8 @@ export function ApoioDaLicao({
             </Text>
             <View style={s.ponteCabecaAcoes}>
               {/* Como na web (rodada 1.3): o selo de conteúdo simulado fica perto do título. */}
-              {ponte?.simulado && <SeloDemonstracao />}
+              {/* O selo é um <p> dentro de .estudio-card na web: 12 de margem em cima e embaixo, no meio da linha. */}
+              {ponte?.simulado && <SeloDemonstracao estilo={s.seloPonte} />}
               {/* Rodada 4D: a saída da ponte fica no alto, à vista desde o começo (na vitória, ela vem embaixo da cena). */}
               {!venceu && !revendo && aoVoltarExercicio && (
                 <Botao testID="ponte-voltar" variante="texto" rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} estilo={s.ponteVoltar} />
@@ -722,24 +727,37 @@ export function ApoioDaLicao({
           <CenaPonte resposta={ultimaResposta} temPonte={Boolean(ponte)} exemplo={Boolean(ponte) && etapaPonte >= 2}
             desafio={Boolean(ponte) && (venceu || etapaPonte >= 3 || Boolean(resposta))}
             concluida={venceu} montada={revendo && Boolean(ponte)} semLegenda={venceu || (revendo && Boolean(ponte))}
+            estilo={venceu || (revendo && Boolean(ponte)) ? s.cenaSemLegenda : s.cenaNoCartao}
             aoMedir={(y) => { cenaY.current = y; }} />
           {/* Rodada 4.3: na releitura, um aviso neutro no lugar do elogio ("Você já construiu esta ponte…"). */}
           {revendo && Boolean(ponte) && (
-            <Text testID="aviso-ponte-reaberta" accessibilityLiveRegion="polite" style={estilos.texto}>{m.ponteReabertaAviso}</Text>
+            <Text testID="aviso-ponte-reaberta" accessibilityLiveRegion="polite" style={[estilos.texto, s.paragrafo]}>{m.ponteReabertaAviso}</Text>
           )}
           {/* Na vitória, o retorno ("Isso!…") e a volta ao exercício ficam logo embaixo da cena, à vista com a travessia. */}
           {venceu && (
             <>
               {!!retorno && (
-                <Text testID="retorno-vitoria" accessibilityLiveRegion="polite" style={[estilos.texto, { color: cores.sucesso, fontWeight: '800' }]}>{retorno}</Text>
+                <Text testID="retorno-vitoria" accessibilityLiveRegion="polite" style={[estilos.texto, s.paragrafo, { color: cores.sucesso, fontWeight: '800' }]}>{retorno}</Text>
               )}
               {aoVoltarExercicio && (
                 <Botao testID="ponte-voltar-vitoria" variante="sucesso" rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} />
               )}
             </>
           )}
+          {/* Como na web: o retorno de uma tentativa errada aparece logo embaixo da cena (âmbar escuro, 700); a lição rola até ele. */}
+          {!venceu && !!retorno && resultadoPonte && !resultadoPonte.correta && (
+            <Text testID="retorno-ponte" accessibilityLiveRegion="polite" style={[estilos.texto, s.paragrafo, s.retornoPonte]}
+              onLayout={(evento) => {
+                if (retornoRolado.current === retorno) return;
+                retornoRolado.current = retorno;
+                aoMostrarRetornoPonte?.(cartaoPonteY.current + evento.nativeEvent.layout.y);
+              }}>
+              {retorno}
+            </Text>
+          )}
           {/* PT6: vencida a ponte, o cartão recolhe como na web: some a explicação, o exemplo e o desafio. */}
-          {!venceu && <T>{ponte?.motivo ?? m.ponteDica}</T>}
+          {/* Como na web: o motivo some com a ponte construída (vitória e releitura). */}
+          {!venceu && !(revendo && ponte) && <T>{ponte?.motivo ?? m.ponteDica}</T>}
           {venceu ? null : !ponte ? (
             <Text accessibilityLiveRegion="polite" style={estilos.texto}>{erro || m.pensando}</Text>
           ) : (
@@ -753,7 +771,7 @@ export function ApoioDaLicao({
               )}
               {etapaPonte >= 2 && (
                 <View ref={exemploPonte} accessible style={s.exemplo} onLayout={(evento) => { exemploY.current = evento.nativeEvent.layout.y; }}>
-                  <T>{ponte.exemplo}</T>
+                  <Text style={[estilos.texto, s.exemploTexto]}>{ponte.exemplo}</Text>
                 </View>
               )}
               {etapaPonte === 2 && !revendo && (
@@ -807,15 +825,8 @@ export function ApoioDaLicao({
                     />
                     </View>
                   )}
-                  {!venceu && (
-                    <Text accessibilityLiveRegion="polite"
-                      style={[estilos.texto, resultadoPonte && retorno ? { color: resultadoPonte.correta ? cores.sucesso : cores.alerta, fontWeight: '800' } : null]}
-                      onLayout={(evento) => {
-                        // Como na web: o retorno de uma tentativa errada aparece no fim do cartão; a lição rola até ele.
-                        if (!retorno || retornoRolado.current === retorno) return;
-                        retornoRolado.current = retorno;
-                        aoMostrarRetornoPonte?.(cartaoPonteY.current + desafioY.current + evento.nativeEvent.layout.y);
-                      }}>
+                  {!venceu && !(resultadoPonte && !resultadoPonte.correta) && !!retorno && (
+                    <Text accessibilityLiveRegion="polite" style={[estilos.texto, s.paragrafo]}>
                       {retorno}
                     </Text>
                   )}
@@ -898,10 +909,13 @@ export function ApoioDaLicao({
               value={texto}
               onChangeText={setTexto}
               editable={!ocupado && !gravando && etapaVoz !== 'ativa'}
-              style={{ minHeight: 140, textAlignVertical: 'top' }}
+              // A textarea da web (5 linhas de 24, 16 de respiro e borda de 2 em gelo, .estudio-card textarea): 156. Desligada
+              // (gravando, ocupada ou com a conversa ao vivo), fica no cinza claro da textarea desativada do navegador.
+              style={[s.campoEnsino, (ocupado || gravando || etapaVoz === 'ativa') && s.campoEnsinoDesligado]}
             />
             {/* Como a web (e57d54d): com a transcrição ligada, a dica diz quem recebe a gravação. */}
-            <Text style={[estilos.legenda, s.legendaCartao]}>
+            {/* .estudio-acoes tem 20 em cima (o cartão põe 14). */}
+            <Text style={[estilos.legenda, s.legendaCartao, { marginBottom: 6 }]}>
               {m.vozDica}{provedorGravacao ? ` ${m.vozProvedorPorProvedor(provedorGravacao)}` : ''}
             </Text>
             <Botao
@@ -947,7 +961,7 @@ export function ApoioDaLicao({
                   aoMostrarEnsino?.(cartaoEnsinoY.current + evento.nativeEvent.layout.y);
                 }}>
                 {/* O retorno em quatro cartões, como o caderno da web; sem a IA, a nota do retorno automático no pé. */}
-                <CadernoDoStu ensino={ensino} />
+                <View style={s.caderno}><CadernoDoStu ensino={ensino} /></View>
               </View>
             )}
           </>
@@ -955,35 +969,66 @@ export function ApoioDaLicao({
       </Card></View>}
       {ocupado && <T>{m.pensando}</T>}
       {/* Como na web (<p role="alert">): o erro (rede, voz, transcrição) é texto neutro, sem ícone; o leitor de tela vai até ele. */}
-      {!!erro && <AvisoAlerta texto={erro} />}
+      {/* Depois do cartão, a web tem os 24 da margem dele (o cartão aqui tem 12 embaixo). */}
+      {!!erro && <View style={s.depoisDoCartao}><AvisoAlerta texto={erro} /></View>}
     </View>
   );
 }
 const s = StyleSheet.create({
-  acoesMaterial: { gap: 12, marginTop: 20 },
+  // Depois do cartão: os 24 da margem dele na web (12 do cartão + 12). É sempre o último do bloco de apoio, que soma 12 embaixo
+  // para a margem do último cartão: aqui ele devolve, e sobram os 40 da web até o rodapé (16 com a ponte aberta, como lá).
+  depoisDoCartao: { marginTop: 12, marginBottom: -12 },
+  // .estudio-acoes: 20 em cima (o cartão já põe 14).
+  acoesMaterial: { gap: 12, marginTop: 6 },
+  legendaPrimeira: { marginTop: 12, marginBottom: -2 },
+  nomeMaterial: { fontSize: 17.6, lineHeight: 22.88, letterSpacing: -0.264, marginTop: 6 },
+  seloMaterial: { marginTop: -2, marginBottom: 10 },
   // A pergunta do desafio da ponte como a do exercício (24 px, -1 px) e as opções no espaço da lista da aula.
   // .estudio-desafio h3 da web: 1,0625rem (17) em 800, entrelinha 1,3 e -0,015em (a regra vem depois de .estudio-card h3).
-  perguntaDesafio: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '800', fontSize: 17, letterSpacing: -0.255, lineHeight: 22.1 },
+  // .estudio-retorno-ponte no erro: âmbar escuro em 700.
+  retornoPonte: { color: '#7A4A00', fontWeight: '700' },
+  paragrafo: { lineHeight: 25.6 },
+  // O selo nunca quebra nem encolhe (bf8cf37): se não couber ao lado dele, "Voltar ao exercício" desce para a linha de baixo.
+  seloPonte: { alignSelf: 'center', flexShrink: 0, marginVertical: 12 },
+  // Na web, a cena vem logo depois da cabeça (10 em cima) e, sem a legenda, o parágrafo seguinte fica a 12; aqui o cartão já
+  // põe 14 entre os blocos, então a cena devolve esse vão.
+  cenaNoCartao: { marginTop: -14 },
+  cenaSemLegenda: { marginTop: -14, marginBottom: -14 },
+  perguntaDesafio: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '800', fontSize: 17, letterSpacing: -0.255, lineHeight: 22.1, marginBottom: 10 },
   // h2 do cartão (.estudio-card h2): 1,35rem (21,6), entrelinha 1,3, -0,015em e 10 embaixo.
   tituloPonte: { flexShrink: 1, fontSize: 21.6, lineHeight: 28.08, letterSpacing: -0.324, marginBottom: 10 },
-  // "Voltar ao exercício" no alto da ponte: botão de texto de 16 px, 48 de altura e 12 de respiro nos lados, como na web.
-  ponteVoltar: { minHeight: 48, paddingHorizontal: 12 },
-  opcoesDesafio: { gap: 10 },
+  // "Voltar ao exercício" no alto da ponte: botão de texto de 16 px e 48 de altura, sem respiro lateral (bf8cf37): quando desce
+  // para a linha de baixo, o texto fica alinhado à borda esquerda do selo.
+  ponteVoltar: { minHeight: 48, paddingHorizontal: 0 },
+  // :is(.aula-quadro, .estudio-desafio) .opcoes: vão de 12.
+  opcoesDesafio: { gap: 12 },
   origemNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   arquivo: { minHeight: 48, justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderStyle: 'dashed',
     borderColor: cores.acao, borderRadius: 14 },
   arquivoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   ponteCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  // Até 600 px, .ponte-cabeca__acoes da web ocupa a linha toda: o selo à esquerda e "Voltar ao exercício" à direita.
-  ponteCabecaAcoes: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  desafio: { gap: 14 },
-  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#EEF3FF' },
-  rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24 },
+  // Até 600 px, .ponte-cabeca__acoes da web ocupa a linha toda: o selo à esquerda e "Voltar ao exercício" à direita; sem
+  // espaço (360), o link desce (vão de 4 entre as linhas, 8 entre os dois).
+  ponteCabecaAcoes: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', rowGap: 4, columnGap: 8 },
+  // .estudio-desafio: grade com vão de 12; o h3 tem 10 embaixo (22 até a 1ª opção) e a última opção fica a 12 do "Verificar"
+  // (8 depois do degrau de 4).
+  desafio: { gap: 12 },
+  // .ensino-gravando: 12 em cima na web (24 do "Parar e transcrever", com o cartão pondo 14) e 12 até o "Enviar".
+  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10, marginBottom: -2, paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: 14, backgroundColor: '#EEF3FF' },
+  campoEnsino: { minHeight: 156, textAlignVertical: 'top', borderColor: cores.gelo },
+  campoEnsinoDesligado: { backgroundColor: '#FAFAFA' },
+  // O campo já põe 8 entre o rótulo e a caixa; a textarea da web tem 10 em cima.
+  rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24, marginBottom: 2 },
   // <p class="estudio-legenda"> dentro de .estudio-card: 0,85rem (13,6) com entrelinha 1,6.
   legendaCartao: { fontSize: 13.6, lineHeight: 21.76 },
   blocoVoz: { marginVertical: -2 },
+  // .estudio-feedback.ensino-caderno (um elemento só): 20 acima (o cartão já põe 14), a linha de 2 em gelo e 16 abaixo (o
+  // padding-top de .ensino-caderno, que vem depois no CSS, vence o de 10).
+  caderno: { marginTop: 6, borderTopWidth: 2, borderColor: cores.gelo, paddingTop: 16 },
+  // .estudio-card: margem de 24 entre cartões (as margens se juntam na web; aqui, 12 + 12).
   card: {
-    marginVertical: 16,
+    marginVertical: 12,
     padding: 18,
     gap: 14,
     borderRadius: 24,
@@ -998,5 +1043,7 @@ const s = StyleSheet.create({
     paddingLeft: 12,
     gap: 10,
   },
-  exemplo: { backgroundColor: '#EEF2FF', padding: 16, borderRadius: 16 },
+  // .estudio-exemplo: respiro de 18, raio de 16 e 16 em cima e embaixo (o cartão já põe 14); o texto com entrelinha de 24.
+  exemplo: { backgroundColor: '#EEF2FF', padding: 18, borderRadius: 16, marginVertical: 2 },
+  exemploTexto: { lineHeight: 24 },
 });

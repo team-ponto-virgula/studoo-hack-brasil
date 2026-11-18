@@ -4,9 +4,11 @@
 
 **Ação principal em tela estreita.** Até 600 px, a ação principal aparece sem rolar, ocupa a largura toda e vem antes de qualquer saída secundária. Onde uma plataforma já faz isso e a outra não, a outra segue.
 
-Esta tabela é a única lista de diferenças entre a web móvel e o app. O que não está nela é defeito. Ela vem do levantamento de 18/11, que comparou o site em `fc6e458` com a prévia do app, em 390×844 e 360×800, e foi refeita no mesmo dia contra o site em `cd870b1`. O app foi corrigido na `feat/ui-hackathon-mobile` (de `d116640` a `67d3720`). As decisões são do Lead.
+Esta tabela é a única lista de diferenças entre a web móvel e o app. O que não está nela é defeito. Ela vem do levantamento de 18/11, que comparou o site em `fc6e458` com a prévia do app, em 390×844 e 360×800, e foi refeita no mesmo dia contra o site em `cd870b1`. O app foi corrigido na `feat/ui-hackathon-mobile` (de `d116640` a `0a7e759`; a rodada medida de `2a2c1c6` a `0a7e759` zerou ou explicou cada linha de espaço, caixa, tipografia, ordem e alinhamento). As decisões são do Lead.
 
-**Resolvido em 18/11.** A web fez W1 a W6, B1 e B2 em `cd870b1`, e o app copiou o esqueleto novo da web (D1, `1a66d2d`). Esses itens saíram da tabela.
+**Rodada revisada (pedido 5a5d2e21).** De `3aa3773` em diante, o app copiou o estilo computado da web em `bf8cf37` (caixas com borda que fecha e degrau por fora, fim da rolagem, rodapé compacto, cabeçalho e legenda da ponte, mapa, paisagens, cabeçalhos de 60 e 64 contando a linha, anel de foco só pelo teclado como `:focus-visible`), medido contra uma web local com o mesmo código e IA simulada (o site passou a usar IA real e não se gera nada nele).
+
+**Resolvido em 18/11.** A web fez W1 a W6, B1 e B2 em `cd870b1`, e o app copiou o esqueleto novo da web (D1, `1a66d2d`). O espaçamento do mapa (A1) ficou igual ao da web em `22c6599` e `0a7e759`: a distância de um nome de lição ao próximo é a mesma nos dois. Esses itens saíram da tabela.
 
 ## Diferenças que sobram
 
@@ -25,17 +27,17 @@ Esta tabela é a única lista de diferenças entre a web móvel e o app. O que n
 | P11 | Fontes TTF variáveis pelo expo-font (app) × WOFF2 (web). A quebra equilibrada dos títulos (`text-wrap: balance`) vem do `textBreakStrategy` do Android; o iOS e a prévia web quebram como sempre | Todas | Formato de fonte e motor de texto de cada plataforma | Ninguém. Conferir no aparelho se o peso pedido pela fonte variável aparece; se não aparecer, carregar arquivos estáticos por peso |
 | P12 | Anel de foco no botão tocado, só na prévia web do app | Prévia | No Android o toque não move o foco; ele só aparece com teclado ou D-pad | Ninguém (artefato da prévia) |
 | V1 | A conversa ao vivo do Explique só aparece na prévia web do app; no aparelho, a opção fica escondida e o Explique segue com "Gravar" e o texto | Explique | O WebRTC nativo pede um módulo próprio (react-native-webrtc) e um build novo; por decisão do Lead, sem dependência nativa nesta versão. Na prévia, o transporte é o WebRTC do navegador, no mesmo fluxo da web | App, quando o módulo nativo entrar |
-| A1 | Espaçamento do caminho do mapa. O vão do nó atual ao próximo já é o da web (+28 abaixo do atual, `e794034`); os outros vãos ainda ficam até 18 px mais curtos no app | Mapa | O app calcula o vão entre os nós com regras próprias de colisão (balão "Começar", selos, faixas de parte). Alinhar o resto às regras da web (`--passo` 36, +14 no nome discreto, +108/+144 no fim de trecho, lente do atual a 1,14×) pede uma passada própria, sem criar sobreposição | App (o resto pendente) |
 
 ## O que não é diferença de tela
 
 - "Esqueci minha senha" e "Experimentar sem conta" aparecem conforme `/api/auth/config`, com a mesma regra nos dois. No site, recuperação e visitante estão desligados.
 - Trilhas da conta, textos gerados pela IA e a ordem das opções (sorteada por sessão, com a mesma regra em `aula.tsx` e `licao.tsx`) mudam de um ambiente para outro.
-- O app não usa SVG. O olho de mostrar senha é desenhado com Views e as colinas do mapa saem de arcos de círculos grandes, reproduzindo os caminhos SVG da web. O desenho é o mesmo.
+- O app não usa SVG. Ícones, olho de mostrar senha, colinas da entrada (elipses de CSS na web), morro do troféu e a estrada até ele são desenhados com Views, no mesmo desenho da web. As ondas do mapa (começo e fronteira entre partes) são curvas Bézier na web e arcos de círculos grandes no app: onde dois arcos se cruzam fica um "V" (sob a faixa "Parte N"). Fechar isso pede `react-native-svg`; a decisão é do Lead (pedido 5a5d2e21).
+- Animações em andamento na hora da captura: o balão "Começar" flutua 4 a 5 px e a estrela do pedido cintila, nos dois.
 - No balão do nó atual, um espaço de largura zero separa a ação do título. Assim o texto visível continua contido no nome acessível ("Começar: <título>. Lição X de Y, atual."), no formato da web 4.6.
 
 ## Como conferir
 
-- Os pares lado a lado (web à esquerda, app à direita), em 390×844 e 360×800, ficam em `studoo-ui-capturas/paridade/pares/` (antes), `paridade/pares-depois/` (depois das correções) e `paridade/pares-cd870b1/` (contra o site em `cd870b1`). Os estados da voz ao vivo, em simulação local, ficam em `paridade/pares-voz/`.
-- As medidas automáticas (texto, fonte, peso, cor, caixa, o que fica parado e o que rola) ficam em `paridade/medidas/`. O levantamento com as classes está em `paridade/LEVANTAMENTO.md`.
+- Os pares lado a lado (web à esquerda, app à direita), em 390×844 e 360×800, e as medidas automáticas (texto, fonte, peso, cor, caixa, o que fica parado e o que rola) de cada rodada ficam na pasta de trabalho de quem entrega, só até o Lead aceitar a entrega (regra de disco de 18/11). As pastas antigas de `studoo-ui-capturas/` (pares, medidas e o levantamento com as classes) foram apagadas na limpeza de disco de 18/11; esta tabela é o que vale.
+- Desde o pedido 5a5d2e21, as capturas são em repouso (movimento reduzido nos dois lados) e a ferramenta compara também a caixa visual (o ancestral com fundo, borda, raio, degradê ou sombra): bordas por lado, estilo da borda, degradê, degrau por fora, contorno, reticências, tamanho e traço dos ícones, o branco no fim da rolagem e o que é tocável.
 - Uma diferença nova que a plataforma obriga entra nesta tabela com o motivo. Qualquer outra diferença é corrigida.

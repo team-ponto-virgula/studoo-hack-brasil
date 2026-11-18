@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
 import { coresMundo, desenhosMundo, regiaoDoTrecho, type Forma, type NomeDesenho } from './mundo-desenhos';
+import { degrade } from './interface';
 
 /*
  * Mundo da trilha no app: os desenhos de mundo-desenhos.ts (o mesmo arquivo da web) feitos com View, porque o app não
@@ -126,6 +127,28 @@ export function Fronteira({ trechoSeguinte, topo }: { trechoSeguinte: number; to
   );
 }
 
+const degradeDaPaisagem = degrade('linear-gradient(180deg, #d4e3ff 0%, #e6efff 52%, #f3f7ff 100%)');
+
+/**
+ * Colina como .paisagem__colina da web: a caixa (posição e tamanho da web) com o topo em meia elipse de raio horizontal igual
+ * à metade da largura e raio vertical de `raioVertical` da altura; abaixo do arco, os lados retos. A elipse é um círculo
+ * achatado (scaleY), recortado pela caixa.
+ */
+export function ColinaElipse({ esquerda, largura, baixo, altura, raioVertical = 1, cor, estilo }: {
+  esquerda?: number; largura: number; baixo: number; altura: number; raioVertical?: number; cor: string;
+  /** Posição de fora (como left 50% com a margem negativa), no lugar de `esquerda`. */
+  estilo?: StyleProp<ViewStyle>;
+}) {
+  const ry = altura * raioVertical;
+  return (
+    <View style={[{ position: 'absolute', left: esquerda, bottom: baixo, width: largura, height: altura, overflow: 'hidden' }, estilo]}>
+      <View style={{ position: 'absolute', left: 0, top: ry - largura / 2, width: largura, height: largura, borderRadius: largura / 2,
+        backgroundColor: cor, transform: [{ scaleY: (2 * ry) / largura }] }} />
+      {raioVertical < 1 && <View style={{ position: 'absolute', left: 0, right: 0, top: ry, bottom: 0, backgroundColor: cor }} />}
+    </View>
+  );
+}
+
 /**
  * Paisagem vista de lado, como a da web: céu, sol, nuvens, balão, montanhas, colinas e árvores. As medidas acompanham a
  * largura da caixa, medida no primeiro layout. `children` fica por cima (o Stu, temas…), já com a largura.
@@ -140,24 +163,23 @@ export function Paisagem({ altura, compacta = false, estilo, children }: {
   const l = (fracao: number) => Math.round(largura * fracao);
 
   return (
-    <View style={[mundoEstilos.paisagem, { height: altura }, estilo]}
+    // .paisagem da web: céu em degradê (#d4e3ff, #e6efff aos 52%, #f3f7ff). A ordem segue as camadas da web: os picos (z-index
+    // -1) atrás de tudo, o sol, as nuvens e o balão na frente deles, as colinas (z 0) e os enfeites (z 1) por cima.
+    <View style={[mundoEstilos.paisagem, degradeDaPaisagem, { height: altura }, estilo]}
       onLayout={(evento) => setLargura(evento.nativeEvent.layout.width)}>
-      <View style={[StyleSheet.absoluteFill, mundoEstilos.ceuMeio]} pointerEvents="none" />
       {largura > 0 && (
         <>
           <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
-            <Desenho nome="sol" largura={l(0.13)} estilo={{ position: 'absolute', top: altura * 0.08, right: l(0.08) }} />
-            <Desenho nome="nuvem" largura={l(0.2)} estilo={{ position: 'absolute', top: altura * 0.09, left: l(0.07) }} />
-            <Desenho nome="nuvem" largura={l(0.14)} estilo={{ position: 'absolute', top: altura * 0.2, left: l(0.46), opacity: 0.9 }} />
-            {!compacta && <Desenho nome="nuvem" largura={l(0.11)} estilo={{ position: 'absolute', top: altura * 0.04, left: l(0.64), opacity: 0.8 }} />}
-            {!compacta && <Desenho nome="balao" largura={l(0.07)} estilo={{ position: 'absolute', top: altura * 0.14, left: l(0.28) }} />}
             <Desenho nome="picos" largura={l(0.4)} estilo={{ position: 'absolute', bottom: altura * 0.33, right: l(0.02) }} />
-            <View style={[mundoEstilos.colina, { bottom: altura * 0.16, left: -l(0.14), width: l(0.78), height: altura * 0.4,
-              borderTopLeftRadius: l(0.39), borderTopRightRadius: l(0.39), backgroundColor: coresMundo.florestaRelevo }]} />
-            <View style={[mundoEstilos.colina, { bottom: altura * 0.08, right: -l(0.18), width: l(0.84), height: altura * 0.38,
-              borderTopLeftRadius: l(0.42), borderTopRightRadius: l(0.42), backgroundColor: coresMundo.campoRelevo }]} />
-            <View style={[mundoEstilos.colina, { bottom: -altura * 0.06, left: -l(0.06), right: -l(0.06), height: altura * 0.26,
-              borderTopLeftRadius: l(0.6), borderTopRightRadius: l(0.6), backgroundColor: coresMundo.campo }]} />
+            <Desenho nome="sol" largura={l(0.13)} estilo={{ position: 'absolute', top: altura * 0.08, right: l(0.1) }} />
+            <Desenho nome="nuvem" largura={l(0.2)} estilo={{ position: 'absolute', top: altura * 0.09, left: l(0.08) }} />
+            <Desenho nome="nuvem" largura={l(0.14)} estilo={{ position: 'absolute', top: altura * 0.2, left: l(0.46), opacity: 0.9 }} />
+            {!compacta && <Desenho nome="nuvem" largura={l(0.11)} estilo={{ position: 'absolute', top: altura * 0.04, left: l(0.62), opacity: 0.8 }} />}
+            {!compacta && <Desenho nome="balao" largura={l(0.07)} estilo={{ position: 'absolute', top: altura * 0.14, left: l(0.28) }} />}
+            {/* .paisagem__colina: meia elipse (border-radius 50% 50% 0 0 / 100% 100% 0 0); a da frente, com o raio vertical de 60%. */}
+            <ColinaElipse esquerda={-l(0.14)} largura={l(0.78)} baixo={altura * 0.16} altura={altura * 0.4} cor={coresMundo.florestaRelevo} />
+            <ColinaElipse esquerda={l(0.34)} largura={l(0.84)} baixo={altura * 0.08} altura={altura * 0.38} cor={coresMundo.campoRelevo} />
+            <ColinaElipse esquerda={-l(0.06)} largura={l(1.12)} baixo={-altura * 0.06} altura={altura * 0.24} raioVertical={0.6} cor={coresMundo.campo} />
             <Desenho nome="pinheiro" largura={l(0.08)} estilo={{ position: 'absolute', bottom: altura * 0.41, left: l(0.08) }} />
             <Desenho nome="pinheiro" largura={l(0.06)} estilo={{ position: 'absolute', bottom: altura * 0.43, left: l(0.17) }} />
             <Desenho nome="arvore" largura={l(0.09)} estilo={{ position: 'absolute', bottom: altura * 0.33, right: l(0.18) }} />
@@ -181,7 +203,5 @@ const mundoEstilos = StyleSheet.create({
   resto: { position: 'absolute', left: 0, right: 0, top: '50%', marginTop: 23, bottom: 0 },
   enfeites: { position: 'absolute', left: 0, right: 0, top: 0, bottom: '50%', marginBottom: -4 },
   enfeite: { position: 'absolute', bottom: 0 },
-  paisagem: { overflow: 'hidden', backgroundColor: '#DCE7FF' },
-  ceuMeio: { top: '45%', backgroundColor: '#E9F0FF' },
-  colina: { position: 'absolute' },
+  paisagem: { overflow: 'hidden', backgroundColor: '#E6EFFF' },
 });

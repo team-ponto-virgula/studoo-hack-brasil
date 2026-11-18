@@ -19,7 +19,7 @@ import {
   type LicaoDetalhe,
 } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode, type Ref } from 'react';
-import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { useAparecer, usePulinho, useTremor } from './animacoes';
 import {
   TranscritorContexto,
@@ -39,7 +39,7 @@ import {
 } from './aula-formatos';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron } from './interface';
+import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron, degrauFora, quebraEquilibrada } from './interface';
 import { mensagens, textoDaFalta } from './mensagens';
 import { Opcao, letras } from './opcao';
 import { cores, fontes } from './tema';
@@ -180,6 +180,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   avaliar: (resposta: string, indice: number) => Promise<Avaliacao | null>;
   concluir: (comprovante: string, resumo: ResumoLicao, pratica?: AutoAvaliacao) => Promise<boolean>;
 }) {
+  // .aula-quadro da web: respiro clamp(16px, 5vw, 28px) (19,5 px em 390, 18 em 360).
+  const { width: larguraJanela } = useWindowDimensions();
+  const respiroQuadro = { padding: Math.min(28, Math.max(16, larguraJanela * 0.05)) };
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   // Como na web: as opções mudam de ordem a cada visita.
   const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
@@ -243,6 +246,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const citacaoY = useRef(0);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const apoioPosicao = useRef(0);
+  const [apoioVazio, setApoioVazio] = useState(true);
   // Para rolar até o fim do exercício depois da correção: onde ele termina, quanto já rolou e a altura visível.
   const fimDoExercicio = useRef(0);
   const posicaoRolagem = useRef(0);
@@ -519,11 +523,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   const topo = (
     <View style={licaoEstilos.topo}>
-      <BotaoIcone icone="fechar" tamanho={26} rotulo={t.voltar} testID="voltar-plano" desativado={ocupado} acao={sair} />
+      {/* .aula-fechar .icone: 26 px com traço 3. */}
+      <BotaoIcone icone="fechar" tamanho={26} traco={3} rotulo={t.voltar} testID="voltar-plano" desativado={ocupado} acao={sair} />
       <View style={licaoEstilos.topoColuna}>
         <View style={licaoEstilos.andamento} accessible accessibilityRole="progressbar" accessibilityLabel={andamento}
           accessibilityValue={{ min: 0, max: total, now: revisao ? total : passo + 1 }}>
-          <BarraDaAula fracao={revisao ? 1 : (passo + 1) / total} certa={avaliacao?.correta === true} />
+          {/* Como a web (aula.tsx): meia etapa enquanto a etapa atual não foi vencida; a etapa inteira depois do acerto. */}
+          <BarraDaAula fracao={revisao ? 1 : (avaliacao?.correta ? passo + 1 : passo + 0.5) / total} certa={avaliacao?.correta === true} />
           <Text style={licaoEstilos.posicao}>{andamento}</Text>
         </View>
         {/* Como na web (rodada 4B): o nome da lição fica pequeno no topo; no exercício, o título é a pergunta. */}
@@ -581,7 +587,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       </View>
     );
   } else if (temMais) {
-    rodape = <Botao testID="ler-mais" peso="900" rotulo={t.continuarLendo} acao={lerMais} />;
+    // Como .botao--ler-mais da web: a seta depois do texto, girada para baixo.
+    rodape = <Botao testID="ler-mais" peso="900" rotulo={t.continuarLendo} icone="seta" giroIcone="90deg" acao={lerMais} />;
   } else {
     rodape = <Botao testID="avancar-licao" peso="900" rotulo={t.seguir} icone="seta" desativado={ocupado}
       acao={() => { posicoesDasEtapas.current[passo] = posicaoRolagem.current; setPasso((atual) => atual + 1); }} />;
@@ -589,13 +596,12 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   if (temAbaixo && (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica')) {
     rodape = (
       <>
-        {/* O alvo tem 48 dp e a pílula, 32: as margens negativas do alvo não deixam o rodapé crescer. */}
-        <Pressable testID="mais-abaixo" accessibilityRole="button" accessibilityLabel={t.maisAbaixo} onPress={lerMais}
-          style={({ pressed }) => [licaoEstilos.maisAbaixoAlvo, pressed && { opacity: 0.7 }]}>
-          <View style={licaoEstilos.maisAbaixo}>
-            <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={14} cor={cores.acao} /></View>
-            <Text style={licaoEstilos.maisAbaixoTexto}>{t.maisAbaixo}</Text>
-          </View>
+        {/* Como .aula-mais-abaixo: a pílula branca com borda; o alvo de 48 dp cresce por fora (hitSlop), sem mudar o desenho (P8). */}
+        <Pressable testID="mais-abaixo" accessibilityRole="button" accessibilityLabel={t.maisAbaixo} onPress={lerMais} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          style={({ pressed }) => [licaoEstilos.maisAbaixoAlvo, licaoEstilos.maisAbaixo, pressed && { opacity: 0.7 }]}>
+          {/* .aula-mais-abaixo .icone: 16 px, girada para baixo. */}
+          <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={16} cor={cores.acao} /></View>
+          <Text style={licaoEstilos.maisAbaixoTexto}>{t.maisAbaixo}</Text>
         </Pressable>
         {rodape}
       </>
@@ -618,14 +624,16 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         );
       case 'multipla_escolha':
         return (
-          <View accessibilityRole="radiogroup" accessibilityLabel={t.resposta} style={licaoEstilos.opcoes}>
+          <View accessibilityRole="radiogroup" accessibilityLabel={t.resposta} style={licaoEstilos.opcoesGrupo}>
             <Text style={estilos.rotulo}>{t.resposta}</Text>
+            <View style={licaoEstilos.opcoes}>
             {atual.opcoes.map((opcao, posicao) => (
               <Opcao key={opcao.id} id={opcao.id} letra={letras[posicao] ?? String(posicao + 1)} texto={opcao.texto}
                 selecionada={opcao.id === resposta} retorno={opcao.id === resposta ? retorno : null}
                 desativada={ocupado || respondido} apagada={respondido && opcao.id !== resposta}
                 acao={() => mudarResposta(opcao.id)} />
             ))}
+            </View>
           </View>
         );
       case 'ordenar':
@@ -666,33 +674,34 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       {/* Como na web: na revisão rápida, a etapa entra de novo, mesmo com o mesmo exercício (o último, pulado agora). */}
       <EntradaDaEtapa key={`${passo}-${rodadaDeOpcoes}`}>
         {passo > 0 && !revisao && (
-          <Pressable testID="etapa-anterior" accessibilityRole="button" disabled={ocupado} hitSlop={8}
+          <Pressable testID="etapa-anterior" accessibilityRole="button" disabled={ocupado} hitSlop={{ top: 10, bottom: 10, left: 0, right: 0 }}
             onPress={() => { voltandoEtapa.current = true; setPasso((atual) => Math.max(0, atual - 1)); }} style={licaoEstilos.voltarEtapa}>
             <View style={{ transform: [{ rotate: '180deg' }] }}><Icone nome="seta" tamanho={16} cor={cores.acao} /></View>
             <Text style={licaoEstilos.voltarEtapaTexto}>{t.etapaAnterior}</Text>
           </Pressable>
         )}
-        <View style={licaoEstilos.etapa}>
+        <View style={[licaoEstilos.etapa, !(passo > 0 && !revisao) && licaoEstilos.etapaNoTopo]}>
           <View style={[licaoEstilos.etapaIcone, { backgroundColor: coresDaEtapa[etapa.tipo].fundo }]}>
-            <Icone nome={iconesDaEtapa[etapa.tipo]} tamanho={18} cor={coresDaEtapa[etapa.tipo].texto} />
+            {/* .aula-etapa .icone: caixa de 28 com 4 de respiro, desenho de 20. */}
+            <Icone nome={iconesDaEtapa[etapa.tipo]} tamanho={20} cor={coresDaEtapa[etapa.tipo].texto} />
           </View>
           <Text style={[licaoEstilos.etapaTexto, { color: coresDaEtapa[etapa.tipo].texto }, caixaAlta]}>{nomeEtapa}</Text>
         </View>
         {/* Rodada 4B da web: o nome da lição é o título no conceito e na prática; no exemplo, o título é "Exemplo" e, no
             exercício, a própria pergunta. O nome continua pequeno no topo. */}
-        {(etapa.tipo === 'conceito' || etapa.tipo === 'pratica') && <Titulo testID="titulo-licao" foco={passo === 0} estilo={licaoEstilos.tituloLicao}>{licao.titulo}</Titulo>}
+        {(etapa.tipo === 'conceito' || etapa.tipo === 'pratica') && <Titulo testID="titulo-licao" foco={passo === 0} equilibrado estilo={licaoEstilos.tituloLicao}>{licao.titulo}</Titulo>}
         {/* Como na web: o erro (rede no Verificar, conclusão) fica no alto, em foco, e a tela sobe até ele. */}
         {/* O cartão de erro da web (3A), sem ação: na lição, a nova tentativa é o próprio botão do rodapé (Verificar, Concluir). */}
         {erro && <EstadoErro mensagem={erro} testID="erro-licao" foco />}
         {avisoRetomada && (
           <View testID="aviso-retomada" accessibilityLiveRegion="polite" style={licaoEstilos.aviso}>
             <Text style={licaoEstilos.avisoTexto}>{confirmandoRecomeco ? t.recomecarPergunta : t.retomada}</Text>
-            <Pressable testID={confirmandoRecomeco ? 'confirmar-recomeco' : 'recomecar-licao'} accessibilityRole="button" hitSlop={8}
+            <Pressable testID={confirmandoRecomeco ? 'confirmar-recomeco' : 'recomecar-licao'} accessibilityRole="button" hitSlop={8} style={licaoEstilos.avisoLink}
               onPress={() => { if (confirmandoRecomeco) { setConfirmandoRecomeco(false); recomecarAgora(); } else setConfirmandoRecomeco(true); }}>
               <Text style={[licaoEstilos.avisoTexto, licaoEstilos.avisoAcao]}>{t.recomecarLicao}</Text>
             </Pressable>
             {confirmandoRecomeco && (
-              <Pressable testID="cancelar-recomeco" accessibilityRole="button" hitSlop={8} onPress={() => setConfirmandoRecomeco(false)}>
+              <Pressable testID="cancelar-recomeco" accessibilityRole="button" hitSlop={8} style={licaoEstilos.avisoLink} onPress={() => setConfirmandoRecomeco(false)}>
                 <Text style={[licaoEstilos.avisoTexto, licaoEstilos.avisoAcao]}>{mensagens.geracao.cancelar}</Text>
               </Pressable>
             )}
@@ -720,13 +729,12 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 <View style={licaoEstilos.marcadores}>
                   <Text style={licaoEstilos.marcadoresTexto}>{mensagens.estudio.baseadoMaterial}</Text>
                   {licao.referencias.map((_, numero) => (
-                    <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button" hitSlop={8}
+                    <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button"
                       accessibilityLabel={`${mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }} aria-expanded={citacaoAberta === numero}
                       onPress={() => mostrarCitacao(numero)}
-                      style={({ pressed }) => [licaoEstilos.marcadorAlvo, pressed && { opacity: 0.8 }]}>
-                      <View style={[licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto]}>
-                        <Text style={[licaoEstilos.marcadorTexto, citacaoAberta === numero && { color: cores.fundo }]}>[{numero + 1}]</Text>
-                      </View>
+                      hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
+                      style={({ pressed }) => [licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto, pressed && { opacity: 0.8 }]}>
+                      <Text style={[licaoEstilos.marcadorTexto, citacaoAberta === numero && { color: cores.fundo }]}>[{numero + 1}]</Text>
                     </Pressable>
                   ))}
                 </View>
@@ -745,9 +753,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           </>
         )}
         {etapa.tipo === 'exemplo' && (
-          <View style={[licaoEstilos.quadro, licaoEstilos.quadroExemplo]}>
+          <View style={[licaoEstilos.quadro, respiroQuadro, licaoEstilos.quadroExemplo]}>
             {/* Como na web 4B: o título do quadro aparece ("Exemplo" ou "Demonstração") e recebe o foco. */}
-            <Text ref={tituloEtapa} testID="titulo-etapa" accessible accessibilityRole="header" style={licaoEstilos.tituloQuadro}>
+            <Text ref={tituloEtapa} testID="titulo-etapa" accessible accessibilityRole="header" textBreakStrategy="balanced" style={[licaoEstilos.tituloQuadro, quebraEquilibrada]}>
               {licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}
             </Text>
             <Text style={estilos.texto}>{licao.exemplo}</Text>
@@ -759,13 +767,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {/* Como na web 4B: o Stu só aparece depois de uma resposta (antes, a pergunta fica sozinha no alto). */}
         {exercicio && estadoStu !== 'neutro' && <StuDoExercicio estado={estadoStu} />}
         {exercicio && (
-          <Animated.View style={[licaoEstilos.quadro, { transform: [{ translateX: tremor }] }]}
+          <Animated.View style={[licaoEstilos.quadro, respiroQuadro, { transform: [{ translateX: tremor }] }]}
             onLayout={(evento) => {
               exercicioY.current = evento.nativeEvent.layout.y;
               fimDoExercicio.current = evento.nativeEvent.layout.y + evento.nativeEvent.layout.height;
             }}>
             {/* Como na web 4B: a pergunta é o título do exercício (e recebe o foco); o selo no alto diz qual exercício é. */}
-            <Text ref={tituloEtapa} testID="pergunta-exercicio" accessible accessibilityRole="header" style={licaoEstilos.pergunta}>
+            <Text ref={tituloEtapa} testID="pergunta-exercicio" accessible accessibilityRole="header" textBreakStrategy="balanced" style={[licaoEstilos.pergunta, quebraEquilibrada]}>
               {exercicio.enunciado}
             </Text>
             {exercicio.contexto && <Text style={estilos.texto}>{exercicio.contexto}</Text>}
@@ -774,7 +782,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
             )}
             {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
-            {campoDoExercicio(exercicio)}
+            <View style={licaoEstilos.formulario}>{campoDoExercicio(exercicio)}</View>
             {!avaliacao && errosAnteriores[indice] && (
               <View testID="dica-anterior" accessible accessibilityRole="text" style={licaoEstilos.dica}>
                 <View style={licaoEstilos.dicaTopo}>
@@ -788,18 +796,22 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             {/* Para consultar, depois da resposta e recolhido para a pergunta ficar no alto: o acorde e a barra de fração (a
                 linha do tempo entregaria a ordem). */}
             {exercicio && (
-              <View style={[licaoEstilos.consulta, !explicacaoAberta && licaoEstilos.consultaFechada]}>
+              <View style={licaoEstilos.consultaRecolhivel}>
                 <Pressable testID="rever-explicacao" accessibilityRole="button" accessibilityState={{ expanded: explicacaoAberta }} aria-expanded={explicacaoAberta}
                   onPress={() => setExplicacaoAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
                   <Chevron aberto={explicacaoAberta} cor="#8A5A00" />
                   <Text style={licaoEstilos.consultaBotaoTexto}>{explicacaoAberta ? t.recursos.esconder : t.reverExplicacao}</Text>
                 </Pressable>
-                {explicacaoAberta && <Text style={estilos.texto}>{licao.conceito}</Text>}
-                {explicacaoAberta && <Text style={estilos.texto}><Text style={{ fontWeight: '800' }}>{t.exemplo}: </Text>{licao.exemplo}</Text>}
+                {explicacaoAberta && (
+                  <View style={licaoEstilos.consultaConteudo}>
+                    <Text style={estilos.texto}>{licao.conceito}</Text>
+                    <Text style={estilos.texto}><Text style={{ fontWeight: '800' }}>{t.exemplo}: </Text>{licao.exemplo}</Text>
+                  </View>
+                )}
               </View>
             )}
             {licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' && (
-              <View style={[licaoEstilos.consulta, !consultaAberta && licaoEstilos.consultaFechada]}
+              <View style={licaoEstilos.consultaRecolhivel}
                 onLayout={(evento) => {
                   // Aberta depois de um erro, a consulta fica atrás do painel: a tela leva o fim dela para cima.
                   if (!consultaAberta || !avaliacao) return;
@@ -819,7 +831,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                         : licao.recurso.tipo === 'imagem' ? t.recursos.verIlustracao : t.recursos.verFracao}
                   </Text>
                 </Pressable>
-                {consultaAberta && <RecursoDaLicao recurso={licao.recurso} />}
+                {consultaAberta && <View style={licaoEstilos.consultaConteudo}><RecursoDaLicao recurso={licao.recurso} /></View>}
               </View>
             )}
             {exercicio.tipo === 'aberta' && avaliacao && (
@@ -828,7 +840,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           </Animated.View>
         )}
         {etapa.tipo === 'pratica' && licao.pratica && (
-          <View style={[licaoEstilos.quadro, licaoEstilos.quadroPratica]} onLayout={(evento) => { praticaY.current = evento.nativeEvent.layout.y; }}>
+          <View style={[licaoEstilos.quadro, respiroQuadro, licaoEstilos.quadroPratica]} onLayout={(evento) => { praticaY.current = evento.nativeEvent.layout.y; }}>
             <Text ref={tituloEtapa} accessible accessibilityRole="header" style={estilos.subtitulo}>{t.pratica.titulo}</Text>
             <EtapaPratica pratica={licao.pratica} escolha={autoAvaliacao} recurso={licao.recurso}
               aoMedirComoFoi={(y) => { comoFoiY.current = y; }} aoAcabar={() => setTimeout(mostrarComoFoi, 120)} reinicio={voltasPratica}
@@ -851,7 +863,10 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         )}
       </EntradaDaEtapa>
       </View>
-      {exercicio && <View onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; }}>
+      {/* Como a web desde bf8cf37: o bloco de apoio vazio (sem reforço, origem nem Explique) não conta (40 entre o último
+          conteúdo e o rodapé); com cartões, a margem do último cartão soma, como na web (64). */}
+      {exercicio && <View style={[licaoEstilos.apoio, ponteAberta && licaoEstilos.apoioComPonte, apoioVazio && licaoEstilos.apoioVazio]}
+        onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; setApoioVazio(evento.nativeEvent.layout.height < 1); }}>
         <ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
         ultimo={indice === exercicios.length - 1}
         aoVoltarExercicio={tentarDeNovo}
@@ -946,13 +961,15 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
 }
 
 type EstadoStu = 'neutro' | 'pensando' | 'atento' | 'primeira' | 'acerto' | 'ponte';
+// As cores computadas de .aula-stu-estado[data-estado] na web: pensando fica na base (névoa e gelo); atento âmbar;
+// de primeira #eafbe2/#6bc445; ponte #eef3ff/#9cb4f5; acerto #eefaf3/#9ad8b5.
 const visualDoStu: Record<EstadoStu, { fundo: string; borda: string }> = {
   neutro: { fundo: cores.nevoa, borda: cores.gelo },
-  pensando: { fundo: '#FFF8E8', borda: '#F2CF96' },
-  atento: { fundo: cores.alertaFundo, borda: cores.alertaBorda },
-  primeira: { fundo: cores.sucessoFundo, borda: '#9AD8B5' },
-  acerto: { fundo: '#F3FBF6', borda: '#BFE6CF' },
-  ponte: { fundo: cores.ceu, borda: cores.destaqueBorda },
+  pensando: { fundo: cores.nevoa, borda: cores.gelo },
+  atento: { fundo: '#FFF6EA', borda: '#F2CF96' },
+  primeira: { fundo: '#EAFBE2', borda: '#6BC445' },
+  acerto: { fundo: '#EEFAF3', borda: '#9AD8B5' },
+  ponte: { fundo: '#EEF3FF', borda: '#9CB4F5' },
 };
 
 /**
@@ -1019,19 +1036,25 @@ export function CartaoFonte({ referencia, numero, ref, titulo, parado = false }:
   return (
     <Animated.View ref={ref} testID="cartao-fonte" accessible accessibilityRole="summary"
       accessibilityLabel={`${m.fonteMaterial} ${numero}. ${onde}. ${referencia.trecho}`}
-      style={[licaoEstilos.fonte, parado ? { marginTop: 0 }
+      // .aula-citacao: borda de 2 (#c3cdf2) que fecha em volta e o degrau de 4 (gelo) por fora, como a sombra da web.
+      style={[degrauFora(4, 20, cores.gelo), licaoEstilos.fonteFora, parado ? { marginTop: 0 }
         : { opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
+      <View style={licaoEstilos.fonte}>
       {/* Como .aula-citacao da web: um selo só com o número e "Fonte do seu material", o material em 14 px/700, o selo de
           demonstração e o trecho em itálico, sem aspas, com a borda azul à esquerda sobre o branco. */}
-      <View style={licaoEstilos.fonteSeloNumero}>
-        <Text style={[licaoEstilos.fonteRotulo, caixaAlta]}>{`[${numero}] ${m.fonteMaterial}`}</Text>
+      {/* .aula-citacao__topo: linha que quebra, com 8 entre as linhas (o cartão tem 10 entre os blocos). */}
+      <View style={licaoEstilos.fonteTopo}>
+        <View style={licaoEstilos.fonteSeloNumero}>
+          <Text style={[licaoEstilos.fonteRotulo, caixaAlta]}>{`[${numero}] ${m.fonteMaterial}`}</Text>
+        </View>
+        <Text style={licaoEstilos.fonteOnde}>{onde}</Text>
+        {referencia.leitura === 'demonstracao' && <SeloDemonstracao emLinha />}
       </View>
-      <Text style={licaoEstilos.fonteOnde}>{onde}</Text>
-      {referencia.leitura === 'demonstracao' && <SeloDemonstracao />}
       <View style={licaoEstilos.fonteTrecho}>
         <Text selectable style={[estilos.texto, licaoEstilos.fonteTrechoTexto]}>{referencia.trecho}</Text>
       </View>
       {referencia.leitura === 'ocr' && <Text style={estilos.legenda}>{m.ocr}</Text>}
+      </View>
     </Animated.View>
   );
 }
@@ -1073,32 +1096,36 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
   }, []);
 
   return (
-    <Animated.View style={{ gap: 14, opacity: subida, transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
+    <Animated.View style={{ gap: 6, opacity: subida, transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
       <View ref={area} testID="feedback-licao" accessible accessibilityRole="alert"
         accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${avaliacao.feedback} ${extras.join(' ')}`}
         style={licaoEstilos.retorno}>
         {/* Como na web: o ícone pequeno ao lado do título e o texto na largura toda, embaixo (o painel ocupava ~40% da tela). */}
         <View style={licaoEstilos.retornoCabecalho}>
-          <Animated.View style={[licaoEstilos.retornoIcone, !certa && licaoEstilos.retornoIconeErrado, {
+          {/* .aula-retorno__icone no celular: círculo de 34 com o degrau de 3 por fora (sombra da web) e o ícone de 20 com traço 3,2. */}
+          <Animated.View style={[degrauFora(3, 17, certa ? cores.sucesso : '#B4650D'), compacto && { borderRadius: 16 }, {
             transform: [
               { scale: icone.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
               { rotate: icone.interpolate({ inputRange: [0, 1], outputRange: ['-30deg', '0deg'] }) },
             ],
           }]}>
-            <Icone nome={certa ? 'check' : iconeErro} tamanho={20} cor={cores.fundo} />
-            {certa && <Confete quantidade={14} />}
+            <View style={[licaoEstilos.retornoIcone, !certa && licaoEstilos.retornoIconeErrado, compacto && licaoEstilos.retornoIconeCompacto]}>
+              <Icone nome={certa ? 'check' : iconeErro} tamanho={compacto ? 18 : 20} cor={cores.fundo} traco={3.2} />
+              {certa && <Confete quantidade={14} />}
+            </View>
           </Animated.View>
           <Text style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 }]}>{titulo}</Text>
         </View>
         {/* .aula-retorno p no celular: 15 px com entrelinha 1,4. */}
         {!compacto && <Text style={[estilos.texto, licaoEstilos.retornoTexto]}>{avaliacao.feedback}</Text>}
         {!compacto && extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
+        {!certa && !compacto && avisoPular && <Text style={licaoEstilos.avisoPular}>{avisoPular}</Text>}
       </View>
       {certa && convite && <Botao testID="convite-explique" variante="texto" rotulo={t.expliqueConvite} desativado={ocupado} acao={convite}
         estilo={licaoEstilos.convite} />}
-      {!certa && !compacto && avisoPular && <Text style={licaoEstilos.avisoPular}>{avisoPular}</Text>}
       {!certa && !compacto && <Botao testID="ver-outro-jeito" peso="900" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
-      <View style={licaoEstilos.retornoAcoes}>
+      {/* Compacto (Explique aberto): 16 entre o título e o "Continuar" (o visto ficava a 4 px do botão); a web segue o mesmo. */}
+      <View style={[licaoEstilos.retornoAcoes, compacto && licaoEstilos.retornoAcoesCompacto]}>
         {!certa && (
           <View style={licaoEstilos.acaoTentar}>
             <Botao testID="tentar-de-novo" variante="secundario" peso="900" rotulo={mensagens.licao.tentarDeNovo} desativado={ocupado} acao={tentarDeNovo} />
@@ -1119,18 +1146,28 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
 const licaoEstilos = StyleSheet.create({
   // A aula da web tem 16 de respiro nos lados no celular (clamp(16px, 4vw, 48px) em aula.css), no alto, no meio e no
   // rodapé; as outras telas têm 20. A barra do alto vem da faixa comum (20), então ela avança 4 para cada lado.
-  topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: -4 },
+  // .aula-topo no celular: 8 em cima e embaixo, começando 2 abaixo do topo (a margem de -12 sobre os 14 da página): o X fica
+  // em 10 e a faixa mede 62.
+  topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: -4, marginTop: 2 },
   topoColuna: { flex: 1, minWidth: 0, gap: 2 },
   andamento: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   tituloTopo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 15 },
   /** A aula começa mais perto do topo (rodada 4B da web). */
-  conteudo: { paddingTop: 16, paddingHorizontal: 16 },
-  rodapeConteudo: { paddingHorizontal: 16 },
+  // 40 entre o último conteúdo e o rodapé fixo no fim da rolagem (bf8cf37: o vão de 22 do painel mais os 18 do rodapé).
+  // 18 da faixa do alto até o primeiro bloco: com a faixa de 62, "Etapa anterior", a etiqueta do exercício e o título da ponte
+  // ficam na altura da web (medido em 390). 40 até o rodapé no fim da rolagem.
+  conteudo: { paddingTop: 18, paddingHorizontal: 16, paddingBottom: 40 },
+  // .aula-rodape no celular: 10 em cima, contando a linha de 2 que a web desenha por dentro (::before); aqui a linha é a borda
+  // de cima do rodapé, então o respiro é 8.
+  rodapeConteudo: { paddingHorizontal: 16, paddingTop: 8 },
   /** Exercício recolhido enquanto a ponte está aberta (rodada 4D da web). */
   recolhido: { display: 'none' },
-  tituloQuadro: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
-  /** A pergunta como título do exercício: 20 px em celular, como `.aula-pergunta` da web. */
-  pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 28 },
+  // .aula-miolo h1 { margin-top: -6px } vale também para o título dentro do quadro (vence o .aula-pergunta).
+  tituloQuadro: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -0.5, lineHeight: 28, marginTop: -6 },
+  /** A pergunta como título do exercício, como `.aula-pergunta` da web: entrelinha de 27,6 e 6 embaixo. */
+  pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 27.6, marginTop: -6, marginBottom: 6 },
+  /** O formulário da resposta: 4 em cima (.aula-quadro .formulario). */
+  formulario: { marginTop: 4 },
   trilha: { flex: 1, height: 18, borderRadius: 9, backgroundColor: cores.gelo, overflow: 'hidden' },
   preenchimento: { height: '100%', minWidth: 18, borderRadius: 9, backgroundColor: cores.acao, overflow: 'hidden' },
   preenchimentoCerto: { backgroundColor: cores.sucessoClaro },
@@ -1143,82 +1180,125 @@ const licaoEstilos = StyleSheet.create({
   avisoPular: { textAlign: 'center', color: cores.texto, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 21, fontWeight: '700' },
   retornoTexto: { fontSize: 15, lineHeight: 21 },
   // "Pular por agora" no painel do erro: botão de texto de 16 px, 44 de altura e 8 de respiro, sem quebrar.
-  pular: { minHeight: 44, paddingHorizontal: 8 },
+  pular: { minHeight: 48, paddingHorizontal: 8 },
   etapa: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   etapaTexto: { fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
   // Como .aula-miolo h1 da web no celular: clamp(1,5rem, 4,6vw, 2rem) = 24 px, entrelinha 1,15.
-  tituloLicao: { fontSize: 24, lineHeight: 28 },
+  // .aula-miolo h1 no celular: 24 px na entrelinha de 1,15; com o vão de 14 da etapa e o -6 de cima, fica a 8 da etapa e a 14 do
+  // objetivo (a introdução já tem 8 em cima).
+  tituloLicao: { fontSize: 24, lineHeight: 27.6, marginTop: 4, marginBottom: 6 },
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   // 48 dp de toque sem empurrar a etapa: as margens negativas devolvem o espaço que o visual de antes ocupava.
-  voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: -8, marginBottom: -2, minHeight: 48 },
-  voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  // .aula-voltar-etapa: 4 de respiro em cima e embaixo (29 de altura), na largura da coluna, 6 embaixo mais o vão de 14 da grade;
+  // o alvo de 48 cresce por fora (hitSlop), sem mudar o desenho (P8).
+  voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'stretch', paddingVertical: 4, marginTop: 4, marginBottom: 20 },
+  // .aula-miolo começa 4 abaixo do topo do conteúdo (a margem de cima do "Etapa anterior"): sem o link (primeira etapa e
+  // revisão), o selo da etapa fica nesse mesmo ponto.
+  etapaNoTopo: { marginTop: 4 },
+  voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   marcadores: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
-  marcadoresTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  marcadoresTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   marcadorAlvo: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', marginVertical: -8 },
-  marcador: { minWidth: 36, minHeight: 32, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
+  // O selo [1] da web: 38 × 28, pílula; o alvo de 48 cresce por fora (hitSlop, P8).
+  marcador: { minWidth: 38, minHeight: 28, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
     borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: cores.fundo },
   marcadorAberto: { borderColor: cores.acao, backgroundColor: cores.acao },
   marcadorTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
-  fonte: { marginTop: 14, paddingVertical: 16, paddingHorizontal: 20, gap: 10, borderRadius: 20, borderWidth: 2, borderBottomWidth: 4,
-    borderColor: cores.destaqueBorda, borderBottomColor: cores.gelo, backgroundColor: '#F6F8FF' },
+  fonteFora: { marginTop: 14 },
+  fonte: { paddingVertical: 16, paddingHorizontal: 20, gap: 10, borderRadius: 20, borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: '#F6F8FF' },
+  fonteTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', rowGap: 8, columnGap: 12 },
   fonteSeloNumero: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#E5EBFF' },
   fonteRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18, letterSpacing: 0.48 },
   fonteOnde: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
   fonteTrecho: { borderLeftWidth: 4, borderColor: cores.acao, backgroundColor: cores.fundo, borderTopRightRadius: 12, borderBottomRightRadius: 12,
     paddingVertical: 10, paddingHorizontal: 14 },
   fonteTrechoTexto: { fontStyle: 'italic' },
-  stuEstado: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18,
+  // .aula-stu-estado: raio de 20; o cartão da pergunta vem 14 abaixo (o vão de .aula-miolo; o cartão já tem 10 em cima).
+  stuEstado: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14, marginBottom: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20,
     borderWidth: 2 },
-  stuEstadoAvatar: { width: 48, height: 52, alignItems: 'center', justifyContent: 'center' },
+  stuEstadoAvatar: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
   stuEstadoImagem: { width: 42, height: 46 },
-  stuEstadoTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
+  stuEstadoTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22.5 },
   adereco: { position: 'absolute', top: -2, right: -2, width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: cores.fundo },
-  maisAbaixoAlvo: { alignSelf: 'center', minHeight: 48, justifyContent: 'center', marginVertical: -8 },
-  maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: cores.nevoa },
-  maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  // .aula-mais-abaixo: margem -6 em cima e 8 embaixo; pílula com borda de 2, sombra de 2 (aqui, a borda de baixo) e texto de 14 px.
+  maisAbaixoAlvo: { alignSelf: 'center', marginTop: -6, marginBottom: -2 },
+  // .aula-mais-abaixo: borda de 2 em volta e o degrau de 2 por fora (box-shadow 0 2px 0 gelo).
+  maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 4,
+    borderRadius: 999, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: `0 2px 0 ${cores.gelo}` },
+  maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
     backgroundColor: '#FFF8E6' },
   dicaTopo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dicaTitulo: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
   dicaTexto: { color: '#5C3B00', fontFamily: fontes.corpo, fontWeight: '600', fontSize: 15, lineHeight: 21 },
   revisaoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
-  explicacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 20 },
+  // .aula-explicacao: o vão de 14 da etapa (sem margem própria).
+  explicacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 14 },
   stu: { width: 58, height: 64, marginTop: 6 },
-  balao: { flex: 1, gap: 10, padding: 16, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  // .aula-balao: borda de 2 em volta e o degrau de 4 por fora (box-shadow 0 4px 0 gelo).
+  balao: { flex: 1, gap: 10, padding: 16, borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo,
+    boxShadow: `0 4px 0 ${cores.gelo}` },
   balaoSeta: { position: 'absolute', top: 24, left: -10, width: 16, height: 16, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo,
     borderBottomLeftRadius: 3, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
-  balaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 24 },
-  quadro: { marginTop: 20, gap: 12, padding: 18, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
-  quadroExemplo: { borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
-  quadroPratica: { borderColor: '#E2D1F5', backgroundColor: '#FBF8FF' },
+  balaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
+  // O primeiro cartão de apoio fica 113 px abaixo do último texto do exercício, como na web. Embaixo, a margem de 24 do último
+  // cartão sai do bloco de apoio na web e soma com o vão do painel e a do rodapé (24 + 22 + 18 = 64 no fim da rolagem): aqui,
+  // os 12 do cartão, mais 12 do bloco e os 40 do conteúdo. Sem cartões, o bloco não conta e sobram os 40.
+  apoio: { marginTop: 27, marginBottom: 12 },
+  apoioVazio: { marginTop: 0, marginBottom: 0 },
+  // Com a ponte aberta, a etapa some (como na web) e o cartão da ponte é o primeiro bloco: sem o vão que vinha depois dela.
+  // Com a ponte aberta, o rodapé some e a web deixa 40 do cartão até a borda (16 do painel + os 24 do cartão): aqui o bloco
+  // devolve os 12 a mais.
+  apoioComPonte: { marginTop: 16, marginBottom: -12 },
+  // .aula-quadro: borda de 2 que fecha em volta e o degrau de 4 por fora (box-shadow 0 4px 0, na cor da borda); 14 da
+  // etiqueta (o vão de .aula-miolo).
+  quadro: { marginTop: 10, gap: 12, padding: 18, borderRadius: 24, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo,
+    boxShadow: `0 4px 0 ${cores.gelo}` },
+  quadroExemplo: { borderColor: '#FFE3A3', backgroundColor: '#FFFAF0', boxShadow: '0 4px 0 #FFE3A3' },
+  quadroPratica: { borderColor: '#E2D1F5', backgroundColor: '#FBF8FF', boxShadow: '0 4px 0 #E2D1F5' },
+  // .aula-consulta: 12 de respiro e vão de 10 (a consulta da prática).
   consulta: { gap: 10, padding: 12, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
-  consultaFechada: { paddingVertical: 4 },
-  aviso: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, marginTop: 8, paddingHorizontal: 14, paddingVertical: 10,
+  // .aula-consulta--recolhivel: sem respiro próprio; o resumo tem 48 com 10 × 14 (52 com a borda) e o conteúdo aberto fica a 12
+  // das bordas.
+  consultaRecolhivel: { borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
+  consultaConteudo: { gap: 10, marginHorizontal: 12, marginBottom: 12 },
+  // .aula-aviso: 4 em cima e 14 embaixo, mais o vão de 14 da grade antes dele.
+  aviso: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, marginTop: 14, marginBottom: 14, paddingHorizontal: 14, paddingVertical: 10,
     borderRadius: 14, backgroundColor: '#EEF2FF' },
   avisoRevisao: { backgroundColor: '#FFF6D9' },
+  // O link do aviso ("Recomeçar do zero"): botão de 44 de altura com 4 de respiro nos lados, como na web.
+  avisoLink: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 4 },
   avisoTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
-  avisoAcao: { minHeight: 48, textDecorationLine: 'underline', paddingVertical: 12, fontWeight: '900' },
-  consultaBotao: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 },
+  // O link tem os 44 do botão (.aula-aviso: 88 de altura com o texto); o alvo cresce por fora (hitSlop de 8).
+  avisoAcao: { textDecorationLine: 'underline', fontWeight: '900' },
+  consultaBotao: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48, paddingVertical: 10, paddingHorizontal: 14 },
   consultaBotaoTexto: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16 },
   consultaRotulo: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
   respostaCampo: { minHeight: 58, fontSize: 20, lineHeight: 26, fontWeight: '700' },
   respostaCerta: { borderColor: cores.sucessoClaro, color: cores.sucesso, backgroundColor: '#EEFAF3' },
   respostaErrada: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
-  opcoes: { gap: 10 },
+  // Entre a pergunta e "Sua resposta", 22 na web: 6 da pergunta, o vão de 12 do cartão e 4 do formulário. As opções têm vão de
+  // 12 (.opcoes) e a legenda fica a 8 da primeira.
+  opcoes: { gap: 12 },
+  opcoesGrupo: { gap: 8 },
   rodapeCerto: { borderTopColor: 'transparent', backgroundColor: '#E3F6EA' },
   rodapeErrado: { borderTopColor: 'transparent', backgroundColor: '#FFF1E0' },
-  retorno: { gap: 6 },
+  retorno: { gap: 2 },
   retornoCabecalho: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  retornoIcone: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3,
-    borderColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
-  retornoIconeErrado: { borderColor: '#B4650D', backgroundColor: '#E58A1F' },
-  retornoTitulo: { color: cores.sucesso, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 26 },
-  retornoTituloCompacto: { fontSize: 17, lineHeight: 24 },
-  convite: { alignSelf: 'flex-start', paddingHorizontal: 2, minHeight: 44 },
+  retornoIcone: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.sucessoClaro },
+  retornoIconeErrado: { backgroundColor: '#E58A1F' },
+  // Rodapé compacto (Explique ou reforço aberto): círculo de 32 e ícone de 18.
+  retornoIconeCompacto: { width: 32, height: 32, borderRadius: 16 },
+  // .aula-retorno h2 no celular: 1,1875rem com entrelinha de 34 px (a altura do ícone) e -0,015em.
+  retornoTitulo: { color: cores.sucesso, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 34, letterSpacing: -0.285 },
+  // Compacto: a web troca só o tamanho (1,0625rem); a entrelinha de 34 px continua, e o título fica a 16 do "Continuar".
+  retornoTituloCompacto: { fontSize: 17, lineHeight: 34 },
+  convite: { alignSelf: 'flex-start', paddingHorizontal: 2, minHeight: 48 },
   retornoTituloErrado: { color: '#8A4B00' },
   retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
-  retornoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  retornoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -2 },
+  retornoAcoesCompacto: { marginTop: 10 },
   metade: { flex: 1, minWidth: 0 },
   /** "Tentar de novo" ocupa o que sobra da linha; "Pular por agora" fica do tamanho do rótulo, discreto. */
   acaoTentar: { flex: 1, minWidth: 0 },

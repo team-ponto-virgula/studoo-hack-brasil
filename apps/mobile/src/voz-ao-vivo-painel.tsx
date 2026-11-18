@@ -69,7 +69,7 @@ export function EntradaVozAoVivo({ desativado, aoAbrir, provedor = 'openai' }: {
         <View style={v.entradaIcone}><Icone nome="microfone" tamanho={20} cor={cores.acao} /></View>
         <Text style={v.beneficio}>{m.abrirBeneficio}</Text>
       </View>
-      <Botao variante="secundario" rotulo={m.abrir} desativado={desativado} acao={aoAbrir} estilo={v.labioFora} />
+      <Botao variante="secundario" rotulo={m.abrir} desativado={desativado} acao={aoAbrir} />
       <Text style={v.nota}>{m.notaPrivacidadePorProvedor(provedor)}</Text>
     </View>
   );

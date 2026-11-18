@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useAudioRecorderState, type AudioRecorder } from 'expo-audio';
 import type { ApoioEstudo, PaginaMaterial } from '@studoo/contratos';
 import { Icone } from './icone';
-import { estilos, useMovimentoReduzido, LinhaAbrir } from './interface';
+import { estilos, useMovimentoReduzido, LinhaAbrir, degrauFora, degrade } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 
@@ -15,6 +15,8 @@ import { cores, fontes } from './tema';
  */
 
 const m = mensagens.estudio;
+/** O céu de .ponte-cena: degradê de #f3f9ff a #e4f1ff até 66% (a água vem por cima a partir daí). */
+const CEU_DA_PONTE = degrade('linear-gradient(180deg, #f3f9ff 0%, #e4f1ff 66%)');
 const madeira = { face: '#9C5619', borda: '#703B10' };
 const madeiraErro = { face: '#B54B14', borda: '#7D310A' };
 const madeiraVencida = { face: '#2F7D22', borda: '#1E5916' };
@@ -44,12 +46,16 @@ function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: numbe
   return (
     <View testID={ativa ? (vencida ? 'tabua-vencida' : 'tabua-posta') : 'tabua-falta'} style={cena.tabuaLugar}>
       {!ativa && <View style={cena.tabuaFalta}><Text style={cena.tabuaNumero}>{numero}</Text></View>}
+      {/* A tábua posta: face de 32 com borda de 2 que fecha em volta e o degrau de 4 por fora (box-shadow 0 4px 0 da web),
+          que cobre a corda de baixo como no site (36 px à vista). */}
       {ativa && (
-        <Animated.View style={[cena.tabua, { backgroundColor: cor.face, borderColor: cor.borda, borderBottomColor: cor.borda }, {
+        <Animated.View style={[degrauFora(4, 10, cor.borda), {
           opacity: entrada.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }),
           transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }],
         }]}>
-          <Text style={[cena.tabuaNumero, { color: cores.fundo }]}>{numero}</Text>
+          <View style={[cena.tabua, { backgroundColor: cor.face, borderColor: cor.borda }]}>
+            <Text style={[cena.tabuaNumero, { color: cores.fundo }]}>{numero}</Text>
+          </View>
         </Animated.View>
       )}
     </View>
@@ -62,7 +68,9 @@ function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: numbe
  * com o desafio) e a margem "De volta ao desafio". Ao vencer, as tábuas ficam verdes e o Stu atravessa, depois de a lição
  * trazer a cena para a vista (`aoMedir`). Embaixo, a legenda das tábuas com o texto de cada uma, legível no celular.
  */
-export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir }: {
+export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir, estilo }: {
+  /** Margens de fora (o cartão da ponte tira o vão do cartão, que a web não tem entre a cabeça e a cena). */
+  estilo?: StyleProp<ViewStyle>;
   /** A resposta errada em texto legível (o texto da opção, não o código). */
   resposta: string;
   /** Texto da 1ª tábua sem resposta (a ilustração da apresentação usa "Sua tentativa", como as tábuas da web). */
@@ -106,9 +114,9 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
     ? Math.max(0, margens.direita.x + margens.direita.largura / 2 - (margens.esquerda.x + margens.esquerda.largura / 2)) : 0;
 
   return (
-    <View onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y, evento.nativeEvent.layout.height)}>
+    <View style={estilo} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y, evento.nativeEvent.layout.height)}>
       {/* Como .ponte-cena da web no celular: céu, água a partir de 66% com as faixas claras no pé, margens e o vão. */}
-      <View testID="cena-ponte" style={cena.cena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <View testID="cena-ponte" style={[cena.cena, CEU_DA_PONTE]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <View style={cena.agua} />
         <View style={cena.faixas}>{Array.from({ length: 14 }, (_, indice) => <View key={indice} style={cena.faixa} />)}</View>
         <View style={cena.linha}>
@@ -122,12 +130,13 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
             <Text style={cena.margemTexto}>{m.ponteMargemErro}</Text>
           </View>
           <View style={cena.vao}>
+            {/* As cordas vêm antes das tábuas: as tábuas (z-index 1 na web) passam por cima delas. */}
             <View style={[cena.trilho, { top: 2 }]} />
+            <View style={[cena.trilho, { bottom: 2 }]} />
             {passos.map((passo, indice) => (
               <Tabua key={indice} numero={indice + 1} ativa={passo.ativa} erro={passo.erro} vencida={vencida} reduzir={reduzir}
                 ordem={indice === 0 ? 0 : indice === 3 ? 0 : indice - 1} />
             ))}
-            <View style={[cena.trilho, { bottom: 2 }]} />
           </View>
           <View style={[cena.margem, cena.margemDireita]}
             onLayout={(evento) => { const { x, width } = evento.nativeEvent.layout; setMargens((antes) => ({ ...antes, direita: { x, largura: width } })); }}>
@@ -177,22 +186,16 @@ export function StuAluno({ estado, fala: falaDaConversa }: { estado: 'aluno' | '
     // @keyframes stuFalando: de translateY(0) scale(1) a translateY(-2px) scale(1.04), 0,7 s, ida e volta.
     ? [{ translateY: balanco.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: balanco.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }]
     : [{ rotate: balanco.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) }];
-  const somando = estado === 'ouvindo' || estado === 'falando';
+  // Como .ensino-stu da web: uma caixa com borda e fundo névoa, o Stu de 52 px e a fala em 16 px/800 ao lado; ouvindo (gravação
+  // ou conversa), a borda fica azul e o fundo azul-claro (data-gravando).
+  const ouvindo = estado === 'ouvindo';
   return (
-    <View style={aluno.linha}>
+    <View style={[aluno.caixa, ouvindo && aluno.caixaOuvindo]}>
       <View style={aluno.avatar} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
           style={[aluno.stu, { transform: movimento }]} />
-        <View style={[aluno.adereco, estado === 'anotou' && { backgroundColor: cores.sucesso }, somando && { backgroundColor: cores.acao }]}>
-          {estado === 'anotou' ? <Icone nome="check" tamanho={12} cor={cores.fundo} />
-            : somando ? <Icone nome="som" tamanho={12} cor={cores.fundo} />
-              : <Text style={aluno.aderecoTexto}>?</Text>}
-        </View>
       </View>
-      <View style={aluno.balao}>
-        <View style={aluno.balaoSeta} />
-        <Text accessibilityLiveRegion="polite" style={aluno.balaoTexto}>{fala}</Text>
-      </View>
+      <Text accessibilityLiveRegion="polite" style={aluno.fala}>{fala}</Text>
     </View>
   );
 }
@@ -217,16 +220,19 @@ export function EtapasDoEnsino({ ativa, primeira }: { ativa: 0 | 1 | 2; primeira
 const PESOS_ONDA = [0.55, 0.85, 1, 0.8, 0.5];
 /**
  * Cinco barras que sobem com o volume real do microfone: o metering do expo-audio (dBFS, de cerca de -60 a 0) vira de
- * 0 a 1. Sem metering (aparelho que não informa), as barras ficam na altura de repouso. Com movimento reduzido, paradas.
+ * 0 a 1 e cada barra fica entre 28% e 100% dos 32 px, como o scaleY da web (max(0,28, min(1, nível))). Sem metering
+ * (aparelho que não informa), as barras ficam cheias, como a web sem Web Audio. Como na web, o movimento reduzido só tira a
+ * transição: as barras continuam seguindo a voz (aqui não há transição, a altura muda a cada leitura).
  */
 export function OndasDoVolume({ gravador }: { gravador: AudioRecorder }) {
-  const reduzir = useMovimentoReduzido();
   const estado = useAudioRecorderState(gravador, 100);
-  const nivel = reduzir === false && typeof estado.metering === 'number' ? Math.max(0, Math.min(1, (estado.metering + 60) / 60)) : null;
+  // Como a web: com movimento reduzido, ela nem liga o analisador e as cinco barras ficam paradas na altura cheia.
+  const reduzir = useMovimentoReduzido();
+  const nivel = reduzir || typeof estado.metering !== 'number' ? null : Math.max(0, Math.min(1, (estado.metering + 60) / 60));
   return (
     <View testID="ondas-volume" style={aluno.ondas} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       {PESOS_ONDA.map((peso, indice) => (
-        <View key={indice} style={[aluno.barra, { height: nivel === null ? 32 : Math.max(6, Math.round(32 * (0.2 + 0.8 * nivel * peso))) }]} />
+        <View key={indice} style={[aluno.barra, { height: nivel === null ? 32 : Math.round(32 * Math.max(0.28, Math.min(1, nivel * peso))) }]} />
       ))}
     </View>
   );
@@ -241,7 +247,8 @@ export function CadernoDoStu({ ensino, compacto = false }: {
   /** Cartões menores, para a ilustração da apresentação (como `.apresentacao-caderno` da web no celular). */
   compacto?: boolean;
 }) {
-  const texto = [estilos.texto, compacto && caderno.textoCompacto];
+  // Os parágrafos do caderno estão dentro de .estudio-card na web: entrelinha de 1,6.
+  const texto = [estilos.texto, caderno.textoCartao, compacto && caderno.textoCompacto];
   const cartao = [caderno.cartao, compacto && caderno.cartaoCompacto];
   const titulo = [caderno.titulo, compacto && caderno.tituloCompacto];
   return (
@@ -250,8 +257,10 @@ export function CadernoDoStu({ ensino, compacto = false }: {
         <Text accessibilityRole="header" style={titulo}>{m.acertos}</Text>
         {ensino.acertos.map((acerto, indice) => (
           <View key={indice} style={caderno.item}>
-            <Text style={[caderno.visto, compacto && caderno.textoCompacto]} importantForAccessibility="no">✓</Text>
-            <Text style={[texto, { flex: 1 }]}>{acerto}</Text>
+            {/* O visto fica em 13 px também no compacto, como .ensino-caderno__visto na apresentação da web. */}
+            <Text style={caderno.visto} importantForAccessibility="no">✓</Text>
+            {/* Os acertos são <li> na web: entrelinha do corpo (1,5), não a de parágrafo do cartão (1,6). */}
+            <Text style={[texto, { flex: 1 }, !compacto && { lineHeight: 24 }]}>{acerto}</Text>
           </View>
         ))}
       </View>
@@ -259,23 +268,44 @@ export function CadernoDoStu({ ensino, compacto = false }: {
         <Text accessibilityRole="header" style={titulo}>{m.lacuna}</Text>
         <Text style={texto}>{ensino.lacuna}</Text>
       </View>
+      {/* .ensino-caderno__pergunta: o único com degrau (0 4px 0 gelo, por fora); o Stu fica no meio da altura do cartão. */}
+      <View style={degrauFora(4, compacto ? 16 : 16, cores.gelo)}>
       <View style={[cartao, caderno.pergunta]}>
         <View style={[caderno.perguntaStu, compacto && caderno.perguntaStuCompacto]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
           <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" style={[caderno.stu, compacto && caderno.stuCompacto]} />
           <View style={caderno.duvida}><Text style={caderno.duvidaTexto}>?</Text></View>
         </View>
-        <View style={{ flex: 1, gap: compacto ? 2 : 4 }}>
+        {/* Título e pergunta sem vão entre eles, como .ensino-caderno__pergunta da web (h3 e p sem margem). */}
+        <View style={{ flex: 1 }}>
           <Text accessibilityRole="header" style={titulo}>{m.pergunta}</Text>
           <Text style={[caderno.perguntaTexto, compacto && caderno.textoCompacto]}>{ensino.pergunta}</Text>
         </View>
+      </View>
       </View>
       <View style={[cartao, caderno.proximo]}>
         <Text accessibilityRole="header" style={titulo}>{m.proximo}</Text>
         <Text style={texto}>{ensino.proximoPasso}</Text>
       </View>
-      {ensino.simulado && <Text style={[estilos.legenda, compacto && { textAlign: 'center' }]}>{m.ensinoAutomatico}</Text>}
+      {/* .estudio-legenda: 0,85rem com entrelinha 1,6 no cartão; na apresentação, 1,5. */}
+      {ensino.simulado && <Text style={[estilos.legenda, { marginTop: compacto ? 0 : 12, fontSize: 13.6, lineHeight: compacto ? 20.4 : 21.76 }, compacto && { textAlign: 'center' }]}>{m.ensinoAutomatico}</Text>}
     </View>
   );
+}
+
+/**
+ * A miniatura da página como .estudio-pagina-thumb da web: até 140 de altura, a largura que a proporção da imagem pede (sem
+ * esticar até a borda do cartão), borda de 1 em gelo e raio de 10; se a largura não couber, a imagem é cortada (cover).
+ */
+function MiniaturaDaPagina({ uri, rotulo }: { uri: string; rotulo: string }) {
+  const [tamanho, setTamanho] = useState<{ largura: number; altura: number } | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    Image.getSize(uri, (largura, altura) => { if (vivo && largura > 0 && altura > 0) setTamanho({ largura, altura }); }, () => {});
+    return () => { vivo = false; };
+  }, [uri]);
+  const altura = tamanho ? Math.min(140, tamanho.altura) : 140;
+  const proporcao = tamanho ? tamanho.largura / tamanho.altura : 16 / 9;
+  return <Image source={{ uri }} resizeMode="cover" accessibilityLabel={rotulo} style={[paginas.miniatura, { height: altura, aspectRatio: proporcao }]} />;
 }
 
 /**
@@ -289,9 +319,7 @@ export function PaginaDoMaterial({ pagina }: { pagina: PaginaMaterial }) {
   return (
     <View testID={`pagina-material-${pagina.numero}`} style={paginas.cartao}>
       <Text accessibilityRole="header" style={paginas.rotulo}>{rotulo}</Text>
-      {pagina.imagem && (
-        <Image source={{ uri: pagina.imagem }} resizeMode="contain" accessibilityLabel={rotulo} style={paginas.miniatura} />
-      )}
+      {pagina.imagem && <MiniaturaDaPagina uri={pagina.imagem} rotulo={rotulo} />}
       {pagina.tabela ? (
         <ScrollView horizontal accessibilityLabel={`${m.tabela} · ${rotulo}`} contentContainerStyle={{ paddingBottom: 4 }}>
           <View>
@@ -321,24 +349,26 @@ const cena = StyleSheet.create({
   faixas: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 12, flexDirection: 'row', gap: 18 },
   faixa: { width: 18, height: 12, backgroundColor: 'rgba(255,255,255,0.35)' },
   linha: { position: 'relative', flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
+  // .ponte-margem: borda de 2 (o filete verde-claro embaixo), 6 em cima e o degrau de 3 por fora (box-shadow 0 3px 0 #5b9a30).
   margem: { position: 'relative', zIndex: 1, minWidth: 58, alignItems: 'center', gap: 4, paddingTop: 6, paddingHorizontal: 6, paddingBottom: 5,
-    borderRadius: 12, borderWidth: 2, borderTopWidth: 6, borderBottomWidth: 5, borderColor: '#76BF43', borderTopColor: '#58CC02',
-    borderBottomColor: '#5B9A30', backgroundColor: '#F6FBF1' },
+    borderRadius: 12, borderWidth: 2, borderTopWidth: 6, borderColor: '#76BF43', borderTopColor: '#58CC02',
+    backgroundColor: '#F6FBF1', boxShadow: '0 3px 0 #5B9A30' },
   margemEsquerda: { zIndex: 2 },
-  margemDireita: { borderColor: '#46A302', borderTopColor: '#58CC02', borderBottomColor: '#3B8A02', backgroundColor: '#ECF9E3' },
+  margemDireita: { borderColor: '#46A302', borderTopColor: '#58CC02', backgroundColor: '#ECF9E3' },
   lugarStu: { width: 32, height: 32 },
-  margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14, textAlign: 'center' },
+  // .ponte-margem no celular: 0,6875rem com a entrelinha do corpo (1,5): 16,5.
+  margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, textAlign: 'center' },
   vao: { position: 'relative', flex: 1, alignSelf: 'center', flexDirection: 'row', gap: 4, paddingVertical: 6 },
   trilho: { position: 'absolute', left: -8, right: -8, height: 3, borderRadius: 2, backgroundColor: '#8D5C2C' },
   tabuaLugar: { flex: 1, minHeight: 32 },
   tabuaFalta: { flex: 1, minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#9D7349',
     borderRadius: 10, backgroundColor: 'rgba(255,250,242,0.88)', opacity: 0.85 },
-  tabua: { flex: 1, minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderBottomWidth: 6, borderRadius: 10 },
+  tabua: { minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: 10 },
   tabuaNumero: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
   stu: { zIndex: 3, width: 32, height: 32 },
-  legenda: { marginBottom: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  // O que o site desenha: em estudio.css, as regras base de .ponte-legenda li e __num vêm depois das do celular e valem
-  // também nele (13 px, respiro de 8 × 10, número de 22 px em 12 px); a grade (vão de 6) segue a regra do celular.
+  // A legenda no tamanho base em qualquer largura (bf8cf37): grade 2×2 com vão de 8 e 16 embaixo (o cartão já põe 14).
+  legenda: { marginBottom: 2, flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  // .ponte-legenda li e __num da web: 13 px, respiro de 8 × 10, número de 22 px em 12 px.
   passo: { flexBasis: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingHorizontal: 10, paddingVertical: 8,
     borderRadius: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C8B69F', backgroundColor: '#FBF8F3' },
   passoNumero: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5D8C8' },
@@ -348,8 +378,13 @@ const cena = StyleSheet.create({
 
 const aluno = StyleSheet.create({
   linha: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  avatar: { width: 56, height: 60, alignItems: 'center', justifyContent: 'center' },
-  stu: { width: 50, height: 56 },
+  // .ensino-stu: flex, gap 14, respiro 12 × 16, borda 2 #E1E7FA, raio 18, fundo névoa; .ensino-stu .stu: 52 px de largura.
+  caixa: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderColor: cores.gelo,
+    borderRadius: 18, backgroundColor: cores.nevoa },
+  caixaOuvindo: { borderColor: cores.acao, backgroundColor: '#EEF3FF' },
+  fala: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 25.6 },
+  avatar: { width: 52, alignItems: 'center', justifyContent: 'center' },
+  stu: { width: 52, height: 58 },
   adereco: { position: 'absolute', top: -2, right: -2, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.ouroEscuro, borderWidth: 2, borderColor: cores.fundo },
   aderecoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 16 },
@@ -368,24 +403,32 @@ const aluno = StyleSheet.create({
 
 const caderno = StyleSheet.create({
   lista: { gap: 12 },
-  cartao: { padding: 14, gap: 6, borderRadius: 18, borderWidth: 2, borderBottomWidth: 4 },
+  // .ensino-caderno__cartao: 14 × 16 de respiro, borda de 2 em volta (sem degrau) e raio de 16.
+  cartao: { paddingVertical: 14, paddingHorizontal: 16, gap: 6, borderRadius: 16, borderWidth: 2 },
   acertos: { borderColor: cores.gelo, backgroundColor: '#F1F4FD' },
   lacuna: { borderColor: '#F2CF96', backgroundColor: '#FFFAF0' },
-  pergunta: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderColor: '#C3CDF2', backgroundColor: '#EEF3FF' },
+  pergunta: { flexDirection: 'row', alignItems: 'center', gap: 14, borderColor: '#C3CDF2', backgroundColor: '#EEF3FF' },
   proximo: { borderColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
-  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
+  // .ensino-caderno__cartao h3: 0,9375rem com a entrelinha de 1,3 dos títulos do cartão (19,5).
+  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 19.5 },
   item: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  visto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16, lineHeight: 24 },
-  perguntaStu: { width: 44, height: 48 },
-  stu: { width: 40, height: 44 },
+  // .ensino-caderno__visto: círculo de 22 em #EEFAF3 com o visto de 13 px em 900.
+  visto: { width: 22, height: 22, borderRadius: 11, overflow: 'hidden', textAlign: 'center', backgroundColor: '#EEFAF3', color: cores.sucesso,
+    fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 22 },
+  // .ensino-caderno__stu: 48 de largura com o Stu de 44; o "?" é um círculo de 20 sem aro.
+  perguntaStu: { width: 48, height: 50, justifyContent: 'center' },
+  stu: { width: 44, height: 50 },
   duvida: { position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: cores.acao, borderWidth: 2, borderColor: cores.fundo },
-  duvidaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
-  perguntaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
+    backgroundColor: cores.acao },
+  duvidaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18 },
+  perguntaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 25.6 },
+  textoCartao: { lineHeight: 25.6 },
   // Compacto (apresentação): como a web no celular, 8 × 10 de respiro, título de 12 e texto de 14.
-  cartaoCompacto: { paddingVertical: 8, paddingHorizontal: 10, gap: 2, borderRadius: 16 },
-  tituloCompacto: { fontSize: 12, lineHeight: 16 },
-  textoCompacto: { fontSize: 14, lineHeight: 19 },
+  // .apresentacao-caderno .ensino-caderno__cartao no celular: 8 × 10 de respiro e o vão de 6 do cartão; h3 de 0,75rem com
+  // entrelinha 1,3 (15,6) e texto de 0,875rem com 1,35 (18,9).
+  cartaoCompacto: { paddingVertical: 8, paddingHorizontal: 10, gap: 6, borderRadius: 16 },
+  tituloCompacto: { fontSize: 12, lineHeight: 15.6 },
+  textoCompacto: { fontSize: 14, lineHeight: 18.9 },
   perguntaStuCompacto: { width: 32, height: 36 },
   stuCompacto: { width: 30, height: 33 },
 });
@@ -394,7 +437,8 @@ const paginas = StyleSheet.create({
   cartao: { gap: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
   rotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
   previa: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 24 },
-  miniatura: { width: '100%', height: 132, borderRadius: 12, backgroundColor: '#FFF8E8' },
+  // .estudio-pagina-thumb: até 140 de altura, cantos de 10 e borda de 1.
+  miniatura: { alignSelf: 'flex-start', maxWidth: '100%', borderRadius: 10, borderWidth: 1, borderColor: cores.gelo },
   linha: { flexDirection: 'row' },
   cabecalho: { backgroundColor: cores.nevoa },
   celula: { width: 132, paddingVertical: 8, paddingHorizontal: 10, borderWidth: 1, borderColor: cores.gelo, color: cores.texto, fontFamily: fontes.corpo,

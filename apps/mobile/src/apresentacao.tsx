@@ -17,13 +17,14 @@ import { usePulinho } from './animacoes';
 import { tracoGrosso } from './caminho';
 import { CadernoDoStu, CenaPonte } from './estudio-cenas';
 import { Icone } from './icone';
-import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao } from './interface';
+import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao, degrauFora, quebraEquilibrada } from './interface';
 import { CartaoFonte } from './licao';
 import { mensagens } from './mensagens';
 import { Desenho, coresDaRegiao } from './mundo';
 import { iconesDosTemas, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
+import { focoVisivel } from './foco';
 
 /*
  * Apresentação do Studoo no app, com os mesmos cinco passos da web (src/app/apresentacao.tsx): desde a rodada 4.5, os quatro
@@ -68,7 +69,15 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
     const titulo = titulos.current[passo];
     if (!titulo) return;
     // Na abertura, o foco vai ao primeiro título como em qualquer tela; depois, a cada passo.
-    const espera = setTimeout(() => AccessibilityInfo.sendAccessibilityEvent(titulo, 'focus'), primeira.current ? 0 : 150);
+    // Na prévia web, o focus() do navegador rolava o passo até o título (4 px no último passo); a web foca sem rolar.
+    const focar = () => {
+      if (Platform.OS === 'web') {
+        const no = titulo as unknown as HTMLElement;
+        if (!no.hasAttribute('tabindex')) no.setAttribute('tabindex', '-1');
+        no.focus({ preventScroll: true });
+      } else AccessibilityInfo.sendAccessibilityEvent(titulo, 'focus');
+    };
+    const espera = setTimeout(focar, primeira.current ? 0 : 150);
     primeira.current = false;
     return () => clearTimeout(espera);
   }, [passo]);
@@ -115,7 +124,8 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
   return (
     <SafeAreaView style={estilos.tela}>
       <View style={apresentacaoEstilos.topo}>
-        <View style={estilos.marcaConteudo}>
+        {/* .apresentacao-topo no celular: 12 do respiro da página em cima e 48 de altura. */}
+        <View style={[estilos.marcaConteudo, apresentacaoEstilos.topoConteudo]}>
           <View style={apresentacaoEstilos.andamento} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <View style={apresentacaoEstilos.pontos}>
               {passos.map((item, indice) => (
@@ -125,7 +135,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
             </View>
             <Text style={apresentacaoEstilos.posicao}>{mensagens.apresentacao.posicao(passo + 1, total)}</Text>
           </View>
-          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto fonte={16} acao={() => concluir()} />}
+          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto fonte={16} estilo={{ paddingHorizontal: 12 }} acao={() => concluir()} />}
         </View>
       </View>
       <ScrollView ref={paginas} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={estilos.tela}
@@ -153,7 +163,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
             )}
             <Text ref={(titulo) => { titulos.current[indice] = titulo; }} testID={`titulo-apresentacao-${indice}`} accessible
               accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`} textBreakStrategy="balanced"
-              style={[estilos.titulo, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
+              style={[estilos.titulo, quebraEquilibrada, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
             <Text style={[estilos.introducao, apresentacaoEstilos.texto]}>{item.texto}</Text>
           </ScrollView>
         ))}
@@ -179,7 +189,7 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
   const pulo = usePulinho(escolhida, 1.3);
   return (
     <Pressable testID={`area-apresentacao-${id}`} accessibilityRole="button" accessibilityState={{ selected: escolhida }}
-      onPress={escolher} onFocus={() => setFocada(true)} onBlur={() => setFocada(false)}
+      onPress={escolher} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
       style={({ pressed }) => [apresentacaoEstilos.area, escolhida && apresentacaoEstilos.areaEscolhida, pressed && apresentacaoEstilos.areaAfundada,
         focada && estilos.foco]}>
       <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
@@ -195,7 +205,7 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
 function Quadro({ selo = false, children }: { selo?: boolean; children: ReactNode }) {
   return (
     <View style={apresentacaoEstilos.quadro}>
-      {selo && <View style={apresentacaoEstilos.quadroTopo}><SeloDemonstracao /></View>}
+      {selo && <View style={apresentacaoEstilos.quadroTopo}><SeloDemonstracao emLinha /></View>}
       {children}
     </View>
   );
@@ -219,7 +229,8 @@ function ArteMaterial() {
 function ArtePonte() {
   return (
     <Quadro selo>
-      <CenaPonte resposta="" primeiraTabua={mensagens.estudio.ponteTabuaErro} temPonte desafio concluida montada />
+      {/* A legenda tem 12 embaixo na web (.ponte-legenda no celular); a cena devolve o -2 que serve ao cartão da lição. */}
+      <CenaPonte resposta="" primeiraTabua={mensagens.estudio.ponteTabuaErro} temPonte desafio concluida montada estilo={{ marginBottom: 14 }} />
     </Quadro>
   );
 }
@@ -229,8 +240,11 @@ function ArteExplique() {
   const ex = mensagens.apresentacao.exemplos;
   return (
     <Quadro>
-      <CadernoDoStu compacto
-        ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: true }} />
+      {/* .ensino-caderno tem 16 em cima também na apresentação. */}
+      <View style={{ paddingTop: 16 }}>
+        <CadernoDoStu compacto
+          ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: true }} />
+      </View>
     </Quadro>
   );
 }
@@ -269,7 +283,8 @@ function NoMini({ x, y, tamanho, face, labio, icone, corIcone }: {
     <View style={{ position: 'absolute', left: x, top: y, marginLeft: -tamanho / 2, marginTop: -tamanho / 2, width: tamanho, height: tamanho }}>
       <View style={[apresentacaoEstilos.camada, { top: tamanho * 0.09, width: tamanho, height: tamanho, borderRadius: tamanho / 2, backgroundColor: labio }]} />
       <View style={[apresentacaoEstilos.camada, apresentacaoEstilos.noFace, { width: tamanho, height: tamanho, borderRadius: tamanho / 2, backgroundColor: face }]}>
-        <Icone nome={icone} tamanho={Math.round(tamanho * 0.44)} cor={corIcone} />
+        {/* Traço 3 como a web (3,08 px num ícone de 25; 3,66 no troféu de 29). */}
+        <Icone nome={icone} tamanho={Math.round(tamanho * 0.44)} cor={corIcone} traco={3} />
       </View>
     </View>
   );
@@ -297,9 +312,12 @@ function ArteProgresso({ largura }: { largura: number }) {
       <View style={apresentacaoEstilos.sincronia}>
         <SeloSincronia sincronia={{ estado: 'atualizado', em: null }} />
       </View>
-      <View style={apresentacaoEstilos.selo}>
-        <Icone nome="check" tamanho={18} cor={cores.sucesso} />
-        <Text style={apresentacaoEstilos.seloTexto}>{mensagens.estudio.ponteMapaFeita}</Text>
+      {/* Ficha "Ponte construída": 36 de altura com o degrau de 4 por fora (0 4px 0 rgba(27, 42, 94, 0.08) na web). */}
+      <View style={[apresentacaoEstilos.seloFora, degrauFora(4, 999, 'rgba(27, 42, 94, 0.08)')]}>
+        <View style={apresentacaoEstilos.selo}>
+          <Icone nome="check" tamanho={18} cor={cores.sucesso} traco={3} />
+          <Text style={apresentacaoEstilos.seloTexto}>{mensagens.estudio.ponteMapaFeita}</Text>
+        </View>
       </View>
     </View>
   );
@@ -313,11 +331,17 @@ const apresentacaoEstilos = StyleSheet.create({
   pontoAtivo: { width: 28, backgroundColor: cores.acao },
   posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   topo: { backgroundColor: cores.fundo },
+  // min-height de 48 da .apresentacao-topo mais os 12 de cima (no Yoga a altura mínima conta o padding): no último passo,
+  // sem o "Pular", a linha não encolhe e o conteúdo fica na mesma altura dos outros passos.
+  topoConteudo: { paddingTop: 12, paddingBottom: 0, minHeight: 60 },
   rodape: { paddingHorizontal: 20, backgroundColor: cores.fundo },
-  rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 18, borderTopWidth: 2, borderColor: cores.nevoa },
+  // 22 da face do botão até a borda, como a web: o degrau de 4 desce por fora, no respiro de baixo (18 à vista).
+  rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 22, borderTopWidth: 2, borderColor: cores.nevoa },
   pagina: { paddingTop: 20 },
-  titulo: { marginTop: 24 },
-  texto: { fontSize: 18, lineHeight: 26 },
+  // .painel--apresentacao no celular: 20 entre a arte e os textos; .apresentacao-textos: 18/24 e 16 entre o título e o texto
+  // (a introdução já tem 8 em cima).
+  titulo: { marginTop: 20 },
+  texto: { fontSize: 18, lineHeight: 24, marginTop: 16 },
   acoes: { flexDirection: 'row' },
   metade: { flex: 1, minWidth: 0 },
   arte: { borderRadius: 28, overflow: 'hidden' },
@@ -335,7 +359,8 @@ const apresentacaoEstilos = StyleSheet.create({
   areaEscolhida: { borderColor: cores.acao, borderBottomColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
   areaAfundada: { borderBottomWidth: 2, marginTop: 3 },
   areaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
-  selo: { position: 'absolute', right: '5%', bottom: '7%', flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10,
-    paddingRight: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: cores.fundo },
+  seloFora: { position: 'absolute', right: '5%', bottom: '7%' },
+  selo: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10, paddingRight: 14, paddingVertical: 9, borderRadius: 999,
+    backgroundColor: cores.fundo },
   seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
 });

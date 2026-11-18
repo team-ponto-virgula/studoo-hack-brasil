@@ -174,6 +174,8 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
       },
     },
     './interface': { Botao: 'Botao', Campo: 'Campo', EstadoMensagem: 'EstadoMensagem', LinhaAbrir: 'LinhaAbrir', SeloDemonstracao: 'SeloDemonstracao', estilos: {} },
+    // O anel de foco dos botões do app segue :focus-visible (src/foco.ts); aqui, foco sempre visível.
+    './foco': { focoVisivel: () => true },
     // Cartão de opção de múltipla escolha, o mesmo da aula (o desafio da ponte usa ele): componente de apresentação.
     './opcao': { Opcao: 'Opcao', letras: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] },
     // Cenas do app (ponte, Stu aluno, ondas, caderno, página do material): componentes de apresentação, sem handlers.
