@@ -859,6 +859,7 @@ button { touch-action: manipulation; }
 .acesso-divisor { display: flex; align-items: center; gap: 12px; color: var(--texto2); font-size: .875rem; }
 .acesso-divisor::before, .acesso-divisor::after { content: ''; flex: 1; height: 1px; background: var(--gelo); }
 .acesso-ajuda { font-size: .875rem; color: var(--texto2); }
+.acesso-visitante { display: grid; gap: 8px; padding: 14px; border: 2px solid var(--gelo); border-radius: 16px; background: #f8faff; }
 .acesso-link { display: inline-flex; min-height: 44px; align-items: center; color: var(--acao); font-weight: 800; text-underline-offset: 4px; }
 .recuperar { max-width: 540px; margin: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); }
 .recuperar-cartao { margin-top: 32px; padding: 28px; border: 2px solid var(--gelo); border-radius: 24px; background: var(--fundo); }

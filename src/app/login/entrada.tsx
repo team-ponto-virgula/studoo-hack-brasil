@@ -17,6 +17,7 @@ const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 export function Entrada() {
   const [googleDisponivel, setGoogleDisponivel] = useState(false);
+  const [visitanteDisponivel, setVisitanteDisponivel] = useState(false);
   const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
   const [verificando, setVerificando] = useState(true);
   const [enviando, setEnviando] = useState(false);
@@ -44,7 +45,12 @@ export function Entrada() {
 
     const codigo = new URLSearchParams(window.location.search).get('erro');
     if (codigo && ['google_invalido', 'google_indisponivel', 'google_conta_existente'].includes(codigo)) setErro(codigo);
-    void cliente.configuracaoAcesso().then(config => { if (ativo) setGoogleDisponivel(config.google); })
+    void cliente.configuracaoAcesso().then(config => {
+      if (ativo) {
+        setGoogleDisponivel(config.google);
+        setVisitanteDisponivel(Boolean(config.visitante));
+      }
+    })
       .catch(() => undefined).finally(() => { if (ativo) setConfiguracaoCarregada(true); });
     void verificarSessao();
     return () => { ativo = false; };
@@ -87,6 +93,22 @@ export function Entrada() {
     }
   }
 
+  async function experimentarSemConta() {
+    if (emEnvio.current) return;
+    emEnvio.current = true;
+    setEnviando(true);
+    setErro(null);
+    try {
+      await cliente.entrarVisitante();
+      window.location.replace('/');
+    } catch (falha) {
+      setErro(falha instanceof ErroStudoo ? falha.codigo : 'rede');
+      setTremor((anterior) => anterior + 1);
+      setEnviando(false);
+      emEnvio.current = false;
+    }
+  }
+
   function conferirCapsLock(evento: KeyboardEvent<HTMLInputElement>) {
     setCapsLock(evento.getModifierState('CapsLock'));
   }
@@ -112,6 +134,14 @@ export function Entrada() {
           {verificando ? <Skeleton /> : (
             <form className="formulario" method="post" noValidate onSubmit={entrar} aria-busy={enviando}
               data-tremor={tremor ? (tremor % 2 ? 'a' : 'b') : undefined}>
+              {visitanteDisponivel && (
+                <div className="acesso-visitante">
+                  <Botao variante="primario" disabled={enviando} onClick={() => void experimentarSemConta()}>
+                    {mensagens.acesso.experimentar}
+                  </Botao>
+                  <p className="acesso-ajuda">{mensagens.acesso.experimentarAviso}</p>
+                </div>
+              )}
               <Botao variante="secundario" disabled={!googleDisponivel || enviando}
                 onClick={() => { window.location.assign('/api/auth/google/iniciar'); }}>{mensagens.acesso.google}</Botao>
               {configuracaoCarregada && !googleDisponivel && <p className="acesso-ajuda">{mensagens.acesso.googleIndisponivel}</p>}
