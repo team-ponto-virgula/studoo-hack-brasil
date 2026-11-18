@@ -332,6 +332,32 @@ function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: s
 }
 
 /** O retorno do "Explique com suas palavras" pela IA. Formato fora do esperado é falha. */
+/**
+ * O recorte de ensino que o avaliador do "Explique com suas palavras" recebe: só a ideia da lição. Sem exercícios,
+ * prática, referências nem ids, para que o retorno fale da ideia e nunca cobre a pergunta de um exercício.
+ * Vale para texto, gravação e voz ao vivo (todos chegam aqui pela transcrição).
+ */
+export type RecorteEnsino = Pick<LicaoDetalhe, 'titulo' | 'objetivo' | 'conceito' | 'exemplo' | 'passos' | 'falas'>;
+export function recorteDeEnsino(licao: LicaoDetalhe): RecorteEnsino {
+  return {
+    titulo: licao.titulo,
+    objetivo: licao.objetivo,
+    conceito: licao.conceito,
+    exemplo: licao.exemplo,
+    ...(licao.passos?.length ? { passos: [...licao.passos] } : {}),
+    ...(licao.falas?.length
+      ? {
+          falas: licao.falas.map(({ texto: t, idioma, traducao, pronuncia }) => ({
+            texto: t,
+            idioma,
+            ...(traducao ? { traducao } : {}),
+            ...(pronuncia ? { pronuncia } : {}),
+          })),
+        }
+      : {}),
+  };
+}
+
 async function ensinoDaIa(licao: LicaoDetalhe, explicacao: string): Promise<FeedbackEnsino> {
   const result = await pedirJson(
     'ensine_ao_stu',
@@ -341,8 +367,8 @@ async function ensinoDaIa(licao: LicaoDetalhe, explicacao: string): Promise<Feed
       pergunta: texto,
       proximoPasso: texto,
     }),
-    'Avalie a explicação em relação à lição. Liste de zero a três pontos realmente corretos; não elogie afirmações falsas. Identifique uma lacuna ou diga que não identificou lacuna neste recorte. Faça uma pergunta de transferência para um contexto novo e proponha uma ação curta. Não atribua nota nem declare domínio do assunto. Se o texto for alheio ao tema, diga isso. Cada texto até 800 caracteres.',
-    { licao, explicacao },
+    'A tarefa da pessoa é explicar a ideia desta lição com as próprias palavras, como se ensinasse um amigo; não é responder a um exercício. Avalie a explicação em relação à ideia da lição (título, objetivo, conceito e exemplo). Liste de zero a três pontos realmente corretos; não elogie afirmações falsas. Identifique uma lacuna na compreensão da ideia ou diga que não identificou lacuna neste recorte. A lacuna e o próximo passo falam da ideia da lição, nunca de uma questão de exercício. Faça uma pergunta de transferência para um contexto novo e proponha uma ação curta. Não atribua nota nem declare domínio do assunto. Se o texto for alheio ao tema, diga isso. Cada texto até 800 caracteres.',
+    { licao: recorteDeEnsino(licao), explicacao },
   );
   const x = result as FeedbackEnsino;
   if (

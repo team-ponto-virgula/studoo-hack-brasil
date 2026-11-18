@@ -208,7 +208,8 @@ export function reduzirEventoRealtime(
     };
   }
 
-  if (tipo === 'output_audio_buffer.stopped') {
+  // `cleared` chega no lugar de `stopped` quando a pessoa interrompe o Stu (confirmado com chave real em 18/11).
+  if (tipo === 'output_audio_buffer.stopped' || tipo === 'output_audio_buffer.cleared') {
     return {
       ...atual,
       estado: !travado && atual.estado === 'stu_falando' ? 'ouvindo' : atual.estado,
