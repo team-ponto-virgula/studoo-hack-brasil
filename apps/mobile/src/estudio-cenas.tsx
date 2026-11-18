@@ -58,7 +58,7 @@ function Tabua({ ativa, erro, vencida, ordem, reduzir }: { ativa: boolean; erro?
  * com o desafio) e a margem "De volta ao desafio". Ao vencer, as tábuas ficam verdes e o Stu atravessa, depois de a lição
  * trazer a cena para a vista (`aoMedir`). Embaixo, a legenda das tábuas com o texto de cada uma, legível no celular.
  */
-export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, concluida, aoMedir }: {
+export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir }: {
   /** A resposta errada em texto legível (o texto da opção, não o código). */
   resposta: string;
   temPonte: boolean;
@@ -66,13 +66,19 @@ export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, con
   exemplo?: boolean;
   desafio: boolean;
   concluida: boolean;
+  /** A ponte já construída antes (releitura): as quatro tábuas verdes e o Stu do outro lado, sem travessia nova. */
+  montada?: boolean;
+  /** Sem a legenda das tábuas (a ponte construída, como a web no celular): a ação fica mais perto da cena. */
+  semLegenda?: boolean;
   /** Onde a cena fica, a partir do topo do cartão, para a lição rolar até ela antes da travessia. */
   aoMedir?: (y: number, altura: number) => void;
 }) {
   const reduzir = useMovimentoReduzido();
   const [largura, setLargura] = useState(0);
-  const [travessia] = useState(() => new Animated.Value(concluida ? 1 : 0));
+  const vencida = concluida || montada;
+  const [travessia] = useState(() => new Animated.Value(vencida ? 1 : 0));
   useEffect(() => {
+    if (montada) { travessia.setValue(1); return; }
     if (!concluida) { travessia.setValue(0); return; }
     if (reduzir !== false) { travessia.setValue(1); return; }
     const animacao = Animated.timing(travessia, {
@@ -80,14 +86,14 @@ export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, con
     });
     animacao.start();
     return () => animacao.stop();
-  }, [concluida, reduzir, travessia]);
+  }, [concluida, montada, reduzir, travessia]);
   // Como a legenda da web (rodada 3A): a tentativa inteira, cortada só depois de 80 caracteres.
   const tentativa = resposta.length > 80 ? `${resposta.slice(0, 79).trimEnd()}…` : resposta;
   const passos = [
     { texto: tentativa ? m.pontePassoErro(tentativa) : m.ponteMargemErro, ativa: true, erro: true },
-    { texto: m.pontePassoExplicacao, ativa: temPonte },
-    { texto: m.pontePassoExemplo, ativa: temPonte && exemplo },
-    { texto: m.pontePassoDesafio, ativa: desafio || concluida },
+    { texto: m.pontePassoExplicacao, ativa: temPonte || montada },
+    { texto: m.pontePassoExemplo, ativa: (temPonte && exemplo) || montada },
+    { texto: m.pontePassoDesafio, ativa: desafio || vencida },
   ];
   // O Stu sai do centro da margem esquerda e para no centro da direita (as margens têm 74 de largura).
   const distancia = Math.max(0, largura - MARGEM);
@@ -108,7 +114,7 @@ export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, con
             <View style={[cena.corda, { top: 6 }]} />
             <View style={cena.tabuas}>
               {passos.map((passo, indice) => (
-                <Tabua key={indice} ativa={passo.ativa} erro={passo.erro} vencida={concluida} reduzir={reduzir}
+                <Tabua key={indice} ativa={passo.ativa} erro={passo.erro} vencida={vencida} reduzir={reduzir}
                   ordem={indice === 0 ? 0 : indice === 3 ? 0 : indice - 1} />
               ))}
             </View>
@@ -127,9 +133,9 @@ export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, con
             ] }]} />
         </View>
       </View>
-      <View style={cena.legenda} accessible accessibilityLabel={passos.filter((passo) => passo.ativa).map((passo) => passo.texto).join('. ')}>
+      {!semLegenda && <View style={cena.legenda} accessible accessibilityLabel={passos.filter((passo) => passo.ativa).map((passo) => passo.texto).join('. ')}>
         {passos.map((passo, indice) => {
-          const cor = concluida && passo.ativa ? madeiraVencida : passo.erro ? madeiraErro : madeira;
+          const cor = vencida && passo.ativa ? madeiraVencida : passo.erro ? madeiraErro : madeira;
           return (
             <View key={indice} style={[cena.passo, passo.ativa ? { backgroundColor: cor.face, borderColor: cor.borda } : cena.passoFalta]}>
               <Text style={[cena.passoNumero, !passo.ativa && { color: '#9D7349' }]}>{indice + 1}</Text>
@@ -137,7 +143,7 @@ export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, con
             </View>
           );
         })}
-      </View>
+      </View>}
     </View>
   );
 }

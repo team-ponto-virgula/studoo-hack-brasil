@@ -259,7 +259,7 @@ export function ApoioDaLicao({
   ultimaResposta = '',
   aoMostrarCena,
   aoVoltarExercicio,
-  aoMostrarPassoPonte,
+  aoMostrarProximaAcao,
 }: {
   /** A resposta errada em texto legível (o texto da opção, não o código): nasce como a 1ª tábua da ponte. Como na web. */
   ultimaResposta?: string;
@@ -267,8 +267,11 @@ export function ApoioDaLicao({
   aoMostrarCena?: (y: number) => void;
   /** "Voltar ao exercício": a ponte fecha e o exercício recolhido volta (rodada 4D da web). */
   aoVoltarExercicio?: () => void;
-  /** Um passo novo da ponte apareceu (o exemplo, o desafio): onde ele começa, a partir do topo do apoio. */
-  aoMostrarPassoPonte?: (y: number) => void;
+  /**
+   * Um passo da ponte apareceu: onde ele começa e onde termina a próxima ação dele ("Ver exemplo", "Ir para o desafio",
+   * "Conferir este exemplo"), a partir do topo do apoio. A lição rola para a ação ficar à vista sem a pessoa rolar.
+   */
+  aoMostrarProximaAcao?: (topo: number, base: number) => void;
   cliente: ClienteEstudio;
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
@@ -472,6 +475,8 @@ export function ApoioDaLicao({
   const desafioPonte = useRef<ComponentRef<typeof Text>>(null);
   const exemploY = useRef(0);
   const desafioY = useRef(0);
+  /** O último passo cuja próxima ação a tela já trouxe à vista (para rolar uma vez por passo, não a cada medida). */
+  const passoMostrado = useRef('');
   // A ponte fechou ("Voltar ao exercício", outra etapa): a próxima abre do começo, sem a resposta nem o retorno de antes.
   useEffect(() => {
     if (pedidoPonte !== 0) return;
@@ -483,7 +488,15 @@ export function ApoioDaLicao({
     setResultadoPonte(null);
     setRetorno('');
     retornoRolado.current = '';
+    passoMostrado.current = '';
   }, [pedidoPonte]);
+  /** Leva a próxima ação do passo para a vista (as medidas são do cartão; o cartão tem 16 de margem em cima). */
+  function mostrarProximaAcao(chave: string, topo: () => number, base: () => number) {
+    if (passoMostrado.current === chave) return;
+    passoMostrado.current = chave;
+    // As medidas dos irmãos chegam no mesmo quadro: espera um instante para ler todas.
+    setTimeout(() => aoMostrarProximaAcao?.(cartaoPonteY.current + 16 + topo(), cartaoPonteY.current + 16 + base()), 30);
+  }
   useEffect(() => {
     if (!venceu) return;
     aoConcluirPonte?.();
@@ -502,13 +515,13 @@ export function ApoioDaLicao({
     if (pedidoPonte === 0 || !tituloPonte.current) return;
     AccessibilityInfo.sendAccessibilityEvent(tituloPonte.current, 'focus');
   }, [pedidoPonte, pontePronta]);
-  // "Ver exemplo" e "Ir para o desafio": o passo novo sobe para a vista e recebe o foco (o botão tocado sai da tela).
+  // "Ver exemplo" e "Ir para o desafio": o passo novo recebe o foco (o botão tocado sai da tela). A rolagem vem da medida
+  // da próxima ação de cada passo (mostrarProximaAcao).
   useEffect(() => {
     if (passoPonte === 1) return;
     const espera = setTimeout(() => {
       const alvo = passoPonte === 2 ? exemploPonte.current : desafioPonte.current;
       if (alvo) AccessibilityInfo.sendAccessibilityEvent(alvo, 'focus');
-      aoMostrarPassoPonte?.(cartaoPonteY.current + (passoPonte === 2 ? exemploY.current : desafioY.current));
     }, 80);
     return () => clearTimeout(espera);
     // Só a mudança de passo dispara.
@@ -568,9 +581,12 @@ export function ApoioDaLicao({
             </View>
           </View>
           {/* A ponte como cena (rodada 1.2): a 1ª tábua nasce da resposta errada; as outras entram a cada passo (4D). */}
+          {/* Rodada 4.2: a ponte já construída (vitória ou releitura) aparece montada, com as quatro tábuas, e a legenda sai,
+              como na web no celular. Na releitura, o Stu já está do outro lado, sem travessia nova. */}
           <CenaPonte resposta={ultimaResposta} temPonte={Boolean(ponte)} exemplo={Boolean(ponte) && etapaPonte >= 2}
             desafio={Boolean(ponte) && (venceu || etapaPonte >= 3 || Boolean(resposta))}
-            concluida={venceu} aoMedir={(y) => { cenaY.current = y; }} />
+            concluida={venceu} montada={revendo && Boolean(ponte)} semLegenda={venceu || (revendo && Boolean(ponte))}
+            aoMedir={(y) => { cenaY.current = y; }} />
           {/* Na vitória, o retorno ("Isso!…") e a volta ao exercício ficam logo embaixo da cena, à vista com a travessia. */}
           {venceu && (
             <>
@@ -589,13 +605,21 @@ export function ApoioDaLicao({
             <>
               {/* Com a ponte em foco, o painel de retorno sai da tela: a explicação nova fica sempre aqui. */}
               <T>{ponte.conceito}</T>
-              {etapaPonte === 1 && <Botao testID="ponte-ver-exemplo" rotulo={m.ponteVerExemplo} desativado={ocupado} acao={() => setPassoPonte(2)} />}
+              {etapaPonte === 1 && (
+                <View onLayout={(evento) => { const { y, height } = evento.nativeEvent.layout; mostrarProximaAcao('p1', () => 0, () => y + height); }}>
+                  <Botao testID="ponte-ver-exemplo" rotulo={m.ponteVerExemplo} desativado={ocupado} acao={() => setPassoPonte(2)} />
+                </View>
+              )}
               {etapaPonte >= 2 && (
                 <View ref={exemploPonte} accessible style={s.exemplo} onLayout={(evento) => { exemploY.current = evento.nativeEvent.layout.y; }}>
                   <T>{ponte.exemplo}</T>
                 </View>
               )}
-              {etapaPonte === 2 && !revendo && <Botao testID="ponte-ir-desafio" rotulo={m.ponteIrDesafio} desativado={ocupado} acao={() => setPassoPonte(3)} />}
+              {etapaPonte === 2 && !revendo && (
+                <View onLayout={(evento) => { const { y, height } = evento.nativeEvent.layout; mostrarProximaAcao('p2', () => exemploY.current, () => y + height); }}>
+                  <Botao testID="ponte-ir-desafio" rotulo={m.ponteIrDesafio} desativado={ocupado} acao={() => setPassoPonte(3)} />
+                </View>
+              )}
               {/* A ponte já vencida não repete o desafio: a pessoa relê e volta ao exercício. */}
               {revendo && aoVoltarExercicio && (
                 <Botao testID="ponte-voltar-revendo" rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} />
@@ -623,8 +647,12 @@ export function ApoioDaLicao({
                       );
                     })}
                   {!venceu && (
+                    <View onLayout={(evento) => { const { y, height } = evento.nativeEvent.layout; mostrarProximaAcao('p3', () => desafioY.current, () => desafioY.current + y + height); }}>
                     <Botao
-                      rotulo={m.verificar}
+                      testID="ponte-conferir"
+                      // Como a web 4.2: ocupado logo no toque, com o "preparando" no lugar do rótulo.
+                      rotulo={ocupado ? m.pensando : m.verificar}
+                      ocupado={ocupado}
                       desativado={ocupado || gravando || !resposta}
                       acao={() =>
                         void executar(async () => {
@@ -636,6 +664,7 @@ export function ApoioDaLicao({
                         })
                       }
                     />
+                    </View>
                   )}
                   {!venceu && (
                     <Text accessibilityLiveRegion="polite"
@@ -696,7 +725,9 @@ export function ApoioDaLicao({
             )}
             {!!aviso && <T>{aviso}</T>}
             <Botao
-              rotulo={m.enviar}
+              // Como a web 4.2: ocupado logo no toque.
+              rotulo={ocupado ? m.pensando : m.enviar}
+              ocupado={ocupado}
               desativado={ocupado || gravando || texto.trim().length < 20}
               acao={() =>
                 void executar(async () => {

@@ -864,8 +864,14 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         ultimaResposta={respostaLegivel(exercicio, resposta)}
         // Na vitória, o alto do cartão (título, cena, "Isso!" e "Voltar ao exercício") vem para a vista antes da travessia.
         aoMostrarCena={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 8), animated: reduzir === false })}
-        // Cada passo novo da ponte (o exemplo, o desafio) sobe para a vista, com um pouco do que veio antes acima.
-        aoMostrarPassoPonte={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 96), animated: reduzir === false })}
+        // A cada passo da ponte, a próxima ação fica à vista sem rolar: o começo do passo perto do alto, se couber; senão, a
+        // ação no pé da tela (Rodada 4.2: "Ver exemplo", "Ir para o desafio" e "Conferir" ficavam abaixo da dobra).
+        aoMostrarProximaAcao={(topo, base) => {
+          const alvo = Math.max(apoioPosicao.current + topo - 96, apoioPosicao.current + base + 24 - alturaVisivel.current);
+          if (alvo > posicaoRolagem.current + 1 || apoioPosicao.current + base + 24 > posicaoRolagem.current + alturaVisivel.current) {
+            rolagem.current?.scrollTo({ y: Math.max(0, alvo), animated: reduzir === false });
+          }
+        }}
         aoPedirEnsino={(y) => setTimeout(() => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false }), 60)}
         aoMostrarRetornoPonte={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 220), animated: reduzir === false })}
         aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })} /></View>}
