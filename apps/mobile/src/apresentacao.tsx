@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from '
 import {
   AccessibilityInfo,
   Animated,
-  BackHandler,
   Platform,
   Pressable,
   ScrollView,
@@ -25,6 +24,7 @@ import { iconesDosTemas, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 import { focoVisivel } from './foco';
+import { ouvirVoltar, travarGesto } from './voltar';
 
 /*
  * Apresentação do Studoo no app, com os mesmos cinco passos da web (src/app/apresentacao.tsx): desde a rodada 4.5, os quatro
@@ -90,9 +90,11 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
   // Sem sessão, o voltar do aparelho fecha a apresentação e volta à entrada (em vez de fechar o app).
   useEffect(() => {
     if (!semSessao) return;
-    const assinatura = BackHandler.addEventListener('hardwareBackPress', () => { concluir(); return true; });
+    const assinatura = ouvirVoltar(() => { concluir(); return true; });
     return () => assinatura.remove();
   }, [semSessao, concluir]);
+  // No iPhone, o arrasto na horizontal é do carrossel: o gesto de voltar da borda fica desligado nesta tela (voltar.ts).
+  useEffect(() => travarGesto(), []);
   // Na prévia web, o teclado também anda e fecha, como a apresentação da web: setas e Esc.
   const passoAtual = useRef(passo);
   passoAtual.current = passo;

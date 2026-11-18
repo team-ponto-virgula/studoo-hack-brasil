@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { BackHandler, Keyboard, Platform, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Platform, StyleSheet, Text, View } from 'react-native';
 import { Icone } from './icone';
 import { cores } from './tema';
 import { criarClienteNativo } from './api-nativa';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
+import { ouvirVoltar } from './voltar';
 
 const m = mensagens.acesso;
 export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string; voltar: () => void }) {
@@ -21,7 +22,7 @@ export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string
   const emCurso = useRef(false);
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const evento = BackHandler.addEventListener('hardwareBackPress', () => { if (!emCurso.current) voltar(); return true; });
+    const evento = ouvirVoltar(() => { if (!emCurso.current) voltar(); return true; });
     return () => evento.remove();
   }, [voltar]);
   useEffect(() => {

@@ -2,7 +2,7 @@ import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
-import { AccessibilityInfo, ActionSheetIOS, Alert, Animated, AppState, BackHandler, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, ActionSheetIOS, Alert, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
 import { codigoDaFalha, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Apresentacao } from './apresentacao';
@@ -23,6 +23,7 @@ import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NomeIcone } from './trilha';
 import { focoVisivel } from './foco';
+import { ouvirVoltar } from './voltar';
 
 /*
  * Estudo no app, com os mesmos passos da web (src/app/estudo.tsx): a pessoa escreve o que quer aprender, a trilha é montada
@@ -181,7 +182,8 @@ export function Estudo({ cliente, sair, expirar }: {
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
-    const assinatura = BackHandler.addEventListener('hardwareBackPress', () => {
+    // O mesmo voltar serve ao botão do Android e ao gesto de borda do iPhone (voltar.ts); em Minhas trilhas, o gesto não começa.
+    const assinatura = ouvirVoltar(() => {
       if (emCurso.current) return true;
       if (etapa.tipo === 'planos') return false;
       if (etapa.tipo === 'apresentacao') {
@@ -198,7 +200,7 @@ export function Estudo({ cliente, sair, expirar }: {
       else if (etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
       else navegar({ tipo: 'planos' });
       return true;
-    });
+    }, etapa.tipo !== 'planos');
     return () => assinatura.remove();
   }, [etapa, geracao]);
 

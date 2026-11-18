@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { cores, fontes } from '../src/tema';
+import { BordaDeVoltar } from '../src/borda-voltar';
 
 export default function Layout() {
   const [carregadas, erro] = useFonts({
@@ -14,11 +15,12 @@ export default function Layout() {
 
   if (!carregadas && !erro) return <View style={estilos.inicio} />;
 
+  // No iPhone, o gesto de voltar da borda esquerda envolve o app todo (borda-voltar.ios.tsx); no Android e na web, nada muda.
   return (
-    <>
+    <BordaDeVoltar>
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerShown: false, contentStyle: estilos.inicio }} />
-    </>
+    </BordaDeVoltar>
   );
 }
 
