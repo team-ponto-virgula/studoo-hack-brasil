@@ -262,7 +262,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         else vistos.delete(entrada.target);
       }
       raiz.toggleAttribute('data-atual-visivel', vistos.size > 0);
-    }, { rootMargin: '-40px 0px -240px 0px', threshold: 0 });
+    }, { rootMargin: '-40px 0px -170px 0px', threshold: 0 });
     alvos.forEach((alvo) => observador.observe(alvo));
     return () => {
       observador.disconnect();

@@ -135,6 +135,10 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
     '@studoo/contratos': {
       ErroStudoo: class extends Error {},
       LIMITES_ESTUDIO: { arquivoBytes: 5 * 1024 * 1024 },
+      estadoInicialVozAoVivo: () => ({ estado: 'pedindo_mic', mudo: false, segundos: 0, limiteSegundos: 180, avisoTempo: false, legendas: [], anuncioSr: '', erro: null }),
+      formatarTempoVoz: (s) => `00:${String(s).padStart(2, '0')}`,
+      prepararExplicacaoParaAvaliacao: (t) => t,
+      textoErroVozAoVivo: () => 'erro',
     },
     '../contratos/cliente-web': { clienteStudooWeb: cliente },
     '../mensagens/pt-BR': { mensagens },
@@ -174,6 +178,13 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
     },
     './animacoes': { useAparecer: () => 0 },
     './tema': { cores: {}, fontes: {} },
+    './voz-ao-vivo': {
+      iniciarControladorVozAoVivo: () => ({
+        alternarMudo: () => false,
+        encerrar: async () => '',
+        descartar() {},
+      }),
+    },
   };
   const contexto = {
     exports: {},

@@ -14,6 +14,7 @@ import {
   type PropostaPlano,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
+import { invalidarElegibilidadeVozAoVivo } from './estudio';
 import { mensagens, textoParaRever } from '../mensagens/pt-BR';
 import {
   AcaoPrincipal,
@@ -92,6 +93,7 @@ export function Estudo() {
   const [erro, setErro] = useState<string | null>(null);
   const [tela, setTela] = useState<Tela>({ tipo: 'planos' });
   const [planos, setPlanos] = useState<PlanoResumo[]>([]);
+  const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
   const [objetivo, setObjetivo] = useState('');
   /** Área escolhida no fim da apresentação: o pedido abre com as ideias dela. */
   const [areaInicial, setAreaInicial] = useState<IdTema | undefined>();
@@ -121,6 +123,7 @@ export function Estudo() {
 
   useEffect(() => {
     try {
+      setTinhaTrilhas(localStorage.getItem('studoo.tinhaTrilhas') === '1');
       const salvo = sessionStorage.getItem('studoo.rascunho.objetivo');
       if (salvo) {
         abriuComRascunho.current = true;
@@ -130,8 +133,20 @@ export function Estudo() {
     } catch { /* Sem armazenamento local: segue sem rascunho. */ }
   }, []);
 
+  useEffect(() => {
+    if (inicio !== 'pronto') return;
+    const tem = planos.length > 0;
+    setTinhaTrilhas(tem);
+    try {
+      localStorage.setItem('studoo.tinhaTrilhas', tem ? '1' : '0');
+    } catch { /* Sem armazenamento local. */ }
+  }, [inicio, planos.length]);
+
   const irParaLogin = useCallback((expirada = false) => {
+    invalidarElegibilidadeVozAoVivo();
     setInicio('carregando');
+    setTinhaTrilhas(false);
+    try { localStorage.removeItem('studoo.tinhaTrilhas'); } catch {}
     if (expirada) {
       try {
         if (objetivoRef.current.trim()) sessionStorage.setItem('studoo.rascunho.objetivo', objetivoRef.current);
@@ -141,6 +156,7 @@ export function Estudo() {
   }, []);
 
   const carregar = useCallback(async (cancelado: () => boolean) => {
+    invalidarElegibilidadeVozAoVivo();
     setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
     try {
       await cliente.sessao();
@@ -493,7 +509,7 @@ export function Estudo() {
   // Começar, na trilha gerada, já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só.
   const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || (pendente === 'aceitar' && tela.tipo === 'geracao');
   const visivel = !carregandoTrilha && !carregandoLicao;
-  const comNavegacao = planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(tela.tipo) && visivel;
+  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(tela.tipo))) && visivel;
 
   const acaoDoErro = (codigoErro: string) =>
     codigoErro === 'limite_geracoes' || codigoErro === 'limite_estudio' ? (
@@ -551,7 +567,9 @@ export function Estudo() {
           </span>
           <div className="estudo-marca"><Logo /></div>
           <div className="estudo-conta">
-            <Botao variante="texto" className="planos-movel" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
+            {inicio === 'pronto' && (
+              <Botao variante="texto" className="planos-movel" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
+            )}
             <Botao variante="texto" onClick={() => void sair()} disabled={ocupado}>{mensagens.sair}</Botao>
           </div>
         </header>

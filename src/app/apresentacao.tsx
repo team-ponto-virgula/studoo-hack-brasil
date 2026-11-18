@@ -195,6 +195,12 @@ function ArtePonte() {
           <span>{m.ponteMargemVolta}</span>
         </div>
       </div>
+      <ol className="ponte-legenda apresentacao-ponte-legenda" aria-hidden="true">
+        <li data-ativa="true" data-erro="true" data-vencida="true"><span className="ponte-legenda__num">1</span><span>{m.ponteTabuaErro}</span></li>
+        <li data-ativa="true" data-vencida="true"><span className="ponte-legenda__num">2</span><span>{m.pontePassoExplicacao}</span></li>
+        <li data-ativa="true" data-vencida="true"><span className="ponte-legenda__num">3</span><span>{m.pontePassoExemplo}</span></li>
+        <li data-ativa="true" data-vencida="true"><span className="ponte-legenda__num">4</span><span>{m.pontePassoDesafio}</span></li>
+      </ol>
     </div>
   );
 }

@@ -1,9 +1,14 @@
 import { responder, rotaPrivada } from "@/servidor/acesso/http";
 import { cookieSessao } from "@/servidor/acesso/origem";
 import { revogarSessao } from "@/servidor/acesso/sessao";
+import { ehEmailVisitante } from "@/servidor/acesso/visitante";
+import { banco } from "@/servidor/banco/cliente";
 
 export async function GET(request: Request) {
-  return rotaPrivada(request, async () => responder({ autenticado: true }));
+  return rotaPrivada(request, async (usuarioId) => {
+    const usuario = await banco.usuario.findUnique({ where: { id: usuarioId }, select: { email: true } });
+    return responder({ autenticado: true, visitante: Boolean(usuario && ehEmailVisitante(usuario.email)) });
+  });
 }
 
 export async function DELETE(request: Request) {
