@@ -61,3 +61,35 @@ export async function apagarTinhaTrilhas() {
     // Idem: sem armazenamento, não há o que apagar.
   }
 }
+
+/*
+ * O aviso de privacidade da voz ao vivo já visto (como `studoo.vozAoVivo.avisoVisto` da web: "1"). O toque em "Conversar
+ * com o Stu" decide na hora, sem esperar o armazenamento, para a conversa nascer dentro do toque (áudio e microfone do
+ * navegador); por isso a leitura é feita antes, quando a opção aparece, e fica na memória.
+ */
+const chaveAvisoVoz = 'studoo.vozAoVivo.avisoVisto';
+let avisoVozVistoNaMemoria: boolean | null = null;
+
+export async function lerAvisoVozVisto() {
+  if (avisoVozVistoNaMemoria !== null) return avisoVozVistoNaMemoria;
+  try {
+    avisoVozVistoNaMemoria = (await SecureStore.getItemAsync(chaveAvisoVoz)) === '1';
+  } catch {
+    avisoVozVistoNaMemoria = false;
+  }
+  return avisoVozVistoNaMemoria;
+}
+
+/** O que já se sabe agora, sem esperar: sem leitura feita, conta como não visto (o aviso aparece). */
+export function avisoVozVistoAgora() {
+  return avisoVozVistoNaMemoria === true;
+}
+
+export async function marcarAvisoVozVisto() {
+  avisoVozVistoNaMemoria = true;
+  try {
+    await SecureStore.setItemAsync(chaveAvisoVoz, '1');
+  } catch {
+    // Sem armazenamento, o aviso volta a aparecer na próxima abertura do app; nada mais depende disso.
+  }
+}

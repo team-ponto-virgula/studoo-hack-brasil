@@ -1,5 +1,6 @@
 import { ApoioDaLicao } from './estudio-adaptativo';
 import type { ClienteEstudio } from '@studoo/contratos';
+import type { ClienteElegibilidadeVoz } from './voz-ao-vivo-painel';
 import {
   acertouParte,
   embaralharExercicio,
@@ -168,7 +169,8 @@ function respostaLegivel(exercicio: ExercicioPublico, resposta: string): string 
  * recebem o foco do leitor de tela.
  */
 export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, concluir }: {
-  cliente: ClienteEstudio;
+  /** O cliente do app (com `configuracaoAcesso` e `sessao`, a conversa ao vivo do Explique pode aparecer na prévia web). */
+  cliente: ClienteEstudio & Pick<ClienteElegibilidadeVoz, 'configuracaoAcesso' | 'sessao'>;
   licao: LicaoDetalhe;
   erro: string | null;
   pendente: string | null;
@@ -868,7 +870,20 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         }}
         aoPedirEnsino={(y) => setTimeout(() => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false }), 60)}
         aoMostrarRetornoPonte={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 220), animated: reduzir === false })}
-        aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })} /></View>}
+        aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })}
+        // Voz ao vivo: o aviso e o painel vêm para o centro da tela (scrollIntoView center da web); com o aviso dos 30 s, os
+        // controles ficam à vista, rolando só o que falta (nearest).
+        aoMostrarVoz={(topo, base, modo) => {
+          const inicio = apoioPosicao.current + topo;
+          const fim = apoioPosicao.current + base;
+          if (modo === 'centro') {
+            rolagem.current?.scrollTo({ y: Math.max(0, (inicio + fim) / 2 - alturaVisivel.current / 2), animated: reduzir === false });
+          } else if (fim > posicaoRolagem.current + alturaVisivel.current) {
+            rolagem.current?.scrollTo({ y: Math.max(0, fim - alturaVisivel.current), animated: reduzir === false });
+          } else if (inicio < posicaoRolagem.current) {
+            rolagem.current?.scrollTo({ y: Math.max(0, inicio), animated: reduzir === false });
+          }
+        }} /></View>}
     </Tela>
     </TranscritorContexto.Provider>
   );

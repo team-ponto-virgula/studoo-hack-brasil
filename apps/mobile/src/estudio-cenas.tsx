@@ -154,12 +154,17 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
   );
 }
 
-/** O Stu como aluno no "Ensine ao Stu": com dúvida, ouvindo (balança devagar enquanto grava) ou anotando o retorno. */
-export function StuAluno({ estado }: { estado: 'aluno' | 'ouvindo' | 'anotou' }) {
+/**
+ * O Stu como aluno no "Ensine ao Stu": com dúvida, ouvindo (balança devagar enquanto grava ou na conversa ao vivo), falando
+ * (na conversa ao vivo, sobe e desce de leve, como .ensino-stu[data-falando] da web) ou anotando o retorno. Na conversa ao
+ * vivo, o balão diz o estado dela (`fala`), como a web.
+ */
+export function StuAluno({ estado, fala: falaDaConversa }: { estado: 'aluno' | 'ouvindo' | 'falando' | 'anotou'; fala?: string }) {
   const reduzir = useMovimentoReduzido();
   const [balanco] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    if (estado !== 'ouvindo' || reduzir !== false) { balanco.setValue(0); return; }
+    if ((estado !== 'ouvindo' && estado !== 'falando') || reduzir !== false) { balanco.setValue(0); return; }
+    // 700 ms para cada lado nos dois casos (o balanço da gravação e o stuFalando da web, 0,7 s com alternate).
     const ciclo = Animated.loop(Animated.sequence([
       Animated.timing(balanco, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
       Animated.timing(balanco, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
@@ -167,15 +172,20 @@ export function StuAluno({ estado }: { estado: 'aluno' | 'ouvindo' | 'anotou' })
     ciclo.start();
     return () => { ciclo.stop(); balanco.setValue(0); };
   }, [estado, reduzir, balanco]);
-  const fala = estado === 'ouvindo' ? m.ensinoStuOuvindo : estado === 'anotou' ? m.ensinoStuAnotou : m.ensinoStuAluno;
+  const fala = falaDaConversa ?? (estado === 'ouvindo' ? m.ensinoStuOuvindo : estado === 'anotou' ? m.ensinoStuAnotou : m.ensinoStuAluno);
+  const movimento = estado === 'falando'
+    // @keyframes stuFalando: de translateY(0) scale(1) a translateY(-2px) scale(1.04), 0,7 s, ida e volta.
+    ? [{ translateY: balanco.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: balanco.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }]
+    : [{ rotate: balanco.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) }];
+  const somando = estado === 'ouvindo' || estado === 'falando';
   return (
     <View style={aluno.linha}>
       <View style={aluno.avatar} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-          style={[aluno.stu, { transform: [{ rotate: balanco.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) }] }]} />
-        <View style={[aluno.adereco, estado === 'anotou' && { backgroundColor: cores.sucesso }, estado === 'ouvindo' && { backgroundColor: cores.acao }]}>
+          style={[aluno.stu, { transform: movimento }]} />
+        <View style={[aluno.adereco, estado === 'anotou' && { backgroundColor: cores.sucesso }, somando && { backgroundColor: cores.acao }]}>
           {estado === 'anotou' ? <Icone nome="check" tamanho={12} cor={cores.fundo} />
-            : estado === 'ouvindo' ? <Icone nome="som" tamanho={12} cor={cores.fundo} />
+            : somando ? <Icone nome="som" tamanho={12} cor={cores.fundo} />
               : <Text style={aluno.aderecoTexto}>?</Text>}
         </View>
       </View>
@@ -187,11 +197,15 @@ export function StuAluno({ estado }: { estado: 'aluno' | 'ouvindo' | 'anotou' })
   );
 }
 
-/** As três etapas do "Ensine ao Stu": a atual em destaque (1. gravar ou escrever, 2. revisar, 3. ver o retorno). */
-export function EtapasDoEnsino({ ativa }: { ativa: 0 | 1 | 2 }) {
+/**
+ * As três etapas do "Ensine ao Stu": a atual em destaque (1. gravar ou escrever, 2. revisar, 3. ver o retorno). Com a voz
+ * ao vivo liberada, a primeira vira "1. Conversar, gravar ou escrever" (`primeira`), como na web.
+ */
+export function EtapasDoEnsino({ ativa, primeira }: { ativa: 0 | 1 | 2; primeira?: string }) {
+  const etapas = primeira ? [primeira, m.ensinoEtapas[1], m.ensinoEtapas[2]] : [...m.ensinoEtapas];
   return (
-    <View accessible accessibilityRole="text" accessibilityLabel={`${m.ensinoEtapasLabel}: ${m.ensinoEtapas[ativa]}`} style={aluno.etapas}>
-      {m.ensinoEtapas.map((etapa, indice) => (
+    <View accessible accessibilityRole="text" accessibilityLabel={`${m.ensinoEtapasLabel}: ${etapas[ativa]}`} style={aluno.etapas}>
+      {etapas.map((etapa, indice) => (
         <View key={etapa} style={[aluno.etapa, indice === ativa && aluno.etapaAtiva]}>
           <Text style={[aluno.etapaTexto, indice === ativa && { color: cores.acao }]}>{etapa}</Text>
         </View>

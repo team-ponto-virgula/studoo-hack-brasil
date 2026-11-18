@@ -31,7 +31,7 @@ export function selosDoNo(no: NoCaminho): SeloDoNo[] {
   return selos;
 }
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
-  | 'lampada' | 'relogio' | 'alvo' | 'som';
+  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'microfone';
 
 /**
  * Próxima lição do caminho: a do primeiro trecho que ainda tem lição pendente.

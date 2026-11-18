@@ -37,7 +37,7 @@ const esperar = async () => {
 };
 
 // Exercita handlers e efeitos reais dos componentes, sem câmera ou permissão física.
-function montar(nativo, { carregar, permissao, preparar } = {}) {
+function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false } } = {}) {
   let cursor = 0;
   const slots = [];
   let efeitos = [];
@@ -53,7 +53,7 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
       return { remove() {} };
     },
   };
-  const contagem = { gravar: 0, parar: 0, liberar: 0, pontes: 0 };
+  const contagem = { gravar: 0, parar: 0, liberar: 0, pontes: 0, ensinos: [] };
   const modos = [];
   const gravador = {
     prepareToRecordAsync: () => preparar?.promise ?? Promise.resolve(),
@@ -96,6 +96,10 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
     criarPonte: async () => {
       contagem.pontes++;
       return { erros: 1, ponte, ensino: null };
+    },
+    ensinarStu: async (_id, texto) => {
+      contagem.ensinos.push(texto);
+      return { acertos: ['Ok'], lacuna: 'Nada', pergunta: 'E agora?', proximoPasso: 'Seguir', simulado: true };
     },
   };
   const hooks = {
@@ -147,10 +151,11 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
     './estudio.css': {},
     'react-native': {
       AccessibilityInfo: { sendAccessibilityEvent() {} },
-      Animated: { View: 'View' },
+      Animated: { View: 'View', Value: class { setValue(v) { this.valor = v; } } },
       AppState: appState,
       Platform: { OS: 'android' },
       Text: 'Text',
+      TextInput: 'TextInput',
       View: 'View',
       Pressable: 'Pressable',
       ScrollView: 'ScrollView',
@@ -178,12 +183,28 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
     },
     './animacoes': { useAparecer: () => 0 },
     './tema': { cores: {}, fontes: {} },
+    // O controlador da voz ao vivo (web e app): registra a conversa aberta para o teste mandar estados, quedas e o fim.
     './voz-ao-vivo': {
-      iniciarControladorVozAoVivo: () => ({
-        alternarMudo: () => false,
-        encerrar: async () => '',
-        descartar() {},
-      }),
+      suporteVozAoVivo: () => false,
+      iniciarControladorVozAoVivo: (opcoes) => {
+        voz.inicios = (voz.inicios ?? 0) + 1;
+        voz.opcoes = opcoes;
+        return {
+          alternarMudo: () => false,
+          encerrar: async () => voz.transcricao ?? '',
+          descartar() { voz.descartes = (voz.descartes ?? 0) + 1; },
+        };
+      },
+    },
+    // App: as peças visuais da voz ao vivo (componentes de apresentação) e a elegibilidade decidida pelo teste.
+    './voz-ao-vivo-painel': {
+      EntradaVozAoVivo: 'EntradaVozAoVivo', PrivacidadeVozAoVivo: 'PrivacidadeVozAoVivo', PainelVozAoVivo: 'PainelVozAoVivo',
+      vozAoVivoLiberada: async () => Boolean(voz.liberada),
+    },
+    './preferencias': {
+      avisoVozVistoAgora: () => Boolean(voz.avisoVisto),
+      lerAvisoVozVisto: async () => Boolean(voz.avisoVisto),
+      marcarAvisoVozVisto: async () => { voz.marcado = true; voz.avisoVisto = true; },
     },
   };
   const contexto = {
@@ -206,6 +227,7 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
     },
     setInterval: () => 1,
     clearInterval() {},
+    requestAnimationFrame: () => 1,
     Blob,
     window: { requestAnimationFrame: () => 1, cancelAnimationFrame() {}, matchMedia: () => ({ matches: true }) },
   };
@@ -241,6 +263,19 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
       return no;
     return buscar(no.props?.children, nome);
   }
+  function buscarTipo(no, tipo) {
+    if (!no) return null;
+    if (Array.isArray(no)) {
+      for (const filho of no) {
+        const b = buscarTipo(filho, tipo);
+        if (b) return b;
+      }
+      return null;
+    }
+    if (typeof no !== 'object') return null;
+    if (no.type === tipo) return no;
+    return buscarTipo(no.props?.children, tipo);
+  }
   function clicar(nome) {
     const b = buscar(arvore, nome);
     assert.ok(b, `Botão ${nome}`);
@@ -262,6 +297,7 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
       render();
     },
     botao: (nome) => buscar(arvore, nome),
+    tipo: (nome) => buscarTipo(arvore, nome),
     texto: () => conteudo(arvore),
     documento,
     appState,
@@ -344,3 +380,94 @@ for (const nativo of [false, true])
     assert.equal(ui.contagem.pontes, 0, 'o reforço espera a gravação acabar');
     assert.ok(ui.botao(mensagens.estudio.parar));
   });
+
+// ---------- Voz ao vivo no app (spec 08, parte B) ----------
+const mv = mensagens.estudio.vozAoVivo;
+const estadoVoz = (mudanca) => ({ estado: 'pedindo_mic', mudo: false, segundos: 0, limiteSegundos: 180, avisoTempo: false, legendas: [], anuncioSr: '', erro: null, ...mudanca });
+
+test('app: sem a voz liberada (aparelho ou visitante sem a flag), o Explique fica como antes', async () => {
+  const ui = montar(true, { voz: { liberada: false } });
+  await esperar();
+  ui.render();
+  ui.clicar(mensagens.estudio.ensinar);
+  ui.render();
+  await esperar();
+  ui.render();
+  assert.equal(ui.tipo('EntradaVozAoVivo'), null);
+  assert.equal(ui.tipo('PainelVozAoVivo'), null);
+  assert.equal(ui.tipo('EtapasDoEnsino').props.primeira, undefined);
+  assert.ok(ui.botao(mensagens.estudio.gravar));
+});
+
+test('app: com a voz liberada, entrada → aviso → conversa; queda leva a fala ao campo; encerrar envia ao Stu', async () => {
+  const voz = { liberada: true, avisoVisto: false };
+  const ui = montar(true, { voz });
+  await esperar();
+  ui.render();
+  ui.clicar(mensagens.estudio.ensinar);
+  ui.render();
+  await esperar();
+  ui.render();
+  assert.ok(ui.tipo('EntradaVozAoVivo'), 'cartão "Conversar com o Stu"');
+  assert.equal(ui.tipo('EtapasDoEnsino').props.primeira, mv.passoComVoz);
+
+  // Primeira vez: o aviso de privacidade antes; aceitar marca como visto e abre a conversa.
+  ui.tipo('EntradaVozAoVivo').props.aoAbrir();
+  ui.render();
+  assert.ok(ui.tipo('PrivacidadeVozAoVivo'));
+  assert.equal(voz.inicios ?? 0, 0);
+  ui.tipo('PrivacidadeVozAoVivo').props.aoAceitar();
+  ui.render();
+  assert.equal(voz.marcado, true);
+  assert.equal(voz.inicios, 1);
+  assert.ok(ui.tipo('PainelVozAoVivo'));
+  assert.equal(ui.tipo('EntradaVozAoVivo'), null);
+  // Durante a conversa, o campo, o Gravar e o Enviar esperam, como na web.
+  assert.equal(ui.tipo('Campo').props.editable, false);
+  assert.equal(ui.botao(mensagens.estudio.gravar).props.desativado, true);
+  assert.equal(ui.botao(mensagens.estudio.enviar).props.desativado, true);
+
+  // O estado do controlador chega ao painel e ao Stu.
+  voz.opcoes.aoMudar(estadoVoz({ estado: 'ouvindo' }));
+  ui.render();
+  assert.equal(ui.tipo('PainelVozAoVivo').props.estado.estado, 'ouvindo');
+  assert.equal(ui.tipo('StuAluno').props.estado, 'ouvindo');
+  assert.equal(ui.tipo('StuAluno').props.fala, mv.estados.ouvindo);
+  voz.opcoes.aoMudar(estadoVoz({ estado: 'stu_falando' }));
+  ui.render();
+  assert.equal(ui.tipo('StuAluno').props.estado, 'falando');
+
+  // A conversa caiu com fala: ela vai para o campo, com o aviso, e a entrada volta.
+  voz.opcoes.aoErroFatal('rede', 'O WHERE filtra somente as linhas que cumprem a condição.');
+  ui.render();
+  assert.equal(ui.tipo('PainelVozAoVivo'), null);
+  assert.ok(ui.tipo('EntradaVozAoVivo'));
+  assert.equal(ui.tipo('Campo').props.value, 'O WHERE filtra somente as linhas que cumprem a condição.');
+  assert.match(ui.texto(), new RegExp(mv.parcialNoCampo));
+
+  // Segunda vez: o aviso já visto vai direto para a conversa; "Encerrar e ver retorno" manda a fala ao Stu.
+  voz.transcricao = 'Explicação dita na conversa ao vivo, longa o bastante.';
+  ui.tipo('EntradaVozAoVivo').props.aoAbrir();
+  ui.render();
+  assert.equal(voz.inicios, 2);
+  assert.equal(ui.tipo('PrivacidadeVozAoVivo'), null);
+  assert.doesNotMatch(ui.texto(), new RegExp(mv.parcialNoCampo), 'o aviso anterior sai');
+  ui.tipo('PainelVozAoVivo').props.aoEncerrar();
+  await esperar();
+  ui.render();
+  assert.deepEqual(ui.contagem.ensinos, ['Explicação dita na conversa ao vivo, longa o bastante.']);
+  assert.equal(ui.tipo('PainelVozAoVivo'), null);
+
+  // "Prefiro escrever ou gravar" e fechar o Explique descartam a conversa aberta.
+  ui.tipo('EntradaVozAoVivo').props.aoAbrir();
+  ui.render();
+  ui.tipo('PainelVozAoVivo').props.aoTrocar();
+  ui.render();
+  assert.equal(ui.tipo('PainelVozAoVivo'), null);
+  const descartesAntes = voz.descartes ?? 0;
+  ui.tipo('EntradaVozAoVivo').props.aoAbrir();
+  ui.render();
+  ui.clicar(mensagens.estudio.ensinar);
+  ui.render();
+  assert.ok((voz.descartes ?? 0) > descartesAntes, 'fechar o Explique desliga a conversa');
+});

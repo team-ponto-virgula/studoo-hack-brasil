@@ -5,6 +5,7 @@ import {
   AppState,
   Platform,
   Text,
+  TextInput,
   View,
   StyleSheet, Pressable } from 'react-native';
 import { File } from 'expo-file-system';
@@ -19,9 +20,12 @@ import {
 import {
   ErroStudoo,
   LIMITES_ESTUDIO,
+  estadoInicialVozAoVivo,
+  prepararExplicacaoParaAvaliacao,
   type ApoioEstudo,
   type Avaliacao,
   type ClienteEstudio,
+  type EstadoSessaoVozAoVivo,
   type LicaoDetalhe,
   type MaterialEstudo,
   type PropostaPlano,
@@ -32,7 +36,10 @@ import { Opcao, letras } from './opcao';
 import { CadernoDoStu, CenaPonte, EtapasDoEnsino, OndasDoVolume, PaginaDoMaterial, StuAluno } from './estudio-cenas';
 import { useAparecer } from './animacoes';
 import { mensagens } from './mensagens';
+import { avisoVozVistoAgora, lerAvisoVozVisto, marcarAvisoVozVisto } from './preferencias';
 import { cores, fontes } from './tema';
+import { iniciarControladorVozAoVivo, type ControladorVozAoVivo } from './voz-ao-vivo';
+import { EntradaVozAoVivo, PainelVozAoVivo, PrivacidadeVozAoVivo, vozAoVivoLiberada, type ClienteElegibilidadeVoz } from './voz-ao-vivo-painel';
 const m = mensagens.estudio;
 /** A mensagem de cada código (da API, como `voz_vazia` e `voz_tempo`, ou do app, como `conexao`); fora deles, a geral. */
 function erroTexto(e: unknown) {
@@ -272,7 +279,13 @@ export function ApoioDaLicao({
   aoMostrarCena,
   aoVoltarExercicio,
   aoMostrarProximaAcao,
+  aoMostrarVoz,
 }: {
+  /**
+   * O aviso de privacidade ou o painel da conversa ao vivo apareceu (`centro`, como o scrollIntoView center da web), ou o
+   * aviso dos 30 s chegou e os controles precisam estar à vista (`perto`): onde começa e termina, a partir do topo do apoio.
+   */
+  aoMostrarVoz?: (topo: number, base: number, modo: 'centro' | 'perto') => void;
   /** A resposta errada em texto legível (o texto da opção, não o código): nasce como a 1ª tábua da ponte. Como na web. */
   ultimaResposta?: string;
   /** A ponte foi vencida: onde o cartão começa, a partir do topo do apoio, para a lição trazê-lo à vista antes da travessia. */
@@ -284,7 +297,8 @@ export function ApoioDaLicao({
    * "Conferir este exemplo"), a partir do topo do apoio. A lição rola para a ação ficar à vista sem a pessoa rolar.
    */
   aoMostrarProximaAcao?: (topo: number, base: number) => void;
-  cliente: ClienteEstudio;
+  /** Com `configuracaoAcesso` e `sessao` (o cliente do app tem os dois), a conversa ao vivo pode aparecer, como na web. */
+  cliente: ClienteEstudio & Pick<ClienteElegibilidadeVoz, 'configuracaoAcesso' | 'sessao'>;
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
   /** Cada vez que muda, o reforço é pedido (o "Ver outro jeito de entender" do painel de retorno), se ainda não existir. */
@@ -318,6 +332,21 @@ export function ApoioDaLicao({
     setApoio(valor);
   }
   const [texto, setTexto] = useState('');
+  /** O rascunho mais recente, para o fim da conversa ao vivo juntar a fala com ele (como textoRef da web). */
+  const textoRef = useRef('');
+  textoRef.current = texto;
+  const campoEnsino = useRef<ComponentRef<typeof TextInput>>(null);
+  // Voz ao vivo (spec 08, parte B), como a web: a opção liberada, a etapa (entrada, aviso da primeira vez, conversa), o
+  // estado que o controlador manda, o próprio controlador e o nível do microfone (-1 enquanto não há medida).
+  const [vozDisponivel, setVozDisponivel] = useState(false);
+  const [etapaVoz, setEtapaVoz] = useState<'inativa' | 'privacidade' | 'ativa'>('inativa');
+  const [estadoVoz, setEstadoVoz] = useState<EstadoSessaoVozAoVivo>(() => estadoInicialVozAoVivo());
+  const controladorVoz = useRef<ControladorVozAoVivo | null>(null);
+  const [nivelVoz] = useState(() => new Animated.Value(-1));
+  /** Onde o bloco da voz começa dentro do cartão do Explique, e onde os controles do painel começam e terminam nele. */
+  const vozY = useRef(0);
+  const controlesVoz = useRef({ topo: 0, base: 0 });
+  const vozCentrada = useRef(false);
   const [resposta, setResposta] = useState('');
   const [retorno, setRetorno] = useState('');
   /** Como na web: o resultado da pergunta do reforço deixa a opção marcada verde (certa) ou âmbar (errada). */
@@ -462,9 +491,99 @@ export function ApoioDaLicao({
   }
   useEffect(() => {
     aoAbrirExplique?.(ensinar);
+    // Como o onToggle da web: fechar o Explique desliga a conversa ao vivo e volta à entrada.
+    if (!ensinar) {
+      controladorVoz.current?.descartar();
+      controladorVoz.current = null;
+      setEtapaVoz('inativa');
+    }
     // Só a abertura e o fechamento avisam a lição.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ensinar]);
+  // A opção de conversar aparece só na prévia web com a flag do servidor (e a de visitante, para visitante), como na web.
+  // O aviso de privacidade já visto é lido aqui, antes do toque, para a conversa nascer dentro dele.
+  useEffect(() => {
+    let ligado = true;
+    void vozAoVivoLiberada(cliente).then((liberada) => {
+      if (!ligado) return;
+      setVozDisponivel(liberada);
+      if (liberada) void lerAvisoVozVisto();
+    });
+    return () => {
+      ligado = false;
+      controladorVoz.current?.descartar();
+      controladorVoz.current = null;
+    };
+  }, [cliente]);
+  // O foco vai para o campo depois da renderização, quando ele já voltou a ser editável (no quadro seguinte ele ainda estava
+  // somente leitura e o foco se perdia).
+  const [pedidoFocoCampo, setPedidoFocoCampo] = useState(0);
+  useEffect(() => {
+    if (pedidoFocoCampo) campoEnsino.current?.focus();
+  }, [pedidoFocoCampo]);
+  function focarCampoEnsino() {
+    setPedidoFocoCampo((n) => n + 1);
+  }
+  /** Fim da conversa (Encerrar ou os 3 minutos): a fala vira a explicação e vai para o Stu, como concluirComTranscricao da web. */
+  function concluirComTranscricao(bruta: string) {
+    controladorVoz.current = null;
+    if (!vivo.current) return;
+    const rascunho = textoRef.current;
+    const preparada = prepararExplicacaoParaAvaliacao(bruta, rascunho);
+    setEtapaVoz('inativa');
+    if (!preparada) {
+      if (bruta.trim() && !rascunho.trim()) setTexto(bruta.trim());
+      setAviso(m.vozAoVivo.erros.curta);
+      focarCampoEnsino();
+      return;
+    }
+    setTexto(preparada);
+    void executar(async () => {
+      const r = await cliente.ensinarStu(licao.id, preparada);
+      atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
+      setEnsino(r);
+      setAviso('');
+      aoEnsinar?.();
+    });
+  }
+  function iniciarConversaAoVivo() {
+    setAviso('');
+    vozCentrada.current = false;
+    setEtapaVoz('ativa');
+    setEstadoVoz(estadoInicialVozAoVivo());
+    nivelVoz.setValue(-1);
+    controladorVoz.current?.descartar();
+    controladorVoz.current = iniciarControladorVozAoVivo({
+      licaoId: licao.id,
+      cliente,
+      aoMudar: (estado) => { if (vivo.current) setEstadoVoz(estado); },
+      aoTempoEsgotado: concluirComTranscricao,
+      aoNivelMic: (nivel) => nivelVoz.setValue(nivel),
+      // A conversa caiu: o que a pessoa já disse vai para o campo, com o aviso, para completar e enviar (como a web).
+      aoErroFatal: (_codigo, parcial) => {
+        controladorVoz.current = null;
+        if (!vivo.current || !parcial.trim()) return;
+        const combinado = prepararExplicacaoParaAvaliacao(parcial, textoRef.current) ??
+          [textoRef.current.trim(), parcial.trim()].filter(Boolean).join('\n\n');
+        setEtapaVoz('inativa');
+        setTexto(combinado);
+        setAviso(m.vozAoVivo.parcialNoCampo);
+        focarCampoEnsino();
+      },
+    });
+  }
+  function abrirConversaAoVivo() {
+    if (!avisoVozVistoAgora()) { setEtapaVoz('privacidade'); return; }
+    iniciarConversaAoVivo();
+  }
+  // Com o aviso dos 30 s, os controles ficam à vista (como o scrollIntoView nearest da web).
+  useEffect(() => {
+    if (etapaVoz !== 'ativa' || !estadoVoz.avisoTempo) return;
+    const { topo, base } = controlesVoz.current;
+    aoMostrarVoz?.(cartaoEnsinoY.current + 16 + vozY.current + topo, cartaoEnsinoY.current + 16 + vozY.current + base, 'perto');
+    // Só a chegada do aviso move a tela.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [etapaVoz, estadoVoz.avisoTempo]);
   useEffect(() => {
     if (pedidoEnsino === 0) return;
     setEnsinar(true);
@@ -701,27 +820,78 @@ export function ApoioDaLicao({
         <LinhaAbrir rotulo={m.ensinar} aberto={ensinar} desativado={gravando || ocupado} alternar={() => setEnsinar(!ensinar)} />
         {ensinar && (
           <>
-            {/* O Stu como aluno (rodada 1.1): com dúvida, ouvindo enquanto grava, anotando quando o retorno chega. */}
-            <StuAluno estado={gravando ? 'ouvindo' : ensino ? 'anotou' : 'aluno'} />
-            <EtapasDoEnsino ativa={ensino ? 2 : gravando || !texto.trim() ? 0 : 1} />
+            {/* O Stu como aluno (rodada 1.1): com dúvida, ouvindo enquanto grava, anotando quando o retorno chega. Na conversa
+                ao vivo, ouvindo ou falando, com o estado dela no balão (como a web). */}
+            <StuAluno
+              estado={etapaVoz === 'ativa' ? (estadoVoz.estado === 'stu_falando' ? 'falando' : estadoVoz.estado === 'ouvindo' ? 'ouvindo' : 'aluno')
+                : gravando ? 'ouvindo' : ensino ? 'anotou' : 'aluno'}
+              fala={etapaVoz === 'ativa' ? m.vozAoVivo.estados[estadoVoz.estado] : undefined} />
+            <EtapasDoEnsino ativa={gravando || etapaVoz === 'ativa' ? 0 : ensino ? 2 : !texto.trim() ? 0 : 1}
+              primeira={vozDisponivel ? m.vozAoVivo.passoComVoz : undefined} />
             <T>{m.ensinoDica}</T>
-            <Text style={estilos.legenda}>{m.ensinoIdeia(licao.objetivo)}</Text>
+            <Text style={[estilos.legenda, s.legendaCartao]}>{m.ensinoIdeia(licao.objetivo)}</Text>
+            {(vozDisponivel || etapaVoz !== 'inativa') && (
+              // As margens de 12 da web se juntam com as dos parágrafos vizinhos: aqui o vão do cartão (14) fica em 12.
+              <View style={s.blocoVoz} onLayout={(evento) => { vozY.current = evento.nativeEvent.layout.y; }}>
+                {vozDisponivel && etapaVoz === 'inativa' && <EntradaVozAoVivo desativado={ocupado || gravando} aoAbrir={abrirConversaAoVivo} />}
+                {etapaVoz === 'privacidade' && (
+                  <PrivacidadeVozAoVivo
+                    aoAceitar={() => { void marcarAvisoVozVisto(); iniciarConversaAoVivo(); }}
+                    aoCancelar={() => setEtapaVoz('inativa')}
+                    aoMedir={(evento) => {
+                      const { y, height } = evento.nativeEvent.layout;
+                      const base = cartaoEnsinoY.current + 16 + vozY.current;
+                      aoMostrarVoz?.(base + y, base + y + height, 'centro');
+                    }} />
+                )}
+                {etapaVoz === 'ativa' && (
+                  <PainelVozAoVivo
+                    estado={estadoVoz}
+                    nivel={nivelVoz}
+                    aoAlternarMudo={() => { controladorVoz.current?.alternarMudo(); }}
+                    aoEncerrar={() => {
+                      const controlador = controladorVoz.current;
+                      if (!controlador) return;
+                      void controlador.encerrar().then(concluirComTranscricao);
+                    }}
+                    aoTrocar={() => {
+                      controladorVoz.current?.descartar();
+                      controladorVoz.current = null;
+                      setEtapaVoz('inativa');
+                      focarCampoEnsino();
+                    }}
+                    aoMedir={(evento) => {
+                      // O painel vem para o centro da tela uma vez por conversa, como o scrollIntoView da web.
+                      if (vozCentrada.current) return;
+                      vozCentrada.current = true;
+                      const { y, height } = evento.nativeEvent.layout;
+                      const base = cartaoEnsinoY.current + 16 + vozY.current;
+                      aoMostrarVoz?.(base + y, base + y + height, 'centro');
+                    }}
+                    aoMedirControles={(evento) => {
+                      const { y, height } = evento.nativeEvent.layout;
+                      controlesVoz.current = { topo: y, base: y + height };
+                    }} />
+                )}
+              </View>
+            )}
             <Campo
               rotulo={m.explicacao}
               estiloRotulo={s.rotuloExplicacao}
+              campoRef={campoEnsino}
               multiline
               numberOfLines={5}
               maxLength={3000}
               value={texto}
               onChangeText={setTexto}
-              editable={!ocupado && !gravando}
+              editable={!ocupado && !gravando && etapaVoz !== 'ativa'}
               style={{ minHeight: 140, textAlignVertical: 'top' }}
             />
-            <Text style={estilos.legenda}>{m.vozDica}</Text>
+            <Text style={[estilos.legenda, s.legendaCartao]}>{m.vozDica}</Text>
             <Botao
               variante="secundario"
               rotulo={gravando ? m.parar : m.gravar}
-              desativado={ocupado}
+              desativado={ocupado || etapaVoz === 'ativa'}
               acao={() => void (gravando ? parar() : gravar())}
             />
             {gravando && (
@@ -732,12 +902,11 @@ export function ApoioDaLicao({
                 </Text>
               </View>
             )}
-            {!!aviso && <T>{aviso}</T>}
             <Botao
               // Como a web 4.2: ocupado logo no toque.
               rotulo={ocupado ? m.pensando : m.enviar}
               ocupado={ocupado}
-              desativado={ocupado || gravando || texto.trim().length < 20}
+              desativado={ocupado || gravando || etapaVoz === 'ativa' || texto.trim().length < 20}
               acao={() =>
                 void executar(async () => {
                   const r = await cliente.ensinarStu(licao.id, texto);
@@ -752,6 +921,8 @@ export function ApoioDaLicao({
                 })
               }
             />
+            {/* Como a web (<p role="status"> depois das ações): o aviso da gravação, da permissão e da fala trazida da conversa. */}
+            {!!aviso && <Text role="status" accessibilityLiveRegion="polite" style={estilos.texto}>{aviso}</Text>}
             {ensino && (
               <View
                 onLayout={(evento) => {
@@ -786,6 +957,9 @@ const s = StyleSheet.create({
   desafio: { gap: 14 },
   gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#EEF3FF' },
   rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24 },
+  // <p class="estudio-legenda"> dentro de .estudio-card: 0,85rem (13,6) com entrelinha 1,6.
+  legendaCartao: { fontSize: 13.6, lineHeight: 21.76 },
+  blocoVoz: { marginVertical: -2 },
   card: {
     marginVertical: 16,
     padding: 18,

@@ -88,6 +88,14 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 11.5, top: 8.25, width: 5.5, height: 7.5, borderRightWidth: 2.5, borderRadius: 3.75 },
     { left: 13, top: 5, width: 8, height: 14, borderRightWidth: 2.5, borderRadius: 7 },
   ],
+  // O microfone do "Conversar com o Stu", como o SVG da web (traço de 2): a cápsula, o arco de baixo, a haste e a base.
+  microfone: [
+    { left: 8, top: 1, width: 8, height: 14, borderWidth: 2, borderRadius: 4 },
+    { left: 4, top: 2, width: 16, height: 16, borderWidth: 2, borderRadius: 8, borderTopColor: 'transparent', borderLeftColor: 'transparent',
+      transform: [{ rotate: '45deg' }] },
+    { left: 11, top: 17, width: 2, height: 5, borderRadius: 1, traco: true },
+    { left: 7, top: 21, width: 10, height: 2, borderRadius: 1, traco: true },
+  ],
 };
 
 const medidas = [
