@@ -58,5 +58,5 @@ const opcaoEstilos = StyleSheet.create({
   letraSelecionada: { borderColor: cores.acao, backgroundColor: cores.acao },
   letraCerta: { borderColor: cores.sucessoClaro, backgroundColor: cores.sucessoClaro },
   letraErrada: { borderColor: '#E3A24A', backgroundColor: '#E3A24A' },
-  letraTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
+  letraTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 18 },
 });

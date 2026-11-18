@@ -556,8 +556,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     const falta = faltaParaVerificar(exercicio, resposta);
     rodape = (
       <View style={{ gap: 8 }}>
-        {falta && <Text testID="falta-para-verificar" accessibilityLiveRegion="polite" style={[estilos.legenda, { textAlign: 'center' }]}>{textoDaFalta(falta)}</Text>}
-        <Botao testID="enviar-resposta" rotulo={pendente === 'avaliar' ? t.avaliando : t.avaliar}
+        {falta && <Text testID="falta-para-verificar" accessibilityLiveRegion="polite" style={[estilos.legenda, licaoEstilos.notaRodape]}>{textoDaFalta(falta)}</Text>}
+        <Botao testID="enviar-resposta" peso="900" rotulo={pendente === 'avaliar' ? t.avaliando : t.avaliar}
           desativado={ocupado || !respostaCompleta(exercicio, resposta)} ocupado={pendente === 'avaliar'} carregando={pendente === 'avaliar'}
           acao={() => void enviar()} />
       </View>
@@ -568,11 +568,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {!autoAvaliacao && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.escolha}</Text>}
         {autoAvaliacao === 'ainda_nao' && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.pratica.aindaNaoNota}</Text>}
         {autoAvaliacao === 'ainda_nao' && (
-          <Botao testID="praticar-mais" rotulo={t.pratica.praticarMais} desativado={ocupado}
+          <Botao testID="praticar-mais" peso="900" rotulo={t.pratica.praticarMais} desativado={ocupado}
             acao={() => { setAutoAvaliacao(null); setVoltasPratica((atual) => atual + 1); mostrarComoFoi(); }} />
         )}
         {/* Sem contar como foi, o botão leva até a pergunta, em vez de ficar apagado sem explicação. Como na web. */}
-        <Botao testID="concluir-pratica"
+        <Botao testID="concluir-pratica" peso="900"
           rotulo={pendente === 'concluir' ? t.concluindo : autoAvaliacao === 'ainda_nao' ? t.pratica.concluirAssim : t.pratica.concluir}
           variante={autoAvaliacao === 'ainda_nao' ? 'texto' : 'sucesso'}
           desativado={ocupado} esmaecido={!autoAvaliacao} dica={autoAvaliacao ? undefined : t.pratica.escolha}
@@ -581,9 +581,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       </View>
     );
   } else if (temMais) {
-    rodape = <Botao testID="ler-mais" rotulo={t.continuarLendo} acao={lerMais} />;
+    rodape = <Botao testID="ler-mais" peso="900" rotulo={t.continuarLendo} acao={lerMais} />;
   } else {
-    rodape = <Botao testID="avancar-licao" rotulo={t.seguir} icone="seta" desativado={ocupado}
+    rodape = <Botao testID="avancar-licao" peso="900" rotulo={t.seguir} icone="seta" desativado={ocupado}
       acao={() => { posicoesDasEtapas.current[passo] = posicaoRolagem.current; setPasso((atual) => atual + 1); }} />;
   }
   if (temAbaixo && (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica')) {
@@ -1090,22 +1090,24 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
           </Animated.View>
           <Text style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 }]}>{titulo}</Text>
         </View>
-        {!compacto && <Text style={estilos.texto}>{avaliacao.feedback}</Text>}
+        {/* .aula-retorno p no celular: 15 px com entrelinha 1,4. */}
+        {!compacto && <Text style={[estilos.texto, licaoEstilos.retornoTexto]}>{avaliacao.feedback}</Text>}
         {!compacto && extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
       </View>
       {certa && convite && <Botao testID="convite-explique" variante="texto" rotulo={t.expliqueConvite} desativado={ocupado} acao={convite}
         estilo={licaoEstilos.convite} />}
-      {!certa && !compacto && avisoPular && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{avisoPular}</Text>}
-      {!certa && !compacto && <Botao testID="ver-outro-jeito" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
+      {!certa && !compacto && avisoPular && <Text style={licaoEstilos.avisoPular}>{avisoPular}</Text>}
+      {!certa && !compacto && <Botao testID="ver-outro-jeito" peso="900" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
       <View style={licaoEstilos.retornoAcoes}>
         {!certa && (
           <View style={licaoEstilos.acaoTentar}>
-            <Botao testID="tentar-de-novo" variante="secundario" rotulo={mensagens.licao.tentarDeNovo} desativado={ocupado} acao={tentarDeNovo} />
+            <Botao testID="tentar-de-novo" variante="secundario" peso="900" rotulo={mensagens.licao.tentarDeNovo} desativado={ocupado} acao={tentarDeNovo} />
           </View>
         )}
         <View style={certa ? licaoEstilos.metade : undefined}>
           <Botao testID="continuar-licao" rotulo={concluindo ? mensagens.licao.concluindo : certa ? mensagens.licao.continuar : rotuloPular}
-            variante={certa ? 'sucesso' : 'texto'} compacto={!certa} desativado={ocupado} ocupado={concluindo} carregando={concluindo} acao={continuar} />
+            variante={certa ? 'sucesso' : 'texto'} peso="900" estilo={certa ? undefined : licaoEstilos.pular}
+            desativado={ocupado} ocupado={concluindo} carregando={concluindo} acao={continuar} />
         </View>
       </View>
     </Animated.View>
@@ -1133,7 +1135,15 @@ const licaoEstilos = StyleSheet.create({
   preenchimento: { height: '100%', minWidth: 18, borderRadius: 9, backgroundColor: cores.acao, overflow: 'hidden' },
   preenchimentoCerto: { backgroundColor: cores.sucessoClaro },
   brilho: { position: 'absolute', top: 4, left: 10, right: 10, height: 4, borderRadius: 2, backgroundColor: 'rgba(255, 255, 255, 0.34)' },
-  posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  // .aula-posicao: 14 px em 900.
+  posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 20 },
+  // .aula-rodape__nota no celular: 13 px em 700, centrada.
+  notaRodape: { textAlign: 'center', fontSize: 13, lineHeight: 19.5, fontWeight: '700' },
+  // O aviso de pular no painel do erro, como na web: 15 px em 700, na cor do texto.
+  avisoPular: { textAlign: 'center', color: cores.texto, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 21, fontWeight: '700' },
+  retornoTexto: { fontSize: 15, lineHeight: 21 },
+  // "Pular por agora" no painel do erro: botão de texto de 16 px, 44 de altura e 8 de respiro, sem quebrar.
+  pular: { minHeight: 44, paddingHorizontal: 8 },
   etapa: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   etapaTexto: { fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },

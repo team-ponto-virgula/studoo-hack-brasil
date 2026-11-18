@@ -1332,7 +1332,8 @@ const formatos = StyleSheet.create({
   ordemCaixa: { gap: 8, minHeight: 64, padding: 10, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo, justifyContent: 'center' },
   disponiveis: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   cartaoDisponivel: { alignSelf: 'flex-start', maxWidth: '100%' },
-  cartaoDisponivelTexto: { flexGrow: 0, flexShrink: 1 },
+  // Base no tamanho do próprio texto (o flex: 1 de cartaoTexto deixava a base em 0 e a ficha quebrava em três linhas).
+  cartaoDisponivelTexto: { flexGrow: 0, flexShrink: 1, flexBasis: 'auto' },
   cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
     borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   cartaoPar: { paddingHorizontal: 10, gap: 8 },

@@ -209,7 +209,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel }: {
+  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso }: {
+  /** Peso do texto quando a web usa outro (os botões do rodapé da aula têm 900, .aula-rodape__acoes > .botao). */
+  peso?: '800' | '900';
   /** Nome para o leitor de tela quando o texto visível sozinho fica ambíguo ("Começar: <título>", como na web). */
   nomeAcessivel?: string;
   /** Tamanho do texto quando a web usa outro (o "Pular" da apresentação tem 16 px mesmo compacto). */
@@ -280,7 +282,8 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
       <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">
       {carregando ? <Pontinhos cor={corTexto} /> : (
         <>
-          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) }]}>{rotulo}</Text>
+          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
+            peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
           {icone && <Icone nome={icone} tamanho={18} cor={corTexto} />}
         </>
       )}
