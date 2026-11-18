@@ -101,6 +101,8 @@ O GitHub Actions roda a mesma verificação em cada PR e em cada push para `deve
 
 ## App Android em modo de desenvolvimento
 
+Para levar o app ao celular da demo (build de desenvolvimento do EAS ou APK falando com o site publicado), veja [Build Android para a demo](BUILD-ANDROID.md).
+
 Use um emulador iniciado, um JDK e o SDK Android configurados para o Expo. Tenha `adb` no PATH e OpenSSL 3 disponível. Mantenha o banco local ativo. Para rodar web e API móvel ao mesmo tempo, use o build web em `http://localhost:3000` com `npm run build` e `npm start`. A API móvel roda em outro processo, em `https://127.0.0.1:3443`.
 
 ### Certificado local

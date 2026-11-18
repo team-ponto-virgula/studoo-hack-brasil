@@ -1,0 +1,45 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "node": "24.22.3",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "node": "24.22.3",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
+      }
+    },
+    "production": {
+      "node": "24.22.3",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
