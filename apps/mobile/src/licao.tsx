@@ -17,7 +17,7 @@ import {
   type ExercicioPublico,
   type LicaoDetalhe,
 } from '@studoo/contratos';
-import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Alert, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAparecer, usePulinho, useTremor } from './animacoes';
 import {
@@ -233,6 +233,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   /** Quantos exercícios a revisão rápida trouxe, para o contador "Revisão 1 de 2". Como na web. */
   const [revisaoTotal, setRevisaoTotal] = useState(retomada?.revisao?.length ?? 0);
   const tituloEtapa = useRef<ComponentRef<typeof Text>>(null);
+  /** O cartão da fonte e onde ele está: o marcador [n] leva até ele e dá o foco (citação focal, rodada 4I da web). */
+  const cartaoCitacao = useRef<ComponentRef<typeof View>>(null);
+  const citacaoY = useRef(0);
   const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
   const apoioPosicao = useRef(0);
   /** Pediu o reforço: quando o cartão crescer (o reforço chegou), a tela rola de novo até ele. */
@@ -392,6 +395,15 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     saida.current = sair;
     return () => { saida.current = null; };
   });
+
+  /** O marcador [n] abre aquela fonte (não fecha) e leva a tela e o leitor de tela até o cartão, como a web. */
+  function mostrarCitacao(numero: number) {
+    setCitacaoAberta(numero);
+    setTimeout(() => {
+      rolagem.current?.scrollTo({ y: Math.max(0, citacaoY.current - 16), animated: reduzir === false });
+      if (cartaoCitacao.current) AccessibilityInfo.sendAccessibilityEvent(cartaoCitacao.current, 'focus');
+    }, 80);
+  }
 
   function mudarResposta(valor: string) {
     setRespostas((atuais) => atuais.map((atual, posicao) => (posicao === indice ? valor : atual)));
@@ -683,7 +695,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   {licao.referencias.map((_, numero) => (
                     <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button" hitSlop={8}
                       accessibilityLabel={`${mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }} aria-expanded={citacaoAberta === numero}
-                      onPress={() => setCitacaoAberta((atual) => (atual === numero ? null : numero))}
+                      onPress={() => mostrarCitacao(numero)}
                       style={({ pressed }) => [licaoEstilos.marcadorAlvo, pressed && { opacity: 0.8 }]}>
                       <View style={[licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto]}>
                         <Text style={[licaoEstilos.marcadorTexto, citacaoAberta === numero && { color: cores.fundo }]}>[{numero + 1}]</Text>
@@ -695,9 +707,12 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               <Text style={estilos.legenda}>{t.origem} · {origemLegivel(licao.origem)}</Text>
             </ExplicacaoDoStu>
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (
-              <CartaoFonte referencia={licao.referencias[citacaoAberta]} numero={citacaoAberta + 1} />
+              <View onLayout={(evento) => { citacaoY.current = evento.nativeEvent.layout.y; }}>
+                <CartaoFonte ref={cartaoCitacao} referencia={licao.referencias[citacaoAberta]} numero={citacaoAberta + 1} />
+              </View>
             )}
-            {(licao.recurso?.tipo === 'imagem' || licao.recurso?.tipo === 'acorde') && (
+            {/* Como na web (rodada 4E): o recurso visual da lição também no conceito, de qualquer tipo. */}
+            {licao.recurso && (
               <View style={{ marginTop: 16 }}><RecursoDaLicao recurso={licao.recurso} /></View>
             )}
           </>
@@ -953,11 +968,11 @@ function StuDoExercicio({ estado }: { estado: EstadoStu }) {
  * A fonte da lição em destaque (o trecho exato do material, com página, parágrafo ou linha), como o cartão da web:
  * o número do marcador, o material, o selo de demonstração quando o material é simulado e a leitura por OCR.
  */
-function CartaoFonte({ referencia, numero }: { referencia: NonNullable<LicaoDetalhe['referencias']>[number]; numero: number }) {
+function CartaoFonte({ referencia, numero, ref }: { referencia: NonNullable<LicaoDetalhe['referencias']>[number]; numero: number; ref?: Ref<ComponentRef<typeof View>> }) {
   const entrada = useAparecer(0, 320, true);
   const m = mensagens.estudio;
   return (
-    <Animated.View testID="cartao-fonte" accessible accessibilityRole="summary"
+    <Animated.View ref={ref} testID="cartao-fonte" accessible accessibilityRole="summary"
       accessibilityLabel={`${m.fonteMaterial} ${numero}. ${referencia.nome}, ${referencia.localizacao ?? m.pagina(referencia.pagina)}. ${referencia.trecho}`}
       style={[licaoEstilos.fonte, { opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
       <View style={licaoEstilos.fonteTopo}>

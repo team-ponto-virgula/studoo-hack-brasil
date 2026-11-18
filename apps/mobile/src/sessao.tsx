@@ -134,9 +134,18 @@ function Entrada({ erroInicial, entrar, google, recuperar }: {
   erroInicial?: string;
   entrar: (email: string, senha: string) => Promise<void>;
 }) {
+  // Como na web (rodada 4A): o Google e o "Esqueci minha senha" só aparecem quando o servidor os oferece; nada apagado.
   const [googleDisponivel, setGoogleDisponivel] = useState(false);
+  const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(false);
   const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
-  useEffect(() => { let ativo = true; void criarClienteNativo().configuracaoAcesso().then(c => { if (ativo) setGoogleDisponivel(c.google); }).catch(() => {}).finally(() => { if (ativo) setConfiguracaoCarregada(true); }); return () => { ativo = false; }; }, []);
+  useEffect(() => {
+    let ativo = true;
+    void criarClienteNativo().configuracaoAcesso()
+      .then((c) => { if (ativo) { setGoogleDisponivel(c.google); setRecuperacaoDisponivel(c.recuperacao); } })
+      .catch(() => {})
+      .finally(() => { if (ativo) setConfiguracaoCarregada(true); });
+    return () => { ativo = false; };
+  }, []);
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState(erroInicial);
@@ -200,9 +209,12 @@ function Entrada({ erroInicial, entrar, google, recuperar }: {
       <Titulo foco testID="titulo-entrada">{mensagens.entrada.titulo}</Titulo>
       <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
       <Animated.View style={[entradaEstilos.formulario, { transform: [{ translateX: tremor }] }]}>
-        <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" desativado={!googleDisponivel || ocupado} acao={() => void abrirGoogle()} />
-        {configuracaoCarregada && !googleDisponivel && <Text style={estilos.legenda}>{mensagens.acesso.googleIndisponivel}</Text>}
-        <View style={entradaEstilos.divisor}><View style={entradaEstilos.linha} /><Text style={estilos.legenda}>{mensagens.acesso.ou}</Text><View style={entradaEstilos.linha} /></View>
+        {configuracaoCarregada && googleDisponivel && (
+          <>
+            <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" desativado={ocupado} acao={() => void abrirGoogle()} />
+            <View style={entradaEstilos.divisor}><View style={entradaEstilos.linha} /><Text style={estilos.legenda}>{mensagens.acesso.ou}</Text><View style={entradaEstilos.linha} /></View>
+          </>
+        )}
         <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email} campoRef={campoEmail} erro={erroEmail}
           onChangeText={(valor) => { setEmail(valor); setErro(undefined); setErroEmail(undefined); }}
           autoCapitalize="none" autoCorrect={false} keyboardType="email-address" returnKeyType="next"
@@ -219,7 +231,9 @@ function Entrada({ erroInicial, entrar, google, recuperar }: {
             rotulo={mensagens.entrada.mostrarSenha} desativado={ocupado}
             acao={() => setMostrarSenha((atual) => !atual)} />} />
       </Animated.View>
-      <Botao rotulo={mensagens.acesso.esqueci} testID="esqueci-senha" variante="texto" desativado={ocupado} acao={() => recuperar(email)} />
+      {configuracaoCarregada && recuperacaoDisponivel && (
+        <Botao rotulo={mensagens.acesso.esqueci} testID="esqueci-senha" variante="texto" desativado={ocupado} acao={() => recuperar(email)} />
+      )}
       {erro && <EstadoErro mensagem={erro} />}
     </Tela>
   );

@@ -29,7 +29,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { Botao, Campo, EstadoErro, SeloSincronia, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia } from './interface';
+import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -518,12 +518,14 @@ export function Estudo({ cliente, sair, expirar }: {
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })} />;
     }
 
+    // Como na web (rodada 4F): enquanto as trilhas chegam, o esqueleto do mapa (quem tem trilha cai no mapa logo depois).
+    if (!planos && !erro) return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
+
     return (
       <Tela pagina="planos" acoes={acoes}>
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
         <Text style={estilos.introducao}>{mensagens.planos.subtitulo}</Text>
         {mensagem}
-        {!planos && !erro && <Skeleton />}
         {planos && planos.length > 0 && (() => {
           // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
           const destaque = planoInicial(planos);

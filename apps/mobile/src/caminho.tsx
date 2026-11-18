@@ -682,8 +682,10 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const atual = no.estado === 'atual';
   const selos = selosDoNo(no);
   // O nome já termina em ponto: os selos entram sem ponto duplicado, na mesma ordem da tela (a ponte primeiro).
-  const rotuloA11y = selos.length ? `${nome} ${selos.map((selo) => selo.texto).join('. ')}.`
-    : no.estado === 'previa' && no.resumo ? `${nome} ${no.resumo}` : nome;
+  // Como na web (rodada 4I): o nome começa pelo texto que se vê (o título), para quem usa voz e leitor de tela.
+  const nomeVisivel = nome.startsWith(no.titulo) ? nome : `${no.titulo} — ${nome}`;
+  const rotuloA11y = selos.length ? `${nomeVisivel} ${selos.map((selo) => selo.texto).join('. ')}.`
+    : no.estado === 'previa' && no.resumo ? `${nomeVisivel} ${no.resumo}` : nomeVisivel;
   const lugar = [caminhoEstilos.noLugar, { left: centro - lente / 2, width: lente, height: lente }];
 
   const rotulo = comRotulo && (
@@ -1305,7 +1307,7 @@ const caminhoEstilos = StyleSheet.create({
   parteCorpo: {},
   parteTopo: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
   parteNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
-  parteAndamento: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  parteAndamento: { color: '#4A5568', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
   chegada: { minHeight: 280, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 8, paddingBottom: 30, overflow: 'hidden' },
   pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(27, 42, 94, 0.34)' },
   chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 104,
