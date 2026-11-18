@@ -244,7 +244,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
           )}
         </div>
       </main>
-      <div className="entrada-arte">
+      <aside className="entrada-arte" aria-label={mensagens.login.arteTitulo}>
         <Paisagem className="entrada-paisagem">
           <div className="entrada-mensagem">
             <p className="entrada-mensagem__titulo">{mensagens.login.arteTitulo}</p>
@@ -257,7 +257,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
           </div>
           <Stu />
         </Paisagem>
-      </div>
+      </aside>
     </div>
   );
 }

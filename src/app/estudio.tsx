@@ -470,7 +470,11 @@ export function ApoioDaLicao({
   const chavePonteAnterior = useRef('');
   // "Ver outro exemplo" no painel de retorno: pede o reforço, se ainda não existe (durante uma gravação, espera ela acabar).
   useEffect(() => {
-    if (pedidoPonte === 0 || gravando) return;
+    if (pedidoPonte === 0) {
+      pedidoAnterior.current = 0;
+      return;
+    }
+    if (gravando) return;
     if (pedidoPonte !== pedidoAnterior.current) {
       pedidoAnterior.current = pedidoPonte;
       setPassoPonte(1);
@@ -835,7 +839,7 @@ export function ApoioDaLicao({
         {ensino && (
           <div className="estudio-feedback ensino-caderno" role="status" ref={retornoDoEnsino}>
             <div className="ensino-caderno__cartao" data-tipo="acertos">
-              <h3>{m.acertos}</h3>
+              <h2>{m.acertos}</h2>
               <ul>
                 {ensino.acertos.map((x, i) => (
                   <li key={i}><span className="ensino-caderno__visto" aria-hidden="true">✓</span><span>{x}</span></li>
@@ -843,7 +847,7 @@ export function ApoioDaLicao({
               </ul>
             </div>
             <div className="ensino-caderno__cartao" data-tipo="lacuna">
-              <h3>{m.lacuna}</h3>
+              <h2>{m.lacuna}</h2>
               <p>{ensino.lacuna}</p>
             </div>
             <div className="ensino-caderno__cartao ensino-caderno__pergunta" data-tipo="pergunta">
@@ -852,12 +856,12 @@ export function ApoioDaLicao({
                 <span className="ensino-caderno__duvida">?</span>
               </div>
               <div>
-                <h3>{m.pergunta}</h3>
+                <h2>{m.pergunta}</h2>
                 <p>{ensino.pergunta}</p>
               </div>
             </div>
             <div className="ensino-caderno__cartao" data-tipo="proximo">
-              <h3>{m.proximo}</h3>
+              <h2>{m.proximo}</h2>
               <p>{ensino.proximoPasso}</p>
             </div>
             {/* Sem a IA, o retorno confere as ideias-chave da lição: a nota fica no pé, como legenda. */}

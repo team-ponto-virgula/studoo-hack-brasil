@@ -78,7 +78,7 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
         id,
         titulo,
         concluida: conclusao !== null,
-        ...(apoio?.reforco ? { ponte: { concluida: apoio.reforcoConcluido } } : {}),
+        ...(apoio?.reforco ? { ponte: { concluida: apoio.reforcoConcluido || Boolean((apoio.reforco as { algumaConcluida?: boolean } | null)?.algumaConcluida) } } : {}),
         ...(rever ? { rever } : {}),
       };
     });

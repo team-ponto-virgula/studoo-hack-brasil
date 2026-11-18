@@ -61,7 +61,15 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [brilho, setBrilho] = useState(0);
   const campo = useRef<HTMLTextAreaElement>(null);
+  const focarBotaoCriar = useRef(false);
   const texto = objetivo.trim();
+
+  useEffect(() => {
+    if (focarBotaoCriar.current && texto && !ocupado) {
+      focarBotaoCriar.current = false;
+      campo.current?.closest('form')?.querySelector<HTMLButtonElement>('.pedido-criar')?.focus();
+    }
+  }, [texto, ocupado]);
 
   useEffect(() => {
     if (modo !== 'ideia' || window.innerWidth < 1024) return;
@@ -102,12 +110,12 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   }
 
   function sugerir(ideia: string) {
+    focarBotaoCriar.current = true;
     aoMudar(ideia);
     setCurto(false);
     setEscolhida(ideia);
     setBrilho((anterior) => anterior + 1);
     anunciar(mensagens.pedido.sugestaoAplicada(ideia));
-    window.requestAnimationFrame(() => campo.current?.closest('form')?.querySelector<HTMLButtonElement>('.pedido-criar')?.focus());
   }
 
   function surpreender() {

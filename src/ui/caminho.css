@@ -809,6 +809,9 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   line-clamp: 2;
 }
 .caminho-no[data-discreto][data-ligado] { padding-bottom: calc(var(--passo) + 30px); }
+@media (max-width: 767px) {
+  .caminho-no[data-discreto] .caminho-no__titulo { -webkit-line-clamp: 3; line-clamp: 3; }
+}
 .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 86px); }
 
 /*

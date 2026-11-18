@@ -145,7 +145,7 @@ export function Apresentacao({
         <p className="introducao">{passos[passo].texto}</p>
       </div>
       <footer className="apresentacao-rodape">
-        <div className="apresentacao-rodape__conteudo">
+        <div className="apresentacao-rodape__conteudo" data-empilhado={(ultimo && rotuloFinal.length > 14) || undefined}>
           {passo > 0 && <Botao variante="secundario" onClick={() => irPara(passo - 1)}>{mensagens.apresentacao.voltar}</Botao>}
           <Botao onClick={avancar}>{rotuloFinal}{!ultimo && <Icone nome="seta" />}</Botao>
         </div>
