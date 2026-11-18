@@ -236,6 +236,8 @@
 }
 
 .estudo:has(.painel--aula) { overflow-x: clip; }
+.painel--aula[data-ponte-aberta] .aula-miolo { display: none; }
+.painel--aula[data-ponte-aberta] .aula-rodape { display: none; }
 .aula-rodape[data-retorno='certa'] { --fundo-rodape: #e3f6ea; --linha-rodape: #e3f6ea; }
 .aula-rodape[data-retorno='errada'] { --fundo-rodape: #fff1e0; --linha-rodape: #fff1e0; }
 

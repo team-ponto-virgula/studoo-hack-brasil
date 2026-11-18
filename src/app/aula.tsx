@@ -618,8 +618,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     );
   }
 
+  const ponteAberta = Boolean(avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita);
+
   return (
-    <article className="painel painel--aula" data-retorno={retorno}>
+    <article className="painel painel--aula" data-retorno={retorno} data-ponte-aberta={ponteAberta || undefined}>
       <header className="aula-topo">
         <button type="button" className="aula-fechar" aria-label={t.voltar} disabled={ocupado} onClick={() => sairAgora.current()}>
           <Icone nome="fechar" />
@@ -747,6 +749,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       {exercicio && (
         <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
           ultimaResposta={respostaLegivel(exercicio, resposta)}
+          aoVoltarExercicio={tentarDeNovo}
           aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
           aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
       )}

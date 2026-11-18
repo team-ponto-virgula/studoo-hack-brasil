@@ -234,6 +234,7 @@ export function ApoioDaLicao({
   pedidoPonte = 0,
   ultimo = true,
   ultimaResposta = '',
+  aoVoltarExercicio,
   aoConcluirPonte,
   aoEnsinar,
   aoAbrirExplique,
@@ -246,6 +247,8 @@ export function ApoioDaLicao({
   ultimo?: boolean;
   /** Resposta que gerou o erro, exibida na 1ª tábua da ponte. */
   ultimaResposta?: string;
+  /** Volta ao exercício recolhido quando a ponte está em tela cheia. */
+  aoVoltarExercicio?: () => void;
   /** A pessoa acertou a pergunta do reforço: a lição troca o "Quase lá!" do painel pelo convite a tentar de novo. */
   aoConcluirPonte?: () => void;
   /** A explicação foi enviada: a lição tira o convite para explicar. */
@@ -273,6 +276,7 @@ export function ApoioDaLicao({
   }
   const [texto, setTexto] = useState('');
   const [resposta, setResposta] = useState('');
+  const [passoPonte, setPassoPonte] = useState<1 | 2 | 3>(1);
   const [feedback, setFeedback] = useState('');
   /** O resultado da pergunta do reforço, para a opção marcada ficar verde (certa) ou âmbar (errada). */
   const [resultadoPonte, setResultadoPonte] = useState<{ id: string; correta: boolean } | null>(null);
@@ -553,11 +557,18 @@ export function ApoioDaLicao({
       )}
       {/* O reforço é do exercício que a pessoa acabou de errar (ou de um reforço começado e não terminado): não fica
           sobrando em outros exercícios nem em outra visita à lição. */}
-      {avaliacao?.correta === false && pedidoPonte > 0 && (
+      {avaliacao?.correta === false && pedidoPonte > 0 && (() => {
+        const etapaPonte = ponte?.concluida ? 3 : passoPonte;
+        return (
         <section className="estudio-card estudio-ponte" ref={cartaoPonte}>
           <div className="ponte-cabeca">
             <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
-            {ponte?.simulado && <p className="estudio-selo">{m.simulado}</p>}
+            <div className="ponte-cabeca__acoes">
+              {ponte?.simulado && <p className="estudio-selo">{m.simulado}</p>}
+              {!ponte?.concluida && aoVoltarExercicio && (
+                <Botao variante="texto" onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>
+              )}
+            </div>
           </div>
           <div
             className="ponte-cena"
@@ -582,10 +593,10 @@ export function ApoioDaLicao({
               <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined} style={{ '--ordem': 1 } as CSSProperties}>
                 {m.pontePassoExplicacao}
               </span>
-              <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined} style={{ '--ordem': 2 } as CSSProperties}>
+              <span className="ponte-tabua" data-ativa={Boolean(ponte && etapaPonte >= 2) || undefined} style={{ '--ordem': 2 } as CSSProperties}>
                 {m.pontePassoExemplo}
               </span>
-              <span className="ponte-tabua" data-ativa={Boolean(ponte?.concluida || resposta) || undefined} style={{ '--ordem': 3 } as CSSProperties}>
+              <span className="ponte-tabua" data-ativa={Boolean(ponte && (ponte.concluida || etapaPonte >= 3 || resposta)) || undefined} style={{ '--ordem': 3 } as CSSProperties}>
                 {m.pontePassoDesafio}
               </span>
             </div>
@@ -607,11 +618,11 @@ export function ApoioDaLicao({
               <span className="ponte-legenda__num">2</span>
               <span>{m.pontePassoExplicacao}</span>
             </li>
-            <li data-ativa={Boolean(ponte) || undefined} data-vencida={ponte?.concluida || undefined}>
+            <li data-ativa={Boolean(ponte && etapaPonte >= 2) || undefined} data-vencida={ponte?.concluida || undefined}>
               <span className="ponte-legenda__num">3</span>
               <span>{m.pontePassoExemplo}</span>
             </li>
-            <li data-ativa={Boolean(ponte?.concluida || resposta) || undefined} data-vencida={ponte?.concluida || undefined}>
+            <li data-ativa={Boolean(ponte && (ponte.concluida || etapaPonte >= 3 || resposta)) || undefined} data-vencida={ponte?.concluida || undefined}>
               <span className="ponte-legenda__num">4</span>
               <span>{m.pontePassoDesafio}</span>
             </li>
@@ -625,58 +636,59 @@ export function ApoioDaLicao({
             <p role="status">{erro || m.pensando}</p>
           ) : (
             <>
-              {/* A explicação do erro já está no painel de retorno: aqui só aparece se for outra. */}
-              {ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
-              <div className="estudio-exemplo">{ponte.exemplo}</div>
-              <fieldset disabled={ocupado || gravando || ponte.concluida}>
-                <legend>{ponte.exercicio.enunciado}</legend>
-                {ponte.exercicio.tipo === 'multipla_escolha' &&
-                  ponte.exercicio.opcoes.map((o) => (
-                    <label className="estudio-opcao" key={o.id}
-                      data-estado={resultadoPonte?.id === o.id ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>
-                      <input
-                        type="radio"
-                        name="reforco"
-                        checked={resposta === o.id}
-                        onChange={() => {
-                          setResposta(o.id);
-                          // Outra escolha depois de um erro: o retorno anterior sai, para não parecer que é desta.
-                          setResultadoPonte(null);
-                          setFeedback('');
-                          // O "Conferir" fica embaixo das opções, às vezes atrás do painel: a tela leva até ele.
-                          window.requestAnimationFrame(() => {
-                            const botao = cartaoPonte.current?.querySelector<HTMLElement>('.botao');
-                            const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
-                            if (!botao) return;
-                            const sobra = botao.getBoundingClientRect().bottom - (window.innerHeight - rodape - 16);
-                            if (sobra > 0) window.scrollBy({ top: sobra, behavior: 'smooth' });
-                          });
-                        }}
-                      />
-                      {o.texto}
-                    </label>
-                  ))}
-              </fieldset>
-              {!ponte.concluida && (
-                <Botao
-                  disabled={ocupado || gravando || !resposta}
-                  onClick={() =>
-                    void executar(async () => {
-                      const r = await cliente.avaliarPonte(licao.id, resposta);
-                      atualizarApoio(r.apoio);
-                      setResultadoPonte({ id: resposta, correta: r.correta });
-                      setFeedback(r.feedback);
-                    })
-                  }
-                >
-                  {m.verificar}
-                </Botao>
+              {/* Sequência real: 1) explicação ("Outro jeito"), 2) exemplo, 3) desafio. */}
+              {etapaPonte >= 1 && ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
+              {etapaPonte === 1 && !ponte.concluida && (
+                <Botao onClick={() => setPassoPonte(2)}>{m.ponteVerExemplo}</Botao>
               )}
-              {/* O "tente de novo" já está no painel de retorno: aqui não repete. */}
+              {etapaPonte >= 2 && <div className="estudio-exemplo">{ponte.exemplo}</div>}
+              {etapaPonte === 2 && !ponte.concluida && (
+                <Botao onClick={() => setPassoPonte(3)}>{m.ponteIrDesafio}</Botao>
+              )}
+              {etapaPonte >= 3 && (
+                <>
+                  <fieldset disabled={ocupado || gravando || ponte.concluida}>
+                    <legend>{ponte.exercicio.enunciado}</legend>
+                    {ponte.exercicio.tipo === 'multipla_escolha' &&
+                      ponte.exercicio.opcoes.map((o) => (
+                        <label className="estudio-opcao" key={o.id}
+                          data-estado={resultadoPonte?.id === o.id ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>
+                          <input
+                            type="radio"
+                            name="reforco"
+                            checked={resposta === o.id}
+                            onChange={() => {
+                              setResposta(o.id);
+                              setResultadoPonte(null);
+                              setFeedback('');
+                            }}
+                          />
+                          {o.texto}
+                        </label>
+                      ))}
+                  </fieldset>
+                  {!ponte.concluida && (
+                    <Botao
+                      disabled={ocupado || gravando || !resposta}
+                      onClick={() =>
+                        void executar(async () => {
+                          const r = await cliente.avaliarPonte(licao.id, resposta);
+                          atualizarApoio(r.apoio);
+                          setResultadoPonte({ id: resposta, correta: r.correta });
+                          setFeedback(r.feedback);
+                        })
+                      }
+                    >
+                      {m.verificar}
+                    </Botao>
+                  )}
+                </>
+              )}
             </>
           )}
         </section>
-      )}
+        );
+      })()}
       {ultimo && <details
         className="estudio-card estudio-ensino"
         onToggle={(e) => {
