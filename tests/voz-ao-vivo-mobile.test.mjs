@@ -259,6 +259,11 @@ test('prévia web: oferta para iniciarVozAoVivo, canal oai-events, estados pelo 
   assert.equal(c.ultimo().estado, 'stu_falando');
   evento(d, { type: 'output_audio_buffer.stopped' });
   assert.equal(c.ultimo().estado, 'ouvindo');
+  // Quando a pessoa interrompe, a OpenAI manda `cleared` (e não `stopped`): o Stu também para de falar (b391588).
+  evento(d, { type: 'output_audio_buffer.started' });
+  assert.equal(c.ultimo().estado, 'stu_falando');
+  evento(d, { type: 'output_audio_buffer.cleared' });
+  assert.equal(c.ultimo().estado, 'ouvindo');
 
   // Item da pessoa criado (conversation.item.added) e a transcrição que chega depois do toque em Encerrar.
   evento(d, { type: 'conversation.item.added', item: { id: 'u1', role: 'user' } });
