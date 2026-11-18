@@ -34,7 +34,13 @@
       "package": "com.studoo.mobile.dev"
     },
     "ios": {
-      "bundleIdentifier": "com.studoo.mobile.dev"
+      "bundleIdentifier": "com.studoo.mobile.dev",
+      "buildNumber": "1",
+      "supportsTablet": false,
+      "icon": "./assets/marca/icone-ios-1024.png",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     }
   }
 }
