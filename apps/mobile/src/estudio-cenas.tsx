@@ -38,7 +38,7 @@ function Tabua({ ativa, erro, vencida, ordem, reduzir }: { ativa: boolean; erro?
   }, [ativa, reduzir, entrada, ordem]);
   const cor = vencida ? madeiraVencida : erro ? madeiraErro : madeira;
   return (
-    <View style={cena.tabuaLugar}>
+    <View testID={ativa ? (vencida ? 'tabua-vencida' : 'tabua-posta') : 'tabua-falta'} style={cena.tabuaLugar}>
       {!ativa && <View style={cena.tabuaFalta} />}
       {ativa && (
         <Animated.View style={[cena.tabua, { backgroundColor: cor.face, borderColor: cor.borda }, {
