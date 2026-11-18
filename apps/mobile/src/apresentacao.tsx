@@ -115,7 +115,8 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
   return (
     <SafeAreaView style={estilos.tela}>
       <View style={apresentacaoEstilos.topo}>
-        <View style={estilos.marcaConteudo}>
+        {/* .apresentacao-topo no celular: 12 do respiro da página em cima e 48 de altura. */}
+        <View style={[estilos.marcaConteudo, apresentacaoEstilos.topoConteudo]}>
           <View style={apresentacaoEstilos.andamento} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <View style={apresentacaoEstilos.pontos}>
               {passos.map((item, indice) => (
@@ -125,7 +126,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
             </View>
             <Text style={apresentacaoEstilos.posicao}>{mensagens.apresentacao.posicao(passo + 1, total)}</Text>
           </View>
-          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto fonte={16} acao={() => concluir()} />}
+          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto fonte={16} estilo={{ paddingHorizontal: 14 }} acao={() => concluir()} />}
         </View>
       </View>
       <ScrollView ref={paginas} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={estilos.tela}
@@ -195,7 +196,7 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
 function Quadro({ selo = false, children }: { selo?: boolean; children: ReactNode }) {
   return (
     <View style={apresentacaoEstilos.quadro}>
-      {selo && <View style={apresentacaoEstilos.quadroTopo}><SeloDemonstracao /></View>}
+      {selo && <View style={apresentacaoEstilos.quadroTopo}><SeloDemonstracao emLinha /></View>}
       {children}
     </View>
   );
@@ -313,6 +314,7 @@ const apresentacaoEstilos = StyleSheet.create({
   pontoAtivo: { width: 28, backgroundColor: cores.acao },
   posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   topo: { backgroundColor: cores.fundo },
+  topoConteudo: { paddingTop: 12, paddingBottom: 0, minHeight: 48 },
   rodape: { paddingHorizontal: 20, backgroundColor: cores.fundo },
   rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 18, borderTopWidth: 2, borderColor: cores.nevoa },
   pagina: { paddingTop: 20 },

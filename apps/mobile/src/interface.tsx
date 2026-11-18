@@ -76,17 +76,20 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   }, []);
   // Como na web, a barra da marca rola junto com a página e sai de vista; só a faixa própria da tela (a barra da aula, o
   // nome da trilha) fica parada no alto.
+  // Entrada e recuperação usam o logo de 112 da web (.entrada-cabecalho, .recuperar-topo); as telas de estudo, o de 102
+  // (.estudo-cabecalho até 767 px, com 64 de altura e 16 nos lados).
+  const paginaDeAcesso = pagina === 'entrada' || Boolean(pagina?.startsWith('recuperar'));
   const cabecalho = !semCabecalho && (
     <View style={[estilos.cabecalho, semLinha && { borderBottomWidth: 0 }]}>
-      <View style={estilos.marcaConteudo}>
+      <View style={[estilos.marcaConteudo, !topo && !paginaDeAcesso && estilos.marcaEstudo, !topo && !paginaDeAcesso && Boolean(abaixoDoLogo) && estilos.marcaComSelo]}>
         {topo ?? (
           <>
-            <Logo />
+            <Logo estilo={paginaDeAcesso ? undefined : estilos.logoEstudo} />
             {acoes && <View style={estilos.acoes}>{acoes}</View>}
           </>
         )}
       </View>
-      {!topo && abaixoDoLogo && <View style={estilos.abaixoDoLogo}>{abaixoDoLogo}</View>}
+      {!topo && abaixoDoLogo && <View style={[estilos.abaixoDoLogo, !paginaDeAcesso && estilos.abaixoDoLogoEstudo]}>{abaixoDoLogo}</View>}
     </View>
   );
   return (
@@ -417,7 +420,9 @@ export type AcaoDoErro = { rotulo: string; acao: () => void; testID?: string; de
  * Estado de erro como o da web (rodadas 3A e 3A.1): um cartão só, com o Stu, o texto do erro e no máximo uma ação. O texto
  * é um alerta e, com `foco`, recebe o foco do leitor de tela; a ação fica logo embaixo, dentro do cartão.
  */
-export function EstadoErro({ mensagem, acao, testID, foco = false }: {
+export function EstadoErro({ mensagem, acao, testID, foco = false, estilo }: {
+  /** Margens de fora (nas listas, a web põe o cartão colado no respiro da página e 16 antes do título). */
+  estilo?: StyleProp<ViewStyle>;
   mensagem: string;
   acao?: AcaoDoErro;
   testID?: string;
@@ -430,7 +435,7 @@ export function EstadoErro({ mensagem, acao, testID, foco = false }: {
   }, [foco]);
 
   return (
-    <View testID={testID} style={estilos.estadoErro}>
+    <View testID={testID} style={[estilos.estadoErro, estilo]}>
       <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} importantForAccessibility="no"
         style={estilos.estadoErroStu} />
       <View style={estilos.estadoErroCorpo}>
@@ -477,8 +482,9 @@ export function LinhaAbrir({ rotulo, aberto, alternar, testID, cor = cores.texto
 }
 
 /** Selo "Modo demonstração", como `.estudio-selo` da web: pílula amarela cheia (#FFF1CC), sem borda, texto 0,8rem/800. */
-export function SeloDemonstracao({ estilo }: { estilo?: StyleProp<ViewStyle> }) {
-  return <View style={[estilos.seloDemo, estilo]}><Text style={estilos.seloDemoTexto}>{mensagens.estudio.simulado}</Text></View>;
+/** `emLinha`: o selo como <span> numa linha flexível (entrelinha de 1,5 → 19,2), e não como <p> do cartão (1,6 → 20,48). */
+export function SeloDemonstracao({ estilo, emLinha = false }: { estilo?: StyleProp<ViewStyle>; emLinha?: boolean }) {
+  return <View style={[estilos.seloDemo, estilo]}><Text style={[estilos.seloDemoTexto, emLinha && { lineHeight: 19.2 }]}>{mensagens.estudio.simulado}</Text></View>;
 }
 
 /**
@@ -592,6 +598,12 @@ export const estilos = StyleSheet.create({
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, minHeight: 60,
   },
   logo: { width: 112, height: 38 },
+  logoEstudo: { width: 102, height: 34.6 },
+  marcaEstudo: { paddingHorizontal: 16, paddingVertical: 4, minHeight: 64 },
+  // Com o selo de sincronia, a web quebra a barra em duas linhas (até 480 px): 4 em cima, a linha do logo, 6 de vão, o selo e
+  // 4 embaixo; os 64 de altura mínima valem para a barra inteira.
+  marcaComSelo: { minHeight: 0, paddingBottom: 0 },
+  abaixoDoLogoEstudo: { paddingHorizontal: 16, marginTop: 6, paddingBottom: 4 },
   acoes: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   rolagemConteudo: { flexGrow: 1 },
   conteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 },
@@ -624,15 +636,17 @@ export const estilos = StyleSheet.create({
   },
   mensagemConteudo: { flex: 1, gap: 4 },
   // Cartão de erro da web (.estado-erro): borda do erro a 40%, fundo rosado, o Stu de 48 à esquerda e o corpo ao lado.
+  // Como na web, o corpo pede pelo menos 220 de largura: em 360, ele desce para baixo do Stu (flex-wrap, vão de 14 entre as linhas).
   estadoErro: {
-    marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 16, paddingHorizontal: 18,
+    marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', rowGap: 14, columnGap: 16, paddingVertical: 16, paddingHorizontal: 18,
     borderWidth: 2, borderRadius: 20, borderColor: 'rgba(194, 59, 78, 0.4)', backgroundColor: cores.erroFundo,
   },
   estadoErroStu: { width: 48, height: 56, flexShrink: 0 },
-  estadoErroCorpo: { flex: 1, gap: 10 },
+  estadoErroCorpo: { flex: 1, minWidth: 220, gap: 10 },
   estadoErroTexto: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   mensagemTitulo: { fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
-  sinal: { width: 24, height: 24, textAlign: 'center', lineHeight: 22, borderRadius: 12, borderWidth: 1, fontFamily: fontes.corpo, fontWeight: '700' },
+  // .sinal da web: 800 em 0,875rem.
+  sinal: { width: 24, height: 24, textAlign: 'center', fontSize: 14, lineHeight: 22, borderRadius: 12, borderWidth: 1, fontFamily: fontes.corpo, fontWeight: '800' },
   skeleton: { marginTop: 20, gap: 8 },
   skeletonCurto: { width: '55%', height: 24, borderRadius: 8, backgroundColor: cores.gelo },
   skeletonLinha: { width: '100%', height: 16, borderRadius: 8, backgroundColor: cores.gelo },
@@ -651,7 +665,8 @@ export const estilos = StyleSheet.create({
   pontinhos: { height: 24, flexDirection: 'row', alignItems: 'center', gap: 5 },
   pontinho: { width: 8, height: 8, borderRadius: 4 },
   botaoDestrutivo: { borderColor: '#F3C4C0', borderBottomColor: '#F3C4C0', backgroundColor: cores.fundo },
-  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', borderBottomWidth: 2, borderColor: cores.gelo },
+  // .trilha-topo no celular: 20 abaixo da barra da marca (28 do respiro da página menos 8).
+  faixaFixa: { zIndex: 6, marginTop: 20, backgroundColor: 'rgba(255, 255, 255, 0.96)', borderBottomWidth: 2, borderColor: cores.gelo },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
   modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
   modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
@@ -680,7 +695,8 @@ export const estilos = StyleSheet.create({
   linhaAbrir: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 44, paddingVertical: 10, borderRadius: 8 },
   linhaAbrirTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   seloDemo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: '#FFF1CC' },
-  seloDemoTexto: { color: '#704700', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12.8, lineHeight: 19 },
+  // .estudio-selo: 0,8rem na entrelinha dos parágrafos do cartão (1,6 → 20,48).
+  seloDemoTexto: { color: '#704700', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12.8, lineHeight: 20.48 },
 });
 
 /** Dois destinos persistentes, fora das aulas e da geração para preservar o foco. */

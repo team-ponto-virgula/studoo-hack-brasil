@@ -10,6 +10,7 @@ import {
   View,
   useWindowDimensions,
   type DimensionValue,
+  type StyleProp,
   type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -117,7 +118,9 @@ function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
  * comemora, a linha até o próximo se desenha e só então o próximo nó se abre. Árvores e flores balançam com o vento.
  */
 export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
-  rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir }: {
+  rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir, estilo }: {
+  /** Margens de fora do mapa (a tela da trilha tem o vão de 20 da web até a faixa do nome). */
+  estilo?: StyleProp<ViewStyle>;
   nos: readonly NoCaminho[];
   stu?: string;
   dicas?: readonly string[];
@@ -286,7 +289,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   }
 
   return (
-    <View style={[caminhoEstilos.caminho, largo ? caminhoEstilos.caminhoLargo : caminhoEstilos.caminhoTela]} onLayout={(evento) => {
+    <View style={[caminhoEstilos.caminho, largo ? caminhoEstilos.caminhoLargo : caminhoEstilos.caminhoTela, estilo]} onLayout={(evento) => {
       posicoes.current.caminho = evento.nativeEvent.layout.y;
       tentarRolar();
     }}>
@@ -734,7 +737,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   // Como na web: o nome de cada lição fica à vista embaixo do nó (o atual já mostra o nome no balão "Começar"), para
   // achar uma lição e rever sem tocar uma por uma.
   const discreto = !comRotulo && (!atual || !!no.ponte) && (
-    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 192, centro - 92)) }]}>
+    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 232, centro - 112)) }]}>
       {/* O fundo fica na caixa, não no texto: assim o corte em duas linhas não deixa vazar a terceira. */}
       <View style={[caminhoEstilos.discretoCaixa, atual && caminhoEstilos.discretoCaixaAtual]}>
         <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta },
@@ -1114,7 +1117,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
     return () => animacao.stop();
   }, [festa, reduzir, pop]);
   return (
-    <View style={[caminhoEstilos.chegada, { backgroundColor: chao, minHeight: 252 + extra, paddingBottom: 30 + extra }]}
+    <View style={[caminhoEstilos.chegada, { backgroundColor: chao, minHeight: 265 + extra, paddingBottom: 30 + extra }]}
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
         <View style={[caminhoEstilos.chegadaEstrada, { backgroundColor: estradaSobre(chao) }]} />
@@ -1288,20 +1291,22 @@ const caminhoEstilos = StyleSheet.create({
   titulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 21 },
   tituloAtual: { fontSize: 17, lineHeight: 22 },
   tituloPrevia: { fontSize: 15, lineHeight: 20 },
-  discreto: { position: 'absolute', width: 184, alignItems: 'center', zIndex: 2 },
+  // .caminho-no[data-discreto] .caminho-no__texto: até 14rem (224) de largura, centrado no nó.
+  discreto: { position: 'absolute', width: 224, alignItems: 'center', zIndex: 2 },
   discretoAtual: { color: cores.acao, fontWeight: '800', fontSize: 14 },
-  discretoCaixa: { maxWidth: 184, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: cores.fundo,
+  discretoCaixa: { maxWidth: 224, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: cores.fundo,
     shadowColor: '#1B2A5E', shadowOpacity: 0.06, shadowRadius: 0, shadowOffset: { width: 0, height: 2 }, elevation: 1 },
   discretoCaixaAtual: { borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)' },
   seloCadeado: { position: 'absolute', right: -4, bottom: -4, width: 28, height: 28, borderRadius: 14, borderWidth: 3, borderColor: cores.fundo,
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
   discretoTexto: {
-    color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
+    color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17.55, textAlign: 'center' },
   discretoResumo: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 12, lineHeight: 16, textAlign: 'center' },
-  seloNaCaixa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 4 },
+  // .caminho-ponte: 12 px na entrelinha de 1,5, com o passo de 26 medido na web (8 do nome ou do selo anterior).
+  seloNaCaixa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 8 },
   selo: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
     backgroundColor: cores.fundo },
-  seloTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  seloTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 18 },
   ponteDiscreta: { marginTop: 6 },
   bolhaTrofeu: { position: 'absolute', bottom: '100%', left: -80, right: -80, marginBottom: 12, alignItems: 'center', zIndex: 3 },
   bolhaTrofeuTexto: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE08A',
@@ -1351,7 +1356,8 @@ const caminhoEstilos = StyleSheet.create({
   chegadaBandeira: { position: 'absolute', bottom: 96 },
   chegadaBase: { position: 'absolute', bottom: 0, left: '50%', marginLeft: -200, width: 400 },
   chegadaStu: { position: 'absolute', bottom: 74, left: '50%', marginLeft: 50, width: 62, height: 68 },
-  chegadaPlaca: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.9)' },
+  // Na web, a placa fica a 14 da caixa do troféu, cujo lábio de 7 é sombra (fora da caixa); aqui o lábio está dentro: 7 a menos.
+  chegadaPlaca: { marginTop: -7, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.9)' },
   chegadaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 20 },
   // Folha
   fundoFolha: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(27, 42, 94, 0.32)' },

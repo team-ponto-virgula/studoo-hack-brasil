@@ -533,10 +533,11 @@ export function Estudo({ cliente, sair, expirar }: {
 
     return (
       <Tela pagina="planos" acoes={acoes} abaixoDoLogo={planos && planos.length > 0 ? <SeloSincronia sincronia={sincronia} /> : undefined}>
-        {/* Como na web: o aviso de erro (sem rede, sessão) vem no alto, antes do título. */}
-        {mensagem}
+        {/* Como na web: o aviso de erro (sem rede, sessão) vem no alto, antes do título, sem margem em cima e a 16 dele. */}
+        {erro && <EstadoErro mensagem={erro} foco acao={acaoDoErro(codigoErro)} estilo={estudoEstilos.erroNaLista} />}
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
-        <Text style={estilos.introducao}>{mensagens.planos.subtitulo}</Text>
+        {/* .painel--planos: grade com vão de 12 (a introdução não tem margem própria ali). */}
+        <Text style={[estilos.introducao, estudoEstilos.introducaoPlanos]}>{mensagens.planos.subtitulo}</Text>
         {planos && planos.length > 0 && (() => {
           // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
           const destaque = planoInicial(planos);
@@ -550,10 +551,13 @@ export function Estudo({ cliente, sair, expirar }: {
               {restantes.length > 0 && (
                 <Text accessibilityRole="header" style={[estudoEstilos.secaoTitulo, caixaAlta]}>{mensagens.planos.outrasTrilhas}</Text>
               )}
+              {/* .planos-ativos: 20 em cima (mais o vão de 12 da página) e 16 entre os cartões. */}
+              {restantes.length > 0 && <View style={estudoEstilos.outrasTrilhas}>
               {restantes.map((plano) => (
                 <CartaoPlano key={plano.id} plano={plano} indice={planos.indexOf(plano)} ocupado={ocupado} secundario
                   abrir={() => void abrirPlano(plano.id)} apagar={() => pedirParaApagar(plano)} />
               ))}
+              </View>}
             </>
           );
         })()}
@@ -676,7 +680,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
       {falha && <EstadoErro mensagem={mensagemDoCodigo(falha)} testID="erro-geracao" foco
         acao={mostrarVerPlanos ? { rotulo: mensagens.pedido.verPlanos, testID: 'ver-planos', desativado: ocupado, acao: verPlanos }
           : repetivel ? { rotulo: mensagens.tentar, testID: 'tentar-geracao', desativado: ocupado, acao: tentar } : undefined} />}
-      <View style={modo !== 'material' && { display: 'none' }}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} ia={ia} mostrarCabeca={false} /></View>
+      <View style={modo !== 'material' ? { display: 'none' } : estudoEstilos.materialNoPedido}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} ia={ia} mostrarCabeca={false} /></View>
       <View style={modo !== 'ideia' && { display: 'none' }}>
         <View style={estudoEstilos.campoPedido}>
           <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} />
@@ -894,8 +898,8 @@ function Sugestao({ texto, icone, testID, ordem, escolhida, desativada, acao }: 
     <Animated.View style={estiloDeEntrada(entrada, 8, 1)}>
       <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ selected: escolhida, disabled: desativada }}
         disabled={desativada} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
-        // Como .pedido-ideia: a ideia escolhida não muda de cor (o Stu é que comemora).
-        style={({ pressed }) => [estudoEstilos.chip, desativada && estudoEstilos.chipDesativada,
+        // Como .pedido-ideia[aria-pressed='true']: a ideia escolhida fica com a borda, o texto e o fundo azuis.
+        style={({ pressed }) => [estudoEstilos.chip, escolhida && estudoEstilos.chipEscolhida, desativada && estudoEstilos.chipDesativada,
           pressed && estudoEstilos.chipAfundado, focado && estilos.foco]}>
         <Animated.View style={{ transform: [{ scale: pulo }] }} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
           <Desenho nome={icone} largura={24} />
@@ -963,8 +967,9 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const rodape = (
     <View style={estudoEstilos.geracaoAcoes}>
       <View style={dividir ? estudoEstilos.metade : null}>
+        {/* .geracao-acoes[data-pronta] > .botao: lado a lado, com 12 nos lados (em 360, "Ajustar pedido" cabe numa linha). */}
         <Botao rotulo={proposta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar} testID="voltar-pedido" variante="secundario"
-          desativado={ocupado} acao={proposta ? ajustar : cancelar} />
+          desativado={ocupado} acao={proposta ? ajustar : cancelar} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
       </View>
       {!dividir && (
         <View accessible accessibilityLabel={`${rotulo}. ${contagem}`} style={estudoEstilos.situacao}>
@@ -974,7 +979,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
       )}
       {proposta && (
         <View style={dividir ? estudoEstilos.metade : null}>
-          <Botao rotulo={mensagens.geracao.comecar} testID="comecar-trilha" desativado={ocupado} acao={() => comecar(proposta)} />
+          <Botao rotulo={mensagens.geracao.comecar} testID="comecar-trilha" desativado={ocupado} acao={() => comecar(proposta)}
+            estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
         </View>
       )}
     </View>
@@ -1315,10 +1321,11 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
     const atual = atualNaRolagem.current;
     const altura = alturaComCartao.current;
     if (!atual || !altura) return;
-    // Como a web (caminho.tsx, IntersectionObserver com rootMargin de -40 px em cima e -240 px embaixo): basta a lente ou
-    // o balão "Começar" (uns 110 pontos acima dela) aparecer na faixa visível para o cartão sair.
+    // Como a web (src/ui/caminho.tsx, IntersectionObserver na lente e no balão "Começar", com rootMargin de -40 px em cima e
+    // -170 px embaixo, sobre a tela inteira: o cartão flutuante não encolhe a área observada): basta a lente ou o balão (uns
+    // 110 pontos acima dela) aparecer nessa faixa para o cartão sair.
     const topoVisivel = rolagemY.current + 40;
-    const peVisivel = rolagemY.current + altura - 240;
+    const peVisivel = rolagemY.current + height - 170;
     const visto = atual.base > topoVisivel && atual.topo - 110 < peVisivel;
     setAtualVisivel((antes) => (antes === visto ? antes : visto));
   }
@@ -1400,7 +1407,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       )}
       {nos.length > 0 ? (
         <Caminho nos={nos} stu={falaDoStu(nos)} ocupado={ocupado} abrindo={abrindo} liberadas={liberadas} recemConcluida={etapa.concluida ?? null}
-          rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)}
+          rolarPara={rolarPara} aoRolar={rolar} aoAbrir={(no) => abrirLicao(no.id)} estilo={largo ? undefined : estudoEstilos.caminhoNaTrilha}
           aoMedirAtual={(topo, base) => {
             atualNaRolagem.current = { topo, base };
             avaliarAtual();
@@ -1641,12 +1648,14 @@ function MenuDoCartao({ titulo, ocupado, apagar, testID }: { titulo: string; ocu
         accessibilityState={{ expanded: aberto, disabled: ocupado }} aria-expanded={aberto} disabled={ocupado}
         onPress={() => setAberto((atual) => !atual)}
         style={({ pressed }) => [estudoEstilos.menuBotao, (aberto || pressed) && estudoEstilos.menuBotaoAberto]}>
-        <Text importantForAccessibility="no" style={estudoEstilos.menuBotaoTexto}>•••</Text>
+        {/* Aberto, o "•••" fica na cor do texto (.plano-cartao__menu[open] > summary). */}
+        <Text importantForAccessibility="no" style={[estudoEstilos.menuBotaoTexto, aberto && { color: cores.texto }]}>•••</Text>
       </Pressable>
       {aberto && (
         <View style={estudoEstilos.menuBalao}>
+          {/* O próprio botão é o balão (.plano-cartao__menu[open] > .plano-cartao__apagar): 6 × 12, borda de 1 e cantos de 12. */}
           <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
-            onPress={() => { setAberto(false); apagar(); }} style={estudoEstilos.cartaoApagar}>
+            onPress={() => { setAberto(false); apagar(); }} style={[estudoEstilos.cartaoApagar, estudoEstilos.cartaoApagarBalao]}>
             <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
           </Pressable>
         </View>
@@ -1869,13 +1878,21 @@ const estudoEstilos = StyleSheet.create({
   historiaTitulo: { flexShrink: 1, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 19.5, letterSpacing: 0.52 },
   historiaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
   historiaSincronia: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21, textAlign: 'center' },
+  // .plano-destaque no celular: 16 de respiro, a cena de 96 com cantos de 18 dentro do cartão, 14 entre a cena e o corpo e o
+  // fundo em degradê (135°, #f6f8ff até o branco aos 62%).
   destaque: {
-    marginTop: 20, borderWidth: 2, borderBottomWidth: 5, borderRadius: 24, borderColor: cores.destaqueBorda,
-    backgroundColor: cores.superficieSutil, overflow: 'hidden',
+    marginTop: 24, padding: 16, gap: 14, borderWidth: 2, borderBottomWidth: 5, borderRadius: 24, borderColor: cores.destaqueBorda,
+    backgroundColor: cores.fundo, overflow: 'hidden',
+    ...(Platform.OS === 'web'
+      ? ({ backgroundImage: 'linear-gradient(135deg, #f6f8ff 0%, #ffffff 62%)' } as object)
+      : { experimental_backgroundImage: 'linear-gradient(135deg, #F6F8FF 0%, #FFFFFF 62%)' }),
   },
-  destaqueCena: { height: 96, overflow: 'hidden' },
+  destaqueCena: { height: 96, borderRadius: 18, overflow: 'hidden' },
   destaqueStu: { position: 'absolute', bottom: 6, left: '50%', marginLeft: -30, width: 60, height: 66 },
-  destaqueCorpo: { padding: 16, gap: 10 },
+  destaqueCorpo: { gap: 8 },
+  introducaoPlanos: { marginTop: 12 },
+  erroNaLista: { marginTop: 0, marginBottom: 16 },
+  outrasTrilhas: { marginTop: 16 },
   destaqueTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   destaqueRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.7 },
   destaqueTitulo: { marginTop: 2 },
@@ -1888,24 +1905,28 @@ const estudoEstilos = StyleSheet.create({
   seloTrilha: { marginBottom: 12 },
   // Pedido simplificado
   pedidoHeroi: { alignItems: 'center', gap: 8, paddingTop: 8 },
+  // O cartão do material na web: o vão de 18 do painel mais os 24 de margem do cartão, em cima e embaixo (o cartão do app tem 12).
+  materialNoPedido: { marginTop: 30, marginBottom: 12 },
   // Como .pedido-heroi__stu e o halo da web: 120 px, o miolo claro e o anel amarelo do gradiente, com o Stu de 96 por cima.
   pedidoStu: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
   pedidoHalo: { position: 'absolute', width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFE08A' },
   pedidoHaloMiolo: { width: 69, height: 69, borderRadius: 35, backgroundColor: '#FFF3C4' },
-  pedidoEstrela: { position: 'absolute', top: 6, right: 8, color: '#FFB703', fontSize: 24, lineHeight: 28 },
+  // .pedido-heroi__estrela: 1,5rem na entrelinha do corpo (1,5 → 36).
+  pedidoEstrela: { position: 'absolute', top: 6, right: 8, color: '#FFB703', fontSize: 24, lineHeight: 36 },
   // Como .pedido-heroi h1 da web no celular: 30 px (clamp de 1,875rem), entrelinha 1,08.
   pedidoTitulo: { fontSize: 30, lineHeight: 32, textAlign: 'center' },
   pedidoFala: { minHeight: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24, textAlign: 'center' },
   // .pedido-alternar: borda tracejada de 2 em #C9D1EA, raio 22, fundo transparente.
   alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 18, paddingVertical: 14, paddingLeft: 14, paddingRight: 18,
     borderRadius: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.bordaCampo, backgroundColor: 'transparent' },
-  alternarDica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  // .pedido-alternar__texto: strong e small na entrelinha do corpo (1,5): 24 e 21.
+  alternarDica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
   alternarLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   alternarSelo: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', backgroundColor: '#E5EBFF',
     color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
   alternarIcone: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
   alternarTextos: { flex: 1, gap: 2 },
-  alternarTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 21 },
+  alternarTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   // Topo da trilha e anel de progresso
   topoTrilha: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12, paddingTop: 4 },
   topoTrilhaTexto: { flex: 1, minWidth: 0 },
@@ -1921,8 +1942,11 @@ const estudoEstilos = StyleSheet.create({
   barraPlano: { width: '100%', maxWidth: 620, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 20,
     paddingVertical: 10 },
   barraPlanoTexto: { flex: 1, minWidth: 0 },
-  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14, letterSpacing: 0.9 },
-  barraPlanoTitulo: { marginTop: 2, fontSize: 18, lineHeight: 21 },
+  // .trilha-topo no celular: rótulo de 0,6875rem e h1 de 1,125rem na entrelinha de 1,12.
+  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, letterSpacing: 0.9 },
+  barraPlanoTitulo: { marginTop: 2, fontSize: 18, lineHeight: 20.16 },
+  // .painel--trilha: 20 entre a faixa do nome e o mapa (o conteúdo já tem 24 em cima).
+  caminhoNaTrilha: { marginTop: -4 },
   concluidoCartao: { gap: 8, marginBottom: 12, padding: 18, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5,
     borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   descobertaHero:{flexDirection:'row',alignItems:'center',gap:8,marginBottom:20},
@@ -1934,7 +1958,8 @@ const estudoEstilos = StyleSheet.create({
   descobertaCaderno:{padding:16,backgroundColor:'#fffcf6',borderWidth:1,borderColor:'#e8dfcf',borderRadius:20},
   descobertaPassos:{flexDirection:'row',justifyContent:'space-between',marginTop:24,paddingTop:20,borderTopWidth:1,borderColor:cores.gelo},
   bloco: { gap: 12, marginTop: 16, padding: 16, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo },
-  blocoConclusao: { marginTop: 24, padding: 20 },
+  // "Progresso na trilha": 34 do título até "1 de 3 lições" na web.
+  blocoConclusao: { marginTop: 24, padding: 20, gap: 2 },
   progresso: { gap: 8, marginTop: 12 },
   progressoNaFaixa: { marginTop: 18 },
   progressoLegenda: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 },
@@ -1982,7 +2007,8 @@ const estudoEstilos = StyleSheet.create({
   menu: { position: 'absolute', top: 10, right: 10, zIndex: 2, alignItems: 'flex-end' },
   menuBotao: { minWidth: 40, minHeight: 40, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.88)' },
-  menuBalao: { marginTop: 4, paddingHorizontal: 4, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12, backgroundColor: cores.fundo,
+  menuBalao: { marginTop: 4 },
+  cartaoApagarBalao: { paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   menuBotaoAberto: { backgroundColor: cores.nevoa },
   menuBotaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16 },
@@ -2050,7 +2076,9 @@ const estudoEstilos = StyleSheet.create({
   dica: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   contador: { alignSelf: 'flex-end' },
   // Como .pedido-ideias e .pedido-ideia da web: fichas de 46 px com lábio de 3, que quebram linha, centralizadas.
-  sugestoes: { marginTop: 20, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
+  // A ficha tem 46 + 3 de lábio (na web, a sombra de 3 fica fora da caixa e entra no vão de 10): 7 entre as linhas dá o passo
+  // de 56 da web.
+  sugestoes: { marginTop: 20, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', rowGap: 7, columnGap: 10 },
   surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 49, paddingVertical: 8, paddingLeft: 10, paddingRight: 16, borderRadius: 999,
     borderWidth: 2, borderBottomWidth: 5, borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   surpresaAfundada: { borderBottomWidth: 2, marginTop: 3 },
@@ -2077,7 +2105,9 @@ const estudoEstilos = StyleSheet.create({
   geracaoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   metade: { flex: 1, minWidth: 0 },
   situacao: { flex: 1, minWidth: 0 },
-  situacaoRotulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 21 },
+  // .geracao-situacao__rotulo: 800 na entrelinha de 1,3.
+  situacaoRotulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 20.8 },
+  botaoDividido: { paddingHorizontal: 12 },
   situacaoContagem: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   // Carregando a lição
   esqueletoTopo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },

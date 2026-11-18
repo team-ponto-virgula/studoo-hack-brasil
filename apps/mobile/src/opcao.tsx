@@ -12,7 +12,9 @@ export const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
  * Opção de múltipla escolha da aula: cartão com a letra à esquerda, o texto alinhado à esquerda e os estados de marcada,
  * certa e errada. O desafio da ponte usa o mesmo cartão, como decidido no levantamento de paridade (PT5).
  */
-export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apagada, acao }: {
+export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apagada, acao, corTextoErro = '#7A4A00' }: {
+  /** Cor do texto da opção errada: âmbar na aula; no desafio da ponte, a web mantém o azul da marcada. */
+  corTextoErro?: string;
   id: string;
   letra: string;
   texto: string;
@@ -41,7 +43,7 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
           <Text style={[opcaoEstilos.letraTexto, (selecionada || retorno) && { color: cores.fundo }]}>{letra}</Text>
         </View>
         {/* Como na web: o texto da opção marcada fica verde no acerto e âmbar no erro. */}
-        <Text style={[estilos.texto, opcaoEstilos.opcaoTexto, retorno === 'certa' && { color: cores.sucesso }, retorno === 'errada' && { color: '#7A4A00' }]}>{texto}</Text>
+        <Text style={[estilos.texto, opcaoEstilos.opcaoTexto, retorno === 'certa' && { color: cores.sucesso }, retorno === 'errada' && { color: corTextoErro }]}>{texto}</Text>
       </Pressable>
     </Animated.View>
   );

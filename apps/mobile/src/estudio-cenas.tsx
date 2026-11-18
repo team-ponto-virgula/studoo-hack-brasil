@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useAudioRecorderState, type AudioRecorder } from 'expo-audio';
 import type { ApoioEstudo, PaginaMaterial } from '@studoo/contratos';
 import { Icone } from './icone';
@@ -62,7 +62,9 @@ function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: numbe
  * com o desafio) e a margem "De volta ao desafio". Ao vencer, as tábuas ficam verdes e o Stu atravessa, depois de a lição
  * trazer a cena para a vista (`aoMedir`). Embaixo, a legenda das tábuas com o texto de cada uma, legível no celular.
  */
-export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir }: {
+export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir, estilo }: {
+  /** Margens de fora (o cartão da ponte tira o vão do cartão, que a web não tem entre a cabeça e a cena). */
+  estilo?: StyleProp<ViewStyle>;
   /** A resposta errada em texto legível (o texto da opção, não o código). */
   resposta: string;
   /** Texto da 1ª tábua sem resposta (a ilustração da apresentação usa "Sua tentativa", como as tábuas da web). */
@@ -106,7 +108,7 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
     ? Math.max(0, margens.direita.x + margens.direita.largura / 2 - (margens.esquerda.x + margens.esquerda.largura / 2)) : 0;
 
   return (
-    <View onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y, evento.nativeEvent.layout.height)}>
+    <View style={estilo} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y, evento.nativeEvent.layout.height)}>
       {/* Como .ponte-cena da web no celular: céu, água a partir de 66% com as faixas claras no pé, margens e o vão. */}
       <View testID="cena-ponte" style={cena.cena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <View style={cena.agua} />
@@ -244,7 +246,8 @@ export function CadernoDoStu({ ensino, compacto = false }: {
         <Text accessibilityRole="header" style={titulo}>{m.acertos}</Text>
         {ensino.acertos.map((acerto, indice) => (
           <View key={indice} style={caderno.item}>
-            <Text style={[caderno.visto, compacto && caderno.textoCompacto]} importantForAccessibility="no">✓</Text>
+            {/* O visto fica em 13 px também no compacto, como .ensino-caderno__visto na apresentação da web. */}
+            <Text style={caderno.visto} importantForAccessibility="no">✓</Text>
             <Text style={[texto, { flex: 1 }]}>{acerto}</Text>
           </View>
         ))}
@@ -330,7 +333,8 @@ const cena = StyleSheet.create({
   tabua: { flex: 1, minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderBottomWidth: 6, borderRadius: 10 },
   tabuaNumero: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
   stu: { zIndex: 3, width: 32, height: 32 },
-  legenda: { marginBottom: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  // A legenda tem 12 embaixo na web; aqui o cartão já põe 14 entre os blocos, então ela devolve 2.
+  legenda: { marginBottom: -2, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   // O que o site desenha: em estudio.css, as regras base de .ponte-legenda li e __num vêm depois das do celular e valem
   // também nele (13 px, respiro de 8 × 10, número de 22 px em 12 px); a grade (vão de 6) segue a regra do celular.
   passo: { flexBasis: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingHorizontal: 10, paddingVertical: 8,
@@ -395,7 +399,8 @@ const paginas = StyleSheet.create({
   cartao: { gap: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
   rotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
   previa: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 24 },
-  miniatura: { width: '100%', height: 132, borderRadius: 12, backgroundColor: '#FFF8E8' },
+  // .estudio-pagina-thumb: até 140 de altura, cantos de 10 e borda de 1.
+  miniatura: { width: '100%', height: 140, borderRadius: 10, borderWidth: 1, borderColor: cores.gelo, backgroundColor: '#FFF8E8' },
   linha: { flexDirection: 'row' },
   cabecalho: { backgroundColor: cores.nevoa },
   celula: { width: 132, paddingVertical: 8, paddingHorizontal: 10, borderWidth: 1, borderColor: cores.gelo, color: cores.texto, fontFamily: fontes.corpo,

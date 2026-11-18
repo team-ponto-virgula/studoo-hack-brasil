@@ -619,14 +619,16 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         );
       case 'multipla_escolha':
         return (
-          <View accessibilityRole="radiogroup" accessibilityLabel={t.resposta} style={licaoEstilos.opcoes}>
+          <View accessibilityRole="radiogroup" accessibilityLabel={t.resposta} style={licaoEstilos.opcoesGrupo}>
             <Text style={estilos.rotulo}>{t.resposta}</Text>
+            <View style={licaoEstilos.opcoes}>
             {atual.opcoes.map((opcao, posicao) => (
               <Opcao key={opcao.id} id={opcao.id} letra={letras[posicao] ?? String(posicao + 1)} texto={opcao.texto}
                 selecionada={opcao.id === resposta} retorno={opcao.id === resposta ? retorno : null}
                 desativada={ocupado || respondido} apagada={respondido && opcao.id !== resposta}
                 acao={() => mudarResposta(opcao.id)} />
             ))}
+            </View>
           </View>
         );
       case 'ordenar':
@@ -721,13 +723,12 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 <View style={licaoEstilos.marcadores}>
                   <Text style={licaoEstilos.marcadoresTexto}>{mensagens.estudio.baseadoMaterial}</Text>
                   {licao.referencias.map((_, numero) => (
-                    <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button" hitSlop={8}
+                    <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button"
                       accessibilityLabel={`${mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }} aria-expanded={citacaoAberta === numero}
                       onPress={() => mostrarCitacao(numero)}
-                      style={({ pressed }) => [licaoEstilos.marcadorAlvo, pressed && { opacity: 0.8 }]}>
-                      <View style={[licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto]}>
-                        <Text style={[licaoEstilos.marcadorTexto, citacaoAberta === numero && { color: cores.fundo }]}>[{numero + 1}]</Text>
-                      </View>
+                      hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
+                      style={({ pressed }) => [licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto, pressed && { opacity: 0.8 }]}>
+                      <Text style={[licaoEstilos.marcadorTexto, citacaoAberta === numero && { color: cores.fundo }]}>[{numero + 1}]</Text>
                     </Pressable>
                   ))}
                 </View>
@@ -775,7 +776,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
             )}
             {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
-            {campoDoExercicio(exercicio)}
+            <View style={licaoEstilos.formulario}>{campoDoExercicio(exercicio)}</View>
             {!avaliacao && errosAnteriores[indice] && (
               <View testID="dica-anterior" accessible accessibilityRole="text" style={licaoEstilos.dica}>
                 <View style={licaoEstilos.dicaTopo}>
@@ -852,7 +853,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         )}
       </EntradaDaEtapa>
       </View>
-      {exercicio && <View style={licaoEstilos.apoio} onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; }}>
+      {exercicio && <View style={[licaoEstilos.apoio, ponteAberta && licaoEstilos.apoioComPonte]} onLayout={(evento) => { apoioPosicao.current = evento.nativeEvent.layout.y; }}>
         <ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
         ultimo={indice === exercicios.length - 1}
         aoVoltarExercicio={tentarDeNovo}
@@ -1024,11 +1025,14 @@ export function CartaoFonte({ referencia, numero, ref, titulo, parado = false }:
         : { opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
       {/* Como .aula-citacao da web: um selo só com o número e "Fonte do seu material", o material em 14 px/700, o selo de
           demonstração e o trecho em itálico, sem aspas, com a borda azul à esquerda sobre o branco. */}
-      <View style={licaoEstilos.fonteSeloNumero}>
-        <Text style={[licaoEstilos.fonteRotulo, caixaAlta]}>{`[${numero}] ${m.fonteMaterial}`}</Text>
+      {/* .aula-citacao__topo: linha que quebra, com 8 entre as linhas (o cartão tem 10 entre os blocos). */}
+      <View style={licaoEstilos.fonteTopo}>
+        <View style={licaoEstilos.fonteSeloNumero}>
+          <Text style={[licaoEstilos.fonteRotulo, caixaAlta]}>{`[${numero}] ${m.fonteMaterial}`}</Text>
+        </View>
+        <Text style={licaoEstilos.fonteOnde}>{onde}</Text>
+        {referencia.leitura === 'demonstracao' && <SeloDemonstracao emLinha />}
       </View>
-      <Text style={licaoEstilos.fonteOnde}>{onde}</Text>
-      {referencia.leitura === 'demonstracao' && <SeloDemonstracao />}
       <View style={licaoEstilos.fonteTrecho}>
         <Text selectable style={[estilos.texto, licaoEstilos.fonteTrechoTexto]}>{referencia.trecho}</Text>
       </View>
@@ -1130,8 +1134,10 @@ const licaoEstilos = StyleSheet.create({
   /** Exercício recolhido enquanto a ponte está aberta (rodada 4D da web). */
   recolhido: { display: 'none' },
   tituloQuadro: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
-  /** A pergunta como título do exercício: 20 px em celular, como `.aula-pergunta` da web. */
-  pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 28 },
+  /** A pergunta como título do exercício, como `.aula-pergunta` da web: entrelinha de 27,6 e 6 embaixo. */
+  pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 27.6, marginBottom: 6 },
+  /** O formulário da resposta: 4 em cima (.aula-quadro .formulario). */
+  formulario: { marginTop: 4 },
   trilha: { flex: 1, height: 18, borderRadius: 9, backgroundColor: cores.gelo, overflow: 'hidden' },
   preenchimento: { height: '100%', minWidth: 18, borderRadius: 9, backgroundColor: cores.acao, overflow: 'hidden' },
   preenchimentoCerto: { backgroundColor: cores.sucessoClaro },
@@ -1149,7 +1155,9 @@ const licaoEstilos = StyleSheet.create({
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   etapaTexto: { fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
   // Como .aula-miolo h1 da web no celular: clamp(1,5rem, 4,6vw, 2rem) = 24 px, entrelinha 1,15.
-  tituloLicao: { fontSize: 24, lineHeight: 28 },
+  // .aula-miolo h1 no celular: 24 px na entrelinha de 1,15; com o vão de 14 da etapa e o -6 de cima, fica a 8 da etapa e a 14 do
+  // objetivo (a introdução já tem 8 em cima).
+  tituloLicao: { fontSize: 24, lineHeight: 27.6, marginTop: 4, marginBottom: 6 },
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   // 48 dp de toque sem empurrar a etapa: as margens negativas devolvem o espaço que o visual de antes ocupava.
   // .aula-voltar-etapa: 4 de respiro em cima e embaixo (29 de altura), na largura da coluna, 6 embaixo mais o vão de 14 da grade;
@@ -1159,12 +1167,14 @@ const licaoEstilos = StyleSheet.create({
   marcadores: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
   marcadoresTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   marcadorAlvo: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', marginVertical: -8 },
-  marcador: { minWidth: 36, minHeight: 32, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
+  // O selo [1] da web: 38 × 28, pílula; o alvo de 48 cresce por fora (hitSlop, P8).
+  marcador: { minWidth: 38, minHeight: 28, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
     borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: cores.fundo },
   marcadorAberto: { borderColor: cores.acao, backgroundColor: cores.acao },
   marcadorTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
   fonte: { marginTop: 14, paddingVertical: 16, paddingHorizontal: 20, gap: 10, borderRadius: 20, borderWidth: 2, borderBottomWidth: 4,
     borderColor: cores.destaqueBorda, borderBottomColor: cores.gelo, backgroundColor: '#F6F8FF' },
+  fonteTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', rowGap: 8, columnGap: 12 },
   fonteSeloNumero: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#E5EBFF' },
   fonteRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18, letterSpacing: 0.48 },
   fonteOnde: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
@@ -1188,7 +1198,8 @@ const licaoEstilos = StyleSheet.create({
   dicaTitulo: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
   dicaTexto: { color: '#5C3B00', fontFamily: fontes.corpo, fontWeight: '600', fontSize: 15, lineHeight: 21 },
   revisaoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
-  explicacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 20 },
+  // .aula-explicacao: o vão de 14 da etapa (sem margem própria).
+  explicacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 14 },
   stu: { width: 58, height: 64, marginTop: 6 },
   balao: { flex: 1, gap: 10, padding: 16, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   balaoSeta: { position: 'absolute', top: 24, left: -10, width: 16, height: 16, borderLeftWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo,
@@ -1196,6 +1207,8 @@ const licaoEstilos = StyleSheet.create({
   balaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   // O primeiro cartão de apoio fica 113 px abaixo do último texto do exercício, como na web.
   apoio: { marginTop: 27 },
+  // Com a ponte aberta, a etapa some (como na web) e o cartão da ponte é o primeiro bloco: sem o vão que vinha depois dela.
+  apoioComPonte: { marginTop: 16 },
   quadro: { marginTop: 4, gap: 12, padding: 18, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   quadroExemplo: { borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
   quadroPratica: { borderColor: '#E2D1F5', backgroundColor: '#FBF8FF' },
@@ -1215,8 +1228,10 @@ const licaoEstilos = StyleSheet.create({
   respostaCampo: { minHeight: 58, fontSize: 20, lineHeight: 26, fontWeight: '700' },
   respostaCerta: { borderColor: cores.sucessoClaro, color: cores.sucesso, backgroundColor: '#EEFAF3' },
   respostaErrada: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
-  // Entre a pergunta e "Sua resposta", 22 na web (o vão de 12 do cartão mais 10).
-  opcoes: { gap: 10, marginTop: 10 },
+  // Entre a pergunta e "Sua resposta", 22 na web: 6 da pergunta, o vão de 12 do cartão e 4 do formulário. As opções têm vão de
+  // 12 (.opcoes) e a legenda fica a 8 da primeira.
+  opcoes: { gap: 12 },
+  opcoesGrupo: { gap: 8 },
   rodapeCerto: { borderTopColor: 'transparent', backgroundColor: '#E3F6EA' },
   rodapeErrado: { borderTopColor: 'transparent', backgroundColor: '#FFF1E0' },
   retorno: { gap: 2 },

@@ -492,7 +492,7 @@ function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: 
           {parte}
           {posicao < partes.length - 1 && (
             <Text accessibilityLabel={preenchimento ? undefined : 'lacuna'} style={[formatos.lacuna, preenchimento ? formatos.lacunaPreenchida : null]}>
-              {preenchimento || '   '}
+              {preenchimento || '    '}
             </Text>
           )}
         </Text>
@@ -520,7 +520,7 @@ export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: 
       return <Passos passos={linhasDePassos(texto)} preenchimento={preenchimento} />;
     default:
       return (
-        <View style={formatos.frase}>
+        <View style={[formatos.frase, partesDaLacuna(texto).length > 1 && formatos.fraseComLacuna]}>
           <ComLacunas texto={texto} estilo={formatos.fraseTexto} preenchimento={preenchimento} />
           {fala && <BotoesOuvir fala={fala} />}
         </View>
@@ -582,10 +582,23 @@ export function RecursoDaLicao({ recurso, longa = false, semBatida = false }: { 
       </View>
     );
   }
+  return <ImagemDoMaterial src={recurso.src} fonte={recurso.fonte} descricao={recurso.descricao} />;
+}
+
+/** Foto do material como .recurso-imagem da web: a largura toda na proporção da própria imagem (até 360 de altura) e a
+ * legenda a 8 embaixo. Antes de a medida chegar, vale 16:10. */
+function ImagemDoMaterial({ src, fonte, descricao }: { src: string; fonte?: string; descricao: string }) {
+  const [proporcao, setProporcao] = useState(16 / 10);
+  useEffect(() => {
+    let vivo = true;
+    Image.getSize(src, (largura, altura) => { if (vivo && largura > 0 && altura > 0) setProporcao(largura / altura); }, () => {});
+    return () => { vivo = false; };
+  }, [src]);
   return (
-    <View style={formatos.secao}>
-      <Image source={{ uri: recurso.src }} accessibilityLabel={`${recurso.fonte ?? t.recursos.doMaterial}: ${recurso.descricao}`} resizeMode="contain" style={formatos.imagem} />
-      <Text style={[estilos.legenda, { lineHeight: 21 }]}><Text style={{ fontWeight: '700' }}>{recurso.fonte ?? t.recursos.doMaterial}</Text> · {recurso.descricao}</Text>
+    <View style={formatos.imagemSecao}>
+      <Image source={{ uri: src }} accessibilityLabel={`${fonte ?? t.recursos.doMaterial}: ${descricao}`} resizeMode="contain"
+        style={[formatos.imagem, { aspectRatio: proporcao }]} />
+      <Text style={[estilos.legenda, { lineHeight: 21 }]}><Text style={{ fontWeight: '700' }}>{fonte ?? t.recursos.doMaterial}</Text> · {descricao}</Text>
     </View>
   );
 }
@@ -810,7 +823,7 @@ export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
     mudar(novas.some(Boolean) ? novas.join(',') : '');
   }
   return (
-    <View style={formatos.secao}>
+    <View style={formatos.secaoOrdenar}>
       <Text style={formatos.instrucao}>{t.ordenar.instrucao}</Text>
       <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.ordenar.suaOrdem}</Text>
       <View style={formatos.ordemCaixa}>
@@ -943,13 +956,13 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
             <Text style={formatos.posicaoTexto}>{indice}</Text>
           </View>
         )}
-        <Text style={[estilos.texto, formatos.cartaoTexto, { fontSize: 15 }]}>{item.texto}</Text>
+        <Text style={[estilos.texto, formatos.cartaoTexto, formatos.cartaoParTexto]}>{item.texto}</Text>
       </Pressable>
     );
   }
 
   return (
-    <View style={formatos.secao}>
+    <View style={formatos.secaoOrdenar}>
       <Text style={formatos.instrucao} accessibilityLiveRegion="polite">
         {escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
           : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao}
@@ -980,8 +993,9 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
 }) {
   const [escolha = '', justificativa = ''] = valor.split(':');
   return (
-    <View style={formatos.secao}>
+    <View style={formatos.vf}>
       <View style={formatos.afirmacao}><Text style={formatos.afirmacaoTexto}>{afirmacao}</Text></View>
+      <View style={formatos.vfGrupo}>
       <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.valor}</Text>
       <View style={formatos.valores} accessibilityRole="radiogroup" accessibilityLabel={t.verdadeiroFalso.valor}>
         {(['verdadeiro', 'falso'] as const).map((opcao) => {
@@ -996,8 +1010,11 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
           );
         })}
       </View>
-      <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.porque}</Text>
-      {justificativas(justificativa, (nova) => mudar(`${escolha}:${nova}`))}
+      </View>
+      <View style={formatos.vfGrupo}>
+        <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.porque}</Text>
+        {justificativas(justificativa, (nova) => mudar(`${escolha}:${nova}`))}
+      </View>
     </View>
   );
 }
@@ -1247,6 +1264,11 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
 
 const formatos = StyleSheet.create({
   secao: { gap: 10 },
+  // .ordenar e .associar: grade com vão de 12.
+  secaoOrdenar: { gap: 12 },
+  // .vf: vão de 14 entre a afirmação, os valores e o porquê; as legendas têm 8 embaixo.
+  vf: { gap: 14 },
+  vfGrupo: { gap: 8 },
   rotuloLinha: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   // .ordenar__rotulo e as legendas do V/F: 13 px em 900, 0,05em; .ordenar__instrucao: 16 px em 700.
   rotuloCaixa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 19.5, letterSpacing: 0.65 },
@@ -1283,7 +1305,10 @@ const formatos = StyleSheet.create({
   formula: { padding: 16, borderRadius: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo, backgroundColor: cores.fundo },
   // Como a web 4.2 (`.trecho--formula`): a fonte da interface, forte, com algarismos de largura igual (antes, serifa).
   formulaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 21, lineHeight: 28, fontVariant: ['tabular-nums'], textAlign: 'center' },
-  frase: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.ceu },
+  // .trecho--frase: 16 × 18 de respiro. Na web, a lacuna é um bloco em linha com borda de 3 embaixo, que alonga a linha em
+  // uns 4 px; aqui ela é texto sublinhado, então o quadro devolve esse espaço embaixo.
+  frase: { gap: 10, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 16, backgroundColor: cores.ceu },
+  fraseComLacuna: { paddingBottom: 20 },
   fraseTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 20, lineHeight: 28 },
   passo: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   passoNumero: { width: 30, height: 30, borderRadius: 8, borderBottomWidth: 3, borderColor: '#9A6A08', alignItems: 'center', justifyContent: 'center',
@@ -1302,7 +1327,8 @@ const formatos = StyleSheet.create({
   fracaoCheia: { backgroundColor: '#8B5A2B' },
   fracaoLegenda: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 10 },
   fracaoRotulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 },
-  imagem: { width: '100%', aspectRatio: 16 / 10, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  imagem: { width: '100%', maxHeight: 360, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  imagemSecao: { gap: 8 },
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   acordeDesenho: { width: 200, height: 214 },
@@ -1337,9 +1363,13 @@ const formatos = StyleSheet.create({
   cartaoDisponivel: { alignSelf: 'flex-start', maxWidth: '100%' },
   // Base no tamanho do próprio texto (o flex: 1 de cartaoTexto deixava a base em 0 e a ficha quebrava em três linhas).
   cartaoDisponivelTexto: { flexGrow: 0, flexShrink: 1, flexBasis: 'auto' },
-  cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
+  // A beirada de 5 embaixo fica dentro do cartão (na web é sombra, fora da caixa): 7 de respiro embaixo no lugar de 10, para a
+  // caixa ter a altura da web.
+  cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingTop: 10, paddingBottom: 7, borderRadius: 14,
     borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   cartaoPar: { paddingHorizontal: 10, gap: 8 },
+  // .associar button até 600 px: 0,95rem (15,2) com a entrelinha de 1,5.
+  cartaoParTexto: { fontSize: 15.2, lineHeight: 22.8 },
   cartaoTexto: { flex: 1, fontWeight: '700' },
   cartaoEscolhido: { borderColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
   cartaoCerto: { borderColor: cores.sucessoClaro, borderBottomColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
@@ -1351,11 +1381,14 @@ const formatos = StyleSheet.create({
   numeroPar: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   numeroParCanto: { position: 'absolute', top: -10, left: -8, width: 24, height: 24, borderRadius: 12, borderWidth: 3, borderColor: cores.fundo, zIndex: 1 },
   colunas: { flexDirection: 'row', gap: 8 },
-  coluna: { flex: 1, gap: 8 },
-  afirmacao: { padding: 14, borderLeftWidth: 5, borderLeftColor: cores.acao, borderRadius: 14, backgroundColor: cores.ceu },
+  // Até 600 px: colunas com vão de 8 e 10 entre os cartões de cada coluna (.associar__colunas > div).
+  coluna: { flex: 1, gap: 10 },
+  // .vf__afirmacao: 16 × 18 de respiro, cantos de 6 à esquerda e 16 à direita.
+  afirmacao: { paddingVertical: 16, paddingHorizontal: 18, borderLeftWidth: 5, borderLeftColor: cores.acao, borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6, borderTopRightRadius: 16, borderBottomRightRadius: 16, backgroundColor: cores.ceu },
   afirmacaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19.2, lineHeight: 29 },
-  valores: { flexDirection: 'row', gap: 10 },
-  valor: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 2,
+  valores: { flexDirection: 'row', gap: 12 },
+  valor: { flex: 1, minHeight: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 2,
     borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo, paddingHorizontal: 6 },
   valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 18, lineHeight: 27 },
   aberta: { minHeight: 140, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: cores.bordaCampo, color: cores.texto,
