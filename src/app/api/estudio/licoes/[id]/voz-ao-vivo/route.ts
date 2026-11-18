@@ -5,6 +5,7 @@ import {
   consumirLimiteVozAoVivo,
   criarChamadaVozAoVivo,
   montarInstrucoesVozAoVivo,
+  validarSdpOferta,
   vozAoVivoAtiva,
 } from "@/servidor/ia/realtime";
 
@@ -16,7 +17,7 @@ export async function POST(
     if (!vozAoVivoAtiva()) throw new FalhaApi("nao_encontrado");
 
     const corpo = await lerJson(request, 65_536) as { sdp?: unknown };
-    if (!corpo || typeof corpo.sdp !== "string") throw new FalhaApi("invalido");
+    const sdp = validarSdpOferta(corpo?.sdp);
 
     const { id } = await contexto.params;
     const licao = await buscarLicao(usuarioId, id);
@@ -25,7 +26,9 @@ export async function POST(
     await consumirLimiteVozAoVivo(usuarioId);
 
     const instrucoes = montarInstrucoesVozAoVivo(licao, apoio);
-    const sessao = await criarChamadaVozAoVivo(usuarioId, corpo.sdp, instrucoes);
+    const sessao = await criarChamadaVozAoVivo(usuarioId, sdp, instrucoes, {
+      idiomaLivre: Boolean(licao.falas?.length),
+    });
     return responder(sessao);
   });
 }

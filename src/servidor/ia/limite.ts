@@ -48,21 +48,30 @@ export function reiniciarLimiteDeGeracoes(): void {
 const LIMITE_VISITANTE_PADRAO = 3;
 const LIMITE_VISITANTES_DIA_PADRAO = 60;
 
+class LimiteVisitanteDiaExcedido extends Error {}
+
 /** Limite persistente de gerações no PostgreSQL (reaproveita `tentativaLogin` via `consumirLimite`). */
 export async function consumirGeracaoPersistente(usuarioId: string): Promise<boolean> {
   const limite = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES, LIMITE_PADRAO);
   const janela = inteiroPositivo(process.env.STUDOO_JANELA_GERACOES_MIN, JANELA_PADRAO_MIN) * 60_000;
   const { banco } = await import("@/servidor/banco/cliente");
   const { ehEmailVisitante } = await import("@/servidor/acesso/visitante");
-  return banco.$transaction(async (tx) => {
-    const usuario = await tx.usuario.findUnique({ where: { id: usuarioId }, select: { email: true } });
-    if (usuario && ehEmailVisitante(usuario.email)) {
-      const tetoDia = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES_VISITANTES_DIA, LIMITE_VISITANTES_DIA_PADRAO);
-      const dentroDia = await consumirLimite(tx, "ia:geracao:visitantes:dia", tetoDia, 24 * 60 * 60_000);
-      if (!dentroDia) return false;
-      const limiteVisitante = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES_VISITANTE, LIMITE_VISITANTE_PADRAO);
-      return consumirLimite(tx, `ia:geracao:${usuarioId}`, limiteVisitante, janela);
-    }
-    return consumirLimite(tx, `ia:geracao:${usuarioId}`, limite, janela);
-  });
+  try {
+    return await banco.$transaction(async (tx) => {
+      const usuario = await tx.usuario.findUnique({ where: { id: usuarioId }, select: { email: true } });
+      if (usuario && ehEmailVisitante(usuario.email)) {
+        const limiteVisitante = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES_VISITANTE, LIMITE_VISITANTE_PADRAO);
+        const dentroIndividual = await consumirLimite(tx, `ia:geracao:${usuarioId}`, limiteVisitante, janela);
+        if (!dentroIndividual) return false;
+        const tetoDia = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES_VISITANTES_DIA, LIMITE_VISITANTES_DIA_PADRAO);
+        const dentroDia = await consumirLimite(tx, "ia:geracao:visitantes:dia", tetoDia, 24 * 60 * 60_000);
+        if (!dentroDia) throw new LimiteVisitanteDiaExcedido();
+        return true;
+      }
+      return consumirLimite(tx, `ia:geracao:${usuarioId}`, limite, janela);
+    });
+  } catch (erro) {
+    if (erro instanceof LimiteVisitanteDiaExcedido) return false;
+    throw erro;
+  }
 }

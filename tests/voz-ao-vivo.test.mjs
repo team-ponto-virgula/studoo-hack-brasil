@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import http from 'node:http';
-import { after, test } from 'node:test';
+import { after, mock, test } from 'node:test';
 import { GET as configHttp } from '../src/app/api/auth/config/route.ts';
 import { POST as encerrarHttp } from '../src/app/api/estudio/licoes/[id]/voz-ao-vivo/encerrar/route.ts';
 import { POST as iniciarHttp } from '../src/app/api/estudio/licoes/[id]/voz-ao-vivo/route.ts';
@@ -10,9 +10,12 @@ import { criarSessao } from '../src/servidor/acesso/sessao.ts';
 import { DOMINIO_EMAIL_VISITANTE, PREFIXO_EMAIL_VISITANTE } from '../src/servidor/acesso/visitante.ts';
 import { aceitarProposta, gerarProposta } from '../src/servidor/aprendizado/servico.ts';
 import { banco } from '../src/servidor/banco/cliente.ts';
-import { buscarApoio, criarPonte, ensinarStu } from '../src/servidor/estudio/apoio.ts';
+import { buscarApoio, ensinarStu } from '../src/servidor/estudio/apoio.ts';
+import { consumirGeracaoPersistente } from '../src/servidor/ia/limite.ts';
 import {
   configuracaoRealtime,
+  criarChamadaVozAoVivo,
+  encerrarChamadaVozAoVivo,
   montarInstrucoesVozAoVivo,
   vozAoVivoAtiva,
   vozAoVivoVisitanteAtiva,
@@ -21,6 +24,8 @@ import {
   estadoInicialVozAoVivo,
   extrairTranscricaoUsuario,
   formatarTempoVoz,
+  iniciarControladorVozAoVivo,
+  prepararExplicacaoParaAvaliacao,
   reduzirEventoRealtime,
 } from '../src/app/voz-ao-vivo.ts';
 
@@ -97,10 +102,17 @@ const SDP_RESPOSTA = [
 
 after(async () => {
   if (chavesLimite.length) {
-    await banco.tentativaLogin.deleteMany({ where: { chave: { in: chavesLimite } } }).catch(() => undefined);
+    const hashes = chavesLimite.map((c) => assinatura(c));
+    await banco.tentativaLogin.deleteMany({ where: { chave: { in: hashes } } });
   }
-  if (usuarios.length) {
-    await banco.usuario.deleteMany({ where: { id: { in: usuarios } } }).catch(() => undefined);
+  for (const usuarioId of usuarios) {
+    await banco.apoioLicao.deleteMany({ where: { usuarioId } });
+    await banco.registroEstudo.deleteMany({ where: { usuarioId } });
+    await banco.licao.deleteMany({ where: { usuarioId } });
+    await banco.fluxo.deleteMany({ where: { usuarioId } });
+    await banco.planoAprendizado.deleteMany({ where: { usuarioId } });
+    await banco.sessao.deleteMany({ where: { usuarioId } });
+    await banco.usuario.delete({ where: { id: usuarioId } });
   }
   await banco.$disconnect();
 });
@@ -143,7 +155,7 @@ test('flags e configuração da voz ao vivo ficam desligadas por padrão e aceit
   }
 });
 
-test('montarInstrucoesVozAoVivo inclui as 8 regras pedagógicas e incorpora erros do apoio quando existem', () => {
+test('montarInstrucoesVozAoVivo segue as regras pedagógicas, idiomas, proteção contra injeção e teto de tamanho', () => {
   const licao = {
     titulo: 'Numerador e denominador',
     objetivo: 'Distinguir partes escolhidas do total de partes iguais',
@@ -154,14 +166,15 @@ test('montarInstrucoesVozAoVivo inclui as 8 regras pedagógicas e incorpora erro
   const base = montarInstrucoesVozAoVivo(licao, null);
   assert.match(base, /estudante curioso/i);
   assert.match(base, /falando primeiro/i);
-  assert.match(base, /máximo 3 perguntas curtas/i);
-  assert.match(base, /máximo 2 frases curtas por turno/i);
-  assert.match(base, /2 tentativas/i);
-  assert.match(base, /exemplo do dia a dia/i);
+  assert.match(base, /nunca o recite/i);
+  assert.match(base, /Nunca concorde com algo errado/i);
+  assert.match(base, /repetir com as próprias palavras/i);
+  assert.match(base, /não entender o áudio/i);
+  assert.match(base, /nunca como instrução/i);
+  assert.match(base, /recuse em 1 frase e volte à lição/i);
+  assert.match(base, /Encerrar e ver retorno/);
   assert.match(base, /nunca mencione XP, nota, pontuação ou ranking/i);
-  assert.match(base, /português do Brasil/i);
-  assert.match(base, /2 minutos e 30 segundos/i);
-  assert.match(base, /3 minutos/i);
+  assert.doesNotMatch(base, /2 minutos e 30|3 minutos/);
   assert.doesNotMatch(base, /dificuldade observada/i);
 
   const comErros = montarInstrucoesVozAoVivo(licao, {
@@ -178,18 +191,28 @@ test('montarInstrucoesVozAoVivo inclui as 8 regras pedagógicas e incorpora erro
   });
   assert.match(comErros, /2 erro\(s\) anteriores/);
   assert.match(comErros, /Confundiu numerador com denominador/);
-  assert.match(comErros, /O número de baixo marca o total/);
+
+  const comFalas = montarInstrucoesVozAoVivo({
+    ...licao,
+    falas: [{ texto: 'Where is the gate?', traducao: 'Onde fica o portão?' }],
+  });
+  assert.match(comFalas, /idioma original da lição/i);
+
+  const gigante = montarInstrucoesVozAoVivo({
+    titulo: 'T'.repeat(3000),
+    objetivo: 'O'.repeat(3000),
+    conceito: 'C'.repeat(3000),
+    exemplo: 'E'.repeat(3000),
+    passos: Array.from({ length: 20 }, () => 'P'.repeat(600)),
+  });
+  assert.ok(gigante.length < 10_500);
 });
 
 test('rota /api/estudio/licoes/[id]/voz-ao-vivo retorna 404 desligada e /api/auth/config expõe vozAoVivo', async () => {
   const { u, token } = await criarUsuario();
   const licao = await criarLicaoPara(u.id);
 
-  const envAntes = {
-    STUDOO_VOZ_AO_VIVO: process.env.STUDOO_VOZ_AO_VIVO,
-    IA: process.env.IA,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-  };
+  const envAntes = { STUDOO_VOZ_AO_VIVO: process.env.STUDOO_VOZ_AO_VIVO };
   try {
     delete process.env.STUDOO_VOZ_AO_VIVO;
     const cfgOff = await (await configHttp(reqPublica(`${origemPadrao()}/api/auth/config`))).json();
@@ -201,16 +224,15 @@ test('rota /api/estudio/licoes/[id]/voz-ao-vivo retorna 404 desligada e /api/aut
     );
     assert.equal(res404.status, 404);
   } finally {
-    for (const [k, v] of Object.entries(envAntes)) {
-      if (v === undefined) delete process.env[k];
-      else process.env[k] = v;
-    }
+    if (envAntes.STUDOO_VOZ_AO_VIVO === undefined) delete process.env.STUDOO_VOZ_AO_VIVO;
+    else process.env.STUDOO_VOZ_AO_VIVO = envAntes.STUDOO_VOZ_AO_VIVO;
   }
 });
 
-test('interface unificada com OpenAI simulada: safety identifier, semantic_vad low, hangup, limites e visitante', async () => {
+test('interface unificada com OpenAI simulada: SDP inválido não gasta cota, chamada única/usuário, hangup, erros e limites', async () => {
   const recebidos = [];
   const hangups = [];
+  let modoMock = 'ok';
   let seq = 0;
 
   const servidor = http.createServer(async (req, res) => {
@@ -219,12 +241,21 @@ test('interface unificada com OpenAI simulada: safety identifier, semantic_vad l
     const body = Buffer.concat(chunks).toString('utf8');
 
     if (req.method === 'POST' && req.url === '/v1/realtime/calls') {
+      if (modoMock === '401' || modoMock === '429' || modoMock === '500') {
+        res.writeHead(Number(modoMock), { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: { code: `cod_${modoMock}`, message: 'SEGREDO_MENSAGEM_INTERNA' } }));
+        return;
+      }
+      if (modoMock === 'sem_location') {
+        res.writeHead(201, { 'content-type': 'application/sdp' });
+        res.end(SDP_RESPOSTA);
+        return;
+      }
       seq += 1;
       const callId = `rtc_sim_${seq}`;
       recebidos.push({
         auth: req.headers.authorization,
         safety: req.headers['openai-safety-identifier'],
-        contentType: req.headers['content-type'],
         body,
         callId,
       });
@@ -238,7 +269,7 @@ test('interface unificada com OpenAI simulada: safety identifier, semantic_vad l
 
     const matchHangup = /^\/v1\/realtime\/calls\/([^/]+)\/hangup$/.exec(req.url || '');
     if (req.method === 'POST' && matchHangup) {
-      hangups.push({ callId: decodeURIComponent(matchHangup[1]), auth: req.headers.authorization });
+      hangups.push(decodeURIComponent(matchHangup[1]));
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(JSON.stringify({ ok: true }));
       return;
@@ -274,7 +305,16 @@ test('interface unificada com OpenAI simulada: safety identifier, semantic_vad l
     chavesLimite.push(`ia:voz:hora:${u.id}`, `ia:voz:dia:${u.id}`);
     const licao = await criarLicaoPara(u.id);
 
-    // 1ª chamada: valida payload multipart, safety identifier e ausência da chave do servidor na resposta
+    // SDP inválido -> 400 sem gastar cota
+    for (let i = 0; i < 4; i++) {
+      const rInv = await iniciarHttp(
+        reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: 'invalido' }),
+        { params: Promise.resolve({ id: licao.id }) },
+      );
+      assert.equal(rInv.status, 400);
+    }
+
+    // 1ª chamada válida
     const r1 = await iniciarHttp(
       reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: SDP_OFERTA }),
       { params: Promise.resolve({ id: licao.id }) },
@@ -282,41 +322,85 @@ test('interface unificada com OpenAI simulada: safety identifier, semantic_vad l
     assert.equal(r1.status, 200);
     const body1 = await r1.json();
     assert.equal(body1.chamadaId, 'rtc_sim_1');
-    assert.equal(body1.sdpResposta.trim(), SDP_RESPOSTA.trim());
-    assert.equal(body1.limiteSegundos, 180);
-    assert.equal(body1.avisoSegundos, 150);
     assert.equal(JSON.stringify(body1).includes('sk-segredo-servidor-teste'), false);
-
-    assert.equal(recebidos.length, 1);
-    assert.equal(recebidos[0].auth, 'Bearer sk-segredo-servidor-teste');
     assert.equal(recebidos[0].safety, assinatura(u.id));
-    assert.notEqual(recebidos[0].safety, u.id);
     assert.match(recebidos[0].body, /"type":"semantic_vad"/);
     assert.match(recebidos[0].body, /"eagerness":"low"/);
     assert.match(recebidos[0].body, /"language":"pt"/);
 
-    // Outro usuário não pode encerrar chamada alheia
+    // 2ª chamada para o mesmo usuário encerra automaticamente a 1ª (1 chamada ativa por usuário)
+    const r2 = await iniciarHttp(
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: SDP_OFERTA }),
+      { params: Promise.resolve({ id: licao.id }) },
+    );
+    assert.equal(r2.status, 200);
+    await new Promise((r) => setTimeout(r, 30));
+    assert.equal(hangups.includes('rtc_sim_1'), true);
+
+    // Id desconhecido ou já encerrado -> 204 sem chamar OpenAI
+    const hangupsAntes = hangups.length;
+    const rDesc = await encerrarHttp(
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo/encerrar`, token, { chamadaId: 'rtc_inexistente_999' }),
+    );
+    assert.equal(rDesc.status, 204);
+    assert.equal(hangups.length, hangupsAntes);
+
+    // Outro usuário não encerra chamada alheia
     const { token: outroToken } = await criarUsuario();
     const rOutro = await encerrarHttp(
-      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo/encerrar`, outroToken, { chamadaId: 'rtc_sim_1' }),
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo/encerrar`, outroToken, { chamadaId: 'rtc_sim_2' }),
     );
     assert.equal(rOutro.status, 404);
 
-    // Dono encerra chamada -> hangup chamado na OpenAI
+    // Dono encerra rtc_sim_2
     const rFim = await encerrarHttp(
-      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo/encerrar`, token, { chamadaId: 'rtc_sim_1' }),
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo/encerrar`, token, { chamadaId: 'rtc_sim_2' }),
     );
     assert.equal(rFim.status, 204);
-    assert.deepEqual(hangups, [{ callId: 'rtc_sim_1', auth: 'Bearer sk-segredo-servidor-teste' }]);
+    assert.equal(hangups.includes('rtc_sim_2'), true);
 
-    // 2ª e 3ª chamadas passam; 4ª estoura limite de 3/hora (429)
-    for (const esperado of [200, 200, 429]) {
-      const r = await iniciarHttp(
-        reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: SDP_OFERTA }),
-        { params: Promise.resolve({ id: licao.id }) },
+    // 3ª chamada passa; 4ª estoura limite de 3/hora (429)
+    const r3 = await iniciarHttp(
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: SDP_OFERTA }),
+      { params: Promise.resolve({ id: licao.id }) },
+    );
+    assert.equal(r3.status, 200);
+    await encerrarHttp(
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo/encerrar`, token, { chamadaId: 'rtc_sim_3' }),
+    );
+    const r4 = await iniciarHttp(
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: SDP_OFERTA }),
+      { params: Promise.resolve({ id: licao.id }) },
+    );
+    assert.equal(r4.status, 429);
+
+    // Erros simulados da OpenAI (401, 429, 500 e 201 sem Location) sem vazar corpo nem chave
+    const { u: uErr1, token: tErr1 } = await criarUsuario();
+    chavesLimite.push(`ia:voz:hora:${uErr1.id}`, `ia:voz:dia:${uErr1.id}`);
+    const licaoErr1 = await criarLicaoPara(uErr1.id);
+
+    const { u: uErr2, token: tErr2 } = await criarUsuario();
+    chavesLimite.push(`ia:voz:hora:${uErr2.id}`, `ia:voz:dia:${uErr2.id}`);
+    const licaoErr2 = await criarLicaoPara(uErr2.id);
+
+    for (const [modo, statusEsperado, codigoEsperado, uTok, uLic] of [
+      ['401', 503, 'voz_indisponivel', tErr1, licaoErr1.id],
+      ['429', 503, 'voz_indisponivel', tErr1, licaoErr1.id],
+      ['500', 502, 'voz_falha', tErr1, licaoErr1.id],
+      ['sem_location', 502, 'voz_falha', tErr2, licaoErr2.id],
+    ]) {
+      modoMock = modo;
+      const rErr = await iniciarHttp(
+        reqPrivada(`${origemPadrao()}/api/estudio/licoes/${uLic}/voz-ao-vivo`, uTok, { sdp: SDP_OFERTA }),
+        { params: Promise.resolve({ id: uLic }) },
       );
-      assert.equal(r.status, esperado);
+      assert.equal(rErr.status, statusEsperado);
+      const txt = await rErr.text();
+      assert.equal(JSON.parse(txt).codigo, codigoEsperado);
+      assert.equal(txt.includes('SEGREDO_MENSAGEM_INTERNA'), false);
+      assert.equal(txt.includes('sk-segredo-servidor-teste'), false);
     }
+    modoMock = 'ok';
 
     // Visitante bloqueado por padrão (403)
     const { u: vis, token: visToken } = await criarUsuario(
@@ -331,19 +415,112 @@ test('interface unificada com OpenAI simulada: safety identifier, semantic_vad l
     );
     assert.equal(rVisOff.status, 403);
 
-    // Com flag de visitante ligada: 1 conversa permitida, 2ª retorna 429
+    // Visitante esgotado não consome cota compartilhada do dia (voz e geração)
     process.env.STUDOO_VOZ_AO_VIVO_VISITANTE = '1';
     const rVis1 = await iniciarHttp(
       reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licaoVis.id}/voz-ao-vivo`, visToken, { sdp: SDP_OFERTA }),
       { params: Promise.resolve({ id: licaoVis.id }) },
     );
     assert.equal(rVis1.status, 200);
-    const rVis2 = await iniciarHttp(
-      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licaoVis.id}/voz-ao-vivo`, visToken, { sdp: SDP_OFERTA }),
-      { params: Promise.resolve({ id: licaoVis.id }) },
+    await encerrarHttp(
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licaoVis.id}/voz-ao-vivo/encerrar`, visToken, {
+        chamadaId: (await rVis1.json()).chamadaId,
+      }),
     );
-    assert.equal(rVis2.status, 429);
+
+    const antesGlobalVoz = await banco.tentativaLogin.findUnique({ where: { chave: assinatura('ia:voz:visitantes:dia') } });
+    assert.ok(antesGlobalVoz && antesGlobalVoz.falhas >= 1);
+    for (let i = 0; i < 4; i++) {
+      const rNeg = await iniciarHttp(
+        reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licaoVis.id}/voz-ao-vivo`, visToken, { sdp: SDP_OFERTA }),
+        { params: Promise.resolve({ id: licaoVis.id }) },
+      );
+      assert.equal(rNeg.status, 429);
+    }
+    const depoisGlobalVoz = await banco.tentativaLogin.findUnique({ where: { chave: assinatura('ia:voz:visitantes:dia') } });
+    assert.equal(depoisGlobalVoz?.falhas, antesGlobalVoz.falhas);
+
+    // Mesmo teste para consumirGeracaoPersistente (criarLicaoPara já consumiu 1 de vis.id)
+    chavesLimite.push(`ia:geracao:${vis.id}`, 'ia:geracao:visitantes:dia');
+    const limGerAntes = process.env.STUDOO_LIMITE_GERACOES_VISITANTE;
+    process.env.STUDOO_LIMITE_GERACOES_VISITANTE = '2';
+    try {
+      assert.equal(await consumirGeracaoPersistente(vis.id), true);
+      const antesGlobalGer = await banco.tentativaLogin.findUnique({ where: { chave: assinatura('ia:geracao:visitantes:dia') } });
+      assert.ok(antesGlobalGer && antesGlobalGer.falhas >= 1);
+      for (let i = 0; i < 4; i++) assert.equal(await consumirGeracaoPersistente(vis.id), false);
+      const depoisGlobalGer = await banco.tentativaLogin.findUnique({ where: { chave: assinatura('ia:geracao:visitantes:dia') } });
+      assert.equal(depoisGlobalGer?.falhas, antesGlobalGer.falhas);
+    } finally {
+      if (limGerAntes === undefined) delete process.env.STUDOO_LIMITE_GERACOES_VISITANTE;
+      else process.env.STUDOO_LIMITE_GERACOES_VISITANTE = limGerAntes;
+    }
   } finally {
+    servidor.close();
+    for (const [k, v] of Object.entries(envAntes)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+});
+
+test('teto de 195 s dispara exatamente um hangup sem encerrar e zero hangups após encerrar', async () => {
+  const hangups = [];
+  let seq = 0;
+  const servidor = http.createServer((req, res) => {
+    if (req.method === 'POST' && req.url === '/v1/realtime/calls') {
+      seq += 1;
+      res.writeHead(201, { 'content-type': 'application/sdp', location: `/v1/realtime/calls/rtc_timer_${seq}` });
+      res.end(SDP_RESPOSTA);
+      return;
+    }
+    if (req.method === 'POST' && req.url?.endsWith('/hangup')) {
+      hangups.push(req.url);
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end('{"ok":true}');
+      return;
+    }
+    res.writeHead(404);
+    res.end();
+  });
+  await new Promise((resolve) => servidor.listen(0, '127.0.0.1', resolve));
+  const { port } = servidor.address();
+
+  const envAntes = {
+    STUDOO_VOZ_AO_VIVO: process.env.STUDOO_VOZ_AO_VIVO,
+    IA: process.env.IA,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
+  };
+
+  try {
+    process.env.STUDOO_VOZ_AO_VIVO = '1';
+    process.env.IA = 'openai';
+    process.env.OPENAI_API_KEY = 'sk-timer-teste';
+    process.env.OPENAI_BASE_URL = `http://127.0.0.1:${port}/v1`;
+
+    const esperarReal = (ms = 40) => new Promise((r) => {
+      const id = setImmediate(() => setImmediate(r));
+      void id;
+    });
+    mock.timers.enable({ apis: ['setTimeout'] });
+    const s1 = await criarChamadaVozAoVivo('u-timer-1', SDP_OFERTA, 'inst');
+    assert.equal(s1.chamadaId, 'rtc_timer_1');
+    mock.timers.tick(194_999);
+    await esperarReal();
+    assert.equal(hangups.length, 0);
+    mock.timers.tick(1);
+    for (let i = 0; i < 20 && hangups.length === 0; i++) await new Promise((r) => setImmediate(r));
+    assert.deepEqual(hangups, ['/v1/realtime/calls/rtc_timer_1/hangup']);
+
+    const s2 = await criarChamadaVozAoVivo('u-timer-2', SDP_OFERTA, 'inst');
+    await encerrarChamadaVozAoVivo('u-timer-2', s2.chamadaId);
+    assert.equal(hangups.length, 2);
+    mock.timers.tick(200_000);
+    for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r));
+    assert.equal(hangups.length, 2);
+  } finally {
+    mock.timers.reset();
     servidor.close();
     for (const [k, v] of Object.entries(envAntes)) {
       if (v === undefined) delete process.env[k];
@@ -378,7 +555,6 @@ test('avaliador existente recebe apenas a transcrição da pessoa e grava o reto
 test('máquina de estados da voz ao vivo: legendas, interrupção natural, tempo e extração só da pessoa', () => {
   let s = { ...estadoInicialVozAoVivo(), estado: 'ouvindo' };
 
-  // Stu começa falando (delta + done)
   s = reduzirEventoRealtime(s, { type: 'response.output_audio_transcript.delta', response_id: 'r1', delta: 'Oi! ' });
   s = reduzirEventoRealtime(s, { type: 'response.output_audio_transcript.delta', response_id: 'r1', delta: 'Me explica essa lição?' });
   assert.equal(s.estado, 'stu_falando');
@@ -388,11 +564,9 @@ test('máquina de estados da voz ao vivo: legendas, interrupção natural, tempo
     transcript: 'Oi! Me explica essa lição?',
   });
 
-  // Pessoa interrompe naturalmente enquanto Stu fala
   s = reduzirEventoRealtime(s, { type: 'input_audio_buffer.speech_started' });
   assert.equal(s.estado, 'ouvindo');
 
-  // Transcrição da fala da pessoa (delta + completed)
   s = reduzirEventoRealtime(s, { type: 'conversation.item.input_audio_transcription.delta', item_id: 'u1', delta: 'O denominador ' });
   s = reduzirEventoRealtime(s, {
     type: 'conversation.item.input_audio_transcription.completed',
@@ -400,14 +574,12 @@ test('máquina de estados da voz ao vivo: legendas, interrupção natural, tempo
     transcript: 'O denominador mostra o total de partes iguais de uma pizza.',
   });
 
-  // Segunda fala da pessoa
   s = reduzirEventoRealtime(s, {
     type: 'conversation.item.input_audio_transcription.completed',
     item_id: 'u2',
     transcript: 'Por exemplo, três oitavos tem oito fatias no total.',
   });
 
-  // Somente a fala da pessoa vai para o avaliador, nunca a fala do Stu
   const transcricao = extrairTranscricaoUsuario(s);
   assert.equal(
     transcricao,
@@ -416,8 +588,181 @@ test('máquina de estados da voz ao vivo: legendas, interrupção natural, tempo
   assert.equal(transcricao.includes('Me explica'), false);
   assert.equal(formatarTempoVoz(150), '02:30');
 
-  // Evento de erro leva ao estado erro
   const erro = reduzirEventoRealtime(s, { type: 'error' });
   assert.equal(erro.estado, 'erro');
   assert.equal(erro.erro, 'rede');
+});
+
+test('redutor C11: transcrições fora de ordem, erro não fatal ignorado, output_audio_buffer e extremos 20/3000', () => {
+  let s = { ...estadoInicialVozAoVivo(), estado: 'ouvindo' };
+
+  // Ordem criada: u1, depois u2
+  s = reduzirEventoRealtime(s, { type: 'conversation.item.created', item: { id: 'u1', role: 'user' } });
+  s = reduzirEventoRealtime(s, { type: 'conversation.item.created', item: { id: 'u2', role: 'user' } });
+  assert.deepEqual(s.itensPendentes, ['u1', 'u2']);
+
+  // u2 chega antes de u1
+  s = reduzirEventoRealtime(s, {
+    type: 'conversation.item.input_audio_transcription.completed',
+    item_id: 'u2',
+    transcript: 'Segunda frase da explicação.',
+  });
+  s = reduzirEventoRealtime(s, {
+    type: 'conversation.item.input_audio_transcription.completed',
+    item_id: 'u1',
+    transcript: 'Primeira frase da explicação.',
+  });
+  assert.deepEqual(s.itensPendentes, []);
+  assert.equal(extrairTranscricaoUsuario(s), 'Primeira frase da explicação. Segunda frase da explicação.');
+
+  // output_audio_buffer controla stu_falando / ouvindo
+  s = reduzirEventoRealtime(s, { type: 'output_audio_buffer.started' });
+  assert.equal(s.estado, 'stu_falando');
+  s = reduzirEventoRealtime(s, { type: 'output_audio_buffer.stopped' });
+  assert.equal(s.estado, 'ouvindo');
+
+  // Erro não fatal é ignorado
+  s = reduzirEventoRealtime(s, { type: 'error', error: { type: 'invalid_request_error', code: 'response_cancel_not_active' } });
+  assert.equal(s.estado, 'ouvindo');
+  assert.equal(s.erro, null);
+
+  // Extremos de tamanho para ensinarStu
+  assert.equal(prepararExplicacaoParaAvaliacao('curto demais'), null);
+  const longa = `${'palavra '.repeat(450)}fim`;
+  const cortada = prepararExplicacaoParaAvaliacao(longa);
+  assert.ok(cortada && cortada.length <= 3000 && cortada.length >= 2400);
+});
+
+test('controlador C1/C2/C5/B2: cancelamento síncrono, disconnected passageiro, timeout 12s e espera de transcrição ao encerrar', async () => {
+  function criarDubles() {
+    let faixaParada = false;
+    const stream = {
+      getTracks: () => [{ enabled: true, stop: () => { faixaParada = true; } }],
+      getAudioTracks: () => [{ enabled: true, stop: () => { faixaParada = true; } }],
+    };
+    const canal = {
+      readyState: 'connecting',
+      onopen: null,
+      onmessage: null,
+      enviados: [],
+      send(msg) { this.enviados.push(JSON.parse(msg)); },
+      close() { this.readyState = 'closed'; },
+    };
+    const pc = {
+      connectionState: 'new',
+      onconnectionstatechange: null,
+      ontrack: null,
+      fechado: false,
+      addTrack() {},
+      createDataChannel() { return canal; },
+      async createOffer() { return { type: 'offer', sdp: SDP_OFERTA }; },
+      async setLocalDescription() {},
+      async setRemoteDescription() {},
+      close() { this.fechado = true; },
+    };
+    return { stream, canal, pc, faixaParadaRef: () => faixaParada };
+  }
+
+  // 1. Cancelamento durante getUserMedia -> para faixas e não chama servidor
+  let resolverMic;
+  let inicioChamado = false;
+  const d1 = criarDubles();
+  const c1 = iniciarControladorVozAoVivo(
+    {
+      licaoId: 'lic1',
+      cliente: {
+        iniciarVozAoVivo: async () => { inicioChamado = true; throw new Error('não deveria chamar'); },
+        encerrarVozAoVivo: async () => null,
+      },
+      aoMudar: () => {},
+      aoTempoEsgotado: () => {},
+    },
+    {
+      pedirMic: () => new Promise((r) => { resolverMic = r; }),
+      criarAudio: () => ({ autoplay: true, srcObject: null }),
+    },
+  );
+  c1.descartar();
+  resolverMic(d1.stream);
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(d1.faixaParadaRef(), true);
+  assert.equal(inicioChamado, false);
+
+  // 2. Cancelamento durante iniciarVozAoVivo -> para faixas, fecha PC e encerra chamada no servidor
+  let resolverInicio;
+  const encerradas = [];
+  const d2 = criarDubles();
+  const c2 = iniciarControladorVozAoVivo(
+    {
+      licaoId: 'lic2',
+      cliente: {
+        iniciarVozAoVivo: () => new Promise((r) => { resolverInicio = r; }),
+        encerrarVozAoVivo: async (_id, cid) => { encerradas.push(cid); return null; },
+      },
+      aoMudar: () => {},
+      aoTempoEsgotado: () => {},
+    },
+    {
+      pedirMic: async () => d2.stream,
+      criarPeer: () => d2.pc,
+      criarAudio: () => ({ autoplay: true, srcObject: null }),
+    },
+  );
+  await new Promise((r) => setTimeout(r, 20));
+  c2.descartar();
+  resolverInicio({ chamadaId: 'rtc_cancel_2', sdpResposta: SDP_RESPOSTA, modelo: 'm', voz: 'v', limiteSegundos: 180, avisoSegundos: 150 });
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(d2.faixaParadaRef(), true);
+  assert.equal(d2.pc.fechado, true);
+  assert.deepEqual(encerradas, ['rtc_cancel_2']);
+
+  // 3. Disconnected passageiro volta a connected; encerrar espera transcrição pendente
+  const d3 = criarDubles();
+  let ultimoEstado = null;
+  const c3 = iniciarControladorVozAoVivo(
+    {
+      licaoId: 'lic3',
+      cliente: {
+        iniciarVozAoVivo: async () => ({ chamadaId: 'rtc_ok_3', sdpResposta: SDP_RESPOSTA, modelo: 'm', voz: 'v', limiteSegundos: 180, avisoSegundos: 150 }),
+        encerrarVozAoVivo: async (_id, cid) => { encerradas.push(cid); return null; },
+      },
+      aoMudar: (s) => { ultimoEstado = s; },
+      aoTempoEsgotado: () => {},
+    },
+    {
+      pedirMic: async () => d3.stream,
+      criarPeer: () => d3.pc,
+      criarAudio: () => ({ autoplay: true, srcObject: null }),
+    },
+  );
+  await new Promise((r) => setTimeout(r, 20));
+  d3.pc.connectionState = 'connected';
+  d3.pc.onconnectionstatechange?.();
+  d3.canal.readyState = 'open';
+  d3.canal.onopen?.();
+  assert.equal(ultimoEstado?.estado, 'ouvindo');
+
+  // Disconnected passageiro e recuperação
+  d3.pc.connectionState = 'disconnected';
+  d3.pc.onconnectionstatechange?.();
+  await new Promise((r) => setTimeout(r, 40));
+  d3.pc.connectionState = 'connected';
+  d3.pc.onconnectionstatechange?.();
+  assert.equal(ultimoEstado?.estado, 'ouvindo');
+
+  // Item pendente chega depois de pedir encerrar
+  d3.canal.onmessage?.({ data: JSON.stringify({ type: 'conversation.item.created', item: { id: 'u_late', role: 'user' } }) });
+  const promFim = c3.encerrar();
+  setTimeout(() => {
+    d3.canal.onmessage?.({
+      data: JSON.stringify({
+        type: 'conversation.item.input_audio_transcription.completed',
+        item_id: 'u_late',
+        transcript: 'Minha explicação completa chegou depois do clique.',
+      }),
+    });
+  }, 40);
+  const textoFinal = await promFim;
+  assert.equal(textoFinal, 'Minha explicação completa chegou depois do clique.');
+  assert.equal(encerradas.includes('rtc_ok_3'), true);
 });

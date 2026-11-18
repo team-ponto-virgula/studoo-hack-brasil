@@ -15,9 +15,9 @@ import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Stu } from '../ui';
 import {
   estadoInicialVozAoVivo,
-  extrairTranscricaoUsuario,
   formatarTempoVoz,
   iniciarControladorVozAoVivo,
+  prepararExplicacaoParaAvaliacao,
   textoErroVozAoVivo,
   type ControladorVozAoVivo,
   type EstadoSessaoVozAoVivo,
@@ -301,9 +301,13 @@ export function ApoioDaLicao({
   const retornoPonte = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     let ativo = true;
-    void cliente.configuracaoAcesso().then((cfg) => {
-      if (ativo) setVozAoVivoDisponivel(Boolean(cfg.vozAoVivo));
-    }).catch(() => undefined);
+    void Promise.all([cliente.configuracaoAcesso(), cliente.sessao()])
+      .then(([cfg, sessao]) => {
+        if (!ativo) return;
+        const liberado = Boolean(cfg.vozAoVivo) && (!sessao.visitante || Boolean(cfg.vozAoVivoVisitante));
+        setVozAoVivoDisponivel(liberado);
+      })
+      .catch(() => undefined);
     return () => {
       ativo = false;
       controladorVozRef.current?.descartar();
@@ -316,6 +320,48 @@ export function ApoioDaLicao({
       painelPrivacidadeRef.current?.querySelector('button')?.focus();
     }
   }, [etapaVoz]);
+
+  function concluirComTranscricao(bruta: string) {
+    controladorVozRef.current = null;
+    const preparada = prepararExplicacaoParaAvaliacao(bruta);
+    setEtapaVoz('inativa');
+    if (!preparada) {
+      if (bruta.trim()) setTexto(bruta.trim());
+      setAviso(m.vozAoVivo.erros.curta);
+      window.requestAnimationFrame(() => campoEnsinoRef.current?.focus());
+      return;
+    }
+    setTexto(preparada);
+    void executar(async () => {
+      const r = await cliente.ensinarStu(licao.id, preparada);
+      atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
+      setEnsino(r);
+      setAviso('');
+      aoEnsinar?.();
+    });
+  }
+
+  function iniciarConversaAoVivo() {
+    setAviso('');
+    setEtapaVoz('ativa');
+    setEstadoVoz(estadoInicialVozAoVivo());
+    controladorVozRef.current?.descartar();
+    controladorVozRef.current = iniciarControladorVozAoVivo({
+      licaoId: licao.id,
+      cliente,
+      aoMudar: setEstadoVoz,
+      aoTempoEsgotado: concluirComTranscricao,
+      aoErroFatal: (_codigo, parcial) => {
+        controladorVozRef.current = null;
+        if (parcial.trim()) {
+          setEtapaVoz('inativa');
+          setTexto(parcial.trim());
+          setAviso(m.vozAoVivo.parcialNoCampo);
+          window.requestAnimationFrame(() => campoEnsinoRef.current?.focus());
+        }
+      },
+    });
+  }
   // O "Isso! Você pegou a ideia." aparece no fim do cartão, às vezes atrás do painel de retorno: a tela leva até ele.
   useEffect(() => {
     if (!feedback) return;
@@ -823,7 +869,7 @@ export function ApoioDaLicao({
         {vozAoVivoDisponivel && etapaVoz === 'inativa' && (
           <div className="voz-ao-vivo-entrada">
             <Botao
-              variante="primario"
+              variante="secundario"
               disabled={ocupado || gravando}
               onClick={() => {
                 let visto = false;
@@ -834,35 +880,12 @@ export function ApoioDaLicao({
                   setEtapaVoz('privacidade');
                   return;
                 }
-                setEtapaVoz('ativa');
-                setEstadoVoz(estadoInicialVozAoVivo());
-                void iniciarControladorVozAoVivo({
-                  licaoId: licao.id,
-                  cliente,
-                  aoMudar: setEstadoVoz,
-                  aoTempoEsgotado: (transcricao) => {
-                    controladorVozRef.current = null;
-                    if (transcricao.trim().length < 20) {
-                      setEstadoVoz((a) => ({ ...a, estado: 'erro', erro: 'curta' }));
-                      return;
-                    }
-                    setEtapaVoz('inativa');
-                    setTexto(transcricao);
-                    void executar(async () => {
-                      const r = await cliente.ensinarStu(licao.id, transcricao);
-                      atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
-                      setEnsino(r);
-                      setAviso('');
-                      aoEnsinar?.();
-                    });
-                  },
-                }).then((ctrl) => {
-                  controladorVozRef.current = ctrl;
-                });
+                iniciarConversaAoVivo();
               }}
             >
               {m.vozAoVivo.abrir}
             </Botao>
+            <p className="estudio-legenda voz-ao-vivo-nota">{m.vozAoVivo.notaPrivacidade}</p>
           </div>
         )}
         {etapaVoz === 'privacidade' && (
@@ -876,31 +899,7 @@ export function ApoioDaLicao({
                   try {
                     window.localStorage.setItem('studoo.vozAoVivo.avisoVisto', '1');
                   } catch { /* ignore */ }
-                  setEtapaVoz('ativa');
-                  setEstadoVoz(estadoInicialVozAoVivo());
-                  void iniciarControladorVozAoVivo({
-                    licaoId: licao.id,
-                    cliente,
-                    aoMudar: setEstadoVoz,
-                    aoTempoEsgotado: (transcricao) => {
-                      controladorVozRef.current = null;
-                      if (transcricao.trim().length < 20) {
-                        setEstadoVoz((a) => ({ ...a, estado: 'erro', erro: 'curta' }));
-                        return;
-                      }
-                      setEtapaVoz('inativa');
-                      setTexto(transcricao);
-                      void executar(async () => {
-                        const r = await cliente.ensinarStu(licao.id, transcricao);
-                        atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
-                        setEnsino(r);
-                        setAviso('');
-                        aoEnsinar?.();
-                      });
-                    },
-                  }).then((ctrl) => {
-                    controladorVozRef.current = ctrl;
-                  });
+                  iniciarConversaAoVivo();
                 }}
               >
                 {m.vozAoVivo.privacidadeAceitar}
@@ -916,15 +915,16 @@ export function ApoioDaLicao({
         )}
         {etapaVoz === 'ativa' && (
           <div className="voz-ao-vivo-painel" data-estado={estadoVoz.estado}>
+            <p className="somente-leitor" aria-live="polite">{estadoVoz.anuncioSr}</p>
             <div className="voz-ao-vivo-cabeca">
               <div className="voz-ao-vivo-mascote" aria-hidden="true">
                 <Stu />
               </div>
-              <span className="voz-ao-vivo-estado" aria-live="polite">
+              <span className="voz-ao-vivo-estado">
                 {m.vozAoVivo.estados[estadoVoz.estado]}
               </span>
               <span className="voz-ao-vivo-tempo">
-                {formatarTempoVoz(estadoVoz.segundos)} / 03:00
+                {formatarTempoVoz(estadoVoz.segundos)} / {formatarTempoVoz(estadoVoz.limiteSegundos)}
               </span>
             </div>
             {estadoVoz.avisoTempo && estadoVoz.estado !== 'erro' && (
@@ -935,7 +935,7 @@ export function ApoioDaLicao({
                 {textoErroVozAoVivo(estadoVoz.erro)}
               </p>
             ) : (
-              <div className="voz-ao-vivo-legendas" aria-live="polite">
+              <div className="voz-ao-vivo-legendas">
                 {estadoVoz.legendas.map((turno) => (
                   <p key={`${turno.autor}-${turno.id}`} className="voz-ao-vivo-turno" data-autor={turno.autor}>
                     <strong>{turno.autor === 'stu' ? m.vozAoVivo.stuDisse : m.vozAoVivo.voceDisse}:</strong>{' '}
@@ -961,22 +961,8 @@ export function ApoioDaLicao({
                     disabled={estadoVoz.estado === 'pedindo_mic' || estadoVoz.estado === 'conectando' || estadoVoz.estado === 'encerrando'}
                     onClick={() => {
                       const ctrl = controladorVozRef.current;
-                      controladorVozRef.current = null;
-                      void (ctrl ? ctrl.encerrar() : Promise.resolve(extrairTranscricaoUsuario(estadoVoz))).then((transcricao) => {
-                        if (transcricao.trim().length < 20) {
-                          setEstadoVoz((a) => ({ ...a, estado: 'erro', erro: 'curta' }));
-                          return;
-                        }
-                        setEtapaVoz('inativa');
-                        setTexto(transcricao);
-                        void executar(async () => {
-                          const r = await cliente.ensinarStu(licao.id, transcricao);
-                          atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
-                          setEnsino(r);
-                          setAviso('');
-                          aoEnsinar?.();
-                        });
-                      });
+                      if (!ctrl) return;
+                      void ctrl.encerrar().then(concluirComTranscricao);
                     }}
                   >
                     {m.vozAoVivo.encerrar}

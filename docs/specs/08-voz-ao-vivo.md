@@ -41,9 +41,16 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
 
 ## O que ainda fica em aberto para validar quando houver chave real
 - **Formato exato do cabeçalho `Location`** em produção (`/v1/realtime/calls/<id>` vs URL absoluta) — o parser no servidor aceitará ambos extraindo o último segmento.
+- **`npm run voz:conferir` com SDP completo realista** (áudio + canal de dados + ICE/fingerprint) contra a OpenAI real.
 - **Comportamento real do `semantic_vad` (`eagerness: "low"`) em português** e ajuste fino se necessário.
 - **Formato exato do campo `usage`** dentro de `conversation.item.input_audio_transcription.completed`.
 - **Compatibilidade no aplicativo móvel**: os contratos em `packages/contratos` ficam prontos, mas WebRTC nativo em React Native fica fora desta entrega web.
+
+---
+
+## Limitação operacional do temporizador de corte (195 s)
+- O temporizador que agenda `POST /v1/realtime/calls/{call_id}/hangup` aos `195 s` vive na **memória do processo Node** (`chamadasAtivas`). Isso pressupõe servidor de longa duração: se o contêiner reiniciar no meio de uma conversa ativa, o temporizador em memória se perde.
+- **O que limita o dano nesse cenário:** (1) os tetos persistentes no PostgreSQL por usuário e para visitantes; e (2) o teto rígido de **60 minutos** imposto pela própria API Realtime da OpenAI (a referência REST `/v1/realtime/calls` não expõe parâmetro configurável de duração máxima de sessão — `expires_after` aplica-se apenas a `client_secrets`).
 
 ---
 
