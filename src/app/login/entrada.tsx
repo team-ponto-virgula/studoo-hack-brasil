@@ -21,12 +21,12 @@ type ConfigAcessoInicial = {
   visitante: boolean;
 };
 
-export function Entrada({ configInicial }: { configInicial?: ConfigAcessoInicial }) {
+export function Entrada({ configInicial, sessaoVerificada = false }: { configInicial?: ConfigAcessoInicial; sessaoVerificada?: boolean }) {
   const [googleDisponivel, setGoogleDisponivel] = useState(Boolean(configInicial?.google));
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(Boolean(configInicial?.recuperacao));
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(Boolean(configInicial?.visitante));
   const [configuracaoCarregada, setConfiguracaoCarregada] = useState(Boolean(configInicial));
-  const [verificando, setVerificando] = useState(true);
+  const [verificando, setVerificando] = useState(!sessaoVerificada);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [errosCampo, setErrosCampo] = useState<ErrosCampo>({});
@@ -52,17 +52,19 @@ export function Entrada({ configInicial }: { configInicial?: ConfigAcessoInicial
 
     const codigo = new URLSearchParams(window.location.search).get('erro');
     if (codigo && ['google_invalido', 'google_indisponivel', 'google_conta_existente', 'nao_autenticado'].includes(codigo)) setErro(codigo);
-    void cliente.configuracaoAcesso().then(config => {
-      if (ativo) {
-        setGoogleDisponivel(config.google);
-        setRecuperacaoDisponivel(Boolean(config.recuperacao));
-        setVisitanteDisponivel(Boolean(config.visitante));
-      }
-    })
-      .catch(() => undefined).finally(() => { if (ativo) setConfiguracaoCarregada(true); });
-    void verificarSessao();
+    if (!configInicial) {
+      void cliente.configuracaoAcesso().then(config => {
+        if (ativo) {
+          setGoogleDisponivel(config.google);
+          setRecuperacaoDisponivel(Boolean(config.recuperacao));
+          setVisitanteDisponivel(Boolean(config.visitante));
+        }
+      })
+        .catch(() => undefined).finally(() => { if (ativo) setConfiguracaoCarregada(true); });
+    }
+    if (!sessaoVerificada) void verificarSessao();
     return () => { ativo = false; };
-  }, []);
+  }, [configInicial, sessaoVerificada]);
 
   async function entrar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();

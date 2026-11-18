@@ -122,8 +122,8 @@ export const mensagens = {
         senhaVazia: 'Informe sua senha.',
         entrar: 'Entrar',
         entrando: 'Entrando…',
-        arteTitulo: 'Aprenda qualquer coisa, um passo de cada vez.',
-        arteTexto: 'Conte o que quer estudar e o Studoo monta uma trilha de lições curtas, com exercícios e feedback.',
+        arteTitulo: 'Seu material vira prática. O erro abre outro caminho.',
+        arteTexto: 'Envie um PDF, foto ou pedido, entenda de outro jeito quando travar e explique com suas palavras o que aprendeu.',
         temas: ['Violão', 'Inglês', 'Culinária', 'História', 'Fotografia', 'Frações'],
     },
     apresentacao: {

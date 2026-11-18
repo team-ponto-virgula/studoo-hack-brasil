@@ -99,6 +99,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
     setEscolhida(ideia);
     setBrilho((anterior) => anterior + 1);
     anunciar(mensagens.pedido.sugestaoAplicada(ideia));
+    window.requestAnimationFrame(() => campo.current?.closest('form')?.querySelector<HTMLButtonElement>('.pedido-criar')?.focus());
   }
 
   function surpreender() {

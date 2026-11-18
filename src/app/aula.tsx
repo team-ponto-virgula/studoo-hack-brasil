@@ -233,6 +233,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [ensinou, setEnsinou] = useState(false);
   /** O "Explique com suas palavras" está aberto: o rodapé fica só com as ações. */
   const [expliqueAberto, setExpliqueAberto] = useState(false);
+  const [confirmandoRecomeco, setConfirmandoRecomeco] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
   const cartaoCitacaoRef = useRef<HTMLElement>(null);
@@ -538,7 +539,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   /** Recomeçar do zero (quem voltou no meio e prefere começar de novo), depois de confirmar: as respostas se perdem. */
   function recomecar() {
-    if (!window.confirm(t.recomecarPergunta)) return;
+    setConfirmandoRecomeco(false);
     guardarAndamento(licao.id, null);
     setPasso(0);
     setRespostas(exercicios.map(() => ''));
@@ -657,8 +658,18 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         {etapa.tipo === 'pratica' && <h1 tabIndex={-1}>{semQuebrarHifen(licao.titulo)}</h1>}
         {avisoRetomada && (
           <p className="aula-aviso" role="status">
-            {t.retomada}{' '}
-            <button type="button" className="aula-aviso__acao" onClick={recomecar}>{t.recomecarLicao}</button>
+            {confirmandoRecomeco ? (
+              <>
+                {t.recomecarPergunta}{' '}
+                <button type="button" className="aula-aviso__acao" onClick={recomecar}>{t.recomecarLicao}</button>{' '}
+                <button type="button" className="aula-aviso__acao" onClick={() => setConfirmandoRecomeco(false)}>{mensagens.geracao.cancelar}</button>
+              </>
+            ) : (
+              <>
+                {t.retomada}{' '}
+                <button type="button" className="aula-aviso__acao" onClick={() => setConfirmandoRecomeco(true)}>{t.recomecarLicao}</button>
+              </>
+            )}
           </p>
         )}
         {revisao && exercicio && <p className="aula-aviso aula-aviso--revisao" role="status">{t.revisaoRapida}</p>}
@@ -798,13 +809,14 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                       : t.associar.certos(avaliacao.certos.length, exercicio.esquerda.length)}
                   </p>
                 )}
+                {!avaliacao.correta && !revisao && pedidoPonte === 0 && (
+                  <p className="aula-rodape__nota">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>
+                )}
               </div>
             </section>
           )}
           {etapa.tipo === 'pratica' && !autoAvaliacao && <p className="aula-rodape__nota">{t.pratica.escolha}</p>}
           {etapa.tipo === 'pratica' && autoAvaliacao === 'ainda_nao' && <p className="aula-rodape__nota">{t.pratica.aindaNaoNota}</p>}
-          {/* Quem erra vê o que acontece ao pular: o exercício não some, volta no fim da lição. */}
-          {avaliacao && !avaliacao.correta && !revisao && pedidoPonte === 0 && <p className="aula-rodape__nota">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>}
           {exercicio && !avaliacao && (() => {
             const falta = faltaParaVerificar(exercicio, resposta);
             return falta && <p className="aula-rodape__nota" aria-live="polite">{textoDaFalta(falta)}</p>;

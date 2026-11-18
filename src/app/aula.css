@@ -243,15 +243,19 @@
 
 .aula-rodape__conteudo {
   display: flex;
-  width: min(100%, 42rem);
+  width: min(100%, 54rem);
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 16px;
+  gap: 10px 18px;
   margin-inline: auto;
 }
 
-.aula-rodape__acoes { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 10px; }
+.aula-rodape__acoes { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 10px; }
+@media (min-width: 768px) {
+  .aula-rodape[data-retorno] .aula-rodape__conteudo { flex-wrap: nowrap; }
+  .aula-rodape[data-retorno] .aula-rodape__acoes { flex-wrap: nowrap; flex: none; }
+}
 .aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 44px; font-weight: 900; }
 .aula-rodape__acoes > .botao--texto { min-width: auto; padding-inline: 10px; }
 

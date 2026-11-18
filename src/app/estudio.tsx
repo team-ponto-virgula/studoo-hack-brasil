@@ -631,10 +631,13 @@ export function ApoioDaLicao({
             <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
               data-estado={resultadoPonte ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
           )}
-          <p>{ponte?.motivo ?? m.ponteDica}</p>
+          {ponte?.concluida && aoVoltarExercicio && (
+            <Botao onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>
+          )}
+          {!ponte?.concluida && <p>{ponte?.motivo ?? m.ponteDica}</p>}
           {!ponte ? (
             <p role="status">{erro || m.pensando}</p>
-          ) : (
+          ) : !ponte.concluida && (
             <>
               {/* Sequência real: 1) explicação ("Outro jeito"), 2) exemplo, 3) desafio. */}
               {etapaPonte >= 1 && ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
