@@ -148,6 +148,7 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
       Platform: { OS: 'android' },
       Text: 'Text',
       View: 'View',
+      Pressable: 'Pressable',
       ScrollView: 'ScrollView',
       StyleSheet: { create: (x) => x },
     },
@@ -163,14 +164,16 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
         modos.push(x);
       },
     },
-    './interface': { Botao: 'Botao', Campo: 'Campo', EstadoMensagem: 'EstadoMensagem', estilos: {} },
+    './interface': { Botao: 'Botao', Campo: 'Campo', EstadoMensagem: 'EstadoMensagem', LinhaAbrir: 'LinhaAbrir', SeloDemonstracao: 'SeloDemonstracao', estilos: {} },
+    // Cartão de opção de múltipla escolha, o mesmo da aula (o desafio da ponte usa ele): componente de apresentação.
+    './opcao': { Opcao: 'Opcao', letras: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] },
     // Cenas do app (ponte, Stu aluno, ondas, caderno, página do material): componentes de apresentação, sem handlers.
     './estudio-cenas': {
       CenaPonte: 'CenaPonte', StuAluno: 'StuAluno', EtapasDoEnsino: 'EtapasDoEnsino', OndasDoVolume: 'OndasDoVolume',
       CadernoDoStu: 'CadernoDoStu', PaginaDoMaterial: 'PaginaDoMaterial',
     },
     './animacoes': { useAparecer: () => 0 },
-    './tema': { cores: {} },
+    './tema': { cores: {}, fontes: {} },
   };
   const contexto = {
     exports: {},
@@ -219,8 +222,9 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
       return null;
     }
     if (typeof no !== 'object') return null;
+    // No app, as linhas de abrir e fechar (LinhaAbrir, como o <summary> da web) também contam como botão.
     if (
-      no.type === 'Botao' &&
+      (no.type === 'Botao' || no.type === 'LinhaAbrir') &&
       (no.props.rotulo === nome || no.props.children === nome)
     )
       return no;
@@ -229,7 +233,7 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
   function clicar(nome) {
     const b = buscar(arvore, nome);
     assert.ok(b, `Botão ${nome}`);
-    return (b.props.onClick ?? b.props.acao)();
+    return (b.props.onClick ?? b.props.acao ?? b.props.alternar)();
   }
   function conteudo(no) {
     if (Array.isArray(no)) return no.map(conteudo).join(' ');
