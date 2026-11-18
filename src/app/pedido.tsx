@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { LIMITES_GERACAO } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
@@ -63,6 +63,14 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const campo = useRef<HTMLTextAreaElement>(null);
   const texto = objetivo.trim();
 
+  useEffect(() => {
+    if (modo !== 'ideia' || window.innerWidth < 1024) return;
+    const quadro = window.requestAnimationFrame(() => {
+      campo.current?.focus({ preventScroll: true });
+    });
+    return () => window.cancelAnimationFrame(quadro);
+  }, [modo]);
+
   // O Stu reage ao pedido: convida, incentiva enquanto a pessoa escreve e comemora a ideia escolhida.
   let fala: string = mensagens.pedido.falas.vazio;
   if (falha === 'limite_geracoes' || falha === 'limite_estudio') fala = mensagens.pedido.falas.limite;
@@ -99,6 +107,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
     setEscolhida(ideia);
     setBrilho((anterior) => anterior + 1);
     anunciar(mensagens.pedido.sugestaoAplicada(ideia));
+    window.requestAnimationFrame(() => campo.current?.closest('form')?.querySelector<HTMLButtonElement>('.pedido-criar')?.focus());
   }
 
   function surpreender() {

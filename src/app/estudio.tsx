@@ -277,6 +277,7 @@ export function ApoioDaLicao({
   const [texto, setTexto] = useState('');
   const [resposta, setResposta] = useState('');
   const [passoPonte, setPassoPonte] = useState<1 | 2 | 3>(1);
+  const [vencidaNestaAbertura, setVencidaNestaAbertura] = useState(false);
   const [feedback, setFeedback] = useState('');
   /** O resultado da pergunta do reforço, para a opção marcada ficar verde (certa) ou âmbar (errada). */
   const [resultadoPonte, setResultadoPonte] = useState<{ id: string; correta: boolean } | null>(null);
@@ -289,8 +290,7 @@ export function ApoioDaLicao({
       if (!alvo) return;
       const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
       const sobra = alvo.getBoundingClientRect().bottom - (window.innerHeight - rodape - 16);
-      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (sobra > 0) window.scrollBy({ top: sobra, behavior: reduzido ? 'auto' : 'smooth' });
+      if (sobra > 0) window.scrollBy({ top: sobra, behavior: 'auto' });
     });
   }, [feedback]);
   const [erro, setErro] = useState('');
@@ -466,6 +466,7 @@ export function ApoioDaLicao({
   // "Ver outro exemplo" no painel de retorno: pede o reforço, se ainda não existe (durante uma gravação, espera ela acabar).
   useEffect(() => {
     if (pedidoPonte === 0 || gravando) return;
+    setVencidaNestaAbertura(false);
     void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
     // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -500,7 +501,7 @@ export function ApoioDaLicao({
     medir();
     window.addEventListener('resize', medir);
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    (cartaoPonte.current ?? ponteCenaRef.current)?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
+    (cartaoPonte.current ?? ponteCenaRef.current)?.scrollIntoView({ block: 'start', behavior: 'auto' });
     if (reduzido) {
       setAtravessando(true);
       return () => window.removeEventListener('resize', medir);
@@ -519,9 +520,7 @@ export function ApoioDaLicao({
   useEffect(() => {
     if (pedidoPonte === 0) return;
     const quadro = window.requestAnimationFrame(() => {
-      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const alvo = pontePronta ? (legendaPonteRef.current ?? cartaoPonte.current) : cartaoPonte.current;
-      alvo?.scrollIntoView({ block: pontePronta ? 'nearest' : 'start', behavior: reduzido ? 'auto' : 'smooth' });
+      cartaoPonte.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
       cartaoPonte.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(quadro);
@@ -530,14 +529,12 @@ export function ApoioDaLicao({
   }, [pedidoPonte, pontePronta]);
   useEffect(() => {
     if (!aviso) return;
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    avisoRef.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    avisoRef.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
   }, [aviso]);
   // O retorno do "Ensine ao Stu" aparece embaixo do formulário: a tela rola até ele.
   useEffect(() => {
     if (!ensino) return;
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
+    retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
   }, [ensino]);
   return (
     <div className="estudio-apoio">
@@ -559,10 +556,11 @@ export function ApoioDaLicao({
           sobrando em outros exercícios nem em outra visita à lição. */}
       {avaliacao?.correta === false && pedidoPonte > 0 && (() => {
         const etapaPonte = ponte?.concluida ? 3 : passoPonte;
+        const reaberta = Boolean(ponte?.concluida && !vencidaNestaAbertura);
         return (
-        <section className="estudio-card estudio-ponte" ref={cartaoPonte}>
+        <section className="estudio-card estudio-ponte" ref={cartaoPonte} data-concluida={ponte?.concluida || undefined}>
           <div className="ponte-cabeca">
-            <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
+            <h2 tabIndex={-1}>{ponte?.concluida && !reaberta ? m.pontePronta : m.ponte}</h2>
             <div className="ponte-cabeca__acoes">
               {ponte?.simulado && <p className="estudio-selo">{m.simulado}</p>}
               {!ponte?.concluida && aoVoltarExercicio && (
@@ -631,9 +629,20 @@ export function ApoioDaLicao({
             <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
               data-estado={resultadoPonte ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
           )}
-          <p>{ponte?.motivo ?? m.ponteDica}</p>
+          {ponte?.concluida && !reaberta && aoVoltarExercicio && (
+            <Botao onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>
+          )}
+          {!ponte?.concluida && <p>{ponte?.motivo ?? m.ponteDica}</p>}
           {!ponte ? (
             <p role="status">{erro || m.pensando}</p>
+          ) : ponte.concluida ? (
+            reaberta && (
+              <>
+                {ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
+                <div className="estudio-exemplo">{ponte.exemplo}</div>
+                {aoVoltarExercicio && <Botao onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>}
+              </>
+            )
           ) : (
             <>
               {/* Sequência real: 1) explicação ("Outro jeito"), 2) exemplo, 3) desafio. */}
@@ -670,16 +679,18 @@ export function ApoioDaLicao({
                   {!ponte.concluida && (
                     <Botao
                       disabled={ocupado || gravando || !resposta}
+                      aria-busy={ocupado || undefined}
                       onClick={() =>
                         void executar(async () => {
                           const r = await cliente.avaliarPonte(licao.id, resposta);
+                          if (r.correta) setVencidaNestaAbertura(true);
                           atualizarApoio(r.apoio);
                           setResultadoPonte({ id: resposta, correta: r.correta });
                           setFeedback(r.feedback);
                         })
                       }
                     >
-                      {m.verificar}
+                      {ocupado ? m.pensando : m.verificar}
                     </Botao>
                   )}
                 </>
@@ -737,6 +748,7 @@ export function ApoioDaLicao({
           </Botao>
           <Botao
             disabled={ocupado || gravando || texto.trim().length < 20}
+            aria-busy={ocupado || undefined}
             onClick={() =>
               void executar(async () => {
                 const r = await cliente.ensinarStu(licao.id, texto);
@@ -750,7 +762,7 @@ export function ApoioDaLicao({
               })
             }
           >
-            {m.enviar}
+            {ocupado ? m.pensando : m.enviar}
           </Botao>
         </div>
         {gravando && (

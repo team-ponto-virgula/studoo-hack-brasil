@@ -75,6 +75,10 @@ type Andamento = {
   segundos?: number;
   /** O que faltava no cronômetro da prática, para ele seguir de onde parou. */
   praticaRestante?: number;
+  /** Pontes concluídas por índice de exercício, preservadas entre recarregamentos. */
+  pontes?: Record<number, boolean>;
+  /** Se a pessoa já enviou o "Explique com suas palavras" nesta lição. */
+  ensinou?: boolean;
 };
 const chaveDoAndamento = (id: string) => `studoo.aula.${id}`;
 
@@ -217,7 +221,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. */
   const [ponteFeita, setPonteFeita] = useState(false);
   /** Pontes concluídas por índice de exercício (a fala do Stu e a história na conclusão usam). */
-  const [pontesPorExercicio, setPontesPorExercicio] = useState<Record<number, boolean>>({});
+  const [pontesPorExercicio, setPontesPorExercicio] = useState<Record<number, boolean>>(() => retomada?.pontes ?? {});
   /** Índice da citação aberta na etapa de conceito (0 por padrão quando há referências do material). */
   const [citacaoAberta, setCitacaoAberta] = useState<number | null>(() => (licao.referencias?.length ? 0 : null));
   /** Nas etapas de leitura: ainda tem conteúdo escondido atrás do rodapé (o botão diz "Continuar lendo"). */
@@ -230,9 +234,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   /** Quantos exercícios a revisão rápida trouxe de volta, para o contador "Revisão 1 de 2". */
   const [revisaoTotal, setRevisaoTotal] = useState(retomada?.revisao?.length ?? 0);
   /** O "Explique com suas palavras" já foi enviado: o convite no acerto do último exercício sai. */
-  const [ensinou, setEnsinou] = useState(false);
+  const [ensinou, setEnsinou] = useState(() => retomada?.ensinou ?? false);
   /** O "Explique com suas palavras" está aberto: o rodapé fica só com as ações. */
   const [expliqueAberto, setExpliqueAberto] = useState(false);
+  const [confirmandoRecomeco, setConfirmandoRecomeco] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
   const cartaoCitacaoRef = useRef<HTMLElement>(null);
@@ -333,8 +338,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   function lerMais() {
     const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
     const topo = document.querySelector<HTMLElement>('.aula-topo')?.getBoundingClientRect().height ?? 0;
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    window.scrollBy({ top: Math.max(160, (window.innerHeight - rodape - topo) * 0.75), behavior: reduzido ? 'auto' : 'smooth' });
+    window.scrollBy({ top: Math.max(160, (window.innerHeight - rodape - topo) * 0.75), behavior: 'auto' });
   }
 
   // O aviso de "continuou de onde parou" vale para a etapa em que a pessoa voltou; na seguinte, sai.
@@ -354,9 +358,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     guardarAndamento(licao.id, {
       passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao,
       segundos: Math.round((Date.now() - inicio) / 1000),
+      pontes: pontesPorExercicio,
+      ensinou,
       ...(praticaRestante.current !== undefined ? { praticaRestante: praticaRestante.current } : {}),
     });
-  }, [licao.id, licao.concluida, passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao]);
+  }, [licao.id, licao.concluida, passo, respostas, avaliacoes, primeiras, tentativas, comprovante, autoAvaliacao, revisao, pontesPorExercicio, ensinou]);
 
   useEffect(() => {
     if (!avaliacao) return;
@@ -368,8 +374,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       if (!exercicioNaTela || !rodape) return;
       const limite = window.innerHeight - rodape.getBoundingClientRect().height - 16;
       const sobra = exercicioNaTela.getBoundingClientRect().bottom - limite;
-      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (sobra > 0) window.scrollBy({ top: sobra, behavior: reduzido ? 'auto' : 'smooth' });
+      if (sobra > 0) window.scrollBy({ top: sobra, behavior: 'auto' });
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [avaliacao]);
@@ -455,6 +460,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   }
 
   function tentarDeNovo() {
+    setPedidoPonte(0);
     setPonteFeita(false);
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (posicao === indice ? avaliacao : atual)));
@@ -538,7 +544,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   /** Recomeçar do zero (quem voltou no meio e prefere começar de novo), depois de confirmar: as respostas se perdem. */
   function recomecar() {
-    if (!window.confirm(t.recomecarPergunta)) return;
+    setConfirmandoRecomeco(false);
     guardarAndamento(licao.id, null);
     setPasso(0);
     setRespostas(exercicios.map(() => ''));
@@ -550,6 +556,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     setRevisao(null);
     setAvisoRetomada(false);
     setErrosAnteriores(exercicios.map(() => null));
+    setPontesPorExercicio({});
+    setEnsinou(false);
   }
 
   /** Abre o "Explique com suas palavras" (no pé da página) e leva até ele. */
@@ -558,8 +566,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     const caixa = caixas[caixas.length - 1];
     if (!caixa) return;
     caixa.open = true;
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    caixa.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
+    caixa.scrollIntoView({ block: 'start', behavior: 'auto' });
     caixa.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
   }
 
@@ -567,8 +574,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   function mostrarComoFoi() {
     const pergunta = document.querySelector<HTMLElement>('.como-foi legend');
     if (!pergunta) return;
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    pergunta.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    pergunta.scrollIntoView({ block: 'center', behavior: 'auto' });
     pergunta.focus({ preventScroll: true });
     const grupo = pergunta.closest<HTMLElement>('.como-foi');
     grupo?.removeAttribute('data-chamar');
@@ -596,7 +602,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     );
   } else if (exercicio) {
     acao = (
-      <Botao type="submit" form="resposta-licao" disabled={ocupado || !respostaCompleta(exercicio, resposta)}>
+      <Botao type="submit" form="resposta-licao" disabled={ocupado || !respostaCompleta(exercicio, resposta)} aria-busy={pendente === 'avaliar' || undefined}>
         {pendente === 'avaliar' ? t.avaliando : t.avaliar}
       </Botao>
     );
@@ -657,8 +663,18 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         {etapa.tipo === 'pratica' && <h1 tabIndex={-1}>{semQuebrarHifen(licao.titulo)}</h1>}
         {avisoRetomada && (
           <p className="aula-aviso" role="status">
-            {t.retomada}{' '}
-            <button type="button" className="aula-aviso__acao" onClick={recomecar}>{t.recomecarLicao}</button>
+            {confirmandoRecomeco ? (
+              <>
+                {t.recomecarPergunta}{' '}
+                <button type="button" className="aula-aviso__acao" onClick={recomecar}>{t.recomecarLicao}</button>{' '}
+                <button type="button" className="aula-aviso__acao" onClick={() => setConfirmandoRecomeco(false)}>{mensagens.geracao.cancelar}</button>
+              </>
+            ) : (
+              <>
+                {t.retomada}{' '}
+                <button type="button" className="aula-aviso__acao" onClick={() => setConfirmandoRecomeco(true)}>{t.recomecarLicao}</button>
+              </>
+            )}
           </p>
         )}
         {revisao && exercicio && <p className="aula-aviso aula-aviso--revisao" role="status">{t.revisaoRapida}</p>}
@@ -681,7 +697,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                         onClick={() => {
                           setCitacaoAberta(idx);
                           window.requestAnimationFrame(() => {
-                            cartaoCitacaoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                            cartaoCitacaoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'auto' });
                             cartaoCitacaoRef.current?.focus({ preventScroll: true });
                           });
                         }}>
@@ -798,13 +814,14 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                       : t.associar.certos(avaliacao.certos.length, exercicio.esquerda.length)}
                   </p>
                 )}
+                {!avaliacao.correta && !revisao && pedidoPonte === 0 && (
+                  <p className="aula-rodape__nota">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>
+                )}
               </div>
             </section>
           )}
           {etapa.tipo === 'pratica' && !autoAvaliacao && <p className="aula-rodape__nota">{t.pratica.escolha}</p>}
           {etapa.tipo === 'pratica' && autoAvaliacao === 'ainda_nao' && <p className="aula-rodape__nota">{t.pratica.aindaNaoNota}</p>}
-          {/* Quem erra vê o que acontece ao pular: o exercício não some, volta no fim da lição. */}
-          {avaliacao && !avaliacao.correta && !revisao && pedidoPonte === 0 && <p className="aula-rodape__nota">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>}
           {exercicio && !avaliacao && (() => {
             const falta = faltaParaVerificar(exercicio, resposta);
             return falta && <p className="aula-rodape__nota" aria-live="polite">{textoDaFalta(falta)}</p>;
@@ -1340,8 +1357,7 @@ function mostrarAberto(evento: SyntheticEvent<HTMLDetailsElement>) {
     const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
     const area = caixa.getBoundingClientRect();
     const sobra = area.bottom - (window.innerHeight - rodape - 12);
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (sobra > 0) window.scrollBy({ top: Math.min(sobra, area.top - 72), behavior: reduzido ? 'auto' : 'smooth' });
+    if (sobra > 0) window.scrollBy({ top: Math.min(sobra, area.top - 72), behavior: 'auto' });
   });
 }
 
@@ -1899,8 +1915,7 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
     // em vez de voltar parado e apagar o que já foi praticado.
     setRestante((atual) => (atual > 0 ? atual : total));
     setRodando(true);
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    cronometro.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    cronometro.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
   }, [reinicio, total]);
   const comoFoi = useRef<HTMLLegendElement>(null);
   const acabou = restante === 0;
@@ -1928,16 +1943,14 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
 
   useEffect(() => {
     if (!acabou) return;
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    comoFoi.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    comoFoi.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
   }, [acabou]);
 
   // A resposta do Stu aparece embaixo das opções: a tela rola para ela não ficar escondida atrás do rodapé.
   const respostaDoStu = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!escolha) return;
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    respostaDoStu.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    respostaDoStu.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
   }, [escolha]);
 
   let rotuloPrincipal: string = t.pratica.comecar;

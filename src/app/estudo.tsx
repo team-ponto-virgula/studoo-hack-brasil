@@ -5,6 +5,7 @@ import {
   ErroStudoo,
   origemDemonstracao,
   origemLegivel,
+  trilhaRepetida,
   type AutoAvaliacao,
   type LicaoDetalhe,
   type PlanoDetalhe,
@@ -102,9 +103,17 @@ export function Estudo() {
   const [anuncio, setAnuncio] = useState('');
   const [sincronia, setSincronia] = useState<Sincronia>({ estado: 'atualizando', em: null });
   const [agora, setAgora] = useState(() => Date.now());
+  const [confirmacao, setConfirmacao] = useState<{
+    mensagem: string;
+    confirmarRotulo: string;
+    destrutivo?: boolean;
+    aoConfirmar: () => Promise<void>;
+  } | null>(null);
+  const origemConfirmacao = useRef<HTMLElement | null>(null);
   const emExecucao = useRef(false);
   const ultimaBusca = useRef(0);
   const geracaoAtiva = useRef<AbortController | null>(null);
+  const cacheLicoes = useRef<Map<string, Promise<LicaoDetalhe>>>(new Map());
   const principal = useRef<HTMLElement>(null);
   const objetivoRef = useRef(objetivo);
   objetivoRef.current = objetivo;
@@ -245,7 +254,9 @@ export function Estudo() {
   }, [carregar]);
 
   useEffect(() => {
-    if (inicio === 'pronto') principal.current?.querySelector('h1')?.focus();
+    if (inicio === 'pronto' && document.activeElement?.id !== 'objetivo') {
+      principal.current?.querySelector('h1')?.focus();
+    }
   }, [inicio, tela]);
 
   useEffect(() => {
@@ -300,12 +311,19 @@ export function Estudo() {
   }
 
   /** Apaga uma trilha depois da confirmação; o cartão sai da lista (sem trilhas, a tela volta ao pedido). */
-  async function apagarPlano(plano: PlanoResumo) {
-    if (!window.confirm(mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total)))) return;
-    const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
-    if (!resultado.ok) return;
-    setPlanos((anteriores) => anteriores.filter((item) => item.id !== plano.id));
-    anunciar(mensagens.planos.apagada(plano.titulo));
+  function apagarPlano(plano: PlanoResumo) {
+    origemConfirmacao.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setConfirmacao({
+      mensagem: mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total)),
+      confirmarRotulo: mensagens.planos.apagar,
+      destrutivo: true,
+      aoConfirmar: async () => {
+        const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
+        if (!resultado.ok) return;
+        setPlanos((anteriores) => anteriores.filter((item) => item.id !== plano.id));
+        anunciar(mensagens.planos.apagada(plano.titulo));
+      },
+    });
   }
 
   function atualizarPlano(plano: PlanoDetalhe) {
@@ -406,10 +424,21 @@ export function Estudo() {
     }
   }
 
+  function obterLicaoComCache(id: string) {
+    const existente = cacheLicoes.current.get(id);
+    if (existente) return existente;
+    const promessa = cliente.obterLicao(id).catch((erro) => {
+      cacheLicoes.current.delete(id);
+      throw erro;
+    });
+    cacheLicoes.current.set(id, promessa);
+    return promessa;
+  }
+
   async function abrirLicao(plano: PlanoDetalhe, id: string) {
     if (emExecucao.current) return;
     setAbrindo(id);
-    const resultado = await executar('abrir', () => cliente.obterLicao(id));
+    const resultado = await executar('abrir', () => obterLicaoComCache(id));
     setAbrindo(null);
     if (resultado.ok) navegar({ tipo: 'licao', plano, licao: resultado.dados });
   }
@@ -418,6 +447,7 @@ export function Estudo() {
     const resultado = await executar('concluir', () => cliente.concluirLicao(licao.id, comprovante, pratica,
       resumo && { segundos: resumo.segundos, acertosDePrimeira: resumo.acertosDePrimeira, exercicios: resumo.exercicios }));
     if (resultado.ok) {
+      cacheLicoes.current.delete(licao.id);
       const atualizado = resultado.dados.plano;
       atualizarPlano(atualizado);
       navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
@@ -426,11 +456,17 @@ export function Estudo() {
     return false;
   }
 
-  async function sair() {
+  function sair() {
     // Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão.
-    if (!window.confirm(mensagens.sairPergunta)) return;
-    const resultado = await executar('sair', () => cliente.logout());
-    if (resultado.ok) irParaLogin();
+    origemConfirmacao.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setConfirmacao({
+      mensagem: mensagens.sairPergunta,
+      confirmarRotulo: mensagens.sair,
+      aoConfirmar: async () => {
+        const resultado = await executar('sair', () => cliente.logout());
+        if (resultado.ok) irParaLogin();
+      },
+    });
   }
 
   /** Fim da apresentação (concluída ou pulada): não aparece mais neste navegador e o pedido abre. */
@@ -473,7 +509,7 @@ export function Estudo() {
             {mensagens.planos.titulo}
           </Botao>
           {planos.length > 0 && <ul className="navegacao-planos">
-            {planos.map((plano) => (
+            {planos.slice(0, 5).map((plano) => (
               <li key={plano.id}>
                 <Botao variante="texto" className="navegacao-plano" onClick={() => void abrirPlano(plano.id)} disabled={ocupado} aria-current={plano.id === planoAtual ? 'page' : undefined}>
                   {plano.titulo}
@@ -532,11 +568,16 @@ export function Estudo() {
             const restantes = destaque ? planos.filter((item) => item.id !== destaque.id) : planos;
             return (
               <section className="painel painel--planos">
-                <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
+                <div className="planos-cabeca">
+                  <h1 tabIndex={-1}>{mensagens.planos.titulo}</h1>
+                  <Botao variante="secundario" disabled={ocupado} onClick={() => navegar({ tipo: 'objetivo' })}>
+                    <span aria-hidden="true">+</span> {mensagens.planos.novo}
+                  </Botao>
+                </div>
                 <p className="introducao">{mensagens.planos.subtitulo}</p>
                 {destaque && (
                   <CartaoDestaque plano={destaque} regiao={planos.findIndex((p) => p.id === destaque.id)}
-                    ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} apagar={() => void apagarPlano(destaque)} />
+                    ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} apagar={() => apagarPlano(destaque)} />
                 )}
                 {restantes.length > 0 && (
                   <>
@@ -545,13 +586,12 @@ export function Estudo() {
                       {restantes.map((plano, indice) => (
                         <li key={plano.id} style={{ '--ordem': indice } as CSSProperties}>
                           <CartaoPlano plano={plano} regiao={planos.findIndex((p) => p.id === plano.id)} ocupado={ocupado}
-                            secundario abrir={() => void abrirPlano(plano.id)} apagar={() => void apagarPlano(plano)} />
+                            secundario abrir={() => void abrirPlano(plano.id)} apagar={() => apagarPlano(plano)} />
                         </li>
                       ))}
                     </ul>
                   </>
                 )}
-                <AcaoPrincipal><Botao variante={destaque ? 'secundario' : 'primario'} disabled={ocupado} onClick={() => navegar({ tipo: 'objetivo' })}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
               </section>
             );
           })()}
@@ -559,14 +599,13 @@ export function Estudo() {
             <GeracaoAoVivo geracao={geracao} ocupado={ocupado}
               cancelar={cancelarGeracao} comecar={(proposta) => void comecar(proposta)} ajustar={() => navegar({ tipo: 'objetivo' })}
               existente={geracao.proposta
-                ? planos.find((plano) =>
-                    plano.titulo === geracao.proposta?.titulo ||
-                    (geracao.proposta?.titulo.toLowerCase().includes('fraç') && plano.titulo.toLowerCase().includes('fraç')))
+                ? planos.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? ''))
                 : undefined}
               abrirExistente={(id) => void abrirPlano(id)} />
           )}
           {visivel && tela.tipo === 'plano' && (
             <Plano tela={tela} ocupado={ocupado} abrindo={abrindo}
+              precarregarLicao={(id) => { void obterLicaoComCache(id).catch(() => undefined); }}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
               novoPlano={() => navegar({ tipo: 'objetivo' })} />
           )}
@@ -593,6 +632,23 @@ export function Estudo() {
             onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
         </nav>}
       </div>
+      {confirmacao && (
+        <ConfirmacaoModal
+          mensagem={confirmacao.mensagem}
+          confirmarRotulo={confirmacao.confirmarRotulo}
+          destrutivo={confirmacao.destrutivo}
+          ocupado={ocupado}
+          aoCancelar={() => {
+            setConfirmacao(null);
+            window.requestAnimationFrame(() => origemConfirmacao.current?.focus());
+          }}
+          aoConfirmar={() => {
+            const acao = confirmacao.aoConfirmar;
+            setConfirmacao(null);
+            void acao();
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -658,10 +714,45 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar }: {
         <Botao variante="primario" aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
           {acao}<Icone nome="seta" />
         </Botao>
-        <button type="button" className="plano-cartao__apagar" aria-label={mensagens.planos.apagarRotulo(plano.titulo)} disabled={ocupado}
-          onClick={apagar}>{mensagens.planos.apagar}</button>
+        <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} />
       </div>
     </article>
+  );
+}
+
+/** Menu discreto no cartão de trilha: fecha com Esc ou clique fora. */
+function MenuCartao({ titulo, ocupado, apagar }: { titulo: string; ocupado: boolean; apagar: () => void }) {
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  useEffect(() => {
+    function aoClicarFora(evento: PointerEvent) {
+      const el = detailsRef.current;
+      if (el?.open && evento.target instanceof Node && !el.contains(evento.target)) el.open = false;
+    }
+    function aoTeclar(evento: KeyboardEvent) {
+      const el = detailsRef.current;
+      if (el?.open && evento.key === 'Escape') {
+        evento.preventDefault();
+        el.open = false;
+        el.querySelector('summary')?.focus();
+      }
+    }
+    document.addEventListener('pointerdown', aoClicarFora);
+    window.addEventListener('keydown', aoTeclar);
+    return () => {
+      document.removeEventListener('pointerdown', aoClicarFora);
+      window.removeEventListener('keydown', aoTeclar);
+    };
+  }, []);
+
+  return (
+    <details className="plano-cartao__menu" ref={detailsRef}>
+      <summary aria-label={mensagens.planos.maisOpcoesRotulo(titulo)}>•••</summary>
+      <button type="button" className="plano-cartao__apagar" aria-label={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
+        onClick={() => { if (detailsRef.current) detailsRef.current.open = false; apagar(); }}>
+        {mensagens.planos.apagar}
+      </button>
+    </details>
   );
 }
 
@@ -698,9 +789,8 @@ function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar
         <Botao variante={concluido || secundario ? 'secundario' : 'primario'} aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
           {acao}<Icone nome="seta" />
         </Botao>
-        {/* Apagar fica depois da ação principal, discreto, como no app. */}
-        <button type="button" className="plano-cartao__apagar" aria-label={mensagens.planos.apagarRotulo(plano.titulo)} disabled={ocupado}
-          onClick={apagar}>{mensagens.planos.apagar}</button>
+        {/* Apagar fica em menu discreto para não competir com a ação principal do cartão. */}
+        <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} />
       </div>
     </article>
   );
@@ -894,10 +984,11 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
-function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
+function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano }: {
   tela: TelaPlano;
   ocupado: boolean;
   abrindo: string | null;
+  precarregarLicao: (id: string) => void;
   abrirLicao: (id: string) => void;
   novoPlano: () => void;
 }) {
@@ -908,7 +999,12 @@ function Plano({ tela, ocupado, abrindo, abrirLicao, novoPlano }: {
   const concluidas = nos.filter((no) => no.estado === 'concluida').length;
   let falaStu: string = mensagens.trilha.stuMeio;
   if (!proximo) falaStu = mensagens.trilha.stuFim;
+  else if (concluidas === 0 && proximo.no.andamento) falaStu = mensagens.trilha.stuInicioEmAndamento;
   else if (concluidas === 0) falaStu = mensagens.trilha.stuInicio;
+
+  useEffect(() => {
+    if (proximo?.no.id) precarregarLicao(proximo.no.id);
+  }, [proximo?.no.id, precarregarLicao]);
 
   return (
     <section className="painel painel--trilha">
@@ -1107,5 +1203,61 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
         </AcaoPrincipal>
       </div>
     </section>
+  );
+}
+
+/** Diálogo de confirmação no próprio produto: foco preso, Esc cancela e devolve o foco ao botão de origem. */
+function ConfirmacaoModal({ mensagem, confirmarRotulo, destrutivo = false, ocupado, aoCancelar, aoConfirmar }: {
+  mensagem: string;
+  confirmarRotulo: string;
+  destrutivo?: boolean;
+  ocupado: boolean;
+  aoCancelar: () => void;
+  aoConfirmar: () => void;
+}) {
+  const tituloId = useId();
+  const acoesRef = useRef<HTMLDivElement>(null);
+  const aoCancelarRef = useRef(aoCancelar);
+  aoCancelarRef.current = aoCancelar;
+
+  useEffect(() => {
+    const botoesIniciais = Array.from(acoesRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
+    botoesIniciais[0]?.focus();
+    function aoTeclar(evento: KeyboardEvent) {
+      if (evento.key === 'Escape') {
+        evento.preventDefault();
+        aoCancelarRef.current();
+        return;
+      }
+      if (evento.key !== 'Tab') return;
+      const botoes = Array.from(acoesRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
+      if (botoes.length < 2) return;
+      const atual = document.activeElement;
+      if (evento.shiftKey && atual === botoes[0]) {
+        evento.preventDefault();
+        botoes[botoes.length - 1].focus();
+      } else if (!evento.shiftKey && atual === botoes[botoes.length - 1]) {
+        evento.preventDefault();
+        botoes[0].focus();
+      }
+    }
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, []);
+
+  return (
+    <div className="modal-fundo" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !ocupado) aoCancelar(); }}>
+      <div className="modal-cartao" role="dialog" aria-modal="true" aria-labelledby={tituloId}>
+        <p id={tituloId} className="modal-mensagem">{mensagem}</p>
+        <div className="modal-acoes" ref={acoesRef}>
+          <Botao variante="secundario" disabled={ocupado} onClick={aoCancelar}>
+            {mensagens.geracao.cancelar}
+          </Botao>
+          <Botao variante={destrutivo ? 'secundario' : 'primario'} className={destrutivo ? 'modal-confirmar--destrutivo' : undefined} disabled={ocupado} onClick={aoConfirmar}>
+            {confirmarRotulo}
+          </Botao>
+        </div>
+      </div>
+    </div>
   );
 }

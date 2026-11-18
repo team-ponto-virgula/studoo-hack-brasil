@@ -336,3 +336,14 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
 }
 
 export type ProvedorIa = "falsa" | "openai" | "deepseek";
+
+function normalizarAssuntoTrilha(titulo: string): string {
+  return titulo.split(':')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+/** Indica se duas trilhas tratam do mesmo assunto (assunto antes dos dois-pontos, normalizado). */
+export function trilhaRepetida(tituloExistente: string, tituloProposto: string): boolean {
+  const existente = normalizarAssuntoTrilha(tituloExistente);
+  const proposto = normalizarAssuntoTrilha(tituloProposto);
+  return existente.length > 0 && existente === proposto;
+}
