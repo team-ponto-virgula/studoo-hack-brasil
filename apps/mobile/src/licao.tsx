@@ -1146,13 +1146,17 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
 const licaoEstilos = StyleSheet.create({
   // A aula da web tem 16 de respiro nos lados no celular (clamp(16px, 4vw, 48px) em aula.css), no alto, no meio e no
   // rodapé; as outras telas têm 20. A barra do alto vem da faixa comum (20), então ela avança 4 para cada lado.
-  topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: -4 },
+  // .aula-topo no celular: 8 em cima e embaixo, começando 2 abaixo do topo (a margem de -12 sobre os 14 da página): o X fica
+  // em 10 e a faixa mede 62.
+  topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: -4, marginTop: 2 },
   topoColuna: { flex: 1, minWidth: 0, gap: 2 },
   andamento: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   tituloTopo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 15 },
   /** A aula começa mais perto do topo (rodada 4B da web). */
   // 40 entre o último conteúdo e o rodapé fixo no fim da rolagem (bf8cf37: o vão de 22 do painel mais os 18 do rodapé).
-  conteudo: { paddingTop: 16, paddingHorizontal: 16, paddingBottom: 40 },
+  // 18 da faixa do alto até o primeiro bloco: com a faixa de 62, "Etapa anterior", a etiqueta do exercício e o título da ponte
+  // ficam na altura da web (medido em 390). 40 até o rodapé no fim da rolagem.
+  conteudo: { paddingTop: 18, paddingHorizontal: 16, paddingBottom: 40 },
   // .aula-rodape no celular: 10 em cima, contando a linha de 2 que a web desenha por dentro (::before); aqui a linha é a borda
   // de cima do rodapé, então o respiro é 8.
   rodapeConteudo: { paddingHorizontal: 16, paddingTop: 8 },

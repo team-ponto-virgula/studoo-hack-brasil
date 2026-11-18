@@ -1579,7 +1579,9 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
         </View>
         <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo, estudoEstilos.destaqueTituloTamanho]}>{plano.titulo}</Text>
         <BarraProgresso progresso={plano.progresso} comPercentual />
-        <Botao rotulo={acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir} />
+        {/* 15 do texto de progresso até o botão, como .plano-destaque na web (o corpo tem vão de 8). */}
+        <Botao rotulo={acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir}
+          estilo={{ marginTop: 7 }} />
       </View>
     </View>
     </Animated.View>
@@ -1984,7 +1986,8 @@ const estudoEstilos = StyleSheet.create({
   barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, letterSpacing: 0.9 },
   barraPlanoTitulo: { marginTop: 2, fontSize: 18, lineHeight: 20.16 },
   // .painel--trilha: 20 entre a faixa do nome e o mapa (o conteúdo já tem 24 em cima).
-  caminhoNaTrilha: { marginTop: -4 },
+  // .painel--trilha: 20 da faixa "SUA TRILHA" até o mapa (o conteúdo das telas de estudo começa a 28).
+  caminhoNaTrilha: { marginTop: -8 },
   concluidoCartao: { gap: 8, marginBottom: 12, padding: 18, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5,
     borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   descobertaHero:{flexDirection:'row',alignItems:'center',gap:8,marginBottom:20},
@@ -2004,7 +2007,8 @@ const estudoEstilos = StyleSheet.create({
   progressoLegenda: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 },
   progressoTexto: { flexShrink: 1, fontWeight: '700' },
   percentual: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 21 },
-  trilha: { height: 10, borderRadius: 5, backgroundColor: cores.nevoa, overflow: 'hidden' },
+  // .barra da web: 12 de altura (nos cartões de Minhas trilhas e no destaque).
+  trilha: { height: 12, borderRadius: 6, backgroundColor: cores.nevoa, overflow: 'hidden' },
   trilhaNaFaixa: { height: 14, borderRadius: 7 },
   preenchimento: { height: '100%', backgroundColor: cores.acao, borderRadius: 7, overflow: 'hidden' },
   brilhoBarra: { position: 'absolute', top: 3, left: 6, right: 6, height: 3, borderRadius: 2, backgroundColor: 'rgba(255, 255, 255, 0.3)' },
@@ -2112,8 +2116,9 @@ const estudoEstilos = StyleSheet.create({
   balaoFalaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   luzCampo: { position: 'absolute', left: -3, right: -3, top: -3, bottom: -3, borderRadius: 27, borderWidth: 3, borderColor: '#F0B429' },
   // Como .pedido-como da web: 44 px, centralizado, 800.
-  // .pedido-como (bf8cf37): 34 da última ficha até a caixa de 44 do botão e, no fim da rolagem, 40 até a barra de baixo.
-  como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', minHeight: 44, marginTop: 34, paddingHorizontal: 10, borderRadius: 12 },
+  // .pedido-como (bf8cf37): 26 do bloco de cima até a caixa de 44 do botão (34 depois das fichas, que têm 8 embaixo) e, no fim
+  // da rolagem, 40 até a barra de baixo.
+  como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', minHeight: 44, marginTop: 26, paddingHorizontal: 10, borderRadius: 12 },
   comoPressionado: { backgroundColor: cores.nevoa },
   comoSinal: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5EBFF' },
   comoSinalTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16 },
@@ -2133,7 +2138,7 @@ const estudoEstilos = StyleSheet.create({
   contador: { alignSelf: 'flex-end' },
   // Como .pedido-ideias e .pedido-ideia da web: fichas de 46 px com lábio de 3, que quebram linha, centralizadas.
   // Fichas de 46 com o degrau de 3 por fora (sem ocupar lugar, como a sombra da web): vão de 10, passo de 56.
-  sugestoes: { marginTop: 20, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
+  sugestoes: { marginTop: 20, marginBottom: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
   surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 46, paddingVertical: 8, paddingLeft: 10, paddingRight: 16, borderRadius: 999,
     borderWidth: 2, borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   surpresaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },

@@ -507,7 +507,8 @@ export function EstadoErro({ mensagem, acao, testID, foco = false, estilo }: {
         style={estilos.estadoErroStu} />
       <View style={estilos.estadoErroCorpo}>
         <View ref={area} accessible accessibilityRole="alert" accessibilityLabel={mensagem} style={estilos.estadoErroTexto}>
-          <Text importantForAccessibility="no" style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro, backgroundColor: cores.fundo }]}>!</Text>
+          {/* O "!" da web só tem a borda (fundo transparente, sobre a cor do cartão de erro). */}
+          <Text importantForAccessibility="no" style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro }]}>!</Text>
           <Text style={[estilos.texto, { flex: 1, color: cores.erro }]}>{mensagem}</Text>
         </View>
         {acao && <Botao rotulo={acao.rotulo} testID={acao.testID} variante="secundario" desativado={acao.desativado} acao={acao.acao}

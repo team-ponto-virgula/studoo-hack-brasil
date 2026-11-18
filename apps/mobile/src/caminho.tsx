@@ -494,7 +494,8 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
  * da Parte 1, de 43 de altura, 152 acima do pé do céu. O balão "Começar" com o nome em duas linhas mede 104 e flutua 4:
  * sobra um respiro de 8 a 10 entre os postes, a faixa e o balão (medido na prévia em 360 e 412).
  */
-const INICIO_COM_BALAO = 234;
+// .caminho[data-comeco-atual] .caminho-inicio { padding-bottom: 242px } e a faixa da parte a 152 do pé.
+const INICIO_COM_BALAO = 242;
 const PARTE_COM_BALAO = 152;
 
 /** Placa de madeira com a frase do Stu: entra balançando, presa em dois postes fincados nas colinas. */

@@ -68,7 +68,15 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
     const titulo = titulos.current[passo];
     if (!titulo) return;
     // Na abertura, o foco vai ao primeiro título como em qualquer tela; depois, a cada passo.
-    const espera = setTimeout(() => AccessibilityInfo.sendAccessibilityEvent(titulo, 'focus'), primeira.current ? 0 : 150);
+    // Na prévia web, o focus() do navegador rolava o passo até o título (4 px no último passo); a web foca sem rolar.
+    const focar = () => {
+      if (Platform.OS === 'web') {
+        const no = titulo as unknown as HTMLElement;
+        if (!no.hasAttribute('tabindex')) no.setAttribute('tabindex', '-1');
+        no.focus({ preventScroll: true });
+      } else AccessibilityInfo.sendAccessibilityEvent(titulo, 'focus');
+    };
+    const espera = setTimeout(focar, primeira.current ? 0 : 150);
     primeira.current = false;
     return () => clearTimeout(espera);
   }, [passo]);
@@ -324,7 +332,8 @@ const apresentacaoEstilos = StyleSheet.create({
   topo: { backgroundColor: cores.fundo },
   topoConteudo: { paddingTop: 12, paddingBottom: 0, minHeight: 48 },
   rodape: { paddingHorizontal: 20, backgroundColor: cores.fundo },
-  rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 18, borderTopWidth: 2, borderColor: cores.nevoa },
+  // 22 da face do botão até a borda, como a web: o degrau de 4 desce por fora, no respiro de baixo (18 à vista).
+  rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 22, borderTopWidth: 2, borderColor: cores.nevoa },
   pagina: { paddingTop: 20 },
   // .painel--apresentacao no celular: 20 entre a arte e os textos; .apresentacao-textos: 18/24 e 16 entre o título e o texto
   // (a introdução já tem 8 em cima).

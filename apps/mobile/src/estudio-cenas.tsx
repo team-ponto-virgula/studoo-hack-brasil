@@ -255,7 +255,8 @@ export function CadernoDoStu({ ensino, compacto = false }: {
           <View key={indice} style={caderno.item}>
             {/* O visto fica em 13 px também no compacto, como .ensino-caderno__visto na apresentação da web. */}
             <Text style={caderno.visto} importantForAccessibility="no">✓</Text>
-            <Text style={[texto, { flex: 1 }]}>{acerto}</Text>
+            {/* Os acertos são <li> na web: entrelinha do corpo (1,5), não a de parágrafo do cartão (1,6). */}
+            <Text style={[texto, { flex: 1 }, !compacto && { lineHeight: 24 }]}>{acerto}</Text>
           </View>
         ))}
       </View>
@@ -270,7 +271,8 @@ export function CadernoDoStu({ ensino, compacto = false }: {
           <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" style={[caderno.stu, compacto && caderno.stuCompacto]} />
           <View style={caderno.duvida}><Text style={caderno.duvidaTexto}>?</Text></View>
         </View>
-        <View style={{ flex: 1, gap: compacto ? 2 : 6 }}>
+        {/* Título e pergunta sem vão entre eles, como .ensino-caderno__pergunta da web (h3 e p sem margem). */}
+        <View style={{ flex: 1 }}>
           <Text accessibilityRole="header" style={titulo}>{m.pergunta}</Text>
           <Text style={[caderno.perguntaTexto, compacto && caderno.textoCompacto]}>{ensino.pergunta}</Text>
         </View>
@@ -280,7 +282,8 @@ export function CadernoDoStu({ ensino, compacto = false }: {
         <Text accessibilityRole="header" style={titulo}>{m.proximo}</Text>
         <Text style={texto}>{ensino.proximoPasso}</Text>
       </View>
-      {ensino.simulado && <Text style={[estilos.legenda, { marginTop: compacto ? 0 : 12 }, compacto && { textAlign: 'center' }]}>{m.ensinoAutomatico}</Text>}
+      {/* .estudio-legenda: 0,85rem com entrelinha 1,6 no cartão; na apresentação, 1,5. */}
+      {ensino.simulado && <Text style={[estilos.legenda, { marginTop: compacto ? 0 : 12, fontSize: 13.6, lineHeight: compacto ? 20.4 : 21.76 }, compacto && { textAlign: 'center' }]}>{m.ensinoAutomatico}</Text>}
     </View>
   );
 }
@@ -349,7 +352,8 @@ const cena = StyleSheet.create({
   margemEsquerda: { zIndex: 2 },
   margemDireita: { borderColor: '#46A302', borderTopColor: '#58CC02', backgroundColor: '#ECF9E3' },
   lugarStu: { width: 32, height: 32 },
-  margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14, textAlign: 'center' },
+  // .ponte-margem no celular: 0,6875rem com a entrelinha do corpo (1,5): 16,5.
+  margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, textAlign: 'center' },
   vao: { position: 'relative', flex: 1, alignSelf: 'center', flexDirection: 'row', gap: 4, paddingVertical: 6 },
   trilho: { position: 'absolute', left: -8, right: -8, height: 3, borderRadius: 2, backgroundColor: '#8D5C2C' },
   tabuaLugar: { flex: 1, minHeight: 32 },
@@ -401,7 +405,8 @@ const caderno = StyleSheet.create({
   lacuna: { borderColor: '#F2CF96', backgroundColor: '#FFFAF0' },
   pergunta: { flexDirection: 'row', alignItems: 'center', gap: 14, borderColor: '#C3CDF2', backgroundColor: '#EEF3FF' },
   proximo: { borderColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
-  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
+  // .ensino-caderno__cartao h3: 0,9375rem com a entrelinha de 1,3 dos títulos do cartão (19,5).
+  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 19.5 },
   item: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   // .ensino-caderno__visto: círculo de 22 em #EEFAF3 com o visto de 13 px em 900.
   visto: { width: 22, height: 22, borderRadius: 11, overflow: 'hidden', textAlign: 'center', backgroundColor: '#EEFAF3', color: cores.sucesso,
@@ -411,7 +416,7 @@ const caderno = StyleSheet.create({
   stu: { width: 44, height: 50 },
   duvida: { position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.acao },
-  duvidaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
+  duvidaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18 },
   perguntaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 25.6 },
   textoCartao: { lineHeight: 25.6 },
   // Compacto (apresentação): como a web no celular, 8 × 10 de respiro, título de 12 e texto de 14.
