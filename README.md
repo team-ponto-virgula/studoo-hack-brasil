@@ -40,7 +40,7 @@ Abra `http://localhost:3000` e entre com a conta sintética gravada pelo `db:loc
 
 - **`src/`**: aplicação web e API em Next.js 16 + React 19 + TypeScript.
 - **`prisma/`**: esquema e migrações do PostgreSQL (`MaterialEstudo`, `ApoioLicao`, trilhas, sessões e limites).
-- **`apps/mobile/`**: app nativo Expo / React Native (Android) com os mesmos fluxos e paridade visual.
+- **`apps/mobile/`**: app nativo Expo / React Native (Android) com os mesmos fluxos e paridade visual. Tudo o que se faz na web deve ser replicado no app mobile, adaptado ao celular: veja as [regras do projeto](docs/REGRAS-DO-PROJETO.md).
 - **`packages/contratos/`**: tipos, cliente HTTP, regras de domínio (`trilhaRepetida`) e fonte única de textos (`experiencia.ts`) compartilhados entre web e app.
 - **`video/`**: composição do filme de lançamento ([como funciona](video/LEIA-ME.md)).
 
@@ -48,7 +48,7 @@ Abra `http://localhost:3000` e entre com a conta sintética gravada pelo `db:loc
 
 - `IA=falsa` (padrão local): não exige chaves externas e permite testar todo o fluxo sem custo.
 - `IA=openai`: geração ao vivo via Responses API, leitura de imagens/OCR, ponte adaptativa, avaliação da explicação e transcrição de áudio ([como configurar](docs/RODAR-LOCALMENTE.md#ia-da-openai)).
-- `IA=deepseek`: geração, imagem e texto via DeepSeek (voz indisponível nesse provedor; explicação por texto funciona normalmente).
+- `IA=deepseek`: geração, imagem e texto via DeepSeek (voz indisponível nesse provedor; explicação por texto funciona normalmente). A integração está coberta por testes com servidor simulado (`npm run test:ia`) e ainda não foi exercitada com chave real.
 
 ## Conteúdo simulado vs. geração real
 
@@ -57,7 +57,7 @@ Com `IA=falsa`, trilhas populares (frações, SQL, violão, inglês para viagem,
 ## Qualidade e verificação
 
 - **CI automática** (`.github/workflows/verificacao.yml`): `typecheck` web e mobile, `next build`, migrações/seed e suítes `test:dominio` (inclui `ponte-reaberta`), `test:paridade`, `test:estudio:interface`, `test:movimento`, `test:google-mobile`, `test:formatos`, `test:ia`, `test:email`, `test:estudio`, `test:acesso`, `test:marco` e `test:trilha`.
-- **Acessibilidade e segurança**: navegação completa por teclado, foco gerenciado em diálogos, `prefers-reduced-motion` respeitado na web e no app, CSP com `nonce` em produção e proteção de origem/canal.
+- **Acessibilidade e segurança**: navegação por teclado nos fluxos principais, foco gerenciado em diálogos, `prefers-reduced-motion` respeitado na web e no app, CSP com `nonce` em produção e proteção de origem/canal.
 
 ## Documentação complementar
 
@@ -67,4 +67,4 @@ Com `IA=falsa`, trilhas populares (frações, SQL, violão, inglês para viagem,
 
 ## Créditos e origem
 
-Esta entrega retoma a ideia do Studoo com implementação iniciada após a abertura de 4 de novembro de 2026, às 21h (horário de Brasília). As fontes **Nunito** e **Quicksand** são distribuídas sob a licença SIL Open Font License ([Nunito](https://github.com/google/fonts/tree/main/ofl/nunito) · [Quicksand](https://github.com/google/fonts/tree/main/ofl/quicksand)).
+Esta entrega retoma a ideia do Studoo com a implementação feita após a abertura de 4 de novembro de 2026, às 21h, no horário de Brasília. O histórico Git foi iniciado para esta entrega. O logo, o ícone e o Stu das boas-vindas são novas exportações raster do kit visual existente do Studoo. Na entrada, a marca aparece uma vez, acima do título, com movimento contínuo na web e no app. A preferência de movimento reduzido exibe a marca estática. Nunito e Quicksand são distribuídas com suas licenças SIL Open Font License. [Nunito](https://github.com/google/fonts/tree/main/ofl/nunito) · [Quicksand](https://github.com/google/fonts/tree/main/ofl/quicksand)
