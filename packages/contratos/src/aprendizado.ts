@@ -194,6 +194,7 @@ const codigosErro = [
   "avaliacao_invalida",
   "credenciais_invalidas",
   "limite_login",
+  "limite_visitante",
   "ia_indisponivel",
   "limite_geracoes",
 ] as const;

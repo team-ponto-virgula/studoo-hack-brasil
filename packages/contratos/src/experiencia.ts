@@ -611,6 +611,7 @@ export const mensagens = {
         limite_recuperacao: "Aguarde alguns minutos antes de tentar novamente.",
         credenciais_invalidas: 'E-mail ou senha inválidos.',
         limite_login: 'E-mail ou senha inválidos.',
+        limite_visitante: 'Muita gente experimentando agora; tente de novo em alguns minutos ou entre com uma conta.',
         nao_autenticado: 'Sua sessão terminou. Entre para continuar.',
         invalido: 'Confira os dados e tente novamente.',
         nao_encontrado: 'Este conteúdo não está disponível. Volte às suas trilhas.',

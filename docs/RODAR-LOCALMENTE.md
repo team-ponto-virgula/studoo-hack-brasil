@@ -188,3 +188,7 @@ npm run test:mobile
 O login Google e o fluxo **Esqueci minha senha** estão disponíveis na web e no Android. Consulte a [configuração completa de acesso](specs/06-acesso-google-recuperacao.md) para cadastrar o callback Google, configurar Resend e reconstruir o app. Os campos estão nos `.env.example` da raiz e do app.
 
 Localmente, `EMAIL=falso` grava o código de recuperação em `.studoo-local/emails/`, somente para origem loopback. `npm run test:acesso` testa os fluxos com o banco migrado, sem Google ou Resend externos; `npm run test:google-mobile` testa o retorno ao app com módulos nativos simulados.
+
+## Experimentar sem conta (`STUDOO_VISITANTE=1`)
+
+Atrás de proxy reverso (ex.: Traefik/Dokploy), `STUDOO_VISITANTE=1` exige `STUDOO_PROXY_HTTPS=1` para identificar o endereço real (`x-forwarded-for` / `x-real-ip`); sem isso, todas as requisições compartilham o mesmo balde `loopback`. Os limites por endereço (`STUDOO_LIMITE_VISITANTES_IP`), janela (`STUDOO_JANELA_VISITANTES_MIN`), teto global (`STUDOO_LIMITE_VISITANTES_GLOBAL`), cota de gerações por visitante (`STUDOO_LIMITE_GERACOES_VISITANTE`) e teto diário de gerações de visitantes (`STUDOO_LIMITE_GERACOES_VISITANTES_DIA`) estão documentados em `.env.example`.

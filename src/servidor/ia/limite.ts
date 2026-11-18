@@ -45,10 +45,24 @@ export function reiniciarLimiteDeGeracoes(): void {
   geracoes.clear();
 }
 
+const LIMITE_VISITANTE_PADRAO = 3;
+const LIMITE_VISITANTES_DIA_PADRAO = 60;
+
 /** Limite persistente de gerações no PostgreSQL (reaproveita `tentativaLogin` via `consumirLimite`). */
 export async function consumirGeracaoPersistente(usuarioId: string): Promise<boolean> {
   const limite = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES, LIMITE_PADRAO);
   const janela = inteiroPositivo(process.env.STUDOO_JANELA_GERACOES_MIN, JANELA_PADRAO_MIN) * 60_000;
   const { banco } = await import("@/servidor/banco/cliente");
-  return banco.$transaction((tx) => consumirLimite(tx, `ia:geracao:${usuarioId}`, limite, janela));
+  const { ehEmailVisitante } = await import("@/servidor/acesso/visitante");
+  return banco.$transaction(async (tx) => {
+    const usuario = await tx.usuario.findUnique({ where: { id: usuarioId }, select: { email: true } });
+    if (usuario && ehEmailVisitante(usuario.email)) {
+      const tetoDia = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES_VISITANTES_DIA, LIMITE_VISITANTES_DIA_PADRAO);
+      const dentroDia = await consumirLimite(tx, "ia:geracao:visitantes:dia", tetoDia, 24 * 60 * 60_000);
+      if (!dentroDia) return false;
+      const limiteVisitante = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES_VISITANTE, LIMITE_VISITANTE_PADRAO);
+      return consumirLimite(tx, `ia:geracao:${usuarioId}`, limiteVisitante, janela);
+    }
+    return consumirLimite(tx, `ia:geracao:${usuarioId}`, limite, janela);
+  });
 }
