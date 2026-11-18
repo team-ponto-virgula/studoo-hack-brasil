@@ -1,11 +1,13 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { StyleSheet, View, type DimensionValue, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import Svg, { Path } from 'react-native-svg';
 import { coresMundo, desenhosMundo, regiaoDoTrecho, type Forma, type NomeDesenho } from './mundo-desenhos';
 import { degrade } from './interface';
 
 /*
- * Mundo da trilha no app: os desenhos de mundo-desenhos.ts (o mesmo arquivo da web) feitos com View, porque o app não
- * usa SVG. A web desenha os mesmos dados em SVG (src/ui/mundo.tsx). Tudo aqui é decorativo e fica fora do leitor de tela.
+ * Mundo da trilha no app: os desenhos de mundo-desenhos.ts (o mesmo arquivo da web) feitos com View; as ondas (começo da
+ * trilha e fronteira entre partes) usam os mesmos caminhos SVG da web, com react-native-svg. A web desenha os mesmos dados
+ * em SVG (src/ui/mundo.tsx). Tudo aqui é decorativo e fica fora do leitor de tela.
  */
 
 function estiloDaForma(forma: Forma, escala: number): ViewStyle {
@@ -70,35 +72,33 @@ export function coresDaRegiao(trecho: number) {
 }
 
 /**
- * As colinas das ondas da web (os caminhos SVG de mundo.tsx e caminho.tsx da web), refeitas com arcos de círculos grandes:
- * cada colina é um círculo com o topo no pico (x em % da largura, y em pontos) e diâmetro em % da largura; os vizinhos se
- * cruzam nos vales. Duas camadas: o relevo atrás e o chão, mais baixo, na frente.
+ * As ondas da web (os caminhos SVG de src/ui/mundo.tsx e src/ui/caminho.tsx), com as mesmas curvas Bézier em
+ * react-native-svg e esticadas como `preserveAspectRatio="none"`: o relevo atrás e o chão na frente. A fronteira entre
+ * partes ocupa 48 de altura (viewBox 400 × 48); o começo da trilha, 76 (viewBox 400 × 64 esticado).
  */
-type Colina = { x: number; y: number; d: number };
-const formasDaOnda: Record<'fronteira' | 'inicio', { altura: number; relevo: readonly Colina[]; chao: readonly Colina[] }> = {
-  // viewBox 400 × 48: "M0 22C36 6 70 4 104 14S170 36 212 22 290 2 332 12 380 26 400 18" e o chão 10 pontos abaixo.
+const formasDaOnda: Record<'fronteira' | 'inicio', { altura: number; caixa: string; relevo: string; chao: string }> = {
   fronteira: {
     altura: 48,
-    relevo: [{ x: 17, y: 5, d: 92 }, { x: 72, y: 4, d: 86 }, { x: 114, y: 12, d: 52 }],
-    chao: [{ x: 19, y: 15, d: 92 }, { x: 73, y: 11, d: 86 }, { x: 115, y: 24, d: 52 }],
+    caixa: '0 0 400 48',
+    relevo: 'M0 22C36 6 70 4 104 14S170 36 212 22 290 2 332 12 380 26 400 18V48H0Z',
+    chao: 'M0 32C40 16 76 14 110 24S176 44 218 30 296 10 338 20 384 34 400 28V48H0Z',
   },
-  // viewBox 400 × 64 esticado em 76: "M0 30C50 6 96 4 148 22S236 52 292 30 368 8 400 18" e o chão de "M0 44C44 28…".
   inicio: {
     altura: 76,
-    relevo: [{ x: 22, y: 6, d: 96 }, { x: 90, y: 11, d: 72 }],
-    chao: [{ x: 21, y: 32, d: 96 }, { x: 89, y: 32, d: 72 }],
+    caixa: '0 0 400 64',
+    relevo: 'M0 30C50 6 96 4 148 22S236 52 292 30 368 8 400 18V64H0Z',
+    chao: 'M0 44C44 28 90 26 140 38S228 60 286 44 364 26 400 34V64H0Z',
   },
 };
 
 export function Onda({ chao, relevo, estilo, forma = 'fronteira' }: { chao: string; relevo: string; estilo?: StyleProp<ViewStyle>; forma?: 'fronteira' | 'inicio' }) {
-  const { altura, relevo: colinasRelevo, chao: colinasChao } = formasDaOnda[forma];
-  const colina = ({ x, y, d }: Colina, cor: string, chave: string) => (
-    <View key={chave} style={[mundoEstilos.colinaOnda, { left: `${x - d / 2}%` as DimensionValue, width: `${d}%` as DimensionValue, top: y, backgroundColor: cor }]} />
-  );
+  const onda = formasDaOnda[forma];
   return (
-    <View pointerEvents="none" style={[mundoEstilos.onda, { height: altura }, estilo]}>
-      {colinasRelevo.map((item, indice) => colina(item, relevo, `relevo-${indice}`))}
-      {colinasChao.map((item, indice) => colina(item, chao, `chao-${indice}`))}
+    <View pointerEvents="none" style={[mundoEstilos.onda, { height: onda.altura }, estilo]}>
+      <Svg width="100%" height="100%" viewBox={onda.caixa} preserveAspectRatio="none">
+        <Path d={onda.relevo} fill={relevo} />
+        <Path d={onda.chao} fill={chao} />
+      </Svg>
     </View>
   );
 }
@@ -197,7 +197,6 @@ export function Paisagem({ altura, compacta = false, estilo, children }: {
 
 const mundoEstilos = StyleSheet.create({
   onda: { position: 'absolute', left: 0, right: 0, top: 0, height: 48, overflow: 'hidden' },
-  colinaOnda: { position: 'absolute', aspectRatio: 1, borderRadius: 9999 },
   fronteira: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   metade: { position: 'absolute', left: 0, right: 0, top: '50%', height: 48, marginTop: -24 },
   resto: { position: 'absolute', left: 0, right: 0, top: '50%', marginTop: 23, bottom: 0 },

@@ -1,4 +1,5 @@
-import { View, type ViewStyle } from 'react-native';
+import { Platform, View, type ViewStyle } from 'react-native';
+import { SymbolView, type SFSymbol } from 'expo-symbols';
 import type { NomeIcone } from './trilha';
 
 /*
@@ -139,7 +140,35 @@ function escalar({ traco: barra, recorte, filho, ...peca }: Peca, escala: number
  * Ícone decorativo: o significado vai sempre no texto ou no nome acessível de quem o usa. `traco` é o stroke-width da web
  * naquele uso, na grade de 24 (2,5 por padrão; 3 no X da aula, 3,2 no visto do retorno, 2,25 no olho da senha).
  */
-export function Icone({ nome, tamanho = 24, cor, cheio = false, traco = 2.5 }: { nome: NomeIcone; tamanho?: number; cor: string; cheio?: boolean; traco?: number }) {
+/**
+ * Ícones da moldura no iPhone: os SF Symbols do sistema no lugar dos desenhos, só onde quem chama pede `sistema` (a barra de
+ * baixo, os botões de ícone do cabeçalho e a seta dos botões). Os ícones de conteúdo (nós do mapa, etapas da aula, blocos
+ * da conclusão) seguem com os desenhos, iguais aos da web. No Android e na prévia web, sempre os desenhos.
+ */
+const SIMBOLOS: Partial<Record<NomeIcone, { nome: SFSymbol; cheio?: SFSymbol }>> = {
+  livro: { nome: 'book', cheio: 'book.fill' },
+  lampada: { nome: 'lightbulb', cheio: 'lightbulb.fill' },
+  fechar: { nome: 'xmark' },
+  olho: { nome: 'eye' },
+  olhoFechado: { nome: 'eye.slash' },
+  seta: { nome: 'arrow.right' },
+};
+
+export function Icone({ nome, tamanho = 24, cor, cheio = false, traco = 2.5, sistema = false }: {
+  nome: NomeIcone; tamanho?: number; cor: string; cheio?: boolean; traco?: number;
+  /** Só no iPhone: `true` usa o SF Symbol do ícone; `'cheio'`, a variante preenchida (a aba selecionada). */
+  sistema?: boolean | 'cheio';
+}) {
+  const simbolo = sistema && Platform.OS === 'ios' ? SIMBOLOS[nome] : undefined;
+  if (simbolo) {
+    return (
+      <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden testID={`icone:${nome}:sf`}
+        style={{ width: tamanho, height: tamanho }}>
+        <SymbolView name={(sistema === 'cheio' && simbolo.cheio) || simbolo.nome} size={tamanho} tintColor={cor} weight="semibold"
+          style={{ width: tamanho, height: tamanho }} />
+      </View>
+    );
+  }
   const escala = tamanho / 24;
   const fator = traco / 2.5;
   return (
