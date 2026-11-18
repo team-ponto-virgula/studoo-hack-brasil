@@ -1331,8 +1331,9 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       if (!sempre && pe <= limite) return;
       // Rola só o necessário: o nó fica logo acima do card (o topo da trilha tende a continuar à vista).
       let y = Math.max(0, pe - limite);
-      // Não para no meio do céu: com a placa cortada, segue até o piso, se o nó continuar à vista.
-      if (piso !== undefined && y > 0 && y < piso && topo - piso > 24) y = piso;
+      // Não para no meio do céu: com a placa cortada, segue até o piso, se o nó continuar à vista. Um ajuste de até 24 (o
+      // respiro acima da placa) não corta a placa: fica como está (o primeiro nó atual, em 360 × 800, pedia 12).
+      if (piso !== undefined && y > 24 && y < piso && topo - piso > 24) y = piso;
       rolagem.current?.scrollTo({ y, animated: reduzir === false });
     });
   }
