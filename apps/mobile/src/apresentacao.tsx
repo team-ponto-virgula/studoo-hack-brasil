@@ -2,8 +2,10 @@ import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from '
 import {
   AccessibilityInfo,
   Animated,
+  BackHandler,
   Easing,
   Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -48,7 +50,18 @@ const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 
  * "Entendi". Pular encerra a qualquer momento. O título de cada passo recebe o foco e diz a posição; as páginas fora da
  * vista ficam fora do leitor de tela. As ilustrações são decorativas.
  */
-export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; concluir: (area?: IdTema) => void }) {
+export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo, concluir }: {
+  primeiraVez: boolean;
+  /**
+   * Aberta pelo "Ver como funciona" da entrada, sem sessão (rodada 4.4 da web): só os quatro primeiros passos, sem a escolha
+   * da área. O voltar do aparelho e o Esc (na prévia web) fecham, como o "Pular".
+   */
+  semSessao?: boolean;
+  /** Rótulo do último passo no lugar de "Entendi" (na entrada, "Experimentar sem conta" quando o visitante está ligado). */
+  rotuloFinalUltimo?: string;
+  /** `concluiuFinal`: a pessoa tocou o botão do último passo (e não "Pular", voltar ou Esc). */
+  concluir: (area?: IdTema, concluiuFinal?: boolean) => void;
+}) {
   const { width } = useWindowDimensions();
   const reduzir = useMovimentoReduzido();
   const [passo, setPasso] = useState(0);
@@ -56,7 +69,7 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
   const paginas = useRef<ComponentRef<typeof ScrollView>>(null);
   const titulos = useRef<(ComponentRef<typeof Text> | null)[]>([]);
   const primeira = useRef(true);
-  const passos = mensagens.apresentacao.passos;
+  const passos = semSessao ? mensagens.apresentacao.passos.slice(0, 4) : mensagens.apresentacao.passos;
   const total = passos.length;
   const ultimo = passo === total - 1;
   const largura = Math.min(width, 620) - 40;
@@ -75,8 +88,30 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
     paginas.current?.scrollTo({ x: indice * width, animated: reduzir === false });
   }
 
+  // Sem sessão, o voltar do aparelho fecha a apresentação e volta à entrada (em vez de fechar o app).
+  useEffect(() => {
+    if (!semSessao) return;
+    const assinatura = BackHandler.addEventListener('hardwareBackPress', () => { concluir(); return true; });
+    return () => assinatura.remove();
+  }, [semSessao, concluir]);
+  // Na prévia web, o teclado também anda e fecha, como a apresentação da web: setas e Esc.
+  const passoAtual = useRef(passo);
+  passoAtual.current = passo;
+  useEffect(() => {
+    if (!semSessao || Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const teclas = (evento: KeyboardEvent) => {
+      if (evento.key === 'Escape') { evento.preventDefault(); concluir(); return; }
+      if (evento.key === 'ArrowRight' && passoAtual.current < total - 1) { evento.preventDefault(); irPara(passoAtual.current + 1); }
+      if (evento.key === 'ArrowLeft' && passoAtual.current > 0) { evento.preventDefault(); irPara(passoAtual.current - 1); }
+    };
+    document.addEventListener('keydown', teclas);
+    return () => document.removeEventListener('keydown', teclas);
+    // irPara lê a largura do momento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [semSessao, concluir, total]);
+
   let rotuloFinal: string = mensagens.apresentacao.continuar;
-  if (ultimo) rotuloFinal = primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi;
+  if (ultimo) rotuloFinal = rotuloFinalUltimo ?? (primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi);
 
   return (
     <SafeAreaView style={estilos.tela}>
@@ -133,7 +168,7 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
           )}
           <View style={[apresentacaoEstilos.metade, ultimo && apresentacaoEstilos.principalLargo]}>
             <Botao rotulo={rotuloFinal} testID="avancar-apresentacao" icone={ultimo ? undefined : 'seta'}
-              acao={() => (ultimo ? concluir(area) : irPara(passo + 1))} />
+              acao={() => (ultimo ? concluir(area, true) : irPara(passo + 1))} />
           </View>
         </View>
       </View>

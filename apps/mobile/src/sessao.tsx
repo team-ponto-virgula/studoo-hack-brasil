@@ -1,16 +1,17 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { Animated, Keyboard, Platform, StyleSheet, Text, View, type TextInput } from 'react-native';
+import { AccessibilityInfo, Animated, Keyboard, Platform, Pressable, StyleSheet, Text, View, type TextInput } from 'react-native';
 import { useTremor, useVaiVem } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { entrarComGoogle } from './google-nativo';
 import { entrarComoVisitante } from './visitante-nativo';
+import { Apresentacao } from './apresentacao';
 import { RecuperarAcesso } from './recuperar';
 import { Estudo } from './estudo';
 import { Botao, BotaoIcone, Campo, EstadoErro, Skeleton, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { Paisagem } from './mundo';
-import { cores } from './tema';
+import { cores, fontes } from './tema';
 
 const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -143,6 +144,21 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(false);
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(false);
   const [experimentando, setExperimentando] = useState(false);
+  /** "Ver como funciona" (rodada 4.4 da web): a apresentação sem sessão, aberta da própria entrada. */
+  const [vendoApresentacao, setVendoApresentacao] = useState(false);
+  const linkComoFunciona = useRef<ComponentRef<typeof Pressable>>(null);
+  const devolverFoco = useRef(false);
+  // Ao fechar a apresentação, o foco do leitor de tela volta ao link (depois de a entrada montar de novo).
+  useEffect(() => {
+    if (vendoApresentacao || !devolverFoco.current) return;
+    devolverFoco.current = false;
+    const espera = setTimeout(() => {
+      if (linkComoFunciona.current) AccessibilityInfo.sendAccessibilityEvent(linkComoFunciona.current, 'focus');
+      // Na prévia web, o foco do teclado também volta para o link.
+      (linkComoFunciona.current as unknown as { focus?: () => void } | null)?.focus?.();
+    }, 150);
+    return () => clearTimeout(espera);
+  }, [vendoApresentacao]);
   const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
   useEffect(() => {
     let ativo = true;
@@ -182,6 +198,23 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
     try { await visitante(); }
     catch (e) { setErro(mensagemDeErro(e)); setErros((total) => total + 1); }
     finally { emEnvio.current = false; setOcupado(false); setExperimentando(false); }
+  }
+
+  if (vendoApresentacao) {
+    return (
+      <Apresentacao primeiraVez={false} semSessao
+        rotuloFinalUltimo={visitanteDisponivel ? mensagens.acesso.experimentar : undefined}
+        concluir={(_area, concluiuFinal) => {
+          // Com o visitante ligado, o último passo já entra como visitante; senão ("Entendi", "Pular", voltar), volta à entrada.
+          if (concluiuFinal && visitanteDisponivel) {
+            setVendoApresentacao(false);
+            void experimentar();
+            return;
+          }
+          devolverFoco.current = true;
+          setVendoApresentacao(false);
+        }} />
+    );
   }
 
   async function enviar() {
@@ -225,6 +258,11 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
       </View>
       <Titulo foco testID="titulo-entrada">{mensagens.entrada.titulo}</Titulo>
       <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
+      {/* Como na web 4.4: "Ver como funciona" abre a apresentação sem sessão, em quatro passos. */}
+      <Pressable ref={linkComoFunciona} testID="ver-como-funciona" accessibilityRole="button" disabled={ocupado} hitSlop={8}
+        onPress={() => setVendoApresentacao(true)} style={({ pressed }) => [entradaEstilos.link, pressed && { opacity: 0.7 }]}>
+        <Text style={entradaEstilos.linkTexto}>{mensagens.acesso.verComoFunciona}</Text>
+      </Pressable>
       <Animated.View style={[entradaEstilos.formulario, { transform: [{ translateX: tremor }] }]}>
         {/* Rodada 4.3: a conta temporária, só quando /api/auth/config devolve visitante: true. */}
         {configuracaoCarregada && visitanteDisponivel && (
@@ -270,4 +308,6 @@ const entradaEstilos = StyleSheet.create({
   banner: { marginBottom: 24, borderRadius: 24 },
   formulario: { gap: 20, marginTop: 28 },
   visitante: { gap: 8, padding: 14, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
+  link: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center', marginTop: 4 },
+  linkTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22, textDecorationLine: 'underline' },
 });
