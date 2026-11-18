@@ -3,6 +3,7 @@ import type { GeradorTrilha } from "./gerador";
 import type { EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { LIMITES_ESQUELETO } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
+import { comNovasTentativas } from "./novas-tentativas";
 import {
   TEMPO_CONTEUDO_MS,
   TEMPO_ESTRUTURA_MS,
@@ -66,7 +67,7 @@ async function pedir(config: ConfiguracaoOpenAi, corpo: Record<string, unknown>,
     signal: sinal,
   });
 
-  let resposta = await enviar(true);
+  let resposta = await comNovasTentativas(() => enviar(true), { rota: "ia-openai", sinal });
   if (resposta.status === 400 && config.esforco) {
     const texto = await resposta.text().catch(() => "");
     if (/reasoning|effort/i.test(texto)) resposta = await enviar(false);

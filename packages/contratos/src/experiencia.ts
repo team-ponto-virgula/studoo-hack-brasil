@@ -29,6 +29,11 @@ export const mensagens = {
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
       vozDica: 'Escreva ou, se preferir, grave até 60 segundos: a gravação vira texto, e você confere antes de enviar.',
       vozErro: 'Não foi possível usar o microfone. Você pode digitar sua explicação.',
+      /** Quem recebe a gravação, mostrado junto da dica quando a gravação está disponível (`transcricao` no config). */
+      vozProvedorPorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
+        ia === 'deepseek'
+          ? 'A gravação é transcrita pela OpenAI, e o texto da sua explicação é avaliado pela DeepSeek.'
+          : 'A gravação é transcrita pela OpenAI.',
       cameraNegada: 'Permita o acesso à câmera para fotografar o seu material.',
       cameraBloqueada: 'Câmera bloqueada nas permissões do aparelho. Libere o acesso nas configurações para fotografar.',
       vozRevisar: 'Transcrição pronta. Confira o texto antes de enviar.', gravando: 'Gravando…',
@@ -50,6 +55,18 @@ export const mensagens = {
         notaPrivacidade: 'Sua voz vai para a OpenAI durante a conversa.',
         privacidadeTitulo: 'Antes de conversar ao vivo',
         privacidadeTexto: 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
+        /**
+         * Nota e aviso conforme o provedor de texto: a conversa é sempre da OpenAI; no modo misto (`deepseek`), o texto
+         * da explicação que sai da conversa é avaliado pela DeepSeek. Nenhum texto cita um provedor que não recebe o dado.
+         */
+        notaPrivacidadePorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
+          ia === 'deepseek'
+            ? 'Sua voz vai para a OpenAI durante a conversa; o texto da sua explicação é avaliado pela DeepSeek.'
+            : 'Sua voz vai para a OpenAI durante a conversa.',
+        privacidadeTextoPorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
+          ia === 'deepseek'
+            ? 'Sua voz vai para a OpenAI durante a conversa ao vivo, e o texto da sua explicação é avaliado pela DeepSeek para gerar o retorno desta lição. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada no retorno.'
+            : 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
         privacidadeAceitar: 'Começar conversa',
         privacidadeCancelar: 'Agora não',
         estados: {

@@ -1,7 +1,17 @@
 import { FalhaApi } from '../acesso/http';
 import { configuracaoOpenAi } from '../ia/openai';
+import { provedorIaAtivo } from '../ia/gerador';
+import { comNovasTentativas } from '../ia/novas-tentativas';
 import { validarArquivo } from './arquivos';
 import { quota } from './materiais';
+
+/**
+ * A gravação vira texto pela OpenAI: disponível com provedor de texto real (`openai`, ou `deepseek` no modo misto) e a
+ * chave da OpenAI. Com a IA simulada, ou sem a chave, fica indisponível.
+ */
+export function transcricaoDisponivel(): boolean {
+  return provedorIaAtivo() !== 'falsa' && configuracaoOpenAi() !== null;
+}
 
 export async function transcrever(usuarioId: string, entrada: unknown, idioma?: unknown) {
   await quota(usuarioId, 'voz', 10);
@@ -28,9 +38,11 @@ export async function transcrever(usuarioId: string, entrada: unknown, idioma?: 
   const ogg =
     tipo === 'audio/ogg' && bytes.subarray(0, 4).toString() === 'OggS';
   if (!webm && !mp4 && !wav && !ogg) throw new FalhaApi('invalido');
-  // DeepSeek ASR (/v1/tools/asr) aceita apenas WAV PCM 16-bit ou Ogg Opus (não WebM/M4A da web/app); sem mistura entre provedores.
+  // A transcrição é sempre da OpenAI: o ASR da DeepSeek (/v1/tools/asr) só aceita WAV PCM 16-bit ou Ogg Opus, não o
+  // WebM/M4A da web e do app. Com texto pela DeepSeek (modo misto), a transcrição usa a OpenAI quando há a chave; sem a
+  // chave, ou com a IA simulada, a gravação fica indisponível.
   const config = configuracaoOpenAi();
-  if (process.env.IA !== 'openai' || !config)
+  if (!transcricaoDisponivel() || !config)
     throw new FalhaApi('voz_indisponivel');
   const corpo = new FormData();
   corpo.append(
@@ -45,13 +57,14 @@ export async function transcrever(usuarioId: string, entrada: unknown, idioma?: 
   corpo.append('response_format', 'json');
   if (lingua) corpo.append('language', lingua);
   try {
-    const response = await fetch(`${config.base}/audio/transcriptions`, {
+    const sinal = AbortSignal.timeout(60_000);
+    const response = await comNovasTentativas(() => fetch(`${config.base}/audio/transcriptions`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${config.chave}` },
       redirect: 'error',
       body: corpo,
-      signal: AbortSignal.timeout(60_000),
-    });
+      signal: sinal,
+    }), { rota: 'voz-transcricao', sinal });
     if (!response.ok) throw new FalhaApi('voz_falha');
     const dado = await response.json();
     if (typeof dado?.text !== 'string' || dado.text.length > 3000) {

@@ -511,3 +511,37 @@ test("cancelar no meio para a leitura, sem pronto e sem erro", async () => {
   assert.ok(eventos.length >= 3);
   assert.ok(!eventos.some(({ tipo }) => tipo === "pronto" || tipo === "erro"));
 });
+
+test("429 da OpenAI: retry-after respeitado, uma nova tentativa e resposta normal; leitura do retry-after", async () => {
+  const { comNovasTentativas, esperaPedida } = await import("../src/servidor/ia/novas-tentativas.ts");
+  assert.equal(esperaPedida(new Headers({ "retry-after": "2" })), 2000);
+  assert.equal(esperaPedida(new Headers({ "retry-after-ms": "350", "retry-after": "9" })), 350);
+  assert.equal(esperaPedida(new Headers({ "retry-after": new Date(10_000 + 3_000).toUTCString() }), 10_000), 3000);
+  assert.equal(esperaPedida(new Headers({})), null);
+
+  const original = console.error;
+  console.error = () => {};
+  try {
+    let chamadas = 0;
+    const resposta = await comNovasTentativas(async () => {
+      chamadas += 1;
+      return chamadas === 1
+        ? new Response("{}", { status: 429, headers: { "retry-after-ms": "20" } })
+        : Response.json({ ok: true });
+    }, { rota: "ia-openai" });
+    assert.equal(resposta.status, 200);
+    assert.deepEqual(await resposta.json(), { ok: true });
+    assert.equal(chamadas, 2);
+
+    // Sempre 429: 1 pedido + no máximo 2 novas tentativas.
+    chamadas = 0;
+    const limite = await comNovasTentativas(async () => {
+      chamadas += 1;
+      return new Response("{}", { status: 429, headers: { "retry-after": "0" } });
+    }, { rota: "ia-openai" });
+    assert.equal(limite.status, 429);
+    assert.equal(chamadas, 3);
+  } finally {
+    console.error = original;
+  }
+});

@@ -4,6 +4,7 @@ import { visitanteAtivo } from '@/servidor/acesso/visitante';
 import { recuperacaoDisponivel } from '@/servidor/email/recuperacao';
 import { provedorIaAtivo } from '@/servidor/ia/gerador';
 import { vozAoVivoAtiva, vozAoVivoVisitanteAtiva } from '@/servidor/ia/realtime';
+import { transcricaoDisponivel } from '@/servidor/estudio/voz';
 export async function GET(request: Request) {
   return rotaPublica(request, async () => responder({
     google: !!configuracaoGoogle(),
@@ -12,5 +13,6 @@ export async function GET(request: Request) {
     visitante: visitanteAtivo(),
     vozAoVivo: vozAoVivoAtiva(),
     vozAoVivoVisitante: vozAoVivoVisitanteAtiva(),
+    transcricao: transcricaoDisponivel(),
   }));
 }

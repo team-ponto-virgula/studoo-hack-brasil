@@ -1,7 +1,9 @@
 # 08 — Voz ao vivo com o Stu (OpenAI Realtime API)
 
 ## Objetivo
-Permitir conversa de voz ao vivo com o **Stu** dentro da atividade **"Explique com suas palavras"** do Estúdio, mantendo o recurso **desligado por padrão** (`STUDOO_VOZ_AO_VIVO` diferente de `1` ou sem `IA=openai` / `OPENAI_API_KEY`).
+Permitir conversa de voz ao vivo com o **Stu** dentro da atividade **"Explique com suas palavras"** do Estúdio, mantendo o recurso **desligado por padrão** (`STUDOO_VOZ_AO_VIVO` diferente de `1`, sem `OPENAI_API_KEY` ou sem provedor de texto real configurado).
+
+**Modo misto (decisão do dono, 18/11/2026):** no site, texto pela DeepSeek e voz pela OpenAI. A voz ao vivo fica ligada com `STUDOO_VOZ_AO_VIVO=1`, `OPENAI_API_KEY` válida e provedor de texto real: `IA=openai`, ou `IA=deepseek` com `DEEPSEEK_API_KEY`. Com `IA=falsa`, fica desligada (voz real com retorno simulado não faz sentido). Com `IA=deepseek`, a conversa e a transcrição da gravação vão para a OpenAI; trilhas, material, ponte e o avaliador do Explique (inclusive o texto que sai da conversa) vão para a DeepSeek, e nenhum pedido de texto chega à OpenAI. Os avisos (`notaPrivacidadePorProvedor` e `privacidadeTextoPorProvedor` em `packages/contratos/src/experiencia.ts`) dizem que a voz vai para a OpenAI e, no modo misto, que o texto da explicação é avaliado pela DeepSeek. Junto da dica de "Gravar explicação", quando `GET /api/auth/config` traz `transcricao: true`, `vozProvedorPorProvedor` diz que a gravação é transcrita pela OpenAI (e, no modo misto, que o texto é avaliado pela DeepSeek).
 
 Ao encerrar a conversa, apenas a **transcrição da fala da pessoa** é enviada para o avaliador existente (`POST /api/estudio/licoes/[id]/ensinar`), preservando os quatro eixos de retorno, o registro de conclusão e a experiência atual de texto/gravação como alternativa de um toque.
 
@@ -82,7 +84,7 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
 
 ### Etapa 1 — Servidor, contratos, instruções e CLI
 1. **Flags e configuração (`src/servidor/ia/realtime.ts` e `GET /api/auth/config`)**:
-   - `vozAoVivoAtiva()`: verdadeira apenas quando `STUDOO_VOZ_AO_VIVO === "1"`, `provedorIaAtivo() === "openai"` e `configuracaoOpenAi()` está presente.
+   - `vozAoVivoAtiva()`: verdadeira apenas quando `STUDOO_VOZ_AO_VIVO === "1"`, `configuracaoOpenAi()` está presente e o provedor de texto é real e configurado (`openai`, ou `deepseek` com `configuracaoDeepSeek()`: modo misto).
    - `vozAoVivoVisitanteAtiva()`: verdadeira apenas quando `vozAoVivoAtiva()` e `STUDOO_VOZ_AO_VIVO_VISITANTE === "1"`.
    - `GET /api/auth/config` passa a retornar `{ google, recuperacao, ia, visitante, vozAoVivo }`.
 2. **Rotas privadas**:
@@ -131,7 +133,7 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
 ## Roteiro de validação com chave real
 Quando a `OPENAI_API_KEY` real estiver disponível em ambiente de ensaio/produção:
 1. **Conferência técnica via CLI (`npm run voz:conferir`)**:
-   - Definir `STUDOO_VOZ_AO_VIVO=1`, `IA=openai`, `OPENAI_API_KEY=<chave>` e executar `npm run voz:conferir`.
+   - Definir `STUDOO_VOZ_AO_VIVO=1`, `OPENAI_API_KEY=<chave>` e `IA=openai` (ou, no modo misto, `IA=deepseek` com `DEEPSEEK_API_KEY`) e executar `npm run voz:conferir`. A saída traz `provedorTexto`.
    - Esperado: saída JSON com `"ok": true`, `sdpRecebido: true` e encerramento por `hangup` sem erro.
 2. **Limites para ensaio**:
    - Subir temporariamente `STUDOO_LIMITE_VOZ_HORA` (padrão `3`) e `STUDOO_LIMITE_VOZ_DIA` (padrão `10`) para evitar bloqueio `429` durante testes seguidos da equipe.

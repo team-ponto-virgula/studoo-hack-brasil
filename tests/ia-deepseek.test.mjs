@@ -15,6 +15,7 @@ const { GERADOR_DEEPSEEK, MODELO_PADRAO } = await import("../src/servidor/ia/dee
 const { refinarAvaliacao } = await import("../src/servidor/aprendizado/correcao.ts");
 const { pedirJson } = await import("../src/servidor/estudio/ia.ts");
 const { transcrever } = await import("../src/servidor/estudio/voz.ts");
+const { gerarConteudos } = await import("../src/servidor/aprendizado/servico.ts");
 const { banco } = await import("../src/servidor/banco/cliente.ts");
 const { GET: getAuthConfig } = await import("../src/app/api/auth/config/route.ts");
 
@@ -68,6 +69,8 @@ let pedidosDeepSeek = [];
 let pedidosOpenAi = [];
 let modo = "normal";
 let tentativaConteudo = 0;
+let emAndamento = 0;
+let picoParalelo = 0;
 
 function responderSseChat(resposta, linhas) {
   resposta.writeHead(200, { "Content-Type": "text/event-stream" });
@@ -141,8 +144,26 @@ before(async () => {
       res.end(JSON.stringify({ error: { message: "Authentication Fails" } }));
       return;
     }
+    if (modo === "medir-paralelo" && !corpo.stream) {
+      emAndamento += 1;
+      picoParalelo = Math.max(picoParalelo, emAndamento);
+      await new Promise((r) => setTimeout(r, 60));
+      emAndamento -= 1;
+      responderJsonChat(res, licaoValida);
+      return;
+    }
+    if (modo === "429-depois-ok" && pedidosDeepSeek.length === 1) {
+      res.writeHead(429, { "Content-Type": "application/json", "retry-after": "0" });
+      res.end(JSON.stringify({ error: { message: "Rate limit exceeded" } }));
+      return;
+    }
+    if (modo === "429-espera-longa") {
+      res.writeHead(429, { "Content-Type": "application/json", "retry-after": "30" });
+      res.end(JSON.stringify({ error: { message: "Rate limit exceeded" } }));
+      return;
+    }
     if (modo === "erro-429") {
-      res.writeHead(429, { "Content-Type": "application/json" });
+      res.writeHead(429, { "Content-Type": "application/json", "retry-after": "0" });
       res.end(JSON.stringify({ error: { message: "Rate limit exceeded" } }));
       return;
     }
@@ -216,8 +237,14 @@ before(async () => {
 
   servidorOpenAiArmadilha = createServer((req, res) => {
     pedidosOpenAi.push(req.url);
+    // Modo misto: só a transcrição da gravação pode ir para a OpenAI. Texto (/responses) nunca.
+    if (req.method === "POST" && req.url === "/audio/transcriptions") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(JSON.stringify({ text: "O violão tem corpo, braço e cabeça." }));
+      return;
+    }
     res.writeHead(500);
-    res.end("OpenAI não deve ser chamada quando IA=deepseek");
+    res.end("OpenAI não deve ser chamada para texto quando IA=deepseek");
   });
 
   await Promise.all([
@@ -359,22 +386,61 @@ test("Estúdio leitura de imagem funciona em deepseek-flash e recusa em modelo s
   assert.equal(pedidosOpenAi.length, 0);
 });
 
-test("voz retorna voz_indisponivel com IA=deepseek sem chamar OpenAI", async () => {
+test("gravação com IA=deepseek: sem a chave da OpenAI fica indisponível; com a chave (modo misto) transcreve pela OpenAI", async () => {
   const originalTx = banco.$transaction;
   banco.$transaction = async () => true;
+  const chave = process.env.OPENAI_API_KEY;
+  const wavFake = Buffer.from("RIFF\x00\x00\x00\x00WAVEfmt ");
+  const arquivo = { nome: "explicacao.wav", tipo: "audio/wav", base64: wavFake.toString("base64") };
   try {
-    const wavFake = Buffer.from("RIFF\x00\x00\x00\x00WAVEfmt ");
-    await assert.rejects(
-      () => transcrever("u-ds-voz", {
-        nome: "explicacao.wav",
-        tipo: "audio/wav",
-        base64: wavFake.toString("base64"),
-      }),
-      (erro) => erro?.codigo === "voz_indisponivel",
-    );
+    delete process.env.OPENAI_API_KEY;
+    await assert.rejects(() => transcrever("u-ds-voz", arquivo), (erro) => erro?.codigo === "voz_indisponivel");
+    assert.equal(pedidosOpenAi.length, 0);
+
+    process.env.OPENAI_API_KEY = chave;
+    const { texto } = await transcrever("u-ds-voz", arquivo);
+    assert.equal(texto, "O violão tem corpo, braço e cabeça.");
+    assert.deepEqual(pedidosOpenAi, ["/audio/transcriptions"]);
+    assert.equal(pedidosDeepSeek.length, 0);
+
+    // Com a IA simulada, a gravação continua indisponível mesmo com a chave.
+    pedidosOpenAi = [];
+    process.env.IA = "falsa";
+    await assert.rejects(() => transcrever("u-ds-voz", arquivo), (erro) => erro?.codigo === "voz_indisponivel");
     assert.equal(pedidosOpenAi.length, 0);
   } finally {
+    process.env.OPENAI_API_KEY = chave;
     banco.$transaction = originalTx;
+  }
+});
+
+test("429 da DeepSeek: espera o retry-after e tenta de novo uma vez com sucesso; espera longa desiste sem repetir", async () => {
+  const logs = [];
+  const origErr = console.error;
+  console.error = (msg) => logs.push(String(msg));
+  try {
+    modo = "429-depois-ok";
+    const dado = await pedirJson("teste", { type: "object" }, "Responda em json.", { pergunta: "x" });
+    assert.equal(dado.objetivo, licaoValida.objetivo, "resposta normal depois do 429");
+    assert.equal(pedidosDeepSeek.length, 2, "uma nova tentativa");
+    const registro = logs.map((l) => { try { return JSON.parse(l); } catch { return null; } })
+      .find((o) => o?.codigo === "limite_do_provedor");
+    assert.deepEqual(
+      { rota: registro?.rota, motivo: registro?.motivo, tentativa: registro?.tentativa, espera: registro?.espera_ms },
+      { rota: "ia-deepseek", motivo: "nova_tentativa", tentativa: 1, espera: 0 },
+    );
+
+    pedidosDeepSeek = [];
+    logs.length = 0;
+    modo = "429-espera-longa";
+    const inicio = Date.now();
+    await assert.rejects(() => pedirJson("teste", { type: "object" }, "Responda em json.", { pergunta: "x" }), (e) => e?.codigo === "ia_indisponivel");
+    assert.equal(pedidosDeepSeek.length, 1, "retry-after de 30 s passa do orçamento de 8 s: não repete");
+    assert.ok(Date.now() - inicio < 2_000, "não espera os 30 s");
+    assert.ok(logs.some((l) => l.includes('"motivo":"espera_longa"')));
+    assert.equal(pedidosOpenAi.length, 0);
+  } finally {
+    console.error = origErr;
   }
 });
 
@@ -413,7 +479,7 @@ test("cancelar no meio para a leitura sem pronto e sem erro", async () => {
   assert.equal(eventos.some((e) => e.tipo === "pronto" || e.tipo === "erro"), false);
 });
 
-test("401, 429, 404 (modelo inexistente) e 5xx registram log e falham sem repetição em laço", async () => {
+test("401, 429, 404 (modelo inexistente) e 5xx registram log e falham sem repetição em laço (429: no máximo 2 novas tentativas)", async () => {
   process.env.STUDOO_IA_RESERVA = "nenhuma";
   const logs = [];
   const origErr = console.error;
@@ -427,11 +493,11 @@ test("401, 429, 404 (modelo inexistente) e 5xx registram log e falham sem repeti
       const ev = await coletar(iniciarGeracao(`u-ds-${caso}`, "Aprender violão"));
       assert.equal(ev.at(-1)?.tipo, "erro");
       assert.equal(ev.at(-1)?.codigo, "ia_indisponivel");
-      assert.equal(pedidosDeepSeek.length, 1);
+      assert.equal(pedidosDeepSeek.length, statusEsperado === 429 ? 3 : 1);
 
       const registroDs = logs.map((l) => {
         try { return JSON.parse(l); } catch { return null; }
-      }).find((o) => o?.rota === "ia-deepseek");
+      }).find((o) => o?.rota === "ia-deepseek" && o?.codigo === "ia_indisponivel");
       assert.equal(registroDs?.codigo, "ia_indisponivel");
       assert.equal(registroDs?.status, statusEsperado);
       if (statusEsperado === 404) {
@@ -471,4 +537,77 @@ test("/api/auth/config expõe o provedor ativo e privacidadePorProvedor identifi
   const bodyFalsa = await resFalsa.json();
   assert.equal(bodyFalsa.ia, "falsa");
   assert.doesNotMatch(mensagens.estudio.privacidadePorProvedor(bodyFalsa.ia), /OpenAI|DeepSeek/);
+});
+
+test("avisos da voz ao vivo citam só quem recebe o dado: voz pela OpenAI e, no modo misto, texto pela DeepSeek", () => {
+  const voz = mensagens.estudio.vozAoVivo;
+  for (const f of [voz.notaPrivacidadePorProvedor, voz.privacidadeTextoPorProvedor]) {
+    assert.match(f("openai"), /OpenAI/);
+    assert.doesNotMatch(f("openai"), /DeepSeek/);
+    assert.match(f("deepseek"), /voz vai para a OpenAI/);
+    assert.match(f("deepseek"), /avaliado pela DeepSeek/);
+  }
+  // O aviso do material com DeepSeek continua citando só a DeepSeek.
+  assert.doesNotMatch(mensagens.estudio.privacidadePorProvedor("deepseek"), /OpenAI/);
+  // Gravação: transcrita pela OpenAI; no modo misto, o texto avaliado pela DeepSeek.
+  assert.equal(mensagens.estudio.vozProvedorPorProvedor("openai"), "A gravação é transcrita pela OpenAI.");
+  assert.match(mensagens.estudio.vozProvedorPorProvedor("deepseek"), /transcrita pela OpenAI.*avaliado pela DeepSeek/);
+});
+
+test("/api/auth/config diz se a gravação está disponível: modo misto com a chave da OpenAI sim; sem a chave ou com IA=falsa, não", async () => {
+  const config = async () => (await getAuthConfig(new Request("http://127.0.0.1:3000/api/auth/config"))).json();
+  const chave = process.env.OPENAI_API_KEY;
+  try {
+    process.env.IA = "deepseek";
+    assert.equal((await config()).transcricao, true);
+    delete process.env.OPENAI_API_KEY;
+    assert.equal((await config()).transcricao, false);
+    process.env.OPENAI_API_KEY = chave;
+    process.env.IA = "falsa";
+    assert.equal((await config()).transcricao, false);
+    process.env.IA = "openai";
+    assert.equal((await config()).transcricao, true);
+  } finally {
+    process.env.OPENAI_API_KEY = chave;
+    process.env.IA = "deepseek";
+  }
+  assert.equal(pedidosOpenAi.length, 0);
+});
+
+test("aceite: no máximo STUDOO_GERACAO_PARALELA chamadas em andamento (padrão 10: todas juntas; 1: uma por vez)", async () => {
+  const { esqueleto: base } = await gerarEsqueletoDireto("Aprender violão");
+  // 8 lições: os trechos do esqueleto simulado repetidos até somar 8.
+  const fluxos = [];
+  while (fluxos.reduce((n, f) => n + f.licoes.length, 0) < 8) fluxos.push(...base.fluxos);
+  let total = 0;
+  const esqueleto = { ...base, fluxos: fluxos.map((f) => ({ ...f, licoes: f.licoes.filter(() => total++ < 8) })).filter((f) => f.licoes.length) };
+  assert.equal(esqueleto.fluxos.reduce((n, f) => n + f.licoes.length, 0), 8);
+  const anterior = process.env.STUDOO_GERACAO_PARALELA;
+  const medir = async (valor) => {
+    if (valor === undefined) delete process.env.STUDOO_GERACAO_PARALELA;
+    else process.env.STUDOO_GERACAO_PARALELA = valor;
+    pedidosDeepSeek = [];
+    modo = "medir-paralelo";
+    picoParalelo = 0;
+    emAndamento = 0;
+    const conteudos = await gerarConteudos("u-ds-aceite", esqueleto);
+    assert.equal(conteudos.flat().length, 8, "as 8 lições concluídas");
+    assert.ok(conteudos.flat().every(conteudoValido));
+    assert.equal(pedidosDeepSeek.length, 8, "uma chamada por lição");
+    return picoParalelo;
+  };
+  try {
+    assert.equal(await medir("3"), 3, "com teto 3, nunca mais de 3 em andamento");
+    assert.equal(await medir(undefined), 8, "com o padrão (10), todas as 8 em andamento juntas");
+    assert.equal(await medir("1"), 1, "com 1, uma por vez");
+    assert.equal(await medir("99"), 8, "valor fora de 1 a 10 vale o padrão");
+    assert.equal(pedidosOpenAi.length, 0);
+    const { tempoDoAceite } = await import("../src/servidor/aprendizado/servico.ts");
+    assert.equal(tempoDoAceite(10, 10), 75_000);
+    assert.equal(tempoDoAceite(8, 3), 225_000);
+    assert.equal(tempoDoAceite(9, 1), 240_000);
+  } finally {
+    if (anterior === undefined) delete process.env.STUDOO_GERACAO_PARALELA;
+    else process.env.STUDOO_GERACAO_PARALELA = anterior;
+  }
 });

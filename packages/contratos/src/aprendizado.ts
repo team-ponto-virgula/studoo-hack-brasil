@@ -318,7 +318,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     entrarVisitante: () => solicitar<Autenticacao>("/visitante", "POST"),
     entrarVisitanteNativo: () => solicitar<SessaoNativa>("/mobile/visitante", "POST"),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
-    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean }>("/auth/config"),
+    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean }>("/auth/config"),
     recuperarSenha: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/senha/recuperar`, 'POST', { email }),
     redefinirSenha: (email: string, codigo: string, senha: string, mobile = false) => solicitar<{ alterada: boolean }>(`${mobile ? '/mobile' : ''}/senha/redefinir`, 'POST', { email, codigo, senha }),
     trocarCodigoGoogle: (codigo: string, verificador: string) => solicitar<SessaoNativa>('/mobile/google', 'POST', { codigo, verificador }),
