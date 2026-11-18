@@ -5,6 +5,7 @@ import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo, Paisagem, Skeleton, Stu } from '../../ui';
+import { Apresentacao } from '../apresentacao';
 
 type ErrosCampo = { email?: string; senha?: string };
 
@@ -34,9 +35,11 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
   const [capsLock, setCapsLock] = useState(false);
   /** Conta os erros: a cada um, o formulário treme de novo. */
   const [tremor, setTremor] = useState(0);
+  const [vendoApresentacao, setVendoApresentacao] = useState(false);
   const emEnvio = useRef(false);
   const campoEmail = useRef<HTMLInputElement>(null);
   const campoSenha = useRef<HTMLInputElement>(null);
+  const linkComoFunciona = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -140,8 +143,25 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
             </Paisagem>
             <h1>{mensagens.login.titulo}</h1>
             <p className="introducao">{mensagens.login.instrucoes}</p>
+            <button ref={linkComoFunciona} type="button" className="acesso-link" onClick={() => setVendoApresentacao(true)}>
+              {mensagens.acesso.verComoFunciona}
+            </button>
           </header>
-          {verificando ? <Skeleton /> : (
+          {vendoApresentacao ? (
+            <Apresentacao
+              primeiraVez={false}
+              rotuloFinalUltimo={visitanteDisponivel ? mensagens.acesso.experimentar : mensagens.apresentacao.voltarEntrada}
+              concluir={(_, concluiuFinal) => {
+                if (concluiuFinal && visitanteDisponivel) {
+                  setVendoApresentacao(false);
+                  void experimentarSemConta();
+                  return;
+                }
+                setVendoApresentacao(false);
+                window.requestAnimationFrame(() => linkComoFunciona.current?.focus());
+              }}
+            />
+          ) : verificando ? <Skeleton /> : (
             <form className="formulario" method="post" noValidate onSubmit={entrar} aria-busy={enviando}
               data-tremor={tremor ? (tremor % 2 ? 'a' : 'b') : undefined}>
               {visitanteDisponivel && (

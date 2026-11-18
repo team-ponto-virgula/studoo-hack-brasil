@@ -30,6 +30,7 @@ Todas as ideias populares da tela inicial (violão, inglês, culinária, histór
 - Citação existe e sustenta a ideia; números/fórmulas extraídos foram conferidos por uma pessoa.
 - Android: gerar novo development build (o app passou a usar `expo-speech` para a voz), permitir câmera/microfone somente quando solicitado, testar negar permissão, gravar/parar, segundo plano, voltar à tela, upload pelo seletor e texto com teclado aberto.
 - Web: testar em 360 px e computador, navegação por teclado, movimento reduzido e falha de rede.
+- Antes do pitch, rode `npm run demo:zerar` para limpar trilhas, materiais, apoios e sessões apenas da conta de demonstração (`STUDOO_EMAIL`), sem afetar outras contas.
 - Agendar `npm run estudio:limpar` de hora em hora.
 - Usar um vídeo curto previamente gravado como reserva, identificado como gravação; nunca fingir que é uma execução ao vivo.
 

@@ -13,6 +13,7 @@
   "scripts": {
     "predev": "npm run db:generate",
     "dev": "next dev --hostname localhost",
+    "demo:zerar": "node --env-file=.env --import tsx scripts/zerar-demo.ts",
     "prebuild": "npm run db:generate",
     "build": "next build",
     "start": "next start --hostname localhost",
@@ -34,7 +35,7 @@
     "db:seed": "node --env-file-if-exists=.env --import tsx prisma/seed.ts",
     "db:local": "node scripts/banco-local.mjs",
     "test:email": "node --import tsx --test tests/email-resend.test.mjs",
-    "test:estudio": "node --env-file=.env --import tsx --test tests/estudio.test.mjs",
+    "test:estudio": "node --env-file=.env --import tsx --test tests/estudio.test.mjs tests/demo-zerar.test.mjs",
     "estudio:limpar": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/limpar-materiais.ts",
     "test:estudio:interface": "node --test tests/estudio-interface.test.mjs"
   },

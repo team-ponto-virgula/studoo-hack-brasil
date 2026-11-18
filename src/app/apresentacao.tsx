@@ -44,7 +44,15 @@ const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 
  * na direção em que a pessoa anda. O título de cada passo recebe o foco e diz a posição ("Passo 2 de 5"); as setas do
  * teclado também avançam e voltam. As ilustrações são decorativas.
  */
-export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; concluir: (area?: IdTema) => void }) {
+export function Apresentacao({
+  primeiraVez,
+  rotuloFinalUltimo,
+  concluir,
+}: {
+  primeiraVez: boolean;
+  rotuloFinalUltimo?: string;
+  concluir: (area?: IdTema, concluiuFinal?: boolean) => void;
+}) {
   const [passo, setPasso] = useState(0);
   const [direcao, setDirecao] = useState<'frente' | 'tras'>('frente');
   const [area, setArea] = useState<IdTema | undefined>();
@@ -69,11 +77,16 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
   }
 
   function avancar() {
-    if (ultimo) concluir(area);
+    if (ultimo) concluir(area, true);
     else irPara(passo + 1);
   }
 
   function teclas(evento: KeyboardEvent<HTMLElement>) {
+    if (evento.key === 'Escape') {
+      evento.preventDefault();
+      concluir();
+      return;
+    }
     if (evento.key === 'ArrowRight' && !ultimo) {
       evento.preventDefault();
       irPara(passo + 1);
@@ -84,7 +97,7 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
   }
 
   let rotuloFinal: string = mensagens.apresentacao.continuar;
-  if (ultimo) rotuloFinal = primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi;
+  if (ultimo) rotuloFinal = rotuloFinalUltimo ?? (primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi);
 
   return (
     <section className="painel painel--apresentacao" aria-labelledby="apresentacao-titulo" onKeyDown={teclas}>

@@ -466,18 +466,37 @@ export function ApoioDaLicao({
     });
   }
   const ponte = apoio?.ponte;
+  const pedidoAnterior = useRef(0);
+  const chavePonteAnterior = useRef('');
   // "Ver outro exemplo" no painel de retorno: pede o reforço, se ainda não existe (durante uma gravação, espera ela acabar).
   useEffect(() => {
     if (pedidoPonte === 0 || gravando) return;
-    setPassoPonte(1);
-    setResposta('');
-    setResultadoPonte(null);
-    setFeedback('');
-    setVencidaNestaAbertura(false);
+    if (pedidoPonte !== pedidoAnterior.current) {
+      pedidoAnterior.current = pedidoPonte;
+      setPassoPonte(1);
+      setResposta('');
+      setResultadoPonte(null);
+      setFeedback('');
+      setVencidaNestaAbertura(false);
+    }
     void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
     // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoPonte, gravando]);
+  useEffect(() => {
+    const chave = ponte ? `${ponte.motivo}\0${ponte.conceito}\0${ponte.exercicio.enunciado}\0${ponte.concluida}` : '';
+    if (chave && chave !== chavePonteAnterior.current) {
+      const anterior = chavePonteAnterior.current;
+      chavePonteAnterior.current = chave;
+      if (anterior && !ponte?.concluida) {
+        setPassoPonte(1);
+        setResposta('');
+        setResultadoPonte(null);
+        setFeedback('');
+        setVencidaNestaAbertura(false);
+      }
+    }
+  }, [ponte]);
 
   useEffect(() => {
     if (!ponte || ponte.concluida) return;
