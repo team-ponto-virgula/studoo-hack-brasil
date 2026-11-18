@@ -174,11 +174,12 @@ function ArtePonte() {
   const m = mensagens.estudio;
   return (
     <div className="apresentacao-quadro apresentacao-quadro--ponte">
+      <div className="apresentacao-quadro__topo">
+        <span className="estudio-selo">{m.simulado}</span>
+      </div>
       <div className="ponte-cena" data-concluida="true">
         <div className="ponte-margem ponte-margem--esquerda">
-          <div className="ponte-stu">
-            <Stu />
-          </div>
+          <div className="ponte-stu-alvo" />
           <span>{m.ponteMargemErro}</span>
         </div>
         <div className="ponte-vao">
@@ -188,11 +189,12 @@ function ArtePonte() {
           <span className="ponte-tabua" data-ativa="true">{m.pontePassoDesafio}</span>
         </div>
         <div className="ponte-margem ponte-margem--direita">
-          <div className="ponte-stu-alvo" />
+          <div className="ponte-stu">
+            <Stu />
+          </div>
           <span>{m.ponteMargemVolta}</span>
         </div>
       </div>
-      <p className="estudio-legenda">{m.simulado}</p>
     </div>
   );
 }
