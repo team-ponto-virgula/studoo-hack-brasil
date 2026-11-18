@@ -108,7 +108,7 @@ function licoesFalsas(paginas: PaginaMaterial[], demo: boolean): LicaoGerada[] {
         opcoes: ['3', '8', '11'],
         correta: 1,
         feedbackCorreto:
-          'Isso! O denominador 8 indica o total de partes iguais.',
+          'O denominador 8 indica o total de partes iguais.',
         feedbackIncorreto:
           'O 3 conta as partes escolhidas. O 8, abaixo da barra, indica o total de partes iguais.',
         pagina: 1,

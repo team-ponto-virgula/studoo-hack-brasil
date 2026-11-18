@@ -151,7 +151,7 @@ const violao: Demo = {
                 op("tocar", "Toque o Dó a partir da 5ª corda"),
               ],
               gabarito: ["montar", "levantar", "levar", "tocar"],
-              feedbackCorreto: "Perfeito: do Lá menor, só o anelar sobe e desce no lugar novo, e o Dó soa.",
+              feedbackCorreto: "Do Lá menor, só o anelar sobe e desce no lugar novo, e o Dó soa.",
               feedbackIncorreto: "Siga o movimento da mão: em que acorde você está antes de trocar? E o que precisa sair do lugar antes de um dedo chegar à casa nova?",
             },
             extras: [
@@ -552,7 +552,7 @@ const ingles: Demo = {
                 op("chave", "Thank you for the key!"),
               ],
               gabarito: ["oi", "reserva", "passaporte", "chave"],
-              feedbackCorreto: "Perfeito: cumprimento, reserva, documento e o agradecimento pela chave.",
+              feedbackCorreto: "Cumprimento, reserva, documento e o agradecimento pela chave.",
               feedbackIncorreto: "Imagine a conversa real no balcão do hotel, uma fala de cada vez.",
             },
             extras: [
@@ -1114,7 +1114,7 @@ const historia: Demo = {
                 op("republica", "Proclamação da República"),
               ],
               gabarito: ["cabral", "familia", "independencia", "republica"],
-              feedbackCorreto: "Perfeito: 1500, 1808, 1822 e 1889.",
+              feedbackCorreto: "1500, 1808, 1822 e 1889.",
               feedbackIncorreto: "Use a linha do tempo da lição: os marcos estão em ordem, do mais antigo ao mais recente. Comece pelo que aconteceu primeiro.",
             },
             extras: [
@@ -1328,7 +1328,7 @@ const fracoes: Demo = {
               enunciado: "Coloque as frações da menor para a maior.",
               itens: [op("um", "1/7"), op("tres", "3/7"), op("cinco", "5/7"), op("seis", "6/7")],
               gabarito: ["um", "tres", "cinco", "seis"],
-              feedbackCorreto: "Perfeito: com o mesmo denominador, basta comparar os numeradores.",
+              feedbackCorreto: "Com o mesmo denominador, basta comparar os numeradores.",
               feedbackIncorreto: "Todas são sétimos. Compare só os numeradores: 1, 3, 5 e 6.",
             },
             extras: [
@@ -1606,7 +1606,7 @@ const fotografia: Demo = {
                 op("disparar", "Tirar a foto"),
               ],
               gabarito: ["enquadrar", "tocar", "brilho", "disparar"],
-              feedbackCorreto: "Perfeito: enquadra, foca, ajusta e só então dispara.",
+              feedbackCorreto: "Enquadra, foca, ajusta e só então dispara.",
               feedbackIncorreto: "Primeiro você escolhe o que vai aparecer, depois foca, ajusta o brilho e por fim tira a foto.",
             },
             extras: [
