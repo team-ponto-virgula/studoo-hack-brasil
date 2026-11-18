@@ -45,7 +45,7 @@
 }
 
 .aula-fechar .icone { width: 26px; height: 26px; stroke-width: 3; }
-.aula-fechar:hover:not(:disabled) { color: var(--texto); background: var(--nevoa); }
+@media (hover: hover) { .aula-fechar:hover:not(:disabled) { color: var(--texto); background: var(--nevoa); } }
 .aula-fechar:disabled { cursor: wait; opacity: 0.6; }
 .aula-andamento { display: grid; gap: 2px; min-width: 0; }
 .aula-andamento__linha { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
@@ -360,6 +360,12 @@
 .aula-rodape[data-compacto] .aula-retorno__icone .icone { width: 18px; height: 18px; }
 .aula-rodape[data-compacto] .aula-retorno h2 { font-size: 1.0625rem; }
 .aula-rodape[data-compacto] .aula-rodape__acoes > .botao { min-height: 42px; }
+@media (max-width: 767px) {
+  /* Sem o texto, o retorno é uma linha (ícone e título): sem a base flexível de 20rem da coluna, que deixava ~40 px vazios. */
+  .aula-rodape[data-compacto] .aula-rodape__conteudo { gap: 16px; }
+  .aula-rodape[data-compacto] .aula-retorno { display: flex; align-items: center; gap: 10px; }
+  .aula-rodape[data-compacto] .aula-retorno__icone { float: none; flex: none; margin-right: 0; }
+}
 .sem-quebra { white-space: nowrap; }
 .aula-aviso-voz { margin-top: 6px; color: var(--alerta); font-weight: 800; }
 .como-foi__sem-cronometro { margin: -4px 0 10px; padding: 4px 0; border: 0; background: none; color: var(--acao); font: inherit;
@@ -369,9 +375,17 @@
 @media (max-width: 767px) {
   .estudo-principal:has(.painel--aula) { padding-top: max(14px, env(safe-area-inset-top)); }
   .painel--aula { gap: 22px; min-height: calc(100svh - max(14px, env(safe-area-inset-top))); }
+  /* 40 px entre o último conteúdo e o rodapé fixo, no fim da rolagem: o espaço do painel (22) mais 18. O bloco de apoio
+     vazio (sem reforço nem Explique) não entra: somava mais 22 no exercício. */
+  .painel--aula > .estudio-apoio:empty { display: none; }
+  .aula-rodape { margin-top: 18px; }
+  /* Reforço aberto (o rodapé some): os mesmos 40 px entre o cartão e o fim da tela. */
+  .painel--aula[data-ponte-aberta] { padding-bottom: 16px; }
   .aula-miolo { gap: 14px; }
   .aula-explicacao .stu { width: 56px; }
-  .aula-retorno { flex-basis: 100%; }
+  /* Na coluna do rodapé, a base flexível (20rem / 100%) deixava o retorno mais alto que o conteúdo (~34 px vazios sob
+     o título quando só ele aparece). A altura passa a ser a do conteúdo. */
+  .aula-retorno { flex: none; }
 }
 
 /* Carregando a lição: a forma da aula, com o mesmo leiaute do topo, do quadro e do rodapé. */
@@ -701,7 +715,7 @@
 .vf__afirmacao { margin: 0; padding: 16px 18px; border-left: 5px solid var(--acao); border-radius: 6px 16px 16px 6px; background: var(--ceu); }
 .vf__afirmacao p { margin: 0; font-size: 1.2rem; font-weight: 800; }
 .vf__valores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; border: 0; }
-.vf__valores legend, .aula-quadro .vf .opcoes legend { margin-bottom: 8px; color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
+.vf__valores legend, .aula-quadro .vf .opcoes legend { margin-bottom: 8px; padding: 0; color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
 .vf__valores input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .vf__valores label {
   display: flex;
@@ -844,12 +858,12 @@
  * Depois da resposta, a cor do resultado vence a da seleção. A regra da seleção usa :has(input:checked), que pesa mais
  * que um atributo; estas repetem o :has e vêm depois, então ganham.
  */
-.aula-quadro .opcoes label[data-retorno='certa']:has(input),
+:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='certa']:has(input),
 .vf__valores label[data-retorno='certa']:has(input) { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; }
-.aula-quadro .opcoes label[data-retorno='errada']:has(input),
+:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada']:has(input),
 .vf__valores label[data-retorno='errada']:has(input) { border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
-.aula-quadro .opcoes label[data-retorno='certa']:has(input) .opcao-tecla { border-color: var(--sucesso-claro); color: var(--fundo); background: var(--sucesso-claro); }
-.aula-quadro .opcoes label[data-retorno='errada']:has(input) .opcao-tecla { border-color: #e3a24a; color: var(--fundo); background: #e3a24a; }
+:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='certa']:has(input) .opcao-tecla { border-color: var(--sucesso-claro); color: var(--fundo); background: var(--sucesso-claro); }
+:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada']:has(input) .opcao-tecla { border-color: #e3a24a; color: var(--fundo); background: #e3a24a; }
 .associar .associar__colunas button[data-estado='certo'] { --cor-par: var(--sucesso-claro); border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; }
 .associar .associar__colunas button[data-estado='errado'] { --cor-par: #e3a24a; border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
 

@@ -26,15 +26,28 @@ import {
 } from './voz-ao-vivo';
 import './estudio.css';
 const m = mensagens.estudio;
+/** Uma consulta a `/api/auth/config` por carga, compartilhada pela voz ao vivo e pela gravação (refeita se falhar). */
+type ConfigAcesso = Awaited<ReturnType<typeof cliente.configuracaoAcesso>>;
+let promessaConfig: Promise<ConfigAcesso> | null = null;
+function consultarConfig(): Promise<ConfigAcesso> {
+  if (!promessaConfig) {
+    promessaConfig = cliente.configuracaoAcesso().catch((erro) => {
+      promessaConfig = null;
+      throw erro;
+    });
+  }
+  return promessaConfig;
+}
 /** Provedor de texto quando a voz ao vivo está liberada para esta conta (para o aviso de privacidade), ou null. */
 let promessaElegibilidadeVoz: Promise<'openai' | 'deepseek' | null> | null = null;
 export function invalidarElegibilidadeVozAoVivo(): void {
   promessaElegibilidadeVoz = null;
+  promessaGravacao = null;
+  promessaConfig = null;
 }
 function consultarElegibilidadeVozAoVivo(): Promise<'openai' | 'deepseek' | null> {
   if (!promessaElegibilidadeVoz) {
-    promessaElegibilidadeVoz = cliente
-      .configuracaoAcesso()
+    promessaElegibilidadeVoz = consultarConfig()
       .then(async (cfg) => {
         if (!cfg.vozAoVivo || (cfg.ia !== 'openai' && cfg.ia !== 'deepseek')) return null;
         const sessao = await cliente.sessao();
@@ -48,8 +61,7 @@ function consultarElegibilidadeVozAoVivo(): Promise<'openai' | 'deepseek' | null
 let promessaGravacao: Promise<'openai' | 'deepseek' | null> | null = null;
 function consultarGravacao(): Promise<'openai' | 'deepseek' | null> {
   if (!promessaGravacao) {
-    promessaGravacao = cliente
-      .configuracaoAcesso()
+    promessaGravacao = consultarConfig()
       .then((cfg) => (cfg.transcricao && (cfg.ia === 'openai' || cfg.ia === 'deepseek') ? cfg.ia : null))
       .catch(() => null);
   }

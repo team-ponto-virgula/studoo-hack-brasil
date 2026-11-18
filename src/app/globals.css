@@ -118,20 +118,24 @@ button, input, textarea { font: inherit; }
 
 .botao .icone { width: 20px; height: 20px; }
 .botao--primario { --labio: var(--acao-escura); color: var(--fundo); background: var(--acao); }
-.botao--primario:hover:not(:disabled) { background: #3050cc; }
 /* Verde e âmbar do retorno da aula, escuros o bastante para o texto branco ter contraste AA. */
 .botao--sucesso { --labio: #145a42; color: var(--fundo); background: var(--sucesso); }
-.botao--sucesso:hover:not(:disabled) { background: #1a6b4f; }
 .botao--alerta { --labio: #6e4100; color: var(--fundo); background: var(--alerta); }
-.botao--alerta:hover:not(:disabled) { background: #8a5100; }
 .botao--secundario { --labio: var(--gelo); border-color: var(--gelo); }
-.botao--secundario:hover:not(:disabled), .botao--texto:hover:not(:disabled) { background: var(--nevoa); }
 .botao--texto { padding-inline: 12px; background: transparent; box-shadow: none; }
 .botao:active:not(:disabled):not(.botao--texto) { box-shadow: 0 1px 0 var(--labio); transform: translateY(3px); }
 .botao:disabled { --labio: var(--gelo); color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); cursor: default; }
 /* Falta um passo (como contar como foi a prática): o botão parece desativado, mas responde ao toque e leva até o que falta. */
-.botao[aria-disabled='true']:not(:disabled), .botao[aria-disabled='true']:not(:disabled):hover {
+.botao[aria-disabled='true']:not(:disabled) {
   --labio: var(--gelo); color: var(--texto2); border-color: var(--gelo); background: var(--nevoa);
+}
+/* Hover só onde há ponteiro que paira: no toque, o botão não fica "aceso" depois de tocado. */
+@media (hover: hover) {
+  .botao--primario:hover:not(:disabled) { background: #3050cc; }
+  .botao--sucesso:hover:not(:disabled) { background: #1a6b4f; }
+  .botao--alerta:hover:not(:disabled) { background: #8a5100; }
+  .botao--secundario:hover:not(:disabled), .botao--texto:hover:not(:disabled) { background: var(--nevoa); }
+  .botao[aria-disabled='true']:not(:disabled):hover { --labio: var(--gelo); color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); }
 }
 .botao--texto:disabled { background: transparent; border-color: transparent; }
 
@@ -182,7 +186,7 @@ button, input, textarea { font: inherit; }
   translate: 0 -50%;
 }
 
-.campo-senha__alternar:hover:not(:disabled) { color: var(--texto); background: var(--nevoa); }
+@media (hover: hover) { .campo-senha__alternar:hover:not(:disabled) { color: var(--texto); background: var(--nevoa); } }
 .campo-senha__alternar .icone { width: 22px; height: 22px; stroke-width: 2.25; }
 .formulario { display: grid; gap: 20px; }
 .introducao { margin-top: 12px; color: var(--texto2); font-size: 1.0625rem; }
@@ -331,7 +335,8 @@ button, input, textarea { font: inherit; }
 }
 
 .navegacao .botao--texto { min-height: 44px; border-radius: 12px; }
-.navegacao .botao--texto:hover:not(:disabled), .navegacao .botao--texto[aria-current] { background: var(--fundo); box-shadow: 0 2px 0 var(--gelo); }
+.navegacao .botao--texto[aria-current] { background: var(--fundo); box-shadow: 0 2px 0 var(--gelo); }
+@media (hover: hover) { .navegacao .botao--texto:hover:not(:disabled) { background: var(--fundo); box-shadow: 0 2px 0 var(--gelo); } }
 .navegacao .botao--texto[aria-current] { color: var(--acao); }
 .navegacao-plano { color: var(--texto); font-weight: 700; }
 .navegacao-novo { margin-top: 12px; }
@@ -696,7 +701,8 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 @media (max-width: 767px) {
   :root { --espaco-pagina: 20px; }
   .selo-sincronia { padding: 3px 8px; font-size: 0.75rem; }
-  .estudo-principal:has(.painel--concluida) { padding-bottom: calc(156px + env(safe-area-inset-bottom)); }
+  /* Rodapé fixo da conclusão (duas ações, 134 px com o respiro) + 40 px entre o último conteúdo e ele. */
+  .estudo-principal:has(.painel--concluida) { padding-bottom: calc(146px + env(safe-area-inset-bottom)); }
 
   .entrada-conteudo {
     padding: calc(28px + env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
@@ -848,7 +854,9 @@ button { touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) { .retomada { animation: none; } }
 @media (max-width: 767px) {
   .estudo[data-navegacao] .painel--planos > .acao-principal { display: none; }
-  .estudo[data-navegacao] .estudo-principal:has(.painel--planos) { padding-bottom: calc(32px + var(--altura-navegacao)); }
+  .estudo[data-navegacao] .estudo-principal:has(.painel--planos) { padding-bottom: calc(16px + var(--altura-navegacao)); }
+  /* Nova trilha (pedido vazio, com ideia, com material e prévia): 40 px entre o último conteúdo e a barra de baixo. */
+  .estudo[data-navegacao] .estudo-principal:has(.painel--pedido) { padding-bottom: calc(40px + var(--altura-navegacao)); }
 }
 
 /* A entrada lateral da aula/trilha não cria rolagem horizontal durante a transição. */
@@ -878,6 +886,8 @@ button { touch-action: manipulation; }
   h1 { font-size: 32px; line-height: 40px; letter-spacing: -1px; }
   .introducao { font-size: 17px; line-height: 24px; }
   .entrada-conteudo { padding-inline: 20px; padding-top: 16px; }
+  /* A barra do logo cola no topo e o conteúdo começa do alto, em qualquer altura de tela (como em "sessão expirada"). */
+  .entrada-conteudo { place-items: start center; align-content: start; }
   .entrada-cabecalho .logo { width: 112px; }
   .entrada-banner { height: 140px; margin-bottom: 24px; }
   .entrada-banner .stu { width: 72px; }
@@ -894,7 +904,6 @@ button { touch-action: manipulation; }
   .entrada-banner { margin-top: 0; }
   .aula-miolo h1 { text-wrap: wrap; }
   .painel--concluida .acao-principal { display: flex; flex-direction: column; gap: 10px; }
-  .painel--concluida { padding-bottom: 180px; }
 }
 .recuperar .botao { text-decoration: none; }
 @media (max-width: 767px) {
@@ -926,7 +935,8 @@ button { touch-action: manipulation; }
   font-weight: 800; cursor: pointer; list-style: none; backdrop-filter: blur(4px);
 }
 .plano-cartao__menu > summary::-webkit-details-marker { display: none; }
-.plano-cartao__menu > summary:hover, .plano-cartao__menu[open] > summary { background: var(--nevoa); color: var(--texto); }
+.plano-cartao__menu[open] > summary { background: var(--nevoa); color: var(--texto); }
+@media (hover: hover) { .plano-cartao__menu > summary:hover { background: var(--nevoa); color: var(--texto); } }
 .plano-cartao__menu[open] > .plano-cartao__apagar {
   position: absolute; top: calc(100% + 4px); right: 0; white-space: nowrap;
   padding: 6px 12px; border: 1px solid var(--gelo); border-radius: 12px;
@@ -936,7 +946,7 @@ button { touch-action: manipulation; }
   justify-self: start; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--texto2);
   font: inherit; font-size: 0.875rem; font-weight: 800; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
 }
-.plano-cartao__apagar:hover:not(:disabled) { color: #b3261e; }
+@media (hover: hover) { .plano-cartao__apagar:hover:not(:disabled) { color: #b3261e; } }
 .plano-cartao__apagar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 6px; }
 .plano-cartao__apagar:disabled { cursor: default; opacity: 0.6; }
 

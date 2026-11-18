@@ -472,3 +472,69 @@ test('app: com a voz liberada, entrada → aviso → conversa; queda leva a fala
   ui.render();
   assert.ok((voz.descartes ?? 0) > descartesAntes, 'fechar o Explique desliga a conversa');
 });
+
+// Especificidade de um seletor (a, b, c), com :is/:has/:not pelo argumento mais forte e :where zerado.
+function especificidade(seletor) {
+  const soma = [0, 0, 0];
+  let resto = seletor;
+  const funcoes = /:(is|has|not|where)\(/g;
+  let m;
+  while ((m = funcoes.exec(resto))) {
+    let nivel = 1;
+    let i = m.index + m[0].length;
+    for (; i < resto.length && nivel; i++) nivel += resto[i] === '(' ? 1 : resto[i] === ')' ? -1 : 0;
+    const dentro = resto.slice(m.index + m[0].length, i - 1);
+    if (m[1] !== 'where') {
+      const maior = dividirLista(dentro).map(especificidade).sort(compararEspecificidade).at(-1);
+      for (let k = 0; k < 3; k++) soma[k] += maior[k];
+    }
+    resto = `${resto.slice(0, m.index)} ${resto.slice(i)}`;
+    funcoes.lastIndex = m.index;
+  }
+  resto = resto.replace(/\[[^\]]*\]/g, () => { soma[1] += 1; return ' '; });
+  resto = resto.replace(/::[\w-]+/g, () => { soma[2] += 1; return ' '; });
+  resto = resto.replace(/#[\w-]+/g, () => { soma[0] += 1; return ' '; });
+  resto = resto.replace(/[.:][\w-]+/g, () => { soma[1] += 1; return ' '; });
+  resto.replace(/(^|[\s>+~])([a-z][\w-]*)/gi, () => { soma[2] += 1; return ' '; });
+  return soma;
+}
+function dividirLista(lista) {
+  const partes = [];
+  let nivel = 0;
+  let atual = '';
+  for (const ch of lista) {
+    if (ch === '(') nivel++;
+    if (ch === ')') nivel--;
+    if (ch === ',' && nivel === 0) { partes.push(atual.trim()); atual = ''; } else atual += ch;
+  }
+  if (atual.trim()) partes.push(atual.trim());
+  return partes;
+}
+const compararEspecificidade = (x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
+
+test('desafio da ponte: depois de Verificar, a cor do retorno (errada e certa) vence a da seleção, também na letra', async () => {
+  const css = (await readFile(new URL('../src/app/aula.css', import.meta.url), 'utf8')).replace(/\/\*[\s\S]*?\*\//g, '');
+  // Regras na ordem do arquivo (as de @media entram no lugar onde aparecem).
+  const regras = [];
+  for (const m of css.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+    for (const seletor of dividirLista(m[1].trim())) regras.push({ seletor, corpo: m[2], ordem: regras.length });
+  }
+  const valeNoDesafio = (s) => s.includes('.estudio-desafio') && /\.opcoes\s+label/.test(s);
+  const maisForte = (filtro) => regras.filter((r) => valeNoDesafio(r.seletor) && filtro(r))
+    .sort((x, y) => compararEspecificidade(especificidade(x.seletor), especificidade(y.seletor)) || x.ordem - y.ordem).at(-1);
+  for (const naTecla of [false, true]) {
+    const temTecla = (r) => r.seletor.includes('.opcao-tecla') === naTecla && /background/.test(r.corpo);
+    const selecao = maisForte((r) => temTecla(r) && r.seletor.includes('input:checked') && !r.seletor.includes('data-retorno'));
+    assert.ok(selecao, 'regra da seleção no desafio');
+    for (const retorno of ['errada', 'certa']) {
+      const regra = maisForte((r) => temTecla(r) && r.seletor.includes(`[data-retorno='${retorno}']`));
+      assert.ok(regra, `regra do retorno ${retorno} no desafio${naTecla ? ' (letra)' : ''}`);
+      const comparacao = compararEspecificidade(especificidade(regra.seletor), especificidade(selecao.seletor));
+      assert.ok(comparacao > 0 || (comparacao === 0 && regra.ordem > selecao.ordem),
+        `"${regra.seletor}" perde para "${selecao.seletor}" no desafio da ponte (${retorno}${naTecla ? ', letra' : ''})`);
+    }
+  }
+  // O calculador em si: o :has(input:checked) pesa mais que um atributo sozinho.
+  assert.deepEqual(especificidade(":is(.aula-quadro, .estudio-desafio) .opcoes label:has(input:checked)"), [0, 3, 2]);
+  assert.deepEqual(especificidade(":is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada']"), [0, 3, 1]);
+});

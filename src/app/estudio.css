@@ -516,9 +516,14 @@
 }
 @media (max-width: 600px) {
   .ponte-vao { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; counter-reset: tabua; }
+  /* Em 360 a tábua tem ~10 px: o número (~7 px) não cabia na caixa com o respiro e transbordava para a direita.
+     Sem respiro lateral e centrado pelo flex, o que sobra se divide igual dos dois lados (como no app). */
   .ponte-tabua {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     min-height: 32px;
-    padding: 4px 2px;
+    padding: 4px 0;
     font-size: 0;
     line-height: 1;
     counter-increment: tabua;
@@ -528,14 +533,13 @@
     font-size: 0.75rem;
     font-weight: 900;
   }
-  .ponte-cabeca__acoes { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: nowrap; }
-  .ponte-selo { white-space: nowrap; font-size: 0.75rem; padding: 5px 10px; }
-  .ponte-legenda { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; padding: 0; }
-  .ponte-legenda li { padding: 6px 8px; font-size: 0.75rem; gap: 6px; }
-  .ponte-legenda__num { width: 18px; height: 18px; font-size: 0.6875rem; }
+  /* Selo e "Voltar ao exercício" na mesma linha quando cabem (390); senão o link desce, com o texto alinhado à borda
+     esquerda do selo (360). O selo nunca quebra nem encolhe; o link não tem respiro lateral para alinhar o texto. */
+  .ponte-cabeca__acoes { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 4px 8px; flex-wrap: wrap; }
+  .ponte-cabeca__acoes .estudio-selo { flex: none; white-space: nowrap; }
   .estudio-ponte[data-concluida] .ponte-legenda { display: none; }
   .estudio-ponte .botao { width: 100%; }
-  .ponte-cabeca__acoes .botao--texto { width: auto; white-space: nowrap; padding-inline: 8px; }
+  .ponte-cabeca__acoes .botao--texto { width: auto; white-space: nowrap; padding-inline: 0; }
   .estudio-acoes { flex-direction: column; align-items: stretch; }
   .estudio-acoes .botao { width: 100%; }
 }
