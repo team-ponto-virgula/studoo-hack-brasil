@@ -575,9 +575,7 @@ export function ApoioDaLicao({
             </div>
             <div className="ponte-vao">
               <span className="ponte-tabua" data-ativa="true" data-erro="true" style={{ '--ordem': 0 } as CSSProperties}>
-                {ultimaResposta
-                  ? m.pontePassoErro(ultimaResposta.length > 24 ? `${ultimaResposta.slice(0, 23).trimEnd()}…` : ultimaResposta)
-                  : m.ponteMargemErro}
+                {m.ponteMargemErro}
               </span>
               <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined} style={{ '--ordem': 1 } as CSSProperties}>
                 {m.pontePassoExplicacao}
@@ -594,6 +592,28 @@ export function ApoioDaLicao({
               <span>{m.ponteMargemVolta}</span>
             </div>
           </div>
+          <ol className="ponte-legenda" aria-label={m.ponte}>
+            <li data-ativa="true" data-erro="true" data-vencida={ponte?.concluida || undefined}>
+              <span className="ponte-legenda__num">1</span>
+              <span>
+                {ultimaResposta
+                  ? m.pontePassoErro(ultimaResposta.length > 80 ? `${ultimaResposta.slice(0, 79).trimEnd()}…` : ultimaResposta)
+                  : m.ponteMargemErro}
+              </span>
+            </li>
+            <li data-ativa={Boolean(ponte) || undefined} data-vencida={ponte?.concluida || undefined}>
+              <span className="ponte-legenda__num">2</span>
+              <span>{m.pontePassoExplicacao}</span>
+            </li>
+            <li data-ativa={Boolean(ponte) || undefined} data-vencida={ponte?.concluida || undefined}>
+              <span className="ponte-legenda__num">3</span>
+              <span>{m.pontePassoExemplo}</span>
+            </li>
+            <li data-ativa={Boolean(ponte?.concluida || resposta) || undefined} data-vencida={ponte?.concluida || undefined}>
+              <span className="ponte-legenda__num">4</span>
+              <span>{m.pontePassoDesafio}</span>
+            </li>
+          </ol>
           {feedback && (
             <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
               data-estado={resultadoPonte ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
@@ -675,9 +695,9 @@ export function ApoioDaLicao({
           </p>
         </div>
         <ol className="ensino-passos" aria-label={m.ensinoEtapasLabel}>
-          <li data-ativo={!texto.trim() || gravando || undefined}>{m.ensinoEtapas[0]}</li>
-          <li data-ativo={(Boolean(texto.trim()) && !gravando && !ensino) || undefined}>{m.ensinoEtapas[1]}</li>
-          <li data-ativo={Boolean(ensino) || undefined}>{m.ensinoEtapas[2]}</li>
+          <li data-ativo={!texto.trim() || gravando || undefined} aria-current={!texto.trim() || gravando ? 'step' : undefined}>{m.ensinoEtapas[0]}</li>
+          <li data-ativo={(Boolean(texto.trim()) && !gravando && !ensino) || undefined} aria-current={Boolean(texto.trim()) && !gravando && !ensino ? 'step' : undefined}>{m.ensinoEtapas[1]}</li>
+          <li data-ativo={Boolean(ensino) || undefined} aria-current={ensino ? 'step' : undefined}>{m.ensinoEtapas[2]}</li>
         </ol>
         <p>{m.ensinoDica}</p>
         <p className="estudio-legenda">{m.ensinoIdeia(licao.objetivo)}</p>

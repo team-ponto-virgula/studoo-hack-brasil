@@ -188,15 +188,18 @@ button, input, textarea { font: inherit; }
 .introducao { margin-top: 12px; color: var(--texto2); font-size: 1.0625rem; }
 
 .estado-erro {
-  display: grid;
-  justify-items: start;
-  gap: 12px;
-  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 16px;
+  padding: 16px 18px;
   border: 2px solid color-mix(in srgb, var(--erro) 40%, transparent);
-  border-radius: var(--raio-campo);
+  border-radius: 20px;
   color: var(--erro);
   background: #fff5f6;
 }
+.estado-erro .stu { width: 48px; flex: none; }
+.estado-erro__corpo { display: grid; justify-items: start; gap: 10px; flex: 1; min-width: min(100%, 220px); }
 
 .estado-erro p, .feedback h3 { display: flex; align-items: flex-start; gap: 8px; }
 .estado-vazio { color: var(--texto2); }

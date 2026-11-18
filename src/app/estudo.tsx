@@ -494,7 +494,13 @@ export function Estudo() {
 
         <main id="conteudo-principal" className="estudo-principal" tabIndex={-1} ref={principal} aria-busy={ocupado}>
           <p className="somente-leitor" role="status">{anuncio}</p>
-          {erro && <EstadoErro codigo={erro} />}
+          {erro && (
+            <EstadoErro codigo={erro}>
+              <Botao variante="secundario" onClick={() => { setErro(null); void carregar(() => false); }}>
+                {mensagens.tentarNovamente}
+              </Botao>
+            </EstadoErro>
+          )}
           {carregandoTrilha && <SkeletonTrilha />}
           {carregandoLicao && (tela.tipo === 'geracao' && geracao?.proposta
             ? <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />
