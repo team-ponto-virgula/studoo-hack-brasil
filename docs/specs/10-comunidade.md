@@ -5,7 +5,7 @@ O dono quer o perfil de ponta a ponta (foto, resumo) e o compartilhar com cara d
 
 criar trilha → publicar → outra pessoa encontra no Explorar → "Quero estudar" (cópia pronta, sem IA) → manda um "Valeu" → quem fez vê o alcance no perfil.
 
-São três etapas, cada uma com **uma** migração que só acrescenta. O Lead libera cada etapa depois de revisar, integrar, publicar e mostrar ao dono. A etapa A está feita; B e C estão descritas aqui para o banco e o contrato serem desenhados de uma vez (nada da A precisa mudar para elas).
+São três etapas, cada uma com **uma** migração que só acrescenta. O Lead libera cada etapa depois de revisar, integrar, publicar e mostrar ao dono. As etapas A e B estão feitas; a C está descrita aqui para o banco e o contrato serem desenhados de uma vez.
 
 ## O que muda na spec 09
 - A decisão 1 da 09 ("sem foto, bio, seguidores, contagem pública ou ranking") **cai** por ordem do dono (18/11).
@@ -82,7 +82,8 @@ A foto fica numa tabela à parte, assim as leituras do usuário não carregam by
   6. `rotate()` (orientação do EXIF), corte central em 512×512 e redução a 128×128;
   7. regravado em WebP: o sharp não copia metadados, então saem EXIF (inclusive GPS), XMP e ICC.
   Falha de leitura vira `422 foto_invalida`.
-- **Endereço:** `GET /api/fotos/<token>/<512|128>`. O token é aleatório (96 bits, `randomBytes(12)` em base64url) e troca a cada foto nova: sem enumeração, cache `public, max-age=31536000, immutable`, e o endereço antigo deixa de existir (404). Nunca o `perfilId`: quem compartilha só por link não tem perfil público, e a foto dela aparece em `/t`.
+- **Endereço:** `GET /api/fotos/<token>/<512|128>`.
+- *Revisto na B:* a leitura usa um cache em memória por token (400 itens, 24 MB, 10 min; trocar e remover tiram o token antigo) e o limite de leitura passou para a memória do processo. Medido localmente: uma página com 20 avatares caiu de 42 ms para 1,9 ms, e uma foto já lida não toca o banco. Cabeçalho `Cross-Origin-Resource-Policy: cross-origin`: o token é imprevisível e a foto é pública, então a prévia web do app em outra origem também carrega. O token é aleatório (96 bits, `randomBytes(12)` em base64url) e troca a cada foto nova: sem enumeração, cache `public, max-age=31536000, immutable`, e o endereço antigo deixa de existir (404). Nunca o `perfilId`: quem compartilha só por link não tem perfil público, e a foto dela aparece em `/t`.
 - Cabeçalhos da foto: `Content-Type: image/webp`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy: default-src 'none'; sandbox`, `Cross-Origin-Resource-Policy: same-site`, `X-Robots-Tag: noindex, nofollow`.
 - **Limite de leitura:** a foto é pedida por toda lista com avatar, então tem um balde próprio, mais largo que o das páginas: 1.200 por 15 min por endereço confiável e um disjuntor global de 30.000 por 15 min sem endereço confiável. Com o cache imutável, cada navegador busca cada foto uma vez.
 - Conta de visitante não tem foto (`403 compartilhar_visitante`).
@@ -115,8 +116,8 @@ Navegador: roteiro de capturas (390, 1440 e 360) com foco, teclado no recorte, a
 
 ---
 
-## Etapa B — Explorar, publicar, Em alta e Valeu (desenho)
-Atrás de `STUDOO_COMUNIDADE=1`, que só vale com `STUDOO_COMPARTILHAR=1`.
+## Etapa B — Explorar, publicar, Em alta e Valeu (feita)
+Atrás de `STUDOO_COMUNIDADE=1`, que só vale com `STUDOO_COMPARTILHAR=1`. Sem ela, nada aparece: as rotas novas respondem 404, `comunidade` vem `false` no config, o link não traz `visibilidade` e a folha mantém o interruptor "Mostrar no meu perfil".
 
 ### Produto
 - **Visibilidade em três níveis** na folha de compartilhar: "Só com o link", "No meu perfil" (já existem) e "No Explorar" (novo). Publicar pede perfil com nome, legenda opcional de até 140 caracteres (mesmas regras do resumo) e um tema, sugerido pelas palavras do título e confirmado pela pessoa. Trilha feita de material não vai para o Explorar. Trilha simulada vai com o rótulo de demonstração.
@@ -138,17 +139,65 @@ Atrás de `STUDOO_COMUNIDADE=1`, que só vale com `STUDOO_COMPARTILHAR=1`.
   - Valeu (liga e desliga), compartilhar e "•••" com Denunciar.
 - **Denunciar** trilha ou perfil, com motivo (spam, ofensivo, direitos autorais, outro). Com 3 contas distintas, a trilha sai do Explorar até revisão. Limite de 10 por hora. Sem painel: registro no banco e uma linha no log.
 
-### Banco (migração da B, só acrescenta)
+### Decisões de implementação
+- **Explorar inclui o perfil.** Publicar marca `noPerfil` e `noExplorar`. Desligar o perfil (pelo interruptor antigo ou pelo nível "Só com o link") também tira do Explorar. Editar tema e legenda não muda `publicadaEm`, então não reordena "Novas".
+- **Eventos:**
+  - "Quero estudar" é o "adicionar" que já existe; ele grava o evento `adicao` junto com o contador.
+  - Contas de visitante não geram evento.
+  - A dona não adiciona a própria trilha (409) nem manda valeu nela (409).
+  - O valeu vale em qualquer link ativo, então quem recebeu só pelo link também agradece.
+- **Agir pede conta comum.** Visitante não publica, não manda valeu e não denuncia (403), porque contas temporárias são fáceis de criar e três delas poderiam tirar uma trilha do ar.
+- **Trilha oculta por denúncias** sai do Explorar e do Em alta, mas o link e o perfil continuam funcionando. A revisão é feita no banco (`oculta = false`).
+- **Em alta com tema:** o mesmo cálculo, filtrado pelo tema da ficha.
+- **Limites** (por conta e por hora, `429 limite_comunidade`): publicar 30, valeu 60 e denunciar 10. `/api/explorar` passa pelo limitador das páginas públicas.
+- **Erros novos:** `explorar_material` (409) e `limite_comunidade` (429).
+- `/api/perfis/:id` passa a aceitar sessão (`rotaPublicaComSessao`), para cada cartão dizer se a trilha já é da pessoa.
+
+### Telas (web)
+- **Explorar** (`src/app/comunidade.tsx` e `comunidade.css`):
+  - entra na lateral (abaixo de "Nova trilha") e é o terceiro item da barra de baixo (4 itens, cabe em 360 px);
+  - na tela de nova trilha, há "Ver trilhas da comunidade";
+  - a página pública é `/explorar` (`noindex`, renderizada no servidor), com o convite "Entre para estudar, mandar valeu ou denunciar."; agir sem conta leva ao login e volta (`/explorar` ou `/t/<código>?adicionar=1`);
+  - blocos: título, fichas de tema (`aria-pressed`; rolam no celular, quebram linha no computador), "Em alta esta semana" (lista com encaixe, setas só com ponteiro fino, numeral grande no canto da capa) e "Novas" em grade, com "Ver mais trilhas";
+  - vazios com o Stu (sem nada publicado, ou um tema vazio).
+- **Cartão de trilha:**
+  - capa gerada, com selos de tema e de "Demonstração";
+  - título que leva à prévia `/t`; foto e nome que levam ao perfil; legenda; contagens;
+  - ação principal ("Quero estudar", "Continuar" ou "Sua trilha");
+  - Valeu com `aria-pressed`, otimista e com anúncio em região viva; Compartilhar (Web Share ou copiar); menu "•••" com Denunciar.
+- **Denunciar:** diálogo com os 4 motivos em rádio e o erro "Escolha um motivo."; "Denunciar perfil" fica no fim de `/p`.
+- **Folha de compartilhar:** "Quem pode ver" com os três níveis em rádio.
+  - "No Explorar" abre a publicação: tema marcado pela sugestão do título ("sugerido pelo título"), legenda com contador e aviso de demonstração.
+  - Trilha feita de material mostra o nível desligado, com o motivo.
+- **Perfil da dona:** cada trilha mostra o selo do nível (e o tema), os valeus e o botão "Visibilidade", que abre a folha. "Como aparece na sua página" mostra os cartões.
+- **`/p/<id>`:** coluna larga (até 76 rem) com a grade de cartões (3 colunas a 1440 px).
+
+### Banco (migração `20261120090000_comunidade`, só acrescenta)
 - `LinkTrilha`: `noExplorar BOOLEAN DEFAULT false`, `tema TEXT`, `legenda TEXT`, `publicadaEm TIMESTAMPTZ`, `oculta BOOLEAN DEFAULT false` (3 denúncias). Índice `(noExplorar, oculta, publicadaEm DESC, codigo)` para "Novas" por cursor e `(tema, …)` para as fichas.
 - `EventoTrilha`: `codigo` (FK `LinkTrilha` em cascata), `usuarioId`, `tipo` (`adicao` | `valeu`), `criadoEm`; único `(codigo, usuarioId, tipo)`, um por conta por trilha; índice `(tipo, criadoEm)` para a janela de 7 dias. O valeu desligado apaga a linha. A adição grava o evento junto com o `adicoes += 1` que já existe, para o Em alta ter data e conta distinta, não só contador.
 - `Denuncia`: `id`, `alvoTipo` (`trilha` | `perfil`), `alvo` (código ou `perfilId`), `usuarioId`, `motivo`, `criadoEm`; único `(alvoTipo, alvo, usuarioId)`.
 
-### API (nomes de trabalho)
+### API
 - `PATCH /api/compartilhar/:codigo` `{ visibilidade: 'link' | 'perfil' | 'explorar', tema?, legenda? }`, compatível com `{ noPerfil }`.
 - `GET /api/explorar?tema=&cursor=` (pública) devolve `{ emAlta: CartaoTrilha[], novas: CartaoTrilha[], cursor }`.
 - `POST|DELETE /api/compartilhar/:codigo/valeu` (privada).
 - `POST /api/denuncias` `{ alvoTipo, alvo, motivo }` (privada).
+- `GET /api/perfis/:perfilId` traz `cartoes: CartaoTrilha[]` com a comunidade.
+- Cliente: `definirVisibilidade`, `explorar`, `valeu` e `denunciar`. Contrato em `packages/contratos/src/comunidade.ts`: `VISIBILIDADES`, `LIMITES_COMUNIDADE`, `MOTIVOS_DENUNCIA`, `sugerirTema`, `COR_DO_TEMA`, `svgCapaTrilha`, `motivoLegendaInvalida`, `CartaoTrilha`, `PaginaExplorar` e `ResultadoValeu`.
 - Tipo `CartaoTrilha`: `codigo`, `titulo`, `tema`, `legenda`, `totalLicoes`, `totalPartes`, `estudando`, `valeus`, `dono` (`DonoPublico`), `demonstracao`, `situacao?`, `valeuMeu?`.
+
+### Testes
+`tests/comunidade.test.mjs` (em `test:estudio`), 8 testes:
+- contrato: tema sugerido, legenda e capa determinística sem script;
+- sem a flag nada existe;
+- publicar: três níveis, tema, legenda, material e data fixa;
+- Explorar: 22 trilhas em várias páginas, sem repetir nem pular, filtro de tema, chaves exatas do cartão, sem e-mail nem ids;
+- situação nova, adicionada e sua; regras do valeu;
+- Em alta: pesos, 7 dias, visitante fora, empate para a mais recente, cache e despublicar;
+- Denunciar: 3 contas ocultam, uma por conta, perfil e limite de 10;
+- `/p` com cartões.
+
+Navegador: 18 checagens a 390, 1440 e 360 px (foco, teclado, alvos de 44 px, sem rolagem lateral, anúncios, `noindex`, login ao agir sem conta), mais o vazio.
 
 ---
 

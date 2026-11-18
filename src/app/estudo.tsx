@@ -41,6 +41,7 @@ import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano,
 import { Pedido, type IdTema } from './pedido';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
 import { TelaEditarPerfil, TelaPerfil } from './perfil';
+import { Explorar } from './comunidade';
 import './aula.css';
 import './trilha.css';
 
@@ -53,6 +54,7 @@ type Tela =
   | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string; aviso?: string }
   | { tipo: 'perfil' }
   | { tipo: 'editarPerfil' }
+  | { tipo: 'explorar' }
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
 
@@ -128,6 +130,8 @@ export function Estudo() {
   const abriuComRascunho = useRef(false);
   /** Perfis e compartilhar (spec 09): só com `compartilhar` no /api/auth/config. */
   const [compartilhar, setCompartilhar] = useState(false);
+  /** Comunidade (spec 10, etapa B): Explorar, publicar, Valeu e Denunciar; só com `comunidade` no config. */
+  const [comunidade, setComunidade] = useState(false);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [folha, setFolha] = useState<string | null>(null);
   const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
@@ -183,6 +187,7 @@ export function Estudo() {
       setPlanos(ativos);
       const comCompartilhar = Boolean(config?.compartilhar);
       setCompartilhar(comCompartilhar);
+      setComunidade(comCompartilhar && Boolean(config?.comunidade));
       if (comCompartilhar) void cliente.obterPerfil().then((dados) => { if (!cancelado()) setPerfil(dados); }).catch(() => undefined);
       const momento = Date.now();
       ultimaBusca.current = momento;
@@ -565,7 +570,7 @@ export function Estudo() {
   // Começar, na trilha gerada, já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só.
   const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || (pendente === 'aceitar' && tela.tipo === 'geracao');
   const visivel = !carregandoTrilha && !carregandoLicao;
-  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (planos.length > 0 && ['planos', 'objetivo', 'plano', 'perfil'].includes(tela.tipo))) && visivel;
+  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (planos.length > 0 && ['planos', 'objetivo', 'plano', 'perfil', 'explorar'].includes(tela.tipo)) || (comunidade && tela.tipo === 'explorar')) && visivel;
   const abrirFolha = compartilhar ? (planoId: string) => setFolha(planoId) : undefined;
 
   const acaoDoErro = (codigoErro: string) =>
@@ -604,6 +609,11 @@ export function Estudo() {
           <Botao variante="secundario" className="navegacao-novo" onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
             <span aria-hidden="true">+</span> {mensagens.planos.novo}
           </Botao>
+          {comunidade && (
+            <Botao variante="texto" className="navegacao-item navegacao-explorar" onClick={() => navegar({ tipo: 'explorar' })} disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}>
+              <Icone nome="bussola" />{mensagens.comunidade.navegacao}
+            </Botao>
+          )}
         </nav>
         <div className="navegacao-rodape">
           <Botao variante="texto" onClick={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
@@ -623,7 +633,7 @@ export function Estudo() {
         <header className="estudo-cabecalho">
           <span className="estudo-identificacao">
             <span className="estudo-identificacao__contexto">
-              {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
+              {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'explorar' ? mensagens.comunidade.titulo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
             </span>
             {inicio === 'pronto' && ((tela.tipo === 'planos' && planos.length > 0) || tela.tipo === 'plano') && (
               <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={planos.length > 0} />
@@ -659,7 +669,10 @@ export function Estudo() {
               aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })}
-              porLink={compartilhar ? <AdicionarPorLink ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPlano={(id) => void abrirPlano(id)} /> : undefined} />
+              porLink={compartilhar ? <>
+                <AdicionarPorLink ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPlano={(id) => void abrirPlano(id)} />
+                {comunidade && <button type="button" className="por-link__abrir" disabled={ocupado} onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.irAoExplorar}</button>}
+              </> : undefined} />
           )}
           {visivel && tela.tipo === 'planos' && planos.length > 0 && (() => {
             const destaque = planoInicial(planos);
@@ -712,7 +725,12 @@ export function Estudo() {
           )}
           {visivel && tela.tipo === 'perfil' && (
             <TelaPerfil perfil={perfil} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
-              abrirPlano={(id) => void abrirPlano(id)} editar={() => navegar({ tipo: 'editarPerfil' })} sair={() => void sair()} />
+              abrirPlano={(id) => void abrirPlano(id)} editar={() => navegar({ tipo: 'editarPerfil' })} sair={() => void sair()}
+              comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} />
+          )}
+          {visivel && tela.tipo === 'explorar' && comunidade && (
+            <Explorar logado aoAbrir={(id) => void abrirPlano(id)} irParaTrilhas={() => navegar({ tipo: 'planos' })}
+              aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} />
           )}
           {visivel && tela.tipo === 'editarPerfil' && perfil && !perfil.visitante && (
             <TelaEditarPerfil perfil={perfil} aoMudarPerfil={setPerfil} anunciar={anunciar} voltar={() => navegar({ tipo: 'perfil' })} registrarGuarda={registrarGuarda} />
@@ -734,17 +752,19 @@ export function Estudo() {
               compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined} />
           )}
         </main>
-        {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao} data-itens={compartilhar ? 3 : 2}>
-          <button type="button" disabled={ocupado} aria-current={tela.tipo !== 'objetivo' && tela.tipo !== 'perfil' ? 'page' : undefined}
+        {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao} data-itens={(compartilhar ? 3 : 2) + (comunidade ? 1 : 0)}>
+          <button type="button" disabled={ocupado} aria-current={!['objetivo', 'perfil', 'editarPerfil', 'explorar'].includes(tela.tipo) ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'planos' })}><Icone nome="livro" />{mensagens.planos.titulo}</button>
           <button type="button" disabled={ocupado} aria-current={tela.tipo === 'objetivo' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
+          {comunidade && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}
+            onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.navegacao}</button>}
           {compartilhar && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'perfil' || tela.tipo === 'editarPerfil' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'perfil' })}><Icone nome="pessoa" />{mensagens.perfil.navegacao}</button>}
         </nav>}
       </div>
       {folha && (
-        <FolhaCompartilhar planoId={folha} visitante={Boolean(perfil?.visitante)} anunciar={anunciar}
+        <FolhaCompartilhar planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade} anunciar={anunciar}
           aoFechar={() => setFolha(null)} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
       )}
       {confirmacao && (

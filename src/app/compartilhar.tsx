@@ -8,6 +8,13 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type RefObject } from 'react';
 import {
   CORES_PERFIL,
+  LIMITES_COMUNIDADE,
+  TEMAS,
+  VISIBILIDADES,
+  motivoLegendaInvalida,
+  normalizarResumoPerfil,
+  type Tema,
+  type Visibilidade,
   ErroStudoo,
   FUNDO_DA_COR,
   codigoDoLink,
@@ -26,6 +33,7 @@ import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import './compartilhar.css';
+import './comunidade.css';
 
 const m = mensagens.compartilhar;
 const p = mensagens.perfil;
@@ -34,7 +42,8 @@ const p = mensagens.perfil;
 export const CHAVE_DEPOIS_DO_LOGIN = 'studoo.depoisDoLogin';
 /** Abrir uma trilha ao chegar no app, com um aviso ("Trilha adicionada. Compartilhada por Ana."). */
 export const CHAVE_ABRIR_PLANO = 'studoo.abrirPlano';
-const CAMINHO_SEGURO = /^\/t\/[A-Za-z0-9_-]{16}(?:\?adicionar=1)?$/;
+/** Para onde o login pode voltar: um link de trilha (com ou sem adicionar) ou o Explorar. Nada fora do site. */
+const CAMINHO_SEGURO = /^(?:\/t\/[A-Za-z0-9_-]{16}(?:\?adicionar=1)?|\/explorar)$/;
 
 /** O caminho guardado para depois do login, só se for o de um link de trilha (nada de redirecionar para fora). */
 export function caminhoDepoisDoLogin(): string | null {
@@ -58,7 +67,7 @@ export function planoParaAbrir(): { id: string; aviso?: string } | null {
   }
 }
 
-function guardar(chave: string, valor: string) {
+export function guardar(chave: string, valor: string) {
   try { sessionStorage.setItem(chave, valor); } catch { /* Sem armazenamento: a pessoa refaz o passo. */ }
 }
 
@@ -215,6 +224,127 @@ export function FormPerfil({ inicial, enviarRotulo, aoSalvar, aoCancelar, titulo
   );
 }
 
+/**
+ * "Quem pode ver" (com a comunidade): Só com o link, No meu perfil, No Explorar. Os dois primeiros salvam na hora;
+ * o Explorar abre a publicação (tema sugerido pelo título, que a pessoa confirma, e legenda opcional de até 140).
+ * Trilha feita de material não vai para o Explorar.
+ */
+export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstracao, aoMudar }: {
+  link: LinkCompartilhado;
+  temaSugerido: Tema;
+  deMaterial: boolean;
+  demonstracao: boolean;
+  aoMudar: (link: LinkCompartilhado) => void;
+}) {
+  const atual: Visibilidade = link.visibilidade ?? (link.noPerfil ? 'perfil' : 'link');
+  const [escolhido, setEscolhido] = useState<Visibilidade>(atual);
+  const [tema, setTema] = useState<Tema>(link.tema ?? temaSugerido);
+  const [legenda, setLegenda] = useState(link.legenda ?? '');
+  const [erroLegenda, setErroLegenda] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const [status, setStatus] = useState('');
+  const [ocupado, setOcupado] = useState(false);
+  const campoLegenda = useRef<HTMLTextAreaElement>(null);
+  const ids = { legenda: useId(), dica: useId(), contador: useId(), erro: useId(), tema: useId() };
+  const cm = mensagens.comunidade;
+  const legendaNormal = normalizarResumoPerfil(legenda);
+  const usados = [...legendaNormal].length;
+  const publicada = atual === 'explorar';
+  const mudouPublicacao = publicada && (tema !== (link.tema ?? temaSugerido) || legendaNormal !== (link.legenda ?? ''));
+
+  async function salvar(nivel: Visibilidade) {
+    setOcupado(true);
+    setErro(null);
+    try {
+      let novo: LinkCompartilhado;
+      if (nivel === 'explorar') {
+        const motivo = motivoLegendaInvalida(legendaNormal);
+        if (motivo) {
+          setErroLegenda(cm.legendaErros[motivo]);
+          campoLegenda.current?.focus();
+          return;
+        }
+        novo = await cliente.definirVisibilidade(link.codigo, 'explorar', { tema, legenda: legendaNormal });
+        setStatus(publicada ? cm.publicacaoSalva : cm.publicada);
+      } else {
+        novo = await cliente.definirVisibilidade(link.codigo, nivel);
+        setStatus(cm.nivelSalvo(cm.niveis[nivel].titulo));
+      }
+      aoMudar(novo);
+      setLegenda(novo.legenda ?? '');
+    } catch (falha) {
+      setErro(textoErro(codigoDoErro(falha)));
+      setEscolhido(atual);
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  function escolher(nivel: Visibilidade) {
+    setEscolhido(nivel);
+    setStatus('');
+    if (nivel !== 'explorar') void salvar(nivel);
+  }
+
+  return (
+    <div className="visibilidade">
+      <fieldset className="niveis" disabled={ocupado}>
+        <legend>{cm.visibilidadeTitulo}</legend>
+        {VISIBILIDADES.map((nivel) => {
+          const bloqueado = nivel === 'explorar' && deMaterial;
+          return (
+            <label key={nivel} className="nivel">
+              <input type="radio" name={`visibilidade-${link.codigo}`} value={nivel} checked={escolhido === nivel} disabled={bloqueado}
+                onChange={() => escolher(nivel)} />
+              <strong>{cm.niveis[nivel].titulo}</strong>
+              <span>{bloqueado ? cm.materialFora : cm.niveis[nivel].texto}</span>
+            </label>
+          );
+        })}
+      </fieldset>
+      {escolhido === 'explorar' && !deMaterial && (
+        <div className="publicacao">
+          <fieldset className="interesses" aria-describedby={ids.tema}>
+            <legend>{cm.temaRotulo}</legend>
+            <p className="campo-dica" id={ids.tema}>{cm.temaDica}</p>
+            <div className="interesses__lista">
+              {TEMAS.map((opcao) => (
+                <label key={opcao} className="interesse">
+                  <input type="radio" name={`tema-${link.codigo}`} checked={tema === opcao} onChange={() => setTema(opcao)} />
+                  <span>{mensagens.temas[opcao]}{opcao === temaSugerido && <em className="publicacao__sugerido"> · {cm.temaSugerido}</em>}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="campo">
+            <div className="campo__linha">
+              <label htmlFor={ids.legenda}>{cm.legendaRotulo}</label>
+              <span className="campo__contador" id={ids.contador} data-acima={usados > LIMITES_COMUNIDADE.legendaMax || undefined}>
+                <span aria-hidden="true">{p.resumoContador(usados, LIMITES_COMUNIDADE.legendaMax)}</span>
+                <span className="somente-leitor">{p.resumoContadorLeitor(LIMITES_COMUNIDADE.legendaMax - usados)}</span>
+              </span>
+            </div>
+            <textarea id={ids.legenda} ref={campoLegenda} rows={2} maxLength={220} value={legenda}
+              aria-invalid={erroLegenda ? true : undefined} aria-describedby={`${ids.dica} ${ids.contador}${erroLegenda ? ` ${ids.erro}` : ''}`}
+              onChange={(e) => { setLegenda(e.target.value.replace(/[\r\n]+/g, ' ')); setErroLegenda(null); }} />
+            <p className="campo-dica" id={ids.dica}>{cm.legendaDica}</p>
+            {erroLegenda && <p className="campo-erro" id={ids.erro}>{erroLegenda}</p>}
+          </div>
+          {demonstracao && <p className="folha-aviso" role="note">{cm.demonstracaoAviso}</p>}
+          <div className="folha-acoes recorte__acoes">
+            {publicada
+              ? <Botao disabled={ocupado || !mudouPublicacao} aria-busy={ocupado || undefined} onClick={() => void salvar('explorar')}>{ocupado ? p.salvando : cm.salvarPublicacao}</Botao>
+              : <Botao disabled={ocupado} aria-busy={ocupado || undefined} onClick={() => void salvar('explorar')}>{ocupado ? cm.publicando : cm.publicar}</Botao>}
+            {!publicada && <Botao variante="secundario" disabled={ocupado} onClick={() => setEscolhido(atual)}>{p.cancelar}</Botao>}
+          </div>
+        </div>
+      )}
+      {erro && <p className="campo-erro" role="alert">{erro}</p>}
+      <p className="folha-status" role="status" aria-live="polite">{status}</p>
+    </div>
+  );
+}
+
 type Etapa = 'carregando' | 'perfil' | 'resumo' | 'pronto' | 'parar' | 'visitante' | 'erro';
 
 /**
@@ -222,9 +352,11 @@ type Etapa = 'carregando' | 'perfil' | 'resumo' | 'pronto' | 'parar' | 'visitant
  * pronto, com Compartilhar (Web Share quando existe), Copiar link, "Mostrar no meu perfil" e "Parar de compartilhar"
  * (com confirmação própria). No celular sobe de baixo; no computador fica no centro.
  */
-export function FolhaCompartilhar({ planoId, visitante, aoFechar, aoMudarLink, aoMudarPerfil, anunciar }: {
+export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFechar, aoMudarLink, aoMudarPerfil, anunciar }: {
   planoId: string;
   visitante: boolean;
+  /** Com a comunidade, "Mostrar no meu perfil" vira "Quem pode ver" (três níveis). */
+  comunidade?: boolean;
   aoFechar: () => void;
   aoMudarLink: (planoId: string, link: LinkCompartilhado | null) => void;
   aoMudarPerfil: (perfil: Perfil) => void;
@@ -404,13 +536,20 @@ export function FolhaCompartilhar({ planoId, visitante, aoFechar, aoMudarLink, a
               <Botao variante={podeCompartilhar ? 'secundario' : 'primario'} onClick={() => void copiar()}><Icone nome="copiar" />{m.copiar}</Botao>
             </div>
             <p className="folha-status" role="status" aria-live="polite">{status}</p>
-            <label className="chave">
-              <input type="checkbox" role="switch" checked={link.noPerfil} disabled={ocupado} aria-describedby={dicaPerfilId}
-                onChange={(e) => void alterarPerfil(e.target.checked)} />
-              <span className="chave__trilho" aria-hidden="true" />
-              <span className="chave__texto">{m.noPerfil}</span>
-            </label>
-            <p className="campo-dica" id={dicaPerfilId}>{m.noPerfilDica}</p>
+            {comunidade && previa.temaSugerido ? (
+              <VisibilidadeDaTrilha link={link} temaSugerido={previa.temaSugerido} deMaterial={previa.deMaterial} demonstracao={Boolean(previa.demonstracao)}
+                aoMudar={(novo) => { setLink(novo); aoMudarLink(planoId, novo); }} />
+            ) : (
+              <>
+                <label className="chave">
+                  <input type="checkbox" role="switch" checked={link.noPerfil} disabled={ocupado} aria-describedby={dicaPerfilId}
+                    onChange={(e) => void alterarPerfil(e.target.checked)} />
+                  <span className="chave__trilho" aria-hidden="true" />
+                  <span className="chave__texto">{m.noPerfil}</span>
+                </label>
+                <p className="campo-dica" id={dicaPerfilId}>{m.noPerfilDica}</p>
+              </>
+            )}
             <p className="folha-texto folha-texto--miudo">{m.doZero}</p>
             {erro && <p className="campo-erro" role="alert">{textoErro(erro)}</p>}
             <Botao variante="texto" className="folha-parar" disabled={ocupado} onClick={() => setEtapa('parar')}>{m.parar}</Botao>
@@ -516,7 +655,7 @@ function AcoesDeQuemRecebe({ trilha, logado, adicionar, abrir, ocupado }: {
 }
 
 /** Abre a trilha no app (a página /t está fora dele): guarda o pedido e vai para o início. */
-function abrirNoApp(planoId: string, aviso?: string) {
+export function abrirNoApp(planoId: string, aviso?: string) {
   guardar(CHAVE_ABRIR_PLANO, JSON.stringify({ id: planoId, ...(aviso ? { aviso } : {}) }));
   window.location.assign('/');
 }

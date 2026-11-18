@@ -20,12 +20,14 @@ import {
   type CorPerfil,
   type LinkCompartilhado,
   type Perfil,
+  type CartaoTrilha,
   type Tema,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone, Stu } from '../ui';
-import { Avatar, DialogoConfirmar, codigoDoErro, dataCurta, urlDoLink, useDialogo } from './compartilhar';
+import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, urlDoLink, useDialogo } from './compartilhar';
+import { CartoesDoPerfil } from './comunidade';
 import './perfil.css';
 
 const m = mensagens.compartilhar;
@@ -110,8 +112,11 @@ export function BotaoCompartilharPerfil({ perfilId, nome, variante = 'secundario
 }
 
 /** Tela Perfil: o cabeçalho novo; as trilhas que a pessoa compartilha; o perfil público; a conta e Sair. */
-export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirPlano, editar, sair, anunciar }: {
+export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirPlano, editar, sair, anunciar, comunidade = false, aoAdicionado }: {
   perfil: Perfil | null;
+  /** Com a comunidade: o nível de cada trilha, "Visibilidade" (abre a folha) e os cartões como aparecem na página. */
+  comunidade?: boolean;
+  aoAdicionado?: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
   aoMudarPerfil: (perfil: Perfil) => void;
   aoMudarLink: (planoId: string, link: LinkCompartilhado | null) => void;
   abrirPlano: (id: string) => void;
@@ -124,7 +129,18 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
   const [parando, setParando] = useState<LinkCompartilhado | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [copiado, setCopiado] = useState('');
+  const [folha, setFolha] = useState<string | null>(null);
+  const [cartoes, setCartoes] = useState<CartaoTrilha[] | null>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
+  const assinaturaLinks = perfil?.links.map((link) => `${link.codigo}:${link.visibilidade ?? link.noPerfil}:${link.tema ?? ''}:${link.legenda ?? ''}`).join('|') ?? '';
+
+  // Os cartões como aparecem na página pública (com a comunidade e perfil público); recarrega quando os links mudam.
+  useEffect(() => {
+    if (!comunidade || !perfil?.publico || !perfil.perfilId) { setCartoes(null); return; }
+    let ativo = true;
+    cliente.perfilPublico(perfil.perfilId).then((dados) => { if (ativo) setCartoes(dados.cartoes ?? null); }).catch(() => { if (ativo) setCartoes(null); });
+    return () => { ativo = false; };
+  }, [comunidade, perfil?.publico, perfil?.perfilId, assinaturaLinks]);
 
   useEffect(() => {
     let ativo = true;
@@ -210,13 +226,24 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
                   {perfil.links.map((link) => (
                     <li key={link.codigo} className="perfil-link">
                       <button type="button" className="perfil-link__titulo" onClick={() => abrirPlano(link.planoId)}>{link.titulo}</button>
-                      <p className="perfil-link__meta">{p.desde(dataCurta(link.criadoEm))} · {p.adicoes(link.adicoes)}</p>
-                      <label className="chave">
-                        <input type="checkbox" role="switch" checked={link.noPerfil} disabled={ocupado} onChange={(e) => void alterar(link, e.target.checked)} />
-                        <span className="chave__trilho" aria-hidden="true" />
-                        <span className="chave__texto">{m.noPerfil}<span className="somente-leitor">: {link.titulo}</span></span>
-                      </label>
+                      <p className="perfil-link__meta">
+                        {p.desde(dataCurta(link.criadoEm))} · {p.adicoes(link.adicoes)}{comunidade && link.valeus !== undefined ? ` · ${mensagens.comunidade.valeus(link.valeus)}` : ''}
+                      </p>
+                      {comunidade && link.visibilidade ? (
+                        <p className="selo-visibilidade" data-nivel={link.visibilidade}>
+                          <Icone nome={link.visibilidade === 'explorar' ? 'bussola' : link.visibilidade === 'perfil' ? 'pessoa' : 'copiar'} />
+                          {mensagens.comunidade.niveis[link.visibilidade].titulo}
+                          {link.visibilidade === 'explorar' && link.tema ? ` · ${temas[link.tema]}` : ''}
+                        </p>
+                      ) : (
+                        <label className="chave">
+                          <input type="checkbox" role="switch" checked={link.noPerfil} disabled={ocupado} onChange={(e) => void alterar(link, e.target.checked)} />
+                          <span className="chave__trilho" aria-hidden="true" />
+                          <span className="chave__texto">{m.noPerfil}<span className="somente-leitor">: {link.titulo}</span></span>
+                        </label>
+                      )}
                       <div className="perfil-link__acoes">
+                        {comunidade && <Botao variante="secundario" aria-label={mensagens.comunidade.ajustarRotulo(link.titulo)} onClick={() => setFolha(link.planoId)}><Icone nome="bussola" />{mensagens.comunidade.ajustar}</Botao>}
                         <Botao variante="secundario" onClick={() => void copiar(link)}><Icone nome="copiar" />{m.copiar}<span className="somente-leitor">: {link.titulo}</span></Botao>
                         <Botao variante="texto" className="folha-parar" disabled={ocupado} onClick={() => setParando(link)}>{m.parar}<span className="somente-leitor">: {link.titulo}</span></Botao>
                       </div>
@@ -226,6 +253,11 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
               )}
               <p className="folha-status" role="status" aria-live="polite">{copiado}</p>
             </section>
+          )}
+
+          {cartoes && cartoes.length > 0 && (
+            <CartoesDoPerfil key={assinaturaLinks} inicial={cartoes} logado titulo={mensagens.comunidade.naSuaPagina}
+              aoAbrir={abrirPlano} aoAdicionado={(id, nome, ja) => aoAdicionado?.(id, nome, ja)} />
           )}
 
           {!perfil.visitante && perfil.nome && (
@@ -244,6 +276,14 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
             <Botao variante="secundario" onClick={sair}>{mensagens.sair}</Botao>
           </section>
         </>
+      )}
+      {folha && (
+        <FolhaCompartilhar planoId={folha} visitante={false} comunidade={comunidade} anunciar={anunciar} aoFechar={() => setFolha(null)}
+          aoMudarPerfil={(novo) => { setPerfil(novo); aoMudarPerfil(novo); }}
+          aoMudarLink={(planoId, novo) => {
+            const antigo = perfil?.links.find((item) => item.planoId === planoId);
+            if (antigo) trocarLink(antigo, novo); else aoMudarLink(planoId, novo);
+          }} />
       )}
       {parando && (
         <DialogoConfirmar titulo={m.pararTitulo} texto={m.pararTexto} confirmar={m.pararConfirmar} cancelar={m.pararCancelar}

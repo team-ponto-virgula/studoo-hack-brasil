@@ -34,7 +34,7 @@ function selosDoNo(no: NoCaminho): { icone: NomeIcone; texto: string }[] {
 }
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
-  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira';
+  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha';
 
 const desenhos: Record<NomeIcone, ReactNode> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
@@ -62,6 +62,11 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   imagem: <><rect x="4" y="4.5" width="16" height="15" rx="3" /><circle cx="9" cy="9.5" r="1.6" /><path d="M4.5 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5" /></>,
   lapis: <path d="M14.5 5.5l4 4M5 19l1-4.5L15.5 5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9.5 18z" />,
   lixeira: <path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />,
+  bussola: <><circle cx="12" cy="12" r="8.5" /><path d="M15.5 8.5l-2 5-5 2 2-5z" /></>,
+  // Valeu: coração com a curva de um sorriso (agradecer, não "curtir" uma pessoa).
+  valeu: <path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z" />,
+  mais: <><circle cx="6" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="18" cy="12" r="1.3" fill="currentColor" /></>,
+  bandeirinha: <><path d="M6 20.5V4" /><path d="M6 4.5h11l-2.5 4 2.5 4H6" /></>,
 };
 
 export function Icone({ nome }: { nome: NomeIcone }) {

@@ -3,25 +3,29 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { origemLegivel, type PerfilPublico } from '@studoo/contratos';
 import { FalhaApi } from '@/servidor/acesso/http';
-import { compartilharAtivo, limitarPublico, perfilPublico } from '@/servidor/compartilhar/servico';
+import { compartilharAtivo, comunidadeAtiva, limitarPublico, perfilPublico } from '@/servidor/compartilhar/servico';
+import { perfilPublicoComCartoes } from '@/servidor/compartilhar/comunidade';
 import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
 import { BotaoCompartilharPerfil, CabecalhoPerfil } from '../../perfil';
-import { PaginaPublica, baseDoSite, redeDaPagina } from '../../publico';
+import { CartoesPublicos, DenunciarPerfil } from '../../comunidade';
+import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../../publico';
 
 export const dynamic = 'force-dynamic';
 const p = mensagens.perfil;
 
 /** O perfil público, uma leitura por abertura (página e metadados usam o mesmo resultado). */
-const carregar = cache(async (id: string): Promise<PerfilPublico | 'inativo' | 'limite' | null> => {
+const carregar = cache(async (id: string): Promise<{ perfil: PerfilPublico; logado: boolean } | 'inativo' | 'limite' | null> => {
   if (!compartilharAtivo()) return null;
+  const usuarioId = await usuarioDaPagina();
   try {
     await limitarPublico(await redeDaPagina());
   } catch {
     return 'limite';
   }
   try {
-    return await perfilPublico(id);
+    // Com a comunidade, as trilhas vêm como cartões (e, com sessão, a situação de cada uma).
+    return { perfil: comunidadeAtiva() ? await perfilPublicoComCartoes(id, usuarioId) : await perfilPublico(id), logado: Boolean(usuarioId) };
   } catch (erro) {
     if (erro instanceof FalhaApi && erro.codigo === 'nao_encontrado') return 'inativo';
     throw erro;
@@ -32,7 +36,8 @@ type Props = { params: Promise<{ id: string }> };
 
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const perfil = await carregar((await params).id);
+  const resultado = await carregar((await params).id);
+  const perfil = resultado && typeof resultado !== 'string' ? resultado.perfil : resultado;
   const base: Metadata = { robots: { index: false, follow: false }, metadataBase: baseDoSite() };
   if (!perfil || typeof perfil === 'string') return { ...base, title: `${p.inativo} · Studoo` };
   const descricao = perfil.resumo ?? p.paginaDescricao(perfil.nome, perfil.trilhas.length);
@@ -46,7 +51,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PaginaDoPerfil({ params }: Props) {
   const id = (await params).id;
-  const perfil = await carregar(id);
+  const resultado = await carregar(id);
+  const perfil = resultado && typeof resultado !== 'string' ? resultado.perfil : resultado;
+  const logado = Boolean(resultado && typeof resultado !== 'string' && resultado.logado);
   if (perfil === null) notFound();
   if (typeof perfil === 'string') {
     return (
@@ -64,6 +71,12 @@ export default async function PaginaDoPerfil({ params }: Props) {
     <PaginaPublica>
       <CabecalhoPerfil nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
         alcance={perfil.alcance} acoes={<BotaoCompartilharPerfil perfilId={id} nome={perfil.nome} />} />
+      {perfil.cartoes ? (
+        <>
+          <CartoesPublicos inicial={perfil.cartoes} logado={logado} titulo={p.paginaTitulo(perfil.nome)} />
+          <DenunciarPerfil perfilId={id} logado={logado} />
+        </>
+      ) : <>
       <h2 className="perfil-publico__titulo">{p.paginaTitulo(perfil.nome)}</h2>
       <ul className="perfil-publico__lista">
         {perfil.trilhas.map((trilha) => (
@@ -75,6 +88,7 @@ export default async function PaginaDoPerfil({ params }: Props) {
           </li>
         ))}
       </ul>
+      </>}
     </PaginaPublica>
   );
 }
