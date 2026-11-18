@@ -55,3 +55,14 @@ O app segue a rodada 4 da web publicada (`c824b29`): entrada com uma ação prin
 - Conclusão depois de sair e voltar: as pontes vencidas e a explicação ao Stu entram no andamento da lição (em memória, 24 horas, como o resto do andamento). O cartão "Ponte construída" e o do Explique aparecem mesmo quando a pessoa fecha a lição no meio e volta.
 - Mapa: com a primeira lição atual e o nome dela em duas linhas, o balão "Começar" cobria a faixa da Parte 1. O começo do mapa ganha 64 de fundo e a faixa fica entre os postes da placa e o balão, em 360 e 412.
 - Não se aplicam ao app: Enter para verificar (o teclado do aparelho já envia a lacuna pela tecla de envio e as escolhas são por toque), fontes WOFF2 (o app embute TTF pelo expo-font) e configuração de acesso no servidor da página de login (o app consulta `/api/auth/config` ao abrir e só mostra o Google e o "Esqueci minha senha" quando a resposta os oferece).
+
+## Diferenças deliberadas do app na rodada 4.2
+
+O app segue a web 4.2.1 (`2a43314`): `trilhaRepetida()` no lugar da regra fixa de frações, a placa "A primeira lição já está aberta" (`stuInicioEmAndamento`), "Ponte construída" no mapa, "Apagar" num menu de mais opções, a ponte reaberta montada, a fração da lacuna na fonte da interface com algarismos tabulares e os botões ocupados logo no toque. As diferenças vêm do toque e da tela estreita:
+
+- Menu dos cartões em Minhas trilhas: na web, o "•••" abre um menu sobreposto. No app, o toque mostra "Apagar" ao lado do "•••", no próprio cartão, e um segundo toque fecha. "Apagar" continua pedindo confirmação. Não há botão "+ Nova trilha" no alto da lista, porque a aba "Nova trilha" fica sempre embaixo.
+- Ponte construída (vitória ou releitura): como na web no celular, as quatro tábuas ficam verdes e a legenda sai. Na releitura, o app mantém "Voltar ao exercício" também no alto do cartão (a web mostra só o do fim), para a saída ficar à vista sem rolar em 360 × 800.
+- Próxima ação de cada passo da ponte: ao abrir a ponte e depois de "Ver exemplo" e "Ir para o desafio", a tela rola só o necessário para "Ver exemplo", "Ir para o desafio" e "Conferir este exemplo" ficarem à vista, com o começo do passo perto do alto quando cabe. A rolagem é animada, menos com movimento reduzido.
+- Segunda ponte na mesma lição: o estado da ponte (passo, opção marcada, retorno, vitória) é zerado quando ela fecha. Com o mesmo erro, volta a ponte vencida, montada, para reler. Com um erro diferente, vem a ponte nova, do passo 1, sem nada marcado e sem elogio.
+- Mapa: o nome da trilha vai até duas linhas na barra de cima. Ícone de mostrar senha: um olho desenhado com Views, porque o app não usa SVG.
+
