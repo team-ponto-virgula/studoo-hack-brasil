@@ -253,8 +253,10 @@
 
 .aula-rodape__acoes { display: flex; flex: 0 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 10px; }
 @media (min-width: 768px) {
-  .aula-rodape[data-retorno] .aula-rodape__conteudo { flex-wrap: nowrap; }
+  .aula-rodape[data-retorno] .aula-rodape__conteudo { width: min(100%, 64rem); flex-wrap: nowrap; gap: 12px 24px; }
+  .aula-rodape[data-retorno] .aula-retorno { flex: 1 1 auto; min-width: 0; }
   .aula-rodape[data-retorno] .aula-rodape__acoes { flex-wrap: nowrap; flex: none; }
+  .aula-rodape[data-retorno] .aula-rodape__acoes > .botao { white-space: nowrap; }
 }
 .aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 44px; font-weight: 900; }
 .aula-rodape__acoes > .botao--texto { min-width: auto; padding-inline: 10px; }
