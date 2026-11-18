@@ -659,7 +659,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     <Tela pagina={`licao-${licao.id}`} topo={topo} semLinha rodape={rodape} rolagem={rolagem}
       aoMedir={(altura) => { alturaVisivel.current = altura; medirMais(); }} aoRolar={(y) => { posicaoRolagem.current = y; medirMais(); }}
       aoMedirConteudo={(altura) => { alturaConteudo.current = altura; medirMais(); }}
-      estiloConteudo={licaoEstilos.conteudo}
+      estiloConteudo={licaoEstilos.conteudo} estiloRodapeConteudo={licaoEstilos.rodapeConteudo}
       estiloRodape={retorno === 'certa' ? licaoEstilos.rodapeCerto : retorno === 'errada' ? licaoEstilos.rodapeErrado : undefined}>
       {/* Com a ponte aberta, a etapa fica recolhida (sem desmontar: a resposta e as medidas continuam), como na web 4D. */}
       <View style={ponteAberta ? licaoEstilos.recolhido : undefined}>
@@ -1115,12 +1115,15 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
 /** Opção do exercício: cartão com relevo e a letra; depois da resposta, a escolhida fica verde (pula) ou âmbar. */
 
 const licaoEstilos = StyleSheet.create({
-  topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // A aula da web tem 16 de respiro nos lados no celular (clamp(16px, 4vw, 48px) em aula.css), no alto, no meio e no
+  // rodapé; as outras telas têm 20. A barra do alto vem da faixa comum (20), então ela avança 4 para cada lado.
+  topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: -4 },
   topoColuna: { flex: 1, minWidth: 0, gap: 2 },
   andamento: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   tituloTopo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 15 },
   /** A aula começa mais perto do topo (rodada 4B da web). */
-  conteudo: { paddingTop: 16 },
+  conteudo: { paddingTop: 16, paddingHorizontal: 16 },
+  rodapeConteudo: { paddingHorizontal: 16 },
   /** Exercício recolhido enquanto a ponte está aberta (rodada 4D da web). */
   recolhido: { display: 'none' },
   tituloQuadro: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
