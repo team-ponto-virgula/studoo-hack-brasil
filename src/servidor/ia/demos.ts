@@ -51,7 +51,7 @@ const violao: Demo = {
                 op("grave", "A corda mais grossa e mais grave"),
               ],
               gabarito: ["tarraxa=afina", "casa=nota", "boca=som", "sexta=grave"],
-              feedbackCorreto: "Isso! A tarraxa afina, a casa muda a nota, a boca projeta o som e a 6ª corda é a mais grave.",
+              feedbackCorreto: "A tarraxa afina, a casa muda a nota, a boca projeta o som e a 6ª corda é a mais grave.",
               feedbackIncorreto: "Abra “Ver a ilustração”, embaixo do exercício: cada número mostra onde a parte fica. Comece pelo que você gira para afinar e pela abertura do corpo; os outros pares saem por exclusão.",
             },
             extras: [
@@ -383,7 +383,7 @@ const ingles: Demo = {
               esquerda: [op("hello", "Hello!"), op("from", "I'm from Brazil."), op("nice", "Nice to meet you!")],
               direita: [op("ola", "Olá!"), op("brasil", "Eu sou do Brasil."), op("prazer", "Prazer em conhecer você!")],
               gabarito: ["hello=ola", "from=brasil", "nice=prazer"],
-              feedbackCorreto: "Isso! Com essas três frases você já começa uma conversa.",
+              feedbackCorreto: "Com essas três frases você já começa uma conversa.",
               feedbackIncorreto: "Volte às frases do exemplo (ouça ou leia) e procure palavras conhecidas. Dica: “from” aparece quando alguém diz de onde é.",
             },
             extras: [
@@ -438,7 +438,7 @@ const ingles: Demo = {
               esquerda: [op("gate", "Gate"), op("cartao", "Boarding pass"), op("mala", "Bag")],
               direita: [op("portao", "Portão de embarque"), op("passe", "Cartão de embarque"), op("bolsa", "Mala")],
               gabarito: ["gate=portao", "cartao=passe", "mala=bolsa"],
-              feedbackCorreto: "Isso! No cartão de embarque você acha o portão, e a mala vai no balcão.",
+              feedbackCorreto: "No cartão de embarque você acha o portão, e a mala vai no balcão.",
               feedbackIncorreto: "Releia a explicação: o “boarding pass” é o papel (ou a tela) que mostra para onde ir. Comece por ele.",
             },
             extras: [
@@ -830,7 +830,7 @@ const culinaria: Demo = {
                 op("discos", "Discos cortados na largura do legume"),
               ],
               gabarito: ["brunoise=cubinhos", "julienne=tiras", "rodelas=discos"],
-              feedbackCorreto: "Isso! Brunoise são cubinhos, julienne são tiras e rodelas são discos.",
+              feedbackCorreto: "Brunoise são cubinhos, julienne são tiras e rodelas são discos.",
               feedbackIncorreto: "Pense no formato de cada corte: qual deles vira tiras, como palitos? Qual vira discos? O que sobrar é o dos cubinhos.",
             },
             extras: [
@@ -1146,7 +1146,7 @@ const historia: Demo = {
                 op("republica", "Proclamou a República em 1889"),
               ],
               gabarito: ["pedro=independencia", "joao=corte", "isabel=aurea", "deodoro=republica"],
-              feedbackCorreto: "Isso! Cada personagem ligado ao seu marco.",
+              feedbackCorreto: "Cada personagem ligado ao seu marco.",
               feedbackIncorreto: "Volte à linha do tempo: Dom João chega em 1808, Dom Pedro declara a Independência em 1822, Isabel assina a Lei Áurea em 1888 e Deodoro proclama a República em 1889.",
             },
             extras: [
@@ -1296,7 +1296,7 @@ const fracoes: Demo = {
               esquerda: [op("meio", "1/2"), op("doisTercos", "2/3"), op("tresQuartos", "3/4")],
               direita: [op("tresSextos", "3/6"), op("quatroSextos", "4/6"), op("seisOitavos", "6/8")],
               gabarito: ["meio=tresSextos", "doisTercos=quatroSextos", "tresQuartos=seisOitavos"],
-              feedbackCorreto: "Isso! Em cada par, numerador e denominador foram multiplicados pelo mesmo número.",
+              feedbackCorreto: "Em cada par, numerador e denominador foram multiplicados pelo mesmo número.",
               feedbackIncorreto: "Procure o número que multiplica o numerador e o denominador ao mesmo tempo. Comece por 1/2: por quanto você multiplica o 2 para chegar a um denominador da direita?",
             },
             extras: [
@@ -1575,7 +1575,7 @@ const fotografia: Demo = {
                 op("dura", "Sombras duras e olhos franzidos"),
               ],
               gabarito: ["contraluz=silhueta", "janela=suave", "meiodia=dura"],
-              feedbackCorreto: "Isso! Escolher de onde vem a luz é metade da foto.",
+              feedbackCorreto: "Escolher de onde vem a luz é metade da foto.",
               feedbackIncorreto: "Reveja o conceito: contraluz faz silhueta, janela de lado suaviza e o sol do meio-dia endurece as sombras.",
             },
             extras: [

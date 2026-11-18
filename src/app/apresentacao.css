@@ -35,7 +35,7 @@
   height: 10px;
   border-radius: 999px;
   background: var(--gelo);
-  transition: width 220ms ease-out, background-color 220ms ease-out;
+  transition: width 160ms ease-out, background-color 160ms ease-out;
 }
 
 .apresentacao-pontos > span[data-feito] { background: #9fb1f0; }
