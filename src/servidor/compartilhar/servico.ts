@@ -2,9 +2,14 @@ import { randomBytes, randomUUID } from "node:crypto";
 import {
   CORES_PERFIL,
   FORMATO_CODIGO,
+  LIMITES_PERFIL,
   MATERIAL_COMPARTILHADO,
+  interessesValidos,
   motivoNomeInvalido,
+  motivoResumoInvalido,
   normalizarNomePerfil,
+  normalizarResumoPerfil,
+  type Tema,
   type CorPerfil,
   type DonoPublico,
   type LinkCompartilhado,
@@ -87,18 +92,29 @@ async function perfilEhPublico(usuarioId: string) {
   return (await banco.linkTrilha.count({ where: { usuarioId, noPerfil: true } })) > 0;
 }
 
-async function donoPublico(usuario: { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null }): Promise<DonoPublico> {
+/** O que entra na leitura do usuário para montar o dono público (nome, cor, foto, resumo). */
+const camposDono = { id: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, foto: { select: { token: true } } } as const;
+type UsuarioDono = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; foto: { token: string } | null };
+
+async function donoPublico(usuario: UsuarioDono): Promise<DonoPublico> {
   return {
     nome: usuario.perfilNome ?? "",
     cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul",
+    foto: usuario.foto?.token ?? null,
+    resumo: usuario.perfilResumo || null,
     perfilId: usuario.perfilId && (await perfilEhPublico(usuario.id)) ? usuario.perfilId : null,
   };
 }
 
+/** Só temas conhecidos, na ordem da lista (o banco guarda texto). */
+const temasGuardados = (valores: string[]): Tema[] => interessesValidos(valores.slice(0, LIMITES_PERFIL.interessesMax)) ?? [];
+
+const alcanceDe = (links: { adicoes: number }[]) => ({ trilhas: links.length, pessoas: links.reduce((total, link) => total + link.adicoes, 0) });
+
 export async function obterPerfil(usuarioId: string): Promise<Perfil> {
   const usuario = await banco.usuario.findUniqueOrThrow({
     where: { id: usuarioId },
-    select: { email: true, perfilNome: true, perfilCor: true, perfilId: true },
+    select: { email: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilInteresses: true, foto: { select: { token: true } } },
   });
   const links = await banco.linkTrilha.findMany({
     where: { usuarioId },
@@ -108,6 +124,10 @@ export async function obterPerfil(usuarioId: string): Promise<Perfil> {
   return {
     nome: usuario.perfilNome,
     cor: corValida(usuario.perfilCor) ? usuario.perfilCor : null,
+    resumo: usuario.perfilResumo || null,
+    interesses: temasGuardados(usuario.perfilInteresses),
+    foto: usuario.foto?.token ?? null,
+    alcance: alcanceDe(links),
     perfilId: usuario.perfilId,
     publico: links.some((link) => link.noPerfil),
     email: usuario.email,
@@ -116,17 +136,32 @@ export async function obterPerfil(usuarioId: string): Promise<Perfil> {
   };
 }
 
+/**
+ * Salva nome e cor e, quando vierem, resumo e interesses (sem eles, o que já existe fica: o app antigo só manda nome e
+ * cor). Resumo vazio apaga o resumo.
+ */
 export async function salvarPerfil(usuarioId: string, entrada: unknown): Promise<Perfil> {
-  const { nome: bruto, cor } = (entrada ?? {}) as { nome?: unknown; cor?: unknown };
+  const { nome: bruto, cor, resumo: resumoBruto, interesses: interessesBrutos } = (entrada ?? {}) as { nome?: unknown; cor?: unknown; resumo?: unknown; interesses?: unknown };
   if (typeof bruto !== "string" || bruto.length > 200 || !corValida(cor)) throw new FalhaApi("invalido");
   const nome = normalizarNomePerfil(bruto);
   if (motivoNomeInvalido(nome)) throw new FalhaApi("invalido");
+  if (resumoBruto !== undefined && (typeof resumoBruto !== "string" || resumoBruto.length > 800)) throw new FalhaApi("invalido");
+  const resumo = typeof resumoBruto === "string" ? normalizarResumoPerfil(resumoBruto) : undefined;
+  if (resumo && motivoResumoInvalido(resumo)) throw new FalhaApi("invalido");
+  const interesses = interessesBrutos === undefined ? undefined : interessesValidos(interessesBrutos);
+  if (interesses === null) throw new FalhaApi("invalido");
   const usuario = await banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { email: true, perfilId: true } });
   if (ehEmailVisitante(usuario.email)) throw new FalhaApi("compartilhar_visitante");
   await limitar(`perfil:${usuarioId}`, LIMITES.perfil);
   await banco.usuario.update({
     where: { id: usuarioId },
-    data: { perfilNome: nome, perfilCor: cor, ...(usuario.perfilId ? {} : { perfilId: novoCodigo() }) },
+    data: {
+      perfilNome: nome,
+      perfilCor: cor,
+      ...(resumo !== undefined ? { perfilResumo: resumo || null } : {}),
+      ...(interesses !== undefined ? { perfilInteresses: interesses } : {}),
+      ...(usuario.perfilId ? {} : { perfilId: novoCodigo() }),
+    },
   });
   return obterPerfil(usuarioId);
 }
@@ -194,7 +229,7 @@ export async function previaCompartilhar(usuarioId: string, planoId: string): Pr
   if (!plano) throw new FalhaApi("nao_encontrado");
   const licoes = plano.fluxos.flatMap((fluxo) => fluxo.licoes);
   const [usuario, link] = await Promise.all([
-    banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { perfilNome: true, perfilCor: true } }),
+    banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { perfilNome: true, perfilCor: true, foto: { select: { token: true } } } }),
     banco.linkTrilha.findUnique({ where: { usuarioId_planoId: { usuarioId, planoId } } }),
   ]);
   return {
@@ -204,7 +239,7 @@ export async function previaCompartilhar(usuarioId: string, planoId: string): Pr
     totalPartes: plano.fluxos.length,
     deMaterial: ehDeMaterial(licoes),
     tituloTemNomeDoArquivo: tituloTemNomeDoArquivo(plano.titulo, licoes),
-    perfil: usuario.perfilNome ? { nome: usuario.perfilNome, cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul" } : null,
+    perfil: usuario.perfilNome ? { nome: usuario.perfilNome, cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul", foto: usuario.foto?.token ?? null } : null,
     link: link ? linkPublico(link, plano.titulo) : null,
   };
 }
@@ -264,7 +299,7 @@ async function linkAtivo(codigo: string) {
       codigo: true,
       usuarioId: true,
       planoId: true,
-      plano: { select: { usuario: { select: { id: true, perfilNome: true, perfilCor: true, perfilId: true } } } },
+      plano: { select: { usuario: { select: camposDono } } },
     },
   });
   // Encerrado e inexistente respondem igual.
@@ -356,16 +391,28 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
 /** A página pública do perfil: só as trilhas marcadas. Sem nenhuma marcada, o perfil não existe. */
 export async function perfilPublico(perfilId: string): Promise<PerfilPublico> {
   if (!FORMATO_CODIGO.test(perfilId)) throw new FalhaApi("nao_encontrado");
-  const usuario = await banco.usuario.findUnique({ where: { perfilId }, select: { id: true, perfilNome: true, perfilCor: true } });
+  const usuario = await banco.usuario.findUnique({
+    where: { perfilId },
+    select: { id: true, perfilNome: true, perfilCor: true, perfilResumo: true, perfilInteresses: true, foto: { select: { token: true } } },
+  });
   if (!usuario?.perfilNome) throw new FalhaApi("nao_encontrado");
-  const links = await banco.linkTrilha.findMany({ where: { usuarioId: usuario.id, noPerfil: true }, orderBy: { criadoEm: "desc" }, select: { codigo: true, planoId: true } });
+  const links = await banco.linkTrilha.findMany({ where: { usuarioId: usuario.id, noPerfil: true }, orderBy: { criadoEm: "desc" }, select: { codigo: true, planoId: true, adicoes: true } });
   if (links.length === 0) throw new FalhaApi("nao_encontrado");
   const trilhas = await Promise.all(links.map(async (link) => {
     const plano = await lerTrilha(usuario.id, link.planoId);
     const licoes = plano?.fluxos.flatMap((fluxo) => fluxo.licoes) ?? [];
     return plano && { codigo: link.codigo, titulo: plano.titulo, totalLicoes: licoes.length, origem: ehDeMaterial(licoes) ? rotuloMaterial(usuario.perfilNome!) : plano.origem };
   }));
-  return { nome: usuario.perfilNome, cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul", trilhas: trilhas.filter((trilha) => trilha !== null) };
+  const visiveis = trilhas.filter((trilha) => trilha !== null);
+  return {
+    nome: usuario.perfilNome,
+    cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul",
+    resumo: usuario.perfilResumo || null,
+    interesses: temasGuardados(usuario.perfilInteresses),
+    foto: usuario.foto?.token ?? null,
+    alcance: alcanceDe(links),
+    trilhas: visiveis,
+  };
 }
 
 /**
@@ -373,7 +420,7 @@ export async function perfilPublico(perfilId: string): Promise<PerfilPublico> {
  * público (se existir agora) e o código original (se ainda ativo).
  */
 export async function marcasDasTrilhas(usuarioId: string, planos: { id: string; origemNome: string | null; origemPerfilId: string | null; origemCodigo: string | null }[]) {
-  const marcas = new Map<string, { link?: { codigo: string; noPerfil: boolean }; recebida?: { nome: string; perfilId: string | null; codigoAtivo: string | null } }>();
+  const marcas = new Map<string, { link?: { codigo: string; noPerfil: boolean }; recebida?: { nome: string; perfilId: string | null; codigoAtivo: string | null; foto: string | null } }>();
   if (!compartilharAtivo() || planos.length === 0) return marcas;
   const links = await banco.linkTrilha.findMany({ where: { usuarioId, planoId: { in: planos.map((plano) => plano.id) } }, select: { planoId: true, codigo: true, noPerfil: true } });
   for (const link of links) marcas.set(link.planoId, { link: { codigo: link.codigo, noPerfil: link.noPerfil } });
@@ -381,16 +428,20 @@ export async function marcasDasTrilhas(usuarioId: string, planos: { id: string; 
   if (recebidas.length > 0) {
     const ativos = new Set((await banco.linkTrilha.findMany({ where: { codigo: { in: recebidas.map((plano) => plano.origemCodigo!) } }, select: { codigo: true } })).map((link) => link.codigo));
     const perfisIds = [...new Set(recebidas.map((plano) => plano.origemPerfilId).filter((valor): valor is string => Boolean(valor)))];
-    const publicos = new Set((await banco.usuario.findMany({
-      where: { perfilId: { in: perfisIds }, planos: { some: { links: { some: { noPerfil: true } } } } },
-      select: { perfilId: true },
-    })).map((usuario) => usuario.perfilId));
+    // A foto é a de agora (se a pessoa remover, some daqui também); o perfil só aparece se for público agora.
+    const donos = await banco.usuario.findMany({
+      where: { perfilId: { in: perfisIds } },
+      select: { perfilId: true, foto: { select: { token: true } }, planos: { where: { links: { some: { noPerfil: true } } }, select: { id: true }, take: 1 } },
+    });
+    const publicos = new Set(donos.filter((dono) => dono.planos.length > 0).map((dono) => dono.perfilId));
+    const fotos = new Map(donos.map((dono) => [dono.perfilId, dono.foto?.token ?? null]));
     for (const plano of recebidas) {
       marcas.set(plano.id, {
         recebida: {
           nome: plano.origemNome ?? "",
           perfilId: plano.origemPerfilId && publicos.has(plano.origemPerfilId) ? plano.origemPerfilId : null,
           codigoAtivo: ativos.has(plano.origemCodigo!) ? plano.origemCodigo : null,
+          foto: (plano.origemPerfilId && fotos.get(plano.origemPerfilId)) || null,
         },
       });
     }

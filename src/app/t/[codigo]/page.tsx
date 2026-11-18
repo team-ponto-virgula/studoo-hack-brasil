@@ -55,14 +55,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PaginaDoLink({ params }: Props) {
   const resultado = await carregar((await params).codigo);
-  if (!resultado) notFound();
+  // Sem a flag e link encerrado ou inexistente: 404 (a tela do link encerrado está em not-found.tsx).
+  if (!resultado || resultado.estado === 'inativo') notFound();
   if (resultado.estado !== 'ok') {
     return (
       <PaginaPublica>
         <section className="pagina-publica__vazio">
           <Stu />
-          <h1>{resultado.estado === 'limite' ? mensagens.erros.limite_compartilhar : m.inativo}</h1>
-          {resultado.estado === 'inativo' && <p className="folha-texto">{m.inativoTexto}</p>}
+          <h1>{mensagens.erros.limite_compartilhar}</h1>
           <a className="botao botao--primario" href={resultado.logado ? '/' : '/login'}>{m.criarMinha}</a>
         </section>
       </PaginaPublica>
@@ -70,7 +70,7 @@ export default async function PaginaDoLink({ params }: Props) {
   }
   return (
     <PaginaPublica>
-      <PreviaTrilha trilha={resultado.trilha} acoes={<AcoesDaPaginaPublica trilha={resultado.trilha} logado={resultado.logado} />} />
+      <PreviaTrilha trilha={resultado.trilha} calor acoes={<AcoesDaPaginaPublica trilha={resultado.trilha} logado={resultado.logado} />} />
     </PaginaPublica>
   );
 }

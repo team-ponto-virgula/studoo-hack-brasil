@@ -11,6 +11,7 @@ import {
   ErroStudoo,
   FUNDO_DA_COR,
   codigoDoLink,
+  enderecoFoto,
   inicialDoNome,
   motivoNomeInvalido,
   normalizarNomePerfil,
@@ -62,18 +63,25 @@ function guardar(chave: string, valor: string) {
 }
 
 export const urlDoLink = (codigo: string) => `${window.location.origin}/t/${codigo}`;
-const codigoDoErro = (erro: unknown) => (erro instanceof ErroStudoo ? erro.codigo : 'rede');
+export const codigoDoErro = (erro: unknown) => (erro instanceof ErroStudoo ? erro.codigo : 'rede');
 
-export function Avatar({ nome, cor, grande = false }: { nome: string; cor: CorPerfil; grande?: boolean }) {
+/**
+ * A foto da pessoa (token da foto, em 128 px; 512 nos tamanhos grandes) ou a inicial na cor. Decorativo: o nome sempre
+ * está escrito ao lado. Tamanhos: p (32), m (56), g (96 no celular, 112 no computador) e livre (`--lado`).
+ */
+export function Avatar({ nome, cor, foto = null, grande = false, tamanho }: { nome: string; cor: CorPerfil; foto?: string | null; grande?: boolean; tamanho?: 'p' | 'm' | 'g' }) {
+  const t = tamanho ?? (grande ? 'm' : 'p');
   return (
-    <span className="avatar" data-grande={grande || undefined} style={{ background: FUNDO_DA_COR[cor] }} aria-hidden="true">
-      {inicialDoNome(nome)}
+    <span className="avatar" data-tamanho={t} data-grande={t !== 'p' || undefined} data-foto={foto ? true : undefined} style={{ background: FUNDO_DA_COR[cor] }} aria-hidden="true">
+      {foto
+        ? <img src={enderecoFoto(foto, t === 'g' ? 512 : 128)} alt="" width={t === 'g' ? 112 : t === 'm' ? 56 : 32} height={t === 'g' ? 112 : t === 'm' ? 56 : 32} decoding="async" draggable={false} />
+        : inicialDoNome(nome)}
     </span>
   );
 }
 
 /** Foco preso no diálogo, Esc fecha (ou volta um passo) e, ao fechar, o foco volta para quem abriu. */
-function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => void) {
+export function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => void) {
   const aoEscRef = useRef(aoEsc);
   aoEscRef.current = aoEsc;
   useEffect(() => {
@@ -139,7 +147,7 @@ export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, ocupado =
 
 /** Nome e cor do avatar, com a prévia "Compartilhada por Ana". Valida como o servidor (`motivoNomeInvalido`). */
 export function FormPerfil({ inicial, enviarRotulo, aoSalvar, aoCancelar, tituloId }: {
-  inicial?: { nome: string | null; cor: CorPerfil | null };
+  inicial?: { nome: string | null; cor: CorPerfil | null; foto?: string | null };
   enviarRotulo: string;
   aoSalvar: (perfil: Perfil) => void;
   aoCancelar?: () => void;
@@ -196,7 +204,7 @@ export function FormPerfil({ inicial, enviarRotulo, aoSalvar, aoCancelar, titulo
         </div>
       </fieldset>
       <p className="form-perfil__previa" aria-live="polite">
-        <Avatar nome={normalizado || '?'} cor={cor} />
+        <Avatar nome={normalizado || '?'} cor={cor} foto={inicial?.foto} />
         <span>{m.compartilhadaPor(normalizado || '…')}</span>
       </p>
       <div className="folha-acoes">
@@ -357,7 +365,7 @@ export function FolhaCompartilhar({ planoId, visitante, aoFechar, aoMudarLink, a
         {etapa === 'perfil' && (
           <FormPerfil enviarRotulo={m.continuar} tituloId={tituloId} aoSalvar={(perfil) => {
             aoMudarPerfil(perfil);
-            setPrevia((anterior) => anterior && { ...anterior, perfil: perfil.nome && perfil.cor ? { nome: perfil.nome, cor: perfil.cor } : anterior.perfil });
+            setPrevia((anterior) => anterior && { ...anterior, perfil: perfil.nome && perfil.cor ? { nome: perfil.nome, cor: perfil.cor, foto: perfil.foto } : anterior.perfil });
             setEtapa('resumo');
           }} />
         )}
@@ -368,7 +376,7 @@ export function FolhaCompartilhar({ planoId, visitante, aoFechar, aoMudarLink, a
               <p className="folha-trilha__titulo">{previa.titulo}</p>
               <p className="folha-trilha__contagem">{m.contagem(previa.totalLicoes, previa.totalPartes)}</p>
               {previa.perfil && (
-                <p className="folha-trilha__por"><Avatar nome={previa.perfil.nome} cor={previa.perfil.cor} />{m.compartilhadaPor(previa.perfil.nome)}</p>
+                <p className="folha-trilha__por"><Avatar nome={previa.perfil.nome} cor={previa.perfil.cor} foto={previa.perfil.foto} />{m.compartilhadaPor(previa.perfil.nome)}</p>
               )}
             </div>
             <p className="folha-texto">{m.doZero}</p>
@@ -422,161 +430,19 @@ export function FolhaCompartilhar({ planoId, visitante, aoFechar, aoMudarLink, a
   );
 }
 
-const dataCurta = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
-
-/** Tela Perfil: avatar, nome e Editar; as trilhas que a pessoa compartilha; o perfil público; a conta e Sair. */
-export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirPlano, sair, anunciar }: {
-  perfil: Perfil | null;
-  aoMudarPerfil: (perfil: Perfil) => void;
-  aoMudarLink: (planoId: string, link: LinkCompartilhado | null) => void;
-  abrirPlano: (id: string) => void;
-  sair: () => void;
-  anunciar: (texto: string) => void;
-}) {
-  const [perfil, setPerfil] = useState<Perfil | null>(inicial);
-  const [editando, setEditando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  const [parando, setParando] = useState<LinkCompartilhado | null>(null);
-  const [ocupado, setOcupado] = useState(false);
-  const [copiado, setCopiado] = useState('');
-  const tituloEdicao = useId();
-  const titulo = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    let ativo = true;
-    cliente.obterPerfil().then((dados) => { if (ativo) { setPerfil(dados); aoMudarPerfil(dados); } })
-      .catch((falha) => { if (ativo) setErro(codigoDoErro(falha)); });
-    return () => { ativo = false; };
-    // Recarrega ao abrir a tela (as adições e os links podem ter mudado).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  function trocarLink(antigo: LinkCompartilhado, novo: LinkCompartilhado | null) {
-    setPerfil((atual) => {
-      if (!atual) return atual;
-      const links = novo ? atual.links.map((item) => (item.codigo === antigo.codigo ? novo : item)) : atual.links.filter((item) => item.codigo !== antigo.codigo);
-      return { ...atual, links, publico: links.some((item) => item.noPerfil) };
-    });
-    aoMudarLink(antigo.planoId, novo);
-  }
-
-  async function alterar(link: LinkCompartilhado, noPerfil: boolean) {
-    setOcupado(true);
-    try { trocarLink(link, await cliente.alterarLink(link.codigo, noPerfil)); } catch (falha) { setErro(codigoDoErro(falha)); } finally { setOcupado(false); }
-  }
-
-  async function copiar(link: LinkCompartilhado) {
-    try {
-      await navigator.clipboard.writeText(urlDoLink(link.codigo));
-      setCopiado((anterior) => (anterior === mensagens.compartilhar.copiado ? `${mensagens.compartilhar.copiado} ` : mensagens.compartilhar.copiado));
-    } catch {
-      setCopiado(mensagens.compartilhar.copiarFalhou);
-    }
-  }
-
-  async function confirmarParada() {
-    if (!parando) return;
-    setOcupado(true);
-    try {
-      await cliente.encerrarLink(parando.codigo);
-      trocarLink(parando, null);
-      anunciar(mensagens.compartilhar.parado);
-      setParando(null);
-    } catch (falha) {
-      setErro(codigoDoErro(falha));
-      setParando(null);
-    } finally {
-      setOcupado(false);
-    }
-  }
-
-  return (
-    <section className="painel painel--perfil">
-      <h1 ref={titulo} tabIndex={-1}>{p.titulo}</h1>
-      {erro && <p className="campo-erro" role="alert">{textoErro(erro)}</p>}
-      {!perfil && !erro && <div className="folha-esqueleto" aria-hidden="true"><span /><span /><span /></div>}
-      {perfil && (
-        <>
-          <div className="perfil-cartao">
-            {perfil.visitante ? (
-              <p className="perfil-cartao__visitante">{p.visitante}</p>
-            ) : editando || !perfil.nome ? (
-              <>
-                <h2 id={tituloEdicao} className="perfil-secao__titulo">{perfil.nome ? p.editar : m.comoAparecer}</h2>
-                {!perfil.nome && <p className="folha-texto">{p.semNome}</p>}
-                <FormPerfil inicial={{ nome: perfil.nome, cor: perfil.cor }} enviarRotulo={p.salvar} tituloId={tituloEdicao}
-                  aoCancelar={perfil.nome ? () => setEditando(false) : undefined}
-                  aoSalvar={(novo) => { setPerfil(novo); aoMudarPerfil(novo); setEditando(false); anunciar(p.salvo); }} />
-              </>
-            ) : (
-              <div className="perfil-cartao__linha">
-                <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} grande />
-                <p className="perfil-cartao__nome">{perfil.nome}</p>
-                <Botao variante="secundario" onClick={() => setEditando(true)}>{p.editar}</Botao>
-              </div>
-            )}
-          </div>
-
-          {!perfil.visitante && (
-            <section className="perfil-secao" aria-labelledby="perfil-compartilhadas">
-              <h2 id="perfil-compartilhadas" className="perfil-secao__titulo">{p.compartilhadas}</h2>
-              {perfil.links.length === 0 ? <p className="folha-texto">{p.nenhuma}</p> : (
-                <ul className="perfil-links">
-                  {perfil.links.map((link) => (
-                    <li key={link.codigo} className="perfil-link">
-                      <button type="button" className="perfil-link__titulo" onClick={() => abrirPlano(link.planoId)}>{link.titulo}</button>
-                      <p className="perfil-link__meta">{p.desde(dataCurta(link.criadoEm))} · {p.adicoes(link.adicoes)}</p>
-                      <label className="chave">
-                        <input type="checkbox" role="switch" checked={link.noPerfil} disabled={ocupado} onChange={(e) => void alterar(link, e.target.checked)} />
-                        <span className="chave__trilho" aria-hidden="true" />
-                        <span className="chave__texto">{m.noPerfil}<span className="somente-leitor">: {link.titulo}</span></span>
-                      </label>
-                      <div className="perfil-link__acoes">
-                        <Botao variante="secundario" onClick={() => void copiar(link)}><Icone nome="copiar" />{m.copiar}<span className="somente-leitor">: {link.titulo}</span></Botao>
-                        <Botao variante="texto" className="folha-parar" disabled={ocupado} onClick={() => setParando(link)}>{m.parar}<span className="somente-leitor">: {link.titulo}</span></Botao>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <p className="folha-status" role="status" aria-live="polite">{copiado}</p>
-            </section>
-          )}
-
-          {!perfil.visitante && perfil.nome && (
-            <section className="perfil-secao" aria-labelledby="perfil-publico">
-              <h2 id="perfil-publico" className="perfil-secao__titulo">{p.publicoTitulo}</h2>
-              <p className="folha-texto">{perfil.publico ? p.publico(perfil.links.filter((link) => link.noPerfil).length) : p.privado}</p>
-              {perfil.publico && perfil.perfilId && (
-                <a className="botao botao--secundario perfil-ver" href={`/p/${perfil.perfilId}`} target="_blank" rel="noopener">{p.verComoOutros}</a>
-              )}
-            </section>
-          )}
-
-          <section className="perfil-secao" aria-labelledby="perfil-conta">
-            <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
-            {!perfil.visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email}</p>}
-            <Botao variante="secundario" onClick={sair}>{mensagens.sair}</Botao>
-          </section>
-        </>
-      )}
-      {parando && (
-        <DialogoConfirmar titulo={m.pararTitulo} texto={m.pararTexto} confirmar={m.pararConfirmar} cancelar={m.pararCancelar}
-          ocupado={ocupado} aoConfirmar={() => void confirmarParada()} aoCancelar={() => setParando(null)} />
-      )}
-    </section>
-  );
-}
+export const dataCurta = (iso: string) => new Date(iso).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' });
 
 /**
  * A prévia de uma trilha compartilhada, igual na página /t e no "Adicionar por link": de quem é, título, contagem e
  * origem, as ações logo abaixo (visíveis sem rolar) e as lições por parte.
  */
-export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef }: {
+export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = false }: {
   trilha: TrilhaCompartilhada;
   nivel?: 'h1' | 'h2';
   acoes: ReactNode;
   tituloRef?: RefObject<HTMLHeadingElement | null>;
+  /** Página /t: o Stu dá as boas-vindas e o cartão de quem compartilhou (foto e resumo) vem antes das lições. */
+  calor?: boolean;
 }) {
   const Titulo = nivel;
   const Parte = nivel === 'h1' ? 'h2' : 'h3';
@@ -586,16 +452,34 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef }: {
   const frase = sua ? m.compartilhadaPor(nome) : m.publicoTitulo(nome);
   const antes = sua ? frase.slice(0, frase.length - nome.length) : '';
   const depois = sua ? '' : frase.slice(nome.length);
+  const comCalor = calor && !sua;
   return (
-    <article className="previa-trilha">
+    <article className="previa-trilha" data-calor={comCalor || undefined}>
+      {comCalor && (
+        <div className="previa-trilha__stu">
+          <img className="stu" src="/marca/stu-oi.svg" alt="" width={72} height={79} />
+          <p className="previa-trilha__balao">{m.stuConvite}</p>
+        </div>
+      )}
       <p className="previa-trilha__de">
-        <Avatar nome={nome} cor={trilha.dono.cor} />
+        <Avatar nome={nome} cor={trilha.dono.cor} foto={trilha.dono.foto} />
         <span>{trilha.dono.perfilId ? <>{antes}<a href={`/p/${trilha.dono.perfilId}`}>{nome}</a>{depois}</> : frase}</span>
       </p>
       <Titulo className="previa-trilha__titulo" ref={tituloRef} tabIndex={-1}>{trilha.titulo}</Titulo>
       <p className="previa-trilha__meta">{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</p>
       <div className="previa-trilha__acoes">{acoes}</div>
       {!sua && <p className="previa-trilha__zero">{m.comecaDoZero}</p>}
+      {comCalor && (
+        <section className="quem-compartilhou" aria-label={m.quemCompartilhou}>
+          <Avatar nome={nome} cor={trilha.dono.cor} foto={trilha.dono.foto} tamanho="m" />
+          <div className="quem-compartilhou__texto">
+            <p className="quem-compartilhou__rotulo">{m.quemCompartilhou}</p>
+            <p className="quem-compartilhou__nome">{nome}</p>
+            {trilha.dono.resumo && <p className="quem-compartilhou__resumo">{trilha.dono.resumo}</p>}
+            {trilha.dono.perfilId && <a className="quem-compartilhou__link" href={`/p/${trilha.dono.perfilId}`}>{m.verPerfil(nome)}</a>}
+          </div>
+        </section>
+      )}
       <ol className="previa-trilha__partes">
         {trilha.partes.map((parte, indice) => (
           <li key={indice}>

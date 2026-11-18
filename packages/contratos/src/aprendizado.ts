@@ -1,6 +1,6 @@
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
-import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil } from './compartilhar';
+import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil, Tema } from './compartilhar';
 export * from './estudio';
 export * from './licao';
 export * from './som';
@@ -209,6 +209,8 @@ const codigosErro = [
   "compartilhar_visitante",
   "trilha_recebida",
   "trilha_propria",
+  "foto_invalida",
+  "limite_foto",
 ] as const;
 
 export type CodigoErro = typeof codigosErro[number];
@@ -343,7 +345,11 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     apagarPlano: (id: string) => solicitar<{ apagado: true }>(`/aprendizado/planos/${encodeURIComponent(id)}`, "DELETE"),
     /** Perfil e compartilhar trilha (spec 09; com `compartilhar` no config). */
     obterPerfil: () => solicitar<Perfil>("/perfil"),
-    salvarPerfil: (nome: string, cor: CorPerfil) => solicitar<Perfil>("/perfil", "PUT", { nome, cor }),
+    /** Sem `resumo` ou `interesses`, o que já existe fica como está. */
+    salvarPerfil: (nome: string, cor: CorPerfil, extra?: { resumo?: string; interesses?: Tema[] }) => solicitar<Perfil>("/perfil", "PUT", { nome, cor, ...extra }),
+    /** Foto já recortada (quadrada), em base64: JPEG, PNG ou WebP até 2 MB. Troca a anterior (e o endereço dela). */
+    enviarFoto: (base64: string) => solicitar<Perfil>("/perfil/foto", "PUT", { base64 }),
+    removerFoto: () => solicitar<Perfil>("/perfil/foto", "DELETE"),
     previaCompartilhar: (planoId: string) => solicitar<PreviaCompartilhar>(`/aprendizado/planos/${encodeURIComponent(planoId)}/compartilhar`),
     /** Cria o link da trilha (ou devolve o que já existe). */
     criarLink: (planoId: string) => solicitar<LinkCompartilhado>(`/aprendizado/planos/${encodeURIComponent(planoId)}/compartilhar`, "POST", {}),
