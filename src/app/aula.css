@@ -263,6 +263,7 @@
 }
 .aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 44px; font-weight: 900; }
 .aula-rodape__acoes > .botao--texto { min-width: auto; padding-inline: 10px; }
+.aula-rodape__nota { flex: 1 1 14rem; color: var(--texto2); font-weight: 700; }
 
 .aula-retorno {
   display: grid;
@@ -306,20 +307,25 @@
 
 /* Celular: o painel de retorno mais compacto (ocupava uns 40% da tela e escondia o exercício). O ícone fica pequeno, ao
    lado do título, e o texto usa a largura toda embaixo, em vez de uma coluna estreita ao lado do ícone. */
-@media (max-width: 600px) {
-  .aula-rodape__conteudo { flex-direction: column; align-items: stretch; gap: 8px; }
-  .aula-rodape__nota { flex: none; text-align: center; }
+@media (max-width: 767px) {
+  .aula-rodape { padding-top: 10px; }
+  .aula-rodape__conteudo { flex-direction: column; align-items: stretch; gap: 6px; }
+  .aula-rodape__nota { flex: none; text-align: center; font-size: 0.8125rem; }
   .aula-rodape__acoes { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
-  .aula-rodape__acoes > .botao { width: 100%; min-height: 44px; }
+  .aula-rodape__acoes > .botao { width: 100%; min-height: 48px; }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     gap: 8px;
   }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao--primario {
     order: -1;
     grid-column: 1 / -1;
     width: 100%;
+  }
+  .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao--secundario {
+    white-space: nowrap;
+    padding-inline: 10px;
   }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao--texto {
     order: 2;
@@ -328,19 +334,13 @@
     justify-content: center;
   }
   .aula-rodape[data-retorno='errada'] .aula-rodape__nota { text-align: center; }
-}
-@media (max-width: 767px) {
-  .aula-rodape { padding-top: 10px; }
   .aula-retorno { display: block; }
   .aula-retorno__icone { float: left; width: 34px; height: 34px; margin-right: 10px; box-shadow: 0 3px 0 var(--sucesso); }
   .aula-rodape[data-retorno='errada'] .aula-retorno__icone { box-shadow: 0 3px 0 #b4650d; }
   .aula-retorno__icone .icone { width: 20px; height: 20px; }
   .aula-retorno h2 { font-size: 1.1875rem; line-height: 34px; }
   .aula-retorno p { font-size: 0.9375rem; line-height: 1.4; }
-  .aula-rodape__nota { font-size: 0.8125rem; }
-  .aula-rodape__acoes > .botao { min-height: 48px; }
   /* Menos espaço entre os blocos do painel (texto, link, aviso e botões). */
-  .aula-rodape__conteudo { gap: 6px 16px; }
   .aula-retorno__link { margin-top: 0; }
   .aula-retorno__link .botao { min-height: 32px; }
 }
@@ -369,7 +369,6 @@
   .painel--aula { gap: 22px; min-height: calc(100svh - max(14px, env(safe-area-inset-top))); }
   .aula-miolo { gap: 14px; }
   .aula-explicacao .stu { width: 56px; }
-  .aula-rodape__acoes > .botao { flex: 1 1 0; min-width: 0; }
   .aula-retorno { flex-basis: 100%; }
 }
 
@@ -755,7 +754,6 @@
 .correcao-aberta__nota { color: var(--texto2); font-size: 0.8125rem; }
 
 .aula-retorno__observacao { margin-top: 4px; color: var(--texto2); font-size: 0.9rem; font-weight: 700; }
-.aula-rodape__nota { flex: 1 1 14rem; color: var(--texto2); font-weight: 700; }
 
 /* Prática: a tarefa em destaque, a lista para conferir, a dica, o cronômetro e o "como foi". */
 .aula-quadro[data-etapa='pratica'] { border-color: #e2d1f5; background: #fbf8ff; box-shadow: 0 4px 0 #e2d1f5; }

@@ -833,9 +833,8 @@ export function ApoioDaLicao({
               )}
               {etapaPonte >= 3 && (
                 <div className="estudio-desafio" ref={desafioPonteRef}>
-                  <h3>{ponte.exercicio.enunciado}</h3>
-                  <fieldset className="opcoes" disabled={ocupado || gravando || ponte.concluida}>
-                    <legend className="somente-leitor">{ponte.exercicio.enunciado}</legend>
+                  <h3 id="desafio-ponte-enunciado">{ponte.exercicio.enunciado}</h3>
+                  <fieldset className="opcoes" aria-labelledby="desafio-ponte-enunciado" disabled={ocupado || gravando || ponte.concluida}>
                     {ponte.exercicio.tipo === 'multipla_escolha' &&
                       ponte.exercicio.opcoes.map((o, pos) => (
                         <label

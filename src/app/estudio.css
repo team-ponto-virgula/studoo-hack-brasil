@@ -39,6 +39,13 @@
   gap: 12px;
   margin-top: 20px;
 }
+@media (min-width: 601px) {
+  .estudio-acoes .ensino-gravando {
+    order: 3;
+    flex-basis: 100%;
+    margin-top: 0;
+  }
+}
 .estudio-arquivo {
   position: relative;
   display: flex;
