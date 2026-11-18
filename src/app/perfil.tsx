@@ -188,7 +188,7 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
               <Stu />
               <div>
                 <h2 className="perfil-secao__titulo">{m.comoAparecer}</h2>
-                <p className="folha-texto">{p.semNome}</p>
+                <p className="folha-texto">{p.convitePerfil}</p>
                 <Botao onClick={editar}><Icone nome="lapis" />{p.completar}</Botao>
               </div>
             </div>
@@ -260,11 +260,16 @@ type ErrosCampos = { nome?: string; resumo?: string };
  * com a prévia ao vivo do cabeçalho público. A foto salva na hora (é um envio à parte); o resto salva no botão, com o
  * estado sempre à vista ("Alterações não salvas", "Salvando…", "Tudo salvo") e o erro no próprio campo.
  */
-export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar }: {
+export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, registrarGuarda }: {
   perfil: Perfil;
   aoMudarPerfil: (perfil: Perfil) => void;
   voltar: () => void;
   anunciar: (texto: string) => void;
+  /**
+   * A tela registra uma guarda de saída: qualquer navegação (Voltar, lateral, barra de baixo) passa por ela e, com
+   * alteração não salva, recebe a mesma confirmação. A guarda devolve true quando segurou a saída.
+   */
+  registrarGuarda?: (guarda: ((continuar: () => void) => boolean) | null) => void;
 }) {
   const [salvo, setSalvo] = useState(perfil);
   const [nome, setNome] = useState(perfil.nome ?? '');
@@ -279,7 +284,7 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar }: {
   const [erroFoto, setErroFoto] = useState<string | null>(null);
   const [statusFoto, setStatusFoto] = useState('');
   const [removendo, setRemovendo] = useState<'perguntar' | 'removendo' | null>(null);
-  const [sair, setSair] = useState(false);
+  const [sair, setSair] = useState<(() => void) | null>(null);
   const [toque, setToque] = useState(false);
   const titulo = useRef<HTMLHeadingElement>(null);
   const campoNome = useRef<HTMLInputElement>(null);
@@ -297,6 +302,24 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar }: {
   useEffect(() => { titulo.current?.focus(); }, []);
   useEffect(() => { setToque(window.matchMedia('(pointer: coarse)').matches); }, []);
   useEffect(() => { if (alterado && estado === 'salvo') setEstado('livre'); }, [alterado, estado]);
+
+  const alteradoRef = useRef(alterado);
+  alteradoRef.current = alterado;
+  useEffect(() => {
+    if (!registrarGuarda) return;
+    registrarGuarda((continuar) => {
+      if (!alteradoRef.current) return false;
+      setSair(() => continuar);
+      return true;
+    });
+    return () => registrarGuarda(null);
+  }, [registrarGuarda]);
+
+  /** Sem a guarda registrada (uso isolado), o Voltar confere sozinho. */
+  function sairDaTela() {
+    if (!registrarGuarda && alterado) setSair(() => voltar);
+    else voltar();
+  }
 
   // Fechar a aba com alterações não salvas pede confirmação do navegador.
   useEffect(() => {
@@ -385,7 +408,7 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar }: {
   return (
     <section className="painel painel--editar-perfil" aria-labelledby="editar-perfil-titulo">
       <div className="editar-perfil__topo">
-        <Botao variante="texto" className="editar-perfil__voltar" onClick={() => (alterado ? setSair(true) : voltar())}>
+        <Botao variante="texto" className="editar-perfil__voltar" onClick={sairDaTela}>
           <span aria-hidden="true">←</span> {p.voltarPerfil}
         </Botao>
         <h1 id="editar-perfil-titulo" ref={titulo} tabIndex={-1}>{p.editarPerfil}</h1>
@@ -494,7 +517,7 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar }: {
       )}
       {sair && (
         <DialogoConfirmar titulo={p.sairSemSalvarTitulo} texto={p.sairSemSalvarTexto} confirmar={p.sairSemSalvarConfirmar} cancelar={p.sairSemSalvarCancelar}
-          aoConfirmar={voltar} aoCancelar={() => setSair(false)} />
+          aoConfirmar={() => { const continuar = sair; registrarGuarda?.(null); setSair(null); continuar(); }} aoCancelar={() => setSair(null)} />
       )}
     </section>
   );
@@ -683,11 +706,12 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
           <input type="range" min={100} max={ZOOM_MAX * 100} step={1} value={Math.round(zoom * 100)} disabled={!natural}
             onChange={(e) => aplicarZoom(Number(e.target.value) / 100)} />
         </label>
-        <p className="folha-aviso" role="note">{p.fotoAviso}</p>
+        <p className="folha-aviso recorte__aviso" role="note">{p.fotoAviso}</p>
         {erro && <p className="campo-erro" role="alert">{erro}</p>}
-        <div className="folha-acoes folha-acoes--par">
-          <Botao variante="secundario" disabled={enviando} onClick={aoCancelar}>{p.recorteCancelar}</Botao>
+        {/* A ação principal vem primeiro (no celular fica em cima, à vista); no computador, à direita. */}
+        <div className="folha-acoes recorte__acoes">
           <Botao disabled={!natural || enviando} aria-busy={enviando || undefined} onClick={() => void usar()}>{enviando ? p.fotoEnviando : p.recorteUsar}</Botao>
+          <Botao variante="secundario" disabled={enviando} onClick={aoCancelar}>{p.recorteCancelar}</Botao>
         </div>
       </div>
     </div>

@@ -9,7 +9,10 @@ import {
   motivoResumoInvalido,
   normalizarNomePerfil,
   normalizarResumoPerfil,
+  origemDemonstracao,
+  sugerirTema,
   type Tema,
+  type Visibilidade,
   type CorPerfil,
   type DonoPublico,
   type LinkCompartilhado,
@@ -53,6 +56,18 @@ export function compartilharAtivo(): boolean {
   return process.env.STUDOO_COMPARTILHAR === "1";
 }
 
+/** Comunidade (spec 10, etapa B): só com as duas flags. */
+export function comunidadeAtiva(): boolean {
+  return compartilharAtivo() && process.env.STUDOO_COMUNIDADE === "1";
+}
+
+export function exigirComunidade(): void {
+  if (!comunidadeAtiva()) throw new FalhaApi("nao_encontrado");
+}
+
+export const visibilidadeDe = (link: { noPerfil: boolean; noExplorar?: boolean }): Visibilidade =>
+  link.noExplorar ? "explorar" : link.noPerfil ? "perfil" : "link";
+
 /** Sem a flag, nenhuma rota nova existe: responde como rota desconhecida. */
 export function exigirCompartilhar(): void {
   if (!compartilharAtivo()) throw new FalhaApi("nao_encontrado");
@@ -78,13 +93,22 @@ function validarCodigo(codigo: string) {
   if (!FORMATO_CODIGO.test(codigo)) throw new FalhaApi("link_inativo");
 }
 
-const linkPublico = (link: { codigo: string; planoId: string; criadoEm: Date; adicoes: number; noPerfil: boolean }, titulo: string): LinkCompartilhado => ({
+type LinkGuardado = { codigo: string; planoId: string; criadoEm: Date; adicoes: number; noPerfil: boolean; noExplorar?: boolean; tema?: string | null; legenda?: string | null };
+
+export const linkPublico = (link: LinkGuardado, titulo: string, valeus?: number): LinkCompartilhado => ({
   codigo: link.codigo,
   planoId: link.planoId,
   titulo,
   criadoEm: link.criadoEm.toISOString(),
   adicoes: link.adicoes,
   noPerfil: link.noPerfil,
+  // Com a comunidade: o nível, o tema e a legenda (e os valeus, quando quem chama conta).
+  ...(comunidadeAtiva() ? {
+    visibilidade: visibilidadeDe(link),
+    tema: (link.tema as Tema | null | undefined) ?? null,
+    legenda: link.legenda ?? null,
+    ...(valeus !== undefined ? { valeus } : {}),
+  } : {}),
 });
 
 /** O perfil é público quando ao menos uma trilha está marcada para aparecer nele. */
@@ -93,8 +117,8 @@ async function perfilEhPublico(usuarioId: string) {
 }
 
 /** O que entra na leitura do usuário para montar o dono público (nome, cor, foto, resumo). */
-const camposDono = { id: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, foto: { select: { token: true } } } as const;
-type UsuarioDono = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; foto: { token: string } | null };
+export const camposDono = { id: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, foto: { select: { token: true } } } as const;
+export type UsuarioDono = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; foto: { token: string } | null };
 
 async function donoPublico(usuario: UsuarioDono): Promise<DonoPublico> {
   return {
@@ -119,8 +143,12 @@ export async function obterPerfil(usuarioId: string): Promise<Perfil> {
   const links = await banco.linkTrilha.findMany({
     where: { usuarioId },
     orderBy: { criadoEm: "desc" },
-    select: { codigo: true, planoId: true, criadoEm: true, adicoes: true, noPerfil: true, plano: { select: { titulo: true } } },
+    select: { codigo: true, planoId: true, criadoEm: true, adicoes: true, noPerfil: true, noExplorar: true, tema: true, legenda: true, plano: { select: { titulo: true } } },
   });
+  const valeus = comunidadeAtiva() && links.length > 0
+    ? new Map((await banco.eventoTrilha.groupBy({ by: ["codigo"], where: { tipo: "valeu", codigo: { in: links.map((link) => link.codigo) } }, _count: { _all: true } }))
+      .map((grupo) => [grupo.codigo, grupo._count._all]))
+    : null;
   return {
     nome: usuario.perfilNome,
     cor: corValida(usuario.perfilCor) ? usuario.perfilCor : null,
@@ -132,7 +160,7 @@ export async function obterPerfil(usuarioId: string): Promise<Perfil> {
     publico: links.some((link) => link.noPerfil),
     email: usuario.email,
     visitante: ehEmailVisitante(usuario.email),
-    links: links.map((link) => linkPublico(link, link.plano.titulo)),
+    links: links.map((link) => linkPublico(link, link.plano.titulo, valeus ? valeus.get(link.codigo) ?? 0 : undefined)),
   };
 }
 
@@ -169,7 +197,7 @@ export async function salvarPerfil(usuarioId: string, entrada: unknown): Promise
 type LicaoComConteudo = { titulo: string; conteudo: Prisma.JsonValue };
 
 /** Lições da trilha, em ordem, com o conteúdo (para a prévia e para a cópia). */
-async function lerTrilha(usuarioId: string, planoId: string) {
+export async function lerTrilha(usuarioId: string, planoId: string) {
   return banco.planoAprendizado.findUnique({
     where: { usuarioId_id: { usuarioId, id: planoId } },
     select: {
@@ -189,7 +217,7 @@ const referenciasDe = (licao: LicaoComConteudo) =>
   conteudoValido(licao.conteudo) ? licao.conteudo.referencias ?? [] : [];
 
 /** Trilha feita de material: alguma lição traz referência ao material. */
-const ehDeMaterial = (licoes: LicaoComConteudo[]) => licoes.some((licao) => referenciasDe(licao).length > 0);
+export const ehDeMaterial = (licoes: LicaoComConteudo[]) => licoes.some((licao) => referenciasDe(licao).length > 0);
 
 /** O título traz o nome do arquivo (com ou sem a extensão), como no caso "Estudar <arquivo>". */
 function tituloTemNomeDoArquivo(titulo: string, licoes: LicaoComConteudo[]) {
@@ -241,6 +269,7 @@ export async function previaCompartilhar(usuarioId: string, planoId: string): Pr
     tituloTemNomeDoArquivo: tituloTemNomeDoArquivo(plano.titulo, licoes),
     perfil: usuario.perfilNome ? { nome: usuario.perfilNome, cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul", foto: usuario.foto?.token ?? null } : null,
     link: link ? linkPublico(link, plano.titulo) : null,
+    ...(comunidadeAtiva() ? { temaSugerido: sugerirTema(plano.titulo), demonstracao: origemDemonstracao(plano.origem) } : {}),
   };
 }
 
@@ -281,7 +310,8 @@ export async function alterarLink(usuarioId: string, codigo: string, entrada: un
   const { noPerfil } = (entrada ?? {}) as { noPerfil?: unknown };
   if (typeof noPerfil !== "boolean") throw new FalhaApi("invalido");
   const link = await linkDaDona(usuarioId, codigo);
-  const alterado = await banco.linkTrilha.update({ where: { codigo }, data: { noPerfil } });
+  // Tirar do perfil também tira do Explorar (o Explorar inclui o perfil).
+  const alterado = await banco.linkTrilha.update({ where: { codigo }, data: { noPerfil, ...(noPerfil ? {} : { noExplorar: false }) } });
   return linkPublico(alterado, link.plano.titulo);
 }
 
@@ -339,6 +369,9 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
   const ja = await banco.planoAprendizado.findUnique({ where: { usuarioId_origemCodigo: { usuarioId, origemCodigo: codigo } }, select: { id: true } });
   if (ja) return { planoId: ja.id, jaTinha: true, dono };
   await limitar(`compartilhar:adicionar:${usuarioId}`, LIMITES.adicionar);
+  // O evento com data (para o "Em alta"): um por conta por trilha; conta de visitante não conta.
+  const quem = await banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { email: true } });
+  const evento = ehEmailVisitante(quem.email) ? [] : [banco.eventoTrilha.createMany({ data: [{ codigo, usuarioId, tipo: "adicao" }], skipDuplicates: true })];
 
   const original = await lerTrilha(link.usuarioId, link.planoId);
   if (!original) throw new FalhaApi("link_inativo");
@@ -377,6 +410,7 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
       banco.fluxo.createMany({ data: fluxos }),
       banco.licao.createMany({ data: copias }),
       banco.linkTrilha.update({ where: { codigo }, data: { adicoes: { increment: 1 } } }),
+      ...evento,
     ]);
   } catch (erro) {
     // Dois pedidos ao mesmo tempo: o segundo encontra a trilha do primeiro.

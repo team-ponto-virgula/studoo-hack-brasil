@@ -351,6 +351,7 @@ export const mensagens = {
         interessesRotulo: 'Interesses',
         semResumoDona: 'Conte em uma frase o que você gosta de estudar.',
         completar: 'Completar perfil',
+        convitePerfil: 'Ponha seu nome, uma foto e o que você gosta de estudar. É assim que as pessoas te veem quando você compartilha uma trilha.',
         // Tela Editar perfil
         voltarPerfil: 'Voltar ao perfil',
         fotoRotulo: 'Foto',
@@ -880,6 +881,8 @@ export const mensagens = {
         trilha_propria: 'Esta trilha é sua.',
         foto_invalida: 'Use uma foto JPG, PNG ou WebP de até 2 MB.',
         limite_foto: 'Você trocou de foto muitas vezes. Tente de novo daqui a pouco.',
+        explorar_material: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
+        limite_comunidade: 'Muitas ações por agora. Tente de novo daqui a pouco.',
         falha: 'Não foi possível continuar. Tente novamente.',
         rede: 'Confira a conexão e tente novamente.',
         conexao: 'Confira a conexão e tente novamente.',

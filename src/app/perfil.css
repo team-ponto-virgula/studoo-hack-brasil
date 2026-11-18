@@ -107,9 +107,8 @@
 .editar-perfil__barra {
   position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
   margin-inline: -4px; padding: 12px 4px calc(12px + env(safe-area-inset-bottom));
-  border-top: 2px solid var(--nevoa); background: rgb(255 255 255 / 0.96);
+  border-top: 2px solid var(--gelo); background: var(--fundo); box-shadow: 0 -8px 16px rgb(255 255 255 / 0.9);
 }
-@supports (backdrop-filter: blur(8px)) { .editar-perfil__barra { background: rgb(255 255 255 / 0.86); backdrop-filter: blur(8px); } }
 .editar-perfil__estado { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 800; }
 .editar-perfil__estado .icone { width: 18px; height: 18px; }
 .editar-perfil__estado[data-estado='pendente'] { color: var(--alerta); }
@@ -123,7 +122,7 @@
 /* Recorte: quadro quadrado, círculo do avatar, controle de zoom. */
 .folha--recorte { gap: 12px; grid-auto-rows: max-content; width: min(100%, 26rem); border-bottom: 2px solid var(--gelo); border-radius: 24px; padding-bottom: 20px; }
 .recorte {
-  position: relative; justify-self: center; width: min(100%, 300px, 34svh); aspect-ratio: 1; overflow: hidden;
+  position: relative; justify-self: center; width: min(100%, 300px, 32svh); aspect-ratio: 1; overflow: hidden;
   border-radius: 18px; background: #101833; touch-action: none; cursor: grab; user-select: none;
 }
 .recorte:active { cursor: grabbing; }
@@ -132,6 +131,13 @@
 .recorte__circulo { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 999px rgb(16 24 51 / 0.52); outline: 2px solid rgb(255 255 255 / 0.9); outline-offset: -2px; pointer-events: none; }
 .recorte__zoom { display: grid; gap: 2px; font-size: 0.875rem; font-weight: 800; }
 .recorte__zoom input { width: 100%; min-height: 44px; accent-color: var(--acao); }
+.recorte__aviso { padding: 10px 12px; font-size: 0.875rem; }
+.recorte__acoes { display: grid; grid-template-columns: 1fr; }
+.recorte__acoes > .botao { width: 100%; }
+@media (min-width: 601px) {
+  .recorte__acoes { display: flex; flex-direction: row-reverse; justify-content: flex-start; }
+  .recorte__acoes > .botao { width: auto; }
+}
 
 /* Página /t: o Stu dá as boas-vindas e o cartão de quem compartilhou. */
 .previa-trilha__stu { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 4px; }

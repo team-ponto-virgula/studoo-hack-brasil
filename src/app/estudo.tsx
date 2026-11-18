@@ -130,6 +130,8 @@ export function Estudo() {
   const [compartilhar, setCompartilhar] = useState(false);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [folha, setFolha] = useState<string | null>(null);
+  const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
+  const registrarGuarda = useCallback((guarda: ((continuar: () => void) => boolean) | null) => { guardaSaida.current = guarda; }, []);
 
   useEffect(() => {
     try {
@@ -338,6 +340,8 @@ export function Estudo() {
    * cancelar no fim da trilha não deixa o pedido rolado); o caminho ainda rola até a lição certa depois de desenhar.
    */
   function navegar(destino: Tela) {
+    // Saindo de "Editar perfil" com alteração não salva: a tela pergunta antes (a mesma confirmação do Voltar).
+    if (destino.tipo !== 'editarPerfil' && guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
     if (destino.tipo !== 'geracao') pararGeracao();
     if (destino.tipo !== tela.tipo) voltarAoTopo();
     setErro(null);
@@ -711,7 +715,7 @@ export function Estudo() {
               abrirPlano={(id) => void abrirPlano(id)} editar={() => navegar({ tipo: 'editarPerfil' })} sair={() => void sair()} />
           )}
           {visivel && tela.tipo === 'editarPerfil' && perfil && !perfil.visitante && (
-            <TelaEditarPerfil perfil={perfil} aoMudarPerfil={setPerfil} anunciar={anunciar} voltar={() => navegar({ tipo: 'perfil' })} />
+            <TelaEditarPerfil perfil={perfil} aoMudarPerfil={setPerfil} anunciar={anunciar} voltar={() => navegar({ tipo: 'perfil' })} registrarGuarda={registrarGuarda} />
           )}
           {visivel && tela.tipo === 'licao' && (
             <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}

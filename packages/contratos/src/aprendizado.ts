@@ -1,12 +1,14 @@
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
 import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil, Tema } from './compartilhar';
+import type { MotivoDenuncia, PaginaExplorar, ResultadoValeu, Visibilidade } from './comunidade';
 export * from './estudio';
 export * from './licao';
 export * from './som';
 export * from './fala';
 export * from './voz-ao-vivo';
 export * from './compartilhar';
+export * from './comunidade';
 export * from './codigo-studoo';
 export interface Progresso {
   concluidas: number;
@@ -211,6 +213,8 @@ const codigosErro = [
   "trilha_propria",
   "foto_invalida",
   "limite_foto",
+  "explorar_material",
+  "limite_comunidade",
 ] as const;
 
 export type CodigoErro = typeof codigosErro[number];
@@ -331,7 +335,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     entrarVisitante: () => solicitar<Autenticacao>("/visitante", "POST"),
     entrarVisitanteNativo: () => solicitar<SessaoNativa>("/mobile/visitante", "POST"),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
-    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean; compartilhar?: boolean }>("/auth/config"),
+    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean; compartilhar?: boolean; comunidade?: boolean }>("/auth/config"),
     recuperarSenha: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/senha/recuperar`, 'POST', { email }),
     redefinirSenha: (email: string, codigo: string, senha: string, mobile = false) => solicitar<{ alterada: boolean }>(`${mobile ? '/mobile' : ''}/senha/redefinir`, 'POST', { email, codigo, senha }),
     trocarCodigoGoogle: (codigo: string, verificador: string) => solicitar<SessaoNativa>('/mobile/google', 'POST', { codigo, verificador }),
@@ -354,6 +358,18 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     /** Cria o link da trilha (ou devolve o que já existe). */
     criarLink: (planoId: string) => solicitar<LinkCompartilhado>(`/aprendizado/planos/${encodeURIComponent(planoId)}/compartilhar`, "POST", {}),
     alterarLink: (codigo: string, noPerfil: boolean) => solicitar<LinkCompartilhado>(`/compartilhar/${encodeURIComponent(codigo)}`, "PATCH", { noPerfil }),
+    /** Comunidade (spec 10, etapa B; com `comunidade` no config). "explorar" pede o tema; a legenda é opcional. */
+    definirVisibilidade: (codigo: string, visibilidade: Visibilidade, publicacao?: { tema: Tema; legenda?: string }) =>
+      solicitar<LinkCompartilhado>(`/compartilhar/${encodeURIComponent(codigo)}`, "PATCH", { visibilidade, ...publicacao }),
+    explorar: (filtro: { tema?: Tema | null; cursor?: string | null } = {}) => {
+      const busca = new URLSearchParams();
+      if (filtro.tema) busca.set("tema", filtro.tema);
+      if (filtro.cursor) busca.set("cursor", filtro.cursor);
+      const texto = busca.toString();
+      return solicitar<PaginaExplorar>(`/explorar${texto ? `?${texto}` : ""}`);
+    },
+    valeu: (codigo: string, ativo: boolean) => solicitar<ResultadoValeu>(`/compartilhar/${encodeURIComponent(codigo)}/valeu`, "POST", { ativo }),
+    denunciar: (alvoTipo: "trilha" | "perfil", alvo: string, motivo: MotivoDenuncia) => solicitar<{ registrada: true }>("/denuncias", "POST", { alvoTipo, alvo, motivo }),
     /** Encerra o link; as cópias de quem já adicionou continuam. */
     encerrarLink: (codigo: string) => solicitar<{ encerrado: true }>(`/compartilhar/${encodeURIComponent(codigo)}`, "DELETE"),
     trilhaCompartilhada: (codigo: string) => solicitar<TrilhaCompartilhada>(`/compartilhar/${encodeURIComponent(codigo)}`),

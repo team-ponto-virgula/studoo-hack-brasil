@@ -1,6 +1,7 @@
 import { lerJson, responder, rotaPrivada, rotaPublicaComSessao } from "@/servidor/acesso/http";
 import { enderecoRede } from "@/servidor/acesso/visitante";
-import { alterarLink, encerrarLink, exigirCompartilhar, limitarPublico, trilhaCompartilhada } from "@/servidor/compartilhar/servico";
+import { alterarLink, encerrarLink, exigirComunidade, exigirCompartilhar, limitarPublico, trilhaCompartilhada } from "@/servidor/compartilhar/servico";
+import { definirVisibilidade } from "@/servidor/compartilhar/comunidade";
 
 type Contexto = { params: Promise<{ codigo: string }> };
 
@@ -17,12 +18,20 @@ export function GET(request: Request, context: Contexto) {
   });
 }
 
-/** Mostrar ou não no perfil público. Só a dona; de outra pessoa responde como link inativo. */
+/**
+ * Mostrar ou não no perfil público (`{ noPerfil }`) ou, com a comunidade, o nível de visibilidade
+ * (`{ visibilidade, tema?, legenda? }`). Só a dona; de outra pessoa responde como link inativo.
+ */
 export function PATCH(request: Request, context: Contexto) {
   return rotaPrivada(request, async (usuarioId) => {
     exigirCompartilhar();
     const { codigo } = await context.params;
-    return responder(await alterarLink(usuarioId, codigo, await lerJson(request, 256)));
+    const entrada = await lerJson(request, 2048);
+    if (entrada && typeof entrada === "object" && "visibilidade" in entrada) {
+      exigirComunidade();
+      return responder(await definirVisibilidade(usuarioId, codigo, entrada));
+    }
+    return responder(await alterarLink(usuarioId, codigo, entrada));
   });
 }
 

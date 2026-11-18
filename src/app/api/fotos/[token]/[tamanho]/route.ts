@@ -10,7 +10,7 @@ import { exigirCompartilhar } from "@/servidor/compartilhar/servico";
 export function GET(request: Request, context: { params: Promise<{ token: string; tamanho: string }> }) {
   return rotaPublica(request, async () => {
     exigirCompartilhar();
-    await limitarLeituraFoto(enderecoRede(request));
+    limitarLeituraFoto(enderecoRede(request));
     const { token, tamanho } = await context.params;
     const bytes = await lerFoto(token, tamanho);
     return new Response(new Uint8Array(bytes), {
@@ -19,7 +19,8 @@ export function GET(request: Request, context: { params: Promise<{ token: string
         "Content-Length": String(bytes.length),
         "Cache-Control": "public, max-age=31536000, immutable",
         "Content-Security-Policy": "default-src 'none'; sandbox",
-        "Cross-Origin-Resource-Policy": "same-site",
+        // Token imprevisível e foto pública: a prévia web do app, em outra origem, também carrega.
+        "Cross-Origin-Resource-Policy": "cross-origin",
         "Referrer-Policy": "no-referrer",
         "X-Content-Type-Options": "nosniff",
         "X-Robots-Tag": "noindex, nofollow",

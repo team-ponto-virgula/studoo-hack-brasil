@@ -36,4 +36,6 @@ export const mensagensApi: Record<CodigoErro, string> = {
   trilha_propria: "Esta trilha é sua.",
   foto_invalida: "Use uma foto JPG, PNG ou WebP de até 2 MB.",
   limite_foto: "Você trocou de foto muitas vezes. Tente de novo daqui a pouco.",
+  explorar_material: "Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.",
+  limite_comunidade: "Muitas ações por agora. Tente de novo daqui a pouco.",
 };

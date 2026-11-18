@@ -34,6 +34,8 @@ const statusErros: Record<CodigoErro, number> = {
   trilha_propria: 409,
   foto_invalida: 422,
   limite_foto: 429,
+  explorar_material: 409,
+  limite_comunidade: 429,
 };
 
 export class FalhaApi extends Error {

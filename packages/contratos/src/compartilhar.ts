@@ -1,3 +1,5 @@
+import type { CartaoTrilha, Visibilidade } from './comunidade';
+
 /*
  * Perfis leves e compartilhar trilha (spec 09): o contrato que a web e o app usam. Compartilhar é dar uma cópia: quem
  * abre o link vê uma prévia e adiciona a trilha às próprias, com progresso do zero e sem nada do estudo de quem
@@ -134,6 +136,11 @@ export interface LinkCompartilhado {
   criadoEm: string;
   adicoes: number;
   noPerfil: boolean;
+  /** Com a comunidade (spec 10, etapa B): o nível de visibilidade, o tema e a legenda de quando foi publicada. */
+  visibilidade?: Visibilidade;
+  tema?: Tema | null;
+  legenda?: string | null;
+  valeus?: number;
 }
 
 /** GET /api/perfil */
@@ -166,6 +173,9 @@ export interface PreviaCompartilhar {
   tituloTemNomeDoArquivo: boolean;
   perfil: { nome: string; cor: CorPerfil; foto: string | null } | null;
   link: LinkCompartilhado | null;
+  /** Com a comunidade: o tema sugerido pelo título e se a trilha é do modo demonstração (vai com o rótulo). */
+  temaSugerido?: Tema;
+  demonstracao?: boolean;
 }
 
 export type SituacaoTrilhaCompartilhada = 'nova' | 'adicionada' | 'sua';
@@ -202,6 +212,8 @@ export interface PerfilPublico {
   foto: string | null;
   /** Só das trilhas marcadas para aparecer no perfil. */
   alcance: AlcancePerfil;
+  /** Com a comunidade: as trilhas do perfil como cartões (capa, tema, legenda, estudando e valeus). */
+  cartoes?: CartaoTrilha[];
   trilhas: { codigo: string; titulo: string; totalLicoes: number; origem: string }[];
 }
 

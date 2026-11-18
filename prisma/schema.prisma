@@ -32,6 +32,8 @@ model Usuario {
   perfilResumo     String?
   perfilInteresses String[] @default([])
   foto             FotoPerfil?
+  eventos          EventoTrilha[]
+  denuncias        Denuncia[]
 }
 
 /// Foto do perfil (spec 10), já recortada e regravada em WebP (sem EXIF). O token aleatório é o endereço público e muda a
@@ -83,16 +85,53 @@ model PlanoAprendizado {
 
 /// Link de compartilhamento de uma trilha (um por trilha). Encerrar apaga a linha; apagar a trilha apaga o link.
 model LinkTrilha {
-  codigo    String           @id
-  usuarioId String
-  planoId   String
-  noPerfil  Boolean          @default(false)
-  adicoes   Int              @default(0)
-  criadoEm  DateTime         @default(now()) @db.Timestamptz(3)
-  plano     PlanoAprendizado @relation(fields: [usuarioId, planoId], references: [usuarioId, id], onDelete: Cascade)
+  codigo      String           @id
+  usuarioId   String
+  planoId     String
+  noPerfil    Boolean          @default(false)
+  adicoes     Int              @default(0)
+  criadoEm    DateTime         @default(now()) @db.Timestamptz(3)
+  /// Comunidade (spec 10, etapa B): publicada no Explorar (também aparece no perfil), com tema e legenda.
+  noExplorar  Boolean          @default(false)
+  tema        String?
+  legenda     String?
+  publicadaEm DateTime?        @db.Timestamptz(3)
+  /// Três contas distintas denunciaram: sai do Explorar até revisão.
+  oculta      Boolean          @default(false)
+  plano       PlanoAprendizado @relation(fields: [usuarioId, planoId], references: [usuarioId, id], onDelete: Cascade)
+  eventos     EventoTrilha[]
 
   @@unique([usuarioId, planoId])
   @@index([usuarioId, noPerfil])
+  @@index([noExplorar, oculta, publicadaEm(sort: Desc), codigo(sort: Desc)])
+}
+
+/// Adição ("Quero estudar") e valeu, com data: um por conta por trilha. O "Em alta" soma os dos últimos 7 dias.
+/// Contas de visitante não geram evento. Desligar o valeu apaga a linha.
+model EventoTrilha {
+  codigo    String
+  usuarioId String
+  tipo      String
+  criadoEm  DateTime   @default(now()) @db.Timestamptz(3)
+  link      LinkTrilha @relation(fields: [codigo], references: [codigo], onDelete: Cascade)
+  usuario   Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([codigo, usuarioId, tipo])
+  @@index([tipo, criadoEm])
+  @@index([usuarioId, tipo])
+}
+
+/// Denúncia de trilha (código do link) ou perfil (id público), uma por conta por alvo. Sem painel: banco e log.
+model Denuncia {
+  id        String   @id @default(uuid())
+  alvoTipo  String
+  alvo      String
+  usuarioId String
+  motivo    String
+  criadoEm  DateTime @default(now()) @db.Timestamptz(3)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([alvoTipo, alvo, usuarioId])
 }
 
 model Fluxo {
