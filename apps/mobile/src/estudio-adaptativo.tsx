@@ -33,9 +33,11 @@ import { useAparecer } from './animacoes';
 import { mensagens } from './mensagens';
 import { cores } from './tema';
 const m = mensagens.estudio;
+/** A mensagem de cada código (da API, como `voz_vazia` e `voz_tempo`, ou do app, como `conexao`); fora deles, a geral. */
 function erroTexto(e: unknown) {
-  return e instanceof ErroStudoo
-    ? (mensagens.erros[e.codigo as keyof typeof mensagens.erros] ?? m.erro)
+  const codigo = e instanceof ErroStudoo ? e.codigo : (e as { codigo?: unknown } | null)?.codigo;
+  return typeof codigo === 'string' && Object.hasOwn(mensagens.erros, codigo)
+    ? mensagens.erros[codigo as keyof typeof mensagens.erros]
     : m.erro;
 }
 function Card({ children }: { children: ReactNode }) {
@@ -140,7 +142,11 @@ export function MaterialParaTrilha({
             'image/webp',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             'text/csv',
+            // O Android costuma dar estes tipos a um .csv; sem eles, o arquivo aparece apagado no seletor.
+            'text/comma-separated-values',
             'application/csv',
+            'application/x-csv',
+            'text/x-csv',
             'text/plain',
             'application/vnd.ms-excel',
             'application/octet-stream',

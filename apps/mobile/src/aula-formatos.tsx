@@ -189,7 +189,26 @@ export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolea
 
 /** Ouça e repita: cada frase com a tradução e os botões de ouvir. */
 /** Quem transcreve a fala gravada (a rota de voz do servidor), dado pela lição; sem ela, o "Falar" não aparece. */
-export const TranscritorContexto = createContext<((entrada: ArquivoEstudo) => Promise<{ texto: string }>) | null>(null);
+type Transcritor = (entrada: ArquivoEstudo & { idioma?: string }) => Promise<{ texto: string }>;
+export const TranscritorContexto = createContext<Transcritor | null>(null);
+
+/**
+ * O aviso do "Falar" para cada falha da rota de voz: sem provedor de voz, não ouviu nada, limite de pedidos, conexão.
+ * `voz_tempo` e `voz_falha` usam o aviso geral de tentar de novo: os textos `erros.voz_*` mandam escrever a explicação,
+ * o que só existe no Explique.
+ */
+export function avisoDaFala(falha: unknown): string {
+  const codigo = falha instanceof ErroStudoo ? falha.codigo : (falha as { codigo?: unknown } | null)?.codigo;
+  switch (codigo) {
+    case 'voz_indisponivel': return t.audio.falaPrecisaIa;
+    case 'voz_vazia': return t.audio.naoOuviu;
+    case 'limite_estudio': return mensagens.erros.limite_estudio;
+    case 'conexao': return mensagens.erros.conexao;
+    case 'voz_tempo':
+    case 'voz_falha': return mensagens.erros.falha;
+    default: return t.audio.naoOuviu;
+  }
+}
 
 function textoDaConferencia(conferencia: ConferenciaDaFala): string {
   const palavras = conferencia.faltaram.map((palavra) => `“${palavra}”`).join(', ');
@@ -289,11 +308,11 @@ function FalarNoNavegador({ fala }: { fala: Fala }) {
 }
 
 /**
- * No aparelho: grava (até 8 s, como o reconhecimento da web), a rota de voz transcreve e a frase é conferida. Sem a IA
- * ligada, avisa. Um toque duplo não abre duas gravações; ir para o segundo plano ou sair da etapa para a gravação sem
- * enviar e devolve o modo de áudio, como no "Explique".
+ * No aparelho: grava (até 8 s, como o reconhecimento da web), a rota de voz transcreve no idioma da frase e a frase é
+ * conferida. Cada falha da voz tem o seu aviso (`avisoDaFala`). Um toque duplo não abre duas gravações; ir para o
+ * segundo plano ou sair da etapa para a gravação sem enviar e devolve o modo de áudio, como no "Explique".
  */
-function FalarNoAparelho({ fala, transcrever }: { fala: Fala; transcrever: (entrada: ArquivoEstudo) => Promise<{ texto: string }> }) {
+function FalarNoAparelho({ fala, transcrever }: { fala: Fala; transcrever: Transcritor }) {
   const gravador = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [estado, setEstado] = useState<'parado' | 'ouvindo' | 'conferindo'>('parado');
   const [resultado, setResultado] = useState<Conferido>(null);
@@ -371,10 +390,11 @@ function FalarNoAparelho({ fala, transcrever }: { fala: Fala; transcrever: (entr
       await gravador.stop();
       await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
       if (!gravador.uri) throw new Error();
-      const { texto } = await transcrever(await arquivo(gravador.uri, 'fala.m4a', 'audio/mp4'));
+      // O idioma da frase (BCP 47, como en-US) evita que um inglês curto volte transcrito em português.
+      const { texto } = await transcrever({ ...await arquivo(gravador.uri, 'fala.m4a', 'audio/mp4'), idioma: fala.idioma });
       if (vivo.current) setResultado({ dito: texto, conferencia: conferirFala(fala.texto, texto, fala.idioma) });
     } catch (falha) {
-      if (vivo.current) setErro(falha instanceof ErroStudoo && falha.codigo === 'voz_indisponivel' ? t.audio.falaPrecisaIa : t.audio.naoOuviu);
+      if (vivo.current) setErro(avisoDaFala(falha));
     } finally {
       emCurso.current = false;
       if (vivo.current) setEstado('parado');
