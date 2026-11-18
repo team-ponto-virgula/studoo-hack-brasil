@@ -40,6 +40,7 @@ import { Confete } from './festa';
 import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron } from './interface';
 import { mensagens, textoDaFalta } from './mensagens';
+import { Opcao, letras } from './opcao';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
@@ -112,7 +113,6 @@ const coresDaEtapa: Record<EtapaAula['tipo'], { texto: string; fundo: string }> 
   exercicio: { texto: cores.sucesso, fundo: '#E3F6EA' },
   pratica: { texto: '#6B3FA0', fundo: '#F1E8FB' },
 };
-const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 
 /** Título do acerto: varia entre as lições, sem sorteio (a mesma lição tem sempre o mesmo), como na web. */
 function tituloDoAcerto(id: string) {
@@ -1097,39 +1097,6 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
 }
 
 /** Opção do exercício: cartão com relevo e a letra; depois da resposta, a escolhida fica verde (pula) ou âmbar. */
-function Opcao({ id, letra, texto, selecionada, retorno, desativada, apagada, acao }: {
-  id: string;
-  letra: string;
-  texto: string;
-  selecionada: boolean;
-  retorno: 'certa' | 'errada' | null;
-  desativada: boolean;
-  apagada: boolean;
-  acao: () => void;
-}) {
-  const [focada, setFocada] = useState(false);
-  const pulo = usePulinho(retorno === 'certa', 1.04);
-  let estado = null;
-  if (retorno === 'certa') estado = licaoEstilos.opcaoCerta;
-  else if (retorno === 'errada') estado = licaoEstilos.opcaoErrada;
-  else if (selecionada) estado = licaoEstilos.opcaoSelecionada;
-
-  return (
-    <Animated.View style={{ transform: [{ scale: pulo }], opacity: apagada ? 0.55 : 1 }}>
-      {/* aria-checked além do accessibilityState: o React Native Web só lê os atributos aria-* (o leitor de tela da web precisava do estado). */}
-      <Pressable testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }} aria-checked={selecionada}
-        accessibilityLabel={texto} disabled={desativada} onPress={acao} onFocus={() => setFocada(true)} onBlur={() => setFocada(false)}
-        style={({ pressed }) => [licaoEstilos.opcao, estado, pressed && licaoEstilos.opcaoAfundada, focada && estilos.foco]}>
-        <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-          style={[licaoEstilos.letra, selecionada && licaoEstilos.letraSelecionada, retorno === 'certa' && licaoEstilos.letraCerta,
-            retorno === 'errada' && licaoEstilos.letraErrada]}>
-          <Text style={[licaoEstilos.letraTexto, (selecionada || retorno) && { color: cores.fundo }]}>{letra}</Text>
-        </View>
-        <Text style={[estilos.texto, licaoEstilos.opcaoTexto]}>{texto}</Text>
-      </Pressable>
-    </Animated.View>
-  );
-}
 
 const licaoEstilos = StyleSheet.create({
   topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -1210,18 +1177,6 @@ const licaoEstilos = StyleSheet.create({
   respostaCerta: { borderColor: cores.sucessoClaro, color: cores.sucesso, backgroundColor: '#EEFAF3' },
   respostaErrada: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
   opcoes: { gap: 10 },
-  opcao: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 16, borderWidth: 2, borderBottomWidth: 5,
-    borderColor: cores.gelo, paddingHorizontal: 14, paddingVertical: 10, backgroundColor: cores.fundo },
-  opcaoAfundada: { borderBottomWidth: 2, marginTop: 3 },
-  opcaoSelecionada: { borderColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
-  opcaoCerta: { borderColor: cores.sucessoClaro, borderBottomColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
-  opcaoErrada: { borderColor: '#E3A24A', borderBottomColor: '#F2CF96', backgroundColor: '#FFF6EA' },
-  opcaoTexto: { flex: 1, fontWeight: '700' },
-  letra: { width: 30, height: 30, borderRadius: 9, borderWidth: 2, borderColor: cores.gelo, alignItems: 'center', justifyContent: 'center' },
-  letraSelecionada: { borderColor: cores.acao, backgroundColor: cores.acao },
-  letraCerta: { borderColor: cores.sucessoClaro, backgroundColor: cores.sucessoClaro },
-  letraErrada: { borderColor: '#E3A24A', backgroundColor: '#E3A24A' },
-  letraTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
   rodapeCerto: { borderTopColor: 'transparent', backgroundColor: '#E3F6EA' },
   rodapeErrado: { borderTopColor: 'transparent', backgroundColor: '#FFF1E0' },
   retorno: { gap: 6 },

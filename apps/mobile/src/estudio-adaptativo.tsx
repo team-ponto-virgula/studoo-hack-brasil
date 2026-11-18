@@ -28,6 +28,7 @@ import {
   type ProvedorIa,
 } from '@studoo/contratos';
 import { Botao, Campo, EstadoMensagem, estilos, SeloDemonstracao, LinhaAbrir } from './interface';
+import { Opcao, letras } from './opcao';
 import { CadernoDoStu, CenaPonte, EtapasDoEnsino, OndasDoVolume, PaginaDoMaterial, StuAluno } from './estudio-cenas';
 import { useAparecer } from './animacoes';
 import { mensagens } from './mensagens';
@@ -543,10 +544,7 @@ export function ApoioDaLicao({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoPonte, gravando]);
   const ponteAberta = avaliacao?.correta === false && pedidoPonte > 0;
-  return (
-    <View>
-      {/* Com a ponte aberta, ela fica no alto da tela, sem o cartão da origem antes. */}
-      {!ponteAberta && !!licao.referencias?.length && (
+  const cartaoOrigem = !!licao.referencias?.length && (
         <Card>
           <LinhaAbrir rotulo={m.origem} aberto={fontes} alternar={() => setFontes(!fontes)} />
           {fontes &&
@@ -558,7 +556,11 @@ export function ApoioDaLicao({
               </View>
             ))}
         </Card>
-      )}
+  );
+  return (
+    <View>
+      {/* Com a ponte aberta, ela fica no alto e "De onde veio esta ideia" vem logo abaixo dela, antes do Explique (PT1). */}
+      {!ponteAberta && cartaoOrigem}
       {/* Como na web: o reforço é do exercício errado agora (ou de um reforço começado e não terminado). */}
       {/* O cartão aparece quando a pessoa pede "Ver outro exemplo" no painel (ou se já há um reforço): sem botão repetido. */}
       {ponteAberta && (
@@ -571,7 +573,7 @@ export function ApoioDaLicao({
               {/* Como na web (rodada 1.3): o selo de conteúdo simulado fica perto do título. */}
               {ponte?.simulado && <SeloDemonstracao />}
               {/* Rodada 4D: a saída da ponte fica no alto, à vista desde o começo (na vitória, ela vem embaixo da cena). */}
-              {!venceu && aoVoltarExercicio && (
+              {!venceu && !revendo && aoVoltarExercicio && (
                 <Botao testID="ponte-voltar" variante="texto" compacto rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} />
               )}
             </View>
@@ -585,7 +587,7 @@ export function ApoioDaLicao({
             aoMedir={(y) => { cenaY.current = y; }} />
           {/* Rodada 4.3: na releitura, um aviso neutro no lugar do elogio ("Você já construiu esta ponte…"). */}
           {revendo && Boolean(ponte) && (
-            <Text testID="aviso-ponte-reaberta" accessibilityLiveRegion="polite" style={[estilos.texto, { fontWeight: '700' }]}>{m.ponteReabertaAviso}</Text>
+            <Text testID="aviso-ponte-reaberta" accessibilityLiveRegion="polite" style={estilos.texto}>{m.ponteReabertaAviso}</Text>
           )}
           {/* Na vitória, o retorno ("Isso!…") e a volta ao exercício ficam logo embaixo da cena, à vista com a travessia. */}
           {venceu && (
@@ -598,8 +600,9 @@ export function ApoioDaLicao({
               )}
             </>
           )}
-          <T>{ponte?.motivo ?? m.ponteDica}</T>
-          {!ponte ? (
+          {/* PT6: vencida a ponte, o cartão recolhe como na web: some a explicação, o exemplo e o desafio. */}
+          {!venceu && <T>{ponte?.motivo ?? m.ponteDica}</T>}
+          {venceu ? null : !ponte ? (
             <Text accessibilityLiveRegion="polite" style={estilos.texto}>{erro || m.pensando}</Text>
           ) : (
             <>
@@ -626,26 +629,25 @@ export function ApoioDaLicao({
               )}
               {etapaPonte >= 3 && (
                 <View style={s.desafio} onLayout={(evento) => { desafioY.current = evento.nativeEvent.layout.y; }}>
-                  <Text ref={desafioPonte} accessible accessibilityRole="header" style={estilos.subtitulo}>{ponte.exercicio.enunciado}</Text>
-                  {ponte.exercicio.tipo === 'multipla_escolha' &&
-                    ponte.exercicio.opcoes.map((o) => {
-                      const conferida = resultadoPonte?.id === o.id ? resultadoPonte : null;
-                      return (
-                        <Botao
-                          key={o.id}
-                          rotulo={`${resposta === o.id ? '✓ ' : ''}${o.texto}`}
-                          variante={conferida ? (conferida.correta ? 'sucesso' : 'alerta') : resposta === o.id ? 'primario' : 'secundario'}
-                          // A opção certa já conferida fica à vista (verde, sem esmaecer); as outras travam.
-                          desativado={ocupado || gravando || (venceu && !conferida)}
-                          acao={() => {
-                            if (venceu) return;
-                            setResposta(o.id);
-                            setResultadoPonte(null);
-                            setRetorno('');
-                          }}
-                        />
-                      );
-                    })}
+                  <Text ref={desafioPonte} accessible accessibilityRole="header" style={s.perguntaDesafio}>{ponte.exercicio.enunciado}</Text>
+                  {ponte.exercicio.tipo === 'multipla_escolha' && (
+                    <View accessibilityRole="radiogroup" accessibilityLabel={ponte.exercicio.enunciado} style={s.opcoesDesafio}>
+                      {ponte.exercicio.opcoes.map((o, posicao) => {
+                        const conferida = resultadoPonte?.id === o.id ? resultadoPonte : null;
+                        return (
+                          <Opcao key={o.id} id={`ponte-${o.id}`} letra={letras[posicao] ?? String(posicao + 1)} texto={o.texto}
+                            selecionada={resposta === o.id} retorno={conferida ? (conferida.correta ? 'certa' : 'errada') : null}
+                            desativada={ocupado || gravando || venceu} apagada={venceu && !conferida}
+                            acao={() => {
+                              if (venceu) return;
+                              setResposta(o.id);
+                              setResultadoPonte(null);
+                              setRetorno('');
+                            }} />
+                        );
+                      })}
+                    </View>
+                  )}
                   {!venceu && (
                     <View onLayout={(evento) => { const { y, height } = evento.nativeEvent.layout; mostrarProximaAcao('p3', () => desafioY.current, () => desafioY.current + y + height); }}>
                     <Botao
@@ -684,6 +686,7 @@ export function ApoioDaLicao({
           )}
         </Card></View>
       )}
+      {ponteAberta && cartaoOrigem}
       {ultimo && <View onLayout={(evento) => { cartaoEnsinoY.current = evento.nativeEvent.layout.y; }}><Card>
         <LinhaAbrir rotulo={m.ensinar} aberto={ensinar} desativado={gravando || ocupado} alternar={() => setEnsinar(!ensinar)} />
         {ensinar && (
@@ -760,6 +763,9 @@ export function ApoioDaLicao({
 }
 const s = StyleSheet.create({
   acoesMaterial: { gap: 12, marginTop: 20 },
+  // A pergunta do desafio da ponte como a do exercício (24 px, -1 px) e as opções no espaço da lista da aula.
+  perguntaDesafio: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 28 },
+  opcoesDesafio: { gap: 10 },
   origemNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   arquivo: { minHeight: 48, justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderStyle: 'dashed',
     borderColor: cores.acao, borderRadius: 14 },
