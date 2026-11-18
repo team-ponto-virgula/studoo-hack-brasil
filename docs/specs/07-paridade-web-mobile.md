@@ -66,3 +66,8 @@ O app segue a web 4.2.1 (`2a43314`): `trilhaRepetida()` no lugar da regra fixa d
 - Segunda ponte na mesma lição: o estado da ponte (passo, opção marcada, retorno, vitória) é zerado quando ela fecha. Com o mesmo erro, volta a ponte vencida, montada, para reler. Com um erro diferente, vem a ponte nova, do passo 1, sem nada marcado e sem elogio.
 - Mapa: o nome da trilha vai até duas linhas na barra de cima. Ícone de mostrar senha: um olho desenhado com Views, porque o app não usa SVG.
 
+## Rodada 4.3 no app
+
+- "Experimentar sem conta": o mesmo bloco da web (botão principal e aviso), só quando `/api/auth/config` devolve `visitante: true`. O aviso é o do aparelho (`experimentarAvisoApp`). O toque pede `POST /api/mobile/visitante` e segue o caminho do login por senha (SecureStore e entrada no app). Com o visitante oferecido, "Entrar" fica secundário, como na web. `limite_visitante` aparece no cartão de erro da entrada. No site publicado, o visitante continua desligado.
+- Ponte reaberta: o aviso neutro `ponteReabertaAviso` fica logo abaixo da cena, no lugar do elogio da vitória. O botão do desafio diz "Verificar", texto que vem do contrato.
+
