@@ -645,13 +645,13 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   }
 
   return (
-    <Tela pagina="objetivo" acoes={acoes} rodape={modo === 'ideia' ? <Botao rotulo={mensagens.inicio.criar} testID="gerar-trilha"
-      desativado={ocupado || !texto} acao={tentar} /> : undefined}>
+    <Tela pagina="objetivo" acoes={acoes}>
       <View style={estudoEstilos.pedidoHeroi}>
-        <View style={estudoEstilos.pedidoHalo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <View style={estudoEstilos.pedidoStu} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <View style={estudoEstilos.pedidoHalo}><View style={estudoEstilos.pedidoHaloMiolo} /></View>
           <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            style={{ width: 70, height: 80, transform: [{ translateY: balancoInicio }] }} />
-          <Text style={estudoEstilos.pedidoEstrela}>✦</Text>
+            style={{ width: 96, height: 110, transform: [{ translateY: balancoInicio }] }} />
+          <Text style={[estudoEstilos.pedidoEstrela, { fontFamily: fontes.corpo }]}>✦</Text>
         </View>
         <Titulo testID="titulo-objetivo" foco={focarTitulo} estilo={estudoEstilos.pedidoTitulo}>
           {modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}
@@ -676,6 +676,9 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
           )}
           {mostrarContador && <Text style={[estilos.legenda, estudoEstilos.contador]}>{contador}</Text>}
         </View>
+        {/* Como na web: o botão vem logo abaixo do campo, no fluxo da página, com a seta e face de 56 px. */}
+        <Botao rotulo={mensagens.inicio.criar} testID="gerar-trilha" icone="seta" fonte={17} estilo={estudoEstilos.criar}
+          desativado={ocupado || !texto} acao={tentar} />
       </View>
       {/* Como na web (rodada 1): a entrada do material próprio, 1º passo da demonstração, fica logo abaixo do campo, à vista
           sem rolar, com o selo "Seu material". */}
@@ -690,22 +693,18 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
             <Text style={estudoEstilos.alternarTitulo}>{modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}</Text>
             {modo === 'ideia' && <Text style={estudoEstilos.alternarSelo}>{mensagens.pedido.seuMaterial}</Text>}
           </View>
-          <Text style={estilos.legenda}>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</Text>
+          <Text style={estudoEstilos.alternarDica}>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</Text>
         </View>
         <Icone nome="seta" tamanho={20} cor={cores.textoSecundario} />
       </Pressable>
       <View style={modo !== 'ideia' && { display: 'none' }}>
-        <View style={estudoEstilos.sugestoes}>
-          <View style={estudoEstilos.sugestoesTopo}>
-            <Text accessibilityRole="header" style={estudoEstilos.sugestoesTitulo}>{mensagens.pedido.sugestoes}</Text>
+        {/* Como .pedido-ideias da web: o nome do grupo é só para o leitor de tela; as fichas quebram linha, centralizadas. */}
+        <View key={tema.id} role="group" accessibilityLabel={mensagens.pedido.sugestoes} style={estudoEstilos.sugestoes}>
             <Surpresa desativada={ocupado} acao={surpreender} />
-          </View>
-          <View key={tema.id} style={estudoEstilos.exemplos}>
-            {tema.exemplos.slice(0, 4).map((exemplo, indice) => (
+            {tema.exemplos.map((exemplo, indice) => (
               <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(tema, exemplo)} testID={`sugestao-${indice}`} ordem={indice}
                 escolhida={texto === exemplo} desativada={ocupado} acao={() => sugerir(exemplo)} />
             ))}
-          </View>
         </View>
       </View>
       <LinkComoFunciona desativado={ocupado} acao={comoFunciona} />
@@ -806,9 +805,9 @@ function CampoObjetivo({ campoRef, valor, aoMudar, editavel, dica, brilho }: {
 
   return (
     <View>
-      <Campo campoRef={campoRef} testID="objetivo-estudo" rotulo={mensagens.inicio.campo} value={valor}
-        onChangeText={aoMudar} editable={editavel} multiline maxLength={LIMITES_GERACAO.objetivoMax}
-        placeholder={mensagens.inicio.exemplo} accessibilityHint={dica} style={estudoEstilos.entradaPedido}
+      <Campo campoRef={campoRef} testID="objetivo-estudo" rotulo={mensagens.inicio.campo} rotuloOculto value={valor}
+        onChangeText={aoMudar} editable={editavel} multiline maxLength={LIMITES_GERACAO.objetivoMax} placeholderTextColor="#9AA3BF"
+        placeholder={mensagens.inicio.exemplo} accessibilityHint={dica} style={[estudoEstilos.entradaPedido, focado && estudoEstilos.entradaPedidoFocada]}
         onFocus={() => setFocado(true)} onBlur={() => setFocado(false)} />
       <Animated.View pointerEvents="none" style={[estudoEstilos.luzCampo, { opacity: luz }]} />
     </View>
@@ -822,10 +821,7 @@ function LinkComoFunciona({ desativado, acao }: { desativado: boolean; acao: () 
     <Pressable testID="como-funciona" accessibilityRole="button" accessibilityState={{ disabled: desativado }} disabled={desativado}
       onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
       style={({ pressed }) => [estudoEstilos.como, pressed && estudoEstilos.comoPressionado, focado && estilos.foco]}>
-      <View style={estudoEstilos.comoSinal} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <Text style={estudoEstilos.comoSinalTexto}>?</Text>
-      </View>
-      <Text style={[estudoEstilos.comoTexto, desativado && { color: cores.textoSecundario }]}>{mensagens.pedido.comoFunciona}</Text>
+      <Text style={[estudoEstilos.comoTexto, desativado && { color: cores.textoSecundario }]}>{mensagens.inicio.saberMais}</Text>
     </Pressable>
   );
 }
@@ -888,14 +884,10 @@ function Sugestao({ texto, icone, testID, ordem, escolhida, desativada, acao }: 
         disabled={desativada} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
         style={({ pressed }) => [estudoEstilos.chip, escolhida && estudoEstilos.chipEscolhida, desativada && estudoEstilos.chipDesativada,
           pressed && estudoEstilos.chipAfundado, focado && estilos.foco]}>
-        <View style={estudoEstilos.chipIcone} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Desenho nome={icone} largura={26} />
-        </View>
-        <Text style={[estudoEstilos.chipTexto, desativada && { color: cores.textoSecundario }]}>{texto}</Text>
-        <Animated.View style={[estudoEstilos.chipAcao, escolhida && estudoEstilos.chipAcaoEscolhida, { transform: [{ scale: pulo }] }]}
-          importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Icone nome={escolhida ? 'check' : 'seta'} tamanho={18} cor={escolhida ? cores.fundo : cores.textoSecundario} />
+        <Animated.View style={{ transform: [{ scale: pulo }] }} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Desenho nome={icone} largura={24} />
         </Animated.View>
+        <Text numberOfLines={1} style={[estudoEstilos.chipTexto, escolhida && { color: cores.acao }, desativada && { color: cores.textoSecundario }]}>{texto}</Text>
       </Pressable>
     </Animated.View>
   );
@@ -995,7 +987,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         {proposta && existente && (
           <View testID="trilha-repetida" accessibilityLiveRegion="polite" style={estudoEstilos.repetida}>
             <Text style={estudoEstilos.repetidaTexto}>{mensagens.geracao.repetida(existente.titulo)}</Text>
-            <Botao rotulo={mensagens.geracao.abrirExistente} testID="abrir-existente" variante="secundario" compacto desativado={ocupado}
+            <Botao rotulo={mensagens.geracao.abrirExistente} testID="abrir-existente" variante="secundario" estilo={{ alignSelf: 'flex-start' }} desativado={ocupado}
               acao={() => abrirExistente(existente.id)} />
           </View>
         )}
@@ -1867,15 +1859,18 @@ const estudoEstilos = StyleSheet.create({
   },
   seloTrilha: { marginBottom: 12 },
   // Pedido simplificado
-  pedidoHeroi: { alignItems: 'center', gap: 6, marginBottom: 4, paddingTop: 4 },
-  pedidoHalo: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center', borderRadius: 48, borderWidth: 8,
-    borderColor: '#FFE08A', backgroundColor: '#FFF3C4' },
-  pedidoEstrela: { position: 'absolute', top: -2, right: 4, color: '#FFB703', fontSize: 24, lineHeight: 28 },
+  pedidoHeroi: { alignItems: 'center', gap: 8, paddingTop: 8 },
+  // Como .pedido-heroi__stu e o halo da web: 120 px, o miolo claro e o anel amarelo do gradiente, com o Stu de 96 por cima.
+  pedidoStu: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
+  pedidoHalo: { position: 'absolute', width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFE08A' },
+  pedidoHaloMiolo: { width: 69, height: 69, borderRadius: 35, backgroundColor: '#FFF3C4' },
+  pedidoEstrela: { position: 'absolute', top: 6, right: 8, color: '#FFB703', fontSize: 24, lineHeight: 28 },
   // Como .pedido-heroi h1 da web no celular: 30 px (clamp de 1,875rem), entrelinha 1,08.
   pedidoTitulo: { fontSize: 30, lineHeight: 32, textAlign: 'center' },
   pedidoFala: { minHeight: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24, textAlign: 'center' },
-  alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14, paddingVertical: 12, paddingLeft: 12, paddingRight: 16,
-    borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.destaqueBorda, backgroundColor: cores.superficieSutil },
+  alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 18, paddingVertical: 14, paddingLeft: 14, paddingRight: 18,
+    borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.destaqueBorda, borderBottomColor: cores.gelo, backgroundColor: '#F7F9FF' },
+  alternarDica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   alternarLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   alternarSelo: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', backgroundColor: '#E5EBFF',
     color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
@@ -1918,7 +1913,8 @@ const estudoEstilos = StyleSheet.create({
   preenchimento: { height: '100%', backgroundColor: cores.acao, borderRadius: 7, overflow: 'hidden' },
   brilhoBarra: { position: 'absolute', top: 3, left: 6, right: 6, height: 3, borderRadius: 2, backgroundColor: 'rgba(255, 255, 255, 0.3)' },
   // Faixa do topo da trilha: cartão branco com relevo, como na web.
-  faixa: { marginBottom: 12, padding: 20, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  // Como o cabeçalho da proposta na web: solto na página, sem cartão (o título, a origem e o aviso de trilha repetida).
+  faixa: { marginBottom: 12 },
   faixaLarga: { padding: 24 },
   // Como o título da proposta na web (clamp(1,5rem, 4vw, 2rem) = 24 px no celular, entrelinha 1,12).
   tituloFaixa: { fontSize: 24, lineHeight: 27 },
@@ -1947,8 +1943,8 @@ const estudoEstilos = StyleSheet.create({
   liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   // Lição concluída
   conclusaoTopo: { alignItems: 'center' },
-  repetida: { gap: 10, marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: '#FFF6D9' },
-  repetidaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
+  repetida: { gap: 10, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFF6D9' },
+  repetidaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   cartaoApagar: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center', paddingHorizontal: 8 },
   menu: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' },
   menuBotao: { minWidth: 48, minHeight: 48, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
@@ -1995,44 +1991,42 @@ const estudoEstilos = StyleSheet.create({
   balaoFalaSeta: { position: 'absolute', left: -9, bottom: 12, width: 14, height: 14, borderLeftWidth: 2, borderBottomWidth: 2,
     borderColor: cores.gelo, borderBottomLeftRadius: 3, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
   balaoFalaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
-  luzCampo: { position: 'absolute', left: -3, right: -3, top: 25, bottom: -3, borderRadius: 17, borderWidth: 3, borderColor: '#F0B429' },
-  como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 48, marginTop: 6, marginLeft: -8,
-    paddingHorizontal: 8, borderRadius: 12 },
+  luzCampo: { position: 'absolute', left: -3, right: -3, top: -3, bottom: -3, borderRadius: 27, borderWidth: 3, borderColor: '#F0B429' },
+  // Como .pedido-como da web: 44 px, centralizado, 800.
+  como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'center', minHeight: 44, marginTop: 26, paddingHorizontal: 10, borderRadius: 12 },
   comoPressionado: { backgroundColor: cores.nevoa },
   comoSinal: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5EBFF' },
   comoSinalTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16 },
-  comoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
+  comoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   aviso: { marginTop: 14, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: cores.nevoa,
     color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
-  campoPedido: { marginTop: 14, gap: 8 },
-  entradaPedido: { minHeight: 100, fontSize: 18, lineHeight: 26, backgroundColor: '#FBFCFF' },
+  campoPedido: { marginTop: 18, marginBottom: 14, gap: 8 },
+  entradaPedido: { minHeight: 117, paddingVertical: 18, paddingHorizontal: 20, borderWidth: 3, borderBottomWidth: 8, borderRadius: 24,
+    borderColor: cores.gelo, backgroundColor: cores.fundo, fontSize: 19, lineHeight: 27, fontWeight: '700' },
+  entradaPedidoFocada: { borderColor: cores.acao, borderBottomColor: '#B9C7F5', outlineWidth: 0 },
+  criar: { minHeight: 60 },
   campoErro: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   campoErroTexto: { flex: 1, color: cores.erro, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   dica: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   contador: { alignSelf: 'flex-end' },
-  sugestoes: { marginTop: 22, gap: 14 },
-  sugestoesTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  sugestoesTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 24 },
-  surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48, paddingHorizontal: 14, borderRadius: 999,
-    borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE3A3', backgroundColor: '#FFF7E0' },
-  surpresaAfundada: { borderBottomWidth: 2, marginTop: 2 },
-  surpresaTexto: { color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
+  // Como .pedido-ideias e .pedido-ideia da web: fichas de 46 px com lábio de 3, que quebram linha, centralizadas.
+  sugestoes: { marginTop: 20, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
+  surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 49, paddingVertical: 8, paddingLeft: 10, paddingRight: 16, borderRadius: 999,
+    borderWidth: 2, borderBottomWidth: 5, borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
+  surpresaAfundada: { borderBottomWidth: 2, marginTop: 3 },
+  surpresaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },
   areasRolagem: { marginHorizontal: -20 },
   areas: { gap: 8, paddingHorizontal: 20, paddingVertical: 2 },
   area: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48, paddingLeft: 10, paddingRight: 14, borderRadius: 999,
     borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   areaEscolhida: { borderColor: cores.acao, backgroundColor: '#F0F4FF' },
   areaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
-  exemplos: { gap: 10 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, paddingLeft: 8, paddingRight: 10, paddingVertical: 8,
-    borderWidth: 2, borderBottomWidth: 4, borderColor: cores.gelo, borderRadius: 18, backgroundColor: cores.fundo },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 49, paddingVertical: 8, paddingLeft: 10, paddingRight: 16,
+    borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, borderRadius: 999, backgroundColor: cores.fundo },
   chipEscolhida: { borderColor: cores.acao, borderBottomColor: '#B9C7F5', backgroundColor: '#F3F6FF' },
   chipDesativada: { backgroundColor: cores.nevoa },
-  chipAfundado: { borderBottomWidth: 2, marginTop: 2 },
-  chipIcone: { width: 42, height: 42, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
-  chipTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
-  chipAcao: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  chipAcaoEscolhida: { backgroundColor: cores.acao },
+  chipAfundado: { borderBottomWidth: 2, marginTop: 3 },
+  chipTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },
   // Geração ao vivo
   contexto: { marginBottom: 8, color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18,
     letterSpacing: 0.5, textTransform: 'uppercase' },

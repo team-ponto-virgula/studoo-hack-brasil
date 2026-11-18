@@ -191,9 +191,11 @@ export function Titulo({ children, testID, foco = false, estilo, linhas }: {
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte }: {
+  compacto = false, esmaecido = false, fonte, estilo }: {
   /** Tamanho do texto quando a web usa outro (o "Pular" da apresentação tem 16 px mesmo compacto). */
   fonte?: number;
+  /** Ajuste de caixa quando a web usa outro tamanho (o "Montar minha trilha" tem face de 56 px). */
+  estilo?: StyleProp<ViewStyle>;
   /** Parece desativado, mas responde ao toque e leva ao que falta (como contar como foi a prática). Como na web. */
   esmaecido?: boolean;
   rotulo: string;
@@ -247,6 +249,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
         variante === 'alerta' && estilos.botaoAlerta,
         variante === 'texto' && estilos.botaoTextoLivre,
         compacto && estilos.botaoCompacto,
+        estilo,
         pressed && variante !== 'texto' && estilos.botaoPressionado,
         pressed && variante === 'texto' && estilos.botaoPressionado,
         focado && estilos.foco,
@@ -266,7 +269,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
 }
 
 /** Três pontinhos que pulam em sequência, enquanto uma ação acontece; parados com movimento reduzido. */
-export function Pontinhos({ cor }: { cor: string }) {
+export function Pontinhos({ cor, tamanho = 8, vao = 5 }: { cor: string; tamanho?: number; vao?: number }) {
   const reduzir = useMovimentoReduzido();
   const [valor] = useState(() => new Animated.Value(0));
 
@@ -281,11 +284,11 @@ export function Pontinhos({ cor }: { cor: string }) {
   }, [reduzir, valor]);
 
   return (
-    <View style={estilos.pontinhos} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+    <View style={[estilos.pontinhos, { gap: vao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       {[0, 1, 2].map((indice) => {
         const comeco = indice * 0.16;
         return (
-          <Animated.View key={indice} style={[estilos.pontinho, { backgroundColor: cor, transform: [{
+          <Animated.View key={indice} style={[estilos.pontinho, { width: tamanho, height: tamanho, borderRadius: tamanho / 2, backgroundColor: cor, transform: [{
             translateY: valor.interpolate({ inputRange: [0, comeco, comeco + 0.2, comeco + 0.4, 1], outputRange: [0, 0, -6, 0, 0], extrapolate: 'clamp' }),
           }] }]} />
         );
@@ -294,8 +297,10 @@ export function Pontinhos({ cor }: { cor: string }) {
   );
 }
 
-export function Campo({ rotulo, campoRef, erro, acessorio, ...props }: TextInputProps & {
+export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false, ...props }: TextInputProps & {
   rotulo: string;
+  /** Rótulo só para o leitor de tela (a web usa .somente-leitor quando o título da tela já faz a pergunta). */
+  rotuloOculto?: boolean;
   campoRef?: Ref<ComponentRef<typeof TextInput>>;
   /** Erro do campo, mostrado embaixo dele e lido pelo leitor de tela junto com a dica. */
   erro?: string;
@@ -308,9 +313,9 @@ export function Campo({ rotulo, campoRef, erro, acessorio, ...props }: TextInput
 
   return (
     <View style={estilos.campo}>
-      <Text nativeID={rotuloId} style={estilos.rotulo}>{rotulo}</Text>
+      {!rotuloOculto && <Text nativeID={rotuloId} style={estilos.rotulo}>{rotulo}</Text>}
       <View>
-        <TextInput {...props} ref={campoRef} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloId} accessibilityHint={dica}
+        <TextInput {...props} ref={campoRef} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
           placeholderTextColor="#7A84A0"
           style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, !!erro && estilos.entradaErro,
             focado && estilos.entradaFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
@@ -408,6 +413,37 @@ export function EstadoErro({ mensagem, acao, testID, foco = false }: {
         {acao && <Botao rotulo={acao.rotulo} testID={acao.testID} variante="secundario" desativado={acao.desativado} acao={acao.acao} />}
       </View>
     </View>
+  );
+}
+
+/**
+ * A seta de abrir e fechar da web (`summary::before`): um canto de 8 px com traço de 2,5 px, que aponta para a direita
+ * fechado (›) e para baixo aberto.
+ */
+export function Chevron({ aberto = false, cor = cores.texto }: { aberto?: boolean; cor?: string }) {
+  return (
+    <View importantForAccessibility="no" accessibilityElementsHidden
+      style={[estilos.chevron, { borderColor: cor, transform: [{ rotate: aberto ? '45deg' : '-45deg' }] }]} />
+  );
+}
+
+/** Linha de abrir e fechar como `details > summary` da web: a seta e o texto 16 px/800, alinhados à esquerda. */
+export function LinhaAbrir({ rotulo, aberto, alternar, testID, cor = cores.texto, desativado = false }: {
+  rotulo: string;
+  aberto: boolean;
+  alternar: () => void;
+  testID?: string;
+  cor?: string;
+  desativado?: boolean;
+}) {
+  const [focado, setFocado] = useState(false);
+  return (
+    <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ expanded: aberto, disabled: desativado }} aria-expanded={aberto}
+      disabled={desativado} hitSlop={6} onPress={alternar} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      style={({ pressed }) => [estilos.linhaAbrir, pressed && { opacity: 0.7 }, focado && estilos.foco]}>
+      <Chevron aberto={aberto} cor={cor} />
+      <Text style={[estilos.linhaAbrirTexto, { color: cor }]}>{rotulo}</Text>
+    </Pressable>
   );
 }
 
@@ -574,6 +610,9 @@ export const estilos = StyleSheet.create({
   seloOffline: { borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
   seloPonto: { width: 8, height: 8, borderRadius: 4 },
   seloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  chevron: { width: 8, height: 8, marginHorizontal: 2, borderRightWidth: 2.5, borderBottomWidth: 2.5 },
+  linhaAbrir: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 44, paddingVertical: 10, borderRadius: 8 },
+  linhaAbrirTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   seloDemo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: '#FFF1CC' },
   seloDemoTexto: { color: '#704700', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12.8, lineHeight: 19 },
 });

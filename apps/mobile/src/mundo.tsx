@@ -68,24 +68,36 @@ export function coresDaRegiao(trecho: number) {
   return { chao: coresMundo[regiao.chao], relevo: coresMundo[regiao.relevo] };
 }
 
-/** Bolhas que fazem a borda ondulada: posição em % da largura e deslocamento vertical, em pontos. */
-const bolhas = [
-  { x: -10, y: 8 }, { x: 6, y: 0 }, { x: 22, y: 10 }, { x: 38, y: 2 }, { x: 54, y: 12 }, { x: 70, y: 3 }, { x: 86, y: 9 },
-] as const;
-
 /**
- * Borda ondulada de 48 pontos de altura: uma fileira de bolhas no tom do relevo e, um pouco abaixo, outra no tom do chão.
- * A parte de baixo da faixa já é o chão, para emendar com o que vem embaixo.
+ * As colinas das ondas da web (os caminhos SVG de mundo.tsx e caminho.tsx da web), refeitas com arcos de círculos grandes:
+ * cada colina é um círculo com o topo no pico (x em % da largura, y em pontos) e diâmetro em % da largura; os vizinhos se
+ * cruzam nos vales. Duas camadas: o relevo atrás e o chão, mais baixo, na frente.
  */
-export function Onda({ chao, relevo, estilo }: { chao: string; relevo: string; estilo?: StyleProp<ViewStyle> }) {
+type Colina = { x: number; y: number; d: number };
+const formasDaOnda: Record<'fronteira' | 'inicio', { altura: number; relevo: readonly Colina[]; chao: readonly Colina[] }> = {
+  // viewBox 400 × 48: "M0 22C36 6 70 4 104 14S170 36 212 22 290 2 332 12 380 26 400 18" e o chão 10 pontos abaixo.
+  fronteira: {
+    altura: 48,
+    relevo: [{ x: 17, y: 5, d: 92 }, { x: 72, y: 4, d: 86 }, { x: 114, y: 12, d: 52 }],
+    chao: [{ x: 19, y: 15, d: 92 }, { x: 73, y: 11, d: 86 }, { x: 115, y: 24, d: 52 }],
+  },
+  // viewBox 400 × 64 esticado em 76: "M0 30C50 6 96 4 148 22S236 52 292 30 368 8 400 18" e o chão de "M0 44C44 28…".
+  inicio: {
+    altura: 76,
+    relevo: [{ x: 22, y: 6, d: 96 }, { x: 90, y: 11, d: 72 }],
+    chao: [{ x: 21, y: 32, d: 96 }, { x: 89, y: 32, d: 72 }],
+  },
+};
+
+export function Onda({ chao, relevo, estilo, forma = 'fronteira' }: { chao: string; relevo: string; estilo?: StyleProp<ViewStyle>; forma?: 'fronteira' | 'inicio' }) {
+  const { altura, relevo: colinasRelevo, chao: colinasChao } = formasDaOnda[forma];
+  const colina = ({ x, y, d }: Colina, cor: string, chave: string) => (
+    <View key={chave} style={[mundoEstilos.colinaOnda, { left: `${x - d / 2}%` as DimensionValue, width: `${d}%` as DimensionValue, top: y, backgroundColor: cor }]} />
+  );
   return (
-    <View pointerEvents="none" style={[mundoEstilos.onda, estilo]}>
-      {bolhas.map(({ x, y }, indice) => (
-        <View key={`relevo-${indice}`} style={[mundoEstilos.bolha, { left: `${x}%` as DimensionValue, top: y, backgroundColor: relevo }]} />
-      ))}
-      {bolhas.map(({ x, y }, indice) => (
-        <View key={`chao-${indice}`} style={[mundoEstilos.bolha, { left: `${x + 8}%` as DimensionValue, top: y + 12, backgroundColor: chao }]} />
-      ))}
+    <View pointerEvents="none" style={[mundoEstilos.onda, { height: altura }, estilo]}>
+      {colinasRelevo.map((item, indice) => colina(item, relevo, `relevo-${indice}`))}
+      {colinasChao.map((item, indice) => colina(item, chao, `chao-${indice}`))}
     </View>
   );
 }
@@ -163,7 +175,7 @@ export function Paisagem({ altura, compacta = false, estilo, children }: {
 
 const mundoEstilos = StyleSheet.create({
   onda: { position: 'absolute', left: 0, right: 0, top: 0, height: 48, overflow: 'hidden' },
-  bolha: { position: 'absolute', width: '22%', aspectRatio: 1, borderRadius: 9999 },
+  colinaOnda: { position: 'absolute', aspectRatio: 1, borderRadius: 9999 },
   fronteira: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   metade: { position: 'absolute', left: 0, right: 0, top: '50%', height: 48, marginTop: -24 },
   resto: { position: 'absolute', left: 0, right: 0, top: '50%', marginTop: 23, bottom: 0 },

@@ -6,8 +6,7 @@ import {
   Platform,
   Text,
   View,
-  StyleSheet,
-} from 'react-native';
+  StyleSheet, Pressable } from 'react-native';
 import { File } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
 import * as ImagePicker from 'expo-image-picker';
@@ -28,11 +27,11 @@ import {
   type PropostaPlano,
   type ProvedorIa,
 } from '@studoo/contratos';
-import { Botao, Campo, EstadoMensagem, estilos, SeloDemonstracao } from './interface';
+import { Botao, Campo, EstadoMensagem, estilos, SeloDemonstracao, LinhaAbrir } from './interface';
 import { CadernoDoStu, CenaPonte, EtapasDoEnsino, OndasDoVolume, PaginaDoMaterial, StuAluno } from './estudio-cenas';
 import { useAparecer } from './animacoes';
 import { mensagens } from './mensagens';
-import { cores } from './tema';
+import { cores, fontes } from './tema';
 const m = mensagens.estudio;
 /** A mensagem de cada código (da API, como `voz_vazia` e `voz_tempo`, ou do app, como `conexao`); fora deles, a geral. */
 function erroTexto(e: unknown) {
@@ -169,26 +168,18 @@ export function MaterialParaTrilha({
       {mostrarCabeca && <H>{mensagens.inicio.materialTitulo}</H>}
       {mostrarCabeca && <T>{mensagens.inicio.materialTexto}</T>}
       <Text style={estilos.legenda}>{mensagens.inicio.enviarSeguro}</Text>
-      <Botao variante="texto" rotulo={mensagens.inicio.detalhes} acao={()=>setDetalhes(!detalhes)}/>
+      <LinhaAbrir rotulo={mensagens.inicio.detalhes} aberto={detalhes} alternar={() => setDetalhes(!detalhes)} />
       {/* O aviso diz quem lê o material (OpenAI, DeepSeek ou ninguém, na demonstração). Antes de a configuração chegar, ou
           se ela falhar, vale o texto geral, verdadeiro em qualquer configuração. */}
       {detalhes && <View><Text style={estilos.legenda}>{m.limites}</Text><Text style={estilos.legenda}>{ia ? m.privacidadePorProvedor(ia) : m.privacidade}</Text></View>}
       {!material ? (
-        <>
-          <Botao
-            rotulo={mensagens.inicio.arquivo}
-            desativado={ocupado}
-            acao={() => void selecionar()}
-          />
-          <Botao
-            rotulo={mensagens.inicio.camera}
-            variante="secundario"
-            desativado={ocupado}
-            acao={() => void selecionar(true)}
-          />
+        <View style={s.acoesMaterial}>
+          {/* Como .estudio-arquivo da web: contorno tracejado azul, texto à esquerda; o seletor é o do sistema. */}
+          <BotaoArquivo rotulo={mensagens.inicio.arquivo} testID="escolher-arquivo" desativado={ocupado} acao={() => void selecionar()} />
+          <BotaoArquivo rotulo={mensagens.inicio.camera} testID="usar-camera" desativado={ocupado} acao={() => void selecionar(true)} />
           <Botao
             rotulo={mensagens.inicio.demo}
-            variante="texto"
+            variante="secundario"
             desativado={ocupado}
             acao={() =>
               void executar(async () => {
@@ -197,7 +188,7 @@ export function MaterialParaTrilha({
               })
             }
           />
-        </>
+        </View>
       ) : (
         <>
           <H>{material.nome}</H>
@@ -243,6 +234,17 @@ export function MaterialParaTrilha({
     </Card>
   );
 }
+function BotaoArquivo({ rotulo, testID, desativado, acao }: { rotulo: string; testID: string; desativado: boolean; acao: () => void }) {
+  const [focado, setFocado] = useState(false);
+  return (
+    <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ disabled: desativado }} disabled={desativado} onPress={acao}
+      onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      style={({ pressed }) => [s.arquivo, pressed && { opacity: 0.8 }, desativado && { borderColor: cores.gelo }, focado && estilos.foco]}>
+      <Text style={[s.arquivoTexto, desativado && { color: cores.textoSecundario }]}>{rotulo}</Text>
+    </Pressable>
+  );
+}
+
 export function ApoioDaLicao({
   cliente,
   licao,
@@ -768,6 +770,10 @@ export function ApoioDaLicao({
   );
 }
 const s = StyleSheet.create({
+  acoesMaterial: { gap: 12, marginTop: 20 },
+  arquivo: { minHeight: 48, justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderStyle: 'dashed',
+    borderColor: cores.acao, borderRadius: 14 },
+  arquivoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   ponteCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   ponteCabecaAcoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   desafio: { gap: 14 },

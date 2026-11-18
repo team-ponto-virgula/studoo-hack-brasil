@@ -3,7 +3,7 @@ import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View 
 import { useAudioRecorderState, type AudioRecorder } from 'expo-audio';
 import type { ApoioEstudo, PaginaMaterial } from '@studoo/contratos';
 import { Icone } from './icone';
-import { estilos, useMovimentoReduzido } from './interface';
+import { estilos, useMovimentoReduzido, LinhaAbrir } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 
@@ -268,7 +268,7 @@ export function CadernoDoStu({ ensino, compacto = false }: {
 export function PaginaDoMaterial({ pagina }: { pagina: PaginaMaterial }) {
   const [aberta, setAberta] = useState(false);
   const rotulo = pagina.rotulo ?? m.pagina(pagina.numero);
-  const longa = pagina.texto.length > 220;
+  const longa = pagina.texto.length > 180;
   return (
     <View testID={`pagina-material-${pagina.numero}`} style={paginas.cartao}>
       <Text accessibilityRole="header" style={paginas.rotulo}>{rotulo}</Text>
@@ -288,14 +288,8 @@ export function PaginaDoMaterial({ pagina }: { pagina: PaginaMaterial }) {
         </ScrollView>
       ) : (
         <>
-          <Text selectable numberOfLines={aberta ? undefined : 4} style={estilos.texto}>{pagina.texto}</Text>
-          {longa && (
-            <Pressable accessibilityRole="button" accessibilityState={{ expanded: aberta }} aria-expanded={aberta} hitSlop={8} onPress={() => setAberta((atual) => !atual)}
-              style={paginas.expandir}>
-              <View style={{ transform: [{ rotate: aberta ? '-90deg' : '90deg' }] }}><Icone nome="seta" tamanho={14} cor={cores.acao} /></View>
-              <Text style={paginas.expandirTexto}>{aberta ? mensagens.licao.recursos.esconder : m.paginaExpandir}</Text>
-            </Pressable>
-          )}
+          <Text selectable numberOfLines={aberta ? undefined : 3} style={paginas.previa}>{pagina.texto}</Text>
+          {longa && <LinhaAbrir rotulo={m.paginaExpandir} aberto={aberta} alternar={() => setAberta((atual) => !atual)} />}
         </>
       )}
     </View>
@@ -376,14 +370,13 @@ const caderno = StyleSheet.create({
 });
 
 const paginas = StyleSheet.create({
-  cartao: { gap: 10, padding: 14, borderRadius: 18, borderWidth: 2, borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
-  rotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
+  cartao: { gap: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
+  rotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
+  previa: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 24 },
   miniatura: { width: '100%', height: 132, borderRadius: 12, backgroundColor: '#FFF8E8' },
   linha: { flexDirection: 'row' },
   cabecalho: { backgroundColor: cores.nevoa },
   celula: { width: 132, paddingVertical: 8, paddingHorizontal: 10, borderWidth: 1, borderColor: cores.gelo, color: cores.texto, fontFamily: fontes.corpo,
     fontSize: 14, lineHeight: 20 },
   numero: { width: 48, textAlign: 'center', color: cores.textoSecundario, fontWeight: '800' },
-  expandir: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', minHeight: 48 },
-  expandirTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
 });

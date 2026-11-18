@@ -428,18 +428,17 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
         <Desenho nome="nuvem" largura={64} estilo={{ position: 'absolute', top: 18, left: '30%' }} />
         <Desenho nome="nuvem" largura={46} estilo={{ position: 'absolute', top: 58, left: '4%' }} />
         <View style={caminhoEstilos.inicioColinas}>
-          <Onda chao={chao} relevo={relevo} estilo={{ top: 6 }} />
-          <View style={[caminhoEstilos.inicioChao, { backgroundColor: chao }]} />
+          <Onda chao={chao} relevo={relevo} forma="inicio" />
         </View>
       </View>
       {texto && placa && <Placa texto={texto} />}
       {texto && !placa && (
         <View style={caminhoEstilos.inicioConteudo}>
           <View style={caminhoEstilos.fala}>
-            <View style={caminhoEstilos.falaLinha}>
-              <Text style={caminhoEstilos.falaTexto}>{texto}</Text>
-              {pensando && <Pontinhos cor={cores.acao} />}
-            </View>
+            <Text style={caminhoEstilos.falaTexto}>
+              {texto}
+              {pensando && <View style={caminhoEstilos.falaPontinhos}><Pontinhos cor={cores.acao} tamanho={6} vao={3} /></View>}
+            </Text>
             {pensando && dicas.length > 0 && <DicaQueTroca dicas={dicas} />}
             <View style={caminhoEstilos.falaSeta} />
           </View>
@@ -1153,7 +1152,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
       </Animated.View>
       </Pressable>
       <View style={caminhoEstilos.chegadaPlaca}>
-        <Text style={[caminhoEstilos.chegadaTexto, { color: cores.ouroTexto }]}>
+        <Text style={[caminhoEstilos.chegadaTexto, { color: '#9A5B00' }]}>
           {feita ? mensagens.trilha.chegadaFeita : mensagens.trilha.chegada}
         </Text>
       </View>
@@ -1246,12 +1245,11 @@ const caminhoEstilos = StyleSheet.create({
   inicioParte: { position: 'absolute', left: 16, right: 16, bottom: 22, alignItems: 'center', zIndex: 2 },
   inicioCeuBaixo: { position: 'absolute', left: 0, right: 0, top: '55%', bottom: 0, backgroundColor: '#EAF1FF' },
   inicioColinas: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 76 },
-  inicioChao: { position: 'absolute', left: 0, right: 0, top: 52, bottom: 0 },
   inicioConteudo: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, flexShrink: 1 },
   fala: { flexShrink: 1, maxWidth: 272, marginBottom: 30, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18,
     backgroundColor: cores.fundo, borderBottomWidth: 3, borderBottomColor: 'rgba(27, 42, 94, 0.08)' },
-  falaTexto: { flexShrink: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
-  falaLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6 },
+  falaTexto: { flexShrink: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
+  falaPontinhos: { height: 14, justifyContent: 'center', paddingLeft: 6 },
   dica: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18 },
   placaMadeira: { maxWidth: 272, marginTop: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 3,
     borderBottomWidth: 7, borderColor: '#C79A62', borderBottomColor: '#B0844D', backgroundColor: '#F7E3C2' },
@@ -1332,7 +1330,7 @@ const caminhoEstilos = StyleSheet.create({
   chegadaBase: { position: 'absolute', bottom: 0, left: '50%', marginLeft: -200, width: 400 },
   chegadaStu: { position: 'absolute', bottom: 74, left: '50%', marginLeft: 50, width: 62, height: 68 },
   chegadaPlaca: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.9)' },
-  chegadaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  chegadaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 20 },
   // Folha
   fundoFolha: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(27, 42, 94, 0.32)' },
   folha: { width: '100%', maxWidth: 620, alignSelf: 'center', gap: 12, paddingTop: 10, paddingLeft: 20, paddingRight: 12,
