@@ -13,6 +13,15 @@ import {
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Stu } from '../ui';
+import {
+  estadoInicialVozAoVivo,
+  extrairTranscricaoUsuario,
+  formatarTempoVoz,
+  iniciarControladorVozAoVivo,
+  textoErroVozAoVivo,
+  type ControladorVozAoVivo,
+  type EstadoSessaoVozAoVivo,
+} from './voz-ao-vivo';
 import './estudio.css';
 const m = mensagens.estudio;
 function erroTexto(e: unknown) {
@@ -275,6 +284,12 @@ export function ApoioDaLicao({
     setApoio(valor);
   }
   const [texto, setTexto] = useState('');
+  const [vozAoVivoDisponivel, setVozAoVivoDisponivel] = useState(false);
+  const [etapaVoz, setEtapaVoz] = useState<'inativa' | 'privacidade' | 'ativa'>('inativa');
+  const [estadoVoz, setEstadoVoz] = useState<EstadoSessaoVozAoVivo>(() => estadoInicialVozAoVivo());
+  const controladorVozRef = useRef<ControladorVozAoVivo | null>(null);
+  const campoEnsinoRef = useRef<HTMLTextAreaElement>(null);
+  const painelPrivacidadeRef = useRef<HTMLDivElement>(null);
   const [resposta, setResposta] = useState('');
   const [passoPonte, setPassoPonte] = useState<1 | 2 | 3>(1);
   const [vencidaNestaAbertura, setVencidaNestaAbertura] = useState(false);
@@ -284,6 +299,23 @@ export function ApoioDaLicao({
   /** O resultado da pergunta do reforço, para a opção marcada ficar verde (certa) ou âmbar (errada). */
   const [resultadoPonte, setResultadoPonte] = useState<{ id: string; correta: boolean } | null>(null);
   const retornoPonte = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    let ativo = true;
+    void cliente.configuracaoAcesso().then((cfg) => {
+      if (ativo) setVozAoVivoDisponivel(Boolean(cfg.vozAoVivo));
+    }).catch(() => undefined);
+    return () => {
+      ativo = false;
+      controladorVozRef.current?.descartar();
+      controladorVozRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (etapaVoz === 'privacidade') {
+      painelPrivacidadeRef.current?.querySelector('button')?.focus();
+    }
+  }, [etapaVoz]);
   // O "Isso! Você pegou a ideia." aparece no fim do cartão, às vezes atrás do painel de retorno: a tela leva até ele.
   useEffect(() => {
     if (!feedback) return;
@@ -762,15 +794,19 @@ export function ApoioDaLicao({
         className="estudio-card estudio-ensino"
         onToggle={(e) => {
           aoAbrirExplique?.(e.currentTarget.open);
-          if (!e.currentTarget.open && recorder.current?.state === 'recording')
-            recorder.current.stop();
+          if (!e.currentTarget.open) {
+            if (recorder.current?.state === 'recording') recorder.current.stop();
+            controladorVozRef.current?.descartar();
+            controladorVozRef.current = null;
+            setEtapaVoz('inativa');
+          }
         }}
       >
         <summary>{m.ensinar}</summary>
-        <div className="ensino-stu" data-gravando={gravando || undefined}>
+        <div className="ensino-stu" data-gravando={gravando || etapaVoz === 'ativa' || undefined}>
           <Stu />
           <p className="ensino-stu__balao">
-            {gravando
+            {gravando || etapaVoz === 'ativa'
               ? m.ensinoStuOuvindo
               : ensino
                 ? m.ensinoStuAnotou
@@ -778,26 +814,204 @@ export function ApoioDaLicao({
           </p>
         </div>
         <ol className="ensino-passos" aria-label={m.ensinoEtapasLabel}>
-          <li data-ativo={!texto.trim() || gravando || undefined} aria-current={!texto.trim() || gravando ? 'step' : undefined}>{m.ensinoEtapas[0]}</li>
-          <li data-ativo={(Boolean(texto.trim()) && !gravando && !ensino) || undefined} aria-current={Boolean(texto.trim()) && !gravando && !ensino ? 'step' : undefined}>{m.ensinoEtapas[1]}</li>
+          <li data-ativo={!texto.trim() || gravando || etapaVoz === 'ativa' || undefined} aria-current={!texto.trim() || gravando || etapaVoz === 'ativa' ? 'step' : undefined}>{m.ensinoEtapas[0]}</li>
+          <li data-ativo={(Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino) || undefined} aria-current={Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino ? 'step' : undefined}>{m.ensinoEtapas[1]}</li>
           <li data-ativo={Boolean(ensino) || undefined} aria-current={ensino ? 'step' : undefined}>{m.ensinoEtapas[2]}</li>
         </ol>
         <p>{m.ensinoDica}</p>
         <p className="estudio-legenda">{m.ensinoIdeia(licao.objetivo)}</p>
+        {vozAoVivoDisponivel && etapaVoz === 'inativa' && (
+          <div className="voz-ao-vivo-entrada">
+            <Botao
+              variante="primario"
+              disabled={ocupado || gravando}
+              onClick={() => {
+                let visto = false;
+                try {
+                  visto = window.localStorage.getItem('studoo.vozAoVivo.avisoVisto') === '1';
+                } catch { /* ignore */ }
+                if (!visto) {
+                  setEtapaVoz('privacidade');
+                  return;
+                }
+                setEtapaVoz('ativa');
+                setEstadoVoz(estadoInicialVozAoVivo());
+                void iniciarControladorVozAoVivo({
+                  licaoId: licao.id,
+                  cliente,
+                  aoMudar: setEstadoVoz,
+                  aoTempoEsgotado: (transcricao) => {
+                    controladorVozRef.current = null;
+                    if (transcricao.trim().length < 20) {
+                      setEstadoVoz((a) => ({ ...a, estado: 'erro', erro: 'curta' }));
+                      return;
+                    }
+                    setEtapaVoz('inativa');
+                    setTexto(transcricao);
+                    void executar(async () => {
+                      const r = await cliente.ensinarStu(licao.id, transcricao);
+                      atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
+                      setEnsino(r);
+                      setAviso('');
+                      aoEnsinar?.();
+                    });
+                  },
+                }).then((ctrl) => {
+                  controladorVozRef.current = ctrl;
+                });
+              }}
+            >
+              {m.vozAoVivo.abrir}
+            </Botao>
+          </div>
+        )}
+        {etapaVoz === 'privacidade' && (
+          <div ref={painelPrivacidadeRef} className="voz-ao-vivo-painel voz-ao-vivo-privacidade" role="region" aria-label={m.vozAoVivo.privacidadeTitulo}>
+            <h3 className="voz-ao-vivo-titulo">{m.vozAoVivo.privacidadeTitulo}</h3>
+            <p className="voz-ao-vivo-texto">{m.vozAoVivo.privacidadeTexto}</p>
+            <div className="voz-ao-vivo-controles">
+              <Botao
+                variante="primario"
+                onClick={() => {
+                  try {
+                    window.localStorage.setItem('studoo.vozAoVivo.avisoVisto', '1');
+                  } catch { /* ignore */ }
+                  setEtapaVoz('ativa');
+                  setEstadoVoz(estadoInicialVozAoVivo());
+                  void iniciarControladorVozAoVivo({
+                    licaoId: licao.id,
+                    cliente,
+                    aoMudar: setEstadoVoz,
+                    aoTempoEsgotado: (transcricao) => {
+                      controladorVozRef.current = null;
+                      if (transcricao.trim().length < 20) {
+                        setEstadoVoz((a) => ({ ...a, estado: 'erro', erro: 'curta' }));
+                        return;
+                      }
+                      setEtapaVoz('inativa');
+                      setTexto(transcricao);
+                      void executar(async () => {
+                        const r = await cliente.ensinarStu(licao.id, transcricao);
+                        atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
+                        setEnsino(r);
+                        setAviso('');
+                        aoEnsinar?.();
+                      });
+                    },
+                  }).then((ctrl) => {
+                    controladorVozRef.current = ctrl;
+                  });
+                }}
+              >
+                {m.vozAoVivo.privacidadeAceitar}
+              </Botao>
+              <Botao
+                variante="secundario"
+                onClick={() => setEtapaVoz('inativa')}
+              >
+                {m.vozAoVivo.privacidadeCancelar}
+              </Botao>
+            </div>
+          </div>
+        )}
+        {etapaVoz === 'ativa' && (
+          <div className="voz-ao-vivo-painel" data-estado={estadoVoz.estado}>
+            <div className="voz-ao-vivo-cabeca">
+              <div className="voz-ao-vivo-mascote" aria-hidden="true">
+                <Stu />
+              </div>
+              <span className="voz-ao-vivo-estado" aria-live="polite">
+                {m.vozAoVivo.estados[estadoVoz.estado]}
+              </span>
+              <span className="voz-ao-vivo-tempo">
+                {formatarTempoVoz(estadoVoz.segundos)} / 03:00
+              </span>
+            </div>
+            {estadoVoz.avisoTempo && estadoVoz.estado !== 'erro' && (
+              <p className="voz-ao-vivo-aviso" role="status">{m.vozAoVivo.avisoTempo}</p>
+            )}
+            {estadoVoz.estado === 'erro' && estadoVoz.erro ? (
+              <p className="voz-ao-vivo-erro" role="alert">
+                {textoErroVozAoVivo(estadoVoz.erro)}
+              </p>
+            ) : (
+              <div className="voz-ao-vivo-legendas" aria-live="polite">
+                {estadoVoz.legendas.map((turno) => (
+                  <p key={`${turno.autor}-${turno.id}`} className="voz-ao-vivo-turno" data-autor={turno.autor}>
+                    <strong>{turno.autor === 'stu' ? m.vozAoVivo.stuDisse : m.vozAoVivo.voceDisse}:</strong>{' '}
+                    <span>{turno.texto}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+            <div className="voz-ao-vivo-controles">
+              {estadoVoz.estado !== 'erro' && (
+                <>
+                  <Botao
+                    variante="secundario"
+                    disabled={estadoVoz.estado === 'pedindo_mic' || estadoVoz.estado === 'conectando' || estadoVoz.estado === 'encerrando'}
+                    onClick={() => {
+                      controladorVozRef.current?.alternarMudo();
+                    }}
+                  >
+                    {estadoVoz.mudo ? m.vozAoVivo.ativarMic : m.vozAoVivo.mudo}
+                  </Botao>
+                  <Botao
+                    variante="primario"
+                    disabled={estadoVoz.estado === 'pedindo_mic' || estadoVoz.estado === 'conectando' || estadoVoz.estado === 'encerrando'}
+                    onClick={() => {
+                      const ctrl = controladorVozRef.current;
+                      controladorVozRef.current = null;
+                      void (ctrl ? ctrl.encerrar() : Promise.resolve(extrairTranscricaoUsuario(estadoVoz))).then((transcricao) => {
+                        if (transcricao.trim().length < 20) {
+                          setEstadoVoz((a) => ({ ...a, estado: 'erro', erro: 'curta' }));
+                          return;
+                        }
+                        setEtapaVoz('inativa');
+                        setTexto(transcricao);
+                        void executar(async () => {
+                          const r = await cliente.ensinarStu(licao.id, transcricao);
+                          atualizarApoio((a) => ({ ...(a ?? { erros: 0, ponte: null }), ensino: r }));
+                          setEnsino(r);
+                          setAviso('');
+                          aoEnsinar?.();
+                        });
+                      });
+                    }}
+                  >
+                    {m.vozAoVivo.encerrar}
+                  </Botao>
+                </>
+              )}
+              <Botao
+                variante="texto"
+                onClick={() => {
+                  controladorVozRef.current?.descartar();
+                  controladorVozRef.current = null;
+                  setEtapaVoz('inativa');
+                  window.requestAnimationFrame(() => campoEnsinoRef.current?.focus());
+                }}
+              >
+                {m.vozAoVivo.alternativaTexto}
+              </Botao>
+            </div>
+          </div>
+        )}
         <label htmlFor="ensino-texto">{m.explicacao}</label>
         <textarea
+          ref={campoEnsinoRef}
           id="ensino-texto"
           rows={5}
           maxLength={3000}
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
-          disabled={ocupado || gravando}
+          disabled={ocupado || gravando || etapaVoz === 'ativa'}
         />
         <p className="estudio-legenda">{m.vozDica}</p>
         <div className="estudio-acoes">
           <Botao
             variante="secundario"
-            disabled={ocupado}
+            disabled={ocupado || etapaVoz === 'ativa'}
             onClick={() =>
               gravando ? recorder.current?.stop() : void gravar()
             }

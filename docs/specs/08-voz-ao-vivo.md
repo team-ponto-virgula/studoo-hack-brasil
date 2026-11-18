@@ -71,9 +71,25 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
 5. **Script de conferência (`npm run voz:conferir` / `scripts/conferir-voz-ao-vivo.ts`)**:
    - Valida criação e encerramento de chamada Realtime contra `OPENAI_BASE_URL` sem precisar de áudio.
 
-### Etapa 2 — Cliente web e privacidade
+### Etapa 2 — Cliente web, privacidade e paridade (390×844 / 360)
 1. **Máquina de estados pura (`src/app/voz-ao-vivo.ts`)**:
    - Estados: `pedindo_mic`, `conectando`, `ouvindo`, `stu_falando`, `encerrando`, `erro`.
    - Envia oferta SDP local para `/api/estudio/licoes/[id]/voz-ao-vivo` (interface unificada), abre `oai-events`, envia `response.create` para o Stu começar, exibe legendas ao vivo, permite interrupção natural, controla timer (`150` s aviso / `180` s fim), mudo e `"Encerrar e ver retorno"` (chama `/encerrar` e envia **somente** a transcrição da pessoa para `ensinarStu`).
 2. **Aviso de privacidade**:
    - Antes da primeira conversa ao vivo, informa que a voz vai para a OpenAI para a conversa ao vivo e que o Studoo não guarda áudio nem transcrição da conversa em log.
+3. **Referência única de tela para web e app (390×844 e 360 de largura)**:
+   - Todos os textos vêm de `mensagens.estudio.vozAoVivo` em `packages/contratos/src/experiencia.ts`; nenhum controle exclusivo de navegador.
+   - **Ordem exata dos blocos dentro de "Explique com suas palavras":**
+     1. Botão de entrada **`Conversar com o Stu`** (`min-height: 44px`, largura `100%` em 360/390, acima da área de texto/gravação quando `vozAoVivo` estiver ativo).
+     2. **Cartão de aviso de privacidade** (na primeira vez, `padding: 16px`, `gap: 12px`): título `privacidadeTitulo` (16px/600), texto `privacidadeTexto` (14px/1.5), botões `Começar conversa` (primário, `min-height: 44px`) e `Agora não` (secundário, `min-height: 44px`).
+     3. **Painel da conversa ao vivo** (`padding: 16px`, `gap: 12px`, borda `1px`, raio `14px`):
+        - **Cabeçalho (`min-height: 44px`, linha única):** mascote `Stu` (`44×44px`), estado atual (`estados[estado]`, `aria-live="polite"`, 14px/600) e cronômetro `MM:SS / 03:00` (`font-variant-numeric: tabular-nums`, 13px).
+        - **Aviso de tempo** (aos `150s`, faixa `padding: 8px 12px`, 13px): `avisoTempo`.
+        - **Legendas ao vivo** (`min-height: 120px`, `max-height: 220px`, rolável, `gap: 8px`): falas do Stu (`stuDisse`) e da pessoa (`voceDisse`), 14px/1.45.
+        - **Controles (`gap: 8px`, empilhados em 100% de largura em 360/390, `min-height: 44px` cada):**
+          1. `Silenciar microfone` / `Ativar microfone` (secundário)
+          2. `Encerrar e ver retorno` (primário)
+          3. `Prefiro escrever ou gravar` (botão texto, `min-height: 40px`)
+     4. **Estado de erro** (substitui legendas mantendo o cabeçalho e a alternativa em 1 toque): mensagem de `erros.*` (`role="alert"`, 14px) + botão `Prefiro escrever ou gravar` (`min-height: 44px`).
+   - Animações respeitam `prefers-reduced-motion: reduce`.
+

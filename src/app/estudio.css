@@ -603,8 +603,109 @@
 }
 .ensino-caderno__cartao[data-tipo='proximo'] { border-color: #9ad8b5; background: #eefaf3; }
 
+.voz-ao-vivo-entrada {
+  margin: 0.75rem 0;
+}
+.voz-ao-vivo-entrada .botao {
+  min-height: 44px;
+}
+.voz-ao-vivo-painel {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  margin: 0.75rem 0;
+  border: 1px solid var(--borda, #d8e1d9);
+  border-radius: 14px;
+  background: var(--cartao, #ffffff);
+}
+.voz-ao-vivo-titulo {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+.voz-ao-vivo-texto {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.voz-ao-vivo-cabeca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.voz-ao-vivo-mascote {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+.voz-ao-vivo-mascote .stu {
+  width: 40px;
+  height: 40px;
+}
+.voz-ao-vivo-estado {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.voz-ao-vivo-tempo {
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.8;
+}
+.voz-ao-vivo-aviso {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #fff6db;
+  color: #5a4300;
+  font-size: 0.8125rem;
+}
+.voz-ao-vivo-legendas {
+  display: grid;
+  gap: 8px;
+  min-height: 120px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--superficie, #f6f8f6);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.voz-ao-vivo-turno {
+  margin: 0;
+}
+.voz-ao-vivo-turno[data-autor='stu'] strong {
+  color: var(--acao, #1f7a4c);
+}
+.voz-ao-vivo-erro {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fdecec;
+  color: #7c1d1d;
+  font-size: 0.875rem;
+}
+.voz-ao-vivo-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.voz-ao-vivo-controles .botao {
+  min-height: 44px;
+}
+@media (max-width: 480px) {
+  .voz-ao-vivo-entrada .botao,
+  .voz-ao-vivo-controles .botao {
+    width: 100%;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .ponte-stu, .ponte-tabua, .ensino-ondas span, .ensino-stu .stu {
+  .ponte-stu, .ponte-tabua, .ensino-ondas span, .ensino-stu .stu, .voz-ao-vivo-painel * {
     transition: none !important;
     animation: none !important;
   }

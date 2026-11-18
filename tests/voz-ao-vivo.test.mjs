@@ -17,6 +17,12 @@ import {
   vozAoVivoAtiva,
   vozAoVivoVisitanteAtiva,
 } from '../src/servidor/ia/realtime.ts';
+import {
+  estadoInicialVozAoVivo,
+  extrairTranscricaoUsuario,
+  formatarTempoVoz,
+  reduzirEventoRealtime,
+} from '../src/app/voz-ao-vivo.ts';
 
 const usuarios = [];
 const chavesLimite = [];
@@ -367,4 +373,51 @@ test('avaliador existente recebe apenas a transcrição da pessoa e grava o reto
     if (iaAntes === undefined) delete process.env.IA;
     else process.env.IA = iaAntes;
   }
+});
+
+test('máquina de estados da voz ao vivo: legendas, interrupção natural, tempo e extração só da pessoa', () => {
+  let s = { ...estadoInicialVozAoVivo(), estado: 'ouvindo' };
+
+  // Stu começa falando (delta + done)
+  s = reduzirEventoRealtime(s, { type: 'response.output_audio_transcript.delta', response_id: 'r1', delta: 'Oi! ' });
+  s = reduzirEventoRealtime(s, { type: 'response.output_audio_transcript.delta', response_id: 'r1', delta: 'Me explica essa lição?' });
+  assert.equal(s.estado, 'stu_falando');
+  s = reduzirEventoRealtime(s, {
+    type: 'response.output_audio_transcript.done',
+    response_id: 'r1',
+    transcript: 'Oi! Me explica essa lição?',
+  });
+
+  // Pessoa interrompe naturalmente enquanto Stu fala
+  s = reduzirEventoRealtime(s, { type: 'input_audio_buffer.speech_started' });
+  assert.equal(s.estado, 'ouvindo');
+
+  // Transcrição da fala da pessoa (delta + completed)
+  s = reduzirEventoRealtime(s, { type: 'conversation.item.input_audio_transcription.delta', item_id: 'u1', delta: 'O denominador ' });
+  s = reduzirEventoRealtime(s, {
+    type: 'conversation.item.input_audio_transcription.completed',
+    item_id: 'u1',
+    transcript: 'O denominador mostra o total de partes iguais de uma pizza.',
+  });
+
+  // Segunda fala da pessoa
+  s = reduzirEventoRealtime(s, {
+    type: 'conversation.item.input_audio_transcription.completed',
+    item_id: 'u2',
+    transcript: 'Por exemplo, três oitavos tem oito fatias no total.',
+  });
+
+  // Somente a fala da pessoa vai para o avaliador, nunca a fala do Stu
+  const transcricao = extrairTranscricaoUsuario(s);
+  assert.equal(
+    transcricao,
+    'O denominador mostra o total de partes iguais de uma pizza. Por exemplo, três oitavos tem oito fatias no total.',
+  );
+  assert.equal(transcricao.includes('Me explica'), false);
+  assert.equal(formatarTempoVoz(150), '02:30');
+
+  // Evento de erro leva ao estado erro
+  const erro = reduzirEventoRealtime(s, { type: 'error' });
+  assert.equal(erro.estado, 'erro');
+  assert.equal(erro.erro, 'rede');
 });
