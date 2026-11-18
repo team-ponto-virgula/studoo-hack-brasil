@@ -575,7 +575,7 @@ export function ApoioDaLicao({
             </div>
             <div className="ponte-vao">
               <span className="ponte-tabua" data-ativa="true" data-erro="true" style={{ '--ordem': 0 } as CSSProperties}>
-                {m.ponteMargemErro}
+                {m.ponteTabuaErro}
               </span>
               <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined} style={{ '--ordem': 1 } as CSSProperties}>
                 {m.pontePassoExplicacao}

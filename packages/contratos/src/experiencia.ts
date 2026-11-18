@@ -37,6 +37,7 @@ export const mensagens = {
       baseadoMaterial: 'Baseado no seu material',
       fonteMaterial: 'Fonte do seu material',
       ponteMargemErro: 'Onde travou',
+      ponteTabuaErro: 'Sua tentativa',
       ponteMargemVolta: 'De volta ao desafio',
       pontePassoErro: (resposta: string) => `Sua tentativa: ${resposta}`,
       pontePassoExplicacao: 'Outro caminho',

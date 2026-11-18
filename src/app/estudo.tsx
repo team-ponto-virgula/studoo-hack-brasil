@@ -431,22 +431,29 @@ export function Estudo() {
   const visivel = !carregandoTrilha && !carregandoLicao;
   const comNavegacao = planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(tela.tipo) && visivel;
 
-  if (inicio !== 'pronto') {
+  if (inicio === 'carregando') {
     return (
       <main className="inicializacao" id="conteudo-principal">
         <Logo />
-        {inicio === 'falha' && erro ? (
-          <EstadoErro codigo={erro}>
-            <Botao variante="secundario" onClick={() => {
-              setInicio('carregando');
-              setErro(null);
-              void carregar(() => false);
-            }}>{mensagens.tentarNovamente}</Botao>
-          </EstadoErro>
-        ) : <Skeleton />}
+        <Skeleton />
       </main>
     );
   }
+
+  const acaoDoErro = (codigoErro: string) =>
+    codigoErro === 'limite_geracoes' || codigoErro === 'limite_estudio' ? (
+      <Botao variante="secundario" onClick={() => { setErro(null); setInicio('pronto'); navegar({ tipo: 'planos' }); }}>
+        {mensagens.pedido.verPlanos}
+      </Botao>
+    ) : (
+      <Botao variante="secundario" onClick={() => {
+        if (inicio === 'falha') setInicio('carregando');
+        setErro(null);
+        void carregar(() => false);
+      }}>
+        {mensagens.tentarNovamente}
+      </Botao>
+    );
 
   return (
     <div className="estudo" data-navegacao={comNavegacao || undefined}>
@@ -494,15 +501,9 @@ export function Estudo() {
 
         <main id="conteudo-principal" className="estudo-principal" tabIndex={-1} ref={principal} aria-busy={ocupado}>
           <p className="somente-leitor" role="status">{anuncio}</p>
-          {erro && (
-            <EstadoErro codigo={erro}>
-              <Botao variante="secundario" onClick={() => { setErro(null); void carregar(() => false); }}>
-                {mensagens.tentarNovamente}
-              </Botao>
-            </EstadoErro>
-          )}
-          {carregandoTrilha && <SkeletonTrilha />}
-          {carregandoLicao && (tela.tipo === 'geracao' && geracao?.proposta
+          {erro && <EstadoErro codigo={erro}>{acaoDoErro(erro)}</EstadoErro>}
+          {inicio === 'pronto' && carregandoTrilha && <SkeletonTrilha />}
+          {inicio === 'pronto' && carregandoLicao && (tela.tipo === 'geracao' && geracao?.proposta
             ? <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />
             : <SkeletonLicao texto={mensagens.licao.carregando} />)}
           {visivel && tela.tipo === 'apresentacao' && (
