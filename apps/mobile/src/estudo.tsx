@@ -29,7 +29,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta } from './interface';
+import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -376,32 +376,23 @@ export function Estudo({ cliente, sair, expirar }: {
     setCodigoErro(licao.codigo);
   }
 
+  /**
+   * Confirmações (sair e apagar) no cartão da web (.modal-cartao), com "Cancelar" e a confirmação, no lugar da caixa do
+   * sistema (levantamento de paridade, G7). O voltar do aparelho cancela.
+   */
+  const [confirmacao, setConfirmacao] = useState<{ mensagem: string; confirmarRotulo: string; destrutivo?: boolean; aoConfirmar: () => void } | null>(null);
+
   /** Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão. Como na web. */
   function pedirParaSair() {
-    const confirmar = () => void executar('sair', sair);
-    if (Platform.OS === 'web') {
-      if ((globalThis as { confirm?: (texto: string) => boolean }).confirm?.(mensagens.sairPergunta)) confirmar();
-      return;
-    }
-    Alert.alert(mensagens.sairPergunta, undefined, [
-      { text: mensagens.ficar, style: 'cancel' },
-      { text: mensagens.sair, style: 'destructive', onPress: confirmar },
-    ]);
+    setConfirmacao({ mensagem: mensagens.sairPergunta, confirmarRotulo: mensagens.sair, aoConfirmar: () => void executar('sair', sair) });
   }
 
-  /** Apaga uma trilha depois da confirmação (na prévia no navegador, o Alert não aparece: usa a caixa do navegador). */
+  /** Apaga uma trilha depois da confirmação no cartão (com o progresso, duas trilhas de mesmo nome não se confundem). */
   function pedirParaApagar(plano: PlanoResumo) {
-    const apagar = () => void apagarPlano(plano);
-    // Com o progresso, duas trilhas de mesmo nome não se confundem. Como na web.
-    const pergunta = mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total));
-    if (Platform.OS === 'web') {
-      if ((globalThis as { confirm?: (texto: string) => boolean }).confirm?.(pergunta)) apagar();
-      return;
-    }
-    Alert.alert(pergunta, undefined, [
-      { text: mensagens.planos.manter, style: 'cancel' },
-      { text: mensagens.planos.apagar, style: 'destructive', onPress: apagar },
-    ]);
+    setConfirmacao({
+      mensagem: mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total)),
+      confirmarRotulo: mensagens.planos.apagar, destrutivo: true, aoConfirmar: () => void apagarPlano(plano),
+    });
   }
 
   async function apagarPlano(plano: PlanoResumo) {
@@ -456,7 +447,14 @@ export function Estudo({ cliente, sair, expirar }: {
   return <NavegacaoContexto.Provider value={comNavegacao ? {
     atual: etapa.tipo as 'planos' | 'objetivo' | 'plano', ocupado,
     planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
-  } : null}>{renderizarTela()}</NavegacaoContexto.Provider>;
+  } : null}>
+    {renderizarTela()}
+    {confirmacao && (
+      <CartaoConfirmacao mensagem={confirmacao.mensagem} confirmarRotulo={confirmacao.confirmarRotulo} destrutivo={confirmacao.destrutivo}
+        ocupado={ocupado} aoCancelar={() => setConfirmacao(null)}
+        aoConfirmar={() => { const acao = confirmacao.aoConfirmar; setConfirmacao(null); acao(); }} />
+    )}
+  </NavegacaoContexto.Provider>;
 
   function renderizarTela() {
     // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. Começar, na trilha gerada,
@@ -521,10 +519,11 @@ export function Estudo({ cliente, sair, expirar }: {
     if (!planos && !erro) return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
 
     return (
-      <Tela pagina="planos" acoes={acoes}>
+      <Tela pagina="planos" acoes={acoes} abaixoDoLogo={planos && planos.length > 0 ? <SeloSincronia sincronia={sincronia} /> : undefined}>
+        {/* Como na web: o aviso de erro (sem rede, sessão) vem no alto, antes do título. */}
+        {mensagem}
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
         <Text style={estilos.introducao}>{mensagens.planos.subtitulo}</Text>
-        {mensagem}
         {planos && planos.length > 0 && (() => {
           // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
           const destaque = planoInicial(planos);
@@ -1300,10 +1299,13 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
   const [atualVisivel, setAtualVisivel] = useState(false);
   function avaliarAtual() {
     const atual = atualNaRolagem.current;
-    // O cartão flutua sobre o pé da área (cerca de 120 pontos).
-    const altura = alturaComCartao.current - 120;
+    const altura = alturaComCartao.current;
     if (!atual || !altura) return;
-    const visto = atual.topo - rolagemY.current >= -10 && atual.base + 48 - rolagemY.current <= altura;
+    // Como a web (caminho.tsx, IntersectionObserver com rootMargin de -40 px em cima e -240 px embaixo): basta a lente ou
+    // o balão "Começar" (uns 110 pontos acima dela) aparecer na faixa visível para o cartão sair.
+    const topoVisivel = rolagemY.current + 40;
+    const peVisivel = rolagemY.current + altura - 240;
+    const visto = atual.base > topoVisivel && atual.topo - 110 < peVisivel;
     setAtualVisivel((antes) => (antes === visto ? antes : visto));
   }
 
@@ -1337,16 +1339,16 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
 
   return (
     <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo || (atualVisivel && passo) ? null : passo || novo} rolagem={rolagem}
-      // No celular, o nome do plano fica na barra de cima, sempre à vista (como a faixa da unidade nos melhores apps).
-      topo={largo ? undefined : (
+      // Como na web no celular (levantamento de paridade, M1): a barra da marca, com "Sair" e o selo de sincronia, rola e sai
+      // de vista; o cabeçalho da trilha (rótulo, nome em até duas linhas e o anel) rola até o alto e fica parado lá.
+      abaixoDoLogo={largo ? undefined : <SeloSincronia sincronia={sincronia} />}
+      faixaFixa={largo ? undefined : (
         <View style={estudoEstilos.barraPlano}>
           <View style={estudoEstilos.barraPlanoTexto}>
             <Text style={[estudoEstilos.barraPlanoRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
-            {/* Rodada 4.2: o nome da trilha vai até duas linhas no alto (em 360 ele era cortado com reticências). */}
             <Titulo testID="titulo-plano" foco linhas={2} estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
           </View>
-          <AnelProgresso progresso={plano.progresso} tamanho={40} />
-          {acoes}
+          <AnelProgresso progresso={plano.progresso} tamanho={44} />
         </View>
       )}
       // No celular, o cartão da próxima lição flutua sobre o mapa, como na web; o conteúdo ganha folga para passar por baixo.
@@ -1361,7 +1363,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
         avaliarAtual();
       }}>
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
-      <View style={estudoEstilos.seloTrilha}><SeloSincronia sincronia={sincronia} /></View>
+      {largo && <View style={estudoEstilos.seloTrilha}><SeloSincronia sincronia={sincronia} /></View>}
       {largo && (
         <View style={estudoEstilos.topoTrilha}>
           <View style={estudoEstilos.topoTrilhaTexto}>
@@ -1548,16 +1550,15 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
         <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
           style={[estudoEstilos.destaqueStu, { transform: [{ translateY: balanco }] }]} />
       </View>
+      {/* Como .plano-cartao__menu da web: o "•••" no canto de cima da arte, com o "Apagar" num balão embaixo. */}
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID="apagar-destaque" />
       <View style={estudoEstilos.destaqueCorpo}>
         <View style={estudoEstilos.destaqueTopo}>
           <Text style={[estudoEstilos.destaqueRotulo, caixaAlta]}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo)}</Text>
-          <SeloSincronia sincronia={sincronia} />
         </View>
         <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo]}>{plano.titulo}</Text>
-        <Text style={estilos.legenda}>{concluido ? mensagens.retomada.revisar : mensagens.retomada.texto}</Text>
         <BarraProgresso progresso={plano.progresso} comPercentual />
-        <Botao rotulo={acao} testID="abrir-destaque" icone="seta" dica={plano.titulo} desativado={ocupado} acao={abrir} />
-        <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID="apagar-destaque" />
+        <Botao rotulo={acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir} />
       </View>
     </Animated.View>
   );
@@ -1605,10 +1606,10 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false
         <BarraProgresso progresso={plano.progresso} />
         <View style={estudoEstilos.cartaoAcao}>
           <Botao rotulo={acao} testID={`abrir-plano-${indice}`} icone="seta" variante={concluido || secundario ? 'secundario' : 'primario'}
-            dica={plano.titulo} desativado={ocupado} acao={abrir} />
-          <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID={`apagar-plano-${indice}`} />
+            nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir} />
         </View>
       </View>
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID={`apagar-plano-${indice}`} />
     </Animated.View>
   );
 }
@@ -1622,17 +1623,19 @@ function MenuDoCartao({ titulo, ocupado, apagar, testID }: { titulo: string; ocu
   const [aberto, setAberto] = useState(false);
   return (
     <View style={estudoEstilos.menu}>
-      <Pressable testID={`${testID}-menu`} accessibilityRole="button" accessibilityLabel={mensagens.planos.maisOpcoesRotulo(titulo)}
+      <Pressable testID={`${testID}-menu`} accessibilityRole="button" accessibilityLabel={mensagens.planos.maisOpcoesRotulo(titulo)} hitSlop={4}
         accessibilityState={{ expanded: aberto, disabled: ocupado }} aria-expanded={aberto} disabled={ocupado}
         onPress={() => setAberto((atual) => !atual)}
         style={({ pressed }) => [estudoEstilos.menuBotao, (aberto || pressed) && estudoEstilos.menuBotaoAberto]}>
         <Text importantForAccessibility="no" style={estudoEstilos.menuBotaoTexto}>•••</Text>
       </Pressable>
       {aberto && (
-        <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
-          onPress={() => { setAberto(false); apagar(); }} style={estudoEstilos.cartaoApagar}>
-          <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
-        </Pressable>
+        <View style={estudoEstilos.menuBalao}>
+          <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
+            onPress={() => { setAberto(false); apagar(); }} style={estudoEstilos.cartaoApagar}>
+            <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
+          </Pressable>
+        </View>
       )}
     </View>
   );
@@ -1880,10 +1883,12 @@ const estudoEstilos = StyleSheet.create({
   anelNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 26 },
   anelTotal: { color: cores.textoSecundario, fontSize: 13 },
   anelNumeroPequeno: { fontSize: 15, lineHeight: 18 },
-  barraPlano: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 },
+  // Como .trilha-topo da web no celular: 10 px de respiro, rótulo 11 px/900, nome em 18 px (até duas linhas) e anel de 44.
+  barraPlano: { width: '100%', maxWidth: 620, alignSelf: 'center', flexDirection: 'row', alignItems: 'center', gap: 16, paddingHorizontal: 20,
+    paddingVertical: 10 },
   barraPlanoTexto: { flex: 1, minWidth: 0 },
-  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14, letterSpacing: 1 },
-  barraPlanoTitulo: { fontSize: 17, lineHeight: 21 },
+  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14, letterSpacing: 0.9 },
+  barraPlanoTitulo: { marginTop: 2, fontSize: 18, lineHeight: 21 },
   concluidoCartao: { gap: 8, marginBottom: 12, padding: 18, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5,
     borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   descobertaHero:{flexDirection:'row',alignItems:'center',gap:8,marginBottom:20},
@@ -1938,9 +1943,13 @@ const estudoEstilos = StyleSheet.create({
   conclusaoTopo: { alignItems: 'center' },
   repetida: { gap: 10, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFF6D9' },
   repetidaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
-  cartaoApagar: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center', paddingHorizontal: 8 },
-  menu: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' },
-  menuBotao: { minWidth: 48, minHeight: 48, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  cartaoApagar: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
+  // Como .plano-cartao__menu: no canto de cima da arte, botão de 40 (alvo de 48 com a folga) sobre branco translúcido.
+  menu: { position: 'absolute', top: 10, right: 10, zIndex: 2, alignItems: 'flex-end' },
+  menuBotao: { minWidth: 40, minHeight: 40, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.88)' },
+  menuBalao: { marginTop: 4, paddingHorizontal: 4, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12, backgroundColor: cores.fundo,
+    shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   menuBotaoAberto: { backgroundColor: cores.nevoa },
   menuBotaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, letterSpacing: 1 },
   cartaoApagarTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, textDecorationLine: 'underline' },

@@ -6,6 +6,7 @@ import {
   Image,
   Keyboard,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -35,7 +36,7 @@ import type { NomeIcone } from './trilha';
  */
 export const DeslocamentoDaRolagem = createContext(0);
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, rolagem, aoMedir, aoRolar, aoMedirConteudo, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
   children: ReactNode;
   acoes?: ReactNode;
   /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
@@ -45,6 +46,10 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   semCabecalho?: boolean;
   /** Sem a linha embaixo da faixa do alto, como a barra da aula na web. */
   semLinha?: boolean;
+  /** Linha a mais na barra da marca, embaixo do logo (o selo "Progresso salvo agora" de Minhas trilhas e do mapa, como na web). */
+  abaixoDoLogo?: ReactNode;
+  /** Faixa que rola com a página até o alto e fica parada lá (o cabeçalho da trilha, como o .trilha-topo da web no celular). */
+  faixaFixa?: ReactNode;
   /** Referência da rolagem, para a tela levar a pessoa até um ponto do conteúdo (como o nó liberado na trilha). */
   rolagem?: Ref<ComponentRef<typeof ScrollView>>;
   /** Altura visível da rolagem, para a tela saber se um ponto do conteúdo já está à vista. */
@@ -62,6 +67,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const navegacao = useContext(NavegacaoContexto);
   const [teclado, setTeclado] = useState(false);
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
+  const [alturaFaixa, setAlturaFaixa] = useState(0);
+  const cabecalhoNaRolagem = !topo && !semCabecalho;
   useEffect(() => {
     const abriu = Keyboard.addListener('keyboardDidShow', () => setTeclado(true));
     const fechou = Keyboard.addListener('keyboardDidHide', () => setTeclado(false));
@@ -79,6 +86,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           </>
         )}
       </View>
+      {!topo && abaixoDoLogo && <View style={estilos.abaixoDoLogo}>{abaixoDoLogo}</View>}
     </View>
   );
   return (
@@ -89,12 +97,14 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           campos de baixo ficavam atrás dele. Se a janela encolher, a sobreposição medida é zero e nada muda. */}
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'web' ? undefined : 'padding'}>
         <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={estilos.rolagemConteudo}
+          stickyHeaderIndices={faixaFixa ? [cabecalhoNaRolagem ? 1 : 0] : undefined}
           onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
           onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}
           onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura))}>
-          {!topo && cabecalho && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
+          {cabecalhoNaRolagem && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
+          {faixaFixa && <View style={estilos.faixaFixa} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</View>}
           <View style={[estilos.conteudo, estiloConteudo]}>
-            <DeslocamentoDaRolagem.Provider value={topo || !cabecalho ? 0 : alturaCabecalho}>
+            <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? alturaFaixa : 0)}>
               <Entrada>{children}</Entrada>
             </DeslocamentoDaRolagem.Provider>
           </View>
@@ -194,7 +204,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte, estilo }: {
+  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel }: {
+  /** Nome para o leitor de tela quando o texto visível sozinho fica ambíguo ("Começar: <título>", como na web). */
+  nomeAcessivel?: string;
   /** Tamanho do texto quando a web usa outro (o "Pular" da apresentação tem 16 px mesmo compacto). */
   fonte?: number;
   /** Ajuste de caixa quando a web usa outro tamanho (o "Montar minha trilha" tem face de 56 px). */
@@ -213,7 +225,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
   /** Mostra pontinhos pulando no lugar do rótulo, que segue como nome do botão para o leitor de tela. */
   carregando?: boolean;
   /** `sucesso` e `alerta` são o verde e o âmbar do retorno da aula, com contraste para o texto branco. */
-  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto';
+  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto' | 'destrutivo';
   compacto?: boolean;
 }) {
   const [focado, setFocado] = useState(false);
@@ -229,14 +241,14 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
     if (bloqueado || reduzir !== false) { pressao.stopAnimation(); pressao.setValue(1); }
     return () => pressao.stopAnimation();
   }, [bloqueado, reduzir, pressao]);
-  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' ? cores.fundo : cores.acao;
+  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : cores.acao;
   if (desativado || esmaecido) corTexto = cores.textoSecundario;
 
   return (
     <Pressable
       testID={testID}
       accessibilityRole="button"
-      accessibilityLabel={rotulo}
+      accessibilityLabel={nomeAcessivel ?? rotulo}
       accessibilityHint={dica}
       accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }}
       disabled={bloqueado}
@@ -251,6 +263,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
         variante === 'sucesso' && estilos.botaoSucesso,
         variante === 'alerta' && estilos.botaoAlerta,
         variante === 'texto' && estilos.botaoTextoLivre,
+        variante === 'destrutivo' && estilos.botaoDestrutivo,
         compacto && estilos.botaoCompacto,
         estilo,
         pressed && variante !== 'texto' && estilos.botaoPressionado,
@@ -417,7 +430,8 @@ export function EstadoErro({ mensagem, acao, testID, foco = false }: {
           <Text importantForAccessibility="no" style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro, backgroundColor: cores.fundo }]}>!</Text>
           <Text style={[estilos.texto, { flex: 1, color: cores.erro }]}>{mensagem}</Text>
         </View>
-        {acao && <Botao rotulo={acao.rotulo} testID={acao.testID} variante="secundario" desativado={acao.desativado} acao={acao.acao} />}
+        {acao && <Botao rotulo={acao.rotulo} testID={acao.testID} variante="secundario" desativado={acao.desativado} acao={acao.acao}
+          estilo={{ alignSelf: 'flex-start' }} />}
       </View>
     </View>
   );
@@ -464,6 +478,33 @@ export function SeloDemonstracao({ estilo }: { estilo?: StyleProp<ViewStyle> }) 
  * original (com o texto já em maiúsculas, o TalkBack pode soletrar a palavra).
  */
 export const caixaAlta = { textTransform: 'uppercase' } as const;
+
+/**
+ * Cartão de confirmação como .modal-cartao da web: o fundo escurece, a pergunta vem em 1,05rem/800 e as ações ficam à
+ * direita, "Cancelar" (secundário) e a confirmação (vermelha quando apaga). Tocar fora ou no voltar do aparelho cancela.
+ */
+export function CartaoConfirmacao({ mensagem, confirmarRotulo, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar }: {
+  mensagem: string;
+  confirmarRotulo: string;
+  destrutivo?: boolean;
+  ocupado?: boolean;
+  aoCancelar: () => void;
+  aoConfirmar: () => void;
+}) {
+  return (
+    <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
+      <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
+        <Pressable testID="confirmacao" accessible={false} accessibilityViewIsModal role="dialog" aria-modal style={estilos.modalCartao} onPress={() => {}}>
+          <Text accessibilityRole="header" style={estilos.modalMensagem}>{mensagem}</Text>
+          <View style={estilos.modalAcoes}>
+            <Botao rotulo={mensagens.geracao.cancelar} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} />
+            <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'destrutivo' : 'primario'} desativado={ocupado} acao={aoConfirmar} />
+          </View>
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
 
 /** Esqueleto que pulsa devagar enquanto o conteúdo carrega, como o brilho da web; parado com movimento reduzido. */
 export function usePulso() {
@@ -600,6 +641,14 @@ export const estilos = StyleSheet.create({
   botaoAlerta: { borderColor: cores.alerta, borderBottomColor: '#6E4100', backgroundColor: cores.alerta },
   pontinhos: { height: 24, flexDirection: 'row', alignItems: 'center', gap: 5 },
   pontinho: { width: 8, height: 8, borderRadius: 4 },
+  botaoDestrutivo: { borderColor: '#F3C4C0', borderBottomColor: '#F3C4C0', backgroundColor: cores.fundo },
+  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', borderBottomWidth: 2, borderColor: cores.gelo },
+  abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
+  modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
+  modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
+    shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 24, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
+  modalMensagem: { marginBottom: 20, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16.8, lineHeight: 25 },
+  modalAcoes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10 },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
   botaoCompacto: { alignSelf: 'flex-start', minHeight: 48, minWidth: 48, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
   botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 1 },

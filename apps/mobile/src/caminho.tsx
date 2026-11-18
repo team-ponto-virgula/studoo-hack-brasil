@@ -323,7 +323,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (no.estado === 'atual' && fimDoTrecho) depois += 16;
           if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 24;
           // Cada selo embaixo do título ("Reforço feito", "Vale rever") ocupa uma linha; a ponte desenhada, mais uma.
-          if (discreto) depois += 22 * selosDoNo(no).length + (no.ponte ? 30 : 0);
+          if (discreto) depois += 22 * selosDoNo(no).length;
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
           const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
@@ -725,15 +725,14 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
           atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
         {/* Como na web (no balão do toque): na prévia, o que a lição ensina. */}
         {no.estado === 'previa' && no.resumo && <Text numberOfLines={2} style={caminhoEstilos.discretoResumo}>{no.resumo}</Text>}
+        {/* Como na web: os selos ficam no mesmo cartão do nome, em ordem (o reforço primeiro, o "vale rever" logo depois). */}
+        {selos.map((selo) => (
+          <View key={selo.texto} style={caminhoEstilos.seloNaCaixa}>
+            <Icone nome={selo.icone} tamanho={13} cor={selo.rever ? cores.alerta : cores.acao} />
+            <Text style={[caminhoEstilos.seloTexto, { color: selo.rever ? cores.alerta : cores.acao }]}>{selo.texto}</Text>
+          </View>
+        ))}
       </View>
-      {/* A ponte desenhada e os selos, em ordem: o reforço primeiro, o "vale rever" logo depois. */}
-      {no.ponte && <View style={caminhoEstilos.ponteDiscreta}><PonteNoMapa /></View>}
-      {selos.map((selo) => (
-        <View key={selo.texto} style={caminhoEstilos.selo}>
-          <Icone nome={selo.icone} tamanho={13} cor={selo.rever ? cores.alerta : cores.acao} />
-          <Text style={[caminhoEstilos.seloTexto, { color: selo.rever ? cores.alerta : cores.acao }]}>{selo.texto}</Text>
-        </View>
-      ))}
     </View>
   );
   const moeda = (pressionado: boolean) => (
@@ -1278,6 +1277,7 @@ const caminhoEstilos = StyleSheet.create({
   discretoTexto: {
     color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, textAlign: 'center' },
   discretoResumo: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 12, lineHeight: 16, textAlign: 'center' },
+  seloNaCaixa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 4 },
   selo: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
     backgroundColor: cores.fundo },
   seloTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
