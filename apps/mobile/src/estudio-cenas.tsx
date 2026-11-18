@@ -337,11 +337,13 @@ const cena = StyleSheet.create({
   tabuaNumero: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
   stu: { zIndex: 3, width: 32, height: 32 },
   legenda: { marginBottom: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  passo: { flexBasis: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 6, paddingHorizontal: 8, paddingVertical: 6,
+  // O que o site desenha: em estudio.css, as regras base de .ponte-legenda li e __num vêm depois das do celular e valem
+  // também nele (13 px, respiro de 8 × 10, número de 22 px em 12 px); a grade (vão de 6) segue a regra do celular.
+  passo: { flexBasis: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingHorizontal: 10, paddingVertical: 8,
     borderRadius: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C8B69F', backgroundColor: '#FBF8F3' },
-  passoNumero: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5D8C8' },
-  passoNumeroTexto: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14 },
-  passoTexto: { flex: 1, color: '#5A432C', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 12, lineHeight: 17 },
+  passoNumero: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5D8C8' },
+  passoNumeroTexto: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18 },
+  passoTexto: { flex: 1, color: '#5A432C', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 19.5 },
 });
 
 const aluno = StyleSheet.create({

@@ -694,7 +694,7 @@ export function ApoioDaLicao({
       {ponteAberta && (
         <View onLayout={(evento) => { cartaoPonteY.current = evento.nativeEvent.layout.y; }}><Card>
           <View style={s.ponteCabeca}>
-            <Text ref={tituloPonte} testID="titulo-ponte" accessible accessibilityRole="header" style={[estilos.subtitulo, { flexShrink: 1 }]}>
+            <Text ref={tituloPonte} testID="titulo-ponte" accessible accessibilityRole="header" style={[estilos.subtitulo, s.tituloPonte]}>
               {venceu ? m.pontePronta : m.ponte}
             </Text>
             <View style={s.ponteCabecaAcoes}>
@@ -702,7 +702,7 @@ export function ApoioDaLicao({
               {ponte?.simulado && <SeloDemonstracao />}
               {/* Rodada 4D: a saída da ponte fica no alto, à vista desde o começo (na vitória, ela vem embaixo da cena). */}
               {!venceu && !revendo && aoVoltarExercicio && (
-                <Botao testID="ponte-voltar" variante="texto" compacto rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} />
+                <Botao testID="ponte-voltar" variante="texto" rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} estilo={s.ponteVoltar} />
               )}
             </View>
           </View>
@@ -946,14 +946,20 @@ export function ApoioDaLicao({
 const s = StyleSheet.create({
   acoesMaterial: { gap: 12, marginTop: 20 },
   // A pergunta do desafio da ponte como a do exercício (24 px, -1 px) e as opções no espaço da lista da aula.
-  perguntaDesafio: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 28 },
+  // .estudio-desafio h3 da web: 1,0625rem (17) em 800, entrelinha 1,3 e -0,015em (a regra vem depois de .estudio-card h3).
+  perguntaDesafio: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '800', fontSize: 17, letterSpacing: -0.255, lineHeight: 22.1 },
+  // h2 do cartão (.estudio-card h2): 1,35rem (21,6), entrelinha 1,3, -0,015em e 10 embaixo.
+  tituloPonte: { flexShrink: 1, fontSize: 21.6, lineHeight: 28.08, letterSpacing: -0.324, marginBottom: 10 },
+  // "Voltar ao exercício" no alto da ponte: botão de texto de 16 px, 48 de altura e 12 de respiro nos lados, como na web.
+  ponteVoltar: { minHeight: 48, paddingHorizontal: 12 },
   opcoesDesafio: { gap: 10 },
   origemNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   arquivo: { minHeight: 48, justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderStyle: 'dashed',
     borderColor: cores.acao, borderRadius: 14 },
   arquivoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   ponteCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  ponteCabecaAcoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  // Até 600 px, .ponte-cabeca__acoes da web ocupa a linha toda: o selo à esquerda e "Voltar ao exercício" à direita.
+  ponteCabecaAcoes: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   desafio: { gap: 14 },
   gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#EEF3FF' },
   rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24 },
