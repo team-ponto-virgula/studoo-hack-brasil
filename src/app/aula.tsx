@@ -783,12 +783,6 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                       : t.associar.certos(avaliacao.certos.length, exercicio.esquerda.length)}
                   </p>
                 )}
-                {!avaliacao.correta && pedidoPonte === 0 && (
-                  <span className="aula-retorno__link">
-                    {/* Um toque só: pede o outro exemplo e mostra o cartão, que rola até ficar acima do painel. */}
-                    <Botao variante="texto" disabled={ocupado} onClick={() => setPedidoPonte((atual) => atual + 1)}>{mensagens.estudio.verPonte}</Botao>
-                  </span>
-                )}
               </div>
             </section>
           )}
@@ -801,7 +795,12 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             return falta && <p className="aula-rodape__nota" aria-live="polite">{textoDaFalta(falta)}</p>;
           })()}
           <div className="aula-rodape__acoes">
-            {avaliacao && !avaliacao.correta && <Botao disabled={ocupado} onClick={tentarDeNovo}>{t.tentarDeNovo}</Botao>}
+            {avaliacao && !avaliacao.correta && pedidoPonte === 0 && (
+              <Botao variante="primario" disabled={ocupado} onClick={() => setPedidoPonte((atual) => atual + 1)}>
+                {mensagens.estudio.verPonte}
+              </Botao>
+            )}
+            {avaliacao && !avaliacao.correta && <Botao variante="secundario" disabled={ocupado} onClick={tentarDeNovo}>{t.tentarDeNovo}</Botao>}
             {acao}
           </div>
         </div>
