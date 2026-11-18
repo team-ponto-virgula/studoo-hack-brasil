@@ -10,23 +10,23 @@
 .estudo-principal:has(.painel--aula) {
   width: min(100%, 57rem);
   margin-inline: auto;
-  padding: clamp(16px, 4vw, 36px) clamp(20px, 5vw, 56px) 0;
+  padding: clamp(12px, 2.5vw, 24px) clamp(16px, 4vw, 48px) 0;
 }
 
 .painel--aula {
   display: flex;
   width: 100%;
   min-width: 0;
-  min-height: calc(100svh - clamp(16px, 4vw, 36px));
+  min-height: calc(100svh - clamp(12px, 2.5vw, 24px));
   flex-direction: column;
-  gap: clamp(20px, 4vw, 36px);
+  gap: clamp(12px, 2.2vw, 22px);
   animation: none;
 }
 
 .aula-topo { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(10px, 3vw, 22px); }
 /* O X e a barra de andamento ficam à vista ao rolar uma etapa longa; o que a tela leva ao topo para abaixo deles. */
-.aula-topo { position: sticky; z-index: 3; inset-block-start: 0; margin: calc(-1 * clamp(16px, 4vw, 36px)) calc(-1 * clamp(20px, 5vw, 56px)) 0;
-  padding: clamp(10px, 2.5vw, 20px) clamp(20px, 5vw, 56px) 10px; background: var(--fundo); }
+.aula-topo { position: sticky; z-index: 3; inset-block-start: 0; margin: calc(-1 * clamp(12px, 2.5vw, 24px)) calc(-1 * clamp(16px, 4vw, 48px)) 0;
+  padding: clamp(8px, 1.8vw, 14px) clamp(16px, 4vw, 48px) 8px; background: var(--fundo); }
 :root:has(.painel--aula) { scroll-padding-top: 84px; }
 
 .aula-fechar {
@@ -45,7 +45,10 @@
 .aula-fechar .icone { width: 26px; height: 26px; stroke-width: 3; }
 .aula-fechar:hover:not(:disabled) { color: var(--texto); background: var(--nevoa); }
 .aula-fechar:disabled { cursor: wait; opacity: 0.6; }
-.aula-andamento { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.aula-andamento { display: grid; gap: 2px; min-width: 0; }
+.aula-andamento__linha { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.aula-titulo-topo { margin: 0; color: var(--texto2); font-size: 0.75rem; font-weight: 800; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aula-pergunta { font-size: clamp(1.25rem, 2.8vw, 1.625rem); line-height: 1.2; margin: 0 0 6px; }
 
 /* Barra de andamento: grossa, com um brilho na faixa cheia, que avança com uma mola curta. */
 .aula-barra { position: relative; height: 18px; overflow: hidden; border-radius: 999px; background: var(--gelo); }
