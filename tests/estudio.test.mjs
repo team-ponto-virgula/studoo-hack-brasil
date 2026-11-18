@@ -599,3 +599,14 @@ test('simulação cobre todas as seções de CSV e mantém referências por linh
   assert.match(licoes.at(-1).titulo, /Linhas 161–200/);
   assert.ok(licoes.every((l) => !l.titulo.includes('página')));
 });
+
+test('CSV com MIME text/comma-separated-values (Android) é aceito e validado pelo conteúdo', async () => {
+  const u = await pessoa();
+  const csv = 'Item,Quantidade\nMaçã,3\nPera,5';
+  const material = await criarMaterial(
+    u,
+    arquivo('android.csv', 'text/comma-separated-values', Buffer.from(csv)),
+  );
+  assert.equal(material.paginas.length, 1);
+  assert.match(material.paginas[0].texto, /Maçã/);
+});
