@@ -39,18 +39,36 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
 
 ---
 
-## O que já foi confirmado com chave real (18/11) e o que fica em aberto
-**Confirmado em chamada real à OpenAI (`criarChamadaVozAoVivo` + `hangup` com oferta SDP real do Chromium):**
-- Criação `201 Created` com cabeçalho `Location` no formato `/v1/realtime/calls/rtc_…` (`rtc_…`), modelo `gpt-realtime-2.1`, voz `marin` e configuração de sessão aceitos.
-- Resposta `text/plain` contendo o SDP `answer` completo (áudio, canal de dados e 6 candidatos TCP e UDP).
-- Encerramento ativo `POST /v1/realtime/calls/{call_id}/hangup` retornando `200`.
-- **Exigência da quebra de linha final no SDP:** o analisador de SDP da OpenAI recusa com `400` (`invalid_offer` — `"Failed to parse offer: failed to unmarshal SDP: EOF"`) qualquer oferta que não termine em `\r\n`; `validarSdpOferta` preserva as linhas intactas e acrescenta `\r\n` final se faltar.
+## Confirmado com chave real em 18/11/2026
+**Chamada (`criarChamadaVozAoVivo` + `hangup`, oferta SDP real do Chromium):**
+- Criação `201 Created` com cabeçalho `Location` no formato `/v1/realtime/calls/rtc_…`, modelo `gpt-realtime-2.1`, voz `marin` e configuração de sessão aceitos.
+- Resposta `text/plain` com o SDP `answer` completo (áudio, canal de dados e 6 candidatos TCP e UDP).
+- `POST /v1/realtime/calls/{call_id}/hangup` devolve `200`.
+- **Quebra de linha final no SDP:** a OpenAI recusa com `400` (`invalid_offer`, `"Failed to parse offer: failed to unmarshal SDP: EOF"`) oferta que não termine em `\r\n`; `validarSdpOferta` preserva as linhas e acrescenta o `\r\n` final se faltar.
 
-**Ainda em aberto:**
-- **Comportamento real do `semantic_vad` (`eagerness: "low"`) em português** em conversa completa com áudio e ajuste fino se necessário.
-- **Formato exato do campo `usage`** dentro de `conversation.item.input_audio_transcription.completed`.
-- **Fala em andamento no instante do encerramento:** com `semantic_vad` ativo, a referência da OpenAI orienta a não enviar `input_audio_buffer.commit` manual (o servidor gerencia os commits automaticamente e rejeita `commit` com buffer vazio); por isso, ao clicar em `"Encerrar e ver retorno"`, o cliente aguarda até 3 s apenas pelos itens já confirmados/pendentes.
-- **Compatibilidade no aplicativo móvel**: os contratos em `packages/contratos` ficam prontos, mas WebRTC nativo em React Native fica fora desta entrega web.
+**Conversa completa no navegador** (servidor local com `IA=openai`, Chromium com microfone falso lendo um áudio de 86 s; execução: Studoo Lead; análise: Studoo Web & API; evidências em `studoo-ui-capturas/voz-ao-vivo/real/`):
+- Conexão em 0,3 s, canal `oai-events` aberto em 0,6 s, o Stu fala primeiro. Três falas transcritas completas e na ordem; a transcrição enviada ao avaliador é só a da pessoa. Item de sistema dos 150 s aceito sem `error`; fim aos 180 s; nenhum evento `error` na conversa.
+- Mídia: bytes de áudio enviados e recebidos maiores que zero, 0 pacotes perdidos; par de candidatos UDP `host`/`host`.
+- `session.created` chega com `server_vad` e `session.updated` aplica a configuração (`semantic_vad`, `eagerness: "low"`, `gpt-4o-transcribe`, `pt`).
+- Confirmados: `output_audio_buffer.started` / `.stopped`, `input_audio_buffer.speech_started` / `.speech_stopped` / `.committed`, `conversation.item.input_audio_transcription.delta` / `.completed`, `response.created` / `response.done` (status `completed` ou `cancelled`).
+
+**Divergências do que esta spec supunha (já tratadas ou documentadas):**
+1. **Nome do evento de item criado:** a API manda `conversation.item.added` seguido de `conversation.item.done`; `conversation.item.created` não veio. O redutor aceita os dois nomes.
+2. **`semantic_vad` com `eagerness: "low"` em português** corta a fala nas pausas entre frases: uma fala de 19 s virou 3 itens. Cada corte abre uma resposta que a API cancela logo em seguida (`response.done` com `status: "cancelled"`, `reason: "turn_detected"`, uso zero). Sem falha e sem custo; a transcrição final fica completa e na ordem.
+3. **Interrupção do Stu:** quando a pessoa fala por cima, vem `output_audio_buffer.cleared` (com `conversation.item.truncated`) no lugar de `output_audio_buffer.stopped`. O redutor compartilhado trata `cleared` como fim de "Stu falando".
+4. **Legenda da pessoa em rajada (comportamento da API):** a API só transcreve depois de confirmar o áudio (`input_audio_buffer.committed`), então os `delta` da transcrição de entrada chegam em rajada logo antes do `completed`, e não enquanto a pessoa fala. O redutor já trata o `delta`; não há o que mudar no cliente.
+5. **Uso da transcrição de entrada:** o formato do campo `usage` de `conversation.item.input_audio_transcription.completed` não foi registrado na conversa real.
+6. **Log no caminho de sucesso:** o servidor não escrevia nada quando a conversa dava certo. Agora escreve uma linha por conversa criada e uma por encerrada (ver "Privacidade em log").
+
+**Retorno do "Explique com suas palavras":** o avaliador recebia a lição inteira, com os exercícios, e cobrou a pergunta de um exercício. Agora recebe só o recorte de ensino (título, objetivo, conceito, exemplo, passos e falas) e avalia a ideia da lição; vale para texto, gravação e voz. `STUDOO_IA_RESERVA` **não vale para o Explique**: se a IA falhar, o retorno local entra mesmo com `STUDOO_IA_RESERVA=nenhuma`, rotulado como "Retorno automático…".
+
+**Ainda não verificado:**
+- Geração de trilha por objetivo escrito pela tela, com a IA real.
+- Voz humana com microfone real (a conversa usou áudio gravado).
+- Safari (incluindo o áudio do Stu tocar sem segundo toque) e celular.
+- Formato do `usage` da transcrição de entrada (item 5).
+- **Fala em andamento no instante do encerramento:** com `semantic_vad` ativo, a referência da OpenAI orienta a não enviar `input_audio_buffer.commit` manual; por isso, ao clicar em `"Encerrar e ver retorno"`, o cliente aguarda até 3 s apenas pelos itens já confirmados/pendentes.
+- **Aplicativo móvel**: os contratos em `packages/contratos` ficam prontos, mas WebRTC nativo em React Native fica fora desta entrega web.
 
 ---
 
@@ -80,6 +98,7 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
    - As 8 regras pedagógicas do Stu (estudante curioso que começa cumprimentando e pedindo a explicação, <=3 perguntas curtas uma por vez mirando lacunas e erros comuns do apoio, <=2 frases/turno, dica/exemplo antes de explicar em 1 frase após 2 tentativas, pedido de exemplo do dia a dia, fechamento em 2 frases sem XP/nota/ranking, PT-BR no tema sem PII, aviso perto de 2m30s e encerramento em 3m00s).
 4. **Privacidade em log**:
    - **Nem áudio nem transcrição** são gravados em log do servidor; apenas contadores de uso/limite e motivo curto de erro.
+   - **Log de uso (caminho de sucesso):** uma linha por conversa criada (`[voz-ao-vivo] conversa criada ref=…abcd modelo=… ativas=N`) e uma por encerrada (`[voz-ao-vivo] conversa encerrada ref=…abcd motivo=cliente|teto|substituida duracao=Ns ativas=N`). `ref` são só os 4 últimos caracteres do id da chamada, para casar as duas linhas; sem identificador de usuário, id completo, áudio, SDP nem texto. `substituida` é quando a mesma pessoa abre outra conversa com uma ainda ativa.
    - A transcrição da fala da pessoa segue o mesmo caminho e a mesma guarda do texto do `"Explique com suas palavras"` (`ensinarStu`).
 5. **Script de conferência (`npm run voz:conferir` / `scripts/conferir-voz-ao-vivo.ts`)**:
    - Valida criação e encerramento de chamada Realtime contra `OPENAI_BASE_URL` sem precisar de áudio.

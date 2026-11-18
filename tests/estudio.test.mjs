@@ -242,6 +242,61 @@ test('com a IA fora do ar, o reforço e o “Explique com suas palavras” caem 
   }
 });
 
+test('o avaliador do “Explique com suas palavras” recebe só a ideia da lição, sem exercícios, prática, referências nem ids', async () => {
+  const u = await pessoa();
+  const plano = await aceitarProposta(u, (await gerarProposta(u, 'Quero aprender violão do zero')).token);
+  const id = plano.fluxos[0].licoes[0].id;
+  const licao = await buscarLicao(u, id);
+  assert.ok(licao.exercicios.length > 0, 'a lição de teste tem exercícios');
+  const ensino = [licao.titulo, licao.objetivo, licao.conceito, licao.exemplo, ...(licao.passos ?? [])].join('\n');
+  const textos = [];
+  const coletar = (v) => {
+    if (typeof v === 'string') textos.push(v);
+    else if (Array.isArray(v)) v.forEach(coletar);
+    else if (v && typeof v === 'object') Object.entries(v).forEach(([k, x]) => k !== 'id' && k !== 'tipo' && coletar(x));
+  };
+  coletar(licao.exercicios);
+  coletar(licao.pratica);
+  // Só os textos próprios do exercício (o que também está no ensino pode aparecer legitimamente).
+  const proibidos = [...new Set(textos.filter((t) => t.trim().length >= 12 && !ensino.includes(t)))];
+  assert.ok(proibidos.length > 0, 'há enunciados e opções para conferir');
+
+  const original = globalThis.fetch;
+  const anterior = { ia: process.env.IA, chave: process.env.OPENAI_API_KEY };
+  process.env.IA = 'openai';
+  process.env.OPENAI_API_KEY = 'chave-sintetica-teste';
+  let pedido = null;
+  globalThis.fetch = async (_url, init) => {
+    pedido = JSON.parse(init.body);
+    return Response.json({
+      output_text: JSON.stringify({ acertos: [], lacuna: 'Falta um exemplo.', pergunta: 'E num ukulele?', proximoPasso: 'Diga com suas palavras.' }),
+    });
+  };
+  try {
+    const feedback = await ensinarStu(u, id, 'A tarraxa fica na cabeça do violão e serve para afinar as cordas.');
+    assert.equal(feedback.simulado, false);
+  } finally {
+    globalThis.fetch = original;
+    process.env.IA = anterior.ia;
+    if (anterior.chave === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = anterior.chave;
+  }
+  assert.ok(pedido, 'o provedor foi chamado');
+  const dados = JSON.parse(pedido.input[0].content[0].text);
+  assert.deepEqual(Object.keys(dados).sort(), ['explicacao', 'licao']);
+  assert.ok(
+    Object.keys(dados.licao).every((k) => ['titulo', 'objetivo', 'conceito', 'exemplo', 'passos', 'falas'].includes(k)),
+    `campos enviados: ${Object.keys(dados.licao).join(', ')}`,
+  );
+  assert.equal(dados.licao.titulo, licao.titulo);
+  assert.equal(dados.licao.conceito, licao.conceito);
+  const corpo = pedido.input[0].content[0].text;
+  for (const t of proibidos) assert.ok(!corpo.includes(t), `texto de exercício ou prática chegou ao avaliador: ${t}`);
+  for (const valor of [licao.id, licao.planoId, licao.fluxoId]) assert.ok(!corpo.includes(valor), 'nenhum id chega ao avaliador');
+  assert.match(pedido.instructions, /explicar a ideia desta lição com as próprias palavras/);
+  assert.match(pedido.instructions, /nunca de uma questão de exercício/);
+});
+
 test('a pergunta escrita pela IA (reforço e lição do material) não deixa a certa sempre na primeira posição', () => {
   const base = { titulo: 'Frações', objetivo: 'Ler frações', conceito: 'Partes iguais.', exemplo: 'Metade.', feedbackCorreto: 'Isso.', feedbackIncorreto: 'Reveja.', pagina: 0, trecho: '' };
   const posicoes = new Set();

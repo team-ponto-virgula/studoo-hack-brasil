@@ -37,7 +37,29 @@ export type ConfiguracaoRealtime = {
 type ChamadaAtiva = {
   usuarioId: string;
   timer: ReturnType<typeof setTimeout>;
+  /** `Date.now()` da criação, para a duração no log de encerramento. */
+  inicio: number;
 };
+
+type MotivoEncerramento = "cliente" | "teto" | "substituida";
+
+/** Só o fim do id da chamada: basta para casar criação e encerramento no log sem expor o id completo. */
+function referenciaChamada(chamadaId: string): string {
+  return `…${chamadaId.slice(-4)}`;
+}
+
+/**
+ * Log de uso da voz no caminho de sucesso (acompanhar uso e custo): uma linha por conversa criada e uma por
+ * encerrada. Nunca leva identificador de usuário, id completo da chamada, áudio, SDP nem texto.
+ */
+function registrarCriacao(chamadaId: string, modelo: string): void {
+  console.info(`[voz-ao-vivo] conversa criada ref=${referenciaChamada(chamadaId)} modelo=${modelo} ativas=${chamadasAtivas.size}`);
+}
+
+function registrarEncerramento(chamadaId: string, ativa: ChamadaAtiva, motivo: MotivoEncerramento): void {
+  const duracao = Math.max(0, Math.round((Date.now() - ativa.inicio) / 1000));
+  console.info(`[voz-ao-vivo] conversa encerrada ref=${referenciaChamada(chamadaId)} motivo=${motivo} duracao=${duracao}s ativas=${chamadasAtivas.size}`);
+}
 
 const globalRealtime = globalThis as typeof globalThis & {
   chamadasVozAtivas?: Map<string, ChamadaAtiva>;
@@ -231,6 +253,7 @@ function encerrarAnterioresDoUsuario(config: ConfiguracaoRealtime, usuarioId: st
     if (ativa.usuarioId === usuarioId) {
       clearTimeout(ativa.timer);
       chamadasAtivas.delete(idAntigo);
+      registrarEncerramento(idAntigo, ativa, "substituida");
       void enviarHangup(config, idAntigo);
     }
   }
@@ -320,11 +343,14 @@ export async function criarChamadaVozAoVivo(
   const anterior = chamadasAtivas.get(chamadaId);
   if (anterior) clearTimeout(anterior.timer);
   const timer = setTimeout(() => {
+    const ativa = chamadasAtivas.get(chamadaId);
     chamadasAtivas.delete(chamadaId);
+    if (ativa) registrarEncerramento(chamadaId, ativa, "teto");
     void enviarHangup(config, chamadaId);
   }, TETO_SERVIDOR_MS);
   timer.unref?.();
-  chamadasAtivas.set(chamadaId, { usuarioId, timer });
+  chamadasAtivas.set(chamadaId, { usuarioId, timer, inicio: Date.now() });
+  registrarCriacao(chamadaId, config.modelo);
 
   return {
     chamadaId,
@@ -351,6 +377,7 @@ export async function encerrarChamadaVozAoVivo(usuarioId: string, chamadaId: str
   }
   clearTimeout(ativa.timer);
   chamadasAtivas.delete(chamadaId);
+  registrarEncerramento(chamadaId, ativa, "cliente");
   const config = configuracaoRealtime();
   if (!config) return;
   await enviarHangup(config, chamadaId);

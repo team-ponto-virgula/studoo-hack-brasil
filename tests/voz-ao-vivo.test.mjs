@@ -549,6 +549,81 @@ test('teto de 195 s dispara exatamente um hangup sem encerrar e zero hangups ap�
   }
 });
 
+test('log de sucesso da voz: uma linha por conversa criada e uma por encerrada (cliente, teto, substituída), sem nada sensível', async () => {
+  let seq = 0;
+  const servidor = http.createServer((req, res) => {
+    if (req.method === 'POST' && req.url === '/v1/realtime/calls') {
+      seq += 1;
+      res.writeHead(201, { 'content-type': 'application/sdp', location: `/v1/realtime/calls/rtc_logsegredo${seq}abcd${seq}` });
+      res.end(SDP_RESPOSTA);
+      return;
+    }
+    if (req.method === 'POST' && req.url?.endsWith('/hangup')) {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end('{"ok":true}');
+      return;
+    }
+    res.writeHead(404);
+    res.end();
+  });
+  await new Promise((resolve) => servidor.listen(0, '127.0.0.1', resolve));
+  const { port } = servidor.address();
+  const envAntes = {
+    STUDOO_VOZ_AO_VIVO: process.env.STUDOO_VOZ_AO_VIVO,
+    IA: process.env.IA,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_BASE_URL: process.env.OPENAI_BASE_URL,
+  };
+  const linhas = [];
+  const originais = { info: console.info, log: console.log, warn: console.warn, error: console.error };
+  for (const nivel of Object.keys(originais)) console[nivel] = (...args) => linhas.push(args.map(String).join(' '));
+  const usuarioA = 'usuario-log-secreto-a';
+  const usuarioB = 'usuario-log-secreto-b';
+  const instrucoes = 'INSTRUCOES-SENSIVEIS do Stu com texto da lição';
+  try {
+    process.env.STUDOO_VOZ_AO_VIVO = '1';
+    process.env.IA = 'openai';
+    process.env.OPENAI_API_KEY = 'sk-log-teste-nao-vaza';
+    process.env.OPENAI_BASE_URL = `http://127.0.0.1:${port}/v1`;
+    mock.timers.enable({ apis: ['setTimeout', 'Date'], now: 1_000_000 });
+
+    // Cliente encerra aos 63 s.
+    const s1 = await criarChamadaVozAoVivo(usuarioA, SDP_OFERTA, instrucoes);
+    mock.timers.tick(63_000);
+    await encerrarChamadaVozAoVivo(usuarioA, s1.chamadaId);
+    // Nova conversa do mesmo usuário substitui a anterior aberta.
+    const s2 = await criarChamadaVozAoVivo(usuarioA, SDP_OFERTA, instrucoes);
+    mock.timers.tick(10_000);
+    const s3 = await criarChamadaVozAoVivo(usuarioA, SDP_OFERTA, instrucoes);
+    // Teto do servidor aos 195 s.
+    const s4 = await criarChamadaVozAoVivo(usuarioB, SDP_OFERTA, instrucoes);
+    mock.timers.tick(195_000);
+    for (let i = 0; i < 10; i++) await new Promise((r) => setImmediate(r));
+
+    const voz = linhas.filter((l) => l.startsWith('[voz-ao-vivo]'));
+    const ref = (id) => `…${id.slice(-4)}`;
+    assert.deepEqual(voz.filter((l) => l.includes('conversa criada')).length, 4);
+    assert.ok(voz.some((l) => l.includes(`conversa encerrada ref=${ref(s1.chamadaId)} motivo=cliente duracao=63s`)), voz.join('\n'));
+    assert.ok(voz.some((l) => l.includes(`conversa encerrada ref=${ref(s2.chamadaId)} motivo=substituida duracao=10s`)), voz.join('\n'));
+    assert.ok(voz.some((l) => l.includes(`conversa encerrada ref=${ref(s4.chamadaId)} motivo=teto duracao=195s`)), voz.join('\n'));
+    assert.ok(voz.some((l) => l.includes(`conversa encerrada ref=${ref(s3.chamadaId)} motivo=teto duracao=195s`)), voz.join('\n'));
+    assert.equal(voz.filter((l) => l.includes('conversa encerrada')).length, 4, 'uma linha de encerramento por conversa');
+    assert.ok(voz.every((l) => l.includes('modelo=') || l.includes('motivo=')));
+
+    const sensiveis = [usuarioA, usuarioB, 'sk-log-teste-nao-vaza', instrucoes, 'INSTRUCOES', 'logsegredo', 'v=0', 'a=fingerprint', SDP_RESPOSTA.slice(0, 20)];
+    for (const s of [s1, s2, s3, s4]) sensiveis.push(s.chamadaId);
+    for (const linha of linhas) for (const proibido of sensiveis) assert.ok(!linha.includes(proibido), `log contém dado sensível: ${linha}`);
+  } finally {
+    mock.timers.reset();
+    Object.assign(console, originais);
+    servidor.close();
+    for (const [k, v] of Object.entries(envAntes)) {
+      if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    }
+  }
+});
+
 test('avaliador existente recebe apenas a transcrição da pessoa e grava o retorno da lição', async () => {
   const { u } = await criarUsuario();
   const licao = await criarLicaoPara(u.id);
@@ -662,6 +737,18 @@ test('redutor C11: transcrições fora de ordem, erro não fatal ignorado, outpu
   assert.equal(sAudio.estado, 'stu_falando');
   sAudio = reduzirEventoRealtime(sAudio, { type: 'output_audio_buffer.stopped' });
   assert.equal(sAudio.estado, 'ouvindo');
+
+  // Interrupção real: a OpenAI manda `output_audio_buffer.cleared` (sem `stopped`); isso também encerra "Stu falando",
+  // mesmo sem `speech_started` antes.
+  let sCortado = reduzirEventoRealtime(s, { type: 'output_audio_buffer.started' });
+  assert.equal(sCortado.estado, 'stu_falando');
+  sCortado = reduzirEventoRealtime(sCortado, { type: 'output_audio_buffer.cleared' });
+  assert.equal(sCortado.estado, 'ouvindo');
+  assert.equal(
+    reduzirEventoRealtime({ ...sCortado, estado: 'encerrando' }, { type: 'output_audio_buffer.cleared' }).estado,
+    'encerrando',
+    'estado final não regride',
+  );
 
   // Extremos de tamanho e preservação de rascunho existente para ensinarStu
   assert.equal(prepararExplicacaoParaAvaliacao('curto demais'), null);
