@@ -1,87 +1,47 @@
-# Revisão de paridade entre web e Android
+# Paridade entre web e app
 
-Web e app devem oferecer o mesmo percurso, conteúdo, identidade visual e ações. O desktop conserva a barra lateral; no celular, a navegação e as ações principais ficam na parte inferior. Os componentes continuam nativos no Android.
+**Regra.** Igual por padrão; diferença só por obrigação da plataforma. Na mesma largura, a mesma tela: mesma ordem, tamanhos, textos, ícones e comportamento. "Fica melhor assim no toque" não é motivo: se é melhor, as duas mudam.
 
-## Ajustes desta revisão
+**Ação principal em tela estreita.** Até 600 px, a ação principal aparece sem rolar, ocupa a largura toda e vem antes de qualquer saída secundária. Onde uma plataforma já faz isso e a outra não, a outra segue.
 
-- A entrada do app abre diretamente no login, como a web. A antiga etapa separada de boas-vindas foi retirada; o Stu e a paisagem continuam no formulário e a apresentação de cinco passos continua após o primeiro acesso.
-- Login valida e-mail e senha vazios com mensagens no campo. Após credenciais inválidas, as duas versões limpam a senha. A indisponibilidade do Google só aparece depois de concluir a consulta de configuração.
-- O separador entre Google e e-mail, a tipografia dos títulos em celular, a paisagem e os espaçamentos da entrada foram alinhados.
-- Recuperação usa o mesmo símbolo de cadeado/confirmação, aviso de envio, etapas, rótulos de carregamento e ação inferior. A versão web estreita deixa de colocar o formulário dentro de um cartão adicional. No app, o título recebe foco ao mudar de etapa.
-- Conclusão da aula fica sem o cabeçalho adicional no app. Na web em celular, as duas ações finais ficam juntas no rodapé, como no app. A chuva de confetes usa a mesma quantidade de peças.
-- A CSP web permite os atributos de estilo usados pelo React para posicionamento, cores e progresso. Tags de estilo continuam exigindo nonce em produção, assim como os scripts.
-- `packages/contratos/src/experiencia.ts` passa a ser a fonte de textos de apresentação, pedido, geração, trilha, aula, retomada, autenticação e erros. Os arquivos de mensagens de cada plataforma mantêm apenas os acessores e aliases necessários. Não há mudança na API nem no banco.
+Esta tabela é a única lista de diferenças entre a web móvel e o app. O que não está nela é defeito. Ela vem do levantamento de 18/11, que comparou o site em `fc6e458` com a prévia do app, em 390×844 e 360×800. O app foi corrigido nos commits `d116640` a `36daccb` da `feat/ui-hackathon-mobile`. As decisões são do Lead.
 
-## Percursos revisados
+## Diferenças que sobram
 
-| Percurso | Verificação |
-| --- | --- |
-| Entrada | Google/configuração, e-mail e senha, validações e mostrar senha |
-| Recuperação | Pedido de código, código inválido, troca, confirmação e retorno ao login |
-| Apresentação | Cinco passos e escolha de área |
-| Pedido | Área, sugestões, campo, fala do Stu e geração |
-| Geração | Andamento, prévia pronta e preparação das lições |
-| Aula | Conceito, exemplo, exercício, erro, nova tentativa e acerto |
-| Conclusão | Resumo, progresso e ações para continuar |
-| Trilha | Caminho, marcos, próximo passo e retorno aos planos |
-| Minhas trilhas | Cartões e retomada |
+| # | Diferença | Onde | Motivo | Quem muda |
+|---|---|---|---|---|
+| P1 | Sessão no SecureStore (app) × cookie httpOnly (web) | Entrada | O app não tem cookie de navegador; o SecureStore é o cofre do sistema | Ninguém |
+| P2 | Google pelo navegador do sistema (app) × troca de página (web) | Entrada | O Google não aceita login em WebView embutida | Ninguém |
+| P3 | Voltar do aparelho fecha cartões e caixas como "Cancelar" e volta uma tela; na web valem o Esc e o histórico do navegador | Todas | Navegação do sistema Android | Ninguém |
+| P4 | O app reserva a área segura (entalhe, barra de gestos) | Todas | Bordas do aparelho; na prévia web valem 0 | Ninguém |
+| P5 | O app sobe o conteúdo para o campo em foco ficar acima do teclado; Enter para verificar existe só na web | Campos e exercícios | Teclado virtual × teclado físico; no aparelho, a tecla de envio do teclado envia a lacuna | Ninguém |
+| P6 | Anúncios e foco do leitor de tela: `accessibilityLiveRegion`, `announceForAccessibility` e foco do TalkBack (app) × `aria-live` e foco do teclado (web) | Todas | APIs de acessibilidade de cada plataforma; o texto anunciado é o mesmo | Ninguém |
+| P7 | Link "Ir para o conteúdo" só na web | Todas | Atalho de Tab do teclado; no app o TalkBack navega por títulos e controles | Ninguém |
+| P8 | Área de toque de 48 dp nos alvos pequenos (selo [1], "•••", "Sair"), com o desenho igual ao da web | Várias | Regra de acessibilidade do Android; a área cresce por fora (`hitSlop`), sem mudar o desenho | Ninguém |
+| P9 | Seletor de arquivo, câmera e pedido de microfone do sistema | Material, Explique | DocumentPicker, ImagePicker e permissão do Android × `input type=file` e permissão do navegador; botões e textos iguais | Ninguém |
+| P10 | Alça de redimensionar o campo de texto só na web | Explique | Recurso do navegador; o TextInput nativo não tem | Ninguém |
+| P11 | Fontes TTF variáveis pelo expo-font (app) × WOFF2 (web). A quebra equilibrada dos títulos (`text-wrap: balance`) vem do `textBreakStrategy` do Android; o iOS e a prévia web quebram como sempre | Todas | Formato de fonte e motor de texto de cada plataforma | Ninguém. Conferir no aparelho se o peso pedido pela fonte variável aparece; se não aparecer, carregar arquivos estáticos por peso |
+| P12 | Anel de foco no botão tocado, só na prévia web do app | Prévia | No Android o toque não move o foco; ele só aparece com teclado ou D-pad | Ninguém (artefato da prévia) |
+| W1 | Botões principais da aula, da ponte e do acerto na largura toda ("Continuar lendo", "Avançar", "Ver exemplo", "Ir para o desafio", "Voltar ao exercício", "Continuar") | Aula, ponte, acerto | Regra da ação principal em tela estreita; o app já cumpre | Web móvel (até 600 px) segue o app |
+| W2 | Gravação no Explique: "Parar e transcrever" → indicador "Gravando…" → "Enviar minha explicação" | Explique | O estado da gravação fica junto do botão que a controla | Web segue o app |
+| W3 | Rodapé do exercício: a dica em cima e "Verificar" na largura toda | Exercícios | Regra da ação principal; em 360 a versão da web quebra em duas linhas, com o botão solto à esquerda | Web móvel segue o app |
+| W4 | Painel do erro: "Ver outro jeito de entender" primeiro; depois "Tentar de novo" com "Pular por agora" ao lado; o aviso "É o último exercício…" acima do botão principal | Erro | A saída secundária não pode vir antes da ação principal. No app, o aviso em #5E6A85 sobre #FFF1E0 tem contraste de 4,88:1 (AA) | Web segue o app |
+| W5 | Ponte compacta: selo e "Voltar ao exercício" na mesma linha; cena horizontal com a grade 2×2 numerada; sem a lista repetida dos passos (vale também para a ilustração do passo 2 da apresentação) | Ponte, apresentação | Na web de 390, "Ver exemplo" só aparecia depois de 500 px de rolagem | Web segue o app |
+| W6 | "Voltar ao exercício" da vitória em verde, a cor de acerto do rodapé "Perfeito!" | Ponte vencida | Mesma cor do acerto | Web segue o app (o cartão recolhido da vitória já é igual nos dois) |
+| B1 | Com a ponte aberta, o cartão da ponte vem primeiro e "De onde veio esta ideia" fica logo abaixo dele, antes de "Explique com suas palavras" | Ponte | Decisão do Lead | Os dois. App feito em `aa822a2`; falta a web |
+| B2 | O desafio da ponte usa o cartão de múltipla escolha da aula (A, B, C, texto à esquerda, estados de marcada, certa e errada) e a pergunta como título | Ponte | Decisão do Lead: um componente só para escolher | Os dois. App feito em `aa822a2`; falta a web |
+| D1 | Esqueleto de carregamento: a web mostra "Minhas trilhas" e "Sair" no alto em 390, mas a tela carregada tem as abas embaixo | Primeira carga | A web corrige o próprio esqueleto móvel antes de o app copiar | Web primeiro; o app copia depois (o Lead avisa) |
+| A1 | Espaçamento do caminho do mapa, até 28 px menor no app (rótulo do nó atual → próximo nó: 312 × 284 px em 390) | Mapa | O app calcula o vão entre os nós com regras próprias de colisão (balão "Começar", selos, faixas de parte). Alinhar às da web (`--passo` 36, +14 no nome discreto, +38 antes do atual, +108/+144 no fim de trecho, lente do atual a 1,14×) pede uma passada própria, sem criar sobreposição | App (pendente) |
 
-As capturas locais ficam em `artifacts/paridade/`. A web usa API e banco locais com IA falsa; a prévia do app usa React Native Web e API simulada. Quantidade de planos e conteúdo gerado dependem da conta e dos dados de cada ambiente, e não são diferenças de interface.
+## O que não é diferença de tela
 
-Os testes de paridade verificam a fonte única de textos, os desenhos e as cores de texto, ação, campos e feedback. Os testes de movimento verificam preferência de movimento reduzido, segundo plano e limpeza das assinaturas. Build e tipos são conferidos nas duas plataformas.
+- "Esqueci minha senha" e "Experimentar sem conta" aparecem conforme `/api/auth/config`, com a mesma regra nos dois. No site, recuperação e visitante estão desligados.
+- Trilhas da conta, textos gerados pela IA e a ordem das opções (sorteada por sessão, com a mesma regra em `aula.tsx` e `licao.tsx`) mudam de um ambiente para outro.
+- O app não usa SVG. O olho de mostrar senha é desenhado com Views e as colinas do mapa saem de arcos de círculos grandes, reproduzindo os caminhos SVG da web. O desenho é o mesmo.
+- No balão do nó atual, um espaço de largura zero separa a ação do título. Assim o texto visível continua contido no nome acessível ("Começar: <título>. Lição X de Y, atual."), no formato da web 4.6.
 
-Permanecem adaptações deliberadas: navegador versus SecureStore para sessão, navegador do sistema para Google no Android, gestos e teclado nativos, áreas seguras e barra lateral no desktop. Esta revisão não substitui a validação em aparelho Android: teclado físico/virtual, TalkBack e desempenho nativo ainda precisam ser conferidos ali.
+## Como conferir
 
-## Diferenças deliberadas do app nas rodadas de UI 1.1 a 1.3
-
-Números e textos seguem `docs/ui/DIRECAO-UI.md` e `experiencia.ts`. Estas diferenças vêm do toque e da tela estreita:
-
-- Ponte: a cena fica horizontal também no celular e o Stu atravessa até "De volta ao desafio". Os textos das tábuas ficam numa legenda numerada logo abaixo da cena, porque quatro tábuas com texto não cabem legíveis em 390 px. O retorno da vitória aparece logo abaixo da cena, que a tela traz à vista antes da travessia.
-- Privacidade do material: até a configuração de acesso responder, o app mostra o aviso geral (`privacidade`). Depois, mostra o aviso do provedor ativo (`privacidadePorProvedor(ia)`).
-- Material: o CSV aparece em tabela com rolagem horizontal dentro do cartão. As páginas de texto mostram quatro linhas e um botão para abrir o resto.
-- Stu no exercício: cada uma das três comemorações (de primeira, acerto e depois da ponte) tem movimento e adereço próprios (✦, ✓ e tábuas).
-- Explique: as ondas da gravação seguem o volume do microfone (`metering` do expo-audio). Com movimento reduzido, ficam paradas.
-- Conclusão: os cartões de história ficam em uma coluna.
-- Estado de erro (rodadas 3A a 3A.2): é o mesmo cartão com o Stu, o texto e uma ação, mas a ação ocupa a largura do cartão, como os outros botões de toque.
-- Erro na lição: o cartão não tem ação, porque a nova tentativa é o próprio botão do rodapé (Verificar, Concluir). Na web, "Tentar novamente" recarrega a página.
-
-## Diferenças deliberadas do app na rodada 4
-
-O app segue a rodada 4 da web publicada (`c824b29`): entrada com uma ação principal (4A), aula focada (4B), erro compacto (4C), ponte em foco (4D), recurso visual no conceito (4E), esqueleto no carregamento (4F), selo de sincronia só em Minhas trilhas e no mapa (4G), citação focal, mapa e conclusão (4I a 4O). As diferenças vêm do toque e da tela estreita:
-
-- Painel de erro: "Ver outro jeito de entender" ocupa a largura toda; embaixo, numa linha só, "Tentar de novo" (secundário) e "Pular por agora" (botão de texto, 14 px). Em 360 px, nenhum rótulo quebra linha. Na web, os três botões ficam numa linha que quebra conforme a largura.
-- Ponte em foco: com a ponte aberta, o exercício recolhe e o painel de retorno sai, como na web. No app, o cartão "Origem do conteúdo" também sai, para a ponte ficar no alto da tela. "Voltar ao exercício" fica no alto do cartão desde o começo. Na vitória, ele aparece logo embaixo da cena, junto do "Isso!", e a tela traz o alto do cartão à vista antes da travessia.
-- Ponte reaberta depois de vencida (o mesmo erro, de novo): o título é "Outro jeito de entender", a cena não repete a travessia, a explicação e o exemplo ficam à vista para reler e "Voltar ao exercício" aparece no alto e no fim. O desafio já vencido não volta. "Tentar de novo" e "Voltar ao exercício" fecham o pedido de reforço, então um erro novo mostra outra vez "Ver outro jeito de entender".
-- Conclusão depois de sair e voltar: as pontes vencidas e a explicação ao Stu entram no andamento da lição (em memória, 24 horas, como o resto do andamento). O cartão "Ponte construída" e o do Explique aparecem mesmo quando a pessoa fecha a lição no meio e volta.
-- Mapa: com a primeira lição atual e o nome dela em duas linhas, o balão "Começar" cobria a faixa da Parte 1. O começo do mapa ganha 64 de fundo e a faixa fica entre os postes da placa e o balão, em 360 e 412.
-- Não se aplicam ao app: Enter para verificar (o teclado do aparelho já envia a lacuna pela tecla de envio e as escolhas são por toque), fontes WOFF2 (o app embute TTF pelo expo-font) e configuração de acesso no servidor da página de login (o app consulta `/api/auth/config` ao abrir e só mostra o Google e o "Esqueci minha senha" quando a resposta os oferece).
-
-## Diferenças deliberadas do app na rodada 4.2
-
-O app segue a web 4.2.1 (`2a43314`): `trilhaRepetida()` no lugar da regra fixa de frações, a placa "A primeira lição já está aberta" (`stuInicioEmAndamento`), "Ponte construída" no mapa, "Apagar" num menu de mais opções, a ponte reaberta montada, a fração da lacuna na fonte da interface com algarismos tabulares e os botões ocupados logo no toque. As diferenças vêm do toque e da tela estreita:
-
-- Menu dos cartões em Minhas trilhas: na web, o "•••" abre um menu sobreposto. No app, o toque mostra "Apagar" ao lado do "•••", no próprio cartão, e um segundo toque fecha. "Apagar" continua pedindo confirmação. Não há botão "+ Nova trilha" no alto da lista, porque a aba "Nova trilha" fica sempre embaixo.
-- Ponte construída (vitória ou releitura): como na web no celular, as quatro tábuas ficam verdes e a legenda sai. Na releitura, o app mantém "Voltar ao exercício" também no alto do cartão (a web mostra só o do fim), para a saída ficar à vista sem rolar em 360 × 800.
-- Próxima ação de cada passo da ponte: ao abrir a ponte e depois de "Ver exemplo" e "Ir para o desafio", a tela rola só o necessário para "Ver exemplo", "Ir para o desafio" e "Conferir este exemplo" ficarem à vista, com o começo do passo perto do alto quando cabe. A rolagem é animada, menos com movimento reduzido.
-- Segunda ponte na mesma lição: o estado da ponte (passo, opção marcada, retorno, vitória) é zerado quando ela fecha. Com o mesmo erro, volta a ponte vencida, montada, para reler. Com um erro diferente, vem a ponte nova, do passo 1, sem nada marcado e sem elogio.
-- Mapa: o nome da trilha vai até duas linhas na barra de cima. Ícone de mostrar senha: um olho desenhado com Views, porque o app não usa SVG.
-
-## Rodada 4.3 no app
-
-- "Experimentar sem conta": o mesmo bloco da web (botão principal e aviso), só quando `/api/auth/config` devolve `visitante: true`. O aviso é o do aparelho (`experimentarAvisoApp`). O toque pede `POST /api/mobile/visitante` e segue o caminho do login por senha (SecureStore e entrada no app). Com o visitante oferecido, "Entrar" fica secundário, como na web. `limite_visitante` aparece no cartão de erro da entrada. No site publicado, o visitante continua desligado.
-- Ponte reaberta: o aviso neutro `ponteReabertaAviso` fica logo abaixo da cena, no lugar do elogio da vitória. O botão do desafio diz "Verificar", texto que vem do contrato.
-
-## Rodadas 4.4 e 4.5 no app
-
-O app segue a web 4.5.1 (`c56460a`). "Ver como funciona" na entrada abre a apresentação sem sessão, com os quatro primeiros passos. Ela termina em "Entendi", que volta à entrada com o foco no link, ou em "Experimentar sem conta", com o visitante ligado. As diferenças vêm do toque e da tela estreita:
-
-- Fechar a apresentação: o voltar do aparelho fecha, como o Esc da web. Na prévia web do app, o Esc e as setas também funcionam. Na abertura, a web põe o foco do teclado no título do passo. No app, o TalkBack vai ao título e o foco do teclado segue o sistema.
-- Último passo com "Experimentar sem conta": abaixo de 600 px, os botões ficam um sobre o outro, para o rótulo caber numa linha. A ação principal fica em cima e "Voltar" embaixo, como na web desde a 4.6 e como no painel de erro. No app, a ordem de leitura do TalkBack segue a da tela.
-- Os quatro momentos usam as peças do próprio app, paradas: o cartão "Fonte do seu material" da lição, a cena da ponte vencida (as quatro tábuas verdes e o Stu na chegada), os cartões do Explique em tamanho compacto e o mapa com "Ponte construída" e o selo de sincronia. Os textos são os exemplos de `mensagens.apresentacao.exemplos`.
-- Na web, as tábuas da ponte trazem o texto. No app, como na lição, os rótulos ficam na legenda numerada abaixo da cena, começando por "Sua tentativa". O mapa perdeu as duas estrelas, como na web, para o selo de sincronia caber no canto.
-
-## Rodada 4.6 no app
-
-- Nome acessível dos nós do mapa, no mesmo formato da web 4.6. O nó atual começa pela ação, como o balão: "Começar: <título>. Lição X de Y, atual.", com os selos no fim. Nos outros nós, os selos vêm logo depois do título: "<título>. Ponte construída. Vale rever. Lição 1 de 3, concluída.". No balão, um espaço de largura zero separa a ação do título, para o texto visível do botão continuar contido no nome. Sem ele, o axe juntava "COMEÇAR" e o título numa palavra só.
-- Na prévia, o nó não é botão e o resumo da lição aparece embaixo dele, não num balão de toque. Por isso o app acrescenta o resumo ao fim do nome.
-
+- Os pares lado a lado (web à esquerda, app à direita), em 390×844 e 360×800, ficam em `studoo-ui-capturas/paridade/pares/` (antes) e `paridade/pares-depois/` (depois das correções).
+- As medidas automáticas (texto, fonte, peso, cor, caixa, o que fica parado e o que rola) ficam em `paridade/medidas/`. O levantamento com as classes está em `paridade/LEVANTAMENTO.md`.
+- Uma diferença nova que a plataforma obriga entra nesta tabela com o motivo. Qualquer outra diferença é corrigida.
