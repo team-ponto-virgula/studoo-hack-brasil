@@ -13,12 +13,22 @@ export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** `resumo`: na prévia, o que a lição ensina (aparece embaixo do título). Como na web. */
 export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever; resumo?: string };
 
-/** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. Como na web. */
-export function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string; rever: boolean } | null {
-  if (no.ponte && !no.ponte.concluida) return { icone: 'revisao', texto: mensagens.estudio.ponteMapa, rever: false };
-  if (no.rever && no.estado === 'concluida') return { icone: 'revisao', texto: mensagens.trilha.valeRever, rever: true };
-  if (no.ponte) return { icone: 'check', texto: mensagens.estudio.ponteMapaFeita, rever: false };
-  return null;
+export type SeloDoNo = { icone: NomeIcone; texto: string; rever: boolean };
+
+/**
+ * Os selos embaixo do nó, em ordem: primeiro o reforço (a ponte pendente ou atravessada), depois o "vale rever", que
+ * aparece junto, sem sumir. Antes, o "vale rever" escondia a ponte feita, e o mapa não mostrava a ponte depois do erro
+ * (spec 05: o mapa marca a ponte na lição de origem e indica quando foi atravessada; o roteiro da demo mostra a ponte).
+ */
+export function selosDoNo(no: NoCaminho): SeloDoNo[] {
+  const selos: SeloDoNo[] = [];
+  if (no.ponte) {
+    selos.push(no.ponte.concluida
+      ? { icone: 'check', texto: mensagens.estudio.ponteMapaFeita, rever: false }
+      : { icone: 'revisao', texto: mensagens.estudio.ponteMapa, rever: false });
+  }
+  if (no.rever && no.estado === 'concluida') selos.push({ icone: 'revisao', texto: mensagens.trilha.valeRever, rever: true });
+  return selos;
 }
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo' | 'som';

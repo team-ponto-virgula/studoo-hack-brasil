@@ -21,7 +21,7 @@ import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
 import { cores, fontes } from './tema';
-import { explicar, iconeDoNo, nomeDoNo, posicaoDoNo, posicaoX, seloDoNo, type EstadoNo, type NoCaminho } from './trilha';
+import { explicar, iconeDoNo, nomeDoNo, posicaoDoNo, posicaoX, selosDoNo, type EstadoNo, type NoCaminho } from './trilha';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
@@ -320,8 +320,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (discreto && seguinte?.estado === 'atual') depois += 80;
           if (no.estado === 'atual' && fimDoTrecho) depois += 16;
           if (no.estado !== 'atual' && discreto && fimDoTrecho) depois += 24;
-          // O selo embaixo do título ("Vale rever", "Reforço") ocupa mais uma linha.
-          if (discreto && seloDoNo(no)) depois += 22;
+          // Cada selo embaixo do título ("Reforço feito", "Vale rever") ocupa uma linha; a ponte desenhada, mais uma.
+          if (discreto) depois += 22 * selosDoNo(no).length + (no.ponte ? 30 : 0);
           const espaco = seguinte || vaiAteChegada || vaiAteVindo ? medidas.linhas + depois : 32;
           const surgir = montando && no.estado === 'previa';
           const marcoVencido = fimDoTrecho && trechoVencido(nos, no.trecho);
@@ -680,9 +680,10 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const centro = (largura * x) / 100;
   const direita = x >= 50;
   const atual = no.estado === 'atual';
-  const selo = seloDoNo(no);
-  // O nome já termina em ponto: o selo entra sem ponto duplicado.
-  const rotuloA11y = selo ? `${nome} ${selo.texto}.` : no.estado === 'previa' && no.resumo ? `${nome} ${no.resumo}` : nome;
+  const selos = selosDoNo(no);
+  // O nome já termina em ponto: os selos entram sem ponto duplicado, na mesma ordem da tela (a ponte primeiro).
+  const rotuloA11y = selos.length ? `${nome} ${selos.map((selo) => selo.texto).join('. ')}.`
+    : no.estado === 'previa' && no.resumo ? `${nome} ${no.resumo}` : nome;
   const lugar = [caminhoEstilos.noLugar, { left: centro - lente / 2, width: lente, height: lente }];
 
   const rotulo = comRotulo && (
@@ -695,6 +696,10 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
           direita && caminhoEstilos.alinharFim, focado && caminhoEstilos.tituloFocado]}>{no.titulo}</Text>
         {!atual && <Text numberOfLines={3} style={[caminhoEstilos.estado, { color: corDoEstado[no.estado] }, direita && caminhoEstilos.alinharFim]}>{linha}</Text>}
         {no.ponte && <><PonteNoMapa /><Text style={[caminhoEstilos.estado, { color: cores.acao }]}>{no.ponte.concluida ? mensagens.estudio.ponteMapaFeita : mensagens.estudio.ponteMapa}</Text></>}
+        {/* O "vale rever" vem logo depois da ponte, sem sumir. */}
+        {no.rever && no.estado === 'concluida' && (
+          <Text style={[caminhoEstilos.estado, { color: cores.alerta }, direita && caminhoEstilos.alinharFim]}>{mensagens.trilha.valeRever}</Text>
+        )}
       </View>
     </View>
   );
@@ -709,12 +714,14 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
         {/* Como na web (no balão do toque): na prévia, o que a lição ensina. */}
         {no.estado === 'previa' && no.resumo && <Text numberOfLines={2} style={caminhoEstilos.discretoResumo}>{no.resumo}</Text>}
       </View>
-      {selo && (
-        <View style={caminhoEstilos.selo}>
+      {/* A ponte desenhada e os selos, em ordem: o reforço primeiro, o "vale rever" logo depois. */}
+      {no.ponte && <View style={caminhoEstilos.ponteDiscreta}><PonteNoMapa /></View>}
+      {selos.map((selo) => (
+        <View key={selo.texto} style={caminhoEstilos.selo}>
           <Icone nome={selo.icone} tamanho={13} cor={selo.rever ? cores.alerta : cores.acao} />
           <Text style={[caminhoEstilos.seloTexto, { color: selo.rever ? cores.alerta : cores.acao }]}>{selo.texto}</Text>
         </View>
-      )}
+      ))}
     </View>
   );
   const moeda = (pressionado: boolean) => (
@@ -1260,6 +1267,7 @@ const caminhoEstilos = StyleSheet.create({
   selo: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
     backgroundColor: cores.fundo },
   seloTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  ponteDiscreta: { marginTop: 6 },
   bolhaTrofeu: { position: 'absolute', bottom: '100%', left: -80, right: -80, marginBottom: 12, alignItems: 'center', zIndex: 3 },
   bolhaTrofeuTexto: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE08A',
     overflow: 'hidden', backgroundColor: '#FFF8E1', color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
