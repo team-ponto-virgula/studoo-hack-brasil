@@ -168,9 +168,11 @@ export function Logo({ decorativo = false, estilo }: { decorativo?: boolean; est
   );
 }
 
-export function Titulo({ children, testID, foco = false, estilo, linhas }: {
+export function Titulo({ children, testID, foco = false, estilo, linhas, equilibrado = false }: {
   /** Corta o título em tantas linhas (a barra do plano usa uma). */
   linhas?: number;
+  /** Linhas de tamanho parecido, como o `text-wrap: balance` da web (no Android; o iOS e a prévia web quebram como sempre). */
+  equilibrado?: boolean;
   children: ReactNode;
   testID?: string;
   foco?: boolean;
@@ -183,7 +185,8 @@ export function Titulo({ children, testID, foco = false, estilo, linhas }: {
     if (foco && titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus');
   }, [foco]);
 
-  return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" numberOfLines={linhas} style={[estilos.titulo, estilo]}>{children}</Text>;
+  return <Text ref={titulo} testID={testID} accessible accessibilityRole="header" numberOfLines={linhas} textBreakStrategy={equilibrado ? 'balanced' : undefined}
+    style={[estilos.titulo, estilo]}>{children}</Text>;
 }
 
 /**
@@ -334,7 +337,9 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
 }
 
 /** Botão só com ícone, de 48 dp (o alvo mínimo de toque do Android), como o de mostrar a senha ou o de fechar. */
-export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = false, testID, cor = cores.textoSecundario }: {
+export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = false, testID, cor = cores.textoSecundario, tamanho = 22 }: {
+  /** Tamanho do ícone (o X da aula tem 26 px, como .aula-fechar da web). */
+  tamanho?: number;
   icone: NomeIcone;
   rotulo: string;
   acao: () => void;
@@ -349,7 +354,7 @@ export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = fals
       accessibilityState={{ disabled: desativado, ...(selecionado === undefined ? null : { selected: selecionado }) }}
       disabled={desativado} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
       style={({ pressed }) => [estilos.botaoIcone, pressed && estilos.botaoIconePressionado, focado && estilos.foco]}>
-      <Icone nome={icone} tamanho={22} cor={cor} />
+      <Icone nome={icone} tamanho={tamanho} cor={cor} />
     </Pressable>
   );
 }

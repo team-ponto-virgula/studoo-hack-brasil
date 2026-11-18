@@ -548,17 +548,11 @@ export function ApoioDaLicao({
       {/* Com a ponte aberta, ela fica no alto da tela, sem o cartão da origem antes. */}
       {!ponteAberta && !!licao.referencias?.length && (
         <Card>
-          <Botao
-            variante="texto"
-            rotulo={m.origem}
-            acao={() => setFontes(!fontes)}
-          />
+          <LinhaAbrir rotulo={m.origem} aberto={fontes} alternar={() => setFontes(!fontes)} />
           {fontes &&
             licao.referencias.map((r, i) => (
               <View key={i} style={s.citacao}>
-                <H>
-                  {r.nome} · {r.localizacao ?? m.pagina(r.pagina)}
-                </H>
+                <Text accessibilityRole="header" style={s.origemNome}>{r.nome} · {r.localizacao ?? m.pagina(r.pagina)}</Text>
                 <T>{r.trecho}</T>
                 {r.leitura === 'ocr' && <T>{m.ocr}</T>}
               </View>
@@ -691,12 +685,7 @@ export function ApoioDaLicao({
         </Card></View>
       )}
       {ultimo && <View onLayout={(evento) => { cartaoEnsinoY.current = evento.nativeEvent.layout.y; }}><Card>
-        <Botao
-          variante="texto"
-          rotulo={m.ensinar}
-          desativado={gravando || ocupado}
-          acao={() => setEnsinar(!ensinar)}
-        />
+        <LinhaAbrir rotulo={m.ensinar} aberto={ensinar} desativado={gravando || ocupado} alternar={() => setEnsinar(!ensinar)} />
         {ensinar && (
           <>
             {/* O Stu como aluno (rodada 1.1): com dúvida, ouvindo enquanto grava, anotando quando o retorno chega. */}
@@ -771,6 +760,7 @@ export function ApoioDaLicao({
 }
 const s = StyleSheet.create({
   acoesMaterial: { gap: 12, marginTop: 20 },
+  origemNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   arquivo: { minHeight: 48, justifyContent: 'center', paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderStyle: 'dashed',
     borderColor: cores.acao, borderRadius: 14 },
   arquivoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },

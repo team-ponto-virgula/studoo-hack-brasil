@@ -844,8 +844,8 @@ export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
         {restantes.map((item) => (
           <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={t.ordenar.colocar(item.texto)} disabled={desativado}
             onPress={() => colocar(item.id)}
-            style={({ pressed }) => [formatos.cartao, pressed && formatos.cartaoAfundado]}>
-            <Text style={[estilos.texto, formatos.cartaoTexto]}>{item.texto}</Text>
+            style={({ pressed }) => [formatos.cartao, formatos.cartaoDisponivel, pressed && formatos.cartaoAfundado]}>
+            <Text style={[estilos.texto, formatos.cartaoTexto, formatos.cartaoDisponivelTexto]}>{item.texto}</Text>
           </Pressable>
         ))}
       </View>}
@@ -1330,7 +1330,9 @@ const formatos = StyleSheet.create({
   acordeLegenda: { flex: 1, minWidth: 150, gap: 8 },
   acordeNome: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 },
   ordemCaixa: { gap: 8, minHeight: 64, padding: 10, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo, justifyContent: 'center' },
-  disponiveis: { gap: 10 },
+  disponiveis: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  cartaoDisponivel: { alignSelf: 'flex-start', maxWidth: '100%' },
+  cartaoDisponivelTexto: { flexGrow: 0, flexShrink: 1 },
   cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
     borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   cartaoPar: { paddingHorizontal: 10, gap: 8 },
@@ -1347,7 +1349,7 @@ const formatos = StyleSheet.create({
   colunas: { flexDirection: 'row', gap: 8 },
   coluna: { flex: 1, gap: 8 },
   afirmacao: { padding: 14, borderLeftWidth: 5, borderLeftColor: cores.acao, borderRadius: 14, backgroundColor: cores.ceu },
-  afirmacaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 18, lineHeight: 25 },
+  afirmacaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19.2, lineHeight: 29 },
   valores: { flexDirection: 'row', gap: 10 },
   valor: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 2,
     borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo, paddingHorizontal: 6 },

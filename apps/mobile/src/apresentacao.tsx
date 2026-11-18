@@ -152,7 +152,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
               </View>
             )}
             <Text ref={(titulo) => { titulos.current[indice] = titulo; }} testID={`titulo-apresentacao-${indice}`} accessible
-              accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`}
+              accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`} textBreakStrategy="balanced"
               style={[estilos.titulo, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
             <Text style={[estilos.introducao, apresentacaoEstilos.texto]}>{item.texto}</Text>
           </ScrollView>

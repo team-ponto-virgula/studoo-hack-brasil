@@ -653,7 +653,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
             style={{ width: 96, height: 110, transform: [{ translateY: balancoInicio }] }} />
           <Text style={[estudoEstilos.pedidoEstrela, { fontFamily: fontes.corpo }]}>✦</Text>
         </View>
-        <Titulo testID="titulo-objetivo" foco={focarTitulo} estilo={estudoEstilos.pedidoTitulo}>
+        <Titulo testID="titulo-objetivo" foco={focarTitulo} equilibrado estilo={estudoEstilos.pedidoTitulo}>
           {modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}
         </Titulo>
         <Text accessibilityLiveRegion="polite" style={estudoEstilos.pedidoFala}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>
@@ -1035,7 +1035,7 @@ function TextoQueChega({ texto, surgir }: { texto: string; surgir: boolean }) {
   }, [entrada]);
 
   return (
-    <Animated.Text style={[estilos.titulo, estudoEstilos.tituloFaixa, entrada && {
+    <Animated.Text textBreakStrategy="balanced" style={[estilos.titulo, estudoEstilos.tituloFaixa, entrada && {
       opacity: entrada,
       transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
     }]}>

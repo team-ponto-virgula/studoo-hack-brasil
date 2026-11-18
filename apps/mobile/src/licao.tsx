@@ -18,7 +18,7 @@ import {
   type LicaoDetalhe,
 } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode, type Ref } from 'react';
-import { AccessibilityInfo, Alert, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAparecer, usePulinho, useTremor } from './animacoes';
 import {
   TranscritorContexto,
@@ -38,7 +38,7 @@ import {
 } from './aula-formatos';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao } from './interface';
+import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron } from './interface';
 import { mensagens, textoDaFalta } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
@@ -368,19 +368,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     voltar();
   }
 
-  /** Recomeçar do zero (quem voltou no meio e prefere começar de novo). */
-  function recomecar() {
-    // Como na web: pergunta antes, porque as respostas desta vez se perdem.
-    const confirmar = () => recomecarAgora();
-    if (Platform.OS === 'web') {
-      if ((globalThis as { confirm?: (texto: string) => boolean }).confirm?.(t.recomecarPergunta)) confirmar();
-      return;
-    }
-    Alert.alert(t.recomecarPergunta, undefined, [
-      { text: mensagens.ficar, style: 'cancel' },
-      { text: t.recomecarLicao, style: 'destructive', onPress: confirmar },
-    ]);
-  }
+  /**
+   * Recomeçar do zero (quem voltou no meio e prefere começar de novo). Como na web, pergunta na própria linha do aviso
+   * ("…? Recomeçar do zero · Cancelar"), porque as respostas desta vez se perdem.
+   */
+  const [confirmandoRecomeco, setConfirmandoRecomeco] = useState(false);
 
   function recomecarAgora() {
     andamentos.delete(licao.id);
@@ -525,7 +517,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   const topo = (
     <View style={licaoEstilos.topo}>
-      <BotaoIcone icone="fechar" rotulo={t.voltar} testID="voltar-plano" desativado={ocupado} acao={sair} />
+      <BotaoIcone icone="fechar" tamanho={26} rotulo={t.voltar} testID="voltar-plano" desativado={ocupado} acao={sair} />
       <View style={licaoEstilos.topoColuna}>
         <View style={licaoEstilos.andamento} accessible accessibilityRole="progressbar" accessibilityLabel={andamento}
           accessibilityValue={{ min: 0, max: total, now: revisao ? total : passo + 1 }}>
@@ -692,10 +684,16 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {erro && <EstadoErro mensagem={erro} testID="erro-licao" foco />}
         {avisoRetomada && (
           <View testID="aviso-retomada" accessibilityLiveRegion="polite" style={licaoEstilos.aviso}>
-            <Text style={licaoEstilos.avisoTexto}>{t.retomada}</Text>
-            <Pressable accessibilityRole="button" onPress={recomecar} hitSlop={8}>
+            <Text style={licaoEstilos.avisoTexto}>{confirmandoRecomeco ? t.recomecarPergunta : t.retomada}</Text>
+            <Pressable testID={confirmandoRecomeco ? 'confirmar-recomeco' : 'recomecar-licao'} accessibilityRole="button" hitSlop={8}
+              onPress={() => { if (confirmandoRecomeco) { setConfirmandoRecomeco(false); recomecarAgora(); } else setConfirmandoRecomeco(true); }}>
               <Text style={[licaoEstilos.avisoTexto, licaoEstilos.avisoAcao]}>{t.recomecarLicao}</Text>
             </Pressable>
+            {confirmandoRecomeco && (
+              <Pressable testID="cancelar-recomeco" accessibilityRole="button" hitSlop={8} onPress={() => setConfirmandoRecomeco(false)}>
+                <Text style={[licaoEstilos.avisoTexto, licaoEstilos.avisoAcao]}>{mensagens.geracao.cancelar}</Text>
+              </Pressable>
+            )}
           </View>
         )}
         {revisao && exercicio && (
@@ -791,9 +789,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               <View style={[licaoEstilos.consulta, !explicacaoAberta && licaoEstilos.consultaFechada]}>
                 <Pressable testID="rever-explicacao" accessibilityRole="button" accessibilityState={{ expanded: explicacaoAberta }} aria-expanded={explicacaoAberta}
                   onPress={() => setExplicacaoAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
-                  <View style={{ transform: [{ rotate: explicacaoAberta ? '90deg' : '0deg' }] }}>
-                    <Icone nome="seta" tamanho={16} cor="#8A5A00" />
-                  </View>
+                  <Chevron aberto={explicacaoAberta} cor="#8A5A00" />
                   <Text style={licaoEstilos.consultaBotaoTexto}>{explicacaoAberta ? t.recursos.esconder : t.reverExplicacao}</Text>
                 </Pressable>
                 {explicacaoAberta && <Text style={estilos.texto}>{licao.conceito}</Text>}
@@ -811,9 +807,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 }}>
                 <Pressable testID="consultar-recurso" accessibilityRole="button" accessibilityState={{ expanded: consultaAberta }} aria-expanded={consultaAberta}
                   onPress={() => setConsultaAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
-                  <View style={{ transform: [{ rotate: consultaAberta ? '90deg' : '0deg' }] }}>
-                    <Icone nome="seta" tamanho={16} cor="#8A5A00" />
-                  </View>
+                  <Chevron aberto={consultaAberta} cor="#8A5A00" />
                   <Text style={licaoEstilos.consultaBotaoTexto}>
                     {consultaAberta ? t.recursos.esconder
                       : licao.recurso.tipo === 'acorde'
@@ -981,15 +975,10 @@ function StuDoExercicio({ estado }: { estado: EstadoStu }) {
       <View style={licaoEstilos.stuEstadoAvatar} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
           style={[licaoEstilos.stuEstadoImagem, { transform: transformacoes }]} />
-        {estado === 'pensando' && <View style={[licaoEstilos.adereco, { backgroundColor: cores.ouroEscuro }]}><Icone nome="lampada" tamanho={12} cor={cores.fundo} /></View>}
-        {estado === 'atento' && <View style={[licaoEstilos.adereco, { backgroundColor: '#E58A1F' }]}><Text style={licaoEstilos.aderecoTexto}>!</Text></View>}
-        {estado === 'primeira' && <View style={[licaoEstilos.adereco, { backgroundColor: cores.ouroEscuro }]}><Text style={licaoEstilos.aderecoTexto}>✦</Text></View>}
-        {estado === 'acerto' && <View style={[licaoEstilos.adereco, { backgroundColor: cores.sucessoClaro }]}><Icone nome="check" tamanho={12} cor={cores.fundo} /></View>}
-        {estado === 'ponte' && (
-          <View style={licaoEstilos.aderecoPonte}>
-            {[0, 1, 2].map((tabua) => <View key={tabua} style={licaoEstilos.aderecoTabua} />)}
-          </View>
-        )}
+        {/* Como .aula-stu-estado__adereco da web: um ponto de 14 px com borda branca, laranja no aviso, ouro pensando,
+            verde de primeira e azul nos outros estados. */}
+        {estado !== 'neutro' && <View style={[licaoEstilos.adereco, { backgroundColor: estado === 'atento' ? '#E58A1F'
+          : estado === 'pensando' ? cores.ouroEscuro : estado === 'primeira' ? cores.sucessoClaro : cores.acao }]} />}
       </View>
       <Text style={licaoEstilos.stuEstadoTexto}>{t.stuEstado[estado]}</Text>
     </View>
@@ -1153,7 +1142,7 @@ const licaoEstilos = StyleSheet.create({
   recolhido: { display: 'none' },
   tituloQuadro: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -0.5, lineHeight: 28 },
   /** A pergunta como título do exercício: 20 px em celular, como `.aula-pergunta` da web. */
-  pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, letterSpacing: -0.3, lineHeight: 25 },
+  pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 28 },
   trilha: { flex: 1, height: 18, borderRadius: 9, backgroundColor: cores.gelo, overflow: 'hidden' },
   preenchimento: { height: '100%', minWidth: 18, borderRadius: 9, backgroundColor: cores.acao, overflow: 'hidden' },
   preenchimentoCerto: { backgroundColor: cores.sucessoClaro },
@@ -1169,7 +1158,7 @@ const licaoEstilos = StyleSheet.create({
   voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: -8, marginBottom: -2, minHeight: 48 },
   voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   marcadores: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
-  marcadoresTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  marcadoresTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   marcadorAlvo: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', marginVertical: -8 },
   marcador: { minWidth: 36, minHeight: 32, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
     borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: cores.fundo },
@@ -1188,11 +1177,7 @@ const licaoEstilos = StyleSheet.create({
   stuEstadoAvatar: { width: 48, height: 52, alignItems: 'center', justifyContent: 'center' },
   stuEstadoImagem: { width: 42, height: 46 },
   stuEstadoTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
-  adereco: { position: 'absolute', top: -4, right: -6, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center',
-    borderWidth: 2, borderColor: cores.fundo },
-  aderecoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
-  aderecoPonte: { position: 'absolute', bottom: -2, right: -12, flexDirection: 'row', gap: 2 },
-  aderecoTabua: { width: 10, height: 6, borderRadius: 2, borderBottomWidth: 2, borderColor: '#703B10', backgroundColor: '#9C5619' },
+  adereco: { position: 'absolute', top: -2, right: -2, width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: cores.fundo },
   maisAbaixoAlvo: { alignSelf: 'center', minHeight: 48, justifyContent: 'center', marginVertical: -8 },
   maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: cores.nevoa },
   maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
@@ -1216,10 +1201,10 @@ const licaoEstilos = StyleSheet.create({
   aviso: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 6, marginTop: 8, paddingHorizontal: 14, paddingVertical: 10,
     borderRadius: 14, backgroundColor: '#EEF2FF' },
   avisoRevisao: { backgroundColor: '#FFF6D9' },
-  avisoTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
-  avisoAcao: { minHeight: 48, textDecorationLine: 'underline', paddingVertical: 13 },
+  avisoTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
+  avisoAcao: { minHeight: 48, textDecorationLine: 'underline', paddingVertical: 12, fontWeight: '900' },
   consultaBotao: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 },
-  consultaBotaoTexto: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 15 },
+  consultaBotaoTexto: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16 },
   consultaRotulo: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
   respostaCampo: { minHeight: 58, fontSize: 20, lineHeight: 26, fontWeight: '700' },
   respostaCerta: { borderColor: cores.sucessoClaro, color: cores.sucesso, backgroundColor: '#EEFAF3' },
