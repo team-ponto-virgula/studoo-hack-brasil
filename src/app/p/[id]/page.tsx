@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ...base,
     title: `${p.paginaTitulo(perfil.nome)} · Studoo`,
     description: descricao,
-    openGraph: { type: 'profile', title: p.paginaTitulo(perfil.nome), description: descricao, siteName: 'Studoo', locale: 'pt_BR', images: [{ url: '/marca/icone-512.png', width: 512, height: 512, alt: 'Studoo' }] },
+    openGraph: { type: 'profile', title: p.paginaTitulo(perfil.nome), description: descricao, siteName: 'Studoo', locale: 'pt_BR' },
   };
 }
 
@@ -69,8 +69,8 @@ export default async function PaginaDoPerfil({ params }: Props) {
   }
   return (
     <PaginaPublica>
-      <CabecalhoPerfil nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
-        alcance={perfil.alcance} acoes={<BotaoCompartilharPerfil perfilId={id} nome={perfil.nome} />} />
+      <CabecalhoPerfil demo={Boolean(perfil.demo)} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
+        alcance={perfil.alcance} acoes={<BotaoCompartilharPerfil perfilId={id} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} />} />
       {perfil.cartoes ? (
         <>
           <CartoesPublicos inicial={perfil.cartoes} logado={logado} titulo={p.paginaTitulo(perfil.nome)} />

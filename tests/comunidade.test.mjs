@@ -17,7 +17,7 @@ import { criarSessao } from '../src/servidor/acesso/sessao.ts';
 import { DOMINIO_EMAIL_VISITANTE, PREFIXO_EMAIL_VISITANTE } from '../src/servidor/acesso/visitante.ts';
 import { aceitarProposta, gerarProposta } from '../src/servidor/aprendizado/servico.ts';
 import { banco } from '../src/servidor/banco/cliente.ts';
-import { zerarCacheEmAlta } from '../src/servidor/compartilhar/comunidade.ts';
+import { classificacaoDaSemana, zerarCacheEmAlta } from '../src/servidor/compartilhar/comunidade.ts';
 import { LIMITES_COMUNIDADE, motivoLegendaInvalida, sugerirTema, svgCapaTrilha } from '@studoo/contratos';
 
 const origem = process.env.STUDOO_ORIGEM || 'http://localhost:3000';
@@ -71,6 +71,25 @@ const explorar = (token, busca = '') => json(explorarGet(pedido(`/api/explorar${
 const adicionar = (quem, codigo) => json(adicionarPost(pedido(`/api/compartilhar/${codigo}/adicionar`, { metodo: 'POST', token: quem.token, corpo: {} }), ctx({ codigo })));
 const valeu = (quem, codigo, ativo = true) => json(valeuPost(pedido(`/api/compartilhar/${codigo}/valeu`, { metodo: 'POST', token: quem.token, corpo: { ativo } }), ctx({ codigo })));
 const denunciar = (quem, corpo) => json(denunciaPost(pedido('/api/denuncias', { metodo: 'POST', token: quem.token, corpo })));
+/**
+ * Os testes não dependem do que já existe no banco (outras suítes, o conteúdo de demonstração): conferem só as trilhas
+ * que criaram, pela ordem relativa, buscando em todas as páginas de "Novas" e na classificação inteira do Em alta.
+ */
+const cartaoEmNovas = async (token, codigo) => {
+  let cursor = null;
+  for (let i = 0; i < 50; i++) {
+    const r = (await explorar(token, cursor ? `?cursor=${encodeURIComponent(cursor)}` : '')).corpo;
+    const achado = r.novas.find((c) => c.codigo === codigo);
+    if (achado || !r.cursor) return achado ?? null;
+    cursor = r.cursor;
+  }
+  return null;
+};
+/** A classificação inteira da semana (sem o corte do top 10), só com os códigos pedidos, na ordem e com os pontos. */
+const classificacao = async (codigos, tema) => (await classificacaoDaSemana())
+  .filter((item) => codigos.includes(item.codigo) && (!tema || item.tema === tema))
+  .map((item) => [item.codigo, item.pontos]);
+
 /** Todas as "Novas" (seguindo o cursor), só dos códigos pedidos. */
 async function todasAsNovas(token, codigos, busca = '') {
   const vistos = [];
@@ -194,7 +213,7 @@ test('Explorar: público, mais novas primeiro, 20 por página por cursor, filtro
   assert.equal((await explorar(null, '?cursor=lixo')).status, 400);
 
   const pagina = (await explorar(null)).corpo;
-  const cartao = pagina.novas.find((c) => codigos.includes(c.codigo));
+  const cartao = await cartaoEmNovas(null, codigos[codigos.length - 1]);
   assert.deepEqual(Object.keys(cartao).sort(), ['codigo', 'demonstracao', 'dono', 'estudando', 'legenda', 'publicadaEm', 'tema', 'titulo', 'totalLicoes', 'totalPartes', 'valeus']);
   assert.deepEqual(Object.keys(cartao.dono).sort(), ['cor', 'foto', 'nome', 'perfilId', 'resumo']);
   assert.ok(cartao.dono.perfilId, 'quem publica tem perfil público');
@@ -207,14 +226,14 @@ test('cartão por situação: nova, adicionada (Continuar) e sua; valeu liga e d
   const bia = await pessoa('Bia');
   const { plano, codigo } = await trilha(ana);
   await publicar(ana, codigo, 'matematica');
-  const deBia = async () => (await explorar(bia.token)).corpo.novas.find((c) => c.codigo === codigo);
+  const deBia = () => cartaoEmNovas(bia.token, codigo);
   assert.equal((await deBia()).situacao, 'nova');
   const { corpo: adicionada } = await adicionar(bia, codigo);
   const cartao = await deBia();
   assert.equal(cartao.situacao, 'adicionada');
   assert.equal(cartao.planoId, adicionada.planoId);
   assert.equal(cartao.estudando, 1);
-  const daAna = (await explorar(ana.token)).corpo.novas.find((c) => c.codigo === codigo);
+  const daAna = await cartaoEmNovas(ana.token, codigo);
   assert.equal(daAna.situacao, 'sua');
   assert.equal(daAna.planoId, plano.id);
 
@@ -257,21 +276,25 @@ test('Em alta: 7 dias, adições distintas × 3 + valeus, sem visitantes, empate
   const fabi = await pessoa('Fabi');
   await valeu(fabi, t.c);
   zerarCacheEmAlta();
-  const emAlta = (await explorar(null)).corpo.emAlta.map((c) => c.codigo).filter((c) => Object.values(t).includes(c));
-  assert.deepEqual(emAlta, [t.a, t.c, t.b, t.e], 'a(6), c(5, mais nova), b(5), e(1); d fora');
-  const soIdiomas = (await explorar(null, '?tema=idiomas')).corpo.emAlta.map((c) => c.codigo).filter((c) => Object.values(t).includes(c));
-  assert.deepEqual(soIdiomas, [t.e]);
-  assert.ok((await explorar(null)).corpo.emAlta.length <= LIMITES_COMUNIDADE.emAlta);
+  const codigos = Object.values(t);
+  const emAlta = await classificacao(codigos);
+  assert.deepEqual(emAlta, [[t.a, 6], [t.c, 5], [t.b, 5], [t.e, 1]], 'a(6), c(5, mais nova), b(5), e(1); d fora');
+  assert.deepEqual(await classificacao(codigos, 'idiomas'), [[t.e, 1]]);
+  // O Em alta da página é o começo da mesma classificação, com no máximo 10, e o filtro de tema usa o mesmo cálculo.
+  const pagina = (await explorar(null)).corpo.emAlta;
+  assert.ok(pagina.length <= LIMITES_COMUNIDADE.emAlta);
+  assert.deepEqual(pagina.map((c) => c.codigo), (await classificacaoDaSemana()).slice(0, LIMITES_COMUNIDADE.emAlta).map((i) => i.codigo));
+  const doTema = (await explorar(null, '?tema=idiomas')).corpo.emAlta;
+  assert.ok(doTema.every((c) => c.tema === 'idiomas'));
   // O "Em alta" fica em cache por 60 s: um valeu novo não muda a ordem até lá.
   await valeu(duda, t.e); await valeu(edu, t.e); await adicionar(duda, t.e); await adicionar(edu, t.e);
-  const emCache = (await explorar(null)).corpo.emAlta.map((c) => c.codigo).filter((c) => Object.values(t).includes(c));
-  assert.deepEqual(emCache, emAlta);
+  assert.deepEqual(await classificacao(codigos), emAlta, 'em cache: nada muda');
   zerarCacheEmAlta();
-  assert.equal((await explorar(null)).corpo.emAlta.map((c) => c.codigo).filter((c) => Object.values(t).includes(c))[0], t.e, 'e(9) passa a liderar');
+  assert.deepEqual((await classificacao(codigos))[0], [t.e, 9], 'e(9) passa a liderar');
   // Despublicar tira do Em alta.
   await visibilidade(ana, t.e, { visibilidade: 'perfil' });
   zerarCacheEmAlta();
-  assert.ok(!(await explorar(null)).corpo.emAlta.some((c) => c.codigo === t.e));
+  assert.ok(!(await classificacao(codigos)).some(([codigo]) => codigo === t.e));
 });
 
 test('Denunciar: motivo da lista, uma por conta, 3 contas tiram a trilha do Explorar, perfil registrado, limites', async () => {
@@ -287,12 +310,12 @@ test('Denunciar: motivo da lista, uma por conta, 3 contas tiram a trilha do Expl
   assert.equal((await denunciar(bia, { alvoTipo: 'trilha', alvo: codigo, motivo: 'spam' })).status, 200);
   assert.equal((await denunciar(bia, { alvoTipo: 'trilha', alvo: codigo, motivo: 'ofensivo' })).status, 200, 'repetir não conta de novo');
   assert.equal((await denunciar(caio, { alvoTipo: 'trilha', alvo: codigo, motivo: 'direitos' })).status, 200);
-  const naLista = async () => (await explorar(null)).corpo.novas.some((c) => c.codigo === codigo);
+  const naLista = async () => Boolean(await cartaoEmNovas(null, codigo));
   assert.ok(await naLista(), 'com 2 contas, segue no Explorar');
   await denunciar(duda, { alvoTipo: 'trilha', alvo: codigo, motivo: 'outro' });
   assert.ok(!(await naLista()), 'com 3 contas, sai do Explorar');
   zerarCacheEmAlta();
-  assert.ok(!(await explorar(null)).corpo.emAlta.some((c) => c.codigo === codigo));
+  assert.ok(!(await classificacao([codigo])).length, 'fora do Em alta');
   assert.equal((await banco.denuncia.count({ where: { alvo: codigo } })), 3);
   // O link continua funcionando para quem tem.
   assert.equal((await adicionar(await pessoa('Edu'), codigo)).status, 200);

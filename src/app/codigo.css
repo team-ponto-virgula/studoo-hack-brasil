@@ -1,0 +1,32 @@
+/* Código Studoo (spec 10, etapa C1): painel na folha e no perfil, e o modo apresentação. */
+.painel-codigo { display: grid; justify-items: center; gap: 10px; padding: 16px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
+.painel-codigo__codigo { display: block; width: min(100%, 240px); aspect-ratio: 1; padding: 10px; border-radius: 28px; background: #fff; box-shadow: 0 0 0 6px var(--acao) inset, 0 8px 20px rgb(27 42 94 / 0.12); }
+.painel-codigo__codigo svg { display: block; width: 100%; height: 100%; }
+.painel-codigo__dica { margin: 0; color: var(--texto2); font-size: 0.9375rem; font-weight: 800; text-align: center; }
+.painel-codigo__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
+.painel-codigo__acoes .botao { min-height: 44px; }
+.painel-codigo__acoes .botao .icone { width: 18px; height: 18px; }
+@media (max-width: 420px) {
+  .painel-codigo__acoes { display: grid; grid-template-columns: 1fr 1fr; }
+  .painel-codigo__acoes .botao { width: 100%; padding-inline: 8px; gap: 6px; font-size: 0.9375rem; white-space: nowrap; }
+  .painel-codigo__acoes .botao .icone { width: 16px; height: 16px; }
+}
+.painel-codigo .folha-status { margin: 0; }
+.folha--codigo { width: min(100%, 30rem); }
+
+/* Modo apresentação: fundo branco (contraste máximo para a câmera), código o maior possível. */
+.apresentacao-codigo {
+  position: fixed; inset: 0; z-index: 60; display: grid; grid-template-rows: auto auto 1fr auto; justify-items: center; align-items: center; gap: 12px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: #fff; color: var(--texto); overflow: auto;
+}
+.apresentacao-codigo__fechar {
+  justify-self: end; display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 16px; border: 2px solid var(--gelo); border-radius: 14px;
+  background: #fff; color: var(--texto); font: inherit; font-weight: 800; cursor: pointer;
+}
+.apresentacao-codigo__fechar .icone { width: 20px; height: 20px; }
+.apresentacao-codigo__fechar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+.apresentacao-codigo__titulo { margin: 0; max-width: 40ch; font-size: clamp(1.5rem, 4vw, 3rem); text-align: center; }
+.apresentacao-codigo__codigo { display: block; width: min(88vw, calc(100svh - 260px)); max-width: 900px; aspect-ratio: 1; }
+.apresentacao-codigo__codigo svg { display: block; width: 100%; height: 100%; }
+.apresentacao-codigo__dica { margin: 0; font-size: clamp(1.125rem, 2.6vw, 1.75rem); text-align: center; }

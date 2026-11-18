@@ -20,7 +20,10 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
-import { camposDono, ehDeMaterial, lerTrilha, linkPublico, perfilPublico, type UsuarioDono } from "./servico";
+import { camposDono, demonstracaoVisivel, ehDeMaterial, lerTrilha, linkPublico, perfilPublico, type UsuarioDono } from "./servico";
+
+/** Sem `STUDOO_COMUNIDADE_DEMO=1`, as trilhas de perfis de demonstração ficam fora do Explorar e do Em alta. */
+const semDemonstracao = () => (demonstracaoVisivel() ? {} : { plano: { usuario: { perfilDemo: false } } });
 
 /*
  * Comunidade (spec 10, etapa B): publicar no Explorar, "Em alta esta semana", Valeu e Denunciar. O "Em alta" ordena
@@ -128,6 +131,7 @@ export async function cartoesDe(links: LinkDoCartao[], quem: string | null): Pro
         foto: dono.foto?.token ?? null,
         resumo: dono.perfilResumo || null,
         perfilId: dono.perfilId,
+        ...(dono.perfilDemo ? { demo: true as const } : {}),
       },
       demonstracao: origemDemonstracao(plano.origem),
       publicadaEm: link.publicadaEm?.toISOString() ?? null,
@@ -152,13 +156,16 @@ export function zerarCacheEmAlta() {
   emAltaCache = null;
 }
 
-/** A classificação da semana (todas as trilhas com 1 ponto ou mais), recalculada a cada 60 s no máximo. */
-async function classificacaoDaSemana() {
+/**
+ * A classificação da semana (todas as trilhas com 1 ponto ou mais, sem o corte do top 10), recalculada a cada 60 s no
+ * máximo. Exportada para os testes conferirem pontos e ordem sem depender do que mais existe no banco.
+ */
+export async function classificacaoDaSemana() {
   if (emAltaCache && Date.now() - emAltaCache.em < CACHE_EM_ALTA_MS) return emAltaCache.lista;
   const desde = new Date(Date.now() - LIMITES_COMUNIDADE.janelaDias * 24 * 60 * 60_000);
   const grupos = await banco.eventoTrilha.groupBy({
     by: ["codigo", "tipo"],
-    where: { criadoEm: { gte: desde }, link: { noExplorar: true, oculta: false } },
+    where: { criadoEm: { gte: desde }, link: { noExplorar: true, oculta: false, ...semDemonstracao() } },
     _count: { _all: true },
   });
   const pontos = new Map<string, number>();
@@ -167,7 +174,7 @@ async function classificacaoDaSemana() {
     pontos.set(grupo.codigo, (pontos.get(grupo.codigo) ?? 0) + grupo._count._all * peso);
   }
   const links = pontos.size === 0 ? [] : await banco.linkTrilha.findMany({
-    where: { codigo: { in: [...pontos.keys()] }, noExplorar: true, oculta: false },
+    where: { codigo: { in: [...pontos.keys()] }, noExplorar: true, oculta: false, ...semDemonstracao() },
     select: { codigo: true, tema: true, publicadaEm: true },
   });
   const lista = links
@@ -199,6 +206,7 @@ export async function explorar(quem: string | null, filtro: { tema?: string | nu
       noExplorar: true,
       oculta: false,
       publicadaEm: { not: null },
+      ...semDemonstracao(),
       ...(tema ? { tema } : {}),
       ...(cursor ? { OR: [{ publicadaEm: { lt: cursor.em } }, { publicadaEm: cursor.em, codigo: { lt: cursor.codigo } }] } : {}),
     },

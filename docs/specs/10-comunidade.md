@@ -201,13 +201,56 @@ Navegador: 18 checagens a 390, 1440 e 360 px (foco, teclado, alvos de 44 px, sem
 
 ---
 
-## Etapa C — Código Studoo e laços (desenho)
+## Etapa C1 — demonstração, Código Studoo e prévia do link (feita)
+
+### Conteúdo de demonstração (migração `20261121090000_comunidade_demo`)
+```sql
+ALTER TABLE "Usuario" ADD COLUMN "perfilDemo" BOOLEAN NOT NULL DEFAULT false;
+```
+- **Comandos** (só com `STUDOO_COMUNIDADE_DEMO=1`; sem ela, recusam com erro):
+  - `npm run comunidade:demo` cria ou renova;
+  - `npm run comunidade:demo:remover` apaga tudo.
+  - Rodam no contêiner de produção como o `db:seed`: só banco, nada de IA nem serviço externo. O código está em `src/servidor/compartilhar/demonstracao.ts` e `scripts/comunidade-demo.ts`.
+- **O que cria:**
+  - 6 perfis fictícios com o selo "Perfil de demonstração" e retratos ilustrados gerados no próprio comando;
+  - 10 trilhas em 9 temas: as 6 prontas do modo demonstração (violão, inglês, culinária, história, frações e fotografia) e 4 trilhas curtas novas, só da demonstração e fora do reconhecimento da IA falsa (Python, primeiros socorros, física do dia a dia e falar em público);
+  - publicação no Explorar com tema e legenda.
+- **Datas e eventos:** adições e valeus entre os perfis de demonstração ficam espalhados entre a publicação e agora, nos últimos 7 dias. Os pesos dão um top de 10 no Em alta.
+- **Idempotente:** perfis, trilhas e links ficam. Rodar de novo refaz as datas de publicação e os eventos dos perfis de demonstração, e mantém os de pessoas de verdade. O "estudando" soma as cópias reais.
+- **Sem login:** o e-mail fica em `demonstracao.studoo.invalid`, sem senha, sem Google e sem sessão, e recuperar a senha não gera código. Os perfis de demonstração só agem nas trilhas de demonstração.
+- **No servidor, a flag também esconde:** sem `STUDOO_COMUNIDADE_DEMO=1`, o conteúdo de demonstração sai do Explorar e do Em alta, e o `/p` e o `/t` dele respondem 404, sem apagar nada.
+- **Contrato:** `DonoPublico.demo` e `PerfilPublico.demo` (só `true`) mostram o selo no cartão, no cabeçalho do perfil, no "Quem compartilhou" do `/t` e nas imagens de prévia.
+- **Remover:** apaga perfis, trilhas, links, eventos e fotos. As cópias que pessoas de verdade adicionaram ficam com elas.
+
+### Código Studoo nas telas (`src/app/codigo.tsx`)
+- Gerador puro `svgCodigoDoLink` no contrato, igual na web e no app. Estilo "rosto" por padrão (os três estilos continuam no gerador), com o miolo dos olhos na cor do perfil e a foto no centro em `centroComFoto`.
+- **Folha de compartilhar, passo "link pronto":** o código (o centro é o sorriso), "Baixar imagem", "Compartilhar imagem" (quando o aparelho deixa, com Web Share de arquivo) e "Apresentar". Copiar e compartilhar o link já estavam na folha.
+- **"Compartilhar perfil":** abre uma folha com o código, a foto no centro, e Copiar link, Compartilhar, Baixar imagem e Apresentar. Vale na tela Perfil e no `/p`.
+- **Imagem baixada:** cartão de 1080×1350 desenhado no navegador (canvas), com o título, o código numa moldura da cor do perfil, a dica e a marca.
+- **Modo apresentação:** camada branca em tela cheia (Fullscreen API quando existe), com o título, o código o maior possível e "Aponte a câmera do celular". O foco vai para "Fechar", e Esc fecha.
+- Só o diálogo de cima responde ao teclado (pilha de diálogos), então o Esc da apresentação não fecha a folha.
+- **Prova de leitura:** `tests/codigo-e-demonstracao.test.mjs` lê, com jsQR e ZXing a 240 e 600 px, os links reais de trilha e de perfil (este com foto no centro) nas 6 cores.
+
+### Imagem de prévia do link (Open Graph)
+- `src/app/t/[codigo]/opengraph-image.tsx` e `src/app/p/[id]/opengraph-image.tsx` usam o `next/og`, que já vem no Next (nenhuma dependência nova). O desenho fica em `src/servidor/og/cartao.tsx`.
+- **Trilha:** capa do tema e foto à esquerda; tema, título, "por Ana" e o selo de demonstração à direita; "N lições" e a marca embaixo.
+- **Perfil:** faixa na cor, a foto, o nome, o resumo e o alcance.
+- **Genérica:** link encerrado, perfil indisponível, flag desligada ou limite estourado.
+- **Fontes:** Quicksand 700 e Nunito 700/800 em WOFF estático em `public/marca/og` (licença OFL, `LICENCA-fontes.txt`, do Fontsource 5.3.0). O desenho não usa nenhuma fonte do sistema. Isso foi provado no build de produção local rodando com um fontconfig vazio.
+- Sem e-mail. Conta no limitador das páginas públicas. `noindex` pelo proxy. Os metadados passam a usar `summary_large_image`.
+
+### Acertos da B
+- (a) Na publicação, aparece só o tema sugerido (ou o salvo) e o botão "Trocar tema", que abre os 12. Em 390, a legenda e "Publicar" ficam à vista.
+- (b) Cartão sem ninguém mostra "Nova" no lugar de "0 estudando · 0 valeus". Os números com zero não aparecem.
+- (c) Com zero trilhas, o Em alta some e "Novas" sobe. Com 1 ou 2, aparecem sem buraco, e as setas só existem quando a lista rola.
+- (d) O Em alta usa consulta de contêiner: 3 cartões inteiros a partir de 44 rem de lista e 4 a partir de 60 rem (a 1440 px de janela). A 1280 px cabem 3: com 4, o cartão ficaria abaixo de 220 px e a linha de ações quebraria.
+- O numeral do top foi para o canto direito da capa, para não bater nos selos quando eles quebram linha.
+
+---
+
+## Etapa C2 — laços (desenho)
 - **Código Studoo** (a variação que o dono escolher, `packages/contratos/src/codigo-studoo.ts`) na folha de compartilhar e em "Compartilhar perfil", com a foto no centro, e as ações baixar e compartilhar imagem. Imagem de prévia do link (Open Graph) para `/t` e `/p`, gerada no servidor com o mesmo SVG.
 - **Seguir e deixar de seguir**, com contagem no perfil e a aba "Seguindo" no Explorar. Sem lista pública de seguidores e sem notificação.
   - Banco: `Seguir` (`seguidorId`, `seguidoId`, `criadoEm`; chave dupla; índice por `seguidoId`).
 - **"Novidades"** na tela Perfil ("3 pessoas começaram sua trilha X esta semana", "Ana mandou um valeu"), lidas de `EventoTrilha`.
-- **Conteúdo de demonstração rotulado**, atrás de `STUDOO_COMUNIDADE_DEMO=1` (o Lead decide com o dono se liga no site):
-  - um comando idempotente cria perfis fictícios com o selo "Perfil de demonstração" e as trilhas das demos prontas publicadas, com adições e valeus espalhados nos últimos 7 dias;
-  - outro comando remove tudo;
-  - banco: `Usuario.perfilDemo BOOLEAN DEFAULT false`.
 - **Checagem automática de foto e texto:** só o ponto de extensão, uma função `revisarConteudo` chamada antes de gravar foto, resumo e legenda, que hoje aprova tudo. Nenhum serviço externo sem o Lead avisar.

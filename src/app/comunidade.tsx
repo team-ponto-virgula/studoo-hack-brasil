@@ -111,9 +111,12 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3' }: { carta
             ? <a href={`/p/${cartao.dono.perfilId}`} aria-label={c.perfilDe(cartao.dono.nome)}>{c.por(cartao.dono.nome)}</a>
             : <span>{c.por(cartao.dono.nome)}</span>}
         </p>
+        {cartao.dono.demo && <p className="selo-demo">{c.perfilDemo}</p>}
         {cartao.legenda && <p className="cartao-trilha__legenda">{cartao.legenda}</p>}
         <p className="cartao-trilha__meta">{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</p>
-        <p className="cartao-trilha__numeros">{c.estudando(cartao.estudando)} · {c.valeus(cartao.valeus)}</p>
+        {cartao.estudando === 0 && cartao.valeus === 0
+          ? <p className="cartao-trilha__numeros"><span className="cartao-trilha__nova" aria-label={c.novaRotulo}>{c.nova}</span></p>
+          : <p className="cartao-trilha__numeros">{[cartao.estudando > 0 && c.estudando(cartao.estudando), cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ')}</p>}
         <div className="cartao-trilha__acoes">
           {principal}
           {!sua && (
@@ -250,6 +253,17 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
 function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string }) {
   const lista = useRef<HTMLOListElement>(null);
   const tituloId = useId();
+  // Com poucas trilhas (tudo cabe), as setas somem e a lista não sobra espaço vazio.
+  const [rola, setRola] = useState(false);
+  useEffect(() => {
+    const el = lista.current;
+    if (!el) return;
+    const medir = () => setRola(el.scrollWidth > el.clientWidth + 2);
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(el);
+    return () => observador.disconnect();
+  }, [cartoes.length]);
   function rolar(direcao: 1 | -1) {
     const el = lista.current;
     if (!el) return;
@@ -263,12 +277,12 @@ function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: Ac
           <h2 id={tituloId} className="explorar__secao">{titulo}</h2>
           <p className="campo-dica">{c.emAltaDica}</p>
         </div>
-        <div className="em-alta__setas">
+        <div className="em-alta__setas" hidden={!rola}>
           <button type="button" className="cartao-trilha__icone" aria-label={c.anteriores} onClick={() => rolar(-1)}><span aria-hidden="true">←</span></button>
           <button type="button" className="cartao-trilha__icone" aria-label={c.proximas} onClick={() => rolar(1)}><span aria-hidden="true">→</span></button>
         </div>
       </div>
-      <ol className="em-alta__lista" ref={lista}>
+      <ol className="em-alta__lista" ref={lista} data-poucas={cartoes.length < 3 || undefined}>
         {cartoes.map((cartao, indice) => (
           <li key={cartao.codigo} className="em-alta__item">
             <CartaoDeTrilha cartao={cartao} acoes={acoes} posicao={indice + 1} />

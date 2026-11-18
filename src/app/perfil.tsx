@@ -28,6 +28,7 @@ import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone, Stu } from '../ui';
 import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, urlDoLink, useDialogo } from './compartilhar';
 import { CartoesDoPerfil } from './comunidade';
+import { FolhaCompartilharPerfil } from './codigo';
 import './perfil.css';
 
 const m = mensagens.compartilhar;
@@ -53,7 +54,9 @@ function DesenhoFaixa() {
  * O cabeçalho do perfil, o mesmo na tela Perfil, na prévia da edição e na página /p: faixa na cor do perfil, foto grande
  * sobreposta, nome, resumo, interesses e a linha de alcance. `acoes`: "Editar perfil" para a dona, "Compartilhar perfil".
  */
-export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, nivel = 'h1', acoes, semResumo, tituloRef }: {
+export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, nivel = 'h1', acoes, semResumo, tituloRef, demo = false }: {
+  /** Perfil de demonstração: selo ao lado do nome. */
+  demo?: boolean;
   nome: string;
   cor: CorPerfil;
   foto: string | null;
@@ -75,6 +78,7 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
           {acoes && <div className="cabeca-perfil__acoes">{acoes}</div>}
         </div>
         <Nome className="cabeca-perfil__nome" ref={nivel === 'p' ? undefined : (tituloRef as RefObject<HTMLHeadingElement>)} tabIndex={tituloRef ? -1 : undefined}>{nome}</Nome>
+        {demo && <p className="selo-demo">{mensagens.comunidade.perfilDemo}</p>}
         {resumo ? <p className="cabeca-perfil__resumo">{resumo}</p> : semResumo}
         {interesses.length > 0 && (
           <ul className="cabeca-perfil__interesses" aria-label={p.interessesRotulo}>
@@ -87,26 +91,13 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
   );
 }
 
-/** "Compartilhar perfil": a folha do sistema quando existe; senão, copia o endereço de /p. */
-export function BotaoCompartilharPerfil({ perfilId, nome, variante = 'secundario' }: { perfilId: string; nome: string; variante?: 'primario' | 'secundario' }) {
-  const [status, setStatus] = useState('');
-  async function compartilhar() {
-    const url = `${window.location.origin}/p/${perfilId}`;
-    if (typeof navigator.share === 'function') {
-      try { await navigator.share({ title: p.paginaTitulo(nome), text: p.textoCompartilharPerfil(nome), url }); } catch { /* fechou a folha */ }
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      setStatus((anterior) => (anterior === p.linkPerfilCopiado ? `${p.linkPerfilCopiado} ` : p.linkPerfilCopiado));
-    } catch {
-      setStatus(m.copiarFalhou);
-    }
-  }
+/** "Compartilhar perfil": abre a folha com o Código Studoo do perfil (foto no centro), copiar, compartilhar e baixar. */
+export function BotaoCompartilharPerfil({ perfilId, nome, cor, foto, variante = 'secundario' }: { perfilId: string; nome: string; cor: CorPerfil; foto: string | null; variante?: 'primario' | 'secundario' }) {
+  const [aberto, setAberto] = useState(false);
   return (
     <>
-      <Botao variante={variante} onClick={() => void compartilhar()}><Icone nome="compartilhar" />{p.compartilharPerfil}</Botao>
-      <span className="cabeca-perfil__status" role="status" aria-live="polite">{status}</span>
+      <Botao variante={variante} onClick={() => setAberto(true)}><Icone nome="compartilhar" />{p.compartilharPerfil}</Botao>
+      {aberto && <FolhaCompartilharPerfil perfilId={perfilId} nome={nome} cor={cor} fotoToken={foto} aoFechar={() => setAberto(false)} />}
     </>
   );
 }
@@ -214,7 +205,7 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
               semResumo={<button type="button" className="cabeca-perfil__convite" onClick={editar}>{p.semResumoDona}</button>}
               acoes={<>
                 <Botao variante="secundario" onClick={editar}><Icone nome="lapis" />{p.editarPerfil}</Botao>
-                {perfil.publico && perfil.perfilId && <BotaoCompartilharPerfil perfilId={perfil.perfilId} nome={perfil.nome} />}
+                {perfil.publico && perfil.perfilId && <BotaoCompartilharPerfil perfilId={perfil.perfilId} nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} />}
               </>} />
           )}
 

@@ -220,3 +220,19 @@ export function svgCodigoStudoo(g: GeometriaCodigo, { tamanho = 1200, cores = CO
     + clareira
     + '</svg>';
 }
+
+/** O centro com a foto da pessoa num círculo branco (caixa 100×100 do centro do código). `href`: endereço ou data URL. */
+export function centroComFoto(href: string): string {
+  const seguro = href.replace(/["<>]/g, '');
+  return '<defs><clipPath id="cs-foto"><circle cx="50" cy="50" r="48"/></clipPath></defs><circle cx="50" cy="50" r="50" fill="#fff"/>'
+    + `<image href="${seguro}" x="2" y="2" width="96" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#cs-foto)"/>`;
+}
+
+/**
+ * O Código Studoo de um link (spec 10, etapa C1), igual na web e no app: estilo "rosto" por padrão (os três ficam no
+ * gerador), miolo dos olhos na cor do perfil (`mioloCor`, um hex de FUNDO_DA_COR) e, quando houver, a foto no centro.
+ */
+export function svgCodigoDoLink(texto: string, { mioloCor, fotoHref, estilo = 'rosto', tamanho = 600 }: { mioloCor?: string; fotoHref?: string | null; estilo?: EstiloCodigo; tamanho?: number } = {}): string {
+  const cores = { ...CORES_CODIGO_PADRAO, ...(mioloCor ? { miolo: mioloCor } : {}) };
+  return svgCodigoStudoo(geometriaCodigoStudoo(texto, { estilo }), { tamanho, cores, ...(fotoHref ? { centro: centroComFoto(fotoHref) } : {}) });
+}

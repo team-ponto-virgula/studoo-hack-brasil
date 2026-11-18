@@ -117,8 +117,16 @@ async function perfilEhPublico(usuarioId: string) {
 }
 
 /** O que entra na leitura do usuário para montar o dono público (nome, cor, foto, resumo). */
-export const camposDono = { id: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, foto: { select: { token: true } } } as const;
-export type UsuarioDono = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; foto: { token: string } | null };
+export const camposDono = { id: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilDemo: true, foto: { select: { token: true } } } as const;
+export type UsuarioDono = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; perfilDemo: boolean; foto: { token: string } | null };
+
+/**
+ * Conteúdo de demonstração (spec 10, etapa C): só aparece com `STUDOO_COMUNIDADE_DEMO=1`. Sem a flag, perfis e trilhas
+ * de demonstração somem do Explorar, do Em alta, do /p e do /t (sem apagar nada).
+ */
+export function demonstracaoVisivel(): boolean {
+  return process.env.STUDOO_COMUNIDADE_DEMO === "1";
+}
 
 async function donoPublico(usuario: UsuarioDono): Promise<DonoPublico> {
   return {
@@ -127,6 +135,7 @@ async function donoPublico(usuario: UsuarioDono): Promise<DonoPublico> {
     foto: usuario.foto?.token ?? null,
     resumo: usuario.perfilResumo || null,
     perfilId: usuario.perfilId && (await perfilEhPublico(usuario.id)) ? usuario.perfilId : null,
+    ...(usuario.perfilDemo ? { demo: true as const } : {}),
   };
 }
 
@@ -333,7 +342,7 @@ async function linkAtivo(codigo: string) {
     },
   });
   // Encerrado e inexistente respondem igual.
-  if (!link || !link.plano.usuario.perfilNome) throw new FalhaApi("link_inativo");
+  if (!link || !link.plano.usuario.perfilNome || (link.plano.usuario.perfilDemo && !demonstracaoVisivel())) throw new FalhaApi("link_inativo");
   return link;
 }
 
@@ -427,9 +436,9 @@ export async function perfilPublico(perfilId: string): Promise<PerfilPublico> {
   if (!FORMATO_CODIGO.test(perfilId)) throw new FalhaApi("nao_encontrado");
   const usuario = await banco.usuario.findUnique({
     where: { perfilId },
-    select: { id: true, perfilNome: true, perfilCor: true, perfilResumo: true, perfilInteresses: true, foto: { select: { token: true } } },
+    select: { id: true, perfilNome: true, perfilCor: true, perfilResumo: true, perfilInteresses: true, perfilDemo: true, foto: { select: { token: true } } },
   });
-  if (!usuario?.perfilNome) throw new FalhaApi("nao_encontrado");
+  if (!usuario?.perfilNome || (usuario.perfilDemo && !demonstracaoVisivel())) throw new FalhaApi("nao_encontrado");
   const links = await banco.linkTrilha.findMany({ where: { usuarioId: usuario.id, noPerfil: true }, orderBy: { criadoEm: "desc" }, select: { codigo: true, planoId: true, adicoes: true } });
   if (links.length === 0) throw new FalhaApi("nao_encontrado");
   const trilhas = await Promise.all(links.map(async (link) => {
@@ -446,6 +455,7 @@ export async function perfilPublico(perfilId: string): Promise<PerfilPublico> {
     foto: usuario.foto?.token ?? null,
     alcance: alcanceDe(links),
     trilhas: visiveis,
+    ...(usuario.perfilDemo ? { demo: true as const } : {}),
   };
 }
 

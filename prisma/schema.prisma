@@ -34,6 +34,8 @@ model Usuario {
   foto             FotoPerfil?
   eventos          EventoTrilha[]
   denuncias        Denuncia[]
+  /// Perfil de demonstração (spec 10, etapa C): criado pelo comando da comunidade, sem senha e sem login; selo público.
+  perfilDemo       Boolean              @default(false)
 }
 
 /// Foto do perfil (spec 10), já recortada e regravada em WebP (sem EXIF). O token aleatório é o endereço público e muda a

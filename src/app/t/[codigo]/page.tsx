@@ -48,8 +48,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ...base,
     title: `${trilha.titulo} · Studoo`,
     description: descricao,
-    openGraph: { type: 'website', title: trilha.titulo, description: descricao, siteName: 'Studoo', locale: 'pt_BR', images: [{ url: '/marca/icone-512.png', width: 512, height: 512, alt: 'Studoo' }] },
-    twitter: { card: 'summary', title: trilha.titulo, description: descricao },
+    openGraph: { type: 'website', title: trilha.titulo, description: descricao, siteName: 'Studoo', locale: 'pt_BR' },
+    twitter: { card: 'summary_large_image', title: trilha.titulo, description: descricao },
   };
 }
 

@@ -124,6 +124,8 @@ export interface DonoPublico {
   /** Token da foto (ver `enderecoFoto`), ou null: a inicial na cor. */
   foto: string | null;
   resumo: string | null;
+  /** Só quando é um perfil de demonstração (selo "Perfil de demonstração"); ausente nos perfis de pessoas. */
+  demo?: true;
   /** Só quando a pessoa tem perfil público (ao menos uma trilha marcada para aparecer nele). */
   perfilId: string | null;
 }
@@ -207,6 +209,8 @@ export interface TrilhaAdicionada {
 export interface PerfilPublico {
   nome: string;
   cor: CorPerfil;
+  /** Perfil de demonstração (selo). */
+  demo?: true;
   resumo: string | null;
   interesses: Tema[];
   foto: string | null;

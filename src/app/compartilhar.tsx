@@ -32,6 +32,7 @@ import {
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
+import { PainelCodigo } from './codigo';
 import './compartilhar.css';
 import './comunidade.css';
 
@@ -90,12 +91,18 @@ export function Avatar({ nome, cor, foto = null, grande = false, tamanho }: { no
 }
 
 /** Foco preso no diálogo, Esc fecha (ou volta um passo) e, ao fechar, o foco volta para quem abriu. */
+/** Diálogos abertos, do mais antigo ao mais novo: só o de cima responde ao teclado (Esc e Tab). */
+const pilhaDeDialogos: symbol[] = [];
+
 export function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => void) {
   const aoEscRef = useRef(aoEsc);
   aoEscRef.current = aoEsc;
   useEffect(() => {
     const origem = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const eu = Symbol('dialogo');
+    pilhaDeDialogos.push(eu);
     function aoTeclar(evento: KeyboardEvent) {
+      if (pilhaDeDialogos[pilhaDeDialogos.length - 1] !== eu) return;
       if (evento.key === 'Escape') {
         evento.preventDefault();
         aoEscRef.current();
@@ -118,6 +125,7 @@ export function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => vo
     }
     window.addEventListener('keydown', aoTeclar);
     return () => {
+      pilhaDeDialogos.splice(pilhaDeDialogos.indexOf(eu), 1);
       window.removeEventListener('keydown', aoTeclar);
       window.requestAnimationFrame(() => origem?.isConnected && origem.focus());
     };
@@ -244,6 +252,8 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
   const [erro, setErro] = useState<string | null>(null);
   const [status, setStatus] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  // No começo só o tema sugerido (ou o salvo) aparece; "Trocar tema" abre os 12, e a legenda e o botão ficam à vista.
+  const [todosTemas, setTodosTemas] = useState(false);
   const campoLegenda = useRef<HTMLTextAreaElement>(null);
   const ids = { legenda: useId(), dica: useId(), contador: useId(), erro: useId(), tema: useId() };
   const cm = mensagens.comunidade;
@@ -308,12 +318,16 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
             <legend>{cm.temaRotulo}</legend>
             <p className="campo-dica" id={ids.tema}>{cm.temaDica}</p>
             <div className="interesses__lista">
-              {TEMAS.map((opcao) => (
+              {(todosTemas ? TEMAS : [tema]).map((opcao) => (
                 <label key={opcao} className="interesse">
                   <input type="radio" name={`tema-${link.codigo}`} checked={tema === opcao} onChange={() => setTema(opcao)} />
                   <span>{mensagens.temas[opcao]}{opcao === temaSugerido && <em className="publicacao__sugerido"> · {cm.temaSugerido}</em>}</span>
                 </label>
               ))}
+              {!todosTemas && (
+                <button type="button" className="publicacao__trocar" aria-label={cm.trocarTemaRotulo(mensagens.temas[tema])} aria-expanded={false}
+                  onClick={() => setTodosTemas(true)}>{cm.trocarTema}</button>
+              )}
             </div>
           </fieldset>
           <div className="campo">
@@ -536,6 +550,8 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
               <Botao variante={podeCompartilhar ? 'secundario' : 'primario'} onClick={() => void copiar()}><Icone nome="copiar" />{m.copiar}</Botao>
             </div>
             <p className="folha-status" role="status" aria-live="polite">{status}</p>
+            <PainelCodigo url={urlDoLink(link.codigo)} titulo={previa.titulo} dica={mensagens.codigo.dicaTrilha} rotulo={mensagens.codigo.rotuloTrilha(previa.titulo)}
+              cor={previa.perfil?.cor} comLink={false} nomeArquivo={`studoo-trilha-${link.codigo}`} />
             {comunidade && previa.temaSugerido ? (
               <VisibilidadeDaTrilha link={link} temaSugerido={previa.temaSugerido} deMaterial={previa.deMaterial} demonstracao={Boolean(previa.demonstracao)}
                 aoMudar={(novo) => { setLink(novo); aoMudarLink(planoId, novo); }} />
@@ -614,6 +630,7 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
           <div className="quem-compartilhou__texto">
             <p className="quem-compartilhou__rotulo">{m.quemCompartilhou}</p>
             <p className="quem-compartilhou__nome">{nome}</p>
+            {trilha.dono.demo && <p className="selo-demo">{mensagens.comunidade.perfilDemo}</p>}
             {trilha.dono.resumo && <p className="quem-compartilhou__resumo">{trilha.dono.resumo}</p>}
             {trilha.dono.perfilId && <a className="quem-compartilhou__link" href={`/p/${trilha.dono.perfilId}`}>{m.verPerfil(nome)}</a>}
           </div>
