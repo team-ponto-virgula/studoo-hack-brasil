@@ -3,8 +3,10 @@ import { createHash, randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 import pg from 'pg';
 
-const web = 'http://localhost:3000';
-const mobile = 'https://127.0.0.1:3443';
+const portaWeb = process.env.STUDOO_TESTE_PORTA?.trim() || '3000';
+const web = process.env.STUDOO_TESTE_PORTA ? `http://localhost:${portaWeb}` : process.env.STUDOO_ORIGEM || `http://localhost:${portaWeb}`;
+const portaMobile = process.env.STUDOO_MOBILE_PORTA?.trim() || '3443';
+const mobile = process.env.STUDOO_MOBILE_ORIGEM || `https://127.0.0.1:${portaMobile}`;
 const caminho = '/api/aprendizado';
 
 function chamar(base, rota, { metodo = 'GET', corpo, token, cookie, origem } = {}) {

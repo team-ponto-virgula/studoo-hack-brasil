@@ -3,7 +3,8 @@ import { createHmac, randomUUID } from "node:crypto";
 import { test } from "node:test";
 import pg from "pg";
 
-const origem = process.env.STUDOO_ORIGEM;
+const porta = process.env.STUDOO_TESTE_PORTA?.trim() || "3000";
+const origem = process.env.STUDOO_TESTE_PORTA ? `http://localhost:${porta}` : process.env.STUDOO_ORIGEM || `http://localhost:${porta}`;
 const prefixo = "/api/aprendizado";
 const objetivo = "Já sei usar SELECT e quero praticar filtros e junções para uma prova de SQL.";
 
@@ -47,7 +48,7 @@ test("primeiro marco via HTTP com contas sintéticas", async (t) => {
   const conexao = new URL(process.env.DATABASE_URL ?? "invalid:");
   assert.equal(conexao.hostname, "127.0.0.1");
   assert.equal(conexao.pathname, "/studoo_local");
-  assert.equal(origem, "http://localhost:3000");
+  assert.match(origem ?? "", /^http:\/\/(?:localhost|127\.0\.0\.1):\d+$/);
   assert.equal(process.env.IA, "falsa");
   assert.equal(process.env.EMAIL, "falso");
 

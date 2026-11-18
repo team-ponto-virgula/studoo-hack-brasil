@@ -5,7 +5,8 @@ import { LIMITES_GERACAO, interpretarEventoGeracao } from "@studoo/contratos";
 import pg from "pg";
 import { respostaCerta, respostaErrada } from "../src/dominio/aprendizado/plano.ts";
 
-const origem = process.env.STUDOO_ORIGEM;
+const porta = process.env.STUDOO_TESTE_PORTA?.trim() || "3000";
+const origem = process.env.STUDOO_TESTE_PORTA ? `http://localhost:${porta}` : process.env.STUDOO_ORIGEM || `http://localhost:${porta}`;
 const prefixo = "/api/aprendizado";
 const AO_VIVO = `${prefixo}/propostas/ao-vivo`;
 
@@ -91,7 +92,7 @@ test("trilha gerada ao vivo via HTTP com contas sintéticas", async (t) => {
   const conexao = new URL(process.env.DATABASE_URL ?? "invalid:");
   assert.equal(conexao.hostname, "127.0.0.1");
   assert.equal(conexao.pathname, "/studoo_local");
-  assert.equal(origem, "http://localhost:3000");
+  assert.match(origem ?? "", /^http:\/\/(?:localhost|127\.0\.0\.1):\d+$/);
   assert.equal(process.env.IA, "falsa");
   assert.equal(process.env.EMAIL, "falso");
 

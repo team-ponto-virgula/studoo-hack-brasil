@@ -1,5 +1,4 @@
 import { consumirLimite } from "@/servidor/acesso/seguranca";
-import { banco } from "@/servidor/banco/cliente";
 
 /**
  * Teto de gerações por pessoa. Em produção (e rotas HTTP), usa `consumirLimite` no PostgreSQL (`tentativaLogin`),
@@ -50,5 +49,6 @@ export function reiniciarLimiteDeGeracoes(): void {
 export async function consumirGeracaoPersistente(usuarioId: string): Promise<boolean> {
   const limite = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES, LIMITE_PADRAO);
   const janela = inteiroPositivo(process.env.STUDOO_JANELA_GERACOES_MIN, JANELA_PADRAO_MIN) * 60_000;
+  const { banco } = await import("@/servidor/banco/cliente");
   return banco.$transaction((tx) => consumirLimite(tx, `ia:geracao:${usuarioId}`, limite, janela));
 }
