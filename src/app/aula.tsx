@@ -693,7 +693,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
         {exercicio && (() => {
           const ponteNeste = Boolean(pontesPorExercicio[indice]);
-          let stuEstado: 'neutro' | 'pensando' | 'atento' | 'comemorando_primeira' | 'comemorando_ponte' = 'neutro';
+          let stuEstado: 'neutro' | 'pensando' | 'atento' | 'comemorando_primeira' | 'comemorando_ponte' | 'comemorando_acerto' = 'neutro';
           let stuFala: string = t.stuEstado.neutro;
           if (avaliacao?.correta) {
             if (ponteNeste) {
@@ -703,7 +703,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
               stuEstado = 'comemorando_primeira';
               stuFala = t.stuEstado.primeira;
             } else {
-              stuEstado = 'comemorando_primeira';
+              stuEstado = 'comemorando_acerto';
               stuFala = t.stuEstado.acerto;
             }
           } else if (avaliacao && !avaliacao.correta) {
