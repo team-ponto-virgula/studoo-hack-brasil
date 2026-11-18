@@ -6,7 +6,9 @@ import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from 'jose';
 import { banco } from '../src/servidor/banco/cliente.ts';
 import { criarHashSenha, verificarSenha } from '../src/servidor/acesso/credenciais.ts';
 import { criarSessao, usuarioDaSessao, hashToken, entrar } from '../src/servidor/acesso/sessao.ts';
-import { assinatura } from '../src/servidor/acesso/seguranca.ts';
+import { assinatura, emailPermitido, emailsPermitidos } from '../src/servidor/acesso/seguranca.ts';
+import { POST as loginWeb } from '../src/app/api/login/route.ts';
+import { createHmac } from 'node:crypto';
 import { solicitarRecuperacao, redefinirSenha } from '../src/servidor/acesso/recuperacao.ts';
 import { iniciarGoogle, retornarGoogle, trocarCodigoMobile, desafioPkce, verificarTokenGoogle } from '../src/servidor/acesso/google.ts';
 import { recuperacaoDisponivel } from '../src/servidor/email/recuperacao.ts';
@@ -234,6 +236,64 @@ test('rotas mantêm proteção de origem/canal; e-mail falso não opera em domí
     method: 'POST', headers: { Origin: 'https://studoo.example.test', Host: 'studoo.example.test', 'Content-Type': 'application/json' }, body: '{}',
   }));
   assert.equal(mobile.status, 403);
+});
+
+test('STUDOO_EMAILS_PERMITIDOS libera e-mails exatos fora do domínio, sem abrir o domínio inteiro', async () => {
+  const id = randomUUID().slice(0, 8);
+  // E-mails fictícios (domínio de exemplo), nunca dados reais.
+  const liberado = `pessoa-${id}@exemplo.com`;
+  const outro = `outra-${id}@exemplo.com`;
+  const inexistente = `${prefixo}-ninguem-${id}@example.test`;
+  emails.push(liberado, outro);
+  for (const email of [liberado, outro]) {
+    await banco.usuario.create({ data: { email, senhaHash: await criarHashSenha('senha-original'), fuso: 'America/Sao_Paulo' } });
+  }
+  const login = (email, senha = 'senha-original') => loginWeb(new Request('http://localhost:3100/api/login', {
+    method: 'POST', headers: { Origin: 'http://localhost:3100', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, senha }),
+  }));
+  const chaveLogin = (email) => createHmac('sha256', Buffer.from(process.env.STUDOO_CHAVE_ASSINATURA, 'hex'))
+    .update(`login\0loopback\0${email}`).digest('hex');
+  const anterior = process.env.STUDOO_EMAILS_PERMITIDOS;
+  try {
+    // Maiúsculas, espaços, entradas vazias e sem formato de e-mail na lista não atrapalham.
+    process.env.STUDOO_EMAILS_PERMITIDOS = ` ,  ${liberado.toUpperCase().replace('@', ' @ ')} ,nao-e-email,, `;
+    assert.deepEqual([...emailsPermitidos()], [liberado]);
+
+    const ok = await login(liberado);
+    assert.equal(ok.status, 200);
+    assert.deepEqual(await ok.json(), { autenticado: true });
+    assert.equal((await entrar(liberado, 'senha-original')).estado, 'ok');
+
+    // Outro e-mail do mesmo domínio externo, com conta no banco: recusado igual a uma conta inexistente.
+    const recusado = await login(outro);
+    const referencia = await login(inexistente);
+    assert.equal(recusado.status, referencia.status);
+    assert.deepEqual(await recusado.json(), await referencia.json());
+    assert.equal((await entrar(outro, 'senha-original')).estado, 'credenciais_invalidas');
+
+    // Lista vazia ou ausente: comportamento de antes (só o domínio).
+    for (const valor of ['', undefined]) {
+      if (valor === undefined) delete process.env.STUDOO_EMAILS_PERMITIDOS;
+      else process.env.STUDOO_EMAILS_PERMITIDOS = valor;
+      assert.equal(emailsPermitidos().size, 0);
+      assert.equal((await entrar(liberado, 'senha-original')).estado, 'credenciais_invalidas');
+      assert.equal(emailPermitido(`${prefixo}-x@example.test`), true);
+    }
+
+    // No máximo 20 entradas; sem domínio configurado, qualquer e-mail continua valendo.
+    process.env.STUDOO_EMAILS_PERMITIDOS = Array.from({ length: 21 }, (_, i) => `p${i}@exemplo.com`).join(',');
+    assert.equal(emailsPermitidos().size, 20);
+    assert.equal(emailPermitido('p19@exemplo.com'), true);
+    assert.equal(emailPermitido('p20@exemplo.com'), false);
+    process.env.STUDOO_DOMINIO_EMAIL = '';
+    assert.equal(emailPermitido(outro), true);
+  } finally {
+    if (anterior === undefined) delete process.env.STUDOO_EMAILS_PERMITIDOS;
+    else process.env.STUDOO_EMAILS_PERMITIDOS = anterior;
+    process.env.STUDOO_DOMINIO_EMAIL = 'example.test';
+    await banco.tentativaLogin.deleteMany({ where: { chave: { in: [liberado, outro, inexistente].map(chaveLogin) } } });
+  }
 });
 
 after(async () => {
