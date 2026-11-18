@@ -543,7 +543,8 @@ export const estilos = StyleSheet.create({
 function NavegacaoInferior() {
   const nav = useContext(NavegacaoContexto);
   if (!nav) return null;
-  return <View style={navegacaoEstilos.faixa}>
+  // As duas abas ficam dentro de uma lista de abas, como pede o papel "tab" (axe: aria-required-parent).
+  return <View accessibilityRole="tablist" style={navegacaoEstilos.faixa}>
     {([
       { id: 'planos', rotulo: mensagens.planos.titulo, icone: 'livro', acao: nav.planos },
       { id: 'objetivo', rotulo: mensagens.planos.novo, icone: 'lampada', acao: nav.criar },

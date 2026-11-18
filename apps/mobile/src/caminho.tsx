@@ -504,8 +504,9 @@ function Linha({ espaco, chao, aoMedir, children }: {
   aoMedir: (caixa: Caixa) => void;
   children: ReactNode;
 }) {
+  // Item da lista "Lições da trilha": sem o papel, o leitor de tela via botões soltos dentro da lista (axe: aria-required-children).
   return (
-    <View style={{ paddingBottom: espaco, backgroundColor: chao }}
+    <View role="listitem" style={{ paddingBottom: espaco, backgroundColor: chao }}
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
       {children}
     </View>
