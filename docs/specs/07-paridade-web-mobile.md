@@ -38,7 +38,6 @@ Esta tabela é a única lista de diferenças entre a web móvel e o app. O que n
 
 ## Como conferir
 
-- Os pares lado a lado (web à esquerda, app à direita), em 390×844 e 360×800, ficam em `studoo-ui-capturas/paridade/pares/` (antes), `paridade/pares-depois/` (depois das correções) `paridade/pares-cd870b1/` (contra o site em `cd870b1`), `paridade/pares-v7/` (o app em `0a7e759` contra o site em `abf48eb`) e `paridade/pares-v11/` (o app contra a web local em `bf8cf37`, com IA simulada e as mesmas trilhas; pedido 5a5d2e21). Os estados da voz ao vivo, em simulação local, ficam em `paridade/pares-voz/`.
+- Os pares lado a lado (web à esquerda, app à direita), em 390×844 e 360×800, e as medidas automáticas (texto, fonte, peso, cor, caixa, o que fica parado e o que rola) de cada rodada ficam na pasta de trabalho de quem entrega, só até o Lead aceitar a entrega (regra de disco de 18/11). As pastas antigas de `studoo-ui-capturas/` (pares, medidas e o levantamento com as classes) foram apagadas na limpeza de disco de 18/11; esta tabela é o que vale.
 - Desde o pedido 5a5d2e21, as capturas são em repouso (movimento reduzido nos dois lados) e a ferramenta compara também a caixa visual (o ancestral com fundo, borda, raio, degradê ou sombra): bordas por lado, estilo da borda, degradê, degrau por fora, contorno, reticências, tamanho e traço dos ícones, o branco no fim da rolagem e o que é tocável.
-- As medidas automáticas (texto, fonte, peso, cor, caixa, o que fica parado e o que rola) ficam em `paridade/medidas/`. O levantamento com as classes está em `paridade/LEVANTAMENTO.md`.
 - Uma diferença nova que a plataforma obriga entra nesta tabela com o motivo. Qualquer outra diferença é corrigida.
