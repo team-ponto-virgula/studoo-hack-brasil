@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao, Desenho, Icone, Paisagem, Stu, coresDaRegiao, type NomeDesenho } from '../ui';
+import { Botao, Desenho, Icone, Stu, coresDaRegiao } from '../ui';
 import { iconesDosTemas, type IdTema } from './pedido';
 import './apresentacao.css';
+import './aula.css';
+import './estudio.css';
 
 const chave = 'studoo.apresentacao';
 
@@ -24,15 +26,6 @@ export function marcarApresentacaoVista() {
     // Sem armazenamento, a apresentação aparece de novo; nada mais depende disso.
   }
 }
-
-const temasDaArte: readonly { nome: string; icone: NomeDesenho }[] = [
-  { nome: mensagens.apresentacao.temas[0], icone: 'temaMusica' },
-  { nome: mensagens.apresentacao.temas[1], icone: 'temaIdiomas' },
-  { nome: mensagens.apresentacao.temas[2], icone: 'temaMatematica' },
-  { nome: mensagens.apresentacao.temas[3], icone: 'temaArtes' },
-  { nome: mensagens.apresentacao.temas[4], icone: 'temaDiaADia' },
-  { nome: mensagens.apresentacao.temas[5], icone: 'temaTecnologia' },
-];
 
 /** Áreas para escolher no último passo: as do pedido, menos Populares. */
 const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 'populares');
@@ -68,10 +61,22 @@ export function Apresentacao({
   useEffect(() => {
     if (primeiraRenderizacao.current) {
       primeiraRenderizacao.current = false;
+      if (semSessao) titulo.current?.focus();
       return;
     }
     titulo.current?.focus();
-  }, [passo]);
+  }, [passo, semSessao]);
+
+  useEffect(() => {
+    function aoTeclar(evento: globalThis.KeyboardEvent) {
+      if (evento.key === 'Escape') {
+        evento.preventDefault();
+        concluir();
+      }
+    }
+    window.addEventListener('keydown', aoTeclar);
+    return () => window.removeEventListener('keydown', aoTeclar);
+  }, [concluir]);
 
   function irPara(destino: number) {
     setDirecao(destino < passo ? 'tras' : 'frente');
@@ -116,9 +121,9 @@ export function Apresentacao({
       </header>
       {passo < 4 ? (
         <div className="apresentacao-arte" key={passo} data-direcao={direcao} aria-hidden="true">
-          {passo === 0 && <ArteStu />}
-          {passo === 1 && <ArteTemas />}
-          {passo === 2 && <ArteTrilha />}
+          {passo === 0 && <ArteMaterial />}
+          {passo === 1 && <ArtePonte />}
+          {passo === 2 && <ArteExplique />}
           {passo === 3 && <ArteProgresso />}
         </div>
       ) : (
@@ -149,63 +154,100 @@ export function Apresentacao({
   );
 }
 
-function ArteStu() {
+function ArteMaterial() {
+  const ex = mensagens.apresentacao.exemplos;
   return (
-    <Paisagem className="apresentacao-paisagem apresentacao-paisagem--stu">
-      <span className="apresentacao-oi">{mensagens.apresentacao.oi}</span>
-      <Stu />
-    </Paisagem>
-  );
-}
-
-function ArteTemas() {
-  return (
-    <Paisagem className="apresentacao-paisagem apresentacao-paisagem--temas">
-      {temasDaArte.map((tema, indice) => (
-        <span key={tema.nome} className="apresentacao-tema" style={{ '--i': indice } as CSSProperties}>
-          <Desenho nome={tema.icone} />{tema.nome}
-        </span>
-      ))}
-      <Stu />
-    </Paisagem>
-  );
-}
-
-/** Pedaço de trilha: estrada em curva e três nós que surgem em sequência, com o cenário brotando ao redor. */
-function ArteTrilha() {
-  return (
-    <div className="mini-trilha" style={coresDaRegiao(0)}>
-      <MiniEstrada />
-      <Desenho nome="arvore" className="mini-trilha__enfeite" style={{ '--x': '10%', '--y': '22%', '--tam': '13%', '--atraso': '900ms' } as CSSProperties} />
-      <Desenho nome="flores" className="mini-trilha__enfeite" style={{ '--x': '84%', '--y': '74%', '--tam': '9%', '--atraso': '500ms' } as CSSProperties} />
-      <Desenho nome="arbusto" className="mini-trilha__enfeite" style={{ '--x': '82%', '--y': '22%', '--tam': '12%', '--atraso': '1300ms' } as CSSProperties} />
-      <Desenho nome="lagoa" className="mini-trilha__enfeite" style={{ '--x': '12%', '--y': '72%', '--tam': '17%', '--atraso': '300ms' } as CSSProperties} />
-      <span className="mini-trilha__no" data-estado="atual" style={{ '--x': '30%', '--y': '78%', '--atraso': '100ms' } as CSSProperties}>
-        <Icone nome="livro" /><span className="mini-trilha__etiqueta">{mensagens.trilha.comecar}</span>
-      </span>
-      <span className="mini-trilha__no" data-estado="previa" style={{ '--x': '68%', '--y': '50%', '--atraso': '600ms' } as CSSProperties}>
-        <Icone nome="livro" />
-      </span>
-      <span className="mini-trilha__no" data-estado="previa" style={{ '--x': '38%', '--y': '20%', '--atraso': '1100ms' } as CSSProperties}>
-        <Icone nome="revisao" />
-      </span>
+    <div className="apresentacao-quadro">
+      <div className="aula-citacao">
+        <div className="aula-citacao__topo">
+          <span className="aula-citacao__selo">[1] {mensagens.estudio.fonteMaterial}</span>
+          <strong>{ex.fonteArquivo}</strong>
+          <span className="estudio-selo">{mensagens.estudio.simulado}</span>
+        </div>
+        <blockquote>{ex.fonteTrecho}</blockquote>
+      </div>
     </div>
   );
 }
 
-/** Trilha vencida: lições concluídas, o troféu dourado no topo da montanha e o selo de progresso salvo. */
+function ArtePonte() {
+  const m = mensagens.estudio;
+  return (
+    <div className="apresentacao-quadro apresentacao-quadro--ponte">
+      <div className="ponte-cena" data-concluida="true">
+        <div className="ponte-margem ponte-margem--esquerda">
+          <div className="ponte-stu">
+            <Stu />
+          </div>
+          <span>{m.ponteMargemErro}</span>
+        </div>
+        <div className="ponte-vao">
+          <span className="ponte-tabua" data-ativa="true" data-erro="true">{m.ponteTabuaErro}</span>
+          <span className="ponte-tabua" data-ativa="true">{m.pontePassoExplicacao}</span>
+          <span className="ponte-tabua" data-ativa="true">{m.pontePassoExemplo}</span>
+          <span className="ponte-tabua" data-ativa="true">{m.pontePassoDesafio}</span>
+        </div>
+        <div className="ponte-margem ponte-margem--direita">
+          <div className="ponte-stu-alvo" />
+          <span>{m.ponteMargemVolta}</span>
+        </div>
+      </div>
+      <p className="estudio-legenda">{m.simulado}</p>
+    </div>
+  );
+}
+
+function ArteExplique() {
+  const m = mensagens.estudio;
+  const ex = mensagens.apresentacao.exemplos;
+  return (
+    <div className="apresentacao-quadro apresentacao-quadro--explique">
+      <div className="ensino-caderno apresentacao-caderno">
+        <div className="ensino-caderno__cartao" data-tipo="acertos">
+          <h3>{m.acertos}</h3>
+          <ul>
+            <li><span className="ensino-caderno__visto">✓</span><span>{ex.ensinoAcertos}</span></li>
+          </ul>
+        </div>
+        <div className="ensino-caderno__cartao" data-tipo="lacuna">
+          <h3>{m.lacuna}</h3>
+          <p>{ex.ensinoLacuna}</p>
+        </div>
+        <div className="ensino-caderno__cartao ensino-caderno__pergunta" data-tipo="pergunta">
+          <div className="ensino-caderno__stu">
+            <Stu />
+            <span className="ensino-caderno__duvida">?</span>
+          </div>
+          <div>
+            <h3>{m.pergunta}</h3>
+            <p>{ex.ensinoPergunta}</p>
+          </div>
+        </div>
+        <div className="ensino-caderno__cartao" data-tipo="proximo">
+          <h3>{m.proximo}</h3>
+          <p>{ex.ensinoProximo}</p>
+        </div>
+        <p className="estudio-legenda">{m.ensinoAutomatico}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Trilha vencida: lições concluídas, o troféu dourado no topo da montanha, ponte construída e selo de sincronia. */
 function ArteProgresso() {
   return (
-    <div className="mini-trilha mini-trilha--feita" style={coresDaRegiao(2)}>
+    <div className="mini-trilha mini-trilha--feita apresentacao-mapa" style={coresDaRegiao(2)}>
       <MiniEstrada feita />
       <Desenho nome="picos" className="mini-trilha__enfeite" style={{ '--x': '14%', '--y': '24%', '--tam': '22%', '--atraso': '0ms' } as CSSProperties} />
       <Desenho nome="pinheiro" className="mini-trilha__enfeite" style={{ '--x': '86%', '--y': '64%', '--tam': '9%', '--atraso': '0ms' } as CSSProperties} />
-      <Desenho nome="estrela" className="mini-trilha__brilho" style={{ '--x': '30%', '--y': '9%', '--tam': '6%' } as CSSProperties} />
-      <Desenho nome="estrela" className="mini-trilha__brilho" style={{ '--x': '50%', '--y': '6%', '--tam': '4%' } as CSSProperties} />
       <span className="mini-trilha__no" data-estado="concluida" style={{ '--x': '30%', '--y': '78%' } as CSSProperties}><Icone nome="check" /></span>
       <span className="mini-trilha__no" data-estado="concluida" style={{ '--x': '68%', '--y': '50%' } as CSSProperties}><Icone nome="check" /></span>
       <span className="mini-trilha__no mini-trilha__no--trofeu" style={{ '--x': '38%', '--y': '20%' } as CSSProperties}><Icone nome="trofeu" /></span>
-      <span className="mini-trilha__selo"><Icone nome="check" />{mensagens.apresentacao.salvo}</span>
+      <span className="selo-sincronia apresentacao-sincronia" data-estado="salvo">
+        <span className="selo-sincronia__ponto" />
+        <span>{mensagens.sincronia.salvo}</span>
+      </span>
+      <span className="mini-trilha__selo"><Icone nome="check" />{mensagens.estudio.ponteMapaFeita}</span>
     </div>
   );
 }

@@ -220,6 +220,42 @@
 
 .mini-trilha__selo .icone { width: 18px; height: 18px; stroke-width: 3; }
 
+.apresentacao-quadro {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 2px solid var(--gelo);
+  border-radius: 28px;
+  background: var(--nevoa);
+}
+.apresentacao-quadro *,
+.apresentacao-mapa * {
+  animation: none !important;
+}
+.apresentacao-quadro--ponte .ponte-cena { margin-bottom: 0; }
+.apresentacao-quadro .estudio-legenda { margin: 0; text-align: center; }
+.apresentacao-caderno { margin: 0; }
+.apresentacao-caderno .ensino-caderno__cartao { padding: 10px 12px; }
+.apresentacao-caderno .ensino-caderno__cartao h3 { font-size: 0.75rem; }
+.apresentacao-caderno .ensino-caderno__cartao p,
+.apresentacao-caderno .ensino-caderno__cartao li { font-size: 0.875rem; line-height: 1.35; }
+.apresentacao-sincronia {
+  position: absolute;
+  top: 6%;
+  right: 5%;
+  z-index: 2;
+}
+@media (min-width: 768px) {
+  .apresentacao-caderno { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .apresentacao-caderno .estudio-legenda { grid-column: 1 / -1; }
+}
+@media (max-width: 767px) {
+  .apresentacao-quadro { padding: 12px; border-radius: 22px; }
+  .apresentacao-caderno { gap: 8px; }
+  .apresentacao-caderno .ensino-caderno__cartao { padding: 8px 10px; }
+  .apresentacao-caderno .ensino-caderno__stu { width: 32px; }
+}
+
 .apresentacao-rodape {
   position: sticky;
   z-index: 2;
