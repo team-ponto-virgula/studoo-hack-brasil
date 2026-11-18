@@ -24,6 +24,7 @@ import type { Prisma } from "@/servidor/banco/gerado/client";
 import { obterGerador } from "@/servidor/ia/gerador";
 import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
+import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
 
 /** Tempo para criar o conteúdo de todas as lições no aceite (com a IA real, em paralelo e com uma segunda tentativa). */
@@ -57,7 +58,10 @@ type PlanoPersistido = Prisma.PlanoAprendizadoGetPayload<{ select: typeof seleca
 
 /** Proposta de uma vez, para o cliente que não acompanha a geração (POST /propostas). */
 export async function gerarProposta(usuarioId: string, objetivo: string): Promise<PropostaPlano> {
-  const geracao = iniciarGeracao(usuarioId, objetivo);
+  const geracao = iniciarGeracao(usuarioId, objetivo, { verificarLimite: false });
+  if (!(await consumirGeracaoPersistente(usuarioId))) {
+    throw new FalhaApi("limite_geracoes");
+  }
   for await (const evento of geracao.eventos(new AbortController().signal, { aoVivo: false })) {
     if (evento.tipo === "pronto") return evento.proposta;
     if (evento.tipo === "erro") throw new FalhaApi(evento.codigo);

@@ -17,13 +17,17 @@ export interface Geracao {
  * Tudo o que pode falhar antes de a resposta começar: objetivo, IA disponível e teto de gerações.
  * Lança FalhaApi (JSON de erro). Depois daqui, os problemas viram o evento `erro`.
  */
-export function iniciarGeracao(usuarioId: string, objetivo: string): Geracao {
+export function iniciarGeracao(
+  usuarioId: string,
+  objetivo: string,
+  opcoes?: { verificarLimite?: boolean },
+): Geracao {
   const texto = objetivo.trim();
   if (texto.length < LIMITES_GERACAO.objetivoMin || texto.length > LIMITES_GERACAO.objetivoMax) {
     throw new FalhaApi("invalido");
   }
   const gerador = obterGerador();
-  if (!registrarGeracao(usuarioId)) {
+  if (opcoes?.verificarLimite !== false && !registrarGeracao(usuarioId)) {
     throw new FalhaApi("limite_geracoes");
   }
 

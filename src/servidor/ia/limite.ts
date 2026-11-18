@@ -1,6 +1,9 @@
+import { consumirLimite } from "@/servidor/acesso/seguranca";
+import { banco } from "@/servidor/banco/cliente";
+
 /**
- * Teto provisório de gerações por pessoa (janela deslizante, em memória do processo).
- * O valor definitivo e onde ele vive (banco, janela, plano pago) dependem da D7, ainda aberta.
+ * Teto de gerações por pessoa. Em produção (e rotas HTTP), usa `consumirLimite` no PostgreSQL (`tentativaLogin`),
+ * sobrevivendo a reinícios sem migração nova; em testes unitários sem banco, `registrarGeracao` mantém a mesma regra.
  *
  * STUDOO_LIMITE_GERACOES: gerações permitidas por janela (padrão 20).
  * STUDOO_JANELA_GERACOES_MIN: tamanho da janela em minutos (padrão 60).
@@ -41,4 +44,11 @@ export function registrarGeracao(usuarioId: string, agora = Date.now()): boolean
 
 export function reiniciarLimiteDeGeracoes(): void {
   geracoes.clear();
+}
+
+/** Limite persistente de gerações no PostgreSQL (reaproveita `tentativaLogin` via `consumirLimite`). */
+export async function consumirGeracaoPersistente(usuarioId: string): Promise<boolean> {
+  const limite = inteiroPositivo(process.env.STUDOO_LIMITE_GERACOES, LIMITE_PADRAO);
+  const janela = inteiroPositivo(process.env.STUDOO_JANELA_GERACOES_MIN, JANELA_PADRAO_MIN) * 60_000;
+  return banco.$transaction((tx) => consumirLimite(tx, `ia:geracao:${usuarioId}`, limite, janela));
 }
