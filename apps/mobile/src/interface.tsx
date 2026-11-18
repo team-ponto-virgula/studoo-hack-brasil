@@ -3,6 +3,7 @@ import {
   AccessibilityInfo,
   Animated,
   Easing,
+  Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
@@ -353,6 +354,40 @@ export function EstadoMensagem({ mensagem, titulo, tipo = 'erro', testID, foco =
   );
 }
 
+/** A ação de um estado de erro: "Tentar novamente" ou "Ver minhas trilhas" (uma só por cartão, como na web). */
+export type AcaoDoErro = { rotulo: string; acao: () => void; testID?: string; desativado?: boolean };
+
+/**
+ * Estado de erro como o da web (rodadas 3A e 3A.1): um cartão só, com o Stu, o texto do erro e no máximo uma ação. O texto
+ * é um alerta e, com `foco`, recebe o foco do leitor de tela; a ação fica logo embaixo, dentro do cartão.
+ */
+export function EstadoErro({ mensagem, acao, testID, foco = false }: {
+  mensagem: string;
+  acao?: AcaoDoErro;
+  testID?: string;
+  foco?: boolean;
+}) {
+  const area = useRef<ComponentRef<typeof View>>(null);
+
+  useEffect(() => {
+    if (foco && area.current) AccessibilityInfo.sendAccessibilityEvent(area.current, 'focus');
+  }, [foco]);
+
+  return (
+    <View testID={testID} style={estilos.estadoErro}>
+      <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} importantForAccessibility="no"
+        style={estilos.estadoErroStu} />
+      <View style={estilos.estadoErroCorpo}>
+        <View ref={area} accessible accessibilityRole="alert" accessibilityLabel={mensagem} style={estilos.estadoErroTexto}>
+          <Text importantForAccessibility="no" style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro, backgroundColor: cores.fundo }]}>!</Text>
+          <Text style={[estilos.texto, { flex: 1, color: cores.erro }]}>{mensagem}</Text>
+        </View>
+        {acao && <Botao rotulo={acao.rotulo} testID={acao.testID} variante="secundario" desativado={acao.desativado} acao={acao.acao} />}
+      </View>
+    </View>
+  );
+}
+
 /** Esqueleto que pulsa devagar enquanto o conteúdo carrega, como o brilho da web; parado com movimento reduzido. */
 export function usePulso() {
   const reduzir = useMovimentoReduzido();
@@ -461,6 +496,14 @@ export const estilos = StyleSheet.create({
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
   },
   mensagemConteudo: { flex: 1, gap: 4 },
+  // Cartão de erro da web (.estado-erro): borda do erro a 40%, fundo rosado, o Stu de 48 à esquerda e o corpo ao lado.
+  estadoErro: {
+    marginTop: 16, flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 16, paddingHorizontal: 18,
+    borderWidth: 2, borderRadius: 20, borderColor: 'rgba(194, 59, 78, 0.4)', backgroundColor: cores.erroFundo,
+  },
+  estadoErroStu: { width: 48, height: 56, flexShrink: 0 },
+  estadoErroCorpo: { flex: 1, gap: 10 },
+  estadoErroTexto: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   mensagemTitulo: { fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   sinal: { width: 24, height: 24, textAlign: 'center', lineHeight: 22, borderRadius: 12, borderWidth: 1, fontFamily: fontes.corpo, fontWeight: '700' },
   skeleton: { marginTop: 20, gap: 8 },

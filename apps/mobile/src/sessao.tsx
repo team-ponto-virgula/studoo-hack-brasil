@@ -6,7 +6,7 @@ import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida
 import { entrarComGoogle } from './google-nativo';
 import { RecuperarAcesso } from './recuperar';
 import { Estudo } from './estudo';
-import { Botao, BotaoIcone, Campo, EstadoMensagem, Skeleton, Tela, Titulo, estilos } from './interface';
+import { Botao, BotaoIcone, Campo, EstadoErro, Skeleton, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { Paisagem } from './mundo';
 import { cores } from './tema';
@@ -94,12 +94,13 @@ export function AppMobile() {
       return <RecuperarAcesso emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} />;
     case 'falha':
       return (
-        <Tela pagina="falha" rodape={<Botao rotulo={mensagens.tentar} testID="tentar-sessao" acao={() => {
-          setSessao({ tipo: 'verificando' });
-          setTentativa((anterior) => anterior + 1);
-        }} />}>
+        // Como na web (3A): o erro fica num cartão com o Stu e a ação dentro dele, em vez de uma tela só com o rodapé.
+        <Tela pagina="falha">
           <Titulo>{mensagens.entrada.titulo}</Titulo>
-          <EstadoMensagem mensagem={sessao.erro} />
+          <EstadoErro mensagem={sessao.erro} foco acao={{ rotulo: mensagens.tentar, testID: 'tentar-sessao', acao: () => {
+            setSessao({ tipo: 'verificando' });
+            setTentativa((anterior) => anterior + 1);
+          } }} />
         </Tela>
       );
     case 'verificando':
@@ -219,7 +220,7 @@ function Entrada({ erroInicial, entrar, google, recuperar }: {
             acao={() => setMostrarSenha((atual) => !atual)} />} />
       </Animated.View>
       <Botao rotulo={mensagens.acesso.esqueci} testID="esqueci-senha" variante="texto" desativado={ocupado} acao={() => recuperar(email)} />
-      {erro && <EstadoMensagem mensagem={erro} />}
+      {erro && <EstadoErro mensagem={erro} />}
     </Tela>
   );
 }

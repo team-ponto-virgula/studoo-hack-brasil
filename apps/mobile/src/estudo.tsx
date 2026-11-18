@@ -28,7 +28,7 @@ import { Caminho, SkeletonTrilha, type Faixa } from './caminho';
 import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { Icone } from './icone';
 import { Confete } from './festa';
-import { Botao, Campo, EstadoMensagem, SeloSincronia, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type Sincronia } from './interface';
+import { Botao, Campo, EstadoErro, SeloSincronia, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -92,6 +92,8 @@ export function Estudo({ cliente, sair, expirar }: {
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [tentativa, setTentativa] = useState(0);
+  /** Código do último erro (o texto fica em `erro`): escolhe a ação do cartão de erro, como na web (3A.1). */
+  const [codigoErro, setCodigoErro] = useState<string | null>(null);
   const [geracao, setGeracao] = useState<TrilhaEmGeracao | null>(null);
   /** Código do erro da geração; o pedido mostra a mensagem e a ação que cabe (tentar de novo, ver os planos). */
   const [falhaGeracao, setFalhaGeracao] = useState<string | null>(null);
@@ -130,7 +132,7 @@ export function Estudo({ cliente, sair, expirar }: {
         if (!ativo) return;
         if (sessaoInvalida(falha)) await expirar();
         else {
-          setErro(mensagemDeErro(falha));
+          mostrarErro(falha);
           setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
         }
       }
@@ -216,6 +218,29 @@ export function Estudo({ cliente, sair, expirar }: {
     setGeracao(null);
   }
 
+  /** Mostra o erro de uma falha: o texto para o cartão e o código para a ação que cabe. */
+  function mostrarErro(falha: unknown) {
+    setErro(mensagemDeErro(falha));
+    setCodigoErro(codigoDaFalha(falha));
+  }
+
+  /**
+   * A ação do cartão de erro, como na web (3A.1): com o limite de gerações (ou de pedidos do estúdio) atingido, "Ver minhas
+   * trilhas"; nos outros (servidor, rede), "Tentar novamente", que limpa o erro e busca as trilhas de novo.
+   */
+  function acaoDoErro(codigo: string | null): AcaoDoErro {
+    if (codigo === 'limite_geracoes' || codigo === 'limite_estudio') {
+      return { rotulo: mensagens.pedido.verPlanos, testID: 'ver-planos-erro', acao: () => abrir({ tipo: 'planos' }) };
+    }
+    return {
+      rotulo: mensagens.tentar, testID: 'tentar-planos', desativado: ocupado,
+      acao: () => {
+        setErro(null);
+        setTentativa((anterior) => anterior + 1);
+      },
+    };
+  }
+
   /** Troca de etapa. Sair da geração ao vivo cancela o pedido em andamento; cada tela nova começa do topo. */
   function navegar(destino: Etapa) {
     if (destino.tipo !== 'geracao') pararGeracao();
@@ -241,7 +266,7 @@ export function Estudo({ cliente, sair, expirar }: {
       return { ok: true, dados: await operacao() };
     } catch (falha) {
       if (sessaoInvalida(falha)) await expirar();
-      else setErro(mensagemDeErro(falha));
+      else mostrarErro(falha);
       return { ok: false, codigo: codigoDaFalha(falha) };
     } finally {
       emCurso.current = false;
@@ -338,6 +363,7 @@ export function Estudo({ cliente, sair, expirar }: {
     if (licao.codigo === 'nao_autenticado') return;
     navegar({ tipo: 'plano', plano });
     setErro(mensagemDoCodigo(licao.codigo));
+    setCodigoErro(licao.codigo);
   }
 
   /** Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão. Como na web. */
@@ -414,7 +440,7 @@ export function Estudo({ cliente, sair, expirar }: {
     </>
   );
   // O erro de Minhas trilhas (sem rede, sessão, servidor) recebe o foco do leitor de tela, como nas outras telas.
-  const mensagem = erro && <EstadoMensagem mensagem={erro} foco />;
+  const mensagem = erro && <EstadoErro mensagem={erro} foco acao={acaoDoErro(codigoErro)} />;
 
   const comNavegacao = planos !== null && planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(etapa.tipo) && !pendente;
   return <NavegacaoContexto.Provider value={comNavegacao ? {
@@ -462,12 +488,12 @@ export function Estudo({ cliente, sair, expirar }: {
     }
 
     if (etapa.tipo === 'plano') {
-      return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} ocupado={ocupado} abrindo={abrindo} sincronia={sincronia}
+      return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} abrindo={abrindo} sincronia={sincronia}
         abrirLicao={(id) => void abrirLicao(etapa.plano, id)} novoPlano={() => abrir({ tipo: 'objetivo' })} />;
     }
 
     if (etapa.tipo === 'geracao' && geracao) {
-      return <GeracaoAoVivo geracao={geracao} erro={erro} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
+      return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
         comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })}
         existente={geracao.proposta ? planos?.find((plano) => plano.titulo === geracao.proposta?.titulo) : undefined}
         abrirExistente={(id) => void abrirPlano(id)} />;
@@ -475,16 +501,13 @@ export function Estudo({ cliente, sair, expirar }: {
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
       return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
-        aviso={etapa.tipo === 'planos' && planos?.length === 0 ? mensagens.planos.semTrilhas : aviso} falha={falhaGeracao} erro={erro} areaInicial={areaInicial}
+        aviso={etapa.tipo === 'planos' && planos?.length === 0 ? mensagens.planos.semTrilhas : aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })} />;
     }
 
     return (
-      <Tela pagina="planos" acoes={acoes} rodape={!planos && erro && <Botao rotulo={mensagens.tentar} testID="tentar-planos" desativado={ocupado} acao={() => {
-          setErro(null);
-          setTentativa((anterior) => anterior + 1);
-        }} />}>
+      <Tela pagina="planos" acoes={acoes}>
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
         <Text style={estilos.introducao}>{mensagens.planos.subtitulo}</Text>
         {mensagem}
@@ -528,7 +551,7 @@ function planoInicial(planos: PlanoResumo[]) {
  * Um objetivo curto demais não sai do aparelho: o campo mostra o que falta e recebe o foco.
  * O foco da tela vai ao erro, quando há um, e senão ao título; o aviso de geração cancelada é anunciado.
  */
-function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona }: {
+function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, acaoErro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona }: {
   cliente: ClienteNativo;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
@@ -536,6 +559,8 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
   aviso: string | null;
   falha: string | null;
   erro: string | null;
+  /** A ação do cartão de um erro geral (rede, servidor, limite), escolhida pelo código. */
+  acaoErro?: AcaoDoErro;
   temPlanos: boolean;
   /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
   areaInicial?: IdTema;
@@ -618,15 +643,11 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
         <Text accessibilityLiveRegion="polite" style={estudoEstilos.pedidoFala}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>
       </View>
       {aviso && <Text style={estudoEstilos.aviso}>{aviso}</Text>}
-      {erro && <EstadoMensagem mensagem={erro} foco />}
-      {falha && <EstadoMensagem mensagem={mensagemDoCodigo(falha)} testID="erro-geracao" foco />}
-      {falha && (repetivel || mostrarVerPlanos) && (
-        <View style={estudoEstilos.acoesErro}>
-          {repetivel && <Botao rotulo={mensagens.tentar} testID="tentar-geracao" variante="secundario" desativado={ocupado} acao={tentar} />}
-          {mostrarVerPlanos && <Botao rotulo={mensagens.pedido.verPlanos} testID="ver-planos" variante="secundario"
-            desativado={ocupado} acao={verPlanos} />}
-        </View>
-      )}
+      {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
+      {/* Como na web (3A.1): um cartão só, com o Stu e a ação que cabe; o que a pessoa escreveu continua no campo. */}
+      {falha && <EstadoErro mensagem={mensagemDoCodigo(falha)} testID="erro-geracao" foco
+        acao={mostrarVerPlanos ? { rotulo: mensagens.pedido.verPlanos, testID: 'ver-planos', desativado: ocupado, acao: verPlanos }
+          : repetivel ? { rotulo: mensagens.tentar, testID: 'tentar-geracao', desativado: ocupado, acao: tentar } : undefined} />}
       <View style={modo !== 'material' && { display: 'none' }}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} ia={ia} mostrarCabeca={false} /></View>
       <View style={modo !== 'ideia' && { display: 'none' }}>
         <View style={estudoEstilos.campoPedido}>
@@ -871,9 +892,10 @@ function Sugestao({ texto, icone, testID, ordem, escolhida, desativada, acao }: 
  * No celular, com a trilha pronta, os dois botões dividem o rodapé e a contagem sai, como na web.
  * Se a pessoa está vendo o fim do caminho, a tela acompanha cada nó que chega; se rolou para cima, fica onde está.
  */
-function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente }: {
+function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente }: {
   geracao: TrilhaEmGeracao;
   erro: string | null;
+  acaoErro?: AcaoDoErro;
   ocupado: boolean;
   acoes: ReactNode;
   cancelar: () => void;
@@ -940,7 +962,7 @@ function GeracaoAoVivo({ geracao, erro, ocupado, acoes, cancelar, comecar, ajust
   return (
     <Tela pagina="geracao" acoes={acoes} rodape={rodape} rolagem={rolagem}
       aoMedir={(altura) => { visivel.current = altura; }} aoRolar={(y) => { rolado.current = y; }}>
-      {erro && <EstadoMensagem mensagem={erro} foco />}
+      {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
       <View style={[estudoEstilos.faixa, largo && estudoEstilos.faixaLarga]}>
         <Text style={estudoEstilos.contexto}>{mensagens.geracao.contexto}</Text>
         <TituloGeracao titulo={titulo} foco={focarTitulo} reduzir={reduzir} />
@@ -1242,12 +1264,13 @@ function SkeletonLicao({ texto }: { texto: string }) {
  * Como na web, no celular o próximo passo vira o rodapé fixo e, a partir de 768 px, fica dentro da faixa.
  * Voltando de uma lição, a trilha rola até o nó liberado, o próximo ou a lição de origem, se ele estiver fora da vista.
  */
-function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano, sincronia }: {
+function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao, novoPlano, sincronia }: {
   /** O selo da tela: a trilha aberta também se atualiza quando o app volta ao primeiro plano. */
   sincronia: Sincronia;
   etapa: EtapaPlano;
   acoes: ReactNode;
   erro: string | null;
+  acaoErro?: AcaoDoErro;
   ocupado: boolean;
   abrindo: string | null;
   abrirLicao: (id: string) => void;
@@ -1327,7 +1350,7 @@ function TelaPlano({ etapa, acoes, erro, ocupado, abrindo, abrirLicao, novoPlano
         rolagemY.current = y;
         avaliarAtual();
       }}>
-      {erro && <EstadoMensagem mensagem={erro} foco />}
+      {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
       <View style={estudoEstilos.seloTrilha}><SeloSincronia sincronia={sincronia} /></View>
       {largo && (
         <View style={estudoEstilos.topoTrilha}>
@@ -1935,7 +1958,6 @@ const estudoEstilos = StyleSheet.create({
   comoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
   aviso: { marginTop: 14, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: cores.nevoa,
     color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
-  acoesErro: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   campoPedido: { marginTop: 14, gap: 8 },
   entradaPedido: { minHeight: 100, fontSize: 18, lineHeight: 26, backgroundColor: '#FBFCFF' },
   campoErro: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },

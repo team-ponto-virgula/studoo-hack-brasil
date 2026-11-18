@@ -38,7 +38,7 @@ import {
 } from './aula-formatos';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { Botao, BotaoIcone, Campo, EstadoMensagem, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
+import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
 import { mensagens, textoDaFalta } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
@@ -649,7 +649,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         </View>
         <Titulo testID="titulo-licao" foco={passo === 0}>{licao.titulo}</Titulo>
         {/* Como na web: o erro (rede no Verificar, conclusão) fica no alto, em foco, e a tela sobe até ele. */}
-        {erro && <EstadoMensagem mensagem={erro} testID="erro-licao" foco />}
+        {/* O cartão de erro da web (3A), sem ação: na lição, a nova tentativa é o próprio botão do rodapé (Verificar, Concluir). */}
+        {erro && <EstadoErro mensagem={erro} testID="erro-licao" foco />}
         {avisoRetomada && (
           <View testID="aviso-retomada" accessibilityLiveRegion="polite" style={licaoEstilos.aviso}>
             <Text style={licaoEstilos.avisoTexto}>{t.retomada}</Text>
