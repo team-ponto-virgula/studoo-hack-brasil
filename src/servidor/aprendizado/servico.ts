@@ -27,11 +27,23 @@ import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
 
+/** Lições escritas ao mesmo tempo no aceite (`STUDOO_GERACAO_PARALELA`, de 1 a 10; padrão 10, todas juntas). */
+export function geracaoParalela(): number {
+  const valor = Number(process.env.STUDOO_GERACAO_PARALELA?.trim());
+  return Number.isInteger(valor) && valor >= 1 && valor <= 10 ? valor : 10;
+}
+
 /**
- * Tempo para criar o conteúdo de todas as lições no aceite. Com a IA real, as lições (de 7 a 10) saem uma por vez, cada
- * uma com prazo próprio de 40 s e as novas tentativas do 429 (até 8 s): o teto total cobre a trilha inteira em série.
+ * Tempo para criar o conteúdo de todas as lições no aceite. As lições (de 7 a 10) saem em ondas de até
+ * `geracaoParalela()` chamadas; cada onda cabe nos 75 s de sempre (o que valia para todas em paralelo: uma chamada tem
+ * prazo próprio de 40 s, a segunda tentativa de formato e as novas tentativas do 429, até 8 s, cabem quase sempre
+ * aí). Teto = 75 s × ondas, limitado a 240 s: com o padrão (10) e até 10 lições, 1 onda = 75 s, como antes; com 3 e 8
+ * lições, 3 ondas = 225 s; com 1 (em série), 240 s.
  */
-const TEMPO_CONTEUDO = 240_000;
+export function tempoDoAceite(licoes: number, paralelas = geracaoParalela()): number {
+  const ondas = Math.max(1, Math.ceil(licoes / paralelas));
+  return Math.min(240_000, 75_000 * ondas);
+}
 const DURACAO_AVALIACAO = 15 * 60 * 1000;
 
 const selecaoPlano = {
@@ -168,17 +180,27 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
 export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
   if (plano.gerador === "material-v1" && plano.materialId) return conteudosDoMaterial(usuarioId, plano.materialId);
   const gerador = obterGerador();
-  const sinal = AbortSignal.timeout(TEMPO_CONTEUDO);
-  // Uma lição por vez: em paralelo, as N chamadas (uma por lição) estouravam juntas o limite por minuto do provedor
-  // (429 em todas). Em série, cada uma ainda tem as novas tentativas do 429 (`comNovasTentativas`).
-  const conteudos: ConteudoLicao[][] = [];
-  for (const [indiceFluxo, fluxo] of plano.fluxos.entries()) {
-    const licoes: ConteudoLicao[] = [];
-    for (const indiceLicao of fluxo.licoes.keys()) {
-      licoes.push(await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal));
+  // Uma chamada por lição, no máximo `geracaoParalela()` em andamento. Contas com limite baixo por minuto (a OpenAI do
+  // dono: 10 mil tokens/min) usam 1 ou 2; com todas juntas, as chamadas estouram o limite ao mesmo tempo (429 em todas).
+  // Cada chamada mantém as novas tentativas do 429 (`comNovasTentativas`). Na primeira falha, nenhuma nova começa.
+  const tarefas = plano.fluxos.flatMap((fluxo, indiceFluxo) => fluxo.licoes.map((_licao, indiceLicao) => ({ indiceFluxo, indiceLicao })));
+  const paralelas = geracaoParalela();
+  const sinal = AbortSignal.timeout(tempoDoAceite(tarefas.length, paralelas));
+  const conteudos: ConteudoLicao[][] = plano.fluxos.map(() => []);
+  let proxima = 0;
+  let falhou = false;
+  async function trabalhar() {
+    while (!falhou && proxima < tarefas.length) {
+      const { indiceFluxo, indiceLicao } = tarefas[proxima++];
+      try {
+        conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal);
+      } catch (erro) {
+        falhou = true;
+        throw erro;
+      }
     }
-    conteudos.push(licoes);
   }
+  await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
   if (!conteudos.every((licoes) => licoes.every(conteudoValido))) {
     throw new FalhaApi("ia_indisponivel");
   }

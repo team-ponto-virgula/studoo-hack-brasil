@@ -147,7 +147,7 @@ before(async () => {
     if (modo === "medir-paralelo" && !corpo.stream) {
       emAndamento += 1;
       picoParalelo = Math.max(picoParalelo, emAndamento);
-      await new Promise((r) => setTimeout(r, 25));
+      await new Promise((r) => setTimeout(r, 60));
       emAndamento -= 1;
       responderJsonChat(res, licaoValida);
       return;
@@ -549,17 +549,65 @@ test("avisos da voz ao vivo citam só quem recebe o dado: voz pela OpenAI e, no 
   }
   // O aviso do material com DeepSeek continua citando só a DeepSeek.
   assert.doesNotMatch(mensagens.estudio.privacidadePorProvedor("deepseek"), /OpenAI/);
+  // Gravação: transcrita pela OpenAI; no modo misto, o texto avaliado pela DeepSeek.
+  assert.equal(mensagens.estudio.vozProvedorPorProvedor("openai"), "A gravação é transcrita pela OpenAI.");
+  assert.match(mensagens.estudio.vozProvedorPorProvedor("deepseek"), /transcrita pela OpenAI.*avaliado pela DeepSeek/);
 });
 
-test("aceite: as lições são escritas uma por vez (uma chamada por lição, nunca em paralelo)", async () => {
-  const { esqueleto } = await gerarEsqueletoDireto("Aprender violão");
-  const licoes = esqueleto.fluxos.reduce((n, f) => n + f.licoes.length, 0);
-  pedidosDeepSeek = [];
-  modo = "medir-paralelo";
-  picoParalelo = 0;
-  const conteudos = await gerarConteudos("u-ds-aceite", esqueleto);
-  assert.equal(conteudos.flat().length, licoes);
-  assert.equal(pedidosDeepSeek.length, licoes, "uma chamada por lição");
-  assert.equal(picoParalelo, 1, "nenhuma chamada em paralelo");
+test("/api/auth/config diz se a gravação está disponível: modo misto com a chave da OpenAI sim; sem a chave ou com IA=falsa, não", async () => {
+  const config = async () => (await getAuthConfig(new Request("http://127.0.0.1:3000/api/auth/config"))).json();
+  const chave = process.env.OPENAI_API_KEY;
+  try {
+    process.env.IA = "deepseek";
+    assert.equal((await config()).transcricao, true);
+    delete process.env.OPENAI_API_KEY;
+    assert.equal((await config()).transcricao, false);
+    process.env.OPENAI_API_KEY = chave;
+    process.env.IA = "falsa";
+    assert.equal((await config()).transcricao, false);
+    process.env.IA = "openai";
+    assert.equal((await config()).transcricao, true);
+  } finally {
+    process.env.OPENAI_API_KEY = chave;
+    process.env.IA = "deepseek";
+  }
   assert.equal(pedidosOpenAi.length, 0);
+});
+
+test("aceite: no máximo STUDOO_GERACAO_PARALELA chamadas em andamento (padrão 10: todas juntas; 1: uma por vez)", async () => {
+  const { esqueleto: base } = await gerarEsqueletoDireto("Aprender violão");
+  // 8 lições: os trechos do esqueleto simulado repetidos até somar 8.
+  const fluxos = [];
+  while (fluxos.reduce((n, f) => n + f.licoes.length, 0) < 8) fluxos.push(...base.fluxos);
+  let total = 0;
+  const esqueleto = { ...base, fluxos: fluxos.map((f) => ({ ...f, licoes: f.licoes.filter(() => total++ < 8) })).filter((f) => f.licoes.length) };
+  assert.equal(esqueleto.fluxos.reduce((n, f) => n + f.licoes.length, 0), 8);
+  const anterior = process.env.STUDOO_GERACAO_PARALELA;
+  const medir = async (valor) => {
+    if (valor === undefined) delete process.env.STUDOO_GERACAO_PARALELA;
+    else process.env.STUDOO_GERACAO_PARALELA = valor;
+    pedidosDeepSeek = [];
+    modo = "medir-paralelo";
+    picoParalelo = 0;
+    emAndamento = 0;
+    const conteudos = await gerarConteudos("u-ds-aceite", esqueleto);
+    assert.equal(conteudos.flat().length, 8, "as 8 lições concluídas");
+    assert.ok(conteudos.flat().every(conteudoValido));
+    assert.equal(pedidosDeepSeek.length, 8, "uma chamada por lição");
+    return picoParalelo;
+  };
+  try {
+    assert.equal(await medir("3"), 3, "com teto 3, nunca mais de 3 em andamento");
+    assert.equal(await medir(undefined), 8, "com o padrão (10), todas as 8 em andamento juntas");
+    assert.equal(await medir("1"), 1, "com 1, uma por vez");
+    assert.equal(await medir("99"), 8, "valor fora de 1 a 10 vale o padrão");
+    assert.equal(pedidosOpenAi.length, 0);
+    const { tempoDoAceite } = await import("../src/servidor/aprendizado/servico.ts");
+    assert.equal(tempoDoAceite(10, 10), 75_000);
+    assert.equal(tempoDoAceite(8, 3), 225_000);
+    assert.equal(tempoDoAceite(9, 1), 240_000);
+  } finally {
+    if (anterior === undefined) delete process.env.STUDOO_GERACAO_PARALELA;
+    else process.env.STUDOO_GERACAO_PARALELA = anterior;
+  }
 });

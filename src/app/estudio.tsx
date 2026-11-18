@@ -44,6 +44,17 @@ function consultarElegibilidadeVozAoVivo(): Promise<'openai' | 'deepseek' | null
   }
   return promessaElegibilidadeVoz;
 }
+/** Provedor de texto quando a gravação está disponível (para dizer quem recebe o áudio), ou null. */
+let promessaGravacao: Promise<'openai' | 'deepseek' | null> | null = null;
+function consultarGravacao(): Promise<'openai' | 'deepseek' | null> {
+  if (!promessaGravacao) {
+    promessaGravacao = cliente
+      .configuracaoAcesso()
+      .then((cfg) => (cfg.transcricao && (cfg.ia === 'openai' || cfg.ia === 'deepseek') ? cfg.ia : null))
+      .catch(() => null);
+  }
+  return promessaGravacao;
+}
 function erroTexto(e: unknown) {
   return e instanceof ErroStudoo
     ? (mensagens.erros[e.codigo as keyof typeof mensagens.erros] ?? m.erro)
@@ -308,6 +319,17 @@ export function ApoioDaLicao({
   textoRef.current = texto;
   const [vozAoVivoDisponivel, setVozAoVivoDisponivel] = useState(false);
   const [provedorTextoVoz, setProvedorTextoVoz] = useState<'openai' | 'deepseek'>('openai');
+  const [provedorGravacao, setProvedorGravacao] = useState<'openai' | 'deepseek' | null>(null);
+  useEffect(() => {
+    let ativo = true;
+    if (!cliente.configuracaoAcesso) return;
+    void consultarGravacao().then((provedor) => {
+      if (ativo) setProvedorGravacao(provedor);
+    });
+    return () => {
+      ativo = false;
+    };
+  }, []);
   const [etapaVoz, setEtapaVoz] = useState<'inativa' | 'privacidade' | 'ativa'>('inativa');
   const [estadoVoz, setEstadoVoz] = useState<EstadoSessaoVozAoVivo>(() => estadoInicialVozAoVivo());
   const controladorVozRef = useRef<ControladorVozAoVivo | null>(null);
@@ -1096,7 +1118,10 @@ export function ApoioDaLicao({
           onChange={(e) => setTexto(e.target.value)}
           disabled={ocupado || gravando || etapaVoz === 'ativa'}
         />
-        <p className="estudio-legenda">{m.vozDica}</p>
+        <p className="estudio-legenda">
+          {m.vozDica}
+          {provedorGravacao && ` ${m.vozProvedorPorProvedor(provedorGravacao)}`}
+        </p>
         <div className="estudio-acoes">
           <Botao
             variante="secundario"

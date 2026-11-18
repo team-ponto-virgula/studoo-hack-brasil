@@ -29,6 +29,11 @@ export const mensagens = {
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
       vozDica: 'Escreva ou, se preferir, grave até 60 segundos: a gravação vira texto, e você confere antes de enviar.',
       vozErro: 'Não foi possível usar o microfone. Você pode digitar sua explicação.',
+      /** Quem recebe a gravação, mostrado junto da dica quando a gravação está disponível (`transcricao` no config). */
+      vozProvedorPorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
+        ia === 'deepseek'
+          ? 'A gravação é transcrita pela OpenAI, e o texto da sua explicação é avaliado pela DeepSeek.'
+          : 'A gravação é transcrita pela OpenAI.',
       cameraNegada: 'Permita o acesso à câmera para fotografar o seu material.',
       cameraBloqueada: 'Câmera bloqueada nas permissões do aparelho. Libere o acesso nas configurações para fotografar.',
       vozRevisar: 'Transcrição pronta. Confira o texto antes de enviar.', gravando: 'Gravando…',

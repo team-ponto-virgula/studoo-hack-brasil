@@ -5,6 +5,14 @@ import { comNovasTentativas } from '../ia/novas-tentativas';
 import { validarArquivo } from './arquivos';
 import { quota } from './materiais';
 
+/**
+ * A gravação vira texto pela OpenAI: disponível com provedor de texto real (`openai`, ou `deepseek` no modo misto) e a
+ * chave da OpenAI. Com a IA simulada, ou sem a chave, fica indisponível.
+ */
+export function transcricaoDisponivel(): boolean {
+  return provedorIaAtivo() !== 'falsa' && configuracaoOpenAi() !== null;
+}
+
 export async function transcrever(usuarioId: string, entrada: unknown, idioma?: unknown) {
   await quota(usuarioId, 'voz', 10);
   const { arquivo, bytes } = validarArquivo(entrada);
@@ -34,7 +42,7 @@ export async function transcrever(usuarioId: string, entrada: unknown, idioma?: 
   // WebM/M4A da web e do app. Com texto pela DeepSeek (modo misto), a transcrição usa a OpenAI quando há a chave; sem a
   // chave, ou com a IA simulada, a gravação fica indisponível.
   const config = configuracaoOpenAi();
-  if (provedorIaAtivo() === 'falsa' || !config)
+  if (!transcricaoDisponivel() || !config)
     throw new FalhaApi('voz_indisponivel');
   const corpo = new FormData();
   corpo.append(
