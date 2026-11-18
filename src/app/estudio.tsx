@@ -409,6 +409,8 @@ export function ApoioDaLicao({
           });
         };
         rec.start();
+        setEnsino(null);
+        setAviso('');
         setSegundos(0);
         setGravando(true);
         const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -429,7 +431,7 @@ export function ApoioDaLicao({
                 analisador.getByteFrequencyData(dados);
                 const barras = ondasRef.current?.querySelectorAll<HTMLElement>('span');
                 barras?.forEach((barra, i) => {
-                  const escala = Math.max(0.2, Math.min(1, (dados[i] ?? 0) / 160));
+                  const escala = Math.max(0.28, Math.min(1, (dados[i] ?? 0) / 140));
                   barra.style.transform = `scaleY(${escala.toFixed(2)})`;
                 });
                 audioRaf.current = window.requestAnimationFrame(atualizar);
@@ -520,7 +522,7 @@ export function ApoioDaLicao({
         <section className="estudio-card estudio-ponte" ref={cartaoPonte}>
           <div className="ponte-cabeca">
             <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
-            {ponte?.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
+            {ponte?.simulado && <p className="estudio-selo">{m.simulado}</p>}
           </div>
           <div className="ponte-cena" ref={ponteCenaRef} data-concluida={ponte?.concluida || undefined} aria-hidden="true">
             <div className="ponte-margem ponte-margem--esquerda">

@@ -591,6 +591,11 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 /* Com a prática, quatro números: lado a lado no computador, dois por linha no celular. */
 .conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 560px) { .conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) {
+  .conclusao-numeros { gap: 8px; }
+  .conclusao-numeros__rotulo { font-size: 0.6875rem; letter-spacing: 0.02em; padding: 6px 4px; gap: 4px; }
+  .conclusao-numeros__valor { font-size: 1.0625rem; padding: 10px 4px; }
+}
 
 .conclusao-numeros__rotulo {
   display: flex;
@@ -673,13 +678,15 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
   .entrada-banner .stu { position: absolute; bottom: 8%; left: 50%; width: 76px; translate: -50% 0; }
   .entrada-cabecalho .logo-quadro { margin-bottom: 20px; }
   .estudo { grid-template-columns: minmax(0, 1fr); }
-  .barra-lateral, .estudo-identificacao { display: none; }
+  .barra-lateral, .estudo-identificacao__contexto { display: none; }
   .estudo-marca, .planos-movel { display: block; }
   .estudo-principal { width: 100%; max-width: 880px; margin-inline: auto; }
 }
 
 @media (max-width: 767px) {
   :root { --espaco-pagina: 20px; }
+  .selo-sincronia { padding: 3px 8px; font-size: 0.75rem; }
+  .estudo-principal:has(.painel--concluida) { padding-bottom: calc(156px + env(safe-area-inset-bottom)); }
 
   .entrada-conteudo {
     padding: calc(28px + env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) calc(96px + env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
