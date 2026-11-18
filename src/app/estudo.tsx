@@ -39,7 +39,8 @@ import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
 import { Pedido, type IdTema } from './pedido';
-import { AdicionarPorLink, Avatar, FolhaCompartilhar, TelaPerfil, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
+import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
+import { TelaEditarPerfil, TelaPerfil } from './perfil';
 import './aula.css';
 import './trilha.css';
 
@@ -51,6 +52,7 @@ type Tela =
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
   | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string; aviso?: string }
   | { tipo: 'perfil' }
+  | { tipo: 'editarPerfil' }
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
 
@@ -604,9 +606,9 @@ export function Estudo() {
             {mensagens.pedido.comoFunciona}
           </Botao>
           {compartilhar && (
-            <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
+            <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' || tela.tipo === 'editarPerfil' ? 'page' : undefined}
               onClick={() => navegar({ tipo: 'perfil' })}>
-              {perfil?.nome ? <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} /> : <Icone nome="pessoa" />}
+              {perfil?.nome ? <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} /> : <Icone nome="pessoa" />}
               <span>{perfil?.nome ?? mensagens.perfil.navegacao}</span>
             </button>
           )}
@@ -706,7 +708,10 @@ export function Estudo() {
           )}
           {visivel && tela.tipo === 'perfil' && (
             <TelaPerfil perfil={perfil} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
-              abrirPlano={(id) => void abrirPlano(id)} sair={() => void sair()} />
+              abrirPlano={(id) => void abrirPlano(id)} editar={() => navegar({ tipo: 'editarPerfil' })} sair={() => void sair()} />
+          )}
+          {visivel && tela.tipo === 'editarPerfil' && perfil && !perfil.visitante && (
+            <TelaEditarPerfil perfil={perfil} aoMudarPerfil={setPerfil} anunciar={anunciar} voltar={() => navegar({ tipo: 'perfil' })} />
           )}
           {visivel && tela.tipo === 'licao' && (
             <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}
@@ -730,7 +735,7 @@ export function Estudo() {
             onClick={() => navegar({ tipo: 'planos' })}><Icone nome="livro" />{mensagens.planos.titulo}</button>
           <button type="button" disabled={ocupado} aria-current={tela.tipo === 'objetivo' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
-          {compartilhar && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
+          {compartilhar && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'perfil' || tela.tipo === 'editarPerfil' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'perfil' })}><Icone nome="pessoa" />{mensagens.perfil.navegacao}</button>}
         </nav>}
       </div>
@@ -790,10 +795,11 @@ function BarraProgresso({ progresso, comPercentual = false, de }: { progresso: P
 /** "Compartilhada" (selo da dona) ou "Compartilhada por Ana" (trilha recebida; o nome abre o perfil público). */
 function MarcaCompartilhar({ plano }: { plano: PlanoResumo }) {
   if (plano.recebida) {
-    const { nome, perfilId } = plano.recebida;
+    const { nome, perfilId, foto } = plano.recebida;
     const texto = mensagens.compartilhar.compartilhadaPor(nome);
     return (
       <p className="marca-recebida">
+        {foto && <Avatar nome={nome} cor="azul" foto={foto} />}
         {perfilId ? <>{texto.slice(0, texto.length - nome.length)}<a href={`/p/${perfilId}`}>{nome}</a></> : texto}
       </p>
     );
@@ -1152,6 +1158,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
           <h1 tabIndex={-1}>{plano.titulo}</h1>
           {plano.recebida ? (
             <p className="trilha-recebida">
+              {plano.recebida.foto && <Avatar nome={plano.recebida.nome} cor="azul" foto={plano.recebida.foto} />}
               <span>{plano.recebida.perfilId
                 ? <>{mensagens.compartilhar.recebidaDe(plano.recebida.nome).slice(0, -plano.recebida.nome.length)}<a href={`/p/${plano.recebida.perfilId}`}>{plano.recebida.nome}</a></>
                 : mensagens.compartilhar.recebidaDe(plano.recebida.nome)}</span>

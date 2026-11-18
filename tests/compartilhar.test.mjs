@@ -204,7 +204,7 @@ test('a cópia não leva nada do estudo da dona e adicionar duas vezes não dupl
   }
   const detalhe = (await json(planoGet(pedido(`/api/aprendizado/planos/${copiaId}`, { token: quem.token }), ctx({ id: copiaId })))).corpo;
   assert.equal(detalhe.progresso.concluidas, 0);
-  assert.deepEqual(detalhe.recebida, { nome: 'Ana', perfilId: null, codigoAtivo: codigo });
+  assert.deepEqual(detalhe.recebida, { nome: 'Ana', perfilId: null, codigoAtivo: codigo, foto: null });
   assert.equal((await criarLink(quem, copiaId)).corpo.codigo, 'trilha_recebida', 'trilha recebida não é recompartilhada');
   assert.equal((await salvarNome(quem, 'Bia')).status, 200);
   assert.equal((await criarLink(quem, copiaId)).corpo.codigo, 'trilha_recebida');
@@ -232,7 +232,9 @@ test('nenhuma resposta pública traz e-mail, id de usuário, objetivo digitado o
     }
   }
   assert.deepEqual(Object.keys(anonima.corpo).sort(), ['codigo', 'dono', 'origem', 'partes', 'titulo', 'totalLicoes']);
-  assert.deepEqual(Object.keys(pagina.corpo).sort(), ['cor', 'nome', 'trilhas']);
+  assert.deepEqual(Object.keys(anonima.corpo.dono).sort(), ['cor', 'foto', 'nome', 'perfilId', 'resumo']);
+  // Perfil rico (spec 10): resumo, interesses, foto e o alcance só das trilhas marcadas.
+  assert.deepEqual(Object.keys(pagina.corpo).sort(), ['alcance', 'cor', 'foto', 'interesses', 'nome', 'resumo', 'trilhas']);
 });
 
 test('link encerrado e inexistente respondem igual; parar não apaga cópias; apagar a trilha encerra o link', async () => {

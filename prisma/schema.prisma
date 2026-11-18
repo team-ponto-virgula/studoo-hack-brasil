@@ -28,6 +28,21 @@ model Usuario {
   perfilNome String?
   perfilCor  String?
   perfilId   String? @unique
+  /// Perfil rico (spec 10): resumo (até 160) e interesses (até 5 temas de TEMAS).
+  perfilResumo     String?
+  perfilInteresses String[] @default([])
+  foto             FotoPerfil?
+}
+
+/// Foto do perfil (spec 10), já recortada e regravada em WebP (sem EXIF). O token aleatório é o endereço público e muda a
+/// cada troca; remover a foto apaga a linha.
+model FotoPerfil {
+  usuarioId String   @id
+  token     String   @unique
+  grande    Bytes
+  pequena   Bytes
+  criadaEm  DateTime @default(now()) @db.Timestamptz(3)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 }
 
 model Sessao {

@@ -6,7 +6,7 @@ import { FalhaApi } from '@/servidor/acesso/http';
 import { compartilharAtivo, limitarPublico, perfilPublico } from '@/servidor/compartilhar/servico';
 import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
-import { Avatar } from '../../compartilhar';
+import { BotaoCompartilharPerfil, CabecalhoPerfil } from '../../perfil';
 import { PaginaPublica, baseDoSite, redeDaPagina } from '../../publico';
 
 export const dynamic = 'force-dynamic';
@@ -30,11 +30,12 @@ const carregar = cache(async (id: string): Promise<PerfilPublico | 'inativo' | '
 
 type Props = { params: Promise<{ id: string }> };
 
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const perfil = await carregar((await params).id);
   const base: Metadata = { robots: { index: false, follow: false }, metadataBase: baseDoSite() };
   if (!perfil || typeof perfil === 'string') return { ...base, title: `${p.inativo} · Studoo` };
-  const descricao = p.paginaDescricao(perfil.nome, perfil.trilhas.length);
+  const descricao = perfil.resumo ?? p.paginaDescricao(perfil.nome, perfil.trilhas.length);
   return {
     ...base,
     title: `${p.paginaTitulo(perfil.nome)} · Studoo`,
@@ -44,7 +45,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function PaginaDoPerfil({ params }: Props) {
-  const perfil = await carregar((await params).id);
+  const id = (await params).id;
+  const perfil = await carregar(id);
   if (perfil === null) notFound();
   if (typeof perfil === 'string') {
     return (
@@ -60,10 +62,9 @@ export default async function PaginaDoPerfil({ params }: Props) {
   }
   return (
     <PaginaPublica>
-      <div className="perfil-publico__cabeca">
-        <Avatar nome={perfil.nome} cor={perfil.cor} grande />
-        <h1>{p.paginaTitulo(perfil.nome)}</h1>
-      </div>
+      <CabecalhoPerfil nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
+        alcance={perfil.alcance} acoes={<BotaoCompartilharPerfil perfilId={id} nome={perfil.nome} />} />
+      <h2 className="perfil-publico__titulo">{p.paginaTitulo(perfil.nome)}</h2>
       <ul className="perfil-publico__lista">
         {perfil.trilhas.map((trilha) => (
           <li key={trilha.codigo}>

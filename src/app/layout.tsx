@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: mensagens.nome,
   description: mensagens.descricao,
   robots: { index: false, follow: false },
+  // iPhone com o Studoo na tela de início: abre como app, com o nome curto e a barra de status clara (o conteúdo não
+  // passa por baixo dela); as áreas seguras laterais e de baixo ficam no CSS.
+  appleWebApp: { capable: true, title: 'Studoo', statusBarStyle: 'default' },
+  formatDetection: { telephone: false, email: false, address: false },
   icons: {
     icon: '/marca/icone.svg',
     apple: '/marca/icone-180.png',

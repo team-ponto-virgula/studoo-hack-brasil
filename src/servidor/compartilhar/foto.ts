@@ -1,0 +1,93 @@
+import { randomBytes } from "node:crypto";
+import sharp from "sharp";
+import { FORMATO_CODIGO, LIMITES_FOTO, type TamanhoFoto } from "@studoo/contratos";
+import { FalhaApi } from "@/servidor/acesso/http";
+import { consumirLimite } from "@/servidor/acesso/seguranca";
+import { ehEmailVisitante } from "@/servidor/acesso/visitante";
+import { banco } from "@/servidor/banco/cliente";
+
+/*
+ * Foto do perfil (spec 10). O cliente manda o quadrado já recortado; aqui a imagem é conferida pelos bytes (JPEG, PNG
+ * ou WebP), aberta pelo sharp com teto de pixels e só o primeiro quadro, girada pela orientação do EXIF, cortada no
+ * centro em 512 e 128 e regravada em WebP. O sharp não copia metadados por padrão: EXIF (com GPS), XMP e ICC ficam de
+ * fora. O endereço público usa um token aleatório que muda a cada troca.
+ */
+
+const LIMITE_TROCAS = { quantidade: LIMITES_FOTO.trocasPorHora, janelaMs: 60 * 60_000 } as const;
+/** Fotos são pedidas por toda lista com avatar: balde próprio, mais largo que o das páginas públicas. */
+const LIMITE_LEITURA = { quantidade: 1200, janelaMs: 15 * 60_000 } as const;
+const LIMITE_LEITURA_GLOBAL = { quantidade: 30_000, janelaMs: 15 * 60_000 } as const;
+
+/** O tipo pelos primeiros bytes; qualquer outra coisa (inclusive SVG, GIF, HEIC) é recusada. */
+export function tipoDaImagem(bytes: Uint8Array): "jpeg" | "png" | "webp" | null {
+  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "jpeg";
+  if (bytes.length >= 8 && [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a].every((valor, i) => bytes[i] === valor)) return "png";
+  if (bytes.length >= 12 && Buffer.from(bytes.subarray(0, 4)).toString("latin1") === "RIFF" && Buffer.from(bytes.subarray(8, 12)).toString("latin1") === "WEBP") return "webp";
+  return null;
+}
+
+/** Decodifica o base64 estrito (o mesmo texto volta igual) e confere tamanho e tipo. */
+function lerBase64(entrada: unknown): Buffer {
+  const { base64 } = (entrada ?? {}) as { base64?: unknown };
+  if (typeof base64 !== "string" || base64.length === 0 || base64.length > Math.ceil(LIMITES_FOTO.bytes / 3) * 4) throw new FalhaApi("foto_invalida");
+  const bytes = Buffer.from(base64, "base64");
+  if (bytes.length === 0 || bytes.length > LIMITES_FOTO.bytes || bytes.toString("base64") !== base64) throw new FalhaApi("foto_invalida");
+  if (!tipoDaImagem(bytes)) throw new FalhaApi("foto_invalida");
+  return bytes;
+}
+
+/** As duas versões em WebP. Falha de leitura (arquivo corrompido, pixels demais) vira `foto_invalida`. */
+export async function processarFoto(bytes: Buffer): Promise<{ grande: Buffer; pequena: Buffer }> {
+  try {
+    const entrada = sharp(bytes, { limitInputPixels: LIMITES_FOTO.pixels, pages: 1, failOn: "error", sequentialRead: true });
+    const meta = await entrada.metadata();
+    if (!meta.width || !meta.height || !["jpeg", "png", "webp"].includes(meta.format ?? "")) throw new Error("formato");
+    const quadrada = await entrada.rotate().resize(LIMITES_FOTO.lado, LIMITES_FOTO.lado, { fit: "cover", position: "centre" }).toColourspace("srgb").png().toBuffer();
+    const [grande, pequena] = await Promise.all([
+      sharp(quadrada).webp({ quality: 82, effort: 4 }).toBuffer(),
+      sharp(quadrada).resize(LIMITES_FOTO.ladoPequeno, LIMITES_FOTO.ladoPequeno).webp({ quality: 80, effort: 4 }).toBuffer(),
+    ]);
+    return { grande, pequena };
+  } catch {
+    throw new FalhaApi("foto_invalida");
+  }
+}
+
+async function contaComPerfil(usuarioId: string) {
+  const usuario = await banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { email: true } });
+  if (ehEmailVisitante(usuario.email)) throw new FalhaApi("compartilhar_visitante");
+}
+
+/** Troca a foto: valida, conta no limite de 10 por hora, processa e grava com token novo. */
+export async function salvarFoto(usuarioId: string, entrada: unknown): Promise<void> {
+  await contaComPerfil(usuarioId);
+  const bytes = lerBase64(entrada);
+  const dentro = await banco.$transaction((tx) => consumirLimite(tx, `foto:${usuarioId}`, LIMITE_TROCAS.quantidade, LIMITE_TROCAS.janelaMs));
+  if (!dentro) throw new FalhaApi("limite_foto");
+  const { grande, pequena } = await processarFoto(bytes);
+  const token = randomBytes(12).toString("base64url");
+  const dados = { token, grande: new Uint8Array(grande), pequena: new Uint8Array(pequena) };
+  await banco.fotoPerfil.upsert({ where: { usuarioId }, create: { usuarioId, ...dados }, update: { ...dados, criadaEm: new Date() } });
+}
+
+export async function removerFoto(usuarioId: string): Promise<void> {
+  await banco.fotoPerfil.deleteMany({ where: { usuarioId } });
+}
+
+export async function limitarLeituraFoto(rede: string) {
+  const global = rede === "loopback" || rede === "desconhecido";
+  const { quantidade, janelaMs } = global ? LIMITE_LEITURA_GLOBAL : LIMITE_LEITURA;
+  const dentro = await banco.$transaction((tx) => consumirLimite(tx, global ? "foto:ler:global" : `foto:ler:${rede}`, quantidade, janelaMs));
+  if (!dentro) throw new FalhaApi("limite_compartilhar");
+}
+
+/** Os bytes de uma foto pelo token; token fora do formato, trocado ou removido responde igual (não encontrado). */
+export async function lerFoto(token: string, tamanho: string): Promise<Buffer> {
+  const lado = Number(tamanho) as TamanhoFoto;
+  if (!FORMATO_CODIGO.test(token) || (lado !== LIMITES_FOTO.lado && lado !== LIMITES_FOTO.ladoPequeno)) throw new FalhaApi("nao_encontrado");
+  const grande = lado === LIMITES_FOTO.lado;
+  const foto = await banco.fotoPerfil.findUnique({ where: { token }, select: { grande, pequena: !grande } });
+  const bytes = foto && (grande ? foto.grande : foto.pequena);
+  if (!bytes) throw new FalhaApi("nao_encontrado");
+  return Buffer.from(bytes);
+}

@@ -34,4 +34,6 @@ export const mensagensApi: Record<CodigoErro, string> = {
   compartilhar_visitante: "Para compartilhar, entre com uma conta.",
   trilha_recebida: "Esta trilha foi compartilhada com você e não pode ser compartilhada de novo.",
   trilha_propria: "Esta trilha é sua.",
+  foto_invalida: "Use uma foto JPG, PNG ou WebP de até 2 MB.",
+  limite_foto: "Você trocou de foto muitas vezes. Tente de novo daqui a pouco.",
 };

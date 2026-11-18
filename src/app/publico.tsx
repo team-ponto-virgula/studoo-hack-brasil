@@ -5,6 +5,7 @@ import { usuarioDaSessao } from '@/servidor/acesso/sessao';
 import { enderecoRede } from '@/servidor/acesso/visitante';
 import { Logo } from '../ui';
 import './compartilhar.css';
+import './perfil.css';
 
 /** Moldura das páginas públicas (/t e /p): a marca no alto, que leva ao início, e uma coluna central. */
 export function PaginaPublica({ children }: { children: ReactNode }) {
