@@ -13,7 +13,9 @@ import {
   instrucoesDaEstrutura,
   instrucoesDaLicao,
   lerLinha,
+  correcaoDoFormato,
   normalizarConteudo,
+  normalizarLicao,
   promptDaLicao,
   sinalComPrazo,
   validarBaseUrl,
@@ -173,11 +175,12 @@ function corpoDaEstrutura(objetivo: string) {
   };
 }
 
-function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number) {
+function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number, correcao = "") {
   return {
     input: [
       { role: "system", content: instrucoesDaLicao },
       { role: "user", content: promptDaLicao(esqueleto, fluxo, licao) },
+      ...(correcao ? [{ role: "user", content: correcao }] : []),
     ],
     text: { format: { type: "json_schema", name: "licao_studoo", schema: esquemaDaLicao, strict: true } },
     max_output_tokens: 6000,
@@ -230,19 +233,37 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
 
     async gerarConteudo(esqueleto, fluxo, licao, sinal) {
       if (esqueleto.gerador !== GERADOR_OPENAI || !esqueleto.fluxos[fluxo]?.licoes[licao]) throw new FalhaApi("proposta_invalida");
+      let correcao = "";
       for (let tentativa = 0; tentativa < 2; tentativa += 1) {
         const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, TEMPO_CONTEUDO_MS);
+        let corpo: unknown;
         try {
-          const resposta = await pedir(config, corpoDaLicao(esqueleto, fluxo, licao), comPrazo);
-          const texto = textoDaResposta(await resposta.json());
-          const conteudo = normalizarConteudo(JSON.parse(texto), esqueleto.origem);
-          if (conteudo) return conteudo;
-          registrar("ia_indisponivel", { motivo: "formato", tentativa });
+          const resposta = await pedir(config, corpoDaLicao(esqueleto, fluxo, licao, correcao), comPrazo);
+          corpo = await resposta.json();
         } catch (erro) {
           if (sinal.aborted || estourou()) throw new FalhaApi("ia_indisponivel");
-          if (erro instanceof FalhaApi) throw erro;
-          registrar("ia_indisponivel", { motivo: "formato", tentativa });
+          if (erro instanceof FalhaApi) throw erro; // HTTP: já registrado com o status em `pedir`.
+          registrar("ia_indisponivel", { motivo: "rede", tentativa });
+          continue;
         }
+        let bruto: unknown;
+        try {
+          bruto = JSON.parse(textoDaResposta(corpo));
+        } catch (erro) {
+          if (erro instanceof FalhaApi) throw erro; // recusa do modelo
+          registrar("ia_indisponivel", { motivo: "formato", detalhe: "json", tentativa });
+          correcao = correcaoDoFormato("json");
+          continue;
+        }
+        const lida = normalizarLicao(bruto, esqueleto.origem);
+        if (lida.conteudo) {
+          if (lida.descartados.length > 0) {
+            registrar("licao_ajustada", { detalhe: lida.descartados.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
+          }
+          return lida.conteudo;
+        }
+        registrar("ia_indisponivel", { motivo: "formato", detalhe: lida.motivo, tentativa });
+        correcao = correcaoDoFormato(lida.motivo ?? "formato");
       }
       throw new FalhaApi("ia_indisponivel");
     },

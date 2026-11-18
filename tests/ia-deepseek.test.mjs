@@ -16,6 +16,8 @@ const { refinarAvaliacao } = await import("../src/servidor/aprendizado/correcao.
 const { pedirJson } = await import("../src/servidor/estudio/ia.ts");
 const { transcrever } = await import("../src/servidor/estudio/voz.ts");
 const { gerarConteudos } = await import("../src/servidor/aprendizado/servico.ts");
+const { normalizarLicao } = await import("../src/servidor/ia/comum.ts");
+const { readFile } = await import("node:fs/promises");
 const { banco } = await import("../src/servidor/banco/cliente.ts");
 const { GET: getAuthConfig } = await import("../src/app/api/auth/config/route.ts");
 
@@ -70,6 +72,8 @@ let pedidosOpenAi = [];
 let modo = "normal";
 let tentativaConteudo = 0;
 let emAndamento = 0;
+/** Modo "licao-seq": as respostas de lição em sequência (objeto, ou "rede" para derrubar a conexão). */
+let respostasLicao = [];
 let picoParalelo = 0;
 
 function responderSseChat(resposta, linhas) {
@@ -150,6 +154,13 @@ before(async () => {
       await new Promise((r) => setTimeout(r, 60));
       emAndamento -= 1;
       responderJsonChat(res, licaoValida);
+      return;
+    }
+    if (modo === "licao-seq" && !corpo.stream) {
+      tentativaConteudo += 1;
+      const resposta = respostasLicao[Math.min(tentativaConteudo, respostasLicao.length) - 1];
+      if (resposta === "rede") { req.socket.destroy(); return; }
+      responderJsonChat(res, resposta);
       return;
     }
     if (modo === "429-depois-ok" && pedidosDeepSeek.length === 1) {
@@ -610,4 +621,136 @@ test("aceite: no máximo STUDOO_GERACAO_PARALELA chamadas em andamento (padrão 
     if (anterior === undefined) delete process.env.STUDOO_GERACAO_PARALELA;
     else process.env.STUDOO_GERACAO_PARALELA = anterior;
   }
+});
+
+// --- Formato das listas que a DeepSeek manda (amostras reais de 18/11, sem esquema imposto) ---
+const amostrasReais = JSON.parse(await readFile(new URL("./fixtures/deepseek-licoes-reais.json", import.meta.url), "utf8"));
+const indiceDoRotulo = (rotulo) => (rotulo === "principal" ? 0 : Number(rotulo.replace("extra", "")));
+
+test("amostras reais da DeepSeek: as 46 lições normalizam; ordenar segue a ordem listada e associar pareia pela posição", () => {
+  assert.equal(amostrasReais.length, 46);
+  assert.equal(amostrasReais.filter((a) => !a.aceitaAntes).length, 21, "21 eram rejeitadas antes da correção");
+  const descartes = [];
+  let ordenar = 0, associar = 0;
+  for (const amostra of amostrasReais) {
+    const lida = normalizarLicao(amostra.bruto, "IA");
+    assert.ok(lida.conteudo, `lição rejeitada: ${lida.motivo}`);
+    descartes.push(...lida.descartados);
+    const fora = new Set(lida.descartados.map((d) => indiceDoRotulo(d.split(":")[0])));
+    const brutos = amostra.bruto.exercicios.slice(0, 3);
+    const normalizados = [lida.conteudo.exercicio, ...(lida.conteudo.extras ?? [])];
+    const pares = brutos.map((bruto, indice) => ({ bruto, indice })).filter(({ indice }) => !fora.has(indice));
+    assert.equal(pares.length, normalizados.length);
+    pares.forEach(({ bruto }, posicao) => {
+      const normal = normalizados[posicao];
+      assert.equal(normal.tipo, bruto.tipo);
+      const textos = (lista) => lista.map((item) => (typeof item === "string" ? item : item.texto).trim());
+      if (bruto.tipo === "ordenar") {
+        ordenar += 1;
+        assert.deepEqual(normal.itens.map((i) => i.texto), textos(bruto.itens));
+        assert.deepEqual(normal.gabarito, normal.itens.map((i) => i.id), "a ordem listada é o gabarito");
+      }
+      if (bruto.tipo === "associar") {
+        associar += 1;
+        assert.deepEqual(normal.esquerda.map((i) => i.texto), textos(bruto.esquerda));
+        assert.deepEqual(normal.direita.map((i) => i.texto), textos(bruto.direita));
+        assert.deepEqual(normal.gabarito, normal.esquerda.map((e, i) => `${e.id}=${normal.direita[i].id}`), "o par é pela posição");
+      }
+    });
+  }
+  assert.equal(ordenar, 34);
+  assert.equal(associar, 9);
+  // Nenhum exercício cai por item em texto; sobram 2 extras sem como fechar (sem frase a julgar; sem justificativas).
+  assert.ok(!descartes.some((d) => /:(ordenar|associar|multipla_escolha):/.test(`:${d.split(":").slice(1).join(":")}`)), descartes.join(", "));
+  assert.deepEqual(descartes.map((d) => d.replace(/^extra\d/, "extra")).sort(), ["extra:verdadeiro_falso:afirmacao", "extra:verdadeiro_falso:opcoes"]);
+});
+
+const exercicioBase = { contexto: null, trecho: null, trechoTipo: null, fala: null, opcoes: null, itens: null, esquerda: null, direita: null,
+  afirmacao: null, gabarito: [], exata: null, criterios: null, modelo: null, armadilhas: null,
+  feedbackCorreto: "Isso mesmo.", feedbackIncorreto: "Reveja a lição." };
+const ordenarCurto = { ...exercicioBase, tipo: "ordenar", enunciado: "Ordene os passos.", itens: ["SEGREDO-PASSO-1", "SEGREDO-PASSO-2"] };
+const lacunaBoa = { ...exercicioBase, tipo: "lacuna", enunciado: "Complete.", trecho: "As tarraxas ficam na ___.", gabarito: ["cabeça"] };
+const licaoCom = (exercicios) => ({ ...licaoValida, exercicios });
+
+async function conteudoComRegistro(respostas) {
+  modo = "licao-seq";
+  respostasLicao = respostas;
+  tentativaConteudo = 0;
+  const { gerador, esqueleto } = await gerarEsqueletoDireto("Aprender violão");
+  pedidosDeepSeek = [];
+  const logs = [];
+  const original = console.error;
+  console.error = (msg) => logs.push(String(msg));
+  try {
+    const conteudo = await gerador.gerarConteudo(esqueleto, 0, 0, new AbortController().signal).catch((erro) => erro);
+    return { conteudo, logs: logs.map((l) => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean), pedidos: pedidosDeepSeek };
+  } finally {
+    console.error = original;
+  }
+}
+
+test("DeepSeek: itens de ordenar em texto puro fecham na primeira tentativa, na ordem listada", async () => {
+  const ordenarTexto = { ...ordenarCurto, itens: ["Afine a 6ª corda", "Afine a 5ª corda", "Afine a 4ª corda"] };
+  const { conteudo, pedidos } = await conteudoComRegistro([licaoCom([ordenarTexto, lacunaBoa])]);
+  assert.equal(pedidos.length, 1);
+  assert.equal(conteudo.exercicio.tipo, "ordenar");
+  assert.deepEqual(conteudo.exercicio.itens.map((i) => i.texto), ordenarTexto.itens);
+  assert.deepEqual(conteudo.exercicio.gabarito, conteudo.exercicio.itens.map((i) => i.id));
+  assert.equal(pedidosOpenAi.length, 0);
+});
+
+test("DeepSeek: principal que não fecha e extra que fecha: o extra vira principal e o registro diz o motivo sem conteúdo", async () => {
+  const { conteudo, logs, pedidos } = await conteudoComRegistro([licaoCom([ordenarCurto, lacunaBoa, licaoValida.exercicios[0]])]);
+  assert.equal(pedidos.length, 1, "sem segunda tentativa");
+  assert.equal(conteudo.exercicio.tipo, "lacuna");
+  assert.deepEqual(conteudo.extras.map((e) => e.tipo), ["multipla_escolha"]);
+  const ajuste = logs.find((l) => l.codigo === "licao_ajustada");
+  assert.deepEqual({ rota: ajuste.rota, detalhe: ajuste.detalhe, promovido: ajuste.promovido }, { rota: "ia-deepseek", detalhe: "principal:ordenar:itens", promovido: "lacuna" });
+  assert.ok(!JSON.stringify(logs).includes("SEGREDO"), "sem conteúdo no registro");
+});
+
+test("DeepSeek: nenhum exercício fecha: a segunda tentativa diz o que veio fora do formato e o registro tem o detalhe", async () => {
+  const vfSemOpcoes = { ...exercicioBase, tipo: "verdadeiro_falso", enunciado: "Julgue.", afirmacao: "SEGREDO-FRASE", gabarito: ["falso", "a"] };
+  const { conteudo, logs, pedidos } = await conteudoComRegistro([licaoCom([ordenarCurto, vfSemOpcoes]), licaoValida]);
+  assert.equal(pedidos.length, 2);
+  assert.equal(conteudo.exercicio.tipo, "multipla_escolha");
+  assert.equal(pedidos[0].corpo.messages.length, 2, "o primeiro pedido é o de sempre");
+  const correcao = pedidos[1].corpo.messages.at(-1);
+  assert.equal(correcao.role, "user");
+  assert.match(correcao.content, /fora do formato \(principal:ordenar:itens;extra1:verdadeiro_falso:opcoes\)/);
+  assert.match(correcao.content, /objeto \{"id": "\.\.\.", "texto": "\.\.\."\}/);
+  const formato = logs.find((l) => l.motivo === "formato");
+  assert.deepEqual({ detalhe: formato.detalhe, tentativa: formato.tentativa }, { detalhe: "principal:ordenar:itens;extra1:verdadeiro_falso:opcoes", tentativa: 0 });
+  assert.ok(!JSON.stringify(logs).includes("SEGREDO"));
+});
+
+test("DeepSeek: queda de conexão é registrada como rede (não como formato) e a segunda tentativa segue", async () => {
+  const { conteudo, logs, pedidos } = await conteudoComRegistro(["rede", licaoValida]);
+  assert.equal(conteudo.exercicio.tipo, "multipla_escolha");
+  assert.equal(pedidos.length, 2);
+  assert.ok(logs.some((l) => l.motivo === "rede" && l.tentativa === 0));
+  assert.ok(!logs.some((l) => l.motivo === "formato"));
+  assert.equal(pedidos[1].corpo.messages.length, 2, "rede não gera correção de formato");
+});
+
+test("o pedido da lição diz que cada item das listas é um objeto, com exemplo de ordenar e de associar", async () => {
+  const { conteudo, pedidos } = await conteudoComRegistro([licaoValida]);
+  assert.ok(conteudo.exercicio);
+  const sistema = pedidos[0].corpo.messages[0].content;
+  assert.match(sistema, /cada item de opcoes, itens, esquerda e direita é um objeto com id e texto, nunca um texto solto/);
+  assert.match(sistema, /"itens": \[\{"id": "i1", "texto": "Lave as mãos"\}/);
+  assert.match(sistema, /"esquerda": \[\{"id": "e1", "texto": "6ª corda"\}/);
+  assert.match(sistema, /"tipo":"ordenar".*"itens":\[\{"id":"i1"/s);
+  assert.match(sistema, /"tipo":"associar".*"esquerda":\[\{"id":"e1"/s);
+});
+
+test("opções e justificativas em texto puro também fecham (o gabarito aponta pelo id refeito ou pelo texto)", () => {
+  const multipla = { ...exercicioBase, tipo: "multipla_escolha", enunciado: "Onde ficam as tarraxas?", opcoes: ["Na cabeça", "No corpo", "No braço"], gabarito: ["Na cabeça"] };
+  const vf = { ...exercicioBase, tipo: "verdadeiro_falso", enunciado: "Julgue.", afirmacao: "As tarraxas afinam as cordas.", opcoes: ["Porque giram e esticam a corda", "Porque abafam o som"], gabarito: ["verdadeiro", "a"] };
+  const lida = normalizarLicao(licaoCom([multipla, vf]), "IA");
+  assert.deepEqual(lida.descartados, []);
+  assert.deepEqual(lida.conteudo.exercicio.opcoes.map((o) => o.id), ["a", "b", "c"]);
+  assert.deepEqual(lida.conteudo.exercicio.gabarito, ["a"]);
+  assert.deepEqual(lida.conteudo.extras[0].justificativas.map((o) => o.texto), vf.opcoes);
+  assert.deepEqual(lida.conteudo.extras[0].gabarito, ["verdadeiro", "a"]);
 });

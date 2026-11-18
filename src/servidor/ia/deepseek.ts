@@ -12,7 +12,8 @@ import {
   instrucoesDaEstrutura,
   instrucoesDaLicao,
   lerLinha,
-  normalizarConteudo,
+  correcaoDoFormato,
+  normalizarLicao,
   promptDaLicao,
   sinalComPrazo,
   validarBaseUrl,
@@ -176,6 +177,29 @@ const exemploJsonLicao = JSON.stringify({
       feedbackCorreto: "Correto porque...",
       feedbackIncorreto: "A opção correta é A porque...",
     },
+    {
+      tipo: "ordenar",
+      enunciado: "Coloque os passos na ordem.",
+      contexto: null, trecho: null, trechoTipo: null, fala: null, opcoes: null,
+      itens: [
+        { id: "i1", texto: "Primeiro passo" },
+        { id: "i2", texto: "Segundo passo" },
+        { id: "i3", texto: "Terceiro passo" },
+      ],
+      esquerda: null, direita: null, afirmacao: null, gabarito: [], exata: null, criterios: null, modelo: null, armadilhas: null,
+      feedbackCorreto: "Essa é a ordem porque...",
+      feedbackIncorreto: "A ordem certa começa por...",
+    },
+    {
+      tipo: "associar",
+      enunciado: "Ligue cada termo ao seu par.",
+      contexto: null, trecho: null, trechoTipo: null, fala: null, opcoes: null, itens: null,
+      esquerda: [{ id: "e1", texto: "Termo 1" }, { id: "e2", texto: "Termo 2" }],
+      direita: [{ id: "d1", texto: "Par do termo 1" }, { id: "d2", texto: "Par do termo 2" }],
+      afirmacao: null, gabarito: [], exata: null, criterios: null, modelo: null, armadilhas: null,
+      feedbackCorreto: "Cada termo combina com...",
+      feedbackIncorreto: "Repare que o termo 1...",
+    },
   ],
 });
 
@@ -327,30 +351,56 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
 
     async gerarConteudo(esqueleto, fluxo, licao, sinal) {
       if (esqueleto.gerador !== GERADOR_DEEPSEEK || !esqueleto.fluxos[fluxo]?.licoes[licao]) throw new FalhaApi("proposta_invalida");
+      // Na segunda tentativa, o pedido diz o que veio fora do formato (em vez de repetir igual e receber o mesmo erro).
+      let correcao = "";
       for (let tentativa = 0; tentativa < 2; tentativa += 1) {
         const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, TEMPO_CONTEUDO_MS);
+        let resposta: Response;
         try {
-          const resposta = await pedir(config, {
+          resposta = await pedir(config, {
             messages: [
               { role: "system", content: instrucoesLicaoJson },
               { role: "user", content: promptDaLicao(esqueleto, fluxo, licao) },
+              ...(correcao ? [{ role: "user", content: correcao }] : []),
             ],
             response_format: { type: "json_object" },
             max_tokens: 8192,
           }, comPrazo);
-          const texto = textoDaRespostaChat(await resposta.json());
-          if (!texto.trim()) {
-            registrar("ia_indisponivel", { motivo: "vazio", tentativa });
-            continue;
-          }
-          const conteudo = normalizarConteudo(analisarJson(texto), esqueleto.origem);
-          if (conteudo) return conteudo;
-          registrar("ia_indisponivel", { motivo: "formato", tentativa });
         } catch (erro) {
           if (sinal.aborted || estourou()) throw new FalhaApi("ia_indisponivel");
-          if (erro instanceof FalhaApi) throw erro;
-          registrar("ia_indisponivel", { motivo: "formato", tentativa });
+          if (erro instanceof FalhaApi) throw erro; // HTTP: já registrado com o status em `pedir`.
+          registrar("ia_indisponivel", { motivo: "rede", tentativa });
+          continue;
         }
+        let texto: string;
+        try {
+          texto = textoDaRespostaChat(await resposta.json());
+        } catch {
+          if (sinal.aborted || estourou()) throw new FalhaApi("ia_indisponivel");
+          registrar("ia_indisponivel", { motivo: "rede", tentativa });
+          continue;
+        }
+        if (!texto.trim()) {
+          registrar("ia_indisponivel", { motivo: "vazio", tentativa });
+          continue;
+        }
+        let bruto: unknown;
+        try {
+          bruto = analisarJson(texto);
+        } catch {
+          registrar("ia_indisponivel", { motivo: "formato", detalhe: "json", tentativa });
+          correcao = correcaoDoFormato("json");
+          continue;
+        }
+        const lida = normalizarLicao(bruto, esqueleto.origem);
+        if (lida.conteudo) {
+          if (lida.descartados.length > 0) {
+            registrar("licao_ajustada", { detalhe: lida.descartados.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
+          }
+          return lida.conteudo;
+        }
+        registrar("ia_indisponivel", { motivo: "formato", detalhe: lida.motivo, tentativa });
+        correcao = correcaoDoFormato(lida.motivo ?? "formato");
       }
       throw new FalhaApi("ia_indisponivel");
     },
