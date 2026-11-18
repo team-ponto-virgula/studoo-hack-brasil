@@ -191,7 +191,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas }: {
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false }: {
+  compacto = false, esmaecido = false, fonte }: {
+  /** Tamanho do texto quando a web usa outro (o "Pular" da apresentação tem 16 px mesmo compacto). */
+  fonte?: number;
   /** Parece desativado, mas responde ao toque e leva ao que falta (como contar como foi a prática). Como na web. */
   esmaecido?: boolean;
   rotulo: string;
@@ -254,7 +256,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
       <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">
       {carregando ? <Pontinhos cor={corTexto} /> : (
         <>
-          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto]}>{rotulo}</Text>
+          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) }]}>{rotulo}</Text>
           {icone && <Icone nome={icone} tamanho={18} cor={corTexto} />}
         </>
       )}
@@ -511,7 +513,7 @@ export const estilos = StyleSheet.create({
   introducao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24, marginTop: 8 },
   legenda: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 },
   campo: { gap: 8 },
-  rotulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  rotulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   entrada: {
     minHeight: 52, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 2, borderRadius: 14,
     borderColor: cores.bordaCampo, color: cores.texto, backgroundColor: cores.fundo,

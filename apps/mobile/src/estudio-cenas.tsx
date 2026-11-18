@@ -248,12 +248,12 @@ export function CadernoDoStu({ ensino, compacto = false }: {
           <View style={caderno.duvida}><Text style={caderno.duvidaTexto}>?</Text></View>
         </View>
         <View style={{ flex: 1, gap: compacto ? 2 : 4 }}>
-          <Text accessibilityRole="header" style={[titulo, { color: cores.acao }]}>{m.pergunta}</Text>
+          <Text accessibilityRole="header" style={titulo}>{m.pergunta}</Text>
           <Text style={[caderno.perguntaTexto, compacto && caderno.textoCompacto]}>{ensino.pergunta}</Text>
         </View>
       </View>
       <View style={[cartao, caderno.proximo]}>
-        <Text accessibilityRole="header" style={[titulo, { color: cores.sucesso }]}>{m.proximo}</Text>
+        <Text accessibilityRole="header" style={titulo}>{m.proximo}</Text>
         <Text style={texto}>{ensino.proximoPasso}</Text>
       </View>
       {ensino.simulado && <Text style={[estilos.legenda, compacto && { textAlign: 'center' }]}>{m.ensinoAutomatico}</Text>}
@@ -366,7 +366,7 @@ const caderno = StyleSheet.create({
   duvida: { position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.acao, borderWidth: 2, borderColor: cores.fundo },
   duvidaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
-  perguntaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 17, lineHeight: 25 },
+  perguntaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
   // Compacto (apresentação): como a web no celular, 8 × 10 de respiro, título de 12 e texto de 14.
   cartaoCompacto: { paddingVertical: 8, paddingHorizontal: 10, gap: 2, borderRadius: 16 },
   tituloCompacto: { fontSize: 12, lineHeight: 16 },

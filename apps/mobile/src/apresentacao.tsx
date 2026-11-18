@@ -114,7 +114,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
 
   return (
     <SafeAreaView style={estilos.tela}>
-      <View style={estilos.cabecalho}>
+      <View style={apresentacaoEstilos.topo}>
         <View style={estilos.marcaConteudo}>
           <View style={apresentacaoEstilos.andamento} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <View style={apresentacaoEstilos.pontos}>
@@ -125,7 +125,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
             </View>
             <Text style={apresentacaoEstilos.posicao}>{mensagens.apresentacao.posicao(passo + 1, total)}</Text>
           </View>
-          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto acao={() => concluir()} />}
+          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto fonte={16} acao={() => concluir()} />}
         </View>
       </View>
       <ScrollView ref={paginas} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={estilos.tela}
@@ -158,10 +158,11 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
           </ScrollView>
         ))}
       </ScrollView>
-      <View style={estilos.rodape}>
-        <View style={[estilos.rodapeConteudo, !empilhar && apresentacaoEstilos.acoes]}>
+      {/* Como .apresentacao-rodape da web: a linha de cima fica dentro das margens do conteúdo, não de ponta a ponta. */}
+      <View style={apresentacaoEstilos.rodape}>
+        <View style={[apresentacaoEstilos.rodapeConteudo, !empilhar && apresentacaoEstilos.acoes]}>
           {!empilhar && voltar}
-          <View style={!empilhar && [apresentacaoEstilos.metade, ultimo && apresentacaoEstilos.principalLargo]}>
+          <View style={!empilhar && apresentacaoEstilos.metade}>
             <Botao rotulo={rotuloFinal} testID="avancar-apresentacao" icone={ultimo ? undefined : 'seta'}
               acao={() => (ultimo ? concluir(area, true) : irPara(passo + 1))} />
           </View>
@@ -310,13 +311,15 @@ const apresentacaoEstilos = StyleSheet.create({
   ponto: { width: 10, height: 10, borderRadius: 5, backgroundColor: cores.gelo },
   pontoFeito: { backgroundColor: '#9FB1F0' },
   pontoAtivo: { width: 28, backgroundColor: cores.acao },
-  posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  topo: { backgroundColor: cores.fundo },
+  rodape: { paddingHorizontal: 20, backgroundColor: cores.fundo },
+  rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 18, borderTopWidth: 2, borderColor: cores.nevoa },
   pagina: { paddingTop: 20 },
   titulo: { marginTop: 24 },
   texto: { fontSize: 18, lineHeight: 26 },
   acoes: { flexDirection: 'row' },
   metade: { flex: 1, minWidth: 0 },
-  principalLargo: { flex: 1.9 },
   arte: { borderRadius: 28, overflow: 'hidden' },
   mini: { position: 'relative' },
   camada: { position: 'absolute', left: 0, top: 0 },
@@ -334,5 +337,5 @@ const apresentacaoEstilos = StyleSheet.create({
   areaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
   selo: { position: 'absolute', right: '5%', bottom: '7%', flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10,
     paddingRight: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: cores.fundo },
-  seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
+  seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
 });

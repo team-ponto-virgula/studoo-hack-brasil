@@ -246,7 +246,7 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   }
 
   return (
-    <Tela pagina="entrada"
+    <Tela pagina="entrada" estiloRodapeConteudo={entradaEstilos.rodape}
       // Como na web: com o visitante oferecido, "Experimentar sem conta" é a ação principal e "Entrar" fica secundário.
       rodape={<Botao rotulo={ocupado && !experimentando ? mensagens.entrada.entrando : mensagens.entrada.entrar}
         variante={configuracaoCarregada && visitanteDisponivel ? 'secundario' : 'primario'}
@@ -308,6 +308,9 @@ const entradaEstilos = StyleSheet.create({
   banner: { marginBottom: 24, borderRadius: 24 },
   formulario: { gap: 20, marginTop: 28 },
   visitante: { gap: 8, padding: 14, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
-  link: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center', marginTop: 4 },
-  linkTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22, textDecorationLine: 'underline' },
+  // Como .acesso-link da web no celular: 44 px de altura logo abaixo da introdução, sem sublinhado (globals.css, até 767 px).
+  link: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
+  linkTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
+  // A web deixa 24 px nas laterais do "Entrar" (342 px em 390).
+  rodape: { paddingHorizontal: 24 },
 });
