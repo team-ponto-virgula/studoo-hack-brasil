@@ -1073,12 +1073,13 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
             <Icone nome={certa ? 'check' : iconeErro} tamanho={20} cor={cores.fundo} />
             {certa && <Confete quantidade={14} />}
           </Animated.View>
-          <Text style={[licaoEstilos.retornoTitulo, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 }]}>{titulo}</Text>
+          <Text style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 }]}>{titulo}</Text>
         </View>
         {!compacto && <Text style={estilos.texto}>{avaliacao.feedback}</Text>}
         {!compacto && extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
       </View>
-      {certa && convite && <Botao testID="convite-explique" variante="texto" rotulo={t.expliqueConvite} desativado={ocupado} acao={convite} />}
+      {certa && convite && <Botao testID="convite-explique" variante="texto" rotulo={t.expliqueConvite} desativado={ocupado} acao={convite}
+        estilo={licaoEstilos.convite} />}
       {!certa && !compacto && avisoPular && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{avisoPular}</Text>}
       {!certa && !compacto && <Botao testID="ver-outro-jeito" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
       <View style={licaoEstilos.retornoAcoes}>
@@ -1184,7 +1185,9 @@ const licaoEstilos = StyleSheet.create({
   retornoIcone: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', borderBottomWidth: 3,
     borderColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
   retornoIconeErrado: { borderColor: '#B4650D', backgroundColor: '#E58A1F' },
-  retornoTitulo: { color: cores.sucesso, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 28 },
+  retornoTitulo: { color: cores.sucesso, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 26 },
+  retornoTituloCompacto: { fontSize: 17, lineHeight: 24 },
+  convite: { alignSelf: 'flex-start', paddingHorizontal: 2, minHeight: 44 },
   retornoTituloErrado: { color: '#8A4B00' },
   retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   retornoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 10 },

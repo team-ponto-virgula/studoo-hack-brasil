@@ -27,7 +27,7 @@ import {
   type PropostaPlano,
   type ProvedorIa,
 } from '@studoo/contratos';
-import { Botao, Campo, EstadoMensagem, estilos, SeloDemonstracao, LinhaAbrir } from './interface';
+import { Botao, Campo, estilos, SeloDemonstracao, LinhaAbrir } from './interface';
 import { Opcao, letras } from './opcao';
 import { CadernoDoStu, CenaPonte, EtapasDoEnsino, OndasDoVolume, PaginaDoMaterial, StuAluno } from './estudio-cenas';
 import { useAparecer } from './animacoes';
@@ -230,11 +230,20 @@ export function MaterialParaTrilha({
           {m.pensando}
         </Text>
       )}
-      {/* O erro (rede, material, voz) é o aviso das outras telas: alerta com ícone, e o leitor de tela vai até ele. */}
-      {!!erro && <EstadoMensagem mensagem={erro} foco />}
+      {/* Como na web (<p role="alert">): o erro (rede, material) é texto neutro, sem ícone; o leitor de tela vai até ele. */}
+      {!!erro && <AvisoAlerta texto={erro} />}
     </Card>
   );
 }
+/** O aviso de erro da web (<p role="alert">): texto na cor do corpo, sem ícone, e o leitor de tela vai até ele. */
+function AvisoAlerta({ texto }: { texto: string }) {
+  const area = useRef<ComponentRef<typeof Text>>(null);
+  useEffect(() => {
+    if (area.current) AccessibilityInfo.sendAccessibilityEvent(area.current, 'focus');
+  }, [texto]);
+  return <Text ref={area} accessible accessibilityRole="alert" accessibilityLiveRegion="assertive" style={estilos.texto}>{texto}</Text>;
+}
+
 function BotaoArquivo({ rotulo, testID, desativado, acao }: { rotulo: string; testID: string; desativado: boolean; acao: () => void }) {
   const [focado, setFocado] = useState(false);
   return (
@@ -698,6 +707,7 @@ export function ApoioDaLicao({
             <Text style={estilos.legenda}>{m.ensinoIdeia(licao.objetivo)}</Text>
             <Campo
               rotulo={m.explicacao}
+              estiloRotulo={s.rotuloExplicacao}
               multiline
               numberOfLines={5}
               maxLength={3000}
@@ -756,8 +766,8 @@ export function ApoioDaLicao({
         )}
       </Card></View>}
       {ocupado && <T>{m.pensando}</T>}
-      {/* O erro (rede, material, voz) é o aviso das outras telas: alerta com ícone, e o leitor de tela vai até ele. */}
-      {!!erro && <EstadoMensagem mensagem={erro} foco />}
+      {/* Como na web (<p role="alert">): o erro (rede, voz, transcrição) é texto neutro, sem ícone; o leitor de tela vai até ele. */}
+      {!!erro && <AvisoAlerta texto={erro} />}
     </View>
   );
 }
@@ -773,7 +783,8 @@ const s = StyleSheet.create({
   ponteCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   ponteCabecaAcoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   desafio: { gap: 14 },
-  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#EEF3FF' },
+  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#EEF3FF' },
+  rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24 },
   card: {
     marginVertical: 16,
     padding: 18,

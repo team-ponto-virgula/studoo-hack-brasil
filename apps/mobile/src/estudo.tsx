@@ -1730,11 +1730,6 @@ function CartaoHistoria({ titulo, texto, tipo, ordem }: { titulo: string; texto:
         estiloDeEntrada(entrada, 10)]}>
       <View style={estudoEstilos.historiaTopo}>
         <Text style={[estudoEstilos.historiaTitulo, { color: cor }, caixaAlta]}>{titulo}</Text>
-        {tipo === 'ponte' && (
-          <View style={estudoEstilos.historiaTabuas} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-            {[0, 1, 2, 3].map((tabua) => <View key={tabua} style={estudoEstilos.historiaTabua} />)}
-          </View>
-        )}
       </View>
       <Text style={estudoEstilos.historiaTexto}>{texto}</Text>
     </Animated.View>
@@ -1840,8 +1835,6 @@ const estudoEstilos = StyleSheet.create({
   historiaEnsino: { borderColor: '#9AD8B5', backgroundColor: cores.sucessoFundo },
   historiaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   historiaTitulo: { flexShrink: 1, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
-  historiaTabuas: { flexDirection: 'row', gap: 3 },
-  historiaTabua: { width: 12, height: 7, borderRadius: 2, borderBottomWidth: 2, borderColor: '#1E5916', backgroundColor: '#2F7D22' },
   historiaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
   historiaSincronia: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18, textAlign: 'center' },
   destaque: {
@@ -1969,10 +1962,10 @@ const estudoEstilos = StyleSheet.create({
   numeros: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 24 },
   numero: { flex: 1, minWidth: 0, overflow: 'hidden', borderRadius: 16, borderWidth: 2 },
   numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 4, paddingVertical: 6 },
-  numeroRotuloTexto: { flexShrink: 1, color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 10, lineHeight: 14, letterSpacing: 0 },
+  numeroRotuloTexto: { flexShrink: 1, color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 15, letterSpacing: 0 },
   numeroValor: { alignItems: 'center', marginHorizontal: 2, marginBottom: 2, paddingHorizontal: 4, paddingVertical: 10, borderRadius: 13,
     backgroundColor: cores.fundo },
-  numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
+  numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16, lineHeight: 22, textAlign: 'center' },
   // Meus planos
   cartao: { marginTop: 16, overflow: 'hidden', borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo,
     backgroundColor: cores.fundo },

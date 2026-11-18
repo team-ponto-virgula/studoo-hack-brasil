@@ -189,8 +189,8 @@ export function EtapasDoEnsino({ ativa }: { ativa: 0 | 1 | 2 }) {
   return (
     <View accessible accessibilityRole="text" accessibilityLabel={`${m.ensinoEtapasLabel}: ${m.ensinoEtapas[ativa]}`} style={aluno.etapas}>
       {m.ensinoEtapas.map((etapa, indice) => (
-        <View key={etapa} style={[aluno.etapa, indice === ativa && aluno.etapaAtiva, indice < ativa && aluno.etapaFeita]}>
-          <Text style={[aluno.etapaTexto, indice === ativa && { color: cores.fundo }, indice < ativa && { color: cores.sucesso }]}>{etapa}</Text>
+        <View key={etapa} style={[aluno.etapa, indice === ativa && aluno.etapaAtiva]}>
+          <Text style={[aluno.etapaTexto, indice === ativa && { color: cores.acao }]}>{etapa}</Text>
         </View>
       ))}
     </View>
@@ -209,7 +209,7 @@ export function OndasDoVolume({ gravador }: { gravador: AudioRecorder }) {
   return (
     <View testID="ondas-volume" style={aluno.ondas} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       {PESOS_ONDA.map((peso, indice) => (
-        <View key={indice} style={[aluno.barra, { height: nivel === null ? 12 : 8 + Math.round(30 * nivel * peso) }]} />
+        <View key={indice} style={[aluno.barra, { height: nivel === null ? 32 : Math.max(6, Math.round(32 * (0.2 + 0.8 * nivel * peso))) }]} />
       ))}
     </View>
   );
@@ -336,12 +336,12 @@ const aluno = StyleSheet.create({
   balaoSeta: { position: 'absolute', left: -7, top: '50%', marginTop: -6, width: 12, height: 12, backgroundColor: cores.fundo, borderLeftWidth: 2,
     borderBottomWidth: 2, borderColor: cores.gelo, transform: [{ rotate: '45deg' }] },
   balaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
-  etapas: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  etapa: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 999, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
-  etapaAtiva: { borderColor: cores.acao, backgroundColor: cores.acao },
-  etapaFeita: { borderColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
-  etapaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
-  ondas: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 40 },
+  etapas: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  etapa: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1.5, borderColor: cores.gelo },
+  etapaAtiva: { borderColor: cores.acao, backgroundColor: '#EEF3FF' },
+  etapaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 19 },
+  // Como .ensino-ondas da web: cinco barras de 6 × 32 com vão de 5; sem o volume (aparelho que não informa), cheias.
+  ondas: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 36 },
   barra: { width: 6, borderRadius: 3, backgroundColor: cores.acao },
 });
 

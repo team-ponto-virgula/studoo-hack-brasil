@@ -300,8 +300,10 @@ export function Pontinhos({ cor, tamanho = 8, vao = 5 }: { cor: string; tamanho?
   );
 }
 
-export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false, ...props }: TextInputProps & {
+export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false, estiloRotulo, ...props }: TextInputProps & {
   rotulo: string;
+  /** Estilo do rótulo quando a web usa outro (o "Sua explicação" do Explique tem 16 px e peso normal). */
+  estiloRotulo?: StyleProp<TextStyle>;
   /** Rótulo só para o leitor de tela (a web usa .somente-leitor quando o título da tela já faz a pergunta). */
   rotuloOculto?: boolean;
   campoRef?: Ref<ComponentRef<typeof TextInput>>;
@@ -316,7 +318,7 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
 
   return (
     <View style={estilos.campo}>
-      {!rotuloOculto && <Text nativeID={rotuloId} style={estilos.rotulo}>{rotulo}</Text>}
+      {!rotuloOculto && <Text nativeID={rotuloId} style={[estilos.rotulo, estiloRotulo]}>{rotulo}</Text>}
       <View>
         <TextInput {...props} ref={campoRef} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
           placeholderTextColor="#7A84A0"
