@@ -596,8 +596,9 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 .conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 @media (max-width: 560px) { .conclusao-numeros:has(li:nth-child(4)) { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 480px) {
-  .conclusao-numeros { gap: 8px; }
-  .conclusao-numeros__rotulo { font-size: 0.6875rem; letter-spacing: 0.02em; padding: 6px 4px; gap: 4px; }
+  .conclusao-numeros { gap: 6px; }
+  .conclusao-numeros__rotulo { min-width: 0; font-size: 0.625rem; letter-spacing: 0; padding: 6px 2px; gap: 3px; }
+  .conclusao-numeros__rotulo .icone { width: 13px; height: 13px; flex-shrink: 0; }
   .conclusao-numeros__valor { font-size: 1.0625rem; padding: 10px 4px; }
 }
 

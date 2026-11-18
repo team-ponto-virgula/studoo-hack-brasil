@@ -295,7 +295,9 @@ export const mensagens = {
             vazio: 'Pode ser qualquer assunto!',
             curto: 'Isso! Conte um pouco mais…',
             pronto: 'Perfeito! Já dá para montar sua trilha.',
-            escolhida: 'Boa escolha! Ajuste o texto se quiser.'
+            escolhida: 'Boa escolha! Ajuste o texto se quiser.',
+            limite: 'Suas trilhas salvas continuam prontas para estudar.',
+            erro: 'Não deu para gerar agora. Veja o aviso abaixo.'
         },
         exemplosDigitados: ['Quero aprender violão do zero', 'Inglês para conversar em viagens', 'Cozinhar o básico sem medo', 'História do Brasil para a prova'],
         exemploPrefixo: 'Ex.: '
@@ -592,6 +594,8 @@ export const mensagens = {
         voz_vazia: 'Não foi possível ouvir sua fala. Tente gravar mais perto ou escreva sua explicação.',
         voz_tempo: 'A transcrição demorou demais. Tente novamente ou escreva sua explicação.',
         voz_falha: 'Não foi possível transcrever o áudio agora. Tente novamente ou escreva sua explicação.',
+        falar_voz_tempo: 'A conferência da fala demorou demais. Tente falar novamente.',
+        falar_voz_falha: 'Não foi possível conferir sua fala agora. Tente novamente.',
 
         google_indisponivel: "O login com Google está indisponível no momento.",
         google_invalido: "Não foi possível confirmar o login com Google. Tente novamente.",

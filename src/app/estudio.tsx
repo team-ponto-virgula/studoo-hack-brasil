@@ -495,7 +495,7 @@ export function ApoioDaLicao({
     medir();
     window.addEventListener('resize', medir);
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    ponteCenaRef.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
+    (cartaoPonte.current ?? ponteCenaRef.current)?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
     if (reduzido) {
       setAtravessando(true);
       return () => window.removeEventListener('resize', medir);

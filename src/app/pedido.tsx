@@ -65,7 +65,9 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
 
   // O Stu reage ao pedido: convida, incentiva enquanto a pessoa escreve e comemora a ideia escolhida.
   let fala: string = mensagens.pedido.falas.vazio;
-  if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
+  if (falha === 'limite_geracoes' || falha === 'limite_estudio') fala = mensagens.pedido.falas.limite;
+  else if (falha) fala = mensagens.pedido.falas.erro;
+  else if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
   else if (texto.length >= 20) fala = mensagens.pedido.falas.pronto;
   else if (texto.length > 0) fala = mensagens.pedido.falas.curto;
   // As ideias vêm da área escolhida na apresentação; sem ela, das mais populares.
