@@ -96,7 +96,10 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
       {/* No Android com edge-to-edge (padrão do build), a janela não encolhe com o teclado: sem o padding, o rodapé e os
           campos de baixo ficavam atrás dele. Se a janela encolher, a sobreposição medida é zero e nada muda. */}
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'web' ? undefined : 'padding'}>
-        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={estilos.rolagemConteudo}
+        {/* No navegador, o "on-drag" do React Native Web tira o foco do campo a cada rolagem, até a que a própria tela faz
+            (o campo do Explique perdia o foco depois da queda da conversa ao vivo); lá, como na web, rolar não tira o foco. */}
+        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}
+          contentContainerStyle={estilos.rolagemConteudo}
           stickyHeaderIndices={faixaFixa ? [cabecalhoNaRolagem ? 1 : 0] : undefined}
           onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
           onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}
