@@ -634,7 +634,8 @@ export function ApoioDaLicao({
               )}
               {/* A ponte já vencida não repete o desafio: a pessoa relê e volta ao exercício. */}
               {revendo && aoVoltarExercicio && (
-                <Botao testID="ponte-voltar-revendo" rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} />
+                // Como a web desde cd870b1: na releitura, "Voltar ao exercício" também é verde, a cor de acerto (W6).
+                <Botao testID="ponte-voltar-revendo" variante="sucesso" rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} />
               )}
               {etapaPonte >= 3 && (
                 <View style={s.desafio} onLayout={(evento) => { desafioY.current = evento.nativeEvent.layout.y; }}>

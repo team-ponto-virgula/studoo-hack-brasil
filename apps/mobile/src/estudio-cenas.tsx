@@ -18,6 +18,9 @@ const m = mensagens.estudio;
 const madeira = { face: '#9C5619', borda: '#703B10' };
 const madeiraErro = { face: '#B54B14', borda: '#7D310A' };
 const madeiraVencida = { face: '#2F7D22', borda: '#1E5916' };
+const legendaPosta = { borda: '#9C5619', fundo: '#FFF7EE', texto: '#4B2809' };
+const legendaErro = { borda: '#B54B14', fundo: '#FFF4EC', texto: '#4B2809' };
+const legendaVencida = { borda: '#2F7D22', fundo: '#EEFAF0', texto: '#184A10' };
 /** Durações da direção: tábua que entra (mola curta), escalonamento de 120 ms e a travessia, um momento raro. */
 const ENTRADA_TABUA_MS = 360;
 const ESCALONAMENTO_MS = 120;
@@ -25,7 +28,7 @@ const ESPERA_TRAVESSIA_MS = 380;
 const TRAVESSIA_MS = 700;
 
 /** Uma tábua da ponte: tracejada enquanto falta; ao entrar, cai no lugar com uma mola curta. */
-function Tabua({ ativa, erro, vencida, ordem, reduzir }: { ativa: boolean; erro?: boolean; vencida: boolean; ordem: number; reduzir: boolean | null }) {
+function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: number; ativa: boolean; erro?: boolean; vencida: boolean; ordem: number; reduzir: boolean | null }) {
   const [entrada] = useState(() => new Animated.Value(ativa ? 1 : 0));
   useEffect(() => {
     if (!ativa) { entrada.setValue(0); return; }
@@ -37,15 +40,16 @@ function Tabua({ ativa, erro, vencida, ordem, reduzir }: { ativa: boolean; erro?
     return () => animacao.stop();
   }, [ativa, reduzir, entrada, ordem]);
   const cor = vencida ? madeiraVencida : erro ? madeiraErro : madeira;
+  // Como .ponte-tabua da web no celular: em pé, com o número; a que falta fica tracejada e meio apagada.
   return (
     <View testID={ativa ? (vencida ? 'tabua-vencida' : 'tabua-posta') : 'tabua-falta'} style={cena.tabuaLugar}>
-      {!ativa && <View style={cena.tabuaFalta} />}
+      {!ativa && <View style={cena.tabuaFalta}><Text style={cena.tabuaNumero}>{numero}</Text></View>}
       {ativa && (
-        <Animated.View style={[cena.tabua, { backgroundColor: cor.face, borderColor: cor.borda }, {
+        <Animated.View style={[cena.tabua, { backgroundColor: cor.face, borderColor: cor.borda, borderBottomColor: cor.borda }, {
           opacity: entrada.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }),
-          transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [-18, 0] }) }],
+          transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }],
         }]}>
-          <View style={cena.tabuaVeio} />
+          <Text style={[cena.tabuaNumero, { color: cores.fundo }]}>{numero}</Text>
         </Animated.View>
       )}
     </View>
@@ -76,7 +80,6 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
   aoMedir?: (y: number, altura: number) => void;
 }) {
   const reduzir = useMovimentoReduzido();
-  const [largura, setLargura] = useState(0);
   const vencida = concluida || montada;
   const [travessia] = useState(() => new Animated.Value(vencida ? 1 : 0));
   useEffect(() => {
@@ -97,51 +100,52 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
     { texto: m.pontePassoExemplo, ativa: (temPonte && exemplo) || montada },
     { texto: m.pontePassoDesafio, ativa: desafio || vencida },
   ];
-  // O Stu sai do centro da margem esquerda e para no centro da direita (as margens têm 74 de largura).
-  const distancia = Math.max(0, largura - MARGEM);
+  // O Stu sai do centro da margem esquerda e para no centro da direita (as margens têm a largura do texto, como na web).
+  const [margens, setMargens] = useState<{ esquerda: { x: number; largura: number } | null; direita: { x: number; largura: number } | null }>({ esquerda: null, direita: null });
+  const distancia = margens.esquerda && margens.direita
+    ? Math.max(0, margens.direita.x + margens.direita.largura / 2 - (margens.esquerda.x + margens.esquerda.largura / 2)) : 0;
 
   return (
     <View onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y, evento.nativeEvent.layout.height)}>
+      {/* Como .ponte-cena da web no celular: céu, água a partir de 66% com as faixas claras no pé, margens e o vão. */}
       <View testID="cena-ponte" style={cena.cena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <View style={cena.agua}>
-          <View style={[cena.onda, { left: '8%' }]} /><View style={[cena.onda, { left: '42%' }]} /><View style={[cena.onda, { left: '74%' }]} />
-        </View>
-        <View style={cena.linha} onLayout={(evento) => setLargura(evento.nativeEvent.layout.width)}>
-          <View style={cena.margem}>
-            <View style={cena.margemTopo} />
-            <View style={cena.lugarStu} />
+        <View style={cena.agua} />
+        <View style={cena.faixas}>{Array.from({ length: 14 }, (_, indice) => <View key={indice} style={cena.faixa} />)}</View>
+        <View style={cena.linha}>
+          <View style={[cena.margem, cena.margemEsquerda]}
+            onLayout={(evento) => { const { x, width } = evento.nativeEvent.layout; setMargens((antes) => ({ ...antes, esquerda: { x, largura: width } })); }}>
+            <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+              style={[cena.stu, { transform: [
+                { translateX: travessia.interpolate({ inputRange: [0, 1], outputRange: [0, distancia] }) },
+                { translateY: travessia.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -12, 0] }) },
+              ] }]} />
             <Text style={cena.margemTexto}>{m.ponteMargemErro}</Text>
           </View>
           <View style={cena.vao}>
-            <View style={[cena.corda, { top: 6 }]} />
-            <View style={cena.tabuas}>
-              {passos.map((passo, indice) => (
-                <Tabua key={indice} ativa={passo.ativa} erro={passo.erro} vencida={vencida} reduzir={reduzir}
-                  ordem={indice === 0 ? 0 : indice === 3 ? 0 : indice - 1} />
-              ))}
-            </View>
-            <View style={[cena.corda, { bottom: 18 }]} />
+            <View style={[cena.trilho, { top: 2 }]} />
+            {passos.map((passo, indice) => (
+              <Tabua key={indice} numero={indice + 1} ativa={passo.ativa} erro={passo.erro} vencida={vencida} reduzir={reduzir}
+                ordem={indice === 0 ? 0 : indice === 3 ? 0 : indice - 1} />
+            ))}
+            <View style={[cena.trilho, { bottom: 2 }]} />
           </View>
-          <View style={[cena.margem, cena.margemDireita]}>
-            <View style={[cena.margemTopo, cena.margemTopoDireita]} />
+          <View style={[cena.margem, cena.margemDireita]}
+            onLayout={(evento) => { const { x, width } = evento.nativeEvent.layout; setMargens((antes) => ({ ...antes, direita: { x, largura: width } })); }}>
             <View style={cena.lugarStu} />
             <Text style={[cena.margemTexto, { color: '#184A10' }]}>{m.ponteMargemVolta}</Text>
           </View>
-          {/* O Stu atravessa por cima da ponte, com um pulinho no meio do caminho. */}
-          <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            style={[cena.stu, { transform: [
-              { translateX: travessia.interpolate({ inputRange: [0, 1], outputRange: [0, distancia] }) },
-              { translateY: travessia.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -12, 0] }) },
-            ] }]} />
         </View>
       </View>
+      {/* Como .ponte-legenda da web: duas colunas; o número num círculo; a tábua posta com borda cheia, a que falta tracejada. */}
       {!semLegenda && <View style={cena.legenda} accessible accessibilityLabel={passos.filter((passo) => passo.ativa).map((passo) => passo.texto).join('. ')}>
         {passos.map((passo, indice) => {
-          const cor = vencida && passo.ativa ? madeiraVencida : passo.erro ? madeiraErro : madeira;
+          const cor = vencida && passo.ativa ? legendaVencida : passo.erro ? legendaErro : legendaPosta;
           return (
-            <View key={indice} style={[cena.passo, passo.ativa ? { backgroundColor: cor.face, borderColor: cor.borda } : cena.passoFalta]}>
-              <Text style={[cena.passoNumero, !passo.ativa && { color: '#9D7349' }]}>{indice + 1}</Text>
-              <Text numberOfLines={2} style={[cena.passoTexto, !passo.ativa && { color: '#7A5A3A' }]}>{passo.texto}</Text>
+            <View key={indice} style={[cena.passo, passo.ativa ? { borderStyle: 'solid', borderColor: cor.borda, backgroundColor: cor.fundo } : null]}>
+              <View style={[cena.passoNumero, passo.ativa && { backgroundColor: cor.borda }]}>
+                <Text style={[cena.passoNumeroTexto, passo.ativa && { color: cores.fundo }]}>{indice + 1}</Text>
+              </View>
+              <Text style={[cena.passoTexto, passo.ativa && { color: cor.texto }]}>{passo.texto}</Text>
             </View>
           );
         })}
@@ -149,7 +153,6 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
     </View>
   );
 }
-const MARGEM = 74;
 
 /** O Stu como aluno no "Ensine ao Stu": com dúvida, ouvindo (balança devagar enquanto grava) ou anotando o retorno. */
 export function StuAluno({ estado }: { estado: 'aluno' | 'ouvindo' | 'anotou' }) {
@@ -297,32 +300,34 @@ export function PaginaDoMaterial({ pagina }: { pagina: PaginaMaterial }) {
 }
 
 const cena = StyleSheet.create({
-  cena: { position: 'relative', marginTop: 14, paddingTop: 16, paddingBottom: 30, paddingHorizontal: 10, borderRadius: 20, borderWidth: 2,
-    borderColor: '#B8D7F5', backgroundColor: '#EAF4FF', overflow: 'hidden' },
-  agua: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 48, backgroundColor: '#9ED3FA' },
-  onda: { position: 'absolute', top: 14, width: 34, height: 4, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.55)' },
+  // Medidas de .ponte-cena, .ponte-margem, .ponte-vao, .ponte-tabua e .ponte-legenda da web até 600 px.
+  cena: { position: 'relative', marginTop: 10, marginBottom: 12, paddingTop: 10, paddingHorizontal: 8, paddingBottom: 12, borderRadius: 20,
+    borderWidth: 2, borderColor: '#B8D7F5', backgroundColor: '#EAF4FF', overflow: 'hidden' },
+  agua: { position: 'absolute', left: 0, right: 0, top: '66%', bottom: 0, backgroundColor: '#9ED3FA' },
+  faixas: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 12, flexDirection: 'row', gap: 18 },
+  faixa: { width: 18, height: 12, backgroundColor: 'rgba(255,255,255,0.35)' },
   linha: { position: 'relative', flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
-  margem: { width: MARGEM, minHeight: 92, alignItems: 'center', justifyContent: 'flex-end', paddingHorizontal: 6, paddingBottom: 8, borderRadius: 12,
-    borderWidth: 2, borderBottomWidth: 4, borderColor: '#76BF43', borderBottomColor: '#5B9A30', backgroundColor: '#F6FBF1', overflow: 'hidden' },
-  margemDireita: { borderColor: '#46A302', borderBottomColor: '#3B8A02', backgroundColor: '#ECF9E3' },
-  margemTopo: { position: 'absolute', top: 0, left: 0, right: 0, height: 6, backgroundColor: '#58CC02' },
-  margemTopoDireita: { backgroundColor: '#58CC02' },
-  lugarStu: { height: 46 },
+  margem: { position: 'relative', zIndex: 1, minWidth: 58, alignItems: 'center', gap: 4, paddingTop: 6, paddingHorizontal: 6, paddingBottom: 5,
+    borderRadius: 12, borderWidth: 2, borderTopWidth: 6, borderBottomWidth: 5, borderColor: '#76BF43', borderTopColor: '#58CC02',
+    borderBottomColor: '#5B9A30', backgroundColor: '#F6FBF1' },
+  margemEsquerda: { zIndex: 2 },
+  margemDireita: { borderColor: '#46A302', borderTopColor: '#58CC02', borderBottomColor: '#3B8A02', backgroundColor: '#ECF9E3' },
+  lugarStu: { width: 32, height: 32 },
   margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14, textAlign: 'center' },
-  vao: { flex: 1, height: 70, justifyContent: 'flex-end', paddingBottom: 22 },
-  corda: { position: 'absolute', left: -8, right: -8, height: 3, borderRadius: 2, backgroundColor: '#8D5C2C' },
-  tabuas: { flexDirection: 'row', gap: 4 },
-  tabuaLugar: { flex: 1, height: 20 },
-  tabuaFalta: { flex: 1, borderWidth: 2, borderStyle: 'dashed', borderColor: '#9D7349', borderRadius: 6, backgroundColor: 'rgba(255,250,242,0.7)' },
-  tabua: { flex: 1, borderWidth: 2, borderBottomWidth: 4, borderRadius: 6, justifyContent: 'center' },
-  tabuaVeio: { marginHorizontal: 4, height: 2, borderRadius: 1, backgroundColor: 'rgba(255,255,255,0.22)' },
-  stu: { position: 'absolute', left: (MARGEM - 40) / 2, bottom: 36, width: 40, height: 44 },
-  legenda: { marginTop: 10, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  passo: { flexBasis: '48%', flexGrow: 1, minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10, paddingVertical: 6,
-    borderRadius: 10, borderWidth: 2, borderBottomWidth: 4 },
-  passoFalta: { borderStyle: 'dashed', borderColor: '#9D7349', borderBottomWidth: 2, backgroundColor: '#FFFAF2' },
-  passoNumero: { color: 'rgba(255,255,255,0.85)', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
-  passoTexto: { flex: 1, color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17 },
+  vao: { position: 'relative', flex: 1, alignSelf: 'center', flexDirection: 'row', gap: 4, paddingVertical: 6 },
+  trilho: { position: 'absolute', left: -8, right: -8, height: 3, borderRadius: 2, backgroundColor: '#8D5C2C' },
+  tabuaLugar: { flex: 1, minHeight: 32 },
+  tabuaFalta: { flex: 1, minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#9D7349',
+    borderRadius: 10, backgroundColor: 'rgba(255,250,242,0.88)', opacity: 0.85 },
+  tabua: { flex: 1, minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderBottomWidth: 6, borderRadius: 10 },
+  tabuaNumero: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
+  stu: { zIndex: 3, width: 32, height: 32 },
+  legenda: { marginBottom: 12, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  passo: { flexBasis: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 6, paddingHorizontal: 8, paddingVertical: 6,
+    borderRadius: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C8B69F', backgroundColor: '#FBF8F3' },
+  passoNumero: { width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5D8C8' },
+  passoNumeroTexto: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14 },
+  passoTexto: { flex: 1, color: '#5A432C', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 12, lineHeight: 17 },
 });
 
 const aluno = StyleSheet.create({
