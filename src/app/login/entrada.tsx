@@ -15,9 +15,17 @@ const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * a senha pode ser mostrada e o Caps Lock ativado é avisado. Na tela larga, a paisagem do mundo ocupa a metade direita;
  * no celular, vira uma faixa acima do título.
  */
-export function Entrada() {
-  const [googleDisponivel, setGoogleDisponivel] = useState(false);
-  const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
+type ConfigAcessoInicial = {
+  google: boolean;
+  recuperacao: boolean;
+  visitante: boolean;
+};
+
+export function Entrada({ configInicial }: { configInicial?: ConfigAcessoInicial }) {
+  const [googleDisponivel, setGoogleDisponivel] = useState(Boolean(configInicial?.google));
+  const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(Boolean(configInicial?.recuperacao));
+  const [visitanteDisponivel, setVisitanteDisponivel] = useState(Boolean(configInicial?.visitante));
+  const [configuracaoCarregada, setConfiguracaoCarregada] = useState(Boolean(configInicial));
   const [verificando, setVerificando] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -43,8 +51,14 @@ export function Entrada() {
     }
 
     const codigo = new URLSearchParams(window.location.search).get('erro');
-    if (codigo && ['google_invalido', 'google_indisponivel', 'google_conta_existente'].includes(codigo)) setErro(codigo);
-    void cliente.configuracaoAcesso().then(config => { if (ativo) setGoogleDisponivel(config.google); })
+    if (codigo && ['google_invalido', 'google_indisponivel', 'google_conta_existente', 'nao_autenticado'].includes(codigo)) setErro(codigo);
+    void cliente.configuracaoAcesso().then(config => {
+      if (ativo) {
+        setGoogleDisponivel(config.google);
+        setRecuperacaoDisponivel(Boolean(config.recuperacao));
+        setVisitanteDisponivel(Boolean(config.visitante));
+      }
+    })
       .catch(() => undefined).finally(() => { if (ativo) setConfiguracaoCarregada(true); });
     void verificarSessao();
     return () => { ativo = false; };
@@ -87,6 +101,22 @@ export function Entrada() {
     }
   }
 
+  async function experimentarSemConta() {
+    if (emEnvio.current) return;
+    emEnvio.current = true;
+    setEnviando(true);
+    setErro(null);
+    try {
+      await cliente.entrarVisitante();
+      window.location.replace('/');
+    } catch (falha) {
+      setErro(falha instanceof ErroStudoo ? falha.codigo : 'rede');
+      setTremor((anterior) => anterior + 1);
+      setEnviando(false);
+      emEnvio.current = false;
+    }
+  }
+
   function conferirCapsLock(evento: KeyboardEvent<HTMLInputElement>) {
     setCapsLock(evento.getModifierState('CapsLock'));
   }
@@ -112,10 +142,21 @@ export function Entrada() {
           {verificando ? <Skeleton /> : (
             <form className="formulario" method="post" noValidate onSubmit={entrar} aria-busy={enviando}
               data-tremor={tremor ? (tremor % 2 ? 'a' : 'b') : undefined}>
-              <Botao variante="secundario" disabled={!googleDisponivel || enviando}
-                onClick={() => { window.location.assign('/api/auth/google/iniciar'); }}>{mensagens.acesso.google}</Botao>
-              {configuracaoCarregada && !googleDisponivel && <p className="acesso-ajuda">{mensagens.acesso.googleIndisponivel}</p>}
-              <p className="acesso-divisor">{mensagens.acesso.ou}</p>
+              {visitanteDisponivel && (
+                <div className="acesso-visitante">
+                  <Botao variante="primario" disabled={enviando} onClick={() => void experimentarSemConta()}>
+                    {mensagens.acesso.experimentar}
+                  </Botao>
+                  <p className="acesso-ajuda">{mensagens.acesso.experimentarAviso}</p>
+                </div>
+              )}
+              {configuracaoCarregada && googleDisponivel && (
+                <Botao variante="secundario" disabled={enviando}
+                  onClick={() => { window.location.assign('/api/auth/google/iniciar'); }}>{mensagens.acesso.google}</Botao>
+              )}
+              {(visitanteDisponivel || (configuracaoCarregada && googleDisponivel)) && (
+                <p className="acesso-divisor">{mensagens.acesso.ou}</p>
+              )}
               <div className="campo">
                 <label htmlFor="email">{mensagens.login.email}</label>
                 <input ref={campoEmail} id="email" name="email" type="email" inputMode="email" autoComplete="username"
@@ -144,12 +185,14 @@ export function Entrada() {
                   <p className="campo-erro" id="senha-erro"><span className="sinal" aria-hidden="true">!</span>{errosCampo.senha}</p>
                 )}
               </div>
-              <a className="acesso-link" href="/recuperar" onClick={() => {
-                try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
-              }}>{mensagens.acesso.esqueci}</a>
+              {configuracaoCarregada && recuperacaoDisponivel && (
+                <a className="acesso-link" href="/recuperar" onClick={() => {
+                  try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
+                }}>{mensagens.acesso.esqueci}</a>
+              )}
               {erro && <EstadoErro codigo={erro} />}
               <AcaoPrincipal>
-                <Botao type="submit" disabled={enviando}>
+                <Botao type="submit" variante={visitanteDisponivel ? 'secundario' : 'primario'} disabled={enviando}>
                   {enviando ? (
                     <>
                       <span className="carregando" aria-hidden="true"><span /><span /><span /></span>

@@ -351,7 +351,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-parte__selo .icone { width: 22px; height: 22px; }
 .caminho-parte__texto { display: flex; grid-area: texto; align-items: baseline; justify-content: space-between; gap: 8px; min-width: 0; }
 .caminho-parte__numero { font-family: Quicksand, sans-serif; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.02em; }
-.caminho-parte__andamento { color: var(--texto2); font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
+.caminho-parte__andamento { color: #4a5568; font-size: 0.75rem; font-weight: 800; white-space: nowrap; }
 .caminho-parte__barra { grid-area: barra; height: 8px; overflow: hidden; border-radius: 999px; background: var(--gelo); }
 .caminho-parte__barra > span { display: block; height: 100%; border-radius: inherit; background: var(--acao); transition: width 600ms ease-out; }
 .caminho-parte[data-vencida] .caminho-parte__selo { color: #7a4a00; background: var(--ouro-face); box-shadow: 0 4px 0 var(--ouro-labio); }

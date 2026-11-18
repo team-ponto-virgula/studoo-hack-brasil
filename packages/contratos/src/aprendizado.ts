@@ -194,6 +194,7 @@ const codigosErro = [
   "avaliacao_invalida",
   "credenciais_invalidas",
   "limite_login",
+  "limite_visitante",
   "ia_indisponivel",
   "limite_geracoes",
 ] as const;
@@ -311,8 +312,9 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     ensinarStu: (id: string, texto: string) => solicitar<FeedbackEnsino>(`/estudio/licoes/${encodeURIComponent(id)}/ensinar`, 'POST', { texto }),
     transcrever: (arquivo: ArquivoEstudo & { idioma?: string }) => solicitar<{ texto: string }>('/estudio/voz', 'POST', arquivo),
     login: (email: string, senha: string) => solicitar<Autenticacao>("/login", "POST", { email, senha }),
+    entrarVisitante: () => solicitar<Autenticacao>("/visitante", "POST"),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
-    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa }>("/auth/config"),
+    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean }>("/auth/config"),
     recuperarSenha: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/senha/recuperar`, 'POST', { email }),
     redefinirSenha: (email: string, codigo: string, senha: string, mobile = false) => solicitar<{ alterada: boolean }>(`${mobile ? '/mobile' : ''}/senha/redefinir`, 'POST', { email, codigo, senha }),
     trocarCodigoGoogle: (codigo: string, verificador: string) => solicitar<SessaoNativa>('/mobile/google', 'POST', { codigo, verificador }),

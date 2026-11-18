@@ -10,23 +10,23 @@
 .estudo-principal:has(.painel--aula) {
   width: min(100%, 57rem);
   margin-inline: auto;
-  padding: clamp(16px, 4vw, 36px) clamp(20px, 5vw, 56px) 0;
+  padding: clamp(12px, 2.5vw, 24px) clamp(16px, 4vw, 48px) 0;
 }
 
 .painel--aula {
   display: flex;
   width: 100%;
   min-width: 0;
-  min-height: calc(100svh - clamp(16px, 4vw, 36px));
+  min-height: calc(100svh - clamp(12px, 2.5vw, 24px));
   flex-direction: column;
-  gap: clamp(20px, 4vw, 36px);
+  gap: clamp(12px, 2.2vw, 22px);
   animation: none;
 }
 
 .aula-topo { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(10px, 3vw, 22px); }
 /* O X e a barra de andamento ficam à vista ao rolar uma etapa longa; o que a tela leva ao topo para abaixo deles. */
-.aula-topo { position: sticky; z-index: 3; inset-block-start: 0; margin: calc(-1 * clamp(16px, 4vw, 36px)) calc(-1 * clamp(20px, 5vw, 56px)) 0;
-  padding: clamp(10px, 2.5vw, 20px) clamp(20px, 5vw, 56px) 10px; background: var(--fundo); }
+.aula-topo { position: sticky; z-index: 3; inset-block-start: 0; margin: calc(-1 * clamp(12px, 2.5vw, 24px)) calc(-1 * clamp(16px, 4vw, 48px)) 0;
+  padding: clamp(8px, 1.8vw, 14px) clamp(16px, 4vw, 48px) 8px; background: var(--fundo); }
 :root:has(.painel--aula) { scroll-padding-top: 84px; }
 
 .aula-fechar {
@@ -45,7 +45,10 @@
 .aula-fechar .icone { width: 26px; height: 26px; stroke-width: 3; }
 .aula-fechar:hover:not(:disabled) { color: var(--texto); background: var(--nevoa); }
 .aula-fechar:disabled { cursor: wait; opacity: 0.6; }
-.aula-andamento { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.aula-andamento { display: grid; gap: 2px; min-width: 0; }
+.aula-andamento__linha { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px; }
+.aula-titulo-topo { margin: 0; color: var(--texto2); font-size: 0.75rem; font-weight: 800; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aula-pergunta { font-size: clamp(1.25rem, 2.8vw, 1.625rem); line-height: 1.2; margin: 0 0 6px; }
 
 /* Barra de andamento: grossa, com um brilho na faixa cheia, que avança com uma mola curta. */
 .aula-barra { position: relative; height: 18px; overflow: hidden; border-radius: 999px; background: var(--gelo); }
@@ -215,8 +218,8 @@
   position: sticky;
   z-index: 2;
   inset-block-end: 0;
-  margin-inline: calc(-1 * clamp(20px, 5vw, 56px));
-  padding: 16px clamp(20px, 5vw, 56px) calc(18px + env(safe-area-inset-bottom));
+  margin-inline: calc(-1 * clamp(16px, 4vw, 48px));
+  padding: 12px clamp(16px, 4vw, 48px) calc(14px + env(safe-area-inset-bottom));
 }
 
 /* O fundo do rodapé vai de uma borda à outra da tela, mesmo com a aula numa coluna central. */
@@ -233,6 +236,8 @@
 }
 
 .estudo:has(.painel--aula) { overflow-x: clip; }
+.painel--aula[data-ponte-aberta] .aula-miolo { display: none; }
+.painel--aula[data-ponte-aberta] .aula-rodape { display: none; }
 .aula-rodape[data-retorno='certa'] { --fundo-rodape: #e3f6ea; --linha-rodape: #e3f6ea; }
 .aula-rodape[data-retorno='errada'] { --fundo-rodape: #fff1e0; --linha-rodape: #fff1e0; }
 
@@ -242,36 +247,37 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 16px 24px;
+  gap: 10px 16px;
   margin-inline: auto;
 }
 
-.aula-rodape__acoes { display: flex; flex: 1 1 auto; justify-content: flex-end; gap: 12px; }
-.aula-rodape__acoes > .botao { min-width: min(100%, 11rem); min-height: 52px; font-weight: 900; }
+.aula-rodape__acoes { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 10px; }
+.aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 44px; font-weight: 900; }
+.aula-rodape__acoes > .botao--texto { min-width: auto; padding-inline: 10px; }
 
 .aula-retorno {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 14px;
-  flex: 1 1 22rem;
+  gap: 12px;
+  flex: 1 1 20rem;
   animation: aula-retorno 320ms cubic-bezier(0.2, 0.9, 0.3, 1.2) backwards;
 }
 
 .aula-retorno__icone {
   position: relative;
   display: grid;
-  width: 56px;
-  height: 56px;
+  width: 42px;
+  height: 42px;
   place-items: center;
   border-radius: 50%;
   color: var(--fundo);
   background: var(--sucesso-claro);
-  box-shadow: 0 4px 0 var(--sucesso);
+  box-shadow: 0 3px 0 var(--sucesso);
   animation: aula-icone 460ms cubic-bezier(0.2, 0.9, 0.3, 1.5) 80ms backwards;
 }
 
-.aula-retorno__icone .icone { width: 30px; height: 30px; stroke-width: 3.2; }
+.aula-retorno__icone .icone { width: 24px; height: 24px; stroke-width: 3.2; }
 .aula-rodape[data-retorno='errada'] .aula-retorno__icone { background: #e58a1f; box-shadow: 0 4px 0 #b4650d; }
 .aula-retorno h2 { color: var(--sucesso); font-size: 1.375rem; }
 .aula-retorno h2:focus { outline: none; }

@@ -235,6 +235,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [expliqueAberto, setExpliqueAberto] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
+  const cartaoCitacaoRef = useRef<HTMLElement>(null);
   /** Onde a pessoa estava em cada etapa ao sair dela: a "Etapa anterior" volta para lá, sem rolar tudo de novo. */
   const posicoesDasEtapas = useRef<Record<number, number>>({});
   const voltandoEtapa = useRef(false);
@@ -418,6 +419,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           evento.preventDefault();
           continuarAgora.current();
         }
+        return;
+      }
+      if (evento.key === 'Enter' && !alvo?.closest('button, a, textarea') && exercicio && respostaCompleta(exercicio, resposta) && !ocupado) {
+        evento.preventDefault();
+        formulario.current?.requestSubmit();
         return;
       }
       if (exercicio?.tipo !== 'multipla_escolha' || alvo?.matches('input[type="text"], textarea')) return;
@@ -618,19 +624,24 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     );
   }
 
+  const ponteAberta = Boolean(avaliacao && !avaliacao.correta && pedidoPonte > 0);
+
   return (
-    <article className="painel painel--aula" data-retorno={retorno}>
+    <article className="painel painel--aula" data-retorno={retorno} data-ponte-aberta={ponteAberta || undefined}>
       <header className="aula-topo">
         <button type="button" className="aula-fechar" aria-label={t.voltar} disabled={ocupado} onClick={() => sairAgora.current()}>
           <Icone nome="fechar" />
         </button>
         <div className="aula-andamento">
-          <div className="aula-barra" role="progressbar" aria-label={andamento} aria-valuemin={0} aria-valuemax={total}
-            aria-valuenow={revisao ? total : passo + 1}>
-            <span className="aula-barra__preenchimento"
-              style={{ '--progresso': revisao ? 1 : (avaliacao?.correta ? passo + 1 : passo + 0.5) / total } as CSSProperties} />
+          <div className="aula-andamento__linha">
+            <div className="aula-barra" role="progressbar" aria-label={andamento} aria-valuemin={0} aria-valuemax={total}
+              aria-valuenow={revisao ? total : passo + 1}>
+              <span className="aula-barra__preenchimento"
+                style={{ '--progresso': revisao ? 1 : (avaliacao?.correta ? passo + 1 : passo + 0.5) / total } as CSSProperties} />
+            </div>
+            <span className="aula-posicao" aria-hidden="true">{andamento}</span>
           </div>
-          <span className="aula-posicao" aria-hidden="true">{andamento}</span>
+          <p className="aula-titulo-topo">{semQuebrarHifen(licao.titulo)}</p>
         </div>
       </header>
       {/* Na revisão rápida, o quadro entra de novo, mesmo quando o exercício é o mesmo (o último, pulado agora). */}
@@ -642,7 +653,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           </button>
         )}
         <p className="aula-etapa" data-etapa={etapa.tipo}><Icone nome={iconesDaEtapa[etapa.tipo]} />{nomeEtapa}</p>
-        <h1 tabIndex={-1}>{semQuebrarHifen(licao.titulo)}</h1>
+        {etapa.tipo === 'conceito' && <h1 tabIndex={-1}>{semQuebrarHifen(licao.titulo)}</h1>}
+        {etapa.tipo === 'pratica' && <h1 tabIndex={-1}>{semQuebrarHifen(licao.titulo)}</h1>}
         {avisoRetomada && (
           <p className="aula-aviso" role="status">
             {t.retomada}{' '}
@@ -666,7 +678,13 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                       <button key={idx} type="button" className="aula-citacao-marcador"
                         aria-label={`Ver fonte ${idx + 1} de ${licao.referencias!.length}`}
                         aria-expanded={citacaoAberta === idx}
-                        onClick={() => setCitacaoAberta((atual) => (atual === idx ? null : idx))}>
+                        onClick={() => {
+                          setCitacaoAberta(idx);
+                          window.requestAnimationFrame(() => {
+                            cartaoCitacaoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                            cartaoCitacaoRef.current?.focus({ preventScroll: true });
+                          });
+                        }}>
                         [{idx + 1}]
                       </button>
                     ))}
@@ -678,7 +696,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (() => {
               const ref = licao.referencias[citacaoAberta];
               return (
-                <aside className="aula-citacao" aria-label={mensagens.estudio.fonteMaterial} tabIndex={-1}>
+                <aside ref={cartaoCitacaoRef} className="aula-citacao" aria-label={mensagens.estudio.fonteMaterial} tabIndex={-1}>
                   <div className="aula-citacao__topo">
                     <span className="aula-citacao__selo">[{citacaoAberta + 1}] {mensagens.estudio.fonteMaterial}</span>
                     <strong>{ref.nome} · {ref.localizacao ?? mensagens.estudio.pagina(ref.pagina)}</strong>
@@ -688,7 +706,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 </aside>
               );
             })()}
-            {(licao.recurso?.tipo === 'imagem' || licao.recurso?.tipo === 'acorde') && <RecursoDaLicao recurso={licao.recurso} />}
+            {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
           </>
         )}
         {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
@@ -716,13 +734,15 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           }
           return (
             <>
-              <div className="aula-stu-estado" data-estado={stuEstado}>
-                <div className="aula-stu-estado__avatar" aria-hidden="true">
-                  <Stu />
-                  <span className="aula-stu-estado__adereco" />
+              {stuEstado !== 'neutro' && (
+                <div className="aula-stu-estado" data-estado={stuEstado}>
+                  <div className="aula-stu-estado__avatar" aria-hidden="true">
+                    <Stu />
+                    <span className="aula-stu-estado__adereco" />
+                  </div>
+                  <p className="aula-stu-estado__balao">{stuFala}</p>
                 </div>
-                <p className="aula-stu-estado__balao">{stuFala}</p>
-              </div>
+              )}
               <EtapaExercicio exercicio={exercicio} indice={indice} total={exercicios.length} resposta={resposta} mudar={mudarResposta}
                 consulta={licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' ? licao.recurso : undefined}
                 explicacao={licao.conceito} exemplo={licao.exemplo}
@@ -741,6 +761,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       {exercicio && (
         <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
           ultimaResposta={respostaLegivel(exercicio, resposta)}
+          aoVoltarExercicio={tentarDeNovo}
           aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
           aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
       )}
@@ -777,12 +798,6 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                       : t.associar.certos(avaliacao.certos.length, exercicio.esquerda.length)}
                   </p>
                 )}
-                {!avaliacao.correta && pedidoPonte === 0 && (
-                  <span className="aula-retorno__link">
-                    {/* Um toque só: pede o outro exemplo e mostra o cartão, que rola até ficar acima do painel. */}
-                    <Botao variante="texto" disabled={ocupado} onClick={() => setPedidoPonte((atual) => atual + 1)}>{mensagens.estudio.verPonte}</Botao>
-                  </span>
-                )}
               </div>
             </section>
           )}
@@ -795,8 +810,14 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             return falta && <p className="aula-rodape__nota" aria-live="polite">{textoDaFalta(falta)}</p>;
           })()}
           <div className="aula-rodape__acoes">
-            {avaliacao && !avaliacao.correta && <Botao disabled={ocupado} onClick={tentarDeNovo}>{t.tentarDeNovo}</Botao>}
-            {acao}
+            {avaliacao && !avaliacao.correta && pedidoPonte === 0 && (
+              <Botao variante="primario" disabled={ocupado} onClick={() => setPedidoPonte((atual) => atual + 1)}>
+                {mensagens.estudio.verPonte}
+              </Botao>
+            )}
+            {avaliacao && !avaliacao.correta && <Botao variante="secundario" disabled={ocupado} onClick={tentarDeNovo}>{t.tentarDeNovo}</Botao>}
+            {avaliacao && !avaliacao.correta && acao}
+            {!(avaliacao && !avaliacao.correta) && acao}
           </div>
         </div>
       </footer>
@@ -808,8 +829,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 function EtapaExemplo({ licao, titulo }: { licao: LicaoDetalhe; titulo: Ref<HTMLHeadingElement> }) {
   return (
     <section className="aula-quadro" data-etapa="exemplo" aria-labelledby="etapa-aula">
-      {/* O selo da etapa já diz "Exemplo" no alto: o título do quadro fica para o leitor de tela (e recebe o foco). */}
-      <h2 id="etapa-aula" ref={titulo} tabIndex={-1} className="somente-leitor">{licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}</h2>
+      <h1 id="etapa-aula" ref={titulo} tabIndex={-1}>{licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}</h1>
       <p>{licao.exemplo}</p>
       {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
       {licao.passos && (
@@ -1561,9 +1581,7 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
 
   return (
     <section className="aula-quadro" data-etapa="exercicio" data-tipo={exercicio.tipo} aria-labelledby="etapa-aula">
-      {/* O selo da etapa já diz "Exercício 1 de 2" no alto: o título do quadro fica para o leitor de tela (e recebe o foco). */}
-      <h2 id="etapa-aula" ref={titulo} tabIndex={-1} className="somente-leitor">{total > 1 ? t.exercicioDe(indice + 1, total) : t.exercicio}</h2>
-      <p>{exercicio.enunciado}</p>
+      <h1 id="etapa-aula" ref={titulo} tabIndex={-1} className="aula-pergunta">{exercicio.enunciado}</h1>
       {exercicio.contexto && <p>{exercicio.contexto}</p>}
       {exercicio.trecho && (
         <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}

@@ -1,13 +1,13 @@
 @font-face {
   font-family: Quicksand;
-  src: url('/marca/Quicksand[wght].ttf') format('truetype');
+  src: url('/marca/quicksand-wght.woff2') format('woff2');
   font-display: swap;
   font-weight: 300 700;
 }
 
 @font-face {
   font-family: Nunito;
-  src: url('/marca/Nunito[wght].ttf') format('truetype');
+  src: url('/marca/nunito-wght.woff2') format('woff2');
   font-display: swap;
   font-weight: 200 1000;
 }
@@ -524,7 +524,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 .opcoes span { overflow-wrap: anywhere; }
 
 /* Lição concluída: tela inteira e centrada, com chuva de confete, raios girando atrás do Stu, que pula, e o resumo. */
-.estudo-principal:has(.painel--concluida) { width: min(100%, 40rem); margin-inline: auto; padding-top: clamp(24px, 6vw, 56px); }
+.estudo-principal:has(.painel--concluida) { width: min(100%, 54rem); margin-inline: auto; padding-top: clamp(24px, 6vw, 56px); }
 .painel--concluida { display: grid; justify-items: center; text-align: center; }
 .painel--concluida p { margin-inline: auto; }
 .conclusao-cena { position: relative; display: grid; width: 190px; height: 172px; place-items: end center; margin-bottom: 14px; }
@@ -600,6 +600,9 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
   .conclusao-numeros__rotulo { min-width: 0; font-size: 0.625rem; letter-spacing: 0; padding: 6px 2px; gap: 3px; }
   .conclusao-numeros__rotulo .icone { width: 13px; height: 13px; flex-shrink: 0; }
   .conclusao-numeros__valor { font-size: 1.0625rem; padding: 10px 4px; }
+  .estudo-cabecalho { flex-wrap: wrap; gap: 6px 8px; padding-block: max(6px, env(safe-area-inset-top)) 8px; }
+  .estudo-identificacao { order: 3; flex: 1 1 100%; min-width: 0; }
+  .selo-sincronia { max-width: 100%; white-space: normal; line-height: 1.25; }
 }
 
 .conclusao-numeros__rotulo {
@@ -856,6 +859,7 @@ button { touch-action: manipulation; }
 .acesso-divisor { display: flex; align-items: center; gap: 12px; color: var(--texto2); font-size: .875rem; }
 .acesso-divisor::before, .acesso-divisor::after { content: ''; flex: 1; height: 1px; background: var(--gelo); }
 .acesso-ajuda { font-size: .875rem; color: var(--texto2); }
+.acesso-visitante { display: grid; gap: 8px; padding: 14px; border: 2px solid var(--gelo); border-radius: 16px; background: #f8faff; }
 .acesso-link { display: inline-flex; min-height: 44px; align-items: center; color: var(--acao); font-weight: 800; text-underline-offset: 4px; }
 .recuperar { max-width: 540px; margin: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); }
 .recuperar-cartao { margin-top: 32px; padding: 28px; border: 2px solid var(--gelo); border-radius: 24px; background: var(--fundo); }

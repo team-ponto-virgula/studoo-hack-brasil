@@ -23,6 +23,7 @@ const statusErros: Record<CodigoErro, number> = {
   avaliacao_invalida: 400,
   credenciais_invalidas: 401,
   limite_login: 429,
+  limite_visitante: 429,
   ia_indisponivel: 503,
   limite_geracoes: 429,
 };

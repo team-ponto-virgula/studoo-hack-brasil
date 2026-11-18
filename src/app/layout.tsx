@@ -20,5 +20,13 @@ export const viewport: Viewport = {
 };
 
 export default function Layout({ children }: { children: ReactNode }) {
-  return <html lang="pt-BR"><body><AmbienteMovimento />{children}</body></html>;
+  return (
+    <html lang="pt-BR">
+      <head>
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/nunito-wght.woff2" />
+        <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/quicksand-wght.woff2" />
+      </head>
+      <body><AmbienteMovimento />{children}</body>
+    </html>
+  );
 }

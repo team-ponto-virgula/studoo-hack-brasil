@@ -483,7 +483,9 @@
   background: #2f7d22;
   box-shadow: 0 4px 0 #1e5916;
 }
+.ponte-cabeca__acoes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .ponte-legenda {
+  scroll-margin-bottom: calc(132px + env(safe-area-inset-bottom));
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
@@ -492,7 +494,8 @@
   list-style: none;
 }
 @media (max-width: 600px) {
-  .ponte-legenda { grid-template-columns: minmax(0, 1fr); }
+  .ponte-cabeca__acoes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ponte-legenda { grid-template-columns: minmax(0, 1fr); }
 }
 .ponte-legenda li {
   display: flex;

@@ -53,20 +53,20 @@ type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'a
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 type Sincronia = { estado: 'atualizando' | 'atualizado' | 'offline'; em: number | null };
 
-function textoSincronia(s: Sincronia, agora: number) {
+function textoSincronia(s: Sincronia, agora: number, temProgresso: boolean) {
   if (s.estado === 'atualizando') return mensagens.sincronia.atualizando;
-  if (s.estado === 'offline') return mensagens.sincronia.offline;
+  if (s.estado === 'offline') return temProgresso ? mensagens.sincronia.offline : mensagens.sincronia.offlineCurto;
   if (!s.em) return mensagens.sincronia.salvo;
   const min = Math.floor((agora - s.em) / 60_000);
   if (min < 1) return mensagens.sincronia.agora;
   return mensagens.sincronia.minutos(min);
 }
 
-function SeloSincronia({ sincronia, agora }: { sincronia: Sincronia; agora: number }) {
+function SeloSincronia({ sincronia, agora, temProgresso }: { sincronia: Sincronia; agora: number; temProgresso: boolean }) {
   return (
     <span className="selo-sincronia" data-estado={sincronia.estado} role="status" aria-live="polite">
       <span className="selo-sincronia__ponto" aria-hidden="true" />
-      <span>{textoSincronia(sincronia, agora)}</span>
+      <span>{textoSincronia(sincronia, agora, temProgresso)}</span>
     </span>
   );
 }
@@ -106,10 +106,27 @@ export function Estudo() {
   const ultimaBusca = useRef(0);
   const geracaoAtiva = useRef<AbortController | null>(null);
   const principal = useRef<HTMLElement>(null);
+  const objetivoRef = useRef(objetivo);
+  objetivoRef.current = objetivo;
 
-  const irParaLogin = useCallback(() => {
+  useEffect(() => {
+    try {
+      const salvo = sessionStorage.getItem('studoo.rascunho.objetivo');
+      if (salvo) {
+        setObjetivo(salvo);
+        sessionStorage.removeItem('studoo.rascunho.objetivo');
+      }
+    } catch { /* Sem armazenamento local: segue sem rascunho. */ }
+  }, []);
+
+  const irParaLogin = useCallback((expirada = false) => {
     setInicio('carregando');
-    window.location.replace('/login');
+    if (expirada) {
+      try {
+        if (objetivoRef.current.trim()) sessionStorage.setItem('studoo.rascunho.objetivo', objetivoRef.current);
+      } catch { /* Sem armazenamento local: segue sem rascunho. */ }
+    }
+    window.location.replace(expirada ? '/login?erro=nao_autenticado' : '/login');
   }, []);
 
   const carregar = useCallback(async (cancelado: () => boolean) => {
@@ -154,7 +171,7 @@ export function Estudo() {
       if (cancelado()) return;
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
       if (codigo === 'nao_autenticado') {
-        irParaLogin();
+        irParaLogin(true);
         return;
       }
       setErro(codigo);
@@ -273,7 +290,7 @@ export function Estudo() {
       return { ok: true, dados: await operacao() };
     } catch (falha) {
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
-      if (codigo === 'nao_autenticado') irParaLogin();
+      if (codigo === 'nao_autenticado') irParaLogin(true);
       else setErro(codigo);
       return { ok: false, codigo };
     } finally {
@@ -330,7 +347,7 @@ export function Estudo() {
       if (controle.signal.aborted) return;
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
       if (codigo === 'nao_autenticado') {
-        irParaLogin();
+        irParaLogin(true);
         return;
       }
       navegar({ tipo: 'objetivo' });
@@ -431,15 +448,6 @@ export function Estudo() {
   const visivel = !carregandoTrilha && !carregandoLicao;
   const comNavegacao = planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(tela.tipo) && visivel;
 
-  if (inicio === 'carregando') {
-    return (
-      <main className="inicializacao" id="conteudo-principal">
-        <Logo />
-        <Skeleton />
-      </main>
-    );
-  }
-
   const acaoDoErro = (codigoErro: string) =>
     codigoErro === 'limite_geracoes' || codigoErro === 'limite_estudio' ? (
       <Botao variante="secundario" onClick={() => { setErro(null); setInicio('pronto'); navegar({ tipo: 'planos' }); }}>
@@ -490,7 +498,9 @@ export function Estudo() {
             <span className="estudo-identificacao__contexto">
               {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
             </span>
-            <SeloSincronia sincronia={sincronia} agora={agora} />
+            {inicio === 'pronto' && ((tela.tipo === 'planos' && planos.length > 0) || tela.tipo === 'plano') && (
+              <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={planos.length > 0} />
+            )}
           </span>
           <div className="estudo-marca"><Logo /></div>
           <div className="estudo-conta">
@@ -502,6 +512,7 @@ export function Estudo() {
         <main id="conteudo-principal" className="estudo-principal" tabIndex={-1} ref={principal} aria-busy={ocupado}>
           <p className="somente-leitor" role="status">{anuncio}</p>
           {erro && <EstadoErro codigo={erro}>{acaoDoErro(erro)}</EstadoErro>}
+          {inicio === 'carregando' && <SkeletonTrilha />}
           {inicio === 'pronto' && carregandoTrilha && <SkeletonTrilha />}
           {inicio === 'pronto' && carregandoLicao && (tela.tipo === 'geracao' && geracao?.proposta
             ? <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />
@@ -547,7 +558,11 @@ export function Estudo() {
           {visivel && tela.tipo === 'geracao' && geracao && (
             <GeracaoAoVivo geracao={geracao} ocupado={ocupado}
               cancelar={cancelarGeracao} comecar={(proposta) => void comecar(proposta)} ajustar={() => navegar({ tipo: 'objetivo' })}
-              existente={geracao.proposta ? planos.find((plano) => plano.titulo === geracao.proposta?.titulo) : undefined}
+              existente={geracao.proposta
+                ? planos.find((plano) =>
+                    plano.titulo === geracao.proposta?.titulo ||
+                    (geracao.proposta?.titulo.toLowerCase().includes('fraç') && plano.titulo.toLowerCase().includes('fraç')))
+                : undefined}
               abrirExistente={(id) => void abrirPlano(id)} />
           )}
           {visivel && tela.tipo === 'plano' && (

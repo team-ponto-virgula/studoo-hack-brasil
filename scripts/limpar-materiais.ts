@@ -1,10 +1,10 @@
 import { banco } from '../src/servidor/banco/cliente';
+import { limparExpirados } from '../src/servidor/estudio/limpeza';
+
 // Agendar a cada hora no mesmo ambiente do servidor. Não imprime texto ou IDs de pessoas.
 try {
-  const resultado = await banco.materialEstudo.deleteMany({
-    where: { expiraEm: { lte: new Date() } },
-  });
-  console.log(JSON.stringify({ materiaisExpiradosRemovidos: resultado.count }));
+  const resultado = await limparExpirados();
+  console.log(JSON.stringify(resultado));
 } finally {
   await banco.$disconnect();
 }
