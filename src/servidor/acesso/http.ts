@@ -107,6 +107,14 @@ function validarCanalMobile(request: Request, indisponivel: "nao_encontrado" | "
 
   const url = new URL(request.url);
   const autorizada = new URL(origem);
+  if (process.env.STUDOO_PROXY_HTTPS === "1") {
+    const proto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+    const hostEncaminhado = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() || request.headers.get("host");
+    if ((proto !== "https" && url.protocol !== "https:") || hostEncaminhado !== autorizada.host) {
+      throw new FalhaApi(indisponivel);
+    }
+    return;
+  }
   // O Next normaliza o host interno de Request.url no HTTPS local.
   if (url.protocol !== "https:" || url.port !== autorizada.port || request.headers.get("host") !== autorizada.host) {
     throw new FalhaApi(indisponivel);
