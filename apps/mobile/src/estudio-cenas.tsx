@@ -58,9 +58,11 @@ function Tabua({ ativa, erro, vencida, ordem, reduzir }: { ativa: boolean; erro?
  * com o desafio) e a margem "De volta ao desafio". Ao vencer, as tábuas ficam verdes e o Stu atravessa, depois de a lição
  * trazer a cena para a vista (`aoMedir`). Embaixo, a legenda das tábuas com o texto de cada uma, legível no celular.
  */
-export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir }: {
+export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir }: {
   /** A resposta errada em texto legível (o texto da opção, não o código). */
   resposta: string;
+  /** Texto da 1ª tábua sem resposta (a ilustração da apresentação usa "Sua tentativa", como as tábuas da web). */
+  primeiraTabua?: string;
   temPonte: boolean;
   /** A 3ª tábua (o novo exemplo): na ponte em passos (rodada 4D da web), só entra com o "Ver exemplo". */
   exemplo?: boolean;
@@ -90,7 +92,7 @@ export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, con
   // Como a legenda da web (rodada 3A): a tentativa inteira, cortada só depois de 80 caracteres.
   const tentativa = resposta.length > 80 ? `${resposta.slice(0, 79).trimEnd()}…` : resposta;
   const passos = [
-    { texto: tentativa ? m.pontePassoErro(tentativa) : m.ponteMargemErro, ativa: true, erro: true },
+    { texto: tentativa ? m.pontePassoErro(tentativa) : (primeiraTabua ?? m.ponteMargemErro), ativa: true, erro: true },
     { texto: m.pontePassoExplicacao, ativa: temPonte || montada },
     { texto: m.pontePassoExemplo, ativa: (temPonte && exemplo) || montada },
     { texto: m.pontePassoDesafio, ativa: desafio || vencida },

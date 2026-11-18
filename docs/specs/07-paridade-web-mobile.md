@@ -71,3 +71,12 @@ O app segue a web 4.2.1 (`2a43314`): `trilhaRepetida()` no lugar da regra fixa d
 - "Experimentar sem conta": o mesmo bloco da web (botão principal e aviso), só quando `/api/auth/config` devolve `visitante: true`. O aviso é o do aparelho (`experimentarAvisoApp`). O toque pede `POST /api/mobile/visitante` e segue o caminho do login por senha (SecureStore e entrada no app). Com o visitante oferecido, "Entrar" fica secundário, como na web. `limite_visitante` aparece no cartão de erro da entrada. No site publicado, o visitante continua desligado.
 - Ponte reaberta: o aviso neutro `ponteReabertaAviso` fica logo abaixo da cena, no lugar do elogio da vitória. O botão do desafio diz "Verificar", texto que vem do contrato.
 
+## Rodadas 4.4 e 4.5 no app
+
+O app segue a web 4.5.1 (`c56460a`). "Ver como funciona" na entrada abre a apresentação sem sessão, com os quatro primeiros passos. Ela termina em "Entendi", que volta à entrada com o foco no link, ou em "Experimentar sem conta", com o visitante ligado. As diferenças vêm do toque e da tela estreita:
+
+- Fechar a apresentação: o voltar do aparelho fecha, como o Esc da web. Na prévia web do app, o Esc e as setas também funcionam. Na abertura, a web põe o foco do teclado no título do passo. No app, o TalkBack vai ao título e o foco do teclado segue o sistema.
+- Último passo com "Experimentar sem conta": abaixo de 600 px, os botões ficam um sobre o outro, para o rótulo caber numa linha. "Voltar" fica em cima e a ação principal embaixo, no lugar de "Continuar". Na web, abaixo de 768 px, os dois botões dividem a largura e o rótulo quebra em duas linhas.
+- Os quatro momentos usam as peças do próprio app, paradas: o cartão "Fonte do seu material" da lição, a cena da ponte vencida (as quatro tábuas verdes e o Stu na chegada), os cartões do Explique em tamanho compacto e o mapa com "Ponte construída" e o selo de sincronia. Os textos são os exemplos de `mensagens.apresentacao.exemplos`.
+- Na web, as tábuas da ponte trazem o texto. No app, como na lição, os rótulos ficam na legenda numerada abaixo da cena, começando por "Sua tentativa". O mapa perdeu as duas estrelas, como na web, para o selo de sincronia caber no canto.
+

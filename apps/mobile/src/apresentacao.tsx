@@ -209,11 +209,14 @@ function ArteMaterial() {
   );
 }
 
-/** Momento 2: a cena da ponte já vencida (as quatro tábuas verdes), com o Stu do lado da chegada. */
+/**
+ * Momento 2: a cena da ponte já vencida (as quatro tábuas verdes), com o Stu do lado da chegada. Os rótulos das tábuas da
+ * web ("Sua tentativa", "Outro jeito"…) ficam na legenda numerada da cena, como na lição: no app, as tábuas não cabem texto.
+ */
 function ArtePonte() {
   return (
     <Quadro selo>
-      <CenaPonte resposta="" temPonte desafio concluida montada semLegenda />
+      <CenaPonte resposta="" primeiraTabua={mensagens.estudio.ponteTabuaErro} temPonte desafio concluida montada />
     </Quadro>
   );
 }
