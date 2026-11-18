@@ -1636,6 +1636,17 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
           </Text>
         </View>
       )}
+      {/* Como na web (rodada 1.2): a história da lição em cartões, só com o que aconteceu de verdade (sem ponte, não há
+          cartão de ponte; sem explicação, não há cartão de ensino), e a confirmação de que o progresso ficou na conta. */}
+      <View testID="conclusao-historia" accessibilityLabel={mensagens.licao.historia.titulo} style={estudoEstilos.historia}>
+        <CartaoHistoria titulo={mensagens.licao.historia.praticou} texto={licao.objetivo} ordem={0} />
+        {resumo?.ponteConstruida && <CartaoHistoria tipo="ponte" titulo={mensagens.licao.historia.ponteTitulo} texto={mensagens.licao.historia.ponteTexto} ordem={1} />}
+        {resumo?.ensinouStu && (
+          <CartaoHistoria tipo="ensino" titulo={mensagens.licao.historia.ensinoTitulo} texto={mensagens.licao.historia.ensinoTexto}
+            ordem={resumo.ponteConstruida ? 2 : 1} />
+        )}
+        <Text style={estudoEstilos.historiaSincronia}>{mensagens.licao.historia.sincronia}</Text>
+      </View>
       {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo. Como na web. */}
       {licao.falas && licao.falas.length > 0 && (
         <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}><FrasesDaLicao falas={licao.falas} /></View>
@@ -1652,6 +1663,27 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
       </View>
       {mensagem}
     </Tela>
+  );
+}
+
+/** Um cartão da história da lição; o da ponte traz as tábuas da travessia, o do ensino, o tom verde. Entram em sequência. */
+function CartaoHistoria({ titulo, texto, tipo, ordem }: { titulo: string; texto: string; tipo?: 'ponte' | 'ensino'; ordem: number }) {
+  const entrada = useAparecer(700 + ordem * 120, 420, true);
+  const cor = tipo === 'ponte' ? cores.acao : tipo === 'ensino' ? cores.sucesso : cores.acao;
+  return (
+    <Animated.View testID={`historia-${tipo ?? 'praticou'}`}
+      style={[estudoEstilos.historiaCartao, tipo === 'ponte' && estudoEstilos.historiaPonte, tipo === 'ensino' && estudoEstilos.historiaEnsino,
+        estiloDeEntrada(entrada, 10)]}>
+      <View style={estudoEstilos.historiaTopo}>
+        <Text style={[estudoEstilos.historiaTitulo, { color: cor }]}>{titulo.toLocaleUpperCase('pt-BR')}</Text>
+        {tipo === 'ponte' && (
+          <View style={estudoEstilos.historiaTabuas} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+            {[0, 1, 2, 3].map((tabua) => <View key={tabua} style={estudoEstilos.historiaTabua} />)}
+          </View>
+        )}
+      </View>
+      <Text style={estudoEstilos.historiaTexto}>{texto}</Text>
+    </Animated.View>
   );
 }
 
@@ -1746,6 +1778,17 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem, base }: {
 }
 
 const estudoEstilos = StyleSheet.create({
+  historia: { marginTop: 18, gap: 10 },
+  historiaCartao: { gap: 4, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 18, borderWidth: 2, borderBottomWidth: 4,
+    borderColor: cores.gelo, backgroundColor: cores.nevoa },
+  historiaPonte: { borderColor: cores.destaqueBorda, backgroundColor: cores.ceu },
+  historiaEnsino: { borderColor: '#9AD8B5', backgroundColor: cores.sucessoFundo },
+  historiaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  historiaTitulo: { flexShrink: 1, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
+  historiaTabuas: { flexDirection: 'row', gap: 3 },
+  historiaTabua: { width: 12, height: 7, borderRadius: 2, borderBottomWidth: 2, borderColor: '#1E5916', backgroundColor: '#2F7D22' },
+  historiaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
+  historiaSincronia: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18, textAlign: 'center' },
   destaque: {
     marginTop: 20, borderWidth: 2, borderBottomWidth: 5, borderRadius: 24, borderColor: cores.destaqueBorda,
     backgroundColor: cores.superficieSutil, overflow: 'hidden',

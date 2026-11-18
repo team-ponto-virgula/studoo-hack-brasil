@@ -18,7 +18,7 @@ import {
   type LicaoDetalhe,
 } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode } from 'react';
-import { AccessibilityInfo, Alert, Animated, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Alert, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAparecer, usePulinho, useTremor } from './animacoes';
 import {
   TranscritorContexto,
@@ -58,6 +58,10 @@ export type ResumoLicao = {
   exercicios: number;
   pratica?: AutoAvaliacao;
   rever: boolean;
+  /** Alguma ponte de reforço foi vencida nesta visita: a conclusão mostra o cartão da ponte (só com conteúdo real). */
+  ponteConstruida?: boolean;
+  /** A pessoa explicou ao Stu nesta visita: a conclusão mostra o cartão do ensino. */
+  ensinouStu?: boolean;
 };
 
 /** O andamento de uma lição, guardado em memória para a pessoa continuar de onde parou (como na web). */
@@ -210,6 +214,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [ponteFeita, setPonteFeita] = useState(false);
   /** Citação aberta no conceito (a primeira, quando a lição veio do material), como na web. */
   const [citacaoAberta, setCitacaoAberta] = useState<number | null>(() => (licao.referencias?.length ? 0 : null));
+  /** Pontes vencidas nesta visita, por exercício: o Stu comemora a travessia e a conclusão conta a ponte. Como na web. */
+  const [pontesPorExercicio, setPontesPorExercicio] = useState<Record<number, boolean>>({});
   /** O "Explique com suas palavras" está aberto: o painel de retorno fica só com o título e as ações. Como na web. */
   const [expliqueAberto, setExpliqueAberto] = useState(false);
   /** A pessoa já explicou ao Stu nesta visita: o convite do acerto sai. Como na web. */
@@ -466,6 +472,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       ...(autoAvaliacao ? { pratica: autoAvaliacao } : {}),
       // Vale rever: ficou exercício sem acerto, a maior parte saiu errada antes do acerto ou a prática não saiu (como o mapa).
       rever: acertos < exercicios.length || motivoParaRever({ acertosDePrimeira, exercicios: exercicios.length, pratica: autoAvaliacao }) !== null,
+      ponteConstruida: Object.values(pontesPorExercicio).some(Boolean),
+      ensinouStu: ensinou,
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) {
       andamentos.delete(licao.id);
@@ -690,6 +698,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           </View>
         )}
         {exercicio && (
+          <StuDoExercicio estado={avaliacao?.correta
+            ? pontesPorExercicio[indice] ? 'ponte' : primeiras[indice] === true ? 'primeira' : 'acerto'
+            : avaliacao ? 'atento' : errosAnteriores[indice] ? 'pensando' : 'neutro'} />
+        )}
+        {exercicio && (
           <Animated.View style={[licaoEstilos.quadro, { transform: [{ translateX: tremor }] }]}
             onLayout={(evento) => {
               exercicioY.current = evento.nativeEvent.layout.y;
@@ -790,7 +803,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         // O reforço chegou e o apoio cresceu: leva ao alto dele (antes, a rolagem parava no fim da página curta).
         if (Date.now() - rolarParaApoio.current < 4000) rolagem.current?.scrollTo({ y: apoioPosicao.current, animated: reduzir === false });
       }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
-        ultimo={indice === exercicios.length - 1} aoConcluirPonte={() => setPonteFeita(true)}
+        ultimo={indice === exercicios.length - 1}
+        aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atuais) => ({ ...atuais, [indice]: true })); }}
         pedidoEnsino={pedidoEnsino} aoAbrirExplique={setExpliqueAberto} aoEnsinar={() => setEnsinou(true)}
         ultimaResposta={respostaLegivel(exercicio, resposta)}
         aoMostrarCena={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 24), animated: reduzir === false })}
@@ -854,6 +868,66 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
         <View style={licaoEstilos.balaoSeta} />
         {children}
       </Animated.View>
+    </View>
+  );
+}
+
+type EstadoStu = 'neutro' | 'pensando' | 'atento' | 'primeira' | 'acerto' | 'ponte';
+const visualDoStu: Record<EstadoStu, { fundo: string; borda: string }> = {
+  neutro: { fundo: cores.nevoa, borda: cores.gelo },
+  pensando: { fundo: '#FFF8E8', borda: '#F2CF96' },
+  atento: { fundo: cores.alertaFundo, borda: cores.alertaBorda },
+  primeira: { fundo: cores.sucessoFundo, borda: '#9AD8B5' },
+  acerto: { fundo: '#F3FBF6', borda: '#BFE6CF' },
+  ponte: { fundo: cores.ceu, borda: cores.destaqueBorda },
+};
+
+/**
+ * O Stu acima do exercício (licao.stuEstado, como na web): neutro, pensando depois de um erro, atento no erro e três
+ * comemorações diferentes, só com o desenho atual do mascote (movimento do corpo + adereço + balão):
+ * de primeira (um pulo com a estrela), acerto depois de errar (um aceno com o visto) e depois da ponte (dois pulos com as
+ * tábuas da ponte). "De primeira" só aparece quando foi de primeira. Com movimento reduzido, a pose final, parada.
+ */
+function StuDoExercicio({ estado }: { estado: EstadoStu }) {
+  const reduzir = useMovimentoReduzido();
+  const [movimento] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    movimento.setValue(0);
+    if (reduzir !== false || estado === 'neutro' || estado === 'pensando') return;
+    const ida = (duracao: number) => Animated.timing(movimento, { toValue: 1, duration: duracao, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    const volta = () => Animated.spring(movimento, { toValue: 0, friction: 4, tension: 140, useNativeDriver: true });
+    const animacao = estado === 'ponte' ? Animated.sequence([ida(200), volta(), ida(200), volta()])
+      : estado === 'atento' ? Animated.sequence([ida(140), Animated.timing(movimento, { toValue: 0, duration: 220, useNativeDriver: true })])
+        : Animated.sequence([ida(estado === 'primeira' ? 180 : 150), volta()]);
+    animacao.start();
+    return () => animacao.stop();
+  }, [estado, reduzir, movimento]);
+  const transformacoes = estado === 'primeira'
+    ? [{ translateY: movimento.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }, { scale: movimento.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) }]
+    : estado === 'ponte'
+      ? [{ translateY: movimento.interpolate({ inputRange: [0, 1], outputRange: [0, -18] }) }, { rotate: movimento.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-10deg'] }) }]
+      : estado === 'acerto'
+        ? [{ rotate: movimento.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '8deg'] }) }]
+        : estado === 'atento'
+          ? [{ rotate: movimento.interpolate({ inputRange: [0, 1], outputRange: ['-6deg', '-12deg'] }) }]
+          : estado === 'pensando' ? [{ rotate: '5deg' }] : [];
+  const visual = visualDoStu[estado];
+  return (
+    <View testID="stu-do-exercicio" style={[licaoEstilos.stuEstado, { backgroundColor: visual.fundo, borderColor: visual.borda }]}>
+      <View style={licaoEstilos.stuEstadoAvatar} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
+          style={[licaoEstilos.stuEstadoImagem, { transform: transformacoes }]} />
+        {estado === 'pensando' && <View style={[licaoEstilos.adereco, { backgroundColor: cores.ouroEscuro }]}><Icone nome="lampada" tamanho={12} cor={cores.fundo} /></View>}
+        {estado === 'atento' && <View style={[licaoEstilos.adereco, { backgroundColor: '#E58A1F' }]}><Text style={licaoEstilos.aderecoTexto}>!</Text></View>}
+        {estado === 'primeira' && <View style={[licaoEstilos.adereco, { backgroundColor: cores.ouroEscuro }]}><Text style={licaoEstilos.aderecoTexto}>✦</Text></View>}
+        {estado === 'acerto' && <View style={[licaoEstilos.adereco, { backgroundColor: cores.sucessoClaro }]}><Icone nome="check" tamanho={12} cor={cores.fundo} /></View>}
+        {estado === 'ponte' && (
+          <View style={licaoEstilos.aderecoPonte}>
+            {[0, 1, 2].map((tabua) => <View key={tabua} style={licaoEstilos.aderecoTabua} />)}
+          </View>
+        )}
+      </View>
+      <Text style={licaoEstilos.stuEstadoTexto}>{t.stuEstado[estado]}</Text>
     </View>
   );
 }
@@ -1023,6 +1097,16 @@ const licaoEstilos = StyleSheet.create({
     borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
   fonteSeloTexto: { color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
   fonteTrecho: { borderLeftWidth: 4, borderColor: cores.ouroEscuro, backgroundColor: '#FFFBEF', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 12 },
+  stuEstado: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18,
+    borderWidth: 2 },
+  stuEstadoAvatar: { width: 48, height: 52, alignItems: 'center', justifyContent: 'center' },
+  stuEstadoImagem: { width: 42, height: 46 },
+  stuEstadoTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
+  adereco: { position: 'absolute', top: -4, right: -6, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: cores.fundo },
+  aderecoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
+  aderecoPonte: { position: 'absolute', bottom: -2, right: -12, flexDirection: 'row', gap: 2 },
+  aderecoTabua: { width: 10, height: 6, borderRadius: 2, borderBottomWidth: 2, borderColor: '#703B10', backgroundColor: '#9C5619' },
   maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: cores.nevoa },
   maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
