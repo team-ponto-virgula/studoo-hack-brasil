@@ -40,7 +40,9 @@ export function proxy(request: NextRequest) {
   resposta.headers.set("Referrer-Policy", "no-referrer");
   resposta.headers.set("X-Content-Type-Options", "nosniff");
   resposta.headers.set("X-Frame-Options", "DENY");
+  // Páginas públicas do compartilhar (spec 09): links não listados, fora de buscadores.
+  if (/^\/(?:t|p)\//.test(request.nextUrl.pathname)) resposta.headers.set("X-Robots-Tag", "noindex, nofollow");
   return resposta;
 }
 
-export const config = { matcher: ["/", "/login", "/recuperar"] };
+export const config = { matcher: ["/", "/login", "/recuperar", "/t/:codigo*", "/p/:id*"] };

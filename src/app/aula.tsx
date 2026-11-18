@@ -693,7 +693,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 <ExplicacaoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} />
                 {!!licao.referencias?.length && (
                   <div className="aula-citacao-marcadores">
-                    <span>{mensagens.estudio.baseadoMaterial}</span>
+                    <span>{licao.materialDe ? mensagens.compartilhar.baseadoMaterialDe(licao.materialDe) : mensagens.estudio.baseadoMaterial}</span>
                     {licao.referencias.map((ref, idx) => (
                       <button key={idx} type="button" className="aula-citacao-marcador"
                         aria-label={`Ver fonte ${idx + 1} de ${licao.referencias!.length}`}
@@ -717,9 +717,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (() => {
               const ref = licao.referencias[citacaoAberta];
               return (
-                <aside ref={cartaoCitacaoRef} className="aula-citacao" aria-label={mensagens.estudio.fonteMaterial} tabIndex={-1}>
+                <aside ref={cartaoCitacaoRef} className="aula-citacao" aria-label={licao.materialDe ? mensagens.compartilhar.fonteMaterialDe(licao.materialDe) : mensagens.estudio.fonteMaterial} tabIndex={-1}>
                   <div className="aula-citacao__topo">
-                    <span className="aula-citacao__selo">[{citacaoAberta + 1}] {mensagens.estudio.fonteMaterial}</span>
+                    <span className="aula-citacao__selo">[{citacaoAberta + 1}] {licao.materialDe ? mensagens.compartilhar.fonteMaterialDe(licao.materialDe) : mensagens.estudio.fonteMaterial}</span>
                     <strong>{ref.nome} · {ref.localizacao ?? mensagens.estudio.pagina(ref.pagina)}</strong>
                     {ref.leitura === 'demonstracao' && <span className="estudio-selo">{mensagens.estudio.simulado}</span>}
                   </div>

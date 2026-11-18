@@ -34,7 +34,7 @@ function selosDoNo(no: NoCaminho): { icone: NomeIcone; texto: string }[] {
 }
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
-  | 'lampada' | 'relogio' | 'alvo' | 'som';
+  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'pessoa' | 'compartilhar' | 'copiar';
 
 const desenhos: Record<NomeIcone, ReactNode> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
@@ -54,6 +54,10 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   alvo: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="0.8" /></>,
   // Alto-falante com duas ondas: ouvir uma frase, um áudio ou um acorde.
   som: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18.3 6.3a8 8 0 0 1 0 11.4" /></>,
+  pessoa: <><circle cx="12" cy="8.5" r="3.8" /><path d="M4.8 20c.9-3.8 3.7-5.8 7.2-5.8s6.3 2 7.2 5.8" /></>,
+  // Três pontos ligados: compartilhar.
+  compartilhar: <><circle cx="17.5" cy="5.5" r="2.5" /><circle cx="6.5" cy="12" r="2.5" /><circle cx="17.5" cy="18.5" r="2.5" /><path d="M8.7 10.8l6.6-4M8.7 13.2l6.6 4" /></>,
+  copiar: <><rect x="8.5" y="8.5" width="11" height="11" rx="2.5" /><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2" /></>,
 };
 
 export function Icone({ nome }: { nome: NomeIcone }) {

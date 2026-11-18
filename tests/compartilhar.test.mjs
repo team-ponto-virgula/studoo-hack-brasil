@@ -17,7 +17,7 @@ import { criarSessao } from '../src/servidor/acesso/sessao.ts';
 import { DOMINIO_EMAIL_VISITANTE, PREFIXO_EMAIL_VISITANTE } from '../src/servidor/acesso/visitante.ts';
 import { aceitarProposta, gerarProposta } from '../src/servidor/aprendizado/servico.ts';
 import { banco } from '../src/servidor/banco/cliente.ts';
-import { LINKS_ATIVOS_MAX } from '../src/servidor/compartilhar/servico.ts';
+import { LINKS_ATIVOS_MAX, conteudoParaCopia } from '../src/servidor/compartilhar/servico.ts';
 import { MATERIAL_COMPARTILHADO, codigoDoLink, motivoNomeInvalido, normalizarNomePerfil } from '@studoo/contratos';
 
 const origem = process.env.STUDOO_ORIGEM || 'http://localhost:3000';
@@ -38,7 +38,7 @@ after(async () => {
     await banco.tentativaLogin.deleteMany({ where: { chave: { in: [`ia:geracao:${id}`, `perfil:${id}`, `compartilhar:criar:${id}`, `compartilhar:adicionar:${id}`].map(assinatura) } } });
     await banco.usuario.delete({ where: { id } });
   }
-  await banco.tentativaLogin.deleteMany({ where: { chave: assinatura('compartilhar:ip:loopback') } });
+  await banco.tentativaLogin.deleteMany({ where: { chave: { in: ['compartilhar:global', 'compartilhar:ip:203.0.113.7', 'compartilhar:ip:203.0.113.8'].map(assinatura) } } });
   await banco.$disconnect();
 });
 
@@ -288,14 +288,16 @@ test('trilha de material: a cópia não leva o nome do arquivo, o materialId nem
   const material = randomUUID();
   const fluxo = plano.fluxos[0];
   // Lições como as do Estúdio: referência ao material, foto da página e origem com o nome do arquivo.
-  for (const { id } of fluxo.licoes) {
+  for (const [indice, { id }] of fluxo.licoes.entries()) {
     const licao = await banco.licao.findUnique({ where: { usuarioId_id: { usuarioId: dona.id, id } } });
+    const src = 'data:image/png;base64,iVBORw0KGgo=';
+    void indice;
     await banco.licao.update({
       where: { usuarioId_id: { usuarioId: dona.id, id } },
       data: { conteudo: {
         ...licao.conteudo,
         origem: 'Material enviado · apostila-secreta.pdf',
-        recurso: { tipo: 'imagem', src: 'data:image/png;base64,iVBORw0KGgo=', descricao: 'Página 1' },
+        recurso: { tipo: 'imagem', src, descricao: 'Página 1' },
         referencias: [{ materialId: material, nome: 'apostila-secreta.pdf', pagina: 2, trecho: 'O denominador indica em quantas partes iguais o inteiro foi dividido.', leitura: 'texto' }],
       } },
     });
@@ -324,7 +326,7 @@ test('trilha de material: a cópia não leva o nome do arquivo, o materialId nem
   for (const l of comReferencia) {
     assert.deepEqual(l.conteudo.referencias, [{ materialId: MATERIAL_COMPARTILHADO, nome: 'Material de Ana', pagina: 2, trecho: 'O denominador indica em quantas partes iguais o inteiro foi dividido.', leitura: 'texto' }]);
     assert.equal(l.conteudo.origem, 'Material de Ana');
-    assert.ok(!l.conteudo.recurso, 'a lição fica sem o recurso de foto e continua válida');
+    assert.ok(!l.conteudo.recurso, 'a lição fica sem o recurso de imagem (data URL ou endereço) e continua válida');
   }
   const aula = (await json(licaoGet(pedido(`/api/aprendizado/licoes/${comReferencia[0].id}`, { token: quem.token }), ctx({ id: comReferencia[0].id })))).corpo;
   assert.equal(aula.materialDe, 'Ana');
@@ -341,4 +343,32 @@ test('teto de links ativos por conta', async () => {
     await banco.linkTrilha.create({ data: { codigo: `t${i}${randomUUID().replace(/-/g, '')}`.slice(0, 16), usuarioId: dona.id, planoId: id } });
   }
   assert.equal((await criarLink(dona, plano.id)).corpo.codigo, 'limite_compartilhar');
+});
+
+test('limite das rotas públicas: sem endereço confiável é um disjuntor global; com o proxy, 120 por endereço', async () => {
+  const dona = await pessoa();
+  await salvarNome(dona);
+  const plano = await trilha(dona);
+  const { codigo } = (await criarLink(dona, plano.id)).corpo;
+  const abrir = (ip) => linkGet(new Request(`${origem}/api/compartilhar/${codigo}`, { headers: { origin: origem, ...(ip ? { 'x-forwarded-for': ip } : {}) } }), ctx({ codigo }));
+  delete process.env.STUDOO_PROXY_HTTPS;
+  for (let i = 0; i < 121; i += 1) assert.equal((await abrir()).status, 200, `abertura ${i + 1} sem o proxy`);
+  process.env.STUDOO_PROXY_HTTPS = '1';
+  try {
+    for (let i = 0; i < 120; i += 1) assert.equal((await abrir('203.0.113.7')).status, 200);
+    const barrada = await json(abrir('203.0.113.7'));
+    assert.deepEqual([barrada.status, barrada.corpo.codigo], [429, 'limite_compartilhar']);
+    assert.equal((await abrir('203.0.113.8')).status, 200, 'outro endereço segue livre');
+  } finally {
+    delete process.env.STUDOO_PROXY_HTTPS;
+  }
+});
+
+test('nenhum recurso de imagem vai na cópia, seja data URL ou endereço do servidor; os outros recursos vão', () => {
+  const base = { objetivo: 'O', conceito: 'C', exemplo: 'E', origem: 'IA', exercicio: { tipo: 'lacuna', enunciado: 'x', gabarito: ['a'], feedbackCorreto: 'a', feedbackIncorreto: 'b' } };
+  for (const src of ['data:image/png;base64,iVBORw0KGgo=', '/api/estudio/materiais/abc/paginas/1', 'https://exemplo.com/foto.png']) {
+    assert.equal(conteudoParaCopia({ ...base, recurso: { tipo: 'imagem', src, descricao: 'Página 1' } }, 'Ana').recurso, undefined, src);
+  }
+  const acorde = { tipo: 'acorde', nome: 'Am', casas: [-1, 0, 2, 2, 1, 0] };
+  assert.deepEqual(conteudoParaCopia({ ...base, recurso: acorde }, 'Ana').recurso, acorde);
 });

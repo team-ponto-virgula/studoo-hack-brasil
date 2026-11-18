@@ -264,7 +264,7 @@ export const mensagens = {
         noPerfilDica: 'A trilha aparece na sua página pública, para quem tiver o endereço dela.',
         parar: 'Parar de compartilhar',
         pararTitulo: 'Parar de compartilhar esta trilha?',
-        pararTexto: 'O link deixa de funcionar. Quem já adicionou continua com a cópia dela.',
+        pararTexto: 'O link deixa de funcionar. Quem já adicionou continua com a própria cópia.',
         pararConfirmar: 'Parar de compartilhar',
         pararCancelar: 'Continuar compartilhando',
         parado: 'Você parou de compartilhar esta trilha.',

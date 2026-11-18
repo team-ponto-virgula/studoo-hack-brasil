@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { LIMITES_GERACAO } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
@@ -39,7 +39,9 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
 export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona,
-  avisoSemTrilhas = false }: {
+  avisoSemTrilhas = false, porLink }: {
+  /** "Adicionar por link" (spec 09, com a flag de compartilhar): logo antes de "Ver como funciona". */
+  porLink?: ReactNode;
   /** Veio de "Minhas trilhas" sem nenhuma trilha: um aviso diz isso (antes, a tela não mudava e parecia travada). */
   avisoSemTrilhas?: boolean;
   onProposta: (p: PropostaPlano) => void;
@@ -190,6 +192,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
           ))}
         </div>
       )}
+      {porLink}
       <button type="button" className="pedido-como" onClick={comoFunciona}>{mensagens.inicio.saberMais}</button>
     </section>
   );

@@ -31,8 +31,14 @@ import type { Prisma } from "@/servidor/banco/gerado/client";
 /** Teto de links ativos por conta. */
 export const LINKS_ATIVOS_MAX = 20;
 const LIMITES = {
-  /** Rotas públicas (prévia e perfil), por endereço de rede. */
+  /** Rotas públicas (prévia e perfil), por endereço de rede, quando o endereço é confiável (atrás do proxy HTTPS). */
   publico: { quantidade: 120, janelaMs: 15 * 60_000 },
+  /**
+   * Sem endereço confiável ("loopback" ou "desconhecido", como no site sem `STUDOO_PROXY_HTTPS=1`), todos caem no mesmo
+   * balde: ele vira um disjuntor global, com teto bem mais alto, para uma plateia (e os robôs de prévia dos apps de
+   * mensagem) abrindo o mesmo link não travar os links de todo mundo.
+   */
+  publicoGlobal: { quantidade: 3000, janelaMs: 15 * 60_000 },
   criar: { quantidade: 20, janelaMs: 60 * 60_000 },
   adicionar: { quantidade: 30, janelaMs: 60 * 60_000 },
   perfil: { quantidade: 30, janelaMs: 60 * 60_000 },
@@ -57,7 +63,10 @@ async function limitar(escopo: string, { quantidade, janelaMs }: { quantidade: n
   if (!dentro) throw new FalhaApi("limite_compartilhar");
 }
 
-export const limitarPublico = (rede: string) => limitar(`compartilhar:ip:${rede}`, LIMITES.publico);
+export const limitarPublico = (rede: string) =>
+  rede === "loopback" || rede === "desconhecido"
+    ? limitar("compartilhar:global", LIMITES.publicoGlobal)
+    : limitar(`compartilhar:ip:${rede}`, LIMITES.publico);
 
 function validarCodigo(codigo: string) {
   // Código fora do formato responde igual a link encerrado ou inexistente.
@@ -162,15 +171,16 @@ const rotuloMaterial = (nome: string) => `Material de ${nome}`;
 
 /**
  * O conteúdo de uma lição na cópia. As referências ficam com o trecho citado e a página, mas sem o nome do arquivo
- * ("Material de Ana") e com um `materialId` neutro; a foto de página (recurso imagem em data URL) não vai.
+ * ("Material de Ana") e com um `materialId` neutro. Nenhum recurso de imagem vai, seja qual for o endereço: hoje é a
+ * foto de página em data URL, e se um dia virar um endereço do servidor a cópia não pode apontar para o material de outra
+ * pessoa.
  */
 export function conteudoParaCopia(conteudo: ConteudoLicao, nomeDono: string): ConteudoLicao {
   const deMaterial = Boolean(conteudo.referencias?.length);
   const { recurso, referencias, ...resto } = conteudo;
-  const fotoDePagina = recurso?.tipo === "imagem" && recurso.src.startsWith("data:");
   return {
     ...resto,
-    ...(recurso && !fotoDePagina ? { recurso } : {}),
+    ...(recurso && recurso.tipo !== "imagem" ? { recurso } : {}),
     ...(referencias?.length
       ? { referencias: referencias.map(({ pagina, localizacao, trecho, leitura }) => ({ materialId: MATERIAL_COMPARTILHADO, nome: rotuloMaterial(nomeDono), pagina, ...(localizacao ? { localizacao } : {}), trecho, leitura })) }
       : {}),
