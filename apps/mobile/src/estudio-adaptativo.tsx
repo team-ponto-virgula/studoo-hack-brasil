@@ -28,7 +28,7 @@ import {
   type PropostaPlano,
   type ProvedorIa,
 } from '@studoo/contratos';
-import { Botao, Campo, EstadoMensagem, estilos } from './interface';
+import { Botao, Campo, EstadoMensagem, estilos, SeloDemonstracao } from './interface';
 import { CadernoDoStu, CenaPonte, EtapasDoEnsino, OndasDoVolume, PaginaDoMaterial, StuAluno } from './estudio-cenas';
 import { useAparecer } from './animacoes';
 import { mensagens } from './mensagens';
@@ -201,7 +201,7 @@ export function MaterialParaTrilha({
       ) : (
         <>
           <H>{material.nome}</H>
-          {material.leitura === 'demonstracao' && <Text style={s.selo}>{m.simulado}</Text>}
+          {material.leitura === 'demonstracao' && <SeloDemonstracao />}
           <T>{m.revisar}</T>
           {material.leitura === 'ocr' && <T>{m.ocr}</T>}
           {/* Como na web (rodada 1.1): cada página num cartão, com a miniatura da foto, a tabela do CSV ou as primeiras
@@ -573,7 +573,7 @@ export function ApoioDaLicao({
             </Text>
             <View style={s.ponteCabecaAcoes}>
               {/* Como na web (rodada 1.3): o selo de conteúdo simulado fica perto do título. */}
-              {ponte?.simulado && <Text style={s.selo}>{m.simulado}</Text>}
+              {ponte?.simulado && <SeloDemonstracao />}
               {/* Rodada 4D: a saída da ponte fica no alto, à vista desde o começo (na vitória, ela vem embaixo da cena). */}
               {!venceu && aoVoltarExercicio && (
                 <Botao testID="ponte-voltar" variante="texto" compacto rotulo={m.ponteVoltarExercicio} desativado={ocupado} acao={aoVoltarExercicio} />
@@ -768,8 +768,6 @@ export function ApoioDaLicao({
   );
 }
 const s = StyleSheet.create({
-  selo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, borderWidth: 1, borderColor: '#F2CF96',
-    backgroundColor: '#FFF6EA', color: '#7A4A00', fontWeight: '800', fontSize: 12, lineHeight: 16, overflow: 'hidden' },
   ponteCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   ponteCabecaAcoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   desafio: { gap: 14 },

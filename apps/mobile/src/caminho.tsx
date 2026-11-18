@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAparecer, useVaiVem } from './animacoes';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { Botao, Pontinhos, estilos, useBalanco, useMovimentoReduzido } from './interface';
+import { Botao, DeslocamentoDaRolagem, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta } from './interface';
 import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
@@ -148,6 +148,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const ventoPar = useVaiVem(1800);
   const ventoImpar = useVaiVem(2300);
   const alvos = useRef(new Map<string, ComponentRef<typeof View>>());
+  // A barra da marca rola junto em algumas telas (como na web): as posições medidas aqui começam abaixo dela.
+  const deslocamento = useContext(DeslocamentoDaRolagem);
   const posicoes = useRef<{ inicio: number | null; caminho: number | null; lista: number | null; linhas: Map<string, Caixa>; vindo: Caixa | null; chegada: Caixa | null }>(
     { inicio: null, caminho: null, lista: null, linhas: new Map(), vindo: null, chegada: null });
   const rolado = useRef<string | null>(null);
@@ -198,7 +200,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     const atual = nos.find((no) => no.estado === 'atual');
     const medidaAtual = atual && posicoes.current.linhas.get(atual.id);
     if (aoMedirAtual && medidaAtual && posicoes.current.caminho !== null && posicoes.current.lista !== null) {
-      const topoAtual = posicoes.current.caminho + posicoes.current.lista + medidaAtual.y;
+      const topoAtual = deslocamento + posicoes.current.caminho + posicoes.current.lista + medidaAtual.y;
       aoMedirAtual(topoAtual, topoAtual + medidas.lente);
     }
     if (!rolarPara || !aoRolar || rolado.current === rolarPara) return;
@@ -227,8 +229,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     // O esqueleto ainda na posição antiga (antes do nó novo) não serve: espera a medida nova.
     if (modo === 'novo' && alvo.y < linha.y + linha.altura - 1) return;
     acompanhando.current = null;
-    const topoLinha = caminho + lista + linha.y;
-    const topoAlvo = modo === 'novo' ? caminho + lista + alvo.y : caminho + alvo.y;
+    const topoLinha = deslocamento + caminho + lista + linha.y;
+    const topoAlvo = deslocamento + (modo === 'novo' ? caminho + lista + alvo.y : caminho + alvo.y);
     acompanhar({ topo: topoLinha, base: topoLinha + linha.altura }, { topo: topoAlvo, base: topoAlvo + alvo.altura });
   }
 
@@ -702,7 +704,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
       ? { right: largura - centro + lente / 2 + 16, alignItems: 'flex-end', maxWidth: Math.max(96, centro - lente / 2 - 28) }
       : { left: centro + lente / 2 + 16, alignItems: 'flex-start', maxWidth: Math.max(96, largura - centro - lente / 2 - 28) }]}>
       <View style={[caminhoEstilos.placa, atual && caminhoEstilos.placaAtual]}>
-        {atual && <Text style={[caminhoEstilos.posicao, direita && caminhoEstilos.alinharFim]}>{posicao.toLocaleUpperCase('pt-BR')}</Text>}
+        {atual && <Text style={[caminhoEstilos.posicao, direita && caminhoEstilos.alinharFim, caixaAlta]}>{posicao}</Text>}
         <Text style={[caminhoEstilos.titulo, atual && caminhoEstilos.tituloAtual, no.estado === 'previa' && caminhoEstilos.tituloPrevia,
           direita && caminhoEstilos.alinharFim, focado && caminhoEstilos.tituloFocado]}>{no.titulo}</Text>
         {!atual && <Text numberOfLines={3} style={[caminhoEstilos.estado, { color: corDoEstado[no.estado] }, direita && caminhoEstilos.alinharFim]}>{linha}</Text>}
@@ -899,7 +901,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
             {/* O espaço de largura zero no fim separa a ação do título no texto visível do botão: sem ele, quem lê o texto
                 da tela (o axe, o controle por voz na web) junta "COMEÇAR" e o título numa palavra só, e o nome do nó deixa de
                 conter o texto visível (WCAG 2.5.3). Não ocupa largura: o balão fica igual. */}
-            <View style={caminhoEstilos.etiquetaAcao}><Text style={caminhoEstilos.etiquetaTexto}>{`${(no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar).toLocaleUpperCase('pt-BR')}​`}</Text></View>
+            <View style={caminhoEstilos.etiquetaAcao}><Text style={[caminhoEstilos.etiquetaTexto, caixaAlta]}>{`${(no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar)}​`}</Text></View>
             <Text numberOfLines={2} style={caminhoEstilos.etiquetaTitulo}>{no.titulo}</Text>
           </View>
         </Animated.View>

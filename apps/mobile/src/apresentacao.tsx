@@ -17,7 +17,7 @@ import { usePulinho } from './animacoes';
 import { tracoGrosso } from './caminho';
 import { CadernoDoStu, CenaPonte } from './estudio-cenas';
 import { Icone } from './icone';
-import { Botao, SeloSincronia, estilos, useMovimentoReduzido } from './interface';
+import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao } from './interface';
 import { CartaoFonte } from './licao';
 import { mensagens } from './mensagens';
 import { Desenho, coresDaRegiao } from './mundo';
@@ -194,7 +194,7 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
 function Quadro({ selo = false, children }: { selo?: boolean; children: ReactNode }) {
   return (
     <View style={apresentacaoEstilos.quadro}>
-      {selo && <View style={apresentacaoEstilos.quadroTopo}><Text style={apresentacaoEstilos.seloDemo}>{mensagens.estudio.simulado}</Text></View>}
+      {selo && <View style={apresentacaoEstilos.quadroTopo}><SeloDemonstracao /></View>}
       {children}
     </View>
   );
@@ -325,8 +325,6 @@ const apresentacaoEstilos = StyleSheet.create({
   // Moldura dos momentos: como `.apresentacao-quadro` da web no celular (12 de respiro, cantos de 22, borda gelo, fundo névoa).
   quadro: { gap: 10, padding: 12, borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.nevoa },
   quadroTopo: { flexDirection: 'row', justifyContent: 'flex-end' },
-  seloDemo: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, borderWidth: 1, borderColor: '#F2CF96', backgroundColor: '#FFF6EA',
-    color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, overflow: 'hidden' },
   sincronia: { position: 'absolute', top: '6%', right: '5%' },
   areas: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 14, borderRadius: 28, backgroundColor: cores.ceu },
   area: { width: '47.5%', flexGrow: 1, minHeight: 92, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12,

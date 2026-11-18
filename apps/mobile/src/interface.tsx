@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -29,7 +29,13 @@ import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, estiloConteudo, estiloRodape }: {
+/**
+ * Quanto o conteúdo da tela começa abaixo do topo da rolagem por causa da barra da marca, que rola junto (como na web).
+ * Quem mede posições para rolar até um ponto (o caminho na geração) soma este valor; com a faixa parada no alto, é 0.
+ */
+export const DeslocamentoDaRolagem = createContext(0);
+
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
   children: ReactNode;
   acoes?: ReactNode;
   /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
@@ -37,6 +43,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   rodape?: ReactNode;
   pagina: string;
   semCabecalho?: boolean;
+  /** Sem a linha embaixo da faixa do alto, como a barra da aula na web. */
+  semLinha?: boolean;
   /** Referência da rolagem, para a tela levar a pessoa até um ponto do conteúdo (como o nó liberado na trilha). */
   rolagem?: Ref<ComponentRef<typeof ScrollView>>;
   /** Altura visível da rolagem, para a tela saber se um ponto do conteúdo já está à vista. */
@@ -48,37 +56,50 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   estiloConteudo?: StyleProp<ViewStyle>;
   /** Fundo do rodapé, como o verde ou o âmbar do retorno da aula. */
   estiloRodape?: StyleProp<ViewStyle>;
+  /** Margens do rodapé quando a tela da web usa outras (a aula usa 16; a entrada, 24). */
+  estiloRodapeConteudo?: StyleProp<ViewStyle>;
 }) {
   const navegacao = useContext(NavegacaoContexto);
   const [teclado, setTeclado] = useState(false);
+  const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   useEffect(() => {
     const abriu = Keyboard.addListener('keyboardDidShow', () => setTeclado(true));
     const fechou = Keyboard.addListener('keyboardDidHide', () => setTeclado(false));
     return () => { abriu.remove(); fechou.remove(); };
   }, []);
+  // Como na web, a barra da marca rola junto com a página e sai de vista; só a faixa própria da tela (a barra da aula, o
+  // nome da trilha) fica parada no alto.
+  const cabecalho = !semCabecalho && (
+    <View style={[estilos.cabecalho, semLinha && { borderBottomWidth: 0 }]}>
+      <View style={estilos.marcaConteudo}>
+        {topo ?? (
+          <>
+            <Logo />
+            {acoes && <View style={estilos.acoes}>{acoes}</View>}
+          </>
+        )}
+      </View>
+    </View>
+  );
   return (
     <SafeAreaView style={estilos.tela}>
-      {!semCabecalho && <View style={estilos.cabecalho}>
-        <View style={estilos.marcaConteudo}>
-          {topo ?? (
-            <>
-              <Logo />
-              {acoes && <View style={estilos.acoes}>{acoes}</View>}
-            </>
-          )}
-        </View>
-      </View>}
+      {topo && cabecalho}
 
       {/* No Android com edge-to-edge (padrão do build), a janela não encolhe com o teclado: sem o padding, o rodapé e os
           campos de baixo ficavam atrás dele. Se a janela encolher, a sobreposição medida é zero e nada muda. */}
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'web' ? undefined : 'padding'}>
-        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={[estilos.conteudo, estiloConteudo]}
+        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={estilos.rolagemConteudo}
           onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
           onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}
           onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura))}>
-          <Entrada>{children}</Entrada>
+          {!topo && cabecalho && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
+          <View style={[estilos.conteudo, estiloConteudo]}>
+            <DeslocamentoDaRolagem.Provider value={topo || !cabecalho ? 0 : alturaCabecalho}>
+              <Entrada>{children}</Entrada>
+            </DeslocamentoDaRolagem.Provider>
+          </View>
         </ScrollView>
-        {rodape && <View style={[estilos.rodape, estiloRodape]}><View style={estilos.rodapeConteudo}>{rodape}</View></View>}
+        {rodape && <View style={[estilos.rodape, estiloRodape]}><View style={[estilos.rodapeConteudo, estiloRodapeConteudo]}>{rodape}</View></View>}
       </KeyboardAvoidingView>
       {navegacao && !teclado && <NavegacaoInferior />}
     </SafeAreaView>
@@ -388,6 +409,17 @@ export function EstadoErro({ mensagem, acao, testID, foco = false }: {
   );
 }
 
+/** Selo "Modo demonstração", como `.estudio-selo` da web: pílula amarela cheia (#FFF1CC), sem borda, texto 0,8rem/800. */
+export function SeloDemonstracao({ estilo }: { estilo?: StyleProp<ViewStyle> }) {
+  return <View style={[estilos.seloDemo, estilo]}><Text style={estilos.seloDemoTexto}>{mensagens.estudio.simulado}</Text></View>;
+}
+
+/**
+ * Caixa alta pelo estilo, como o `text-transform: uppercase` da web: a tela mostra maiúsculas e o leitor de tela lê o texto
+ * original (com o texto já em maiúsculas, o TalkBack pode soletrar a palavra).
+ */
+export const caixaAlta = { textTransform: 'uppercase' } as const;
+
 /** Esqueleto que pulsa devagar enquanto o conteúdo carrega, como o brilho da web; parado com movimento reduzido. */
 export function usePulso() {
   const reduzir = useMovimentoReduzido();
@@ -467,10 +499,11 @@ export const estilos = StyleSheet.create({
   },
   logo: { width: 112, height: 38 },
   acoes: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
+  rolagemConteudo: { flexGrow: 1 },
   conteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 },
-  // Tipografia da rodada 1 (DIRECAO-UI.md §2), no tamanho que a web usa no celular: h1 com 28 px e -0,035em; h2/h3 com
-  // -0,015em (a compressão antiga apertava os subtítulos).
-  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 28, letterSpacing: -0.98, lineHeight: 32 },
+  // Paridade (levantamento de 18/11, G2): o h1 da web no celular tem 32/40 e -1px (globals.css, até 767 px). As telas em
+  // que a web usa outro tamanho (pedido 30, aula e proposta 24) passam o próprio estilo. h2/h3 seguem com -0,015em.
+  titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 32, letterSpacing: -1, lineHeight: 40 },
   subtitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, letterSpacing: -0.3, lineHeight: 26 },
   tituloBloco: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, letterSpacing: -0.27, lineHeight: 24 },
   texto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
@@ -510,10 +543,12 @@ export const estilos = StyleSheet.create({
   skeletonCurto: { width: '55%', height: 24, borderRadius: 8, backgroundColor: cores.gelo },
   skeletonLinha: { width: '100%', height: 16, borderRadius: 8, backgroundColor: cores.gelo },
   rodape: { borderTopWidth: 2, borderColor: cores.nevoa, backgroundColor: cores.fundo },
-  rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', padding: 16, gap: 10 },
+  // A web deixa 20 px nas laterais do rodapé (350 px de botão em 390); a aula e a entrada passam as delas.
+  rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 16, gap: 10 },
+  // Como .botao da web: face de 48 px com o lábio de 4 px embaixo (aqui, a borda de baixo) e texto 16 px/800.
   botao: {
-    minHeight: 50, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 8,
-    borderWidth: 2, borderBottomWidth: 5, borderRadius: 16, borderColor: cores.acao, borderBottomColor: cores.acaoEscura, backgroundColor: cores.acao,
+    minHeight: 52, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingVertical: 8,
+    borderWidth: 2, borderBottomWidth: 4, borderRadius: 16, borderColor: cores.acao, borderBottomColor: cores.acaoEscura, backgroundColor: cores.acao,
   },
   botaoSecundario: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.fundo },
   botaoSucesso: { borderColor: cores.sucesso, borderBottomColor: '#145A42', backgroundColor: cores.sucesso },
@@ -526,7 +561,7 @@ export const estilos = StyleSheet.create({
   botaoPressionado: { opacity: 0.82 },
   foco: { outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
   botaoDesativado: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.nevoa },
-  botaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24, textAlign: 'center', flexShrink: 1 },
+  botaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textAlign: 'center', flexShrink: 1 },
   botaoTextoCompacto: { fontSize: 14, lineHeight: 20 },
   botaoIcone: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   botaoIconePressionado: { backgroundColor: cores.nevoa },
@@ -537,6 +572,8 @@ export const estilos = StyleSheet.create({
   seloOffline: { borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
   seloPonto: { width: 8, height: 8, borderRadius: 4 },
   seloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  seloDemo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: '#FFF1CC' },
+  seloDemoTexto: { color: '#704700', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12.8, lineHeight: 19 },
 });
 
 /** Dois destinos persistentes, fora das aulas e da geração para preservar o foco. */
@@ -578,5 +615,5 @@ const navegacaoEstilos = StyleSheet.create({
   faixa: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 8, borderTopWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
   item: { flex: 1, minHeight: 56, borderRadius: 18, padding: 6, alignItems: 'center', justifyContent: 'center', gap: 3 },
   ativo: { backgroundColor: cores.nevoa },
-  rotulo: { fontFamily: fontes.corpo, fontSize: 12, fontWeight: '700', color: cores.textoSecundario, textAlign: 'center' },
+  rotulo: { fontFamily: fontes.corpo, fontSize: 12, fontWeight: '800', color: cores.textoSecundario, textAlign: 'center' },
 });

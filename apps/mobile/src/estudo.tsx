@@ -29,7 +29,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia } from './interface';
+import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -536,7 +536,7 @@ export function Estudo({ cliente, sair, expirar }: {
                   abrir={() => void abrirPlano(destaque.id)} apagar={() => pedirParaApagar(destaque)} />
               )}
               {restantes.length > 0 && (
-                <Text accessibilityRole="header" style={estudoEstilos.secaoTitulo}>{mensagens.planos.outrasTrilhas.toLocaleUpperCase('pt-BR')}</Text>
+                <Text accessibilityRole="header" style={[estudoEstilos.secaoTitulo, caixaAlta]}>{mensagens.planos.outrasTrilhas}</Text>
               )}
               {restantes.map((plano) => (
                 <CartaoPlano key={plano.id} plano={plano} indice={planos.indexOf(plano)} ocupado={ocupado} secundario
@@ -1259,7 +1259,7 @@ function SkeletonLicao({ texto }: { texto: string }) {
   );
 
   return (
-    <Tela pagina="carregando-licao" topo={topo} rodape={<View importantForAccessibility="no-hide-descendants"
+    <Tela pagina="carregando-licao" topo={topo} semLinha rodape={<View importantForAccessibility="no-hide-descendants"
       accessibilityElementsHidden style={estudoEstilos.esqueletoBotao} />}>
       <View ref={area} testID="carregando-licao" accessible accessibilityLabel={texto} accessibilityLiveRegion="polite">
         <View style={estudoEstilos.esqueletoTituloLicao} />
@@ -1349,7 +1349,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       topo={largo ? undefined : (
         <View style={estudoEstilos.barraPlano}>
           <View style={estudoEstilos.barraPlanoTexto}>
-            <Text style={estudoEstilos.barraPlanoRotulo}>{mensagens.trilha.suaTrilha.toLocaleUpperCase('pt-BR')}</Text>
+            <Text style={[estudoEstilos.barraPlanoRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
             {/* Rodada 4.2: o nome da trilha vai até duas linhas no alto (em 360 ele era cortado com reticências). */}
             <Titulo testID="titulo-plano" foco linhas={2} estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
           </View>
@@ -1373,7 +1373,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       {largo && (
         <View style={estudoEstilos.topoTrilha}>
           <View style={estudoEstilos.topoTrilhaTexto}>
-            <Text style={estudoEstilos.topoTrilhaRotulo}>{mensagens.trilha.suaTrilha.toLocaleUpperCase('pt-BR')}</Text>
+            <Text style={[estudoEstilos.topoTrilhaRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
             <Titulo testID="titulo-plano" foco estilo={estudoEstilos.tituloTopo}>{plano.titulo}</Titulo>
           </View>
           <AnelProgresso progresso={plano.progresso} />
@@ -1558,7 +1558,7 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
       </View>
       <View style={estudoEstilos.destaqueCorpo}>
         <View style={estudoEstilos.destaqueTopo}>
-          <Text style={estudoEstilos.destaqueRotulo}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo).toLocaleUpperCase('pt-BR')}</Text>
+          <Text style={[estudoEstilos.destaqueRotulo, caixaAlta]}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo)}</Text>
           <SeloSincronia sincronia={sincronia} />
         </View>
         <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo]}>{plano.titulo}</Text>
@@ -1687,7 +1687,7 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
           <Text style={estudoEstilos.resumoTrilhaTexto}>{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length, plano.estatisticas)}</Text>
         </View>
       )}
-      {resumo && trilhaFeita && <Text style={estudoEstilos.legendaNumeros}>{mensagens.licao.resumo.ultimaLicao.toLocaleUpperCase('pt-BR')}</Text>}
+      {resumo && trilhaFeita && <Text style={[estudoEstilos.legendaNumeros, caixaAlta]}>{mensagens.licao.resumo.ultimaLicao}</Text>}
       {resumo && <NumerosDaLicao resumo={resumo} />}
       {resumo?.rever && (
         // Como na web 4.2: o ícone fica junto da primeira linha e o texto alinhado à esquerda, num bloco centralizado.
@@ -1737,7 +1737,7 @@ function CartaoHistoria({ titulo, texto, tipo, ordem }: { titulo: string; texto:
       style={[estudoEstilos.historiaCartao, tipo === 'ponte' && estudoEstilos.historiaPonte, tipo === 'ensino' && estudoEstilos.historiaEnsino,
         estiloDeEntrada(entrada, 10)]}>
       <View style={estudoEstilos.historiaTopo}>
-        <Text style={[estudoEstilos.historiaTitulo, { color: cor }]}>{titulo.toLocaleUpperCase('pt-BR')}</Text>
+        <Text style={[estudoEstilos.historiaTitulo, { color: cor }, caixaAlta]}>{titulo}</Text>
         {tipo === 'ponte' && (
           <View style={estudoEstilos.historiaTabuas} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             {[0, 1, 2, 3].map((tabua) => <View key={tabua} style={estudoEstilos.historiaTabua} />)}
@@ -1831,7 +1831,7 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem, base }: {
       <View style={estudoEstilos.numeroRotulo}>
         <Icone nome={icone} tamanho={12} cor={cores.fundo} />
         {/* Uma linha só (em 360, "DE PRIMEIRA" quebrava em duas e desalinhava os três cartões). */}
-        <Text numberOfLines={1} style={estudoEstilos.numeroRotuloTexto}>{rotulo.toLocaleUpperCase('pt-BR')}</Text>
+        <Text numberOfLines={1} style={[estudoEstilos.numeroRotuloTexto, caixaAlta]}>{rotulo}</Text>
       </View>
       <View style={estudoEstilos.numeroValor}>
         <Text style={estudoEstilos.numeroValorTexto}>{valor}</Text>
@@ -1871,7 +1871,8 @@ const estudoEstilos = StyleSheet.create({
   pedidoHalo: { width: 96, height: 96, alignItems: 'center', justifyContent: 'center', borderRadius: 48, borderWidth: 8,
     borderColor: '#FFE08A', backgroundColor: '#FFF3C4' },
   pedidoEstrela: { position: 'absolute', top: -2, right: 4, color: '#FFB703', fontSize: 24, lineHeight: 28 },
-  pedidoTitulo: { fontSize: 28, lineHeight: 32, textAlign: 'center' },
+  // Como .pedido-heroi h1 da web no celular: 30 px (clamp de 1,875rem), entrelinha 1,08.
+  pedidoTitulo: { fontSize: 30, lineHeight: 32, textAlign: 'center' },
   pedidoFala: { minHeight: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24, textAlign: 'center' },
   alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14, paddingVertical: 12, paddingLeft: 12, paddingRight: 16,
     borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.destaqueBorda, backgroundColor: cores.superficieSutil },
@@ -1893,7 +1894,7 @@ const estudoEstilos = StyleSheet.create({
   anelNumeroPequeno: { fontSize: 15, lineHeight: 18 },
   barraPlano: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 },
   barraPlanoTexto: { flex: 1, minWidth: 0 },
-  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 11, lineHeight: 14, letterSpacing: 1 },
+  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 14, letterSpacing: 1 },
   barraPlanoTitulo: { fontSize: 17, lineHeight: 21 },
   concluidoCartao: { gap: 8, marginBottom: 12, padding: 18, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5,
     borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
@@ -1919,7 +1920,8 @@ const estudoEstilos = StyleSheet.create({
   // Faixa do topo da trilha: cartão branco com relevo, como na web.
   faixa: { marginBottom: 12, padding: 20, borderRadius: 24, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   faixaLarga: { padding: 24 },
-  tituloFaixa: { fontSize: 28, lineHeight: 32 },
+  // Como o título da proposta na web (clamp(1,5rem, 4vw, 2rem) = 24 px no celular, entrelinha 1,12).
+  tituloFaixa: { fontSize: 24, lineHeight: 27 },
   objetivoFaixa: { fontSize: 16 },
   divisao: { marginTop: 20, paddingTop: 20, borderTopWidth: 2, borderColor: cores.nevoa },
   proximo: { gap: 2 },
@@ -2032,7 +2034,7 @@ const estudoEstilos = StyleSheet.create({
   chipAcao: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   chipAcaoEscolhida: { backgroundColor: cores.acao },
   // Geração ao vivo
-  contexto: { marginBottom: 8, color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18,
+  contexto: { marginBottom: 8, color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18,
     letterSpacing: 0.5, textTransform: 'uppercase' },
   esqueletoTitulo: { width: '72%', maxWidth: 384, height: 28, marginVertical: 2, borderRadius: 8, backgroundColor: cores.gelo },
   geracaoIa: { marginTop: 16, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },

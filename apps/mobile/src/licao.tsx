@@ -38,7 +38,7 @@ import {
 } from './aula-formatos';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido } from './interface';
+import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao } from './interface';
 import { mensagens, textoDaFalta } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
@@ -662,7 +662,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   return (
     // A conferência da fala grava e manda para a rota de voz do servidor (no aparelho).
     <TranscritorContexto.Provider value={cliente.transcrever}>
-    <Tela pagina={`licao-${licao.id}`} topo={topo} rodape={rodape} rolagem={rolagem}
+    <Tela pagina={`licao-${licao.id}`} topo={topo} semLinha rodape={rodape} rolagem={rolagem}
       aoMedir={(altura) => { alturaVisivel.current = altura; medirMais(); }} aoRolar={(y) => { posicaoRolagem.current = y; medirMais(); }}
       aoMedirConteudo={(altura) => { alturaConteudo.current = altura; medirMais(); }}
       estiloConteudo={licaoEstilos.conteudo}
@@ -682,11 +682,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           <View style={[licaoEstilos.etapaIcone, { backgroundColor: coresDaEtapa[etapa.tipo].fundo }]}>
             <Icone nome={iconesDaEtapa[etapa.tipo]} tamanho={18} cor={coresDaEtapa[etapa.tipo].texto} />
           </View>
-          <Text style={[licaoEstilos.etapaTexto, { color: coresDaEtapa[etapa.tipo].texto }]}>{nomeEtapa.toLocaleUpperCase('pt-BR')}</Text>
+          <Text style={[licaoEstilos.etapaTexto, { color: coresDaEtapa[etapa.tipo].texto }, caixaAlta]}>{nomeEtapa}</Text>
         </View>
         {/* Rodada 4B da web: o nome da lição é o título no conceito e na prática; no exemplo, o título é "Exemplo" e, no
             exercício, a própria pergunta. O nome continua pequeno no topo. */}
-        {(etapa.tipo === 'conceito' || etapa.tipo === 'pratica') && <Titulo testID="titulo-licao" foco={passo === 0}>{licao.titulo}</Titulo>}
+        {(etapa.tipo === 'conceito' || etapa.tipo === 'pratica') && <Titulo testID="titulo-licao" foco={passo === 0} estilo={licaoEstilos.tituloLicao}>{licao.titulo}</Titulo>}
         {/* Como na web: o erro (rede no Verificar, conclusão) fica no alto, em foco, e a tela sobe até ele. */}
         {/* O cartão de erro da web (3A), sem ação: na lição, a nova tentativa é o próprio botão do rodapé (Verificar, Concluir). */}
         {erro && <EstadoErro mensagem={erro} testID="erro-licao" foco />}
@@ -779,7 +779,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               <View testID="dica-anterior" accessible accessibilityRole="text" style={licaoEstilos.dica}>
                 <View style={licaoEstilos.dicaTopo}>
                   <Icone nome="lampada" tamanho={16} cor="#7A4A00" />
-                  <Text style={licaoEstilos.dicaTitulo}>{t.dicaAnterior.toLocaleUpperCase('pt-BR')}</Text>
+                  <Text style={[licaoEstilos.dicaTitulo, caixaAlta]}>{t.dicaAnterior}</Text>
                 </View>
                 <Text style={licaoEstilos.dicaTexto}>{errosAnteriores[indice]?.feedback}</Text>
                 {errosAnteriores[indice]?.observacao && <Text style={licaoEstilos.dicaTexto}>{errosAnteriores[indice]?.observacao}</Text>}
@@ -845,7 +845,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               }}
               consulta={(licao.recurso || licao.passos || licao.falas) && (
                 <View style={licaoEstilos.consulta}>
-                  <Text style={licaoEstilos.consultaRotulo}>{t.recursos.consultar.toLocaleUpperCase('pt-BR')}</Text>
+                  <Text style={[licaoEstilos.consultaRotulo, caixaAlta]}>{t.recursos.consultar}</Text>
                   {licao.recurso && <RecursoDaLicao recurso={licao.recurso} longa semBatida={licao.recurso.tipo === 'acorde' && licao.recurso.batida} />}
                   {licao.passos && <Passos passos={licao.passos} />}
                   {licao.falas && <Falas falas={licao.falas} />}
@@ -1017,16 +1017,15 @@ export function CartaoFonte({ referencia, numero, ref, titulo, parado = false }:
       accessibilityLabel={`${m.fonteMaterial} ${numero}. ${onde}. ${referencia.trecho}`}
       style={[licaoEstilos.fonte, parado ? { marginTop: 0 }
         : { opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
-      <View style={licaoEstilos.fonteTopo}>
-        <View style={licaoEstilos.fonteNumero}><Text style={licaoEstilos.fonteNumeroTexto}>[{numero}]</Text></View>
-        <Text style={licaoEstilos.fonteRotulo}>{m.fonteMaterial.toLocaleUpperCase('pt-BR')}</Text>
+      {/* Como .aula-citacao da web: um selo só com o número e "Fonte do seu material", o material em 14 px/700, o selo de
+          demonstração e o trecho em itálico, sem aspas, com a borda azul à esquerda sobre o branco. */}
+      <View style={licaoEstilos.fonteSeloNumero}>
+        <Text style={[licaoEstilos.fonteRotulo, caixaAlta]}>{`[${numero}] ${m.fonteMaterial}`}</Text>
       </View>
-      <Text style={estilos.tituloBloco}>{onde}</Text>
-      {referencia.leitura === 'demonstracao' && (
-        <View style={licaoEstilos.fonteSelo}><Text style={licaoEstilos.fonteSeloTexto}>{m.simulado}</Text></View>
-      )}
+      <Text style={licaoEstilos.fonteOnde}>{onde}</Text>
+      {referencia.leitura === 'demonstracao' && <SeloDemonstracao />}
       <View style={licaoEstilos.fonteTrecho}>
-        <Text selectable style={estilos.texto}>“{referencia.trecho}”</Text>
+        <Text selectable style={[estilos.texto, licaoEstilos.fonteTrechoTexto]}>{referencia.trecho}</Text>
       </View>
       {referencia.leitura === 'ocr' && <Text style={estilos.legenda}>{m.ocr}</Text>}
     </Animated.View>
@@ -1162,7 +1161,9 @@ const licaoEstilos = StyleSheet.create({
   posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   etapa: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  etapaTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
+  etapaTexto: { fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
+  // Como .aula-miolo h1 da web no celular: clamp(1,5rem, 4,6vw, 2rem) = 24 px, entrelinha 1,15.
+  tituloLicao: { fontSize: 24, lineHeight: 28 },
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
   // 48 dp de toque sem empurrar a etapa: as margens negativas devolvem o espaço que o visual de antes ocupava.
   voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: -8, marginBottom: -2, minHeight: 48 },
@@ -1174,16 +1175,14 @@ const licaoEstilos = StyleSheet.create({
     borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: cores.fundo },
   marcadorAberto: { borderColor: cores.acao, backgroundColor: cores.acao },
   marcadorTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
-  fonte: { marginTop: 14, padding: 16, gap: 8, borderRadius: 20, borderWidth: 2, borderBottomWidth: 4, borderColor: cores.destaqueBorda,
-    backgroundColor: cores.superficieSutil },
-  fonteTopo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  fonteNumero: { paddingHorizontal: 8, minHeight: 24, borderRadius: 999, justifyContent: 'center', backgroundColor: cores.acao },
-  fonteNumeroTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16 },
-  fonteRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
-  fonteSelo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, borderWidth: 1,
-    borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
-  fonteSeloTexto: { color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
-  fonteTrecho: { borderLeftWidth: 4, borderColor: cores.ouroEscuro, backgroundColor: '#FFFBEF', borderRadius: 10, paddingVertical: 10, paddingHorizontal: 12 },
+  fonte: { marginTop: 14, paddingVertical: 16, paddingHorizontal: 20, gap: 10, borderRadius: 20, borderWidth: 2, borderBottomWidth: 4,
+    borderColor: cores.destaqueBorda, borderBottomColor: cores.gelo, backgroundColor: '#F6F8FF' },
+  fonteSeloNumero: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#E5EBFF' },
+  fonteRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18, letterSpacing: 0.48 },
+  fonteOnde: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
+  fonteTrecho: { borderLeftWidth: 4, borderColor: cores.acao, backgroundColor: cores.fundo, borderTopRightRadius: 12, borderBottomRightRadius: 12,
+    paddingVertical: 10, paddingHorizontal: 14 },
+  fonteTrechoTexto: { fontStyle: 'italic' },
   stuEstado: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 14, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 18,
     borderWidth: 2 },
   stuEstadoAvatar: { width: 48, height: 52, alignItems: 'center', justifyContent: 'center' },

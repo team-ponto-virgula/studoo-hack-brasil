@@ -26,7 +26,7 @@ import {
 } from '@studoo/contratos';
 import { arquivo } from './estudio-adaptativo';
 import { Icone } from './icone';
-import { Botao, estilos } from './interface';
+import { Botao, estilos, caixaAlta } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 
@@ -168,7 +168,7 @@ export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolea
     <View style={formatos.escuta}>
       <View style={formatos.rotuloLinha}>
         <Icone nome="som" tamanho={16} cor={cores.acaoEscura} />
-        <Text style={[formatos.rotuloCaixa, { color: cores.acaoEscura }]}>{t.audio.escuta.toLocaleUpperCase('pt-BR')}</Text>
+        <Text style={[formatos.rotuloCaixa, { color: cores.acaoEscura }, caixaAlta]}>{t.audio.escuta}</Text>
       </View>
       <View style={formatos.ouvir}>
         <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvirExercicio} icone="som" destaque grande acao={() => tocar(false)} />
@@ -421,7 +421,7 @@ function BotaoFalar({ fala }: { fala: Fala }) {
 export function Falas({ falas }: { falas: Fala[] }) {
   return (
     <View style={formatos.secao}>
-      <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.audio.falasTitulo.toLocaleUpperCase('pt-BR')}</Text>
+      <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.audio.falasTitulo}</Text>
       {falas.some(({ pronuncia }) => pronuncia) && <Text style={estilos.legenda}>{t.audio.comoLerPronuncia}</Text>}
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
@@ -467,7 +467,7 @@ export function TextoComFalas({ texto, idioma, estilo }: { texto: string; idioma
 export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
   return (
     <View testID="frases-da-licao" style={formatos.secao}>
-      <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.frasesDaLicao.toLocaleUpperCase('pt-BR')}</Text>
+      <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.frasesDaLicao}</Text>
       {falas.some(({ pronuncia }) => pronuncia) && <Text style={estilos.legenda}>{t.audio.comoLerPronuncia}</Text>}
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
@@ -532,7 +532,7 @@ export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: 
 export function Passos({ passos, titulo, preenchimento }: { passos: string[]; titulo?: string; preenchimento?: string }) {
   return (
     <View style={formatos.secao}>
-      {titulo && <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{titulo.toLocaleUpperCase('pt-BR')}</Text>}
+      {titulo && <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{titulo}</Text>}
       {passos.map((passo, posicao) => (
         <View key={posicao} style={formatos.passo}>
           <View style={formatos.passoNumero} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
@@ -568,7 +568,7 @@ export function RecursoDaLicao({ recurso, longa = false, semBatida = false }: { 
   if (recurso.tipo === 'linha_do_tempo') {
     return (
       <View style={formatos.secao}>
-        <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.recursos.linhaDoTempo.toLocaleUpperCase('pt-BR')}</Text>
+        <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.recursos.linhaDoTempo}</Text>
         <View style={formatos.linhaTempo}>
           <View style={formatos.linhaTempoTrilho} />
           {recurso.eventos.map((evento, posicao) => (
@@ -812,7 +812,7 @@ export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
   return (
     <View style={formatos.secao}>
       <Text style={formatos.instrucao}>{t.ordenar.instrucao}</Text>
-      <Text style={formatos.rotuloCaixa}>{t.ordenar.suaOrdem.toLocaleUpperCase('pt-BR')}</Text>
+      <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.ordenar.suaOrdem}</Text>
       <View style={formatos.ordemCaixa}>
         {posicoes.length === 0 && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.ordenar.vazio}</Text>}
         {posicoes.map((id, posicao) => {
@@ -982,7 +982,7 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
   return (
     <View style={formatos.secao}>
       <View style={formatos.afirmacao}><Text style={formatos.afirmacaoTexto}>{afirmacao}</Text></View>
-      <Text style={formatos.rotuloCaixa}>{t.verdadeiroFalso.valor.toLocaleUpperCase('pt-BR')}</Text>
+      <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.valor}</Text>
       <View style={formatos.valores} accessibilityRole="radiogroup" accessibilityLabel={t.verdadeiroFalso.valor}>
         {(['verdadeiro', 'falso'] as const).map((opcao) => {
           const marcada = escolha === opcao;
@@ -996,7 +996,7 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
           );
         })}
       </View>
-      <Text style={formatos.rotuloCaixa}>{t.verdadeiroFalso.porque.toLocaleUpperCase('pt-BR')}</Text>
+      <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.porque}</Text>
       {justificativas(justificativa, (nova) => mudar(`${escolha}:${nova}`))}
     </View>
   );
@@ -1031,7 +1031,7 @@ export function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao:
     <View style={formatos.correcao}>
       {avaliacao.criterios && (
         <>
-          <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.aberta.criterios.toLocaleUpperCase('pt-BR')}</Text>
+          <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.aberta.criterios}</Text>
           {avaliacao.criterios.map((criterio, posicao) => (
             <View key={posicao} style={formatos.criterio} accessible
               accessibilityLabel={`${criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: ${criterio.texto}`}>
@@ -1046,7 +1046,7 @@ export function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao:
       {avaliacao.modelo && !mostrarModelo && <Text style={estilos.legenda}>{t.aberta.modeloDepois}</Text>}
       {avaliacao.modelo && mostrarModelo && (
         <View style={formatos.modelo}>
-          <Text style={formatos.rotuloCaixa}>{t.aberta.modelo.toLocaleUpperCase('pt-BR')}</Text>
+          <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.aberta.modelo}</Text>
           <Text style={estilos.texto}>{avaliacao.modelo}</Text>
         </View>
       )}
