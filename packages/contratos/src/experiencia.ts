@@ -139,26 +139,34 @@ export const mensagens = {
         posicao: (passo: number, total: number) => `Passo ${passo} de ${total}`,
         passos: [
             {
-                titulo: 'Oi! Eu sou o Stu.',
-                texto: 'Vou te acompanhar nos estudos. Você escolhe o assunto e eu ajudo a montar a trilha até lá.',
+                titulo: 'Seu material vira lição',
+                texto: 'Envie um arquivo, foto ou pedido e estude com a citação do trecho original.',
             },
             {
-                titulo: 'Conte o que quer aprender',
-                texto: 'Pode ser qualquer coisa: violão, inglês para viagem, culinária, história do Brasil, fotografia ou primeiros socorros.',
+                titulo: 'O erro abre outro caminho',
+                texto: 'Quando travar, a ponte explica de outro jeito em quatro passos até o desafio.',
             },
             {
-                titulo: 'Veja sua trilha nascer',
-                texto: 'A IA monta lições curtas, uma de cada vez, na ordem que ajuda a aprender. Você confere a trilha antes de começar.',
+                titulo: 'Explique com suas palavras',
+                texto: 'Conte ao Stu o que entendeu e receba retorno em quatro cartões objetivos.',
             },
             {
-                titulo: 'Avance no seu ritmo',
-                texto: 'Cada lição tem explicação, exemplo e exercícios de vários tipos, com áudio, imagens e prática fora da tela quando ajudam. Seu progresso fica salvo na web e no celular.',
+                titulo: 'Progresso salvo no mapa',
+                texto: 'Acompanhe cada lição e ponte concluída na web e no celular, no seu ritmo.',
             },
             {
                 titulo: 'O que te interessa?',
                 texto: 'Escolha uma área para ver ideias de trilha primeiro. Dá para mudar depois.',
             },
         ],
+        exemplos: {
+            fonteArquivo: 'Frações.pdf · pág. 2',
+            fonteTrecho: 'Dividir um inteiro em partes iguais garante que cada fração represente a mesma parte.',
+            ensinoAcertos: 'Você explicou a divisão em partes iguais.',
+            ensinoLacuna: 'Faltou ligar o denominador ao total de partes.',
+            ensinoPergunta: 'Como ficam 3 fatias de uma pizza dividida em 8?',
+            ensinoProximo: 'Pratique comparando frações com o mesmo todo.',
+        },
         temas: ['Violão', 'Inglês', 'Culinária', 'História', 'Fotografia', 'Primeiros socorros'],
         salvo: 'Progresso salvo',
         oi: 'Oi!',
