@@ -29,6 +29,7 @@ import { Icone } from './icone';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
+import { focoVisivel } from './foco';
 
 /**
  * Quanto o conteúdo da tela começa abaixo do topo da rolagem por causa da barra da marca, que rola junto (como na web).
@@ -81,7 +82,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const paginaDeAcesso = pagina === 'entrada' || Boolean(pagina?.startsWith('recuperar'));
   const cabecalho = !semCabecalho && (
     <View style={[estilos.cabecalho, semLinha && { borderBottomWidth: 0 }]}>
-      <View style={[estilos.marcaConteudo, !topo && !paginaDeAcesso && estilos.marcaEstudo, !topo && !paginaDeAcesso && Boolean(abaixoDoLogo) && estilos.marcaComSelo]}>
+      <View style={[estilos.marcaConteudo, !topo && paginaDeAcesso && estilos.marcaAcesso, !topo && !paginaDeAcesso && estilos.marcaEstudo, !topo && !paginaDeAcesso && Boolean(abaixoDoLogo) && estilos.marcaComSelo]}>
         {topo ?? (
           <>
             <Logo estilo={paginaDeAcesso ? undefined : estilos.logoEstudo} />
@@ -289,7 +290,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
       <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityHint={dica}
         accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} disabled={bloqueado}
         onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao}
-        onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+        onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
         // A caixa ocupa os 48 da face, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
         style={({ pressed }) => [degrauFora(4, 16, labio, pressed), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
         <View style={[estilos.botaoFace, variante === 'secundario' && estilos.botaoFaceSecundaria, variante === 'sucesso' && estilos.botaoFaceSucesso,
@@ -312,7 +313,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
       onPressIn={() => pressionar(0.97)}
       onPressOut={() => pressionar(1)}
       onPress={acao}
-      onFocus={() => setFocado(true)}
+      onFocus={() => setFocado(focoVisivel())}
       onBlur={() => setFocado(false)}
       style={({ pressed }) => [estilos.botao, estilos.botaoTextoLivre, compacto && estilos.botaoCompacto, estilo,
         pressed && estilos.botaoPressionado, focado && estilos.foco]}
@@ -445,7 +446,7 @@ export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = fals
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={rotulo}
       accessibilityState={{ disabled: desativado, ...(selecionado === undefined ? null : { selected: selecionado }) }}
-      disabled={desativado} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)} hitSlop={2}
+      disabled={desativado} onPress={acao} onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)} hitSlop={2}
       style={({ pressed }) => [estilos.botaoIcone, pressed && estilos.botaoIconePressionado, focado && estilos.foco]}>
       <Icone nome={icone} tamanho={tamanho} cor={cor} traco={traco} />
     </Pressable>
@@ -541,7 +542,7 @@ export function LinhaAbrir({ rotulo, aberto, alternar, testID, cor = cores.texto
   const [focado, setFocado] = useState(false);
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ expanded: aberto, disabled: desativado }} aria-expanded={aberto}
-      disabled={desativado} hitSlop={6} onPress={alternar} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      disabled={desativado} hitSlop={6} onPress={alternar} onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
       style={({ pressed }) => [estilos.linhaAbrir, pressed && { opacity: 0.7 }, focado && estilos.foco]}>
       <Chevron aberto={aberto} cor={cor} />
       <Text style={[estilos.linhaAbrirTexto, { color: cor }]}>{rotulo}</Text>
@@ -665,9 +666,13 @@ export const estilos = StyleSheet.create({
     width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 8,
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8, minHeight: 60,
   },
+  // .entrada-cabecalho .logo-quadro e .recuperar-topo: 60 de altura contando a linha de 2 de baixo (box-sizing: border-box).
+  marcaAcesso: { minHeight: 58 },
   logo: { width: 112, height: 38 },
   logoEstudo: { width: 102, height: 34.6 },
-  marcaEstudo: { paddingHorizontal: 16, paddingVertical: 4, minHeight: 64 },
+  // .estudo-cabecalho no celular: 64 contando a linha de 2 (box-sizing: border-box). Sem o selo, a linha do logo e do "Sair"
+  // fica no alto (4 em cima; a web estica a linha vazia do selo embaixo): 4 + 48 + 10 = 62 mais a linha.
+  marcaEstudo: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 10, minHeight: 62 },
   conteudoEstudo: { paddingTop: 28 },
   // Com o selo de sincronia, a web quebra a barra em duas linhas (até 480 px): 4 em cima, a linha do logo (44), 7 até o selo e
   // 4 embaixo (selo em y=55, divisória em 82); os 64 de altura mínima valem para a barra inteira. A linha do logo do app tem
@@ -777,7 +782,8 @@ export const estilos = StyleSheet.create({
   seloOffline: { borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
   seloPonto: { width: 8, height: 8, borderRadius: 4 },
   seloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 15 },
-  chevron: { width: 8, height: 8, marginHorizontal: 2, borderRightWidth: 2.5, borderBottomWidth: 2.5 },
+  // summary::before da web: caixa de 8 (box-sizing: border-box, com as bordas de 2,5) girada, sem margem; o texto vem 8 depois.
+  chevron: { width: 8, height: 8, borderRightWidth: 2.5, borderBottomWidth: 2.5 },
   linhaAbrir: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 44, paddingVertical: 10, borderRadius: 8 },
   linhaAbrirTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   seloDemo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: '#FFF1CC' },

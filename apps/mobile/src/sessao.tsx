@@ -267,7 +267,7 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   }
 
   return (
-    <Tela pagina="entrada" estiloRodapeConteudo={entradaEstilos.rodape}
+    <Tela pagina="entrada" estiloRodapeConteudo={entradaEstilos.rodape} estiloConteudo={entradaEstilos.conteudo}
       // Como na web: com o visitante oferecido, "Experimentar sem conta" é a ação principal e "Entrar" fica secundário.
       rodape={<Botao rotulo={ocupado && !experimentando ? mensagens.entrada.entrando : mensagens.entrada.entrar}
         variante={configuracaoCarregada && visitanteDisponivel ? 'secundario' : 'primario'}
@@ -314,11 +314,17 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
           acessorio={<BotaoIcone icone={mostrarSenha ? 'olhoFechado' : 'olho'} testID="alternar-senha" selecionado={mostrarSenha}
             rotulo={mensagens.entrada.mostrarSenha} desativado={ocupado}
             acao={() => setMostrarSenha((atual) => !atual)} />} />
+        {/* Como na web, o link e o erro ficam dentro do formulário (vão de 20, e tremem com ele). O link é .acesso-link: 44 de
+            altura, texto no centro e sem sublinhado até 767 px; não é um botão com borda. */}
+        {configuracaoCarregada && recuperacaoDisponivel && (
+          <Pressable testID="esqueci-senha" accessibilityRole="link" disabled={ocupado} accessibilityState={{ disabled: ocupado }}
+            hitSlop={{ top: 2, bottom: 2 }} onPress={() => recuperar(email)}
+            style={({ pressed }) => [entradaEstilos.linkCentro, pressed && { opacity: 0.7 }]}>
+            <Text style={entradaEstilos.linkTexto}>{mensagens.acesso.esqueci}</Text>
+          </Pressable>
+        )}
+        {erro && <EstadoErro mensagem={erro} estilo={entradaEstilos.erro} />}
       </Animated.View>
-      {configuracaoCarregada && recuperacaoDisponivel && (
-        <Botao rotulo={mensagens.acesso.esqueci} testID="esqueci-senha" variante="texto" desativado={ocupado} acao={() => recuperar(email)} />
-      )}
-      {erro && <EstadoErro mensagem={erro} />}
     </Tela>
   );
 }
@@ -328,9 +334,15 @@ const entradaEstilos = StyleSheet.create({
   linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
   banner: { marginBottom: 24, borderRadius: 24 },
   formulario: { gap: 20, marginTop: 28 },
+  // .entrada-conteudo deixa 96 embaixo e o rodapé fixo cobre 76: sobram 20 entre o último item e o rodapé.
+  conteudo: { paddingBottom: 20 },
   visitante: { gap: 8, padding: 14, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
   // Como .acesso-link da web no celular: 44 px de altura logo abaixo da introdução, sem sublinhado (globals.css, até 767 px).
   link: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
+  // O "Esqueci minha senha" é item da grade do formulário: ocupa a largura toda, com o texto no centro.
+  linkCentro: { minHeight: 44, justifyContent: 'center', alignItems: 'center' },
+  // .estado-erro não tem margem própria: o vão de 20 do formulário já separa o cartão do link.
+  erro: { marginTop: 0 },
   linkTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   // A web deixa 24 px nas laterais do "Entrar" (342 px em 390).
   rodape: { paddingHorizontal: 24 },

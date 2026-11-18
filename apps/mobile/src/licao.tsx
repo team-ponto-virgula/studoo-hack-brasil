@@ -680,7 +680,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <Text style={licaoEstilos.voltarEtapaTexto}>{t.etapaAnterior}</Text>
           </Pressable>
         )}
-        <View style={licaoEstilos.etapa}>
+        <View style={[licaoEstilos.etapa, !(passo > 0 && !revisao) && licaoEstilos.etapaNoTopo]}>
           <View style={[licaoEstilos.etapaIcone, { backgroundColor: coresDaEtapa[etapa.tipo].fundo }]}>
             {/* .aula-etapa .icone: caixa de 28 com 4 de respiro, desenho de 20. */}
             <Icone nome={iconesDaEtapa[etapa.tipo]} tamanho={20} cor={coresDaEtapa[etapa.tipo].texto} />
@@ -1193,6 +1193,9 @@ const licaoEstilos = StyleSheet.create({
   // .aula-voltar-etapa: 4 de respiro em cima e embaixo (29 de altura), na largura da coluna, 6 embaixo mais o vão de 14 da grade;
   // o alvo de 48 cresce por fora (hitSlop), sem mudar o desenho (P8).
   voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'stretch', paddingVertical: 4, marginTop: 4, marginBottom: 20 },
+  // .aula-miolo começa 4 abaixo do topo do conteúdo (a margem de cima do "Etapa anterior"): sem o link (primeira etapa e
+  // revisão), o selo da etapa fica nesse mesmo ponto.
+  etapaNoTopo: { marginTop: 4 },
   voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
   marcadores: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
   marcadoresTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21 },
@@ -1211,8 +1214,8 @@ const licaoEstilos = StyleSheet.create({
   fonteTrecho: { borderLeftWidth: 4, borderColor: cores.acao, backgroundColor: cores.fundo, borderTopRightRadius: 12, borderBottomRightRadius: 12,
     paddingVertical: 10, paddingHorizontal: 14 },
   fonteTrechoTexto: { fontStyle: 'italic' },
-  // .aula-stu-estado: raio de 20; o cartão da pergunta vem 14 abaixo (o vão de .aula-miolo; o cartão já tem 4 em cima).
-  stuEstado: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14, marginBottom: 10, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20,
+  // .aula-stu-estado: raio de 20; o cartão da pergunta vem 14 abaixo (o vão de .aula-miolo; o cartão já tem 10 em cima).
+  stuEstado: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14, marginBottom: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20,
     borderWidth: 2 },
   stuEstadoAvatar: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
   stuEstadoImagem: { width: 42, height: 46 },

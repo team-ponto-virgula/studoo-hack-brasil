@@ -39,6 +39,7 @@ import { mensagens } from './mensagens';
 import { avisoVozVistoAgora, lerAvisoVozVisto, marcarAvisoVozVisto } from './preferencias';
 import { cores, fontes } from './tema';
 import { iniciarControladorVozAoVivo, type ControladorVozAoVivo } from './voz-ao-vivo';
+import { focoVisivel } from './foco';
 import {
   EntradaVozAoVivo, PainelVozAoVivo, PrivacidadeVozAoVivo, provedorDaGravacao, provedorDaVozAoVivo, type ClienteElegibilidadeVoz,
   type ProvedorTexto,
@@ -261,7 +262,7 @@ function BotaoArquivo({ rotulo, testID, desativado, acao }: { rotulo: string; te
   const [focado, setFocado] = useState(false);
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ disabled: desativado }} disabled={desativado} onPress={acao}
-      onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
       style={({ pressed }) => [s.arquivo, pressed && { opacity: 0.8 }, desativado && { borderColor: cores.gelo }, focado && estilos.foco]}>
       <Text style={[s.arquivoTexto, desativado && { color: cores.textoSecundario }]}>{rotulo}</Text>
     </Pressable>

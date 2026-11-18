@@ -22,6 +22,7 @@ import { guardarTinhaTrilhas, lerTinhaTrilhas, marcarApresentacaoVista } from '.
 import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NomeIcone } from './trilha';
+import { focoVisivel } from './foco';
 
 /*
  * Estudo no app, com os mesmos passos da web (src/app/estudo.tsx): a pessoa escreve o que quer aprender, a trilha é montada
@@ -814,7 +815,7 @@ function CampoObjetivo({ campoRef, valor, aoMudar, editavel, dica, brilho }: {
           onChangeText={aoMudar} editable={editavel} multiline maxLength={LIMITES_GERACAO.objetivoMax} placeholderTextColor="#9AA3BF"
           placeholder={mensagens.inicio.exemplo} accessibilityHint={dica}
           style={[estudoEstilos.entradaPedido, focado && estudoEstilos.entradaPedidoFocada, !valor && estudoEstilos.entradaPedidoVazia]}
-          onFocus={() => setFocado(true)} onBlur={() => setFocado(false)} />
+          onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)} />
       </View>
       <Animated.View pointerEvents="none" style={[estudoEstilos.luzCampo, { opacity: luz }]} />
     </View>
@@ -826,7 +827,7 @@ function LinkComoFunciona({ desativado, acao }: { desativado: boolean; acao: () 
   const [focado, setFocado] = useState(false);
   return (
     <Pressable testID="como-funciona" accessibilityRole="button" accessibilityState={{ disabled: desativado }} disabled={desativado}
-      onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      onPress={acao} onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
       style={({ pressed }) => [estudoEstilos.como, pressed && estudoEstilos.comoPressionado, focado && estilos.foco]}>
       <Text style={[estudoEstilos.comoTexto, desativado && { color: cores.textoSecundario }]}>{mensagens.inicio.saberMais}</Text>
     </Pressable>
@@ -838,7 +839,7 @@ function Surpresa({ desativada, acao }: { desativada: boolean; acao: () => void 
   const [focado, setFocado] = useState(false);
   return (
     <Pressable testID="surpreenda-me" accessibilityRole="button" accessibilityState={{ disabled: desativada }} disabled={desativada}
-      onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      onPress={acao} onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
       style={({ pressed }) => [degrauFora(3, 999, '#FFE08A', pressed), focado && estilos.foco]}>
       <View style={[estudoEstilos.surpresa, desativada && estudoEstilos.chipDesativada]}>
         {/* .pedido-ideia .desenho: 24 px. */}
@@ -862,7 +863,7 @@ function Area({ nome, icone, testID, escolhida, desativada, acao }: {
   const pulo = usePulinho(escolhida, 1.3);
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ selected: escolhida, disabled: desativada }}
-      disabled={desativada} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+      disabled={desativada} onPress={acao} onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
       style={({ pressed }) => [estudoEstilos.area, escolhida && estudoEstilos.areaEscolhida, desativada && estudoEstilos.chipDesativada,
         pressed && estilos.botaoPressionado, focado && estilos.foco]}>
       <Animated.View style={{ transform: [{ scale: pulo }, { rotate: pulo.interpolate({ inputRange: [1, 1.3], outputRange: ['0deg', '-12deg'] }) }] }}>
@@ -890,7 +891,7 @@ function Sugestao({ texto, icone, testID, ordem, escolhida, desativada, acao }: 
   return (
     <Animated.View style={estiloDeEntrada(entrada, 8, 1)}>
       <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ selected: escolhida, disabled: desativada }}
-        disabled={desativada} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+        disabled={desativada} onPress={acao} onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
         // Como .pedido-ideia[aria-pressed='true']: a ideia escolhida fica com a borda, o texto e o fundo azuis.
         style={({ pressed }) => [degrauFora(3, 999, escolhida ? '#B9C7F5' : cores.gelo, pressed), focado && estilos.foco]}>
         <View style={[estudoEstilos.chip, escolhida && estudoEstilos.chipEscolhida, desativada && estudoEstilos.chipDesativada]}>
@@ -1579,9 +1580,9 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
         </View>
         <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo, estudoEstilos.destaqueTituloTamanho]}>{plano.titulo}</Text>
         <BarraProgresso progresso={plano.progresso} comPercentual />
-        {/* 15 do texto de progresso até o botão, como .plano-destaque na web (o corpo tem vão de 8). */}
+        {/* 14 da linha do progresso (21) até o botão, como .plano-destaque na web (o corpo tem vão de 8). */}
         <Botao rotulo={acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir}
-          estilo={{ marginTop: 7 }} />
+          estilo={{ marginTop: 6 }} />
       </View>
     </View>
     </Animated.View>
@@ -1743,7 +1744,7 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
           <Text style={estudoEstilos.liberadaTexto}>{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</Text>
         </Animated.View>
       )}
-      <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}>
+      <View style={[estudoEstilos.bloco, estudoEstilos.blocoProgresso]}>
         <Text accessibilityRole="header" style={[estilos.tituloBloco, estudoEstilos.tituloProgresso]}>{mensagens.licao.progresso}</Text>
         <BarraProgresso progresso={plano.progresso} de={antes} testID="progresso-plano" comPercentual />
       </View>
@@ -2000,12 +2001,14 @@ const estudoEstilos = StyleSheet.create({
   descobertaPassos:{flexDirection:'row',justifyContent:'space-between',marginTop:24,paddingTop:20,borderTopWidth:1,borderColor:cores.gelo},
   // Borda de 2 que fecha em volta e o degrau de 4 por fora, na mesma cor (gelo), como na web (box-shadow 0 4px 0).
   bloco: { gap: 12, marginTop: 16, padding: 16, borderRadius: 24, borderWidth: 2, borderColor: cores.gelo, boxShadow: `0 4px 0 ${cores.gelo}` },
-  // "Progresso na trilha": 34 do título até "1 de 3 lições" na web.
   blocoConclusao: { marginTop: 24, padding: 20, gap: 2 },
+  // .conclusao-progresso: 20 depois de "Liberada na trilha", 20 de respiro e o título colado no .progresso (que tem 12 em cima).
+  blocoProgresso: { marginTop: 20, padding: 20, gap: 0 },
   progresso: { gap: 8, marginTop: 12 },
   progressoNaFaixa: { marginTop: 18 },
   progressoLegenda: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 },
-  progressoTexto: { flexShrink: 1, fontWeight: '700' },
+  // .progresso span: 0,875rem com a entrelinha de 1,5 do corpo (21).
+  progressoTexto: { flexShrink: 1, fontWeight: '700', lineHeight: 21 },
   percentual: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 21 },
   // .barra da web: 12 de altura (nos cartões de Minhas trilhas e no destaque).
   trilha: { height: 12, borderRadius: 6, backgroundColor: cores.nevoa, overflow: 'hidden' },
@@ -2014,7 +2017,8 @@ const estudoEstilos = StyleSheet.create({
   brilhoBarra: { position: 'absolute', top: 3, left: 6, right: 6, height: 3, borderRadius: 2, backgroundColor: 'rgba(255, 255, 255, 0.3)' },
   // Faixa do topo da trilha: cartão branco com relevo, como na web.
   // Como o cabeçalho da proposta na web: solto na página, sem cartão (o título, a origem e o aviso de trilha repetida).
-  faixa: { marginBottom: 12 },
+  // .trilha-cabecalho: 4 em cima e nos lados (o texto começa em 24 no celular, não em 20).
+  faixa: { marginBottom: 12, paddingTop: 4, paddingHorizontal: 4 },
   faixaLarga: { padding: 24 },
   // Como o título da proposta na web (clamp(1,5rem, 4vw, 2rem) = 24 px no celular, entrelinha 1,12).
   tituloFaixa: { fontSize: 24, lineHeight: 27 },
@@ -2105,8 +2109,9 @@ const estudoEstilos = StyleSheet.create({
   cartaoSelo: { position: 'absolute', top: 12, left: 14, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10,
     paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.92)' },
   cartaoSeloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
-  cartaoCorpo: { gap: 4, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 },
-  cartaoAcao: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 14 },
+  // .plano-cartao__corpo: 18 20 20 de respiro; o título e o .progresso (12 em cima) num bloco e o botão 16 abaixo dele.
+  cartaoCorpo: { gap: 0, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 20 },
+  cartaoAcao: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16 },
   // Pedido
   stuReage: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginTop: 20, marginBottom: -6 },
   balaoFala: { flexShrink: 1, maxWidth: 320, marginBottom: 22, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16,
@@ -2138,7 +2143,8 @@ const estudoEstilos = StyleSheet.create({
   contador: { alignSelf: 'flex-end' },
   // Como .pedido-ideias e .pedido-ideia da web: fichas de 46 px com lábio de 3, que quebram linha, centralizadas.
   // Fichas de 46 com o degrau de 3 por fora (sem ocupar lugar, como a sombra da web): vão de 10, passo de 56.
-  sugestoes: { marginTop: 20, marginBottom: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
+  // Em cima, o vão de 18 de .painel--pedido mais a margem de 2 e o respiro de 4 de .pedido-ideias.
+  sugestoes: { marginTop: 24, marginBottom: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
   surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 46, paddingVertical: 8, paddingLeft: 10, paddingRight: 16, borderRadius: 999,
     borderWidth: 2, borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   surpresaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },

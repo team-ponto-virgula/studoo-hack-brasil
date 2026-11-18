@@ -4,6 +4,7 @@ import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { usePulinho } from './animacoes';
 import { degrauFora, estilos } from './interface';
 import { cores, fontes } from './tema';
+import { focoVisivel } from './foco';
 
 /** Letras das opções de múltipla escolha, como na web (A, B, C…). */
 export const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -37,7 +38,7 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
     <Animated.View style={{ transform: [{ scale: pulo }], opacity: apagada ? 0.55 : 1 }}>
       {/* aria-checked além do accessibilityState: o React Native Web só lê os atributos aria-* (o leitor de tela da web precisava do estado). */}
       <Pressable testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }} aria-checked={selecionada}
-        accessibilityLabel={texto} disabled={desativada} onPress={acao} onFocus={() => setFocada(true)} onBlur={() => setFocada(false)}
+        accessibilityLabel={texto} disabled={desativada} onPress={acao} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
         style={({ pressed }) => [degrauFora(4, 16, corDegrau, pressed), focada && estilos.foco]}>
         {/* A face: borda de 2 que fecha em volta (o degrau de 4 é o pai, por fora, como a sombra da web). */}
         <View style={[opcaoEstilos.opcao, estado]}>

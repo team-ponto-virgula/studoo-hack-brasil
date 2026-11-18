@@ -24,6 +24,7 @@ import { Desenho, coresDaRegiao } from './mundo';
 import { iconesDosTemas, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
+import { focoVisivel } from './foco';
 
 /*
  * Apresentação do Studoo no app, com os mesmos cinco passos da web (src/app/apresentacao.tsx): desde a rodada 4.5, os quatro
@@ -188,7 +189,7 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
   const pulo = usePulinho(escolhida, 1.3);
   return (
     <Pressable testID={`area-apresentacao-${id}`} accessibilityRole="button" accessibilityState={{ selected: escolhida }}
-      onPress={escolher} onFocus={() => setFocada(true)} onBlur={() => setFocada(false)}
+      onPress={escolher} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
       style={({ pressed }) => [apresentacaoEstilos.area, escolhida && apresentacaoEstilos.areaEscolhida, pressed && apresentacaoEstilos.areaAfundada,
         focada && estilos.foco]}>
       <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
@@ -330,7 +331,9 @@ const apresentacaoEstilos = StyleSheet.create({
   pontoAtivo: { width: 28, backgroundColor: cores.acao },
   posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   topo: { backgroundColor: cores.fundo },
-  topoConteudo: { paddingTop: 12, paddingBottom: 0, minHeight: 48 },
+  // min-height de 48 da .apresentacao-topo mais os 12 de cima (no Yoga a altura mínima conta o padding): no último passo,
+  // sem o "Pular", a linha não encolhe e o conteúdo fica na mesma altura dos outros passos.
+  topoConteudo: { paddingTop: 12, paddingBottom: 0, minHeight: 60 },
   rodape: { paddingHorizontal: 20, backgroundColor: cores.fundo },
   // 22 da face do botão até a borda, como a web: o degrau de 4 desce por fora, no respiro de baixo (18 à vista).
   rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 22, borderTopWidth: 2, borderColor: cores.nevoa },

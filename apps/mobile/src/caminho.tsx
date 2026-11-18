@@ -23,6 +23,7 @@ import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-
 import { ColinaElipse, Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
 import { cores, fontes } from './tema';
 import { explicar, iconeDoNo, nomeAcessivelDoNo, posicaoDoNo, posicaoX, selosDoNo, type EstadoNo, type NoCaminho } from './trilha';
+import { focoVisivel } from './foco';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
@@ -797,7 +798,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
     <View style={{ height: lente }}>
       <Pressable ref={guardar} accessibilityRole="button" accessibilityLabel={rotuloA11y}
         accessibilityState={{ disabled: ocupado, busy: abrindo }} disabled={ocupado} onPress={tocar} hitSlop={8}
-        onFocus={() => setFocado(true)} onBlur={() => setFocado(false)} style={lugar}>
+        onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)} style={lugar}>
         {({ pressed }) => moeda(pressed)}
       </Pressable>
       {rotulo}
@@ -1253,7 +1254,7 @@ function Folha({ titulo, texto, reduzir, estado, refazer, irParaAtual, fechar }:
             <Text ref={cabecalho} accessible accessibilityRole="header"
               style={[estilos.tituloBloco, caminhoEstilos.folhaTitulo, concluida && { color: cores.sucesso }]}>{titulo}</Text>
             <Pressable accessibilityRole="button" accessibilityLabel={mensagens.trilha.fechar} onPress={fechar}
-              onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+              onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
               style={({ pressed }) => [caminhoEstilos.fechar, pressed && caminhoEstilos.fecharPressionado, focado && estilos.foco]}>
               <Icone nome="fechar" tamanho={20} cor={cores.textoSecundario} />
             </Pressable>
@@ -1313,7 +1314,9 @@ const caminhoEstilos = StyleSheet.create({
   // .caminho-placa: borda de 3 em volta (#c79a62) e o degrau de 4 por fora (box-shadow 0 4px 0 #b0844d).
   placaMadeira: { maxWidth: 272, marginTop: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 3,
     borderColor: '#C79A62', backgroundColor: '#F7E3C2', boxShadow: '0 4px 0 #B0844D' },
-  poste: { position: 'absolute', bottom: -30, width: 8, height: 22, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, backgroundColor: '#A87650' },
+  // .caminho-placa::before/::after: 22 de altura a partir da borda da placa, por trás do degrau de 4; aqui o poste é filho da
+  // placa (fica por cima do degrau), então começa abaixo dele: os mesmos 18 à vista, com o pé no mesmo lugar.
+  poste: { position: 'absolute', bottom: -25, width: 8, height: 18, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, backgroundColor: '#A87650' },
   placaTexto: { color: '#5B3A17', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
   // .caminho-guia::after: elipse (border-radius 50%), não barra arredondada.
   guiaSombra: { position: 'absolute', left: '18%', right: '18%', bottom: -2, height: 8, borderRadius: '50%', backgroundColor: 'rgba(27, 42, 94, 0.14)' },

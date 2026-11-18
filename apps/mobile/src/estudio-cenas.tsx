@@ -3,7 +3,7 @@ import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View,
 import { useAudioRecorderState, type AudioRecorder } from 'expo-audio';
 import type { ApoioEstudo, PaginaMaterial } from '@studoo/contratos';
 import { Icone } from './icone';
-import { estilos, useMovimentoReduzido, LinhaAbrir, degrauFora } from './interface';
+import { estilos, useMovimentoReduzido, LinhaAbrir, degrauFora, degrade } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 
@@ -15,6 +15,8 @@ import { cores, fontes } from './tema';
  */
 
 const m = mensagens.estudio;
+/** O céu de .ponte-cena: degradê de #f3f9ff a #e4f1ff até 66% (a água vem por cima a partir daí). */
+const CEU_DA_PONTE = degrade('linear-gradient(180deg, #f3f9ff 0%, #e4f1ff 66%)');
 const madeira = { face: '#9C5619', borda: '#703B10' };
 const madeiraErro = { face: '#B54B14', borda: '#7D310A' };
 const madeiraVencida = { face: '#2F7D22', borda: '#1E5916' };
@@ -114,7 +116,7 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
   return (
     <View style={estilo} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y, evento.nativeEvent.layout.height)}>
       {/* Como .ponte-cena da web no celular: céu, água a partir de 66% com as faixas claras no pé, margens e o vão. */}
-      <View testID="cena-ponte" style={cena.cena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <View testID="cena-ponte" style={[cena.cena, CEU_DA_PONTE]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <View style={cena.agua} />
         <View style={cena.faixas}>{Array.from({ length: 14 }, (_, indice) => <View key={indice} style={cena.faixa} />)}</View>
         <View style={cena.linha}>
@@ -224,7 +226,9 @@ const PESOS_ONDA = [0.55, 0.85, 1, 0.8, 0.5];
  */
 export function OndasDoVolume({ gravador }: { gravador: AudioRecorder }) {
   const estado = useAudioRecorderState(gravador, 100);
-  const nivel = typeof estado.metering === 'number' ? Math.max(0, Math.min(1, (estado.metering + 60) / 60)) : null;
+  // Como a web: com movimento reduzido, ela nem liga o analisador e as cinco barras ficam paradas na altura cheia.
+  const reduzir = useMovimentoReduzido();
+  const nivel = reduzir || typeof estado.metering !== 'number' ? null : Math.max(0, Math.min(1, (estado.metering + 60) / 60));
   return (
     <View testID="ondas-volume" style={aluno.ondas} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       {PESOS_ONDA.map((peso, indice) => (

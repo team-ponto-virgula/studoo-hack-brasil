@@ -6,6 +6,8 @@
 
 Esta tabela é a única lista de diferenças entre a web móvel e o app. O que não está nela é defeito. Ela vem do levantamento de 18/11, que comparou o site em `fc6e458` com a prévia do app, em 390×844 e 360×800, e foi refeita no mesmo dia contra o site em `cd870b1`. O app foi corrigido na `feat/ui-hackathon-mobile` (de `d116640` a `0a7e759`; a rodada medida de `2a2c1c6` a `0a7e759` zerou ou explicou cada linha de espaço, caixa, tipografia, ordem e alinhamento). As decisões são do Lead.
 
+**Rodada revisada (pedido 5a5d2e21).** De `3aa3773` em diante, o app copiou o estilo computado da web em `bf8cf37` (caixas com borda que fecha e degrau por fora, fim da rolagem, rodapé compacto, cabeçalho e legenda da ponte, mapa, paisagens, cabeçalhos de 60 e 64 contando a linha, anel de foco só pelo teclado como `:focus-visible`), medido contra uma web local com o mesmo código e IA simulada (o site passou a usar IA real e não se gera nada nele).
+
 **Resolvido em 18/11.** A web fez W1 a W6, B1 e B2 em `cd870b1`, e o app copiou o esqueleto novo da web (D1, `1a66d2d`). O espaçamento do mapa (A1) ficou igual ao da web em `22c6599` e `0a7e759`: a distância de um nome de lição ao próximo é a mesma nos dois. Esses itens saíram da tabela.
 
 ## Diferenças que sobram
@@ -30,12 +32,13 @@ Esta tabela é a única lista de diferenças entre a web móvel e o app. O que n
 
 - "Esqueci minha senha" e "Experimentar sem conta" aparecem conforme `/api/auth/config`, com a mesma regra nos dois. No site, recuperação e visitante estão desligados.
 - Trilhas da conta, textos gerados pela IA e a ordem das opções (sorteada por sessão, com a mesma regra em `aula.tsx` e `licao.tsx`) mudam de um ambiente para outro.
-- O app não usa SVG. O olho de mostrar senha é desenhado com Views e as colinas do mapa saem de arcos de círculos grandes, reproduzindo os caminhos SVG da web. O desenho é o mesmo.
+- O app não usa SVG. Ícones, olho de mostrar senha, colinas da entrada (elipses de CSS na web), morro do troféu e a estrada até ele são desenhados com Views, no mesmo desenho da web. As ondas do mapa (começo e fronteira entre partes) são curvas Bézier na web e arcos de círculos grandes no app: onde dois arcos se cruzam fica um "V" (sob a faixa "Parte N"). Fechar isso pede `react-native-svg`; a decisão é do Lead (pedido 5a5d2e21).
 - Animações em andamento na hora da captura: o balão "Começar" flutua 4 a 5 px e a estrela do pedido cintila, nos dois.
 - No balão do nó atual, um espaço de largura zero separa a ação do título. Assim o texto visível continua contido no nome acessível ("Começar: <título>. Lição X de Y, atual."), no formato da web 4.6.
 
 ## Como conferir
 
-- Os pares lado a lado (web à esquerda, app à direita), em 390×844 e 360×800, ficam em `studoo-ui-capturas/paridade/pares/` (antes), `paridade/pares-depois/` (depois das correções) `paridade/pares-cd870b1/` (contra o site em `cd870b1`) e `paridade/pares-v7/` (o app em `0a7e759` contra o site em `abf48eb`). Os estados da voz ao vivo, em simulação local, ficam em `paridade/pares-voz/`.
+- Os pares lado a lado (web à esquerda, app à direita), em 390×844 e 360×800, ficam em `studoo-ui-capturas/paridade/pares/` (antes), `paridade/pares-depois/` (depois das correções) `paridade/pares-cd870b1/` (contra o site em `cd870b1`), `paridade/pares-v7/` (o app em `0a7e759` contra o site em `abf48eb`) e `paridade/pares-v11/` (o app contra a web local em `bf8cf37`, com IA simulada e as mesmas trilhas; pedido 5a5d2e21). Os estados da voz ao vivo, em simulação local, ficam em `paridade/pares-voz/`.
+- Desde o pedido 5a5d2e21, as capturas são em repouso (movimento reduzido nos dois lados) e a ferramenta compara também a caixa visual (o ancestral com fundo, borda, raio, degradê ou sombra): bordas por lado, estilo da borda, degradê, degrau por fora, contorno, reticências, tamanho e traço dos ícones, o branco no fim da rolagem e o que é tocável.
 - As medidas automáticas (texto, fonte, peso, cor, caixa, o que fica parado e o que rola) ficam em `paridade/medidas/`. O levantamento com as classes está em `paridade/LEVANTAMENTO.md`.
 - Uma diferença nova que a plataforma obriga entra nesta tabela com o motivo. Qualquer outra diferença é corrigida.
