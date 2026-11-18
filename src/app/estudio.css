@@ -239,6 +239,7 @@
   transition: rotate 160ms ease-out;
 }
 .painel--aula details[open] > summary::before, .estudio-card details[open] > summary::before { rotate: 45deg; }
+.estudio-ponte { scroll-margin-top: 96px; }
 .estudio-ponte h2:focus { outline: none; }
 .ponte-desenho[data-concluida='true'] span {
   background: var(--sucesso-claro);
@@ -358,7 +359,7 @@
 }
 .ponte-cena {
   position: relative;
-  scroll-margin-top: 20px;
+  scroll-margin-top: 96px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: end;
