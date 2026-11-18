@@ -1024,3 +1024,30 @@ test('controlador H1: pagehide dispara fetch keepalive para encerrar', async () 
     globalThis.fetch = fetchAntes;
   }
 });
+
+test('redutor J1/J2: conversation.item.added e duas respostas falhadas seguidas em response.done', () => {
+  let s = { ...estadoInicialVozAoVivo(), estado: 'ouvindo' };
+
+  // J2: conversation.item.added registra ordem e pendência igual a created
+  s = reduzirEventoRealtime(s, { type: 'conversation.item.added', item: { id: 'u_add', role: 'user' } });
+  assert.deepEqual(s.ordemUsuario, ['u_add']);
+  assert.deepEqual(s.itensPendentes, ['u_add']);
+
+  // J1: 1 falha seguida de completed zera contador e mantém conversa
+  s = reduzirEventoRealtime(s, {
+    type: 'response.done',
+    response: { status: 'failed', status_details: { type: 'failed', error: { type: 'server_error', code: 'internal_error' } } },
+  });
+  assert.equal(s.estado, 'ouvindo');
+  assert.equal(s.respostasFalhasSeguidas, 1);
+
+  s = reduzirEventoRealtime(s, { type: 'response.done', response: { status: 'completed' } });
+  assert.equal(s.respostasFalhasSeguidas, 0);
+
+  // J1: 2 falhas seguidas (failed + incomplete) encerram como erro de rede
+  s = reduzirEventoRealtime(s, { type: 'response.done', response: { status: 'failed' } });
+  assert.equal(s.estado, 'ouvindo');
+  s = reduzirEventoRealtime(s, { type: 'response.done', response: { status: 'incomplete', status_details: { reason: 'content_filter' } } });
+  assert.equal(s.estado, 'erro');
+  assert.equal(s.erro, 'rede');
+});

@@ -101,3 +101,22 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
      4. **Estado de erro** (substitui legendas mantendo o cabeçalho e a alternativa em 1 toque): mensagem de `erros.*` (`role="alert"`, 14px) + botão `Prefiro escrever ou gravar` (`min-height: 44px`).
    - Animações respeitam `prefers-reduced-motion: reduce`.
 
+
+---
+
+## Roteiro de validação com chave real
+Quando a `OPENAI_API_KEY` real estiver disponível em ambiente de ensaio/produção:
+1. **Conferência técnica via CLI (`npm run voz:conferir`)**:
+   - Definir `STUDOO_VOZ_AO_VIVO=1`, `IA=openai`, `OPENAI_API_KEY=<chave>` e executar `npm run voz:conferir`.
+   - Esperado: saída JSON com `"ok": true`, `sdpRecebido: true` e encerramento por `hangup` sem erro.
+2. **Limites para ensaio**:
+   - Subir temporariamente `STUDOO_LIMITE_VOZ_HORA` (padrão `3`) e `STUDOO_LIMITE_VOZ_DIA` (padrão `10`) para evitar bloqueio `429` durante testes seguidos da equipe.
+3. **Primeira conversa no navegador e no Safari**:
+   - Abrir uma lição até o último exercício, expandir `"Explique com suas palavras (opcional)"` e tocar em `"Conversar com o Stu"`.
+   - Confirmar que o áudio do Stu toca automaticamente no Safari (sem precisar de segundo toque, graças à criação síncrona do `<audio>` no clique).
+4. **Logs do servidor**:
+   - Verificar que nenhum áudio ou transcrição aparece no log do servidor; em caso de falha na OpenAI, conferir apenas `status` HTTP e `codigo` higienizado (`[voz-ao-vivo] resposta OpenAI status=... codigo=...`).
+5. **Eventos do canal `oai-events` (DevTools / console em desenvolvimento)**:
+   - Confirmar recebimento de `output_audio_buffer.started` e `output_audio_buffer.stopped` alternando `Stu falando` / `Ouvindo você`.
+   - Confirmar aceitação do item de sistema (`conversation.item.create`) enviado aos `150 s` sem erro fatal.
+   - Confirmar `response.done` com `response.status === "completed"` (ou tratamento de `failed`/`incomplete` caso ocorra).

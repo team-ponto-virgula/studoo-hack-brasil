@@ -19,6 +19,7 @@ export type EstadoSessaoVozAoVivo = {
   pessoaFalando: boolean;
   respostaEmCurso: boolean;
   usouBufferAudio: boolean;
+  respostasFalhasSeguidas: number;
   legendas: TurnoLegenda[];
   ordemUsuario: string[];
   falasPorItem: Record<string, string>;
@@ -39,6 +40,7 @@ export function estadoInicialVozAoVivo(limiteSegundos = 180): EstadoSessaoVozAoV
     pessoaFalando: false,
     respostaEmCurso: false,
     usouBufferAudio: false,
+    respostasFalhasSeguidas: 0,
     legendas: [],
     ordemUsuario: [],
     falasPorItem: {},
@@ -117,6 +119,14 @@ export type EventoRealtime = {
   transcript?: string;
   item?: { id?: string; role?: string };
   error?: { type?: string; code?: string };
+  response?: {
+    status?: string;
+    status_details?: {
+      type?: string;
+      reason?: string;
+      error?: { type?: string; code?: string | null };
+    };
+  };
 };
 
 function estadoFinal(estado: EstadoVozAoVivo): boolean {
@@ -135,7 +145,7 @@ export function reduzirEventoRealtime(
   if (!tipo) return atual;
   const travado = estadoFinal(atual.estado);
 
-  if (tipo === 'conversation.item.created' && evento.item?.role === 'user' && evento.item.id) {
+  if ((tipo === 'conversation.item.created' || tipo === 'conversation.item.added') && evento.item?.role === 'user' && evento.item.id) {
     return {
       ...atual,
       ordemUsuario: registrarOrdem(atual.ordemUsuario, evento.item.id),
@@ -233,10 +243,42 @@ export function reduzirEventoRealtime(
   }
 
   if (tipo === 'response.done') {
+    const statusResp = evento.response?.status;
+    const falhou = statusResp === 'failed' || statusResp === 'incomplete';
+    if (falhou) {
+      if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'development') {
+        const detalhe = evento.response?.status_details;
+        console.debug(
+          '[voz-ao-vivo] resposta',
+          statusResp,
+          detalhe?.reason ?? detalhe?.error?.code ?? detalhe?.error?.type ?? '',
+        );
+      }
+      const seguidas = atual.respostasFalhasSeguidas + 1;
+      if (seguidas >= 2 && !travado) {
+        return {
+          ...atual,
+          respostaEmCurso: false,
+          respostasFalhasSeguidas: seguidas,
+          estado: 'erro',
+          erro: 'rede',
+          anuncioSr: mensagens.estudio.vozAoVivo.erros.rede,
+        };
+      }
+      const deveVoltar = !travado && !atual.usouBufferAudio && atual.estado === 'stu_falando';
+      return {
+        ...atual,
+        respostaEmCurso: false,
+        respostasFalhasSeguidas: seguidas,
+        estado: deveVoltar ? 'ouvindo' : atual.estado,
+      };
+    }
+
     const deveVoltar = !travado && !atual.usouBufferAudio && atual.estado === 'stu_falando';
     return {
       ...atual,
       respostaEmCurso: false,
+      respostasFalhasSeguidas: 0,
       estado: deveVoltar ? 'ouvindo' : atual.estado,
     };
   }

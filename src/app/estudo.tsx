@@ -14,6 +14,7 @@ import {
   type PropostaPlano,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
+import { invalidarElegibilidadeVozAoVivo } from './estudio';
 import { mensagens, textoParaRever } from '../mensagens/pt-BR';
 import {
   AcaoPrincipal,
@@ -131,6 +132,7 @@ export function Estudo() {
   }, []);
 
   const irParaLogin = useCallback((expirada = false) => {
+    invalidarElegibilidadeVozAoVivo();
     setInicio('carregando');
     if (expirada) {
       try {
@@ -141,6 +143,7 @@ export function Estudo() {
   }, []);
 
   const carregar = useCallback(async (cancelado: () => boolean) => {
+    invalidarElegibilidadeVozAoVivo();
     setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
     try {
       await cliente.sessao();

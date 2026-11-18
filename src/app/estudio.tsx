@@ -27,6 +27,9 @@ import {
 import './estudio.css';
 const m = mensagens.estudio;
 let promessaElegibilidadeVoz: Promise<boolean> | null = null;
+export function invalidarElegibilidadeVozAoVivo(): void {
+  promessaElegibilidadeVoz = null;
+}
 function consultarElegibilidadeVozAoVivo(): Promise<boolean> {
   if (!promessaElegibilidadeVoz) {
     promessaElegibilidadeVoz = cliente
@@ -305,8 +308,9 @@ export function ApoioDaLicao({
   const [vozAoVivoDisponivel, setVozAoVivoDisponivel] = useState(false);
   const [etapaVoz, setEtapaVoz] = useState<'inativa' | 'privacidade' | 'ativa'>('inativa');
   const [estadoVoz, setEstadoVoz] = useState<EstadoSessaoVozAoVivo>(() => estadoInicialVozAoVivo());
-  const [nivelMic, setNivelMic] = useState(0);
   const controladorVozRef = useRef<ControladorVozAoVivo | null>(null);
+  const ondasVozRef = useRef<HTMLDivElement>(null);
+  const controlesVozRef = useRef<HTMLDivElement>(null);
   const campoEnsinoRef = useRef<HTMLTextAreaElement>(null);
   const painelPrivacidadeRef = useRef<HTMLDivElement>(null);
   const painelVozRef = useRef<HTMLDivElement>(null);
@@ -346,10 +350,26 @@ export function ApoioDaLicao({
   }, [etapaVoz]);
 
   useEffect(() => {
+    if (etapaVoz === 'ativa' && estadoVoz.avisoTempo) {
+      controlesVozRef.current?.scrollIntoView?.({ block: 'nearest' });
+    }
+  }, [etapaVoz, estadoVoz.avisoTempo]);
+
+  useEffect(() => {
     const el = legendasVozRef.current;
     if (!el || usuarioRolouLegendasRef.current) return;
     el.scrollTop = el.scrollHeight;
   }, [estadoVoz.legendas]);
+
+  function atualizarOndasVoz(nivel: number) {
+    const barras = ondasVozRef.current?.querySelectorAll<HTMLElement>('span');
+    if (!barras) return;
+    const pesos = [0.6, 0.9, 1, 0.85, 0.65];
+    barras.forEach((barra, i) => {
+      const escala = Math.max(0.28, Math.min(1, 0.28 + nivel * (pesos[i] ?? 0.8)));
+      barra.style.transform = `scaleY(${escala.toFixed(2)})`;
+    });
+  }
 
   function concluirComTranscricao(bruta: string) {
     controladorVozRef.current = null;
@@ -375,7 +395,6 @@ export function ApoioDaLicao({
   function iniciarConversaAoVivo() {
     setAviso('');
     usuarioRolouLegendasRef.current = false;
-    setNivelMic(0);
     setEtapaVoz('ativa');
     setEstadoVoz(estadoInicialVozAoVivo());
     controladorVozRef.current?.descartar();
@@ -384,7 +403,7 @@ export function ApoioDaLicao({
       cliente,
       aoMudar: setEstadoVoz,
       aoTempoEsgotado: concluirComTranscricao,
-      aoNivelMic: setNivelMic,
+      aoNivelMic: atualizarOndasVoz,
       aoErroFatal: (_codigo, parcial) => {
         controladorVozRef.current = null;
         if (parcial.trim()) {
@@ -903,7 +922,7 @@ export function ApoioDaLicao({
         </div>
         <ol className="ensino-passos" aria-label={m.ensinoEtapasLabel}>
           <li data-ativo={!texto.trim() || gravando || etapaVoz === 'ativa' || undefined} aria-current={!texto.trim() || gravando || etapaVoz === 'ativa' ? 'step' : undefined}>
-            {vozAoVivoDisponivel ? `1. ${m.vozAoVivo.abrir}, gravar ou escrever` : m.ensinoEtapas[0]}
+            {vozAoVivoDisponivel ? m.vozAoVivo.passoComVoz : m.ensinoEtapas[0]}
           </li>
           <li data-ativo={(Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino) || undefined} aria-current={Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino ? 'step' : undefined}>{m.ensinoEtapas[1]}</li>
           <li data-ativo={Boolean(ensino) || undefined} aria-current={ensino ? 'step' : undefined}>{m.ensinoEtapas[2]}</li>
@@ -921,10 +940,7 @@ export function ApoioDaLicao({
                   <line x1="8" y1="22" x2="16" y2="22" />
                 </svg>
               </span>
-              <div className="voz-ao-vivo-entrada__texto">
-                <strong className="voz-ao-vivo-entrada__titulo">{m.vozAoVivo.abrir}</strong>
-                <span className="voz-ao-vivo-entrada__beneficio">{m.vozAoVivo.abrirBeneficio}</span>
-              </div>
+              <span className="voz-ao-vivo-entrada__beneficio">{m.vozAoVivo.abrirBeneficio}</span>
             </div>
             <Botao
               variante="secundario"
@@ -972,7 +988,7 @@ export function ApoioDaLicao({
           </div>
         )}
         {etapaVoz === 'ativa' && (
-          <div ref={painelVozRef} className="voz-ao-vivo-painel" data-estado={estadoVoz.estado}>
+          <div ref={painelVozRef} className="voz-ao-vivo-painel" data-estado={estadoVoz.estado} data-aviso-tempo={estadoVoz.avisoTempo || undefined}>
             <p className="somente-leitor" aria-live="polite">{estadoVoz.anuncioSr}</p>
             <div className="voz-ao-vivo-cabeca">
               <span className="voz-ao-vivo-estado">
@@ -982,20 +998,21 @@ export function ApoioDaLicao({
                 {formatarTempoVoz(estadoVoz.segundos)} / {formatarTempoVoz(estadoVoz.limiteSegundos)}
               </span>
             </div>
-            {(estadoVoz.estado === 'ouvindo' || estadoVoz.estado === 'stu_falando') && (
-              <p className="voz-ao-vivo-dica">{m.vozAoVivo.dicaInterromper}</p>
+            {!estadoVoz.avisoTempo && (estadoVoz.estado === 'ouvindo' || estadoVoz.estado === 'stu_falando') && (
+              <p className="voz-ao-vivo-dica">
+                {estadoVoz.estado === 'stu_falando' ? m.vozAoVivo.dicaInterromper : m.vozAoVivo.dicaOuvindo}
+              </p>
             )}
             {(estadoVoz.estado === 'pedindo_mic' || estadoVoz.estado === 'conectando') && (
               <div className="voz-ao-vivo-progresso" aria-hidden="true"><span /></div>
             )}
             {estadoVoz.estado === 'ouvindo' && !estadoVoz.mudo && (
-              <div className="ensino-ondas voz-ao-vivo-ondas" aria-hidden="true">
-                {[0.6, 0.9, 1, 0.85, 0.65].map((peso, idx) => (
-                  <span
-                    key={idx}
-                    style={{ transform: `scaleY(${Math.max(0.28, Math.min(1, 0.28 + nivelMic * peso)).toFixed(2)})` }}
-                  />
-                ))}
+              <div ref={ondasVozRef} className="ensino-ondas voz-ao-vivo-ondas" aria-hidden="true">
+                <span />
+                <span />
+                <span />
+                <span />
+                <span />
               </div>
             )}
             {estadoVoz.avisoTempo && estadoVoz.estado !== 'erro' && (
@@ -1023,7 +1040,7 @@ export function ApoioDaLicao({
                 ))}
               </div>
             )}
-            <div className="voz-ao-vivo-controles">
+            <div ref={controlesVozRef} className="voz-ao-vivo-controles">
               {estadoVoz.estado !== 'erro' && (
                 <>
                   <Botao

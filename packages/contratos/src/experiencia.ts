@@ -46,6 +46,7 @@ export const mensagens = {
       vozAoVivo: {
         abrir: 'Conversar com o Stu',
         abrirBeneficio: 'Até 3 minutos por voz: ele pergunta, você explica.',
+        passoComVoz: '1. Conversar, gravar ou escrever',
         notaPrivacidade: 'Sua voz vai para a OpenAI durante a conversa.',
         privacidadeTitulo: 'Antes de conversar ao vivo',
         privacidadeTexto: 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
@@ -59,6 +60,7 @@ export const mensagens = {
           encerrando: 'Encerrando…',
           erro: 'Conversa encerrada',
         },
+        dicaOuvindo: 'Fale no seu ritmo',
         dicaInterromper: 'Você pode interromper quando quiser',
         conectado: 'Conversa conectada. Pode falar quando estiver pronto.',
         mudo: 'Silenciar microfone',
@@ -67,7 +69,7 @@ export const mensagens = {
         alternativaTexto: 'Prefiro escrever ou gravar',
         avisoTempo: 'Faltam cerca de 30 segundos para encerrar esta conversa.',
         avisoFechamentoStu: 'Faltam 30 segundos para encerrar a conversa. Faça o fechamento em até 2 frases dizendo o que entendeu e peça para tocar em "Encerrar e ver retorno".',
-        parcialNoCampo: 'O que você já explicou está no campo abaixo. Complete e envie.',
+        parcialNoCampo: 'O que você já explicou está no campo de texto. Complete e envie.',
         voceDisse: 'Você',
         stuDisse: 'Stu',
         erros: {

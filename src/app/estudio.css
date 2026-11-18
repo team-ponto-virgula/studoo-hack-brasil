@@ -767,7 +767,19 @@
 .voz-ao-vivo-controles .botao {
   min-height: 44px;
 }
+.voz-ao-vivo-painel[data-aviso-tempo='true'] .voz-ao-vivo-legendas {
+  min-height: 88px;
+  max-height: 140px;
+}
 @media (max-width: 480px) {
+  .voz-ao-vivo-legendas {
+    min-height: 96px;
+    max-height: 160px;
+  }
+  .voz-ao-vivo-painel[data-aviso-tempo='true'] .voz-ao-vivo-legendas {
+    min-height: 76px;
+    max-height: 120px;
+  }
   .voz-ao-vivo-entrada .botao,
   .voz-ao-vivo-controles .botao {
     width: 100%;
