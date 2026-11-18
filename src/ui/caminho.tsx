@@ -24,12 +24,13 @@ function semQuebrarHifen(texto: string): ReactNode {
   return partes.length === 1 ? texto : partes.map((parte, indice) => (indice % 2 ? <span key={indice} className="sem-quebra">{parte}</span> : parte));
 }
 
-/** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. */
-function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string } | null {
-  if (no.ponte && !no.ponte.concluida) return { icone: 'revisao', texto: mensagens.estudio.ponteMapa };
-  if (no.ponte) return { icone: 'check', texto: mensagens.estudio.ponteMapaFeita };
-  if (no.rever && no.estado === 'concluida') return { icone: 'revisao', texto: mensagens.trilha.valeRever };
-  return null;
+/** Os selos embaixo do nó: reforço pendente; se concluído, a marca da ponte feita vem primeiro e "Vale rever" segue junto quando houver. */
+function selosDoNo(no: NoCaminho): { icone: NomeIcone; texto: string }[] {
+  if (no.ponte && !no.ponte.concluida) return [{ icone: 'revisao', texto: mensagens.estudio.ponteMapa }];
+  const selos: { icone: NomeIcone; texto: string }[] = [];
+  if (no.ponte) selos.push({ icone: 'check', texto: mensagens.estudio.ponteMapaFeita });
+  if (no.rever && no.estado === 'concluida') selos.push({ icone: 'revisao', texto: mensagens.trilha.valeRever });
+  return selos;
 }
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
@@ -405,7 +406,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const numeroMarco = trechos.indexOf(no.trecho) + 1;
           const recem = no.id === recemConcluida;
           const desenhar = recem && no.estado === 'concluida' && ligado;
-          const selo = seloDoNo(no);
+          const selos = selosDoNo(no);
 
           const conteudo = (
             <>
@@ -421,8 +422,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               {(!atual || no.estado === 'previa') && <span className="caminho-no__texto" aria-hidden="true">
                 <span className="caminho-no__titulo">{semQuebrarHifen(no.titulo)}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
-                {/* O reforço e o "vale rever" são um selo com ícone (o desenho de blocos parecia um carregamento travado). */}
-                {selo && <span className="caminho-ponte" data-rever={selo.texto === mensagens.trilha.valeRever || undefined}><Icone nome={selo.icone} />{selo.texto}</span>}
+                {/* O reforço e o "vale rever" são selos com ícone (a marca da ponte feita vem antes do "Vale rever"). */}
+                {selos.map((selo) => (
+                  <span key={selo.texto} className="caminho-ponte" data-rever={selo.texto === mensagens.trilha.valeRever || undefined}><Icone nome={selo.icone} />{selo.texto}</span>
+                ))}
               </span>}
             </>
           );
@@ -472,7 +475,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 </button>
               ) : (
                 <button type="button" className="caminho-no__alvo" ref={(elemento) => guardarBotao(no.id, elemento)}
-                  aria-label={selo ? `${nome} ${selo.texto}.` : nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
+                  aria-label={selos.length > 0 ? `${nome} ${selos.map((s) => s.texto).join('. ')}.` : nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
                   aria-controls={estaAberto ? idBalao : undefined} disabled={ocupado} onClick={() => tocar(no)}>
                   {conteudo}
                 </button>
