@@ -75,15 +75,7 @@ async function* emitirEventos(
       }
       seguirEstrutura(acumulado, passo.value);
       if (passo.value.tipo === "plano") {
-        const limpo = passo.value.titulo
-          .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
-          .replace(/<[^>]*>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim();
-        const tituloLimpo = limpo || "Nova trilha";
-        plano = { titulo: tituloLimpo, objetivo: passo.value.objetivo };
-        yield { ...passo.value, titulo: tituloLimpo };
-        continue;
+        plano = { titulo: passo.value.titulo, objetivo: passo.value.objetivo };
       }
       yield passo.value;
     }

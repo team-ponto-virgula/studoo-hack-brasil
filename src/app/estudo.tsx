@@ -538,7 +538,7 @@ export function Estudo() {
         <header className="estudo-cabecalho">
           <span className="estudo-identificacao">
             <span className="estudo-identificacao__contexto">
-              {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? limparTituloPlano(tela.plano.titulo) : mensagens.planos.titulo}
+              {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
             </span>
             {inicio === 'pronto' && ((tela.tipo === 'planos' && planos.length > 0) || tela.tipo === 'plano') && (
               <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={planos.length > 0} />
@@ -989,14 +989,6 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
-function limparTituloPlano(titulo: string) {
-  return titulo
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim() || mensagens.planos.titulo;
-}
-
 function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano }: {
   tela: TelaPlano;
   ocupado: boolean;
@@ -1024,7 +1016,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
       <header className="trilha-topo">
         <div className="trilha-topo__texto">
           <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
-          <h1 tabIndex={-1}>{limparTituloPlano(plano.titulo)}</h1>
+          <h1 tabIndex={-1}>{plano.titulo}</h1>
         </div>
         <AnelProgresso progresso={plano.progresso} />
       </header>
