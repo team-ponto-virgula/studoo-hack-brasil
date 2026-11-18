@@ -1000,18 +1000,28 @@ function StuDoExercicio({ estado }: { estado: EstadoStu }) {
  * A fonte da lição em destaque (o trecho exato do material, com página, parágrafo ou linha), como o cartão da web:
  * o número do marcador, o material, o selo de demonstração quando o material é simulado e a leitura por OCR.
  */
-function CartaoFonte({ referencia, numero, ref }: { referencia: NonNullable<LicaoDetalhe['referencias']>[number]; numero: number; ref?: Ref<ComponentRef<typeof View>> }) {
+export function CartaoFonte({ referencia, numero, ref, titulo, parado = false }: {
+  referencia: NonNullable<LicaoDetalhe['referencias']>[number];
+  numero: number;
+  ref?: Ref<ComponentRef<typeof View>>;
+  /** Título pronto no lugar de "material · página" (a apresentação usa o exemplo do contrato, "Frações.pdf · pág. 2"). */
+  titulo?: string;
+  /** Sem a entrada animada e sem a margem de cima: a ilustração parada da apresentação. */
+  parado?: boolean;
+}) {
   const entrada = useAparecer(0, 320, true);
   const m = mensagens.estudio;
+  const onde = titulo ?? `${referencia.nome} · ${referencia.localizacao ?? m.pagina(referencia.pagina)}`;
   return (
     <Animated.View ref={ref} testID="cartao-fonte" accessible accessibilityRole="summary"
-      accessibilityLabel={`${m.fonteMaterial} ${numero}. ${referencia.nome}, ${referencia.localizacao ?? m.pagina(referencia.pagina)}. ${referencia.trecho}`}
-      style={[licaoEstilos.fonte, { opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
+      accessibilityLabel={`${m.fonteMaterial} ${numero}. ${onde}. ${referencia.trecho}`}
+      style={[licaoEstilos.fonte, parado ? { marginTop: 0 }
+        : { opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
       <View style={licaoEstilos.fonteTopo}>
         <View style={licaoEstilos.fonteNumero}><Text style={licaoEstilos.fonteNumeroTexto}>[{numero}]</Text></View>
         <Text style={licaoEstilos.fonteRotulo}>{m.fonteMaterial.toLocaleUpperCase('pt-BR')}</Text>
       </View>
-      <Text style={estilos.tituloBloco}>{referencia.nome} · {referencia.localizacao ?? m.pagina(referencia.pagina)}</Text>
+      <Text style={estilos.tituloBloco}>{onde}</Text>
       {referencia.leitura === 'demonstracao' && (
         <View style={licaoEstilos.fonteSelo}><Text style={licaoEstilos.fonteSeloTexto}>{m.simulado}</Text></View>
       )}

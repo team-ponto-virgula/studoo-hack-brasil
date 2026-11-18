@@ -217,37 +217,44 @@ export function OndasDoVolume({ gravador }: { gravador: AudioRecorder }) {
  * O retorno do "Ensine ao Stu" em quatro cartões, como o caderno da web: o que fez sentido (com o visto), o que revisar,
  * a pergunta do Stu para outra situação, em destaque, e o próximo passo. Sem a IA, a nota do retorno automático no pé.
  */
-export function CadernoDoStu({ ensino }: { ensino: NonNullable<ApoioEstudo['ensino']> }) {
+export function CadernoDoStu({ ensino, compacto = false }: {
+  ensino: NonNullable<ApoioEstudo['ensino']>;
+  /** Cartões menores, para a ilustração da apresentação (como `.apresentacao-caderno` da web no celular). */
+  compacto?: boolean;
+}) {
+  const texto = [estilos.texto, compacto && caderno.textoCompacto];
+  const cartao = [caderno.cartao, compacto && caderno.cartaoCompacto];
+  const titulo = [caderno.titulo, compacto && caderno.tituloCompacto];
   return (
-    <View testID="caderno-do-stu" style={caderno.lista} accessibilityLiveRegion="polite">
-      <View style={[caderno.cartao, caderno.acertos]}>
-        <Text accessibilityRole="header" style={caderno.titulo}>{m.acertos}</Text>
+    <View testID="caderno-do-stu" style={[caderno.lista, compacto && { gap: 8 }]} accessibilityLiveRegion="polite">
+      <View style={[cartao, caderno.acertos]}>
+        <Text accessibilityRole="header" style={titulo}>{m.acertos}</Text>
         {ensino.acertos.map((acerto, indice) => (
           <View key={indice} style={caderno.item}>
-            <Text style={caderno.visto} importantForAccessibility="no">✓</Text>
-            <Text style={[estilos.texto, { flex: 1 }]}>{acerto}</Text>
+            <Text style={[caderno.visto, compacto && caderno.textoCompacto]} importantForAccessibility="no">✓</Text>
+            <Text style={[texto, { flex: 1 }]}>{acerto}</Text>
           </View>
         ))}
       </View>
-      <View style={[caderno.cartao, caderno.lacuna]}>
-        <Text accessibilityRole="header" style={caderno.titulo}>{m.lacuna}</Text>
-        <Text style={estilos.texto}>{ensino.lacuna}</Text>
+      <View style={[cartao, caderno.lacuna]}>
+        <Text accessibilityRole="header" style={titulo}>{m.lacuna}</Text>
+        <Text style={texto}>{ensino.lacuna}</Text>
       </View>
-      <View style={[caderno.cartao, caderno.pergunta]}>
-        <View style={caderno.perguntaStu} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" style={caderno.stu} />
+      <View style={[cartao, caderno.pergunta]}>
+        <View style={[caderno.perguntaStu, compacto && caderno.perguntaStuCompacto]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" style={[caderno.stu, compacto && caderno.stuCompacto]} />
           <View style={caderno.duvida}><Text style={caderno.duvidaTexto}>?</Text></View>
         </View>
-        <View style={{ flex: 1, gap: 4 }}>
-          <Text accessibilityRole="header" style={[caderno.titulo, { color: cores.acao }]}>{m.pergunta}</Text>
-          <Text style={caderno.perguntaTexto}>{ensino.pergunta}</Text>
+        <View style={{ flex: 1, gap: compacto ? 2 : 4 }}>
+          <Text accessibilityRole="header" style={[titulo, { color: cores.acao }]}>{m.pergunta}</Text>
+          <Text style={[caderno.perguntaTexto, compacto && caderno.textoCompacto]}>{ensino.pergunta}</Text>
         </View>
       </View>
-      <View style={[caderno.cartao, caderno.proximo]}>
-        <Text accessibilityRole="header" style={[caderno.titulo, { color: cores.sucesso }]}>{m.proximo}</Text>
-        <Text style={estilos.texto}>{ensino.proximoPasso}</Text>
+      <View style={[cartao, caderno.proximo]}>
+        <Text accessibilityRole="header" style={[titulo, { color: cores.sucesso }]}>{m.proximo}</Text>
+        <Text style={texto}>{ensino.proximoPasso}</Text>
       </View>
-      {ensino.simulado && <Text style={estilos.legenda}>{m.ensinoAutomatico}</Text>}
+      {ensino.simulado && <Text style={[estilos.legenda, compacto && { textAlign: 'center' }]}>{m.ensinoAutomatico}</Text>}
     </View>
   );
 }
@@ -358,6 +365,12 @@ const caderno = StyleSheet.create({
     backgroundColor: cores.acao, borderWidth: 2, borderColor: cores.fundo },
   duvidaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
   perguntaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 17, lineHeight: 25 },
+  // Compacto (apresentação): como a web no celular, 8 × 10 de respiro, título de 12 e texto de 14.
+  cartaoCompacto: { paddingVertical: 8, paddingHorizontal: 10, gap: 2, borderRadius: 16 },
+  tituloCompacto: { fontSize: 12, lineHeight: 16 },
+  textoCompacto: { fontSize: 14, lineHeight: 19 },
+  perguntaStuCompacto: { width: 32, height: 36 },
+  stuCompacto: { width: 30, height: 33 },
 });
 
 const paginas = StyleSheet.create({
