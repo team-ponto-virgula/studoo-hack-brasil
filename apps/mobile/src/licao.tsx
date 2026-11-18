@@ -1265,7 +1265,8 @@ const licaoEstilos = StyleSheet.create({
   retornoIconeCompacto: { width: 32, height: 32, borderRadius: 16 },
   // .aula-retorno h2 no celular: 1,1875rem com entrelinha de 34 px (a altura do ícone) e -0,015em.
   retornoTitulo: { color: cores.sucesso, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 34, letterSpacing: -0.285 },
-  retornoTituloCompacto: { fontSize: 17, lineHeight: 24 },
+  // Compacto: a web troca só o tamanho (1,0625rem); a entrelinha de 34 px continua, e o título fica a 16 do "Continuar".
+  retornoTituloCompacto: { fontSize: 17, lineHeight: 34 },
   convite: { alignSelf: 'flex-start', paddingHorizontal: 2, minHeight: 48 },
   retornoTituloErrado: { color: '#8A4B00' },
   retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
