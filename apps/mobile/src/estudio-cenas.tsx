@@ -58,10 +58,12 @@ function Tabua({ ativa, erro, vencida, ordem, reduzir }: { ativa: boolean; erro?
  * com o desafio) e a margem "De volta ao desafio". Ao vencer, as tábuas ficam verdes e o Stu atravessa, depois de a lição
  * trazer a cena para a vista (`aoMedir`). Embaixo, a legenda das tábuas com o texto de cada uma, legível no celular.
  */
-export function CenaPonte({ resposta, temPonte, desafio, concluida, aoMedir }: {
+export function CenaPonte({ resposta, temPonte, exemplo = temPonte, desafio, concluida, aoMedir }: {
   /** A resposta errada em texto legível (o texto da opção, não o código). */
   resposta: string;
   temPonte: boolean;
+  /** A 3ª tábua (o novo exemplo): na ponte em passos (rodada 4D da web), só entra com o "Ver exemplo". */
+  exemplo?: boolean;
   desafio: boolean;
   concluida: boolean;
   /** Onde a cena fica, a partir do topo do cartão, para a lição rolar até ela antes da travessia. */
@@ -84,7 +86,7 @@ export function CenaPonte({ resposta, temPonte, desafio, concluida, aoMedir }: {
   const passos = [
     { texto: tentativa ? m.pontePassoErro(tentativa) : m.ponteMargemErro, ativa: true, erro: true },
     { texto: m.pontePassoExplicacao, ativa: temPonte },
-    { texto: m.pontePassoExemplo, ativa: temPonte },
+    { texto: m.pontePassoExemplo, ativa: temPonte && exemplo },
     { texto: m.pontePassoDesafio, ativa: desafio || concluida },
   ];
   // O Stu sai do centro da margem esquerda e para no centro da direita (as margens têm 74 de largura).
