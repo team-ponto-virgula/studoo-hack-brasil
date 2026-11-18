@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import {
   ErroStudoo,
   LIMITES_ESTUDIO,
@@ -253,7 +253,10 @@ export function ApoioDaLicao({
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const cartaoPonte = useRef<HTMLElement>(null);
   const ponteCenaRef = useRef<HTMLDivElement>(null);
+  const stuOrigemRef = useRef<HTMLDivElement>(null);
+  const stuDestinoRef = useRef<HTMLDivElement>(null);
   const [atravessando, setAtravessando] = useState(false);
+  const [deslocamentoStu, setDeslocamentoStu] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
   const retornoDoEnsino = useRef<HTMLDivElement>(null);
   // O aviso do microfone (ou da transcrição) aparece junto do botão Gravar, no pé da página: a tela leva até ele.
   const avisoRef = useRef<HTMLParagraphElement>(null);
@@ -464,17 +467,42 @@ export function ApoioDaLicao({
   useEffect(() => {
     if (!ponteConcluida) {
       setAtravessando(false);
+      setDeslocamentoStu({ dx: 0, dy: 0 });
       return;
     }
     if (pedidoPonte > 0) aoConcluirPonte?.();
+    const medir = () => {
+      const origem = stuOrigemRef.current;
+      const destino = stuDestinoRef.current;
+      if (!origem || !destino) return;
+      const o = origem.getBoundingClientRect();
+      const d = destino.getBoundingClientRect();
+      // Subtrai o transform atual (se já estiver deslocado) somando offset relativo ao pai.
+      const estilo = window.getComputedStyle(origem);
+      const matriz = new DOMMatrixReadOnly(estilo.transform === 'none' ? undefined : estilo.transform);
+      const baseLeft = o.left - matriz.m41;
+      const baseTop = o.top - matriz.m42;
+      setDeslocamentoStu({
+        dx: Math.round(d.left + d.width / 2 - (baseLeft + o.width / 2)),
+        dy: Math.round(d.top + d.height / 2 - (baseTop + o.height / 2)),
+      });
+    };
+    medir();
+    window.addEventListener('resize', medir);
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    ponteCenaRef.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    ponteCenaRef.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
     if (reduzido) {
       setAtravessando(true);
-      return;
+      return () => window.removeEventListener('resize', medir);
     }
-    const timer = window.setTimeout(() => setAtravessando(true), 380);
-    return () => window.clearTimeout(timer);
+    const timer = window.setTimeout(() => {
+      medir();
+      setAtravessando(true);
+    }, 380);
+    return () => {
+      window.removeEventListener('resize', medir);
+      window.clearTimeout(timer);
+    };
     // Só a conclusão do reforço dispara.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ponteConcluida]);
@@ -524,33 +552,47 @@ export function ApoioDaLicao({
             <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
             {ponte?.simulado && <p className="estudio-selo">{m.simulado}</p>}
           </div>
-          <div className="ponte-cena" ref={ponteCenaRef} data-concluida={ponte?.concluida || undefined} aria-hidden="true">
+          <div
+            className="ponte-cena"
+            ref={ponteCenaRef}
+            data-concluida={ponte?.concluida || undefined}
+            style={{
+              '--ponte-dx': `${deslocamentoStu.dx}px`,
+              '--ponte-dy': `${deslocamentoStu.dy}px`,
+            } as CSSProperties}
+            aria-hidden="true"
+          >
             <div className="ponte-margem ponte-margem--esquerda">
-              <div className="ponte-stu" data-atravessou={atravessando || undefined}>
+              <div className="ponte-stu" ref={stuOrigemRef} data-atravessou={atravessando || undefined}>
                 <Stu />
               </div>
               <span>{m.ponteMargemErro}</span>
             </div>
             <div className="ponte-vao">
-              <span className="ponte-tabua" data-ativa="true" data-erro="true">
+              <span className="ponte-tabua" data-ativa="true" data-erro="true" style={{ '--ordem': 0 } as CSSProperties}>
                 {ultimaResposta
                   ? m.pontePassoErro(ultimaResposta.length > 24 ? `${ultimaResposta.slice(0, 23).trimEnd()}…` : ultimaResposta)
                   : m.ponteMargemErro}
               </span>
-              <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined}>
+              <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined} style={{ '--ordem': 1 } as CSSProperties}>
                 {m.pontePassoExplicacao}
               </span>
-              <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined}>
+              <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined} style={{ '--ordem': 2 } as CSSProperties}>
                 {m.pontePassoExemplo}
               </span>
-              <span className="ponte-tabua" data-ativa={Boolean(ponte?.concluida || resposta) || undefined}>
+              <span className="ponte-tabua" data-ativa={Boolean(ponte?.concluida || resposta) || undefined} style={{ '--ordem': 3 } as CSSProperties}>
                 {m.pontePassoDesafio}
               </span>
             </div>
             <div className="ponte-margem ponte-margem--direita">
+              <div className="ponte-stu-alvo" ref={stuDestinoRef} />
               <span>{m.ponteMargemVolta}</span>
             </div>
           </div>
+          {feedback && (
+            <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
+              data-estado={resultadoPonte ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
+          )}
           <p>{ponte?.motivo ?? m.ponteDica}</p>
           {!ponte ? (
             <p role="status">{erro || m.pensando}</p>
@@ -603,8 +645,6 @@ export function ApoioDaLicao({
                   {m.verificar}
                 </Botao>
               )}
-              <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
-                data-estado={resultadoPonte && feedback ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
               {/* O "tente de novo" já está no painel de retorno: aqui não repete. */}
             </>
           )}

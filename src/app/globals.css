@@ -572,6 +572,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 
 .conclusao-numeros li {
   display: grid;
+  min-width: 0;
   overflow: hidden;
   border: 2px solid var(--cor-numero);
   border-radius: 16px;
@@ -939,11 +940,15 @@ button { touch-action: manipulation; }
 }
 .conclusao-historia li {
   display: grid;
+  align-content: start;
   gap: 4px;
   padding: 14px 16px;
   border: 2px solid var(--gelo);
   border-radius: 18px;
   background: var(--nevoa);
+}
+@media (max-width: 480px) {
+  .conclusao-historia { grid-template-columns: minmax(0, 1fr); }
 }
 .conclusao-historia li[data-tipo='ponte'] { border-color: #c3cdf2; background: #eef3ff; }
 .conclusao-historia li[data-tipo='ensino'] { border-color: #9ad8b5; background: #eefaf3; }
