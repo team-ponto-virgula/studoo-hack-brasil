@@ -1,16 +1,22 @@
 /*
- * Confere a IA da OpenAI de verdade, com a chave do .env.local: monta a estrutura de uma trilha por streaming e escreve
- * a primeira lição, pelo mesmo adaptador do servidor e com as mesmas validações. Não grava nada no banco.
+ * Confere a IA configurada de verdade (OpenAI ou DeepSeek), com a chave do .env.local: monta a estrutura de uma trilha
+ * por streaming e escreve a primeira lição, pelo mesmo adaptador do servidor e com as mesmas validações. Não grava nada no banco.
  * Uso: npm run ia:conferir -- "objetivo de estudo" (sem objetivo, usa um exemplo).
  */
 import { conteudoValido, esqueletoValido, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
+import { configuracaoDeepSeek, criarGeradorDeepSeek } from "@/servidor/ia/deepseek";
 import { configuracaoOpenAi, criarGeradorOpenAi } from "@/servidor/ia/openai";
 
 const objetivo = process.argv[2]?.trim() || "Frações para a prova do 6º ano";
-const config = configuracaoOpenAi();
+const provedor = process.env.IA === "deepseek" ? "deepseek" : "openai";
+const config = provedor === "deepseek" ? configuracaoDeepSeek() : configuracaoOpenAi();
 if (!config) {
-  console.error("Defina OPENAI_API_KEY no .env.local (veja docs/RODAR-LOCALMENTE.md#ia-da-openai).");
+  console.error(
+    provedor === "deepseek"
+      ? "Defina DEEPSEEK_API_KEY no .env.local (veja docs/RODAR-LOCALMENTE.md#ia-da-deepseek)."
+      : "Defina OPENAI_API_KEY no .env.local (veja docs/RODAR-LOCALMENTE.md#ia-da-openai).",
+  );
   process.exit(1);
 }
 
@@ -18,9 +24,12 @@ const inicio = Date.now();
 const tempo = () => `${((Date.now() - inicio) / 1000).toFixed(1).padStart(5)} s`;
 
 async function conferir() {
-  console.log(`Modelo: ${config!.modelo} · ${new URL(config!.base).host}`);
+  const nomeProvedor = provedor === "deepseek" ? "DeepSeek" : "OpenAI";
+  console.log(`Provedor: ${nomeProvedor} · Modelo: ${config!.modelo} · ${new URL(config!.base).host}`);
   console.log(`Objetivo: ${objetivo}\n`);
-  const gerador = criarGeradorOpenAi(config!);
+  const gerador = provedor === "deepseek"
+    ? criarGeradorDeepSeek(config as NonNullable<ReturnType<typeof configuracaoDeepSeek>>)
+    : criarGeradorOpenAi(config as NonNullable<ReturnType<typeof configuracaoOpenAi>>);
   const sinal = new AbortController().signal;
 
   const esqueleto: EsqueletoPlano = { gerador: "", titulo: "", objetivo, origem: "", fluxos: [] };
@@ -56,11 +65,13 @@ async function conferir() {
   console.log(`${tempo()}  Primeira lição escrita: ${esqueleto.fluxos[0].licoes[0].titulo}`);
   console.log(`         Objetivo: ${conteudo.objetivo}`);
   console.log(`         Exercício (${exercicio.tipo === "multipla_escolha" ? `múltipla escolha, ${exercicio.opcoes.length} opções` : "lacuna"}): ${exercicio.enunciado}`);
-  console.log("\nTudo certo: a OpenAI respondeu no formato do Studoo.");
+  console.log(`\nTudo certo: a ${provedor === "deepseek" ? "DeepSeek" : "OpenAI"} respondeu no formato do Studoo.`);
 }
 
 conferir().catch((erro: unknown) => {
-  const motivo = erro instanceof FalhaApi ? `${erro.codigo} (o status da OpenAI aparece na linha "ia-openai" acima)` : String(erro);
+  const rota = provedor === "deepseek" ? "ia-deepseek" : "ia-openai";
+  const nomeProvedor = provedor === "deepseek" ? "DeepSeek" : "OpenAI";
+  const motivo = erro instanceof FalhaApi ? `${erro.codigo} (o status da ${nomeProvedor} aparece na linha "${rota}" acima)` : String(erro);
   console.error(`\nFalhou: ${motivo}`);
   process.exit(1);
 });

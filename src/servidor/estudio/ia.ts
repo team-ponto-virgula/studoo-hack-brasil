@@ -1,5 +1,6 @@
 import { embaralharComSemente } from '@studoo/contratos';
 import { FalhaApi } from '../acesso/http';
+import { configuracaoDeepSeek, pedirJsonDeepSeek } from '../ia/deepseek';
 import { configuracaoOpenAi } from '../ia/openai';
 
 export const objeto = (properties: Record<string, unknown>) => ({
@@ -77,6 +78,11 @@ export async function pedirJson(
   dados: unknown,
   anexos: unknown[] = [],
 ): Promise<unknown> {
+  if (process.env.IA === 'deepseek') {
+    const config = configuracaoDeepSeek();
+    if (!config) throw new FalhaApi('ia_indisponivel');
+    return pedirJsonDeepSeek(config, nome, schema, instrucoes, dados, anexos);
+  }
   const config = configuracaoOpenAi();
   if (process.env.IA !== 'openai' || !config)
     throw new FalhaApi('ia_indisponivel');

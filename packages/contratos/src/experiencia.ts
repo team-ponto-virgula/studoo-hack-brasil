@@ -6,7 +6,7 @@ export const mensagens = {
       titulo: 'Seu material vira uma jornada', subtitulo: 'Traga uma foto, documento ou tabela. O Stu transforma suas ideias em uma trilha com referências.',
       arquivo: 'Escolher material', camera: 'Fotografar página', demo: 'Experimentar com frações',
       limites: 'Imagem JPG/PNG/WebP, PDF de até 6 páginas, DOCX ou CSV. Até 5 MB e 24 mil caracteres. CSV: até 200 linhas e 20 colunas, em UTF-8.',
-      privacidade: 'Ao enviar, você autoriza a leitura pela OpenAI quando a IA real estiver ativa. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
+      privacidade: 'Ao enviar, você autoriza a leitura pelo provedor de IA configurado quando a IA real estiver ativa. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
       revisar: 'Confira o conteúdo antes de gerar', ocr: 'A leitura de imagens pode errar números e fórmulas. Se houver erro, remova e envie uma imagem mais nítida.',
       remover: 'Remover material', gerar: 'Criar trilha deste material', objetivo: 'Estudar este material',
       tabela: 'Prévia da tabela', linha: 'Linha',

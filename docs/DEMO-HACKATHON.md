@@ -25,7 +25,7 @@ Todas as ideias populares da tela inicial (violão, inglês, culinária, histór
 ## Conferência antes de apresentar
 
 - Migrações aplicadas, conta funcionando, domínio HTTPS, Google/Resend configurados se usados na demo.
-- `.env.local` com chave válida; `IA=openai`. Não mostrar o arquivo em transmissão ou screenshots.
+- `.env.local` com chave válida (`IA=openai` ou `IA=deepseek`). Não mostrar o arquivo em transmissão ou screenshots.
 - `npm run ia:conferir`: valida a integração de geração existente. Depois percorrer material, reforço, ensino e voz com a configuração real; o comando antigo não cobre os recursos novos.
 - Citação existe e sustenta a ideia; números/fórmulas extraídos foram conferidos por uma pessoa.
 - Android: gerar novo development build (o app passou a usar `expo-speech` para a voz), permitir câmera/microfone somente quando solicitado, testar negar permissão, gravar/parar, segundo plano, voltar à tela, upload pelo seletor e texto com teclado aberto.
