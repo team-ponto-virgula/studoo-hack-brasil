@@ -664,6 +664,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                     <span>{mensagens.estudio.baseadoMaterial}</span>
                     {licao.referencias.map((ref, idx) => (
                       <button key={idx} type="button" className="aula-citacao-marcador"
+                        aria-label={`Ver fonte ${idx + 1} de ${licao.referencias!.length}`}
                         aria-expanded={citacaoAberta === idx}
                         onClick={() => setCitacaoAberta((atual) => (atual === idx ? null : idx))}>
                         [{idx + 1}]
@@ -677,7 +678,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (() => {
               const ref = licao.referencias[citacaoAberta];
               return (
-                <aside className="aula-citacao" aria-label={mensagens.estudio.fonteMaterial}>
+                <aside className="aula-citacao" aria-label={mensagens.estudio.fonteMaterial} tabIndex={-1}>
                   <div className="aula-citacao__topo">
                     <span className="aula-citacao__selo">[{citacaoAberta + 1}] {mensagens.estudio.fonteMaterial}</span>
                     <strong>{ref.nome} · {ref.localizacao ?? mensagens.estudio.pagina(ref.pagina)}</strong>

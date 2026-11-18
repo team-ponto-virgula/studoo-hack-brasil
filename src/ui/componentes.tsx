@@ -30,8 +30,11 @@ export function AcaoPrincipal({ children }: { children: ReactNode }) {
 export function EstadoErro({ codigo, children }: { codigo: string; children?: ReactNode }) {
   return (
     <div className="estado-erro">
-      <p role="alert"><span className="sinal" aria-hidden="true">!</span>{textoErro(codigo)}</p>
-      {children}
+      <Stu />
+      <div className="estado-erro__corpo">
+        <p role="alert"><span className="sinal" aria-hidden="true">!</span>{textoErro(codigo)}</p>
+        {children}
+      </div>
     </div>
   );
 }

@@ -2,25 +2,25 @@
 
 ## Demonstração em dois minutos
 
-Prepare uma conta de demonstração, conexão estável e três páginas sobre frações. Se a OpenAI real não estiver configurada, use **Experimentar com frações** e diga claramente que o conteúdo é simulado. Não apresente a simulação como geração real.
+Prepare uma conta de demonstração, conexão estável e três páginas sobre frações. Se nenhuma chave de IA real estiver configurada (`IA=openai` ou `IA=deepseek`), use **Experimentar com frações** e diga claramente que o conteúdo é simulado e rotulado como **Modo demonstração** (nunca apresente a simulação como geração real).
 
-1. **0:00–0:25 — Seu próprio material.** Abra Nova trilha. Envie PDF, DOCX, CSV ou fotografe uma página. Em DOCX, mostre a referência por parágrafo; em CSV, a prévia da tabela e a referência por linha. Confira o texto e crie a trilha. Mostre a página e a citação na primeira lição.
-2. **0:25–0:55 — O erro muda o caminho.** Na lição de numerador e denominador da demonstração, responda “3” à pergunta sobre o total de partes em 3/8. Toque em **Ver outro jeito de entender**. Mostre a ponte com a explicação do chocolate e o novo desafio. Escolha “6”.
-3. **0:55–1:30 — Aprender explicando.** Abra **Explique com suas palavras (opcional)**. Escreva uma explicação com exemplo, ou grave com a IA real configurada. Confira a transcrição, envie e mostre o caderno do Stu com a pergunta para outra situação. No modo simulado, explique a limitação do feedback.
-4. **1:30–2:00 — Evidência visível.** Volte ao exercício, escolha “8”, conclua e mostre a ponte no mapa. Abra a mesma conta no outro dispositivo para demonstrar o progresso salvo no servidor.
+1. **0:00–0:25 — Seu próprio material.** Abra **Nova trilha** e envie PDF, DOCX, CSV, foto ou clique em **Experimentar com frações**. Mostre a prévia extraída página a página (ou tabela em CSV) e crie a trilha. Na primeira lição, toque no marcador `[1]` para abrir o cartão **Fonte do seu material** com a citação literal.
+2. **0:25–0:55 — O erro muda o caminho.** Na lição, erre de propósito e toque em **Ver outro jeito de entender**. Mostre a ponte com a margem **Onde travou**, a legenda numerada com a tentativa completa, as quatro tábuas de madeira sobre o rio e o aviso **Modo demonstração** (quando simulado). Acerte o desafio para ver as tábuas ficarem verdes, o **Stu** atravessar para **De volta ao desafio** e o retorno aparecer logo abaixo da cena.
+3. **0:55–1:30 — Aprender explicando.** Abra **Explique com suas palavras (opcional)**, mostre o Stu como aluno com as três etapas, escreva uma explicação com exemplo (ou grave com `IA=openai` configurada; com DeepSeek, a voz não funciona — escreva a explicação) e envie para mostrar o retorno em quatro cartões (**O que fez sentido**, **O que revisar**, **Leve a ideia adiante** e **Próximo passo**).
+4. **1:30–2:00 — Evidência visível e sincronia.** Volte ao exercício, acerte e conclua a lição para mostrar os cartões de história na tela de conclusão, o selo **Reforço feito** no mapa da trilha e o selo de sincronia ao vivo no cabeçalho (inclusive no outro dispositivo).
 
 Uma frase para o pitch: **“O Studoo transforma seu material em prática, usa o erro para oferecer outro caminho e pede que você explique o que entendeu.”**
 
 ## Qualquer assunto, em um minuto
 
-Sem a OpenAI, as trilhas prontas do modo demonstração mostram assuntos além de programação. Diga que o conteúdo é de demonstração.
+Sem chave de IA, as trilhas prontas do modo demonstração mostram assuntos além de programação. Diga que o conteúdo é de demonstração.
 
 1. Peça “Quero aprender violão do zero”. No exemplo do Lá menor, mostre o diagrama, toque em **Ouvir o acorde** e faça a prática com o cronômetro.
 2. Na troca de Lá menor para Dó, ordene os movimentos; erre de propósito para mostrar as posições certas e erradas.
 3. Peça “Inglês para conversar em viagens”: ouça as frases e faça o exercício de escuta.
 4. Em “História do Brasil para a prova”, mostre a linha do tempo e a resposta aberta, com os critérios e a resposta modelo.
 
-Todas as ideias populares da tela inicial (violão, inglês, culinária, história do Brasil, frações e fotografia) abrem trilhas prontas. Outros assuntos, sem a OpenAI, recebem a trilha genérica de demonstração.
+Todas as ideias populares da tela inicial (violão, inglês, culinária, história do Brasil, frações e fotografia) abrem trilhas prontas. Outros assuntos, sem chave de IA, recebem a trilha genérica de demonstração.
 
 ## Conferência antes de apresentar
 

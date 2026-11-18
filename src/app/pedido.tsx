@@ -115,10 +115,17 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         <h1 tabIndex={-1}>{modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}</h1>
         <p className="pedido-heroi__fala" aria-live="polite">{modo === 'material' ? mensagens.inicio.materialTexto : fala}</p>
       </header>
-      {falha === 'limite_geracoes' && temPlanos && <Botao variante="secundario" onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>}
       {avisoSemTrilhas && <p className="pedido-aviso" role="status">{mensagens.planos.semTrilhas}</p>}
       {aviso && <p className="pedido-aviso">{aviso}</p>}
-      {falha && <EstadoErro codigo={falha}>{repetivel && <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>}</EstadoErro>}
+      {falha && (
+        <EstadoErro codigo={falha}>
+          {falha === 'limite_geracoes' && temPlanos ? (
+            <Botao variante="secundario" onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>
+          ) : repetivel ? (
+            <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>
+          ) : null}
+        </EstadoErro>
+      )}
       <div hidden={modo !== 'material'} className="pedido-material">
         <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} mostrarCabeca={false} />
       </div>
