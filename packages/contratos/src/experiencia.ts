@@ -265,7 +265,7 @@ export const mensagens = {
         detalhes: 'Saiba mais',
         materialTitulo: 'Transforme seu material em descobertas',
         materialTexto: 'Escolha um arquivo ou fotografe uma página. Depois, confira o que o Stu leu.',
-        arquivo: 'Escolher arquivo', camera: 'Usar a câmera', demo: 'Quero experimentar primeiro',
+        arquivo: 'Escolher arquivo', camera: 'Usar a câmera', demo: 'Experimentar com frações',
         ler: '1 · Traga seu material', conferir: '2 · Confira a leitura',
         saberMais: 'Ver como funciona',
     },

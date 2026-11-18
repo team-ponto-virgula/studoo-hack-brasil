@@ -235,6 +235,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [expliqueAberto, setExpliqueAberto] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
+  const cartaoCitacaoRef = useRef<HTMLElement>(null);
   /** Onde a pessoa estava em cada etapa ao sair dela: a "Etapa anterior" volta para lá, sem rolar tudo de novo. */
   const posicoesDasEtapas = useRef<Record<number, number>>({});
   const voltandoEtapa = useRef(false);
@@ -418,6 +419,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           evento.preventDefault();
           continuarAgora.current();
         }
+        return;
+      }
+      if (evento.key === 'Enter' && !alvo?.closest('button, a, textarea') && exercicio && respostaCompleta(exercicio, resposta) && !ocupado) {
+        evento.preventDefault();
+        formulario.current?.requestSubmit();
         return;
       }
       if (exercicio?.tipo !== 'multipla_escolha' || alvo?.matches('input[type="text"], textarea')) return;
@@ -672,7 +678,13 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                       <button key={idx} type="button" className="aula-citacao-marcador"
                         aria-label={`Ver fonte ${idx + 1} de ${licao.referencias!.length}`}
                         aria-expanded={citacaoAberta === idx}
-                        onClick={() => setCitacaoAberta((atual) => (atual === idx ? null : idx))}>
+                        onClick={() => {
+                          setCitacaoAberta(idx);
+                          window.requestAnimationFrame(() => {
+                            cartaoCitacaoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                            cartaoCitacaoRef.current?.focus({ preventScroll: true });
+                          });
+                        }}>
                         [{idx + 1}]
                       </button>
                     ))}
@@ -684,7 +696,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (() => {
               const ref = licao.referencias[citacaoAberta];
               return (
-                <aside className="aula-citacao" aria-label={mensagens.estudio.fonteMaterial} tabIndex={-1}>
+                <aside ref={cartaoCitacaoRef} className="aula-citacao" aria-label={mensagens.estudio.fonteMaterial} tabIndex={-1}>
                   <div className="aula-citacao__topo">
                     <span className="aula-citacao__selo">[{citacaoAberta + 1}] {mensagens.estudio.fonteMaterial}</span>
                     <strong>{ref.nome} · {ref.localizacao ?? mensagens.estudio.pagina(ref.pagina)}</strong>

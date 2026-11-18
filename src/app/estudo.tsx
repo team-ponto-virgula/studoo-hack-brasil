@@ -106,10 +106,27 @@ export function Estudo() {
   const ultimaBusca = useRef(0);
   const geracaoAtiva = useRef<AbortController | null>(null);
   const principal = useRef<HTMLElement>(null);
+  const objetivoRef = useRef(objetivo);
+  objetivoRef.current = objetivo;
 
-  const irParaLogin = useCallback(() => {
+  useEffect(() => {
+    try {
+      const salvo = sessionStorage.getItem('studoo.rascunho.objetivo');
+      if (salvo) {
+        setObjetivo(salvo);
+        sessionStorage.removeItem('studoo.rascunho.objetivo');
+      }
+    } catch { /* Sem armazenamento local: segue sem rascunho. */ }
+  }, []);
+
+  const irParaLogin = useCallback((expirada = false) => {
     setInicio('carregando');
-    window.location.replace('/login');
+    if (expirada) {
+      try {
+        if (objetivoRef.current.trim()) sessionStorage.setItem('studoo.rascunho.objetivo', objetivoRef.current);
+      } catch { /* Sem armazenamento local: segue sem rascunho. */ }
+    }
+    window.location.replace(expirada ? '/login?erro=nao_autenticado' : '/login');
   }, []);
 
   const carregar = useCallback(async (cancelado: () => boolean) => {
@@ -154,7 +171,7 @@ export function Estudo() {
       if (cancelado()) return;
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
       if (codigo === 'nao_autenticado') {
-        irParaLogin();
+        irParaLogin(true);
         return;
       }
       setErro(codigo);
@@ -273,7 +290,7 @@ export function Estudo() {
       return { ok: true, dados: await operacao() };
     } catch (falha) {
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
-      if (codigo === 'nao_autenticado') irParaLogin();
+      if (codigo === 'nao_autenticado') irParaLogin(true);
       else setErro(codigo);
       return { ok: false, codigo };
     } finally {
@@ -330,7 +347,7 @@ export function Estudo() {
       if (controle.signal.aborted) return;
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
       if (codigo === 'nao_autenticado') {
-        irParaLogin();
+        irParaLogin(true);
         return;
       }
       navegar({ tipo: 'objetivo' });
@@ -541,7 +558,11 @@ export function Estudo() {
           {visivel && tela.tipo === 'geracao' && geracao && (
             <GeracaoAoVivo geracao={geracao} ocupado={ocupado}
               cancelar={cancelarGeracao} comecar={(proposta) => void comecar(proposta)} ajustar={() => navegar({ tipo: 'objetivo' })}
-              existente={geracao.proposta ? planos.find((plano) => plano.titulo === geracao.proposta?.titulo) : undefined}
+              existente={geracao.proposta
+                ? planos.find((plano) =>
+                    plano.titulo === geracao.proposta?.titulo ||
+                    (geracao.proposta?.titulo.toLowerCase().includes('fraç') && plano.titulo.toLowerCase().includes('fraç')))
+                : undefined}
               abrirExistente={(id) => void abrirPlano(id)} />
           )}
           {visivel && tela.tipo === 'plano' && (

@@ -524,7 +524,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 .opcoes span { overflow-wrap: anywhere; }
 
 /* Lição concluída: tela inteira e centrada, com chuva de confete, raios girando atrás do Stu, que pula, e o resumo. */
-.estudo-principal:has(.painel--concluida) { width: min(100%, 40rem); margin-inline: auto; padding-top: clamp(24px, 6vw, 56px); }
+.estudo-principal:has(.painel--concluida) { width: min(100%, 54rem); margin-inline: auto; padding-top: clamp(24px, 6vw, 56px); }
 .painel--concluida { display: grid; justify-items: center; text-align: center; }
 .painel--concluida p { margin-inline: auto; }
 .conclusao-cena { position: relative; display: grid; width: 190px; height: 172px; place-items: end center; margin-bottom: 14px; }

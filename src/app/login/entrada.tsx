@@ -15,11 +15,17 @@ const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * a senha pode ser mostrada e o Caps Lock ativado é avisado. Na tela larga, a paisagem do mundo ocupa a metade direita;
  * no celular, vira uma faixa acima do título.
  */
-export function Entrada() {
-  const [googleDisponivel, setGoogleDisponivel] = useState(false);
-  const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(false);
-  const [visitanteDisponivel, setVisitanteDisponivel] = useState(false);
-  const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
+type ConfigAcessoInicial = {
+  google: boolean;
+  recuperacao: boolean;
+  visitante: boolean;
+};
+
+export function Entrada({ configInicial }: { configInicial?: ConfigAcessoInicial }) {
+  const [googleDisponivel, setGoogleDisponivel] = useState(Boolean(configInicial?.google));
+  const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(Boolean(configInicial?.recuperacao));
+  const [visitanteDisponivel, setVisitanteDisponivel] = useState(Boolean(configInicial?.visitante));
+  const [configuracaoCarregada, setConfiguracaoCarregada] = useState(Boolean(configInicial));
   const [verificando, setVerificando] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -45,7 +51,7 @@ export function Entrada() {
     }
 
     const codigo = new URLSearchParams(window.location.search).get('erro');
-    if (codigo && ['google_invalido', 'google_indisponivel', 'google_conta_existente'].includes(codigo)) setErro(codigo);
+    if (codigo && ['google_invalido', 'google_indisponivel', 'google_conta_existente', 'nao_autenticado'].includes(codigo)) setErro(codigo);
     void cliente.configuracaoAcesso().then(config => {
       if (ativo) {
         setGoogleDisponivel(config.google);
