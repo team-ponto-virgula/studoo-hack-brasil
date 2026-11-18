@@ -3,10 +3,13 @@
  * As ilustrações reaproveitam o mundo da trilha (src/ui/mundo.tsx).
  */
 
-.estudo:has(.painel--apresentacao) { grid-template-columns: minmax(0, 1fr); }
+.estudo:has(.painel--apresentacao),
+.entrada:has(.painel--apresentacao) { grid-template-columns: minmax(0, 1fr); }
 .estudo:has(.painel--apresentacao) .barra-lateral, .estudo:has(.painel--apresentacao) .estudo-cabecalho { display: none; }
 
-.estudo-principal:has(.painel--apresentacao) {
+.estudo-principal:has(.painel--apresentacao),
+.entrada-conteudo:has(.painel--apresentacao) {
+  display: block;
   width: min(100%, 44rem);
   margin-inline: auto;
   padding: clamp(16px, 4vw, 32px) clamp(20px, 5vw, 40px) 0;
@@ -244,7 +247,8 @@
 }
 
 @media (max-width: 767px) {
-  .estudo-principal:has(.painel--apresentacao) { padding-top: max(12px, env(safe-area-inset-top)); }
+  .estudo-principal:has(.painel--apresentacao),
+  .entrada-conteudo:has(.painel--apresentacao) { padding-top: max(12px, env(safe-area-inset-top)); }
   .painel--apresentacao { gap: 20px; }
   .apresentacao-rodape__conteudo > .botao { flex: 1 1 0; min-width: 0; }
 }

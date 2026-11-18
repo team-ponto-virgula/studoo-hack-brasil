@@ -697,6 +697,7 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar }: {
 
   return (
     <article className="plano-destaque">
+      <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} />
       <div className="plano-destaque__cena" style={coresDaRegiao(Math.max(0, regiao))} aria-hidden="true">
         <span className="plano-cartao__colina" />
         <Desenho nome={enfeites[0]} />
@@ -714,7 +715,6 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar }: {
         <Botao variante="primario" aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
           {acao}<Icone nome="seta" />
         </Botao>
-        <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} />
       </div>
     </article>
   );
@@ -773,6 +773,7 @@ function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar
 
   return (
     <article className="plano-cartao">
+      <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} />
       <div className="plano-cartao__cena" style={coresDaRegiao(Math.max(0, regiao))} aria-hidden="true">
         <span className="plano-cartao__colina" />
         <Desenho nome={enfeites[0]} />
@@ -789,8 +790,6 @@ function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar
         <Botao variante={concluido || secundario ? 'secundario' : 'primario'} aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
           {acao}<Icone nome="seta" />
         </Botao>
-        {/* Apagar fica em menu discreto para não competir com a ação principal do cartão. */}
-        <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} />
       </div>
     </article>
   );

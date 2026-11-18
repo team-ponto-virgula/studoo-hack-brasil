@@ -67,6 +67,7 @@ export const mensagens = {
     acesso: {
         google: 'Continuar com Google',
         googleIndisponivel: 'O login com Google está indisponível no momento.',
+        verComoFunciona: 'Ver como funciona',
         experimentar: 'Experimentar sem conta',
         experimentarAviso: 'Conta temporária, sem e-mail nem senha: seu progresso fica guardado por 24 horas neste navegador.',
         experimentarAvisoApp: 'Conta temporária, sem e-mail nem senha: seu progresso fica guardado por 24 horas neste aparelho.',

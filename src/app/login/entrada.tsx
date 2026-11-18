@@ -5,6 +5,7 @@ import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo, Paisagem, Skeleton, Stu } from '../../ui';
+import { Apresentacao } from '../apresentacao';
 
 type ErrosCampo = { email?: string; senha?: string };
 
@@ -34,9 +35,19 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
   const [capsLock, setCapsLock] = useState(false);
   /** Conta os erros: a cada um, o formulário treme de novo. */
   const [tremor, setTremor] = useState(0);
+  const [vendoApresentacao, setVendoApresentacao] = useState(false);
   const emEnvio = useRef(false);
   const campoEmail = useRef<HTMLInputElement>(null);
   const campoSenha = useRef<HTMLInputElement>(null);
+  const linkComoFunciona = useRef<HTMLButtonElement>(null);
+  const devolverFocoApresentacao = useRef(false);
+
+  useEffect(() => {
+    if (!vendoApresentacao && devolverFocoApresentacao.current) {
+      devolverFocoApresentacao.current = false;
+      linkComoFunciona.current?.focus();
+    }
+  }, [vendoApresentacao]);
 
   useEffect(() => {
     let ativo = true;
@@ -129,6 +140,29 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
 
   const descricaoSenha = [capsLock && 'senha-caps', errosCampo.senha && 'senha-erro'].filter(Boolean).join(' ') || undefined;
 
+  if (vendoApresentacao) {
+    return (
+      <div className="entrada">
+        <main className="entrada-conteudo" id="conteudo-principal">
+          <Apresentacao
+            primeiraVez={false}
+            semSessao
+            rotuloFinalUltimo={visitanteDisponivel ? mensagens.acesso.experimentar : undefined}
+            concluir={(_, concluiuFinal) => {
+              if (concluiuFinal && visitanteDisponivel) {
+                setVendoApresentacao(false);
+                void experimentarSemConta();
+                return;
+              }
+              devolverFocoApresentacao.current = true;
+              setVendoApresentacao(false);
+            }}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="entrada">
       <main className="entrada-conteudo" id="conteudo-principal">
@@ -140,6 +174,9 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
             </Paisagem>
             <h1>{mensagens.login.titulo}</h1>
             <p className="introducao">{mensagens.login.instrucoes}</p>
+            <button ref={linkComoFunciona} type="button" className="acesso-link" onClick={() => setVendoApresentacao(true)}>
+              {mensagens.acesso.verComoFunciona}
+            </button>
           </header>
           {verificando ? <Skeleton /> : (
             <form className="formulario" method="post" noValidate onSubmit={entrar} aria-busy={enviando}
