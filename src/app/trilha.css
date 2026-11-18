@@ -121,7 +121,7 @@
  * Escrevendo as lições (aceite): o Stu escreve com o lápis e as folhas voam; um brilho desce pela lista de lições, sem
  * marcar nenhuma como pronta. Quando o aceite volta, o visto verde passa pela lista, uma lição de cada vez.
  */
-.estudo-principal:has(.painel--preparo) { width: min(100%, 40rem); margin-inline: auto; padding-top: clamp(16px, 4vw, 40px); }
+.painel--preparo { width: min(100%, 40rem); margin-inline: auto; padding-top: clamp(4px, 1.5vw, 16px); animation: none; }
 .painel--preparo .contexto-tela { color: var(--acao); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; overflow-wrap: anywhere; }
 
 .preparo-cena {

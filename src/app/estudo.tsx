@@ -117,11 +117,13 @@ export function Estudo() {
   const principal = useRef<HTMLElement>(null);
   const objetivoRef = useRef(objetivo);
   objetivoRef.current = objetivo;
+  const abriuComRascunho = useRef(false);
 
   useEffect(() => {
     try {
       const salvo = sessionStorage.getItem('studoo.rascunho.objetivo');
       if (salvo) {
+        abriuComRascunho.current = true;
         setObjetivo(salvo);
         sessionStorage.removeItem('studoo.rascunho.objetivo');
       }
@@ -164,8 +166,8 @@ export function Estudo() {
           // A lição não existe mais (trilha apagada): segue para a trilha em andamento.
         }
       }
-      // Com planos salvos, abre direto na trilha em andamento, como os apps de estudo; senão, começa pelo pedido.
-      const inicial = planoInicial(ativos);
+      // Com planos salvos, abre direto na trilha em andamento, exceto se voltou com um rascunho de pedido salvo.
+      const inicial = abriuComRascunho.current ? null : planoInicial(ativos);
       if (inicial) {
         try {
           const plano = await cliente.obterPlano(inicial.id);
@@ -450,6 +452,10 @@ export function Estudo() {
       cacheLicoes.current.delete(licao.id);
       const atualizado = resultado.dados.plano;
       atualizarPlano(atualizado);
+      const momento = Date.now();
+      ultimaBusca.current = momento;
+      setAgora(momento);
+      setSincronia({ estado: 'atualizado', em: momento });
       navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
       return true;
     }
@@ -532,7 +538,7 @@ export function Estudo() {
         <header className="estudo-cabecalho">
           <span className="estudo-identificacao">
             <span className="estudo-identificacao__contexto">
-              {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
+              {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? limparTituloPlano(tela.plano.titulo) : mensagens.planos.titulo}
             </span>
             {inicio === 'pronto' && ((tela.tipo === 'planos' && planos.length > 0) || tela.tipo === 'plano') && (
               <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={planos.length > 0} />
@@ -913,7 +919,7 @@ function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; pron
           </li>
         ))}
       </ol>
-      {!prontas && <p key={dica} className="preparo-dica" aria-hidden="true"><Icone nome="lampada" />{dicas[dica]}</p>}
+      <p key={dica} className="preparo-dica" aria-hidden="true" style={prontas ? { visibility: 'hidden' } : undefined}><Icone nome="lampada" />{dicas[dica]}</p>
       <p className="somente-leitor" role="status">{prontas ? mensagens.preparo.anuncioProntas : mensagens.preparo.anuncio}</p>
     </section>
   );
@@ -983,6 +989,14 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
+function limparTituloPlano(titulo: string) {
+  return titulo
+    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || mensagens.planos.titulo;
+}
+
 function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano }: {
   tela: TelaPlano;
   ocupado: boolean;
@@ -1010,7 +1024,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
       <header className="trilha-topo">
         <div className="trilha-topo__texto">
           <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
-          <h1 tabIndex={-1}>{plano.titulo}</h1>
+          <h1 tabIndex={-1}>{limparTituloPlano(plano.titulo)}</h1>
         </div>
         <AnelProgresso progresso={plano.progresso} />
       </header>

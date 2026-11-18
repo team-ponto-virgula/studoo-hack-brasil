@@ -10,6 +10,7 @@
 .estudo-principal:has(.painel--apresentacao),
 .entrada-conteudo:has(.painel--apresentacao) {
   display: block;
+  place-items: normal;
   width: min(100%, 44rem);
   margin-inline: auto;
   padding: clamp(16px, 4vw, 32px) clamp(20px, 5vw, 40px) 0;
@@ -17,10 +18,12 @@
 
 .painel--apresentacao {
   display: flex;
+  width: 100%;
   min-width: 0;
   min-height: calc(100svh - clamp(16px, 4vw, 32px));
   flex-direction: column;
   gap: 24px;
+  animation: none;
 }
 
 .apresentacao-topo { display: flex; min-height: 48px; align-items: center; justify-content: space-between; gap: 16px; }
@@ -295,6 +298,8 @@
   .entrada-conteudo:has(.painel--apresentacao) { padding-top: max(12px, env(safe-area-inset-top)); }
   .painel--apresentacao { gap: 20px; }
   .apresentacao-rodape__conteudo > .botao { flex: 1 1 0; min-width: 0; }
+  .apresentacao-rodape__conteudo[data-empilhado] { flex-direction: column-reverse; }
+  .apresentacao-rodape__conteudo[data-empilhado] > .botao { flex: none; width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

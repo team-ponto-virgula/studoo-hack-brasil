@@ -176,10 +176,16 @@ async function gerarPonte(
       ponte = await local();
     }
   }
+  const jaVenceu = Boolean((guardado as { algumaConcluida?: boolean } | null)?.algumaConcluida || apoio.reforcoConcluido);
   await banco.apoioLicao.updateMany({
     where: { usuarioId, licaoId },
     data: {
-      reforco: JSON.parse(JSON.stringify({ ...ponte, resposta: apoio.ultimaResposta, indice: apoio.ultimoIndice })),
+      reforco: JSON.parse(JSON.stringify({
+        ...ponte,
+        resposta: apoio.ultimaResposta,
+        indice: apoio.ultimoIndice,
+        ...(jaVenceu ? { algumaConcluida: true } : {}),
+      })),
       reforcoConcluido: false,
     },
   });

@@ -395,9 +395,14 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const idBalao = `${base}-balao-${indice}`;
           const posicao = montando ? mensagens.trilha.posicaoParcial(indice + 1) : mensagens.trilha.posicao(indice + 1, total);
           const estado = mensagens.trilha.estados[no.estado];
-          const nome = atual
+          const selos = selosDoNo(no);
+          const selosTexto = selos.map((selo) => selo.texto).join('. ');
+          const nomeBase = atual
             ? (no.andamento ? mensagens.trilha.nomeNoContinuar(no.titulo, posicao) : mensagens.trilha.nomeNoAtual(no.titulo, posicao))
-            : mensagens.trilha.nomeNo(no.titulo, posicao, estado.toLocaleLowerCase('pt-BR'));
+            : (selos.length > 0
+              ? `${no.titulo}. ${selosTexto}. ${posicao}, ${estado.toLocaleLowerCase('pt-BR')}.`
+              : mensagens.trilha.nomeNo(no.titulo, posicao, estado.toLocaleLowerCase('pt-BR')));
+          const nome = atual && selos.length > 0 ? `${nomeBase} ${selosTexto}.` : nomeBase;
           let linha = no.estado === 'previa' ? posicao : estado;
           if (abrindo === no.id) linha = mensagens.trilha.abrindo;
           const enfeites = enfeitesDaLinha(no.trecho, indice);
@@ -406,7 +411,6 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const numeroMarco = trechos.indexOf(no.trecho) + 1;
           const recem = no.id === recemConcluida;
           const desenhar = recem && no.estado === 'concluida' && ligado;
-          const selos = selosDoNo(no);
 
           const conteudo = (
             <>
@@ -414,17 +418,17 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 <Icone nome={iconeDoNo(no)} />
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {recem && <Confete quantidade={12} />}
-                {/* Um balão só no nó atual: a ação e o nome da lição juntos. */}
-                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar}</span><span className="caminho-no__etiqueta-titulo">{semQuebrarHifen(no.titulo)}</span></span>}
+                {/* Um balão só no nó atual: a ação e o nome da lição juntos (\u200B evita colar palavras no axe). */}
+                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar}{'\u200B'}</span><span className="caminho-no__etiqueta-titulo">{semQuebrarHifen(no.titulo)}</span></span>}
                 {no.estado === 'bloqueada' && <span className="caminho-no__selo"><Icone nome="cadeado" /></span>}
               </span>
               {/* O nome de cada lição fica à vista embaixo do nó (o atual já mostra o nome no balão "Começar"): dá para achar uma lição para rever sem tocar uma por uma. */}
               {(!atual || no.estado === 'previa') && <span className="caminho-no__texto" aria-hidden="true">
-                <span className="caminho-no__titulo">{semQuebrarHifen(no.titulo)}</span>
+                <span className="caminho-no__titulo">{semQuebrarHifen(no.titulo)}{selos.length > 0 ? '\u200B' : ''}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
                 {/* O reforço e o "vale rever" são selos com ícone (a marca da ponte feita vem antes do "Vale rever"). */}
-                {selos.map((selo) => (
-                  <span key={selo.texto} className="caminho-ponte" data-rever={selo.texto === mensagens.trilha.valeRever || undefined}><Icone nome={selo.icone} />{selo.texto}</span>
+                {selos.map((selo, sIdx) => (
+                  <span key={selo.texto} className="caminho-ponte" data-rever={selo.texto === mensagens.trilha.valeRever || undefined}><Icone nome={selo.icone} />{selo.texto}{sIdx < selos.length - 1 ? '\u200B' : ''}</span>
                 ))}
               </span>}
             </>
