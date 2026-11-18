@@ -31,3 +31,14 @@ As capturas locais ficam em `artifacts/paridade/`. A web usa API e banco locais 
 Os testes de paridade verificam a fonte única de textos, os desenhos e as cores de texto, ação, campos e feedback. Os testes de movimento verificam preferência de movimento reduzido, segundo plano e limpeza das assinaturas. Build e tipos são conferidos nas duas plataformas.
 
 Permanecem adaptações deliberadas: navegador versus SecureStore para sessão, navegador do sistema para Google no Android, gestos e teclado nativos, áreas seguras e barra lateral no desktop. Esta revisão não substitui a validação em aparelho Android: teclado físico/virtual, TalkBack e desempenho nativo ainda precisam ser conferidos ali.
+
+## Diferenças deliberadas do app nas rodadas de UI 1.1 a 1.3
+
+Números e textos seguem `docs/ui/DIRECAO-UI.md` e `experiencia.ts`. Estas diferenças vêm do toque e da tela estreita:
+
+- Ponte: a cena fica horizontal também no celular e o Stu atravessa até "De volta ao desafio". Os textos das tábuas ficam numa legenda numerada logo abaixo da cena, porque quatro tábuas com texto não cabem legíveis em 390 px. O retorno da vitória aparece logo abaixo da cena, que a tela traz à vista antes da travessia.
+- Privacidade do material: até a configuração de acesso responder, o app mostra o aviso geral (`privacidade`). Depois, mostra o aviso do provedor ativo (`privacidadePorProvedor(ia)`).
+- Material: o CSV aparece em tabela com rolagem horizontal dentro do cartão. As páginas de texto mostram quatro linhas e um botão para abrir o resto.
+- Stu no exercício: cada uma das três comemorações (de primeira, acerto e depois da ponte) tem movimento e adereço próprios (✦, ✓ e tábuas).
+- Explique: as ondas da gravação seguem o volume do microfone (`metering` do expo-audio). Com movimento reduzido, ficam paradas.
+- Conclusão: os cartões de história ficam em uma coluna.
