@@ -149,6 +149,40 @@ export function formatarTempo(segundos: number) {
  * no acerto (com confete) ou âmbar no erro (o exercício treme), e dá para tentar de novo. Continuar segue para a próxima
  * etapa; na última, registra a conclusão. O título de cada etapa e o do retorno recebem o foco.
  */
+function respostaLegivel(exercicio: LicaoDetalhe['exercicio'], resposta: string): string {
+  const limpa = resposta.trim();
+  if (!limpa) return '';
+  switch (exercicio.tipo) {
+    case 'multipla_escolha':
+      return exercicio.opcoes.find((o) => o.id === limpa)?.texto ?? '';
+    case 'ordenar':
+      return limpa
+        .split(',')
+        .map((id) => exercicio.itens.find((item) => item.id === id)?.texto)
+        .filter(Boolean)
+        .join(' · ');
+    case 'associar':
+      return limpa
+        .split(',')
+        .map((par) => {
+          const [idE, idD] = par.split('=');
+          const e = exercicio.esquerda.find((item) => item.id === idE)?.texto;
+          const d = exercicio.direita.find((item) => item.id === idD)?.texto;
+          return e && d ? `${e} → ${d}` : '';
+        })
+        .filter(Boolean)
+        .join(' · ');
+    case 'verdadeiro_falso': {
+      const [valor = '', justId = ''] = limpa.split(':');
+      const rotulo = valor === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : valor === 'falso' ? t.verdadeiroFalso.falso : '';
+      const just = exercicio.justificativas.find((item) => item.id === justId)?.texto;
+      return rotulo && just ? `${rotulo} · ${just}` : rotulo;
+    }
+    default:
+      return limpa;
+  }
+}
+
 export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   licao: LicaoDetalhe;
   pendente: string | null;
@@ -705,7 +739,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       </div>
       {exercicio && (
         <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
-          ultimaResposta={resposta}
+          ultimaResposta={respostaLegivel(exercicio, resposta)}
           aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
           aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
       )}

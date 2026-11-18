@@ -257,6 +257,8 @@ export function ApoioDaLicao({
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const cartaoPonte = useRef<HTMLElement>(null);
+  const ponteCenaRef = useRef<HTMLDivElement>(null);
+  const [atravessando, setAtravessando] = useState(false);
   const retornoDoEnsino = useRef<HTMLDivElement>(null);
   // O aviso do microfone (ou da transcrição) aparece junto do botão Gravar, no pé da página: a tela leva até ele.
   const avisoRef = useRef<HTMLParagraphElement>(null);
@@ -463,7 +465,19 @@ export function ApoioDaLicao({
   const pontePronta = Boolean(ponte);
   const ponteConcluida = ponte?.concluida === true;
   useEffect(() => {
-    if (ponteConcluida && pedidoPonte > 0) aoConcluirPonte?.();
+    if (!ponteConcluida) {
+      setAtravessando(false);
+      return;
+    }
+    if (pedidoPonte > 0) aoConcluirPonte?.();
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    ponteCenaRef.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    if (reduzido) {
+      setAtravessando(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setAtravessando(true), 380);
+    return () => window.clearTimeout(timer);
     // Só a conclusão do reforço dispara.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ponteConcluida]);
@@ -513,16 +527,18 @@ export function ApoioDaLicao({
             <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
             {ponte?.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
           </div>
-          <div className="ponte-cena" data-concluida={ponte?.concluida || undefined} aria-hidden="true">
+          <div className="ponte-cena" ref={ponteCenaRef} data-concluida={ponte?.concluida || undefined} aria-hidden="true">
             <div className="ponte-margem ponte-margem--esquerda">
-              <div className="ponte-stu" data-atravessou={ponte?.concluida || undefined}>
+              <div className="ponte-stu" data-atravessou={atravessando || undefined}>
                 <Stu />
               </div>
               <span>{m.ponteMargemErro}</span>
             </div>
             <div className="ponte-vao">
               <span className="ponte-tabua" data-ativa="true" data-erro="true">
-                {ultimaResposta ? m.pontePassoErro(ultimaResposta.slice(0, 24)) : m.ponteMargemErro}
+                {ultimaResposta
+                  ? m.pontePassoErro(ultimaResposta.length > 24 ? `${ultimaResposta.slice(0, 23).trimEnd()}…` : ultimaResposta)
+                  : m.ponteMargemErro}
               </span>
               <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined}>
                 {m.pontePassoExplicacao}
