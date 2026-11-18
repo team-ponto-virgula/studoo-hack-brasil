@@ -102,10 +102,15 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
 
   let rotuloFinal: string = mensagens.apresentacao.continuar;
   if (ultimo) rotuloFinal = rotuloFinalUltimo ?? (primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi);
-  // "Experimentar sem conta" não cabe numa linha ao lado de "Voltar" em telas de celular (na web, abaixo de 768 px, os dois
-  // dividem a largura e o rótulo quebra). Com um rótulo longo no último passo, os botões ficam um sobre o outro: "Voltar" em
-  // cima, na ordem da web, e a ação principal embaixo, onde a pessoa tocava "Continuar".
+  // "Experimentar sem conta" não cabe numa linha ao lado de "Voltar" em telas de celular. Com um rótulo longo no último passo,
+  // os botões ficam um sobre o outro: a ação principal em cima e "Voltar" embaixo, como na web (4.6) e no painel de erro.
+  // No app, a ordem de leitura do TalkBack segue a da tela (a principal primeiro).
   const empilhar = ultimo && passo > 0 && rotuloFinal.length > 14 && width < 600;
+  const voltar = passo > 0 && (
+    <View style={!empilhar && apresentacaoEstilos.metade}>
+      <Botao rotulo={mensagens.apresentacao.voltar} testID="voltar-apresentacao" variante="secundario" acao={() => irPara(passo - 1)} />
+    </View>
+  );
 
   return (
     <SafeAreaView style={estilos.tela}>
@@ -155,15 +160,12 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
       </ScrollView>
       <View style={estilos.rodape}>
         <View style={[estilos.rodapeConteudo, !empilhar && apresentacaoEstilos.acoes]}>
-          {passo > 0 && (
-            <View style={!empilhar && apresentacaoEstilos.metade}>
-              <Botao rotulo={mensagens.apresentacao.voltar} testID="voltar-apresentacao" variante="secundario" acao={() => irPara(passo - 1)} />
-            </View>
-          )}
+          {!empilhar && voltar}
           <View style={!empilhar && [apresentacaoEstilos.metade, ultimo && apresentacaoEstilos.principalLargo]}>
             <Botao rotulo={rotuloFinal} testID="avancar-apresentacao" icone={ultimo ? undefined : 'seta'}
               acao={() => (ultimo ? concluir(area, true) : irPara(passo + 1))} />
           </View>
+          {empilhar && voltar}
         </View>
       </View>
     </SafeAreaView>
