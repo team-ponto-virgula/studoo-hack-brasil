@@ -736,10 +736,13 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   );
   // Como na web: o nome de cada lição fica à vista embaixo do nó (o atual já mostra o nome no balão "Começar"), para
   // achar uma lição e rever sem tocar uma por uma.
+  // Como na web: o cartão do nome fica centrado no nó e estreita perto da borda (até 224, com 16 de folga de cada lado), em
+  // vez de escorregar para dentro; assim o nome quebra nas mesmas linhas.
+  const larguraRotulo = Math.max(120, Math.min(224, 2 * Math.min(centro, largura - centro) - 32));
   const discreto = !comRotulo && (!atual || !!no.ponte) && (
-    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), left: Math.max(8, Math.min(largura - 232, centro - 112)) }]}>
+    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), width: larguraRotulo, left: centro - larguraRotulo / 2 }]}>
       {/* O fundo fica na caixa, não no texto: assim o corte em duas linhas não deixa vazar a terceira. */}
-      <View style={[caminhoEstilos.discretoCaixa, atual && caminhoEstilos.discretoCaixaAtual]}>
+      <View style={[caminhoEstilos.discretoCaixa, { maxWidth: larguraRotulo }, atual && caminhoEstilos.discretoCaixaAtual]}>
         <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta },
           atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
         {/* Como na web (no balão do toque): na prévia, o que a lição ensina. */}

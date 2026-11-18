@@ -126,7 +126,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
             </View>
             <Text style={apresentacaoEstilos.posicao}>{mensagens.apresentacao.posicao(passo + 1, total)}</Text>
           </View>
-          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto fonte={16} estilo={{ paddingHorizontal: 14 }} acao={() => concluir()} />}
+          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto fonte={16} estilo={{ paddingHorizontal: 12 }} acao={() => concluir()} />}
         </View>
       </View>
       <ScrollView ref={paginas} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={estilos.tela}
@@ -220,7 +220,8 @@ function ArteMaterial() {
 function ArtePonte() {
   return (
     <Quadro selo>
-      <CenaPonte resposta="" primeiraTabua={mensagens.estudio.ponteTabuaErro} temPonte desafio concluida montada />
+      {/* A legenda tem 12 embaixo na web (.ponte-legenda no celular); a cena devolve o -2 que serve ao cartão da lição. */}
+      <CenaPonte resposta="" primeiraTabua={mensagens.estudio.ponteTabuaErro} temPonte desafio concluida montada estilo={{ marginBottom: 14 }} />
     </Quadro>
   );
 }
@@ -230,8 +231,11 @@ function ArteExplique() {
   const ex = mensagens.apresentacao.exemplos;
   return (
     <Quadro>
-      <CadernoDoStu compacto
-        ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: true }} />
+      {/* .ensino-caderno tem 16 em cima também na apresentação. */}
+      <View style={{ paddingTop: 16 }}>
+        <CadernoDoStu compacto
+          ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: true }} />
+      </View>
     </Quadro>
   );
 }
@@ -318,8 +322,10 @@ const apresentacaoEstilos = StyleSheet.create({
   rodape: { paddingHorizontal: 20, backgroundColor: cores.fundo },
   rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 18, borderTopWidth: 2, borderColor: cores.nevoa },
   pagina: { paddingTop: 20 },
-  titulo: { marginTop: 24 },
-  texto: { fontSize: 18, lineHeight: 26 },
+  // .painel--apresentacao no celular: 20 entre a arte e os textos; .apresentacao-textos: 18/24 e 16 entre o título e o texto
+  // (a introdução já tem 8 em cima).
+  titulo: { marginTop: 20 },
+  texto: { fontSize: 18, lineHeight: 24, marginTop: 16 },
   acoes: { flexDirection: 'row' },
   metade: { flex: 1, minWidth: 0 },
   arte: { borderRadius: 28, overflow: 'hidden' },

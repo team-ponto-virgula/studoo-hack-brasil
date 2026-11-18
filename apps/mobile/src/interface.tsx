@@ -109,7 +109,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura))}>
           {cabecalhoNaRolagem && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
           {faixaFixa && <View style={estilos.faixaFixa} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</View>}
-          <View style={[estilos.conteudo, estiloConteudo]}>
+          {/* .estudo-principal no celular: 28 em cima. Com o selo de sincronia, a barra da marca do app já fica uns 4 mais alta
+              que a da web (o "Sair" tem 48 de toque), então vale o respiro de 24. */}
+          <View style={[estilos.conteudo, !topo && !paginaDeAcesso && !abaixoDoLogo && estilos.conteudoEstudo, estiloConteudo]}>
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) ? null
               : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? alturaFaixa : 0)}>
@@ -600,6 +602,7 @@ export const estilos = StyleSheet.create({
   logo: { width: 112, height: 38 },
   logoEstudo: { width: 102, height: 34.6 },
   marcaEstudo: { paddingHorizontal: 16, paddingVertical: 4, minHeight: 64 },
+  conteudoEstudo: { paddingTop: 28 },
   // Com o selo de sincronia, a web quebra a barra em duas linhas (até 480 px): 4 em cima, a linha do logo, 6 de vão, o selo e
   // 4 embaixo; os 64 de altura mínima valem para a barra inteira.
   marcaComSelo: { minHeight: 0, paddingBottom: 0 },

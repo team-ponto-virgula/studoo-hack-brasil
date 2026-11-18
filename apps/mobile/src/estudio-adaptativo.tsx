@@ -912,7 +912,8 @@ export function ApoioDaLicao({
               style={{ minHeight: 156, textAlignVertical: 'top' }}
             />
             {/* Como a web (e57d54d): com a transcrição ligada, a dica diz quem recebe a gravação. */}
-            <Text style={[estilos.legenda, s.legendaCartao]}>
+            {/* .estudio-acoes tem 20 em cima (o cartão põe 14). */}
+            <Text style={[estilos.legenda, s.legendaCartao, { marginBottom: 6 }]}>
               {m.vozDica}{provedorGravacao ? ` ${m.vozProvedorPorProvedor(provedorGravacao)}` : ''}
             </Text>
             <Botao
@@ -1005,7 +1006,8 @@ const s = StyleSheet.create({
   ponteCabecaAcoes: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   desafio: { gap: 14 },
   gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#EEF3FF' },
-  rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24, marginBottom: 8 },
+  // O campo já põe 8 entre o rótulo e a caixa; a textarea da web tem 10 em cima.
+  rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24, marginBottom: 2 },
   // <p class="estudio-legenda"> dentro de .estudio-card: 0,85rem (13,6) com entrelinha 1,6.
   legendaCartao: { fontSize: 13.6, lineHeight: 21.76 },
   blocoVoz: { marginVertical: -2 },
