@@ -176,7 +176,7 @@ export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolea
       </View>
       {semVoz && <Text accessibilityLiveRegion="polite" style={formatos.avisoSemVoz}>{t.audio.semVozFrase}</Text>}
       {!acertou && !semVoz && (
-        <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} onPress={() => setMostrar((atual) => !atual)} style={formatos.linkAlvo}>
+        <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} aria-expanded={mostrar} onPress={() => setMostrar((atual) => !atual)} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}</Text>
         </Pressable>
       )}
@@ -987,7 +987,7 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
         {(['verdadeiro', 'falso'] as const).map((opcao) => {
           const marcada = escolha === opcao;
           return (
-            <Pressable key={opcao} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: desativado }} disabled={desativado}
+            <Pressable key={opcao} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: desativado }} aria-checked={marcada} disabled={desativado}
               testID={`vf-${opcao}`} onPress={() => mudar(`${opcao}:${justificativa}`)}
               style={({ pressed }) => [formatos.valor, marcada && formatos.cartaoEscolhido, marcada && retorno === 'certa' && formatos.cartaoCerto,
                 marcada && retorno === 'errada' && formatos.cartaoErrado, desativado && !marcada && { opacity: 0.55 }, pressed && formatos.cartaoAfundado]}>
@@ -1162,7 +1162,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
           {pratica.passos.map((passo, posicao) => {
             const feito = feitos.includes(posicao);
             return (
-              <Pressable key={posicao} accessibilityRole="checkbox" accessibilityState={{ checked: feito }}
+              <Pressable key={posicao} accessibilityRole="checkbox" accessibilityState={{ checked: feito }} aria-checked={feito}
                 onPress={() => setFeitos((atuais) => (feito ? atuais.filter((item) => item !== posicao) : [...atuais, posicao]))}
                 style={formatos.conferir}>
                 <View style={[formatos.caixinha, feito && formatos.caixinhaMarcada]}>{feito && <Icone nome="check" tamanho={14} cor={cores.fundo} />}</View>
@@ -1223,7 +1223,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
           const marcada = escolha === valor;
           const travada = !praticou && !escolha;
           return (
-            <Pressable key={valor} testID={`como-foi-${valor}`} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: travada }}
+            <Pressable key={valor} testID={`como-foi-${valor}`} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: travada }} aria-checked={marcada}
               disabled={travada} onPress={() => escolher(valor)}
               style={({ pressed }) => [formatos.valor, { flex: 1 }, travada && { opacity: 0.55 }, marcada && valor === 'consegui' && formatos.cartaoCerto,
                 marcada && valor === 'quase' && formatos.cartaoQuase, marcada && valor === 'ainda_nao' && formatos.cartaoEscolhido,

@@ -682,7 +682,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   <Text style={licaoEstilos.marcadoresTexto}>{mensagens.estudio.baseadoMaterial}</Text>
                   {licao.referencias.map((_, numero) => (
                     <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button" hitSlop={8}
-                      accessibilityLabel={`${mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }}
+                      accessibilityLabel={`${mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }} aria-expanded={citacaoAberta === numero}
                       onPress={() => setCitacaoAberta((atual) => (atual === numero ? null : numero))}
                       style={({ pressed }) => [licaoEstilos.marcadorAlvo, pressed && { opacity: 0.8 }]}>
                       <View style={[licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto]}>
@@ -750,7 +750,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 linha do tempo entregaria a ordem). */}
             {exercicio && (
               <View style={[licaoEstilos.consulta, !explicacaoAberta && licaoEstilos.consultaFechada]}>
-                <Pressable testID="rever-explicacao" accessibilityRole="button" accessibilityState={{ expanded: explicacaoAberta }}
+                <Pressable testID="rever-explicacao" accessibilityRole="button" accessibilityState={{ expanded: explicacaoAberta }} aria-expanded={explicacaoAberta}
                   onPress={() => setExplicacaoAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
                   <View style={{ transform: [{ rotate: explicacaoAberta ? '90deg' : '0deg' }] }}>
                     <Icone nome="seta" tamanho={16} cor="#8A5A00" />
@@ -770,7 +770,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   const sobra = fim - (posicaoRolagem.current + alturaVisivel.current);
                   if (sobra > 0) rolagem.current?.scrollTo({ y: posicaoRolagem.current + sobra, animated: reduzir === false });
                 }}>
-                <Pressable testID="consultar-recurso" accessibilityRole="button" accessibilityState={{ expanded: consultaAberta }}
+                <Pressable testID="consultar-recurso" accessibilityRole="button" accessibilityState={{ expanded: consultaAberta }} aria-expanded={consultaAberta}
                   onPress={() => setConsultaAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
                   <View style={{ transform: [{ rotate: consultaAberta ? '90deg' : '0deg' }] }}>
                     <Icone nome="seta" tamanho={16} cor="#8A5A00" />
@@ -1070,7 +1070,8 @@ function Opcao({ id, letra, texto, selecionada, retorno, desativada, apagada, ac
 
   return (
     <Animated.View style={{ transform: [{ scale: pulo }], opacity: apagada ? 0.55 : 1 }}>
-      <Pressable testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }}
+      {/* aria-checked além do accessibilityState: o React Native Web só lê os atributos aria-* (o leitor de tela da web precisava do estado). */}
+      <Pressable testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }} aria-checked={selecionada}
         accessibilityLabel={texto} disabled={desativada} onPress={acao} onFocus={() => setFocada(true)} onBlur={() => setFocada(false)}
         style={({ pressed }) => [licaoEstilos.opcao, estado, pressed && licaoEstilos.opcaoAfundada, focada && estilos.foco]}>
         <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden

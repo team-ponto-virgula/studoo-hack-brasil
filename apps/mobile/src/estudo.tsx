@@ -28,6 +28,7 @@ import { Caminho, SkeletonTrilha, type Faixa } from './caminho';
 import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { Icone } from './icone';
 import { Confete } from './festa';
+import { guardarRascunho, tomarRascunho } from './rascunho';
 import { Botao, Campo, EstadoErro, SeloSincronia, Skeleton, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
@@ -85,7 +86,10 @@ export function Estudo({ cliente, sair, expirar }: {
 }) {
   const [planos, setPlanos] = useState<PlanoResumo[] | null>(null);
   const [etapa, setEtapa] = useState<Etapa>({ tipo: 'planos' });
-  const [objetivo, setObjetivo] = useState('');
+  // O pedido guardado quando a sessão terminou no meio volta para o campo (rodada 4 da web).
+  const [objetivo, setObjetivo] = useState(() => tomarRascunho());
+  const objetivoAtual = useRef(objetivo);
+  objetivoAtual.current = objetivo;
   /** Área escolhida no fim da apresentação: o pedido abre com as ideias dela. */
   const [areaInicial, setAreaInicial] = useState<IdTema | undefined>();
   const [pendente, setPendente] = useState<Acao | null>(null);
@@ -130,7 +134,7 @@ export function Estudo({ cliente, sair, expirar }: {
         }
       } catch (falha) {
         if (!ativo) return;
-        if (sessaoInvalida(falha)) await expirar();
+        if (sessaoInvalida(falha)) await expirarGuardando();
         else {
           mostrarErro(falha);
           setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
@@ -169,7 +173,7 @@ export function Estudo({ cliente, sair, expirar }: {
       }
       marcarSincronia();
     } catch (falha) {
-      if (sessaoInvalida(falha)) await expirar();
+      if (sessaoInvalida(falha)) await expirarGuardando();
       else setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
     }
   }
@@ -216,6 +220,12 @@ export function Estudo({ cliente, sair, expirar }: {
     geracaoAtiva.current?.abort();
     geracaoAtiva.current = null;
     setGeracao(null);
+  }
+
+  /** A sessão terminou: guarda o pedido em andamento antes de voltar à entrada (o aviso da entrada diz o motivo). */
+  async function expirarGuardando() {
+    guardarRascunho(objetivoAtual.current);
+    await expirar();
   }
 
   /** Mostra o erro de uma falha: o texto para o cartão e o código para a ação que cabe. */
@@ -265,7 +275,7 @@ export function Estudo({ cliente, sair, expirar }: {
     try {
       return { ok: true, dados: await operacao() };
     } catch (falha) {
-      if (sessaoInvalida(falha)) await expirar();
+      if (sessaoInvalida(falha)) await expirarGuardando();
       else mostrarErro(falha);
       return { ok: false, codigo: codigoDaFalha(falha) };
     } finally {
@@ -319,7 +329,7 @@ export function Estudo({ cliente, sair, expirar }: {
     } catch (falha) {
       if (controle.signal.aborted) return;
       if (sessaoInvalida(falha)) {
-        await expirar();
+        await expirarGuardando();
         return;
       }
       navegar({ tipo: 'objetivo' });
@@ -495,7 +505,9 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'geracao' && geracao) {
       return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
         comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })}
-        existente={geracao.proposta ? planos?.find((plano) => plano.titulo === geracao.proposta?.titulo) : undefined}
+        // Como a web na rodada 4: além do título igual, a trilha de demonstração de frações reconhece outra de frações.
+        existente={geracao.proposta ? planos?.find((plano) => plano.titulo === geracao.proposta?.titulo
+          || (geracao.proposta?.titulo.toLowerCase().includes('fraç') && plano.titulo.toLowerCase().includes('fraç'))) : undefined}
         abrirExistente={(id) => void abrirPlano(id)} />;
     }
 

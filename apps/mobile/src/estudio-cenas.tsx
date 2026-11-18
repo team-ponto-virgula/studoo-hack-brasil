@@ -273,7 +273,7 @@ export function PaginaDoMaterial({ pagina }: { pagina: PaginaMaterial }) {
         <>
           <Text selectable numberOfLines={aberta ? undefined : 4} style={estilos.texto}>{pagina.texto}</Text>
           {longa && (
-            <Pressable accessibilityRole="button" accessibilityState={{ expanded: aberta }} hitSlop={8} onPress={() => setAberta((atual) => !atual)}
+            <Pressable accessibilityRole="button" accessibilityState={{ expanded: aberta }} aria-expanded={aberta} hitSlop={8} onPress={() => setAberta((atual) => !atual)}
               style={paginas.expandir}>
               <View style={{ transform: [{ rotate: aberta ? '-90deg' : '90deg' }] }}><Icone nome="seta" tamanho={14} cor={cores.acao} /></View>
               <Text style={paginas.expandirTexto}>{aberta ? mensagens.licao.recursos.esconder : m.paginaExpandir}</Text>
