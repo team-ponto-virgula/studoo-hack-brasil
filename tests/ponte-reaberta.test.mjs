@@ -21,7 +21,7 @@ test('vocabulário unificado da ponte e ausência de window.confirm / scroll smo
     readFile(new URL('../src/app/aula.tsx', import.meta.url), 'utf8'),
   ]);
 
-  assert.match(proxySrc, /const estilo = "'unsafe-inline'"/);
+  assert.match(proxySrc, /const estilo = desenvolvimento \? "'unsafe-inline'" : `'nonce-\$\{nonce\}'`/);
   assert.equal(estudoSrc.includes('window.confirm'), false);
   assert.equal(estudioTsxSrc.includes("'smooth'"), false);
   assert.equal(aulaSrc.includes("'smooth'"), false);

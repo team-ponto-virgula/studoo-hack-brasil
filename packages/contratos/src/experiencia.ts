@@ -176,6 +176,7 @@ export const mensagens = {
         concluido: 'Concluída',
         apagar: 'Apagar',
         apagarRotulo: (titulo: string) => `Apagar a trilha “${titulo}”`,
+        maisOpcoesRotulo: (titulo: string) => `Mais opções de “${titulo}”`,
         apagarPergunta: (titulo: string, detalhe?: string) =>
             `Apagar a trilha “${titulo}”${detalhe ? ` (${detalhe})` : ''}? As lições e o progresso dela também serão apagados.`,
         semTrilhas: 'Você ainda não tem trilhas. Comece uma aqui: escreva o que quer aprender.',

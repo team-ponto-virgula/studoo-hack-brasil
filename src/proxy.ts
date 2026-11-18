@@ -12,12 +12,12 @@ export function proxy(request: NextRequest) {
   const desenvolvimento = process.env.NODE_ENV === "development";
   const origem = origemStudoo();
   const websocket = desenvolvimento && origem ? ` ${origem.replace(/^http/, "ws")}` : "";
-  const estilo = "'unsafe-inline'";
+  const estilo = desenvolvimento ? "'unsafe-inline'" : `'nonce-${nonce}'`;
   const politica = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${desenvolvimento ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' ${estilo}`,
-    // React usa atributos style para cores, posições e progresso. O nonce continua exigido nas tags style.
+    // React usa atributos style para cores, posições e progresso. Em produção, tags style exigem nonce.
     "style-src-attr 'unsafe-inline'",
     `connect-src 'self'${websocket}`,
     "img-src 'self' data:",

@@ -686,7 +686,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
   .entrada-banner .stu { position: absolute; bottom: 8%; left: 50%; width: 76px; translate: -50% 0; }
   .entrada-cabecalho .logo-quadro { margin-bottom: 20px; }
   .estudo { grid-template-columns: minmax(0, 1fr); }
-  .barra-lateral, .estudo-identificacao__contexto { display: none; }
+  .barra-lateral, .estudo-identificacao__contexto, .planos-cabeca .botao { display: none; }
   .estudo-marca, .planos-movel { display: block; }
   .estudo-principal { width: 100%; max-width: 880px; margin-inline: auto; }
 }
@@ -909,8 +909,8 @@ button { touch-action: manipulation; }
 .painel--concluida .conclusao-liberada .icone { color: var(--acao); }
 
 /* Lição terminada com erro ou com a prática em "ainda não": um lembrete gentil de rever. */
-.conclusao-rever { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; color: var(--alerta); font-weight: 800; text-align: center; }
-.conclusao-rever .icone { flex: none; width: 20px; height: 20px; }
+.conclusao-rever { display: flex; align-items: flex-start; justify-content: center; gap: 8px; max-width: 28rem; margin: 16px auto 0; color: var(--alerta); font-weight: 800; text-align: left; }
+.conclusao-rever .icone { flex: none; width: 20px; height: 20px; margin-top: 2px; }
 
 /* Fim da trilha: os números são da última lição, e a legenda diz isso. */
 .conclusao-numeros__legenda { margin: 18px 0 -8px; color: var(--texto2); font-weight: 800; font-size: 0.85rem; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }

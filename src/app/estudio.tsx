@@ -629,7 +629,7 @@ export function ApoioDaLicao({
             <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
               data-estado={resultadoPonte ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
           )}
-          {ponte?.concluida && aoVoltarExercicio && (
+          {ponte?.concluida && !reaberta && aoVoltarExercicio && (
             <Botao onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>
           )}
           {!ponte?.concluida && <p>{ponte?.motivo ?? m.ponteDica}</p>}
@@ -640,6 +640,7 @@ export function ApoioDaLicao({
               <>
                 {ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
                 <div className="estudio-exemplo">{ponte.exemplo}</div>
+                {aoVoltarExercicio && <Botao onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>}
               </>
             )
           ) : (
