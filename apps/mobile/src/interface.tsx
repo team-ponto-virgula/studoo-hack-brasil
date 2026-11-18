@@ -478,7 +478,7 @@ export const estilos = StyleSheet.create({
   pontinhos: { height: 24, flexDirection: 'row', alignItems: 'center', gap: 5 },
   pontinho: { width: 8, height: 8, borderRadius: 4 },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
-  botaoCompacto: { alignSelf: 'flex-start', minHeight: 48, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
+  botaoCompacto: { alignSelf: 'flex-start', minHeight: 48, minWidth: 48, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
   botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 1 },
   botaoPressionado: { opacity: 0.82 },
   foco: { outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
