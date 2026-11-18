@@ -694,7 +694,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 </aside>
               );
             })()}
-            {(licao.recurso?.tipo === 'imagem' || licao.recurso?.tipo === 'acorde') && <RecursoDaLicao recurso={licao.recurso} />}
+            {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
           </>
         )}
         {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
