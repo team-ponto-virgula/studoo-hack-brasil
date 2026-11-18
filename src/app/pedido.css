@@ -25,7 +25,7 @@
   cursor: pointer;
 }
 
-.pedido-como:hover:not(:disabled) { background: var(--nevoa); }
+@media (hover: hover) { .pedido-como:hover:not(:disabled) { background: var(--nevoa); } }
 .pedido-como:disabled { color: var(--texto2); cursor: default; }
 
 .pedido-como__sinal {
@@ -248,7 +248,7 @@
 .descoberta-ponto { position:absolute; bottom:10px; left:9px; width:17px; height:17px; background:#a9dbc7; border-radius:50%; }
 .descoberta-modos { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 .descoberta-modo { display:flex; align-items:center; text-align:left; gap:12px; min-height:90px; padding:17px; background:white; border:2px solid var(--gelo); border-radius:20px; color:var(--texto); cursor:pointer; transition:background .18s,border-color .18s,transform .18s; }
-.descoberta-modo:hover { transform:translateY(-2px); }
+@media (hover: hover) { .descoberta-modo:hover { transform:translateY(-2px); } }
 .descoberta-modo[aria-pressed=true] { border-color:var(--acao); background:#f0f3ff; }
 .descoberta-modo strong { display:block; font-size:1rem; }
 .descoberta-modo small { display:block; margin-top:5px; color:var(--texto2); line-height:1.3; }
@@ -388,7 +388,7 @@
 .pedido-alternar__texto strong { font-weight: 800; }
 .pedido-alternar__texto small { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
 .pedido-alternar > .icone { width: 20px; height: 20px; color: var(--texto2); }
-.pedido-novo .pedido-como { justify-self: center; }
+.pedido-novo .pedido-como { justify-self: center; margin-left: 0; }
 
 @media (hover: hover) {
   .pedido-ideia:hover:not(:disabled) { border-color: #b9c7f5; }
