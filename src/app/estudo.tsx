@@ -260,7 +260,8 @@ export function Estudo() {
   }, [carregar]);
 
   useEffect(() => {
-    if (inicio === 'pronto' && document.activeElement?.id !== 'objetivo') {
+    const vaiFocarCampo = tela.tipo === 'objetivo' && (window.innerWidth >= 1024 || Boolean(objetivoRef.current.trim()));
+    if (inicio === 'pronto' && !vaiFocarCampo && document.activeElement?.id !== 'objetivo') {
       principal.current?.querySelector('h1')?.focus();
     }
   }, [inicio, tela]);

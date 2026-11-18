@@ -62,6 +62,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const [brilho, setBrilho] = useState(0);
   const campo = useRef<HTMLTextAreaElement>(null);
   const focarBotaoCriar = useRef(false);
+  const focouComTexto = useRef(false);
   const texto = objetivo.trim();
 
   useEffect(() => {
@@ -73,11 +74,15 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
 
   useEffect(() => {
     if (modo !== 'ideia' || (window.innerWidth < 1024 && !objetivo.trim())) return;
-    const quadro = window.requestAnimationFrame(() => {
-      campo.current?.focus({ preventScroll: true });
-    });
-    return () => window.cancelAnimationFrame(quadro);
+    campo.current?.focus({ preventScroll: true });
+    if (objetivo.trim()) focouComTexto.current = true;
   }, [modo]);
+
+  useEffect(() => {
+    if (modo !== 'ideia' || focouComTexto.current || !texto || focarBotaoCriar.current || escolhida !== null) return;
+    focouComTexto.current = true;
+    campo.current?.focus({ preventScroll: true });
+  }, [modo, texto, escolhida]);
 
   // O Stu reage ao pedido: convida, incentiva enquanto a pessoa escreve e comemora a ideia escolhida.
   let fala: string = mensagens.pedido.falas.vazio;
