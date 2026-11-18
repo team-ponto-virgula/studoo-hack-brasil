@@ -42,3 +42,5 @@ Números e textos seguem `docs/ui/DIRECAO-UI.md` e `experiencia.ts`. Estas difer
 - Stu no exercício: cada uma das três comemorações (de primeira, acerto e depois da ponte) tem movimento e adereço próprios (✦, ✓ e tábuas).
 - Explique: as ondas da gravação seguem o volume do microfone (`metering` do expo-audio). Com movimento reduzido, ficam paradas.
 - Conclusão: os cartões de história ficam em uma coluna.
+- Estado de erro (rodadas 3A a 3A.2): é o mesmo cartão com o Stu, o texto e uma ação, mas a ação ocupa a largura do cartão, como os outros botões de toque.
+- Erro na lição: o cartão não tem ação, porque a nova tentativa é o próprio botão do rodapé (Verificar, Concluir). Na web, "Tentar novamente" recarrega a página.
