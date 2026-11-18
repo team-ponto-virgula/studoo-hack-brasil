@@ -10,20 +10,36 @@ import {
   type PropostaPlano,
   type ProvedorIa,
 } from '@studoo/contratos';
+import {
+  estadoInicialVozAoVivo,
+  formatarTempoVoz,
+  prepararExplicacaoParaAvaliacao,
+  textoErroVozAoVivo,
+  type EstadoSessaoVozAoVivo,
+} from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Stu } from '../ui';
 import {
-  estadoInicialVozAoVivo,
-  formatarTempoVoz,
   iniciarControladorVozAoVivo,
-  prepararExplicacaoParaAvaliacao,
-  textoErroVozAoVivo,
   type ControladorVozAoVivo,
-  type EstadoSessaoVozAoVivo,
 } from './voz-ao-vivo';
 import './estudio.css';
 const m = mensagens.estudio;
+let promessaElegibilidadeVoz: Promise<boolean> | null = null;
+function consultarElegibilidadeVozAoVivo(): Promise<boolean> {
+  if (!promessaElegibilidadeVoz) {
+    promessaElegibilidadeVoz = cliente
+      .configuracaoAcesso()
+      .then(async (cfg) => {
+        if (!cfg.vozAoVivo) return false;
+        const sessao = await cliente.sessao();
+        return !sessao.visitante || Boolean(cfg.vozAoVivoVisitante);
+      })
+      .catch(() => false);
+  }
+  return promessaElegibilidadeVoz;
+}
 function erroTexto(e: unknown) {
   return e instanceof ErroStudoo
     ? (mensagens.erros[e.codigo as keyof typeof mensagens.erros] ?? m.erro)
@@ -284,12 +300,18 @@ export function ApoioDaLicao({
     setApoio(valor);
   }
   const [texto, setTexto] = useState('');
+  const textoRef = useRef('');
+  textoRef.current = texto;
   const [vozAoVivoDisponivel, setVozAoVivoDisponivel] = useState(false);
   const [etapaVoz, setEtapaVoz] = useState<'inativa' | 'privacidade' | 'ativa'>('inativa');
   const [estadoVoz, setEstadoVoz] = useState<EstadoSessaoVozAoVivo>(() => estadoInicialVozAoVivo());
+  const [nivelMic, setNivelMic] = useState(0);
   const controladorVozRef = useRef<ControladorVozAoVivo | null>(null);
   const campoEnsinoRef = useRef<HTMLTextAreaElement>(null);
   const painelPrivacidadeRef = useRef<HTMLDivElement>(null);
+  const painelVozRef = useRef<HTMLDivElement>(null);
+  const legendasVozRef = useRef<HTMLDivElement>(null);
+  const usuarioRolouLegendasRef = useRef(false);
   const [resposta, setResposta] = useState('');
   const [passoPonte, setPassoPonte] = useState<1 | 2 | 3>(1);
   const [vencidaNestaAbertura, setVencidaNestaAbertura] = useState(false);
@@ -301,13 +323,12 @@ export function ApoioDaLicao({
   const retornoPonte = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     let ativo = true;
-    void Promise.all([cliente.configuracaoAcesso(), cliente.sessao()])
-      .then(([cfg, sessao]) => {
-        if (!ativo) return;
-        const liberado = Boolean(cfg.vozAoVivo) && (!sessao.visitante || Boolean(cfg.vozAoVivoVisitante));
-        setVozAoVivoDisponivel(liberado);
-      })
-      .catch(() => undefined);
+    const suporteWebRtc =
+      typeof RTCPeerConnection !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia);
+    if (!suporteWebRtc || !cliente.configuracaoAcesso) return;
+    void consultarElegibilidadeVozAoVivo().then((liberado) => {
+      if (ativo) setVozAoVivoDisponivel(liberado);
+    });
     return () => {
       ativo = false;
       controladorVozRef.current?.descartar();
@@ -317,16 +338,26 @@ export function ApoioDaLicao({
 
   useEffect(() => {
     if (etapaVoz === 'privacidade') {
+      painelPrivacidadeRef.current?.scrollIntoView?.({ block: 'center' });
       painelPrivacidadeRef.current?.querySelector('button')?.focus();
+    } else if (etapaVoz === 'ativa') {
+      painelVozRef.current?.scrollIntoView?.({ block: 'center' });
     }
   }, [etapaVoz]);
 
+  useEffect(() => {
+    const el = legendasVozRef.current;
+    if (!el || usuarioRolouLegendasRef.current) return;
+    el.scrollTop = el.scrollHeight;
+  }, [estadoVoz.legendas]);
+
   function concluirComTranscricao(bruta: string) {
     controladorVozRef.current = null;
-    const preparada = prepararExplicacaoParaAvaliacao(bruta);
+    const rascunho = textoRef.current;
+    const preparada = prepararExplicacaoParaAvaliacao(bruta, rascunho);
     setEtapaVoz('inativa');
     if (!preparada) {
-      if (bruta.trim()) setTexto(bruta.trim());
+      if (bruta.trim() && !rascunho.trim()) setTexto(bruta.trim());
       setAviso(m.vozAoVivo.erros.curta);
       window.requestAnimationFrame(() => campoEnsinoRef.current?.focus());
       return;
@@ -343,6 +374,8 @@ export function ApoioDaLicao({
 
   function iniciarConversaAoVivo() {
     setAviso('');
+    usuarioRolouLegendasRef.current = false;
+    setNivelMic(0);
     setEtapaVoz('ativa');
     setEstadoVoz(estadoInicialVozAoVivo());
     controladorVozRef.current?.descartar();
@@ -351,11 +384,14 @@ export function ApoioDaLicao({
       cliente,
       aoMudar: setEstadoVoz,
       aoTempoEsgotado: concluirComTranscricao,
+      aoNivelMic: setNivelMic,
       aoErroFatal: (_codigo, parcial) => {
         controladorVozRef.current = null;
         if (parcial.trim()) {
+          const combinado = prepararExplicacaoParaAvaliacao(parcial, textoRef.current) ??
+            [textoRef.current.trim(), parcial.trim()].filter(Boolean).join('\n\n');
           setEtapaVoz('inativa');
-          setTexto(parcial.trim());
+          setTexto(combinado);
           setAviso(m.vozAoVivo.parcialNoCampo);
           window.requestAnimationFrame(() => campoEnsinoRef.current?.focus());
         }
@@ -849,18 +885,26 @@ export function ApoioDaLicao({
         }}
       >
         <summary>{m.ensinar}</summary>
-        <div className="ensino-stu" data-gravando={gravando || etapaVoz === 'ativa' || undefined}>
+        <div
+          className="ensino-stu"
+          data-gravando={gravando || (etapaVoz === 'ativa' && estadoVoz.estado === 'ouvindo') || undefined}
+          data-falando={etapaVoz === 'ativa' && estadoVoz.estado === 'stu_falando' ? 'true' : undefined}
+        >
           <Stu />
           <p className="ensino-stu__balao">
-            {gravando || etapaVoz === 'ativa'
-              ? m.ensinoStuOuvindo
-              : ensino
-                ? m.ensinoStuAnotou
-                : m.ensinoStuAluno}
+            {etapaVoz === 'ativa'
+              ? m.vozAoVivo.estados[estadoVoz.estado]
+              : gravando
+                ? m.ensinoStuOuvindo
+                : ensino
+                  ? m.ensinoStuAnotou
+                  : m.ensinoStuAluno}
           </p>
         </div>
         <ol className="ensino-passos" aria-label={m.ensinoEtapasLabel}>
-          <li data-ativo={!texto.trim() || gravando || etapaVoz === 'ativa' || undefined} aria-current={!texto.trim() || gravando || etapaVoz === 'ativa' ? 'step' : undefined}>{m.ensinoEtapas[0]}</li>
+          <li data-ativo={!texto.trim() || gravando || etapaVoz === 'ativa' || undefined} aria-current={!texto.trim() || gravando || etapaVoz === 'ativa' ? 'step' : undefined}>
+            {vozAoVivoDisponivel ? `1. ${m.vozAoVivo.abrir}, gravar ou escrever` : m.ensinoEtapas[0]}
+          </li>
           <li data-ativo={(Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino) || undefined} aria-current={Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino ? 'step' : undefined}>{m.ensinoEtapas[1]}</li>
           <li data-ativo={Boolean(ensino) || undefined} aria-current={ensino ? 'step' : undefined}>{m.ensinoEtapas[2]}</li>
         </ol>
@@ -868,6 +912,20 @@ export function ApoioDaLicao({
         <p className="estudio-legenda">{m.ensinoIdeia(licao.objetivo)}</p>
         {vozAoVivoDisponivel && etapaVoz === 'inativa' && (
           <div className="voz-ao-vivo-entrada">
+            <div className="voz-ao-vivo-entrada__cabeca">
+              <span className="voz-ao-vivo-entrada__icone" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="2" width="6" height="12" rx="3" />
+                  <path d="M5 10a7 7 0 0 0 14 0" />
+                  <line x1="12" y1="17" x2="12" y2="22" />
+                  <line x1="8" y1="22" x2="16" y2="22" />
+                </svg>
+              </span>
+              <div className="voz-ao-vivo-entrada__texto">
+                <strong className="voz-ao-vivo-entrada__titulo">{m.vozAoVivo.abrir}</strong>
+                <span className="voz-ao-vivo-entrada__beneficio">{m.vozAoVivo.abrirBeneficio}</span>
+              </div>
+            </div>
             <Botao
               variante="secundario"
               disabled={ocupado || gravando}
@@ -914,12 +972,9 @@ export function ApoioDaLicao({
           </div>
         )}
         {etapaVoz === 'ativa' && (
-          <div className="voz-ao-vivo-painel" data-estado={estadoVoz.estado}>
+          <div ref={painelVozRef} className="voz-ao-vivo-painel" data-estado={estadoVoz.estado}>
             <p className="somente-leitor" aria-live="polite">{estadoVoz.anuncioSr}</p>
             <div className="voz-ao-vivo-cabeca">
-              <div className="voz-ao-vivo-mascote" aria-hidden="true">
-                <Stu />
-              </div>
               <span className="voz-ao-vivo-estado">
                 {m.vozAoVivo.estados[estadoVoz.estado]}
               </span>
@@ -927,6 +982,22 @@ export function ApoioDaLicao({
                 {formatarTempoVoz(estadoVoz.segundos)} / {formatarTempoVoz(estadoVoz.limiteSegundos)}
               </span>
             </div>
+            {(estadoVoz.estado === 'ouvindo' || estadoVoz.estado === 'stu_falando') && (
+              <p className="voz-ao-vivo-dica">{m.vozAoVivo.dicaInterromper}</p>
+            )}
+            {(estadoVoz.estado === 'pedindo_mic' || estadoVoz.estado === 'conectando') && (
+              <div className="voz-ao-vivo-progresso" aria-hidden="true"><span /></div>
+            )}
+            {estadoVoz.estado === 'ouvindo' && !estadoVoz.mudo && (
+              <div className="ensino-ondas voz-ao-vivo-ondas" aria-hidden="true">
+                {[0.6, 0.9, 1, 0.85, 0.65].map((peso, idx) => (
+                  <span
+                    key={idx}
+                    style={{ transform: `scaleY(${Math.max(0.28, Math.min(1, 0.28 + nivelMic * peso)).toFixed(2)})` }}
+                  />
+                ))}
+              </div>
+            )}
             {estadoVoz.avisoTempo && estadoVoz.estado !== 'erro' && (
               <p className="voz-ao-vivo-aviso" role="status">{m.vozAoVivo.avisoTempo}</p>
             )}
@@ -935,7 +1006,15 @@ export function ApoioDaLicao({
                 {textoErroVozAoVivo(estadoVoz.erro)}
               </p>
             ) : (
-              <div className="voz-ao-vivo-legendas">
+              <div
+                ref={legendasVozRef}
+                className="voz-ao-vivo-legendas"
+                onScroll={() => {
+                  const el = legendasVozRef.current;
+                  if (!el) return;
+                  usuarioRolouLegendasRef.current = el.scrollTop + el.clientHeight < el.scrollHeight - 24;
+                }}
+              >
                 {estadoVoz.legendas.map((turno) => (
                   <p key={`${turno.autor}-${turno.id}`} className="voz-ao-vivo-turno" data-autor={turno.autor}>
                     <strong>{turno.autor === 'stu' ? m.vozAoVivo.stuDisse : m.vozAoVivo.voceDisse}:</strong>{' '}
@@ -1005,7 +1084,7 @@ export function ApoioDaLicao({
             {gravando ? m.parar : m.gravar}
           </Botao>
           <Botao
-            disabled={ocupado || gravando || texto.trim().length < 20}
+            disabled={ocupado || gravando || etapaVoz === 'ativa' || texto.trim().length < 20}
             aria-busy={ocupado || undefined}
             onClick={() =>
               void executar(async () => {

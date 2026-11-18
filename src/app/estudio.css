@@ -605,12 +605,76 @@
 
 .voz-ao-vivo-entrada {
   display: grid;
-  gap: 6px;
+  gap: 10px;
   justify-items: start;
+  padding: 14px 16px;
   margin: 0.75rem 0;
+  border: 1px solid var(--borda, #d8e1d9);
+  border-radius: 14px;
+  background: var(--superficie, #f6f8f6);
+}
+.voz-ao-vivo-entrada__cabeca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.voz-ao-vivo-entrada__icone {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: var(--cartao, #ffffff);
+  color: var(--acao, #1f7a4c);
+  flex-shrink: 0;
+}
+.voz-ao-vivo-entrada__texto {
+  display: grid;
+  gap: 2px;
+}
+.voz-ao-vivo-entrada__titulo {
+  font-size: 0.9375rem;
+}
+.voz-ao-vivo-entrada__beneficio {
+  font-size: 0.8125rem;
+  opacity: 0.85;
 }
 .voz-ao-vivo-nota {
   margin: 0;
+}
+.voz-ao-vivo-dica {
+  margin: 0;
+  font-size: 0.8125rem;
+  opacity: 0.8;
+}
+.voz-ao-vivo-progresso {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--borda, #d8e1d9);
+  overflow: hidden;
+}
+.voz-ao-vivo-progresso span {
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--acao, #1f7a4c);
+  animation: vozProgresso 1.2s ease-in-out infinite;
+}
+@keyframes vozProgresso {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+.voz-ao-vivo-ondas {
+  justify-content: flex-start;
+  padding: 4px 0;
+}
+.ensino-stu[data-falando='true'] .stu {
+  animation: stuFalando 0.7s ease-in-out infinite alternate;
+}
+@keyframes stuFalando {
+  from { transform: translateY(0) scale(1); }
+  to { transform: translateY(-2px) scale(1.04); }
 }
 .voz-ao-vivo-entrada .botao {
   min-height: 44px;

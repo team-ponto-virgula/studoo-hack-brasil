@@ -4,6 +4,7 @@ export * from './estudio';
 export * from './licao';
 export * from './som';
 export * from './fala';
+export * from './voz-ao-vivo';
 export interface Progresso {
   concluidas: number;
   total: number;

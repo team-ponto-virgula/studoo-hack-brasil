@@ -1,253 +1,17 @@
-import type { ClienteEstudio, EstadoVozAoVivo, SessaoVozAoVivo } from '@studoo/contratos';
+import {
+  classificarErroServidorVoz,
+  estadoInicialVozAoVivo,
+  extrairTranscricaoUsuario,
+  reduzirEventoRealtime,
+  textoErroVozAoVivo,
+  TEXTO_AVISO_FECHAMENTO_VOZ,
+  type ClienteEstudio,
+  type CodigoErroVozAoVivo,
+  type EstadoSessaoVozAoVivo,
+  type EventoRealtime,
+  type SessaoVozAoVivo,
+} from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
-
-export type CodigoErroVozAoVivo = 'micNegado' | 'falhaConexao' | 'rede' | 'limite' | 'visitante' | 'curta';
-
-export type TurnoLegenda = {
-  id: string;
-  autor: 'usuario' | 'stu';
-  texto: string;
-  finalizada: boolean;
-};
-
-export type EstadoSessaoVozAoVivo = {
-  estado: EstadoVozAoVivo;
-  mudo: boolean;
-  segundos: number;
-  limiteSegundos: number;
-  avisoTempo: boolean;
-  legendas: TurnoLegenda[];
-  ordemUsuario: string[];
-  falasPorItem: Record<string, string>;
-  itensPendentes: string[];
-  erro: CodigoErroVozAoVivo | null;
-  anuncioSr: string;
-};
-
-export function estadoInicialVozAoVivo(limiteSegundos = 180): EstadoSessaoVozAoVivo {
-  return {
-    estado: 'pedindo_mic',
-    mudo: false,
-    segundos: 0,
-    limiteSegundos,
-    avisoTempo: false,
-    legendas: [],
-    ordemUsuario: [],
-    falasPorItem: {},
-    itensPendentes: [],
-    erro: null,
-    anuncioSr: '',
-  };
-}
-
-function atualizarLegenda(
-  legendas: TurnoLegenda[],
-  id: string,
-  autor: 'usuario' | 'stu',
-  texto: string,
-  finalizada: boolean,
-  anexar = false,
-): TurnoLegenda[] {
-  if (!texto.trim()) return legendas;
-  const indice = legendas.findIndex((item) => item.id === id && item.autor === autor);
-  if (indice === -1) {
-    return [...legendas, { id, autor, texto, finalizada }];
-  }
-  return legendas.map((item, idx) =>
-    idx === indice
-      ? {
-          ...item,
-          texto: anexar ? `${item.texto}${texto}` : texto,
-          finalizada: finalizada || item.finalizada,
-        }
-      : item,
-  );
-}
-
-function registrarOrdem(ordem: string[], id: string): string[] {
-  return ordem.includes(id) ? ordem : [...ordem, id];
-}
-
-function adicionarPendente(pendentes: string[], id: string): string[] {
-  return pendentes.includes(id) ? pendentes : [...pendentes, id];
-}
-
-function removerPendente(pendentes: string[], id: string): string[] {
-  return pendentes.filter((item) => item !== id);
-}
-
-const CODIGOS_NAO_FATAIS = new Set([
-  'response_cancel_not_active',
-  'conversation_already_has_active_response',
-  'input_audio_buffer_commit_empty',
-  'item_truncate_invalid_item_id',
-]);
-
-export function erroCanalEhFatal(erro?: { type?: string; code?: string } | null): boolean {
-  const codigo = String(erro?.code ?? '').toLowerCase();
-  if (codigo && CODIGOS_NAO_FATAIS.has(codigo)) return false;
-  const tipo = String(erro?.type ?? '').toLowerCase();
-  if (tipo === 'invalid_request_error' && codigo && CODIGOS_NAO_FATAIS.has(codigo)) return false;
-  return true;
-}
-
-export type EventoRealtime = {
-  type?: string;
-  item_id?: string;
-  response_id?: string;
-  delta?: string;
-  transcript?: string;
-  item?: { id?: string; role?: string };
-  error?: { type?: string; code?: string };
-};
-
-/**
- * Redutor puro dos eventos do canal `oai-events` da OpenAI Realtime API.
- * Mantém a ordem dos itens do usuário mesmo com transcrições atrasadas ou fora de ordem.
- */
-export function reduzirEventoRealtime(
-  atual: EstadoSessaoVozAoVivo,
-  evento: EventoRealtime,
-): EstadoSessaoVozAoVivo {
-  const tipo = evento.type;
-  if (!tipo) return atual;
-
-  if (tipo === 'conversation.item.created' && evento.item?.role === 'user' && evento.item.id) {
-    return {
-      ...atual,
-      ordemUsuario: registrarOrdem(atual.ordemUsuario, evento.item.id),
-      itensPendentes: adicionarPendente(atual.itensPendentes, evento.item.id),
-    };
-  }
-
-  if (tipo === 'input_audio_buffer.committed' && evento.item_id) {
-    return {
-      ...atual,
-      ordemUsuario: registrarOrdem(atual.ordemUsuario, evento.item_id),
-      itensPendentes: adicionarPendente(atual.itensPendentes, evento.item_id),
-    };
-  }
-
-  if (tipo === 'input_audio_buffer.speech_started') {
-    return atual.estado === 'stu_falando' ? { ...atual, estado: 'ouvindo' } : atual;
-  }
-
-  if (tipo === 'conversation.item.input_audio_transcription.delta' && typeof evento.delta === 'string') {
-    const id = evento.item_id ?? `usr-${atual.ordemUsuario.length + 1}`;
-    return {
-      ...atual,
-      estado: 'ouvindo',
-      ordemUsuario: registrarOrdem(atual.ordemUsuario, id),
-      itensPendentes: adicionarPendente(atual.itensPendentes, id),
-      legendas: atualizarLegenda(atual.legendas, id, 'usuario', evento.delta, false, true),
-    };
-  }
-
-  if (tipo === 'conversation.item.input_audio_transcription.completed' && typeof evento.transcript === 'string') {
-    const id = evento.item_id ?? `usr-${atual.ordemUsuario.length + 1}`;
-    const fala = evento.transcript.trim();
-    const pendentes = removerPendente(atual.itensPendentes, id);
-    if (!fala) {
-      return { ...atual, itensPendentes: pendentes };
-    }
-    return {
-      ...atual,
-      ordemUsuario: registrarOrdem(atual.ordemUsuario, id),
-      falasPorItem: { ...atual.falasPorItem, [id]: fala },
-      itensPendentes: pendentes,
-      legendas: atualizarLegenda(atual.legendas, id, 'usuario', fala, true, false),
-    };
-  }
-
-  if (tipo === 'output_audio_buffer.started') {
-    return atual.estado === 'encerrando' || atual.estado === 'erro'
-      ? atual
-      : { ...atual, estado: 'stu_falando' };
-  }
-
-  if (tipo === 'output_audio_buffer.stopped') {
-    return atual.estado === 'stu_falando' ? { ...atual, estado: 'ouvindo' } : atual;
-  }
-
-  if (
-    (tipo === 'response.output_audio_transcript.delta' || tipo === 'response.audio_transcript.delta') &&
-    typeof evento.delta === 'string'
-  ) {
-    const id = evento.response_id ?? evento.item_id ?? 'stu-atual';
-    return {
-      ...atual,
-      estado: 'stu_falando',
-      legendas: atualizarLegenda(atual.legendas, id, 'stu', evento.delta, false, true),
-    };
-  }
-
-  if (
-    (tipo === 'response.output_audio_transcript.done' || tipo === 'response.audio_transcript.done') &&
-    typeof evento.transcript === 'string'
-  ) {
-    const id = evento.response_id ?? evento.item_id ?? 'stu-atual';
-    return {
-      ...atual,
-      legendas: atualizarLegenda(atual.legendas, id, 'stu', evento.transcript.trim(), true, false),
-    };
-  }
-
-  if (tipo === 'response.done') {
-    return atual.estado === 'stu_falando' ? { ...atual, estado: 'ouvindo' } : atual;
-  }
-
-  if (tipo === 'error') {
-    if (!erroCanalEhFatal(evento.error)) {
-      if (process.env.NODE_ENV === 'development') {
-        console.debug('[voz-ao-vivo] aviso canal', evento.error?.type ?? '', evento.error?.code ?? '');
-      }
-      return atual;
-    }
-    return {
-      ...atual,
-      estado: 'erro',
-      erro: 'rede',
-      anuncioSr: mensagens.estudio.vozAoVivo.erros.rede,
-    };
-  }
-
-  return atual;
-}
-
-/** Extrai exclusivamente as falas da pessoa, na ordem dos itens da conversa. */
-export function extrairTranscricaoUsuario(estado: EstadoSessaoVozAoVivo): string {
-  const partes: string[] = [];
-  for (const id of estado.ordemUsuario) {
-    const finalizada = estado.falasPorItem[id]?.trim();
-    if (finalizada) {
-      partes.push(finalizada);
-      continue;
-    }
-    const parcial = estado.legendas.find((l) => l.id === id && l.autor === 'usuario')?.texto.trim();
-    if (parcial) partes.push(parcial);
-  }
-  return partes.join(' ').replace(/\s+/g, ' ').trim();
-}
-
-/** Garante os limites do avaliador `ensinarStu` (20 a 3000 caracteres) após 3 minutos de conversa. */
-export function prepararExplicacaoParaAvaliacao(texto: string): string | null {
-  const limpo = texto.replace(/\s+/g, ' ').trim();
-  if (limpo.length < 20) return null;
-  if (limpo.length <= 3000) return limpo;
-  const corte = limpo.slice(0, 3000);
-  const ultimoEspaco = corte.lastIndexOf(' ');
-  return (ultimoEspaco > 2400 ? corte.slice(0, ultimoEspaco) : corte).trim();
-}
-
-export function formatarTempoVoz(segundos: number): string {
-  const min = Math.floor(segundos / 60);
-  const seg = segundos % 60;
-  return `${String(min).padStart(2, '0')}:${String(seg).padStart(2, '0')}`;
-}
-
-export function textoErroVozAoVivo(codigo: CodigoErroVozAoVivo): string {
-  return mensagens.estudio.vozAoVivo.erros[codigo];
-}
 
 export type ControladorVozAoVivo = {
   alternarMudo: () => boolean;
@@ -261,14 +25,8 @@ type OpcoesControlador = {
   aoMudar: (estado: EstadoSessaoVozAoVivo) => void;
   aoTempoEsgotado: (transcricao: string) => void;
   aoErroFatal?: (codigo: CodigoErroVozAoVivo, parcial: string) => void;
+  aoNivelMic?: (nivel: number) => void;
 };
-
-function classificarErroServidor(erro: unknown): CodigoErroVozAoVivo {
-  const codigo = (erro as { codigo?: string } | null)?.codigo;
-  if (codigo === 'limite_estudio') return 'limite';
-  if (codigo === 'origem_invalida') return 'visitante';
-  return 'falhaConexao';
-}
 
 export type DependenciasVoz = {
   pedirMic?: () => Promise<MediaStream>;
@@ -278,11 +36,11 @@ export type DependenciasVoz = {
 };
 
 /**
- * Inicia o controlador de voz ao vivo de forma síncrona para garantir cancelamento imediato
- * em qualquer etapa assíncrona, mantendo o estado sob posse exclusiva do controlador.
+ * Controlador WebRTC da conversa de voz ao vivo.
+ * Nasce de forma síncrona para garantir cancelamento imediato e posse exclusiva do estado.
  */
 export function iniciarControladorVozAoVivo(
-  { licaoId, cliente, aoMudar, aoTempoEsgotado, aoErroFatal }: OpcoesControlador,
+  { licaoId, cliente, aoMudar, aoTempoEsgotado, aoErroFatal, aoNivelMic }: OpcoesControlador,
   deps: DependenciasVoz = {},
 ): ControladorVozAoVivo {
   let estadoAtual = estadoInicialVozAoVivo();
@@ -295,7 +53,10 @@ export function iniciarControladorVozAoVivo(
   let timerDesconexao: number | null = null;
   let timerGracaFim: number | null = null;
   let timerPendentes: number | null = null;
+  let timerNivel: number | null = null;
+  let audioCtx: AudioContext | null = null;
   let resolverPendentes: (() => void) | null = null;
+  let promessaEncerramento: Promise<string> | null = null;
   let inicioMs = 0;
   let avisoEnviado = false;
   let fimSolicitado = false;
@@ -330,10 +91,22 @@ export function iniciarControladorVozAoVivo(
     if (timerDesconexao !== null) { clearTimeout(timerDesconexao); timerDesconexao = null; }
     if (timerGracaFim !== null) { clearTimeout(timerGracaFim); timerGracaFim = null; }
     if (timerPendentes !== null) { clearTimeout(timerPendentes); timerPendentes = null; }
+    if (timerNivel !== null) { clearInterval(timerNivel); timerNivel = null; }
+  };
+
+  const silenciarMidia = () => {
+    stream?.getAudioTracks().forEach((t) => { t.enabled = false; });
+    if (audioEl) audioEl.muted = true;
+    aoNivelMic?.(0);
   };
 
   const limparMidia = () => {
     limparTemporizadores();
+    if (audioCtx) {
+      void audioCtx.close().catch(() => undefined);
+      audioCtx = null;
+    }
+    aoNivelMic?.(0);
     try { canal?.close(); } catch { /* ignore */ }
     canal = null;
     try { pc?.close(); } catch { /* ignore */ }
@@ -396,6 +169,16 @@ export function iniciarControladorVozAoVivo(
     aoErroFatal?.(codigo, parcial);
   };
 
+  const tratarFechamentoRemoto = () => {
+    if (cancelado || encerrado) return;
+    const limite = sessao?.limiteSegundos ?? 180;
+    if (inicioMs > 0 && estadoAtual.segundos >= limite) {
+      void encerrar().then(aoTempoEsgotado);
+    } else {
+      falhar(inicioMs > 0 ? 'rede' : 'falhaConexao');
+    }
+  };
+
   const esperarTranscricoesPendentes = (): Promise<void> => {
     if (estadoAtual.itensPendentes.length === 0) return Promise.resolve();
     return new Promise((resolve) => {
@@ -405,6 +188,31 @@ export function iniciarControladorVozAoVivo(
         resolve();
       }, 3_000) as unknown as number;
     });
+  };
+
+  const iniciarMedidorMic = () => {
+    if (!aoNivelMic || !stream || typeof window === 'undefined') return;
+    const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return;
+    try {
+      audioCtx = new AudioCtx();
+      const fonte = audioCtx.createMediaStreamSource(stream);
+      const analisador = audioCtx.createAnalyser();
+      analisador.fftSize = 64;
+      fonte.connect(analisador);
+      const dados = new Uint8Array(analisador.frequencyBinCount);
+      timerNivel = setInterval(() => {
+        if (cancelado || encerrado || estadoAtual.mudo || estadoAtual.estado !== 'ouvindo') {
+          aoNivelMic(0);
+          return;
+        }
+        analisador.getByteFrequencyData(dados);
+        const media = dados.reduce((acc, v) => acc + v, 0) / Math.max(1, dados.length);
+        aoNivelMic(Math.min(1, media / 90));
+      }, 80) as unknown as number;
+    } catch {
+      // Sem Web Audio: segue sem animação de nível.
+    }
   };
 
   const tentarAtivarConversa = () => {
@@ -421,6 +229,7 @@ export function iniciarControladorVozAoVivo(
       estado: 'ouvindo',
       anuncioSr: mensagens.estudio.vozAoVivo.conectado,
     }));
+    iniciarMedidorMic();
 
     try {
       canal?.send(JSON.stringify({ type: 'response.create' }));
@@ -441,13 +250,10 @@ export function iniciarControladorVozAoVivo(
             item: {
               type: 'message',
               role: 'system',
-              content: [{
-                type: 'input_text',
-                text: `Faltam 30 segundos para encerrar a conversa. Faça o fechamento em até 2 frases dizendo o que entendeu e peça para tocar em "${mensagens.estudio.vozAoVivo.encerrar}".`,
-              }],
+              content: [{ type: 'input_text', text: TEXTO_AVISO_FECHAMENTO_VOZ }],
             },
           }));
-          if (estadoAtual.estado === 'ouvindo') {
+          if (!estadoAtual.pessoaFalando && !estadoAtual.respostaEmCurso) {
             canal?.send(JSON.stringify({ type: 'response.create' }));
           }
         } catch { /* ignore */ }
@@ -464,7 +270,7 @@ export function iniciarControladorVozAoVivo(
         fimSolicitado = true;
         if (estadoAtual.estado === 'stu_falando') {
           timerGracaFim = setTimeout(() => {
-            void encerrar().then(aoTempoEsgotado);
+            if (!encerrado && !cancelado) void encerrar().then(aoTempoEsgotado);
           }, 10_000) as unknown as number;
         } else {
           void encerrar().then(aoTempoEsgotado);
@@ -488,7 +294,7 @@ export function iniciarControladorVozAoVivo(
         });
       });
       stream = await pedirMic();
-      if (cancelado) { limparMidia(); return; }
+      if (cancelado || encerrado) { limparMidia(); return; }
     } catch {
       falhar('micNegado');
       return;
@@ -516,6 +322,9 @@ export function iniciarControladorVozAoVivo(
       canal.onopen = () => {
         tentarAtivarConversa();
       };
+      canal.onclose = () => {
+        tratarFechamentoRemoto();
+      };
       canal.onmessage = (ev) => {
         if (cancelado) return;
         try {
@@ -531,7 +340,7 @@ export function iniciarControladorVozAoVivo(
             aoErroFatal?.(estadoAtual.erro ?? 'rede', parcial);
             return;
           }
-          if (fimSolicitado && antes.estado === 'stu_falando' && estadoAtual.estado === 'ouvindo' && !encerrado) {
+          if (fimSolicitado && antes.estado === 'stu_falando' && estadoAtual.estado === 'ouvindo' && !encerrado && !cancelado) {
             if (timerGracaFim !== null) { clearTimeout(timerGracaFim); timerGracaFim = null; }
             void encerrar().then(aoTempoEsgotado);
           }
@@ -546,8 +355,8 @@ export function iniciarControladorVozAoVivo(
           tentarAtivarConversa();
           return;
         }
-        if (st === 'failed') {
-          falhar(inicioMs > 0 ? 'rede' : 'falhaConexao');
+        if (st === 'failed' || st === 'closed') {
+          tratarFechamentoRemoto();
           return;
         }
         if (st === 'disconnected' && timerDesconexao === null) {
@@ -561,14 +370,14 @@ export function iniciarControladorVozAoVivo(
       };
 
       const oferta = await pc.createOffer();
-      if (cancelado) { limparMidia(); return; }
+      if (cancelado || encerrado) { limparMidia(); return; }
       await pc.setLocalDescription(oferta);
-      if (cancelado) { limparMidia(); return; }
+      if (cancelado || encerrado) { limparMidia(); return; }
       if (!oferta.sdp) throw new Error('sdp_vazio');
 
       const resposta = await cliente.iniciarVozAoVivo(licaoId, oferta.sdp);
       sessao = resposta;
-      if (cancelado) {
+      if (cancelado || encerrado) {
         limparMidia();
         await encerrarNoServidor();
         return;
@@ -576,38 +385,44 @@ export function iniciarControladorVozAoVivo(
 
       aplicar((a) => ({ ...a, limiteSegundos: resposta.limiteSegundos || 180 }));
       await pc.setRemoteDescription({ type: 'answer', sdp: resposta.sdpResposta });
-      if (cancelado) {
+      if (cancelado || encerrado) {
         limparMidia();
         await encerrarNoServidor();
         return;
       }
       tentarAtivarConversa();
     } catch (erro) {
-      if (cancelado) {
+      if (cancelado || encerrado) {
         limparMidia();
         await encerrarNoServidor();
         return;
       }
-      falhar(classificarErroServidor(erro));
+      falhar(classificarErroServidorVoz(erro));
     }
   }
 
   void conectar();
 
-  async function encerrar(): Promise<string> {
-    if (encerrado) return extrairTranscricaoUsuario(estadoAtual);
+  function encerrar(): Promise<string> {
+    if (promessaEncerramento) return promessaEncerramento;
     encerrado = true;
     removerPageHide();
+    silenciarMidia();
+    if (timerGracaFim !== null) { clearTimeout(timerGracaFim); timerGracaFim = null; }
+    if (relogio !== null) { clearInterval(relogio); relogio = null; }
     aplicar((a) => ({
       ...a,
       estado: 'encerrando',
       anuncioSr: mensagens.estudio.vozAoVivo.estados.encerrando,
     }));
-    await esperarTranscricoesPendentes();
-    const textoFinal = extrairTranscricaoUsuario(estadoAtual);
-    limparMidia();
-    await encerrarNoServidor();
-    return textoFinal;
+    promessaEncerramento = (async () => {
+      await esperarTranscricoesPendentes();
+      const textoFinal = extrairTranscricaoUsuario(estadoAtual);
+      limparMidia();
+      await encerrarNoServidor();
+      return textoFinal;
+    })();
+    return promessaEncerramento;
   }
 
   function alternarMudo(): boolean {

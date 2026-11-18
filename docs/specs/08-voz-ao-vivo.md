@@ -44,6 +44,7 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
 - **`npm run voz:conferir` com SDP completo realista** (áudio + canal de dados + ICE/fingerprint) contra a OpenAI real.
 - **Comportamento real do `semantic_vad` (`eagerness: "low"`) em português** e ajuste fino se necessário.
 - **Formato exato do campo `usage`** dentro de `conversation.item.input_audio_transcription.completed`.
+- **Fala em andamento no instante do encerramento:** com `semantic_vad` ativo, a referência da OpenAI orienta a não enviar `input_audio_buffer.commit` manual (o servidor gerencia os commits automaticamente e rejeita `commit` com buffer vazio); por isso, ao clicar em `"Encerrar e ver retorno"`, o cliente aguarda até 3 s apenas pelos itens já confirmados/pendentes.
 - **Compatibilidade no aplicativo móvel**: os contratos em `packages/contratos` ficam prontos, mas WebRTC nativo em React Native fica fora desta entrega web.
 
 ---
