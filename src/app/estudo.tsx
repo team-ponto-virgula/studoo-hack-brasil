@@ -502,6 +502,7 @@ export function Estudo() {
         <main id="conteudo-principal" className="estudo-principal" tabIndex={-1} ref={principal} aria-busy={ocupado}>
           <p className="somente-leitor" role="status">{anuncio}</p>
           {erro && <EstadoErro codigo={erro}>{acaoDoErro(erro)}</EstadoErro>}
+          {inicio === 'carregando' && <SkeletonTrilha />}
           {inicio === 'pronto' && carregandoTrilha && <SkeletonTrilha />}
           {inicio === 'pronto' && carregandoLicao && (tela.tipo === 'geracao' && geracao?.proposta
             ? <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />
