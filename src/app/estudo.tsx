@@ -431,15 +431,6 @@ export function Estudo() {
   const visivel = !carregandoTrilha && !carregandoLicao;
   const comNavegacao = planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(tela.tipo) && visivel;
 
-  if (inicio === 'carregando') {
-    return (
-      <main className="inicializacao" id="conteudo-principal">
-        <Logo />
-        <Skeleton />
-      </main>
-    );
-  }
-
   const acaoDoErro = (codigoErro: string) =>
     codigoErro === 'limite_geracoes' || codigoErro === 'limite_estudio' ? (
       <Botao variante="secundario" onClick={() => { setErro(null); setInicio('pronto'); navegar({ tipo: 'planos' }); }}>
