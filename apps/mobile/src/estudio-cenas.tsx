@@ -79,7 +79,8 @@ export function CenaPonte({ resposta, temPonte, desafio, concluida, aoMedir }: {
     animacao.start();
     return () => animacao.stop();
   }, [concluida, reduzir, travessia]);
-  const tentativa = resposta.length > 24 ? `${resposta.slice(0, 23).trimEnd()}…` : resposta;
+  // Como a legenda da web (rodada 3A): a tentativa inteira, cortada só depois de 80 caracteres.
+  const tentativa = resposta.length > 80 ? `${resposta.slice(0, 79).trimEnd()}…` : resposta;
   const passos = [
     { texto: tentativa ? m.pontePassoErro(tentativa) : m.ponteMargemErro, ativa: true, erro: true },
     { texto: m.pontePassoExplicacao, ativa: temPonte },
