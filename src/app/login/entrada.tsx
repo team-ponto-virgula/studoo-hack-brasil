@@ -17,6 +17,7 @@ const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  */
 export function Entrada() {
   const [googleDisponivel, setGoogleDisponivel] = useState(false);
+  const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(false);
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(false);
   const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
   const [verificando, setVerificando] = useState(true);
@@ -48,6 +49,7 @@ export function Entrada() {
     void cliente.configuracaoAcesso().then(config => {
       if (ativo) {
         setGoogleDisponivel(config.google);
+        setRecuperacaoDisponivel(Boolean(config.recuperacao));
         setVisitanteDisponivel(Boolean(config.visitante));
       }
     })
@@ -142,10 +144,13 @@ export function Entrada() {
                   <p className="acesso-ajuda">{mensagens.acesso.experimentarAviso}</p>
                 </div>
               )}
-              <Botao variante="secundario" disabled={!googleDisponivel || enviando}
-                onClick={() => { window.location.assign('/api/auth/google/iniciar'); }}>{mensagens.acesso.google}</Botao>
-              {configuracaoCarregada && !googleDisponivel && <p className="acesso-ajuda">{mensagens.acesso.googleIndisponivel}</p>}
-              <p className="acesso-divisor">{mensagens.acesso.ou}</p>
+              {configuracaoCarregada && googleDisponivel && (
+                <Botao variante="secundario" disabled={enviando}
+                  onClick={() => { window.location.assign('/api/auth/google/iniciar'); }}>{mensagens.acesso.google}</Botao>
+              )}
+              {(visitanteDisponivel || (configuracaoCarregada && googleDisponivel)) && (
+                <p className="acesso-divisor">{mensagens.acesso.ou}</p>
+              )}
               <div className="campo">
                 <label htmlFor="email">{mensagens.login.email}</label>
                 <input ref={campoEmail} id="email" name="email" type="email" inputMode="email" autoComplete="username"
@@ -174,12 +179,14 @@ export function Entrada() {
                   <p className="campo-erro" id="senha-erro"><span className="sinal" aria-hidden="true">!</span>{errosCampo.senha}</p>
                 )}
               </div>
-              <a className="acesso-link" href="/recuperar" onClick={() => {
-                try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
-              }}>{mensagens.acesso.esqueci}</a>
+              {configuracaoCarregada && recuperacaoDisponivel && (
+                <a className="acesso-link" href="/recuperar" onClick={() => {
+                  try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
+                }}>{mensagens.acesso.esqueci}</a>
+              )}
               {erro && <EstadoErro codigo={erro} />}
               <AcaoPrincipal>
-                <Botao type="submit" disabled={enviando}>
+                <Botao type="submit" variante={visitanteDisponivel ? 'secundario' : 'primario'} disabled={enviando}>
                   {enviando ? (
                     <>
                       <span className="carregando" aria-hidden="true"><span /><span /><span /></span>

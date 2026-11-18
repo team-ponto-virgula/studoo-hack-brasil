@@ -109,8 +109,8 @@ export const mensagens = {
         offlineCurto: 'Sem conexão',
     },
     login: {
-        titulo: 'Que bom te ver por aqui!',
-        instrucoes: 'Entre para continuar sua trilha de onde parou.',
+        titulo: 'Aprenda qualquer coisa, um passo de cada vez.',
+        instrucoes: 'Conte o que quer estudar e o Studoo monta uma trilha de lições curtas, com exercícios e feedback.',
         email: 'E-mail',
         senha: 'Senha',
         mostrarSenha: 'Mostrar senha',
