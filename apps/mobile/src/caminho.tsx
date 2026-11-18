@@ -21,7 +21,7 @@ import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
 import { cores, fontes } from './tema';
-import { explicar, iconeDoNo, nomeDoNo, posicaoDoNo, posicaoX, selosDoNo, type EstadoNo, type NoCaminho } from './trilha';
+import { explicar, iconeDoNo, nomeAcessivelDoNo, posicaoDoNo, posicaoX, selosDoNo, type EstadoNo, type NoCaminho } from './trilha';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
@@ -683,7 +683,6 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   tocar: () => void;
 }) {
   const [focado, setFocado] = useState(false);
-  const nome = nomeDoNo(no, posicao);
   // Na prévia, a linha embaixo do título diz o que a lição ensina (quando o gerador diz); senão, a posição.
   let linha: string = no.estado === 'previa' ? no.resumo ?? posicao : mensagens.trilha.estados[no.estado];
   if (abrindo) linha = mensagens.trilha.abrindo;
@@ -692,11 +691,10 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const direita = x >= 50;
   const atual = no.estado === 'atual';
   const selos = selosDoNo(no);
-  // O nome já termina em ponto: os selos entram sem ponto duplicado, na mesma ordem da tela (a ponte primeiro).
-  // Como na web (rodada 4I): o nome começa pelo texto que se vê (o título), para quem usa voz e leitor de tela.
-  const nomeVisivel = nome.startsWith(no.titulo) ? nome : `${no.titulo} — ${nome}`;
-  const rotuloA11y = selos.length ? `${nomeVisivel} ${selos.map((selo) => selo.texto).join('. ')}.`
-    : no.estado === 'previa' && no.resumo ? `${nomeVisivel} ${no.resumo}` : nomeVisivel;
+  // Mesmo formato da web (rodada 4.6): o atual começa pela ação, como o balão; nos outros, os selos vêm logo depois do
+  // título. Na prévia, que não é botão, o resumo da lição entra no fim: no app ele aparece embaixo do nó, não num balão.
+  const nome = nomeAcessivelDoNo(no, posicao);
+  const rotuloA11y = no.estado === 'previa' && no.resumo ? `${nome} ${no.resumo}` : nome;
   const lugar = [caminhoEstilos.noLugar, { left: centro - lente / 2, width: lente, height: lente }];
 
   const rotulo = comRotulo && (

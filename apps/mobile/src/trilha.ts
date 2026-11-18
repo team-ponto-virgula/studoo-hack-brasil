@@ -124,6 +124,18 @@ export function nomeDoNo(no: NoCaminho, posicao: string) {
   return mensagens.trilha.nomeNo(no.titulo, posicao, mensagens.trilha.estados[no.estado].toLocaleLowerCase('pt-BR'));
 }
 
+/**
+ * Nome acessível do nó com os selos, no mesmo formato da web (rodada 4.6, src/ui/caminho.tsx). O atual começa pela ação,
+ * como o balão, e os selos vêm no fim ("Começar: título. Lição 1 de 6, atual."). Nos outros, os selos vêm logo depois do
+ * título, na ordem da tela ("título. Ponte construída. Vale rever. Lição 1 de 3, concluída.").
+ */
+export function nomeAcessivelDoNo(no: NoCaminho, posicao: string) {
+  const selos = selosDoNo(no).map((selo) => selo.texto).join('. ');
+  if (no.estado === 'atual') return selos ? `${nomeDoNo(no, posicao)} ${selos}.` : nomeDoNo(no, posicao);
+  if (!selos) return nomeDoNo(no, posicao);
+  return `${no.titulo}. ${selos}. ${posicao}, ${mensagens.trilha.estados[no.estado].toLocaleLowerCase('pt-BR')}.`;
+}
+
 /** O pedido aparece sob o título só quando acrescenta algo: num objetivo curto, o título pode ser o próprio pedido. */
 export function repeteTitulo(titulo: string | null, objetivo: string) {
   const comparavel = (texto: string) => texto.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');

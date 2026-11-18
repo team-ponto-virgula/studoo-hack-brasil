@@ -80,3 +80,8 @@ O app segue a web 4.5.1 (`c56460a`). "Ver como funciona" na entrada abre a apres
 - Os quatro momentos usam as peças do próprio app, paradas: o cartão "Fonte do seu material" da lição, a cena da ponte vencida (as quatro tábuas verdes e o Stu na chegada), os cartões do Explique em tamanho compacto e o mapa com "Ponte construída" e o selo de sincronia. Os textos são os exemplos de `mensagens.apresentacao.exemplos`.
 - Na web, as tábuas da ponte trazem o texto. No app, como na lição, os rótulos ficam na legenda numerada abaixo da cena, começando por "Sua tentativa". O mapa perdeu as duas estrelas, como na web, para o selo de sincronia caber no canto.
 
+## Rodada 4.6 no app
+
+- Nome acessível dos nós do mapa, no mesmo formato da web 4.6. O nó atual começa pela ação, como o balão: "Começar: <título>. Lição X de Y, atual.", com os selos no fim. Nos outros nós, os selos vêm logo depois do título: "<título>. Ponte construída. Vale rever. Lição 1 de 3, concluída.". No balão, um espaço de largura zero separa a ação do título, para o texto visível do botão continuar contido no nome. Sem ele, o axe juntava "COMEÇAR" e o título numa palavra só.
+- Na prévia, o nó não é botão e o resumo da lição aparece embaixo dele, não num balão de toque. Por isso o app acrescenta o resumo ao fim do nome.
+
