@@ -1,4 +1,5 @@
 export const duracaoSessao = 8 * 60 * 60;
+export const duracaoSessaoVisitante = 24 * 60 * 60;
 
 export function origemStudoo(): string | null {
   const configurada = process.env.STUDOO_ORIGEM;

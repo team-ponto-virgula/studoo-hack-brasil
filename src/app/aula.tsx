@@ -338,7 +338,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   function lerMais() {
     const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
     const topo = document.querySelector<HTMLElement>('.aula-topo')?.getBoundingClientRect().height ?? 0;
-    window.scrollBy({ top: Math.max(160, (window.innerHeight - rodape - topo) * 0.75), behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollBy({ top: Math.max(160, (window.innerHeight - rodape - topo) * 0.75), behavior: reduzido ? 'auto' : 'smooth' });
   }
 
   // O aviso de "continuou de onde parou" vale para a etapa em que a pessoa voltou; na seguinte, sai.
@@ -374,7 +375,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       if (!exercicioNaTela || !rodape) return;
       const limite = window.innerHeight - rodape.getBoundingClientRect().height - 16;
       const sobra = exercicioNaTela.getBoundingClientRect().bottom - limite;
-      if (sobra > 0) window.scrollBy({ top: sobra, behavior: 'auto' });
+      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (sobra > 0) window.scrollBy({ top: sobra, behavior: reduzido ? 'auto' : 'smooth' });
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [avaliacao]);
@@ -566,7 +568,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     const caixa = caixas[caixas.length - 1];
     if (!caixa) return;
     caixa.open = true;
-    caixa.scrollIntoView({ block: 'start', behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    caixa.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
     caixa.querySelector<HTMLElement>('summary')?.focus({ preventScroll: true });
   }
 
@@ -574,7 +577,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   function mostrarComoFoi() {
     const pergunta = document.querySelector<HTMLElement>('.como-foi legend');
     if (!pergunta) return;
-    pergunta.scrollIntoView({ block: 'center', behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    pergunta.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
     pergunta.focus({ preventScroll: true });
     const grupo = pergunta.closest<HTMLElement>('.como-foi');
     grupo?.removeAttribute('data-chamar');
@@ -697,7 +701,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                         onClick={() => {
                           setCitacaoAberta(idx);
                           window.requestAnimationFrame(() => {
-                            cartaoCitacaoRef.current?.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+                            const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                            cartaoCitacaoRef.current?.scrollIntoView({ block: 'nearest', behavior: reduzido ? 'auto' : 'smooth' });
                             cartaoCitacaoRef.current?.focus({ preventScroll: true });
                           });
                         }}>
@@ -1357,7 +1362,8 @@ function mostrarAberto(evento: SyntheticEvent<HTMLDetailsElement>) {
     const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
     const area = caixa.getBoundingClientRect();
     const sobra = area.bottom - (window.innerHeight - rodape - 12);
-    if (sobra > 0) window.scrollBy({ top: Math.min(sobra, area.top - 72), behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (sobra > 0) window.scrollBy({ top: Math.min(sobra, area.top - 72), behavior: reduzido ? 'auto' : 'smooth' });
   });
 }
 
@@ -1915,7 +1921,8 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
     // em vez de voltar parado e apagar o que já foi praticado.
     setRestante((atual) => (atual > 0 ? atual : total));
     setRodando(true);
-    cronometro.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    cronometro.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
   }, [reinicio, total]);
   const comoFoi = useRef<HTMLLegendElement>(null);
   const acabou = restante === 0;
@@ -1943,14 +1950,16 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
 
   useEffect(() => {
     if (!acabou) return;
-    comoFoi.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    comoFoi.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
   }, [acabou]);
 
   // A resposta do Stu aparece embaixo das opções: a tela rola para ela não ficar escondida atrás do rodapé.
   const respostaDoStu = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!escolha) return;
-    respostaDoStu.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    respostaDoStu.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
   }, [escolha]);
 
   let rotuloPrincipal: string = t.pratica.comecar;
