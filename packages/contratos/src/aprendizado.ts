@@ -1,4 +1,4 @@
-import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino } from './estudio';
+import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
 export * from './estudio';
 export * from './licao';
@@ -310,12 +310,14 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     criarPonte: (id: string) => solicitar<ApoioEstudo>(`/estudio/licoes/${encodeURIComponent(id)}/ponte`, 'POST', {}),
     avaliarPonte: (id: string, resposta: string) => solicitar<{ correta: boolean; feedback: string; apoio: ApoioEstudo }>(`/estudio/licoes/${encodeURIComponent(id)}/ponte/avaliar`, 'POST', { resposta }),
     ensinarStu: (id: string, texto: string) => solicitar<FeedbackEnsino>(`/estudio/licoes/${encodeURIComponent(id)}/ensinar`, 'POST', { texto }),
+    iniciarVozAoVivo: (id: string, sdp: string) => solicitar<SessaoVozAoVivo>(`/estudio/licoes/${encodeURIComponent(id)}/voz-ao-vivo`, 'POST', { sdp }),
+    encerrarVozAoVivo: (id: string, chamadaId: string) => solicitar<null>(`/estudio/licoes/${encodeURIComponent(id)}/voz-ao-vivo/encerrar`, 'POST', { chamadaId }),
     transcrever: (arquivo: ArquivoEstudo & { idioma?: string }) => solicitar<{ texto: string }>('/estudio/voz', 'POST', arquivo),
     login: (email: string, senha: string) => solicitar<Autenticacao>("/login", "POST", { email, senha }),
     entrarVisitante: () => solicitar<Autenticacao>("/visitante", "POST"),
     entrarVisitanteNativo: () => solicitar<SessaoNativa>("/mobile/visitante", "POST"),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
-    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean }>("/auth/config"),
+    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean }>("/auth/config"),
     recuperarSenha: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/senha/recuperar`, 'POST', { email }),
     redefinirSenha: (email: string, codigo: string, senha: string, mobile = false) => solicitar<{ alterada: boolean }>(`${mobile ? '/mobile' : ''}/senha/redefinir`, 'POST', { email, codigo, senha }),
     trocarCodigoGoogle: (codigo: string, verificador: string) => solicitar<SessaoNativa>('/mobile/google', 'POST', { codigo, verificador }),

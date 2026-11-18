@@ -1,0 +1,79 @@
+# 08 — Voz ao vivo com o Stu (OpenAI Realtime API)
+
+## Objetivo
+Permitir conversa de voz ao vivo com o **Stu** dentro da atividade **"Explique com suas palavras"** do Estúdio, mantendo o recurso **desligado por padrão** (`STUDOO_VOZ_AO_VIVO` diferente de `1` ou sem `IA=openai` / `OPENAI_API_KEY`).
+
+Ao encerrar a conversa, apenas a **transcrição da fala da pessoa** é enviada para o avaliador existente (`POST /api/estudio/licoes/[id]/ensinar`), preservando os quatro eixos de retorno, o registro de conclusão e a experiência atual de texto/gravação como alternativa de um toque.
+
+---
+
+## Caminho escolhido: interface unificada (`POST /v1/realtime/calls` + `hangup` no servidor)
+A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realtime/calls` e guia WebRTC unificado) confirma que:
+1. O servidor pode abrir a chamada WebRTC enviando `multipart/form-data` com `sdp` (oferta do navegador) e `session` (JSON de configuração) para `POST /v1/realtime/calls` autenticado com `OPENAI_API_KEY` e cabeçalho `OpenAI-Safety-Identifier`.
+2. A resposta `201 Created` devolve o SDP `answer` no corpo e o identificador da chamada no cabeçalho `Location` (ex.: `/v1/realtime/calls/<call_id>`).
+3. Existe encerramento ativo pelo servidor para chamadas WebRTC: `POST /v1/realtime/calls/{call_id}/hangup`.
+
+**Por que escolhemos a interface unificada (em vez de segredo efêmero no navegador):**
+- **Teto de custo garantido no servidor:** o navegador nunca pode segurar a chamada até os 60 minutos máximos da API; o servidor agenda o encerramento forçado aos **3m15s (`195` s)** e também encerra imediatamente quando a pessoa clica em **"Encerrar e ver retorno"** (`POST /api/estudio/licoes/[id]/voz-ao-vivo/encerrar`).
+- **Nenhuma credencial no navegador:** nem `OPENAI_API_KEY` nem segredo efêmero saem do servidor.
+- **CSP inalterada:** como o navegador envia a oferta SDP para o próprio Studoo (`/api/estudio/licoes/[id]/voz-ao-vivo`) e o WebRTC usa ICE/DTLS direto sem `fetch` para `api.openai.com`, `connect-src` em `src/proxy.ts` não precisa liberar `https://api.openai.com`.
+
+---
+
+## O que a documentação oficial confirma
+- **`POST /v1/realtime/calls`** (`multipart/form-data` com `sdp` e `session`):
+  - `session.type = "realtime"`
+  - `session.model`: `OPENAI_REALTIME_MODELO` (padrão `gpt-realtime-2.1`)
+  - `session.instructions`: instruções pedagógicas geradas no servidor
+  - `session.output_modalities = ["audio"]`
+  - `session.audio.input.transcription = { model: "gpt-4o-transcribe", language: "pt" }`
+  - `session.audio.input.turn_detection = { type: "semantic_vad", eagerness: "low", interrupt_response: true }` — espera pausas de quem está pensando e permite interrupção natural pela pessoa
+  - `session.audio.output.voice`: `OPENAI_REALTIME_VOZ` (padrão `marin`)
+- **`POST /v1/realtime/calls/{call_id}/hangup`**: encerra a chamada WebRTC ativa no servidor.
+- **Eventos no canal de dados `oai-events`:**
+  - `conversation.item.input_audio_transcription.delta` e `conversation.item.input_audio_transcription.completed` (`transcript`, `item_id`) para a fala da pessoa.
+  - `response.output_audio_transcript.delta` / `.done` para a legenda do Stu.
+  - O Stu fala primeiro: o cliente dispara `response.create` ao abrir o canal `oai-events` para o Stu cumprimentar e pedir a explicação.
+  - Separação de uso: `response.done` traz `response.usage` da resposta, enquanto o uso da transcrição de entrada vem em `conversation.item.input_audio_transcription.completed`.
+- **Distinção frente a `/v1/live/sessions`:** `/v1/live/sessions` (`gpt-live-1`) é um paradigma mais novo; esta implementação usa explicitamente a **Realtime API** (`/v1/realtime/calls`).
+
+---
+
+## O que ainda fica em aberto para validar quando houver chave real
+- **Formato exato do cabeçalho `Location`** em produção (`/v1/realtime/calls/<id>` vs URL absoluta) — o parser no servidor aceitará ambos extraindo o último segmento.
+- **Comportamento real do `semantic_vad` (`eagerness: "low"`) em português** e ajuste fino se necessário.
+- **Formato exato do campo `usage`** dentro de `conversation.item.input_audio_transcription.completed`.
+- **Compatibilidade no aplicativo móvel**: os contratos em `packages/contratos` ficam prontos, mas WebRTC nativo em React Native fica fora desta entrega web.
+
+---
+
+## Desenho técnico
+
+### Etapa 1 — Servidor, contratos, instruções e CLI
+1. **Flags e configuração (`src/servidor/ia/realtime.ts` e `GET /api/auth/config`)**:
+   - `vozAoVivoAtiva()`: verdadeira apenas quando `STUDOO_VOZ_AO_VIVO === "1"`, `provedorIaAtivo() === "openai"` e `configuracaoOpenAi()` está presente.
+   - `vozAoVivoVisitanteAtiva()`: verdadeira apenas quando `vozAoVivoAtiva()` e `STUDOO_VOZ_AO_VIVO_VISITANTE === "1"`.
+   - `GET /api/auth/config` passa a retornar `{ google, recuperacao, ia, visitante, vozAoVivo }`.
+2. **Rotas privadas**:
+   - `POST /api/estudio/licoes/[id]/voz-ao-vivo`:
+     - Autenticada via `rotaPrivada`.
+     - Retorna `404` se `vozAoVivoAtiva()` for falsa.
+     - Se conta for visitante (`ehEmailVisitante`), retorna `403` quando `vozAoVivoVisitanteAtiva()` for falsa; quando ativa, aplica teto de `1` conversa por conta de visitante e teto diário compartilhado entre todos os visitantes (`ia:voz:visitantes:dia`, padrão `20`/dia, no molde de `ia:geracao:visitantes:dia`).
+     - Para conta normal, aplica limite persistente via `consumirLimite` (`3` por hora e `10` por dia por usuário), retornando `429` quando excedido.
+     - Recebe `{ sdp }` (oferta SDP WebRTC válida), carrega lição + apoio, monta instruções com `montarInstrucoesVozAoVivo`, chama `POST <base>/realtime/calls` com `OpenAI-Safety-Identifier: assinatura(usuarioId)`, registra a chamada ativa para o usuário com timer de encerramento forçado no servidor aos `195` s (`3m15s`), e devolve `{ chamadaId, sdpResposta, modelo, voz, limiteSegundos: 180, avisoSegundos: 150 }`.
+   - `POST /api/estudio/licoes/[id]/voz-ao-vivo/encerrar`:
+     - Recebe `{ chamadaId }`, verifica posse do usuário e chama `POST <base>/realtime/calls/{callId}/hangup` (idempotente).
+3. **Construtor puro de instruções (`montarInstrucoesVozAoVivo`)**:
+   - As 8 regras pedagógicas do Stu (estudante curioso que começa cumprimentando e pedindo a explicação, <=3 perguntas curtas uma por vez mirando lacunas e erros comuns do apoio, <=2 frases/turno, dica/exemplo antes de explicar em 1 frase após 2 tentativas, pedido de exemplo do dia a dia, fechamento em 2 frases sem XP/nota/ranking, PT-BR no tema sem PII, aviso perto de 2m30s e encerramento em 3m00s).
+4. **Privacidade em log**:
+   - **Nem áudio nem transcrição** são gravados em log do servidor; apenas contadores de uso/limite e motivo curto de erro.
+   - A transcrição da fala da pessoa segue o mesmo caminho e a mesma guarda do texto do `"Explique com suas palavras"` (`ensinarStu`).
+5. **Script de conferência (`npm run voz:conferir` / `scripts/conferir-voz-ao-vivo.ts`)**:
+   - Valida criação e encerramento de chamada Realtime contra `OPENAI_BASE_URL` sem precisar de áudio.
+
+### Etapa 2 — Cliente web e privacidade
+1. **Máquina de estados pura (`src/app/voz-ao-vivo.ts`)**:
+   - Estados: `pedindo_mic`, `conectando`, `ouvindo`, `stu_falando`, `encerrando`, `erro`.
+   - Envia oferta SDP local para `/api/estudio/licoes/[id]/voz-ao-vivo` (interface unificada), abre `oai-events`, envia `response.create` para o Stu começar, exibe legendas ao vivo, permite interrupção natural, controla timer (`150` s aviso / `180` s fim), mudo e `"Encerrar e ver retorno"` (chama `/encerrar` e envia **somente** a transcrição da pessoa para `ensinarStu`).
+2. **Aviso de privacidade**:
+   - Antes da primeira conversa ao vivo, informa que a voz vai para a OpenAI para a conversa ao vivo e que o Studoo não guarda áudio nem transcrição da conversa em log.

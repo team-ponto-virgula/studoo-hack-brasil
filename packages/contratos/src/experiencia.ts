@@ -9,7 +9,7 @@ export const mensagens = {
       privacidade: 'Com IA real ativa, você autoriza a leitura do material pelo provedor de IA configurado neste Studoo; no modo demonstração, o material não sai do Studoo. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.',
       privacidadePorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') => {
         if (ia === 'openai') {
-          return 'Ao enviar, você autoriza a leitura pela OpenAI. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.';
+          return 'Ao enviar, você autoriza a leitura pela OpenAI. Na conversa de voz ao vivo, o áudio vai para a OpenAI durante a sessão; o Studoo não guarda áudio nem transcrição da conversa em log. Envie somente conteúdo que pode compartilhar, sem dados pessoais. O texto do material fica disponível por 24 horas; as citações ficam nas lições salvas.';
         }
         if (ia === 'deepseek') {
           return 'Ao enviar, você autoriza a leitura pela DeepSeek. Envie somente material que pode compartilhar, sem dados pessoais. O texto fica disponível por 24 horas; as citações ficam nas lições salvas.';
@@ -43,6 +43,35 @@ export const mensagens = {
       pontePassoExplicacao: 'Outro caminho',
       pontePassoExemplo: 'Novo exemplo',
       pontePassoDesafio: 'Desafio vencido',
+      vozAoVivo: {
+        abrir: 'Conversar com o Stu',
+        privacidadeTitulo: 'Antes de conversar ao vivo',
+        privacidadeTexto: 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
+        privacidadeAceitar: 'Começar conversa',
+        privacidadeCancelar: 'Agora não',
+        estados: {
+          pedindo_mic: 'Pedindo acesso ao microfone…',
+          conectando: 'Conectando ao Stu…',
+          ouvindo: 'Stu ouvindo — fale no seu ritmo',
+          stu_falando: 'Stu falando — você pode interromper quando quiser',
+          encerrando: 'Encerrando e preparando seu retorno…',
+          erro: 'Não foi possível manter a conversa ao vivo.',
+        },
+        mudo: 'Silenciar microfone',
+        ativarMic: 'Ativar microfone',
+        encerrar: 'Encerrar e ver retorno',
+        alternativaTexto: 'Prefiro escrever ou gravar',
+        avisoTempo: 'Faltam cerca de 30 segundos para encerrar esta conversa.',
+        voceDisse: 'Você',
+        stuDisse: 'Stu',
+        erros: {
+          micNegado: 'O microfone não foi liberado. Você pode escrever ou gravar sua explicação.',
+          rede: 'A conexão caiu durante a conversa. Tente de novo ou escreva sua explicação.',
+          limite: 'Você atingiu o limite de conversas ao vivo por agora. Tente mais tarde ou escreva sua explicação.',
+          visitante: 'A conversa ao vivo está disponível para contas cadastradas. Você pode escrever ou gravar sua explicação.',
+          curta: 'Não deu para captar sua explicação completa. Fale um pouco mais ou escreva sua explicação.',
+        },
+      },
       ponteVerExemplo: 'Ver exemplo',
       ponteIrDesafio: 'Ir para o desafio',
       ponteVoltarExercicio: 'Voltar ao exercício',
