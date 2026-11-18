@@ -26,6 +26,8 @@ import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
+import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
+import { MATERIAL_COMPARTILHADO } from "@studoo/contratos";
 
 /** Lições escritas ao mesmo tempo no aceite (`STUDOO_GERACAO_PARALELA`, de 1 a 10; padrão 10, todas juntas). */
 export function geracaoParalela(): number {
@@ -51,6 +53,9 @@ const selecaoPlano = {
   titulo: true,
   objetivo: true,
   origem: true,
+  origemNome: true,
+  origemPerfilId: true,
+  origemCodigo: true,
   fluxos: {
     orderBy: { ordem: "asc" },
     select: {
@@ -142,7 +147,8 @@ export async function buscarPlano(usuarioId: string, id: string): Promise<PlanoD
   if (!plano) {
     throw new FalhaApi("nao_encontrado");
   }
-  return apresentarPlano(plano);
+  const marcas = await marcasDasTrilhas(usuarioId, [plano]);
+  return { ...apresentarPlano(plano), ...marcas.get(plano.id) };
 }
 
 /**
@@ -170,9 +176,10 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
     select: selecaoPlano,
   });
 
+  const marcas = await marcasDasTrilhas(usuarioId, planos);
   return planos.map((plano) => {
     const { id, titulo, progresso } = apresentarPlano(plano);
-    return { id, titulo, progresso };
+    return { id, titulo, progresso, ...marcas.get(id) };
   });
 }
 
@@ -288,7 +295,7 @@ async function lerLicao(usuarioId: string, id: string) {
       titulo: true,
       fluxoId: true,
       conteudo: true,
-      fluxo: { select: { planoId: true } },
+      fluxo: { select: { planoId: true, plano: { select: { origemNome: true } } } },
       conclusao: { select: { concluidoEm: true } },
     },
   });
@@ -330,6 +337,11 @@ export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoD
     ...(pratica ? { pratica } : {}),
     ...(referencias ? { referencias } : {}),
     concluida: licao.conclusao !== null,
+    // Lição de material numa trilha recebida: a aula diz "material de Ana" e não oferece nada que busque o material.
+    // Vale mesmo com a flag desligada depois: a cópia nunca pode dizer "seu material".
+    ...(licao.fluxo.plano.origemNome && referencias?.some((ref) => ref.materialId === MATERIAL_COMPARTILHADO)
+      ? { materialDe: licao.fluxo.plano.origemNome }
+      : {}),
   };
 }
 

@@ -1,10 +1,12 @@
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
+import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil } from './compartilhar';
 export * from './estudio';
 export * from './licao';
 export * from './som';
 export * from './fala';
 export * from './voz-ao-vivo';
+export * from './compartilhar';
 export interface Progresso {
   concluidas: number;
   total: number;
@@ -20,7 +22,7 @@ export interface PropostaPlano {
   fluxos: { titulo: string; licoes: { titulo: string; resumo?: string }[] }[];
 }
 
-export interface PlanoResumo {
+export interface PlanoResumo extends MarcasCompartilhar {
   id: string;
   titulo: string;
   progresso: Progresso;
@@ -153,6 +155,8 @@ export interface LicaoDetalhe {
   /** Prática no mundo real, depois dos exercícios. */
   pratica?: Pratica;
   concluida: boolean;
+  /** Lição de material numa trilha recebida: o nome de quem compartilhou ("Baseado no material de Ana"). */
+  materialDe?: string;
 }
 
 export interface Avaliacao {
@@ -198,6 +202,12 @@ const codigosErro = [
   "limite_visitante",
   "ia_indisponivel",
   "limite_geracoes",
+  "link_inativo",
+  "limite_compartilhar",
+  "perfil_incompleto",
+  "compartilhar_visitante",
+  "trilha_recebida",
+  "trilha_propria",
 ] as const;
 
 export type CodigoErro = typeof codigosErro[number];
@@ -318,7 +328,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     entrarVisitante: () => solicitar<Autenticacao>("/visitante", "POST"),
     entrarVisitanteNativo: () => solicitar<SessaoNativa>("/mobile/visitante", "POST"),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
-    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean }>("/auth/config"),
+    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean; compartilhar?: boolean }>("/auth/config"),
     recuperarSenha: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/senha/recuperar`, 'POST', { email }),
     redefinirSenha: (email: string, codigo: string, senha: string, mobile = false) => solicitar<{ alterada: boolean }>(`${mobile ? '/mobile' : ''}/senha/redefinir`, 'POST', { email, codigo, senha }),
     trocarCodigoGoogle: (codigo: string, verificador: string) => solicitar<SessaoNativa>('/mobile/google', 'POST', { codigo, verificador }),
@@ -330,6 +340,18 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     obterPlano: (id: string) => solicitar<PlanoDetalhe>(`/aprendizado/planos/${encodeURIComponent(id)}`),
     /** Apaga a trilha, com as lições e o progresso dela. */
     apagarPlano: (id: string) => solicitar<{ apagado: true }>(`/aprendizado/planos/${encodeURIComponent(id)}`, "DELETE"),
+    /** Perfil e compartilhar trilha (spec 09; com `compartilhar` no config). */
+    obterPerfil: () => solicitar<Perfil>("/perfil"),
+    salvarPerfil: (nome: string, cor: CorPerfil) => solicitar<Perfil>("/perfil", "PUT", { nome, cor }),
+    previaCompartilhar: (planoId: string) => solicitar<PreviaCompartilhar>(`/aprendizado/planos/${encodeURIComponent(planoId)}/compartilhar`),
+    /** Cria o link da trilha (ou devolve o que já existe). */
+    criarLink: (planoId: string) => solicitar<LinkCompartilhado>(`/aprendizado/planos/${encodeURIComponent(planoId)}/compartilhar`, "POST", {}),
+    alterarLink: (codigo: string, noPerfil: boolean) => solicitar<LinkCompartilhado>(`/compartilhar/${encodeURIComponent(codigo)}`, "PATCH", { noPerfil }),
+    /** Encerra o link; as cópias de quem já adicionou continuam. */
+    encerrarLink: (codigo: string) => solicitar<{ encerrado: true }>(`/compartilhar/${encodeURIComponent(codigo)}`, "DELETE"),
+    trilhaCompartilhada: (codigo: string) => solicitar<TrilhaCompartilhada>(`/compartilhar/${encodeURIComponent(codigo)}`),
+    adicionarTrilha: (codigo: string) => solicitar<TrilhaAdicionada>(`/compartilhar/${encodeURIComponent(codigo)}/adicionar`, "POST", {}),
+    perfilPublico: (perfilId: string) => solicitar<PerfilPublico>(`/perfis/${encodeURIComponent(perfilId)}`),
     obterLicao: (id: string) => solicitar<LicaoDetalhe>(`/aprendizado/licoes/${encodeURIComponent(id)}`),
     /** `indice`: qual exercício da lição (0 é o primeiro). */
     avaliarLicao: (id: string, resposta: string, indice = 0) => solicitar<Avaliacao>(`/aprendizado/licoes/${encodeURIComponent(id)}/avaliar`, "POST", { resposta, indice }),

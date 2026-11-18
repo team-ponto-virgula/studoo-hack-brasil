@@ -26,6 +26,12 @@ const statusErros: Record<CodigoErro, number> = {
   limite_visitante: 429,
   ia_indisponivel: 503,
   limite_geracoes: 429,
+  link_inativo: 404,
+  limite_compartilhar: 429,
+  perfil_incompleto: 409,
+  compartilhar_visitante: 403,
+  trilha_recebida: 409,
+  trilha_propria: 409,
 };
 
 export class FalhaApi extends Error {
@@ -128,6 +134,25 @@ export function rotaPublica(request: Request, acao: () => Promise<Response>): Pr
     validarOrigemWeb(request);
     if (request.headers.has("authorization")) throw new FalhaApi("nao_autenticado");
     return acao();
+  });
+}
+
+/**
+ * Rota pública que também aceita sessão (cookie da web ou Bearer do app), sem exigir: a prévia de um link
+ * compartilhado diz a quem está logado se a trilha já é dela. Sem sessão válida, segue como visitante anônimo.
+ */
+export function rotaPublicaComSessao(
+  request: Request,
+  acao: (usuarioId: string | null) => Promise<Response>,
+): Promise<Response> {
+  return tratarRota(async () => {
+    if (request.headers.get("authorization") === null) {
+      validarOrigemWeb(request);
+      const token = lerCookieSessao(request);
+      return acao(token ? await usuarioDaSessao(token, "WEB") : null);
+    }
+    const credencial = lerCredencial(request);
+    return acao(await usuarioDaSessao(credencial.token, credencial.canal));
   });
 }
 

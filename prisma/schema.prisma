@@ -24,6 +24,10 @@ model Usuario {
   sessoes   Sessao[]
   planos    PlanoAprendizado[]
   materiais MaterialEstudo[]
+  /// Perfil leve (spec 09): nome e cor do avatar; o id público (aleatório) é o da página /p/<id>.
+  perfilNome String?
+  perfilCor  String?
+  perfilId   String? @unique
 }
 
 model Sessao {
@@ -52,8 +56,28 @@ model PlanoAprendizado {
   criadoEm  DateTime @default(now()) @db.Timestamptz(3)
   usuario   Usuario  @relation(fields: [usuarioId], references: [id])
   fluxos    Fluxo[]
+  /// Trilha recebida por link: nome e id público de quem compartilhou (no momento da cópia) e o código do link.
+  origemNome     String?
+  origemPerfilId String?
+  origemCodigo   String?
+  links          LinkTrilha[]
 
   @@id([usuarioId, id])
+  @@unique([usuarioId, origemCodigo])
+}
+
+/// Link de compartilhamento de uma trilha (um por trilha). Encerrar apaga a linha; apagar a trilha apaga o link.
+model LinkTrilha {
+  codigo    String           @id
+  usuarioId String
+  planoId   String
+  noPerfil  Boolean          @default(false)
+  adicoes   Int              @default(0)
+  criadoEm  DateTime         @default(now()) @db.Timestamptz(3)
+  plano     PlanoAprendizado @relation(fields: [usuarioId, planoId], references: [usuarioId, id], onDelete: Cascade)
+
+  @@unique([usuarioId, planoId])
+  @@index([usuarioId, noPerfil])
 }
 
 model Fluxo {

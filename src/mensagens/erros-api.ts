@@ -28,4 +28,10 @@ export const mensagensApi: Record<CodigoErro, string> = {
   limite_visitante: "Muita gente experimentando agora; tente de novo em alguns minutos ou entre com uma conta.",
   ia_indisponivel: "A geração está indisponível. Tente de novo.",
   limite_geracoes: "Você gerou trilhas demais por agora. Tente de novo mais tarde.",
+  link_inativo: "Este link não está mais ativo.",
+  limite_compartilhar: "Muitos pedidos de compartilhamento por agora. Tente de novo mais tarde.",
+  perfil_incompleto: "Escolha como você quer aparecer antes de compartilhar.",
+  compartilhar_visitante: "Para compartilhar, entre com uma conta.",
+  trilha_recebida: "Esta trilha foi compartilhada com você e não pode ser compartilhada de novo.",
+  trilha_propria: "Esta trilha é sua.",
 };
