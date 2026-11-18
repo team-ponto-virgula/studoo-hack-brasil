@@ -518,7 +518,7 @@ export function Estudo() {
                 <p className="introducao">{mensagens.planos.subtitulo}</p>
                 {destaque && (
                   <CartaoDestaque plano={destaque} regiao={planos.findIndex((p) => p.id === destaque.id)}
-                    ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} />
+                    ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} apagar={() => void apagarPlano(destaque)} />
                 )}
                 {restantes.length > 0 && (
                   <>
@@ -603,11 +603,12 @@ function BarraProgresso({ progresso, comPercentual = false, de }: { progresso: P
  * Cartão de um plano em Meus planos: uma faixa do mundo (cada plano numa região, para os cartões não ficarem iguais),
  * o título, o progresso e a ação que cabe: começar, continuar ou rever a trilha concluída.
  */
-function CartaoDestaque({ plano, regiao, ocupado, abrir }: {
+function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar }: {
   plano: PlanoResumo;
   regiao: number;
   ocupado: boolean;
   abrir: () => void;
+  apagar: () => void;
 }) {
   const { concluidas, total } = plano.progresso;
   const concluido = total > 0 && concluidas === total;
@@ -635,6 +636,8 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir }: {
         <Botao variante="primario" aria-label={`${acao}: ${plano.titulo}`} disabled={ocupado} onClick={abrir}>
           {acao}<Icone nome="seta" />
         </Botao>
+        <button type="button" className="plano-cartao__apagar" aria-label={mensagens.planos.apagarRotulo(plano.titulo)} disabled={ocupado}
+          onClick={apagar}>{mensagens.planos.apagar}</button>
       </div>
     </article>
   );

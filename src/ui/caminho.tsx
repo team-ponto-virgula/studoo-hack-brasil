@@ -27,8 +27,8 @@ function semQuebrarHifen(texto: string): ReactNode {
 /** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. */
 function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string } | null {
   if (no.ponte && !no.ponte.concluida) return { icone: 'revisao', texto: mensagens.estudio.ponteMapa };
-  if (no.rever && no.estado === 'concluida') return { icone: 'revisao', texto: mensagens.trilha.valeRever };
   if (no.ponte) return { icone: 'check', texto: mensagens.estudio.ponteMapaFeita };
+  if (no.rever && no.estado === 'concluida') return { icone: 'revisao', texto: mensagens.trilha.valeRever };
   return null;
 }
 
