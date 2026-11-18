@@ -898,7 +898,7 @@ export function ApoioDaLicao({
               value={texto}
               onChangeText={setTexto}
               editable={!ocupado && !gravando && etapaVoz !== 'ativa'}
-              style={{ minHeight: 140, textAlignVertical: 'top' }}
+              style={{ minHeight: 148, textAlignVertical: 'top' }}
             />
             {/* Como a web (e57d54d): com a transcrição ligada, a dica diz quem recebe a gravação. */}
             <Text style={[estilos.legenda, s.legendaCartao]}>
@@ -947,7 +947,7 @@ export function ApoioDaLicao({
                   aoMostrarEnsino?.(cartaoEnsinoY.current + evento.nativeEvent.layout.y);
                 }}>
                 {/* O retorno em quatro cartões, como o caderno da web; sem a IA, a nota do retorno automático no pé. */}
-                <CadernoDoStu ensino={ensino} />
+                <View style={s.caderno}><CadernoDoStu ensino={ensino} /></View>
               </View>
             )}
           </>
@@ -982,8 +982,11 @@ const s = StyleSheet.create({
   // <p class="estudio-legenda"> dentro de .estudio-card: 0,85rem (13,6) com entrelinha 1,6.
   legendaCartao: { fontSize: 13.6, lineHeight: 21.76 },
   blocoVoz: { marginVertical: -2 },
+  // .ensino-caderno: 16 de respiro em cima, depois do aviso e das ações.
+  caderno: { marginTop: 21 },
+  // .estudio-card: margem de 24 entre cartões (as margens se juntam na web; aqui, 12 + 12).
   card: {
-    marginVertical: 16,
+    marginVertical: 12,
     padding: 18,
     gap: 14,
     borderRadius: 24,

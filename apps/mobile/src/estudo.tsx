@@ -894,7 +894,8 @@ function Sugestao({ texto, icone, testID, ordem, escolhida, desativada, acao }: 
     <Animated.View style={estiloDeEntrada(entrada, 8, 1)}>
       <Pressable testID={testID} accessibilityRole="button" accessibilityState={{ selected: escolhida, disabled: desativada }}
         disabled={desativada} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
-        style={({ pressed }) => [estudoEstilos.chip, escolhida && estudoEstilos.chipEscolhida, desativada && estudoEstilos.chipDesativada,
+        // Como .pedido-ideia: a ideia escolhida não muda de cor (o Stu é que comemora).
+        style={({ pressed }) => [estudoEstilos.chip, desativada && estudoEstilos.chipDesativada,
           pressed && estudoEstilos.chipAfundado, focado && estilos.foco]}>
         <Animated.View style={{ transform: [{ scale: pulo }] }} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
           <Desenho nome={icone} largura={24} />
@@ -1569,7 +1570,7 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
         <View style={estudoEstilos.destaqueTopo}>
           <Text style={[estudoEstilos.destaqueRotulo, caixaAlta]}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo)}</Text>
         </View>
-        <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo]}>{plano.titulo}</Text>
+        <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo, estudoEstilos.destaqueTituloTamanho]}>{plano.titulo}</Text>
         <BarraProgresso progresso={plano.progresso} comPercentual />
         <Botao rotulo={acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir} />
       </View>
@@ -1615,7 +1616,7 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false
         )}
       </View>
       <View style={estudoEstilos.cartaoCorpo}>
-        <Text accessibilityRole="header" style={estilos.tituloBloco}>{plano.titulo}</Text>
+        <Text accessibilityRole="header" style={[estilos.tituloBloco, estudoEstilos.cartaoTitulo]}>{plano.titulo}</Text>
         <BarraProgresso progresso={plano.progresso} />
         <View style={estudoEstilos.cartaoAcao}>
           <Botao rotulo={acao} testID={`abrir-plano-${indice}`} icone="seta" variante={concluido || secundario ? 'secundario' : 'primario'}
@@ -1878,6 +1879,9 @@ const estudoEstilos = StyleSheet.create({
   destaqueTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   destaqueRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.7 },
   destaqueTitulo: { marginTop: 2 },
+  // O título do cartão de destaque tem 22 px na web; o dos outros cartões, 19.
+  destaqueTituloTamanho: { fontSize: 22, lineHeight: 28.6, letterSpacing: -0.33 },
+  cartaoTitulo: { fontSize: 19, lineHeight: 24.7, letterSpacing: -0.285 },
   secaoTitulo: {
     marginTop: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.8,
   },
@@ -1892,8 +1896,9 @@ const estudoEstilos = StyleSheet.create({
   // Como .pedido-heroi h1 da web no celular: 30 px (clamp de 1,875rem), entrelinha 1,08.
   pedidoTitulo: { fontSize: 30, lineHeight: 32, textAlign: 'center' },
   pedidoFala: { minHeight: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24, textAlign: 'center' },
+  // .pedido-alternar: borda tracejada de 2 em #C9D1EA, raio 22, fundo transparente.
   alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 18, paddingVertical: 14, paddingLeft: 14, paddingRight: 18,
-    borderRadius: 22, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.destaqueBorda, borderBottomColor: cores.gelo, backgroundColor: '#F7F9FF' },
+    borderRadius: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.bordaCampo, backgroundColor: 'transparent' },
   alternarDica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   alternarLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   alternarSelo: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', backgroundColor: '#E5EBFF',
@@ -1980,7 +1985,7 @@ const estudoEstilos = StyleSheet.create({
   menuBalao: { marginTop: 4, paddingHorizontal: 4, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   menuBotaoAberto: { backgroundColor: cores.nevoa },
-  menuBotaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, letterSpacing: 1 },
+  menuBotaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16 },
   cartaoApagarTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, textDecorationLine: 'underline' },
   rever: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, alignSelf: 'center', maxWidth: 448 },
   reverIcone: { marginTop: 1 },

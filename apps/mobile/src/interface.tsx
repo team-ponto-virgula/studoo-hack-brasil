@@ -642,11 +642,12 @@ export const estilos = StyleSheet.create({
   // Como .botao da web: face de 48 px com o lábio de 4 px embaixo (aqui, a borda de baixo) e texto 16 px/800.
   botao: {
     minHeight: 52, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingVertical: 8,
-    borderWidth: 2, borderBottomWidth: 4, borderRadius: 16, borderColor: cores.acao, borderBottomColor: cores.acaoEscura, backgroundColor: cores.acao,
+    // Como .botao: borda de 2 transparente (o fundo aparece por baixo); o lábio é a borda de baixo, mais escura.
+    borderWidth: 2, borderBottomWidth: 4, borderRadius: 16, borderColor: 'transparent', borderBottomColor: cores.acaoEscura, backgroundColor: cores.acao,
   },
   botaoSecundario: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.fundo },
-  botaoSucesso: { borderColor: cores.sucesso, borderBottomColor: '#145A42', backgroundColor: cores.sucesso },
-  botaoAlerta: { borderColor: cores.alerta, borderBottomColor: '#6E4100', backgroundColor: cores.alerta },
+  botaoSucesso: { borderColor: 'transparent', borderBottomColor: '#145A42', backgroundColor: cores.sucesso },
+  botaoAlerta: { borderColor: 'transparent', borderBottomColor: '#6E4100', backgroundColor: cores.alerta },
   pontinhos: { height: 24, flexDirection: 'row', alignItems: 'center', gap: 5 },
   pontinho: { width: 8, height: 8, borderRadius: 4 },
   botaoDestrutivo: { borderColor: '#F3C4C0', borderBottomColor: '#F3C4C0', backgroundColor: cores.fundo },
@@ -658,7 +659,8 @@ export const estilos = StyleSheet.create({
   modalMensagem: { marginBottom: 20, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16.8, lineHeight: 25 },
   modalAcoes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10 },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
-  botaoCompacto: { alignSelf: 'flex-start', minHeight: 48, minWidth: 48, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
+  // O raio do botão da web é 16 também no botão pequeno ("Sair", "Pular").
+  botaoCompacto: { alignSelf: 'flex-start', minHeight: 48, minWidth: 48, paddingHorizontal: 8, borderRadius: 16, flexShrink: 1 },
   botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 1 },
   botaoPressionado: { opacity: 0.82 },
   foco: { outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },

@@ -40,7 +40,8 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
             retorno === 'errada' && opcaoEstilos.letraErrada]}>
           <Text style={[opcaoEstilos.letraTexto, (selecionada || retorno) && { color: cores.fundo }]}>{letra}</Text>
         </View>
-        <Text style={[estilos.texto, opcaoEstilos.opcaoTexto]}>{texto}</Text>
+        {/* Como na web: o texto da opção marcada fica verde no acerto e âmbar no erro. */}
+        <Text style={[estilos.texto, opcaoEstilos.opcaoTexto, retorno === 'certa' && { color: cores.sucesso }, retorno === 'errada' && { color: '#7A4A00' }]}>{texto}</Text>
       </Pressable>
     </Animated.View>
   );

@@ -267,7 +267,7 @@ export function CadernoDoStu({ ensino, compacto = false }: {
         <Text accessibilityRole="header" style={titulo}>{m.proximo}</Text>
         <Text style={texto}>{ensino.proximoPasso}</Text>
       </View>
-      {ensino.simulado && <Text style={[estilos.legenda, compacto && { textAlign: 'center' }]}>{m.ensinoAutomatico}</Text>}
+      {ensino.simulado && <Text style={[estilos.legenda, { marginTop: compacto ? 0 : 12 }, compacto && { textAlign: 'center' }]}>{m.ensinoAutomatico}</Text>}
     </View>
   );
 }
@@ -370,12 +370,14 @@ const caderno = StyleSheet.create({
   cartao: { padding: 14, gap: 6, borderRadius: 18, borderWidth: 2, borderBottomWidth: 4 },
   acertos: { borderColor: cores.gelo, backgroundColor: '#F1F4FD' },
   lacuna: { borderColor: '#F2CF96', backgroundColor: '#FFFAF0' },
-  pergunta: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderColor: '#C3CDF2', backgroundColor: '#EEF3FF' },
+  pergunta: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, borderColor: '#C3CDF2', backgroundColor: '#EEF3FF' },
   proximo: { borderColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
   titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   item: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  visto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16, lineHeight: 24 },
-  perguntaStu: { width: 44, height: 48 },
+  // .ensino-caderno__visto: círculo de 22 em #EEFAF3 com o visto de 13 px em 900.
+  visto: { width: 22, height: 22, borderRadius: 11, overflow: 'hidden', textAlign: 'center', backgroundColor: '#EEFAF3', color: cores.sucesso,
+    fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 22 },
+  perguntaStu: { width: 48, height: 48 },
   stu: { width: 40, height: 44 },
   duvida: { position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.acao, borderWidth: 2, borderColor: cores.fundo },
