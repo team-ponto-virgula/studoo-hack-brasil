@@ -313,6 +313,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     transcrever: (arquivo: ArquivoEstudo & { idioma?: string }) => solicitar<{ texto: string }>('/estudio/voz', 'POST', arquivo),
     login: (email: string, senha: string) => solicitar<Autenticacao>("/login", "POST", { email, senha }),
     entrarVisitante: () => solicitar<Autenticacao>("/visitante", "POST"),
+    entrarVisitanteNativo: () => solicitar<SessaoNativa>("/mobile/visitante", "POST"),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
     configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean }>("/auth/config"),
     recuperarSenha: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/senha/recuperar`, 'POST', { email }),

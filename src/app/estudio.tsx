@@ -278,6 +278,8 @@ export function ApoioDaLicao({
   const [resposta, setResposta] = useState('');
   const [passoPonte, setPassoPonte] = useState<1 | 2 | 3>(1);
   const [vencidaNestaAbertura, setVencidaNestaAbertura] = useState(false);
+  const acaoPonteRef = useRef<HTMLDivElement>(null);
+  const desafioPonteRef = useRef<HTMLDivElement>(null);
   const [feedback, setFeedback] = useState('');
   /** O resultado da pergunta do reforço, para a opção marcada ficar verde (certa) ou âmbar (errada). */
   const [resultadoPonte, setResultadoPonte] = useState<{ id: string; correta: boolean } | null>(null);
@@ -290,7 +292,8 @@ export function ApoioDaLicao({
       if (!alvo) return;
       const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
       const sobra = alvo.getBoundingClientRect().bottom - (window.innerHeight - rodape - 16);
-      if (sobra > 0) window.scrollBy({ top: sobra, behavior: 'auto' });
+      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (sobra > 0) window.scrollBy({ top: sobra, behavior: reduzido ? 'auto' : 'smooth' });
     });
   }, [feedback]);
   const [erro, setErro] = useState('');
@@ -466,11 +469,32 @@ export function ApoioDaLicao({
   // "Ver outro exemplo" no painel de retorno: pede o reforço, se ainda não existe (durante uma gravação, espera ela acabar).
   useEffect(() => {
     if (pedidoPonte === 0 || gravando) return;
+    setPassoPonte(1);
+    setResposta('');
+    setResultadoPonte(null);
+    setFeedback('');
     setVencidaNestaAbertura(false);
     void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
     // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoPonte, gravando]);
+
+  useEffect(() => {
+    if (!ponte || ponte.concluida) return;
+    const quadro = window.requestAnimationFrame(() => {
+      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const behavior = reduzido ? 'auto' : 'smooth';
+      if (passoPonte === 3) {
+        desafioPonteRef.current?.scrollIntoView({ block: 'end', behavior });
+        return;
+      }
+      const acao = acaoPonteRef.current;
+      if (acao && acao.getBoundingClientRect().bottom > window.innerHeight - 16) {
+        acao.scrollIntoView({ block: 'end', behavior });
+      }
+    });
+    return () => window.cancelAnimationFrame(quadro);
+  }, [passoPonte, ponte]);
   // ... e leva ao alto do cartão, acima do painel de retorno. Rola de novo quando o reforço chega: antes, a página ainda
   // é curta e a rolagem para no meio do caminho.
   const pontePronta = Boolean(ponte);
@@ -501,7 +525,7 @@ export function ApoioDaLicao({
     medir();
     window.addEventListener('resize', medir);
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    (cartaoPonte.current ?? ponteCenaRef.current)?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    (cartaoPonte.current ?? ponteCenaRef.current)?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
     if (reduzido) {
       setAtravessando(true);
       return () => window.removeEventListener('resize', medir);
@@ -520,7 +544,14 @@ export function ApoioDaLicao({
   useEffect(() => {
     if (pedidoPonte === 0) return;
     const quadro = window.requestAnimationFrame(() => {
-      cartaoPonte.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const behavior = reduzido ? 'auto' : 'smooth';
+      const acao = acaoPonteRef.current;
+      if (pontePronta && acao && acao.getBoundingClientRect().bottom > window.innerHeight - 16) {
+        acao.scrollIntoView({ block: 'end', behavior });
+      } else {
+        cartaoPonte.current?.scrollIntoView({ block: 'start', behavior });
+      }
       cartaoPonte.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(quadro);
@@ -529,12 +560,14 @@ export function ApoioDaLicao({
   }, [pedidoPonte, pontePronta]);
   useEffect(() => {
     if (!aviso) return;
-    avisoRef.current?.scrollIntoView({ block: 'center', behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    avisoRef.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
   }, [aviso]);
   // O retorno do "Ensine ao Stu" aparece embaixo do formulário: a tela rola até ele.
   useEffect(() => {
     if (!ensino) return;
-    retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: 'auto' });
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
   }, [ensino]);
   return (
     <div className="estudio-apoio">
@@ -625,7 +658,9 @@ export function ApoioDaLicao({
               <span>{m.pontePassoDesafio}</span>
             </li>
           </ol>
-          {feedback && (
+          {reaberta ? (
+            <p role="status" className="estudio-retorno-ponte">{m.ponteReabertaAviso}</p>
+          ) : feedback && (
             <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
               data-estado={resultadoPonte ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
           )}
@@ -648,14 +683,14 @@ export function ApoioDaLicao({
               {/* Sequência real: 1) explicação ("Outro jeito"), 2) exemplo, 3) desafio. */}
               {etapaPonte >= 1 && ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
               {etapaPonte === 1 && !ponte.concluida && (
-                <Botao onClick={() => setPassoPonte(2)}>{m.ponteVerExemplo}</Botao>
+                <div ref={acaoPonteRef}><Botao onClick={() => setPassoPonte(2)}>{m.ponteVerExemplo}</Botao></div>
               )}
               {etapaPonte >= 2 && <div className="estudio-exemplo">{ponte.exemplo}</div>}
               {etapaPonte === 2 && !ponte.concluida && (
-                <Botao onClick={() => setPassoPonte(3)}>{m.ponteIrDesafio}</Botao>
+                <div ref={acaoPonteRef}><Botao onClick={() => setPassoPonte(3)}>{m.ponteIrDesafio}</Botao></div>
               )}
               {etapaPonte >= 3 && (
-                <>
+                <div className="estudio-desafio" ref={desafioPonteRef}>
                   <fieldset disabled={ocupado || gravando || ponte.concluida}>
                     <legend>{ponte.exercicio.enunciado}</legend>
                     {ponte.exercicio.tipo === 'multipla_escolha' &&
@@ -693,7 +728,7 @@ export function ApoioDaLicao({
                       {ocupado ? m.pensando : m.verificar}
                     </Botao>
                   )}
-                </>
+                </div>
               )}
             </>
           )}

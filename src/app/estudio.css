@@ -240,6 +240,7 @@
 }
 .painel--aula details[open] > summary::before, .estudio-card details[open] > summary::before { rotate: 45deg; }
 .estudio-ponte { scroll-margin-top: 96px; }
+.estudio-desafio { display: grid; gap: 12px; scroll-margin-bottom: 24px; }
 .estudio-ponte h2:focus { outline: none; }
 .ponte-desenho[data-concluida='true'] span {
   background: var(--sucesso-claro);

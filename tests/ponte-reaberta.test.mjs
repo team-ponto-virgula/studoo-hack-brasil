@@ -23,8 +23,10 @@ test('vocabulário unificado da ponte e ausência de window.confirm / scroll smo
 
   assert.match(proxySrc, /const estilo = desenvolvimento \? "'unsafe-inline'" : `'nonce-\$\{nonce\}'`/);
   assert.equal(estudoSrc.includes('window.confirm'), false);
-  assert.equal(estudioTsxSrc.includes("'smooth'"), false);
-  assert.equal(aulaSrc.includes("'smooth'"), false);
+  assert.match(estudioTsxSrc, /prefers-reduced-motion: reduce/);
+  assert.match(aulaSrc, /prefers-reduced-motion: reduce/);
   assert.match(estudioTsxSrc, /const reaberta = Boolean\(ponte\?\.concluida && !vencidaNestaAbertura\)/);
   assert.match(estudioTsxSrc, /ponte\?\.concluida && !reaberta \? m\.pontePronta : m\.ponte/);
+  assert.match(estudioTsxSrc, /reaberta \? \(\s*<p role="status" className="estudio-retorno-ponte">\{m\.ponteReabertaAviso\}<\/p>/);
+  assert.match(estudioTsxSrc, /setPassoPonte\(1\);\s*setResposta\(''\);\s*setResultadoPonte\(null\);\s*setFeedback\(''\);\s*setVencidaNestaAbertura\(false\);/);
 });

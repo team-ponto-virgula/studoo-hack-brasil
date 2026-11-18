@@ -1,5 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { banco } from "@/servidor/banco/cliente";
+import type { CanalSessao } from "@/servidor/banco/gerado/client";
+import { duracaoSessaoVisitante } from "./origem";
 import { consumirLimite } from "./seguranca";
 import { criarSessao } from "./sessao";
 
@@ -44,7 +46,7 @@ type ResultadoVisitante =
   | { estado: "ok"; token: string; expiraEm: Date; usuarioId: string }
   | { estado: "limite_visitante" };
 
-export async function criarSessaoVisitante(rede: string): Promise<ResultadoVisitante> {
+export async function criarSessaoVisitante(rede: string, canal: CanalSessao = "WEB"): Promise<ResultadoVisitante> {
   const limiteIp = inteiroPositivo(process.env.STUDOO_LIMITE_VISITANTES_IP, LIMITE_IP_PADRAO);
   const janelaMs = inteiroPositivo(process.env.STUDOO_JANELA_VISITANTES_MIN, JANELA_PADRAO_MIN) * 60_000;
   const limiteGlobal = inteiroPositivo(process.env.STUDOO_LIMITE_VISITANTES_GLOBAL, LIMITE_GLOBAL_PADRAO);
@@ -61,7 +63,7 @@ export async function criarSessaoVisitante(rede: string): Promise<ResultadoVisit
       data: { email, senhaHash: null, fuso: "America/Sao_Paulo" },
       select: { id: true },
     });
-    const sessao = await criarSessao(usuario.id, "WEB", tx);
+    const sessao = await criarSessao(usuario.id, canal, tx, duracaoSessaoVisitante);
     return { estado: "ok", usuarioId: usuario.id, ...sessao };
   });
 }

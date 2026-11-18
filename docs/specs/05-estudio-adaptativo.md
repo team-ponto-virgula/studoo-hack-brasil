@@ -20,7 +20,7 @@ Em `IA=falsa`, o botão **Experimentar com frações** usa três páginas autora
 
 ## Ponte de reforço
 
-Após uma resposta incorreta, **Ver outro jeito de entender** abre a seção de apoio e constrói a ponte com uma explicação por outro caminho, exemplo e exercício novos. O mapa marca a ponte na lição de origem e indica quando foi atravessada.
+Após uma resposta incorreta, **Ver outro jeito de entender** abre a seção de apoio e constrói a ponte passo a passo (**Ver exemplo** → **Ir para o desafio**) com uma explicação por outro caminho, exemplo e desafio novos. Ao vencer o desafio, **Voltar ao exercício** retorna à tentativa original. O mapa marca a ponte na lição de origem com o selo **Ponte construída**.
 
 Acertar o reforço não conclui a lição nem infla o progresso. A pessoa retorna ao exercício original. A ponte é persistida e reaproveitada; falhas do provedor permitem nova tentativa. O motivo descreve uma possível dificuldade, sem afirmar um diagnóstico do aluno. O comportamento existente de continuar a lição após ler o feedback permanece disponível.
 
