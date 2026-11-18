@@ -142,6 +142,7 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
     '../ui': { Botao: 'Botao', Stu: 'Stu' },
     './estudio.css': {},
     'react-native': {
+      AccessibilityInfo: { sendAccessibilityEvent() {} },
       Animated: { View: 'View' },
       AppState: appState,
       Platform: { OS: 'android' },
@@ -162,7 +163,7 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
         modos.push(x);
       },
     },
-    './interface': { Botao: 'Botao', Campo: 'Campo', estilos: {} },
+    './interface': { Botao: 'Botao', Campo: 'Campo', EstadoMensagem: 'EstadoMensagem', estilos: {} },
     // Cenas do app (ponte, Stu aluno, ondas, caderno, página do material): componentes de apresentação, sem handlers.
     './estudio-cenas': {
       CenaPonte: 'CenaPonte', StuAluno: 'StuAluno', EtapasDoEnsino: 'EtapasDoEnsino', OndasDoVolume: 'OndasDoVolume',

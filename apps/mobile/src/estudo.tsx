@@ -413,7 +413,8 @@ export function Estudo({ cliente, sair, expirar }: {
         acao={pedirParaSair} />
     </>
   );
-  const mensagem = erro && <EstadoMensagem mensagem={erro} />;
+  // O erro de Minhas trilhas (sem rede, sessão, servidor) recebe o foco do leitor de tela, como nas outras telas.
+  const mensagem = erro && <EstadoMensagem mensagem={erro} foco />;
 
   const comNavegacao = planos !== null && planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(etapa.tipo) && !pendente;
   return <NavegacaoContexto.Provider value={comNavegacao ? {
@@ -1884,7 +1885,7 @@ const estudoEstilos = StyleSheet.create({
   conclusaoTopo: { alignItems: 'center' },
   repetida: { gap: 10, marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: '#FFF6D9' },
   repetidaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
-  cartaoApagar: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
+  cartaoApagar: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center' },
   cartaoApagarTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, textDecorationLine: 'underline' },
   rever: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
   resumoTrilha: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: 8, marginTop: 14, paddingHorizontal: 16, paddingVertical: 8,
@@ -1926,7 +1927,7 @@ const estudoEstilos = StyleSheet.create({
     borderColor: cores.gelo, borderBottomLeftRadius: 3, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
   balaoFalaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   luzCampo: { position: 'absolute', left: -3, right: -3, top: 25, bottom: -3, borderRadius: 17, borderWidth: 3, borderColor: '#F0B429' },
-  como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 44, marginTop: 6, marginLeft: -8,
+  como: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 48, marginTop: 6, marginLeft: -8,
     paddingHorizontal: 8, borderRadius: 12 },
   comoPressionado: { backgroundColor: cores.nevoa },
   comoSinal: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5EBFF' },
@@ -1944,13 +1945,13 @@ const estudoEstilos = StyleSheet.create({
   sugestoes: { marginTop: 22, gap: 14 },
   sugestoesTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   sugestoesTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 24 },
-  surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingHorizontal: 14, borderRadius: 999,
+  surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48, paddingHorizontal: 14, borderRadius: 999,
     borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE3A3', backgroundColor: '#FFF7E0' },
   surpresaAfundada: { borderBottomWidth: 2, marginTop: 2 },
   surpresaTexto: { color: cores.ouroTexto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   areasRolagem: { marginHorizontal: -20 },
   areas: { gap: 8, paddingHorizontal: 20, paddingVertical: 2 },
-  area: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingLeft: 10, paddingRight: 14, borderRadius: 999,
+  area: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48, paddingLeft: 10, paddingRight: 14, borderRadius: 999,
     borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   areaEscolhida: { borderColor: cores.acao, backgroundColor: '#F0F4FF' },
   areaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },

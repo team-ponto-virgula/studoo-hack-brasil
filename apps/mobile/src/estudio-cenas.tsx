@@ -360,6 +360,6 @@ const paginas = StyleSheet.create({
   celula: { width: 132, paddingVertical: 8, paddingHorizontal: 10, borderWidth: 1, borderColor: cores.gelo, color: cores.texto, fontFamily: fontes.corpo,
     fontSize: 14, lineHeight: 20 },
   numero: { width: 48, textAlign: 'center', color: cores.textoSecundario, fontWeight: '800' },
-  expandir: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', minHeight: 32 },
+  expandir: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', minHeight: 48 },
   expandirTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
 });

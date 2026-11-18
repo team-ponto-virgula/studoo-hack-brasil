@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
+  AccessibilityInfo,
   Animated,
   AppState,
   Platform,
@@ -27,7 +28,7 @@ import {
   type PropostaPlano,
   type ProvedorIa,
 } from '@studoo/contratos';
-import { Botao, Campo, estilos } from './interface';
+import { Botao, Campo, EstadoMensagem, estilos } from './interface';
 import { CadernoDoStu, CenaPonte, EtapasDoEnsino, OndasDoVolume, PaginaDoMaterial, StuAluno } from './estudio-cenas';
 import { useAparecer } from './animacoes';
 import { mensagens } from './mensagens';
@@ -237,11 +238,8 @@ export function MaterialParaTrilha({
           {m.pensando}
         </Text>
       )}
-      {!!erro && (
-        <Text accessibilityRole="alert" style={estilos.texto}>
-          {erro}
-        </Text>
-      )}
+      {/* O erro (rede, material, voz) é o aviso das outras telas: alerta com ícone, e o leitor de tela vai até ele. */}
+      {!!erro && <EstadoMensagem mensagem={erro} foco />}
     </Card>
   );
 }
@@ -463,6 +461,13 @@ export function ApoioDaLicao({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ponteConcluida]);
   const ponte = apoio?.ponte;
+  // Como na web: o título do reforço recebe o foco do leitor de tela quando o cartão aparece e quando o reforço chega.
+  const tituloPonte = useRef<ComponentRef<typeof Text>>(null);
+  const pontePronta = Boolean(ponte);
+  useEffect(() => {
+    if (pedidoPonte === 0 || !tituloPonte.current) return;
+    AccessibilityInfo.sendAccessibilityEvent(tituloPonte.current, 'focus');
+  }, [pedidoPonte, pontePronta]);
   // "Ver outro exemplo" no painel de retorno: um toque já pede o reforço, se ainda não existe (durante uma gravação, espera
   // ela acabar). Como na web.
   useEffect(() => {
@@ -497,7 +502,7 @@ export function ApoioDaLicao({
       {avaliacao?.correta === false && pedidoPonte > 0 && (
         <View onLayout={(evento) => { cartaoPonteY.current = evento.nativeEvent.layout.y; }}><Card>
           <View style={s.ponteCabeca}>
-            <H>{ponte?.concluida ? m.pontePronta : m.ponte}</H>
+            <Text ref={tituloPonte} accessible accessibilityRole="header" style={estilos.subtitulo}>{ponte?.concluida ? m.pontePronta : m.ponte}</Text>
             {/* Como na web (rodada 1.3): o selo de conteúdo simulado fica perto do título. */}
             {ponte?.simulado && <Text style={s.selo}>{m.simulado}</Text>}
           </View>
@@ -641,11 +646,8 @@ export function ApoioDaLicao({
         )}
       </Card></View>}
       {ocupado && <T>{m.pensando}</T>}
-      {!!erro && (
-        <Text accessibilityRole="alert" style={estilos.texto}>
-          {erro}
-        </Text>
-      )}
+      {/* O erro (rede, material, voz) é o aviso das outras telas: alerta com ícone, e o leitor de tela vai até ele. */}
+      {!!erro && <EstadoMensagem mensagem={erro} foco />}
     </View>
   );
 }

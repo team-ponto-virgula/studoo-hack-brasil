@@ -397,6 +397,16 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setRespostas((atuais) => atuais.map((atual, posicao) => (posicao === indice ? valor : atual)));
   }
 
+  /** "Tentar de novo" devolve o foco do leitor de tela ao exercício (o painel com o botão some), como a web faz com o campo. */
+  const [voltaAoExercicio, setVoltaAoExercicio] = useState(0);
+  useEffect(() => {
+    if (voltaAoExercicio === 0) return;
+    const espera = setTimeout(() => {
+      if (tituloEtapa.current) AccessibilityInfo.sendAccessibilityEvent(tituloEtapa.current, 'focus');
+    }, 120);
+    return () => clearTimeout(espera);
+  }, [voltaAoExercicio]);
+
   async function enviar() {
     if (ocupado || !exercicio || avaliacao || !respostaCompleta(exercicio, resposta)) return;
     const resultado = await avaliar(resposta, indice);
@@ -414,6 +424,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (posicao === indice ? avaliacao : atual)));
     // Fica o que estava certo (na aberta, o texto todo); o resto recomeça. Como na web.
     if (exercicio && avaliacao) mudarResposta(respostaParaTentarDeNovo(exercicio, resposta, avaliacao));
+    setVoltaAoExercicio((atual) => atual + 1);
   }
 
   /** A etapa de um exercício (pelo índice dele). */
@@ -552,10 +563,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   if (temAbaixo && (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica')) {
     rodape = (
       <>
-        <Pressable testID="mais-abaixo" accessibilityRole="button" accessibilityLabel={t.maisAbaixo} onPress={lerMais} hitSlop={8}
-          style={({ pressed }) => [licaoEstilos.maisAbaixo, pressed && { opacity: 0.7 }]}>
-          <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={14} cor={cores.acao} /></View>
-          <Text style={licaoEstilos.maisAbaixoTexto}>{t.maisAbaixo}</Text>
+        {/* O alvo tem 48 dp e a pílula, 32: as margens negativas do alvo não deixam o rodapé crescer. */}
+        <Pressable testID="mais-abaixo" accessibilityRole="button" accessibilityLabel={t.maisAbaixo} onPress={lerMais}
+          style={({ pressed }) => [licaoEstilos.maisAbaixoAlvo, pressed && { opacity: 0.7 }]}>
+          <View style={licaoEstilos.maisAbaixo}>
+            <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={14} cor={cores.acao} /></View>
+            <Text style={licaoEstilos.maisAbaixoTexto}>{t.maisAbaixo}</Text>
+          </View>
         </Pressable>
         {rodape}
       </>
@@ -669,8 +683,10 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                     <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button" hitSlop={8}
                       accessibilityLabel={`${mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }}
                       onPress={() => setCitacaoAberta((atual) => (atual === numero ? null : numero))}
-                      style={({ pressed }) => [licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto, pressed && { opacity: 0.8 }]}>
-                      <Text style={[licaoEstilos.marcadorTexto, citacaoAberta === numero && { color: cores.fundo }]}>[{numero + 1}]</Text>
+                      style={({ pressed }) => [licaoEstilos.marcadorAlvo, pressed && { opacity: 0.8 }]}>
+                      <View style={[licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto]}>
+                        <Text style={[licaoEstilos.marcadorTexto, citacaoAberta === numero && { color: cores.fundo }]}>[{numero + 1}]</Text>
+                      </View>
                     </Pressable>
                   ))}
                 </View>
@@ -1079,10 +1095,12 @@ const licaoEstilos = StyleSheet.create({
   etapaIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
   etapaTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
   revisao: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 12 },
-  voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginBottom: 6, minHeight: 32 },
+  // 48 dp de toque sem empurrar a etapa: as margens negativas devolvem o espaço que o visual de antes ocupava.
+  voltarEtapa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: -8, marginBottom: -2, minHeight: 48 },
   voltarEtapaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   marcadores: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6, marginTop: 4 },
   marcadoresTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  marcadorAlvo: { minWidth: 48, minHeight: 48, alignItems: 'center', justifyContent: 'center', marginVertical: -8 },
   marcador: { minWidth: 36, minHeight: 32, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
     borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: cores.fundo },
   marcadorAberto: { borderColor: cores.acao, backgroundColor: cores.acao },
@@ -1107,6 +1125,7 @@ const licaoEstilos = StyleSheet.create({
   aderecoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
   aderecoPonte: { position: 'absolute', bottom: -2, right: -12, flexDirection: 'row', gap: 2 },
   aderecoTabua: { width: 10, height: 6, borderRadius: 2, borderBottomWidth: 2, borderColor: '#703B10', backgroundColor: '#9C5619' },
+  maisAbaixoAlvo: { alignSelf: 'center', minHeight: 48, justifyContent: 'center', marginVertical: -8 },
   maisAbaixo: { alignSelf: 'center', minHeight: 32, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, borderRadius: 999, backgroundColor: cores.nevoa },
   maisAbaixoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
@@ -1130,10 +1149,10 @@ const licaoEstilos = StyleSheet.create({
     borderRadius: 14, backgroundColor: '#EEF2FF' },
   avisoRevisao: { backgroundColor: '#FFF6D9' },
   avisoTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
-  avisoAcao: { minHeight: 44, textDecorationLine: 'underline', paddingVertical: 11 },
+  avisoAcao: { minHeight: 48, textDecorationLine: 'underline', paddingVertical: 13 },
   /** Só para o leitor de tela: some da vista sem sair da ordem de leitura. */
   soLeitor: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
-  consultaBotao: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44 },
+  consultaBotao: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48 },
   consultaBotaoTexto: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 15 },
   consultaRotulo: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
   respostaCampo: { minHeight: 58, fontSize: 20, lineHeight: 26, fontWeight: '700' },

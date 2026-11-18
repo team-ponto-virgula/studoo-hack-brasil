@@ -1328,7 +1328,7 @@ const caminhoEstilos = StyleSheet.create({
   folhaIconeConcluida: { backgroundColor: ouroFace },
   folhaTitulo: { flex: 1, paddingTop: 9 },
   folhaAcao: { paddingRight: 8, paddingTop: 4 },
-  fechar: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
+  fechar: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   fecharPressionado: { backgroundColor: cores.nevoa },
   // Esqueletos
   skeleton: { marginTop: 24, gap: 28 },

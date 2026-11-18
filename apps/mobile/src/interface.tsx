@@ -304,7 +304,7 @@ export function Campo({ rotulo, campoRef, erro, acessorio, ...props }: TextInput
   );
 }
 
-/** Botão só com ícone, de 44 pontos, como o de mostrar a senha ou o de fechar. */
+/** Botão só com ícone, de 48 dp (o alvo mínimo de toque do Android), como o de mostrar a senha ou o de fechar. */
 export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = false, testID, cor = cores.textoSecundario }: {
   icone: NomeIcone;
   rotulo: string;
@@ -478,14 +478,14 @@ export const estilos = StyleSheet.create({
   pontinhos: { height: 24, flexDirection: 'row', alignItems: 'center', gap: 5 },
   pontinho: { width: 8, height: 8, borderRadius: 4 },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
-  botaoCompacto: { alignSelf: 'flex-start', minHeight: 44, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
+  botaoCompacto: { alignSelf: 'flex-start', minHeight: 48, paddingHorizontal: 8, borderRadius: 12, flexShrink: 1 },
   botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 1 },
   botaoPressionado: { opacity: 0.82 },
   foco: { outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
   botaoDesativado: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.nevoa },
   botaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24, textAlign: 'center', flexShrink: 1 },
   botaoTextoCompacto: { fontSize: 14, lineHeight: 20 },
-  botaoIcone: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
+  botaoIcone: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   botaoIconePressionado: { backgroundColor: cores.nevoa },
   selo: {
     alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4,

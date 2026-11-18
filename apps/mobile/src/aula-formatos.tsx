@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { AccessibilityInfo, AppState, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import * as Speech from 'expo-speech';
 import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
@@ -176,7 +176,7 @@ export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolea
       </View>
       {semVoz && <Text accessibilityLiveRegion="polite" style={formatos.avisoSemVoz}>{t.audio.semVozFrase}</Text>}
       {!acertou && !semVoz && (
-        <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} onPress={() => setMostrar((atual) => !atual)}>
+        <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} onPress={() => setMostrar((atual) => !atual)} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}</Text>
         </Pressable>
       )}
@@ -850,7 +850,7 @@ export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
         ))}
       </View>}
       {ordem.some((id) => !travado(id)) && !desativado && (
-        <Pressable accessibilityRole="button" onPress={() => mudar(comTravados ? posicoes.map((id) => (travado(id) ? id : '')).join(',') : '')}>
+        <Pressable accessibilityRole="button" onPress={() => mudar(comTravados ? posicoes.map((id) => (travado(id) ? id : '')).join(',') : '')} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{t.ordenar.recomecar}</Text>
         </Pressable>
       )}
@@ -959,7 +959,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
         <View style={formatos.coluna} accessibilityLabel={t.associar.direita}>{direita.map((item) => cartao(item, 'direita'))}</View>
       </View>
       {pares.some(([item]) => !travado(item)) && !desativado && (
-        <Pressable accessibilityRole="button" onPress={() => { salvar(pares.filter(([item]) => travado(item))); setEscolhida(null); }}>
+        <Pressable accessibilityRole="button" onPress={() => { salvar(pares.filter(([item]) => travado(item))); setEscolhida(null); }} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{t.associar.recomecar}</Text>
         </Pressable>
       )}
@@ -1116,12 +1116,18 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
     return () => clearInterval(intervalo);
   }, [rodando]);
 
+  /** A pergunta "Como foi?": recebe o foco do leitor de tela no fim do cronômetro, depois que a lição rola até ela. */
+  const perguntaComoFoi = useRef<ComponentRef<typeof Text>>(null);
   useEffect(() => {
-    if (acabou && !avisado.current) {
-      avisado.current = true;
-      AccessibilityInfo.announceForAccessibility(t.pratica.acabou);
-      aoAcabar?.();
-    }
+    if (!acabou || avisado.current) return;
+    avisado.current = true;
+    aoAcabar?.();
+    // O leitor lê "acabou" na própria pergunta e segue para as opções; sem a pergunta montada, fica o anúncio.
+    const espera = setTimeout(() => {
+      if (perguntaComoFoi.current) AccessibilityInfo.sendAccessibilityEvent(perguntaComoFoi.current, 'focus');
+      else AccessibilityInfo.announceForAccessibility(t.pratica.acabou);
+    }, 400);
+    return () => clearTimeout(espera);
     // Só o fim do cronômetro dispara.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [acabou]);
@@ -1137,6 +1143,15 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   // Como na web: o que já foi praticado não se perde no "Recomeçar" nem no "Praticar mais um pouco" (conta todo o tempo).
   const praticado = Math.max(praticadoTotal, total - restante);
   const praticou = semCronometro || praticado >= minimo;
+  // Como a região de status da web: quando a prática mínima chega, o leitor ouve que já dá para contar como foi.
+  const anunciouComoFoi = useRef(false);
+  useEffect(() => {
+    if (!praticou || escolha || acabou || anunciouComoFoi.current) return;
+    anunciouComoFoi.current = true;
+    AccessibilityInfo.announceForAccessibility(t.pratica.comoFoi);
+    // Só a chegada ao mínimo dispara.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [praticou]);
 
   return (
     <View style={formatos.secao} onLayout={(evento) => { raizY.current = evento.nativeEvent.layout.y; }}>
@@ -1190,7 +1205,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
       {pratica.som && <TocarSom rotulo={pratica.som.rotulo} casas={pratica.som.casas} />}
       {recurso?.tipo === 'acorde' && recurso.batida && <DiagramaAcorde recurso={recurso} longa soBatida />}
       {/* "Como foi?" espera o cronômetro começar: a prática pede praticar. */}
-      <Text accessibilityRole="header" style={formatos.comoFoi}
+      <Text ref={perguntaComoFoi} accessible accessibilityRole="header" style={formatos.comoFoi}
         onLayout={(evento) => aoMedirComoFoi?.(raizY.current + evento.nativeEvent.layout.y)}>
         {acabou ? t.pratica.acabou
           : praticou || escolha ? t.pratica.comoFoi
@@ -1199,7 +1214,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
               : t.pratica.comeceAntes}
       </Text>
       {!praticou && !escolha && (
-        <Pressable accessibilityRole="button" onPress={() => setSemCronometro(true)} hitSlop={8}>
+        <Pressable accessibilityRole="button" onPress={() => setSemCronometro(true)} hitSlop={8} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{t.audio.jaPratiquei}</Text>
         </Pressable>
       )}
@@ -1235,9 +1250,11 @@ const formatos = StyleSheet.create({
   rotuloLinha: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   rotuloCaixa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
   instrucao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
+  /** O toque de um link de texto: 48 dp de altura, mesmo com o texto numa linha só. */
+  linkAlvo: { minHeight: 48, justifyContent: 'center', alignSelf: 'flex-start' },
   link: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22, textDecorationLine: 'underline' },
   avisoSemVoz: { color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 2,
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 48, paddingHorizontal: 14, borderRadius: 999, borderWidth: 2,
     borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
   chipDestaque: { borderColor: '#B9C6F3' },
   chipGrande: { minHeight: 50, paddingHorizontal: 18 },
@@ -1343,7 +1360,7 @@ const formatos = StyleSheet.create({
   modelo: { gap: 4, padding: 12, borderLeftWidth: 4, borderLeftColor: cores.sucessoClaro, borderRadius: 12, backgroundColor: cores.fundo },
   tarefa: { padding: 14, borderRadius: 14, backgroundColor: cores.fundo, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800',
     fontSize: 18, lineHeight: 26 },
-  conferir: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40 },
+  conferir: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 },
   caixinha: { flexShrink: 0, width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: '#B9A3D8', alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.fundo },
   caixinhaMarcada: { borderColor: '#6B3FA0', backgroundColor: '#6B3FA0' },
