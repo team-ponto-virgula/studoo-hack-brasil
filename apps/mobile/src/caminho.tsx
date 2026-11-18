@@ -328,6 +328,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           // Com o nome embaixo do nó, a pílula desce: o vão cresce na mesma medida.
           if (fimDoTrecho && seguinte?.estado === 'atual') depois += 56 + 56;
           if (discreto) depois += 14;
+          // .caminho-no[data-discreto][data-ligado] (regra de baixo do caminho.css): passo + 30 entre dois nós discretos no mesmo
+          // trecho (os casos antes da lição atual e no fim do trecho têm regras próprias, abaixo).
+          if (discreto && !fimDoTrecho && seguinte && seguinte.estado !== 'atual') depois += 16;
           // M4 (paridade): como .caminho-no[data-estado='atual'][data-ligado] da web (passo + 28), o nó atual ligado ao próximo
           // ganha 28 embaixo; com a ponte ele já é discreto (+14), então completa até 28. Só acrescenta espaço.
           if (no.estado === 'atual' && !fimDoTrecho) depois += discreto ? 14 : 28;
@@ -374,7 +377,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                   atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => guardarAlvo(no.id, alvo)} tocar={() => tocar(no)} />
               </Entra>
               {fimDoTrecho && (
-                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 46 : 36)} noAlto={seguinte?.estado === 'atual'}>
+                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}>
                   <Parte numero={trechos.indexOf(no.trecho) + 2} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </Marco>
               )}
