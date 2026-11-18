@@ -325,6 +325,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           // Com o nome embaixo do nó, a pílula desce: o vão cresce na mesma medida.
           if (fimDoTrecho && seguinte?.estado === 'atual') depois += 56 + 56;
           if (discreto) depois += 14;
+          // M4 (paridade): como .caminho-no[data-estado='atual'][data-ligado] da web (passo + 28), o nó atual ligado ao próximo
+          // ganha 28 embaixo; com a ponte ele já é discreto (+14), então completa até 28. Só acrescenta espaço.
+          if (no.estado === 'atual' && !fimDoTrecho) depois += discreto ? 14 : 28;
           // Na prévia, o resumo da lição (até duas linhas) vem embaixo do nome.
           if (no.estado === 'previa' && no.resumo) depois += 36;
           // O título discreto não pode encostar no balão "Começar" do próximo, nem o do nó atual na faixa seguinte.
