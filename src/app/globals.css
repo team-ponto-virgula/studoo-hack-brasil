@@ -600,6 +600,9 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
   .conclusao-numeros__rotulo { min-width: 0; font-size: 0.625rem; letter-spacing: 0; padding: 6px 2px; gap: 3px; }
   .conclusao-numeros__rotulo .icone { width: 13px; height: 13px; flex-shrink: 0; }
   .conclusao-numeros__valor { font-size: 1.0625rem; padding: 10px 4px; }
+  .estudo-cabecalho { flex-wrap: wrap; gap: 6px 8px; padding-block: max(6px, env(safe-area-inset-top)) 8px; }
+  .estudo-identificacao { order: 3; flex: 1 1 100%; min-width: 0; }
+  .selo-sincronia { max-width: 100%; white-space: normal; line-height: 1.25; }
 }
 
 .conclusao-numeros__rotulo {

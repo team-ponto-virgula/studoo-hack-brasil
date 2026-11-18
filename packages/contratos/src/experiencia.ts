@@ -104,6 +104,7 @@ export const mensagens = {
         agora: 'Atualizado agora',
         minutos: (n: number) => `Atualizado há ${n} min`,
         offline: 'Sem conexão: mostrando o último progresso salvo',
+        offlineCurto: 'Sem conexão',
     },
     login: {
         titulo: 'Que bom te ver por aqui!',

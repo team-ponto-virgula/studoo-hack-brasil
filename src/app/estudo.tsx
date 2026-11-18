@@ -53,20 +53,20 @@ type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'a
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 type Sincronia = { estado: 'atualizando' | 'atualizado' | 'offline'; em: number | null };
 
-function textoSincronia(s: Sincronia, agora: number) {
+function textoSincronia(s: Sincronia, agora: number, temProgresso: boolean) {
   if (s.estado === 'atualizando') return mensagens.sincronia.atualizando;
-  if (s.estado === 'offline') return mensagens.sincronia.offline;
+  if (s.estado === 'offline') return temProgresso ? mensagens.sincronia.offline : mensagens.sincronia.offlineCurto;
   if (!s.em) return mensagens.sincronia.salvo;
   const min = Math.floor((agora - s.em) / 60_000);
   if (min < 1) return mensagens.sincronia.agora;
   return mensagens.sincronia.minutos(min);
 }
 
-function SeloSincronia({ sincronia, agora }: { sincronia: Sincronia; agora: number }) {
+function SeloSincronia({ sincronia, agora, temProgresso }: { sincronia: Sincronia; agora: number; temProgresso: boolean }) {
   return (
     <span className="selo-sincronia" data-estado={sincronia.estado} role="status" aria-live="polite">
       <span className="selo-sincronia__ponto" aria-hidden="true" />
-      <span>{textoSincronia(sincronia, agora)}</span>
+      <span>{textoSincronia(sincronia, agora, temProgresso)}</span>
     </span>
   );
 }
@@ -490,7 +490,7 @@ export function Estudo() {
             <span className="estudo-identificacao__contexto">
               {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
             </span>
-            <SeloSincronia sincronia={sincronia} agora={agora} />
+            <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={inicio === 'pronto' && planos.length > 0} />
           </span>
           <div className="estudo-marca"><Logo /></div>
           <div className="estudo-conta">

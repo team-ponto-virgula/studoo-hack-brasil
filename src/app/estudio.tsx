@@ -258,6 +258,7 @@ export function ApoioDaLicao({
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const cartaoPonte = useRef<HTMLElement>(null);
   const ponteCenaRef = useRef<HTMLDivElement>(null);
+  const legendaPonteRef = useRef<HTMLOListElement>(null);
   const stuOrigemRef = useRef<HTMLDivElement>(null);
   const stuDestinoRef = useRef<HTMLDivElement>(null);
   const [atravessando, setAtravessando] = useState(false);
@@ -515,7 +516,8 @@ export function ApoioDaLicao({
     if (pedidoPonte === 0) return;
     const quadro = window.requestAnimationFrame(() => {
       const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      cartaoPonte.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
+      const alvo = pontePronta ? (legendaPonteRef.current ?? cartaoPonte.current) : cartaoPonte.current;
+      alvo?.scrollIntoView({ block: pontePronta ? 'nearest' : 'start', behavior: reduzido ? 'auto' : 'smooth' });
       cartaoPonte.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
     });
     return () => window.cancelAnimationFrame(quadro);
@@ -592,7 +594,7 @@ export function ApoioDaLicao({
               <span>{m.ponteMargemVolta}</span>
             </div>
           </div>
-          <ol className="ponte-legenda" aria-label={m.ponte}>
+          <ol className="ponte-legenda" ref={legendaPonteRef} aria-label={m.ponte}>
             <li data-ativa="true" data-erro="true" data-vencida={ponte?.concluida || undefined}>
               <span className="ponte-legenda__num">1</span>
               <span>
