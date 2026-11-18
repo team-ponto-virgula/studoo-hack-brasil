@@ -48,6 +48,40 @@ Depois, reinicie o `npm run dev`. Na trilha gerada, a origem passa a mostrar "IA
 
 Uma falha no meio da geração mostra o erro de IA indisponível, e o pedido continua no campo. Se a escrita das lições falhar no **Começar**, a trilha continua na tela com o erro, e **Começar** tenta de novo. Os logs registram só o código e o status, sem objetivo, conteúdo ou chave.
 
+## IA da DeepSeek
+
+Com `IA=deepseek`, o Studoo usa a API Chat Completions da DeepSeek (`POST /chat/completions`) com streaming SSE na estrutura e `response_format: { type: "json_object" }` nas lições, correções e pedidos do Estúdio.
+
+```sh
+IA=deepseek
+DEEPSEEK_API_KEY=sua-chave
+```
+
+| Variável | Padrão | Efeito |
+| --- | --- | --- |
+| `DEEPSEEK_API_KEY` | (nenhum) | Chave da API da DeepSeek. Sem ela, vale a reserva (`STUDOO_IA_RESERVA`). |
+| `DEEPSEEK_BASE_URL` | `https://api.deepseek.com` | Outro endereço compatível. Só HTTPS, ou HTTP no próprio computador. |
+| `DEEPSEEK_MODELO` | `deepseek-flash` | Modelo usado nas gerações (`deepseek-flash` atende texto e imagem; `deepseek-v4-pro` é só texto). |
+| `DEEPSEEK_RACIOCINIO` | `false` | Quando `true`, ativa `thinking: { type: "enabled" }`; padrão `false` (`disabled`) para menor latência. |
+| `STUDOO_IA_RESERVA` | `falsa` | Sem chave, ou se a DeepSeek falhar antes da primeira linha, `falsa` assume. `nenhuma` retorna `ia_indisponivel`. |
+
+### O que funciona por provedor
+
+| Recurso | `IA=falsa` | `IA=openai` | `IA=deepseek` |
+| --- | --- | --- | --- |
+| Trilha ao vivo + lições | Simulada | Sim (Responses API + JSON Schema) | Sim (Chat Completions + `json_object`) |
+| Correção aberta / desempate lacuna | Local | Sim | Sim |
+| Estúdio: PDF texto, DOCX, CSV, reforço, Ensine ao Stu | Simulado / local | Sim | Sim |
+| Estúdio: leitura de imagem | Não (só demo) | Sim | Sim com o padrão `deepseek-flash` (indisponível em `deepseek-v4-pro`) |
+| Estúdio: transcrição de voz | Não (`voz_indisponivel`) | Sim | Não (`voz_indisponivel`) |
+
+Motivo da voz indisponível na DeepSeek: o endpoint `POST /v1/tools/asr` aceita apenas WAV PCM de 16 bits ou Ogg Opus, até 8 MiB e 120 s, sem parâmetro de idioma — incompatível com WebM/M4A gravados pelo navegador e pelo app.
+Caminho mais barato para suportar voz na DeepSeek depois: gravar/codificar áudio WAV PCM mono de 16 bits direto no navegador/app quando o provedor ativo for `deepseek` e enviar para `/v1/tools/asr` no servidor.
+
+Observação de privacidade: diferentemente da Responses API da OpenAI (que envia `store: false`), o endpoint `/chat/completions` da DeepSeek não possui parâmetro `store: false`; o tratamento segue a política da plataforma DeepSeek. Quando `IA=deepseek`, nenhuma requisição é enviada à OpenAI mesmo que `OPENAI_API_KEY` esteja definida.
+
+Para testar a chave antes de abrir o Studoo, rode `IA=deepseek npm run ia:conferir`.
+
 ## Testes
 
 ```sh
@@ -61,7 +95,7 @@ npm run test:marco
 npm run test:trilha
 ```
 
-`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. `test:paridade` também não: confere que os desenhos do mundo da trilha, as ideias do pedido, os passos da apresentação e os textos da tela que escreve as lições são os mesmos na web e no app. `test:ia` confere o adaptador da OpenAI com um servidor local que imita a Responses API, sem chave e sem rede: a trilha por streaming, o conteúdo da lição, a reserva e as falhas. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
+`test:dominio` não precisa de servidor: verifica o gerador falso, o teto de gerações e o token da proposta. `test:paridade` também não: confere que os desenhos do mundo da trilha, as ideias do pedido, os passos da apresentação e os textos da tela que escreve as lições são os mesmos na web e no app. `test:ia` confere os adaptadores da OpenAI (Responses API) e da DeepSeek (Chat Completions) com servidores locais simulados, sem chave e sem rede: a trilha por streaming, o conteúdo da lição, a reserva, visão/voz e as falhas. Os testes web usam o banco local e o servidor em `http://localhost:3000`. Eles criam contas sintéticas temporárias. `test:marco` verifica acesso, aceite da proposta, feedback, conclusão e retomada do plano. `test:trilha` verifica a rota ao vivo: NDJSON válido, ordem dos eventos, cancelamento, aceite e as lições de uma trilha genérica. Inicie o servidor com `STUDOO_IA_FALSA_PAUSA_MS=0` para os testes rodarem sem esperar as pausas.
 
 O GitHub Actions roda a mesma verificação em cada PR e em cada push para `development` e `main` (`.github/workflows/verificacao.yml`): os dois typechecks, `test:dominio`, `test:paridade`, `test:movimento`, `test:ia`, o build e, com um PostgreSQL de serviço, `test:marco` e `test:trilha`. O CI usa só os adaptadores falsos e credenciais geradas na hora.
 

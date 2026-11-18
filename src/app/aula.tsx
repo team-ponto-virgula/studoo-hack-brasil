@@ -149,6 +149,40 @@ export function formatarTempo(segundos: number) {
  * no acerto (com confete) ou âmbar no erro (o exercício treme), e dá para tentar de novo. Continuar segue para a próxima
  * etapa; na última, registra a conclusão. O título de cada etapa e o do retorno recebem o foco.
  */
+function respostaLegivel(exercicio: LicaoDetalhe['exercicio'], resposta: string): string {
+  const limpa = resposta.trim();
+  if (!limpa) return '';
+  switch (exercicio.tipo) {
+    case 'multipla_escolha':
+      return exercicio.opcoes.find((o) => o.id === limpa)?.texto ?? '';
+    case 'ordenar':
+      return limpa
+        .split(',')
+        .map((id) => exercicio.itens.find((item) => item.id === id)?.texto)
+        .filter(Boolean)
+        .join(' · ');
+    case 'associar':
+      return limpa
+        .split(',')
+        .map((par) => {
+          const [idE, idD] = par.split('=');
+          const e = exercicio.esquerda.find((item) => item.id === idE)?.texto;
+          const d = exercicio.direita.find((item) => item.id === idD)?.texto;
+          return e && d ? `${e} → ${d}` : '';
+        })
+        .filter(Boolean)
+        .join(' · ');
+    case 'verdadeiro_falso': {
+      const [valor = '', justId = ''] = limpa.split(':');
+      const rotulo = valor === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : valor === 'falso' ? t.verdadeiroFalso.falso : '';
+      const just = exercicio.justificativas.find((item) => item.id === justId)?.texto;
+      return rotulo && just ? `${rotulo} · ${just}` : rotulo;
+    }
+    default:
+      return limpa;
+  }
+}
+
 export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   licao: LicaoDetalhe;
   pendente: string | null;
@@ -182,8 +216,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [pedidoPonte, setPedidoPonte] = useState(0);
   /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. */
   const [ponteFeita, setPonteFeita] = useState(false);
-  /** Alguma ponte de reforço foi concluída nesta visita à lição (para a história na conclusão e reação do Stu). */
-  const [ponteUsada, setPonteUsada] = useState(false);
+  /** Pontes concluídas por índice de exercício (a fala do Stu e a história na conclusão usam). */
+  const [pontesPorExercicio, setPontesPorExercicio] = useState<Record<number, boolean>>({});
   /** Índice da citação aberta na etapa de conceito (0 por padrão quando há referências do material). */
   const [citacaoAberta, setCitacaoAberta] = useState<number | null>(() => (licao.referencias?.length ? 0 : null));
   /** Nas etapas de leitura: ainda tem conteúdo escondido atrás do rodapé (o botão diz "Continuar lendo"). */
@@ -483,7 +517,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       ...(autoAvaliacao ? { pratica: autoAvaliacao } : {}),
       // Vale rever: ficou exercício sem acerto, a maior parte saiu errada antes do acerto ou a prática não saiu (como o mapa).
       rever: acertos < exercicios.length || motivoParaRever({ acertosDePrimeira, exercicios: exercicios.length, pratica: autoAvaliacao }) !== null,
-      ponteConstruida: ponteUsada,
+      ponteConstruida: Object.values(pontesPorExercicio).some(Boolean),
       ensinouStu: ensinou,
     };
     if (await concluir(comprovante, resumo, autoAvaliacao ?? undefined)) {
@@ -627,7 +661,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 <ExplicacaoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} />
                 {!!licao.referencias?.length && (
                   <div className="aula-citacao-marcadores">
-                    <span>Baseado no seu material</span>
+                    <span>{mensagens.estudio.baseadoMaterial}</span>
                     {licao.referencias.map((ref, idx) => (
                       <button key={idx} type="button" className="aula-citacao-marcador"
                         aria-expanded={citacaoAberta === idx}
@@ -643,11 +677,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (() => {
               const ref = licao.referencias[citacaoAberta];
               return (
-                <aside className="aula-citacao" aria-label="Fonte do seu material">
+                <aside className="aula-citacao" aria-label={mensagens.estudio.fonteMaterial}>
                   <div className="aula-citacao__topo">
-                    <span className="aula-citacao__selo">[{citacaoAberta + 1}] Fonte do seu material</span>
-                    <strong>{ref.nome} · {ref.localizacao ?? `Página ${ref.pagina}`}</strong>
-                    {ref.leitura === 'demonstracao' && <span className="estudio-selo">Modo demonstração</span>}
+                    <span className="aula-citacao__selo">[{citacaoAberta + 1}] {mensagens.estudio.fonteMaterial}</span>
+                    <strong>{ref.nome} · {ref.localizacao ?? mensagens.estudio.pagina(ref.pagina)}</strong>
+                    {ref.leitura === 'demonstracao' && <span className="estudio-selo">{mensagens.estudio.simulado}</span>}
                   </div>
                   <blockquote>{ref.trecho}</blockquote>
                 </aside>
@@ -658,22 +692,26 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         )}
         {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
         {exercicio && (() => {
+          const ponteNeste = Boolean(pontesPorExercicio[indice]);
           let stuEstado: 'neutro' | 'pensando' | 'atento' | 'comemorando_primeira' | 'comemorando_ponte' = 'neutro';
-          let stuFala = 'Leia com calma e confira sua resposta.';
+          let stuFala: string = t.stuEstado.neutro;
           if (avaliacao?.correta) {
-            if (ponteUsada) {
+            if (ponteNeste) {
               stuEstado = 'comemorando_ponte';
-              stuFala = 'Você construiu a ponte e venceu o desafio!';
+              stuFala = t.stuEstado.ponte;
+            } else if (primeiras[indice] === true) {
+              stuEstado = 'comemorando_primeira';
+              stuFala = t.stuEstado.primeira;
             } else {
               stuEstado = 'comemorando_primeira';
-              stuFala = 'Mandou bem logo de primeira!';
+              stuFala = t.stuEstado.acerto;
             }
           } else if (avaliacao && !avaliacao.correta) {
             stuEstado = 'atento';
-            stuFala = 'O erro mostra o próximo degrau. Que tal ver outro jeito?';
+            stuFala = t.stuEstado.atento;
           } else if (errosAnteriores[indice]) {
             stuEstado = 'pensando';
-            stuFala = 'Sem pressa — tente de novo com a dica abaixo.';
+            stuFala = t.stuEstado.pensando;
           }
           return (
             <>
@@ -701,7 +739,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       </div>
       {exercicio && (
         <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
-          aoConcluirPonte={() => { setPonteFeita(true); setPonteUsada(true); }} aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
+          ultimaResposta={respostaLegivel(exercicio, resposta)}
+          aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
+          aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
       )}
       <footer className="aula-rodape" data-retorno={retorno}
         data-compacto={(avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita) || (expliqueAberto && avaliacao) || undefined}>

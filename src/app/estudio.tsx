@@ -8,6 +8,7 @@ import {
   type LicaoDetalhe,
   type MaterialEstudo,
   type PropostaPlano,
+  type ProvedorIa,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens } from '../mensagens/pt-BR';
@@ -31,17 +32,23 @@ export function lerBase64(blob: Blob): Promise<string> {
 export function MaterialParaTrilha({
   objetivo,
   onProposta,
+  mostrarCabeca = true,
 }: {
   objetivo: string;
   onProposta: (p: PropostaPlano) => void;
+  mostrarCabeca?: boolean;
 }) {
   const [material, setMaterial] = useState<MaterialEstudo | null>(null);
+  const [provedorIa, setProvedorIa] = useState<ProvedorIa>('falsa');
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
   const [erro, setErro] = useState('');
   const vivo = useRef(true);
   useEffect(() => {
     vivo.current = true;
+    void cliente.configuracaoAcesso().then((cfg) => {
+      if (vivo.current) setProvedorIa(cfg.ia);
+    }).catch(() => undefined);
     return () => {
       vivo.current = false;
     };
@@ -76,18 +83,21 @@ export function MaterialParaTrilha({
   return (
     <section
       className="estudio-card"
-      aria-labelledby="material-titulo"
+      aria-labelledby={mostrarCabeca ? 'material-titulo' : undefined}
+      aria-label={mostrarCabeca ? undefined : mensagens.inicio.materialTitulo}
       aria-busy={ocupado}
     >
-      <div className="estudio-cabeca">
-        <Stu />
-        <div>
-          <h2 id="material-titulo">{mensagens.inicio.materialTitulo}</h2>
-          <p>{mensagens.inicio.materialTexto}</p>
+      {mostrarCabeca && (
+        <div className="estudio-cabeca">
+          <Stu />
+          <div>
+            <h2 id="material-titulo">{mensagens.inicio.materialTitulo}</h2>
+            <p>{mensagens.inicio.materialTexto}</p>
+          </div>
         </div>
-      </div>
+      )}
       <p className="estudio-legenda">{mensagens.inicio.enviarSeguro}</p>
-      <details><summary>{mensagens.inicio.detalhes}</summary><p className="estudio-legenda">{m.limites}</p><p className="estudio-legenda">{m.privacidade}</p></details>
+      <details><summary>{mensagens.inicio.detalhes}</summary><p className="estudio-legenda">{m.limites}</p><p className="estudio-legenda">{m.privacidadePorProvedor(provedorIa)}</p></details>
       {!material ? (
         <div className="estudio-acoes">
           <label className="estudio-arquivo">
@@ -136,37 +146,52 @@ export function MaterialParaTrilha({
           )}
           <p>{m.revisar}</p>
           {material.leitura === 'ocr' && <p>{m.ocr}</p>}
-          {material.paginas.map((p) => (
-            <details key={p.numero}>
-              <summary>{p.rotulo ?? m.pagina(p.numero)}</summary>
-              {p.tabela ? (
-                <div
-                  className="estudio-tabela"
-                  role="region"
-                  aria-label={m.tabela}
-                  tabIndex={0}
-                >
-                  <table>
-                    <caption>
-                      {m.tabela} · {p.rotulo}
-                    </caption>
-                    <tbody>
-                      {p.tabela.map((linha, i) => (
-                        <tr key={i}>
-                          <th scope="row">{(p.numero - 1) * 40 + i + 1}</th>
-                          {linha.map((c, j) => (
-                            <td key={j}>{c}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="estudio-transcricao">{p.texto}</p>
-              )}
-            </details>
-          ))}
+          <div className="estudio-paginas">
+            {material.paginas.map((p) => (
+              <article key={p.numero} className="estudio-pagina-card">
+                <header className="estudio-pagina-card__topo">
+                  <strong>{p.rotulo ?? m.pagina(p.numero)}</strong>
+                </header>
+                {p.imagem && (
+                  <img className="estudio-pagina-thumb" src={p.imagem} alt={p.rotulo ?? m.pagina(p.numero)} />
+                )}
+                {p.tabela ? (
+                  <div
+                    className="estudio-tabela"
+                    role="region"
+                    aria-label={m.tabela}
+                    tabIndex={0}
+                  >
+                    <table>
+                      <caption>
+                        {m.tabela} · {p.rotulo}
+                      </caption>
+                      <tbody>
+                        {p.tabela.slice(0, 6).map((linha, i) => (
+                          <tr key={i}>
+                            <th scope="row">{(p.numero - 1) * 40 + i + 1}</th>
+                            {linha.map((c, j) => (
+                              <td key={j}>{c}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <>
+                    <p className="estudio-pagina-previa">{p.texto}</p>
+                    {p.texto.length > 180 && (
+                      <details>
+                        <summary>{m.paginaExpandir}</summary>
+                        <p className="estudio-transcricao">{p.texto}</p>
+                      </details>
+                    )}
+                  </>
+                )}
+              </article>
+            ))}
+          </div>
           <div className="estudio-acoes">
             <Botao
               disabled={ocupado}
@@ -208,6 +233,7 @@ export function ApoioDaLicao({
   avaliacao,
   pedidoPonte = 0,
   ultimo = true,
+  ultimaResposta = '',
   aoConcluirPonte,
   aoEnsinar,
   aoAbrirExplique,
@@ -218,6 +244,8 @@ export function ApoioDaLicao({
   pedidoPonte?: number;
   /** Último exercício da lição: só nele aparece o "Ensine ao Stu", quando a pessoa já viu a lição toda. */
   ultimo?: boolean;
+  /** Resposta que gerou o erro, exibida na 1ª tábua da ponte. */
+  ultimaResposta?: string;
   /** A pessoa acertou a pergunta do reforço: a lição troca o "Quase lá!" do painel pelo convite a tentar de novo. */
   aoConcluirPonte?: () => void;
   /** A explicação foi enviada: a lição tira o convite para explicar. */
@@ -229,6 +257,8 @@ export function ApoioDaLicao({
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
   const cartaoPonte = useRef<HTMLElement>(null);
+  const ponteCenaRef = useRef<HTMLDivElement>(null);
+  const [atravessando, setAtravessando] = useState(false);
   const retornoDoEnsino = useRef<HTMLDivElement>(null);
   // O aviso do microfone (ou da transcrição) aparece junto do botão Gravar, no pé da página: a tela leva até ele.
   const avisoRef = useRef<HTMLParagraphElement>(null);
@@ -260,23 +290,27 @@ export function ApoioDaLicao({
   const emExecucao = useRef(false);
   const [gravando, setGravando] = useState(false);
   const [segundos, setSegundos] = useState(0);
-  const [ondas, setOndas] = useState<number[]>([0.2, 0.35, 0.5, 0.35, 0.2]);
   const [aviso, setAviso] = useState('');
   const recorder = useRef<MediaRecorder | null>(null);
   const stream = useRef<MediaStream | null>(null);
   const audioCtx = useRef<AudioContext | null>(null);
-  const audioTimer = useRef<number | null>(null);
+  const audioRaf = useRef<number | null>(null);
+  const ondasRef = useRef<HTMLDivElement>(null);
   const vivo = useRef(true);
   function pararOndas() {
-    if (audioTimer.current !== null) {
-      window.clearInterval(audioTimer.current);
-      audioTimer.current = null;
+    if (audioRaf.current !== null) {
+      window.cancelAnimationFrame(audioRaf.current);
+      audioRaf.current = null;
     }
     if (audioCtx.current) {
       void audioCtx.current.close().catch(() => undefined);
       audioCtx.current = null;
     }
-    setOndas([0.2, 0.35, 0.5, 0.35, 0.2]);
+    if (ondasRef.current) {
+      const barras = ondasRef.current.querySelectorAll<HTMLElement>('span');
+      const padrao = [0.25, 0.45, 0.65, 0.45, 0.25];
+      barras.forEach((barra, i) => { barra.style.transform = `scaleY(${padrao[i] ?? 0.3})`; });
+    }
   }
   useEffect(() => {
     vivo.current = true;
@@ -382,24 +416,34 @@ export function ApoioDaLicao({
         rec.start();
         setSegundos(0);
         setGravando(true);
-        try {
-          const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-          if (Ctx) {
-            const ctx = new Ctx();
-            audioCtx.current = ctx;
-            const fonte = ctx.createMediaStreamSource(midia);
-            const analisador = ctx.createAnalyser();
-            analisador.fftSize = 32;
-            fonte.connect(analisador);
-            const dados = new Uint8Array(analisador.frequencyBinCount);
-            audioTimer.current = window.setInterval(() => {
-              analisador.getByteFrequencyData(dados);
-              const n = [0, 1, 2, 3, 4].map((i) => Math.max(0.18, Math.min(1, (dados[i] ?? 0) / 180)));
-              if (vivo.current) setOndas(n);
-            }, 70);
+        const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduzido) {
+          try {
+            const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+            if (Ctx) {
+              const ctx = new Ctx();
+              audioCtx.current = ctx;
+              void ctx.resume().catch(() => undefined);
+              const fonte = ctx.createMediaStreamSource(midia);
+              const analisador = ctx.createAnalyser();
+              analisador.fftSize = 32;
+              fonte.connect(analisador);
+              const dados = new Uint8Array(analisador.frequencyBinCount);
+              const atualizar = () => {
+                if (!vivo.current || !audioCtx.current) return;
+                analisador.getByteFrequencyData(dados);
+                const barras = ondasRef.current?.querySelectorAll<HTMLElement>('span');
+                barras?.forEach((barra, i) => {
+                  const escala = Math.max(0.2, Math.min(1, (dados[i] ?? 0) / 160));
+                  barra.style.transform = `scaleY(${escala.toFixed(2)})`;
+                });
+                audioRaf.current = window.requestAnimationFrame(atualizar);
+              };
+              audioRaf.current = window.requestAnimationFrame(atualizar);
+            }
+          } catch {
+            // Sem Web Audio: barras ficam estáticas.
           }
-        } catch {
-          // Sem Web Audio: as barras usam pulso CSS padrão.
         }
       } catch {
         stream.current?.getTracks().forEach((t) => t.stop());
@@ -421,7 +465,19 @@ export function ApoioDaLicao({
   const pontePronta = Boolean(ponte);
   const ponteConcluida = ponte?.concluida === true;
   useEffect(() => {
-    if (ponteConcluida && pedidoPonte > 0) aoConcluirPonte?.();
+    if (!ponteConcluida) {
+      setAtravessando(false);
+      return;
+    }
+    if (pedidoPonte > 0) aoConcluirPonte?.();
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    ponteCenaRef.current?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+    if (reduzido) {
+      setAtravessando(true);
+      return;
+    }
+    const timer = window.setTimeout(() => setAtravessando(true), 380);
+    return () => window.clearTimeout(timer);
     // Só a conclusão do reforço dispara.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ponteConcluida]);
@@ -467,20 +523,42 @@ export function ApoioDaLicao({
           sobrando em outros exercícios nem em outra visita à lição. */}
       {avaliacao?.correta === false && pedidoPonte > 0 && (
         <section className="estudio-card estudio-ponte" ref={cartaoPonte}>
-          <div className="ponte-desenho" data-concluida={ponte?.concluida || undefined} aria-hidden="true">
-            <span />
-            <span />
-            <span />
-            <span />
-            <span />
+          <div className="ponte-cabeca">
+            <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
+            {ponte?.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
           </div>
-          <h2 tabIndex={-1}>{ponte?.concluida ? m.pontePronta : m.ponte}</h2>
+          <div className="ponte-cena" ref={ponteCenaRef} data-concluida={ponte?.concluida || undefined} aria-hidden="true">
+            <div className="ponte-margem ponte-margem--esquerda">
+              <div className="ponte-stu" data-atravessou={atravessando || undefined}>
+                <Stu />
+              </div>
+              <span>{m.ponteMargemErro}</span>
+            </div>
+            <div className="ponte-vao">
+              <span className="ponte-tabua" data-ativa="true" data-erro="true">
+                {ultimaResposta
+                  ? m.pontePassoErro(ultimaResposta.length > 24 ? `${ultimaResposta.slice(0, 23).trimEnd()}…` : ultimaResposta)
+                  : m.ponteMargemErro}
+              </span>
+              <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined}>
+                {m.pontePassoExplicacao}
+              </span>
+              <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined}>
+                {m.pontePassoExemplo}
+              </span>
+              <span className="ponte-tabua" data-ativa={Boolean(ponte?.concluida || resposta) || undefined}>
+                {m.pontePassoDesafio}
+              </span>
+            </div>
+            <div className="ponte-margem ponte-margem--direita">
+              <span>{m.ponteMargemVolta}</span>
+            </div>
+          </div>
           <p>{ponte?.motivo ?? m.ponteDica}</p>
           {!ponte ? (
             <p role="status">{erro || m.pensando}</p>
           ) : (
             <>
-              {ponte.simulado && <p className="estudio-selo">{m.retornoAutomatico}</p>}
               {/* A explicação do erro já está no painel de retorno: aqui só aparece se for outra. */}
               {ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
               <div className="estudio-exemplo">{ponte.exemplo}</div>
@@ -548,16 +626,16 @@ export function ApoioDaLicao({
           <Stu />
           <p className="ensino-stu__balao">
             {gravando
-              ? 'Estou ouvindo você explicar…'
+              ? m.ensinoStuOuvindo
               : ensino
-                ? 'Boa explicação! Veja o que anotei:'
-                : 'Agora eu sou o aluno: me explique com suas palavras!'}
+                ? m.ensinoStuAnotou
+                : m.ensinoStuAluno}
           </p>
         </div>
-        <ol className="ensino-passos" aria-label="Etapas para explicar">
-          <li data-ativo={!texto.trim() || gravando || undefined}>1. Gravar ou escrever</li>
-          <li data-ativo={Boolean(texto.trim()) && !gravando && !ensino || undefined}>2. Revisar texto</li>
-          <li data-ativo={Boolean(ensino) || undefined}>3. Ver retorno do Stu</li>
+        <ol className="ensino-passos" aria-label={m.ensinoEtapasLabel}>
+          <li data-ativo={!texto.trim() || gravando || undefined}>{m.ensinoEtapas[0]}</li>
+          <li data-ativo={(Boolean(texto.trim()) && !gravando && !ensino) || undefined}>{m.ensinoEtapas[1]}</li>
+          <li data-ativo={Boolean(ensino) || undefined}>{m.ensinoEtapas[2]}</li>
         </ol>
         <p>{m.ensinoDica}</p>
         <p className="estudio-legenda">{m.ensinoIdeia(licao.objetivo)}</p>
@@ -601,29 +679,45 @@ export function ApoioDaLicao({
         </div>
         {gravando && (
           <div className="ensino-gravando" role="status">
-            <div className="ensino-ondas" aria-hidden="true">
-              {ondas.map((v, i) => (
-                <span key={i} style={{ transform: `scaleY(${v.toFixed(2)})` }} />
-              ))}
+            <div className="ensino-ondas" ref={ondasRef} aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
+              <span />
             </div>
             <span>{m.gravando} {segundos}/60 s</span>
           </div>
         )}
         {aviso && <p role="status" ref={avisoRef}>{aviso}</p>}
         {ensino && (
-          <div className="estudio-feedback" role="status" ref={retornoDoEnsino}>
-            <h3>{m.acertos}</h3>
-            <ul>
-              {ensino.acertos.map((x, i) => (
-                <li key={i}>{x}</li>
-              ))}
-            </ul>
-            <h3>{m.lacuna}</h3>
-            <p>{ensino.lacuna}</p>
-            <h3>{m.pergunta}</h3>
-            <p>{ensino.pergunta}</p>
-            <h3>{m.proximo}</h3>
-            <p>{ensino.proximoPasso}</p>
+          <div className="estudio-feedback ensino-caderno" role="status" ref={retornoDoEnsino}>
+            <div className="ensino-caderno__cartao" data-tipo="acertos">
+              <h3>{m.acertos}</h3>
+              <ul>
+                {ensino.acertos.map((x, i) => (
+                  <li key={i}><span className="ensino-caderno__visto" aria-hidden="true">✓</span><span>{x}</span></li>
+                ))}
+              </ul>
+            </div>
+            <div className="ensino-caderno__cartao" data-tipo="lacuna">
+              <h3>{m.lacuna}</h3>
+              <p>{ensino.lacuna}</p>
+            </div>
+            <div className="ensino-caderno__cartao ensino-caderno__pergunta" data-tipo="pergunta">
+              <div className="ensino-caderno__stu" aria-hidden="true">
+                <Stu />
+                <span className="ensino-caderno__duvida">?</span>
+              </div>
+              <div>
+                <h3>{m.pergunta}</h3>
+                <p>{ensino.pergunta}</p>
+              </div>
+            </div>
+            <div className="ensino-caderno__cartao" data-tipo="proximo">
+              <h3>{m.proximo}</h3>
+              <p>{ensino.proximoPasso}</p>
+            </div>
             {/* Sem a IA, o retorno confere as ideias-chave da lição: a nota fica no pé, como legenda. */}
             {ensino.simulado && <p className="estudio-legenda">{m.ensinoAutomatico}</p>}
           </div>
