@@ -209,7 +209,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     rolado.current = rolarPara;
     const topo = caminho + lista + linha.y;
     // Piso: rolando, a tela passa da placa do céu e para com a faixa da Parte 1 no topo, sem cortar a placa ao meio.
-    aoRolar(topo, topo + medidas.lente, false, caminho + inicio - 62);
+    aoRolar(topo, topo + medidas.lente, false, caminho + inicio - (nos[0]?.estado === 'atual' ? PARTE_COM_BALAO + 52 : 62));
   }
 
   /**
@@ -417,7 +417,9 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
   const stu = Math.round(lente * 1.28);
 
   return (
-    <View style={[caminhoEstilos.inicio, comecoAtual && { paddingBottom: 150 }]} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.height)}>
+    // Com o primeiro nó atual, o balão "Começar" (nome em até duas linhas) sobe até ~125 acima do nó: a faixa da Parte 1 fica
+    // entre os postes da placa e o balão, sem que um cubra o outro (defeito e da rodada 4, em 360 e 412).
+    <View style={[caminhoEstilos.inicio, comecoAtual && { paddingBottom: INICIO_COM_BALAO }]} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.height)}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
         <View style={caminhoEstilos.inicioCeuBaixo} />
         <Desenho nome="sol" largura={44} estilo={{ position: 'absolute', top: 14, left: 18 }} />
@@ -444,16 +446,23 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
             style={{ width: stu, height: Math.round(stu * 1.1), transform: [{ translateY: subida }] }} />
         </View>
       )}
-      {parte && <View pointerEvents="none" style={[caminhoEstilos.inicioParte, comecoAtual && { bottom: 70 }]}>{parte}</View>}
+      {parte && <View testID="faixa-parte-inicio" pointerEvents="none" style={[caminhoEstilos.inicioParte, comecoAtual && { bottom: PARTE_COM_BALAO }]}>{parte}</View>}
     </View>
   );
 }
+
+/**
+ * Com o primeiro nó atual: o fundo do começo (a placa termina 214 acima do nó e os postes descem mais 30) e a faixa da
+ * Parte 1, de 42 de altura, 133 acima do nó, logo acima do balão "Começar" (22 + ~95 + a flutuação).
+ */
+const INICIO_COM_BALAO = 214;
+const PARTE_COM_BALAO = 133;
 
 /** Placa de madeira com a frase do Stu: entra balançando, presa em dois postes fincados nas colinas. */
 function Placa({ texto }: { texto: string }) {
   const entrada = useAparecer(150, 520, true);
   return (
-    <Animated.View style={[caminhoEstilos.placaMadeira, {
+    <Animated.View testID="placa-stu" style={[caminhoEstilos.placaMadeira, {
       opacity: entrada,
       transform: [
         { rotate: entrada.interpolate({ inputRange: [0, 1], outputRange: ['-8deg', '0deg'] }) },
@@ -885,7 +894,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
           transform: [{ translateY: etiqueta.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }, { translateY: flutuar }],
         }]}>
           {/* Um balão só no nó atual: a ação e o nome da lição juntos, como na web. */}
-          <View style={caminhoEstilos.etiqueta}>
+          <View testID="balao-no-atual" style={caminhoEstilos.etiqueta}>
             <View style={[caminhoEstilos.etiquetaSeta, { marginLeft: -6 - puxa }]} />
             <View style={caminhoEstilos.etiquetaAcao}><Text style={caminhoEstilos.etiquetaTexto}>{(no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar).toLocaleUpperCase('pt-BR')}</Text></View>
             <Text numberOfLines={2} style={caminhoEstilos.etiquetaTitulo}>{no.titulo}</Text>
@@ -1031,7 +1040,7 @@ function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; res
   if (resumo.previa) texto = mensagens.trilha.parteLicoes(resumo.total);
   else if (vencida) texto = mensagens.trilha.parteVencida;
   return (
-    <View style={[caminhoEstilos.parte, { backgroundColor: coresDaRegiao(trecho).relevo, borderColor: coresDaRegiao(trecho).relevo }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+    <View testID={`faixa-parte-${numero}`} style={[caminhoEstilos.parte, { backgroundColor: coresDaRegiao(trecho).relevo, borderColor: coresDaRegiao(trecho).relevo }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       <View style={[caminhoEstilos.parteSelo, vencida && caminhoEstilos.parteSeloVencida]}>
         <Icone nome={vencida ? 'trofeu' : 'bandeira'} tamanho={16} cor={vencida ? cores.ouroTexto : cores.fundo} />
       </View>
