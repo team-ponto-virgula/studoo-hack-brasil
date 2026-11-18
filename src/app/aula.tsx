@@ -624,7 +624,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     );
   }
 
-  const ponteAberta = Boolean(avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita);
+  const ponteAberta = Boolean(avaliacao && !avaliacao.correta && pedidoPonte > 0);
 
   return (
     <article className="painel painel--aula" data-retorno={retorno} data-ponte-aberta={ponteAberta || undefined}>
@@ -816,7 +816,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
               </Botao>
             )}
             {avaliacao && !avaliacao.correta && <Botao variante="secundario" disabled={ocupado} onClick={tentarDeNovo}>{t.tentarDeNovo}</Botao>}
-            {acao}
+            {avaliacao && !avaliacao.correta && acao}
+            {!(avaliacao && !avaliacao.correta) && acao}
           </div>
         </div>
       </footer>

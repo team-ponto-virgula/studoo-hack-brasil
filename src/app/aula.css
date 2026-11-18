@@ -252,7 +252,8 @@
 }
 
 .aula-rodape__acoes { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px 10px; }
-.aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 46px; font-weight: 900; }
+.aula-rodape__acoes > .botao { min-width: min(100%, 9rem); min-height: 44px; font-weight: 900; }
+.aula-rodape__acoes > .botao--texto { min-width: auto; padding-inline: 10px; }
 
 .aula-retorno {
   display: grid;
