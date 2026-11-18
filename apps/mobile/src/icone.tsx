@@ -47,13 +47,17 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
     { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
+  // Olho em amêndoa, como o da web: um quadrado com dois cantos opostos redondos, girado e achatado, com a pupila no meio.
+  // (O contorno de pílula de antes, com a bolinha dentro, parecia um interruptor.)
   olho: [
-    { left: 2.25, top: 5.75, width: 19.5, height: 12.5, borderWidth: 2.5, borderRadius: 6.25 },
-    { left: 9, top: 9, width: 6, height: 6, borderRadius: 3, traco: true },
+    { left: 4.95, top: 4.95, width: 14.1, height: 14.1, borderWidth: 2.2, borderTopLeftRadius: 14.1, borderBottomRightRadius: 14.1,
+      transform: [{ scaleY: 1.35 }, { rotate: '45deg' }] },
+    { left: 8.75, top: 8.75, width: 6.5, height: 6.5, borderRadius: 3.25, traco: true },
   ],
   olhoFechado: [
-    { left: 2.25, top: 5.75, width: 19.5, height: 12.5, borderWidth: 2.5, borderRadius: 6.25 },
-    { left: 9, top: 9, width: 6, height: 6, borderRadius: 3, traco: true },
+    { left: 4.95, top: 4.95, width: 14.1, height: 14.1, borderWidth: 2.2, borderTopLeftRadius: 14.1, borderBottomRightRadius: 14.1,
+      transform: [{ scaleY: 1.35 }, { rotate: '45deg' }] },
+    { left: 8.75, top: 8.75, width: 6.5, height: 6.5, borderRadius: 3.25, traco: true },
     { left: 1.5, top: 10.75, width: 21, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
   ],
   seta: [

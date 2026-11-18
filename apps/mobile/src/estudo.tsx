@@ -1,6 +1,6 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
@@ -505,9 +505,8 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'geracao' && geracao) {
       return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
         comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })}
-        // Como a web na rodada 4: além do título igual, a trilha de demonstração de frações reconhece outra de frações.
-        existente={geracao.proposta ? planos?.find((plano) => plano.titulo === geracao.proposta?.titulo
-          || (geracao.proposta?.titulo.toLowerCase().includes('fraç') && plano.titulo.toLowerCase().includes('fraç'))) : undefined}
+        // Como a web 4.2: a mesma regra do contrato (o assunto antes dos dois-pontos, sem acento), em vez do "fraç" fixo.
+        existente={geracao.proposta ? planos?.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '')) : undefined}
         abrirExistente={(id) => void abrirPlano(id)} />;
     }
 
@@ -1351,7 +1350,8 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
         <View style={estudoEstilos.barraPlano}>
           <View style={estudoEstilos.barraPlanoTexto}>
             <Text style={estudoEstilos.barraPlanoRotulo}>{mensagens.trilha.suaTrilha.toLocaleUpperCase('pt-BR')}</Text>
-            <Titulo testID="titulo-plano" foco linhas={1} estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
+            {/* Rodada 4.2: o nome da trilha vai até duas linhas no alto (em 360 ele era cortado com reticências). */}
+            <Titulo testID="titulo-plano" foco linhas={2} estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
           </View>
           <AnelProgresso progresso={plano.progresso} tamanho={40} />
           {acoes}
@@ -1565,10 +1565,7 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
         <Text style={estilos.legenda}>{concluido ? mensagens.retomada.revisar : mensagens.retomada.texto}</Text>
         <BarraProgresso progresso={plano.progresso} comPercentual />
         <Botao rotulo={acao} testID="abrir-destaque" icone="seta" dica={plano.titulo} desativado={ocupado} acao={abrir} />
-        <Pressable testID="apagar-destaque" accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(plano.titulo)}
-          disabled={ocupado} onPress={apagar} hitSlop={8} style={estudoEstilos.cartaoApagar}>
-          <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
-        </Pressable>
+        <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID="apagar-destaque" />
       </View>
     </Animated.View>
   );
@@ -1617,13 +1614,35 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false
         <View style={estudoEstilos.cartaoAcao}>
           <Botao rotulo={acao} testID={`abrir-plano-${indice}`} icone="seta" variante={concluido || secundario ? 'secundario' : 'primario'}
             dica={plano.titulo} desativado={ocupado} acao={abrir} />
+          <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID={`apagar-plano-${indice}`} />
         </View>
-        <Pressable testID={`apagar-plano-${indice}`} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(plano.titulo)}
-          disabled={ocupado} onPress={apagar} hitSlop={8} style={estudoEstilos.cartaoApagar}>
-          <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
-        </Pressable>
       </View>
     </Animated.View>
+  );
+}
+
+/**
+ * Rodada 4.2 da web: o "Apagar" sai de baixo de cada cartão e vai para um menu discreto ("•••", "Mais opções de …"), para
+ * não competir com Começar/Continuar. Tocar no menu mostra "Apagar" ao lado; tocar nele de novo fecha. Apagar ainda pede
+ * confirmação.
+ */
+function MenuDoCartao({ titulo, ocupado, apagar, testID }: { titulo: string; ocupado: boolean; apagar: () => void; testID: string }) {
+  const [aberto, setAberto] = useState(false);
+  return (
+    <View style={estudoEstilos.menu}>
+      <Pressable testID={`${testID}-menu`} accessibilityRole="button" accessibilityLabel={mensagens.planos.maisOpcoesRotulo(titulo)}
+        accessibilityState={{ expanded: aberto, disabled: ocupado }} aria-expanded={aberto} disabled={ocupado}
+        onPress={() => setAberto((atual) => !atual)}
+        style={({ pressed }) => [estudoEstilos.menuBotao, (aberto || pressed) && estudoEstilos.menuBotaoAberto]}>
+        <Text importantForAccessibility="no" style={estudoEstilos.menuBotaoTexto}>•••</Text>
+      </Pressable>
+      {aberto && (
+        <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
+          onPress={() => { setAberto(false); apagar(); }} style={estudoEstilos.cartaoApagar}>
+          <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
+        </Pressable>
+      )}
+    </View>
   );
 }
 
@@ -1671,8 +1690,9 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
       {resumo && trilhaFeita && <Text style={estudoEstilos.legendaNumeros}>{mensagens.licao.resumo.ultimaLicao.toLocaleUpperCase('pt-BR')}</Text>}
       {resumo && <NumerosDaLicao resumo={resumo} />}
       {resumo?.rever && (
+        // Como na web 4.2: o ícone fica junto da primeira linha e o texto alinhado à esquerda, num bloco centralizado.
         <View testID="conclusao-rever" style={estudoEstilos.rever}>
-          <Icone nome="revisao" tamanho={20} cor={cores.alerta} />
+          <View style={estudoEstilos.reverIcone}><Icone nome="revisao" tamanho={20} cor={cores.alerta} /></View>
           <Text style={estudoEstilos.reverTexto}>
             {textoParaRever(resumo)}
           </Text>
@@ -1809,8 +1829,9 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem, base }: {
     <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
       style={[estudoEstilos.numero, { backgroundColor: cor, borderColor: cor, flexBasis: base }, estiloDeEntrada(entrada, 14, 0.9)]}>
       <View style={estudoEstilos.numeroRotulo}>
-        <Icone nome={icone} tamanho={14} cor={cores.fundo} />
-        <Text style={estudoEstilos.numeroRotuloTexto}>{rotulo.toLocaleUpperCase('pt-BR')}</Text>
+        <Icone nome={icone} tamanho={12} cor={cores.fundo} />
+        {/* Uma linha só (em 360, "DE PRIMEIRA" quebrava em duas e desalinhava os três cartões). */}
+        <Text numberOfLines={1} style={estudoEstilos.numeroRotuloTexto}>{rotulo.toLocaleUpperCase('pt-BR')}</Text>
       </View>
       <View style={estudoEstilos.numeroValor}>
         <Text style={estudoEstilos.numeroValorTexto}>{valor}</Text>
@@ -1873,7 +1894,7 @@ const estudoEstilos = StyleSheet.create({
   barraPlano: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, minWidth: 0 },
   barraPlanoTexto: { flex: 1, minWidth: 0 },
   barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 11, lineHeight: 14, letterSpacing: 1 },
-  barraPlanoTitulo: { fontSize: 18, lineHeight: 23 },
+  barraPlanoTitulo: { fontSize: 17, lineHeight: 21 },
   concluidoCartao: { gap: 8, marginBottom: 12, padding: 18, borderRadius: 22, borderWidth: 2, borderBottomWidth: 5,
     borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   descobertaHero:{flexDirection:'row',alignItems:'center',gap:8,marginBottom:20},
@@ -1926,14 +1947,19 @@ const estudoEstilos = StyleSheet.create({
   conclusaoTopo: { alignItems: 'center' },
   repetida: { gap: 10, marginTop: 12, padding: 12, borderRadius: 16, backgroundColor: '#FFF6D9' },
   repetidaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
-  cartaoApagar: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center' },
+  cartaoApagar: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center', paddingHorizontal: 8 },
+  menu: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start' },
+  menuBotao: { minWidth: 48, minHeight: 48, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  menuBotaoAberto: { backgroundColor: cores.nevoa },
+  menuBotaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, letterSpacing: 1 },
   cartaoApagarTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, textDecorationLine: 'underline' },
-  rever: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 16 },
+  rever: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, alignSelf: 'center', maxWidth: 448 },
+  reverIcone: { marginTop: 1 },
   resumoTrilha: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: 8, marginTop: 14, paddingHorizontal: 16, paddingVertical: 8,
     borderRadius: 999, backgroundColor: '#FFF6D9' },
   resumoTrilhaTexto: { flexShrink: 1, color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 15, textAlign: 'center' },
   legendaNumeros: { marginTop: 18, marginBottom: -6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, letterSpacing: 0.8, textAlign: 'center' },
-  reverTexto: { flexShrink: 1, color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21, textAlign: 'center' },
+  reverTexto: { flexShrink: 1, color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21, textAlign: 'left' },
   textoCentro: { textAlign: 'center' },
   cena: { width: 190, height: 172, alignItems: 'center', justifyContent: 'flex-end', marginBottom: 12 },
   raios: { position: 'absolute', left: -6, top: -12, width: 202, height: 202, alignItems: 'center', justifyContent: 'center' },
@@ -1944,8 +1970,8 @@ const estudoEstilos = StyleSheet.create({
   conclusaoLicao: { marginTop: 2, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
   numeros: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 24 },
   numero: { flex: 1, minWidth: 0, overflow: 'hidden', borderRadius: 16, borderWidth: 2 },
-  numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingHorizontal: 6, paddingVertical: 6 },
-  numeroRotuloTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 10, lineHeight: 14, letterSpacing: 0.2 },
+  numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 4, paddingVertical: 6 },
+  numeroRotuloTexto: { flexShrink: 1, color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 10, lineHeight: 14, letterSpacing: 0 },
   numeroValor: { alignItems: 'center', marginHorizontal: 2, marginBottom: 2, paddingHorizontal: 4, paddingVertical: 10, borderRadius: 13,
     backgroundColor: cores.fundo },
   numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
@@ -1959,7 +1985,7 @@ const estudoEstilos = StyleSheet.create({
     paddingVertical: 4, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.92)' },
   cartaoSeloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   cartaoCorpo: { gap: 4, paddingHorizontal: 20, paddingTop: 16, paddingBottom: 20 },
-  cartaoAcao: { alignItems: 'flex-start', marginTop: 14 },
+  cartaoAcao: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 14 },
   // Pedido
   stuReage: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginTop: 20, marginBottom: -6 },
   balaoFala: { flexShrink: 1, maxWidth: 320, marginBottom: 22, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16,

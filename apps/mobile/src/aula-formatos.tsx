@@ -1278,7 +1278,8 @@ const formatos = StyleSheet.create({
   aspas: { position: 'absolute', top: -2, left: 10, color: '#C9A24A', fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }), fontSize: 48, lineHeight: 56 },
   citacaoTexto: { color: '#4D3A12', fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }), fontStyle: 'italic', fontSize: 20, lineHeight: 28 },
   formula: { padding: 16, borderRadius: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo, backgroundColor: cores.fundo },
-  formulaTexto: { color: cores.texto, fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }), fontSize: 20, lineHeight: 28, textAlign: 'center' },
+  // Como a web 4.2 (`.trecho--formula`): a fonte da interface, forte, com algarismos de largura igual (antes, serifa).
+  formulaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 21, lineHeight: 28, fontVariant: ['tabular-nums'], textAlign: 'center' },
   frase: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.ceu },
   fraseTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19, lineHeight: 27 },
   passo: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },

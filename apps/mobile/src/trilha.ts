@@ -71,7 +71,10 @@ export function montarTrilha(plano: PlanoDetalhe, temAndamento: (id: string) => 
 /** Frase curta do Stu no começo do caminho, conforme o progresso. */
 export function falaDoStu(nos: readonly NoCaminho[]) {
   if (!nos.some((no) => no.estado === 'atual')) return mensagens.trilha.stuFim;
-  if (!nos.some((no) => no.estado === 'concluida')) return mensagens.trilha.stuInicio;
+  // Como na web 4.2: com a primeira lição já começada, a placa diz para continuar de onde parou.
+  if (!nos.some((no) => no.estado === 'concluida')) {
+    return nos.some((no) => no.estado === 'atual' && no.andamento) ? mensagens.trilha.stuInicioEmAndamento : mensagens.trilha.stuInicio;
+  }
   return mensagens.trilha.stuMeio;
 }
 
