@@ -26,20 +26,21 @@ import {
 } from './voz-ao-vivo';
 import './estudio.css';
 const m = mensagens.estudio;
-let promessaElegibilidadeVoz: Promise<boolean> | null = null;
+/** Provedor de texto quando a voz ao vivo está liberada para esta conta (para o aviso de privacidade), ou null. */
+let promessaElegibilidadeVoz: Promise<'openai' | 'deepseek' | null> | null = null;
 export function invalidarElegibilidadeVozAoVivo(): void {
   promessaElegibilidadeVoz = null;
 }
-function consultarElegibilidadeVozAoVivo(): Promise<boolean> {
+function consultarElegibilidadeVozAoVivo(): Promise<'openai' | 'deepseek' | null> {
   if (!promessaElegibilidadeVoz) {
     promessaElegibilidadeVoz = cliente
       .configuracaoAcesso()
       .then(async (cfg) => {
-        if (!cfg.vozAoVivo) return false;
+        if (!cfg.vozAoVivo || (cfg.ia !== 'openai' && cfg.ia !== 'deepseek')) return null;
         const sessao = await cliente.sessao();
-        return !sessao.visitante || Boolean(cfg.vozAoVivoVisitante);
+        return !sessao.visitante || Boolean(cfg.vozAoVivoVisitante) ? cfg.ia : null;
       })
-      .catch(() => false);
+      .catch(() => null);
   }
   return promessaElegibilidadeVoz;
 }
@@ -306,6 +307,7 @@ export function ApoioDaLicao({
   const textoRef = useRef('');
   textoRef.current = texto;
   const [vozAoVivoDisponivel, setVozAoVivoDisponivel] = useState(false);
+  const [provedorTextoVoz, setProvedorTextoVoz] = useState<'openai' | 'deepseek'>('openai');
   const [etapaVoz, setEtapaVoz] = useState<'inativa' | 'privacidade' | 'ativa'>('inativa');
   const [estadoVoz, setEstadoVoz] = useState<EstadoSessaoVozAoVivo>(() => estadoInicialVozAoVivo());
   const controladorVozRef = useRef<ControladorVozAoVivo | null>(null);
@@ -330,8 +332,10 @@ export function ApoioDaLicao({
     const suporteWebRtc =
       typeof RTCPeerConnection !== 'undefined' && Boolean(navigator.mediaDevices?.getUserMedia);
     if (!suporteWebRtc || !cliente.configuracaoAcesso) return;
-    void consultarElegibilidadeVozAoVivo().then((liberado) => {
-      if (ativo) setVozAoVivoDisponivel(liberado);
+    void consultarElegibilidadeVozAoVivo().then((provedor) => {
+      if (!ativo) return;
+      setVozAoVivoDisponivel(provedor !== null);
+      if (provedor) setProvedorTextoVoz(provedor);
     });
     return () => {
       ativo = false;
@@ -962,13 +966,13 @@ export function ApoioDaLicao({
             >
               {m.vozAoVivo.abrir}
             </Botao>
-            <p className="estudio-legenda voz-ao-vivo-nota">{m.vozAoVivo.notaPrivacidade}</p>
+            <p className="estudio-legenda voz-ao-vivo-nota">{m.vozAoVivo.notaPrivacidadePorProvedor(provedorTextoVoz)}</p>
           </div>
         )}
         {etapaVoz === 'privacidade' && (
           <div ref={painelPrivacidadeRef} className="voz-ao-vivo-painel voz-ao-vivo-privacidade" role="region" aria-label={m.vozAoVivo.privacidadeTitulo}>
             <h3 className="voz-ao-vivo-titulo">{m.vozAoVivo.privacidadeTitulo}</h3>
-            <p className="voz-ao-vivo-texto">{m.vozAoVivo.privacidadeTexto}</p>
+            <p className="voz-ao-vivo-texto">{m.vozAoVivo.privacidadeTextoPorProvedor(provedorTextoVoz)}</p>
             <div className="voz-ao-vivo-controles">
               <Botao
                 variante="primario"

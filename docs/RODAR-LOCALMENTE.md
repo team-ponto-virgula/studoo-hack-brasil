@@ -73,10 +73,14 @@ DEEPSEEK_API_KEY=sua-chave
 | Correção aberta / desempate lacuna | Local | Sim | Sim |
 | Estúdio: PDF texto, DOCX, CSV, reforço, Ensine ao Stu | Simulado / local | Sim | Sim |
 | Estúdio: leitura de imagem | Não (só demo) | Sim | Sim com o padrão `deepseek-flash` (indisponível em `deepseek-v4-pro`) |
-| Estúdio: transcrição de voz | Não (`voz_indisponivel`) | Sim | Não (`voz_indisponivel`) |
+| Estúdio: transcrição de voz | Não (`voz_indisponivel`) | Sim | Pela OpenAI, com `OPENAI_API_KEY` (modo misto); sem ela, `voz_indisponivel` |
+| Voz ao vivo com o Stu (`STUDOO_VOZ_AO_VIVO=1`) | Desligada | Sim | Pela OpenAI, com `OPENAI_API_KEY` (modo misto); o texto da conversa é avaliado pela DeepSeek |
 
-Motivo da voz indisponível na DeepSeek: o endpoint `POST /v1/tools/asr` aceita apenas WAV PCM de 16 bits ou Ogg Opus, até 8 MiB e 120 s, sem parâmetro de idioma — incompatível com WebM/M4A gravados pelo navegador e pelo app.
-Caminho mais barato para suportar voz na DeepSeek depois: gravar/codificar áudio WAV PCM mono de 16 bits direto no navegador/app quando o provedor ativo for `deepseek` e enviar para `/v1/tools/asr` no servidor.
+**Modo misto (texto pela DeepSeek, voz pela OpenAI):** com `IA=deepseek`, `DEEPSEEK_API_KEY` e `OPENAI_API_KEY`, trilhas, material, ponte e o retorno do Explique vão para a DeepSeek; só o áudio (conversa ao vivo e transcrição da gravação) vai para a OpenAI. Nenhum pedido de texto chega à OpenAI nesse modo.
+
+Por que a transcrição não usa a DeepSeek: o endpoint `POST /v1/tools/asr` aceita apenas WAV PCM de 16 bits ou Ogg Opus, até 8 MiB e 120 s, sem parâmetro de idioma — incompatível com WebM/M4A gravados pelo navegador e pelo app.
+
+**Limite do provedor (429):** OpenAI e DeepSeek respondem 429 quando a conta passa do limite por minuto ou por dia. O servidor espera o que o provedor pede (`retry-after-ms` ou `retry-after`) e tenta de novo no máximo 2 vezes, com espera total de até 8 s; se o provedor pedir mais, desiste na hora. No aceite de uma trilha, as lições (de 7 a 10, uma chamada cada) são escritas uma por vez, nunca em paralelo.
 
 Observação de privacidade: diferentemente da Responses API da OpenAI (que envia `store: false`), o endpoint `/chat/completions` da DeepSeek não possui parâmetro `store: false`; o tratamento segue a política da plataforma DeepSeek. Quando `IA=deepseek`, nenhuma requisição é enviada à OpenAI mesmo que `OPENAI_API_KEY` esteja definida.
 

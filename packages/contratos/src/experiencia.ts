@@ -50,6 +50,18 @@ export const mensagens = {
         notaPrivacidade: 'Sua voz vai para a OpenAI durante a conversa.',
         privacidadeTitulo: 'Antes de conversar ao vivo',
         privacidadeTexto: 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
+        /**
+         * Nota e aviso conforme o provedor de texto: a conversa é sempre da OpenAI; no modo misto (`deepseek`), o texto
+         * da explicação que sai da conversa é avaliado pela DeepSeek. Nenhum texto cita um provedor que não recebe o dado.
+         */
+        notaPrivacidadePorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
+          ia === 'deepseek'
+            ? 'Sua voz vai para a OpenAI durante a conversa; o texto da sua explicação é avaliado pela DeepSeek.'
+            : 'Sua voz vai para a OpenAI durante a conversa.',
+        privacidadeTextoPorProvedor: (ia?: 'falsa' | 'openai' | 'deepseek') =>
+          ia === 'deepseek'
+            ? 'Sua voz vai para a OpenAI durante a conversa ao vivo, e o texto da sua explicação é avaliado pela DeepSeek para gerar o retorno desta lição. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada no retorno.'
+            : 'Sua voz vai para a OpenAI durante a conversa ao vivo. O Studoo não guarda áudio nem registro da conversa em log; só a sua explicação é usada para gerar o retorno desta lição.',
         privacidadeAceitar: 'Começar conversa',
         privacidadeCancelar: 'Agora não',
         estados: {

@@ -2,6 +2,7 @@ import { embaralharComSemente } from '@studoo/contratos';
 import { FalhaApi } from '../acesso/http';
 import { configuracaoDeepSeek, pedirJsonDeepSeek } from '../ia/deepseek';
 import { configuracaoOpenAi } from '../ia/openai';
+import { comNovasTentativas } from '../ia/novas-tentativas';
 
 export const objeto = (properties: Record<string, unknown>) => ({
   type: 'object',
@@ -87,10 +88,11 @@ export async function pedirJson(
   if (process.env.IA !== 'openai' || !config)
     throw new FalhaApi('ia_indisponivel');
   try {
-    const resposta = await fetch(`${config.base}/responses`, {
+    const sinal = AbortSignal.timeout(60_000);
+    const resposta = await comNovasTentativas(() => fetch(`${config.base}/responses`, {
       method: 'POST',
       redirect: 'error',
-      signal: AbortSignal.timeout(60_000),
+      signal: sinal,
       headers: {
         Authorization: `Bearer ${config.chave}`,
         'Content-Type': 'application/json',
@@ -113,7 +115,7 @@ export async function pedirJson(
           format: { type: 'json_schema', name: nome, strict: true, schema },
         },
       }),
-    });
+    }), { rota: 'ia-openai', sinal });
     if (!resposta.ok) throw new Error();
     const result = await resposta.json();
     if (result.status && result.status !== 'completed') throw new Error();

@@ -27,8 +27,11 @@ import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
 
-/** Tempo para criar o conteúdo de todas as lições no aceite (com a IA real, em paralelo e com uma segunda tentativa). */
-const TEMPO_CONTEUDO = 75_000;
+/**
+ * Tempo para criar o conteúdo de todas as lições no aceite. Com a IA real, as lições (de 7 a 10) saem uma por vez, cada
+ * uma com prazo próprio de 40 s e as novas tentativas do 429 (até 8 s): o teto total cobre a trilha inteira em série.
+ */
+const TEMPO_CONTEUDO = 240_000;
 const DURACAO_AVALIACAO = 15 * 60 * 1000;
 
 const selecaoPlano = {
@@ -162,13 +165,20 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
 }
 
 /** Pede ao gerador o conteúdo de cada lição do esqueleto aceito e valida o que voltou. */
-async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
+export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
   if (plano.gerador === "material-v1" && plano.materialId) return conteudosDoMaterial(usuarioId, plano.materialId);
   const gerador = obterGerador();
   const sinal = AbortSignal.timeout(TEMPO_CONTEUDO);
-  const conteudos = await Promise.all(plano.fluxos.map((fluxo, indiceFluxo) =>
-    Promise.all(fluxo.licoes.map((_licao, indiceLicao) =>
-      gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal)))));
+  // Uma lição por vez: em paralelo, as N chamadas (uma por lição) estouravam juntas o limite por minuto do provedor
+  // (429 em todas). Em série, cada uma ainda tem as novas tentativas do 429 (`comNovasTentativas`).
+  const conteudos: ConteudoLicao[][] = [];
+  for (const [indiceFluxo, fluxo] of plano.fluxos.entries()) {
+    const licoes: ConteudoLicao[] = [];
+    for (const indiceLicao of fluxo.licoes.keys()) {
+      licoes.push(await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal));
+    }
+    conteudos.push(licoes);
+  }
   if (!conteudos.every((licoes) => licoes.every(conteudoValido))) {
     throw new FalhaApi("ia_indisponivel");
   }

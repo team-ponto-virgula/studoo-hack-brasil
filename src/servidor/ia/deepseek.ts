@@ -1,6 +1,7 @@
 import type { EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { LIMITES_ESQUELETO } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
+import { comNovasTentativas } from "./novas-tentativas";
 import type { GeradorTrilha, MetaPlano } from "./gerador";
 import {
   TEMPO_CONTEUDO_MS,
@@ -73,7 +74,7 @@ async function pedir(config: ConfiguracaoDeepSeek, corpo: Record<string, unknown
     signal: sinal,
   });
 
-  let resposta = await enviar(true);
+  let resposta = await comNovasTentativas(() => enviar(true), { rota: "ia-deepseek", sinal });
   if (resposta.status === 400) {
     const texto = await resposta.text().catch(() => "");
     if (/thinking/i.test(texto)) resposta = await enviar(false);
