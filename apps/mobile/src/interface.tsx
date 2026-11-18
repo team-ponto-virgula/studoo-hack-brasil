@@ -34,7 +34,7 @@ import type { NomeIcone } from './trilha';
  * Quanto o conteúdo da tela começa abaixo do topo da rolagem por causa da barra da marca, que rola junto (como na web).
  * Quem mede posições para rolar até um ponto (o caminho na geração) soma este valor; com a faixa parada no alto, é 0.
  */
-export const DeslocamentoDaRolagem = createContext(0);
+export const DeslocamentoDaRolagem = createContext<number | null>(0);
 
 export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, rolagem, aoMedir, aoRolar, aoMedirConteudo, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
   children: ReactNode;
@@ -104,7 +104,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           {cabecalhoNaRolagem && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
           {faixaFixa && <View style={estilos.faixaFixa} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</View>}
           <View style={[estilos.conteudo, estiloConteudo]}>
-            <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? alturaFaixa : 0)}>
+            {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
+            <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) ? null
+              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? alturaFaixa : 0)}>
               <Entrada>{children}</Entrada>
             </DeslocamentoDaRolagem.Provider>
           </View>

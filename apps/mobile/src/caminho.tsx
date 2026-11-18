@@ -148,8 +148,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const ventoPar = useVaiVem(1800);
   const ventoImpar = useVaiVem(2300);
   const alvos = useRef(new Map<string, ComponentRef<typeof View>>());
-  // A barra da marca rola junto em algumas telas (como na web): as posições medidas aqui começam abaixo dela.
-  const deslocamento = useContext(DeslocamentoDaRolagem);
+  // A barra da marca (e, no mapa, o cabeçalho da trilha) rola junto, como na web: as posições medidas aqui começam abaixo
+  // delas. Enquanto a altura dessas faixas não chega (null), a posição do nó atual e a rolagem esperam.
+  const deslocamentoMedido = useContext(DeslocamentoDaRolagem);
+  const deslocamento = deslocamentoMedido ?? 0;
   const posicoes = useRef<{ inicio: number | null; caminho: number | null; lista: number | null; linhas: Map<string, Caixa>; vindo: Caixa | null; chegada: Caixa | null }>(
     { inicio: null, caminho: null, lista: null, linhas: new Map(), vindo: null, chegada: null });
   const rolado = useRef<string | null>(null);
@@ -197,6 +199,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   }, [montando]);
 
   function tentarRolar() {
+    if (deslocamentoMedido === null) return;
     const atual = nos.find((no) => no.estado === 'atual');
     const medidaAtual = atual && posicoes.current.linhas.get(atual.id);
     if (aoMedirAtual && medidaAtual && posicoes.current.caminho !== null && posicoes.current.lista !== null) {
@@ -209,16 +212,23 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     const { inicio } = posicoes.current;
     if (caminho === null || lista === null || linha === undefined || inicio === null) return;
     rolado.current = rolarPara;
-    const topo = caminho + lista + linha.y;
+    const topo = deslocamento + caminho + lista + linha.y;
     // Piso: rolando, a tela passa da placa do céu e para com a faixa da Parte 1 no topo, sem cortar a placa ao meio.
-    aoRolar(topo, topo + medidas.lente, false, caminho + inicio - (nos[0]?.estado === 'atual' ? PARTE_COM_BALAO + 52 : 62));
+    aoRolar(topo, topo + medidas.lente, false, deslocamento + caminho + inicio - (nos[0]?.estado === 'atual' ? PARTE_COM_BALAO + 52 : 62));
   }
+  // Quando a altura das faixas do alto chega (ou muda), a posição do nó atual é informada de novo e a rolagem pendente segue.
+  useEffect(() => {
+    tentarRolar();
+    tentarAcompanhar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deslocamentoMedido]);
 
   /**
    * Acompanha o fim do caminho depois que as medidas chegam: o nó novo e o esqueleto (ou a chegada) só têm posição
    * depois do layout, que vem depois do efeito. Quem chegar por último completa o pedido.
    */
   function tentarAcompanhar() {
+    if (deslocamentoMedido === null) return;
     const modo = acompanhando.current;
     const ultimo = nos[total - 1];
     if (!modo || !acompanhar || !ultimo) return;
