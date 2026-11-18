@@ -599,7 +599,10 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   const mostrarVerPlanos = falha === 'limite_geracoes' && temPlanos;
   // O Stu reage ao pedido, como na web: convida, incentiva enquanto a pessoa escreve e comemora a ideia escolhida.
   let fala: string = mensagens.pedido.falas.vazio;
-  if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
+  // Como na web (3A.2): com o limite atingido ou outro erro da geração, o Stu não contradiz o aviso do cartão.
+  if (falha === 'limite_geracoes' || falha === 'limite_estudio') fala = mensagens.pedido.falas.limite;
+  else if (falha) fala = mensagens.pedido.falas.erro;
+  else if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
   else if (texto.length >= 20) fala = mensagens.pedido.falas.pronto;
   else if (texto.length > 0) fala = mensagens.pedido.falas.curto;
 

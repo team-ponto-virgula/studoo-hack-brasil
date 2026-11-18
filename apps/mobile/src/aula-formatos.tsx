@@ -193,9 +193,9 @@ type Transcritor = (entrada: ArquivoEstudo & { idioma?: string }) => Promise<{ t
 export const TranscritorContexto = createContext<Transcritor | null>(null);
 
 /**
- * O aviso do "Falar" para cada falha da rota de voz: sem provedor de voz, não ouviu nada, limite de pedidos, conexão.
- * `voz_tempo` e `voz_falha` usam o aviso geral de tentar de novo: os textos `erros.voz_*` mandam escrever a explicação,
- * o que só existe no Explique.
+ * O aviso do "Falar" para cada falha da rota de voz: sem provedor de voz, não ouviu nada, demorou, falhou, limite de
+ * pedidos, conexão. Demorou e falhou têm textos próprios do "Falar" (`erros.falar_voz_*`, rodada 3A.2): os `erros.voz_*`
+ * mandam escrever a explicação, o que só existe no Explique.
  */
 export function avisoDaFala(falha: unknown): string {
   const codigo = falha instanceof ErroStudoo ? falha.codigo : (falha as { codigo?: unknown } | null)?.codigo;
@@ -204,8 +204,8 @@ export function avisoDaFala(falha: unknown): string {
     case 'voz_vazia': return t.audio.naoOuviu;
     case 'limite_estudio': return mensagens.erros.limite_estudio;
     case 'conexao': return mensagens.erros.conexao;
-    case 'voz_tempo':
-    case 'voz_falha': return mensagens.erros.falha;
+    case 'voz_tempo': return mensagens.erros.falar_voz_tempo;
+    case 'voz_falha': return mensagens.erros.falar_voz_falha;
     default: return t.audio.naoOuviu;
   }
 }
