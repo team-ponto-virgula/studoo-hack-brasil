@@ -2,7 +2,7 @@ import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
-import { AccessibilityInfo, Alert, Animated, AppState, BackHandler, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, ActionSheetIOS, Alert, Animated, AppState, BackHandler, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
 import { codigoDaFalha, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Apresentacao } from './apresentacao';
@@ -1649,11 +1649,22 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false
  */
 function MenuDoCartao({ titulo, ocupado, apagar, testID }: { titulo: string; ocupado: boolean; apagar: () => void; testID: string }) {
   const [aberto, setAberto] = useState(false);
+  // No iPhone, o menu é a folha de ações do sistema, com o mesmo item ("Apagar", em vermelho), "Cancelar" e o nome da
+  // trilha no alto; no Android e na prévia web, o balão de hoje, como o da web.
+  const alternar = () => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        { title: titulo, options: [mensagens.geracao.cancelar, mensagens.planos.apagar], cancelButtonIndex: 0, destructiveButtonIndex: 1 },
+        (indice) => { if (indice === 1) apagar(); });
+      return;
+    }
+    setAberto((atual) => !atual);
+  };
   return (
     <View style={estudoEstilos.menu}>
       <Pressable testID={`${testID}-menu`} accessibilityRole="button" accessibilityLabel={mensagens.planos.maisOpcoesRotulo(titulo)} hitSlop={4}
         accessibilityState={{ expanded: aberto, disabled: ocupado }} aria-expanded={aberto} disabled={ocupado}
-        onPress={() => setAberto((atual) => !atual)}
+        onPress={alternar}
         style={({ pressed }) => [estudoEstilos.menuBotao, (aberto || pressed) && estudoEstilos.menuBotaoAberto]}>
         {/* Aberto, o "•••" fica na cor do texto (.plano-cartao__menu[open] > summary). */}
         <Text importantForAccessibility="no" style={[estudoEstilos.menuBotaoTexto, aberto && { color: cores.texto }]}>•••</Text>

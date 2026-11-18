@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
+  Alert,
   Animated,
   Easing,
   Image,
@@ -18,9 +19,11 @@ import {
   type StyleProp,
   type TextInputProps,
   type TextStyle,
+  type ViewProps,
   type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NavegacaoContexto } from './navegacao';
 import { useMovimentoReduzido } from './movimento';
 export { useMovimentoReduzido } from './movimento';
@@ -111,7 +114,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura))}>
           {cabecalhoNaRolagem && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
           {faixaFixa && <View style={estilos.faixaVao} />}
-          {faixaFixa && <View style={estilos.faixaFixa} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</View>}
+          {faixaFixa && <FundoDeBarra estilo={estilos.faixaFixa} estiloVidro={estilos.faixaFixaVidro} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</FundoDeBarra>}
           {/* .estudo-principal no celular: 28 em cima, também com o selo de sincronia (a barra tem a altura da da web). */}
           <View style={[estilos.conteudo, !topo && !paginaDeAcesso && estilos.conteudoEstudo, estiloConteudo]}>
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
@@ -121,7 +124,10 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             </DeslocamentoDaRolagem.Provider>
           </View>
         </ScrollView>
-        {rodape && <View style={[estilos.rodape, estiloRodape]}><View style={[estilos.rodapeConteudo, estiloRodapeConteudo]}>{rodape}</View></View>}
+        {/* O rodapé de feedback (verde ou laranja) é conteúdo e fica com a cor de hoje; o neutro vira vidro no iOS 26. */}
+        {rodape && <FundoDeBarra estilo={[estilos.rodape, estiloRodape]} estiloVidro={estiloRodape ? undefined : estilos.rodapeVidro}>
+          <View style={[estilos.rodapeConteudo, estiloRodapeConteudo]}>{rodape}</View>
+        </FundoDeBarra>}
       </KeyboardAvoidingView>
       {navegacao && !teclado && <NavegacaoInferior />}
     </SafeAreaView>
@@ -279,7 +285,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
         <>
           <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
             peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
-          {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} /></View>}
+          {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} sistema /></View>}
         </>
       )}
     </Animated.View>
@@ -448,7 +454,7 @@ export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = fals
       accessibilityState={{ disabled: desativado, ...(selecionado === undefined ? null : { selected: selecionado }) }}
       disabled={desativado} onPress={acao} onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)} hitSlop={2}
       style={({ pressed }) => [estilos.botaoIcone, pressed && estilos.botaoIconePressionado, focado && estilos.foco]}>
-      <Icone nome={icone} tamanho={tamanho} cor={cor} traco={traco} />
+      <Icone nome={icone} tamanho={tamanho} cor={cor} traco={traco} sistema />
     </Pressable>
   );
 }
@@ -566,14 +572,18 @@ export const caixaAlta = { textTransform: 'uppercase' } as const;
  * Cartão de confirmação como .modal-cartao da web: o fundo escurece, a pergunta vem em 1,05rem/800 e as ações ficam à
  * direita, "Cancelar" (secundário) e a confirmação (vermelha quando apaga). Tocar fora ou no voltar do aparelho cancela.
  */
-export function CartaoConfirmacao({ mensagem, confirmarRotulo, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar }: {
+type PropsConfirmacao = {
   mensagem: string;
   confirmarRotulo: string;
   destrutivo?: boolean;
   ocupado?: boolean;
   aoCancelar: () => void;
   aoConfirmar: () => void;
-}) {
+};
+
+export function CartaoConfirmacao(props: PropsConfirmacao) {
+  if (Platform.OS === 'ios') return <ConfirmacaoDoSistema {...props} />;
+  const { mensagem, confirmarRotulo, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar } = props;
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
       <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
@@ -587,6 +597,37 @@ export function CartaoConfirmacao({ mensagem, confirmarRotulo, destrutivo = fals
       </Pressable>
     </Modal>
   );
+}
+
+/**
+ * No iPhone, a confirmação é o alerta do sistema (UIAlertController), com o mesmo texto e as mesmas duas ações: "Cancelar"
+ * e a confirmação, em vermelho quando apaga. Quem usa já tira a confirmação da tela antes de rodar a ação.
+ */
+function ConfirmacaoDoSistema({ mensagem, confirmarRotulo, destrutivo = false, aoCancelar, aoConfirmar }: PropsConfirmacao) {
+  const acoes = useRef({ aoCancelar, aoConfirmar });
+  acoes.current = { aoCancelar, aoConfirmar };
+  useEffect(() => {
+    Alert.alert(mensagem, undefined, [
+      { text: mensagens.geracao.cancelar, style: 'cancel', onPress: () => acoes.current.aoCancelar() },
+      { text: confirmarRotulo, style: destrutivo ? 'destructive' : 'default', onPress: () => acoes.current.aoConfirmar() },
+    ]);
+  }, [mensagem, confirmarRotulo, destrutivo]);
+  return null;
+}
+
+/** Liquid Glass só no iPhone com iOS 26 ou mais novo (expo-glass-effect); no iOS anterior, no Android e na prévia web, o fundo de hoje. */
+const VIDRO = Platform.OS === 'ios' && (() => {
+  try { return isLiquidGlassAvailable(); } catch { return false; }
+})();
+
+/**
+ * Fundo das barras que ficam por cima do conteúdo (rodapé, barra de baixo, faixa fixa do mapa). Com vidro, `estiloVidro`
+ * substitui o estilo de hoje (sem fundo branco nem linha: o vidro é o fundo); sem `estiloVidro`, a barra fica como hoje.
+ */
+function FundoDeBarra({ estilo, estiloVidro, children, ...resto }: ViewProps & { estilo: StyleProp<ViewStyle>; estiloVidro?: StyleProp<ViewStyle> }) {
+  // O app é sempre claro (userInterfaceStyle "light"): o vidro também.
+  if (VIDRO && estiloVidro) return <GlassView glassEffectStyle="regular" colorScheme="light" style={estiloVidro} {...resto}>{children}</GlassView>;
+  return <View style={estilo} {...resto}>{children}</View>;
 }
 
 /** Esqueleto que pulsa devagar enquanto o conteúdo carrega, como o brilho da web; parado com movimento reduzido. */
@@ -726,6 +767,8 @@ export const estilos = StyleSheet.create({
   skeletonCurto: { width: '55%', height: 24, borderRadius: 8, backgroundColor: cores.gelo },
   skeletonLinha: { width: '100%', height: 16, borderRadius: 8, backgroundColor: cores.gelo },
   rodape: { borderTopWidth: 2, borderColor: cores.nevoa, backgroundColor: cores.fundo },
+  // iOS 26: o vidro é o fundo do rodapé (sem o branco e sem a linha de cima).
+  rodapeVidro: {},
   // A web deixa 20 px nas laterais do rodapé (350 px de botão em 390); a aula e a entrada passam as delas.
   // .acao-principal e .aula-rodape no celular: 12 em cima e 14 embaixo (o degrau do botão desce por fora, no respiro de baixo).
   rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14, gap: 10 },
@@ -745,6 +788,8 @@ export const estilos = StyleSheet.create({
   faixaVao: { height: 20 },
   // .trilha-topo no celular: a linha de baixo é sombra por fora (box-shadow 0 2px 0 gelo), não borda.
   faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', boxShadow: `0 2px 0 ${cores.gelo}` },
+  // iOS 26: a faixa vira vidro sobre o mapa que rola por baixo (sem o branco e sem a linha de baixo).
+  faixaFixaVidro: { zIndex: 6 },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
   modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
   modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
@@ -796,7 +841,7 @@ function NavegacaoInferior() {
   const nav = useContext(NavegacaoContexto);
   if (!nav) return null;
   // As duas abas ficam dentro de uma lista de abas, como pede o papel "tab" (axe: aria-required-parent).
-  return <View accessibilityRole="tablist" style={navegacaoEstilos.faixa}>
+  return <FundoDeBarra accessibilityRole="tablist" estilo={navegacaoEstilos.faixa} estiloVidro={navegacaoEstilos.faixaVidro}>
     {([
       { id: 'planos', rotulo: mensagens.planos.titulo, icone: 'livro', acao: nav.planos },
       { id: 'objetivo', rotulo: mensagens.planos.novo, icone: 'lampada', acao: nav.criar },
@@ -810,7 +855,7 @@ function NavegacaoInferior() {
         <Text style={[navegacaoEstilos.rotulo, selecionado && { color: cores.acao }]}>{item.rotulo}</Text>
       </Pressable>;
     })}
-  </View>;
+  </FundoDeBarra>;
 }
 function IndicadorNavegacao({ icone, selecionado }: { icone: NomeIcone; selecionado: boolean }) {
   const reduzir = useMovimentoReduzido();
@@ -823,11 +868,13 @@ function IndicadorNavegacao({ icone, selecionado }: { icone: NomeIcone; selecion
     return () => { animacao.stop(); escala.setValue(1); };
   }, [selecionado, reduzir, escala]);
   return <Animated.View style={{ transform: [{ scale: escala }] }}>
-    <Icone nome={icone} tamanho={22} cor={selecionado ? cores.acao : cores.textoSecundario} />
+    <Icone nome={icone} tamanho={22} cor={selecionado ? cores.acao : cores.textoSecundario} sistema={selecionado ? 'cheio' : true} />
   </Animated.View>;
 }
 const navegacaoEstilos = StyleSheet.create({
   faixa: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 8, borderTopWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  // iOS 26: a mesma barra sobre vidro, sem o fundo branco e sem a linha de cima.
+  faixaVidro: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 8 },
   item: { flex: 1, minHeight: 56, borderRadius: 18, padding: 6, alignItems: 'center', justifyContent: 'center', gap: 3 },
   ativo: { backgroundColor: cores.nevoa },
   rotulo: { fontFamily: fontes.corpo, fontSize: 12, fontWeight: '800', color: cores.textoSecundario, textAlign: 'center' },
