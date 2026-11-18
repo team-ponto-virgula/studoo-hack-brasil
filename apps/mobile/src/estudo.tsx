@@ -1,5 +1,5 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
-import type { ClienteEstudio } from '@studoo/contratos';
+import type { ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
@@ -528,7 +528,7 @@ function planoInicial(planos: PlanoResumo[]) {
  * O foco da tela vai ao erro, quando há um, e senão ao título; o aviso de geração cancelada é anunciado.
  */
 function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona }: {
-  cliente: ClienteEstudio;
+  cliente: ClienteNativo;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
   ocupado: boolean;
@@ -545,6 +545,13 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
   comoFunciona: () => void;
 }) {
   const [modo, setModo] = useState<'ideia' | 'material'>('ideia');
+  /** Provedor de IA do servidor: o aviso de privacidade do material diz quem lê (OpenAI, DeepSeek ou ninguém). */
+  const [ia, setIa] = useState<ProvedorIa | undefined>();
+  useEffect(() => {
+    let ativo = true;
+    void cliente.configuracaoAcesso().then((configuracao) => { if (ativo) setIa(configuracao.ia); }).catch(() => undefined);
+    return () => { ativo = false; };
+  }, [cliente]);
   const balancoInicio = useBalanco(3, 1800);
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
@@ -619,7 +626,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, te
             desativado={ocupado} acao={verPlanos} />}
         </View>
       )}
-      <View style={modo !== 'material' && { display: 'none' }}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} /></View>
+      <View style={modo !== 'material' && { display: 'none' }}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} ia={ia} mostrarCabeca={false} /></View>
       <View style={modo !== 'ideia' && { display: 'none' }}>
         <View style={estudoEstilos.campoPedido}>
           <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} />

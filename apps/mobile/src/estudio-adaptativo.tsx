@@ -3,7 +3,6 @@ import {
   Animated,
   AppState,
   Platform,
-  ScrollView,
   Text,
   View,
   StyleSheet,
@@ -26,8 +25,10 @@ import {
   type LicaoDetalhe,
   type MaterialEstudo,
   type PropostaPlano,
+  type ProvedorIa,
 } from '@studoo/contratos';
 import { Botao, Campo, estilos } from './interface';
+import { CadernoDoStu, CenaPonte, EtapasDoEnsino, OndasDoVolume, PaginaDoMaterial, StuAluno } from './estudio-cenas';
 import { useAparecer } from './animacoes';
 import { mensagens } from './mensagens';
 import { cores } from './tema';
@@ -72,17 +73,22 @@ export function MaterialParaTrilha({
   cliente,
   objetivo,
   onProposta,
+  ia,
+  mostrarCabeca = true,
 }: {
   cliente: ClienteEstudio;
   objetivo: string;
   onProposta: (p: PropostaPlano) => void;
+  /** Provedor de IA do servidor (configuracaoAcesso): o aviso de privacidade diz quem lê o material. */
+  ia?: ProvedorIa;
+  /** No pedido, o título já está no alto da tela: o cartão não repete (como `mostrarCabeca={false}` na web). */
+  mostrarCabeca?: boolean;
 }) {
   const [material, setMaterial] = useState<MaterialEstudo | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
   const [erro, setErro] = useState('');
   const [detalhes, setDetalhes] = useState(false);
-  const [aberta, setAberta] = useState<number | null>(null);
   const vivo = useRef(true);
   useEffect(() => {
     vivo.current = true;
@@ -153,11 +159,13 @@ export function MaterialParaTrilha({
   }
   return (
     <Card>
-      <H>{mensagens.inicio.materialTitulo}</H>
-      <T>{mensagens.inicio.materialTexto}</T>
+      {mostrarCabeca && <H>{mensagens.inicio.materialTitulo}</H>}
+      {mostrarCabeca && <T>{mensagens.inicio.materialTexto}</T>}
       <Text style={estilos.legenda}>{mensagens.inicio.enviarSeguro}</Text>
       <Botao variante="texto" rotulo={mensagens.inicio.detalhes} acao={()=>setDetalhes(!detalhes)}/>
-      {detalhes && <View><Text style={estilos.legenda}>{m.limites}</Text><Text style={estilos.legenda}>{m.privacidade}</Text></View>}
+      {/* O aviso diz quem lê o material (OpenAI, DeepSeek ou ninguém, na demonstração). Antes de a configuração chegar, ou
+          se ela falhar, vale o texto geral, verdadeiro em qualquer configuração. */}
+      {detalhes && <View><Text style={estilos.legenda}>{m.limites}</Text><Text style={estilos.legenda}>{ia ? m.privacidadePorProvedor(ia) : m.privacidade}</Text></View>}
       {!material ? (
         <>
           <Botao
@@ -186,47 +194,12 @@ export function MaterialParaTrilha({
       ) : (
         <>
           <H>{material.nome}</H>
-          {material.leitura === 'demonstracao' && <T>{m.simulado}</T>}
+          {material.leitura === 'demonstracao' && <Text style={s.selo}>{m.simulado}</Text>}
           <T>{m.revisar}</T>
           {material.leitura === 'ocr' && <T>{m.ocr}</T>}
-          {material.paginas.map((p) => (
-            <View key={p.numero}>
-              <Botao
-                variante="texto"
-                rotulo={p.rotulo ?? m.pagina(p.numero)}
-                acao={() => setAberta(aberta === p.numero ? null : p.numero)}
-              />
-              {aberta === p.numero &&
-                (p.tabela ? (
-                  <ScrollView horizontal accessibilityLabel={m.tabela}>
-                    <View>
-                      {p.tabela.map((linha, i) => (
-                        <View key={i} style={{ flexDirection: 'row' }}>
-                          <Text
-                            style={[estilos.texto, s.celula, { width: 60 }]}
-                          >
-                            {(p.numero - 1) * 40 + i + 1}
-                          </Text>
-                          {linha.map((c, j) => (
-                            <Text
-                              key={j}
-                              selectable
-                              style={[estilos.texto, s.celula]}
-                            >
-                              {c}
-                            </Text>
-                          ))}
-                        </View>
-                      ))}
-                    </View>
-                  </ScrollView>
-                ) : (
-                  <Text selectable style={estilos.texto}>
-                    {p.texto}
-                  </Text>
-                ))}
-            </View>
-          ))}
+          {/* Como na web (rodada 1.1): cada página num cartão, com a miniatura da foto, a tabela do CSV ou as primeiras
+              linhas do texto. */}
+          {material.paginas.map((p) => <PaginaDoMaterial key={p.numero} pagina={p} />)}
           <Botao
             rotulo={m.gerar}
             desativado={ocupado}
@@ -279,7 +252,13 @@ export function ApoioDaLicao({
   aoPedirEnsino,
   aoAbrirExplique,
   aoEnsinar,
+  ultimaResposta = '',
+  aoMostrarCena,
 }: {
+  /** A resposta errada em texto legível (o texto da opção, não o código): nasce como a 1ª tábua da ponte. Como na web. */
+  ultimaResposta?: string;
+  /** A ponte foi vencida: onde a cena começa, a partir do topo do apoio, para a lição trazê-la à vista antes da travessia. */
+  aoMostrarCena?: (y: number) => void;
   cliente: ClienteEstudio;
   licao: LicaoDetalhe;
   avaliacao: Avaliacao | null;
@@ -319,6 +298,8 @@ export function ApoioDaLicao({
   /** Como na web: o resultado da pergunta do reforço deixa a opção marcada verde (certa) ou âmbar (errada). */
   const [resultadoPonte, setResultadoPonte] = useState<{ id: string; correta: boolean } | null>(null);
   const cartaoPonteY = useRef(0);
+  /** Onde a cena da ponte começa dentro do cartão, para a lição rolar até ela antes de o Stu atravessar. */
+  const cenaY = useRef(0);
   const retornoRolado = useRef('');
   const [erro, setErro] = useState('');
   const [ocupado, setOcupado] = useState(false);
@@ -328,7 +309,8 @@ export function ApoioDaLicao({
   const [gravando, setGravando] = useState(false);
   const [segundos, setSegundos] = useState(0);
   const [aviso, setAviso] = useState('');
-  const gravador = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+  // Com o metering, as ondas da gravação sobem com o volume real do microfone (OndasDoVolume).
+  const gravador = useAudioRecorder({ ...RecordingPresets.HIGH_QUALITY, isMeteringEnabled: true });
   const vivo = useRef(true);
   const ativo = useRef(false);
   useEffect(() => {
@@ -415,6 +397,9 @@ export function ApoioDaLicao({
         ativo.current = true;
         setSegundos(0);
         setGravando(true);
+        // Como na web (rodada 1.3): uma gravação nova começa limpa, sem o retorno anterior nem o aviso.
+        setEnsino(null);
+        setAviso('');
       } catch {
         setAviso(m.vozErro);
       } finally {
@@ -464,7 +449,10 @@ export function ApoioDaLicao({
   }, [pedidoEnsino]);
   const ponteConcluida = apoio?.ponte?.concluida === true;
   useEffect(() => {
-    if (ponteConcluida && pedidoPonte > 0) aoConcluirPonte?.();
+    if (!ponteConcluida || pedidoPonte === 0) return;
+    aoConcluirPonte?.();
+    // A cena vem para a vista antes da travessia do Stu (que começa 380 ms depois, em CenaPonte). Como na web.
+    aoMostrarCena?.(cartaoPonteY.current + cenaY.current);
     // Só a conclusão do reforço dispara.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ponteConcluida]);
@@ -502,13 +490,23 @@ export function ApoioDaLicao({
       {/* O cartão aparece quando a pessoa pede "Ver outro exemplo" no painel (ou se já há um reforço): sem botão repetido. */}
       {avaliacao?.correta === false && pedidoPonte > 0 && (
         <View onLayout={(evento) => { cartaoPonteY.current = evento.nativeEvent.layout.y; }}><Card>
-          <H>{ponte?.concluida ? m.pontePronta : m.ponte}</H>
+          <View style={s.ponteCabeca}>
+            <H>{ponte?.concluida ? m.pontePronta : m.ponte}</H>
+            {/* Como na web (rodada 1.3): o selo de conteúdo simulado fica perto do título. */}
+            {ponte?.simulado && <Text style={s.selo}>{m.simulado}</Text>}
+          </View>
+          {/* A ponte como cena (rodada 1.2): a 1ª tábua nasce da resposta errada; as outras entram conforme a pessoa avança. */}
+          <CenaPonte resposta={ultimaResposta} temPonte={Boolean(ponte)} desafio={Boolean(ponte?.concluida || resposta)}
+            concluida={Boolean(ponte?.concluida)} aoMedir={(y) => { cenaY.current = y; }} />
+          {/* Na vitória, o retorno fica logo embaixo da cena, à vista junto da travessia. */}
+          {ponte?.concluida && !!retorno && (
+            <Text accessibilityLiveRegion="polite" style={[estilos.texto, { color: cores.sucesso, fontWeight: '800' }]}>{retorno}</Text>
+          )}
           <T>{ponte?.motivo ?? m.ponteDica}</T>
           {!ponte ? (
             <Text accessibilityLiveRegion="polite" style={estilos.texto}>{erro || m.pensando}</Text>
           ) : (
             <>
-              {ponte.simulado && <T>{m.retornoAutomatico}</T>}
               {/* A explicação do erro já está no painel de retorno: aqui só aparece se for outra. */}
               {ponte.conceito !== avaliacao?.feedback && <T>{ponte.conceito}</T>}
               <View style={s.exemplo}>
@@ -548,16 +546,18 @@ export function ApoioDaLicao({
                   }
                 />
               )}
-              <Text accessibilityLiveRegion="polite"
-                style={[estilos.texto, resultadoPonte && retorno ? { color: resultadoPonte.correta ? cores.sucesso : cores.alerta, fontWeight: '800' } : null]}
-                onLayout={(evento) => {
-                  // Como na web: o retorno aparece no fim do cartão, às vezes atrás do painel; a lição rola até ele.
-                  if (!retorno || retornoRolado.current === retorno) return;
-                  retornoRolado.current = retorno;
-                  aoMostrarRetornoPonte?.(cartaoPonteY.current + evento.nativeEvent.layout.y);
-                }}>
-                {retorno}
-              </Text>
+              {!ponte.concluida && (
+                <Text accessibilityLiveRegion="polite"
+                  style={[estilos.texto, resultadoPonte && retorno ? { color: resultadoPonte.correta ? cores.sucesso : cores.alerta, fontWeight: '800' } : null]}
+                  onLayout={(evento) => {
+                    // Como na web: o retorno de uma tentativa errada aparece no fim do cartão; a lição rola até ele.
+                    if (!retorno || retornoRolado.current === retorno) return;
+                    retornoRolado.current = retorno;
+                    aoMostrarRetornoPonte?.(cartaoPonteY.current + evento.nativeEvent.layout.y);
+                  }}>
+                  {retorno}
+                </Text>
+              )}
               {/* O "tente de novo" já está no painel de retorno: aqui não repete. Como na web. */}
             </>
           )}
@@ -572,6 +572,9 @@ export function ApoioDaLicao({
         />
         {ensinar && (
           <>
+            {/* O Stu como aluno (rodada 1.1): com dúvida, ouvindo enquanto grava, anotando quando o retorno chega. */}
+            <StuAluno estado={gravando ? 'ouvindo' : ensino ? 'anotou' : 'aluno'} />
+            <EtapasDoEnsino ativa={ensino ? 2 : gravando || !texto.trim() ? 0 : 1} />
             <T>{m.ensinoDica}</T>
             <Text style={estilos.legenda}>{m.ensinoIdeia(licao.objetivo)}</Text>
             <Campo
@@ -592,9 +595,12 @@ export function ApoioDaLicao({
               acao={() => void (gravando ? parar() : gravar())}
             />
             {gravando && (
-              <Text accessibilityLiveRegion="polite" style={estilos.texto}>
-                {m.gravando} {segundos}/60 s
-              </Text>
+              <View style={s.gravando}>
+                <OndasDoVolume gravador={gravador} />
+                <Text accessibilityLiveRegion="polite" style={[estilos.texto, { color: cores.acao, fontWeight: '800' }]}>
+                  {m.gravando} {segundos}/60 s
+                </Text>
+              </View>
             )}
             {!!aviso && <T>{aviso}</T>}
             <Botao
@@ -615,24 +621,14 @@ export function ApoioDaLicao({
               }
             />
             {ensino && (
-              <View accessibilityLiveRegion="polite" style={{ gap: 12 }}
+              <View
                 onLayout={(evento) => {
                   if (ensinoRolado.current === ensino) return;
                   ensinoRolado.current = ensino;
                   aoMostrarEnsino?.(cartaoEnsinoY.current + evento.nativeEvent.layout.y);
                 }}>
-                <H>{m.acertos}</H>
-                {ensino.acertos.map((x, i) => (
-                  <T key={i}>{x}</T>
-                ))}
-                <H>{m.lacuna}</H>
-                <T>{ensino.lacuna}</T>
-                <H>{m.pergunta}</H>
-                <T>{ensino.pergunta}</T>
-                <H>{m.proximo}</H>
-                <T>{ensino.proximoPasso}</T>
-                {/* Sem a IA, o retorno confere as ideias-chave da lição: a nota fica no pé, como legenda. Como na web. */}
-                {ensino.simulado && <Text style={estilos.legenda}>{m.ensinoAutomatico}</Text>}
+                {/* O retorno em quatro cartões, como o caderno da web; sem a IA, a nota do retorno automático no pé. */}
+                <CadernoDoStu ensino={ensino} />
               </View>
             )}
           </>
@@ -648,7 +644,10 @@ export function ApoioDaLicao({
   );
 }
 const s = StyleSheet.create({
-  celula: { width: 150, padding: 10, borderWidth: 1, borderColor: cores.gelo },
+  selo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, borderWidth: 1, borderColor: '#F2CF96',
+    backgroundColor: '#FFF6EA', color: '#7A4A00', fontWeight: '800', fontSize: 12, lineHeight: 16, overflow: 'hidden' },
+  ponteCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
+  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 8, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#EEF3FF' },
   card: {
     marginVertical: 16,
     padding: 18,
@@ -666,19 +665,4 @@ const s = StyleSheet.create({
     gap: 10,
   },
   exemplo: { backgroundColor: '#EEF2FF', padding: 16, borderRadius: 16 },
-  ponte: {
-    flexDirection: 'row',
-    gap: 6,
-    height: 65,
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  tabua: {
-    width: 38,
-    height: 18,
-    borderRadius: 8,
-    backgroundColor: cores.acao,
-    borderBottomWidth: 4,
-    borderColor: '#203487',
-  },
 });

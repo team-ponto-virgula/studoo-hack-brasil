@@ -163,6 +163,11 @@ function montar(nativo, { carregar, permissao, preparar } = {}) {
       },
     },
     './interface': { Botao: 'Botao', Campo: 'Campo', estilos: {} },
+    // Cenas do app (ponte, Stu aluno, ondas, caderno, página do material): componentes de apresentação, sem handlers.
+    './estudio-cenas': {
+      CenaPonte: 'CenaPonte', StuAluno: 'StuAluno', EtapasDoEnsino: 'EtapasDoEnsino', OndasDoVolume: 'OndasDoVolume',
+      CadernoDoStu: 'CadernoDoStu', PaginaDoMaterial: 'PaginaDoMaterial',
+    },
     './animacoes': { useAparecer: () => 0 },
     './tema': { cores: {} },
   };

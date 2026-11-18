@@ -123,6 +123,36 @@ function extrasDoRetorno(avaliacao: Avaliacao, exercicio: ExercicioPublico | nul
 }
 
 /**
+ * A resposta em texto legível, para a 1ª tábua da ponte ("Sua tentativa: 3"): o texto da opção, dos itens na ordem
+ * escolhida, dos pares ou do verdadeiro/falso com o porquê, nunca o código interno. A mesma regra da web (aula.tsx).
+ */
+function respostaLegivel(exercicio: ExercicioPublico, resposta: string): string {
+  const limpa = resposta.trim();
+  if (!limpa) return '';
+  switch (exercicio.tipo) {
+    case 'multipla_escolha':
+      return exercicio.opcoes.find((opcao) => opcao.id === limpa)?.texto ?? '';
+    case 'ordenar':
+      return limpa.split(',').map((id) => exercicio.itens.find((item) => item.id === id)?.texto).filter(Boolean).join(' · ');
+    case 'associar':
+      return limpa.split(',').map((par) => {
+        const [esquerda, direita] = par.split('=');
+        const e = exercicio.esquerda.find((item) => item.id === esquerda)?.texto;
+        const d = exercicio.direita.find((item) => item.id === direita)?.texto;
+        return e && d ? `${e} → ${d}` : '';
+      }).filter(Boolean).join(' · ');
+    case 'verdadeiro_falso': {
+      const [valor = '', porque = ''] = limpa.split(':');
+      const rotulo = valor === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : valor === 'falso' ? t.verdadeiroFalso.falso : '';
+      const justificativa = exercicio.justificativas.find((item) => item.id === porque)?.texto;
+      return rotulo && justificativa ? `${rotulo} · ${justificativa}` : rotulo;
+    }
+    default:
+      return limpa;
+  }
+}
+
+/**
  * Aula por etapas, como na web (spec 02), com o número de etapas de cada lição: conceito, exemplo (ou demonstração, com
  * recurso, passos e frases para ouvir), de um a três exercícios de formatos variados e, quando a lição pede, a prática no
  * mundo real com cronômetro. Depois da resposta, o rodapé vira o painel de retorno, verde no acerto (com confete) ou
@@ -762,6 +792,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       }}><ApoioDaLicao key={indice} cliente={cliente} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte}
         ultimo={indice === exercicios.length - 1} aoConcluirPonte={() => setPonteFeita(true)}
         pedidoEnsino={pedidoEnsino} aoAbrirExplique={setExpliqueAberto} aoEnsinar={() => setEnsinou(true)}
+        ultimaResposta={respostaLegivel(exercicio, resposta)}
+        aoMostrarCena={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 24), animated: reduzir === false })}
         aoPedirEnsino={(y) => setTimeout(() => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false }), 60)}
         aoMostrarRetornoPonte={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 220), animated: reduzir === false })}
         aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })} /></View>}
