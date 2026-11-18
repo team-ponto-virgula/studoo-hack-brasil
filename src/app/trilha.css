@@ -358,6 +358,7 @@
 
 /* Celular: o mapa termina com cantos arredondados, como um cartão, em vez de um corte reto. */
 @media (max-width: 767px) {
+  .trilha-proximo__titulo { font-size: 0.9375rem; -webkit-line-clamp: 3; line-clamp: 3; }
   /* O morro do troféu continua por baixo do cartão flutuante até a navegação: o mapa não termina num corte branco. */
   .painel--trilha > .caminho { margin-bottom: -120px; }
   .painel--trilha .caminho-chegada { --extra: 120px; }

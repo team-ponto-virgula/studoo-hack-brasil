@@ -479,10 +479,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 </button>
               ) : (
                 <button type="button" className="caminho-no__alvo" ref={(elemento) => guardarBotao(no.id, elemento)}
-                  aria-label={(() => {
-                    const baseNome = nome.startsWith(no.titulo) ? nome : `${no.titulo} — ${nome}`;
-                    return selos.length > 0 ? `${baseNome} ${selos.map((s) => s.texto).join('. ')}.` : baseNome;
-                  })()} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
+                  aria-label={nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
                   aria-controls={estaAberto ? idBalao : undefined} disabled={ocupado} onClick={() => tocar(no)}>
                   {conteudo}
                 </button>

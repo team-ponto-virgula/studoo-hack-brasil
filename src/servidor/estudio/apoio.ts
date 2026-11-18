@@ -130,8 +130,8 @@ function reforcoFalso(licao: LicaoDetalhe, interno: ConteudoLicao, resposta: str
       ],
       gabarito: ['1'],
       feedbackCorreto: fracao
-        ? 'Isso! As seis fatias formam o inteiro.'
-        : 'Isso: essa é a ideia central da lição.',
+        ? 'As seis fatias formam o inteiro.'
+        : 'Essa é a ideia central da lição.',
       feedbackIncorreto: fracao
         ? 'Conte todas as partes iguais do bolo: são seis. Duas é a quantidade servida.'
         : 'Compare com a explicação: a ideia central orienta a solução, em vez de adivinhar.',

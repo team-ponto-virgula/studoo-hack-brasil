@@ -107,7 +107,7 @@ function montar(assunto: string, semente: number, fluxo: number, licao: number):
           `Complete a frase sobre como começar a estudar ${aspas}.`,
           "Antes de estudar, desenhe o ___ do assunto e liste as suas partes.",
           "mapa",
-          "Isso mesmo: o mapa mostra as partes e a ordem em que elas se ligam.",
+          "O mapa mostra as partes e a ordem em que elas se ligam.",
           "A palavra é mapa. Ele organiza as partes do assunto antes de você entrar nos detalhes.",
         ),
       };

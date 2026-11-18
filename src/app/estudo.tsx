@@ -167,14 +167,18 @@ export function Estudo() {
         }
       }
       // Com planos salvos, abre direto na trilha em andamento, exceto se voltou com um rascunho de pedido salvo.
-      const inicial = abriuComRascunho.current ? null : planoInicial(ativos);
-      if (inicial) {
-        try {
-          const plano = await cliente.obterPlano(inicial.id);
-          if (cancelado()) return;
-          setTela({ tipo: 'plano', plano });
-        } catch {
-          // Sem o detalhe do plano, a pessoa cai em Meus planos e escolhe de lá.
+      if (abriuComRascunho.current) {
+        setTela({ tipo: 'objetivo' });
+      } else {
+        const inicial = planoInicial(ativos);
+        if (inicial) {
+          try {
+            const plano = await cliente.obterPlano(inicial.id);
+            if (cancelado()) return;
+            setTela({ tipo: 'plano', plano });
+          } catch {
+            // Sem o detalhe do plano, a pessoa cai em Meus planos e escolhe de lá.
+          }
         }
       }
       setInicio('pronto');

@@ -72,7 +72,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   }, [texto, ocupado]);
 
   useEffect(() => {
-    if (modo !== 'ideia' || window.innerWidth < 1024) return;
+    if (modo !== 'ideia' || (window.innerWidth < 1024 && !objetivo.trim())) return;
     const quadro = window.requestAnimationFrame(() => {
       campo.current?.focus({ preventScroll: true });
     });
