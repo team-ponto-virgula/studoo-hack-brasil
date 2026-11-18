@@ -186,11 +186,13 @@ function extrairCallId(location: string | null): string | null {
 }
 
 export function validarSdpOferta(sdp: unknown): string {
-  const limpo = typeof sdp === "string" ? sdp.trim() : "";
-  if (!limpo || limpo.length > 32_768 || !limpo.includes("v=0")) {
+  const texto = typeof sdp === "string" ? sdp : "";
+  const limpo = texto.trim();
+  if (!limpo || texto.length > 32_768 || !limpo.includes("v=0")) {
     throw new FalhaApi("invalido");
   }
-  return limpo;
+  if (texto.endsWith("\r\n")) return texto;
+  return texto.endsWith("\n") ? `${texto.slice(0, -1)}\r\n` : `${texto}\r\n`;
 }
 
 function higienizarCodigoErro(valor: unknown): string {

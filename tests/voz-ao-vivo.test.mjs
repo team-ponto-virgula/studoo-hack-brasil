@@ -261,12 +261,20 @@ test('interface unificada com OpenAI simulada: SDP inválido não gasta cota, ch
         res.end(SDP_RESPOSTA);
         return;
       }
+      const mSdp = /name="sdp"\r\n\r\n([\s\S]*?)\r\n--/.exec(body);
+      const sdpCampo = mSdp?.[1] ?? '';
+      if (!sdpCampo.endsWith('\n')) {
+        res.writeHead(400, { 'content-type': 'application/json' });
+        res.end(JSON.stringify({ error: { code: 'invalid_offer', message: 'Failed to parse offer: failed to unmarshal SDP: EOF' } }));
+        return;
+      }
       seq += 1;
       const callId = `rtc_sim_${seq}`;
       recebidos.push({
         auth: req.headers.authorization,
         safety: req.headers['openai-safety-identifier'],
         body,
+        sdp: sdpCampo,
         callId,
       });
       res.writeHead(201, {
@@ -334,16 +342,18 @@ test('interface unificada com OpenAI simulada: SDP inválido não gasta cota, ch
     assert.equal(body1.chamadaId, 'rtc_sim_1');
     assert.equal(JSON.stringify(body1).includes('sk-segredo-servidor-teste'), false);
     assert.equal(recebidos[0].safety, assinatura(u.id));
+    assert.equal(recebidos[0].sdp.endsWith('\r\n'), true);
     assert.match(recebidos[0].body, /"type":"semantic_vad"/);
     assert.match(recebidos[0].body, /"eagerness":"low"/);
     assert.match(recebidos[0].body, /"language":"pt"/);
 
-    // 2ª chamada para o mesmo usuário encerra automaticamente a 1ª (1 chamada ativa por usuário)
+    // 2ª chamada sem quebra de linha final no SDP -> servidor acrescenta \r\n e encerra a 1ª
     const r2 = await iniciarHttp(
-      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: SDP_OFERTA }),
+      reqPrivada(`${origemPadrao()}/api/estudio/licoes/${licao.id}/voz-ao-vivo`, token, { sdp: SDP_OFERTA.trimEnd() }),
       { params: Promise.resolve({ id: licao.id }) },
     );
     assert.equal(r2.status, 200);
+    assert.equal(recebidos[1].sdp.endsWith('\r\n'), true);
     await new Promise((r) => setTimeout(r, 30));
     assert.equal(hangups.includes('rtc_sim_1'), true);
 

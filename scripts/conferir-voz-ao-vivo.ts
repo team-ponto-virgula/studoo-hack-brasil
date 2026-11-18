@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { readFileSync } from "node:fs";
 import {
   configuracaoRealtime,
   criarChamadaVozAoVivo,
@@ -58,7 +59,10 @@ async function main() {
     exemplo: "Uma troca curta de cumprimento e encerramento.",
   });
 
-  const sessao = await criarChamadaVozAoVivo("conferencia-cli", gerarSdpRealista(), instrucoes);
+  const caminhoSdp = process.env.VOZ_CONFERIR_SDP?.trim();
+  const sdpOferta = caminhoSdp ? readFileSync(caminhoSdp, "utf8") : gerarSdpRealista();
+
+  const sessao = await criarChamadaVozAoVivo("conferencia-cli", sdpOferta, instrucoes);
   await encerrarChamadaVozAoVivo("conferencia-cli", sessao.chamadaId);
 
   console.log(
@@ -74,7 +78,8 @@ async function main() {
 }
 
 main().catch((erro) => {
+  const status = (erro as { status?: number } | null)?.status ?? "desconhecido";
   const codigo = (erro as { codigo?: string } | null)?.codigo ?? "desconhecido";
-  console.error(`Falha ao conferir voz ao vivo: codigo=${codigo}`);
+  console.error(`Falha ao conferir voz ao vivo: status=${status} codigo=${codigo}`);
   process.exit(1);
 });

@@ -39,10 +39,15 @@ A documentação oficial da **OpenAI Realtime API** (referência REST `/v1/realt
 
 ---
 
-## O que ainda fica em aberto para validar quando houver chave real
-- **Formato exato do cabeçalho `Location`** em produção (`/v1/realtime/calls/<id>` vs URL absoluta) — o parser no servidor aceitará ambos extraindo o último segmento.
-- **`npm run voz:conferir` com SDP completo realista** (áudio + canal de dados + ICE/fingerprint) contra a OpenAI real.
-- **Comportamento real do `semantic_vad` (`eagerness: "low"`) em português** e ajuste fino se necessário.
+## O que já foi confirmado com chave real (18/11) e o que fica em aberto
+**Confirmado em chamada real à OpenAI (`criarChamadaVozAoVivo` + `hangup` com oferta SDP real do Chromium):**
+- Criação `201 Created` com cabeçalho `Location` no formato `/v1/realtime/calls/rtc_…` (`rtc_…`), modelo `gpt-realtime-2.1`, voz `marin` e configuração de sessão aceitos.
+- Resposta `text/plain` contendo o SDP `answer` completo (áudio, canal de dados e 6 candidatos TCP e UDP).
+- Encerramento ativo `POST /v1/realtime/calls/{call_id}/hangup` retornando `200`.
+- **Exigência da quebra de linha final no SDP:** o analisador de SDP da OpenAI recusa com `400` (`invalid_offer` — `"Failed to parse offer: failed to unmarshal SDP: EOF"`) qualquer oferta que não termine em `\r\n`; `validarSdpOferta` preserva as linhas intactas e acrescenta `\r\n` final se faltar.
+
+**Ainda em aberto:**
+- **Comportamento real do `semantic_vad` (`eagerness: "low"`) em português** em conversa completa com áudio e ajuste fino se necessário.
 - **Formato exato do campo `usage`** dentro de `conversation.item.input_audio_transcription.completed`.
 - **Fala em andamento no instante do encerramento:** com `semantic_vad` ativo, a referência da OpenAI orienta a não enviar `input_audio_buffer.commit` manual (o servidor gerencia os commits automaticamente e rejeita `commit` com buffer vazio); por isso, ao clicar em `"Encerrar e ver retorno"`, o cliente aguarda até 3 s apenas pelos itens já confirmados/pendentes.
 - **Compatibilidade no aplicativo móvel**: os contratos em `packages/contratos` ficam prontos, mas WebRTC nativo em React Native fica fora desta entrega web.

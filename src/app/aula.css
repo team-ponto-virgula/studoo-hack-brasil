@@ -315,7 +315,7 @@
   .aula-rodape__acoes > .botao { width: 100%; min-height: 48px; }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes {
     display: grid;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
   }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao--primario {
@@ -329,7 +329,9 @@
   }
   .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao--texto {
     order: 2;
-    width: 100%;
+    width: auto;
+    white-space: nowrap;
+    padding-inline: 8px;
     min-height: 44px;
     justify-content: center;
   }
