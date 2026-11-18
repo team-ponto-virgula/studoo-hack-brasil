@@ -5,7 +5,8 @@ import { lerCookieSessao, origemStudoo } from "./origem";
 import { usuarioDaSessao } from "./sessao";
 
 const statusErros: Record<CodigoErro, number> = {
-  material_invalido: 400, material_ilegivel: 422, reforco_indisponivel: 409, limite_estudio: 429, voz_indisponivel: 503,
+  material_invalido: 400, material_ilegivel: 422, reforco_indisponivel: 409, limite_estudio: 429,
+  voz_indisponivel: 503, voz_vazia: 422, voz_tempo: 504, voz_falha: 502,
   google_indisponivel: 503,
   google_invalido: 400,
   google_conta_existente: 409,

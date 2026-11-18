@@ -176,7 +176,8 @@ export interface Conclusao {
 }
 
 const codigosErro = [
-  "material_invalido", "material_ilegivel", "reforco_indisponivel", "limite_estudio", "voz_indisponivel",
+  "material_invalido", "material_ilegivel", "reforco_indisponivel", "limite_estudio",
+  "voz_indisponivel", "voz_vazia", "voz_tempo", "voz_falha",
   "google_indisponivel",
   "google_invalido",
   "google_conta_existente",
@@ -308,7 +309,7 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     criarPonte: (id: string) => solicitar<ApoioEstudo>(`/estudio/licoes/${encodeURIComponent(id)}/ponte`, 'POST', {}),
     avaliarPonte: (id: string, resposta: string) => solicitar<{ correta: boolean; feedback: string; apoio: ApoioEstudo }>(`/estudio/licoes/${encodeURIComponent(id)}/ponte/avaliar`, 'POST', { resposta }),
     ensinarStu: (id: string, texto: string) => solicitar<FeedbackEnsino>(`/estudio/licoes/${encodeURIComponent(id)}/ensinar`, 'POST', { texto }),
-    transcrever: (arquivo: ArquivoEstudo) => solicitar<{ texto: string }>('/estudio/voz', 'POST', arquivo),
+    transcrever: (arquivo: ArquivoEstudo & { idioma?: string }) => solicitar<{ texto: string }>('/estudio/voz', 'POST', arquivo),
     login: (email: string, senha: string) => solicitar<Autenticacao>("/login", "POST", { email, senha }),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
     configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa }>("/auth/config"),

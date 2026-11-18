@@ -363,7 +363,7 @@ test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados',
       'O denominador conta todas as partes iguais.',
     );
     globalThis.fetch = async () => Response.json({ text: 'x'.repeat(3001) });
-    await assert.rejects(transcrever(u, audio), codigo('voz_indisponivel'));
+    await assert.rejects(transcrever(u, audio), codigo('voz_falha'));
   } finally {
     globalThis.fetch = original;
     for (const k of Object.keys(process.env))
@@ -609,4 +609,40 @@ test('CSV com MIME text/comma-separated-values (Android) é aceito e validado pe
   );
   assert.equal(material.paginas.length, 1);
   assert.match(material.paginas[0].texto, /Maçã/);
+});
+
+test('voz separa voz_vazia, voz_falha e voz_tempo e envia language quando idioma é informado', async () => {
+  const u = await pessoa();
+  const iaAntes = process.env.IA;
+  const chaveAntes = process.env.OPENAI_API_KEY;
+  const fetchAntes = globalThis.fetch;
+  process.env.IA = 'openai';
+  process.env.OPENAI_API_KEY = 'sk-teste-voz';
+  const wav = Buffer.from('RIFF\x00\x00\x00\x00WAVEfmt ');
+  const entrada = { ...arquivo('fala.wav', 'audio/wav', wav), idioma: 'pt-BR' };
+
+  try {
+    let languageEnviado = null;
+    globalThis.fetch = async (_url, init) => {
+      languageEnviado = init.body.get('language');
+      return Response.json({ text: '   ' });
+    };
+    await assert.rejects(() => transcrever(u, entrada), codigo('voz_vazia'));
+    assert.equal(languageEnviado, 'pt');
+
+    globalThis.fetch = async () => new Response('erro', { status: 500 });
+    await assert.rejects(() => transcrever(u, entrada), codigo('voz_falha'));
+
+    globalThis.fetch = async () => {
+      const err = new Error('timeout');
+      err.name = 'TimeoutError';
+      throw err;
+    };
+    await assert.rejects(() => transcrever(u, entrada), codigo('voz_tempo'));
+  } finally {
+    process.env.IA = iaAntes;
+    if (chaveAntes === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = chaveAntes;
+    globalThis.fetch = fetchAntes;
+  }
 });

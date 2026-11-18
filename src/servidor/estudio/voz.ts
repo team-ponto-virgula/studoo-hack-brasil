@@ -3,9 +3,17 @@ import { configuracaoOpenAi } from '../ia/openai';
 import { validarArquivo } from './arquivos';
 import { quota } from './materiais';
 
-export async function transcrever(usuarioId: string, entrada: unknown) {
+export async function transcrever(usuarioId: string, entrada: unknown, idioma?: unknown) {
   await quota(usuarioId, 'voz', 10);
   const { arquivo, bytes } = validarArquivo(entrada);
+  const idiomaBruto = typeof idioma === 'string'
+    ? idioma.trim()
+    : typeof (entrada as { idioma?: unknown })?.idioma === 'string'
+      ? String((entrada as { idioma?: unknown }).idioma).trim()
+      : '';
+  const lingua = /^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/i.test(idiomaBruto)
+    ? idiomaBruto.split('-')[0].toLowerCase()
+    : undefined;
   const tipo = arquivo.tipo.split(';')[0];
   const webm =
     ['audio/webm', 'video/webm'].includes(tipo) &&
@@ -35,6 +43,7 @@ export async function transcrever(usuarioId: string, entrada: unknown) {
     `explicacao.${webm ? 'webm' : mp4 ? 'm4a' : wav ? 'wav' : 'ogg'}`,
   );
   corpo.append('response_format', 'json');
+  if (lingua) corpo.append('language', lingua);
   try {
     const response = await fetch(`${config.base}/audio/transcriptions`, {
       method: 'POST',
@@ -43,16 +52,20 @@ export async function transcrever(usuarioId: string, entrada: unknown) {
       body: corpo,
       signal: AbortSignal.timeout(60_000),
     });
-    if (!response.ok) throw new Error();
+    if (!response.ok) throw new FalhaApi('voz_falha');
     const dado = await response.json();
-    if (
-      typeof dado.text !== 'string' ||
-      !dado.text.trim() ||
-      dado.text.length > 3000
-    )
-      throw new Error();
+    if (typeof dado?.text !== 'string' || dado.text.length > 3000) {
+      throw new FalhaApi('voz_falha');
+    }
+    if (!dado.text.trim()) {
+      throw new FalhaApi('voz_vazia');
+    }
     return { texto: dado.text.trim() };
-  } catch {
-    throw new FalhaApi('voz_indisponivel');
+  } catch (erro) {
+    if (erro instanceof FalhaApi) throw erro;
+    if (erro instanceof Error && (erro.name === 'TimeoutError' || erro.name === 'AbortError')) {
+      throw new FalhaApi('voz_tempo');
+    }
+    throw new FalhaApi('voz_falha');
   }
 }
