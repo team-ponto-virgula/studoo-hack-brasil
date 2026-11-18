@@ -416,7 +416,23 @@
 .ponte-stu-alvo { width: 42px; height: 42px; }
 .ponte-stu[data-atravessou='true'] { transform: translate(var(--ponte-dx, 0px), var(--ponte-dy, 0px)); }
 @media (max-width: 600px) {
-  .ponte-cena { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .ponte-cena {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 6px;
+    margin: 10px 0 12px;
+    padding: 10px 8px 12px;
+  }
+  .ponte-margem {
+    min-width: 58px;
+    padding: 6px 6px 5px;
+    font-size: 0.6875rem;
+    gap: 4px;
+  }
+  .ponte-stu .stu,
+  .ponte-stu-alvo {
+    width: 32px;
+    height: 32px;
+  }
 }
 .ponte-vao {
   position: relative;
@@ -440,10 +456,7 @@
 }
 .ponte-vao::before { top: 2px; }
 .ponte-vao::after { bottom: 2px; }
-@media (max-width: 600px) {
-  .ponte-vao { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .ponte-vao::before, .ponte-vao::after { display: none; }
-}
+/* Celular: .ponte-tabua numerada 1..4 fica após .ponte-tabua base para não ser sobrescrita */
 .ponte-tabua {
   position: relative;
   z-index: 1;
@@ -495,11 +508,34 @@
   list-style: none;
 }
 @media (max-width: 600px) {
-  .ponte-cabeca__acoes { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .ponte-legenda { grid-template-columns: minmax(0, 1fr); gap: 8px; padding: 10px 12px; }
+  .ponte-vao { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; counter-reset: tabua; }
+  .ponte-tabua {
+    min-height: 32px;
+    padding: 4px 2px;
+    font-size: 0;
+    line-height: 1;
+    counter-increment: tabua;
+  }
+  .ponte-tabua::before {
+    content: counter(tabua);
+    font-size: 0.75rem;
+    font-weight: 900;
+  }
+  .ponte-cabeca__acoes { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: nowrap; }
+  .ponte-selo { white-space: nowrap; font-size: 0.75rem; padding: 5px 10px; }
+  .ponte-legenda { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; padding: 0; }
+  .ponte-legenda li { padding: 6px 8px; font-size: 0.75rem; gap: 6px; }
+  .ponte-legenda__num { width: 18px; height: 18px; font-size: 0.6875rem; }
   .estudio-ponte[data-concluida] .ponte-legenda { display: none; }
-  .ponte-margem--esquerda { width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 8px 12px; font-size: 0.78rem; }
-  .ponte-cena { padding: 10px 10px 0; }
+  .estudio-ponte .botao { width: 100%; }
+  .ponte-cabeca__acoes .botao--texto { width: auto; white-space: nowrap; padding-inline: 8px; }
+  .estudio-acoes { flex-direction: column; align-items: stretch; }
+  .estudio-acoes .botao { width: 100%; }
+}
+.estudio-desafio h3 {
+  margin: 0 0 10px;
+  font-size: 1.0625rem;
+  font-weight: 800;
 }
 .ponte-legenda li {
   display: flex;
@@ -771,7 +807,7 @@
   min-height: 88px;
   max-height: 140px;
 }
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .voz-ao-vivo-legendas {
     min-height: 96px;
     max-height: 160px;

@@ -727,20 +727,6 @@ export function ApoioDaLicao({
   }, [ensino]);
   return (
     <div className="estudio-apoio">
-      {!!licao.referencias?.length && (
-        <details className="estudio-card">
-          <summary>{m.origem}</summary>
-          {licao.referencias.map((r, i) => (
-            <blockquote key={i}>
-              <strong>
-                {r.nome} · {r.localizacao ?? m.pagina(r.pagina)}
-              </strong>
-              <p>{r.trecho}</p>
-              {r.leitura === 'ocr' && <small>{m.ocr}</small>}
-            </blockquote>
-          ))}
-        </details>
-      )}
       {/* O reforço é do exercício que a pessoa acabou de errar (ou de um reforço começado e não terminado): não fica
           sobrando em outros exercícios nem em outra visita à lição. */}
       {avaliacao?.correta === false && pedidoPonte > 0 && (() => {
@@ -821,7 +807,7 @@ export function ApoioDaLicao({
               data-estado={resultadoPonte ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
           )}
           {ponte?.concluida && !reaberta && aoVoltarExercicio && (
-            <Botao onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>
+            <Botao variante="sucesso" onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>
           )}
           {!ponte?.concluida && <p>{ponte?.motivo ?? m.ponteDica}</p>}
           {!ponte ? (
@@ -831,7 +817,7 @@ export function ApoioDaLicao({
               <>
                 {ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
                 <div className="estudio-exemplo">{ponte.exemplo}</div>
-                {aoVoltarExercicio && <Botao onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>}
+                {aoVoltarExercicio && <Botao variante="sucesso" onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>}
               </>
             )
           ) : (
@@ -847,12 +833,15 @@ export function ApoioDaLicao({
               )}
               {etapaPonte >= 3 && (
                 <div className="estudio-desafio" ref={desafioPonteRef}>
-                  <fieldset disabled={ocupado || gravando || ponte.concluida}>
-                    <legend>{ponte.exercicio.enunciado}</legend>
+                  <h3>{ponte.exercicio.enunciado}</h3>
+                  <fieldset className="opcoes" disabled={ocupado || gravando || ponte.concluida}>
+                    <legend className="somente-leitor">{ponte.exercicio.enunciado}</legend>
                     {ponte.exercicio.tipo === 'multipla_escolha' &&
-                      ponte.exercicio.opcoes.map((o) => (
-                        <label className="estudio-opcao" key={o.id}
-                          data-estado={resultadoPonte?.id === o.id ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>
+                      ponte.exercicio.opcoes.map((o, pos) => (
+                        <label
+                          key={o.id}
+                          data-retorno={resultadoPonte?.id === o.id ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}
+                        >
                           <input
                             type="radio"
                             name="reforco"
@@ -863,7 +852,8 @@ export function ApoioDaLicao({
                               setFeedback('');
                             }}
                           />
-                          {o.texto}
+                          <span className="opcao-tecla" aria-hidden="true">{String.fromCharCode(65 + pos)}</span>
+                          <span>{o.texto}</span>
                         </label>
                       ))}
                   </fieldset>
@@ -891,6 +881,20 @@ export function ApoioDaLicao({
         </section>
         );
       })()}
+      {!!licao.referencias?.length && (
+        <details className="estudio-card">
+          <summary>{m.origem}</summary>
+          {licao.referencias.map((r, i) => (
+            <blockquote key={i}>
+              <strong>
+                {r.nome} · {r.localizacao ?? m.pagina(r.pagina)}
+              </strong>
+              <p>{r.trecho}</p>
+              {r.leitura === 'ocr' && <small>{m.ocr}</small>}
+            </blockquote>
+          ))}
+        </details>
+      )}
       {ultimo && <details
         className="estudio-card estudio-ensino"
         onToggle={(e) => {
@@ -1100,6 +1104,18 @@ export function ApoioDaLicao({
           >
             {gravando ? m.parar : m.gravar}
           </Botao>
+          {gravando && (
+            <div className="ensino-gravando" role="status">
+              <div className="ensino-ondas" ref={ondasRef} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+              <span>{m.gravando} {segundos}/60 s</span>
+            </div>
+          )}
           <Botao
             disabled={ocupado || gravando || etapaVoz === 'ativa' || texto.trim().length < 20}
             aria-busy={ocupado || undefined}
@@ -1119,18 +1135,6 @@ export function ApoioDaLicao({
             {ocupado ? m.pensando : m.enviar}
           </Botao>
         </div>
-        {gravando && (
-          <div className="ensino-gravando" role="status">
-            <div className="ensino-ondas" ref={ondasRef} aria-hidden="true">
-              <span />
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
-            <span>{m.gravando} {segundos}/60 s</span>
-          </div>
-        )}
         {aviso && <p role="status" ref={avisoRef}>{aviso}</p>}
         {ensino && (
           <div className="estudio-feedback ensino-caderno" role="status" ref={retornoDoEnsino}>

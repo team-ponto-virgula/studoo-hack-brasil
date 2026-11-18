@@ -496,7 +496,7 @@ export function Estudo() {
   // Começar, na trilha gerada, já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só.
   const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || (pendente === 'aceitar' && tela.tipo === 'geracao');
   const visivel = !carregandoTrilha && !carregandoLicao;
-  const comNavegacao = planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(tela.tipo) && visivel;
+  const comNavegacao = (inicio === 'carregando' || (planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(tela.tipo))) && visivel;
 
   const acaoDoErro = (codigoErro: string) =>
     codigoErro === 'limite_geracoes' || codigoErro === 'limite_estudio' ? (
@@ -554,7 +554,9 @@ export function Estudo() {
           </span>
           <div className="estudo-marca"><Logo /></div>
           <div className="estudo-conta">
-            <Botao variante="texto" className="planos-movel" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
+            {inicio === 'pronto' && (
+              <Botao variante="texto" className="planos-movel" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
+            )}
             <Botao variante="texto" onClick={() => void sair()} disabled={ocupado}>{mensagens.sair}</Botao>
           </div>
         </header>

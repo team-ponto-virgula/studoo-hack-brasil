@@ -164,10 +164,10 @@
 .painel--aula[data-retorno='errada'] .aula-quadro[data-etapa='exercicio'] { animation: aula-tremer 440ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
 
 /* Opções: cartões com relevo e a tecla de atalho; o círculo do rádio fica escondido, mas segue no teclado. */
-.aula-quadro .opcoes { gap: 12px; }
-.aula-quadro .opcoes input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+:is(.aula-quadro, .estudio-desafio) .opcoes { gap: 12px; border: 0; padding: 0; margin: 0; }
+:is(.aula-quadro, .estudio-desafio) .opcoes input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
-.aula-quadro .opcoes label {
+:is(.aula-quadro, .estudio-desafio) .opcoes label {
   position: relative;
   display: flex;
   min-height: 60px;
@@ -182,9 +182,9 @@
   transition: border-color 140ms ease-out, background-color 140ms ease-out, box-shadow 110ms ease-out, transform 110ms ease-out;
 }
 
-.aula-quadro .opcoes label:active { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
-.aula-quadro .opcoes label:has(input:checked) { border-color: #9fb1f0; color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
-.aula-quadro .opcoes label:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 3px; }
+:is(.aula-quadro, .estudio-desafio) .opcoes label:active { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
+:is(.aula-quadro, .estudio-desafio) .opcoes label:has(input:checked) { border-color: #9fb1f0; color: var(--acao-escura); background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
+:is(.aula-quadro, .estudio-desafio) .opcoes label:has(input:focus-visible) { outline: 3px solid var(--acao); outline-offset: 3px; }
 
 .opcao-tecla {
   display: grid;
@@ -199,13 +199,13 @@
   font-weight: 900;
 }
 
-.aula-quadro .opcoes label:has(input:checked) .opcao-tecla { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
-.aula-quadro .opcoes label[data-retorno='certa'] { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; animation: aula-pular 460ms cubic-bezier(0.2, 0.9, 0.3, 1.4); }
-.aula-quadro .opcoes label[data-retorno='certa'] .opcao-tecla { border-color: var(--sucesso-claro); background: var(--sucesso-claro); }
-.aula-quadro .opcoes label[data-retorno='errada'] { border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
-.aula-quadro .opcoes label[data-retorno='errada'] .opcao-tecla { border-color: #e3a24a; background: #e3a24a; }
-.aula-quadro .opcoes:disabled label { cursor: default; }
-.aula-quadro .opcoes:disabled label:not([data-retorno]) { opacity: 0.55; }
+:is(.aula-quadro, .estudio-desafio) .opcoes label:has(input:checked) .opcao-tecla { border-color: var(--acao); color: var(--fundo); background: var(--acao); }
+:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='certa'] { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; animation: aula-pular 460ms cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='certa'] .opcao-tecla { border-color: var(--sucesso-claro); color: var(--fundo); background: var(--sucesso-claro); }
+:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada'] { border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
+:is(.aula-quadro, .estudio-desafio) .opcoes label[data-retorno='errada'] .opcao-tecla { border-color: #e3a24a; color: var(--fundo); background: #e3a24a; }
+:is(.aula-quadro, .estudio-desafio) .opcoes:disabled label { cursor: default; }
+:is(.aula-quadro, .estudio-desafio) .opcoes:disabled label:not([data-retorno]) { opacity: 0.55; }
 .opcoes-atalho { display: none; color: var(--texto2); font-size: 0.8125rem; }
 
 @media (hover: hover) and (pointer: fine) {
@@ -306,11 +306,31 @@
 
 /* Celular: o painel de retorno mais compacto (ocupava uns 40% da tela e escondia o exercício). O ícone fica pequeno, ao
    lado do título, e o texto usa a largura toda embaixo, em vez de uma coluna estreita ao lado do ícone. */
+@media (max-width: 600px) {
+  .aula-rodape__conteudo { flex-direction: column; align-items: stretch; gap: 8px; }
+  .aula-rodape__nota { flex: none; text-align: center; }
+  .aula-rodape__acoes { width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
+  .aula-rodape__acoes > .botao { width: 100%; min-height: 44px; }
+  .aula-rodape[data-retorno='errada'] .aula-rodape__acoes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao--primario {
+    order: -1;
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao--texto {
+    order: 2;
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .aula-rodape[data-retorno='errada'] .aula-rodape__nota { text-align: center; }
+}
 @media (max-width: 767px) {
   .aula-rodape { padding-top: 10px; }
-  .aula-rodape[data-retorno='errada'] .aula-rodape__acoes { width: 100%; flex-direction: column; align-items: stretch; gap: 6px; }
-  .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao { width: 100%; min-height: 44px; white-space: nowrap; }
-  .aula-rodape[data-retorno='errada'] .aula-rodape__acoes > .botao--texto { width: auto; align-self: center; min-height: 36px; }
   .aula-retorno { display: block; }
   .aula-retorno__icone { float: left; width: 34px; height: 34px; margin-right: 10px; box-shadow: 0 3px 0 var(--sucesso); }
   .aula-rodape[data-retorno='errada'] .aula-retorno__icone { box-shadow: 0 3px 0 #b4650d; }
