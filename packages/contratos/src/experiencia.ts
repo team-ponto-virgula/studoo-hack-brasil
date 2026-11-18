@@ -136,7 +136,6 @@ export const mensagens = {
         continuar: 'Continuar',
         comecar: 'Criar minha primeira trilha',
         entendi: 'Entendi',
-        voltarEntrada: 'Voltar para entrar',
         posicao: (passo: number, total: number) => `Passo ${passo} de ${total}`,
         passos: [
             {

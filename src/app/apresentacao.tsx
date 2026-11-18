@@ -46,10 +46,12 @@ const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 
  */
 export function Apresentacao({
   primeiraVez,
+  semSessao = false,
   rotuloFinalUltimo,
   concluir,
 }: {
   primeiraVez: boolean;
+  semSessao?: boolean;
   rotuloFinalUltimo?: string;
   concluir: (area?: IdTema, concluiuFinal?: boolean) => void;
 }) {
@@ -57,7 +59,7 @@ export function Apresentacao({
   const [direcao, setDirecao] = useState<'frente' | 'tras'>('frente');
   const [area, setArea] = useState<IdTema | undefined>();
   const titulo = useRef<HTMLHeadingElement>(null);
-  const passos = mensagens.apresentacao.passos;
+  const passos = semSessao ? mensagens.apresentacao.passos.slice(0, 4) : mensagens.apresentacao.passos;
   const total = passos.length;
   const ultimo = passo === total - 1;
   const posicao = mensagens.apresentacao.posicao(passo + 1, total);

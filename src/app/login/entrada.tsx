@@ -40,6 +40,14 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
   const campoEmail = useRef<HTMLInputElement>(null);
   const campoSenha = useRef<HTMLInputElement>(null);
   const linkComoFunciona = useRef<HTMLButtonElement>(null);
+  const devolverFocoApresentacao = useRef(false);
+
+  useEffect(() => {
+    if (!vendoApresentacao && devolverFocoApresentacao.current) {
+      devolverFocoApresentacao.current = false;
+      linkComoFunciona.current?.focus();
+    }
+  }, [vendoApresentacao]);
 
   useEffect(() => {
     let ativo = true;
@@ -132,6 +140,29 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
 
   const descricaoSenha = [capsLock && 'senha-caps', errosCampo.senha && 'senha-erro'].filter(Boolean).join(' ') || undefined;
 
+  if (vendoApresentacao) {
+    return (
+      <div className="entrada">
+        <main className="entrada-conteudo" id="conteudo-principal">
+          <Apresentacao
+            primeiraVez={false}
+            semSessao
+            rotuloFinalUltimo={visitanteDisponivel ? mensagens.acesso.experimentar : undefined}
+            concluir={(_, concluiuFinal) => {
+              if (concluiuFinal && visitanteDisponivel) {
+                setVendoApresentacao(false);
+                void experimentarSemConta();
+                return;
+              }
+              devolverFocoApresentacao.current = true;
+              setVendoApresentacao(false);
+            }}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="entrada">
       <main className="entrada-conteudo" id="conteudo-principal">
@@ -147,21 +178,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
               {mensagens.acesso.verComoFunciona}
             </button>
           </header>
-          {vendoApresentacao ? (
-            <Apresentacao
-              primeiraVez={false}
-              rotuloFinalUltimo={visitanteDisponivel ? mensagens.acesso.experimentar : mensagens.apresentacao.voltarEntrada}
-              concluir={(_, concluiuFinal) => {
-                if (concluiuFinal && visitanteDisponivel) {
-                  setVendoApresentacao(false);
-                  void experimentarSemConta();
-                  return;
-                }
-                setVendoApresentacao(false);
-                window.requestAnimationFrame(() => linkComoFunciona.current?.focus());
-              }}
-            />
-          ) : verificando ? <Skeleton /> : (
+          {verificando ? <Skeleton /> : (
             <form className="formulario" method="post" noValidate onSubmit={entrar} aria-busy={enviando}
               data-tremor={tremor ? (tremor % 2 ? 'a' : 'b') : undefined}>
               {visitanteDisponivel && (
