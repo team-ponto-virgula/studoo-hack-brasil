@@ -19,38 +19,50 @@ const m = mensagens.estudio.vozAoVivo;
 const borda = '#D8E1D9';
 const superficie = '#F6F8F6';
 
+export type ProvedorTexto = 'openai' | 'deepseek';
+
 /** O que a elegibilidade usa do cliente: o mesmo que a web consulta (configuração do servidor e sessão). */
 export type ClienteElegibilidadeVoz = {
   iniciarVozAoVivo?: unknown;
-  configuracaoAcesso?: () => Promise<{ vozAoVivo?: boolean; vozAoVivoVisitante?: boolean }>;
+  configuracaoAcesso?: () => Promise<{ ia?: string; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean }>;
   sessao?: () => Promise<{ visitante?: boolean }>;
 };
 
-const consultas = new WeakMap<object, Promise<boolean>>();
+const consultas = new WeakMap<object, Promise<ProvedorTexto | null>>();
+const ehProvedorReal = (ia?: string): ia is ProvedorTexto => ia === 'openai' || ia === 'deepseek';
 
 /**
  * Como `consultarElegibilidadeVozAoVivo` da web: a opção aparece com o WebRTC do navegador, a flag `vozAoVivo` do
- * servidor e, para visitante, também `vozAoVivoVisitante`. Uma consulta por cliente (cada sessão tem o seu).
+ * servidor, um provedor de texto real e, para visitante, também `vozAoVivoVisitante`. Devolve o provedor de texto (para o
+ * aviso de privacidade dizer quem avalia a explicação) ou null. Uma consulta por cliente (cada sessão tem o seu).
  */
-export function vozAoVivoLiberada(cliente: ClienteElegibilidadeVoz, suporte = suporteVozAoVivo()): Promise<boolean> {
+export function provedorDaVozAoVivo(cliente: ClienteElegibilidadeVoz, suporte = suporteVozAoVivo()): Promise<ProvedorTexto | null> {
   const { configuracaoAcesso, sessao } = cliente;
-  if (!suporte || !cliente.iniciarVozAoVivo || !configuracaoAcesso || !sessao) return Promise.resolve(false);
+  if (!suporte || !cliente.iniciarVozAoVivo || !configuracaoAcesso || !sessao) return Promise.resolve(null);
   let consulta = consultas.get(cliente);
   if (!consulta) {
     consulta = configuracaoAcesso()
       .then(async (cfg) => {
-        if (!cfg.vozAoVivo) return false;
+        if (!cfg.vozAoVivo || !ehProvedorReal(cfg.ia)) return null;
         const atual = await sessao();
-        return !atual.visitante || Boolean(cfg.vozAoVivoVisitante);
+        return !atual.visitante || Boolean(cfg.vozAoVivoVisitante) ? cfg.ia : null;
       })
-      .catch(() => false);
+      .catch(() => null);
     consultas.set(cliente, consulta);
   }
   return consulta;
 }
 
+/** Como `consultarGravacao` da web: o provedor de texto quando a gravação vira texto (`transcricao`), ou null. */
+export function provedorDaGravacao(cliente: ClienteElegibilidadeVoz): Promise<ProvedorTexto | null> {
+  if (!cliente.configuracaoAcesso) return Promise.resolve(null);
+  return cliente.configuracaoAcesso()
+    .then((cfg) => (cfg.transcricao && ehProvedorReal(cfg.ia) ? cfg.ia : null))
+    .catch(() => null);
+}
+
 /** O cartão "Conversar com o Stu" (.voz-ao-vivo-entrada): o microfone, o benefício, o botão e a nota de privacidade. */
-export function EntradaVozAoVivo({ desativado, aoAbrir }: { desativado: boolean; aoAbrir: () => void }) {
+export function EntradaVozAoVivo({ desativado, aoAbrir, provedor = 'openai' }: { desativado: boolean; aoAbrir: () => void; provedor?: ProvedorTexto }) {
   return (
     <View testID="voz-entrada" style={v.entrada}>
       <View style={v.entradaCabeca}>
@@ -58,13 +70,15 @@ export function EntradaVozAoVivo({ desativado, aoAbrir }: { desativado: boolean;
         <Text style={v.beneficio}>{m.abrirBeneficio}</Text>
       </View>
       <Botao variante="secundario" rotulo={m.abrir} desativado={desativado} acao={aoAbrir} estilo={v.labioFora} />
-      <Text style={v.nota}>{m.notaPrivacidade}</Text>
+      <Text style={v.nota}>{m.notaPrivacidadePorProvedor(provedor)}</Text>
     </View>
   );
 }
 
 /** O aviso da primeira vez (.voz-ao-vivo-privacidade): a voz vai para a OpenAI; "Começar conversa" ou "Agora não". */
-export function PrivacidadeVozAoVivo({ aoAceitar, aoCancelar, aoMedir }: {
+export function PrivacidadeVozAoVivo({ aoAceitar, aoCancelar, aoMedir, provedor = 'openai' }: {
+  /** Provedor de texto: com a DeepSeek, o aviso diz que a voz vai para a OpenAI e o texto é avaliado pela DeepSeek. */
+  provedor?: ProvedorTexto;
   aoAceitar: () => void;
   aoCancelar: () => void;
   aoMedir?: (evento: LayoutChangeEvent) => void;
@@ -72,7 +86,7 @@ export function PrivacidadeVozAoVivo({ aoAceitar, aoCancelar, aoMedir }: {
   return (
     <View testID="voz-privacidade" role="region" aria-label={m.privacidadeTitulo} style={v.painel} onLayout={aoMedir}>
       <Text role="heading" aria-level={3} style={v.titulo}>{m.privacidadeTitulo}</Text>
-      <Text style={v.texto}>{m.privacidadeTexto}</Text>
+      <Text style={v.texto}>{m.privacidadeTextoPorProvedor(provedor)}</Text>
       <View style={v.controles}>
         <Botao rotulo={m.privacidadeAceitar} acao={aoAceitar} />
         <Botao variante="secundario" rotulo={m.privacidadeCancelar} acao={aoCancelar} />

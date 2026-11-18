@@ -39,7 +39,10 @@ import { mensagens } from './mensagens';
 import { avisoVozVistoAgora, lerAvisoVozVisto, marcarAvisoVozVisto } from './preferencias';
 import { cores, fontes } from './tema';
 import { iniciarControladorVozAoVivo, type ControladorVozAoVivo } from './voz-ao-vivo';
-import { EntradaVozAoVivo, PainelVozAoVivo, PrivacidadeVozAoVivo, vozAoVivoLiberada, type ClienteElegibilidadeVoz } from './voz-ao-vivo-painel';
+import {
+  EntradaVozAoVivo, PainelVozAoVivo, PrivacidadeVozAoVivo, provedorDaGravacao, provedorDaVozAoVivo, type ClienteElegibilidadeVoz,
+  type ProvedorTexto,
+} from './voz-ao-vivo-painel';
 const m = mensagens.estudio;
 /** A mensagem de cada código (da API, como `voz_vazia` e `voz_tempo`, ou do app, como `conexao`); fora deles, a geral. */
 function erroTexto(e: unknown) {
@@ -339,6 +342,9 @@ export function ApoioDaLicao({
   // Voz ao vivo (spec 08, parte B), como a web: a opção liberada, a etapa (entrada, aviso da primeira vez, conversa), o
   // estado que o controlador manda, o próprio controlador e o nível do microfone (-1 enquanto não há medida).
   const [vozDisponivel, setVozDisponivel] = useState(false);
+  /** Quem avalia o texto (o aviso de privacidade da voz muda com a DeepSeek) e quem recebe a gravação, como na web. */
+  const [provedorTextoVoz, setProvedorTextoVoz] = useState<ProvedorTexto>('openai');
+  const [provedorGravacao, setProvedorGravacao] = useState<ProvedorTexto | null>(null);
   const [etapaVoz, setEtapaVoz] = useState<'inativa' | 'privacidade' | 'ativa'>('inativa');
   const [estadoVoz, setEstadoVoz] = useState<EstadoSessaoVozAoVivo>(() => estadoInicialVozAoVivo());
   const controladorVoz = useRef<ControladorVozAoVivo | null>(null);
@@ -504,11 +510,15 @@ export function ApoioDaLicao({
   // O aviso de privacidade já visto é lido aqui, antes do toque, para a conversa nascer dentro dele.
   useEffect(() => {
     let ligado = true;
-    void vozAoVivoLiberada(cliente).then((liberada) => {
+    void provedorDaVozAoVivo(cliente).then((provedor) => {
       if (!ligado) return;
-      setVozDisponivel(liberada);
-      if (liberada) void lerAvisoVozVisto();
+      setVozDisponivel(provedor !== null);
+      if (provedor) {
+        setProvedorTextoVoz(provedor);
+        void lerAvisoVozVisto();
+      }
     });
+    void provedorDaGravacao(cliente).then((provedor) => { if (ligado) setProvedorGravacao(provedor); });
     return () => {
       ligado = false;
       controladorVoz.current?.descartar();
@@ -833,9 +843,12 @@ export function ApoioDaLicao({
             {(vozDisponivel || etapaVoz !== 'inativa') && (
               // As margens de 12 da web se juntam com as dos parágrafos vizinhos: aqui o vão do cartão (14) fica em 12.
               <View style={s.blocoVoz} onLayout={(evento) => { vozY.current = evento.nativeEvent.layout.y; }}>
-                {vozDisponivel && etapaVoz === 'inativa' && <EntradaVozAoVivo desativado={ocupado || gravando} aoAbrir={abrirConversaAoVivo} />}
+                {vozDisponivel && etapaVoz === 'inativa' && (
+                  <EntradaVozAoVivo desativado={ocupado || gravando} aoAbrir={abrirConversaAoVivo} provedor={provedorTextoVoz} />
+                )}
                 {etapaVoz === 'privacidade' && (
                   <PrivacidadeVozAoVivo
+                    provedor={provedorTextoVoz}
                     aoAceitar={() => { void marcarAvisoVozVisto(); iniciarConversaAoVivo(); }}
                     aoCancelar={() => setEtapaVoz('inativa')}
                     aoMedir={(evento) => {
@@ -887,7 +900,10 @@ export function ApoioDaLicao({
               editable={!ocupado && !gravando && etapaVoz !== 'ativa'}
               style={{ minHeight: 140, textAlignVertical: 'top' }}
             />
-            <Text style={[estilos.legenda, s.legendaCartao]}>{m.vozDica}</Text>
+            {/* Como a web (e57d54d): com a transcrição ligada, a dica diz quem recebe a gravação. */}
+            <Text style={[estilos.legenda, s.legendaCartao]}>
+              {m.vozDica}{provedorGravacao ? ` ${m.vozProvedorPorProvedor(provedorGravacao)}` : ''}
+            </Text>
             <Botao
               variante="secundario"
               rotulo={gravando ? m.parar : m.gravar}

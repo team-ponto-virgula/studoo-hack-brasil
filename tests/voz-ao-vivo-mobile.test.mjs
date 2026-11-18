@@ -95,30 +95,37 @@ test('elegibilidade: no aparelho a opção não aparece nem consulta o servidor'
   let consultas = 0;
   const cliente = {
     iniciarVozAoVivo: async () => ({}),
-    configuracaoAcesso: async () => { consultas += 1; return { vozAoVivo: true, vozAoVivoVisitante: true }; },
+    configuracaoAcesso: async () => { consultas += 1; return { ia: 'openai', vozAoVivo: true, vozAoVivoVisitante: true }; },
     sessao: async () => ({ autenticado: true }),
   };
   // Sem suporte (o padrão vem de voz-ao-vivo.ts, o do aparelho).
-  assert.equal(await painel().vozAoVivoLiberada(cliente), false);
-  assert.equal(await painel({ suporte: true }).vozAoVivoLiberada(cliente, false), false);
+  assert.equal(await painel().provedorDaVozAoVivo(cliente), null);
+  assert.equal(await painel({ suporte: true }).provedorDaVozAoVivo(cliente, false), null);
   assert.equal(consultas, 0);
 });
 
-test('elegibilidade: visitante só com a flag de visitante; conta comum com a flag geral; erro esconde', async () => {
-  const { vozAoVivoLiberada } = painel({ suporte: true });
-  const cliente = (cfg, sessao, extra = {}) => ({ iniciarVozAoVivo: async () => ({}), configuracaoAcesso: async () => cfg, sessao: async () => sessao, ...extra });
-  assert.equal(await vozAoVivoLiberada(cliente({ vozAoVivo: true }, { autenticado: true, visitante: true })), false, 'visitante sem a flag');
-  assert.equal(await vozAoVivoLiberada(cliente({ vozAoVivo: true, vozAoVivoVisitante: true }, { autenticado: true, visitante: true })), true, 'visitante com a flag');
-  assert.equal(await vozAoVivoLiberada(cliente({ vozAoVivo: true }, { autenticado: true })), true, 'conta comum');
-  assert.equal(await vozAoVivoLiberada(cliente({ vozAoVivo: false, vozAoVivoVisitante: true }, { autenticado: true })), false, 'servidor desligado');
-  assert.equal(await vozAoVivoLiberada(cliente({ vozAoVivo: true }, { autenticado: true }, { iniciarVozAoVivo: undefined })), false, 'cliente sem a rota');
-  assert.equal(await vozAoVivoLiberada({ iniciarVozAoVivo: async () => ({}), configuracaoAcesso: async () => { throw new Error('rede'); }, sessao: async () => ({}) }), false, 'falha na consulta');
+test('elegibilidade: visitante só com a flag de visitante; conta comum com a flag geral; provedor de texto real; erro esconde', async () => {
+  const { provedorDaVozAoVivo, provedorDaGravacao } = painel({ suporte: true });
+  const cliente = (cfg, sessao, extra = {}) => ({ iniciarVozAoVivo: async () => ({}), configuracaoAcesso: async () => ({ ia: 'openai', ...cfg }), sessao: async () => sessao, ...extra });
+  assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: true }, { autenticado: true, visitante: true })), null, 'visitante sem a flag');
+  assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: true, vozAoVivoVisitante: true }, { autenticado: true, visitante: true })), 'openai', 'visitante com a flag');
+  assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: true }, { autenticado: true })), 'openai', 'conta comum');
+  assert.equal(await provedorDaVozAoVivo(cliente({ ia: 'deepseek', vozAoVivo: true }, { autenticado: true })), 'deepseek', 'modo misto: texto pela DeepSeek');
+  assert.equal(await provedorDaVozAoVivo(cliente({ ia: 'falsa', vozAoVivo: true }, { autenticado: true })), null, 'IA falsa');
+  assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: false, vozAoVivoVisitante: true }, { autenticado: true })), null, 'servidor desligado');
+  assert.equal(await provedorDaVozAoVivo(cliente({ vozAoVivo: true }, { autenticado: true }, { iniciarVozAoVivo: undefined })), null, 'cliente sem a rota');
+  assert.equal(await provedorDaVozAoVivo({ iniciarVozAoVivo: async () => ({}), configuracaoAcesso: async () => { throw new Error('rede'); }, sessao: async () => ({}) }), null, 'falha na consulta');
   // Uma consulta por cliente (sessão), como a promessa guardada da web.
   let consultas = 0;
-  const unico = cliente({ vozAoVivo: true }, { autenticado: true }, { configuracaoAcesso: async () => { consultas += 1; return { vozAoVivo: true }; } });
-  await vozAoVivoLiberada(unico);
-  await vozAoVivoLiberada(unico);
+  const unico = cliente({ vozAoVivo: true }, { autenticado: true }, { configuracaoAcesso: async () => { consultas += 1; return { ia: 'openai', vozAoVivo: true }; } });
+  await provedorDaVozAoVivo(unico);
+  await provedorDaVozAoVivo(unico);
   assert.equal(consultas, 1);
+  // A gravação diz quem recebe o áudio só com `transcricao` e um provedor real (e57d54d), também no aparelho.
+  assert.equal(await provedorDaGravacao(cliente({ transcricao: true }, {})), 'openai');
+  assert.equal(await provedorDaGravacao(cliente({ ia: 'deepseek', transcricao: true }, {})), 'deepseek');
+  assert.equal(await provedorDaGravacao(cliente({ transcricao: false }, {})), null);
+  assert.equal(await provedorDaGravacao(cliente({ ia: 'falsa', transcricao: true }, {})), null);
 });
 
 test('painel: estados da conversa iguais aos da web (textos, ondas, aviso, erro e controles)', () => {
@@ -130,6 +137,9 @@ test('painel: estados da conversa iguais aos da web (textos, ondas, aviso, erro 
   const entrada = EntradaVozAoVivo({ desativado: false, aoAbrir() {} });
   assert.match(textoDe(entrada), new RegExp(m.abrirBeneficio));
   assert.match(textoDe(entrada), new RegExp(m.notaPrivacidade));
+  // Modo misto: com a DeepSeek, a nota e o aviso dizem que o texto é avaliado por ela.
+  assert.match(textoDe(EntradaVozAoVivo({ desativado: false, aoAbrir() {}, provedor: 'deepseek' })), /avaliado pela DeepSeek/);
+  assert.match(textoDe(PrivacidadeVozAoVivo({ aoAceitar() {}, aoCancelar() {}, provedor: 'deepseek' })), /avaliado pela DeepSeek/);
   assert.deepEqual(botoes(entrada), [{ rotulo: m.abrir, desativado: false }]);
   const aviso = PrivacidadeVozAoVivo({ aoAceitar() {}, aoCancelar() {} });
   assert.match(textoDe(aviso), new RegExp(m.privacidadeTitulo));

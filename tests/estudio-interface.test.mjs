@@ -199,7 +199,8 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     // App: as peças visuais da voz ao vivo (componentes de apresentação) e a elegibilidade decidida pelo teste.
     './voz-ao-vivo-painel': {
       EntradaVozAoVivo: 'EntradaVozAoVivo', PrivacidadeVozAoVivo: 'PrivacidadeVozAoVivo', PainelVozAoVivo: 'PainelVozAoVivo',
-      vozAoVivoLiberada: async () => Boolean(voz.liberada),
+      provedorDaVozAoVivo: async () => (voz.liberada ? 'openai' : null),
+      provedorDaGravacao: async () => null,
     },
     './preferencias': {
       avisoVozVistoAgora: () => Boolean(voz.avisoVisto),
