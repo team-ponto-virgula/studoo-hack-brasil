@@ -25,3 +25,39 @@ export async function marcarApresentacaoVista() {
     // Sem armazenamento, a apresentação volta a aparecer na próxima abertura do app; nada mais depende disso.
   }
 }
+
+/*
+ * Se a conta tinha trilhas na última vez (como `studoo.tinhaTrilhas` da web: "1" ou "0", apagada ao sair). O esqueleto da
+ * primeira carga só mostra as abas quando sabe que havia trilhas; sem essa informação, fica sem abas.
+ */
+const chaveTinhaTrilhas = 'studoo.tinhaTrilhas';
+let tinhaTrilhasNaMemoria: boolean | null = null;
+
+export async function lerTinhaTrilhas() {
+  if (tinhaTrilhasNaMemoria !== null) return tinhaTrilhasNaMemoria;
+  try {
+    tinhaTrilhasNaMemoria = (await SecureStore.getItemAsync(chaveTinhaTrilhas)) === '1';
+  } catch {
+    tinhaTrilhasNaMemoria = false;
+  }
+  return tinhaTrilhasNaMemoria;
+}
+
+export async function guardarTinhaTrilhas(tem: boolean) {
+  if (tinhaTrilhasNaMemoria === tem) return;
+  tinhaTrilhasNaMemoria = tem;
+  try {
+    await SecureStore.setItemAsync(chaveTinhaTrilhas, tem ? '1' : '0');
+  } catch {
+    // Sem armazenamento, o esqueleto da próxima abertura fica sem abas; nada mais depende disso.
+  }
+}
+
+export async function apagarTinhaTrilhas() {
+  tinhaTrilhasNaMemoria = null;
+  try {
+    await SecureStore.deleteItemAsync(chaveTinhaTrilhas);
+  } catch {
+    // Idem: sem armazenamento, não há o que apagar.
+  }
+}

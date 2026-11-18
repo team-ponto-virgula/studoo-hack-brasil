@@ -36,7 +36,7 @@ import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './li
 import { mensagemDeErro, mensagemDoCodigo, mensagens, textoParaRever } from './mensagens';
 import { regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
 import { Desenho, coresDaRegiao } from './mundo';
-import { marcarApresentacaoVista } from './preferencias';
+import { guardarTinhaTrilhas, lerTinhaTrilhas, marcarApresentacaoVista } from './preferencias';
 import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NomeIcone } from './trilha';
@@ -85,6 +85,16 @@ export function Estudo({ cliente, sair, expirar }: {
   expirar: () => Promise<void>;
 }) {
   const [planos, setPlanos] = useState<PlanoResumo[] | null>(null);
+  const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
+  useEffect(() => {
+    let ativo = true;
+    void lerTinhaTrilhas().then((tem) => { if (ativo) setTinhaTrilhas(tem); });
+    return () => { ativo = false; };
+  }, []);
+  // A lista chegou (ou mudou): guarda se há trilhas para o esqueleto da próxima abertura, como a web.
+  useEffect(() => {
+    if (planos) void guardarTinhaTrilhas(planos.length > 0);
+  }, [planos]);
   const [etapa, setEtapa] = useState<Etapa>({ tipo: 'planos' });
   // O pedido guardado quando a sessão terminou no meio volta para o campo (rodada 4 da web).
   const [objetivo, setObjetivo] = useState(() => tomarRascunho());
@@ -443,7 +453,10 @@ export function Estudo({ cliente, sair, expirar }: {
   // O erro de Minhas trilhas (sem rede, sessão, servidor) recebe o foco do leitor de tela, como nas outras telas.
   const mensagem = erro && <EstadoErro mensagem={erro} foco acao={acaoDoErro(codigoErro)} />;
 
-  const comNavegacao = planos !== null && planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(etapa.tipo) && !pendente;
+  // Como a web (studoo.tinhaTrilhas): na primeira carga, as abas só aparecem no esqueleto se a conta tinha trilhas.
+  const carregandoInicio = !planos && !erro;
+  const comNavegacao = (carregandoInicio && tinhaTrilhas)
+    || (planos !== null && planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(etapa.tipo) && !pendente);
   return <NavegacaoContexto.Provider value={comNavegacao ? {
     atual: etapa.tipo as 'planos' | 'objetivo' | 'plano', ocupado,
     planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),

@@ -1223,20 +1223,24 @@ function Folha({ titulo, texto, reduzir, estado, refazer, irParaAtual, fechar }:
 
 /** Carregando a trilha: esqueleto com a forma da faixa do topo e do mapa, nas cores dos campos. */
 export function SkeletonTrilha() {
-  const { lente, linhas } = useMedidas();
-  const { width } = useWindowDimensions();
+  const { lente } = useMedidas();
+  // Como .skeleton-trilha da web: três barras (60% × 28, a linha inteira e 40% × 12) e o chão da primeira região com quatro
+  // nós claros nas posições 50%, 67%, 74% e 67%, 46 pontos entre eles e 56 de respiro em cima e embaixo.
   return (
     <View accessible accessibilityRole="progressbar" accessibilityLabel={mensagens.trilha.carregando} accessibilityLiveRegion="polite"
       style={caminhoEstilos.skeleton}>
       <View style={caminhoEstilos.skeletonCabecalho}>
+        <View style={[caminhoEstilos.skeletonLinha, { width: '60%', height: 28 }]} />
+        <View style={caminhoEstilos.skeletonLinha} />
         <View style={[caminhoEstilos.skeletonLinha, { width: '40%', height: 12 }]} />
-        <View style={[caminhoEstilos.skeletonLinha, { width: '64%', height: 28 }]} />
       </View>
-      <View style={[{ gap: linhas, paddingVertical: 56, backgroundColor: coresDaRegiao(0).chao },
-        width >= 768 ? caminhoEstilos.caminhoLargo : caminhoEstilos.caminhoTela]}>
-        {[0, 1, 2, 3].map((indice) => (
-          <View key={indice} style={[circulo(lente), caminhoEstilos.skeletonNo,
-            { marginLeft: `${posicaoX(indice)}%` as DimensionValue, transform: [{ translateX: -lente / 2 }] }]} />
+      <View style={[caminhoEstilos.skeletonCaminho, { backgroundColor: coresDaRegiao(0).chao }]}>
+        {[50, 67, 74, 67].map((x, indice) => (
+          // A sombra de 8 da web (0 8px 0, branco a 45%) vira um segundo círculo atrás; o passo entre os nós continua 72 + 46.
+          <View key={indice} style={{ width: lente, height: lente + 8, marginLeft: `${x}%` as DimensionValue, transform: [{ translateX: -lente / 2 }] }}>
+            <View style={[circulo(lente), caminhoEstilos.skeletonNoSombra]} />
+            <View style={[circulo(lente), caminhoEstilos.skeletonNo]} />
+          </View>
         ))}
       </View>
     </View>
@@ -1355,10 +1359,12 @@ const caminhoEstilos = StyleSheet.create({
   fechar: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   fecharPressionado: { backgroundColor: cores.nevoa },
   // Esqueletos
-  skeleton: { marginTop: 24, gap: 28 },
+  skeleton: { gap: 20 },
   skeletonCabecalho: { gap: 10, paddingVertical: 8, paddingHorizontal: 4 },
   skeletonLinha: { height: 16, borderRadius: 8, backgroundColor: cores.gelo },
+  skeletonCaminho: { gap: 38, paddingTop: 56, paddingBottom: 48 },
   skeletonNo: { backgroundColor: 'rgba(255, 255, 255, 0.75)' },
+  skeletonNoSombra: { position: 'absolute', top: 8, backgroundColor: 'rgba(255, 255, 255, 0.45)' },
   vindoLente: { borderWidth: 3, borderStyle: 'dashed', borderColor: '#C3CDEE', backgroundColor: 'rgba(255, 255, 255, 0.7)' },
   vindoPlaca: { width: 144, gap: 8 },
   vindoPlacaDireita: { alignItems: 'flex-end' },

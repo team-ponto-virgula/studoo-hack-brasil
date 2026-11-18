@@ -8,7 +8,10 @@ import { entrarComoVisitante } from './visitante-nativo';
 import { Apresentacao } from './apresentacao';
 import { RecuperarAcesso } from './recuperar';
 import { Estudo } from './estudo';
-import { Botao, BotaoIcone, Campo, EstadoErro, Skeleton, Tela, Titulo, estilos } from './interface';
+import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos } from './interface';
+import { SkeletonTrilha } from './caminho';
+import { NavegacaoContexto } from './navegacao';
+import { apagarTinhaTrilhas, lerTinhaTrilhas } from './preferencias';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { Paisagem } from './mundo';
 import { cores, fontes } from './tema';
@@ -25,6 +28,10 @@ type Sessao =
 export function AppMobile() {
   const [sessao, setSessao] = useState<Sessao>({ tipo: 'verificando' });
   const [tentativa, setTentativa] = useState(0);
+  const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
+  useEffect(() => {
+    void lerTinhaTrilhas().then(setTinhaTrilhas);
+  }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -107,11 +114,25 @@ export function AppMobile() {
         </Tela>
       );
     case 'verificando':
-      return <Tela pagina="verificando"><Skeleton /></Tela>;
+      // Como o esqueleto da web na primeira carga: a barra com "Sair", as barras e o mapa, e as abas só se havia trilhas.
+      return (
+        <NavegacaoContexto.Provider value={tinhaTrilhas ? { atual: 'planos', ocupado: true, planos: () => undefined, criar: () => undefined } : null}>
+          <Tela pagina="verificando" acoes={<Botao rotulo={mensagens.sair} testID="sair" compacto variante="texto"
+            acao={() => void (async () => {
+              const token = await lerToken().catch(() => null);
+              if (token) await criarClienteNativo(token).logout().catch(() => undefined);
+              setSessao(await encerrarNoAparelho());
+            })()} />}>
+            <SkeletonTrilha />
+          </Tela>
+        </NavegacaoContexto.Provider>
+      );
   }
 }
 
 async function encerrarNoAparelho(erro?: string): Promise<Sessao> {
+  // Como a web ao sair ou com a sessão vencida: some a marca de "tinha trilhas" (o próximo esqueleto fica sem abas).
+  await apagarTinhaTrilhas();
   try {
     await apagarToken();
     return { tipo: 'entrada', erro };
