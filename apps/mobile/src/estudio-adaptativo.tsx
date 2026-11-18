@@ -587,6 +587,10 @@ export function ApoioDaLicao({
             desafio={Boolean(ponte) && (venceu || etapaPonte >= 3 || Boolean(resposta))}
             concluida={venceu} montada={revendo && Boolean(ponte)} semLegenda={venceu || (revendo && Boolean(ponte))}
             aoMedir={(y) => { cenaY.current = y; }} />
+          {/* Rodada 4.3: na releitura, um aviso neutro no lugar do elogio ("Você já construiu esta ponte…"). */}
+          {revendo && Boolean(ponte) && (
+            <Text testID="aviso-ponte-reaberta" accessibilityLiveRegion="polite" style={[estilos.texto, { fontWeight: '700' }]}>{m.ponteReabertaAviso}</Text>
+          )}
           {/* Na vitória, o retorno ("Isso!…") e a volta ao exercício ficam logo embaixo da cena, à vista com a travessia. */}
           {venceu && (
             <>

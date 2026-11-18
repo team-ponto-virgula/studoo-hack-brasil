@@ -4,6 +4,7 @@ import { Animated, Keyboard, Platform, StyleSheet, Text, View, type TextInput } 
 import { useTremor, useVaiVem } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { entrarComGoogle } from './google-nativo';
+import { entrarComoVisitante } from './visitante-nativo';
 import { RecuperarAcesso } from './recuperar';
 import { Estudo } from './estudo';
 import { Botao, BotaoIcone, Campo, EstadoErro, Skeleton, Tela, Titulo, estilos } from './interface';
@@ -89,6 +90,7 @@ export function AppMobile() {
     case 'entrada':
       return <Entrada erroInicial={sessao.erro} entrar={entrar}
         google={async () => { const token = await entrarComGoogle(); if (token) setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) }); }}
+        visitante={async () => { const token = await entrarComoVisitante(); setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) }); }}
         recuperar={(email) => setSessao({ tipo: 'recuperar', email })} />;
     case 'recuperar':
       return <RecuperarAcesso emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} />;
@@ -128,8 +130,10 @@ function StuAcenando({ largura, esquerda }: { largura: number; esquerda: number 
   );
 }
 
-function Entrada({ erroInicial, entrar, google, recuperar }: {
+function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   google: () => Promise<void>;
+  /** "Experimentar sem conta" (rodada 4.3): só aparece quando o servidor oferece o visitante. */
+  visitante: () => Promise<void>;
   recuperar: (email: string) => void;
   erroInicial?: string;
   entrar: (email: string, senha: string) => Promise<void>;
@@ -137,11 +141,13 @@ function Entrada({ erroInicial, entrar, google, recuperar }: {
   // Como na web (rodada 4A): o Google e o "Esqueci minha senha" só aparecem quando o servidor os oferece; nada apagado.
   const [googleDisponivel, setGoogleDisponivel] = useState(false);
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(false);
+  const [visitanteDisponivel, setVisitanteDisponivel] = useState(false);
+  const [experimentando, setExperimentando] = useState(false);
   const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
   useEffect(() => {
     let ativo = true;
     void criarClienteNativo().configuracaoAcesso()
-      .then((c) => { if (ativo) { setGoogleDisponivel(c.google); setRecuperacaoDisponivel(c.recuperacao); } })
+      .then((c) => { if (ativo) { setGoogleDisponivel(c.google); setRecuperacaoDisponivel(c.recuperacao); setVisitanteDisponivel(c.visitante === true); } })
       .catch(() => {})
       .finally(() => { if (ativo) setConfiguracaoCarregada(true); });
     return () => { ativo = false; };
@@ -167,6 +173,15 @@ function Entrada({ erroInicial, entrar, google, recuperar }: {
     try { await google(); }
     catch (e) { setErro(mensagemDeErro(e)); }
     finally { emEnvio.current = false; setOcupado(false); }
+  }
+
+  /** Entra como visitante: o mesmo bloqueio do login (um envio por vez) e o erro no cartão, com o tremor. */
+  async function experimentar() {
+    if (emEnvio.current) return;
+    emEnvio.current = true; setOcupado(true); setExperimentando(true); setErro(undefined); Keyboard.dismiss();
+    try { await visitante(); }
+    catch (e) { setErro(mensagemDeErro(e)); setErros((total) => total + 1); }
+    finally { emEnvio.current = false; setOcupado(false); setExperimentando(false); }
   }
 
   async function enviar() {
@@ -199,8 +214,10 @@ function Entrada({ erroInicial, entrar, google, recuperar }: {
 
   return (
     <Tela pagina="entrada"
-      rodape={<Botao rotulo={ocupado ? mensagens.entrada.entrando : mensagens.entrada.entrar}
-        testID="entrar" desativado={!podeEntrar} ocupado={ocupado} carregando={ocupado} acao={() => void enviar()} />}>
+      // Como na web: com o visitante oferecido, "Experimentar sem conta" é a ação principal e "Entrar" fica secundário.
+      rodape={<Botao rotulo={ocupado && !experimentando ? mensagens.entrada.entrando : mensagens.entrada.entrar}
+        variante={configuracaoCarregada && visitanteDisponivel ? 'secundario' : 'primario'}
+        testID="entrar" desativado={!podeEntrar} ocupado={ocupado && !experimentando} carregando={ocupado && !experimentando} acao={() => void enviar()} />}>
       <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         <Paisagem altura={140} compacta estilo={entradaEstilos.banner}>
           {(l) => <StuAcenando largura={72} esquerda={l / 2 - 36} />}
@@ -209,11 +226,19 @@ function Entrada({ erroInicial, entrar, google, recuperar }: {
       <Titulo foco testID="titulo-entrada">{mensagens.entrada.titulo}</Titulo>
       <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
       <Animated.View style={[entradaEstilos.formulario, { transform: [{ translateX: tremor }] }]}>
+        {/* Rodada 4.3: a conta temporária, só quando /api/auth/config devolve visitante: true. */}
+        {configuracaoCarregada && visitanteDisponivel && (
+          <View testID="acesso-visitante" style={entradaEstilos.visitante}>
+            <Botao rotulo={mensagens.acesso.experimentar} testID="experimentar-sem-conta" desativado={ocupado} ocupado={experimentando}
+              carregando={experimentando} acao={() => void experimentar()} />
+            <Text testID="aviso-visitante" style={estilos.legenda}>{mensagens.acesso.experimentarAvisoApp}</Text>
+          </View>
+        )}
         {configuracaoCarregada && googleDisponivel && (
-          <>
-            <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" desativado={ocupado} acao={() => void abrirGoogle()} />
-            <View style={entradaEstilos.divisor}><View style={entradaEstilos.linha} /><Text style={estilos.legenda}>{mensagens.acesso.ou}</Text><View style={entradaEstilos.linha} /></View>
-          </>
+          <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" desativado={ocupado} acao={() => void abrirGoogle()} />
+        )}
+        {configuracaoCarregada && (visitanteDisponivel || googleDisponivel) && (
+          <View style={entradaEstilos.divisor}><View style={entradaEstilos.linha} /><Text style={estilos.legenda}>{mensagens.acesso.ou}</Text><View style={entradaEstilos.linha} /></View>
         )}
         <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email} campoRef={campoEmail} erro={erroEmail}
           onChangeText={(valor) => { setEmail(valor); setErro(undefined); setErroEmail(undefined); }}
@@ -244,4 +269,5 @@ const entradaEstilos = StyleSheet.create({
   linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
   banner: { marginBottom: 24, borderRadius: 24 },
   formulario: { gap: 20, marginTop: 28 },
+  visitante: { gap: 8, padding: 14, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
 });
