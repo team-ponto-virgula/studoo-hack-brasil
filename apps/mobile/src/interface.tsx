@@ -103,18 +103,19 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             (o campo do Explique perdia o foco depois da queda da conversa ao vivo); lá, como na web, rolar não tira o foco. */}
         <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}
           contentContainerStyle={estilos.rolagemConteudo}
-          stickyHeaderIndices={faixaFixa ? [cabecalhoNaRolagem ? 1 : 0] : undefined}
+          // O vão de 20 acima da faixa é um filho à parte: a faixa gruda colada no topo (com margem, ela parava 20 abaixo).
+          stickyHeaderIndices={faixaFixa ? [(cabecalhoNaRolagem ? 1 : 0) + 1] : undefined}
           onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
           onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}
           onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura))}>
           {cabecalhoNaRolagem && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
+          {faixaFixa && <View style={estilos.faixaVao} />}
           {faixaFixa && <View style={estilos.faixaFixa} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</View>}
-          {/* .estudo-principal no celular: 28 em cima. Com o selo de sincronia, a barra da marca do app já fica uns 4 mais alta
-              que a da web (o "Sair" tem 48 de toque), então vale o respiro de 24. */}
-          <View style={[estilos.conteudo, !topo && !paginaDeAcesso && !abaixoDoLogo && estilos.conteudoEstudo, estiloConteudo]}>
+          {/* .estudo-principal no celular: 28 em cima, também com o selo de sincronia (a barra tem a altura da da web). */}
+          <View style={[estilos.conteudo, !topo && !paginaDeAcesso && estilos.conteudoEstudo, estiloConteudo]}>
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) ? null
-              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? alturaFaixa : 0)}>
+              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? 20 + alturaFaixa : 0)}>
               <Entrada>{children}</Entrada>
             </DeslocamentoDaRolagem.Provider>
           </View>
@@ -214,7 +215,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso }: {
+  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone }: {
+  /** Giro do ícone (a seta de "Continuar lendo" aponta para baixo, como .botao--ler-mais .icone da web). */
+  giroIcone?: '90deg' | '180deg';
   /** Peso do texto quando a web usa outro (os botões do rodapé da aula têm 900, .aula-rodape__acoes > .botao). */
   peso?: '800' | '900';
   /** Nome para o leitor de tela quando o texto visível sozinho fica ambíguo ("Começar: <título>", como na web). */
@@ -255,6 +258,40 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
   }, [bloqueado, reduzir, pressao]);
   let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : cores.acao;
   if (desativado || esmaecido) corTexto = cores.textoSecundario;
+  // Como .botao da web: a face de 48 com borda de 2 que fecha em volta e o degrau de 4 por fora, na cor do lábio
+  // (--labio); nos botões claros, a borda e o degrau somam a faixa de 6 da web. O botão de texto não tem degrau.
+  const comDegrau = variante !== 'texto';
+  const apagado = desativado || esmaecido;
+  const labio = apagado ? cores.gelo : variante === 'primario' ? cores.acaoEscura : variante === 'sucesso' ? '#145A42' : variante === 'alerta' ? '#6E4100' : cores.gelo;
+  const { fora, face } = separarEstilo(estilo);
+  const conteudo = (
+    <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">
+      {carregando ? <Pontinhos cor={corTexto} /> : (
+        <>
+          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
+            peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
+          {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} /></View>}
+        </>
+      )}
+    </Animated.View>
+  );
+
+  if (comDegrau) {
+    return (
+      <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityHint={dica}
+        accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} disabled={bloqueado}
+        onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao}
+        onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
+        // A caixa ocupa os 48 da face, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
+        style={({ pressed }) => [degrauFora(4, 16, labio, pressed), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
+        <View style={[estilos.botaoFace, variante === 'secundario' && estilos.botaoFaceSecundaria, variante === 'sucesso' && estilos.botaoFaceSucesso,
+          variante === 'alerta' && estilos.botaoFaceAlerta, variante === 'destrutivo' && estilos.botaoFaceDestrutiva,
+          compacto && estilos.botaoFaceCompacta, face, apagado && estilos.botaoFaceApagada]}>
+          {conteudo}
+        </View>
+      </Pressable>
+    );
+  }
 
   return (
     <Pressable
@@ -269,32 +306,38 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
       onPress={acao}
       onFocus={() => setFocado(true)}
       onBlur={() => setFocado(false)}
-      style={({ pressed }) => [
-        estilos.botao,
-        variante === 'secundario' && estilos.botaoSecundario,
-        variante === 'sucesso' && estilos.botaoSucesso,
-        variante === 'alerta' && estilos.botaoAlerta,
-        variante === 'texto' && estilos.botaoTextoLivre,
-        variante === 'destrutivo' && estilos.botaoDestrutivo,
-        compacto && estilos.botaoCompacto,
-        estilo,
-        pressed && variante !== 'texto' && estilos.botaoPressionado,
-        pressed && variante === 'texto' && estilos.botaoPressionado,
-        focado && estilos.foco,
-        (desativado || esmaecido) && variante !== 'texto' && estilos.botaoDesativado,
-      ]}
+      style={({ pressed }) => [estilos.botao, estilos.botaoTextoLivre, compacto && estilos.botaoCompacto, estilo,
+        pressed && estilos.botaoPressionado, focado && estilos.foco]}
     >
-      <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">
-      {carregando ? <Pontinhos cor={corTexto} /> : (
-        <>
-          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
-            peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
-          {icone && <Icone nome={icone} tamanho={18} cor={corTexto} />}
-        </>
-      )}
-      </Animated.View>
+      {conteudo}
     </Pressable>
   );
+}
+
+/** Separa o estilo de quem chama: o que posiciona vai para fora (o degrau); o resto, para a face. */
+const CHAVES_DE_FORA = new Set(['alignSelf', 'flex', 'flexGrow', 'flexShrink', 'flexBasis', 'width', 'maxWidth', 'minWidth', 'position', 'top', 'left',
+  'right', 'bottom', 'margin', 'marginTop', 'marginBottom', 'marginLeft', 'marginRight', 'marginHorizontal', 'marginVertical', 'zIndex']);
+function separarEstilo(estilo?: StyleProp<ViewStyle>): { fora: ViewStyle; face: ViewStyle } {
+  const plano = (StyleSheet.flatten(estilo) ?? {}) as Record<string, unknown>;
+  const fora: Record<string, unknown> = {}; const face: Record<string, unknown> = {};
+  for (const [chave, valor] of Object.entries(plano)) (CHAVES_DE_FORA.has(chave) ? fora : face)[chave] = valor;
+  return { fora: fora as ViewStyle, face: face as ViewStyle };
+}
+
+/** Fundo em degradê como o background da web (linear-gradient em CSS): no navegador, background-image; no aparelho, o
+ * experimental_backgroundImage do React Native. */
+export function degrade(css: string): ViewStyle {
+  return (Platform.OS === 'web' ? { backgroundImage: css } : { experimental_backgroundImage: css }) as ViewStyle;
+}
+
+/**
+ * O degrau de baixo das caixas da web (box-shadow: 0 <altura>px 0 <cor>): o pai pinta o degrau embaixo da face e não ocupa
+ * lugar (a margem negativa devolve a altura), como a sombra da web. Afundado (:active), a face desce e sobra 1 px.
+ */
+export function degrauFora(altura: number, raio: number, cor: string, afundado = false): ViewStyle {
+  return afundado
+    ? { borderRadius: raio, backgroundColor: cor, paddingBottom: 1, marginTop: altura - 1, marginBottom: -altura }
+    : { borderRadius: raio, backgroundColor: cor, paddingBottom: altura, marginBottom: -altura };
 }
 
 /** Três pontinhos que pulam em sequência, enquanto uma ação acontece; parados com movimento reduzido. */
@@ -347,7 +390,7 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
       {!rotuloOculto && <Text nativeID={rotuloId} style={[estilos.rotulo, estiloRotulo]}>{rotulo}</Text>}
       <View>
         <TextInput {...props} ref={campoRef} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
-          placeholderTextColor="#7A84A0"
+          placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'}
           style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, !!erro && estilos.entradaErro,
             focado && estilos.entradaFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
           onFocus={(evento) => { setFocado(true); props.onFocus?.(evento); }}
@@ -365,9 +408,11 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
 }
 
 /** Botão só com ícone, de 48 dp (o alvo mínimo de toque do Android), como o de mostrar a senha ou o de fechar. */
-export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = false, testID, cor = cores.textoSecundario, tamanho = 22 }: {
+export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = false, testID, cor = cores.textoSecundario, tamanho = 22, traco }: {
   /** Tamanho do ícone (o X da aula tem 26 px, como .aula-fechar da web). */
   tamanho?: number;
+  /** Traço do ícone na grade de 24 (o X da aula tem 3, como o stroke-width de .aula-fechar .icone). */
+  traco?: number;
   icone: NomeIcone;
   rotulo: string;
   acao: () => void;
@@ -382,7 +427,7 @@ export function BotaoIcone({ icone, rotulo, acao, selecionado, desativado = fals
       accessibilityState={{ disabled: desativado, ...(selecionado === undefined ? null : { selected: selecionado }) }}
       disabled={desativado} onPress={acao} onFocus={() => setFocado(true)} onBlur={() => setFocado(false)}
       style={({ pressed }) => [estilos.botaoIcone, pressed && estilos.botaoIconePressionado, focado && estilos.foco]}>
-      <Icone nome={icone} tamanho={tamanho} cor={cor} />
+      <Icone nome={icone} tamanho={tamanho} cor={cor} traco={traco} />
     </Pressable>
   );
 }
@@ -603,10 +648,11 @@ export const estilos = StyleSheet.create({
   logoEstudo: { width: 102, height: 34.6 },
   marcaEstudo: { paddingHorizontal: 16, paddingVertical: 4, minHeight: 64 },
   conteudoEstudo: { paddingTop: 28 },
-  // Com o selo de sincronia, a web quebra a barra em duas linhas (até 480 px): 4 em cima, a linha do logo, 6 de vão, o selo e
-  // 4 embaixo; os 64 de altura mínima valem para a barra inteira.
+  // Com o selo de sincronia, a web quebra a barra em duas linhas (até 480 px): 4 em cima, a linha do logo (44), 7 até o selo e
+  // 4 embaixo (selo em y=55, divisória em 82); os 64 de altura mínima valem para a barra inteira. A linha do logo do app tem
+  // 48 (o toque do "Sair"), então o selo fica a 3 dela.
   marcaComSelo: { minHeight: 0, paddingBottom: 0 },
-  abaixoDoLogoEstudo: { paddingHorizontal: 16, marginTop: 6, paddingBottom: 4 },
+  abaixoDoLogoEstudo: { paddingHorizontal: 16, marginTop: 3, paddingBottom: 4 },
   acoes: { flexDirection: 'row', alignItems: 'center', gap: 4, flexShrink: 1 },
   rolagemConteudo: { flexGrow: 1 },
   conteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 24, paddingBottom: 24 },
@@ -655,7 +701,8 @@ export const estilos = StyleSheet.create({
   skeletonLinha: { width: '100%', height: 16, borderRadius: 8, backgroundColor: cores.gelo },
   rodape: { borderTopWidth: 2, borderColor: cores.nevoa, backgroundColor: cores.fundo },
   // A web deixa 20 px nas laterais do rodapé (350 px de botão em 390); a aula e a entrada passam as delas.
-  rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingVertical: 16, gap: 10 },
+  // .acao-principal e .aula-rodape no celular: 12 em cima e 14 embaixo (o degrau do botão desce por fora, no respiro de baixo).
+  rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14, gap: 10 },
   // Como .botao da web: face de 48 px com o lábio de 4 px embaixo (aqui, a borda de baixo) e texto 16 px/800.
   botao: {
     minHeight: 52, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingVertical: 8,
@@ -668,8 +715,9 @@ export const estilos = StyleSheet.create({
   pontinhos: { height: 24, flexDirection: 'row', alignItems: 'center', gap: 5 },
   pontinho: { width: 8, height: 8, borderRadius: 4 },
   botaoDestrutivo: { borderColor: '#F3C4C0', borderBottomColor: '#F3C4C0', backgroundColor: cores.fundo },
-  // .trilha-topo no celular: 20 abaixo da barra da marca (28 do respiro da página menos 8).
-  faixaFixa: { zIndex: 6, marginTop: 20, backgroundColor: 'rgba(255, 255, 255, 0.96)', borderBottomWidth: 2, borderColor: cores.gelo },
+  // .trilha-topo no celular: 20 abaixo da barra da marca (28 do respiro da página menos 8), colada no topo ao rolar.
+  faixaVao: { height: 20 },
+  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', borderBottomWidth: 2, borderColor: cores.gelo },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
   modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
   modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
@@ -677,6 +725,16 @@ export const estilos = StyleSheet.create({
   modalMensagem: { marginBottom: 20, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16.8, lineHeight: 25 },
   modalAcoes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10 },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
+  // Botão com degrau: fora, o lábio (degrauFora, 4 por fora); dentro, a face de 48 com a borda de 2 que fecha em volta.
+  botaoDegrauCompacto: { alignSelf: 'flex-start', flexShrink: 1 },
+  botaoFace: { minHeight: 48, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, paddingHorizontal: 22, paddingVertical: 6,
+    borderWidth: 2, borderRadius: 16, borderColor: 'transparent', backgroundColor: cores.acao },
+  botaoFaceSecundaria: { borderColor: cores.gelo, backgroundColor: cores.fundo },
+  botaoFaceSucesso: { backgroundColor: cores.sucesso },
+  botaoFaceAlerta: { backgroundColor: cores.alerta },
+  botaoFaceDestrutiva: { borderColor: '#F3C4C0', backgroundColor: cores.fundo },
+  botaoFaceApagada: { borderColor: cores.gelo, backgroundColor: cores.nevoa },
+  botaoFaceCompacta: { minHeight: 44, minWidth: 44, paddingHorizontal: 8 },
   // O raio do botão da web é 16 também no botão pequeno ("Sair", "Pular").
   botaoCompacto: { alignSelf: 'flex-start', minHeight: 48, minWidth: 48, paddingHorizontal: 8, borderRadius: 16, flexShrink: 1 },
   botaoConteudo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 1 },
@@ -688,12 +746,13 @@ export const estilos = StyleSheet.create({
   botaoIcone: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
   botaoIconePressionado: { backgroundColor: cores.nevoa },
   selo: {
-    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4,
+    // .selo-sincronia no celular (até 767 px): 3 × 8 de respiro e o texto de 12 na entrelinha normal (15): 23 × 159.
+    alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 8, paddingVertical: 3,
     borderWidth: 1, borderColor: cores.gelo, borderRadius: 999, backgroundColor: cores.nevoa, maxWidth: '100%',
   },
   seloOffline: { borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
   seloPonto: { width: 8, height: 8, borderRadius: 4 },
-  seloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  seloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 15 },
   chevron: { width: 8, height: 8, marginHorizontal: 2, borderRightWidth: 2.5, borderBottomWidth: 2.5 },
   linhaAbrir: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 44, paddingVertical: 10, borderRadius: 8 },
   linhaAbrirTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },

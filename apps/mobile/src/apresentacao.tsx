@@ -17,7 +17,7 @@ import { usePulinho } from './animacoes';
 import { tracoGrosso } from './caminho';
 import { CadernoDoStu, CenaPonte } from './estudio-cenas';
 import { Icone } from './icone';
-import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao } from './interface';
+import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao, degrauFora } from './interface';
 import { CartaoFonte } from './licao';
 import { mensagens } from './mensagens';
 import { Desenho, coresDaRegiao } from './mundo';
@@ -274,7 +274,8 @@ function NoMini({ x, y, tamanho, face, labio, icone, corIcone }: {
     <View style={{ position: 'absolute', left: x, top: y, marginLeft: -tamanho / 2, marginTop: -tamanho / 2, width: tamanho, height: tamanho }}>
       <View style={[apresentacaoEstilos.camada, { top: tamanho * 0.09, width: tamanho, height: tamanho, borderRadius: tamanho / 2, backgroundColor: labio }]} />
       <View style={[apresentacaoEstilos.camada, apresentacaoEstilos.noFace, { width: tamanho, height: tamanho, borderRadius: tamanho / 2, backgroundColor: face }]}>
-        <Icone nome={icone} tamanho={Math.round(tamanho * 0.44)} cor={corIcone} />
+        {/* Traço 3 como a web (3,08 px num ícone de 25; 3,66 no troféu de 29). */}
+        <Icone nome={icone} tamanho={Math.round(tamanho * 0.44)} cor={corIcone} traco={3} />
       </View>
     </View>
   );
@@ -302,9 +303,12 @@ function ArteProgresso({ largura }: { largura: number }) {
       <View style={apresentacaoEstilos.sincronia}>
         <SeloSincronia sincronia={{ estado: 'atualizado', em: null }} />
       </View>
-      <View style={apresentacaoEstilos.selo}>
-        <Icone nome="check" tamanho={18} cor={cores.sucesso} />
-        <Text style={apresentacaoEstilos.seloTexto}>{mensagens.estudio.ponteMapaFeita}</Text>
+      {/* Ficha "Ponte construída": 36 de altura com o degrau de 4 por fora (0 4px 0 rgba(27, 42, 94, 0.08) na web). */}
+      <View style={[apresentacaoEstilos.seloFora, degrauFora(4, 999, 'rgba(27, 42, 94, 0.08)')]}>
+        <View style={apresentacaoEstilos.selo}>
+          <Icone nome="check" tamanho={18} cor={cores.sucesso} traco={3} />
+          <Text style={apresentacaoEstilos.seloTexto}>{mensagens.estudio.ponteMapaFeita}</Text>
+        </View>
       </View>
     </View>
   );
@@ -343,7 +347,8 @@ const apresentacaoEstilos = StyleSheet.create({
   areaEscolhida: { borderColor: cores.acao, borderBottomColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
   areaAfundada: { borderBottomWidth: 2, marginTop: 3 },
   areaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
-  selo: { position: 'absolute', right: '5%', bottom: '7%', flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10,
-    paddingRight: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: cores.fundo },
+  seloFora: { position: 'absolute', right: '5%', bottom: '7%' },
+  selo: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10, paddingRight: 14, paddingVertical: 9, borderRadius: 999,
+    backgroundColor: cores.fundo },
   seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
 });

@@ -6,7 +6,8 @@ import type { NomeIcone } from './trilha';
  * Cada medida está na grade de 24 da versão web, com traço de 2,5, e é escalada pelo tamanho pedido.
  */
 
-type Peca = ViewStyle & { traco?: boolean };
+/** `traco`: barra cheia (a espessura é o lado de 2,5); `recorte` + `filho`: um pedaço de círculo (arco) recortado. */
+type Peca = ViewStyle & { traco?: boolean; recorte?: boolean; filho?: Peca };
 
 const desenhos: Record<NomeIcone, Peca[]> = {
   check: [
@@ -47,17 +48,17 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
     { left: 4.5, top: 10.75, width: 15, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
-  // Olho em amêndoa, como o da web: um quadrado com dois cantos opostos redondos, girado e achatado, com a pupila no meio.
-  // (O contorno de pílula de antes, com a bolinha dentro, parecia um interruptor.)
+  // Olho como o da web: a amêndoa de 2,5 a 21,5 (dois arcos de círculo de raio 10,2 que se encontram nas pontas, cada um
+  // recortado na sua metade) e a pupila em contorno (círculo de raio 3), não cheia.
   olho: [
-    { left: 4.95, top: 4.95, width: 14.1, height: 14.1, borderWidth: 2.2, borderTopLeftRadius: 14.1, borderBottomRightRadius: 14.1,
-      transform: [{ scaleY: 1.35 }, { rotate: '45deg' }] },
-    { left: 8.75, top: 8.75, width: 6.5, height: 6.5, borderRadius: 3.25, traco: true },
+    { left: 0, top: 0, width: 24, height: 12.6, recorte: true, filho: { left: 0.68, top: 4.37, width: 22.64, height: 22.64, borderWidth: 2.5, borderRadius: 11.32 } },
+    { left: 0, top: 11.4, width: 24, height: 12.6, recorte: true, filho: { left: 0.68, top: -14.41, width: 22.64, height: 22.64, borderWidth: 2.5, borderRadius: 11.32 } },
+    { left: 7.75, top: 7.75, width: 8.5, height: 8.5, borderWidth: 2.5, borderRadius: 4.25 },
   ],
   olhoFechado: [
-    { left: 4.95, top: 4.95, width: 14.1, height: 14.1, borderWidth: 2.2, borderTopLeftRadius: 14.1, borderBottomRightRadius: 14.1,
-      transform: [{ scaleY: 1.35 }, { rotate: '45deg' }] },
-    { left: 8.75, top: 8.75, width: 6.5, height: 6.5, borderRadius: 3.25, traco: true },
+    { left: 0, top: 0, width: 24, height: 12.6, recorte: true, filho: { left: 0.68, top: 4.37, width: 22.64, height: 22.64, borderWidth: 2.5, borderRadius: 11.32 } },
+    { left: 0, top: 11.4, width: 24, height: 12.6, recorte: true, filho: { left: 0.68, top: -14.41, width: 22.64, height: 22.64, borderWidth: 2.5, borderRadius: 11.32 } },
+    { left: 7.75, top: 7.75, width: 8.5, height: 8.5, borderWidth: 2.5, borderRadius: 4.25 },
     { left: 1.5, top: 10.75, width: 21, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
   ],
   seta: [
@@ -65,21 +66,25 @@ const desenhos: Record<NomeIcone, Peca[]> = {
     { left: 11.5, top: 7.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '45deg' }] },
     { left: 11.5, top: 13.75, width: 9, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '-45deg' }] },
   ],
+  // Lâmpada como o caminho da web: o bulbo (círculo de raio 5,5) aberto embaixo, o gargalo que afunila até a base cheia
+  // (a linha do gargalo e a de y 18 juntas) e a tampinha em y 21.
   lampada: [
-    { left: 6.5, top: 2.75, width: 11, height: 11, borderWidth: 2.5, borderRadius: 5.5 },
-    { left: 9.25, top: 12.5, width: 5.5, height: 3.75, borderLeftWidth: 2.5, borderRightWidth: 2.5 },
-    { left: 8.75, top: 16, width: 6.5, height: 2.5, borderRadius: 1.25, traco: true },
-    { left: 10, top: 19.5, width: 4, height: 2.5, borderRadius: 1.25, traco: true },
+    { left: 5.25, top: 2.25, width: 13.5, height: 13.5, borderWidth: 2.5, borderRadius: 6.75, borderBottomColor: 'transparent' },
+    { left: 8, top: 12.3, width: 2.5, height: 4.2, borderRadius: 1.25, traco: true, transform: [{ rotate: '-22deg' }] },
+    { left: 13.5, top: 12.3, width: 2.5, height: 4.2, borderRadius: 1.25, traco: true, transform: [{ rotate: '22deg' }] },
+    { left: 8.25, top: 14.9, width: 7.5, height: 4.35, borderRadius: 1.6, traco: true },
+    { left: 9.25, top: 19.75, width: 5.5, height: 2.5, borderRadius: 1.25, traco: true },
   ],
   relogio: [
     { left: 3.5, top: 3.5, width: 17, height: 17, borderWidth: 2.5, borderRadius: 8.5 },
     { left: 10.75, top: 7, width: 2.5, height: 6.25, borderRadius: 1.25, traco: true },
     { left: 10.45, top: 11.75, width: 6.1, height: 2.5, borderRadius: 1.25, traco: true, transform: [{ rotate: '33.7deg' }] },
   ],
+  // Os círculos da web (r 8,5, 4,5 e 0,8 com traço de 2,5 centrado na linha): por fora, 19,5, 11,5 e o ponto de 4,1.
   alvo: [
-    { left: 3.5, top: 3.5, width: 17, height: 17, borderWidth: 2.5, borderRadius: 8.5 },
-    { left: 7.5, top: 7.5, width: 9, height: 9, borderWidth: 2.5, borderRadius: 4.5 },
-    { left: 11, top: 11, width: 2, height: 2, borderRadius: 1, traco: true },
+    { left: 2.25, top: 2.25, width: 19.5, height: 19.5, borderWidth: 2.5, borderRadius: 9.75 },
+    { left: 6.25, top: 6.25, width: 11.5, height: 11.5, borderWidth: 2.5, borderRadius: 5.75 },
+    { left: 9.95, top: 9.95, width: 4.1, height: 4.1, borderRadius: 2.05, traco: true },
   ],
   // Alto-falante com duas ondas (a mesma ideia da web): ouvir uma frase, um áudio ou um acorde.
   som: [
@@ -103,22 +108,45 @@ const medidas = [
   'borderRadius', 'borderTopLeftRadius', 'borderTopRightRadius', 'borderBottomLeftRadius', 'borderBottomRightRadius',
 ] as const;
 
-function escalar({ traco, ...peca }: Peca, escala: number, cor: string): ViewStyle {
+const BORDAS = ['borderWidth', 'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'] as const;
+
+/**
+ * Escala a peça da grade de 24 para o tamanho pedido. `fator` é o traço pedido sobre o de desenho (2,5): engrossa as bordas
+ * e as barras (a barra cresce em volta do próprio centro), como o stroke-width da web em cada uso.
+ */
+function escalar({ traco: barra, recorte, filho, ...peca }: Peca, escala: number, cor: string, fator: number): ViewStyle {
+  const base: Record<string, unknown> = { ...peca };
+  for (const borda of BORDAS) if (typeof base[borda] === 'number') base[borda] = (base[borda] as number) * fator;
+  if (barra) {
+    if (base.width === 2.5) { base.width = 2.5 * fator; base.left = (base.left as number) - (2.5 * fator - 2.5) / 2; }
+    if (base.height === 2.5) { base.height = 2.5 * fator; base.top = (base.top as number) - (2.5 * fator - 2.5) / 2; }
+    if (base.borderRadius === 1.25) base.borderRadius = 1.25 * fator;
+  }
   const escaladas: Partial<Record<(typeof medidas)[number], number>> = {};
   for (const medida of medidas) {
-    const valor = peca[medida];
+    const valor = base[medida];
     if (typeof valor === 'number') escaladas[medida] = valor * escala;
   }
-  return { ...peca, ...escaladas, position: 'absolute', borderColor: cor, ...(traco ? { backgroundColor: cor } : {}) };
+  const corBorda = recorte ? undefined : { borderColor: cor };
+  return { ...(base as ViewStyle), ...escaladas, position: 'absolute', ...corBorda, ...(barra ? { backgroundColor: cor } : {}), ...(recorte ? { overflow: 'hidden' } : {}),
+    ...(peca.borderBottomColor === 'transparent' ? { borderBottomColor: 'transparent' } : {}) };
 }
 
-/** Ícone decorativo: o significado vai sempre no texto ou no nome acessível de quem o usa. */
-export function Icone({ nome, tamanho = 24, cor, cheio = false }: { nome: NomeIcone; tamanho?: number; cor: string; cheio?: boolean }) {
+/**
+ * Ícone decorativo: o significado vai sempre no texto ou no nome acessível de quem o usa. `traco` é o stroke-width da web
+ * naquele uso, na grade de 24 (2,5 por padrão; 3 no X da aula, 3,2 no visto do retorno, 2,25 no olho da senha).
+ */
+export function Icone({ nome, tamanho = 24, cor, cheio = false, traco = 2.5 }: { nome: NomeIcone; tamanho?: number; cor: string; cheio?: boolean; traco?: number }) {
   const escala = tamanho / 24;
+  const fator = traco / 2.5;
   return (
-    <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+    <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden testID={`icone:${nome}:${traco}`}
       style={{ width: tamanho, height: tamanho }}>
-      {desenhos[nome].map((peca, indice) => <View key={indice} style={[escalar(peca, escala, cor), cheio && indice === 0 && { backgroundColor: cor }]} />)}
+      {desenhos[nome].map((peca, indice) => (
+        <View key={indice} style={[escalar(peca, escala, cor, fator), cheio && indice === 0 && { backgroundColor: cor }]}>
+          {peca.filho && <View style={escalar(peca.filho, escala, cor, fator)} />}
+        </View>
+      ))}
     </View>
   );
 }

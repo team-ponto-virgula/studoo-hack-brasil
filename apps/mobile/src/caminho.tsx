@@ -10,6 +10,7 @@ import {
   View,
   useWindowDimensions,
   type DimensionValue,
+  type TextStyle,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -17,10 +18,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAparecer, useVaiVem } from './animacoes';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { Botao, DeslocamentoDaRolagem, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta } from './interface';
+import { Botao, DeslocamentoDaRolagem, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade } from './interface';
 import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
-import { Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
+import { ColinaElipse, Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
 import { cores, fontes } from './tema';
 import { explicar, iconeDoNo, nomeAcessivelDoNo, posicaoDoNo, posicaoX, selosDoNo, type EstadoNo, type NoCaminho } from './trilha';
 
@@ -66,6 +67,12 @@ function useMedidas(): Medidas {
   if (width >= 768) return { lente: 78, linhas: 52, etiqueta: 38, marco: 72, enfeite: 56, miudo: 28, guia: 64 };
   return { lente: 72, linhas: 36, etiqueta: 38, marco: 60, enfeite: 46, miudo: 24, guia: 56 };
 }
+
+/** `text-wrap: pretty` da web (o React Native Web repassa a propriedade ao CSS; no aparelho ela é ignorada). */
+const QUEBRA_SEM_VIUVA = { textWrap: 'pretty' } as unknown as TextStyle;
+
+/** O brilho da lente da web: radial-gradient(circle at 50% 28%, branco a 55% até 18%, transparente em 46%). */
+const BRILHO_DA_LENTE = 'radial-gradient(circle at 50% 28%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.55) 18%, rgba(255, 255, 255, 0) 46%)';
 
 /** Cores da lente por estado: a face, o lábio embaixo (o relevo) e o ícone. */
 const coresDaLente: Record<EstadoNo, { face: string; labio: string; icone: string }> = {
@@ -300,7 +307,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           tentarRolar();
         }}
         parte={total > 0 ? <Parte numero={1} trecho={primeiroTrecho} resumo={resumoTrechos.get(primeiroTrecho)} /> : null} />
-      <View accessibilityRole="list" accessibilityLabel={mensagens.trilha.licoes}
+      {/* Acima da chegada (zIndex 1): o título embaixo do último nó passa por cima do morro do troféu, inteiro e com a sombra,
+          como na web (no app ele era cortado pela chegada, desenhada depois). */}
+      <View accessibilityRole="list" accessibilityLabel={mensagens.trilha.licoes} style={{ zIndex: 1 }}
         onLayout={(evento) => {
           posicoes.current.lista = evento.nativeEvent.layout.y;
           const medida = Math.round(evento.nativeEvent.layout.width);
@@ -330,7 +339,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           if (discreto) depois += 14;
           // .caminho-no[data-discreto][data-ligado] (regra de baixo do caminho.css): passo + 30 entre dois nós discretos no mesmo
           // trecho (os casos antes da lição atual e no fim do trecho têm regras próprias, abaixo).
-          if (discreto && !fimDoTrecho && seguinte && seguinte.estado !== 'atual') depois += 16;
+          // O último nó também é "ligado" na web (vai até a chegada): a mesma regra vale para ele.
+          if (discreto && !fimDoTrecho && (seguinte ? seguinte.estado !== 'atual' : vaiAteChegada)) depois += 16;
           // M4 (paridade): como .caminho-no[data-estado='atual'][data-ligado] da web (passo + 28), o nó atual ligado ao próximo
           // ganha 28 embaixo; com a ponte ele já é discreto (+14), então completa até 28. Só acrescenta espaço.
           if (no.estado === 'atual' && !fimDoTrecho) depois += discreto ? 14 : 28;
@@ -369,7 +379,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               {fimDoTrecho && <Fronteira trechoSeguinte={seguinte.trecho} topo={medidas.lente} />}
               {(seguinte || vaiAteChegada || vaiAteVindo) && (
                 <Ligacao de={x / 100} ate={xSeguinte / 100} feita={no.estado === 'concluida'} topo={medidas.lente / 2} chao={coresDaRegiao(no.trecho).chao}
-                  desenhar={recem && no.estado === 'concluida'} />
+                  desenhar={recem && no.estado === 'concluida'} alem={vaiAteChegada ? medidas.lente / 2 : 0} />
               )}
               <Entra ativo={surgir || comEntrada} atraso={atrasoEntrada} reduzir={reduzir}>
                 <No no={no} posicao={posicaoDoNo(indice, total, montando)} x={x} largura={largura} comRotulo={comRotulo} medidas={medidas} reduzir={reduzir}
@@ -438,17 +448,19 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
 }) {
   const { chao, relevo } = coresDaRegiao(trecho);
   const subida = useBalanco(4, 1400, pensando);
-  const stu = Math.round(lente * 1.28);
+  // .caminho-inicio .stu: 82 no celular (92 a partir de 768, quando a lente é de 78 ou mais), com 4 embaixo.
+  const stu = lente >= 78 ? 92 : 82;
 
   return (
     // Com o primeiro nó atual, o balão "Começar" (nome em até duas linhas) sobe até ~140 acima do nó: a faixa da Parte 1 fica
     // entre os postes da placa e o balão, sem que um cubra o outro (defeito e da rodada 4, em 360 e 412).
-    <View style={[caminhoEstilos.inicio, comecoAtual && { paddingBottom: INICIO_COM_BALAO }]} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.height)}>
+    // .caminho-inicio: céu em degradê contínuo (#d6e4ff até #ecf2ff aos 72%); sol em 14/18; nuvens em 22 à direita (8%) e em
+    // 70 à esquerda (4%).
+    <View style={[caminhoEstilos.inicio, degrade('linear-gradient(180deg, #d6e4ff 0%, #ecf2ff 72%)'), comecoAtual && { paddingBottom: INICIO_COM_BALAO }]} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.height)}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
-        <View style={caminhoEstilos.inicioCeuBaixo} />
         <Desenho nome="sol" largura={44} estilo={{ position: 'absolute', top: 14, left: 18 }} />
-        <Desenho nome="nuvem" largura={64} estilo={{ position: 'absolute', top: 18, left: '30%' }} />
-        <Desenho nome="nuvem" largura={46} estilo={{ position: 'absolute', top: 58, left: '4%' }} />
+        <Desenho nome="nuvem" largura={64} estilo={{ position: 'absolute', top: 22, right: '8%' }} />
+        <Desenho nome="nuvem" largura={46} estilo={{ position: 'absolute', top: 70, left: '4%' }} />
         <View style={caminhoEstilos.inicioColinas}>
           <Onda chao={chao} relevo={relevo} forma="inicio" />
         </View>
@@ -466,7 +478,7 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
           </View>
           <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
             importantForAccessibility="no"
-            style={{ width: stu, height: Math.round(stu * 1.1), transform: [{ translateY: subida }] }} />
+            style={{ width: stu, height: Math.round(stu * 1.1), marginBottom: 4, transform: [{ translateY: subida }] }} />
         </View>
       )}
       {parte && <View testID="faixa-parte-inicio" pointerEvents="none" style={[caminhoEstilos.inicioParte, comecoAtual && { bottom: PARTE_COM_BALAO }]}>{parte}</View>}
@@ -587,12 +599,12 @@ function Terreno({ x, largura, semEnfeites, trecho, indice, medidas, brotar, atr
   atrasoGuia: number;
   vento: Animated.Value;
 }) {
-  const { grande, miudo } = enfeitesDaLinha(trecho, indice);
+  const { grande } = enfeitesDaLinha(trecho, indice);
   const reduzir = useMovimentoReduzido();
   const [crescer] = useState(() => brotar ? new Animated.Value(0) : null);
   const direita = x >= 50;
   const centro = (largura * x) / 100;
-  const { lente, enfeite, miudo: tamMiudo, guia: tamGuia } = medidas;
+  const { lente, enfeite, guia: tamGuia } = medidas;
 
   useEffect(() => {
     if (!crescer || reduzir === null) return;
@@ -614,15 +626,12 @@ function Terreno({ x, largura, semEnfeites, trecho, indice, medidas, brotar, atr
         <GuiaStu tamanho={tamGuia} atraso={atrasoGuia} estilo={[{ position: 'absolute', top: lente / 2 - tamGuia * 0.9 },
           direita ? { left: centro + lente / 2 + 10 } : { right: largura - centro + lente / 2 + 10 }]} />
       )}
-      {!semEnfeites && (
-        <>
-          <Animated.View style={[{ position: 'absolute', top: 6 }, ladoLivre(largura * 0.06), animacao]}>
-            <Balanca nome={grande} vento={vento}><Desenho nome={grande} largura={enfeite} /></Balanca>
-          </Animated.View>
-          <Animated.View style={[{ position: 'absolute', top: lente + 4 }, ladoLivre(largura * 0.2), animacao]}>
-            <Balanca nome={miudo} vento={vento}><Desenho nome={miudo} largura={tamMiudo} /></Balanca>
-          </Animated.View>
-        </>
+      {/* Como a web: no nó atual com o Stu guia, ele fica no lugar do enfeite grande; o enfeite miúdo não aparece nos nós com o
+          título embaixo (.caminho-no[data-discreto] .caminho-enfeite--miudo { display: none }), que no celular são todos. */}
+      {!semEnfeites && !guia && (
+        <Animated.View style={[{ position: 'absolute', top: 6 }, ladoLivre(largura * 0.06), animacao]}>
+          <Balanca nome={grande} vento={vento}><Desenho nome={grande} largura={enfeite} /></Balanca>
+        </Animated.View>
       )}
     </View>
   );
@@ -746,14 +755,17 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
     <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), width: larguraRotulo, left: centro - larguraRotulo / 2 }]}>
       {/* O fundo fica na caixa, não no texto: assim o corte em duas linhas não deixa vazar a terceira. */}
       <View style={[caminhoEstilos.discretoCaixa, { maxWidth: larguraRotulo }, atual && caminhoEstilos.discretoCaixaAtual]}>
-        <Text numberOfLines={2} style={[caminhoEstilos.discretoTexto, no.estado === 'concluida' && { color: cores.alerta },
-          atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
+        {/* Até três linhas no celular (line-clamp 3) e sem palavra sozinha na última linha (text-wrap: pretty da web; no
+            Android, a quebra equilibrada). */}
+        <Text numberOfLines={3} textBreakStrategy="balanced" style={[caminhoEstilos.discretoTexto, QUEBRA_SEM_VIUVA,
+          no.estado === 'concluida' && { color: cores.alerta }, atual && caminhoEstilos.discretoAtual]}>{no.titulo}</Text>
         {/* Como na web (no balão do toque): na prévia, o que a lição ensina. */}
         {no.estado === 'previa' && no.resumo && <Text numberOfLines={2} style={caminhoEstilos.discretoResumo}>{no.resumo}</Text>}
         {/* Como na web: os selos ficam no mesmo cartão do nome, em ordem (o reforço primeiro, o "vale rever" logo depois). */}
         {selos.map((selo) => (
           <View key={selo.texto} style={caminhoEstilos.seloNaCaixa}>
-            <Icone nome={selo.icone} tamanho={13} cor={selo.rever ? cores.alerta : cores.acao} />
+            {/* Como os selos da web: ícone de 14 com traço 3 (1,75 px). */}
+            <Icone nome={selo.icone} tamanho={14} traco={3} cor={selo.rever ? cores.alerta : cores.acao} />
             <Text style={[caminhoEstilos.seloTexto, { color: selo.rever ? cores.alerta : cores.acao }]}>{selo.texto}</Text>
           </View>
         ))}
@@ -877,11 +889,12 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
     };
   }, [atual, reduzir, respiro]);
 
-  const tamanhoIcone = Math.round(lente * 0.44);
+  // .caminho-no__lente > .icone: 42% da lente com traço 3.
+  const tamanhoIcone = Math.round(lente * 0.42);
   // A revisão tem formato próprio: quadrado arredondado, não moeda (como na web).
   const forma = iconeDoNo(no) === 'revisao' ? { borderRadius: Math.round(lente * 0.32) } : null;
   const anel = atual ? 18 : 8;
-  const afundar = pressionado ? 4 : 0;
+  const afundar = pressionado ? 6 : 0;
 
   return (
     <View style={{ width: lente, height: lente }}>
@@ -894,14 +907,18 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
           ],
         }]} />
       )}
-      <View style={[caminhoEstilos.camada, circulo(lente), forma, { top: 8, backgroundColor: visual.labio }]} />
-      <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), forma, {
+      {/* .caminho-no__lente da web: o brilho radial no alto, a faixa interna mais escura embaixo (inset 0 -5px 0), o lábio de 8
+          por fora e a sombra suave (0 16px 22px); tocada, desce 6 e o lábio fica com 2. */}
+      <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), forma, degrade(BRILHO_DA_LENTE), {
         top: afundar, backgroundColor: visual.face, transform: [{ scale: escala }],
+        boxShadow: pressionado
+          ? `inset 0 -5px 0 rgba(0, 0, 0, 0.06), 0 2px 0 ${visual.labio}, 0 6px 10px rgba(27, 42, 94, 0.12)`
+          : `inset 0 -5px 0 rgba(0, 0, 0, 0.06), 0 8px 0 ${visual.labio}, 0 16px 22px rgba(27, 42, 94, 0.16)`,
       }]}>
-        <View><Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} /></View>
+        <View><Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} traco={3} /></View>
         {liberada && (
           <Animated.View style={[caminhoEstilos.cadeado, { borderRadius: lente / 2, opacity: cadeado }]}>
-            <Icone nome="cadeado" tamanho={tamanhoIcone} cor={cores.tintaNeutra} />
+            <Icone nome="cadeado" tamanho={tamanhoIcone} cor={cores.tintaNeutra} traco={3} />
           </Animated.View>
         )}
         {recem && <Confete quantidade={12} />}
@@ -909,7 +926,7 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
       {no.estado === 'concluida' && <Text style={caminhoEstilos.brilho}>✦</Text>}
       {no.estado === 'bloqueada' && (
         <View style={caminhoEstilos.seloCadeado} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Icone nome="cadeado" tamanho={14} cor={cores.fundo} />
+          <Icone nome="cadeado" tamanho={14} cor={cores.fundo} traco={3} />
         </View>
       )}
       {focado && <View style={[caminhoEstilos.anelFoco, circulo(lente + anel * 2), { left: -anel, top: -anel }]} />}
@@ -984,7 +1001,9 @@ export function tracoGrosso(pontos: readonly Ponto[], espessura: number, cor: st
  * Ligação até o próximo nó: a estrada clara e, por cima, a linha pontilhada adiante e contínua depois de concluída.
  * Vai do pé da lente até o fim da linha.
  */
-function Ligacao({ de, ate, feita, topo, chao, desenhar = false }: {
+function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0 }: {
+  /** Quanto a curva desce além da linha: até a chegada, a web vai metade da lente para dentro dela (.caminho-ligacao). */
+  alem?: number;
   /** Chão da região, para a estrada opaca. */
   chao: string;
   /** Posições do nó e do próximo (ou da chegada), em fração da largura. */
@@ -1023,7 +1042,7 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false }: {
 
   return (
     <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-      style={[caminhoEstilos.ligacao, { top: topo }]}
+      style={[caminhoEstilos.ligacao, { top: topo, bottom: -alem }]}
       onLayout={(evento) => {
         const { width, height } = evento.nativeEvent.layout;
         setCaixa((anterior) => anterior?.largura === width && anterior.altura === height ? anterior : { largura: width, altura: height });
@@ -1098,6 +1117,8 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
   aoMedir: (caixa: Caixa) => void;
 }) {
   const { chao, relevo } = coresDaRegiao(trecho);
+  const { width: larguraTela } = useWindowDimensions();
+  const larguraColina = Math.min(larguraTela * 0.94, 440);
   // .caminho-chegada__lente: lente-base + 20.
   const tamanho = lente + 20;
   const reduzir = useMovimentoReduzido();
@@ -1126,11 +1147,16 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
     <View style={[caminhoEstilos.chegada, { backgroundColor: chao, minHeight: 265 + extra, paddingBottom: 30 + extra }]}
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
-        <View style={[caminhoEstilos.chegadaEstrada, { backgroundColor: estradaSobre(chao) }]} />
-        {/* O mesmo pontilhado da estrada, sem emenda até o troféu. */}
-        {!feita && Array.from({ length: 7 }, (_, indice) => <View key={indice} style={[caminhoEstilos.pontoEstrada, { top: 7 + indice * 14 }]} />)}
-        <View style={[caminhoEstilos.chegadaColina, { backgroundColor: relevo, bottom: -48 + extra }]} />
-        {extra > 0 && <View style={[caminhoEstilos.chegadaBase, { height: extra, backgroundColor: relevo }]} />}
+        {/* A reta começa onde a curva da última lição termina (metade da lente para dentro da chegada) e vai até 140, como a
+            web; o pontilhado segue o da estrada, a cada 14 a partir do começo da reta. */}
+        <View style={[caminhoEstilos.chegadaEstrada, { top: lente / 2, height: 140 - lente / 2, backgroundColor: estradaSobre(chao) }]} />
+        {!feita && Array.from({ length: Math.floor((140 - lente / 2) / 14) + 1 }, (_, indice) => (
+          <View key={indice} style={[caminhoEstilos.pontoEstrada, { top: lente / 2 - 3 + indice * 14 }]} />
+        ))}
+        {/* .caminho-chegada__colina: cúpula de 94% da largura (até 440), raio vertical de 190, que desce mais `extra` embaixo. */}
+        {/* Meia elipse de raio horizontal igual à metade da largura e vertical de 190 (border-radius 50% / 190px da web). */}
+        <ColinaElipse largura={larguraColina} baixo={-48} altura={190 + extra} raioVertical={190 / (190 + extra)} cor={relevo}
+          estilo={{ left: '50%', marginLeft: -larguraColina / 2 }} />
         <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { bottom: 96 + extra, left: '50%', marginLeft: -104 }]} />
         <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { bottom: 96 + extra, right: '50%', marginRight: -104, transform: [{ scaleX: -1 }] }]} />
         {/* Estrelas também antes da conquista: o troféu já parece um prêmio desejável. */}
@@ -1272,7 +1298,6 @@ const caminhoEstilos = StyleSheet.create({
   inicio: { minHeight: 210, flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', paddingHorizontal: 16,
     paddingTop: 22, paddingBottom: 104, overflow: 'hidden', backgroundColor: '#D6E4FF' },
   inicioParte: { position: 'absolute', left: 16, right: 16, bottom: 22, alignItems: 'center', zIndex: 2 },
-  inicioCeuBaixo: { position: 'absolute', left: 0, right: 0, top: '55%', bottom: 0, backgroundColor: '#EAF1FF' },
   inicioColinas: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 76 },
   inicioConteudo: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, flexShrink: 1 },
   fala: { flexShrink: 1, maxWidth: 272, marginBottom: 30, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18,
@@ -1284,7 +1309,8 @@ const caminhoEstilos = StyleSheet.create({
     borderBottomWidth: 7, borderColor: '#C79A62', borderBottomColor: '#B0844D', backgroundColor: '#F7E3C2' },
   poste: { position: 'absolute', bottom: -30, width: 8, height: 22, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, backgroundColor: '#A87650' },
   placaTexto: { color: '#5B3A17', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
-  guiaSombra: { position: 'absolute', left: '18%', right: '18%', bottom: -2, height: 8, borderRadius: 999, backgroundColor: 'rgba(27, 42, 94, 0.14)' },
+  // .caminho-guia::after: elipse (border-radius 50%), não barra arredondada.
+  guiaSombra: { position: 'absolute', left: '18%', right: '18%', bottom: -2, height: 8, borderRadius: '50%', backgroundColor: 'rgba(27, 42, 94, 0.14)' },
   falaSeta: { position: 'absolute', right: -6, bottom: 18, width: 16, height: 16, borderRadius: 3, backgroundColor: cores.fundo,
     transform: [{ rotate: '45deg' }] },
   // Nó e rótulo
@@ -1324,7 +1350,7 @@ const caminhoEstilos = StyleSheet.create({
   estado: { fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18 },
   alinharFim: { textAlign: 'right' },
   camada: { position: 'absolute', left: 0, top: 0 },
-  face: { alignItems: 'center', justifyContent: 'center', borderWidth: 4, borderColor: 'rgba(255, 255, 255, 0.2)' },
+  face: { alignItems: 'center', justifyContent: 'center' },
   halo: { position: 'absolute', left: -12, top: -12, borderWidth: 6, borderColor: 'rgba(68, 102, 228, 0.22)' },
   cadeado: { position: 'absolute', left: -4, top: -4, right: -4, bottom: -4, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.faceNeutra },
@@ -1355,12 +1381,10 @@ const caminhoEstilos = StyleSheet.create({
   // A1: o troféu fica 16 px mais longe do último nó, como na web (193 px de lente a lente em 390).
   chegada: { minHeight: 296, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 8, paddingBottom: 30, overflow: 'hidden' },
   pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(27, 42, 94, 0.34)' },
-  chegadaEstrada: { position: 'absolute', top: 0, left: '50%', marginLeft: -12, width: 24, height: 104,
+  chegadaEstrada: { position: 'absolute', left: '50%', marginLeft: -12, width: 24,
     borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
-  chegadaColina: { position: 'absolute', bottom: -48, left: '50%', marginLeft: -200, width: 400, height: 190,
-    borderTopLeftRadius: 200, borderTopRightRadius: 200 },
+  chegadaColina: { position: 'absolute', bottom: -48, left: '50%' },
   chegadaBandeira: { position: 'absolute', bottom: 96 },
-  chegadaBase: { position: 'absolute', bottom: 0, left: '50%', marginLeft: -200, width: 400 },
   chegadaStu: { position: 'absolute', bottom: 74, left: '50%', marginLeft: 50, width: 62, height: 68 },
   // Na web, a placa fica a 14 da caixa do troféu, cujo lábio de 7 é sombra (fora da caixa); aqui o lábio está dentro: 7 a menos.
   chegadaPlaca: { marginTop: -7, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.9)' },

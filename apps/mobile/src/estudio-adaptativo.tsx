@@ -770,7 +770,7 @@ export function ApoioDaLicao({
               )}
               {etapaPonte >= 2 && (
                 <View ref={exemploPonte} accessible style={s.exemplo} onLayout={(evento) => { exemploY.current = evento.nativeEvent.layout.y; }}>
-                  <T>{ponte.exemplo}</T>
+                  <Text style={[estilos.texto, s.exemploTexto]}>{ponte.exemplo}</Text>
                 </View>
               )}
               {etapaPonte === 2 && !revendo && (
@@ -791,7 +791,7 @@ export function ApoioDaLicao({
                       {ponte.exercicio.opcoes.map((o, posicao) => {
                         const conferida = resultadoPonte?.id === o.id ? resultadoPonte : null;
                         return (
-                          <Opcao key={o.id} id={`ponte-${o.id}`} letra={letras[posicao] ?? String(posicao + 1)} texto={o.texto} corTextoErro={cores.acaoEscura}
+                          <Opcao key={o.id} id={`ponte-${o.id}`} letra={letras[posicao] ?? String(posicao + 1)} texto={o.texto}
                             selecionada={resposta === o.id} retorno={conferida ? (conferida.correta ? 'certa' : 'errada') : null}
                             desativada={ocupado || gravando || venceu} apagada={venceu && !conferida}
                             acao={() => {
@@ -908,8 +908,9 @@ export function ApoioDaLicao({
               value={texto}
               onChangeText={setTexto}
               editable={!ocupado && !gravando && etapaVoz !== 'ativa'}
-              // A textarea da web (5 linhas de 24, 16 de respiro e borda de 2): 156.
-              style={{ minHeight: 156, textAlignVertical: 'top' }}
+              // A textarea da web (5 linhas de 24, 16 de respiro e borda de 2 em gelo, .estudio-card textarea): 156. Desligada
+              // (gravando, ocupada ou com a conversa ao vivo), fica no cinza claro da textarea desativada do navegador.
+              style={[s.campoEnsino, (ocupado || gravando || etapaVoz === 'ativa') && s.campoEnsinoDesligado]}
             />
             {/* Como a web (e57d54d): com a transcrição ligada, a dica diz quem recebe a gravação. */}
             {/* .estudio-acoes tem 20 em cima (o cartão põe 14). */}
@@ -984,17 +985,18 @@ const s = StyleSheet.create({
   // .estudio-retorno-ponte no erro: âmbar escuro em 700.
   retornoPonte: { color: '#7A4A00', fontWeight: '700' },
   paragrafo: { lineHeight: 25.6 },
-  seloPonte: { alignSelf: 'center', marginVertical: 12 },
+  // O selo nunca quebra nem encolhe (bf8cf37): se não couber ao lado dele, "Voltar ao exercício" desce para a linha de baixo.
+  seloPonte: { alignSelf: 'center', flexShrink: 0, marginVertical: 12 },
   // Na web, a cena vem logo depois da cabeça (10 em cima) e, sem a legenda, o parágrafo seguinte fica a 12; aqui o cartão já
   // põe 14 entre os blocos, então a cena devolve esse vão.
   cenaNoCartao: { marginTop: -14 },
   cenaSemLegenda: { marginTop: -14, marginBottom: -14 },
-  perguntaDesafio: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '800', fontSize: 17, letterSpacing: -0.255, lineHeight: 22.1 },
+  perguntaDesafio: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '800', fontSize: 17, letterSpacing: -0.255, lineHeight: 22.1, marginBottom: 10 },
   // h2 do cartão (.estudio-card h2): 1,35rem (21,6), entrelinha 1,3, -0,015em e 10 embaixo.
   tituloPonte: { flexShrink: 1, fontSize: 21.6, lineHeight: 28.08, letterSpacing: -0.324, marginBottom: 10 },
-  // "Voltar ao exercício" no alto da ponte: botão de texto de 16 px, 48 de altura e 12 de respiro nos lados, como na web.
-  // Até 600 px, .ponte-cabeca__acoes .botao--texto tem 8 de respiro nos lados.
-  ponteVoltar: { minHeight: 48, paddingHorizontal: 8 },
+  // "Voltar ao exercício" no alto da ponte: botão de texto de 16 px e 48 de altura, sem respiro lateral (bf8cf37): quando desce
+  // para a linha de baixo, o texto fica alinhado à borda esquerda do selo.
+  ponteVoltar: { minHeight: 48, paddingHorizontal: 0 },
   // :is(.aula-quadro, .estudio-desafio) .opcoes: vão de 12.
   opcoesDesafio: { gap: 12 },
   origemNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
@@ -1002,10 +1004,17 @@ const s = StyleSheet.create({
     borderColor: cores.acao, borderRadius: 14 },
   arquivoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   ponteCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  // Até 600 px, .ponte-cabeca__acoes da web ocupa a linha toda: o selo à esquerda e "Voltar ao exercício" à direita.
-  ponteCabecaAcoes: { width: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  desafio: { gap: 14 },
-  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, backgroundColor: '#EEF3FF' },
+  // Até 600 px, .ponte-cabeca__acoes da web ocupa a linha toda: o selo à esquerda e "Voltar ao exercício" à direita; sem
+  // espaço (360), o link desce (vão de 4 entre as linhas, 8 entre os dois).
+  ponteCabecaAcoes: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', rowGap: 4, columnGap: 8 },
+  // .estudio-desafio: grade com vão de 12; o h3 tem 10 embaixo (22 até a 1ª opção) e a última opção fica a 12 do "Verificar"
+  // (8 depois do degrau de 4).
+  desafio: { gap: 12 },
+  // .ensino-gravando: 12 em cima na web (24 do "Parar e transcrever", com o cartão pondo 14) e 12 até o "Enviar".
+  gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10, marginBottom: -2, paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: 14, backgroundColor: '#EEF3FF' },
+  campoEnsino: { minHeight: 156, textAlignVertical: 'top', borderColor: cores.gelo },
+  campoEnsinoDesligado: { backgroundColor: '#FAFAFA' },
   // O campo já põe 8 entre o rótulo e a caixa; a textarea da web tem 10 em cima.
   rotuloExplicacao: { fontSize: 16, fontWeight: '400', lineHeight: 24, marginBottom: 2 },
   // <p class="estudio-legenda"> dentro de .estudio-card: 0,85rem (13,6) com entrelinha 1,6.
@@ -1030,5 +1039,7 @@ const s = StyleSheet.create({
     paddingLeft: 12,
     gap: 10,
   },
-  exemplo: { backgroundColor: '#EEF2FF', padding: 16, borderRadius: 16 },
+  // .estudio-exemplo: respiro de 18, raio de 16 e 16 em cima e embaixo (o cartão já põe 14); o texto com entrelinha de 24.
+  exemplo: { backgroundColor: '#EEF2FF', padding: 18, borderRadius: 16, marginVertical: 2 },
+  exemploTexto: { lineHeight: 24 },
 });
