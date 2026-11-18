@@ -7,6 +7,7 @@ export * from './som';
 export * from './fala';
 export * from './voz-ao-vivo';
 export * from './compartilhar';
+export * from './codigo-studoo';
 export interface Progresso {
   concluidas: number;
   total: number;
