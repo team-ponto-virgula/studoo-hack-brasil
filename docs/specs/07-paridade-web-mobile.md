@@ -44,3 +44,14 @@ Números e textos seguem `docs/ui/DIRECAO-UI.md` e `experiencia.ts`. Estas difer
 - Conclusão: os cartões de história ficam em uma coluna.
 - Estado de erro (rodadas 3A a 3A.2): é o mesmo cartão com o Stu, o texto e uma ação, mas a ação ocupa a largura do cartão, como os outros botões de toque.
 - Erro na lição: o cartão não tem ação, porque a nova tentativa é o próprio botão do rodapé (Verificar, Concluir). Na web, "Tentar novamente" recarrega a página.
+
+## Diferenças deliberadas do app na rodada 4
+
+O app segue a rodada 4 da web publicada (`c824b29`): entrada com uma ação principal (4A), aula focada (4B), erro compacto (4C), ponte em foco (4D), recurso visual no conceito (4E), esqueleto no carregamento (4F), selo de sincronia só em Minhas trilhas e no mapa (4G), citação focal, mapa e conclusão (4I a 4O). As diferenças vêm do toque e da tela estreita:
+
+- Painel de erro: "Ver outro jeito de entender" ocupa a largura toda; embaixo, numa linha só, "Tentar de novo" (secundário) e "Pular por agora" (botão de texto, 14 px). Em 360 px, nenhum rótulo quebra linha. Na web, os três botões ficam numa linha que quebra conforme a largura.
+- Ponte em foco: com a ponte aberta, o exercício recolhe e o painel de retorno sai, como na web. No app, o cartão "Origem do conteúdo" também sai, para a ponte ficar no alto da tela. "Voltar ao exercício" fica no alto do cartão desde o começo. Na vitória, ele aparece logo embaixo da cena, junto do "Isso!", e a tela traz o alto do cartão à vista antes da travessia.
+- Ponte reaberta depois de vencida (o mesmo erro, de novo): o título é "Outro jeito de entender", a cena não repete a travessia, a explicação e o exemplo ficam à vista para reler e "Voltar ao exercício" aparece no alto e no fim. O desafio já vencido não volta. "Tentar de novo" e "Voltar ao exercício" fecham o pedido de reforço, então um erro novo mostra outra vez "Ver outro jeito de entender".
+- Conclusão depois de sair e voltar: as pontes vencidas e a explicação ao Stu entram no andamento da lição (em memória, 24 horas, como o resto do andamento). O cartão "Ponte construída" e o do Explique aparecem mesmo quando a pessoa fecha a lição no meio e volta.
+- Mapa: com a primeira lição atual e o nome dela em duas linhas, o balão "Começar" cobria a faixa da Parte 1. O começo do mapa ganha 64 de fundo e a faixa fica entre os postes da placa e o balão, em 360 e 412.
+- Não se aplicam ao app: Enter para verificar (o teclado do aparelho já envia a lacuna pela tecla de envio e as escolhas são por toque), fontes WOFF2 (o app embute TTF pelo expo-font) e configuração de acesso no servidor da página de login (o app consulta `/api/auth/config` ao abrir e só mostra o Google e o "Esqueci minha senha" quando a resposta os oferece).

@@ -417,7 +417,7 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
   const stu = Math.round(lente * 1.28);
 
   return (
-    // Com o primeiro nó atual, o balão "Começar" (nome em até duas linhas) sobe até ~125 acima do nó: a faixa da Parte 1 fica
+    // Com o primeiro nó atual, o balão "Começar" (nome em até duas linhas) sobe até ~140 acima do nó: a faixa da Parte 1 fica
     // entre os postes da placa e o balão, sem que um cubra o outro (defeito e da rodada 4, em 360 e 412).
     <View style={[caminhoEstilos.inicio, comecoAtual && { paddingBottom: INICIO_COM_BALAO }]} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.height)}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
@@ -452,11 +452,12 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
 }
 
 /**
- * Com o primeiro nó atual: o fundo do começo (a placa termina 214 acima do nó e os postes descem mais 30) e a faixa da
- * Parte 1, de 42 de altura, 133 acima do nó, logo acima do balão "Começar" (22 + ~95 + a flutuação).
+ * Com o primeiro nó atual: o fundo do começo (a placa termina 234 acima do pé do céu e os postes descem mais 30) e a faixa
+ * da Parte 1, de 43 de altura, 152 acima do pé do céu. O balão "Começar" com o nome em duas linhas mede 104 e flutua 4:
+ * sobra um respiro de 8 a 10 entre os postes, a faixa e o balão (medido na prévia em 360 e 412).
  */
-const INICIO_COM_BALAO = 214;
-const PARTE_COM_BALAO = 133;
+const INICIO_COM_BALAO = 234;
+const PARTE_COM_BALAO = 152;
 
 /** Placa de madeira com a frase do Stu: entra balançando, presa em dois postes fincados nas colinas. */
 function Placa({ texto }: { texto: string }) {
