@@ -25,7 +25,10 @@ process.env.STUDOO_COMPARTILHAR = '1';
 process.env.STUDOO_COMUNIDADE = '1';
 const usuarios = [];
 // O banco local é compartilhado: se a demonstração já existia antes da suíte, ela volta no fim (com datas novas).
-const demoAntes = (await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } })) > 0;
+// Toda busca pela demonstração filtra também pelo domínio: outros arquivos de teste, rodando em paralelo no mesmo banco,
+// criam perfis com perfilDemo e e-mail @example.test (por exemplo, seguir.test.mjs).
+const DONO_DEMO = { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } };
+const demoAntes = (await banco.usuario.count({ where: DONO_DEMO })) > 0;
 
 after(async () => {
   process.env.STUDOO_COMUNIDADE_DEMO = '1';
@@ -110,15 +113,15 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
   assert.ok(primeiro.perfis >= 4 && primeiro.perfis <= 6);
   assert.ok(primeiro.trilhas >= 8 && primeiro.trilhas <= 12);
   assert.ok(primeiro.temas >= 6);
-  const datasAntes = (await banco.linkTrilha.findMany({ where: { plano: { usuario: { perfilDemo: true } } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
+  const datasAntes = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
   const segundo = await criarDemonstracao();
   assert.deepEqual(segundo, primeiro, 'rodar de novo não duplica');
-  assert.equal(await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } }), primeiro.perfis);
-  assert.equal(await banco.linkTrilha.count({ where: { plano: { usuario: { perfilDemo: true } } } }), primeiro.trilhas);
-  const datasDepois = (await banco.linkTrilha.findMany({ where: { plano: { usuario: { perfilDemo: true } } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
+  assert.equal(await banco.usuario.count({ where: DONO_DEMO }), primeiro.perfis);
+  assert.equal(await banco.linkTrilha.count({ where: { plano: { usuario: DONO_DEMO } } }), primeiro.trilhas);
+  const datasDepois = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
   assert.ok(Math.min(...datasDepois) > Math.max(...datasAntes) - 3 * 24 * 60 * 60_000 + 60_000, 'as datas andaram');
   // Eventos só dos perfis de demonstração, nos últimos 7 dias, depois da publicação.
-  const eventos = await banco.eventoTrilha.findMany({ where: { link: { plano: { usuario: { perfilDemo: true } } } }, select: { criadoEm: true, usuario: { select: { perfilDemo: true } }, link: { select: { publicadaEm: true } } } });
+  const eventos = await banco.eventoTrilha.findMany({ where: { link: { plano: { usuario: DONO_DEMO } } }, select: { criadoEm: true, usuario: { select: { perfilDemo: true } }, link: { select: { publicadaEm: true } } } });
   assert.ok(eventos.length > 20);
   for (const e of eventos) {
     assert.ok(e.usuario.perfilDemo);
@@ -126,7 +129,7 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
     assert.ok(Date.now() - e.criadoEm.getTime() < 7 * 24 * 60 * 60_000);
   }
   // Sem login: sem senha, sem Google, sem sessão, e-mail .invalid; recuperar senha não cria código.
-  const perfis = await banco.usuario.findMany({ where: { perfilDemo: true }, select: { id: true, email: true, senhaHash: true, googleSub: true, _count: { select: { sessoes: true } } } });
+  const perfis = await banco.usuario.findMany({ where: DONO_DEMO, select: { id: true, email: true, senhaHash: true, googleSub: true, _count: { select: { sessoes: true } } } });
   for (const p of perfis) {
     assert.ok(p.email.endsWith(`@${DOMINIO_DEMO}`));
     assert.equal(p.senhaHash, null);
@@ -138,7 +141,7 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
 
   // Na classificação da semana, todas as trilhas de demonstração têm ponto (o Em alta enche com elas num banco limpo).
   zerarCacheEmAlta();
-  const codigosDemo = (await banco.linkTrilha.findMany({ where: { plano: { usuario: { perfilDemo: true } } }, select: { codigo: true } })).map((l) => l.codigo);
+  const codigosDemo = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { codigo: true } })).map((l) => l.codigo);
   const pontuadas = (await classificacaoDaSemana()).filter((item) => codigosDemo.includes(item.codigo));
   assert.equal(pontuadas.length, primeiro.trilhas, 'todas no Em alta da semana');
   assert.ok(new Set(pontuadas.map((item) => item.pontos)).size >= 6, 'pontos variados: um top de verdade');
@@ -150,7 +153,7 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
 test('demonstração: sem a flag no servidor, some do Explorar, do /p e do /t; uma pessoa de verdade que adicionou fica com a cópia ao remover', async () => {
   process.env.STUDOO_COMUNIDADE_DEMO = '1';
   await criarDemonstracao();
-  const link = await banco.linkTrilha.findFirst({ where: { plano: { usuario: { perfilDemo: true } } }, select: { codigo: true, adicoes: true, plano: { select: { usuario: { select: { perfilId: true } } } } } });
+  const link = await banco.linkTrilha.findFirst({ where: { plano: { usuario: DONO_DEMO } }, select: { codigo: true, adicoes: true, plano: { select: { usuario: { select: { perfilId: true } } } } } });
   const pessoa = await banco.usuario.create({ data: { email: `demo-real-${randomUUID()}@example.test`, fuso: 'UTC' } });
   usuarios.push(pessoa.id);
   const { token } = await criarSessao(pessoa.id);
@@ -174,7 +177,7 @@ test('demonstração: sem a flag no servidor, some do Explorar, do /p e do /t; u
   }
   const { perfis } = await removerDemonstracao();
   assert.ok(perfis >= 4);
-  assert.equal(await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } }), 0);
+  assert.equal(await banco.usuario.count({ where: DONO_DEMO }), 0);
   assert.equal(await banco.planoAprendizado.count({ where: { usuarioId: pessoa.id, origemCodigo: link.codigo } }), 1, 'a cópia da pessoa fica');
   zerarCacheEmAlta();
 });
