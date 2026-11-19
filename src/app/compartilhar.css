@@ -267,7 +267,6 @@ h2.previa-trilha__titulo { font-size: 1.25rem; }
 }
 @media (hover: hover) { .plano-cartao__compartilhar:hover:not(:disabled) { background: var(--nevoa); } }
 .plano-cartao__compartilhar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
-.navegacao-mobile[data-itens='3'] { gap: 8px; }
 .conclusao-compartilhar { justify-self: center; margin: 10px auto 0; }
 .conclusao-compartilhar .icone, .trilha-concluida .botao .icone { width: 18px; height: 18px; }
 /* A capa no alto da página do link (lote 4). */

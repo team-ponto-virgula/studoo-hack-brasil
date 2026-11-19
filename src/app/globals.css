@@ -794,51 +794,89 @@ html[data-pausado='true'] *, html[data-pausado='true'] *::before, html[data-paus
 button, a, label { -webkit-tap-highlight-color: transparent; }
 button { touch-action: manipulation; }
 @media (max-width: 767px) {
-  .estudo[data-navegacao] { --altura-navegacao: calc(73px + env(safe-area-inset-bottom)); }
+  html:has(.estudo[data-navegacao]) {
+    --margem-ilha-esq: max(16px, calc(env(safe-area-inset-left) + 8px));
+    --margem-ilha-dir: max(16px, calc(env(safe-area-inset-right) + 8px));
+    --base-ilha: max(16px, calc(env(safe-area-inset-bottom) + 8px));
+    --altura-navegacao: calc(var(--altura-ilha, 62px) + var(--base-ilha));
+    --sombra-ilha: 0 0 0 1px rgb(11 27 92 / 0.1), 0 8px 24px rgb(11 27 92 / 0.14);
+    --espaco-rodape: calc(var(--altura-navegacao) + var(--espaco-acao-fixa, 0px) + 16px);
+    scroll-padding-bottom: var(--espaco-rodape);
+  }
+  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .editor-perfil__barra, .trilha-vazia)) {
+    --espaco-acao-fixa: calc(var(--altura-acao-fixa, 48px) + 12px);
+  }
   .estudo[data-navegacao] .planos-movel { display: none; }
-  .estudo[data-navegacao] .estudo-principal { padding-bottom: calc(120px + var(--altura-navegacao)); }
+  .estudo[data-navegacao] .estudo-principal { padding-bottom: var(--espaco-rodape); }
   .estudo[data-navegacao] .acao-principal {
-    bottom: var(--altura-navegacao);
-    padding-bottom: 14px;
+    inset: auto var(--margem-ilha-dir) calc(var(--altura-navegacao) + 12px) var(--margem-ilha-esq);
+    max-width: 480px;
+    margin-inline: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
   }
   .navegacao-mobile {
     position: fixed;
     z-index: 4;
-    inset: auto 0 0;
+    inset: auto var(--margem-ilha-dir) var(--base-ilha) var(--margem-ilha-esq);
+    max-width: 480px;
+    margin-inline: auto;
     display: flex;
-    gap: 12px;
-    padding: 8px max(20px, env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
-    border-top: 1px solid var(--gelo);
+    padding: 4px;
+    overflow: hidden;
+    border-radius: 31px;
     background: var(--fundo);
+    box-shadow: var(--sombra-ilha);
   }
   .navegacao-mobile button {
+    position: relative;
     display: flex;
-    flex: 1;
+    flex: 1 1 auto;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    min-height: 56px;
-    gap: 3px;
+    min-width: 48px;
+    min-height: 54px;
+    gap: 2px;
     padding: 6px;
     border: 0;
-    border-radius: 18px;
+    border-radius: 27px;
     color: var(--texto2);
     background: transparent;
-    font-size: 0.75rem;
+    font-size: min(0.75rem, 15.6px);
     font-weight: 800;
+    line-height: 1.25;
+    text-align: center;
+    cursor: pointer;
     transition: background-color 180ms ease-out, color 180ms ease-out;
   }
-  .navegacao-mobile .icone { width: 22px; height: 22px; transition: transform 180ms ease-out; }
-  .navegacao-mobile button[aria-current] { color: var(--acao); background: var(--nevoa); }
+  /* Explorar e Perfil têm uma palavra; cedem espaço as abas que podem quebrar no espaço. */
+  .navegacao-mobile button:nth-child(n + 3) { flex-shrink: 0; white-space: nowrap; }
+  /* O respiro da cápsula também responde ao toque, até a borda e sem invadir a aba vizinha. */
+  .navegacao-mobile button::after { content: ''; position: absolute; inset: -4px 0; }
+  .navegacao-mobile button:first-child::after { left: -4px; }
+  .navegacao-mobile button:last-child::after { right: -4px; }
+  .navegacao-mobile .icone { flex: none; width: 24px; height: 24px; transition: transform 180ms ease-out; }
+  .navegacao-mobile button[aria-current] { color: var(--acao-escura); background: var(--lavanda); }
+  .navegacao-mobile button[aria-current] .icone { fill: currentColor; }
+  .navegacao-mobile button[aria-current] .icone__detalhe { fill: var(--lavanda); stroke: var(--lavanda); stroke-width: 1.5; }
+  .navegacao-mobile button:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
   .navegacao-mobile button:active:not(:disabled) .icone { transform: scale(0.9); }
   .navegacao-mobile button:disabled { opacity: 0.6; }
   html[data-teclado='true'] .navegacao-mobile { display: none; }
-  html[data-teclado='true'] .estudo[data-navegacao] { --altura-navegacao: 0px; }
+  html[data-teclado='true']:has(.estudo[data-navegacao]) {
+    --altura-navegacao: 0px;
+    --espaco-acao-fixa: 0px;
+  }
   /* O teclado não cobre o envio: com campo ativo a ação volta ao fluxo de leitura. */
-  html[data-teclado='true'] .estudo[data-navegacao] .acao-principal { position: static; margin-top: 16px; }
+  html[data-teclado='true'] .estudo[data-navegacao] :is(.acao-principal, .editor-perfil__barra) { position: static; }
+}
+@media (max-width: 767px) and (forced-colors: active) {
+  .navegacao-mobile button[aria-current] { border: 2px solid Highlight; }
 }
 @media (prefers-reduced-motion: reduce) {
   .navegacao-mobile button, .navegacao-mobile .icone { transition: none; }
+  .navegacao-mobile button:active:not(:disabled) .icone { transform: none; }
 }
 
 .retomada {
@@ -868,7 +906,7 @@ button { touch-action: manipulation; }
 @media (prefers-reduced-motion: reduce) { .retomada { animation: none; } }
 @media (max-width: 767px) {
   .estudo[data-navegacao] .painel--planos > .acao-principal { display: none; }
-  .estudo[data-navegacao] .estudo-principal:has(.painel--planos) { padding-bottom: calc(16px + var(--altura-navegacao)); }
+  .estudo[data-navegacao] .planos-ativos { margin-bottom: 0; }
   /* Nova trilha (pedido vazio, com ideia, com material e prévia): 40 px entre o último conteúdo e a barra de baixo. */
   .estudo[data-navegacao] .estudo-principal:has(.painel--pedido) { padding-bottom: calc(40px + var(--altura-navegacao)); }
 }

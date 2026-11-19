@@ -15,9 +15,9 @@ export function AmbienteMovimento() {
       const campo = evento?.type === 'focusout' ? evento.relatedTarget : document.activeElement;
       window.clearTimeout(adiado);
       if (digita(campo)) { raiz.dataset.teclado = 'true'; return; }
-      // Ao sair do campo com um toque, a barra de abas só volta depois do toque terminar: voltando na hora, ela empurrava
-      // o botão tocado (o "Salvar" ou o "Cancelar" no pé da tela) e o clique caía em outro lugar.
-      if (evento?.type === 'focusout') adiado = window.setTimeout(() => { raiz.dataset.teclado = 'false'; }, 350);
+      // Tanto o focusout do campo como o focusin do botão chegam antes do clique. Se a ilha voltar entre eles,
+      // a ação de salvar muda de posição antes de a pessoa soltar o botão.
+      if (evento && raiz.dataset.teclado === 'true') adiado = window.setTimeout(() => { raiz.dataset.teclado = 'false'; }, 350);
       else raiz.dataset.teclado = 'false';
     };
     visibilidade();

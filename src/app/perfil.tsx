@@ -27,6 +27,7 @@ import {
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
+import { medirAcaoFixa } from '../ui/rodape-movel';
 import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, urlDoLink, useDialogo } from './compartilhar';
 import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
@@ -554,7 +555,7 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
           </div>
         </fieldset>
 
-        <div className="editar-perfil__barra editor-perfil__barra">
+        <div className="editar-perfil__barra editor-perfil__barra" ref={medirAcaoFixa}>
           <p className="editar-perfil__estado" data-estado={estado === 'salvando' ? 'salvando' : alterado ? 'pendente' : 'salvo'} role="status" aria-live="polite">
             {!alterado && estado !== 'salvando' && <Icone nome="check" />}{estadoTexto}
           </p>
