@@ -839,7 +839,14 @@ export const mensagens = {
         comecar: 'Começar',
         ajustar: 'Ajustar pedido',
         anuncioTitulo: (titulo: string) => `Trilha: ${titulo}. As lições vão aparecer uma a uma.`,
-        anuncioPronta: (total: number) => `Trilha pronta, com ${total} ${total === 1 ? 'lição' : 'lições'}. Escolha Começar para salvar a trilha e abrir a primeira lição.`
+        anuncioPronta: (total: number) => `Trilha pronta, com ${total} ${total === 1 ? 'lição' : 'lições'}. Escolha Começar para salvar a trilha e abrir a primeira lição.`,
+        /** Lote 2 (spec 03): a pessoa assumiu a rolagem; o botão pequeno volta a seguir os nós que chegam. */
+        acompanhar: 'Acompanhar',
+        acompanharRotulo: 'Voltar a acompanhar a trilha enquanto ela é montada',
+        /** No aceite, cada nó mostra que a lição está sendo escrita (o servidor não avisa lição por lição). */
+        noEscrevendo: (titulo: string) => `${titulo}, sendo escrita`,
+        /** Fim do aceite: a tela volta à primeira lição, onde está o "Começar". */
+        anuncioLicoesProntas: 'Lições prontas. A primeira lição está no começo da trilha, com o botão Começar.'
     },
     preparo: {
         titulo: 'Escrevendo suas lições',

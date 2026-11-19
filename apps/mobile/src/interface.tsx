@@ -55,7 +55,9 @@ export const TecladoAberto = createContext(false);
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo, aoTocarNaRolagem }: {
+  /** A pessoa pôs o dedo na rolagem ou começou a arrastar (a geração para de acompanhar, lote 2). */
+  aoTocarNaRolagem?: () => void;
   children: ReactNode;
   acoes?: ReactNode;
   /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
@@ -201,6 +203,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             if (campoEmFoco.current) mostrarCampoEmFoco();
           }}
           onScroll={(evento) => { rolado.current = evento.nativeEvent.contentOffset.y; aoRolar?.(evento.nativeEvent.contentOffset.y); }}
+          onScrollBeginDrag={aoTocarNaRolagem} onTouchStart={aoTocarNaRolagem}
           scrollEventThrottle={16}
           onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura - fimDaRolagem))}>
           {cabecalhoNaRolagem && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}

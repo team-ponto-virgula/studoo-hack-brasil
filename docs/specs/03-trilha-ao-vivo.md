@@ -14,6 +14,38 @@ Hoje o Studoo aceita apenas objetivos de SQL e devolve uma proposta pronta, de u
 4. **Trilha.** É um caminho único e contínuo, do primeiro ao último nó, com nós que alternam de lado. A trilha **não agrupa lições por assunto**: não há cartões nem cabeçalhos como "Consultas" ou "Junções". A faixa do topo mostra o título do plano e o progresso total. Entre um trecho e outro do caminho aparece só um marco discreto, sem nome de assunto. O nó atual se destaca com movimento suave e o rótulo **Começar**. As lições concluídas mostram que estão feitas. Um nó futuro, quando tocado, explica o que falta para liberá-lo. Ao concluir uma lição, o nó seguinte é liberado com uma animação curta.
 5. **Lição.** Mantém a aula por etapas da [spec 02](02-aula-web.md). O conteúdo de uma lição gerada pode ser criado na primeira vez que ela é aberta. Enquanto isso, a tela mostra um estado de carregamento próprio.
 
+## A tela acompanha a geração (lote 2 do dono, 19/11; web e app)
+
+Palavras do dono: "quando for gerando a trilha ter animações e a tela ir acompanhando até a última trilha". Ele gerou uma trilha no iPhone, e a tela ficou parada no alto enquanto as lições apareciam embaixo.
+
+**Antes.** Na web e no app, a tela só puxava o nó novo para a vista quando a pessoa já estava vendo o último nó (na web, `scrollIntoView` com `block: 'nearest'`; no app, a mesma regra). Quem estava no alto, onde a tela abre, ficava parado ali. No aceite, uma tela à parte ("Escrevendo suas lições") ficava de 12 a 22 s na frente da trilha, com a IA real, e a primeira lição abria sozinha.
+
+**Agora**, igual nas duas plataformas (os números ficam em `ACOMPANHAR_GERACAO`, em `packages/contratos/src/acompanhar.ts`):
+
+1. **Acompanhar.** Enquanto os nós chegam, a tela rola suave para o nó mais novo ficar à vista com o nome: o centro dele (lente e nome) fica a 58% da parte visível, um pouco abaixo do meio, e o fim do nome fica pelo menos 24 acima do rodapé ou da barra. Segue assim até o último nó; quando a proposta termina, a chegada (o troféu) entra junto com o último nó.
+2. **A pessoa manda.** Se a pessoa rolar ou tocar no mapa durante a geração ou o aceite, o acompanhamento para na hora (a rolagem da própria tela é cancelada). Aparece um botão pequeno, "Acompanhar", centrado logo acima do rodapé, que volta a seguir e leva ao nó mais novo. A tela nunca briga com o dedo: a rolagem que a tela começa é marcada (até onde e até quando), e qualquer outra é da pessoa.
+3. **Cada nó novo.** O trecho do caminho até ele se desenha (240 ms), o nó entra (a mola de sempre, 320 ms depois do desenho) e o nome aparece por último (200 ms depois). O Stu sai do alto (fica só o balão com as dicas) e vai para perto do nó mais novo. Nós que chegam juntos entram em fila, um a cada 450 ms, para dar para ver a sequência.
+4. **Aceite.** O aceite é um pedido só: o servidor não avisa lição por lição. Por isso o estado é o honesto, sem barra de progresso inventada: todos os nós mostram um lápis que balança ("escrevendo"; o leitor de tela ouve "<lição>, sendo escrita"), o rodapé diz "Escrevendo suas lições", e a tela passeia pela trilha, um nó a cada 1,6 s, até o último. Se um dia o servidor mandar o andamento por lição, cada lápis vira visto quando a lição dele terminar, com o mesmo acompanhamento.
+5. **Fim.** Com as lições prontas, o lápis de cada nó vira o visto verde (em sequência), o rodapé diz "Lições prontas!" por 1,4 s e a tela volta devagar (1,1 s) até a primeira lição. Então abre o mapa da trilha salva, com a primeira lição atual e o "Começar": a pessoa abre a lição quando quiser. Se ela assumiu a rolagem, a tela não volta sozinha: o mapa abre direto.
+6. **Movimento reduzido.** Sem animação e sem rolagem suave: os nós aparecem prontos, o rodapé mostra o texto fixo "N lições até agora" (no aceite, "Escrevendo suas lições"), e a tela só se posiciona no fim (no último nó, quando a proposta termina; na primeira lição, depois do aceite).
+7. **Leitor de tela.** O progresso é anunciado de vez em quando, a cada três nós ("6 lições até agora"), e no começo e no fim do aceite. O foco não sai de onde a pessoa está.
+8. **No aparelho.** As animações dos nós, do trecho, do lápis e do visto usam o driver nativo; seguir os nós e o passeio usam a rolagem suave do próprio sistema. Só a volta devagar ao começo é desenhada quadro a quadro (1,1 s, sem mais nada acontecendo na tela).
+
+| Constante | Valor | Para quê |
+|---|---|---|
+| `intervaloEntreNosMs` | 450 | fila dos nós que chegam juntos |
+| `posicaoDoNo` | 0,58 | onde fica o centro do nó mais novo na parte visível |
+| `folgaDoRodape` | 24 | do fim do nome até o rodapé ou a barra |
+| `rolagemMs` | 520 | rolagem suave até o nó (na web; no app, a do sistema) |
+| `desenhoMs`, `entradaMs`, `nomeAtrasoMs` | 240, 320, 200 | trecho, nó e nome do nó novo |
+| `stuMs` | 420 | o Stu indo para perto do nó mais novo |
+| `passeioPorNoMs` | 1600 | passeio pela trilha no aceite |
+| `escrevendoCicloMs` | 900 | ida e volta do lápis |
+| `prontaMs`, `voltaMs` | 1400, 1100 | "Lições prontas!" e a volta devagar à primeira lição |
+| `anunciarACada` | 3 | anúncio do progresso ao leitor de tela |
+
+Feito no app; a web vem pelo Studoo Web & API, com as mesmas constantes. Com a IA real, quem confere é o dono, no aparelho.
+
 **Referência, não cópia.** Usamos as ideias de interação do caminho do Duolingo: caminho linear, nó atual em destaque e marcos. A cara é do Studoo, com a paleta, a tipografia, o Stu e os componentes do `DESIGN.md`. Não usamos a coruja, as cores, os ícones nem os textos do Duolingo. Também não usamos XP, sequência de dias, ranking ou moeda, porque a gamificação segue aberta em D16.
 
 ## Ordem da trilha
