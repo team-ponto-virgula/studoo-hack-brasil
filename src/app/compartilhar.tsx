@@ -45,8 +45,8 @@ const p = mensagens.perfil;
 export const CHAVE_DEPOIS_DO_LOGIN = 'studoo.depoisDoLogin';
 /** Abrir uma trilha ao chegar no app, com um aviso ("Trilha adicionada. Compartilhada por Ana."). */
 export const CHAVE_ABRIR_PLANO = 'studoo.abrirPlano';
-/** Para onde o login pode voltar: um link de trilha (com ou sem adicionar) ou o Explorar. Nada fora do site. */
-const CAMINHO_SEGURO = /^(?:\/t\/[A-Za-z0-9_-]{16}(?:\?adicionar=1)?|\/p\/[A-Za-z0-9_-]{16}|\/explorar)$/;
+/** Para onde o login pode voltar: um link de trilha (com ou sem adicionar), um perfil ou o Explorar, com ou sem `?curtir=`. Nada fora do site. */
+const CAMINHO_SEGURO = /^(?:\/t\/[A-Za-z0-9_-]{16}(?:\?adicionar=1)?|(?:\/t\/[A-Za-z0-9_-]{16}|\/p\/[A-Za-z0-9_-]{16}|\/explorar)(?:\?curtir=[A-Za-z0-9_-]{16})?)$/;
 
 /** O caminho guardado para depois do login, só se for o de um link de trilha (nada de redirecionar para fora). */
 export function caminhoDepoisDoLogin(): string | null {
@@ -81,13 +81,17 @@ export const codigoDoErro = (erro: unknown) => (erro instanceof ErroStudoo ? err
  * A foto da pessoa (token da foto, em 128 px; 512 nos tamanhos grandes) ou a inicial na cor. Decorativo: o nome sempre
  * está escrito ao lado. Tamanhos: p (32), m (56), g (96 no celular, 112 no computador) e livre (`--lado`).
  */
-export function Avatar({ nome, cor, foto = null, grande = false, tamanho }: { nome: string; cor: CorPerfil; foto?: string | null; grande?: boolean; tamanho?: 'p' | 'm' | 'g' }) {
+export function Avatar({ nome, cor, foto = null, grande = false, tamanho, vazio = false }: {
+  nome: string; cor: CorPerfil; foto?: string | null; grande?: boolean; tamanho?: 'p' | 'm' | 'g';
+  /** Perfil ainda sem nome nem foto: o desenho de pessoa no lugar da inicial (some assim que o nome ganha uma letra). */
+  vazio?: boolean;
+}) {
   const t = tamanho ?? (grande ? 'm' : 'p');
   return (
-    <span className="avatar" data-tamanho={t} data-grande={t !== 'p' || undefined} data-foto={foto ? true : undefined} style={{ background: FUNDO_DA_COR[cor] }} aria-hidden="true">
+    <span className="avatar" data-tamanho={t} data-grande={t !== 'p' || undefined} data-foto={foto ? true : undefined} data-vazio={(!foto && vazio) || undefined} style={{ background: FUNDO_DA_COR[cor] }} aria-hidden="true">
       {foto
         ? <img src={enderecoFoto(foto, t === 'g' ? 512 : 128)} alt="" width={t === 'g' ? 112 : t === 'm' ? 56 : 32} height={t === 'g' ? 112 : t === 'm' ? 56 : 32} decoding="async" draggable={false} />
-        : inicialDoNome(nome)}
+        : vazio ? <Icone nome="pessoa" /> : inicialDoNome(nome)}
     </span>
   );
 }
@@ -135,30 +139,68 @@ export function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => vo
 }
 
 /** Confirmação no próprio produto (nunca `window.confirm`): título, texto e duas ações; a segura recebe o foco. */
-export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, ocupado = false, aoConfirmar, aoCancelar }: {
+/**
+ * A confirmação do Studoo (nunca a do sistema): título, texto e, se houver, um aviso em parágrafo à parte; as ações
+ * dividem a linha ao meio e, quando um rótulo não cabe na metade, ficam uma por linha, com a segura em cima.
+ * `perigo`: a ação de confirmar vem cheia em vermelho (apagar).
+ */
+export function DialogoConfirmar({ titulo, texto, aviso, confirmar, cancelar, ocupado = false, perigo = false, aoConfirmar, aoCancelar }: {
   titulo: string;
   texto: string;
+  aviso?: string | null;
   confirmar: string;
   cancelar: string;
   ocupado?: boolean;
+  perigo?: boolean;
   aoConfirmar: () => void;
   aoCancelar: () => void;
 }) {
   const caixa = useRef<HTMLDivElement>(null);
   const tituloId = useId();
   const textoId = useId();
+  const avisoId = useId();
   useDialogo(caixa, aoCancelar);
   // A ação segura (cancelar) recebe o foco.
   useEffect(() => { caixa.current?.querySelector<HTMLButtonElement>('.folha-acoes button')?.focus(); }, []);
   return (
     <div className="folha-fundo folha-fundo--centro" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !ocupado) aoCancelar(); }}>
-      <div className="folha folha--confirmar" role="alertdialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={textoId} ref={caixa}>
-        <h2 id={tituloId} className="folha-titulo">{titulo}</h2>
-        <p id={textoId} className="folha-texto">{texto}</p>
-        <div className="folha-acoes folha-acoes--par">
+      <div className="folha folha--confirmar" role="alertdialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={aviso ? `${textoId} ${avisoId}` : textoId} ref={caixa}>
+        <h2 id={tituloId} className="folha-titulo folha-titulo--confirmar">{titulo}</h2>
+        <p id={textoId} className="folha-texto folha-texto--confirmar">{texto}</p>
+        {aviso && <p id={avisoId} className="folha-texto folha-texto--confirmar">{aviso}</p>}
+        <div className="folha-acoes folha-acoes--metades">
           <Botao variante="secundario" disabled={ocupado} onClick={aoCancelar}>{cancelar}</Botao>
-          <Botao variante="secundario" className="modal-confirmar--destrutivo" disabled={ocupado} onClick={aoConfirmar}>{confirmar}</Botao>
+          <Botao variante="secundario" className={perigo ? 'botao--perigo' : 'modal-confirmar--destrutivo'} disabled={ocupado} aria-busy={(perigo && ocupado) || undefined} onClick={aoConfirmar}>{confirmar}</Botao>
         </div>
+      </div>
+    </div>
+  );
+}
+
+export type OpcaoDeAcao = { chave: string; rotulo: string; icone: Parameters<typeof Icone>[0]['nome']; perigo?: boolean; aoEscolher: () => void };
+
+/**
+ * O menu de ações do Studoo (folha que sobe do pé; no computador, centrada): título, as opções uma por linha e
+ * "Cancelar". Foco preso, Esc e toque fora fecham, e o foco volta para quem abriu.
+ */
+export function FolhaDeAcoes({ titulo, opcoes, cancelar, aoFechar }: { titulo: string; opcoes: OpcaoDeAcao[]; cancelar: string; aoFechar: () => void }) {
+  const caixa = useRef<HTMLDivElement>(null);
+  const tituloId = useId();
+  useDialogo(caixa, aoFechar);
+  useEffect(() => { caixa.current?.querySelector<HTMLButtonElement>('.folha-acoes-lista button')?.focus(); }, []);
+  return (
+    <div className="folha-fundo" role="presentation" onClick={(e) => { if (e.target === e.currentTarget) aoFechar(); }}>
+      <div className="folha folha--acoes" role="dialog" aria-modal="true" aria-labelledby={tituloId} ref={caixa}>
+        <span className="folha__alca" aria-hidden="true" />
+        <h2 id={tituloId} className="folha-titulo folha-titulo--acoes">{titulo}</h2>
+        <ul className="folha-acoes-lista">
+          {opcoes.map((opcao) => (
+            <li key={opcao.chave}>
+              <button type="button" data-perigo={opcao.perigo || undefined} onClick={() => opcao.aoEscolher()}><Icone nome={opcao.icone} />{opcao.rotulo}</button>
+            </li>
+          ))}
+        </ul>
+        <Botao variante="secundario" className="folha-acoes__cancelar" onClick={aoFechar}>{cancelar}</Botao>
       </div>
     </div>
   );

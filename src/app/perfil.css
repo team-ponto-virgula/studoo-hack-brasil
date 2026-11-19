@@ -123,21 +123,6 @@
 @media (hover: hover) { .interesse input:not(:checked) + span:hover { background: var(--nevoa); } }
 .interesses__aviso:empty { display: none; }
 
-.editar-perfil__barra {
-  position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
-  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
-  border-top: 2px solid var(--gelo); background: var(--fundo); box-shadow: 0 -8px 16px rgb(255 255 255 / 0.9);
-}
-.editar-perfil__estado { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 800; }
-.editar-perfil__estado .icone { width: 18px; height: 18px; }
-.editar-perfil__estado[data-estado='pendente'] { color: var(--alerta); }
-.editar-perfil__estado[data-estado='salvo'] { color: var(--sucesso); }
-.editar-perfil__estado[data-estado='salvando'] { color: var(--texto2); }
-.editar-perfil__barra .campo-erro { flex-basis: 100%; order: 3; }
-.editar-perfil__barra .botao { min-height: 48px; min-width: 9rem; }
-/* Em 360, estado e botão cabem lado a lado (165 + 12 + 128 px em 320). */
-@media (max-width: 379px) { .editar-perfil__barra { flex-wrap: nowrap; } .editar-perfil__barra .botao { min-width: 8rem; padding-inline: 16px; } }
-@media (max-width: 339px) { .editar-perfil__barra { flex-wrap: wrap; } .editar-perfil__barra .botao { flex: 1 1 100%; } }
 .estudo-principal:has(.painel--editar-perfil) { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
 
 /* Recorte: quadro quadrado, círculo do avatar, controle de zoom. */
@@ -221,7 +206,6 @@
 /* Perfil direto nos dados (lote 4): os campos abertos na aba Perfil, num bloco só. */
 .editor-perfil { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
 @media (min-width: 768px) { .editor-perfil { padding: 22px 24px; } }
-.editor-perfil__linha { margin: 0; color: var(--texto2); font-weight: 700; line-height: 1.45; }
 .editar-foto__circulo { position: relative; flex: none; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
 .editar-foto__circulo .avatar { border: 4px solid #fff; box-shadow: 0 6px 16px rgb(27 42 94 / 0.14); }
 .editar-foto__circulo:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }
@@ -231,5 +215,55 @@
 }
 .editar-foto__selo .icone { width: 20px; height: 20px; }
 @media (hover: hover) { .editar-foto__circulo:hover .editar-foto__selo { background: #2a44a8; } }
-.editor-perfil__barra { bottom: var(--altura-navegacao, 0px); margin-inline: -4px; padding-inline: 4px; }
-.editor-perfil__botoes { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+
+/* Revisão de 19/11 (spec 10, "Perfil direto nos dados"). */
+/* Privacidade no alto dos campos, com cadeado. */
+.editor-perfil__privacidade { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--texto2); font-size: 0.875rem; font-weight: 700; line-height: 1.43; }
+.editor-perfil__privacidade .icone { flex: none; width: 16px; height: 16px; margin-top: 2px; }
+/* Bloco da foto sem caixa: avatar de 96 com o selo, e ao lado o link e a dica. */
+.editor-perfil .editar-foto { padding: 0; border: 0; background: none; flex-wrap: nowrap; }
+.editor-perfil .editar-foto__corpo { flex: 1 1 auto; gap: 2px; }
+.editar-foto__link {
+  justify-self: start; min-height: 44px; padding: 0; border: 0; background: none; color: var(--acao);
+  font: inherit; font-size: 1rem; font-weight: 800; text-align: start; cursor: pointer;
+}
+@media (hover: hover) { .editar-foto__link:hover { text-decoration: underline; text-underline-offset: 3px; } }
+.editar-foto__corpo .campo-dica { margin: 0; }
+/* Perfil vazio: o desenho de pessoa no lugar da inicial. */
+.avatar[data-vazio] { display: grid; place-items: center; }
+.avatar[data-vazio] .icone { width: 44px; height: 44px; color: #fff; }
+.cores-perfil > .campo-dica { margin: -2px 0 6px; }
+
+/* Barra de salvar: presa no pé da tela, acima da barra de abas; no celular, na largura da tela; no computador, na do cartão. */
+.barra-salvar {
+  position: sticky; bottom: 0; z-index: 5; display: flex; align-items: center; gap: 12px;
+  min-height: 72px; margin: 0 -18px -18px; padding: 12px 18px;
+  border-top: 1px solid #e1e7fa; border-radius: 0 0 calc(var(--raio-bloco) - 2px) calc(var(--raio-bloco) - 2px); background: #fff;
+}
+@media (min-width: 768px) { .barra-salvar { margin: 0 -24px -22px; padding: 12px 24px; } }
+@media (max-width: 767px) {
+  .barra-salvar { position: fixed; left: 0; right: 0; bottom: var(--altura-navegacao, 0px); margin: 0; padding: 12px max(16px, env(safe-area-inset-right)) 12px max(16px, env(safe-area-inset-left)); border-radius: 0; }
+  .estudo:not([data-navegacao]) .barra-salvar, html[data-teclado='true'] .barra-salvar { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+.barra-salvar__estado {
+  display: -webkit-box; flex: 1 1 auto; min-width: 0; margin: 0; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  font-size: 0.875rem; font-weight: 800; line-height: 1.29;
+}
+.barra-salvar__estado .icone { width: 16px; height: 16px; margin-right: 6px; vertical-align: -3px; }
+.barra-salvar__estado[data-estado='pendente'] { color: #9a5b00; }
+.barra-salvar__estado[data-estado='pendente']::before { content: ''; display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: currentColor; vertical-align: 1px; }
+.barra-salvar__estado[data-estado='salvando'] { color: var(--texto2); }
+.barra-salvar__estado[data-estado='erro'] { color: #c23b4e; }
+.barra-salvar__botoes { display: flex; flex: none; gap: 8px; margin-left: auto; }
+.barra-salvar__botoes .botao { min-height: 48px; min-width: 120px; padding-inline: 16px; }
+@media (max-width: 399px) { .barra-salvar[data-com-cancelar] .barra-salvar__botoes .botao { min-width: 104px; } }
+
+/* Números do perfil: até três colunas, número em cima e rótulo embaixo. */
+.cabeca-perfil__numeros dl { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 6px 0 0; }
+.cabeca-perfil__numeros dl > div { display: flex; flex-direction: column-reverse; }
+.cabeca-perfil__numeros dd { margin: 0; color: var(--texto); font-family: Quicksand, sans-serif; font-size: 1.375rem; font-weight: 700; line-height: 1.18; font-variant-numeric: tabular-nums; }
+.cabeca-perfil__numeros dt { color: var(--texto2); font-size: 0.8125rem; font-weight: 700; line-height: 1.38; }
+/* Ações da dona numa fileira, metade cada (se o rótulo não cabe, cada uma ocupa a linha). */
+.cabeca-perfil__acoes-rodape { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.cabeca-perfil__acoes-rodape > .botao { flex: 1 1 0; min-width: max-content; min-height: 44px; padding: 8px 14px; }
+.cabeca-perfil__acoes-rodape .botao .icone { width: 20px; height: 20px; }

@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 
 export function Logo({ decorativo = false }: { decorativo?: boolean }) {
@@ -16,6 +16,7 @@ export function Stu() {
 }
 
 type BotaoProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  ref?: Ref<HTMLButtonElement>;
   variante?: 'primario' | 'secundario' | 'texto' | 'sucesso' | 'alerta';
 };
 

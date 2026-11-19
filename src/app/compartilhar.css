@@ -273,3 +273,32 @@ h2.previa-trilha__titulo { font-size: 1.25rem; }
 /* A capa no alto da página do link (lote 4). */
 .previa-trilha__capa { display: block; width: 100%; aspect-ratio: 4 / 1; max-height: 150px; margin-bottom: 14px; overflow: hidden; border-radius: 20px; }
 .previa-trilha__capa svg { display: block; width: 100%; height: 100%; }
+
+/* Confirmação do Studoo (revisão de 19/11): título, texto e aviso separados; ações ao meio ou uma por linha, a segura em cima. */
+.folha-titulo--confirmar { font-family: Quicksand, sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1.3; color: var(--texto); overflow-wrap: anywhere; }
+.folha-texto--confirmar { color: var(--texto2); font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
+.folha-acoes.folha-acoes--metades { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Cada ação começa na metade; se o rótulo não cabe nela, a largura mínima empurra a outra para a linha de baixo. */
+.folha-acoes--metades > .botao { flex: 1 1 calc(50% - 5px); min-width: max-content; min-height: 48px; white-space: nowrap; }
+.botao.botao--perigo { --labio: #8f2a39; color: #fff; border-color: #c23b4e; background: #c23b4e; }
+.botao.botao--perigo:disabled { --labio: #8f2a39; color: #fff; border-color: #c23b4e; background: #c23b4e; opacity: 0.7; }
+@media (hover: hover) { .botao.botao--perigo:hover:not(:disabled) { border-color: #a93244; background: #a93244; } }
+
+/* Menu de ações do Studoo: título, opções de 52 px uma por linha e "Cancelar". */
+.folha--acoes { gap: 8px; }
+.folha__alca { justify-self: center; width: 40px; height: 4px; margin: -8px 0 4px; border-radius: 2px; background: var(--gelo); }
+@media (min-width: 768px) { .folha__alca { display: none; } }
+.folha-titulo--acoes { font-size: 1.125rem; }
+.folha-acoes-lista { display: grid; margin: 0 -8px; padding: 0; list-style: none; }
+.folha-acoes-lista button {
+  display: flex; align-items: center; gap: 14px; width: 100%; min-height: 52px; padding: 0 12px; border: 0; border-radius: 14px;
+  color: var(--texto); background: none; font: inherit; font-weight: 800; text-align: start; cursor: pointer;
+}
+.folha-acoes-lista button .icone { width: 22px; height: 22px; flex: none; }
+.folha-acoes-lista button[data-perigo] { color: #c23b4e; }
+.folha-acoes-lista button:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
+.folha-acoes-lista button:active { background: var(--nevoa); }
+@media (hover: hover) { .folha-acoes-lista button:hover { background: var(--nevoa); } }
+.folha-acoes__cancelar { width: 100%; margin-top: 6px; }
+/* Curtir no mapa da trilha recebida: o mesmo botão do cartão, na linha de "Esta trilha é de <nome>". */
+.trilha-recebida .trilha-recebida__curtir { min-height: 44px; }
