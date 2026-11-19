@@ -33,11 +33,11 @@ O que tirei disso, e que está no resultado: tema em laço com frase cantável, 
 
 | id | arquivo | formato | duração | laço | papel |
 |---|---|---|---|---|---|
-| `foco_calmo` | `public/sons/fundos/foco-calmo.mp3` | MP3 44,1 kHz mono, 80 kbps | 89,30 s | 32 compassos | **cue principal**: tema na kalimba + pad + contracanto de flauta. É o que a spec 12 recomenda para a aula |
-| `chuva_suave` | `chuva-suave.mp3` | idem | 89,30 s | idem | caixinha de música esparsa sobre chuva |
-| `lofi_estudo` | `lofi-estudo.mp3` | idem | 89,30 s | idem | piano elétrico em meio-tempo, bumbo, escova, vinil |
-| `biblioteca` | `biblioteca.mp3` | idem | 89,30 s | idem | piano de feltro, muito espaço, sem percussão |
-| `brisa_natural` | `brisa-natural.mp3` | idem | 89,30 s | idem | flauta à frente, harpa, vento |
+| `foco_calmo` | `public/sons/fundos/foco-calmo.mp3` | MP3 44,1 kHz mono, 80 kbps | 89,33 s (laço de 89,30 s) | 32 compassos | **cue principal**: tema na kalimba + pad + contracanto de flauta. É o que a spec 12 recomenda para a aula |
+| `chuva_suave` | `chuva-suave.mp3` | idem | 89,33 s | idem | caixinha de música esparsa sobre chuva |
+| `lofi_estudo` | `lofi-estudo.mp3` | idem | 89,33 s | idem | piano elétrico em meio-tempo, bumbo, escova, vinil |
+| `biblioteca` | `biblioteca.mp3` | idem | 89,33 s | idem | piano de feltro, muito espaço, sem percussão |
+| `brisa_natural` | `brisa-natural.mp3` | idem | 89,33 s | idem | flauta à frente, harpa, vento |
 
 Todos com 873 KB (limite de 1 MB), pico entre −4,7 e −11,9 dBFS e −24,3 a −24,7 dBFS RMS.
 
@@ -46,9 +46,25 @@ Todos com 873 KB (limite de 1 MB), pico entre −4,7 e −11,9 dBFS e −24,3 a 
 ## Emenda do laço
 
 - A cauda de 1,2 s é dobrada no começo (`fecha_laco` em `gerar-trilha.py`) e o corte cai no compasso exato: o fim continua no começo, sem *fade* nem degrau.
-- Cada clima termina com um *pickup* do dominante (A4 e C#5) nas duas últimas colcheias, que resolve na tônica do compasso 1: a volta soa como continuação, não como reinício.
-- Medido no MP3 decodificado, em duas voltas: salto na virada entre 0,01× e 1,22× o passo típico de 99,9% do próprio arquivo (sem estalo).
-- `aparoInicioSeg = 0,026` (atraso do codificador MP3 que o navegador não tira) e `aparoFimSeg = 0`. No app, o cruzamento de 150 ms já cobre a diferença.
+- O arquivo começa com 26 ms do próprio fim (pré-rolo) e o compasso 1 cai exatamente em `aparoInicioSeg = 0,026 s`, que é onde o toca-sons começa a tocar. Assim o laço do navegador cobre os 32 compassos inteiros e começa no ataque, sem cortar o tema.
+- Cada clima termina com um *pickup* do dominante (A4 e C#5) nas duas últimas colcheias, que resolve na tônica do compasso 1.
+
+**Medido no Chromium** (`OfflineAudioContext.decodeAudioData`, a mesma decodificação que o toca-sons da web usa; página local servida em `http://…:8765` e analisada no navegador):
+
+| | `foco_calmo` | `lofi_estudo` |
+|---|---|---|
+| Duração que o navegador entrega | 89,3283 s (3.939.380 amostras) | idem |
+| Silêncio no começo / no fim | 0 / 0 amostras | 0 / 0 |
+| Laço com `loopStart = 0,026` e `loopEnd = duração` | 89,3023 s (32 compassos) | idem |
+| Salto na emenda ÷ passo típico do próprio arquivo | **0,19×** | **0,68×** |
+| Nível 50 ms antes / depois da emenda | −33,2 / −17,1 dBFS | −35,5 / −15,3 dBFS |
+| Começo do compasso 1 | 26,01 ms (o `loopStart`) | idem |
+
+O Chromium **tira** o atraso e o enchimento do codificador MP3: o buffer já começa na música. A primeira versão do arquivo começava no compasso 1, então o `loopStart = 0,026` cortava 26 ms do ataque a cada volta — no `lofi_estudo` isso dava um degrau de 3,5× o passo típico (estalo audível). O pré-rolo de 26 ms resolve sem mexer no player: o laço passa a cobrir os 32 compassos e a emenda é a do material original.
+
+O mesmo cálculo está em `python3 scripts/som/verificar-som.py --laco-web <arquivo>` (lê o bloco LAME, simula o buffer com e sem o atraso e compara com o começo sem aparo). O bloco LAME deste MP3 traz 576 amostras de atraso e 1.036 de enchimento.
+
+**Num navegador que não tire o atraso** (o caso que o pré-rolo cobre): o começo cai 0,94 ms dentro da cauda, que está a −35 dBFS, e sobra ~11 ms de enchimento no fim — abaixo do limite em que se percebe buraco. Não foi possível medir outro motor além do Chromium nesta máquina.
 
 ## Efeitos
 
@@ -85,4 +101,6 @@ Precisa de `numpy` e de um `ffmpeg` com `libmp3lame` (caminho em `FFMPEG`). Os s
 
 - **Não escutei o resultado**: não há saída de áudio nesta máquina. A conferência foi por medição (loudness, bandas, picos, ataque, emenda, espectrograma) e pela composição escrita. O ouvido do dono decide.
 - Não houve teste em aparelho físico (iPhone/Android); a emenda no app depende do cruzamento do toca-sons, que é do Mobile & QA.
-- O texto da linha do clima na folha "Som" (`OPCOES_FUNDO_UI`) diz "Batida lenta, sem melodia" no Lo-fi; com o novo arranjo há melodia discreta. O texto é do Designer — sugiro "Batida lenta e abafada".
+- A coluna "celular" das medições (energia entre 400 Hz e 4 kHz) é um **proxy digital** da faixa que o alto-falante pequeno reproduz — não é teste de alto-falante.
+- A emenda foi medida no Chromium e simulada para o caso sem corte de atraso; Firefox e Safari não foram medidos.
+- O texto da linha do clima na folha "Som" (`OPCOES_FUNDO_UI`) do Lo-fi era "Batida lenta, sem melodia"; com o novo arranjo há melodia discreta, e o Lead aprovou em 19/11 o texto **"Batida lenta e abafada"**, que vale no catálogo, na spec 12 e nos testes.

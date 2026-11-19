@@ -84,9 +84,14 @@ export interface EstadoSomSnapshot {
 
 export const MENSAGEM_ERRO_FUNDO = 'Não deu para tocar agora. Toque de novo para tentar.';
 
+/** Mantém o silêncio escolhido no aparelho e traz os antigos fundos ligados para a faixa única. */
+export function fundoUnicoDaPreferencia(valor: unknown): 'mudo' | 'lofi_estudo' {
+  return valor === 'mudo' ? 'mudo' : 'lofi_estudo';
+}
+
 export const PADRAO_PREFERENCIAS_SOM: Readonly<PreferenciasSom> = {
   efeitosAtivos: true,
-  fundo: 'mudo',
+  fundo: 'lofi_estudo',
 };
 
 export const CATALOGO_EFEITOS: Readonly<Record<IdEfeitoSonoro, DefinicaoEfeitoSonoro>> = {
@@ -125,7 +130,7 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
     rotulo: 'Foco Calmo',
     descricao: 'Tema do Studoo em kalimba e pad quente, com contracanto de flauta',
     arquivo: 'foco-calmo.mp3',
-    duracaoMs: 89302,
+    duracaoMs: 89328,
     volume: 0.24,
     aparoInicioSeg: 0.026,
     aparoFimSeg: 0,
@@ -135,7 +140,7 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
     rotulo: 'Chuva Suave',
     descricao: 'Caixinha de música esparsa sobre chuva leve na janela',
     arquivo: 'chuva-suave.mp3',
-    duracaoMs: 89302,
+    duracaoMs: 89328,
     volume: 0.24,
     aparoInicioSeg: 0.026,
     aparoFimSeg: 0,
@@ -145,7 +150,7 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
     rotulo: 'Lo-fi de Estudo',
     descricao: 'Piano elétrico em meio-tempo, bumbo e escova, vinil discreto',
     arquivo: 'lofi-estudo.mp3',
-    duracaoMs: 89302,
+    duracaoMs: 89328,
     volume: 0.24,
     aparoInicioSeg: 0.026,
     aparoFimSeg: 0,
@@ -155,7 +160,7 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
     rotulo: 'Biblioteca',
     descricao: 'Piano de feltro com muito espaço e tom de sala',
     arquivo: 'biblioteca.mp3',
-    duracaoMs: 89302,
+    duracaoMs: 89328,
     volume: 0.24,
     aparoInicioSeg: 0.026,
     aparoFimSeg: 0,
@@ -165,7 +170,7 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
     rotulo: 'Brisa Natural',
     descricao: 'Flauta à frente do tema, harpa e vento suave entre folhas',
     arquivo: 'brisa-natural.mp3',
-    duracaoMs: 89302,
+    duracaoMs: 89328,
     volume: 0.24,
     aparoInicioSeg: 0.026,
     aparoFimSeg: 0,
@@ -175,7 +180,7 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
 const DESCRICOES_CURTAS_FUNDO: Readonly<Record<Exclude<IdSomFundo, 'mudo'>, string>> = {
   foco_calmo: 'Acordes suaves e quentes',
   chuva_suave: 'Chuva leve na janela',
-  lofi_estudo: 'Batida lenta, sem melodia',
+  lofi_estudo: 'Batida lenta e abafada',
   biblioteca: 'Ambiente quieto, bom para ler',
   brisa_natural: 'Vento suave entre as folhas',
 };

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -62,7 +63,7 @@ export default async function PaginaDoPerfil({ params }: Props) {
           <Stu expressao={perfil === 'limite' ? 'stu-encorajador' : 'stu-surpreso'} tamanho={96} animado="uma-vez" />
           <h1>{perfil === 'limite' ? mensagens.erros.limite_compartilhar : p.inativo}</h1>
           {perfil === 'inativo' && <p className="folha-texto">{p.inativoTexto}</p>}
-          <a className="botao botao--primario" href="/">{mensagens.compartilhar.criarMinha}</a>
+          <Link className="botao botao--primario" href="/">{mensagens.compartilhar.criarMinha}</Link>
         </section>
       </PaginaPublica>
     );
@@ -81,10 +82,10 @@ export default async function PaginaDoPerfil({ params }: Props) {
       <ul className="perfil-publico__lista">
         {perfil.trilhas.map((trilha) => (
           <li key={trilha.codigo}>
-            <a className="perfil-publico__trilha" href={`/t/${trilha.codigo}`} aria-label={p.abrirTrilha(trilha.titulo)}>
+            <Link className="perfil-publico__trilha" href={`/t/${trilha.codigo}`} aria-label={p.abrirTrilha(trilha.titulo)}>
               <strong>{trilha.titulo}</strong>
               <span>{mensagens.compartilhar.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</span>
-            </a>
+            </Link>
           </li>
         ))}
       </ul>

@@ -245,7 +245,7 @@ button, input, textarea { font: inherit; }
 }
 
 .entrada-forma { width: 100%; max-width: 420px; }
-.entrada-cabecalho .logo-quadro { display: block; width: fit-content; margin-bottom: 32px; }
+.entrada-cabecalho .som-marca { display: flex; width: 100%; align-items: center; justify-content: space-between; margin-bottom: 32px; }
 .entrada-cabecalho h1 { text-wrap: balance; }
 .entrada-cabecalho .introducao { margin-top: 8px; }
 .entrada-forma .formulario { margin-top: 32px; }
@@ -309,7 +309,8 @@ button, input, textarea { font: inherit; }
   display: grid;
   min-height: 100vh;
   min-height: 100svh;
-  grid-template-columns: clamp(216px, 21vw, 276px) minmax(0, 1fr);
+  --largura-menu: clamp(216px, 21vw, 276px);
+  grid-template-columns: var(--largura-menu) minmax(0, 1fr);
 }
 
 /* Na tela larga, a barra lateral fica parada enquanto a página rola: marca e navegação continuam à vista em trilhas longas. */
@@ -705,7 +706,7 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
   .entrada-arte { display: none; }
   .entrada-banner { display: block; height: 152px; margin: -4px 0 28px; border-radius: 24px; }
   .entrada-banner .stu { position: absolute; bottom: 8%; left: 50%; width: 76px; translate: -50% 0; }
-  .entrada-cabecalho .logo-quadro { margin-bottom: 20px; }
+  .entrada-cabecalho .som-marca { margin-bottom: 20px; }
   .estudo { grid-template-columns: minmax(0, 1fr); }
   .barra-lateral, .estudo-identificacao__contexto, .planos-cabeca .botao { display: none; }
   .estudo-marca, .planos-movel { display: block; }
@@ -952,7 +953,7 @@ button { touch-action: manipulation; }
   .recuperar .acao-principal > .botao { width: 100%; }
 }
 @media (max-width: 767px) {
-  .entrada-cabecalho .logo-quadro { width: calc(100% + 40px); margin: -16px -20px 24px; padding: 8px 20px; min-height: 60px; border-bottom: 2px solid var(--nevoa); }
+  .entrada-cabecalho .som-marca { width: calc(100% + 40px); margin: -16px -20px 24px; padding: 8px 20px; min-height: 60px; border-bottom: 2px solid var(--nevoa); }
   .entrada-banner { margin-top: 0; }
   .aula-miolo h1 { text-wrap: wrap; }
   .painel--concluida .acao-principal { display: flex; flex-direction: column; gap: 10px; }
@@ -1084,7 +1085,9 @@ button { touch-action: manipulation; }
   .entrada-cabecalho h1 { font-size: 28px; line-height: 34px; letter-spacing: -0.5px; }
   .entrada-cabecalho .introducao { font-size: 15px; line-height: 22px; }
   .entrada-cabecalho .acesso-link { min-height: 44px; }
-  .entrada-cabecalho .logo-quadro { margin-bottom: 20px; }
+  .entrada-cabecalho .som-marca { margin-bottom: 20px; }
   .entrada-forma .formulario { margin-top: 16px; }
 }
 @media (max-width: 767px) and (max-height: 860px) { .entrada-banner { display: none; } }
+
+.recuperar-acoes { display: flex; align-items: center; gap: 8px; }

@@ -1,0 +1,14 @@
+/* Aviso do próprio app: faixa no pé da tela (acima da barra de abas no celular), some sozinha. */
+.aviso-app { position: fixed; left: 50%; bottom: var(--espaco-rodape, calc(16px + env(safe-area-inset-bottom))); z-index: 70; width: min(calc(100% - 32px), 30rem); translate: -50% 0; pointer-events: none; }
+.aviso-app p {
+  margin: 0; padding: 12px 16px; border-radius: 16px; background: var(--texto); color: #fff; font-weight: 800; line-height: 1.4;
+  box-shadow: 0 12px 30px rgb(15 23 42 / 0.28); text-wrap: pretty;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .aviso-app p { animation: aviso-sobe 220ms ease-out both; }
+  @keyframes aviso-sobe { from { opacity: 0; transform: translateY(10px); } }
+}
+.aviso-musica { bottom: max(16px,calc(var(--espaco-rodape,0px) + 12px),calc(env(safe-area-inset-bottom) + 16px)); }
+.aviso-musica p { padding: 2px 8px 2px 14px; min-height: 48px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.aviso-musica button { pointer-events: auto; flex: none; min-height: 44px; padding: 4px 10px; border: 0; border-radius: 10px; color: var(--texto); background: white; font: inherit; cursor: pointer; }
+.aviso-musica button:focus-visible { outline: 3px solid var(--ouro); outline-offset: 2px; }

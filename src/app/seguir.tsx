@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 /*
  * Seguir e Novidades na web (spec 10, etapa C2): o botão Seguir (cabeçalho do /p e cartão "Quem compartilhou" do /t)
  * e a seção Novidades da tela Perfil. Sem lista pública de seguidores e sem notificação.
@@ -25,6 +27,7 @@ export function BotaoSeguir({ perfilId, nome, estado, logado, aoMudar }: {
   logado: boolean;
   aoMudar?: (seguidores: number) => void;
 }) {
+  const router = useRouter();
   const [seguindo, setSeguindo] = useState(Boolean(estado?.seguindo));
   const [ocupado, setOcupado] = useState(false);
   const [anuncio, setAnuncio] = useState('');
@@ -33,7 +36,7 @@ export function BotaoSeguir({ perfilId, nome, estado, logado, aoMudar }: {
   async function alternar() {
     if (!logado) {
       guardar(CHAVE_DEPOIS_DO_LOGIN, `/p/${perfilId}`);
-      window.location.assign('/login');
+      router.push('/login');
       return;
     }
     const ativo = !seguindo;

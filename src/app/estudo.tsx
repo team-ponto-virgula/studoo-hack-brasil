@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   ErroStudoo,
@@ -41,7 +44,6 @@ import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, plan
 import { TelaPerfil } from './perfil';
 import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { Explorar } from './comunidade';
-import { contarLicaoParaNovidadeDoSom, useAreaDoSom } from './som';
 import { tocaSons } from './sons';
 import { medirAcaoFixa, medirIlha } from '../ui/rodape-movel';
 import './aula.css';
@@ -96,8 +98,7 @@ function voltarAoTopo() {
 
 export function Estudo() {
   const [inicio, setInicio] = useState<'carregando' | 'pronto' | 'falha'>('carregando');
-  // O som de fundo toca no app inteiro depois da entrada (spec 12); ao sair do app (ou da conta), para.
-  useAreaDoSom(inicio === 'pronto');
+  const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [tela, setTela] = useState<Tela>({ tipo: 'planos' });
   const [planos, setPlanos] = useState<PlanoResumo[]>([]);
@@ -174,8 +175,9 @@ export function Estudo() {
         if (objetivoRef.current.trim()) sessionStorage.setItem('studoo.rascunho.objetivo', objetivoRef.current);
       } catch { /* Sem armazenamento local: segue sem rascunho. */ }
     }
-    window.location.replace(expirada ? '/login?erro=nao_autenticado' : '/login');
-  }, []);
+    router.replace(expirada ? '/login?erro=nao_autenticado' : '/login');
+    router.refresh();
+  }, [router]);
 
   const carregar = useCallback(async (cancelado: () => boolean) => {
     invalidarElegibilidadeVozAoVivo();
@@ -185,7 +187,7 @@ export function Estudo() {
       // Voltou do login para concluir um link de trilha (adicionar): segue para a página dele.
       const depois = caminhoDepoisDoLogin();
       if (depois) {
-        window.location.replace(depois);
+        router.replace(depois);
         return;
       }
       const [ativos, config] = await Promise.all([cliente.listarPlanos(), cliente.configuracaoAcesso().catch(() => null)]);
@@ -255,7 +257,7 @@ export function Estudo() {
       setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
       setInicio('falha');
     }
-  }, [irParaLogin]);
+  }, [irParaLogin, router]);
 
   const sincronizarAgora = useCallback(async () => {
     if (emExecucao.current || inicio !== 'pronto') return;
@@ -483,7 +485,6 @@ export function Estudo() {
     aceiteAtual.current = tentativa;
     setAceite('salvando');
     anunciar(mensagens.geracao.anuncioCriando);
-    void tocaSons.tocarEfeito('toque_opcao');
     let plano: PlanoDetalhe;
     try {
       // O cliente pode sair, mas o pedido já enviado continua no servidor.
@@ -493,6 +494,7 @@ export function Estudo() {
       aceiteAtual.current = null;
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
       if (codigo === 'nao_autenticado') { irParaLogin(true); return; }
+      setAnuncio('');
       setAceite(codigo === 'proposta_invalida' ? 'expirada' : 'erro');
       return;
     }
@@ -576,7 +578,6 @@ export function Estudo() {
       cacheLicoes.current.delete(licao.id);
       const atualizado = resultado.dados.plano;
       // A última lição fecha a trilha: o som é o da trilha inteira (só na primeira vez que ela fecha).
-      contarLicaoParaNovidadeDoSom();
       const fechada = (p: PlanoDetalhe['progresso']) => p.total > 0 && p.concluidas === p.total;
       void tocaSons.tocarEfeito(fechada(atualizado.progresso) && !fechada(plano.progresso) ? 'concluir_trilha' : 'concluir_licao');
       atualizarPlano(atualizado);
@@ -639,7 +640,7 @@ export function Estudo() {
   return (
     <div className="estudo" data-navegacao={comNavegacao || undefined}>
       <a className="pular" href="#conteudo-principal">{mensagens.pular}</a>
-      <aside className="barra-lateral">
+      <aside className="barra-lateral" inert={!!passagem}>
         <div className="barra-marca"><Logo /></div>
         <nav className="navegacao" aria-label={mensagens.navegacao}>
           <Botao variante="texto" className="navegacao-item" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado} aria-current={tela.tipo === 'planos' ? 'page' : undefined}>
@@ -885,7 +886,7 @@ function MarcaCompartilhar({ plano }: { plano: PlanoResumo }) {
     return (
       <p className="marca-recebida">
         {foto && <Avatar nome={nome} cor="azul" foto={foto} />}
-        {perfilId ? <>{texto.slice(0, texto.length - nome.length)}<a href={`/p/${perfilId}`}>{nome}</a></> : texto}
+        {perfilId ? <>{texto.slice(0, texto.length - nome.length)}<Link href={`/p/${perfilId}`}>{nome}</Link></> : texto}
       </p>
     );
   }
@@ -1131,9 +1132,9 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
             <p className="trilha-recebida">
               {plano.recebida.foto && <Avatar nome={plano.recebida.nome} cor="azul" foto={plano.recebida.foto} />}
               <span>{plano.recebida.perfilId
-                ? <>{mensagens.compartilhar.recebidaDe(plano.recebida.nome).slice(0, -plano.recebida.nome.length)}<a href={`/p/${plano.recebida.perfilId}`}>{plano.recebida.nome}</a></>
+                ? <>{mensagens.compartilhar.recebidaDe(plano.recebida.nome).slice(0, -plano.recebida.nome.length)}<Link href={`/p/${plano.recebida.perfilId}`}>{plano.recebida.nome}</Link></>
                 : mensagens.compartilhar.recebidaDe(plano.recebida.nome)}</span>
-              {plano.recebida.codigoAtivo && <a href={`/t/${plano.recebida.codigoAtivo}`}>{mensagens.compartilhar.verOriginal}</a>}
+              {plano.recebida.codigoAtivo && <Link href={`/t/${plano.recebida.codigoAtivo}`}>{mensagens.compartilhar.verOriginal}</Link>}
             </p>
           ) : null}
           <div className="trilha-topo__acoes">

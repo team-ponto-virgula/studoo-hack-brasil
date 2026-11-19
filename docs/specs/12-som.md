@@ -58,7 +58,7 @@ Fora da aula, o controle fica no Perfil.
 | Mudo | Sem som de fundo |
 | Foco Calmo | Acordes suaves e quentes |
 | Chuva Suave | Chuva leve na janela |
-| Lo-fi de Estudo | Batida lenta, sem melodia |
+| Lo-fi de Estudo | Batida lenta e abafada |
 | Biblioteca | Ambiente quieto, bom para ler |
 | Brisa Natural | Vento suave entre as folhas |
 

@@ -1,4 +1,6 @@
 'use client';
+import Link from 'next/link';
+import { BotaoSom } from '../som';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
@@ -59,7 +61,7 @@ export function Recuperar() {
     });
   }
   return <main className="recuperar" id="conteudo-principal">
-    <header className="recuperar-topo"><Logo /><a className="botao botao--texto" href="/login">{mensagens.voltar}</a></header>
+    <header className="recuperar-topo"><Logo /><div className="recuperar-acoes"><BotaoSom /><Link className="botao botao--texto" href="/login">{mensagens.voltar}</Link></div></header>
     <section className="recuperar-cartao">
       <div className="recuperar-simbolo" aria-hidden="true"><Icone nome={etapa === 'pronto' ? 'check' : 'cadeado'} /></div>
       <h1 ref={titulo} tabIndex={-1}>{etapa === 'pronto' ? m.sucesso : m.recuperar}</h1>
@@ -91,7 +93,7 @@ export function Recuperar() {
           ? <Botao variante="texto" disabled={ocupado} onClick={() => { setEtapa('codigo'); setValidacao(''); setErro(null); }}>{m.tenhoCodigo}</Botao>
           : <Botao variante="texto" disabled={ocupado || espera > 0} onClick={enviar}>{espera ? m.aguarde(espera) : m.reenviar}</Botao>}
       </form>}
-      <div className={etapa === 'pronto' ? 'acao-principal' : 'recuperar-voltar'}><a className={etapa === 'pronto' ? 'botao botao--primario' : 'acesso-link'} href="/login">{m.entrar}</a></div>
+      <div className={etapa === 'pronto' ? 'acao-principal' : 'recuperar-voltar'}><Link className={etapa === 'pronto' ? 'botao botao--primario' : 'acesso-link'} href="/login">{m.entrar}</Link></div>
     </section>
   </main>;
 }

@@ -46,8 +46,9 @@ test('Mesmos IDs de SFX e fundos declarados no mobile (FONTES_SFX e FONTES_FUNDO
   }
   for (const def of CATALOGO_FUNDOS) {
     assert.match(mobSrc, new RegExp(`\\b${def.id}:\\s*require\\(['"]\\.\\./assets/sons/fundos/${def.arquivo}['"]\\)`), `Falta ${def.id} em FONTES_FUNDOS`);
-    assert.match(webSrc, new RegExp(`'${def.id}'`), `Falta ${def.id} em src/app/sons.ts`);
+
   }
+  assert.match(webSrc, /faixa\.id === 'lofi_estudo'/);
 });
 
 test('Todos os WAVs são PCM 16-bit mono em 44.100 Hz com início em até 5 ms', () => {
@@ -137,17 +138,7 @@ test('MaquinaEstadoSom: posse do modo de áudio, bloqueio de SFX em gravação/v
   assert.equal(m.motivoPausa(true), 'nenhum');
 });
 
-test('Spec 12: descrições curtas em OPCOES_FUNDO_UI e regra de não enfileirar antes do gesto na web', () => {
-  const descricoes = Object.fromEntries(OPCOES_FUNDO_UI.map((o) => [o.id, o.descricao]));
-  assert.deepEqual(descricoes, {
-    mudo: 'Sem som de fundo',
-    foco_calmo: 'Acordes suaves e quentes',
-    chuva_suave: 'Chuva leve na janela',
-    lofi_estudo: 'Batida lenta, sem melodia',
-    biblioteca: 'Ambiente quieto, bom para ler',
-    brisa_natural: 'Vento suave entre as folhas',
-  });
-
+test('efeitos antes do gesto são descartados e os essenciais são preparados', () => {
   const webSrc = fs.readFileSync(path.join(RAIZ, 'src/app/sons.ts'), 'utf8');
   assert.match(webSrc, /if\s*\(!this\.desbloqueado\)\s*return;/);
   assert.match(webSrc, /preCarregarEssenciais\(\)/);
@@ -158,7 +149,7 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
   const requisicoes = [];
   let ctxEstado = 'suspended';
 
-  let inicios = 0;
+  let inicios = 0, iniciosFundo = 0, paradasFundo = 0;
   let liberarArquivo;
   class FakeAudioContext {
     get state() {
@@ -174,7 +165,7 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
       };
     }
     createBufferSource() {
-      return { buffer: null, loop: false, loopStart: 0, loopEnd: 0, connect() {}, start() { inicios++; }, stop() {}, disconnect() {} };
+      return { buffer: null, loop: false, loopStart: 0, loopEnd: 0, connect() {}, start() { if (this.loop) iniciosFundo++; else inicios++; }, stop() { if (this.loop) paradasFundo++; }, disconnect() {} };
     }
     async resume() {
       ctxEstado = 'running';
@@ -232,6 +223,9 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
     assert.equal(inicios, 2, 'dois disparos da mesma interação tocam uma vez');
     assert.equal(requisicoes.filter(url => url.includes('/acerto.wav')).length, 1);
 
+    assert.equal(iniciosFundo, 1, 'a música única iniciou no primeiro gesto');
+    assert.equal(paradasFundo, 0, 'acerto e os demais efeitos não interrompem o fundo');
+    assert.deepEqual(requisicoes.filter(u => u.includes('/fundos/')), ['/sons/fundos/lofi-estudo.mp3?v=9b1e28811362']);
     const escopo = tocaSons.sinalDosEfeitos;
     tocaSons.entrarEmGravacaoOuVoz();
     await tocaSons.tocarEfeito('erro');
