@@ -1,0 +1,14 @@
+# A busca da lista de trilhas falhou: o app mostra "Confira a conexão e tente novamente", com "Tentar novamente"
+# (testID tentar-planos), e fica sem a barra de baixo. O botão busca as trilhas de novo e, dando certo, o app vai sozinho ao
+# mapa da trilha em andamento (estudo.tsx, carregarPlanos). Esta parte toca nele uma vez, se ele estiver na tela; se a falha
+# continuar, a espera seguinte de quem a chama derruba o fluxo, como antes.
+appId: host.exp.Exponent
+---
+- runFlow:
+    when:
+      visible:
+        id: tentar-planos
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: tentar-planos
