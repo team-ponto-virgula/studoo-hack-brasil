@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
-  AccessibilityInfo, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions,
+  AccessibilityInfo, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle,
 } from 'react-native';
-import Svg, { Defs, FeDropShadow, Filter, G, SvgXml, Text as SvgTexto } from 'react-native-svg';
+import Svg, { Defs, FeDropShadow, Filter, G, LinearGradient, Rect, Stop, SvgXml, Text as SvgTexto } from 'react-native-svg';
 import {
   LIMITES_COMUNIDADE, MOTIVOS_DENUNCIA, TEMAS, origemLegivel, svgCapaTrilha,
   type CartaoTrilha, type EstadoSeguir, type MotivoDenuncia, type Novidade, type PaginaExplorar, type PerfilPublico, type PessoaNovidade, type Tema,
@@ -10,7 +10,7 @@ import {
 } from '@studoo/contratos';
 import type { ClienteNativo } from './api-nativa';
 import { Icone } from './icone';
-import { Botao, Tela, Titulo, degrauFora, estilos } from './interface';
+import { AvisoDoApp, Botao, Tela, Titulo, degrauFora, estilos, useMovimentoReduzido } from './interface';
 import { useDepoisDeSair } from './janelas';
 import { mensagens } from './mensagens';
 import {
@@ -154,50 +154,63 @@ function MenuCartao({ titulo, aoDenunciar, testID }: { titulo: string; aoDenunci
 }
 
 /**
- * Cartão de trilha, como `CartaoDeTrilha` da web: capa (tema e, se for o caso, "Demonstração"), título (abre a prévia),
- * quem fez (foto e nome, levam ao perfil), legenda, "6 lições · 3 partes", "12 estudando · 8 valeus" (ou "Nova", sem
- * ninguém) e as ações: Quero estudar / Continuar / Sua trilha, Valeu (liga e desliga), Compartilhar e "•••" com Denunciar.
+ * Cartão de trilha, como `CartaoDeTrilha` da web em 6122cc2 (rodada de banca e lote 4): capa com o tema inteiro no alto,
+ * "Demonstração" embaixo à esquerda e o numeral do Em alta embaixo à direita; título (abre a prévia); quem fez (foto e
+ * nome num link só, "por" em cinza e só o nome sublinhado); legenda; contagem e números logo acima dos botões; e as ações:
+ * Quero estudar / Continuar (azul claro) / Abrir minha trilha, o Valeu (coração, palavra e contagem), Compartilhar e "•••"
+ * com Denunciar. Na própria trilha, sem Valeu: "Compartilhar" com ícone e palavra, e a contagem de valeus fica nos números.
  */
-export function CartaoDeTrilha({ cartao, acoes, posicao, testID }: { cartao: CartaoTrilha; acoes: AcoesCartao; posicao?: number; testID?: string }) {
+export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, duasLinhas = false }: {
+  cartao: CartaoTrilha; acoes: AcoesCartao; posicao?: number; testID?: string;
+  /** Capa mais baixa no celular (112 na grade, 104 no Em alta); sem ela, a capa tem a proporção 2:1. */
+  alturaCapa?: number;
+  /** Em fileira ou grade de várias colunas, o título reserva exatamente duas linhas (o resto bate com o vizinho). */
+  duasLinhas?: boolean;
+}) {
   const sua = cartao.situacao === 'sua';
   const ocupado = acoes.ocupado === cartao.codigo;
   const id = testID ?? `cartao-${cartao.codigo}`;
   const principal = sua
-    ? <Botao rotulo={c.sua} variante="secundario" testID={`${id}-sua`} acao={() => cartao.planoId && acoes.abrir(cartao.planoId)} estilo={comunidadeEstilos.principal} />
+    ? <Botao rotulo={c.sua} variante="secundario" testID={`${id}-sua`} acao={() => cartao.planoId && acoes.abrir(cartao.planoId)} estilo={[comunidadeEstilos.principal, comunidadeEstilos.contorno]} />
     : cartao.situacao === 'adicionada'
-      ? <Botao rotulo={c.continuar} variante="secundario" testID={`${id}-continuar`} acao={() => cartao.planoId && acoes.abrir(cartao.planoId)} estilo={comunidadeEstilos.principal} />
+      ? <Botao rotulo={c.continuar} variante="secundario" testID={`${id}-continuar`} acao={() => cartao.planoId && acoes.abrir(cartao.planoId)}
+          estilo={[comunidadeEstilos.principal, comunidadeEstilos.contorno, comunidadeEstilos.continuar]} />
       : <Botao rotulo={ocupado ? c.adicionando : c.queroEstudar} testID={`${id}-quero`} ocupado={ocupado} acao={() => acoes.queroEstudar(cartao)} estilo={comunidadeEstilos.principal} />;
-  const numeros = [cartao.estudando > 0 && c.estudando(cartao.estudando), cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ');
+  // A contagem de valeus mora no próprio botão; na trilha própria, que não tem o botão, fica aqui.
+  const numeros = [cartao.estudando > 0 && c.estudando(cartao.estudando), sua && cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ');
+  const por = c.por('');
   return (
     <View testID={id} style={[degrauFora(4, 20, cores.gelo), comunidadeEstilos.cartaoFora]}>
       <View style={comunidadeEstilos.cartao}>
-        <View style={comunidadeEstilos.capa}>
+        <View style={[comunidadeEstilos.capa, alturaCapa !== undefined && { aspectRatio: undefined, height: alturaCapa }]}>
           <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} />
           {posicao !== undefined && <Posicao numero={posicao} />}
-          <View style={comunidadeEstilos.selos} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-            {cartao.tema && (
-              <View style={[comunidadeEstilos.selo, comunidadeEstilos.seloTema]}>
-                <Text numberOfLines={1} style={comunidadeEstilos.seloTexto}>{temas[cartao.tema]}</Text>
-              </View>
-            )}
-            {cartao.demonstracao && (
-              <View style={[comunidadeEstilos.selo, comunidadeEstilos.seloDemo]}>
-                <Text numberOfLines={1} style={[comunidadeEstilos.seloTexto, { color: '#5B3A00' }]}>{c.demonstracao}</Text>
-              </View>
-            )}
-          </View>
+          {cartao.tema && (
+            <View style={[comunidadeEstilos.selo, comunidadeEstilos.seloTema]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              <Text style={comunidadeEstilos.seloTexto}>{temas[cartao.tema]}</Text>
+            </View>
+          )}
+          {cartao.demonstracao && (
+            <View style={[comunidadeEstilos.selo, comunidadeEstilos.seloDemo]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              <Text numberOfLines={1} style={[comunidadeEstilos.seloTexto, { color: '#5B3A00' }]}>{c.demonstracao}</Text>
+            </View>
+          )}
         </View>
         <View style={comunidadeEstilos.corpo}>
           {posicao !== undefined && <Text style={comunidadeEstilos.somenteLeitor}>{c.posicao(posicao)}</Text>}
-          <Pressable accessibilityRole="link" testID={`${id}-titulo`} onPress={() => acoes.abrirPrevia(cartao.codigo)} style={comunidadeEstilos.tituloToque}>
+          <Pressable accessibilityRole="link" testID={`${id}-titulo`} onPress={() => acoes.abrirPrevia(cartao.codigo)}
+            style={[comunidadeEstilos.tituloToque, duasLinhas && comunidadeEstilos.tituloDuasLinhas]}>
             <Text accessibilityRole="header" style={comunidadeEstilos.titulo}>{cartao.titulo}</Text>
           </Pressable>
-          {/* Quem fez: a foto e o nome levam ao perfil dela (na web, o nome é o link; aqui a linha toda responde ao toque). */}
+          {/* Quem fez: a foto e o nome num link só, que leva ao perfil dela; "por" em cinza, só o nome sublinhado. */}
           {cartao.dono.perfilId ? (
             <Pressable accessibilityRole="link" accessibilityLabel={c.perfilDe(cartao.dono.nome)} testID={`${id}-dono`}
               onPress={() => acoes.abrirPerfil(cartao.dono.perfilId!)} style={[comunidadeEstilos.dono, comunidadeEstilos.donoLink]}>
               <Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} />
-              <Text style={comunidadeEstilos.donoLinkTexto}>{c.por(cartao.dono.nome)}</Text>
+              <Text style={comunidadeEstilos.donoLinha}>
+                <Text style={comunidadeEstilos.donoPor}>{por}</Text>
+                <Text style={comunidadeEstilos.donoNome}>{cartao.dono.nome}</Text>
+              </Text>
             </Pressable>
           ) : (
             <View style={comunidadeEstilos.dono}>
@@ -206,30 +219,69 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID }: { cartao: Car
             </View>
           )}
           {cartao.legenda && <Text style={comunidadeEstilos.legenda}>{cartao.legenda}</Text>}
-          <Text style={comunidadeEstilos.meta}>{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</Text>
-          {cartao.estudando === 0 && cartao.valeus === 0 ? (
-            <View style={comunidadeEstilos.numerosLinha}>
-              <View accessible accessibilityLabel={c.novaRotulo} style={comunidadeEstilos.nova}><Text style={comunidadeEstilos.novaTexto}>{c.nova}</Text></View>
-            </View>
-          ) : <Text style={comunidadeEstilos.meta}>{numeros}</Text>}
+          {/* Contagem e números ancorados logo acima dos botões: as últimas linhas batem na fileira. */}
+          <View style={comunidadeEstilos.rodape}>
+            <Text style={comunidadeEstilos.meta}>{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</Text>
+            {cartao.estudando === 0 && cartao.valeus === 0 ? (
+              <View style={comunidadeEstilos.numerosLinha}>
+                <View accessible accessibilityLabel={c.novaRotulo} style={comunidadeEstilos.nova}><Text style={comunidadeEstilos.novaTexto}>{c.nova}</Text></View>
+              </View>
+            ) : numeros !== '' && <Text style={comunidadeEstilos.meta}>{numeros}</Text>}
+          </View>
           <View style={comunidadeEstilos.acoes}>
             {principal}
-            {!sua && (
-              <Pressable testID={`${id}-valeu`} accessibilityRole="button" accessibilityLabel={c.valeuRotulo(cartao.titulo)}
-                accessibilityState={{ selected: Boolean(cartao.valeuMeu), disabled: ocupado }} aria-pressed={Boolean(cartao.valeuMeu)} disabled={ocupado}
-                onPress={() => acoes.valeu(cartao)}
-                style={({ pressed }) => [comunidadeEstilos.valeu, cartao.valeuMeu && comunidadeEstilos.valeuMarcado, pressed && !cartao.valeuMeu && { backgroundColor: cores.nevoa },
-                  ocupado && { opacity: 0.6 }]}>
-                <Icone nome="valeu" tamanho={20} cor={cartao.valeuMeu ? '#A3204A' : cores.texto} cheio={Boolean(cartao.valeuMeu)} />
-                <Text importantForAccessibility="no" style={[comunidadeEstilos.valeuTexto, cartao.valeuMeu && { color: '#A3204A' }]}>{c.valeu}</Text>
-              </Pressable>
+            {!sua && <BotaoValeu cartao={cartao} ocupado={ocupado} testID={`${id}-valeu`} aoTocar={() => acoes.valeu(cartao)} />}
+            {sua ? (
+              // Na própria trilha, o compartilhar ocupa a linha, com o ícone e a palavra.
+              <Botao rotulo={c.compartilhar} iconeAntes="compartilhar" variante="secundario" nomeAcessivel={c.compartilharRotulo(cartao.titulo)}
+                testID={`${id}-compartilhar`} acao={() => acoes.compartilhar(cartao)} estilo={[comunidadeEstilos.principal, comunidadeEstilos.contorno]} />
+            ) : (
+              <BotaoDoCartao rotulo={c.compartilharRotulo(cartao.titulo)} icone="compartilhar" testID={`${id}-compartilhar`} acao={() => acoes.compartilhar(cartao)} />
             )}
-            <BotaoDoCartao rotulo={c.compartilharRotulo(cartao.titulo)} icone="compartilhar" testID={`${id}-compartilhar`} acao={() => acoes.compartilhar(cartao)} />
             {!sua && <MenuCartao titulo={cartao.titulo} testID={`${id}-mais`} aoDenunciar={() => acoes.denunciar(cartao)} />}
           </View>
         </View>
       </View>
     </View>
+  );
+}
+
+/**
+ * O Valeu (lote 4): coração, "Valeu" e a contagem (some no zero). Marcado, fundo #FDE8EE, borda #F2B8C6 e cor #A3204A, com o
+ * coração cheio; ao marcar, o coração dá um pulo curto (280 ms, escala 1,32 a 45%); com movimento reduzido, só a cor muda.
+ * Tocar de novo retira.
+ */
+function BotaoValeu({ cartao, ocupado, testID, aoTocar }: { cartao: CartaoTrilha; ocupado: boolean; testID: string; aoTocar: () => void }) {
+  const marcado = Boolean(cartao.valeuMeu);
+  const reduzir = useMovimentoReduzido();
+  const [pulo] = useState(() => new Animated.Value(1));
+  const antes = useRef(marcado);
+  useEffect(() => {
+    const acabouDeMarcar = marcado && !antes.current;
+    antes.current = marcado;
+    if (!acabouDeMarcar || reduzir !== false) return;
+    // cubic-bezier(0.2, 0.9, 0.3, 1.4) da web, nas duas metades do pulo (126 ms subindo, 154 voltando).
+    const curva = Easing.bezier(0.2, 0.9, 0.3, 1.4);
+    const animacao = Animated.sequence([
+      Animated.timing(pulo, { toValue: 1.32, duration: 126, easing: curva, useNativeDriver: true }),
+      Animated.timing(pulo, { toValue: 1, duration: 154, easing: curva, useNativeDriver: true }),
+    ]);
+    animacao.start();
+    return () => animacao.stop();
+  }, [marcado, reduzir, pulo]);
+  const cor = marcado ? '#A3204A' : cores.texto;
+  return (
+    <Pressable testID={testID} accessibilityRole="button"
+      accessibilityLabel={`${marcado ? c.valeuMarcadoRotulo(cartao.titulo) : c.valeuRotulo(cartao.titulo)}${cartao.valeus > 0 ? ` (${c.valeus(cartao.valeus)})` : ''}`}
+      accessibilityState={{ selected: marcado, disabled: ocupado }} aria-pressed={marcado} disabled={ocupado} onPress={aoTocar}
+      style={({ pressed }) => [comunidadeEstilos.valeu, marcado && comunidadeEstilos.valeuMarcado, pressed && !marcado && { backgroundColor: cores.nevoa },
+        ocupado && { opacity: 0.6 }]}>
+      <Animated.View style={{ transform: [{ scale: pulo }] }}>
+        <Icone nome="valeu" tamanho={20} cor={cor} cheio={marcado} />
+      </Animated.View>
+      <Text importantForAccessibility="no" style={[comunidadeEstilos.valeuTexto, { color: cor }]}>{c.valeu}</Text>
+      {cartao.valeus > 0 && <Text testID={`${testID}-n`} importantForAccessibility="no" style={[comunidadeEstilos.valeuTexto, comunidadeEstilos.valeuNumero, { color: cor }]}>{cartao.valeus}</Text>}
+    </Pressable>
   );
 }
 
@@ -242,9 +294,15 @@ function Radio({ marcado }: { marcado: boolean }) {
   );
 }
 
-/** Denunciar trilha ou perfil, como `DialogoDenuncia` da web: os quatro motivos em rádio, "Enviar denúncia" e "Cancelar". */
-export function DialogoDenuncia({ cliente, alvoTipo, alvo, aoFechar, aoEnviar }: {
-  cliente: ClienteNativo; alvoTipo: 'trilha' | 'perfil'; alvo: string; aoFechar: () => void; aoEnviar: (texto: string) => void;
+/**
+ * Denunciar trilha ou perfil, como `DialogoDenuncia` da web em 6122cc2: o alvo nomeado («"Título", de Nome» ou o nome da
+ * pessoa), os quatro motivos em rádio, nenhum marcado, e "Enviar denúncia" desligado até a pessoa escolher; e "Cancelar".
+ */
+export function DialogoDenuncia({ cliente, alvoTipo, alvo, alvoNome, aoFechar, aoEnviar }: {
+  cliente: ClienteNativo; alvoTipo: 'trilha' | 'perfil'; alvo: string;
+  /** O que está sendo denunciado, por extenso. */
+  alvoNome: string;
+  aoFechar: () => void; aoEnviar: (texto: string) => void;
 }) {
   const [motivo, setMotivo] = useState<MotivoDenuncia | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -275,7 +333,8 @@ export function DialogoDenuncia({ cliente, alvoTipo, alvo, aoFechar, aoEnviar }:
       <Pressable accessible={false} style={estilos.modalFundo} onPress={() => { if (!enviando) aoFechar(); }}>
         <Pressable testID="denuncia" accessible={false} accessibilityViewIsModal role="dialog" aria-modal onPress={() => {}} style={[estilos.dialogoCartao, { maxWidth: 416 }]}>
           <Text accessibilityRole="header" style={estilos.dialogoTitulo}>{alvoTipo === 'trilha' ? c.denuncia.tituloTrilha : c.denuncia.tituloPerfil}</Text>
-          <Text style={estilos.dialogoTexto}>{c.denuncia.texto}</Text>
+          <Text testID="denuncia-alvo" style={comunidadeEstilos.denunciaAlvo}>{alvoNome}</Text>
+          <Text style={estilos.dialogoTexto}>{alvoTipo === 'trilha' ? c.denuncia.texto : c.denuncia.textoPerfil}</Text>
           <View accessibilityRole="radiogroup" accessibilityLabel={c.denuncia.escolha} style={comunidadeEstilos.motivos}>
             {MOTIVOS_DENUNCIA.map((opcao, indice) => (
               <Pressable key={opcao} ref={indice === 0 ? primeiro : undefined} testID={`denuncia-${opcao}`} accessibilityRole="radio"
@@ -289,7 +348,9 @@ export function DialogoDenuncia({ cliente, alvoTipo, alvo, aoFechar, aoEnviar }:
           {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
           {/* .recorte__acoes: até 600 de largura, uma embaixo da outra; a ação vem primeiro. */}
           <View style={[comunidadeEstilos.dialogoAcoes, width > 600 && comunidadeEstilos.dialogoAcoesLado]}>
-            <Botao rotulo={enviando ? c.denuncia.enviando : c.denuncia.enviar} variante="destrutivo" testID="denuncia-enviar" ocupado={enviando} acao={() => void enviar()} />
+            {/* Nenhum motivo vem marcado: "Enviar" só liga depois que a pessoa escolhe. */}
+            <Botao rotulo={enviando ? c.denuncia.enviando : c.denuncia.enviar} variante="destrutivo" testID="denuncia-enviar" ocupado={enviando}
+              desativado={!motivo} acao={() => void enviar()} />
             <Botao rotulo={c.denuncia.cancelar} variante="secundario" testID="denuncia-cancelar" desativado={enviando} acao={aoFechar} />
           </View>
         </Pressable>
@@ -313,6 +374,8 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
 }) {
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [denuncia, setDenuncia] = useState<CartaoTrilha | null>(null);
+  // O aviso do próprio app (lote 4): o Valeu e a denúncia enviada avisam numa faixa no pé da tela, nunca no sistema.
+  const { avisar } = useContext(AvisoDoApp);
   const falar = (texto: string) => { anunciar(texto); aoAnunciar?.(texto); };
   const acoes: AcoesCartao = {
     ocupado,
@@ -338,7 +401,8 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
       try {
         const r = await cliente.valeu(cartao.codigo, ativo);
         setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: r.valeuMeu, valeus: r.valeus } : atual));
-        falar(ativo ? c.valeuEnviado(cartao.titulo) : c.valeuRetirado(cartao.titulo));
+        // Toda vez, o aviso do app (o leitor de tela também ouve).
+        avisar(ativo ? c.valeuAviso(cartao.dono.nome.trim().split(/\s+/)[0] ?? cartao.dono.nome) : c.valeuRetiradoAviso);
       } catch (falha) {
         setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: cartao.valeuMeu, valeus: cartao.valeus } : atual));
         falar(textoDoErro(codigoDoErro(falha)));
@@ -357,10 +421,57 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
     },
   };
   const dialogo = denuncia ? (
-    <DialogoDenuncia cliente={cliente} alvoTipo="trilha" alvo={denuncia.codigo} aoFechar={() => setDenuncia(null)}
-      aoEnviar={(texto) => { setDenuncia(null); falar(texto); }} />
+    <DialogoDenuncia cliente={cliente} alvoTipo="trilha" alvo={denuncia.codigo} alvoNome={c.denuncia.alvoTrilha(denuncia.titulo, denuncia.dono.nome)}
+      aoFechar={() => setDenuncia(null)} aoEnviar={(texto) => { setDenuncia(null); avisar(texto); }} />
   ) : null;
   return { acoes, dialogo };
+}
+
+/** Esmaecimento de 24 na borda da fileira que ainda tem conteúdo (a máscara `linear-gradient` da web): o fundo da página por cima. */
+function Esmaecer({ lado }: { lado: 'esquerda' | 'direita' }) {
+  const id = `esmaecer-${lado}`;
+  return (
+    <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      style={[comunidadeEstilos.esmaecer, lado === 'esquerda' ? { left: 0 } : { right: 0 }]}>
+      <Svg width={24} height="100%">
+        <Defs>
+          <LinearGradient id={id} x1={lado === 'esquerda' ? '0' : '1'} y1="0" x2={lado === 'esquerda' ? '1' : '0'} y2="0">
+            <Stop offset="0" stopColor={cores.fundo} stopOpacity={1} />
+            <Stop offset="1" stopColor={cores.fundo} stopOpacity={0} />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="24" height="100%" fill={`url(#${id})`} />
+      </Svg>
+    </View>
+  );
+}
+
+/**
+ * Fileira rolável que vai até as bordas da tela no celular (as fichas de tema e o Em alta, como a web na rodada de banca):
+ * o conteúdo começa no respiro da página e some sob a borda, com o esmaecimento de 24 na borda que ainda tem o que rolar.
+ */
+function Fileira({ children, estiloConteudo, testID, papel, rotulo, encaixe }: {
+  children: ReactNode; estiloConteudo?: StyleProp<ViewStyle>; testID?: string; papel?: 'list' | 'radiogroup'; rotulo?: string;
+  /** Passo do encaixe ao rolar (o Em alta encaixa um cartão por vez). */
+  encaixe?: number;
+}) {
+  const [medidas, setMedidas] = useState({ largura: 0, conteudo: 0, x: 0 });
+  const rola = medidas.conteudo > medidas.largura + 2;
+  return (
+    <View style={comunidadeEstilos.fileira}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} testID={testID} accessibilityRole={papel} accessibilityLabel={rotulo}
+        snapToInterval={encaixe} snapToAlignment={encaixe ? 'start' : undefined} decelerationRate={encaixe ? 'fast' : undefined} disableIntervalMomentum={Boolean(encaixe)}
+        scrollEventThrottle={32}
+        onLayout={(evento) => { const largura = evento.nativeEvent.layout.width; setMedidas((atual) => (atual.largura === largura ? atual : { ...atual, largura })); }}
+        onContentSizeChange={(conteudo) => setMedidas((atual) => (atual.conteudo === conteudo ? atual : { ...atual, conteudo }))}
+        onScroll={(evento) => { const x = evento.nativeEvent.contentOffset.x; setMedidas((atual) => (Math.abs(atual.x - x) < 1 ? atual : { ...atual, x })); }}
+        contentContainerStyle={[comunidadeEstilos.fileiraConteudo, estiloConteudo]}>
+        {children}
+      </ScrollView>
+      {rola && medidas.x > 2 && <Esmaecer lado="esquerda" />}
+      {rola && medidas.x + medidas.largura < medidas.conteudo - 2 && <Esmaecer lado="direita" />}
+    </View>
+  );
 }
 
 /**
@@ -369,8 +480,8 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
  */
 function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string }) {
   const [largura, setLargura] = useState(0);
-  // 86 % da área da lista sem o respiro de 2 de cada lado (o `%` da web conta a caixa de conteúdo), até 21 rem.
-  const item = largura ? Math.min((largura - 4) * 0.86, 336) : 0;
+  // 86 % da largura do conteúdo da página (a lista vai até as bordas, com o respiro da página dentro), até 21 rem.
+  const item = largura ? Math.min(largura * 0.86, 336) : 0;
   return (
     <View style={comunidadeEstilos.emAlta}>
       <View>
@@ -379,14 +490,13 @@ function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: Ac
       </View>
       <View onLayout={(evento) => setLargura(evento.nativeEvent.layout.width)}>
         {item > 0 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} snapToInterval={item + 8} snapToAlignment="start" decelerationRate="fast"
-            disableIntervalMomentum testID="em-alta" accessibilityRole="list" contentContainerStyle={comunidadeEstilos.emAltaLista}>
+          <Fileira testID="em-alta" papel="list" encaixe={item + 8} estiloConteudo={comunidadeEstilos.emAltaLista}>
             {cartoes.map((cartao, indice) => (
               <View key={cartao.codigo} style={{ width: item }}>
-                <CartaoDeTrilha cartao={cartao} acoes={acoes} posicao={indice + 1} testID={`em-alta-${indice + 1}`} />
+                <CartaoDeTrilha cartao={cartao} acoes={acoes} posicao={indice + 1} testID={`em-alta-${indice + 1}`} alturaCapa={ALTURA_CAPA_EM_ALTA} duasLinhas />
               </View>
             ))}
-          </ScrollView>
+          </Fileira>
         )}
       </View>
     </View>
@@ -396,13 +506,15 @@ function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: Ac
 /** Grade de cartões: uma coluna no celular, como `repeat(auto-fill, minmax(min(100%, 17rem), 1fr))` da web. */
 function Grade({ cartoes, acoes, prefixo }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; prefixo: string }) {
   const [largura, setLargura] = useState(0);
+  const larguraJanela = useWindowDimensions().width;
   const colunas = Math.max(1, Math.floor((largura + 16) / (272 + 16)));
   const lado = colunas > 1 ? (largura - 16 * (colunas - 1)) / colunas : undefined;
   return (
     <View accessibilityRole="list" onLayout={(evento) => setLargura(evento.nativeEvent.layout.width)} style={comunidadeEstilos.grade}>
       {cartoes.map((cartao) => (
         <View key={cartao.codigo} style={lado ? { width: lado } : comunidadeEstilos.gradeItem}>
-          <CartaoDeTrilha cartao={cartao} acoes={acoes} testID={`${prefixo}-${cartao.codigo}`} />
+          <CartaoDeTrilha cartao={cartao} acoes={acoes} testID={`${prefixo}-${cartao.codigo}`} duasLinhas={colunas > 1}
+            alturaCapa={larguraJanela <= 767 ? ALTURA_CAPA_GRADE : undefined} />
         </View>
       ))}
     </View>
@@ -520,6 +632,13 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
         <View style={comunidadeEstilos.topo}>
           <Titulo testID="titulo-explorar" foco>{c.titulo}</Titulo>
           <Text style={comunidadeEstilos.subtitulo}>{c.subtitulo}</Text>
+          {/* Enquanto houver conteúdo de exemplo na tela, uma linha explica o selo (como a web na rodada de banca). */}
+          {pagina && [...pagina.emAlta, ...pagina.novas].some((cartao) => cartao.demonstracao) && (
+            <Text testID="explorar-demo" style={comunidadeEstilos.explorarDemo}>
+              <Text style={comunidadeEstilos.explorarDemoSelo}>{` ${c.demonstracao} `}</Text>
+              {` ${c.demonstracaoExplica.replace(`“${c.demonstracao}” `, '')}`}
+            </Text>
+          )}
         </View>
 
         <View accessibilityRole="radiogroup" accessibilityLabel={c.abasRotulo} style={comunidadeEstilos.abas}>
@@ -532,11 +651,13 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
           ))}
         </View>
 
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} accessibilityRole="radiogroup" accessibilityLabel={c.temas}
-          style={comunidadeEstilos.temas} contentContainerStyle={comunidadeEstilos.temasConteudo}>
-          <FichaTema rotulo={c.todos} marcada={tema === null} testID="tema-todos" aoTocar={() => setTema(null)} />
-          {TEMAS.map((opcao) => <FichaTema key={opcao} rotulo={temas[opcao]} marcada={tema === opcao} testID={`tema-${opcao}`} aoTocar={() => setTema(opcao)} />)}
-        </ScrollView>
+        {/* Uma linha só, rolável, até as bordas da tela; na aba Seguindo sem ninguém seguido, não há o que filtrar. */}
+        {!(aba === 'seguindo' && pagina?.seguindoAlguem === false) && (
+          <Fileira papel="radiogroup" rotulo={c.temas} estiloConteudo={comunidadeEstilos.temasConteudo}>
+            <FichaTema rotulo={c.todos} marcada={tema === null} testID="tema-todos" aoTocar={() => setTema(null)} />
+            {TEMAS.map((opcao) => <FichaTema key={opcao} rotulo={temas[opcao]} marcada={tema === opcao} testID={`tema-${opcao}`} aoTocar={() => setTema(opcao)} />)}
+          </Fileira>
+        )}
 
         {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
         {carregando && !pagina && (
@@ -556,7 +677,7 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
               : <Botao rotulo={c.vazioAcao} testID="vazio-minhas-trilhas" acao={irParaTrilhas} estilo={{ alignSelf: 'flex-start' }} />} />
         )}
 
-        {pagina && pagina.emAlta.length > 0 && <EmAlta cartoes={pagina.emAlta} acoes={acoes} titulo={c.emAlta} />}
+        {pagina && pagina.emAlta.length > 0 && <EmAlta cartoes={pagina.emAlta} acoes={acoes} titulo={tema ? c.emAltaDoTema(temas[tema]) : c.emAlta} />}
 
         {pagina && pagina.novas.length > 0 && (
           <View style={comunidadeEstilos.novas}>
@@ -743,7 +864,8 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
   const [falha, setFalha] = useState<string | null>(null);
   const [seguidores, setSeguidores] = useState<number | undefined>(undefined);
   const [denunciando, setDenunciando] = useState(false);
-  const [status, setStatus] = useState('');
+  // A denúncia enviada usa o aviso do próprio app (lote 4).
+  const { avisar } = useContext(AvisoDoApp);
   useEffect(() => {
     let ativo = true;
     setPerfil(null);
@@ -780,7 +902,6 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
                   aoAdicionado={aoAdicionado} aoAbrir={aoAbrir} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfil} />
                 <View style={comunidadeEstilos.denunciarPerfil}>
                   <BotaoParar rotulo={c.denuncia.tituloPerfil} icone="bandeirinha" testID="denunciar-perfil" acao={() => setDenunciando(true)} />
-                  <Status texto={status} />
                 </View>
               </>
             ) : (
@@ -803,8 +924,8 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
         )}
       </View>
       {denunciando && (
-        <DialogoDenuncia cliente={cliente} alvoTipo="perfil" alvo={perfilId} aoFechar={() => setDenunciando(false)}
-          aoEnviar={(texto) => { setDenunciando(false); setStatus(texto); anunciar(texto); }} />
+        <DialogoDenuncia cliente={cliente} alvoTipo="perfil" alvo={perfilId} alvoNome={perfil?.nome ?? ''} aoFechar={() => setDenunciando(false)}
+          aoEnviar={(texto) => { setDenunciando(false); avisar(texto); }} />
       )}
     </Tela>
   );
@@ -872,6 +993,10 @@ export function TelaPreviaTrilha({ cliente, codigo, acoesTela, aoAdicionado, aoA
 /** Fim da rolagem com a barra de baixo: 120 entre o último bloco e a barra, como `.estudo[data-navegacao] .estudo-principal` (o Perfil também usa). */
 export const FIM_COM_BARRA = { paddingBottom: 120 } as const;
 
+/** Capas mais baixas no celular (até 767 de largura), como a web: 112 na grade e 104 no Em alta. */
+const ALTURA_CAPA_GRADE = 112;
+const ALTURA_CAPA_EM_ALTA = 104;
+
 const comunidadeEstilos = StyleSheet.create({
   irAoExplorar: { marginTop: 26 },
   // .quem-compartilhou__seguir: 6 acima e a largura do próprio botão.
@@ -881,33 +1006,48 @@ const comunidadeEstilos = StyleSheet.create({
   cartao: { flex: 1, overflow: 'hidden', borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
   capa: { aspectRatio: 2, overflow: 'hidden' },
   posicao: { position: 'absolute', right: 12, bottom: 4, height: 72, zIndex: 1 },
-  selos: { position: 'absolute', top: 10, left: 10, right: 10, height: 26, flexDirection: 'row', gap: 6, overflow: 'hidden' },
-  selo: { height: 26, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 999, backgroundColor: '#FFFFFF',
+  // .cartao-trilha__tema / __demo: pílulas brancas de 20 de linha com 3 × 10 de respiro; o tema inteiro no alto, à esquerda
+  // (até a largura da capa menos 20, quebrando se precisar), e "Demonstração" embaixo, à esquerda.
+  selo: { position: 'absolute', left: 10, paddingVertical: 3, paddingHorizontal: 10, borderRadius: 999, backgroundColor: '#FFFFFF',
     shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
-  seloTema: { flexShrink: 1, minWidth: 0 },
-  seloDemo: { flexShrink: 0, backgroundColor: '#FFF6EA' },
+  seloTema: { top: 10, maxWidth: '94%' },
+  seloDemo: { bottom: 10, backgroundColor: '#FFF6EA' },
   seloTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 20, fontWeight: '900' },
   corpo: { flex: 1, gap: 6, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16, minWidth: 0 },
   somenteLeitor: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   tituloToque: { minHeight: 44, paddingTop: 2, alignSelf: 'flex-start' },
+  // Em fileira ou grade de várias colunas: duas linhas reservadas (2,6 em + 2).
+  tituloDuasLinhas: { minHeight: 48.8 },
   titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   dono: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 32 },
   donoLink: { minHeight: 44 },
-  donoLinkTexto: { flexShrink: 1, color: cores.acao, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800', textDecorationLine: 'underline' },
+  // "por" em cinza, sem negrito (600); só o nome sublinhado, na cor do link.
+  donoLinha: { flexShrink: 1, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
+  donoPor: { color: cores.textoSecundario, fontWeight: '600' },
+  donoNome: { color: cores.acao, textDecorationLine: 'underline' },
   donoTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   legenda: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 23.2 },
   meta: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
   numerosLinha: { flexDirection: 'row' },
   nova: { paddingHorizontal: 10, paddingVertical: 2, borderRadius: 999, backgroundColor: '#FFF3C4' },
   novaTexto: { color: '#6B4A00', fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '900' },
-  acoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 'auto', paddingTop: 8 },
+  // .cartao-trilha__rodape: contagem e números ancorados acima dos botões (margin-top: auto); as ações a 12 deles.
+  rodape: { gap: 4, marginTop: 'auto' },
+  acoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, paddingTop: 12 },
   principal: { flexBasis: '100%', flexGrow: 1 },
+  // Contornos dos controles com 3:1 sobre o branco (#8792BD); "Continuar" em azul claro da marca.
+  contorno: { borderColor: '#8792BD' },
+  continuar: { backgroundColor: '#EEF3FF' },
   valeu: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minWidth: 44, minHeight: 44, paddingHorizontal: 10,
-    borderWidth: 2, borderColor: cores.gelo, borderRadius: 14, backgroundColor: cores.fundo },
+    borderWidth: 2, borderColor: '#8792BD', borderRadius: 14, backgroundColor: cores.fundo },
   valeuMarcado: { borderColor: '#F2B8C6', backgroundColor: '#FDE8EE' },
   valeuTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
-  icone: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, borderWidth: 2, borderColor: cores.gelo,
+  // .cartao-trilha__valeu-n: a contagem em algarismos de largura fixa, no mínimo 1,25 em.
+  valeuNumero: { minWidth: 20, fontVariant: ['tabular-nums'] },
+  icone: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, borderWidth: 2, borderColor: '#8792BD',
     borderRadius: 14, backgroundColor: cores.fundo },
+  // .denuncia__alvo: o que está sendo denunciado, logo abaixo do título (6 mais perto dele), em 800.
+  denunciaAlvo: { marginTop: -6, color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   menu: { position: 'relative' },
   opcoes: { position: 'absolute', right: 0, bottom: 50, zIndex: 10, minWidth: 176, padding: 6, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12,
     backgroundColor: cores.fundo, shadowColor: '#0F172A', shadowOpacity: 0.14, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 8 },
@@ -933,8 +1073,14 @@ const comunidadeEstilos = StyleSheet.create({
   aba: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 18, borderRadius: 12 },
   abaMarcada: { backgroundColor: cores.fundo, shadowColor: '#1B2A5E', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   abaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '900' },
-  temas: { marginHorizontal: -4 },
-  temasConteudo: { gap: 8, paddingHorizontal: 4, paddingTop: 2, paddingBottom: 6 },
+  // Fileiras até as bordas da tela no celular: a margem negativa do respiro da página (20) e o mesmo respiro dentro.
+  fileira: { marginHorizontal: -20 },
+  fileiraConteudo: { paddingHorizontal: 20 },
+  esmaecer: { position: 'absolute', top: 0, bottom: 0, width: 24 },
+  temasConteudo: { gap: 8, paddingTop: 2, paddingBottom: 6 },
+  // .explorar__demo: 15/25,5 em cinza, com o selo "Demonstração" tracejado no começo.
+  explorarDemo: { marginTop: 4, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 25.5 },
+  explorarDemoSelo: { color: '#5B3A00', backgroundColor: '#FFF6EA', fontSize: 13, fontWeight: '900' },
   fichaTema: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 2, borderColor: cores.bordaCampo, borderRadius: 999, backgroundColor: cores.fundo },
   fichaTemaMarcada: { borderColor: cores.texto, backgroundColor: cores.texto },
   fichaTemaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
@@ -945,7 +1091,7 @@ const comunidadeEstilos = StyleSheet.create({
   vazioStu: { width: 96, height: 106 },
   vazioTexto: { flexGrow: 1, flexShrink: 1, flexBasis: 256, gap: 8, alignItems: 'flex-start' },
   emAlta: { gap: 10 },
-  emAltaLista: { gap: 8, paddingHorizontal: 2, paddingTop: 6, paddingBottom: 14 },
+  emAltaLista: { gap: 8, paddingTop: 6, paddingBottom: 14 },
   novas: { gap: 12 },
   grade: { flexDirection: 'row', flexWrap: 'wrap', gap: 16 },
   gradeItem: { width: '100%' },

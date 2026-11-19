@@ -533,7 +533,11 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
               style={[socialEstilos.nivel, marcado && socialEstilos.nivelMarcado, (ocupado || bloqueado) && { opacity: 0.6 }]}>
               <Radio marcado={marcado} />
               <View style={socialEstilos.nivelTextos}>
-                <Text style={socialEstilos.nivelTitulo}>{cm.niveis[nivel].titulo}</Text>
+                {/* "Agora" dentro do cartão do nível que vale de fato (antes de publicar, o Explorar ainda não vale). */}
+                <View style={socialEstilos.nivelTituloLinha}>
+                  <Text style={socialEstilos.nivelTitulo}>{cm.niveis[nivel].titulo}</Text>
+                  {nivel === atual && <View testID={`nivel-${nivel}-agora`} style={socialEstilos.nivelAgora}><Text style={socialEstilos.nivelAgoraTexto}>{cm.agora}</Text></View>}
+                </View>
                 <Text style={socialEstilos.nivelTexto}>{texto}</Text>
               </View>
             </Pressable>
@@ -567,6 +571,7 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
             <Text style={socialEstilos.dica}>{cm.legendaDica}</Text>
           </View>
           {demonstracao && <View style={socialEstilos.aviso}><Text style={socialEstilos.avisoTexto}>{cm.demonstracaoAviso}</Text></View>}
+          {!publicada && <Text testID="publicacao-ainda" style={socialEstilos.publicacaoAinda}>{cm.aindaNaoNoExplorar(cm.niveis[atual].titulo)}</Text>}
           <View style={socialEstilos.acoesRecorte}>
             {publicada
               ? <Botao rotulo={ocupado ? p.salvando : cm.salvarPublicacao} testID="publicacao-salvar" desativado={!mudouPublicacao} ocupado={ocupado}
@@ -577,7 +582,8 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
         </View>
       )}
       {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
-      <Status texto={status} />
+      {/* Como a web: o estado ("Nível salvo…") só para o leitor de tela (ele já é anunciado). */}
+      <Text style={socialEstilos.somenteLeitor} accessibilityLiveRegion="polite">{status}</Text>
     </View>
   );
 }
@@ -715,11 +721,17 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
           onPress={() => { if (!ocupado && etapa !== 'parar') aoFechar(); }} />
         <View testID="folha-compartilhar" accessibilityViewIsModal role="dialog" aria-modal
           style={[socialEstilos.folha, { paddingBottom: 20 + insets.bottom }]}>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={socialEstilos.folhaConteudo} bounces={false}>
-            <View style={socialEstilos.folhaTopo}>
-              <Text style={socialEstilos.folhaContexto} importantForAccessibility={tituloDaEtapa === m.folhaTitulo ? 'no' : 'auto'}>
-                {tituloDaEtapa === m.folhaTitulo ? '' : m.folhaTitulo}
-              </Text>
+          {/* Cabeçalho preso no topo ao rolar: "Compartilhar trilha", o nome da trilha e o fechar (como a web na rodada de banca). */}
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={socialEstilos.folhaConteudo} bounces={false} stickyHeaderIndices={[0]}>
+            <View style={[socialEstilos.folhaTopo, socialEstilos.folhaTopoPreso]}>
+              <View style={socialEstilos.folhaTopoTexto}>
+                <Text style={socialEstilos.folhaContexto} importantForAccessibility={tituloDaEtapa === m.folhaTitulo ? 'no' : 'auto'}>
+                  {tituloDaEtapa === m.folhaTitulo ? '' : m.folhaTitulo}
+                </Text>
+                {previa && etapa === 'pronto' && (
+                  <Text numberOfLines={1} importantForAccessibility="no" style={socialEstilos.folhaTopoTrilha}>{previa.titulo}</Text>
+                )}
+              </View>
               {etapa !== 'parar' && <BotaoIcone icone="fechar" rotulo={m.fechar} testID="folha-fechar" desativado={ocupado} acao={aoFechar} />}
             </View>
             <Text ref={titulo} accessibilityRole="header" style={socialEstilos.folhaTitulo}>{tituloDaEtapa}</Text>
@@ -839,6 +851,7 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
   const abrirPerfil = useContext(AbrirPerfil);
   const nome = trilha.dono.nome;
   const sua = trilha.situacao === 'sua';
+  const jaTem = trilha.situacao === 'adicionada';
   const comCalor = Boolean(calor) && !sua;
   useEffect(() => {
     const alvo = titulo.current;
@@ -851,7 +864,7 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
       {comCalor && (
         <View style={socialEstilos.previaStu}>
           <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={socialEstilos.previaStuImagem} />
-          <View style={socialEstilos.previaBalao}><Text style={socialEstilos.previaBalaoTexto}>{m.stuConvite}</Text></View>
+          <View style={socialEstilos.previaBalao}><Text style={socialEstilos.previaBalaoTexto}>{jaTem ? m.stuDeNovo : m.stuConvite}</Text></View>
         </View>
       )}
       <View style={socialEstilos.previaDe}>
@@ -863,7 +876,23 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
       <Text ref={titulo} accessibilityRole="header" style={calor ? estilosDaInterface.titulo : socialEstilos.previaTitulo}>{trilha.titulo}</Text>
       <Text style={socialEstilos.previaMeta}>{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</Text>
       <View style={socialEstilos.previaAcoes}>{acoes}</View>
-      {!sua && <Text style={socialEstilos.previaZero}>{m.comecaDoZero}</Text>}
+      {!sua && <Text style={socialEstilos.previaZero}>{jaTem ? m.jaAdicionadaTexto : m.comecaDoZero}</Text>}
+      <View style={socialEstilos.previaPartes}>
+        {trilha.partes.map((parte, indice) => (
+          <View key={indice}>
+            <Text accessibilityRole="header" style={socialEstilos.previaParte}>{m.parte(indice + 1)} · {parte.titulo}</Text>
+            <View style={socialEstilos.previaLicoes}>
+              {parte.licoes.map((licao, i) => (
+                <View key={i} style={socialEstilos.previaLicao}>
+                  <Icone nome="livro" tamanho={18} cor={cores.acao} />
+                  <Text style={socialEstilos.previaLicaoTexto}>{licao}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+      </View>
+      {/* Quem compartilhou vem depois das lições: no alto fica só a linha com a foto e o nome (como a web). */}
       {comCalor && (
         <View accessibilityLabel={m.quemCompartilhou} style={socialEstilos.quem}>
           <Avatar nome={nome} cor={trilha.dono.cor} foto={trilha.dono.foto} tamanho="m" estilo={socialEstilos.quemAvatar} />
@@ -881,21 +910,6 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
           </View>
         </View>
       )}
-      <View style={socialEstilos.previaPartes}>
-        {trilha.partes.map((parte, indice) => (
-          <View key={indice}>
-            <Text accessibilityRole="header" style={socialEstilos.previaParte}>{m.parte(indice + 1)} · {parte.titulo}</Text>
-            <View style={socialEstilos.previaLicoes}>
-              {parte.licoes.map((licao, i) => (
-                <View key={i} style={socialEstilos.previaLicao}>
-                  <Icone nome="livro" tamanho={18} cor={cores.acao} />
-                  <Text style={socialEstilos.previaLicaoTexto}>{licao}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        ))}
-      </View>
     </View>
   );
 }
@@ -1119,6 +1133,11 @@ export const socialEstilos = StyleSheet.create({
   folhaConteudo: { gap: 14, paddingHorizontal: 20 },
   folhaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 44, marginTop: -6, marginRight: -6, marginBottom: -10 },
   folhaContexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontWeight: '900', letterSpacing: 0.52, textTransform: 'uppercase' },
+  // .folha-topo--preso: preso no alto ao rolar, na largura toda da folha, com a linha de 2 em névoa embaixo.
+  folhaTopoPreso: { marginTop: -20, marginRight: -20, marginLeft: -20, marginBottom: -4, paddingTop: 16, paddingRight: 14, paddingBottom: 10, paddingLeft: 20,
+    borderBottomWidth: 2, borderBottomColor: cores.nevoa, backgroundColor: cores.fundo, zIndex: 3 },
+  folhaTopoTexto: { flex: 1, gap: 2, minWidth: 0 },
+  folhaTopoTrilha: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   folhaTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 27.5, letterSpacing: -0.33 },
   folhaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
   folhaTextoMiudo: { color: cores.textoSecundario, fontSize: 14, lineHeight: 21 },
@@ -1148,6 +1167,14 @@ export const socialEstilos = StyleSheet.create({
   nivelMarcado: { borderColor: cores.acao, backgroundColor: '#F3F6FF' },
   nivelTextos: { flex: 1, gap: 2 },
   nivelTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '900' },
+  nivelTituloLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
+  // .nivel__agora: pílula verde-clara de 12/900.
+  nivelAgora: { paddingHorizontal: 8, paddingVertical: 1, borderRadius: 999, backgroundColor: '#E3F6EA' },
+  nivelAgoraTexto: { color: '#14513B', fontFamily: fontes.corpo, fontSize: 12, lineHeight: 18, fontWeight: '900' },
+  // .publicacao__ainda: a nota em branco sobre a névoa da publicação.
+  publicacaoAinda: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#FFFFFF', color: cores.texto, fontFamily: fontes.corpo,
+    fontSize: 16, lineHeight: 24, fontWeight: '800', overflow: 'hidden' },
+  somenteLeitor: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   nivelTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 19.6 },
   publicacao: { gap: 14, padding: 14, borderRadius: 16, backgroundColor: cores.nevoa },
   acoesRecorte: { gap: 10, marginTop: 4 },

@@ -11,7 +11,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, degrauFora, degrade, quebraEquilibrada } from './interface';
+import { AvisoDoApp, Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useAvisoDoAppRaiz, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, degrauFora, degrade, quebraEquilibrada } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -25,7 +25,7 @@ import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo
 import { focoVisivel } from './foco';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
-import { TelaEditarPerfil, TelaPerfil } from './perfil';
+import { TelaPerfil } from './perfil';
 import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
 
 /*
@@ -44,7 +44,6 @@ type Etapa =
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao }
   // Perfis e compartilhar (spec 09 e 10): a tela Perfil e a tela Editar perfil, só com `compartilhar` no config.
   | { tipo: 'perfil' }
-  | { tipo: 'editarPerfil' }
   // Comunidade (spec 10, B e C2), só com `comunidade` no config: o Explorar e, dentro do app, o perfil de outra pessoa (a
   // página /p da web) e a prévia de uma trilha (a página /t); `voltar` é a tela de onde a pessoa veio. `restaurar`: o
   // Explorar volta como estava (aba, tema, lista e rolagem) quando a pessoa volta de um perfil ou de uma trilha.
@@ -138,6 +137,8 @@ export function Estudo({ cliente, sair, expirar }: {
   const [folha, setFolha] = useState<string | null>(null);
   const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
   const registrarGuarda = useCallback((guarda: ((continuar: () => void) => boolean) | null) => { guardaSaida.current = guarda; }, []);
+  // O aviso do próprio app (lote 4): o Valeu e a denúncia avisam numa faixa no pé da tela, nunca no sistema.
+  const avisoDoApp = useAvisoDoAppRaiz();
   /** O Explorar como a pessoa deixou ao abrir um perfil ou uma trilha dele (aba, tema, lista e rolagem). */
   const memoriaExplorar = useRef<MemoriaExplorar | null>(null);
   const guardarExplorar = useCallback((memoria: MemoriaExplorar) => { memoriaExplorar.current = memoria; }, []);
@@ -241,7 +242,6 @@ export function Estudo({ cliente, sair, expirar }: {
         else void abrirPlano(etapa.plano.id, etapa.licao.id);
       }
       else if (etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
-      else if (etapa.tipo === 'editarPerfil') navegar({ tipo: 'perfil' });
       else if (etapa.tipo === 'perfilPublico' || etapa.tipo === 'previaTrilha') navegar(etapa.voltar);
       else navegar({ tipo: 'planos' });
       return true;
@@ -293,8 +293,8 @@ export function Estudo({ cliente, sair, expirar }: {
 
   /** Troca de etapa. Sair da geração ao vivo cancela o pedido em andamento; cada tela nova começa do topo. */
   function navegar(destino: Etapa) {
-    // Saindo de "Editar perfil" com alteração não salva: a tela pergunta antes (a mesma confirmação do Voltar), como na web.
-    if (destino.tipo !== 'editarPerfil' && guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
+    // Saindo do perfil com os dados abertos e alteração não salva: o editor pergunta antes ("Sair sem salvar?"), como na web.
+    if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
     if (destino.tipo !== 'geracao') pararGeracao();
     setErro(null);
     setFalhaGeracao(null);
@@ -521,7 +521,7 @@ export function Estudo({ cliente, sair, expirar }: {
   // Como a web (studoo.tinhaTrilhas): na primeira carga, as abas só aparecem no esqueleto se a conta tinha trilhas.
   const carregandoInicio = !planos && !erro;
   const comNavegacao = (carregandoInicio && tinhaTrilhas) || comNavegacaoAgora;
-  return <NavegacaoContexto.Provider value={comNavegacao ? {
+  return <AvisoDoApp.Provider value={avisoDoApp}><NavegacaoContexto.Provider value={comNavegacao ? {
     atual: aba as Aba, ocupado,
     planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
     explorar: comunidade ? () => abrir({ tipo: 'explorar' }) : undefined,
@@ -540,7 +540,7 @@ export function Estudo({ cliente, sair, expirar }: {
         ocupado={ocupado} aoCancelar={() => setConfirmacao(null)}
         aoConfirmar={() => { const acao = confirmacao.aoConfirmar; setConfirmacao(null); acao(); }} />
     )}
-  </NavegacaoContexto.Provider>;
+  </NavegacaoContexto.Provider></AvisoDoApp.Provider>;
 
   function renderizarTela() {
     // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. Começar, na trilha gerada,
@@ -599,7 +599,7 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'perfil') {
       return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
-        editar={() => abrir({ tipo: 'editarPerfil' })} sair={pedirParaSair}
+        sair={pedirParaSair} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} />;
     }
 
@@ -619,11 +619,6 @@ export function Estudo({ cliente, sair, expirar }: {
       return <TelaPreviaTrilha key={etapa.codigo} cliente={cliente} codigo={etapa.codigo} acoesTela={acoes}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
         criarTrilha={() => abrir({ tipo: 'objetivo' })} />;
-    }
-
-    if (etapa.tipo === 'editarPerfil' && perfil && !perfil.visitante) {
-      return <TelaEditarPerfil cliente={cliente} perfil={perfil} acoes={acoes} aoMudarPerfil={setPerfil}
-        voltar={() => navegar({ tipo: 'perfil' })} registrarGuarda={registrarGuarda} />;
     }
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {

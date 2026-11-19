@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -52,6 +52,54 @@ export const RolagemDaTela = createContext<{
 } | null>(null);
 /** O teclado está aberto: a entrada recolhe a parte de cima, e o rodapé deixa de somar a área segura de baixo. */
 export const TecladoAberto = createContext(false);
+
+/**
+ * Aviso do próprio app (lote 4: nunca do sistema), como `useAvisoDoApp` da web: uma faixa no pé da tela, acima do rodapé e
+ * da barra de abas, que some sozinha em 4,5 s ("Valeu enviado para Ana…", "Valeu retirado.", "Denúncia enviada…"). O
+ * estado mora na raiz do app (uma tela por vez); quem avisa pega `avisar` do contexto, e a `Tela` desenha a faixa onde ela
+ * sabe a altura das barras.
+ */
+export type AvisoAtual = { texto: string; vez: number };
+export const AvisoDoApp = createContext<{ aviso: AvisoAtual | null; avisar: (texto: string) => void }>({ aviso: null, avisar: () => undefined });
+export const DURACAO_DO_AVISO_MS = 4500;
+
+/** O estado do aviso na raiz do app: cada `avisar` mostra o texto de novo (mesmo repetido) e recomeça os 4,5 s. */
+export function useAvisoDoAppRaiz() {
+  const [aviso, setAviso] = useState<AvisoAtual | null>(null);
+  useEffect(() => {
+    if (!aviso) return;
+    const relogio = setTimeout(() => setAviso(null), DURACAO_DO_AVISO_MS);
+    return () => clearTimeout(relogio);
+  }, [aviso]);
+  const avisar = useCallback((texto: string) => {
+    setAviso((anterior) => ({ texto, vez: (anterior?.vez ?? 0) + 1 }));
+    // Papel de status, como o role="status" da web: o leitor de tela também ouve.
+    setTimeout(() => AccessibilityInfo.announceForAccessibility(texto), 0);
+  }, []);
+  return { aviso, avisar };
+}
+
+/** A faixa do aviso: até 480 de largura, fundo #1B2A5E, texto branco 800, cantos de 16; sobe 10 com o fundo aparecendo em 220 ms. */
+function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
+  const reduzir = useMovimentoReduzido();
+  const [entrada] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduzir !== false) { entrada.setValue(1); return; }
+    entrada.setValue(0);
+    const animacao = Animated.timing(entrada, { toValue: 1, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [aviso.vez, reduzir, entrada]);
+  return (
+    <View pointerEvents="none" style={[estilos.avisoLugar, { bottom: baixo }]}>
+      <Animated.View testID="aviso-app" accessibilityLiveRegion="polite" style={[estilos.aviso, {
+        opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+      }]}>
+        <Text style={estilos.avisoTexto}>{aviso.texto}</Text>
+      </Animated.View>
+    </View>
+  );
+}
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
@@ -182,6 +230,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
       {!topo && abaixoDoLogo && <View style={[estilos.abaixoDoLogo, !paginaDeAcesso && estilos.abaixoDoLogoEstudo]}>{abaixoDoLogo}</View>}
     </View>
   );
+  const { aviso } = useContext(AvisoDoApp);
+  // O aviso fica 16 acima do que estiver embaixo: o rodapé, a barra de abas ou, sem nenhum, a área segura de baixo.
+  const baixoDoAviso = 16 + (comBarra ? alturaBarra : 0) + (rodape ? alturaRodape : 0) + (!comBarra && !rodape ? fundoSeguro : 0);
   return (
     <SafeAreaView style={estilos.tela} edges={['top', 'left', 'right']}>
       {topo && cabecalho}
@@ -238,6 +289,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
         })()}
       </KeyboardAvoidingView>
       {comBarra && <NavegacaoInferior fundo={fundoSeguro} sobreposta={barraSobreposta} aoMedir={setAlturaBarra} />}
+      {aviso && <FaixaDoAviso key={aviso.vez} aviso={aviso} baixo={baixoDoAviso} />}
     </SafeAreaView>
   );
 }
@@ -909,6 +961,11 @@ export const estilos = StyleSheet.create({
   faixaFixaVidro: { zIndex: 6 },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
   modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
+  // .aviso-app: centrada, até 30 rem, 16 das bordas; o texto em branco 800 sobre o azul-escuro, com sombra.
+  avisoLugar: { position: 'absolute', left: 16, right: 16, alignItems: 'center', zIndex: 70 },
+  aviso: { width: '100%', maxWidth: 480, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16, backgroundColor: cores.texto,
+    shadowColor: '#0F172A', shadowOpacity: 0.28, shadowRadius: 30, shadowOffset: { width: 0, height: 12 }, elevation: 10 },
+  avisoTexto: { color: '#FFFFFF', fontFamily: fontes.corpo, fontSize: 16, lineHeight: 22.4, fontWeight: '800' },
   modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 24, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
   modalMensagem: { marginBottom: 20, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16.8, lineHeight: 25 },
