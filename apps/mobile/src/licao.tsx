@@ -21,6 +21,8 @@ import {
 } from '@studoo/contratos';
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type MutableRefObject, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { useAparecer, usePulinho, useTremor } from './animacoes';
 import {
   TranscritorContexto,
@@ -252,6 +254,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [pedidoEnsino, setPedidoEnsino] = useState(0);
   /** No exercício e na prática, há conteúdo abaixo da parte visível (reforço, consulta, "Explique", "Como foi?"). */
   const [temAbaixo, setTemAbaixo] = useState(false);
+  // A pílula "Ver mais abaixo" divide o rodapé com o painel de retorno: o painel desconta a altura dela (cabe em metade da janela).
+  const [alturaDaPilula, setAlturaDaPilula] = useState(0);
   // Onde fica o exercício: para levar a consulta aberta para cima do painel de retorno.
   const exercicioY = useRef(0);
   const [inicio] = useState(() => Date.now() - (retomada?.segundos ?? 0) * 1000);
@@ -296,9 +300,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       ? t.revisaoDe(Math.max(1, revisaoTotal - revisao.length + 1), Math.max(revisaoTotal, revisao.length))
       : exercicios.length > 1 ? t.exercicioDe(indice + 1, exercicios.length) : t.exercicio;
   }
-  const estadoStu: EstadoStu = avaliacao?.correta
-    ? pontesPorExercicio[indice] ? 'ponte' : primeiras[indice] === true ? 'primeira' : 'acerto'
-    : avaliacao ? 'atento' : errosAnteriores[indice] ? 'pensando' : 'neutro';
+  // A reação do Stu mora no painel de retorno (spec 13, emenda de 19/11): só depois da resposta.
+  const reacaoDoStu: ReacaoDoStu | undefined = !avaliacao ? undefined : !avaliacao.correta ? 'erro'
+    : pontesPorExercicio[indice] ? 'ponte' : primeiras[indice] === true ? 'primeira' : 'acerto';
 
   useEffect(() => {
     // Cada etapa começa do topo, como uma tela nova (menos na volta pela "Etapa anterior", que reabre onde a pessoa
@@ -569,7 +573,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   let rodape: ReactNode;
   if (avaliacao) {
     rodape = (
-      <PainelRetorno avaliacao={avaliacao}
+      <PainelRetorno avaliacao={avaliacao} reacao={reacaoDoStu}
+        // A pílula fica acima, com as margens de -6 e -2 e o vão de 10 do rodapé.
+        reservaAcima={temAbaixo && etapa.tipo === 'exercicio' && alturaDaPilula > 0 ? alturaDaPilula - 6 - 2 + 10 : 0}
         titulo={avaliacao.correta
           ? avaliacao.criterios?.some(({ atendido }) => !atendido) ? t.quaseCompleta : tituloDoAcerto(`${licao.id}-${indice}`)
           : ponteFeita ? t.ponteFeita : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
@@ -626,6 +632,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       <>
         {/* Como .aula-mais-abaixo: a pílula branca com borda; o alvo de 48 dp cresce por fora (hitSlop), sem mudar o desenho (P8). */}
         <Pressable testID="mais-abaixo" accessibilityRole="button" accessibilityLabel={t.maisAbaixo} onPress={lerMais} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+          onLayout={(evento) => setAlturaDaPilula(evento.nativeEvent.layout.height)}
           style={({ pressed }) => [licaoEstilos.maisAbaixoAlvo, licaoEstilos.maisAbaixo, pressed && { opacity: 0.7 }]}>
           {/* .aula-mais-abaixo .icone: 16 px, girada para baixo. */}
           <View style={{ transform: [{ rotate: '90deg' }] }}><Icone nome="seta" tamanho={16} cor={cores.acao} /></View>
@@ -793,8 +800,6 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             {licao.falas && <Falas falas={licao.falas} />}
           </View>
         )}
-        {/* Como na web 4B: o Stu só aparece depois de uma resposta (antes, a pergunta fica sozinha no alto). */}
-        {exercicio && estadoStu !== 'neutro' && <StuDoExercicio estado={estadoStu} />}
         {exercicio && (
           <Animated.View style={[licaoEstilos.quadro, respiroQuadro, { transform: [{ translateX: tremor }] }]}
             onLayout={(evento) => {
@@ -987,43 +992,34 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
   );
 }
 
-type EstadoStu = 'neutro' | 'pensando' | 'atento' | 'primeira' | 'acerto' | 'ponte';
-// As cores computadas de .aula-stu-estado[data-estado] na web: pensando fica na base (névoa e gelo); atento âmbar;
-// de primeira #eafbe2/#6bc445; ponte lavanda (cores.ceu)/#9cb4f5; acerto #eefaf3/#9ad8b5.
-const visualDoStu: Record<EstadoStu, { fundo: string; borda: string }> = {
-  neutro: { fundo: cores.nevoa, borda: cores.gelo },
-  pensando: { fundo: cores.nevoa, borda: cores.gelo },
-  atento: { fundo: '#FFF6EA', borda: '#F2CF96' },
-  primeira: { fundo: '#EAFBE2', borda: '#6BC445' },
-  acerto: { fundo: '#EEFAF3', borda: '#9AD8B5' },
-  ponte: { fundo: cores.ceu, borda: '#9CB4F5' },
-};
-
-/** A expressão do Stu em cada estado da reação (spec 13, A2 e B4). */
-const expressaoDoStu: Record<EstadoStu, NomeStu> = {
-  neutro: 'stu-curioso',
-  pensando: 'stu-concentrado',
-  atento: 'stu-encorajador',
-  primeira: 'stu-comemorando',
+/** A reação do Stu no painel de retorno (spec 13, emenda de 19/11). */
+type ReacaoDoStu = 'acerto' | 'primeira' | 'ponte' | 'erro';
+/** Acerto feliz; de primeira comemorando (com o pulo); depois da ponte animado; erro encorajador (sem tremer). */
+const expressaoDaReacao: Record<ReacaoDoStu, NomeStu> = {
   acerto: 'stu-feliz',
+  primeira: 'stu-comemorando',
   ponte: 'stu-animado',
+  erro: 'stu-encorajador',
 };
+/** Borda de cima (2), respiro de cima (8) e de baixo (14) do rodapé da aula: o painel inteiro cabe em metade da janela. */
+const MOLDURA_DO_RODAPE = 24;
 
-/**
- * O Stu acima do exercício (licao.stuEstado, como na web), com a expressão do mascote oficial (spec 13): atento (curioso)
- * e pensando (concentrado) ficam parados enquanto a pessoa responde; no erro (encorajador, sem tremer: quem treme é o
- * exercício), no acerto (feliz), de primeira (comemorando) e depois da ponte (animado), ele se mexe um ciclo no
- * acontecimento. A troca de expressão dá o pop da §B7; os adereços desenhados saíram. Com movimento reduzido, parado.
- */
-function StuDoExercicio({ estado }: { estado: EstadoStu }) {
-  const visual = visualDoStu[estado];
-  const noAcontecimento = estado !== 'neutro' && estado !== 'pensando';
+let ultimoEsmaecer = 0;
+/** O fim do texto que rola no painel: 24 px que esmaecem na cor do painel, enquanto ainda há texto embaixo. */
+function EsmaecerTexto({ cor }: { cor: string }) {
+  const [id] = useState(() => { ultimoEsmaecer += 1; return `esmaecer-retorno-${ultimoEsmaecer}`; });
   return (
-    <View testID="stu-do-exercicio" style={[licaoEstilos.stuEstado, { backgroundColor: visual.fundo, borderColor: visual.borda }]}>
-      <View style={licaoEstilos.stuEstadoAvatar} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <Stu nome={expressaoDoStu[estado]} tamanho={48} animado={noAcontecimento ? 'acontecimento' : undefined} acontecimento={noAcontecimento ? estado : undefined} />
-      </View>
-      <Text style={licaoEstilos.stuEstadoTexto}>{t.stuEstado[estado]}</Text>
+    <View testID="retorno-esmaecer" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      style={licaoEstilos.retornoEsmaecer}>
+      <Svg width="100%" height={24}>
+        <Defs>
+          <LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={cor} stopOpacity={0} />
+            <Stop offset="1" stopColor={cor} stopOpacity={1} />
+          </LinearGradient>
+        </Defs>
+        <Rect x="0" y="0" width="100%" height={24} fill={`url(#${id})`} />
+      </Svg>
     </View>
   );
 }
@@ -1077,9 +1073,16 @@ export function CartaoFonte({ referencia, numero, ref, titulo, parado = false, m
  * Painel de retorno no rodapé: sobe com a cor do resultado; o ícone entra com um giro e, no acerto, solta confete.
  * No erro (rodada 4C da web), "Ver outro jeito de entender" é a ação principal, na largura toda; embaixo, "Tentar de novo"
  * (secundário) e "Pular por agora" (discreto), numa linha só, sem quebrar o rótulo em 360 px.
+ * A reação do Stu mora aqui (spec 13, emenda de 19/11): 42 px na ponta direita da linha do título, subindo 8 px no respiro de
+ * cima do rodapé (o painel não cresce), com o pop aos 160 ms e um ciclo; sem Stu no compacto (o Explique já tem o dele). O
+ * painel inteiro cabe em metade da janela: passando disso, só o texto rola, com o esmaecer de 24 no fim.
  */
 function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarDeNovo, continuar, verReforco, rotuloPular, compacto = false, avisoPular,
-  iconeErro = 'fechar', convite }: {
+  iconeErro = 'fechar', convite, reacao, reservaAcima = 0 }: {
+  /** A expressão do Stu na linha do título (acerto, de primeira, depois da ponte ou erro). */
+  reacao?: ReacaoDoStu;
+  /** O que mais divide o rodapé com o painel, acima dele (a pílula "Ver mais abaixo"), para o rodapé inteiro caber em metade da janela. */
+  reservaAcima?: number;
   /** No acerto do último exercício, antes de explicar: "Quer fixar? Explique com suas palavras" abre o "Explique". Como na web. */
   convite?: () => void;
   avaliacao: Avaliacao;
@@ -1104,16 +1107,26 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
   const subida = useAparecer(0, 320, true);
   const icone = useAparecer(80, 460, true);
   const area = useRef<ComponentRef<typeof View>>(null);
+  const comStu = reacao !== undefined && !compacto;
+  const janela = useWindowDimensions();
+  const margens = useSafeAreaInsets();
+  const alturaMaxima = Math.max(200, Math.floor(janela.height * 0.5) - MOLDURA_DO_RODAPE - margens.bottom - reservaAcima);
+  // O texto que rola: só quando passa do que cabe; o esmaecer some no fim.
+  const [alturaDoTexto, setAlturaDoTexto] = useState(0);
+  const [janelaDoTexto, setJanelaDoTexto] = useState(0);
+  const [noFim, setNoFim] = useState(false);
+  const transborda = janelaDoTexto > 0 && alturaDoTexto > janelaDoTexto + 1;
 
   useEffect(() => {
     if (area.current) AccessibilityInfo.sendAccessibilityEvent(area.current, 'focus');
   }, []);
 
   return (
-    <Animated.View style={{ gap: 6, opacity: subida, transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
+    <Animated.View testID="painel-retorno" style={{ gap: 6, maxHeight: alturaMaxima, opacity: subida,
+      transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
       <View ref={area} testID="feedback-licao" accessible accessibilityRole="alert"
         accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${avaliacao.feedback} ${extras.join(' ')}`}
-        style={licaoEstilos.retorno}>
+        style={[licaoEstilos.retorno, licaoEstilos.encolhe]}>
         {/* Como na web: o ícone pequeno ao lado do título e o texto na largura toda, embaixo (o painel ocupava ~40% da tela). */}
         <View style={licaoEstilos.retornoCabecalho}>
           {/* .aula-retorno__icone no celular: círculo de 34 com o degrau de 3 por fora (sombra da web) e o ícone de 20 com traço 3,2. */}
@@ -1128,12 +1141,32 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
               {certa && <Confete quantidade={14} />}
             </View>
           </Animated.View>
-          <Text style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 }]}>{titulo}</Text>
+          <Text style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 },
+            comStu && licaoEstilos.retornoTituloComStu]}>{titulo}</Text>
+          {comStu && (
+            // Enfeite: o toque passa e o leitor de tela não lê (o anúncio é o do painel).
+            <View testID="stu-do-retorno" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+              style={licaoEstilos.retornoStu}>
+              <Stu nome={expressaoDaReacao[reacao]} tamanho={42} animado="acontecimento" acontecimento={reacao} popAoMontar={160} />
+            </View>
+          )}
         </View>
-        {/* .aula-retorno p no celular: 15 px com entrelinha 1,4. */}
-        {!compacto && <Text style={[estilos.texto, licaoEstilos.retornoTexto]}>{avaliacao.feedback}</Text>}
-        {!compacto && extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
-        {!certa && !compacto && avisoPular && <Text style={licaoEstilos.avisoPular}>{avisoPular}</Text>}
+        {!compacto && (
+          <View style={licaoEstilos.encolhe}>
+            <ScrollView testID="retorno-texto" style={licaoEstilos.retornoRolagem} contentContainerStyle={licaoEstilos.retorno}
+              scrollEnabled={transborda} bounces={false} showsVerticalScrollIndicator={transborda} scrollEventThrottle={32}
+              onLayout={(evento) => setJanelaDoTexto(evento.nativeEvent.layout.height)}
+              onContentSizeChange={(_largura, altura) => setAlturaDoTexto(altura)}
+              onScroll={({ nativeEvent: { contentOffset, layoutMeasurement, contentSize } }) =>
+                setNoFim(contentOffset.y + layoutMeasurement.height >= contentSize.height - 1)}>
+              {/* .aula-retorno p no celular: 15 px com entrelinha 1,4. */}
+              <Text style={[estilos.texto, licaoEstilos.retornoTexto]}>{avaliacao.feedback}</Text>
+              {extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
+              {!certa && avisoPular && <Text style={licaoEstilos.avisoPular}>{avisoPular}</Text>}
+            </ScrollView>
+            {transborda && !noFim && <EsmaecerTexto cor={certa ? CORES_DO_PAINEL.certa : CORES_DO_PAINEL.errada} />}
+          </View>
+        )}
       </View>
       {certa && convite && <Botao testID="convite-explique" variante="texto" rotulo={t.expliqueConvite} desativado={ocupado} acao={convite}
         estilo={licaoEstilos.convite} />}
@@ -1156,6 +1189,9 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
 }
 
 /** Opção do exercício: cartão com relevo e a letra; depois da resposta, a escolhida fica verde (pula) ou âmbar. */
+
+/** O fundo do painel de retorno (o rodapé da aula depois da resposta) e o esmaecer do texto que rola. */
+const CORES_DO_PAINEL = { certa: '#E3F6EA', errada: '#FFF1E0' };
 
 const licaoEstilos = StyleSheet.create({
   // A aula da web tem 16 de respiro nos lados no celular (clamp(16px, 4vw, 48px) em aula.css), no alto, no meio e no
@@ -1229,10 +1265,6 @@ const licaoEstilos = StyleSheet.create({
     paddingVertical: 10, paddingHorizontal: 14 },
   fonteTrechoTexto: { fontStyle: 'italic' },
   // .aula-stu-estado: raio de 20; o cartão da pergunta vem 14 abaixo (o vão de .aula-miolo; o cartão já tem 10 em cima).
-  stuEstado: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14, marginBottom: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20,
-    borderWidth: 2 },
-  stuEstadoAvatar: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
-  stuEstadoTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22.5 },
   // .aula-mais-abaixo: margem -6 em cima e 8 embaixo; pílula com borda de 2, sombra de 2 (aqui, a borda de baixo) e texto de 14 px.
   maisAbaixoAlvo: { alignSelf: 'center', marginTop: -6, marginBottom: -2 },
   // .aula-mais-abaixo: borda de 2 em volta e o degrau de 2 por fora (box-shadow 0 2px 0 gelo).
@@ -1294,8 +1326,8 @@ const licaoEstilos = StyleSheet.create({
   // 12 (.opcoes) e a legenda fica a 8 da primeira.
   opcoes: { gap: 12 },
   opcoesGrupo: { gap: 8 },
-  rodapeCerto: { borderTopColor: 'transparent', backgroundColor: '#E3F6EA' },
-  rodapeErrado: { borderTopColor: 'transparent', backgroundColor: '#FFF1E0' },
+  rodapeCerto: { borderTopColor: 'transparent', backgroundColor: CORES_DO_PAINEL.certa },
+  rodapeErrado: { borderTopColor: 'transparent', backgroundColor: CORES_DO_PAINEL.errada },
   retorno: { gap: 2 },
   retornoCabecalho: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   retornoIcone: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.sucessoClaro },
@@ -1308,6 +1340,13 @@ const licaoEstilos = StyleSheet.create({
   retornoTituloCompacto: { fontSize: 17, lineHeight: 34 },
   convite: { alignSelf: 'flex-start', paddingHorizontal: 2, minHeight: 48 },
   retornoTituloErrado: { color: '#8A4B00' },
+  // Com o Stu: 52 de respiro à direita (o quadro de 42 mais 10), para o título nunca passar por baixo dele.
+  retornoTituloComStu: { marginRight: 52 },
+  // O quadro de 42 na ponta direita, alinhado pela base com a linha do título (34): sobe 8 no respiro de cima do rodapé.
+  retornoStu: { position: 'absolute', right: 0, top: -8, width: 42, height: 42 },
+  encolhe: { flexShrink: 1, minHeight: 0 },
+  retornoRolagem: { flexGrow: 0, flexShrink: 1 },
+  retornoEsmaecer: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 24 },
   retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   retornoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -2 },
   retornoAcoesCompacto: { marginTop: 10 },
