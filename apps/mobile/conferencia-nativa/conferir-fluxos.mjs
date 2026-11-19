@@ -2,8 +2,8 @@
 // que deixou de existir aparecer em segundos, e não depois de meia hora de máquina.
 //
 // O que confere:
-//   1. todo `id:` usado num fluxo existe como `testID` em apps/mobile/src (um `testID` montado com `${...}` vale como molde),
-//      fora os poucos ids do próprio Expo Go, listados abaixo;
+//   1. todo `id:` usado num fluxo existe como `testID` em apps/mobile/src (um `testID` montado com `${...}` vale como molde,
+//      e um id do fluxo com parâmetro do Maestro, `${...}`, precisa caber num molde), fora os poucos ids do Expo Go;
 //   2. as capturas do percurso (nomes que começam por dois dígitos) são exatamente as da lista CAPTURAS_ESPERADAS de
 //      comum.sh (a mesma para o iPhone e o Android);
 //   3. todo arquivo de `runFlow` existe;
@@ -69,7 +69,12 @@ for (const arquivo of fluxos) {
   for (const [, valor] of texto.matchAll(/^\s*id:\s*(.+)$/gm)) {
     // O `id` de um fluxo é uma expressão regular: aqui só se usa a alternância (a|b).
     for (const id of semAspas(valor).split('|')) {
-      if (!existeNoApp(id)) problemas.push(`${curto(arquivo)}: o id "${id}" não existe como testID em apps/mobile/src.`);
+      // Um id com parâmetro do Maestro (`opcao-${RESPOSTA_CERTA}`, passado com -e) vale se, com uma palavra no lugar do
+      // parâmetro, cabe num molde do app (`opcao-${id}`); um literal com o mesmo texto não conta.
+      const comParametro = /\$\{[^}]*\}/.test(id);
+      const exemplo = id.replace(/\$\{[^}]*\}/g, 'parametro');
+      const existe = comParametro ? moldes.some(({ expressao, comPrefixo }) => !comPrefixo && expressao.test(exemplo)) : existeNoApp(id);
+      if (!existe) problemas.push(`${curto(arquivo)}: o id "${id}" não existe como testID em apps/mobile/src.`);
     }
   }
 
