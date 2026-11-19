@@ -50,3 +50,15 @@ test('o componente anima pelo expo-image só até 330 px, nunca com movimento re
   const pacote = JSON.parse(readFileSync(new URL('apps/mobile/package.json', raiz), 'utf8'));
   assert.ok(pacote.dependencies['expo-image'], 'expo-image nas dependências do app');
 });
+
+test('o Stu antigo (stu-oi) saiu do app: nenhum uso no código e o arquivo apagado (spec 13, A2)', () => {
+  const pastas = ['apps/mobile/src/', 'apps/mobile/app/'];
+  const usos = [];
+  for (const pasta of pastas) {
+    for (const nome of readdirSync(new URL(pasta, raiz)).filter((arquivo) => /\.(ts|tsx)$/.test(arquivo))) {
+      if (readFileSync(new URL(`${pasta}${nome}`, raiz), 'utf8').includes('stu-oi')) usos.push(`${pasta}${nome}`);
+    }
+  }
+  assert.deepEqual(usos, []);
+  assert.equal(existsSync(new URL('apps/mobile/assets/marca/stu-oi.png', raiz)), false);
+});

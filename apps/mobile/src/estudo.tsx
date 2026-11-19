@@ -726,7 +726,6 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
     void cliente.configuracaoAcesso().then((configuracao) => { if (ativo) setIa(configuracao.ia); }).catch(() => undefined);
     return () => { ativo = false; };
   }, [cliente]);
-  const balancoInicio = useBalanco(3, 1800);
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [brilho, setBrilho] = useState(0);
@@ -753,6 +752,8 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   else if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
   else if (texto.length >= 20) fala = mensagens.pedido.falas.pronto;
   else if (texto.length > 0) fala = mensagens.pedido.falas.curto;
+  // Spec 13 (A2): convida curioso; escrevendo (e no erro ou no limite), encorajador; ideia aplicada, animado.
+  const expressaoDoPedido: NomeStu = escolhida !== null && escolhida === texto && !falha ? 'stu-animado' : texto.length > 0 || falha ? 'stu-encorajador' : 'stu-curioso';
 
   function tentar() {
     if (ocupado || !texto) return;
@@ -782,10 +783,11 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   return (
     <Tela pagina="objetivo" acoes={acoes} estiloConteudo={estudoEstilos.fimQuarenta}>
       <View style={estudoEstilos.pedidoHeroi}>
+        {/* Spec 13: o Stu convida curioso (uma vez ao abrir), encoraja enquanto a pessoa escreve (parado) e se anima quando
+            uma ideia entra no campo (no acontecimento); 72 no celular, com o halo lavanda no lugar do halo amarelo. */}
         <View style={estudoEstilos.pedidoStu} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <View style={estudoEstilos.pedidoHalo}><View style={estudoEstilos.pedidoHaloMiolo} /></View>
-          <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            style={{ width: 96, height: 110, transform: [{ translateY: balancoInicio }] }} />
+          <Stu nome={expressaoDoPedido} tamanho={72} halo animado={expressaoDoPedido === 'stu-curioso' ? 'uma-vez' : expressaoDoPedido === 'stu-animado' ? 'acontecimento' : undefined}
+            acontecimento={expressaoDoPedido === 'stu-animado' ? texto : undefined} />
           <Text style={[estudoEstilos.pedidoEstrela, { fontFamily: fontes.corpo }]}>✦</Text>
         </View>
         <Titulo testID="titulo-objetivo" foco={focarTitulo} equilibrado estilo={estudoEstilos.pedidoTitulo}>
@@ -848,31 +850,6 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
       {porLink}
       <LinkComoFunciona desativado={ocupado} acao={comoFunciona} />
     </Tela>
-  );
-}
-
-/** O Stu acima do campo, que sobe e desce devagar, com um balão que reage ao pedido, como na web. */
-function StuQueReage({ fala }: { fala: string }) {
-  const balanco = useBalanco(4, 1500);
-  return (
-    <View style={estudoEstilos.stuReage} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-        style={{ width: 62, height: 68, transform: [{ translateY: balanco }] }} />
-      <BalaoFala key={fala} texto={fala} />
-    </View>
-  );
-}
-
-/** Balão de fala que entra com um pulinho a cada frase nova. */
-function BalaoFala({ texto }: { texto: string }) {
-  const entrada = useAparecer(0, 380, true);
-  return (
-    <Animated.View style={[estudoEstilos.balaoFala, {
-      opacity: entrada, transform: [{ scale: entrada.interpolate({ inputRange: [0, 1], outputRange: [0.85, 1] }) }],
-    }]}>
-      <View style={estudoEstilos.balaoFalaSeta} />
-      <Text style={estudoEstilos.balaoFalaTexto}>{texto}</Text>
-    </Animated.View>
   );
 }
 
@@ -1223,36 +1200,16 @@ function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; pron
   );
 }
 
-/** A cena do Stu escrevendo: o céu, a colina da primeira região, o lápis que risca e as folhas que voam. */
+/**
+ * A cena do Escrevendo suas lições (spec 13): o céu, a colina da primeira região e o Stu estudando no notebook, em laço
+ * enquanto a IA escreve (é espera), em 110 × 88 no celular, o teto em que ainda anima (E2). O notebook da pose conta a
+ * história: o lápis e as folhas desenhados saíram. Com as lições prontas, ele troca para comemorando, com dois pulinhos e
+ * um ciclo no acontecimento. Com movimento reduzido, a imagem parada, sem pulo.
+ */
 function CenaPreparo({ prontas }: { prontas: boolean }) {
   const reduzir = useMovimentoReduzido();
   const { chao, relevo } = coresDaRegiao(0);
-  const subida = useBalanco(6, 1200, !prontas);
-  const [risco] = useState(() => new Animated.Value(0));
   const [pulo] = useState(() => new Animated.Value(0));
-  const [folhas] = useState(() => [0, 1, 2].map(() => new Animated.Value(0)));
-
-  useEffect(() => {
-    if (reduzir !== false || prontas) return;
-    const movimento = { duration: 520, easing: Easing.inOut(Easing.ease), isInteraction: false, useNativeDriver: true };
-    const lapis = Animated.loop(Animated.sequence([
-      Animated.timing(risco, { ...movimento, toValue: 1 }),
-      Animated.timing(risco, { ...movimento, toValue: 0 }),
-    ]));
-    const voar = folhas.map((folha, indice) => Animated.loop(Animated.sequence([
-      Animated.delay(indice * 1100),
-      Animated.timing(folha, { toValue: 1, duration: 3300, easing: Easing.out(Easing.quad), isInteraction: false, useNativeDriver: true }),
-      Animated.timing(folha, { toValue: 0, duration: 0, useNativeDriver: true }),
-      Animated.delay((2 - indice) * 1100),
-    ])));
-    lapis.start();
-    voar.forEach((animacao) => animacao.start());
-    return () => {
-      lapis.stop();
-      voar.forEach((animacao) => animacao.stop());
-      folhas.forEach((folha) => folha.setValue(0));
-    };
-  }, [reduzir, prontas, risco, folhas]);
 
   // Lições prontas: o Stu dá dois pulinhos.
   useEffect(() => {
@@ -1264,45 +1221,16 @@ function CenaPreparo({ prontas }: { prontas: boolean }) {
     return () => pular.stop();
   }, [prontas, reduzir, pulo]);
 
-  const destinos = [{ x: 104, y: -96, giro: '24deg' }, { x: -118, y: -96, giro: '-28deg' }, { x: 70, y: -128, giro: '14deg' }];
-
   return (
     <View style={estudoEstilos.preparoCena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       <View style={[estudoEstilos.preparoColina, { backgroundColor: chao, borderTopColor: relevo }]} />
       <Desenho nome="arvore" largura={52} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%', bottom: 16 }]} />
       <Desenho nome="flores" largura={30} estilo={[estudoEstilos.cartaoEnfeite, { right: '25%', bottom: 12 }]} />
       <Desenho nome="arbusto" largura={46} estilo={[estudoEstilos.cartaoEnfeite, { right: '7%', bottom: 16 }]} />
-      {!prontas && reduzir === false && folhas.map((folha, indice) => (
-        <Animated.View key={indice} style={[estudoEstilos.preparoFolha, {
-          opacity: folha.interpolate({ inputRange: [0, 0.12, 0.8, 1], outputRange: [0, 1, 1, 0] }),
-          transform: [
-            { translateX: folha.interpolate({ inputRange: [0, 1], outputRange: [0, destinos[indice].x] }) },
-            { translateY: folha.interpolate({ inputRange: [0, 1], outputRange: [0, destinos[indice].y] }) },
-            { rotate: folha.interpolate({ inputRange: [0, 1], outputRange: ['0deg', destinos[indice].giro] }) },
-            { scale: folha.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) },
-          ],
-        }]}>
-          <View style={[estudoEstilos.preparoFolhaLinha, { width: 16 }]} />
-          <View style={[estudoEstilos.preparoFolhaLinha, { width: 12 }]} />
-          <View style={[estudoEstilos.preparoFolhaLinha, { width: 14 }]} />
-        </Animated.View>
-      ))}
-      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-        style={[estudoEstilos.preparoStu, { transform: [{ translateY: prontas ? pulo : subida }] }]} />
-      {!prontas && (
-        <Animated.View style={[estudoEstilos.preparoLapis, {
-          transform: [
-            { translateX: risco.interpolate({ inputRange: [0, 1], outputRange: [0, 4] }) },
-            { rotate: risco.interpolate({ inputRange: [0, 1], outputRange: ['16deg', '32deg'] }) },
-          ],
-        }]}>
-          <View style={estudoEstilos.preparoLapisBorracha} />
-          <View style={estudoEstilos.preparoLapisPonteira} />
-          <View style={estudoEstilos.preparoLapisCorpo} />
-          <View style={estudoEstilos.preparoLapisPonta} />
-          <View style={estudoEstilos.preparoLapisGrafite} />
-        </Animated.View>
-      )}
+      <Animated.View style={[estudoEstilos.preparoStu, { transform: [{ translateY: pulo }] }]}>
+        <Stu nome={prontas ? 'stu-comemorando' : 'stu-estudando'} tamanho={prontas ? 96 : 110} sombra
+          animado={prontas ? 'acontecimento' : 'laco'} acontecimento={prontas ? 'prontas' : undefined} />
+      </Animated.View>
     </View>
   );
 }
@@ -2124,8 +2052,6 @@ const estudoEstilos = StyleSheet.create({
   materialNoPedido: { marginTop: 30, marginBottom: 12 },
   // Como .pedido-heroi__stu e o halo da web: 120 px, o miolo claro e o anel amarelo do gradiente, com o Stu de 96 por cima.
   pedidoStu: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
-  pedidoHalo: { position: 'absolute', width: 92, height: 92, borderRadius: 46, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFE08A' },
-  pedidoHaloMiolo: { width: 69, height: 69, borderRadius: 35, backgroundColor: '#FFF3C4' },
   // .pedido-heroi__estrela: 1,5rem na entrelinha do corpo (1,5 → 36).
   pedidoEstrela: { position: 'absolute', top: 6, right: 8, color: '#FFB703', fontSize: 24, lineHeight: 36 },
   // Como .pedido-heroi h1 da web no celular: 30 px (clamp de 1,875rem), entrelinha 1,08.
@@ -2286,12 +2212,6 @@ const estudoEstilos = StyleSheet.create({
   cartaoCorpo: { gap: 0, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 20 },
   cartaoAcao: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 16 },
   // Pedido
-  stuReage: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginTop: 20, marginBottom: -6 },
-  balaoFala: { flexShrink: 1, maxWidth: 320, marginBottom: 22, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16,
-    borderWidth: 2, borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
-  balaoFalaSeta: { position: 'absolute', left: -9, bottom: 12, width: 14, height: 14, borderLeftWidth: 2, borderBottomWidth: 2,
-    borderColor: cores.gelo, borderBottomLeftRadius: 3, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
-  balaoFalaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
   luzCampo: { position: 'absolute', left: -3, right: -3, top: -3, bottom: -3, borderRadius: 27, borderWidth: 3, borderColor: '#F0B429' },
   // Como .pedido-como da web: 44 px, centralizado, 800.
   // .pedido-como (bf8cf37): 26 do bloco de cima até a caixa de 44 do botão (34 depois das fichas, que têm 8 embaixo) e, no fim
@@ -2362,18 +2282,7 @@ const estudoEstilos = StyleSheet.create({
     borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: '#E4ECFF' },
   preparoColina: { position: 'absolute', left: '-12%', right: '-12%', bottom: -64, height: 124, borderTopWidth: 7,
     borderTopLeftRadius: 400, borderTopRightRadius: 400 },
-  preparoStu: { width: 98, height: 108, marginBottom: 12 },
-  preparoLapis: { position: 'absolute', bottom: 56, left: '50%', marginLeft: 30, width: 13, height: 63, transformOrigin: '50% 100%' },
-  preparoLapisBorracha: { height: 9, borderTopLeftRadius: 4, borderTopRightRadius: 4, backgroundColor: '#FF8FA3' },
-  preparoLapisPonteira: { height: 5, backgroundColor: cores.bordaCampo },
-  preparoLapisCorpo: { height: 38, backgroundColor: cores.ouro },
-  preparoLapisPonta: { width: 0, height: 0, borderTopWidth: 11, borderTopColor: '#E9B880', borderLeftWidth: 6.5, borderRightWidth: 6.5,
-    borderLeftColor: 'transparent', borderRightColor: 'transparent' },
-  preparoLapisGrafite: { position: 'absolute', bottom: 0, left: 4.5, width: 0, height: 0, borderTopWidth: 4, borderTopColor: cores.texto,
-    borderLeftWidth: 2, borderRightWidth: 2, borderLeftColor: 'transparent', borderRightColor: 'transparent' },
-  preparoFolha: { position: 'absolute', bottom: 74, left: '50%', marginLeft: -13, width: 26, height: 32, gap: 3, paddingTop: 8, paddingLeft: 5,
-    borderRadius: 5, borderBottomWidth: 2, borderColor: cores.bordaCampo, backgroundColor: cores.fundo },
-  preparoFolhaLinha: { height: 3, borderRadius: 2, backgroundColor: cores.gelo },
+  preparoStu: { marginBottom: 12 },
   preparoLista: { gap: 10, marginTop: 22 },
   preparoLinha: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden', paddingVertical: 9, paddingLeft: 10,
     paddingRight: 16, borderRadius: 16, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },

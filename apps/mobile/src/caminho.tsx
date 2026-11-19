@@ -1186,9 +1186,9 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
         )}
       </View>
       {stu && (
-        // Spec 13: `stu-comemorando` de 64 ao lado do troféu, na sombra de contato; ele mesmo comemora uma vez ao aparecer.
+        // Spec 13: `stu-comemorando` de 64 ao lado do troféu, na sombra de contato, parado (como a chegada da web).
         <View style={[caminhoEstilos.chegadaStu, { bottom: 74 + extra }]}>
-          <Stu nome="stu-comemorando" tamanho={64} animado="uma-vez" sombra />
+          <Stu nome="stu-comemorando" tamanho={64} sombra />
         </View>
       )}
       <Pressable accessibilityRole="button" accessibilityLabel={mensagens.trilha.trofeu} disabled={total === 0 && !feita}

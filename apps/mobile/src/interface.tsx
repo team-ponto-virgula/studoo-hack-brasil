@@ -34,6 +34,7 @@ import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
+import { Stu } from './mascote';
 
 /**
  * Quanto o conteúdo da tela começa abaixo do topo da rolagem por causa da barra da marca, que rola junto (como na web).
@@ -699,8 +700,8 @@ export function EstadoErro({ mensagem, acao, testID, foco = false, estilo }: {
 
   return (
     <View testID={testID} style={[estilos.estadoErro, estilo]}>
-      <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} importantForAccessibility="no"
-        style={estilos.estadoErroStu} />
+      {/* Spec 13: `stu-encorajador` de 48, que se mexe uma vez ao abrir. */}
+      <Stu nome="stu-encorajador" tamanho={48} animado="uma-vez" estilo={estilos.estadoErroStu} />
       <View style={estilos.estadoErroCorpo}>
         <View ref={area} accessible accessibilityRole="alert" accessibilityLabel={mensagem} style={estilos.estadoErroTexto}>
           {/* O "!" da web só tem a borda (fundo transparente, sobre a cor do cartão de erro). */}
@@ -1124,7 +1125,7 @@ export const estilos = StyleSheet.create({
     marginTop: 16, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', rowGap: 14, columnGap: 16, paddingVertical: 16, paddingHorizontal: 18,
     borderWidth: 2, borderRadius: 20, borderColor: 'rgba(194, 59, 78, 0.4)', backgroundColor: cores.erroFundo,
   },
-  estadoErroStu: { width: 48, height: 56, flexShrink: 0 },
+  estadoErroStu: { flexShrink: 0 },
   estadoErroCorpo: { flex: 1, minWidth: 220, gap: 10 },
   estadoErroTexto: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   mensagemTitulo: { fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },

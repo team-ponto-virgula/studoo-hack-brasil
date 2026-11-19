@@ -18,6 +18,7 @@ import {
   socialEstilos, temFolhaDoSistema, textoDoErro, urlDoLink, urlDoPerfil, focarSemRolar,
 } from './social';
 import { cores, fontes } from './tema';
+import { Stu } from './mascote';
 
 /*
  * Comunidade no app (spec 10, etapas B, C1 e C2), espelhando src/app/comunidade.tsx, src/app/seguir.tsx e a página /p da web
@@ -539,7 +540,7 @@ function Grade({ cartoes, acoes, prefixo }: { cartoes: CartaoTrilha[]; acoes: Ac
 function Vazio({ titulo, texto, acao }: { titulo: string; texto?: string; acao?: ReactNode }) {
   return (
     <View testID="explorar-vazio" style={comunidadeEstilos.vazio}>
-      <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={comunidadeEstilos.vazioStu} />
+      <Stu nome="stu-curioso" tamanho={96} animado="uma-vez" />
       <View style={comunidadeEstilos.vazioTexto}>
         <Text accessibilityRole="header" style={comunidadeEstilos.secao}>{titulo}</Text>
         {texto && <Text style={estilos.texto}>{texto}</Text>}
@@ -852,7 +853,7 @@ function CompartilharPerfil({ perfilId, nome }: { perfilId: string; nome: string
 function Indisponivel({ titulo, texto, criar }: { titulo: string; texto?: string; criar: () => void }) {
   return (
     <View testID="indisponivel" style={comunidadeEstilos.indisponivel}>
-      <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={comunidadeEstilos.vazioStu} />
+      <Stu nome="stu-surpreso" tamanho={96} halo animado="uma-vez" />
       <Titulo foco>{titulo}</Titulo>
       {texto && <Text style={estilos.texto}>{texto}</Text>}
       <Botao rotulo={mensagens.compartilhar.criarMinha} acao={criar} estilo={{ alignSelf: 'flex-start' }} />
@@ -1100,7 +1101,6 @@ const comunidadeEstilos = StyleSheet.create({
   esqueletoBloco: { height: 280, borderRadius: 20, backgroundColor: cores.nevoa },
   vazio: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18, padding: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo,
     borderRadius: 20, backgroundColor: cores.ceu },
-  vazioStu: { width: 96, height: 106 },
   vazioTexto: { flexGrow: 1, flexShrink: 1, flexBasis: 256, gap: 8, alignItems: 'flex-start' },
   emAlta: { gap: 10 },
   emAltaLista: { gap: 8, paddingTop: 6, paddingBottom: 14 },
