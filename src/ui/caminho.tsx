@@ -20,7 +20,7 @@ export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever; resumo?: string };
 
 /** O título sem quebra no meio de uma palavra com hífen (“check-" numa linha e “in” na outra). */
-function semQuebrarHifen(texto: string): ReactNode {
+export function semQuebrarHifen(texto: string): ReactNode {
   const partes = texto.split(/(\S*\p{L}-\p{L}\S*)/u);
   return partes.length === 1 ? texto : partes.map((parte, indice) => (indice % 2 ? <span key={indice} className="sem-quebra">{parte}</span> : parte));
 }

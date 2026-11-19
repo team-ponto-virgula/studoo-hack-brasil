@@ -3,8 +3,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { origemLegivel, type PlanoResumo } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao, Icone, Mascote, coresDaRegiao } from '../ui';
-import { posicaoX } from '../ui/caminho';
+import { Botao, Desenho, Fronteira, Icone, Mascote, coresDaRegiao } from '../ui';
+import { desenhosQueBalancam, enfeitesDaLinha } from '../ui/mundo-desenhos';
+import { posicaoX, semQuebrarHifen } from '../ui/caminho';
 import { nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { tocaSons } from './sons';
 import './previa-trilha.css';
@@ -16,6 +17,9 @@ const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: redu
 
 /** Guarda a posição antes que a aula troque a largura e a rolagem da página. */
 export function medirPassagem(geracao: TrilhaEmGeracao, painel: HTMLElement): PassagemCriada {
+  // Em uma resposta muito rápida, a volta de 240 ms ao primeiro nó pode estar em curso.
+  // Termina só a rolagem, para que o círculo nasça do nó já à vista no quadro da confirmação.
+  painel.querySelector('.previa-mapa')?.scrollTo({ top: 0, behavior: 'instant' });
   const caixa = painel.getBoundingClientRect();
   const no = painel.querySelector('[data-primeiro] .previa-no__face')?.getBoundingClientRect();
   const x = no ? no.left + no.width / 2 : caixa.left + caixa.width / 2;
@@ -25,6 +29,20 @@ export function medirPassagem(geracao: TrilhaEmGeracao, painel: HTMLElement): Pa
     '--origem-x': `${x}px`, '--origem-y': `${y}px`,
     '--raio': `${Math.ceil(Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)))}px`,
   } as CSSProperties };
+}
+
+function LigacaoRascunho({ de, ate }: { de: number; ate: number }) {
+  return <span className="previa-ligacao" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none">
+    <path d={`M${de} 0 C${de} 48 ${ate} 52 ${ate} 100`} vectorEffect="non-scaling-stroke" />
+  </svg></span>;
+}
+
+function CenarioDaPrevia({ trecho, indice }: { trecho: number; indice: number }) {
+  const perto = enfeitesDaLinha(trecho, indice), longe = enfeitesDaLinha(trecho, indice + 2);
+  return <div className="previa-cenario" aria-hidden="true">
+    {[perto.grande, perto.miudo, longe.grande, longe.miudo].map((nome, i) =>
+      <Desenho key={i} nome={nome} className={desenhosQueBalancam.has(nome) ? 'mundo-balanca' : ''} />)}
+  </div>;
 }
 
 export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajustar, aceitar, remontar, existente, abrirExistente }: {
@@ -38,11 +56,18 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const mapa = useRef<HTMLDivElement>(null);
   const acompanhar = useRef(true);
   const anterior = useRef(0);
+  const propostaApresentada = useRef<string | null>(null);
+  const trofeu = useRef<HTMLDivElement>(null);
+  const [trofeuAVista, setTrofeuAVista] = useState(false);
+  const [viuTrofeu, setViuTrofeu] = useState(false);
+  const [licaoAnunciada, setLicaoAnunciada] = useState('');
   const ultimoPouso = useRef(-Infinity);
   const [explicacao, setExplicacao] = useState<string | null>(null);
   const [semNovidade, setSemNovidade] = useState(false);
   const [demorou, setDemorou] = useState(false);
   const salvando = aceite === 'salvando' || !!passagem;
+  const falhou = aceite === 'erro' || aceite === 'expirada';
+  const stuNoTrofeu = !!proposta && trofeuAVista && !salvando && !falhou;
   const fase = passagem ? 'criada' : salvando ? 'salvando' : proposta ? 'pronta' : 'montando';
   const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
@@ -67,18 +92,57 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     const area = mapa.current;
     if (!area) return;
     if (proposta) {
-      if (acompanhar.current || salvando) area.scrollTo({ top: 0, behavior: 'instant' });
+      if (propostaApresentada.current === proposta.token) return;
+      propostaApresentada.current = proposta.token;
+      if (acompanhar.current && trofeu.current) {
+        const destino = trofeu.current.getBoundingClientRect().bottom - area.getBoundingClientRect().bottom + area.scrollTop;
+        area.scrollTo({ top: Math.max(0, destino), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
+        painel.current?.querySelector<HTMLButtonElement>('.previa-comecar')?.focus({ preventScroll: true });
+      }
       return;
     }
+    propostaApresentada.current = null;
     const vaga = area.querySelector<HTMLElement>('[data-mais-novo]');
     if (!vaga || !acompanhar.current) return;
     const centro = vaga.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop + vaga.offsetHeight / 2;
     area.scrollTo({ top: Math.max(0, centro - area.clientHeight * 0.6), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
-  }, [nos.length, proposta, salvando]);
+  }, [nos.length, proposta]);
 
-  function pousou(face: HTMLElement) {
+  useLayoutEffect(() => {
     const area = mapa.current;
-    if (proposta || !area || performance.now() - ultimoPouso.current < 400) return;
+    if (!area) return;
+    if (aceite === 'erro' || aceite === 'expirada') { area.scrollTop = 0; return; }
+    if (aceite !== 'salvando' || passagem) return;
+    const de = area.scrollTop;
+    if (movimentoReduzido() || !de) { area.scrollTop = 0; return; }
+    const inicio = performance.now();
+    let quadro: number;
+    function rolar(agora: number) {
+      const fracao = Math.min(1, (agora - inicio) / 240);
+      area!.scrollTop = de * (1 - fracao) ** 3;
+      if (fracao < 1) quadro = requestAnimationFrame(rolar);
+    }
+    quadro = requestAnimationFrame(rolar);
+    return () => cancelAnimationFrame(quadro);
+  }, [aceite, passagem]);
+
+  useEffect(() => {
+    if (!proposta || !mapa.current || !trofeu.current) {
+      setViuTrofeu(false); setTrofeuAVista(false); return;
+    }
+    const observador = new IntersectionObserver(([entrada]) => {
+      setTrofeuAVista(entrada.isIntersecting);
+      if (entrada.isIntersecting) setViuTrofeu(true);
+    }, { root: mapa.current, threshold: 0.45 });
+    observador.observe(trofeu.current);
+    return () => observador.disconnect();
+  }, [proposta]);
+
+  function pousou(face: HTMLElement, numero: number, titulo: string) {
+    const area = mapa.current;
+    if (proposta || !area) return;
+    setLicaoAnunciada(t.anuncioLicao(numero, titulo));
+    if (performance.now() - ultimoPouso.current < 400) return;
     const no = face.getBoundingClientRect(), janela = area.getBoundingClientRect();
     if (no.bottom < janela.top || no.top > janela.bottom) return;
     ultimoPouso.current = performance.now();
@@ -93,7 +157,8 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     </header>
     <div className="previa-palco">
       <p className="previa-placa" role="status">{placa}</p>
-      <div className="previa-mapa" ref={mapa} onScroll={ev => {
+      {!proposta && <span className="somente-leitor" role="status">{licaoAnunciada}</span>}
+      <div className="previa-mapa" ref={mapa} style={coresDaRegiao(nos.at(-1)?.trecho ?? 0)} onScroll={ev => {
         const area = ev.currentTarget;
         if (area.scrollTop < anterior.current - 2) acompanhar.current = false;
         if (area.scrollHeight - area.clientHeight - area.scrollTop < 24) acompanhar.current = true;
@@ -102,22 +167,29 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
         <ol className="previa-percurso" aria-label={t.contexto}>
           {nos.map((no, i) => {
             const x = posicaoX(i), antes = posicaoX(i - 1);
-            const comStu = proposta ? i === 0 : i === nos.length - 1;
-            const pose = passagem ? 'stu-comemorando' : salvando ? 'stu-estudando' : proposta ? 'stu-feliz' : 'stu-curioso';
+            const novaParte = i > 0 && no.trecho !== nos[i - 1].trecho;
+            const seguinte = nos[i + 1], fronteira = seguinte && seguinte.trecho !== no.trecho;
+            const comStu = proposta ? i === 0 && !stuNoTrofeu : i === nos.length - 1;
+            const pose = passagem ? 'stu-comemorando' : salvando ? 'stu-estudando' : falhou ? 'stu-encorajador' : proposta ? 'stu-feliz' : 'stu-curioso';
             const mostrar = explicacao === no.id && !salvando;
-            return <li key={no.id} className="previa-no" data-primeiro={i === 0 || undefined} data-mais-novo={i === nos.length - 1 || undefined}
+            return <li key={no.id} className="previa-no" data-lado={x >= 50 ? 'direita' : 'esquerda'} data-fronteira={fronteira || undefined} data-nova-parte={novaParte || undefined} data-primeiro={i === 0 || undefined} data-mais-novo={i === nos.length - 1 || undefined}
               style={{ ...coresDaRegiao(no.trecho), '--x': `${x}%` } as CSSProperties}>
-              {i > 0 && <span className="previa-ligacao" aria-hidden="true"><svg viewBox="0 0 100 100" preserveAspectRatio="none"><path d={`M${antes} 0 C${antes} 48 ${x} 52 ${x} 100`} vectorEffect="non-scaling-stroke" /></svg></span>}
+              <CenarioDaPrevia trecho={no.trecho} indice={i} />
+              {fronteira && <>
+                <Fronteira trechoSeguinte={seguinte.trecho} />
+                <span className="previa-marco" style={coresDaRegiao(seguinte.trecho)}><Icone nome="bandeira" />{mensagens.trilha.parte(seguinte.trecho + 1)}</span>
+              </>}
+              {i > 0 && <LigacaoRascunho de={antes} ate={x} />}
               <div className="previa-no__centro">
                 <button type="button" className="previa-no__alvo" disabled={salvando} aria-expanded={mostrar} aria-label={no.titulo}
                   onClick={() => setExplicacao(mostrar ? null : no.id)}>
                   <span className="previa-no__face" onAnimationEnd={ev => {
-                    if (ev.animationName === 'previa-pousar' || ev.animationName === 'previa-aparecer') pousou(ev.currentTarget);
+                    if (ev.animationName === 'previa-pousar' || ev.animationName === 'previa-aparecer') pousou(ev.currentTarget, i + 1, no.titulo);
                   }}><Icone nome={no.titulo.startsWith('Revis') ? 'revisao' : 'livro'} /></span>
-                  <span className="previa-no__titulo">{no.titulo}</span>
+                  <span className="previa-no__titulo">{semQuebrarHifen(no.titulo)}</span>
                 </button>
                 {comStu && <div className="previa-stu" data-esquerda={x > 64 || undefined}>
-                  <Mascote key={pose} expressao={pose} tamanho={80} animado={!proposta || (salvando && !passagem) ? 'laco' : 'uma-vez'} sombra />
+                  <Mascote key={pose} expressao={pose} tamanho={80} animado={falhou || (viuTrofeu && !salvando) ? undefined : !proposta || !passagem && salvando ? 'laco' : 'uma-vez'} sombra />
                 </div>}
                 {mostrar && <p className="previa-no__explicacao">{no.resumo || mensagens.licao.audio.previaAbre}</p>}
               </div>
@@ -125,8 +197,12 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
           })}
         </ol>
         {!proposta && <div className="previa-vaga" aria-hidden="true"><span />{!nos.length && <Mascote expressao="stu-curioso" tamanho={80} animado="laco" sombra />}</div>}
-        {proposta && <div className="previa-chegada" style={coresDaRegiao(nos.at(-1)?.trecho ?? 0)}>
-          <Mascote expressao="acessorio-trofeu" tamanho={64} />
+        {proposta && <div ref={trofeu} className="previa-chegada" data-visto={viuTrofeu || undefined}>
+          <LigacaoRascunho de={posicaoX(Math.max(0, nos.length - 1))} ate={50} />
+          <div className="previa-premio">
+            <Mascote expressao="acessorio-trofeu" tamanho={64} />
+            {stuNoTrofeu && <div className="previa-stu"><Mascote expressao="stu-feliz" tamanho={80} animado="uma-vez" sombra /></div>}
+          </div>
           <span>{mensagens.trilha.chegada}</span>
           <small>{t.origem(origemLegivel(proposta.origem))}</small>
         </div>}
