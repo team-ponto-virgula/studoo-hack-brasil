@@ -27,6 +27,7 @@ import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
 import { TelaPerfil } from './perfil';
+import { BotaoConfigurar, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
 
 /*
@@ -45,6 +46,8 @@ type Etapa =
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao }
   // Perfis e compartilhar (spec 09 e 10): a tela Perfil e a tela Editar perfil, só com `compartilhar` no config.
   | { tipo: 'perfil' }
+  // Configurações da trilha (spec 10, lote 4), só da dona: `volta` é de onde a pessoa veio (Minhas trilhas ou o mapa).
+  | { tipo: 'configuracoes'; planoId: string; volta: 'planos' | 'plano' }
   // Comunidade (spec 10, B e C2), só com `comunidade` no config: o Explorar e, dentro do app, o perfil de outra pessoa (a
   // página /p da web) e a prévia de uma trilha (a página /t); `voltar` é a tela de onde a pessoa veio. `restaurar`: o
   // Explorar volta como estava (aba, tema, lista e rolagem) quando a pessoa volta de um perfil ou de uma trilha.
@@ -58,6 +61,7 @@ const ABAS: readonly string[] = ['planos', 'objetivo', 'plano', 'perfil', 'explo
 
 /** A seção da barra de baixo de uma tela: o perfil de outra pessoa e a prévia ficam na seção de onde vieram. */
 function abaDe(etapa: Etapa): Etapa['tipo'] {
+  if (etapa.tipo === 'configuracoes') return 'planos';
   return etapa.tipo === 'perfilPublico' || etapa.tipo === 'previaTrilha' ? abaDe(etapa.voltar) : etapa.tipo;
 }
 
@@ -136,6 +140,8 @@ export function Estudo({ cliente, sair, expirar }: {
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   /** A trilha da folha "Compartilhar trilha" aberta, ou null. */
   const [folha, setFolha] = useState<string | null>(null);
+  /** Muda quando a folha de compartilhar fecha: as configurações da trilha releem "Quem pode ver". */
+  const [versaoFolha, setVersaoFolha] = useState(0);
   const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
   const registrarGuarda = useCallback((guarda: ((continuar: () => void) => boolean) | null) => { guardaSaida.current = guarda; }, []);
   // O aviso do próprio app (lote 4): o Valeu e a denúncia avisam numa faixa no pé da tela, nunca no sistema.
@@ -244,6 +250,7 @@ export function Estudo({ cliente, sair, expirar }: {
       }
       else if (etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
       else if (etapa.tipo === 'perfilPublico' || etapa.tipo === 'previaTrilha') navegar(etapa.voltar);
+      else if (etapa.tipo === 'configuracoes' && etapa.volta === 'plano') void abrirPlano(etapa.planoId);
       else navegar({ tipo: 'planos' });
       return true;
     }, etapa.tipo !== 'planos');
@@ -448,6 +455,8 @@ export function Estudo({ cliente, sair, expirar }: {
     const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
     if (!resultado.ok) return;
     setPlanos((anteriores) => anteriores?.filter((item) => item.id !== plano.id) ?? null);
+    // Apagada pelas configurações dela: a tela não existe mais, e a pessoa volta a Minhas trilhas.
+    setEtapa((atual) => (atual.tipo === 'configuracoes' && atual.planoId === plano.id ? { tipo: 'planos' } : atual));
     anunciar(mensagens.planos.apagada(plano.titulo));
   }
 
@@ -513,7 +522,7 @@ export function Estudo({ cliente, sair, expirar }: {
   const telaDaComunidade = ['explorar', 'perfilPublico', 'previaTrilha'].includes(etapa.tipo);
   const acoes = (
     <>
-      {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
+      {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil', 'configuracoes'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
         desativado={ocupado} acao={() => abrir({ tipo: 'planos' })} />}
       {/* Com o compartilhar (como a web): "Sair" fica no Perfil; no alto, "Perfil" só onde não há a barra de baixo. */}
       {compartilhar
@@ -540,7 +549,7 @@ export function Estudo({ cliente, sair, expirar }: {
     </AbrirPerfil.Provider>
     {folha && (
       <FolhaCompartilhar cliente={cliente} planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade}
-        aoFechar={() => setFolha(null)} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
+        aoFechar={() => { setFolha(null); setVersaoFolha((versao) => versao + 1); }} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
     )}
     {confirmacao && (
       <CartaoConfirmacao mensagem={confirmacao.mensagem} texto={confirmacao.texto} aviso={confirmacao.aviso} confirmarRotulo={confirmacao.confirmarRotulo}
@@ -593,7 +602,18 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'plano') {
       return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} abrindo={abrindo} sincronia={sincronia}
         abrirLicao={(id) => void abrirLicao(etapa.plano, id)} novoPlano={() => abrir({ tipo: 'objetivo' })}
-        compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined} />;
+        compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined}
+        configurar={() => abrir({ tipo: 'configuracoes', planoId: etapa.plano.id, volta: 'plano' })} />;
+    }
+    if (etapa.tipo === 'configuracoes') {
+      const resumo = planos?.find((item) => item.id === etapa.planoId);
+      return <TelaConfiguracoes key={etapa.planoId} cliente={cliente} planoId={etapa.planoId} acoes={acoes} desativado={ocupado}
+        compartilhar={Boolean(abrirFolha)} versao={versaoFolha} recebidaDe={resumo?.recebida?.nome ?? null}
+        voltar={() => (etapa.volta === 'plano' ? void abrirPlano(etapa.planoId) : abrir({ tipo: 'planos' }))}
+        aoMudar={(conf) => setPlanos((anteriores) => anteriores?.map((item) => (item.id === conf.planoId
+          ? { ...item, titulo: conf.titulo, capa: conf.capa, tema: conf.tema } : item)) ?? null)}
+        mudarCompartilhamento={() => abrirFolha?.(etapa.planoId)}
+        apagar={() => { if (resumo) pedirParaApagar(resumo); }} />;
     }
 
     if (etapa.tipo === 'geracao' && geracao) {
@@ -662,6 +682,7 @@ export function Estudo({ cliente, sair, expirar }: {
               {destaque && (
                 <CartaoDestaque plano={destaque} indice={planos.indexOf(destaque)} sincronia={sincronia} ocupado={ocupado}
                   abrir={() => void abrirPlano(destaque.id)} apagar={() => pedirParaApagar(destaque)}
+                  configurar={() => abrir({ tipo: 'configuracoes', planoId: destaque.id, volta: 'planos' })}
                   compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined} />
               )}
               {restantes.length > 0 && (
@@ -672,6 +693,7 @@ export function Estudo({ cliente, sair, expirar }: {
               {restantes.map((plano) => (
                 <CartaoPlano key={plano.id} plano={plano} indice={planos.indexOf(plano)} ocupado={ocupado} secundario
                   abrir={() => void abrirPlano(plano.id)} apagar={() => pedirParaApagar(plano)}
+                  configurar={() => abrir({ tipo: 'configuracoes', planoId: plano.id, volta: 'planos' })}
                   compartilhar={abrirFolha && !plano.recebida ? () => abrirFolha(plano.id) : undefined} />
               ))}
               </View>}
@@ -1422,9 +1444,11 @@ function SkeletonLicao({ texto }: { texto: string }) {
  * Como na web, no celular o próximo passo vira o rodapé fixo e, a partir de 768 px, fica dentro da faixa.
  * Voltando de uma lição, a trilha rola até o nó liberado, o próximo ou a lição de origem, se ele estiver fora da vista.
  */
-function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao, novoPlano, sincronia, compartilhar }: {
+function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao, novoPlano, sincronia, compartilhar, configurar }: {
   /** Abre a folha "Compartilhar trilha" (só na trilha da própria pessoa, com o compartilhar ligado). */
   compartilhar?: () => void;
+  /** A engrenagem leva às configurações da trilha (capa, nome, descrição, tema, quem pode ver, apagar). */
+  configurar?: () => void;
   /** O selo da tela: a trilha aberta também se atualiza quando o app volta ao primeiro plano. */
   sincronia: Sincronia;
   etapa: EtapaPlano;
@@ -1493,11 +1517,16 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
   // "Compartilhar" (ou "Compartilhada", com o link ativo); depois de adicionar, o aviso verde.
   const marcaDoTopo = (
     <>
-      {plano.recebida ? <TrilhaRecebida recebida={plano.recebida} /> : compartilhar && (
-        <Botao rotulo={plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada} iconeAntes="compartilhar" variante="secundario"
-          testID="plano-compartilhar" nomeAcessivel={mensagens.compartilhar.entradaRotulo(plano.titulo)} desativado={ocupado} acao={compartilhar}
-          estilo={estudoEstilos.compartilharTopo} />
-      )}
+      {plano.recebida && <TrilhaRecebida recebida={plano.recebida} />}
+      {/* Como .trilha-topo__acoes da web: "Compartilhar" (só na trilha da própria pessoa) e a engrenagem, com 8 entre eles. */}
+      <View style={estudoEstilos.acoesTopo}>
+        {!plano.recebida && compartilhar && (
+          <Botao rotulo={plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada} iconeAntes="compartilhar" variante="secundario"
+            testID="plano-compartilhar" nomeAcessivel={mensagens.compartilhar.entradaRotulo(plano.titulo)} desativado={ocupado} acao={compartilhar}
+            estilo={estudoEstilos.compartilharTopo} />
+        )}
+        {configurar && <BotaoConfigurar titulo={plano.titulo} desativado={ocupado} acao={configurar} />}
+      </View>
       {etapa.aviso && <AvisoDaTrilha texto={etapa.aviso} />}
     </>
   );
@@ -1701,13 +1730,15 @@ function BarraProgresso({ progresso, testID, naFaixa = false, comPercentual = fa
  * sincronia, o título, o progresso com a porcentagem e o único botão primário da tela. Com tudo concluído, o rótulo vira
  * "Você concluiu suas trilhas!" e a ação, rever. O "Apagar" continua discreto, como nos outros cartões.
  */
-function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, compartilhar }: {
+function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, compartilhar, configurar }: {
   plano: PlanoResumo;
   indice: number;
   sincronia: Sincronia;
   ocupado: boolean;
   abrir: () => void;
   apagar: () => void;
+  /** "Configurações" no menu "•••", antes de "Apagar". */
+  configurar: () => void;
   /** "Compartilhar" no menu "•••", acima de "Apagar" (só na trilha da própria pessoa, com o compartilhar ligado). */
   compartilhar?: () => void;
 }) {
@@ -1736,7 +1767,7 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
       </View>
       {/* Como .plano-cartao__menu da web: o "•••" dentro da arte, 8 do topo e da direita dela (24 do cartão), com o "Apagar"
           num balão embaixo. */}
-      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} testID="apagar-destaque" estilo={estudoEstilos.menuDestaque} />
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} testID="apagar-destaque" estilo={estudoEstilos.menuDestaque} />
       <View style={estudoEstilos.destaqueCorpo}>
         <View style={estudoEstilos.destaqueTopo}>
           <Text style={[estudoEstilos.destaqueRotulo, caixaAlta]}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo)}</Text>
@@ -1757,7 +1788,9 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
  * Cartão de um plano em Meus planos, como na web: uma faixa do mundo (cada plano numa região), o título, o progresso e a
  * ação que cabe: começar, continuar ou rever a trilha concluída.
  */
-function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, secundario = false }: {
+function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, configurar, secundario = false }: {
+  /** "Configurações" no menu "•••", antes de "Apagar". */
+  configurar: () => void;
   /** "Compartilhar" no menu "•••", acima de "Apagar" (só na trilha da própria pessoa, com o compartilhar ligado). */
   compartilhar?: () => void;
   /** Abaixo do destaque, a ação é secundária: o único botão azul da tela fica no "Seu próximo passo". Como na web. */
@@ -1803,7 +1836,7 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, secu
             nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir} />
         </View>
       </View>
-      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} testID={`apagar-plano-${indice}`} />
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} testID={`apagar-plano-${indice}`} />
     </View>
     </Animated.View>
   );
@@ -1811,13 +1844,15 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, secu
 
 /**
  * O "•••" de cada cartão de Minhas trilhas: o menu de ações do Studoo (spec 11), igual no iPhone, no Android e na web.
- * "Compartilhar" (só nas trilhas da pessoa) e, por último, depois de uma linha, "Apagar" em vermelho, que pede confirmação.
- * "Configurações" entra com o item das configurações da trilha.
+ * "Compartilhar" (só nas trilhas da pessoa), "Configurações" e, por último, depois de uma linha, "Apagar" em vermelho, que
+ * pede confirmação.
  */
-function MenuDoCartao({ titulo, ocupado, apagar, compartilhar, testID, estilo }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; testID: string; estilo?: StyleProp<ViewStyle> }) {
+function MenuDoCartao({ titulo, ocupado, apagar, compartilhar, configurar, testID, estilo }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; configurar: () => void; testID: string; estilo?: StyleProp<ViewStyle> }) {
   const acoes: AcaoDoMenu[] = [
     ...(compartilhar ? [{ rotulo: mensagens.compartilhar.entrada, icone: 'compartilhar' as const, aoEscolher: compartilhar, testID: `${testID}-compartilhar`,
       nomeAcessivel: mensagens.compartilhar.entradaRotulo(titulo) }] : []),
+    { rotulo: mensagens.configuracoes.entrada, icone: 'engrenagem', aoEscolher: configurar, testID: `${testID}-configuracoes`,
+      nomeAcessivel: mensagens.configuracoes.entradaRotulo(titulo) },
     { rotulo: mensagens.planos.apagar, icone: 'lixeira', aoEscolher: apagar, perigo: true, testID, nomeAcessivel: mensagens.planos.apagarRotulo(titulo) },
   ];
   return (
@@ -2227,6 +2262,7 @@ const estudoEstilos = StyleSheet.create({
   acaoNaTela: { alignItems: 'flex-start', marginTop: 8 },
   // .trilha-compartilhar: 10 abaixo do nome da trilha.
   compartilharTopo: { alignSelf: 'flex-start', marginTop: 10 },
+  acoesTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
   vazio: { gap: 16, marginTop: 24 },
   liberada: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
   liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
