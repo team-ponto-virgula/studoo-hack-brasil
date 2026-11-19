@@ -1672,7 +1672,8 @@ const caminhoEstilos = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
   discretoTexto: {
     color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17.55, textAlign: 'center' },
-  discretoResumo: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 12, lineHeight: 16, textAlign: 'center' },
+  // O que a lição ensina, na prévia e na geração: 13 no mínimo (metadado, banca da noite §6 e §10), na cor secundária.
+  discretoResumo: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 18, textAlign: 'center' },
   // .caminho-ponte: 12 px na entrelinha de 1,5, com o passo de 26 medido na web (8 do nome ou do selo anterior).
   seloNaCaixa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 8 },
   selo: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,

@@ -11,7 +11,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { AvisoDoApp, Botao, Campo, DeslocamentoDaRolagem, EstadoErro, Pontinhos, SeloSincronia, Tela, Titulo, estilos, useAvisoDoAppRaiz, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
+import { AvisoDoApp, Botao, Campo, DeslocamentoDaRolagem, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useAvisoDoAppRaiz, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -1321,7 +1321,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     <View>
       <View testID="faixa-geracao" accessible accessibilityRole="header" accessibilityLabel={`${geracao.objetivo}. ${contagemDaFaixa}`}
         style={estudoEstilos.faixaGeracao} onLayout={(evento) => { coberto.current = Math.round(evento.nativeEvent.layout.height); }}>
-        {!pronta && <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden><Pontinhos cor={cores.acao} tamanho={6} vao={4} /></View>}
+        {/* Sem os três pontos no alto (banca da noite §6): pareciam um menu, e o rodapé já diz "Montando a trilha". */}
         <Text numberOfLines={1} style={estudoEstilos.faixaGeracaoNome}>{geracao.objetivo}</Text>
         <Text style={estudoEstilos.faixaGeracaoContagem}>{contagemDaFaixa}</Text>
       </View>
@@ -2519,7 +2519,8 @@ const estudoEstilos = StyleSheet.create({
   placaGeracao: { paddingHorizontal: 12, paddingVertical: 10, borderWidth: 2, borderColor: '#E8D3A8', borderRadius: 16, backgroundColor: '#FFF9EC',
     boxShadow: '0 3px 0 #E8D3A8' },
   placaGeracaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
-  placaGeracaoLinha: { marginTop: 4, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 12, lineHeight: 16 },
+  // A dica da placa em 14/20 #0B1B5C (banca da noite §6; tinha 12 px com contraste baixo).
+  placaGeracaoLinha: { marginTop: 4, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   geracaoConteudo: { paddingTop: 0, paddingBottom: 0 },
   cartaoDeVolta: { marginTop: 20 },
   pilulaSeguir: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 44, paddingHorizontal: 16, borderRadius: 999, backgroundColor: cores.acao,

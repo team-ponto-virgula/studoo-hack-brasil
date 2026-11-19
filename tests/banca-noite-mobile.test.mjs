@@ -39,3 +39,13 @@ test('§4 conclusão: sem o selo de visto, números em blocos brancos e o que pr
   assert.match(estudo, /rotulo=\{mensagens\.licao\.historia\.verPraticou\} testID="ver-praticado" variante="texto"/);
   assert.match(textos, /verPraticou: 'Ver o que você praticou',/);
 });
+
+test('§6 geração: sem os três pontos no alto, a dica da placa em 14/20 #0B1B5C e o resumo do nó em 13', async () => {
+  const caminho = await readFile(new URL('../apps/mobile/src/caminho.tsx', import.meta.url), 'utf8');
+  const faixa = estudo.slice(estudo.indexOf('<View testID="faixa-geracao"'), estudo.indexOf('<Text style={estudoEstilos.faixaGeracaoContagem}>'));
+  assert.doesNotMatch(faixa, /Pontinhos/, 'os pontos pareciam um menu');
+  assert.match(estudo, /placaGeracaoLinha: \{ marginTop: 4, color: cores\.texto, fontFamily: fontes\.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 \}/);
+  assert.match(caminho, /discretoResumo: \{ marginTop: 2, color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontSize: 13,/);
+  // O nome do nó que nasce fica na cor secundária, sem opacidade parada (só a entrada de 220 ms da spec 04).
+  assert.match(caminho, /discretoTexto: \{\n\s*color: cores\.textoSecundario,/);
+});
