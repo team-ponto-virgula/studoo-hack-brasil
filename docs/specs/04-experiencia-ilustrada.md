@@ -172,7 +172,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 **Som.** O único som de conclusão é `geracao_pronta`, no t = 0 da passagem. Ele é aquecido ao abrir a geração, para tocar sem atraso. O fim da proposta (troféu) não tem som. `geracao_licao` segue a spec 12.
 
 **Erro, tentar de novo e sair.**
-- **O aceite falhou:** o botão volta a "Começar a lição 1" e "Ajustar pedido" volta. A linha embaixo, em `#C23B4E`, diz "Não deu para criar a trilha. Confira a conexão e tente de novo." (`erroCriacao`). O Stu fica ao lado do nó 1, parado, em `stu-encorajador`. O novo toque usa o mesmo token, e o servidor devolve a trilha já criada para esse token (`aceitarProposta`, em `src/servidor/aprendizado/servico.ts`), então nada duplica.
+- **O aceite falhou:** nada da tela some nem remonta. A prévia fica onde estava, sem quadro em branco e sem a entrada da tela. A camada da passagem, se chegou a montar, sai sem aparecer. Só o rodapé e o Stu mudam: o botão volta a "Começar a lição 1" e "Ajustar pedido" volta. A linha embaixo, em `#C23B4E`, diz "Não deu para criar a trilha. Confira a conexão e tente de novo." (`erroCriacao`). O Stu fica ao lado do nó 1, parado, em `stu-encorajador`. O novo toque usa o mesmo token, e o servidor devolve a trilha já criada para esse token (`aceitarProposta`, em `src/servidor/aprendizado/servico.ts`), então nada duplica.
 - **Proposta expirada (`proposta_invalida`):** a linha diz "Esta proposta expirou. Monte de novo." (`propostaExpirada`), e o botão vira "Montar de novo" (`montarDeNovo`), que refaz a geração com o mesmo pedido.
 - **Sair durante "Criando sua trilha…"** (voltar, gesto ou outra aba): não cancela no servidor. O cliente ignora a resposta e não abre a aula, e a trilha aparece em Minhas trilhas.
 - Cancelar durante a geração continua como hoje (P17 da spec 07).
@@ -193,6 +193,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - C6: tentar de novo depois de uma falha não duplica (Minhas trilhas com uma trilha), e voltar da aula leva ao mapa salvo.
 - C7: com movimento reduzido, a troca é por opacidade e a informação é a mesma; os dois anúncios saem.
 - C8: "Criando sua trilha…" fica numa linha em 320, 360 e 390.
+- C9: no erro e na proposta expirada, nenhum quadro em branco: a prévia continua à vista do erro em diante. Depois de "Montar de novo", a linha de erro some na hora, a placa volta a "Montando sua trilha" e termina em "Proposta pronta", com "Começar a lição 1" ligado. Se já existe uma trilha com o mesmo nome, aparece o aviso "Abrir a que já existe" (spec 05). O teste observa essa proposta nova e o botão ligado; com a IA falsa, a faixa da geração pode nem chegar a aparecer.
 
 **Paridade.** Igual na web, no Android e no iPhone, com os mesmos tempos e os mesmos textos.
 
