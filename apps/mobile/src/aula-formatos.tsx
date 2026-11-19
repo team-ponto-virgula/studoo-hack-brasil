@@ -876,7 +876,7 @@ export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
         {restantes.map((item) => (
           <CartaoDegrau key={item.id} accessibilityRole="button" accessibilityLabel={t.ordenar.colocar(item.texto)} disabled={desativado}
             onPress={() => colocar(item.id)} corDegrau={cores.gelo} estiloFora={formatos.cartaoDisponivel} face={formatos.cartao}>
-            <Text style={[estilos.texto, formatos.cartaoTexto, formatos.cartaoDisponivelTexto]}>{item.texto}</Text>
+            <Text style={[estilos.texto, formatos.cartaoDisponivelTexto]}>{item.texto}</Text>
           </CartaoDegrau>
         ))}
       </View>}
@@ -1384,8 +1384,10 @@ const formatos = StyleSheet.create({
   ordemCaixa: { gap: 8, minHeight: 64, padding: 10, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo, justifyContent: 'center' },
   disponiveis: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   cartaoDisponivel: { alignSelf: 'flex-start', maxWidth: '100%' },
-  // Base no tamanho do próprio texto (o flex: 1 de cartaoTexto deixava a base em 0 e a ficha quebrava em três linhas).
-  cartaoDisponivelTexto: { flexGrow: 0, flexShrink: 1, flexBasis: 'auto' },
+  // A ficha tem a largura do próprio texto, que encolhe e quebra em linhas quando passa da largura. Sem `flex`: no Yoga do
+  // aparelho, `flex: 1` troca a base `auto` por 0 mesmo com `flexBasis: 'auto'` por cima, e com `flexGrow: 0` o texto ficava
+  // com largura zero (as fichas vazias do iPhone do dono, lote 3); no navegador, a base `auto` valia e a prévia mostrava o texto.
+  cartaoDisponivelTexto: { flexShrink: 1, fontWeight: '700' },
   // .ordenar button, .associar button: face de 52 com borda de 2 em volta e 10 × 14 de respiro; o degrau de 4 vem por fora
   // (CartaoDegrau).
   cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
