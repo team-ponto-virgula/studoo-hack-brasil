@@ -111,8 +111,14 @@ test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mai
 test('o nó 1 à vista no toque: inteiro na área livre (entre a placa e o rodapé), com o centro a 40% dela', () => {
   const efeito = trecho(geracao, "if (criacao !== 'criando') return;\n    const primeiro", '}, [criacao]);');
   assert.match(efeito, /const topoLivre = cartaoDeVolta \? 0 : RITMO_DA_GERACAO\.placaTopo \+ alturaPlaca;/);
-  assert.match(efeito, /if \(naTela - RITMO_DA_GERACAO\.no1AcimaDoCentro >= topoLivre && naTela \+ RITMO_DA_GERACAO\.no1AbaixoDoCentro <= altura\) return;/);
-  assert.match(efeito, /rolarPara\(Math\.max\(0, Math\.round\(centro - \(topoLivre \+ \(altura - topoLivre\) \* RITMO_DA_GERACAO\.no1NaAreaLivre\)\)\)\);/);
+  assert.match(efeito, /if \(naTela - RITMO_DA_GERACAO\.no1AcimaDoCentro >= topoLivre && naTela \+ RITMO_DA_GERACAO\.no1AbaixoDoCentro <= altura\) \{\n\s*aoRolarAteNo1\(Date\.now\(\)\);/);
+  assert.match(efeito, /rolarAteNo1\(Math\.max\(0, Math\.round\(centro - \(topoLivre \+ \(altura - topoLivre\) \* RITMO_DA_GERACAO\.no1NaAreaLivre\)\)\)\);/);
+  // A rolagem tem 240 ms, quadro a quadro, e avisa quando termina; o círculo mede o nó 1 depois dela.
+  const rolar = trecho(geracao, 'function rolarAteNo1(alvo: number) {', '\n  }\n');
+  assert.match(rolar, /RITMO_DA_GERACAO\.rolarAteNo1Ms : 0;/);
+  assert.match(rolar, /aoRolarAteNo1\(inicio \+ duracao\);/);
+  assert.match(rolar, /scrollTo\(\{ y: de \+ \(alvo - de\) \* \(1 - \(1 - t\) \*\* 3\), animated: false \}\)/);
+  assert.match(comecar, /setTimeout\(medirNo1, Math\.max\(inicio \+ RITMO_DA_GERACAO\.circuloAtrasoMs - 20, fimDaRolagemNo1\.current \+ 20\) - Date\.now\(\)\)/);
   // Chegar ao alto durante a criação não traz o cartão do título de volta (ele empurraria o nó 1 para baixo do rodapé).
   assert.match(geracao, /if \(pronta && !cartaoDeVolta && y <= 4 && criacaoAgora\.current === null\) setCartaoDeVolta\(true\);/);
 });
