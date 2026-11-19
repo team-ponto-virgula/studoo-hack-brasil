@@ -13,14 +13,10 @@ export function AmbienteSom() {
   const [visivel, mostrar] = useState(false);
   const [emFoco, manter] = useState(false);
   const caminho = usePathname();
-  const publica = /^\/(?:t|p)(?:\/|$)/.test(caminho);
   const aviso = useRef<HTMLDivElement>(null);
   const jaMostrou = useRef(false);
-  useLayoutEffect(() => {
-    tocaSons.definirAreaDaMusica(!publica);
-    if (!publica) tocaSons.prepararFundo();
-  }, [publica]);
   useEffect(() => {
+    tocaSons.prepararFundo();
     return tocaSons.assinarEstado(estado => {
       if (estado.fundo === 'mudo') { mostrar(false); return; }
       if (estado.estadoFundo !== 'tocando' || jaMostrou.current) return;
@@ -38,7 +34,7 @@ export function AmbienteSom() {
     return () => window.clearTimeout(relogio);
   }, [visivel, emFoco]);
   useLayoutEffect(() => {
-    if (!visivel || publica) return;
+    if (!visivel) return;
     function posicionar() {
       const el = aviso.current;
       if (!el) return;
@@ -59,9 +55,9 @@ export function AmbienteSom() {
       window.removeEventListener('resize', posicionar);
       window.removeEventListener('scroll', posicionar, true);
     };
-  }, [visivel, publica, caminho]);
+  }, [visivel, caminho]);
   return <div ref={aviso} className="aviso-app aviso-musica" role="status" aria-live="polite">
-    {visivel && !publica && <p>{mensagens.som.musicaAviso}<button type="button" onFocus={() => manter(true)} onBlur={() => manter(false)}
+    {visivel && <p>{mensagens.som.musicaAviso}<button type="button" onFocus={() => manter(true)} onBlur={() => manter(false)}
       onClick={() => void tocaSons.definirFundo('mudo')}>{mensagens.som.desligarMusica}</button></p>}
   </div>;
 }

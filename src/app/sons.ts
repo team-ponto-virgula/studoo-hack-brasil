@@ -302,15 +302,8 @@ class TocaSonsWeb {
     }
   }
 
-  definirAreaDaMusica(permitida: boolean): void {
-    this.lerPreferencias();
-    if (this.estado.areaPermitida === permitida) return;
-    this.estado.definirAreaPermitida(permitida);
-    void this.atualizarEstadoFundo();
-  }
-
   prepararFundo(): void {
-    if (this.lerPreferencias().fundo !== 'mudo' && this.estado.areaPermitida && document.visibilityState === 'visible') {
+    if (this.lerPreferencias().fundo !== 'mudo' && document.visibilityState === 'visible') {
       void this.carregarBuffer(arquivoSonoro('fundos', lofi.arquivo), TIMEOUT_CARREGAMENTO_MS);
     }
   }
@@ -405,7 +398,7 @@ class TocaSonsWeb {
         const decorrido = this.ctx.currentTime - this.origemTemporalFundo - fonte.loopStart;
         this.retomarEm = fonte.loopStart + Math.max(0, decorrido) % (fonte.loopEnd - fonte.loopStart);
       }
-      const imediato = !this.desbloqueado || !this.estado.areaPermitida || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano;
+      const imediato = !this.desbloqueado || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano;
       this.pararComRampa(imediato ? 0 : 400);
       this.estadoFundo = this.erroFundo && id !== 'mudo' ? 'erro' : 'parado';
       this.notificar();
