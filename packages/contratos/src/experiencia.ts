@@ -4,13 +4,56 @@ import type { FaltaParaVerificar, MotivoRever } from './licao';
 /** "e-mail" sem quebra de linha no hífen (marcadores de junção invisíveis em volta dele). */
 const EMAIL = 'e\u2060-\u2060mail';
 /**
- * O gesto de agradecer uma trilha, num lugar só: trocar "Valeu" por outra palavra (por exemplo "Curtir") é mudar só aqui.
+ * O gesto de gostar de uma trilha, num lugar só (spec 10, "Revisão do dono (19/11)", tabela "Textos finais").
+ * "Curtir" é a palavra recomendada; se o dono mantiver "Valeu", basta trocar `GESTO` para `GESTO_VALEU`.
  */
-const GESTO = {
-    nome: 'Valeu', palavra: 'valeu', plural: 'valeus', umGesto: 'um valeu',
-    mandar: 'mandar valeu', mandarUm: 'mandar um valeu', mandou: 'mandou valeu', mandouUm: 'mandou um valeu', mandaram: 'mandaram valeu',
-    enviado: 'Valeu enviado', retirado: 'Valeu retirado',
-} as const;
+type Gesto = {
+    nome: string; palavra: string; plural: string;
+    rotulo: (titulo: string) => string;
+    marcou: (titulo: string) => string;
+    desmarcou: (titulo: string) => string;
+    /** Aviso curto ao retirar (até o item B tirar esse aviso). */
+    retirado: string;
+    primeiraVez: (primeiroNome: string) => string;
+    erroRede: string; limite: string; contaTemporaria: string; faixaSemConta: string;
+    legendaEmAlta: string; semNinguem: string;
+    novidade: (quem: string, total: number, titulo: string) => string;
+    novidadesVazio: string;
+};
+const GESTO_CURTIR: Gesto = {
+    nome: 'Curtir', palavra: 'curtida', plural: 'curtidas',
+    rotulo: (titulo) => `Curtir “${titulo}”`,
+    marcou: (titulo) => `Você curtiu “${titulo}”.`,
+    desmarcou: (titulo) => `Curtida retirada de “${titulo}”.`,
+    retirado: 'Curtida retirada.',
+    primeiraVez: (primeiroNome) => `${primeiroNome} vai ver sua curtida. Curtidas levam trilhas ao Em alta.`,
+    erroRede: 'Não deu para curtir agora. Confira a conexão e tente de novo.',
+    limite: 'Muitas curtidas seguidas. Tente de novo daqui a pouco.',
+    contaTemporaria: 'Para curtir, entre com uma conta.',
+    faixaSemConta: 'Entre para estudar e curtir.',
+    legendaEmAlta: 'As trilhas que mais gente começou e curtiu nos últimos 7 dias.',
+    semNinguem: 'Ainda sem ninguém estudando e sem curtidas',
+    novidade: (quem, total, titulo) => `${quem} ${total === 1 ? 'curtiu' : 'curtiram'} “${titulo}”`,
+    novidadesVazio: 'Sem novidades nesta semana. Quando alguém começar ou curtir uma trilha sua, ou seguir você, aparece aqui.',
+};
+/** A coluna "Valeu" da mesma tabela, caso o dono mantenha a palavra. */
+export const GESTO_VALEU: Gesto = {
+    nome: 'Valeu', palavra: 'valeu', plural: 'valeus',
+    rotulo: (titulo) => `Mandar valeu para “${titulo}”`,
+    marcou: (titulo) => `Valeu enviado para “${titulo}”.`,
+    desmarcou: (titulo) => `Valeu retirado de “${titulo}”.`,
+    retirado: 'Valeu retirado.',
+    primeiraVez: (primeiroNome) => `${primeiroNome} vai ver seu valeu. Valeus levam trilhas ao Em alta.`,
+    erroRede: 'Não deu para mandar o valeu agora. Confira a conexão e tente de novo.',
+    limite: 'Muitos valeus seguidos. Tente de novo daqui a pouco.',
+    contaTemporaria: 'Para mandar valeu, entre com uma conta.',
+    faixaSemConta: 'Entre para estudar e mandar valeu.',
+    legendaEmAlta: 'As trilhas que mais gente começou e mandou valeu nos últimos 7 dias.',
+    semNinguem: 'Ainda sem ninguém estudando e sem valeus',
+    novidade: (quem, total, titulo) => `${quem} ${total === 1 ? 'mandou um valeu' : 'mandaram valeu'} em “${titulo}”`,
+    novidadesVazio: 'Sem novidades nesta semana. Quando alguém começar uma trilha sua, mandar um valeu ou seguir você, aparece aqui.',
+};
+const GESTO: Gesto = GESTO_CURTIR;
 
 /** A frase única de privacidade (perfil, recorte da foto e nome): o que fica público e o que nunca aparece. */
 const PRIVACIDADE = `Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu ${EMAIL} nunca aparece.`;
@@ -392,6 +435,8 @@ export const mensagens = {
             longo: 'Use até 40 caracteres.',
             caracteres: 'Use letras, números e pontuação simples.',
             endereco: `O nome não pode ter endereço de site nem ${EMAIL}.`,
+            /** Campo vazio ao salvar (revisão de 19/11). */
+            vazio: 'Escreva como você quer aparecer.',
         },
         compartilhadas: 'Trilhas que você compartilha',
         /** Título da seção com o total (inclui as trilhas só com o link). */
@@ -402,8 +447,8 @@ export const mensagens = {
         nenhumaDepois: (toque: boolean) => ` e ${toque ? 'toque' : 'clique'} em “Compartilhar”.`,
         desde: (data: string) => `Compartilhada desde ${data}`,
         adicoes: (n: number) => (n === 0 ? 'Ainda ninguém estudando' : n === 1 ? '1 pessoa estudando' : `${n} pessoas estudando`),
-        /** Na lista da dona, quando ninguém começou nem mandou valeu: uma frase só. */
-        semNinguem: `Ainda ninguém estudando nem ${GESTO.mandou}`,
+        /** Na lista da dona, quando ninguém começou nem curtiu: uma frase só. */
+        semNinguem: GESTO.semNinguem,
         publicoTitulo: 'Seu perfil público',
         privado: 'Privado. Nenhuma trilha aparece no seu perfil.',
         publico: (n: number) => `Público. ${n === 1 ? '1 trilha aparece' : `${n} trilhas aparecem`} no seu perfil, para quem tiver o endereço dele.`,
@@ -450,7 +495,7 @@ export const mensagens = {
         fotoTrocar: 'Trocar foto',
         fotoRemover: 'Remover foto',
         fotoCamera: 'Tirar foto',
-        fotoDica: 'JPG, PNG ou WebP, até 2 MB. Sem foto, fica a inicial na cor.',
+        fotoDica: 'Opcional. Sem foto, aparece a inicial do seu nome.',
         fotoAviso: PRIVACIDADE,
         fotoEnviando: 'Enviando foto…',
         fotoSalva: 'Foto salva.',
@@ -459,6 +504,32 @@ export const mensagens = {
         fotoRemoverTexto: 'No lugar dela volta a inicial do seu nome, na cor do perfil.',
         fotoRemoverCancelar: 'Manter foto',
         fotoIlegivel: 'Não deu para abrir esta imagem. Tente outra foto.',
+        // Revisão de 19/11 (spec 10, "Perfil direto nos dados"): campos na ordem privacidade, foto, nome, resumo, interesses e cor.
+        /** A linha de privacidade, com cadeado, no alto dos campos. */
+        privacidade: PRIVACIDADE,
+        /** O link ao lado do avatar sem foto (com foto: `fotoTrocar`). */
+        fotoAdicionar: 'Adicionar foto',
+        /** Menu de ações do Studoo para a foto: galeria, câmera (só toque), remover (só com foto) e cancelar. */
+        fotoGaleria: 'Escolher da galeria',
+        fotoMenuCancelar: 'Cancelar',
+        /** Resposta 422 do envio da foto. */
+        fotoFormato: 'Use uma foto JPG, PNG ou WebP de até 2 MB.',
+        /** Resposta 429 do envio da foto. */
+        fotoLimite: 'Você trocou de foto muitas vezes. Tente de novo daqui a pouco.',
+        nomeDica: 'Nome ou apelido, de 2 a 40 caracteres.',
+        interessesCampoRotulo: 'Interesses (opcional)',
+        corDica: 'Pinta a faixa do perfil e a inicial, quando não há foto.',
+        /** Barra de salvar: erro de rede (os campos guardam o que foi digitado). */
+        salvarErroRede: 'Não deu para salvar. Confira a conexão e tente de novo.',
+        /** Fileira de números do perfil: rótulo sob cada número (só entram os itens acima de zero). */
+        numeroTrilhas: (n: number) => (n === 1 ? 'trilha' : 'trilhas'),
+        numeroEstudando: 'estudando',
+        numeroSeguidores: (n: number) => (n === 1 ? 'seguidor' : 'seguidores'),
+        /** O que o leitor de tela ouve da fileira inteira, numa frase só. */
+        numerosLeitor: (trilhas: number, pessoas: number, seguidores: number) =>
+            mensagens.perfil.alcanceItens(trilhas, pessoas, { seguidores, semZeros: true }).join(', '),
+        /** Ações do perfil preenchido, numa fileira: `editar` e esta. */
+        compartilhar: 'Compartilhar',
         // Recorte
         recorteTitulo: 'Ajustar foto',
         recorteDica: 'Arraste para posicionar. Use o controle ou as setas para aproximar.',
@@ -468,7 +539,7 @@ export const mensagens = {
         recorteArea: 'Área do recorte. Use as setas para mover e + ou − para aproximar.',
         recorteUsar: 'Usar esta foto',
         recorteCancelar: 'Cancelar',
-        resumoRotulo: 'Resumo',
+        resumoRotulo: 'Resumo (opcional)',
         resumoDica: 'Uma frase sobre você e o que gosta de estudar.',
         resumoContador: (usados: number, maximo: number) => `${usados} de ${maximo}`,
         resumoContadorLeitor: (restam: number) => (restam >= 0 ? `Restam ${restam} caracteres` : `${-restam} caracteres além do limite`),
@@ -484,19 +555,19 @@ export const mensagens = {
         alteracoesNaoSalvas: 'Alterações não salvas',
         tudoSalvo: 'Tudo salvo',
         sairSemSalvarTitulo: 'Sair sem salvar?',
-        sairSemSalvarTexto: 'As mudanças no nome, no resumo e nos interesses se perdem.',
+        sairSemSalvarTexto: 'As mudanças no nome, no resumo, nos interesses e na cor se perdem.',
         sairSemSalvarConfirmar: 'Sair sem salvar',
         sairSemSalvarCancelar: 'Continuar editando',
         corrigirCampos: 'Confira os campos marcados.',
     },
-    /** Comunidade (spec 10, etapa B): Explorar, Em alta, cartão de trilha, Valeu, Denunciar e publicar. */
+    /** Comunidade (spec 10, etapa B): Explorar, Em alta, cartão de trilha, Curtir, Denunciar e publicar. */
     comunidade: {
         navegacao: 'Explorar',
         titulo: 'Explorar',
         subtitulo: 'Trilhas que a comunidade publicou. Escolha uma e comece do zero, no seu ritmo.',
         emAlta: 'Em alta esta semana',
         emAltaDoTema: (tema: string) => `Em alta em ${tema} esta semana`,
-        emAltaDica: `As trilhas que mais gente começou e ${GESTO.mandou} nos últimos 7 dias.`,
+        emAltaDica: GESTO.legendaEmAlta,
         posicao: (n: number) => `${n}º lugar`,
         anteriores: 'Ver as anteriores',
         proximas: 'Ver as próximas',
@@ -523,14 +594,20 @@ export const mensagens = {
         continuar: 'Continuar',
         sua: 'Abrir minha trilha',
         valeu: GESTO.nome,
-        valeuRotulo: (titulo: string) => `${GESTO.mandarUm[0].toUpperCase()}${GESTO.mandarUm.slice(1)} para “${titulo}”`,
-        /** Botão marcado (o nome que o leitor de tela anuncia): tocar de novo retira. */
-        valeuMarcadoRotulo: (titulo: string) => `${GESTO.enviado} para “${titulo}”. Toque para retirar.`,
-        valeuEnviado: (titulo: string) => `${GESTO.enviado} para “${titulo}”.`,
-        valeuRetirado: (titulo: string) => `${GESTO.retirado} de “${titulo}”.`,
-        /** O aviso do app (nunca do sistema), toda vez que a pessoa manda ou retira. */
-        valeuAviso: (primeiroNome: string) => `${GESTO.enviado} para ${primeiroNome}. É o seu obrigado pela trilha e ajuda ela a aparecer em Em alta.`,
-        valeuRetiradoAviso: `${GESTO.retirado}.`,
+        /** Nome acessível fixo do botão (marcado ou não): o estado vai em `aria-pressed` e a contagem em `aria-describedby`. */
+        valeuRotulo: GESTO.rotulo,
+        /** Igual ao `valeuRotulo` (o nome não muda com o estado); fica para quem ainda usa a chave. */
+        valeuMarcadoRotulo: GESTO.rotulo,
+        /** O que o leitor de tela ouve ao marcar e ao desmarcar. */
+        valeuEnviado: GESTO.marcou,
+        valeuRetirado: GESTO.desmarcou,
+        /** O aviso do app (nunca do sistema), só na primeira curtida da pessoa. */
+        valeuAviso: GESTO.primeiraVez,
+        valeuRetiradoAviso: GESTO.retirado,
+        valeuErroRede: GESTO.erroRede,
+        valeuLimite: GESTO.limite,
+        /** Conta temporária: o aviso vem com o botão "Entrar" (`entrar`). */
+        valeuContaTemporaria: GESTO.contaTemporaria,
         compartilhar: 'Compartilhar',
         compartilharRotulo: (titulo: string) => `Compartilhar “${titulo}”`,
         linkCopiado: 'Link da trilha copiado',
@@ -539,7 +616,7 @@ export const mensagens = {
         demonstracao: 'Demonstração',
         demonstracaoDica: 'Trilha pronta do modo demonstração.',
         demonstracaoExplica: '“Demonstração” marca conteúdo de exemplo, criado para mostrar o Studoo.',
-        entrarParaAgir: `Entre para estudar e ${GESTO.mandar}.`,
+        entrarParaAgir: GESTO.faixaSemConta,
         entrar: 'Entrar',
         adicionada: (nome: string) => `Trilha adicionada. Feita por ${nome}.`,
         denuncia: {
@@ -607,7 +684,7 @@ export const mensagens = {
         seguidosSemTrilhas: 'Quem você segue ainda não publicou trilhas no Explorar.',
         // Novidades (etapa C2)
         novidadesTitulo: 'Novidades',
-        novidadesVazio: `Sem novidades nesta semana. Quando alguém começar uma trilha sua, ${GESTO.mandarUm} ou seguir você, aparece aqui.`,
+        novidadesVazio: GESTO.novidadesVazio,
         novidadesSemana: 'Nos últimos 7 dias',
         alguem: 'Alguém',
         listaPessoas: (nomes: string[], outros: number) => {
@@ -616,7 +693,7 @@ export const mensagens = {
             return `${nomes.join(', ')} e mais ${outros} ${outros === 1 ? 'pessoa' : 'pessoas'}`;
         },
         novidadeAdicoes: (n: number, titulo: string) => `${n === 1 ? '1 pessoa começou' : `${n} pessoas começaram`} a estudar “${titulo}”`,
-        novidadeValeus: (quem: string, total: number, titulo: string) => `${quem} ${total === 1 ? GESTO.mandouUm : GESTO.mandaram} em “${titulo}”`,
+        novidadeValeus: GESTO.novidade,
         novidadeSeguidores: (quem: string | null, total: number) => (quem
             ? `${quem} ${total === 1 ? 'começou' : 'começaram'} a seguir você`
             : `${total === 1 ? '1 pessoa nova segue' : `${total} pessoas novas seguem`} você`),
@@ -685,6 +762,16 @@ export const mensagens = {
         apagar: 'Apagar',
         apagarRotulo: (titulo: string) => `Apagar a trilha “${titulo}”`,
         maisOpcoesRotulo: (titulo: string) => `Mais opções de “${titulo}”`,
+        /** Confirmação de apagar (revisão de 19/11): título, texto e ações separados; com link, entra também `compartilhar.apagarAviso`. */
+        apagarTitulo: (titulo: string) => `Apagar “${titulo}”?`,
+        apagarTexto: (licoes: number, concluidas: number) => {
+            const asLicoes = licoes === 1 ? 'a lição' : `as ${licoes} lições`;
+            return concluidas > 0
+                ? `A trilha, ${asLicoes} e o seu progresso (${concluidas} ${concluidas === 1 ? 'concluída' : 'concluídas'}) saem da sua conta. Não dá para desfazer.`
+                : `A trilha e ${asLicoes} saem da sua conta. Não dá para desfazer.`;
+        },
+        /** A ação segura, que recebe o foco (a outra é `apagar`). */
+        apagarCancelar: 'Cancelar',
         apagarPergunta: (titulo: string, detalhe?: string) =>
             `Apagar a trilha “${titulo}”${detalhe ? ` (${detalhe})` : ''}? As lições e o progresso dela também serão apagados.`,
         semTrilhas: 'Você ainda não tem trilhas. Comece uma aqui: escreva o que quer aprender.',
