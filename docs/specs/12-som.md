@@ -2,7 +2,7 @@
 
 **Estado:** regra de design de 19/11, pedido 6 do Lead, a pedido do dono ("SFX vivos" e som de fundo com cinco opções ou mudo). Vale para web, Android e iPhone. O catálogo e o toca-sons já estão na integração (`packages/contratos/src/catalogo-sons.ts`, `src/app/sons.ts`, `apps/mobile/src/sons.ts`); esta spec diz onde a pessoa controla o som, o que a tela mostra em cada estado e como o som se comporta. Esboço: `som-390.png`, na pasta de trabalho do Designer (`ux/06-controle-de-som`).
 
-**Revisão do dono (19/11): uma música só.** O fundo passa a ser só o Lo-fi de Estudo (`lofi_estudo`: `public/sons/fundos/lofi-estudo.mp3` e `apps/mobile/assets/sons/fundos/lofi-estudo.mp3`, na versão de d5bf5aa, com o laço que começa no compasso 1), em laço no app inteiro. Os efeitos tocam por cima, sem parar e sem baixar a música. Saem os cinco climas, a lista de escolha, a prévia e o ponto de novidade: a pessoa controla música e efeitos com duas chaves independentes, na folha "Som" e no Perfil, sem tela nova. Esta spec já está escrita assim; onde algo de antes mudou, está dito.
+**Revisão do dono (19/11): uma música só.** O fundo passa a ser só o Lo-fi de Estudo (`lofi_estudo`: `public/sons/fundos/lofi-estudo.mp3` e `apps/mobile/assets/sons/fundos/lofi-estudo.mp3`, na versão de d5bf5aa, com o laço que começa no compasso 1), em laço no app inteiro: já na entrada, na recuperação de senha e no modo visitante, sem recomeçar ao entrar ou sair da conta. Os efeitos tocam por cima, no volume constante deles, sem parar e sem baixar a música. Saem os cinco climas, a lista de escolha, a prévia e o ponto de novidade: a pessoa controla música e efeitos com duas chaves independentes, na folha "Som" e no Perfil, sem tela nova. Esta spec já está escrita assim; onde algo de antes mudou, está dito.
 
 ## O que a pessoa controla
 
@@ -20,8 +20,9 @@
    Não há seta nem folha a partir do Perfil: as chaves já estão ali.
 2. **Aula: botão de som no alto**, à direita da barra de andamento, sempre à vista. O alto da aula tem três colunas: o X, o andamento e o som. O botão abre a folha "Som" por cima da lição, que fica onde estava; ao fechar, o foco volta ao botão. Calar a música leva dois toques (o botão e a chave), sem sair da lição.
    - O botão não cala direto porque são dois sons; a folha mostra os dois.
+3. **Entrada e recuperação de senha:** o mesmo botão de som (44 × 44) no alto, à direita da barra da marca, abre a mesma folha. É o controle de quem ainda não entrou: a música também toca ali, e precisa de um jeito de parar.
 
-Fora da aula, o controle fica no Perfil.
+Nas outras telas, o controle fica no Perfil.
 
 ## Botão de som da aula
 
@@ -56,29 +57,29 @@ Não há lista nem carrossel de climas e não há prévia. É a folha da spec 11
 
 ### Textos
 
-Os textos da folha e do Perfil ficam no contrato (`packages/contratos/src/experiencia.ts`), iguais nos dois lados: "Música de fundo", "Lo-fi de Estudo, em laço", "Efeitos sonoros", "Toques, acertos, erros e conquistas", "Tocando", "Carregando…", "Começa no primeiro toque", "Pausada enquanto você grava" e o erro acima.
-- O nome da faixa é **"Lo-fi de Estudo"**, como no arquivo escolhido pelo dono. Em 31bcaa5, `musicaFaixa` diz "Lo-fi de estúdio" e precisa ser corrigido.
+Os textos da folha e do Perfil ficam no contrato (`packages/contratos/src/experiencia.ts`, em `som`, desde 59cfe8d: `musicaFaixa`, `musicaEmLaco`, `musicaComeca`, `musicaPausada`, `musicaErro`, `musicaAviso`, `desligarMusica`, `rodapeMusica` e `botaoMusicaRotulo`), iguais nos dois lados: "Música de fundo", "Lo-fi de Estudo, em laço", "Efeitos sonoros", "Toques, acertos, erros e conquistas", "Tocando", "Carregando…", "Começa no primeiro toque", "Pausada enquanto você grava" e o erro acima.
+- O nome da faixa é **"Lo-fi de Estudo"**, como no arquivo escolhido pelo dono. O "Lo-fi de estúdio" de 31bcaa5 foi corrigido em 59cfe8d.
 - `OPCOES_FUNDO_UI` e as descrições dos cinco climas saem da tela.
 
 ## Como a música se comporta
 
-- **Onde toca:** dentro do app, depois da entrada: abas, mapa, geração e aula. Não toca na entrada, na recuperação de senha nem nas páginas públicas `/t` e `/p`. Ao sair da conta, para; a escolha continua no aparelho.
-- **Laço contínuo:** a música não recomeça ao trocar de tela, nem ao abrir uma lição; segue de onde estava.
+- **Onde toca:** no app inteiro: entrada, recuperação de senha, modo visitante, abas, mapa, geração e aula. Ao entrar e ao sair da conta, ela continua. Só as páginas públicas da web (`/t` e `/p`), que recebem quem ainda não está no app, ficam sem música.
+- **Laço contínuo:** a música não recomeça ao trocar de tela, ao abrir uma lição nem ao entrar ou sair da conta; segue de onde estava.
 - **Ligar:** sobe de 0 ao volume da música em 600 ms. **Desligar:** desce em 400 ms e para. A música nunca entra no volume cheio de uma vez.
-- **Efeitos por cima (decisão do dono):** nenhum efeito para ou baixa a música; eles tocam por cima, no volume deles.
-- **Studoo falando** (ler em voz alta, frases de inglês, acorde, som de referência da prática): a música desce a 20% em cerca de 0,4 s e volta em 0,6 s quando a fala acaba. Fala não é efeito; se o dono quiser a música sem baixar também aqui, muda só esta linha.
+- **Efeitos por cima (decisão do dono):** nenhum efeito para ou baixa a música. Eles tocam por cima, no volume constante deles: a música não muda o volume dos efeitos, e os efeitos não mudam o da música.
+- **Studoo falando** (ler em voz alta, frases de inglês, acorde, som de referência da prática): a música desce a 20% em cerca de 0,4 s e volta em 0,6 s quando a fala acaba. É o comportamento de hoje e continua: fala e gravação são casos separados da decisão sobre os efeitos.
 - **Para** durante a gravação do Explique e a voz ao vivo, com o app em segundo plano ou com a aba escondida. Ao voltar, recomeça subindo em 600 ms. Durante a gravação, os efeitos também se calam, menos o de fim de gravação, como o toca-sons já faz.
-- **Começo:** nas três plataformas, a música começa no primeiro toque, clique ou tecla da pessoa dentro do app, depois da entrada, subindo em 600 ms. É a regra do navegador, e o app segue a mesma: abrir o Studoo nunca começa a tocar sozinho antes de um gesto.
+- **Começo:** a música começa no primeiro gesto que a plataforma permite (toque, clique ou tecla), já na tela de entrada, subindo em 600 ms; no app também, desde o login. Abrir o Studoo nunca começa a tocar antes de um gesto. Na web, depois de recarregar a página inteira, o navegador exige um novo gesto antes de voltar a tocar (P26 da spec 07); trocar de tela sem recarregar não exige.
 
 ## Como a pessoa descobre a música
 
-- A música, ligada por padrão, começa no primeiro toque depois da entrada.
-- **Aviso da primeira vez:** quando a música toca pela primeira vez no aparelho, aparece o aviso do app (spec 11) "Música de fundo ligada." com a ação "Desligar", que desliga a música na hora (`studoo.sons.avisoMusica`, no aparelho). Ele é a forma rápida de parar o som que tocou sem a pessoa pedir, e o leitor de tela também o anuncia. Não há tela, folha nem convite antes.
-- Depois, o controle está no botão de som da aula e na seção "Som" do Perfil.
+- A música, ligada por padrão, começa no primeiro gesto, já na tela de entrada.
+- **Aviso da primeira vez:** quando a música toca pela primeira vez no aparelho, aparece o aviso do app (spec 11) "Música de fundo ligada.", com a ação "Desligar", que desliga na hora (`musicaAviso` e `desligarMusica`; guardado em `studoo.sons.avisoMusica`). Ele é discreto e aparece uma vez por aparelho: uma linha de 48 px, que não leva o foco, não bloqueia toques fora dele e some sozinha em 7 s. Na entrada e na recuperação, ele fica no alto, 8 px abaixo da barra da marca, para não cobrir o formulário; nas outras telas, fica no lugar de sempre, 16 px acima da cápsula ou da borda. O leitor de tela o anuncia. Não há tela, folha nem convite antes.
+- Depois, o controle está no botão de som da aula, no botão de som da entrada e da recuperação e na seção "Som" do Perfil.
 
 ## Primeira vez
 
-1. No primeiro acesso no aparelho, música e efeitos estão ligados. No primeiro toque depois da entrada, a música entra subindo em 600 ms, e o aviso "Música de fundo ligada." aparece com "Desligar". Na web, esse toque é o próprio gesto que libera o áudio.
+1. No primeiro acesso no aparelho, música e efeitos estão ligados. No primeiro gesto, já na tela de entrada, a música entra subindo em 600 ms, e o aviso "Música de fundo ligada." aparece com "Desligar". Na web, esse toque é o próprio gesto que libera o áudio.
 2. O primeiro toque numa opção da aula já soa (`toque_opcao`), por cima da música.
 3. Na primeira abertura da folha, as duas chaves estão ligadas e a linha da música diz "Tocando" (ou "Carregando…" até o som chegar).
 
@@ -127,13 +128,13 @@ Os arquivos finais e as decisões de composição estão em [som/PRODUCAO.md](..
 
 ## Decisões
 
-**Do dono, 19/11:** só o Lo-fi de Estudo, em laço, no app inteiro, com os efeitos por cima, sem parar nem baixar a música (a escolha substitui os cinco climas).
+**Do dono, 19/11:** só o Lo-fi de Estudo, em laço, no app inteiro (também na entrada, na recuperação de senha e no visitante, sem recomeçar ao entrar ou sair da conta), com os efeitos por cima, no volume constante deles, sem parar nem baixar a música. A escolha substitui os cinco climas.
 
 **Do dono, fechadas em 19/11 (seguiu a recomendação do Designer):**
 1. **Onde o fundo toca: no app inteiro, depois da entrada.** Não é configurável, e não toca na entrada nem antes dela. Cortar o som a cada troca de tela cansa.
 2. **Modo silencioso do iPhone: os sons do Studoo respeitam** (`playsInSilentMode: false`, como o toca-sons já faz). Quem silencia o celular não espera o app tocando, e a P24 da spec 07 continua. Para a demonstração, o aparelho sai do silencioso antes.
 
-**De design (revistas com a música única):** duas chaves independentes, na folha e no Perfil, sem lista, carrossel nem prévia; o aviso da primeira vez com "Desligar"; a música começa no primeiro toque também no app. De antes, continuam: a folha no lugar de um botão que alterna; sem controle de volume; os textos curtos das opções; o ponto de novidade no lugar de um convite.
+**De design (revistas com a música única):** duas chaves independentes, na folha e no Perfil, sem lista, carrossel nem prévia; o aviso discreto da primeira vez, com "Desligar"; o botão de som também na entrada e na recuperação; a música começa no primeiro gesto também no app. De antes, continuam: a folha no lugar de um botão que alterna; sem controle de volume; os textos curtos das opções; o ponto de novidade no lugar de um convite.
 
 ## Conferência antes de apresentar
 
