@@ -880,6 +880,10 @@ def main() -> None:
     ap.add_argument("alvo", choices=["musica", "efeitos"])
     ap.add_argument("--destino-demo", default="/tmp/audio-tools/demo")
     ap.add_argument("--raiz", default=".")
+    ap.add_argument("--todos", action="store_true",
+                    help="grava os cinco arranjos (o padrão grava só o lofi_estudo, o único que o app usa)")
+    ap.add_argument("--destino-extras", default="/tmp/studoo-fundos",
+                    help="pasta dos quatro arranjos não usados quando --todos")
     args = ap.parse_args()
     rng = np.random.default_rng(20261119)
 
@@ -893,15 +897,27 @@ def main() -> None:
             mix = fecha_laco(mix, seg(LOOP_S))
             wav_tmp = f"/tmp/trilha-{clima}.wav"
             escrever_wav(wav_tmp, mix)
-            destino = os.path.join(args.raiz, "public/sons/fundos", ARQUIVOS[clima])
-            para_mp3(wav_tmp, destino, "80k")
-            copia = os.path.join(args.raiz, "apps/mobile/assets/sons/fundos", ARQUIVOS[clima])
-            os.makedirs(os.path.dirname(copia), exist_ok=True)
-            subprocess.run(["cp", destino, copia], check=True)
-            os.makedirs(args.destino_demo, exist_ok=True)
-            para_mp3(wav_tmp, os.path.join(args.destino_demo, ARQUIVOS[clima]), "128k")
+            # O app usa só o Lo-fi (decisão do dono, spec 12): o padrão grava
+            # apenas ele. Os outros quatro saem do pacote; para reouvir, use
+            # --todos, que os grava em `--destino-extras`, fora do repositório.
+            destino = None
+            if clima == "lofi_estudo":
+                destino = os.path.join(args.raiz, "public/sons/fundos", ARQUIVOS[clima])
+                para_mp3(wav_tmp, destino, "80k")
+                copia = os.path.join(args.raiz, "apps/mobile/assets/sons/fundos", ARQUIVOS[clima])
+                os.makedirs(os.path.dirname(copia), exist_ok=True)
+                subprocess.run(["cp", destino, copia], check=True)
+            elif args.todos:
+                destino = os.path.join(args.destino_extras, ARQUIVOS[clima])
+                os.makedirs(args.destino_extras, exist_ok=True)
+                para_mp3(wav_tmp, destino, "80k")
+            if destino:
+                os.makedirs(args.destino_demo, exist_ok=True)
+                para_mp3(wav_tmp, os.path.join(args.destino_demo, ARQUIVOS[clima]), "128k")
+                print(f"  -> {destino} ({os.path.getsize(destino)/1024:.0f} KB)", flush=True)
+            else:
+                print("  (fora do pacote: use --todos para gravar)", flush=True)
             os.remove(wav_tmp)
-            print(f"  -> {destino} ({os.path.getsize(destino)/1024:.0f} KB)", flush=True)
 
     else:
         for nome, arquivo in EFEITOS.items():
