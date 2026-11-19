@@ -283,7 +283,12 @@ test('Em alta: 7 dias, adições distintas × 3 + valeus, sem visitantes, empate
   // O Em alta da página é o começo da mesma classificação, com no máximo 10, e o filtro de tema usa o mesmo cálculo.
   const pagina = (await explorar(null)).corpo.emAlta;
   assert.ok(pagina.length <= LIMITES_COMUNIDADE.emAlta);
-  assert.deepEqual(pagina.map((c) => c.codigo), (await classificacaoDaSemana()).slice(0, LIMITES_COMUNIDADE.emAlta).map((i) => i.codigo));
+  // Outros arquivos de teste rodam em paralelo no mesmo banco e podem apagar trilhas suas entre o cálculo (em cache) e a
+  // leitura dos cartões: a página é o top 10 na mesma ordem, sem as que sumiram, e as desta suíte estão todas lá.
+  const top = (await classificacaoDaSemana()).slice(0, LIMITES_COMUNIDADE.emAlta).map((i) => i.codigo);
+  const naPagina = pagina.map((c) => c.codigo);
+  assert.deepEqual(naPagina, top.filter((codigo) => naPagina.includes(codigo)), 'mesma ordem do top 10');
+  assert.deepEqual(naPagina.filter((codigo) => codigos.includes(codigo)), top.filter((codigo) => codigos.includes(codigo)));
   const doTema = (await explorar(null, '?tema=idiomas')).corpo.emAlta;
   assert.ok(doTema.every((c) => c.tema === 'idiomas'));
   // O "Em alta" fica em cache por 60 s: um valeu novo não muda a ordem até lá.

@@ -1,6 +1,20 @@
 import type { FaltaParaVerificar, MotivoRever } from './licao';
 
 /** Conteúdo compartilhado pelas interfaces web e nativa. */
+/** "e-mail" sem quebra de linha no hífen (marcadores de junção invisíveis em volta dele). */
+const EMAIL = 'e\u2060-\u2060mail';
+/**
+ * O gesto de agradecer uma trilha, num lugar só: trocar "Valeu" por outra palavra (por exemplo "Curtir") é mudar só aqui.
+ */
+const GESTO = {
+    nome: 'Valeu', palavra: 'valeu', plural: 'valeus', umGesto: 'um valeu',
+    mandar: 'mandar valeu', mandarUm: 'mandar um valeu', mandou: 'mandou valeu', mandouUm: 'mandou um valeu', mandaram: 'mandaram valeu',
+    enviado: 'Valeu enviado', retirado: 'Valeu retirado',
+} as const;
+
+/** A frase única de privacidade (perfil, recorte da foto e nome): o que fica público e o que nunca aparece. */
+const PRIVACIDADE = `Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu ${EMAIL} nunca aparece.`;
+
 export const mensagens = {
     estudio: {
       titulo: 'Seu material vira uma jornada', subtitulo: 'Traga uma foto, documento ou tabela. O Stu transforma suas ideias em uma trilha com referências.',
@@ -237,16 +251,18 @@ export const mensagens = {
         fechar: 'Fechar',
         voltar: 'Voltar',
         comoAparecer: 'Como você quer aparecer?',
-        comoAparecerDica: 'Quem receber o link vê este nome. Seu e-mail nunca aparece.',
+        comoAparecerDica: PRIVACIDADE,
         nomeRotulo: 'Seu nome',
-        corRotulo: 'Cor do avatar',
+        corRotulo: 'Cor do perfil',
         cores: { azul: 'Azul', verde: 'Verde', laranja: 'Laranja', roxo: 'Roxo', rosa: 'Rosa', turquesa: 'Turquesa' },
         compartilhadaPor: (nome: string) => `Compartilhada por ${nome}`,
         continuar: 'Continuar',
         oQueVai: 'O que vai junto',
         contagem: (licoes: number, partes: number) =>
             `${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}`,
-        doZero: 'Quem receber começa do zero. Suas respostas e seu progresso não vão junto.',
+        doZero: 'Quem abrir vê seu nome, sua foto e seu resumo. Suas respostas e seu progresso não vão junto.',
+        /** Na folha "Compartilhar perfil": o que o perfil público mostra. */
+        perfilMostra: `Quem abrir vê seu nome, sua foto, seu resumo, seus interesses e as trilhas que você mostra no perfil. Seu ${EMAIL} nunca aparece.`,
         avisoMaterial: 'Esta trilha veio de um material seu. Vão junto os trechos citados nas lições e as páginas de onde vieram. O arquivo, o nome dele e as fotos das páginas não vão.',
         /** Quando o título traz o nome do arquivo: o aviso não pode dizer que o nome não vai. */
         avisoMaterialComTitulo: 'Esta trilha veio de um material seu. Vão junto os trechos citados nas lições e as páginas de onde vieram. O arquivo e as fotos das páginas não vão.',
@@ -261,7 +277,7 @@ export const mensagens = {
         copiarFalhou: 'Não deu para copiar. Selecione o link e copie.',
         textoCompartilhar: (titulo: string) => `Estude comigo no Studoo: ${titulo}`,
         noPerfil: 'Mostrar no meu perfil',
-        noPerfilDica: 'A trilha aparece na sua página pública, para quem tiver o endereço dela.',
+        noPerfilDica: 'A trilha aparece no seu perfil, para quem tiver o endereço dele.',
         parar: 'Parar de compartilhar',
         pararTitulo: 'Parar de compartilhar esta trilha?',
         pararTexto: 'O link deixa de funcionar. Quem já adicionou continua com a própria cópia.',
@@ -287,12 +303,15 @@ export const mensagens = {
         entrarParaAdicionar: 'Entrar para adicionar',
         adicionada: (nome: string) => `Trilha adicionada. Compartilhada por ${nome}.`,
         jaAdicionada: 'Você já adicionou esta trilha.',
+        jaAdicionadaTexto: 'Ela já está nas suas trilhas. Continue de onde parou.',
+        stuDeNovo: 'Que bom te ver de novo!',
         abrirMinhas: 'Abrir nas minhas trilhas',
         sua: 'Esta trilha é sua',
         abrirSua: 'Abrir trilha',
         inativo: 'Este link não está mais ativo',
         inativoTexto: 'Quem compartilhou pode ter parado de compartilhar ou apagado a trilha.',
         criarMinha: 'Criar minha trilha',
+        verExplorar: 'Ver trilhas no Explorar',
         // Adicionar por link
         porLink: 'Adicionar por link',
         porLinkDica: 'Recebeu o link de uma trilha? Cole aqui o endereço inteiro ou só o código.',
@@ -303,6 +322,12 @@ export const mensagens = {
         baseadoMaterialDe: (nome: string) => `Baseado no material de ${nome}`,
         fonteMaterialDe: (nome: string) => `Fonte do material de ${nome}`,
         apagarAviso: 'O link de compartilhamento desta trilha também deixa de funcionar.',
+    },
+    /** Página 404 própria (endereço que não existe): em português, com o Stu. */
+    naoEncontrada: {
+        titulo: 'Esta página não existe',
+        texto: 'O endereço pode estar errado ou a página saiu do ar.',
+        voltar: 'Voltar para o início',
     },
     /** Perfil (spec 09). */
     perfil: {
@@ -320,18 +345,26 @@ export const mensagens = {
             curto: 'Use pelo menos 2 caracteres.',
             longo: 'Use até 40 caracteres.',
             caracteres: 'Use letras, números e pontuação simples.',
-            endereco: 'O nome não pode ter endereço de site nem e-mail.',
+            endereco: `O nome não pode ter endereço de site nem ${EMAIL}.`,
         },
         compartilhadas: 'Trilhas que você compartilha',
+        /** Título da seção com o total (inclui as trilhas só com o link). */
+        compartilhadasTotal: (n: number) => `Trilhas que você compartilha (${n})`,
         nenhuma: 'Você ainda não compartilha nenhuma trilha. Abra uma trilha e toque em “Compartilhar”.',
+        nenhumaAntes: 'Você ainda não compartilha nenhuma trilha.',
+        nenhumaLink: 'Abra uma trilha',
+        nenhumaDepois: (toque: boolean) => ` e ${toque ? 'toque' : 'clique'} em “Compartilhar”.`,
         desde: (data: string) => `Compartilhada desde ${data}`,
-        adicoes: (n: number) => (n === 0 ? 'Ninguém adicionou ainda' : n === 1 ? '1 pessoa adicionou' : `${n} pessoas adicionaram`),
+        adicoes: (n: number) => (n === 0 ? 'Ainda ninguém estudando' : n === 1 ? '1 pessoa estudando' : `${n} pessoas estudando`),
+        /** Na lista da dona, quando ninguém começou nem mandou valeu: uma frase só. */
+        semNinguem: `Ainda ninguém estudando nem ${GESTO.mandou}`,
         publicoTitulo: 'Seu perfil público',
         privado: 'Privado. Nenhuma trilha aparece no seu perfil.',
         publico: (n: number) => `Público. ${n === 1 ? '1 trilha aparece' : `${n} trilhas aparecem`} no seu perfil, para quem tiver o endereço dele.`,
         verComoOutros: 'Ver como os outros veem',
         conta: 'Conta',
-        email: 'E-mail',
+        email: 'E\u2060-\u2060mail',
+        soVoceVe: 'Só você vê',
         visitante: 'Conta temporária: para ter um perfil e compartilhar trilhas, entre com uma conta.',
         // Página pública /p/<id>
         paginaTitulo: (nome: string) => `Trilhas de ${nome}`,
@@ -346,12 +379,24 @@ export const mensagens = {
         linkPerfilCopiado: 'Link do perfil copiado',
         perfilPrivadoDica: 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.',
         alcance: (trilhas: number, pessoas: number) =>
-            `${trilhas === 1 ? '1 trilha compartilhada' : `${trilhas} trilhas compartilhadas`} · ${pessoas === 0 ? 'ninguém adicionou ainda' : pessoas === 1 ? '1 pessoa adicionou' : `${pessoas} pessoas adicionaram`}`,
+            mensagens.perfil.alcanceItens(trilhas, pessoas).join(' · '),
+        /**
+         * Os itens da linha de alcance (cada um sem quebra no meio). `semZeros`: na página pública, item zerado não aparece.
+         * "Estudando" é o verbo de todo o social (cartão, alcance, lista e Novidades).
+         */
+        alcanceItens: (trilhas: number, pessoas: number, { seguidores, semZeros = false }: { seguidores?: number; semZeros?: boolean } = {}) => [
+            ...(trilhas > 0 || !semZeros ? [trilhas === 1 ? '1 trilha compartilhada' : `${trilhas} trilhas compartilhadas`] : []),
+            ...(pessoas > 0 ? [pessoas === 1 ? '1 pessoa estudando suas trilhas' : `${pessoas} pessoas estudando suas trilhas`] : semZeros ? [] : ['ninguém estudando ainda']),
+            ...(seguidores === undefined || (semZeros && seguidores === 0) ? [] : [seguidores === 1 ? '1 seguidor' : `${seguidores} seguidores`]),
+        ],
         alcanceRotulo: 'Alcance',
         interessesRotulo: 'Interesses',
         semResumoDona: 'Conte em uma frase o que você gosta de estudar.',
         completar: 'Completar perfil',
-        convitePerfil: 'Ponha seu nome, uma foto e o que você gosta de estudar. É assim que as pessoas te veem quando você compartilha uma trilha.',
+        /** O perfil abre direto nos dados (sem tela de convite): a linha sobre os campos. */
+        editorLinha: 'É assim que as pessoas te veem quando você compartilha uma trilha.',
+        seusDados: 'Seus dados',
+        convitePerfil: 'Coloque seu nome, uma foto e o que você gosta de estudar. É assim que as pessoas veem você quando você compartilha uma trilha.',
         // Tela Editar perfil
         voltarPerfil: 'Voltar ao perfil',
         fotoRotulo: 'Foto',
@@ -360,7 +405,7 @@ export const mensagens = {
         fotoRemover: 'Remover foto',
         fotoCamera: 'Tirar foto',
         fotoDica: 'JPG, PNG ou WebP, até 2 MB. Sem foto, fica a inicial na cor.',
-        fotoAviso: 'Quem abrir suas trilhas compartilhadas vê seu nome, sua foto e seu resumo. Seu e-mail nunca aparece.',
+        fotoAviso: PRIVACIDADE,
         fotoEnviando: 'Enviando foto…',
         fotoSalva: 'Foto salva.',
         fotoRemovida: 'Foto removida.',
@@ -371,6 +416,7 @@ export const mensagens = {
         // Recorte
         recorteTitulo: 'Ajustar foto',
         recorteDica: 'Arraste para posicionar. Use o controle ou as setas para aproximar.',
+        recorteDicaToque: 'Arraste para posicionar. Use o controle para aproximar.',
         recorteTeclado: 'Setas movem a foto; + e − aproximam e afastam.',
         recorteZoom: 'Aproximar',
         recorteArea: 'Área do recorte. Use as setas para mover e + ou − para aproximar.',
@@ -383,10 +429,10 @@ export const mensagens = {
         resumoErros: {
             longo: 'Use até 160 caracteres.',
             caracteres: 'Use letras, números e pontuação simples.',
-            endereco: 'O resumo não pode ter endereço de site nem e-mail.',
+            endereco: `O resumo não pode ter endereço de site nem ${EMAIL}.`,
         },
-        interessesDica: (maximo: number) => `Escolha até ${maximo}.`,
-        interessesContador: (n: number, maximo: number) => `${n} de ${maximo} escolhidos`,
+        interessesDica: (maximo: number) => `Escolha até ${maximo}`,
+        interessesContador: (n: number, _maximo: number) => `· ${n} ${n === 1 ? 'escolhido' : 'escolhidos'}`,
         interessesCheio: (maximo: number) => `Você já escolheu ${maximo}. Desmarque um para trocar.`,
         previaTitulo: 'Como os outros veem',
         alteracoesNaoSalvas: 'Alterações não salvas',
@@ -403,12 +449,13 @@ export const mensagens = {
         titulo: 'Explorar',
         subtitulo: 'Trilhas que a comunidade publicou. Escolha uma e comece do zero, no seu ritmo.',
         emAlta: 'Em alta esta semana',
-        emAltaDica: 'As trilhas que mais gente começou e agradeceu nos últimos 7 dias.',
+        emAltaDoTema: (tema: string) => `Em alta em ${tema} esta semana`,
+        emAltaDica: `As trilhas que mais gente começou e ${GESTO.mandou} nos últimos 7 dias.`,
         posicao: (n: number) => `${n}º lugar`,
         anteriores: 'Ver as anteriores',
         proximas: 'Ver as próximas',
         temas: 'Filtrar por tema',
-        todos: 'Todos',
+        todos: 'Todos os temas',
         novas: 'Novas',
         novasDoTema: (tema: string) => `Novas em ${tema}`,
         carregarMais: 'Ver mais trilhas',
@@ -422,17 +469,22 @@ export const mensagens = {
         vazioTemaAcao: 'Ver todos os temas',
         contagem: (licoes: number, partes: number) => `${licoes} ${licoes === 1 ? 'lição' : 'lições'} · ${partes} ${partes === 1 ? 'parte' : 'partes'}`,
         estudando: (n: number) => `${n} estudando`,
-        valeus: (n: number) => `${n} ${n === 1 ? 'valeu' : 'valeus'}`,
+        valeus: (n: number) => `${n} ${n === 1 ? GESTO.palavra : GESTO.plural}`,
         por: (nome: string) => `por ${nome}`,
         perfilDe: (nome: string) => `Ver o perfil de ${nome}`,
         queroEstudar: 'Quero estudar',
         adicionando: 'Adicionando…',
         continuar: 'Continuar',
-        sua: 'Sua trilha',
-        valeu: 'Valeu',
-        valeuRotulo: (titulo: string) => `Mandar um valeu para “${titulo}”`,
-        valeuEnviado: (titulo: string) => `Valeu enviado para “${titulo}”.`,
-        valeuRetirado: (titulo: string) => `Valeu retirado de “${titulo}”.`,
+        sua: 'Abrir minha trilha',
+        valeu: GESTO.nome,
+        valeuRotulo: (titulo: string) => `${GESTO.mandarUm[0].toUpperCase()}${GESTO.mandarUm.slice(1)} para “${titulo}”`,
+        /** Botão marcado (o nome que o leitor de tela anuncia): tocar de novo retira. */
+        valeuMarcadoRotulo: (titulo: string) => `${GESTO.enviado} para “${titulo}”. Toque para retirar.`,
+        valeuEnviado: (titulo: string) => `${GESTO.enviado} para “${titulo}”.`,
+        valeuRetirado: (titulo: string) => `${GESTO.retirado} de “${titulo}”.`,
+        /** O aviso do app (nunca do sistema), toda vez que a pessoa manda ou retira. */
+        valeuAviso: (primeiroNome: string) => `${GESTO.enviado} para ${primeiroNome}. É o seu obrigado pela trilha e ajuda ela a aparecer em Em alta.`,
+        valeuRetiradoAviso: `${GESTO.retirado}.`,
         compartilhar: 'Compartilhar',
         compartilharRotulo: (titulo: string) => `Compartilhar “${titulo}”`,
         linkCopiado: 'Link da trilha copiado',
@@ -440,14 +492,17 @@ export const mensagens = {
         denunciar: 'Denunciar',
         demonstracao: 'Demonstração',
         demonstracaoDica: 'Trilha pronta do modo demonstração.',
-        entrarParaAgir: 'Entre para estudar, mandar valeu ou denunciar.',
+        demonstracaoExplica: '“Demonstração” marca conteúdo de exemplo, criado para mostrar o Studoo.',
+        entrarParaAgir: `Entre para estudar e ${GESTO.mandar}.`,
         entrar: 'Entrar',
         adicionada: (nome: string) => `Trilha adicionada. Feita por ${nome}.`,
         denuncia: {
             tituloTrilha: 'Denunciar trilha',
             tituloPerfil: 'Denunciar perfil',
-            texto: 'Conte o motivo. Com denúncias de pessoas diferentes, a trilha sai do Explorar até ser revista.',
-            motivos: { spam: 'Spam ou propaganda', ofensivo: 'Conteúdo ofensivo', direitos: 'Viola direitos autorais', outro: 'Outro motivo' },
+            texto: 'Conte o motivo. Com denúncias de pessoas diferentes, a trilha sai do Explorar até a equipe do Studoo revisar.',
+            textoPerfil: 'Conte o motivo. A equipe do Studoo revisa cada denúncia.',
+            alvoTrilha: (titulo: string, nome: string) => `“${titulo}”, de ${nome}`,
+            motivos: { spam: 'Spam ou propaganda', ofensivo: 'Conteúdo ofensivo', direitos: 'Cópia ou direitos autorais', outro: 'Outro motivo' },
             enviar: 'Enviar denúncia',
             enviando: 'Enviando…',
             cancelar: 'Cancelar',
@@ -458,10 +513,12 @@ export const mensagens = {
         visibilidadeTitulo: 'Quem pode ver',
         niveis: {
             link: { titulo: 'Só com o link', texto: 'Só quem receber o link abre a trilha.' },
-            perfil: { titulo: 'No meu perfil', texto: 'Aparece na sua página pública, para quem tiver o endereço dela.' },
+            perfil: { titulo: 'No meu perfil', texto: 'Aparece no seu perfil, para quem tiver o endereço dele.' },
             explorar: { titulo: 'No Explorar', texto: 'Qualquer pessoa encontra no Explorar. Também aparece no seu perfil.' },
         },
         nivelSalvo: (nivel: string) => `Agora: ${nivel}.`,
+        agora: 'Agora',
+        aindaNaoNoExplorar: (nivel: string) => `Ainda não está no Explorar. Agora: ${nivel}.`,
         temaRotulo: 'Tema',
         temaDica: 'Ajuda quem procura por assunto.',
         temaSugerido: 'sugerido pelo título',
@@ -478,13 +535,13 @@ export const mensagens = {
         publicada: 'Publicada no Explorar.',
         publicacaoSalva: 'Tema e legenda salvos.',
         materialFora: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
-        demonstracaoAviso: 'Esta trilha é do modo demonstração e aparece no Explorar com esse rótulo.',
+        demonstracaoAviso: 'Esta trilha é do modo demonstração e aparece no Explorar com o rótulo “Demonstração”.',
         verNoExplorar: 'Ver no Explorar',
         irAoExplorar: 'Ver trilhas da comunidade',
         // Tela Perfil (dona)
-        ajustar: 'Visibilidade',
+        ajustar: 'Quem pode ver',
         ajustarRotulo: (titulo: string) => `Mudar quem pode ver “${titulo}”`,
-        naSuaPagina: 'Como aparece na sua página',
+        naSuaPagina: 'Como os outros veem',
         perfilDemo: 'Perfil de demonstração',
         // Seguir (etapa C2)
         seguir: 'Seguir',
@@ -495,16 +552,16 @@ export const mensagens = {
         deixouDeSeguir: (nome: string) => `Você deixou de seguir ${nome}.`,
         seguidores: (n: number) => (n === 1 ? '1 seguidor' : `${n} seguidores`),
         abasRotulo: 'O que mostrar',
-        abaTodos: 'Todos',
+        abaTodos: 'Comunidade',
         abaSeguindo: 'Seguindo',
         seguindoTitulo: 'De quem você segue',
         vazioSeguindoTitulo: 'Você ainda não segue ninguém',
-        vazioSeguindoTexto: 'Siga quem publica trilhas que você curte: toque em “Seguir” no perfil da pessoa. As trilhas novas dela aparecem aqui.',
+        vazioSeguindoTexto: 'Siga quem publica trilhas do seu interesse: use o botão “Seguir” no perfil da pessoa. As trilhas novas dela aparecem aqui.',
         vazioSeguindoAcao: 'Ver todas as trilhas',
         seguidosSemTrilhas: 'Quem você segue ainda não publicou trilhas no Explorar.',
         // Novidades (etapa C2)
         novidadesTitulo: 'Novidades',
-        novidadesVazio: 'Sem novidades nesta semana. Quando alguém começar uma trilha sua, mandar um valeu ou seguir você, aparece aqui.',
+        novidadesVazio: `Sem novidades nesta semana. Quando alguém começar uma trilha sua, ${GESTO.mandarUm} ou seguir você, aparece aqui.`,
         novidadesSemana: 'Nos últimos 7 dias',
         alguem: 'Alguém',
         listaPessoas: (nomes: string[], outros: number) => {
@@ -512,8 +569,8 @@ export const mensagens = {
             if (outros === 0) return nomes.length === 1 ? nomes[0] : `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
             return `${nomes.join(', ')} e mais ${outros} ${outros === 1 ? 'pessoa' : 'pessoas'}`;
         },
-        novidadeAdicoes: (n: number, titulo: string) => `${n === 1 ? '1 pessoa começou' : `${n} pessoas começaram`} sua trilha “${titulo}”`,
-        novidadeValeus: (quem: string, total: number, titulo: string) => `${quem} ${total === 1 ? 'mandou um valeu' : 'mandaram valeu'} em “${titulo}”`,
+        novidadeAdicoes: (n: number, titulo: string) => `${n === 1 ? '1 pessoa começou' : `${n} pessoas começaram`} a estudar “${titulo}”`,
+        novidadeValeus: (quem: string, total: number, titulo: string) => `${quem} ${total === 1 ? GESTO.mandouUm : GESTO.mandaram} em “${titulo}”`,
         novidadeSeguidores: (quem: string | null, total: number) => (quem
             ? `${quem} ${total === 1 ? 'começou' : 'começaram'} a seguir você`
             : `${total === 1 ? '1 pessoa nova segue' : `${total} pessoas novas seguem`} você`),
@@ -545,7 +602,7 @@ export const mensagens = {
         apresentar: 'Apresentar',
         apresentarRotulo: 'Mostrar o código em tela cheia',
         apresentacaoApontar: 'Aponte a câmera do celular',
-        apresentacaoAbrir: 'e toque no link para abrir no Studoo',
+        apresentacaoAbrir: 'e toque no link para abrir no Studoo.',
         fechar: 'Fechar',
         perfilTitulo: 'Compartilhar perfil',
         imagemTrilha: (titulo: string) => titulo,

@@ -353,6 +353,8 @@ button, input, textarea { font: inherit; }
   border-bottom: 2px solid var(--nevoa);
 }
 
+@media (min-width: 1024px) { .estudo-cabecalho[data-vazia-no-computador] { display: none; } }
+
 .estudo-identificacao { display: inline-flex; align-items: center; gap: 10px; color: var(--texto); font-weight: 800; }
 .estudo-identificacao__contexto { display: none; }
 .selo-sincronia {
@@ -427,6 +429,8 @@ button, input, textarea { font: inherit; }
   .plano-destaque__cena { height: 96px; }
   .plano-destaque__acoes { justify-items: stretch; }
   .plano-destaque__acoes .botao { width: 100%; }
+  /* O "•••" fica dentro da ilustração (8 px do topo e da direita dela), como nos cartões de "Outras trilhas". */
+  .plano-destaque > .plano-cartao__menu { top: 24px; right: 24px; }
 }
 
 .planos-secao-titulo { margin-top: 12px; color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -930,7 +934,7 @@ button { touch-action: manipulation; }
 .planos-cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .plano-cartao__menu { position: absolute; top: 10px; right: 10px; z-index: 2; }
 .plano-cartao__menu > summary {
-  display: inline-flex; align-items: center; justify-content: center; min-width: 40px; min-height: 40px;
+  display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px;
   padding: 0 10px; border-radius: 12px; color: var(--texto2); background: rgb(255 255 255 / 0.88);
   font-weight: 800; cursor: pointer; list-style: none; backdrop-filter: blur(4px);
 }

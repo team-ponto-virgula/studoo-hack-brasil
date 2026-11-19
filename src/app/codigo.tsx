@@ -63,7 +63,7 @@ function linhas(ctx: CanvasRenderingContext2D, texto: string, largura: number): 
 }
 
 /** A imagem para baixar e compartilhar: cartão 1080×1350 com o título, o código, a dica e a marca (PNG). */
-export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inicial }: { texto: string; titulo: string; dica: string; cor?: CorPerfil | null; fotoToken?: string | null; inicial?: string | null }): Promise<Blob> {
+export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inicial, demonstracao = false }: { texto: string; titulo: string; dica: string; cor?: CorPerfil | null; fotoToken?: string | null; inicial?: string | null; demonstracao?: boolean }): Promise<Blob> {
   await document.fonts.ready;
   const fotoHref = fotoToken ? await fotoComoDataUrl(fotoToken) : null;
   const [codigo, logo] = await Promise.all([
@@ -79,39 +79,57 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
   if (!ctx) throw new Error('canvas');
   ctx.fillStyle = '#eef3ff';
   ctx.fillRect(0, 0, 1080, 1350);
-  // Moldura do ícone do app em volta do código (como no cartão "rosto" da etapa 1).
-  const moldura = (x: number, y: number, l: number, r: number, cor: string) => { ctx.fillStyle = cor; ctx.beginPath(); ctx.roundRect(x, y, l, l, r); ctx.fill(); };
-  moldura(120, 270, 840, 140, FUNDO_DA_COR[cor ?? 'azul']);
-  moldura(154, 304, 772, 106, '#ffffff');
+  // Moldura sempre no azul da marca (como na folha); a cor da pessoa fica só no miolo dos olhos e no centro.
+  const moldura = (x: number, y: number, l: number, r: number, corMoldura: string) => { ctx.fillStyle = corMoldura; ctx.beginPath(); ctx.roundRect(x, y, l, l, r); ctx.fill(); };
+  // Conjunto 24 px acima e moldura de 800 (antes 840): sobram 72 px ou mais embaixo do logotipo.
+  moldura(140, 250, 800, 132, '#3858d6');
+  moldura(172, 282, 736, 100, '#ffffff');
   // O código entra recortado em cantos arredondados, concêntricos com a moldura: nenhum quadradinho nos cantos.
+  const [cx0, cy0, lado] = [196, 306, 688];
   ctx.save();
   ctx.beginPath();
-  ctx.roundRect(180, 330, 720, 720, 84);
+  ctx.roundRect(cx0, cy0, lado, lado, 80);
   ctx.clip();
-  ctx.drawImage(codigo, 180, 330, 720, 720);
+  ctx.drawImage(codigo, cx0, cy0, lado, lado);
   ctx.restore();
   const centro = !fotoHref && inicial ? centroDoCodigo(texto) : null;
   if (centro && inicial) {
-    ctx.fillStyle = '#ffffff';
+    // A letra na cor do perfil, sobre o disco claro (como no código da folha).
+    ctx.fillStyle = FUNDO_DA_COR[cor ?? 'azul'];
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = `700 ${Math.round(centro.letra * 720)}px Quicksand, sans-serif`;
-    ctx.fillText(inicial.slice(0, 1), 180 + centro.cx * 720, 330 + centro.cy * 720 + centro.letra * 720 * 0.04);
+    ctx.font = `700 ${Math.round(centro.letra * lado)}px Quicksand, sans-serif`;
+    ctx.fillText(inicial.slice(0, 1), cx0 + centro.cx * lado, cy0 + centro.cy * lado + centro.letra * lado * 0.04);
     ctx.textBaseline = 'alphabetic';
   }
   ctx.fillStyle = '#1b2a5e';
   ctx.textAlign = 'center';
   ctx.font = '700 64px Quicksand, sans-serif';
   const titulos = linhas(ctx, titulo, 920);
-  titulos.forEach((linha, i) => ctx.fillText(linha, 540, (titulos.length === 1 ? 190 : 140) + i * 76));
+  // Com o selo "Demonstração" sob o título, o título sobe um pouco.
+  const topoTitulo = (titulos.length === 1 ? 166 : 118) - (demonstracao ? 24 : 0);
+  titulos.forEach((linha, i) => ctx.fillText(linha, 540, topoTitulo + i * 76));
+  if (demonstracao) {
+    // O mesmo selo creme de borda tracejada de "Perfil de demonstração".
+    ctx.font = '800 30px Nunito, sans-serif';
+    const largura = ctx.measureText(mensagens.comunidade.demonstracao).width + 40;
+    const y = topoTitulo + (titulos.length - 1) * 76 + 26;
+    ctx.fillStyle = '#fff4d6';
+    ctx.beginPath(); ctx.roundRect(540 - largura / 2, y, largura, 46, 23); ctx.fill();
+    ctx.setLineDash([6, 5]); ctx.lineWidth = 2; ctx.strokeStyle = '#b7791f';
+    ctx.beginPath(); ctx.roundRect(540 - largura / 2, y, largura, 46, 23); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#7a4a00';
+    ctx.fillText(mensagens.comunidade.demonstracao, 540, y + 33);
+  }
+  ctx.fillStyle = '#1b2a5e';
   ctx.font = '700 36px Nunito, sans-serif';
-  ctx.fillText(dica, 540, 1172, 960);
-  if (logo) ctx.drawImage(logo, 400, 1222, 280, 92);
+  ctx.fillText(dica, 540, 1124, 960);
+  if (logo) ctx.drawImage(logo, 400, 1170, 280, 92);
   return new Promise((resolver, rejeitar) => canvas.toBlob((blob) => (blob ? resolver(blob) : rejeitar(new Error('png'))), 'image/png'));
 }
 
 /** Modo apresentação: o código grande em tela cheia, com o título e "Aponte a câmera"; Esc ou Fechar sai. */
-export function ModoApresentacao({ svg, titulo, rotulo, aoFechar: aoFecharFora }: { svg: string; titulo: string; rotulo: string; aoFechar: () => void }) {
+export function ModoApresentacao({ svg, titulo, rotulo, demonstracao = false, aoFechar: aoFecharFora }: { svg: string; titulo: string; rotulo: string; demonstracao?: boolean; aoFechar: () => void }) {
   const caixa = useRef<HTMLDivElement>(null);
   const tituloId = useId();
   const fecharRef = useRef(aoFecharFora);
@@ -138,9 +156,15 @@ export function ModoApresentacao({ svg, titulo, rotulo, aoFechar: aoFecharFora }
   return (
     <div className="apresentacao-codigo" role="dialog" aria-modal="true" aria-labelledby={tituloId} ref={caixa}>
       <button type="button" className="apresentacao-codigo__fechar" onClick={aoFechar}><Icone nome="fechar" />{k.fechar}</button>
-      <h2 id={tituloId} className="apresentacao-codigo__titulo">{titulo}</h2>
-      <span className="apresentacao-codigo__codigo" role="img" aria-label={rotulo} dangerouslySetInnerHTML={{ __html: svg }} />
-      <p className="apresentacao-codigo__dica"><strong>{k.apresentacaoApontar}</strong> {k.apresentacaoAbrir}</p>
+      {/* Título, código e dica num bloco só, centrado; sem moldura (o código o maior possível) e com a marca embaixo. */}
+      <div className="apresentacao-codigo__bloco">
+        <h2 id={tituloId} className="apresentacao-codigo__titulo">{titulo}</h2>
+        {demonstracao && <p className="selo-demo apresentacao-codigo__demo">{mensagens.comunidade.demonstracao}</p>}
+        <span className="apresentacao-codigo__codigo" role="img" aria-label={rotulo} dangerouslySetInnerHTML={{ __html: svg }} />
+        <p className="apresentacao-codigo__dica"><strong>{k.apresentacaoApontar}</strong> {k.apresentacaoAbrir}</p>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="apresentacao-codigo__marca" src="/marca/logo-com-sorriso.svg" alt="Studoo" width={140} height={46} />
+      </div>
     </div>
   );
 }
@@ -149,7 +173,11 @@ export function ModoApresentacao({ svg, titulo, rotulo, aoFechar: aoFecharFora }
  * O painel do Código Studoo: o código, e as ações (copiar link e compartilhar quando `comLink`; baixar imagem,
  * compartilhar imagem quando o aparelho deixa, e apresentar). `fotoToken` põe a foto no centro.
  */
-export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, inicial, nomeArquivo, comLink = true }: {
+export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, inicial, nomeArquivo, comLink = true, demonstracao = false, mostra }: {
+  /** Trilha de demonstração: o selo vai também na imagem baixada e na apresentação. */
+  demonstracao?: boolean;
+  /** Uma linha sob o código dizendo o que quem abrir vai ver (folha do perfil). */
+  mostra?: string;
   /** Perfil sem foto: a inicial na cor vai no centro (igual na folha, na imagem e na apresentação). */
   inicial?: string | null;
   url: string;
@@ -188,7 +216,7 @@ export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, inicia
     setGerando(true);
     avisar(k.gerando);
     try {
-      return await imagemDoCodigo({ texto: url, titulo, dica, cor, fotoToken, inicial: centroInicial });
+      return await imagemDoCodigo({ texto: url, titulo, dica, cor, fotoToken, inicial: centroInicial, demonstracao });
     } catch {
       avisar(k.falhou);
       return null;
@@ -222,15 +250,16 @@ export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, inicia
     <section className="painel-codigo" aria-label={k.titulo}>
       <span className="painel-codigo__codigo" role="img" aria-label={rotulo} dangerouslySetInnerHTML={{ __html: svg }} />
       <p className="painel-codigo__dica">{dica}</p>
-      <div className="painel-codigo__acoes">
+      {mostra && <p className="painel-codigo__mostra">{mostra}</p>}
+      <div className="painel-codigo__acoes" data-quatro={comLink || undefined}>
+        {comLink && <Botao onClick={() => void compartilharLink()}><Icone nome="compartilhar" />{k.compartilhar}</Botao>}
         {comLink && <Botao variante="secundario" onClick={() => void copiar()}><Icone nome="copiar" />{k.copiar}</Botao>}
-        {comLink && <Botao variante="secundario" onClick={() => void compartilharLink()}><Icone nome="compartilhar" />{k.compartilhar}</Botao>}
         <Botao variante="secundario" disabled={gerando} aria-busy={gerando || undefined} onClick={() => void baixar()}><Icone nome="imagem" />{k.baixar}</Botao>
         {podeArquivo && <Botao variante="secundario" disabled={gerando} onClick={() => void compartilharImagem()}><Icone nome="compartilhar" />{k.compartilharImagem}</Botao>}
-        <Botao variante="secundario" aria-label={k.apresentarRotulo} onClick={() => setApresentando(true)}><Icone nome="olho" />{k.apresentar}</Botao>
+        <Botao variante="secundario" aria-label={k.apresentarRotulo} onClick={() => setApresentando(true)}><Icone nome="telaCheia" />{k.apresentar}</Botao>
       </div>
       <p className="folha-status" role="status" aria-live="polite">{status}</p>
-      {apresentando && <ModoApresentacao svg={svgDoCodigo(url, { cor, fotoHref, inicial: centroInicial, tamanho: 1200 })} titulo={titulo} rotulo={rotulo} aoFechar={() => setApresentando(false)} />}
+      {apresentando && <ModoApresentacao svg={svgDoCodigo(url, { cor, fotoHref, inicial: centroInicial, tamanho: 1200 })} titulo={titulo} rotulo={rotulo} demonstracao={demonstracao} aoFechar={() => setApresentando(false)} />}
     </section>
   );
 }
@@ -251,6 +280,7 @@ export function FolhaCompartilharPerfil({ perfilId, nome, cor, fotoToken, aoFech
         </div>
         <h2 id={tituloId} tabIndex={-1} className="folha-titulo">{k.perfilTitulo}</h2>
         <PainelCodigo url={url} titulo={k.imagemPerfil(nome)} dica={k.dicaPerfil} rotulo={k.rotuloPerfil(nome)} cor={cor} fotoToken={fotoToken} inicial={inicialDoNome(nome)}
+          mostra={mensagens.compartilhar.perfilMostra}
           nomeArquivo={`studoo-perfil-${nome.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`} />
       </div>
     </div>

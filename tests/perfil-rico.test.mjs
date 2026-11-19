@@ -128,10 +128,11 @@ test('resumo e interesses: salvar, manter quando não vêm, recusar inválidos e
   const { link } = await trilhaCompartilhada(ana);
   const bia = await pessoa();
   await json(adicionarPost(pedido(`/api/compartilhar/${link.codigo}/adicionar`, { metodo: 'POST', token: bia.token, corpo: {} }), ctx({ codigo: link.codigo })));
-  // Uma segunda trilha compartilhada, fora do perfil: entra no alcance da dona, não no público.
+  // O alcance da dona é o mesmo da página pública: trilhas fora do perfil (só com o link) não entram.
   await trilhaCompartilhada(ana);
   r = await json(perfilGet(pedido('/api/perfil', { token: ana.token })));
-  assert.deepEqual(r.corpo.alcance, { trilhas: 2, pessoas: 1 });
+  assert.deepEqual(r.corpo.alcance, { trilhas: 0, pessoas: 0 });
+  assert.equal(r.corpo.links.length, 2, 'o total vai no título da lista');
 
   const previa = await json(linkGet(pedido(`/api/compartilhar/${link.codigo}`), ctx({ codigo: link.codigo })));
   assert.equal(previa.corpo.dono.resumo, 'Cozinho e ensino frações.');
@@ -143,6 +144,7 @@ test('resumo e interesses: salvar, manter quando não vêm, recusar inválidos e
   assert.equal(publico.corpo.resumo, 'Cozinho e ensino frações.');
   assert.deepEqual(publico.corpo.interesses, ['matematica', 'culinaria']);
   assert.deepEqual(publico.corpo.alcance, { trilhas: 1, pessoas: 1 });
+  assert.deepEqual((await json(perfilGet(pedido('/api/perfil', { token: ana.token })))).corpo.alcance, publico.corpo.alcance, 'cartão da dona = página pública');
   assert.ok(!JSON.stringify(publico.corpo).includes(ana.email));
 });
 

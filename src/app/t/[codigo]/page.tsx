@@ -7,6 +7,7 @@ import { compartilharAtivo, comunidadeAtiva, limitarPublico, trilhaCompartilhada
 import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
 import { AcoesDaPaginaPublica, PreviaTrilha } from '../../compartilhar';
+import { VoltarDaPagina } from '../../comunidade';
 import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../../publico';
 
 export const dynamic = 'force-dynamic';
@@ -70,6 +71,7 @@ export default async function PaginaDoLink({ params }: Props) {
   }
   return (
     <PaginaPublica>
+      {resultado.logado && <VoltarDaPagina destino={comunidadeAtiva() ? '/explorar' : '/'} />}
       <PreviaTrilha trilha={resultado.trilha} calor logado={resultado.logado} comunidade={comunidadeAtiva()} acoes={<AcoesDaPaginaPublica trilha={resultado.trilha} logado={resultado.logado} />} />
     </PaginaPublica>
   );

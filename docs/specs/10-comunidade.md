@@ -237,6 +237,19 @@ ALTER TABLE "Usuario" ADD COLUMN "perfilDemo" BOOLEAN NOT NULL DEFAULT false;
   - Em M, a clareira fica com no máximo 7 módulos.
   - Resultado da varredura de 20 a 120 caracteres: até 55 em H v3 a v6; 60 a 70 em Q v5/v6; 75 a 105 em M v5/v6 (75 → M v5, 37 módulos, clareira 7); 106 a 120 em M v7 com clareira 5.
   - Prova em `scripts/codigo-studoo-links.mjs`: links de 40, 75, 90 e 120 × trilha e perfil × sorriso, foto e inicial × 6 cores × 7 degradações × 2 leitores, 2016 de 2016. Teste automático com links de 75, 90, 106, 107 e 120 em `tests/codigo-e-demonstracao.test.mjs`.
+- **Correção (19/11, banca): folga garantida por link.**
+  - O que acontecia: em M v5, a ponte cheia (que pinta a linha 3 entre as lentes) e a clareira de 7 já gastavam de 10 a 11 das 12 correções do pior bloco em parte dos links; a folga dependia do link.
+  - Agora o gerador faz a conta para o link em mãos, sem leitor nem imagem: mapa módulo → palavra-código → bloco (posicionamento em zigue-zague e tabela de blocos do padrão QR, conferidos com o Reed-Solomon nos testes) e, para cada candidata, quantas palavras de cada bloco o desenho estraga (todo módulo de dados na clareira; na ponte cheia, os módulos claros da linha 3).
+  - Candidatas: níveis H, Q e M (cada um na menor versão em que o link cabe e nas duas seguintes, até a 13), as 8 máscaras (a matriz troca de máscara e regrava os bits de formato), ponte cheia, ponte fina ou nenhuma, e clareira de 9, 7 ou 5 módulos (a que couber) ou nenhuma.
+  - **Folga:** nenhum bloco gasta mais de 60% da correção e, com 8 módulos de dados sujos ao acaso, a chance de ler fica em 99% ou mais (conta exata e conservadora: cada módulo sujo estraga uma palavra nova, distribuída pelo tamanho dos blocos). Só os 60% não bastavam: em códigos de 2 blocos, 7 de 12 gastos deixam 5 por bloco, e 8 sujos estouram um bloco em cerca de 1 vez em 4.
+  - **Escolha:** entre as que passam, o centro (sorriso, foto ou inicial) só sai em último caso; depois o módulo maior (a menor versão); depois o rosto mais completo (com ponte, clareira maior, ponte cheia antes da fina); depois mais correção e menos uso.
+  - **Ponte fina:** passa entre as linhas 2 e 3 sem cobrir o centro de nenhum módulo (não gasta correção): canal claro de 2,7 a 3,3 e arco de 0,46 módulo, a 0,6 da borda de cada lente (encostada na lente, emendava no anel e confundia o localizador do jsQR em tela cheia). Assim a ponte só some se nem ela couber, o que não acontece.
+  - **Clareira redonda,** como o que vai nela: fica livre o módulo cujo centro está a até meio lado do centro do código (com lado 7, 37 módulos em vez de 49). Isso devolveu a clareira de 7 ao link de 75 caracteres.
+  - **Centro quase até os pontos vizinhos** (`diametroDoCentro`: 0,12 da borda do ponto mais perto, sem cobrir centro de módulo). Com um anel claro largo, uma foto escura virava um falso olho do QR (1:1:3:1:1) e o ZXing não lia; com o anel estreito, lê.
+  - **Centro em disco só com clareira de 7 ou mais** (`CentroCodigo`: foto ou inicial; o sorriso da trilha não tem essa regra). Uma foto escura lisa numa clareira de 5 passava por um olho do QR para o ZXing (6 em 5.000 links de 40 caracteres).
+  - **Inicial clara:** disco num tom claro da cor do perfil (`corClara`) e a letra na cor. A letra branca num disco escuro formava um falso olho e o ZXing errava cerca de 1 em 100 (5 em 500 leituras com a letra "A"; a inicial clara, 0 em 500). A imagem baixada desenha a letra na cor.
+  - Resultado: trilha (sorriso) — 40 caracteres → M v3, clareira 5; 75 → M v5, clareira 7; 90 → M v6, clareira 7; 120 → M v7, clareira 9 (sobre o alinhamento do centro). Perfil (disco) — 40 → Q v4, clareira 7; os outros como a trilha. Todos com ponte fina; a ponte cheia ainda sai quando a máscara deixa (raro).
+  - Teste automático determinístico em `tests/codigo-folga.test.mjs` (semente fixa): mapa conferido pelo Reed-Solomon, a regra em 200 links por formato (40, 75, 90 e 120; trilha e perfil) com uma conta independente, e leitura por jsQR e ZXing em 60 links por formato (perfil com foto escura lisa ou inicial clara), 100% limpos e no máximo 1 falha com 8 sujos. A prova grande (5.000 links por formato, também em tela cheia) fica fora do CI.
 - **Perfil sem foto:** o centro é a inicial do nome num círculo na cor do perfil (`centroComInicial`), o mesmo avatar de todo lugar, igual na folha, na imagem baixada e na apresentação. A trilha leva o sorriso do Stu.
 
 ### Imagem de prévia do link (Open Graph)
@@ -309,3 +322,33 @@ CREATE INDEX "Seguir_seguidoId_criadoEm_idx" ON "Seguir"("seguidoId", "criadoEm"
 - `revisarConteudo` chamado antes de gravar, e nada gravado quando recusa.
 
 Todos os testes da comunidade conferem só o que criam: passam com e sem o conteúdo de demonstração no banco.
+
+## Rodada de banca (19/11): perfil, Explorar e compartilhar
+
+Três pareceres de jurado (perfil 7,5; Explorar 7; compartilhar 7). Textos novos em `experiencia.ts` (o app herda).
+
+### Perfil
+- **Página de outra pessoa:** com a conta aberta, `/p` e `/t` ganham "← Voltar" no topo (volta para de onde a pessoa veio no Studoo; sem histórico, vai ao Explorar).
+- **O cartão mostra o que a página pública mostra:** o alcance da dona (`GET /api/perfil`) conta só as trilhas no perfil, como o `/p`; o total, com as trilhas só com o link, vai no título "Trilhas que você compartilha (N)". Com erro no campo, a prévia fica com o último valor salvo.
+- **Linha de alcance:** cada item inteiro (sem quebra no meio), sem a bolinha; na página pública, item zerado não aparece (`alcanceItens(..., { semZeros })`). A imagem de prévia do perfil usa a mesma conta.
+- **Um verbo só:** "N estudando" (cartão), "N pessoas estudando suas trilhas" (alcance), "N pessoa(s) estudando" (lista), "N pessoas começaram a estudar “X”" (Novidades). Na lista da dona, sem ninguém: "Ainda ninguém estudando nem mandou valeu".
+- **Privacidade:** a mesma frase sob o nome, sob a prévia e no recorte ("Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu e-mail nunca aparece."); "e-mail" nunca quebra (marcadores de junção em volta do hífen); "Só você vê" ao lado do e-mail em Conta.
+- **Campo com erro:** borda de 2 px em #c23b4e (o foco vira anel externo), a mensagem logo abaixo com ícone de alerta e o texto de ajuda escondido enquanto o erro durar.
+- **Novidades** logo abaixo do cartão; no computador largo (1240 px ou mais), na coluna da direita. Mesmo respiro em todos os tipos; só nomes e título em negrito.
+- Controle "Aproximar" do recorte com trilho de 8 px, trecho preenchido em azul e bolinha de 28 px (toque de 44 px); barra de salvar numa linha em 360; título "Perfil" no tamanho de título de página; o "•••" do "Seu próximo passo" dentro da ilustração.
+
+### Explorar
+- **Dados de exemplo sem repetição:** o teste da demonstração exige títulos e retratos únicos; a Ana das capturas tem retrato e títulos só dela.
+- **Capa:** o tema sempre inteiro no alto; "Demonstração" embaixo à esquerda; o numeral do Em alta embaixo à direita.
+- **Fileiras:** fichas de tema numa linha só, rolável, com as setas do Em alta no computador; no celular, fichas e Em alta vão até a borda da tela; esmaecimento de 24 px na borda que ainda tem conteúdo; setas desligadas no começo e no fim.
+- Aba "Comunidade | Seguindo" e ficha "Todos os temas"; com tema escolhido, "Em alta em Idiomas esta semana".
+- **Faixa do topo** (computador): hoje só leva o selo "Progresso salvo" (Minhas trilhas e dentro da trilha); nas outras telas some. Sem o perfil ligado, leva o "Sair" e fica.
+- Na própria trilha, "Abrir minha trilha" e "Compartilhar" com ícone e palavra; denúncia sem motivo marcado ("Enviar" só liga com motivo), com o alvo nomeado («"Título", de Nome») e "a equipe do Studoo revisa"; uma linha explica "Demonstração" enquanto houver conteúdo simulado na tela; sem conta, "Entre para estudar e mandar valeu." com o botão ao lado.
+- Cartão: título com duas linhas reservadas em fileira e grade (uma no celular), contagem e números ancorados acima dos botões; "por" em cinza com só o nome sublinhado e o retrato dentro do link; contornos dos controles com 3:1; "Continuar" em azul claro; capas mais baixas no celular.
+
+### Compartilhar e Código Studoo
+- Antes de publicar: "Ainda não está no Explorar. Agora: <nível que vale>." e "Publicar"/"Cancelar" presos no rodapé da folha; "Agora" dentro do cartão do nível que vale; cabeçalho da folha preso no topo com "Compartilhar trilha", o nome da trilha e o fechar.
+- Nota da folha: "Quem abrir vê seu nome, sua foto e seu resumo. Suas respostas e seu progresso não vão junto."; a folha do perfil diz sob o código o que o perfil público mostra.
+- **Moldura do código sempre no azul da marca** (folha e imagem baixada); a cor da pessoa só no miolo dos olhos e no centro. No modo apresentação, sem moldura, com a marca embaixo e título, código e dica num bloco só. Trilha de demonstração leva o selo "Demonstração" sob o título na imagem baixada e na apresentação.
+- Ações do código numa grade de duas colunas iguais (vão de 10 px); abaixo de 400 px, uma por linha. "Compartilhar" é o botão principal na folha do perfil; "Apresentar" com ícone de tela cheia.
+- `/t`: já adicionada diz "Ela já está nas suas trilhas. Continue de onde parou." e o Stu, "Que bom te ver de novo!"; "Quem compartilhou" vem depois das lições; link encerrado centrado, botão na largura toda no celular e "Ver trilhas no Explorar".

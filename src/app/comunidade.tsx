@@ -5,7 +5,7 @@
  * prévia), a tela Explorar (no app e na página pública /explorar), o Valeu e o diálogo de Denunciar.
  * Tudo só aparece com `comunidade` no /api/auth/config.
  */
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import {
   LIMITES_COMUNIDADE,
   MOTIVOS_DENUNCIA,
@@ -82,7 +82,7 @@ function MenuCartao({ titulo, aoDenunciar }: { titulo: string; aoDenunciar: () =
  * levam ao perfil), legenda, "6 lições · 3 partes", "12 estudando · 8 valeus" e as ações: Quero estudar / Continuar /
  * Sua trilha, Valeu (liga e desliga), Compartilhar e "•••" com Denunciar.
  */
-export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3' }: { cartao: CartaoTrilha; acoes: AcoesCartao; posicao?: number; nivel?: 'h2' | 'h3' }) {
+export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono = false }: { cartao: CartaoTrilha; acoes: AcoesCartao; posicao?: number; nivel?: 'h2' | 'h3'; semDono?: boolean }) {
   const Titulo = nivel;
   const tituloId = useId();
   const sua = cartao.situacao === 'sua';
@@ -97,34 +97,47 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3' }: { carta
       <div className="cartao-trilha__capa">
         <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} />
         {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{posicao}</span>}
-        <div className="cartao-trilha__selos">
-          {cartao.tema && <span className="cartao-trilha__tema" title={temas[cartao.tema]}>{temas[cartao.tema]}</span>}
-          {cartao.demonstracao && <span className="cartao-trilha__demo" title={c.demonstracaoDica}>{c.demonstracao}</span>}
-        </div>
+        {/* O tema sempre inteiro no alto; "Demonstração" embaixo à esquerda; o numeral do Em alta embaixo à direita. */}
+        {cartao.tema && <span className="cartao-trilha__tema">{temas[cartao.tema]}</span>}
+        {cartao.demonstracao && <span className="cartao-trilha__demo">{c.demonstracao}</span>}
       </div>
       <div className="cartao-trilha__corpo">
         {posicao !== undefined && <p className="somente-leitor">{c.posicao(posicao)}</p>}
         <Titulo id={tituloId} className="cartao-trilha__titulo"><a href={`/t/${cartao.codigo}`}>{cartao.titulo}</a></Titulo>
-        <p className="cartao-trilha__dono">
-          <Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} />
-          {cartao.dono.perfilId
-            ? <a href={`/p/${cartao.dono.perfilId}`} aria-label={c.perfilDe(cartao.dono.nome)}>{c.por(cartao.dono.nome)}</a>
-            : <span>{c.por(cartao.dono.nome)}</span>}
-        </p>
+        {!semDono && (
+          <p className="cartao-trilha__dono">
+            {cartao.dono.perfilId
+              ? <a href={`/p/${cartao.dono.perfilId}`} aria-label={c.perfilDe(cartao.dono.nome)}>
+                <Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} />
+                <span className="cartao-trilha__por">por </span><span className="cartao-trilha__nome">{cartao.dono.nome}</span>
+              </a>
+              : <><Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} /><span>{c.por(cartao.dono.nome)}</span></>}
+          </p>
+        )}
         {cartao.legenda && <p className="cartao-trilha__legenda">{cartao.legenda}</p>}
-        <p className="cartao-trilha__meta">{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</p>
-        {cartao.estudando === 0 && cartao.valeus === 0
-          ? <p className="cartao-trilha__numeros"><span className="cartao-trilha__nova" aria-label={c.novaRotulo}>{c.nova}</span></p>
-          : <p className="cartao-trilha__numeros">{[cartao.estudando > 0 && c.estudando(cartao.estudando), cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ')}</p>}
-        <div className="cartao-trilha__acoes">
+        {/* Contagem e números ancorados logo acima dos botões: as últimas linhas batem na fileira. */}
+        <div className="cartao-trilha__rodape">
+          <p className="cartao-trilha__meta">{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</p>
+          {cartao.estudando === 0 && cartao.valeus === 0
+            ? <p className="cartao-trilha__numeros"><span className="cartao-trilha__nova" aria-label={c.novaRotulo}>{c.nova}</span></p>
+            // A contagem de valeus mora no próprio botão (na trilha própria, que não tem o botão, fica aqui).
+            : <p className="cartao-trilha__numeros">{[cartao.estudando > 0 && c.estudando(cartao.estudando), sua && cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ')}</p>}
+        </div>
+        <div className="cartao-trilha__acoes" data-sua={sua || undefined}>
           {principal}
           {!sua && (
-            <button type="button" className="cartao-trilha__valeu" aria-pressed={Boolean(cartao.valeuMeu)} aria-label={c.valeuRotulo(cartao.titulo)}
+            // Coração, "Valeu" e a contagem; marcado, o coração enche (com um pulo curto) e tocar de novo retira.
+            <button type="button" className="cartao-trilha__valeu" aria-pressed={Boolean(cartao.valeuMeu)}
+              aria-label={`${cartao.valeuMeu ? c.valeuMarcadoRotulo(cartao.titulo) : c.valeuRotulo(cartao.titulo)}${cartao.valeus > 0 ? ` (${c.valeus(cartao.valeus)})` : ''}`}
               disabled={ocupado} onClick={() => acoes.valeu(cartao)}>
               <Icone nome="valeu" /><span aria-hidden="true">{c.valeu}</span>
+              {cartao.valeus > 0 && <span className="cartao-trilha__valeu-n" aria-hidden="true">{cartao.valeus}</span>}
             </button>
           )}
-          <button type="button" className="cartao-trilha__icone" aria-label={c.compartilharRotulo(cartao.titulo)} onClick={() => acoes.compartilhar(cartao)}><Icone nome="compartilhar" /></button>
+          {sua
+            // Na própria trilha, o compartilhar ocupa a linha, com o ícone e a palavra.
+            ? <Botao variante="secundario" className="cartao-trilha__compartilhar" aria-label={c.compartilharRotulo(cartao.titulo)} onClick={() => acoes.compartilhar(cartao)}><Icone nome="compartilhar" />{c.compartilhar}</Botao>
+            : <button type="button" className="cartao-trilha__icone" aria-label={c.compartilharRotulo(cartao.titulo)} onClick={() => acoes.compartilhar(cartao)}><Icone nome="compartilhar" /></button>}
           {!sua && <MenuCartao titulo={cartao.titulo} aoDenunciar={() => acoes.denunciar(cartao)} />}
         </div>
       </div>
@@ -133,7 +146,14 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3' }: { carta
 }
 
 /** Denunciar trilha ou perfil: motivo (rádio), enviar; foco preso, Esc fecha e devolve o foco. */
-export function DialogoDenuncia({ alvoTipo, alvo, aoFechar, aoEnviar }: { alvoTipo: 'trilha' | 'perfil'; alvo: string; aoFechar: () => void; aoEnviar: (texto: string) => void }) {
+export function DialogoDenuncia({ alvoTipo, alvo, alvoNome, aoFechar, aoEnviar }: {
+  alvoTipo: 'trilha' | 'perfil';
+  alvo: string;
+  /** O que está sendo denunciado, por extenso: «"Redação para o ENEM", de Caio Prado» ou o nome da pessoa. */
+  alvoNome: string;
+  aoFechar: () => void;
+  aoEnviar: (texto: string) => void;
+}) {
   const [motivo, setMotivo] = useState<MotivoDenuncia | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
@@ -160,7 +180,8 @@ export function DialogoDenuncia({ alvoTipo, alvo, aoFechar, aoEnviar }: { alvoTi
     <div className="folha-fundo folha-fundo--centro" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !enviando) aoFechar(); }}>
       <div className="folha folha--confirmar folha--denuncia" role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={textoId} ref={caixa}>
         <h2 id={tituloId} className="folha-titulo">{alvoTipo === 'trilha' ? c.denuncia.tituloTrilha : c.denuncia.tituloPerfil}</h2>
-        <p id={textoId} className="folha-texto">{c.denuncia.texto}</p>
+        <p className="denuncia__alvo">{alvoNome}</p>
+        <p id={textoId} className="folha-texto">{alvoTipo === 'trilha' ? c.denuncia.texto : c.denuncia.textoPerfil}</p>
         <fieldset className="denuncia__motivos">
           <legend className="somente-leitor">{c.denuncia.escolha}</legend>
           {MOTIVOS_DENUNCIA.map((opcao) => (
@@ -172,7 +193,8 @@ export function DialogoDenuncia({ alvoTipo, alvo, aoFechar, aoEnviar }: { alvoTi
         </fieldset>
         {erro && <p className="campo-erro" role="alert">{erro}</p>}
         <div className="folha-acoes recorte__acoes">
-          <Botao variante="secundario" className="modal-confirmar--destrutivo" disabled={enviando} aria-busy={enviando || undefined} onClick={() => void enviar()}>{enviando ? c.denuncia.enviando : c.denuncia.enviar}</Botao>
+          {/* Nenhum motivo vem marcado: "Enviar" só liga depois que a pessoa escolhe. */}
+          <Botao variante="secundario" className="modal-confirmar--destrutivo" disabled={enviando || !motivo} aria-busy={enviando || undefined} onClick={() => void enviar()}>{enviando ? c.denuncia.enviando : c.denuncia.enviar}</Botao>
           <Botao variante="secundario" disabled={enviando} onClick={aoFechar}>{c.denuncia.cancelar}</Botao>
         </div>
       </div>
@@ -193,6 +215,7 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
 }) {
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [denuncia, setDenuncia] = useState<CartaoTrilha | null>(null);
+  const [aviso, avisar] = useAvisoDoApp();
   const acoes: AcoesCartao = {
     logado,
     ocupado,
@@ -220,7 +243,8 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
       try {
         const r = await cliente.valeu(cartao.codigo, ativo);
         setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: r.valeuMeu, valeus: r.valeus } : atual));
-        anunciar(ativo ? c.valeuEnviado(cartao.titulo) : c.valeuRetirado(cartao.titulo));
+        // Toda vez, o aviso do próprio app (com papel de status: o leitor de tela também ouve).
+        avisar(ativo ? c.valeuAviso(cartao.dono.nome.trim().split(/\s+/)[0] ?? cartao.dono.nome) : c.valeuRetiradoAviso);
       } catch (falha) {
         setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: cartao.valeuMeu, valeus: cartao.valeus } : atual));
         const codigo = codigoDoErro(falha);
@@ -242,33 +266,78 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
     },
   };
   const dialogo = denuncia ? (
-    <DialogoDenuncia alvoTipo="trilha" alvo={denuncia.codigo} aoFechar={() => setDenuncia(null)}
-      aoEnviar={(texto) => { setDenuncia(null); anunciar(texto); }} />
+    <DialogoDenuncia alvoTipo="trilha" alvo={denuncia.codigo} alvoNome={c.denuncia.alvoTrilha(denuncia.titulo, denuncia.dono.nome)} aoFechar={() => setDenuncia(null)}
+      aoEnviar={(texto) => { setDenuncia(null); avisar(texto); }} />
   ) : null;
-  return { acoes, dialogo };
+  return { acoes, dialogo: <>{dialogo}{aviso}</> };
 }
 
-/** Lista horizontal do "Em alta": numeral grande ao lado de cada cartão, com encaixe ao rolar e setas (com ponteiro fino). */
-function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string }) {
-  const lista = useRef<HTMLOListElement>(null);
-  const tituloId = useId();
-  // Com poucas trilhas (tudo cabe), as setas somem e a lista não sobra espaço vazio.
-  const [rola, setRola] = useState(false);
-  useEffect(() => {
-    const el = lista.current;
+/**
+ * Fileira rolável (Em alta e fichas de tema): diz se rola, se está no começo ou no fim (para o esmaecimento nas bordas e
+ * as setas desligadas) e rola por "páginas".
+ */
+function useFileira<T extends HTMLElement>(dependencia: unknown) {
+  const ref = useRef<T>(null);
+  const [estado, setEstado] = useState({ rola: false, inicio: true, fim: true });
+  const medir = useCallback(() => {
+    const el = ref.current;
     if (!el) return;
-    const medir = () => setRola(el.scrollWidth > el.clientWidth + 2);
+    const rola = el.scrollWidth > el.clientWidth + 2;
+    setEstado({ rola, inicio: el.scrollLeft <= 2, fim: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2 });
+  }, []);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
     medir();
     const observador = new ResizeObserver(medir);
     observador.observe(el);
-    return () => observador.disconnect();
-  }, [cartoes.length]);
+    el.addEventListener('scroll', medir, { passive: true });
+    return () => { observador.disconnect(); el.removeEventListener('scroll', medir); };
+  }, [medir, dependencia]);
   function rolar(direcao: 1 | -1) {
-    const el = lista.current;
+    const el = ref.current;
     if (!el) return;
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     el.scrollBy({ left: direcao * el.clientWidth * 0.85, behavior: reduzido ? 'auto' : 'smooth' });
   }
+  return { ref, ...estado, rolar };
+}
+
+/** As setas de uma fileira (só com ponteiro fino): a da esquerda desligada no começo, a da direita no fim. */
+function Setas({ fileira, rotulo }: { fileira: { rola: boolean; inicio: boolean; fim: boolean; rolar: (d: 1 | -1) => void }; rotulo?: string }) {
+  return (
+    <div className="fileira__setas" hidden={!fileira.rola} role={rotulo ? 'group' : undefined} aria-label={rotulo}>
+      <button type="button" className="cartao-trilha__icone" aria-label={c.anteriores} disabled={fileira.inicio} onClick={() => fileira.rolar(-1)}><Icone nome="setaVoltar" /></button>
+      <button type="button" className="cartao-trilha__icone" aria-label={c.proximas} disabled={fileira.fim} onClick={() => fileira.rolar(1)}><Icone nome="seta" /></button>
+    </div>
+  );
+}
+
+/**
+ * Aviso do próprio app (nunca do sistema): uma faixa no pé da tela, acima da barra de abas, que some sozinha em 4,5 s.
+ * Tem papel de status, então o leitor de tela também anuncia.
+ */
+export function useAvisoDoApp(): [ReactNode, (texto: string) => void] {
+  const [texto, setTexto] = useState('');
+  const [vez, setVez] = useState(0);
+  useEffect(() => {
+    if (!texto) return;
+    const relogio = window.setTimeout(() => setTexto(''), 4500);
+    return () => window.clearTimeout(relogio);
+  }, [texto, vez]);
+  const avisar = useCallback((novo: string) => { setTexto(novo); setVez((n) => n + 1); }, []);
+  const elemento = (
+    <div className="aviso-app" role="status" aria-live="polite" data-visivel={texto ? true : undefined}>
+      {texto && <p key={vez}>{texto}</p>}
+    </div>
+  );
+  return [elemento, avisar];
+}
+
+/** Lista horizontal do "Em alta": numeral grande no canto da capa, com encaixe ao rolar e setas (com ponteiro fino). */
+function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: AcoesCartao; titulo: string }) {
+  const fileira = useFileira<HTMLOListElement>(cartoes.length);
+  const tituloId = useId();
   return (
     <section className="em-alta" aria-labelledby={tituloId}>
       <div className="em-alta__topo">
@@ -276,12 +345,10 @@ function EmAlta({ cartoes, acoes, titulo }: { cartoes: CartaoTrilha[]; acoes: Ac
           <h2 id={tituloId} className="explorar__secao">{titulo}</h2>
           <p className="campo-dica">{c.emAltaDica}</p>
         </div>
-        <div className="em-alta__setas" hidden={!rola}>
-          <button type="button" className="cartao-trilha__icone" aria-label={c.anteriores} onClick={() => rolar(-1)}><span aria-hidden="true">←</span></button>
-          <button type="button" className="cartao-trilha__icone" aria-label={c.proximas} onClick={() => rolar(1)}><span aria-hidden="true">→</span></button>
-        </div>
+        <Setas fileira={fileira} />
       </div>
-      <ol className="em-alta__lista" ref={lista} data-poucas={cartoes.length < 3 || undefined}>
+      <ol className="em-alta__lista fileira" ref={fileira.ref} data-poucas={cartoes.length < 3 || undefined}
+        data-rola={fileira.rola || undefined} data-inicio={fileira.inicio || undefined} data-fim={fileira.fim || undefined}>
         {cartoes.map((cartao, indice) => (
           <li key={cartao.codigo} className="em-alta__item">
             <CartaoDeTrilha cartao={cartao} acoes={acoes} posicao={indice + 1} />
@@ -346,6 +413,10 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
     setPagina((atual) => atual && { ...atual, emAlta: atual.emAlta.map(mudar), novas: atual.novas.map(mudar) });
   const { acoes, dialogo } = useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, anunciar });
   const vazio = pagina && pagina.emAlta.length === 0 && pagina.novas.length === 0;
+  const fichas = useFileira<HTMLDivElement>(logado);
+  const comDemonstracao = Boolean(pagina && [...pagina.emAlta, ...pagina.novas].some((cartao) => cartao.demonstracao));
+  // Na aba Seguindo sem ninguém seguido, as fichas de tema não têm o que filtrar.
+  const semFichas = aba === 'seguindo' && pagina?.seguindoAlguem === false;
 
   return (
     <section className="painel painel--explorar" aria-busy={carregando || undefined}>
@@ -354,6 +425,7 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
       <header className="explorar__topo">
         <h1 ref={titulo} tabIndex={-1}>{c.titulo}</h1>
         <p className="explorar__subtitulo">{c.subtitulo}</p>
+        {comDemonstracao && <p className="explorar__demo"><span className="cartao-trilha__demo">{c.demonstracao}</span>{c.demonstracaoExplica.replace(`“${c.demonstracao}” `, '')}</p>}
       </header>
 
       {logado && (
@@ -363,12 +435,19 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
         </div>
       )}
 
-      <div className="explorar__temas" role="group" aria-label={c.temas}>
-        <button type="button" className="ficha-tema" aria-pressed={tema === null} onClick={() => setTema(null)}>{c.todos}</button>
-        {TEMAS.map((opcao) => (
-          <button key={opcao} type="button" className="ficha-tema" aria-pressed={tema === opcao} onClick={() => setTema(opcao)}>{temas[opcao]}</button>
-        ))}
-      </div>
+      {!semFichas && (
+        <div className="explorar__fichas">
+          {/* Uma linha só, rolável, com esmaecimento na borda que ainda tem fichas e as mesmas setas do Em alta. */}
+          <div className="explorar__temas fileira" role="group" aria-label={c.temas} ref={fichas.ref}
+            data-rola={fichas.rola || undefined} data-inicio={fichas.inicio || undefined} data-fim={fichas.fim || undefined}>
+            <button type="button" className="ficha-tema" aria-pressed={tema === null} onClick={() => setTema(null)}>{c.todos}</button>
+            {TEMAS.map((opcao) => (
+              <button key={opcao} type="button" className="ficha-tema" aria-pressed={tema === opcao} onClick={() => setTema(opcao)}>{temas[opcao]}</button>
+            ))}
+          </div>
+          <Setas fileira={fichas} />
+        </div>
+      )}
 
       {erro && <p className="campo-erro" role="alert">{erro}</p>}
       {carregando && !pagina && <div className="explorar__esqueleto" aria-hidden="true"><span /><span /><span /></div>}
@@ -396,7 +475,7 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
         </div>
       )}
 
-      {pagina && pagina.emAlta.length > 0 && <EmAlta cartoes={pagina.emAlta} acoes={acoes} titulo={c.emAlta} />}
+      {pagina && pagina.emAlta.length > 0 && <EmAlta cartoes={pagina.emAlta} acoes={acoes} titulo={tema ? c.emAltaDoTema(temas[tema]) : c.emAlta} />}
 
       {pagina && pagina.novas.length > 0 && (
         <section className="explorar__novas" aria-labelledby="explorar-novas">
@@ -425,7 +504,10 @@ export function ConviteEntrar() {
 }
 
 /** Grade de cartões do perfil público (/p e a prévia da dona), com as mesmas ações do Explorar. */
-export function CartoesDoPerfil({ inicial, logado, aoAdicionado, aoAbrir, titulo }: {
+export function CartoesDoPerfil({ inicial, logado, aoAdicionado, aoAbrir, titulo, classeTitulo = 'perfil-publico__titulo', semDono = false }: {
+  /** Na página da própria pessoa, o "por …" do cartão repete o cabeçalho: sai. */
+  semDono?: boolean;
+  classeTitulo?: string;
   inicial: CartaoTrilha[];
   logado: boolean;
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
@@ -442,9 +524,9 @@ export function CartoesDoPerfil({ inicial, logado, aoAdicionado, aoAbrir, titulo
   return (
     <section className="perfil-cartoes" aria-labelledby="perfil-cartoes-titulo">
       <p className="somente-leitor" role="status" aria-live="polite">{anuncio}</p>
-      <h2 id="perfil-cartoes-titulo" className="perfil-publico__titulo">{titulo}</h2>
+      <h2 id="perfil-cartoes-titulo" className={classeTitulo}>{titulo}</h2>
       <ul className="grade-cartoes">
-        {cartoes.map((cartao) => <li key={cartao.codigo}><CartaoDeTrilha cartao={cartao} acoes={acoes} /></li>)}
+        {cartoes.map((cartao) => <li key={cartao.codigo}><CartaoDeTrilha cartao={cartao} acoes={acoes} semDono={semDono} /></li>)}
       </ul>
       {dialogo}
     </section>
@@ -454,7 +536,7 @@ export function CartoesDoPerfil({ inicial, logado, aoAdicionado, aoAbrir, titulo
 /** /p/<id>: os cartões com as ações; sem o app aberto, adicionar e abrir levam ao app. */
 export function CartoesPublicos({ inicial, logado, titulo }: { inicial: CartaoTrilha[]; logado: boolean; titulo: string }) {
   return (
-    <CartoesDoPerfil inicial={inicial} logado={logado} titulo={titulo}
+    <CartoesDoPerfil inicial={inicial} logado={logado} titulo={titulo} semDono
       aoAbrir={(planoId) => abrirNoApp(planoId)}
       aoAdicionado={(planoId, nome, jaTinha) => abrirNoApp(planoId, jaTinha ? undefined : c.adicionada(nome))} />
   );
@@ -471,7 +553,7 @@ export function ExplorarPublico({ inicial, logado }: { inicial: PaginaExplorar |
 }
 
 /** "Denunciar perfil", discreto, no fim da página /p (sem sessão, leva ao login). */
-export function DenunciarPerfil({ perfilId, logado }: { perfilId: string; logado: boolean }) {
+export function DenunciarPerfil({ perfilId, logado, nome }: { perfilId: string; logado: boolean; nome: string }) {
   const [aberto, setAberto] = useState(false);
   const [status, setStatus] = useState('');
   return (
@@ -480,7 +562,24 @@ export function DenunciarPerfil({ perfilId, logado }: { perfilId: string; logado
         <Icone nome="bandeirinha" />{c.denuncia.tituloPerfil}
       </Botao>
       <p className="folha-status" role="status" aria-live="polite">{status}</p>
-      {aberto && <DialogoDenuncia alvoTipo="perfil" alvo={perfilId} aoFechar={() => setAberto(false)} aoEnviar={(texto) => { setAberto(false); setStatus(texto); }} />}
+      {aberto && <DialogoDenuncia alvoTipo="perfil" alvo={perfilId} alvoNome={nome} aoFechar={() => setAberto(false)} aoEnviar={(texto) => { setAberto(false); setStatus(texto); }} />}
     </div>
+  );
+}
+
+/**
+ * "← Voltar" no topo do /p e do /t para quem está com a conta aberta: volta para de onde a pessoa veio (dentro do
+ * Studoo); sem histórico, vai para o Explorar (ou para o início, sem a comunidade).
+ */
+export function VoltarDaPagina({ destino }: { destino: string }) {
+  function voltar() {
+    const veioDoStudoo = document.referrer.startsWith(window.location.origin) && window.history.length > 1;
+    if (veioDoStudoo) window.history.back();
+    else window.location.assign(destino);
+  }
+  return (
+    <Botao variante="texto" className="voltar-pagina" onClick={voltar}>
+      <Icone nome="setaVoltar" />{mensagens.compartilhar.voltar}
+    </Botao>
   );
 }

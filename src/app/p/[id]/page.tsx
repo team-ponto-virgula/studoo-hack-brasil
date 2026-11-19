@@ -8,7 +8,7 @@ import { perfilPublicoComCartoes } from '@/servidor/compartilhar/comunidade';
 import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
 import { CabecalhoPublico } from '../../perfil';
-import { CartoesPublicos, DenunciarPerfil } from '../../comunidade';
+import { CartoesPublicos, DenunciarPerfil, VoltarDaPagina } from '../../comunidade';
 import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../../publico';
 
 export const dynamic = 'force-dynamic';
@@ -69,11 +69,12 @@ export default async function PaginaDoPerfil({ params }: Props) {
   }
   return (
     <PaginaPublica>
+      {logado && <VoltarDaPagina destino={comunidadeAtiva() ? '/explorar' : '/'} />}
       <CabecalhoPublico perfil={perfil} perfilId={id} logado={logado} />
       {perfil.cartoes ? (
         <>
           <CartoesPublicos inicial={perfil.cartoes} logado={logado} titulo={p.paginaTitulo(perfil.nome)} />
-          <DenunciarPerfil perfilId={id} logado={logado} />
+          <DenunciarPerfil perfilId={id} logado={logado} nome={perfil.nome} />
         </>
       ) : <>
       <h2 className="perfil-publico__titulo">{p.paginaTitulo(perfil.nome)}</h2>

@@ -25,7 +25,10 @@ process.env.STUDOO_COMPARTILHAR = '1';
 process.env.STUDOO_COMUNIDADE = '1';
 const usuarios = [];
 // O banco local é compartilhado: se a demonstração já existia antes da suíte, ela volta no fim (com datas novas).
-const demoAntes = (await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } })) > 0;
+// Toda busca pela demonstração filtra também pelo domínio: outros arquivos de teste, rodando em paralelo no mesmo banco,
+// criam perfis com perfilDemo e e-mail @example.test (por exemplo, seguir.test.mjs).
+const DONO_DEMO = { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } };
+const demoAntes = (await banco.usuario.count({ where: DONO_DEMO })) > 0;
 
 after(async () => {
   process.env.STUDOO_COMUNIDADE_DEMO = '1';
@@ -73,8 +76,8 @@ test('Código Studoo dos links reais (trilha e perfil com foto no centro) é lid
 });
 
 test('Código Studoo com links do tamanho do de produção (75 car.) e maiores (90, 106, 107 e 120): sempre com clareira e lido pelos dois leitores', async () => {
-  // O site de prévia tem domínio longo: o link de 75 caracteres, em H, caía na versão 8 (alinhamento no centro) e saía
-  // sem o centro. Agora a correção é escolhida para caber até a versão 6, e acima disso a clareira cobre o alinhamento.
+  // O site de prévia tem domínio longo. A configuração (nível, versão, máscara, ponte e clareira) sai da conta da folga
+  // (tests/codigo-folga.test.mjs); aqui, os centros e as cores em três tamanhos.
   const link = (n, tipo) => { const fim = `/${tipo}/AbCdEfGhIjKlMn_-`; return `https://${'studoo-previa-hackbrasil.exemplo.com.br'.padEnd(n, 'x').slice(0, n - 8 - fim.length)}${fim}`; };
   const foto = `data:image/png;base64,${(await sharp({ create: { width: 64, height: 64, channels: 3, background: '#222' } }).png().toBuffer()).toString('base64')}`;
   for (const n of [75, 90, 106, 107, 120]) {
@@ -96,9 +99,10 @@ test('Código Studoo com links do tamanho do de produção (75 car.) e maiores (
       }
     }
   }
-  // O de 75 caracteres sai em M versão 5 (37 módulos) com clareira de 7, como o link local de 40 em H.
+  // O de 75 caracteres fica na versão 5 (37 módulos), com o centro e a ponte (fina quando a cheia gastaria a folga).
   const g75 = geometriaCodigoStudoo(link(75, 't'));
-  assert.deepEqual([g75.nivel, g75.versao, g75.clareira.lado], ['M', 5, 7]);
+  assert.equal(g75.versao, 5);
+  assert.ok(g75.clareira && g75.configuracao.ponte !== 'nenhuma');
 });
 
 test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 6+ temas, Em alta cheio, sem login', async () => {
@@ -110,15 +114,15 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
   assert.ok(primeiro.perfis >= 4 && primeiro.perfis <= 6);
   assert.ok(primeiro.trilhas >= 8 && primeiro.trilhas <= 12);
   assert.ok(primeiro.temas >= 6);
-  const datasAntes = (await banco.linkTrilha.findMany({ where: { plano: { usuario: { perfilDemo: true } } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
+  const datasAntes = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
   const segundo = await criarDemonstracao();
   assert.deepEqual(segundo, primeiro, 'rodar de novo não duplica');
-  assert.equal(await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } }), primeiro.perfis);
-  assert.equal(await banco.linkTrilha.count({ where: { plano: { usuario: { perfilDemo: true } } } }), primeiro.trilhas);
-  const datasDepois = (await banco.linkTrilha.findMany({ where: { plano: { usuario: { perfilDemo: true } } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
+  assert.equal(await banco.usuario.count({ where: DONO_DEMO }), primeiro.perfis);
+  assert.equal(await banco.linkTrilha.count({ where: { plano: { usuario: DONO_DEMO } } }), primeiro.trilhas);
+  const datasDepois = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
   assert.ok(Math.min(...datasDepois) > Math.max(...datasAntes) - 3 * 24 * 60 * 60_000 + 60_000, 'as datas andaram');
   // Eventos só dos perfis de demonstração, nos últimos 7 dias, depois da publicação.
-  const eventos = await banco.eventoTrilha.findMany({ where: { link: { plano: { usuario: { perfilDemo: true } } } }, select: { criadoEm: true, usuario: { select: { perfilDemo: true } }, link: { select: { publicadaEm: true } } } });
+  const eventos = await banco.eventoTrilha.findMany({ where: { link: { plano: { usuario: DONO_DEMO } } }, select: { criadoEm: true, usuario: { select: { perfilDemo: true } }, link: { select: { publicadaEm: true } } } });
   assert.ok(eventos.length > 20);
   for (const e of eventos) {
     assert.ok(e.usuario.perfilDemo);
@@ -126,7 +130,7 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
     assert.ok(Date.now() - e.criadoEm.getTime() < 7 * 24 * 60 * 60_000);
   }
   // Sem login: sem senha, sem Google, sem sessão, e-mail .invalid; recuperar senha não cria código.
-  const perfis = await banco.usuario.findMany({ where: { perfilDemo: true }, select: { id: true, email: true, senhaHash: true, googleSub: true, _count: { select: { sessoes: true } } } });
+  const perfis = await banco.usuario.findMany({ where: DONO_DEMO, select: { id: true, email: true, senhaHash: true, googleSub: true, _count: { select: { sessoes: true } } } });
   for (const p of perfis) {
     assert.ok(p.email.endsWith(`@${DOMINIO_DEMO}`));
     assert.equal(p.senhaHash, null);
@@ -138,19 +142,25 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
 
   // Na classificação da semana, todas as trilhas de demonstração têm ponto (o Em alta enche com elas num banco limpo).
   zerarCacheEmAlta();
-  const codigosDemo = (await banco.linkTrilha.findMany({ where: { plano: { usuario: { perfilDemo: true } } }, select: { codigo: true } })).map((l) => l.codigo);
+  const codigosDemo = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { codigo: true } })).map((l) => l.codigo);
   const pontuadas = (await classificacaoDaSemana()).filter((item) => codigosDemo.includes(item.codigo));
   assert.equal(pontuadas.length, primeiro.trilhas, 'todas no Em alta da semana');
   assert.ok(new Set(pontuadas.map((item) => item.pontos)).size >= 6, 'pontos variados: um top de verdade');
   const pagina = await (await explorarGet(new Request(`${origem}/api/explorar`, { headers: { origin: origem } }))).json();
   assert.ok([...pagina.emAlta, ...pagina.novas].filter((c) => codigosDemo.includes(c.codigo)).every((c) => c.dono.demo === true), 'selo no dono');
   assert.ok(!JSON.stringify(pagina).includes(DOMINIO_DEMO), 'sem e-mail');
+  // Nenhuma tela mostra dois cartões com o mesmo título nem dois retratos iguais: títulos e retratos únicos.
+  const titulos = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { plano: { select: { titulo: true } } } })).map((l) => l.plano.titulo);
+  assert.equal(new Set(titulos).size, titulos.length, `títulos repetidos: ${titulos.join(' | ')}`);
+  const fotos = await banco.fotoPerfil.findMany({ where: { usuario: DONO_DEMO }, select: { pequena: true } });
+  assert.equal(fotos.length, primeiro.perfis);
+  assert.equal(new Set(fotos.map((f) => Buffer.from(f.pequena).toString('base64'))).size, fotos.length, 'retratos únicos');
 });
 
 test('demonstração: sem a flag no servidor, some do Explorar, do /p e do /t; uma pessoa de verdade que adicionou fica com a cópia ao remover', async () => {
   process.env.STUDOO_COMUNIDADE_DEMO = '1';
   await criarDemonstracao();
-  const link = await banco.linkTrilha.findFirst({ where: { plano: { usuario: { perfilDemo: true } } }, select: { codigo: true, adicoes: true, plano: { select: { usuario: { select: { perfilId: true } } } } } });
+  const link = await banco.linkTrilha.findFirst({ where: { plano: { usuario: DONO_DEMO } }, select: { codigo: true, adicoes: true, plano: { select: { usuario: { select: { perfilId: true } } } } } });
   const pessoa = await banco.usuario.create({ data: { email: `demo-real-${randomUUID()}@example.test`, fuso: 'UTC' } });
   usuarios.push(pessoa.id);
   const { token } = await criarSessao(pessoa.id);
@@ -174,7 +184,7 @@ test('demonstração: sem a flag no servidor, some do Explorar, do /p e do /t; u
   }
   const { perfis } = await removerDemonstracao();
   assert.ok(perfis >= 4);
-  assert.equal(await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } }), 0);
+  assert.equal(await banco.usuario.count({ where: DONO_DEMO }), 0);
   assert.equal(await banco.planoAprendizado.count({ where: { usuarioId: pessoa.id, origemCodigo: link.codigo } }), 1, 'a cópia da pessoa fica');
   zerarCacheEmAlta();
 });
