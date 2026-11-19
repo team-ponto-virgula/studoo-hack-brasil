@@ -87,10 +87,16 @@ test('troféu do fim do mapa (B4, Designer 19/11): acessorio-trofeu em 72% da le
   assert.match(componente, /silhueta \? \{ tintColor: silhueta \} : null/);
 });
 
-test('apresentação (B4, Designer 19/11): só o passo 4 tem Stu próprio — stu-comemorando de 40 ao lado do troféu, uma vez a cada entrada, com o pop', () => {
+test('apresentação (B4, Designer 19/11; banca da noite §2): um Stu por passo — estudando no 1, concentrado no 3 e comemorando de 40 no 4, uma vez a cada entrada, com o pop', () => {
   const apresentacao = readFileSync(new URL('apps/mobile/src/apresentacao.tsx', raiz), 'utf8');
-  assert.match(apresentacao, /<ArteProgresso largura=\{largura\} ativo=\{passo === 3\} \/>/);
+  assert.match(apresentacao, /<ArteProgresso largura=\{largura\} altura=\{arteDoPasso\(3\)\} ativo=\{passo === 3\} \/>/);
   assert.match(apresentacao, /<Stu nome="stu-comemorando" tamanho=\{40\} animado="acontecimento" acontecimento=\{entradas \|\| undefined\} pop=\{entradas \|\| undefined\} \/>/);
-  assert.equal((apresentacao.match(/<Stu\b/g) ?? []).length, 1, 'um Stu próprio na apresentação (os dos passos 2 e 3 vêm das cenas)');
+  // Banca da noite §2 (spec 04): o passo 1 ganha o stu-estudando ao lado da citação e o passo 3 fica com dois cartões e o
+  // Stu concentrado na arte (antes ele vinha no cartão da pergunta do caderno). A ponte do passo 2 traz o dela, da cena.
+  assert.match(apresentacao, /<Stu nome="stu-estudando" tamanho=\{tamanho\} animado="acontecimento" acontecimento=\{entradas \|\| undefined\} pop=\{entradas \|\| undefined\} \/>/);
+  assert.match(apresentacao, /<Stu nome="stu-concentrado" tamanho=\{80\} animado="acontecimento" acontecimento=\{entradas \|\| undefined\} pop=\{entradas \|\| undefined\} \/>/);
+  assert.equal((apresentacao.match(/<Stu\b/g) ?? []).length, 3, 'um Stu próprio em cada um dos passos 1, 3 e 4');
+  // No celular, o animado tem teto de 110 (spec 13): o do passo 1 vai até 110; o do passo 3, ao lado dos cartões, tem 80.
+  assert.match(apresentacao, /const tamanho = tamanhoDoStuDaArte\(altura, cartao, 72, 110\);/);
   assert.match(componente, /const chaveDoPop = `\$\{nome\}\|\$\{pop \?\? ''\}`/);
 });

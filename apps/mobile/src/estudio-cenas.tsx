@@ -31,7 +31,11 @@ const ESPERA_TRAVESSIA_MS = 380;
 const TRAVESSIA_MS = 700;
 
 /** Uma tábua da ponte: tracejada enquanto falta; ao entrar, cai no lugar com uma mola curta. */
-function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: number; ativa: boolean; erro?: boolean; vencida: boolean; ordem: number; reduzir: boolean | null }) {
+function Tabua({ numero, ativa, erro, vencida, ordem, reduzir, numeroGrande = false }: {
+  numero: number; ativa: boolean; erro?: boolean; vencida: boolean; ordem: number; reduzir: boolean | null;
+  /** O número em 14 (a arte da apresentação). */
+  numeroGrande?: boolean;
+}) {
   const [entrada] = useState(() => new Animated.Value(ativa ? 1 : 0));
   useEffect(() => {
     if (!ativa) { entrada.setValue(0); return; }
@@ -46,7 +50,7 @@ function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: numbe
   // Como .ponte-tabua da web no celular: em pé, com o número; a que falta fica tracejada e meio apagada.
   return (
     <View testID={ativa ? (vencida ? 'tabua-vencida' : 'tabua-posta') : 'tabua-falta'} style={cena.tabuaLugar}>
-      {!ativa && <View style={cena.tabuaFalta}><Text style={cena.tabuaNumero}>{numero}</Text></View>}
+      {!ativa && <View style={cena.tabuaFalta}><Text style={[cena.tabuaNumero, numeroGrande && cena.margemTextoArte]}>{numero}</Text></View>}
       {/* A tábua posta: face de 32 com borda de 2 que fecha em volta e o degrau de 4 por fora (box-shadow 0 4px 0 da web),
           que cobre a corda de baixo como no site (36 px à vista). */}
       {ativa && (
@@ -55,7 +59,7 @@ function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: numbe
           transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }],
         }]}>
           <View style={[cena.tabua, { backgroundColor: cor.face, borderColor: cor.borda }]}>
-            <Text style={[cena.tabuaNumero, { color: cores.fundo }]}>{numero}</Text>
+            <Text style={[cena.tabuaNumero, numeroGrande && cena.margemTextoArte, { color: cores.fundo }]}>{numero}</Text>
           </View>
         </Animated.View>
       )}
@@ -69,7 +73,9 @@ function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: numbe
  * com o desafio) e a margem "De volta ao desafio". Ao vencer, as tábuas ficam verdes e o Stu atravessa, depois de a lição
  * trazer a cena para a vista (`aoMedir`). Embaixo, a legenda das tábuas com o texto de cada uma, legível no celular.
  */
-export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir, estilo }: {
+export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, textosDaArte = false, aoMedir, estilo }: {
+  /** Na arte da apresentação, os textos da cena e da legenda ficam com 14 px no mínimo (spec 04, banca da noite §2). */
+  textosDaArte?: boolean;
   /** Margens de fora (o cartão da ponte tira o vão do cartão, que a web não tem entre a cabeça e a cena). */
   estilo?: StyleProp<ViewStyle>;
   /** A resposta errada em texto legível (o texto da opção, não o código). */
@@ -124,7 +130,7 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
         <View style={cena.agua} />
         <View style={cena.faixas}>{Array.from({ length: 14 }, (_, indice) => <View key={indice} style={cena.faixa} />)}</View>
         <View style={cena.linha}>
-          <View style={[cena.margem, cena.margemEsquerda]}
+          <View style={[cena.margem, cena.margemEsquerda, textosDaArte && cena.margemArte]}
             onLayout={(evento) => { const { x, width } = evento.nativeEvent.layout; setMargens((antes) => ({ ...antes, esquerda: { x, largura: width } })); }}>
             <Animated.View style={[cena.stu, { transform: [
                 { translateX: travessia.interpolate({ inputRange: [0, 1], outputRange: [0, distancia] }) },
@@ -133,7 +139,7 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
               <Stu nome={etapaDoStu === 'chegou' ? 'stu-animado' : 'stu-perfil'} tamanho={36}
                 animado={etapaDoStu === 'atravessando' ? 'laco' : etapaDoStu === 'chegou' ? 'uma-vez' : undefined} />
             </Animated.View>
-            <Text style={cena.margemTexto}>{m.ponteMargemErro}</Text>
+            <Text style={[cena.margemTexto, textosDaArte && cena.margemTextoArte]}>{m.ponteMargemErro}</Text>
           </View>
           <View style={cena.vao}>
             {/* As cordas vêm antes das tábuas: as tábuas (z-index 1 na web) passam por cima delas. */}
@@ -141,13 +147,13 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
             <View style={[cena.trilho, { bottom: 2 }]} />
             {passos.map((passo, indice) => (
               <Tabua key={indice} numero={indice + 1} ativa={passo.ativa} erro={passo.erro} vencida={vencida} reduzir={reduzir}
-                ordem={indice === 0 ? 0 : indice === 3 ? 0 : indice - 1} />
+                ordem={indice === 0 ? 0 : indice === 3 ? 0 : indice - 1} numeroGrande={textosDaArte} />
             ))}
           </View>
-          <View style={[cena.margem, cena.margemDireita]}
+          <View style={[cena.margem, cena.margemDireita, textosDaArte && cena.margemArte]}
             onLayout={(evento) => { const { x, width } = evento.nativeEvent.layout; setMargens((antes) => ({ ...antes, direita: { x, largura: width } })); }}>
             <View style={cena.lugarStu} />
-            <Text style={[cena.margemTexto, { color: '#184A10' }]}>{m.ponteMargemVolta}</Text>
+            <Text style={[cena.margemTexto, textosDaArte && cena.margemTextoArte, { color: '#184A10' }]}>{m.ponteMargemVolta}</Text>
           </View>
         </View>
       </View>
@@ -158,9 +164,9 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
           return (
             <View key={indice} style={[cena.passo, passo.ativa ? { borderStyle: 'solid', borderColor: cor.borda, backgroundColor: cor.fundo } : null]}>
               <View style={[cena.passoNumero, passo.ativa && { backgroundColor: cor.borda }]}>
-                <Text style={[cena.passoNumeroTexto, passo.ativa && { color: cores.fundo }]}>{indice + 1}</Text>
+                <Text style={[cena.passoNumeroTexto, textosDaArte && cena.textoArte, passo.ativa && { color: cores.fundo }]}>{indice + 1}</Text>
               </View>
-              <Text style={[cena.passoTexto, passo.ativa && { color: cor.texto }]}>{passo.texto}</Text>
+              <Text style={[cena.passoTexto, textosDaArte && cena.textoArte, passo.ativa && { color: cor.texto }]}>{passo.texto}</Text>
             </View>
           );
         })}
@@ -235,11 +241,36 @@ export function OndasDoVolume({ gravador }: { gravador: AudioRecorder }) {
  * O retorno do "Ensine ao Stu" em quatro cartões, como o caderno da web: o que fez sentido (com o visto), o que revisar,
  * a pergunta do Stu para outra situação, em destaque, e o próximo passo. Sem a IA, a nota do retorno automático no pé.
  */
-export function CadernoDoStu({ ensino, compacto = false }: {
+export function CadernoDoStu({ ensino, compacto = false, apresentacao = false }: {
   ensino: NonNullable<ApoioEstudo['ensino']>;
   /** Cartões menores, para a ilustração da apresentação (como `.apresentacao-caderno` da web no celular). */
   compacto?: boolean;
+  /**
+   * A arte do passo 3 da apresentação (spec 04, banca da noite §2): só "O que fez sentido" e "Próximo passo", com os
+   * títulos e os textos em 15 (14 px no mínimo na arte), sem a pergunta, o que revisar e a nota do retorno automático. O Stu
+   * concentrado fica ao lado, na própria arte.
+   */
+  apresentacao?: boolean;
 }) {
+  if (apresentacao) {
+    return (
+      <View testID="caderno-do-stu" style={[caderno.lista, { gap: 10 }]}>
+        <View style={[caderno.cartao, caderno.acertos]}>
+          <Text style={[caderno.titulo, caderno.tituloArte]}>{m.acertos}</Text>
+          {ensino.acertos.map((acerto, indice) => (
+            <View key={indice} style={caderno.item}>
+              <Text style={[caderno.visto, caderno.vistoArte]} importantForAccessibility="no">✓</Text>
+              <Text style={[estilos.texto, caderno.textoArte, { flex: 1 }]}>{acerto}</Text>
+            </View>
+          ))}
+        </View>
+        <View style={[caderno.cartao, caderno.proximo]}>
+          <Text style={[caderno.titulo, caderno.tituloArte]}>{m.proximo}</Text>
+          <Text style={[estilos.texto, caderno.textoArte]}>{ensino.proximoPasso}</Text>
+        </View>
+      </View>
+    );
+  }
   // Os parágrafos do caderno estão dentro de .estudio-card na web: entrelinha de 1,6.
   const texto = [estilos.texto, caderno.textoCartao, compacto && caderno.textoCompacto];
   const cartao = [caderno.cartao, compacto && caderno.cartaoCompacto];
@@ -351,6 +382,11 @@ const cena = StyleSheet.create({
   lugarStu: { width: 32, height: 32 },
   // .ponte-margem no celular: 0,6875rem com a entrelinha do corpo (1,5): 16,5.
   margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, textAlign: 'center' },
+  // A arte da apresentação: os textos com 14 px no mínimo (spec 04, banca da noite §2). As margens quebram o rótulo em duas
+  // linhas ("Onde / travou", "De volta ao / desafio"), para as tábuas continuarem com lugar para o número (23 px cada em 390).
+  margemArte: { maxWidth: 92, paddingHorizontal: 4 },
+  margemTextoArte: { fontSize: 14, lineHeight: 18 },
+  textoArte: { fontSize: 14, lineHeight: 20 },
   vao: { position: 'relative', flex: 1, alignSelf: 'center', flexDirection: 'row', gap: 4, paddingVertical: 6 },
   trilho: { position: 'absolute', left: -8, right: -8, height: 3, borderRadius: 2, backgroundColor: '#8D5C2C' },
   tabuaLugar: { flex: 1, minHeight: 32 },
@@ -424,6 +460,10 @@ const caderno = StyleSheet.create({
   textoCompacto: { fontSize: 14, lineHeight: 18.9 },
   perguntaStuCompacto: { width: 32, height: 36 },
   stuCompacto: { width: 30, height: 33 },
+  // A arte da apresentação (banca da noite §2): títulos e textos em 15, o visto em 14.
+  tituloArte: { fontSize: 15, lineHeight: 19.5 },
+  textoArte: { fontSize: 15, lineHeight: 21 },
+  vistoArte: { fontSize: 14 },
 });
 
 const paginas = StyleSheet.create({

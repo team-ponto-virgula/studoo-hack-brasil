@@ -1091,7 +1091,11 @@ export function textoSincronia(sincronia: Sincronia, agora: number) {
  * Selo discreto de sincronia (um por tela): reflete a última busca real no servidor. O ponto pulsa enquanto atualiza
  * (parado com movimento reduzido) e o selo fica âmbar sem conexão. O "há N min" se atualiza sozinho.
  */
-export function SeloSincronia({ sincronia }: { sincronia: Sincronia }) {
+export function SeloSincronia({ sincronia, grande = false }: {
+  sincronia: Sincronia;
+  /** Texto de 14 (a arte da apresentação: os textos dela têm 14 px no mínimo, spec 04, banca da noite §2). */
+  grande?: boolean;
+}) {
   const [agora, setAgora] = useState(() => Date.now());
   const pulso = usePulso();
   useEffect(() => {
@@ -1107,7 +1111,7 @@ export function SeloSincronia({ sincronia }: { sincronia: Sincronia }) {
       style={[estilos.selo, offline && estilos.seloOffline]}>
       <Animated.View style={[estilos.seloPonto, { backgroundColor: offline ? '#E58A1F' : atualizando ? cores.acao : cores.sucessoClaro },
         atualizando && { opacity: pulso }]} />
-      <Text numberOfLines={1} style={[estilos.seloTexto, offline && { color: cores.ouroTexto }]}>{texto}</Text>
+      <Text numberOfLines={1} style={[estilos.seloTexto, grande && { fontSize: 14, lineHeight: 18 }, offline && { color: cores.ouroTexto }]}>{texto}</Text>
     </View>
   );
 }

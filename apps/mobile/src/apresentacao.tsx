@@ -16,8 +16,7 @@ import { usePulinho } from './animacoes';
 import { tracoGrosso } from './caminho';
 import { CadernoDoStu, CenaPonte } from './estudio-cenas';
 import { Icone } from './icone';
-import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao, degrauFora, quebraEquilibrada } from './interface';
-import { CartaoFonte } from './licao';
+import { Botao, SeloSincronia, estilos, useMovimentoReduzido, degrauFora, quebraEquilibrada, caixaAlta } from './interface';
 import { mensagens } from './mensagens';
 import { Desenho, coresDaRegiao } from './mundo';
 import { Stu, medidasDoStu } from './mascote';
@@ -42,7 +41,15 @@ const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 
  * "Entendi". Pular encerra a qualquer momento. O título de cada passo recebe o foco e diz a posição; as páginas fora da
  * vista ficam fora do leitor de tela. As ilustrações são decorativas e paradas, montadas com as peças do próprio app.
  */
-export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo, concluir }: {
+/**
+ * A arte de cada passo ocupa 52% da altura útil (a das páginas, entre o alto e o rodapé), com 280 no mínimo e 420 no
+ * máximo; o título e o texto ficam centrados no que sobra até o rodapé (spec 04, banca da noite §2).
+ */
+export function alturaDaArte(alturaUtil: number): number {
+  return Math.round(Math.min(420, Math.max(280, alturaUtil * 0.52)));
+}
+
+export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo, entrar, concluir }: {
   primeiraVez: boolean;
   /**
    * Aberta pelo "Ver como funciona" da entrada, sem sessão (rodada 4.4 da web): só os quatro primeiros passos, sem a escolha
@@ -51,6 +58,12 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
   semSessao?: boolean;
   /** Rótulo do último passo no lugar de "Entendi" (na entrada, "Experimentar sem conta" quando o visitante está ligado). */
   rotuloFinalUltimo?: string;
+  /**
+   * Aberta pela entrada (banca da noite §2): o último passo oferece "Entrar". Com o visitante ligado (`rotuloFinalUltimo`),
+   * as ações ficam empilhadas, "Experimentar sem conta" (principal) em cima e "Entrar" (secundário) embaixo; sem ele, só
+   * "Entrar", como principal.
+   */
+  entrar?: () => void;
   /** `concluiuFinal`: a pessoa tocou o botão do último passo (e não "Pular", voltar ou Esc). */
   concluir: (area?: IdTema, concluiuFinal?: boolean) => void;
 }) {
@@ -65,6 +78,11 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
   const total = passos.length;
   const ultimo = passo === total - 1;
   const largura = Math.min(width, 620) - 40;
+  // A altura útil é medida nas páginas; o rodapé do último passo (duas ações empilhadas) não encolhe a arte dos outros.
+  const [alturaUtil, setAlturaUtil] = useState(0);
+  const alturaArte = alturaDaArte(alturaUtil);
+  const [alturaAtual, setAlturaAtual] = useState(0);
+  const [alturaDosTextos, setAlturaDosTextos] = useState<Record<number, number>>({});
 
   useEffect(() => {
     const titulo = titulos.current[passo];
@@ -114,21 +132,31 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
 
   let rotuloFinal: string = mensagens.apresentacao.continuar;
   if (ultimo) rotuloFinal = rotuloFinalUltimo ?? (primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi);
-  // "Experimentar sem conta" não cabe numa linha ao lado de "Voltar" em telas de celular. Com um rótulo longo no último passo,
-  // os botões ficam um sobre o outro: a ação principal em cima e "Voltar" embaixo, como na web (4.6) e no painel de erro.
-  // No app, a ordem de leitura do TalkBack segue a da tela (a principal primeiro).
-  const empilhar = ultimo && passo > 0 && rotuloFinal.length > 14 && width < 600;
-  const voltar = passo > 0 && (
-    <View style={!empilhar && apresentacaoEstilos.metade}>
-      <Botao rotulo={mensagens.apresentacao.voltar} testID="voltar-apresentacao" variante="secundario" acao={() => irPara(passo - 1)} />
-    </View>
-  );
+  // Banca da noite §2: no último passo, "Voltar" sobe para o alto, à esquerda, como botão de texto (no lugar do "Pular"), e o
+  // rodapé fica só com as ações finais. Aberta pela entrada, "Entrar" entra no fim: embaixo de "Experimentar sem conta"
+  // (empilhadas, o rótulo não cabe na metade, spec 11) ou sozinho, como principal, sem o visitante.
+  const comEntrar = ultimo && semSessao && entrar !== undefined;
+  const empilhar = comEntrar && rotuloFinalUltimo !== undefined;
+  const alturaMedida = useRef(false);
+  // Com as duas ações empilhadas, as páginas encolhem 64: numa janela baixa (390×667), a arte do último passo cede o que
+  // falta para o título e o texto caberem sem rolar, até 200 (os respiros da página somam 64: 20 em cima, 20 entre a arte e
+  // o título e 24 embaixo).
+  const arteDoPasso = (indice: number) => {
+    const textos = alturaDosTextos[indice];
+    if (!empilhar || indice !== total - 1 || !alturaAtual || !textos) return alturaArte;
+    return Math.max(200, Math.min(alturaArte, Math.floor(alturaAtual - 64 - textos)));
+  };
 
   return (
     <SafeAreaView style={estilos.tela}>
       <View style={apresentacaoEstilos.topo}>
         {/* .apresentacao-topo no celular: 12 do respiro da página em cima e 48 de altura. */}
         <View style={[estilos.marcaConteudo, apresentacaoEstilos.topoConteudo]}>
+          {/* O "Voltar" do último passo: botão de texto de 48 com a seta, rente à margem (a caixa tem 12 de respiro). */}
+          {ultimo && passo > 0 && (
+            <Botao rotulo={mensagens.apresentacao.voltar} testID="voltar-apresentacao" variante="texto" compacto fonte={16} iconeAntes="setaVoltar"
+              estilo={apresentacaoEstilos.voltarNoAlto} acao={() => irPara(passo - 1)} />
+          )}
           <View style={apresentacaoEstilos.andamento} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <View style={apresentacaoEstilos.pontos}>
               {passos.map((item, indice) => (
@@ -142,6 +170,12 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
         </View>
       </View>
       <ScrollView ref={paginas} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={estilos.tela}
+        onLayout={(evento) => {
+          const altura = evento.nativeEvent.layout.height;
+          setAlturaAtual(altura);
+          // Com as duas ações empilhadas no último passo, as páginas encolhem: a arte fica com a medida dos outros passos.
+          if (!empilhar || !alturaMedida.current) { alturaMedida.current = true; setAlturaUtil(altura); }
+        }}
         onMomentumScrollEnd={(evento) => {
           const indice = Math.round(evento.nativeEvent.contentOffset.x / width);
           if (indice !== passo && indice >= 0 && indice < total) setPasso(indice);
@@ -150,11 +184,11 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
           <ScrollView key={item.titulo} style={{ width }} contentContainerStyle={[estilos.conteudo, apresentacaoEstilos.pagina]}
             importantForAccessibility={indice === passo ? 'auto' : 'no-hide-descendants'} accessibilityElementsHidden={indice !== passo}>
             {indice < 4 ? (
-              <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-                {indice === 0 && <ArteMaterial />}
-                {indice === 1 && <ArtePonte />}
-                {indice === 2 && <ArteExplique />}
-                {indice === 3 && <ArteProgresso largura={largura} ativo={passo === 3} />}
+              <View testID={`arte-apresentacao-${indice}`} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ height: arteDoPasso(indice) }}>
+                {indice === 0 && <ArteMaterial altura={arteDoPasso(0)} ativo={passo === 0} />}
+                {indice === 1 && <ArtePonte altura={arteDoPasso(1)} />}
+                {indice === 2 && <ArteExplique altura={arteDoPasso(2)} ativo={passo === 2} />}
+                {indice === 3 && <ArteProgresso largura={largura} altura={arteDoPasso(3)} ativo={passo === 3} />}
               </View>
             ) : (
               <View accessibilityLabel={mensagens.apresentacao.areas} style={apresentacaoEstilos.areas}>
@@ -164,22 +198,40 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
                 ))}
               </View>
             )}
-            <Text ref={(titulo) => { titulos.current[indice] = titulo; }} testID={`titulo-apresentacao-${indice}`} accessible
-              accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`} textBreakStrategy="balanced"
-              style={[estilos.titulo, quebraEquilibrada, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
-            <Text style={[estilos.introducao, apresentacaoEstilos.texto]}>{item.texto}</Text>
+            {/* O título e o texto centrados no que sobra até o rodapé. */}
+            <View style={apresentacaoEstilos.textos}>
+              <View onLayout={(evento) => {
+                const altura = Math.ceil(evento.nativeEvent.layout.height);
+                setAlturaDosTextos((antes) => (antes[indice] === altura ? antes : { ...antes, [indice]: altura }));
+              }}>
+                <Text ref={(titulo) => { titulos.current[indice] = titulo; }} testID={`titulo-apresentacao-${indice}`} accessible
+                  accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`} textBreakStrategy="balanced"
+                  style={[estilos.titulo, quebraEquilibrada]}>{item.titulo}</Text>
+                <Text style={[estilos.introducao, apresentacaoEstilos.texto]}>{item.texto}</Text>
+              </View>
+            </View>
           </ScrollView>
         ))}
       </ScrollView>
       {/* Como .apresentacao-rodape da web: a linha de cima fica dentro das margens do conteúdo, não de ponta a ponta. */}
       <View style={apresentacaoEstilos.rodape}>
         <View style={[apresentacaoEstilos.rodapeConteudo, !empilhar && apresentacaoEstilos.acoes]}>
-          {!empilhar && voltar}
-          <View style={!empilhar && apresentacaoEstilos.metade}>
-            <Botao rotulo={rotuloFinal} testID="avancar-apresentacao" icone={ultimo ? undefined : 'seta'}
-              acao={() => (ultimo ? concluir(area, true) : irPara(passo + 1))} />
-          </View>
-          {empilhar && voltar}
+          {!ultimo && passo > 0 && (
+            <View style={apresentacaoEstilos.metade}>
+              <Botao rotulo={mensagens.apresentacao.voltar} testID="voltar-apresentacao" variante="secundario" acao={() => irPara(passo - 1)} />
+            </View>
+          )}
+          {(!comEntrar || empilhar) && (
+            <View style={!empilhar && apresentacaoEstilos.metade}>
+              <Botao rotulo={rotuloFinal} testID="avancar-apresentacao" icone={ultimo ? undefined : 'seta'}
+                acao={() => (ultimo ? concluir(area, true) : irPara(passo + 1))} />
+            </View>
+          )}
+          {comEntrar && (
+            <View style={!empilhar && apresentacaoEstilos.metade}>
+              <Botao rotulo={mensagens.entrada.entrar} testID="entrar-apresentacao" variante={empilhar ? 'secundario' : 'primario'} acao={entrar} />
+            </View>
+          )}
         </View>
       </View>
     </SafeAreaView>
@@ -204,49 +256,89 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
   );
 }
 
-/** Moldura das ilustrações dos momentos (como `.apresentacao-quadro` da web no celular), com o selo de demonstração no alto. */
-function Quadro({ selo = false, children }: { selo?: boolean; children: ReactNode }) {
-  return (
-    <View style={apresentacaoEstilos.quadro}>
-      {selo && <View style={apresentacaoEstilos.quadroTopo}><SeloDemonstracao emLinha /></View>}
-      {children}
-    </View>
-  );
+/**
+ * Moldura das ilustrações dos momentos (como `.apresentacao-quadro` da web no celular), na altura da arte (banca da noite
+ * §2). Sem o selo "Modo demonstração": ele é de conteúdo simulado, não de ilustração.
+ */
+function Quadro({ altura, centro = false, children }: { altura: number; centro?: boolean; children: ReactNode }) {
+  return <View style={[apresentacaoEstilos.quadro, { height: altura }, centro && { justifyContent: 'center' }]}>{children}</View>;
 }
 
-/** Momento 1: o cartão "Fonte do seu material" da lição, com o exemplo de demonstração do contrato. */
-function ArteMaterial() {
+/** Conta as entradas no passo: cada uma dá o pop e um ciclo da animação do Stu da arte (spec 13, §B7). */
+function useEntradas(ativo: boolean) {
+  const [entradas, setEntradas] = useState(0);
+  useEffect(() => {
+    if (ativo) setEntradas((anterior) => anterior + 1);
+  }, [ativo]);
+  return entradas;
+}
+
+/**
+ * O Stu da arte, no canto de baixo à direita, no tamanho que cabe embaixo do conteúdo (com até 24 por cima dele), entre o
+ * mínimo e o máximo: no celular, o teto do animado é 110 (spec 13).
+ */
+function tamanhoDoStuDaArte(altura: number, conteudo: number, minimo: number, maximo: number) {
+  return Math.round(Math.max(minimo, Math.min(maximo, altura - 24 - conteudo + 24)));
+}
+
+/**
+ * Momento 1: o cartão "Fonte do seu material" com o exemplo do contrato, sem o selo de demonstração e com os textos em 14
+ * ou mais, e o `stu-estudando` ao lado da citação (banca da noite §2: 160 pedido, 110 no celular pelo teto da spec 13).
+ */
+function ArteMaterial({ altura, ativo }: { altura: number; ativo: boolean }) {
   const ex = mensagens.apresentacao.exemplos;
+  const [cartao, setCartao] = useState(0);
+  const entradas = useEntradas(ativo);
+  const tamanho = tamanhoDoStuDaArte(altura, cartao, 72, 110);
   return (
-    <Quadro>
-      <CartaoFonte parado numero={1} titulo={ex.fonteArquivo}
-        referencia={{ materialId: 'apresentacao', nome: ex.fonteArquivo, pagina: 2, trecho: ex.fonteTrecho, leitura: 'demonstracao' }} />
+    <Quadro altura={altura}>
+      <View onLayout={(evento) => setCartao(evento.nativeEvent.layout.height)} style={[degrauFora(4, 20, cores.gelo), apresentacaoEstilos.fonteFora]}>
+        <View style={apresentacaoEstilos.fonte}>
+          <Text style={[apresentacaoEstilos.fonteRotulo, caixaAlta]}>{mensagens.estudio.fonteMaterial}</Text>
+          <Text style={apresentacaoEstilos.fonteOnde}>{ex.fonteArquivo}</Text>
+          <View style={apresentacaoEstilos.fonteTrecho}>
+            <Text style={apresentacaoEstilos.fonteTrechoTexto}>{ex.fonteTrecho}</Text>
+          </View>
+        </View>
+      </View>
+      <View testID="stu-apresentacao-material" style={apresentacaoEstilos.stuDaArte}>
+        <Stu nome="stu-estudando" tamanho={tamanho} animado="acontecimento" acontecimento={entradas || undefined} pop={entradas || undefined} />
+      </View>
     </Quadro>
   );
 }
 
 /**
- * Momento 2: a cena da ponte já vencida (as quatro tábuas verdes), com o Stu do lado da chegada. Os rótulos das tábuas da
- * web ("Sua tentativa", "Outro jeito"…) ficam na legenda numerada da cena, como na lição: no app, as tábuas não cabem texto.
+ * Momento 2: a cena da ponte já vencida (as quatro tábuas verdes), com o Stu do lado da chegada, no meio da arte. Os
+ * rótulos das tábuas da web ("Sua tentativa", "Outro jeito"…) ficam na legenda numerada da cena, como na lição: no app,
+ * as tábuas não cabem texto. Os textos da cena e da legenda em 14 (banca da noite §2).
  */
-function ArtePonte() {
+function ArtePonte({ altura }: { altura: number }) {
   return (
-    <Quadro selo>
-      {/* A legenda tem 12 embaixo na web (.ponte-legenda no celular); a cena devolve o -2 que serve ao cartão da lição. */}
-      <CenaPonte resposta="" primeiraTabua={mensagens.estudio.ponteTabuaErro} temPonte desafio concluida montada estilo={{ marginBottom: 14 }} />
+    <Quadro altura={altura} centro>
+      <CenaPonte resposta="" primeiraTabua={mensagens.estudio.ponteTabuaErro} temPonte desafio concluida montada textosDaArte
+        estilo={{ marginTop: -10, marginBottom: -12 }} />
     </Quadro>
   );
 }
 
-/** Momento 3: os quatro cartões do Explique, compactos, com a legenda do retorno automático. */
-function ArteExplique() {
+/**
+ * Momento 3 (banca da noite §2): só os cartões "O que fez sentido" e "Próximo passo" do Explique, com os textos em 15, e o
+ * Stu concentrado de 80 ao lado deles, embaixo (no canto, ele cobria o fim do "Próximo passo" em 390×667 e 360×800).
+ */
+function ArteExplique({ altura, ativo }: { altura: number; ativo: boolean }) {
   const ex = mensagens.apresentacao.exemplos;
+  const entradas = useEntradas(ativo);
   return (
-    <Quadro>
-      {/* .ensino-caderno tem 16 em cima também na apresentação. */}
-      <View style={{ paddingTop: 16 }}>
-        <CadernoDoStu compacto
-          ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: true }} />
+    <Quadro altura={altura} centro>
+      <View style={apresentacaoEstilos.explique}>
+        <View style={apresentacaoEstilos.metade}>
+          <CadernoDoStu apresentacao
+            ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: true }} />
+        </View>
+        <View testID="stu-apresentacao-explique">
+          <Stu nome="stu-concentrado" tamanho={80} animado="acontecimento" acontecimento={entradas || undefined} pop={entradas || undefined} />
+        </View>
       </View>
     </Quadro>
   );
@@ -299,15 +391,13 @@ function NoMini({ x, y, tamanho, face, labio, icone, corIcone }: {
  * base do nó (o lábio incluído), que se mexe uma vez a cada entrada no passo, com o pop da §B7. Fica por cima da arte, sem
  * mudar a altura dela.
  */
-function ArteProgresso({ largura, ativo }: { largura: number; ativo: boolean }) {
-  const altura = largura * (11 / 16);
+function ArteProgresso({ largura, altura, ativo }: { largura: number; altura: number; ativo: boolean }) {
   const pontos = estradaDaMiniatura(largura, altura);
-  const no = largura * 0.16;
-  const trofeu = largura * 0.19;
-  const [entradas, setEntradas] = useState(0);
-  useEffect(() => {
-    if (ativo) setEntradas((anterior) => anterior + 1);
-  }, [ativo]);
+  // Os nós e o troféu seguem o lado menor da arte (na altura de 52%, ela fica mais alta que a miniatura de 16:11).
+  const lado = Math.min(largura, altura * (16 / 11));
+  const no = lado * 0.16;
+  const trofeu = lado * 0.19;
+  const entradas = useEntradas(ativo);
   const stu = medidasDoStu('stu-comemorando', 40);
   const baseDoTrofeu = altura * 0.2 + trofeu / 2 + trofeu * 0.09;
   return (
@@ -328,7 +418,7 @@ function ArteProgresso({ largura, ativo }: { largura: number; ativo: boolean }) 
       </View>
       {/* O selo de sincronia do mapa, no canto de cima (como `.apresentacao-sincronia` da web). */}
       <View style={apresentacaoEstilos.sincronia}>
-        <SeloSincronia sincronia={{ estado: 'atualizado', em: null }} />
+        <SeloSincronia grande sincronia={{ estado: 'atualizado', em: null }} />
       </View>
       {/* Ficha "Ponte construída": 36 de altura com o degrau de 4 por fora (0 4px 0 rgba(11, 27, 92, 0.08) na web). */}
       <View style={[apresentacaoEstilos.seloFora, degrauFora(4, 999, 'rgba(11, 27, 92, 0.08)')]}>
@@ -355,11 +445,22 @@ const apresentacaoEstilos = StyleSheet.create({
   rodape: { paddingHorizontal: 20, backgroundColor: cores.fundo },
   // 22 da face do botão até a borda, como a web: o degrau de 4 desce por fora, no respiro de baixo (18 à vista).
   rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 22, borderTopWidth: 2, borderColor: cores.nevoa },
-  pagina: { paddingTop: 20 },
   // .painel--apresentacao no celular: 20 entre a arte e os textos; .apresentacao-textos: 18/24 e 16 entre o título e o texto
   // (a introdução já tem 8 em cima).
-  titulo: { marginTop: 20 },
+  // Banca da noite §2: o título e o texto centrados no que sobra entre a arte e o rodapé (20 de folga embaixo da arte).
+  pagina: { flexGrow: 1, paddingTop: 20 },
+  textos: { flexGrow: 1, justifyContent: 'center', paddingTop: 20 },
   texto: { fontSize: 18, lineHeight: 24, marginTop: 16 },
+  voltarNoAlto: { paddingHorizontal: 12, marginLeft: -12 },
+  // O cartão da fonte na arte do passo 1: como .aula-citacao, sem o número e o selo, com os textos em 14 ou mais.
+  fonteFora: { alignSelf: 'stretch' },
+  fonte: { gap: 8, paddingVertical: 14, paddingHorizontal: 16, borderRadius: 20, borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: cores.fundo },
+  fonteRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 18, letterSpacing: 0.56 },
+  fonteOnde: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22 },
+  fonteTrecho: { borderLeftWidth: 4, borderColor: cores.acao, paddingLeft: 12, paddingVertical: 2 },
+  fonteTrechoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontStyle: 'italic', fontSize: 15, lineHeight: 22 },
+  stuDaArte: { position: 'absolute', right: 10, bottom: 6 },
+  explique: { flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   acoes: { flexDirection: 'row' },
   metade: { flex: 1, minWidth: 0 },
   arte: { borderRadius: 28, overflow: 'hidden' },
@@ -368,8 +469,7 @@ const apresentacaoEstilos = StyleSheet.create({
   pontinho: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: 'rgba(11, 27, 92, 0.24)' },
   noFace: { alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(255, 255, 255, 0.2)' },
   // Moldura dos momentos: como `.apresentacao-quadro` da web no celular (12 de respiro, cantos de 22, borda gelo, fundo névoa).
-  quadro: { gap: 10, padding: 12, borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.nevoa },
-  quadroTopo: { flexDirection: 'row', justifyContent: 'flex-end' },
+  quadro: { gap: 10, padding: 12, overflow: 'hidden', borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.nevoa },
   sincronia: { position: 'absolute', top: '6%', right: '5%' },
   areas: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 14, borderRadius: 28, backgroundColor: cores.ceu },
   area: { width: '47.5%', flexGrow: 1, minHeight: 92, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12,
@@ -380,5 +480,5 @@ const apresentacaoEstilos = StyleSheet.create({
   seloFora: { position: 'absolute', right: '5%', bottom: '7%' },
   selo: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10, paddingRight: 14, paddingVertical: 9, borderRadius: 999,
     backgroundColor: cores.fundo },
-  seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
+  seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 18 },
 });

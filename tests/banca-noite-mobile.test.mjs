@@ -98,3 +98,48 @@ test('§7 conceito no app: sem links no meio do parágrafo, "Continuar lendo" qu
   // O "Continuar lendo" do rodapé faz o mesmo que o do balão enquanto o resto está recolhido.
   assert.match(licao, /if \(recolhido && explicacaoY\.current \+ corteDoConceitoY\.current >= posicaoRolagem\.current\) \{\n\s*abrirConceito\(\);/);
 });
+
+test('§2 "Ver como funciona": arte em 52% da altura útil (280 a 420), sem selo de demonstração, textos centrados', async () => {
+  const apresentacao = await readFile(new URL('../apps/mobile/src/apresentacao.tsx', import.meta.url), 'utf8');
+  assert.match(apresentacao, /return Math\.round\(Math\.min\(420, Math\.max\(280, alturaUtil \* 0\.52\)\)\);/);
+  assert.match(apresentacao, /style=\{\{ height: arteDoPasso\(indice\) \}\}>/, 'cada arte na altura calculada');
+  // Só no último passo com as duas ações empilhadas, numa janela baixa, a arte cede até 200 para o texto caber sem rolar.
+  assert.match(apresentacao, /if \(!empilhar \|\| indice !== total - 1 \|\| !alturaAtual \|\| !textos\) return alturaArte;\n\s*return Math\.max\(200, Math\.min\(alturaArte, Math\.floor\(alturaAtual - 64 - textos\)\)\);/);
+  assert.doesNotMatch(apresentacao, /SeloDemonstracao|leitura: 'demonstracao'/, 'o selo é de conteúdo simulado, não de ilustração');
+  assert.match(apresentacao, /textos: \{ flexGrow: 1, justifyContent: 'center', paddingTop: 20 \}/, 'título e texto no meio do que sobra');
+});
+
+test('§2 "Ver como funciona": textos da arte com 14 px ou mais, dois cartões no passo 3 e o Stu estudando no passo 1', async () => {
+  const apresentacao = await readFile(new URL('../apps/mobile/src/apresentacao.tsx', import.meta.url), 'utf8');
+  const cenas = await readFile(new URL('../apps/mobile/src/estudio-cenas.tsx', import.meta.url), 'utf8');
+  const estilos = apresentacao.slice(apresentacao.indexOf('const apresentacaoEstilos = StyleSheet.create({'));
+  for (const nome of ['fonteRotulo', 'fonteOnde', 'fonteTrechoTexto', 'seloTexto']) {
+    const tamanho = Number(estilos.match(new RegExp(`  ${nome}: \\{[^}]*fontSize: (\\d+)`))?.[1]);
+    assert.ok(tamanho >= 14, `${nome} com ${tamanho} px`);
+  }
+  assert.match(apresentacao, /<SeloSincronia grande sincronia=/);
+  assert.match(apresentacao, /<CenaPonte [^>]*textosDaArte/);
+  assert.match(cenas, /margemTextoArte: \{ fontSize: 14, lineHeight: 18 \},\n\s*textoArte: \{ fontSize: 14, lineHeight: 20 \},/);
+  // Com o rótulo em 14, as margens quebram em duas linhas para as tábuas não ficarem espremidas.
+  assert.match(cenas, /margemArte: \{ maxWidth: 92, paddingHorizontal: 4 \},/);
+  assert.equal((cenas.match(/textosDaArte && cena\.margemArte\]/g) ?? []).length, 2);
+  // Passo 3: só "O que fez sentido" e "Próximo passo", em 15.
+  assert.match(apresentacao, /<CadernoDoStu apresentacao\n/);
+  const variante = cenas.slice(cenas.indexOf('if (apresentacao) {'), cenas.indexOf('// Os parágrafos do caderno'));
+  assert.match(variante, /\{m\.acertos\}/);
+  assert.match(variante, /\{m\.proximo\}/);
+  assert.doesNotMatch(variante, /m\.lacuna|m\.pergunta|ensinoAutomatico/);
+  assert.match(cenas, /tituloArte: \{ fontSize: 15, lineHeight: 19\.5 \},\n\s*textoArte: \{ fontSize: 15, lineHeight: 21 \},\n\s*vistoArte: \{ fontSize: 14 \},/);
+});
+
+test('§2 "Ver como funciona": no último passo, Voltar no alto e as ações finais com "Entrar"', async () => {
+  const apresentacao = await readFile(new URL('../apps/mobile/src/apresentacao.tsx', import.meta.url), 'utf8');
+  const sessao = await readFile(new URL('../apps/mobile/src/sessao.tsx', import.meta.url), 'utf8');
+  // "Voltar" sobe para o alto, à esquerda, como botão de texto (no lugar do "Pular"); fora do último passo, fica no rodapé.
+  assert.match(apresentacao, /\{ultimo && passo > 0 && \(\n\s*<Botao rotulo=\{mensagens\.apresentacao\.voltar\} testID="voltar-apresentacao" variante="texto" compacto fonte=\{16\} iconeAntes="setaVoltar"/);
+  assert.match(apresentacao, /\{!ultimo && passo > 0 && \(\n\s*<View style=\{apresentacaoEstilos\.metade\}>\n\s*<Botao rotulo=\{mensagens\.apresentacao\.voltar\} testID="voltar-apresentacao" variante="secundario"/);
+  // Aberta pela entrada: com o visitante, "Experimentar sem conta" em cima e "Entrar" (secundário) embaixo; sem ele, só "Entrar".
+  assert.match(apresentacao, /const comEntrar = ultimo && semSessao && entrar !== undefined;\n\s*const empilhar = comEntrar && rotuloFinalUltimo !== undefined;/);
+  assert.match(apresentacao, /<Botao rotulo=\{mensagens\.entrada\.entrar\} testID="entrar-apresentacao" variante=\{empilhar \? 'secundario' : 'primario'\} acao=\{entrar\} \/>/);
+  assert.match(sessao, /entrar=\{\(\) => \{ devolverFoco\.current = 'email'; setVendoApresentacao\(false\); \}\}/);
+});

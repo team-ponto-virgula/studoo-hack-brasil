@@ -220,15 +220,18 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   /** "Ver como funciona" (rodada 4.4 da web): a apresentação sem sessão, aberta da própria entrada. */
   const [vendoApresentacao, setVendoApresentacao] = useState(false);
   const linkComoFunciona = useRef<ComponentRef<typeof Pressable>>(null);
-  const devolverFoco = useRef(false);
-  // Ao fechar a apresentação, o foco do leitor de tela volta ao link (depois de a entrada montar de novo).
+  const devolverFoco = useRef<'link' | 'email' | null>(null);
+  // Ao fechar a apresentação, o foco do leitor de tela volta ao link (depois de a entrada montar de novo); pelo "Entrar" do
+  // último passo (banca da noite §2), vai para o campo de e-mail, sem abrir o teclado no aparelho.
   useEffect(() => {
     if (vendoApresentacao || !devolverFoco.current) return;
-    devolverFoco.current = false;
+    const destino = devolverFoco.current;
+    devolverFoco.current = null;
     const espera = setTimeout(() => {
-      if (linkComoFunciona.current) AccessibilityInfo.sendAccessibilityEvent(linkComoFunciona.current, 'focus');
-      // Na prévia web, o foco do teclado também volta para o link.
-      (linkComoFunciona.current as unknown as { focus?: () => void } | null)?.focus?.();
+      const alvo = destino === 'email' ? campoEmail.current : linkComoFunciona.current;
+      if (alvo) AccessibilityInfo.sendAccessibilityEvent(alvo, 'focus');
+      // Na prévia web, o foco do teclado também vai para lá.
+      if (Platform.OS === 'web') (alvo as unknown as { focus?: () => void } | null)?.focus?.();
     }, 150);
     return () => clearTimeout(espera);
   }, [vendoApresentacao]);
@@ -308,14 +311,16 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
     return (
       <Apresentacao primeiraVez={false} semSessao
         rotuloFinalUltimo={visitanteDisponivel ? mensagens.acesso.experimentar : undefined}
+        // Banca da noite §2: o último passo oferece "Entrar", que volta à entrada com o foco no e-mail.
+        entrar={() => { devolverFoco.current = 'email'; setVendoApresentacao(false); }}
         concluir={(_area, concluiuFinal) => {
-          // Com o visitante ligado, o último passo já entra como visitante; senão ("Entendi", "Pular", voltar), volta à entrada.
+          // Com o visitante ligado, o último passo já entra como visitante; senão ("Pular", voltar), volta à entrada.
           if (concluiuFinal && visitanteDisponivel) {
             setVendoApresentacao(false);
             void experimentar();
             return;
           }
-          devolverFoco.current = true;
+          devolverFoco.current = 'link';
           setVendoApresentacao(false);
         }} />
     );
