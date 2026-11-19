@@ -3,6 +3,15 @@ import type { FaltaParaVerificar, MotivoRever } from './licao';
 /** Conteúdo compartilhado pelas interfaces web e nativa. */
 /** "e-mail" sem quebra de linha no hífen (marcadores de junção invisíveis em volta dele). */
 const EMAIL = 'e\u2060-\u2060mail';
+/**
+ * O gesto de agradecer uma trilha, num lugar só: trocar "Valeu" por outra palavra (por exemplo "Curtir") é mudar só aqui.
+ */
+const GESTO = {
+    nome: 'Valeu', palavra: 'valeu', plural: 'valeus', umGesto: 'um valeu',
+    mandar: 'mandar valeu', mandarUm: 'mandar um valeu', mandou: 'mandou valeu', mandouUm: 'mandou um valeu', mandaram: 'mandaram valeu',
+    enviado: 'Valeu enviado', retirado: 'Valeu retirado',
+} as const;
+
 /** A frase única de privacidade (perfil, recorte da foto e nome): o que fica público e o que nunca aparece. */
 const PRIVACIDADE = `Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu ${EMAIL} nunca aparece.`;
 
@@ -342,7 +351,7 @@ export const mensagens = {
         desde: (data: string) => `Compartilhada desde ${data}`,
         adicoes: (n: number) => (n === 0 ? 'Ainda ninguém estudando' : n === 1 ? '1 pessoa estudando' : `${n} pessoas estudando`),
         /** Na lista da dona, quando ninguém começou nem mandou valeu: uma frase só. */
-        semNinguem: 'Ainda ninguém estudando nem mandou valeu',
+        semNinguem: `Ainda ninguém estudando nem ${GESTO.mandou}`,
         publicoTitulo: 'Seu perfil público',
         privado: 'Privado. Nenhuma trilha aparece no seu perfil.',
         publico: (n: number) => `Público. ${n === 1 ? '1 trilha aparece' : `${n} trilhas aparecem`} no seu perfil, para quem tiver o endereço dele.`,
@@ -435,7 +444,7 @@ export const mensagens = {
         subtitulo: 'Trilhas que a comunidade publicou. Escolha uma e comece do zero, no seu ritmo.',
         emAlta: 'Em alta esta semana',
         emAltaDoTema: (tema: string) => `Em alta em ${tema} esta semana`,
-        emAltaDica: 'As trilhas que mais gente começou e agradeceu nos últimos 7 dias.',
+        emAltaDica: `As trilhas que mais gente começou e ${GESTO.mandou} nos últimos 7 dias.`,
         posicao: (n: number) => `${n}º lugar`,
         anteriores: 'Ver as anteriores',
         proximas: 'Ver as próximas',
@@ -454,17 +463,22 @@ export const mensagens = {
         vazioTemaAcao: 'Ver todos os temas',
         contagem: (licoes: number, partes: number) => `${licoes} ${licoes === 1 ? 'lição' : 'lições'} · ${partes} ${partes === 1 ? 'parte' : 'partes'}`,
         estudando: (n: number) => `${n} estudando`,
-        valeus: (n: number) => `${n} ${n === 1 ? 'valeu' : 'valeus'}`,
+        valeus: (n: number) => `${n} ${n === 1 ? GESTO.palavra : GESTO.plural}`,
         por: (nome: string) => `por ${nome}`,
         perfilDe: (nome: string) => `Ver o perfil de ${nome}`,
         queroEstudar: 'Quero estudar',
         adicionando: 'Adicionando…',
         continuar: 'Continuar',
         sua: 'Abrir minha trilha',
-        valeu: 'Valeu',
-        valeuRotulo: (titulo: string) => `Mandar um valeu para “${titulo}”`,
-        valeuEnviado: (titulo: string) => `Valeu enviado para “${titulo}”.`,
-        valeuRetirado: (titulo: string) => `Valeu retirado de “${titulo}”.`,
+        valeu: GESTO.nome,
+        valeuRotulo: (titulo: string) => `${GESTO.mandarUm[0].toUpperCase()}${GESTO.mandarUm.slice(1)} para “${titulo}”`,
+        /** Botão marcado (o nome que o leitor de tela anuncia): tocar de novo retira. */
+        valeuMarcadoRotulo: (titulo: string) => `${GESTO.enviado} para “${titulo}”. Toque para retirar.`,
+        valeuEnviado: (titulo: string) => `${GESTO.enviado} para “${titulo}”.`,
+        valeuRetirado: (titulo: string) => `${GESTO.retirado} de “${titulo}”.`,
+        /** O aviso do app (nunca do sistema), toda vez que a pessoa manda ou retira. */
+        valeuAviso: (primeiroNome: string) => `${GESTO.enviado} para ${primeiroNome}. É o seu obrigado pela trilha e ajuda ela a aparecer em Em alta.`,
+        valeuRetiradoAviso: `${GESTO.retirado}.`,
         compartilhar: 'Compartilhar',
         compartilharRotulo: (titulo: string) => `Compartilhar “${titulo}”`,
         linkCopiado: 'Link da trilha copiado',
@@ -473,7 +487,7 @@ export const mensagens = {
         demonstracao: 'Demonstração',
         demonstracaoDica: 'Trilha pronta do modo demonstração.',
         demonstracaoExplica: '“Demonstração” marca conteúdo de exemplo, criado para mostrar o Studoo.',
-        entrarParaAgir: 'Entre para estudar e mandar valeu.',
+        entrarParaAgir: `Entre para estudar e ${GESTO.mandar}.`,
         entrar: 'Entrar',
         adicionada: (nome: string) => `Trilha adicionada. Feita por ${nome}.`,
         denuncia: {
@@ -541,7 +555,7 @@ export const mensagens = {
         seguidosSemTrilhas: 'Quem você segue ainda não publicou trilhas no Explorar.',
         // Novidades (etapa C2)
         novidadesTitulo: 'Novidades',
-        novidadesVazio: 'Sem novidades nesta semana. Quando alguém começar uma trilha sua, mandar um valeu ou seguir você, aparece aqui.',
+        novidadesVazio: `Sem novidades nesta semana. Quando alguém começar uma trilha sua, ${GESTO.mandarUm} ou seguir você, aparece aqui.`,
         novidadesSemana: 'Nos últimos 7 dias',
         alguem: 'Alguém',
         listaPessoas: (nomes: string[], outros: number) => {
@@ -550,7 +564,7 @@ export const mensagens = {
             return `${nomes.join(', ')} e mais ${outros} ${outros === 1 ? 'pessoa' : 'pessoas'}`;
         },
         novidadeAdicoes: (n: number, titulo: string) => `${n === 1 ? '1 pessoa começou' : `${n} pessoas começaram`} a estudar “${titulo}”`,
-        novidadeValeus: (quem: string, total: number, titulo: string) => `${quem} ${total === 1 ? 'mandou um valeu' : 'mandaram valeu'} em “${titulo}”`,
+        novidadeValeus: (quem: string, total: number, titulo: string) => `${quem} ${total === 1 ? GESTO.mandouUm : GESTO.mandaram} em “${titulo}”`,
         novidadeSeguidores: (quem: string | null, total: number) => (quem
             ? `${quem} ${total === 1 ? 'começou' : 'começaram'} a seguir você`
             : `${total === 1 ? '1 pessoa nova segue' : `${total} pessoas novas seguem`} você`),
