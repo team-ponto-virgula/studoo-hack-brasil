@@ -230,11 +230,13 @@ jobs:
         run: bash apps/mobile/conferencia-nativa/android.sh metro
 
       # O emulador só existe neste passo: a preparação dele (tela de 360 × 780 dp, barra fixa, APK, `adb reverse`) e os
-      # três fluxos rodam aqui. Animações ligadas, como no iPhone (o Stu animado também é conferido).
+      # três fluxos rodam aqui. Animações ligadas, como no iPhone (o Stu animado também é conferido). No emulador, cada
+      # leitura da tela pelo Maestro leva de 7 a 20 s: o passo levou 57 min na execução 44565509060, com cinco fluxos
+      # caindo cedo; com eles inteiros, passa de uma hora.
       - name: "Emulador: entrada, conta e telas"
         id: emulador
         if: ${{ !cancelled() && steps.app.outcome == 'success' && steps.metro.outcome == 'success' && steps.maestro.outcome == 'success' }}
-        timeout-minutes: 60
+        timeout-minutes: 90
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
           api-level: 35

@@ -11,12 +11,13 @@ appId: host.exp.Exponent
     visible:
       id: titulo-planos
     timeout: 30000
-# O botão do cartão tem o nome acessível "<ação>: <título da trilha>".
+# O botão do cartão tem o nome acessível "<ação>: <título da trilha>". O limite cobre o emulador de Android, onde cada
+# passo da rolagem leva de 20 a 28 s (ver exercicio.yaml).
 - scrollUntilVisible:
     element:
       text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
     direction: DOWN
-    timeout: 45000
+    timeout: 240000
     speed: 50
     waitToSettleTimeoutMs: 500
 # No iOS 26 a barra de baixo fica por cima do conteúdo: o botão pode ter parado atrás dela. Sobe mais um pouco.
