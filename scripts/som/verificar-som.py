@@ -121,6 +121,96 @@ def andamento(y: np.ndarray) -> float:
     return round(60 * fps / lag, 1)
 
 
+def bloco_lame(caminho: str) -> dict:
+    """Lê atraso e enchimento do bloco LAME/Xing (o que o decodificador tira)."""
+    import struct
+
+    br1 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0]
+    sr1 = [44100, 48000, 32000, 0]
+    d = open(caminho, "rb").read()
+    i = 0
+    if d[:3] == b"ID3":
+        i = 10 + (((d[6] & 0x7F) << 21) | ((d[7] & 0x7F) << 14) | ((d[8] & 0x7F) << 7) | (d[9] & 0x7F))
+    while i < len(d) - 4 and not (d[i] == 0xFF and (d[i + 1] & 0xE0) == 0xE0 and ((d[i + 1] >> 3) & 3) == 3 and ((d[i + 1] >> 1) & 3) == 1):
+        i += 1
+    h = d[i : i + 4]
+    br, sr = br1[(h[2] >> 4) & 0xF] * 1000, sr1[(h[2] >> 2) & 3]
+    if not br or not sr:
+        return {}
+    tam = int(144 * br / sr) + (h[2] & 1)
+    corpo = d[i + 4 : i + tam]
+    p = corpo.find(b"Xing")
+    p = p if p >= 0 else corpo.find(b"Info")
+    if p < 0:
+        return {}
+    quadros = struct.unpack(">I", corpo[p + 8 : p + 12])[0]
+    lpos = corpo.find(b"LAME")
+    lpos = lpos if lpos >= 0 else corpo.find(b"Lavc")
+    if lpos < 0:
+        return {}
+    b = corpo[lpos + 21 : lpos + 24]
+    v = (b[0] << 16) | (b[1] << 8) | b[2]
+    return {"encoder": corpo[lpos : lpos + 9].decode("latin1"), "quadros": quadros,
+            "delay": v >> 12, "padding": v & 0xFFF, "amostras": quadros * 1152}
+
+
+def emenda_web(caminho: str, aparo: float = 0.026, decodificador_atraso: int = 529) -> dict:
+    """Emenda como o toca-sons da web toca: loopStart = aparo, loopEnd = duração.
+
+    Mede três casos: o buffer como o Chromium entrega (já sem o atraso do
+    codificador, medido em `OfflineAudioContext`), o buffer de um navegador que
+    mantenha o atraso, e o começo sem aparo (loopStart = 0).
+    """
+    y = decodificar(caminho)
+    t = bloco_lame(caminho)
+    extra = (t.get("amostras") or len(y)) - len(y)
+    atraso = (t.get("delay", 576) + decodificador_atraso) if t else 1105
+    if atraso > extra:
+        atraso = extra // 2
+    naivo = np.concatenate([np.zeros(atraso), y, np.zeros(max(0, extra - atraso))])
+
+    def nivel(a):
+        return round(db(math.sqrt(float(np.mean(a**2)) + 1e-20)), 1)
+
+    def compasso1(buf, acima_db=-20.0):
+        w = int(0.01 * SR)
+        for i in range(0, len(buf) - w, w):
+            if db(math.sqrt(float(np.mean(buf[i : i + w] ** 2)) + 1e-20)) > acima_db:
+                return i
+        return 0
+
+    def caso(nome, buf, inicio_fixo=None):
+        ini = int(round(aparo * SR)) if inicio_fixo is None else inicio_fixo
+        fim = len(buf)
+        passo = np.abs(np.diff(buf))
+        tipico = float(np.percentile(passo, 99.9))
+        salto = abs(float(buf[fim - 1] - buf[ini]))
+        k = int(0.05 * SR)
+        return {
+            "caso": nome,
+            "loopStart_ms": round(ini / SR * 1000, 2),
+            "loop_s": round((fim - ini) / SR, 4),
+            "amostras_de_musica_puladas": max(0, ini - atraso),
+            "salto": round(salto, 5),
+            "salto_vs_tipico": round(salto / (tipico + 1e-12), 2),
+            "nivel_antes_db": nivel(buf[fim - k : fim]),
+            "nivel_depois_db": nivel(buf[ini : ini + k]),
+        }
+
+    return {
+        "arquivo": os.path.basename(caminho),
+        "atraso_codificador": t.get("delay") if t else None,
+        "enchimento_codificador": t.get("padding") if t else None,
+        "atraso_no_buffer_medido": atraso,
+        "compasso1_ms": round(compasso1(y) / SR * 1000, 2),
+        "casos": [
+            caso("Chromium (medido)", y),
+            caso("navegador com atraso", naivo),
+            caso("sem aparo", y, 0),
+        ],
+    }
+
+
 def medir(caminho: str, laco: bool = False) -> dict:
     y = decodificar(caminho)
     i = info(caminho)
@@ -164,9 +254,12 @@ def medir(caminho: str, laco: bool = False) -> dict:
 
 def main() -> None:
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
-    laco = "--laco" in sys.argv
     if not args:
         print(__doc__)
+        return
+    if "--laco-web" in sys.argv:
+        for caminho in args:
+            print(json.dumps(emenda_web(caminho), ensure_ascii=False))
         return
     for caminho in args:
         print(json.dumps(medir(caminho, laco=True), ensure_ascii=False))
