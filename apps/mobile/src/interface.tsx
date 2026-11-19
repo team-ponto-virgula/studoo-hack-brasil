@@ -133,7 +133,7 @@ function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, faixaColada = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo, flutuante }: {
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, acimaDaFaixa, faixaColada = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo, flutuante }: {
   /** Algo que flutua sobre o conteúdo, centrado e 16 acima do rodapé (ou da barra): a pílula "Ver a lição nova" da geração. */
   flutuante?: ReactNode;
   children: ReactNode;
@@ -149,6 +149,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   abaixoDoLogo?: ReactNode;
   /** Faixa que rola com a página até o alto e fica parada lá (o cabeçalho da trilha, como o .trilha-topo da web no celular). */
   faixaFixa?: ReactNode;
+  /** O que rola acima da faixa parada e sai de vista antes dela: a capa da trilha no alto do mapa (.trilha-capa da web). */
+  acimaDaFaixa?: ReactNode;
   /**
    * A faixa fica colada embaixo da barra da marca, sem o vão de 20, e pinta o próprio fundo (sem o branco nem o vidro da
    * faixa da trilha): a faixa da geração, de 52, com a placa do Stu por cima do mapa (spec 04, revisão de 19/11).
@@ -190,6 +192,10 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const [teclado, setTeclado] = useState(false);
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   const [alturaFaixa, setAlturaFaixa] = useState(0);
+  const [alturaAcima, setAlturaAcima] = useState(0);
+  // O que fica acima da faixa parada entra na conta de onde o conteúdo começa (só existe com a faixa).
+  const comAcima = Boolean(faixaFixa && acimaDaFaixa);
+  const acima = comAcima ? alturaAcima : 0;
   const [alturaRodape, setAlturaRodape] = useState(0);
   const [alturaBarra, setAlturaBarra] = useState(0);
   const cabecalhoNaRolagem = !topo && !semCabecalho;
@@ -228,10 +234,10 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const alturaDoConteudo = useRef(0);
   const informarNatural = () => {
     if (!aoMedirNatural || !alturaDoConteudo.current) return;
-    aoMedirNatural((cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + alturaFaixa : 0) + alturaDoConteudo.current);
+    aoMedirNatural((cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + acima + alturaFaixa : 0) + alturaDoConteudo.current);
   };
   // A barra da marca e a faixa entram na conta assim que são medidas.
-  useEffect(informarNatural, [alturaCabecalho, alturaFaixa]);
+  useEffect(informarNatural, [alturaCabecalho, alturaFaixa, acima]);
   /** Leva o elemento para a parte visível, se ele não estiver inteiro lá (sem mexer quando já está). */
   const mostrar = (no: ComponentRef<typeof View> | null, margem = 16) => {
     const tela = rolagemInterna.current;
@@ -290,6 +296,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const filhosDeCima: ReactNode[] = [];
   if (cabecalhoNaRolagem) filhosDeCima.push(<View key="cabecalho" onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>);
   if (faixaFixa && !faixaColada) filhosDeCima.push(<View key="vao" style={estilos.faixaVao} />);
+  if (comAcima) filhosDeCima.push(<View key="acima" onLayout={(evento) => setAlturaAcima(evento.nativeEvent.layout.height)}>{acimaDaFaixa}</View>);
   const indiceDaFaixa = faixaFixa ? filhosDeCima.length : null;
   if (faixaFixa) {
     filhosDeCima.push(faixaColada
@@ -324,8 +331,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           <View style={[estilos.conteudo, !topo && !paginaDeAcesso && estilos.conteudoEstudo, estiloConteudo]}
             onLayout={(evento) => { alturaDoConteudo.current = evento.nativeEvent.layout.height; informarNatural(); }}>
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
-            <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) ? null
-              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + alturaFaixa : 0)}>
+            <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) || (comAcima && !alturaAcima) ? null
+              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + acima + alturaFaixa : 0)}>
               <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
                 <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar, travar: setRolagemTravada, rolarPor }}>
                   <TecladoAberto.Provider value={teclado}>
