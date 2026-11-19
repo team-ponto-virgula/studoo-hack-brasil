@@ -1,6 +1,6 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
-import { AccessibilityInfo, Animated, Keyboard, Platform, Pressable, StyleSheet, Text, View, type TextInput } from 'react-native';
+import { AccessibilityInfo, Animated, Keyboard, LayoutAnimation, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
 import { useTremor, useVaiVem } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { entrarComGoogle } from './google-nativo';
@@ -8,7 +8,8 @@ import { entrarComoVisitante } from './visitante-nativo';
 import { Apresentacao } from './apresentacao';
 import { RecuperarAcesso } from './recuperar';
 import { Estudo } from './estudo';
-import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos } from './interface';
+import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useMovimentoReduzido } from './interface';
+import { ESPERA_DA_MEDIDA_MS, ESTADO_INICIAL_DA_ENTRADA, ILUSTRACAO_MAXIMA, MARGEM_DA_ILUSTRACAO, proximoEstadoDaEntrada, type EstadoDaEntrada } from './entrada-medidas';
 import { SkeletonTrilha } from './caminho';
 import { NavegacaoContexto } from './navegacao';
 import { apagarTinhaTrilhas, lerTinhaTrilhas } from './preferencias';
@@ -152,6 +153,35 @@ function StuAcenando({ largura, esquerda }: { largura: number; esquerda: number 
   );
 }
 
+
+/**
+ * A parte de cima da entrada: a ilustração na altura que sobra (recortada de cima, com as colinas e o Stu embaixo), o
+ * título e a descrição. Com o teclado aberto ou o foco no formulário, recolhe (fica montada, sem altura e escondida do
+ * leitor de tela), para E-mail, Senha e "Entrar" ficarem juntos na tela.
+ */
+function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: number; nivel: number; recolher: boolean; respiro: number }) {
+  const stu = Math.max(28, Math.min(72, Math.round((ilustracao - 14) / 1.1)));
+  return (
+    <View testID="entrada-topo" style={recolher ? entradaEstilos.recolhido : respiro > 0 ? { marginTop: respiro } : null}
+      importantForAccessibility={recolher ? 'no-hide-descendants' : 'auto'}
+      accessibilityElementsHidden={recolher}>
+      {ilustracao > 0 && (
+        <View testID="entrada-ilustracao" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+          style={[entradaEstilos.banner, { height: ilustracao }]}>
+          <View style={{ marginTop: ilustracao - ILUSTRACAO_MAXIMA }}>
+            <Paisagem altura={ILUSTRACAO_MAXIMA} compacta estilo={entradaEstilos.paisagem}>
+              {(l) => <StuAcenando largura={stu} esquerda={l / 2 - stu / 2} />}
+            </Paisagem>
+          </View>
+        </View>
+      )}
+      <Titulo foco testID="titulo-entrada" estilo={nivel >= 2 ? entradaEstilos.tituloCompacto : undefined}>{mensagens.entrada.titulo}</Titulo>
+      {/* Nível 3 (só em tela muito baixa): a descrição é a última a ceder e sai; o título e "Ver como funciona" ficam. */}
+      {nivel < 3 && <Text testID="entrada-descricao" style={[estilos.introducao, nivel >= 2 && entradaEstilos.textoCompacto]}>{mensagens.entrada.texto}</Text>}
+    </View>
+  );
+}
+
 function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   google: () => Promise<void>;
   /** "Experimentar sem conta" (rodada 4.3): só aparece quando o servidor oferece o visitante. */
@@ -203,6 +233,37 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   const campoEmail = useRef<ComponentRef<typeof TextInput>>(null);
   const campoSenha = useRef<ComponentRef<typeof TextInput>>(null);
   const podeEntrar = !ocupado;
+
+  // Entrada sem rolar (regra do dono, spec 04): tudo cabe de uma vez. Cede, nesta ordem: a ilustração (da altura que
+  // sobra até 140; abaixo de 44, sai), os espaços (nível 1), o tamanho do título e da descrição (nível 2) e a descrição
+  // (nível 3).
+  const reduzirMovimento = useMovimentoReduzido();
+  const janela = useWindowDimensions();
+  const [medidas, setMedidas] = useState({ visivel: 0, conteudo: 0 });
+  // Nível, ilustração e respiro (entrada-medidas.ts): o respiro é o que sobra quando a ilustração sai (abaixo de 44 pt) ou
+  // já está no máximo (140), metade acima do título e metade acima do formulário, em vez de um vão só embaixo.
+  const [{ nivel, ilustracao, respiro }, setEstado] = useState<EstadoDaEntrada>(ESTADO_INICIAL_DA_ENTRADA);
+  const [tecladoAberto, setTecladoAberto] = useState(false);
+  const [focoNoFormulario, setFocoNoFormulario] = useState(false);
+  const recolher = tecladoAberto || focoNoFormulario;
+  const animarTroca = () => {
+    if (Platform.OS === 'ios' && reduzirMovimento === false) LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  };
+  useEffect(() => {
+    const abriu = Keyboard.addListener('keyboardDidShow', () => { animarTroca(); setTecladoAberto(true); });
+    const fechou = Keyboard.addListener('keyboardDidHide', () => { animarTroca(); setTecladoAberto(false); });
+    return () => { abriu.remove(); fechou.remove(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Tela mais alta (outro aparelho, janela que cresceu): recomeça do nível 0.
+  useEffect(() => { setEstado(ESTADO_INICIAL_DA_ENTRADA); }, [janela.height]);
+  useEffect(() => {
+    if (recolher || !medidas.visivel || !medidas.conteudo) return;
+    // Decide só com as medidas paradas (a primeira passada de layout ainda mexe): sem isso, uma medida de passagem subia o
+    // nível sem precisar, e o nível não volta sozinho.
+    const espera = setTimeout(() => setEstado((atual) => proximoEstadoDaEntrada(medidas.visivel, medidas.conteudo, atual)), ESPERA_DA_MEDIDA_MS);
+    return () => clearTimeout(espera);
+  }, [medidas, recolher, nivel, ilustracao, respiro]);
 
   async function abrirGoogle() {
     if (emEnvio.current) return;
@@ -267,24 +328,21 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   }
 
   return (
-    <Tela pagina="entrada" estiloRodapeConteudo={entradaEstilos.rodape} estiloConteudo={entradaEstilos.conteudo}
+    <Tela pagina="entrada" estiloRodapeConteudo={entradaEstilos.rodape} estiloConteudo={[entradaEstilos.conteudo, nivel >= 1 && entradaEstilos.conteudoCompacto]}
+      aoMedir={(visivel) => setMedidas((atual) => (atual.visivel === visivel ? atual : { ...atual, visivel }))}
+      aoMedirNatural={(conteudo) => setMedidas((atual) => (atual.conteudo === conteudo ? atual : { ...atual, conteudo }))}
       // Como na web: com o visitante oferecido, "Experimentar sem conta" é a ação principal e "Entrar" fica secundário.
       rodape={<Botao rotulo={ocupado && !experimentando ? mensagens.entrada.entrando : mensagens.entrada.entrar}
         variante={configuracaoCarregada && visitanteDisponivel ? 'secundario' : 'primario'}
         testID="entrar" desativado={!podeEntrar} ocupado={ocupado && !experimentando} carregando={ocupado && !experimentando} acao={() => void enviar()} />}>
-      <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <Paisagem altura={140} compacta estilo={entradaEstilos.banner}>
-          {(l) => <StuAcenando largura={72} esquerda={l / 2 - 36} />}
-        </Paisagem>
-      </View>
-      <Titulo foco testID="titulo-entrada">{mensagens.entrada.titulo}</Titulo>
-      <Text style={estilos.introducao}>{mensagens.entrada.texto}</Text>
+      <TopoDaEntrada ilustracao={ilustracao} nivel={nivel} recolher={recolher} respiro={respiro} />
       {/* Como na web 4.4: "Ver como funciona" abre a apresentação sem sessão, em quatro passos. */}
       <Pressable ref={linkComoFunciona} testID="ver-como-funciona" accessibilityRole="button" disabled={ocupado} hitSlop={8}
         onPress={() => setVendoApresentacao(true)} style={({ pressed }) => [entradaEstilos.link, pressed && { opacity: 0.7 }]}>
         <Text style={entradaEstilos.linkTexto}>{mensagens.acesso.verComoFunciona}</Text>
       </Pressable>
-      <Animated.View style={[entradaEstilos.formulario, { transform: [{ translateX: tremor }] }]}>
+      <Animated.View style={[entradaEstilos.formulario, nivel >= 1 && entradaEstilos.formularioCompacto, !recolher && respiro > 0 && { marginTop: (nivel >= 1 ? 16 : 28) + respiro },
+        { transform: [{ translateX: tremor }] }]}>
         {/* Rodada 4.3: a conta temporária, só quando /api/auth/config devolve visitante: true. */}
         {configuracaoCarregada && visitanteDisponivel && (
           <View testID="acesso-visitante" style={entradaEstilos.visitante}>
@@ -304,12 +362,14 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
           autoCapitalize="none" autoCorrect={false} keyboardType="email-address" returnKeyType="next"
           textContentType={Platform.OS === 'ios' ? 'username' : undefined}
           autoComplete={Platform.OS === 'android' ? 'email' : undefined}
+          onFocus={() => { animarTroca(); setFocoNoFormulario(true); }} onBlur={() => { animarTroca(); setFocoNoFormulario(false); }}
           editable={!ocupado} onSubmitEditing={() => campoSenha.current?.focus()} />
         <Campo testID="login-senha" rotulo={mensagens.entrada.senha} value={senha} campoRef={campoSenha} erro={erroSenha}
           onChangeText={(valor) => { setSenha(valor); setErro(undefined); setErroSenha(undefined); }} secureTextEntry={!mostrarSenha} returnKeyType="go"
           autoCapitalize="none" autoCorrect={false}
           textContentType={Platform.OS === 'ios' ? 'password' : undefined}
           autoComplete={Platform.OS === 'android' ? 'current-password' : undefined}
+          onFocus={() => { animarTroca(); setFocoNoFormulario(true); }} onBlur={() => { animarTroca(); setFocoNoFormulario(false); }}
           editable={!ocupado} onSubmitEditing={() => void enviar()}
           acessorio={<BotaoIcone icone={mostrarSenha ? 'olhoFechado' : 'olho'} testID="alternar-senha" selecionado={mostrarSenha}
             rotulo={mensagens.entrada.mostrarSenha} desativado={ocupado}
@@ -332,8 +392,17 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
 const entradaEstilos = StyleSheet.create({
   divisor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
-  banner: { marginBottom: 24, borderRadius: 24 },
+  // A ilustração recortada: a caixa tem a altura que sobra e mostra a parte de baixo da paisagem de 140.
+  banner: { overflow: 'hidden', borderRadius: 24, marginBottom: MARGEM_DA_ILUSTRACAO },
+  paisagem: { borderRadius: 0 },
+  recolhido: { height: 0, overflow: 'hidden', opacity: 0 },
   formulario: { gap: 20, marginTop: 28 },
+  // Nível 1 (não coube nem sem a ilustração): espaços menores.
+  conteudoCompacto: { paddingTop: 16 },
+  formularioCompacto: { gap: 12, marginTop: 16 },
+  // Nível 2: título de 26/32 (até duas linhas) e descrição de 15/22.
+  tituloCompacto: { fontSize: 26, lineHeight: 32, letterSpacing: -0.6 },
+  textoCompacto: { fontSize: 15, lineHeight: 22 },
   // .entrada-conteudo deixa 96 embaixo e o rodapé fixo cobre 76: sobram 20 entre o último item e o rodapé.
   conteudo: { paddingBottom: 20 },
   visitante: { gap: 8, padding: 14, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: '#F8FAFF' },
