@@ -59,7 +59,7 @@ function estradaSobre(chao: string) {
 const corEstradaFeita = '#FFE8A6';
 const ouroFace = '#FFCF4D';
 const ouroLabio = '#E0A12A';
-const corPontilhado = 'rgba(27, 42, 94, 0.34)';
+const corPontilhado = 'rgba(11, 27, 92, 0.34)';
 
 /** Mesmas medidas da web: celular, tablet e telas a partir de 1024 px. */
 function useMedidas(): Medidas {
@@ -930,8 +930,8 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
       <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), forma, degrade(BRILHO_DA_LENTE), {
         top: afundar, backgroundColor: visual.face, transform: [{ scale: escala }],
         boxShadow: pressionado
-          ? `inset 0 -5px 0 rgba(0, 0, 0, 0.06), 0 2px 0 ${visual.labio}, 0 6px 10px rgba(27, 42, 94, 0.12)`
-          : `inset 0 -5px 0 rgba(0, 0, 0, 0.06), 0 8px 0 ${visual.labio}, 0 16px 22px rgba(27, 42, 94, 0.16)`,
+          ? `inset 0 -5px 0 rgba(0, 0, 0, 0.06), 0 2px 0 ${visual.labio}, 0 6px 10px rgba(11, 27, 92, 0.12)`
+          : `inset 0 -5px 0 rgba(0, 0, 0, 0.06), 0 8px 0 ${visual.labio}, 0 16px 22px rgba(11, 27, 92, 0.16)`,
       }]}>
         <View><Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} traco={3} /></View>
         {liberada && (
@@ -1316,7 +1316,7 @@ const caminhoEstilos = StyleSheet.create({
   inicioConteudo: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, flexShrink: 1 },
   // .caminho-inicio__fala: o degrau de 3 é sombra por fora (box-shadow 0 3px 0 rgb(27 42 94 / 0.08)), não borda.
   fala: { flexShrink: 1, maxWidth: 272, marginBottom: 30, paddingHorizontal: 16, paddingVertical: 12, borderRadius: 18,
-    backgroundColor: cores.fundo, boxShadow: '0 3px 0 rgba(27, 42, 94, 0.08)' },
+    backgroundColor: cores.fundo, boxShadow: '0 3px 0 rgba(11, 27, 92, 0.08)' },
   falaTexto: { flexShrink: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
   falaPontinhos: { height: 14, justifyContent: 'center', paddingLeft: 6 },
   dica: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18 },
@@ -1328,14 +1328,14 @@ const caminhoEstilos = StyleSheet.create({
   poste: { position: 'absolute', bottom: -25, width: 8, height: 18, borderBottomLeftRadius: 3, borderBottomRightRadius: 3, backgroundColor: '#A87650' },
   placaTexto: { color: '#5B3A17', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20, textAlign: 'center' },
   // .caminho-guia::after: elipse (border-radius 50%), não barra arredondada.
-  guiaSombra: { position: 'absolute', left: '18%', right: '18%', bottom: -2, height: 8, borderRadius: '50%', backgroundColor: 'rgba(27, 42, 94, 0.14)' },
+  guiaSombra: { position: 'absolute', left: '18%', right: '18%', bottom: -2, height: 8, borderRadius: '50%', backgroundColor: 'rgba(11, 27, 92, 0.14)' },
   falaSeta: { position: 'absolute', right: -6, bottom: 18, width: 16, height: 16, borderRadius: 3, backgroundColor: cores.fundo,
     transform: [{ rotate: '45deg' }] },
   // Nó e rótulo
   noLugar: { position: 'absolute', top: 0 },
   rotulo: { position: 'absolute', top: 0, justifyContent: 'center', zIndex: 2 },
   placa: { maxWidth: '100%', gap: 2, paddingHorizontal: 13, paddingVertical: 9, borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.94)', boxShadow: '0 3px 0 rgba(27, 42, 94, 0.08)' },
+    backgroundColor: 'rgba(255, 255, 255, 0.94)', boxShadow: '0 3px 0 rgba(11, 27, 92, 0.08)' },
   // .caminho-no[data-estado='atual'] .caminho-no__texto: borda de 2 e degrau de 4 por fora em azul claro.
   placaAtual: { borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)', boxShadow: '0 4px 0 rgba(68, 102, 228, 0.16)' },
   posicao: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
@@ -1348,7 +1348,7 @@ const caminhoEstilos = StyleSheet.create({
   // .caminho-no[data-discreto] .caminho-no__texto: degrau chapado de 2 por fora (box-shadow 0 2px 0 rgb(27 42 94 / 0.06));
   // a elevation do Android desenhava uma sombra borrada.
   discretoCaixa: { maxWidth: 224, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10, backgroundColor: cores.fundo,
-    boxShadow: '0 2px 0 rgba(27, 42, 94, 0.06)' },
+    boxShadow: '0 2px 0 rgba(11, 27, 92, 0.06)' },
   discretoCaixaAtual: { borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)' },
   seloCadeado: { position: 'absolute', right: -4, bottom: -4, width: 28, height: 28, borderRadius: 14, borderWidth: 3, borderColor: cores.fundo,
     alignItems: 'center', justifyContent: 'center', backgroundColor: '#98A1BD' },
@@ -1383,7 +1383,7 @@ const caminhoEstilos = StyleSheet.create({
     borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: `0 4px 0 ${cores.gelo}` },
   etiquetaSeta: { position: 'absolute', bottom: -8, left: '50%', marginLeft: -6, width: 12, height: 12, borderRadius: 2,
     borderRightWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
-  // .caminho-no__etiqueta-acao: sem borda, com o degrau de 2 por fora (box-shadow 0 2px 0 #2a44a8).
+  // .caminho-no__etiqueta-acao: sem borda, com o degrau de 2 por fora (box-shadow 0 2px 0 #1d4ed8).
   etiquetaAcao: { paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999, backgroundColor: cores.acao, boxShadow: `0 2px 0 ${cores.acaoEscura}` },
   etiquetaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.9 },
   etiquetaTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 19, textAlign: 'center' },
@@ -1395,7 +1395,7 @@ const caminhoEstilos = StyleSheet.create({
   // Divisor de parte: uma pílula pequena sobre a borda entre as regiões, como na web (antes era um card largo).
   // .caminho-parte: borda de 2 em volta e o degrau de 3 por fora (box-shadow 0 3px 0 rgb(27 42 94 / 0.1)).
   parte: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4, paddingLeft: 4, paddingRight: 14,
-    borderRadius: 999, borderWidth: 2, borderColor: cores.fundo, backgroundColor: cores.fundo, boxShadow: '0 3px 0 rgba(27, 42, 94, 0.1)' },
+    borderRadius: 999, borderWidth: 2, borderColor: cores.fundo, backgroundColor: cores.fundo, boxShadow: '0 3px 0 rgba(11, 27, 92, 0.1)' },
   parteSelo: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.acao },
   parteSeloVencida: { backgroundColor: ouroFace },
   parteCorpo: {},
@@ -1404,7 +1404,7 @@ const caminhoEstilos = StyleSheet.create({
   parteAndamento: { color: '#4A5568', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
   // A1: o troféu fica 16 px mais longe do último nó, como na web (193 px de lente a lente em 390).
   chegada: { minHeight: 296, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 8, paddingBottom: 30, overflow: 'hidden' },
-  pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(27, 42, 94, 0.34)' },
+  pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(11, 27, 92, 0.34)' },
   chegadaEstrada: { position: 'absolute', left: '50%', marginLeft: -12, width: 24,
     borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
   chegadaColina: { position: 'absolute', bottom: -48, left: '50%' },
@@ -1414,7 +1414,7 @@ const caminhoEstilos = StyleSheet.create({
   chegadaPlaca: { marginTop: -7, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.9)' },
   chegadaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 20 },
   // Folha
-  fundoFolha: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(27, 42, 94, 0.32)' },
+  fundoFolha: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(11, 27, 92, 0.32)' },
   folha: { width: '100%', maxWidth: 620, alignSelf: 'center', gap: 12, paddingTop: 10, paddingLeft: 20, paddingRight: 12,
     borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: cores.fundo },
   folhaConcluida: { borderTopWidth: 6, borderColor: '#FFE08A' },

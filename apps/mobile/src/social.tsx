@@ -1066,7 +1066,7 @@ export const socialEstilos = StyleSheet.create({
   cabeca: { overflow: 'hidden', borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
   cabecaFaixa: { height: 104, overflow: 'hidden' },
   cabecaCorpo: { gap: 8, paddingHorizontal: 18, paddingBottom: 18 },
-  cabecaAvatar: { marginTop: -48, borderWidth: 4, borderColor: '#FFFFFF', shadowColor: '#1B2A5E', shadowOpacity: 0.18, shadowRadius: 20,
+  cabecaAvatar: { marginTop: -48, borderWidth: 4, borderColor: '#FFFFFF', shadowColor: cores.texto, shadowOpacity: 0.18, shadowRadius: 20,
     shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   cabecaNome: { marginTop: 4, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 26, lineHeight: 31.2, letterSpacing: -0.91 },
   cabecaResumo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 25.5 },

@@ -664,11 +664,11 @@ const perfilEstilos = StyleSheet.create({
   // .foto-linha: o avatar de 96 e, ao lado, o link e a dica.
   fotoLinha: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   circulo: { borderRadius: 999 },
-  fotoAvatar: { borderWidth: 4, borderColor: '#FFFFFF', shadowColor: '#1B2A5E', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
+  fotoAvatar: { borderWidth: 4, borderColor: '#FFFFFF', shadowColor: cores.texto, shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
   // .avatar .selo: 40 × 40 na cor da ação, borda branca de 3, ícone de 20, 6 para fora no canto de baixo à direita.
   selo: { position: 'absolute', right: -6, bottom: -6, width: 40, height: 40, alignItems: 'center', justifyContent: 'center', borderRadius: 999,
     borderWidth: 3, borderColor: '#FFFFFF', backgroundColor: cores.acao,
-    shadowColor: '#1B2A5E', shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
+    shadowColor: cores.texto, shadowOpacity: 0.25, shadowRadius: 10, shadowOffset: { width: 0, height: 4 }, elevation: 5 },
   fotoTexto: { flex: 1, gap: 2, minWidth: 0 },
   fotoLink: { alignSelf: 'flex-start' },
   fotoLinkTexto: { color: cores.acao, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
