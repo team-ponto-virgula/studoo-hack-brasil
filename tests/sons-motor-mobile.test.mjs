@@ -37,16 +37,21 @@ function ambiente({ salvo = {}, plataforma = 'ios', registro = false } = {}) {
       this.isLoaded = false;
       this.playing = false;
       this.volume = 1;
+      this.base = 0;
+      this.desde = 0;
+      this.duration = fonte.endsWith('.mp3') ? 89.328 : 0.3;
       this.ouvintes = new Set();
       jogadores.push(this);
       chamadas.push(['criar', fonte]);
     }
+    /** A posição anda com o relógio enquanto toca, como no aparelho. */
+    get currentTime() { return this.playing ? this.base + (relogio - this.desde) / 1000 : this.base; }
     addListener(_evento, ouvinte) { this.ouvintes.add(ouvinte); return { remove: () => this.ouvintes.delete(ouvinte) }; }
     avisar(status) { for (const ouvinte of this.ouvintes) ouvinte({ isLoaded: this.isLoaded, playing: this.playing, didJustFinish: false, ...status }); }
     carregar() { this.isLoaded = true; this.avisar({}); }
-    play() { chamadas.push(['play', this.fonte, relogio]); this.playing = true; this.avisar({ playing: true }); }
-    pause() { chamadas.push(['pause', this.fonte]); this.playing = false; }
-    seekTo(segundos) { chamadas.push(['seek', this.fonte, segundos]); return Promise.resolve(); }
+    play() { chamadas.push(['play', this.fonte, relogio]); this.desde = relogio; this.playing = true; this.avisar({ playing: true }); }
+    pause() { chamadas.push(['pause', this.fonte, relogio]); this.base = this.currentTime; this.playing = false; }
+    seekTo(segundos) { chamadas.push(['seek', this.fonte, segundos]); this.base = segundos; this.desde = relogio; return Promise.resolve(); }
     terminar() { this.playing = false; this.avisar({ didJustFinish: true, playing: false }); }
     remove() { chamadas.push(['remove', this.fonte]); }
   }
@@ -118,7 +123,7 @@ function ambiente({ salvo = {}, plataforma = 'ios', registro = false } = {}) {
     for (const j of jogadores) if (!j.isLoaded) j.carregar();
   };
   return { tocaSons, ATRASO_MAXIMO_EFEITO_MS, avancar, microtarefas, lerArmazenamento, jogador, jogadores, chamadas, contar, abrir, registros,
-    agora: () => relogio };
+    armazenado, agora: () => relogio };
 }
 
 test('o toque toca na mesma volta: play() antes de qualquer espera, sem modo de áudio e sem reprodutor novo', async () => {
@@ -210,7 +215,7 @@ test('efeitos desligados não tocam; ligar de novo aquece e confirma com "salvo"
 });
 
 test('gravação e voz ao vivo: só os dois bipes, sem mexer no modo de áudio; ao sair, o modo normal volta uma vez', async () => {
-  const a = ambiente();
+  const a = ambiente({ salvo: { 'studoo.sons.fundo': 'mudo' } });
   await a.abrir();
   const modoAntes = a.contar('modo');
   a.tocaSons.entrarEmGravacaoOuVoz();
@@ -245,35 +250,108 @@ test('registro para a conferência nativa: comando antes do play e reprodução 
   assert.equal(b.registros.length, 0, 'sem a variável, nada no log');
 });
 
-test('fundo: B já fica no começo do trecho; no cruzamento, play() sem seek na hora, e quem sai volta ao começo', async () => {
-  const a = ambiente({ salvo: { 'studoo.sons.fundo': 'foco_calmo' } });
+test('virada do laço: B já fica no começo do trecho; no cruzamento (180 ms antes do fim, pela posição), play() sem seek', async () => {
+  const a = ambiente();
   await a.abrir();
   a.tocaSons.registrarGesto();
-  await a.microtarefas();
-  await a.microtarefas();
-  const fundos = a.jogadores.filter((j) => j.fonte === 'foco-calmo.mp3');
+  for (let i = 0; i < 4; i += 1) await a.microtarefas();
+  const fundos = a.jogadores.filter((j) => j.fonte === 'lofi-estudo.mp3');
   assert.equal(fundos.length, 2, 'dois reprodutores, um par só');
-  const def = catalogo.CATALOGO_FUNDOS.find((f) => f.id === 'foco_calmo');
+  const def = catalogo.CATALOGO_FUNDOS.find((f) => f.id === 'lofi_estudo');
+  assert.deepEqual([def.duracaoMs, def.volume, def.aparoInicioSeg, def.aparoFimSeg], [89328, 0.24, 0.026, 0], 'o catálogo de d5bf5aa');
   const [jA, jB] = fundos;
-  assert.equal(a.chamadas.filter(([t, f, s]) => t === 'seek' && f === 'foco-calmo.mp3' && s === def.aparoInicioSeg).length, 2,
+  assert.equal(a.chamadas.filter(([t, f, s]) => t === 'seek' && f === 'lofi-estudo.mp3' && s === def.aparoInicioSeg).length, 2,
     'A e B posicionados no começo do trecho ao nascer');
-  const seeksAntes = a.contar('seek', 'foco-calmo.mp3');
-  a.avancar(Math.max(5000, def.duracaoMs - Math.round((def.aparoInicioSeg + def.aparoFimSeg) * 1000) - 180));
+  const seeksAntes = a.contar('seek', 'lofi-estudo.mp3');
+  a.avancar(def.duracaoMs - Math.round((def.aparoInicioSeg + def.aparoFimSeg) * 1000) - 180);
   assert.ok(jB.playing, 'B entrou no cruzamento');
-  assert.equal(a.contar('seek', 'foco-calmo.mp3'), seeksAntes, 'sem seek no instante do play (no iPhone ele chegaria depois)');
+  assert.equal(a.contar('seek', 'lofi-estudo.mp3'), seeksAntes, 'sem seek no instante do play (no iPhone ele chegaria depois)');
   a.avancar(200);
   assert.equal(jA.playing, false, 'A saiu');
-  assert.equal(a.contar('seek', 'foco-calmo.mp3'), seeksAntes + 1, 'e já voltou ao começo para a próxima volta');
+  assert.equal(a.contar('seek', 'lofi-estudo.mp3'), seeksAntes + 1, 'e já voltou ao começo para a próxima volta');
+  // A segunda volta também cruza (agora de B para A), pela posição de B.
+  a.avancar(def.duracaoMs - 26 - 180);
+  assert.ok(jA.playing && !jB.playing, 'a volta seguinte cruzou de novo');
 });
 
-test('fundo: dois pedidos seguidos (trocar e parar enquanto o modo de áudio é aplicado) não deixam reprodutor sobrando', async () => {
-  const a = ambiente({ salvo: { 'studoo.sons.fundo': 'foco_calmo' } });
+test('fundo: dois pedidos seguidos (ligar e desligar enquanto o modo de áudio é aplicado) não deixam reprodutor sobrando', async () => {
+  const a = ambiente({ salvo: { 'studoo.sons.fundo': 'mudo' } });
   await a.abrir();
   a.tocaSons.registrarGesto();
-  void a.tocaSons.definirFundo('chuva_suave');
-  void a.tocaSons.definirFundo('mudo');
+  void a.tocaSons.definirMusicaLigada(true);
+  void a.tocaSons.definirMusicaLigada(false);
   for (let i = 0; i < 6; i += 1) await a.microtarefas();
   a.avancar(1000);
   const vivos = a.jogadores.filter((j) => j.fonte.endsWith('.mp3') && !a.chamadas.some(([t, f]) => t === 'remove' && f === j.fonte));
   assert.equal(vivos.length, 0, 'mudo no fim: nenhum fundo vivo');
+});
+
+test('uma música só: instalação nova liga o Lo-fi, "mudo" escolhido continua e os climas antigos viram o Lo-fi', async () => {
+  const nova = ambiente();
+  await nova.abrir();
+  assert.equal(nova.tocaSons.obterPreferencias().fundo, 'lofi_estudo', 'ligada por padrão');
+  const mudo = ambiente({ salvo: { 'studoo.sons.fundo': 'mudo' } });
+  await mudo.abrir();
+  assert.equal(mudo.tocaSons.obterPreferencias().fundo, 'mudo', 'o silêncio escolhido fica');
+  const antigo = ambiente({ salvo: { 'studoo.sons.fundo': 'chuva_suave' } });
+  await antigo.abrir();
+  assert.equal(antigo.tocaSons.obterPreferencias().fundo, 'lofi_estudo');
+  await antigo.tocaSons.definirFundo('biblioteca');
+  assert.equal(antigo.tocaSons.obterPreferencias().fundo, 'lofi_estudo', 'nenhum outro clima entra');
+  await antigo.tocaSons.definirMusicaLigada(false);
+  assert.equal(antigo.armazenado.get('studoo.sons.fundo'), 'mudo');
+});
+
+test('a música começa no primeiro gesto, segue por cima dos efeitos (mesmo volume, sem pausa nem recomeço)', async () => {
+  const a = ambiente();
+  await a.abrir();
+  assert.equal(a.jogadores.filter((j) => j.fonte === 'lofi-estudo.mp3').length, 0, 'nada antes do primeiro gesto');
+  a.tocaSons.registrarGesto();
+  for (let i = 0; i < 4; i += 1) await a.microtarefas();
+  const [musicaA] = a.jogadores.filter((j) => j.fonte === 'lofi-estudo.mp3');
+  assert.ok(musicaA?.playing, 'tocando');
+  a.avancar(1000);
+  const volume = musicaA.volume;
+  const pausasAntes = a.contar('pause', 'lofi-estudo.mp3');
+  const playsAntes = a.contar('play', 'lofi-estudo.mp3');
+  for (const id of ['acerto', 'erro', 'toque_opcao', 'concluir_licao']) { a.tocaSons.tocarEfeito(id); a.avancar(150); }
+  assert.equal(musicaA.volume, volume, 'os efeitos não baixam a música');
+  assert.equal(a.contar('pause', 'lofi-estudo.mp3'), pausasAntes, 'nem pausam');
+  assert.equal(a.contar('play', 'lofi-estudo.mp3'), playsAntes, 'nem recomeçam');
+  assert.equal(a.tocaSons.obterEstado().estadoFundo, 'tocando');
+});
+
+test('gravação e segundo plano pausam onde estava; a música volta do mesmo ponto, sem voltar ao começo', async () => {
+  const a = ambiente();
+  await a.abrir();
+  a.tocaSons.registrarGesto();
+  for (let i = 0; i < 4; i += 1) await a.microtarefas();
+  const [musicaA] = a.jogadores.filter((j) => j.fonte === 'lofi-estudo.mp3');
+  a.avancar(30000);
+  const antes = musicaA.currentTime;
+  a.tocaSons.entrarEmGravacaoOuVoz();
+  await a.microtarefas();
+  assert.equal(musicaA.playing, false, 'pausada na gravação');
+  const seeks = a.contar('seek', 'lofi-estudo.mp3');
+  a.avancar(5000);
+  a.tocaSons.sairDeGravacaoOuVoz();
+  for (let i = 0; i < 4; i += 1) await a.microtarefas();
+  assert.equal(musicaA.playing, true, 'voltou');
+  assert.equal(a.contar('seek', 'lofi-estudo.mp3'), seeks, 'sem seek ao começo');
+  assert.ok(Math.abs(musicaA.currentTime - antes) < 0.05, `do mesmo ponto (${antes.toFixed(2)} s)`);
+  assert.equal(a.jogadores.filter((j) => j.fonte === 'lofi-estudo.mp3').length, 2, 'os mesmos dois reprodutores');
+});
+
+test('registro do fundo para a conferência nativa: posição, volume e qual reprodutor, 0 e 200 ms depois de cada efeito', async () => {
+  const a = ambiente({ registro: true });
+  await a.abrir();
+  a.tocaSons.registrarGesto();
+  for (let i = 0; i < 4; i += 1) await a.microtarefas();
+  a.avancar(1000);
+  a.registros.length = 0;
+  a.tocaSons.tocarEfeito('acerto');
+  a.avancar(250);
+  const fundo = a.registros.filter((linha) => linha.startsWith('[som] fundo '));
+  assert.ok(fundo.length >= 2, 'duas linhas depois do efeito');
+  assert.match(fundo[0], /^\[som\] fundo lofi_estudo A tocando \d+\/89328 \d\.\d{3} \d+$/);
 });

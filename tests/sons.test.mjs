@@ -44,11 +44,14 @@ test('Mesmos IDs de SFX e fundos declarados no mobile (FONTES_SFX e FONTES_FUNDO
   for (const [id, def] of Object.entries(CATALOGO_EFEITOS)) {
     assert.match(mobSrc, new RegExp(`\\b${id}:\\s*require\\(['"]\\.\\./assets/sons/sfx/${def.arquivo}['"]\\)`), `Falta ${id} em FONTES_SFX`);
   }
-  for (const def of CATALOGO_FUNDOS) {
-    assert.match(mobSrc, new RegExp(`\\b${def.id}:\\s*require\\(['"]\\.\\./assets/sons/fundos/${def.arquivo}['"]\\)`), `Falta ${def.id} em FONTES_FUNDOS`);
-
-  }
   assert.match(webSrc, /faixa\.id === 'lofi_estudo'/);
+  // O app leva só a música que toca (uma música só, 19/11): o Lo-fi de Estudo. Os outros climas viram o Lo-fi
+  // (fundoUnicoDaPreferencia) e não entram no pacote do app.
+  const lofi = CATALOGO_FUNDOS.find((def) => def.id === 'lofi_estudo');
+  assert.match(mobSrc, new RegExp(`\\blofi_estudo:\\s*require\\(['"]\\.\\./assets/sons/fundos/${lofi.arquivo}['"]\\)`), 'Falta lofi_estudo em FONTES_FUNDOS');
+  for (const def of CATALOGO_FUNDOS.filter((d) => d.id !== 'lofi_estudo')) {
+    assert.doesNotMatch(mobSrc, new RegExp(`assets/sons/fundos/${def.arquivo}`), `${def.id} não entra no pacote do app`);
+  }
 });
 
 test('Todos os WAVs são PCM 16-bit mono em 44.100 Hz com início em até 5 ms', () => {

@@ -11,7 +11,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { AvisoDoApp, Botao, Campo, DeslocamentoDaRolagem, EstadoErro, Pontinhos, SeloSincronia, Tela, Titulo, estilos, useAvisoDoAppRaiz, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
+import { AvisoDoApp, Botao, Campo, DeslocamentoDaRolagem, EstadoErro, Pontinhos, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -27,7 +27,6 @@ import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, 
 import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
-import { contarLicaoParaNovidadeDoSom } from './som';
 import { TelaPerfil } from './perfil';
 import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
@@ -167,7 +166,8 @@ export function Estudo({ cliente, sair, expirar }: {
   const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
   const registrarGuarda = useCallback((guarda: ((continuar: () => void) => boolean) | null) => { guardaSaida.current = guarda; }, []);
   // O aviso do próprio app (lote 4): o Valeu e a denúncia avisam numa faixa no pé da tela, nunca no sistema.
-  const avisoDoApp = useAvisoDoAppRaiz();
+  // O aviso do app mora na raiz (sessao.tsx), para valer também na entrada (o aviso da música da primeira vez).
+  const avisoDoApp = useContext(AvisoDoApp);
   /** O Explorar como a pessoa deixou ao abrir um perfil ou uma trilha dele (aba, tema, lista e rolagem). */
   const memoriaExplorar = useRef<MemoriaExplorar | null>(null);
   const guardarExplorar = useCallback((memoria: MemoriaExplorar) => { memoriaExplorar.current = memoria; }, []);
@@ -624,8 +624,6 @@ export function Estudo({ cliente, sair, expirar }: {
       // A última lição fecha a trilha: o som é o da trilha inteira (só na primeira vez que ela fecha), como na web.
       const fechada = (p: PlanoDetalhe['progresso']) => p.total > 0 && p.concluidas === p.total;
       void tocaSons.tocarEfeito(fechada(atualizado.progresso) && !fechada(plano.progresso) ? 'concluir_trilha' : 'concluir_licao');
-      // Como a web: na terceira lição concluída, o ponto de novidade do botão de som some (spec 12).
-      void contarLicaoParaNovidadeDoSom();
       atualizarPlano(atualizado);
       navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
       return true;

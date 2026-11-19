@@ -85,10 +85,10 @@ test('convivência: a fala e o acorde abaixam o fundo; a gravação e a voz ao v
   assert.ok(gravar.indexOf('entrarNoSomDaGravacao();') < gravar.indexOf('allowsRecording: true'), 'entra antes do modo do microfone');
 });
 
-test('o fundo só com a sessão ativa (para ao sair da conta), as preferências ao abrir e o primeiro toque libera o som', () => {
+test('a música desde a entrada (login e visitante), as preferências ao abrir e o primeiro toque libera o som', () => {
   const sessao = ler('src/sessao.tsx');
-  assert.match(sessao, /tocaSons\.definirAreaPermitida\(sessao\.tipo === 'ativa'\)/);
-  assert.match(sessao, /return \(\) => tocaSons\.definirAreaPermitida\(false\)/);
+  // Uma música só, em laço no app inteiro (pedido do dono, 19/11): nada a prende à sessão ativa nem a para ao sair da conta.
+  assert.doesNotMatch(sessao, /definirAreaPermitida/);
   assert.match(sessao, /tocaSons\.carregarPreferencias\(\)/);
   assert.match(ler('app/index.tsx'), /tocaSons\.registrarGesto\(\);\n\s*return false;/);
   assert.match(ler('app/index.tsx'), /onStartShouldSetResponderCapture=\{liberarSom\}/);

@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import ts from 'typescript';
-import { OPCOES_FUNDO_UI } from '../packages/contratos/src/catalogo-sons.ts';
 
 // Controle de som no app (spec 12), espelho de src/app/som.tsx: a folha "Som", o botão do alto da aula e o bloco do Perfil.
 // Sem React Native no Node: o texto e a árvore do TypeScript dos arquivos, como os outros testes do app.
@@ -37,41 +37,41 @@ test('os textos vêm do contrato (mensagens.som), nenhum escrito no JSX', () => 
   assert.match(som, /const t = mensagens\.som;/);
 });
 
-test('a folha tem Mudo e os cinco climas do contrato, num grupo de escolha única, com o nome de cada linha pelo estado', () => {
+test('a folha: duas chaves independentes, "Música de fundo" (o Lo-fi, em laço) e "Efeitos sonoros", e a linha de estado da música', () => {
   const folha = corpoDe(som, 'FolhaSom');
-  assert.match(folha, /\{OPCOES_FUNDO_UI\.map\(\(opcao\) => \{/);
-  assert.match(folha, /accessibilityRole="radiogroup" accessibilityLabel=\{t\.fundoTitulo\}/);
-  assert.match(folha, /accessibilityRole="radio" accessibilityLabel=\{rotulo\}\s+accessibilityState=\{\{ checked: marcada \}\}/);
-  assert.match(folha, /const rotulo = erro \? t\.linhaErro\(opcao\.rotulo\) : tocando \? t\.linhaTocando\(opcao\.rotulo\) : t\.linhaRotulo\(opcao\.rotulo, opcao\.descricao\);/);
-  for (const texto of ['t.tocando', 't.carregando', 't.erro', 't.titulo', 't.fundoTitulo', 't.fundoDica', 't.efeitosTitulo', 't.efeitosDica', 't.rodape', 't.fechar']) {
-    assert.ok(folha.includes(texto), `a folha usa ${texto}`);
-  }
-  // Um ícone para cada opção do contrato, na ordem dele: Mudo, Foco Calmo, Chuva Suave, Lo-fi de Estudo, Biblioteca, Brisa Natural.
-  const icones = som.match(/const ICONES_FUNDO[^;]+;/s)?.[0] ?? '';
-  for (const { id } of OPCOES_FUNDO_UI) assert.match(icones, new RegExp(`\\b${id}: '`), `ícone de ${id}`);
-  assert.deepEqual(OPCOES_FUNDO_UI.map(({ id }) => id), ['mudo', 'foco_calmo', 'chuva_suave', 'lofi_estudo', 'biblioteca', 'brisa_natural']);
-  // As medidas da spec 12: linha de 60, borda 2, raio 16, 6 entre as linhas; quadro de 40 com raio 12; marca de 24 com miolo de 12.
-  assert.match(som, /lista: \{ gap: 6 \}/);
-  assert.match(som, /opcao: \{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 60, paddingVertical: 8, paddingHorizontal: 12, borderWidth: 2,/);
-  assert.match(som, /opcaoMarcada: \{ borderColor: cores\.acao, backgroundColor: cores\.ceu \}/);
-  assert.match(som, /opcaoIcone: \{ width: 40, height: 40, [^}]*borderRadius: 12, backgroundColor: cores\.nevoa \}/);
-  assert.match(som, /marcaMiolo: \{ width: 12, height: 12, borderRadius: 6, backgroundColor: cores\.acao \}/);
-  // A descrição numa linha só; o erro em até duas.
-  assert.match(folha, /<Text numberOfLines=\{1\} style=\{somEstilos\.opcaoDescricao\}>/);
-  assert.match(folha, /<Text numberOfLines=\{2\} style=\{somEstilos\.opcaoErro\}>\{t\.erro\}<\/Text>/);
+  const chaves = corpoDe(som, 'ChavesDoSom');
+  assert.match(folha, /<ChavesDoSom estado=\{estado\} \/>/);
+  assert.doesNotMatch(som, /OPCOES_FUNDO_UI|radiogroup|accessibilityRole="radio"/, 'sem lista de climas nem escolha única');
+  assert.match(chaves, /<ChaveStudoo testID=\{`\$\{prefixo\}-musica`\} ligada=\{ligada\} rotulo=\{t\.musicaTitulo\} dica=\{t\.musicaEmLaco\}/);
+  assert.match(chaves, /aoMudar=\{\(valor\) => void tocaSons\.definirMusicaLigada\(valor\)\}/);
+  assert.match(chaves, /<ChaveStudoo testID=\{`\$\{prefixo\}-efeitos`\} ligada=\{estado\.efeitosAtivos\}/);
+  assert.match(chaves, /aoMudar=\{\(valor\) => void tocaSons\.definirEfeitosAtivos\(valor\)\}/);
+  // A linha de estado: tocando (barras), carregando (giro), antes do primeiro toque, gravando, erro; desligada, nada.
+  const estado = corpoDe(som, 'EstadoDaMusica');
+  for (const texto of ['t.musicaErro', 't.musicaComeca', 't.musicaPausada', 't.carregando', 't.tocando']) assert.ok(estado.includes(texto), `estado usa ${texto}`);
+  assert.match(estado, /if \(!ligada\) return null;/);
+  assert.match(som, /estadoErro: \{ marginTop: 2, color: '#C23B4E',/);
+  assert.match(folha, /\{t\.rodapeMusica\}/);
+  assert.match(folha, /<Stu nome="acessorio-fone" tamanho=\{40\} \/>/);
 });
 
-test('a escolha passa pelo toca-sons: prévia com a folha aberta, espera do leitor de tela e nova tentativa no erro', () => {
+test('a folha passa pelo toca-sons: a música a 60% com o leitor de tela e nova tentativa no erro ao reabrir', () => {
   const folha = corpoDe(som, 'FolhaSom');
-  assert.match(folha, /tocaSons\.definirFundoComAtraso\(id\)/);
-  assert.match(folha, /if \(id === estado\.fundo && estado\.estadoFundo === 'erro'\) \{ void tocaSons\.tentarNovamenteFundo\(\); return; \}/);
   assert.match(folha, /void tocaSons\.definirPreviewFolha\(\{ aberta: true \}\)/);
   assert.match(folha, /void tocaSons\.definirPreviewFolha\(\{ aberta: false \}\)/);
   assert.match(folha, /if \(tocaSons\.obterEstado\(\)\.estadoFundo === 'erro'\) void tocaSons\.tentarNovamenteFundo\(\);/);
-  // O leitor de tela ouve a escolha (antes do som) e o foco abre no título.
-  assert.match(folha, /AccessibilityInfo\.announceForAccessibility\(t\.anuncioMudo\)/);
-  assert.match(folha, /AccessibilityInfo\.announceForAccessibility\(t\.anuncioEscolhido\(nomeDoFundo\(estado\.fundo\)\)\)/);
   assert.match(folha, /AccessibilityInfo\.sendAccessibilityEvent\(titulo\.current, 'focus'\)/);
+});
+
+test('o aviso da primeira vez: "Música de fundo ligada." com "Desligar", uma vez por aparelho, na raiz (vale na entrada)', () => {
+  const aviso = corpoDe(som, 'useAvisoDaMusica');
+  assert.match(som, /const CHAVE_AVISO_MUSICA = 'studoo\.sons\.avisoMusica';/);
+  assert.match(aviso, /avisar\(t\.musicaAviso, \{ som: null, acao: \{ rotulo: t\.desligarMusica, aoTocar: \(\) => void tocaSons\.definirMusicaLigada\(false\) \} \}\);/);
+  assert.match(aviso, /if \(avisado !== false \|\| estado\.fundo === 'mudo' \|\| estado\.estadoFundo !== 'tocando'\) return;/);
+  const sessao = readFileSync(new URL('../apps/mobile/src/sessao.tsx', import.meta.url), 'utf8');
+  assert.match(sessao, /const avisoDoApp = useAvisoDoAppRaiz\(\);\n\s*useAvisoDaMusica\(avisoDoApp\.avisar\);/);
+  assert.match(sessao, /return <AvisoDoApp\.Provider value=\{avisoDoApp\}>\{tela\(\)\}<\/AvisoDoApp\.Provider>;/);
+  assert.match(estudo, /const avisoDoApp = useContext\(AvisoDoApp\);/, 'o Estudo usa o aviso da raiz');
 });
 
 test('nada de janela nem chave do sistema: a folha e a chave são do Studoo', () => {
@@ -91,28 +91,19 @@ test('nada de janela nem chave do sistema: a folha e a chave são do Studoo', ()
   assert.match(som, /alca: \{ alignSelf: 'center', width: 40, height: 4, marginTop: -8, marginBottom: 4, borderRadius: 2, backgroundColor: cores\.gelo \}/);
 });
 
-test('o botão da aula: 44 × 44, ícone pelo estado, nome pelo contrato com o motivo e a novidade, ponto de 10 a 6 do canto', () => {
+test('o botão da aula: 44 × 44, ícone pela música e pelos efeitos, nome pelo contrato com o motivo, sem ponto de novidade', () => {
   const botao = corpoDe(som, 'BotaoSom');
-  assert.match(botao, /accessibilityLabel=\{t\.botaoRotulo\(\{ clima, efeitos: estado\.efeitosAtivos, motivo, novidade \}\)\}/);
-  assert.match(botao, /const motivo = clima && \(estado\.motivoPausa === 'sem_gesto' \|\| estado\.motivoPausa === 'gravando'\) \? estado\.motivoPausa : null;/);
-  assert.match(botao, /const icone: NomeIcone = clima \? 'somDuasOndas' : estado\.efeitosAtivos \? 'somUmaOnda' : 'somCortado';/);
-  assert.match(botao, /<Icone nome=\{icone\} tamanho=\{24\} cor=\{clima \? cores\.acao : cores\.textoSecundario\} \/>/);
+  assert.match(botao, /accessibilityLabel=\{t\.botaoMusicaRotulo\(ligada, estado\.efeitosAtivos, motivo\)\}/);
+  assert.match(som, /const motivo = ligada && \(estado\.motivoPausa === 'sem_gesto' \|\| estado\.motivoPausa === 'gravando'\) \? estado\.motivoPausa : undefined;/);
+  assert.match(botao, /const icone: NomeIcone = ligada \? 'somDuasOndas' : estado\.efeitosAtivos \? 'somUmaOnda' : 'somCortado';/);
+  assert.match(botao, /<Icone nome=\{icone\} tamanho=\{24\} cor=\{ligada \? cores\.acao : cores\.textoSecundario\} \/>/);
   // No Android, a área de toque chega a 48 (P8).
   assert.match(botao, /hitSlop=\{Platform\.OS === 'android' \? 2 : undefined\}/);
   assert.match(som, /botao: \{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 \}/);
-  assert.match(som, /novidade: \{ position: 'absolute', top: 6, right: 6, width: 14, height: 14, borderWidth: 2, borderColor: '#FFFFFF', borderRadius: 7,\s+backgroundColor: cores\.ouro \}/);
+  assert.doesNotMatch(som, /novidade|CHAVE_VISTO|CHAVE_LICOES|contarLicaoParaNovidadeDoSom/, 'sem ponto de novidade (spec 12, música única)');
+  assert.doesNotMatch(estudo, /contarLicaoParaNovidadeDoSom/);
   // Ao fechar, o foco volta ao botão, depois que a folha saiu.
   assert.match(botao, /depoisDeSair\(\(\) => \{ if \(botao\.current\) AccessibilityInfo\.sendAccessibilityEvent\(botao\.current, 'focus'\); \}\)/);
-});
-
-test('a novidade usa as chaves da web e some ao abrir a folha ou na terceira lição concluída', () => {
-  assert.match(som, /const CHAVE_VISTO = 'studoo\.sons\.visto';/);
-  assert.match(som, /const CHAVE_LICOES = 'studoo\.sons\.licoes';/);
-  assert.match(som, /vistoNaMemoria = visto === '1' \|\| Number\(licoes \?\? 0\) >= 3;/);
-  assert.match(corpoDe(som, 'FolhaSom'), /marcarSomVisto\(\);/);
-  // A conclusão de cada lição conta, como em src/app/estudo.tsx.
-  const concluir = estudo.slice(estudo.indexOf('async function concluir('), estudo.indexOf('return false;', estudo.indexOf('async function concluir(')));
-  assert.match(concluir, /if \(resultado\.ok\) \{[\s\S]*void contarLicaoParaNovidadeDoSom\(\);/);
 });
 
 test('ligado nas telas: o botão no alto da aula, à direita do andamento, e a seção "Som" logo antes de "Conta"', () => {
@@ -123,10 +114,10 @@ test('ligado nas telas: o botão no alto da aula, à direita do andamento, e a s
   const conta = perfil.indexOf('<TituloSecao>{p.conta}</TituloSecao>');
   assert.ok(secaoSom > 0 && secaoSom < conta, 'a seção Som vem antes de Conta');
   assert.ok(perfil.indexOf('<SomNoPerfil />', secaoSom) < conta);
-  // O bloco do Perfil: duas linhas de 64, borda de 2 e raio 24; o nome da linha "Som de fundo" diz o valor.
+  // O bloco do Perfil: as mesmas duas chaves da folha (sem seta nem folha), borda de 2 e raio 24.
   assert.match(som, /perfil: \{ borderWidth: 2, borderColor: cores\.gelo, borderRadius: 24, overflow: 'hidden' \}/);
-  assert.match(corpoDe(som, 'SomNoPerfil'), /accessibilityLabel=\{t\.perfilFundoRotulo\(valor\)\}/);
-  assert.match(corpoDe(som, 'SomNoPerfil'), /dica=\{t\.efeitosDicaPerfil\}/);
+  assert.match(corpoDe(som, 'SomNoPerfil'), /<ChavesDoSom estado=\{estado\} noPerfil \/>/);
+  assert.match(corpoDe(som, 'ChavesDoSom'), /noPerfil \? t\.efeitosDicaPerfil : t\.efeitosDica/);
 });
 
 test('no iPhone, a folha ganha a linha do modo silencioso (P24 da spec 07)', () => {
