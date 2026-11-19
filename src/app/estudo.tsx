@@ -98,7 +98,6 @@ function voltarAoTopo() {
 
 export function Estudo() {
   const [inicio, setInicio] = useState<'carregando' | 'pronto' | 'falha'>('carregando');
-  // O som de fundo toca no app inteiro depois da entrada (spec 12); ao sair do app (ou da conta), para.
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
   const [tela, setTela] = useState<Tela>({ tipo: 'planos' });
@@ -486,7 +485,6 @@ export function Estudo() {
     aceiteAtual.current = tentativa;
     setAceite('salvando');
     anunciar(mensagens.geracao.anuncioCriando);
-    void tocaSons.tocarEfeito('toque_opcao');
     let plano: PlanoDetalhe;
     try {
       // O cliente pode sair, mas o pedido já enviado continua no servidor.

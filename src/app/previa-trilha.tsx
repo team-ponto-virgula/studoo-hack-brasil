@@ -11,24 +11,27 @@ import { tocaSons } from './sons';
 import './previa-trilha.css';
 
 export type EstadoAceite = 'livre' | 'salvando' | 'erro' | 'expirada';
-export type PassagemCriada = { geracao: TrilhaEmGeracao; estilo: CSSProperties; reduzida: boolean };
+export type PassagemCriada = { geracao: TrilhaEmGeracao; estilo: CSSProperties; reduzida: boolean; rolagem: number };
 const t = mensagens.geracao;
 const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** Guarda a posição antes que a aula troque a largura e a rolagem da página. */
-export function medirPassagem(geracao: TrilhaEmGeracao, painel: HTMLElement): PassagemCriada {
-  // Em uma resposta muito rápida, a volta de 240 ms ao primeiro nó pode estar em curso.
-  // Termina só a rolagem, para que o círculo nasça do nó já à vista no quadro da confirmação.
-  painel.querySelector('.previa-mapa')?.scrollTo({ top: 0, behavior: 'instant' });
+function origemDoCirculo(painel: HTMLElement, faltaRolar = 0) {
   const caixa = painel.getBoundingClientRect();
   const no = painel.querySelector('[data-primeiro] .previa-no__face')?.getBoundingClientRect();
   const x = no ? no.left + no.width / 2 : caixa.left + caixa.width / 2;
-  const y = no ? no.top + no.height / 2 : caixa.top + caixa.height / 2;
-  return { geracao, reduzida: movimentoReduzido(), estilo: {
-    left: caixa.left, top: caixa.top, width: caixa.width, height: caixa.height,
-    '--origem-x': `${x}px`, '--origem-y': `${y}px`,
-    '--raio': `${Math.ceil(Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)))}px`,
-  } as CSSProperties };
+  const y = no ? no.top + no.height / 2 + faltaRolar : caixa.top + caixa.height / 2;
+  return { '--origem-x': `${x}px`, '--origem-y': `${y}px`,
+    '--raio': `${Math.ceil(Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)))}px` };
+}
+
+export function medirPassagem(geracao: TrilhaEmGeracao, painel: HTMLElement): PassagemCriada {
+  const area = painel.querySelector<HTMLElement>('.previa-mapa');
+  const reduzida = movimentoReduzido();
+  if (area && (reduzida || area.scrollTop > innerHeight)) area.scrollTop = 0;
+  const rolagem = area?.scrollTop ?? 0;
+  const caixa = painel.getBoundingClientRect();
+  return { geracao, reduzida, rolagem, estilo: { left: caixa.left, top: caixa.top,
+    width: caixa.width, height: caixa.height, ...origemDoCirculo(painel, rolagem) } as CSSProperties };
 }
 
 function LigacaoRascunho({ de, ate }: { de: number; ate: number }) {
@@ -72,7 +75,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
   useEffect(() => {
-    tocaSons.prepararEfeitos('geracao_licao', 'geracao_pronta', 'toque_opcao');
+    tocaSons.prepararEfeitos('geracao_licao', 'geracao_pronta');
   }, []);
   useEffect(() => {
     setSemNovidade(false);
@@ -112,13 +115,15 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     const area = mapa.current;
     if (!area) return;
     if (aceite === 'erro' || aceite === 'expirada') { area.scrollTop = 0; return; }
-    if (aceite !== 'salvando' || passagem) return;
-    const de = area.scrollTop;
+    if (aceite !== 'salvando' && !passagem) return;
+    const de = passagem?.rolagem ?? area.scrollTop;
+    const duracao = passagem ? 120 : 240;
     if (movimentoReduzido() || !de) { area.scrollTop = 0; return; }
+    area.scrollTop = de;
     const inicio = performance.now();
     let quadro: number;
     function rolar(agora: number) {
-      const fracao = Math.min(1, (agora - inicio) / 240);
+      const fracao = Math.min(1, (agora - inicio) / duracao);
       area!.scrollTop = de * (1 - fracao) ** 3;
       if (fracao < 1) quadro = requestAnimationFrame(rolar);
     }
@@ -222,6 +227,10 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
       {demorou && salvando && !passagem && <p className="previa-espera" role="status">{t.escrevendoLicoes}</p>}
       {(aceite === 'erro' || aceite === 'expirada') && <p className="previa-erro" role="alert">{aceite === 'expirada' ? t.propostaExpirada : t.erroCriacao}</p>}
     </footer>
-    {passagem && !passagem.reduzida && <div className="previa-circulo" aria-hidden="true" />}
+    {passagem && !passagem.reduzida && <div className="previa-circulo" aria-hidden="true" onAnimationStart={() => {
+      if (!painel.current || !mapa.current) return;
+      mapa.current.scrollTop = 0;
+      for (const [nome, valor] of Object.entries(origemDoCirculo(painel.current))) painel.current.style.setProperty(nome, valor);
+    }} />}
   </section>;
 }
