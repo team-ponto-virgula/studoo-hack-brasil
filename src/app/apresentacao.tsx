@@ -111,13 +111,40 @@ export function Apresentacao({
 
   let rotuloFinal: string = mensagens.apresentacao.continuar;
   if (ultimo) rotuloFinal = rotuloFinalUltimo ?? (primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi);
-  // Último passo do tour da entrada: "Voltar" sobe para o alto (no lugar de "Pular") e as ações são as de entrar.
+  // Último passo do tour da entrada: as ações são as de entrar. "Voltar" sobe para o alto (no lugar de "Pular") em todo
+  // último passo, com sessão ou sem ela (spec 04, decidido em 20/11), e embaixo ficam só as ações do passo.
   const finalDaEntrada = ultimo && semSessao && aoEntrar !== undefined;
+  const voltarNoAlto = ultimo && passo > 0;
+  const duasAcoes = finalDaEntrada && Boolean(rotuloFinalUltimo);
+
+  // A arte ocupa 52% da altura útil (entre o alto e o rodapé), de 280 a 420, como no app (277466c). No último passo com
+  // as duas ações, numa janela baixa, ela cede até 200 px (nunca abaixo de 80) para o título e o texto caberem sem rolar.
+  // No computador fica a altura do CSS.
+  const secao = useRef<HTMLElement>(null);
+  const [alturaArte, setAlturaArte] = useState<number | null>(null);
+  useEffect(() => {
+    const medir = () => {
+      const raiz = secao.current;
+      if (!raiz || window.innerWidth >= 768) { setAlturaArte(null); return; }
+      const topo = raiz.querySelector('.apresentacao-topo')?.getBoundingClientRect().bottom ?? 0;
+      const rodape = raiz.querySelector('.apresentacao-rodape')?.getBoundingClientRect().height ?? 0;
+      const util = window.innerHeight - topo - rodape;
+      let arte = Math.round(Math.min(420, Math.max(280, util * 0.52)));
+      if (duasAcoes) {
+        const textos = raiz.querySelector<HTMLElement>('.apresentacao-textos')?.scrollHeight ?? 0;
+        arte = Math.max(Math.max(80, arte - 200), Math.min(arte, Math.floor(util - 64 - textos)));
+      }
+      setAlturaArte(arte);
+    };
+    medir();
+    window.addEventListener('resize', medir);
+    return () => window.removeEventListener('resize', medir);
+  }, [passo, duasAcoes]);
 
   return (
-    <section className="painel painel--apresentacao" aria-labelledby="apresentacao-titulo" onKeyDown={teclas}>
-      <header className="apresentacao-topo" data-voltar={finalDaEntrada || undefined}>
-        {finalDaEntrada && (
+    <section ref={secao} className="painel painel--apresentacao" aria-labelledby="apresentacao-titulo" onKeyDown={teclas}>
+      <header className="apresentacao-topo" data-voltar={voltarNoAlto || undefined}>
+        {voltarNoAlto && (
           <Botao variante="texto" className="apresentacao-voltar-alto" onClick={() => irPara(passo - 1)}><Icone nome="setaVoltar" />{mensagens.apresentacao.voltar}</Botao>
         )}
         <div className="apresentacao-andamento" aria-hidden="true">
@@ -131,7 +158,7 @@ export function Apresentacao({
         {!ultimo && <Botao variante="texto" onClick={() => concluir()}>{mensagens.apresentacao.pular}</Botao>}
       </header>
       {passo < 4 ? (
-        <div className="apresentacao-arte" key={passo} data-direcao={direcao} aria-hidden="true">
+        <div className="apresentacao-arte" key={passo} data-direcao={direcao} aria-hidden="true" style={alturaArte ? { height: alturaArte } : undefined}>
           {passo === 0 && <ArteMaterial />}
           {passo === 1 && <ArtePonte />}
           {passo === 2 && <ArteExplique />}
@@ -168,7 +195,7 @@ export function Apresentacao({
           </div>
         ) : (
           <div className="apresentacao-rodape__conteudo" data-empilhado={(ultimo && rotuloFinal.length > 14) || undefined}>
-            {passo > 0 && <Botao variante="secundario" onClick={() => irPara(passo - 1)}>{mensagens.apresentacao.voltar}</Botao>}
+            {passo > 0 && !voltarNoAlto && <Botao variante="secundario" onClick={() => irPara(passo - 1)}>{mensagens.apresentacao.voltar}</Botao>}
             <Botao onClick={avancar}>{rotuloFinal}{!ultimo && <Icone nome="seta" />}</Botao>
           </div>
         )}
@@ -183,7 +210,7 @@ function ArteMaterial() {
     <div className="apresentacao-quadro">
       <div className="aula-citacao">
         <div className="aula-citacao__topo">
-          <span className="aula-citacao__selo">[1] {mensagens.estudio.fonteMaterial}</span>
+          <span className="aula-citacao__selo">{mensagens.estudio.fonteMaterial}</span>
           <strong>{ex.fonteArquivo}</strong>
         </div>
         <blockquote>{ex.fonteTrecho}</blockquote>
@@ -243,7 +270,7 @@ function ArteExplique() {
           <p>{ex.ensinoProximo}</p>
         </div>
         {/* Só dois cartões, com textos de 14 px no mínimo, e o Stu concentrado (banca da noite, item 2). */}
-        <span className="apresentacao-stu-concentrado"><Stu expressao="stu-concentrado" tamanho={72} /></span>
+        <span className="apresentacao-stu-concentrado"><Stu expressao="stu-concentrado" tamanho={80} /></span>
       </div>
     </div>
   );
@@ -260,7 +287,7 @@ function ArteProgresso() {
       <span className="mini-trilha__no" data-estado="concluida" style={{ '--x': '68%', '--y': '50%' } as CSSProperties}><Icone nome="check" /></span>
       <span className="mini-trilha__no mini-trilha__no--trofeu" style={{ '--x': '38%', '--y': '20%' } as CSSProperties}><Icone nome="trofeu" /></span>
       {/* O Stu comemora ao lado do troféu (spec 13, §B4), em 40 px, de pé no chão da miniatura. */}
-      <span className="mini-trilha__stu" style={{ '--x': '55%', '--y': '20%' } as CSSProperties}>
+      <span className="mini-trilha__stu" style={{ '--x': '55%', '--y': '27%' } as CSSProperties}>
         <Stu expressao="stu-comemorando" tamanho={40} animado="uma-vez" sombra />
       </span>
       <span className="selo-sincronia apresentacao-sincronia" data-estado="salvo">

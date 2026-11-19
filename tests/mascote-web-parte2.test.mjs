@@ -40,7 +40,7 @@ test('passo 4 da apresentação: o Stu comemorando em 40 px ao lado do troféu d
   const arte = ler('src/app/apresentacao.tsx');
   const progresso = arte.slice(arte.indexOf('function ArteProgresso'), arte.indexOf('function MiniEstrada'));
   assert.match(progresso, /mini-trilha__no--trofeu[^\n]*--x': '38%', '--y': '20%'/);
-  assert.match(progresso, /<span className="mini-trilha__stu" style=\{\{ '--x': '55%', '--y': '20%' \}[^>]*>\s*<Stu expressao="stu-comemorando" tamanho=\{40\}/);
+  assert.match(progresso, /<span className="mini-trilha__stu" style=\{\{ '--x': '55%', '--y': '27%' \}[^>]*>\s*<Stu expressao="stu-comemorando" tamanho=\{40\}/);
   assert.match(ler('src/app/apresentacao.css'), /\.mini-trilha__stu \{ position: absolute;[^}]*width: 40px;[^}]*pointer-events: none;/);
 });
 

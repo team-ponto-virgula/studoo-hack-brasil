@@ -260,7 +260,7 @@ export const mensagens = {
             },
             {
                 titulo: 'Explique com suas palavras',
-                texto: 'Conte ao Stu o que entendeu e receba retorno em quatro cartões objetivos.',
+                texto: 'Conte ao Stu o que entendeu: ele mostra o que fez sentido e o próximo passo.',
             },
             {
                 titulo: 'Progresso salvo no mapa',

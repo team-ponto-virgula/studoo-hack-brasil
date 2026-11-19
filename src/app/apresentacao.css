@@ -334,3 +334,32 @@
 .apresentacao-rodape__conteudo--entrada > .botao { width: 100%; }
 @media (max-width: 767px) { .apresentacao-rodape__conteudo--entrada[data-empilhado] { flex-direction: column; } }
 .apresentacao-arte .ensino-caderno__visto, .apresentacao-arte .ponte-legenda__num { font-size: 14px; }
+
+/*
+ * Paridade com o app (277466c) no celular: Stu estudando de 110 (o teto do animado no celular, spec 13; 160 no
+ * computador), Stu concentrado de 80 ao lado dos cartões, o cartão da fonte sem "[1]" ("FONTE DO SEU MATERIAL" 14/18 900,
+ * o arquivo 16/22 800 e o trecho 15/22 itálico com borda azul de 4), a ponte com margens e números em 14 (as margens
+ * quebram em duas linhas, até 92 px) e a legenda 14/20, o caderno em 15 com o visto em 14, e 20 px entre a arte e o título.
+ */
+.apresentacao-arte .aula-citacao__selo { padding: 0; background: none; font-size: 14px; font-weight: 900; line-height: 18px; text-transform: uppercase; }
+.apresentacao-arte .aula-citacao__topo strong { font-size: 16px; font-weight: 800; line-height: 22px; }
+.apresentacao-arte .aula-citacao blockquote { border-left: 4px solid var(--acao); font-size: 15px; font-style: italic; line-height: 22px; }
+.apresentacao-arte .ponte-margem span { max-width: 92px; font-size: 14px; line-height: 18px; white-space: normal; }
+.apresentacao-arte .ponte-legenda li { font-size: 14px; line-height: 20px; }
+.apresentacao-arte .ensino-caderno__cartao h3, .apresentacao-arte .ensino-caderno__cartao p, .apresentacao-arte .ensino-caderno__cartao li { font-size: 15px; }
+.apresentacao-arte .ensino-caderno__visto { font-size: 14px; }
+.apresentacao-arte .selo-sincronia, .apresentacao-arte .mini-trilha__selo { font-size: 14px; }
+.apresentacao-stu-concentrado { width: 80px; }
+@media (max-width: 767px) {
+  .apresentacao-stu-estudando { width: 110px; }
+  .painel--apresentacao .apresentacao-textos { margin-top: 0; }
+  .painel--apresentacao { gap: 20px; }
+}
+@media (min-width: 768px) { .apresentacao-arte .ponte-tabua { font-size: 14px; } }
+/* Último passo com sessão (as áreas) numa janela baixa: cartões compactos, com o desenho ao lado do nome, para a pergunta
+   e "Entendi" caberem sem rolar (o "Voltar" fica no alto também com sessão, spec 04, decidido em 20/11). */
+@media (max-width: 767px) and (max-height: 760px) {
+  .apresentacao-areas { gap: 8px; padding: 12px; }
+  .apresentacao-area { display: flex; min-height: 52px; justify-content: flex-start; align-items: center; gap: 10px; padding: 6px 12px; text-align: start; }
+  .apresentacao-area .desenho { --tam: 28px; flex: none; }
+}
