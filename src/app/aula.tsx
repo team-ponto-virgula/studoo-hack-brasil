@@ -35,7 +35,7 @@ import {
   type TipoTrecho,
 } from '@studoo/contratos';
 import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
-import { Botao, Confete, Icone, Stu, type NomeIcone } from '../ui';
+import { Botao, Confete, Icone, Mascote, Stu, type NomeIcone } from '../ui';
 import { ApoioDaLicao } from './estudio';
 import { Ordenar } from './ordenar';
 import { BotaoSom } from './som';
@@ -261,6 +261,19 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [confirmandoRecomeco, setConfirmandoRecomeco] = useState(false);
   const tituloEtapa = useRef<HTMLHeadingElement>(null);
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
+  /** O texto do retorno: rola sozinho quando o painel passaria de metade da tela (degradê de 24 px no fim). */
+  const corpoRetorno = useRef<HTMLDivElement>(null);
+  const [corpoRola, setCorpoRola] = useState(false);
+  useEffect(() => {
+    const corpo = corpoRetorno.current;
+    if (!corpo) { setCorpoRola(false); return; }
+    const medir = () => setCorpoRola(corpo.scrollHeight > corpo.clientHeight + 1 && corpo.scrollTop + corpo.clientHeight < corpo.scrollHeight - 1);
+    medir();
+    const observador = new ResizeObserver(medir);
+    observador.observe(corpo);
+    corpo.addEventListener('scroll', medir, { passive: true });
+    return () => { observador.disconnect(); corpo.removeEventListener('scroll', medir); };
+  });
   const cartaoCitacaoRef = useRef<HTMLElement>(null);
   /** Onde a pessoa estava em cada etapa ao sair dela: a "Etapa anterior" volta para lá, sem rolar tudo de novo. */
   const posicoesDasEtapas = useRef<Record<number, number>>({});
@@ -666,6 +679,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   }
 
   const ponteAberta = Boolean(avaliacao && !avaliacao.correta && pedidoPonte > 0);
+  const compacto = Boolean((avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita) || (expliqueAberto && avaliacao));
+  // Acerto: feliz; de primeira: comemorando (com o pulo); depois da ponte: animado; erro: encorajador.
+  const expressaoDaReacao = !avaliacao?.correta ? 'stu-encorajador'
+    : pontesPorExercicio[indice] ? 'stu-animado' : primeiras[indice] === true ? 'stu-comemorando' : 'stu-feliz';
 
   return (
     <article className="painel painel--aula" data-retorno={retorno} data-ponte-aberta={ponteAberta || undefined}>
@@ -765,38 +782,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         )}
         {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
         {exercicio && (() => {
-          const ponteNeste = Boolean(pontesPorExercicio[indice]);
-          let stuEstado: 'neutro' | 'pensando' | 'atento' | 'comemorando_primeira' | 'comemorando_ponte' | 'comemorando_acerto' = 'neutro';
-          let stuFala: string = t.stuEstado.neutro;
-          if (avaliacao?.correta) {
-            if (ponteNeste) {
-              stuEstado = 'comemorando_ponte';
-              stuFala = t.stuEstado.ponte;
-            } else if (primeiras[indice] === true) {
-              stuEstado = 'comemorando_primeira';
-              stuFala = t.stuEstado.primeira;
-            } else {
-              stuEstado = 'comemorando_acerto';
-              stuFala = t.stuEstado.acerto;
-            }
-          } else if (avaliacao && !avaliacao.correta) {
-            stuEstado = 'atento';
-            stuFala = t.stuEstado.atento;
-          } else if (errosAnteriores[indice]) {
-            stuEstado = 'pensando';
-            stuFala = t.stuEstado.pensando;
-          }
           return (
             <>
-              {stuEstado !== 'neutro' && (
-                <div className="aula-stu-estado" data-estado={stuEstado}>
-                  <div className="aula-stu-estado__avatar" aria-hidden="true">
-                    <Stu />
-                    <span className="aula-stu-estado__adereco" />
-                  </div>
-                  <p className="aula-stu-estado__balao">{stuFala}</p>
-                </div>
-              )}
               <EtapaExercicio exercicio={exercicio} indice={indice} total={exercicios.length} resposta={resposta} inicial={iniciais[indice]} mudar={mudarResposta}
                 consulta={licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' ? licao.recurso : undefined}
                 explicacao={licao.conceito} exemplo={licao.exemplo}
@@ -819,8 +806,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
           aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
       )}
-      <footer className="aula-rodape" data-retorno={retorno}
-        data-compacto={(avaliacao && !avaliacao.correta && pedidoPonte > 0 && !ponteFeita) || (expliqueAberto && avaliacao) || undefined}>
+      <footer className="aula-rodape" data-retorno={retorno} data-compacto={compacto || undefined}>
         {temAbaixo && (
           <button type="button" className="aula-mais-abaixo" onClick={lerMais}><Icone nome="seta" />{t.maisAbaixo}</button>
         )}
@@ -831,13 +817,15 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 <Icone nome={avaliacao.correta ? 'check' : ponteFeita ? 'lampada' : 'fechar'} />
                 {avaliacao.correta && <Confete quantidade={14} />}
               </span>
-              <div>
+              <div className="aula-retorno__texto">
                 <h2 id="aula-retorno-titulo" ref={tituloRetorno} tabIndex={-1}>
                   {avaliacao.correta
                     ? avaliacao.criterios?.some(({ atendido }) => !atendido) ? t.quaseCompleta : tituloDoAcerto(`${licao.id}-${indice}`)
                     : ponteFeita ? t.ponteFeita : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
                   <span className="somente-leitor"> {avaliacao.correta ? t.correta : t.incorreta}.</span>
                 </h2>
+                {/* Só este bloco rola quando o painel passaria de metade da tela; o título e as ações ficam. */}
+                <div className="aula-retorno__corpo" ref={corpoRetorno} data-rola={corpoRola || undefined}>
                 {pedidoPonte === 0 && <p>{avaliacao.feedback}</p>}
                 {pedidoPonte === 0 && avaliacao.observacao && <p className="aula-retorno__observacao">{avaliacao.observacao}</p>}
                 {avaliacao.correta && indice === exercicios.length - 1 && !ensinou && (
@@ -855,7 +843,14 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 {!avaliacao.correta && !revisao && pedidoPonte === 0 && (
                   <p className="aula-rodape__nota">{soEsteFalta ? t.pularAvisoUltimo : t.pularAviso}</p>
                 )}
+                </div>
               </div>
+              {/* A reação do Stu mora no painel (spec 13, emenda de 19/11): enfeite, um ciclo no acontecimento; no painel
+                  compacto (Explique ou reforço abertos), sai: no máximo um Stu por tela. */}
+              {!compacto && (
+                <Mascote expressao={expressaoDaReacao} tamanho={48} animado="acontecimento" acontecimento={`${indice}-${tentativas}`}
+                  className="aula-retorno__stu" />
+              )}
             </section>
           )}
           {etapa.tipo === 'pratica' && !autoAvaliacao && <p className="aula-rodape__nota">{t.pratica.escolha}</p>}
