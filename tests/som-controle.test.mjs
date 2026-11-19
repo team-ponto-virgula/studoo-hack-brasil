@@ -53,9 +53,11 @@ test('o botão da aula anuncia o estado das duas chaves e abre a folha', () => {
   assert.equal(t.botaoMusicaRotulo(true, true, 'gravando'), 'Som: música pausada enquanto você grava');
 });
 
-test('um layout comum conserva a reprodução entre a entrada e a aula', () => {
+test('o layout conserva o áudio na entrada, na aula e nos links de trilha e perfil públicos', () => {
   const fonte = arq => readFileSync(join(raiz, 'src/app', arq), 'utf8');
   assert.match(fonte('layout.tsx'), /<AmbienteSom \/>/);
+  assert.doesNotMatch(fonte('ambiente-som.tsx'), /definirAreaDaMusica|definirAreaPermitida/);
+  assert.match(fonte('publico.tsx'), /<Link href="\/"/);
   assert.doesNotMatch(fonte('login/entrada.tsx'), /window\.location\.replace/);
   assert.doesNotMatch(fonte('estudo.tsx'), /useAreaDoSom|window\.location\.replace/);
   assert.match(fonte('aula.tsx'), /<BotaoSom \/>/);

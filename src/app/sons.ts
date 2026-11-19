@@ -47,6 +47,8 @@ class TocaSonsWeb {
 
   private fonteFundo: AudioBufferSourceNode | null = null;
   private ganhoFundo: GainNode | null = null;
+  private origemTemporalFundo = 0;
+  private retomarEm = 0;
   private fundoTocandoId: IdSomFundo | null = null;
   private timerParada: ReturnType<typeof setTimeout> | null = null;
   private sequenciaFundo = 0;
@@ -390,8 +392,14 @@ class TocaSonsWeb {
 
     if (estadoDesejado === 'parado' || id === 'mudo' || !this.desbloqueado) {
       this.sequenciaFundo++;
-      const pararMs = !this.desbloqueado || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano ? 0 : 400;
-      this.pararComRampa(pararMs);
+      const fonte = this.fonteFundo;
+      if (id === 'mudo') this.retomarEm = 0;
+      else if (fonte && this.ctx) {
+        const decorrido = this.ctx.currentTime - this.origemTemporalFundo - fonte.loopStart;
+        this.retomarEm = fonte.loopStart + Math.max(0, decorrido) % (fonte.loopEnd - fonte.loopStart);
+      }
+      const imediato = !this.desbloqueado || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano;
+      this.pararComRampa(imediato ? 0 : 400);
       this.estadoFundo = this.erroFundo && id !== 'mudo' ? 'erro' : 'parado';
       this.notificar();
       return;
@@ -451,7 +459,10 @@ class TocaSonsWeb {
     src.loopEnd = fim;
     src.connect(this.ganhoFundo);
     this.ganhoFundo.gain.setValueAtTime(0, ctx.currentTime);
-    src.start(0, inicio);
+    const posicao = this.retomarEm >= inicio && this.retomarEm < fim ? this.retomarEm : inicio;
+    this.origemTemporalFundo = ctx.currentTime - posicao;
+    this.retomarEm = 0;
+    src.start(0, posicao);
     this.fonteFundo = src;
     this.fundoTocandoId = id;
     this.rampaGanho(alvoGanho(), 600);
