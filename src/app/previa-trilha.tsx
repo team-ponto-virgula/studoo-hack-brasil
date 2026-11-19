@@ -86,7 +86,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   }
 
   return <section ref={painel} className="painel painel--geracao" data-fase={fase} data-passagem={passagem ? (passagem.reduzida ? 'reduzida' : 'circulo') : undefined}
-    style={passagem?.estilo} inert={!!passagem} aria-hidden={passagem ? true : undefined}>
+    style={passagem?.estilo} inert={!!passagem}>
     <header className="previa-cabecalho">
       <button type="button" className="previa-voltar" aria-label={mensagens.planos.titulo} onClick={sair}><Icone nome="seta" /></button>
       <h1 tabIndex={-1}>{geracao.titulo || geracao.objetivo}</h1>

@@ -493,6 +493,7 @@ export function Estudo() {
       aceiteAtual.current = null;
       const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
       if (codigo === 'nao_autenticado') { irParaLogin(true); return; }
+      setAnuncio('');
       setAceite(codigo === 'proposta_invalida' ? 'expirada' : 'erro');
       return;
     }
