@@ -122,7 +122,23 @@ preparar_fluxos_android() {
 depois_do_emulador() {
   local id
   id="$(dispositivo)"
-  [ -n "$id" ] || return 0
+  if [ -z "$id" ]; then
+    # O emulador sumiu no meio do passo. Na execução 44580235839, ele caiu 25 min depois de ligar, no fluxo 30, e os
+    # fluxos seguintes falharam em milissegundos ("device not found"), sem logcat nem tela. Fica o que a máquina mostra,
+    # para separar falta de memória (o núcleo registra o processo morto) de uma queda do próprio emulador.
+    {
+      echo "== $(date -u '+%H:%M:%S') UTC: nenhum aparelho pronto no adb"
+      adb devices -l 2>&1 || true
+      echo "== Memória"
+      free -m 2>&1 || true
+      echo "== Processos que mais usam memória"
+      ps aux --sort=-rss 2> /dev/null | head -15 || true
+      echo "== Fim do registro do núcleo"
+      sudo -n dmesg -T 2> /dev/null | tail -n 150 || echo "(sem acesso ao registro do núcleo)"
+    } > "$REGISTROS/emulador-sumiu.txt" 2>&1
+    aviso "O emulador sumiu no meio do passo: os fluxos que faltavam falharam sem rodar (infraestrutura, não o app). Memória, processos e o fim do registro do núcleo estão em emulador-sumiu.txt, nos registros."
+    return 0
+  fi
   adb -s "$id" logcat -d -v time 2> /dev/null | tail -n 5000 | cut -c1-600 > "$REGISTROS/logcat-fim.txt" || true
   capturar_tela_do_aparelho "$REGISTROS/tela-no-fim-do-emulador.png"
 }
