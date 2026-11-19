@@ -179,8 +179,10 @@ test('§10 texto auxiliar: 13 px no mínimo (14 nas dicas), sem opacidade em tex
       if (tamanho < 13) pequenos.push(`${nome}: ${linha.trim().slice(0, 60)}`);
     }
   }
-  // Só os rótulos da barra de abas (navegação, não texto auxiliar) ficam em 12 e 11.
-  assert.deepEqual(pequenos.map((p) => p.replace(/: \{.*$/, '')), ['interface.tsx: rotulo', 'interface.tsx: rotuloQuatro']);
+  // Só os rótulos da barra de abas (navegação, não texto auxiliar) ficam abaixo de 13: 12 e 11 na barra no fluxo e 12 na
+  // cápsula da spec 05 (19/11), que não tem mais o rótulo de quatro abas.
+  const restantes = pequenos.map((p) => p.replace(/: \{.*$/, ''));
+  assert.ok(restantes.length > 0 && restantes.every((nome) => ['interface.tsx: rotulo', 'interface.tsx: rotuloQuatro'].includes(nome)), restantes.join(', '));
   const [tema, voz, cenas, caminho, formatos] = await Promise.all(['tema.ts', 'voz-ao-vivo-painel.tsx', 'estudio-cenas.tsx', 'caminho.tsx', 'aula-formatos.tsx']
     .map((nome) => readFile(new URL(nome, pasta), 'utf8')));
   assert.match(tema, /textoSecundarioForte: '#4B5675',/);
