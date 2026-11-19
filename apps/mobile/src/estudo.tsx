@@ -23,7 +23,7 @@ import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NoCaminho, type NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
-import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, fimDaPassagem, intervaloDaFila, raioQueCobre, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
+import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, raioQueCobre, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
@@ -83,8 +83,11 @@ type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
  * espera só a resposta.
  */
 type FaseDaCriacao = 'criando' | 'erro' | 'expirada' | 'criada';
-/** A passagem para a aula: quando o aceite voltou, de onde o círculo cresce (o centro do nó 1, na janela) e se é a reduzida. */
-type Passagem = { inicio: number; origem: { x: number; y: number } | null; reduzida: boolean };
+/**
+ * A passagem para a aula: quando o aceite voltou, de onde o círculo cresce (o centro do nó 1, na janela), se é a reduzida e
+ * se a aula (ou o esqueleto dela) já está na tela, embaixo da camada.
+ */
+type Passagem = { inicio: number; origem: { x: number; y: number } | null; reduzida: boolean; aulaNaTela: boolean };
 const esperar = (ms: number) => new Promise<void>((resolver) => setTimeout(resolver, Math.max(0, ms)));
 
 /** Volta da lição ou da conclusão para a trilha, que rola até o nó liberado, o próximo ou a lição de origem, como na web. */
@@ -474,19 +477,29 @@ export function Estudo({ cliente, sair, expirar }: {
     const busca = cliente.obterLicao(primeira).then((dados) => { licao = dados; }, (falha: unknown) => { falhaLicao = falha ?? new ErroStudoo('falha'); });
     tocaSons.tocarEfeito('geracao_pronta');
     setCriacao('criada');
-    setPassagem({ inicio, origem: null, reduzida });
-    lenteDoNo1.current?.measureInWindow((x, y, largura, altura) => {
+    setPassagem({ inicio, origem: null, reduzida, aulaNaTela: false });
+    // De onde o círculo cresce: o centro do nó 1, medido agora e de novo logo antes do círculo (a prévia pode estar rolando
+    // até ele).
+    const medirNo1 = () => lenteDoNo1.current?.measureInWindow((x, y, largura, altura) => {
       if (largura > 0) setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, origem: { x: x + largura / 2, y: y + altura / 2 } } : atual));
     });
-    // Aos 320 ms (com movimento reduzido, na hora), a aula entra por cima; se a lição ainda não chegou, o esqueleto dela.
-    await esperar(inicio + (reduzida ? 0 : RITMO_DA_GERACAO.aulaEntraMs) - Date.now());
+    if (!reduzida) {
+      medirNo1();
+      setTimeout(medirNo1, RITMO_DA_GERACAO.circuloAtrasoMs - 20);
+    }
+    const aulaNaTela = () => setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, aulaNaTela: true } : atual));
+    // Aos 200 ms (com movimento reduzido, na hora), a aula monta embaixo do círculo; se a lição ainda não chegou, o esqueleto
+    // dela. A camada some por cima dela a partir dos 320 ms, só depois que ela está na tela.
+    await esperar(inicio + (reduzida ? 0 : RITMO_DA_GERACAO.aulaMontaMs) - Date.now());
     if (aceiteAtual.current !== vez) return;
     if (!licao && !falhaLicao) {
       setPendente('abrir');
+      aulaNaTela();
       await busca;
       if (aceiteAtual.current !== vez) return;
     }
     terminarCriacao();
+    aulaNaTela();
     const pronta = licao as LicaoDetalhe | null;
     if (pronta) {
       navegar({ tipo: 'licao', plano, licao: pronta });
@@ -517,12 +530,14 @@ export function Estudo({ cliente, sair, expirar }: {
     navegar({ tipo: 'planos' });
   }
 
-  // A passagem dura 470 ms (com movimento reduzido, 150): depois, a camada do círculo sai.
+  // A camada do círculo sai quando termina de sumir por cima da aula (PassagemDaCriacao avisa); se algo a deixar parada (a
+  // aula não montou), sai sozinha depois de 3 s, para nunca tapar a tela.
+  const inicioDaPassagem = passagem?.inicio;
   useEffect(() => {
-    if (!passagem) return;
-    const fim = setTimeout(() => setPassagem(null), passagem.inicio + fimDaPassagem(passagem.reduzida) - Date.now() + 40);
-    return () => clearTimeout(fim);
-  }, [passagem]);
+    if (inicioDaPassagem === undefined) return;
+    const limite = setTimeout(() => setPassagem(null), 3000);
+    return () => clearTimeout(limite);
+  }, [inicioDaPassagem]);
 
   /**
    * Confirmações (sair e apagar) no cartão da web (.modal-cartao), com "Cancelar" e a confirmação, no lugar da caixa do
@@ -657,7 +672,7 @@ export function Estudo({ cliente, sair, expirar }: {
         aoFechar={() => { setFolha(null); setVersaoFolha((versao) => versao + 1); }} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
     )}
     {/* A passagem da criação: o círculo da cor da aula cresce do nó 1 por cima de tudo e some quando a aula já entrou. */}
-    {passagem && <PassagemDaCriacao passagem={passagem} />}
+    {passagem && <PassagemDaCriacao passagem={passagem} aoTerminar={() => setPassagem(null)} />}
     {confirmacao && (
       <CartaoConfirmacao mensagem={confirmacao.mensagem} texto={confirmacao.texto} aviso={confirmacao.aviso} confirmarRotulo={confirmacao.confirmarRotulo}
         cancelarRotulo={confirmacao.cancelarRotulo} destrutivo={confirmacao.destrutivo}
@@ -1602,27 +1617,33 @@ function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes }: { pronta: boole
  * (a aula "entra por cima"). Com movimento reduzido, sem círculo: a camada cheia some em 150 ms. Não recebe toque: a aula
  * responde assim que monta.
  */
-function PassagemDaCriacao({ passagem }: { passagem: Passagem }) {
+function PassagemDaCriacao({ passagem, aoTerminar }: { passagem: Passagem; aoTerminar: () => void }) {
   const { width, height } = useWindowDimensions();
   const raiz = useRef<ComponentRef<typeof View>>(null);
   const [deslocamento, setDeslocamento] = useState<{ x: number; y: number } | null>(null);
   const [crescer] = useState(() => new Animated.Value(0));
   const [presenca] = useState(() => new Animated.Value(1));
-  const { inicio, reduzida, origem } = passagem;
+  const { inicio, reduzida, origem, aulaNaTela } = passagem;
+  const terminar = useRef(aoTerminar);
+  terminar.current = aoTerminar;
 
+  // O círculo cresce aos 120 ms, em 300 ms (com movimento reduzido, não há círculo: a camada já começa cheia).
   useEffect(() => {
-    const passou = Date.now() - inicio;
-    const animacao = reduzida
-      ? Animated.timing(presenca, { toValue: 0, duration: RITMO_DA_GERACAO.aulaOpacidadeMs, easing: Easing.linear, useNativeDriver: true })
-      : Animated.parallel([
-          Animated.timing(crescer, { toValue: 1, duration: RITMO_DA_GERACAO.circuloMs, delay: Math.max(0, RITMO_DA_GERACAO.circuloAtrasoMs - passou),
-            easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-          Animated.timing(presenca, { toValue: 0, duration: RITMO_DA_GERACAO.aulaOpacidadeMs, delay: Math.max(0, RITMO_DA_GERACAO.aulaEntraMs - passou),
-            easing: Easing.linear, useNativeDriver: true }),
-        ]);
-    animacao.start();
-    return () => animacao.stop();
-  }, [inicio, reduzida, crescer, presenca]);
+    if (reduzida) return;
+    const crescimento = Animated.timing(crescer, { toValue: 1, duration: RITMO_DA_GERACAO.circuloMs,
+      delay: Math.max(0, RITMO_DA_GERACAO.circuloAtrasoMs - (Date.now() - inicio)), easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    crescimento.start();
+    return () => crescimento.stop();
+  }, [inicio, reduzida, crescer]);
+
+  // A aula entra por cima: a camada some em 150 ms a partir dos 320 ms (reduzida: na hora), só com a aula já na tela.
+  useEffect(() => {
+    if (!aulaNaTela) return;
+    const sumir = Animated.timing(presenca, { toValue: 0, duration: RITMO_DA_GERACAO.aulaOpacidadeMs,
+      delay: reduzida ? 0 : Math.max(0, RITMO_DA_GERACAO.aulaEntraMs - (Date.now() - inicio)), easing: Easing.linear, useNativeDriver: true });
+    sumir.start(({ finished }) => { if (finished) terminar.current(); });
+    return () => sumir.stop();
+  }, [aulaNaTela, inicio, reduzida, presenca]);
 
   // O centro do nó 1 vem em coordenadas da janela; a camada pode não começar no canto da janela.
   const ponto = origem && deslocamento ? { x: origem.x - deslocamento.x, y: origem.y - deslocamento.y } : { x: width / 2, y: height / 2 };

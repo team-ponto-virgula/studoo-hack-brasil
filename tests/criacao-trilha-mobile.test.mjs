@@ -25,9 +25,11 @@ test('sem pausa fixa: o aceite espera só a resposta e a busca da lição começ
   const busca = comecar.indexOf('cliente.obterLicao(primeira)');
   const espera = comecar.indexOf('await esperar(');
   assert.ok(aceite > 0 && aceite < busca && busca < espera, 'aceite → busca da lição → aos 320 ms, a aula');
-  assert.match(comecar, /await esperar\(inicio \+ \(reduzida \? 0 : RITMO_DA_GERACAO\.aulaEntraMs\) - Date\.now\(\)\);/);
-  // Aos 320 ms: a aula, se chegou; senão o esqueleto dela (pendente 'abrir') até chegar.
-  assert.match(comecar, /if \(!licao && !falhaLicao\) \{\n\s*setPendente\('abrir'\);\n\s*await busca;/);
+  assert.match(comecar, /await esperar\(inicio \+ \(reduzida \? 0 : RITMO_DA_GERACAO\.aulaMontaMs\) - Date\.now\(\)\);/);
+  // Aos 200 ms, embaixo do círculo: a aula, se chegou; senão o esqueleto dela (pendente 'abrir') até chegar. A camada só some
+  // depois disso (aulaNaTela), a partir dos 320 ms.
+  assert.match(comecar, /if \(!licao && !falhaLicao\) \{\n\s*setPendente\('abrir'\);\n\s*aulaNaTela\(\);\n\s*await busca;/);
+  assert.match(comecar, /terminarCriacao\(\);\n\s*aulaNaTela\(\);/);
   assert.match(comecar, /navegar\(\{ tipo: 'licao', plano, licao: pronta \}\);\n\s*anunciar\(mensagens\.geracao\.anuncioCriada\(pronta\.titulo\)\);/);
 });
 
@@ -77,8 +79,10 @@ test('a passagem: som único, pulso do nó 1, círculo do nó 1 por cima e a aul
   assert.match(comecar, /lenteDoNo1\.current\?\.measureInWindow\(/);
   const passagem = trecho(estudo, 'function PassagemDaCriacao(', '\n}\n');
   assert.match(passagem, /testID="passagem-criacao" pointerEvents="none"/, 'não recebe toque: a aula responde assim que monta');
-  assert.match(passagem, /delay: Math\.max\(0, RITMO_DA_GERACAO\.circuloAtrasoMs - passou\)/);
-  assert.match(passagem, /delay: Math\.max\(0, RITMO_DA_GERACAO\.aulaEntraMs - passou\)/);
+  assert.match(passagem, /delay: Math\.max\(0, RITMO_DA_GERACAO\.circuloAtrasoMs - \(Date\.now\(\) - inicio\)\)/);
+  assert.match(passagem, /if \(!aulaNaTela\) return;/, 'a camada só some com a aula na tela: a prévia nunca reaparece por baixo');
+  assert.match(passagem, /delay: reduzida \? 0 : Math\.max\(0, RITMO_DA_GERACAO\.aulaEntraMs - \(Date\.now\(\) - inicio\)\)/);
+  assert.match(passagem, /sumir\.start\(\(\{ finished \}\) => \{ if \(finished\) terminar\.current\(\); \}\);/);
   assert.match(passagem, /Easing\.out\(Easing\.cubic\)/);
   assert.match(passagem, /reduzida\n\s*\? <View style=\{\[StyleSheet\.absoluteFill, \{ backgroundColor: cores\.fundo \}\]\} \/>/);
   // O nó 1 pulsa e vira o nó atual; o caminho firma em 180 ms; o Stu comemora uma vez.

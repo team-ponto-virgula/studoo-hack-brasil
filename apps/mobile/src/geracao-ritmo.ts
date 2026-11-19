@@ -64,6 +64,11 @@ export const RITMO_DA_GERACAO = {
   circuloMs: 300,
   aulaEntraMs: 320,
   aulaOpacidadeMs: 150,
+  /**
+   * A aula monta embaixo do círculo aos 200 ms (ele já cobre quase toda a tela aos 300), para estar pronta quando entra por
+   * cima, aos 320: a camada só some depois que a aula (ou o esqueleto) está na tela, e a prévia nunca reaparece por baixo.
+   */
+  aulaMontaMs: 200,
 } as const;
 
 /** Quando a passagem termina (a aula já está por inteiro na tela): 470 ms; com movimento reduzido, só a opacidade (150 ms). */
