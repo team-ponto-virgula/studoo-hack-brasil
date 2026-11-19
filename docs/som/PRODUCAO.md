@@ -75,6 +75,15 @@ O mesmo cálculo está em `python3 scripts/som/verificar-som.py --laco-web <arqu
 - **No celular:** `erro` e `erro_rede` foram refeitos para ter corpo em 200–800 Hz; o `erro` antigo tinha 0,3% da energia em 0,5–3 kHz (quase inaudível no alto-falante).
 - **Volume:** cada efeito foi medido (RMS dos 50 ms mais fortes) e o volume do catálogo leva todos ao mesmo alvo por prioridade — `alta` ≈ −9, `media` ≈ −13, `baixa` ≈ −18. Antes, `erro` tocava 5 dB abaixo de `acerto` com o mesmo papel.
 
+## Amostra de mixagem: Lo-fi + acerto + erro
+
+O dono escolheu o `lofi_estudo` como única música, em laço no app inteiro, com os SFX por cima sem interromper nem baixar o fundo. A amostra `amostra-mixagem-lofi-volta-acerto-erro.mp3` (14 s, 160 kbps) mostra exatamente essa combinação, com os bytes de `d5bf5aa`:
+
+- fundo na amplitude do app (volume `0.24` do catálogo, sem ducking), atravessando a volta do laço: a emenda cai em **4,000 s** da amostra;
+- `acerto` a **2,5 s** (`volume 0.90`) e `erro` a **8,0 s** (`0.86`), somados ao fundo sem alterar o ganho dele.
+
+Medido na soma: pico combinado **−2,28 dBFS** no WAV (−2,73 dBFS no MP3 160 kbps), **nenhuma amostra em 0 dBFS** e 2,3 dB de folga. O pico da mistura é o do próprio efeito (−1,5 dBFS × 0,90 = −2,4 dBFS); o fundo entra em −37 dBFS RMS e acrescenta menos de 0,2 dB, então ele não é fonte de saturação. Na emenda, o degrau é 0,07× o passo típico da mistura e o fundo vai de −47,9 a −27,7 dBFS em 50 ms, sem estalo.
+
 ## Antes e depois (medido, não ouvido)
 
 | Fundo | antes: RMS / centro / 0,5–3 kHz | depois: RMS / centro / 0,5–3 kHz |
