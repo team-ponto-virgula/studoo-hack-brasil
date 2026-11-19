@@ -510,3 +510,29 @@ Título, texto e ações separados, no componente de confirmação do Studoo (me
 ### O que fica para o dono
 - Curtir ou Valeu.
 - Proposta: o botão de curtir também no mapa da trilha recebida, no bloco "Esta trilha é de <nome>". Quem chega ao fim de uma trilha é quem mais tem motivo para agradecer, e hoje ali não há o botão.
+
+## Revisão de design (19/11): configurações da trilha, capas e selos sobre foto
+
+Revisa as configurações (`094d841`) e a capa com foto (`0a77fe0`), as duas já na integração (`567e507`). Vale para web, Android e iPhone; o app ainda não tem a tela e entra com estas medidas. Esboço: `configuracoes-390.png`, na pasta de trabalho do Designer (`ux/03-configuracoes-capa`).
+
+**Fica como está:** as entradas (menu "•••" e engrenagem no mapa), as três seções na ordem Capa e nome, Quem pode ver e Apagar trilha, o salvamento campo a campo sem diálogo de sair, o erro embaixo do campo, a galeria com o Padrão e as 12 capas e os nomes delas, o recorte 2:1 da foto e o aviso de que a cópia fica com a capa padrão.
+
+**Mudanças, da mais grave para a menos:**
+
+1. **Confirmação de apagar (grave).** Hoje é um parágrafo só, todo em negrito e sem título. Passa a ser a confirmação do Studoo, igual à do perfil: título “Apagar “<nome>”?” (Quicksand 700, 20/26); texto em peso normal, “Você já concluiu 3 de 7 lições. As lições e esse progresso também serão apagados.” (sem progresso: “As 7 lições também serão apagadas.”); o aviso do link num parágrafo à parte, só quando há link: “O link de compartilhamento desta trilha também deixa de funcionar.”; “Cancelar” (secundário, com o foco) e “Apagar” (vermelho cheio `#C23B4E`, degrau `#8F2A39`).
+2. **“Salvo” longe do campo (grave).** Hoje ele aparece embaixo do título da página, e quem edita a descrição ou o tema, mais abaixo, não vê. Passa para o rótulo do campo, à direita: “Salvando…”, com um giro de 14 px em `#5E6A85`, e depois “Salvo”, com visto, em 13 px 800 `#1F7A5A`, que some em 2,5 s (saída de 200 ms; com movimento reduzido, some sem transição). O leitor de tela ouve “Nome da trilha salvo.” (`aria-live` educado). O “Salvo” do título sai.
+3. **Ajuda da foto quebrando ao lado do botão (média).** “JPG, PNG ou WebP, até 2 MB” fica ao lado de “Usar uma foto” e joga o “MB” para a linha de baixo. O botão passa a ocupar a largura da folha (altura de 48), e a ajuda vai embaixo, numa linha só: “JPG, PNG ou WebP, até 2 MB.”
+4. **Capa escolhida marcada só pela cor da borda (média).** A escolhida ganha, além da borda de 3 px `#3858D6`, um visto num círculo de 24 px `#3858D6`, com contorno branco de 2 px, no canto de cima à direita. A galeria é um grupo de escolha única (`radiogroup`, com `aria-checked` em cada capa; no app, `accessibilityState.selected`), e o nome da capa é o nome acessível. Escolher salva, mostra o visto, fecha a folha em 300 ms e avisa “Capa salva.”.
+5. **Prévia da capa pequena (média).** Hoje é uma capa de 240 × 120 à esquerda, com “Capa: Pôr do sol” e o botão embaixo. A prévia passa a ocupar a largura da seção, em 2:1 e raio de 16, com “Trocar capa” por cima, no canto de baixo à direita: pílula branca de 40 px, ícone de imagem de 18 px, texto de 15 px 800 `#2A44A8` e sombra `0 2px 8px rgba(15, 23, 42, .25)`. Tocar em qualquer ponto da capa também abre a galeria. “Capa: Pôr do sol” sai da tela e fica no nome acessível (“Trocar capa. Capa atual: Pôr do sol”).
+6. **Véu também embaixo da foto (baixa).** O véu de baixo escurece a foto onde não há texto. Ele fica só nos 45% de cima, de `rgba(15, 23, 42, .38)` a zero; embaixo, só quando houver texto por cima da capa.
+7. **Rótulo do Padrão (baixa).** “Padrão · A cor e o desenho do tema” quebra em duas linhas miúdas. Passa a ser “Padrão” e, embaixo, “Do tema” (13 px 700 `#5E6A85`).
+
+**Leitura dos selos por cima de foto e de capa desenhada.**
+
+- O selo é sempre sólido, nunca translúcido: fundo branco (o de Demonstração, `#FFF4DB` com texto `#7A4A00`), texto `#1B2A5E` em 13 px 800, altura de 28, 12 px dos lados, raio 99, borda de 1 px `rgba(27, 42, 94, .10)` e sombra `0 2px 6px rgba(15, 23, 42, .22)`. O texto passa de 7:1 contra o próprio fundo, qualquer que seja a foto; a borda e a sombra separam o selo das capas claras (Areia, Céu).
+- Posição: canto de cima à esquerda, a 12 px das bordas, um embaixo do outro com 6 px. No máximo dois selos na capa; um terceiro vai para a linha de dados do cartão.
+- Numeral do Em alta: Quicksand 700 de 64 px, branco, com contorno de 4 px `#1B2A5E` por trás do preenchimento, no canto de cima à direita, a 10 px.
+- Véu: só em foto, como no item 6. Nenhum outro texto vai solto direto na foto.
+- No recorte da foto, a área dos selos aparece por cima, tracejada (dois retângulos de 28 px de altura, brancos a 55%), para a pessoa não deixar o principal da foto embaixo deles. Texto do recorte: “Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.” Na web, a roda do mouse e o controle aproximam, e as setas movem 8 px (com Shift, 32 px).
+
+**Quem decide.** Tudo nesta seção é decisão de design. Nada precisa do dono.
