@@ -66,7 +66,7 @@ test('o estado do salvamento fica no rótulo do campo: "Salvo" some em 2,5 s e a
   }
   // O leitor de tela ouve a frase do campo; a capa avisa pelo aviso do app.
   assert.match(app, /announceForAccessibility\(k\.salvoLeitor\[campo\]\)/);
-  assert.match(app, /avisar\(k\.capaSalva, \{ icone: 'check' \}\)/);
+  assert.match(app, /avisar\(k\.capaSalva, \{ icone: 'check', som: 'salvo' \}\)/);
   assert.equal(k.salvoLeitor.titulo, 'Nome da trilha salvo.');
   assert.equal(k.salvoLeitor.descricao, 'Descrição salva.');
   assert.equal(k.salvoLeitor.tema, 'Tema salvo.');
@@ -209,4 +209,16 @@ test('a engrenagem alinha pelo centro com "Compartilhar": com o botão, os 10 de
   assert.doesNotMatch(estudo, /compartilharTopo/);
   // Sem nenhum dos dois botões, a fileira nem aparece.
   assert.match(estudo, /\{\(comCompartilhar \|\| configurar\) && \(/);
+});
+
+test('salvar um campo alterado toca "salvo" (spec 12); a capa toca pelo aviso "Capa salva."', () => {
+  const salvar = app.slice(app.indexOf('async function salvar('), app.indexOf('} catch (falha) {', app.indexOf('async function salvar(')));
+  assert.match(salvar, /marcar\(campo, 'salvo'\);[\s\S]*if \(campo !== 'capa'\) void tocaSons\.tocarEfeito\('salvo'\);/);
+  // "Capa salva." toca "salvo" pelo aviso do app (o padrão do aviso seria o efeito "aviso").
+  assert.equal((app.match(/avisar\(k\.capaSalva, \{ icone: 'check', som: 'salvo' \}\);/g) ?? []).length, 2);
+  assert.doesNotMatch(app, /avisar\(k\.capaSalva, \{ icone: 'check' \}\)/);
+  // Só chega ao salvar com mudança: o nome e a descrição comparam com o que está salvo; o tema, com o tema atual.
+  assert.match(app, /if \(normal === salvo\.titulo\) \{/);
+  assert.match(app, /if \(normal === \(salvo\.descricao \?\? ''\)\) return;/);
+  assert.match(app, /if \(!desativado && conf\.tema !== tema\) void salvar\('tema', \{ tema \}\);/);
 });

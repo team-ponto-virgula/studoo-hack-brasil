@@ -35,7 +35,9 @@ export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' |
   // Perfil e compartilhar (spec 09 e 10): desenhados em SVG com os mesmos traços da web (icone.tsx).
   | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha' | 'alerta'
   // Configurações da trilha (spec 10, lote 4): a engrenagem do mapa, o elo de "Quem tem o link" e a seta do "Voltar".
-  | 'engrenagem' | 'elo' | 'setaVoltar';
+  | 'engrenagem' | 'elo' | 'setaVoltar'
+  // Controle de som (spec 12): o botão da aula e as linhas da folha "Som".
+  | 'somDuasOndas' | 'somUmaOnda' | 'somCortado' | 'ondas' | 'chuva' | 'fones' | 'livros' | 'folha' | 'info';
 
 /**
  * Próxima lição do caminho: a do primeiro trecho que ainda tem lição pendente.

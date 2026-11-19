@@ -11,10 +11,9 @@ appId: host.exp.Exponent
     visible:
       id: titulo-entrada|nav-planos|xmark
     timeout: ${ESPERA}
-# O menu sobe logo depois de o app aparecer. A pausa dá tempo para isso e recomeça a contagem das esperas do Maestro
-# (elas descontam o tempo passado desde o último toque; sem a pausa, a conferência abaixo seria instantânea).
-- waitForAnimationToEnd:
-    timeout: 3000
+# Com as preferências do Expo Go gravadas pelo passo do simulador, o menu não abre (conferido na execução 44511779137).
+# A conferência abaixo fica como segunda linha e custa só o que sobra dos 7 s do Maestro depois da abertura (as esperas
+# opcionais dele descontam o tempo passado desde o último toque).
 - runFlow:
     when:
       visible:
@@ -27,9 +26,9 @@ appId: host.exp.Exponent
           commands:
             - tapOn: "Continue"
             - waitForAnimationToEnd:
-                timeout: 3000
+                timeout: 1500
       # O "X" do menu ("Close"): mais seguro que tocar fora, porque a folha do menu muda de altura.
       - tapOn:
           id: xmark
       - waitForAnimationToEnd:
-          timeout: 3000
+          timeout: 1500

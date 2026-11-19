@@ -5,19 +5,21 @@ name: 10-mapa
 ---
 - runFlow: ../partes/reabrir.yaml
 - waitForAnimationToEnd:
-    timeout: 4000
+    timeout: 2000
 - takeScreenshot: 10-mapa-da-trilha
 - swipe:
+    waitToSettleTimeoutMs: 1000
     start: 50%, 65%
     end: 50%, 40%
     duration: 800
 - waitForAnimationToEnd:
-    timeout: 3000
+    timeout: 1500
 - takeScreenshot: 11-mapa-rolado-sob-a-barra
 - swipe:
+    waitToSettleTimeoutMs: 1000
     start: 50%, 65%
     end: 50%, 35%
     duration: 800
 - waitForAnimationToEnd:
-    timeout: 3000
+    timeout: 1500
 - takeScreenshot: 12-mapa-rolado-mais

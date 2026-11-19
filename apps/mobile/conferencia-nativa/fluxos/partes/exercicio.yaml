@@ -1,10 +1,13 @@
 # Abre a trilha ${TRILHA} por Minhas trilhas, começa a lição atual, avança até o primeiro exercício e captura o estado
 # inicial dele (${CAPTURA}) e o resto da tela (${CAPTURA}-abaixo). Não responde nada: o preparo dos dados deixou a
-# lição atual de cada trilha começando pelo formato da captura.
+# lição atual de cada trilha começando pelo formato da captura. Não sai da lição no fim: o próximo fluxo reabre o app.
+# Os toques e os arrastos esperam a tela parar no máximo 1,5 s e 1 s: o mapa e a lição têm animações que não param, e
+# a espera padrão do Maestro chegava a 18 s por toque.
 appId: host.exp.Exponent
 ---
 - runFlow: reabrir.yaml
 - tapOn:
+    waitToSettleTimeoutMs: 1500
     id: nav-planos
     retryTapIfNoChange: true
 - extendedWaitUntil:
@@ -17,13 +20,16 @@ appId: host.exp.Exponent
       text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
     direction: DOWN
     timeout: 45000
-    speed: 30
+    speed: 50
+    waitToSettleTimeoutMs: 500
 # No iOS 26 a barra de baixo fica por cima do conteúdo: o botão pode ter parado atrás dela. Sobe mais um pouco.
 - swipe:
+    waitToSettleTimeoutMs: 1000
     start: 50%, 55%
     end: 50%, 40%
     duration: 800
 - tapOn:
+    waitToSettleTimeoutMs: 1500
     text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
 - extendedWaitUntil:
     visible:
@@ -31,7 +37,7 @@ appId: host.exp.Exponent
     timeout: 45000
 # O mapa rola sozinho até a lição atual. Com ela à vista, a ação é o próprio nó; fora da vista, o cartão "Próxima lição".
 - waitForAnimationToEnd:
-    timeout: 3500
+    timeout: 2000
 - evalScript: ${output.abriuPeloCartao = false}
 - runFlow:
     when:
@@ -39,6 +45,7 @@ appId: host.exp.Exponent
         id: comecar-licao
     commands:
       - tapOn:
+          waitToSettleTimeoutMs: 1500
           id: comecar-licao
       - evalScript: ${output.abriuPeloCartao = true}
 - runFlow:
@@ -46,6 +53,7 @@ appId: host.exp.Exponent
       true: ${output.abriuPeloCartao == false}
     commands:
       - tapOn:
+          waitToSettleTimeoutMs: 1500
           text: "(Começar|Continuar): .*"
 # Conceito e exemplo vêm antes do exercício: "Continuar lendo" enquanto houver texto abaixo, depois "Avançar". Só um dos
 # dois botões existe por vez, então um toque só serve aos dois (o `id` é uma expressão regular). É opcional: enquanto a
@@ -57,6 +65,7 @@ appId: host.exp.Exponent
         id: pergunta-exercicio
     commands:
       - tapOn:
+          waitToSettleTimeoutMs: 1500
           id: "ler-mais|avancar-licao"
           optional: true
 - extendedWaitUntil:
@@ -64,18 +73,13 @@ appId: host.exp.Exponent
       id: pergunta-exercicio
     timeout: 20000
 - waitForAnimationToEnd:
-    timeout: 3500
+    timeout: 2000
 - takeScreenshot: ${CAPTURA}
 - swipe:
+    waitToSettleTimeoutMs: 1000
     start: 50%, 70%
     end: 50%, 35%
     duration: 800
 - waitForAnimationToEnd:
-    timeout: 2500
+    timeout: 1500
 - takeScreenshot: ${CAPTURA}-abaixo
-- tapOn:
-    id: voltar-plano
-- extendedWaitUntil:
-    visible:
-      id: titulo-plano
-    timeout: 30000

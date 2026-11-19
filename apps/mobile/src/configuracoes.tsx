@@ -18,6 +18,7 @@ import { useDepoisDeSair } from './janelas';
 import { mensagens } from './mensagens';
 import { RecorteImagem, escolherImagem, type ImagemParaRecortar } from './recorte';
 import { Esqueleto, Ficha, codigoDoErro, socialEstilos, textoDoErro } from './social';
+import { tocaSons } from './sons';
 import { cores, fontes, raios } from './tema';
 import type { NomeIcone } from './trilha';
 
@@ -233,6 +234,8 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
       marcar(campo, 'salvo');
       // O aviso do app já lê "Capa salva."; nos outros campos, o leitor de tela ouve a frase do campo.
       if (campo !== 'capa' && montada.current) AccessibilityInfo.announceForAccessibility(k.salvoLeitor[campo]);
+      // Spec 12: salvar um campo alterado toca "salvo" (só se chega aqui com mudança). A capa toca pelo aviso "Capa salva.".
+      if (campo !== 'capa') void tocaSons.tocarEfeito('salvo');
       return true;
     } catch (falha) {
       if (montada.current) setErros((antes) => ({ ...antes, [campo]: textoDoErro(codigoDoErro(falha)) }));
@@ -280,7 +283,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
     const novo = await cliente.enviarCapa(planoId, base64);
     aoMudar(novo);
     if (montada.current) { setConf(novo); setParaRecortar(null); }
-    avisar(k.capaSalva, { icone: 'check' });
+    avisar(k.capaSalva, { icone: 'check', som: 'salvo' });
   }
 
   // Ao sair da tela (Voltar, barra de baixo, voltar do aparelho), o que ficou escrito e ainda vale é salvo.
@@ -411,7 +414,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
           aoUsarFoto={compartilhar ? () => (toque ? setOrigemDaFoto(true) : void buscarFoto(false)) : undefined}
           aoEscolher={async (capa) => {
             const salvou = await salvar('capa', { capa });
-            if (salvou) avisar(k.capaSalva, { icone: 'check' });
+            if (salvou) avisar(k.capaSalva, { icone: 'check', som: 'salvo' });
             return salvou;
           }} />
       )}
