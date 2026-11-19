@@ -378,8 +378,9 @@ fluxo_criacao() {
   # As provas da criação vão já para o artefato das capturas, com ou sem falha.
   find "$SAIDA_MAESTRO/criacao" -type f \( -name '9[0-9]-*.png' -o -name 'criacao-transicao*.mp4' \) -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
   comandos="$(find "$SAIDA_MAESTRO/criacao" -type f -name commands.json -path '*90-criacao-da-trilha*' 2> /dev/null | head -1 || true)"
-  node "$AQUI/servidor/linha-do-tempo-som.mjs" --comandos "$comandos" --audio "$REGISTROS/audio-criacao.log" --plataforma "$plataforma" \
-    > "$REGISTROS/linha-do-tempo-criacao.txt" 2>&1 || true
+  # O registro de som do app (apps/mobile/src/sons.ts) chega pelo log do sistema e, se o Expo o repassar, pelo do Metro.
+  node "$AQUI/servidor/linha-do-tempo-som.mjs" --comandos "$comandos" --audio "$REGISTROS/audio-criacao.log" --audio "$REGISTROS/metro.log" \
+    --plataforma "$plataforma" > "$REGISTROS/linha-do-tempo-criacao.txt" 2>&1 || true
 
   linha="$(trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/trilhas-depois-da-criacao.json" --apagar)" || codigo=$?
   case "$codigo:$fluxo" in

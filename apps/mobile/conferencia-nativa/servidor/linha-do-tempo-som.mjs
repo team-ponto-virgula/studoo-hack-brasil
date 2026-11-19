@@ -6,12 +6,15 @@
 //     registrar, o player dizendo que tocou ("[som] reproducao <id> <ms>");
 //   - saída gravada: indisponível no CI (o simulador e o emulador não têm saída de áudio que se possa gravar; o emulador
 //     roda com -noaudio). Não se mede latência física.
-// Uso: node linha-do-tempo-som.mjs --comandos <commands.json> --audio <registro> --plataforma iphone|android
+// O registro do app vem de apps/mobile/src/sons.ts (registrarSom, com EXPO_PUBLIC_STUDOO_REGISTRO_SOM=1):
+// console.info(`[som] ${tipo} ${id} ${Date.now()}`), com tipo comando ou reproducao e o id do efeito ou do fundo. A mesma
+// linha pode chegar por mais de um registro (o log do sistema e o do Metro): conta uma vez só.
+// Uso: node linha-do-tempo-som.mjs --comandos <commands.json> --audio <registro> [--audio <outro>] --plataforma iphone|android
 import { existsSync, readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
 const { values: opcoes } = parseArgs({
-  options: { comandos: { type: 'string' }, audio: { type: 'string' }, plataforma: { type: 'string', default: 'iphone' } },
+  options: { comandos: { type: 'string' }, audio: { type: 'string', multiple: true }, plataforma: { type: 'string', default: 'iphone' } },
 });
 
 const eventos = [];
@@ -45,10 +48,13 @@ if (opcoes.comandos && existsSync(opcoes.comandos)) {
 // dos comandos.
 let doSistema = 0;
 let doApp = 0;
-if (opcoes.audio && existsSync(opcoes.audio)) {
-  for (const linha of readFileSync(opcoes.audio, 'utf8').split('\n')) {
+const vistas = new Set();
+for (const arquivo of (opcoes.audio ?? []).filter((caminho) => existsSync(caminho))) {
+  for (const linha of readFileSync(arquivo, 'utf8').split('\n')) {
     const app = linha.match(/\[som\] (comando|reproducao) ([a-z0-9_]+) (\d{13})/);
     if (app) {
+      if (vistas.has(app[0])) continue;
+      vistas.add(app[0]);
       doApp += 1;
       eventos.push({ t: Number(app[3]), origem: app[1] === 'comando' ? 'comando (app)' : 'reprodução (player do app)', texto: app[2] });
       continue;
