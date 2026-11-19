@@ -63,7 +63,7 @@ Os textos da folha e do Perfil ficam no contrato (`packages/contratos/src/experi
 
 ## Como a música se comporta
 
-- **Onde toca:** no app inteiro: entrada, recuperação de senha, modo visitante, abas, mapa, geração e aula. Ao entrar e ao sair da conta, ela continua. Só as páginas públicas da web (`/t` e `/p`), que recebem quem ainda não está no app, ficam sem música.
+- **Onde toca:** no app inteiro: entrada, recuperação de senha, modo visitante, abas, mapa, geração e aula, e também as páginas públicas da web (`/t` e `/p`) quando a pessoa chega nelas navegando no Studoo (o player da web vive no layout comum a essas páginas, desde bd0757f). Ao entrar e ao sair da conta, ela continua. Um link aberto numa aba nova começa como um carregamento novo: a música espera o primeiro gesto (P26 da spec 07). As imagens de compartilhamento (prévia do link) não têm som.
 - **Laço contínuo:** a música não recomeça ao trocar de tela, ao abrir uma lição nem ao entrar ou sair da conta; segue de onde estava.
 - **Ligar:** sobe de 0 ao volume da música em 600 ms. **Desligar:** desce em 400 ms e para. A música nunca entra no volume cheio de uma vez.
 - **Efeitos por cima (decisão do dono):** nenhum efeito para ou baixa a música. Eles tocam por cima, no volume constante deles: a música não muda o volume dos efeitos, e os efeitos não mudam o da música.
