@@ -9,7 +9,10 @@ name: 02-entrar
 - inputText: ${EMAIL}
 - tapOn:
     id: login-senha
-- inputText: ${SENHA}
+# Com `label`, a saída do Maestro mostra esta frase no lugar do texto digitado.
+- inputText:
+    text: ${SENHA}
+    label: Digitar a senha da conta sintética
 - waitForAnimationToEnd:
     timeout: 2500
 - takeScreenshot: 04-entrada-preenchida

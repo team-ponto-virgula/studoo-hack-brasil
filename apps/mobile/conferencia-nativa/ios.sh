@@ -348,7 +348,7 @@ simulador() {
   conferir_sha256 "$FERRAMENTAS/expo-go.tar.gz" "$EXPO_GO_IOS_SHA256"
   rm -rf "$FERRAMENTAS/Expo Go.app"
   mkdir -p "$FERRAMENTAS/Expo Go.app"
-  tar -xzf "$FERRAMENTAS/expo-go.tar.gz" -C "$FERRAMENTAS/Expo Go.app"
+  tar -xzf "$FERRAMENTAS/expo-go.tar.gz" -C "$FERRAMENTAS/Expo Go.app" || erro "O arquivo do Expo Go não abriu (tar)."
   xcrun simctl install "$id" "$FERRAMENTAS/Expo Go.app" || erro "O Expo Go não instalou no simulador."
   xcrun simctl get_app_container "$id" "$EXPO_GO" > /dev/null 2>&1 || erro "O Expo Go não aparece instalado no simulador ($EXPO_GO)."
   echo "Expo Go $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$FERRAMENTAS/Expo Go.app/Info.plist" 2> /dev/null || echo '?') instalado."
@@ -364,9 +364,9 @@ instalar_maestro() {
   curl -fsSL --retry 3 -o "$FERRAMENTAS/maestro.zip" "$endereco" || erro "Não deu para baixar o Maestro $MAESTRO_VERSAO."
   conferir_sha256 "$FERRAMENTAS/maestro.zip" "$MAESTRO_SHA256"
   rm -rf "$FERRAMENTAS/maestro"
-  unzip -q -o "$FERRAMENTAS/maestro.zip" -d "$FERRAMENTAS"
+  unzip -q -o "$FERRAMENTAS/maestro.zip" -d "$FERRAMENTAS" || erro "O arquivo do Maestro $MAESTRO_VERSAO não abriu (unzip)."
   rm -f "$FERRAMENTAS/maestro.zip"
-  chmod +x "$MAESTRO"
+  chmod +x "$MAESTRO" || erro "O Maestro $MAESTRO_VERSAO veio sem o executável esperado (maestro/bin/maestro)."
   MAESTRO_CLI_NO_ANALYTICS=1 MAESTRO_DISABLE_UPDATE_CHECK=true "$MAESTRO" --version || erro "O Maestro $MAESTRO_VERSAO não rodou nesta máquina (precisa de Java 17 ou mais novo)."
 }
 
@@ -393,7 +393,7 @@ metro() {
     erro "O Metro não entregou o manifesto do app para iOS."
   }
   printf '%s\n' "$manifesto" > "$REGISTROS/manifesto-ios.json"
-  pacote="$(printf '%s' "$manifesto" | jq -r '.launchAsset.url // empty')"
+  pacote="$(printf '%s' "$manifesto" | jq -r '.launchAsset.url // empty' 2> /dev/null || true)"
   [ -n "$pacote" ] || erro "O manifesto do Expo veio sem o endereço do pacote (launchAsset.url). Veja manifesto-ios.json nos registros."
   echo "Pacote: $pacote"
 
@@ -453,6 +453,9 @@ sem_preenchimento() {
   local id base arquivo feitos=0
   id="$(udid)"
   base="$HOME/Library/Developer/CoreSimulator/Devices/$id/data"
+  # Com o simulador desligado, nenhum serviço dele regrava os arquivos por cima do ajuste; ao ligar de novo, o sistema
+  # inteiro lê o valor novo (o Expo Go já tinha mostrado o campo de senha no fluxo anterior).
+  xcrun simctl shutdown "$id" || true
   for arquivo in \
     "$base/Library/UserConfigurationProfiles/EffectiveUserSettings.plist" \
     "$base/Containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles/Library/ConfigurationProfiles/UserSettings.plist"; do
@@ -462,11 +465,12 @@ sem_preenchimento() {
       echo "Não deu para ajustar: $arquivo"
     fi
   done
+  # A cópia pública das mesmas configurações, quando o sistema a tiver (não está na receita; não conta para o aviso).
+  arquivo="$base/Library/UserConfigurationProfiles/PublicInfo/PublicEffectiveUserSettings.plist"
+  if [ -f "$arquivo" ]; then plutil -replace restrictedBool.allowPasswordAutoFill.value -bool NO "$arquivo" || true; fi
   if [ "$feitos" -lt 2 ]; then
     aviso "O preenchimento automático de senhas do simulador pode ter ficado ligado ($feitos de 2 arquivos ajustados): digitar a senha pode falhar no próximo fluxo."
   fi
-  # Reinicia para o sistema inteiro ler o ajuste (o Expo Go já tinha mostrado o campo de senha no fluxo anterior).
-  xcrun simctl shutdown "$id" || true
   xcrun simctl boot "$id" || erro "O simulador não ligou de novo depois do ajuste."
   esperar_simulador
   echo "Simulador reiniciado com o preenchimento automático de senhas desligado ($feitos de 2 arquivos)."
@@ -498,8 +502,22 @@ fluxo_telas() {
 # ---------------------------------------------------------------------------------------------------------------------
 # coletar: junta as capturas, diz o que faltou e arruma os registros
 
+# A senha da conta sintética aparece na saída do Maestro (ele escreve o texto que digita). Ela vale só nesta execução,
+# mas os registros sobem como artefato: sai deles antes.
+tirar_senha_dos_registros() {
+  local senha arquivo
+  senha="$(do_env STUDOO_SENHA 2> /dev/null || true)"
+  [ -n "$senha" ] || return 0
+  grep -rlF -- "$senha" "$REGISTROS" "$SAIDA_MAESTRO" "$DADOS" 2> /dev/null | while IFS= read -r arquivo; do
+    LC_ALL=C sed -i.limpo "s/$senha/(senha da conta sintetica)/g" "$arquivo" && rm -f "$arquivo.limpo"
+  done || true
+}
+
 coletar() {
   local nome faltam="" total=0 largura altura
+  # Em algumas versões, o Maestro guarda a tela e a árvore de elementos do passo que falhou na pasta padrão dele, e não
+  # na pasta pedida: vai junto com os registros.
+  if [ -d "$HOME/.maestro/tests" ]; then cp -R "$HOME/.maestro/tests" "$SAIDA_MAESTRO/pasta-padrao-do-maestro" 2> /dev/null || true; fi
   # O Maestro guarda cada captura em <saída>/<sessão>/<fluxo>/takeScreenshot/<nome>.png.
   find "$SAIDA_MAESTRO" -type f -name '[0-9][0-9]-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
 
@@ -525,6 +543,8 @@ coletar() {
   # O registro do Expo Go no simulador ajuda a entender uma tela em branco ou um erro de rede do app.
   com_limite 120 xcrun simctl spawn "$(udid)" log show --last 30m --style compact --predicate 'process == "Expo Go"' \
     > "$REGISTROS/simulador-expo-go.log" 2> /dev/null || true
+
+  tirar_senha_dos_registros
 
   if [ -n "$faltam" ]; then
     erro "Faltaram $(echo "$faltam" | wc -w | tr -d ' ') de $(echo "$CAPTURAS_ESPERADAS" | wc -w | tr -d ' ') capturas:$faltam."

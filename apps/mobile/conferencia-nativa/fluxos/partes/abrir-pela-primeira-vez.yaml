@@ -19,3 +19,18 @@ appId: host.exp.Exponent
     visible:
       id: titulo-entrada
     timeout: 240000
+# Algumas versões do Expo Go abrem o menu de desenvolvedor com uma apresentação na primeira vez que um projeto carrega.
+# Se ela aparecer, sai: "Continue" fecha a apresentação e um toque fora fecha o menu.
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow:
+    when:
+      visible: "Continue|Got it"
+    commands:
+      - tapOn: "Continue|Got it"
+- runFlow:
+    when:
+      visible: "Reload|Go home|Go Home"
+    commands:
+      - tapOn:
+          point: 50%, 8%
