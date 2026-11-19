@@ -585,7 +585,11 @@ export function Estudo() {
   // Começar, na trilha gerada, já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só.
   const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || (pendente === 'aceitar' && tela.tipo === 'geracao');
   const visivel = !carregandoTrilha && !carregandoLicao;
-  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (planos.length > 0 && ['planos', 'objetivo', 'plano', 'perfil', 'explorar', 'configuracoes'].includes(tela.tipo)) || (comunidade && tela.tipo === 'explorar')) && visivel;
+  // Banca da noite §5: nas telas de topo, a barra de abas aparece sempre, também sem trilhas (com "Nova trilha" marcada),
+  // e no celular o cabeçalho fica só com a marca e o selo, como no app.
+  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (inicio === 'pronto' && ['planos', 'objetivo', 'plano', 'perfil', 'explorar', 'configuracoes'].includes(tela.tipo))) && visivel;
+  // Sem trilhas, "Minhas trilhas" mostra o pedido: a aba marcada é "Nova trilha".
+  const abaNovaTrilha = tela.tipo === 'objetivo' || (tela.tipo === 'planos' && planos.length === 0);
   const abrirFolha = compartilhar ? (planoId: string) => setFolha(planoId) : undefined;
 
   const acaoDoErro = (codigoErro: string) =>
@@ -784,9 +788,9 @@ export function Estudo() {
           )}
         </main>
         {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao} data-itens={(compartilhar ? 3 : 2) + (comunidade ? 1 : 0)}>
-          <button type="button" disabled={ocupado} aria-current={!['objetivo', 'perfil', 'explorar'].includes(tela.tipo) ? 'page' : undefined}
+          <button type="button" disabled={ocupado} aria-current={!abaNovaTrilha && !['perfil', 'explorar'].includes(tela.tipo) ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'planos' })}><Icone nome="livro" />{mensagens.planos.titulo}</button>
-          <button type="button" disabled={ocupado} aria-current={tela.tipo === 'objetivo' ? 'page' : undefined}
+          <button type="button" disabled={ocupado} aria-current={abaNovaTrilha ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
           {comunidade && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.navegacao}</button>}

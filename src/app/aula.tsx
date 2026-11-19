@@ -5,7 +5,9 @@ import {
   AUTOAVALIACOES,
   acertouParte,
   codificarResposta,
+  conceitoEmBlocos,
   conferirFala,
+  falasDoTexto,
   embaralharExercicio,
   etapasDaLicao,
   faltaParaVerificar,
@@ -247,6 +249,24 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const [citacaoAberta, setCitacaoAberta] = useState<number | null>(() => (licao.referencias?.length ? 0 : null));
   /** Nas etapas de leitura: ainda tem conteúdo escondido atrás do rodapé (o botão diz "Continuar lendo"). */
   const [temMais, setTemMais] = useState(false);
+  // Banca da noite §7: o conceito mostra até 3 frases (cerca de 50 palavras) e o resto fica em "Continuar lendo".
+  const [conceitoAberto, setConceitoAberto] = useState(false);
+  const restoDoConceito = useMemo(() => conceitoEmBlocos(licao.conceito).resto, [licao.conceito]);
+  useEffect(() => { setConceitoAberto(false); }, [licao.id]);
+  /** Abre o resto do conceito no lugar e, se ele ficou abaixo da dobra, desce até ele. */
+  function abrirConceito() {
+    setConceitoAberto(true);
+    window.requestAnimationFrame(() => {
+      const resto = document.querySelector<HTMLElement>('.aula-conceito__resto');
+      if (!resto) return;
+      const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().top ?? window.innerHeight;
+      if (resto.getBoundingClientRect().top > rodape - 80) {
+        const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        resto.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
+      }
+      resto.focus({ preventScroll: true });
+    });
+  }
   const [inicio] = useState(() => Date.now() - (retomada?.segundos ?? 0) * 1000);
   /** Cada "Praticar mais um pouco" recomeça o cronômetro da prática. */
   const [voltasPratica, setVoltasPratica] = useState(0);
@@ -672,6 +692,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         </Botao>
       </>
     );
+  } else if (etapa.tipo === 'conceito' && restoDoConceito && !conceitoAberto) {
+    // Enquanto o resto do conceito está recolhido, o "Continuar lendo" do rodapé faz o mesmo que o do balão.
+    acao = <Botao className="botao--ler-mais" onClick={abrirConceito}>{t.continuarLendo}<Icone nome="seta" /></Botao>;
   } else if (temMais) {
     acao = <Botao className="botao--ler-mais" onClick={lerMais}>{t.continuarLendo}<Icone nome="seta" /></Botao>;
   } else {
@@ -745,7 +768,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
               <Stu expressao="stu-feliz" tamanho={76} />
               <section className="aula-balao" aria-labelledby="etapa-aula">
                 <h2 id="etapa-aula">{t.explicacaoDoStu}</h2>
-                <ExplicacaoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} />
+                <ExplicacaoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} aberto={conceitoAberto} abrir={abrirConceito} />
                 {!!licao.referencias?.length && (
                   <div className="aula-citacao-marcadores">
                     <span>{licao.materialDe ? mensagens.compartilhar.baseadoMaterialDe(licao.materialDe) : mensagens.estudio.baseadoMaterial}</span>
@@ -1421,50 +1444,44 @@ function mostrarAberto(evento: SyntheticEvent<HTMLDetailsElement>) {
   });
 }
 
-/** Se o texto tem frases entre aspas no idioma da lição (fora do português), que viram botões de ouvir. */
-function temFalasNoTexto(texto: string, idioma?: string) {
-  return Boolean(idioma && !idioma.toLowerCase().startsWith('pt') && /“[^”ãõçáéíóúâêôà]+”/i.test(texto));
-}
-
 /**
- * Texto com as frases entre aspas no idioma da lição (“Hello”, “I'd like…”) tocáveis: um toque e a voz fala a frase.
- * Sem voz, ou numa lição em português, o texto fica como está.
+ * O conceito do balão "O Stu explica" (spec 04, banca da noite §7; igual ao app): até 3 frases e cerca de 50 palavras à
+ * vista (`conceitoEmBlocos`), com "Continuar lendo" (botão de texto com seta para baixo) que abre o resto no lugar. As
+ * frases com áudio saem do parágrafo e viram uma lista logo abaixo, na ordem do texto à vista, cada uma com o botão
+ * "Ouvir" de 44 px (alto-falante e texto).
  */
-function ExplicacaoComFalas({ texto, idioma }: { texto: string; idioma?: string }) {
+function ExplicacaoComFalas({ texto, idioma, aberto, abrir }: { texto: string; idioma?: string; aberto: boolean; abrir: () => void }) {
   const disponivel = useVozDisponivel();
-  const [tocando, setTocando] = useState<number | null>(null);
+  const [tocando, setTocando] = useState<string | null>(null);
   const [semVoz, setSemVoz] = useState(false);
-  if (!idioma || idioma.toLowerCase().startsWith('pt') || !disponivel || !temFalasNoTexto(texto, idioma)) return <p>{texto}</p>;
-  const partes = texto.split(/“([^”]+)”/);
-  function ouvir(indice: number, frase: string) {
-    setTocando(indice);
+  const { inicio, resto } = conceitoEmBlocos(texto);
+  const falas = disponivel ? falasDoTexto(aberto ? texto : inicio, idioma) : [];
+  function ouvir(frase: string) {
+    setTocando(frase);
     setSemVoz(false);
     falar({ texto: frase, idioma: idioma ?? 'en-US' }, false, () => setTocando(null), () => setSemVoz(true));
   }
   return (
     <>
-      <p>
-        {partes.map((parte, indice) => {
-          // Fora das aspas, ou uma citação em português (com acento), fica como texto.
-          if (indice % 2 === 0) return parte;
-          if (/[ãõçáéíóúâêôà]/i.test(parte)) return `“${parte}”`;
-          // Um span no fluxo do texto (o botão quebraria a linha antes de um parêntese ou de um ponto). A última palavra
-          // vai presa ao ícone de som, que assim nunca fica sozinho numa linha.
-          const corte = parte.lastIndexOf(' ');
-          return (
-            <span key={indice} role="button" tabIndex={0} className="fala-inline" lang={idioma} aria-label={t.audio.ouvirFrase(parte)}
-              data-tocando={tocando === indice || undefined} onClick={() => ouvir(indice, parte)}
-              onKeyDown={(evento) => {
-                if (evento.key !== 'Enter' && evento.key !== ' ') return;
-                evento.preventDefault();
-                ouvir(indice, parte);
-              }}>
-              “{parte.slice(0, corte + 1)}<span className="sem-quebra">{parte.slice(corte + 1)}”<Icone nome="som" /></span>
-            </span>
-          );
-        })}
-      </p>
-      <p className={semVoz ? 'aula-aviso-voz' : 'licao-origem'} role="status">{semVoz ? t.audio.semVozTexto : t.audio.toqueParaOuvir}</p>
+      <p>{inicio}</p>
+      {resto && !aberto && (
+        <button type="button" className="aula-conceito__mais" onClick={abrir}>{t.continuarLendo}<Icone nome="seta" /></button>
+      )}
+      {resto && aberto && <p className="aula-conceito__resto" tabIndex={-1}>{resto}</p>}
+      {falas.length > 0 && (
+        <ul className="aula-falas-lista">
+          {falas.map((frase) => (
+            <li key={frase}>
+              <span className="aula-falas-lista__frase" lang={idioma}>{frase}</span>
+              <button type="button" className="aula-falas-lista__ouvir" aria-label={t.audio.ouvirFrase(frase)}
+                data-tocando={tocando === frase || undefined} onClick={() => ouvir(frase)}>
+                <Icone nome="som" />{t.audio.ouvir}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {semVoz && <p className="aula-aviso-voz" role="status">{t.audio.semVozTexto}</p>}
     </>
   );
 }
