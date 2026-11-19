@@ -29,7 +29,7 @@ const GESTO_CURTIR: Gesto = {
     primeiraVez: (primeiroNome) => `${primeiroNome} vai ver sua curtida. Curtidas levam trilhas ao Em alta.`,
     erroRede: 'Não deu para curtir agora. Confira a conexão e tente de novo.',
     limite: 'Muitas curtidas seguidas. Tente de novo daqui a pouco.',
-    contaTemporaria: 'Para curtir, entre com uma conta.',
+    contaTemporaria: 'Curtidas precisam de uma conta. Como visitante, você continua estudando normalmente.',
     faixaSemConta: 'Entre para estudar e curtir.',
     legendaEmAlta: 'As trilhas que mais gente começou e curtiu nos últimos 7 dias.',
     semNinguem: 'Ainda sem ninguém estudando e sem curtidas',
@@ -46,7 +46,7 @@ export const GESTO_VALEU: Gesto = {
     primeiraVez: (primeiroNome) => `${primeiroNome} vai ver seu valeu. Valeus levam trilhas ao Em alta.`,
     erroRede: 'Não deu para mandar o valeu agora. Confira a conexão e tente de novo.',
     limite: 'Muitos valeus seguidos. Tente de novo daqui a pouco.',
-    contaTemporaria: 'Para mandar valeu, entre com uma conta.',
+    contaTemporaria: 'O valeu precisa de uma conta. Como visitante, você continua estudando normalmente.',
     faixaSemConta: 'Entre para estudar e mandar valeu.',
     legendaEmAlta: 'As trilhas que mais gente começou e mandou valeu nos últimos 7 dias.',
     semNinguem: 'Ainda sem ninguém estudando e sem valeus',
@@ -491,6 +491,8 @@ export const mensagens = {
         // Tela Editar perfil
         voltarPerfil: 'Voltar ao perfil',
         fotoRotulo: 'Foto',
+        /** Título da folha da foto no celular e nome acessível do menu da foto na web (spec 10, 19/11). */
+        fotoFolhaTitulo: 'Foto do perfil',
         fotoEscolher: 'Escolher foto',
         fotoTrocar: 'Trocar foto',
         fotoRemover: 'Remover foto',
@@ -553,6 +555,8 @@ export const mensagens = {
         interessesCheio: (maximo: number) => `Você já escolheu ${maximo}. Desmarque um para trocar.`,
         previaTitulo: 'Como os outros veem',
         alteracoesNaoSalvas: 'Alterações não salvas',
+        /** Na barra com "Cancelar" e "Salvar" numa tela de até 400 px, para caber numa linha (spec 10, 19/11). */
+        naoSalvoCurto: 'Não salvo',
         tudoSalvo: 'Tudo salvo',
         sairSemSalvarTitulo: 'Sair sem salvar?',
         sairSemSalvarTexto: 'As mudanças no nome, no resumo, nos interesses e na cor se perdem.',
@@ -1280,6 +1284,10 @@ export const mensagens = {
     marca: 'Studoo',
     voltar: 'Voltar',
     tentar: 'Tentar novamente',
+    /** Componentes do Studoo (spec 11). No app, o balão do menu de ações é anunciado com este rótulo e recebe o foco do leitor. */
+    componentes: {
+        menuRotulo: (opcoes: number) => `Menu, ${opcoes} ${opcoes === 1 ? 'opção' : 'opções'}`,
+    },
     boasVindas: {
         titulo: 'Aprenda qualquer coisa, um passo de cada vez',
         texto: 'Conte o que quer estudar e o Studoo monta uma trilha de lições curtas, com exercícios e feedback.',
