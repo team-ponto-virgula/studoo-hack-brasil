@@ -41,10 +41,10 @@ import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } f
 import { RITMO_DA_GERACAO, atrasosDaLicao, comMaisUma, deixouDeAcompanhar, intervaloDaFila, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
 import { Pedido, type IdTema } from './pedido';
-import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
+import { AdicionarPorLink, Avatar, DialogoConfirmar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
 import { TelaPerfil } from './perfil';
 import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
-import { Explorar } from './comunidade';
+import { CurtirTrilhaRecebida, Explorar } from './comunidade';
 import { contarLicaoParaNovidadeDoSom, useAreaDoSom } from './som';
 import { tocaSons } from './sons';
 import './aula.css';
@@ -123,6 +123,9 @@ export function Estudo() {
   const [agora, setAgora] = useState(() => Date.now());
   const [confirmacao, setConfirmacao] = useState<{
     mensagem: string;
+    /** Com título: a confirmação do Studoo com título, texto e aviso separados (apagar trilha). */
+    titulo?: string;
+    aviso?: string | null;
     confirmarRotulo: string;
     destrutivo?: boolean;
     aoConfirmar: () => Promise<void>;
@@ -389,7 +392,9 @@ export function Estudo() {
   function apagarPlano(plano: PlanoResumo, depois?: () => void) {
     origemConfirmacao.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setConfirmacao({
-      mensagem: `${mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total))}${plano.link ? ` ${mensagens.compartilhar.apagarAviso}` : ''}`,
+      titulo: mensagens.planos.apagarTitulo(plano.titulo),
+      mensagem: mensagens.planos.apagarTexto(plano.progresso.total, plano.progresso.concluidas),
+      aviso: plano.link ? mensagens.compartilhar.apagarAviso : null,
       confirmarRotulo: mensagens.planos.apagar,
       destrutivo: true,
       aoConfirmar: async () => {
@@ -740,7 +745,7 @@ export function Estudo() {
               abrirExistente={(id) => void abrirPlano(id)} />
           )}
           {visivel && tela.tipo === 'plano' && (
-            <Plano tela={tela} ocupado={ocupado} abrindo={abrindo}
+            <Plano tela={tela} ocupado={ocupado} abrindo={abrindo} anunciar={anunciar}
               precarregarLicao={(id) => { void obterLicaoComCache(id).catch(() => undefined); }}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
               novoPlano={() => navegar({ tipo: 'objetivo' })}
@@ -802,7 +807,13 @@ export function Estudo() {
         <FolhaCompartilhar planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade} anunciar={anunciar}
           aoFechar={() => { setFolha(null); setVersaoFolha((n) => n + 1); }} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
       )}
-      {confirmacao && (
+      {confirmacao?.titulo && (
+        <DialogoConfirmar titulo={confirmacao.titulo} texto={confirmacao.mensagem} aviso={confirmacao.aviso} perigo
+          confirmar={confirmacao.confirmarRotulo} cancelar={mensagens.planos.apagarCancelar} ocupado={ocupado}
+          aoCancelar={() => setConfirmacao(null)}
+          aoConfirmar={() => { const acao = confirmacao.aoConfirmar; setConfirmacao(null); void acao(); }} />
+      )}
+      {confirmacao && !confirmacao.titulo && (
         <ConfirmacaoModal
           mensagem={confirmacao.mensagem}
           confirmarRotulo={confirmacao.confirmarRotulo}
@@ -1487,8 +1498,9 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
-function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar }: {
+function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar, anunciar }: {
   tela: TelaPlano;
+  anunciar: (texto: string) => void;
   ocupado: boolean;
   abrindo: string | null;
   precarregarLicao: (id: string) => void;
@@ -1519,13 +1531,18 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
           <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
           <h1 tabIndex={-1}>{plano.titulo}</h1>
           {plano.recebida ? (
-            <p className="trilha-recebida">
+            <div className="trilha-recebida">
               {plano.recebida.foto && <Avatar nome={plano.recebida.nome} cor="azul" foto={plano.recebida.foto} />}
               <span>{plano.recebida.perfilId
                 ? <>{mensagens.compartilhar.recebidaDe(plano.recebida.nome).slice(0, -plano.recebida.nome.length)}<a href={`/p/${plano.recebida.perfilId}`}>{plano.recebida.nome}</a></>
                 : mensagens.compartilhar.recebidaDe(plano.recebida.nome)}</span>
               {plano.recebida.codigoAtivo && <a href={`/t/${plano.recebida.codigoAtivo}`}>{mensagens.compartilhar.verOriginal}</a>}
-            </p>
+              {/* Com a comunidade e o link original ativo, o botão de curtir mora aqui também. */}
+              {plano.recebida.codigoAtivo && plano.recebida.valeus !== undefined && (
+                <CurtirTrilhaRecebida codigo={plano.recebida.codigoAtivo} titulo={plano.titulo} donoNome={plano.recebida.nome}
+                  curtido={Boolean(plano.recebida.valeuMeu)} curtidas={plano.recebida.valeus} anunciar={anunciar} />
+              )}
+            </div>
           ) : null}
           <div className="trilha-topo__acoes">
             {!plano.recebida && compartilhar && (
