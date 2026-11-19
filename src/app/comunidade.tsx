@@ -21,6 +21,8 @@ import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone, Stu } from '../ui';
 import { Avatar, CHAVE_DEPOIS_DO_LOGIN, abrirNoApp, codigoDoErro, guardar, urlDoLink, useDialogo } from './compartilhar';
+import { tocaSons } from './sons';
+import type { IdEfeitoSonoro } from '../../packages/contratos/src/catalogo-sons';
 import './comunidade.css';
 
 const c = mensagens.comunidade;
@@ -239,13 +241,14 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
     async valeu(cartao) {
       if (!logado) return entrarEVoltar('/explorar');
       const ativo = !cartao.valeuMeu;
+      if (ativo) void tocaSons.tocarEfeito('valeu');
       // Otimista: muda na hora e desfaz se falhar.
       setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: ativo, valeus: Math.max(0, atual.valeus + (ativo ? 1 : -1)) } : atual));
       try {
         const r = await cliente.valeu(cartao.codigo, ativo);
         setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: r.valeuMeu, valeus: r.valeus } : atual));
         // Toda vez, o aviso do próprio app (com papel de status: o leitor de tela também ouve).
-        avisar(ativo ? c.valeuAviso(cartao.dono.nome.trim().split(/\s+/)[0] ?? cartao.dono.nome) : c.valeuRetiradoAviso);
+        avisar(ativo ? c.valeuAviso(cartao.dono.nome.trim().split(/\s+/)[0] ?? cartao.dono.nome) : c.valeuRetiradoAviso, null);
       } catch (falha) {
         setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: cartao.valeuMeu, valeus: cartao.valeus } : atual));
         const codigo = codigoDoErro(falha);
@@ -263,7 +266,7 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
         try { await navigator.share({ title: cartao.titulo, text: mensagens.compartilhar.textoCompartilhar(cartao.titulo), url }); } catch { /* fechou */ }
         return;
       }
-      try { await navigator.clipboard.writeText(url); anunciar(c.linkCopiado); } catch { anunciar(mensagens.compartilhar.copiarFalhou); }
+      try { await navigator.clipboard.writeText(url); void tocaSons.tocarEfeito('link_copiado'); anunciar(c.linkCopiado); } catch { anunciar(mensagens.compartilhar.copiarFalhou); }
     },
   };
   const dialogo = denuncia ? (
@@ -318,7 +321,7 @@ function Setas({ fileira, rotulo }: { fileira: { rola: boolean; inicio: boolean;
  * Aviso do próprio app (nunca do sistema): uma faixa no pé da tela, acima da barra de abas, que some sozinha em 4,5 s.
  * Tem papel de status, então o leitor de tela também anuncia.
  */
-export function useAvisoDoApp(): [ReactNode, (texto: string) => void] {
+export function useAvisoDoApp(): [ReactNode, (texto: string, som?: IdEfeitoSonoro | null) => void] {
   const [texto, setTexto] = useState('');
   const [vez, setVez] = useState(0);
   useEffect(() => {
@@ -326,7 +329,12 @@ export function useAvisoDoApp(): [ReactNode, (texto: string) => void] {
     const relogio = window.setTimeout(() => setTexto(''), 4500);
     return () => window.clearTimeout(relogio);
   }, [texto, vez]);
-  const avisar = useCallback((novo: string) => { setTexto(novo); setVez((n) => n + 1); }, []);
+  /** `som`: o efeito do aviso (`aviso`, sem dizer nada); `null` quando o gesto já tocou o seu (como o curtir). */
+  const avisar = useCallback((novo: string, som: IdEfeitoSonoro | null = 'aviso') => {
+    if (som) void tocaSons.tocarEfeito(som);
+    setTexto(novo);
+    setVez((n) => n + 1);
+  }, []);
   const elemento = (
     <div className="aviso-app" role="status" aria-live="polite" data-visivel={texto ? true : undefined}>
       {texto && <p key={vez}>{texto}</p>}

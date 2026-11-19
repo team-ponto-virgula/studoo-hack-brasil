@@ -204,6 +204,14 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
       provedorDaVozAoVivo: async () => (voz.liberada ? 'openai' : null),
       provedorDaGravacao: async () => null,
     },
+    // Web: o toca-sons (os efeitos de gravação e o fundo); aqui só conta as entradas e saídas.
+    './sons': {
+      tocaSons: {
+        tocarEfeito: async (id) => { voz.sons = [...(voz.sons ?? []), id]; },
+        entrarEmGravacaoOuVoz() { voz.emGravacao = (voz.emGravacao ?? 0) + 1; },
+        sairDeGravacaoOuVoz() { voz.emGravacao = (voz.emGravacao ?? 0) - 1; },
+      },
+    },
     './preferencias': {
       avisoVozVistoAgora: () => Boolean(voz.avisoVisto),
       lerAvisoVozVisto: async () => Boolean(voz.avisoVisto),

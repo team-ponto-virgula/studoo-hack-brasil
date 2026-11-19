@@ -45,12 +45,30 @@ export const codificarResposta = {
   verdadeiroFalso: (verdadeiro: boolean, justificativa: string) => `${verdadeiro ? 'verdadeiro' : 'falso'}:${justificativa}`,
 };
 
-/** A resposta já pode ser verificada: ordem completa, todos os pares, valor e justificativa, mínimo de caracteres… */
-export function respostaCompleta(exercicio: ExercicioPublico, resposta: string): boolean {
+/**
+ * Ordenar em lista única (spec 08, revisão de 19/11): a ordem com que a tentativa começou. Na primeira, a do servidor
+ * (`exercicio.itens`, que nunca é a resposta); na nova tentativa, quem chama passa a ordem do começo dela.
+ */
+export function ordemInicial(exercicio: Extract<ExercicioPublico, { tipo: 'ordenar' }>): string {
+  return codificarResposta.ordem(exercicio.itens.map((item) => item.id));
+}
+
+/** A ordem está completa (todos os itens, sem vaga) e mudou em relação à ordem com que a tentativa começou. */
+function ordemMudou(exercicio: Extract<ExercicioPublico, { tipo: 'ordenar' }>, valor: string, inicial?: string): 'incompleta' | 'igual' | 'mudou' {
+  const ids = valor.split(',').map((id) => id.trim());
+  if (ids.filter(Boolean).length !== exercicio.itens.length) return 'incompleta';
+  return ids.join(',') === (inicial ?? ordemInicial(exercicio)).split(',').map((id) => id.trim()).join(',') ? 'igual' : 'mudou';
+}
+
+/**
+ * A resposta já pode ser verificada: ordem completa e mudada, todos os pares, valor e justificativa, mínimo de
+ * caracteres… `inicial` (só no ordenar): a ordem com que a tentativa começou; sem ela, a do servidor.
+ */
+export function respostaCompleta(exercicio: ExercicioPublico, resposta: string, inicial?: string): boolean {
   const valor = resposta.trim();
   switch (exercicio.tipo) {
     case 'ordenar':
-      return valor.split(',').filter(Boolean).length === exercicio.itens.length;
+      return ordemMudou(exercicio, valor, inicial) === 'mudou';
     case 'associar':
       return valor.split(',').filter(Boolean).length === exercicio.esquerda.length;
     case 'verdadeiro_falso': {
@@ -74,17 +92,22 @@ export type FaltaParaVerificar =
   | { tipo: 'escrever' }
   | { tipo: 'escolher' }
   | { tipo: 'ordenar'; faltam: number }
+  /** Ordenar em lista única: a ordem ainda é a do começo da tentativa. */
+  | { tipo: 'mudarOrdem' }
   | { tipo: 'associar'; faltam: number }
   | { tipo: 'valor' }
   | { tipo: 'justificativa' }
   | { tipo: 'caracteres'; faltam: number };
 
-export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string): FaltaParaVerificar | null {
-  if (respostaCompleta(exercicio, resposta)) return null;
+export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string, inicial?: string): FaltaParaVerificar | null {
+  if (respostaCompleta(exercicio, resposta, inicial)) return null;
   const valor = resposta.trim();
   switch (exercicio.tipo) {
     case 'ordenar':
-      return { tipo: 'ordenar', faltam: exercicio.itens.length - valor.split(',').filter(Boolean).length };
+      // Lista única: completa desde o começo, falta só mudar. Fichas (o modelo antigo, até as plataformas migrarem): faltam itens.
+      return ordemMudou(exercicio, valor, inicial) === 'igual'
+        ? { tipo: 'mudarOrdem' }
+        : { tipo: 'ordenar', faltam: exercicio.itens.length - valor.split(',').filter(Boolean).length };
     case 'associar':
       return { tipo: 'associar', faltam: exercicio.esquerda.length - valor.split(',').filter(Boolean).length };
     case 'verdadeiro_falso':

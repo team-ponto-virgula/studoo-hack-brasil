@@ -9,6 +9,7 @@ import {
   respostaParaTentarDeNovo,
   etapasDaLicao,
   faltaParaVerificar,
+  ordemInicial,
   frequenciasDoAcorde,
   inferirTipoTrecho,
   linhasDePassos,
@@ -348,8 +349,8 @@ test("cada objetivo cai na trilha certa: SQL, demo com assunto ou genérica", as
 
 test("o rodapé diz o que falta para verificar, em cada formato, e some com a resposta completa", async () => {
   const { textoDaFalta } = await import("@studoo/contratos/experiencia");
-  const dica = (exercicio, resposta) => {
-    const falta = faltaParaVerificar(exercicio, resposta);
+  const dica = (exercicio, resposta, inicial) => {
+    const falta = faltaParaVerificar(exercicio, resposta, inicial);
     return falta && textoDaFalta(falta);
   };
   const itens = [{ id: "a", texto: "A" }, { id: "b", texto: "B" }, { id: "c", texto: "C" }];
@@ -357,6 +358,15 @@ test("o rodapé diz o que falta para verificar, em cada formato, e some com a re
   assert.equal(dica(ordenar, ""), "Faltam 3 itens para colocar em ordem.");
   assert.equal(dica(ordenar, "b,a"), "Falta 1 item para colocar em ordem.");
   assert.equal(dica(ordenar, "b,a,c"), null);
+  // Lista única (spec 08, revisão de 19/11): a ordem do servidor já está completa, mas só verifica depois de mudar.
+  assert.equal(dica(ordenar, "a,b,c"), "Mude a ordem para verificar.");
+  assert.equal(respostaCompleta(ordenar, "a,b,c"), false, "a ordem do servidor nunca vai para a verificação");
+  assert.equal(ordemInicial(ordenar), "a,b,c");
+  // Nova tentativa: compara com a ordem com que ela começou (o que já mudou antes não conta).
+  assert.equal(respostaCompleta(ordenar, "b,a,c", "b,a,c"), false);
+  assert.equal(dica(ordenar, "b,a,c", "b,a,c"), "Mude a ordem para verificar.");
+  assert.equal(respostaCompleta(ordenar, "a,b,c", "b,a,c"), true, "voltar à ordem do servidor também é mudar");
+  assert.equal(dica(ordenar, "c,a,b", "b,a,c"), null);
   const associar = { tipo: "associar", enunciado: "Ligue", esquerda: itens.slice(0, 2), direita: [{ id: "1", texto: "1" }, { id: "2", texto: "2" }] };
   assert.equal(dica(associar, "a=2"), "Falta 1 par para ligar.");
   assert.equal(dica(associar, "a=2,b=1"), null);

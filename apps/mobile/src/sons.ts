@@ -1,9 +1,11 @@
 /**
  * Toca-sons do app Mobile (Expo) para o Studoo.
  * - Usa `expo-audio` com `playsInSilentMode: false` para respeitar a chave de silêncio do aparelho nos efeitos/fundo.
- * - Efeitos em WAV mono (0 ms de atraso de codificador).
+ * - Efeitos em WAV mono 44.1 kHz (0 ms de atraso de codificador).
  * - Fundos em MP3 com dois reprodutores alternados em cruzamento suave (150 ms) para evitar buraco na emenda.
- * - Convivência: abaixa o fundo em fala/áudio de lição (ducking) e pausa em gravação, voz ao vivo ou segundo plano (`AppState`).
+ * - Posse do modo de áudio delegada a `MaquinaEstadoSom` (`packages/contratos/src/som-estado.ts`):
+ *   nunca chama `setAudioModeAsync` durante gravação/voz ao vivo ou fala de lição, e reaplica o modo normal
+ *   em `sairDeFala()` e `sairDeGravacaoOuVoz()`.
  * - Preferências persistidas em `SecureStore`.
  */
 
@@ -18,6 +20,7 @@ import {
   type IdSomFundo,
   type PreferenciasSom,
 } from '../../../packages/contratos/src/catalogo-sons';
+import { MaquinaEstadoSom } from '../../../packages/contratos/src/som-estado';
 
 const CHAVE_EFEITOS = 'studoo.sons.efeitos';
 const CHAVE_FUNDO = 'studoo.sons.fundo';
@@ -65,16 +68,11 @@ const FONTES_FUNDOS: Record<Exclude<IdSomFundo, 'mudo'>, AudioSource> = {
 };
 
 class TocaSonsMobile {
-  private prefs: PreferenciasSom = { ...PADRAO_PREFERENCIAS_SOM };
+  private estado = new MaquinaEstadoSom();
   private prefsCarregadas = false;
   private ultimoDisparo = new Map<IdEfeitoSonoro, number>();
 
-  private modoConfigurado = false;
-  private appEmSegundoPlano = false;
   private listenerAppState: { remove: () => void } | null = null;
-
-  private contFala = 0;
-  private contGravacaoOuVoz = 0;
 
   private fundoAtualId: Exclude<IdSomFundo, 'mudo'> | null = null;
   private jogadorA: AudioPlayer | null = null;
@@ -83,39 +81,47 @@ class TocaSonsMobile {
   private timerCruzamento: ReturnType<typeof setTimeout> | null = null;
 
   async carregarPreferencias(): Promise<PreferenciasSom> {
-    if (this.prefsCarregadas) return { ...this.prefs };
+    if (this.prefsCarregadas) return this.obterPreferencias();
     this.prefsCarregadas = true;
     try {
       const [e, f] = await Promise.all([
         SecureStore.getItemAsync(CHAVE_EFEITOS),
         SecureStore.getItemAsync(CHAVE_FUNDO),
       ]);
-      this.prefs = {
-        efeitosAtivos: e === null ? PADRAO_PREFERENCIAS_SOM.efeitosAtivos : e === '1',
-        fundo: f && IDS_FUNDOS_VALIDOS.has(f as IdSomFundo) ? (f as IdSomFundo) : PADRAO_PREFERENCIAS_SOM.fundo,
-      };
+      this.estado.definirEfeitosAtivos(e === null ? PADRAO_PREFERENCIAS_SOM.efeitosAtivos : e === '1');
+      this.estado.definirFundo(
+        f && IDS_FUNDOS_VALIDOS.has(f as IdSomFundo) ? (f as IdSomFundo) : PADRAO_PREFERENCIAS_SOM.fundo,
+      );
     } catch {
-      this.prefs = { ...PADRAO_PREFERENCIAS_SOM };
+      this.estado.definirEfeitosAtivos(PADRAO_PREFERENCIAS_SOM.efeitosAtivos);
+      this.estado.definirFundo(PADRAO_PREFERENCIAS_SOM.fundo);
     }
     this.garantirAppState();
-    return { ...this.prefs };
+    return this.obterPreferencias();
   }
 
   obterPreferencias(): PreferenciasSom {
-    return { ...this.prefs };
+    return {
+      efeitosAtivos: this.estado.efeitosAtivos,
+      fundo: this.estado.fundo,
+    };
   }
 
   private garantirAppState(): void {
     if (this.listenerAppState || Platform.OS === 'web') return;
     this.listenerAppState = AppState.addEventListener('change', (estado) => {
-      this.appEmSegundoPlano = estado !== 'active';
+      this.estado.definirSegundoPlano(estado !== 'active');
       void this.atualizarEstadoFundo();
     });
   }
 
-  private async garantirModoAudio(): Promise<void> {
-    if (this.modoConfigurado || Platform.OS === 'web') return;
-    this.modoConfigurado = true;
+  /**
+   * Aplica o modo normal do toca-sons (`playsInSilentMode: false`).
+   * Só executa quando `MaquinaEstadoSom.podeConfigurarModoAgora()` é verdadeiro
+   * (ou seja, nunca durante fala/áudio de lição nem durante gravação/voz ao vivo).
+   */
+  private async aplicarModoNormalSePermitido(): Promise<void> {
+    if (Platform.OS === 'web' || !this.estado.podeConfigurarModoAgora()) return;
     await setAudioModeAsync({
       playsInSilentMode: false,
       interruptionMode: 'duckOthers',
@@ -124,8 +130,7 @@ class TocaSonsMobile {
 
   async tocarEfeito(id: IdEfeitoSonoro): Promise<void> {
     await this.carregarPreferencias();
-    if (!this.prefs.efeitosAtivos) return;
-    if (this.contGravacaoOuVoz > 0 && id !== 'gravacao_fim') return;
+    if (!this.estado.podeTocarEfeito(id)) return;
 
     const def = CATALOGO_EFEITOS[id];
     const agora = Date.now();
@@ -133,7 +138,9 @@ class TocaSonsMobile {
     if (agora - ultimo < def.cooldownMs) return;
     this.ultimoDisparo.set(id, agora);
 
-    await this.garantirModoAudio();
+    // Garante que o modo normal (respeitando chave de silêncio) esteja ativo se nenhum outro dono estiver no controle.
+    await this.aplicarModoNormalSePermitido();
+
     try {
       const player = createAudioPlayer(FONTES_SFX[id]);
       player.volume = def.volume;
@@ -151,7 +158,7 @@ class TocaSonsMobile {
   }
 
   async definirEfeitosAtivos(ativos: boolean): Promise<void> {
-    this.prefs.efeitosAtivos = ativos;
+    this.estado.definirEfeitosAtivos(ativos);
     this.prefsCarregadas = true;
     try {
       await SecureStore.setItemAsync(CHAVE_EFEITOS, ativos ? '1' : '0');
@@ -161,7 +168,7 @@ class TocaSonsMobile {
   }
 
   async definirFundo(fundo: IdSomFundo): Promise<void> {
-    this.prefs.fundo = fundo;
+    this.estado.definirFundo(fundo);
     this.prefsCarregadas = true;
     try {
       await SecureStore.setItemAsync(CHAVE_FUNDO, fundo);
@@ -173,23 +180,31 @@ class TocaSonsMobile {
   }
 
   entrarEmFala(): void {
-    this.contFala += 1;
+    this.estado.entrarEmFala();
     void this.atualizarEstadoFundo();
   }
 
   sairDeFala(): void {
-    this.contFala = Math.max(0, this.contFala - 1);
-    void this.atualizarEstadoFundo();
+    const deveReaplicar = this.estado.sairDeFala();
+    if (deveReaplicar) {
+      void this.aplicarModoNormalSePermitido().then(() => this.atualizarEstadoFundo());
+    } else {
+      void this.atualizarEstadoFundo();
+    }
   }
 
   entrarEmGravacaoOuVoz(): void {
-    this.contGravacaoOuVoz += 1;
+    this.estado.entrarEmGravacaoOuVoz();
     void this.atualizarEstadoFundo();
   }
 
   sairDeGravacaoOuVoz(): void {
-    this.contGravacaoOuVoz = Math.max(0, this.contGravacaoOuVoz - 1);
-    void this.atualizarEstadoFundo();
+    const deveReaplicar = this.estado.sairDeGravacaoOuVoz();
+    if (deveReaplicar) {
+      void this.aplicarModoNormalSePermitido().then(() => this.atualizarEstadoFundo());
+    } else {
+      void this.atualizarEstadoFundo();
+    }
   }
 
   private limparFundo(): void {
@@ -213,7 +228,7 @@ class TocaSonsMobile {
   }
 
   private volumeAlvo(base: number): number {
-    return this.contFala > 0 ? base * 0.2 : base;
+    return this.estado.estadoFundo() === 'atenuado' ? base * 0.2 : base;
   }
 
   private agendarProximoCruzamento(id: Exclude<IdSomFundo, 'mudo'>): void {
@@ -221,10 +236,9 @@ class TocaSonsMobile {
     const def = CATALOGO_FUNDOS.find((f) => f.id === id);
     if (!def) return;
 
-    // Dispara 180 ms antes do fim aparado para cruzar os dois tocadores sem buraco de MP3.
     const esperaMs = Math.max(5000, def.duracaoMs - Math.round((def.aparoInicioSeg + def.aparoFimSeg) * 1000) - 180);
     this.timerCruzamento = setTimeout(() => {
-      if (this.fundoAtualId !== id || this.appEmSegundoPlano || this.contGravacaoOuVoz > 0) return;
+      if (this.fundoAtualId !== id || this.estado.estadoFundo() === 'parado') return;
       const atual = this.ativoEhA ? this.jogadorA : this.jogadorB;
       const proximo = this.ativoEhA ? this.jogadorB : this.jogadorA;
       if (!atual || !proximo) return;
@@ -238,7 +252,6 @@ class TocaSonsMobile {
         return;
       }
 
-      // Cruzamento de 150 ms em 5 passos
       let passo = 0;
       const passos = 5;
       const intervalo = setInterval(() => {
@@ -266,24 +279,20 @@ class TocaSonsMobile {
   }
 
   private async atualizarEstadoFundo(): Promise<void> {
-    const deveTocar =
-      this.prefs.fundo !== 'mudo' &&
-      !this.appEmSegundoPlano &&
-      this.contGravacaoOuVoz === 0;
-
-    if (!deveTocar || this.prefs.fundo === 'mudo') {
+    const estadoFundo = this.estado.estadoFundo();
+    if (estadoFundo === 'parado' || this.estado.fundo === 'mudo') {
       this.limparFundo();
       return;
     }
 
-    const id = this.prefs.fundo;
+    const id = this.estado.fundo;
     const def = CATALOGO_FUNDOS.find((f) => f.id === id);
     if (!def) {
       this.limparFundo();
       return;
     }
 
-    await this.garantirModoAudio();
+    await this.aplicarModoNormalSePermitido();
     const alvo = this.volumeAlvo(def.volume);
 
     if (this.fundoAtualId === id && this.jogadorA && this.jogadorB) {

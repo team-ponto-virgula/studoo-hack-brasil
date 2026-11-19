@@ -43,6 +43,7 @@ import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, plan
 import { TelaPerfil } from './perfil';
 import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { Explorar } from './comunidade';
+import { tocaSons } from './sons';
 import './aula.css';
 import './trilha.css';
 
@@ -389,6 +390,7 @@ export function Estudo() {
       aoConfirmar: async () => {
         const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
         if (!resultado.ok) return;
+        void tocaSons.tocarEfeito('apagar');
         setPlanos((anteriores) => anteriores.filter((item) => item.id !== plano.id));
         anunciar(mensagens.planos.apagada(plano.titulo));
         depois?.();
@@ -429,7 +431,9 @@ export function Estudo() {
         trilha = aplicarEvento(trilha, evento);
         setGeracao(trilha);
         if (evento.tipo === 'plano') anunciar(mensagens.geracao.anuncioTitulo(evento.titulo));
+        if (evento.tipo === 'licao') void tocaSons.tocarEfeito('geracao_licao');
         if (evento.tipo === 'pronto') {
+          void tocaSons.tocarEfeito('geracao_pronta');
           anunciar(mensagens.geracao.anuncioPronta(nosDaPrevia(trilha).length));
           return;
         }
@@ -539,6 +543,9 @@ export function Estudo() {
     if (resultado.ok) {
       cacheLicoes.current.delete(licao.id);
       const atualizado = resultado.dados.plano;
+      // A última lição fecha a trilha: o som é o da trilha inteira (só na primeira vez que ela fecha).
+      const fechada = (p: PlanoDetalhe['progresso']) => p.total > 0 && p.concluidas === p.total;
+      void tocaSons.tocarEfeito(fechada(atualizado.progresso) && !fechada(plano.progresso) ? 'concluir_trilha' : 'concluir_licao');
       atualizarPlano(atualizado);
       const momento = Date.now();
       ultimaBusca.current = momento;

@@ -31,6 +31,7 @@ import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, u
 import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
+import { tocaSons } from './sons';
 import './perfil.css';
 
 const m = mensagens.compartilhar;
@@ -196,6 +197,7 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
   async function copiar(link: LinkCompartilhado) {
     try {
       await navigator.clipboard.writeText(urlDoLink(link.codigo));
+      void tocaSons.tocarEfeito('link_copiado');
       setCopiado((anterior) => (anterior === m.copiado ? `${m.copiado} ` : m.copiado));
     } catch {
       setCopiado(m.copiarFalhou);
@@ -433,6 +435,7 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
       setResumo(novo.resumo ?? '');
       setInteresses(novo.interesses);
       setEstado('salvo');
+      void tocaSons.tocarEfeito('salvo');
       anunciar(p.salvo);
       registrarGuarda?.(null);
       aoFechar?.();

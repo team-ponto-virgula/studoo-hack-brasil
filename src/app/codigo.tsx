@@ -10,6 +10,7 @@ import { FUNDO_DA_COR, centroDoCodigo, enderecoFoto, inicialDoNome, svgCodigoDoL
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { useDialogo } from './compartilhar';
+import { tocaSons } from './sons';
 import './codigo.css';
 
 const k = mensagens.codigo;
@@ -206,7 +207,7 @@ export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, inicia
   }, []);
 
   async function copiar() {
-    try { await navigator.clipboard.writeText(url); avisar(k.copiado); } catch { avisar(mensagens.compartilhar.copiarFalhou); }
+    try { await navigator.clipboard.writeText(url); void tocaSons.tocarEfeito('link_copiado'); avisar(k.copiado); } catch { avisar(mensagens.compartilhar.copiarFalhou); }
   }
   async function compartilharLink() {
     if (typeof navigator.share !== 'function') return copiar();
