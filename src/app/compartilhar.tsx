@@ -35,6 +35,7 @@ import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { PainelCodigo } from './codigo';
 import { BotaoSeguir } from './seguir';
+import { tocaSons } from './sons';
 import './compartilhar.css';
 import './comunidade.css';
 
@@ -441,6 +442,7 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
     if (!link) return;
     try {
       await navigator.clipboard.writeText(urlDoLink(link.codigo));
+      void tocaSons.tocarEfeito('link_copiado');
       setStatus((anterior) => (anterior === m.copiado ? `${m.copiado} ` : m.copiado));
     } catch {
       campoLink.current?.select();

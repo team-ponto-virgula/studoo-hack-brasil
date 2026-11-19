@@ -36,6 +36,7 @@ import {
 import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
 import { Botao, Confete, Icone, Stu, type NomeIcone } from '../ui';
 import { ApoioDaLicao } from './estudio';
+import { tocaSons } from './sons';
 
 const t = mensagens.licao;
 
@@ -440,6 +441,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       if (numero >= 0 && numero < exercicio.opcoes.length) {
         evento.preventDefault();
         mudarResposta(exercicio.opcoes[numero].id);
+        void tocaSons.tocarEfeito('toque_opcao');
       }
     }
     window.addEventListener('keydown', teclas);
@@ -455,6 +457,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     if (ocupado || !exercicio || avaliacao || !respostaCompleta(exercicio, resposta)) return;
     const resultado = await avaliar(resposta, indice);
     if (!resultado) return;
+    void tocaSons.tocarEfeito(resultado.correta ? 'acerto' : 'erro');
     setTentativas((soma) => soma + 1);
     setPrimeiras((atuais) => atuais.map((atual, posicao) => (posicao === indice ? atual ?? resultado.correta : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? resultado : atual)));
@@ -833,7 +836,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           })()}
           <div className="aula-rodape__acoes">
             {avaliacao && !avaliacao.correta && pedidoPonte === 0 && (
-              <Botao variante="primario" disabled={ocupado} onClick={() => setPedidoPonte((atual) => atual + 1)}>
+              <Botao variante="primario" disabled={ocupado} onClick={() => { setPedidoPonte((atual) => atual + 1); void tocaSons.tocarEfeito('ponte_abrir'); }}>
                 {mensagens.estudio.verPonte}
               </Botao>
             )}
@@ -1013,6 +1016,7 @@ function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso:
     };
     enderecos.current[som] ??= URL.createObjectURL(new Blob([bytes() as BlobPart], { type: 'audio/wav' }));
     const audio = new Audio(enderecos.current[som]);
+    const sairDaFala = emFala(audio);
     audioAtual.current = audio;
     setTocando(som);
     setSemSom(false);
@@ -1023,6 +1027,7 @@ function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso:
     audio.play().then(() => {
       if (som === 'batida') acompanhar(audio);
     }).catch(() => {
+      sairDaFala();
       setTocando(null);
       setSemSom(true);
     });
@@ -1093,6 +1098,18 @@ function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso:
 }
 
 /** Um som de referência para a prática (como o Mi da 6ª corda, para afinar), sintetizado como o acorde. */
+/** O som de fundo abaixa enquanto o acorde ou a batida tocam (sai no fim, na pausa ou no erro, uma vez só). */
+function emFala(audio: HTMLAudioElement) {
+  tocaSons.entrarEmFala();
+  let saiu = false;
+  const sair = () => { if (!saiu) { saiu = true; tocaSons.sairDeFala(); } };
+  audio.addEventListener('ended', sair, { once: true });
+  audio.addEventListener('pause', sair, { once: true });
+  audio.addEventListener('error', sair, { once: true });
+  // Não chegou a tocar (bloqueado pelo navegador): sai também.
+  return sair;
+}
+
 function TocarSom({ rotulo, casas }: { rotulo: string; casas: number[] }) {
   const [tocando, setTocando] = useState(false);
   const [semSom, setSemSom] = useState(false);
@@ -1103,10 +1120,12 @@ function TocarSom({ rotulo, casas }: { rotulo: string; casas: number[] }) {
   function tocar() {
     endereco.current ??= URL.createObjectURL(new Blob([sintetizarAcorde(casas) as BlobPart], { type: 'audio/wav' }));
     const audio = new Audio(endereco.current);
+    const sairDaFala = emFala(audio);
     setTocando(true);
     setSemSom(false);
     audio.onended = () => setTocando(false);
     audio.play().catch(() => {
+      sairDaFala();
       setTocando(false);
       setSemSom(true);
     });
@@ -1139,21 +1158,26 @@ function falar(fala: Fala, devagar: boolean, aoTerminar?: () => void, aoFalhar?:
   const sintese = window.speechSynthesis;
   sintese.cancel();
   const frase = new SpeechSynthesisUtterance(fala.texto);
-  if (aoTerminar) {
-    const comeco = Date.now();
-    const reserva = window.setTimeout(aoTerminar, Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
-    frase.onend = () => {
-      window.clearTimeout(reserva);
-      aoTerminar();
-      // Acabou na hora: o aparelho não tem voz para a frase (nada foi falado).
-      if (Date.now() - comeco < 250 && fala.texto.length > 3) aoFalhar?.();
-    };
-    frase.onerror = (evento) => {
-      window.clearTimeout(reserva);
-      aoTerminar();
-      if (evento.error !== 'interrupted' && evento.error !== 'canceled') aoFalhar?.();
-    };
-  }
+  // Enquanto a voz lê, o som de fundo abaixa (uma saída por entrada, pelo fim, pelo erro ou pela reserva).
+  tocaSons.entrarEmFala();
+  let saiu = false;
+  const terminar = () => {
+    if (!saiu) { saiu = true; tocaSons.sairDeFala(); }
+    aoTerminar?.();
+  };
+  const comeco = Date.now();
+  const reserva = window.setTimeout(terminar, Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
+  frase.onend = () => {
+    window.clearTimeout(reserva);
+    terminar();
+    // Acabou na hora: o aparelho não tem voz para a frase (nada foi falado).
+    if (Date.now() - comeco < 250 && fala.texto.length > 3) aoFalhar?.();
+  };
+  frase.onerror = (evento) => {
+    window.clearTimeout(reserva);
+    terminar();
+    if (evento.error !== 'interrupted' && evento.error !== 'canceled') aoFalhar?.();
+  };
   frase.lang = fala.idioma;
   frase.rate = devagar ? 0.6 : 0.95;
   const idioma = fala.idioma.toLowerCase();
@@ -1560,7 +1584,7 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
           <legend>{t.resposta}</legend>
           {exercicio.opcoes.map((opcao, posicao) => (
             <label key={opcao.id} data-retorno={resposta === opcao.id ? retorno : undefined}>
-              <input type="radio" name="resposta" value={opcao.id} required checked={resposta === opcao.id} onChange={() => mudar(opcao.id)} />
+              <input type="radio" name="resposta" value={opcao.id} required checked={resposta === opcao.id} onChange={() => { mudar(opcao.id); void tocaSons.tocarEfeito('toque_opcao'); }} />
               <span className="opcao-tecla" aria-hidden="true">{String.fromCharCode(65 + posicao)}</span>
               <span>{opcao.texto}</span>
             </label>
@@ -1836,7 +1860,7 @@ function VerdadeiroFalso({ afirmacao, justificativas, valor, mudar, desativado, 
         <legend>{t.verdadeiroFalso.valor}</legend>
         {(['verdadeiro', 'falso'] as const).map((opcao) => (
           <label key={opcao} data-valor={opcao} data-retorno={escolha === opcao ? corDaParte('valor') : undefined}>
-            <input type="radio" name="vf-valor" value={opcao} checked={escolha === opcao} onChange={() => salvar(opcao, justificativa)} />
+            <input type="radio" name="vf-valor" value={opcao} checked={escolha === opcao} onChange={() => { salvar(opcao, justificativa); void tocaSons.tocarEfeito('toque_opcao'); }} />
             <span>{opcao === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : t.verdadeiroFalso.falso}</span>
           </label>
         ))}
@@ -1846,7 +1870,7 @@ function VerdadeiroFalso({ afirmacao, justificativas, valor, mudar, desativado, 
         {justificativas.map((opcao, posicao) => (
           <label key={opcao.id} data-retorno={justificativa === opcao.id ? corDaParte('justificativa') : undefined}>
             <input type="radio" name="vf-justificativa" value={opcao.id} checked={justificativa === opcao.id}
-              onChange={() => salvar(escolha, opcao.id)} />
+              onChange={() => { salvar(escolha, opcao.id); void tocaSons.tocarEfeito('toque_opcao'); }} />
             <span className="opcao-tecla" aria-hidden="true">{String.fromCharCode(65 + posicao)}</span>
             <span>{opcao.texto}</span>
           </label>
@@ -1935,6 +1959,13 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
   const praticado = Math.max(praticadoTotal, total - restante);
   const praticou = semCronometro || praticado >= minimo;
 
+  // Sons do cronômetro: ao começar (ou retomar) e quando chega a zero contando.
+  useEffect(() => { if (rodando) void tocaSons.tocarEfeito('cronometro_inicio'); }, [rodando]);
+  const restanteAntes = useRef(restante);
+  useEffect(() => {
+    if (restante === 0 && restanteAntes.current > 0) void tocaSons.tocarEfeito('cronometro_fim');
+    restanteAntes.current = restante;
+  }, [restante]);
   useEffect(() => {
     if (!rodando) return;
     const intervalo = window.setInterval(() => {

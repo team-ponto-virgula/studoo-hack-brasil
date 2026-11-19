@@ -27,6 +27,7 @@ import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { codigoDoErro, useDialogo } from './compartilhar';
 import { RecorteImagem } from './perfil';
+import { tocaSons } from './sons';
 import './configuracoes.css';
 
 const k = mensagens.configuracoes;
@@ -84,6 +85,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
       const novo = await cliente.salvarConfiguracoes(planoId, mudanca);
       setConf(novo);
       setEstado('salvo');
+      void tocaSons.tocarEfeito('salvo');
       aoMudar(novo);
     } catch (falha) {
       setErros((atual) => ({ ...atual, [campo]: textoErro(codigoDoErro(falha)) }));
@@ -226,6 +228,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
             setArquivo(null);
             setConf(novo);
             setEstado('salvo');
+            void tocaSons.tocarEfeito('salvo');
             aoMudar(novo);
           }} />
       )}

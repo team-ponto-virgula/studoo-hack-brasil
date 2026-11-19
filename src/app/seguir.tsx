@@ -10,6 +10,7 @@ import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { Avatar, CHAVE_DEPOIS_DO_LOGIN, codigoDoErro, guardar } from './compartilhar';
+import { tocaSons } from './sons';
 
 const c = mensagens.comunidade;
 
@@ -36,6 +37,7 @@ export function BotaoSeguir({ perfilId, nome, estado, logado, aoMudar }: {
       return;
     }
     const ativo = !seguindo;
+    if (ativo) void tocaSons.tocarEfeito('seguir');
     setOcupado(true);
     setSeguindo(ativo);
     try {

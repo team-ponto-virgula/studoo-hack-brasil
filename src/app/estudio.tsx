@@ -24,6 +24,7 @@ import {
   iniciarControladorVozAoVivo,
   type ControladorVozAoVivo,
 } from './voz-ao-vivo';
+import { tocaSons } from './sons';
 import './estudio.css';
 const m = mensagens.estudio;
 /** Uma consulta a `/api/auth/config` por carga, compartilhada pela voz ao vivo e pela gravação (refeita se falhar). */
@@ -431,6 +432,8 @@ export function ApoioDaLicao({
   }
 
   function iniciarConversaAoVivo() {
+    // O som de início antes de abrir o microfone (o efeito abaixo pausa o fundo e os outros efeitos).
+    void tocaSons.tocarEfeito('gravacao_inicio');
     setAviso('');
     usuarioRolouLegendasRef.current = false;
     setEtapaVoz('ativa');
@@ -455,6 +458,12 @@ export function ApoioDaLicao({
       },
     });
   }
+  // Voz ao vivo: enquanto a conversa está aberta, o fundo para e só o fim da gravação toca; ao fechar, `gravacao_fim`.
+  useEffect(() => {
+    if (etapaVoz !== 'ativa') return;
+    tocaSons.entrarEmGravacaoOuVoz();
+    return () => { tocaSons.sairDeGravacaoOuVoz(); void tocaSons.tocarEfeito('gravacao_fim'); };
+  }, [etapaVoz]);
   // O "Isso! Você pegou a ideia." aparece no fim do cartão, às vezes atrás do painel de retorno: a tela leva até ele.
   useEffect(() => {
     if (!feedback) return;
@@ -524,6 +533,12 @@ export function ApoioDaLicao({
       ativo = false;
     };
   }, [licao.id, avaliacao]);
+  // Gravação: o mesmo, do microfone aberto até fechar (o `gravando` cai depois de parar as faixas).
+  useEffect(() => {
+    if (!gravando) return;
+    tocaSons.entrarEmGravacaoOuVoz();
+    return () => { tocaSons.sairDeGravacaoOuVoz(); void tocaSons.tocarEfeito('gravacao_fim'); };
+  }, [gravando]);
   useEffect(() => {
     if (!gravando) return;
     const id = setInterval(() => setSegundos((s) => s + 1), 1000);
@@ -550,6 +565,7 @@ export function ApoioDaLicao({
   async function gravar() {
     await executar(async () => {
       try {
+        void tocaSons.tocarEfeito('gravacao_inicio');
         const midia = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
