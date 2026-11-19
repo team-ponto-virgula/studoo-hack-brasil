@@ -67,7 +67,7 @@ export function tipoDaImagem(bytes: Uint8Array): "jpeg" | "png" | "webp" | null 
 }
 
 /** Decodifica o base64 estrito (o mesmo texto volta igual) e confere tamanho e tipo. */
-function lerBase64(entrada: unknown): Buffer {
+export function lerBase64(entrada: unknown): Buffer {
   const { base64 } = (entrada ?? {}) as { base64?: unknown };
   if (typeof base64 !== "string" || base64.length === 0 || base64.length > Math.ceil(LIMITES_FOTO.bytes / 3) * 4) throw new FalhaApi("foto_invalida");
   const bytes = Buffer.from(base64, "base64");
@@ -93,7 +93,7 @@ export async function processarFoto(bytes: Buffer): Promise<{ grande: Buffer; pe
   }
 }
 
-async function contaComPerfil(usuarioId: string) {
+export async function contaComPerfil(usuarioId: string) {
   const usuario = await banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { email: true } });
   if (ehEmailVisitante(usuario.email)) throw new FalhaApi("compartilhar_visitante");
 }

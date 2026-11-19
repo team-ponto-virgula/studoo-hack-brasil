@@ -8,12 +8,79 @@ O Studoo ensina qualquer assunto, não só programação. A lição tem formatos
 | --- | --- | --- | --- |
 | `lacuna` | escreve uma palavra, número ou símbolo | o texto | tolera maiúsculas, acentos, aspas, pontuação nas pontas e artigo; grafias que soam igual em português (ch e x, ç, ss e s, sc e xc, z e s entre vogais: “tarracha”), com aviso de grafia; um deslize de digitação em palavras de 5 letras ou mais (dois a partir de 9), com aviso; a frase em volta junto (“how much” na lacuna de “How ___ is…”), uma palavra de cortesia (“repeat please”, “por favor”) ou, com a lacuna no fim da frase, um complemento (“repeat it”), com o aviso de que basta o que falta. Com a palavra certa no meio de outras, o retorno diz que ela está na resposta e que a lacuna pede só o que falta. Números e símbolos (`>=`) seguem exatos. Com `exata`, a grafia é a lição (idioma) e não há tolerância a deslize: uma letra a mais ou a menos continua errada, mas o retorno diz **Quase! Confira a grafia**. Com a IA configurada, uma resposta errada passa por um desempate (sinônimo, número por extenso), menos uma armadilha conhecida da lição (“chave”), que continua errada, com o aviso; com `exata`, o desempate sabe que a grafia é a lição e não aceita palavra escrita errado. |
 | `multipla_escolha` | escolhe uma opção | o id | exata |
-| `ordenar` | toca nos itens na ordem certa (chegam embaralhados, sempre do mesmo jeito) | `a,b,c` | exata; o retorno diz quais posições já estão certas |
+| `ordenar` | vê todos os itens numa lista só e arrasta para pôr em ordem, ou toca em dois para trocar de lugar (chegam embaralhados, sempre do mesmo jeito) | `a,b,c` | exata; o retorno diz quais posições já estão certas |
 | `associar` | liga cada item da esquerda ao par da direita (a direita chega embaralhada) | `e1=d2,e2=d1` | exata; o retorno diz quais pares estão certos |
 | `verdadeiro_falso` | julga a afirmação e escolhe a justificativa | `falso:j2` | os dois precisam estar certos; acertar só o valor gera um aviso |
 | `aberta` | explica com as próprias palavras (mínimo de caracteres) | o texto | com a IA, critério por critério, e os essenciais continuam obrigatórios (sem o essencial, o retorno diz “Falta o ponto principal desta resposta: …”), com o aviso da armadilha ou da grafia junto; no modo demonstração, confere as ideias-chave (grupos de palavras-chave sem acento, pelo começo da palavra, com um deslize de digitação em palavras de 5 letras ou mais) e desconsidera a ideia negada logo antes (“não continuo”), a menos que o termo já comece com a negação (“não para”). Critérios em `essenciais` (o ponto da lição, como “I'd like” e não “I like”) precisam aparecer para passar. Erros comuns (`armadilhas`, como “I want” num pedido) ganham um aviso próprio, e uma ideia achada só com um deslize de digitação (“coffe”) vale com o aviso da grafia; na lacuna, a armadilha vale para a resposta inteira errada (“chave”, o nome popular da tarraxa). Mostra os critérios e, no acerto ou na segunda tentativa, uma resposta modelo; “Tentar de novo” mantém o texto para a pessoa corrigir. |
 
 O trecho de um exercício tem um tipo (`trechoTipo`): `codigo` (o único em fonte monoespaçada), `frase`, `citacao`, `formula` ou `passos`. Lições salvas antes dos tipos recebem um tipo inferido (código só quando parece código). As lacunas (`___`) aparecem como um espaço sublinhado.
+
+## Revisão do dono (19/11): ordenar em lista única e cada formato em 3 segundos
+
+Vale para web, Android e iPhone, com os mesmos textos, medidas e ordem. O ordenar por fichas (a ficha ia para “Sua ordem”, com vagas e “Recomeçar”) sai. A resposta enviada e a correção não mudam (`a,b,c`). Esboços: `ordenar-390.png` e `formatos-390.png`, na pasta de trabalho do Designer (`ux/02-ordenar-formatos`).
+
+### Ordenar em lista única
+
+**Como funciona.** Todos os itens ficam numa lista só, na ordem do servidor, que nunca é a resposta. A pessoa arrasta um item para outro lugar, ou toca em dois itens para trocar os dois de lugar. A ordem da lista é a resposta.
+
+**Anatomia (390 px).**
+- Logo abaixo do enunciado, a linha de como responder (ver abaixo): o ícone de arrastar e “Arraste para pôr em ordem ou toque em dois itens para trocar.”
+- Lista numerada, com 8 px entre os cartões, na largura do quadro (na web larga, até 640 px).
+- Cartão: altura mínima de 56 px, respiro de 10 px em cima e embaixo e 12 px à esquerda, raio de 16, borda de 2 px `#C9D1EA`, fundo branco e degrau de 4 px `#C9D1EA`, que some no toque como nos outros cartões. Da esquerda para a direita: o número da posição num círculo de 28 px (fundo `#EEF3FF`, número `#2A44A8`, Quicksand 700 de 15 px, sem “º”); o texto (Nunito 700, 16/22, `#1B2A5E`, até três linhas, sem cortar); a alça de arrastar (seis pontos de 20 px, `#8A94B3`) numa área de toque de 44 × 44 px.
+- Sem o rótulo “Sua ordem”, sem a caixa tracejada e sem vagas.
+
+**Estados do cartão.**
+
+| Estado | Como fica |
+| --- | --- |
+| Normal | como na anatomia |
+| Mouse em cima (web) | borda `#9FB1F0` e cursor de mão na alça |
+| Foco pelo teclado | anel de 3 px `#3858D6`, afastado 3 px |
+| Escolhido (primeiro toque) | sobe 2 px; borda `#3858D6`, fundo `#EEF3FF`, degrau de 6 px `#2A44A8` e o círculo do número cheio `#3858D6`, com o número branco |
+| Arrastando | escala 1,03, com a sombra `0 12px 24px rgba(27, 42, 94, .18)`; os outros abrem espaço |
+| Certo e travado (nova tentativa) | borda `#2F9E6F`, fundo `#EEFAF3`, círculo `#2F9E6F` e o visto no lugar da alça; não se move nem troca |
+| Depois de verificar | certo em verde e errado em âmbar (borda `#E3A24A`, fundo `#FFF6EA`, círculo `#E3A24A` e um X no lugar da alça) |
+| Enviando | igual; os toques são ignorados |
+
+**Toques e gestos.**
+- Tocar num cartão escolhe ele, e a linha de como responder vira “Agora toque em outro item para trocar os dois de lugar.” Tocar em outro troca os dois. Tocar de novo no escolhido, ou fora da lista, desfaz a escolha.
+- Arrastar: no toque, segurar 180 ms e mover, para a rolagem da página continuar livre; com o mouse, 4 px de movimento já arrastam; pela alça, o arrasto começa na hora. Perto da borda de cima ou de baixo da tela (64 px), a página rola sozinha.
+- Teclado (web): Tab chega a cada cartão. Enter ou Espaço escolhe; com um escolhido, as setas para cima e para baixo movem ele uma posição, e Enter ou Espaço noutro cartão troca os dois; Esc desfaz a escolha.
+- Os travados ficam fora: arrastar passa por eles sem tirá-los do lugar, e tocar num travado só lê o estado.
+
+**Movimento.**
+- Escolher: 120 ms, com saída suave.
+- Trocar: os dois cartões deslizam um para o lugar do outro em 240 ms, com uma mola curta (curva 0,2, 0,9, 0,3, 1,2); ao chegar, ganham um brilho `#EEF3FF` que some em 400 ms.
+- Soltar o arrastado: 200 ms até o lugar, com a mesma mola; os outros andam em 180 ms.
+- Movimento reduzido: nada sobe, escala ou desliza. A troca e o soltar são imediatos, e os dois cartões que mudaram ficam com o brilho por 600 ms (só cor).
+- App: os mesmos tempos com `Animated` e o arrasto com `react-native-gesture-handler`, que já está instalado. Sem dependência nova e sem vibração (o app não tem `expo-haptics`).
+
+**Textos finais.**
+- Como responder: “Arraste para pôr em ordem ou toque em dois itens para trocar.”
+- Com um escolhido: “Agora toque em outro item para trocar os dois de lugar.”
+- Rodapé antes da primeira mudança: “Mude a ordem para verificar.”, com “Verificar” desligado. Depois da primeira mudança, “Verificar” liga e o rodapé fica sem texto.
+- “Voltar à ordem inicial”, um link que aparece depois da primeira mudança. Na nova tentativa, ele volta à ordem com que a tentativa começou.
+- Nome acessível do cartão: “2º de 4: Despachar a mala”. O escolhido tem o estado selecionado (`aria-pressed` na web e `accessibilityState.selected` no app).
+- Avisos falados (`aria-live` educado; no app, `announceForAccessibility`): ““Despachar a mala” escolhido. Toque em outro item para trocar os dois de lugar.”, ““Despachar a mala” e “Pegar o cartão de embarque” trocaram de lugar.” e ““Despachar a mala” agora está na posição 3 de 4.”
+- Ações de acessibilidade em cada cartão (VoiceOver e TalkBack; na web, as setas): “Mover para cima” e “Mover para baixo”.
+- Travado: ““Mostrar o passaporte no balcão”, na posição 1: já está certo.” O retorno continua como hoje (“Confira a 2ª posição…” e “2 de 4 na posição certa.”).
+
+**Nova tentativa.** Os itens certos ficam travados no lugar, em verde. Os outros continuam onde estavam, sem o âmbar, e só eles se mexem. A dica da tentativa anterior continua embaixo. “Verificar” liga depois da primeira mudança.
+
+**O que a web e o app acompanham.** A resposta começa com a ordem do servidor, não vazia. No ordenar, `respostaCompleta` e `faltaParaVerificar` (em `packages/contratos/src/licao.ts`) comparam a resposta com a ordem inicial (`exercicio.itens`; na nova tentativa, a ordem com que ela começou), e o texto da falta vira “Mude a ordem para verificar.” A API e a correção não mudam. Saem os textos `suaOrdem`, `disponiveis`, `vazio`, `vaga`, `colocar` e `tirar`; `recomecar` vira “Voltar à ordem inicial”.
+
+### Cada formato em 3 segundos
+
+A pergunta é uma só: dá para entender o que fazer em 3 segundos? Do mais grave para o menos grave:
+
+1. **Verdadeiro ou falso (grave).** São duas perguntas na tela ao mesmo tempo, Verdadeira ou Falsa e três porquês, com rótulos pequenos em caixa alta. A pessoa vê cinco caixas e não sabe por onde começar. Mudar: as duas partes viram perguntas numeradas de 16 px em 800 (“1. A frase é verdadeira ou falsa?” e “2. Por quê?”). Os porquês aparecem só depois da escolha, entrando de cima em 200 ms (com movimento reduzido, aparecem direto), e o foco vai para “2. Por quê?”. Trocar a escolha mantém o porquê marcado.
+2. **Associar (grave no celular).** Em 390 px, duas colunas de 160 px apertam as definições, que chegam a quatro linhas, e os rótulos “Itens” e “Pares” não dizem nada. Mudar: abaixo de 560 px, os itens da esquerda viram uma fileira de fichas numeradas no alto (“1 Tarraxa”, “2 Pestana”) e os pares ficam embaixo, um por linha, na largura toda. Ligar dá ao par o número e a cor da ficha. A instrução vira dois passos, com o atual em azul: “1 Escolha um item” e “2 Toque no par dele”. “Itens” e “Pares” saem da tela e ficam só para o leitor de tela. A partir de 560 px, ficam as duas colunas.
+3. **Como responder (média, em todos os formatos).** Hoje só o ordenar e o associar dizem como responder, cada um num lugar. Mudar: todo exercício tem uma linha logo abaixo do enunciado, com ícone de 20 px `#3858D6` e texto de 16 px em 700 `#5E6A85`. Escolha: “Toque na resposta certa.” Lacuna: “Escreva o que falta na frase.” Ordenar: como acima. Associar: os dois passos. Verdadeiro ou falso: “Diga se a frase é verdadeira ou falsa e por quê.” Aberta: “Explique com as suas palavras, em uma ou duas frases.”
+4. **Lacuna (média).** O espaço da frase é um traço fino, diferente na web (barra cinza-azulada) e no app (traço azul-marinho), e o campo embaixo diz só “Sua resposta”: não fica claro que o que se escreve vai para a frase. Mudar: o espaço vira uma vaga com largura mínima de 72 px, altura de 1,4 em, borda tracejada de 2 px `#9FB1F0`, raio de 8 e fundo branco. Com o campo em foco, a borda fica cheia `#3858D6`. O que se escreve aparece na vaga, como hoje, e tocar na vaga põe o foco no campo. O rótulo do campo vira “Escreva o que falta”. Igual na web e no app.
+5. **Resposta aberta (baixa).** “Faltam 40 letras” aparece antes de qualquer letra e soa como cobrança. Mudar: antes de escrever, “Pelo menos 40 letras”; escrevendo, “Faltam 12 letras”; passado o mínimo, “52 letras”, em verde e com o visto. O campo cresce com o texto, de 5 até 10 linhas.
+6. **Múltipla escolha (passa).** As letras A, B e C e os cartões com degrau se explicam sozinhos. Só o rótulo “Sua resposta” sai da tela e fica para o leitor de tela.
+
+**Quem decide.** Tudo nesta seção é decisão de design. O modelo de lista única é decisão do Lead. Nada precisa do dono.
 
 ## Recursos
 

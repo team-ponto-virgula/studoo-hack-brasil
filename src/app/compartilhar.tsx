@@ -13,7 +13,7 @@ import {
   VISIBILIDADES,
   motivoLegendaInvalida,
   normalizarResumoPerfil,
-  svgCapa,
+  marcacaoCapa,
   type Tema,
   type Visibilidade,
   ErroStudoo,
@@ -624,7 +624,7 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
   return (
     <article className="previa-trilha" data-calor={comCalor || undefined}>
       {/* A capa da trilha (a escolhida nas configurações ou a padrão do tema), no alto da página do link. */}
-      {calor && <span className="previa-trilha__capa" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgCapa({ codigo: trilha.codigo, tema: trilha.tema ?? null, capa: trilha.capa }) }} />}
+      {calor && <span className="previa-trilha__capa" aria-hidden="true" data-foto={trilha.capa?.startsWith('foto:') || undefined} dangerouslySetInnerHTML={{ __html: marcacaoCapa({ codigo: trilha.codigo, tema: trilha.tema ?? null, capa: trilha.capa, tamanho: 1024 }) }} />}
       {comCalor && (
         <div className="previa-trilha__stu">
           <img className="stu" src="/marca/stu-oi.svg" alt="" width={72} height={79} />

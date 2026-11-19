@@ -90,3 +90,44 @@ Um iPhone SE (375 × 667, áreas 20 / 0) fica com cerca de 569 de altura útil: 
 - As áreas e ideias do pedido, os passos da apresentação, as dicas da geração e os textos de **Escrevendo suas lições** têm o mesmo texto em `src/mensagens/pt-BR.ts` e em `apps/mobile/src/mensagens.ts`.
 - `npm run test:paridade` confere as duas coisas, sem servidor nem banco.
 - Adaptações do app: a apresentação vira páginas que também deslizam para o lado; as áreas do pedido ficam numa fileira que rola para o lado; o aviso de Caps Lock fica só na web.
+
+## Revisão do dono (19/11): a geração que se acompanha até a última lição
+
+O dono pediu animações na geração e a tela acompanhando até a última lição. Hoje o título ocupa um cartão alto e o mapa fica parado no alto: da terceira lição em diante, o que nasce fica abaixo da dobra, e a pessoa só vê o rodapé contar. Vale para web, Android e iPhone. Esboço: `geracao-390.png`, na pasta de trabalho do Designer (`ux/05-geracao-acompanhada`).
+
+**A tela durante a geração.**
+- O cartão do título vira uma faixa de 52 px presa embaixo do cabeçalho: os três pontinhos que digitam, o nome do pedido (Nunito 800 de 15 px, numa linha, com reticências) e a contagem à direita (“Gerando…”, depois “2 lições”). O mapa ganha o resto da tela.
+- A frase do Stu vai numa placa presa no alto do mapa: fundo `#FFF9EC`, borda de 2 px `#E8D3A8`, raio de 16 e 16 px das laterais, com as dicas que se revezam como hoje. O Stu sai da placa e fica do lado de fora da lição mais nova, no lado oposto ao nome, subindo e descendo devagar.
+- O rodapé continua igual: “Cancelar” e “Montando a trilha”, com “N lições até agora”.
+
+**Cada lição que nasce**, do evento até a próxima espera:
+1. Em 0 ms, se a tela está acompanhando, ela rola até a vaga da lição ficar a 60% da altura do mapa (320 ms, com saída suave).
+2. Em 120 ms, o caminho se desenha do nó anterior até a vaga (300 ms).
+3. Em 320 ms, o nó cai 26 px e pula (escala de 0,7 a 1,08 e de volta a 1, em 380 ms, com mola). Cinco estrelinhas `#FFD166` se abrem e somem (300 ms), e o anel do nó fica azul por 1,2 s.
+4. Em 420 ms, o nome entra do lado do nó (opacidade e 12 px, 220 ms), e a contagem do rodapé e da faixa sobe.
+5. Em 560 ms, árvores e flores perto do nó brotam (escala de 0 a 1, 260 ms).
+6. Em 700 ms, o esqueleto da próxima vaga gira e o Stu anda até a lição nova (400 ms).
+
+Se os eventos chegarem mais rápido que a sequência, cada lição começa quando a anterior chega ao passo 3: nada fica para trás nem se acumula. Na primeira lição de um trecho novo, o marco vem antes, na fronteira ondulada (cai 12 px em 260 ms), com a pílula “Parte 3”, e a lição chega 200 ms depois. Ao lado do Stu, um balãozinho “Mais uma!” aparece por 900 ms, no máximo a cada três lições.
+
+**Quem manda na rolagem.**
+- A tela acompanha enquanto a pessoa não mexe. Se ela rolar para cima mais de 40 px, ou puser o foco do teclado num nó da prévia, a tela para de acompanhar. Aparece então, 16 px acima do rodapé, a pílula azul “Ver a lição nova · 7”: 44 px de altura, seta para baixo e o número da última lição.
+- Tocar na pílula rola até a lição nova (320 ms) e volta a acompanhar. Se a pessoa rolar sozinha até a lição nova, também volta.
+- Rolar para baixo não desliga o acompanhamento.
+
+**Quando a trilha fica pronta.**
+- Se a tela está acompanhando, ela rola até o fim do caminho. O troféu entra (escala de 0 a 1,1 e de volta a 1, 420 ms), com confete por 1,2 s. A placa vira “Trilha pronta! 9 lições em 3 partes.”, com “Confira o caminho e comece quando quiser.”, e o Stu pula ao lado do troféu. O rodapé troca para “Ajustar pedido” e “Começar”, deslizando 12 px em 220 ms. O foco vai para “Começar”, como hoje.
+- Se não está acompanhando, a pílula vira “Ver o fim da trilha”. O resto acontece igual, mas o confete só cai quando o troféu entra na tela.
+- Ao subir até o começo do mapa, a faixa volta a ser o cartão do título.
+
+**Escrevendo suas lições.** Depois de “Começar”, quando as lições não cabem na tela, a lista também acompanha: o brilho que desce pela lista leva a rolagem junto, com a linha do brilho a 60% da altura. Quando o aceite volta, o visto verde passa pela lista, 80 ms de uma linha para a outra, rolando até a última, antes de abrir a primeira lição.
+
+**Movimento reduzido.** A tela continua acompanhando, mas pula direto, sem rolagem animada. Nada cai, pula, brota ou chove: o nó, o nome e o cenário aparecem juntos, com 150 ms de opacidade; o troféu aparece sem confete, e o Stu fica parado. A informação é a mesma.
+
+**Leitor de tela.** Cada lição nova é anunciada (`aria-live` educado; no app, `announceForAccessibility`): “Lição 3: Combinar condições com AND.” No fim: “Trilha pronta, 9 lições. Começar.” Durante a geração, o foco não se mexe: fica em “Cancelar” ou onde a pessoa estiver.
+
+**Espera longa.** Com a IA real, uma lição pode demorar. Depois de 12 s sem lição nova, a placa diz “Ainda escrevendo… esta parte pede mais cuidado.”, sem barra de progresso inventada.
+
+**Paridade.** Na web, `scrollTo` com rolagem suave (imediata com movimento reduzido); no app, `ScrollView.scrollTo` e `Animated`. Sem dependência nova. Os textos novos (a pílula, a placa da espera longa e o anúncio do fim) entram em `packages/contratos/src/experiencia.ts`, iguais nos dois lados.
+
+**Quem decide.** Tudo nesta seção é decisão de design. Nada precisa do dono.

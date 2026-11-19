@@ -99,6 +99,7 @@ model PlanoAprendizado {
   descricao      String?
   tema           String?
   capa           String?
+  capaFoto       CapaFoto?
 
   @@id([usuarioId, id])
   @@unique([usuarioId, origemCodigo])
@@ -253,4 +254,18 @@ model ApoioLicao {
   atualizadoEm DateTime @updatedAt @db.Timestamptz(3)
   licao Licao @relation(fields: [usuarioId, licaoId], references: [usuarioId, id], onDelete: Cascade)
   @@id([usuarioId, licaoId])
+}
+
+/// Capa da trilha com foto (lote 4): a imagem enviada pela dona, já recortada em 2:1, regravada em WebP sem metadados em
+/// dois tamanhos. O token do endereço público muda a cada troca; a trilha guarda `capa = "foto:<token>"`.
+model CapaFoto {
+  usuarioId String
+  planoId   String
+  token     String           @unique
+  grande    Bytes
+  pequena   Bytes
+  criadaEm  DateTime         @default(now()) @db.Timestamptz(3)
+  plano     PlanoAprendizado @relation(fields: [usuarioId, planoId], references: [usuarioId, id], onDelete: Cascade)
+
+  @@id([usuarioId, planoId])
 }

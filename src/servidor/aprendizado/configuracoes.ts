@@ -91,6 +91,8 @@ export async function salvarConfiguracoes(usuarioId: string, planoId: string, en
 
   const link = await banco.linkTrilha.findUnique({ where: { usuarioId_planoId: { usuarioId, planoId } }, select: { codigo: true, noExplorar: true } });
   await banco.$transaction([
+    // Trocar para a galeria ou para a padrão apaga a foto de capa (o endereço antigo deixa de existir).
+    ...("capa" in dados ? [banco.capaFoto.deleteMany({ where: { usuarioId, planoId } })] : []),
     banco.planoAprendizado.update({ where: { usuarioId_id: { usuarioId, id: planoId } }, data: dados }),
     // A legenda e o tema do link são a descrição e o tema daqui. Trilha no Explorar não fica sem tema.
     ...(link && ("descricao" in dados || (dados.tema !== undefined && (dados.tema !== null || !link.noExplorar)))
