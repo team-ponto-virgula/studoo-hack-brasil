@@ -113,16 +113,17 @@ test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mai
 test('o nó 1 à vista no toque: inteiro na área livre (entre a placa e o rodapé), com o centro a 40% dela', () => {
   const efeito = trecho(geracao, "if (criacao !== 'criando') return;\n    const primeiro", '}, [criacao]);');
   assert.match(efeito, /const topoLivre = cartaoDeVolta \? 0 : RITMO_DA_GERACAO\.placaTopo \+ alturaPlaca;/);
-  assert.match(efeito, /if \(naTela - RITMO_DA_GERACAO\.no1AcimaDoCentro >= topoLivre && naTela \+ RITMO_DA_GERACAO\.no1AbaixoDoCentro <= altura\) \{\n\s*aoRolarAteNo1\(Date\.now\(\)\);/);
+  assert.match(efeito, /if \(naTela - RITMO_DA_GERACAO\.no1AcimaDoCentro >= topoLivre && naTela \+ RITMO_DA_GERACAO\.no1AbaixoDoCentro <= altura\) return;/);
   assert.match(efeito, /rolarAteNo1\(Math\.max\(0, Math\.round\(centro - \(topoLivre \+ \(altura - topoLivre\) \* RITMO_DA_GERACAO\.no1NaAreaLivre\)\)\)\);/);
-  // A rolagem tem 240 ms, quadro a quadro, e avisa quando termina; o círculo mede o nó 1 depois dela.
-  const rolar = trecho(geracao, 'function rolarAteNo1(alvo: number) {', '\n  }\n');
-  assert.match(rolar, /RITMO_DA_GERACAO\.rolarAteNo1Ms : 0;/);
-  assert.match(rolar, /aoRolarAteNo1\(inicio \+ duracao\);/);
+  // A rolagem tem 240 ms, quadro a quadro, com saída suave.
+  const rolar = trecho(geracao, 'function rolarAteNo1(alvo: number, duracaoPedida: number = RITMO_DA_GERACAO.rolarAteNo1Ms) {', '\n  }\n');
   assert.match(rolar, /scrollTo\(\{ y: de \+ \(alvo - de\) \* \(1 - \(1 - t\) \*\* 3\), animated: false \}\)/);
-  // A passagem só começa com a rolagem do toque terminada (d403f5a): o nó 1 parado e à vista quando o círculo é medido.
-  assert.ok(comecar.indexOf('await esperar(fimDaRolagemNo1.current - Date.now());') < comecar.indexOf("tocaSons.tocarEfeito('geracao_pronta')"));
-  assert.match(comecar, /if \(!reduzida\) medirNo1\(\);/);
+  // 4140a58: a passagem não espera a rolagem; com o aceite de volta, o que falta termina até t = 120 ms (longe demais ou com
+  // movimento reduzido, pula), e o círculo mede o nó 1 nesse instante.
+  assert.doesNotMatch(comecar, /fimDaRolagemNo1/);
+  assert.match(comecar, /rolagemDoNo1\.current\?\.terminar\(reduzida \? 0 : RITMO_DA_GERACAO\.circuloAtrasoMs\);/);
+  assert.match(comecar, /if \(!reduzida\) setTimeout\(medirNo1, RITMO_DA_GERACAO\.circuloAtrasoMs \+ 5\);/);
+  assert.match(geracao, /const longe = Math\.abs\(alvo - rolado\.current\) > \(visivel\.current \|\| height\);\n\s*rolarAteNo1\(alvo, prazoMs <= 0 \|\| longe \? 0 : prazoMs\);/);
   // Chegar ao alto durante a criação não traz o cartão do título de volta (ele empurraria o nó 1 para baixo do rodapé).
   assert.match(geracao, /if \(pronta && !cartaoDeVolta && y <= 4 && criacaoAgora\.current === null\) setCartaoDeVolta\(true\);/);
 });

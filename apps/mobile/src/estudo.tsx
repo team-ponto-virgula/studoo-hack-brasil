@@ -149,8 +149,8 @@ export function Estudo({ cliente, sair, expirar }: {
   const [passagem, setPassagem] = useState<Passagem | null>(null);
   const aceiteAtual = useRef<object | null>(null);
   const lenteDoNo1 = useRef<ComponentRef<typeof View> | null>(null);
-  /** Quando a rolagem do toque até o nó 1 termina: o círculo da passagem mede o nó 1 depois disso. */
-  const fimDaRolagemNo1 = useRef(0);
+  /** A rolagem do toque até o nó 1 (na prévia): a passagem a faz terminar até o círculo começar (t = 120 ms). */
+  const rolagemDoNo1 = useRef<{ terminar: (prazoMs: number) => void } | null>(null);
   const reduzirMovimento = useMovimentoReduzido();
   const reduzirAgora = useRef(reduzirMovimento);
   reduzirAgora.current = reduzirMovimento;
@@ -471,27 +471,23 @@ export function Estudo({ cliente, sair, expirar }: {
       navegar({ tipo: 'plano', plano });
       return;
     }
-    // A busca da lição começa já; a passagem começa quando a rolagem do toque até o nó 1 também terminou (no máximo 240 ms
-    // depois do toque), com o nó 1 parado e à vista (spec 04, d403f5a).
+    // t = 0, no aceite (spec 04, 4140a58): o som único da criação, o pulso do nó 1, o caminho que firma e a busca da lição.
+    // Se a rolagem do toque até o nó 1 ainda anda, ela termina até t = 120 ms (longe demais ou com movimento reduzido, pula).
+    const inicio = Date.now();
+    const reduzida = reduzirAgora.current !== false;
     let licao: LicaoDetalhe | null = null;
     let falhaLicao: unknown = null;
     const busca = cliente.obterLicao(primeira).then((dados) => { licao = dados; }, (falha: unknown) => { falhaLicao = falha ?? new ErroStudoo('falha'); });
-    if (fimDaRolagemNo1.current > Date.now()) {
-      await esperar(fimDaRolagemNo1.current - Date.now());
-      if (aceiteAtual.current !== vez) return;
-    }
-    // t = 0: o som único da criação, o pulso do nó 1 e o caminho que firma.
-    const inicio = Date.now();
-    const reduzida = reduzirAgora.current !== false;
+    rolagemDoNo1.current?.terminar(reduzida ? 0 : RITMO_DA_GERACAO.circuloAtrasoMs);
     tocaSons.tocarEfeito('geracao_pronta');
     setCriacao('criada');
     setPassagem({ inicio, origem: null, reduzida, aulaNaTela: false });
-    // De onde o círculo cresce: o centro do nó 1, medido logo antes do círculo e depois de a rolagem do toque até ele
-    // acabar (na referência rápida, o aceite volta antes dela). O círculo espera essa medida.
+    // De onde o círculo cresce: o centro do nó 1, medido no t = 120 ms, com a rolagem até ele já terminada. O círculo espera
+    // essa medida.
     const medirNo1 = () => lenteDoNo1.current?.measureInWindow((x, y, largura, altura) => {
       if (largura > 0) setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, origem: { x: x + largura / 2, y: y + altura / 2 } } : atual));
     });
-    if (!reduzida) medirNo1();
+    if (!reduzida) setTimeout(medirNo1, RITMO_DA_GERACAO.circuloAtrasoMs + 5);
     const aulaNaTela = () => setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, aulaNaTela: true } : atual));
     // Aos 200 ms (com movimento reduzido, na hora), a aula monta embaixo do círculo; se a lição ainda não chegou, o esqueleto
     // dela. A camada some por cima dela a partir dos 320 ms, só depois que ela está na tela.
@@ -744,7 +740,7 @@ export function Estudo({ cliente, sair, expirar }: {
       return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
         comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })}
         criacao={criacao} remontar={() => void gerar(geracao.objetivo)} guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
-        aoRolarAteNo1={(fimEm) => { fimDaRolagemNo1.current = fimEm; }}
+        rolagemDoNo1={rolagemDoNo1}
         // Como a web 4.2: a mesma regra do contrato (o assunto antes dos dois-pontos, sem acento), em vez do "fraç" fixo.
         existente={geracao.proposta ? planos?.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '')) : undefined}
         abrirExistente={(id) => void abrirPlano(id)} />;
@@ -1222,9 +1218,9 @@ function useFilaDaGeracao(nos: readonly NoCaminho[]) {
  * até o começo do mapa, o cartão do título volta embaixo da faixa. Com movimento reduzido, a tela pula em vez de rolar e
  * nada cai nem brota.
  */
-function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente, criacao, remontar, guardarNo1, aoRolarAteNo1 }: {
-  /** Quando a rolagem do toque até o nó 1 termina (Date.now): o círculo da passagem mede o nó 1 depois disso. */
-  aoRolarAteNo1: (fimEm: number) => void;
+function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente, criacao, remontar, guardarNo1, rolagemDoNo1 }: {
+  /** Para a passagem fazer a rolagem do toque até o nó 1 terminar até o círculo começar. */
+  rolagemDoNo1: { current: { terminar: (prazoMs: number) => void } | null };
   /** O toque em "Começar a lição 1" (spec 04, "Criar a trilha"): criando, erro, expirada ou criada (a passagem). */
   criacao: FaseDaCriacao | null;
   /** "Montar de novo", com a proposta expirada: a geração de novo, com o mesmo pedido. */
@@ -1367,10 +1363,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     const altura = visivel.current || height;
     const topoLivre = cartaoDeVolta ? 0 : RITMO_DA_GERACAO.placaTopo + alturaPlaca;
     const naTela = centro - rolado.current;
-    if (naTela - RITMO_DA_GERACAO.no1AcimaDoCentro >= topoLivre && naTela + RITMO_DA_GERACAO.no1AbaixoDoCentro <= altura) {
-      aoRolarAteNo1(Date.now());
-      return;
-    }
+    if (naTela - RITMO_DA_GERACAO.no1AcimaDoCentro >= topoLivre && naTela + RITMO_DA_GERACAO.no1AbaixoDoCentro <= altura) return;
     mudarAcompanhar(false);
     rolarAteNo1(Math.max(0, Math.round(centro - (topoLivre + (altura - topoLivre) * RITMO_DA_GERACAO.no1NaAreaLivre))));
     // Só no toque.
@@ -1418,25 +1411,42 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
    * Com movimento reduzido, pula.
    */
   const quadroDoNo1 = useRef<number | null>(null);
+  const alvoDoNo1 = useRef<number | null>(null);
   useEffect(() => () => { if (quadroDoNo1.current !== null) cancelAnimationFrame(quadroDoNo1.current); }, []);
-  function rolarAteNo1(alvo: number) {
+  function rolarAteNo1(alvo: number, duracaoPedida: number = RITMO_DA_GERACAO.rolarAteNo1Ms) {
     if (quadroDoNo1.current !== null) cancelAnimationFrame(quadroDoNo1.current);
+    quadroDoNo1.current = null;
     const de = rolado.current;
-    const duracao = reduzir === false && Math.abs(alvo - de) >= 2 ? RITMO_DA_GERACAO.rolarAteNo1Ms : 0;
+    const duracao = reduzir === false && Math.abs(alvo - de) >= 2 ? duracaoPedida : 0;
     const inicio = Date.now();
+    alvoDoNo1.current = alvo;
     programada.current = { inicio: de, alvo, ate: inicio + duracao + 120 };
-    aoRolarAteNo1(inicio + duracao);
     if (duracao === 0) {
       rolagem.current?.scrollTo({ y: alvo, animated: false });
+      alvoDoNo1.current = null;
       return;
     }
     const passo = () => {
       const t = Math.min(1, (Date.now() - inicio) / duracao);
       rolagem.current?.scrollTo({ y: de + (alvo - de) * (1 - (1 - t) ** 3), animated: false });
       quadroDoNo1.current = t < 1 ? requestAnimationFrame(passo) : null;
+      if (t >= 1) alvoDoNo1.current = null;
     };
     quadroDoNo1.current = requestAnimationFrame(passo);
   }
+  // A passagem começou com a rolagem ainda andando (spec 04, 4140a58): o que falta termina até o prazo (t = 120 ms), com
+  // saída suave; se falta mais que uma altura de tela, ou com movimento reduzido, o nó vai para o lugar na hora.
+  useEffect(() => {
+    rolagemDoNo1.current = {
+      terminar: (prazoMs) => {
+        const alvo = alvoDoNo1.current;
+        if (alvo === null) return;
+        const longe = Math.abs(alvo - rolado.current) > (visivel.current || height);
+        rolarAteNo1(alvo, prazoMs <= 0 || longe ? 0 : prazoMs);
+      },
+    };
+    return () => { rolagemDoNo1.current = null; };
+  });
 
   const fimDaTrilha = () => Math.max(0, (fim.current?.base ?? 0) + 24 - (visivel.current || height));
 
