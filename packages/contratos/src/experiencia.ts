@@ -417,6 +417,10 @@ export const mensagens = {
         capaPadraoDoTema: 'Do tema',
         /** O que o leitor de tela ouve quando um campo salva ("Salvo" aparece no rótulo do campo, só para quem vê). */
         salvoLeitor: { titulo: 'Nome da trilha salvo.', descricao: 'Descrição salva.', tema: 'Tema salvo.' },
+        /** A ajuda de "Usar uma foto", embaixo do botão e numa linha só (revisão de 19/11, item 3). */
+        usarFotoAjuda: 'JPG, PNG ou WebP, até 2 MB.',
+        /** O texto do recorte da capa, com a área dos selos tracejada por cima da foto (revisão de 19/11). */
+        capaFotoDica: 'Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.',
     },
     /** Controle de som (spec 12): a folha "Som", o botão no alto da aula e a seção no Perfil. Nomes e descrições dos climas: OPCOES_FUNDO_UI. */
     som: {
