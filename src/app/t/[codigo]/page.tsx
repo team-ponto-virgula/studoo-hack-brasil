@@ -62,7 +62,7 @@ export default async function PaginaDoLink({ params }: Props) {
     return (
       <PaginaPublica>
         <section className="pagina-publica__vazio">
-          <Stu />
+          <Stu expressao="stu-encorajador" tamanho={96} animado="uma-vez" />
           <h1>{mensagens.erros.limite_compartilhar}</h1>
           <a className="botao botao--primario" href={resultado.logado ? '/' : '/login'}>{m.criarMinha}</a>
         </section>

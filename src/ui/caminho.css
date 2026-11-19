@@ -989,3 +989,12 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 
 /* "Vale rever": a lição foi concluída com um erro antes do acerto; o âmbar chama sem alarmar. */
 .caminho-ponte[data-rever] { color: var(--alerta); }
+
+/* Fim do mapa (spec 13, §B4): a lente de face branca, borda de 3 px #E0A92E e lábio #C7922A nos dois estados; o troféu do
+   kit a 72% da lente, em silhueta (cinza a 40%) antes da conquista e em cor cheia depois. */
+.caminho-chegada .caminho-chegada__lente, .caminho-chegada[data-feita] .caminho-chegada__lente, .caminho-chegada:not([data-feita]) .caminho-chegada__lente {
+  background: #fff;
+  box-shadow: inset 0 0 0 3px #e0a92e, 0 8px 0 #c7922a, 0 16px 24px rgb(11 27 92 / 0.14);
+}
+.caminho-chegada__trofeu { width: 72%; height: auto; pointer-events: none; }
+.caminho-chegada:not([data-feita]) .caminho-chegada__trofeu { filter: grayscale(1); opacity: 0.4; }

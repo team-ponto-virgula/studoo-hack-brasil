@@ -1105,11 +1105,11 @@ function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; pron
         <Desenho nome="arvore" />
         <Desenho nome="flores" />
         <Desenho nome="arbusto" />
-        <span className="preparo-folha" />
-        <span className="preparo-folha" />
-        <span className="preparo-folha" />
-        <Stu />
-        <span className="preparo-lapis" />
+        {/* O notebook da pose conta a história (o lápis e as folhas desenhados saíram, spec 13 §A2). Escrevendo: laço; em
+            "Lições prontas!", comemora com o pulo. */}
+        {prontas
+          ? <Stu expressao="stu-comemorando" tamanho={110} animado="acontecimento" acontecimento="prontas" sombra />
+          : <Stu expressao="stu-estudando" tamanho={132} animado="laco" sombra />}
       </div>
       <p className="contexto-tela">{proposta.titulo}</p>
       <h1 ref={titulo} tabIndex={-1}>{prontas ? mensagens.preparo.prontas : mensagens.preparo.titulo}</h1>

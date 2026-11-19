@@ -190,7 +190,7 @@ function ArtePonte() {
         </div>
         <div className="ponte-margem ponte-margem--direita">
           <div className="ponte-stu">
-            <Stu />
+            <Stu expressao="stu-perfil" tamanho={44} />
           </div>
           <span>{m.ponteMargemVolta}</span>
         </div>
@@ -223,7 +223,7 @@ function ArteExplique() {
         </div>
         <div className="ensino-caderno__cartao ensino-caderno__pergunta" data-tipo="pergunta">
           <div className="ensino-caderno__stu">
-            <Stu />
+            <Stu expressao="stu-concentrado" tamanho={48} />
             <span className="ensino-caderno__duvida">?</span>
           </div>
           <div>
@@ -251,6 +251,10 @@ function ArteProgresso() {
       <span className="mini-trilha__no" data-estado="concluida" style={{ '--x': '30%', '--y': '78%' } as CSSProperties}><Icone nome="check" /></span>
       <span className="mini-trilha__no" data-estado="concluida" style={{ '--x': '68%', '--y': '50%' } as CSSProperties}><Icone nome="check" /></span>
       <span className="mini-trilha__no mini-trilha__no--trofeu" style={{ '--x': '38%', '--y': '20%' } as CSSProperties}><Icone nome="trofeu" /></span>
+      {/* O Stu comemora ao lado do troféu (spec 13, §B4), em 40 px, de pé no chão da miniatura. */}
+      <span className="mini-trilha__stu" style={{ '--x': '55%', '--y': '20%' } as CSSProperties}>
+        <Stu expressao="stu-comemorando" tamanho={40} animado="uma-vez" sombra />
+      </span>
       <span className="selo-sincronia apresentacao-sincronia" data-estado="salvo">
         <span className="selo-sincronia__ponto" />
         <span>{mensagens.sincronia.salvo}</span>

@@ -32,7 +32,7 @@ import {
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
-import { Botao, Icone } from '../ui';
+import { Botao, Icone, Stu } from '../ui';
 import { PainelCodigo } from './codigo';
 import { BotaoSeguir } from './seguir';
 import { tocaSons } from './sons';
@@ -629,7 +629,7 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
       {calor && <span className="previa-trilha__capa" aria-hidden="true" data-foto={trilha.capa?.startsWith('foto:') || undefined} dangerouslySetInnerHTML={{ __html: marcacaoCapa({ codigo: trilha.codigo, tema: trilha.tema ?? null, capa: trilha.capa, tamanho: 1024 }) }} />}
       {comCalor && (
         <div className="previa-trilha__stu">
-          <img className="stu" src="/marca/stu-oi.svg" alt="" width={72} height={79} />
+          <Stu expressao="stu-feliz" tamanho={64} animado="uma-vez" />
           <p className="previa-trilha__balao">{jaTem ? m.stuDeNovo : m.stuConvite}</p>
         </div>
       )}

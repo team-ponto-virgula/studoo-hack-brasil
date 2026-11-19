@@ -52,7 +52,8 @@ const seloDemo = () => (
 
 let stu: Promise<string | null> | null = null;
 function carregarStu() {
-  stu ??= readFile(join(raiz, "public/marca/stu-oi.svg")).then((svg) => `data:image/svg+xml;base64,${svg.toString("base64")}`).catch(() => null);
+  // O mascote oficial (spec 13, §A2): a acolhida em PNG de 480 (o cartão do link não lê WebP e não anima).
+  stu ??= readFile(join(raiz, "public/marca/stu/stu-acolhida-480.png")).then((png) => `data:image/png;base64,${png.toString("base64")}`).catch(() => null);
   return stu;
 }
 
@@ -106,7 +107,7 @@ export async function imagemGenerica() {
   return resposta(
     <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", padding: 64, background: "#e9e7ff", position: "relative" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {desenho && <img src={desenho} width={260} height={286} style={{ position: "absolute", right: 80, top: 70 }} alt="" />}
+      {desenho && <img src={desenho} width={240} height={234} style={{ position: "absolute", right: 80, top: 80 }} alt="" />}
       <span style={{ fontFamily: "Quicksand", fontSize: 72, color: "#0b1b5c", maxWidth: 760, lineHeight: 1.1 }}>Aprenda qualquer coisa, uma lição por vez.</span>
       {await rodape("Studoo")}
     </div>,
