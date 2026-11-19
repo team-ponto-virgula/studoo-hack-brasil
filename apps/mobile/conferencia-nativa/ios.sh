@@ -244,9 +244,56 @@ sem_preenchimento() {
 # ---------------------------------------------------------------------------------------------------------------------
 # coletar: junta as capturas, diz o que faltou e arruma os registros (o comum está em comum.sh)
 
+# O material que o app deveria usar na barra de baixo (spec 05, "Barra de abas em cápsula"): o Liquid Glass quando o vidro
+# existe e "Reduzir transparência" está desligada; senão, a superfície branca opaca. O vidro existe quando o aplicativo
+# que roda o JavaScript (aqui, o Expo Go) foi feito com o Xcode 26 ou mais novo, roda no iOS 26 ou mais novo e não pede
+# UIDesignRequiresCompatibility: é a conta de isLiquidGlassAvailable, no expo-glass-effect. As três coisas vêm do Expo Go
+# instalado e do simulador. A preferência de transparência vem do domínio de acessibilidade do simulador
+# (EnhancedBackgroundContrastEnabled, a chave de UIAccessibilityIsReduceTransparencyEnabled). Uma captura sozinha não
+# separa o vidro de uma cor: a leitura das capturas compara a barra sobre fundos diferentes (o mapa nas 10 a 12).
+material_da_barra() {
+  local id plist xcode sdk compat ios rt tamanho vidro
+  id="$(udid)"
+  plist="$FERRAMENTAS/Expo Go.app/Info.plist"
+  xcode="$(/usr/libexec/PlistBuddy -c 'Print :DTXcode' "$plist" 2> /dev/null || echo '?')"
+  sdk="$(/usr/libexec/PlistBuddy -c 'Print :DTSDKName' "$plist" 2> /dev/null || echo '?')"
+  compat="$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist" 2> /dev/null || echo 'ausente')"
+  ios="$(sed -n 's/^Simulador: .*, iOS \([0-9][0-9]*\).*/\1/p' "$SAIDA/origem-simulador.txt" 2> /dev/null | head -1)"
+  if rt="$(com_limite 30 xcrun simctl spawn "$id" defaults read com.apple.Accessibility EnhancedBackgroundContrastEnabled 2> /dev/null)"; then
+    case "$rt" in
+      1) rt="ligada" ;;
+      0) rt="desligada" ;;
+      *) rt="lida como \"$rt\"" ;;
+    esac
+  else
+    rt="desligada (a preferência não existe no simulador: vale o padrão)"
+  fi
+  tamanho="$(com_limite 30 xcrun simctl ui "$id" content_size 2> /dev/null | tr -d '\r' | head -1 || true)"
+  if [ "$xcode" -ge 2600 ] 2> /dev/null && [ "${ios:-0}" -ge 26 ] && [ "$compat" != "true" ]; then
+    vidro="disponível"
+  else
+    vidro="indisponível"
+  fi
+  echo "Vidro (isLiquidGlassAvailable): $vidro (iOS ${ios:-?}; Expo Go feito com o Xcode $xcode, SDK $sdk; UIDesignRequiresCompatibility $compat)"
+  echo "Reduzir transparência: $rt"
+  echo "Tamanho do texto do sistema: ${tamanho:-não lido}"
+  if [ "$vidro" = "disponível" ] && [ "${rt%% *}" = "desligada" ]; then
+    echo "Material esperado da barra de baixo: Liquid Glass (spec 05)"
+  else
+    echo "Material esperado da barra de baixo: superfície branca opaca (spec 05)"
+  fi
+}
+
 coletar() {
-  local dados
-  echo "Expo Go: $(cat "$SAIDA/expo-go-versao" 2> /dev/null || echo '?')" > "$SAIDA/origem-app.txt"
+  local dados linha
+  {
+    echo "Expo Go: $(cat "$SAIDA/expo-go-versao" 2> /dev/null || echo '?')"
+    material_da_barra
+  } > "$SAIDA/origem-app.txt"
+  resumo "### Barra de baixo"
+  resumo ""
+  { grep -E '^(Vidro|Reduzir|Tamanho|Material)' "$SAIDA/origem-app.txt" || true; } | while IFS= read -r linha; do resumo "- $linha"; done
+  resumo ""
   coletar_inicio "simulador de iPhone numa máquina do GitHub Actions, com o app servido pelo Metro (sem modo de desenvolvimento) dentro do Expo Go. Não é aparelho de verdade."
 
   # O que o Expo Go guardou das preferências do menu de desenvolvedor depois dos fluxos (o arquivo, como está no disco).

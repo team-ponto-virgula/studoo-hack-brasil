@@ -30,7 +30,7 @@ Os fluxos são do [Maestro](https://docs.maestro.dev) e ficam em `fluxos/`. Eles
 |---|---|---|
 | Entrada, com o simulador como vem de fábrica | `01-entrada.yaml` | `01` em repouso, `02` e-mail em foco, `03` senha em foco com o teclado |
 | Entrar na conta | `02-entrar.yaml` | `04` entrada preenchida, `05` o que abre depois de entrar |
-| Telas | `telas/*.yaml` | `10` a `12` mapa (como abre e rolado sob a barra de baixo); `20` a `23` Minhas trilhas, menu "…" e confirmação de apagar (cancelada); `30` a `35` um exercício de cada formato, no estado inicial e rolado; `40` e `41` Explorar; `50` e `51` Perfil; `60` Configurações da trilha, com o toque na borda do "Voltar" (spec 04, §9) |
+| Telas | `telas/*.yaml` | `10` a `12` mapa (como abre e rolado sob a barra de baixo); `20` a `23` Minhas trilhas, menu "…" e confirmação de apagar (cancelada); `30` a `35` um exercício de cada formato, no estado inicial e rolado; `40` e `41` Explorar; `50` e `51` Perfil; `60` Configurações da trilha, com o toque na borda do "Voltar" (spec 04, §9); `80` a `83` (o primeiro fluxo das telas) a barra de baixo nas abas fixas: Nova trilha selecionada (`80`) e o fim dela (`81`), o fim de Minhas trilhas com a seleção de volta (`82`) e o mapa aberto por um toque perto da borda de baixo do último botão (`83`) |
 
 Entre a primeira e a segunda fase, o preenchimento automático de senhas do simulador é desligado e o simulador reinicia: com ele ligado, o Maestro não consegue digitar num campo de senha (problema conhecido, com a receita na documentação dele). A captura do teclado vem antes disso, com o simulador intocado.
 
@@ -55,7 +55,7 @@ Animações ligadas, como no iPhone. Não conferido: aparelho de verdade, o volu
 ## Como ler o resultado
 
 - **Sumário da execução**: a máquina e o simulador usados, as trilhas da conta sintética, a tabela das capturas (a que faltou aparece como "faltou") e, numa linha, o que falhou.
-- **Artefato `capturas-iphone`**: os PNGs, com o número na frente do nome, e `ORIGEM.txt` (aparelho, iOS, Expo Go, Maestro, commit e execução): é simulador, não aparelho.
+- **Artefato `capturas-iphone`**: os PNGs, com o número na frente do nome, e `ORIGEM.txt` (aparelho, iOS, Expo Go, Maestro, commit e execução): é simulador, não aparelho. O `ORIGEM.txt` diz também o material que o app deveria usar na barra de baixo e por quê: se o vidro existe (a conta de `isLiquidGlassAvailable`: Xcode e SDK com que o Expo Go foi feito, iOS e `UIDesignRequiresCompatibility`), o estado de "Reduzir transparência" e o tamanho do texto do sistema; no Android, a superfície opaca e o `font_scale`. Uma captura sozinha não separa o vidro de uma cor: para saber o que foi desenhado, compare a barra sobre fundos diferentes (o mapa nas capturas 10 a 12).
 - **Artefato `registros-iphone`**: o registro de cada programa (`banco.log`, `build.log`, `servidor.log`, `proxy.log`, `metro.log`, `maestro-<fase>.log`), a tela do simulador no fim de cada fase (`tela-no-fim-de-<fase>.png`), a saída do Maestro (com a tela e a árvore de elementos do passo que falhou), o registro do Expo Go no simulador (`simulador-expo-go.log`) e os dados da conta sintética. Sem o `.env` e sem chaves; a senha sorteada sai dos arquivos antes do envio, e o sumário diz se a conferência final achou alguma. Do registro inteiro do simulador que o Maestro grava em cada fluxo (perto de 200 MB) fica só o fim (`device-simulator-fim.log`).
 - **Uma conferência por vez**: um envio novo espera a que está rodando terminar (cancelada no meio, ela não deixaria capturas).
 
