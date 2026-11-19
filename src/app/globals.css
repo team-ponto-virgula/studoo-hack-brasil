@@ -1018,12 +1018,13 @@ button { touch-action: manipulation; }
 .conclusao-historia p { font-size: 0.9375rem; font-weight: 700; color: var(--texto); }
 .conclusao-sincronia { margin-top: 14px; color: var(--texto2); font-size: 0.875rem; font-weight: 800; text-align: center; }
 
-/* Capa com foto (lote 4): a foto cobre a capa; um véu escuro suave no alto e embaixo mantém legíveis o selo do tema,
+/* Capa com foto (lote 4): a foto cobre a capa; um véu escuro suave no alto mantém legíveis o selo do tema,
    "Demonstração" e o numeral do Em alta. */
 /* Todo contêiner de capa é posicionado: a foto (absoluta) nunca sai dele. */
 [data-foto], .previa-trilha__capa, .configuracoes__previa, .trilha-capa, .capa-trilha, .galeria-capas__desenho { position: relative; overflow: hidden; }
 .capa-foto { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
-.capa-veu { position: absolute; inset: 0; background: linear-gradient(to bottom, rgb(15 23 42 / 0.38) 0%, rgb(15 23 42 / 0) 38%, rgb(15 23 42 / 0) 52%, rgb(15 23 42 / 0.42) 100%); pointer-events: none; }
+/* O véu só nos 45% de cima, onde ficam os selos (spec 10, revisão de 19/11, item 6); embaixo não há texto sobre a capa. */
+.capa-veu { position: absolute; inset: 0 0 auto; height: 45%; background: linear-gradient(to bottom, rgb(15 23 42 / 0.38), rgb(15 23 42 / 0)); pointer-events: none; }
 
 /* Mascote oficial (spec 13): a imagem e a sombra de contato onde ele pisa no cenário chapado (elipse marinho a 14%, 70%
    da largura e 10% da altura, borrada 6 px). */

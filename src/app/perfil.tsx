@@ -607,14 +607,18 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
  * O recorte de imagem do app (foto do perfil, quadrada; capa da trilha, 2:1): a imagem cobre sempre o quadro; arrastar
  * move, pinça, roda do mouse e o controle aproximam; setas movem e + / − aproximam. `enviar` recebe o JPEG em base64.
  */
-export function RecorteImagem({ origem, aoCancelar, enviar, proporcao = 1, titulo = p.recorteTitulo, aviso = p.fotoAviso }: {
+export function RecorteImagem({ origem, aoCancelar, enviar, proporcao = 1, titulo = p.recorteTitulo, dica, aviso = p.fotoAviso, comSelos = false }: {
   origem: string;
   aoCancelar: () => void;
   enviar: (base64: string) => Promise<void>;
   /** Largura ÷ altura do recorte: 1 (avatar, com o círculo) ou 2 (capa). */
   proporcao?: number;
   titulo?: string;
+  /** O texto de como ajustar; sem ele, o do perfil (com toque ou com mouse). */
+  dica?: string;
   aviso?: string;
+  /** Na capa: a área dos selos por cima, tracejada, para a pessoa não deixar o principal da foto embaixo deles. */
+  comSelos?: boolean;
 }) {
   const caixa = useRef<HTMLDivElement>(null);
   const quadro = useRef<HTMLDivElement>(null);
@@ -763,15 +767,16 @@ export function RecorteImagem({ origem, aoCancelar, enviar, proporcao = 1, titul
     }
   }
 
+  // A folha sobe de baixo no celular, como no app (spec 11 e P18); no computador, fica no centro.
   return (
-    <div className="folha-fundo folha-fundo--centro" role="presentation">
+    <div className="folha-fundo" role="presentation">
       <div className="folha folha--recorte" role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={dicaId} aria-busy={enviando || undefined} ref={caixa}>
         <div className="folha-topo">
           <span />
           <button type="button" className="folha-fechar" aria-label={p.recorteCancelar} disabled={enviando} onClick={aoCancelar}><Icone nome="fechar" /></button>
         </div>
         <h2 id={tituloId} className="folha-titulo">{titulo}</h2>
-        <p id={dicaId} className="folha-texto folha-texto--miudo">{toque ? p.recorteDicaToque : p.recorteDica}</p>
+        <p id={dicaId} className="folha-texto folha-texto--miudo">{dica ?? (toque ? p.recorteDicaToque : p.recorteDica)}</p>
         <div ref={quadro} className="recorte" data-proporcao={proporcao} style={{ aspectRatio: String(proporcao) }} tabIndex={0} role="group" aria-label={p.recorteArea} aria-describedby={tecladoId}
           onPointerDown={aoPressionar} onPointerMove={aoMover} onPointerUp={aoSoltar} onPointerCancel={aoSoltar} onKeyDown={aoTeclar}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -779,7 +784,9 @@ export function RecorteImagem({ origem, aoCancelar, enviar, proporcao = 1, titul
             onLoad={(e) => setNatural({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
             onError={() => setErro(p.fotoIlegivel)}
             style={natural ? { width: largura, height: altura, transform: `translate(${pos.x}px, ${pos.y}px)` } : { opacity: 0 }} />
-          <span className={proporcao === 1 ? 'recorte__circulo' : 'recorte__moldura'} aria-hidden="true" />
+          <span className={proporcao === 1 ? 'recorte__circulo' : 'recorte__moldura'} aria-hidden="true">
+            {proporcao !== 1 && comSelos && <><span className="recorte__selo" /><span className="recorte__selo recorte__selo--2" /></>}
+          </span>
         </div>
         <p id={tecladoId} className="somente-leitor">{p.recorteTeclado}</p>
         <label className="recorte__zoom">

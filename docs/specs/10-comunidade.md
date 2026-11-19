@@ -527,6 +527,8 @@ Revisa as configurações (`094d841`) e a capa com foto (`0a77fe0`), as duas já
 6. **Véu também embaixo da foto (baixa).** O véu de baixo escurece a foto onde não há texto. Ele fica só nos 45% de cima, de `rgba(15, 23, 42, .38)` a zero; embaixo, só quando houver texto por cima da capa.
 7. **Rótulo do Padrão (baixa).** “Padrão · A cor e o desenho do tema” quebra em duas linhas miúdas. Passa a ser “Padrão” e, embaixo, “Do tema” (13 px 700 `#5E6A85`).
 
+**Tema sugerido (decisão do Lead, 19/11).** Sem tema salvo, o tema sugerido pelo título já vem marcado no campo Tema, com “· sugerido pelo título”; nada é gravado até a pessoa tocar num tema, inclusive no sugerido, e só então aparece “Salvo”. Na web e no app.
+
 **Leitura dos selos por cima de foto e de capa desenhada.**
 
 - O selo é sempre sólido, nunca translúcido: fundo branco (o de Demonstração, `#FFF4DB` com texto `#7A4A00`), texto `#1B2A5E` em 13 px 800, altura de 28, 12 px dos lados, raio 99, borda de 1 px `rgba(27, 42, 94, .10)` e sombra `0 2px 6px rgba(15, 23, 42, .22)`. O texto passa de 7:1 contra o próprio fundo, qualquer que seja a foto; a borda e a sombra separam o selo das capas claras (Areia, Céu).
