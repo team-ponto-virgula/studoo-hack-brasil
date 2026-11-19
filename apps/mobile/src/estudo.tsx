@@ -659,7 +659,7 @@ export function Estudo({ cliente, sair, expirar }: {
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
       return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
-        aviso={etapa.tipo === 'planos' && planos?.length === 0 ? mensagens.planos.semTrilhas : aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
+        aviso={aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })}
         porLink={compartilhar ? <>
@@ -722,8 +722,10 @@ function planoInicial(planos: PlanoResumo[]) {
 
 /**
  * Pedido da trilha: a pessoa escreve o que quer aprender, ou escolhe uma ideia, e gera a trilha ao vivo.
- * As ideias vêm por área de interesse (idiomas, música, matemática…), numa fileira que desliza para o lado, para mostrar
- * que vale qualquer assunto; "Surpreenda-me" sorteia uma. Como na web, tocar numa ideia preenche o campo.
+ * Spec 04, banca da noite §3: na ordem, o Stu curioso de 72 (56, e sem o subtítulo, em janela de até 700 de altura), o título,
+ * o campo e "Montar minha trilha", "Tenho um material" num cartão compacto de 64 e a fileira de ideias que rola para o lado
+ * (fichas de 44, terminando em "Surpreenda-me"): tudo à vista sem rolar em 390×844 e 390×667. Sem o aviso de "sem trilhas"
+ * (repetia o título). Como na web, tocar numa ideia preenche o campo.
  * Um objetivo curto demais não sai do aparelho: o campo mostra o que falta e recebe o foco.
  * O foco da tela vai ao erro, quando há um, e senão ao título; o aviso de geração cancelada é anunciado.
  */
@@ -758,6 +760,9 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   }, [cliente]);
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
+  // Janela baixa (até 700 de altura): o Stu vai a 56 e o subtítulo sai, para o material e as ideias ficarem à vista.
+  const baixa = useWindowDimensions().height <= 700;
+  const tamanhoDoStu = baixa ? 56 : 72;
   const [brilho, setBrilho] = useState(0);
   // Decidido uma vez: o erro que some enquanto a pessoa digita não devolve o foco ao título.
   const [focarTitulo] = useState(() => !erro && !falha);
@@ -817,17 +822,17 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
 
   return (
     <Tela pagina="objetivo" acoes={acoes} estiloConteudo={estudoEstilos.fimQuarenta}>
-      <View style={estudoEstilos.pedidoHeroi}>
+      <View style={[estudoEstilos.pedidoHeroi, baixa && estudoEstilos.pedidoHeroiBaixo]}>
         {/* Spec 13: o Stu convida curioso (uma vez ao abrir), encoraja enquanto a pessoa escreve (parado) e se anima quando
-            uma ideia entra no campo (no acontecimento); 72 no celular, com o halo lavanda no lugar do halo amarelo. */}
-        <View style={estudoEstilos.pedidoStu} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Stu nome={expressaoDoPedido} tamanho={72} halo animado={animacaoDoPedido} acontecimento={expressaoDoPedido === 'stu-animado' ? texto : undefined} />
-          <Text style={[estudoEstilos.pedidoEstrela, { fontFamily: fontes.corpo }]}>✦</Text>
+            uma ideia entra no campo (no acontecimento); 72 no celular (56 na janela baixa), com o halo lavanda. Sem a estrela
+            desenhada ao lado (o esboço da banca da noite e os adereços que saíram do mascote oficial). */}
+        <View testID="stu-pedido" style={{ width: tamanhoDoStu, height: tamanhoDoStu }} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          <Stu nome={expressaoDoPedido} tamanho={tamanhoDoStu} halo animado={animacaoDoPedido} acontecimento={expressaoDoPedido === 'stu-animado' ? texto : undefined} />
         </View>
-        <Titulo testID="titulo-objetivo" foco={focarTitulo} equilibrado estilo={estudoEstilos.pedidoTitulo}>
+        <Titulo testID="titulo-objetivo" foco={focarTitulo} equilibrado estilo={[estudoEstilos.pedidoTitulo, baixa && estudoEstilos.pedidoTituloBaixo]}>
           {modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}
         </Titulo>
-        <Text accessibilityLiveRegion="polite" style={estudoEstilos.pedidoFala}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>
+        {!baixa && <Text accessibilityLiveRegion="polite" style={estudoEstilos.pedidoFala}>{modo === 'material' ? mensagens.inicio.materialTexto : fala}</Text>}
       </View>
       {aviso && <Text style={estudoEstilos.aviso}>{aviso}</Text>}
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
@@ -839,7 +844,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
         aoEsperar={setEsperaMaterial} /></View>
       <View style={modo !== 'ideia' && { display: 'none' }}>
         <View style={estudoEstilos.campoPedido}>
-          <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} />
+          <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} baixo={baixa} />
           {mostrarCurto && (
             <View style={estudoEstilos.campoErro}>
               <Text importantForAccessibility="no" style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro }]}>!</Text>
@@ -852,35 +857,33 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
         <Botao rotulo={mensagens.inicio.criar} testID="gerar-trilha" icone="seta" fonte={17} estilo={estudoEstilos.criar}
           desativado={ocupado || !texto} acao={tentar} />
       </View>
-      {/* Como na web (rodada 1): a entrada do material próprio, 1º passo da demonstração, fica logo abaixo do campo, à vista
-          sem rolar, com o selo "Seu material". */}
-      {/* .pedido-alternar (a regra que vale no fim de pedido.css): borda lisa #c3cdf2, degradê de 135° e degrau de 3 por fora. */}
+      {/* A entrada do material próprio, logo abaixo do campo: o cartão compacto da banca da noite (§3), com 64 de altura, o ícone,
+          o título e "Foto, PDF, DOCX ou CSV", sem a pílula "Seu material"; borda lisa #c3cdf2, degradê de 135° e degrau de 3. */}
       <Pressable testID="alternar-modo" accessibilityRole="button" accessibilityState={{ disabled: ocupado }} disabled={ocupado}
         onPress={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}
         style={({ pressed }) => [degrauFora(3, 22, cores.gelo), estudoEstilos.alternarFora, pressed && { opacity: 0.85 }]}>
         <View style={[estudoEstilos.alternar, degrade('linear-gradient(135deg, #f4f7ff 0%, #ffffff 70%)')]}>
         <View style={estudoEstilos.alternarIcone} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} tamanho={22} cor={cores.acao} />
+          <Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} tamanho={20} cor={cores.acao} />
         </View>
         <View style={estudoEstilos.alternarTextos}>
-          <View style={estudoEstilos.alternarLinha}>
-            <Text style={estudoEstilos.alternarTitulo}>{modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}</Text>
-            {modo === 'ideia' && <Text style={estudoEstilos.alternarSelo}>{mensagens.pedido.seuMaterial}</Text>}
-          </View>
+          <Text style={estudoEstilos.alternarTitulo}>{modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}</Text>
           <Text style={estudoEstilos.alternarDica}>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</Text>
         </View>
         <Icone nome="seta" tamanho={20} cor={cores.textoSecundario} />
         </View>
       </Pressable>
       <View style={modo !== 'ideia' && { display: 'none' }}>
-        {/* Como .pedido-ideias da web: o nome do grupo é só para o leitor de tela; as fichas quebram linha, centralizadas. */}
-        <View key={tema.id} role="group" accessibilityLabel={mensagens.pedido.sugestoes} style={estudoEstilos.sugestoes}>
-            <Surpresa desativada={ocupado} acao={surpreender} />
-            {tema.exemplos.map((exemplo, indice) => (
-              <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(tema, exemplo)} testID={`sugestao-${indice}`} ordem={indice}
-                escolhida={texto === exemplo} desativada={ocupado} acao={() => sugerir(exemplo)} />
-            ))}
-        </View>
+        {/* A fileira de ideias (banca da noite §3): rola para o lado, de borda a borda, com as fichas de 44 na ordem de hoje e
+            "Surpreenda-me" no fim; o nome do grupo é só para o leitor de tela. */}
+        <ScrollView key={tema.id} testID="ideias-pedido" horizontal showsHorizontalScrollIndicator={false} role="group"
+          accessibilityLabel={mensagens.pedido.sugestoes} style={estudoEstilos.ideiasRolagem} contentContainerStyle={estudoEstilos.ideias}>
+          {tema.exemplos.map((exemplo, indice) => (
+            <Sugestao key={exemplo} texto={exemplo} icone={iconeDoExemplo(tema, exemplo)} testID={`sugestao-${indice}`} ordem={indice}
+              escolhida={texto === exemplo} desativada={ocupado} acao={() => sugerir(exemplo)} />
+          ))}
+          <Surpresa desativada={ocupado} acao={surpreender} />
+        </ScrollView>
       </View>
       {porLink}
       <LinkComoFunciona desativado={ocupado} acao={comoFunciona} />
@@ -934,8 +937,10 @@ function useExemploDigitado(ativo: boolean) {
 }
 
 /** Campo do objetivo: só ele redesenha a cada letra do exemplo; brilha em dourado quando uma ideia é aplicada. */
-function CampoObjetivo({ campoRef, valor, aoMudar, editavel, dica, brilho }: {
+function CampoObjetivo({ campoRef, valor, aoMudar, editavel, dica, brilho, baixo = false }: {
   campoRef: Ref<ComponentRef<typeof TextInput>>;
+  /** Janela baixa (até 700 de altura): o campo começa com 88 em vez de 112 (banca da noite §3). */
+  baixo?: boolean;
   valor: string;
   aoMudar: (texto: string) => void;
   editavel: boolean;
@@ -962,7 +967,8 @@ function CampoObjetivo({ campoRef, valor, aoMudar, editavel, dica, brilho }: {
         <Campo campoRef={campoRef} testID="objetivo-estudo" rotulo={mensagens.inicio.campo} rotuloOculto value={valor}
           onChangeText={aoMudar} editable={editavel} multiline maxLength={LIMITES_GERACAO.objetivoMax} placeholderTextColor="#9AA3BF"
           placeholder={mensagens.inicio.exemplo} accessibilityHint={dica}
-          style={[estudoEstilos.entradaPedido, focado && estudoEstilos.entradaPedidoFocada, !valor && estudoEstilos.entradaPedidoVazia]}
+          style={[estudoEstilos.entradaPedido, baixo && estudoEstilos.entradaPedidoBaixa, focado && estudoEstilos.entradaPedidoFocada,
+            !valor && estudoEstilos.entradaPedidoVazia]}
           onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)} />
       </View>
       <Animated.View pointerEvents="none" style={[estudoEstilos.luzCampo, { opacity: luz }]} />
@@ -2438,28 +2444,22 @@ const estudoEstilos = StyleSheet.create({
   capaTrilhaLarga: { marginBottom: 20 },
   // Pedido simplificado
   pedidoHeroi: { alignItems: 'center', gap: 8, paddingTop: 8 },
+  pedidoHeroiBaixo: { gap: 6, paddingTop: 0 },
   // O cartão do material na web: o vão de 18 do painel mais os 24 de margem do cartão, em cima e embaixo (o cartão do app tem 12).
   materialNoPedido: { marginTop: 30, marginBottom: 12 },
-  // Como .pedido-heroi__stu e o halo da web: 120 px, o miolo claro e o anel amarelo do gradiente, com o Stu de 96 por cima.
-  pedidoStu: { width: 120, height: 120, alignItems: 'center', justifyContent: 'center' },
-  // .pedido-heroi__estrela: 1,5rem na entrelinha do corpo (1,5 → 36).
-  pedidoEstrela: { position: 'absolute', top: 6, right: 8, color: '#FFB703', fontSize: 24, lineHeight: 36 },
   // Como .pedido-heroi h1 da web no celular: 30 px (clamp de 1,875rem), entrelinha 1,08.
   pedidoTitulo: { fontSize: 30, lineHeight: 32, textAlign: 'center' },
+  // Janela baixa (até 700 de altura): o título numa linha só, como o esboço da banca da noite em 390×667.
+  pedidoTituloBaixo: { fontSize: 24, lineHeight: 30 },
   pedidoFala: { minHeight: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 24, textAlign: 'center' },
   // .pedido-alternar (regra final de pedido.css): borda lisa de 2 em #C3CDF2, raio 22, degradê e degrau de 3 por fora.
-  alternarFora: { marginTop: 18 },
-  alternar: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingLeft: 14, paddingRight: 18,
-    borderRadius: 22, borderWidth: 2, borderColor: '#C3CDF2', backgroundColor: cores.fundo },
-  // .pedido-alternar__texto: strong e small na entrelinha do corpo (1,5): 24 e 21.
-  alternarDica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
-  // .pedido-alternar__selo: em linha depois do título, com 8 à esquerda (também quando desce para a linha de baixo, como o
-  // inline-block da web), 12/18 com 2 × 8 de respiro (22 de altura) no meio da linha de 24.
-  alternarLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
-  alternarSelo: { marginLeft: 8, marginVertical: 1, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, overflow: 'hidden', backgroundColor: '#E5EBFF',
-    color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 18 },
-  alternarIcone: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
-  alternarTextos: { flex: 1, gap: 2 },
+  // O cartão compacto (banca da noite §3): 64 de altura, o ícone num quadro de 40, o título 16/24 e a dica 14/20.
+  alternarFora: { marginTop: 14 },
+  alternar: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64, paddingVertical: 8, paddingLeft: 12, paddingRight: 16,
+    borderRadius: 20, borderWidth: 2, borderColor: '#C3CDF2', backgroundColor: cores.fundo },
+  alternarDica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  alternarIcone: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
+  alternarTextos: { flex: 1 },
   alternarTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   // Topo da trilha e anel de progresso
   topoTrilha: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12, paddingTop: 4 },
@@ -2634,9 +2634,10 @@ const estudoEstilos = StyleSheet.create({
   comoTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   aviso: { marginTop: 14, paddingVertical: 10, paddingHorizontal: 14, borderRadius: 12, backgroundColor: cores.nevoa,
     color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
-  campoPedido: { marginTop: 18, marginBottom: 14, gap: 8 },
+  campoPedido: { marginTop: 16, marginBottom: 12, gap: 8 },
   entradaPedido: { minHeight: 112, paddingVertical: 18, paddingHorizontal: 20, borderWidth: 3, borderRadius: 24,
     borderColor: cores.gelo, backgroundColor: cores.fundo, fontSize: 19, lineHeight: 27, fontWeight: '700' },
+  entradaPedidoBaixa: { minHeight: 88, paddingVertical: 14 },
   entradaPedidoFocada: { borderColor: cores.acao, outlineWidth: 0 },
   entradaPedidoVazia: { fontWeight: '600' },
   // A face do "Montar minha trilha" tem 56 na web (o degrau de 4 vem por fora).
@@ -2646,10 +2647,11 @@ const estudoEstilos = StyleSheet.create({
   dica: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   contador: { alignSelf: 'flex-end' },
   // Como .pedido-ideias e .pedido-ideia da web: fichas de 46 px com lábio de 3, que quebram linha, centralizadas.
-  // Fichas de 46 com o degrau de 3 por fora (sem ocupar lugar, como a sombra da web): vão de 10, passo de 56.
-  // Em cima, o vão de 18 de .painel--pedido mais a margem de 2 e o respiro de 4 de .pedido-ideias.
-  sugestoes: { marginTop: 24, marginBottom: 8, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10 },
-  surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 46, paddingVertical: 8, paddingLeft: 10, paddingRight: 16, borderRadius: 999,
+  // A fileira de ideias (banca da noite §3): de borda a borda (a página tem 20 nos lados), fichas de 44 com o degrau de 3 por
+  // fora e vão de 10; embaixo, o respiro do degrau.
+  ideiasRolagem: { marginTop: 14, marginHorizontal: -20 },
+  ideias: { gap: 10, paddingHorizontal: 20, paddingTop: 2, paddingBottom: 6 },
+  surpresa: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingVertical: 6, paddingLeft: 10, paddingRight: 16, borderRadius: 999,
     borderWidth: 2, borderColor: '#FFE08A', backgroundColor: '#FFF8E1' },
   surpresaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },
   areasRolagem: { marginHorizontal: -20 },
@@ -2658,7 +2660,7 @@ const estudoEstilos = StyleSheet.create({
     borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   areaEscolhida: { borderColor: cores.acao, backgroundColor: '#F0F4FF' },
   areaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 46, paddingVertical: 8, paddingLeft: 10, paddingRight: 16,
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, paddingVertical: 6, paddingLeft: 10, paddingRight: 16,
     borderWidth: 2, borderColor: cores.gelo, borderRadius: 999, backgroundColor: cores.fundo },
   chipEscolhida: { borderColor: cores.acao, backgroundColor: '#F3F6FF' },
   chipDesativada: { backgroundColor: cores.nevoa },

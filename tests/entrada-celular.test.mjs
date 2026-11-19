@@ -1,0 +1,29 @@
+// Entrada no celular (spec 04, revisão de banca da noite, item 1): cabe sem rolar, com "Entrar" junto dos campos.
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+
+const raiz = resolve(import.meta.dirname, '..');
+const entrada = readFileSync(join(raiz, 'src/app/login/entrada.tsx'), 'utf8');
+const css = readFileSync(join(raiz, 'src/app/globals.css'), 'utf8');
+
+test('"Entrar" fica dentro do formulário, logo depois da senha, e "Esqueci minha senha" embaixo dele; sem rodapé preso', () => {
+  const senha = entrada.indexOf('id="senha"');
+  const entrar = entrada.indexOf('<div className="entrada-entrar">');
+  const esqueci = entrada.indexOf('className="acesso-link entrada-esqueci"');
+  assert.ok(senha > 0 && entrar > senha && esqueci > entrar, 'senha, Entrar e Esqueci, nessa ordem');
+  assert.ok(entrar < entrada.indexOf('</form>'), 'dentro do formulário');
+  assert.doesNotMatch(entrada, /<AcaoPrincipal>/);
+  assert.match(entrada, /variante=\{visitanteDisponivel \? 'secundario' : 'primario'\}/, 'secundário com o visitante, principal sem ele');
+});
+
+test('no celular: sem faixa até 860 px de altura (120 px acima), título 28/34, texto 15/22 e Entrar de 48 na largura toda', () => {
+  const bloco = css.slice(css.lastIndexOf('/* Entrada no celular'));
+  assert.match(bloco, /\.entrada-entrar > \.botao \{ width: 100%; min-height: 48px; \}/);
+  assert.match(bloco, /\.entrada-banner \{ height: 120px;/);
+  assert.match(bloco, /\.entrada-cabecalho h1 \{ font-size: 28px; line-height: 34px;/);
+  assert.match(bloco, /\.entrada-cabecalho \.introducao \{ font-size: 15px; line-height: 22px; \}/);
+  assert.match(bloco, /@media \(max-width: 767px\) and \(max-height: 860px\) \{ \.entrada-banner \{ display: none; \} \}/);
+  assert.match(bloco, /\.entrada-cabecalho \.acesso-link \{ min-height: 44px; \}/);
+});
