@@ -200,7 +200,7 @@ function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
  * a linha até o próximo se desenha e só então o próximo nó se abre.
  */
 export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
-  rolarPara = null, recemConcluida = null, aoAbrir }: {
+  rolarPara = null, recemConcluida = null, aoAbrir, acompanhada = false, maisUma = 0, stuNoFim = false, festaPermitida = true }: {
   nos: readonly NoCaminho[];
   stu?: string;
   dicas?: readonly string[];
@@ -212,6 +212,18 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   liberadas?: readonly string[];
   rolarPara?: string | null;
   aoAbrir?: (no: NoCaminho) => void;
+  /**
+   * A geração que se acompanha (spec 04, revisão do dono de 19/11): quem chama cuida da rolagem e da placa do Stu; o mapa
+   * não mostra a frase no alto, põe o Stu ao lado da lição mais nova (no lado oposto ao do nó) e cada lição nasce na
+   * sequência de 0/120/320/420/560/700 ms (com o marco 200 ms antes, na primeira de um trecho).
+   */
+  acompanhada?: boolean;
+  /** Cada valor novo (maior que zero) mostra o balãozinho "Mais uma!" ao lado do Stu por 900 ms. */
+  maisUma?: number;
+  /** A trilha acabou de ficar pronta: o Stu pula ao lado do troféu, que entra do zero. */
+  stuNoFim?: boolean;
+  /** O confete da chegada só cai quando o troféu está à vista (ou a tela está acompanhando). */
+  festaPermitida?: boolean;
 }) {
   const [aberto, setAberto] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState('');
@@ -234,7 +246,14 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const primeiroTrecho = nos[0]?.trecho ?? 0;
   const ultimoTrecho = nos[total - 1]?.trecho ?? 0;
   const guiaNoCaminho = !montando && nos.some((no) => no.estado === 'atual');
-  const stuNaChegada = !montando && tudoFeito;
+  const stuNaChegada = !montando && (tudoFeito || stuNoFim);
+  const [balaoMaisUma, setBalaoMaisUma] = useState(false);
+  useEffect(() => {
+    if (!maisUma) return;
+    setBalaoMaisUma(true);
+    const relogio = window.setTimeout(() => setBalaoMaisUma(false), 900);
+    return () => window.clearTimeout(relogio);
+  }, [maisUma]);
   const comRecem = recemConcluida !== null && nos.some((no) => no.id === recemConcluida);
   const resumoTrechos = resumoDosTrechos(nos);
 
@@ -310,7 +329,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   useEffect(() => {
     const item = vindo.current;
     const anterior = item?.previousElementSibling;
-    if (!montando || !item || !anterior) return;
+    if (acompanhada || !montando || !item || !anterior) return;
     const limite = window.innerHeight - (Number.parseFloat(getComputedStyle(item).scrollMarginBottom) || 0);
     const caixaAnterior = anterior.getBoundingClientRect();
     if (caixaAnterior.top > limite || caixaAnterior.bottom < 0) return;
@@ -327,7 +346,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     if (acabouDeMontar) setFestaNaChegada(true);
     const item = fim.current;
     const ultimo = item?.previousElementSibling?.lastElementChild;
-    if (!acabouDeMontar || !item || !ultimo) return;
+    if (acompanhada || !acabouDeMontar || !item || !ultimo) return;
     const limite = window.innerHeight - (Number.parseFloat(getComputedStyle(item).scrollMarginBottom) || 0);
     const caixaUltimo = ultimo.getBoundingClientRect();
     if (caixaUltimo.top > limite || caixaUltimo.bottom < 0) return;
@@ -383,7 +402,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   }
 
   return (
-    <div className="caminho" data-montando={montando || undefined} data-comeco-atual={nos[0]?.estado === 'atual' || undefined} data-entrada={(entrada && !comRecem) || undefined}
+    <div className="caminho" data-montando={montando || undefined} data-acompanhada={acompanhada || undefined} data-comeco-atual={nos[0]?.estado === 'atual' || undefined} data-entrada={(entrada && !comRecem) || undefined}
       data-recem={comRecem || undefined}>
       <div className="caminho-inicio" style={coresDaRegiao(primeiroTrecho)} data-regiao={regiaoDoTrecho(primeiroTrecho).id}>
         <span className="caminho-inicio__ceu" aria-hidden="true">
@@ -395,12 +414,12 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           <path d="M0 30C50 6 96 4 148 22S236 52 292 30 368 8 400 18V64H0Z" fill="var(--relevo)" />
           <path d="M0 44C44 28 90 26 140 38S228 60 286 44 364 26 400 34V64H0Z" fill="var(--chao)" />
         </svg>
-        {stu && (guiaNoCaminho || stuNaChegada) && (
+        {stu && !acompanhada && (guiaNoCaminho || stuNaChegada) && (
           <div className="caminho-inicio__conteudo caminho-inicio__conteudo--placa">
             <p className="caminho-placa">{stu}</p>
           </div>
         )}
-        {stu && !guiaNoCaminho && !stuNaChegada && (
+        {stu && !acompanhada && !guiaNoCaminho && !stuNaChegada && (
           <div className="caminho-inicio__conteudo">
             <p className="caminho-inicio__fala">
               <span>{stu}{montando && <span className="caminho-digitando" aria-hidden="true"><span /><span /><span /></span>}</span>
@@ -447,6 +466,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const numeroMarco = trechos.indexOf(no.trecho) + 1;
           const recem = no.id === recemConcluida;
           const desenhar = recem && no.estado === 'concluida' && ligado;
+          // Na geração acompanhada: a primeira lição de um trecho vem 200 ms depois do marco; a mais nova leva o Stu.
+          const abreTrecho = indice > 0 && nos[indice - 1].trecho !== no.trecho;
+          const maisNova = acompanhada && montando && indice === total - 1;
 
           const conteudo = (
             <>
@@ -454,6 +476,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 <Icone nome={iconeDoNo(no)} />
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {recem && <Confete quantidade={12} />}
+                {acompanhada && montando && <span className="caminho-no__estrelas">{[0, 1, 2, 3, 4].map((estrela) => <span key={estrela} style={{ '--i': estrela } as CSSProperties} />)}</span>}
                 {/* Um balão só no nó atual: a ação e o nome da lição juntos (\u200B evita colar palavras no axe). */}
                 {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar}{'\u200B'}</span><span className="caminho-no__etiqueta-titulo">{semQuebrarHifen(no.titulo)}</span></span>}
                 {no.estado === 'bloqueada' && <span className="caminho-no__selo"><Icone nome="cadeado" /></span>}
@@ -474,7 +497,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             <li key={no.id} className="caminho-no" data-estado={no.estado} data-lado={lado} data-revisao={iconeDoNo(no) === 'revisao' || undefined}
               style={{ ...coresDaRegiao(no.trecho), '--ordem': indice, '--x': x } as CSSProperties}
               data-ligado={ligado || undefined} data-fim-trecho={fimDoTrecho || undefined} data-rotulo={comRotulo || undefined} data-discreto={!comRotulo || undefined} data-liberada={liberada || undefined}
-              data-aberto={estaAberto || undefined} data-recem={recem || undefined}
+              data-aberto={estaAberto || undefined} data-recem={recem || undefined} data-abre-trecho={(acompanhada && abreTrecho) || undefined}
               onKeyDown={(evento) => {
                 if (evento.key !== 'Escape' || !estaAberto) return;
                 evento.stopPropagation();
@@ -485,6 +508,13 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 if (estaAberto && destino instanceof Node && !evento.currentTarget.contains(destino)) setAberto(null);
               }}>
               <span className="caminho-terreno" aria-hidden="true">
+                {maisNova && (
+                  // O Stu sai da placa e fica ao lado da lição mais nova, no lado oposto ao do nó, subindo e descendo devagar.
+                  <span className="caminho-stu-novo" key={no.id}>
+                    <Mascote expressao="stu-curioso" tamanho={64} animado="laco" className="stu" />
+                    {balaoMaisUma && <span className="caminho-stu-novo__balao" key={maisUma}>{mensagens.geracao.maisUma}</span>}
+                  </span>
+                )}
                 {atual && guiaNoCaminho
                   // De três quartos, olhando para o próximo nó: espelhado quando o caminho vira à esquerda.
                   ? <span className="caminho-guia" data-olha={xSeguinte < x ? 'esquerda' : 'direita'}><Mascote expressao="stu-tres-quartos" tamanho={96} animado="periodico" className="stu" /></span>
@@ -571,7 +601,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
       </ol>
       {comChegada && (
         <div className="caminho-chegada" data-feita={tudoFeito || undefined} ref={fim} style={coresDaRegiao(ultimoTrecho)}
-          data-festa={festaNaChegada || (comRecem && tudoFeito) || undefined}>
+          data-festa={(festaNaChegada && festaPermitida) || (comRecem && tudoFeito) || undefined} data-do-zero={(acompanhada && stuNoFim) || undefined}>
           <span className="caminho-chegada__cenario" aria-hidden="true">
             <span className="caminho-chegada__colina" />
             <Desenho nome="bandeira" className="caminho-chegada__bandeira caminho-chegada__bandeira--1" />
@@ -595,7 +625,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             }}>
             {/* O troféu do kit (spec 13, §B4): em silhueta antes da conquista e em cor cheia depois, com o pop de hoje. */}
             <Mascote expressao="acessorio-trofeu" tamanho={73} className="caminho-chegada__trofeu" />
-            {(festaNaChegada || (comRecem && tudoFeito)) && <Confete quantidade={18} />}
+            {((festaNaChegada && festaPermitida) || (comRecem && tudoFeito)) && <Confete quantidade={18} />}
             {trofeuTocado > 0 && (
               <span key={trofeuTocado} className="caminho-chegada__bolha" aria-hidden="true">
                 {tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.trofeuProgresso(nos.filter((no) => no.estado === 'concluida').length, total)}

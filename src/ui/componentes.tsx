@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import type { NomeStu } from '@studoo/contratos';
 import { Mascote, type ModoAnimacaoStu } from './mascote';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
@@ -29,6 +29,7 @@ export function Stu({ expressao = 'stu-feliz', tamanho = 96, animado, acontecime
 }
 
 type BotaoProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  ref?: Ref<HTMLButtonElement>;
   variante?: 'primario' | 'secundario' | 'texto' | 'sucesso' | 'alerta';
 };
 

@@ -998,3 +998,81 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 }
 .caminho-chegada__trofeu { width: 72%; height: auto; pointer-events: none; }
 .caminho-chegada:not([data-feita]) .caminho-chegada__trofeu { filter: grayscale(1); opacity: 0.4; }
+
+/*
+ * Geração que se acompanha (spec 04, revisão do dono de 19/11; mesmos tempos do app, src/app/geracao-ritmo.ts). Cada lição
+ * nasce assim, contando do evento: em 120 ms o caminho até a próxima vaga se desenha (300 ms); em 320 ms o nó cai 26 px e
+ * pula (0,7 → 1,08 → 1, 380 ms), cinco estrelinhas douradas (paleta do kit) se abrem (300 ms) e o anel fica azul por 1,2 s; em 420 ms o nome
+ * entra (opacidade e 12 px, 220 ms); em 560 ms o cenário brota (260 ms); em 700 ms a próxima vaga aparece. Na primeira
+ * lição de um trecho, o marco cai 12 px em 260 ms e tudo vem 200 ms depois.
+ */
+.caminho[data-acompanhada] .caminho-no { --extra: 0ms; }
+.caminho[data-acompanhada] .caminho-no[data-abre-trecho] { --extra: 200ms; }
+.caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-conector {
+  animation: caminho-desenhar 300ms ease-out calc(120ms + var(--extra)) backwards;
+}
+.caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-no__lente {
+  animation: geracao-no-cair 380ms cubic-bezier(0.3, 1.4, 0.5, 1) calc(320ms + var(--extra)) backwards,
+    geracao-anel 1200ms ease-out calc(320ms + var(--extra)) backwards;
+}
+.caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-no__texto {
+  animation: geracao-nome 220ms ease-out calc(420ms + var(--extra)) backwards;
+}
+.caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-enfeite {
+  transform-origin: 50% 100%; animation: caminho-brotar 260ms ease-out calc(560ms + var(--extra)) backwards;
+}
+.caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-enfeite--balanca {
+  animation: caminho-brotar 260ms ease-out calc(560ms + var(--extra)) backwards, caminho-balancar 3600ms ease-in-out calc(var(--ordem, 0) * -600ms) infinite alternate;
+}
+.caminho[data-acompanhada] .caminho-marco .caminho-parte, .caminho[data-acompanhada] .mundo-fronteira { animation: geracao-marco 260ms ease-out backwards; }
+.caminho[data-acompanhada] .caminho-no--vindo { animation: caminho-aparecer 200ms ease-out 700ms backwards; }
+/* Banca da noite, item 6: o rótulo do nó que nasce em #5E6A85, sem opacidade. */
+.caminho[data-acompanhada] .caminho-no[data-estado='previa'] .caminho-no__titulo { color: #5e6a85; opacity: 1; }
+
+.caminho-no__estrelas { position: absolute; inset: 50% auto auto 50%; width: 0; height: 0; pointer-events: none; }
+.caminho-no__estrelas > span {
+  position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 2px; background: var(--ouro); rotate: 45deg; opacity: 0;
+  animation: geracao-estrela 300ms ease-out calc(320ms + var(--extra, 0ms)) both;
+  --angulo: calc(var(--i) * 72deg - 90deg);
+}
+
+/* O Stu ao lado da lição mais nova, no lado oposto ao do nó; anda até ela em 400 ms, aos 700 ms. */
+.caminho-stu-novo {
+  position: absolute;
+  top: calc(var(--lente) / 2 - 58px);
+  right: calc(var(--lateral) + var(--coluna) * (100 - var(--x)) / 100 + var(--lente) / 2 + 12px);
+  z-index: 3;
+  width: 64px;
+  animation: geracao-stu-andar 400ms ease-out calc(700ms + var(--extra, 0ms)) backwards;
+}
+.caminho-no[data-lado='esquerda'] .caminho-stu-novo { right: auto; left: calc(var(--lateral) + var(--coluna) * var(--x) / 100 + var(--lente) / 2 + 12px); }
+.caminho-stu-novo .stu { width: 100%; animation: caminho-guia 2600ms ease-in-out infinite; }
+.caminho-stu-novo__balao {
+  position: absolute; bottom: calc(100% + 2px); left: 50%; translate: -50% 0; padding: 4px 10px; border: 2px solid #e8d3a8;
+  border-radius: 999px; color: #0b1b5c; background: #fff9ec; font-size: 0.8125rem; font-weight: 800; white-space: nowrap;
+  animation: geracao-mais-uma 900ms ease-out both;
+}
+
+/* O fim: o troféu entra do zero (0 → 1,1 → 1 em 420 ms). */
+.caminho-chegada[data-do-zero] .caminho-chegada__lente { animation: geracao-trofeu 420ms cubic-bezier(0.2, 0.9, 0.3, 1.4) backwards; }
+
+@keyframes geracao-no-cair { 0% { opacity: 0; transform: translateY(-26px) scale(0.7); } 60% { opacity: 1; transform: translateY(0) scale(1.08); } 100% { transform: scale(1); } }
+@keyframes geracao-anel { 0%, 70% { box-shadow: 0 0 0 4px var(--acao), 0 6px 0 rgb(11 27 92 / 0.12); } }
+@keyframes geracao-nome { from { opacity: 0; transform: translateY(12px); } }
+@keyframes geracao-marco { from { opacity: 0; transform: translateY(-12px); } }
+@keyframes geracao-estrela { 0% { opacity: 1; transform: rotate(var(--angulo)) translateX(0) scale(0.4); } 100% { opacity: 0; transform: rotate(var(--angulo)) translateX(44px) scale(1); } }
+@keyframes geracao-stu-andar { from { opacity: 0; transform: translateY(-40px); } }
+@keyframes geracao-mais-uma { 0% { opacity: 0; transform: translateY(6px) scale(0.8); } 15%, 85% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+@keyframes geracao-trofeu { 0% { transform: scale(0); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+/* Movimento reduzido: nó, nome e cenário aparecem juntos, com 150 ms de opacidade; nada cai, pula, brota ou chove. */
+@media (prefers-reduced-motion: reduce) {
+  .caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-conector,
+  .caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-no__lente,
+  .caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-no__texto,
+  .caminho[data-acompanhada][data-montando] .caminho-no[data-estado='previa'] .caminho-enfeite,
+  .caminho[data-acompanhada] .caminho-marco .caminho-parte, .caminho[data-acompanhada] .mundo-fronteira,
+  .caminho[data-acompanhada] .caminho-no--vindo { animation: caminho-aparecer 150ms linear both !important; }
+  .caminho-no__estrelas, .caminho-stu-novo__balao { display: none; }
+  .caminho-stu-novo, .caminho-stu-novo .stu, .caminho-chegada[data-do-zero] .caminho-chegada__lente { animation: none !important; }
+}

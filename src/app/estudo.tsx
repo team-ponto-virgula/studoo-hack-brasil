@@ -38,6 +38,7 @@ import {
 } from '../ui';
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
+import { RITMO_DA_GERACAO, atrasosDaLicao, comMaisUma, deixouDeAcompanhar, intervaloDaFila, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
 import { Pedido, type IdTema } from './pedido';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
@@ -435,12 +436,8 @@ export function Estudo() {
         trilha = aplicarEvento(trilha, evento);
         setGeracao(trilha);
         if (evento.tipo === 'plano') anunciar(mensagens.geracao.anuncioTitulo(evento.titulo));
-        if (evento.tipo === 'licao') void tocaSons.tocarEfeito('geracao_licao');
-        if (evento.tipo === 'pronto') {
-          void tocaSons.tocarEfeito('geracao_pronta');
-          anunciar(mensagens.geracao.anuncioPronta(nosDaPrevia(trilha).length));
-          return;
-        }
+        // Os sons e os anúncios de cada lição e do fim vêm da tela, no ritmo em que as lições aparecem (não da rede).
+        if (evento.tipo === 'pronto') return;
       }
       throw new ErroStudoo('falha');
     } catch (falha) {
@@ -1007,9 +1004,48 @@ function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar
 }
 
 /**
- * Geração ao vivo: a trilha vazia recebe primeiro o título e depois cada lição como nó do caminho, na ordem em que chegam.
- * O botão da esquerda é o mesmo do começo ao fim: Cancelar enquanto a IA monta e Ajustar pedido no fim; os dois voltam
- * ao pedido sem salvar nada. Começar aparece em outro lugar, então um toque atrasado em Cancelar não aceita a trilha.
+ * A fila da geração (spec 04, revisão do dono de 19/11; como o app): cada lição entra quando a anterior chega ao passo 3
+ * (o nó cai), então nada fica para trás nem se acumula quando os eventos chegam rápido. A contagem sobe e o leitor de tela
+ * ouve "Lição 3: …" no passo 4, quando o nome aparece.
+ */
+function useFilaDaGeracao(nos: readonly NoCaminho[], anunciar: (texto: string) => void) {
+  const [mostrados, setMostrados] = useState(0);
+  const [contados, setContados] = useState(0);
+  const ultimaEntrada = useRef(0);
+  const relogios = useRef<number[]>([]);
+  const lista = useRef(nos);
+  lista.current = nos;
+  useEffect(() => () => relogios.current.forEach((relogio) => window.clearTimeout(relogio)), []);
+  useEffect(() => {
+    if (mostrados >= nos.length) return;
+    const abriu = (indice: number) => indice > 0 && lista.current[indice].trecho !== lista.current[indice - 1].trecho;
+    const espera = mostrados === 0 ? 0 : Math.max(0, ultimaEntrada.current + intervaloDaFila(abriu(mostrados - 1)) - Date.now());
+    const relogio = window.setTimeout(() => {
+      ultimaEntrada.current = Date.now();
+      const indice = mostrados;
+      setMostrados(indice + 1);
+      relogios.current.push(window.setTimeout(() => {
+        setContados((atual) => Math.max(atual, indice + 1));
+        const licao = lista.current[indice];
+        if (licao) anunciar(mensagens.geracao.anuncioLicao(indice + 1, licao.titulo));
+      }, atrasosDaLicao(abriu(indice)).nome));
+    }, espera);
+    return () => window.clearTimeout(relogio);
+  }, [mostrados, nos.length, anunciar]);
+  return { mostrados, contados };
+}
+
+const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Geração que se acompanha (spec 04, "Revisão do dono (19/11)"; paridade com o app, 4652078). O cartão do título vira
+ * uma faixa de 52 px presa no alto (o pedido numa linha e a contagem; sem os pontinhos, banca da noite, item 6), com a
+ * placa do Stu presa logo abaixo, por cima do mapa (a frase, as dicas que se revezam e, depois de 12 s sem lição nova, a
+ * espera longa). Cada lição nasce em passos e a página rola até ela ficar a 60% do mapa, enquanto a pessoa não mexe.
+ * Rolar para cima mais de 40 px (ou pôr o foco num nó) para de acompanhar e mostra a pílula "Ver a lição nova · N";
+ * tocar nela, ou rolar até a lição nova, volta a acompanhar. No fim, a página vai até o troféu (ou a pílula vira "Ver o
+ * fim da trilha"), a placa diz que a trilha ficou pronta, o rodapé troca para "Ajustar pedido" e "Começar" e o foco vai
+ * para "Começar". Ao subir até o começo, o cartão do título volta. Cancelar e Ajustar voltam ao pedido sem salvar nada.
  */
 function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar, existente, abrirExistente }: {
   geracao: TrilhaEmGeracao;
@@ -1021,56 +1057,279 @@ function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar, existente
   existente?: PlanoResumo;
   abrirExistente: (id: string) => void;
 }) {
-  const nos = useMemo(() => nosDaPrevia(geracao), [geracao]);
+  const todos = useMemo(() => nosDaPrevia(geracao), [geracao]);
   const { titulo, proposta } = geracao;
+  const [anuncio, setAnuncio] = useState('');
+  const anunciar = useCallback((texto: string) => setAnuncio((antes) => (antes === texto ? `${texto}\u00a0` : texto)), []);
+  const { mostrados, contados } = useFilaDaGeracao(todos, anunciar);
+  const nos = useMemo(() => todos.slice(0, mostrados), [todos, mostrados]);
+  const pronta = proposta !== null && mostrados >= todos.length;
   const total = nos.length;
+  const partes = new Set(nos.map((no) => no.trecho)).size;
+  const ultimo = nos[total - 1];
+  const raiz = useRef<HTMLElement>(null);
+  const faixa = useRef<HTMLDivElement>(null);
+  const placa = useRef<HTMLDivElement>(null);
+  const rodape = useRef<HTMLDivElement>(null);
+  const botaoComecar = useRef<HTMLButtonElement>(null);
+  const [acompanhando, setAcompanhando] = useState(true);
+  const acompanhandoAgora = useRef(true);
+  const maisBaixo = useRef(0);
+  const programada = useRef<{ inicio: number; alvo: number; ate: number } | null>(null);
+  const animacao = useRef(0);
+  const [esperaLonga, setEsperaLonga] = useState(false);
+  const [cartaoDeVolta, setCartaoDeVolta] = useState(false);
+  const [trofeuAVista, setTrofeuAVista] = useState(false);
+  const [maisUma, setMaisUma] = useState(0);
+  const [medidas, setMedidas] = useState({ rodape: 88, placa: 72 });
+  const prontaAgora = useRef(pronta);
+  prontaAgora.current = pronta;
+  const contagem = pronta ? mensagens.geracao.contagemFinal(total) : mensagens.geracao.contagem(contados);
+  const contagemDaFaixa = pronta ? mensagens.geracao.contagemFinal(total) : contados === 0 ? mensagens.geracao.faixaGerando : mensagens.geracao.contagemFinal(contados);
+
+  // A faixa, a placa e o rodapé cobrem parte da janela: a vaga fica a 60% do que sobra entre eles.
+  const coberto = () => faixa.current?.offsetHeight ?? 0;
+  const visivel = () => Math.min(window.innerHeight, rodape.current?.getBoundingClientRect().top ?? window.innerHeight);
+  const alturaMaxima = () => document.documentElement.scrollHeight - window.innerHeight;
+
+  useEffect(() => {
+    const medir = () => setMedidas({ rodape: rodape.current?.offsetHeight ?? 88, placa: placa.current?.offsetHeight ?? 72 });
+    medir();
+    const observador = new ResizeObserver(medir);
+    [rodape.current, placa.current].forEach((alvo) => { if (alvo) observador.observe(alvo); });
+    return () => observador.disconnect();
+  }, [cartaoDeVolta]);
+
+  function mudarAcompanhar(valor: boolean) {
+    acompanhandoAgora.current = valor;
+    setAcompanhando(valor);
+  }
+
+  /** A página rola sozinha (320 ms, saída suave; com movimento reduzido, pula): o que ela faz não conta como a pessoa. */
+  function rolarPara(destino: number) {
+    const alvo = Math.max(0, Math.round(destino));
+    const inicio = window.scrollY;
+    const reduzido = movimentoReduzido();
+    window.cancelAnimationFrame(animacao.current);
+    programada.current = { inicio, alvo, ate: Date.now() + (reduzido ? 120 : RITMO_DA_GERACAO.rolagemMs + 400) };
+    if (reduzido) { window.scrollTo(0, alvo); return; }
+    const comeco = performance.now();
+    const passo = (agora: number) => {
+      const t = Math.min(1, (agora - comeco) / RITMO_DA_GERACAO.rolagemMs);
+      const suave = 1 - (1 - t) ** 3;
+      window.scrollTo(0, inicio + (alvo - inicio) * suave);
+      if (t < 1) animacao.current = window.requestAnimationFrame(passo);
+    };
+    animacao.current = window.requestAnimationFrame(passo);
+  }
+  useEffect(() => () => window.cancelAnimationFrame(animacao.current), []);
+
+  /** O centro da lente da lição mais nova, na página. */
+  function centroDaMaisNova() {
+    const lentes = raiz.current?.querySelectorAll('.caminho-no:not(.caminho-no--vindo) .caminho-no__lente');
+    const lente = lentes?.[lentes.length - 1];
+    if (!lente) return null;
+    const caixa = lente.getBoundingClientRect();
+    return caixa.top + caixa.height / 2 + window.scrollY;
+  }
+  function rolarAteLicao() {
+    const centro = centroDaMaisNova();
+    if (centro !== null) rolarPara(Math.min(alturaMaxima(), rolagemDaVaga(centro, visivel(), coberto())));
+  }
+  function fimDaTrilha() {
+    const chegada = raiz.current?.querySelector('.caminho-chegada');
+    if (!chegada) return alturaMaxima();
+    return Math.min(alturaMaxima(), chegada.getBoundingClientRect().bottom + window.scrollY + 24 - visivel());
+  }
+
+  // Cada lição nova: a página vai até ela (passo 0), se está acompanhando; "Mais uma!" a cada três lições, aos 700 ms.
+  useEffect(() => {
+    if (mostrados === 0 || prontaAgora.current) return;
+    if (acompanhandoAgora.current) window.requestAnimationFrame(rolarAteLicao);
+    if (!comMaisUma(mostrados) || movimentoReduzido()) return;
+    const relogio = window.setTimeout(() => setMaisUma(mostrados), RITMO_DA_GERACAO.esperaAtrasoMs);
+    return () => window.clearTimeout(relogio);
+    // Só quando uma lição nova entra no mapa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostrados]);
+
+  // Sons (spec 12, momentos novos de 19/11): cada lição toca `geracao_licao` quando o nó cai (passo 3; com movimento
+  // reduzido, quando aparece); rajadas dentro de 180 ms o toca-sons descarta. O fim toca `geracao_pronta` uma vez e cala as
+  // lições que ainda cairiam. "Mais uma!", o troféu e o foco em "Começar" não têm som; sair da tela cala o que faltava.
+  const somDasLicoes = useRef(new Set<number>());
+  const mostradosAntes = useRef(mostrados);
+  useEffect(() => {
+    const de = mostradosAntes.current;
+    mostradosAntes.current = mostrados;
+    if (pronta || mostrados <= de) return;
+    for (let indice = de; indice < mostrados; indice += 1) {
+      const abreTrecho = indice > 0 && todos[indice - 1]?.trecho !== todos[indice]?.trecho;
+      const relogio = window.setTimeout(() => {
+        somDasLicoes.current.delete(relogio);
+        void tocaSons.tocarEfeito('geracao_licao');
+      }, movimentoReduzido() ? 0 : atrasosDaLicao(abreTrecho).no);
+      somDasLicoes.current.add(relogio);
+    }
+    // Só quando uma lição nova entra no mapa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostrados]);
+  useEffect(() => () => somDasLicoes.current.forEach((relogio) => window.clearTimeout(relogio)), []);
+
+  // Espera longa: 12 s sem lição nova, a placa diz que ainda está escrevendo (sem barra de progresso inventada).
+  useEffect(() => {
+    setEsperaLonga(false);
+    if (proposta) return;
+    const relogio = window.setTimeout(() => setEsperaLonga(true), RITMO_DA_GERACAO.esperaLongaMs);
+    return () => window.clearTimeout(relogio);
+  }, [todos.length, proposta]);
+
+  // O fim: o som e o anúncio uma vez, a página até o troféu (se acompanhando) e o foco em "Começar" depois do rodapé.
+  useEffect(() => {
+    if (!pronta) return;
+    somDasLicoes.current.forEach((relogio) => window.clearTimeout(relogio));
+    somDasLicoes.current.clear();
+    void tocaSons.tocarEfeito('geracao_pronta');
+    anunciar(mensagens.geracao.anuncioFim(total));
+    if (window.scrollY <= 4 && !acompanhandoAgora.current) setCartaoDeVolta(true);
+    const quadro = window.requestAnimationFrame(() => { if (acompanhandoAgora.current) rolarPara(fimDaTrilha()); });
+    const focar = window.setTimeout(() => botaoComecar.current?.focus({ preventScroll: true }), RITMO_DA_GERACAO.rodapeMs + 60);
+    return () => { window.cancelAnimationFrame(quadro); window.clearTimeout(focar); };
+    // Só na virada para pronta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pronta]);
+
+  // O troféu à vista libera o confete (sem acompanhar, ele só cai quando o troféu entra na tela).
+  useEffect(() => {
+    if (!pronta) return;
+    const lente = raiz.current?.querySelector('.caminho-chegada__lente');
+    if (!lente) return;
+    const observador = new IntersectionObserver(([entrada]) => { if (entrada.isIntersecting) setTrofeuAVista(true); }, { threshold: 0.6 });
+    observador.observe(lente);
+    return () => observador.disconnect();
+  }, [pronta]);
+
+  // Quem manda na rolagem: subir mais de 40 px (ou o foco num nó) para de acompanhar; descer até a lição nova volta.
+  useEffect(() => {
+    let anterior = window.scrollY;
+    maisBaixo.current = anterior;
+    function aoRolar() {
+      const y = window.scrollY;
+      const antes = anterior;
+      anterior = y;
+      if (prontaAgora.current && y <= 4) setCartaoDeVolta(true);
+      const andando = programada.current;
+      if (andando) {
+        if (acompanhandoAgora.current && y < Math.min(andando.inicio, andando.alvo) - RITMO_DA_GERACAO.pararAcimaDe) {
+          programada.current = null;
+          window.cancelAnimationFrame(animacao.current);
+          mudarAcompanhar(false);
+          return;
+        }
+        if (Math.abs(y - andando.alvo) < 2) { programada.current = null; maisBaixo.current = y; return; }
+        if (Date.now() <= andando.ate) return;
+        programada.current = null;
+        maisBaixo.current = antes;
+      }
+      if (acompanhandoAgora.current) {
+        if (deixouDeAcompanhar(y, maisBaixo.current)) mudarAcompanhar(false);
+        else maisBaixo.current = Math.max(maisBaixo.current, y);
+        return;
+      }
+      if (y <= antes) return;
+      const chegada = raiz.current?.querySelector('.caminho-chegada__lente');
+      const centro = centroDaMaisNova();
+      const voltou = prontaAgora.current
+        ? chegada !== null && chegada !== undefined && chegada.getBoundingClientRect().bottom <= visivel()
+        : centro !== null && vagaAVista(centro, y, visivel(), coberto());
+      if (voltou) { maisBaixo.current = y; mudarAcompanhar(true); }
+    }
+    function aoFocar(evento: FocusEvent) {
+      if (evento.target instanceof Element && evento.target.closest('.caminho-nos')) mudarAcompanhar(false);
+    }
+    window.addEventListener('scroll', aoRolar, { passive: true });
+    const area = raiz.current;
+    area?.addEventListener('focusin', aoFocar);
+    return () => { window.removeEventListener('scroll', aoRolar); area?.removeEventListener('focusin', aoFocar); };
+    // Liga uma vez; as referências guardam o estado atual.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** A pílula: leva à lição nova (ou ao fim) e volta a acompanhar. */
+  function verLicaoNova() {
+    mudarAcompanhar(true);
+    if (pronta) rolarPara(fimDaTrilha());
+    else rolarAteLicao();
+  }
+
+  const pilula = !acompanhando && total > 0 && !(pronta && trofeuAVista);
+  const placaTexto = pronta ? mensagens.geracao.placaPronta(total, partes) : esperaLonga ? mensagens.geracao.esperaLonga : mensagens.geracao.stuMontando;
 
   return (
-    <section className="painel painel--trilha painel--geracao">
-      <header className="trilha-cabecalho">
-        <div className="trilha-resumo">
-          <p className="contexto-tela">{mensagens.geracao.contexto}</p>
-          <h1 tabIndex={-1}>
-            {titulo ? <span className="geracao-titulo" key={titulo}>{titulo}</span> : (
-              <>
-                <span className="somente-leitor">{mensagens.geracao.montandoTitulo}</span>
-                <span className="geracao-esqueleto geracao-esqueleto--titulo" aria-hidden="true" />
-              </>
+    <section ref={raiz} className="painel painel--trilha painel--geracao" data-acompanhada data-pronta={pronta || undefined}
+      style={{ '--rodape-geracao': `${medidas.rodape}px`, '--respiro-placa': `${medidas.placa + 20}px` } as CSSProperties}>
+      {pronta && proposta && cartaoDeVolta ? (
+        <header className="trilha-cabecalho geracao-cartao">
+          <div className="trilha-resumo">
+            <p className="contexto-tela">{mensagens.geracao.contexto}</p>
+            <h1 tabIndex={-1}>{titulo ? <span className="geracao-titulo" key={titulo}>{titulo}</span> : geracao.objetivo}</h1>
+            {titulo !== null && !repeteTitulo(titulo, geracao.objetivo) && <p className="introducao">{geracao.objetivo}</p>}
+            <p className="geracao-ia">{origemDemonstracao(proposta.origem) ? mensagens.geracao.demonstracao : mensagens.geracao.ia}</p>
+            {!origemDemonstracao(proposta.origem) && <p className="geracao-origem">{mensagens.geracao.origem(origemLegivel(proposta.origem))}</p>}
+            {existente && (
+              <div className="geracao-repetida" role="status">
+                <p>{mensagens.geracao.repetida(existente.titulo)}</p>
+                <Botao variante="secundario" disabled={ocupado} onClick={() => abrirExistente(existente.id)}>{mensagens.geracao.abrirExistente}</Botao>
+              </div>
             )}
-          </h1>
-          {titulo !== null && !repeteTitulo(titulo, geracao.objetivo) && <p className="introducao">{geracao.objetivo}</p>}
-          {/* Quem montou: a IA ou o modo demonstração (trilha pronta). Enquanto não se sabe, um texto neutro. */}
-          <p className="geracao-ia">
-            {!proposta ? mensagens.geracao.montadaDoPedido : origemDemonstracao(proposta.origem) ? mensagens.geracao.demonstracao : mensagens.geracao.ia}
-          </p>
-          {/* A origem só aparece quando acrescenta algo: na trilha pronta, o aviso acima já diz de onde ela vem. */}
-          {proposta
-            ? !origemDemonstracao(proposta.origem) && <p className="geracao-origem">{mensagens.geracao.origem(origemLegivel(proposta.origem))}</p>
-            : <span className="geracao-esqueleto geracao-esqueleto--origem" aria-hidden="true" />}
-          {proposta && existente && (
-            <div className="geracao-repetida" role="status">
-              <p>{mensagens.geracao.repetida(existente.titulo)}</p>
-              <Botao variante="secundario" disabled={ocupado} onClick={() => abrirExistente(existente.id)}>{mensagens.geracao.abrirExistente}</Botao>
-            </div>
-          )}
+          </div>
+        </header>
+      ) : (
+        // A faixa de 52 presa no alto: o pedido numa linha e a contagem (o título e de onde veio voltam no cartão, no alto).
+        <div className="geracao-faixa" ref={faixa}>
+          <h1 className="geracao-faixa__nome" tabIndex={-1}>{geracao.objetivo}</h1>
+          <span className="geracao-faixa__contagem" aria-hidden="true">{contagemDaFaixa}</span>
         </div>
-      </header>
-      <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas}
-        chegada={proposta !== null} montando={proposta === null} />
-      <div className="geracao-acoes" data-pronta={proposta ? true : undefined}>
-        <Botao key="voltar" variante="secundario" disabled={ocupado} onClick={proposta ? ajustar : cancelar}>
-          {proposta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar}
+      )}
+      {/* A placa do Stu, presa logo abaixo da faixa, por cima do mapa (o leitor de tela já ouve cada lição e o fim). */}
+      <div className="geracao-placa-lugar" data-sem-faixa={(pronta && cartaoDeVolta) || undefined} aria-hidden="true">
+        <div className="geracao-placa" ref={placa}>
+          <p className="geracao-placa__texto">{placaTexto}</p>
+          {pronta ? <p className="geracao-placa__linha">{mensagens.geracao.placaProntaTexto}</p>
+            : !esperaLonga && <DicaDaPlaca />}
+        </div>
+      </div>
+      <Caminho nos={nos} stu={pronta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando}
+        chegada={pronta} montando={!pronta} acompanhada maisUma={maisUma} stuNoFim={pronta} festaPermitida={acompanhando || trofeuAVista} />
+      {pilula && (
+        <button type="button" className="geracao-pilula" onClick={verLicaoNova}>
+          <Icone nome="seta" />{pronta ? mensagens.geracao.verFimDaTrilha : mensagens.geracao.verLicaoNova(total)}
+        </button>
+      )}
+      <div className="geracao-acoes" ref={rodape} data-pronta={pronta || undefined}>
+        <Botao key="voltar" variante="secundario" disabled={ocupado} onClick={pronta ? ajustar : cancelar}>
+          {pronta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar}
         </Botao>
         <p className="geracao-situacao">
-          <span className="geracao-situacao__rotulo">{proposta ? mensagens.geracao.pronta : mensagens.geracao.montando}</span>{' '}
-          <span className="geracao-situacao__contagem">
-            {proposta ? mensagens.geracao.contagemFinal(total) : mensagens.geracao.contagem(total)}
-          </span>
+          <span className="geracao-situacao__rotulo">{pronta ? mensagens.geracao.pronta : mensagens.geracao.montando}</span>{' '}
+          <span className="geracao-situacao__contagem">{contagem}</span>
         </p>
-        {proposta && <Botao key="comecar" disabled={ocupado} onClick={() => comecar(proposta)}>{mensagens.geracao.comecar}</Botao>}
+        {pronta && proposta && <Botao key="comecar" ref={botaoComecar} disabled={ocupado} onClick={() => comecar(proposta)}>{mensagens.geracao.comecar}</Botao>}
       </div>
+      <p className="somente-leitor" role="status" aria-live="polite">{anuncio}</p>
     </section>
   );
+}
+
+/** As dicas da placa, que se revezam a cada 3,6 s (14/20 em #0B1B5C, banca da noite, item 6). */
+function DicaDaPlaca() {
+  const dicas = mensagens.geracao.dicas;
+  const [indice, setIndice] = useState(0);
+  useEffect(() => {
+    if (dicas.length < 2) return;
+    const intervalo = window.setInterval(() => setIndice((atual) => (atual + 1) % dicas.length), 3600);
+    return () => window.clearInterval(intervalo);
+  }, [dicas.length]);
+  return <p className="geracao-placa__linha" key={indice}>{dicas[indice]}</p>;
 }
 
 /**
@@ -1098,6 +1357,36 @@ function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; pron
     return () => window.clearInterval(intervalo);
   }, [prontas, dicas.length]);
 
+  // Quando as lições não cabem na tela, a lista acompanha (spec 04, revisão de 19/11): o brilho que desce leva a rolagem,
+  // com a linha do brilho a 60% da altura; quando o aceite volta, o visto passa de linha em linha a cada 80 ms, até a última.
+  const lista = useRef<HTMLOListElement>(null);
+  useEffect(() => {
+    const itens = lista.current ? Array.from(lista.current.children) as HTMLElement[] : [];
+    if (itens.length === 0) return;
+    const naoCabe = () => (itens[itens.length - 1].getBoundingClientRect().bottom > window.innerHeight);
+    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const levar = (indice: number) => {
+      const item = itens[Math.min(indice, itens.length - 1)];
+      const caixa = item.getBoundingClientRect();
+      const alvo = caixa.top + caixa.height / 2 + window.scrollY - window.innerHeight * RITMO_DA_GERACAO.linhaDoBrilho;
+      window.scrollTo({ top: Math.max(0, alvo), behavior: reduzido ? 'auto' : 'smooth' });
+    };
+    if (!naoCabe()) return;
+    let linha = 0;
+    const passo = prontas ? RITMO_DA_GERACAO.vistoPorLinhaMs : 200;
+    const comeco = window.setTimeout(() => {
+      levar(0);
+      const intervalo = window.setInterval(() => {
+        linha += 1;
+        if (linha >= itens.length) { window.clearInterval(intervalo); return; }
+        levar(linha);
+      }, passo);
+      relogio.current = intervalo;
+    }, prontas ? 0 : 600);
+    const relogio = { current: 0 };
+    return () => { window.clearTimeout(comeco); window.clearInterval(relogio.current); };
+  }, [prontas]);
+
   return (
     <section className="painel painel--preparo" data-prontas={prontas || undefined}>
       <div className="preparo-cena" style={coresDaRegiao(0)} aria-hidden="true">
@@ -1114,7 +1403,7 @@ function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; pron
       <p className="contexto-tela">{proposta.titulo}</p>
       <h1 ref={titulo} tabIndex={-1}>{prontas ? mensagens.preparo.prontas : mensagens.preparo.titulo}</h1>
       <p className="introducao">{prontas ? mensagens.preparo.textoProntas : mensagens.preparo.texto}</p>
-      <ol className="preparo-lista" aria-label={mensagens.preparo.lista}>
+      <ol className="preparo-lista" ref={lista} aria-label={mensagens.preparo.lista}>
         {licoes.map((nome, indice) => (
           <li key={indice} style={{ '--ordem': indice } as CSSProperties}>
             <span className="preparo-lista__icone">
