@@ -20,7 +20,9 @@ appId: host.exp.Exponent
     file: sair-do-menu-do-expo-go.yaml
     env:
       ESPERA: "240000"
-# Fechado o menu, o app já está carregado por trás dele: a espera é curta.
+# Fechado o menu, o app já está carregado por trás dele: a espera é curta. O `evalScript` zera a conta do Maestro antes
+# dela (ver reabrir.yaml): sem ele, os 30 s seriam o que sobrou depois da espera longa acima.
+- evalScript: ${output.esperaDaEntrada = true}
 - extendedWaitUntil:
     visible:
       id: titulo-entrada

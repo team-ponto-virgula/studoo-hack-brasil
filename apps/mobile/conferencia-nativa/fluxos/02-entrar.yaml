@@ -43,6 +43,8 @@ name: 02-entrar
     visible:
       id: nav-planos
     timeout: 60000
+# Zera a conta do Maestro (ver partes/reabrir.yaml): sem isto, a espera da barra de baixo consome a do mapa.
+- evalScript: ${output.esperaDoMapa = true}
 - extendedWaitUntil:
     visible:
       id: titulo-plano

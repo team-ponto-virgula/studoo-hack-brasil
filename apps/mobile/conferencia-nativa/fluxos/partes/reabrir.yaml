@@ -17,6 +17,11 @@ appId: host.exp.Exponent
     visible:
       id: nav-planos
     timeout: 30000
+# O Maestro desconta de toda espera pelo que está na tela, mesmo com `timeout`, o tempo passado desde o último comando que
+# ele conta como interação (adjustedToLatestInteraction, no Orchestra.kt da 2.12.1), e as esperas acima não contam. Na
+# execução 44565509060, o app levou 37 s para abrir e o mapa do fluxo 70 ficou com 6 s dos 45. O `evalScript` conta como
+# interação e não toca no aparelho: zera a conta antes da espera do mapa.
+- evalScript: ${output.esperaDoMapa = true}
 - extendedWaitUntil:
     visible:
       id: titulo-plano
