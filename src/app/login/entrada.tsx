@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from 'react';
 import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
@@ -24,6 +27,7 @@ type ConfigAcessoInicial = {
 };
 
 export function Entrada({ configInicial, sessaoVerificada = false }: { configInicial?: ConfigAcessoInicial; sessaoVerificada?: boolean }) {
+  const router = useRouter();
   const [googleDisponivel, setGoogleDisponivel] = useState(Boolean(configInicial?.google));
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(Boolean(configInicial?.recuperacao));
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(Boolean(configInicial?.visitante));
@@ -51,12 +55,13 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
   }, [vendoApresentacao]);
 
   useEffect(() => {
+    tocaSons.prepararEfeitos('entrar');
     let ativo = true;
 
     async function verificarSessao() {
       try {
         await cliente.sessao();
-        if (ativo) window.location.replace('/');
+        if (ativo) router.replace('/');
       } catch {
         if (ativo) setVerificando(false);
       }
@@ -76,7 +81,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
     }
     if (!sessaoVerificada) void verificarSessao();
     return () => { ativo = false; };
-  }, [configInicial, sessaoVerificada]);
+  }, [configInicial, sessaoVerificada, router]);
 
   async function entrar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -105,10 +110,8 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
 
     try {
       await cliente.login(email, senha);
-      // O som de entrar antes de trocar de página (até meio segundo para carregar, mais o tempo dele).
-      await Promise.race([tocaSons.tocarEfeito('entrar'), new Promise((pronto) => window.setTimeout(pronto, 500))]);
-      await new Promise((pronto) => window.setTimeout(pronto, 260));
-      window.location.replace('/');
+      void tocaSons.tocarEfeito('entrar');
+      router.replace('/');
     } catch (falha) {
       setErro(falha instanceof ErroStudoo ? falha.codigo : 'rede');
       if (falha instanceof ErroStudoo && falha.codigo === 'credenciais_invalidas' && campoSenha.current) campoSenha.current.value = '';
@@ -125,7 +128,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
     setErro(null);
     try {
       await cliente.entrarVisitante();
-      window.location.replace('/');
+      router.replace('/');
     } catch (falha) {
       setErro(falha instanceof ErroStudoo ? falha.codigo : 'rede');
       setTremor((anterior) => anterior + 1);
@@ -242,9 +245,9 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
                 </Botao>
               </div>
               {configuracaoCarregada && recuperacaoDisponivel && (
-                <a className="acesso-link entrada-esqueci" href="/recuperar" onClick={() => {
+                <Link className="acesso-link entrada-esqueci" href="/recuperar" onClick={() => {
                   try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
-                }}>{mensagens.acesso.esqueci}</a>
+                }}>{mensagens.acesso.esqueci}</Link>
               )}
             </form>
           )}

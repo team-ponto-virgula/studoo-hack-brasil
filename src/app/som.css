@@ -5,49 +5,7 @@
 .folha-som__topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .folha-som__titulo { margin: 0; font-family: Quicksand, sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1.3; }
 .folha-som__titulo:focus { outline: none; }
-.folha-som__bloco { display: grid; gap: 2px; }
-.folha-som__subtitulo { margin: 0; font-family: Quicksand, sans-serif; font-size: 1.125rem; font-weight: 700; line-height: 1.33; }
-.folha-som__dica { margin: 0; color: var(--texto2); font-size: 0.9375rem; line-height: 1.47; }
-
-/* A lista de escolha única: linhas de 60, borda de 2, raio 16; marcada em azul sobre o fundo suave. */
-.som-lista { display: grid; gap: 6px; }
-.som-opcao {
-  display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 8px 12px; border: 2px solid var(--gelo); border-radius: 16px;
-  background: var(--fundo); cursor: pointer;
-}
-.som-opcao:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
-@media (hover: hover) { .som-opcao:not([data-marcada]):hover { background: var(--nevoa); } }
-.som-opcao[data-marcada] { border-color: var(--acao); background: var(--ceu); }
-.som-opcao__icone { display: grid; flex: none; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: var(--nevoa); color: var(--acao); }
-.som-opcao__icone .icone { width: 22px; height: 22px; }
-.som-opcao__texto { display: grid; flex: 1 1 auto; min-width: 0; }
-.som-opcao__nome { color: var(--texto); font-size: 1rem; font-weight: 800; line-height: 1.375; }
-.som-opcao__descricao { overflow: hidden; color: var(--texto2); font-size: 0.875rem; line-height: 1.43; text-overflow: ellipsis; white-space: nowrap; }
-.som-opcao__tocando, .som-opcao__carregando { display: inline-flex; align-items: center; gap: 6px; font-size: 0.875rem; font-weight: 800; line-height: 1.43; }
-/* Sobre o fundo suave (lavanda), o texto azul usa a ação escura (contraste da B5). */
-.som-opcao__tocando { color: var(--acao-escura); }
-.som-opcao__carregando { color: var(--texto2); }
-.som-opcao__erro { color: #c23b4e; font-size: 0.875rem; font-weight: 800; line-height: 1.43; }
-.som-opcao__marca { flex: none; width: 24px; height: 24px; border: 2px solid #8792bd; border-radius: 50%; background: var(--fundo); }
-.som-opcao[data-marcada] .som-opcao__marca { border-color: var(--acao); background: radial-gradient(circle, var(--acao) 0 6px, var(--fundo) 6.5px); }
-
-/* Tocando: três barras de 3 px (vão de 2, de 4 a 12 px), sobem e descem em 900 ms com 150 ms entre elas. */
-.som-barras { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
-.som-barras span { width: 3px; height: 6px; border-radius: 2px; background: currentColor; }
-.som-barras span:nth-child(2) { height: 12px; }
-.som-barras span:nth-child(3) { height: 8px; }
-@media (prefers-reduced-motion: no-preference) {
-  .som-barras span { animation: som-barra 900ms ease-in-out infinite alternate; }
-  .som-barras span:nth-child(2) { animation-delay: 150ms; }
-  .som-barras span:nth-child(3) { animation-delay: 300ms; }
-  @keyframes som-barra { from { height: 4px; } to { height: 12px; } }
-  .som-giro { animation: som-girar 800ms linear infinite; }
-  @keyframes som-girar { to { transform: rotate(360deg); } }
-}
-.som-giro { display: inline-block; width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; }
-
-.folha-som__linha { width: 100%; height: 1px; margin: 0; border: 0; background: var(--gelo); }
-.som-efeitos { display: flex; align-items: center; gap: 12px; min-height: 64px; }
+.som-controles .som-perfil__linha { padding-inline: 0; }
 .som-efeitos__texto { display: grid; flex: 1 1 auto; min-width: 0; }
 .som-efeitos__titulo { font-weight: 800; }
 .som-efeitos__dica { color: var(--texto2); font-size: 0.875rem; line-height: 1.43; }
@@ -70,7 +28,6 @@
 .aula-som .icone { width: 24px; height: 24px; }
 @media (hover: hover) { .aula-som:hover { background: var(--nevoa); } }
 .aula-som:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
-.aula-som__novidade { position: absolute; top: 6px; right: 6px; width: 10px; height: 10px; border: 2px solid #fff; border-radius: 50%; background: var(--ouro); box-sizing: content-box; }
 
 /* Perfil: um bloco com duas linhas de 64. */
 .som-perfil { display: grid; border: 2px solid var(--gelo); border-radius: 24px; overflow: hidden; }
@@ -78,10 +35,23 @@
   display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; border: 0; background: var(--fundo);
   color: var(--texto); font: inherit; text-align: start;
 }
-button.som-perfil__linha { cursor: pointer; }
 .som-perfil__linha + .som-perfil__linha { border-top: 1px solid var(--gelo); }
-.som-perfil__linha:focus-visible { outline: 3px solid var(--acao); outline-offset: -3px; }
-@media (hover: hover) { button.som-perfil__linha:hover { background: var(--nevoa); } }
 .som-perfil__titulo { flex: 1 1 auto; font-weight: 800; }
-.som-perfil__valor { color: var(--texto2); font-weight: 800; }
 .som-perfil__linha .icone { flex: none; width: 20px; height: 20px; color: var(--texto2); }
+
+.folha-som__topo h2 { flex: 1; }
+.som-situacao { display: flex; align-items: center; gap: 6px; color: var(--acao-escura); font-size: .875rem; font-weight: 750; }
+.som-situacao:empty { display: none; }
+.som-situacao[data-erro] { color: #c23b4e; }
+.som-barras { height: 14px; display: inline-flex; align-items: center; gap: 2px; }
+.som-barras i { display: block; width: 3px; height: 8px; border-radius: 3px; background: currentColor; }
+.som-barras i:nth-child(2) { height: 13px; }
+.som-giro { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; }
+@media (prefers-reduced-motion: no-preference) {
+  .som-barras i { animation: som-onda 900ms ease-in-out infinite alternate; }
+  .som-barras i:nth-child(2) { animation-delay: 150ms; }
+  .som-barras i:nth-child(3) { animation-delay: 300ms; }
+  .som-giro { animation: som-girar 800ms linear infinite; }
+  @keyframes som-onda { to { transform: scaleY(.45); } }
+  @keyframes som-girar { to { transform: rotate(1turn); } }
+}

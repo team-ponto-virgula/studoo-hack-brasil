@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 /*
  * Perfis e compartilhar trilha (spec 09) na web: avatar, folha "Compartilhar trilha", confirmação, formulário do perfil,
  * tela Perfil, prévia da trilha compartilhada (página /t e "Adicionar por link") e as ações da página pública.
@@ -635,7 +638,7 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
       )}
       <p className="previa-trilha__de">
         <Avatar nome={nome} cor={trilha.dono.cor} foto={trilha.dono.foto} />
-        <span>{trilha.dono.perfilId ? <>{antes}<a href={`/p/${trilha.dono.perfilId}`}>{nome}</a>{depois}</> : frase}</span>
+        <span>{trilha.dono.perfilId ? <>{antes}<Link href={`/p/${trilha.dono.perfilId}`}>{nome}</Link>{depois}</> : frase}</span>
       </p>
       <Titulo className="previa-trilha__titulo" ref={tituloRef} tabIndex={-1}>{trilha.titulo}</Titulo>
       <p className="previa-trilha__meta">{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</p>
@@ -658,7 +661,7 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
             <p className="quem-compartilhou__nome">{nome}</p>
             {trilha.dono.demo && <p className="selo-demo">{mensagens.comunidade.perfilDemo}</p>}
             {trilha.dono.resumo && <p className="quem-compartilhou__resumo">{trilha.dono.resumo}</p>}
-            {trilha.dono.perfilId && <a className="quem-compartilhou__link" href={`/p/${trilha.dono.perfilId}`}>{m.verPerfil(nome)}</a>}
+            {trilha.dono.perfilId && <Link className="quem-compartilhou__link" href={`/p/${trilha.dono.perfilId}`}>{m.verPerfil(nome)}</Link>}
             {comunidade && trilha.dono.perfilId && (
               <div className="quem-compartilhou__seguir"><BotaoSeguir perfilId={trilha.dono.perfilId} nome={nome} estado={trilha.seguirDono} logado={logado} /></div>
             )}
@@ -677,10 +680,11 @@ function AcoesDeQuemRecebe({ trilha, logado, adicionar, abrir, ocupado }: {
   abrir: (planoId: string) => void;
   ocupado: boolean;
 }) {
+  const router = useRouter();
   if (!logado) {
     return <Botao onClick={() => {
       guardar(CHAVE_DEPOIS_DO_LOGIN, `/t/${trilha.codigo}?adicionar=1`);
-      window.location.assign('/login');
+      router.push('/login');
     }}>{m.entrarParaAdicionar}</Botao>;
   }
   if (trilha.situacao === 'sua' && trilha.planoId) {
@@ -693,13 +697,18 @@ function AcoesDeQuemRecebe({ trilha, logado, adicionar, abrir, ocupado }: {
 }
 
 /** Abre a trilha no app (a página /t está fora dele): guarda o pedido e vai para o início. */
-export function abrirNoApp(planoId: string, aviso?: string) {
-  guardar(CHAVE_ABRIR_PLANO, JSON.stringify({ id: planoId, ...(aviso ? { aviso } : {}) }));
-  window.location.assign('/');
+export function useAbrirNoApp() {
+  const router = useRouter();
+  return (planoId: string, aviso?: string) => {
+    guardar(CHAVE_ABRIR_PLANO, JSON.stringify({ id: planoId, ...(aviso ? { aviso } : {}) }));
+    router.push('/');
+  };
 }
 
 /** As ações da página pública /t/<código>; com `?adicionar=1` (volta do login), adiciona sozinha uma vez. */
 export function AcoesDaPaginaPublica({ trilha, logado }: { trilha: TrilhaCompartilhada; logado: boolean }) {
+  const router = useRouter();
+  const abrirNoApp = useAbrirNoApp();
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const tentou = useRef(false);
@@ -714,7 +723,7 @@ export function AcoesDaPaginaPublica({ trilha, logado }: { trilha: TrilhaCompart
       const codigo = codigoDoErro(falha);
       if (codigo === 'nao_autenticado') {
         guardar(CHAVE_DEPOIS_DO_LOGIN, `/t/${trilha.codigo}?adicionar=1`);
-        window.location.assign('/login');
+        router.push('/login');
         return;
       }
       setErro(codigo);

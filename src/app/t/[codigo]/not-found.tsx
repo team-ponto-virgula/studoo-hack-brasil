@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { compartilharAtivo, comunidadeAtiva } from '@/servidor/compartilhar/servico';
 import { mensagens } from '../../../mensagens/pt-BR';
@@ -23,8 +24,8 @@ export default async function LinkInativo() {
         <Stu expressao="stu-surpreso" tamanho={120} animado="uma-vez" />
         <h1>{m.inativo}</h1>
         <p className="folha-texto">{m.inativoTexto}</p>
-        <a className="botao botao--primario" href={logado ? '/' : '/login'}>{m.criarMinha}</a>
-        {comunidadeAtiva() && <a className="botao botao--texto" href="/explorar">{m.verExplorar}</a>}
+        <Link className="botao botao--primario" href={logado ? '/' : '/login'}>{m.criarMinha}</Link>
+        {comunidadeAtiva() && <Link className="botao botao--texto" href="/explorar">{m.verExplorar}</Link>}
       </section>
     </PaginaPublica>
   );

@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Metadata } from 'next';
 import { mensagens } from '../mensagens/pt-BR';
 import { Stu } from '../ui';
@@ -16,7 +17,7 @@ export default function PaginaNaoEncontrada() {
         <Stu expressao="stu-surpreso" tamanho={120} animado="uma-vez" />
         <h1>{n.titulo}</h1>
         <p className="folha-texto">{n.texto}</p>
-        <a className="botao botao--primario" href="/">{n.voltar}</a>
+        <Link className="botao botao--primario" href="/">{n.voltar}</Link>
       </section>
     </PaginaPublica>
   );
