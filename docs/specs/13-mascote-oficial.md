@@ -157,3 +157,78 @@ O PNG do kit não é o vetor de hoje redesenhado na mesma forma: é a mesma idei
 - **Ícone do app (Android e iPhone) e ícone do site:** recomendo manter a marca de hoje (os óculos com sorriso, a mesma forma do logo), trocando o azul de #3858D6 para #2563FF. Ela é vetorial e se lê em 16 px. Um ícone com o rosto do Stu em volume, como o do Duolingo, precisa de um render novo do rosto em 1024 px ou mais: o rosto recortado do kit tem uns 550 px e ficaria borrado. **Decisão do dono**, com essa ressalva.
 - **Tela de abertura do app:** hoje o `app.json` não configura nenhuma (nem `splash` nem o plugin `expo-splash-screen`). Recomendo a marca branca sobre #2563FF, com imagem de 200 dp, porque o Android 12 ou mais novo só mostra um ícone no centro. O Stu em volume aparece logo depois, na entrada.
 - **Imagem de prévia do link:** muda, com o Stu (§A2).
+
+## Emenda (19/11): o Stu animado
+O dono mandou um GIF para cada PNG do kit ("Troque os PNGs por GIFs, assim o Studoo fica mais animado"). Os GIFs têm 352×352, 33 quadros em 2,36 s (a acolhida tem 40 quadros e 2,86 s), laço infinito e transparência de um bit. A regra junta o pedido do dono com a §B7: **o Stu se mexe em todo momento em que ele é o assunto (boas-vindas, vazio, espera, acerto, erro, conclusão, voz) e fica parado enquanto a pessoa lê ou responde ao lado dele.** Continua valendo um Stu se mexendo por vez: se dois puderem se mexer, se mexe o do acontecimento mais recente.
+
+### E1. Onde ele se mexe
+Modos: **laço** (repete enquanto está visível, com as pausas da §E4); **uma vez** (um ciclo quando aparece, depois o PNG parado); **no acontecimento** (parado até o fato, um ciclo nele, ou dois nas conclusões, depois parado); **de tempos em tempos** (um ciclo a cada 8 s); **parado** (só o PNG).
+
+| Lugar (§A2, §B4) | Imagem | Modo |
+|---|---|---|
+| Entrada, faixa no celular | `stu-acolhida` | laço; para quando um campo recebe foco |
+| Entrada, tela larga (XG) | `stu-acolhida` | parado, com o aceno da §B7 (§E2) |
+| Apresentação, cada passo | as da §B4 | uma vez ao entrar no passo |
+| Pedido: convida | `stu-curioso` | uma vez ao abrir |
+| Pedido: pessoa escrevendo | `stu-encorajador` | parado |
+| Pedido: ideia aplicada | `stu-animado` | no acontecimento |
+| Cartão em destaque, prévia de trilha, cabeça do estúdio | `stu-feliz` | uma vez ao abrir |
+| Escrevendo suas lições, mapa montando, lendo o material | `stu-estudando`, `stu-curioso`, `stu-concentrado` | laço (é espera) |
+| Lições prontas!, início do mapa pronto | `stu-comemorando`, `stu-feliz` | no acontecimento / uma vez |
+| Guia do mapa | `stu-tres-quartos` | de tempos em tempos; e uma vez na volta de lição concluída, depois do pulo do nó |
+| Conceito da aula | `stu-feliz` | uma vez quando a etapa entra, depois parado |
+| Reação: atento e pensando | `stu-curioso`, `stu-concentrado` | parado (a pessoa está respondendo) |
+| Reação: acerto, de primeira, erro, ponte | `stu-feliz`, `stu-comemorando`, `stu-encorajador`, `stu-animado` | no acontecimento |
+| Prática: cronômetro correndo, resposta modelo | `stu-concentrado`, `stu-encorajador` | parado |
+| Prática: terminou | `stu-comemorando` | no acontecimento |
+| Ponte do reforço | `stu-perfil`, depois `stu-animado` | laço só durante a travessia; uma vez ao chegar |
+| Ensine ao Stu e voz ao vivo | ouvindo, falando, pensando | laço enquanto o estado dura (mostra que ele ouve ou fala) |
+| Ensine ao Stu: pessoa digitando, caderno do Stu | `stu-curioso`, `stu-concentrado` | parado |
+| Ensine ao Stu: anotou | `stu-encorajador` | no acontecimento |
+| Lição concluída | `stu-comemorando` (ou `stu-encorajador`) | no acontecimento, dois ciclos |
+| Trilha concluída | `stu-celebrando` | no acontecimento, dois ciclos (§E2) |
+| Fim do mapa | `acessorio-trofeu` | no acontecimento (trilha concluída) |
+| Minhas trilhas sem trilha | `stu-organizando` | laço |
+| Novidades e Explorar sem resultado | `stu-meio-de-boa`, `stu-curioso` | uma vez ao abrir |
+| 404, erro do app, sem conexão, páginas públicas, erro na linha | `stu-surpreso`, `stu-encorajador` | uma vez ao abrir (no 404, junto com o "chegar" da §B7) |
+| Controle de som | `acessorio-fone` | parado |
+| Imagem de prévia do link | `stu-acolhida` | parado (PNG; o cartão de link não anima) |
+
+### E2. Tamanho em que ainda anima
+- A animação só entra quando **lado na tela × densidade ≤ 330 px**, ou seja, até 165 px na web (tela 2x), 110 pt no app em tela 3x e 165 pt em tela 2x. Acima disso o GIF teria de ser ampliado e borra.
+- No celular, web e app usam o mesmo teto de 110 para os lugares animados: apresentação (160 → 110), Escrevendo suas lições (132×106 → 110×88), lição concluída (140 → 110) e 404 (120 → 110). Na tela larga da web valem os tamanhos da §A2 e §B4 até 165.
+- **XG (240) e entrada larga: PNG parado com o movimento da §B7.** Trilha concluída vira uma composição: `stu-celebrando` animado em 165 (110 no celular) no centro, com os raios girando e o confete desenhados em código atrás, como na spec 04. O PNG de 240 fica para movimento reduzido.
+- **Pedido ao dono (recomendação):** `acolhida`, `celebrando` e `comemorando` em 720×720 px ou mais, em WebP animado ou APNG com transparência suave (alfa de 8 bits), no mesmo ritmo (cerca de 2,4 s em laço) e com o primeiro quadro igual à pose do PNG parado. Com eles, a XG e a entrada larga voltam a animar com nitidez.
+
+### E3. Borda de um bit
+- O GIF não tem pixel meio transparente: no tamanho original ou ampliado, a borda fica serrilhada em qualquer fundo claro do mapa de troca (branco, halo lavanda, céu da entrada, regiões do mapa, painéis verde e âmbar).
+- **Ao reduzir com o filtro lanczos (o padrão do sharp), a borda fica suave**: medido de 96 a 330 px, todos os tamanhos ganham alfa parcial na borda (o `feliz` em 330 px tem 3.533 pixels de borda suave). Por isso o produto nunca serve o GIF original nem um arquivo ampliado: só o WebP animado gerado no tamanho da faixa, dentro do teto da §E2.
+- Continua valendo a §A2: nunca sobre o azul de ação #2563FF nem sobre foto ou capa.
+
+### E4. Movimento reduzido e economia
+- **Imagem parada:** o PNG de mesmo nome da §A1, na mesma faixa (nítido, feito do original de 1024). Nunca o primeiro quadro do GIF.
+- **Ordem de carga:** o PNG aparece primeiro, com `width` e `height` fixos. O WebP animado é pedido só quando a tela fica interativa (`requestIdleCallback` na web, `InteractionManager.runAfterInteractions` no app) e entra por cima com 120 ms de opacidade. Se não chegar em 3 s, a tela fica no PNG.
+- **Movimento reduzido:** o arquivo animado nem é pedido; tudo fica no PNG e as trocas de expressão são imediatas (§B7).
+- **Economia de dados** (`navigator.connection.saveData` ou `prefers-reduced-data` na web): como movimento reduzido.
+- **Pausa (troca para o PNG):** fora da tela (menos de 10% visível: `IntersectionObserver` na web; tela sem foco na navegação do app); aba ou app em segundo plano (`visibilitychange`, `AppState`); qualquer campo de texto da tela com foco; e laço depois de 20 s sem toque, rolagem ou tecla. Volta ao ciclo no próximo toque, rolagem ou ao voltar à tela.
+- **Leitor de tela:** nada muda; o Stu segue enfeite (§B8) e a animação não gera anúncio.
+- **App:** a imagem animada pede o `expo-image` (que já existe no Expo Go), com `autoplay` desligado nos modos "uma vez" e "no acontecimento", que o componente controla pelo tempo do ciclo.
+
+### E5. O que não vira GIF
+- Logo: fica o vetor (§B6). O GIF do logo é o desenho grosso do kit, em raster.
+- Paleta: as amostras são referência, não entram no produto.
+- Também ficam de fora `vistas/costas`, `vistas/perfil-esquerdo` (o `stu-perfil` espelhado faz o papel), `mochila`, `notebook` e `chapeu-de-formatura`, como na §A1.
+
+### E6. Teto de peso
+Medido com o sharp (WebP animado, lanczos, qualidade 60 a 72, esforço 6): o `feliz` pesa 59 KB em 96 px, 116 KB em 192 e 168 KB em 288. A acolhida pesa 101, 216 e 322 KB. Baixar a qualidade quase não muda o peso (de 216 para 202 KB): ele vem dos 33 a 40 quadros. A economia vem da §E1 e da §E4, não da compressão.
+
+| Arquivo animado, lado de saída | Teto | Acolhida |
+|---|---|---|
+| 96 px | 70 KB | 110 KB |
+| 144 px | 110 KB | 170 KB |
+| 192 px | 130 KB | 230 KB |
+| 288 px | 190 KB | 330 KB |
+| 330 px | 240 KB | 400 KB |
+
+- **Por tela, na web:** a primeira imagem é sempre o PNG (tetos da §A1). Depois que a tela fica interativa, entram no máximo 250 KB de animação. A aula carrega só as três animações de acontecimento da reação (`feliz`, `comemorando` e `encorajador` em 96 px, até 210 KB); o resto vem quando for usado.
+- **No app:** todas as animações juntas pesam até 3,5 MB no pacote. Cada faixa leva só os tamanhos @2x e @3x, e cada imagem só as faixas em que aparece na §E1.

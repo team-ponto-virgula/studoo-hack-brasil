@@ -20,7 +20,7 @@ Hoje a web tem dois menus (o balão do Explorar, que abre em cima, e o `details`
 - Abrir leva o foco ao primeiro item. As setas para cima e para baixo andam pelos itens, com volta; Home e End vão às pontas; Enter ou Espaço escolhem; Esc e Tab fecham e devolvem o foco ao “•••”.
 - Tocar fora fecha sem escolher, e esse toque não aciona o que estiver embaixo.
 - Escolher fecha o balão e só depois abre o destino: a folha, a tela ou a confirmação. No iPhone, isso acontece depois que o balão sai, como em `janelas.ts`.
-- Web: `role="menu"` e `menuitem`. App: cada item é um botão, e o balão é anunciado como “Menu, 3 opções”.
+- Web: `role="menu"` e `menuitem`, sem texto a mais: o leitor de tela já diz "menu" e a posição de cada item. App: o balão é um contêiner com o rótulo "Menu, N opções" ("Menu, 1 opção" no singular; chave nova `componentes.menuRotulo(n)`), e o foco do leitor vai para ele ao abrir (`AccessibilityInfo.setAccessibilityFocus`, com `accessibilityViewIsModal` no iOS); cada item é um botão com o próprio texto. (Detalhado em 19/11.)
 
 **Movimento.** Entra em 160 ms, com a opacidade de 0 a 1 e a escala de 0,96 a 1 a partir do canto do botão (curva 0,2, 0,9, 0,3, 1); sai em 120 ms, só com a opacidade. Com movimento reduzido, só a opacidade, em 120 ms.
 

@@ -1,36 +1,288 @@
 {
-  "_como": "Tabela do mascote: o que `npm run mascote:gerar` (scripts/mascote.mjs) produz. Cada grupo recorta a margem transparente com a mesma caixa para todas as imagens dele (a união das caixas), então o boneco fica na mesma escala e na mesma base em todas as poses. `tamanhos` são larguras em px de CSS (cada uma sai em 1x, 2x e 3x); um item pode trocar os do grupo com os dele. A tabela do Designer entra aqui, sem mudar o script. Tamanhos provisórios até ela chegar.",
-  "densidades": [1, 2, 3],
-  "grupos": {
-    "personagem": { "tamanhos": [64, 160] },
-    "acessorio": { "tamanhos": [48] },
-    "marca": { "tamanhos": [160] }
+  "_como": "Tabela do mascote (spec 13, A1): o que `npm run mascote:gerar` (scripts/mascote.mjs) produz. `quadro`: a caixa comum x 58, y 58, 908×908 (centro em 512, 512), para a troca de expressão não deslocar o Stu. `justo`: a caixa útil (alfa > 8) com 24 px de folga, para ilustração solta. Cada imagem sai só nas faixas dela: na web, WebP em 1x e 2x (`<nome>-<px>.webp`); no app, PNG @1x, @2x e @3x (`<nome>-<faixa>.png`). O lado é o maior lado na tela, em px de CSS (dp no app). Mudar a tabela não pede mudança no script.",
+  "faixas": {
+    "P": {
+      "lado": 48,
+      "ate": 56,
+      "tetoKB": 10
+    },
+    "M": {
+      "lado": 96,
+      "ate": 110,
+      "tetoKB": 24
+    },
+    "G": {
+      "lado": 160,
+      "ate": 180,
+      "tetoKB": 50
+    },
+    "XG": {
+      "lado": 240,
+      "ate": 260,
+      "tetoKB": 100
+    }
+  },
+  "web": {
+    "pasta": "public/marca/stu",
+    "densidades": [
+      1,
+      2
+    ],
+    "webp": {
+      "quality": 82,
+      "alphaQuality": 90
+    }
+  },
+  "app": {
+    "pasta": "apps/mobile/assets/marca/stu",
+    "densidades": [
+      1,
+      2,
+      3
+    ],
+    "png": {
+      "quality": 80,
+      "compressionLevel": 9
+    }
+  },
+  "quadro": {
+    "x": 58,
+    "y": 58,
+    "lado": 908
+  },
+  "justo": {
+    "folga": 24,
+    "limiarAlfa": 8
   },
   "itens": [
-    { "id": "acolhida", "grupo": "personagem", "origem": "mascote/acolhida.png", "alt": "Studoo, o mascote, acenando com a mochila e um livro" },
-    { "id": "vista-frente", "grupo": "personagem", "origem": "vistas/frente.png", "alt": "Studoo de frente" },
-    { "id": "vista-tres-quartos", "grupo": "personagem", "origem": "vistas/tres-quartos.png", "alt": "Studoo de três quartos" },
-    { "id": "vista-perfil-direito", "grupo": "personagem", "origem": "vistas/perfil.png", "alt": "Studoo de perfil, virado para a direita" },
-    { "id": "vista-perfil-esquerdo", "grupo": "personagem", "origem": "vistas/perfil-esquerdo.png", "alt": "Studoo de perfil, virado para a esquerda" },
-    { "id": "vista-costas", "grupo": "personagem", "origem": "vistas/costas.png", "alt": "Studoo de costas" },
-    { "id": "feliz", "grupo": "personagem", "origem": "expressoes/feliz.png", "alt": "Studoo feliz" },
-    { "id": "animado", "grupo": "personagem", "origem": "expressoes/animado.png", "alt": "Studoo animado" },
-    { "id": "concentrado", "grupo": "personagem", "origem": "expressoes/concentrado.png", "alt": "Studoo concentrado, lendo um livro" },
-    { "id": "pensando", "grupo": "personagem", "origem": "expressoes/curioso.png", "alt": "Studoo pensando, com um ponto de interrogação" },
-    { "id": "surpreso", "grupo": "personagem", "origem": "expressoes/surpreso.png", "alt": "Studoo surpreso" },
-    { "id": "meio-de-boa", "grupo": "personagem", "origem": "expressoes/meio-de-boa.png", "alt": "Studoo de óculos escuros, de boa" },
-    { "id": "encorajador", "grupo": "personagem", "origem": "expressoes/encorajador.png", "alt": "Studoo piscando e fazendo sinal de força" },
-    { "id": "celebrando", "grupo": "personagem", "origem": "expressoes/comemorando.png", "alt": "Studoo comemorando com os braços para cima" },
-    { "id": "pose-estudando", "grupo": "personagem", "origem": "poses/estudando.png", "alt": "Studoo estudando no notebook" },
-    { "id": "pose-organizando", "grupo": "personagem", "origem": "poses/organizando.png", "alt": "Studoo com uma lista de tarefas marcadas" },
-    { "id": "pose-conquistando", "grupo": "personagem", "origem": "poses/celebrando.png", "alt": "Studoo comemorando com um troféu" },
-    { "id": "acessorio-mochila", "grupo": "acessorio", "origem": "acessorios/mochila.png", "alt": "Mochila do Studoo" },
-    { "id": "acessorio-livro", "grupo": "acessorio", "origem": "acessorios/livro.png", "alt": "Livro" },
-    { "id": "acessorio-notebook", "grupo": "acessorio", "origem": "acessorios/notebook.png", "alt": "Notebook" },
-    { "id": "acessorio-fone", "grupo": "acessorio", "origem": "acessorios/fone.png", "alt": "Fone de ouvido" },
-    { "id": "acessorio-formatura", "grupo": "acessorio", "origem": "acessorios/chapeu-de-formatura.png", "alt": "Chapéu de formatura" },
-    { "id": "acessorio-trofeu", "grupo": "acessorio", "origem": "acessorios/trofeu.png", "alt": "Troféu" },
-    { "id": "logo", "grupo": "marca", "origem": "marca/studoo-logo.png", "alt": "Studoo" }
+    {
+      "nome": "stu-acolhida",
+      "origem": "mascote/acolhida.png",
+      "recorte": "justo",
+      "faixas": [
+        "M",
+        "G",
+        "XG"
+      ],
+      "alt": "Stu, o mascote do Studoo, acenando com a mochila e um livro",
+      "faixasAnimadas": [
+        "M",
+        "G"
+      ]
+    },
+    {
+      "nome": "stu-feliz",
+      "origem": "expressoes/feliz.png",
+      "recorte": "quadro",
+      "faixas": [
+        "P",
+        "M",
+        "G"
+      ],
+      "alt": "Stu feliz",
+      "faixasAnimadas": [
+        "P",
+        "M"
+      ]
+    },
+    {
+      "nome": "stu-animado",
+      "origem": "expressoes/animado.png",
+      "recorte": "quadro",
+      "faixas": [
+        "P",
+        "M"
+      ],
+      "alt": "Stu animado",
+      "faixasAnimadas": [
+        "P",
+        "M"
+      ]
+    },
+    {
+      "nome": "stu-comemorando",
+      "origem": "expressoes/comemorando.png",
+      "recorte": "quadro",
+      "faixas": [
+        "P",
+        "M",
+        "G"
+      ],
+      "alt": "Stu comemorando",
+      "faixasAnimadas": [
+        "P",
+        "M",
+        "G"
+      ]
+    },
+    {
+      "nome": "stu-concentrado",
+      "origem": "expressoes/concentrado.png",
+      "recorte": "quadro",
+      "faixas": [
+        "P",
+        "M"
+      ],
+      "alt": "Stu concentrado, lendo",
+      "faixasAnimadas": [
+        "M"
+      ]
+    },
+    {
+      "nome": "stu-curioso",
+      "origem": "expressoes/curioso.png",
+      "recorte": "quadro",
+      "faixas": [
+        "P",
+        "M"
+      ],
+      "alt": "Stu curioso",
+      "faixasAnimadas": [
+        "M"
+      ]
+    },
+    {
+      "nome": "stu-encorajador",
+      "origem": "expressoes/encorajador.png",
+      "recorte": "quadro",
+      "faixas": [
+        "P",
+        "M"
+      ],
+      "alt": "Stu piscando, dando força",
+      "faixasAnimadas": [
+        "P",
+        "M"
+      ]
+    },
+    {
+      "nome": "stu-surpreso",
+      "origem": "expressoes/surpreso.png",
+      "recorte": "quadro",
+      "faixas": [
+        "M",
+        "G"
+      ],
+      "alt": "Stu surpreso",
+      "faixasAnimadas": [
+        "M",
+        "G"
+      ]
+    },
+    {
+      "nome": "stu-meio-de-boa",
+      "origem": "expressoes/meio-de-boa.png",
+      "recorte": "quadro",
+      "faixas": [
+        "M"
+      ],
+      "alt": "Stu de óculos escuros, de boa",
+      "faixasAnimadas": [
+        "M"
+      ]
+    },
+    {
+      "nome": "stu-tres-quartos",
+      "origem": "vistas/tres-quartos.png",
+      "recorte": "quadro",
+      "faixas": [
+        "M"
+      ],
+      "alt": "Stu de três quartos",
+      "faixasAnimadas": [
+        "M"
+      ]
+    },
+    {
+      "nome": "stu-perfil",
+      "origem": "vistas/perfil.png",
+      "recorte": "quadro",
+      "faixas": [
+        "P"
+      ],
+      "alt": "Stu de perfil, andando",
+      "faixasAnimadas": [
+        "P"
+      ]
+    },
+    {
+      "nome": "stu-estudando",
+      "origem": "poses/estudando.png",
+      "recorte": "justo",
+      "faixas": [
+        "M",
+        "G"
+      ],
+      "alt": "Stu estudando no notebook",
+      "faixasAnimadas": [
+        "M",
+        "G"
+      ]
+    },
+    {
+      "nome": "stu-organizando",
+      "origem": "poses/organizando.png",
+      "recorte": "justo",
+      "faixas": [
+        "M",
+        "G"
+      ],
+      "alt": "Stu com uma lista de tarefas marcadas",
+      "faixasAnimadas": [
+        "M",
+        "G"
+      ]
+    },
+    {
+      "nome": "stu-celebrando",
+      "origem": "poses/celebrando.png",
+      "recorte": "justo",
+      "faixas": [
+        "G",
+        "XG"
+      ],
+      "alt": "Stu comemorando com um troféu",
+      "faixasAnimadas": [
+        "G"
+      ]
+    },
+    {
+      "nome": "acessorio-trofeu",
+      "origem": "acessorios/trofeu.png",
+      "recorte": "justo",
+      "faixas": [
+        "P",
+        "M"
+      ],
+      "alt": "Troféu"
+    },
+    {
+      "nome": "acessorio-fone",
+      "origem": "acessorios/fone.png",
+      "recorte": "justo",
+      "faixas": [
+        "P"
+      ],
+      "alt": "Fone de ouvido"
+    },
+    {
+      "nome": "acessorio-livro",
+      "origem": "acessorios/livro.png",
+      "recorte": "justo",
+      "faixas": [
+        "M"
+      ],
+      "alt": "Livro"
+    }
+  ],
+  "extras": [
+    {
+      "_para": "imagem de prévia do link (cartão OG, que não lê WebP)",
+      "nome": "stu-acolhida",
+      "formato": "png",
+      "px": 480,
+      "pasta": "public/marca/stu"
+    }
   ],
   "cores": {
     "azul-marinho": "#0B1B5C",
@@ -40,5 +292,57 @@
     "violeta": "#8B5CF6",
     "lavanda": "#E9E7FF"
   },
-  "fora": ["studoo-character-sheet.png", "paleta/"]
+  "semUso": [
+    "vistas/frente.png",
+    "vistas/perfil-esquerdo.png",
+    "vistas/costas.png",
+    "acessorios/mochila.png",
+    "acessorios/notebook.png",
+    "acessorios/chapeu-de-formatura.png",
+    "studoo-character-sheet.png",
+    "marca/studoo-logo.png",
+    "paleta/"
+  ],
+  "animado": {
+    "_como": "Versão animada (spec 13, emenda de 19/11). Só as imagens do personagem (`stu-*`). O GIF (352 px) é levado ao quadro do PNG por uma transformação comum, medida pelo script (a mediana entre as imagens), para trocar parado por animado sem pulo. A animação pode sair do quadro (pulos): a camada animada é maior e fica por cima da imagem parada, sem mudar o lugar reservado. Sempre reduzindo (lanczos dá borda suave): só sai onde o lado de saída é no máximo `ladoMax` px. Web: WebP animado 1x e 2x; app: WebP animado @2x e @3x. Tetos por lado de saída (`tetos`: lado, teto em KB, teto da acolhida). `faixasAnimadas` de cada item: só as faixas em que ele aparece animado na tabela E1 (os lugares parados ficam no PNG).",
+    "origem": "assets/mascote/originais-gif",
+    "folga": 8,
+    "webp": {
+      "quality": 60,
+      "alphaQuality": 60,
+      "effort": 6
+    },
+    "densidadesApp": [
+      2,
+      3
+    ],
+    "ladoMax": 330,
+    "tetos": [
+      [
+        96,
+        70,
+        110
+      ],
+      [
+        144,
+        110,
+        170
+      ],
+      [
+        192,
+        130,
+        230
+      ],
+      [
+        288,
+        190,
+        330
+      ],
+      [
+        330,
+        240,
+        400
+      ]
+    ]
+  }
 }
