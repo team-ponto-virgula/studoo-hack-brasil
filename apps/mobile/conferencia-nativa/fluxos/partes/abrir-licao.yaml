@@ -1,0 +1,57 @@
+# Abre a trilha ${TRILHA} por Minhas trilhas e começa a lição atual: para na etapa 1 (Conceito). Os mesmos passos do
+# começo de exercicio.yaml.
+appId: host.exp.Exponent
+---
+- runFlow: reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-planos
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-planos
+    timeout: 30000
+# O botão do cartão tem o nome acessível "<ação>: <título da trilha>".
+- scrollUntilVisible:
+    element:
+      text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+    direction: DOWN
+    timeout: 45000
+    speed: 50
+    waitToSettleTimeoutMs: 500
+# No iOS 26 a barra de baixo fica por cima do conteúdo: o botão pode ter parado atrás dela. Sobe mais um pouco.
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 55%
+    end: 50%, 40%
+    duration: 800
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 45000
+# O mapa rola sozinho até a lição atual. Com ela à vista, a ação é o próprio nó; fora da vista, o cartão "Próxima lição".
+- waitForAnimationToEnd:
+    timeout: 2000
+- evalScript: ${output.abriuPeloCartao = false}
+- runFlow:
+    when:
+      visible:
+        id: comecar-licao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: comecar-licao
+      - evalScript: ${output.abriuPeloCartao = true}
+- runFlow:
+    when:
+      true: ${output.abriuPeloCartao == false}
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          text: "(Começar|Continuar): .*"
+- extendedWaitUntil:
+    visible: 'Etapa 1 de \d+'
+    timeout: 30000
