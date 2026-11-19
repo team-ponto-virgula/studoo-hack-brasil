@@ -76,8 +76,8 @@ test('Código Studoo dos links reais (trilha e perfil com foto no centro) é lid
 });
 
 test('Código Studoo com links do tamanho do de produção (75 car.) e maiores (90, 106, 107 e 120): sempre com clareira e lido pelos dois leitores', async () => {
-  // O site de prévia tem domínio longo: o link de 75 caracteres, em H, caía na versão 8 (alinhamento no centro) e saía
-  // sem o centro. Agora a correção é escolhida para caber até a versão 6, e acima disso a clareira cobre o alinhamento.
+  // O site de prévia tem domínio longo. A configuração (nível, versão, máscara, ponte e clareira) sai da conta da folga
+  // (tests/codigo-folga.test.mjs); aqui, os centros e as cores em três tamanhos.
   const link = (n, tipo) => { const fim = `/${tipo}/AbCdEfGhIjKlMn_-`; return `https://${'studoo-previa-hackbrasil.exemplo.com.br'.padEnd(n, 'x').slice(0, n - 8 - fim.length)}${fim}`; };
   const foto = `data:image/png;base64,${(await sharp({ create: { width: 64, height: 64, channels: 3, background: '#222' } }).png().toBuffer()).toString('base64')}`;
   for (const n of [75, 90, 106, 107, 120]) {
@@ -99,9 +99,10 @@ test('Código Studoo com links do tamanho do de produção (75 car.) e maiores (
       }
     }
   }
-  // O de 75 caracteres sai em M versão 5 (37 módulos) com clareira de 7, como o link local de 40 em H.
+  // O de 75 caracteres fica na versão 5 (37 módulos), com o centro e a ponte (fina quando a cheia gastaria a folga).
   const g75 = geometriaCodigoStudoo(link(75, 't'));
-  assert.deepEqual([g75.nivel, g75.versao, g75.clareira.lado], ['M', 5, 7]);
+  assert.equal(g75.versao, 5);
+  assert.ok(g75.clareira && g75.configuracao.ponte !== 'nenhuma');
 });
 
 test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 6+ temas, Em alta cheio, sem login', async () => {

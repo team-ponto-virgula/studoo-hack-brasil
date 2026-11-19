@@ -41,7 +41,7 @@
     "codigo:studoo": "node --import tsx scripts/codigo-studoo.mjs",
     "codigo:studoo:prova": "node --import tsx scripts/codigo-studoo-prova.mjs",
     "test:email": "node --import tsx --test tests/email-resend.test.mjs",
-    "test:estudio": "node --env-file=.env --import tsx --test tests/estudio.test.mjs tests/demo-zerar.test.mjs tests/voz-ao-vivo.test.mjs tests/compartilhar.test.mjs tests/perfil-rico.test.mjs tests/comunidade.test.mjs tests/codigo-e-demonstracao.test.mjs tests/seguir.test.mjs",
+    "test:estudio": "node --env-file=.env --import tsx --test tests/estudio.test.mjs tests/demo-zerar.test.mjs tests/voz-ao-vivo.test.mjs tests/compartilhar.test.mjs tests/perfil-rico.test.mjs tests/comunidade.test.mjs tests/codigo-e-demonstracao.test.mjs tests/codigo-folga.test.mjs tests/seguir.test.mjs",
     "estudio:limpar": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/limpar-materiais.ts",
     "test:estudio:interface": "node --test tests/estudio-interface.test.mjs tests/voz-ao-vivo-mobile.test.mjs tests/voltar-mobile.test.mjs tests/api-nativa-mobile.test.mjs",
     "test:voz-mobile": "node --test tests/voz-ao-vivo-mobile.test.mjs"

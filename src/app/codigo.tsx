@@ -92,7 +92,8 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
   ctx.restore();
   const centro = !fotoHref && inicial ? centroDoCodigo(texto) : null;
   if (centro && inicial) {
-    ctx.fillStyle = '#ffffff';
+    // A letra na cor do perfil, sobre o disco claro (como no código da folha).
+    ctx.fillStyle = FUNDO_DA_COR[cor ?? 'azul'];
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.font = `700 ${Math.round(centro.letra * 720)}px Quicksand, sans-serif`;
