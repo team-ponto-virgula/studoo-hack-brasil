@@ -591,16 +591,25 @@ export function Estudo({ cliente, sair, expirar }: {
       const proxima = proximaDoCaminho(etapa.plano);
       const { concluidas, total } = etapa.plano.progresso;
       return (
-        <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} ocupado={ocupado}
-          compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined} rodape={<>
-          {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}
-          {total > 0 && concluidas === total && <Botao rotulo={mensagens.licao.novoAssunto} testID="novo-assunto" variante="secundario"
-            desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />}
-          <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" variante={proxima ? 'secundario' : 'primario'} desativado={ocupado}
-            acao={() => abrir(voltarATrilha(etapa))} />
-          {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" desativado={ocupado}
-            acao={() => void abrirLicao(etapa.plano, proxima)} />}
-        </>} />
+        <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} ocupado={ocupado} rodape={total > 0 && concluidas === total ? (
+          // Trilha concluída (banca da noite §4): compartilhar é o principal (quando a pessoa pode), "Começar um assunto novo"
+          // o secundário e "Voltar à trilha" um botão de texto. Sem o compartilhar, o assunto novo vira o principal.
+          <>
+            {abrirFolha && !etapa.plano.recebida && <Botao rotulo={mensagens.compartilhar.concluidaAcao} iconeAntes="compartilhar"
+              testID="conclusao-compartilhar" desativado={ocupado} acao={() => abrirFolha(etapa.plano.id)} />}
+            <Botao rotulo={mensagens.licao.novoAssunto} testID="novo-assunto" variante={abrirFolha && !etapa.plano.recebida ? 'secundario' : 'primario'}
+              desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />
+            <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" variante="texto" desativado={ocupado} acao={() => abrir(voltarATrilha(etapa))} />
+          </>
+        ) : (
+          // Lição concluída: como antes; com uma próxima lição, seguir é a ação principal e voltar à trilha a alternativa.
+          <>
+            <Botao rotulo={mensagens.licao.voltar} testID="voltar-plano" variante={proxima ? 'secundario' : 'primario'} desativado={ocupado}
+              acao={() => abrir(voltarATrilha(etapa))} />
+            {proxima && <Botao rotulo={mensagens.licao.avancar} testID="proxima-licao" desativado={ocupado}
+              acao={() => void abrirLicao(etapa.plano, proxima)} />}
+          </>
+        )} />
       );
     }
 
@@ -2150,14 +2159,12 @@ function formatarTempo(segundos: number) {
  * Lição concluída, como na web: chuva de confete, raios girando atrás do Stu, que pula, o resumo da lição (tempo,
  * acerto e etapas), a lição liberada e o progresso do plano, que enche a partir de onde estava.
  */
-function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }: {
+function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado }: {
   etapa: Extract<Etapa, { tipo: 'concluida' }>;
   acoes: ReactNode;
   mensagem: ReactNode;
   rodape: ReactNode;
   ocupado: boolean;
-  /** Com a trilha concluída, "Compartilhar esta trilha" (só na trilha da própria pessoa, com o compartilhar ligado). */
-  compartilhar?: () => void;
 }) {
   const { plano, antes, licao, liberadas, resumo } = etapa;
   const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
@@ -2167,6 +2174,8 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }
   // Ficou exercício sem acerto ou a prática não saiu: a conclusão vira um lembrete gentil (sem confete nem raios).
   const comLembrete = Boolean(resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao'));
   const reduzir = useMovimentoReduzido();
+  // Banca da noite §4: "O que você praticou" e as frases ficam recolhidos num botão de texto que abre no lugar.
+  const [verPraticado, setVerPraticado] = useState(false);
 
   return (
     <Tela pagina="concluida" semCabecalho rodape={rodape} estiloConteudo={estudoEstilos.fimQuarenta}>
@@ -2191,11 +2200,6 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }
           <Text style={estudoEstilos.resumoTrilhaTexto}>{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length, plano.estatisticas)}</Text>
         </View>
       )}
-      {trilhaFeita && compartilhar && (
-        // .conclusao-compartilhar: centralizado, 10 abaixo do resumo da trilha.
-        <Botao rotulo={mensagens.compartilhar.concluidaAcao} iconeAntes="compartilhar" variante="secundario" testID="conclusao-compartilhar"
-          desativado={ocupado} acao={compartilhar} estilo={{ alignSelf: 'center', marginTop: 10 }} />
-      )}
       {resumo && trilhaFeita && <Text style={[estudoEstilos.legendaNumeros, caixaAlta]}>{mensagens.licao.resumo.ultimaLicao}</Text>}
       {resumo && <NumerosDaLicao resumo={resumo} />}
       {resumo?.rever && (
@@ -2207,21 +2211,27 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }
           </Text>
         </View>
       )}
-      {/* Como na web (rodada 1.2): a história da lição em cartões, só com o que aconteceu de verdade (sem ponte, não há
-          cartão de ponte; sem explicação, não há cartão de ensino), e a confirmação de que o progresso ficou na conta. */}
-      <View testID="conclusao-historia" accessibilityLabel={mensagens.licao.historia.titulo} style={estudoEstilos.historia}>
-        <CartaoHistoria titulo={mensagens.licao.historia.praticou} texto={licao.objetivo} ordem={0} />
-        {resumo?.ponteConstruida && <CartaoHistoria tipo="ponte" titulo={mensagens.licao.historia.ponteTitulo} texto={mensagens.licao.historia.ponteTexto} ordem={1} />}
-        {resumo?.ensinouStu && (
-          <CartaoHistoria tipo="ensino" titulo={mensagens.licao.historia.ensinoTitulo} texto={mensagens.licao.historia.ensinoTexto}
-            ordem={resumo.ponteConstruida ? 2 : 1} />
-        )}
-        <Text style={estudoEstilos.historiaSincronia}>{mensagens.licao.historia.sincronia}</Text>
-      </View>
-      {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo. Como na web. */}
-      {licao.falas && licao.falas.length > 0 && (
-        <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}><FrasesDaLicao falas={licao.falas} /></View>
+      {/* A história da lição em cartões (só o que aconteceu de verdade) e, na lição de idioma, as frases: recolhidas atrás de
+          "Ver o que você praticou" (banca da noite §4), que abre no lugar e some. A confirmação da sincronia fica à vista. */}
+      {verPraticado ? (
+        <>
+          <View testID="conclusao-historia" accessibilityLabel={mensagens.licao.historia.titulo} style={estudoEstilos.historia}>
+            <CartaoHistoria titulo={mensagens.licao.historia.praticou} texto={licao.objetivo} ordem={0} atrasoBase={0} />
+            {resumo?.ponteConstruida && <CartaoHistoria tipo="ponte" titulo={mensagens.licao.historia.ponteTitulo} texto={mensagens.licao.historia.ponteTexto} ordem={1} atrasoBase={0} />}
+            {resumo?.ensinouStu && (
+              <CartaoHistoria tipo="ensino" titulo={mensagens.licao.historia.ensinoTitulo} texto={mensagens.licao.historia.ensinoTexto}
+                ordem={resumo.ponteConstruida ? 2 : 1} atrasoBase={0} />
+            )}
+          </View>
+          {licao.falas && licao.falas.length > 0 && (
+            <View style={[estudoEstilos.bloco, estudoEstilos.blocoConclusao]}><FrasesDaLicao falas={licao.falas} /></View>
+          )}
+        </>
+      ) : (
+        <Botao rotulo={mensagens.licao.historia.verPraticou} testID="ver-praticado" variante="texto" desativado={ocupado}
+          acao={() => setVerPraticado(true)} estilo={estudoEstilos.verPraticado} />
       )}
+      <Text style={[estudoEstilos.historiaSincronia, estudoEstilos.sincroniaConclusao]}>{mensagens.licao.historia.sincronia}</Text>
       {liberada && (
         <Animated.View style={[estudoEstilos.liberada, estiloDeEntrada(entradaLiberada, 12)]}>
           <Icone nome="livro" tamanho={20} cor={cores.acao} />
@@ -2238,8 +2248,12 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }
 }
 
 /** Um cartão da história da lição; o da ponte traz as tábuas da travessia, o do ensino, o tom verde. Entram em sequência. */
-function CartaoHistoria({ titulo, texto, tipo, ordem }: { titulo: string; texto: string; tipo?: 'ponte' | 'ensino'; ordem: number }) {
-  const entrada = useAparecer(700 + ordem * 120, 420, true);
+function CartaoHistoria({ titulo, texto, tipo, ordem, atrasoBase = 700 }: {
+  titulo: string; texto: string; tipo?: 'ponte' | 'ensino'; ordem: number;
+  /** Atraso do primeiro cartão (aberto pelo "Ver o que você praticou", entra logo). */
+  atrasoBase?: number;
+}) {
+  const entrada = useAparecer(atrasoBase + ordem * 120, 420, true);
   const cor = tipo === 'ponte' ? cores.acao : tipo === 'ensino' ? cores.sucesso : cores.acao;
   return (
     <Animated.View testID={`historia-${tipo ?? 'praticou'}`}
@@ -2255,12 +2269,6 @@ function CartaoHistoria({ titulo, texto, tipo, ordem }: { titulo: string; texto:
 
 /** Raios dourados que giram devagar, o Stu que pula algumas vezes e depois flutua, e o selo de concluída. */
 /** Faixas de cada raio da conclusão, da ponta (raio 104) ao centro: a largura acompanha a cunha de 11° e o alfa, a máscara. */
-/** Escurece uma cor #RRGGBB (como o color-mix com preto da web no degrau dos números). */
-function escurecer(cor: string, fator: number): string {
-  const n = parseInt(cor.replace('#', ''), 16);
-  const canal = (deslocamento: number) => Math.round(((n >> deslocamento) & 255) * fator).toString(16).padStart(2, '0');
-  return `#${canal(16)}${canal(8)}${canal(0)}`;
-}
 
 // Cunha de 11° do centro (104) até a borda: a largura cresce para fora e a opacidade cai de 0,42 (até 30% do raio) a 0 (70%).
 const FAIXAS_DO_RAIO = Array.from({ length: 13 }, (_, indice) => {
@@ -2285,7 +2293,6 @@ function CenaConclusao({ nome, tamanho, comRaios }: { nome: NomeStu; tamanho: nu
   const [giro] = useState(() => new Animated.Value(0));
   const [chegada] = useState(() => new Animated.Value(0));
   const raios = useAparecer(0, 700);
-  const selo = useAparecer(700, 520, true);
 
   useEffect(() => {
     if (reduzir === null) return;
@@ -2330,20 +2337,7 @@ function CenaConclusao({ nome, tamanho, comRaios }: { nome: NomeStu; tamanho: nu
       ] }}>
         <Stu nome={nome} tamanho={tamanho} animado="acontecimento" acontecimento="conclusao" ciclos={2} sombra />
       </Animated.View>
-      {/* .conclusao-selo: círculo de 50 com o degrau escuro de 4 por fora e o anel branco de 4 em volta (0 0 0 4px). */}
-      <Animated.View style={[estudoEstilos.seloAnel, {
-        opacity: selo,
-        transform: [
-          { scale: selo.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
-          { rotate: selo.interpolate({ inputRange: [0, 1], outputRange: ['-40deg', '0deg'] }) },
-        ],
-      }]}>
-        <View style={degrauFora(4, 25, cores.sucesso)}>
-          <View style={estudoEstilos.seloConclusao}>
-            <Icone nome="check" tamanho={28} cor={cores.fundo} traco={3.2} />
-          </View>
-        </View>
-      </Animated.View>
+      {/* Sem o selo de visto sobre o Stu (banca da noite §4): a expressão e o título já dizem. */}
     </View>
   );
 }
@@ -2372,13 +2366,14 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem, base }: {
 }) {
   const entrada = useAparecer(600 + ordem * 120, 480, true);
   return (
-    // .conclusao-numeros li: a face na cor do número e o degrau de 4 por fora, no mesmo tom escurecido a 70%.
+    // Banca da noite §4: blocos brancos com borda de 2 #E1E7FA, o ícone de 16 na cor de cada número e o valor em 22 #0B1B5C,
+    // sem a face colorida nem o degrau.
     <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-      style={[degrauFora(4, 16, escurecer(cor, 0.7)), { flex: 1, minWidth: 0, flexBasis: base }, estiloDeEntrada(entrada, 14, 0.9)]}>
-      <View style={[estudoEstilos.numero, { backgroundColor: cor, borderColor: cor }]}>
+      style={[{ flex: 1, minWidth: 0, flexBasis: base }, estiloDeEntrada(entrada, 14, 0.9)]}>
+      <View style={estudoEstilos.numero}>
       <View style={estudoEstilos.numeroRotulo}>
-        {/* O ícone do rótulo tem 16 px com traço de 1,83 px (2,75 na grade de 24), o que a web calcula em 390 e 360. */}
-        <Icone nome={icone} tamanho={16} cor={cores.fundo} traco={2.75} />
+        {/* O ícone do rótulo tem 16 px com traço de 1,83 px (2,75 na grade de 24). */}
+        <Icone nome={icone} tamanho={16} cor={cor} traco={2.75} />
         {/* Uma linha só (em 360, "DE PRIMEIRA" quebrava em duas e desalinhava os três cartões). */}
         <Text numberOfLines={1} style={[estudoEstilos.numeroRotuloTexto, caixaAlta]}>{rotulo}</Text>
       </View>
@@ -2405,6 +2400,8 @@ const estudoEstilos = StyleSheet.create({
   historiaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   historiaTitulo: { flexShrink: 1, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 19.5, letterSpacing: 0.52 },
   historiaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 22.5 },
+  verPraticado: { alignSelf: 'center', marginTop: 14 },
+  sincroniaConclusao: { marginTop: 14 },
   historiaSincronia: { marginTop: 2, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 21, textAlign: 'center' },
   // .plano-destaque no celular: 16 de respiro, a cena de 96 com cantos de 18 dentro do cartão, 14 entre a cena e o corpo e o
   // fundo em degradê (135°, #f6f8ff até o branco aos 62%).
@@ -2585,23 +2582,21 @@ const estudoEstilos = StyleSheet.create({
   raios: { position: 'absolute', left: -9, top: -18, width: 208, height: 208 },
   raio: { position: 'absolute', left: 0, top: 0, width: 208, height: 208 },
   // O anel branco de 4 (box-shadow 0 0 0 4px) fica por fora do círculo de 50 (right 6 e bottom 30 na web).
-  seloAnel: { position: 'absolute', right: 2, bottom: 26, padding: 4, borderRadius: 29, backgroundColor: cores.fundo },
-  seloConclusao: { width: 50, height: 50, borderRadius: 25, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.sucessoClaro },
   // .conclusao-texto: 17 px em 800 (entrelinha 1,5) e .conclusao-licao: 16 px em 700 (entrelinha 1,5).
   // "Progresso na trilha" na conclusão: h2 de 1,25rem (20 px), entrelinha 1,3, -0,015em.
   tituloProgresso: { fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
   comemoracao: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 17, lineHeight: 25.5 },
   conclusaoLicao: { marginTop: 2, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   numeros: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 24 },
-  numero: { overflow: 'hidden', borderRadius: 16, borderWidth: 2 },
-  // O rótulo ocupa a largura toda do bloco (97 em 360) e o conteúdo fica centrado, como na web: "DE PRIMEIRA" com o ícone
-  // mede 95 e cabe inteiro em 360 (com respiro de 4 dos lados, era cortado com reticências).
-  numeroRotulo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4, paddingHorizontal: 0, paddingVertical: 6 },
-  numeroRotuloTexto: { flexShrink: 1, color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, letterSpacing: 0.22 },
-  numeroValor: { alignItems: 'center', marginHorizontal: 2, marginBottom: 2, paddingHorizontal: 4, paddingVertical: 10, borderRadius: 13,
-    backgroundColor: cores.fundo },
-  // .conclusao-numeros__valor: 16 px na entrelinha de 1,2 (a caixa tem 39 de altura).
-  numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16, lineHeight: 19.2, textAlign: 'center' },
+  numero: { overflow: 'hidden', borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, paddingBottom: 4 },
+  // O ícone em cima do rótulo: com o rótulo em 13 (banca da noite §10), "DE PRIMEIRA" mede uns 91 e só cabe inteiro com a
+  // largura toda do bloco (uns 100 por dentro em 360); ao lado do ícone, saía cortado com reticências.
+  numeroRotulo: { alignItems: 'center', gap: 2, paddingHorizontal: 2, paddingTop: 8, paddingBottom: 2 },
+  // O rótulo em 13 (metadado, banca da noite §10) na cor secundária.
+  numeroRotuloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.2 },
+  numeroValor: { alignItems: 'center', paddingHorizontal: 4, paddingBottom: 6 },
+  // O valor em 22 #0B1B5C.
+  numeroValorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 22, lineHeight: 28, textAlign: 'center' },
   // Meus planos
   cartaoFora: { marginTop: 16 },
   cartao: { overflow: 'hidden', borderRadius: 24, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },

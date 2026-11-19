@@ -1084,6 +1084,8 @@ export const mensagens = {
             ensinoTitulo: 'Você ensinou ao Stu',
             ensinoTexto: 'Você explicou a ideia com suas palavras e testou seu entendimento.',
             sincronia: 'Progresso salvo na sua conta · pronto para continuar em outro dispositivo',
+            /** Banca da noite §4: "O que você praticou" e as frases ficam recolhidos atrás deste botão de texto. */
+            verPraticou: 'Ver o que você praticou',
         },
         novoAssunto: 'Começar um assunto novo',
         falta: {
