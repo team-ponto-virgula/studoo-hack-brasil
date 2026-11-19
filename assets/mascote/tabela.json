@@ -170,18 +170,6 @@
       ]
     },
     {
-      "nome": "stu-meio-de-boa",
-      "origem": "expressoes/meio-de-boa.png",
-      "recorte": "quadro",
-      "faixas": [
-        "M"
-      ],
-      "alt": "Stu de óculos escuros, de boa",
-      "faixasAnimadas": [
-        "M"
-      ]
-    },
-    {
       "nome": "stu-tres-quartos",
       "origem": "vistas/tres-quartos.png",
       "recorte": "quadro",
@@ -214,20 +202,6 @@
         "G"
       ],
       "alt": "Stu estudando no notebook",
-      "faixasAnimadas": [
-        "M",
-        "G"
-      ]
-    },
-    {
-      "nome": "stu-organizando",
-      "origem": "poses/organizando.png",
-      "recorte": "justo",
-      "faixas": [
-        "M",
-        "G"
-      ],
-      "alt": "Stu com uma lista de tarefas marcadas",
       "faixasAnimadas": [
         "M",
         "G"
@@ -301,7 +275,9 @@
     "acessorios/chapeu-de-formatura.png",
     "studoo-character-sheet.png",
     "marca/studoo-logo.png",
-    "paleta/"
+    "paleta/",
+    "expressoes/meio-de-boa.png",
+    "poses/organizando.png"
   ],
   "animado": {
     "_como": "Versão animada (spec 13, emenda de 19/11). Só as imagens do personagem (`stu-*`). O GIF (352 px) é levado ao quadro do PNG por uma transformação comum, medida pelo script (a mediana entre as imagens), para trocar parado por animado sem pulo. A animação pode sair do quadro (pulos): a camada animada é maior e fica por cima da imagem parada, sem mudar o lugar reservado. Sempre reduzindo (lanczos dá borda suave): só sai onde o lado de saída é no máximo `ladoMax` px. Web: WebP animado 1x e 2x; app: WebP animado @2x e @3x. Tetos por lado de saída (`tetos`: lado, teto em KB, teto da acolhida). `faixasAnimadas` de cada item: só as faixas em que ele aparece animado na tabela E1 (os lugares parados ficam no PNG).",
