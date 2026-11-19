@@ -111,15 +111,15 @@ test('aba atual: subcápsula opaca #E9E7FF, ícone cheio e rótulo #1D4ED8; ao p
 
 test('material: vidro do iOS 26 sem "Reduzir transparência"; senão, branco opaco com contorno de 1 por fora e sombra leve', () => {
   // Uma condição só escolhe o material, para a cápsula, para o bloco preso e para o testID que a automação lê.
-  assert.match(corpoDe(tela, 'function useMaterialFlutuante'), /return VIDRO && !transparenciaReduzida \? 'vidro' : 'opaca';/);
+  assert.match(corpoDe(tela, 'function useMaterialFlutuante'), /return VIDRO && vidroPermitido \? 'vidro' : 'opaca';/);
   const superficie = corpoDe(tela, 'function SuperficieFlutuante');
   assert.match(superficie, /if \(material === 'vidro'\) \{\n\s*return <GlassView glassEffectStyle="regular" colorScheme="light"/);
   assert.match(superficie, /<View style=\{\[estilo, estilos\.superficieOpaca, \{ borderRadius: raio \}\]\}/);
   assert.match(tela, /superficieOpaca: \{ backgroundColor: cores\.fundo, boxShadow: '0 0 0 1px rgba\(11, 27, 92, 0\.10\), 0 8px 24px rgba\(11, 27, 92, 0\.14\)' \}/);
-  // A preferência vem do sistema e acompanha a troca na hora; na web (sem a consulta), fica "não".
+  // A preferência vem do sistema e acompanha a troca na hora; o vidro só com ela confirmada desligada (o comportamento,
+  // com a consulta atrasada, a que falha e o evento, fica em tests/transparencia-mobile.test.mjs).
   assert.match(transparencia, /AccessibilityInfo\.addEventListener\('reduceTransparencyChanged'/);
-  assert.match(transparencia, /if \(typeof AccessibilityInfo\.isReduceTransparencyEnabled === 'function'\) \{/);
-  assert.match(transparencia, /useSyncExternalStore\(assinar, \(\) => reduzida, \(\) => false\)/);
+  assert.match(transparencia, /useSyncExternalStore\(assinar, \(\) => preferencia === false, \(\) => false\)/);
 });
 
 test('fim da rolagem: a cápsula, a distância até a borda e mais 16; a ação presa e mais 12; o mapa pinta o fim por baixo', () => {

@@ -28,7 +28,7 @@ import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NavegacaoContexto } from './navegacao';
 import { useDepoisDeSair } from './janelas';
 import { useMovimentoReduzido } from './movimento';
-import { useTransparenciaReduzida } from './transparencia';
+import { useVidroPermitido } from './transparencia';
 export { useMovimentoReduzido } from './movimento';
 
 import { Icone } from './icone';
@@ -1117,12 +1117,13 @@ function FundoDeBarra({ estilo, estiloVidro, children, ...resto }: ViewProps & {
 /** O material da cápsula e das ações presas: `vidro` (Liquid Glass) ou `opaca` (branco com contorno e sombra). */
 type MaterialFlutuante = 'vidro' | 'opaca';
 /**
- * A condição única do material (spec 05): o vidro só no iPhone com iOS 26 (`isLiquidGlassAvailable`) e sem "Reduzir
- * transparência"; senão, a superfície opaca. A troca acompanha a preferência na hora.
+ * A condição única do material (spec 05): o vidro só no iPhone com iOS 26 (`isLiquidGlassAvailable`) e com a "Reduzir
+ * transparência" confirmada desligada; até a confirmação, se a consulta falhar ou com ela ligada, a superfície opaca. A
+ * troca acompanha a preferência na hora.
  */
 function useMaterialFlutuante(): MaterialFlutuante {
-  const transparenciaReduzida = useTransparenciaReduzida();
-  return VIDRO && !transparenciaReduzida ? 'vidro' : 'opaca';
+  const vidroPermitido = useVidroPermitido();
+  return VIDRO && vidroPermitido ? 'vidro' : 'opaca';
 }
 
 /**
