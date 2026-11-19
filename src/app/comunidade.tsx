@@ -99,7 +99,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
         {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{posicao}</span>}
         {/* O tema sempre inteiro no alto; "Demonstração" embaixo à esquerda; o numeral do Em alta embaixo à direita. */}
         {cartao.tema && <span className="cartao-trilha__tema">{temas[cartao.tema]}</span>}
-        {cartao.demonstracao && <span className="cartao-trilha__demo" title={c.demonstracaoDica}>{c.demonstracao}</span>}
+        {cartao.demonstracao && <span className="cartao-trilha__demo">{c.demonstracao}</span>}
       </div>
       <div className="cartao-trilha__corpo">
         {posicao !== undefined && <p className="somente-leitor">{c.posicao(posicao)}</p>}
@@ -120,14 +120,18 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
           <p className="cartao-trilha__meta">{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</p>
           {cartao.estudando === 0 && cartao.valeus === 0
             ? <p className="cartao-trilha__numeros"><span className="cartao-trilha__nova" aria-label={c.novaRotulo}>{c.nova}</span></p>
-            : <p className="cartao-trilha__numeros">{[cartao.estudando > 0 && c.estudando(cartao.estudando), cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ')}</p>}
+            // A contagem de valeus mora no próprio botão (na trilha própria, que não tem o botão, fica aqui).
+            : <p className="cartao-trilha__numeros">{[cartao.estudando > 0 && c.estudando(cartao.estudando), sua && cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ')}</p>}
         </div>
         <div className="cartao-trilha__acoes" data-sua={sua || undefined}>
           {principal}
           {!sua && (
-            <button type="button" className="cartao-trilha__valeu" aria-pressed={Boolean(cartao.valeuMeu)} aria-label={c.valeuRotulo(cartao.titulo)}
+            // Coração, "Valeu" e a contagem; marcado, o coração enche (com um pulo curto) e tocar de novo retira.
+            <button type="button" className="cartao-trilha__valeu" aria-pressed={Boolean(cartao.valeuMeu)}
+              aria-label={`${cartao.valeuMeu ? c.valeuMarcadoRotulo(cartao.titulo) : c.valeuRotulo(cartao.titulo)}${cartao.valeus > 0 ? ` (${c.valeus(cartao.valeus)})` : ''}`}
               disabled={ocupado} onClick={() => acoes.valeu(cartao)}>
               <Icone nome="valeu" /><span aria-hidden="true">{c.valeu}</span>
+              {cartao.valeus > 0 && <span className="cartao-trilha__valeu-n" aria-hidden="true">{cartao.valeus}</span>}
             </button>
           )}
           {sua
@@ -211,6 +215,7 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
 }) {
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [denuncia, setDenuncia] = useState<CartaoTrilha | null>(null);
+  const [aviso, avisar] = useAvisoDoApp();
   const acoes: AcoesCartao = {
     logado,
     ocupado,
@@ -238,7 +243,8 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
       try {
         const r = await cliente.valeu(cartao.codigo, ativo);
         setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: r.valeuMeu, valeus: r.valeus } : atual));
-        anunciar(ativo ? c.valeuEnviado(cartao.titulo) : c.valeuRetirado(cartao.titulo));
+        // Toda vez, o aviso do próprio app (com papel de status: o leitor de tela também ouve).
+        avisar(ativo ? c.valeuAviso(cartao.dono.nome.trim().split(/\s+/)[0] ?? cartao.dono.nome) : c.valeuRetiradoAviso);
       } catch (falha) {
         setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: cartao.valeuMeu, valeus: cartao.valeus } : atual));
         const codigo = codigoDoErro(falha);
@@ -261,9 +267,9 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
   };
   const dialogo = denuncia ? (
     <DialogoDenuncia alvoTipo="trilha" alvo={denuncia.codigo} alvoNome={c.denuncia.alvoTrilha(denuncia.titulo, denuncia.dono.nome)} aoFechar={() => setDenuncia(null)}
-      aoEnviar={(texto) => { setDenuncia(null); anunciar(texto); }} />
+      aoEnviar={(texto) => { setDenuncia(null); avisar(texto); }} />
   ) : null;
-  return { acoes, dialogo };
+  return { acoes, dialogo: <>{dialogo}{aviso}</> };
 }
 
 /**
@@ -305,6 +311,27 @@ function Setas({ fileira, rotulo }: { fileira: { rola: boolean; inicio: boolean;
       <button type="button" className="cartao-trilha__icone" aria-label={c.proximas} disabled={fileira.fim} onClick={() => fileira.rolar(1)}><Icone nome="seta" /></button>
     </div>
   );
+}
+
+/**
+ * Aviso do próprio app (nunca do sistema): uma faixa no pé da tela, acima da barra de abas, que some sozinha em 4,5 s.
+ * Tem papel de status, então o leitor de tela também anuncia.
+ */
+export function useAvisoDoApp(): [ReactNode, (texto: string) => void] {
+  const [texto, setTexto] = useState('');
+  const [vez, setVez] = useState(0);
+  useEffect(() => {
+    if (!texto) return;
+    const relogio = window.setTimeout(() => setTexto(''), 4500);
+    return () => window.clearTimeout(relogio);
+  }, [texto, vez]);
+  const avisar = useCallback((novo: string) => { setTexto(novo); setVez((n) => n + 1); }, []);
+  const elemento = (
+    <div className="aviso-app" role="status" aria-live="polite" data-visivel={texto ? true : undefined}>
+      {texto && <p key={vez}>{texto}</p>}
+    </div>
+  );
+  return [elemento, avisar];
 }
 
 /** Lista horizontal do "Em alta": numeral grande no canto da capa, com encaixe ao rolar e setas (com ponteiro fino). */

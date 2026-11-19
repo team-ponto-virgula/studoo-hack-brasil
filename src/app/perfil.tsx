@@ -26,7 +26,7 @@ import {
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
-import { Botao, Icone, Stu } from '../ui';
+import { Botao, Icone } from '../ui';
 import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, urlDoLink, useDialogo } from './compartilhar';
 import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
@@ -131,7 +131,9 @@ export function CabecalhoPublico({ perfil, perfilId, logado }: { perfil: PerfilP
 }
 
 /** Tela Perfil: o cabeçalho novo; as trilhas que a pessoa compartilha; o perfil público; a conta e Sair. */
-export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirPlano, editar, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas }: {
+export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirPlano, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas, registrarGuarda }: {
+  /** Guarda de saída do editor (alteração não salva pede a confirmação do app ao navegar). */
+  registrarGuarda?: (guarda: ((continuar: () => void) => boolean) | null) => void;
   perfil: Perfil | null;
   /** O vazio de "Trilhas que você compartilha" leva a Minhas trilhas. */
   irParaTrilhas?: () => void;
@@ -141,7 +143,6 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
   aoMudarPerfil: (perfil: Perfil) => void;
   aoMudarLink: (planoId: string, link: LinkCompartilhado | null) => void;
   abrirPlano: (id: string) => void;
-  editar: () => void;
   sair: () => void;
   anunciar: (texto: string) => void;
 }) {
@@ -152,6 +153,8 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
   const [copiado, setCopiado] = useState('');
   const [folha, setFolha] = useState<string | null>(null);
   const [cartoes, setCartoes] = useState<CartaoTrilha[] | null>(null);
+  // Com dados, o bloco mostra o perfil como os outros veem; "Editar" abre os campos ali mesmo.
+  const [editando, setEditando] = useState(false);
   const titulo = useRef<HTMLHeadingElement>(null);
   const [toque, setToque] = useState(false);
   useEffect(() => { setToque(window.matchMedia('(pointer: coarse)').matches); }, []);
@@ -224,22 +227,18 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
         <>
           {perfil.visitante ? (
             <div className="perfil-cartao"><p className="perfil-cartao__visitante">{p.visitante}</p></div>
-          ) : !perfil.nome ? (
-            <div className="perfil-completar">
-              <Stu />
-              <div>
-                <h2 className="perfil-secao__titulo">{m.comoAparecer}</h2>
-                <p className="folha-texto">{p.convitePerfil}</p>
-                <Botao onClick={editar}><Icone nome="lapis" />{p.completar}</Botao>
-              </div>
-            </div>
+          ) : !perfil.nome || editando ? (
+            // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
+            <EditorPerfil perfil={perfil} anunciar={anunciar} registrarGuarda={registrarGuarda}
+              aoMudarPerfil={(novo) => { setPerfil(novo); aoMudarPerfil(novo); }}
+              aoFechar={perfil.nome ? () => { setEditando(false); titulo.current?.focus(); } : undefined} />
           ) : (
             <div className="perfil-topo">
             <CabecalhoPerfil nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
               alcance={perfil.alcance} nivel="h2"
-              semResumo={<button type="button" className="cabeca-perfil__convite" onClick={editar}>{p.semResumoDona}</button>}
+              semResumo={<button type="button" className="cabeca-perfil__convite" onClick={() => setEditando(true)}>{p.semResumoDona}</button>}
               acoes={<>
-                <Botao variante="secundario" onClick={editar}><Icone nome="lapis" />{p.editarPerfil}</Botao>
+                <Botao variante="secundario" onClick={() => setEditando(true)}><Icone nome="lapis" />{p.editar}</Botao>
                 {perfil.publico && perfil.perfilId && <BotaoCompartilharPerfil perfilId={perfil.perfilId} nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} />}
               </>} />
             {/* Novidades logo abaixo do cartão (no computador, na coluna da direita): é a recompensa do social. */}
@@ -332,20 +331,18 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
 type ErrosCampos = { nome?: string; resumo?: string };
 
 /**
- * Tela "Editar perfil": foto (escolher, tirar, recortar, remover), nome, cor, resumo com contador e interesses (até 5),
- * com a prévia ao vivo do cabeçalho público. A foto salva na hora (é um envio à parte); o resto salva no botão, com o
- * estado sempre à vista ("Alterações não salvas", "Salvando…", "Tudo salvo") e o erro no próprio campo.
+ * Os dados do perfil, abertos ali mesmo na aba Perfil (sem outra tela nem diálogo): foto (o círculo com o selo de
+ * câmera), nome, resumo, interesses e cor. A foto salva na hora (é um envio à parte); o resto salva no botão, que só
+ * liga quando algo muda, com o estado sempre à vista e o erro no próprio campo. `aoFechar` (perfil com dados): o
+ * "Cancelar" e o salvar voltam para o perfil como os outros veem.
  */
-export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, registrarGuarda }: {
+export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda, aoFechar }: {
   perfil: Perfil;
   aoMudarPerfil: (perfil: Perfil) => void;
-  voltar: () => void;
   anunciar: (texto: string) => void;
-  /**
-   * A tela registra uma guarda de saída: qualquer navegação (Voltar, lateral, barra de baixo) passa por ela e, com
-   * alteração não salva, recebe a mesma confirmação. A guarda devolve true quando segurou a saída.
-   */
+  /** Qualquer navegação passa pela guarda; com alteração não salva, recebe a confirmação do app. */
   registrarGuarda?: (guarda: ((continuar: () => void) => boolean) | null) => void;
+  aoFechar?: () => void;
 }) {
   const [salvo, setSalvo] = useState(perfil);
   const [nome, setNome] = useState(perfil.nome ?? '');
@@ -361,13 +358,10 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
   const [statusFoto, setStatusFoto] = useState('');
   const [removendo, setRemovendo] = useState<'perguntar' | 'removendo' | null>(null);
   const [sair, setSair] = useState<(() => void) | null>(null);
-  const [toque, setToque] = useState(false);
-  const titulo = useRef<HTMLHeadingElement>(null);
   const campoNome = useRef<HTMLInputElement>(null);
   const campoResumo = useRef<HTMLTextAreaElement>(null);
   const galeria = useRef<HTMLInputElement>(null);
-  const camera = useRef<HTMLInputElement>(null);
-  const ids = { nome: useId(), nomeDica: useId(), nomeErro: useId(), resumo: useId(), resumoDica: useId(), resumoErro: useId(), resumoContador: useId(), interesses: useId(), foto: useId() };
+  const ids = { titulo: useId(), nome: useId(), nomeDica: useId(), nomeErro: useId(), resumo: useId(), resumoDica: useId(), resumoErro: useId(), resumoContador: useId(), interesses: useId(), foto: useId() };
 
   const nomeNormal = normalizarNomePerfil(nome);
   const resumoNormal = normalizarResumoPerfil(resumo);
@@ -375,8 +369,10 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
   const alterado = nomeNormal !== (salvo.nome ?? '') || cor !== (salvo.cor ?? 'azul') || resumoNormal !== (salvo.resumo ?? '')
     || interesses.join() !== salvo.interesses.join();
 
-  useEffect(() => { titulo.current?.focus(); }, []);
-  useEffect(() => { setToque(window.matchMedia('(pointer: coarse)').matches); }, []);
+  // Abrindo pelo "Editar", o foco vai para o título do bloco (o leitor de tela anuncia), uma vez só e sem abrir o teclado.
+  const abertoPeloEditar = useRef(Boolean(aoFechar));
+  const tituloBloco = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { if (abertoPeloEditar.current) tituloBloco.current?.focus(); }, []);
   useEffect(() => { if (alterado && estado === 'salvo') setEstado('livre'); }, [alterado, estado]);
 
   const alteradoRef = useRef(alterado);
@@ -391,20 +387,6 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
     return () => registrarGuarda(null);
   }, [registrarGuarda]);
 
-  /** Sem a guarda registrada (uso isolado), o Voltar confere sozinho. */
-  function sairDaTela() {
-    if (!registrarGuarda && alterado) setSair(() => voltar);
-    else voltar();
-  }
-
-  // Fechar a aba com alterações não salvas pede confirmação do navegador.
-  useEffect(() => {
-    if (!alterado) return;
-    const aviso = (evento: BeforeUnloadEvent) => { evento.preventDefault(); };
-    window.addEventListener('beforeunload', aviso);
-    return () => window.removeEventListener('beforeunload', aviso);
-  }, [alterado]);
-
   function atualizarPerfil(novo: Perfil) {
     setSalvo(novo);
     aoMudarPerfil(novo);
@@ -417,6 +399,15 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
     }
     setAvisoInteresses('');
     setInteresses((atual) => TEMAS.filter((t) => (t === tema ? marcado : atual.includes(t))));
+  }
+
+  function cancelar() {
+    setNome(salvo.nome ?? '');
+    setCor(salvo.cor ?? 'azul');
+    setResumo(salvo.resumo ?? '');
+    setInteresses(salvo.interesses);
+    setErros({});
+    aoFechar?.();
   }
 
   async function salvar(evento: FormEvent) {
@@ -443,6 +434,8 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
       setInteresses(novo.interesses);
       setEstado('salvo');
       anunciar(p.salvo);
+      registrarGuarda?.(null);
+      aoFechar?.();
     } catch (falha) {
       setErroGeral(textoErro(codigoDoErro(falha)));
       setEstado('livre');
@@ -452,7 +445,6 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
   function escolherArquivo(lista: FileList | null) {
     const escolhido = lista?.[0];
     if (galeria.current) galeria.current.value = '';
-    if (camera.current) camera.current.value = '';
     if (!escolhido) return;
     setErroFoto(null);
     // Antes do recorte, qualquer imagem que o navegador abra serve (o recorte regrava em JPEG); só um teto de memória.
@@ -482,107 +474,92 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
   const estadoTexto = estado === 'salvando' ? p.salvando : alterado ? p.alteracoesNaoSalvas : p.tudoSalvo;
 
   return (
-    <section className="painel painel--editar-perfil" aria-labelledby="editar-perfil-titulo">
-      <div className="editar-perfil__topo">
-        <Botao variante="texto" className="editar-perfil__voltar" onClick={sairDaTela}>
-          <span aria-hidden="true">←</span> {p.voltarPerfil}
-        </Botao>
-        <h1 id="editar-perfil-titulo" ref={titulo} tabIndex={-1} className="titulo-pagina">{p.editarPerfil}</h1>
-      </div>
-
-      <div className="editar-perfil__grade">
-        <form className="editar-perfil__form" onSubmit={salvar} noValidate aria-describedby={erroGeral ? 'editar-perfil-erro' : undefined}>
-          <section className="editar-foto" aria-labelledby={ids.foto}>
+    <section className="editor-perfil" aria-labelledby={ids.titulo}>
+      <h2 id={ids.titulo} ref={tituloBloco} tabIndex={-1} className="somente-leitor">{aoFechar ? p.editarPerfil : p.seusDados}</h2>
+      <p className="editor-perfil__linha">{p.editorLinha}</p>
+      <form className="editar-perfil__form" onSubmit={salvar} noValidate aria-describedby={erroGeral ? 'editar-perfil-erro' : undefined}>
+        <section className="editar-foto" aria-labelledby={ids.foto}>
+          <h3 id={ids.foto} className="somente-leitor">{p.fotoRotulo}</h3>
+          {/* A foto (ou a inicial na cor) num círculo com o selo de câmera: tocar escolhe a foto. */}
+          <button type="button" className="editar-foto__circulo" aria-label={salvo.foto ? p.fotoTrocar : p.fotoEscolher} onClick={() => galeria.current?.click()}>
             <Avatar nome={nomeNormal || '?'} cor={cor} foto={salvo.foto} tamanho="g" />
-            <div className="editar-foto__corpo">
-              <h2 id={ids.foto} className="editar-perfil__rotulo">{p.fotoRotulo}</h2>
-              <div className="editar-foto__acoes">
-                <Botao variante="secundario" onClick={() => galeria.current?.click()}><Icone nome="imagem" />{salvo.foto ? p.fotoTrocar : p.fotoEscolher}</Botao>
-                {toque && <Botao variante="secundario" onClick={() => camera.current?.click()}><Icone nome="camera" />{p.fotoCamera}</Botao>}
-                {salvo.foto && <Botao variante="texto" className="folha-parar" disabled={removendo !== null} onClick={() => setRemovendo('perguntar')}><Icone nome="lixeira" />{p.fotoRemover}</Botao>}
-              </div>
-              <p className="campo-dica">{p.fotoDica}</p>
-              {erroFoto && !arquivo && <p className="campo-erro" role="alert">{erroFoto}</p>}
-              <p className="folha-status" role="status" aria-live="polite">{statusFoto}</p>
-              <input ref={galeria} type="file" accept="image/*" hidden onChange={(e) => escolherArquivo(e.target.files)} />
-              <input ref={camera} type="file" accept="image/*" capture="user" hidden onChange={(e) => escolherArquivo(e.target.files)} />
-            </div>
-          </section>
-
-          <div className="campo" data-erro={erros.nome ? true : undefined}>
-            <label htmlFor={ids.nome}>{m.nomeRotulo}</label>
-            <input id={ids.nome} ref={campoNome} value={nome} maxLength={60} autoComplete="nickname" autoCapitalize="words"
-              aria-invalid={erros.nome ? true : undefined} aria-describedby={erros.nome ? ids.nomeErro : ids.nomeDica}
-              onChange={(e) => { setNome(e.target.value); if (erros.nome) setErros((atual) => ({ ...atual, nome: undefined })); }} />
-            {erros.nome && <p className="campo-erro campo-erro--colado" id={ids.nomeErro}><Icone nome="alerta" />{erros.nome}</p>}
-            <p className="campo-dica" id={ids.nomeDica} hidden={Boolean(erros.nome)}>{m.comoAparecerDica}</p>
+            <span className="editar-foto__selo" aria-hidden="true"><Icone nome="camera" /></span>
+          </button>
+          <div className="editar-foto__corpo">
+            <p className="campo-dica">{p.fotoDica}</p>
+            {salvo.foto && <Botao variante="texto" className="folha-parar" disabled={removendo !== null} onClick={() => setRemovendo('perguntar')}><Icone nome="lixeira" />{p.fotoRemover}</Botao>}
+            {erroFoto && !arquivo && <p className="campo-erro" role="alert">{erroFoto}</p>}
+            <p className="folha-status" role="status" aria-live="polite">{statusFoto}</p>
+            <input ref={galeria} type="file" accept="image/*" hidden onChange={(e) => escolherArquivo(e.target.files)} />
           </div>
+        </section>
 
-          <fieldset className="cores-perfil">
-            <legend>{m.corRotulo}</legend>
-            <div className="cores-perfil__lista">
-              {CORES_PERFIL.map((opcao) => (
-                <label key={opcao} className="cor-perfil" style={{ '--cor': FUNDO_DA_COR[opcao] } as CSSProperties}>
-                  <input type="radio" name="cor-perfil" value={opcao} checked={cor === opcao} onChange={() => setCor(opcao)} />
-                  <span className="cor-perfil__amostra" aria-hidden="true" />
-                  <span className="somente-leitor">{m.cores[opcao]}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+        <div className="campo" data-erro={erros.nome ? true : undefined}>
+          <label htmlFor={ids.nome}>{m.nomeRotulo}</label>
+          <input id={ids.nome} ref={campoNome} value={nome} maxLength={60} autoComplete="nickname" autoCapitalize="words"
+            aria-invalid={erros.nome ? true : undefined} aria-describedby={erros.nome ? ids.nomeErro : ids.nomeDica}
+            onChange={(e) => { setNome(e.target.value); if (erros.nome) setErros((atual) => ({ ...atual, nome: undefined })); }} />
+          {erros.nome && <p className="campo-erro campo-erro--colado" id={ids.nomeErro}><Icone nome="alerta" />{erros.nome}</p>}
+          <p className="campo-dica" id={ids.nomeDica} hidden={Boolean(erros.nome)}>{m.comoAparecerDica}</p>
+        </div>
 
-          <div className="campo campo--resumo" data-erro={erros.resumo ? true : undefined}>
-            <div className="campo__linha">
-              <label htmlFor={ids.resumo}>{p.resumoRotulo}</label>
-              <span className="campo__contador" id={ids.resumoContador} data-acima={usados > LIMITES_PERFIL.resumoMax || undefined}>
-                <span aria-hidden="true">{p.resumoContador(usados, LIMITES_PERFIL.resumoMax)}</span>
-                <span className="somente-leitor">{p.resumoContadorLeitor(LIMITES_PERFIL.resumoMax - usados)}</span>
-              </span>
-            </div>
-            <textarea id={ids.resumo} ref={campoResumo} value={resumo} rows={3} maxLength={240}
-              aria-invalid={erros.resumo ? true : undefined} aria-describedby={`${erros.resumo ? ids.resumoErro : ids.resumoDica} ${ids.resumoContador}`}
-              onChange={(e) => { setResumo(e.target.value.replace(/[\r\n]+/g, ' ')); if (erros.resumo) setErros((atual) => ({ ...atual, resumo: undefined })); }} />
-            {erros.resumo && <p className="campo-erro campo-erro--colado" id={ids.resumoErro}><Icone nome="alerta" />{erros.resumo}</p>}
-            <p className="campo-dica" id={ids.resumoDica} hidden={Boolean(erros.resumo)}>{p.resumoDica}</p>
+        <div className="campo campo--resumo" data-erro={erros.resumo ? true : undefined}>
+          <div className="campo__linha">
+            <label htmlFor={ids.resumo}>{p.resumoRotulo}</label>
+            <span className="campo__contador" id={ids.resumoContador} data-acima={usados > LIMITES_PERFIL.resumoMax || undefined}>
+              <span aria-hidden="true">{p.resumoContador(usados, LIMITES_PERFIL.resumoMax)}</span>
+              <span className="somente-leitor">{p.resumoContadorLeitor(LIMITES_PERFIL.resumoMax - usados)}</span>
+            </span>
           </div>
+          <textarea id={ids.resumo} ref={campoResumo} value={resumo} rows={3} maxLength={240}
+            aria-invalid={erros.resumo ? true : undefined} aria-describedby={`${erros.resumo ? ids.resumoErro : ids.resumoDica} ${ids.resumoContador}`}
+            onChange={(e) => { setResumo(e.target.value.replace(/[\r\n]+/g, ' ')); if (erros.resumo) setErros((atual) => ({ ...atual, resumo: undefined })); }} />
+          {erros.resumo && <p className="campo-erro campo-erro--colado" id={ids.resumoErro}><Icone nome="alerta" />{erros.resumo}</p>}
+          <p className="campo-dica" id={ids.resumoDica} hidden={Boolean(erros.resumo)}>{p.resumoDica}</p>
+        </div>
 
-          <fieldset className="interesses" aria-describedby={`${ids.interesses}-dica`}>
-            <legend>{p.interessesRotulo}</legend>
-            <p className="campo-dica" id={`${ids.interesses}-dica`}>
-              {p.interessesDica(LIMITES_PERFIL.interessesMax)} <span>{p.interessesContador(interesses.length, LIMITES_PERFIL.interessesMax)}</span>
-            </p>
-            <div className="interesses__lista">
-              {TEMAS.map((tema) => (
-                <label key={tema} className="interesse">
-                  <input type="checkbox" checked={interesses.includes(tema)} onChange={(e) => alternarTema(tema, e.target.checked)} />
-                  <span>{temas[tema]}</span>
-                </label>
-              ))}
-            </div>
-            <p className="campo-erro interesses__aviso" role="status" aria-live="polite">{avisoInteresses}</p>
-          </fieldset>
+        <fieldset className="interesses" aria-describedby={`${ids.interesses}-dica`}>
+          <legend>{p.interessesRotulo}</legend>
+          <p className="campo-dica" id={`${ids.interesses}-dica`}>
+            {p.interessesDica(LIMITES_PERFIL.interessesMax)} <span>{p.interessesContador(interesses.length, LIMITES_PERFIL.interessesMax)}</span>
+          </p>
+          <div className="interesses__lista">
+            {TEMAS.map((tema) => (
+              <label key={tema} className="interesse">
+                <input type="checkbox" checked={interesses.includes(tema)} onChange={(e) => alternarTema(tema, e.target.checked)} />
+                <span>{temas[tema]}</span>
+              </label>
+            ))}
+          </div>
+          <p className="campo-erro interesses__aviso" role="status" aria-live="polite">{avisoInteresses}</p>
+        </fieldset>
 
-          <div className="editar-perfil__barra">
-            <p className="editar-perfil__estado" data-estado={estado === 'salvando' ? 'salvando' : alterado ? 'pendente' : 'salvo'} role="status" aria-live="polite">
-              {!alterado && estado !== 'salvando' && <Icone nome="check" />}{estadoTexto}
-            </p>
-            {erroGeral && <p className="campo-erro" id="editar-perfil-erro" role="alert">{erroGeral}</p>}
+        <fieldset className="cores-perfil">
+          <legend>{m.corRotulo}</legend>
+          <div className="cores-perfil__lista">
+            {CORES_PERFIL.map((opcao) => (
+              <label key={opcao} className="cor-perfil" style={{ '--cor': FUNDO_DA_COR[opcao] } as CSSProperties}>
+                <input type="radio" name="cor-perfil" value={opcao} checked={cor === opcao} onChange={() => setCor(opcao)} />
+                <span className="cor-perfil__amostra" aria-hidden="true" />
+                <span className="somente-leitor">{m.cores[opcao]}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className="editar-perfil__barra editor-perfil__barra">
+          <p className="editar-perfil__estado" data-estado={estado === 'salvando' ? 'salvando' : alterado ? 'pendente' : 'salvo'} role="status" aria-live="polite">
+            {!alterado && estado !== 'salvando' && <Icone nome="check" />}{estadoTexto}
+          </p>
+          {erroGeral && <p className="campo-erro" id="editar-perfil-erro" role="alert">{erroGeral}</p>}
+          <div className="editor-perfil__botoes">
+            {aoFechar && <Botao variante="secundario" disabled={estado === 'salvando'} onClick={cancelar}>{p.cancelar}</Botao>}
             <Botao type="submit" disabled={estado === 'salvando' || !alterado} aria-busy={estado === 'salvando' || undefined}>
               {estado === 'salvando' ? p.salvando : p.salvar}
             </Botao>
           </div>
-        </form>
-
-        <aside className="editar-perfil__previa" aria-labelledby="editar-perfil-previa">
-          <h2 id="editar-perfil-previa" className="editar-perfil__rotulo">{p.previaTitulo}</h2>
-          <div aria-live="off">
-            {/* Com erro no campo, a prévia fica com o último valor salvo (o que os outros veem de fato). */}
-            <CabecalhoPerfil nome={(erros.nome ? salvo.nome : nomeNormal) || '…'} cor={cor} foto={salvo.foto} resumo={(erros.resumo ? salvo.resumo : resumoNormal) || null} interesses={interesses}
-              alcance={salvo.alcance} nivel="p" publica />
-          </div>
-          <p className="campo-dica">{p.fotoAviso}</p>
-        </aside>
-      </div>
+        </div>
+      </form>
 
       {arquivo && (
         <RecorteFoto origem={arquivo} aoCancelar={() => setArquivo(null)}

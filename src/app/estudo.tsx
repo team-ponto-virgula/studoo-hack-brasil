@@ -40,7 +40,7 @@ import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } f
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
 import { Pedido, type IdTema } from './pedido';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
-import { TelaEditarPerfil, TelaPerfil } from './perfil';
+import { TelaPerfil } from './perfil';
 import { Explorar } from './comunidade';
 import './aula.css';
 import './trilha.css';
@@ -53,7 +53,6 @@ type Tela =
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
   | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string; aviso?: string }
   | { tipo: 'perfil' }
-  | { tipo: 'editarPerfil' }
   | { tipo: 'explorar' }
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
@@ -345,8 +344,8 @@ export function Estudo() {
    * cancelar no fim da trilha não deixa o pedido rolado); o caminho ainda rola até a lição certa depois de desenhar.
    */
   function navegar(destino: Tela) {
-    // Saindo de "Editar perfil" com alteração não salva: a tela pergunta antes (a mesma confirmação do Voltar).
-    if (destino.tipo !== 'editarPerfil' && guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
+    // Saindo do Perfil com os dados abertos e alteração não salva: a confirmação do app pergunta antes.
+    if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
     if (destino.tipo !== 'geracao') pararGeracao();
     if (destino.tipo !== tela.tipo) voltarAoTopo();
     setErro(null);
@@ -620,7 +619,7 @@ export function Estudo() {
             {mensagens.pedido.comoFunciona}
           </Botao>
           {compartilhar && (
-            <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' || tela.tipo === 'editarPerfil' ? 'page' : undefined}
+            <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
               onClick={() => navegar({ tipo: 'perfil' })}>
               {perfil?.nome ? <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} /> : <Icone nome="pessoa" />}
               <span>{perfil?.nome ?? mensagens.perfil.navegacao}</span>
@@ -727,15 +726,12 @@ export function Estudo() {
           )}
           {visivel && tela.tipo === 'perfil' && (
             <TelaPerfil perfil={perfil} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
-              abrirPlano={(id) => void abrirPlano(id)} editar={() => navegar({ tipo: 'editarPerfil' })} sair={() => void sair()}
+              abrirPlano={(id) => void abrirPlano(id)} registrarGuarda={registrarGuarda} sair={() => void sair()}
               comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} irParaTrilhas={() => navegar({ tipo: 'planos' })} />
           )}
           {visivel && tela.tipo === 'explorar' && comunidade && (
             <Explorar logado aoAbrir={(id) => void abrirPlano(id)} irParaTrilhas={() => navegar({ tipo: 'planos' })}
               aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} />
-          )}
-          {visivel && tela.tipo === 'editarPerfil' && perfil && !perfil.visitante && (
-            <TelaEditarPerfil perfil={perfil} aoMudarPerfil={setPerfil} anunciar={anunciar} voltar={() => navegar({ tipo: 'perfil' })} registrarGuarda={registrarGuarda} />
           )}
           {visivel && tela.tipo === 'licao' && (
             <Licao key={tela.licao.id} licao={tela.licao} pendente={pendente}
@@ -755,13 +751,13 @@ export function Estudo() {
           )}
         </main>
         {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao} data-itens={(compartilhar ? 3 : 2) + (comunidade ? 1 : 0)}>
-          <button type="button" disabled={ocupado} aria-current={!['objetivo', 'perfil', 'editarPerfil', 'explorar'].includes(tela.tipo) ? 'page' : undefined}
+          <button type="button" disabled={ocupado} aria-current={!['objetivo', 'perfil', 'explorar'].includes(tela.tipo) ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'planos' })}><Icone nome="livro" />{mensagens.planos.titulo}</button>
           <button type="button" disabled={ocupado} aria-current={tela.tipo === 'objetivo' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
           {comunidade && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.navegacao}</button>}
-          {compartilhar && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'perfil' || tela.tipo === 'editarPerfil' ? 'page' : undefined}
+          {compartilhar && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'perfil' })}><Icone nome="pessoa" />{mensagens.perfil.navegacao}</button>}
         </nav>}
       </div>

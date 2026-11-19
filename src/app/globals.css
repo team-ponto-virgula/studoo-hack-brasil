@@ -354,8 +354,6 @@ button, input, textarea { font: inherit; }
 }
 
 @media (min-width: 1024px) { .estudo-cabecalho[data-vazia-no-computador] { display: none; } }
-/* Editar perfil tem o próprio "← Voltar ao perfil": o cabeçalho não repete os atalhos. */
-.estudo-cabecalho[data-tela='editarPerfil'] .estudo-conta { visibility: hidden; }
 
 .estudo-identificacao { display: inline-flex; align-items: center; gap: 10px; color: var(--texto); font-weight: 800; }
 .estudo-identificacao__contexto { display: none; }

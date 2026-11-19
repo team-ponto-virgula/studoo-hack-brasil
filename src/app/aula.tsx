@@ -1610,7 +1610,7 @@ function EtapaExercicio({ exercicio, indice, total, resposta, mudar, avaliacao, 
           preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
       )}
       {!exercicio.trecho && exercicio.fala && <Escuta fala={exercicio.fala} acertou={avaliacao?.correta === true} />}
-      <form id="resposta-licao" ref={formulario} className="formulario" method="post" onSubmit={responder}>
+      <form id="resposta-licao" ref={formulario} className="formulario" method="post" noValidate onSubmit={responder}>
         {campo}
       </form>
       {dica && (
