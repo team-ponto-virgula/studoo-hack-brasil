@@ -1505,8 +1505,9 @@ function Marco({ numero, vencido, topo, noAlto = false, queda = false, children 
 function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; resumo?: ResumoTrecho }) {
   if (!resumo) return null;
   const vencida = !resumo.previa && resumo.feitas === resumo.total;
-  let texto = mensagens.trilha.parteProgresso(resumo.feitas, resumo.total);
-  if (resumo.previa) texto = mensagens.trilha.parteLicoes(resumo.total);
+  // Na prévia (spec 04, "Criar a trilha"), só "Parte 2": sem contagem. No mapa salvo, o progresso de verdade.
+  let texto: string | null = mensagens.trilha.parteProgresso(resumo.feitas, resumo.total);
+  if (resumo.previa) texto = null;
   else if (vencida) texto = mensagens.trilha.parteVencida;
   return (
     <View testID={`faixa-parte-${numero}`} style={[caminhoEstilos.parte, { backgroundColor: coresDaRegiao(trecho).relevo, borderColor: coresDaRegiao(trecho).relevo }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
@@ -1516,7 +1517,7 @@ function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; res
       <View style={caminhoEstilos.parteCorpo}>
         <View style={caminhoEstilos.parteTopo}>
           <Text style={caminhoEstilos.parteNumero}>{mensagens.trilha.parte(numero)}</Text>
-          <Text style={[caminhoEstilos.parteAndamento, vencida && { color: cores.alerta }]}>{texto}</Text>
+          {texto !== null && <Text style={[caminhoEstilos.parteAndamento, vencida && { color: cores.alerta }]}>{texto}</Text>}
         </View>
       </View>
     </View>
@@ -1622,8 +1623,8 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
           estilo={{ left: '50%', marginLeft: -larguraColina / 2 }} />
         <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { bottom: 96 + extra, left: '50%', marginLeft: -104 }]} />
         <Desenho nome="bandeira" largura={30} estilo={[caminhoEstilos.chegadaBandeira, { bottom: 96 + extra, right: '50%', marginRight: -104, transform: [{ scaleX: -1 }] }]} />
-        {/* Estrelas também antes da conquista: o troféu já parece um prêmio desejável. */}
-        {(
+        {/* Brilho e estrelas só com a trilha concluída (spec 13 §B4, revisão de 917e40c): antes, a lente branca com a silhueta. */}
+        {feita && (
           <>
             <Desenho nome="estrela" largura={22} estilo={{ position: 'absolute', bottom: 150 + extra, left: '50%', marginLeft: -72 }} />
             <Desenho nome="estrela" largura={16} estilo={{ position: 'absolute', bottom: 172 + extra, right: '50%', marginRight: -66 }} />
@@ -1652,8 +1653,8 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
       {bolha && <View pointerEvents="none" style={caminhoEstilos.bolhaTrofeu}><Text style={caminhoEstilos.bolhaTrofeuTexto}>{bolha}</Text></View>}
       <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
         style={{ width: tamanho, height: tamanho + 7, transform: [{ scale: pop }] }}>
-        {/* Halo dourado em volta do troféu. */}
-        <View style={[caminhoEstilos.camada, circulo(tamanho + 28), { left: -14, top: -14, backgroundColor: 'rgba(255, 207, 77, 0.42)' }]} />
+        {/* Halo dourado em volta do troféu, só conquistado. */}
+        {feita && <View style={[caminhoEstilos.camada, circulo(tamanho + 28), { left: -14, top: -14, backgroundColor: 'rgba(255, 207, 77, 0.42)' }]} />}
         {/* Spec 13 (B4, Designer 19/11): `acessorio-trofeu` (faixa M) no lugar do troféu desenhado, com 72% do lado da lente,
             numa lente de face branca, borda de 3 #E0A92E e lábio #C7922A nos dois estados. Antes da conquista, silhueta
             #8A93B0 a 40%; ao concluir, a cor cheia com o pop de hoje (o troféu não tem versão animada no kit). */}

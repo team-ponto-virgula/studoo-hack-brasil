@@ -1270,6 +1270,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const [esperaReal, setEsperaReal] = useState(false);
   const [saidaDoAjustar] = useState(() => new Animated.Value(0));
   const [ajustarFora, setAjustarFora] = useState(false);
+  const criacaoAgora = useRef(criacao);
+  criacaoAgora.current = criacao;
 
   // O erro aparece no topo, como na web; a tela sobe até ele.
   useEffect(() => {
@@ -1347,13 +1349,19 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
 
   // O toque em "Começar a lição 1" (spec 04, "Criar a trilha"). Se o nó 1 não está à vista, a prévia rola até ele (no app, a
   // rolagem animada do sistema; com movimento reduzido, pula), para o anel que respira e o Stu que estuda ficarem à vista.
+  // A área livre é a que fica entre a base da placa presa no alto e o topo do rodapé: o nó 1, o nome dele e o Stu inteiros
+  // nela, com o centro do nó a 40% da altura dela (spec 04, 917e40c).
   useEffect(() => {
     if (criacao !== 'criando') return;
     const primeiro = todos[0]?.id;
     const centro = primeiro ? centros.current.get(primeiro) : undefined;
-    if (centro === undefined || vagaAVista(centro, rolado.current, visivel.current || height, coberto.current)) return;
+    if (centro === undefined) return;
+    const altura = visivel.current || height;
+    const topoLivre = cartaoDeVolta ? 0 : RITMO_DA_GERACAO.placaTopo + alturaPlaca;
+    const naTela = centro - rolado.current;
+    if (naTela - RITMO_DA_GERACAO.no1AcimaDoCentro >= topoLivre && naTela + RITMO_DA_GERACAO.no1AbaixoDoCentro <= altura) return;
     mudarAcompanhar(false);
-    rolarPara(rolagemDaVaga(centro, visivel.current || height, coberto.current));
+    rolarPara(Math.max(0, Math.round(centro - (topoLivre + (altura - topoLivre) * RITMO_DA_GERACAO.no1NaAreaLivre))));
     // Só no toque.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [criacao]);
@@ -1431,7 +1439,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   function aoRolar(y: number) {
     const anterior = rolado.current;
     rolado.current = y;
-    if (pronta && !cartaoDeVolta && y <= 4) setCartaoDeVolta(true);
+    // Na criação, o cartão do título não volta: ele empurraria o nó 1 e o Stu para baixo do rodapé.
+    if (pronta && !cartaoDeVolta && y <= 4 && criacaoAgora.current === null) setCartaoDeVolta(true);
     if (pronta) conferirTrofeu(y);
     const andando = programada.current;
     if (andando) {
@@ -1494,7 +1503,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         const medida = Math.round(evento.nativeEvent.layout.height);
         setAlturaPlaca((anterior) => anterior === medida ? anterior : medida);
       }}>
-        <PlacaDaGeracao pronta={pronta} esperaLonga={esperaLonga} licoes={total} partes={partes} />
+        <PlacaDaGeracao pronta={pronta} esperaLonga={esperaLonga} licoes={total} partes={partes} sai={criacao === 'criada'} reduzir={reduzir} />
       </View>
     </View>
   );
@@ -1583,7 +1592,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         // zero antes do mapa, por cima dele, sem mudar o lugar do que o mapa mede.
         <View style={estudoEstilos.placaNoMapa} pointerEvents="none">
           <View style={estudoEstilos.placaNoMapaLugar}>
-            <PlacaDaGeracao pronta={pronta} esperaLonga={false} licoes={total} partes={partes} />
+            <PlacaDaGeracao pronta={pronta} esperaLonga={false} licoes={total} partes={partes} sai={criacao === 'criada'} reduzir={reduzir} />
           </View>
         </View>
       )}
@@ -1602,12 +1611,34 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
  * depois de 12 s sem lição nova e "Proposta pronta: 9 lições em 3 partes." no fim (a trilha só existe depois do toque). O
  * leitor de tela já ouve cada lição e o fim; a placa fica fora dele para não repetir.
  */
-function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes }: { pronta: boolean; esperaLonga: boolean; licoes: number; partes: number }) {
+function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, reduzir = null }: {
+  pronta: boolean; esperaLonga: boolean; licoes: number; partes: number;
+  /** A proposta virou trilha (t = 0 da passagem): a placa sai, com opacidade e 8 px para cima, em 150 ms (reduzido: na hora). */
+  sai?: boolean;
+  reduzir?: boolean | null;
+}) {
   const texto = pronta ? mensagens.geracao.propostaPronta(licoes, partes) : esperaLonga ? mensagens.geracao.aguardandoLicao : mensagens.geracao.montandoTitulo;
+  const [saida] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!sai) {
+      saida.setValue(0);
+      return;
+    }
+    if (reduzir !== false) {
+      saida.setValue(1);
+      return;
+    }
+    const animacao = Animated.timing(saida, { toValue: 1, duration: RITMO_DA_GERACAO.placaSaiMs, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [sai, reduzir, saida]);
   return (
-    <View testID="placa-geracao" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={estudoEstilos.placaGeracao}>
+    <Animated.View testID="placa-geracao" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={[estudoEstilos.placaGeracao, {
+      opacity: saida.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+      transform: [{ translateY: saida.interpolate({ inputRange: [0, 1], outputRange: [0, -RITMO_DA_GERACAO.placaSaiDeslize] }) }],
+    }]}>
       <Text style={estudoEstilos.placaGeracaoTexto}>{texto}</Text>
-    </View>
+    </Animated.View>
   );
 }
 
