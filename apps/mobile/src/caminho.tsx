@@ -24,6 +24,7 @@ import { ColinaElipse, Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
 import { cores, fontes } from './tema';
 import { explicar, iconeDoNo, nomeAcessivelDoNo, posicaoDoNo, posicaoX, selosDoNo, type EstadoNo, type NoCaminho } from './trilha';
 import { focoVisivel } from './foco';
+import { Stu } from './mascote';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
@@ -465,9 +466,8 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
   parte: ReactNode;
 }) {
   const { chao, relevo } = coresDaRegiao(trecho);
-  const subida = useBalanco(4, 1400, pensando);
-  // .caminho-inicio .stu: 82 no celular (92 a partir de 768, quando a lente é de 78 ou mais), com 4 embaixo.
-  const stu = lente >= 78 ? 92 : 82;
+  // Spec 13 (A2): o Stu do começo do mapa tem 92; montando, `stu-curioso` em laço (é espera); pronto, `stu-feliz` uma vez.
+  const stu = 92;
 
   return (
     // Com o primeiro nó atual, o balão "Começar" (nome em até duas linhas) sobe até ~140 acima do nó: a faixa da Parte 1 fica
@@ -494,9 +494,7 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
             {pensando && dicas.length > 0 && <DicaQueTroca dicas={dicas} />}
             <View style={caminhoEstilos.falaSeta} />
           </View>
-          <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            importantForAccessibility="no"
-            style={{ width: stu, height: Math.round(stu * 1.1), marginBottom: 4, transform: [{ translateY: subida }] }} />
+          <Stu nome={pensando ? 'stu-curioso' : 'stu-feliz'} tamanho={stu} animado={pensando ? 'laco' : 'uma-vez'} sombra estilo={{ marginBottom: 8 }} />
         </View>
       )}
       {parte && <View testID="faixa-parte-inicio" pointerEvents="none" style={[caminhoEstilos.inicioParte, comecoAtual && { bottom: PARTE_COM_BALAO }]}
@@ -643,7 +641,7 @@ function Terreno({ x, largura, semEnfeites, trecho, indice, medidas, brotar, atr
   return (
     <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
       {guia && (
-        <GuiaStu tamanho={tamGuia} atraso={atrasoGuia} estilo={[{ position: 'absolute', top: lente / 2 - tamGuia * 0.9 },
+        <GuiaStu tamanho={tamGuia} atraso={atrasoGuia} olhaParaEsquerda={posicaoX(indice + 1) < x} estilo={[{ position: 'absolute', top: lente / 2 - tamGuia * 0.9 },
           direita ? { left: centro + lente / 2 + 10 } : { right: largura - centro + lente / 2 + 10 }]} />
       )}
       {/* Como a web: no nó atual com o Stu guia, ele fica no lugar do enfeite grande; o enfeite miúdo não aparece nos nós com o
@@ -667,19 +665,19 @@ function Balanca({ nome, vento, children }: { nome: NomeDesenho; vento: Animated
   );
 }
 
-/** O Stu ao lado do nó atual: entra com um pulinho, sobe e desce devagar e acena de vez em quando, com a sombra embaixo. */
-function GuiaStu({ tamanho, atraso, estilo }: { tamanho: number; atraso: number; estilo: ViewStyle[] }) {
+/**
+ * O Stu ao lado do nó atual (spec 13): `stu-tres-quartos` olhando para o próximo nó (espelhado quando o caminho vira à
+ * esquerda), na sombra de contato. Entra com um pulinho, flutua 4 px a cada 3,2 s (§B7) e se mexe de tempos em tempos
+ * (emenda E1, um ciclo a cada 8 s). Com movimento reduzido, parado.
+ */
+function GuiaStu({ tamanho, atraso, estilo, olhaParaEsquerda }: { tamanho: number; atraso: number; estilo: ViewStyle[]; olhaParaEsquerda: boolean }) {
   const entrada = useAparecer(atraso, 460, true);
-  const flutuar = useBalanco(6, 1300);
-  const aceno = useVaiVem(2600);
+  const flutuar = useBalanco(4, 1600);
   return (
     <Animated.View style={[...estilo, { width: tamanho, opacity: entrada, transform: [{ scale: entrada.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }] }]}>
-      <Animated.View style={[caminhoEstilos.guiaSombra, { transform: [{ scaleX: flutuar.interpolate({ inputRange: [-6, 0], outputRange: [0.8, 1] }) }] }]} />
-      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-        style={{ width: tamanho, height: Math.round(tamanho * 1.1), transformOrigin: 'bottom', transform: [
-          { translateY: flutuar },
-          { rotate: aceno.interpolate({ inputRange: [0, 0.8, 0.88, 0.94, 1], outputRange: ['0deg', '0deg', '-6deg', '5deg', '0deg'] }) },
-        ] }} />
+      <Animated.View style={{ transform: [{ translateY: flutuar }] }}>
+        <Stu nome="stu-tres-quartos" tamanho={tamanho} animado="periodico" espelhado={olhaParaEsquerda} sombra />
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -1143,7 +1141,6 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
   const tamanho = lente + 20;
   const reduzir = useMovimentoReduzido();
   const [pop] = useState(() => new Animated.Value(festa ? 0.5 : 1));
-  const pulo = useVaiVem(380, stu);
   const [bolha, setBolha] = useState<string | null>(null);
   const [toques, setToques] = useState(0);
   useEffect(() => {
@@ -1189,13 +1186,10 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
         )}
       </View>
       {stu && (
-        <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-          importantForAccessibility="no" style={[caminhoEstilos.chegadaStu, { bottom: 74 + extra,
-            transform: [
-              { translateY: pulo.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) },
-              { rotate: pulo.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '4deg'] }) },
-            ],
-          }]} />
+        // Spec 13: `stu-comemorando` de 64 ao lado do troféu, na sombra de contato; ele mesmo comemora uma vez ao aparecer.
+        <View style={[caminhoEstilos.chegadaStu, { bottom: 74 + extra }]}>
+          <Stu nome="stu-comemorando" tamanho={64} animado="uma-vez" sombra />
+        </View>
       )}
       <Pressable accessibilityRole="button" accessibilityLabel={mensagens.trilha.trofeu} disabled={total === 0 && !feita}
         onPress={() => {
@@ -1415,7 +1409,7 @@ const caminhoEstilos = StyleSheet.create({
     borderBottomLeftRadius: 12, borderBottomRightRadius: 12, backgroundColor: corEstrada },
   chegadaColina: { position: 'absolute', bottom: -48, left: '50%' },
   chegadaBandeira: { position: 'absolute', bottom: 96 },
-  chegadaStu: { position: 'absolute', bottom: 74, left: '50%', marginLeft: 50, width: 62, height: 68 },
+  chegadaStu: { position: 'absolute', bottom: 74, left: '50%', marginLeft: 50 },
   // Na web, a placa fica a 14 da caixa do troféu, cujo lábio de 7 é sombra (fora da caixa); aqui o lábio está dentro: 7 a menos.
   chegadaPlaca: { marginTop: -7, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999, backgroundColor: 'rgba(255, 255, 255, 0.9)' },
   chegadaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 20 },
