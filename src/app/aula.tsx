@@ -348,6 +348,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       setTemMais(false);
       return;
     }
+    // Ao expandir o conceito, há um novo fim para medir, mesmo que o trecho recolhido coubesse inteiro.
     let chegouAoFim = false;
     const medir = () => {
       const miolo = document.querySelector<HTMLElement>('.aula-miolo');
@@ -369,7 +370,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       window.removeEventListener('resize', medir);
       observador?.disconnect();
     };
-  }, [passo, etapa.tipo]);
+  }, [passo, etapa.tipo, conceitoAberto]);
 
   // No exercício, com conteúdo escondido atrás do painel (o reforço, a consulta, o "Explique"), e na prática (o
   // cronômetro e o "Como foi?" ficam abaixo da tarefa), um aviso discreto leva até ele: nada mostrava que havia mais.

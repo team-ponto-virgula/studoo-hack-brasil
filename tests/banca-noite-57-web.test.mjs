@@ -33,6 +33,8 @@ test('item 7: o conceito mostra o começo (até 3 frases, até 60 palavras) e o 
   assert.match(explicacao, /aria-label=\{t\.audio\.ouvirFrase\(frase\)\}/);
   assert.doesNotMatch(explicacao, /fala-inline|toqueParaOuvir/, 'sem links no parágrafo e sem "toque para ouvir"');
   assert.match(aula, /etapa\.tipo === 'conceito' && restoDoConceito && !conceitoAberto\) \{[\s\S]*?onClick=\{abrirConceito\}>\{t\.continuarLendo\}/, 'o rodapé faz o mesmo que o balão');
+  const medicao = aula.slice(aula.indexOf('let chegouAoFim = false;'), aula.indexOf('const [temAbaixo, setTemAbaixo]'));
+  assert.match(medicao, /}, \[[^\]]*\bconceitoAberto\b[^\]]*\]\);/, 'abrir o restante reinicia a medição do fim da leitura');
   assert.match(aulaCss, /\.aula-falas-lista \{ display: grid; gap: 8px; margin: 12px 0 0; padding: 12px 0 0; border-top: 2px solid #e1e7fa;/);
   assert.match(aulaCss, /\.aula-falas-lista__frase \{[^}]*color: #0b1b5c; font-size: 16px; font-weight: 800; line-height: 22px;/);
   assert.match(aulaCss, /\.aula-falas-lista__ouvir \{[^}]*min-height: 44px;[^}]*border: 2px solid #b9c6f3;[^}]*box-shadow: 0 4px 0 #b9c6f3; font: inherit; font-size: 14px;/);
