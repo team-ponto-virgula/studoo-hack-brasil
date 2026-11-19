@@ -270,3 +270,50 @@
    alta (237 px): o Valeu encolhe primeiro, com respiros menores. */
 .cartao-trilha__acoes { column-gap: 6px; }
 .cartao-trilha__valeu { flex: 1 1 0; min-width: 0; gap: 5px; padding-inline: 8px; white-space: nowrap; }
+
+/* Curtir (revisão de 19/11): curtido continua branco, com o contorno de 3:1; só o coração enche. Nunca desliga. */
+.botao-curtir {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 44px; min-height: 44px; padding: 0 14px;
+  border: 2px solid #8792bd; border-radius: 14px; background: #fff; color: var(--texto); font: inherit; font-size: 1rem; font-weight: 800; line-height: 1.5; cursor: pointer;
+}
+.botao-curtir .icone { width: 20px; height: 20px; flex: none; color: var(--texto); transition: fill 120ms ease-out, color 120ms ease-out; }
+.botao-curtir[aria-pressed='true'], .cartao-trilha__valeu.botao-curtir[aria-pressed='true'] { border-color: #8792bd; background: #fff; color: #a3204a; }
+.botao-curtir[aria-pressed='true'] .icone { color: #d6336c; fill: #d6336c; animation: none; }
+.botao-curtir:active, .botao-curtir[aria-pressed='true']:active { background: #f1f4fd; }
+.botao-curtir:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+@media (hover: hover) { .botao-curtir:hover, .botao-curtir[aria-pressed='true']:hover { background: var(--nevoa); } }
+/* O número: 8 px depois da palavra, algarismos tabulares, rola ao mudar. */
+.numero-rolante { position: relative; display: inline-grid; margin-left: 2px; overflow: hidden; color: #5e6a85; font-variant-numeric: tabular-nums; }
+.botao-curtir[aria-pressed='true'] .numero-rolante { color: #a3204a; }
+.numero-rolante > span { grid-area: 1 / 1; }
+@media (prefers-reduced-motion: no-preference) {
+  .botao-curtir[data-gesto='curtiu'][aria-pressed='true'] .icone { animation: curtir-pulo 280ms cubic-bezier(0.2, 0.9, 0.3, 1.4); }
+  @keyframes curtir-pulo { 45% { transform: scale(1.3); } }
+  .numero-rolante[data-direcao='sobe'] .numero-rolante__atual { animation: numero-de-baixo 180ms ease-out both; }
+  .numero-rolante[data-direcao='sobe'] .numero-rolante__saindo { animation: numero-para-cima 180ms ease-out both; }
+  .numero-rolante[data-direcao='desce'] .numero-rolante__atual { animation: numero-de-cima 180ms ease-out both; }
+  .numero-rolante[data-direcao='desce'] .numero-rolante__saindo { animation: numero-para-baixo 180ms ease-out both; }
+  @keyframes numero-de-baixo { from { transform: translateY(100%); opacity: 0; } }
+  @keyframes numero-de-cima { from { transform: translateY(-100%); opacity: 0; } }
+  @keyframes numero-para-cima { to { transform: translateY(-100%); opacity: 0; } }
+  @keyframes numero-para-baixo { to { transform: translateY(100%); opacity: 0; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  .numero-rolante__saindo { display: none; }
+  .botao-curtir .icone { transition: none; }
+}
+/* A linha de números do cartão tem altura fixa: "N estudando" ou "Nova"; nada nela muda ao curtir. */
+.cartao-trilha__numeros { display: flex; align-items: center; min-height: 1.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Aviso do app: coração cheio à esquerda (o que explica o Curtir) e, quando há, um botão (só aí recebe toque). */
+.aviso-app p { display: flex; align-items: center; gap: 10px; font-size: 0.9375rem; line-height: 1.47; }
+.aviso-app p[data-acao] { pointer-events: auto; padding-block: 8px; }
+.aviso-app__texto { flex: 1 1 auto; min-width: 0; }
+.aviso-app__coracao { display: grid; flex: none; place-items: center; }
+.aviso-app__coracao .icone { width: 20px; height: 20px; color: #ff9cbc; fill: #ff9cbc; }
+.aviso-app__acao {
+  flex: none; min-height: 44px; padding: 0 14px; border: 2px solid rgb(255 255 255 / 0.7); border-radius: 12px;
+  color: #fff; background: transparent; font: inherit; font-weight: 800; cursor: pointer;
+}
+.aviso-app__acao:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+@media (hover: hover) { .aviso-app__acao:hover { background: rgb(255 255 255 / 0.12); } }

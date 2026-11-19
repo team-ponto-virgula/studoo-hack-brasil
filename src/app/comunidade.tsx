@@ -72,7 +72,7 @@ function MenuCartao({ titulo, aoDenunciar }: { titulo: string; aoDenunciar: () =
       <button ref={botao} type="button" className="cartao-trilha__icone" aria-label={c.mais(titulo)} aria-haspopup="menu" aria-expanded={aberto} aria-controls={aberto ? idMenu : undefined}
         onClick={() => setAberto((valor) => !valor)}><Icone nome="mais" /></button>
       {aberto && (
-        <div className="cartao-trilha__opcoes" role="menu" id={idMenu}>
+        <div className="cartao-trilha__opcoes" role="menu" id={idMenu} aria-label={mensagens.componentes.menuRotulo(1)}>
           <button type="button" role="menuitem" onClick={() => { setAberto(false); aoDenunciar(); }}><Icone nome="bandeirinha" />{c.denunciar}</button>
         </div>
       )}
@@ -90,6 +90,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
   const tituloId = useId();
   const sua = cartao.situacao === 'sua';
   const ocupado = acoes.ocupado === cartao.codigo;
+  const numeros = [cartao.estudando > 0 && c.estudando(cartao.estudando), sua && cartao.valeus > 0 && c.valeus(cartao.valeus)].filter((item): item is string => Boolean(item));
   const principal = sua
     ? <Botao variante="secundario" onClick={() => cartao.planoId && acoes.abrir(cartao.planoId)}>{c.sua}</Botao>
     : cartao.situacao === 'adicionada'
@@ -121,22 +122,15 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
         {/* Contagem e números ancorados logo acima dos botões: as últimas linhas batem na fileira. */}
         <div className="cartao-trilha__rodape">
           <p className="cartao-trilha__meta">{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</p>
-          {cartao.estudando === 0 && cartao.valeus === 0
-            ? <p className="cartao-trilha__numeros"><span className="cartao-trilha__nova" aria-label={c.novaRotulo}>{c.nova}</span></p>
-            // A contagem de valeus mora no próprio botão (na trilha própria, que não tem o botão, fica aqui).
-            : <p className="cartao-trilha__numeros">{[cartao.estudando > 0 && c.estudando(cartao.estudando), sua && cartao.valeus > 0 && c.valeus(cartao.valeus)].filter(Boolean).join(' · ')}</p>}
+          {/* Altura fixa: "N estudando" ou "Nova". A curtida mora no botão e não mexe nesta linha (na trilha própria,
+              que não tem o botão, a contagem vem aqui: "5 estudando · 6 curtidas"). */}
+          {numeros.length > 0
+            ? <p className="cartao-trilha__numeros">{numeros.join(' · ')}</p>
+            : <p className="cartao-trilha__numeros"><span className="cartao-trilha__nova" aria-label={c.novaRotulo}>{c.nova}</span></p>}
         </div>
         <div className="cartao-trilha__acoes" data-sua={sua || undefined}>
           {principal}
-          {!sua && (
-            // Coração, "Valeu" e a contagem; marcado, o coração enche (com um pulo curto) e tocar de novo retira.
-            <button type="button" className="cartao-trilha__valeu" aria-pressed={Boolean(cartao.valeuMeu)}
-              aria-label={`${cartao.valeuMeu ? c.valeuMarcadoRotulo(cartao.titulo) : c.valeuRotulo(cartao.titulo)}${cartao.valeus > 0 ? ` (${c.valeus(cartao.valeus)})` : ''}`}
-              disabled={ocupado} onClick={() => acoes.valeu(cartao)}>
-              <Icone nome="valeu" /><span aria-hidden="true">{c.valeu}</span>
-              {cartao.valeus > 0 && <span className="cartao-trilha__valeu-n" aria-hidden="true">{cartao.valeus}</span>}
-            </button>
-          )}
+          {!sua && <BotaoCurtir titulo={cartao.titulo} curtido={Boolean(cartao.valeuMeu)} curtidas={cartao.valeus} aoTocar={() => acoes.valeu(cartao)} />}
           {sua
             // Na própria trilha, o compartilhar ocupa a linha, com o ícone e a palavra.
             ? <Botao variante="secundario" className="cartao-trilha__compartilhar" aria-label={c.compartilharRotulo(cartao.titulo)} onClick={() => acoes.compartilhar(cartao)}><Icone nome="compartilhar" />{c.compartilhar}</Botao>
@@ -145,6 +139,160 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
         </div>
       </div>
     </article>
+  );
+}
+
+/**
+ * O número da curtida que rola: ao subir, o antigo sai para cima e o novo entra por baixo (ao descer, o contrário), em
+ * 180 ms. Com movimento reduzido, a troca é na hora.
+ */
+function NumeroRolante({ n }: { n: number }) {
+  const anterior = useRef(n);
+  const [saindo, setSaindo] = useState<{ valor: number; direcao: 'sobe' | 'desce' } | null>(null);
+  useEffect(() => {
+    if (anterior.current === n) return;
+    setSaindo({ valor: anterior.current, direcao: n > anterior.current ? 'sobe' : 'desce' });
+    anterior.current = n;
+    const relogio = window.setTimeout(() => setSaindo(null), 200);
+    return () => window.clearTimeout(relogio);
+  }, [n]);
+  return (
+    <span className="numero-rolante" data-direcao={saindo?.direcao} aria-hidden="true">
+      {saindo && <span key={`s${saindo.valor}`} className="numero-rolante__saindo">{saindo.valor}</span>}
+      <span key={n} className="numero-rolante__atual">{n}</span>
+    </span>
+  );
+}
+
+/**
+ * O botão de curtir (cartão de trilha e mapa da trilha recebida): coração, "Curtir" e, com 1 ou mais, o número.
+ * Nome acessível fixo ("Curtir “X”"), estado em `aria-pressed` e a contagem na descrição. Nunca desliga: o estado novo
+ * aparece na hora e o envio corre por trás.
+ */
+export function BotaoCurtir({ titulo, curtido, curtidas, aoTocar, className = '' }: { titulo: string; curtido: boolean; curtidas: number; aoTocar: () => void; className?: string }) {
+  const idContagem = useId();
+  // Só o toque anima (curtiu: enche e pula; descurtiu: esvazia); o estado que já vem da lista não pula ao aparecer.
+  const [gesto, setGesto] = useState<'curtiu' | 'descurtiu' | null>(null);
+  return (
+    <button type="button" className={`botao-curtir cartao-trilha__valeu ${className}`} aria-pressed={curtido} data-gesto={gesto ?? undefined}
+      aria-label={c.valeuRotulo(titulo)} aria-describedby={curtidas > 0 ? idContagem : undefined}
+      onClick={() => { setGesto(curtido ? 'descurtiu' : 'curtiu'); aoTocar(); }}>
+      <Icone nome="valeu" /><span className="botao-curtir__palavra" aria-hidden="true">{c.valeu}</span>
+      {curtidas > 0 && <NumeroRolante n={curtidas} />}
+      {curtidas > 0 && <span id={idContagem} hidden>{c.valeus(curtidas)}</span>}
+    </button>
+  );
+}
+
+const CHAVE_GESTO_EXPLICADO = 'studoo.gestoExplicado';
+/** O código de `?curtir=` já aplicado nesta página (uma vez só, mesmo com várias listas na tela). */
+let curtirDaVoltaAplicado = false;
+
+/** Para onde o login volta depois de um toque em Curtir sem sessão: a mesma página, com `?curtir=<código>`. */
+function voltaComCurtir(codigo: string) {
+  const caminho = window.location.pathname;
+  const base = /^\/(?:t|p)\/[A-Za-z0-9_-]{16}$/.test(caminho) || caminho === '/explorar' ? caminho : '/explorar';
+  return `${base}?curtir=${codigo}`;
+}
+
+export type EstadoCurtida = { valeuMeu: boolean; valeus: number };
+export type AlvoCurtida = EstadoCurtida & { codigo: string; titulo: string; donoNome: string };
+
+/**
+ * A lógica de curtir, a mesma no cartão e no mapa: muda na hora (otimista); com um envio em andamento, guarda o estado
+ * desejado e, quando a resposta chega, manda de novo só se ainda for diferente (vale o último toque). Erro: volta ao
+ * último estado confirmado e o aviso do app diz o que houve. O aviso que explica o gesto aparece só na primeira curtida
+ * da pessoa neste aparelho. Sem sessão, leva à entrada e volta já curtindo (`?curtir=`, uma vez).
+ */
+export function useCurtir({ logado, aplicar, anunciar, avisar }: {
+  logado: boolean;
+  aplicar: (codigo: string, estado: EstadoCurtida) => void;
+  anunciar: (texto: string) => void;
+  avisar: AvisarApp;
+}) {
+  const desejado = useRef(new Map<string, boolean>());
+  const confirmado = useRef(new Map<string, EstadoCurtida>());
+  const emVoo = useRef(new Set<string>());
+  const aplicarRef = useRef(aplicar);
+  aplicarRef.current = aplicar;
+
+  async function enviar(codigo: string) {
+    emVoo.current.add(codigo);
+    try {
+      for (;;) {
+        const alvo = desejado.current.get(codigo)!;
+        const r = await cliente.valeu(codigo, alvo);
+        confirmado.current.set(codigo, { valeuMeu: r.valeuMeu, valeus: r.valeus });
+        if (desejado.current.get(codigo) === r.valeuMeu) { aplicarRef.current(codigo, { valeuMeu: r.valeuMeu, valeus: r.valeus }); break; }
+      }
+    } catch (falha) {
+      const anterior = confirmado.current.get(codigo);
+      if (anterior) aplicarRef.current(codigo, anterior);
+      desejado.current.delete(codigo);
+      const erro = codigoDoErro(falha);
+      if (erro === 'nao_autenticado') { entrarEVoltar(voltaComCurtir(codigo)); return; }
+      if (erro === 'compartilhar_visitante') {
+        // Visitante (fechamento do Designer, 19/11): o coração volta e o aviso fica visível, sem botão.
+        avisar(c.valeuContaTemporaria, { duracao: 8000 });
+        return;
+      }
+      // Sem rede, o cliente já tocou `erro_rede`.
+      avisar(erro === 'rede' ? c.valeuErroRede : erro === 'limite_comunidade' ? c.valeuLimite : textoErro(erro), { som: erro === 'rede' ? null : 'aviso' });
+    } finally {
+      emVoo.current.delete(codigo);
+    }
+  }
+
+  function curtir(alvo: AlvoCurtida) {
+    if (!logado) { entrarEVoltar(voltaComCurtir(alvo.codigo)); return; }
+    const novo = !alvo.valeuMeu;
+    if (novo) void tocaSons.tocarEfeito('valeu');
+    if (!emVoo.current.has(alvo.codigo)) confirmado.current.set(alvo.codigo, { valeuMeu: alvo.valeuMeu, valeus: alvo.valeus });
+    desejado.current.set(alvo.codigo, novo);
+    aplicarRef.current(alvo.codigo, { valeuMeu: novo, valeus: Math.max(0, alvo.valeus + (novo ? 1 : -1)) });
+    anunciar(novo ? c.valeuEnviado(alvo.titulo) : c.valeuRetirado(alvo.titulo));
+    if (novo) {
+      let explicado = true;
+      try { explicado = localStorage.getItem(CHAVE_GESTO_EXPLICADO) === '1'; if (!explicado) localStorage.setItem(CHAVE_GESTO_EXPLICADO, '1'); } catch { /* sem armazenamento: não explica */ }
+      if (!explicado) avisar(c.valeuAviso(alvo.donoNome.trim().split(/\s+/)[0] || alvo.donoNome), { coracao: true, duracao: 5000, som: null });
+    }
+    if (!emVoo.current.has(alvo.codigo)) void enviar(alvo.codigo);
+  }
+
+  // Volta da entrada com `?curtir=<código>`: curte uma vez e limpa o endereço.
+  useEffect(() => {
+    if (!logado || curtirDaVoltaAplicado) return;
+    const parametros = new URLSearchParams(window.location.search);
+    const codigo = parametros.get('curtir');
+    if (!codigo || !/^[A-Za-z0-9_-]{16}$/.test(codigo)) return;
+    curtirDaVoltaAplicado = true;
+    parametros.delete('curtir');
+    const resto = parametros.toString();
+    window.history.replaceState(window.history.state, '', `${window.location.pathname}${resto ? `?${resto}` : ''}`);
+    cliente.valeu(codigo, true).then((r) => aplicarRef.current(codigo, { valeuMeu: r.valeuMeu, valeus: r.valeus })).catch(() => null);
+  }, [logado]);
+
+  return curtir;
+}
+
+/**
+ * Curtir no mapa da trilha recebida (bloco "Esta trilha é de <nome>"), com o link original ativo: quem chega ao fim de
+ * uma trilha é quem mais tem motivo para agradecer. Mesmo botão e mesma lógica do cartão.
+ */
+export function CurtirTrilhaRecebida({ codigo, titulo, donoNome, curtido, curtidas, anunciar }: {
+  codigo: string; titulo: string; donoNome: string; curtido: boolean; curtidas: number; anunciar: (texto: string) => void;
+}) {
+  const [estado, setEstado] = useState<EstadoCurtida>({ valeuMeu: curtido, valeus: curtidas });
+  // A trilha recarregada traz o número de agora.
+  useEffect(() => { setEstado({ valeuMeu: curtido, valeus: curtidas }); }, [curtido, curtidas]);
+  const [aviso, avisar] = useAvisoDoApp();
+  const curtir = useCurtir({ logado: true, anunciar, avisar, aplicar: (_codigo, novo) => setEstado(novo) });
+  return (
+    <>
+      <BotaoCurtir className="trilha-recebida__curtir" titulo={titulo} curtido={estado.valeuMeu} curtidas={estado.valeus}
+        aoTocar={() => curtir({ codigo, titulo, donoNome, ...estado })} />
+      {aviso}
+    </>
   );
 }
 
@@ -219,6 +367,10 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [denuncia, setDenuncia] = useState<CartaoTrilha | null>(null);
   const [aviso, avisar] = useAvisoDoApp();
+  const curtir = useCurtir({
+    logado, anunciar, avisar,
+    aplicar: (codigo, estado) => setCartoes((atual) => (atual.codigo === codigo ? { ...atual, ...estado } : atual)),
+  });
   const acoes: AcoesCartao = {
     logado,
     ocupado,
@@ -238,23 +390,8 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
         setOcupado(null);
       }
     },
-    async valeu(cartao) {
-      if (!logado) return entrarEVoltar('/explorar');
-      const ativo = !cartao.valeuMeu;
-      if (ativo) void tocaSons.tocarEfeito('valeu');
-      // Otimista: muda na hora e desfaz se falhar.
-      setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: ativo, valeus: Math.max(0, atual.valeus + (ativo ? 1 : -1)) } : atual));
-      try {
-        const r = await cliente.valeu(cartao.codigo, ativo);
-        setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: r.valeuMeu, valeus: r.valeus } : atual));
-        // Toda vez, o aviso do próprio app (com papel de status: o leitor de tela também ouve).
-        avisar(ativo ? c.valeuAviso(cartao.dono.nome.trim().split(/\s+/)[0] ?? cartao.dono.nome) : c.valeuRetiradoAviso, null);
-      } catch (falha) {
-        setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: cartao.valeuMeu, valeus: cartao.valeus } : atual));
-        const codigo = codigoDoErro(falha);
-        if (codigo === 'nao_autenticado') return entrarEVoltar('/explorar');
-        anunciar(textoErro(codigo));
-      }
+    valeu(cartao) {
+      curtir({ codigo: cartao.codigo, titulo: cartao.titulo, donoNome: cartao.dono.nome, valeuMeu: Boolean(cartao.valeuMeu), valeus: cartao.valeus });
     },
     denunciar(cartao) {
       if (!logado) return entrarEVoltar('/explorar');
@@ -317,27 +454,43 @@ function Setas({ fileira, rotulo }: { fileira: { rola: boolean; inicio: boolean;
   );
 }
 
+export type OpcoesAviso = {
+  /** Coração cheio à esquerda (o aviso que explica o Curtir). */
+  coracao?: boolean;
+  /** Em milissegundos (4,5 s sem nada). */
+  duracao?: number;
+  /** Um botão no aviso (ex.: "Entrar" da conta temporária); só aí o aviso recebe toque. */
+  acao?: { rotulo: string; aoTocar: () => void };
+  /** O efeito do aviso (`aviso`, sem dizer nada); `null` quando o gesto já tocou o seu (curtir, erro de rede). */
+  som?: IdEfeitoSonoro | null;
+};
+export type AvisarApp = (texto: string, opcoes?: OpcoesAviso) => void;
+
 /**
- * Aviso do próprio app (nunca do sistema): uma faixa no pé da tela, acima da barra de abas, que some sozinha em 4,5 s.
- * Tem papel de status, então o leitor de tela também anuncia.
+ * Aviso do próprio app (nunca do sistema): uma faixa no pé da tela, acima da barra de abas, que some sozinha. Um por
+ * vez; tem papel de status, então o leitor de tela também anuncia, e não recebe foco.
  */
-export function useAvisoDoApp(): [ReactNode, (texto: string, som?: IdEfeitoSonoro | null) => void] {
-  const [texto, setTexto] = useState('');
-  const [vez, setVez] = useState(0);
+export function useAvisoDoApp(): [ReactNode, AvisarApp] {
+  const [aviso, setAviso] = useState<{ texto: string; opcoes: OpcoesAviso; vez: number } | null>(null);
   useEffect(() => {
-    if (!texto) return;
-    const relogio = window.setTimeout(() => setTexto(''), 4500);
+    if (!aviso) return;
+    const relogio = window.setTimeout(() => setAviso(null), aviso.opcoes.duracao ?? 4500);
     return () => window.clearTimeout(relogio);
-  }, [texto, vez]);
-  /** `som`: o efeito do aviso (`aviso`, sem dizer nada); `null` quando o gesto já tocou o seu (como o curtir). */
-  const avisar = useCallback((novo: string, som: IdEfeitoSonoro | null = 'aviso') => {
+  }, [aviso]);
+  const avisar = useCallback<AvisarApp>((texto, opcoes = {}) => {
+    const som = opcoes.som === undefined ? 'aviso' : opcoes.som;
     if (som) void tocaSons.tocarEfeito(som);
-    setTexto(novo);
-    setVez((n) => n + 1);
+    setAviso((atual) => ({ texto, opcoes, vez: (atual?.vez ?? 0) + 1 }));
   }, []);
   const elemento = (
-    <div className="aviso-app" role="status" aria-live="polite" data-visivel={texto ? true : undefined}>
-      {texto && <p key={vez}>{texto}</p>}
+    <div className="aviso-app" role="status" aria-live="polite" data-visivel={aviso ? true : undefined}>
+      {aviso && (
+        <p key={aviso.vez} data-acao={aviso.opcoes.acao ? true : undefined}>
+          {aviso.opcoes.coracao && <span className="aviso-app__coracao" aria-hidden="true"><Icone nome="valeu" /></span>}
+          <span className="aviso-app__texto">{aviso.texto}</span>
+          {aviso.opcoes.acao && <button type="button" className="aviso-app__acao" onClick={() => { const acao = aviso.opcoes.acao!; setAviso(null); acao.aoTocar(); }}>{aviso.opcoes.acao.rotulo}</button>}
+        </p>
+      )}
     </div>
   );
   return [elemento, avisar];

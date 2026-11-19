@@ -234,6 +234,9 @@ export interface PerfilPublico {
 export interface MarcasCompartilhar {
   /** Da dona: o link ativo da trilha. */
   link?: { codigo: string; noPerfil: boolean };
-  /** De quem recebeu: de quem veio, o perfil público (se existir agora) e o código do link original, se ainda ativo. */
-  recebida?: { nome: string; perfilId: string | null; codigoAtivo: string | null; foto: string | null };
+  /**
+   * De quem recebeu: de quem veio, o perfil público (se existir agora) e o código do link original, se ainda ativo.
+   * Com a comunidade e o link ativo, `valeus` e `valeuMeu` para o botão de curtir no mapa (revisão de 19/11, item C).
+   */
+  recebida?: { nome: string; perfilId: string | null; codigoAtivo: string | null; foto: string | null; valeus?: number; valeuMeu?: boolean };
 }
