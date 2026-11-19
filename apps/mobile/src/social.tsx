@@ -19,6 +19,7 @@ import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, RolagemDaTela, degrade, estilos as estilosDaInterface, useMovimentoReduzido } from './interface';
 import { mensagemDoCodigo, mensagens } from './mensagens';
 import { cores, fontes } from './tema';
+import { Stu } from './mascote';
 import type { NomeIcone } from './trilha';
 
 /*
@@ -868,7 +869,7 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
     <View style={socialEstilos.previa}>
       {comCalor && (
         <View style={socialEstilos.previaStu}>
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={socialEstilos.previaStuImagem} />
+          <Stu nome="stu-feliz" tamanho={64} animado="uma-vez" />
           <View style={socialEstilos.previaBalao}><Text style={socialEstilos.previaBalaoTexto}>{jaTem ? m.stuDeNovo : m.stuConvite}</Text></View>
         </View>
       )}
@@ -1228,7 +1229,6 @@ export const socialEstilos = StyleSheet.create({
   trocarTemaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   // Página /t: o Stu com o balão e o cartão "Quem compartilhou".
   previaStu: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginBottom: 4 },
-  previaStuImagem: { width: 64, height: 70 },
   previaBalao: { flex: 1, marginBottom: 14, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 2, borderColor: cores.gelo, borderRadius: 18,
     borderBottomLeftRadius: 6, backgroundColor: cores.ceu },
   previaBalaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 22.4, fontWeight: '800' },

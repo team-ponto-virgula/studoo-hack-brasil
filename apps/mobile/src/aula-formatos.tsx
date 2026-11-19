@@ -29,6 +29,7 @@ import { Icone } from './icone';
 import { Botao, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
+import { Stu } from './mascote';
 
 /*
  * Formatos da aula no app, com os mesmos dados e a mesma sequência da web (src/app/aula.tsx), adaptados ao toque:
@@ -1280,7 +1281,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
       </View>
       {escolha && (
         <View style={formatos.resposta} accessibilityLiveRegion="polite">
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} importantForAccessibility="no" style={formatos.stu} />
+          <Stu nome="stu-encorajador" tamanho={56} estilo={formatos.stu} />
           <View style={formatos.respostaBalao}><Text style={[estilos.texto, { fontWeight: '700' }]}>{t.pratica.respostas[escolha]}</Text></View>
         </View>
       )}
@@ -1445,6 +1446,6 @@ const formatos = StyleSheet.create({
   comoFoi: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 24, marginTop: 4 },
   opcoesComoFoi: { flexDirection: 'row', gap: 8 },
   resposta: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  stu: { width: 48, height: 54 },
+  stu: { flexShrink: 0 },
   respostaBalao: { flex: 1, padding: 12, borderRadius: 18, borderWidth: 2, borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
 });

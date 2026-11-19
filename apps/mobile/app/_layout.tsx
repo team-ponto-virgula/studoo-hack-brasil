@@ -32,7 +32,8 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
   return (
     <SafeAreaView style={[estilos.inicio, estilos.falha]}>
       <StatusBar style="dark" />
-      <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={estilos.stu} />
+      {/* Spec 13: `stu-surpreso` de 96, a imagem parada (só componentes básicos aqui, sem o mascote animado). */}
+      <Image source={require('../assets/marca/stu/stu-surpreso-m.png')} resizeMode="contain" accessible={false} style={estilos.stu} />
       <Text accessibilityRole="alert" style={estilos.texto}>{mensagens.erros.falha}</Text>
       <Pressable accessibilityRole="button" accessibilityLabel={mensagens.tentar} onPress={() => void retry()}
         style={({ pressed }) => [estilos.botao, pressed && estilos.botaoPressionado]}>
@@ -45,7 +46,7 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
 const estilos = StyleSheet.create({
   inicio: { flex: 1, backgroundColor: cores.fundo },
   falha: { alignItems: 'center', justifyContent: 'center', padding: 24, gap: 20 },
-  stu: { width: 96, height: 106 },
+  stu: { width: 96, height: 96 },
   texto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24, textAlign: 'center', maxWidth: 360 },
   botao: {
     minHeight: 50, minWidth: 220, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 18,
