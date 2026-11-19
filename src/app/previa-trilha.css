@@ -79,6 +79,8 @@
   .previa-rodape { padding: 10px max(16px,env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left)); }
 }
 @media (prefers-reduced-motion: reduce) {
+  /* A regra global encurta movimentos. Nesta passagem só a opacidade muda. */
+  .painel--geracao[data-passagem='reduzida'] { animation-duration: 150ms !important; }
   [data-fase='montando'] .previa-no__face, [data-fase='montando'] .previa-no__titulo, [data-fase='montando'] .previa-ligacao, .previa-chegada img { animation: previa-aparecer 150ms linear; }
   [data-fase='salvando'] [data-primeiro] .previa-no__face { animation: none; box-shadow: 0 0 0 4px #8cafff; }
   [data-fase='criada'] [data-primeiro] .previa-no__face, .previa-giro { animation: none; }
