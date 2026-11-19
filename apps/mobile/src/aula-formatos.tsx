@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, AppState, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import * as Speech from 'expo-speech';
 import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
@@ -7,7 +7,9 @@ import {
   AUTOAVALIACOES,
   ErroStudoo,
   codificarResposta,
+  conceitoEmBlocos,
   conferirFala,
+  falasDoTexto,
   linhasDePassos,
   partesDaLacuna,
   semAspas,
@@ -478,29 +480,64 @@ export function Falas({ falas }: { falas: Fala[] }) {
 }
 
 /**
- * Texto com as frases entre aspas no idioma da lição tocáveis: um toque e a voz do aparelho fala a frase. Como na web.
- * Numa lição em português, o texto fica como está.
+ * O conceito em blocos curtos (spec 04, banca da noite §7): o balão mostra até 3 frases (cerca de 50 palavras) e o resto
+ * fica em "Continuar lendo", que abre no lugar. As frases entre aspas no idioma da lição saem do parágrafo (antes eram
+ * links no meio dele) e viram uma lista logo abaixo, na mesma ordem, cada uma com o botão "Ouvir". A lista acompanha o
+ * texto à vista: ao abrir o resto, entram as frases dele.
  */
-export function TextoComFalas({ texto, idioma, estilo }: { texto: string; idioma?: string; estilo?: object }) {
-  if (!idioma || idioma.toLowerCase().startsWith('pt')) return <Text style={estilo}>{texto}</Text>;
-  const partes = texto.split(/“([^”]+)”/);
-  const tocaveis = partes.some((parte, indice) => indice % 2 === 1 && !/[ãõçáéíóúâêôà]/i.test(parte));
+export function ConceitoEmBlocos({ texto, idioma, aberto, abrir, aoMedirCorte, restoRef }: {
+  texto: string;
+  idioma?: string;
+  aberto: boolean;
+  abrir: () => void;
+  /**
+   * Onde fica o corte dentro do balão: o "Continuar lendo" e, aberto, o começo do resto (a tela desce até ele quando
+   * ficou abaixo da parte visível; o "Continuar lendo" do rodapé só abre o resto se o do balão não ficou para trás).
+   */
+  aoMedirCorte?: (y: number) => void;
+  restoRef?: Ref<ComponentRef<typeof Text>>;
+}) {
+  const { inicio, resto } = conceitoEmBlocos(texto);
+  const falas = falasDoTexto(aberto || !resto ? texto : inicio, idioma);
   return (
     <>
-    <Text style={estilo}>
-      {partes.map((parte, indice) => {
-        if (indice % 2 === 0) return parte;
-        if (/[ãõçáéíóúâêôà]/i.test(parte)) return `“${parte}”`;
-        return (
-          <Text key={indice} accessibilityRole="button" accessibilityLabel={t.audio.ouvirFrase(parte)} suppressHighlighting={false}
-            onPress={() => falar({ texto: parte, idioma }, false)} style={formatos.falaInline}>
-            “{parte}”
-          </Text>
-        );
-      })}
-    </Text>
-    {tocaveis && <Text style={estilos.legenda}>{t.audio.toqueParaOuvir}</Text>}
+      <Text testID="conceito-inicio" style={estilos.texto}>{inicio}</Text>
+      {!!resto && aberto && (
+        <Text ref={restoRef} testID="conceito-resto" style={estilos.texto} onLayout={(evento) => aoMedirCorte?.(evento.nativeEvent.layout.y)}>{resto}</Text>
+      )}
+      {!!resto && !aberto && (
+        // O botão de texto fica rente ao parágrafo (a caixa de 48 tem 8 de respiro dos lados).
+        <View style={formatos.conceitoContinuar} onLayout={(evento) => aoMedirCorte?.(evento.nativeEvent.layout.y)}>
+          <Botao testID="conceito-continuar" rotulo={t.continuarLendo} variante="texto" compacto icone="seta" giroIcone="90deg" acao={abrir} />
+        </View>
+      )}
+      {falas.length > 0 && (
+        <View testID="falas-do-conceito" style={formatos.falasDoConceito}>
+          {falas.map((frase) => <FalaDoConceito key={frase} fala={{ texto: frase, idioma: idioma ?? 'en-US' }} />)}
+        </View>
+      )}
     </>
+  );
+}
+
+/** Uma frase da lista do conceito: o texto e o botão "Ouvir" de 44, com o alto-falante e o texto (banca da noite §7). */
+function FalaDoConceito({ fala }: { fala: Fala }) {
+  const [tocando, tocar, semVoz] = useTocando(fala);
+  return (
+    <View style={formatos.falaDoConceito}>
+      <View style={formatos.falaDoConceitoLinha}>
+        <Text selectable accessibilityLanguage={fala.idioma} style={formatos.falaDoConceitoTexto}>{fala.texto}</Text>
+        {/* O rótulo fica "Ouvir" enquanto toca (a largura não pula); o fundo azul claro diz que está tocando. */}
+        <Pressable testID="ouvir-frase" accessibilityRole="button" accessibilityLabel={t.audio.ouvirFrase(fala.texto)}
+          accessibilityState={{ busy: tocando !== null }} aria-busy={tocando !== null} onPress={() => tocar(false)}
+          hitSlop={{ top: 2, bottom: 2, left: 0, right: 0 }}
+          style={({ pressed }) => [formatos.ouvirFrase, tocando !== null && formatos.ouvirFraseTocando, pressed && formatos.ouvirFraseAfundado]}>
+          <Icone nome="som" tamanho={18} cor={cores.acaoEscura} />
+          <Text style={formatos.ouvirFraseTexto}>{t.audio.ouvir}</Text>
+        </Pressable>
+      </View>
+      {semVoz && <Text accessibilityLiveRegion="polite" style={formatos.avisoSemVoz}>{t.audio.semVozFrase}</Text>}
+    </View>
   );
 }
 
@@ -1280,7 +1317,17 @@ const formatos = StyleSheet.create({
   ouvir: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   escuta: { gap: 12, padding: 14, borderRadius: 16, backgroundColor: cores.ceu },
   fraseGrande: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19, lineHeight: 26 },
-  falaInline: { color: cores.acaoEscura, fontWeight: '800', textDecorationLine: 'underline', textDecorationStyle: 'dotted' },
+  // Banca da noite §7: "Continuar lendo" rente ao parágrafo e a lista das frases do conceito com o "Ouvir" de 44.
+  conceitoContinuar: { marginLeft: -8, marginVertical: -4 },
+  falasDoConceito: { gap: 8, paddingTop: 12, borderTopWidth: 2, borderTopColor: cores.gelo },
+  falaDoConceito: { gap: 4 },
+  falaDoConceitoLinha: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  falaDoConceitoTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22 },
+  ouvirFrase: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 12, borderRadius: 999, borderWidth: 2,
+    borderBottomWidth: 4, borderColor: '#B9C6F3', backgroundColor: cores.fundo },
+  ouvirFraseTocando: { backgroundColor: '#EEF2FF' },
+  ouvirFraseAfundado: { borderBottomWidth: 2, marginTop: 2 },
+  ouvirFraseTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
   pronuncia: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontStyle: 'italic', fontWeight: '700', fontSize: 14, lineHeight: 20 },
   soBatida: { alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: '#FFFAF0' },
   fala: { gap: 6, padding: 12, borderRadius: 16, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: cores.fundo },

@@ -264,3 +264,80 @@ export function respostaParaTentarDeNovo(exercicio: ExercicioPublico, resposta: 
       return '';
   }
 }
+
+/**
+ * Banca da noite §7 (spec 04): onde termina cada frase do texto (o índice logo depois dela). A frase acaba no ponto, na
+ * interrogação, na exclamação ou nas reticências, com as aspas ou o parêntese que fecham logo depois, quando vem um espaço
+ * e uma maiúscula, um número ou aspas abrindo. O sinal dentro de aspas ou de parênteses (“How are you?”)
+ * e o ponto de uma abreviação (Sr., Dr., J.) não fecham a frase. Uma quebra de linha fecha.
+ */
+export function fimDasFrases(texto: string): number[] {
+  const fins: number[] = [];
+  const terminal = (c: string | undefined) => c !== undefined && '.!?…'.includes(c);
+  const fecha = (c: string | undefined) => c === '”' || c === ')' || c === '»';
+  let profundidade = 0;
+  let inicio = 0;
+  for (let i = 0; i < texto.length; i += 1) {
+    const c = texto[i];
+    if (c === '“' || c === '(' || c === '«') profundidade += 1;
+    else if (fecha(c) && profundidade > 0) profundidade -= 1;
+    if (c === '\n') {
+      if (texto.slice(inicio, i).trim()) fins.push(i);
+      inicio = i + 1;
+      continue;
+    }
+    if (profundidade > 0) continue;
+    // O fim: um sinal de fim, ou o fechamento logo depois dele (o ponto dentro das aspas: “I'm here on vacation.”).
+    let antes = i;
+    while (antes > inicio && fecha(texto[antes])) antes -= 1;
+    if (!terminal(texto[antes])) continue;
+    const depois = texto[i + 1];
+    if (depois !== undefined && !/\s/.test(depois)) continue;
+    const seguinte = texto.slice(i + 1).trimStart()[0];
+    // Um parêntese depois do fim é a tradução da frase citada (“Where is…?” (onde fica…?)): não abre frase nova.
+    if (seguinte !== undefined && !/[A-ZÀ-Ý0-9“"«¿¡]/.test(seguinte)) continue;
+    if (texto[i] === '.' && /(?:^|[\s(“])(?:[A-ZÀ-Ý]|Sra?|Srta|Dra?|Profa?|Mrs?|Ms|St|Jr|Av|Ex|n|nº|p|pág|vol|cap|séc)\.$/.test(texto.slice(inicio, i + 1))) continue;
+    if (texto.slice(inicio, i + 1).trim()) fins.push(i + 1);
+    inicio = i + 1;
+  }
+  if (texto.slice(inicio).trim()) fins.push(texto.length);
+  return fins;
+}
+
+/** O conceito curto da banca da noite §7: até 3 frases e cerca de 50 palavras no balão (até 60, sem cortar frase). */
+export const CONCEITO_CURTO = { frases: 3, palavras: 60 } as const;
+
+/**
+ * Banca da noite §7 (spec 04): o começo do conceito que aparece no balão (até 3 frases, cerca de 50 palavras, nunca menos
+ * de uma frase) e o resto, que fica em "Continuar lendo" e abre no lugar. Sem resto, o texto inteiro cabe no balão.
+ */
+export function conceitoEmBlocos(texto: string): { inicio: string; resto: string } {
+  const limpo = texto.trim();
+  const fins = fimDasFrases(limpo);
+  let corte = 0;
+  let frases = 0;
+  let palavras = 0;
+  for (const fim of fins) {
+    const daFrase = limpo.slice(corte, fim).split(/\s+/).filter(Boolean).length;
+    if (frases > 0 && (frases >= CONCEITO_CURTO.frases || palavras + daFrase > CONCEITO_CURTO.palavras)) break;
+    frases += 1;
+    palavras += daFrase;
+    corte = fim;
+  }
+  return { inicio: limpo.slice(0, corte).trim(), resto: limpo.slice(corte).trim() };
+}
+
+/**
+ * Banca da noite §7 (spec 04): as frases entre aspas no idioma da lição (fora do português), na ordem do texto e sem
+ * repetir. Saem do parágrafo como links e viram a lista com o botão "Ouvir". Uma citação em português (com acento) fica
+ * no texto.
+ */
+export function falasDoTexto(texto: string, idioma?: string): string[] {
+  if (!idioma || idioma.toLowerCase().startsWith('pt')) return [];
+  const lista: string[] = [];
+  for (const [, frase] of texto.matchAll(/“([^”]+)”/g)) {
+    const limpa = frase.trim();
+    if (limpa && !/[ãõçáéíóúâêôà]/i.test(limpa) && !lista.includes(limpa)) lista.push(limpa);
+  }
+  return lista;
+}

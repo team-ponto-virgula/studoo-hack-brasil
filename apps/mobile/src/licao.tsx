@@ -3,6 +3,7 @@ import type { ClienteEstudio, NomeStu } from '@studoo/contratos';
 import type { ClienteElegibilidadeVoz } from './voz-ao-vivo-painel';
 import {
   acertouParte,
+  conceitoEmBlocos,
   embaralharExercicio,
   etapasDaLicao,
   exerciciosDaLicao,
@@ -28,13 +29,13 @@ import {
   TranscritorContexto,
   Associar,
   CampoAberta,
+  ConceitoEmBlocos,
   CorrecaoAberta,
   Escuta,
   EtapaPratica,
   Falas,
   Passos,
   RecursoDaLicao,
-  TextoComFalas,
   Trecho,
   VerdadeiroFalso,
   pararVoz,
@@ -243,6 +244,14 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const [explicacaoAberta, setExplicacaoAberta] = useState(false);
   /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. Como na web. */
   const [ponteFeita, setPonteFeita] = useState(false);
+  /** O resto do conceito, depois das 3 primeiras frases, está aberto (spec 04, banca da noite §7). */
+  const [conceitoAberto, setConceitoAberto] = useState(false);
+  const restoDoConceito = useRef<ComponentRef<typeof Text>>(null);
+  /** Onde fica o balão do Stu na etapa e, dentro dele, o corte do conceito ("Continuar lendo" e, aberto, o resto). */
+  const explicacaoY = useRef(0);
+  const corteDoConceitoY = useRef(0);
+  /** O resto acabou de abrir: quando ele tiver medida, a tela desce até ele se ficou abaixo da parte visível. */
+  const rolarAoResto = useRef(false);
   /** Citação aberta no conceito (a primeira, quando a lição veio do material), como na web. */
   const [citacaoAberta, setCitacaoAberta] = useState<number | null>(() => (licao.referencias?.length ? 0 : null));
   /** Pontes vencidas nesta visita, por exercício: o Stu comemora a travessia e a conclusão conta a ponte. Como na web. */
@@ -352,9 +361,37 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setTemMais((antes) => (antes === novo ? antes : novo));
   }
 
-  /** "Continuar lendo": rola mais um pedaço do conteúdo. */
+  /**
+   * "Continuar lendo": rola mais um pedaço do conteúdo. No conceito com o resto ainda recolhido e o "Continuar lendo" do
+   * balão na tela ou abaixo dela, o do rodapé faz o mesmo que ele: abre o resto no lugar (os dois botões de mesmo nome
+   * fazem a mesma coisa). Depois, volta a rolar.
+   */
   function lerMais() {
+    const recolhido = etapa.tipo === 'conceito' && !conceitoAberto && conceitoEmBlocos(licao.conceito).resto !== '';
+    if (recolhido && explicacaoY.current + corteDoConceitoY.current >= posicaoRolagem.current) {
+      abrirConceito();
+      return;
+    }
     rolagem.current?.scrollTo({ y: posicaoRolagem.current + alturaVisivel.current * 0.75, animated: reduzir === false });
+  }
+
+  /** Abre o resto do conceito no lugar do "Continuar lendo" do balão (banca da noite §7). */
+  function abrirConceito() {
+    rolarAoResto.current = true;
+    setConceitoAberto(true);
+  }
+
+  /** O corte do conceito mediu: com o resto recém-aberto, a tela desce até ele se ficou abaixo da parte visível. */
+  function medirCorteDoConceito(y: number) {
+    corteDoConceitoY.current = y;
+    if (!rolarAoResto.current || !conceitoAberto) return;
+    rolarAoResto.current = false;
+    const alvo = explicacaoY.current + y;
+    if (alvo + 48 > posicaoRolagem.current + alturaVisivel.current) {
+      rolagem.current?.scrollTo({ y: Math.max(0, alvo - alturaVisivel.current * 0.25), animated: reduzir === false });
+    }
+    // O leitor de tela vai para a continuação (o botão saiu).
+    if (restoDoConceito.current) AccessibilityInfo.sendAccessibilityEvent(restoDoConceito.current, 'focus');
   }
 
   /** Leva até o "Como foi?" da prática (no fim do cronômetro ou ao concluir sem contar como foi). */
@@ -761,9 +798,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               </View>
             )}
             <Text style={estilos.introducao}>{licao.objetivo}</Text>
-            <ExplicacaoDoStu>
+            <ExplicacaoDoStu aoMedir={(y) => { explicacaoY.current = y; }}>
               <Text accessibilityRole="header" style={licaoEstilos.balaoTitulo}>{t.explicacaoDoStu}</Text>
-              <TextoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} estilo={estilos.texto} />
+              {/* Banca da noite §7: até 3 frases, "Continuar lendo" que abre no lugar e as frases com áudio numa lista com "Ouvir". */}
+              <ConceitoEmBlocos texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} aberto={conceitoAberto} abrir={abrirConceito}
+                aoMedirCorte={medirCorteDoConceito} restoRef={restoDoConceito} />
               {/* O marcador fica no bloco, não numa frase: a referência é da lição inteira (não garante o apoio de uma frase). */}
               {!!licao.referencias?.length && (
                 <View style={licaoEstilos.marcadores}>
@@ -982,10 +1021,10 @@ function BarraDaAula({ fracao, certa }: { fracao: number; certa: boolean }) {
 }
 
 /** O Stu explica o conceito num balão (spec 13): `stu-feliz` de 58 no halo lavanda, que se mexe uma vez quando a etapa entra. */
-function ExplicacaoDoStu({ children }: { children: ReactNode }) {
+function ExplicacaoDoStu({ children, aoMedir }: { children: ReactNode; aoMedir?: (y: number) => void }) {
   const balao = useAparecer(120, 420, true);
   return (
-    <View style={licaoEstilos.explicacao}>
+    <View style={licaoEstilos.explicacao} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y)}>
       <Stu nome="stu-feliz" tamanho={58} halo animado="uma-vez" estilo={licaoEstilos.stu} />
       <Animated.View style={[licaoEstilos.balao, {
         opacity: balao, transform: [{ scale: balao.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) }],

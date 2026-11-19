@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
+import { conceitoEmBlocos, falasDoTexto, fimDasFrases } from '../packages/contratos/src/licao.ts';
 
 // Revisão de banca da noite (19–20/11, spec 04): o que o app segue em cada item, item por item.
 const estudo = await readFile(new URL('../apps/mobile/src/estudo.tsx', import.meta.url), 'utf8');
@@ -48,4 +49,52 @@ test('§6 geração: sem os três pontos no alto, a dica da placa em 14/20 #0B1B
   assert.match(caminho, /discretoResumo: \{ marginTop: 2, color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontSize: 13,/);
   // O nome do nó que nasce fica na cor secundária, sem opacidade parada (só a entrada de 220 ms da spec 04).
   assert.match(caminho, /discretoTexto: \{\n\s*color: cores\.textoSecundario,/);
+});
+
+// A aula de inglês da demonstração (src/servidor/ia/demos.ts): 3 frases, 72 palavras e 6 frases com áudio.
+const INGLES = 'Para começar uma conversa em inglês, três frases curtas resolvem: um cumprimento (“Hello!”, olá), seu nome (“I\'m Ana”, eu sou a Ana) e de onde você vem (“I\'m from Brazil”, eu sou do Brasil). “Nice to meet you” (prazer em conhecer) mostra simpatia. Na imigração do aeroporto, o agente pergunta o motivo da viagem (“What is the purpose of your visit?”), e você responde: “I\'m here on vacation” (estou aqui de férias).';
+
+test('§7 conceito: as frases terminam fora das aspas, dos parênteses e das abreviações', () => {
+  const frases = (texto) => fimDasFrases(texto).map((fim, i, fins) => texto.slice(i ? fins[i - 1] : 0, fim).trim());
+  assert.deepEqual(frases('Ele disse “How are you?” e sorriu. Depois foi embora.'), ['Ele disse “How are you?” e sorriu.', 'Depois foi embora.']);
+  assert.deepEqual(frases('Responda: “I\'m here on vacation.” Depois agradeça.'), ['Responda: “I\'m here on vacation.”', 'Depois agradeça.']);
+  assert.deepEqual(frases('Pergunte “Where is…?” (onde fica…?). Na resposta, ouça. No fim, agradeça: “Thank you!”'),
+    ['Pergunte “Where is…?” (onde fica…?).', 'Na resposta, ouça.', 'No fim, agradeça: “Thank you!”']);
+  assert.deepEqual(frases('O Sr. Silva e J. K. Rowling chegaram. Custou 4.99 e 1.000. Fim!'), ['O Sr. Silva e J. K. Rowling chegaram.', 'Custou 4.99 e 1.000.', 'Fim!']);
+  assert.deepEqual(frases('Linha um\nLinha dois. Três.'), ['Linha um', 'Linha dois.', 'Três.']);
+});
+
+test('§7 conceito: até 3 frases e cerca de 50 palavras no balão; o resto em "Continuar lendo"', () => {
+  // A de inglês: as duas primeiras frases (43 palavras) no balão; a terceira passaria de 60.
+  const { inicio, resto } = conceitoEmBlocos(INGLES);
+  assert.match(inicio, /mostra simpatia\.$/);
+  assert.match(resto, /^Na imigração do aeroporto/);
+  // Até 3 frases curtas: cabe tudo. A quarta frase vai para o resto, mesmo curta.
+  assert.deepEqual(conceitoEmBlocos('Um. Dois. Três.'), { inicio: 'Um. Dois. Três.', resto: '' });
+  assert.deepEqual(conceitoEmBlocos('A luz muda tudo. A janela ajuda. O sol do meio-dia, não. A hora dourada é a melhor.'),
+    { inicio: 'A luz muda tudo. A janela ajuda. O sol do meio-dia, não.', resto: 'A hora dourada é a melhor.' });
+  // Uma frase só, longa, fica inteira (nunca menos de uma frase).
+  const longa = `${'palavra '.repeat(80).trim()}.`;
+  assert.deepEqual(conceitoEmBlocos(longa), { inicio: longa, resto: '' });
+});
+
+test('§7 conceito: as frases com áudio viram uma lista, na ordem, sem repetir e só fora do português', () => {
+  assert.deepEqual(falasDoTexto(conceitoEmBlocos(INGLES).inicio, 'en-US'), ['Hello!', "I'm Ana", "I'm from Brazil", 'Nice to meet you']);
+  assert.deepEqual(falasDoTexto(INGLES, 'en-US').slice(4), ['What is the purpose of your visit?', "I'm here on vacation"]);
+  assert.deepEqual(falasDoTexto('Diga “Hello” e “Hello” de novo, como em “olá, tudo bem?”.', 'en-US'), ['Hello']);
+  assert.deepEqual(falasDoTexto(INGLES, 'pt-BR'), []);
+  assert.deepEqual(falasDoTexto(INGLES, undefined), []);
+});
+
+test('§7 conceito no app: sem links no meio do parágrafo, "Continuar lendo" que abre no lugar e "Ouvir" de 44', async () => {
+  const formatos = await readFile(new URL('../apps/mobile/src/aula-formatos.tsx', import.meta.url), 'utf8');
+  const licao = await readFile(new URL('../apps/mobile/src/licao.tsx', import.meta.url), 'utf8');
+  assert.doesNotMatch(formatos, /TextoComFalas|falaInline|toqueParaOuvir/, 'as frases não são mais links no parágrafo');
+  assert.match(licao, /<ConceitoEmBlocos texto=\{licao\.conceito\} idioma=\{licao\.falas\?\.\[0\]\?\.idioma\} aberto=\{conceitoAberto\} abrir=\{abrirConceito\}/);
+  assert.match(formatos, /<Botao testID="conceito-continuar" rotulo=\{t\.continuarLendo\} variante="texto" compacto icone="seta" giroIcone="90deg" acao=\{abrir\} \/>/);
+  assert.match(formatos, /const falas = falasDoTexto\(aberto \|\| !resto \? texto : inicio, idioma\);/, 'a lista acompanha o texto à vista');
+  assert.match(formatos, /ouvirFrase: \{ flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44,/);
+  assert.match(formatos, /<Icone nome="som" tamanho=\{18\} cor=\{cores\.acaoEscura\} \/>\n\s*<Text style=\{formatos\.ouvirFraseTexto\}>\{t\.audio\.ouvir\}<\/Text>/);
+  // O "Continuar lendo" do rodapé faz o mesmo que o do balão enquanto o resto está recolhido.
+  assert.match(licao, /if \(recolhido && explicacaoY\.current \+ corteDoConceitoY\.current >= posicaoRolagem\.current\) \{\n\s*abrirConceito\(\);/);
 });
