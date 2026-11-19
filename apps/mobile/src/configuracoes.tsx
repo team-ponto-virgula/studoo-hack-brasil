@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
-  AccessibilityInfo, Animated, Easing, Image, Keyboard, Modal, Pressable, ScrollView, StyleSheet, Text, View,
+  AccessibilityInfo, Animated, Easing, Image, Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View,
   type LayoutChangeEvent, type StyleProp, type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -13,8 +13,10 @@ import {
 import { origemConfigurada, type ClienteNativo } from './api-nativa';
 import { FIM_COM_BARRA } from './comunidade';
 import { Icone } from './icone';
-import { AvisoDoApp, Botao, BotaoIcone, Campo, Tela, Titulo, degrade, degrauFora, useMovimentoReduzido } from './interface';
+import { AvisoDoApp, Botao, BotaoIcone, Campo, FolhaDeAcoes, Tela, Titulo, degrade, degrauFora, useMovimentoReduzido } from './interface';
+import { useDepoisDeSair } from './janelas';
 import { mensagens } from './mensagens';
+import { RecorteImagem, escolherImagem, type ImagemParaRecortar } from './recorte';
 import { Esqueleto, Ficha, codigoDoErro, socialEstilos, textoDoErro } from './social';
 import { cores, fontes, raios } from './tema';
 import type { NomeIcone } from './trilha';
@@ -186,7 +188,12 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
   const [erros, setErros] = useState<Partial<Record<CampoDaTela, string>>>({});
   const [estados, setEstados] = useState(SEM_ESTADO);
   const [galeria, setGaleria] = useState(false);
+  /** "Usar uma foto": a folha com galeria e câmera (em tela de toque) e, escolhida a imagem, o recorte 2:1 do Studoo. */
+  const [origemDaFoto, setOrigemDaFoto] = useState(false);
+  const [paraRecortar, setParaRecortar] = useState<ImagemParaRecortar | null>(null);
   const { avisar } = useContext(AvisoDoApp);
+  // Como no perfil: "Tirar foto" só em tela de toque (no aparelho, sempre); no computador, o seletor abre direto.
+  const toque = Platform.OS !== 'web' || (typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches === true);
 
   // O que está na tela agora, para salvar o que ficou pendente quando a pessoa sai sem tirar o foco do campo (no app,
   // tocar em "Voltar" ou na barra de baixo não tira o foco sozinho, como o clique faz na web).
@@ -256,6 +263,24 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
     if (motivo) { if (montada.current) setErros((antes) => ({ ...antes, descricao: mensagens.comunidade.legendaErros[motivo] })); return; }
     if (montada.current) setDescricao(normal);
     void salvar('descricao', { descricao: normal || null });
+  }
+
+  /** A galeria ou a câmera do sistema (P18); o recorte é o do Studoo. */
+  async function buscarFoto(camera: boolean) {
+    setErros((antes) => ({ ...antes, capa: undefined }));
+    try {
+      const imagem = await escolherImagem(camera);
+      if (imagem && montada.current) setParaRecortar(imagem);
+    } catch {
+      if (montada.current) setErros((antes) => ({ ...antes, capa: mensagens.perfil.fotoIlegivel }));
+    }
+  }
+
+  async function enviarFoto(base64: string) {
+    const novo = await cliente.enviarCapa(planoId, base64);
+    aoMudar(novo);
+    if (montada.current) { setConf(novo); setParaRecortar(null); }
+    avisar(k.capaSalva, { icone: 'check' });
   }
 
   // Ao sair da tela (Voltar, barra de baixo, voltar do aparelho), o que ficou escrito e ainda vale é salvo.
@@ -380,13 +405,26 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
         )}
       </View>
 
-      {galeria && conf && (
-        <GaleriaDeCapas atual={conf.capa} semente={conf.semente} tema={conf.tema} aoFechar={() => setGaleria(false)}
+      {conf && (
+        <GaleriaDeCapas visivel={galeria} atual={conf.capa} semente={conf.semente} tema={conf.tema} aoFechar={() => setGaleria(false)}
+          // A foto usa a mesma flag da foto do perfil (com o compartilhar ligado).
+          aoUsarFoto={compartilhar ? () => (toque ? setOrigemDaFoto(true) : void buscarFoto(false)) : undefined}
           aoEscolher={async (capa) => {
             const salvou = await salvar('capa', { capa });
             if (salvou) avisar(k.capaSalva, { icone: 'check' });
             return salvou;
           }} />
+      )}
+      <FolhaDeAcoes visivel={origemDaFoto} titulo={k.usarFoto} cancelarRotulo={mensagens.perfil.fotoMenuCancelar} testID="folha-capa-foto"
+        aoFechar={() => setOrigemDaFoto(false)}
+        acoes={[
+          { rotulo: mensagens.perfil.fotoGaleria, icone: 'imagem', testID: 'capa-foto-galeria', aoEscolher: () => void buscarFoto(false) },
+          { rotulo: mensagens.perfil.fotoCamera, icone: 'camera', testID: 'capa-foto-camera', aoEscolher: () => void buscarFoto(true) },
+        ]} />
+      {paraRecortar && (
+        // A foto da capa: o mesmo recorte do perfil, na proporção da capa (2:1), com a área dos selos marcada.
+        <RecorteImagem imagem={paraRecortar} proporcao={2} titulo={k.capaFotoTitulo} dica={k.capaFotoDica} aviso={k.capaFotoAviso} comSelos
+          aoCancelar={() => setParaRecortar(null)} enviar={enviarFoto} />
       )}
     </Tela>
   );
@@ -408,11 +446,15 @@ function Voltar({ acao }: { acao: () => void }) {
  * prontas, em duas colunas (três a partir de 600 de largura). É um grupo de escolha única: a escolhida tem a borda azul e
  * o visto no canto; escolher salva, mostra o visto na capa nova e fecha a folha em 300 ms.
  */
-function GaleriaDeCapas({ atual, semente, tema, aoFechar, aoEscolher }: {
+function GaleriaDeCapas({ visivel, atual, semente, tema, aoFechar, aoEscolher, aoUsarFoto }: {
+  /** A folha fica montada e só liga e desliga: no iPhone, o que abre depois dela (a galeria de fotos) espera a folha sair. */
+  visivel: boolean;
   atual: string | null;
   semente: string;
   tema: Tema | null;
   aoFechar: () => void;
+  /** "Usar uma foto": fecha a folha e abre a escolha da foto. Sem ele (compartilhar desligado), o botão não aparece. */
+  aoUsarFoto?: () => void;
   /** Salva a capa escolhida; devolve se salvou (com erro, a folha continua aberta para outra tentativa). */
   aoEscolher: (capa: string | null) => Promise<boolean>;
 }) {
@@ -423,13 +465,22 @@ function GaleriaDeCapas({ atual, semente, tema, aoFechar, aoEscolher }: {
   const [marcada, setMarcada] = useState<string | null>(atual);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState(false);
-  const aberta = useRef(true);
-  useEffect(() => () => { aberta.current = false; }, []);
+  const { depoisDeSair, aoSair } = useDepoisDeSair();
+  const aberta = useRef(visivel);
+  aberta.current = visivel;
+  // A cada abertura: a folha sobe de novo e mostra a capa de agora.
   useEffect(() => {
+    if (!visivel) return;
+    setMarcada(atual);
+    setEnviando(false);
+    setErro(false);
+    subida.setValue(0);
     const entrada = Animated.timing(subida, { toValue: 1, duration: reduzir !== false ? 120 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: true });
     entrada.start();
     return () => entrada.stop();
-  }, [reduzir, subida]);
+    // Só ao abrir: a capa muda durante a escolha, e a folha não recomeça por isso.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visivel, reduzir, subida]);
 
   const opcoes: { id: string | null; nome: string; dica?: string }[] = [
     ...(ehCapaFoto(atual) ? [{ id: atual, nome: k.suaFoto }] : []),
@@ -454,7 +505,8 @@ function GaleriaDeCapas({ atual, semente, tema, aoFechar, aoEscolher }: {
   }
 
   return (
-    <Modal transparent visible animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={() => { if (!enviando) aoFechar(); }}>
+    <Modal transparent visible={visivel} animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={() => { if (!enviando) aoFechar(); }}
+      onDismiss={aoSair}>
       <View style={confEstilos.folhaFundo}>
         <Pressable testID="galeria-fundo" accessible={false} style={StyleSheet.absoluteFill} onPress={() => { if (!enviando) aoFechar(); }} />
         <Animated.View testID="galeria-capas" accessibilityViewIsModal style={[confEstilos.folha, { paddingBottom: 20 + margens.bottom, opacity: subida,
@@ -466,6 +518,14 @@ function GaleriaDeCapas({ atual, semente, tema, aoFechar, aoEscolher }: {
           </View>
           {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{mensagens.erros.falha}</Text>}
           <ScrollView bounces={false} showsVerticalScrollIndicator={false} contentContainerStyle={confEstilos.folhaConteudo}>
+            {aoUsarFoto && (
+              // O botão ocupa a largura da folha, e a ajuda vai embaixo, numa linha só (revisão de 19/11, item 3).
+              <View style={confEstilos.usarFoto}>
+                <Botao rotulo={k.usarFoto} iconeAntes="camera" variante="secundario" testID="capa-usar-foto" desativado={enviando}
+                  acao={() => { aoFechar(); depoisDeSair(aoUsarFoto); }} />
+                <Text style={confEstilos.dica}>{k.usarFotoAjuda}</Text>
+              </View>
+            )}
             <View accessibilityRole="radiogroup" accessibilityLabel={k.capaTitulo} style={confEstilos.grade}
               onLayout={(evento: LayoutChangeEvent) => setLargura(evento.nativeEvent.layout.width)}>
               {ladoDaCapa > 0 && opcoes.map((opcao) => {
@@ -556,7 +616,8 @@ const confEstilos = StyleSheet.create({
   folhaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
   // .folha-titulo da web: 22/27,5.
   folhaTitulo: { flexShrink: 1, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 27.5, letterSpacing: -0.33 },
-  folhaConteudo: { paddingBottom: 4 },
+  folhaConteudo: { gap: 14, paddingBottom: 4 },
+  usarFoto: { gap: 6 },
   // A grade: 12 entre as colunas e 14 entre as linhas.
   grade: { flexDirection: 'row', flexWrap: 'wrap', columnGap: VAO_DA_GRADE, rowGap: 14 },
   opcao: { gap: 6 },

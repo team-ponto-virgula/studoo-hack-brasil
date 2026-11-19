@@ -11,6 +11,8 @@ const ler = (caminho) => readFile(new URL(`../${caminho}`, import.meta.url), 'ut
 const app = await ler('apps/mobile/src/configuracoes.tsx');
 const web = await ler('src/app/configuracoes.tsx');
 const estudo = await ler('apps/mobile/src/estudo.tsx');
+const recorte = await ler('apps/mobile/src/recorte.tsx');
+const perfil = await ler('apps/mobile/src/perfil.tsx');
 const k = mensagens.configuracoes;
 
 /** A posição de cada trecho no arquivo, na ordem pedida; falha se um faltar. */
@@ -23,9 +25,10 @@ function posicoes(fonte, trechos, onde) {
 }
 const crescente = (lista) => lista.every((valor, indice) => indice === 0 || valor > lista[indice - 1]);
 
-test('os textos da tela vêm do contrato, nenhum escrito no JSX', () => {
-  const fonte = ts.createSourceFile('configuracoes.tsx', app, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
+test('os textos da tela e do recorte vêm do contrato, nenhum escrito no JSX', () => {
   const achados = [];
+  for (const [nome, codigo] of [['configuracoes.tsx', app], ['recorte.tsx', recorte]]) {
+  const fonte = ts.createSourceFile(nome, codigo, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
   const visitar = (no) => {
     if (ts.isJsxText(no) && /\p{L}/u.test(no.text)) achados.push(no.text.trim());
     if (ts.isJsxAttribute(no) && no.initializer && ts.isStringLiteral(no.initializer)
@@ -34,6 +37,7 @@ test('os textos da tela vêm do contrato, nenhum escrito no JSX', () => {
     ts.forEachChild(no, visitar);
   };
   visitar(fonte);
+  }
   assert.deepEqual(achados, []);
 });
 
@@ -84,8 +88,67 @@ test('a capa é desenhada pelo contrato, e a galeria é um grupo de escolha úni
 });
 
 test('sem janela do sistema: a galeria é uma folha do Studoo, sem apresentação nativa nem seletor', () => {
-  assert.doesNotMatch(app, /presentationStyle|ActionSheetIOS|Alert\b|ToastAndroid|Picker\b/);
-  assert.match(app, /<Modal transparent visible animationType="fade"/);
+  for (const fonte of [app, recorte]) assert.doesNotMatch(fonte, /presentationStyle|ActionSheetIOS|Alert\b|ToastAndroid|\bSlider\b/);
+  assert.match(app, /<Modal transparent visible=\{visivel\} animationType="fade"/);
+  // A folha fica montada e avisa quando saiu: no iPhone, a escolha da foto só abre depois dela (janelas.ts).
+  assert.match(app, /onDismiss=\{aoSair\}/);
+  assert.match(app, /acao=\{\(\) => \{ aoFechar\(\); depoisDeSair\(aoUsarFoto\); \}\}/);
+});
+
+test('a capa com foto: galeria ou câmera do sistema, sem o recorte do sistema, e o recorte 2:1 do Studoo com a área dos selos', () => {
+  // Do sistema ficam só a galeria e a câmera (spec 07, P18): o seletor abre sem edição, e o recorte é o componente do app.
+  assert.match(recorte, /allowsEditing: false/);
+  assert.doesNotMatch(app, /allowsEditing/);
+  assert.match(app, /<RecorteImagem imagem=\{paraRecortar\} proporcao=\{2\} titulo=\{k\.capaFotoTitulo\} dica=\{k\.capaFotoDica\} aviso=\{k\.capaFotoAviso\} comSelos/);
+  assert.match(app, /cliente\.enviarCapa\(planoId, base64\)/);
+  // "Usar uma foto" na largura da folha, com a ajuda embaixo, numa linha só; a escolha entre galeria e câmera é a folha do Studoo.
+  assert.match(app, /<Botao rotulo=\{k\.usarFoto\} iconeAntes="camera" variante="secundario" testID="capa-usar-foto"/);
+  assert.equal(k.usarFotoAjuda, 'JPG, PNG ou WebP, até 2 MB.');
+  assert.match(app, /<FolhaDeAcoes visivel=\{origemDaFoto\} titulo=\{k\.usarFoto\}/);
+  assert.equal(k.capaFotoDica, 'Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.');
+  // O véu da foto só nos 45% de cima.
+  assert.match(app, /capaVeu: \{ position: 'absolute', left: 0, right: 0, top: 0, height: '45%' \}/);
+});
+
+test('a foto do perfil usa o mesmo recorte, quadrado, no lugar do recorte do sistema', () => {
+  assert.doesNotMatch(perfil, /allowsEditing|expo-image-picker|expo-image-manipulator/, 'o seletor e a redução da imagem moram em recorte.tsx');
+  assert.match(perfil, /const imagem = await escolherImagem\(camera\);/);
+  // Sem `proporcao`, o recorte é 1:1, com o círculo do avatar e os textos do perfil.
+  assert.match(perfil, /<RecorteImagem imagem=\{paraRecortar\} aoCancelar=\{\(\) => setParaRecortar\(null\)\} enviar=\{enviarFotoRecortada\} \/>/);
+  assert.match(recorte, /proporcao = 1, titulo = p\.recorteTitulo, dica = p\.recorteDicaToque, aviso = p\.fotoAviso/);
+  assert.match(perfil, /atualizarPerfil\(await cliente\.enviarFoto\(base64\)\);/);
+});
+
+test('o recorte faz a conta da web: a foto cobre o quadro e sai com 256 a 1024 px de largura', async () => {
+  // As funções puras do recorte, tiradas do arquivo e avaliadas aqui (sem React Native).
+  const trecho = (nome) => {
+    const inicio = recorte.indexOf(`export function ${nome}`);
+    assert.ok(inicio >= 0, `${nome} não encontrada`);
+    return recorte.slice(inicio, recorte.indexOf('\n}\n', inicio) + 3).replace('export ', '');
+  };
+  const js = ts.transpileModule(`const LADO_ENVIO_FOTO = 1024;\n${trecho('retanguloDoRecorte')}\n${trecho('limitarPosicao')}\n${trecho('bytesDoBase64')}\nexport { retanguloDoRecorte, limitarPosicao, bytesDoBase64 };`,
+    { compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const { retanguloDoRecorte, limitarPosicao, bytesDoBase64 } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+
+  // Foto 4000 × 3000 num quadro de 330 de largura, 2:1, sem zoom e centrada: a largura toda e a faixa do meio.
+  const foto = { largura: 4000, altura: 3000 };
+  const quadro = { largura: 330, proporcao: 2 };
+  const escala = 330 / 4000;
+  const centro = retanguloDoRecorte(foto, quadro, { zoom: 1, x: 0, y: (165 - 3000 * escala) / 2 });
+  assert.deepEqual(centro, { originX: 0, originY: 500, width: 4000, height: 2000, saida: 1024 });
+  // Com zoom 4 no canto de cima à esquerda: um quarto da largura; a saída acompanha (1000 px).
+  assert.deepEqual(retanguloDoRecorte(foto, quadro, { zoom: 4, x: 0, y: 0 }), { originX: 0, originY: 0, width: 1000, height: 500, saida: 1000 });
+  // Foto pequena: a saída não cai abaixo de 256.
+  assert.equal(retanguloDoRecorte({ largura: 200, altura: 200 }, { largura: 300, proporcao: 1 }, { zoom: 1, x: 0, y: 0 }).saida, 256);
+  // O retângulo nunca passa da borda, mesmo com uma posição fora do limite.
+  const fora = retanguloDoRecorte(foto, quadro, { zoom: 2, x: -5000, y: -5000 });
+  assert.ok(fora.originX + fora.width <= 4000 && fora.originY + fora.height <= 3000);
+
+  // A foto nunca deixa o fundo aparecer: a posição fica entre (quadro − tamanho) e 0.
+  assert.deepEqual(limitarPosicao(50, 20, { largura: 660, altura: 495 }, { largura: 330, altura: 165 }), { x: 0, y: 0 });
+  assert.deepEqual(limitarPosicao(-900, -900, { largura: 660, altura: 495 }, { largura: 330, altura: 165 }), { x: -330, y: -330 });
+  assert.equal(bytesDoBase64('QUJD'), 3);
+  assert.equal(bytesDoBase64('QUI='), 2);
 });
 
 test('as entradas: "Configurações" no menu do cartão, entre Compartilhar e Apagar, e a engrenagem no alto do mapa', () => {
