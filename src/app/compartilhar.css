@@ -53,6 +53,13 @@
   @keyframes folha-subir { from { opacity: 0; transform: translateY(24px); } }
 }
 .folha-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin: -6px -6px -10px 0; }
+/* Na folha da trilha, o cabeçalho fica preso no topo ao rolar, com o nome da trilha e o fechar. */
+.folha-topo--preso {
+  position: sticky; top: -20px; z-index: 3; margin: -20px -20px -4px; padding: 16px 14px 10px 20px;
+  border-bottom: 2px solid var(--nevoa); background: var(--fundo);
+}
+.folha-topo__texto { display: grid; gap: 2px; min-width: 0; }
+.folha-topo__trilha { overflow: hidden; margin: 0; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
 .folha-contexto { margin: 0; color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
 .folha-fechar {
   display: grid; width: 44px; height: 44px; place-items: center; border: 0; border-radius: 14px;
@@ -230,6 +237,10 @@ h2.previa-trilha__titulo { font-size: 1.25rem; }
 .pagina-publica__corpo { width: min(100%, 44rem); margin: 0 auto; padding: 24px var(--espaco-pagina) calc(40px + env(safe-area-inset-bottom)); }
 @media (max-width: 767px) { .pagina-publica__corpo { padding: 16px 20px calc(40px + env(safe-area-inset-bottom)); } }
 .pagina-publica__vazio { display: grid; gap: 12px; justify-items: start; }
+/* Link encerrado: o bloco no meio da altura da tela, o botão na largura toda no celular e a saída para o Explorar. */
+.pagina-publica__vazio--centro { min-height: 60svh; align-content: center; justify-items: center; text-align: center; }
+.pagina-publica__vazio--centro h1, .pagina-publica__vazio--centro p { text-wrap: balance; }
+@media (max-width: 599px) { .pagina-publica__vazio--centro .botao { width: 100%; } }
 .pagina-publica__vazio .stu { width: 96px; height: auto; }
 .pagina-publica__vazio h1 { margin: 0; }
 .perfil-publico__cabeca { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }

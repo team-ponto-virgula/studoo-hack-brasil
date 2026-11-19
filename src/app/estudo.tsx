@@ -630,7 +630,9 @@ export function Estudo() {
       </aside>
 
       <div className="estudo-pagina">
-        <header className="estudo-cabecalho">
+        {/* No computador, com o perfil ligado, a faixa do topo só tem o selo "Progresso salvo" (Minhas trilhas e dentro da
+            trilha); nas outras telas fica vazia e some. Sem o perfil, ela leva o "Sair". No celular fica sempre. */}
+        <header className="estudo-cabecalho" data-tela={tela.tipo} data-vazia-no-computador={(compartilhar && !(inicio === 'pronto' && ((tela.tipo === 'planos' && planos.length > 0) || tela.tipo === 'plano'))) || undefined}>
           <span className="estudo-identificacao">
             <span className="estudo-identificacao__contexto">
               {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'explorar' ? mensagens.comunidade.titulo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
@@ -726,7 +728,7 @@ export function Estudo() {
           {visivel && tela.tipo === 'perfil' && (
             <TelaPerfil perfil={perfil} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
               abrirPlano={(id) => void abrirPlano(id)} editar={() => navegar({ tipo: 'editarPerfil' })} sair={() => void sair()}
-              comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} />
+              comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} irParaTrilhas={() => navegar({ tipo: 'planos' })} />
           )}
           {visivel && tela.tipo === 'explorar' && comunidade && (
             <Explorar logado aoAbrir={(id) => void abrirPlano(id)} irParaTrilhas={() => navegar({ tipo: 'planos' })}

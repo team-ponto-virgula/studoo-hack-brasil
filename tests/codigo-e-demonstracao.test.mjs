@@ -149,6 +149,12 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
   const pagina = await (await explorarGet(new Request(`${origem}/api/explorar`, { headers: { origin: origem } }))).json();
   assert.ok([...pagina.emAlta, ...pagina.novas].filter((c) => codigosDemo.includes(c.codigo)).every((c) => c.dono.demo === true), 'selo no dono');
   assert.ok(!JSON.stringify(pagina).includes(DOMINIO_DEMO), 'sem e-mail');
+  // Nenhuma tela mostra dois cartões com o mesmo título nem dois retratos iguais: títulos e retratos únicos.
+  const titulos = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { plano: { select: { titulo: true } } } })).map((l) => l.plano.titulo);
+  assert.equal(new Set(titulos).size, titulos.length, `títulos repetidos: ${titulos.join(' | ')}`);
+  const fotos = await banco.fotoPerfil.findMany({ where: { usuario: DONO_DEMO }, select: { pequena: true } });
+  assert.equal(fotos.length, primeiro.perfis);
+  assert.equal(new Set(fotos.map((f) => Buffer.from(f.pequena).toString('base64'))).size, fotos.length, 'retratos únicos');
 });
 
 test('demonstração: sem a flag no servidor, some do Explorar, do /p e do /t; uma pessoa de verdade que adicionou fica com a cópia ao remover', async () => {

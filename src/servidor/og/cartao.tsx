@@ -150,7 +150,7 @@ export async function imagemDoPerfil(p: { nome: string; cor: CorPerfil; foto: st
         <span style={{ marginTop: 18, fontFamily: "Quicksand", fontSize: 64, color: "#1b2a5e", letterSpacing: -1.5 }}>{p.nome}</span>
         {p.demo && seloDemo()}
         {p.resumo && <span style={{ marginTop: 8, fontFamily: "Nunito", fontWeight: 700, fontSize: 30, color: "#1b2a5e", maxWidth: 1000, lineHeight: 1.3 }}>{p.resumo.length > 110 ? `${p.resumo.slice(0, 108)}…` : p.resumo}</span>}
-        {await rodape(mensagens.perfil.alcance(p.trilhas, p.pessoas))}
+        {await rodape(mensagens.perfil.alcanceItens(p.trilhas, p.pessoas, { semZeros: true }).join(" · "))}
       </div>
     </div>,
   );

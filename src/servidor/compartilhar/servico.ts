@@ -165,7 +165,8 @@ export async function obterPerfil(usuarioId: string): Promise<Perfil> {
     resumo: usuario.perfilResumo || null,
     interesses: temasGuardados(usuario.perfilInteresses),
     foto: usuario.foto?.token ?? null,
-    alcance: { ...alcanceDe(links), ...(comunidadeAtiva() ? { seguidores: await banco.seguir.count({ where: { seguidoId: usuarioId } }) } : {}) },
+    // O mesmo alcance da página pública (só as trilhas no perfil): o total, com as só por link, fica no título da lista.
+    alcance: { ...alcanceDe(links.filter((link) => link.noPerfil)), ...(comunidadeAtiva() ? { seguidores: await banco.seguir.count({ where: { seguidoId: usuarioId } }) } : {}) },
     perfilId: usuario.perfilId,
     publico: links.some((link) => link.noPerfil),
     email: usuario.email,

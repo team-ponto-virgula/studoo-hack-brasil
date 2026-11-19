@@ -304,10 +304,11 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
         {VISIBILIDADES.map((nivel) => {
           const bloqueado = nivel === 'explorar' && deMaterial;
           return (
-            <label key={nivel} className="nivel">
+            <label key={nivel} className="nivel" data-vale={nivel === atual || undefined}>
               <input type="radio" name={`visibilidade-${link.codigo}`} value={nivel} checked={escolhido === nivel} disabled={bloqueado}
                 onChange={() => escolher(nivel)} />
-              <strong>{cm.niveis[nivel].titulo}</strong>
+              {/* "Agora" dentro do cartão do nível que vale de fato (antes de publicar, o Explorar ainda não vale). */}
+              <strong>{cm.niveis[nivel].titulo}{nivel === atual && <span className="nivel__agora">{cm.agora}</span>}</strong>
               <span>{bloqueado ? cm.materialFora : cm.niveis[nivel].texto}</span>
             </label>
           );
@@ -315,6 +316,7 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
       </fieldset>
       {escolhido === 'explorar' && !deMaterial && (
         <div className="publicacao">
+          {!publicada && <p className="publicacao__ainda" role="note">{cm.aindaNaoNoExplorar(cm.niveis[atual].titulo)}</p>}
           <fieldset className="interesses" aria-describedby={ids.tema}>
             <legend>{cm.temaRotulo}</legend>
             <p className="campo-dica" id={ids.tema}>{cm.temaDica}</p>
@@ -346,7 +348,8 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
             {erroLegenda && <p className="campo-erro" id={ids.erro}>{erroLegenda}</p>}
           </div>
           {demonstracao && <p className="folha-aviso" role="note">{cm.demonstracaoAviso}</p>}
-          <div className="folha-acoes recorte__acoes">
+          {/* Publicar e Cancelar ficam presos no rodapé da folha enquanto a pessoa preenche tema e legenda. */}
+          <div className="folha-acoes recorte__acoes publicacao__acoes">
             {publicada
               ? <Botao disabled={ocupado || !mudouPublicacao} aria-busy={ocupado || undefined} onClick={() => void salvar('explorar')}>{ocupado ? p.salvando : cm.salvarPublicacao}</Botao>
               : <Botao disabled={ocupado} aria-busy={ocupado || undefined} onClick={() => void salvar('explorar')}>{ocupado ? cm.publicando : cm.publicar}</Botao>}
@@ -355,7 +358,7 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
         </div>
       )}
       {erro && <p className="campo-erro" role="alert">{erro}</p>}
-      <p className="folha-status" role="status" aria-live="polite">{status}</p>
+      <p className="folha-status somente-leitor" role="status" aria-live="polite">{status}</p>
     </div>
   );
 }
@@ -488,8 +491,12 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
   return (
     <div className="folha-fundo" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !ocupado && etapa !== 'parar') aoFechar(); }}>
       <div className="folha" role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-busy={etapa === 'carregando' || ocupado || undefined} ref={caixa}>
-        <div className="folha-topo">
-          <p className="folha-contexto" aria-hidden={tituloDaEtapa === m.folhaTitulo || undefined}>{tituloDaEtapa === m.folhaTitulo ? '' : m.folhaTitulo}</p>
+        {/* Cabeçalho preso no topo ao rolar: "Compartilhar trilha", o nome da trilha e o fechar. */}
+        <div className="folha-topo folha-topo--preso">
+          <div className="folha-topo__texto">
+            <p className="folha-contexto" aria-hidden={tituloDaEtapa === m.folhaTitulo || undefined}>{tituloDaEtapa === m.folhaTitulo ? '' : m.folhaTitulo}</p>
+            {previa && etapa === 'pronto' && <p className="folha-topo__trilha" aria-hidden="true">{previa.titulo}</p>}
+          </div>
           {etapa !== 'parar' && (
             <button type="button" className="folha-fechar" aria-label={m.fechar} disabled={ocupado} onClick={aoFechar}><Icone nome="fechar" /></button>
           )}
@@ -552,7 +559,7 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
             </div>
             <p className="folha-status" role="status" aria-live="polite">{status}</p>
             <PainelCodigo url={urlDoLink(link.codigo)} titulo={previa.titulo} dica={mensagens.codigo.dicaTrilha} rotulo={mensagens.codigo.rotuloTrilha(previa.titulo)}
-              cor={previa.perfil?.cor} comLink={false} nomeArquivo={`studoo-trilha-${link.codigo}`} />
+              cor={previa.perfil?.cor} comLink={false} nomeArquivo={`studoo-trilha-${link.codigo}`} demonstracao={Boolean(previa.demonstracao)} />
             {comunidade && previa.temaSugerido ? (
               <VisibilidadeDaTrilha link={link} temaSugerido={previa.temaSugerido} deMaterial={previa.deMaterial} demonstracao={Boolean(previa.demonstracao)}
                 aoMudar={(novo) => { setLink(novo); aoMudarLink(planoId, novo); }} />
@@ -612,12 +619,13 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
   const antes = sua ? frase.slice(0, frase.length - nome.length) : '';
   const depois = sua ? '' : frase.slice(nome.length);
   const comCalor = calor && !sua;
+  const jaTem = trilha.situacao === 'adicionada';
   return (
     <article className="previa-trilha" data-calor={comCalor || undefined}>
       {comCalor && (
         <div className="previa-trilha__stu">
           <img className="stu" src="/marca/stu-oi.svg" alt="" width={72} height={79} />
-          <p className="previa-trilha__balao">{m.stuConvite}</p>
+          <p className="previa-trilha__balao">{jaTem ? m.stuDeNovo : m.stuConvite}</p>
         </div>
       )}
       <p className="previa-trilha__de">
@@ -627,7 +635,16 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
       <Titulo className="previa-trilha__titulo" ref={tituloRef} tabIndex={-1}>{trilha.titulo}</Titulo>
       <p className="previa-trilha__meta">{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</p>
       <div className="previa-trilha__acoes">{acoes}</div>
-      {!sua && <p className="previa-trilha__zero">{m.comecaDoZero}</p>}
+      {!sua && <p className="previa-trilha__zero">{jaTem ? m.jaAdicionadaTexto : m.comecaDoZero}</p>}
+      <ol className="previa-trilha__partes">
+        {trilha.partes.map((parte, indice) => (
+          <li key={indice}>
+            <Parte className="previa-trilha__parte">{m.parte(indice + 1)} · {parte.titulo}</Parte>
+            <ol>{parte.licoes.map((licao, i) => <li key={i}><Icone nome="livro" />{licao}</li>)}</ol>
+          </li>
+        ))}
+      </ol>
+      {/* Quem compartilhou vem depois das lições: no alto fica só a linha com a foto e o nome. */}
       {comCalor && (
         <section className="quem-compartilhou" aria-label={m.quemCompartilhou}>
           <Avatar nome={nome} cor={trilha.dono.cor} foto={trilha.dono.foto} tamanho="m" />
@@ -643,14 +660,6 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
           </div>
         </section>
       )}
-      <ol className="previa-trilha__partes">
-        {trilha.partes.map((parte, indice) => (
-          <li key={indice}>
-            <Parte className="previa-trilha__parte">{m.parte(indice + 1)} · {parte.titulo}</Parte>
-            <ol>{parte.licoes.map((licao, i) => <li key={i}><Icone nome="livro" />{licao}</li>)}</ol>
-          </li>
-        ))}
-      </ol>
     </article>
   );
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { compartilharAtivo } from '@/servidor/compartilhar/servico';
+import { compartilharAtivo, comunidadeAtiva } from '@/servidor/compartilhar/servico';
 import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
 import { PaginaPublica, usuarioDaPagina } from '../../publico';
@@ -19,11 +19,12 @@ export default async function LinkInativo() {
   const logado = Boolean(await usuarioDaPagina());
   return (
     <PaginaPublica>
-      <section className="pagina-publica__vazio">
+      <section className="pagina-publica__vazio pagina-publica__vazio--centro">
         <Stu />
         <h1>{m.inativo}</h1>
         <p className="folha-texto">{m.inativoTexto}</p>
         <a className="botao botao--primario" href={logado ? '/' : '/login'}>{m.criarMinha}</a>
+        {comunidadeAtiva() && <a className="botao botao--texto" href="/explorar">{m.verExplorar}</a>}
       </section>
     </PaginaPublica>
   );

@@ -322,3 +322,33 @@ CREATE INDEX "Seguir_seguidoId_criadoEm_idx" ON "Seguir"("seguidoId", "criadoEm"
 - `revisarConteudo` chamado antes de gravar, e nada gravado quando recusa.
 
 Todos os testes da comunidade conferem só o que criam: passam com e sem o conteúdo de demonstração no banco.
+
+## Rodada de banca (19/11): perfil, Explorar e compartilhar
+
+Três pareceres de jurado (perfil 7,5; Explorar 7; compartilhar 7). Textos novos em `experiencia.ts` (o app herda).
+
+### Perfil
+- **Página de outra pessoa:** com a conta aberta, `/p` e `/t` ganham "← Voltar" no topo (volta para de onde a pessoa veio no Studoo; sem histórico, vai ao Explorar).
+- **O cartão mostra o que a página pública mostra:** o alcance da dona (`GET /api/perfil`) conta só as trilhas no perfil, como o `/p`; o total, com as trilhas só com o link, vai no título "Trilhas que você compartilha (N)". Com erro no campo, a prévia fica com o último valor salvo.
+- **Linha de alcance:** cada item inteiro (sem quebra no meio), sem a bolinha; na página pública, item zerado não aparece (`alcanceItens(..., { semZeros })`). A imagem de prévia do perfil usa a mesma conta.
+- **Um verbo só:** "N estudando" (cartão), "N pessoas estudando suas trilhas" (alcance), "N pessoa(s) estudando" (lista), "N pessoas começaram a estudar “X”" (Novidades). Na lista da dona, sem ninguém: "Ainda ninguém estudando nem mandou valeu".
+- **Privacidade:** a mesma frase sob o nome, sob a prévia e no recorte ("Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu e-mail nunca aparece."); "e-mail" nunca quebra (marcadores de junção em volta do hífen); "Só você vê" ao lado do e-mail em Conta.
+- **Campo com erro:** borda de 2 px em #c23b4e (o foco vira anel externo), a mensagem logo abaixo com ícone de alerta e o texto de ajuda escondido enquanto o erro durar.
+- **Novidades** logo abaixo do cartão; no computador largo (1240 px ou mais), na coluna da direita. Mesmo respiro em todos os tipos; só nomes e título em negrito.
+- Controle "Aproximar" do recorte com trilho de 8 px, trecho preenchido em azul e bolinha de 28 px (toque de 44 px); barra de salvar numa linha em 360; título "Perfil" no tamanho de título de página; o "•••" do "Seu próximo passo" dentro da ilustração.
+
+### Explorar
+- **Dados de exemplo sem repetição:** o teste da demonstração exige títulos e retratos únicos; a Ana das capturas tem retrato e títulos só dela.
+- **Capa:** o tema sempre inteiro no alto; "Demonstração" embaixo à esquerda; o numeral do Em alta embaixo à direita.
+- **Fileiras:** fichas de tema numa linha só, rolável, com as setas do Em alta no computador; no celular, fichas e Em alta vão até a borda da tela; esmaecimento de 24 px na borda que ainda tem conteúdo; setas desligadas no começo e no fim.
+- Aba "Comunidade | Seguindo" e ficha "Todos os temas"; com tema escolhido, "Em alta em Idiomas esta semana".
+- **Faixa do topo** (computador): hoje só leva o selo "Progresso salvo" (Minhas trilhas e dentro da trilha); nas outras telas some. Sem o perfil ligado, leva o "Sair" e fica.
+- Na própria trilha, "Abrir minha trilha" e "Compartilhar" com ícone e palavra; denúncia sem motivo marcado ("Enviar" só liga com motivo), com o alvo nomeado («"Título", de Nome») e "a equipe do Studoo revisa"; uma linha explica "Demonstração" enquanto houver conteúdo simulado na tela; sem conta, "Entre para estudar e mandar valeu." com o botão ao lado.
+- Cartão: título com duas linhas reservadas em fileira e grade (uma no celular), contagem e números ancorados acima dos botões; "por" em cinza com só o nome sublinhado e o retrato dentro do link; contornos dos controles com 3:1; "Continuar" em azul claro; capas mais baixas no celular.
+
+### Compartilhar e Código Studoo
+- Antes de publicar: "Ainda não está no Explorar. Agora: <nível que vale>." e "Publicar"/"Cancelar" presos no rodapé da folha; "Agora" dentro do cartão do nível que vale; cabeçalho da folha preso no topo com "Compartilhar trilha", o nome da trilha e o fechar.
+- Nota da folha: "Quem abrir vê seu nome, sua foto e seu resumo. Suas respostas e seu progresso não vão junto."; a folha do perfil diz sob o código o que o perfil público mostra.
+- **Moldura do código sempre no azul da marca** (folha e imagem baixada); a cor da pessoa só no miolo dos olhos e no centro. No modo apresentação, sem moldura, com a marca embaixo e título, código e dica num bloco só. Trilha de demonstração leva o selo "Demonstração" sob o título na imagem baixada e na apresentação.
+- Ações do código numa grade de duas colunas iguais (vão de 10 px); abaixo de 400 px, uma por linha. "Compartilhar" é o botão principal na folha do perfil; "Apresentar" com ícone de tela cheia.
+- `/t`: já adicionada diz "Ela já está nas suas trilhas. Continue de onde parou." e o Stu, "Que bom te ver de novo!"; "Quem compartilhou" vem depois das lições; link encerrado centrado, botão na largura toda no celular e "Ver trilhas no Explorar".

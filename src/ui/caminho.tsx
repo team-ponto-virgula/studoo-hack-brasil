@@ -34,7 +34,8 @@ function selosDoNo(no: NoCaminho): { icone: NomeIcone; texto: string }[] {
 }
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
-  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha';
+  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha'
+  | 'elo' | 'telaCheia' | 'alerta' | 'setaVoltar' | 'pessoaMais';
 
 const desenhos: Record<NomeIcone, ReactNode> = {
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
@@ -67,6 +68,15 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   valeu: <path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z" />,
   mais: <><circle cx="6" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="18" cy="12" r="1.3" fill="currentColor" /></>,
   bandeirinha: <><path d="M6 20.5V4" /><path d="M6 4.5h11l-2.5 4 2.5 4H6" /></>,
+  // Elo de corrente: "Só com o link" (estado), diferente de "Copiar link" (ação).
+  elo: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
+  // Quatro cantos: tela cheia (Apresentar).
+  telaCheia: <path d="M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15" />,
+  // Alerta: círculo com exclamação (erro no campo).
+  alerta: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v5.5" /><circle cx="12" cy="16.3" r="0.6" fill="currentColor" /></>,
+  setaVoltar: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  // Pessoa com "+": Seguir.
+  pessoaMais: <><circle cx="10" cy="8.5" r="3.8" /><path d="M3 20c.9-3.8 3.6-5.8 7-5.8 1.6 0 3 .4 4.2 1.2M18.5 13.5v6M15.5 16.5h6" /></>,
 };
 
 export function Icone({ nome }: { nome: NomeIcone }) {
