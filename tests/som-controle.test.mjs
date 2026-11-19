@@ -36,7 +36,7 @@ test('a folha tem Mudo e os cinco climas, nesta ordem, num grupo de escolha úni
 
 test('as descrições curtas cabem numa linha (as da spec 12)', () => {
   assert.deepEqual(OPCOES_FUNDO_UI.map((o) => o.descricao), [
-    'Sem som de fundo', 'Acordes suaves e quentes', 'Chuva leve na janela', 'Batida lenta, sem melodia', 'Ambiente quieto, bom para ler', 'Vento suave entre as folhas',
+    'Sem som de fundo', 'Acordes suaves e quentes', 'Chuva leve na janela', 'Batida lenta e abafada', 'Ambiente quieto, bom para ler', 'Vento suave entre as folhas',
   ]);
 });
 

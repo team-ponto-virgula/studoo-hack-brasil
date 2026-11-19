@@ -175,7 +175,7 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
 const DESCRICOES_CURTAS_FUNDO: Readonly<Record<Exclude<IdSomFundo, 'mudo'>, string>> = {
   foco_calmo: 'Acordes suaves e quentes',
   chuva_suave: 'Chuva leve na janela',
-  lofi_estudo: 'Batida lenta, sem melodia',
+  lofi_estudo: 'Batida lenta e abafada',
   biblioteca: 'Ambiente quieto, bom para ler',
   brisa_natural: 'Vento suave entre as folhas',
 };

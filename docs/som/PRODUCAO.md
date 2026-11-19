@@ -85,4 +85,4 @@ Precisa de `numpy` e de um `ffmpeg` com `libmp3lame` (caminho em `FFMPEG`). Os s
 
 - **Não escutei o resultado**: não há saída de áudio nesta máquina. A conferência foi por medição (loudness, bandas, picos, ataque, emenda, espectrograma) e pela composição escrita. O ouvido do dono decide.
 - Não houve teste em aparelho físico (iPhone/Android); a emenda no app depende do cruzamento do toca-sons, que é do Mobile & QA.
-- O texto da linha do clima na folha "Som" (`OPCOES_FUNDO_UI`) diz "Batida lenta, sem melodia" no Lo-fi; com o novo arranjo há melodia discreta. O texto é do Designer — sugiro "Batida lenta e abafada".
+- O texto da linha do clima na folha "Som" (`OPCOES_FUNDO_UI`) do Lo-fi era "Batida lenta, sem melodia"; com o novo arranjo há melodia discreta, e o Lead aprovou em 19/11 o texto **"Batida lenta e abafada"**, que vale no catálogo, na spec 12 e nos testes.
