@@ -36,6 +36,7 @@ import {
 import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
 import { Botao, Confete, Icone, Stu, type NomeIcone } from '../ui';
 import { ApoioDaLicao } from './estudio';
+import { BotaoSom } from './som';
 import { tocaSons } from './sons';
 
 const t = mensagens.licao;
@@ -656,6 +657,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           </div>
           <p className="aula-titulo-topo">{semQuebrarHifen(licao.titulo)}</p>
         </div>
+        {/* O som, sempre à vista no alto da aula (spec 12): abre a folha por cima da lição. */}
+        <BotaoSom />
       </header>
       {/* Na revisão rápida, o quadro entra de novo, mesmo quando o exercício é o mesmo (o último, pulado agora). */}
       <div className="aula-miolo" key={`${passo}-${rodadaDeOpcoes}`}>
