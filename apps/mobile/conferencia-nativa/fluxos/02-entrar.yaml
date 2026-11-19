@@ -39,6 +39,16 @@ name: 02-entrar
       visible: "Not Now"
     commands:
       - tapOn: "Not Now"
+# A barra de baixo, ou o aviso de falha da lista de trilhas. Na execução 44590901823, a máquina do iPhone (3 núcleos e
+# 7 GB) engasgou logo depois de entrar: o servidor local respondeu 502 depois de 20 s, o app ficou no aviso, sem a barra,
+# e o fluxo caiu, pulando todas as telas. Com o aviso, um toque em "Tentar novamente" (partes/tentar-de-novo.yaml).
+- extendedWaitUntil:
+    visible:
+      id: nav-planos|tentar-planos
+    timeout: 60000
+- runFlow: partes/tentar-de-novo.yaml
+# Zera a conta do Maestro antes da espera da barra (ver partes/reabrir.yaml).
+- evalScript: ${output.esperaDaBarra = true}
 - extendedWaitUntil:
     visible:
       id: nav-planos
