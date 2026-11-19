@@ -1,0 +1,16 @@
+# Conjunto das telas: um fluxo por tela, na ordem abaixo. Cada um recomeça o app, então a falha de um não derruba o próximo.
+flows:
+  - '*'
+executionOrder:
+  continueOnFailure: true
+  flowsOrder:
+    - 10-mapa
+    - 20-minhas-trilhas
+    - 30-exercicio-ordenar
+    - 31-exercicio-associar
+    - 32-exercicio-multipla-escolha
+    - 33-exercicio-verdadeiro-falso
+    - 34-exercicio-lacuna
+    - 35-exercicio-aberta
+    - 40-explorar
+    - 50-perfil

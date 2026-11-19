@@ -1,0 +1,15 @@
+# Recomeça o app do zero, com a sessão que já existe: fecha o Expo Go, abre o projeto de novo e espera a barra de baixo
+# e o mapa da trilha em andamento (é onde o Studoo abre para quem tem trilhas). Cada fluxo de `telas/` começa por aqui,
+# para não depender de onde o fluxo anterior parou (uma folha aberta, uma lição pela metade).
+appId: host.exp.Exponent
+---
+- stopApp
+- openLink: exp://127.0.0.1:8081
+- extendedWaitUntil:
+    visible:
+      id: nav-planos
+    timeout: 180000
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 45000

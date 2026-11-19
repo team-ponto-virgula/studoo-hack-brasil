@@ -1,0 +1,148 @@
+# Conferência nativa do app: roda o Studoo num simulador de iPhone, pelo Expo Go, e guarda as capturas das telas.
+#
+# É um workflow à parte da verificação do PR (`verificacao.yml`): nada aqui é obrigatório, e ele não entra na fila dela.
+# Dados: a API do próprio repositório, nesta máquina, com IA simulada e uma conta sintética de senha sorteada a cada
+# execução. Nenhum segredo e nada do site publicado. O passo a passo está em `apps/mobile/conferencia-nativa/`.
+name: Capturas nativas
+
+on:
+  workflow_dispatch:
+    inputs:
+      aparelho:
+        description: Aparelho do simulador
+        default: iPhone 17 Pro
+        required: true
+      ios:
+        description: Versão do iOS (por exemplo 26.5)
+        default: "26.5"
+        required: true
+  push:
+    branches: [feat/hackathon-integracao]
+    paths:
+      - "apps/mobile/**"
+      - "packages/contratos/**"
+      - ".github/workflows/capturas-nativas.yml"
+
+permissions:
+  contents: read
+
+# Um envio novo no mesmo ramo substitui a conferência que ainda estiver rodando.
+concurrency:
+  group: capturas-nativas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  iphone:
+    name: iPhone (simulador)
+    # macOS 26 arm64 fixo, e não `macos-latest`: a lista de simuladores não muda sozinha quando o rótulo mudar de sistema.
+    runs-on: macos-26
+    timeout-minutes: 50
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      CONFERENCIA_APARELHO: ${{ inputs.aparelho || 'iPhone 17 Pro' }}
+      CONFERENCIA_IOS: ${{ inputs.ios || '26.5' }}
+      # Expo Go de simulador para o SDK 58 (a versão que https://api.expo.dev/v2/versions/latest indica). Ao subir o SDK
+      # do app, troque o endereço e o sha256 juntos.
+      EXPO_GO_IOS_URL: https://github.com/expo/expo-go-releases/releases/download/Expo-Go-58.0.7/Expo-Go-58.0.7.tar.gz
+      EXPO_GO_IOS_SHA256: 17ab20f856c72690a750e79826ab5c90550a1441b1d1d67db6cd252af979b903
+      # Maestro: versão e sha256 do maestro.zip publicado em github.com/mobile-dev-inc/Maestro/releases (cli-<versão>).
+      MAESTRO_VERSAO: 2.12.1
+      MAESTRO_SHA256: 54dbb0716425626604973cbb374c585ca30272375d9ce15177a1152765ddd9d7
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Segundos, sem simulador: um `testID` que mudou no app e ficou para trás num fluxo aparece aqui.
+      - name: Conferir os fluxos contra o código do app
+        run: node apps/mobile/conferencia-nativa/conferir-fluxos.mjs
+
+      - name: Sonda (versões, simuladores e o aparelho escolhido)
+        id: sonda
+        run: bash apps/mobile/conferencia-nativa/ios.sh sonda
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Ligar o simulador (segue em segundo plano)
+        run: bash apps/mobile/conferencia-nativa/ios.sh ligar
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: API local (banco, build, HTTPS e dados de demonstração)
+        id: servidor
+        timeout-minutes: 20
+        run: bash apps/mobile/conferencia-nativa/ios.sh servidor
+
+      - name: Simulador pronto (CA local e Expo Go)
+        id: simulador
+        timeout-minutes: 15
+        run: bash apps/mobile/conferencia-nativa/ios.sh simulador
+
+      - name: Maestro
+        id: maestro
+        timeout-minutes: 5
+        run: bash apps/mobile/conferencia-nativa/ios.sh maestro
+
+      - name: Metro e pacote do app
+        id: metro
+        timeout-minutes: 20
+        run: bash apps/mobile/conferencia-nativa/ios.sh metro
+
+      # Daqui em diante, um fluxo que falha não impede os seguintes de tentar: cada um deixa as capturas que conseguiu.
+      - name: "Fluxo 1: entrada, com o simulador como vem de fábrica"
+        id: fluxo_entrada
+        if: ${{ !cancelled() && steps.metro.outcome == 'success' }}
+        timeout-minutes: 12
+        run: bash apps/mobile/conferencia-nativa/ios.sh fluxo-entrada
+
+      - name: Desligar o preenchimento automático de senhas do simulador
+        id: sem_preenchimento
+        if: ${{ !cancelled() && steps.metro.outcome == 'success' }}
+        timeout-minutes: 12
+        run: bash apps/mobile/conferencia-nativa/ios.sh sem-preenchimento
+
+      - name: "Fluxo 2: entrar na conta sintética"
+        id: fluxo_entrar
+        if: ${{ !cancelled() && steps.sem_preenchimento.outcome == 'success' }}
+        timeout-minutes: 12
+        run: bash apps/mobile/conferencia-nativa/ios.sh fluxo-entrar
+
+      - name: "Fluxos das telas: mapa, Minhas trilhas, exercícios, Explorar e Perfil"
+        id: fluxo_telas
+        if: ${{ !cancelled() && steps.fluxo_entrar.outcome == 'success' }}
+        timeout-minutes: 25
+        run: bash apps/mobile/conferencia-nativa/ios.sh fluxo-telas
+
+      - name: Juntar as capturas e dizer o que faltou
+        if: ${{ !cancelled() && steps.sonda.outcome == 'success' }}
+        run: bash apps/mobile/conferencia-nativa/ios.sh coletar
+
+      - name: Guardar as capturas (3 dias)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: capturas-iphone
+          path: ${{ runner.temp }}/conferencia/capturas
+          retention-days: 3
+          if-no-files-found: warn
+
+      # Registros de cada programa, a saída do Maestro (com a tela e a árvore de elementos de cada falha) e os dados da
+      # conta sintética. Sem o .env, sem chaves e sem as ferramentas baixadas.
+      - name: Guardar os registros (3 dias)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: registros-iphone
+          path: |
+            ${{ runner.temp }}/conferencia/registros
+            ${{ runner.temp }}/conferencia/maestro
+            ${{ runner.temp }}/conferencia/dados
+          retention-days: 3
+          if-no-files-found: warn
