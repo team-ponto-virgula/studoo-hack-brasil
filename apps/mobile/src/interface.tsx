@@ -525,9 +525,13 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia }: {
+  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia, afundado = false, giro = false }: {
   /** O botão em si, para quem leva o foco até ele (o "Começar" do fim da geração). */
   referencia?: Ref<ComponentRef<typeof Pressable>>;
+  /** Fica afundado (sem o lábio), como no toque, enquanto a ação que ele começou anda ("Criando sua trilha…"). */
+  afundado?: boolean;
+  /** O giro de 16 px antes do rótulo, numa linha só (spec 04, "Criar a trilha"). */
+  giro?: boolean;
   /** Ícone antes do rótulo, como `<Icone />{texto}` nos botões da web (Compartilhar, Copiar link, Editar perfil): 18 px. */
   iconeAntes?: NomeIcone;
   /** Giro do ícone (a seta de "Continuar lendo" aponta para baixo, como .botao--ler-mais .icone da web). */
@@ -582,8 +586,9 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
     <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">
       {carregando ? <Pontinhos cor={corTexto} /> : (
         <>
+          {giro && <Giro cor={corTexto} />}
           {iconeAntes && <Icone nome={iconeAntes} tamanho={18} cor={corTexto} />}
-          <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
+          <Text numberOfLines={giro ? 1 : undefined} style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
             peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
           {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} sistema /></View>}
         </>
@@ -598,7 +603,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
         onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao}
         onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
         // A caixa ocupa os 48 da face, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
-        style={({ pressed }) => [degrauFora(4, 16, labio, pressed), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
+        style={({ pressed }) => [degrauFora(4, 16, labio, pressed || afundado), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
         <View style={[estilos.botaoFace, variante === 'secundario' && estilos.botaoFaceSecundaria, variante === 'sucesso' && estilos.botaoFaceSucesso,
           variante === 'alerta' && estilos.botaoFaceAlerta, variante === 'destrutivo' && estilos.botaoFaceDestrutiva, variante === 'perigo' && estilos.botaoFacePerigo,
           compacto && estilos.botaoFaceCompacta, face, apagado && estilos.botaoFaceApagada]}>
@@ -654,6 +659,22 @@ export function degrauFora(altura: number, raio: number, cor: string, afundado =
   return afundado
     ? { borderRadius: raio, backgroundColor: cor, paddingBottom: 1, marginTop: altura - 1, marginBottom: -altura }
     : { borderRadius: raio, backgroundColor: cor, paddingBottom: altura, marginBottom: -altura };
+}
+
+/** O giro de 16 px dentro de um botão: um anel com um quarto mais forte, girando (parado com movimento reduzido). */
+function Giro({ cor }: { cor: string }) {
+  const reduzir = useMovimentoReduzido();
+  const [volta] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduzir !== false) return;
+    const ciclo = Animated.loop(Animated.timing(volta, { toValue: 1, duration: 800, easing: Easing.linear, isInteraction: false, useNativeDriver: true }));
+    ciclo.start();
+    return () => ciclo.stop();
+  }, [reduzir, volta]);
+  return (
+    <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={[estilos.giro, { borderColor: `${cor}59`, borderTopColor: cor,
+      transform: [{ rotate: volta.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }]} />
+  );
 }
 
 /** Três pontinhos que pulam em sequência, enquanto uma ação acontece; parados com movimento reduzido. */
@@ -1381,6 +1402,7 @@ export const estilos = StyleSheet.create({
   foco: { outlineColor: cores.acao, outlineWidth: 2, outlineOffset: 2, outlineStyle: 'solid' },
   botaoDesativado: { borderColor: cores.gelo, borderBottomColor: cores.gelo, backgroundColor: cores.nevoa },
   botaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textAlign: 'center', flexShrink: 1 },
+  giro: { width: 16, height: 16, borderRadius: 8, borderWidth: 2 },
   botaoTextoCompacto: { fontSize: 14, lineHeight: 20 },
   // .aula-fechar e .campo-senha__alternar da web: 44 × 44. O toque chega a 48 dp por fora (hitSlop de 2), sem mudar o
   // desenho (P8 da spec 07).

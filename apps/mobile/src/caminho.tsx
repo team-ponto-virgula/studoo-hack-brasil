@@ -25,7 +25,8 @@ import { cores, fontes } from './tema';
 import { explicar, iconeDoNo, nomeAcessivelDoNo, posicaoDoNo, posicaoX, selosDoNo, type EstadoNo, type NoCaminho } from './trilha';
 import { focoVisivel } from './foco';
 import { Stu } from './mascote';
-import { RITMO_DA_GERACAO, atrasosDaLicao, comMaisUma } from './geracao-ritmo';
+import type { NomeStu } from '@studoo/contratos';
+import { RITMO_DA_GERACAO, atrasosDaLicao } from './geracao-ritmo';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
@@ -61,6 +62,8 @@ const corEstradaFeita = '#FFE8A6';
 const ouroFace = '#FFCF4D';
 const ouroLabio = '#E0A12A';
 const corPontilhado = 'rgba(11, 27, 92, 0.34)';
+/** O rascunho da prévia (spec 04, "Criar a trilha"): o contorno dos nós e o tracejado do caminho. */
+const corRascunho = '#9CB4F5';
 
 /** Mesmas medidas da web: celular, tablet e telas a partir de 1024 px. */
 function useMedidas(): Medidas {
@@ -126,7 +129,19 @@ function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
  */
 export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
   rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir, estilo, extraChegada = 0, semFala = false, respiroNoAlto = 0,
-  aoMedirNo, stuNoFim = false, festaPermitida = true, trofeuDoZero = false }: {
+  aoMedirNo, stuNoFim = false, festaPermitida = true, trofeuDoZero = false, rascunho = false, criacao = null, guardarNo1 }: {
+  /**
+   * A prévia é rascunho (spec 04, "Criar a trilha"): nós de face branca com contorno tracejado de 2 px `#9CB4F5`, sem o lábio,
+   * e o caminho tracejado 8/8 na mesma cor. Quando a trilha passa a existir (`criacao` = 'criada'), viram os de sempre.
+   */
+  rascunho?: boolean;
+  /**
+   * O toque em "Começar a lição 1": 'criando' (o anel do nó 1 respira e o Stu estuda ao lado dele), 'erro' (o Stu fica ao
+   * lado do nó 1, parado, encorajador) e 'criada' (o nó 1 pulsa e fica azul cheio, o caminho firma e o Stu comemora).
+   */
+  criacao?: 'criando' | 'erro' | 'criada' | null;
+  /** A lente do nó 1, para a tela medir de onde o círculo da passagem cresce. */
+  guardarNo1?: (alvo: ComponentRef<typeof View> | null) => void;
   /**
    * Geração que se acompanha (spec 04, revisão de 19/11): a frase do Stu vai na placa presa no alto da tela, fora do mapa;
    * o começo do mapa fica sem balão e sem Stu, com `respiroNoAlto` em cima para a placa não cobrir a primeira lição.
@@ -206,7 +221,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const primeiroTrecho = nos[0]?.trecho ?? 0;
   const ultimoTrecho = nos[total - 1]?.trecho ?? 0;
   const guiaNoCaminho = !montando && nos.some((no) => no.estado === 'atual');
-  const stuNaChegada = !montando && (tudoFeito || stuNoFim);
+  // Na criação, o Stu sai do troféu e vai para o lado do nó 1.
+  const stuNaChegada = !montando && (tudoFeito || stuNoFim) && criacao === null;
+  const firmar = criacao === 'criada';
   // Na geração, o Stu fica do lado de fora da lição mais nova (ou da vaga, antes da primeira) e anda até a próxima.
   const [alvoStu, setAlvoStu] = useState<{ x: number; topo: number } | null>(null);
   const comRecem = recemConcluida !== null && nos.some((no) => no.id === recemConcluida);
@@ -442,15 +459,18 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               {fimDoTrecho && <Fronteira trechoSeguinte={seguinte.trecho} topo={medidas.lente} />}
               {(seguinte || vaiAteChegada || vaiAteVindo) && (
                 <Ligacao de={x / 100} ate={xSeguinte / 100} feita={no.estado === 'concluida'} topo={medidas.lente / 2} chao={coresDaRegiao(no.trecho).chao}
-                  desenhar={recem && no.estado === 'concluida'} alem={vaiAteChegada ? medidas.lente / 2 : 0} surgir={linhaParaONovo ?? linhaParaAVaga} />
+                  desenhar={recem && no.estado === 'concluida'} alem={vaiAteChegada ? medidas.lente / 2 : 0} surgir={linhaParaONovo ?? linhaParaAVaga}
+                  rascunho={rascunho && no.estado === 'previa'} firmar={firmar} />
               )}
               <Entra ativo={surgir || comEntrada} atraso={novo ? atrasos.no : atrasoEntrada} reduzir={reduzir} queda={montando}>
                 <No no={no} posicao={posicaoDoNo(indice, total, montando)} x={x} largura={largura} comRotulo={comRotulo} medidas={medidas} reduzir={reduzir}
                   ocupado={ocupado} abrindo={abrindo === no.id} liberada={liberadas.includes(no.id)} recem={recem}
-                  atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => guardarAlvo(no.id, alvo)} tocar={() => tocar(no)}
-                  atrasoNome={novo ? atrasos.nome : undefined} />
+                  atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => { guardarAlvo(no.id, alvo); if (indice === 0) guardarNo1?.(alvo); }} tocar={() => tocar(no)}
+                  atrasoNome={novo ? atrasos.nome : undefined} rascunho={rascunho && no.estado === 'previa'}
+                  respira={indice === 0 && criacao === 'criando'} virouAtual={indice === 0 && firmar} />
               </Entra>
               {montando && <Nascimento x={x} largura={largura} lente={medidas.lente} atraso={atrasos.no} animar={novo} reduzir={reduzir} />}
+              {indice === 0 && criacao !== null && <StuDoNo1 x={x} largura={largura} lente={medidas.lente} tamanho={medidas.guia} criacao={criacao} reduzir={reduzir} />}
               {fimDoTrecho && (
                 <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}
                   queda={montando}>
@@ -470,12 +490,13 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
             }} />
         )}
         {montando && semFala && alvoStu && (
-          <StuQueAnda x={alvoStu.x} topo={alvoStu.topo} largura={largura} lente={medidas.lente} tamanho={medidas.guia} reduzir={reduzir} vez={total}
-            atraso={total === 0 ? 0 : atrasosDaLicao(total > 1 && nos[total - 2].trecho !== nos[total - 1].trecho).espera} maisUma={comMaisUma(total)} />
+          <StuQueAnda x={alvoStu.x} topo={alvoStu.topo} largura={largura} lente={medidas.lente} tamanho={medidas.guia} reduzir={reduzir}
+            atraso={total === 0 ? 0 : atrasosDaLicao(total > 1 && nos[total - 2].trecho !== nos[total - 1].trecho).espera} />
         )}
       </View>
       {comChegada && (
         <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : extraChegada + espacoDaBarra}
+          rascunho={rascunho} firmar={firmar}
           faltam={nos.filter((no) => no.estado !== 'concluida').length} stu={stuNaChegada} festa={(festaNaChegada && festaPermitida) || (comRecem && tudoFeito)}
           doZero={trofeuDoZero}
           aoMedir={(caixa) => {
@@ -783,9 +804,8 @@ function GuiaStu({ tamanho, atraso, estilo, olhaParaEsquerda }: { tamanho: numbe
 }
 
 /**
- * A lição que acabou de nascer (spec 04, passo 3): cinco estrelinhas douradas (o ouro do kit, spec 13 B5) se abrem e
- * somem (300 ms) e o anel do nó fica azul por 1,2 s. Com movimento reduzido, sem estrelinhas; o anel aparece e some sem
- * animação. Decorativo.
+ * A lição que acabou de nascer (spec 04, passo 3): o anel do nó fica azul por 1,2 s, sem enfeite (revisão "Criar a
+ * trilha"). Com movimento reduzido, o anel aparece e some sem animação. Decorativo.
  */
 function Nascimento({ x, largura, lente, atraso, animar, reduzir }: {
   x: number; largura: number; lente: number; atraso: number;
@@ -796,7 +816,6 @@ function Nascimento({ x, largura, lente, atraso, animar, reduzir }: {
   const [ligado] = useState(animar);
   const [atrasoInicial] = useState(atraso);
   const [anel] = useState(() => new Animated.Value(0));
-  const [estrelas] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (!ligado || reduzir === null) return;
     if (reduzir) {
@@ -804,55 +823,73 @@ function Nascimento({ x, largura, lente, atraso, animar, reduzir }: {
       const apagar = setTimeout(() => anel.setValue(0), RITMO_DA_GERACAO.anelMs);
       return () => clearTimeout(apagar);
     }
-    const animacao = Animated.parallel([
-      Animated.sequence([
-        Animated.delay(atrasoInicial),
-        Animated.timing(estrelas, { toValue: 1, duration: RITMO_DA_GERACAO.estrelasMs, easing: Easing.out(Easing.quad), useNativeDriver: true }),
-      ]),
-      Animated.sequence([
-        Animated.delay(atrasoInicial),
-        Animated.timing(anel, { toValue: 1, duration: 120, useNativeDriver: true }),
-        Animated.delay(RITMO_DA_GERACAO.anelMs - 120),
-        Animated.timing(anel, { toValue: 0, duration: 240, useNativeDriver: true }),
-      ]),
+    const animacao = Animated.sequence([
+      Animated.delay(atrasoInicial),
+      Animated.timing(anel, { toValue: 1, duration: 120, useNativeDriver: true }),
+      Animated.delay(RITMO_DA_GERACAO.anelMs - 120),
+      Animated.timing(anel, { toValue: 0, duration: 240, useNativeDriver: true }),
     ]);
     animacao.start();
     return () => animacao.stop();
-  }, [ligado, reduzir, atrasoInicial, anel, estrelas]);
+  }, [ligado, reduzir, atrasoInicial, anel]);
   if (!ligado) return null;
   const centro = (largura * x) / 100;
-  const raio = lente / 2 + 18;
   return (
     <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
       <Animated.View style={[caminhoEstilos.anelNovo, circulo(lente + 8), { left: centro - lente / 2 - 4, top: -4, opacity: anel }]} />
-      {reduzir === false && [0, 1, 2, 3, 4].map((ponta) => {
-        const angulo = -Math.PI / 2 + (ponta * 2 * Math.PI) / 5;
-        return (
-          <Animated.View key={ponta} style={[caminhoEstilos.estrelinha, { left: centro - 4, top: lente / 2 - 4,
-            opacity: estrelas.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 0] }),
-            transform: [
-              { translateX: estrelas.interpolate({ inputRange: [0, 1], outputRange: [0, Math.cos(angulo) * raio] }) },
-              { translateY: estrelas.interpolate({ inputRange: [0, 1], outputRange: [0, Math.sin(angulo) * raio] }) },
-            ] }]} />
-        );
-      })}
     </View>
   );
 }
 
 /**
- * O Stu na geração (spec 04): fica do lado de fora da lição mais nova (antes da primeira, ao lado da vaga), subindo e
- * descendo devagar, e anda até a próxima aos 700 ms (400 ms). A cada três lições, o balãozinho "Mais uma!" aparece por
- * 900 ms. Com movimento reduzido, o Stu fica parado e pula direto para o lugar novo. Decorativo.
+ * O Stu ao lado do nó 1 quando a pessoa toca em "Começar a lição 1" (spec 04 e 13, "Criar a trilha"), no tamanho do guia
+ * do mapa: chega andando (400 ms) e estuda em laço (`stu-estudando`) enquanto o aceite não volta; no erro, fica parado e
+ * encorajador; quando a trilha passa a existir, faz um ciclo de `stu-comemorando`. Com movimento reduzido, já está no
+ * lugar e não anda. Decorativo.
  */
-function StuQueAnda({ x, topo, largura, lente, tamanho, atraso, maisUma, vez, reduzir }: {
-  x: number; topo: number; largura: number; lente: number; tamanho: number; atraso: number; maisUma: boolean; vez: number; reduzir: boolean | null;
+function StuDoNo1({ x, largura, lente, tamanho, criacao, reduzir }: {
+  x: number; largura: number; lente: number; tamanho: number; criacao: 'criando' | 'erro' | 'criada'; reduzir: boolean | null;
+}) {
+  const centro = (largura * x) / 100;
+  const direita = x < 50;
+  const esquerda = direita ? centro + lente / 2 + 10 : centro - lente / 2 - 10 - tamanho;
+  const [chegada] = useState(() => new Animated.Value(reduzir === false ? 0 : 1));
+  useEffect(() => {
+    if (reduzir !== false) {
+      chegada.setValue(1);
+      return;
+    }
+    const andar = Animated.timing(chegada, { toValue: 1, duration: RITMO_DA_GERACAO.stuMs, easing: Easing.inOut(Easing.ease), useNativeDriver: true });
+    andar.start();
+    return () => andar.stop();
+    // Só ao chegar (a troca de pose não o faz andar de novo).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const pose: { nome: NomeStu; animado?: 'laco' | 'acontecimento'; acontecimento?: string } = criacao === 'criando'
+    ? { nome: 'stu-estudando', animado: 'laco' }
+    : criacao === 'criada' ? { nome: 'stu-comemorando', animado: 'acontecimento', acontecimento: 'criada' } : { nome: 'stu-encorajador' };
+  return (
+    <Animated.View testID="stu-no1" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      style={[caminhoEstilos.stuQueAnda, { width: tamanho, left: esquerda, top: lente / 2 - tamanho * 0.9, opacity: chegada,
+        transform: [{ translateY: chegada.interpolate({ inputRange: [0, 1], outputRange: [36, 0] }) }] }]}>
+      <View style={caminhoEstilos.guiaSombra} />
+      <Stu key={pose.nome} nome={pose.nome} tamanho={tamanho} animado={pose.animado} acontecimento={pose.acontecimento} espelhado={direita} />
+    </Animated.View>
+  );
+}
+
+/**
+ * O Stu na geração (spec 04): fica do lado de fora da lição mais nova (antes da primeira, ao lado da vaga), subindo e
+ * descendo devagar, e anda até a próxima aos 700 ms (400 ms). Com movimento reduzido, o Stu fica parado e pula direto para
+ * o lugar novo. Decorativo.
+ */
+function StuQueAnda({ x, topo, largura, lente, tamanho, atraso, reduzir }: {
+  x: number; topo: number; largura: number; lente: number; tamanho: number; atraso: number; reduzir: boolean | null;
 }) {
   const centro = (largura * x) / 100;
   const esquerda = x >= 50 ? centro + lente / 2 + 10 : centro - lente / 2 - 10 - tamanho;
   const alto = topo + lente / 2 - tamanho * 0.9;
   const [posicao] = useState(() => new Animated.ValueXY({ x: esquerda, y: alto }));
-  const [balao] = useState(() => new Animated.Value(0));
   const flutuar = useBalanco(5, 1400, reduzir === false);
 
   useEffect(() => {
@@ -867,31 +904,9 @@ function StuQueAnda({ x, topo, largura, lente, tamanho, atraso, maisUma, vez, re
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [esquerda, alto, reduzir]);
 
-  useEffect(() => {
-    if (!maisUma) return;
-    if (reduzir !== false) {
-      balao.setValue(1);
-      const apagar = setTimeout(() => balao.setValue(0), atraso + RITMO_DA_GERACAO.maisUmaMs);
-      return () => clearTimeout(apagar);
-    }
-    const mostrar = Animated.sequence([
-      Animated.delay(atraso),
-      Animated.timing(balao, { toValue: 1, duration: 140, useNativeDriver: true }),
-      Animated.delay(RITMO_DA_GERACAO.maisUmaMs - 140),
-      Animated.timing(balao, { toValue: 0, duration: 160, useNativeDriver: true }),
-    ]);
-    mostrar.start();
-    return () => mostrar.stop();
-    // Uma vez por lição que nasce.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vez]);
-
   return (
     <Animated.View testID="stu-geracao" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
       style={[caminhoEstilos.stuQueAnda, { width: tamanho, transform: [{ translateX: posicao.x }, { translateY: posicao.y }] }]}>
-      <Animated.View testID="mais-uma" style={[caminhoEstilos.maisUma, x >= 50 ? { right: tamanho - 12 } : { left: tamanho - 12 }, { opacity: balao }]}>
-        <Text style={caminhoEstilos.maisUmaTexto}>{mensagens.geracao.maisUma}</Text>
-      </Animated.View>
       <Animated.View style={[caminhoEstilos.guiaSombra, { transform: [{ scaleX: flutuar.interpolate({ inputRange: [-5, 0], outputRange: [0.8, 1] }) }] }]} />
       {/* Spec 13 (E1): mapa montando é espera, `stu-curioso` em laço; o sobe-e-desce da spec 04 vai por fora e a sombra fica
           no chão. */}
@@ -955,9 +970,16 @@ function Vindo({ x, largura, medidas, chao, aoMedir, aparecerEm = 0, folgaAbaixo
   );
 }
 
-function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abrindo, liberada, recem, atrasoLiberacao, guardar, tocar, atrasoNome }: {
+function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abrindo, liberada, recem, atrasoLiberacao, guardar, tocar, atrasoNome,
+  rascunho = false, respira = false, virouAtual = false }: {
   /** Geração: o nome entra do lado aos 420 ms (opacidade e 12 px, 220 ms); com movimento reduzido, 150 ms de opacidade. */
   atrasoNome?: number;
+  /** Prévia em rascunho: face branca, contorno tracejado de 2 px e sem o lábio. */
+  rascunho?: boolean;
+  /** O nó 1 enquanto a trilha é criada: o anel respira. */
+  respira?: boolean;
+  /** O nó 1 quando a trilha passa a existir: pulsa e fica no estado atual, azul cheio. */
+  virouAtual?: boolean;
   no: NoCaminho;
   /** "Lição 3 de 9", ou só "Lição 3" enquanto a trilha é montada. */
   posicao: string;
@@ -1048,14 +1070,15 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const moeda = (pressionado: boolean) => (
     <View style={atual ? { transform: [{ scale: 1.14 }] } : null}>
       <Lente no={no} medidas={medidas} reduzir={reduzir} liberada={liberada} recem={recem} atrasoLiberacao={atrasoLiberacao}
-        pressionado={pressionado} focado={focado} puxa={(50 - x) * 1.5} />
+        pressionado={pressionado} focado={focado} puxa={(50 - x) * 1.5} rascunho={rascunho} respira={respira} virouAtual={virouAtual} />
     </View>
   );
 
   if (no.estado === 'previa') {
     return (
       <View accessible accessibilityLabel={rotuloA11y} style={{ height: lente }}>
-        <View style={lugar}>{moeda(false)}</View>
+        {/* A lente medida pela passagem da criação (o círculo cresce do centro dela). */}
+        <View ref={guardar} collapsable={false} style={lugar}>{moeda(false)}</View>
         {rotulo}
         {discreto}
       </View>
@@ -1080,7 +1103,10 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
  * uma vez e depois respira devagar, e a etiqueta "Começar", que flutua. A recém-liberada mostra o cadeado se abrindo.
  * Com movimento reduzido, tudo já aparece no estado final, parado.
  */
-function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressionado, focado, puxa = 0 }: {
+function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressionado, focado, puxa = 0, rascunho = false, respira = false, virouAtual = false }: {
+  rascunho?: boolean;
+  respira?: boolean;
+  virouAtual?: boolean;
   /** Deslocamento do balão para o centro da tela (o nó fica de um lado): não encosta na borda; a seta segue no nó. */
   puxa?: number;
   no: NoCaminho;
@@ -1097,7 +1123,9 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
   const { lente } = medidas;
   const atual = no.estado === 'atual';
   // Lições à frente: cinza neutro e frio com lábio escuro, separado de qualquer terreno (como na web).
-  const visual = no.estado === 'bloqueada'
+  // O nó 1 da prévia, quando a trilha passa a existir, vira o nó atual de sempre (azul cheio, com o lábio).
+  const comoRascunho = rascunho && !virouAtual;
+  const visual = virouAtual ? coresDaLente.atual : no.estado === 'bloqueada'
     ? { face: '#DFE3EE', labio: '#A9B1CA', icone: '#66708F' }
     : coresDaLente[no.estado];
   const halo = useRef(new Animated.Value(0)).current;
@@ -1143,6 +1171,17 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
     return () => grupo.stop();
   }, [reduzir, atual, liberada, recem, atrasoLiberacao, halo, etiqueta, cadeado, escala]);
 
+  // A trilha passou a existir: o nó 1 pulsa (1 → 1,12 → 1 em 180 ms). Com movimento reduzido, sem pulso.
+  useEffect(() => {
+    if (!virouAtual || reduzir !== false) return;
+    const pulso = Animated.sequence([
+      Animated.timing(escala, { toValue: 1.12, duration: Math.round(RITMO_DA_GERACAO.pulsoMs * 0.55), easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(escala, { toValue: 1, duration: Math.round(RITMO_DA_GERACAO.pulsoMs * 0.45), easing: Easing.in(Easing.quad), useNativeDriver: true }),
+    ]);
+    pulso.start();
+    return () => pulso.stop();
+  }, [virouAtual, reduzir, escala]);
+
   // O anel do nó atual respira devagar enquanto ele é o próximo passo.
   useEffect(() => {
     if (!atual || reduzir !== false) {
@@ -1182,12 +1221,14 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
       )}
       {/* .caminho-no__lente da web: o brilho radial no alto, a faixa interna mais escura embaixo (inset 0 -5px 0), o lábio de 8
           por fora e a sombra suave (0 16px 22px); tocada, desce 6 e o lábio fica com 2. */}
-      <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), forma, degrade(BRILHO_DA_LENTE), {
-        top: afundar, backgroundColor: visual.face, transform: [{ scale: escala }],
-        boxShadow: pressionado
+      {respira && <AnelQueRespira lente={lente} reduzir={reduzir} />}
+      {/* No rascunho (spec 04, "Criar a trilha"): face branca, contorno tracejado de 2 px `#9CB4F5`, sem o lábio nem a sombra. */}
+      <Animated.View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(lente), forma, !comoRascunho && degrade(BRILHO_DA_LENTE), {
+        top: afundar, backgroundColor: comoRascunho ? '#FFFFFF' : visual.face, transform: [{ scale: escala }],
+        boxShadow: comoRascunho ? undefined : pressionado
           ? `inset 0 -5px 0 rgba(0, 0, 0, 0.06), 0 2px 0 ${visual.labio}, 0 6px 10px rgba(11, 27, 92, 0.12)`
           : `inset 0 -5px 0 rgba(0, 0, 0, 0.06), 0 8px 0 ${visual.labio}, 0 16px 22px rgba(11, 27, 92, 0.16)`,
-      }]}>
+      }, comoRascunho && caminhoEstilos.faceRascunho]}>
         <View><Icone nome={iconeDoNo(no)} tamanho={tamanhoIcone} cor={visual.icone} traco={3} /></View>
         {liberada && (
           <Animated.View style={[caminhoEstilos.cadeado, { borderRadius: lente / 2, opacity: cadeado }]}>
@@ -1219,6 +1260,34 @@ function Lente({ no, medidas, reduzir, liberada, recem, atrasoLiberacao, pressio
           </View>
         </Animated.View>
       )}
+    </View>
+  );
+}
+
+/**
+ * O anel do nó 1 enquanto a trilha é criada (spec 04, "Criar a trilha"): um anel de 4 px `#8CAFFF` e, por fora, um halo
+ * `#B4CDFF` que cresce até 9 px e volta (1,1 s por volta), como o box-shadow da web. Com movimento reduzido, só o anel.
+ */
+function AnelQueRespira({ lente, reduzir }: { lente: number; reduzir: boolean | null }) {
+  const [respiro] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduzir !== false) return;
+    const metade = { duration: RITMO_DA_GERACAO.respiroMs / 2, easing: Easing.inOut(Easing.ease), isInteraction: false, useNativeDriver: true };
+    const ciclo = Animated.loop(Animated.sequence([
+      Animated.timing(respiro, { ...metade, toValue: 1 }),
+      Animated.timing(respiro, { ...metade, toValue: 0 }),
+    ]));
+    ciclo.start();
+    return () => ciclo.stop();
+  }, [reduzir, respiro]);
+  const fora = lente + 18;
+  return (
+    <View testID="anel-no1" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
+      {reduzir === false && (
+        <Animated.View style={[caminhoEstilos.camada, circulo(fora), { left: -9, top: -9, backgroundColor: '#B4CDFF',
+          transform: [{ scale: respiro.interpolate({ inputRange: [0, 1], outputRange: [(lente + 8) / fora, 1] }) }] }]} />
+      )}
+      <View style={[caminhoEstilos.camada, circulo(lente + 8), { left: -4, top: -4, backgroundColor: '#8CAFFF' }]} />
     </View>
   );
 }
@@ -1274,7 +1343,11 @@ export function tracoGrosso(pontos: readonly Ponto[], espessura: number, cor: st
  * Ligação até o próximo nó: a estrada clara e, por cima, a linha pontilhada adiante e contínua depois de concluída.
  * Vai do pé da lente até o fim da linha.
  */
-function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0, surgir = null }: {
+function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0, surgir = null, rascunho = false, firmar = false }: {
+  /** Prévia em rascunho (spec 04, "Criar a trilha"): só o tracejado 8/8 em `#9CB4F5`, sem a estrada. */
+  rascunho?: boolean;
+  /** A trilha passou a existir: o tracejado vira o caminho de sempre (180 ms de opacidade; com movimento reduzido, na hora). */
+  firmar?: boolean;
   /**
    * Geração (spec 04): o caminho se desenha do nó anterior até a vaga, pedaço por pedaço (aos 120 ms, em 300 ms; até a vaga
    * seguinte, aos 700 ms). Com movimento reduzido, aparece de uma vez.
@@ -1296,6 +1369,24 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0, surgi
   const reduzir = useMovimentoReduzido();
   const [traco] = useState(() => new Animated.Value(desenhar ? 0 : 1));
   const [rastro] = useState(() => new Animated.Value(surgir ? 0 : 1));
+  const [firme] = useState(() => new Animated.Value(rascunho ? 0 : 1));
+  useEffect(() => {
+    if (!rascunho) {
+      firme.setValue(1);
+      return;
+    }
+    if (!firmar) {
+      firme.setValue(0);
+      return;
+    }
+    if (reduzir !== false) {
+      firme.setValue(1);
+      return;
+    }
+    const animacao = Animated.timing(firme, { toValue: 1, duration: RITMO_DA_GERACAO.firmarMs, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [rascunho, firmar, reduzir, firme]);
   const atrasoDoRastro = surgir?.atraso;
   const duracaoDoRastro = surgir?.duracao;
 
@@ -1326,15 +1417,19 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0, surgi
     return () => animacao.stop();
   }, [desenhar, reduzir, traco]);
   const desenho = useMemo(() => {
-    if (!caixa) return { base: [], verde: [] };
+    if (!caixa) return { base: [], verde: [], tracos: [] };
     const estrada = tracoGrosso(tracado(caixa.largura, caixa.altura, de, ate, 12), 24, feita && !desenhar ? corEstradaFeita : estradaSobre(chao));
     const pontos = pontilhar(tracado(caixa.largura, caixa.altura, de, ate, 48), 13).map((ponto): ViewStyle => ({
       left: ponto.x - 2.5, top: ponto.y - 2.5, width: 5, height: 5, borderRadius: 2.5, backgroundColor: corPontilhado,
     }));
     const verde = feita ? tracoGrosso(tracado(caixa.largura, caixa.altura, de, ate, 12), 6, ouroLabio) : [];
+    // O rascunho: traços de 8 com vãos de 8 ao longo da mesma curva (pontos a cada 8; um traço entre o par e o seguinte).
+    const marcas = rascunho ? pontilhar(tracado(caixa.largura, caixa.altura, de, ate, 48), RITMO_DA_GERACAO.tracejadoPx) : [];
+    const tracos = marcas.flatMap((ponto, indice) => indice % 2 === 0 && marcas[indice + 1]
+      ? tracoGrosso([ponto, marcas[indice + 1]], RITMO_DA_GERACAO.tracejadoEspessura, corRascunho) : []);
     // Enquanto a linha verde se desenha, o pontilhado aparece embaixo dela.
-    return { base: feita && !desenhar ? estrada : [...estrada, ...pontos], verde };
-  }, [caixa, feita, desenhar, de, ate, chao]);
+    return { base: feita && !desenhar ? estrada : [...estrada, ...pontos], verde, tracos };
+  }, [caixa, feita, desenhar, de, ate, chao, rascunho]);
   const pedacos = desenho.verde.length;
 
   return (
@@ -1344,9 +1439,18 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0, surgi
         const { width, height } = evento.nativeEvent.layout;
         setCaixa((anterior) => anterior?.largura === width && anterior.altura === height ? anterior : { largura: width, altura: height });
       }}>
-      {desenho.base.map((estilo, indice) => surgir ? (
+      {rascunho && desenho.tracos.map((estilo, indice) => (
+        <Animated.View key={`r${indice}`} style={[caminhoEstilos.camada, estilo, {
+          opacity: surgir
+            ? Animated.multiply(rastro.interpolate({ inputRange: [indice / desenho.tracos.length, (indice + 1) / desenho.tracos.length], outputRange: [0, 1], extrapolate: 'clamp' }),
+              firme.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }))
+            : firme.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+        }]} />
+      ))}
+      {/* O caminho de sempre: no rascunho, só aparece quando a trilha passa a existir. */}
+      {desenho.base.map((estilo, indice) => surgir || rascunho ? (
         <Animated.View key={`b${indice}`} style={[caminhoEstilos.camada, estilo, {
-          opacity: rastro.interpolate({ inputRange: [indice / desenho.base.length, (indice + 1) / desenho.base.length], outputRange: [0, 1], extrapolate: 'clamp' }),
+          opacity: rascunho ? firme : rastro.interpolate({ inputRange: [indice / desenho.base.length, (indice + 1) / desenho.base.length], outputRange: [0, 1], extrapolate: 'clamp' }),
         }]} />
       ) : <View key={`b${indice}`} style={[caminhoEstilos.camada, estilo]} />)}
       {desenho.verde.map((estilo, indice) => (
@@ -1420,7 +1524,10 @@ function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; res
 }
 
 /** Chegada: o topo do caminho, com o troféu numa colina e bandeiras; fica dourada quando todas as lições estão concluídas. */
-function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, extra = 0, doZero = false }: {
+function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, extra = 0, doZero = false, rascunho = false, firmar = false }: {
+  /** Prévia em rascunho: a reta até o troféu também é tracejada; vira a estrada de sempre quando a trilha passa a existir. */
+  rascunho?: boolean;
+  firmar?: boolean;
   /** Fim da geração: o troféu entra de 0 a 1,1 e volta a 1 em 420 ms (com movimento reduzido, já aparece). */
   doZero?: boolean;
   /** No celular, o morro continua por baixo do cartão flutuante (pontos a mais embaixo). */
@@ -1445,6 +1552,16 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
   const [pop] = useState(() => new Animated.Value(doZero ? 0 : festa ? 0.5 : 1));
   const [bolha, setBolha] = useState<string | null>(null);
   const [toques, setToques] = useState(0);
+  const [firme] = useState(() => new Animated.Value(rascunho ? 0 : 1));
+  useEffect(() => {
+    if (!rascunho || !firmar || reduzir !== false) {
+      firme.setValue(!rascunho || firmar ? 1 : 0);
+      return;
+    }
+    const animacao = Animated.timing(firme, { toValue: 1, duration: RITMO_DA_GERACAO.firmarMs, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [rascunho, firmar, reduzir, firme]);
   useEffect(() => {
     if (!bolha) return;
     const espera = setTimeout(() => setBolha(null), 3000);
@@ -1484,10 +1601,21 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
         {/* A reta começa onde a curva da última lição termina (metade da lente para dentro da chegada) e vai até 140, como a
             web; o pontilhado segue o da estrada, a cada 14 a partir do começo da reta. */}
-        <View style={[caminhoEstilos.chegadaEstrada, { top: lente / 2, height: 140 - lente / 2, backgroundColor: estradaSobre(chao) }]} />
-        {!feita && Array.from({ length: Math.floor((140 - lente / 2) / 14) + 1 }, (_, indice) => (
-          <View key={indice} style={[caminhoEstilos.pontoEstrada, { top: lente / 2 - 3 + indice * 14 }]} />
-        ))}
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: firme }]}>
+          <View style={[caminhoEstilos.chegadaEstrada, { top: lente / 2, height: 140 - lente / 2, backgroundColor: estradaSobre(chao) }]} />
+          {!feita && Array.from({ length: Math.floor((140 - lente / 2) / 14) + 1 }, (_, indice) => (
+            <View key={indice} style={[caminhoEstilos.pontoEstrada, { top: lente / 2 - 3 + indice * 14 }]} />
+          ))}
+        </Animated.View>
+        {/* O rascunho: traços de 8 + as pontas redondas de 5 (como o stroke-linecap da web), a cada 16. */}
+        {rascunho && (
+          <Animated.View style={[StyleSheet.absoluteFill, { opacity: firme.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }]}>
+            {Array.from({ length: Math.floor((140 - lente / 2) / (RITMO_DA_GERACAO.tracejadoPx * 2)) }, (_, indice) => (
+              <View key={indice} style={[caminhoEstilos.tracoChegada, { top: lente / 2 + 4 + indice * RITMO_DA_GERACAO.tracejadoPx * 2,
+                height: RITMO_DA_GERACAO.tracejadoPx + RITMO_DA_GERACAO.tracejadoEspessura }]} />
+            ))}
+          </Animated.View>
+        )}
         {/* .caminho-chegada__colina: cúpula de 94% da largura (até 440), raio vertical de 190, que desce mais `extra` embaixo. */}
         {/* Meia elipse de raio horizontal igual à metade da largura e vertical de 190 (border-radius 50% / 190px da web). */}
         <ColinaElipse largura={larguraColina} baixo={-48} altura={190 + extra} raioVertical={190 / (190 + extra)} cor={relevo}
@@ -1505,9 +1633,9 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
       </View>
       {stu && (
         // Spec 13: `stu-comemorando` de 64 ao lado do troféu, na sombra de contato, parado (como a chegada da web). No fim da
-        // geração (spec 04, "o Stu pula ao lado do troféu"), um ciclo da animação quando a trilha fica pronta.
+        // proposta (spec 04, "Criar a trilha"), um ciclo de `stu-feliz`: a trilha ainda não existe, a festa fica para o aceite.
         <View style={[caminhoEstilos.chegadaStu, { bottom: 74 + extra }]}>
-          <Stu nome="stu-comemorando" tamanho={64} sombra animado={doZero ? 'acontecimento' : undefined} acontecimento={doZero ? 'pronta' : undefined} />
+          {doZero ? <Stu nome="stu-feliz" tamanho={64} sombra animado="uma-vez" /> : <Stu nome="stu-comemorando" tamanho={64} sombra />}
         </View>
       )}
       <Pressable accessibilityRole="button" accessibilityLabel={mensagens.trilha.trofeu} disabled={total === 0 && !feita}
@@ -1694,6 +1822,9 @@ const caminhoEstilos = StyleSheet.create({
   alinharFim: { textAlign: 'right' },
   camada: { position: 'absolute', left: 0, top: 0 },
   face: { alignItems: 'center', justifyContent: 'center' },
+  faceRascunho: { borderWidth: 2, borderStyle: 'dashed', borderColor: corRascunho },
+  tracoChegada: { position: 'absolute', left: '50%', marginLeft: -RITMO_DA_GERACAO.tracejadoEspessura / 2, width: RITMO_DA_GERACAO.tracejadoEspessura,
+    borderRadius: RITMO_DA_GERACAO.tracejadoEspessura / 2, backgroundColor: corRascunho },
   halo: { position: 'absolute', left: -12, top: -12, borderWidth: 6, borderColor: 'rgba(68, 102, 228, 0.22)' },
   cadeado: { position: 'absolute', left: -4, top: -4, right: -4, bottom: -4, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.faceNeutra },
@@ -1755,13 +1886,9 @@ const caminhoEstilos = StyleSheet.create({
   skeletonNo: { backgroundColor: 'rgba(255, 255, 255, 0.75)' },
   skeletonNoSombra: { position: 'absolute', top: 8, backgroundColor: 'rgba(255, 255, 255, 0.45)' },
   vindoLente: { borderWidth: 3, borderStyle: 'dashed', borderColor: '#C3CDEE', backgroundColor: 'rgba(255, 255, 255, 0.7)' },
-  // Geração (spec 04): o anel azul da lição que nasce (.no--novo), as estrelinhas, o Stu que anda e o balãozinho "Mais uma!".
+  // Geração (spec 04): o anel azul da lição que nasce (.no--novo) e o Stu que anda.
   anelNovo: { position: 'absolute', zIndex: 2, borderWidth: 4, borderColor: '#9FB1F0', boxShadow: '0 0 0 8px rgba(37, 99, 255, 0.12)' },
-  estrelinha: { position: 'absolute', zIndex: 3, width: 8, height: 8, borderRadius: 4, backgroundColor: cores.ouro },
   stuQueAnda: { position: 'absolute', left: 0, top: 0, zIndex: 3 },
-  maisUma: { position: 'absolute', bottom: '100%', marginBottom: 2, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: cores.fundo,
-    boxShadow: '0 3px 8px rgba(15, 23, 42, 0.15)' },
-  maisUmaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   vindoPlaca: { width: 144, gap: 8 },
   vindoPlacaDireita: { alignItems: 'flex-end' },
   vindoTitulo: { width: '80%', height: 14, borderRadius: 8, backgroundColor: cores.gelo },

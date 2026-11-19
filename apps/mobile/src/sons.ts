@@ -332,12 +332,22 @@ class TocaSonsMobile {
   }
 
   /**
-   * Aquece os efeitos: cria o reprodutor de cada um, aos poucos (um a cada 40 ms, para não disputar com a tela que abre),
-   * só com os efeitos ligados. Chamado ao ler as preferências e ao ligar os efeitos; montar uma tela de novo não duplica.
+   * Aquece os efeitos: cria o reprodutor de cada um, só com os efeitos ligados. Sem lista (ao ler as preferências e ao ligar
+   * os efeitos), todos, aos poucos (um a cada 40 ms, para não disputar com a tela que abre); com lista (a tela que vai
+   * precisar deles, como a geração com `geracao_pronta`), esses na hora. Montar uma tela de novo não duplica.
    */
-  aquecerEfeitos(ids: readonly IdEfeitoSonoro[] = ORDEM_DE_AQUECIMENTO): void {
-    if (!this.estado.efeitosAtivos || this.aquecimento) return;
-    const faltam = ids.filter((id) => !this.efeitos.has(id));
+  aquecerEfeitos(ids?: readonly IdEfeitoSonoro[]): void {
+    if (!this.prefsProntas) {
+      void this.carregarPreferencias().then(() => this.aquecerEfeitos(ids));
+      return;
+    }
+    if (!this.estado.efeitosAtivos) return;
+    if (ids) {
+      for (const id of ids) if (!this.efeitos.has(id)) this.criarJogadorDeEfeito(id);
+      return;
+    }
+    if (this.aquecimento) return;
+    const faltam = ORDEM_DE_AQUECIMENTO.filter((id) => !this.efeitos.has(id));
     const proximo = () => {
       this.aquecimento = null;
       if (!this.estado.efeitosAtivos) return;

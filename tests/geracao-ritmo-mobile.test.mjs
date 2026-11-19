@@ -10,7 +10,7 @@ const fonte = await readFile(new URL('../apps/mobile/src/geracao-ritmo.ts', impo
 const { outputText } = ts.transpileModule(fonte, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } });
 const m = {};
 runInNewContext(outputText, { exports: m });
-const { RITMO_DA_GERACAO: R, intervaloDaFila, atrasosDaLicao, rolagemDaVaga, deixouDeAcompanhar, vagaAVista, comMaisUma } = m;
+const { RITMO_DA_GERACAO: R, intervaloDaFila, atrasosDaLicao, rolagemDaVaga, deixouDeAcompanhar, vagaAVista, fimDaPassagem, raioQueCobre } = m;
 
 test('os tempos de cada lição que nasce são os da spec 04', () => {
   assert.deepEqual(
@@ -18,8 +18,9 @@ test('os tempos de cada lição que nasce são os da spec 04', () => {
     [320, 120, 300, 320, 26, 380, 1200, 420, 220, 560, 260, 700, 400],
   );
   assert.equal(R.posicaoDaVaga, 0.6);
-  assert.deepEqual([R.marcoQueda, R.marcoMs, R.depoisDoMarcoMs, R.maisUmaMs, R.pararAcimaDe, R.esperaLongaMs, R.reduzidoMs, R.vistoPorLinhaMs],
-    [12, 260, 200, 900, 40, 12000, 150, 80]);
+  assert.deepEqual([R.marcoQueda, R.marcoMs, R.depoisDoMarcoMs, R.pararAcimaDe, R.esperaLongaMs, R.reduzidoMs], [12, 260, 200, 40, 12000, 150]);
+  // Saíram em "Criar a trilha": as estrelinhas, o "Mais uma!", o confete e o visto da lista de "Escrevendo suas lições".
+  for (const saiu of ['estrelasMs', 'maisUmaMs', 'maisUmaACada', 'confeteMs', 'linhaDoBrilho', 'vistoPorLinhaMs']) assert.equal(R[saiu], undefined, saiu);
 });
 
 test('na fila, cada lição começa quando a anterior chega ao passo 3; com marco antes, 200 ms depois', () => {
@@ -48,8 +49,16 @@ test('a tela volta a acompanhar quando a lição nova entra no mapa visível', (
   assert.equal(vagaAVista(1200, 1170, 650, 50), false);
 });
 
-test('"Mais uma!" no máximo a cada três lições', () => {
-  assert.deepEqual([1, 2, 3, 4, 5, 6, 9].map(comMaisUma), [false, false, true, false, false, true, true]);
+test('criar a trilha (spec 04): o toque, a espera real e a passagem em até 470 ms', () => {
+  assert.deepEqual([R.ajustarSaiMs, R.rolarAteNo1Ms, R.esperaRealMs, R.respiroMs, R.somDaLicaoMinimoMs], [200, 240, 1500, 1100, 400]);
+  assert.deepEqual([R.pulsoMs, R.firmarMs, R.circuloAtrasoMs, R.circuloMs, R.aulaEntraMs, R.aulaOpacidadeMs], [180, 180, 120, 300, 320, 150]);
+  assert.deepEqual([R.tracejadoPx, R.tracejadoEspessura], [8, 5]);
+  assert.equal(fimDaPassagem(false), 470, 'o círculo termina aos 420 e a aula está inteira aos 470');
+  assert.ok(R.circuloAtrasoMs + R.circuloMs <= fimDaPassagem(false));
+  assert.equal(fimDaPassagem(true), 150, 'com movimento reduzido, só a opacidade');
+  // O raio vai até o canto mais longe: do nó 1 no alto à esquerda de 390 × 844, até o canto de baixo à direita.
+  assert.equal(raioQueCobre(100, 200, 390, 844), Math.ceil(Math.hypot(290, 644)));
+  assert.equal(raioQueCobre(195, 422, 390, 844), Math.ceil(Math.hypot(195, 422)));
 });
 
 // Achados da prévia (19/11): o mapa chama `acompanhar` com a vaga de cada lição nova e também no fim; a tela só trata o fim
