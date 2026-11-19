@@ -63,3 +63,6 @@ Hoje a web tem dois menus (o balão do Explorar, que abre em cima, e o `details`
 ## Folha
 
 A folha de hoje fica como está (`.folha` e `.folha-fundo`): sobe de baixo até 767 px e vira um cartão no centro a partir de 768 px, com até 480 px de largura, até 92% da altura, raio de 24 e entrada de 260 ms. No toque, ela ganha a alça de 40 × 5 px no alto, e arrastar a folha 80 px para baixo fecha. Esc e o véu fecham. O título tem o X de 44 px à direita.
+
+## Alvos e texto auxiliar (19–20/11)
+Vale para todos os componentes: botões de texto e links de ação têm área de 44×44 px no mínimo, e o texto auxiliar tem 13 px (metadados) ou 14 px (dicas) no mínimo, sem opacidade. Medidas na spec 04, "Revisão de banca da noite", itens 9 e 10.

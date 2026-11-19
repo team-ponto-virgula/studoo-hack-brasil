@@ -131,3 +131,82 @@ Se os eventos chegarem mais rápido que a sequência, cada lição começa quand
 **Paridade.** Na web, `scrollTo` com rolagem suave (imediata com movimento reduzido); no app, `ScrollView.scrollTo` e `Animated`. Sem dependência nova. Os textos novos (a pílula, a placa da espera longa e o anúncio do fim) entram em `packages/contratos/src/experiencia.ts`, iguais nos dois lados.
 
 **Quem decide.** Tudo nesta seção é decisão de design. Nada precisa do dono.
+
+## Revisão de banca da noite (19–20/11)
+Revisão com olhar de jurado sobre o 9e6e96e. Cobre a entrada, o "Ver como funciona", o pedido, o roteiro do pitch, o Explorar, o perfil e o compartilhar. Na web foram 390×844 e 390×667, rodando local com IA falsa, mais as capturas recentes do Web & API em 390 e 1440. No app, as capturas recentes do Mobile & QA (prévia web). Os itens vão do mais grave ao menos grave. Ficou de fora o que já está decidido e em implementação: ordenar em lista única na web, reação no painel, mascote parte 2 na web, revisão das configurações, geração que se acompanha na web, Curtir B e C e controle de som no app. Os esboços dos três primeiros estão na pasta do Designer, `ux/11-banca-noite/`.
+
+### 1. Entrada no celular: caber sem rolar, com "Entrar" junto dos campos (web; o app já cabe)
+- **Hoje:** em 390×844, o campo de e-mail começa na dobra e o de senha fica abaixo dela; em 390×667, nenhum campo aparece. "Entrar" fica preso no rodapé, longe dos campos, e com o modo visitante ligado vira botão branco (`src/app/login/entrada.tsx`). O app já tirou a faixa ilustrada e cabe (b1254bd).
+- **Regra (web até 767 px, igual ao app):**
+  - Sem faixa ilustrada quando a janela tem até 860 px de altura. Acima disso, a faixa tem 120 px.
+  - Título em 28/34 (até 3 linhas em 390) e texto em 15/22 (até 3 linhas). "Ver como funciona" é um botão de texto de 44 px.
+  - **Modo visitante ligado:** o cartão "Experimentar sem conta" fica como está. O formulário vem logo abaixo, e "Entrar" fica dentro dele, logo depois da senha, na largura toda, com 48 px, em estilo secundário. Não há rodapé preso.
+  - **Modo visitante desligado:** "Entrar" é o principal (azul cheio, 48 px), no mesmo lugar.
+  - "Esqueci minha senha" fica embaixo do botão, como botão de texto de 44 px. Com o teclado aberto, vale a regra do app: o campo em foco fica acima do teclado.
+- **Aceite:** em 390×844 aparecem, sem rolar, o botão "Entrar" (visitante desligado) ou o campo de e-mail inteiro (visitante ligado). Em 390×667, o campo de e-mail aparece inteiro nos dois casos.
+
+### 2. "Ver como funciona": arte grande, sem selo de demonstração e sem vazio (web e app)
+- **Hoje:** a arte ocupa uns 40% da tela, e sobram uns 300 px vazios até o rodapé em 390×844. A arte dos passos 1 e 2 leva o selo "Modo demonstração" (`src/app/apresentacao.tsx:165` e `:178`), que serve para conteúdo simulado, não para ilustração. No passo 3, os cartões da arte têm texto de 11 a 13 px. O último passo oferece "Experimentar sem conta" e "Voltar", sem "Entrar".
+- **Regra:**
+  - A arte ocupa 52% da altura útil (mínimo de 280 px, máximo de 420), e o título e o texto ficam centrados no espaço que sobra até o rodapé.
+  - Sem o selo "Modo demonstração" na arte do tour.
+  - Os textos da arte têm 14 px no mínimo. No passo 3 ficam só dois cartões ("O que fez sentido" e "Próximo passo"), mais o Stu concentrado. O passo 1 ganha o `stu-estudando`, em 160 px, ao lado da citação. Continua valendo a §B4 da spec 13 nos outros passos.
+  - **Último passo:** com o modo visitante ligado, as ações ficam empilhadas, porque o rótulo não cabe na metade (spec 11): "Experimentar sem conta" (principal) em cima e "Entrar" (secundário) embaixo. Com ele desligado, só "Entrar", como principal. "Voltar" sobe para o alto, à esquerda, como botão de texto de 44 px, no lugar de "Pular".
+
+### 3. Pedido: material e ideias à vista (web e app)
+- **Hoje:** em 390×844, as ideias de um toque começam abaixo da dobra. O aviso "Você ainda não tem trilhas. Comece uma aqui…" repete o título, e o Stu do alto tem uns 110 px.
+- **Regra, com a mesma ordem nos três:**
+  1. O Stu curioso em 72 px (56 quando a janela tem até 700 px de altura, e aí o subtítulo sai), o título "O que você quer aprender?" e "Pode ser qualquer assunto!".
+  2. O campo e "Montar minha trilha".
+  3. "Tenho um material" num cartão compacto: 64 px de altura, com ícone, título e "Foto, PDF, DOCX ou CSV", sem a pílula "Seu material".
+  4. Uma fileira de ideias populares que rola para o lado: chips de 44 px com ícone e texto, na ordem de hoje, terminando em "Surpreenda-me".
+  - O aviso `planos.semTrilhas` deixa de aparecer no pedido.
+- **Aceite:** em 390×844 e em 390×667 aparecem, sem rolar e acima da barra de abas, o campo, "Montar minha trilha", "Tenho um material" e a fileira de ideias.
+
+### 4. Conclusão: o clímax com uma ação clara (web e app)
+- **Hoje:**
+  - Na trilha concluída, o botão principal é "Voltar à trilha", e "Compartilhar esta trilha" aparece no meio, como secundário (`src/app/estudo.tsx:1444-1446`).
+  - Um selo de visto verde cobre o Stu nas duas conclusões.
+  - Os números usam bordas grossas coloridas.
+  - Antes das ações, a página empilha números, "O que você praticou", o aviso de sincronia e "Frases desta lição".
+- **Regra:**
+  - **Trilha concluída:** "Compartilhar esta trilha" é o principal, "Começar um assunto novo" o secundário, e "Voltar à trilha" vira botão de texto.
+  - **Lição concluída:** fica como hoje ("Ir para a próxima lição" como principal e "Voltar à trilha" como secundário).
+  - Sem o selo de visto sobre o Stu: a expressão e o título já dizem.
+  - Os números ficam em três blocos brancos, com borda de 2 px #E1E7FA, ícone de 16 px na cor de hoje e valor em 22 px #0B1B5C. Sem borda colorida grossa.
+  - "O que você praticou" e "Frases desta lição" ficam recolhidos num botão de texto, "Ver o que você praticou", que abre no lugar. As ações continuam no rodapé preso.
+
+### 5. Navegação no celular no mesmo lugar desde o primeiro uso (web)
+- **Hoje:** na conta sem trilhas, a web mostra "Minhas trilhas" e "Perfil" no alto e não mostra a barra de abas. Com trilhas, a barra de abas aparece embaixo (cabeçalho em `src/app/estudo.tsx:653-672`). O app mostra a barra de abas.
+- **Regra:** nas telas de topo, a barra de abas (Minhas trilhas, Nova trilha, Explorar e Perfil) aparece sempre, inclusive sem trilhas, com "Nova trilha" marcada. No celular, o cabeçalho fica só com a marca e o selo de sincronia, e "Minhas trilhas" e "Perfil" saem do alto. É igual ao app (spec 07).
+
+### 6. Geração no app: progresso que se lê (app; a web segue quando a geração que se acompanha entrar)
+- **Hoje:** os três pontos animados ao lado do título, no alto, parecem um menu. A dica da placa tem uns 12 px, com contraste baixo, e o rótulo do nó que está nascendo fica esmaecido (capturas de geração do Mobile & QA).
+- **Regra:** os três pontos saem do alto, porque o rodapé já diz "Montando a trilha". A dica da placa passa a 14/20, em #0B1B5C. O rótulo do nó que nasce fica em #5E6A85, sem opacidade.
+
+### 7. Lição: conceito em blocos curtos e áudio com botão (web e app)
+- **Hoje:** no celular, o balão "O Stu explica" chega a umas 110 palavras, com seis frases de áudio como links no meio do parágrafo (aula de inglês, 390).
+- **Regra:**
+  - O balão mostra até 3 frases (cerca de 50 palavras), e o resto fica em "Continuar lendo" (a chave já existe), que abre no lugar.
+  - As frases com áudio saem do parágrafo e viram uma lista logo abaixo dele, na mesma ordem. Cada uma tem um botão "Ouvir" de 44 px, com ícone de alto-falante e texto.
+
+### 8. Estados vazios sem controles que não servem (web e app)
+- **Hoje:** o Explorar vazio mostra as abas e a fileira de temas com setas acima do aviso.
+- **Regra:** com a lista vazia, a fileira de temas e as setas somem. Ficam as abas Comunidade e Seguindo e o aviso com o Stu e "Ir para minhas trilhas". Vale também para a busca sem resultado e para Seguindo vazio.
+
+### 9. Alvos de toque de 44 px em todo botão de texto (web e app)
+- **Hoje:** `.botao--texto` só tem 44 px de altura dentro da navegação (`src/app/globals.css:342`). "Ver como funciona", o "Pular" do tour, "Esqueci minha senha" e "Rever a explicação" ficam entre uns 20 e 32 px de altura.
+- **Regra:** todo botão de texto e todo link de ação têm área de toque de 44×44 px no mínimo.
+  - Na web: altura mínima de 44 px e respiro de 12 px dos lados. Quando o desenho não comporta isso, a área cresce por fora com um `::after`.
+  - No app: `hitSlop` de 12 nos botões de texto.
+
+### 10. Texto auxiliar legível (web e app)
+- **Hoje:** placas, metadados e fontes usam 11 a 12 px, às vezes com opacidade. Exemplos: "Toque nas frases destacadas para ouvir", "Fonte · …", a dica da placa da geração e o rótulo do nó que nasce.
+- **Regra:** no mínimo 13 px para metadados e 14 px para dicas. A cor mínima é #5E6A85 sobre branco (5,4:1) e #4B5675 sobre lavanda ou creme. Texto nunca usa opacidade abaixo de 1.
+
+### Decisão do dono
+- **Modo visitante no site da banca ("Experimentar sem conta").** Recomendo deixar ligado durante o hackathon: o jurado experimenta sem pedir senha. O item 1 já trata os dois casos.
+
+### Já decidido, mas ainda fora da web no 9e6e96e (fora da contagem)
+- Perfil vazio com "?" no avatar e "Tudo salvo" sem nada salvo (spec 10, pedido 1): na web, o perfil continua assim.
+
