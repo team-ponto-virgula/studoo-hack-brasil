@@ -71,6 +71,19 @@
 @keyframes previa-pulso { 55% { transform: scale(1.12); } }
 @keyframes previa-sair { to { opacity: 0; } }
 @keyframes previa-abrir { to { clip-path: circle(var(--raio) at var(--origem-x) var(--origem-y)); } }
+/* Fora do mapa, o mesmo quadro cobre a aula até ela aparecer; teclas e toques já chegam à aula. */
+@media (min-width: 768px) {
+  .estudo:has(.painel--geracao[data-passagem])::before {
+    content: ''; position: fixed; z-index: 18; inset: 0; background: white; pointer-events: none;
+    animation: previa-sair 150ms 320ms linear forwards;
+  }
+}
+@media (min-width: 1024px) {
+  .estudo:has(.painel--geracao[data-passagem]) .barra-lateral {
+    display: flex; position: fixed; z-index: 19; top: 0; left: 0; width: var(--largura-menu); pointer-events: none;
+    animation: previa-sair 150ms 320ms linear forwards;
+  }
+}
 @media (max-width: 767px) {
   .painel--geracao { position: fixed; inset: 0; z-index: 6; width: 100%; height: 100dvh; min-height: 0; max-height: none; border: 0; border-radius: 0; }
   .estudo:has(.painel--geracao:not([inert])) .estudo-cabecalho { display: none; }
@@ -80,7 +93,9 @@
 }
 @media (prefers-reduced-motion: reduce) {
   /* A regra global encurta movimentos. Nesta passagem só a opacidade muda. */
-  .painel--geracao[data-passagem='reduzida'] { animation-duration: 150ms !important; }
+  .painel--geracao[data-passagem='reduzida'],
+  .estudo:has([data-passagem='reduzida'])::before,
+  .estudo:has([data-passagem='reduzida']) .barra-lateral { animation-duration: 150ms !important; animation-delay: 0ms; }
   [data-fase='montando'] .previa-no__face, [data-fase='montando'] .previa-no__titulo, [data-fase='montando'] .previa-ligacao, .previa-chegada img { animation: previa-aparecer 150ms linear; }
   [data-fase='salvando'] [data-primeiro] .previa-no__face { animation: none; box-shadow: 0 0 0 4px #8cafff; }
   [data-fase='criada'] [data-primeiro] .previa-no__face, .previa-giro { animation: none; }
