@@ -17,7 +17,9 @@ on:
         default: "26.5"
         required: true
   push:
-    branches: [feat/hackathon-integracao]
+    # conferencia/continuar-lendo-iphone: a correção 37c302e sobre a base que o Expo Go do dono serve (bce28d5), com os
+    # fluxos 70 e 72; só neste ramo, que não volta para a integração.
+    branches: [feat/hackathon-integracao, conferencia/continuar-lendo-iphone]
     paths:
       - "apps/mobile/**"
       - "packages/contratos/**"

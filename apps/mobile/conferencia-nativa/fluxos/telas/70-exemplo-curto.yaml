@@ -1,0 +1,44 @@
+# Correção 37c302e ("Continuar lendo" nunca fica sem efeito no iPhone): numa etapa curta, com o exemplo inteiro à vista,
+# o rodapé mostra "Avançar", e um toque leva à etapa 3. Antes, no iOS 26, o rodapé de vidro deixava "Continuar lendo"
+# num conteúdo que não rola. Lição: "Organizar antes de cozinhar" (Culinária, a lição atual da trilha do ordenar), cujo
+# exemplo cabe inteiro na tela do iPhone 17 Pro (medido na prévia web: o conteúdo não passa da parte visível).
+appId: host.exp.Exponent
+name: 70-exemplo-curto
+---
+- runFlow:
+    file: ../partes/abrir-licao.yaml
+    env:
+      TRILHA: ${TRILHA_ORDENAR}
+# Da etapa 1 (Conceito) à etapa 2 (Exemplo): "Avançar" ou, se o conceito for longo, "Continuar lendo" até ele.
+- repeat:
+    times: 8
+    while:
+      notVisible: 'Etapa 2 de \d+'
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: "ler-mais|avancar-licao"
+          optional: true
+- extendedWaitUntil:
+    visible: 'Etapa 2 de \d+'
+    timeout: 15000
+# As medidas da etapa assentam em 250 ms; a espera de animação cobre isso antes de conferir o rodapé.
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 70-exemplo-curto-etapa-2
+- extendedWaitUntil:
+    visible:
+      id: avancar-licao
+    timeout: 5000
+- assertNotVisible:
+    id: ler-mais
+# Um toque só em "Avançar" leva à etapa 3.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: avancar-licao
+- extendedWaitUntil:
+    visible: 'Etapa 3 de \d+'
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 71-exemplo-curto-etapa-3

@@ -1,0 +1,60 @@
+# A outra metade da correção 37c302e: um exemplo longo continua pedindo leitura. Na etapa 2, o rodapé mostra "Continuar
+# lendo" (e não "Avançar"); cada toque rola a tela, e só no fim o rodapé vira "Avançar", que leva à etapa 3. Lição:
+# "Pedir informações na rua" (Inglês, a lição atual da trilha da lacuna), cujo exemplo tem as frases para ouvir e passa
+# bem da tela (medido na prévia web: 1789 de conteúdo para 644 visíveis).
+appId: host.exp.Exponent
+name: 72-exemplo-longo
+---
+- runFlow:
+    file: ../partes/abrir-licao.yaml
+    env:
+      TRILHA: ${TRILHA_LACUNA}
+# Da etapa 1 (Conceito) à etapa 2 (Exemplo): "Avançar" ou, se o conceito for longo, "Continuar lendo" até ele.
+- repeat:
+    times: 8
+    while:
+      notVisible: 'Etapa 2 de \d+'
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: "ler-mais|avancar-licao"
+          optional: true
+- extendedWaitUntil:
+    visible: 'Etapa 2 de \d+'
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 72-exemplo-longo-etapa-2
+- extendedWaitUntil:
+    visible:
+      id: ler-mais
+    timeout: 5000
+- assertNotVisible:
+    id: avancar-licao
+# Lê até o fim: cada "Continuar lendo" rola três quartos da tela.
+- repeat:
+    times: 10
+    while:
+      notVisible:
+        id: avancar-licao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: ler-mais
+          optional: true
+- extendedWaitUntil:
+    visible:
+      id: avancar-licao
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 73-exemplo-longo-lido
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: avancar-licao
+- extendedWaitUntil:
+    visible: 'Etapa 3 de \d+'
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 74-exemplo-longo-etapa-3
