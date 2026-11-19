@@ -207,7 +207,8 @@ const v = StyleSheet.create({
   entrada: { gap: 10, paddingVertical: 14, paddingHorizontal: 16, borderWidth: 1, borderColor: borda, borderRadius: 14, backgroundColor: superficie },
   entradaCabeca: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   entradaIcone: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.fundo },
-  beneficio: { flex: 1, color: cores.texto, opacity: 0.85, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5 },
+  // Banca da noite §10: texto nunca com opacidade abaixo de 1 (antes 0,85 e 0,8 sobre a cor do texto); a dica em 14.
+  beneficio: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5 },
   // <p class="estudio-legenda voz-ao-vivo-nota">: .estudio-card p dá margem de 12 e entrelinha 1,6.
   nota: { marginVertical: 12, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13.6, lineHeight: 21.76 },
   // Na web, o lábio de 4 é sombra (fora da caixa); no app, fica dentro: o que vem depois começa 4 antes.
@@ -223,8 +224,8 @@ const v = StyleSheet.create({
   somenteLeitor: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   cabeca: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 44 },
   estado: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '600', fontSize: 14, lineHeight: 21 },
-  tempo: { color: cores.texto, opacity: 0.8, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontVariant: ['tabular-nums'] },
-  dica: { marginVertical: 12, color: cores.texto, opacity: 0.8, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 20.8 },
+  tempo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontVariant: ['tabular-nums'] },
+  dica: { marginVertical: 12, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21 },
   progresso: { height: 4, borderRadius: 999, backgroundColor: borda, overflow: 'hidden' },
   progressoTrecho: { height: '100%', borderRadius: 999, backgroundColor: cores.acao },
   // 36 de altura com o respiro de 4 dentro (box-sizing: border-box): as barras de 32 ficam centradas.

@@ -2420,7 +2420,7 @@ const estudoEstilos = StyleSheet.create({
   erroNaLista: { marginTop: 0, marginBottom: 16 },
   outrasTrilhas: { marginTop: 16 },
   destaqueTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
-  destaqueRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.7 },
+  destaqueRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17, letterSpacing: 0.7 },
   destaqueTitulo: { marginTop: 2 },
   // O título do cartão de destaque tem 22 px na web; o dos outros cartões, 19.
   destaqueTituloTamanho: { fontSize: 22, lineHeight: 28.6, letterSpacing: -0.33 },
@@ -2458,7 +2458,7 @@ const estudoEstilos = StyleSheet.create({
   // Topo da trilha e anel de progresso
   topoTrilha: { flexDirection: 'row', alignItems: 'center', gap: 16, marginBottom: 12, paddingTop: 4 },
   topoTrilhaTexto: { flex: 1, minWidth: 0 },
-  topoTrilhaRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 1 },
+  topoTrilhaRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, letterSpacing: 1 },
   tituloTopo: { fontSize: 26, lineHeight: 30 },
   // Com a sombra de 4 embaixo da web (0 4px 0 rgb(27 42 94 / 0.08)).
   anel: { alignItems: 'center', justifyContent: 'center', borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: '0 4px 0 rgba(11, 27, 92, 0.08)' },
@@ -2472,7 +2472,7 @@ const estudoEstilos = StyleSheet.create({
     paddingVertical: 10 },
   barraPlanoTexto: { flex: 1, minWidth: 0 },
   // .trilha-topo no celular: rótulo de 0,6875rem e h1 de 1,125rem na entrelinha de 1,12.
-  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, letterSpacing: 0.9 },
+  barraPlanoRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17, letterSpacing: 0.9 },
   barraPlanoTitulo: { marginTop: 2, fontSize: 18, lineHeight: 20.16 },
   // .painel--trilha: 20 entre a faixa do nome e o mapa (o conteúdo já tem 24 em cima).
   // .painel--trilha: 20 da faixa "SUA TRILHA" até o mapa (o conteúdo das telas de estudo começa a 28).
@@ -2549,7 +2549,7 @@ const estudoEstilos = StyleSheet.create({
   conteudoComFlutuante: { paddingBottom: 0 },
   proximoTextos: { flex: 1, minWidth: 0 },
   // .trilha-proximo__rotulo: 12 px em 900, 0,06em, entrelinha do corpo (18).
-  proximoRotuloRodape: { fontSize: 12, lineHeight: 18, fontWeight: '900', letterSpacing: 0.72 },
+  proximoRotuloRodape: { fontSize: 13, lineHeight: 18, fontWeight: '900', letterSpacing: 0.72 },
   proximoTituloRodape: { fontSize: 15, lineHeight: 18.75, fontWeight: '800' },
   concluido: { gap: 8 },
   concluidoTitulo: { flexDirection: 'row', alignItems: 'center', gap: 8 },

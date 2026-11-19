@@ -751,7 +751,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       {/* Como na web: na revisão rápida, a etapa entra de novo, mesmo com o mesmo exercício (o último, pulado agora). */}
       <EntradaDaEtapa key={`${passo}-${rodadaDeOpcoes}`}>
         {passo > 0 && !revisao && (
-          <Pressable testID="etapa-anterior" accessibilityRole="button" disabled={ocupado} hitSlop={{ top: 10, bottom: 10, left: 0, right: 0 }}
+          <Pressable testID="etapa-anterior" accessibilityRole="button" disabled={ocupado} hitSlop={12}
             onPress={() => { voltandoEtapa.current = true; setPasso((atual) => Math.max(0, atual - 1)); }} style={licaoEstilos.voltarEtapa}>
             <View style={{ transform: [{ rotate: '180deg' }] }}><Icone nome="seta" tamanho={16} cor={cores.acao} /></View>
             <Text style={licaoEstilos.voltarEtapaTexto}>{t.etapaAnterior}</Text>
@@ -773,12 +773,12 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {avisoRetomada && (
           <View testID="aviso-retomada" accessibilityLiveRegion="polite" style={licaoEstilos.aviso}>
             <Text style={licaoEstilos.avisoTexto}>{confirmandoRecomeco ? t.recomecarPergunta : t.retomada}</Text>
-            <Pressable testID={confirmandoRecomeco ? 'confirmar-recomeco' : 'recomecar-licao'} accessibilityRole="button" hitSlop={8} style={licaoEstilos.avisoLink}
+            <Pressable testID={confirmandoRecomeco ? 'confirmar-recomeco' : 'recomecar-licao'} accessibilityRole="button" hitSlop={12} style={licaoEstilos.avisoLink}
               onPress={() => { if (confirmandoRecomeco) { setConfirmandoRecomeco(false); recomecarAgora(); } else setConfirmandoRecomeco(true); }}>
               <Text style={[licaoEstilos.avisoTexto, licaoEstilos.avisoAcao]}>{t.recomecarLicao}</Text>
             </Pressable>
             {confirmandoRecomeco && (
-              <Pressable testID="cancelar-recomeco" accessibilityRole="button" hitSlop={8} style={licaoEstilos.avisoLink} onPress={() => setConfirmandoRecomeco(false)}>
+              <Pressable testID="cancelar-recomeco" accessibilityRole="button" hitSlop={12} style={licaoEstilos.avisoLink} onPress={() => setConfirmandoRecomeco(false)}>
                 <Text style={[licaoEstilos.avisoTexto, licaoEstilos.avisoAcao]}>{mensagens.geracao.cancelar}</Text>
               </Pressable>
             )}
@@ -876,7 +876,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             {exercicio && (
               <View style={licaoEstilos.consultaRecolhivel}>
                 <Pressable testID="rever-explicacao" accessibilityRole="button" accessibilityState={{ expanded: explicacaoAberta }} aria-expanded={explicacaoAberta}
-                  onPress={() => setExplicacaoAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
+                  onPress={() => setExplicacaoAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={12}>
                   <Chevron aberto={explicacaoAberta} cor="#8A5A00" />
                   <Text style={licaoEstilos.consultaBotaoTexto}>{explicacaoAberta ? t.recursos.esconder : t.reverExplicacao}</Text>
                 </Pressable>
@@ -898,7 +898,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   if (sobra > 0) rolagem.current?.scrollTo({ y: posicaoRolagem.current + sobra, animated: reduzir === false });
                 }}>
                 <Pressable testID="consultar-recurso" accessibilityRole="button" accessibilityState={{ expanded: consultaAberta }} aria-expanded={consultaAberta}
-                  onPress={() => setConsultaAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={6}>
+                  onPress={() => setConsultaAberta((atual) => !atual)} style={licaoEstilos.consultaBotao} hitSlop={12}>
                   <Chevron aberto={consultaAberta} cor="#8A5A00" />
                   <Text style={licaoEstilos.consultaBotaoTexto}>
                     {consultaAberta ? t.recursos.esconder
@@ -1245,7 +1245,7 @@ const licaoEstilos = StyleSheet.create({
   topo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12, marginHorizontal: -4, marginTop: 2 },
   topoColuna: { flex: 1, minWidth: 0, gap: 2 },
   andamento: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  tituloTopo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 15 },
+  tituloTopo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17 },
   /** A aula começa mais perto do topo (rodada 4B da web). */
   // 40 entre o último conteúdo e o rodapé fixo no fim da rolagem (bf8cf37: o vão de 22 do painel mais os 18 do rodapé).
   // 18 da faixa do alto até o primeiro bloco: com a faixa de 62, "Etapa anterior", a etiqueta do exercício e o título da ponte
@@ -1303,7 +1303,7 @@ const licaoEstilos = StyleSheet.create({
   fonte: { paddingVertical: 16, paddingHorizontal: 20, gap: 10, borderRadius: 20, borderWidth: 2, borderColor: cores.destaqueBorda, backgroundColor: '#F6F8FF' },
   fonteTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', rowGap: 8, columnGap: 12 },
   fonteSeloNumero: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#E5EBFF' },
-  fonteRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18, letterSpacing: 0.48 },
+  fonteRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.48 },
   fonteOnde: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 21 },
   fonteTrecho: { borderLeftWidth: 4, borderColor: cores.acao, backgroundColor: cores.fundo, borderTopRightRadius: 12, borderBottomRightRadius: 12,
     paddingVertical: 10, paddingHorizontal: 14 },
@@ -1318,7 +1318,7 @@ const licaoEstilos = StyleSheet.create({
   dica: { gap: 4, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderLeftWidth: 4, borderLeftColor: '#E0A92E', borderRadius: 12,
     backgroundColor: '#FFF8E6' },
   dicaTopo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dicaTitulo: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
+  dicaTitulo: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17, letterSpacing: 0.6 },
   dicaTexto: { color: '#5C3B00', fontFamily: fontes.corpo, fontWeight: '600', fontSize: 15, lineHeight: 21 },
   revisaoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   // .aula-explicacao: o vão de 14 da etapa (sem margem própria).
@@ -1362,7 +1362,7 @@ const licaoEstilos = StyleSheet.create({
   avisoAcao: { textDecorationLine: 'underline', fontWeight: '900' },
   consultaBotao: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 48, paddingVertical: 10, paddingHorizontal: 14 },
   consultaBotaoTexto: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16 },
-  consultaRotulo: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
+  consultaRotulo: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17, letterSpacing: 0.8 },
   respostaCampo: { minHeight: 58, fontSize: 20, lineHeight: 26, fontWeight: '700' },
   respostaCerta: { borderColor: cores.sucessoClaro, color: cores.sucesso, backgroundColor: '#EEFAF3' },
   respostaErrada: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },

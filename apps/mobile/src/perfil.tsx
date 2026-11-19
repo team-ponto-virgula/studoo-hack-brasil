@@ -542,7 +542,7 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
           </View>
         </Pressable>
         <View style={perfilEstilos.fotoTexto}>
-          <Pressable testID="foto-link" accessibilityRole="button" disabled={salvando} onPress={tocarNaFoto} hitSlop={6}
+          <Pressable testID="foto-link" accessibilityRole="button" disabled={salvando} onPress={tocarNaFoto} hitSlop={12}
             style={({ pressed }) => [perfilEstilos.fotoLink, pressed && { opacity: 0.7 }]}>
             <Text style={perfilEstilos.fotoLinkTexto}>{salvo.foto ? p.fotoTrocar : p.fotoAdicionar}</Text>
           </Pressable>
@@ -620,7 +620,7 @@ const perfilEstilos = StyleSheet.create({
   emailRotulo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
   // .selo-so-voce: "Só você vê" ao lado do e-mail.
   soVoce: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999, backgroundColor: cores.nevoa },
-  soVoceTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 12, lineHeight: 18, fontWeight: '800' },
+  soVoceTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 18, fontWeight: '800' },
 
   // Editor (esboço do Designer, .editor): bloco com borda de 2 e cantos de 24, respiro de 18 e 18 entre os campos.
   editor: { gap: 18, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo },

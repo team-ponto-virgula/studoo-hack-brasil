@@ -1185,7 +1185,7 @@ export const socialEstilos = StyleSheet.create({
   nivelTituloLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
   // .nivel__agora: pílula verde-clara de 12/900.
   nivelAgora: { paddingHorizontal: 8, paddingVertical: 1, borderRadius: 999, backgroundColor: '#E3F6EA' },
-  nivelAgoraTexto: { color: '#14513B', fontFamily: fontes.corpo, fontSize: 12, lineHeight: 18, fontWeight: '900' },
+  nivelAgoraTexto: { color: '#14513B', fontFamily: fontes.corpo, fontSize: 13, lineHeight: 18, fontWeight: '900' },
   // .publicacao__ainda: a nota em branco sobre a névoa da publicação.
   publicacaoAinda: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#FFFFFF', color: cores.texto, fontFamily: fontes.corpo,
     fontSize: 16, lineHeight: 24, fontWeight: '800', overflow: 'hidden' },

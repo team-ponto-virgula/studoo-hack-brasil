@@ -703,8 +703,9 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
           ))}
         </View>
 
-        {/* Uma linha só, rolável, até as bordas da tela; na aba Seguindo sem ninguém seguido, não há o que filtrar. */}
-        {!(aba === 'seguindo' && pagina?.seguindoAlguem === false) && (
+        {/* Uma linha só, rolável, até as bordas da tela. Com a lista vazia (Explorar vazio, tema sem trilha, Seguindo vazio),
+            a fileira sai (banca da noite §8): ficam as abas e o aviso com o Stu e a ação dele. */}
+        {!vazio && !(aba === 'seguindo' && pagina?.seguindoAlguem === false) && (
           <Fileira papel="radiogroup" rotulo={c.temas} estiloConteudo={comunidadeEstilos.temasConteudo}>
             <FichaTema rotulo={c.todos} marcada={tema === null} testID="tema-todos" aoTocar={() => setTema(null)} />
             {TEMAS.map((opcao) => <FichaTema key={opcao} rotulo={temas[opcao]} marcada={tema === opcao} testID={`tema-${opcao}`} aoTocar={() => setTema(opcao)} />)}

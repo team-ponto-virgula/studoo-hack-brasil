@@ -1637,7 +1637,7 @@ const caminhoEstilos = StyleSheet.create({
     backgroundColor: cores.fundo, boxShadow: '0 3px 0 rgba(11, 27, 92, 0.08)' },
   falaTexto: { flexShrink: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
   falaPontinhos: { height: 14, justifyContent: 'center', paddingLeft: 6 },
-  dica: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18 },
+  dica: { marginTop: 6, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   // .caminho-placa: borda de 3 em volta (#c79a62) e o degrau de 4 por fora (box-shadow 0 4px 0 #b0844d).
   placaMadeira: { maxWidth: 272, marginTop: 4, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 3,
     borderColor: '#C79A62', backgroundColor: '#F7E3C2', boxShadow: '0 4px 0 #B0844D' },
@@ -1656,7 +1656,7 @@ const caminhoEstilos = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.94)', boxShadow: '0 3px 0 rgba(11, 27, 92, 0.08)' },
   // .caminho-no[data-estado='atual'] .caminho-no__texto: borda de 2 e degrau de 4 por fora em azul claro.
   placaAtual: { borderWidth: 2, borderColor: 'rgba(68, 102, 228, 0.28)', boxShadow: '0 4px 0 rgba(68, 102, 228, 0.16)' },
-  posicao: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
+  posicao: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17, letterSpacing: 0.6 },
   titulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 21 },
   tituloAtual: { fontSize: 17, lineHeight: 22 },
   tituloPrevia: { fontSize: 15, lineHeight: 20 },
@@ -1678,7 +1678,7 @@ const caminhoEstilos = StyleSheet.create({
   seloNaCaixa: { flexDirection: 'row', alignItems: 'center', gap: 4, alignSelf: 'flex-start', marginTop: 8 },
   selo: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999,
     backgroundColor: cores.fundo },
-  seloTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 18 },
+  seloTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   ponteDiscreta: { marginTop: 6 },
   bolhaTrofeu: { position: 'absolute', bottom: '100%', left: -80, right: -80, marginBottom: 12, alignItems: 'center', zIndex: 3 },
   bolhaTrofeuTexto: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 14, borderWidth: 2, borderBottomWidth: 4, borderColor: '#FFE08A',
@@ -1704,7 +1704,7 @@ const caminhoEstilos = StyleSheet.create({
     borderRightWidth: 2, borderBottomWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
   // .caminho-no__etiqueta-acao: sem borda, com o degrau de 2 por fora (box-shadow 0 2px 0 #1d4ed8).
   etiquetaAcao: { paddingHorizontal: 12, paddingVertical: 3, borderRadius: 999, backgroundColor: cores.acao, boxShadow: `0 2px 0 ${cores.acaoEscura}` },
-  etiquetaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.9 },
+  etiquetaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17, letterSpacing: 0.9 },
   etiquetaTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 19, textAlign: 'center' },
   // Ligação, marco e chegada
   ligacao: { position: 'absolute', left: 0, right: 0, bottom: 0 },
@@ -1720,7 +1720,7 @@ const caminhoEstilos = StyleSheet.create({
   parteCorpo: {},
   parteTopo: { flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 },
   parteNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 20 },
-  parteAndamento: { color: '#4A5568', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16 },
+  parteAndamento: { color: '#4A5568', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 17 },
   // A1: o troféu fica 16 px mais longe do último nó, como na web (193 px de lente a lente em 390).
   chegada: { minHeight: 296, alignItems: 'center', justifyContent: 'flex-end', gap: 14, paddingTop: 8, paddingBottom: 30, overflow: 'hidden' },
   pontoEstrada: { position: 'absolute', left: '50%', marginLeft: -3, width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(11, 27, 92, 0.34)' },

@@ -143,3 +143,51 @@ test('§2 "Ver como funciona": no último passo, Voltar no alto e as ações fin
   assert.match(apresentacao, /<Botao rotulo=\{mensagens\.entrada\.entrar\} testID="entrar-apresentacao" variante=\{empilhar \? 'secundario' : 'primario'\} acao=\{entrar\} \/>/);
   assert.match(sessao, /entrar=\{\(\) => \{ devolverFoco\.current = 'email'; setVendoApresentacao\(false\); \}\}/);
 });
+
+test('§8 vazios: com a lista vazia, a fileira de temas sai (ficam as abas e o aviso com o Stu e a ação)', async () => {
+  const comunidade = await readFile(new URL('../apps/mobile/src/comunidade.tsx', import.meta.url), 'utf8');
+  assert.match(comunidade, /const vazio = pagina && pagina\.emAlta\.length === 0 && pagina\.novas\.length === 0;/);
+  assert.match(comunidade, /\{!vazio && !\(aba === 'seguindo' && pagina\?\.seguindoAlguem === false\) && \(\n\s*<Fileira papel="radiogroup" rotulo=\{c\.temas\}/);
+  // As abas continuam fora da condição, e os três vazios com o Stu.
+  assert.match(comunidade, /accessibilityRole="radiogroup" accessibilityLabel=\{c\.abasRotulo\}/);
+  assert.match(comunidade, /<Stu nome="stu-curioso" tamanho=\{96\} animado="uma-vez" \/>/);
+});
+
+test('§9 alvos: todo botão de texto e link de ação com 12 de toque por fora (44 × 44 no mínimo)', async () => {
+  const ler = (arquivo) => readFile(new URL(`../apps/mobile/src/${arquivo}`, import.meta.url), 'utf8');
+  const [interfaceApp, sessao, licao, formatos, perfil] = await Promise.all(['interface.tsx', 'sessao.tsx', 'licao.tsx', 'aula-formatos.tsx', 'perfil.tsx'].map(ler));
+  const textoLivre = interfaceApp.slice(interfaceApp.indexOf('  return (\n    <Pressable\n      ref={referencia}'), interfaceApp.indexOf('estilos.botaoTextoLivre'));
+  assert.match(textoLivre, /hitSlop=\{12\}/, 'o Botao de texto');
+  assert.match(interfaceApp, /testID="aviso-acao" accessibilityRole="button" hitSlop=\{12\}/);
+  assert.match(sessao, /testID="ver-como-funciona" accessibilityRole="button" disabled=\{ocupado\} hitSlop=\{12\}/);
+  assert.match(sessao, /hitSlop=\{12\} onPress=\{\(\) => recuperar\(email\)\}/, '"Esqueci minha senha"');
+  assert.match(licao, /testID="etapa-anterior" accessibilityRole="button" disabled=\{ocupado\} hitSlop=\{12\}/);
+  assert.equal((licao.match(/style=\{licaoEstilos\.avisoLink\}/g) ?? []).length, (licao.match(/hitSlop=\{12\} style=\{licaoEstilos\.avisoLink\}/g) ?? []).length);
+  assert.equal((licao.match(/style=\{licaoEstilos\.consultaBotao\} hitSlop=\{12\}>/g) ?? []).length, 2, '"Rever a explicação" e a consulta');
+  assert.match(formatos, /onPress=\{\(\) => setSemCronometro\(true\)\} hitSlop=\{12\}/);
+  assert.match(perfil, /testID="foto-link" accessibilityRole="button" disabled=\{salvando\} onPress=\{tocarNaFoto\} hitSlop=\{12\}/);
+});
+
+test('§10 texto auxiliar: 13 px no mínimo (14 nas dicas), sem opacidade em texto e #4B5675 sobre lavanda ou creme', async () => {
+  const { readdir } = await import('node:fs/promises');
+  const pasta = new URL('../apps/mobile/src/', import.meta.url);
+  const arquivos = (await readdir(pasta)).filter((nome) => /\.(tsx|ts)$/.test(nome));
+  const pequenos = [];
+  for (const nome of arquivos) {
+    const fonte = await readFile(new URL(nome, pasta), 'utf8');
+    for (const [linha, tamanho] of fonte.split('\n').flatMap((l) => [...l.matchAll(/fontSize: (\d+(?:\.\d+)?)\b/g)].map((m) => [l, Number(m[1])]))) {
+      if (tamanho < 13) pequenos.push(`${nome}: ${linha.trim().slice(0, 60)}`);
+    }
+  }
+  // Só os rótulos da barra de abas (navegação, não texto auxiliar) ficam em 12 e 11.
+  assert.deepEqual(pequenos.map((p) => p.replace(/: \{.*$/, '')), ['interface.tsx: rotulo', 'interface.tsx: rotuloQuatro']);
+  const [tema, voz, cenas, caminho, formatos] = await Promise.all(['tema.ts', 'voz-ao-vivo-painel.tsx', 'estudio-cenas.tsx', 'caminho.tsx', 'aula-formatos.tsx']
+    .map((nome) => readFile(new URL(nome, pasta), 'utf8')));
+  assert.match(tema, /textoSecundarioForte: '#4B5675',/);
+  assert.doesNotMatch(voz, /color: cores\.texto, opacity: 0\.\d/, 'a voz ao vivo sem texto esmaecido');
+  assert.match(voz, /dica: \{ marginVertical: 12, color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontSize: 14,/);
+  assert.doesNotMatch(cenas.slice(cenas.indexOf('  tabuaFalta:'), cenas.indexOf('  tabua: {')), /opacity/, 'o número da tábua que falta sem opacidade');
+  assert.match(caminho, /dica: \{ marginTop: 6, color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontWeight: '700', fontSize: 14,/);
+  // A tradução da escuta (lavanda) e as legendas do exemplo e dos recursos (creme) no secundário mais escuro.
+  assert.ok((formatos.match(/color: cores\.textoSecundarioForte/g) ?? []).length >= 6);
+});

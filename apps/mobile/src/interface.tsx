@@ -121,7 +121,7 @@ function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
         {aviso.icone && <View style={estilos.avisoIcone}><Icone nome={aviso.icone} tamanho={20} cor="#FFFFFF" cheio={aviso.icone === 'valeu'} /></View>}
         <Text style={estilos.avisoTexto}>{aviso.texto}</Text>
         {aviso.acao && (
-          <Pressable testID="aviso-acao" accessibilityRole="button" hitSlop={8} onPress={() => { const acao = aviso.acao; dispensar(); acao?.aoTocar(); }}
+          <Pressable testID="aviso-acao" accessibilityRole="button" hitSlop={12} onPress={() => { const acao = aviso.acao; dispensar(); acao?.aoTocar(); }}
             style={({ pressed }) => [estilos.avisoAcao, pressed && { opacity: 0.7 }]}>
             <Text style={estilos.avisoAcaoTexto}>{aviso.acao.rotulo}</Text>
           </Pressable>
@@ -555,6 +555,8 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
       accessibilityHint={dica}
       accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }}
       disabled={bloqueado}
+      // Banca da noite §9 (spec 04): todo botão de texto tem 44 × 44 de toque no mínimo; o alvo cresce 12 por fora.
+      hitSlop={12}
       onPressIn={() => pressionar(0.97)}
       onPressOut={() => pressionar(1)}
       onPress={acao}
@@ -1303,14 +1305,14 @@ export const estilos = StyleSheet.create({
   },
   seloOffline: { borderColor: cores.alertaBorda, backgroundColor: cores.alertaFundo },
   seloPonto: { width: 8, height: 8, borderRadius: 4 },
-  seloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 15 },
+  seloTexto: { flexShrink: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16 },
   // summary::before da web: caixa de 8 (box-sizing: border-box, com as bordas de 2,5) girada, sem margem; o texto vem 8 depois.
   chevron: { width: 8, height: 8, borderRightWidth: 2.5, borderBottomWidth: 2.5 },
   linhaAbrir: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', minHeight: 44, paddingVertical: 10, borderRadius: 8 },
   linhaAbrirTexto: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   seloDemo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, backgroundColor: '#FFF1CC' },
   // .estudio-selo: 0,8rem na entrelinha dos parágrafos do cartão (1,6 → 20,48).
-  seloDemoTexto: { color: '#704700', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12.8, lineHeight: 20.48 },
+  seloDemoTexto: { color: '#704700', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 20 },
 });
 
 /** Dois destinos persistentes, fora das aulas e da geração para preservar o foco. */

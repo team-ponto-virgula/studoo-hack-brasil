@@ -225,7 +225,7 @@ export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolea
       )}
       {verTexto && <Text selectable style={formatos.fraseGrande}>{fala.texto}</Text>}
       {verTexto && fala.pronuncia && <Text style={formatos.pronuncia}>{fala.pronuncia}</Text>}
-      {acertou && fala.traducao && <Text style={[estilos.legenda, { fontWeight: '700' }]}>{fala.traducao}</Text>}
+      {acertou && fala.traducao && <Text style={[estilos.legenda, { fontWeight: '700', color: cores.textoSecundarioForte }]}>{fala.traducao}</Text>}
     </View>
   );
 }
@@ -465,7 +465,7 @@ export function Falas({ falas }: { falas: Fala[] }) {
   return (
     <View style={formatos.secao}>
       <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.audio.falasTitulo}</Text>
-      {falas.some(({ pronuncia }) => pronuncia) && <Text style={estilos.legenda}>{t.audio.comoLerPronuncia}</Text>}
+      {falas.some(({ pronuncia }) => pronuncia) && <Text style={[estilos.legenda, { color: cores.textoSecundarioForte }]}>{t.audio.comoLerPronuncia}</Text>}
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
           <Text selectable style={formatos.falaTexto}>{fala.texto}</Text>
@@ -644,7 +644,7 @@ export function RecursoDaLicao({ recurso, longa = false, semBatida = false }: { 
         </View>
         <View style={formatos.fracaoLegenda}>
           <Text style={formatos.fracaoRotulo}>{recurso.rotulo ?? `${recurso.numerador}/${recurso.denominador}`}</Text>
-          <Text style={estilos.legenda}>{descricao}</Text>
+          <Text style={[estilos.legenda, { color: cores.textoSecundarioForte }]}>{descricao}</Text>
         </View>
       </View>
     );
@@ -682,7 +682,7 @@ function ImagemDoMaterial({ src, fonte, descricao }: { src: string; fonte?: stri
     <View style={formatos.imagemSecao}>
       <Image source={{ uri: src }} accessibilityLabel={`${fonte ?? t.recursos.doMaterial}: ${descricao}`} resizeMode="contain"
         style={[formatos.imagem, { aspectRatio: proporcao }]} />
-      <Text style={[estilos.legenda, { lineHeight: 21 }]}><Text style={{ fontWeight: '700' }}>{fonte ?? t.recursos.doMaterial}</Text> · {descricao}</Text>
+      <Text style={[estilos.legenda, { lineHeight: 21, color: cores.textoSecundarioForte }]}><Text style={{ fontWeight: '700' }}>{fonte ?? t.recursos.doMaterial}</Text> · {descricao}</Text>
     </View>
   );
 }
@@ -804,7 +804,7 @@ function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso:
           </View>
         ))}
       </View>
-      <Text style={estilos.legenda}>{t.audio.batidaGuia}</Text>
+      <Text style={[estilos.legenda, { color: cores.textoSecundarioForte }]}>{t.audio.batidaGuia}</Text>
     </>
   );
   if (soBatida) {
@@ -836,7 +836,7 @@ function DiagramaAcorde({ recurso, longa = false, soBatida = false }: { recurso:
       ) : <BracoDoAcorde nome={recurso.nome} casas={recurso.casas} dedos={recurso.dedos} />}
       <View style={formatos.acordeLegenda}>
         <Text style={formatos.acordeNome}>{anterior ? t.recursos.troca(anterior.nome, recurso.nome) : t.recursos.acorde(recurso.nome)}</Text>
-        <Text style={estilos.legenda}>{t.recursos.legendaAcorde}</Text>
+        <Text style={[estilos.legenda, { color: cores.textoSecundarioForte }]}>{t.recursos.legendaAcorde}</Text>
         {anterior && (
           <Botao rotulo={tocando === 'anterior' ? t.recursos.tocando : t.recursos.ouvirNome(anterior.nome)} variante="secundario" compacto
             desativado={tocando !== null} acao={() => tocar('anterior')} />
@@ -1261,7 +1261,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
               : t.pratica.comeceAntes}
       </Text>
       {!praticou && !escolha && (
-        <Pressable accessibilityRole="button" onPress={() => setSemCronometro(true)} hitSlop={8} style={formatos.linkAlvo}>
+        <Pressable accessibilityRole="button" onPress={() => setSemCronometro(true)} hitSlop={12} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{t.audio.jaPratiquei}</Text>
         </Pressable>
       )}
@@ -1372,7 +1372,7 @@ const formatos = StyleSheet.create({
   rotuloDiagrama: { position: 'absolute', width: 22, textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800',
     fontSize: 14, lineHeight: 18 },
   eixoDiagrama: { position: 'absolute', textAlign: 'center', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700',
-    fontSize: 11, lineHeight: 14 },
+    fontSize: 13, lineHeight: 16 },
   batida: { flexDirection: 'row', gap: 4, width: '100%' },
   batidaTempo: { flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 10, backgroundColor: '#EEF2FF' },
   batidaSobe: { backgroundColor: '#F6F7FB' },

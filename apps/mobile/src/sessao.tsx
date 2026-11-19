@@ -364,7 +364,7 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
         testID="entrar" desativado={!podeEntrar} ocupado={ocupado && !experimentando} carregando={ocupado && !experimentando} acao={() => void enviar()} />}>
       <TopoDaEntrada ilustracao={ilustracao} nivel={nivel} recolher={recolher} respiro={respiro} />
       {/* Como na web 4.4: "Ver como funciona" abre a apresentação sem sessão, em quatro passos. */}
-      <Pressable ref={linkComoFunciona} testID="ver-como-funciona" accessibilityRole="button" disabled={ocupado} hitSlop={8}
+      <Pressable ref={linkComoFunciona} testID="ver-como-funciona" accessibilityRole="button" disabled={ocupado} hitSlop={12}
         onPress={() => setVendoApresentacao(true)} style={({ pressed }) => [entradaEstilos.link, pressed && { opacity: 0.7 }]}>
         <Text style={entradaEstilos.linkTexto}>{mensagens.acesso.verComoFunciona}</Text>
       </Pressable>
@@ -405,7 +405,7 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
             altura, texto no centro e sem sublinhado até 767 px; não é um botão com borda. */}
         {configuracaoCarregada && recuperacaoDisponivel && (
           <Pressable testID="esqueci-senha" accessibilityRole="link" disabled={ocupado} accessibilityState={{ disabled: ocupado }}
-            hitSlop={{ top: 2, bottom: 2 }} onPress={() => recuperar(email)}
+            hitSlop={12} onPress={() => recuperar(email)}
             style={({ pressed }) => [entradaEstilos.linkCentro, pressed && { opacity: 0.7 }]}>
             <Text style={entradaEstilos.linkTexto}>{mensagens.acesso.esqueci}</Text>
           </Pressable>

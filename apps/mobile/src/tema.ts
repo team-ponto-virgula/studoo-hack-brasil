@@ -4,6 +4,8 @@ export const cores = {
   gelo: '#E1E7FA',
   texto: '#0B1B5C',
   textoSecundario: '#5E6A85',
+  /** Banca da noite §10 (spec 04): o texto secundário sobre lavanda ou creme (o #5E6A85 fica abaixo de 4,5:1 nesses fundos). */
+  textoSecundarioForte: '#4B5675',
   acao: '#2563FF',
   acaoEscura: '#1D4ED8',
   sucesso: '#1F7A5A',

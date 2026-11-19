@@ -374,14 +374,16 @@ const cena = StyleSheet.create({
   faixa: { width: 18, height: 12, backgroundColor: 'rgba(255,255,255,0.35)' },
   linha: { position: 'relative', flexDirection: 'row', alignItems: 'flex-end', gap: 6 },
   // .ponte-margem: borda de 2 (o filete verde-claro embaixo), 6 em cima e o degrau de 3 por fora (box-shadow 0 3px 0 #5b9a30).
-  margem: { position: 'relative', zIndex: 1, minWidth: 58, alignItems: 'center', gap: 4, paddingTop: 6, paddingHorizontal: 6, paddingBottom: 5,
+  margem: { position: 'relative', zIndex: 1, minWidth: 58, maxWidth: 104, alignItems: 'center', gap: 4, paddingTop: 6, paddingHorizontal: 6, paddingBottom: 5,
     borderRadius: 12, borderWidth: 2, borderTopWidth: 6, borderColor: '#76BF43', borderTopColor: '#58CC02',
     backgroundColor: '#F6FBF1', boxShadow: '0 3px 0 #5B9A30' },
   margemEsquerda: { zIndex: 2 },
   margemDireita: { borderColor: '#46A302', borderTopColor: '#58CC02', backgroundColor: '#ECF9E3' },
   lugarStu: { width: 32, height: 32 },
   // .ponte-margem no celular: 0,6875rem com a entrelinha do corpo (1,5): 16,5.
-  margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 11, lineHeight: 16.5, textAlign: 'center' },
+  // Banca da noite §10: 13 no mínimo (era 11). As margens quebram o rótulo longo ("De volta ao / desafio") para as tábuas
+  // manterem o lugar do número.
+  margemTexto: { color: '#1F3D14', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17, textAlign: 'center' },
   // A arte da apresentação: os textos com 14 px no mínimo (spec 04, banca da noite §2). As margens quebram o rótulo em duas
   // linhas ("Onde / travou", "De volta ao / desafio"), para as tábuas continuarem com lugar para o número (23 px cada em 390).
   margemArte: { maxWidth: 92, paddingHorizontal: 4 },
@@ -391,9 +393,9 @@ const cena = StyleSheet.create({
   trilho: { position: 'absolute', left: -8, right: -8, height: 3, borderRadius: 2, backgroundColor: '#8D5C2C' },
   tabuaLugar: { flex: 1, minHeight: 32 },
   tabuaFalta: { flex: 1, minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#9D7349',
-    borderRadius: 10, backgroundColor: 'rgba(255,250,242,0.88)', opacity: 0.85 },
+    borderRadius: 10, backgroundColor: 'rgba(255,250,242,0.88)' },
   tabua: { minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: 10 },
-  tabuaNumero: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
+  tabuaNumero: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 16 },
   stu: { zIndex: 3 },
   // A legenda no tamanho base em qualquer largura (bf8cf37): grade 2×2 com vão de 8 e 16 embaixo (o cartão já põe 14).
   legenda: { marginBottom: 2, flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
@@ -401,7 +403,7 @@ const cena = StyleSheet.create({
   passo: { flexBasis: '48%', flexGrow: 1, flexDirection: 'row', alignItems: 'flex-start', gap: 8, paddingHorizontal: 10, paddingVertical: 8,
     borderRadius: 12, borderWidth: 2, borderStyle: 'dashed', borderColor: '#C8B69F', backgroundColor: '#FBF8F3' },
   passoNumero: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E5D8C8' },
-  passoNumeroTexto: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18 },
+  passoNumeroTexto: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
   passoTexto: { flex: 1, color: '#5A432C', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 19.5 },
 });
 
@@ -449,14 +451,14 @@ const caderno = StyleSheet.create({
   stu: { width: 44, height: 50 },
   duvida: { position: 'absolute', top: -4, right: -4, width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.acao },
-  duvidaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 18 },
+  duvidaTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
   perguntaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 25.6 },
   textoCartao: { lineHeight: 25.6 },
   // Compacto (apresentação): como a web no celular, 8 × 10 de respiro, título de 12 e texto de 14.
   // .apresentacao-caderno .ensino-caderno__cartao no celular: 8 × 10 de respiro e o vão de 6 do cartão; h3 de 0,75rem com
   // entrelinha 1,3 (15,6) e texto de 0,875rem com 1,35 (18,9).
   cartaoCompacto: { paddingVertical: 8, paddingHorizontal: 10, gap: 6, borderRadius: 16 },
-  tituloCompacto: { fontSize: 12, lineHeight: 15.6 },
+  tituloCompacto: { fontSize: 13, lineHeight: 17 },
   textoCompacto: { fontSize: 14, lineHeight: 18.9 },
   perguntaStuCompacto: { width: 32, height: 36 },
   stuCompacto: { width: 30, height: 33 },
