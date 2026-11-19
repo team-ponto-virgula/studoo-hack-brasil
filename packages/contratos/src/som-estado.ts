@@ -16,7 +16,7 @@
  *    Ao voltar para 0 em `sairDeGravacaoOuVoz()`, `sons.ts` reaplica o modo normal.
  */
 
-import type { IdEfeitoSonoro, IdSomFundo } from './catalogo-sons';
+import type { IdEfeitoSonoro, IdSomFundo, MotivoPausaFundo } from './catalogo-sons';
 
 export type EstadoFundo = 'parado' | 'tocando' | 'atenuado';
 
@@ -24,6 +24,7 @@ export class MaquinaEstadoSom {
   private _efeitosAtivos = true;
   private _fundo: IdSomFundo = 'mudo';
   private _emSegundoPlano = false;
+  private _areaPermitida = true;
   private _contFala = 0;
   private _contGravacaoOuVoz = 0;
 
@@ -37,6 +38,10 @@ export class MaquinaEstadoSom {
 
   get emSegundoPlano(): boolean {
     return this._emSegundoPlano;
+  }
+
+  get areaPermitida(): boolean {
+    return this._areaPermitida;
   }
 
   get contFala(): number {
@@ -57,6 +62,14 @@ export class MaquinaEstadoSom {
 
   definirSegundoPlano(emSegundoPlano: boolean): void {
     this._emSegundoPlano = emSegundoPlano;
+  }
+
+  /**
+   * Define se a tela atual pode tocar som de fundo (true dentro do app após entrada;
+   * false na entrada, recuperação de senha, /t, /p ou ao sair da conta).
+   */
+  definirAreaPermitida(permitida: boolean): void {
+    this._areaPermitida = permitida;
   }
 
   entrarEmFala(): void {
@@ -97,12 +110,21 @@ export class MaquinaEstadoSom {
   }
 
   estadoFundo(): EstadoFundo {
-    if (this._fundo === 'mudo' || this._emSegundoPlano || this._contGravacaoOuVoz > 0) {
+    if (this._fundo === 'mudo' || !this._areaPermitida || this._emSegundoPlano || this._contGravacaoOuVoz > 0) {
       return 'parado';
     }
     if (this._contFala > 0) {
       return 'atenuado';
     }
     return 'tocando';
+  }
+
+  motivoPausa(desbloqueado: boolean): MotivoPausaFundo {
+    if (this._fundo === 'mudo') return 'nenhum';
+    if (!this._areaPermitida) return 'fora_do_app';
+    if (this._contGravacaoOuVoz > 0) return 'gravando';
+    if (this._emSegundoPlano) return 'segundo_plano';
+    if (!desbloqueado) return 'sem_gesto';
+    return 'nenhum';
   }
 }

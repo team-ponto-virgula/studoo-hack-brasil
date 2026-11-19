@@ -36,6 +36,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "node --env-file-if-exists=.env --import tsx prisma/seed.ts",
     "db:local": "node scripts/banco-local.mjs",
+    "mascote:gerar": "node scripts/mascote.mjs",
     "comunidade:demo": "node --env-file-if-exists=.env --import tsx scripts/comunidade-demo.ts criar",
     "comunidade:demo:remover": "node --env-file-if-exists=.env --import tsx scripts/comunidade-demo.ts remover",
     "codigo:studoo": "node --import tsx scripts/codigo-studoo.mjs",
@@ -43,7 +44,7 @@
     "test:email": "node --import tsx --test tests/email-resend.test.mjs",
     "test:estudio": "node --env-file=.env --import tsx --test tests/estudio.test.mjs tests/demo-zerar.test.mjs tests/voz-ao-vivo.test.mjs tests/compartilhar.test.mjs tests/perfil-rico.test.mjs tests/comunidade.test.mjs tests/codigo-e-demonstracao.test.mjs tests/codigo-folga.test.mjs tests/seguir.test.mjs tests/configuracoes-trilha.test.mjs",
     "estudio:limpar": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/limpar-materiais.ts",
-    "test:estudio:interface": "node --import tsx --test tests/estudio-interface.test.mjs tests/sons-web.test.mjs tests/voz-ao-vivo-mobile.test.mjs tests/voltar-mobile.test.mjs tests/api-nativa-mobile.test.mjs tests/comunidade-mobile.test.mjs tests/estilo-nativo-mobile.test.mjs tests/entrada-mobile.test.mjs tests/sem-janela-nativa-mobile.test.mjs tests/sons.test.mjs",
+    "test:estudio:interface": "node --import tsx --test tests/estudio-interface.test.mjs tests/sons-web.test.mjs tests/voz-ao-vivo-mobile.test.mjs tests/voltar-mobile.test.mjs tests/api-nativa-mobile.test.mjs tests/comunidade-mobile.test.mjs tests/estilo-nativo-mobile.test.mjs tests/entrada-mobile.test.mjs tests/sem-janela-nativa-mobile.test.mjs tests/sons.test.mjs tests/mascote.test.mjs",
     "test:voz-mobile": "node --test tests/voz-ao-vivo-mobile.test.mjs"
   },
   "dependencies": {
