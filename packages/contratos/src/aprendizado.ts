@@ -5,6 +5,7 @@ import type { ConfiguracoesTrilha, MotivoDenuncia, MudancaConfiguracoes, Novidad
 export * from './estudio';
 export * from './licao';
 export * from './som';
+export { fundoUnicoDaPreferencia } from './catalogo-sons';
 export * from './fala';
 export * from './voz-ao-vivo';
 export * from './compartilhar';
