@@ -141,7 +141,6 @@
 .selo-compartilhada .icone { width: 14px; height: 14px; }
 .marca-recebida { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 8px; color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
 .marca-recebida a { color: var(--acao); }
-.trilha-compartilhar { margin-top: 10px; }
 .trilha-compartilhar .icone { width: 18px; height: 18px; }
 .trilha-recebida { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 8px 0 0; color: var(--texto2); font-weight: 800; }
 .trilha-recebida a { color: var(--acao); }

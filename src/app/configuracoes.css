@@ -4,17 +4,38 @@
 .configuracoes__topo h1:focus { outline: none; }
 .configuracoes__voltar { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-left: -8px; padding-inline: 8px; }
 .configuracoes__voltar .icone { width: 20px; height: 20px; }
-.configuracoes__estado { display: inline-flex; align-items: center; gap: 6px; min-height: 22px; margin: 0; color: var(--texto2); font-weight: 800; }
-.configuracoes__estado[data-estado='salvo'] { color: var(--sucesso); }
-.configuracoes__estado .icone { width: 18px; height: 18px; }
+/* "Salvando…" e "Salvo" no rótulo do campo, à direita (revisão de 19/11, item 2): 13 px 800; o giro de 14 px em #5E6A85;
+   o "Salvo" em #1F7A5A, que some em 2,5 s com 200 ms de saída (com movimento reduzido, some sem transição). */
+.configuracoes__rotulo { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 21px; }
+.configuracoes__legenda { width: 100%; padding: 0; }
+.configuracoes__legenda .configuracoes__rotulo > span:first-child { font-weight: 800; }
+.configuracoes__estado { display: inline-flex; flex: none; align-items: center; gap: 4px; color: #5e6a85; font-size: 0.8125rem; font-weight: 800; line-height: 18px; }
+.configuracoes__estado[data-estado='salvo'] { color: #1f7a5a; }
+.configuracoes__estado .icone { width: 16px; height: 16px; stroke-width: 3; }
+.configuracoes__giro { width: 14px; height: 14px; border: 2px solid var(--gelo); border-top-color: #5e6a85; border-radius: 50%; }
+@media (prefers-reduced-motion: no-preference) {
+  .configuracoes__giro { animation: configuracoes-giro 800ms linear infinite; }
+  .configuracoes__estado[data-estado='salvo'] { animation: configuracoes-salvo-sai 200ms ease-in 2300ms forwards; }
+  @keyframes configuracoes-giro { to { rotate: 360deg; } }
+  @keyframes configuracoes-salvo-sai { to { opacity: 0; } }
+}
 .configuracoes__recebida { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--ceu); font-weight: 700; line-height: 1.45; }
 .configuracoes__secao { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
 @media (min-width: 768px) { .configuracoes__secao { padding: 22px 24px; } }
-.configuracoes__capa { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
-.configuracoes__previa { display: block; flex: 0 0 auto; width: min(100%, 15rem); aspect-ratio: 2 / 1; overflow: hidden; border-radius: 16px; box-shadow: 0 6px 16px rgb(11 27 92 / 0.14); }
+/* A prévia da capa (item 5): a largura da seção, em 2:1 e raio de 16; o botão é a capa inteira, com "Trocar capa" por
+   cima no canto de baixo à direita (pílula branca de 40, ícone de 18, 15 px 800 na ação escura do kit e sombra). */
+.configuracoes__capa { display: grid; gap: 8px; justify-items: start; }
+.configuracoes__capa-botao { position: relative; display: block; width: 100%; padding: 0; border: 0; border-radius: 16px; background: none; cursor: pointer; }
+.configuracoes__capa-botao:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }
+.configuracoes__previa { display: block; width: 100%; aspect-ratio: 2 / 1; overflow: hidden; border-radius: 16px; }
 .configuracoes__previa svg { display: block; width: 100%; height: 100%; }
-.configuracoes__capa-acoes { display: grid; flex: 1 1 12rem; gap: 8px; justify-items: start; }
-.configuracoes__capa-acoes .botao .icone, .configuracoes__botao .icone { width: 18px; height: 18px; }
+.configuracoes__trocar {
+  position: absolute; right: 10px; bottom: 10px; display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px;
+  border-radius: 999px; color: var(--acao-escura); background: #fff; box-shadow: 0 2px 8px rgb(15 23 42 / 0.25); font-size: 0.9375rem; font-weight: 800; line-height: 20px;
+}
+.configuracoes__trocar .icone { width: 18px; height: 18px; stroke-width: 2.4; }
+@media (hover: hover) { .configuracoes__capa-botao:hover .configuracoes__trocar { background: #f3f6ff; } }
+.configuracoes__botao .icone { width: 18px; height: 18px; }
 .configuracoes__linha { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 800; }
 .configuracoes__linha .icone { width: 20px; height: 20px; color: var(--acao); }
 .configuracoes__botao { justify-self: start; min-height: 44px; }
@@ -26,19 +47,35 @@
 @media (min-width: 600px) { .galeria-capas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .galeria-capas__opcao { position: relative; display: grid; gap: 6px; cursor: pointer; }
 .galeria-capas__opcao input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.galeria-capas__desenho { display: block; aspect-ratio: 2 / 1; overflow: hidden; border: 3px solid transparent; border-radius: 14px; box-shadow: 0 0 0 2px var(--gelo); }
-.galeria-capas__desenho svg { display: block; width: 100%; height: 100%; }
-.galeria-capas__opcao input:checked ~ .galeria-capas__desenho { border-color: #fff; box-shadow: 0 0 0 3px var(--acao); }
+/* O anel por fora do desenho: 2 de gelo; na escolhida, 3 da cor de ação do kit com o visto num círculo de 24 no canto (item 4). */
+.galeria-capas__desenho { position: relative; display: block; aspect-ratio: 2 / 1; overflow: visible; padding: 1px; border: 2px solid var(--gelo); border-radius: 14px; }
+.galeria-capas__svg { display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 11px; }
+.galeria-capas__svg svg { display: block; width: 100%; height: 100%; }
+.galeria-capas__opcao[data-escolhida] .galeria-capas__desenho { padding: 0; border: 3px solid var(--acao); }
+.galeria-capas__visto {
+  position: absolute; top: 6px; right: 6px; display: grid; width: 24px; height: 24px; place-items: center;
+  border: 2px solid #fff; border-radius: 50%; color: #fff; background: var(--acao);
+}
+.galeria-capas__visto .icone { width: 14px; height: 14px; stroke-width: 3.5; }
 .galeria-capas__opcao input:focus-visible ~ .galeria-capas__desenho { outline: 3px solid var(--acao); outline-offset: 3px; }
-.galeria-capas__nome { min-height: 22px; font-size: 0.875rem; font-weight: 800; }
-.galeria-capas__nome small { color: var(--texto2); font-weight: 700; }
-@media (hover: hover) { .galeria-capas__opcao:hover .galeria-capas__desenho { box-shadow: 0 0 0 2px #8792bd; } }
+.galeria-capas__opcao input:disabled ~ * { cursor: progress; }
+.galeria-capas__nome { font-size: 0.9375rem; font-weight: 800; line-height: 18px; }
+/* "Do tema", embaixo de "Padrão" (item 7): 13 px 700 #5E6A85. */
+.galeria-capas__dica { margin-top: -4px; color: #5e6a85; font-size: 0.8125rem; font-weight: 700; line-height: 18px; }
+/* "Usar uma foto" na largura da folha (48 de altura) e a ajuda embaixo, numa linha só (item 3). */
+.galeria-capas__foto { display: grid; gap: 6px; }
+.galeria-capas__foto .botao { width: 100%; min-height: 48px; }
+.galeria-capas__foto .campo-dica { white-space: nowrap; }
+@media (hover: hover) { .galeria-capas__opcao:not([data-escolhida]):hover .galeria-capas__desenho { border-color: #8792bd; } }
 
 /* A capa escolhida no alto do mapa e no cartão de Minhas trilhas (no lugar da ilustração). */
 .trilha-capa { display: block; width: 100%; aspect-ratio: 4 / 1; max-height: 140px; overflow: hidden; border-radius: 20px; margin-bottom: 4px; }
 .trilha-capa svg { display: block; width: 100%; height: 100%; }
 .plano-cartao__capa, .plano-destaque__capa { position: absolute; inset: 0; display: block; }
 .plano-cartao__capa svg, .plano-destaque__capa svg { display: block; width: 100%; height: 100%; }
-.trilha-topo__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+/* Compartilhar e a engrenagem na mesma linha, alinhados pelo centro (os dois com 48 de altura); o respiro de cima fica
+   na linha, não no botão, para os dois descerem juntos. */
+.trilha-topo__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.trilha-topo__acoes:empty { display: none; }
 .trilha-configurar { display: inline-grid; width: 48px; min-width: 48px; height: 48px; min-height: 48px; place-items: center; padding: 0; }
 .trilha-configurar .icone { width: 24px; height: 24px; stroke-width: 2; }
