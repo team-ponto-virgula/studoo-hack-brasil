@@ -3,7 +3,7 @@
 #
 # Cada subcomando é um passo de `.github/workflows/capturas-nativas.yml`, na ordem:
 #   sonda -> ligar -> servidor -> simulador -> maestro -> metro -> fluxo-entrada -> sem-preenchimento -> fluxo-entrar
-#   -> fluxo-telas -> coletar
+#   -> fluxo-telas (e, depois das telas, a passada curta de "Reduzir transparência") -> coletar
 # O passo que falha diz, numa linha, o que quebrou (anotação de erro e sumário da execução); os registros de cada
 # programa ficam em $CONFERENCIA_SAIDA/registros e sobem como artefato.
 #
@@ -241,6 +241,91 @@ sem_preenchimento() {
   echo "Simulador reiniciado com o preenchimento automático de senhas desligado ($feitos de 2 arquivos)."
 }
 
+# "Reduzir transparência" no simulador: a preferência do sistema que o UIKit lê (UIAccessibilityIsReduceTransparencyEnabled),
+# no domínio de acessibilidade. O app a pergunta ao abrir (AccessibilityInfo.isReduceTransparencyEnabled).
+DOMINIO_ACESSIBILIDADE="com.apple.Accessibility"
+CHAVE_TRANSPARENCIA="EnhancedBackgroundContrastEnabled"
+
+# O valor da preferência: 1 ou 0, "ausente" (a chave não existe: vale o padrão, desligada) ou "desconhecido: <motivo>".
+ler_transparencia() {
+  local saida codigo=0
+  saida="$(com_limite 30 xcrun simctl spawn "$(udid)" defaults read "$DOMINIO_ACESSIBILIDADE" "$CHAVE_TRANSPARENCIA" 2>&1)" || codigo=$?
+  if [ "$codigo" -eq 0 ]; then
+    printf '%s' "$saida"
+  elif printf '%s' "$saida" | grep -Eq 'domain/default pair of .* does not exist|Domain .* does not exist'; then
+    printf 'ausente'
+  else
+    printf 'desconhecido: código %s, %s' "$codigo" "$(printf '%s' "$saida" | head -1 | cut -c1-120)"
+  fi
+}
+
+# Passada curta da alternativa opaca no iPhone, depois dos fluxos das telas (as capturas deles já estão guardadas, na
+# pasta do Maestro de cada fase): liga a preferência de verdade, reabre o app (fluxos/variantes/transparencia-reduzida.yaml)
+# e devolve a preferência ao estado de antes, aconteça o que acontecer com o fluxo. Nunca falha o passo: o que aconteceu
+# fica em $SAIDA/transparencia-reduzida.txt, que a coleta resume. Se o simulador não aceitar a preferência, a passada diz
+# isso e a prova principal não muda.
+passada_transparencia_reduzida() {
+  local estado="$SAIDA/transparencia-reduzida.txt" antes ligada depois
+  antes="$(ler_transparencia)"
+  echo "antes: $antes" > "$estado"
+  if ! com_limite 30 xcrun simctl spawn "$(udid)" defaults write "$DOMINIO_ACESSIBILIDADE" "$CHAVE_TRANSPARENCIA" -bool true \
+    >> "$REGISTROS/transparencia-reduzida.log" 2>&1; then
+    echo "não rodou: a gravação da preferência falhou (defaults write)" >> "$estado"
+    return 0
+  fi
+  ligada="$(ler_transparencia)"
+  echo "ligada: $ligada" >> "$estado"
+  if [ "$ligada" != "1" ]; then
+    echo "não rodou: a preferência não ficou ligada na leitura de volta" >> "$estado"
+  elif rodar_maestro transparencia "$PASTA_DOS_FLUXOS/variantes/transparencia-reduzida.yaml"; then
+    echo "fluxo: completo" >> "$estado"
+  else
+    echo "fluxo: falhou (veja maestro-transparencia.log e tela-no-fim-de-transparencia.png)" >> "$estado"
+  fi
+  # De volta ao estado de antes: sem a chave, se ela não existia; com o valor de antes, se existia; desligada, se ele não
+  # foi lido (é o padrão).
+  case "$antes" in
+    ausente) com_limite 30 xcrun simctl spawn "$(udid)" defaults delete "$DOMINIO_ACESSIBILIDADE" "$CHAVE_TRANSPARENCIA" ;;
+    1) com_limite 30 xcrun simctl spawn "$(udid)" defaults write "$DOMINIO_ACESSIBILIDADE" "$CHAVE_TRANSPARENCIA" -bool true ;;
+    *) com_limite 30 xcrun simctl spawn "$(udid)" defaults write "$DOMINIO_ACESSIBILIDADE" "$CHAVE_TRANSPARENCIA" -bool false ;;
+  esac >> "$REGISTROS/transparencia-reduzida.log" 2>&1 || true
+  depois="$(ler_transparencia)"
+  echo "depois: $depois" >> "$estado"
+  if [ "$depois" != "$antes" ] && ! { [ "$antes" != "1" ] && [ "$depois" = "0" ]; }; then
+    aviso "\"Reduzir transparência\" não voltou ao estado de antes no simulador (antes: $antes; depois: $depois). O material calculado no ORIGEM.txt é lido na coleta e pode refletir a preferência ligada."
+  fi
+}
+
+# O passo das telas no iPhone: os fluxos das telas e, depois, a passada de "Reduzir transparência". A falha das telas
+# continua sendo a falha do passo; a passada só registra.
+telas_e_transparencia() {
+  local falha=0
+  ( fluxo_telas ) || falha=$?
+  ( passada_transparencia_reduzida ) || aviso "A passada de \"Reduzir transparência\" parou no meio; a prova principal não muda (veja transparencia-reduzida.log nos registros)."
+  return "$falha"
+}
+
+# O resultado da passada de "Reduzir transparência", para o ORIGEM.txt e o sumário.
+resultado_transparencia() {
+  local estado="$SAIDA/transparencia-reduzida.txt" visto
+  if [ ! -f "$estado" ]; then
+    echo "Reduzir transparência ligada (passada extra no iPhone): não rodou (os fluxos das telas não chegaram a ela)"
+    return 0
+  fi
+  if grep -q '^não rodou:' "$estado"; then
+    echo "Reduzir transparência ligada (passada extra no iPhone): não rodou, $(sed -n 's/^não rodou: //p' "$estado" | head -1). Limitação do simulador; a prova principal não muda."
+    return 0
+  fi
+  if [ -n "$(find "$SAIDA_MAESTRO/transparencia" -type f -name 'transparencia-reduzida-opaca.png' 2> /dev/null | head -1 || true)" ]; then
+    visto="superfície opaca (barra-material-opaca), como pede a spec 05"
+  elif [ -n "$(find "$SAIDA_MAESTRO/transparencia" -type f -name 'transparencia-reduzida-vidro.png' 2> /dev/null | head -1 || true)" ]; then
+    visto="vidro (barra-material-vidro): com a preferência gravada, o app continuou no vidro"
+  else
+    visto="não identificado (nenhum dos dois testID apareceu)"
+  fi
+  echo "Reduzir transparência ligada (passada extra no iPhone, a preferência do sistema no simulador): material observado $visto; captura transparencia-reduzida-minhas-trilhas.png; preferência $CHAVE_TRANSPARENCIA $(sed -n 's/^antes: //p' "$estado") antes, $(sed -n 's/^ligada: //p' "$estado") na passada e $(sed -n 's/^depois: //p' "$estado") depois; $(sed -n 's/^fluxo: /fluxo /p' "$estado")"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # coletar: junta as capturas, diz o que faltou e arruma os registros (o comum está em comum.sh)
 
@@ -337,9 +422,15 @@ coletar() {
     echo "Expo Go: $(cat "$SAIDA/expo-go-versao" 2> /dev/null || echo '?')"
     ( material_da_barra ) 2>> "$REGISTROS/material-da-barra.txt" \
       || echo "Material calculado da barra (estimativa, não é o observado): desconhecido (a leitura do Expo Go ou do simulador falhou; veja material-da-barra.txt nos registros)"
+    ( resultado_transparencia ) 2>> "$REGISTROS/material-da-barra.txt" || true
   } > "$SAIDA/origem-app.txt" || true
   coletar_inicio "simulador de iPhone numa máquina do GitHub Actions, com o app servido pelo Metro (sem modo de desenvolvimento) dentro do Expo Go. Não é aparelho de verdade."
+  # As imagens da passada de "Reduzir transparência" vão junto das capturas.
+  find "$SAIDA_MAESTRO" -type f -name 'transparencia-reduzida-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
   resumir_barra "$SAIDA/origem-app.txt"
+  if ! grep -q '^Reduzir transparência ligada .*material observado superfície opaca' "$SAIDA/origem-app.txt" 2> /dev/null; then
+    aviso "A passada de \"Reduzir transparência\" no iPhone não mostrou a superfície opaca: $(grep '^Reduzir transparência ligada' "$SAIDA/origem-app.txt" 2> /dev/null | sed 's/^Reduzir transparência ligada //' | head -1 || true)"
+  fi
 
   # O que o Expo Go guardou das preferências do menu de desenvolvedor depois dos fluxos (o arquivo, como está no disco).
   if dados="$(xcrun simctl get_app_container "$(udid)" "$EXPO_GO" data 2> /dev/null)" && [ -n "$dados" ]; then
@@ -373,7 +464,7 @@ case "${1:-}" in
   fluxo-entrada) fluxo_entrada ;;
   sem-preenchimento) sem_preenchimento ;;
   fluxo-entrar) fluxo_entrar ;;
-  fluxo-telas) fluxo_telas ;;
+  fluxo-telas) telas_e_transparencia ;;
   coletar) coletar ;;
   *)
     echo "Uso: $0 sonda|ligar|servidor|simulador|maestro|metro|fluxo-entrada|sem-preenchimento|fluxo-entrar|fluxo-telas|coletar" >&2

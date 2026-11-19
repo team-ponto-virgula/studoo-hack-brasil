@@ -1,0 +1,32 @@
+# A alternativa opaca da barra no próprio iPhone (spec 05: com "Reduzir transparência", a barra troca o vidro pela
+# superfície opaca). Só no iPhone e depois dos fluxos das telas, com as capturas deles já guardadas: o ios.sh
+# (passada_transparencia_reduzida) liga a preferência de verdade no simulador, roda este fluxo e a devolve ao estado de
+# antes. O fluxo reabre o app em Minhas trilhas, guarda uma captura identificada e registra qual testID de material
+# apareceu (o esperado é barra-material-opaca). Não exige nada: o resultado vai para o ORIGEM.txt e o sumário.
+appId: host.exp.Exponent
+name: transparencia-reduzida
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-planos
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-planos
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: transparencia-reduzida-minhas-trilhas
+- runFlow:
+    when:
+      visible:
+        id: barra-material-opaca
+    commands:
+      - takeScreenshot: transparencia-reduzida-opaca
+- runFlow:
+    when:
+      visible:
+        id: barra-material-vidro
+    commands:
+      - takeScreenshot: transparencia-reduzida-vidro
