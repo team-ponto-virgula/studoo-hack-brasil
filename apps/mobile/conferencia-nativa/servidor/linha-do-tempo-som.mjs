@@ -47,7 +47,7 @@ let doSistema = 0;
 let doApp = 0;
 if (opcoes.audio && existsSync(opcoes.audio)) {
   for (const linha of readFileSync(opcoes.audio, 'utf8').split('\n')) {
-    const app = linha.match(/\[som\] (comando|reproducao) ([a-z_]+) (\d{13})/);
+    const app = linha.match(/\[som\] (comando|reproducao) ([a-z0-9_]+) (\d{13})/);
     if (app) {
       doApp += 1;
       eventos.push({ t: Number(app[3]), origem: app[1] === 'comando' ? 'comando (app)' : 'reprodução (player do app)', texto: app[2] });
