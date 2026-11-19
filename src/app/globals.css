@@ -1079,3 +1079,28 @@ button { touch-action: manipulation; }
 @media (max-width: 767px) {
   .estudo-principal:has(.acoes-tela[data-tres]) { padding-bottom: calc(206px + env(safe-area-inset-bottom)); }
 }
+
+/*
+ * Banca da noite §9 (spec 04): todo botão de texto e todo link de ação têm área de toque de 44×44 px no mínimo, com 12 px
+ * de respiro dos lados; quando o desenho não comporta (o link no meio de uma frase), a área cresce por fora com um ::after.
+ */
+.botao.botao--texto { min-height: 44px; min-width: 44px; padding-inline: 12px; }
+.aula-voltar-etapa, .exercicio-recomecar, .como-foi__sem-cronometro, .pedido-como, .aula-consulta > summary, .recuperar-cartao > .acesso-link {
+  min-height: 44px; min-width: 44px;
+}
+.aula-voltar-etapa, .exercicio-recomecar, .como-foi__sem-cronometro { display: inline-flex; align-items: center; }
+.aula-consulta > summary { display: flex; align-items: center; }
+.aula-aviso__acao, .fala-inline, .caminho-ponte, .cartao-trilha__dono a, .trilha-recebida a { position: relative; }
+.aula-aviso__acao::after, .cartao-trilha__dono a::after, .trilha-recebida a::after {
+  content: ''; position: absolute; inset: 50% -12px auto; height: 44px; translate: 0 -50%;
+}
+
+/*
+ * Banca da noite §10 (spec 04): texto auxiliar legível. Metadados e rótulos em caixa alta com 13 px no mínimo, dicas com
+ * 14, cor mínima #5E6A85 sobre branco e nada de opacidade em texto. A aba marcada da barra de baixo usa a ação escura,
+ * que passa de 4,5:1 sobre a névoa.
+ */
+.selo-sincronia, .plano-destaque__rotulo, .trilha-topo__rotulo, .estudio-selo { font-size: 13px; }
+@media (max-width: 767px) { .selo-sincronia { font-size: 13px; } }
+.caminho-inicio__dica { font-size: 14px; }
+@media (max-width: 1023px) { .navegacao-mobile button[aria-current] { color: var(--acao-escura); } }

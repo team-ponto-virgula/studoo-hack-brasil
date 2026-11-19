@@ -159,7 +159,7 @@
 .perfil-link__titulo {
   justify-self: start; padding: 0; border: 0; background: none; color: var(--texto); font: inherit; font-size: 1.0625rem;
   font-weight: 900; text-align: start; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; overflow-wrap: anywhere;
-  min-height: 32px;
+  min-height: 44px; /* banca da noite §9: alvo de 44 */
 }
 .perfil-link__meta { margin: 0; color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
 .perfil-link__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }

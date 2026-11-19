@@ -96,7 +96,7 @@
   border-radius: 20px;
   background: #fff1cc;
   color: #704700;
-  font-size: 0.8rem;
+  font-size: 13px; /* banca da noite §10: 13 px no mínimo */
   font-weight: 800;
 }
 .estudio-exemplo {

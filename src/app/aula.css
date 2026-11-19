@@ -1051,3 +1051,9 @@
 .aula-falas-lista__ouvir[data-tocando] { border-color: var(--acao); }
 .aula-falas-lista__ouvir:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .aula-falas-lista__ouvir:active { transform: none; } }
+
+/* Banca da noite §10: depois de verificar, as opções que ficaram de fora esmaecem pela cor (#5E6A85), não pela opacidade. */
+.aula-titulo-topo { font-size: 13px; }
+:is(.aula-quadro, .estudio-desafio) .opcoes:disabled label:not([data-retorno]),
+.vf__valores:disabled label:not(:has(input:checked)),
+.como-foi[data-travado] label { opacity: 1; color: var(--texto2); }

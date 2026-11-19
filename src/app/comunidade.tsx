@@ -578,7 +578,9 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
   const fichas = useFileira<HTMLDivElement>(logado);
   const comDemonstracao = Boolean(pagina && [...pagina.emAlta, ...pagina.novas].some((cartao) => cartao.demonstracao));
   // Na aba Seguindo sem ninguém seguido, as fichas de tema não têm o que filtrar.
-  const semFichas = aba === 'seguindo' && pagina?.seguindoAlguem === false;
+  // Banca da noite §8: com a lista vazia (Explorar vazio, tema sem trilha ou Seguindo vazio), a fileira de temas e as setas
+  // somem; ficam as abas e o aviso com o Stu e a ação de cada caso.
+  const semFichas = Boolean(vazio) || (aba === 'seguindo' && pagina?.seguindoAlguem === false);
 
   return (
     <section className="painel painel--explorar" aria-busy={carregando || undefined}>
