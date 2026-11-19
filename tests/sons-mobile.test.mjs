@@ -52,10 +52,11 @@ test('cada efeito disparado no app existe no catálogo e tem o arquivo em apps/m
   }
 });
 
-test('os momentos pedidos estão ligados no app (os da geração vêm à parte)', () => {
+test('os momentos pedidos estão ligados no app', () => {
   // `conta_criada` fica de fora, como na web: o app também não tem formulário de criar conta (e-mail e senha, Google ou visitante).
   const pedidos = ['toque_opcao', 'ordenar_soltar', 'acerto', 'erro', 'ponte_abrir', 'concluir_licao', 'concluir_trilha', 'entrar', 'valeu',
-    'seguir', 'link_copiado', 'salvo', 'aviso', 'erro_rede', 'apagar', 'cronometro_inicio', 'cronometro_fim', 'gravacao_inicio', 'gravacao_fim'];
+    'seguir', 'link_copiado', 'salvo', 'aviso', 'erro_rede', 'apagar', 'cronometro_inicio', 'cronometro_fim', 'gravacao_inicio', 'gravacao_fim',
+    'geracao_licao', 'geracao_pronta'];
   for (const id of pedidos) assert.ok(disparos.has(id), `"${id}" tem disparo`);
   // A reação do Stu no painel de retorno não tem som próprio: só o acerto ou o erro do resultado.
   assert.equal((ler('src/licao.tsx').match(/tocarEfeito\(resultado\.correta \? 'acerto' : 'erro'\)/g) ?? []).length, 1);
@@ -99,4 +100,17 @@ test('aviso do app: `aviso` por padrão, `salvo` no perfil e calado quando o ges
   assert.match(ler('src/comunidade.tsx'), /avisar\(c\.valeuAviso\(primeiroNome\), \{ icone: 'valeu', duracaoMs: 5000, som: null \}\)/);
   // Sem rede só numa ação da pessoa (pedido que não é GET).
   assert.match(ler('src/api-nativa.ts'), /if \(\(opcoes\.method \?\? 'GET'\)\.toUpperCase\(\) !== 'GET'\) void tocaSons\.tocarEfeito\('erro_rede'\);/);
+});
+
+test('geração (tabela de 19/11): cada lição quando o nó cai; o fim toca uma vez e cala a última lição; cancelar cala o resto', () => {
+  const estudo = ler('src/estudo.tsx');
+  // A lição: no passo 3 da spec 04 (o mesmo atraso do caminho), nada quando a lição que entra já é a da virada para pronta.
+  assert.match(estudo, /if \(pronta \|\| mostrados <= de\) return;/);
+  assert.match(estudo, /void tocaSons\.tocarEfeito\('geracao_licao'\);\n\s*\}, reduzir !== false \? 0 : atrasosDaLicao\(abreTrecho\)\.no\);/);
+  // O fim: cala as lições que ainda cairiam e toca uma vez, na virada para pronta.
+  assert.match(estudo, /if \(!pronta\) return;\n\s*for \(const relogio of somDasLicoes\.current\) clearTimeout\(relogio\);\n\s*somDasLicoes\.current\.clear\(\);\n\s*void tocaSons\.tocarEfeito\('geracao_pronta'\);/);
+  // Sair da tela (cancelar) limpa os relógios.
+  assert.match(estudo, /useEffect\(\(\) => \(\) => \{\n\s*for \(const relogio of somDasLicoes\.current\) clearTimeout\(relogio\);\n\s*\}, \[\]\);/);
+  // "Mais uma!", o troféu e o foco em "Começar": sem som.
+  assert.doesNotMatch(ler('src/caminho.tsx'), /tocarEfeito/);
 });

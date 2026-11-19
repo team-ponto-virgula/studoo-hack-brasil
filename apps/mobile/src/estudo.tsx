@@ -1144,6 +1144,31 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     if (erro) rolagem.current?.scrollTo({ y: 0, animated: reduzir === false });
   }, [erro, reduzir]);
 
+  // Sons da geração (spec 12, momentos novos de 19/11): cada lição toca `geracao_licao` quando o nó cai no mapa (o passo 3 da
+  // spec 04, como o caminho anima; com movimento reduzido, quando aparece); rajadas dentro de 180 ms o toca-sons descarta. O
+  // fim toca `geracao_pronta` uma vez e cala a última lição, que ainda cairia (o efeito da virada para pronta, abaixo).
+  // "Mais uma!", o troféu e o foco em "Começar" não têm som; cancelar (sair da tela) cala o que faltava.
+  const somDasLicoes = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const mostradosAntes = useRef(mostrados);
+  useEffect(() => {
+    const de = mostradosAntes.current;
+    mostradosAntes.current = mostrados;
+    if (pronta || mostrados <= de) return;
+    for (let indice = de; indice < mostrados; indice += 1) {
+      const abreTrecho = indice > 0 && todos[indice - 1]?.trecho !== todos[indice]?.trecho;
+      const relogio = setTimeout(() => {
+        somDasLicoes.current.delete(relogio);
+        void tocaSons.tocarEfeito('geracao_licao');
+      }, reduzir !== false ? 0 : atrasosDaLicao(abreTrecho).no);
+      somDasLicoes.current.add(relogio);
+    }
+    // Só quando uma lição nova entra no mapa.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mostrados]);
+  useEffect(() => () => {
+    for (const relogio of somDasLicoes.current) clearTimeout(relogio);
+  }, []);
+
   // Espera longa: 12 s sem lição nova, a placa diz que ainda está escrevendo (sem barra de progresso inventada).
   useEffect(() => {
     setEsperaLonga(false);
@@ -1156,6 +1181,9 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   // "Começar". Se a pessoa já está no alto, o cartão do título volta na hora.
   useEffect(() => {
     if (!pronta) return;
+    for (const relogio of somDasLicoes.current) clearTimeout(relogio);
+    somDasLicoes.current.clear();
+    void tocaSons.tocarEfeito('geracao_pronta');
     AccessibilityInfo.announceForAccessibility(mensagens.geracao.anuncioFim(total));
     if (rolado.current <= 4) setCartaoDeVolta(true);
     const focar = setTimeout(() => focarSemRolar(botaoComecar.current), RITMO_DA_GERACAO.rodapeMs + 60);
