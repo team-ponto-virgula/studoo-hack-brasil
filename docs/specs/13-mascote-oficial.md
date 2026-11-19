@@ -65,7 +65,7 @@ Hoje a web usa `/marca/stu-oi.svg` pelo `Stu` de `src/ui/componentes.tsx:14` (e 
 | Guia do mapa | `ui/caminho.tsx:478` (`.caminho-guia`) | `caminho.tsx:678` `GuiaStu` | `stu-tres-quartos`, olhando para o próximo nó (espelhado quando o caminho vira à esquerda) | o de hoje |
 | Chegada, fim do mapa | `ui/caminho.tsx:576` (`.caminho-chegada__stu`) | `caminho.tsx:1192` (62) | `stu-comemorando` | 64 |
 | Conceito da aula | `aula.tsx:693` (`.aula-explicacao`, 76/56) | `licao.tsx:952` (58) | `stu-feliz` | 76 (56 até 390 px; app 58) |
-| Reação no exercício | `aula.tsx:764` (`.aula-stu-estado__avatar`, 46) | `licao.tsx:1009` `StuDoExercicio` (42) | atento `stu-curioso`; pensando `stu-concentrado`; acerto `stu-feliz`; de primeira `stu-comemorando`; ponte `stu-animado` | 48 |
+| Reação no exercício | `aula.tsx:764` (`.aula-stu-estado__avatar`, 46) | `licao.tsx:1009` `StuDoExercicio` (42) | **muda para o painel de retorno (emenda de 19/11, reação no painel)**: acerto `stu-feliz`; de primeira `stu-comemorando`; erro `stu-encorajador`; ponte `stu-animado`. A faixa do corpo sai, com atento e pensando | 42 no celular; 48 na tela larga |
 | Prática, resposta modelo | `aula.tsx:2054` (76/56) | `aula-formatos.tsx:1283` (48) | `stu-encorajador` | 76 (56; app 56) |
 | Cabeça do estúdio | `estudio.tsx:145` (`.estudio-cabeca`) | — | `stu-feliz` | 56 |
 | Ponte do reforço | `estudio.tsx:812` e `apresentacao.tsx:193` (`.ponte-stu`, 42) | `estudio-cenas.tsx:125` `CenaPonte` (32) | `stu-perfil` atravessando; ao chegar, `stu-animado` | 44 (app 36) |
@@ -105,8 +105,8 @@ Regra geral: no máximo um Stu por tela, nunca mais alto que 40% da altura útil
 | Espera: mapa montando | `stu-curioso` | 92 | balão com pontinhos (spec 04) |
 | Espera: Escrevendo suas lições | `stu-estudando` | 132×106 | §A2; em "Lições prontas!" troca para `stu-comemorando` com pulo |
 | Espera: lendo o material enviado | `stu-concentrado` | 72 | "Lendo seu material…" ao lado. Carregamento de menos de 1 s fica só no esqueleto, sem Stu |
-| Acerto | `stu-feliz`; de primeira, `stu-comemorando` | 48 | na faixa de reação, com pulo; o painel verde continua sendo o sinal principal |
-| Erro | `stu-encorajador` | 48 | sem tremer (quem treme é o exercício, spec 04); "Quase lá!" no painel âmbar |
+| Acerto | `stu-feliz`; de primeira, `stu-comemorando` | 42 (48 na tela larga) | no painel de retorno, na ponta direita da linha do título, com pulo; o painel verde, com o visto e o título, continua sendo o sinal principal |
+| Erro | `stu-encorajador` | 42 (48 na tela larga) | no painel de retorno, na ponta direita da linha do título; sem tremer (quem treme é o exercício, spec 04); o X e o título no painel âmbar |
 | Ponte do reforço | `stu-perfil` atravessando, `stu-animado` ao chegar; balão do reforço com `stu-encorajador` | 44; balão 76 | atravessa a tábua como hoje |
 | Lição concluída | `stu-comemorando`; com exercício sem acerto, `stu-encorajador` | 140 | raios e confete só no primeiro caso (spec 04) |
 | Trilha concluída | `stu-celebrando` (com troféu) | 240 | confete, "Trilha concluída!" e "Compartilhar trilha" |
@@ -177,8 +177,7 @@ Modos: **laço** (repete enquanto está visível, com as pausas da §E4); **uma 
 | Lições prontas!, início do mapa pronto | `stu-comemorando`, `stu-feliz` | no acontecimento / uma vez |
 | Guia do mapa | `stu-tres-quartos` | de tempos em tempos; e uma vez na volta de lição concluída, depois do pulo do nó |
 | Conceito da aula | `stu-feliz` | uma vez quando a etapa entra, depois parado |
-| Reação: atento e pensando | `stu-curioso`, `stu-concentrado` | parado (a pessoa está respondendo) |
-| Reação: acerto, de primeira, erro, ponte | `stu-feliz`, `stu-comemorando`, `stu-encorajador`, `stu-animado` | no acontecimento |
+| Reação no painel de retorno: acerto, de primeira, erro, ponte | `stu-feliz`, `stu-comemorando`, `stu-encorajador`, `stu-animado` | no acontecimento |
 | Prática: cronômetro correndo, resposta modelo | `stu-concentrado`, `stu-encorajador` | parado |
 | Prática: terminou | `stu-comemorando` | no acontecimento |
 | Ponte do reforço | `stu-perfil`, depois `stu-animado` | laço só durante a travessia; uma vez ao chegar |
@@ -254,9 +253,47 @@ O GIF não é o PNG reduzido: o boneco ocupa uns 5% menos do quadro e, em quatro
 - Nenhum pai do Stu animado corta: `overflow: visible` no quadro e nos contêineres que a folga atravessa; no app, sem `overflow: 'hidden'` nesses pais. Uma arte de cartão de borda arredondada que precisa cortar recebe só expressão que não pula (`feliz`).
 - Na folga não fica texto nem nada tocável. Ela pode passar por cima de fundo, cenário ou margem.
 - Folga por lugar:
-  - reação do exercício (48, `comemorando` e `animado`): 10 px livres acima do quadro;
+  - reação no painel de retorno (42, `comemorando` e `animado`): o quadro já sobe 8 px no respiro do rodapé; no alto do pulo passa até 8 px da borda, por menos de 1 s, sobre o exercício já respondido, e deixa o toque passar;
   - chegada do mapa (64, `comemorando`): 12 px acima;
   - pedido, ideia aplicada (96, 72 ou 62, `animado`): 12 px acima, com o título fora dessa faixa;
   - entrada no celular (76, `acolhida`): 10 px entre o quadro e a borda direita da faixa, que não corta;
   - lição concluída, Lições prontas e trilha concluída (110 a 165): a folga cai sobre os raios e o confete, e não muda nada.
 - Onde a folga não couber, o lugar mostra a imagem parada no acontecimento, com o pulo da §B7.
+
+## Emenda (19/11): a reação mora no painel de retorno
+**Problema.** No celular, a faixa de reação (`.aula-stu-estado` na web, `StuDoExercicio` no app) é o último elemento do corpo do exercício. Em 390 × 844, com um enunciado de quatro ou cinco linhas, ela já fica abaixo da dobra; quando o retorno aparece, o painel do rodapé cresce e a cobre. A reação ao acerto e ao erro, o momento de mais emoção da aula, não é vista.
+
+**Decisão (do Designer).**
+- **Celular (web até 767 px e app):** o Stu da reação mora no painel de retorno, na ponta direita da linha do título. O quadro tem 42 px, alinhado pela base com a linha do título (34) e encostado à direita do conteúdo do painel (16 px da borda da tela). Ele sobe 8 px para o respiro de cima do rodapé, que é de 12 px na web e 8 no app. **O painel não cresce:** a altura é a de hoje para o mesmo texto. O título ganha 52 px de respiro à direita (o quadro mais 10), para nunca passar por baixo do Stu.
+- **Tela larga (web a partir de 768 px):** o Stu fica em 48, entre o texto do retorno e as ações, centrado na altura do painel.
+- **A faixa de reação do corpo sai**, em todos os estados (neutro, pensando, atento, acerto, de primeira, ponte), na web e no app. Antes da resposta ela fica ao lado de quem responde (§B4: o Stu fica fora da área de resposta), e depois dela quem reage é o painel. Os textos `licao.stuEstado` deixam de ser usados.
+- **Painel compacto** (com o Explique aberto): sem Stu, porque a cena do Explique já tem o dela (no máximo um Stu por tela).
+
+**Estados.** As imagens vêm da faixa P (§A1).
+
+| Estado | Ícone à esquerda (como hoje) | Stu à direita | Movimento |
+|---|---|---|---|
+| Acerto | visto branco no círculo verde #2F9E6F, degrau #1F7A5A | `stu-feliz` | um ciclo |
+| Acerto de primeira | o mesmo visto | `stu-comemorando` | um ciclo, com o pulo |
+| Erro (e erro depois do reforço, com a lâmpada) | X ou lâmpada brancos no círculo laranja #E58A1F, degrau #B4650D | `stu-encorajador` | um ciclo, sem tremer |
+| Acerto depois da ponte | o visto | `stu-animado` | um ciclo |
+
+- O ícone continua: o resultado é dito pelo ícone, pela palavra do título e pela cor, nunca só pela cor. Ele mantém 34 px, com o ícone branco de 20 e traço de 3,2.
+- **Contorno do painel:** o de hoje. Fundo #E3F6EA no acerto e #FFF1E0 no erro, na largura toda, sem borda em cima. O Stu entra sem contorno e sem halo.
+
+**Movimento.**
+- O painel sobe em 320 ms, como hoje, e o ícone gira aos 80 ms, como hoje.
+- O Stu entra com o pop da §B7 aos 160 ms e roda um ciclo da animação (o modo "no acontecimento" da §E1). O confete do acerto continua saindo do ícone. No erro, quem treme é o exercício; o Stu, não.
+- Com movimento reduzido, o painel aparece sem subir, sem giro, sem pop e sem confete. O Stu é o PNG parado da expressão, e a informação é a mesma.
+
+**Toque e leitor de tela.**
+- O Stu é enfeite e deixa o toque passar (`pointer-events: none` na web, `pointerEvents="none"` no app). Assim, o pulo, que passa até 8 px da borda do rodapé (§E7), nunca rouba um toque.
+- O anúncio continua o do painel (`role="alert"`: título, certo ou errado, e o retorno). A expressão não é anunciada.
+
+**Altura do rodapé de retorno.**
+- O Stu não aumenta o painel.
+- **A altura máxima do painel é 50% da altura visível** (`50svh` na web; metade da janela no app): 333 px em 390 × 667 e 422 px em 390 × 844. Hoje, o retorno de erro com duas linhas e o aviso de pular tem cerca de 320 px e cabe.
+- Se passar do máximo, só o bloco de texto rola dentro do painel: o retorno, as linhas extras e o aviso. Ele termina num degradê de 24 px na cor do painel. A linha do título com o Stu e as ações ficam fixas, então "Continuar", "Tentar de novo" e "Pular por agora" nunca saem da tela e o painel nunca cobre mais da resposta do que a metade da tela.
+
+**Paridade:** é o mesmo desenho na web até 767 px e no app. A tela larga existe só na web. O esboço está na pasta do Designer, em `ux/10-reacao-no-painel/reacao-390.png`.
+
