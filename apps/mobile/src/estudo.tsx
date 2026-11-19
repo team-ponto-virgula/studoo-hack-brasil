@@ -1732,20 +1732,23 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
   }
 
   const novo = <Botao rotulo={mensagens.planos.novo} testID="novo-plano" desativado={ocupado} acao={novoPlano} />;
+  const comCompartilhar = Boolean(!plano.recebida && compartilhar);
   // Como .trilha-topo__texto da web: na trilha recebida, "Esta trilha é de Ana" e o link original; na da própria pessoa,
   // "Compartilhar" (ou "Compartilhada", com o link ativo); depois de adicionar, o aviso verde.
   const marcaDoTopo = (
     <>
       {plano.recebida && <TrilhaRecebida recebida={plano.recebida} />}
-      {/* Como .trilha-topo__acoes da web: "Compartilhar" (só na trilha da própria pessoa) e a engrenagem, com 8 entre eles. */}
-      <View style={estudoEstilos.acoesTopo}>
-        {!plano.recebida && compartilhar && (
-          <Botao rotulo={plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada} iconeAntes="compartilhar" variante="secundario"
-            testID="plano-compartilhar" nomeAcessivel={mensagens.compartilhar.entradaRotulo(plano.titulo)} desativado={ocupado} acao={compartilhar}
-            estilo={estudoEstilos.compartilharTopo} />
-        )}
-        {configurar && <BotaoConfigurar titulo={plano.titulo} desativado={ocupado} acao={configurar} />}
-      </View>
+      {/* Como .trilha-topo__acoes da web: "Compartilhar" (só na trilha da própria pessoa) e a engrenagem, com 8 entre eles. Com
+          o botão, os 10 de cima ficam na fileira, e não nele: os dois, de 48, alinham pelo centro (decisão do Lead, 19/11). */}
+      {(comCompartilhar || configurar) && (
+        <View style={[estudoEstilos.acoesTopo, comCompartilhar && estudoEstilos.acoesTopoComCompartilhar]}>
+          {!plano.recebida && compartilhar && (
+            <Botao rotulo={plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada} iconeAntes="compartilhar" variante="secundario"
+              testID="plano-compartilhar" nomeAcessivel={mensagens.compartilhar.entradaRotulo(plano.titulo)} desativado={ocupado} acao={compartilhar} />
+          )}
+          {configurar && <BotaoConfigurar titulo={plano.titulo} desativado={ocupado} acao={configurar} />}
+        </View>
+      )}
       {etapa.aviso && <AvisoDaTrilha texto={etapa.aviso} />}
     </>
   );
@@ -2521,9 +2524,10 @@ const estudoEstilos = StyleSheet.create({
   concluidoTitulo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   concluidoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   acaoNaTela: { alignItems: 'flex-start', marginTop: 8 },
-  // .trilha-compartilhar: 10 abaixo do nome da trilha.
-  compartilharTopo: { alignSelf: 'flex-start', marginTop: 10 },
   acoesTopo: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 },
+  // .trilha-compartilhar: 10 abaixo do nome da trilha. Com o botão, na fileira inteira, para a engrenagem alinhar pelo centro
+  // com ele; só com a engrenagem (trilha recebida), ela fica logo abaixo da linha de cima, como na web.
+  acoesTopoComCompartilhar: { marginTop: 10 },
   vazio: { gap: 16, marginTop: 24 },
   liberada: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
   liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },

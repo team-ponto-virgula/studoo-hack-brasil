@@ -200,3 +200,13 @@ test('o Tela conta a altura do que fica acima da faixa parada, para a tela rolar
   assert.equal((interfaceApp.match(/\(faixaColada \? 0 : 20\) \+ acima \+ alturaFaixa/g) ?? []).length, 2);
   assert.match(interfaceApp, /\(comAcima && !alturaAcima\) \? null/);
 });
+
+test('a engrenagem alinha pelo centro com "Compartilhar": com o botão, os 10 de cima ficam na fileira, não nele', () => {
+  assert.match(estudo, /acoesTopo: \{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8 \}/);
+  assert.match(estudo, /acoesTopoComCompartilhar: \{ marginTop: 10 \}/);
+  assert.match(estudo, /<View style=\{\[estudoEstilos\.acoesTopo, comCompartilhar && estudoEstilos\.acoesTopoComCompartilhar\]\}>/);
+  assert.match(estudo, /const comCompartilhar = Boolean\(!plano\.recebida && compartilhar\);/);
+  assert.doesNotMatch(estudo, /compartilharTopo/);
+  // Sem nenhum dos dois botões, a fileira nem aparece.
+  assert.match(estudo, /\{\(comCompartilhar \|\| configurar\) && \(/);
+});
