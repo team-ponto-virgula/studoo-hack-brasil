@@ -1,21 +1,25 @@
 /**
- * Toca-sons do app Mobile (Expo) para o Studoo.
- * - Usa `expo-audio` com `playsInSilentMode: false` para respeitar a chave de silêncio do aparelho nos efeitos/fundo.
+ * Toca-sons do app Mobile (Expo) para o Studoo (alinhado à docs/specs/12-som.md).
+ * - Usa `expo-audio` com `playsInSilentMode: false` para respeitar a chave de silêncio do iPhone.
  * - Efeitos em WAV mono 44.1 kHz (0 ms de atraso de codificador).
  * - Fundos em MP3 com dois reprodutores alternados em cruzamento suave (150 ms) para evitar buraco na emenda.
+ * - Começa apenas após o primeiro gesto (`registrarGesto()` ou toque em controle), com rampas de 600/300/400 ms.
  * - Posse do modo de áudio delegada a `MaquinaEstadoSom` (`packages/contratos/src/som-estado.ts`):
  *   nunca chama `setAudioModeAsync` durante gravação/voz ao vivo ou fala de lição, e reaplica o modo normal
  *   em `sairDeFala()` e `sairDeGravacaoOuVoz()`.
  * - Preferências persistidas em `SecureStore`.
  */
 
-import { AppState, Platform } from 'react-native';
+import { AccessibilityInfo, AppState, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer, type AudioSource } from 'expo-audio';
 import {
   CATALOGO_EFEITOS,
   CATALOGO_FUNDOS,
+  MENSAGEM_ERRO_FUNDO,
   PADRAO_PREFERENCIAS_SOM,
+  type EstadoReproducaoFundo,
+  type EstadoSomSnapshot,
   type IdEfeitoSonoro,
   type IdSomFundo,
   type PreferenciasSom,
@@ -67,18 +71,30 @@ const FONTES_FUNDOS: Record<Exclude<IdSomFundo, 'mudo'>, AudioSource> = {
   brisa_natural: require('../assets/sons/fundos/brisa-natural.mp3'),
 };
 
+type OuvinteEstado = (estado: EstadoSomSnapshot) => void;
+
 class TocaSonsMobile {
   private estado = new MaquinaEstadoSom();
   private prefsCarregadas = false;
+  private desbloqueado = false;
   private ultimoDisparo = new Map<IdEfeitoSonoro, number>();
 
   private listenerAppState: { remove: () => void } | null = null;
-
   private fundoAtualId: Exclude<IdSomFundo, 'mudo'> | null = null;
   private jogadorA: AudioPlayer | null = null;
   private jogadorB: AudioPlayer | null = null;
   private ativoEhA = true;
+  private volumeAtual = 0;
   private timerCruzamento: ReturnType<typeof setTimeout> | null = null;
+  private timerRampa: ReturnType<typeof setInterval> | null = null;
+  private timerPreview: ReturnType<typeof setTimeout> | null = null;
+
+  private estadoFundo: EstadoReproducaoFundo = 'parado';
+  private erroFundo: string | null = null;
+  private ouvintes = new Set<OuvinteEstado>();
+
+  private folhaAberta = false;
+  private leitorDeTela = false;
 
   async carregarPreferencias(): Promise<PreferenciasSom> {
     if (this.prefsCarregadas) return this.obterPreferencias();
@@ -97,6 +113,7 @@ class TocaSonsMobile {
       this.estado.definirFundo(PADRAO_PREFERENCIAS_SOM.fundo);
     }
     this.garantirAppState();
+    this.notificar();
     return this.obterPreferencias();
   }
 
@@ -107,18 +124,49 @@ class TocaSonsMobile {
     };
   }
 
+  obterEstado(): EstadoSomSnapshot {
+    return {
+      efeitosAtivos: this.estado.efeitosAtivos,
+      fundo: this.estado.fundo,
+      estadoFundo: this.estadoFundo,
+      motivoPausa: this.estado.motivoPausa(this.desbloqueado),
+      desbloqueado: this.desbloqueado,
+      erroFundo: this.erroFundo,
+    };
+  }
+
+  assinarEstado(ouvinte: OuvinteEstado): () => void {
+    this.ouvintes.add(ouvinte);
+    ouvinte(this.obterEstado());
+    return () => {
+      this.ouvintes.delete(ouvinte);
+    };
+  }
+
+  private notificar(): void {
+    const snap = this.obterEstado();
+    for (const o of this.ouvintes) o(snap);
+  }
+
+  /** Registra o primeiro gesto no app para liberar o som de fundo salvo (paridade com a web). */
+  registrarGesto(): void {
+    if (this.desbloqueado) return;
+    this.desbloqueado = true;
+    void this.atualizarEstadoFundo(600);
+    this.notificar();
+  }
+
   private garantirAppState(): void {
     if (this.listenerAppState || Platform.OS === 'web') return;
     this.listenerAppState = AppState.addEventListener('change', (estado) => {
       this.estado.definirSegundoPlano(estado !== 'active');
-      void this.atualizarEstadoFundo();
+      void this.atualizarEstadoFundo(this.estado.emSegundoPlano ? 0 : 600);
     });
   }
 
   /**
    * Aplica o modo normal do toca-sons (`playsInSilentMode: false`).
-   * Só executa quando `MaquinaEstadoSom.podeConfigurarModoAgora()` é verdadeiro
-   * (ou seja, nunca durante fala/áudio de lição nem durante gravação/voz ao vivo).
+   * Só executa quando `MaquinaEstadoSom.podeConfigurarModoAgora()` é verdadeiro.
    */
   private async aplicarModoNormalSePermitido(): Promise<void> {
     if (Platform.OS === 'web' || !this.estado.podeConfigurarModoAgora()) return;
@@ -130,6 +178,7 @@ class TocaSonsMobile {
 
   async tocarEfeito(id: IdEfeitoSonoro): Promise<void> {
     await this.carregarPreferencias();
+    this.desbloqueado = true;
     if (!this.estado.podeTocarEfeito(id)) return;
 
     const def = CATALOGO_EFEITOS[id];
@@ -138,7 +187,6 @@ class TocaSonsMobile {
     if (agora - ultimo < def.cooldownMs) return;
     this.ultimoDisparo.set(id, agora);
 
-    // Garante que o modo normal (respeitando chave de silêncio) esteja ativo se nenhum outro dono estiver no controle.
     await this.aplicarModoNormalSePermitido();
 
     try {
@@ -158,52 +206,108 @@ class TocaSonsMobile {
   }
 
   async definirEfeitosAtivos(ativos: boolean): Promise<void> {
+    const mudouParaLigado = !this.estado.efeitosAtivos && ativos;
     this.estado.definirEfeitosAtivos(ativos);
     this.prefsCarregadas = true;
+    this.desbloqueado = true;
     try {
       await SecureStore.setItemAsync(CHAVE_EFEITOS, ativos ? '1' : '0');
     } catch {
       // Sem armazenamento, vale na sessão atual.
     }
+    this.notificar();
+    if (mudouParaLigado) {
+      await this.tocarEfeito('salvo');
+    }
+  }
+
+  definirAreaPermitida(permitida: boolean): void {
+    this.estado.definirAreaPermitida(permitida);
+    void this.atualizarEstadoFundo(permitida ? 600 : 400);
+  }
+
+  async definirPreviewFolha(opcoes: { aberta: boolean; leitorDeTela?: boolean }): Promise<void> {
+    this.folhaAberta = opcoes.aberta;
+    if (opcoes.leitorDeTela !== undefined) {
+      this.leitorDeTela = opcoes.leitorDeTela;
+    } else if (opcoes.aberta) {
+      this.leitorDeTela = await AccessibilityInfo.isScreenReaderEnabled().catch(() => false);
+    }
+    if (!opcoes.aberta) this.cancelarPreviewFundo();
+    await this.atualizarEstadoFundo(300);
+  }
+
+  cancelarPreviewFundo(): void {
+    if (this.timerPreview) {
+      clearTimeout(this.timerPreview);
+      this.timerPreview = null;
+    }
+  }
+
+  /** No app com leitor de tela ligado, espera 1,5 s antes da prévia para não atropelar o anúncio. */
+  definirFundoComAtraso(fundo: IdSomFundo, atrasoMs?: number): void {
+    this.cancelarPreviewFundo();
+    const espera = atrasoMs ?? (this.leitorDeTela ? 1500 : 0);
+    if (espera <= 0) {
+      void this.definirFundo(fundo);
+      return;
+    }
+    this.estado.definirFundo(fundo);
+    this.prefsCarregadas = true;
+    this.desbloqueado = true;
+    void SecureStore.setItemAsync(CHAVE_FUNDO, fundo).catch(() => undefined);
+    this.notificar();
+    this.timerPreview = setTimeout(() => {
+      this.timerPreview = null;
+      void this.atualizarEstadoFundo(600);
+    }, espera);
   }
 
   async definirFundo(fundo: IdSomFundo): Promise<void> {
+    this.cancelarPreviewFundo();
     this.estado.definirFundo(fundo);
     this.prefsCarregadas = true;
+    this.desbloqueado = true;
+    this.erroFundo = null;
     try {
       await SecureStore.setItemAsync(CHAVE_FUNDO, fundo);
     } catch {
       // Sem armazenamento, vale na sessão atual.
     }
     this.garantirAppState();
-    await this.atualizarEstadoFundo();
+    await this.atualizarEstadoFundo(fundo === 'mudo' ? 400 : 600);
+  }
+
+  async tentarNovamenteFundo(): Promise<void> {
+    this.erroFundo = null;
+    await this.atualizarEstadoFundo(600);
   }
 
   entrarEmFala(): void {
     this.estado.entrarEmFala();
-    void this.atualizarEstadoFundo();
+    void this.atualizarEstadoFundo(400);
   }
 
   sairDeFala(): void {
     const deveReaplicar = this.estado.sairDeFala();
     if (deveReaplicar) {
-      void this.aplicarModoNormalSePermitido().then(() => this.atualizarEstadoFundo());
+      void this.aplicarModoNormalSePermitido().then(() => this.atualizarEstadoFundo(600));
     } else {
-      void this.atualizarEstadoFundo();
+      void this.atualizarEstadoFundo(600);
     }
   }
 
   entrarEmGravacaoOuVoz(): void {
     this.estado.entrarEmGravacaoOuVoz();
-    void this.atualizarEstadoFundo();
+    void this.atualizarEstadoFundo(0);
   }
 
   sairDeGravacaoOuVoz(): void {
     const deveReaplicar = this.estado.sairDeGravacaoOuVoz();
     if (deveReaplicar) {
-      void this.aplicarModoNormalSePermitido().then(() => this.atualizarEstadoFundo());
+      void this.aplicarModoNormalSePermitido().then(() => this.atualizarEstadoFundo(600));
     } else {
-      void this.atualizarEstadoFundo();
+      void this.atualizarEstadoFundo(600);
     }
   }
 
@@ -211,6 +315,10 @@ class TocaSonsMobile {
     if (this.timerCruzamento) {
       clearTimeout(this.timerCruzamento);
       this.timerCruzamento = null;
+    }
+    if (this.timerRampa) {
+      clearInterval(this.timerRampa);
+      this.timerRampa = null;
     }
     for (const j of [this.jogadorA, this.jogadorB]) {
       if (j) {
@@ -225,10 +333,50 @@ class TocaSonsMobile {
     this.jogadorA = null;
     this.jogadorB = null;
     this.fundoAtualId = null;
+    this.volumeAtual = 0;
   }
 
   private volumeAlvo(base: number): number {
-    return this.estado.estadoFundo() === 'atenuado' ? base * 0.2 : base;
+    const fatorFala = this.estado.estadoFundo() === 'atenuado' ? 0.2 : 1;
+    const fatorLeitor = this.folhaAberta && this.leitorDeTela ? 0.6 : 1;
+    return base * fatorFala * fatorLeitor;
+  }
+
+  private ramparVolume(jogador: AudioPlayer, de: number, para: number, duracaoMs: number, aoTerminar?: () => void): void {
+    if (this.timerRampa) {
+      clearInterval(this.timerRampa);
+      this.timerRampa = null;
+    }
+    if (duracaoMs <= 0) {
+      try {
+        jogador.volume = para;
+      } catch {
+        // Ignora.
+      }
+      this.volumeAtual = para;
+      aoTerminar?.();
+      return;
+    }
+    const passos = Math.max(2, Math.round(duracaoMs / 40));
+    let passo = 0;
+    this.timerRampa = setInterval(() => {
+      passo += 1;
+      const p = passo / passos;
+      const v = de + (para - de) * p;
+      try {
+        jogador.volume = v;
+        this.volumeAtual = v;
+      } catch {
+        if (this.timerRampa) clearInterval(this.timerRampa);
+        this.timerRampa = null;
+        return;
+      }
+      if (passo >= passos) {
+        if (this.timerRampa) clearInterval(this.timerRampa);
+        this.timerRampa = null;
+        aoTerminar?.();
+      }
+    }, 40);
   }
 
   private agendarProximoCruzamento(id: Exclude<IdSomFundo, 'mudo'>): void {
@@ -260,6 +408,7 @@ class TocaSonsMobile {
         try {
           proximo.volume = alvo * p;
           atual.volume = alvo * (1 - p);
+          this.volumeAtual = alvo;
         } catch {
           clearInterval(intervalo);
           return;
@@ -278,17 +427,28 @@ class TocaSonsMobile {
     }, esperaMs);
   }
 
-  private async atualizarEstadoFundo(): Promise<void> {
-    const estadoFundo = this.estado.estadoFundo();
-    if (estadoFundo === 'parado' || this.estado.fundo === 'mudo') {
-      this.limparFundo();
+  private async atualizarEstadoFundo(rampaMs = 600): Promise<void> {
+    const estadoDesejado = this.estado.estadoFundo();
+    const id = this.estado.fundo;
+
+    if (estadoDesejado === 'parado' || id === 'mudo' || !this.desbloqueado) {
+      const ativo = this.ativoEhA ? this.jogadorA : this.jogadorB;
+      const pararMs = !this.desbloqueado || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano ? 0 : 400;
+      if (ativo && pararMs > 0) {
+        this.ramparVolume(ativo, this.volumeAtual, 0, pararMs, () => this.limparFundo());
+      } else {
+        this.limparFundo();
+      }
+      this.estadoFundo = this.erroFundo && id !== 'mudo' ? 'erro' : 'parado';
+      this.notificar();
       return;
     }
 
-    const id = this.estado.fundo;
     const def = CATALOGO_FUNDOS.find((f) => f.id === id);
     if (!def) {
       this.limparFundo();
+      this.estadoFundo = 'parado';
+      this.notificar();
       return;
     }
 
@@ -297,26 +457,34 @@ class TocaSonsMobile {
 
     if (this.fundoAtualId === id && this.jogadorA && this.jogadorB) {
       const ativo = this.ativoEhA ? this.jogadorA : this.jogadorB;
-      try {
-        ativo.volume = alvo;
-      } catch {
-        // Ignora.
-      }
+      this.ramparVolume(ativo, this.volumeAtual, alvo, rampaMs);
+      this.estadoFundo = 'tocando';
+      this.notificar();
       return;
     }
 
     this.limparFundo();
+    this.estadoFundo = 'carregando';
+    this.notificar();
+
     this.fundoAtualId = id;
     this.ativoEhA = true;
     try {
       this.jogadorA = createAudioPlayer(FONTES_FUNDOS[id]);
       this.jogadorB = createAudioPlayer(FONTES_FUNDOS[id]);
-      this.jogadorA.volume = alvo;
+      this.jogadorA.volume = 0;
       void this.jogadorA.seekTo(def.aparoInicioSeg);
       this.jogadorA.play();
+      this.ramparVolume(this.jogadorA, 0, alvo, 600);
       this.agendarProximoCruzamento(id);
+      this.estadoFundo = 'tocando';
+      this.erroFundo = null;
+      this.notificar();
     } catch {
       this.limparFundo();
+      this.estadoFundo = 'erro';
+      this.erroFundo = MENSAGEM_ERRO_FUNDO;
+      this.notificar();
     }
   }
 }
