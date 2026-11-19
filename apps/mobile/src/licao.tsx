@@ -238,6 +238,14 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const alturaConteudo = useRef(0);
   /** Chegou ao fim desta etapa: o "Continuar lendo" não volta (um som tocando muda a altura do conteúdo). */
   const chegouAoFim = useRef(false);
+  /**
+   * A medida inicial da etapa já passou (250 ms depois da troca): só então o "fim" fica preso. Antes, as medidas podem
+   * chegar fora de ordem (a altura visível antes da do conteúdo, o rodapé de vidro medido por último) e o fim seria
+   * decidido cedo demais, com conteúdo embaixo do rodapé (iPhone, 20/11).
+   */
+  const medidaPronta = useRef(false);
+  /** A conferência do "Continuar lendo": se a tela não andou, não há mais o que rolar (o rodapé vira "Avançar"). */
+  const conferirLeitura = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [errosSeguidos, setErrosSeguidos] = useState(0);
   const [pedidoPonte, setPedidoPonte] = useState(0);
   const [consultaAberta, setConsultaAberta] = useState(false);
@@ -324,7 +332,10 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     // O conteúdo da etapa ainda está sendo medido: a volta à posição espera um instante.
     const volta = destino > 0 ? setTimeout(() => { rolagem.current?.scrollTo({ y: destino, animated: false }); posicaoRolagem.current = destino; }, 80) : undefined;
     chegouAoFim.current = false;
-    const medida = setTimeout(medirMais, 250);
+    medidaPronta.current = false;
+    // Uma conferência do "Continuar lendo" da etapa anterior não vale para esta.
+    clearTimeout(conferirLeitura.current);
+    const medida = setTimeout(() => { medidaPronta.current = true; medirMais(); }, 250);
     pararVoz();
     // O reforço é de cada exercício: um pedido antigo não vale para o próximo.
     setPedidoPonte(0);
@@ -350,14 +361,17 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
 
   /** Confere se o fim do conteúdo (a legenda, o passo a passo) ainda está abaixo da parte visível. */
   function medirMais() {
+    // Sem as duas medidas (a parte visível e a altura real do conteúdo), nada se decide: com uma delas em zero, o fim
+    // parecia já à vista (iPhone, 20/11).
+    if (!alturaVisivel.current || !alturaConteudo.current) return;
     const falta = alturaConteudo.current - (posicaoRolagem.current + alturaVisivel.current);
     // Como na web: no exercício e na prática, um aviso discreto no rodapé leva ao que ficou abaixo (antes, nada mostrava).
-    const abaixo = (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica') && alturaVisivel.current > 0 && falta > 48;
+    const abaixo = (etapa.tipo === 'exercicio' || etapa.tipo === 'pratica') && falta > 48;
     setTemAbaixo((antes) => (antes === abaixo ? antes : abaixo));
     if (chegouAoFim.current) return;
     const leitura = etapa.tipo === 'conceito' || etapa.tipo === 'exemplo';
-    const novo = leitura && alturaVisivel.current > 0 && falta > 24;
-    if (leitura && alturaVisivel.current > 0 && !novo) chegouAoFim.current = true;
+    const novo = leitura && falta > 24;
+    if (leitura && !novo && medidaPronta.current) chegouAoFim.current = true;
     setTemMais((antes) => (antes === novo ? antes : novo));
   }
 
@@ -372,7 +386,17 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       abrirConceito();
       return;
     }
-    rolagem.current?.scrollTo({ y: posicaoRolagem.current + alturaVisivel.current * 0.75, animated: reduzir === false });
+    const antes = posicaoRolagem.current;
+    rolagem.current?.scrollTo({ y: antes + alturaVisivel.current * 0.75, animated: reduzir === false });
+    // Rede de segurança (iPhone, 20/11): um toque em "Continuar lendo" nunca fica sem efeito. Se a tela não andou, o fim já
+    // está à vista: o rodapé vira "Avançar" (e a pílula "Ver mais abaixo" sai). Nada fica para trás, porque nada rolou.
+    clearTimeout(conferirLeitura.current);
+    conferirLeitura.current = setTimeout(() => {
+      if (Math.abs(posicaoRolagem.current - antes) >= 1) return;
+      chegouAoFim.current = true;
+      setTemMais(false);
+      setTemAbaixo(false);
+    }, reduzir === false ? 600 : 200);
   }
 
   /** Abre o resto do conceito no lugar do "Continuar lendo" do balão (banca da noite §7). */
@@ -399,7 +423,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     rolagem.current?.scrollTo({ y: Math.max(0, 24 + praticaY.current + comoFoiY.current - 80), animated: reduzir === false });
   }
 
-  useEffect(() => () => pararVoz(), []);
+  useEffect(() => () => { pararVoz(); clearTimeout(conferirLeitura.current); }, []);
 
   // Um erro novo (rede no Verificar, conclusão que não foi registrada) aparece no alto: a tela sobe até ele.
   useEffect(() => {
@@ -743,7 +767,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     <TranscritorContexto.Provider value={cliente.transcrever}>
     <Tela pagina={`licao-${licao.id}`} topo={topo} semLinha rodape={rodape} rolagem={rolagem}
       aoMedir={(altura) => { alturaVisivel.current = altura; medirMais(); }} aoRolar={(y) => { posicaoRolagem.current = y; medirMais(); }}
-      aoMedirConteudo={(altura) => { alturaConteudo.current = altura; medirMais(); }}
+      // A altura real do conteúdo (iPhone, 20/11): a da caixa da rolagem, menos o espaço do fim, ficava velha numa etapa curta
+      // com o rodapé de vidro do iOS 26. A caixa fica presa na altura da janela (flexGrow), o rodapé é medido depois e o
+      // espaço do fim entra sem a caixa mudar de tamanho: sem evento novo, sobrava a altura do rodapé como "falta" e o
+      // "Continuar lendo" ficava num conteúdo que não rola.
+      aoMedirNatural={(altura) => { alturaConteudo.current = altura; medirMais(); }}
       estiloConteudo={licaoEstilos.conteudo} estiloRodapeConteudo={licaoEstilos.rodapeConteudo}
       estiloRodape={retorno === 'certa' ? licaoEstilos.rodapeCerto : retorno === 'errada' ? licaoEstilos.rodapeErrado : undefined}>
       {/* Com a ponte aberta, a etapa fica recolhida (sem desmontar: a resposta e as medidas continuam), como na web 4D. */}
