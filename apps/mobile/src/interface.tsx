@@ -15,6 +15,7 @@ import {
   Text,
   TextInput,
   View,
+  useWindowDimensions,
   type ImageStyle,
   type StyleProp,
   type TextInputProps,
@@ -229,8 +230,10 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * Botão com relevo, como na web: a face e um lábio mais escuro embaixo; no toque, a face desce até o lábio
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
-export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, ocupado = false, carregando = false, variante = 'primario',
+export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativado = false, ocupado = false, carregando = false, variante = 'primario',
   compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone }: {
+  /** Ícone antes do rótulo, como `<Icone />{texto}` nos botões da web (Compartilhar, Copiar link, Editar perfil): 18 px. */
+  iconeAntes?: NomeIcone;
   /** Giro do ícone (a seta de "Continuar lendo" aponta para baixo, como .botao--ler-mais .icone da web). */
   giroIcone?: '90deg' | '180deg';
   /** Peso do texto quando a web usa outro (os botões do rodapé da aula têm 900, .aula-rodape__acoes > .botao). */
@@ -283,6 +286,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, desativado = false, o
     <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">
       {carregando ? <Pontinhos cor={corTexto} /> : (
         <>
+          {iconeAntes && <Icone nome={iconeAntes} tamanho={18} cor={corTexto} />}
           <Text style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
             peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
           {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} sistema /></View>}
@@ -575,6 +579,10 @@ export const caixaAlta = { textTransform: 'uppercase' } as const;
 type PropsConfirmacao = {
   mensagem: string;
   confirmarRotulo: string;
+  /** Texto embaixo da pergunta, como o DialogoConfirmar da web (título, texto e duas ações). */
+  texto?: string;
+  /** Rótulo da ação segura quando não é "Cancelar" ("Continuar compartilhando", "Manter foto", "Continuar editando"). */
+  cancelarRotulo?: string;
   destrutivo?: boolean;
   ocupado?: boolean;
   aoCancelar: () => void;
@@ -583,17 +591,31 @@ type PropsConfirmacao = {
 
 export function CartaoConfirmacao(props: PropsConfirmacao) {
   if (Platform.OS === 'ios') return <ConfirmacaoDoSistema {...props} />;
-  const { mensagem, confirmarRotulo, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar } = props;
+  const { mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar } = props;
+  const estreito = useWindowDimensions().width <= 420;
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
       <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
-        <Pressable testID="confirmacao" accessible={false} accessibilityViewIsModal role="dialog" aria-modal style={estilos.modalCartao} onPress={() => {}}>
-          <Text accessibilityRole="header" style={estilos.modalMensagem}>{mensagem}</Text>
-          <View style={estilos.modalAcoes}>
-            <Botao rotulo={mensagens.geracao.cancelar} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} />
-            <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'destrutivo' : 'primario'} desativado={ocupado} acao={aoConfirmar} />
-          </View>
-        </Pressable>
+        {texto ? (
+          // Com título e texto, como o DialogoConfirmar da web (.folha--confirmar): título de 22, texto e as duas ações, a
+          // segura primeiro; até 420 de largura, uma embaixo da outra e na largura toda (.folha-acoes--par no celular).
+          <Pressable testID="confirmacao" accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={estilos.dialogoCartao} onPress={() => {}}>
+            <Text accessibilityRole="header" style={estilos.dialogoTitulo}>{mensagem}</Text>
+            <Text style={estilos.dialogoTexto}>{texto}</Text>
+            <View style={[estilos.dialogoAcoes, estreito && estilos.dialogoAcoesEmpilhadas]}>
+              <Botao rotulo={cancelarRotulo} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} />
+              <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'destrutivo' : 'primario'} desativado={ocupado} acao={aoConfirmar} />
+            </View>
+          </Pressable>
+        ) : (
+          <Pressable testID="confirmacao" accessible={false} accessibilityViewIsModal role="dialog" aria-modal style={estilos.modalCartao} onPress={() => {}}>
+            <Text accessibilityRole="header" style={estilos.modalMensagem}>{mensagem}</Text>
+            <View style={estilos.modalAcoes}>
+              <Botao rotulo={cancelarRotulo} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} />
+              <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'destrutivo' : 'primario'} desativado={ocupado} acao={aoConfirmar} />
+            </View>
+          </Pressable>
+        )}
       </Pressable>
     </Modal>
   );
@@ -603,15 +625,15 @@ export function CartaoConfirmacao(props: PropsConfirmacao) {
  * No iPhone, a confirmação é o alerta do sistema (UIAlertController), com o mesmo texto e as mesmas duas ações: "Cancelar"
  * e a confirmação, em vermelho quando apaga. Quem usa já tira a confirmação da tela antes de rodar a ação.
  */
-function ConfirmacaoDoSistema({ mensagem, confirmarRotulo, destrutivo = false, aoCancelar, aoConfirmar }: PropsConfirmacao) {
+function ConfirmacaoDoSistema({ mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, aoCancelar, aoConfirmar }: PropsConfirmacao) {
   const acoes = useRef({ aoCancelar, aoConfirmar });
   acoes.current = { aoCancelar, aoConfirmar };
   useEffect(() => {
-    Alert.alert(mensagem, undefined, [
-      { text: mensagens.geracao.cancelar, style: 'cancel', onPress: () => acoes.current.aoCancelar() },
+    Alert.alert(mensagem, texto, [
+      { text: cancelarRotulo, style: 'cancel', onPress: () => acoes.current.aoCancelar() },
       { text: confirmarRotulo, style: destrutivo ? 'destructive' : 'default', onPress: () => acoes.current.aoConfirmar() },
     ]);
-  }, [mensagem, confirmarRotulo, destrutivo]);
+  }, [mensagem, texto, cancelarRotulo, confirmarRotulo, destrutivo]);
   return null;
 }
 
@@ -796,6 +818,13 @@ export const estilos = StyleSheet.create({
     shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 24, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
   modalMensagem: { marginBottom: 20, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16.8, lineHeight: 25 },
   modalAcoes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10 },
+  // .folha.folha--confirmar da web: 20 de respiro, vão de 14, cantos de 24 e borda de 2.
+  dialogoCartao: { width: '100%', maxWidth: 480, padding: 20, gap: 14, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
+    shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 24, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
+  dialogoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 27.5 },
+  dialogoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
+  dialogoAcoes: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 10, marginTop: 4 },
+  dialogoAcoesEmpilhadas: { flexDirection: 'column', alignItems: 'stretch' },
   botaoTextoLivre: { borderColor: 'transparent', borderBottomColor: 'transparent', borderBottomWidth: 2, backgroundColor: 'transparent' },
   // Botão com degrau: fora, o lábio (degrauFora, 4 por fora); dentro, a face de 48 com a borda de 2 que fecha em volta.
   botaoDegrauCompacto: { alignSelf: 'flex-start', flexShrink: 1 },
@@ -841,11 +870,15 @@ function NavegacaoInferior() {
   const nav = useContext(NavegacaoContexto);
   if (!nav) return null;
   // As duas abas ficam dentro de uma lista de abas, como pede o papel "tab" (axe: aria-required-parent).
-  return <FundoDeBarra accessibilityRole="tablist" estilo={navegacaoEstilos.faixa} estiloVidro={navegacaoEstilos.faixaVidro}>
-    {([
-      { id: 'planos', rotulo: mensagens.planos.titulo, icone: 'livro', acao: nav.planos },
-      { id: 'objetivo', rotulo: mensagens.planos.novo, icone: 'lampada', acao: nav.criar },
-    ] as const).map((item) => {
+  const itens: { id: 'planos' | 'objetivo' | 'perfil'; rotulo: string; icone: NomeIcone; acao: () => void }[] = [
+    { id: 'planos', rotulo: mensagens.planos.titulo, icone: 'livro', acao: nav.planos },
+    { id: 'objetivo', rotulo: mensagens.planos.novo, icone: 'lampada', acao: nav.criar },
+  ];
+  if (nav.perfil) itens.push({ id: 'perfil', rotulo: mensagens.perfil.navegacao, icone: 'pessoa', acao: nav.perfil });
+  // Com três itens, o vão entre eles cai de 12 para 8, como .navegacao-mobile[data-itens='3'] da web.
+  const vao = itens.length > 2 ? { gap: 8 } : null;
+  return <FundoDeBarra accessibilityRole="tablist" estilo={[navegacaoEstilos.faixa, vao]} estiloVidro={[navegacaoEstilos.faixaVidro, vao]}>
+    {itens.map((item) => {
       const selecionado = item.id === nav.atual || item.id === 'planos' && nav.atual === 'plano';
       return <Pressable key={item.id} testID={`nav-${item.id}`} accessibilityRole="tab" accessibilityState={{ selected: selecionado, disabled: nav.ocupado }}
         aria-selected={selecionado} aria-disabled={nav.ocupado}

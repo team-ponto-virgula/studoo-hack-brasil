@@ -1,6 +1,21 @@
 import { Platform, View, type ViewStyle } from 'react-native';
 import { SymbolView, type SFSymbol } from 'expo-symbols';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 import type { NomeIcone } from './trilha';
+
+/** Ícones do perfil e do compartilhar: os mesmos elementos SVG da web (src/ui/caminho.tsx), na grade de 24, traço redondo. */
+const DESENHOS_SVG = {
+  pessoa: <><Circle cx="12" cy="8.5" r="3.8" /><Path d="M4.8 20c.9-3.8 3.7-5.8 7.2-5.8s6.3 2 7.2 5.8" /></>,
+  compartilhar: <><Circle cx="17.5" cy="5.5" r="2.5" /><Circle cx="6.5" cy="12" r="2.5" /><Circle cx="17.5" cy="18.5" r="2.5" /><Path d="M8.7 10.8l6.6-4M8.7 13.2l6.6 4" /></>,
+  copiar: <><Rect x="8.5" y="8.5" width="11" height="11" rx="2.5" /><Path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2" /></>,
+  camera: <><Path d="M4 8.5A2 2 0 0 1 6 6.5h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><Circle cx="12" cy="13" r="3.5" /></>,
+  imagem: <><Rect x="4" y="4.5" width="16" height="15" rx="3" /><Circle cx="9" cy="9.5" r="1.6" /><Path d="M4.5 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5" /></>,
+  lapis: <Path d="M14.5 5.5l4 4M5 19l1-4.5L15.5 5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9.5 18z" />,
+  lixeira: <Path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />,
+  bussola: <><Circle cx="12" cy="12" r="8.5" /><Path d="M15.5 8.5l-2 5-5 2 2-5z" /></>,
+} as const;
+type NomeIconeSvg = keyof typeof DESENHOS_SVG;
+const ehSvg = (nome: NomeIcone): nome is NomeIconeSvg => Object.hasOwn(DESENHOS_SVG, nome);
 
 /*
  * Ícones da trilha, os mesmos da web (src/ui/caminho.tsx), desenhados com View porque o app não usa SVG.
@@ -10,7 +25,7 @@ import type { NomeIcone } from './trilha';
 /** `traco`: barra cheia (a espessura é o lado de 2,5); `recorte` + `filho`: um pedaço de círculo (arco) recortado. */
 type Peca = ViewStyle & { traco?: boolean; recorte?: boolean; filho?: Peca };
 
-const desenhos: Record<NomeIcone, Peca[]> = {
+const desenhos: Record<Exclude<NomeIcone, NomeIconeSvg>, Peca[]> = {
   check: [
     { left: 4.44, top: 6.98, width: 15, height: 7.25, borderLeftWidth: 2.5, borderBottomWidth: 2.5, transform: [{ rotate: '-45deg' }] },
   ],
@@ -152,6 +167,7 @@ const SIMBOLOS: Partial<Record<NomeIcone, { nome: SFSymbol; cheio?: SFSymbol }>>
   olho: { nome: 'eye' },
   olhoFechado: { nome: 'eye.slash' },
   seta: { nome: 'arrow.right' },
+  pessoa: { nome: 'person', cheio: 'person.fill' },
 };
 
 export function Icone({ nome, tamanho = 24, cor, cheio = false, traco = 2.5, sistema = false }: {
@@ -166,6 +182,16 @@ export function Icone({ nome, tamanho = 24, cor, cheio = false, traco = 2.5, sis
         style={{ width: tamanho, height: tamanho }}>
         <SymbolView name={(sistema === 'cheio' && simbolo.cheio) || simbolo.nome} size={tamanho} tintColor={cor} weight="semibold"
           style={{ width: tamanho, height: tamanho }} />
+      </View>
+    );
+  }
+  if (ehSvg(nome)) {
+    return (
+      <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden testID={`icone:${nome}:${traco}`}
+        style={{ width: tamanho, height: tamanho }}>
+        <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth={traco} strokeLinecap="round" strokeLinejoin="round">
+          {DESENHOS_SVG[nome]}
+        </Svg>
       </View>
     );
   }

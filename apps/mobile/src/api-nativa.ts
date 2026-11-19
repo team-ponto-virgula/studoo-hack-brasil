@@ -61,7 +61,9 @@ export function criarClienteNativo(token?: string) {
   const cliente = criarClienteStudoo(async (caminho, opcoes) => {
     const origem = origemConfigurada().origin;
     const controle = new AbortController();
-    const aceite = opcoes.method === 'POST' && (caminho === '/api/aprendizado/planos' || caminho.startsWith('/api/estudio/'));
+    // O aceite e o estúdio geram conteúdo; a foto do perfil sobe até 2 MB em base64: os três ganham o tempo longo.
+    const aceite = (opcoes.method === 'POST' && (caminho === '/api/aprendizado/planos' || caminho.startsWith('/api/estudio/')))
+      || (opcoes.method === 'PUT' && caminho === '/api/perfil/foto');
     const limite = setTimeout(() => controle.abort(), aceite ? tempoLimiteDoAceiteMs : tempoLimiteMs);
 
     try {

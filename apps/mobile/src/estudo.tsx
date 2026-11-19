@@ -1,7 +1,7 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type LicaoDetalhe, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
-import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, ActionSheetIOS, Alert, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
 import { codigoDaFalha, sessaoInvalida, type ClienteNativo } from './api-nativa';
@@ -24,6 +24,8 @@ import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NomeIcone } from './trilha';
 import { focoVisivel } from './foco';
 import { ouvirVoltar } from './voltar';
+import { AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
+import { TelaEditarPerfil, TelaPerfil } from './perfil';
 
 /*
  * Estudo no app, com os mesmos passos da web (src/app/estudo.tsx): a pessoa escreve o que quer aprender, a trilha é montada
@@ -36,9 +38,12 @@ type Etapa =
   | { tipo: 'objetivo' }
   | { tipo: 'geracao' }
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
-  | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string }
+  | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string; aviso?: string }
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
-  | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
+  | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao }
+  // Perfis e compartilhar (spec 09 e 10): a tela Perfil e a tela Editar perfil, só com `compartilhar` no config.
+  | { tipo: 'perfil' }
+  | { tipo: 'editarPerfil' };
 
 type EtapaPlano = Extract<Etapa, { tipo: 'plano' }>;
 type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'apagar';
@@ -103,6 +108,15 @@ export function Estudo({ cliente, sair, expirar }: {
   const saidaDaLicao = useRef<(() => void) | null>(null);
   const geracaoAtiva = useRef<AbortController | null>(null);
   const ocupado = pendente !== null;
+  /** Perfis e compartilhar (spec 09): só com `compartilhar` no /api/auth/config, como na web. */
+  const [compartilhar, setCompartilhar] = useState(false);
+  /** Comunidade (spec 10, etapa B): "Quem pode ver" em três níveis; só com `comunidade` no config. */
+  const [comunidade, setComunidade] = useState(false);
+  const [perfil, setPerfil] = useState<Perfil | null>(null);
+  /** A trilha da folha "Compartilhar trilha" aberta, ou null. */
+  const [folha, setFolha] = useState<string | null>(null);
+  const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
+  const registrarGuarda = useCallback((guarda: ((continuar: () => void) => boolean) | null) => { guardaSaida.current = guarda; }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -110,9 +124,14 @@ export function Estudo({ cliente, sair, expirar }: {
     async function carregarPlanos() {
       setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
       try {
-        const lista = await cliente.listarPlanos();
+        // Como na web: a lista e a configuração chegam juntas (o compartilhar decide a barra de baixo e o cabeçalho).
+        const [lista, config] = await Promise.all([cliente.listarPlanos(), cliente.configuracaoAcesso().catch(() => null)]);
         // A apresentação é opcional, como na web.
         if (!ativo) return;
+        const comCompartilhar = Boolean(config?.compartilhar);
+        setCompartilhar(comCompartilhar);
+        setComunidade(comCompartilhar && Boolean(config?.comunidade));
+        if (comCompartilhar) void cliente.obterPerfil().then((dados) => { if (ativo) setPerfil(dados); }).catch(() => undefined);
         setPlanos(lista);
         marcarSincronia();
         // Como na web: com planos salvos, abre direto na trilha em andamento (só se a pessoa ainda está em Meus planos).
@@ -198,6 +217,7 @@ export function Estudo({ cliente, sair, expirar }: {
         else void abrirPlano(etapa.plano.id, etapa.licao.id);
       }
       else if (etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
+      else if (etapa.tipo === 'editarPerfil') navegar({ tipo: 'perfil' });
       else navegar({ tipo: 'planos' });
       return true;
     }, etapa.tipo !== 'planos');
@@ -248,6 +268,8 @@ export function Estudo({ cliente, sair, expirar }: {
 
   /** Troca de etapa. Sair da geração ao vivo cancela o pedido em andamento; cada tela nova começa do topo. */
   function navegar(destino: Etapa) {
+    // Saindo de "Editar perfil" com alteração não salva: a tela pergunta antes (a mesma confirmação do Voltar), como na web.
+    if (destino.tipo !== 'editarPerfil' && guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
     if (destino.tipo !== 'geracao') pararGeracao();
     setErro(null);
     setFalhaGeracao(null);
@@ -385,7 +407,7 @@ export function Estudo({ cliente, sair, expirar }: {
   /** Apaga uma trilha depois da confirmação no cartão (com o progresso, duas trilhas de mesmo nome não se confundem). */
   function pedirParaApagar(plano: PlanoResumo) {
     setConfirmacao({
-      mensagem: mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total)),
+      mensagem: `${mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total))}${plano.link ? ` ${mensagens.compartilhar.apagarAviso}` : ''}`,
       confirmarRotulo: mensagens.planos.apagar, destrutivo: true, aoConfirmar: () => void apagarPlano(plano),
     });
   }
@@ -397,12 +419,28 @@ export function Estudo({ cliente, sair, expirar }: {
     anunciar(mensagens.planos.apagada(plano.titulo));
   }
 
-  async function abrirPlano(id: string, origem?: string) {
+  async function abrirPlano(id: string, origem?: string, aviso?: string) {
     const resultado = await executar('plano', () => cliente.obterPlano(id));
     if (!resultado.ok) return;
     atualizarPlano(resultado.dados);
-    navegar({ tipo: 'plano', plano: resultado.dados, origem });
+    navegar({ tipo: 'plano', plano: resultado.dados, origem, ...(aviso ? { aviso } : {}) });
   }
+
+  /** O link de uma trilha mudou (criado, alterado ou encerrado): a lista e o mapa mostram o selo certo. Como na web. */
+  function mudarLink(planoId: string, link: LinkCompartilhado | null) {
+    const marca = link ? { codigo: link.codigo, noPerfil: link.noPerfil } : undefined;
+    setPlanos((anteriores) => anteriores?.map((item) => (item.id === planoId ? { ...item, link: marca } : item)) ?? null);
+    setEtapa((atual) => ('plano' in atual && atual.plano.id === planoId ? { ...atual, plano: { ...atual.plano, link: marca } } : atual));
+  }
+
+  /** Trilha adicionada pelo link (ou já tinha): abre o mapa dela, com o aviso de quem compartilhou. Como na web. */
+  async function aoAdicionarPorLink(planoId: string, nomeDono: string, jaTinha: boolean) {
+    try {
+      setPlanos(await cliente.listarPlanos());
+    } catch { /* A lista se atualiza na próxima sincronia. */ }
+    void abrirPlano(planoId, undefined, jaTinha ? undefined : mensagens.compartilhar.adicionada(nomeDono));
+  }
+  const abrirFolha = compartilhar ? (planoId: string) => setFolha(planoId) : undefined;
 
   /** Abre a lição guardando qual nó está abrindo, para o caminho e o próximo passo mostrarem "Abrindo…". */
   async function abrirLicao(plano: PlanoDetalhe, id: string) {
@@ -427,12 +465,16 @@ export function Estudo({ cliente, sair, expirar }: {
     return false;
   }
 
+  const comNavegacaoAgora = planos !== null && planos.length > 0 && ['planos', 'objetivo', 'plano', 'perfil'].includes(etapa.tipo) && !pendente;
   const acoes = (
     <>
-      {etapa.tipo !== 'planos' && !['objetivo', 'plano'].includes(etapa.tipo) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
+      {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil'].includes(etapa.tipo) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
         desativado={ocupado} acao={() => abrir({ tipo: 'planos' })} />}
-      <Botao rotulo={mensagens.sair} testID="sair" compacto variante="texto" desativado={ocupado}
-        acao={pedirParaSair} />
+      {/* Com o compartilhar (como a web): "Sair" fica no Perfil; no alto, "Perfil" só onde não há a barra de baixo. */}
+      {compartilhar
+        ? !comNavegacaoAgora && <Botao rotulo={mensagens.perfil.navegacao} testID="perfil-cabecalho" compacto variante="texto" desativado={ocupado}
+            acao={() => abrir({ tipo: 'perfil' })} />
+        : <Botao rotulo={mensagens.sair} testID="sair" compacto variante="texto" desativado={ocupado} acao={pedirParaSair} />}
     </>
   );
   // O erro de Minhas trilhas (sem rede, sessão, servidor) recebe o foco do leitor de tela, como nas outras telas.
@@ -440,13 +482,17 @@ export function Estudo({ cliente, sair, expirar }: {
 
   // Como a web (studoo.tinhaTrilhas): na primeira carga, as abas só aparecem no esqueleto se a conta tinha trilhas.
   const carregandoInicio = !planos && !erro;
-  const comNavegacao = (carregandoInicio && tinhaTrilhas)
-    || (planos !== null && planos.length > 0 && ['planos', 'objetivo', 'plano'].includes(etapa.tipo) && !pendente);
+  const comNavegacao = (carregandoInicio && tinhaTrilhas) || comNavegacaoAgora;
   return <NavegacaoContexto.Provider value={comNavegacao ? {
-    atual: etapa.tipo as 'planos' | 'objetivo' | 'plano', ocupado,
+    atual: etapa.tipo as 'planos' | 'objetivo' | 'plano' | 'perfil', ocupado,
     planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
+    perfil: compartilhar ? () => abrir({ tipo: 'perfil' }) : undefined,
   } : null}>
     {renderizarTela()}
+    {folha && (
+      <FolhaCompartilhar cliente={cliente} planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade}
+        aoFechar={() => setFolha(null)} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
+    )}
     {confirmacao && (
       <CartaoConfirmacao mensagem={confirmacao.mensagem} confirmarRotulo={confirmacao.confirmarRotulo} destrutivo={confirmacao.destrutivo}
         ocupado={ocupado} aoCancelar={() => setConfirmacao(null)}
@@ -481,7 +527,8 @@ export function Estudo({ cliente, sair, expirar }: {
       const proxima = proximaDoCaminho(etapa.plano);
       const { concluidas, total } = etapa.plano.progresso;
       return (
-        <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} rodape={<>
+        <TelaConcluida etapa={etapa} acoes={acoes} mensagem={mensagem} ocupado={ocupado}
+          compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined} rodape={<>
           {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}
           {total > 0 && concluidas === total && <Botao rotulo={mensagens.licao.novoAssunto} testID="novo-assunto" variante="secundario"
             desativado={ocupado} acao={() => abrir({ tipo: 'objetivo' })} />}
@@ -495,7 +542,8 @@ export function Estudo({ cliente, sair, expirar }: {
 
     if (etapa.tipo === 'plano') {
       return <TelaPlano etapa={etapa} acoes={acoes} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} abrindo={abrindo} sincronia={sincronia}
-        abrirLicao={(id) => void abrirLicao(etapa.plano, id)} novoPlano={() => abrir({ tipo: 'objetivo' })} />;
+        abrirLicao={(id) => void abrirLicao(etapa.plano, id)} novoPlano={() => abrir({ tipo: 'objetivo' })}
+        compartilhar={abrirFolha && !etapa.plano.recebida ? () => abrirFolha(etapa.plano.id) : undefined} />;
     }
 
     if (etapa.tipo === 'geracao' && geracao) {
@@ -506,11 +554,24 @@ export function Estudo({ cliente, sair, expirar }: {
         abrirExistente={(id) => void abrirPlano(id)} />;
     }
 
+    if (etapa.tipo === 'perfil') {
+      return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
+        aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
+        editar={() => abrir({ tipo: 'editarPerfil' })} sair={pedirParaSair} />;
+    }
+
+    if (etapa.tipo === 'editarPerfil' && perfil && !perfil.visitante) {
+      return <TelaEditarPerfil cliente={cliente} perfil={perfil} acoes={acoes} aoMudarPerfil={setPerfil}
+        voltar={() => navegar({ tipo: 'perfil' })} registrarGuarda={registrarGuarda} />;
+    }
+
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
       return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
         aviso={etapa.tipo === 'planos' && planos?.length === 0 ? mensagens.planos.semTrilhas : aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
-        verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })} />;
+        verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })}
+        porLink={compartilhar ? <AdicionarPorLink cliente={cliente} ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)}
+          abrirPlano={(id) => void abrirPlano(id)} /> : undefined} />;
     }
 
     // Como na web (rodada 4F): enquanto as trilhas chegam, o esqueleto do mapa (quem tem trilha cai no mapa logo depois).
@@ -532,7 +593,8 @@ export function Estudo({ cliente, sair, expirar }: {
             <>
               {destaque && (
                 <CartaoDestaque plano={destaque} indice={planos.indexOf(destaque)} sincronia={sincronia} ocupado={ocupado}
-                  abrir={() => void abrirPlano(destaque.id)} apagar={() => pedirParaApagar(destaque)} />
+                  abrir={() => void abrirPlano(destaque.id)} apagar={() => pedirParaApagar(destaque)}
+                  compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined} />
               )}
               {restantes.length > 0 && (
                 <Text accessibilityRole="header" style={[estudoEstilos.secaoTitulo, caixaAlta]}>{mensagens.planos.outrasTrilhas}</Text>
@@ -541,7 +603,8 @@ export function Estudo({ cliente, sair, expirar }: {
               {restantes.length > 0 && <View style={estudoEstilos.outrasTrilhas}>
               {restantes.map((plano) => (
                 <CartaoPlano key={plano.id} plano={plano} indice={planos.indexOf(plano)} ocupado={ocupado} secundario
-                  abrir={() => void abrirPlano(plano.id)} apagar={() => pedirParaApagar(plano)} />
+                  abrir={() => void abrirPlano(plano.id)} apagar={() => pedirParaApagar(plano)}
+                  compartilhar={abrirFolha && !plano.recebida ? () => abrirFolha(plano.id) : undefined} />
               ))}
               </View>}
             </>
@@ -566,7 +629,9 @@ function planoInicial(planos: PlanoResumo[]) {
  * Um objetivo curto demais não sai do aparelho: o campo mostra o que falta e recebe o foco.
  * O foco da tela vai ao erro, quando há um, e senão ao título; o aviso de geração cancelada é anunciado.
  */
-function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, acaoErro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona }: {
+function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, acaoErro, temPlanos, areaInicial, acoes, aoMudar, gerar, verPlanos, comoFunciona, porLink }: {
+  /** "Adicionar por link" (com o compartilhar), antes de "Ver como funciona", como na web. */
+  porLink?: ReactNode;
   cliente: ClienteNativo;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
@@ -712,6 +777,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
             ))}
         </View>
       </View>
+      {porLink}
       <LinkComoFunciona desativado={ocupado} acao={comoFunciona} />
     </Tela>
   );
@@ -1288,7 +1354,9 @@ function SkeletonLicao({ texto }: { texto: string }) {
  * Como na web, no celular o próximo passo vira o rodapé fixo e, a partir de 768 px, fica dentro da faixa.
  * Voltando de uma lição, a trilha rola até o nó liberado, o próximo ou a lição de origem, se ele estiver fora da vista.
  */
-function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao, novoPlano, sincronia }: {
+function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao, novoPlano, sincronia, compartilhar }: {
+  /** Abre a folha "Compartilhar trilha" (só na trilha da própria pessoa, com o compartilhar ligado). */
+  compartilhar?: () => void;
   /** O selo da tela: a trilha aberta também se atualiza quando o app volta ao primeiro plano. */
   sincronia: Sincronia;
   etapa: EtapaPlano;
@@ -1350,6 +1418,18 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
   }
 
   const novo = <Botao rotulo={mensagens.planos.novo} testID="novo-plano" desativado={ocupado} acao={novoPlano} />;
+  // Como .trilha-topo__texto da web: na trilha recebida, "Esta trilha é de Ana" e o link original; na da própria pessoa,
+  // "Compartilhar" (ou "Compartilhada", com o link ativo); depois de adicionar, o aviso verde.
+  const marcaDoTopo = (
+    <>
+      {plano.recebida ? <TrilhaRecebida recebida={plano.recebida} /> : compartilhar && (
+        <Botao rotulo={plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada} iconeAntes="compartilhar" variante="secundario"
+          testID="plano-compartilhar" nomeAcessivel={mensagens.compartilhar.entradaRotulo(plano.titulo)} desativado={ocupado} acao={compartilhar}
+          estilo={estudoEstilos.compartilharTopo} />
+      )}
+      {etapa.aviso && <AvisoDaTrilha texto={etapa.aviso} />}
+    </>
+  );
   const passo = proximo && (
     <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id} andamento={proximo.no.andamento}
       ocupado={ocupado} rodape={!largo} aoAbrir={() => abrirLicao(proximo.no.id)} />
@@ -1365,6 +1445,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
           <View style={estudoEstilos.barraPlanoTexto}>
             <Text style={[estudoEstilos.barraPlanoRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
             <Titulo testID="titulo-plano" foco linhas={2} equilibrado estilo={estudoEstilos.barraPlanoTitulo}>{plano.titulo}</Titulo>
+            {marcaDoTopo}
           </View>
           <AnelProgresso progresso={plano.progresso} tamanho={44} />
         </View>
@@ -1388,6 +1469,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
           <View style={estudoEstilos.topoTrilhaTexto}>
             <Text style={[estudoEstilos.topoTrilhaRotulo, caixaAlta]}>{mensagens.trilha.suaTrilha}</Text>
             <Titulo testID="titulo-plano" foco equilibrado estilo={estudoEstilos.tituloTopo}>{plano.titulo}</Titulo>
+            {marcaDoTopo}
           </View>
           <AnelProgresso progresso={plano.progresso} />
         </View>
@@ -1401,6 +1483,10 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
           </View>
           <Text style={estilos.textoSecundario}>{mensagens.trilha.concluidoTexto}</Text>
           {largo && <View style={estudoEstilos.acaoNaTela}>{novo}</View>}
+          {compartilhar && (
+            <Botao rotulo={mensagens.compartilhar.concluidaAcao} iconeAntes="compartilhar" variante="secundario" testID="trofeu-compartilhar"
+              desativado={ocupado} acao={compartilhar} estilo={{ alignSelf: 'flex-start', marginTop: 8 }} />
+          )}
         </View>
       )}
       {nos.length > 0 ? (
@@ -1544,13 +1630,15 @@ function BarraProgresso({ progresso, testID, naFaixa = false, comPercentual = fa
  * sincronia, o título, o progresso com a porcentagem e o único botão primário da tela. Com tudo concluído, o rótulo vira
  * "Você concluiu suas trilhas!" e a ação, rever. O "Apagar" continua discreto, como nos outros cartões.
  */
-function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
+function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, compartilhar }: {
   plano: PlanoResumo;
   indice: number;
   sincronia: Sincronia;
   ocupado: boolean;
   abrir: () => void;
   apagar: () => void;
+  /** "Compartilhar" no menu "•••", acima de "Apagar" (só na trilha da própria pessoa, com o compartilhar ligado). */
+  compartilhar?: () => void;
 }) {
   const { concluidas, total } = plano.progresso;
   const concluido = total > 0 && concluidas === total;
@@ -1575,12 +1663,13 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
           style={[estudoEstilos.destaqueStu, { transform: [{ translateY: balanco }] }]} />
       </View>
       {/* Como .plano-cartao__menu da web: o "•••" no canto de cima da arte, com o "Apagar" num balão embaixo. */}
-      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID="apagar-destaque" />
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} testID="apagar-destaque" />
       <View style={estudoEstilos.destaqueCorpo}>
         <View style={estudoEstilos.destaqueTopo}>
           <Text style={[estudoEstilos.destaqueRotulo, caixaAlta]}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo)}</Text>
         </View>
         <Text accessibilityRole="header" style={[estilos.subtitulo, estudoEstilos.destaqueTitulo, estudoEstilos.destaqueTituloTamanho]}>{plano.titulo}</Text>
+        <MarcaCompartilhar marcas={plano} />
         <BarraProgresso progresso={plano.progresso} comPercentual />
         {/* 14 da linha do progresso (21) até o botão, como .plano-destaque na web (o corpo tem vão de 8). */}
         <Botao rotulo={acao} testID="abrir-destaque" icone="seta" nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir}
@@ -1595,7 +1684,9 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar }: {
  * Cartão de um plano em Meus planos, como na web: uma faixa do mundo (cada plano numa região), o título, o progresso e a
  * ação que cabe: começar, continuar ou rever a trilha concluída.
  */
-function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false }: {
+function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, secundario = false }: {
+  /** "Compartilhar" no menu "•••", acima de "Apagar" (só na trilha da própria pessoa, com o compartilhar ligado). */
+  compartilhar?: () => void;
   /** Abaixo do destaque, a ação é secundária: o único botão azul da tela fica no "Seu próximo passo". Como na web. */
   secundario?: boolean;
   plano: PlanoResumo;
@@ -1632,13 +1723,14 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false
       </View>
       <View style={estudoEstilos.cartaoCorpo}>
         <Text accessibilityRole="header" style={[estilos.tituloBloco, estudoEstilos.cartaoTitulo]}>{plano.titulo}</Text>
+        <MarcaCompartilhar marcas={plano} />
         <BarraProgresso progresso={plano.progresso} />
         <View style={estudoEstilos.cartaoAcao}>
           <Botao rotulo={acao} testID={`abrir-plano-${indice}`} icone="seta" variante={concluido || secundario ? 'secundario' : 'primario'}
             nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir} />
         </View>
       </View>
-      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} testID={`apagar-plano-${indice}`} />
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} testID={`apagar-plano-${indice}`} />
     </View>
     </Animated.View>
   );
@@ -1649,15 +1741,21 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, secundario = false
  * não competir com Começar/Continuar. Tocar no menu mostra "Apagar" ao lado; tocar nele de novo fecha. Apagar ainda pede
  * confirmação.
  */
-function MenuDoCartao({ titulo, ocupado, apagar, testID }: { titulo: string; ocupado: boolean; apagar: () => void; testID: string }) {
+function MenuDoCartao({ titulo, ocupado, apagar, compartilhar, testID }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; testID: string }) {
   const [aberto, setAberto] = useState(false);
-  // No iPhone, o menu é a folha de ações do sistema, com o mesmo item ("Apagar", em vermelho), "Cancelar" e o nome da
-  // trilha no alto; no Android e na prévia web, o balão de hoje, como o da web.
+  // No iPhone, o menu é a folha de ações do sistema, com os mesmos itens ("Compartilhar" e "Apagar", em vermelho),
+  // "Cancelar" e o nome da trilha no alto; no Android e na prévia web, o balão de hoje, como o da web.
   const alternar = () => {
     if (Platform.OS === 'ios') {
+      const opcoes = compartilhar
+        ? [mensagens.geracao.cancelar, mensagens.compartilhar.entrada, mensagens.planos.apagar]
+        : [mensagens.geracao.cancelar, mensagens.planos.apagar];
       ActionSheetIOS.showActionSheetWithOptions(
-        { title: titulo, options: [mensagens.geracao.cancelar, mensagens.planos.apagar], cancelButtonIndex: 0, destructiveButtonIndex: 1 },
-        (indice) => { if (indice === 1) apagar(); });
+        { title: titulo, options: opcoes, cancelButtonIndex: 0, destructiveButtonIndex: opcoes.length - 1 },
+        (indice) => {
+          if (compartilhar && indice === 1) compartilhar();
+          else if (indice === opcoes.length - 1) apagar();
+        });
       return;
     }
     setAberto((atual) => !atual);
@@ -1671,11 +1769,24 @@ function MenuDoCartao({ titulo, ocupado, apagar, testID }: { titulo: string; ocu
         {/* Aberto, o "•••" fica na cor do texto (.plano-cartao__menu[open] > summary). */}
         <Text importantForAccessibility="no" style={[estudoEstilos.menuBotaoTexto, aberto && { color: cores.texto }]}>•••</Text>
       </Pressable>
-      {aberto && (
+      {aberto && !compartilhar && (
         <View style={estudoEstilos.menuBalao}>
           {/* O próprio botão é o balão (.plano-cartao__menu[open] > .plano-cartao__apagar): 6 × 12, borda de 1 e cantos de 12. */}
           <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
             onPress={() => { setAberto(false); apagar(); }} style={[estudoEstilos.cartaoApagar, estudoEstilos.cartaoApagarBalao]}>
+            <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
+          </Pressable>
+        </View>
+      )}
+      {aberto && compartilhar && (
+        // Com o compartilhar, como .plano-cartao__opcoes da web: uma caixa só, "Compartilhar" acima de "Apagar".
+        <View style={[estudoEstilos.menuBalao, estudoEstilos.menuOpcoes]}>
+          <Pressable testID={`${testID}-compartilhar`} accessibilityRole="button" accessibilityLabel={mensagens.compartilhar.entradaRotulo(titulo)} disabled={ocupado}
+            onPress={() => { setAberto(false); compartilhar(); }} style={({ pressed }) => [estudoEstilos.menuOpcao, pressed && { backgroundColor: cores.nevoa }]}>
+            <Text style={estudoEstilos.menuOpcaoTexto}>{mensagens.compartilhar.entrada}</Text>
+          </Pressable>
+          <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
+            onPress={() => { setAberto(false); apagar(); }} style={estudoEstilos.menuOpcao}>
             <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
           </Pressable>
         </View>
@@ -1693,11 +1804,14 @@ function formatarTempo(segundos: number) {
  * Lição concluída, como na web: chuva de confete, raios girando atrás do Stu, que pula, o resumo da lição (tempo,
  * acerto e etapas), a lição liberada e o progresso do plano, que enche a partir de onde estava.
  */
-function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
+function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }: {
   etapa: Extract<Etapa, { tipo: 'concluida' }>;
   acoes: ReactNode;
   mensagem: ReactNode;
   rodape: ReactNode;
+  ocupado: boolean;
+  /** Com a trilha concluída, "Compartilhar esta trilha" (só na trilha da própria pessoa, com o compartilhar ligado). */
+  compartilhar?: () => void;
 }) {
   const { plano, antes, licao, liberadas, resumo } = etapa;
   const liberada = plano.fluxos.flatMap((fluxo) => fluxo.licoes).find((item) => item.id === liberadas[0]);
@@ -1724,6 +1838,11 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape }: {
           <Icone nome="trofeu" tamanho={18} cor="#7A4A00" />
           <Text style={estudoEstilos.resumoTrilhaTexto}>{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length, plano.estatisticas)}</Text>
         </View>
+      )}
+      {trilhaFeita && compartilhar && (
+        // .conclusao-compartilhar: centralizado, 10 abaixo do resumo da trilha.
+        <Botao rotulo={mensagens.compartilhar.concluidaAcao} iconeAntes="compartilhar" variante="secundario" testID="conclusao-compartilhar"
+          desativado={ocupado} acao={compartilhar} estilo={{ alignSelf: 'center', marginTop: 10 }} />
       )}
       {resumo && trilhaFeita && <Text style={[estudoEstilos.legendaNumeros, caixaAlta]}>{mensagens.licao.resumo.ultimaLicao}</Text>}
       {resumo && <NumerosDaLicao resumo={resumo} />}
@@ -2060,6 +2179,8 @@ const estudoEstilos = StyleSheet.create({
   concluidoTitulo: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   concluidoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   acaoNaTela: { alignItems: 'flex-start', marginTop: 8 },
+  // .trilha-compartilhar: 10 abaixo do nome da trilha.
+  compartilharTopo: { alignSelf: 'flex-start', marginTop: 10 },
   vazio: { gap: 16, marginTop: 24 },
   liberada: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
   liberadaTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
@@ -2073,6 +2194,11 @@ const estudoEstilos = StyleSheet.create({
   menuBotao: { minWidth: 40, minHeight: 40, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.88)' },
   menuBalao: { marginTop: 4 },
+  // .plano-cartao__opcoes: no mínimo 11 rem, 6 de respiro, borda de 1, cantos de 12 e a sombra do balão.
+  menuOpcoes: { minWidth: 176, padding: 6, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12, backgroundColor: cores.fundo,
+    shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
+  menuOpcao: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 8 },
+  menuOpcaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14 },
   cartaoApagarBalao: { paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
   menuBotaoAberto: { backgroundColor: cores.nevoa },
