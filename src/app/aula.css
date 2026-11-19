@@ -25,7 +25,7 @@
   animation: none;
 }
 
-.aula-topo { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(10px, 3vw, 22px); }
+.aula-topo { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: clamp(10px, 3vw, 22px); }
 /* O X e a barra de andamento ficam à vista ao rolar uma etapa longa; o que a tela leva ao topo para abaixo deles. */
 .aula-topo { position: sticky; z-index: 3; inset-block-start: 0; margin: calc(-1 * clamp(12px, 2.5vw, 24px)) calc(-1 * clamp(16px, 4vw, 48px)) 0;
   padding: clamp(8px, 1.8vw, 14px) clamp(16px, 4vw, 48px) 8px; background: var(--fundo); }

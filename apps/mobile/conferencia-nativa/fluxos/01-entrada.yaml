@@ -1,0 +1,19 @@
+# Entrada, com o simulador como vem de fábrica (preenchimento automático de senhas ligado, como num iPhone comum):
+# em repouso, com o e-mail em foco e com a senha em foco e o teclado aberto. Nada é digitado aqui.
+appId: host.exp.Exponent
+name: 01-entrada
+---
+- runFlow: partes/abrir-pela-primeira-vez.yaml
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 01-entrada-em-repouso
+- tapOn:
+    id: login-email
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 02-entrada-email-em-foco
+- tapOn:
+    id: login-senha
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 03-entrada-senha-em-foco

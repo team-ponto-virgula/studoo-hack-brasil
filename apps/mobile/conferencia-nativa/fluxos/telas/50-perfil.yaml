@@ -1,0 +1,22 @@
+# Perfil da conta sintética, já com nome, resumo e interesses: o alto da tela e a tela rolada.
+appId: host.exp.Exponent
+name: 50-perfil
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    id: nav-perfil
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-perfil
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 50-perfil
+- swipe:
+    start: 50%, 70%
+    end: 50%, 35%
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 51-perfil-rolado

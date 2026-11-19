@@ -1,0 +1,52 @@
+# Conferência nativa do app
+
+O workflow `.github/workflows/capturas-nativas.yml` roda o Studoo num **simulador de iPhone**, numa máquina macOS do GitHub Actions, e guarda as capturas das telas como artefato por 3 dias. É a única execução nativa do app que a equipe tem: a prévia web do app (o export web do Expo no navegador) não reproduz o layout nativo.
+
+O que sai daqui vem de simulador, com o app servido pelo Metro dentro do Expo Go. **Não é aparelho de verdade**: toque, desempenho, modo silencioso, câmera e leitor de tela continuam sem conferência.
+
+## Quando roda
+
+- A cada envio para `feat/hackathon-integracao` que mexa em `apps/mobile/**`, em `packages/contratos/**` ou no próprio workflow.
+- Na mão, pelo botão "Run workflow" (ele só aparece quando o arquivo do workflow existe no ramo padrão) ou por `gh workflow run capturas-nativas.yml --ref <ramo>`.
+
+Ele é separado da verificação do PR: não é obrigatório e não entra na fila dela.
+
+## De onde vêm os dados
+
+Da API do próprio repositório, rodando na mesma máquina, com `IA=falsa`. Nenhum segredo e nada do site publicado.
+
+1. `npm run db:local` sobe o PostgreSQL embutido, aplica as migrações e cria a conta sintética (`piloto@example.test`, com senha sorteada a cada execução).
+2. `npm run build` e `npm start` servem a API. O app só aceita API em HTTPS, então `servidor/proxy-https.mjs` termina o TLS na porta 3443, com um certificado gerado na hora, e o simulador recebe a CA (`xcrun simctl keychain add-root-cert`). O servidor roda com `STUDOO_PROXY_HTTPS=1`, como o site atrás do proxy.
+3. `npm run comunidade:demo` cria o conteúdo do Explorar.
+4. `servidor/preparar-dados.mjs` entra pelo canal do app, com o cliente do contrato (`criarClienteStudoo`), preenche o perfil e cria **uma trilha por formato de exercício** a partir das demonstrações da IA simulada. Ele conclui lições pela API até a lição atual de cada trilha começar pelo formato pedido; as respostas certas vêm de `respostaCerta`, do domínio. Por isso o percurso na tela não responde exercício nenhum.
+
+As opções da entrada ficam iguais às do site: sem Google, sem recuperação de senha e sem visitante; com compartilhar e comunidade.
+
+## O percurso
+
+Os fluxos são do [Maestro](https://docs.maestro.dev) e ficam em `fluxos/`. Eles acham os elementos pelo `testID` e pelo nome acessível.
+
+| Fase | Arquivo | Capturas |
+|---|---|---|
+| Entrada, com o simulador como vem de fábrica | `01-entrada.yaml` | `01` em repouso, `02` e-mail em foco, `03` senha em foco com o teclado |
+| Entrar na conta | `02-entrar.yaml` | `04` entrada preenchida, `05` o que abre depois de entrar |
+| Telas | `telas/*.yaml` | `10` a `12` mapa (como abre e rolado sob a barra de baixo); `20` a `23` Minhas trilhas, menu "…" e confirmação de apagar (cancelada); `30` a `35` um exercício de cada formato, no estado inicial e rolado; `40` e `41` Explorar; `50` e `51` Perfil |
+
+Entre a primeira e a segunda fase, o preenchimento automático de senhas do simulador é desligado e o simulador reinicia: com ele ligado, o Maestro não consegue digitar num campo de senha (problema conhecido, com a receita na documentação dele). A captura do teclado vem antes disso, com o simulador intocado.
+
+Cada fluxo de `telas/` fecha o Expo Go e abre o app de novo (`partes/reabrir.yaml`), então a falha de um não derruba o seguinte.
+
+## Como ler o resultado
+
+- **Sumário da execução**: a máquina e o simulador usados, as trilhas da conta sintética, a tabela das capturas (a que faltou aparece como "faltou") e, numa linha, o que falhou.
+- **Artefato `capturas-iphone`**: os PNGs, com o número na frente do nome.
+- **Artefato `registros-iphone`**: o registro de cada programa (`banco.log`, `build.log`, `servidor.log`, `proxy.log`, `metro.log`, `maestro-<fase>.log`), a tela do simulador no fim de cada fase (`tela-no-fim-de-<fase>.png`), a saída do Maestro (com a tela e a árvore de elementos do passo que falhou) e os dados da conta sintética. Sem o `.env` e sem chaves.
+
+## Como mexer
+
+- **Tela nova**: um arquivo em `fluxos/telas/`, começando por `- runFlow: ../partes/reabrir.yaml`, com o nome na ordem de `fluxos/telas/config.yaml` e as capturas na lista `CAPTURAS_ESPERADAS` de `ios.sh`.
+- **Mudou um `testID` ou um nome acessível**: o fluxo que usa o seletor precisa mudar junto. `node apps/mobile/conferencia-nativa/conferir-fluxos.mjs` confere, sem simulador, se todo `id` dos fluxos ainda existe como `testID` no app, se as capturas batem com a lista de `ios.sh` e se a ordem de `telas/config.yaml` está completa; é o primeiro passo do workflow. Um nome acessível que mudou só aparece na execução: o passo do Maestro diz qual comando não achou o elemento.
+- **Versões fixadas** (no topo do workflow): o Expo Go de simulador e o Maestro, com sha256; as ações do GitHub, pelo commit. Ao subir o SDK do Expo no app, troque o endereço e o sha256 do Expo Go juntos.
+- **Outro aparelho ou outro iOS**: as entradas `aparelho` e `ios` do disparo manual. Se o iOS pedido não existir na máquina, a conferência segue no mais novo que houver e avisa.
+
+`ios.sh` tem um subcomando por passo do workflow e roda no bash 3.2 do macOS. `preparar-dados.mjs` só aceita a API do próprio computador e conta em domínio `.test`.

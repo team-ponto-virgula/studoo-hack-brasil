@@ -36,9 +36,19 @@ function selosDoNo(no: NoCaminho): { icone: NomeIcone; texto: string }[] {
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo' | 'som' | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha'
-  | 'elo' | 'telaCheia' | 'alerta' | 'setaVoltar' | 'pessoaMais' | 'engrenagem';
+  | 'elo' | 'telaCheia' | 'alerta' | 'setaVoltar' | 'pessoaMais' | 'engrenagem'
+  | 'somUmaOnda' | 'somCortado' | 'ondas' | 'chuva' | 'fones' | 'livros' | 'folha' | 'info';
 
 const desenhos: Record<NomeIcone, ReactNode> = {
+  // Controle de som (spec 12): o alto-falante com uma onda e cortado, e os ícones dos climas.
+  somUmaOnda: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6" /></>,
+  somCortado: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" /></>,
+  ondas: <path d="M3.5 9.5c2.8-2.4 5.7-2.4 8.5 0s5.7 2.4 8.5 0M3.5 14.5c2.8-2.4 5.7-2.4 8.5 0s5.7 2.4 8.5 0" />,
+  chuva: <><path d="M7 14.5a4 4 0 0 1 .4-8 5 5 0 0 1 9.6 1.5 3.3 3.3 0 0 1-.5 6.5z" /><path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5" /></>,
+  fones: <><path d="M4.5 14v-2a7.5 7.5 0 0 1 15 0v2" /><rect x="3.5" y="13.5" width="4" height="6.5" rx="1.8" /><rect x="16.5" y="13.5" width="4" height="6.5" rx="1.8" /></>,
+  livros: <><rect x="4" y="5" width="4" height="14.5" rx="1" /><rect x="9.5" y="7" width="4" height="12.5" rx="1" /><path d="M15.2 8.4l3.6-1 3 11.8-3.6 1z" /></>,
+  folha: <><path d="M5.5 18.5C5 11 9.5 5.5 19 5c.3 8.8-4.7 13.6-13.5 13.5z" /><path d="M5.5 18.5L13 11" /></>,
+  info: <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" /><circle cx="12" cy="7.8" r="0.6" fill="currentColor" /></>,
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
   livro: <path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5zM12 6.5V19" />,
   // Repetir: arco de três quartos com uma seta, o mesmo desenho do app.

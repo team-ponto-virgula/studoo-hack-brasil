@@ -1,0 +1,49 @@
+# Entra com a conta sintética e captura o que o Studoo mostra logo depois. Roda com o preenchimento automático de senhas
+# desligado no simulador: com ele ligado, digitar num campo de senha falha (problema conhecido do Maestro no iOS).
+appId: host.exp.Exponent
+name: 02-entrar
+---
+- runFlow: partes/abrir-pela-primeira-vez.yaml
+- tapOn:
+    id: login-email
+- inputText: ${EMAIL}
+- tapOn:
+    id: login-senha
+# Com `label`, a saída do Maestro mostra esta frase no lugar do texto digitado.
+- inputText:
+    text: ${SENHA}
+    label: Digitar a senha da conta sintética
+- waitForAnimationToEnd:
+    timeout: 2500
+- takeScreenshot: 04-entrada-preenchida
+# O campo da senha envia pelo teclado (returnKeyType "go"). Se o Enter não enviar, o botão "Entrar" envia.
+- pressKey: Enter
+- extendedWaitUntil:
+    visible:
+      id: nav-planos
+    timeout: 25000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: entrar
+    commands:
+      - tapOn:
+          id: entrar
+# Com o preenchimento automático desligado, o iOS não oferece guardar a senha; se oferecer, a resposta é "agora não".
+- runFlow:
+    when:
+      visible: "Not Now"
+    commands:
+      - tapOn: "Not Now"
+- extendedWaitUntil:
+    visible:
+      id: nav-planos
+    timeout: 60000
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 45000
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 05-depois-de-entrar

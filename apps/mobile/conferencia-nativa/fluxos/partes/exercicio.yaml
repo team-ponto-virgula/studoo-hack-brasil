@@ -1,0 +1,81 @@
+# Abre a trilha ${TRILHA} por Minhas trilhas, começa a lição atual, avança até o primeiro exercício e captura o estado
+# inicial dele (${CAPTURA}) e o resto da tela (${CAPTURA}-abaixo). Não responde nada: o preparo dos dados deixou a
+# lição atual de cada trilha começando pelo formato da captura.
+appId: host.exp.Exponent
+---
+- runFlow: reabrir.yaml
+- tapOn:
+    id: nav-planos
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-planos
+    timeout: 30000
+# O botão do cartão tem o nome acessível "<ação>: <título da trilha>".
+- scrollUntilVisible:
+    element:
+      text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+    direction: DOWN
+    timeout: 45000
+    speed: 30
+# No iOS 26 a barra de baixo fica por cima do conteúdo: o botão pode ter parado atrás dela. Sobe mais um pouco.
+- swipe:
+    start: 50%, 55%
+    end: 50%, 40%
+    duration: 800
+- tapOn:
+    text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 45000
+# O mapa rola sozinho até a lição atual. Com ela à vista, a ação é o próprio nó; fora da vista, o cartão "Próxima lição".
+- waitForAnimationToEnd:
+    timeout: 3500
+- evalScript: ${output.abriuPeloCartao = false}
+- runFlow:
+    when:
+      visible:
+        id: comecar-licao
+    commands:
+      - tapOn:
+          id: comecar-licao
+      - evalScript: ${output.abriuPeloCartao = true}
+- runFlow:
+    when:
+      true: ${output.abriuPeloCartao == false}
+    commands:
+      - tapOn:
+          text: "(Começar|Continuar): .*"
+# Conceito e exemplo vêm antes do exercício: "Continuar lendo" enquanto houver texto abaixo, depois "Avançar". Só um dos
+# dois botões existe por vez, então um toque só serve aos dois (o `id` é uma expressão regular). É opcional: enquanto a
+# lição carrega, nenhum existe, e a espera do próprio toque cobre esse tempo.
+- repeat:
+    times: 24
+    while:
+      notVisible:
+        id: pergunta-exercicio
+    commands:
+      - tapOn:
+          id: "ler-mais|avancar-licao"
+          optional: true
+- extendedWaitUntil:
+    visible:
+      id: pergunta-exercicio
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 3500
+- takeScreenshot: ${CAPTURA}
+- swipe:
+    start: 50%, 70%
+    end: 50%, 35%
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 2500
+- takeScreenshot: ${CAPTURA}-abaixo
+- tapOn:
+    id: voltar-plano
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 30000
