@@ -28,7 +28,7 @@ import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
 import { TelaPerfil } from './perfil';
-import { BotaoConfigurar, TelaConfiguracoes } from './configuracoes';
+import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
 
 /*
@@ -1753,12 +1753,19 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
     <ProximoPasso titulo={proximo.no.titulo} detalhe={proximo.posicao} abrindo={abrindo === proximo.no.id} andamento={proximo.no.andamento}
       ocupado={ocupado} rodape={!largo} aoAbrir={() => abrirLicao(proximo.no.id)} />
   );
+  // .trilha-capa da web: a capa escolhida no alto do mapa, em 4:1 (até 140 de altura) e cantos de 20. Só com capa escolhida.
+  const capa = plano.capa
+    ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} grande estilo={estudoEstilos.capaTrilha} />
+    : null;
 
   return (
     <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo || (atualVisivel && passo) ? null : passo || novo} rolagem={rolagem}
       // Como na web no celular (levantamento de paridade, M1): a barra da marca, com "Sair" e o selo de sincronia, rola e sai
       // de vista; o cabeçalho da trilha (rótulo, nome em até duas linhas e o anel) rola até o alto e fica parado lá.
       abaixoDoLogo={largo ? undefined : <SeloSincronia sincronia={sincronia} />}
+      // No celular, a capa rola com a página e sai de vista antes do cabeçalho, que fica parado no alto. Como na web (medido
+      // em 390 e 360): 28 da barra da marca até a capa (o vão de 20 do Tela e 8 aqui) e 16 da capa até a faixa.
+      acimaDaFaixa={largo || !capa ? undefined : <View testID="capa-do-mapa" style={estudoEstilos.capaTrilhaFaixa}>{capa}</View>}
       faixaFixa={largo ? undefined : (
         <View style={estudoEstilos.barraPlano}>
           <View style={estudoEstilos.barraPlanoTexto}>
@@ -1783,6 +1790,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       }}>
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
       {largo && <View style={estudoEstilos.seloTrilha}><SeloSincronia sincronia={sincronia} /></View>}
+      {largo && capa && <View testID="capa-do-mapa" style={estudoEstilos.capaTrilhaLarga}>{capa}</View>}
       {largo && (
         <View style={estudoEstilos.topoTrilha}>
           <View style={estudoEstilos.topoTrilhaTexto}>
@@ -1976,13 +1984,18 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
     <Animated.View testID="plano-destaque" style={[degrauFora(4, 24, cores.destaqueBorda), estudoEstilos.destaqueFora, estiloDeEntrada(entrada)]}>
     <View style={estudoEstilos.destaque}>
       <View style={[estudoEstilos.destaqueCena, { backgroundColor: chao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <View style={[estudoEstilos.cartaoColina, estudoEstilos.cartaoColinaDestaque, { backgroundColor: relevo }]} />
-        <Desenho nome={enfeites[0]} largura={40} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%' }]} />
-        <Desenho nome={enfeites[2]} largura={36} estilo={[estudoEstilos.cartaoEnfeite, { right: '9%' }]} />
-        {/* Spec 13: `stu-feliz` de 64, na sombra de contato, que se mexe uma vez ao abrir (emenda E1). */}
-        <View style={estudoEstilos.destaqueStu}>
-          <Stu nome="stu-feliz" tamanho={64} animado="uma-vez" sombra />
-        </View>
+        {/* Como .plano-destaque__capa da web: com capa escolhida nas configurações, ela entra no lugar da ilustração. */}
+        {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} estilo={StyleSheet.absoluteFill} /> : (
+          <>
+            <View style={[estudoEstilos.cartaoColina, estudoEstilos.cartaoColinaDestaque, { backgroundColor: relevo }]} />
+            <Desenho nome={enfeites[0]} largura={40} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%' }]} />
+            <Desenho nome={enfeites[2]} largura={36} estilo={[estudoEstilos.cartaoEnfeite, { right: '9%' }]} />
+            {/* Spec 13: `stu-feliz` de 64, na sombra de contato, que se mexe uma vez ao abrir (emenda E1). */}
+            <View style={estudoEstilos.destaqueStu}>
+              <Stu nome="stu-feliz" tamanho={64} animado="uma-vez" sombra />
+            </View>
+          </>
+        )}
       </View>
       {/* Como .plano-cartao__menu da web: o "•••" dentro da arte, 8 do topo e da direita dela (24 do cartão), com o "Apagar"
           num balão embaixo. */}
@@ -2034,11 +2047,16 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, conf
     <Animated.View style={[degrauFora(4, 24, cores.gelo), estudoEstilos.cartaoFora, estiloDeEntrada(entrada)]}>
     <View style={estudoEstilos.cartao}>
       <View style={[estudoEstilos.cartaoCena, { backgroundColor: chao }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <View style={[estudoEstilos.cartaoColina, { backgroundColor: relevo }]} />
-        <Desenho nome={enfeites[0]} largura={46} estilo={[estudoEstilos.cartaoEnfeite, { left: '8%' }]} />
-        <Desenho nome={enfeites[1]} largura={26} estilo={[estudoEstilos.cartaoEnfeite, { left: '30%' }]} />
-        <Desenho nome={enfeites[3]} largura={34} estilo={[estudoEstilos.cartaoEnfeite, { right: '26%' }]} />
-        <Desenho nome={enfeites[2]} largura={44} estilo={[estudoEstilos.cartaoEnfeite, { right: '6%' }]} />
+        {/* Como .plano-cartao__capa da web: a capa escolhida no lugar da ilustração; o selo de concluída fica por cima. */}
+        {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} estilo={StyleSheet.absoluteFill} /> : (
+          <>
+            <View style={[estudoEstilos.cartaoColina, { backgroundColor: relevo }]} />
+            <Desenho nome={enfeites[0]} largura={46} estilo={[estudoEstilos.cartaoEnfeite, { left: '8%' }]} />
+            <Desenho nome={enfeites[1]} largura={26} estilo={[estudoEstilos.cartaoEnfeite, { left: '30%' }]} />
+            <Desenho nome={enfeites[3]} largura={34} estilo={[estudoEstilos.cartaoEnfeite, { right: '26%' }]} />
+            <Desenho nome={enfeites[2]} largura={44} estilo={[estudoEstilos.cartaoEnfeite, { right: '6%' }]} />
+          </>
+        )}
         {concluido && (
           <View style={estudoEstilos.cartaoSelo}>
             <Icone nome="trofeu" tamanho={16} cor={cores.sucesso} />
@@ -2372,6 +2390,13 @@ const estudoEstilos = StyleSheet.create({
     marginTop: 24, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.8,
   },
   seloTrilha: { marginBottom: 12 },
+  // .trilha-capa: na largura do conteúdo, 4:1 até 140 de altura, cantos de 20.
+  capaTrilha: { width: '100%', aspectRatio: 4, maxHeight: 140, borderRadius: 20 },
+  // No celular, acima da faixa parada: 20 dos lados (--espaco-pagina), 8 em cima (com o vão de 20 do Tela, os 28 da web) e
+  // 16 embaixo, até a faixa (na web, a faixa começa 16 abaixo da capa).
+  capaTrilhaFaixa: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 },
+  // No tablet, o cabeçalho não fica parado: 20 da capa até ele (o vão de 16 da grade e os 4 da capa).
+  capaTrilhaLarga: { marginBottom: 20 },
   // Pedido simplificado
   pedidoHeroi: { alignItems: 'center', gap: 8, paddingTop: 8 },
   // O cartão do material na web: o vão de 18 do painel mais os 24 de margem do cartão, em cima e embaixo (o cartão do app tem 12).

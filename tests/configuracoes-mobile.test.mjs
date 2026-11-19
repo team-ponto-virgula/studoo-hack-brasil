@@ -163,3 +163,40 @@ test('as entradas: "Configurações" no menu do cartão, entre Compartilhar e Ap
   assert.match(estudo, /if \(etapa\.tipo === 'configuracoes'\) return 'planos';/);
   assert.match(estudo, /etapa\.tipo === 'configuracoes' && etapa\.volta === 'plano'\) void abrirPlano\(etapa\.planoId\)/);
 });
+
+test('a capa escolhida aparece nos cartões de Minhas trilhas e no alto do mapa, como na web', () => {
+  const corpoDe = (nome) => {
+    const inicio = estudo.indexOf(`function ${nome}(`);
+    assert.ok(inicio >= 0, `não achei ${nome}`);
+    return estudo.slice(inicio, estudo.indexOf('\n}\n', inicio));
+  };
+  // Nos dois cartões, a capa entra no lugar da ilustração, na área inteira da cena (.plano-destaque__capa e
+  // .plano-cartao__capa da web); sem capa, a ilustração de sempre.
+  for (const nome of ['CartaoDestaque', 'CartaoPlano']) {
+    const corpo = corpoDe(nome);
+    assert.match(corpo, /\{plano\.capa \? <CapaDaTrilha semente=\{plano\.id\} tema=\{plano\.tema \?\? null\} capa=\{plano\.capa\} estilo=\{StyleSheet\.absoluteFill\} \/> : \(/,
+      `${nome}: a capa no lugar da ilustração`);
+    assert.ok(corpo.indexOf('<CapaDaTrilha') < corpo.indexOf('cartaoColina'), `${nome}: a colina só sem capa`);
+  }
+  // O selo de concluída continua por cima da capa (fica fora do condicional).
+  const cartao = corpoDe('CartaoPlano');
+  assert.ok(cartao.indexOf('{concluido && (') > cartao.indexOf('</>\n        )}'), 'o selo de concluída vem depois do condicional da capa');
+  assert.match(web, /export function CapaDaTrilha/);
+
+  // No mapa: .trilha-capa (4:1, até 140, cantos de 20), na imagem grande; no celular, acima da faixa parada.
+  const mapa = corpoDe('TelaPlano');
+  assert.match(mapa, /<CapaDaTrilha semente=\{plano\.id\} tema=\{plano\.tema \?\? null\} capa=\{plano\.capa\} grande estilo=\{estudoEstilos\.capaTrilha\} \/>/);
+  assert.match(mapa, /acimaDaFaixa=\{largo \|\| !capa \? undefined : <View testID=\"capa-do-mapa\" style=\{estudoEstilos\.capaTrilhaFaixa\}>\{capa\}<\/View>\}/);
+  assert.match(estudo, /capaTrilha: \{ width: '100%', aspectRatio: 4, maxHeight: 140, borderRadius: 20 \}/);
+  assert.match(estudo, /capaTrilhaFaixa: \{[^}]*paddingHorizontal: 20, paddingTop: 8, paddingBottom: 16 \}/);
+});
+
+test('o Tela conta a altura do que fica acima da faixa parada, para a tela rolar até o ponto certo', async () => {
+  const interfaceApp = await ler('apps/mobile/src/interface.tsx');
+  assert.match(interfaceApp, /acimaDaFaixa\?: ReactNode;/);
+  // O que fica acima entra entre o vão e a faixa, e a faixa presa continua sendo a última da lista de cima.
+  assert.ok(crescente(posicoes(interfaceApp, ['key="vao"', 'key="acima"', 'const indiceDaFaixa'], 'Tela')));
+  // A altura dele entra no deslocamento do conteúdo e na altura natural; enquanto não é medida, o deslocamento é null.
+  assert.equal((interfaceApp.match(/\(faixaColada \? 0 : 20\) \+ acima \+ alturaFaixa/g) ?? []).length, 2);
+  assert.match(interfaceApp, /\(comAcima && !alturaAcima\) \? null/);
+});
