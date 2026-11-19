@@ -153,6 +153,7 @@ class TocaSonsWeb {
     document.addEventListener('visibilitychange', () => {
       this.estado.definirSegundoPlano(document.visibilityState !== 'visible');
       if (this.estado.emSegundoPlano) this.silenciarEfeitos();
+      else this.prepararEfeitos(...this.efeitosDaTela);
       void this.atualizarEstadoFundo(this.estado.emSegundoPlano ? 0 : 600);
     });
   }
