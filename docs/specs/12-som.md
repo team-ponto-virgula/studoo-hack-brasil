@@ -106,11 +106,10 @@ Tabela fechada com os IDs já existentes em `packages/contratos/src/catalogo-son
 
 | Área | Momento | Efeito (`IdEfeitoSonoro`) | Vol. relativo | Regra para não empilhar / quando NÃO tocar |
 |---|---|---|---|---|
-| **Geração que se acompanha** (spec 04) | Cada lição nova que chega ao mapa | `geracao_licao` | `0.58` | Cooldown mínimo de `180 ms` (rajadas no mesmo lote descartam os extras); não toca se a geração foi cancelada |
-| **Geração que se acompanha** (spec 04) | Aviso "Mais uma!" (no máximo a cada 3 lições) | nenhum | — | A lição que acabou de chegar já tocou `geracao_licao`; outro som no mesmo lote polui |
-| **Geração que se acompanha** (spec 04) | "Trilha pronta! N lições em M partes." | `geracao_pronta` | `0.95` | Toca uma única vez ao concluir (cooldown `500 ms`); se a última lição chegou há menos de `200 ms`, suprimir `geracao_licao` e tocar só `geracao_pronta` |
-| **Geração que se acompanha** (spec 04) | Troféu que entra no fim da geração | nenhum | — | `geracao_pronta` já marca a conclusão da trilha |
-| **Geração que se acompanha** (spec 04) | Foco automático no botão "Começar" | nenhum | — | Foco programático nunca dispara som |
+| **Geração que se acompanha** (spec 04) | Cada lição nova, quando o nó pousa no mapa (o evento visível, não a chegada do pacote) | `geracao_licao` | `0.58` | No máximo um a cada `400 ms`; nunca depois da proposta pronta; não toca se a geração foi cancelada |
+| **Geração que se acompanha** (spec 04) | Proposta pronta ("Proposta pronta: N lições em M partes.", o troféu entra) | nenhum | — | A trilha ainda não existe; o som de conclusão fica para o aceite |
+| **Criar a trilha** (spec 04) | O aceite voltou: a trilha passou a existir, o nó 1 pulsa e vira a aula | `geracao_pronta` | `0.95` | O único som de conclusão do fluxo: uma vez por trilha criada, aquecido ao abrir a geração; não toca no erro nem se a pessoa saiu antes de o aceite voltar |
+| **Geração que se acompanha** (spec 04) | Foco automático no botão "Começar a lição 1" | nenhum | — | Foco programático nunca dispara som |
 | **Ordenar em lista única** (spec 08) | Escolher um item da lista | `toque_opcao` | `0.76` | Cooldown `45 ms` |
 | **Ordenar em lista única** (spec 08) | Trocar dois itens de lugar (por toque ou seta) | `ordenar_soltar` | `0.63` | Cooldown `50 ms`; no segundo toque que efetiva a troca, toca só `ordenar_soltar` (não soma `toque_opcao`) |
 | **Ordenar em lista única** (spec 08) | Arrastar e soltar um item | `ordenar_soltar` | `0.63` | Toca apenas ao soltar em uma **nova** posição; não toca se voltar ao mesmo lugar ou cancelar |

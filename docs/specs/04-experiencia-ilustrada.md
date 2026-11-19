@@ -16,8 +16,8 @@ A interface funcionava, mas era plana: a entrada não dizia o que o Studoo faz, 
    - **O Stu acompanha a pessoa.** Fica ao lado do nó atual, sobe e desce devagar e acena de vez em quando; com tudo concluído, pula ao lado do troféu. A frase dele vai numa placa de madeira no alto do mapa.
    - **Ao abrir**, os nós caem no lugar em sequência e o cenário brota logo depois.
    - **Na volta de uma lição concluída**, o nó comemora com um pulo e confete, a linha até o próximo se desenha e só então o próximo nó se abre.
-   - **Na geração ao vivo**, o Stu abre o mapa com um balão em que pontinhos digitam e dicas de estudo se revezam. Cada nó cai no lugar assim que chega, o esqueleto do próximo gira e, quando a trilha fica pronta, o troféu entra com confete.
-   - **Ao Começar**, a IA escreve o conteúdo das lições, o que leva alguns segundos com a IA real. Em vez de um esqueleto, a tela **Escrevendo suas lições** mostra o Stu escrevendo com um lápis, folhas que voam, a lista das lições da trilha com um brilho que desce por ela e dicas que se revezam. O aceite é um pedido só, sem andamento por lição, então nenhuma lição ganha o visto antes da hora. Quando o aceite volta, o título vira **Lições prontas!**, o visto verde passa pela lista e a primeira lição abre.
+   - **Na geração ao vivo**, cada nó cai no lugar assim que chega, sobre o caminho em rascunho, e o esqueleto do próximo gira. Quando a proposta fica pronta, o troféu entra, sem confete ("Geração que se acompanha" e "Criar a trilha", abaixo).
+   - **Ao Começar**, um toque salva a trilha e abre a etapa 1 da lição 1, sem tela no meio: o botão mostra "Criando sua trilha…" enquanto a IA escreve as lições, e o nó 1 vira a aula quando o aceite volta ("Criar a trilha", abaixo).
 6. **Aula.** A aula por etapas da [spec 02](02-aula-web.md) vale na web e no app. A barra de andamento é grossa e avança com uma mola; cada etapa entra deslizando. O conceito vem num balão do Stu. No exercício de escolha, as opções são cartões com relevo, com as teclas 1, 2, 3… na web e as letras A, B, C… no app; na web, Enter verifica e continua. Depois de **Verificar**, o rodapé vira o painel de retorno: sobe verde no acerto ("Mandou bem!", com confete) ou âmbar no erro ("Quase lá!", e o exercício treme). O Stu reage no próprio painel, na ponta direita da linha do título (spec 13, emenda de 19/11: a reação mora no painel de retorno). No erro, **Tentar de novo** volta ao exercício e **Continuar** segue, como antes.
 7. **Conclusão e trilhas.** A lição concluída tem chuva de confete (que some antes dos números e dos botões), raios girando atrás do Stu, que pula, e o resumo da lição: tempo, acertos (de primeira ou quantos exercícios de quantos) e etapas. Se ficou exercício sem acerto, ou a prática em “ainda não”, não há chuva: a conclusão sugere rever a lição. A barra da trilha enche a partir de onde estava. Minhas trilhas mostra cartões com uma faixa do mundo, que entram em sequência, e a ação que cabe: começar, continuar ou rever a trilha. As telas entram com uma subida curta, e os esqueletos brilham enquanto carregam.
 
@@ -95,42 +95,106 @@ Um iPhone SE (375 × 667, áreas 20 / 0) fica com cerca de 569 de altura útil: 
 
 O dono pediu animações na geração e a tela acompanhando até a última lição. Hoje o título ocupa um cartão alto e o mapa fica parado no alto: da terceira lição em diante, o que nasce fica abaixo da dobra, e a pessoa só vê o rodapé contar. Vale para web, Android e iPhone. Esboço: `geracao-390.png`, na pasta de trabalho do Designer (`ux/05-geracao-acompanhada`).
 
+Revisto em 19/11 por "Criar a trilha", abaixo: saíram as dicas que se revezam, as estrelinhas, o "Mais uma!", o confete, as contagens e a tela Escrevendo suas lições.
+
 **A tela durante a geração.**
-- O cartão do título vira uma faixa de 52 px presa embaixo do cabeçalho: os três pontinhos que digitam, o nome do pedido (Nunito 800 de 15 px, numa linha, com reticências) e a contagem à direita (“Gerando…”, depois “2 lições”). O mapa ganha o resto da tela.
-- A frase do Stu vai numa placa presa no alto do mapa: fundo `#FFF9EC`, borda de 2 px `#E8D3A8`, raio de 16 e 16 px das laterais, com as dicas que se revezam como hoje. O Stu sai da placa e fica do lado de fora da lição mais nova, no lado oposto ao nome, subindo e descendo devagar.
-- O rodapé continua igual: “Cancelar” e “Montando a trilha”, com “N lições até agora”.
+- O cartão do título vira uma faixa de 52 px presa embaixo do cabeçalho: os três pontinhos que digitam e o nome do pedido (Nunito 800 de 15 px, numa linha, com reticências), sem contagem. O mapa ganha o resto da tela.
+- A frase vai numa placa presa no alto do mapa: fundo `#FFF9EC`, borda de 2 px `#E8D3A8`, raio de 16 e 16 px das laterais. Ela diz só o que é verdade, sem dicas que se revezam: "Montando sua trilha" (`montandoTitulo`) enquanto chegam lições, "Ainda montando a próxima lição…" (`aguardandoLicao`) depois de 12 s sem lição nova e "Proposta pronta: 9 lições em 3 partes." (`propostaPronta`) no fim. O Stu (`stu-curioso`, em laço) fica do lado de fora da lição mais nova, no lado oposto ao nome, subindo e descendo devagar.
+- O rodapé: "Cancelar" e "Montando a trilha", sem a contagem de lições.
 
 **Cada lição que nasce**, do evento até a próxima espera:
 1. Em 0 ms, se a tela está acompanhando, ela rola até a vaga da lição ficar a 60% da altura do mapa (320 ms, com saída suave).
-2. Em 120 ms, o caminho se desenha do nó anterior até a vaga (300 ms).
-3. Em 320 ms, o nó cai 26 px e pula (escala de 0,7 a 1,08 e de volta a 1, em 380 ms, com mola). Cinco estrelinhas `#FFD166` se abrem e somem (300 ms), e o anel do nó fica azul por 1,2 s.
-4. Em 420 ms, o nome entra do lado do nó (opacidade e 12 px, 220 ms), e a contagem do rodapé e da faixa sobe.
+2. Em 120 ms, o caminho se desenha do nó anterior até a vaga (300 ms), tracejado, como rascunho.
+3. Em 320 ms, o nó cai 26 px e pula (escala de 0,7 a 1,08 e de volta a 1, em 380 ms, com mola), com o contorno tracejado do rascunho, e o anel dele fica azul por 1,2 s.
+4. Em 420 ms, o nome entra do lado do nó (opacidade e 12 px, 220 ms).
 5. Em 560 ms, árvores e flores perto do nó brotam (escala de 0 a 1, 260 ms).
 6. Em 700 ms, o esqueleto da próxima vaga gira e o Stu anda até a lição nova (400 ms).
 
-Se os eventos chegarem mais rápido que a sequência, cada lição começa quando a anterior chega ao passo 3: nada fica para trás nem se acumula. Na primeira lição de um trecho novo, o marco vem antes, na fronteira ondulada (cai 12 px em 260 ms), com a pílula “Parte 3”, e a lição chega 200 ms depois. Ao lado do Stu, um balãozinho “Mais uma!” aparece por 900 ms, no máximo a cada três lições.
+Se os eventos chegarem mais rápido que a sequência, cada lição começa quando a anterior chega ao passo 3: nada fica para trás nem se acumula. Na primeira lição de um trecho novo, o marco vem antes, na fronteira ondulada (cai 12 px em 260 ms), com a pílula “Parte 3”, e a lição chega 200 ms depois.
 
 **Quem manda na rolagem.**
 - A tela acompanha enquanto a pessoa não mexe. Se ela rolar para cima mais de 40 px, ou puser o foco do teclado num nó da prévia, a tela para de acompanhar. Aparece então, 16 px acima do rodapé, a pílula azul “Ver a lição nova · 7”: 44 px de altura, seta para baixo e o número da última lição.
 - Tocar na pílula rola até a lição nova (320 ms) e volta a acompanhar. Se a pessoa rolar sozinha até a lição nova, também volta.
 - Rolar para baixo não desliga o acompanhamento.
 
-**Quando a trilha fica pronta.**
-- Se a tela está acompanhando, ela rola até o fim do caminho. O troféu entra (escala de 0 a 1,1 e de volta a 1, 420 ms), com confete por 1,2 s. A placa vira “Trilha pronta! 9 lições em 3 partes.”, com “Confira o caminho e comece quando quiser.”, e o Stu pula ao lado do troféu. O rodapé troca para “Ajustar pedido” e “Começar”, deslizando 12 px em 220 ms. O foco vai para “Começar”, como hoje.
-- Se não está acompanhando, a pílula vira “Ver o fim da trilha”. O resto acontece igual, mas o confete só cai quando o troféu entra na tela.
+**Quando a proposta fica pronta.**
+- Se a tela está acompanhando, ela rola até o fim do caminho. O troféu entra (escala de 0 a 1,1 e de volta a 1, 420 ms), sem confete e sem som. A placa vira "Proposta pronta: 9 lições em 3 partes.": é uma proposta, e a trilha só existe depois do toque. O Stu faz um ciclo de `stu-feliz` ao lado do troféu. O rodapé troca para "Ajustar pedido" e "Começar a lição 1" (`comecarLicao1`), deslizando 12 px em 220 ms. O foco vai para "Começar a lição 1".
+- Se não está acompanhando, a pílula vira “Ver o fim da trilha”. O resto acontece igual.
 - Ao subir até o começo do mapa, a faixa volta a ser o cartão do título.
 
-**Escrevendo suas lições.** Depois de “Começar”, quando as lições não cabem na tela, a lista também acompanha: o brilho que desce pela lista leva a rolagem junto, com a linha do brilho a 60% da altura. Quando o aceite volta, o visto verde passa pela lista, 80 ms de uma linha para a outra, rolando até a última, antes de abrir a primeira lição.
+**Depois de "Começar a lição 1".** Não há mais a tela Escrevendo suas lições: veja "Criar a trilha", abaixo.
 
-**Movimento reduzido.** A tela continua acompanhando, mas pula direto, sem rolagem animada. Nada cai, pula, brota ou chove: o nó, o nome e o cenário aparecem juntos, com 150 ms de opacidade; o troféu aparece sem confete, e o Stu fica parado. A informação é a mesma.
+**Movimento reduzido.** A tela continua acompanhando, mas pula direto, sem rolagem animada. Nada cai, pula, brota ou chove: o nó, o nome e o cenário aparecem juntos, com 150 ms de opacidade; o troféu aparece sem escala, e o Stu fica parado. A informação é a mesma.
 
-**Leitor de tela.** Cada lição nova é anunciada (`aria-live` educado; no app, `announceForAccessibility`): “Lição 3: Combinar condições com AND.” No fim: “Trilha pronta, 9 lições. Começar.” Durante a geração, o foco não se mexe: fica em “Cancelar” ou onde a pessoa estiver.
+**Leitor de tela.** Cada lição nova é anunciada (`aria-live` educado; no app, `announceForAccessibility`): “Lição 3: Combinar condições com AND.” No fim: “Proposta pronta, 9 lições. Começar a lição 1.” Durante a geração, o foco não se mexe: fica em “Cancelar” ou onde a pessoa estiver.
 
-**Espera longa.** Com a IA real, uma lição pode demorar. Depois de 12 s sem lição nova, a placa diz “Ainda escrevendo… esta parte pede mais cuidado.”, sem barra de progresso inventada.
+**Espera longa.** Com a IA real, uma lição pode demorar. Depois de 12 s sem lição nova, a placa diz “Ainda montando a próxima lição…”, sem barra de progresso inventada.
 
 **Paridade.** Na web, `scrollTo` com rolagem suave (imediata com movimento reduzido); no app, `ScrollView.scrollTo` e `Animated`. Sem dependência nova. Os textos novos (a pílula, a placa da espera longa e o anúncio do fim) entram em `packages/contratos/src/experiencia.ts`, iguais nos dois lados.
 
 **Quem decide.** Tudo nesta seção é decisão de design. Nada precisa do dono.
+
+## Criar a trilha: da prévia à etapa 1 (pedido do dono, 19/11)
+
+**Estado:** regra de design, em implementação na web e no app. Os textos já estão em `mensagens.geracao` (commit 66f4553 do Web & API). Ainda sem validação no aparelho.
+
+O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não muda: na prévia pronta, um toque salva a trilha e abre a etapa 1 da lição 1, e o mapa salvo aparece quando a pessoa volta da aula. Não entram tela no meio, segundo botão, pausa fixa, contagem, etapas inventadas, confete nem texto de enfeite. Esboço antes e depois: `ux/13-criar-trilha/sequencia.png`, na pasta do Designer.
+
+**A prévia é rascunho.** Os nós da prévia têm face branca e contorno tracejado de 2 px `#9CB4F5`, sem o lábio. O caminho é tracejado 8/8, também em `#9CB4F5`. Quando a trilha passa a existir, eles viram os nós e o caminho de sempre.
+
+**O toque (0 ms).**
+- O botão principal da prévia pronta diz "Começar a lição 1" (`comecarLicao1`).
+- Em até 100 ms do toque, o botão afunda (o lábio some), mostra o giro de 16 px e "Criando sua trilha…" (`criandoTrilha`).
+- "Ajustar pedido" sai, e o botão ocupa a largura toda, numa linha: 200 ms, ou na hora com movimento reduzido. Na metade da largura, em 390, o rótulo com o giro quebraria em duas linhas.
+- Se o nó 1 não estiver à vista, a prévia rola até ele (240 ms).
+- O Stu anda até o nó 1 (400 ms) e passa a `stu-estudando`, em laço, no tamanho do guia do mapa. O anel do nó 1 respira. O resto da tela não muda.
+- Leitor de tela: "Criando sua trilha." (`anuncioCriando`, educado). O foco fica no botão.
+
+**Enquanto o aceite não volta.**
+- Sem pausa mínima: o aceite não espera nada além da resposta. Saem a `pausa(ESCRITA_MINIMA_MS)`, de 1.200 ms, e a `pausa(PAUSA_LICOES_PRONTAS_MS)`, de 900 ms, nos dois clientes.
+- Depois de 1,5 s sem resposta, aparece uma linha embaixo do botão, centrada, em 14/20 `#5E6A85`: "Escrevendo as lições da trilha. Com a IA, leva alguns segundos." (`escrevendoLicoes`). É verdade: é o aceite que escreve o conteúdo das lições. A linha é só da espera real: na referência rápida (IA falsa, rede local), o aceite volta antes de 1,5 s, e ela não aparece.
+- Sem barra, sem porcentagem e sem visto por lição, porque o aceite é um pedido só.
+- A tela Escrevendo suas lições sai, com a lista, o brilho e as dicas.
+
+**A trilha passa a existir (o aceite volta ok).** A passagem é a própria navegação para a aula, em até 470 ms:
+- t = 0: toca `geracao_pronta`. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
+- t = 120 ms: um círculo da cor do fundo da aula cresce a partir do centro do nó 1 até cobrir a tela (300 ms, ease-out).
+- t = 320 ms: a etapa 1 entra por cima (opacidade, 150 ms). Se a lição ainda carrega, entra o esqueleto da aula no mesmo lugar, sem giro.
+- A busca da lição (`obterLicao`) começa no instante em que o aceite volta, junto com a passagem, e não depois dela.
+- A aula aceita toque assim que monta: nada espera a animação acabar.
+- O foco vai para o título da etapa 1, e o leitor de tela ouve "Trilha criada. Lição 1: <título>." (`anuncioCriada`).
+- A geração sai do histórico (substitui, não empilha): voltar da aula leva ao mapa salvo, nunca à prévia.
+- Como fazer: na web, `clip-path: circle()` a partir do `getBoundingClientRect` do nó 1. No app, `measureInWindow` do nó e uma `View` redonda animada por cima, dentro da tela da geração; quando ela cobre a tela, a aula entra sem transição. Sem dependência nova.
+- Movimento reduzido: sem pulso, sem o Stu andando e sem círculo; a aula entra por opacidade em 150 ms. O som segue a preferência de som (spec 12), não a de movimento.
+
+**Som.** O único som de conclusão é `geracao_pronta`, no t = 0 da passagem. Ele é aquecido ao abrir a geração, para tocar sem atraso. O fim da proposta (troféu) não tem som. `geracao_licao` segue a spec 12.
+
+**Erro, tentar de novo e sair.**
+- **O aceite falhou:** o botão volta a "Começar a lição 1" e "Ajustar pedido" volta. A linha embaixo, em `#C23B4E`, diz "Não deu para criar a trilha. Confira a conexão e tente de novo." (`erroCriacao`). O Stu fica ao lado do nó 1, parado, em `stu-encorajador`. O novo toque usa o mesmo token, e o servidor devolve a trilha já criada para esse token (`aceitarProposta`, em `src/servidor/aprendizado/servico.ts`), então nada duplica.
+- **Proposta expirada (`proposta_invalida`):** a linha diz "Esta proposta expirou. Monte de novo." (`propostaExpirada`), e o botão vira "Montar de novo" (`montarDeNovo`), que refaz a geração com o mesmo pedido.
+- **Sair durante "Criando sua trilha…"** (voltar, gesto ou outra aba): não cancela no servidor. O cliente ignora a resposta e não abre a aula, e a trilha aparece em Minhas trilhas.
+- Cancelar durante a geração continua como hoje (P17 da spec 07).
+
+**Critérios observáveis.**
+- C1: do toque até o botão mudar, no máximo 100 ms (6 quadros numa gravação a 60 fps).
+- C2: o relato do tempo tem sempre quatro números:
+  - total: do toque até a etapa 1 interativa;
+  - aceite: do toque até a resposta do aceite;
+  - busca da lição: da resposta do aceite até a resposta do `obterLicao`, que é uma segunda chamada, em sequência;
+  - passagem: da resposta do aceite até a aula na tela, com o esqueleto ou com a etapa 1.
+  - **Referência rápida** (IA falsa, rede local, sem atraso simulado): passagem de no máximo 470 ms e total de no máximo o aceite mais 470 ms. Em 0491ed7, o total era de pelo menos 2,1 s.
+  - **Espera real** (IA real ou rede lenta, simulada e identificada no relato): sem meta de total. Os quatro números entram como medidos, sem descontar a demora. A passagem continua em no máximo 470 ms, mesmo com a busca da lição lenta. O esqueleto fica até a lição chegar, e a etapa 1 fica interativa em até 100 ms depois disso. A linha de 1,5 s aparece.
+  - Nos dois casos, nenhuma pausa fixa.
+- C3: nenhuma tela e nenhum segundo botão entre a prévia e a etapa 1.
+- C4: um `geracao_pronta` por trilha criada, na passagem, e nenhum som no fim da proposta.
+- C5: sem confete, sem dicas que se revezam, sem "Mais uma!", sem contagens, sem barra e sem visto por lição.
+- C6: tentar de novo depois de uma falha não duplica (Minhas trilhas com uma trilha), e voltar da aula leva ao mapa salvo.
+- C7: com movimento reduzido, a troca é por opacidade e a informação é a mesma; os dois anúncios saem.
+- C8: "Criando sua trilha…" fica numa linha em 320, 360 e 390.
+
+**Paridade.** Igual na web, no Android e no iPhone, com os mesmos tempos e os mesmos textos.
+
+**Quem decide.** É decisão de design; nada precisa do dono.
 
 ## Revisão de banca da noite (19–20/11)
 Revisão com olhar de jurado sobre o 9e6e96e. Cobre a entrada, o "Ver como funciona", o pedido, o roteiro do pitch, o Explorar, o perfil e o compartilhar. Na web foram 390×844 e 390×667, rodando local com IA falsa, mais as capturas recentes do Web & API em 390 e 1440. No app, as capturas recentes do Mobile & QA (prévia web). Os itens vão do mais grave ao menos grave. Ficou de fora o que já está decidido e em implementação: ordenar em lista única na web, reação no painel, mascote parte 2 na web, revisão das configurações, geração que se acompanha na web, Curtir B e C e controle de som no app. Os esboços dos três primeiros estão na pasta do Designer, `ux/11-banca-noite/`.
