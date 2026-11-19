@@ -53,6 +53,8 @@ test('criar a trilha (spec 04): o toque, a espera real e a passagem em até 470 
   assert.deepEqual([R.ajustarSaiMs, R.rolarAteNo1Ms, R.esperaRealMs, R.respiroMs, R.somDaLicaoMinimoMs], [200, 240, 1500, 1100, 400]);
   assert.deepEqual([R.pulsoMs, R.firmarMs, R.circuloAtrasoMs, R.circuloMs, R.aulaEntraMs, R.aulaOpacidadeMs], [180, 180, 120, 300, 320, 150]);
   assert.deepEqual([R.tracejadoPx, R.tracejadoEspessura], [8, 5]);
+  // A aula monta embaixo do círculo antes de entrar por cima (o círculo já cobre quase tudo aos 300 ms).
+  assert.ok(R.circuloAtrasoMs < R.aulaMontaMs && R.aulaMontaMs < R.aulaEntraMs);
   assert.equal(fimDaPassagem(false), 470, 'o círculo termina aos 420 e a aula está inteira aos 470');
   assert.ok(R.circuloAtrasoMs + R.circuloMs <= fimDaPassagem(false));
   assert.equal(fimDaPassagem(true), 150, 'com movimento reduzido, só a opacidade');
