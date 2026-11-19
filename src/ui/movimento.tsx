@@ -16,8 +16,10 @@ export function AmbienteMovimento() {
       window.clearTimeout(adiado);
       if (digita(campo)) { raiz.dataset.teclado = 'true'; return; }
       // Ao sair do campo com um toque, a barra de abas só volta depois do toque terminar: voltando na hora, ela empurrava
-      // o botão tocado (o "Salvar" ou o "Cancelar" no pé da tela) e o clique caía em outro lugar.
-      if (evento?.type === 'focusout') adiado = window.setTimeout(() => { raiz.dataset.teclado = 'false'; }, 350);
+      // o botão tocado (o "Salvar" ou o "Cancelar" no pé da tela) e o clique caía em outro lugar. Vale também para o
+      // `focusin` do botão tocado, que chega logo depois do `focusout` do campo: antes ele cancelava a espera e a barra
+      // voltava na hora (no celular, o "Salvar" do perfil subia 73 px e o erro de campo nunca aparecia na barra).
+      if (evento) adiado = window.setTimeout(() => { raiz.dataset.teclado = 'false'; }, 350);
       else raiz.dataset.teclado = 'false';
     };
     visibilidade();

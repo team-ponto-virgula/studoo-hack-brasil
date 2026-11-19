@@ -72,7 +72,7 @@ function MenuCartao({ titulo, aoDenunciar }: { titulo: string; aoDenunciar: () =
       <button ref={botao} type="button" className="cartao-trilha__icone" aria-label={c.mais(titulo)} aria-haspopup="menu" aria-expanded={aberto} aria-controls={aberto ? idMenu : undefined}
         onClick={() => setAberto((valor) => !valor)}><Icone nome="mais" /></button>
       {aberto && (
-        <div className="cartao-trilha__opcoes" role="menu" id={idMenu}>
+        <div className="cartao-trilha__opcoes" role="menu" id={idMenu} aria-label={mensagens.componentes.menuRotulo(1)}>
           <button type="button" role="menuitem" onClick={() => { setAberto(false); aoDenunciar(); }}><Icone nome="bandeirinha" />{c.denunciar}</button>
         </div>
       )}
@@ -232,7 +232,8 @@ export function useCurtir({ logado, aplicar, anunciar, avisar }: {
       const erro = codigoDoErro(falha);
       if (erro === 'nao_autenticado') { entrarEVoltar(voltaComCurtir(codigo)); return; }
       if (erro === 'compartilhar_visitante') {
-        avisar(c.valeuContaTemporaria, { duracao: 8000, acao: { rotulo: c.entrar, aoTocar: () => { void cliente.logout().catch(() => null).finally(() => entrarEVoltar(voltaComCurtir(codigo))); } } });
+        // Visitante (fechamento do Designer, 19/11): o coração volta e o aviso fica visível, sem botão.
+        avisar(c.valeuContaTemporaria, { duracao: 8000 });
         return;
       }
       // Sem rede, o cliente já tocou `erro_rede`.

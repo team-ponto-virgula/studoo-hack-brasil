@@ -544,7 +544,7 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
     ? { tipo: 'salvando', texto: p.salvando }
     : estado.tipo === 'erroCampo' ? { tipo: 'erro', texto: p.corrigirCampos, icone: true }
       : estado.tipo === 'erro' ? { tipo: 'erro', texto: estado.texto }
-        : alterado ? { tipo: 'pendente', texto: p.alteracoesNaoSalvas } : null;
+        : alterado ? { tipo: 'pendente', texto: p.alteracoesNaoSalvas, curto: p.naoSalvoCurto } : null;
 
   return (
     <section className="editor-perfil" aria-labelledby={ids.titulo}>
@@ -626,7 +626,9 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
         {/* Barra presa no pé da tela, acima da barra de abas: o estado à esquerda (nenhum, sem mudança) e os botões à direita. */}
         <div className="barra-salvar" data-com-cancelar={aoFechar ? true : undefined}>
           <p className="barra-salvar__estado" data-estado={barra?.tipo} role="status" aria-live="polite">
-            {barra && barra.tipo === 'erro' && 'icone' in barra && <Icone nome="alerta" />}{barra?.texto ?? ''}
+            {barra && barra.tipo === 'erro' && 'icone' in barra && <Icone nome="alerta" />}
+            {/* Com "Cancelar" e "Salvar" numa tela de até 400 px, "Não salvo" (perfil.naoSalvoCurto), para caber numa linha. */}
+            {barra && 'curto' in barra ? <><span className="barra-salvar__longo">{barra.texto}</span><span className="barra-salvar__curto">{barra.curto}</span></> : barra?.texto ?? ''}
           </p>
           <div className="barra-salvar__botoes">
             {aoFechar && <Botao variante="secundario" disabled={salvando} onClick={cancelar}>{p.cancelar}</Botao>}
@@ -635,7 +637,7 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
         </div>
       </form>
 
-      {menuFoto && <FolhaDeAcoes titulo={p.fotoMenuTitulo} opcoes={opcoesFoto} cancelar={p.fotoMenuCancelar} aoFechar={() => setMenuFoto(false)} />}
+      {menuFoto && <FolhaDeAcoes titulo={p.fotoFolhaTitulo} opcoes={opcoesFoto} cancelar={p.fotoMenuCancelar} aoFechar={() => setMenuFoto(false)} />}
       {arquivo && (
         <RecorteFoto origem={arquivo} aoCancelar={() => setArquivo(null)}
           aoSalvar={(novo) => { atualizarPerfil(novo); setArquivo(null); setStatusFoto(p.fotoSalva); anunciar(p.fotoSalva); }} />

@@ -276,7 +276,9 @@ h2.previa-trilha__titulo { font-size: 1.25rem; }
 /* Confirmação do Studoo (revisão de 19/11): título, texto e aviso separados; ações ao meio ou uma por linha, a segura em cima. */
 .folha-titulo--confirmar { font-family: Quicksand, sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1.3; color: var(--texto); overflow-wrap: anywhere; }
 .folha-texto--confirmar { color: var(--texto2); font-size: 1rem; line-height: 1.5; overflow-wrap: anywhere; }
-.folha-acoes.folha-acoes--metades { display: flex; flex-wrap: wrap; gap: 10px; }
+/* Confirmação (spec 11): lado a lado, "Cancelar" à esquerda e a ação à direita; se um rótulo não cabe na metade, uma por
+   linha, com a ação em cima (wrap-reverse) e o foco em "Cancelar", a segura. */
+.folha-acoes.folha-acoes--metades { display: flex; flex-wrap: wrap-reverse; gap: 8px; }
 /* Cada ação começa na metade; se o rótulo não cabe nela, a largura mínima empurra a outra para a linha de baixo. */
 .folha-acoes--metades > .botao { flex: 1 1 calc(50% - 5px); min-width: max-content; min-height: 48px; white-space: nowrap; }
 .botao.botao--perigo { --labio: #8f2a39; color: #fff; border-color: #c23b4e; background: #c23b4e; }

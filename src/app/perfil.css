@@ -274,3 +274,9 @@
 /* A barra presa no pé é `position: fixed` no celular: nenhum ancestral pode ter transform, senão ela segue o painel e não
    a tela. A entrada do painel (translateY) fica desligada enquanto os campos estão abertos. */
 .painel--perfil:has(.barra-salvar) { animation: none; }
+
+.barra-salvar__curto { display: none; }
+@media (max-width: 400px) {
+  .barra-salvar[data-com-cancelar] .barra-salvar__longo { display: none; }
+  .barra-salvar[data-com-cancelar] .barra-salvar__curto { display: inline; }
+}

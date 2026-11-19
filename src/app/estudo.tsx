@@ -952,7 +952,7 @@ function MenuCartao({ titulo, ocupado, apagar, compartilhar, configurar }: { tit
     <details className="plano-cartao__menu" ref={detailsRef}>
       <summary aria-label={mensagens.planos.maisOpcoesRotulo(titulo)}>•••</summary>
       {/* Compartilhar, Configurações e Apagar, num menu do próprio app (sem folha do sistema). */}
-      <div className="plano-cartao__opcoes">
+      <div className="plano-cartao__opcoes" role="group" aria-label={mensagens.componentes.menuRotulo(1 + (compartilhar ? 1 : 0) + (configurar ? 1 : 0))}>
         {compartilhar && (
           <button type="button" className="plano-cartao__compartilhar" aria-label={mensagens.compartilhar.entradaRotulo(titulo)} disabled={ocupado}
             onClick={() => { if (detailsRef.current) detailsRef.current.open = false; compartilhar(); }}>
