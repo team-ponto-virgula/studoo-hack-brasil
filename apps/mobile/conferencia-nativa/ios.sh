@@ -27,7 +27,9 @@ MAESTRO="$FERRAMENTAS/maestro/bin/maestro"
 API="https://127.0.0.1:3443"
 PORTA_API=3443
 PORTA_WEB=3000
+# O Expo Go abre o Metro pela porta 8081, onde fica a cache dos pacotes (servidor/cache-do-metro.mjs); o Metro fica na 8082.
 PORTA_METRO=8081
+PORTA_METRO_INTERNA=8082
 EXPO_GO="host.exp.Exponent"
 
 # O que o percurso inteiro deve produzir. `coletar` acusa a captura que faltar.
@@ -424,12 +426,22 @@ metro() {
   printf 'EXPO_PUBLIC_STUDOO_API_URL=%s\nEXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI=studoo-dev://auth/google\n' "$API" > .env.local
 
   # Sem modo de desenvolvimento e minificado, como o servidor que o dono usa no iPhone dele: sem avisos de
-  # desenvolvimento por cima das telas.
-  CI=1 EXPO_NO_TELEMETRY=1 EXPO_PUBLIC_STUDOO_API_URL="$API" EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI="studoo-dev://auth/google" \
-    nohup npx expo start --go --localhost --port "$PORTA_METRO" --no-dev --minify --max-workers 2 > "$REGISTROS/metro.log" 2>&1 < /dev/null &
-  if ! esperar_http "http://127.0.0.1:$PORTA_METRO/status" 180; then
+  # desenvolvimento por cima das telas. EXPO_PACKAGER_PROXY_URL faz o manifesto apontar para a cache, e não para o Metro.
+  CI=1 EXPO_NO_TELEMETRY=1 EXPO_PACKAGER_PROXY_URL="http://127.0.0.1:$PORTA_METRO" \
+    EXPO_PUBLIC_STUDOO_API_URL="$API" EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI="studoo-dev://auth/google" \
+    nohup npx expo start --go --localhost --port "$PORTA_METRO_INTERNA" --no-dev --minify --max-workers 2 > "$REGISTROS/metro.log" 2>&1 < /dev/null &
+  if ! esperar_http "http://127.0.0.1:$PORTA_METRO_INTERNA/status" 180; then
     mostrar_registro "$REGISTROS/metro.log"
-    erro "O Metro (\`expo start\`) não subiu na porta $PORTA_METRO em 3 minutos."
+    erro "O Metro (\`expo start\`) não subiu na porta $PORTA_METRO_INTERNA em 3 minutos."
+  fi
+
+  # A cache na frente do Metro: a cada abertura, o Expo Go pede o pacote de novo, e o Metro o refazia (7 a 73 s com o
+  # bytecode do Hermes; um pedido passou do tempo do Expo Go na execução 44511779137).
+  nohup node "$AQUI/servidor/cache-do-metro.mjs" --porta "$PORTA_METRO" --destino "$PORTA_METRO_INTERNA" \
+    > "$REGISTROS/cache-do-metro.log" 2>&1 < /dev/null &
+  if ! esperar_http "http://127.0.0.1:$PORTA_METRO/status" 30; then
+    mostrar_registro "$REGISTROS/cache-do-metro.log"
+    erro "A cache na frente do Metro não respondeu na porta $PORTA_METRO."
   fi
 
   manifesto="$(curl -sf -m 60 -H 'expo-platform: ios' -H 'accept: application/expo+json,application/json' "http://127.0.0.1:$PORTA_METRO/")" || {
@@ -440,6 +452,10 @@ metro() {
   pacote="$(printf '%s' "$manifesto" | jq -r '.launchAsset.url // empty' 2> /dev/null || true)"
   [ -n "$pacote" ] || erro "O manifesto do Expo veio sem o endereço do pacote (launchAsset.url). Veja manifesto-ios.json nos registros."
   echo "Pacote: $pacote"
+  case "$pacote" in
+    "http://127.0.0.1:$PORTA_METRO/"*) ;;
+    *) aviso "O manifesto aponta o pacote para fora da cache ($pacote): cada abertura vai esperar o Metro refazer o pacote." ;;
+  esac
 
   # Compila agora, com tempo de sobra, para o app abrir rápido no simulador. Se o código não compilar, o erro aparece aqui.
   if ! medida="$(curl -sf -m 900 -o "$FERRAMENTAS/pacote-ios" -w '%{size_download} bytes em %{time_total}s' "$pacote")"; then
@@ -633,6 +649,11 @@ coletar() {
   resumo ""
   resumo "Origem: simulador de iPhone numa máquina do GitHub Actions, com o app servido pelo Metro no Expo Go. Não é aparelho de verdade. Aparelho, iOS, Expo Go e commit estão em ORIGEM.txt, no artefato das capturas."
   resumo ""
+
+  if [ -f "$REGISTROS/cache-do-metro.log" ]; then
+    resumo "Pacote do app nas aberturas: $(grep -c ' guardado ' "$REGISTROS/cache-do-metro.log" || true) da cache e $(grep -c ' do Metro ' "$REGISTROS/cache-do-metro.log" || true) feitos pelo Metro (cache-do-metro.log)."
+    resumo ""
+  fi
 
   # O registro do Expo Go no simulador ajuda a entender uma tela em branco ou um erro de rede do app.
   com_limite 120 xcrun simctl spawn "$(udid)" log show --last 30m --style compact --predicate 'process == "Expo Go"' \

@@ -5,15 +5,17 @@ name: 01-entrada
 ---
 - runFlow: partes/abrir-pela-primeira-vez.yaml
 - waitForAnimationToEnd:
-    timeout: 4000
+    timeout: 2000
 - takeScreenshot: 01-entrada-em-repouso
 - tapOn:
+    waitToSettleTimeoutMs: 1500
     id: login-email
 - waitForAnimationToEnd:
-    timeout: 4000
+    timeout: 2000
 - takeScreenshot: 02-entrada-email-em-foco
 - tapOn:
+    waitToSettleTimeoutMs: 1500
     id: login-senha
 - waitForAnimationToEnd:
-    timeout: 4000
+    timeout: 2000
 - takeScreenshot: 03-entrada-senha-em-foco
