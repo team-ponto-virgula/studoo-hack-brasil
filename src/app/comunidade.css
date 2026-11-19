@@ -266,3 +266,7 @@
   .aviso-app p { animation: aviso-sobe 220ms ease-out both; }
   @keyframes aviso-sobe { from { opacity: 0; transform: translateY(10px); } }
 }
+/* Valeu com número: a linha de ações (Valeu, compartilhar, "•••") cabe numa linha só também no cartão estreito do Em
+   alta (237 px): o Valeu encolhe primeiro, com respiros menores. */
+.cartao-trilha__acoes { column-gap: 6px; }
+.cartao-trilha__valeu { flex: 1 1 0; min-width: 0; gap: 5px; padding-inline: 8px; white-space: nowrap; }
