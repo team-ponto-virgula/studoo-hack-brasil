@@ -1,7 +1,7 @@
 import { ErroStudoo } from '@studoo/contratos';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { AccessibilityInfo, Animated, Keyboard, LayoutAnimation, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
-import { useTremor, useVaiVem } from './animacoes';
+import { useTremor } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { entrarComGoogle } from './google-nativo';
 import { entrarComoVisitante } from './visitante-nativo';
@@ -15,6 +15,7 @@ import { NavegacaoContexto } from './navegacao';
 import { apagarTinhaTrilhas, lerTinhaTrilhas } from './preferencias';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { Paisagem } from './mundo';
+import { Stu } from './mascote';
 import { cores, fontes } from './tema';
 
 const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -142,14 +143,15 @@ async function encerrarNoAparelho(erro?: string): Promise<Sessao> {
   }
 }
 
-/** O Stu na paisagem: sobe e desce devagar e acena de vez em quando. */
-function StuAcenando({ largura, esquerda }: { largura: number; esquerda: number }) {
-  const aceno = useVaiVem(2400);
+/**
+ * O Stu na paisagem (spec 13): `stu-acolhida` com a sombra de contato, acenando em laço (emenda E1); para quando um campo
+ * recebe foco (a parte de cima recolhe) e com movimento reduzido fica a imagem parada.
+ */
+function StuAcenando({ largura, esquerda, pausado }: { largura: number; esquerda: number; pausado: boolean }) {
   return (
-    <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-      style={{ position: 'absolute', bottom: '7%', left: esquerda, width: largura, height: largura * 1.1, transformOrigin: 'bottom', transform: [
-        { rotate: aceno.interpolate({ inputRange: [0, 0.8, 0.88, 0.94, 1], outputRange: ['0deg', '0deg', '-6deg', '5deg', '0deg'] }) },
-      ] }} />
+    <View style={{ position: 'absolute', bottom: '7%', left: esquerda }}>
+      <Stu nome="stu-acolhida" tamanho={largura} animado="laco" pausado={pausado} sombra />
+    </View>
   );
 }
 
@@ -160,7 +162,8 @@ function StuAcenando({ largura, esquerda }: { largura: number; esquerda: number 
  * leitor de tela), para E-mail, Senha e "Entrar" ficarem juntos na tela.
  */
 function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: number; nivel: number; recolher: boolean; respiro: number }) {
-  const stu = Math.max(28, Math.min(72, Math.round((ilustracao - 14) / 1.1)));
+  // A conta de hoje, com o teto de 76 da spec 13 (A2).
+  const stu = Math.max(28, Math.min(76, Math.round((ilustracao - 14) / 1.1)));
   return (
     <View testID="entrada-topo" style={recolher ? entradaEstilos.recolhido : respiro > 0 ? { marginTop: respiro } : null}
       importantForAccessibility={recolher ? 'no-hide-descendants' : 'auto'}
@@ -170,7 +173,7 @@ function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: n
           style={[entradaEstilos.banner, { height: ilustracao }]}>
           <View style={{ marginTop: ilustracao - ILUSTRACAO_MAXIMA }}>
             <Paisagem altura={ILUSTRACAO_MAXIMA} compacta estilo={entradaEstilos.paisagem}>
-              {(l) => <StuAcenando largura={stu} esquerda={l / 2 - stu / 2} />}
+              {(l) => <StuAcenando largura={stu} esquerda={l / 2 - stu / 2} pausado={recolher} />}
             </Paisagem>
           </View>
         </View>

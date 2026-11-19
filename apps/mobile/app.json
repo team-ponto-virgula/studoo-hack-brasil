@@ -28,7 +28,8 @@
           "photosPermission": "Permitir que o Studoo selecione uma foto do seu material?",
           "microphonePermission": "Permitir que o Studoo grave sua explicação para transcrever e revisar?"
         }
-      ]
+      ],
+      "expo-image"
     ],
     "android": {
       "package": "com.studoo.mobile.dev"

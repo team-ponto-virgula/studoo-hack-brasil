@@ -1,6 +1,6 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
@@ -23,6 +23,7 @@ import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NomeIcone } from './trilha';
 import { focoVisivel } from './foco';
+import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
 import { TelaPerfil } from './perfil';
@@ -1718,7 +1719,6 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
   const { chao, relevo } = coresDaRegiao(Math.max(0, indice));
   const enfeites = regiaoDoTrecho(Math.max(0, indice)).enfeites;
   const entrada = useAparecer(80, 420, true);
-  const balanco = useBalanco(3, 1600);
 
   return (
     // .plano-destaque: borda de 2 que fecha em volta e o degrau de 4 por fora (box-shadow 0 4px 0 #c3cdf2). A face recorta a
@@ -1729,8 +1729,10 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
         <View style={[estudoEstilos.cartaoColina, estudoEstilos.cartaoColinaDestaque, { backgroundColor: relevo }]} />
         <Desenho nome={enfeites[0]} largura={40} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%' }]} />
         <Desenho nome={enfeites[2]} largura={36} estilo={[estudoEstilos.cartaoEnfeite, { right: '9%' }]} />
-        <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-          style={[estudoEstilos.destaqueStu, { transform: [{ translateY: balanco }] }]} />
+        {/* Spec 13: `stu-feliz` de 64, na sombra de contato, que se mexe uma vez ao abrir (emenda E1). */}
+        <View style={estudoEstilos.destaqueStu}>
+          <Stu nome="stu-feliz" tamanho={64} animado="uma-vez" sombra />
+        </View>
       </View>
       {/* Como .plano-cartao__menu da web: o "•••" dentro da arte, 8 do topo e da direita dela (24 do cartão), com o "Apagar"
           num balão embaixo. */}
@@ -1848,13 +1850,19 @@ function TelaConcluida({ etapa, acoes, mensagem, rodape, ocupado, compartilhar }
   const entradaLiberada = useAparecer(1000, 420, true);
   // A última lição fecha a trilha: a comemoração é da trilha inteira.
   const trilhaFeita = plano.progresso.total > 0 && plano.progresso.concluidas === plano.progresso.total;
+  // Ficou exercício sem acerto ou a prática não saiu: a conclusão vira um lembrete gentil (sem confete nem raios).
+  const comLembrete = Boolean(resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao'));
+  const reduzir = useMovimentoReduzido();
 
   return (
     <Tela pagina="concluida" semCabecalho rodape={rodape} estiloConteudo={estudoEstilos.fimQuarenta}>
       {/* Sem chuva de confete quando ficou exercício sem acerto ou a prática não saiu: a conclusão vira um lembrete gentil. */}
-      {!(resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao')) && <Confete chuva quantidade={44} />}
+      {!comLembrete && <Confete chuva quantidade={44} />}
       <View style={estudoEstilos.conclusaoTopo}>
-        <CenaConclusao />
+        {/* Spec 13: lição concluída com `stu-comemorando` (ou `stu-encorajador` com exercício sem acerto), em 110 no celular
+            (o teto em que ainda anima, E2); trilha concluída com `stu-celebrando`, que fica em 240 parado com movimento reduzido. */}
+        <CenaConclusao nome={trilhaFeita ? 'stu-celebrando' : comLembrete ? 'stu-encorajador' : 'stu-comemorando'}
+          tamanho={trilhaFeita && reduzir !== false ? 240 : 110} comRaios={!comLembrete} />
         <Titulo testID="titulo-conclusao" foco estilo={estudoEstilos.textoCentro}>
           {trilhaFeita ? mensagens.licao.trilhaConcluida : mensagens.licao.concluida}
         </Titulo>
@@ -1953,33 +1961,37 @@ const RAIOS_WEB = {
   WebkitMaskImage: 'radial-gradient(circle, #000 30%, transparent 70%)',
 } as unknown as ViewStyle;
 
-function CenaConclusao() {
+/**
+ * A cena da conclusão (spec 13): o Stu chega (escala 0,6 → 1 e 12 px de subida em 360 ms, §B7) e se mexe dois ciclos no
+ * acontecimento (emenda E1), na sombra de contato; os raios giram atrás só quando há o que comemorar (com exercício sem
+ * acerto, o Stu encorajador fica sem raios, como o confete). Com movimento reduzido, tudo parado.
+ */
+function CenaConclusao({ nome, tamanho, comRaios }: { nome: NomeStu; tamanho: number; comRaios: boolean }) {
   const reduzir = useMovimentoReduzido();
   const [giro] = useState(() => new Animated.Value(0));
-  const [pulo] = useState(() => new Animated.Value(0));
+  const [chegada] = useState(() => new Animated.Value(0));
   const raios = useAparecer(0, 700);
   const selo = useAparecer(700, 520, true);
 
   useEffect(() => {
-    if (reduzir !== false) return;
+    if (reduzir === null) return;
+    if (reduzir) {
+      chegada.setValue(1);
+      return;
+    }
     const girar = Animated.loop(Animated.timing(giro, { toValue: 1, duration: 16000, easing: Easing.linear, isInteraction: false, useNativeDriver: true }));
-    const subir = (duracao: number, altura: number) => Animated.timing(pulo, { toValue: altura, duration: duracao, easing: Easing.out(Easing.quad), useNativeDriver: true });
-    const descer = (duracao: number) => Animated.timing(pulo, { toValue: 0, duration: duracao, easing: Easing.in(Easing.quad), useNativeDriver: true });
-    const pular = Animated.sequence([
-      Animated.delay(250), subir(240, -26), descer(240), subir(240, -26), descer(240),
-      Animated.loop(Animated.sequence([subir(1300, -6), descer(1300)])),
-    ]);
-    girar.start();
-    pular.start();
+    const chegar = Animated.timing(chegada, { toValue: 1, duration: 360, delay: 120, easing: Easing.out(Easing.back(1.4)), useNativeDriver: true });
+    if (comRaios) girar.start();
+    chegar.start();
     return () => {
       girar.stop();
-      pular.stop();
+      chegar.stop();
     };
-  }, [reduzir, giro, pulo]);
+  }, [reduzir, giro, chegada, comRaios]);
 
   return (
     <View style={estudoEstilos.cena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <Animated.View style={[estudoEstilos.raios, {
+      {comRaios && <Animated.View style={[estudoEstilos.raios, {
         opacity: raios,
         transform: [
           { scale: raios.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) },
@@ -1997,9 +2009,13 @@ function CenaConclusao() {
             ))}
           </View>
         ))}
+      </Animated.View>}
+      <Animated.View style={{ opacity: chegada.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }), transform: [
+        { translateY: chegada.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) },
+        { scale: chegada.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) },
+      ] }}>
+        <Stu nome={nome} tamanho={tamanho} animado="acontecimento" acontecimento="conclusao" ciclos={2} sombra />
       </Animated.View>
-      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-        style={{ width: 130, height: 143, transform: [{ translateY: pulo }] }} />
       {/* .conclusao-selo: círculo de 50 com o degrau escuro de 4 por fora e o anel branco de 4 em volta (0 0 0 4px). */}
       <Animated.View style={[estudoEstilos.seloAnel, {
         opacity: selo,
@@ -2087,7 +2103,7 @@ const estudoEstilos = StyleSheet.create({
       : { experimental_backgroundImage: 'linear-gradient(135deg, #F6F8FF 0%, #FFFFFF 62%)' }),
   },
   destaqueCena: { height: 96, borderRadius: 18, overflow: 'hidden' },
-  destaqueStu: { position: 'absolute', bottom: 6, left: '50%', marginLeft: -30, width: 60, height: 66 },
+  destaqueStu: { position: 'absolute', bottom: 8, left: '50%', marginLeft: -32 },
   destaqueCorpo: { gap: 8 },
   introducaoPlanos: { marginTop: 12 },
   erroNaLista: { marginTop: 0, marginBottom: 16 },
