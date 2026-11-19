@@ -1,4 +1,4 @@
-import { Platform } from 'react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 
 /**
  * O critério de `:focus-visible` da web para o anel de foco dos botões. A web desenha o anel de botões, opções, nós do mapa
@@ -20,4 +20,19 @@ if (Platform.OS === 'web' && typeof document !== 'undefined') {
 /** Se o foco que acabou de chegar a um botão mostra o anel. */
 export function focoVisivel() {
   return peloTeclado;
+}
+
+/**
+ * Leva o foco do leitor de tela ao título, como o `focus()` da web. Na prévia web, foca sem rolar (o `focus()` do navegador
+ * rolava a folha até o título e escondia a linha de cima), como a apresentação já faz.
+ */
+export function focarSemRolar(no: unknown) {
+  if (!no) return;
+  if (Platform.OS === 'web') {
+    const elemento = no as HTMLElement;
+    if (!elemento.hasAttribute('tabindex')) elemento.setAttribute('tabindex', '-1');
+    elemento.focus({ preventScroll: true });
+    return;
+  }
+  AccessibilityInfo.sendAccessibilityEvent(no as Parameters<typeof AccessibilityInfo.sendAccessibilityEvent>[0], 'focus');
 }

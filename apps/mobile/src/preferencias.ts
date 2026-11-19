@@ -93,3 +93,29 @@ export async function marcarAvisoVozVisto() {
     // Sem armazenamento, o aviso volta a aparecer na próxima abertura do app; nada mais depende disso.
   }
 }
+
+/**
+ * Se a pessoa já viu o aviso que explica a curtida (spec 10, revisão de 19/11: o aviso só na primeira curtida naquele
+ * aparelho; `studoo.gestoExplicado` no localStorage da web, no SecureStore do app).
+ */
+const chaveGestoExplicado = 'studoo.gestoExplicado';
+let gestoExplicadoNaMemoria = false;
+
+export async function gestoJaExplicado() {
+  if (gestoExplicadoNaMemoria) return true;
+  try {
+    gestoExplicadoNaMemoria = (await SecureStore.getItemAsync(chaveGestoExplicado)) === '1';
+  } catch {
+    // Sem o armazenamento, vale o que ficou na memória.
+  }
+  return gestoExplicadoNaMemoria;
+}
+
+export async function marcarGestoExplicado() {
+  gestoExplicadoNaMemoria = true;
+  try {
+    await SecureStore.setItemAsync(chaveGestoExplicado, '1');
+  } catch {
+    // Sem o armazenamento, vale só enquanto o app está aberto.
+  }
+}

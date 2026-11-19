@@ -108,9 +108,9 @@ As descrições de hoje (`descricao` em `CATALOGO_FUNDOS`) são técnicas e não
 
 ## Decisões
 
-**Do dono, com a recomendação do Designer:**
-1. **Onde o fundo toca.** Recomendo no app inteiro depois da entrada, e não só na aula: cortar o som a cada troca de tela cansa. A alternativa é tocar só na aula e no mapa.
-2. **Modo silencioso do iPhone.** Recomendo respeitar, como o toca-sons já faz (`playsInSilentMode: false`): quem silencia o celular não espera o app tocando. A alternativa é tocar mesmo no silencioso (`playsInSilentMode: true`), o que tira a P24.
+**Do dono, fechadas em 19/11 (seguiu a recomendação do Designer):**
+1. **Onde o fundo toca: no app inteiro, depois da entrada.** Não é configurável, e não toca na entrada nem antes dela. Cortar o som a cada troca de tela cansa.
+2. **Modo silencioso do iPhone: os sons do Studoo respeitam** (`playsInSilentMode: false`, como o toca-sons já faz). Quem silencia o celular não espera o app tocando, e a P24 da spec 07 continua. Para a demonstração, o aparelho sai do silencioso antes.
 
 **De design:** a folha no lugar de um botão que alterna; sem controle de volume; os textos curtos das opções; o ponto de novidade no lugar de um convite.
 

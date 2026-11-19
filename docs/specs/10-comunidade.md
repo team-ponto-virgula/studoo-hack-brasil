@@ -415,7 +415,7 @@ Revisão de design do que foi ao ar em `6122cc2` (lote 4: `59f95bb` perfil, `850
 - **Erro de rede:** volta ao estado anterior e o aviso "Não deu para curtir agora. Confira a conexão e tente de novo.".
 - **Limite (429):** volta e o aviso "Muitas curtidas seguidas. Tente de novo daqui a pouco.".
 - **Sem sessão:** o toque leva à entrada e volta ao mesmo cartão já curtido (`?curtir=<código>`, aplicado uma vez).
-- **Conta temporária:** o aviso "Para curtir, entre com uma conta." com o botão "Entrar".
+- **Conta temporária (visitante):** o coração volta ao estado anterior e o aviso do app, visível (não só anunciado), diz "Curtidas precisam de uma conta. Como visitante, você continua estudando normalmente.". **Sem botão**, na web e no app: entrar com uma conta encerra a visita, e as trilhas dela ficam para trás. **Sem sessão** (página pública), continua o "entrar e voltar" de hoje. (Corrigido em 19/11.)
 - **Toques rápidos:** vale o último estado. Com um envio em andamento, o app guarda o estado desejado e, quando a resposta chega, manda de novo só se ainda for diferente.
 
 **Movimento.**
@@ -448,7 +448,7 @@ Revisão de design do que foi ao ar em `6122cc2` (lote 4: `59f95bb` perfil, `850
 | Aviso da primeira vez | Caio vai ver sua curtida. Curtidas levam trilhas ao Em alta. | Caio vai ver seu valeu. Valeus levam trilhas ao Em alta. |
 | Erro de rede | Não deu para curtir agora. Confira a conexão e tente de novo. | Não deu para mandar o valeu agora. Confira a conexão e tente de novo. |
 | Limite | Muitas curtidas seguidas. Tente de novo daqui a pouco. | Muitos valeus seguidos. Tente de novo daqui a pouco. |
-| Conta temporária | Para curtir, entre com uma conta. | Para mandar valeu, entre com uma conta. |
+| Conta temporária | Curtidas precisam de uma conta. Como visitante, você continua estudando normalmente. | O valeu precisa de uma conta. Como visitante, você continua estudando normalmente. |
 | Faixa sem conta (Explorar) | Entre para estudar e curtir. | Entre para estudar e mandar valeu. |
 | Legenda do Em alta | As trilhas que mais gente começou e curtiu nos últimos 7 dias. | As trilhas que mais gente começou e mandou valeu nos últimos 7 dias. |
 | Lista da dona, sem ninguém | Ainda sem ninguém estudando e sem curtidas | Ainda sem ninguém estudando e sem valeus |
@@ -471,7 +471,7 @@ Confirma o que está no ar: a aba Perfil nunca mostra o cartão "Como você quer
 
 **Foto.**
 - Avatar de 96 com borda branca de 4 e o selo de câmera (40×40, #3858D6, borda branca de 3) no canto de baixo à direita. Ao lado, o link "Adicionar foto" ou "Trocar foto" (Nunito 800, 16, #3858D6) e a dica.
-- Tocar no avatar ou no link abre o menu de ações do Studoo (pedido 4): "Escolher da galeria", "Tirar foto" (só em tela de toque), "Remover foto" (só com foto, em vermelho, com a confirmação de hoje) e "Cancelar". Quando o menu teria uma opção só (computador, sem foto), o seletor de arquivo abre direto.
+- Tocar no avatar ou no link abre o menu de ações do Studoo (pedido 4), com o título "Foto do perfil" (chave nova `perfil.fotoFolhaTitulo`: no celular é o título da folha da spec 11, e na web, o nome acessível do menu; `fotoRotulo`, "Foto", fica só no título oculto da seção): "Escolher da galeria", "Tirar foto" (só em tela de toque), "Remover foto" (só com foto, em vermelho, com a confirmação de hoje) e "Cancelar". Quando o menu teria uma opção só (computador, sem foto), o seletor de arquivo abre direto.
 - No app, galeria, câmera e recorte continuam os do sistema (P18). A foto salva na hora, pelo "Usar esta foto" do recorte, à parte do botão "Salvar".
 
 **Salvar com botão** (não salva sozinho). O nome é público e só vale completo: salvar campo a campo mostraria nomes pela metade nas trilhas compartilhadas.
@@ -484,12 +484,12 @@ Confirma o que está no ar: a aba Perfil nunca mostra o cartão "Como você quer
 | Estado | Texto na barra | "Salvar" | O resto |
 |---|---|---|---|
 | Nada mudou | nenhum | desligado | perfil vazio: desenho de pessoa no avatar |
-| Mudou algo | "Alterações não salvas" (#9A5B00, bolinha de 8 px antes) | ligado | — |
+| Mudou algo | "Alterações não salvas" (#9A5B00, bolinha de 8 px antes); quando a barra tem "Cancelar" e "Salvar" numa tela de até 400 px, "Não salvo" (chave nova `perfil.naoSalvoCurto`), para caber numa linha | ligado | — |
 | Salvando | "Salvando…" (#5E6A85) | "Salvando…", com `aria-busy` | campos travados |
 | Erro de campo | "Confira os campos marcados." (#C23B4E, ícone de alerta) | ligado | borda de 2 px #C23B4E, mensagem sob o campo e foco no primeiro campo com erro |
 | Erro de rede | "Não deu para salvar. Confira a conexão e tente de novo." (#C23B4E) | ligado | os campos guardam o que foi digitado |
 | Salvo | — | — | os campos fecham, o cabeçalho mostra o perfil, o aviso do app diz "Perfil salvo." e o foco vai para "Editar" |
-| Sair ou cancelar com alteração | — | — | a confirmação "Sair sem salvar?", com o texto "As mudanças no nome, no resumo, nos interesses e na cor se perdem." e as ações "Continuar editando" e "Sair sem salvar", uma por linha (o rótulo não cabe na metade) |
+| Sair ou cancelar com alteração | — | — | a confirmação "Sair sem salvar?", com o texto "As mudanças no nome, no resumo, nos interesses e na cor se perdem." e as ações "Sair sem salvar" (vermelha, em cima) e "Continuar editando" (embaixo, com o foco), uma por linha (o rótulo não cabe na metade) |
 
 **Perfil preenchido.**
 - O cabeçalho continua como está: faixa, foto de 96 (112 no computador), nome, resumo e interesses.
@@ -505,7 +505,7 @@ Título, texto e ações separados, no componente de confirmação do Studoo (me
 - **Texto** (Nunito 400, 16/24, #5E6A85). Sem progresso: "A trilha e as 7 lições saem da sua conta. Não dá para desfazer." Com progresso: "A trilha, as 7 lições e o seu progresso (3 concluídas) saem da sua conta. Não dá para desfazer."
 - **Com link**, um parágrafo à parte: "O link de compartilhamento desta trilha também deixa de funcionar."
 - **Ações**, metade cada, com 48 de altura: "Cancelar" (secundário, recebe o foco) e "Apagar" (fundo #C23B4E, texto branco, lábio #8F2A39).
-- Em toda confirmação, quando um rótulo não cabe na metade, as ações ficam uma por linha, na largura toda, com a segura em cima.
+- Em toda confirmação, quando um rótulo não cabe na metade, as ações ficam uma por linha, na largura toda, com a ação em cima e a segura embaixo, como na spec 11; o foco começa na segura. (Corrigido em 19/11: antes dizia "a segura em cima".)
 
 ### O que fica para o dono
 - Curtir ou Valeu.

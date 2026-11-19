@@ -62,6 +62,12 @@ class TocaSonsWeb {
   private folhaAberta = false;
   private leitorDeTela = false;
 
+  constructor() {
+    if (typeof window !== 'undefined') {
+      this.registrarGestos();
+    }
+  }
+
   private lerPreferencias(): PreferenciasSom {
     if (this.prefsCarregadas || typeof window === 'undefined') return this.obterPreferencias();
     this.prefsCarregadas = true;

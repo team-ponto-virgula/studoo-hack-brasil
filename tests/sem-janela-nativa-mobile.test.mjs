@@ -60,8 +60,9 @@ test('nenhum Modal com apresentação de folha do sistema (pageSheet, formSheet)
   assert.deepEqual(achados, []);
 });
 
-test('o menu dos cartões e a confirmação são os mesmos em toda plataforma (sem ramo por Platform)', () => {
-  const componentes = [['estudo.tsx', 'MenuDoCartao'], ['comunidade.tsx', 'MenuCartao'], ['interface.tsx', 'CartaoConfirmacao']];
+test('o menu de ações, a folha e a confirmação são os mesmos em toda plataforma (sem ramo por Platform)', () => {
+  const componentes = [['estudo.tsx', 'MenuDoCartao'], ['comunidade.tsx', 'MenuCartao'], ['interface.tsx', 'MenuDeAcoes'], ['interface.tsx', 'FolhaDeAcoes'],
+    ['interface.tsx', 'CartaoConfirmacao']];
   const achados = [];
   for (const [nome, componente] of componentes) {
     const fonte = fontes.get(nome);

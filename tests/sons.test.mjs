@@ -152,3 +152,73 @@ test('Spec 12: descrições curtas em OPCOES_FUNDO_UI e regra de não enfileirar
   assert.match(webSrc, /if\s*\(!this\.desbloqueado\)\s*return;/);
   assert.match(webSrc, /preCarregarEssenciais\(\)/);
 });
+
+test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) sem gesto descarta sem enfileirar', async () => {
+  const ouvintesWin = new Map();
+  const requisicoes = [];
+  let ctxEstado = 'suspended';
+
+  class FakeAudioContext {
+    get state() {
+      return ctxEstado;
+    }
+    get currentTime() {
+      return 0;
+    }
+    createGain() {
+      return {
+        gain: { value: 0, cancelScheduledValues() {}, setValueAtTime() {}, linearRampToValueAtTime() {} },
+        connect() {},
+      };
+    }
+    createBufferSource() {
+      return { buffer: null, loop: false, loopStart: 0, loopEnd: 0, connect() {}, start() {}, stop() {}, disconnect() {} };
+    }
+    async resume() {
+      ctxEstado = 'running';
+    }
+    async decodeAudioData() {
+      return { duration: 1 };
+    }
+  }
+
+  const origWindow = globalThis.window;
+  const origDoc = globalThis.document;
+  const origFetch = globalThis.fetch;
+
+  globalThis.window = {
+    AudioContext: FakeAudioContext,
+    localStorage: { getItem: () => null, setItem() {} },
+    addEventListener(tipo, fn) {
+      ouvintesWin.set(tipo, [...(ouvintesWin.get(tipo) ?? []), fn]);
+    },
+  };
+  globalThis.document = {
+    visibilityState: 'visible',
+    addEventListener() {},
+  };
+  globalThis.fetch = async (url) => {
+    requisicoes.push(url);
+    return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) };
+  };
+
+  try {
+    const mod = await import(`../src/app/sons.ts?t=${Date.now()}`);
+    const { tocaSons } = mod;
+
+    // Caso 2: sem gesto nenhum, nada é pedido nem enfileirado.
+    await tocaSons.tocarEfeito('aviso');
+    assert.equal(requisicoes.length, 0, 'sem gesto, nenhuma requisição deve ser feita');
+
+    // Caso 1: ocorre pointerdown e, no mesmo toque, tocarEfeito('valeu') é chamado.
+    for (const fn of ouvintesWin.get('pointerdown') ?? []) fn();
+    await tocaSons.tocarEfeito('valeu');
+
+    assert.ok(requisicoes.includes('/sons/sfx/valeu.wav'), 'no primeiro gesto, valeu.wav deve ser pedido imediatamente');
+    assert.ok(!requisicoes.includes('/sons/sfx/aviso.wav') || requisicoes.indexOf('/sons/sfx/valeu.wav') !== -1);
+  } finally {
+    globalThis.window = origWindow;
+    globalThis.document = origDoc;
+    globalThis.fetch = origFetch;
+  }
+});
