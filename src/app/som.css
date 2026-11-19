@@ -22,7 +22,7 @@
 /* Área de toque de 44 em volta da chave. */
 .chave-studoo::before { content: ''; position: absolute; inset: -6px -2px; }
 
-/* Botão de som da aula: 44 × 44, raio 12, ícone de 24; o ponto de novidade não pulsa. */
+/* Botão de som da aula, da entrada e da recuperação. */
 .aula-som { position: relative; display: grid; width: 44px; height: 44px; place-items: center; padding: 0; border: 0; border-radius: 12px; color: var(--texto2); background: transparent; cursor: pointer; }
 .aula-som[data-ativo] { color: var(--acao); }
 .aula-som .icone { width: 24px; height: 24px; }
