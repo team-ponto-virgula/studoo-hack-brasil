@@ -42,7 +42,7 @@ Se ainda assim não couber (texto grande do sistema), a página rola, e o rodap�
 
 **Teclado aberto (ou foco num campo do formulário):** a parte de cima (ilustração, título e descrição) recolhe: fica montada, sem altura e fora do leitor de tela. "Ver como funciona", E-mail, Senha e "Entrar" ficam juntos na tela. O campo em foco fica sempre inteiro acima do rodapé: a tela rola até ele, com 16 de folga. Isso vale para todo campo do app (recuperar senha, Editar perfil, Nova trilha, a resposta aberta da aula e o Explique). O app não tem tela de criar conta. Ao fechar o teclado, a parte de cima volta. Com movimento reduzido, sem animação.
 
-**Barras de baixo:** o fundo do rodapé e o da barra de quatro itens vão até a borda da tela. A área segura de baixo (barra de início do iPhone, barra de gestos do Android) fica dentro deles, sem linha embaixo nem faixa solta. Com o teclado aberto, o teclado cobre essa área e o rodapé encosta nele.
+**Barras de baixo:** o fundo do rodapé vai até a borda da tela. A área segura de baixo (barra de início do iPhone, barra de gestos do Android) fica dentro dele, sem linha embaixo nem faixa solta. Com o teclado aberto, o teclado cobre essa área e o rodapé encosta nele. A barra de abas não encosta: desde 20/11 é uma cápsula que flutua 8 acima da área segura (spec 05, "Barra de abas em cápsula").
 
 **Pontos de corte por altura útil** (aqui, a área que rola: da área segura de cima até o rodapé, com a barra da marca dentro; medidos na prévia do app a 390 e a 360 de largura, de 20 em 20 pt de altura, com a configuração do site, sem "Esqueci minha senha"):
 
