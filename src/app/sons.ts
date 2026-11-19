@@ -300,8 +300,15 @@ class TocaSonsWeb {
     }
   }
 
+  definirAreaDaMusica(permitida: boolean): void {
+    this.lerPreferencias();
+    if (this.estado.areaPermitida === permitida) return;
+    this.estado.definirAreaPermitida(permitida);
+    void this.atualizarEstadoFundo();
+  }
+
   prepararFundo(): void {
-    if (this.lerPreferencias().fundo !== 'mudo' && document.visibilityState === 'visible') {
+    if (this.lerPreferencias().fundo !== 'mudo' && this.estado.areaPermitida && document.visibilityState === 'visible') {
       void this.carregarBuffer(arquivoSonoro('fundos', lofi.arquivo), TIMEOUT_CARREGAMENTO_MS);
     }
   }

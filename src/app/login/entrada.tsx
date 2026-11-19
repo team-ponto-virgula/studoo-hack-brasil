@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { BotaoSom } from '../som';
 import { useRouter } from 'next/navigation';
 
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from 'react';
@@ -175,7 +176,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
       <main className="entrada-conteudo" id="conteudo-principal">
         <div className="entrada-forma">
           <header className="entrada-cabecalho">
-            <Logo />
+            <div className="som-marca"><Logo /><BotaoSom /></div>
             <Paisagem compacta className="entrada-banner">
               <Mascote expressao="stu-acolhida" tamanho={76} sombra prioridade animado="laco" className="stu" />
             </Paisagem>

@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { BotaoSom } from '../som';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
@@ -60,7 +61,7 @@ export function Recuperar() {
     });
   }
   return <main className="recuperar" id="conteudo-principal">
-    <header className="recuperar-topo"><Logo /><Link className="botao botao--texto" href="/login">{mensagens.voltar}</Link></header>
+    <header className="recuperar-topo"><Logo /><div className="recuperar-acoes"><BotaoSom /><Link className="botao botao--texto" href="/login">{mensagens.voltar}</Link></div></header>
     <section className="recuperar-cartao">
       <div className="recuperar-simbolo" aria-hidden="true"><Icone nome={etapa === 'pronto' ? 'check' : 'cadeado'} /></div>
       <h1 ref={titulo} tabIndex={-1}>{etapa === 'pronto' ? m.sucesso : m.recuperar}</h1>
