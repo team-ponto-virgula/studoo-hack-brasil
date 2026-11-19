@@ -51,6 +51,10 @@ export const RolagemDaTela = createContext<{
   mostrar: (no: ComponentRef<typeof View> | null, margem?: number) => void;
   /** O campo em foco (ou null): a tela o mantém inteiro à vista quando o teclado abre e quando a área visível encolhe. */
   focar: (no: ComponentRef<typeof View> | null) => void;
+  /** Arrasto dentro da tela (o ordenar): enquanto true, o dedo não rola a tela. */
+  travar: (ativo: boolean) => void;
+  /** Rola a tela `delta` pontos sem animação (perto da borda, durante um arrasto) e devolve quanto rolou de fato. */
+  rolarPor: (delta: number) => number;
 } | null>(null);
 /** O teclado está aberto: a entrada recolhe a parte de cima, e o rodapé deixa de somar a área segura de baixo. */
 export const TecladoAberto = createContext(false);
@@ -121,7 +125,9 @@ function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, faixaColada = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo, flutuante }: {
+  /** Algo que flutua sobre o conteúdo, centrado e 16 acima do rodapé (ou da barra): a pílula "Ver a lição nova" da geração. */
+  flutuante?: ReactNode;
   children: ReactNode;
   acoes?: ReactNode;
   /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
@@ -135,6 +141,11 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   abaixoDoLogo?: ReactNode;
   /** Faixa que rola com a página até o alto e fica parada lá (o cabeçalho da trilha, como o .trilha-topo da web no celular). */
   faixaFixa?: ReactNode;
+  /**
+   * A faixa fica colada embaixo da barra da marca, sem o vão de 20, e pinta o próprio fundo (sem o branco nem o vidro da
+   * faixa da trilha): a faixa da geração, de 52, com a placa do Stu por cima do mapa (spec 04, revisão de 19/11).
+   */
+  faixaColada?: boolean;
   /** Referência da rolagem, para a tela levar a pessoa até um ponto do conteúdo (como o nó liberado na trilha). */
   rolagem?: Ref<ComponentRef<typeof ScrollView>>;
   /** Altura visível da rolagem, para a tela saber se um ponto do conteúdo já está à vista. */
@@ -189,13 +200,27 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const fimDaRolagem = sobreposicao + (!rodape && !comBarra ? fundoSeguro : 0);
   const rolado = useRef(0);
   const alturaRolagem = useRef(0);
+  // A altura de tudo o que rola e a trava do arrasto (o ordenar): para o rolarPor parar no fim e o dedo não rolar a tela.
+  const alturaRolavel = useRef(0);
+  const [rolagemTravada, setRolagemTravada] = useState(false);
+  const rolarPor = (delta: number) => {
+    const tela = rolagemInterna.current;
+    if (!tela) return 0;
+    const maximo = Math.max(0, alturaRolavel.current - alturaRolagem.current);
+    const destino = Math.max(0, Math.min(maximo, rolado.current + delta));
+    const andou = destino - rolado.current;
+    if (andou === 0) return 0;
+    rolado.current = destino;
+    tela.scrollTo({ y: destino, animated: false });
+    return andou;
+  };
   const sobreposicaoAtual = useRef(0);
   sobreposicaoAtual.current = sobreposicao;
   const campoEmFoco = useRef<ComponentRef<typeof View> | null>(null);
   const alturaDoConteudo = useRef(0);
   const informarNatural = () => {
     if (!aoMedirNatural || !alturaDoConteudo.current) return;
-    aoMedirNatural((cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? 20 + alturaFaixa : 0) + alturaDoConteudo.current);
+    aoMedirNatural((cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + alturaFaixa : 0) + alturaDoConteudo.current);
   };
   // A barra da marca e a faixa entram na conta assim que são medidas.
   useEffect(informarNatural, [alturaCabecalho, alturaFaixa]);
@@ -251,6 +276,19 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const { aviso } = useContext(AvisoDoApp);
   // O aviso fica 16 acima do que estiver embaixo: o rodapé, a barra de abas ou, sem nenhum, a área segura de baixo.
   const baixoDoAviso = 16 + (comBarra ? alturaBarra : 0) + (rodape ? alturaRodape : 0) + (!comBarra && !rodape ? fundoSeguro : 0);
+  // Os filhos de cima da rolagem numa lista sem buracos, e o índice da faixa presa é o lugar dela nessa lista. Com
+  // `condição && <X/>`, o React Native Web conta os `false` nos índices de stickyHeaderIndices e o aparelho não (a faixa
+  // colada da geração não grudava na prévia).
+  const filhosDeCima: ReactNode[] = [];
+  if (cabecalhoNaRolagem) filhosDeCima.push(<View key="cabecalho" onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>);
+  if (faixaFixa && !faixaColada) filhosDeCima.push(<View key="vao" style={estilos.faixaVao} />);
+  const indiceDaFaixa = faixaFixa ? filhosDeCima.length : null;
+  if (faixaFixa) {
+    filhosDeCima.push(faixaColada
+      ? <View key="faixa" style={estilos.faixaColada} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</View>
+      : <FundoDeBarra key="faixa" estilo={estilos.faixaFixa} estiloVidro={estilos.faixaFixaVidro} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</FundoDeBarra>);
+  }
+
   return (
     <SafeAreaView style={estilos.tela} edges={['top', 'left', 'right']}>
       {topo && cabecalho}
@@ -263,7 +301,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
         <ScrollView key={pagina} ref={referenciaDaRolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}
           contentContainerStyle={estilos.rolagemConteudo}
           // O vão de 20 acima da faixa é um filho à parte: a faixa gruda colada no topo (com margem, ela parava 20 abaixo).
-          stickyHeaderIndices={faixaFixa ? [(cabecalhoNaRolagem ? 1 : 0) + 1] : undefined}
+          stickyHeaderIndices={indiceDaFaixa !== null ? [indiceDaFaixa] : undefined}
           onLayout={(evento) => {
             alturaRolagem.current = evento.nativeEvent.layout.height;
             aoMedir?.(evento.nativeEvent.layout.height - sobreposicao);
@@ -271,18 +309,17 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           }}
           onScroll={(evento) => { rolado.current = evento.nativeEvent.contentOffset.y; aoRolar?.(evento.nativeEvent.contentOffset.y); }}
           scrollEventThrottle={16}
-          onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura - fimDaRolagem))}>
-          {cabecalhoNaRolagem && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
-          {faixaFixa && <View style={estilos.faixaVao} />}
-          {faixaFixa && <FundoDeBarra estilo={estilos.faixaFixa} estiloVidro={estilos.faixaFixaVidro} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</FundoDeBarra>}
+          scrollEnabled={!rolagemTravada}
+          onContentSizeChange={(_largura, altura) => { alturaRolavel.current = altura; aoMedirConteudo?.(altura - fimDaRolagem); }}>
+          {filhosDeCima}
           {/* .estudo-principal no celular: 28 em cima, também com o selo de sincronia (a barra tem a altura da da web). */}
           <View style={[estilos.conteudo, !topo && !paginaDeAcesso && estilos.conteudoEstudo, estiloConteudo]}
             onLayout={(evento) => { alturaDoConteudo.current = evento.nativeEvent.layout.height; informarNatural(); }}>
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) ? null
-              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? 20 + alturaFaixa : 0)}>
+              : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + alturaFaixa : 0)}>
               <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
-                <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar }}>
+                <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar, travar: setRolagemTravada, rolarPor }}>
                   <TecladoAberto.Provider value={teclado}>
                     <BaixoOcupado.Provider value={baixoDoAviso - 16}>
                       <Entrada>{children}</Entrada>
@@ -309,6 +346,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
         })()}
       </KeyboardAvoidingView>
       {comBarra && <NavegacaoInferior fundo={fundoSeguro} sobreposta={barraSobreposta} aoMedir={setAlturaBarra} />}
+      {flutuante && <View pointerEvents="box-none" style={[estilos.flutuante, { bottom: baixoDoAviso }]}>{flutuante}</View>}
       {aviso && <FaixaDoAviso key={aviso.vez} aviso={aviso} baixo={baixoDoAviso} />}
     </SafeAreaView>
   );
@@ -410,7 +448,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone }: {
+  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia }: {
+  /** O botão em si, para quem leva o foco até ele (o "Começar" do fim da geração). */
+  referencia?: Ref<ComponentRef<typeof Pressable>>;
   /** Ícone antes do rótulo, como `<Icone />{texto}` nos botões da web (Compartilhar, Copiar link, Editar perfil): 18 px. */
   iconeAntes?: NomeIcone;
   /** Giro do ícone (a seta de "Continuar lendo" aponta para baixo, como .botao--ler-mais .icone da web). */
@@ -476,7 +516,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
 
   if (comDegrau) {
     return (
-      <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityHint={dica}
+      <Pressable ref={referencia} testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityHint={dica}
         accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} disabled={bloqueado}
         onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao}
         onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
@@ -493,6 +533,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
 
   return (
     <Pressable
+      ref={referencia}
       testID={testID}
       accessibilityRole="button"
       accessibilityLabel={nomeAcessivel ?? rotulo}
@@ -881,9 +922,11 @@ const CURVA_DO_MENU = Easing.bezier(0.2, 0.9, 0.3, 1);
  * Menu de ações do Studoo (spec 11), o mesmo no iPhone, no Android e na web: o "•••" de 44 × 44 e o balão de 200 a 280,
  * embaixo do botão, alinhado pela direita, a 6 (em cima quando falta espaço até a borda ou até a barra de baixo; sempre a 8
  * das bordas). Entra em 160 ms (opacidade e escala de 0,96 a partir do canto do botão) e sai em 120 ms; com movimento
- * reduzido, só a opacidade. Abrir leva o foco ao primeiro item; tocar fora fecha sem acionar o que estiver embaixo; voltar
- * ou Esc fecham e devolvem o foco ao "•••". Escolher fecha o balão e só depois abre o destino (no iPhone, depois que o balão
- * saiu, como em janelas.ts).
+ * reduzido, só a opacidade. Tocar fora fecha sem acionar o que estiver embaixo; voltar, Esc ou o gesto de escapar do
+ * VoiceOver fecham e devolvem o foco ao "•••". Escolher fecha o balão e só depois abre o destino (no iPhone, depois que o
+ * balão saiu, como em janelas.ts). Leitor de tela (spec 11, 19/11): no app, o balão é um contêiner com o rótulo "Menu, N
+ * opções" (`componentes.menuRotulo`), que recebe o foco ao abrir (`accessibilityViewIsModal` no iOS), e cada item é um botão
+ * com o próprio texto. O mesmo na prévia web (os papéis `menu` e `menuitem` são da web, não do app).
  */
 export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloBotao, corDosPontos = cores.textoSecundario }: {
   /** Nome acessível do "•••" ("Mais opções de “<título>”"). */
@@ -897,7 +940,7 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
 }) {
   const [lugar, setLugar] = useState<{ direita: number; topo?: number; baixo?: number } | null>(null);
   const botao = useRef<ComponentRef<typeof Pressable>>(null);
-  const primeiro = useRef<ComponentRef<typeof Pressable>>(null);
+  const rotuloDoBalao = useRef<ComponentRef<typeof View>>(null);
   const janela = useWindowDimensions();
   const baixoOcupado = useContext(BaixoOcupado);
   const reduzir = useMovimentoReduzido() !== false;
@@ -910,12 +953,6 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
   const perigos = acoes.filter((acao) => acao.perigo);
   const comLinha = comuns.length > 0 && perigos.length > 0;
   const altura = 2 + 2 * RESPIRO_DO_MENU + ITEM_DO_MENU * acoes.length + (comLinha ? LINHA_DO_MENU : 0);
-
-  useEffect(() => {
-    if (!lugar) return;
-    const espera = setTimeout(() => focarSemRolar(primeiro.current), 50);
-    return () => clearTimeout(espera);
-  }, [lugar]);
 
   function abrir() {
     botao.current?.measureInWindow((x, y, largura, alturaBotao) => {
@@ -941,7 +978,8 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
     });
   }
   const item = (acao: AcaoDoMenu, indice: number) => (
-    <Pressable key={acao.rotulo} ref={indice === 0 ? primeiro : undefined} testID={acao.testID} accessibilityRole="button" role="menuitem"
+    // Botão, não `menuitem`: no iPhone esse papel não tem o traço de botão, e o VoiceOver deixaria de dizer "botão".
+    <Pressable key={acao.rotulo} testID={acao.testID} accessibilityRole="button"
       accessibilityLabel={acao.nomeAcessivel ?? acao.rotulo} onPress={() => fechar(acao.aoEscolher)}
       style={({ pressed }) => [estilos.menuItem, pressed && { backgroundColor: cores.nevoa }]}>
       <Icone nome={acao.icone} tamanho={20} cor={acao.perigo ? cores.erro : cores.texto} />
@@ -961,13 +999,18 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
       </Pressable>
       {/* Montado sempre (visible liga e desliga): o onDismiss avisa quando o balão saiu, para o destino abrir depois. */}
       <Modal transparent visible={Boolean(lugar)} animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={() => fechar(undefined, true)}
-        onDismiss={aoSair}>
+        onShow={() => focarSemRolar(rotuloDoBalao.current)} onDismiss={aoSair}>
         {lugar && (
           <>
             <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={() => fechar()} />
-            <Animated.View testID={`${testID}-balao`} role="menu" accessibilityLabel={rotulo}
+            <Animated.View testID={`${testID}-balao`} accessibilityViewIsModal onAccessibilityEscape={() => fechar(undefined, true)}
               style={[estilos.menuBalao, { right: lugar.direita, top: lugar.topo, bottom: lugar.baixo, maxWidth: Math.min(280, janela.width - 16), opacity: opacidade,
                 transform: [{ scale: escala }], transformOrigin: lugar.topo !== undefined ? 'right top' : 'right bottom' }]}>
+              {/* O rótulo do contêiner, do tamanho do balão e por baixo dos itens (o toque passa para eles): é ele que o leitor de
+                  tela anuncia e foca ao abrir. Um contêiner `accessible` esconderia os itens do VoiceOver; por isso um elemento à parte. */}
+              <View ref={rotuloDoBalao} testID={`${testID}-rotulo`} accessible accessibilityLabel={mensagens.componentes.menuRotulo(acoes.length)}
+                pointerEvents="none" style={StyleSheet.absoluteFill} />
+
               {comuns.map(item)}
               {comLinha && <View style={estilos.menuLinha} />}
               {perigos.map((acao, indice) => item(acao, comuns.length + indice))}
@@ -1160,6 +1203,8 @@ export const estilos = StyleSheet.create({
   faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', boxShadow: `0 2px 0 ${cores.gelo}` },
   // iOS 26: a faixa vira vidro sobre o mapa que rola por baixo (sem o branco e sem a linha de baixo).
   faixaFixaVidro: { zIndex: 6 },
+  faixaColada: { zIndex: 6 },
+  flutuante: { position: 'absolute', left: 16, right: 16, zIndex: 7, alignItems: 'center' },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
   modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
   // Confirmação (spec 11): cartão de até 400 com respiro de 24, cantos de 24, borda de 2 e 12 entre os blocos.

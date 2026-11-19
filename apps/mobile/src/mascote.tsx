@@ -90,8 +90,12 @@ function Halo({ largura, altura }: { largura: number; altura: number }) {
  * E2, com o app em segundo plano, com o teclado aberto (um campo de texto em foco), com `pausado` e, no laço, depois de
  * 20 s sem toque nem rolagem. Um Stu se mexe por vez.
  */
-export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra = false, halo = false, pausado = false, espelhado = false, estilo }: {
+export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra = false, halo = false, pausado = false, espelhado = false, silhueta, pop, estilo }: {
   nome: NomeStu;
+  /** Silhueta: a imagem parada pintada desta cor (tintColor), sem animação (o troféu do fim do mapa antes da conquista). */
+  silhueta?: string;
+  /** Cada valor novo (definido) dá o pop da §B7, como a troca de expressão (a entrada num passo da apresentação). */
+  pop?: string | number;
   /** Halo lavanda atrás, onde ele fica solto sobre branco (aula, vazio, erro). */
   halo?: boolean;
   tamanho: number;
@@ -112,7 +116,7 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
   const parado = PARADO_STU[`${nome}-${faixaDoStu(nome, tamanho).toLowerCase()}`];
   const faixaAnimada = animado ? faixaAnimadaDoStu(nome, tamanho) : null;
   const fonteAnimada = faixaAnimada ? ANIMADO_STU[`${nome}-${faixaAnimada.toLowerCase()}`] : undefined;
-  const temAnimacao = Boolean(animado && fonteAnimada && item.animacao && tamanho * PixelRatio.get() <= TETO_ANIMADO_PX);
+  const temAnimacao = Boolean(animado && !silhueta && fonteAnimada && item.animacao && tamanho * PixelRatio.get() <= TETO_ANIMADO_PX);
   const duracao = (item.animacao?.duracaoMs ?? 0) * Math.max(1, ciclos);
   const reduzir = useMovimentoReduzido();
 
@@ -129,16 +133,18 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
   const [entrada] = useState(() => new Animated.Value(0));
   // §B7: a expressão nova entra em 120 ms de opacidade com um pop de 0,92 → 1,06 → 1 em 240 ms (com movimento reduzido, na hora).
   const [troca] = useState(() => new Animated.Value(1));
-  const nomeAnterior = useRef(nome);
+  // A expressão nova ou um `pop` novo: a mesma entrada.
+  const chaveDoPop = `${nome}|${pop ?? ''}`;
+  const popAnterior = useRef(chaveDoPop);
   useEffect(() => {
-    if (nomeAnterior.current === nome) return;
-    nomeAnterior.current = nome;
+    if (popAnterior.current === chaveDoPop) return;
+    popAnterior.current = chaveDoPop;
     if (reduzir !== false) { troca.setValue(1); return; }
     troca.setValue(0);
-    const pop = Animated.timing(troca, { toValue: 1, duration: 240, easing: Easing.bezier(0.2, 0.9, 0.3, 1.3), useNativeDriver: true });
-    pop.start();
-    return () => pop.stop();
-  }, [nome, reduzir, troca]);
+    const entrar = Animated.timing(troca, { toValue: 1, duration: 240, easing: Easing.bezier(0.2, 0.9, 0.3, 1.3), useNativeDriver: true });
+    entrar.start();
+    return () => entrar.stop();
+  }, [chaveDoPop, reduzir, troca]);
 
   // Permissões da E4: a tela interativa, o app à vista, sem teclado aberto e, no laço, sem 20 s ociosos.
   useEffect(() => {
@@ -227,7 +233,7 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: troca.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 1] }),
         transform: [{ scale: troca.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.92, 1.06, 1] }) }] }]}>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: mostrar ? entrada.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) : 1, transform: virar }]}>
-        <Image source={parado} resizeMode="contain" accessible={false} style={{ width: largura, height: altura }} />
+        <Image source={parado} resizeMode="contain" accessible={false} style={[{ width: largura, height: altura }, silhueta ? { tintColor: silhueta } : null]} />
       </Animated.View>
       {mostrar && fonteAnimada && (
         <Animated.View style={{ position: 'absolute', left: (largura * esquerda) / 100, top: (altura * topo) / 100,

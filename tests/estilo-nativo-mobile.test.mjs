@@ -104,14 +104,11 @@ test('nenhuma lista de estilos do app soma flex positivo com base "auto" ou sem 
   assert.deepEqual(achados, []);
 });
 
-test('as fichas disponíveis do Ordenar têm o texto na largura do conteúdo (sem flex)', () => {
-  const fonte = fontes.get('aula-formatos.tsx');
-  const texto = fonte.getFullText();
-  const trecho = texto.slice(texto.indexOf('restantes.map((item)'), texto.indexOf('{item.texto}</Text>'));
-  const lista = trecho.slice(trecho.lastIndexOf('style={['));
-  assert.ok(lista.startsWith('style={['), 'texto da ficha disponível não encontrado');
-  const props = Object.assign({}, ...lista.slice(8, lista.indexOf(']')).split(',').map((parte) => parte.trim()).filter(Boolean)
-    .map((ref) => { const [folha, chave] = ref.split('.'); return resolver('aula-formatos.tsx', folha, chave) ?? {}; }));
-  assert.equal(props.flex, undefined, 'a ficha disponível não pode herdar flex (no aparelho a largura do texto vira 0)');
-  assert.equal(props.flexShrink, 1, 'o texto encolhe e quebra em linhas quando a ficha passa da largura');
+test('o texto do cartão do Ordenar (lista única) encolhe e quebra em linhas, sem o atalho `flex`', () => {
+  // As fichas do modelo antigo ficavam vazias no iPhone (lote 3): no Yoga do aparelho, `flex: 1` troca a base `auto` por 0.
+  // No cartão da lista única, a linha tem a largura toda: o texto cresce, encolhe e quebra com as três propriedades à parte.
+  const props = resolver('ordenar.tsx', 'estilosOrdenar', 'texto') ?? {};
+  assert.equal(props.flex, undefined, 'sem o atalho flex');
+  assert.equal(props.flexShrink, 1, 'o texto encolhe e quebra quando passa da largura');
+  assert.equal(props.flexGrow, 1, 'e ocupa o que sobra da linha, entre o número e a alça');
 });

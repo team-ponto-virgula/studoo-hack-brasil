@@ -62,3 +62,35 @@ test('o Stu antigo (stu-oi) saiu do app: nenhum uso no código e o arquivo apaga
   assert.deepEqual(usos, []);
   assert.equal(existsSync(new URL('apps/mobile/assets/marca/stu-oi.png', raiz)), false);
 });
+
+test('lendo o material (spec 13, B4): na espera de mais de 1 s, o Stu do alto do pedido fica concentrado, em laço; um Stu por tela', () => {
+  const pedido = readFileSync(new URL('apps/mobile/src/estudo.tsx', raiz), 'utf8');
+  const material = readFileSync(new URL('apps/mobile/src/estudio-adaptativo.tsx', raiz), 'utf8');
+  assert.match(pedido, /modo === 'material' && esperaMaterial \? 'stu-concentrado'/);
+  assert.match(pedido, /expressaoDoPedido === 'stu-concentrado' \? 'laco'/);
+  assert.match(pedido, /aoEsperar=\{setEsperaMaterial\}/);
+  assert.match(material, /setTimeout\(\(\) => avisarEspera\.current\?\.\(true\), 1000\)/);
+  // O cartão do material não desenha um segundo Stu.
+  const corpo = material.slice(material.indexOf('export function MaterialParaTrilha'), material.indexOf('\nfunction AvisoAlerta'));
+  assert.doesNotMatch(corpo, /<Stu\b/);
+});
+
+test('troféu do fim do mapa (B4, Designer 19/11): acessorio-trofeu em 72% da lente branca, silhueta #8A93B0 a 40% antes da conquista', () => {
+  const caminho = readFileSync(new URL('apps/mobile/src/caminho.tsx', raiz), 'utf8');
+  const chegada = caminho.slice(caminho.indexOf('function Chegada('), caminho.indexOf('\n}\n', caminho.indexOf('function Chegada(')));
+  assert.match(chegada, /<Stu nome="acessorio-trofeu" tamanho=\{Math\.round\(tamanho \* 0\.72\)\} silhueta=\{feita \? undefined : '#8A93B0'\} estilo=\{feita \? undefined : \{ opacity: 0\.4 \}\}/);
+  assert.match(chegada, /backgroundColor: '#FFFFFF', borderWidth: 3, borderColor: '#E0A92E'/);
+  assert.match(chegada, /top: 8, backgroundColor: '#C7922A'/);
+  assert.doesNotMatch(chegada, /<Icone nome="trofeu"/);
+  // A silhueta não anima e pinta só a imagem parada.
+  assert.match(componente, /animado && !silhueta && fonteAnimada/);
+  assert.match(componente, /silhueta \? \{ tintColor: silhueta \} : null/);
+});
+
+test('apresentação (B4, Designer 19/11): só o passo 4 tem Stu próprio — stu-comemorando de 40 ao lado do troféu, uma vez a cada entrada, com o pop', () => {
+  const apresentacao = readFileSync(new URL('apps/mobile/src/apresentacao.tsx', raiz), 'utf8');
+  assert.match(apresentacao, /<ArteProgresso largura=\{largura\} ativo=\{passo === 3\} \/>/);
+  assert.match(apresentacao, /<Stu nome="stu-comemorando" tamanho=\{40\} animado="acontecimento" acontecimento=\{entradas \|\| undefined\} pop=\{entradas \|\| undefined\} \/>/);
+  assert.equal((apresentacao.match(/<Stu\b/g) ?? []).length, 1, 'um Stu próprio na apresentação (os dos passos 2 e 3 vêm das cenas)');
+  assert.match(componente, /const chaveDoPop = `\$\{nome\}\|\$\{pop \?\? ''\}`/);
+});

@@ -27,9 +27,11 @@ const assinar = (pasta, nomes) => {
   return h.digest('hex');
 };
 
-test('a tabela e o catálogo têm as 17 imagens da spec, com texto alternativo que diz Stu', () => {
+// Spec 13 (A1, revisão de 19/11): 15 imagens no pacote; `poses/organizando` e `expressoes/meio-de-boa` ficam no kit, sem
+// arquivo gerado, até terem uso.
+test('a tabela e o catálogo têm as 15 imagens do pacote da spec, com texto alternativo que diz Stu', () => {
   assert.deepEqual(itens.map((item) => item.nome).sort(), tabela.itens.map((item) => item.nome).sort());
-  assert.equal(itens.length, 17);
+  assert.equal(itens.length, 15);
   for (const item of itens) {
     assert.ok(item.alt.trim().length > 0, `${item.nome} tem texto alternativo`);
     if (item.nome.startsWith('stu-')) assert.match(item.alt, /\bStu\b/, `${item.nome}: o alt diz Stu`);
@@ -129,7 +131,7 @@ async function caixaDoQuadro(arquivo, pagina = 0) {
 }
 
 test('animado: só o personagem, nas faixas da E1, sempre reduzindo (até 330 px), dentro do teto por lado de saída', async () => {
-  assert.ok(animadas.length >= 14, 'as 14 imagens do personagem que a E1 anima');
+  assert.ok(animadas.length >= 12, 'as 12 imagens do personagem que a E1 anima');
   const tetos = tabela.animado.tetos;
   for (const item of animadas) {
     assert.ok(item.nome.startsWith('stu-'), `${item.nome}: só o personagem anima`);

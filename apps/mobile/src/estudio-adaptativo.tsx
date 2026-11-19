@@ -90,10 +90,13 @@ export function MaterialParaTrilha({
   onProposta,
   ia,
   mostrarCabeca = true,
+  aoEsperar,
 }: {
   cliente: ClienteEstudio;
   objetivo: string;
   onProposta: (p: PropostaPlano) => void;
+  /** Espera de mais de 1 s começou (true) ou acabou (false): quem mostra o Stu da tela o deixa concentrado (spec 13). */
+  aoEsperar?: (longa: boolean) => void;
   /** Provedor de IA do servidor (configuracaoAcesso): o aviso de privacidade diz quem lê o material. */
   ia?: ProvedorIa;
   /** No pedido, o título já está no alto da tela: o cartão não repete (como `mostrarCabeca={false}` na web). */
@@ -111,6 +114,18 @@ export function MaterialParaTrilha({
       vivo.current = false;
     };
   }, []);
+  // Spec 13 (§B4, §E1): a espera de mais de 1 s (ler o material, montar a proposta) é avisada a quem mostra o Stu da tela;
+  // menos que isso, só o texto. Um Stu por tela: no pedido, é o do alto que fica concentrado.
+  const avisarEspera = useRef(aoEsperar);
+  avisarEspera.current = aoEsperar;
+  useEffect(() => {
+    if (!ocupado) {
+      avisarEspera.current?.(false);
+      return;
+    }
+    const espera = setTimeout(() => avisarEspera.current?.(true), 1000);
+    return () => clearTimeout(espera);
+  }, [ocupado]);
   async function executar(f: () => Promise<void>) {
     if (emExecucao.current) return;
     emExecucao.current = true;
@@ -240,7 +255,7 @@ export function MaterialParaTrilha({
         </>
       )}
       {ocupado && (
-        <Text accessibilityLiveRegion="polite" style={estilos.texto}>
+        <Text testID="espera-material" accessibilityLiveRegion="polite" style={estilos.texto}>
           {m.pensando}
         </Text>
       )}

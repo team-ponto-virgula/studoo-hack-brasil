@@ -8,6 +8,7 @@ import {
   exerciciosDaLicao,
   faltaParaVerificar,
   motivoParaRever,
+  ordemInicial,
   origemLegivel,
   respostaParaTentarDeNovo,
   respostaCompleta,
@@ -29,7 +30,6 @@ import {
   Escuta,
   EtapaPratica,
   Falas,
-  Ordenar,
   Passos,
   RecursoDaLicao,
   TextoComFalas,
@@ -38,6 +38,7 @@ import {
   pararVoz,
 } from './aula-formatos';
 import { Confete } from './festa';
+import { Ordenar } from './ordenar';
 import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron, degrauFora, quebraEquilibrada } from './interface';
 import { mensagens, textoDaFalta } from './mensagens';
@@ -117,6 +118,22 @@ const coresDaEtapa: Record<EtapaAula['tipo'], { texto: string; fundo: string }> 
 };
 
 /** Título do acerto: varia entre as lições, sem sorteio (a mesma lição tem sempre o mesmo), como na web. */
+/** A resposta com que um exercício começa: no ordenar em lista única (spec 08, 19/11), a ordem do servidor; nos outros, vazia. */
+function respostaDoComeco(exercicio: ExercicioPublico): string {
+  return exercicio.tipo === 'ordenar' ? ordemInicial(exercicio) : '';
+}
+
+/**
+ * A resposta guardada de quem saiu no meio. No ordenar, só serve uma ordem com todos os itens (o andamento de antes da
+ * lista única guardava fichas, com vagas): senão, a ordem do servidor.
+ */
+function respostaRetomada(exercicio: ExercicioPublico, guardada: string | undefined): string {
+  if (exercicio.tipo !== 'ordenar') return guardada ?? '';
+  const ids = exercicio.itens.map((item) => item.id);
+  const lidos = (guardada ?? '').split(',').filter((id) => ids.includes(id));
+  return lidos.length === ids.length && new Set(lidos).size === ids.length ? lidos.join(',') : ordemInicial(exercicio);
+}
+
 function tituloDoAcerto(id: string) {
   let soma = 0;
   for (const caractere of id) soma = (soma * 31 + caractere.charCodeAt(0)) >>> 0;
@@ -196,7 +213,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   // Quem saiu no meio continua de onde parou.
   const [retomada] = useState(() => lerAndamento(licao, etapas.length, exercicios.length));
   const [passo, setPasso] = useState(retomada?.passo ?? 0);
-  const [respostas, setRespostas] = useState<string[]>(() => retomada?.respostas ?? exercicios.map(() => ''));
+  const [respostas, setRespostas] = useState<string[]>(() => exercicios.map((exercicio, numero) => respostaRetomada(exercicio, retomada?.respostas?.[numero])));
+  /** Ordenar em lista única (spec 08, 19/11): a ordem com que cada tentativa começou (o "Voltar à ordem inicial" e a falta). */
+  const [iniciais, setIniciais] = useState<string[]>(() => exercicios.map(respostaDoComeco));
   const [avaliacoes, setAvaliacoes] = useState<(Avaliacao | null)[]>(() => retomada?.avaliacoes ?? exercicios.map(() => null));
   const [primeiras, setPrimeiras] = useState<(boolean | null)[]>(() => retomada?.primeiras ?? exercicios.map(() => null));
   const [tentativas, setTentativas] = useState(retomada?.tentativas ?? 0);
@@ -384,7 +403,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   function recomecarAgora() {
     andamentos.delete(licao.id);
     setPasso(0);
-    setRespostas(exercicios.map(() => ''));
+    setRespostas(exercicios.map(respostaDoComeco));
+    setIniciais(exercicios.map(respostaDoComeco));
     setAvaliacoes(exercicios.map(() => null));
     setPrimeiras(exercicios.map(() => null));
     setTentativas(0);
@@ -427,7 +447,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   }, [voltaAoExercicio]);
 
   async function enviar() {
-    if (ocupado || !exercicio || avaliacao || !respostaCompleta(exercicio, resposta)) return;
+    if (ocupado || !exercicio || avaliacao || !respostaCompleta(exercicio, resposta, iniciais[indice])) return;
     const resultado = await avaliar(resposta, indice);
     if (!resultado) return;
     setTentativas((soma) => soma + 1);
@@ -446,8 +466,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setPonteFeita(false);
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? null : atual)));
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (posicao === indice ? avaliacao : atual)));
-    // Fica o que estava certo (na aberta, o texto todo); o resto recomeça. Como na web.
-    if (exercicio && avaliacao) mudarResposta(respostaParaTentarDeNovo(exercicio, resposta, avaliacao));
+    // Fica o que estava certo (na aberta, o texto todo); o resto recomeça. Como na web. No ordenar, a ordem fica inteira (os
+    // certos travam) e ela passa a ser a ordem com que a nova tentativa começou.
+    if (exercicio && avaliacao) {
+      const nova = respostaParaTentarDeNovo(exercicio, resposta, avaliacao);
+      mudarResposta(nova);
+      if (exercicio.tipo === 'ordenar') setIniciais((atuais) => atuais.map((atual, posicao) => (posicao === indice ? nova : atual)));
+    }
     setVoltaAoExercicio((atual) => atual + 1);
   }
 
@@ -461,14 +486,16 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     setRevisaoTotal(pendentes.length);
     setErrosAnteriores((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? avaliacoes[posicao] ?? atual : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) ? null : atual)));
-    setRespostas((atuais) => atuais.map((atual, posicao) => {
+    const novas = respostas.map((atual, posicao) => {
       const anterior = avaliacoes[posicao];
       if (!pendentes.includes(posicao)) return atual;
       // Na revisão, a lacuna volta vazia (a dica da tentativa anterior mostra o que foi escrito): com o texto errado de
       // volta, parecia que o "Pular" não tinha feito nada.
       if (exercicios[posicao].tipo === 'lacuna') return '';
-      return anterior ? respostaParaTentarDeNovo(exercicios[posicao], atual, anterior) : '';
-    }));
+      return anterior ? respostaParaTentarDeNovo(exercicios[posicao], atual, anterior) : respostaDoComeco(exercicios[posicao]);
+    });
+    setRespostas(novas);
+    setIniciais((atuais) => atuais.map((atual, posicao) => (pendentes.includes(posicao) && exercicios[posicao].tipo === 'ordenar' ? novas[posicao] : atual)));
     setPasso(etapaDoExercicio(pendentes[0]));
   }
 
@@ -560,12 +587,12 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         continuar={() => void avancar()} />
     );
   } else if (exercicio) {
-    const falta = faltaParaVerificar(exercicio, resposta);
+    const falta = faltaParaVerificar(exercicio, resposta, iniciais[indice]);
     rodape = (
       <View style={{ gap: 8 }}>
         {falta && <Text testID="falta-para-verificar" accessibilityLiveRegion="polite" style={[estilos.legenda, licaoEstilos.notaRodape]}>{textoDaFalta(falta)}</Text>}
         <Botao testID="enviar-resposta" peso="900" rotulo={pendente === 'avaliar' ? t.avaliando : t.avaliar}
-          desativado={ocupado || !respostaCompleta(exercicio, resposta)} ocupado={pendente === 'avaliar'} carregando={pendente === 'avaliar'}
+          desativado={ocupado || !respostaCompleta(exercicio, resposta, iniciais[indice])} ocupado={pendente === 'avaliar'} carregando={pendente === 'avaliar'}
           acao={() => void enviar()} />
       </View>
     );
@@ -638,8 +665,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           </View>
         );
       case 'ordenar':
-        return <Ordenar itens={atual.itens} valor={resposta} mudar={mudarResposta} desativado={ocupado || respondido} certos={avaliacao?.certos}
-          fixos={avaliacao ? undefined : errosAnteriores[indice]?.certos} />;
+        return <Ordenar itens={atual.itens} valor={resposta} inicial={iniciais[indice]} mudar={mudarResposta} desativado={ocupado || respondido}
+          certos={avaliacao?.certos} fixos={avaliacao ? undefined : errosAnteriores[indice]?.certos} />;
       case 'associar':
         return <Associar esquerda={atual.esquerda} direita={atual.direita} valor={resposta} mudar={mudarResposta}
           desativado={ocupado || respondido} certos={avaliacao?.certos} fixos={avaliacao ? undefined : errosAnteriores[indice]?.certos} />;

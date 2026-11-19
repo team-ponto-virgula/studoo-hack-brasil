@@ -256,11 +256,10 @@ export function respostaParaTentarDeNovo(exercicio: ExercicioPublico, resposta: 
       const [valor = '', justificativa = ''] = resposta.split(':');
       return `${certos.has('valor') ? valor : ''}:${certos.has('justificativa') ? justificativa : ''}`.replace(/^:$/, '');
     }
-    case 'ordenar': {
-      // Cada item que estava na posição certa fica onde estava; as outras posições ficam vagas (",,") para a nova tentativa.
-      const ids = resposta.split(',');
-      return ids.some((id) => certos.has(id)) ? ids.map((id) => (certos.has(id) ? id : '')).join(',') : '';
-    }
+    case 'ordenar':
+      // Lista única (spec 08, revisão de 19/11): a nova tentativa começa com a ordem toda como estava. Os certos ficam
+      // travados no lugar (a tela trava pelos `certos` da avaliação) e os outros continuam onde estavam, sem vagas.
+      return resposta;
     default:
       return '';
   }

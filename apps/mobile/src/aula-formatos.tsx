@@ -819,77 +819,6 @@ function TocarSom({ rotulo, casas }: { rotulo: string; casas: number[] }) {
   );
 }
 
-/** Ordenar tocando: cada toque coloca o item na próxima posição; tocar num item colocado tira ele da ordem. */
-export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
-  itens: Opcao[];
-  valor: string;
-  mudar: (valor: string) => void;
-  desativado: boolean;
-  certos?: string[];
-  /** Na nova tentativa: os itens que já estavam na posição certa ficam travados nela; o resto vira vaga. Como na web. */
-  fixos?: string[];
-}) {
-  const posicoes = valor ? valor.split(',').map((id) => (itens.some((item) => item.id === id) ? id : '')) : [];
-  const travado = (id: string) => Boolean(fixos?.includes(id));
-  const comTravados = posicoes.some(travado);
-  const ordem = posicoes.filter(Boolean);
-  const restantes = itens.filter((item) => !ordem.includes(item.id));
-  const texto = (id: string) => itens.find((item) => item.id === id)?.texto ?? '';
-  function colocar(id: string) {
-    const vaga = posicoes.indexOf('');
-    mudar((vaga >= 0 ? posicoes.map((atual, posicao) => (posicao === vaga ? id : atual)) : [...posicoes, id]).join(','));
-  }
-  function tirar(posicao: number) {
-    const novas = comTravados ? posicoes.map((atual, indice) => (indice === posicao ? '' : atual)) : posicoes.filter((_, indice) => indice !== posicao);
-    mudar(novas.some(Boolean) ? novas.join(',') : '');
-  }
-  return (
-    <View style={formatos.secaoOrdenar}>
-      <Text style={formatos.instrucao}>{t.ordenar.instrucao}</Text>
-      <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.ordenar.suaOrdem}</Text>
-      <View style={formatos.ordemCaixa}>
-        {posicoes.length === 0 && <Text style={formatos.vazioOrdem}>{t.ordenar.vazio}</Text>}
-        {posicoes.map((id, posicao) => {
-          if (!id) {
-            return (
-              <View key={`vaga-${posicao}`} style={formatos.vaga} accessible accessibilityLabel={`${t.ordenar.posicao(posicao + 1)}: ${t.ordenar.vaga}`}>
-                <View style={[formatos.posicao, { opacity: 0.5 }]}><Text style={formatos.posicaoTexto}>{t.ordenar.posicao(posicao + 1)}</Text></View>
-                <Text style={[estilos.legenda, { flex: 1 }]}>{t.ordenar.vaga}</Text>
-              </View>
-            );
-          }
-          const fixo = travado(id);
-          const estado = certos ? (certos.includes(id) ? 'certo' : 'errado') : fixo ? 'certo' : null;
-          return (
-            <CartaoDegrau key={id} accessibilityRole="button" disabled={desativado || fixo}
-              accessibilityLabel={fixo ? t.ordenar.travado(texto(id), posicao + 1) : t.ordenar.tirar(texto(id), posicao + 1)}
-              onPress={() => tirar(posicao)} corDegrau={estado === 'certo' ? '#9AD8B5' : estado === 'errado' ? '#F2CF96' : '#9FB1F0'}
-              face={[formatos.cartao, formatos.cartaoEscolhido, estado === 'certo' && formatos.cartaoCerto, estado === 'errado' && formatos.cartaoErrado]}>
-              <View style={[formatos.posicao, estado === 'certo' && { backgroundColor: cores.sucessoClaro }, estado === 'errado' && { backgroundColor: '#E3A24A' }]}>
-                <Text style={formatos.posicaoTexto}>{t.ordenar.posicao(posicao + 1)}</Text>
-              </View>
-              <Text style={[estilos.texto, formatos.cartaoTexto]}>{texto(id)}</Text>
-            </CartaoDegrau>
-          );
-        })}
-      </View>
-      {restantes.length > 0 && <View style={formatos.disponiveis} accessibilityRole="none" accessibilityLabel={t.ordenar.disponiveis}>
-        {restantes.map((item) => (
-          <CartaoDegrau key={item.id} accessibilityRole="button" accessibilityLabel={t.ordenar.colocar(item.texto)} disabled={desativado}
-            onPress={() => colocar(item.id)} corDegrau={cores.gelo} estiloFora={formatos.cartaoDisponivel} face={formatos.cartao}>
-            <Text style={[estilos.texto, formatos.cartaoDisponivelTexto]}>{item.texto}</Text>
-          </CartaoDegrau>
-        ))}
-      </View>}
-      {ordem.some((id) => !travado(id)) && !desativado && (
-        <Pressable accessibilityRole="button" onPress={() => mudar(comTravados ? posicoes.map((id) => (travado(id) ? id : '')).join(',') : '')} style={formatos.linkAlvo}>
-          <Text style={formatos.link}>{t.ordenar.recomecar}</Text>
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
 const coresDosPares = [cores.acao, '#C25A8A', '#1F8A8A', '#B7791F', '#6B3FA0', '#5E6A85'];
 
 /** Associar tocando: um item da esquerda e depois o par na direita; cada par ganha um número e uma cor. */
@@ -1303,7 +1232,6 @@ const formatos = StyleSheet.create({
   rotuloCaixa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 19.5, letterSpacing: 0.65 },
   instrucao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
   // .ordenar__vazio: o texto do corpo (16 px) na cor secundária.
-  vazioOrdem: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, textAlign: 'center' },
   /** O toque de um link de texto: 48 dp de altura, mesmo com o texto numa linha só. */
   linkAlvo: { minHeight: 48, justifyContent: 'center', alignSelf: 'flex-start' },
   link: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22, textDecorationLine: 'underline' },
@@ -1320,8 +1248,6 @@ const formatos = StyleSheet.create({
   falaInline: { color: cores.acaoEscura, fontWeight: '800', textDecorationLine: 'underline', textDecorationStyle: 'dotted' },
   pronuncia: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontStyle: 'italic', fontWeight: '700', fontSize: 14, lineHeight: 20 },
   soBatida: { alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: '#FFFAF0' },
-  vaga: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 14, borderRadius: 16, borderWidth: 2,
-    borderStyle: 'dashed', borderColor: cores.gelo },
   fala: { gap: 6, padding: 12, borderRadius: 16, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   falaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 18, lineHeight: 24 },
   lacuna: { textDecorationLine: 'underline', textDecorationStyle: 'solid' },
@@ -1387,13 +1313,6 @@ const formatos = StyleSheet.create({
   dedoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 16 },
   acordeLegenda: { flex: 1, minWidth: 150, gap: 8 },
   acordeNome: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 },
-  ordemCaixa: { gap: 8, minHeight: 64, padding: 10, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo, justifyContent: 'center' },
-  disponiveis: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  cartaoDisponivel: { alignSelf: 'flex-start', maxWidth: '100%' },
-  // A ficha tem a largura do próprio texto, que encolhe e quebra em linhas quando passa da largura. Sem `flex`: no Yoga do
-  // aparelho, `flex: 1` troca a base `auto` por 0 mesmo com `flexBasis: 'auto'` por cima, e com `flexGrow: 0` o texto ficava
-  // com largura zero (as fichas vazias do iPhone do dono, lote 3); no navegador, a base `auto` valia e a prévia mostrava o texto.
-  cartaoDisponivelTexto: { flexShrink: 1, fontWeight: '700' },
   // .ordenar button, .associar button: face de 52 com borda de 2 em volta e 10 × 14 de respiro; o degrau de 4 vem por fora
   // (CartaoDegrau).
   cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
@@ -1407,7 +1326,6 @@ const formatos = StyleSheet.create({
   cartaoCerto: { borderColor: cores.sucessoClaro, backgroundColor: '#EEFAF3' },
   cartaoErrado: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
   cartaoQuase: { borderColor: '#E0A92E', backgroundColor: '#FFF6D9' },
-  posicao: { minWidth: 34, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, backgroundColor: cores.acao },
   posicaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17 },
   numeroPar: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   numeroParCanto: { position: 'absolute', top: -10, left: -8, width: 24, height: 24, borderRadius: 12, borderWidth: 3, borderColor: cores.fundo, zIndex: 1 },

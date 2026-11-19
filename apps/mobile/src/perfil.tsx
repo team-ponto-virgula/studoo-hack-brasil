@@ -532,6 +532,8 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
   acoesDaBarra.current = { salvar, cancelar };
   const comCancelar = Boolean(aoCancelar);
   const larguraDoBotao = comCancelar && width < 400 ? 104 : 120;
+  // Com "Cancelar" e "Salvar" numa tela de até 400, o estado encurta para "Não salvo", para caber numa linha (spec 10).
+  const textoNaoSalvo = comCancelar && width <= 400 ? p.naoSalvoCurto : p.alteracoesNaoSalvas;
   useEffect(() => {
     const erroNaBarra = comErroDeCampo ? p.corrigirCampos : erroGeral;
     definirRodape(
@@ -546,7 +548,7 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
             ) : alterado ? (
               <>
                 <View style={perfilEstilos.estadoPonto} />
-                <Text testID="editar-estado" style={[perfilEstilos.estadoTexto, { color: cores.alerta }]}>{p.alteracoesNaoSalvas}</Text>
+                <Text testID="editar-estado" style={[perfilEstilos.estadoTexto, { color: cores.alerta }]}>{textoNaoSalvo}</Text>
               </>
             ) : null}
         </View>
@@ -558,7 +560,7 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
         </View>
       </View>,
     );
-  }, [alterado, salvando, erroGeral, comErroDeCampo, comCancelar, larguraDoBotao, definirRodape]);
+  }, [alterado, salvando, erroGeral, comErroDeCampo, comCancelar, larguraDoBotao, textoNaoSalvo, definirRodape]);
   useEffect(() => () => definirRodape(null), [definirRodape]);
 
   return (
@@ -619,7 +621,7 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
 
       <CoresDoPerfil cor={cor} aoEscolher={setCor} dica={p.corDica} />
 
-      <FolhaDeAcoes visivel={folhaDaFoto} titulo={p.fotoRotulo} acoes={opcoesDaFoto} cancelarRotulo={p.fotoMenuCancelar} testID="folha-foto"
+      <FolhaDeAcoes visivel={folhaDaFoto} titulo={p.fotoFolhaTitulo} acoes={opcoesDaFoto} cancelarRotulo={p.fotoMenuCancelar} testID="folha-foto"
         aoFechar={() => setFolhaDaFoto(false)} />
       {removendo && (
         <CartaoConfirmacao mensagem={p.fotoRemoverTitulo} texto={p.fotoRemoverTexto} confirmarRotulo={p.fotoRemover} cancelarRotulo={p.fotoRemoverCancelar}
