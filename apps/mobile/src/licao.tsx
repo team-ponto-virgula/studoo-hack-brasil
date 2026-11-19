@@ -1,5 +1,5 @@
 import { ApoioDaLicao } from './estudio-adaptativo';
-import type { ClienteEstudio } from '@studoo/contratos';
+import type { ClienteEstudio, NomeStu } from '@studoo/contratos';
 import type { ClienteElegibilidadeVoz } from './voz-ao-vivo-painel';
 import {
   acertouParte,
@@ -42,6 +42,7 @@ import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron, degrauFora, quebraEquilibrada } from './interface';
 import { mensagens, textoDaFalta } from './mensagens';
 import { Opcao, letras } from './opcao';
+import { Stu } from './mascote';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
@@ -943,14 +944,12 @@ function BarraDaAula({ fracao, certa }: { fracao: number; certa: boolean }) {
   );
 }
 
-/** O Stu explica o conceito num balão; ele sobe e desce devagar. */
+/** O Stu explica o conceito num balão (spec 13): `stu-feliz` de 58 no halo lavanda, que se mexe uma vez quando a etapa entra. */
 function ExplicacaoDoStu({ children }: { children: ReactNode }) {
-  const balanco = useBalanco(5, 1600);
   const balao = useAparecer(120, 420, true);
   return (
     <View style={licaoEstilos.explicacao}>
-      <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-        importantForAccessibility="no" style={[licaoEstilos.stu, { transform: [{ translateY: balanco }] }]} />
+      <Stu nome="stu-feliz" tamanho={58} halo animado="uma-vez" estilo={licaoEstilos.stu} />
       <Animated.View style={[licaoEstilos.balao, {
         opacity: balao, transform: [{ scale: balao.interpolate({ inputRange: [0, 1], outputRange: [0.94, 1] }) }],
       }]}>
@@ -963,55 +962,39 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
 
 type EstadoStu = 'neutro' | 'pensando' | 'atento' | 'primeira' | 'acerto' | 'ponte';
 // As cores computadas de .aula-stu-estado[data-estado] na web: pensando fica na base (névoa e gelo); atento âmbar;
-// de primeira #eafbe2/#6bc445; ponte #eef3ff/#9cb4f5; acerto #eefaf3/#9ad8b5.
+// de primeira #eafbe2/#6bc445; ponte lavanda (cores.ceu)/#9cb4f5; acerto #eefaf3/#9ad8b5.
 const visualDoStu: Record<EstadoStu, { fundo: string; borda: string }> = {
   neutro: { fundo: cores.nevoa, borda: cores.gelo },
   pensando: { fundo: cores.nevoa, borda: cores.gelo },
   atento: { fundo: '#FFF6EA', borda: '#F2CF96' },
   primeira: { fundo: '#EAFBE2', borda: '#6BC445' },
   acerto: { fundo: '#EEFAF3', borda: '#9AD8B5' },
-  ponte: { fundo: '#EEF3FF', borda: '#9CB4F5' },
+  ponte: { fundo: cores.ceu, borda: '#9CB4F5' },
+};
+
+/** A expressão do Stu em cada estado da reação (spec 13, A2 e B4). */
+const expressaoDoStu: Record<EstadoStu, NomeStu> = {
+  neutro: 'stu-curioso',
+  pensando: 'stu-concentrado',
+  atento: 'stu-encorajador',
+  primeira: 'stu-comemorando',
+  acerto: 'stu-feliz',
+  ponte: 'stu-animado',
 };
 
 /**
- * O Stu acima do exercício (licao.stuEstado, como na web): neutro, pensando depois de um erro, atento no erro e três
- * comemorações diferentes, só com o desenho atual do mascote (movimento do corpo + adereço + balão):
- * de primeira (um pulo com a estrela), acerto depois de errar (um aceno com o visto) e depois da ponte (dois pulos com as
- * tábuas da ponte). "De primeira" só aparece quando foi de primeira. Com movimento reduzido, a pose final, parada.
+ * O Stu acima do exercício (licao.stuEstado, como na web), com a expressão do mascote oficial (spec 13): atento (curioso)
+ * e pensando (concentrado) ficam parados enquanto a pessoa responde; no erro (encorajador, sem tremer: quem treme é o
+ * exercício), no acerto (feliz), de primeira (comemorando) e depois da ponte (animado), ele se mexe um ciclo no
+ * acontecimento. A troca de expressão dá o pop da §B7; os adereços desenhados saíram. Com movimento reduzido, parado.
  */
 function StuDoExercicio({ estado }: { estado: EstadoStu }) {
-  const reduzir = useMovimentoReduzido();
-  const [movimento] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    movimento.setValue(0);
-    if (reduzir !== false || estado === 'neutro' || estado === 'pensando') return;
-    const ida = (duracao: number) => Animated.timing(movimento, { toValue: 1, duration: duracao, easing: Easing.out(Easing.quad), useNativeDriver: true });
-    const volta = () => Animated.spring(movimento, { toValue: 0, friction: 4, tension: 140, useNativeDriver: true });
-    const animacao = estado === 'ponte' ? Animated.sequence([ida(200), volta(), ida(200), volta()])
-      : estado === 'atento' ? Animated.sequence([ida(140), Animated.timing(movimento, { toValue: 0, duration: 220, useNativeDriver: true })])
-        : Animated.sequence([ida(estado === 'primeira' ? 180 : 150), volta()]);
-    animacao.start();
-    return () => animacao.stop();
-  }, [estado, reduzir, movimento]);
-  const transformacoes = estado === 'primeira'
-    ? [{ translateY: movimento.interpolate({ inputRange: [0, 1], outputRange: [0, -14] }) }, { scale: movimento.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) }]
-    : estado === 'ponte'
-      ? [{ translateY: movimento.interpolate({ inputRange: [0, 1], outputRange: [0, -18] }) }, { rotate: movimento.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '-10deg'] }) }]
-      : estado === 'acerto'
-        ? [{ rotate: movimento.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '8deg'] }) }]
-        : estado === 'atento'
-          ? [{ rotate: movimento.interpolate({ inputRange: [0, 1], outputRange: ['-6deg', '-12deg'] }) }]
-          : estado === 'pensando' ? [{ rotate: '5deg' }] : [];
   const visual = visualDoStu[estado];
+  const noAcontecimento = estado !== 'neutro' && estado !== 'pensando';
   return (
     <View testID="stu-do-exercicio" style={[licaoEstilos.stuEstado, { backgroundColor: visual.fundo, borderColor: visual.borda }]}>
       <View style={licaoEstilos.stuEstadoAvatar} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-          style={[licaoEstilos.stuEstadoImagem, { transform: transformacoes }]} />
-        {/* Como .aula-stu-estado__adereco da web: um ponto de 14 px com borda branca, laranja no aviso, ouro pensando,
-            verde de primeira e azul nos outros estados. */}
-        {estado !== 'neutro' && <View style={[licaoEstilos.adereco, { backgroundColor: estado === 'atento' ? '#E58A1F'
-          : estado === 'pensando' ? cores.ouroEscuro : estado === 'primeira' ? cores.sucessoClaro : cores.acao }]} />}
+        <Stu nome={expressaoDoStu[estado]} tamanho={48} animado={noAcontecimento ? 'acontecimento' : undefined} acontecimento={noAcontecimento ? estado : undefined} />
       </View>
       <Text style={licaoEstilos.stuEstadoTexto}>{t.stuEstado[estado]}</Text>
     </View>
@@ -1222,9 +1205,7 @@ const licaoEstilos = StyleSheet.create({
   stuEstado: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 14, marginBottom: 4, paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20,
     borderWidth: 2 },
   stuEstadoAvatar: { width: 52, height: 52, alignItems: 'center', justifyContent: 'center' },
-  stuEstadoImagem: { width: 42, height: 46 },
   stuEstadoTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22.5 },
-  adereco: { position: 'absolute', top: -2, right: -2, width: 14, height: 14, borderRadius: 7, borderWidth: 2, borderColor: cores.fundo },
   // .aula-mais-abaixo: margem -6 em cima e 8 embaixo; pílula com borda de 2, sombra de 2 (aqui, a borda de baixo) e texto de 14 px.
   maisAbaixoAlvo: { alignSelf: 'center', marginTop: -6, marginBottom: -2 },
   // .aula-mais-abaixo: borda de 2 em volta e o degrau de 2 por fora (box-shadow 0 2px 0 gelo).
@@ -1239,7 +1220,7 @@ const licaoEstilos = StyleSheet.create({
   revisaoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   // .aula-explicacao: o vão de 14 da etapa (sem margem própria).
   explicacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 14 },
-  stu: { width: 58, height: 64, marginTop: 6 },
+  stu: { marginTop: 6 },
   // .aula-balao: borda de 2 em volta e o degrau de 4 por fora (box-shadow 0 4px 0 gelo).
   balao: { flex: 1, gap: 10, padding: 16, borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo,
     boxShadow: `0 4px 0 ${cores.gelo}` },

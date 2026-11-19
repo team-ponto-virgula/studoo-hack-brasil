@@ -18,6 +18,7 @@ import {
   socialEstilos, temFolhaDoSistema, textoDoErro, urlDoLink, urlDoPerfil, focarSemRolar,
 } from './social';
 import { cores, fontes } from './tema';
+import { Stu } from './mascote';
 
 /*
  * Comunidade no app (spec 10, etapas B, C1 e C2), espelhando src/app/comunidade.tsx, src/app/seguir.tsx e a página /p da web
@@ -542,7 +543,7 @@ function Grade({ cartoes, acoes, prefixo }: { cartoes: CartaoTrilha[]; acoes: Ac
 function Vazio({ titulo, texto, acao }: { titulo: string; texto?: string; acao?: ReactNode }) {
   return (
     <View testID="explorar-vazio" style={comunidadeEstilos.vazio}>
-      <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={comunidadeEstilos.vazioStu} />
+      <Stu nome="stu-curioso" tamanho={96} animado="uma-vez" />
       <View style={comunidadeEstilos.vazioTexto}>
         <Text accessibilityRole="header" style={comunidadeEstilos.secao}>{titulo}</Text>
         {texto && <Text style={estilos.texto}>{texto}</Text>}
@@ -818,7 +819,7 @@ export function NovidadesDoPerfil({ cliente, abrirPlano }: { cliente: ClienteNat
       <View style={comunidadeEstilos.novidadesLista}>
         {itens.map((n, i) => {
           const fundo = n.tipo === 'valeus' ? '#FDE8EE' : n.tipo === 'seguidores' ? '#E3F6EA' : cores.ceu;
-          const cor = n.tipo === 'valeus' ? '#A3204A' : n.tipo === 'seguidores' ? '#14513B' : cores.acao;
+          const cor = n.tipo === 'valeus' ? '#A3204A' : n.tipo === 'seguidores' ? '#14513B' : cores.acaoEscura;
           return (
             <View key={`${n.tipo}-${'planoId' in n ? n.planoId : 'seguidores'}-${i}`} style={comunidadeEstilos.novidade}>
               <View style={[comunidadeEstilos.novidadeIcone, { backgroundColor: fundo }]}>
@@ -855,7 +856,7 @@ function CompartilharPerfil({ perfilId, nome }: { perfilId: string; nome: string
 function Indisponivel({ titulo, texto, criar }: { titulo: string; texto?: string; criar: () => void }) {
   return (
     <View testID="indisponivel" style={comunidadeEstilos.indisponivel}>
-      <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={comunidadeEstilos.vazioStu} />
+      <Stu nome="stu-surpreso" tamanho={96} halo animado="uma-vez" />
       <Titulo foco>{titulo}</Titulo>
       {texto && <Text style={estilos.texto}>{texto}</Text>}
       <Botao rotulo={mensagens.compartilhar.criarMinha} acao={criar} estilo={{ alignSelf: 'flex-start' }} />
@@ -1055,7 +1056,7 @@ const comunidadeEstilos = StyleSheet.create({
   principal: { flexBasis: '100%', flexGrow: 1 },
   // Contornos dos controles com 3:1 sobre o branco (#8792BD); "Continuar" em azul claro da marca.
   contorno: { borderColor: '#8792BD' },
-  continuar: { backgroundColor: '#EEF3FF' },
+  continuar: { backgroundColor: cores.ceu },
   // .curtir: contorno de 2 #8792BD, raio 14, fundo branco (curtido também), 14 de folga e 6 entre o coração e a palavra.
   valeu: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minWidth: 44, minHeight: 44, paddingHorizontal: 14,
     borderWidth: 2, borderColor: '#8792BD', borderRadius: 14, backgroundColor: cores.fundo },
@@ -1086,7 +1087,7 @@ const comunidadeEstilos = StyleSheet.create({
   secaoPerfil: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   abas: { flexDirection: 'row', alignSelf: 'flex-start', gap: 4, padding: 4, borderRadius: 16, backgroundColor: cores.nevoa },
   aba: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 18, borderRadius: 12 },
-  abaMarcada: { backgroundColor: cores.fundo, shadowColor: '#1B2A5E', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  abaMarcada: { backgroundColor: cores.fundo, shadowColor: cores.texto, shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   abaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '900' },
   // Fileiras até as bordas da tela no celular: a margem negativa do respiro da página (20) e o mesmo respiro dentro.
   fileira: { marginHorizontal: -20 },
@@ -1103,7 +1104,6 @@ const comunidadeEstilos = StyleSheet.create({
   esqueletoBloco: { height: 280, borderRadius: 20, backgroundColor: cores.nevoa },
   vazio: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18, padding: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo,
     borderRadius: 20, backgroundColor: cores.ceu },
-  vazioStu: { width: 96, height: 106 },
   vazioTexto: { flexGrow: 1, flexShrink: 1, flexBasis: 256, gap: 8, alignItems: 'flex-start' },
   emAlta: { gap: 10 },
   emAltaLista: { gap: 8, paddingTop: 6, paddingBottom: 14 },

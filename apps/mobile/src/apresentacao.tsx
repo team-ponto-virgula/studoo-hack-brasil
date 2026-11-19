@@ -314,8 +314,8 @@ function ArteProgresso({ largura }: { largura: number }) {
       <View style={apresentacaoEstilos.sincronia}>
         <SeloSincronia sincronia={{ estado: 'atualizado', em: null }} />
       </View>
-      {/* Ficha "Ponte construída": 36 de altura com o degrau de 4 por fora (0 4px 0 rgba(27, 42, 94, 0.08) na web). */}
-      <View style={[apresentacaoEstilos.seloFora, degrauFora(4, 999, 'rgba(27, 42, 94, 0.08)')]}>
+      {/* Ficha "Ponte construída": 36 de altura com o degrau de 4 por fora (0 4px 0 rgba(11, 27, 92, 0.08) na web). */}
+      <View style={[apresentacaoEstilos.seloFora, degrauFora(4, 999, 'rgba(11, 27, 92, 0.08)')]}>
         <View style={apresentacaoEstilos.selo}>
           <Icone nome="check" tamanho={18} cor={cores.sucesso} traco={3} />
           <Text style={apresentacaoEstilos.seloTexto}>{mensagens.estudio.ponteMapaFeita}</Text>
@@ -349,7 +349,7 @@ const apresentacaoEstilos = StyleSheet.create({
   arte: { borderRadius: 28, overflow: 'hidden' },
   mini: { position: 'relative' },
   camada: { position: 'absolute', left: 0, top: 0 },
-  pontinho: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: 'rgba(27, 42, 94, 0.24)' },
+  pontinho: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: 'rgba(11, 27, 92, 0.24)' },
   noFace: { alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(255, 255, 255, 0.2)' },
   // Moldura dos momentos: como `.apresentacao-quadro` da web no celular (12 de respiro, cantos de 22, borda gelo, fundo névoa).
   quadro: { gap: 10, padding: 12, borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.nevoa },

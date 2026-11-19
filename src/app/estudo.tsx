@@ -44,6 +44,7 @@ import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, plan
 import { TelaPerfil } from './perfil';
 import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { Explorar } from './comunidade';
+import { contarLicaoParaNovidadeDoSom, useAreaDoSom } from './som';
 import { tocaSons } from './sons';
 import './aula.css';
 import './trilha.css';
@@ -102,6 +103,8 @@ function voltarAoTopo() {
 
 export function Estudo() {
   const [inicio, setInicio] = useState<'carregando' | 'pronto' | 'falha'>('carregando');
+  // O som de fundo toca no app inteiro depois da entrada (spec 12); ao sair do app (ou da conta), para.
+  useAreaDoSom(inicio === 'pronto');
   const [erro, setErro] = useState<string | null>(null);
   const [tela, setTela] = useState<Tela>({ tipo: 'planos' });
   const [planos, setPlanos] = useState<PlanoResumo[]>([]);
@@ -545,6 +548,7 @@ export function Estudo() {
       cacheLicoes.current.delete(licao.id);
       const atualizado = resultado.dados.plano;
       // A última lição fecha a trilha: o som é o da trilha inteira (só na primeira vez que ela fecha).
+      contarLicaoParaNovidadeDoSom();
       const fechada = (p: PlanoDetalhe['progresso']) => p.total > 0 && p.concluidas === p.total;
       void tocaSons.tocarEfeito(fechada(atualizado.progresso) && !fechada(plano.progresso) ? 'concluir_trilha' : 'concluir_licao');
       atualizarPlano(atualizado);

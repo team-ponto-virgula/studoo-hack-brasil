@@ -29,7 +29,8 @@
           "microphonePermission": "Permitir que o Studoo grave sua explicação para transcrever e revisar?"
         }
       ],
-      "expo-image"
+      "expo-image",
+      "expo-asset"
     ],
     "android": {
       "package": "com.studoo.mobile.dev"

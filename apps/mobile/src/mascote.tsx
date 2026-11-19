@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Animated, AppState, Easing, Image, Keyboard, PixelRatio, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Animated, AppState, Easing, Image, Keyboard, PixelRatio, Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Asset } from 'expo-asset';
 import { Image as ImagemAnimada } from 'expo-image';
 import { CATALOGO_STU, faixaAnimadaDoStu, faixaDoStu, type NomeStu } from '@studoo/contratos';
 import { useMovimentoReduzido } from './movimento';
@@ -32,6 +33,16 @@ export function acordarMascote() {
   ouvintesDoToque.forEach((ouvir) => ouvir());
 }
 
+/**
+ * A fonte do WebP animado para o expo-image. No aparelho, o número do recurso basta: o React Native escolhe @2x ou @3x
+ * para a tela. Na prévia web, tanto o expo-image quanto o expo-asset montam o endereço da versão 1x, que não existe para o
+ * animado (só @2x e @3x, e a faixa G só @2x): lá o endereço aponta para o @2x, que toda faixa animada tem.
+ */
+function fonteDaAnimacao(modulo: number) {
+  if (Platform.OS !== 'web') return modulo;
+  return { uri: Asset.fromModule(modulo).uri.replace(/\.webp(?=$|\?)/, '@2x.webp') };
+}
+
 /** Lado do quadro na tela e a altura pela proporção do recorte (para nada pular ao carregar). */
 export function medidasDoStu(nome: NomeStu, tamanho: number) {
   const [w, h] = CATALOGO_STU[nome].proporcao;
@@ -55,6 +66,19 @@ function SombraDeContato({ largura, altura }: { largura: number; altura: number 
 }
 
 /**
+ * Halo (spec 13, A2) onde o Stu fica solto sobre branco (aula, vazio, erro): um radial lavanda #E9E7FF de 1,3× o mascote,
+ * indo a transparente. No navegador, o background-image da web; no aparelho, o experimental_backgroundImage do React Native.
+ */
+function Halo({ largura, altura }: { largura: number; altura: number }) {
+  const lado = Math.round(Math.max(largura, altura) * 1.3);
+  const fundo = 'radial-gradient(circle, rgba(233, 231, 255, 1) 0%, rgba(233, 231, 255, 0.85) 38%, rgba(233, 231, 255, 0) 70%)';
+  return (
+    <View style={[estilos.halo, { width: lado, height: lado, left: (largura - lado) / 2, top: (altura - lado) / 2, borderRadius: lado / 2 },
+      (Platform.OS === 'web' ? { backgroundImage: fundo } : { experimental_backgroundImage: fundo }) as ViewStyle]} />
+  );
+}
+
+/**
  * O mascote oficial (spec 13) pela imagem e pelo tamanho (`tamanho`: o maior lado na tela, em dp). Escolhe a faixa (P, M,
  * G, XG) e deixa o React Native pegar o PNG @2x ou @3x; a largura e a altura fixas reservam o lugar. Sempre enfeite para o
  * leitor de tela (B8): a mensagem está no texto ao lado.
@@ -66,8 +90,10 @@ function SombraDeContato({ largura, altura }: { largura: number; altura: number 
  * E2, com o app em segundo plano, com o teclado aberto (um campo de texto em foco), com `pausado` e, no laço, depois de
  * 20 s sem toque nem rolagem. Um Stu se mexe por vez.
  */
-export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra = false, pausado = false, espelhado = false, estilo }: {
+export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra = false, halo = false, pausado = false, espelhado = false, estilo }: {
   nome: NomeStu;
+  /** Halo lavanda atrás, onde ele fica solto sobre branco (aula, vazio, erro). */
+  halo?: boolean;
   tamanho: number;
   animado?: ModoAnimacaoStu;
   /** No modo `acontecimento`: cada valor novo (definido) dispara os ciclos. */
@@ -101,6 +127,18 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
   const [carregado, setCarregado] = useState(false);
   const [desistiu, setDesistiu] = useState(false);
   const [entrada] = useState(() => new Animated.Value(0));
+  // §B7: a expressão nova entra em 120 ms de opacidade com um pop de 0,92 → 1,06 → 1 em 240 ms (com movimento reduzido, na hora).
+  const [troca] = useState(() => new Animated.Value(1));
+  const nomeAnterior = useRef(nome);
+  useEffect(() => {
+    if (nomeAnterior.current === nome) return;
+    nomeAnterior.current = nome;
+    if (reduzir !== false) { troca.setValue(1); return; }
+    troca.setValue(0);
+    const pop = Animated.timing(troca, { toValue: 1, duration: 240, easing: Easing.bezier(0.2, 0.9, 0.3, 1.3), useNativeDriver: true });
+    pop.start();
+    return () => pop.stop();
+  }, [nome, reduzir, troca]);
 
   // Permissões da E4: a tela interativa, o app à vista, sem teclado aberto e, no laço, sem 20 s ociosos.
   useEffect(() => {
@@ -184,21 +222,26 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
   return (
     <View pointerEvents="none" accessible={false} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
       style={[{ width: largura, height: altura }, estilo]}>
+      {halo && <Halo largura={largura} altura={altura} />}
       {sombra && <SombraDeContato largura={largura} altura={altura} />}
+      <Animated.View style={[StyleSheet.absoluteFill, { opacity: troca.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 1] }),
+        transform: [{ scale: troca.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.92, 1.06, 1] }) }] }]}>
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: mostrar ? entrada.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) : 1, transform: virar }]}>
         <Image source={parado} resizeMode="contain" accessible={false} style={{ width: largura, height: altura }} />
       </Animated.View>
       {mostrar && fonteAnimada && (
         <Animated.View style={{ position: 'absolute', left: (largura * esquerda) / 100, top: (altura * topo) / 100,
           width: (largura * larguraAnimada) / 100, height: (altura * alturaAnimada) / 100, opacity: entrada, transform: virar }}>
-          <ImagemAnimada key={rodada} source={fonteAnimada} contentFit="contain" autoplay accessible={false} style={StyleSheet.absoluteFill}
+          <ImagemAnimada key={rodada} source={fonteDaAnimacao(fonteAnimada)} contentFit="contain" autoplay accessible={false} style={StyleSheet.absoluteFill}
             onLoad={() => setCarregado(true)} onError={() => setDesistiu(true)} />
         </Animated.View>
       )}
+      </Animated.View>
     </View>
   );
 }
 
 const estilos = StyleSheet.create({
   sombra: { position: 'absolute' },
+  halo: { position: 'absolute' },
 });

@@ -5,6 +5,7 @@ import type { ApoioEstudo, PaginaMaterial } from '@studoo/contratos';
 import { Icone } from './icone';
 import { estilos, useMovimentoReduzido, LinhaAbrir, degrauFora, degrade } from './interface';
 import { mensagens } from './mensagens';
+import { Stu } from './mascote';
 import { cores, fontes } from './tema';
 
 /*
@@ -90,15 +91,18 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
   const reduzir = useMovimentoReduzido();
   const vencida = concluida || montada;
   const [travessia] = useState(() => new Animated.Value(vencida ? 1 : 0));
+  // Spec 13: o Stu de perfil atravessa (em laço só durante a travessia) e, ao chegar, troca para animado (um ciclo).
+  const [etapaDoStu, setEtapaDoStu] = useState<'esperando' | 'atravessando' | 'chegou'>(vencida ? 'chegou' : 'esperando');
   useEffect(() => {
-    if (montada) { travessia.setValue(1); return; }
-    if (!concluida) { travessia.setValue(0); return; }
-    if (reduzir !== false) { travessia.setValue(1); return; }
+    if (montada) { travessia.setValue(1); setEtapaDoStu('chegou'); return; }
+    if (!concluida) { travessia.setValue(0); setEtapaDoStu('esperando'); return; }
+    if (reduzir !== false) { travessia.setValue(1); setEtapaDoStu('chegou'); return; }
+    const comeco = setTimeout(() => setEtapaDoStu('atravessando'), ESPERA_TRAVESSIA_MS);
     const animacao = Animated.timing(travessia, {
       toValue: 1, duration: TRAVESSIA_MS, delay: ESPERA_TRAVESSIA_MS, easing: Easing.bezier(0.2, 0.9, 0.3, 1.2), useNativeDriver: true,
     });
-    animacao.start();
-    return () => animacao.stop();
+    animacao.start(({ finished }) => { if (finished) setEtapaDoStu('chegou'); });
+    return () => { clearTimeout(comeco); animacao.stop(); };
   }, [concluida, montada, reduzir, travessia]);
   // Como a legenda da web (rodada 3A): a tentativa inteira, cortada só depois de 80 caracteres.
   const tentativa = resposta.length > 80 ? `${resposta.slice(0, 79).trimEnd()}…` : resposta;
@@ -122,11 +126,13 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
         <View style={cena.linha}>
           <View style={[cena.margem, cena.margemEsquerda]}
             onLayout={(evento) => { const { x, width } = evento.nativeEvent.layout; setMargens((antes) => ({ ...antes, esquerda: { x, largura: width } })); }}>
-            <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-              style={[cena.stu, { transform: [
+            <Animated.View style={[cena.stu, { transform: [
                 { translateX: travessia.interpolate({ inputRange: [0, 1], outputRange: [0, distancia] }) },
                 { translateY: travessia.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -12, 0] }) },
-              ] }]} />
+              ] }]}>
+              <Stu nome={etapaDoStu === 'chegou' ? 'stu-animado' : 'stu-perfil'} tamanho={36}
+                animado={etapaDoStu === 'atravessando' ? 'laco' : etapaDoStu === 'chegou' ? 'uma-vez' : undefined} />
+            </Animated.View>
             <Text style={cena.margemTexto}>{m.ponteMargemErro}</Text>
           </View>
           <View style={cena.vao}>
@@ -169,31 +175,18 @@ export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPont
  * vivo, o balão diz o estado dela (`fala`), como a web.
  */
 export function StuAluno({ estado, fala: falaDaConversa }: { estado: 'aluno' | 'ouvindo' | 'falando' | 'anotou'; fala?: string }) {
-  const reduzir = useMovimentoReduzido();
-  const [balanco] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    if ((estado !== 'ouvindo' && estado !== 'falando') || reduzir !== false) { balanco.setValue(0); return; }
-    // 700 ms para cada lado nos dois casos (o balanço da gravação e o stuFalando da web, 0,7 s com alternate).
-    const ciclo = Animated.loop(Animated.sequence([
-      Animated.timing(balanco, { toValue: 1, duration: 700, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      Animated.timing(balanco, { toValue: 0, duration: 700, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-    ]));
-    ciclo.start();
-    return () => { ciclo.stop(); balanco.setValue(0); };
-  }, [estado, reduzir, balanco]);
   const fala = falaDaConversa ?? (estado === 'ouvindo' ? m.ensinoStuOuvindo : estado === 'anotou' ? m.ensinoStuAnotou : m.ensinoStuAluno);
-  const movimento = estado === 'falando'
-    // @keyframes stuFalando: de translateY(0) scale(1) a translateY(-2px) scale(1.04), 0,7 s, ida e volta.
-    ? [{ translateY: balanco.interpolate({ inputRange: [0, 1], outputRange: [0, -2] }) }, { scale: balanco.interpolate({ inputRange: [0, 1], outputRange: [1, 1.04] }) }]
-    : [{ rotate: balanco.interpolate({ inputRange: [0, 1], outputRange: ['-4deg', '4deg'] }) }];
-  // Como .ensino-stu da web: uma caixa com borda e fundo névoa, o Stu de 52 px e a fala em 16 px/800 ao lado; ouvindo (gravação
-  // ou conversa), a borda fica azul e o fundo azul-claro (data-gravando).
+  // Spec 13: aluno curioso (parado); ouvindo concentrado e falando animado, em laço enquanto o estado dura (mostra que ele
+  // ouve ou fala); anotou encorajador, um ciclo no acontecimento. A troca de expressão dá o pop da §B7.
+  const nome = estado === 'ouvindo' ? 'stu-concentrado' : estado === 'falando' ? 'stu-animado' : estado === 'anotou' ? 'stu-encorajador' : 'stu-curioso';
+  // Como .ensino-stu da web: uma caixa com borda e fundo névoa, o Stu e a fala em 16 px/800 ao lado; ouvindo (gravação
+  // ou conversa), a borda fica azul e o fundo lavanda (data-gravando).
   const ouvindo = estado === 'ouvindo';
   return (
     <View style={[aluno.caixa, ouvindo && aluno.caixaOuvindo]}>
       <View style={aluno.avatar} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-          style={[aluno.stu, { transform: movimento }]} />
+        <Stu nome={nome} tamanho={56} animado={estado === 'ouvindo' || estado === 'falando' ? 'laco' : estado === 'anotou' ? 'acontecimento' : undefined}
+          acontecimento={estado === 'anotou' ? 'anotou' : undefined} />
       </View>
       <Text accessibilityLiveRegion="polite" style={aluno.fala}>{fala}</Text>
     </View>
@@ -210,7 +203,7 @@ export function EtapasDoEnsino({ ativa, primeira }: { ativa: 0 | 1 | 2; primeira
     <View accessible accessibilityRole="text" accessibilityLabel={`${m.ensinoEtapasLabel}: ${etapas[ativa]}`} style={aluno.etapas}>
       {etapas.map((etapa, indice) => (
         <View key={etapa} style={[aluno.etapa, indice === ativa && aluno.etapaAtiva]}>
-          <Text style={[aluno.etapaTexto, indice === ativa && { color: cores.acao }]}>{etapa}</Text>
+          <Text style={[aluno.etapaTexto, indice === ativa && { color: cores.acaoEscura }]}>{etapa}</Text>
         </View>
       ))}
     </View>
@@ -272,7 +265,7 @@ export function CadernoDoStu({ ensino, compacto = false }: {
       <View style={degrauFora(4, compacto ? 16 : 16, cores.gelo)}>
       <View style={[cartao, caderno.pergunta]}>
         <View style={[caderno.perguntaStu, compacto && caderno.perguntaStuCompacto]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" style={[caderno.stu, compacto && caderno.stuCompacto]} />
+          <Stu nome="stu-concentrado" tamanho={compacto ? 32 : 48} />
           <View style={caderno.duvida}><Text style={caderno.duvidaTexto}>?</Text></View>
         </View>
         {/* Título e pergunta sem vão entre eles, como .ensino-caderno__pergunta da web (h3 e p sem margem). */}
@@ -365,7 +358,7 @@ const cena = StyleSheet.create({
     borderRadius: 10, backgroundColor: 'rgba(255,250,242,0.88)', opacity: 0.85 },
   tabua: { minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: 10 },
   tabuaNumero: { color: '#4B2F15', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 15 },
-  stu: { zIndex: 3, width: 32, height: 32 },
+  stu: { zIndex: 3 },
   // A legenda no tamanho base em qualquer largura (bf8cf37): grade 2×2 com vão de 8 e 16 embaixo (o cartão já põe 14).
   legenda: { marginBottom: 2, flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   // .ponte-legenda li e __num da web: 13 px, respiro de 8 × 10, número de 22 px em 12 px.
@@ -381,10 +374,10 @@ const aluno = StyleSheet.create({
   // .ensino-stu: flex, gap 14, respiro 12 × 16, borda 2 #E1E7FA, raio 18, fundo névoa; .ensino-stu .stu: 52 px de largura.
   caixa: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderColor: cores.gelo,
     borderRadius: 18, backgroundColor: cores.nevoa },
-  caixaOuvindo: { borderColor: cores.acao, backgroundColor: '#EEF3FF' },
+  caixaOuvindo: { borderColor: cores.acao, backgroundColor: cores.ceu },
   fala: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 25.6 },
   avatar: { width: 52, alignItems: 'center', justifyContent: 'center' },
-  stu: { width: 52, height: 58 },
+  stu: { width: 56, height: 56 },
   adereco: { position: 'absolute', top: -2, right: -2, width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.ouroEscuro, borderWidth: 2, borderColor: cores.fundo },
   aderecoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 16 },
@@ -394,7 +387,7 @@ const aluno = StyleSheet.create({
   balaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
   etapas: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   etapa: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1.5, borderColor: cores.gelo },
-  etapaAtiva: { borderColor: cores.acao, backgroundColor: '#EEF3FF' },
+  etapaAtiva: { borderColor: cores.acao, backgroundColor: cores.ceu },
   etapaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 19 },
   // Como .ensino-ondas da web: cinco barras de 6 × 32 com vão de 5; sem o volume (aparelho que não informa), cheias.
   ondas: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 36 },
@@ -407,7 +400,7 @@ const caderno = StyleSheet.create({
   cartao: { paddingVertical: 14, paddingHorizontal: 16, gap: 6, borderRadius: 16, borderWidth: 2 },
   acertos: { borderColor: cores.gelo, backgroundColor: '#F1F4FD' },
   lacuna: { borderColor: '#F2CF96', backgroundColor: '#FFFAF0' },
-  pergunta: { flexDirection: 'row', alignItems: 'center', gap: 14, borderColor: '#C3CDF2', backgroundColor: '#EEF3FF' },
+  pergunta: { flexDirection: 'row', alignItems: 'center', gap: 14, borderColor: '#C3CDF2', backgroundColor: cores.ceu },
   proximo: { borderColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
   // .ensino-caderno__cartao h3: 0,9375rem com a entrelinha de 1,3 dos títulos do cartão (19,5).
   titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 19.5 },
