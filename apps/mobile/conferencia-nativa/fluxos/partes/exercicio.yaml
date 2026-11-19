@@ -47,27 +47,18 @@ appId: host.exp.Exponent
     commands:
       - tapOn:
           text: "(Começar|Continuar): .*"
-# Conceito e exemplo vêm antes do exercício: "Continuar lendo" enquanto houver texto abaixo, depois "Avançar".
+# Conceito e exemplo vêm antes do exercício: "Continuar lendo" enquanto houver texto abaixo, depois "Avançar". Só um dos
+# dois botões existe por vez, então um toque só serve aos dois (o `id` é uma expressão regular). É opcional: enquanto a
+# lição carrega, nenhum existe, e a espera do próprio toque cobre esse tempo.
 - repeat:
     times: 24
     while:
       notVisible:
         id: pergunta-exercicio
     commands:
-      - runFlow:
-          when:
-            visible:
-              id: ler-mais
-          commands:
-            - tapOn:
-                id: ler-mais
-      - runFlow:
-          when:
-            visible:
-              id: avancar-licao
-          commands:
-            - tapOn:
-                id: avancar-licao
+      - tapOn:
+          id: "ler-mais|avancar-licao"
+          optional: true
 - extendedWaitUntil:
     visible:
       id: pergunta-exercicio
