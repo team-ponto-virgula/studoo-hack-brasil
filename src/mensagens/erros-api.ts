@@ -38,4 +38,6 @@ export const mensagensApi: Record<CodigoErro, string> = {
   limite_foto: "Você trocou de foto muitas vezes. Tente de novo daqui a pouco.",
   explorar_material: "Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.",
   limite_comunidade: "Muitas ações por agora. Tente de novo daqui a pouco.",
+  seguir_invalido: "Não dá para seguir este perfil.",
+  conteudo_recusado: "Este conteúdo não pode ser publicado. Ajuste e tente de novo.",
 };

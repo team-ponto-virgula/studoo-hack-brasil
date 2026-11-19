@@ -36,6 +36,8 @@ const statusErros: Record<CodigoErro, number> = {
   limite_foto: 429,
   explorar_material: 409,
   limite_comunidade: 429,
+  seguir_invalido: 409,
+  conteudo_recusado: 422,
 };
 
 export class FalhaApi extends Error {

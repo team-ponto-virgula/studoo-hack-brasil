@@ -5,6 +5,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
+import { revisarConteudo } from "./revisao";
 
 /*
  * Foto do perfil (spec 10). O cliente manda o quadrado já recortado; aqui a imagem é conferida pelos bytes (JPEG, PNG
@@ -104,6 +105,8 @@ export async function salvarFoto(usuarioId: string, entrada: unknown): Promise<v
   const dentro = await banco.$transaction((tx) => consumirLimite(tx, `foto:${usuarioId}`, LIMITE_TROCAS.quantidade, LIMITE_TROCAS.janelaMs));
   if (!dentro) throw new FalhaApi("limite_foto");
   const { grande, pequena } = await processarFoto(bytes);
+  // Revisão de conteúdo (ponto de extensão; hoje aprova tudo) antes de gravar a foto, já sem metadados.
+  if (!(await revisarConteudo({ tipo: "foto", usuarioId, bytes: new Uint8Array(grande) })).aprovado) throw new FalhaApi("conteudo_recusado");
   const token = randomBytes(12).toString("base64url");
   const dados = { token, grande: new Uint8Array(grande), pequena: new Uint8Array(pequena) };
   const anterior = await banco.fotoPerfil.findUnique({ where: { usuarioId }, select: { token: true } });

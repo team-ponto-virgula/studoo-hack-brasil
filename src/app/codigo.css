@@ -1,7 +1,9 @@
 /* Código Studoo (spec 10, etapa C1): painel na folha e no perfil, e o modo apresentação. */
 .painel-codigo { display: grid; justify-items: center; gap: 10px; padding: 16px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
 .painel-codigo__codigo { display: block; width: min(100%, 240px); aspect-ratio: 1; padding: 10px; border-radius: 28px; background: #fff; box-shadow: 0 0 0 6px var(--acao) inset, 0 8px 20px rgb(27 42 94 / 0.12); }
-.painel-codigo__codigo svg { display: block; width: 100%; height: 100%; }
+.painel-codigo__codigo { overflow: hidden; }
+/* O quadrado branco do código fica dentro da curva da moldura: canto arredondado, sem sobra nos cantos internos. */
+.painel-codigo__codigo svg { display: block; width: 100%; height: 100%; border-radius: 20px; }
 .painel-codigo__dica { margin: 0; color: var(--texto2); font-size: 0.9375rem; font-weight: 800; text-align: center; }
 .painel-codigo__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
 .painel-codigo__acoes .botao { min-height: 44px; }

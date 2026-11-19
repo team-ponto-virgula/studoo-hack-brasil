@@ -33,6 +33,7 @@ import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { PainelCodigo } from './codigo';
+import { BotaoSeguir } from './seguir';
 import './compartilhar.css';
 import './comunidade.css';
 
@@ -44,7 +45,7 @@ export const CHAVE_DEPOIS_DO_LOGIN = 'studoo.depoisDoLogin';
 /** Abrir uma trilha ao chegar no app, com um aviso ("Trilha adicionada. Compartilhada por Ana."). */
 export const CHAVE_ABRIR_PLANO = 'studoo.abrirPlano';
 /** Para onde o login pode voltar: um link de trilha (com ou sem adicionar) ou o Explorar. Nada fora do site. */
-const CAMINHO_SEGURO = /^(?:\/t\/[A-Za-z0-9_-]{16}(?:\?adicionar=1)?|\/explorar)$/;
+const CAMINHO_SEGURO = /^(?:\/t\/[A-Za-z0-9_-]{16}(?:\?adicionar=1)?|\/p\/[A-Za-z0-9_-]{16}|\/explorar)$/;
 
 /** O caminho guardado para depois do login, só se for o de um link de trilha (nada de redirecionar para fora). */
 export function caminhoDepoisDoLogin(): string | null {
@@ -591,7 +592,10 @@ export const dataCurta = (iso: string) => new Date(iso).toLocaleDateString('pt-B
  * A prévia de uma trilha compartilhada, igual na página /t e no "Adicionar por link": de quem é, título, contagem e
  * origem, as ações logo abaixo (visíveis sem rolar) e as lições por parte.
  */
-export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = false }: {
+export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = false, logado = false, comunidade = false }: {
+  /** Com a comunidade: o botão Seguir no cartão "Quem compartilhou" (sem sessão, leva ao login). */
+  logado?: boolean;
+  comunidade?: boolean;
   trilha: TrilhaCompartilhada;
   nivel?: 'h1' | 'h2';
   acoes: ReactNode;
@@ -633,6 +637,9 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
             {trilha.dono.demo && <p className="selo-demo">{mensagens.comunidade.perfilDemo}</p>}
             {trilha.dono.resumo && <p className="quem-compartilhou__resumo">{trilha.dono.resumo}</p>}
             {trilha.dono.perfilId && <a className="quem-compartilhou__link" href={`/p/${trilha.dono.perfilId}`}>{m.verPerfil(nome)}</a>}
+            {comunidade && trilha.dono.perfilId && (
+              <div className="quem-compartilhou__seguir"><BotaoSeguir perfilId={trilha.dono.perfilId} nome={nome} estado={trilha.seguirDono} logado={logado} /></div>
+            )}
           </div>
         </section>
       )}

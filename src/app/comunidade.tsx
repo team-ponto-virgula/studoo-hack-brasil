@@ -98,7 +98,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3' }: { carta
         <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} />
         {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{posicao}</span>}
         <div className="cartao-trilha__selos">
-          {cartao.tema && <span className="cartao-trilha__tema">{temas[cartao.tema]}</span>}
+          {cartao.tema && <span className="cartao-trilha__tema" title={temas[cartao.tema]}>{temas[cartao.tema]}</span>}
           {cartao.demonstracao && <span className="cartao-trilha__demo" title={c.demonstracaoDica}>{c.demonstracao}</span>}
         </div>
       </div>
@@ -111,7 +111,6 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3' }: { carta
             ? <a href={`/p/${cartao.dono.perfilId}`} aria-label={c.perfilDe(cartao.dono.nome)}>{c.por(cartao.dono.nome)}</a>
             : <span>{c.por(cartao.dono.nome)}</span>}
         </p>
-        {cartao.dono.demo && <p className="selo-demo">{c.perfilDemo}</p>}
         {cartao.legenda && <p className="cartao-trilha__legenda">{cartao.legenda}</p>}
         <p className="cartao-trilha__meta">{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</p>
         {cartao.estudando === 0 && cartao.valeus === 0
@@ -307,6 +306,8 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
   topo?: ReactNode;
 }) {
   const [tema, setTema] = useState<Tema | null>(null);
+  // Aba "Seguindo" (etapa C2, só com sessão): as trilhas de quem a pessoa segue, mais novas primeiro.
+  const [aba, setAba] = useState<'todos' | 'seguindo'>('todos');
   const [pagina, setPagina] = useState<PaginaExplorar | null>(inicial);
   const [carregando, setCarregando] = useState(!inicial);
   const [maisCarregando, setMaisCarregando] = useState(false);
@@ -322,17 +323,17 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
     let ativo = true;
     setCarregando(true);
     setErro(null);
-    cliente.explorar({ tema }).then((dados) => { if (ativo) setPagina(dados); })
+    cliente.explorar({ tema, seguindo: aba === 'seguindo' }).then((dados) => { if (ativo) setPagina(dados); })
       .catch((falha) => { if (ativo) setErro(textoErro(codigoDoErro(falha))); })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, [tema]);
+  }, [tema, aba]);
 
   async function verMais() {
     if (!pagina?.cursor) return;
     setMaisCarregando(true);
     try {
-      const proxima = await cliente.explorar({ tema, cursor: pagina.cursor });
+      const proxima = await cliente.explorar({ tema, cursor: pagina.cursor, seguindo: aba === 'seguindo' });
       setPagina((atual) => atual && { ...atual, novas: [...atual.novas, ...proxima.novas], cursor: proxima.cursor });
     } catch (falha) {
       anunciar(textoErro(codigoDoErro(falha)));
@@ -355,6 +356,13 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
         <p className="explorar__subtitulo">{c.subtitulo}</p>
       </header>
 
+      {logado && (
+        <div className="explorar__abas" role="group" aria-label={c.abasRotulo}>
+          <button type="button" className="explorar__aba" aria-pressed={aba === 'todos'} onClick={() => setAba('todos')}>{c.abaTodos}</button>
+          <button type="button" className="explorar__aba" aria-pressed={aba === 'seguindo'} onClick={() => setAba('seguindo')}><Icone nome="pessoa" />{c.abaSeguindo}</button>
+        </div>
+      )}
+
       <div className="explorar__temas" role="group" aria-label={c.temas}>
         <button type="button" className="ficha-tema" aria-pressed={tema === null} onClick={() => setTema(null)}>{c.todos}</button>
         {TEMAS.map((opcao) => (
@@ -365,7 +373,17 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
       {erro && <p className="campo-erro" role="alert">{erro}</p>}
       {carregando && !pagina && <div className="explorar__esqueleto" aria-hidden="true"><span /><span /><span /></div>}
 
-      {pagina && vazio && (
+      {pagina && vazio && aba === 'seguindo' && (
+        <div className="explorar__vazio">
+          <Stu />
+          <div>
+            <h2 className="explorar__secao">{pagina.seguindoAlguem ? c.seguidosSemTrilhas : c.vazioSeguindoTitulo}</h2>
+            {!pagina.seguindoAlguem && <p className="folha-texto">{c.vazioSeguindoTexto}</p>}
+            <Botao variante="secundario" onClick={() => { setTema(null); setAba('todos'); }}>{c.vazioSeguindoAcao}</Botao>
+          </div>
+        </div>
+      )}
+      {pagina && vazio && aba === 'todos' && (
         <div className="explorar__vazio">
           <Stu />
           <div>
@@ -382,7 +400,7 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
 
       {pagina && pagina.novas.length > 0 && (
         <section className="explorar__novas" aria-labelledby="explorar-novas">
-          <h2 id="explorar-novas" className="explorar__secao">{tema ? c.novasDoTema(temas[tema]) : c.novas}</h2>
+          <h2 id="explorar-novas" className="explorar__secao">{aba === 'seguindo' ? c.seguindoTitulo : tema ? c.novasDoTema(temas[tema]) : c.novas}</h2>
           <ul className="grade-cartoes">
             {pagina.novas.map((cartao) => <li key={cartao.codigo}><CartaoDeTrilha cartao={cartao} acoes={acoes} /></li>)}
           </ul>

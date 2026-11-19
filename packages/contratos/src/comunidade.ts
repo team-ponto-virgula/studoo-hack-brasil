@@ -3,7 +3,7 @@
  * `STUDOO_COMUNIDADE=1` (que só vale com `STUDOO_COMPARTILHAR=1`; o `/api/auth/config` traz `comunidade`).
  * O "Em alta" ordena trilhas, nunca pessoas (D16).
  */
-import type { DonoPublico, SituacaoTrilhaCompartilhada, Tema } from './compartilhar';
+import type { CorPerfil, DonoPublico, SituacaoTrilhaCompartilhada, Tema } from './compartilhar';
 
 /** Quem pode ver a trilha: só quem tem o link, quem abre o perfil, ou qualquer pessoa no Explorar (que inclui o perfil). */
 export const VISIBILIDADES = ['link', 'perfil', 'explorar'] as const;
@@ -173,6 +173,8 @@ export interface PaginaExplorar {
   novas: CartaoTrilha[];
   /** Para a próxima página de "Novas", ou null no fim. */
   cursor: string | null;
+  /** Só na aba "Seguindo": se a pessoa segue alguém (para o vazio certo). */
+  seguindoAlguem?: boolean;
 }
 
 /** POST /api/compartilhar/:codigo/valeu */
@@ -187,4 +189,36 @@ export interface PedidoDenuncia {
   /** Código do link ou id público do perfil. */
   alvo: string;
   motivo: MotivoDenuncia;
+}
+
+/** Seguir (etapa C2): o estado do botão para quem está logado. */
+export interface EstadoSeguir {
+  seguindo: boolean;
+  /** Falso para a própria pessoa e para conta de visitante: o botão não aparece. */
+  podeSeguir: boolean;
+}
+
+/** POST /api/perfis/:perfilId/seguir */
+export interface ResultadoSeguir {
+  seguindo: boolean;
+  seguidores: number;
+}
+
+/** Uma pessoa nas Novidades: só quem tem perfil público aparece com nome e foto; o resto entra em "outros". */
+export interface PessoaNovidade {
+  nome: string;
+  cor: CorPerfil;
+  foto: string | null;
+  perfilId: string;
+}
+
+/** As Novidades da dona (últimos 7 dias), agrupadas. Adição mostra só a contagem. */
+export type Novidade =
+  | { tipo: 'adicoes'; planoId: string; titulo: string; quantidade: number; em: string }
+  | { tipo: 'valeus'; planoId: string; titulo: string; pessoas: PessoaNovidade[]; outros: number; em: string }
+  | { tipo: 'seguidores'; pessoas: PessoaNovidade[]; outros: number; em: string };
+
+/** GET /api/perfil/novidades */
+export interface Novidades {
+  itens: Novidade[];
 }

@@ -256,9 +256,56 @@ ALTER TABLE "Usuario" ADD COLUMN "perfilDemo" BOOLEAN NOT NULL DEFAULT false;
 
 ---
 
-## Etapa C2 — laços (desenho)
-- **Código Studoo** (a variação que o dono escolher, `packages/contratos/src/codigo-studoo.ts`) na folha de compartilhar e em "Compartilhar perfil", com a foto no centro, e as ações baixar e compartilhar imagem. Imagem de prévia do link (Open Graph) para `/t` e `/p`, gerada no servidor com o mesmo SVG.
-- **Seguir e deixar de seguir**, com contagem no perfil e a aba "Seguindo" no Explorar. Sem lista pública de seguidores e sem notificação.
-  - Banco: `Seguir` (`seguidorId`, `seguidoId`, `criadoEm`; chave dupla; índice por `seguidoId`).
-- **"Novidades"** na tela Perfil ("3 pessoas começaram sua trilha X esta semana", "Ana mandou um valeu"), lidas de `EventoTrilha`.
-- **Checagem automática de foto e texto:** só o ponto de extensão, uma função `revisarConteudo` chamada antes de gravar foto, resumo e legenda, que hoje aprova tudo. Nenhum serviço externo sem o Lead avisar.
+## Etapa C2 — seguir, Novidades e revisão de conteúdo (feita)
+
+### Banco (migração `20261122090000_comunidade_seguir`)
+```sql
+CREATE TABLE "Seguir" ("seguidorId" TEXT NOT NULL, "seguidoId" TEXT NOT NULL, "criadoEm" TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Seguir_pkey" PRIMARY KEY ("seguidorId","seguidoId"));
+CREATE INDEX "Seguir_seguidoId_criadoEm_idx" ON "Seguir"("seguidoId", "criadoEm");
+-- FKs em cascata para Usuario(id) nos dois lados.
+```
+
+### Seguir
+- `POST /api/perfis/:perfilId/seguir { ativo }` devolve `{ seguindo, seguidores }`.
+- **Regras:**
+  - só se segue perfil público (ao menos uma trilha no perfil; senão 404);
+  - ninguém segue a si mesmo (`409 seguir_invalido`);
+  - conta de visitante não segue (403);
+  - perfil de demonstração pode ser seguido (com a flag de demonstração), mas não segue ninguém (`seguir_invalido`); os perfis de demonstração só seguem uns aos outros, criados pelo comando;
+  - limite de 60 por hora (`429 limite_comunidade`), como o do Valeu.
+- **Público:** só a contagem (`alcance.seguidores` no `/p` e no perfil da dona), nunca a lista. Sem notificação.
+- **Com sessão:**
+  - `PerfilPublico.seguir` e `TrilhaCompartilhada.seguirDono` (`{ seguindo, podeSeguir }`) mostram o botão no cabeçalho do `/p` e no cartão "Quem compartilhou" do `/t`;
+  - a própria pessoa e o visitante recebem `podeSeguir: false`, e o botão não aparece;
+  - sem sessão, o botão leva ao login e volta ao `/p`.
+- **Explorar, aba "Seguindo"** (ao lado de "Todos", só com sessão): `GET /api/explorar?seguindo=1` traz as trilhas publicadas por quem a pessoa segue, das mais novas para as mais antigas, sem Em alta, com o mesmo filtro de tema e a mesma paginação.
+  - `seguindoAlguem` escolhe o vazio do Stu: "Você ainda não segue ninguém", com o convite, ou "Quem você segue ainda não publicou trilhas no Explorar".
+
+### Novidades (`GET /api/perfil/novidades`, privada)
+- O que aconteceu com as trilhas da dona nos últimos 7 dias, agrupado e mais recente primeiro:
+  - adições por trilha, só a contagem ("3 pessoas começaram sua trilha X");
+  - valeus por trilha ("Bia e mais 1 pessoa mandaram valeu em Y");
+  - novos seguidores ("Bia e mais 2 pessoas começaram a seguir você"; sem ninguém com perfil público, "2 pessoas novas seguem você").
+- Nome e foto só de quem tem perfil público; o resto entra como "alguém" ou "mais N pessoas".
+- Sem novidade, uma linha discreta. Cada novidade de trilha abre o mapa dela.
+
+### Revisão de conteúdo
+`src/servidor/compartilhar/revisao.ts`: `revisarConteudo` é chamado antes de gravar o nome, o resumo, a legenda (ao publicar) e a foto (já sem metadados). Hoje aprova tudo e não chama nenhum serviço externo. Recusado, responde `422 conteudo_recusado` e não grava nada. `definirRevisor` troca o revisor, usado nos testes e na moderação futura.
+
+### Acertos da C1
+- (a) A moldura do código não deixa sobra nos cantos internos: o SVG tem canto arredondado e a imagem baixada recorta o código em cantos concêntricos com a moldura.
+- (b) No cartão fica só o selo "Demonstração" da capa; "Perfil de demonstração" continua no `/p`, no `/t` e na imagem de prévia.
+- (c) O cache da prévia ficou como está: `no-store` pelo proxy, conferido no site pelo Lead.
+- (d) A área dos selos tem altura fixa, numa linha só (o tema encurta com reticências e tem `title`), e o título do cartão alinha em cima.
+
+### Testes
+`tests/seguir.test.mjs` (em `test:estudio`), 6 testes:
+- regras do seguir, contagem sem lista, estado do botão;
+- botão no `/t`;
+- aba "Seguindo" (só de quem segue, ordem, pede conta, vazio);
+- Novidades (7 dias, agrupamento, nomes só de quem tem perfil público, sem e-mail nem ids);
+- demonstração não segue, e limite de 60;
+- `revisarConteudo` chamado antes de gravar, e nada gravado quando recusa.
+
+Todos os testes da comunidade conferem só o que criam: passam com e sem o conteúdo de demonstração no banco.

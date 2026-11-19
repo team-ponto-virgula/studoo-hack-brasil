@@ -81,7 +81,13 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
   const moldura = (x: number, y: number, l: number, r: number, cor: string) => { ctx.fillStyle = cor; ctx.beginPath(); ctx.roundRect(x, y, l, l, r); ctx.fill(); };
   moldura(120, 270, 840, 140, FUNDO_DA_COR[cor ?? 'azul']);
   moldura(154, 304, 772, 106, '#ffffff');
+  // O código entra recortado em cantos arredondados, concêntricos com a moldura: nenhum quadradinho nos cantos.
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(180, 330, 720, 720, 84);
+  ctx.clip();
   ctx.drawImage(codigo, 180, 330, 720, 720);
+  ctx.restore();
   ctx.fillStyle = '#1b2a5e';
   ctx.textAlign = 'center';
   ctx.font = '700 64px Quicksand, sans-serif';

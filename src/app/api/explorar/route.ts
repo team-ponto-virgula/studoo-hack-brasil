@@ -9,6 +9,6 @@ export function GET(request: Request) {
     exigirComunidade();
     await limitarPublico(enderecoRede(request));
     const busca = new URL(request.url).searchParams;
-    return responder(await explorar(usuarioId, { tema: busca.get("tema"), cursor: busca.get("cursor") }));
+    return responder(await explorar(usuarioId, { tema: busca.get("tema"), cursor: busca.get("cursor"), seguindo: busca.get("seguindo") === "1" }));
   });
 }

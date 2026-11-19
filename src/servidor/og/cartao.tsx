@@ -97,6 +97,7 @@ async function rodape(texto: string) {
   );
 }
 
+/** Sem cache: o proxy põe `no-store` nas rotas de /t e /p, inclusive aqui (conferido no site pelo Lead). */
 const resposta = async (conteudo: React.ReactElement) => new ImageResponse(conteudo, { ...TAMANHO_OG, fonts: await carregarFontes() });
 
 /** A imagem genérica (link encerrado, perfil indisponível ou limite estourado): só a marca e o convite. */

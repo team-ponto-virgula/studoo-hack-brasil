@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import type { TrilhaCompartilhada } from '@studoo/contratos';
 import { FalhaApi } from '@/servidor/acesso/http';
-import { compartilharAtivo, limitarPublico, trilhaCompartilhada } from '@/servidor/compartilhar/servico';
+import { compartilharAtivo, comunidadeAtiva, limitarPublico, trilhaCompartilhada } from '@/servidor/compartilhar/servico';
 import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
 import { AcoesDaPaginaPublica, PreviaTrilha } from '../../compartilhar';
@@ -70,7 +70,7 @@ export default async function PaginaDoLink({ params }: Props) {
   }
   return (
     <PaginaPublica>
-      <PreviaTrilha trilha={resultado.trilha} calor acoes={<AcoesDaPaginaPublica trilha={resultado.trilha} logado={resultado.logado} />} />
+      <PreviaTrilha trilha={resultado.trilha} calor logado={resultado.logado} comunidade={comunidadeAtiva()} acoes={<AcoesDaPaginaPublica trilha={resultado.trilha} logado={resultado.logado} />} />
     </PaginaPublica>
   );
 }

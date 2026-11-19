@@ -7,7 +7,7 @@ import { compartilharAtivo, comunidadeAtiva, limitarPublico, perfilPublico } fro
 import { perfilPublicoComCartoes } from '@/servidor/compartilhar/comunidade';
 import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
-import { BotaoCompartilharPerfil, CabecalhoPerfil } from '../../perfil';
+import { CabecalhoPublico } from '../../perfil';
 import { CartoesPublicos, DenunciarPerfil } from '../../comunidade';
 import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../../publico';
 
@@ -69,8 +69,7 @@ export default async function PaginaDoPerfil({ params }: Props) {
   }
   return (
     <PaginaPublica>
-      <CabecalhoPerfil demo={Boolean(perfil.demo)} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
-        alcance={perfil.alcance} acoes={<BotaoCompartilharPerfil perfilId={id} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} />} />
+      <CabecalhoPublico perfil={perfil} perfilId={id} logado={logado} />
       {perfil.cartoes ? (
         <>
           <CartoesPublicos inicial={perfil.cartoes} logado={logado} titulo={p.paginaTitulo(perfil.nome)} />

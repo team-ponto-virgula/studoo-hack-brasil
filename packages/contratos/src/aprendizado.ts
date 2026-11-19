@@ -1,7 +1,7 @@
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
 import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil, Tema } from './compartilhar';
-import type { MotivoDenuncia, PaginaExplorar, ResultadoValeu, Visibilidade } from './comunidade';
+import type { MotivoDenuncia, Novidades, PaginaExplorar, ResultadoSeguir, ResultadoValeu, Visibilidade } from './comunidade';
 export * from './estudio';
 export * from './licao';
 export * from './som';
@@ -215,6 +215,8 @@ const codigosErro = [
   "limite_foto",
   "explorar_material",
   "limite_comunidade",
+  "seguir_invalido",
+  "conteudo_recusado",
 ] as const;
 
 export type CodigoErro = typeof codigosErro[number];
@@ -361,13 +363,18 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     /** Comunidade (spec 10, etapa B; com `comunidade` no config). "explorar" pede o tema; a legenda é opcional. */
     definirVisibilidade: (codigo: string, visibilidade: Visibilidade, publicacao?: { tema: Tema; legenda?: string }) =>
       solicitar<LinkCompartilhado>(`/compartilhar/${encodeURIComponent(codigo)}`, "PATCH", { visibilidade, ...publicacao }),
-    explorar: (filtro: { tema?: Tema | null; cursor?: string | null } = {}) => {
+    explorar: (filtro: { tema?: Tema | null; cursor?: string | null; seguindo?: boolean } = {}) => {
       const busca = new URLSearchParams();
+      if (filtro.seguindo) busca.set("seguindo", "1");
       if (filtro.tema) busca.set("tema", filtro.tema);
       if (filtro.cursor) busca.set("cursor", filtro.cursor);
       const texto = busca.toString();
       return solicitar<PaginaExplorar>(`/explorar${texto ? `?${texto}` : ""}`);
     },
+    /** Seguir ou deixar de seguir um perfil público (etapa C2). */
+    seguir: (perfilId: string, ativo: boolean) => solicitar<ResultadoSeguir>(`/perfis/${encodeURIComponent(perfilId)}/seguir`, "POST", { ativo }),
+    /** As Novidades da própria pessoa (últimos 7 dias). */
+    novidades: () => solicitar<Novidades>("/perfil/novidades"),
     valeu: (codigo: string, ativo: boolean) => solicitar<ResultadoValeu>(`/compartilhar/${encodeURIComponent(codigo)}/valeu`, "POST", { ativo }),
     denunciar: (alvoTipo: "trilha" | "perfil", alvo: string, motivo: MotivoDenuncia) => solicitar<{ registrada: true }>("/denuncias", "POST", { alvoTipo, alvo, motivo }),
     /** Encerra o link; as cópias de quem já adicionou continuam. */

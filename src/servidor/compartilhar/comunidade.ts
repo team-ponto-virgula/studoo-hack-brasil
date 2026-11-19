@@ -20,6 +20,8 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
+import { revisarConteudo } from "./revisao";
+import { contarSeguidores, estadoSeguir, seguidosPor } from "./seguir";
 import { camposDono, demonstracaoVisivel, ehDeMaterial, lerTrilha, linkPublico, perfilPublico, type UsuarioDono } from "./servico";
 
 /** Sem `STUDOO_COMUNIDADE_DEMO=1`, as trilhas de perfis de demonstração ficam fora do Explorar e do Em alta. */
@@ -78,6 +80,7 @@ export async function definirVisibilidade(usuarioId: string, codigo: string, ent
   if (!trilha) throw new FalhaApi("link_inativo");
   if (ehDeMaterial(trilha.fluxos.flatMap((fluxo) => fluxo.licoes))) throw new FalhaApi("explorar_material");
   await limitar(`comunidade:publicar:${usuarioId}`, LIMITES.publicar);
+  if (legenda && !(await revisarConteudo({ tipo: "legenda", usuarioId, texto: legenda })).aprovado) throw new FalhaApi("conteudo_recusado");
   const alterado = await banco.linkTrilha.update({
     where: { codigo },
     data: { noPerfil: true, noExplorar: true, tema, legenda: legenda || null, ...(link.publicadaEm ? {} : { publicadaEm: new Date() }) },
@@ -197,10 +200,13 @@ function lerCursor(cursor: string): { em: Date; codigo: string } {
 }
 
 /** GET /api/explorar: "Em alta" (primeira página) e "Novas" (20 por página, por cursor), com filtro de tema. */
-export async function explorar(quem: string | null, filtro: { tema?: string | null; cursor?: string | null }): Promise<PaginaExplorar> {
+export async function explorar(quem: string | null, filtro: { tema?: string | null; cursor?: string | null; seguindo?: boolean }): Promise<PaginaExplorar> {
   const tema = filtro.tema || null;
   if (tema !== null && !ehTema(tema)) throw new FalhaApi("invalido");
   const cursor = filtro.cursor ? lerCursor(filtro.cursor) : null;
+  // Aba "Seguindo": as trilhas publicadas por quem a pessoa segue, das mais novas para as mais antigas (sem Em alta).
+  if (filtro.seguindo && !quem) throw new FalhaApi("nao_autenticado");
+  const seguidos = filtro.seguindo && quem ? await seguidosPor(quem) : null;
   const pagina = await banco.linkTrilha.findMany({
     where: {
       noExplorar: true,
@@ -208,6 +214,7 @@ export async function explorar(quem: string | null, filtro: { tema?: string | nu
       publicadaEm: { not: null },
       ...semDemonstracao(),
       ...(tema ? { tema } : {}),
+      ...(seguidos ? { usuarioId: { in: seguidos } } : {}),
       ...(cursor ? { OR: [{ publicadaEm: { lt: cursor.em } }, { publicadaEm: cursor.em, codigo: { lt: cursor.codigo } }] } : {}),
     },
     orderBy: [{ publicadaEm: "desc" }, { codigo: "desc" }],
@@ -217,7 +224,7 @@ export async function explorar(quem: string | null, filtro: { tema?: string | nu
   const temMais = pagina.length > LIMITES_COMUNIDADE.porPagina;
   const novas = pagina.slice(0, LIMITES_COMUNIDADE.porPagina);
   let emAlta: CartaoTrilha[] = [];
-  if (!cursor) {
+  if (!cursor && !seguidos) {
     const top = (await classificacaoDaSemana()).filter((item) => !tema || item.tema === tema).slice(0, LIMITES_COMUNIDADE.emAlta);
     const linksTop = top.length === 0 ? [] : await banco.linkTrilha.findMany({ where: { codigo: { in: top.map((item) => item.codigo) }, noExplorar: true, oculta: false }, select: camposLink });
     const porCodigo = new Map(linksTop.map((link) => [link.codigo, link]));
@@ -227,6 +234,7 @@ export async function explorar(quem: string | null, filtro: { tema?: string | nu
     emAlta,
     novas: await cartoesDe(novas, quem),
     cursor: temMais ? cursorDe(novas[novas.length - 1]) : null,
+    ...(seguidos ? { seguindoAlguem: seguidos.length > 0 } : {}),
   };
 }
 
@@ -236,7 +244,8 @@ export async function perfilPublicoComCartoes(perfilId: string, quem: string | n
   const usuario = await banco.usuario.findUnique({ where: { perfilId }, select: { id: true } });
   if (!usuario) return perfil;
   const links = await banco.linkTrilha.findMany({ where: { usuarioId: usuario.id, noPerfil: true }, orderBy: { criadoEm: "desc" }, select: camposLink });
-  return { ...perfil, cartoes: await cartoesDe(links, quem) };
+  const [cartoes, seguidores, seguir] = await Promise.all([cartoesDe(links, quem), contarSeguidores(usuario.id), estadoSeguir(quem, usuario.id)]);
+  return { ...perfil, alcance: { ...perfil.alcance, seguidores }, cartoes, ...(seguir ? { seguir } : {}) };
 }
 
 /** Liga ou desliga o valeu (um por conta por trilha). Não vale na própria trilha nem em conta de visitante. */

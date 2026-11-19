@@ -27,6 +27,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
+import { revisarConteudo } from "./revisao";
 import type { Prisma } from "@/servidor/banco/gerado/client";
 
 /*
@@ -164,7 +165,7 @@ export async function obterPerfil(usuarioId: string): Promise<Perfil> {
     resumo: usuario.perfilResumo || null,
     interesses: temasGuardados(usuario.perfilInteresses),
     foto: usuario.foto?.token ?? null,
-    alcance: alcanceDe(links),
+    alcance: { ...alcanceDe(links), ...(comunidadeAtiva() ? { seguidores: await banco.seguir.count({ where: { seguidoId: usuarioId } }) } : {}) },
     perfilId: usuario.perfilId,
     publico: links.some((link) => link.noPerfil),
     email: usuario.email,
@@ -190,6 +191,10 @@ export async function salvarPerfil(usuarioId: string, entrada: unknown): Promise
   const usuario = await banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { email: true, perfilId: true } });
   if (ehEmailVisitante(usuario.email)) throw new FalhaApi("compartilhar_visitante");
   await limitar(`perfil:${usuarioId}`, LIMITES.perfil);
+  // Revisão de conteúdo (ponto de extensão; hoje aprova tudo) antes de gravar o nome e o resumo.
+  for (const [tipo, texto] of [["nome", nome], ["resumo", resumo ?? ""]] as const) {
+    if (texto && !(await revisarConteudo({ tipo, usuarioId, texto })).aprovado) throw new FalhaApi("conteudo_recusado");
+  }
   await banco.usuario.update({
     where: { id: usuarioId },
     data: {
@@ -364,7 +369,16 @@ export async function trilhaCompartilhada(codigo: string, usuarioId: string | nu
   if (!usuarioId) return previa;
   if (usuarioId === link.usuarioId) return { ...previa, situacao: "sua", planoId: link.planoId };
   const copia = await banco.planoAprendizado.findUnique({ where: { usuarioId_origemCodigo: { usuarioId, origemCodigo: codigo } }, select: { id: true } });
-  return copia ? { ...previa, situacao: "adicionada", planoId: copia.id } : { ...previa, situacao: "nova" };
+  // Com a comunidade: o botão Seguir do cartão "Quem compartilhou" (só com perfil público; visitante e demonstração não seguem).
+  let seguirDono: TrilhaCompartilhada["seguirDono"];
+  if (comunidadeAtiva() && dono.perfilId) {
+    const quem = await banco.usuario.findUnique({ where: { id: usuarioId }, select: { email: true, perfilDemo: true } });
+    const pode = Boolean(quem && !ehEmailVisitante(quem.email) && !quem.perfilDemo);
+    const segue = pode && Boolean(await banco.seguir.findUnique({ where: { seguidorId_seguidoId: { seguidorId: usuarioId, seguidoId: link.usuarioId } }, select: { criadoEm: true } }));
+    seguirDono = { seguindo: segue, podeSeguir: pode };
+  }
+  const situacao = copia ? { situacao: "adicionada" as const, planoId: copia.id } : { situacao: "nova" as const };
+  return { ...previa, ...situacao, ...(seguirDono ? { seguirDono } : {}) };
 }
 
 /**

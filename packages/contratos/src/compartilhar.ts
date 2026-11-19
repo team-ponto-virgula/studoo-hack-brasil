@@ -1,4 +1,4 @@
-import type { CartaoTrilha, Visibilidade } from './comunidade';
+import type { CartaoTrilha, EstadoSeguir, Visibilidade } from './comunidade';
 
 /*
  * Perfis leves e compartilhar trilha (spec 09): o contrato que a web e o app usam. Compartilhar é dar uma cópia: quem
@@ -96,6 +96,8 @@ export interface FotoEnviada {
 export interface AlcancePerfil {
   trilhas: number;
   pessoas: number;
+  /** Com a comunidade (etapa C2): quantas pessoas seguem o perfil. Só a contagem; nunca a lista. */
+  seguidores?: number;
 }
 
 /** A inicial do avatar: a primeira letra ou número do nome, em maiúscula. */
@@ -195,6 +197,8 @@ export interface TrilhaCompartilhada {
   situacao?: SituacaoTrilhaCompartilhada;
   /** Com `situacao` "adicionada" ou "sua": a trilha da própria pessoa, para abrir. */
   planoId?: string;
+  /** Com a comunidade e sessão: o botão Seguir do cartão "Quem compartilhou" (só quando o perfil dela é público). */
+  seguirDono?: EstadoSeguir;
 }
 
 /** POST /api/compartilhar/:codigo/adicionar */
@@ -218,6 +222,8 @@ export interface PerfilPublico {
   alcance: AlcancePerfil;
   /** Com a comunidade: as trilhas do perfil como cartões (capa, tema, legenda, estudando e valeus). */
   cartoes?: CartaoTrilha[];
+  /** Com a comunidade e sessão: se a pessoa segue este perfil e se pode seguir (não é ela, nem visitante). */
+  seguir?: EstadoSeguir;
   trilhas: { codigo: string; titulo: string; totalLicoes: number; origem: string }[];
 }
 

@@ -25,7 +25,7 @@ process.env.STUDOO_COMPARTILHAR = '1';
 process.env.STUDOO_COMUNIDADE = '1';
 const usuarios = [];
 // O banco local é compartilhado: se a demonstração já existia antes da suíte, ela volta no fim (com datas novas).
-const demoAntes = (await banco.usuario.count({ where: { perfilDemo: true } })) > 0;
+const demoAntes = (await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } })) > 0;
 
 after(async () => {
   process.env.STUDOO_COMUNIDADE_DEMO = '1';
@@ -113,7 +113,7 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
   const datasAntes = (await banco.linkTrilha.findMany({ where: { plano: { usuario: { perfilDemo: true } } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
   const segundo = await criarDemonstracao();
   assert.deepEqual(segundo, primeiro, 'rodar de novo não duplica');
-  assert.equal(await banco.usuario.count({ where: { perfilDemo: true } }), primeiro.perfis);
+  assert.equal(await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } }), primeiro.perfis);
   assert.equal(await banco.linkTrilha.count({ where: { plano: { usuario: { perfilDemo: true } } } }), primeiro.trilhas);
   const datasDepois = (await banco.linkTrilha.findMany({ where: { plano: { usuario: { perfilDemo: true } } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
   assert.ok(Math.min(...datasDepois) > Math.max(...datasAntes) - 3 * 24 * 60 * 60_000 + 60_000, 'as datas andaram');
@@ -174,7 +174,7 @@ test('demonstração: sem a flag no servidor, some do Explorar, do /p e do /t; u
   }
   const { perfis } = await removerDemonstracao();
   assert.ok(perfis >= 4);
-  assert.equal(await banco.usuario.count({ where: { perfilDemo: true } }), 0);
+  assert.equal(await banco.usuario.count({ where: { perfilDemo: true, email: { endsWith: `@${DOMINIO_DEMO}` } } }), 0);
   assert.equal(await banco.planoAprendizado.count({ where: { usuarioId: pessoa.id, origemCodigo: link.codigo } }), 1, 'a cópia da pessoa fica');
   zerarCacheEmAlta();
 });

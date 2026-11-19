@@ -21,6 +21,7 @@ import {
   type LinkCompartilhado,
   type Perfil,
   type CartaoTrilha,
+  type PerfilPublico,
   type Tema,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
@@ -29,6 +30,7 @@ import { Botao, Icone, Stu } from '../ui';
 import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, urlDoLink, useDialogo } from './compartilhar';
 import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
+import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
 import './perfil.css';
 
 const m = mensagens.compartilhar;
@@ -85,7 +87,12 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
             {interesses.map((tema) => <li key={tema}>{temas[tema]}</li>)}
           </ul>
         )}
-        <p className="cabeca-perfil__alcance"><span className="somente-leitor">{p.alcanceRotulo}: </span>{p.alcance(alcance.trilhas, alcance.pessoas)}</p>
+        <p className="cabeca-perfil__alcance">
+          <span>
+            <span className="somente-leitor">{p.alcanceRotulo}: </span>{p.alcance(alcance.trilhas, alcance.pessoas)}
+            {alcance.seguidores !== undefined && <> · <strong>{mensagens.comunidade.seguidores(alcance.seguidores)}</strong></>}
+          </span>
+        </p>
       </div>
     </div>
   );
@@ -99,6 +106,23 @@ export function BotaoCompartilharPerfil({ perfilId, nome, cor, foto, variante = 
       <Botao variante={variante} onClick={() => setAberto(true)}><Icone nome="compartilhar" />{p.compartilharPerfil}</Botao>
       {aberto && <FolhaCompartilharPerfil perfilId={perfilId} nome={nome} cor={cor} fotoToken={foto} aoFechar={() => setAberto(false)} />}
     </>
+  );
+}
+
+/**
+ * O cabeçalho do /p com Seguir (com a comunidade) e "Compartilhar perfil": a contagem de seguidores muda na hora ao
+ * seguir ou deixar de seguir. Sem lista de quem segue.
+ */
+export function CabecalhoPublico({ perfil, perfilId, logado }: { perfil: PerfilPublico; perfilId: string; logado: boolean }) {
+  const [seguidores, setSeguidores] = useState(perfil.alcance.seguidores);
+  const comunidade = perfil.alcance.seguidores !== undefined;
+  return (
+    <CabecalhoPerfil demo={Boolean(perfil.demo)} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
+      alcance={{ ...perfil.alcance, ...(seguidores !== undefined ? { seguidores } : {}) }}
+      acoes={<>
+        {comunidade && <BotaoSeguir perfilId={perfilId} nome={perfil.nome} estado={perfil.seguir} logado={logado} aoMudar={setSeguidores} />}
+        <BotaoCompartilharPerfil perfilId={perfilId} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} />
+      </>} />
   );
 }
 
@@ -245,6 +269,8 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
               <p className="folha-status" role="status" aria-live="polite">{copiado}</p>
             </section>
           )}
+
+          {comunidade && !perfil.visitante && perfil.nome && <NovidadesDoPerfil abrirPlano={abrirPlano} />}
 
           {cartoes && cartoes.length > 0 && (
             <CartoesDoPerfil key={assinaturaLinks} inicial={cartoes} logado titulo={mensagens.comunidade.naSuaPagina}

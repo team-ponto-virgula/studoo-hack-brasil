@@ -36,6 +36,20 @@ model Usuario {
   denuncias        Denuncia[]
   /// Perfil de demonstração (spec 10, etapa C): criado pelo comando da comunidade, sem senha e sem login; selo público.
   perfilDemo       Boolean              @default(false)
+  segue            Seguir[]             @relation("seguidor")
+  seguidores       Seguir[]             @relation("seguido")
+}
+
+/// Seguir (spec 10, etapa C2): quem segue quem, com data (as Novidades contam os novos da semana). Sem lista pública.
+model Seguir {
+  seguidorId String
+  seguidoId  String
+  criadoEm   DateTime @default(now()) @db.Timestamptz(3)
+  seguidor   Usuario  @relation("seguidor", fields: [seguidorId], references: [id], onDelete: Cascade)
+  seguido    Usuario  @relation("seguido", fields: [seguidoId], references: [id], onDelete: Cascade)
+
+  @@id([seguidorId, seguidoId])
+  @@index([seguidoId, criadoEm])
 }
 
 /// Foto do perfil (spec 10), já recortada e regravada em WebP (sem EXIF). O token aleatório é o endereço público e muda a

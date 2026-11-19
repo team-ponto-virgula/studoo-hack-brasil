@@ -486,6 +486,41 @@ export const mensagens = {
         ajustarRotulo: (titulo: string) => `Mudar quem pode ver “${titulo}”`,
         naSuaPagina: 'Como aparece na sua página',
         perfilDemo: 'Perfil de demonstração',
+        // Seguir (etapa C2)
+        seguir: 'Seguir',
+        seguindo: 'Seguindo',
+        seguirRotulo: (nome: string) => `Seguir ${nome}`,
+        seguindoRotulo: (nome: string) => `Seguindo ${nome}. Toque para deixar de seguir.`,
+        passouASeguir: (nome: string) => `Agora você segue ${nome}.`,
+        deixouDeSeguir: (nome: string) => `Você deixou de seguir ${nome}.`,
+        seguidores: (n: number) => (n === 1 ? '1 seguidor' : `${n} seguidores`),
+        abasRotulo: 'O que mostrar',
+        abaTodos: 'Todos',
+        abaSeguindo: 'Seguindo',
+        seguindoTitulo: 'De quem você segue',
+        vazioSeguindoTitulo: 'Você ainda não segue ninguém',
+        vazioSeguindoTexto: 'Siga quem publica trilhas que você curte: toque em “Seguir” no perfil da pessoa. As trilhas novas dela aparecem aqui.',
+        vazioSeguindoAcao: 'Ver todas as trilhas',
+        seguidosSemTrilhas: 'Quem você segue ainda não publicou trilhas no Explorar.',
+        // Novidades (etapa C2)
+        novidadesTitulo: 'Novidades',
+        novidadesVazio: 'Sem novidades nesta semana. Quando alguém começar uma trilha sua, mandar um valeu ou seguir você, aparece aqui.',
+        novidadesSemana: 'Nos últimos 7 dias',
+        alguem: 'Alguém',
+        listaPessoas: (nomes: string[], outros: number) => {
+            if (nomes.length === 0) return outros === 1 ? 'Alguém' : `${outros} pessoas`;
+            if (outros === 0) return nomes.length === 1 ? nomes[0] : `${nomes.slice(0, -1).join(', ')} e ${nomes[nomes.length - 1]}`;
+            return `${nomes.join(', ')} e mais ${outros} ${outros === 1 ? 'pessoa' : 'pessoas'}`;
+        },
+        novidadeAdicoes: (n: number, titulo: string) => `${n === 1 ? '1 pessoa começou' : `${n} pessoas começaram`} sua trilha “${titulo}”`,
+        novidadeValeus: (quem: string, total: number, titulo: string) => `${quem} ${total === 1 ? 'mandou um valeu' : 'mandaram valeu'} em “${titulo}”`,
+        novidadeSeguidores: (quem: string | null, total: number) => (quem
+            ? `${quem} ${total === 1 ? 'começou' : 'começaram'} a seguir você`
+            : `${total === 1 ? '1 pessoa nova segue' : `${total} pessoas novas seguem`} você`),
+        quando: (iso: string) => {
+            const dias = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+            return dias <= 0 ? 'hoje' : dias === 1 ? 'ontem' : `há ${dias} dias`;
+        },
         nova: 'Nova',
         novaRotulo: 'Nova: ninguém começou ainda.',
         trocarTema: 'Trocar tema',
@@ -1002,6 +1037,8 @@ export const mensagens = {
         limite_foto: 'Você trocou de foto muitas vezes. Tente de novo daqui a pouco.',
         explorar_material: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
         limite_comunidade: 'Muitas ações por agora. Tente de novo daqui a pouco.',
+        seguir_invalido: 'Não dá para seguir este perfil.',
+        conteudo_recusado: 'Este conteúdo não pode ser publicado. Ajuste e tente de novo.',
         falha: 'Não foi possível continuar. Tente novamente.',
         rede: 'Confira a conexão e tente novamente.',
         conexao: 'Confira a conexão e tente novamente.',

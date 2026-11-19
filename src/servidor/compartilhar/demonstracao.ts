@@ -143,6 +143,13 @@ export async function criarDemonstracao(agora = new Date()) {
     ]);
     codigos.push(codigo);
   }
+  // Os perfis de demonstração seguem uns aos outros (nunca alguém de verdade): o /p mostra "N seguidores".
+  const seguir = todos.flatMap((seguidorId, i) => todos.filter((_, j) => j !== i && (i + j) % 3 !== 0)
+    .map((seguidoId, k) => ({ seguidorId, seguidoId, criadoEm: new Date(agora.getTime() - (1 + espalhar(i * 7 + k)) * 5 * 24 * 60 * 60_000 / 2) })));
+  await banco.$transaction([
+    banco.seguir.deleteMany({ where: { seguidorId: { in: todos }, seguidoId: { in: todos } } }),
+    banco.seguir.createMany({ data: seguir }),
+  ]);
   zerarCacheEmAlta();
   return { perfis: ids.size, trilhas: codigos.length, temas: new Set(TRILHAS.map((t) => t.tema)).size };
 }
