@@ -48,7 +48,7 @@ Caixa útil = caixa do alfa (> 8) no original de 1024, em x, y, largura × altur
 | `acessorio-fone` | `acessorios/fone` | 58, 77, 908×870 | justo | P | parte B |
 | `acessorio-livro` | `acessorios/livro` | 89, 58, 847×908 | justo | M | parte B |
 
-Ficam no kit, sem uso por enquanto: `vistas/frente` (o `stu-feliz` faz o papel), `vistas/perfil-esquerdo` (é o perfil espelhado), `vistas/costas`, `acessorios/mochila`, `acessorios/notebook` e `acessorios/chapeu-de-formatura`.
+Ficam no kit, sem uso por enquanto: `vistas/frente` (o `stu-feliz` faz o papel), `vistas/perfil-esquerdo` (é o perfil espelhado), `vistas/costas`, `acessorios/mochila`, `acessorios/notebook` e `acessorios/chapeu-de-formatura`. Desde 19/11 (revisão da §B4 com o Mobile & QA), também `poses/organizando` e `expressoes/meio-de-boa`: os arquivos gerados delas saem do pacote do app e de `public/` até terem uso (cerca de 0,7 MB de animado no app).
 
 ## A2. Mapa de troca
 Hoje a web usa `/marca/stu-oi.svg` pelo `Stu` de `src/ui/componentes.tsx:14` (e direto em `src/app/compartilhar.tsx:632` e `src/servidor/og/cartao.tsx:55`); o app usa `assets/marca/stu-oi.png` direto, em 21 lugares. Tamanho novo = lado do quadro.
@@ -98,25 +98,25 @@ Regra geral: no máximo um Stu por tela, nunca mais alto que 40% da altura útil
 
 | Momento | Imagem | Tamanho | Comportamento |
 |---|---|---|---|
-| Boas-vindas (apresentação, 5 passos) | 1: `stu-acolhida`; 2: `stu-curioso` com `acessorio-livro` e `acessorio-fone` em volta (48); 3: `stu-organizando`; 4: `stu-estudando`; 5: `stu-feliz` | 160 (passo 2 e 5: 96 e 72) | entra com o passo e dá o "pop" (§B7); Pular continua em todos |
-| Minhas trilhas, sem trilha | `stu-organizando` | 96 | título "Sua primeira trilha começa aqui" e o botão "Pedir uma trilha" |
-| Novidades, sem novidade | `stu-meio-de-boa` | 96 | "Tudo em dia por aqui." É o único uso dos óculos escuros |
+| Boas-vindas (apresentação, os 5 passos de hoje) | passos 2 (o erro abre outro caminho) e 3 (explique com suas palavras): os Stu das cenas, ponte e caderno, como estão; passo 4 (progresso salvo no mapa): `stu-comemorando` ao lado do troféu da miniatura, à direita dele e com a base na base do nó, como no fim do mapa; passos 1 (material) e 5 (interesses): sem Stu | passo 4: 40 | entra com o passo e dá o "pop" (§B7), sem mudar a altura da arte; Pular continua em todos. Revisto em 19/11 |
 | Explorar e busca sem resultado | `stu-curioso` | 96 | como na §A2 |
 | Espera: mapa montando | `stu-curioso` | 92 | balão com pontinhos (spec 04) |
 | Espera: Escrevendo suas lições | `stu-estudando` | 132×106 | §A2; em "Lições prontas!" troca para `stu-comemorando` com pulo |
-| Espera: lendo o material enviado | `stu-concentrado` | 72 | "Lendo seu material…" ao lado. Carregamento de menos de 1 s fica só no esqueleto, sem Stu |
+| Espera: lendo o material enviado | o Stu do alto do pedido vira `stu-concentrado` | o do pedido (72) | quando a espera passa de 1 s; o texto continua "O Stu está preparando…", sem chave nova. Carregamento de menos de 1 s fica só no esqueleto |
 | Acerto | `stu-feliz`; de primeira, `stu-comemorando` | 42 (48 na tela larga) | no painel de retorno, na ponta direita da linha do título, com pulo; o painel verde, com o visto e o título, continua sendo o sinal principal |
 | Erro | `stu-encorajador` | 42 (48 na tela larga) | no painel de retorno, na ponta direita da linha do título; sem tremer (quem treme é o exercício, spec 04); o X e o título no painel âmbar |
 | Ponte do reforço | `stu-perfil` atravessando, `stu-animado` ao chegar; balão do reforço com `stu-encorajador` | 44; balão 76 | atravessa a tábua como hoje |
 | Lição concluída | `stu-comemorando`; com exercício sem acerto, `stu-encorajador` | 140 | raios e confete só no primeiro caso (spec 04) |
 | Trilha concluída | `stu-celebrando` (com troféu) | 240 | confete, "Trilha concluída!" e "Compartilhar trilha" |
-| Fim do mapa | `acessorio-trofeu` no lugar do troféu desenhado | 72 | proposta: cinza a 40% antes; cor cheia com pop ao concluir a trilha |
+| Fim do mapa | `acessorio-trofeu` no lugar do ícone desenhado da lente | 72% do lado da lente (52 na lente de 72, 56 na de 78, 60 na de 82), arquivo da faixa M | a lente tem face branca #FFFFFF com borda de 3 px #E0A92E e o lábio de baixo #C7922A, nos dois estados (na face dourada, o troféu sumia). Antes: troféu em silhueta cinza a 40% (web: `filter: grayscale(1)` e opacidade 0,4; app: `tintColor` #8A93B0 e opacidade 0,4). Ao concluir a trilha: cor cheia, com o pop de hoje e um ciclo da animação (§E1) |
 | 404 | `stu-surpreso` | 120 | com halo; "Essa página não existe" e "Voltar ao início" |
 | Erro de rede | na linha, `stu-encorajador`; tela inteira sem conexão, `stu-surpreso` | 48; 96 | "Sem conexão. Confira a internet e tente de novo." e "Tentar de novo" |
 | Prática com cronômetro | `stu-concentrado`; ao terminar, `stu-comemorando` | 48 | ao lado do cronômetro, nunca sobre o diagrama |
 | Voz: Ensine ao Stu e voz ao vivo | ouvindo `stu-concentrado`; falando `stu-animado`; pensando `stu-curioso`; anotou `stu-encorajador` | 96 | no centro da tela de voz, com as ondas de hoje em volta |
 | Compartilhar | prévia `stu-feliz`; imagem do link `stu-acolhida` | 64; 240 | depois de compartilhar, só o aviso em texto (spec 11) |
 | Controle de som (spec 12) | `acessorio-fone` | 40 | no título da folha "Som" |
+
+**Revisão de 19/11 (com o Mobile & QA, nas telas de hoje):** Minhas trilhas sem trilha não existe: com zero trilhas, Minhas trilhas abre o pedido, que já tem o Stu (curioso, 72). Novidades é uma seção do Perfil, com uma linha de texto: fica sem Stu, porque no máximo um aparece por tela e ele ficaria maior que o bloco, e a linha de hoje continua, sem título novo.
 
 **Fica fora:** a área de resposta antes de "Verificar"; o texto da explicação (o Stu fica ao lado do balão, nunca por cima); formulários (perfil, configurações da trilha); listas e cartões do Explorar, salvo o vazio; avisos, menus e confirmações (spec 11); a barra do alto da aula; foto ou capa de trilha.
 
@@ -168,7 +168,7 @@ Modos: **laço** (repete enquanto está visível, com as pausas da §E4); **uma 
 |---|---|---|
 | Entrada, faixa no celular | `stu-acolhida` | laço; para quando um campo recebe foco |
 | Entrada, tela larga (XG) | `stu-acolhida` | parado, com o aceno da §B7 (§E2) |
-| Apresentação, cada passo | as da §B4 | uma vez ao entrar no passo |
+| Apresentação, passo 4 | `stu-comemorando` ao lado do troféu da miniatura | uma vez ao entrar no passo (os Stu das cenas dos passos 2 e 3 seguem a ponte e o caderno) |
 | Pedido: convida | `stu-curioso` | uma vez ao abrir |
 | Pedido: pessoa escrevendo | `stu-encorajador` | parado |
 | Pedido: ideia aplicada | `stu-animado` | no acontecimento |
@@ -187,8 +187,7 @@ Modos: **laço** (repete enquanto está visível, com as pausas da §E4); **uma 
 | Lição concluída | `stu-comemorando` (ou `stu-encorajador`) | no acontecimento, dois ciclos |
 | Trilha concluída | `stu-celebrando` | no acontecimento, dois ciclos (§E2) |
 | Fim do mapa | `acessorio-trofeu` | no acontecimento (trilha concluída) |
-| Minhas trilhas sem trilha | `stu-organizando` | laço |
-| Novidades e Explorar sem resultado | `stu-meio-de-boa`, `stu-curioso` | uma vez ao abrir |
+| Explorar sem resultado | `stu-curioso` | uma vez ao abrir |
 | 404, erro do app, sem conexão, páginas públicas, erro na linha | `stu-surpreso`, `stu-encorajador` | uma vez ao abrir (no 404, junto com o "chegar" da §B7) |
 | Controle de som | `acessorio-fone` | parado |
 | Imagem de prévia do link | `stu-acolhida` | parado (PNG; o cartão de link não anima) |
