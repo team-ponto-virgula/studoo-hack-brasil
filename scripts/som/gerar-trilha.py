@@ -716,12 +716,18 @@ def master(x: np.ndarray, alvo_lufs: float = -24.0, teto_peak: float = 0.63) -> 
     return x
 
 
-def fecha_laco(x: np.ndarray, n_loop: int, n_curto: int = seg(0.9)) -> np.ndarray:
-    """Dobra a cauda no começo e recorta no compasso exato.
+def fecha_laco(x: np.ndarray, n_loop: int, n_curto: int = seg(0.9), pre: float = 0.026) -> np.ndarray:
+    """Dobra a cauda no começo, recorta no compasso exato e acrescenta 26 ms.
 
-    A cauda (reverb, notas longas) é somada aos primeiros 0,9 s; assim o fim do
-    laço já contém o que seria o ataque natural do começo e a emenda fica
-    contínua, sem fade nem degrau.
+    1. A cauda (reverb, notas longas) é somada aos primeiros 0,9 s: o fim do
+       laço continua no começo, sem fade nem degrau.
+    2. O trecho final de 26 ms é repetido antes do começo. O compasso 1 passa
+       a cair em exatamente `aparoInicioSeg` (0,026 s), que é onde o toca-sons
+       começa a tocar. No Chromium, que decodifica o MP3 já sem o atraso do
+       codificador, o laço então cobre os 32 compassos inteiros e a emenda é a
+       do material original; num navegador que não tire o atraso, o começo cai
+       dentro desse trecho de cauda, que é quase silêncio, em vez de abrir um
+       buraco.
     """
     cauda = x[n_loop:]
     inicio = x[:n_loop].copy()
@@ -729,7 +735,8 @@ def fecha_laco(x: np.ndarray, n_loop: int, n_curto: int = seg(0.9)) -> np.ndarra
     if k:
         peso = np.linspace(1, 0, k)[:, None] ** 1.2
         inicio[:k] += cauda[:k] * peso
-    return inicio
+    n_pre = seg(pre)
+    return np.concatenate([inicio[-n_pre:], inicio], axis=0)
 
 
 def escrever_wav(caminho: str, x: np.ndarray, bits: int = 16) -> None:
