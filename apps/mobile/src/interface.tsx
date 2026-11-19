@@ -881,9 +881,11 @@ const CURVA_DO_MENU = Easing.bezier(0.2, 0.9, 0.3, 1);
  * Menu de ações do Studoo (spec 11), o mesmo no iPhone, no Android e na web: o "•••" de 44 × 44 e o balão de 200 a 280,
  * embaixo do botão, alinhado pela direita, a 6 (em cima quando falta espaço até a borda ou até a barra de baixo; sempre a 8
  * das bordas). Entra em 160 ms (opacidade e escala de 0,96 a partir do canto do botão) e sai em 120 ms; com movimento
- * reduzido, só a opacidade. Abrir leva o foco ao primeiro item; tocar fora fecha sem acionar o que estiver embaixo; voltar
- * ou Esc fecham e devolvem o foco ao "•••". Escolher fecha o balão e só depois abre o destino (no iPhone, depois que o balão
- * saiu, como em janelas.ts).
+ * reduzido, só a opacidade. Tocar fora fecha sem acionar o que estiver embaixo; voltar, Esc ou o gesto de escapar do
+ * VoiceOver fecham e devolvem o foco ao "•••". Escolher fecha o balão e só depois abre o destino (no iPhone, depois que o
+ * balão saiu, como em janelas.ts). Leitor de tela (spec 11, 19/11): no app, o balão é um contêiner com o rótulo "Menu, N
+ * opções" (`componentes.menuRotulo`), que recebe o foco ao abrir (`accessibilityViewIsModal` no iOS), e cada item é um botão
+ * com o próprio texto. O mesmo na prévia web (os papéis `menu` e `menuitem` são da web, não do app).
  */
 export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloBotao, corDosPontos = cores.textoSecundario }: {
   /** Nome acessível do "•••" ("Mais opções de “<título>”"). */
@@ -897,7 +899,7 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
 }) {
   const [lugar, setLugar] = useState<{ direita: number; topo?: number; baixo?: number } | null>(null);
   const botao = useRef<ComponentRef<typeof Pressable>>(null);
-  const primeiro = useRef<ComponentRef<typeof Pressable>>(null);
+  const rotuloDoBalao = useRef<ComponentRef<typeof View>>(null);
   const janela = useWindowDimensions();
   const baixoOcupado = useContext(BaixoOcupado);
   const reduzir = useMovimentoReduzido() !== false;
@@ -910,12 +912,6 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
   const perigos = acoes.filter((acao) => acao.perigo);
   const comLinha = comuns.length > 0 && perigos.length > 0;
   const altura = 2 + 2 * RESPIRO_DO_MENU + ITEM_DO_MENU * acoes.length + (comLinha ? LINHA_DO_MENU : 0);
-
-  useEffect(() => {
-    if (!lugar) return;
-    const espera = setTimeout(() => focarSemRolar(primeiro.current), 50);
-    return () => clearTimeout(espera);
-  }, [lugar]);
 
   function abrir() {
     botao.current?.measureInWindow((x, y, largura, alturaBotao) => {
@@ -941,7 +937,8 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
     });
   }
   const item = (acao: AcaoDoMenu, indice: number) => (
-    <Pressable key={acao.rotulo} ref={indice === 0 ? primeiro : undefined} testID={acao.testID} accessibilityRole="button" role="menuitem"
+    // Botão, não `menuitem`: no iPhone esse papel não tem o traço de botão, e o VoiceOver deixaria de dizer "botão".
+    <Pressable key={acao.rotulo} testID={acao.testID} accessibilityRole="button"
       accessibilityLabel={acao.nomeAcessivel ?? acao.rotulo} onPress={() => fechar(acao.aoEscolher)}
       style={({ pressed }) => [estilos.menuItem, pressed && { backgroundColor: cores.nevoa }]}>
       <Icone nome={acao.icone} tamanho={20} cor={acao.perigo ? cores.erro : cores.texto} />
@@ -961,13 +958,18 @@ export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloB
       </Pressable>
       {/* Montado sempre (visible liga e desliga): o onDismiss avisa quando o balão saiu, para o destino abrir depois. */}
       <Modal transparent visible={Boolean(lugar)} animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={() => fechar(undefined, true)}
-        onDismiss={aoSair}>
+        onShow={() => focarSemRolar(rotuloDoBalao.current)} onDismiss={aoSair}>
         {lugar && (
           <>
             <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={() => fechar()} />
-            <Animated.View testID={`${testID}-balao`} role="menu" accessibilityLabel={rotulo}
+            <Animated.View testID={`${testID}-balao`} accessibilityViewIsModal onAccessibilityEscape={() => fechar(undefined, true)}
               style={[estilos.menuBalao, { right: lugar.direita, top: lugar.topo, bottom: lugar.baixo, maxWidth: Math.min(280, janela.width - 16), opacity: opacidade,
                 transform: [{ scale: escala }], transformOrigin: lugar.topo !== undefined ? 'right top' : 'right bottom' }]}>
+              {/* O rótulo do contêiner, do tamanho do balão e por baixo dos itens (o toque passa para eles): é ele que o leitor de
+                  tela anuncia e foca ao abrir. Um contêiner `accessible` esconderia os itens do VoiceOver; por isso um elemento à parte. */}
+              <View ref={rotuloDoBalao} testID={`${testID}-rotulo`} accessible accessibilityLabel={mensagens.componentes.menuRotulo(acoes.length)}
+                pointerEvents="none" style={StyleSheet.absoluteFill} />
+
               {comuns.map(item)}
               {comLinha && <View style={estilos.menuLinha} />}
               {perigos.map((acao, indice) => item(acao, comuns.length + indice))}

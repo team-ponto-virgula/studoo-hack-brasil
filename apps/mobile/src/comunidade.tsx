@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useContext, useEffect, useLayoutEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle,
 } from 'react-native';
@@ -212,9 +212,10 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, dua
 /**
  * Curtir (spec 10, "Revisão do dono (19/11)"; esboço `curtir-390.png`): coração de 20, "Curtir" e a contagem (some no zero),
  * num botão de contorno #8792BD que fica branco também curtido: só o coração enche (#D6336C) e a palavra e o número ficam
- * #A3204A. Ao curtir, o coração cresce para 1,3× e volta em 280 ms e o número novo entra por baixo (180 ms); ao descurtir, o
- * coração esvazia em 120 ms, sem pulo, e o número desce. Com movimento reduzido, a troca é na hora. O nome acessível é fixo
- * ("Curtir “X”"); o estado vai no `selected` e a contagem no valor. O botão não desliga enquanto envia.
+ * #A3204A. Ao curtir, o coração cresce para 1,3× e volta em 280 ms e o número rola em 180 ms: o antigo sai para cima e o novo
+ * entra por baixo; ao descurtir, o coração esvazia em 120 ms, sem pulo, e o número rola para baixo. Com movimento reduzido, a
+ * troca é na hora. O nome acessível é fixo ("Curtir “X”"); o estado vai no `selected` e a contagem no valor. O botão não
+ * desliga enquanto envia.
  */
 function BotaoValeu({ cartao, testID, aoTocar }: { cartao: CartaoTrilha; testID: string; aoTocar: () => void }) {
   const marcado = Boolean(cartao.valeuMeu);
@@ -222,35 +223,51 @@ function BotaoValeu({ cartao, testID, aoTocar }: { cartao: CartaoTrilha; testID:
   const animar = reduzir === false;
   const [pulo] = useState(() => new Animated.Value(1));
   const [cheio] = useState(() => new Animated.Value(marcado ? 1 : 0));
-  const [numero] = useState(() => new Animated.Value(0));
-  const antes = useRef({ marcado, valeus: cartao.valeus });
+  const antes = useRef(marcado);
   useEffect(() => {
     const anterior = antes.current;
-    antes.current = { marcado, valeus: cartao.valeus };
-    if (!animar) { cheio.setValue(marcado ? 1 : 0); pulo.setValue(1); numero.setValue(0); return; }
-    const movimentos: Animated.CompositeAnimation[] = [];
-    if (marcado && !anterior.marcado) {
+    antes.current = marcado;
+    if (!animar) { cheio.setValue(marcado ? 1 : 0); pulo.setValue(1); return; }
+    if (marcado && !anterior) {
       // curva 0.2, 0.9, 0.3, 1.4 da revisão, nas duas metades do pulo (280 ms ao todo).
       const curva = Easing.bezier(0.2, 0.9, 0.3, 1.4);
       cheio.setValue(1);
-      movimentos.push(Animated.sequence([
+      const pular = Animated.sequence([
         Animated.timing(pulo, { toValue: 1.3, duration: 120, easing: curva, useNativeDriver: true }),
         Animated.timing(pulo, { toValue: 1, duration: 160, easing: curva, useNativeDriver: true }),
-      ]));
-    } else if (!marcado && anterior.marcado) {
-      movimentos.push(Animated.timing(cheio, { toValue: 0, duration: 120, easing: Easing.out(Easing.ease), useNativeDriver: true }));
+      ]);
+      pular.start();
+      return () => pular.stop();
     }
-    if (cartao.valeus !== anterior.valeus) {
-      // O número novo entra por baixo quando sobe e por cima quando desce.
-      numero.setValue(cartao.valeus > anterior.valeus ? 10 : -10);
-      movimentos.push(Animated.timing(numero, { toValue: 0, duration: 180, easing: Easing.out(Easing.ease), useNativeDriver: true }));
+    if (!marcado && anterior) {
+      const esvaziar = Animated.timing(cheio, { toValue: 0, duration: 120, easing: Easing.out(Easing.ease), useNativeDriver: true });
+      esvaziar.start();
+      return () => esvaziar.stop();
     }
-    if (movimentos.length === 0) return;
-    const todos = Animated.parallel(movimentos);
-    todos.start();
-    return () => todos.stop();
-  }, [marcado, cartao.valeus, animar, cheio, pulo, numero]);
+  }, [marcado, animar, cheio, pulo]);
+
+  // A rolagem do número (0 → 1 em 180 ms): o novo entra a 10 px de distância e aparece; o antigo, por cima dele, sai pelo lado
+  // oposto e some. Antes da pintura (layout effect), para o número novo não piscar parado no primeiro quadro.
+  const [rolagem] = useState(() => new Animated.Value(1));
+  const [saindo, setSaindo] = useState<{ valor: number; sobe: boolean } | null>(null);
+  const valeusAntes = useRef(cartao.valeus);
+  useLayoutEffect(() => {
+    const anterior = valeusAntes.current;
+    valeusAntes.current = cartao.valeus;
+    if (cartao.valeus === anterior) return;
+    if (!animar) { rolagem.setValue(1); setSaindo(null); return; }
+    const sobe = cartao.valeus > anterior;
+    rolagem.setValue(0);
+    setSaindo({ valor: anterior, sobe });
+    const rolar = Animated.timing(rolagem, { toValue: 1, duration: 180, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    rolar.start(({ finished }) => { if (finished) setSaindo(null); });
+    return () => rolar.stop();
+  }, [cartao.valeus, animar, rolagem]);
+  const distancia = saindo?.sobe === false ? -10 : 10;
   const cor = marcado ? '#A3204A' : cores.texto;
+  const corDoNumero = marcado ? '#A3204A' : cores.textoSecundario;
+  // O antigo sai sobre o novo; sem número novo (a contagem chegou a zero), ele mesmo ocupa o lugar até sair.
+  const antigoVisivel = saindo !== null && saindo.valor > 0;
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={c.valeuRotulo(cartao.titulo)}
       accessibilityState={{ selected: marcado }} accessibilityValue={cartao.valeus > 0 ? { text: c.valeus(cartao.valeus) } : undefined}
@@ -263,11 +280,24 @@ function BotaoValeu({ cartao, testID, aoTocar }: { cartao: CartaoTrilha; testID:
         </Animated.View>
       </Animated.View>
       <Text importantForAccessibility="no" style={[comunidadeEstilos.valeuTexto, { color: cor }]}>{c.valeu}</Text>
-      {cartao.valeus > 0 && (
-        <Animated.Text testID={`${testID}-n`} importantForAccessibility="no"
-          style={[comunidadeEstilos.valeuTexto, comunidadeEstilos.valeuNumero, { color: marcado ? '#A3204A' : cores.textoSecundario, transform: [{ translateY: numero }] }]}>
-          {cartao.valeus}
-        </Animated.Text>
+      {(cartao.valeus > 0 || antigoVisivel) && (
+        <View style={comunidadeEstilos.valeuRolo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          {cartao.valeus > 0 && (
+            <Animated.Text testID={`${testID}-n`}
+              style={[comunidadeEstilos.valeuTexto, comunidadeEstilos.valeuNumero, { color: corDoNumero, opacity: rolagem,
+                transform: [{ translateY: rolagem.interpolate({ inputRange: [0, 1], outputRange: [distancia, 0] }) }] }]}>
+              {cartao.valeus}
+            </Animated.Text>
+          )}
+          {antigoVisivel && (
+            <Animated.Text testID={`${testID}-n-antigo`}
+              style={[comunidadeEstilos.valeuTexto, comunidadeEstilos.valeuNumero, cartao.valeus > 0 && comunidadeEstilos.valeuNumeroAntigo,
+                { color: corDoNumero, opacity: rolagem.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+                  transform: [{ translateY: rolagem.interpolate({ inputRange: [0, 1], outputRange: [0, -distancia] }) }] }]}>
+              {saindo.valor}
+            </Animated.Text>
+          )}
+        </View>
       )}
     </Pressable>
   );
@@ -1060,7 +1090,10 @@ const comunidadeEstilos = StyleSheet.create({
   valeuCoracao: { width: 20, height: 20 },
   valeuTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   // .cartao-trilha__valeu-n: a contagem em algarismos de largura fixa, no mínimo 1,25 em.
-  valeuNumero: { marginLeft: 2, fontVariant: ['tabular-nums'] },
+  // Sem recorte: com 10 → 9 o antigo é mais largo que o lugar e seria cortado; ele some pela opacidade, dentro do botão de 44.
+  valeuRolo: { marginLeft: 2 },
+  valeuNumero: { fontVariant: ['tabular-nums'] },
+  valeuNumeroAntigo: { position: 'absolute', left: 0, top: 0 },
   icone: { minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 10, borderWidth: 2, borderColor: '#8792BD',
     borderRadius: 14, backgroundColor: cores.fundo },
   // .denuncia__alvo: o que está sendo denunciado, logo abaixo do título (6 mais perto dele), em 800.

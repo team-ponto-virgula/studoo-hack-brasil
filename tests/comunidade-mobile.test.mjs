@@ -39,3 +39,35 @@ test('a barra de baixo segue a ordem da web: Minhas trilhas, Nova trilha, Explor
   const ordem = [...corpo.matchAll(/\{ id: '(planos|objetivo|explorar|perfil)', rotulo/g)].map((achado) => achado[1]);
   assert.deepEqual(ordem, ['planos', 'objetivo', 'explorar', 'perfil']);
 });
+
+// Acabamento do item 4 (Designer, 19/11): menu de ações com o leitor de tela da spec 11, folha da foto e barra de salvar da
+// spec 10 e o número do Curtir que rola.
+const corpoDe = (fonte, inicio) => {
+  const comeco = fonte.indexOf(inicio);
+  assert.ok(comeco >= 0, `${inicio} não encontrado`);
+  return fonte.slice(comeco, fonte.indexOf('\n}\n', comeco));
+};
+
+test('menu de ações no app: o balão anuncia "Menu, N opções", recebe o foco do leitor ao abrir e cada item é um botão', async () => {
+  const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
+  assert.equal(mensagens.componentes.menuRotulo(1), 'Menu, 1 opção');
+  assert.equal(mensagens.componentes.menuRotulo(3), 'Menu, 3 opções');
+  const corpo = corpoDe(await readFile(new URL('../apps/mobile/src/interface.tsx', import.meta.url), 'utf8'), 'export function MenuDeAcoes');
+  assert.match(corpo, /accessibilityLabel=\{mensagens\.componentes\.menuRotulo\(acoes\.length\)\}/);
+  assert.match(corpo, /onShow=\{\(\) => focarSemRolar\(rotuloDoBalao\.current\)\}/);
+  assert.match(corpo, /accessibilityViewIsModal/);
+  assert.match(corpo, /onAccessibilityEscape=/);
+  assert.doesNotMatch(corpo, /role="menuitem"|role=\{?'menuitem'/);
+});
+
+test('perfil: a folha da foto se chama "Foto do perfil" e a barra diz "Não salvo" com Cancelar e Salvar até 400 px', async () => {
+  const fonte = await readFile(new URL('../apps/mobile/src/perfil.tsx', import.meta.url), 'utf8');
+  assert.match(fonte, /<FolhaDeAcoes[^>]*titulo=\{p\.fotoFolhaTitulo\}/);
+  assert.match(fonte, /comCancelar && width <= 400 \? p\.naoSalvoCurto : p\.alteracoesNaoSalvas/);
+});
+
+test('Curtir: o número antigo fica na tela enquanto sai, para o lado oposto ao do novo', async () => {
+  const corpo = corpoDe(await readFile(new URL('../apps/mobile/src/comunidade.tsx', import.meta.url), 'utf8'), 'function BotaoValeu');
+  assert.match(corpo, /testID=\{`\$\{testID\}-n-antigo`\}/);
+  assert.match(corpo, /outputRange: \[0, -distancia\]/);
+});
