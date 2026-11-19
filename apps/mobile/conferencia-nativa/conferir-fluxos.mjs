@@ -4,7 +4,8 @@
 // O que confere:
 //   1. todo `id:` usado num fluxo existe como `testID` em apps/mobile/src (um `testID` montado com `${...}` vale como molde),
 //      fora os poucos ids do próprio Expo Go, listados abaixo;
-//   2. as capturas do percurso (nomes que começam por dois dígitos) são exatamente as da lista CAPTURAS_ESPERADAS de ios.sh;
+//   2. as capturas do percurso (nomes que começam por dois dígitos) são exatamente as da lista CAPTURAS_ESPERADAS de
+//      comum.sh (a mesma para o iPhone e o Android);
 //   3. todo arquivo de `runFlow` existe;
 //   4. a ordem em telas/config.yaml cita exatamente os fluxos de telas/, e o `name` de cada fluxo é o nome do arquivo.
 //
@@ -92,11 +93,11 @@ for (const arquivo of fluxos) {
   }
 }
 
-const script = readFileSync(join(aqui, 'ios.sh'), 'utf8');
+const script = readFileSync(join(aqui, 'comum.sh'), 'utf8');
 const esperadas = new Set((script.match(/CAPTURAS_ESPERADAS="([^"]*)"/)?.[1] ?? '').split(/\s+/).filter(Boolean));
-if (esperadas.size === 0) problemas.push('ios.sh: não achei a lista CAPTURAS_ESPERADAS.');
-for (const nome of esperadas) if (!capturas.has(nome)) problemas.push(`ios.sh espera a captura "${nome}", mas nenhum fluxo a tira.`);
-for (const [nome, arquivo] of capturas) if (!esperadas.has(nome)) problemas.push(`${arquivo}: a captura "${nome}" não está em CAPTURAS_ESPERADAS (ios.sh).`);
+if (esperadas.size === 0) problemas.push('comum.sh: não achei a lista CAPTURAS_ESPERADAS.');
+for (const nome of esperadas) if (!capturas.has(nome)) problemas.push(`comum.sh espera a captura "${nome}", mas nenhum fluxo a tira.`);
+for (const [nome, arquivo] of capturas) if (!esperadas.has(nome)) problemas.push(`${arquivo}: a captura "${nome}" não está em CAPTURAS_ESPERADAS (comum.sh).`);
 
 // --- 4. O conjunto das telas: a ordem cita todos os fluxos, e só eles; o `name` é o nome do arquivo.
 const config = readFileSync(join(pastaFluxos, 'telas/config.yaml'), 'utf8');

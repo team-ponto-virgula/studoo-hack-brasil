@@ -5,16 +5,18 @@ name: 02-entrar
 ---
 - runFlow: partes/abrir-pela-primeira-vez.yaml
 - tapOn:
+    waitToSettleTimeoutMs: 1500
     id: login-email
 - inputText: ${EMAIL}
 - tapOn:
+    waitToSettleTimeoutMs: 1500
     id: login-senha
 # Com `label`, a saída do Maestro mostra esta frase no lugar do texto digitado.
 - inputText:
     text: ${SENHA}
     label: Digitar a senha da conta sintética
 - waitForAnimationToEnd:
-    timeout: 2500
+    timeout: 1500
 - takeScreenshot: 04-entrada-preenchida
 # O campo da senha envia pelo teclado (returnKeyType "go"). Se o Enter não enviar, o botão "Entrar" envia.
 - pressKey: Enter
@@ -29,6 +31,7 @@ name: 02-entrar
         id: entrar
     commands:
       - tapOn:
+          waitToSettleTimeoutMs: 1500
           id: entrar
 # Com o preenchimento automático desligado, o iOS não oferece guardar a senha; se oferecer, a resposta é "agora não".
 - runFlow:
@@ -45,5 +48,5 @@ name: 02-entrar
       id: titulo-plano
     timeout: 45000
 - waitForAnimationToEnd:
-    timeout: 4000
+    timeout: 2000
 - takeScreenshot: 05-depois-de-entrar

@@ -45,6 +45,7 @@ import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron, degrauFora, quebraEquilibrada } from './interface';
 import { mensagens, textoDaFalta } from './mensagens';
 import { Opcao, letras } from './opcao';
+import { BotaoSom } from './som';
 import { Stu } from './mascote';
 import { tocaSons } from './sons';
 import { cores, fontes } from './tema';
@@ -570,6 +571,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         {/* Como na web (rodada 4B): o nome da lição fica pequeno no topo; no exercício, o título é a pergunta. */}
         <Text testID="titulo-topo" numberOfLines={1} style={licaoEstilos.tituloTopo}>{licao.titulo}</Text>
       </View>
+      {/* Spec 12: o som no alto, à direita do andamento (a folha e o botão moram em som.tsx). */}
+      <BotaoSom />
     </View>
   );
 

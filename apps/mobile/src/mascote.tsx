@@ -4,6 +4,7 @@ import { Asset } from 'expo-asset';
 import { Image as ImagemAnimada } from 'expo-image';
 import { CATALOGO_STU, faixaAnimadaDoStu, faixaDoStu, type NomeStu } from '@studoo/contratos';
 import { useMovimentoReduzido } from './movimento';
+import { ESPERA_DESENHO_MS, GARANTIA_DO_POP_MS, camadasDoStu } from './mascote-regras';
 import { ANIMADO_STU, PARADO_STU } from './stu-arquivos';
 
 /**
@@ -15,7 +16,6 @@ export type ModoAnimacaoStu = 'laco' | 'uma-vez' | 'acontecimento' | 'periodico'
 
 const INTERVALO_PERIODICO_MS = 8000;
 const OCIOSO_MS = 20_000;
-const ESPERA_CARGA_MS = 3000;
 /** E2: a animação só entra com lado na tela × densidade até 330 px (110 pt numa tela 3x); acima disso, borraria. */
 export const TETO_ANIMADO_PX = 330;
 
@@ -84,11 +84,13 @@ function Halo({ largura, altura }: { largura: number; altura: number }) {
  * leitor de tela (B8): a mensagem está no texto ao lado.
  *
  * `animado` (um modo da E1): a imagem parada aparece primeiro; quando a tela fica interativa (o primeiro momento
- * ocioso, `requestIdleCallback`; o `InteractionManager` saiu do React Native), o WebP animado entra por cima, pelo expo-image, na caixa da animação
- * (`animacao.caixa`, maior que o recorte quando ele pula para fora do quadro), com 120 ms de opacidade; a parada some
- * embaixo. Se não carregar em 3 s, fica a parada. Nunca com movimento reduzido (o arquivo nem é pedido), acima do teto da
- * E2, com o app em segundo plano, com o teclado aberto (um campo de texto em foco), com `pausado` e, no laço, depois de
- * 20 s sem toque nem rolagem. Um Stu se mexe por vez.
+ * ocioso, `requestIdleCallback`; o `InteractionManager` saiu do React Native), o WebP animado é pedido por cima, pelo
+ * expo-image, na caixa da animação (`animacao.caixa`, maior que o recorte quando ele pula para fora do quadro), ainda
+ * invisível. A parada só sai quando a animada já desenhou na tela (`onDisplay`); se ela falhar ou não desenhar em 3 s, fica a
+ * parada (correção do iPhone, 20/11: o `onLoad` chegava sem nada desenhado e o Stu sumia). No iPhone, o WebP passa pelo
+ * libwebp (`useAppleWebpCodec={false}`): o codec da Apple não compõe os quadros parciais dos nossos WebP. Nunca com
+ * movimento reduzido (o arquivo nem é pedido), acima do teto da E2, com o app em segundo plano, com o teclado aberto (um
+ * campo de texto em foco), com `pausado` e, no laço, depois de 20 s sem toque nem rolagem. Um Stu se mexe por vez.
  */
 export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra = false, halo = false, pausado = false, espelhado = false, silhueta, pop, popAoMontar, estilo }: {
   nome: NomeStu;
@@ -133,9 +135,9 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
   const [quer, setQuer] = useState(false);
   const [rodada, setRodada] = useState(0);
   const [comVez, setComVez] = useState(true);
-  const [carregado, setCarregado] = useState(false);
+  // A animada já desenhou na tela (onDisplay do expo-image): só então a parada sai.
+  const [desenhada, setDesenhada] = useState(false);
   const [desistiu, setDesistiu] = useState(false);
-  const [entrada] = useState(() => new Animated.Value(0));
   // §B7: a expressão nova entra em 120 ms de opacidade com um pop de 0,92 → 1,06 → 1 em 240 ms (com movimento reduzido, na hora).
   const [troca] = useState(() => new Animated.Value(popAoMontar !== undefined ? 0 : 1));
   // A expressão nova ou um `pop` novo: a mesma entrada.
@@ -147,8 +149,10 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
     if (reduzir !== false) { troca.setValue(1); return; }
     troca.setValue(0);
     const entrar = Animated.timing(troca, { toValue: 1, duration: 240, easing: Easing.bezier(0.2, 0.9, 0.3, 1.3), useNativeDriver: true });
-    entrar.start();
-    return () => entrar.stop();
+    // O Stu nunca fica escondido: no fim do pop (ou se o fim não chegar), o valor volta a 1 inteiro.
+    entrar.start(({ finished }) => { if (finished) troca.setValue(1); });
+    const garantia = setTimeout(() => troca.setValue(1), GARANTIA_DO_POP_MS);
+    return () => { entrar.stop(); clearTimeout(garantia); };
   }, [chaveDoPop, reduzir, troca]);
   // A entrada ao montar (popAoMontar): o mesmo pop, depois da espera.
   const comEntrada = popAoMontar !== undefined;
@@ -159,8 +163,9 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
       Animated.delay(popAoMontar ?? 0),
       Animated.timing(troca, { toValue: 1, duration: 240, easing: Easing.bezier(0.2, 0.9, 0.3, 1.3), useNativeDriver: true }),
     ]);
-    entrar.start();
-    return () => entrar.stop();
+    entrar.start(({ finished }) => { if (finished) troca.setValue(1); });
+    const garantia = setTimeout(() => troca.setValue(1), (popAoMontar ?? 0) + GARANTIA_DO_POP_MS);
+    return () => { entrar.stop(); clearTimeout(garantia); };
     // Só ao montar (e de novo se o movimento reduzido mudar).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [comEntrada, reduzir, troca]);
@@ -224,23 +229,23 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
   }, [mover, id, rodada]);
   const mostrar = mover && comVez;
 
-  // Um ciclo (ou `ciclos`) depois de carregar, nos modos que não são laço; a desistência se não carregar em 3 s.
+  // Cada rodada nova remonta a animada (key): até ela desenhar de novo, a parada volta.
+  useEffect(() => { setDesenhada(false); }, [rodada]);
+  // Um ciclo (ou `ciclos`) depois de desenhar, nos modos que não são laço; sem desenhar em 3 s, desiste e fica a parada.
   useEffect(() => {
     if (!mostrar) {
-      setCarregado(false);
-      entrada.setValue(0);
+      setDesenhada(false);
       return;
     }
-    if (carregado) {
-      const aparecer = Animated.timing(entrada, { toValue: 1, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true });
-      aparecer.start();
-      if (animado === 'laco') return () => aparecer.stop();
+    if (desenhada) {
+      if (animado === 'laco') return;
       const fim = setTimeout(() => setQuer(false), duracao);
-      return () => { aparecer.stop(); clearTimeout(fim); };
+      return () => clearTimeout(fim);
     }
-    const espera = setTimeout(() => setDesistiu(true), ESPERA_CARGA_MS);
+    const espera = setTimeout(() => setDesistiu(true), ESPERA_DESENHO_MS);
     return () => clearTimeout(espera);
-  }, [mostrar, carregado, animado, duracao, rodada, entrada]);
+  }, [mostrar, desenhada, animado, duracao, rodada]);
+  const camadas = camadasDoStu(mostrar, desenhada);
 
   const [esquerda, topo, larguraAnimada, alturaAnimada] = item.animacao?.caixa ?? [0, 0, 100, 100];
   const virar = espelhado ? [{ scaleX: -1 }] : [];
@@ -251,15 +256,17 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
       {sombra && <SombraDeContato largura={largura} altura={altura} />}
       <Animated.View style={[StyleSheet.absoluteFill, { opacity: troca.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 1, 1] }),
         transform: [{ scale: troca.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.92, 1.06, 1] }) }] }]}>
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: mostrar ? entrada.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) : 1, transform: virar }]}>
+      {/* As duas camadas com opacidade comum (sem valor animado nativo, que podia ficar preso em 0 no aparelho): a parada fica
+          até a animada ter desenhado; a animada, pedida por cima, fica invisível até lá. */}
+      <View testID="stu-parado" style={[StyleSheet.absoluteFill, { opacity: camadas.parada, transform: virar }]}>
         <Image source={parado} resizeMode="contain" accessible={false} style={[{ width: largura, height: altura }, silhueta ? { tintColor: silhueta } : null]} />
-      </Animated.View>
+      </View>
       {mostrar && fonteAnimada && (
-        <Animated.View style={{ position: 'absolute', left: (largura * esquerda) / 100, top: (altura * topo) / 100,
-          width: (largura * larguraAnimada) / 100, height: (altura * alturaAnimada) / 100, opacity: entrada, transform: virar }}>
+        <View testID="stu-animado" style={{ position: 'absolute', left: (largura * esquerda) / 100, top: (altura * topo) / 100,
+          width: (largura * larguraAnimada) / 100, height: (altura * alturaAnimada) / 100, opacity: camadas.animada, transform: virar }}>
           <ImagemAnimada key={rodada} source={fonteDaAnimacao(fonteAnimada)} contentFit="contain" autoplay accessible={false} style={StyleSheet.absoluteFill}
-            onLoad={() => setCarregado(true)} onError={() => setDesistiu(true)} />
-        </Animated.View>
+            useAppleWebpCodec={false} onDisplay={() => setDesenhada(true)} onError={() => setDesistiu(true)} />
+        </View>
       )}
       </Animated.View>
     </View>

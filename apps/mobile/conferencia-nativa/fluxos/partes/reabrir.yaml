@@ -5,14 +5,10 @@ appId: host.exp.Exponent
 ---
 - stopApp
 - openLink: exp://127.0.0.1:8081
-# A pergunta do iOS sobre abrir o link no Expo Go foi respondida no primeiro fluxo; se voltar, ela aparece na hora.
-- runFlow:
-    when:
-      visible: "Open"
-    commands:
-      - tapOn: "Open"
-# Depois de religar o simulador, a apresentação do Expo Go pode voltar: a mesma defesa da primeira abertura. O pacote já
-# está compilado no Metro, então a espera é menor.
+# A pergunta do iOS sobre abrir o link no Expo Go, respondida no primeiro fluxo, não voltou nas reaberturas da execução
+# 44511779137; conferir a cada vez custava uns 9 s.
+# Depois de religar o simulador, a apresentação do Expo Go pode voltar: a mesma defesa da primeira abertura. O pacote vem
+# da cache na frente do Metro (servidor/cache-do-metro.mjs), já pronto, então a espera é menor.
 - runFlow:
     file: sair-do-menu-do-expo-go.yaml
     env:
