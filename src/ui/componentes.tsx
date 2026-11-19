@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import type { NomeStu } from '@studoo/contratos';
 import { Mascote, type ModoAnimacaoStu } from './mascote';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
@@ -36,8 +36,8 @@ export function Botao({ variante = 'primario', className = '', type = 'button', 
   return <button type={type} className={`botao botao--${variante} ${className}`} {...props} />;
 }
 
-export function AcaoPrincipal({ children }: { children: ReactNode }) {
-  return <div className="acao-principal">{children}</div>;
+export function AcaoPrincipal({ children, ref }: { children: ReactNode; ref?: Ref<HTMLDivElement> }) {
+  return <div className="acao-principal" ref={ref}>{children}</div>;
 }
 
 export function EstadoErro({ codigo, children }: { codigo: string; children?: ReactNode }) {

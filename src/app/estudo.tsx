@@ -46,6 +46,7 @@ import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { Explorar } from './comunidade';
 import { contarLicaoParaNovidadeDoSom, useAreaDoSom } from './som';
 import { tocaSons } from './sons';
+import { medirAcaoFixa, medirIlha } from '../ui/rodape-movel';
 import './aula.css';
 import './trilha.css';
 
@@ -588,7 +589,9 @@ export function Estudo() {
   // Começar, na trilha gerada, já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só.
   const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || (pendente === 'aceitar' && tela.tipo === 'geracao');
   const visivel = !carregandoTrilha && !carregandoLicao;
-  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (planos.length > 0 && ['planos', 'objetivo', 'plano', 'perfil', 'explorar', 'configuracoes'].includes(tela.tipo)) || (comunidade && tela.tipo === 'explorar')) && visivel;
+  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (inicio === 'pronto' && ['planos', 'objetivo', 'plano', 'perfil', 'explorar', 'configuracoes'].includes(tela.tipo))) && visivel;
+  // Sem trilhas, a tela de planos já mostra o pedido.
+  const abaNovaTrilha = tela.tipo === 'objetivo' || (inicio === 'pronto' && tela.tipo === 'planos' && planos.length === 0);
   const abrirFolha = compartilhar ? (planoId: string) => setFolha(planoId) : undefined;
 
   const acaoDoErro = (codigoErro: string) =>
@@ -786,10 +789,10 @@ export function Estudo() {
               compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined} />
           )}
         </main>
-        {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao} data-itens={(compartilhar ? 3 : 2) + (comunidade ? 1 : 0)}>
-          <button type="button" disabled={ocupado} aria-current={!['objetivo', 'perfil', 'explorar'].includes(tela.tipo) ? 'page' : undefined}
+        {comNavegacao && <nav className="navegacao-mobile" aria-label={mensagens.navegacao} ref={medirIlha}>
+          <button type="button" disabled={ocupado} aria-current={!abaNovaTrilha && !['perfil', 'explorar'].includes(tela.tipo) ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'planos' })}><Icone nome="livro" />{mensagens.planos.titulo}</button>
-          <button type="button" disabled={ocupado} aria-current={tela.tipo === 'objetivo' ? 'page' : undefined}
+          <button type="button" disabled={ocupado} aria-current={abaNovaTrilha ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
           {comunidade && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.navegacao}</button>}
@@ -1266,7 +1269,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
       ) : (
         <div className="trilha-vazia">
           <EstadoVazio>{mensagens.trilha.semLicoes}</EstadoVazio>
-          <AcaoPrincipal><Botao disabled={ocupado} onClick={novoPlano}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
+          <AcaoPrincipal ref={medirAcaoFixa}><Botao disabled={ocupado} onClick={novoPlano}>{mensagens.planos.novo}</Botao></AcaoPrincipal>
         </div>
       )}
       {proximo && (
@@ -1308,7 +1311,7 @@ function ProximoPasso({ titulo, detalhe, abrindo, ocupado, aoAbrir, andamento = 
   const idTitulo = useId();
 
   return (
-    <div className="trilha-proximo">
+    <div className="trilha-proximo" ref={medirAcaoFixa}>
       <p className="trilha-proximo__rotulo">{mensagens.trilha.proxima}</p>
       <p className="trilha-proximo__titulo" id={idTitulo}>{titulo}</p>
       <p className="trilha-proximo__detalhe">{detalhe}</p>

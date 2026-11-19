@@ -50,7 +50,7 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   folha: <><path d="M5.5 18.5C5 11 9.5 5.5 19 5c.3 8.8-4.7 13.6-13.5 13.5z" /><path d="M5.5 18.5L13 11" /></>,
   info: <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" /><circle cx="12" cy="7.8" r="0.6" fill="currentColor" /></>,
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
-  livro: <path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5zM12 6.5V19" />,
+  livro: <><path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5z" /><path className="icone__detalhe" d="M12 6.5V19" /></>,
   // Repetir: arco de três quartos com uma seta, o mesmo desenho do app.
   revisao: <path d="M6.7 6.7A7.5 7.5 0 1 1 6.7 17.3M10.6 15.5H5.8v4.7" />,
   cadeado: <><rect x="5.5" y="10.5" width="13" height="9" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></>,
@@ -74,7 +74,7 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   imagem: <><rect x="4" y="4.5" width="16" height="15" rx="3" /><circle cx="9" cy="9.5" r="1.6" /><path d="M4.5 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5" /></>,
   lapis: <path d="M14.5 5.5l4 4M5 19l1-4.5L15.5 5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9.5 18z" />,
   lixeira: <path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />,
-  bussola: <><circle cx="12" cy="12" r="8.5" /><path d="M15.5 8.5l-2 5-5 2 2-5z" /></>,
+  bussola: <><circle cx="12" cy="12" r="8.5" /><path className="icone__detalhe" d="M15.5 8.5l-2 5-5 2 2-5z" /></>,
   // Valeu: coração com a curva de um sorriso (agradecer, não "curtir" uma pessoa).
   valeu: <path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z" />,
   mais: <><circle cx="6" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="18" cy="12" r="1.3" fill="currentColor" /></>,

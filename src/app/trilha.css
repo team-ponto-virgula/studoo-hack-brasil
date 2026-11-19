@@ -261,7 +261,13 @@
     width: auto;
   }
 
-  .estudo[data-navegacao] .trilha-proximo { bottom: calc(var(--altura-navegacao) + 10px); }
+  .estudo[data-navegacao] .trilha-proximo {
+    inset: auto var(--margem-ilha-dir) calc(var(--altura-navegacao) + 12px) var(--margem-ilha-esq);
+    max-width: 480px;
+    padding: 8px;
+    border: 0;
+    box-shadow: var(--sombra-ilha);
+  }
 
   .geracao-acoes {
     position: fixed;
@@ -299,6 +305,8 @@
   /* O morro do troféu continua por baixo do cartão flutuante até a navegação: o mapa não termina num corte branco. */
   .painel--trilha > .caminho { margin-bottom: -120px; }
   .painel--trilha .caminho-chegada { --extra: 120px; }
+  .estudo[data-navegacao] .painel--trilha > .caminho { margin-bottom: calc(-1 * var(--espaco-rodape)); }
+  .estudo[data-navegacao] .painel--trilha .caminho-chegada { --extra: var(--espaco-rodape); }
 }
 
 /* Com o nó atual à vista, o cartão fixo da próxima lição desce e some (em qualquer tela): o balão "Começar" já faz esse
