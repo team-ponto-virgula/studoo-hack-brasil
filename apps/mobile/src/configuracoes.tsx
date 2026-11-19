@@ -283,7 +283,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
     const novo = await cliente.enviarCapa(planoId, base64);
     aoMudar(novo);
     if (montada.current) { setConf(novo); setParaRecortar(null); }
-    avisar(k.capaSalva, { icone: 'check' });
+    avisar(k.capaSalva, { icone: 'check', som: 'salvo' });
   }
 
   // Ao sair da tela (Voltar, barra de baixo, voltar do aparelho), o que ficou escrito e ainda vale é salvo.
@@ -414,7 +414,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
           aoUsarFoto={compartilhar ? () => (toque ? setOrigemDaFoto(true) : void buscarFoto(false)) : undefined}
           aoEscolher={async (capa) => {
             const salvou = await salvar('capa', { capa });
-            if (salvou) avisar(k.capaSalva, { icone: 'check' });
+            if (salvou) avisar(k.capaSalva, { icone: 'check', som: 'salvo' });
             return salvou;
           }} />
       )}
