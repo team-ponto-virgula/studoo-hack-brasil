@@ -84,9 +84,14 @@ export interface EstadoSomSnapshot {
 
 export const MENSAGEM_ERRO_FUNDO = 'Não deu para tocar agora. Toque de novo para tentar.';
 
+/** Mantém o silêncio escolhido no aparelho e traz os antigos fundos ligados para a faixa única. */
+export function fundoUnicoDaPreferencia(valor: unknown): 'mudo' | 'lofi_estudo' {
+  return valor === 'mudo' ? 'mudo' : 'lofi_estudo';
+}
+
 export const PADRAO_PREFERENCIAS_SOM: Readonly<PreferenciasSom> = {
   efeitosAtivos: true,
-  fundo: 'mudo',
+  fundo: 'lofi_estudo',
 };
 
 export const CATALOGO_EFEITOS: Readonly<Record<IdEfeitoSonoro, DefinicaoEfeitoSonoro>> = {
