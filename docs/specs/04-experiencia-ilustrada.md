@@ -158,7 +158,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - Sem barra, sem porcentagem e sem visto por lição, porque o aceite é um pedido só.
 - A tela Escrevendo suas lições sai, com a lista, o brilho e as dicas.
 
-**A trilha passa a existir (o aceite volta ok).** A passagem é a própria navegação para a aula, em até 470 ms:
+**A trilha passa a existir (o aceite volta ok).** A passagem começa quando as duas coisas aconteceram: o aceite voltou ok e o nó 1 está no lugar, ou seja, a rolagem do toque terminou (no máximo 240 ms depois do toque). Se o aceite volta antes, a passagem espera o fim da rolagem, e a origem do círculo é medida nesse momento, com o nó 1 parado e à vista. Na referência rápida do app, o aceite voltou em 71 ms, antes do fim da rolagem, e no quadro de 220 ms o nó 1 estava acima da tela. A passagem é a própria navegação para a aula, em até 470 ms:
 - t = 0: toca `geracao_pronta`. A placa "Proposta pronta" sai (opacidade e 8 px para cima, 150 ms; na hora com movimento reduzido), porque a proposta virou trilha. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
 - t = 120 ms: um círculo da cor do fundo da aula cresce a partir do centro do nó 1 até cobrir a tela (300 ms, ease-out).
 - t = 320 ms: a etapa 1 entra por cima (opacidade, 150 ms). Se a lição ainda carrega, entra o esqueleto da aula no mesmo lugar, sem giro.
@@ -184,7 +184,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
   - aceite: do toque até a resposta do aceite;
   - busca da lição: da resposta do aceite até a resposta do `obterLicao`, que é uma segunda chamada, em sequência;
   - passagem: da resposta do aceite até a aula na tela, com o esqueleto ou com a etapa 1.
-  - **Referência rápida** (IA falsa, rede local, sem atraso simulado): passagem de no máximo 470 ms e total de no máximo o aceite mais 470 ms. Em 0491ed7, o total era de pelo menos 2,1 s.
+  - **Referência rápida** (IA falsa, rede local, sem atraso simulado): passagem de no máximo 470 ms e total de no máximo o maior entre o aceite e o fim da rolagem até o nó 1 (até 240 ms), mais 470 ms. Em 0491ed7, o total era de pelo menos 2,1 s.
   - **Espera real** (IA real ou rede lenta, simulada e identificada no relato): sem meta de total. Os quatro números entram como medidos, sem descontar a demora. A passagem continua em no máximo 470 ms, mesmo com a busca da lição lenta. O esqueleto fica até a lição chegar, e a etapa 1 fica interativa em até 100 ms depois disso. A linha de 1,5 s aparece.
   - Nos dois casos, nenhuma pausa fixa.
 - C3: nenhuma tela e nenhum segundo botão entre a prévia e a etapa 1.
