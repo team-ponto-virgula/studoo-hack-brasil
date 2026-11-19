@@ -375,8 +375,25 @@ resposta_da_prova() {
     --api "$API" --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/resposta-da-prova.json") 2>> "$REGISTROS/resposta-da-prova.log"
 }
 
+# O fundo por baixo dos fluxos 90 e 95, pelo veredito da linha do tempo (servidor/linha-do-tempo-som.mjs): ✅ só com o
+# lofi_estudo identificado e cada troca de tela, o erro e o acerto cobertos; ❌ com outra faixa tocando, pausa, reinício ou
+# volume baixo; ⚠️ com dado ausente, inclusive o fluxo 95 que não rodou. É o estado que o expo-audio relata do reprodutor,
+# não a saída no alto-falante.
+resumir_fundo() {
+  local fundo
+  fundo="$(grep -m 1 '^Fundo: ' "$1" 2> /dev/null || true)"
+  case "$fundo" in
+    'Fundo: CONTÍNUO '*) resumo "✅ $fundo" ;;
+    'Fundo: FALHA '*)
+      resumo "❌ $fundo"
+      aviso "O fundo não seguiu contínuo nos fluxos 90 e 95 (outra faixa, pausa, reinício ou volume baixo): veja linha-do-tempo-criacao.txt, nos registros." ;;
+    'Fundo: INCONCLUSIVO '*) resumo "⚠️ $fundo" ;;
+    *) resumo "⚠️ Fundo nos fluxos 90 e 95: inconclusivo, a linha do tempo não chegou ao veredito (linha-do-tempo-criacao.txt, nos registros)." ;;
+  esac
+}
+
 fluxo_criacao() {
-  local plataforma=iphone comandos90 comandos95 fluxo=falhou resposta codigo=0 linha parametros certa errada fundo
+  local plataforma=iphone comandos90 comandos95 fluxo=falhou resposta codigo=0 linha parametros certa errada
   case "$TITULO_DA_CONFERENCIA" in *Android*) plataforma=android ;; esac
   rm -f "$SAIDA/criacao-falhou.txt"
   trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$REGISTROS/trilhas-antes-da-criacao.json" > /dev/null || true
@@ -412,17 +429,7 @@ fluxo_criacao() {
   else
     resumo "❌ Resposta errada e certa na trilha temporária (fluxo 95): $resposta."
   fi
-  # O fundo por baixo dos fluxos 90 e 95, pelas amostras do reprodutor (registrarFundo, em apps/mobile/src/sons.ts): seguiu,
-  # ou pausou, recomeçou ou baixou. É o estado que o expo-audio relata, não a saída no alto-falante.
-  fundo="$(grep -m 1 '^Fundo: ' "$REGISTROS/linha-do-tempo-criacao.txt" 2> /dev/null || true)"
-  case "$fundo" in
-    '') resumo "⚠️ Fundo nos fluxos 90 e 95: a linha do tempo não chegou ao veredito (linha-do-tempo-criacao.txt, nos registros)." ;;
-    *'pausas 0, reinícios 0, reduções no efeito 0, outras reduções 0;'*) resumo "✅ $fundo" ;;
-    *'pausas 0, reinícios 0, reduções no efeito 0,'*|*'sem amostras'*|*'não o mostram tocando'*) resumo "⚠️ $fundo" ;;
-    *)
-      resumo "❌ $fundo"
-      aviso "O fundo não seguiu contínuo nos fluxos 90 e 95 (pausa, reinício ou redução no efeito): veja linha-do-tempo-criacao.txt, nos registros." ;;
-  esac
+  resumir_fundo "$REGISTROS/linha-do-tempo-criacao.txt"
 
   linha="$(trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/trilhas-depois-da-criacao.json" --apagar)" || codigo=$?
   case "$codigo:$fluxo" in
