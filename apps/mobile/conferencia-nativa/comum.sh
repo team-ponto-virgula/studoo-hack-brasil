@@ -42,6 +42,7 @@ CAPTURAS_ESPERADAS="
 70-exemplo-curto-etapa-2 71-exemplo-curto-etapa-3 72-exemplo-longo-etapa-2 73-exemplo-longo-lido 74-exemplo-longo-etapa-3
 80-ilha-nova-trilha 81-ilha-nova-trilha-fim 82-ilha-minhas-trilhas-fim 83-ilha-ultimo-toque
 90-criacao-pedido 91-criacao-em-andamento 92-criacao-pronta 93-criacao-primeira-aula 94-criacao-mapa-ao-voltar
+95-resposta-exercicio 96-resposta-errada 97-resposta-certa
 "
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
@@ -367,20 +368,61 @@ trilhas_da_criacao() {
   return "${PIPESTATUS[0]}"
 }
 
+# A resposta certa e uma errada do primeiro exercício da trilha temporária (servidor/resposta-da-prova.mjs): duas linhas,
+# RESPOSTA_CERTA=<id> e RESPOSTA_ERRADA=<id>; o motivo de não escolher vai para resposta-da-prova.log.
+resposta_da_prova() {
+  (cd "$RAIZ" && NODE_EXTRA_CA_CERTS="$TLS/ca.crt" node --env-file=.env --import tsx "$AQUI/servidor/resposta-da-prova.mjs" \
+    --api "$API" --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/resposta-da-prova.json") 2>> "$REGISTROS/resposta-da-prova.log"
+}
+
 fluxo_criacao() {
-  local plataforma=iphone comandos fluxo=falhou codigo=0 linha
+  local plataforma=iphone comandos90 comandos95 fluxo=falhou resposta codigo=0 linha parametros certa errada fundo
   case "$TITULO_DA_CONFERENCIA" in *Android*) plataforma=android ;; esac
   rm -f "$SAIDA/criacao-falhou.txt"
   trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$REGISTROS/trilhas-antes-da-criacao.json" > /dev/null || true
   if declare -F iniciar_registro_de_audio > /dev/null; then iniciar_registro_de_audio "$REGISTROS/audio-criacao.log" || true; fi
   if rodar_maestro criacao "$PASTA_DOS_FLUXOS/criacao/90-criacao-da-trilha.yaml"; then fluxo=passou; fi
+  # Uma resposta errada e uma certa na primeira lição da trilha temporária (fluxo 95), antes de ela sair: o app ficou no
+  # mapa dela. Sem a criação, ou sem opções escolhidas sem dúvida, o fluxo não roda, e as capturas 95 a 97 faltam.
+  if [ "$fluxo" != passou ]; then
+    resposta="não rodou: a criação falhou"
+  elif parametros="$(resposta_da_prova)"; then
+    certa="$(printf '%s\n' "$parametros" | sed -n 's/^RESPOSTA_CERTA=//p')"
+    errada="$(printf '%s\n' "$parametros" | sed -n 's/^RESPOSTA_ERRADA=//p')"
+    if rodar_maestro resposta "$PASTA_DOS_FLUXOS/criacao/95-resposta-certa-e-errada.yaml" -e "RESPOSTA_CERTA=$certa" -e "RESPOSTA_ERRADA=$errada"; then
+      resposta=passou
+    else
+      resposta="falhou (maestro-resposta.log e tela-no-fim-de-resposta.png, nos registros)"
+    fi
+  else
+    resposta="não rodou: $(tail -n 1 "$REGISTROS/resposta-da-prova.log" 2> /dev/null || echo 'as opções não foram escolhidas')"
+  fi
   if declare -F parar_registro_de_audio > /dev/null; then parar_registro_de_audio || true; fi
-  # As provas da criação vão já para o artefato das capturas, com ou sem falha.
-  find "$SAIDA_MAESTRO/criacao" -type f \( -name '9[0-9]-*.png' -o -name 'criacao-transicao*.mp4' \) -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
-  comandos="$(find "$SAIDA_MAESTRO/criacao" -type f -name commands.json -path '*90-criacao-da-trilha*' 2> /dev/null | head -1 || true)"
+  # As provas da criação e das respostas vão já para o artefato das capturas, com ou sem falha.
+  find "$SAIDA_MAESTRO/criacao" "$SAIDA_MAESTRO/resposta" -type f \( -name '9[0-9]-*.png' -o -name 'criacao-transicao*.mp4' \) \
+    -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
+  comandos90="$(find "$SAIDA_MAESTRO/criacao" -type f -name commands.json -path '*90-criacao-da-trilha*' 2> /dev/null | head -1 || true)"
+  comandos95="$(find "$SAIDA_MAESTRO/resposta" -type f -name commands.json -path '*95-resposta-certa-e-errada*' 2> /dev/null | head -1 || true)"
   # O registro de som do app (apps/mobile/src/sons.ts) chega pelo log do sistema e, se o Expo o repassar, pelo do Metro.
-  node "$AQUI/servidor/linha-do-tempo-som.mjs" --comandos "$comandos" --audio "$REGISTROS/audio-criacao.log" --audio "$REGISTROS/metro.log" \
+  node "$AQUI/servidor/linha-do-tempo-som.mjs" --comandos "$comandos90" --comandos "$comandos95" \
+    --audio "$REGISTROS/audio-criacao.log" --audio "$REGISTROS/metro.log" \
     --plataforma "$plataforma" > "$REGISTROS/linha-do-tempo-criacao.txt" 2>&1 || true
+  if [ "$resposta" = passou ]; then
+    resumo "✅ Resposta errada e certa na trilha temporária (fluxo 95): os tempos estão em linha-do-tempo-criacao.txt, nos registros."
+  else
+    resumo "❌ Resposta errada e certa na trilha temporária (fluxo 95): $resposta."
+  fi
+  # O fundo por baixo dos fluxos 90 e 95, pelas amostras do reprodutor (registrarFundo, em apps/mobile/src/sons.ts): seguiu,
+  # ou pausou, recomeçou ou baixou. É o estado que o expo-audio relata, não a saída no alto-falante.
+  fundo="$(grep -m 1 '^Fundo: ' "$REGISTROS/linha-do-tempo-criacao.txt" 2> /dev/null || true)"
+  case "$fundo" in
+    '') resumo "⚠️ Fundo nos fluxos 90 e 95: a linha do tempo não chegou ao veredito (linha-do-tempo-criacao.txt, nos registros)." ;;
+    *'pausas 0, reinícios 0, reduções no efeito 0, outras reduções 0;'*) resumo "✅ $fundo" ;;
+    *'pausas 0, reinícios 0, reduções no efeito 0,'*|*'sem amostras'*|*'não o mostram tocando'*) resumo "⚠️ $fundo" ;;
+    *)
+      resumo "❌ $fundo"
+      aviso "O fundo não seguiu contínuo nos fluxos 90 e 95 (pausa, reinício ou redução no efeito): veja linha-do-tempo-criacao.txt, nos registros." ;;
+  esac
 
   linha="$(trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/trilhas-depois-da-criacao.json" --apagar)" || codigo=$?
   case "$codigo:$fluxo" in
