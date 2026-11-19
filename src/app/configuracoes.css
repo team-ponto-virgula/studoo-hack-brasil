@@ -1,0 +1,44 @@
+/* Configurações da trilha (lote 4). 360 px no mínimo; toques de 44 px; hover só com ponteiro fino. */
+.painel--configuracoes { display: grid; gap: 20px; width: min(100%, 44rem); }
+.configuracoes__topo { display: grid; gap: 2px; }
+.configuracoes__topo h1:focus { outline: none; }
+.configuracoes__voltar { justify-self: start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-left: -8px; padding-inline: 8px; }
+.configuracoes__voltar .icone { width: 20px; height: 20px; }
+.configuracoes__estado { display: inline-flex; align-items: center; gap: 6px; min-height: 22px; margin: 0; color: var(--texto2); font-weight: 800; }
+.configuracoes__estado[data-estado='salvo'] { color: var(--sucesso); }
+.configuracoes__estado .icone { width: 18px; height: 18px; }
+.configuracoes__recebida { margin: 0; padding: 12px 14px; border-radius: 14px; background: var(--ceu); font-weight: 700; line-height: 1.45; }
+.configuracoes__secao { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
+@media (min-width: 768px) { .configuracoes__secao { padding: 22px 24px; } }
+.configuracoes__capa { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
+.configuracoes__previa { display: block; flex: 0 0 auto; width: min(100%, 15rem); aspect-ratio: 2 / 1; overflow: hidden; border-radius: 16px; box-shadow: 0 6px 16px rgb(27 42 94 / 0.14); }
+.configuracoes__previa svg { display: block; width: 100%; height: 100%; }
+.configuracoes__capa-acoes { display: grid; flex: 1 1 12rem; gap: 8px; justify-items: start; }
+.configuracoes__capa-acoes .botao .icone, .configuracoes__botao .icone { width: 18px; height: 18px; }
+.configuracoes__linha { display: flex; align-items: center; gap: 8px; margin: 0; font-weight: 800; }
+.configuracoes__linha .icone { width: 20px; height: 20px; color: var(--acao); }
+.configuracoes__botao { justify-self: start; min-height: 44px; }
+.configuracoes__secao .campo textarea { min-height: 72px; resize: none; }
+
+/* Galeria de capas: a padrão e as 12 prontas, em grade (2 colunas no celular, 3 no computador). */
+.folha--galeria { width: min(100%, 40rem); }
+.galeria-capas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; border: 0; min-width: 0; }
+@media (min-width: 600px) { .galeria-capas { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.galeria-capas__opcao { position: relative; display: grid; gap: 6px; cursor: pointer; }
+.galeria-capas__opcao input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.galeria-capas__desenho { display: block; aspect-ratio: 2 / 1; overflow: hidden; border: 3px solid transparent; border-radius: 14px; box-shadow: 0 0 0 2px var(--gelo); }
+.galeria-capas__desenho svg { display: block; width: 100%; height: 100%; }
+.galeria-capas__opcao input:checked ~ .galeria-capas__desenho { border-color: #fff; box-shadow: 0 0 0 3px var(--acao); }
+.galeria-capas__opcao input:focus-visible ~ .galeria-capas__desenho { outline: 3px solid var(--acao); outline-offset: 3px; }
+.galeria-capas__nome { min-height: 22px; font-size: 0.875rem; font-weight: 800; }
+.galeria-capas__nome small { color: var(--texto2); font-weight: 700; }
+@media (hover: hover) { .galeria-capas__opcao:hover .galeria-capas__desenho { box-shadow: 0 0 0 2px #8792bd; } }
+
+/* A capa escolhida no alto do mapa e no cartão de Minhas trilhas (no lugar da ilustração). */
+.trilha-capa { display: block; width: 100%; aspect-ratio: 4 / 1; max-height: 140px; overflow: hidden; border-radius: 20px; margin-bottom: 4px; }
+.trilha-capa svg { display: block; width: 100%; height: 100%; }
+.plano-cartao__capa, .plano-destaque__capa { position: absolute; inset: 0; display: block; }
+.plano-cartao__capa svg, .plano-destaque__capa svg { display: block; width: 100%; height: 100%; }
+.trilha-topo__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.trilha-configurar { display: inline-grid; width: 48px; min-width: 48px; height: 48px; min-height: 48px; place-items: center; padding: 0; }
+.trilha-configurar .icone { width: 24px; height: 24px; stroke-width: 2; }

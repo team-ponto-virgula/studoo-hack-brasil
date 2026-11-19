@@ -5,7 +5,7 @@
  */
 
 export type ConteudoParaRevisar =
-  | { tipo: "nome" | "resumo" | "legenda"; usuarioId: string; texto: string }
+  | { tipo: "nome" | "resumo" | "legenda" | "titulo"; usuarioId: string; texto: string }
   | { tipo: "foto"; usuarioId: string; bytes: Uint8Array };
 
 export type Revisao = { aprovado: true } | { aprovado: false; motivo: string };
