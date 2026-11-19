@@ -40,6 +40,7 @@ CAPTURAS_ESPERADAS="
 40-explorar 41-explorar-rolado 50-perfil 51-perfil-rolado
 60-configuracoes
 70-exemplo-curto-etapa-2 71-exemplo-curto-etapa-3 72-exemplo-longo-etapa-2 73-exemplo-longo-lido 74-exemplo-longo-etapa-3
+80-ilha-nova-trilha 81-ilha-nova-trilha-fim 82-ilha-minhas-trilhas-fim 83-ilha-ultimo-toque
 "
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.

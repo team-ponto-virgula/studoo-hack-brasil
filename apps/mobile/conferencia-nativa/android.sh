@@ -128,7 +128,7 @@ depois_do_emulador() {
 }
 
 no_emulador() {
-  local id comando versao api modelo
+  local id comando versao api modelo escala
   trap depois_do_emulador EXIT
   id="$(dispositivo)"
   [ -n "$id" ] || erro "Nenhum emulador ligado no adb."
@@ -161,6 +161,14 @@ no_emulador() {
   modelo="$(adb -s "$id" shell getprop ro.product.model | tr -d '\r')"
   echo "Emulador: $modelo, Android $versao (API $api), $(adb -s "$id" shell wm size | tr -d '\r' | tail -1), $(adb -s "$id" shell wm density | tr -d '\r' | tail -1)" \
     > "$SAIDA/origem-simulador.txt"
+  # A barra de baixo no Android é sempre a superfície branca opaca (spec 05: o vidro é só do iPhone com iOS 26). O tamanho
+  # do texto do sistema entra junto, porque a barra cresce com ele.
+  escala="$(adb -s "$id" shell settings get system font_scale | tr -d '\r')"
+  if [ -z "$escala" ] || [ "$escala" = "null" ]; then escala="1.0 (o padrão)"; fi
+  {
+    echo "Tamanho do texto do sistema: font_scale $escala"
+    echo "Material esperado da barra de baixo: superfície branca opaca (o Android não tem o vidro; spec 05)"
+  } >> "$SAIDA/origem-simulador.txt"
   cat "$SAIDA/origem-simulador.txt"
 
   preparar_fluxos_android
