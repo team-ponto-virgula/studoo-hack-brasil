@@ -371,6 +371,12 @@ Regras duradouras: nenhuma janela nativa do sistema ou do navegador (tudo do app
 - **Tela:** entradas pelo menu "•••" (Compartilhar, Configurações, Apagar) e pela engrenagem no alto do mapa; seções Capa e nome, Quem pode ver (estado e "Mudar compartilhamento", que abre a folha de sempre) e Apagar trilha (confirmação do app). Cada campo salva ao sair dele, com "Salvo"; erro embaixo do campo; sem diálogo de sair sem salvar.
 - Testes em `tests/configuracoes-trilha.test.mjs`.
 
+### Etapa 2, parte 2: capa com foto (migração `20261124090000_trilha_capa_foto`, tabela nova)
+- `CapaFoto` (dona e trilha, token único, WebP grande 1024×512 e pequeno 480×240). A trilha guarda `capa = "foto:<token>"`.
+- `PUT` e `DELETE /api/aprendizado/planos/:id/capa` (mesma flag da foto do perfil, `STUDOO_COMPARTILHAR`): o retângulo 2:1 recortado no app, conferido pelos bytes, aberto pelo sharp com teto de pixels, sem EXIF, até 10 trocas por hora, com `revisarConteudo` antes de gravar; o token muda a cada troca. `GET /api/capas/:token/:largura` com cache imutável e os mesmos cabeçalhos e limite da foto do perfil. Escolher uma capa da galeria ou a padrão apaga a foto.
+- A cópia volta à capa padrão (a foto fica com quem enviou). A imagem de prévia do link usa a capa padrão do tema quando a capa é foto.
+- Na tela: "Usar uma foto" na galeria e o mesmo recorte do perfil na proporção 2:1 (`RecorteImagem`). Por cima da foto, um véu escuro suave no alto e embaixo mantém legíveis o tema, "Demonstração" e o numeral do Em alta (`marcacaoCapa`).
+
 ## Revisão do dono (19/11): Curtir e perfil direto nos dados
 
 Revisão de design do que foi ao ar em `6122cc2` (lote 4: `59f95bb` perfil, `8502293` Valeu), a partir das capturas do iPhone do dono e das do site em 390 e 1440. Vale igual para web, Android e iPhone: o app espelha na mesma rodada. Tudo aqui é decisão de design, menos o que está marcado **(dono)**. Esboços: `ux/01-valeu-perfil` na pasta do Designer.

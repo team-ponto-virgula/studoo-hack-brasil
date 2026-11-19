@@ -355,6 +355,9 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     /** Configurações da trilha (lote 4): só a dona; trilha de outra pessoa responde `nao_encontrado`. */
     obterConfiguracoes: (id: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/configuracoes`),
     salvarConfiguracoes: (id: string, mudanca: MudancaConfiguracoes) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/configuracoes`, "PATCH", mudanca),
+    /** Capa com foto (lote 4): o retângulo 2:1 já recortado, em base64 (JPEG, PNG ou WebP, até 2 MB). */
+    enviarCapa: (id: string, base64: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/capa`, "PUT", { base64 }),
+    removerCapa: (id: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/capa`, "DELETE"),
     /** Perfil e compartilhar trilha (spec 09; com `compartilhar` no config). */
     obterPerfil: () => solicitar<Perfil>("/perfil"),
     /** Sem `resumo` ou `interesses`, o que já existe fica como está. */

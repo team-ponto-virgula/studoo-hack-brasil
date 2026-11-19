@@ -593,6 +593,22 @@ async function base64DoBlob(blob: Blob): Promise<string> {
  * fica. "Usar esta foto" recorta num canvas (até 1024 px, JPEG) e envia.
  */
 function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCancelar: () => void; aoSalvar: (perfil: Perfil) => void }) {
+  return <RecorteImagem origem={origem} aoCancelar={aoCancelar} enviar={async (base64) => aoSalvar(await cliente.enviarFoto(base64))} />;
+}
+
+/**
+ * O recorte de imagem do app (foto do perfil, quadrada; capa da trilha, 2:1): a imagem cobre sempre o quadro; arrastar
+ * move, pinça, roda do mouse e o controle aproximam; setas movem e + / − aproximam. `enviar` recebe o JPEG em base64.
+ */
+export function RecorteImagem({ origem, aoCancelar, enviar, proporcao = 1, titulo = p.recorteTitulo, aviso = p.fotoAviso }: {
+  origem: string;
+  aoCancelar: () => void;
+  enviar: (base64: string) => Promise<void>;
+  /** Largura ÷ altura do recorte: 1 (avatar, com o círculo) ou 2 (capa). */
+  proporcao?: number;
+  titulo?: string;
+  aviso?: string;
+}) {
   const caixa = useRef<HTMLDivElement>(null);
   const quadro = useRef<HTMLDivElement>(null);
   const imagem = useRef<HTMLImageElement>(null);
@@ -622,7 +638,8 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
     return () => observador.disconnect();
   }, []);
 
-  const base = natural && lado ? lado / Math.min(natural.w, natural.h) : 1;
+  const altoQuadro = lado / proporcao;
+  const base = natural && lado ? Math.max(lado / natural.w, altoQuadro / natural.h) : 1;
   const escala = base * zoom;
   const largura = (natural?.w ?? 0) * escala;
   const altura = (natural?.h ?? 0) * escala;
@@ -630,20 +647,20 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
   /** Mantém a foto cobrindo o quadro. */
   const limitar = useMemo(() => (x: number, y: number, l = largura, a = altura) => ({
     x: Math.min(0, Math.max(lado - l, x)),
-    y: Math.min(0, Math.max(lado - a, y)),
-  }), [lado, largura, altura]);
+    y: Math.min(0, Math.max(altoQuadro - a, y)),
+  }), [lado, altoQuadro, largura, altura]);
 
   // Ao carregar (ou mudar o tamanho do quadro), centraliza.
   useEffect(() => {
     if (!natural || !lado) return;
-    const b = lado / Math.min(natural.w, natural.h);
-    setPos({ x: (lado - natural.w * b * zoom) / 2, y: (lado - natural.h * b * zoom) / 2 });
+    const b = Math.max(lado / natural.w, lado / proporcao / natural.h);
+    setPos({ x: (lado - natural.w * b * zoom) / 2, y: (lado / proporcao - natural.h * b * zoom) / 2 });
     // Só quando a foto ou o quadro mudam.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [natural, lado]);
 
   /** Zoom em torno de um ponto do quadro (o centro, por padrão): o ponto debaixo dele fica parado. */
-  function aplicarZoom(novo: number, cx = lado / 2, cy = lado / 2) {
+  function aplicarZoom(novo: number, cx = lado / 2, cy = altoQuadro / 2) {
     if (!natural) return;
     const z = Math.min(ZOOM_MAX, Math.max(1, novo));
     const fator = z / zoom;
@@ -716,22 +733,23 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
     try {
       const lFonte = lado / escala;
       const saida = Math.max(256, Math.min(LADO_ENVIO_FOTO, Math.round(lFonte)));
+      const saidaAlta = Math.round(saida / proporcao);
       const canvas = document.createElement('canvas');
       canvas.width = saida;
-      canvas.height = saida;
+      canvas.height = saidaAlta;
       const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('canvas');
       ctx.fillStyle = '#fff';
-      ctx.fillRect(0, 0, saida, saida);
+      ctx.fillRect(0, 0, saida, saidaAlta);
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(img, -pos.x / escala, -pos.y / escala, lFonte, lFonte, 0, 0, saida, saida);
+      ctx.drawImage(img, -pos.x / escala, -pos.y / escala, lFonte, lFonte / proporcao, 0, 0, saida, saidaAlta);
       let blob: Blob | null = null;
       for (const qualidade of [0.9, 0.8, 0.65]) {
         blob = await new Promise<Blob | null>((resolver) => canvas.toBlob(resolver, 'image/jpeg', qualidade));
         if (blob && blob.size <= LIMITES_FOTO.bytes) break;
       }
       if (!blob || blob.size > LIMITES_FOTO.bytes) throw new Error('grande');
-      aoSalvar(await cliente.enviarFoto(await base64DoBlob(blob)));
+      await enviar(await base64DoBlob(blob));
     } catch (falha) {
       setErro(falha instanceof Error && ['canvas', 'grande'].includes(falha.message) ? p.fotoIlegivel : textoErro(codigoDoErro(falha)));
       setEnviando(false);
@@ -745,16 +763,16 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
           <span />
           <button type="button" className="folha-fechar" aria-label={p.recorteCancelar} disabled={enviando} onClick={aoCancelar}><Icone nome="fechar" /></button>
         </div>
-        <h2 id={tituloId} className="folha-titulo">{p.recorteTitulo}</h2>
+        <h2 id={tituloId} className="folha-titulo">{titulo}</h2>
         <p id={dicaId} className="folha-texto folha-texto--miudo">{toque ? p.recorteDicaToque : p.recorteDica}</p>
-        <div ref={quadro} className="recorte" tabIndex={0} role="group" aria-label={p.recorteArea} aria-describedby={tecladoId}
+        <div ref={quadro} className="recorte" data-proporcao={proporcao} style={{ aspectRatio: String(proporcao) }} tabIndex={0} role="group" aria-label={p.recorteArea} aria-describedby={tecladoId}
           onPointerDown={aoPressionar} onPointerMove={aoMover} onPointerUp={aoSoltar} onPointerCancel={aoSoltar} onKeyDown={aoTeclar}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img ref={imagem} src={origem} alt="" draggable={false}
             onLoad={(e) => setNatural({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
             onError={() => setErro(p.fotoIlegivel)}
             style={natural ? { width: largura, height: altura, transform: `translate(${pos.x}px, ${pos.y}px)` } : { opacity: 0 }} />
-          <span className="recorte__circulo" aria-hidden="true" />
+          <span className={proporcao === 1 ? 'recorte__circulo' : 'recorte__moldura'} aria-hidden="true" />
         </div>
         <p id={tecladoId} className="somente-leitor">{p.recorteTeclado}</p>
         <label className="recorte__zoom">
@@ -763,7 +781,7 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
             style={{ '--preenchido': `${((zoom - 1) / (ZOOM_MAX - 1)) * 100}%` } as CSSProperties}
             onChange={(e) => aplicarZoom(Number(e.target.value) / 100)} />
         </label>
-        <p className="campo-dica recorte__aviso">{p.fotoAviso}</p>
+        <p className="campo-dica recorte__aviso">{aviso}</p>
         {erro && <p className="campo-erro" role="alert">{erro}</p>}
         {/* A ação principal vem primeiro (no celular fica em cima, à vista); no computador, à direita. */}
         <div className="folha-acoes recorte__acoes">

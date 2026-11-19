@@ -14,6 +14,8 @@ import {
   motivoTituloTrilhaInvalido,
   normalizarResumoPerfil,
   normalizarTituloTrilha,
+  ehCapaFoto,
+  marcacaoCapa,
   svgCapa,
   svgCapaGaleria,
   type ConfiguracoesTrilha,
@@ -24,13 +26,14 @@ import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { codigoDoErro, useDialogo } from './compartilhar';
+import { RecorteImagem } from './perfil';
 import './configuracoes.css';
 
 const k = mensagens.configuracoes;
 
 /** A capa (galeria ou padrão) desenhada em SVG, decorativa. */
-export function CapaDaTrilha({ semente, tema, capa, className = 'capa-trilha' }: { semente: string; tema: Tema | null; capa: string | null | undefined; className?: string }) {
-  return <span className={className} aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgCapa({ codigo: semente, tema, capa }) }} />;
+export function CapaDaTrilha({ semente, tema, capa, className = 'capa-trilha', grande = false }: { semente: string; tema: Tema | null; capa: string | null | undefined; className?: string; grande?: boolean }) {
+  return <span className={className} aria-hidden="true" data-foto={ehCapaFoto(capa) || undefined} dangerouslySetInnerHTML={{ __html: marcacaoCapa({ codigo: semente, tema, capa, tamanho: grande ? 1024 : 480 }) }} />;
 }
 
 type Campo = 'titulo' | 'descricao' | 'tema' | 'capa';
@@ -56,6 +59,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
   const [erros, setErros] = useState<Partial<Record<Campo, string>>>({});
   const [estado, setEstado] = useState<'livre' | 'salvando' | 'salvo'>('livre');
   const [galeria, setGaleria] = useState(false);
+  const [arquivo, setArquivo] = useState<string | null>(null);
   const tituloTela = useRef<HTMLHeadingElement>(null);
   const ids = { titulo: useId(), tituloDica: useId(), tituloErro: useId(), descricao: useId(), descricaoDica: useId(), descricaoErro: useId(), descricaoContador: useId(), tema: useId(), estado: useId() };
 
@@ -117,7 +121,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
   }
 
   const usados = [...normalizarResumoPerfil(descricao)].length;
-  const nomeCapa = conf?.capa ? k.capas[conf.capa] ?? conf.capa : k.capaPadrao;
+  const nomeCapa = !conf?.capa ? k.capaPadrao : ehCapaFoto(conf.capa) ? k.suaFoto : k.capas[conf.capa] ?? conf.capa;
   const comp = conf?.compartilhamento ?? null;
 
   return (
@@ -207,27 +211,57 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
       )}
 
       {galeria && conf && (
-        <GaleriaDeCapas atual={conf.capa} semente={conf.semente} tema={conf.tema}
+        <GaleriaDeCapas atual={conf.capa} semente={conf.semente} tema={conf.tema} comFoto={compartilhar}
           aoFechar={() => setGaleria(false)}
-          aoEscolher={(capa) => { setGaleria(false); if (capa !== conf.capa) void salvar('capa', { capa }); }} />
+          aoEscolher={(capa) => { setGaleria(false); if (capa !== conf.capa) void salvar('capa', { capa }); }}
+          aoEscolherArquivo={(dados) => { setGaleria(false); setArquivo(dados); }}
+          aoErroArquivo={(texto) => { setGaleria(false); setErros((atual) => ({ ...atual, capa: texto })); }} />
+      )}
+      {arquivo && (
+        // A foto da capa: o mesmo recorte do perfil, na proporção da capa (2:1).
+        <RecorteImagem origem={arquivo} proporcao={2} titulo={k.capaFotoTitulo} aviso={k.capaFotoAviso}
+          aoCancelar={() => setArquivo(null)}
+          enviar={async (base64) => {
+            const novo = await cliente.enviarCapa(planoId, base64);
+            setArquivo(null);
+            setConf(novo);
+            setEstado('salvo');
+            aoMudar(novo);
+          }} />
       )}
     </section>
   );
 }
 
 /** A galeria de capas, numa folha do próprio app: a padrão e as 12 prontas. Escolher salva e fecha. */
-function GaleriaDeCapas({ atual, semente, tema, aoFechar, aoEscolher }: {
+function GaleriaDeCapas({ atual, semente, tema, comFoto, aoFechar, aoEscolher, aoEscolherArquivo, aoErroArquivo }: {
   atual: string | null;
   semente: string;
   tema: Tema | null;
+  /** "Usar uma foto" (com o compartilhar ligado, a mesma flag da foto do perfil). */
+  comFoto: boolean;
   aoFechar: () => void;
   aoEscolher: (capa: string | null) => void;
+  aoEscolherArquivo: (dataUrl: string) => void;
+  aoErroArquivo: (texto: string) => void;
 }) {
+  const arquivoRef = useRef<HTMLInputElement>(null);
+  function lerArquivo(lista: FileList | null) {
+    const escolhido = lista?.[0];
+    if (arquivoRef.current) arquivoRef.current.value = '';
+    if (!escolhido) return;
+    if (!escolhido.type.startsWith('image/') || escolhido.size > 30 * 1024 * 1024) { aoErroArquivo(mensagens.perfil.fotoIlegivel); return; }
+    const leitor = new FileReader();
+    leitor.onload = () => { if (typeof leitor.result === 'string') aoEscolherArquivo(leitor.result); };
+    leitor.onerror = () => aoErroArquivo(mensagens.perfil.fotoIlegivel);
+    leitor.readAsDataURL(escolhido);
+  }
   const caixa = useRef<HTMLDivElement>(null);
   const tituloId = useId();
   useDialogo(caixa, aoFechar);
   useEffect(() => { caixa.current?.querySelector<HTMLInputElement>('input:checked')?.focus(); }, []);
   const opcoes: { id: string | null; nome: string; svg: string }[] = [
+    ...(ehCapaFoto(atual) ? [{ id: atual as string, nome: k.suaFoto, svg: marcacaoCapa({ codigo: semente, tema, capa: atual }) }] : []),
     { id: null, nome: k.capaPadrao, svg: svgCapa({ codigo: semente, tema, capa: null }) },
     ...CAPAS_GALERIA.map((capa) => ({ id: capa.id as string, nome: k.capas[capa.id] ?? capa.id, svg: svgCapaGaleria(capa.id) })),
   ];
@@ -239,12 +273,19 @@ function GaleriaDeCapas({ atual, semente, tema, aoFechar, aoEscolher }: {
           <button type="button" className="folha-fechar" aria-label={mensagens.compartilhar.fechar} onClick={aoFechar}><Icone nome="fechar" /></button>
         </div>
         <h2 id={tituloId} className="folha-titulo">{k.capaTitulo}</h2>
+        {comFoto && (
+          <div className="galeria-capas__foto">
+            <Botao variante="secundario" onClick={() => arquivoRef.current?.click()}><Icone nome="camera" />{k.usarFoto}</Botao>
+            <span className="campo-dica">{k.usarFotoDica}</span>
+            <input ref={arquivoRef} type="file" accept="image/*" hidden onChange={(e) => lerArquivo(e.target.files)} />
+          </div>
+        )}
         <fieldset className="galeria-capas">
           <legend className="somente-leitor">{k.capaTitulo}</legend>
           {opcoes.map((opcao) => (
             <label key={opcao.id ?? 'padrao'} className="galeria-capas__opcao">
               <input type="radio" name="capa-da-trilha" checked={(atual ?? null) === opcao.id} onChange={() => aoEscolher(opcao.id)} />
-              <span className="galeria-capas__desenho" aria-hidden="true" dangerouslySetInnerHTML={{ __html: opcao.svg }} />
+              <span className="galeria-capas__desenho" aria-hidden="true" data-foto={ehCapaFoto(opcao.id) || undefined} dangerouslySetInnerHTML={{ __html: opcao.svg }} />
               <span className="galeria-capas__nome">{opcao.nome}{opcao.id === null && <small> · {k.capaPadraoDica}</small>}</span>
             </label>
           ))}

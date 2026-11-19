@@ -4,7 +4,11 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { after, test } from 'node:test';
+import sharp from 'sharp';
 import { CAPAS_GALERIA } from '@studoo/contratos';
+import { PUT as capaPut, DELETE as capaDelete } from '../src/app/api/aprendizado/planos/[id]/capa/route.ts';
+import { GET as capaGet } from '../src/app/api/capas/[token]/[tamanho]/route.ts';
+import { zerarCacheFotos } from '../src/servidor/compartilhar/foto.ts';
 import { PUT as perfilPut } from '../src/app/api/perfil/route.ts';
 import { GET as configGet, PATCH as configPatch } from '../src/app/api/aprendizado/planos/[id]/configuracoes/route.ts';
 import { GET as planosGet } from '../src/app/api/aprendizado/planos/route.ts';
@@ -34,7 +38,7 @@ after(async () => {
     await banco.fluxo.deleteMany({ where: { usuarioId: id } });
     await banco.planoAprendizado.deleteMany({ where: { usuarioId: id } });
     await banco.sessao.deleteMany({ where: { usuarioId: id } });
-    await banco.tentativaLogin.deleteMany({ where: { chave: { in: ['ia:geracao', 'perfil', 'compartilhar:criar', 'compartilhar:adicionar', 'comunidade:publicar', 'trilha:configuracoes'].map((p) => assinatura(`${p}:${id}`)) } } });
+    await banco.tentativaLogin.deleteMany({ where: { chave: { in: ['ia:geracao', 'perfil', 'compartilhar:criar', 'compartilhar:adicionar', 'comunidade:publicar', 'trilha:configuracoes', 'capa'].map((p) => assinatura(`${p}:${id}`)) } } });
     await banco.usuario.delete({ where: { id } });
   }
   await banco.tentativaLogin.deleteMany({ where: { chave: assinatura('compartilhar:global') } });
@@ -129,4 +133,63 @@ test('configurações: descrição e tema são a legenda e o tema do link; nome 
   await mudar(bia, adicionada.planoId, { titulo: 'Minha cópia', capa: 'noite' });
   assert.deepEqual([(await obter(ana, plano.id)).corpo.titulo, (await obter(ana, plano.id)).corpo.capa], ['Frações de cozinha', 'oceano']);
   assert.equal((await obter(ana, plano.id)).corpo.compartilhamento.estudando, 1);
+});
+
+const enviarCapa = (quem, planoId, base64) => json(capaPut(pedido(`/api/aprendizado/planos/${planoId}/capa`, { metodo: 'PUT', token: quem.token, corpo: { base64 } }), ctx({ id: planoId })));
+const lerCapa = (token, tamanho) => capaGet(pedido(`/api/capas/${token}/${tamanho}`), ctx({ token, tamanho: String(tamanho) }));
+
+test('capa com foto: 2:1 em WebP sem metadados nos dois tamanhos, token novo a cada troca, a cópia volta à padrão', async () => {
+  zerarCacheFotos();
+  const ana = await pessoa('Ana');
+  const bia = await pessoa('Bia');
+  const plano = await novaTrilha(ana);
+  // Uma foto com EXIF (orientação e GPS) e proporção qualquer: o servidor corta em 2:1 e tira os metadados.
+  const foto = await sharp({ create: { width: 900, height: 600, channels: 3, background: '#c2410c' } })
+    .withMetadata({ exif: { IFD0: { Copyright: 'segredo-exif' }, GPS: { GPSLatitudeRef: 'S' } } }).jpeg().toBuffer();
+  // De outra pessoa e inválidas: nada muda.
+  assert.equal((await enviarCapa(bia, plano.id, foto.toString('base64'))).status, 404);
+  const gif = Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==', 'base64');
+  assert.equal((await enviarCapa(ana, plano.id, gif.toString('base64'))).corpo.codigo, 'foto_invalida');
+  assert.equal((await enviarCapa(ana, plano.id, 'nao-e-base64!')).corpo.codigo, 'foto_invalida');
+  const r = await enviarCapa(ana, plano.id, foto.toString('base64'));
+  assert.equal(r.status, 200);
+  assert.match(r.corpo.capa, /^foto:[A-Za-z0-9_-]{16}$/);
+  const token = r.corpo.capa.slice(5);
+  for (const [largura, altura] of [[1024, 512], [480, 240]]) {
+    const resposta = await lerCapa(token, largura);
+    assert.equal(resposta.status, 200);
+    assert.equal(resposta.headers.get('content-type'), 'image/webp');
+    assert.match(resposta.headers.get('cache-control'), /immutable/);
+    const bytes = Buffer.from(await resposta.arrayBuffer());
+    const meta = await sharp(bytes).metadata();
+    assert.deepEqual([meta.format, meta.width, meta.height], ['webp', largura, altura]);
+    assert.equal(meta.exif, undefined, 'sem EXIF');
+    assert.ok(!bytes.includes('segredo-exif'));
+  }
+  assert.equal((await lerCapa(token, 300)).status, 404, 'só os dois tamanhos');
+  // A lista e o link mostram a foto; a cópia volta à capa padrão (a foto fica com quem enviou).
+  assert.equal((await json(planosGet(pedido('/api/aprendizado/planos', { token: ana.token })))).corpo.find((item) => item.id === plano.id).capa, r.corpo.capa);
+  const { corpo: link } = await json(criarPost(pedido(`/api/aprendizado/planos/${plano.id}/compartilhar`, { metodo: 'POST', token: ana.token, corpo: {} }), ctx({ id: plano.id })));
+  assert.equal((await json(linkGet(pedido(`/api/compartilhar/${link.codigo}`), ctx({ codigo: link.codigo })))).corpo.capa, r.corpo.capa);
+  const { corpo: adicionada } = await json(adicionarPost(pedido(`/api/compartilhar/${link.codigo}/adicionar`, { metodo: 'POST', token: bia.token, corpo: {} }), ctx({ codigo: link.codigo })));
+  assert.equal((await obter(bia, adicionada.planoId)).corpo.capa, null);
+  // Trocar a foto: token novo, o antigo deixa de existir.
+  const segunda = await enviarCapa(ana, plano.id, foto.toString('base64'));
+  assert.notEqual(segunda.corpo.capa, r.corpo.capa);
+  assert.equal((await lerCapa(token, 480)).status, 404);
+  // Escolher uma capa da galeria apaga a foto; tirar a foto volta a padrão.
+  const token2 = segunda.corpo.capa.slice(5);
+  assert.equal((await mudar(ana, plano.id, { capa: 'menta' })).corpo.capa, 'menta');
+  assert.equal((await lerCapa(token2, 480)).status, 404);
+  await enviarCapa(ana, plano.id, foto.toString('base64'));
+  const sem = await json(capaDelete(pedido(`/api/aprendizado/planos/${plano.id}/capa`, { metodo: 'DELETE', token: ana.token }), ctx({ id: plano.id })));
+  assert.equal(sem.corpo.capa, null);
+  // O revisor de conteúdo é chamado antes de gravar a foto.
+  definirRevisor(async (conteudo) => (conteudo.tipo === 'foto' ? { aprovado: false, motivo: 'teste' } : { aprovado: true }));
+  try {
+    assert.equal((await enviarCapa(ana, plano.id, foto.toString('base64'))).corpo.codigo, 'conteudo_recusado');
+    assert.equal((await obter(ana, plano.id)).corpo.capa, null);
+  } finally {
+    definirRevisor();
+  }
 });

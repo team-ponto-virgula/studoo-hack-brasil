@@ -334,6 +334,12 @@ export const mensagens = {
         capaTitulo: 'Escolher a capa',
         capaPadrao: 'Padrão',
         capaPadraoDica: 'A cor e o desenho do tema',
+        usarFoto: 'Usar uma foto',
+        usarFotoDica: 'JPG, PNG ou WebP, até 2 MB',
+        suaFoto: 'Sua foto',
+        capaFotoTitulo: 'Ajustar a capa',
+        capaFotoAviso: 'A capa aparece no cartão, no mapa e no link da trilha. Quem adicionar uma cópia fica com a capa padrão: a foto continua só com você.',
+        capaSalva: 'Capa salva.',
         capaEscolhida: (nome: string) => `Capa: ${nome}`,
         capas: {
             aurora: 'Aurora', oceano: 'Oceano', floresta: 'Floresta', 'por-do-sol': 'Pôr do sol', noite: 'Noite', areia: 'Areia',
