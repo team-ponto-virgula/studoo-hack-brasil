@@ -1,5 +1,8 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 /*
  * Comunidade (spec 10, etapa B) na web: a capa gerada, o cartão de trilha (o mesmo no Explorar, no perfil e na
  * prévia), a tela Explorar (no app e na página pública /explorar), o Valeu e o diálogo de Denunciar.
@@ -20,7 +23,7 @@ import {
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone, Stu } from '../ui';
-import { Avatar, CHAVE_DEPOIS_DO_LOGIN, abrirNoApp, codigoDoErro, guardar, urlDoLink, useDialogo } from './compartilhar';
+import { Avatar, CHAVE_DEPOIS_DO_LOGIN, useAbrirNoApp, codigoDoErro, guardar, urlDoLink, useDialogo } from './compartilhar';
 import { tocaSons } from './sons';
 import type { IdEfeitoSonoro } from '../../packages/contratos/src/catalogo-sons';
 import './comunidade.css';
@@ -29,9 +32,12 @@ const c = mensagens.comunidade;
 const temas = mensagens.temas;
 
 /** Leva ao login e volta para `caminho` depois (um link de trilha ou o Explorar). */
-export function entrarEVoltar(caminho: string) {
-  guardar(CHAVE_DEPOIS_DO_LOGIN, caminho);
-  window.location.assign('/login');
+function useEntrarEVoltar() {
+  const router = useRouter();
+  return (caminho: string) => {
+    guardar(CHAVE_DEPOIS_DO_LOGIN, caminho);
+    router.push('/login');
+  };
 }
 
 /** A capa: cor do tema e um padrão geométrico determinístico pelo código (sem imagem enviada, sem IA). */
@@ -106,14 +112,14 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
       </div>
       <div className="cartao-trilha__corpo">
         {posicao !== undefined && <p className="somente-leitor">{c.posicao(posicao)}</p>}
-        <Titulo id={tituloId} className="cartao-trilha__titulo"><a href={`/t/${cartao.codigo}`}>{cartao.titulo}</a></Titulo>
+        <Titulo id={tituloId} className="cartao-trilha__titulo"><Link href={`/t/${cartao.codigo}`}>{cartao.titulo}</Link></Titulo>
         {!semDono && (
           <p className="cartao-trilha__dono">
             {cartao.dono.perfilId
-              ? <a href={`/p/${cartao.dono.perfilId}`} aria-label={c.perfilDe(cartao.dono.nome)}>
+              ? <Link href={`/p/${cartao.dono.perfilId}`} aria-label={c.perfilDe(cartao.dono.nome)}>
                 <Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} />
                 <span className="cartao-trilha__por">por </span><span className="cartao-trilha__nome">{cartao.dono.nome}</span>
-              </a>
+              </Link>
               : <><Avatar nome={cartao.dono.nome} cor={cartao.dono.cor} foto={cartao.dono.foto} /><span>{c.por(cartao.dono.nome)}</span></>}
           </p>
         )}
@@ -216,6 +222,7 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
   aoAbrir: (planoId: string) => void;
   anunciar: (texto: string) => void;
 }) {
+  const entrarEVoltar = useEntrarEVoltar();
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [denuncia, setDenuncia] = useState<CartaoTrilha | null>(null);
   const [aviso, avisar] = useAvisoDoApp();
@@ -504,6 +511,7 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
 
 /** Na página pública sem conta: o convite para entrar (ver não pede conta; agir pede). */
 export function ConviteEntrar() {
+  const entrarEVoltar = useEntrarEVoltar();
   return (
     <div className="explorar__convite">
       <p>{c.entrarParaAgir}</p>
@@ -544,6 +552,7 @@ export function CartoesDoPerfil({ inicial, logado, aoAdicionado, aoAbrir, titulo
 
 /** /p/<id>: os cartões com as ações; sem o app aberto, adicionar e abrir levam ao app. */
 export function CartoesPublicos({ inicial, logado, titulo }: { inicial: CartaoTrilha[]; logado: boolean; titulo: string }) {
+  const abrirNoApp = useAbrirNoApp();
   return (
     <CartoesDoPerfil inicial={inicial} logado={logado} titulo={titulo} semDono
       aoAbrir={(planoId) => abrirNoApp(planoId)}
@@ -553,16 +562,19 @@ export function CartoesPublicos({ inicial, logado, titulo }: { inicial: CartaoTr
 
 /** /explorar: o mesmo Explorar do app, com o convite para entrar quando não há sessão. */
 export function ExplorarPublico({ inicial, logado }: { inicial: PaginaExplorar | null; logado: boolean }) {
+  const abrirNoApp = useAbrirNoApp();
+  const router = useRouter();
   return (
     <Explorar logado={logado} inicial={inicial} topo={logado ? undefined : <ConviteEntrar />}
       aoAbrir={(planoId) => abrirNoApp(planoId)}
       aoAdicionado={(planoId, nome, jaTinha) => abrirNoApp(planoId, jaTinha ? undefined : c.adicionada(nome))}
-      irParaTrilhas={() => window.location.assign('/')} />
+      irParaTrilhas={() => router.push('/')} />
   );
 }
 
 /** "Denunciar perfil", discreto, no fim da página /p (sem sessão, leva ao login). */
 export function DenunciarPerfil({ perfilId, logado, nome }: { perfilId: string; logado: boolean; nome: string }) {
+  const entrarEVoltar = useEntrarEVoltar();
   const [aberto, setAberto] = useState(false);
   const [status, setStatus] = useState('');
   return (
@@ -581,10 +593,13 @@ export function DenunciarPerfil({ perfilId, logado, nome }: { perfilId: string; 
  * Studoo); sem histórico, vai para o Explorar (ou para o início, sem a comunidade).
  */
 export function VoltarDaPagina({ destino }: { destino: string }) {
+  const router = useRouter();
   function voltar() {
-    const veioDoStudoo = document.referrer.startsWith(window.location.origin) && window.history.length > 1;
+    const entrada = performance.getEntriesByType('navigation')[0]?.name;
+    const veioDoStudoo = window.history.length > 1 && ((entrada && new URL(entrada).pathname !== location.pathname)
+      || (document.referrer && new URL(document.referrer).origin === location.origin));
     if (veioDoStudoo) window.history.back();
-    else window.location.assign(destino);
+    else router.push(destino);
   }
   return (
     <Botao variante="texto" className="voltar-pagina" onClick={voltar}>

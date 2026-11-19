@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -64,7 +65,7 @@ export default async function PaginaDoLink({ params }: Props) {
         <section className="pagina-publica__vazio">
           <Stu expressao="stu-encorajador" tamanho={96} animado="uma-vez" />
           <h1>{mensagens.erros.limite_compartilhar}</h1>
-          <a className="botao botao--primario" href={resultado.logado ? '/' : '/login'}>{m.criarMinha}</a>
+          <Link className="botao botao--primario" href={resultado.logado ? '/' : '/login'}>{m.criarMinha}</Link>
         </section>
       </PaginaPublica>
     );

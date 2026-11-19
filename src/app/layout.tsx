@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
 import './globals.css';
+import { AmbienteSom } from './ambiente-som';
 import { AmbienteMovimento } from '../ui/movimento';
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/nunito-wght.woff2" />
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/quicksand-wght.woff2" />
       </head>
-      <body><AmbienteMovimento />{children}</body>
+      <body><AmbienteMovimento /><AmbienteSom />{children}</body>
     </html>
   );
 }

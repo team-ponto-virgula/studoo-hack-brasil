@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { cookies, headers } from 'next/headers';
 import { nomeCookieSessao, origemStudoo } from '@/servidor/acesso/origem';
@@ -11,7 +12,7 @@ import './perfil.css';
 export function PaginaPublica({ children }: { children: ReactNode }) {
   return (
     <div className="pagina-publica">
-      <header className="pagina-publica__topo"><a href="/" aria-label="Studoo"><Logo decorativo /></a></header>
+      <header className="pagina-publica__topo"><Link href="/" aria-label="Studoo"><Logo decorativo /></Link></header>
       <main id="conteudo-principal" className="pagina-publica__corpo">{children}</main>
     </div>
   );

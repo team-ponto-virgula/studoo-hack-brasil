@@ -4,13 +4,14 @@
  *   e laço sem buraco nos fundos (MP3 decodificado em memória com `loopStart` e `loopEnd` aparados).
  * - Só desbloqueia no primeiro gesto do usuário (sem enfileirar sons disparados antes do gesto).
  * - Pré-carrega `erro_rede` e `aviso` no primeiro gesto para tocarem mesmo offline.
- * - Rampas de volume: entrada em 600 ms, troca 300 ms / 600 ms, Mudo em 400 ms, fala 20% em 400 ms / volta em 600 ms.
+ * - Rampas de volume: entrada em 600 ms, Mudo em 400 ms, fala 20% em 400 ms / volta em 600 ms.
  * - Expõe estados (`parado`, `carregando`, `tocando`, `erro`) com timeout de 8 s para a folha "Som".
  */
 
 import {
   CATALOGO_EFEITOS,
   CATALOGO_FUNDOS,
+  fundoUnicoDaPreferencia,
   MENSAGEM_ERRO_FUNDO,
   PADRAO_PREFERENCIAS_SOM,
   type EstadoReproducaoFundo,
@@ -23,22 +24,14 @@ import { MaquinaEstadoSom } from '../../packages/contratos/src/som-estado';
 
 const CHAVE_EFEITOS = 'studoo.sons.efeitos';
 // Pré-carga, cache decodificado e reprodução compartilham a revisão publicada dos arquivos.
-const REVISAO_DOS_SONS = '24498ec';
-const arquivoSonoro = (pasta: 'sfx' | 'fundos', nome: string) => `/sons/${pasta}/${nome}?v=${REVISAO_DOS_SONS}`;
+const revisao = { sfx: '24498ec', fundos: '9b1e28811362' } as const;
+const arquivoSonoro = (pasta: keyof typeof revisao, nome: string) => `/sons/${pasta}/${nome}?v=${revisao[pasta]}`;
+const lofi = CATALOGO_FUNDOS.find((faixa) => faixa.id === 'lofi_estudo')!;
 
 const CHAVE_FUNDO = 'studoo.sons.fundo';
 const TIMEOUT_CARREGAMENTO_MS = 8000;
 // Um arquivo frio continua no cache para o próximo gesto. Depois desse limite o gesto já passou.
 const VALIDADE_EFEITO_MS = 80;
-
-const IDS_FUNDOS_VALIDOS = new Set<IdSomFundo>([
-  'mudo',
-  'foco_calmo',
-  'chuva_suave',
-  'lofi_estudo',
-  'biblioteca',
-  'brisa_natural',
-]);
 
 type OuvinteEstado = (estado: EstadoSomSnapshot) => void;
 
@@ -56,9 +49,9 @@ class TocaSonsWeb {
   private ganhoFundo: GainNode | null = null;
   private fundoTocandoId: IdSomFundo | null = null;
   private timerParada: ReturnType<typeof setTimeout> | null = null;
-  private timerPreview: ReturnType<typeof setTimeout> | null = null;
   private sequenciaFundo = 0;
 
+  private folhaAberta = false;
   private prefsCarregadas = false;
   private gestosRegistrados = false;
   private desbloqueado = false;
@@ -67,9 +60,6 @@ class TocaSonsWeb {
   private estadoFundo: EstadoReproducaoFundo = 'parado';
   private erroFundo: string | null = null;
   private ouvintes = new Set<OuvinteEstado>();
-
-  private folhaAberta = false;
-  private leitorDeTela = false;
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -82,11 +72,13 @@ class TocaSonsWeb {
     this.prefsCarregadas = true;
     try {
       const e = window.localStorage.getItem(CHAVE_EFEITOS);
-      const f = window.localStorage.getItem(CHAVE_FUNDO) as IdSomFundo | null;
+      const anterior = window.localStorage.getItem(CHAVE_FUNDO);
+      const fundo = fundoUnicoDaPreferencia(anterior);
       this.estado.definirEfeitosAtivos(e === null ? PADRAO_PREFERENCIAS_SOM.efeitosAtivos : e === '1');
-      this.estado.definirFundo(
-        f && IDS_FUNDOS_VALIDOS.has(f) ? f : PADRAO_PREFERENCIAS_SOM.fundo,
-      );
+      this.estado.definirFundo(fundo);
+      if (anterior && anterior !== fundo) {
+        try { window.localStorage.setItem(CHAVE_FUNDO, fundo); } catch { /* A preferência lida vale nesta sessão. */ }
+      }
     } catch {
       this.estado.definirEfeitosAtivos(PADRAO_PREFERENCIAS_SOM.efeitosAtivos);
       this.estado.definirFundo(PADRAO_PREFERENCIAS_SOM.fundo);
@@ -140,7 +132,7 @@ class TocaSonsWeb {
           this.preCarregarEssenciais();
           void this.atualizarEstadoFundo(600);
         }).catch(() => { /* No iOS, a próxima soltura do toque pode liberar o contexto. */ });
-      } else if (eraBloqueado || this.estadoFundo === 'erro') {
+      } else if (eraBloqueado) {
         this.preCarregarEssenciais();
         void this.atualizarEstadoFundo(600);
       }
@@ -308,61 +300,25 @@ class TocaSonsWeb {
     }
   }
 
-  definirAreaPermitida(permitida: boolean): void {
-    this.lerPreferencias();
-    this.estado.definirAreaPermitida(permitida);
-    void this.atualizarEstadoFundo(permitida ? 600 : 400);
-  }
-
-  definirPreviewFolha(opcoes: { aberta: boolean; leitorDeTela?: boolean }): void {
-    this.folhaAberta = opcoes.aberta;
-    if (opcoes.leitorDeTela !== undefined) this.leitorDeTela = opcoes.leitorDeTela;
-    if (!opcoes.aberta) this.cancelarPreviewFundo();
-    void this.atualizarEstadoFundo(300);
-  }
-
-  cancelarPreviewFundo(): void {
-    if (this.timerPreview) {
-      clearTimeout(this.timerPreview);
-      this.timerPreview = null;
+  prepararFundo(): void {
+    if (this.lerPreferencias().fundo !== 'mudo' && document.visibilityState === 'visible') {
+      void this.carregarBuffer(arquivoSonoro('fundos', lofi.arquivo), TIMEOUT_CARREGAMENTO_MS);
     }
   }
 
-  /** Agenda a troca de fundo (usado para setas no teclado: 600 ms de permanência na opção). */
-  definirFundoComAtraso(fundo: IdSomFundo, atrasoMs = 600): void {
-    this.cancelarPreviewFundo();
+  async definirFundo(preferencia: IdSomFundo): Promise<void> {
     this.lerPreferencias();
+    const fundo = fundoUnicoDaPreferencia(preferencia);
     this.estado.definirFundo(fundo);
-    try {
-      window.localStorage.setItem(CHAVE_FUNDO, fundo);
-    } catch {
-      // Ignora.
-    }
-    this.notificar();
-    this.timerPreview = setTimeout(() => {
-      this.timerPreview = null;
-      void this.atualizarEstadoFundo();
-    }, atrasoMs);
+    try { window.localStorage.setItem(CHAVE_FUNDO, fundo); } catch { /* Continua nesta sessão. */ }
+    this.erroFundo = null;
+    await this.atualizarEstadoFundo();
   }
 
-  async definirFundo(fundo: IdSomFundo): Promise<void> {
-    this.cancelarPreviewFundo();
-    this.lerPreferencias();
-    const anterior = this.estado.fundo;
-    this.estado.definirFundo(fundo);
-    try {
-      window.localStorage.setItem(CHAVE_FUNDO, fundo);
-    } catch {
-      // Ignora erro de armazenamento privado.
-    }
-    this.erroFundo = null;
-    const rampaMs = fundo === 'mudo' ? 400 : anterior !== 'mudo' && anterior !== fundo ? 600 : 600;
-    await this.atualizarEstadoFundo(rampaMs);
-  }
-
-  async tentarNovamenteFundo(): Promise<void> {
-    this.erroFundo = null;
-    await this.atualizarEstadoFundo(600);
+  definirFolhaAberta(aberta: boolean): void {
+    if (this.folhaAberta === aberta) return;
+    this.folhaAberta = aberta;
+    if (this.estado.fundo !== 'mudo' && this.estadoFundo === 'tocando') void this.atualizarEstadoFundo(aberta ? 400 : 600);
   }
 
   entrarEmFala(): void {
@@ -433,6 +389,7 @@ class TocaSonsWeb {
     const id = this.estado.fundo;
 
     if (estadoDesejado === 'parado' || id === 'mudo' || !this.desbloqueado) {
+      this.sequenciaFundo++;
       const pararMs = !this.desbloqueado || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano ? 0 : 400;
       this.pararComRampa(pararMs);
       this.estadoFundo = this.erroFundo && id !== 'mudo' ? 'erro' : 'parado';
@@ -440,14 +397,7 @@ class TocaSonsWeb {
       return;
     }
 
-    const def = CATALOGO_FUNDOS.find((f) => f.id === id);
-    if (!def) {
-      this.limparFonteImediatamente();
-      this.estadoFundo = 'parado';
-      this.notificar();
-      return;
-    }
-
+    const def = lofi;
     const ctx = this.garantirContexto();
     if (!ctx || !this.ganhoFundo) return;
     if (ctx.state === 'suspended') {
@@ -458,22 +408,17 @@ class TocaSonsWeb {
       }
     }
 
-    const fatorFala = estadoDesejado === 'atenuado' ? 0.2 : 1;
-    const fatorLeitor = this.folhaAberta && this.leitorDeTela ? 0.6 : 1;
-    const alvoGanho = def.volume * fatorFala * fatorLeitor;
+    const alvoGanho = () => def.volume * (this.estado.estadoFundo() === 'atenuado' ? 0.2 : this.folhaAberta ? 0.6 : 1);
 
     if (this.fonteFundo && this.fundoTocandoId === id) {
-      this.rampaGanho(alvoGanho, rampaMs);
+      if (this.timerParada) { clearTimeout(this.timerParada); this.timerParada = null; }
+      this.rampaGanho(alvoGanho(), rampaMs);
       this.estadoFundo = 'tocando';
       this.notificar();
       return;
     }
 
     const seq = ++this.sequenciaFundo;
-    // Se havia outro clima tocando, desce o anterior em 300 ms antes de subir o novo em 600 ms.
-    if (this.fonteFundo) {
-      this.pararComRampa(300);
-    }
 
     if (!this.cacheBuffers.has(arquivoSonoro('fundos', def.arquivo))) {
       this.estadoFundo = 'carregando';
@@ -509,7 +454,7 @@ class TocaSonsWeb {
     src.start(0, inicio);
     this.fonteFundo = src;
     this.fundoTocandoId = id;
-    this.rampaGanho(alvoGanho, 600);
+    this.rampaGanho(alvoGanho(), 600);
     this.estadoFundo = 'tocando';
     this.erroFundo = null;
     this.notificar();
