@@ -323,6 +323,12 @@ export const mensagens = {
         fonteMaterialDe: (nome: string) => `Fonte do material de ${nome}`,
         apagarAviso: 'O link de compartilhamento desta trilha também deixa de funcionar.',
     },
+    /** Página 404 própria (endereço que não existe): em português, com o Stu. */
+    naoEncontrada: {
+        titulo: 'Esta página não existe',
+        texto: 'O endereço pode estar errado ou a página saiu do ar.',
+        voltar: 'Voltar para o início',
+    },
     /** Perfil (spec 09). */
     perfil: {
         titulo: 'Perfil',
