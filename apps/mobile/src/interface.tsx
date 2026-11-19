@@ -40,6 +40,13 @@ import { focoVisivel } from './foco';
  * Quem mede posições para rolar até um ponto (o caminho na geração) soma este valor; com a faixa parada no alto, é 0.
  */
 export const DeslocamentoDaRolagem = createContext<number | null>(0);
+/**
+ * Rola a tela até um elemento dela (medido dentro da rolagem), com uma folga no alto: o `scrollIntoView` da web, para
+ * quem abre um bloco no fim da tela ("Adicionar por link") e precisa trazê-lo para cima do teclado e da barra de baixo.
+ */
+export const RolagemDaTela = createContext<{ rolarAte: (no: ComponentRef<typeof View> | null, folga?: number) => void } | null>(null);
+/** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
+export const AlturaDaFaixaFixa = createContext(0);
 
 export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, rolagem, aoMedir, aoRolar, aoMedirConteudo, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
   children: ReactNode;
@@ -70,6 +77,19 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   estiloRodapeConteudo?: StyleProp<ViewStyle>;
 }) {
   const navegacao = useContext(NavegacaoContexto);
+  const reduzirMovimento = useMovimentoReduzido();
+  const rolagemInterna = useRef<ComponentRef<typeof ScrollView> | null>(null);
+  const referenciaDaRolagem = (no: ComponentRef<typeof ScrollView> | null) => {
+    rolagemInterna.current = no;
+    if (typeof rolagem === 'function') rolagem(no);
+    else if (rolagem) (rolagem as { current: ComponentRef<typeof ScrollView> | null }).current = no;
+  };
+  const rolarAte = (no: ComponentRef<typeof View> | null, folga = 16) => {
+    const tela = rolagemInterna.current;
+    const conteudo = tela?.getInnerViewRef?.();
+    if (!tela || !conteudo || !no) return;
+    no.measureLayout(conteudo as never, (_x, y) => tela.scrollTo({ y: Math.max(0, y - folga), animated: reduzirMovimento === false }), () => undefined);
+  };
   const [teclado, setTeclado] = useState(false);
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   const [alturaFaixa, setAlturaFaixa] = useState(0);
@@ -106,7 +126,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
       <KeyboardAvoidingView style={estilos.tela} behavior={Platform.OS === 'web' ? undefined : 'padding'}>
         {/* No navegador, o "on-drag" do React Native Web tira o foco do campo a cada rolagem, até a que a própria tela faz
             (o campo do Explique perdia o foco depois da queda da conversa ao vivo); lá, como na web, rolar não tira o foco. */}
-        <ScrollView key={pagina} ref={rolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}
+        <ScrollView key={pagina} ref={referenciaDaRolagem} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'web' ? 'none' : 'on-drag'}
           contentContainerStyle={estilos.rolagemConteudo}
           // O vão de 20 acima da faixa é um filho à parte: a faixa gruda colada no topo (com margem, ela parava 20 abaixo).
           stickyHeaderIndices={faixaFixa ? [(cabecalhoNaRolagem ? 1 : 0) + 1] : undefined}
@@ -121,7 +141,11 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) ? null
               : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? 20 + alturaFaixa : 0)}>
-              <Entrada>{children}</Entrada>
+              <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
+                <RolagemDaTela.Provider value={{ rolarAte }}>
+                  <Entrada>{children}</Entrada>
+                </RolagemDaTela.Provider>
+              </AlturaDaFaixaFixa.Provider>
             </DeslocamentoDaRolagem.Provider>
           </View>
         </ScrollView>

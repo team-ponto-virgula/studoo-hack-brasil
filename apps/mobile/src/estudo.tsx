@@ -1401,7 +1401,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
   }, [erro, reduzir]);
 
   /** Centraliza o nó só quando ele está fora da vista, como o scrollIntoView da web. Com movimento reduzido, salta direto. */
-  function rolar(topo: number, base: number, sempre = false, piso?: number) {
+  function rolar(topo: number, base: number, sempre = false, ceu?: { topo: number; parte: number; coberto: number }) {
     requestAnimationFrame(() => {
       const altura = visivel.current || height;
       // O card da próxima lição flutua sobre o pé da área: o nó e o título embaixo dele precisam ficar acima do card.
@@ -1410,9 +1410,12 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       if (!sempre && pe <= limite) return;
       // Rola só o necessário: o nó fica logo acima do card (o topo da trilha tende a continuar à vista).
       let y = Math.max(0, pe - limite);
-      // Não para no meio do céu: com a placa cortada, segue até o piso, se o nó continuar à vista. Um ajuste de até 24 (o
-      // respiro acima da placa) não corta a placa: fica como está (o primeiro nó atual, em 360 × 800, pedia 12).
-      if (piso !== undefined && y > 24 && y < piso && topo - piso > 24) y = piso;
+      // Como a web: se a rolagem parou com o céu cortado no alto (a placa pela metade), segue até a faixa da Parte 1 ficar 12
+      // abaixo da faixa presa no alto, desde que o nó continue bem à vista (72 abaixo dela).
+      if (ceu) {
+        const resto = ceu.parte - y - 12 - ceu.coberto;
+        if (ceu.topo - y < 0 && resto > 0 && topo - y - resto > 72) y += resto;
+      }
       rolagem.current?.scrollTo({ y, animated: reduzir === false });
     });
   }

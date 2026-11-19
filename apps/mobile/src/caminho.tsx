@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAparecer, useVaiVem } from './animacoes';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { Botao, DeslocamentoDaRolagem, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
+import { AlturaDaFaixaFixa, Botao, DeslocamentoDaRolagem, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
 import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { ColinaElipse, Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
@@ -144,7 +144,11 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   liberadas?: readonly string[];
   rolarPara?: string | null;
   /** `sempre`: rola mesmo que o nó já esteja na tela (pedido explícito da pessoa). */
-  aoRolar?: (topo: number, base: number, sempre?: boolean, piso?: number) => void;
+  /**
+   * `ceu`, na abertura: o topo do céu e o da faixa da Parte 1 na rolagem e a altura da faixa presa no alto, para a tela seguir
+   * a regra da web (com o céu cortado, sobe até a Parte 1 ficar logo abaixo do cabeçalho preso).
+   */
+  aoRolar?: (topo: number, base: number, sempre?: boolean, ceu?: { topo: number; parte: number; coberto: number }) => void;
   /** Posição da lente do nó atual na rolagem (topo e base), para a tela esconder o cartão fixo enquanto ele está à vista. */
   aoMedirAtual?: (topo: number, base: number) => void;
   acompanhar?: (ultimo: Faixa, alvo: Faixa) => void;
@@ -167,8 +171,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   // delas. Enquanto a altura dessas faixas não chega (null), a posição do nó atual e a rolagem esperam.
   const deslocamentoMedido = useContext(DeslocamentoDaRolagem);
   const deslocamento = deslocamentoMedido ?? 0;
-  const posicoes = useRef<{ inicio: number | null; caminho: number | null; lista: number | null; linhas: Map<string, Caixa>; vindo: Caixa | null; chegada: Caixa | null }>(
-    { inicio: null, caminho: null, lista: null, linhas: new Map(), vindo: null, chegada: null });
+  const posicoes = useRef<{ inicio: number | null; parte: number | null; caminho: number | null; lista: number | null; linhas: Map<string, Caixa>; vindo: Caixa | null; chegada: Caixa | null }>(
+    { inicio: null, parte: null, caminho: null, lista: null, linhas: new Map(), vindo: null, chegada: null });
+  const coberto = useContext(AlturaDaFaixaFixa);
   const rolado = useRef<string | null>(null);
   const acompanhando = useRef<'novo' | 'fim' | null>(null);
   const estavaMontando = useRef(montando);
@@ -224,12 +229,15 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     if (!rolarPara || !aoRolar || rolado.current === rolarPara) return;
     const { caminho, lista, linhas } = posicoes.current;
     const linha = linhas.get(rolarPara);
-    const { inicio } = posicoes.current;
+    const { inicio, parte } = posicoes.current;
     if (caminho === null || lista === null || linha === undefined || inicio === null) return;
+    // A faixa da Parte 1 (quando há partes) precisa estar medida: é até ela que a tela sobe com o céu cortado.
+    if (total > 0 && parte === null) return;
     rolado.current = rolarPara;
     const topo = deslocamento + caminho + lista + linha.y;
-    // Piso: rolando, a tela passa da placa do céu e para com a faixa da Parte 1 no topo, sem cortar a placa ao meio.
-    aoRolar(topo, topo + medidas.lente, false, deslocamento + caminho + inicio - (nos[0]?.estado === 'atual' ? PARTE_COM_BALAO + 52 : 62));
+    // Como a web (src/ui/caminho.tsx): mostra o nó e, se o céu ficou cortado no alto, sobe até a Parte 1 ficar 12 abaixo da
+    // faixa presa (a altura dela muda com o "Compartilhar" e com "Esta trilha é de", por isso é medida, não fixa).
+    aoRolar(topo, topo + medidas.lente, false, parte === null ? undefined : { topo: deslocamento + caminho, parte: deslocamento + caminho + parte, coberto });
   }
   // Quando a altura das faixas do alto chega (ou muda), a posição do nó atual é informada de novo e a rolagem pendente segue.
   useEffect(() => {
@@ -309,6 +317,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         comecoAtual={nos[0]?.estado === 'atual'}
         aoMedir={(altura) => {
           posicoes.current.inicio = altura;
+          tentarRolar();
+        }}
+        aoMedirParte={(y) => {
+          posicoes.current.parte = y;
           tentarRolar();
         }}
         parte={total > 0 ? <Parte numero={1} trecho={primeiroTrecho} resumo={resumoTrechos.get(primeiroTrecho)} /> : null} />
@@ -437,8 +449,10 @@ function circulo(tamanho: number) {
  * senão, o Stu abre o mapa com a frase num balão. Enquanto a IA monta a trilha, o Stu "pensa" (sobe e desce devagar),
  * pontinhos digitam no balão e as dicas se revezam embaixo da frase.
  */
-function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtual, aoMedir }: {
+function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtual, aoMedir, aoMedirParte }: {
   aoMedir?: (altura: number) => void;
+  /** Topo da faixa da Parte 1 dentro do céu. */
+  aoMedirParte?: (y: number) => void;
   /** O primeiro nó é o atual: a faixa sobe para o balão "Começar" não cobri-la. */
   comecoAtual: boolean;
   texto?: string;
@@ -485,7 +499,8 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
             style={{ width: stu, height: Math.round(stu * 1.1), marginBottom: 4, transform: [{ translateY: subida }] }} />
         </View>
       )}
-      {parte && <View testID="faixa-parte-inicio" pointerEvents="none" style={[caminhoEstilos.inicioParte, comecoAtual && { bottom: PARTE_COM_BALAO }]}>{parte}</View>}
+      {parte && <View testID="faixa-parte-inicio" pointerEvents="none" style={[caminhoEstilos.inicioParte, comecoAtual && { bottom: PARTE_COM_BALAO }]}
+        onLayout={(evento) => aoMedirParte?.(evento.nativeEvent.layout.y)}>{parte}</View>}
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View,
   useWindowDimensions, type StyleProp, type ViewStyle,
@@ -15,7 +15,7 @@ import {
 } from '@studoo/contratos';
 import { origemConfigurada, type ClienteNativo } from './api-nativa';
 import { Icone } from './icone';
-import { Botao, BotaoIcone, Campo, degrade } from './interface';
+import { Botao, BotaoIcone, Campo, RolagemDaTela, degrade, useMovimentoReduzido } from './interface';
 import { mensagemDoCodigo, mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
@@ -92,6 +92,38 @@ export function misturarComBranco(hex: string, proporcao: number) {
   const valor = hex.replace('#', '');
   const canal = (i: number) => Math.round(parseInt(valor.slice(i, i + 2), 16) * proporcao + 255 * (1 - proporcao));
   return `#${[0, 2, 4].map((i) => canal(i).toString(16).padStart(2, '0')).join('')}`;
+}
+
+/**
+ * Leva o foco do leitor de tela ao título, como o `focus()` da web. Na prévia web, foca sem rolar (o `focus()` do navegador
+ * rolava a folha até o título e escondia a linha de cima), como a apresentação já faz.
+ */
+export function focarSemRolar(no: unknown) {
+  if (!no) return;
+  if (Platform.OS === 'web') {
+    const elemento = no as HTMLElement;
+    if (!elemento.hasAttribute('tabindex')) elemento.setAttribute('tabindex', '-1');
+    elemento.focus({ preventScroll: true });
+    return;
+  }
+  AccessibilityInfo.sendAccessibilityEvent(no as Parameters<typeof AccessibilityInfo.sendAccessibilityEvent>[0], 'focus');
+}
+
+/** Linha de status que fica sempre no fluxo, como `.folha-status` da web: vazia, não tem altura nem margem (mas conta o vão). */
+export function Status({ texto }: { texto: string }) {
+  return <Text accessibilityLiveRegion="polite" style={[socialEstilos.status, !texto && socialEstilos.statusVazio]}>{texto}</Text>;
+}
+
+/** Botão só de texto em vermelho, como `.folha-parar` da web ("Parar de compartilhar"): 48 de altura (o `.botao` da web), sem respiro nos lados. */
+export function BotaoParar({ rotulo, nomeAcessivel, acao, desativado = false, testID }: {
+  rotulo: string; nomeAcessivel?: string; acao: () => void; desativado?: boolean; testID?: string;
+}) {
+  return (
+    <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityState={{ disabled: desativado }}
+      disabled={desativado} onPress={acao} style={({ pressed }) => [socialEstilos.parar, pressed && { opacity: 0.7 }, desativado && { opacity: 0.6 }]}>
+      <Text style={socialEstilos.pararTexto}>{rotulo}</Text>
+    </Pressable>
+  );
 }
 
 /** Repete o anúncio quando o texto é o mesmo (a web acrescenta um espaço para a região viva falar de novo). */
@@ -496,7 +528,7 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
         </View>
       )}
       {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
-      {status !== '' && <Text accessibilityLiveRegion="polite" style={socialEstilos.status}>{status}</Text>}
+      <Status texto={status} />
     </View>
   );
 }
@@ -537,6 +569,7 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
   const [ocupado, setOcupado] = useState(false);
   const titulo = useRef<ComponentRef<typeof Text>>(null);
   const insets = useSafeAreaInsets();
+  const reduzir = useMovimentoReduzido();
   const sistema = temFolhaDoSistema();
 
   useEffect(() => {
@@ -559,7 +592,7 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
   useEffect(() => {
     if (etapa === 'carregando' || !titulo.current) return;
     const alvo = titulo.current;
-    const espera = setTimeout(() => AccessibilityInfo.sendAccessibilityEvent(alvo, 'focus'), 250);
+    const espera = setTimeout(() => focarSemRolar(alvo), 250);
     return () => clearTimeout(espera);
   }, [etapa]);
 
@@ -626,7 +659,8 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
   const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' ? m.linkPronto : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
 
   return (
-    <Modal transparent visible animationType="slide" statusBarTranslucent onRequestClose={voltarOuFechar}>
+    // Como a web (.folha só sobe com prefers-reduced-motion: no-preference): com movimento reduzido, a folha aparece parada.
+    <Modal transparent visible animationType={reduzir === false ? 'slide' : 'none'} statusBarTranslucent onRequestClose={voltarOuFechar}>
       <KeyboardAvoidingView style={socialEstilos.folhaFundo} behavior={Platform.OS === 'web' ? undefined : 'padding'}>
         <Pressable testID="folha-fundo" accessible={false} style={StyleSheet.absoluteFill}
           onPress={() => { if (!ocupado && etapa !== 'parar') aoFechar(); }} />
@@ -700,7 +734,7 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
                   <Botao rotulo={m.copiar} iconeAntes="copiar" testID="folha-copiar" variante={sistema ? 'secundario' : 'primario'}
                     estilo={sistema ? socialEstilos.botaoMetade : undefined} acao={() => void copiarLink()} />
                 </View>
-                {status !== '' && <Text accessibilityLiveRegion="polite" style={socialEstilos.status}>{status}</Text>}
+                <Status texto={status} />
                 {comunidade && previa.temaSugerido ? (
                   <VisibilidadeDaTrilha cliente={cliente} link={link} temaSugerido={previa.temaSugerido} deMaterial={previa.deMaterial}
                     demonstracao={Boolean(previa.demonstracao)} aoMudar={(novo) => { setLink(novo); aoMudarLink(planoId, novo); }} />
@@ -712,8 +746,7 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
                 )}
                 <Text style={[socialEstilos.folhaTexto, socialEstilos.folhaTextoMiudo]}>{m.doZero}</Text>
                 {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{textoDoErro(erro)}</Text>}
-                <Botao rotulo={m.parar} variante="texto" testID="folha-parar" desativado={ocupado} acao={() => setEtapa('parar')}
-                  estilo={socialEstilos.botaoParar} />
+                <BotaoParar rotulo={m.parar} testID="folha-parar" desativado={ocupado} acao={() => setEtapa('parar')} />
               </>
             )}
             {etapa === 'parar' && (
@@ -754,7 +787,7 @@ function PreviaTrilha({ trilha, acoes }: { trilha: TrilhaCompartilhada; acoes: R
   useEffect(() => {
     const alvo = titulo.current;
     if (!alvo) return;
-    const espera = setTimeout(() => AccessibilityInfo.sendAccessibilityEvent(alvo, 'focus'), 150);
+    const espera = setTimeout(() => focarSemRolar(alvo), 150);
     return () => clearTimeout(espera);
   }, [trilha.codigo]);
   return (
@@ -828,13 +861,22 @@ export function AdicionarPorLink({ cliente, ocupado: ocupadoFora, aoAdicionar, a
   const [carregando, setCarregando] = useState(false);
   const [adicionando, setAdicionando] = useState(false);
   const campo = useRef<ComponentRef<typeof TextInput>>(null);
+  const secao = useRef<ComponentRef<typeof View>>(null);
+  const rolagem = useContext(RolagemDaTela);
   const { width } = useWindowDimensions();
 
+  // Como a web: ao abrir, a seção sobe (16 do alto, acima do teclado e da barra de baixo) e o campo recebe o foco.
   useEffect(() => {
     if (!aberto) return;
-    const espera = setTimeout(() => campo.current?.focus(), 50);
+    const espera = setTimeout(() => {
+      rolagem?.rolarAte(secao.current, 16);
+      campo.current?.focus();
+    }, 50);
     return () => clearTimeout(espera);
+    // A rolagem da tela não muda enquanto a seção está aberta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [aberto]);
+
 
   async function ver() {
     const codigo = codigoDoLink(texto);
@@ -882,7 +924,7 @@ export function AdicionarPorLink({ cliente, ocupado: ocupadoFora, aoAdicionar, a
   }
   const empilhar = width <= 420;
   return (
-    <View testID="por-link" style={socialEstilos.porLink}>
+    <View ref={secao} testID="por-link" style={socialEstilos.porLink}>
       <Text accessibilityRole="header" style={socialEstilos.porLinkTitulo}>{m.porLink}</Text>
       <View style={socialEstilos.porLinkForm}>
         <Text style={socialEstilos.rotulo} onPress={() => campo.current?.focus()} suppressHighlighting>{m.porLinkRotulo}</Text>
@@ -962,7 +1004,10 @@ export const socialEstilos = StyleSheet.create({
   dica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20.3 },
   erro: { color: cores.erro, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 22.5, fontWeight: '800' },
   status: { color: cores.sucesso, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 22.4, fontWeight: '800', marginTop: -4 },
-  campoComDica: { gap: 6 },
+  statusVazio: { marginTop: 0, lineHeight: 0, height: 0 },
+  parar: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center' },
+  pararTexto: { color: '#B3261E', fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
+  campoComDica: { gap: 8 },
   campoLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', columnGap: 12, rowGap: 4 },
   contador: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800', fontVariant: ['tabular-nums'] },
   cores: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
@@ -976,7 +1021,7 @@ export const socialEstilos = StyleSheet.create({
   fichaCompacta: { paddingHorizontal: 12 },
   fichaMarcada: { borderColor: cores.acao, backgroundColor: cores.acao },
   fichaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
-  fichaComplemento: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, fontWeight: '700' },
+  fichaComplemento: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, fontWeight: '700', fontStyle: 'italic' },
 
   formPerfil: { gap: 16 },
   formPerfilPrevia: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14, backgroundColor: cores.nevoa },
@@ -1009,11 +1054,10 @@ export const socialEstilos = StyleSheet.create({
   avisoTexto: { color: '#5B3A00', fontFamily: fontes.corpo, fontSize: 16, lineHeight: 23.2 },
   folhaLink: { minHeight: 48, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 2, borderColor: cores.bordaCampo, borderRadius: 14,
     color: cores.texto, backgroundColor: cores.nevoa, fontFamily: fontes.corpo, fontSize: 15 },
-  botaoParar: { alignSelf: 'flex-start', minHeight: 44, paddingHorizontal: 0 },
   esqueleto: { gap: 10 },
   esqueletoBarra: { height: 18, borderRadius: 8, backgroundColor: cores.gelo },
 
-  visibilidade: { gap: 14 },
+  visibilidade: {},
   niveis: { gap: 8 },
   niveisLegenda: { marginBottom: 6, color: cores.texto, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '900' },
   nivel: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingHorizontal: 14, paddingVertical: 12, borderWidth: 2, borderColor: cores.gelo, borderRadius: 16 },

@@ -11,7 +11,7 @@ import { Icone } from './icone';
 import { Botao, Campo, CartaoConfirmacao, Tela, Titulo, estilos } from './interface';
 import { mensagens } from './mensagens';
 import {
-  Avatar, CabecalhoPerfil, Chave, Contador, CoresDoPerfil, Esqueleto, Ficha, FolhaCompartilhar, SeloVisibilidade, abrirNoNavegador,
+  Avatar, BotaoParar, CabecalhoPerfil, Chave, Contador, CoresDoPerfil, Esqueleto, Ficha, FolhaCompartilhar, SeloVisibilidade, Status, abrirNoNavegador,
   codigoDoErro, compartilharNoSistema, copiar, dataCurta, socialEstilos, temFolhaDoSistema, textoDoErro, urlDoLink, urlDoPerfil,
 } from './social';
 import { cores, fontes } from './tema';
@@ -185,14 +185,13 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                               testID={`perfil-visibilidade-${link.codigo}`} acao={() => setFolha(link.planoId)} />
                           )}
                           <Botao rotulo={m.copiar} iconeAntes="copiar" variante="secundario" nomeAcessivel={`${m.copiar}: ${link.titulo}`} acao={() => void copiarLink(link)} />
-                          <Botao rotulo={m.parar} variante="texto" nomeAcessivel={`${m.parar}: ${link.titulo}`} desativado={ocupado} acao={() => setParando(link)}
-                            estilo={perfilEstilos.parar} />
+                          <BotaoParar rotulo={m.parar} nomeAcessivel={`${m.parar}: ${link.titulo}`} desativado={ocupado} acao={() => setParando(link)} />
                         </View>
                       </View>
                     ))}
                   </View>
                 )}
-                {copiado !== '' && <Text accessibilityLiveRegion="polite" style={socialEstilos.status}>{copiado}</Text>}
+                <Status texto={copiado} />
               </View>
             )}
 
@@ -432,7 +431,7 @@ export function TelaEditarPerfil({ cliente, perfil, acoes, aoMudarPerfil, voltar
             style={({ pressed }) => [perfilEstilos.voltar, pressed && { opacity: 0.7 }]}>
             <Text style={perfilEstilos.voltarTexto}><Text importantForAccessibility="no">←</Text> {p.voltarPerfil}</Text>
           </Pressable>
-          <Titulo testID="titulo-editar-perfil" foco estilo={perfilEstilos.titulo}>{p.editarPerfil}</Titulo>
+          <Titulo testID="titulo-editar-perfil" foco>{p.editarPerfil}</Titulo>
         </View>
 
         <View style={perfilEstilos.form}>
@@ -455,7 +454,7 @@ export function TelaEditarPerfil({ cliente, perfil, acoes, aoMudarPerfil, voltar
               </View>
               <Text style={socialEstilos.dica}>{p.fotoDica}</Text>
               {erroFoto && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erroFoto}</Text>}
-              {statusFoto !== '' && <Text accessibilityLiveRegion="polite" style={socialEstilos.status}>{statusFoto}</Text>}
+              <Status texto={statusFoto} />
             </View>
           </View>
 
@@ -512,7 +511,7 @@ export function TelaEditarPerfil({ cliente, perfil, acoes, aoMudarPerfil, voltar
 const perfilEstilos = StyleSheet.create({
   // .painel--perfil: grade com vão de 20; o título de 24 (.painel--perfil__titulo).
   painel: { gap: 20 },
-  titulo: { fontSize: 24, lineHeight: 26.9, letterSpacing: -0.5 },
+  titulo: { fontSize: 24, lineHeight: 40, letterSpacing: -0.75 },
   secao: { gap: 10 },
   secaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   cartao: { gap: 12, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
@@ -526,14 +525,14 @@ const perfilEstilos = StyleSheet.create({
   linkTituloTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 25.5, fontWeight: '900', textDecorationLine: 'underline' },
   linkMeta: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '700' },
   linkAcoes: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 12, rowGap: 8 },
-  parar: { minHeight: 44, paddingHorizontal: 0 },
   email: { gap: 2 },
   emailRotulo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
 
   // .painel--editar-perfil: vão de 16; o formulário com vão de 22; a prévia depois dele no celular.
-  editar: { gap: 24 },
+  editar: { gap: 16 },
   topo: { gap: 2 },
-  voltar: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
+  // Os botões só de texto da web têm 48 (o respiro e a borda do .botao vencem o min-height de 44).
+  voltar: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center' },
   voltarTexto: { color: cores.acao, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   form: { gap: 22 },
   rotuloBloco: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 16, lineHeight: 20.8 },
@@ -542,9 +541,9 @@ const perfilEstilos = StyleSheet.create({
   fotoAvatar: { borderWidth: 4, borderColor: '#FFFFFF', shadowColor: '#1B2A5E', shadowOpacity: 0.14, shadowRadius: 16, shadowOffset: { width: 0, height: 6 }, elevation: 4 },
   fotoCorpo: { flexGrow: 1, flexShrink: 1, flexBasis: 240, gap: 8, minWidth: 0 },
   fotoAcoes: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  remover: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 6 },
+  remover: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 48, paddingHorizontal: 6 },
   removerTexto: { color: '#B3261E', fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
-  previa: { gap: 10 },
+  previa: { gap: 10, marginTop: 8 },
   previaCabeca: { shadowColor: '#1B2A5E', shadowOpacity: 0.08, shadowRadius: 30, shadowOffset: { width: 0, height: 10 }, elevation: 3 },
   // .editar-perfil__barra: estado à esquerda e "Salvar" à direita (no mínimo 144 de largura), com a linha de cima.
   barraConteudo: { paddingTop: 12, paddingBottom: 12 },
