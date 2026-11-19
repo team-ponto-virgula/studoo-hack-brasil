@@ -932,7 +932,24 @@ export const mensagens = {
         comecar: 'Começar',
         ajustar: 'Ajustar pedido',
         anuncioTitulo: (titulo: string) => `Trilha: ${titulo}. As lições vão aparecer uma a uma.`,
-        anuncioPronta: (total: number) => `Trilha pronta, com ${total} ${total === 1 ? 'lição' : 'lições'}. Escolha Começar para salvar a trilha e abrir a primeira lição.`
+        anuncioPronta: (total: number) => `Trilha pronta, com ${total} ${total === 1 ? 'lição' : 'lições'}. Escolha Começar para salvar a trilha e abrir a primeira lição.`,
+        /**
+         * A geração que se acompanha (spec 04, "Revisão do dono (19/11)"). A faixa de 52 px que substitui o cartão do título
+         * conta "Gerando…" e depois `contagemFinal`; a placa do alto do mapa troca a frase do Stu pela da espera longa e pela
+         * do fim; a pílula leva de volta à lição nova (ou ao fim, quando a trilha fica pronta).
+         */
+        faixaGerando: 'Gerando…',
+        verLicaoNova: (numero: number) => `Ver a lição nova · ${numero}`,
+        verFimDaTrilha: 'Ver o fim da trilha',
+        esperaLonga: 'Ainda escrevendo… esta parte pede mais cuidado.',
+        placaPronta: (licoes: number, partes: number) =>
+            `Trilha pronta! ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}.`,
+        placaProntaTexto: 'Confira o caminho e comece quando quiser.',
+        /** O balãozinho ao lado do Stu, no máximo a cada três lições. */
+        maisUma: 'Mais uma!',
+        /** Leitor de tela: cada lição que nasce e o fim (aria-live educado na web; announceForAccessibility no app). */
+        anuncioLicao: (numero: number, titulo: string) => `Lição ${numero}: ${titulo}.`,
+        anuncioFim: (total: number) => `Trilha pronta, ${total} ${total === 1 ? 'lição' : 'lições'}. Começar.`
     },
     preparo: {
         titulo: 'Escrevendo suas lições',
