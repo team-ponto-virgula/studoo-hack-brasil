@@ -17,7 +17,7 @@ export default async function Imagem({ params }: { params: Promise<{ codigo: str
     const trilha = await trilhaCompartilhada(codigo, null);
     const link = await banco.linkTrilha.findUnique({ where: { codigo }, select: { tema: true, noExplorar: true } });
     const tema = link?.noExplorar && (TEMAS as readonly unknown[]).includes(link.tema) ? (link.tema as Tema) : null;
-    return imagemDaTrilha({ codigo, titulo: trilha.titulo, tema, totalLicoes: trilha.totalLicoes, dono: trilha.dono });
+    return imagemDaTrilha({ codigo, titulo: trilha.titulo, tema, capa: trilha.capa ?? null, totalLicoes: trilha.totalLicoes, dono: trilha.dono });
   } catch {
     return imagemGenerica();
   }

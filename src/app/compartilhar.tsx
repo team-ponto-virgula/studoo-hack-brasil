@@ -13,6 +13,7 @@ import {
   VISIBILIDADES,
   motivoLegendaInvalida,
   normalizarResumoPerfil,
+  svgCapa,
   type Tema,
   type Visibilidade,
   ErroStudoo,
@@ -622,6 +623,8 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
   const jaTem = trilha.situacao === 'adicionada';
   return (
     <article className="previa-trilha" data-calor={comCalor || undefined}>
+      {/* A capa da trilha (a escolhida nas configurações ou a padrão do tema), no alto da página do link. */}
+      {calor && <span className="previa-trilha__capa" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgCapa({ codigo: trilha.codigo, tema: trilha.tema ?? null, capa: trilha.capa }) }} />}
       {comCalor && (
         <div className="previa-trilha__stu">
           <img className="stu" src="/marca/stu-oi.svg" alt="" width={72} height={79} />

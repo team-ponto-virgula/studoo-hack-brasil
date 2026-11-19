@@ -352,3 +352,21 @@ Três pareceres de jurado (perfil 7,5; Explorar 7; compartilhar 7). Textos novos
 - **Moldura do código sempre no azul da marca** (folha e imagem baixada); a cor da pessoa só no miolo dos olhos e no centro. No modo apresentação, sem moldura, com a marca embaixo e título, código e dica num bloco só. Trilha de demonstração leva o selo "Demonstração" sob o título na imagem baixada e na apresentação.
 - Ações do código numa grade de duas colunas iguais (vão de 10 px); abaixo de 400 px, uma por linha. "Compartilhar" é o botão principal na folha do perfil; "Apresentar" com ícone de tela cheia.
 - `/t`: já adicionada diz "Ela já está nas suas trilhas. Continue de onde parou." e o Stu, "Que bom te ver de novo!"; "Quem compartilhou" vem depois das lições; link encerrado centrado, botão na largura toda no celular e "Ver trilhas no Explorar".
+
+## Lote 4 (19/11): anotações do dono
+
+Regras duradouras: nenhuma janela nativa do sistema ou do navegador (tudo do app, igual em Android, iOS e web; fica do sistema só escolher arquivo, compartilhar para outros apps, permissões e teclado) e nenhuma tela de convite antes dos dados.
+
+### Etapa 1
+- **Perfil direto nos dados:** a aba Perfil abre nos campos (foto com selo de câmera, nome, resumo, interesses e cor; "Salvar" liga com mudança) ou, com dados, no perfil como os outros veem com "Editar" abrindo os campos ali mesmo. A tela separada "Editar perfil" saiu.
+- **Valeu claro:** coração, "Valeu" e contagem no botão; pulo de 280 ms; aviso do app a cada envio e retirada; textos do gesto num lugar só (`GESTO`).
+- **Sem janela nativa:** `noValidate` no formulário da lição; sem `title` como explicação; o aviso do navegador ao fechar a aba saiu.
+- **404 própria** em português, com o Stu.
+
+### Etapa 2, parte 1: configurações da trilha (migração `20261123090000_trilha_configuracoes`, só acrescenta)
+- `PlanoAprendizado` ganha `descricao`, `tema` e `capa` (anuláveis; nenhuma trilha muda).
+- `GET` e `PATCH /api/aprendizado/planos/:id/configuracoes`: só a dona (`nao_encontrado` para as outras); `PATCH` grava um ou mais campos (nome de 3 a 80; descrição até 140 com as regras da legenda; tema dos temas do Explorar; capa da galeria ou `null`), com o gancho `revisarConteudo` para nome e descrição e um teto de 240 mudanças por hora.
+- Descrição e tema são a legenda e o tema do link (gravados juntos nos dois sentidos; trilha no Explorar não fica sem tema).
+- **Galeria:** 12 capas desenhadas em código (`CAPAS_GALERIA`, `svgCapaGaleria`, `svgCapa`); a padrão continua a de hoje. A capa aparece no cartão de Minhas trilhas (no lugar da ilustração), no alto do mapa, nos cartões do Explorar e do perfil, na página do link e na imagem de prévia. A cópia leva a capa da galeria.
+- **Tela:** entradas pelo menu "•••" (Compartilhar, Configurações, Apagar) e pela engrenagem no alto do mapa; seções Capa e nome, Quem pode ver (estado e "Mudar compartilhamento", que abre a folha de sempre) e Apagar trilha (confirmação do app). Cada campo salva ao sair dele, com "Salvo"; erro embaixo do campo; sem diálogo de sair sem salvar.
+- Testes em `tests/configuracoes-trilha.test.mjs`.

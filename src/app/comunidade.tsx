@@ -10,7 +10,7 @@ import {
   LIMITES_COMUNIDADE,
   MOTIVOS_DENUNCIA,
   TEMAS,
-  svgCapaTrilha,
+  svgCapa,
   type CartaoTrilha,
   type MotivoDenuncia,
   type PaginaExplorar,
@@ -32,9 +32,9 @@ export function entrarEVoltar(caminho: string) {
 }
 
 /** A capa: cor do tema e um padrão geométrico determinístico pelo código (sem imagem enviada, sem IA). */
-export function CapaTrilha({ codigo, tema }: { codigo: string; tema: Tema | null }) {
+export function CapaTrilha({ codigo, tema, capa }: { codigo: string; tema: Tema | null; capa?: string | null }) {
   // O SVG é gerado por uma função pura do contrato: só formas, com o código já restrito a [A-Za-z0-9_-].
-  return <span className="capa-trilha" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgCapaTrilha(codigo, tema) }} />;
+  return <span className="capa-trilha" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgCapa({ codigo, tema, capa }) }} />;
 }
 
 export type AcoesCartao = {
@@ -95,7 +95,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
   return (
     <article className="cartao-trilha" aria-labelledby={tituloId} data-situacao={cartao.situacao}>
       <div className="cartao-trilha__capa">
-        <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} />
+        <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} capa={cartao.capa} />
         {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{posicao}</span>}
         {/* O tema sempre inteiro no alto; "Demonstração" embaixo à esquerda; o numeral do Em alta embaixo à direita. */}
         {cartao.tema && <span className="cartao-trilha__tema">{temas[cartao.tema]}</span>}

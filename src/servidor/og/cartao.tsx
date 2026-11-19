@@ -4,10 +4,10 @@ import { ImageResponse } from "next/og";
 import { headers } from "next/headers";
 import sharp from "sharp";
 import {
-  COR_DO_TEMA,
+  coresDaCapa,
+  svgCapa,
   FUNDO_DA_COR,
   inicialDoNome,
-  svgCapaTrilha,
   type CorPerfil,
   type Tema,
 } from "@studoo/contratos";
@@ -114,14 +114,14 @@ export async function imagemGenerica() {
 }
 
 /** /t/<código>: capa do tema à esquerda; tema, título, quem fez e a contagem à direita; a marca embaixo. */
-export async function imagemDaTrilha(t: { codigo: string; titulo: string; tema: Tema | null; totalLicoes: number; dono: { nome: string; cor: CorPerfil; foto: string | null; demo?: true } }) {
+export async function imagemDaTrilha(t: { codigo: string; titulo: string; tema: Tema | null; capa?: string | null; totalLicoes: number; dono: { nome: string; cor: CorPerfil; foto: string | null; demo?: true } }) {
   const foto = await fotoPng(t.dono.foto);
   const tamanhoTitulo = t.titulo.length > 60 ? 50 : t.titulo.length > 34 ? 60 : 70;
   return resposta(
     <div style={{ display: "flex", width: "100%", height: "100%", background: "#fff" }}>
-      <div style={{ display: "flex", position: "relative", width: 420, height: "100%", background: COR_DO_TEMA[t.tema ?? "outros"] }}>
+      <div style={{ display: "flex", position: "relative", width: 420, height: "100%", background: coresDaCapa(t.tema, t.capa).de }}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={dataSvg(svgCapaTrilha(t.codigo, t.tema).replace('viewBox="0 0 320 160"', 'viewBox="80 0 160 160"'))} width={420} height={630} style={{ objectFit: "cover" }} alt="" />
+        <img src={dataSvg(svgCapa({ codigo: t.codigo, tema: t.tema, capa: t.capa }).replace('viewBox="0 0 320 160"', 'viewBox="80 0 160 160"'))} width={420} height={630} style={{ objectFit: "cover" }} alt="" />
         <div style={{ display: "flex", position: "absolute", left: 40, bottom: 40 }}><Avatar nome={t.dono.nome} cor={t.dono.cor} foto={foto} lado={150} /></div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "56px 56px 48px" }}>
