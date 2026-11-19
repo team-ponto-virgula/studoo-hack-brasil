@@ -281,7 +281,7 @@ button, input, textarea { font: inherit; }
 .entrada-tema:nth-child(4) { top: 51%; left: 15%; }
 .entrada-tema:nth-child(5) { top: 56%; right: 16%; }
 .entrada-tema:nth-child(6) { top: 47%; left: 40%; }
-.entrada-paisagem .stu { position: absolute; bottom: 7%; left: 50%; width: 22cqw; translate: -50% 0; }
+.entrada-paisagem .stu { position: absolute; bottom: 7%; left: 50%; width: 26cqw; translate: -50% 0; }
 /* Na entrada, o céu abre espaço para a frase: nuvens e balão ficam abaixo dela e à direita. */
 .entrada-paisagem .paisagem__nuvem--1 { top: 27%; left: 64%; --tam: 13cqw; }
 .entrada-paisagem .paisagem__nuvem--2 { top: 31%; left: 24%; --tam: 11cqw; }
@@ -414,7 +414,7 @@ button, input, textarea { font: inherit; }
   background: var(--chao);
 }
 .plano-destaque__cena .plano-cartao__colina { bottom: -32px; height: 68px; }
-.plano-destaque__cena .stu { position: absolute; bottom: 8px; left: 50%; width: 62px; translate: -50% 0; }
+.plano-destaque__cena .stu { position: absolute; bottom: 8px; left: 50%; width: 64px; translate: -50% 0; }
 .plano-destaque__cena .desenho { position: absolute; bottom: 10px; }
 .plano-destaque__cena .desenho:nth-of-type(1) { left: 10%; --tam: 38px; }
 .plano-destaque__cena .desenho:nth-of-type(2) { right: 10%; --tam: 34px; }
@@ -551,7 +551,12 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 
 .conclusao-cena .stu {
   position: relative;
-  width: 134px;
+  width: 140px;
+}
+/* Trilha concluída: o Stu com o troféu em 165 (spec 13, E2); no celular, lição e trilha ficam em 110. */
+.conclusao-cena[data-trilha] .stu { width: 165px; }
+@media (max-width: 767px) { .conclusao-cena .stu, .conclusao-cena[data-trilha] .stu { width: 110px; } }
+.conclusao-cena .stu {
   animation: conclusao-pular 480ms cubic-bezier(0.3, 0.6, 0.4, 1) 250ms 4 alternate both, conclusao-flutuar 2600ms ease-in-out 2200ms infinite;
 }
 

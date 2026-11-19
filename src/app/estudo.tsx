@@ -28,6 +28,7 @@ import {
   EstadoVazio,
   Icone,
   Logo,
+  Mascote,
   Skeleton,
   SkeletonTrilha,
   Stu,
@@ -886,7 +887,7 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar, c
           <span className="plano-cartao__colina" />
           <Desenho nome={enfeites[0]} />
           <Desenho nome={enfeites[2]} />
-          <Stu />
+          <Mascote expressao="stu-feliz" tamanho={64} sombra animado="uma-vez" className="stu" />
         </>}
       </div>
       <div className="plano-destaque__corpo">
@@ -1363,9 +1364,12 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
     <section className="painel painel--concluida">
       {/* Sem chuva de confete quando ficou exercício sem acerto ou a prática não saiu: a conclusão vira um lembrete gentil. */}
       {!(resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao')) && <Confete chuva quantidade={44} />}
-      <div className="conclusao-cena" aria-hidden="true">
+      <div className="conclusao-cena" aria-hidden="true" data-trilha={trilhaFeita || undefined}>
         <span className="conclusao-raios" />
-        <Stu />
+        {/* Trilha concluída: o Stu com o troféu; lição: comemora ou, com exercício sem acerto ou prática que não saiu,
+            encoraja. Dois ciclos no acontecimento (spec 13, E1); depois, a imagem parada. */}
+        <Mascote expressao={trilhaFeita ? 'stu-celebrando' : resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao') ? 'stu-encorajador' : 'stu-comemorando'}
+          tamanho={trilhaFeita ? 165 : 140} sombra prioridade animado="acontecimento" acontecimento={licao.id} ciclos={2} className="stu" />
         <span className="conclusao-selo"><Icone nome="check" /></span>
       </div>
       <h1 tabIndex={-1}>{trilhaFeita ? mensagens.licao.trilhaConcluida : mensagens.licao.concluida}</h1>

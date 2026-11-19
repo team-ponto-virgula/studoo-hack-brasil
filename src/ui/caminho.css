@@ -76,7 +76,7 @@
   rotate: 45deg;
 }
 
-.caminho-inicio .stu { flex: none; width: 82px; height: auto; margin-bottom: 4px; }
+.caminho-inicio .stu { flex: none; width: 92px; height: auto; margin-bottom: 4px; }
 
 /* A faixa da Parte 1 fica no pé do céu, sobre as colinas. */
 .caminho-inicio > .caminho-parte { position: absolute; bottom: 22px; left: 50%; z-index: 2; translate: -50% 0; }
@@ -545,6 +545,8 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 }
 
 .caminho-no[data-lado='esquerda'] .caminho-guia { right: calc(var(--lateral) + var(--coluna) * (100 - var(--x)) / 100 + var(--lente) / 2 + 10px); left: auto; }
+/* De três quartos, olhando para o próximo nó (a imagem olha para a direita; espelha quando o caminho vira à esquerda). */
+.caminho-guia[data-olha='esquerda'] .stu { scale: -1 1; }
 .caminho-guia .stu { width: 100%; transform-origin: 50% 100%; animation: caminho-guia 2600ms ease-in-out infinite, stu-acenar 5200ms ease-in-out 1200ms infinite; }
 
 .caminho-guia::after {
@@ -631,7 +633,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   bottom: 74px;
   left: calc(50% + 54px);
   z-index: 2;
-  width: 62px;
+  width: 64px;
   animation: chegada-pular 760ms cubic-bezier(0.3, 0.7, 0.4, 1) infinite alternate;
 }
 
