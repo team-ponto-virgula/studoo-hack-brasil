@@ -1,7 +1,7 @@
-import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Share, StyleSheet, Text, TextInput, View,
-  useWindowDimensions, type StyleProp, type ViewStyle,
+  useWindowDimensions, type StyleProp, type TextStyle, type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
@@ -29,6 +29,30 @@ import type { NomeIcone } from './trilha';
 const m = mensagens.compartilhar;
 const p = mensagens.perfil;
 const cm = mensagens.comunidade;
+
+/**
+ * Abre o perfil público de uma pessoa dentro do app (o `/p/<id>` da web). Sem quem o forneça (o compartilhar desligado), os
+ * nomes ficam só como texto.
+ */
+export const AbrirPerfil = createContext<((perfilId: string) => void) | null>(null);
+
+/**
+ * Uma frase com o nome da pessoa como link para o perfil, como o `<a href="/p/…">` da web: o nome no começo ("Ana
+ * compartilhou…") ou no fim ("Compartilhada por Ana"). Sem perfil público ou sem quem abra, a frase inteira é texto.
+ */
+export function FraseComNome({ frase, nome, perfilId, estilo, estiloNome, rotulo }: {
+  frase: string; nome: string; perfilId: string | null | undefined; estilo: StyleProp<TextStyle>; estiloNome?: StyleProp<TextStyle>; rotulo?: string;
+}) {
+  const abrir = useContext(AbrirPerfil);
+  if (!perfilId || !abrir) return <Text style={estilo}>{frase}</Text>;
+  const noComeco = frase.startsWith(nome);
+  const resto = noComeco ? frase.slice(nome.length) : frase.slice(0, frase.length - nome.length);
+  const link = (
+    <Text accessibilityRole="link" accessibilityLabel={rotulo} suppressHighlighting onPress={() => abrir(perfilId)}
+      style={[socialEstilos.nomeLink, estiloNome]}>{nome}</Text>
+  );
+  return <Text style={estilo}>{noComeco ? <>{link}{resto}</> : <>{resto}{link}</>}</Text>;
+}
 
 /** O código de erro de uma falha, como `codigoDoErro` da web ("rede" quando não veio do servidor). */
 export const codigoDoErro = (erro: unknown) => (erro instanceof ErroStudoo ? erro.codigo : 'rede');
@@ -115,12 +139,15 @@ export function Status({ texto }: { texto: string }) {
 }
 
 /** Botão só de texto em vermelho, como `.folha-parar` da web ("Parar de compartilhar"): 48 de altura (o `.botao` da web), sem respiro nos lados. */
-export function BotaoParar({ rotulo, nomeAcessivel, acao, desativado = false, testID }: {
+export function BotaoParar({ rotulo, nomeAcessivel, acao, desativado = false, testID, icone }: {
   rotulo: string; nomeAcessivel?: string; acao: () => void; desativado?: boolean; testID?: string;
+  /** Ícone de 16 antes do texto, com vão de 6 ("Denunciar perfil", como `.denunciar-perfil .botao` da web). */
+  icone?: NomeIcone;
 }) {
   return (
     <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityState={{ disabled: desativado }}
-      disabled={desativado} onPress={acao} style={({ pressed }) => [socialEstilos.parar, pressed && { opacity: 0.7 }, desativado && { opacity: 0.6 }]}>
+      disabled={desativado} onPress={acao} style={({ pressed }) => [socialEstilos.parar, icone && socialEstilos.pararComIcone, pressed && { opacity: 0.7 }, desativado && { opacity: 0.6 }]}>
+      {icone && <Icone nome={icone} tamanho={16} cor="#B3261E" />}
       <Text style={socialEstilos.pararTexto}>{rotulo}</Text>
     </Pressable>
   );
@@ -181,7 +208,9 @@ function DesenhoFaixa() {
  * O cabeçalho do perfil, o mesmo na tela Perfil e na prévia da edição: faixa na cor do perfil, foto grande sobreposta, nome,
  * resumo, interesses e a linha de alcance. No celular, as ações vão para o fim do cartão, uma embaixo da outra.
  */
-export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, acoes, semResumo, comoTitulo = true, estilo }: {
+export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, acoes, semResumo, comoTitulo = true, estilo, demo = false }: {
+  /** Perfil de demonstração: o selo embaixo do nome (spec 10, C1). */
+  demo?: boolean;
   nome: string;
   cor: CorPerfil;
   foto: string | null;
@@ -204,6 +233,7 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
       <View style={socialEstilos.cabecaCorpo}>
         <Avatar nome={nome} cor={cor} foto={foto} tamanho="g" estilo={socialEstilos.cabecaAvatar} />
         <Text accessibilityRole={comoTitulo ? 'header' : undefined} style={socialEstilos.cabecaNome}>{nome}</Text>
+        {demo && <SeloDemo />}
         {resumo ? <Text style={socialEstilos.cabecaResumo}>{resumo}</Text> : semResumo}
         {interesses.length > 0 && (
           <View accessibilityLabel={p.interessesRotulo} style={socialEstilos.cabecaInteresses}>
@@ -214,9 +244,14 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
             ))}
           </View>
         )}
-        <View style={socialEstilos.cabecaAlcance} accessible accessibilityLabel={`${p.alcanceRotulo}: ${p.alcance(alcance.trilhas, alcance.pessoas)}`}>
+        <View style={socialEstilos.cabecaAlcance} accessible
+          accessibilityLabel={`${p.alcanceRotulo}: ${p.alcance(alcance.trilhas, alcance.pessoas)}${alcance.seguidores !== undefined ? ` · ${cm.seguidores(alcance.seguidores)}` : ''}`}>
           <View style={[socialEstilos.cabecaAlcancePonto, { backgroundColor: fundo }]} />
-          <Text style={socialEstilos.cabecaAlcanceTexto}>{p.alcance(alcance.trilhas, alcance.pessoas)}</Text>
+          <Text style={socialEstilos.cabecaAlcanceTexto}>
+            {p.alcance(alcance.trilhas, alcance.pessoas)}
+            {/* Com a comunidade: " · N seguidores" em destaque, como o <strong> da web. */}
+            {alcance.seguidores !== undefined && <> · <Text style={socialEstilos.cabecaSeguidores}>{cm.seguidores(alcance.seguidores)}</Text></>}
+          </Text>
         </View>
         {acoes && <View style={socialEstilos.cabecaAcoes}>{acoes}</View>}
       </View>
@@ -227,11 +262,11 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
 /** "Compartilhada" (selo da dona) ou "Compartilhada por Ana", com a foto de agora (trilha recebida), como `MarcaCompartilhar`. */
 export function MarcaCompartilhar({ marcas }: { marcas: MarcasCompartilhar }) {
   if (marcas.recebida) {
-    const { nome, foto } = marcas.recebida;
+    const { nome, foto, perfilId } = marcas.recebida;
     return (
       <View style={socialEstilos.marcaRecebida}>
         {foto && <Avatar nome={nome} cor="azul" foto={foto} tamanho={24} />}
-        <Text style={socialEstilos.marcaRecebidaTexto}>{m.compartilhadaPor(nome)}</Text>
+        <FraseComNome frase={m.compartilhadaPor(nome)} nome={nome} perfilId={perfilId} estilo={socialEstilos.marcaRecebidaTexto} />
       </View>
     );
   }
@@ -254,13 +289,18 @@ export function TrilhaRecebida({ recebida }: { recebida: NonNullable<MarcasCompa
   return (
     <View style={socialEstilos.trilhaRecebida}>
       {recebida.foto && <Avatar nome={recebida.nome} cor="azul" foto={recebida.foto} tamanho={24} />}
-      <Text style={socialEstilos.trilhaRecebidaTexto}>{m.recebidaDe(recebida.nome)}</Text>
+      <FraseComNome frase={m.recebidaDe(recebida.nome)} nome={recebida.nome} perfilId={recebida.perfilId} estilo={socialEstilos.trilhaRecebidaTexto} />
       {recebida.codigoAtivo && (
         <Text accessibilityRole="link" style={socialEstilos.link} suppressHighlighting
           onPress={() => abrirNoNavegador(urlDoLink(recebida.codigoAtivo!))}>{m.verOriginal}</Text>
       )}
     </View>
   );
+}
+
+/** Selo "Perfil de demonstração", como `.selo-demo` da web: borda tracejada dourada. */
+export function SeloDemo() {
+  return <View style={socialEstilos.seloDemo}><Text style={socialEstilos.seloDemoTexto}>{cm.perfilDemo}</Text></View>;
 }
 
 /** O aviso verde do mapa depois de adicionar ("Trilha adicionada. Compartilhada por Ana."), como `.trilha-aviso`. */
@@ -434,6 +474,8 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
   const [erro, setErro] = useState<string | null>(null);
   const [status, setStatus] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  // Como a web (C1): no começo só o tema sugerido (ou o salvo); "Trocar tema" abre os 12, e a legenda e o botão ficam à vista.
+  const [todosTemas, setTodosTemas] = useState(false);
   const campoLegenda = useRef<ComponentRef<typeof TextInput>>(null);
   const legendaNormal = normalizarResumoPerfil(legenda);
   const usados = [...legendaNormal].length;
@@ -501,13 +543,20 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
       {escolhido === 'explorar' && !deMaterial && (
         <View style={socialEstilos.publicacao}>
           <View accessibilityRole="radiogroup" accessibilityLabel={cm.temaRotulo} style={socialEstilos.interesses}>
-            <Text style={socialEstilos.legenda}>{cm.temaRotulo}</Text>
+            <Text style={[socialEstilos.legenda, socialEstilos.legendaDoGrupo]}>{cm.temaRotulo}</Text>
             <Text style={socialEstilos.dica}>{cm.temaDica}</Text>
             <View style={[socialEstilos.fichas, { gap: 6 }]}>
-              {TEMAS.map((opcao) => (
+              {(todosTemas ? TEMAS : [tema]).map((opcao) => (
                 <Ficha key={opcao} papel="radio" compacta rotulo={mensagens.temas[opcao]} marcada={tema === opcao} aoTocar={() => setTema(opcao)}
                   complemento={opcao === temaSugerido ? cm.temaSugerido : undefined} />
               ))}
+              {!todosTemas && (
+                <Pressable testID="publicacao-trocar-tema" accessibilityRole="button" accessibilityLabel={cm.trocarTemaRotulo(mensagens.temas[tema])}
+                  accessibilityState={{ expanded: false }} onPress={() => setTodosTemas(true)}
+                  style={({ pressed }) => [socialEstilos.trocarTema, pressed && { backgroundColor: cores.fundo }]}>
+                  <Text style={socialEstilos.trocarTemaTexto}>{cm.trocarTema}</Text>
+                </Pressable>
+              )}
             </View>
           </View>
           <View style={socialEstilos.campoComDica}>
@@ -780,10 +829,17 @@ export function Esqueleto({ estilo }: { estilo?: StyleProp<ViewStyle> }) {
  * A prévia de uma trilha compartilhada, a mesma da página /t da web, no "Adicionar por link": de quem é, título, contagem e
  * origem, as ações logo abaixo e as lições por parte. A dona vendo o próprio link: "Compartilhada por Ana", sem "com você".
  */
-function PreviaTrilha({ trilha, acoes }: { trilha: TrilhaCompartilhada; acoes: ReactNode }) {
+export function PreviaTrilha({ trilha, acoes, calor }: {
+  trilha: TrilhaCompartilhada;
+  acoes: ReactNode;
+  /** A página /t: o Stu dá as boas-vindas e o cartão "Quem compartilhou" (com Seguir) vem antes das lições. */
+  calor?: { seguir: ReactNode };
+}) {
   const titulo = useRef<ComponentRef<typeof Text>>(null);
+  const abrirPerfil = useContext(AbrirPerfil);
   const nome = trilha.dono.nome;
   const sua = trilha.situacao === 'sua';
+  const comCalor = Boolean(calor) && !sua;
   useEffect(() => {
     const alvo = titulo.current;
     if (!alvo) return;
@@ -792,14 +848,38 @@ function PreviaTrilha({ trilha, acoes }: { trilha: TrilhaCompartilhada; acoes: R
   }, [trilha.codigo]);
   return (
     <View style={socialEstilos.previa}>
+      {comCalor && (
+        <View style={socialEstilos.previaStu}>
+          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={socialEstilos.previaStuImagem} />
+          <View style={socialEstilos.previaBalao}><Text style={socialEstilos.previaBalaoTexto}>{m.stuConvite}</Text></View>
+        </View>
+      )}
       <View style={socialEstilos.previaDe}>
         <Avatar nome={nome} cor={trilha.dono.cor} foto={trilha.dono.foto} />
-        <Text style={socialEstilos.previaDeTexto}>{sua ? m.compartilhadaPor(nome) : m.publicoTitulo(nome)}</Text>
+        <FraseComNome frase={sua ? m.compartilhadaPor(nome) : m.publicoTitulo(nome)} nome={nome} perfilId={trilha.dono.perfilId}
+          estilo={socialEstilos.previaDeTexto} />
       </View>
       <Text ref={titulo} accessibilityRole="header" style={socialEstilos.previaTitulo}>{trilha.titulo}</Text>
       <Text style={socialEstilos.previaMeta}>{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</Text>
       <View style={socialEstilos.previaAcoes}>{acoes}</View>
       {!sua && <Text style={socialEstilos.previaZero}>{m.comecaDoZero}</Text>}
+      {comCalor && (
+        <View accessibilityLabel={m.quemCompartilhou} style={socialEstilos.quem}>
+          <Avatar nome={nome} cor={trilha.dono.cor} foto={trilha.dono.foto} tamanho="m" estilo={socialEstilos.quemAvatar} />
+          <View style={socialEstilos.quemTexto}>
+            <Text style={socialEstilos.quemRotulo}>{m.quemCompartilhou}</Text>
+            <Text style={socialEstilos.quemNome}>{nome}</Text>
+            {trilha.dono.demo && <SeloDemo />}
+            {trilha.dono.resumo && <Text style={socialEstilos.quemResumo}>{trilha.dono.resumo}</Text>}
+            {trilha.dono.perfilId && abrirPerfil && (
+              <Pressable accessibilityRole="link" onPress={() => abrirPerfil(trilha.dono.perfilId!)} style={socialEstilos.quemLink}>
+                <Text style={socialEstilos.link}>{m.verPerfil(nome)}</Text>
+              </Pressable>
+            )}
+            {calor?.seguir}
+          </View>
+        </View>
+      )}
       <View style={socialEstilos.previaPartes}>
         {trilha.partes.map((parte, indice) => (
           <View key={indice}>
@@ -820,7 +900,7 @@ function PreviaTrilha({ trilha, acoes }: { trilha: TrilhaCompartilhada; acoes: R
 }
 
 /** As ações de quem recebe, conforme a situação: adicionar, abrir a já adicionada, ou é sua (o app já tem sessão). */
-function AcoesDeQuemRecebe({ trilha, adicionar, abrir, ocupado }: {
+export function AcoesDeQuemRecebe({ trilha, adicionar, abrir, ocupado }: {
   trilha: TrilhaCompartilhada;
   adicionar: () => void;
   abrir: (planoId: string) => void;
@@ -916,7 +996,7 @@ export function AdicionarPorLink({ cliente, ocupado: ocupadoFora, aoAdicionar, a
   if (!aberto) {
     return (
       <Pressable testID="por-link-abrir" accessibilityRole="button" accessibilityState={{ disabled: ocupadoFora }} disabled={ocupadoFora}
-        onPress={() => setAberto(true)} style={({ pressed }) => [socialEstilos.porLinkAbrir, pressed && { backgroundColor: cores.nevoa }]}>
+        onPress={() => setAberto(true)} style={({ pressed }) => [socialEstilos.porLinkAbrir, socialEstilos.porLinkNoPedido, pressed && { backgroundColor: cores.nevoa }]}>
         <Icone nome="compartilhar" tamanho={18} cor={cores.acao} />
         <Text style={socialEstilos.porLinkAbrirTexto}>{m.porLink}</Text>
       </Pressable>
@@ -924,7 +1004,7 @@ export function AdicionarPorLink({ cliente, ocupado: ocupadoFora, aoAdicionar, a
   }
   const empilhar = width <= 420;
   return (
-    <View ref={secao} testID="por-link" style={socialEstilos.porLink}>
+    <View ref={secao} testID="por-link" style={[socialEstilos.porLink, socialEstilos.porLinkNoPedido]}>
       <Text accessibilityRole="header" style={socialEstilos.porLinkTitulo}>{m.porLink}</Text>
       <View style={socialEstilos.porLinkForm}>
         <Text style={socialEstilos.rotulo} onPress={() => campo.current?.focus()} suppressHighlighting>{m.porLinkRotulo}</Text>
@@ -1000,12 +1080,15 @@ export const socialEstilos = StyleSheet.create({
   radioMiolo: { width: 10, height: 10, borderRadius: 5, backgroundColor: cores.acao },
 
   legenda: { marginBottom: 8, color: cores.texto, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
+  // A legenda de um fieldset em grade (`.interesses legend`) não entra no vão de 8 da grade: fica a 4 do primeiro item.
+  legendaDoGrupo: { marginBottom: -4 },
   rotulo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
   dica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20.3 },
   erro: { color: cores.erro, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 22.5, fontWeight: '800' },
   status: { color: cores.sucesso, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 22.4, fontWeight: '800', marginTop: -4 },
   statusVazio: { marginTop: 0, lineHeight: 0, height: 0 },
   parar: { alignSelf: 'flex-start', minHeight: 48, justifyContent: 'center' },
+  pararComIcone: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   pararTexto: { color: '#B3261E', fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   campoComDica: { gap: 8 },
   campoLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', justifyContent: 'space-between', columnGap: 12, rowGap: 4 },
@@ -1086,10 +1169,36 @@ export const socialEstilos = StyleSheet.create({
 
   porLinkAbrir: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', alignSelf: 'center', gap: 8, minHeight: 44,
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
+  // No pedido, 26 do último exemplo até "Adicionar por link" (o bloco das ideias já deixa 5), fechado ou aberto.
+  porLinkNoPedido: { marginTop: 21 },
   porLinkAbrirTexto: { color: cores.acao, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   porLink: { gap: 14, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
   porLinkTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   porLinkForm: { gap: 6 },
   porLinkLinha: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 4 },
   porLinkInativo: { gap: 4 },
+
+  nomeLink: { color: cores.acao, textDecorationLine: 'underline' },
+  cabecaSeguidores: { fontWeight: '900', color: cores.texto },
+  seloDemo: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 2, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#C9A227',
+    borderRadius: 999, backgroundColor: '#FFFAEA' },
+  seloDemoTexto: { color: '#6B4A00', fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontWeight: '900' },
+  // .publicacao__trocar: ficha tracejada, só o texto na cor de ação.
+  trocarTema: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.bordaCampo,
+    borderRadius: 999 },
+  trocarTemaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
+  // Página /t: o Stu com o balão e o cartão "Quem compartilhou".
+  previaStu: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, marginBottom: 4 },
+  previaStuImagem: { width: 64, height: 70 },
+  previaBalao: { flex: 1, marginBottom: 14, paddingHorizontal: 14, paddingVertical: 10, borderWidth: 2, borderColor: cores.gelo, borderRadius: 18,
+    borderBottomLeftRadius: 6, backgroundColor: cores.ceu },
+  previaBalaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 22.4, fontWeight: '800' },
+  quem: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, marginTop: 4, padding: 16, borderWidth: 2, borderColor: cores.gelo, borderRadius: 18,
+    backgroundColor: cores.nevoa },
+  quemAvatar: { borderWidth: 3, borderColor: '#FFFFFF' },
+  quemTexto: { flex: 1, gap: 2, minWidth: 0 },
+  quemRotulo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontWeight: '900', letterSpacing: 0.52, textTransform: 'uppercase' },
+  quemNome: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 18, lineHeight: 27, fontWeight: '900' },
+  quemResumo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 23.2 },
+  quemLink: { alignSelf: 'flex-start', minHeight: 44, justifyContent: 'center' },
 });

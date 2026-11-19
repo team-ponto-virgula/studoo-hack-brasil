@@ -13,6 +13,10 @@ const DESENHOS_SVG = {
   lapis: <Path d="M14.5 5.5l4 4M5 19l1-4.5L15.5 5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9.5 18z" />,
   lixeira: <Path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />,
   bussola: <><Circle cx="12" cy="12" r="8.5" /><Path d="M15.5 8.5l-2 5-5 2 2-5z" /></>,
+  // Valeu: coração com a curva de um sorriso (agradecer, não "curtir" uma pessoa).
+  valeu: <Path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z" />,
+  mais: <><Circle cx="6" cy="12" r="1.3" fill="currentColor" /><Circle cx="12" cy="12" r="1.3" fill="currentColor" /><Circle cx="18" cy="12" r="1.3" fill="currentColor" /></>,
+  bandeirinha: <><Path d="M6 20.5V4" /><Path d="M6 4.5h11l-2.5 4 2.5 4H6" /></>,
 } as const;
 type NomeIconeSvg = keyof typeof DESENHOS_SVG;
 const ehSvg = (nome: NomeIcone): nome is NomeIconeSvg => Object.hasOwn(DESENHOS_SVG, nome);
@@ -168,6 +172,8 @@ const SIMBOLOS: Partial<Record<NomeIcone, { nome: SFSymbol; cheio?: SFSymbol }>>
   olhoFechado: { nome: 'eye.slash' },
   seta: { nome: 'arrow.right' },
   pessoa: { nome: 'person', cheio: 'person.fill' },
+  // A bússola do Explorar na barra de baixo (a do Safari é o símbolo de bússola do sistema).
+  bussola: { nome: 'safari', cheio: 'safari.fill' },
 };
 
 export function Icone({ nome, tamanho = 24, cor, cheio = false, traco = 2.5, sistema = false }: {
@@ -189,7 +195,8 @@ export function Icone({ nome, tamanho = 24, cor, cheio = false, traco = 2.5, sis
     return (
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden testID={`icone:${nome}:${traco}`}
         style={{ width: tamanho, height: tamanho }}>
-        <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" fill="none" stroke={cor} strokeWidth={traco} strokeLinecap="round" strokeLinejoin="round">
+        {/* `cheio` preenche o desenho na cor (o Valeu marcado, como `fill: currentColor` da web); `color` serve o currentColor. */}
+        <Svg width={tamanho} height={tamanho} viewBox="0 0 24 24" color={cor} fill={cheio ? cor : 'none'} stroke={cor} strokeWidth={traco} strokeLinecap="round" strokeLinejoin="round">
           {DESENHOS_SVG[nome]}
         </Svg>
       </View>

@@ -894,22 +894,25 @@ function NavegacaoInferior() {
   const nav = useContext(NavegacaoContexto);
   if (!nav) return null;
   // As duas abas ficam dentro de uma lista de abas, como pede o papel "tab" (axe: aria-required-parent).
-  const itens: { id: 'planos' | 'objetivo' | 'perfil'; rotulo: string; icone: NomeIcone; acao: () => void }[] = [
+  const itens: { id: 'planos' | 'objetivo' | 'explorar' | 'perfil'; rotulo: string; icone: NomeIcone; acao: () => void }[] = [
     { id: 'planos', rotulo: mensagens.planos.titulo, icone: 'livro', acao: nav.planos },
     { id: 'objetivo', rotulo: mensagens.planos.novo, icone: 'lampada', acao: nav.criar },
   ];
+  if (nav.explorar) itens.push({ id: 'explorar', rotulo: mensagens.comunidade.navegacao, icone: 'bussola', acao: nav.explorar });
   if (nav.perfil) itens.push({ id: 'perfil', rotulo: mensagens.perfil.navegacao, icone: 'pessoa', acao: nav.perfil });
-  // Com três itens, o vão entre eles cai de 12 para 8, como .navegacao-mobile[data-itens='3'] da web.
-  const vao = itens.length > 2 ? { gap: 8 } : null;
+  // Com três itens, o vão entre eles cai de 12 para 8, como .navegacao-mobile[data-itens='3'] da web; com quatro, 4 de vão,
+  // 8 nos lados, 6 × 2 dentro do item e o rótulo de 11/1,15 (.navegacao-mobile[data-itens='4']), para caber em 360.
+  const quatro = itens.length > 3;
+  const vao = quatro ? navegacaoEstilos.faixaQuatro : itens.length > 2 ? { gap: 8 } : null;
   return <FundoDeBarra accessibilityRole="tablist" estilo={[navegacaoEstilos.faixa, vao]} estiloVidro={[navegacaoEstilos.faixaVidro, vao]}>
     {itens.map((item) => {
       const selecionado = item.id === nav.atual || item.id === 'planos' && nav.atual === 'plano';
       return <Pressable key={item.id} testID={`nav-${item.id}`} accessibilityRole="tab" accessibilityState={{ selected: selecionado, disabled: nav.ocupado }}
         aria-selected={selecionado} aria-disabled={nav.ocupado}
         accessibilityLabel={item.rotulo} disabled={nav.ocupado} onPress={item.acao}
-        style={({ pressed }) => [navegacaoEstilos.item, selecionado && navegacaoEstilos.ativo, pressed && { opacity: 0.7 }]}>
+        style={({ pressed }) => [navegacaoEstilos.item, quatro && navegacaoEstilos.itemQuatro, selecionado && navegacaoEstilos.ativo, pressed && { opacity: 0.7 }]}>
         <IndicadorNavegacao icone={item.icone} selecionado={selecionado} />
-        <Text style={[navegacaoEstilos.rotulo, selecionado && { color: cores.acao }]}>{item.rotulo}</Text>
+        <Text style={[navegacaoEstilos.rotulo, quatro && navegacaoEstilos.rotuloQuatro, selecionado && { color: cores.acao }]}>{item.rotulo}</Text>
       </Pressable>;
     })}
   </FundoDeBarra>;
@@ -932,7 +935,10 @@ const navegacaoEstilos = StyleSheet.create({
   faixa: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 8, borderTopWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
   // iOS 26: a mesma barra sobre vidro, sem o fundo branco e sem a linha de cima.
   faixaVidro: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 8 },
+  faixaQuatro: { gap: 4, paddingHorizontal: 8 },
   item: { flex: 1, minHeight: 56, borderRadius: 18, padding: 6, alignItems: 'center', justifyContent: 'center', gap: 3 },
+  itemQuatro: { paddingHorizontal: 2 },
   ativo: { backgroundColor: cores.nevoa },
   rotulo: { fontFamily: fontes.corpo, fontSize: 12, fontWeight: '800', color: cores.textoSecundario, textAlign: 'center' },
+  rotuloQuatro: { fontSize: 11, lineHeight: 12.65 },
 });
