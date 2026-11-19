@@ -1,8 +1,8 @@
 # Conferência nativa do app
 
-O workflow `.github/workflows/capturas-nativas.yml` roda o Studoo num **simulador de iPhone**, numa máquina macOS do GitHub Actions, e guarda as capturas das telas como artefato por 3 dias. É a única execução nativa do app que a equipe tem: a prévia web do app (o export web do Expo no navegador) não reproduz o layout nativo.
+O workflow `.github/workflows/capturas-nativas.yml` roda o Studoo num **simulador de iPhone**, numa máquina macOS do GitHub Actions, e num **emulador de Android**, numa máquina Ubuntu (os dois jobs em paralelo), e guarda as capturas das telas como artefato por 3 dias. É a única execução nativa do app que a equipe tem: a prévia web do app (o export web do Expo no navegador) não reproduz o layout nativo.
 
-O que sai daqui vem de simulador, com o app servido pelo Metro dentro do Expo Go. **Não é aparelho de verdade**: toque, desempenho, modo silencioso, câmera e leitor de tela continuam sem conferência.
+O que sai daqui vem de simulador e de emulador: no iPhone, o app servido pelo Metro dentro do Expo Go; no Android, o build de debug do projeto com o JavaScript do Metro (seção "Android", abaixo). **Não é aparelho de verdade**: toque, desempenho, modo silencioso, câmera e leitor de tela continuam sem conferência.
 
 ## Quando roda
 
@@ -40,6 +40,18 @@ Entre o Expo Go e o Metro fica uma cache (`servidor/cache-do-metro.mjs`, na port
 
 O menu de desenvolvedor do Expo Go abre sozinho na primeira vez que um projeto carrega, com uma apresentação por cima, e depois deixa um botão flutuante (engrenagem azul) sobre o app. Com o menu aberto, a árvore de elementos só tem o Expo Go e nenhum id do app aparece (foi o que parou a primeira execução). O passo do simulador desliga a apresentação, a abertura automática e o botão nas preferências do Expo Go antes de ele abrir (o que ficou gravado está em `expo-go-preferencias.txt`). Se não pegar, toda abertura passa por `partes/sair-do-menu-do-expo-go.yaml`, que espera o app ou o menu, toca "Continue" e fecha o menu pelo "X" antes de esperar a tela do Studoo. Se o botão flutuante ficar sobre o app, a coleta avisa no sumário.
 
+## Android
+
+O job `android` segue a rota A1 de `docs/BUILD-ANDROID.md`, em `android.sh` (o que vale para os dois sistemas fica em `comum.sh`):
+
+1. A mesma API, com a mesma CA gerada na hora.
+2. `expo prebuild --platform android` com `STUDOO_ANDROID_PILOTO_CA` apontando para a CA: o plugin `plugins/with-android-piloto-ca.cjs` a põe só no build de debug, para 127.0.0.1 e localhost. `servidor/manifesto-android.mjs` põe no manifesto de debug os padrões do menu de desenvolvedor (apresentação vista, sem abrir sozinho, sem o botão flutuante), que o expo-dev-menu lê dos `meta-data`. Depois, o Gradle gera o APK de debug só para x86_64, com cache entre as execuções.
+3. O Metro em modo de cliente de desenvolvimento (`--dev-client`), com a mesma cache na porta 8081.
+4. O emulador (`ReactiveCircus/android-emulator-runner`, Android 15, API 35, google_apis x86_64, com KVM) só existe no passo dele, e ali roda `android.sh no-emulador`: tela de 1080 × 2340 a 480 dpi (360 × 780 dp, a largura dos pares de 360 da web), barra de status fixa no modo de demonstração, teclado da tela, sem preenchimento automático, o APK instalado e `adb reverse` da API (3443) e da cache do Metro (8081), para o app ver as duas em 127.0.0.1, como no iPhone. Depois, os três fluxos.
+5. Os fluxos são os mesmos, numa cópia com `appId: com.studoo.mobile.dev` e o link `studoo-dev://expo-development-client/?url=…` no lugar dos do Expo Go. As capturas têm os mesmos nomes (`capturas-android`, `registros-android`). No fim do passo do emulador, ficam o fim do `logcat` e a tela do emulador nos registros.
+
+Animações ligadas, como no iPhone. Não conferido: aparelho de verdade, o volume e o modo silencioso, câmera, leitor de tela.
+
 ## Como ler o resultado
 
 - **Sumário da execução**: a máquina e o simulador usados, as trilhas da conta sintética, a tabela das capturas (a que faltou aparece como "faltou") e, numa linha, o que falhou.
@@ -49,9 +61,9 @@ O menu de desenvolvedor do Expo Go abre sozinho na primeira vez que um projeto c
 
 ## Como mexer
 
-- **Tela nova**: um arquivo em `fluxos/telas/`, começando por `- runFlow: ../partes/reabrir.yaml`, com o nome na ordem de `fluxos/telas/config.yaml` e as capturas na lista `CAPTURAS_ESPERADAS` de `ios.sh`.
-- **Mudou um `testID` ou um nome acessível**: o fluxo que usa o seletor precisa mudar junto. `node apps/mobile/conferencia-nativa/conferir-fluxos.mjs` confere, sem simulador, se todo `id` dos fluxos ainda existe como `testID` no app, se as capturas batem com a lista de `ios.sh` e se a ordem de `telas/config.yaml` está completa; é o primeiro passo do workflow. Um nome acessível que mudou só aparece na execução: o passo do Maestro diz qual comando não achou o elemento.
+- **Tela nova**: um arquivo em `fluxos/telas/`, começando por `- runFlow: ../partes/reabrir.yaml`, com o nome na ordem de `fluxos/telas/config.yaml` e as capturas na lista `CAPTURAS_ESPERADAS` de `comum.sh` (a mesma para o iPhone e o Android).
+- **Mudou um `testID` ou um nome acessível**: o fluxo que usa o seletor precisa mudar junto. `node apps/mobile/conferencia-nativa/conferir-fluxos.mjs` confere, sem simulador, se todo `id` dos fluxos ainda existe como `testID` no app, se as capturas batem com a lista de `comum.sh` e se a ordem de `telas/config.yaml` está completa; é o primeiro passo do workflow. Um nome acessível que mudou só aparece na execução: o passo do Maestro diz qual comando não achou o elemento.
 - **Versões fixadas** (no topo do workflow): o Expo Go de simulador e o Maestro, com sha256; as ações do GitHub, pelo commit. Ao subir o SDK do Expo no app, troque o endereço e o sha256 do Expo Go juntos.
 - **Outro aparelho ou outro iOS**: as entradas `aparelho` e `ios` do disparo manual. Se o iOS pedido não existir na máquina, a conferência segue no mais novo que houver e avisa.
 
-`ios.sh` tem um subcomando por passo do workflow e roda no bash 3.2 do macOS. `preparar-dados.mjs` só aceita a API do próprio computador e conta em domínio `.test`.
+`ios.sh` e `android.sh` têm um subcomando por passo do workflow; o que os dois fazem igual está em `comum.sh`, que roda no bash 3.2 do macOS e no do Ubuntu. `preparar-dados.mjs` só aceita a API do próprio computador e conta em domínio `.test`.

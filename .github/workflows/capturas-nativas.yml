@@ -1,4 +1,5 @@
-# Conferência nativa do app: roda o Studoo num simulador de iPhone, pelo Expo Go, e guarda as capturas das telas.
+# Conferência nativa do app: roda o Studoo num simulador de iPhone, pelo Expo Go, e num emulador de Android, com o build
+# de debug do projeto, e guarda as capturas das telas (os dois jobs rodam em paralelo, um não espera o outro).
 #
 # É um workflow à parte da verificação do PR (`verificacao.yml`): nada aqui é obrigatório, e ele não entra na fila dela.
 # Dados: a API do próprio repositório, nesta máquina, com IA simulada e uma conta sintética de senha sorteada a cada
@@ -32,6 +33,12 @@ concurrency:
   group: capturas-nativas-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  # Maestro: versão e sha256 do maestro.zip publicado em github.com/mobile-dev-inc/Maestro/releases (cli-<versão>). Vale
+  # para os dois jobs.
+  MAESTRO_VERSAO: 2.12.1
+  MAESTRO_SHA256: 54dbb0716425626604973cbb374c585ca30272375d9ce15177a1152765ddd9d7
+
 jobs:
   iphone:
     name: iPhone (simulador)
@@ -50,9 +57,6 @@ jobs:
       # do app, troque o endereço e o sha256 juntos.
       EXPO_GO_IOS_URL: https://github.com/expo/expo-go-releases/releases/download/Expo-Go-58.0.7/Expo-Go-58.0.7.tar.gz
       EXPO_GO_IOS_SHA256: 17ab20f856c72690a750e79826ab5c90550a1441b1d1d67db6cd252af979b903
-      # Maestro: versão e sha256 do maestro.zip publicado em github.com/mobile-dev-inc/Maestro/releases (cli-<versão>).
-      MAESTRO_VERSAO: 2.12.1
-      MAESTRO_SHA256: 54dbb0716425626604973cbb374c585ca30272375d9ce15177a1152765ddd9d7
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -145,6 +149,125 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: registros-iphone
+          path: |
+            ${{ runner.temp }}/conferencia/registros
+            ${{ runner.temp }}/conferencia/maestro
+            ${{ runner.temp }}/conferencia/dados
+          retention-days: 3
+          if-no-files-found: warn
+
+  android:
+    name: Android (emulador)
+    # Rota A1 de docs/BUILD-ANDROID.md: o build de debug do projeto (com a CA local só no debug), num emulador com KVM.
+    runs-on: ubuntu-latest
+    # O primeiro build do Gradle, sem cache, é o passo mais longo; cada passo tem o próprio limite, abaixo deste.
+    timeout-minutes: 120
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Conferir os fluxos contra o código do app
+        run: node apps/mobile/conferencia-nativa/conferir-fluxos.mjs
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      # Java 17 para o Gradle e o Maestro.
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      # O emulador precisa da aceleração do kernel (KVM) para ligar em minutos, e não em dezenas de minutos.
+      - name: Liberar o KVM para o emulador
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Sonda (versões, SDK do Android e KVM)
+        id: sonda
+        run: bash apps/mobile/conferencia-nativa/android.sh sonda
+
+      - name: Instalar dependências
+        run: npm ci
+
+      # Gradle e o que ele baixa (wrapper, dependências, NDK do React Native): a segunda execução reaproveita.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-android-${{ hashFiles('package-lock.json', 'apps/mobile/app.json', 'apps/mobile/plugins/**') }}
+          restore-keys: gradle-android-
+
+      - name: API local (banco, build, HTTPS e dados de demonstração)
+        id: servidor
+        timeout-minutes: 20
+        run: bash apps/mobile/conferencia-nativa/android.sh servidor
+
+      - name: Build de debug do app (prebuild e Gradle, com a CA local)
+        id: app
+        timeout-minutes: 50
+        run: bash apps/mobile/conferencia-nativa/android.sh app
+
+      - name: Maestro
+        id: maestro
+        timeout-minutes: 5
+        run: bash apps/mobile/conferencia-nativa/android.sh maestro
+
+      - name: Metro e pacote do app
+        id: metro
+        timeout-minutes: 20
+        run: bash apps/mobile/conferencia-nativa/android.sh metro
+
+      # O emulador só existe neste passo: a preparação dele (tela de 360 × 780 dp, barra fixa, APK, `adb reverse`) e os
+      # três fluxos rodam aqui. Animações ligadas, como no iPhone (o Stu animado também é conferido).
+      - name: "Emulador: entrada, conta e telas"
+        id: emulador
+        if: ${{ !cancelled() && steps.app.outcome == 'success' && steps.metro.outcome == 'success' && steps.maestro.outcome == 'success' }}
+        timeout-minutes: 60
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 3
+          ram-size: 4096M
+          disk-size: 6000M
+          emulator-boot-timeout: 900
+          disable-animations: false
+          disable-spellchecker: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: bash apps/mobile/conferencia-nativa/android.sh no-emulador
+
+      - name: Juntar as capturas e dizer o que faltou
+        if: ${{ always() && steps.sonda.outcome == 'success' }}
+        run: bash apps/mobile/conferencia-nativa/android.sh coletar
+
+      - name: Guardar as capturas (3 dias)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: capturas-android
+          path: ${{ runner.temp }}/conferencia/capturas
+          retention-days: 3
+          if-no-files-found: warn
+
+      - name: Guardar os registros (3 dias)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: registros-android
           path: |
             ${{ runner.temp }}/conferencia/registros
             ${{ runner.temp }}/conferencia/maestro
