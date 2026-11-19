@@ -108,8 +108,25 @@ test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mai
   assert.match(caminho, /\{doZero \? <Stu nome="stu-feliz" tamanho=\{64\} sombra animado="uma-vez" \/>/);
 });
 
-test('o nó 1 à vista no toque: a prévia rola até ele se ele estiver fora da tela', () => {
+test('o nó 1 à vista no toque: inteiro na área livre (entre a placa e o rodapé), com o centro a 40% dela', () => {
   const efeito = trecho(geracao, "if (criacao !== 'criando') return;\n    const primeiro", '}, [criacao]);');
-  assert.match(efeito, /vagaAVista\(centro, rolado\.current, visivel\.current \|\| height, coberto\.current\)\) return;/);
-  assert.match(efeito, /rolarPara\(rolagemDaVaga\(centro, visivel\.current \|\| height, coberto\.current\)\);/);
+  assert.match(efeito, /const topoLivre = cartaoDeVolta \? 0 : RITMO_DA_GERACAO\.placaTopo \+ alturaPlaca;/);
+  assert.match(efeito, /if \(naTela - RITMO_DA_GERACAO\.no1AcimaDoCentro >= topoLivre && naTela \+ RITMO_DA_GERACAO\.no1AbaixoDoCentro <= altura\) return;/);
+  assert.match(efeito, /rolarPara\(Math\.max\(0, Math\.round\(centro - \(topoLivre \+ \(altura - topoLivre\) \* RITMO_DA_GERACAO\.no1NaAreaLivre\)\)\)\);/);
+  // Chegar ao alto durante a criação não traz o cartão do título de volta (ele empurraria o nó 1 para baixo do rodapé).
+  assert.match(geracao, /if \(pronta && !cartaoDeVolta && y <= 4 && criacaoAgora\.current === null\) setCartaoDeVolta\(true\);/);
+});
+
+test('ajustes do Designer (917e40c): a placa sai na passagem, a parte da prévia sem contagem e o troféu sem brilho antes de concluir', () => {
+  assert.equal((geracao.match(/<PlacaDaGeracao [^>]*sai=\{criacao === 'criada'\} reduzir=\{reduzir\} \/>/g) ?? []).length, 2);
+  const placa = trecho(estudo, 'function PlacaDaGeracao(', '\n}\n');
+  assert.match(placa, /duration: RITMO_DA_GERACAO\.placaSaiMs/);
+  assert.match(placa, /outputRange: \[0, -RITMO_DA_GERACAO\.placaSaiDeslize\]/);
+  const parte = trecho(caminho, 'function Parte(', '\n}\n');
+  assert.match(parte, /if \(resumo\.previa\) texto = null;/);
+  assert.match(parte, /\{texto !== null && <Text/);
+  const chegada = trecho(caminho, 'function Chegada(', '\n}\n');
+  assert.match(chegada, /\{feita && <View style=\{\[caminhoEstilos\.camada, circulo\(tamanho \+ 28\)/, 'o brilho dourado só conquistado');
+  assert.match(chegada, /\{feita && \(\n\s*<>\n\s*<Desenho nome="estrela"/, 'as estrelas só conquistado');
+  assert.match(chegada, /silhueta=\{feita \? undefined : '#8A93B0'\}/, 'antes, a silhueta cinza');
 });

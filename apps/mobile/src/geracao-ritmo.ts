@@ -69,6 +69,17 @@ export const RITMO_DA_GERACAO = {
    * cima, aos 320: a camada só some depois que a aula (ou o esqueleto) está na tela, e a prévia nunca reaparece por baixo.
    */
   aulaMontaMs: 200,
+  /** No t = 0 da passagem, a placa "Proposta pronta" sai (opacidade e 8 px para cima, 150 ms): a proposta virou trilha. */
+  placaSaiMs: 150,
+  placaSaiDeslize: 8,
+  /**
+   * A rolagem do toque mira a área livre, entre a base da placa presa (62 px do alto da rolagem, mais a altura dela) e o topo
+   * do rodapé: o centro do nó 1 a 40% dela, com a lente e o Stu (até 52 px acima do centro) e o nome (até 112 abaixo) inteiros.
+   */
+  placaTopo: 62,
+  no1NaAreaLivre: 0.4,
+  no1AcimaDoCentro: 52,
+  no1AbaixoDoCentro: 112,
 } as const;
 
 /** Quando a passagem termina (a aula já está por inteiro na tela): 470 ms; com movimento reduzido, só a opacidade (150 ms). */
