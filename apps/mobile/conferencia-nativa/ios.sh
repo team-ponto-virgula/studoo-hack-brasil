@@ -185,6 +185,11 @@ sonda() {
 
   printf '%s' "$id" > "$SAIDA/udid"
   if [ -n "${GITHUB_ENV:-}" ]; then echo "CONFERENCIA_UDID=$id" >> "$GITHUB_ENV"; fi
+  # Para o arquivo de origem que vai junto das capturas (coletar o completa).
+  {
+    echo "Simulador: $aparelho$criado, $nome_runtime"
+    echo "Máquina: GitHub Actions, macOS $(sw_vers -productVersion) $(uname -m), $(xcodebuild -version 2> /dev/null | head -1)"
+  } > "$SAIDA/origem-simulador.txt"
 
   resumo "### Conferência nativa no iPhone"
   resumo ""
@@ -351,8 +356,47 @@ simulador() {
   tar -xzf "$FERRAMENTAS/expo-go.tar.gz" -C "$FERRAMENTAS/Expo Go.app" || erro "O arquivo do Expo Go não abriu (tar)."
   xcrun simctl install "$id" "$FERRAMENTAS/Expo Go.app" || erro "O Expo Go não instalou no simulador."
   xcrun simctl get_app_container "$id" "$EXPO_GO" > /dev/null 2>&1 || erro "O Expo Go não aparece instalado no simulador ($EXPO_GO)."
-  echo "Expo Go $(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$FERRAMENTAS/Expo Go.app/Info.plist" 2> /dev/null || echo '?') instalado."
+  /usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$FERRAMENTAS/Expo Go.app/Info.plist" > "$SAIDA/expo-go-versao" 2> /dev/null \
+    || echo '?' > "$SAIDA/expo-go-versao"
+  echo "Expo Go $(cat "$SAIDA/expo-go-versao") instalado."
   rm -f "$FERRAMENTAS/expo-go.tar.gz"
+
+  preparar_menu_do_expo_go
+}
+
+# Na primeira vez que um projeto carrega, o Expo Go abre sozinho o menu de desenvolvedor, com uma apresentação por cima,
+# e depois deixa um botão flutuante (a engrenagem azul, "Tools button") sobre o app. Com o menu aberto, a árvore de
+# elementos só tem o Expo Go (foi o que parou a primeira execução); o botão sairia em todas as capturas e pode cobrir um
+# toque. As três chaves são as preferências desse menu (pacote expo-dev-menu do SDK 58) e moram nas preferências do Expo
+# Go, dentro da pasta de dados dele no simulador. São escritas antes da primeira abertura, pelo serviço de preferências
+# do próprio simulador; se não pegarem, os fluxos ainda fecham a apresentação e o menu (partes/sair-do-menu-do-expo-go.yaml).
+preparar_menu_do_expo_go() {
+  local id dados preferencias par chave valor falhas=0
+  id="$(udid)"
+  if ! dados="$(xcrun simctl get_app_container "$id" "$EXPO_GO" data 2> /dev/null)" || [ -z "$dados" ]; then
+    aviso "Não achei a pasta de dados do Expo Go: o menu de desenvolvedor dele pode abrir sozinho (os fluxos o fecham)."
+    return 0
+  fi
+  mkdir -p "$dados/Library/Preferences"
+  preferencias="$dados/Library/Preferences/$EXPO_GO"
+  for par in EXDevMenuIsOnboardingFinished:YES EXDevMenuShowsAtLaunch:NO EXDevMenuShowFloatingActionButton:NO; do
+    chave="${par%%:*}"
+    valor="${par#*:}"
+    if ! xcrun simctl spawn "$id" defaults write "$preferencias" "$chave" -bool "$valor" 2>> "$REGISTROS/expo-go-preferencias.txt"; then
+      # Sem o serviço do simulador, direto no arquivo: o Expo Go ainda não abriu, nada guarda outra versão dele.
+      if [ ! -f "$preferencias.plist" ]; then
+        printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' '<plist version="1.0"><dict/></plist>' > "$preferencias.plist"
+      fi
+      plutil -replace "$chave" -bool "$valor" "$preferencias.plist" 2>> "$REGISTROS/expo-go-preferencias.txt" || falhas=$((falhas + 1))
+    fi
+  done
+  {
+    echo "== Preferências do menu de desenvolvedor do Expo Go, antes da primeira abertura"
+    xcrun simctl spawn "$id" defaults read "$preferencias" 2>&1 || plutil -p "$preferencias.plist" 2>&1 || true
+  } | tee -a "$REGISTROS/expo-go-preferencias.txt"
+  if [ "$falhas" -gt 0 ]; then
+    aviso "$falhas de 3 preferências do menu do Expo Go não foram gravadas: a apresentação e o botão flutuante podem aparecer (os fluxos fecham o menu)."
+  fi
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -505,21 +549,71 @@ fluxo_telas() {
 # A senha da conta sintética aparece na saída do Maestro (ele escreve o texto que digita). Ela vale só nesta execução,
 # mas os registros sobem como artefato: sai deles antes.
 tirar_senha_dos_registros() {
-  local senha arquivo
+  local senha arquivo restantes
   senha="$(do_env STUDOO_SENHA 2> /dev/null || true)"
   [ -n "$senha" ] || return 0
-  grep -rlF -- "$senha" "$REGISTROS" "$SAIDA_MAESTRO" "$DADOS" 2> /dev/null | while IFS= read -r arquivo; do
+  grep -rlF -- "$senha" "$REGISTROS" "$SAIDA_MAESTRO" "$DADOS" "$CAPTURAS" 2> /dev/null | while IFS= read -r arquivo; do
     LC_ALL=C sed -i.limpo "s/$senha/(senha da conta sintetica)/g" "$arquivo" && rm -f "$arquivo.limpo"
+  done || true
+  # Confere de novo. Um arquivo que o sed não limpou não sobe.
+  restantes="$(grep -rlF -- "$senha" "$REGISTROS" "$SAIDA_MAESTRO" "$DADOS" "$CAPTURAS" 2> /dev/null || true)"
+  if [ -n "$restantes" ]; then
+    printf '%s\n' "$restantes" | while IFS= read -r arquivo; do rm -f "$arquivo"; done
+    aviso "A senha da conta sintética ficou em $(printf '%s\n' "$restantes" | wc -l | tr -d ' ') arquivo(s) depois da limpeza; eles foram apagados e não sobem."
+  else
+    resumo "Senha da conta sintética: nenhum arquivo enviado a contém (conferido depois da limpeza)."
+  fi
+}
+
+# O Maestro grava o registro inteiro do simulador em cada fluxo (perto de 200 MB cada). O que interessa do Expo Go já
+# está em simulador-expo-go.log; de cada um fica só o fim, para ver os últimos instantes de um fluxo que falhou.
+encurtar_registros_do_simulador() {
+  local arquivo
+  find "$SAIDA_MAESTRO" -type f -name 'device-simulator.log' 2> /dev/null | while IFS= read -r arquivo; do
+    tail -n 2000 "$arquivo" | cut -c1-600 > "${arquivo%.log}-fim.log" 2> /dev/null || true
+    rm -f "$arquivo"
   done || true
 }
 
+# De onde vieram as capturas, num arquivo ao lado delas: toda prova do app diz a origem.
+escrever_origem() {
+  {
+    echo "Capturas da conferência nativa do Studoo: simulador de iPhone numa máquina do GitHub Actions, com o app servido"
+    echo "pelo Metro (sem modo de desenvolvimento) dentro do Expo Go. Não é aparelho de verdade."
+    echo
+    cat "$SAIDA/origem-simulador.txt" 2> /dev/null || echo "Simulador: ? (a sonda não registrou)"
+    echo "Expo Go: $(cat "$SAIDA/expo-go-versao" 2> /dev/null || echo '?')"
+    echo "Maestro: ${MAESTRO_VERSAO:-?}"
+    echo "Commit: ${GITHUB_SHA:-$(git -C "$RAIZ" rev-parse HEAD 2> /dev/null || echo '?')}"
+    echo "Ramo: ${GITHUB_REF_NAME:-$(git -C "$RAIZ" rev-parse --abbrev-ref HEAD 2> /dev/null || echo '?')}"
+    if [ -n "${GITHUB_RUN_ID:-}" ]; then
+      echo "Execução: ${GITHUB_SERVER_URL:-https://github.com}/${GITHUB_REPOSITORY:-?}/actions/runs/$GITHUB_RUN_ID (tentativa ${GITHUB_RUN_ATTEMPT:-1})"
+    fi
+    echo "Data: $(date -u '+%Y-%m-%d %H:%M') UTC"
+    echo "Dados: API do próprio repositório nesta máquina, com IA simulada e conta sintética (nada do site publicado)."
+  } > "$CAPTURAS/ORIGEM.txt"
+}
+
 coletar() {
-  local nome faltam="" total=0 largura altura
+  local nome faltam="" total=0 largura altura dados
   # Em algumas versões, o Maestro guarda a tela e a árvore de elementos do passo que falhou na pasta padrão dele, e não
   # na pasta pedida: vai junto com os registros.
   if [ -d "$HOME/.maestro/tests" ]; then cp -R "$HOME/.maestro/tests" "$SAIDA_MAESTRO/pasta-padrao-do-maestro" 2> /dev/null || true; fi
+  encurtar_registros_do_simulador
   # O Maestro guarda cada captura em <saída>/<sessão>/<fluxo>/takeScreenshot/<nome>.png.
   find "$SAIDA_MAESTRO" -type f -name '[0-9][0-9]-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
+  escrever_origem
+
+  # O que o Expo Go guardou das preferências do menu de desenvolvedor depois dos fluxos (o arquivo, como está no disco).
+  if dados="$(xcrun simctl get_app_container "$(udid)" "$EXPO_GO" data 2> /dev/null)" && [ -n "$dados" ]; then
+    {
+      echo "== Preferências do menu de desenvolvedor do Expo Go, depois dos fluxos"
+      plutil -p "$dados/Library/Preferences/$EXPO_GO.plist" 2>&1 | grep -E 'EXDevMenu|DevMenuFAB|^\{|^\}' || echo "(arquivo ausente)"
+    } >> "$REGISTROS/expo-go-preferencias.txt" 2> /dev/null || true
+  fi
+  if [ -n "$(find "$SAIDA_MAESTRO" -type f -name 'aviso-botao-do-expo-go.png' 2> /dev/null | head -1)" ]; then
+    aviso "O botão flutuante do Expo Go (engrenagem azul) ficou sobre o app: ele aparece nas capturas. Veja aviso-botao-do-expo-go.png e expo-go-preferencias.txt nos registros."
+  fi
 
   resumo "### Capturas"
   resumo ""
@@ -537,7 +631,7 @@ coletar() {
     fi
   done
   resumo ""
-  resumo "Origem: simulador de iPhone numa máquina do GitHub Actions, com o app servido pelo Metro no Expo Go. Não é aparelho de verdade."
+  resumo "Origem: simulador de iPhone numa máquina do GitHub Actions, com o app servido pelo Metro no Expo Go. Não é aparelho de verdade. Aparelho, iOS, Expo Go e commit estão em ORIGEM.txt, no artefato das capturas."
   resumo ""
 
   # O registro do Expo Go no simulador ajuda a entender uma tela em branco ou um erro de rede do app.

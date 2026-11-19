@@ -36,11 +36,14 @@ Entre a primeira e a segunda fase, o preenchimento automático de senhas do simu
 
 Cada fluxo de `telas/` fecha o Expo Go e abre o app de novo (`partes/reabrir.yaml`), então a falha de um não derruba o seguinte.
 
+O menu de desenvolvedor do Expo Go abre sozinho na primeira vez que um projeto carrega, com uma apresentação por cima, e depois deixa um botão flutuante (engrenagem azul) sobre o app. Com o menu aberto, a árvore de elementos só tem o Expo Go e nenhum id do app aparece (foi o que parou a primeira execução). O passo do simulador desliga a apresentação, a abertura automática e o botão nas preferências do Expo Go antes de ele abrir (o que ficou gravado está em `expo-go-preferencias.txt`). Se não pegar, toda abertura passa por `partes/sair-do-menu-do-expo-go.yaml`, que espera o app ou o menu, toca "Continue" e fecha o menu pelo "X" antes de esperar a tela do Studoo. Se o botão flutuante ficar sobre o app, a coleta avisa no sumário.
+
 ## Como ler o resultado
 
 - **Sumário da execução**: a máquina e o simulador usados, as trilhas da conta sintética, a tabela das capturas (a que faltou aparece como "faltou") e, numa linha, o que falhou.
-- **Artefato `capturas-iphone`**: os PNGs, com o número na frente do nome.
-- **Artefato `registros-iphone`**: o registro de cada programa (`banco.log`, `build.log`, `servidor.log`, `proxy.log`, `metro.log`, `maestro-<fase>.log`), a tela do simulador no fim de cada fase (`tela-no-fim-de-<fase>.png`), a saída do Maestro (com a tela e a árvore de elementos do passo que falhou) e os dados da conta sintética. Sem o `.env` e sem chaves.
+- **Artefato `capturas-iphone`**: os PNGs, com o número na frente do nome, e `ORIGEM.txt` (aparelho, iOS, Expo Go, Maestro, commit e execução): é simulador, não aparelho.
+- **Artefato `registros-iphone`**: o registro de cada programa (`banco.log`, `build.log`, `servidor.log`, `proxy.log`, `metro.log`, `maestro-<fase>.log`), a tela do simulador no fim de cada fase (`tela-no-fim-de-<fase>.png`), a saída do Maestro (com a tela e a árvore de elementos do passo que falhou), o registro do Expo Go no simulador (`simulador-expo-go.log`) e os dados da conta sintética. Sem o `.env` e sem chaves; a senha sorteada sai dos arquivos antes do envio, e o sumário diz se a conferência final achou alguma. Do registro inteiro do simulador que o Maestro grava em cada fluxo (perto de 200 MB) fica só o fim (`device-simulator-fim.log`).
+- **Uma conferência por vez**: um envio novo espera a que está rodando terminar (cancelada no meio, ela não deixaria capturas).
 
 ## Como mexer
 
