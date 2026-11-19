@@ -6,6 +6,7 @@ import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo, Paisagem, Skeleton, Stu } from '../../ui';
 import { Apresentacao } from '../apresentacao';
+import { tocaSons } from '../sons';
 
 type ErrosCampo = { email?: string; senha?: string };
 
@@ -104,6 +105,9 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
 
     try {
       await cliente.login(email, senha);
+      // O som de entrar antes de trocar de página (até meio segundo para carregar, mais o tempo dele).
+      await Promise.race([tocaSons.tocarEfeito('entrar'), new Promise((pronto) => window.setTimeout(pronto, 500))]);
+      await new Promise((pronto) => window.setTimeout(pronto, 260));
       window.location.replace('/');
     } catch (falha) {
       setErro(falha instanceof ErroStudoo ? falha.codigo : 'rede');
