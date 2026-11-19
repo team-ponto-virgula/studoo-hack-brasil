@@ -30,7 +30,7 @@ Os fluxos são do [Maestro](https://docs.maestro.dev) e ficam em `fluxos/`. Eles
 |---|---|---|
 | Entrada, com o simulador como vem de fábrica | `01-entrada.yaml` | `01` em repouso, `02` e-mail em foco, `03` senha em foco com o teclado |
 | Entrar na conta | `02-entrar.yaml` | `04` entrada preenchida, `05` o que abre depois de entrar |
-| Telas | `telas/*.yaml` | `10` a `12` mapa (como abre e rolado sob a barra de baixo); `20` a `23` Minhas trilhas, menu "…" e confirmação de apagar (cancelada); `30` a `35` um exercício de cada formato, no estado inicial e rolado; `40` e `41` Explorar; `50` e `51` Perfil |
+| Telas | `telas/*.yaml` | `10` a `12` mapa (como abre e rolado sob a barra de baixo); `20` a `23` Minhas trilhas, menu "…" e confirmação de apagar (cancelada); `30` a `35` um exercício de cada formato, no estado inicial e rolado; `40` e `41` Explorar; `50` e `51` Perfil; `60` Configurações da trilha, com o toque na borda do "Voltar" (spec 04, §9) |
 
 Entre a primeira e a segunda fase, o preenchimento automático de senhas do simulador é desligado e o simulador reinicia: com ele ligado, o Maestro não consegue digitar num campo de senha (problema conhecido, com a receita na documentação dele). A captura do teclado vem antes disso, com o simulador intocado.
 

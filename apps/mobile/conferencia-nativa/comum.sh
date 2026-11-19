@@ -38,6 +38,7 @@ CAPTURAS_ESPERADAS="
 32-exercicio-multipla-escolha 32-exercicio-multipla-escolha-abaixo 33-exercicio-verdadeiro-falso 33-exercicio-verdadeiro-falso-abaixo
 34-exercicio-lacuna 34-exercicio-lacuna-abaixo 35-exercicio-aberta 35-exercicio-aberta-abaixo
 40-explorar 41-explorar-rolado 50-perfil 51-perfil-rolado
+60-configuracoes
 "
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
