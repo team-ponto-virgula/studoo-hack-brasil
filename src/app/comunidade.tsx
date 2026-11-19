@@ -99,7 +99,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
         {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{posicao}</span>}
         {/* O tema sempre inteiro no alto; "Demonstração" embaixo à esquerda; o numeral do Em alta embaixo à direita. */}
         {cartao.tema && <span className="cartao-trilha__tema">{temas[cartao.tema]}</span>}
-        {cartao.demonstracao && <span className="cartao-trilha__demo" title={c.demonstracaoDica}>{c.demonstracao}</span>}
+        {cartao.demonstracao && <span className="cartao-trilha__demo">{c.demonstracao}</span>}
       </div>
       <div className="cartao-trilha__corpo">
         {posicao !== undefined && <p className="somente-leitor">{c.posicao(posicao)}</p>}
