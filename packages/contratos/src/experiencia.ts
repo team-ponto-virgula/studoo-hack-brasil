@@ -1023,6 +1023,8 @@ export const mensagens = {
             escrever: 'Escreva sua resposta para verificar.',
             escolher: 'Escolha uma opção para verificar.',
             ordenar: (faltam: number) => `${faltam === 1 ? 'Falta 1 item' : `Faltam ${faltam} itens`} para colocar em ordem.`,
+            /** Ordenar em lista única: antes da primeira mudança. */
+            mudarOrdem: 'Mude a ordem para verificar.',
             associar: (faltam: number) => `${faltam === 1 ? 'Falta 1 par' : `Faltam ${faltam} pares`} para ligar.`,
             valor: 'Diga se a frase é verdadeira ou falsa.',
             justificativa: 'Agora escolha o porquê.',
@@ -1122,7 +1124,30 @@ export const mensagens = {
             travado: (texto: string, posicao: number) => `“${texto}”, na posição ${posicao}: já está certo`,
             vaga: 'Toque num item abaixo para esta posição',
             recomecar: 'Recomeçar',
-            certos: (certos: number, total: number) => `${certos} de ${total} na posição certa.`
+            certos: (certos: number, total: number) => `${certos} de ${total} na posição certa.`,
+            // Lista única (spec 08, revisão de 19/11). As chaves das fichas (suaOrdem, disponiveis, vazio, vaga, colocar,
+            // tirar e recomecar) saem quando a web e o app migrarem.
+            comoResponder: 'Arraste para pôr em ordem ou toque em dois itens para trocar.',
+            comoResponderEscolhido: 'Agora toque em outro item para trocar os dois de lugar.',
+            voltarOrdemInicial: 'Voltar à ordem inicial',
+            /** Nome acessível do cartão: "2º de 4: Despachar a mala". */
+            cartaoRotulo: (posicao: number, total: number, texto: string) => `${posicao}º de ${total}: ${texto}`,
+            avisoEscolhido: (texto: string) => `“${texto}” escolhido. Toque em outro item para trocar os dois de lugar.`,
+            avisoTrocaram: (um: string, outro: string) => `“${um}” e “${outro}” trocaram de lugar.`,
+            avisoPosicao: (texto: string, posicao: number, total: number) => `“${texto}” agora está na posição ${posicao} de ${total}.`,
+            moverParaCima: 'Mover para cima',
+            moverParaBaixo: 'Mover para baixo',
+            travadoRotulo: (texto: string, posicao: number) => `“${texto}”, na posição ${posicao}: já está certo.`
+        },
+        /** A linha de como responder, logo abaixo do enunciado, em todo exercício (spec 08, revisão de 19/11). */
+        comoResponder: {
+            multipla_escolha: 'Toque na resposta certa.',
+            lacuna: 'Escreva o que falta na frase.',
+            ordenar: 'Arraste para pôr em ordem ou toque em dois itens para trocar.',
+            /** Associar: dois passos, o atual em azul. */
+            associar: ['Escolha um item', 'Toque no par dele'] as const,
+            verdadeiro_falso: 'Diga se a frase é verdadeira ou falsa e por quê.',
+            aberta: 'Explique com as suas palavras, em uma ou duas frases.'
         },
         associar: {
             instrucao: 'Toque num item da esquerda e depois no par dele à direita.',
