@@ -19,6 +19,10 @@ const DESENHOS_SVG = {
   bandeirinha: <><Path d="M6 20.5V4" /><Path d="M6 4.5h11l-2.5 4 2.5 4H6" /></>,
   // Alerta (spec 11): o círculo com a exclamação dos erros de campo, da barra de salvar e do aviso.
   alerta: <><Circle cx="12" cy="12" r="8.5" /><Path d="M12 7.8v5.2" /><Circle cx="12" cy="16.3" r="0.6" fill="currentColor" /></>,
+  // Configurações da trilha (spec 10, lote 4): os mesmos desenhos de `engrenagem`, `elo` e `setaVoltar` da web.
+  engrenagem: <><Circle cx="12" cy="12" r="3" /><Path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></>,
+  elo: <Path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
+  setaVoltar: <Path d="M19 12H5M11 6l-6 6 6 6" />,
 } as const;
 type NomeIconeSvg = keyof typeof DESENHOS_SVG;
 const ehSvg = (nome: NomeIcone): nome is NomeIconeSvg => Object.hasOwn(DESENHOS_SVG, nome);

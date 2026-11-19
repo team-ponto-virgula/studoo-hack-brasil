@@ -411,6 +411,12 @@ export const mensagens = {
         salvando: 'Salvando…',
         salvo: 'Salvo',
         configurar: 'Configurações da trilha',
+        /** Revisão de design de 19/11 (spec 10): o nome acessível da capa, que abre a galeria ("Capa: X" sai da tela). */
+        trocarCapaRotulo: (nome: string) => `Trocar capa. Capa atual: ${nome}`,
+        /** Embaixo de "Padrão", na galeria (no lugar de "Padrão · A cor e o desenho do tema", que quebrava em duas linhas). */
+        capaPadraoDoTema: 'Do tema',
+        /** O que o leitor de tela ouve quando um campo salva ("Salvo" aparece no rótulo do campo, só para quem vê). */
+        salvoLeitor: { titulo: 'Nome da trilha salvo.', descricao: 'Descrição salva.', tema: 'Tema salvo.' },
     },
     /** Controle de som (spec 12): a folha "Som", o botão no alto da aula e a seção no Perfil. Nomes e descrições dos climas: OPCOES_FUNDO_UI. */
     som: {

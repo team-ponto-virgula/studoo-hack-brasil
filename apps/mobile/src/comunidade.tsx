@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import Svg, { Defs, FeDropShadow, Filter, G, LinearGradient, Rect, Stop, SvgXml, Text as SvgTexto } from 'react-native-svg';
 import {
-  LIMITES_COMUNIDADE, MOTIVOS_DENUNCIA, TEMAS, origemLegivel, svgCapaTrilha,
+  LIMITES_COMUNIDADE, MOTIVOS_DENUNCIA, TEMAS, origemLegivel, svgCapa,
   type CartaoTrilha, type EstadoSeguir, type MotivoDenuncia, type Novidade, type PaginaExplorar, type PerfilPublico, type PessoaNovidade, type Tema,
   type TrilhaCompartilhada,
 } from '@studoo/contratos';
@@ -33,11 +33,14 @@ function anunciar(texto: string) {
   setTimeout(() => AccessibilityInfo.announceForAccessibility(texto), 0);
 }
 
-/** A capa: cor do tema e um padrão geométrico determinístico pelo código (o SVG do contrato, desenhado com SvgXml). */
-export function CapaTrilha({ codigo, tema }: { codigo: string; tema: Tema | null }) {
+/**
+ * A capa do cartão (o SVG do contrato, desenhado com SvgXml): a da galeria, quando a dona escolheu uma nas configurações
+ * da trilha; senão, a padrão, com a cor do tema e um padrão geométrico determinístico pelo código.
+ */
+export function CapaTrilha({ codigo, tema, capa }: { codigo: string; tema: Tema | null; capa?: string | null }) {
   return (
     <View style={StyleSheet.absoluteFill} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <SvgXml xml={svgCapaTrilha(codigo, tema)} width="100%" height="100%" />
+      <SvgXml xml={svgCapa({ codigo, tema, capa })} width="100%" height="100%" />
     </View>
   );
 }
@@ -144,7 +147,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, dua
     <View testID={id} style={[degrauFora(4, 20, cores.gelo), comunidadeEstilos.cartaoFora]}>
       <View style={comunidadeEstilos.cartao}>
         <View style={[comunidadeEstilos.capa, alturaCapa !== undefined && { aspectRatio: undefined, height: alturaCapa }]}>
-          <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} />
+          <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} capa={cartao.capa} />
           {posicao !== undefined && <Posicao numero={posicao} />}
           {cartao.tema && (
             <View style={[comunidadeEstilos.selo, comunidadeEstilos.seloTema]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
