@@ -35,11 +35,12 @@ export function acordarMascote() {
 
 /**
  * A fonte do WebP animado para o expo-image. No aparelho, o número do recurso basta: o React Native escolhe @2x ou @3x
- * para a tela. Na prévia web, o expo-image pede a versão 1x, que não existe para o animado (só @2x e @3x): lá a densidade
- * é escolhida antes, pelo expo-asset.
+ * para a tela. Na prévia web, tanto o expo-image quanto o expo-asset montam o endereço da versão 1x, que não existe para o
+ * animado (só @2x e @3x, e a faixa G só @2x): lá o endereço aponta para o @2x, que toda faixa animada tem.
  */
 function fonteDaAnimacao(modulo: number) {
-  return Platform.OS === 'web' ? { uri: Asset.fromModule(modulo).uri } : modulo;
+  if (Platform.OS !== 'web') return modulo;
+  return { uri: Asset.fromModule(modulo).uri.replace(/\.webp(?=$|\?)/, '@2x.webp') };
 }
 
 /** Lado do quadro na tela e a altura pela proporção do recorte (para nada pular ao carregar). */
