@@ -158,7 +158,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - Sem barra, sem porcentagem e sem visto por lição, porque o aceite é um pedido só.
 - A tela Escrevendo suas lições sai, com a lista, o brilho e as dicas.
 
-**A trilha passa a existir (o aceite volta ok).** A passagem começa quando as duas coisas aconteceram: o aceite voltou ok e o nó 1 está no lugar, ou seja, a rolagem do toque terminou (no máximo 240 ms depois do toque). Se o aceite volta antes, a passagem espera o fim da rolagem, e a origem do círculo é medida nesse momento, com o nó 1 parado e à vista. Na referência rápida do app, o aceite voltou em 71 ms, antes do fim da rolagem, e no quadro de 220 ms o nó 1 estava acima da tela. A passagem é a própria navegação para a aula, em até 470 ms:
+**A trilha passa a existir (o aceite volta ok).** A passagem começa no aceite, sem espera, e cabe em até 470 ms contados dele. Se o aceite volta antes de a rolagem do toque até o nó 1 acabar, a rolagem que falta termina até t = 120 ms, com saída suave, e o círculo nasce do nó 1 já no lugar. Se faltar mais que uma altura de tela, ou com movimento reduzido, o nó vai para o lugar na hora, no t = 0. Na referência rápida do app, o aceite voltou em 71 ms, antes do fim da rolagem, e no quadro de 220 ms o nó 1 estava acima da tela. A passagem é a própria navegação para a aula, em até 470 ms:
 - t = 0: toca `geracao_pronta`. A placa "Proposta pronta" sai (opacidade e 8 px para cima, 150 ms; na hora com movimento reduzido), porque a proposta virou trilha. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
 - t = 120 ms: um círculo da cor do fundo da aula cresce a partir do centro do nó 1 até cobrir a tela (300 ms, ease-out).
 - t = 320 ms: a etapa 1 entra por cima (opacidade, 150 ms). Se a lição ainda carrega, entra o esqueleto da aula no mesmo lugar, sem giro.
@@ -169,7 +169,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - Como fazer: na web, `clip-path: circle()` a partir do `getBoundingClientRect` do nó 1. No app, `measureInWindow` do nó e uma `View` redonda animada por cima, dentro da tela da geração; quando ela cobre a tela, a aula entra sem transição. Sem dependência nova.
 - Movimento reduzido: sem pulso, sem o Stu andando e sem círculo; a aula entra por opacidade em 150 ms. O som segue a preferência de som (spec 12), não a de movimento.
 
-**Som.** O único som de conclusão é `geracao_pronta`, no t = 0 da passagem. Ele é aquecido ao abrir a geração, para tocar sem atraso. O fim da proposta (troféu) não tem som. `geracao_licao` segue a spec 12.
+**Som.** O único som de conclusão é `geracao_pronta`, no t = 0 da passagem. O toque em "Começar a lição 1" não toca `toque_opcao`, para a confirmação ser ouvida sozinha. Ele é aquecido ao abrir a geração, para tocar sem atraso. O fim da proposta (troféu) não tem som. `geracao_licao` segue a spec 12.
 
 **Erro, tentar de novo e sair.**
 - **O aceite falhou:** nada da tela some nem remonta. A prévia fica onde estava, sem quadro em branco e sem a entrada da tela. A camada da passagem, se chegou a montar, sai sem aparecer. Só o rodapé e o Stu mudam: o botão volta a "Começar a lição 1" e "Ajustar pedido" volta. A linha embaixo, em `#C23B4E`, diz "Não deu para criar a trilha. Confira a conexão e tente de novo." (`erroCriacao`). O Stu fica ao lado do nó 1, parado, em `stu-encorajador`. O novo toque usa o mesmo token, e o servidor devolve a trilha já criada para esse token (`aceitarProposta`, em `src/servidor/aprendizado/servico.ts`), então nada duplica.
@@ -184,7 +184,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
   - aceite: do toque até a resposta do aceite;
   - busca da lição: da resposta do aceite até a resposta do `obterLicao`, que é uma segunda chamada, em sequência;
   - passagem: da resposta do aceite até a aula na tela, com o esqueleto ou com a etapa 1.
-  - **Referência rápida** (IA falsa, rede local, sem atraso simulado): passagem de no máximo 470 ms e total de no máximo o maior entre o aceite e o fim da rolagem até o nó 1 (até 240 ms), mais 470 ms. Em 0491ed7, o total era de pelo menos 2,1 s.
+  - **Referência rápida** (IA falsa, rede local, sem atraso simulado): passagem de no máximo 470 ms e total de no máximo o aceite mais 470 ms, também quando o aceite volta antes de a rolagem até o nó 1 acabar. Em 0491ed7, o total era de pelo menos 2,1 s.
   - **Espera real** (IA real ou rede lenta, simulada e identificada no relato): sem meta de total. Os quatro números entram como medidos, sem descontar a demora. A passagem continua em no máximo 470 ms, mesmo com a busca da lição lenta. O esqueleto fica até a lição chegar, e a etapa 1 fica interativa em até 100 ms depois disso. A linha de 1,5 s aparece.
   - Nos dois casos, nenhuma pausa fixa.
 - C3: nenhuma tela e nenhum segundo botão entre a prévia e a etapa 1.
