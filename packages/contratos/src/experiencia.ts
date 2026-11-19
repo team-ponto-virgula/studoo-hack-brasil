@@ -378,6 +378,9 @@ export const mensagens = {
         interessesRotulo: 'Interesses',
         semResumoDona: 'Conte em uma frase o que você gosta de estudar.',
         completar: 'Completar perfil',
+        /** O perfil abre direto nos dados (sem tela de convite): a linha sobre os campos. */
+        editorLinha: 'É assim que as pessoas te veem quando você compartilha uma trilha.',
+        seusDados: 'Seus dados',
         convitePerfil: 'Coloque seu nome, uma foto e o que você gosta de estudar. É assim que as pessoas veem você quando você compartilha uma trilha.',
         // Tela Editar perfil
         voltarPerfil: 'Voltar ao perfil',

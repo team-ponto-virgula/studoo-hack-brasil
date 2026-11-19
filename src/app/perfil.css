@@ -214,3 +214,19 @@
 /* Contorno de campo e de etiqueta não marcada com 3:1 sobre o branco (o contorno é o que identifica o campo). */
 .painel--editar-perfil .campo:not([data-erro]) input:not(:focus), .painel--editar-perfil .campo:not([data-erro]) textarea:not(:focus),
 .painel--editar-perfil .interesse input:not(:checked) + span { border-color: #8591c0; }
+
+/* Perfil direto nos dados (lote 4): os campos abertos na aba Perfil, num bloco só. */
+.editor-perfil { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
+@media (min-width: 768px) { .editor-perfil { padding: 22px 24px; } }
+.editor-perfil__linha { margin: 0; color: var(--texto2); font-weight: 700; line-height: 1.45; }
+.editar-foto__circulo { position: relative; flex: none; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.editar-foto__circulo .avatar { border: 4px solid #fff; box-shadow: 0 6px 16px rgb(27 42 94 / 0.14); }
+.editar-foto__circulo:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }
+.editar-foto__selo {
+  position: absolute; right: -2px; bottom: -2px; display: grid; width: 40px; height: 40px; place-items: center;
+  border: 3px solid #fff; border-radius: 50%; background: var(--acao); color: #fff; box-shadow: 0 4px 10px rgb(27 42 94 / 0.25);
+}
+.editar-foto__selo .icone { width: 20px; height: 20px; }
+@media (hover: hover) { .editar-foto__circulo:hover .editar-foto__selo { background: #2a44a8; } }
+.editor-perfil__barra { bottom: var(--altura-navegacao, 0px); margin-inline: -4px; padding-inline: 4px; }
+.editor-perfil__botoes { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
