@@ -2,14 +2,17 @@
 //
 //   antes:  fotografa a lista logo antes da fase e confere a base do preparo (dados-da-conferencia.json): a conta é a do
 //           preparo, a lista do preparo não está vazia, e a conta tem exatamente as trilhas dele, nem uma a mais.
-//   depois: compara a lista com a fotografia. Exatamente uma trilha nova, nenhuma sumida e a base conferida: é a trilha
-//           da própria prova, sem dúvida; com --apagar, só ela sai, e a lista tem de voltar a ser a da fotografia.
+//   depois: compara a lista com a fotografia. Exatamente uma trilha nova, com o detalhe lido, nenhuma sumida e a base
+//           conferida: é a trilha da própria prova, sem dúvida; com --apagar, só ela sai, e a lista tem de voltar a ser a
+//           da fotografia (se a lista final não responder, fica registrado que a remoção foi pedida e faltou confirmar).
 //           Nenhuma nova: nada a apagar (a fase falhou antes de criar, ou o fluxo passou sem criar). Duas ou mais: falha
-//           de duplicação, com o detalhe de cada uma, e nada é apagado. Uma trilha sumida, ou a base que não conferiu:
-//           nada é apagado.
+//           de duplicação, com o detalhe de cada uma, e nada é apagado. O detalhe da trilha nova sem resposta, uma trilha
+//           sumida, ou a base que não conferiu: nada é apagado.
 // Cada modo escreve um JSON com o que viu (--saida) e uma linha legível; o código de saída diz o caso:
 //   0 conferido (antes: base certa; depois: a trilha da prova apagada, ou nenhuma nova), 3 base que não confere,
-//   4 duplicação, 5 trilha do preparo sumida, 6 a lista não voltou à fotografia depois de apagar, 1 erro de API.
+//   4 duplicação, 5 trilha do preparo sumida, 6 a remoção falhou ou a lista não voltou à fotografia, 7 o detalhe da
+//   trilha nova não respondeu (nada é apagado), 8 a remoção foi aceita, mas a lista final não respondeu para confirmar,
+//   1 erro de API antes de comparar.
 // Entrar de novo pela API cria outra sessão e não derruba a do app (src/servidor/acesso/sessao.ts, entrar).
 //
 // Só roda contra a API do próprio computador, com IA simulada e conta `.test`, como preparar-dados.mjs.
@@ -128,6 +131,11 @@ if (novas.length > 1) {
   terminar(4, `Depois da criação: ${novas.length} trilhas novas numa criação só (duplicação): ${detalhes.map((d) => `"${d.titulo}" (${d.id})`).join(', ')}. Nada foi apagado.`, { caso: 'duplicada', ...registro });
 }
 const nova = detalhes[0];
+// Sem o detalhe, a trilha nova não está identificada: ela e o registro ficam, para quem for ver a causa.
+if (nova.erro) {
+  terminar(7, `Depois da criação: uma trilha nova, "${nova.titulo}" (${nova.id}), mas o detalhe dela não respondeu (${nova.erro}); nada foi apagado.`,
+    { caso: 'detalhe-falhou', ...registro });
+}
 if (!opcoes.apagar) {
   terminar(0, `Depois da criação: uma trilha nova, "${nova.titulo}" (${nova.id}); não apagada (sem --apagar).`, { caso: 'uma-nova', ...registro });
 }
@@ -136,7 +144,13 @@ try {
 } catch (erro) {
   terminar(6, `Depois da criação: a trilha da prova, "${nova.titulo}" (${nova.id}), não foi apagada: ${erro?.codigo ?? erro?.message ?? erro}.`, { caso: 'apagar-falhou', ...registro });
 }
-const final = (await cliente.listarPlanos()).map((plano) => plano.id);
+let final;
+try {
+  final = (await cliente.listarPlanos()).map((plano) => plano.id);
+} catch (erro) {
+  terminar(8, `Depois da criação: a remoção da trilha da prova, "${nova.titulo}" (${nova.id}), foi pedida e aceita, mas a lista final não respondeu (${erro?.codigo ?? erro?.message ?? erro}): falta confirmar que ela saiu.`,
+    { caso: 'remocao-sem-confirmacao', ...registro });
+}
 const igual = final.length === antes.size && final.every((id) => antes.has(id));
 terminar(igual ? 0 : 6,
   igual ? `Depois da criação: a trilha da prova, "${nova.titulo}" (${nova.id}), foi apagada; a lista voltou à de antes (${final.length}).`
