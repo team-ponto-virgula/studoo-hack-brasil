@@ -42,8 +42,14 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
   const campoSenha = useRef<HTMLInputElement>(null);
   const linkComoFunciona = useRef<HTMLButtonElement>(null);
   const devolverFocoApresentacao = useRef(false);
+  const focarEmailDepois = useRef(false);
 
   useEffect(() => {
+    if (!vendoApresentacao && focarEmailDepois.current) {
+      focarEmailDepois.current = false;
+      campoEmail.current?.focus();
+      return;
+    }
     if (!vendoApresentacao && devolverFocoApresentacao.current) {
       devolverFocoApresentacao.current = false;
       linkComoFunciona.current?.focus();
@@ -152,6 +158,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
             primeiraVez={false}
             semSessao
             rotuloFinalUltimo={visitanteDisponivel ? mensagens.acesso.experimentar : undefined}
+            aoEntrar={() => { focarEmailDepois.current = true; setVendoApresentacao(false); }}
             concluir={(_, concluiuFinal) => {
               if (concluiuFinal && visitanteDisponivel) {
                 setVendoApresentacao(false);

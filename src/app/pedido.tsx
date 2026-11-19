@@ -39,10 +39,10 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
 export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona,
-  avisoSemTrilhas = false, porLink }: {
+  porLink }: {
   /** "Adicionar por link" (spec 09, com a flag de compartilhar): logo antes de "Ver como funciona". */
   porLink?: ReactNode;
-  /** Veio de "Minhas trilhas" sem nenhuma trilha: um aviso diz isso (antes, a tela não mudava e parecia travada). */
+  /** Sem uso desde a banca da noite (item 3): o aviso `planos.semTrilhas` repetia o título e saiu do pedido. */
   avisoSemTrilhas?: boolean;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
@@ -144,17 +144,16 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
           <span className="pedido-heroi__halo" />
           {/* Convida: curioso, uma vez; escrevendo: encorajador, parado; ideia aplicada: animado, no acontecimento;
               lendo o material: concentrado, em laço (spec 13, §A2, §B4 e §E1). */}
-          {lendoDemorado ? <Stu expressao="stu-concentrado" tamanho={96} animado="laco" />
-            : falha ? <Stu expressao="stu-encorajador" tamanho={96} />
-              : escolhida !== null && escolhida === texto ? <Stu expressao="stu-animado" tamanho={96} animado="acontecimento" acontecimento={brilho} />
-                : texto.length > 0 ? <Stu expressao="stu-encorajador" tamanho={96} />
-                  : <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />}
-          <span className="pedido-heroi__estrela">✦</span>
+          {/* Banca da noite, item 3: 72 px (56 com a janela de até 700 de altura), com o halo lavanda da §A2 e sem a estrela. */}
+          {lendoDemorado ? <Stu expressao="stu-concentrado" tamanho={72} animado="laco" />
+            : falha ? <Stu expressao="stu-encorajador" tamanho={72} />
+              : escolhida !== null && escolhida === texto ? <Stu expressao="stu-animado" tamanho={72} animado="acontecimento" acontecimento={brilho} />
+                : texto.length > 0 ? <Stu expressao="stu-encorajador" tamanho={72} />
+                  : <Stu expressao="stu-curioso" tamanho={72} animado="uma-vez" />}
         </div>
         <h1 tabIndex={-1}>{modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}</h1>
         <p className="pedido-heroi__fala" aria-live="polite">{modo === 'material' ? mensagens.inicio.materialTexto : fala}</p>
       </header>
-      {avisoSemTrilhas && <p className="pedido-aviso" role="status">{mensagens.planos.semTrilhas}</p>}
       {aviso && <p className="pedido-aviso">{aviso}</p>}
       {falha && (
         <EstadoErro codigo={falha}>
@@ -187,22 +186,22 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         <span className="pedido-alternar__texto">
           <strong>
             {modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}
-            {modo === 'ideia' && <span className="pedido-alternar__selo">{mensagens.pedido.seuMaterial}</span>}
           </strong>
           <small>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</small>
         </span>
         <Icone nome="seta" />
       </button>
       {modo === 'ideia' && (
+        // Uma fileira que rola para o lado, de borda a borda: as ideias na ordem de hoje, terminando em "Surpreenda-me".
         <div className="pedido-ideias" role="group" aria-label={mensagens.pedido.sugestoes}>
-          <button type="button" className="pedido-ideia pedido-ideia--surpresa" disabled={ocupado} onClick={surpreender}>
-            <Desenho nome="estrela" />{mensagens.pedido.surpresa}
-          </button>
           {tema.exemplos.map(exemplo => (
             <button key={exemplo} type="button" className="pedido-ideia" aria-pressed={texto === exemplo} disabled={ocupado} onClick={() => sugerir(exemplo)}>
               <Desenho nome={iconeDoExemplo(tema, exemplo)} />{exemplo}
             </button>
           ))}
+          <button type="button" className="pedido-ideia pedido-ideia--surpresa" disabled={ocupado} onClick={surpreender}>
+            <Desenho nome="estrela" />{mensagens.pedido.surpresa}
+          </button>
         </div>
       )}
       {porLink}

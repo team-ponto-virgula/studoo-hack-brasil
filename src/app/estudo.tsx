@@ -1652,9 +1652,15 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
   const textos = mensagens.licao.resumo;
   // A última lição fecha a trilha: a comemoração é da trilha inteira.
   const trilhaFeita = plano.progresso.total > 0 && plano.progresso.concluidas === plano.progresso.total;
+  // Banca da noite, item 4: "O que você praticou" e as frases ficam recolhidos atrás de um botão de texto, que abre no lugar.
+  const [praticouAberto, setPraticouAberto] = useState(false);
+  const temFrases = Boolean(licao.falas && licao.falas.length > 0);
+  const praticou = useRef<HTMLDivElement>(null);
+  // O botão some ao abrir: o foco vai para o que abriu, no lugar dele.
+  useEffect(() => { if (praticouAberto) praticou.current?.focus({ preventScroll: true }); }, [praticouAberto]);
 
   return (
-    <section className="painel painel--concluida">
+    <section className="painel painel--concluida" data-trilha={trilhaFeita || undefined}>
       {/* Sem chuva de confete quando ficou exercício sem acerto ou a prática não saiu: a conclusão vira um lembrete gentil. */}
       {!(resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao')) && <Confete chuva quantidade={44} />}
       <div className="conclusao-cena" aria-hidden="true" data-trilha={trilhaFeita || undefined}>
@@ -1663,15 +1669,12 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
             encoraja. Dois ciclos no acontecimento (spec 13, E1); depois, a imagem parada. */}
         <Mascote expressao={trilhaFeita ? 'stu-celebrando' : resumo && (resumo.acertos < resumo.exercicios || resumo.pratica === 'ainda_nao') ? 'stu-encorajador' : 'stu-comemorando'}
           tamanho={trilhaFeita ? 165 : 140} sombra prioridade animado="acontecimento" acontecimento={licao.id} ciclos={2} className="stu" />
-        <span className="conclusao-selo"><Icone nome="check" /></span>
+        {/* Sem o selo de visto sobre o Stu (banca da noite, item 4): a expressão e o título já dizem. */}
       </div>
       <h1 tabIndex={-1}>{trilhaFeita ? mensagens.licao.trilhaConcluida : mensagens.licao.concluida}</h1>
       <p className="conclusao-texto">{trilhaFeita ? mensagens.licao.trilhaConcluidaTexto(plano.titulo) : mensagens.licao.comemoracao}</p>
       <p className="conclusao-licao">{licao.titulo}</p>
       {trilhaFeita && <p className="conclusao-trilha"><Icone nome="trofeu" />{mensagens.licao.trilhaResumo(plano.progresso.total, plano.fluxos.length, plano.estatisticas)}</p>}
-      {trilhaFeita && compartilhar && (
-        <Botao variante="secundario" className="conclusao-compartilhar" disabled={ocupado} onClick={compartilhar}><Icone nome="compartilhar" />{mensagens.compartilhar.concluidaAcao}</Botao>
-      )}
       {resumo && trilhaFeita && <p className="conclusao-numeros__legenda">{textos.ultimaLicao}</p>}
       {resumo && (
         <ul className="conclusao-numeros" aria-label={trilhaFeita ? `${textos.titulo}: ${textos.ultimaLicao}` : textos.titulo}>
@@ -1701,38 +1704,56 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
           {textoParaRever(resumo)}
         </p>
       )}
-      <ul className="conclusao-historia" aria-label={mensagens.licao.historia.titulo}>
-        <li>
-          <strong>{mensagens.licao.historia.praticou}</strong>
-          <p>{licao.objetivo}</p>
-        </li>
-        {resumo?.ponteConstruida && (
-          <li data-tipo="ponte">
-            <strong>{mensagens.licao.historia.ponteTitulo}</strong>
-            <p>{mensagens.licao.historia.ponteTexto}</p>
-          </li>
-        )}
-        {resumo?.ensinouStu && (
-          <li data-tipo="ensino">
-            <strong>{mensagens.licao.historia.ensinoTitulo}</strong>
-            <p>{mensagens.licao.historia.ensinoTexto}</p>
-          </li>
-        )}
-      </ul>
+      {!praticouAberto && (
+        <button type="button" className="conclusao-ver-praticou" onClick={() => setPraticouAberto(true)}>{mensagens.licao.historia.verPraticou}</button>
+      )}
+      {praticouAberto && (
+        <div className="conclusao-praticou" ref={praticou} tabIndex={-1}>
+          <ul className="conclusao-historia" aria-label={mensagens.licao.historia.titulo}>
+            <li>
+              <strong>{mensagens.licao.historia.praticou}</strong>
+              <p>{licao.objetivo}</p>
+            </li>
+            {resumo?.ponteConstruida && (
+              <li data-tipo="ponte">
+                <strong>{mensagens.licao.historia.ponteTitulo}</strong>
+                <p>{mensagens.licao.historia.ponteTexto}</p>
+              </li>
+            )}
+            {resumo?.ensinouStu && (
+              <li data-tipo="ensino">
+                <strong>{mensagens.licao.historia.ensinoTitulo}</strong>
+                <p>{mensagens.licao.historia.ensinoTexto}</p>
+              </li>
+            )}
+          </ul>
+          {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo (no fim, ficavam atrás dos botões fixos). */}
+          {temFrases && licao.falas && <FrasesDaLicao falas={licao.falas} />}
+        </div>
+      )}
       <p className="conclusao-sincronia">{mensagens.licao.historia.sincronia}</p>
-      {/* Lição de idioma: as frases que a pessoa aprendeu, logo depois do resumo (no fim, ficavam atrás dos botões fixos). */}
-      {licao.falas && licao.falas.length > 0 && <FrasesDaLicao falas={licao.falas} />}
       {liberada && <p className="conclusao-liberada"><Icone nome="livro" />{mensagens.trilha.liberadaNaTrilha(liberada.titulo)}</p>}
       <div className="conclusao-progresso">
         <h2>{mensagens.planos.progressoPlano}</h2>
         <BarraProgresso progresso={plano.progresso} de={antes} comPercentual />
       </div>
-      <div className="acoes-tela">
+      <div className="acoes-tela" data-tres={trilhaFeita || undefined}>
         <AcaoPrincipal>
-          {/* Com uma próxima lição, seguir é a ação principal; voltar à trilha fica como alternativa. */}
-          {trilhaFeita && <Botao variante="secundario" disabled={ocupado} onClick={novoAssunto}>{mensagens.licao.novoAssunto}</Botao>}
-          <Botao variante={proxima ? 'secundario' : 'primario'} disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>
-          {proxima && <Botao disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
+          {trilhaFeita ? (
+            // Trilha concluída (banca da noite, item 4): compartilhar é o principal (quando a pessoa pode), o assunto novo o
+            // secundário (ou o principal, sem compartilhar) e voltar à trilha um botão de texto.
+            <>
+              {compartilhar && <Botao disabled={ocupado} onClick={compartilhar}><Icone nome="compartilhar" />{mensagens.compartilhar.concluidaAcao}</Botao>}
+              <Botao variante={compartilhar ? 'secundario' : 'primario'} disabled={ocupado} onClick={novoAssunto}>{mensagens.licao.novoAssunto}</Botao>
+              <Botao variante="texto" disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>
+            </>
+          ) : (
+            // Lição concluída: como antes; com uma próxima lição, seguir é a ação principal e voltar à trilha a alternativa.
+            <>
+              <Botao variante={proxima ? 'secundario' : 'primario'} disabled={ocupado} onClick={voltar}>{mensagens.licao.voltar}</Botao>
+              {proxima && <Botao disabled={ocupado} onClick={() => abrirLicao(proxima)}>{mensagens.licao.avancar}</Botao>}
+            </>
+          )}
         </AcaoPrincipal>
       </div>
     </section>

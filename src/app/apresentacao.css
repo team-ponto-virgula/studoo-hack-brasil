@@ -307,3 +307,30 @@
 @media (prefers-reduced-motion: reduce) {
   .painel--apresentacao *, .painel--apresentacao *::before, .painel--apresentacao *::after { animation: none !important; }
 }
+
+/*
+ * "Ver como funciona" (spec 04, banca da noite, item 2; igual ao app): a arte ocupa 52% da altura útil (de 280 a 420 px)
+ * e o título e o texto ficam centrados no espaço que sobra até o rodapé. Sem o selo de demonstração na arte; os textos da
+ * arte com 14 px no mínimo; o passo 1 com o Stu estudando (160) ao lado da citação e o passo 3 com dois cartões e o Stu
+ * concentrado. No último passo do tour da entrada, "Voltar" fica no alto, à esquerda, como botão de texto de 44 px.
+ */
+.apresentacao-arte:not(.apresentacao-areas) { display: grid; height: clamp(280px, 52svh, 420px); align-items: center; }
+.apresentacao-textos { flex: 1 1 auto; align-content: center; }
+.apresentacao-quadro { position: relative; }
+.apresentacao-stu-estudando { position: absolute; right: 4%; bottom: -8px; z-index: 1; width: min(160px, 40%); pointer-events: none; }
+.apresentacao-stu-estudando .stu { display: block; width: 100%; }
+.apresentacao-arte .aula-citacao { margin-bottom: 96px; }
+.apresentacao-stu-concentrado { justify-self: end; width: 72px; margin-top: -4px; }
+.apresentacao-stu-concentrado .stu { display: block; width: 100%; }
+.apresentacao-arte .aula-citacao__selo, .apresentacao-arte .aula-citacao__topo strong, .apresentacao-arte .aula-citacao blockquote,
+.apresentacao-arte .ensino-caderno__cartao h3, .apresentacao-arte .ensino-caderno__cartao p, .apresentacao-arte .ensino-caderno__cartao li,
+.apresentacao-arte .ponte-legenda li, .apresentacao-arte .ponte-margem span, .apresentacao-arte .mini-trilha__selo,
+.apresentacao-arte .selo-sincronia { font-size: max(14px, 1em); }
+.apresentacao-arte .ensino-caderno__cartao h3, .apresentacao-arte .ensino-caderno__cartao p { font-size: 14px; }
+.apresentacao-topo[data-voltar] { justify-content: space-between; }
+.apresentacao-voltar-alto { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-left: -12px; }
+.apresentacao-voltar-alto .icone { width: 18px; height: 18px; }
+.apresentacao-rodape__conteudo--entrada { flex-direction: column; }
+.apresentacao-rodape__conteudo--entrada > .botao { width: 100%; }
+@media (max-width: 767px) { .apresentacao-rodape__conteudo--entrada[data-empilhado] { flex-direction: column; } }
+.apresentacao-arte .ensino-caderno__visto, .apresentacao-arte .ponte-legenda__num { font-size: 14px; }

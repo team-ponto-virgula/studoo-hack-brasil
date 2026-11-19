@@ -41,11 +41,17 @@ export function Apresentacao({
   primeiraVez,
   semSessao = false,
   rotuloFinalUltimo,
+  aoEntrar,
   concluir,
 }: {
   primeiraVez: boolean;
   semSessao?: boolean;
   rotuloFinalUltimo?: string;
+  /**
+   * Sem sessão (o tour da entrada), o último passo oferece "Entrar" (banca da noite, item 2): com o modo visitante,
+   * empilhado embaixo de "Experimentar sem conta"; sem ele, sozinho, como o principal.
+   */
+  aoEntrar?: () => void;
   concluir: (area?: IdTema, concluiuFinal?: boolean) => void;
 }) {
   const [passo, setPasso] = useState(0);
@@ -105,10 +111,15 @@ export function Apresentacao({
 
   let rotuloFinal: string = mensagens.apresentacao.continuar;
   if (ultimo) rotuloFinal = rotuloFinalUltimo ?? (primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi);
+  // Último passo do tour da entrada: "Voltar" sobe para o alto (no lugar de "Pular") e as ações são as de entrar.
+  const finalDaEntrada = ultimo && semSessao && aoEntrar !== undefined;
 
   return (
     <section className="painel painel--apresentacao" aria-labelledby="apresentacao-titulo" onKeyDown={teclas}>
-      <header className="apresentacao-topo">
+      <header className="apresentacao-topo" data-voltar={finalDaEntrada || undefined}>
+        {finalDaEntrada && (
+          <Botao variante="texto" className="apresentacao-voltar-alto" onClick={() => irPara(passo - 1)}><Icone nome="setaVoltar" />{mensagens.apresentacao.voltar}</Botao>
+        )}
         <div className="apresentacao-andamento" aria-hidden="true">
           <span className="apresentacao-pontos">
             {passos.map((item, indice) => (
@@ -145,10 +156,22 @@ export function Apresentacao({
         <p className="introducao">{passos[passo].texto}</p>
       </div>
       <footer className="apresentacao-rodape">
-        <div className="apresentacao-rodape__conteudo" data-empilhado={(ultimo && rotuloFinal.length > 14) || undefined}>
-          {passo > 0 && <Botao variante="secundario" onClick={() => irPara(passo - 1)}>{mensagens.apresentacao.voltar}</Botao>}
-          <Botao onClick={avancar}>{rotuloFinal}{!ultimo && <Icone nome="seta" />}</Botao>
-        </div>
+        {finalDaEntrada ? (
+          // Ação em cima, a alternativa embaixo (spec 11): o rótulo de experimentar não cabe na metade.
+          <div className="apresentacao-rodape__conteudo apresentacao-rodape__conteudo--entrada" data-empilhado>
+            {rotuloFinalUltimo ? (
+              <>
+                <Botao onClick={avancar}>{rotuloFinalUltimo}</Botao>
+                <Botao variante="secundario" onClick={aoEntrar}>{mensagens.login.entrar}</Botao>
+              </>
+            ) : <Botao onClick={aoEntrar}>{mensagens.login.entrar}</Botao>}
+          </div>
+        ) : (
+          <div className="apresentacao-rodape__conteudo" data-empilhado={(ultimo && rotuloFinal.length > 14) || undefined}>
+            {passo > 0 && <Botao variante="secundario" onClick={() => irPara(passo - 1)}>{mensagens.apresentacao.voltar}</Botao>}
+            <Botao onClick={avancar}>{rotuloFinal}{!ultimo && <Icone nome="seta" />}</Botao>
+          </div>
+        )}
       </footer>
     </section>
   );
@@ -162,10 +185,11 @@ function ArteMaterial() {
         <div className="aula-citacao__topo">
           <span className="aula-citacao__selo">[1] {mensagens.estudio.fonteMaterial}</span>
           <strong>{ex.fonteArquivo}</strong>
-          <span className="estudio-selo">{mensagens.estudio.simulado}</span>
         </div>
         <blockquote>{ex.fonteTrecho}</blockquote>
       </div>
+      {/* Sem o selo "Modo demonstração" (serve para conteúdo simulado, não para ilustração); o Stu estudando ao lado. */}
+      <span className="apresentacao-stu-estudando"><Stu expressao="stu-estudando" tamanho={160} sombra /></span>
     </div>
   );
 }
@@ -174,9 +198,6 @@ function ArtePonte() {
   const m = mensagens.estudio;
   return (
     <div className="apresentacao-quadro apresentacao-quadro--ponte">
-      <div className="apresentacao-quadro__topo">
-        <span className="estudio-selo">{m.simulado}</span>
-      </div>
       <div className="ponte-cena" data-concluida="true">
         <div className="ponte-margem ponte-margem--esquerda">
           <div className="ponte-stu-alvo" />
@@ -217,25 +238,12 @@ function ArteExplique() {
             <li><span className="ensino-caderno__visto">✓</span><span>{ex.ensinoAcertos}</span></li>
           </ul>
         </div>
-        <div className="ensino-caderno__cartao" data-tipo="lacuna">
-          <h3>{m.lacuna}</h3>
-          <p>{ex.ensinoLacuna}</p>
-        </div>
-        <div className="ensino-caderno__cartao ensino-caderno__pergunta" data-tipo="pergunta">
-          <div className="ensino-caderno__stu">
-            <Stu expressao="stu-concentrado" tamanho={48} />
-            <span className="ensino-caderno__duvida">?</span>
-          </div>
-          <div>
-            <h3>{m.pergunta}</h3>
-            <p>{ex.ensinoPergunta}</p>
-          </div>
-        </div>
         <div className="ensino-caderno__cartao" data-tipo="proximo">
           <h3>{m.proximo}</h3>
           <p>{ex.ensinoProximo}</p>
         </div>
-        <p className="estudio-legenda">{m.ensinoAutomatico}</p>
+        {/* Só dois cartões, com textos de 14 px no mínimo, e o Stu concentrado (banca da noite, item 2). */}
+        <span className="apresentacao-stu-concentrado"><Stu expressao="stu-concentrado" tamanho={72} /></span>
       </div>
     </div>
   );

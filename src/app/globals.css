@@ -1050,3 +1050,31 @@ button { touch-action: manipulation; }
   .entrada-forma .formulario { margin-top: 16px; }
 }
 @media (max-width: 767px) and (max-height: 860px) { .entrada-banner { display: none; } }
+
+/*
+ * Conclusão (spec 04, banca da noite, item 4; igual ao app): os números em três blocos brancos, com borda de 2 px
+ * #E1E7FA, ícone de 16 px na cor de cada número, rótulo em 13 px na cor secundária e valor em 22 px #0B1B5C, sem a face
+ * colorida nem o degrau. "Ver o que você praticou" é um botão de texto de 44 px que abre no lugar. Na trilha concluída, o
+ * rodapé preso tem três ações (compartilhar, assunto novo e voltar à trilha, em texto).
+ */
+.conclusao-numeros li { border: 2px solid #e1e7fa; background: #fff; box-shadow: none; }
+.conclusao-numeros__rotulo { padding: 10px 6px 0; color: var(--texto2); font-size: 13px; font-weight: 800; letter-spacing: 0; text-transform: none; }
+.conclusao-numeros__rotulo .icone { width: 16px; height: 16px; color: var(--cor-numero); }
+.conclusao-numeros__valor { margin: 0; padding: 4px 6px 12px; color: #0b1b5c; background: transparent; font-size: 22px; line-height: 28px; }
+@media (max-width: 480px) {
+  .conclusao-numeros__rotulo { padding: 8px 2px 0; font-size: 13px; }
+  .conclusao-numeros__rotulo .icone { width: 16px; height: 16px; }
+  .conclusao-numeros__valor { padding: 2px 4px 10px; font-size: 22px; }
+}
+.conclusao-ver-praticou {
+  display: inline-flex; min-height: 44px; align-items: center; margin-top: 12px; padding: 0 8px; border: 0; color: var(--acao);
+  background: none; font: inherit; font-weight: 800; cursor: pointer;
+}
+.conclusao-ver-praticou:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 8px; }
+@media (hover: hover) { .conclusao-ver-praticou:hover { text-decoration: underline; text-underline-offset: 4px; } }
+.conclusao-praticou { display: grid; width: 100%; gap: 12px; }
+.conclusao-praticou:focus { outline: none; }
+.painel--concluida .acoes-tela[data-tres] .botao--texto { min-height: 44px; }
+@media (max-width: 767px) {
+  .estudo-principal:has(.acoes-tela[data-tres]) { padding-bottom: calc(206px + env(safe-area-inset-bottom)); }
+}
