@@ -244,57 +244,102 @@ sem_preenchimento() {
 # ---------------------------------------------------------------------------------------------------------------------
 # coletar: junta as capturas, diz o que faltou e arruma os registros (o comum está em comum.sh)
 
-# O material que o app deveria usar na barra de baixo (spec 05, "Barra de abas em cápsula"): o Liquid Glass quando o vidro
-# existe e "Reduzir transparência" está desligada; senão, a superfície branca opaca. O vidro existe quando o aplicativo
-# que roda o JavaScript (aqui, o Expo Go) foi feito com o Xcode 26 ou mais novo, roda no iOS 26 ou mais novo e não pede
-# UIDesignRequiresCompatibility: é a conta de isLiquidGlassAvailable, no expo-glass-effect. As três coisas vêm do Expo Go
-# instalado e do simulador. A preferência de transparência vem do domínio de acessibilidade do simulador
-# (EnhancedBackgroundContrastEnabled, a chave de UIAccessibilityIsReduceTransparencyEnabled). Uma captura sozinha não
-# separa o vidro de uma cor: a leitura das capturas compara a barra sobre fundos diferentes (o mapa nas 10 a 12).
+# O material que o app deveria usar na barra de baixo, calculado aqui (spec 05, "Barra de abas em cápsula"): o Liquid Glass
+# quando o vidro existe e "Reduzir transparência" está desligada; senão, a superfície branca opaca. É uma estimativa: o que
+# o app desenhou de fato vem do testID que o fluxo 80 viu (material_observado, em comum.sh).
+# O vidro existe quando o aplicativo que roda o JavaScript (aqui, o Expo Go) foi feito com o Xcode 26 ou mais novo, roda no
+# iOS 26 ou mais novo e não pede UIDesignRequiresCompatibility: é a conta de isLiquidGlassAvailable, no expo-glass-effect.
+# A preferência de transparência vem do domínio de acessibilidade do simulador (EnhancedBackgroundContrastEnabled, a chave
+# de UIAccessibilityIsReduceTransparencyEnabled). Cada dado tem três estados: lido, ausente de fato (vale o padrão) e
+# desconhecido (a leitura falhou ou não respondeu). Um desconhecido nunca vira "desligada" nem "indisponível".
 material_da_barra() {
-  local id plist xcode sdk compat ios rt tamanho vidro
-  id="$(udid)"
+  local id plist xcode="" sdk="" compat="" ios rt tamanho saida codigo feito26 vidro material nota=""
+  id="${CONFERENCIA_UDID:-$(cat "$SAIDA/udid" 2> /dev/null || true)}"
   plist="$FERRAMENTAS/Expo Go.app/Info.plist"
-  xcode="$(/usr/libexec/PlistBuddy -c 'Print :DTXcode' "$plist" 2> /dev/null || echo '?')"
-  sdk="$(/usr/libexec/PlistBuddy -c 'Print :DTSDKName' "$plist" 2> /dev/null || echo '?')"
-  compat="$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist" 2> /dev/null || echo 'ausente')"
-  ios="$(sed -n 's/^Simulador: .*, iOS \([0-9][0-9]*\).*/\1/p' "$SAIDA/origem-simulador.txt" 2> /dev/null | head -1)"
-  if rt="$(com_limite 30 xcrun simctl spawn "$id" defaults read com.apple.Accessibility EnhancedBackgroundContrastEnabled 2> /dev/null)"; then
-    case "$rt" in
-      1) rt="ligada" ;;
-      0) rt="desligada" ;;
-      *) rt="lida como \"$rt\"" ;;
-    esac
+  if [ -f "$plist" ]; then
+    xcode="$(/usr/libexec/PlistBuddy -c 'Print :DTXcode' "$plist" 2> /dev/null || true)"
+    sdk="$(/usr/libexec/PlistBuddy -c 'Print :DTSDKName' "$plist" 2> /dev/null || true)"
+    # Sem a chave (o normal), o app não pede o visual antigo; outro erro deixa o valor desconhecido.
+    codigo=0
+    saida="$(/usr/libexec/PlistBuddy -c 'Print :UIDesignRequiresCompatibility' "$plist" 2>&1)" || codigo=$?
+    if [ "$codigo" -eq 0 ]; then
+      compat="$saida"
+    elif printf '%s' "$saida" | grep -q 'Does Not Exist'; then
+      compat="ausente"
+    fi
   else
-    rt="desligada (a preferência não existe no simulador: vale o padrão)"
+    nota="; o Info.plist do Expo Go não foi achado"
   fi
-  tamanho="$(com_limite 30 xcrun simctl ui "$id" content_size 2> /dev/null | tr -d '\r' | head -1 || true)"
-  if [ "$xcode" -ge 2600 ] 2> /dev/null && [ "${ios:-0}" -ge 26 ] && [ "$compat" != "true" ]; then
-    vidro="disponível"
+  ios="$(sed -n 's/^Simulador: .*, iOS \([0-9][0-9]*\).*/\1/p' "$SAIDA/origem-simulador.txt" 2> /dev/null | head -1 || true)"
+
+  # Feito com o Xcode 26 (o compilador do Swift 6.2): pelo DTXcode (2600 ou mais) ou, sem ele, pelo SDK (iphonesimulator26.x).
+  if [ -n "$xcode" ] && [ "$xcode" -eq "$xcode" ] 2> /dev/null; then
+    if [ "$xcode" -ge 2600 ]; then feito26="sim"; else feito26="não"; fi
+  elif printf '%s' "$sdk" | grep -Eq '^iphone(simulator|os)[0-9]+'; then
+    if [ "$(printf '%s' "$sdk" | sed 's/^iphone[a-z]*\([0-9][0-9]*\).*/\1/')" -ge 26 ]; then feito26="sim"; else feito26="não"; fi
   else
+    feito26="?"
+  fi
+  if [ "$feito26" = "não" ] || { [ -n "$ios" ] && [ "$ios" -lt 26 ]; } || [ "$compat" = "true" ]; then
     vidro="indisponível"
-  fi
-  echo "Vidro (isLiquidGlassAvailable): $vidro (iOS ${ios:-?}; Expo Go feito com o Xcode $xcode, SDK $sdk; UIDesignRequiresCompatibility $compat)"
-  echo "Reduzir transparência: $rt"
-  echo "Tamanho do texto do sistema: ${tamanho:-não lido}"
-  if [ "$vidro" = "disponível" ] && [ "${rt%% *}" = "desligada" ]; then
-    echo "Material esperado da barra de baixo: Liquid Glass (spec 05)"
+  elif [ "$feito26" = "?" ] || [ -z "$ios" ] || [ -z "$compat" ]; then
+    vidro="desconhecido"
   else
-    echo "Material esperado da barra de baixo: superfície branca opaca (spec 05)"
+    vidro="disponível"
   fi
+
+  if [ -z "$id" ]; then
+    rt="desconhecida (sem o identificador do simulador)"
+  else
+    codigo=0
+    saida="$(com_limite 30 xcrun simctl spawn "$id" defaults read com.apple.Accessibility EnhancedBackgroundContrastEnabled 2>&1)" || codigo=$?
+    if [ "$codigo" -eq 0 ]; then
+      case "$saida" in
+        1) rt="ligada" ;;
+        0) rt="desligada" ;;
+        *) rt="desconhecida (valor lido: $(printf '%s' "$saida" | head -1 | cut -c1-60))" ;;
+      esac
+    elif printf '%s' "$saida" | grep -Eq 'domain/default pair of .* does not exist|Domain .* does not exist'; then
+      rt="desligada (a chave não existe no simulador: vale o padrão)"
+    elif [ "$codigo" -eq 142 ]; then
+      rt="desconhecida (a leitura não respondeu em 30 s)"
+    else
+      rt="desconhecida (a leitura falhou, código $codigo: $(printf '%s' "$saida" | head -1 | cut -c1-120))"
+    fi
+  fi
+
+  if [ -z "$id" ]; then
+    tamanho="desconhecido (sem o identificador do simulador)"
+  else
+    codigo=0
+    saida="$(com_limite 30 xcrun simctl ui "$id" content_size 2>&1)" || codigo=$?
+    saida="$(printf '%s' "$saida" | tr -d '\r' | head -1)"
+    if [ "$codigo" -eq 0 ] && [ -n "$saida" ]; then tamanho="$saida"; else tamanho="desconhecido (a leitura falhou, código $codigo)"; fi
+  fi
+
+  if [ "$vidro" = "indisponível" ] || [ "$rt" = "ligada" ]; then
+    material="superfície branca opaca"
+  elif [ "$vidro" = "disponível" ] && [ "${rt%% *}" = "desligada" ]; then
+    material="Liquid Glass"
+  else
+    material="desconhecido"
+  fi
+  echo "Vidro, pela conta de isLiquidGlassAvailable (calculado): $vidro (iOS ${ios:-desconhecido}; Expo Go feito com o Xcode ${xcode:-desconhecido}, SDK ${sdk:-desconhecido}; UIDesignRequiresCompatibility ${compat:-desconhecida}$nota)"
+  echo "Reduzir transparência (lida no simulador): $rt"
+  echo "Tamanho do texto do sistema (lido no simulador): $tamanho"
+  echo "Material calculado da barra (estimativa, não é o observado): $material"
 }
 
 coletar() {
-  local dados linha
+  local dados
+  # A leitura do Expo Go e do simulador roda à parte: uma falha dela vira "desconhecido" e não para a coleta das capturas.
   {
     echo "Expo Go: $(cat "$SAIDA/expo-go-versao" 2> /dev/null || echo '?')"
-    material_da_barra
-  } > "$SAIDA/origem-app.txt"
-  resumo "### Barra de baixo"
-  resumo ""
-  { grep -E '^(Vidro|Reduzir|Tamanho|Material)' "$SAIDA/origem-app.txt" || true; } | while IFS= read -r linha; do resumo "- $linha"; done
-  resumo ""
+    ( material_da_barra ) 2>> "$REGISTROS/material-da-barra.txt" \
+      || echo "Material calculado da barra (estimativa, não é o observado): desconhecido (a leitura do Expo Go ou do simulador falhou; veja material-da-barra.txt nos registros)"
+  } > "$SAIDA/origem-app.txt" || true
   coletar_inicio "simulador de iPhone numa máquina do GitHub Actions, com o app servido pelo Metro (sem modo de desenvolvimento) dentro do Expo Go. Não é aparelho de verdade."
+  resumir_barra "$SAIDA/origem-app.txt"
 
   # O que o Expo Go guardou das preferências do menu de desenvolvedor depois dos fluxos (o arquivo, como está no disco).
   if dados="$(xcrun simctl get_app_container "$(udid)" "$EXPO_GO" data 2> /dev/null)" && [ -n "$dados" ]; then
