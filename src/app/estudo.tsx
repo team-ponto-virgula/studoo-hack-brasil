@@ -3,8 +3,6 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   ErroStudoo,
-  origemDemonstracao,
-  origemLegivel,
   trilhaRepetida,
   type AutoAvaliacao,
   type LicaoDetalhe,
@@ -13,7 +11,6 @@ import {
   type PlanoDetalhe,
   type PlanoResumo,
   type Progresso,
-  type PropostaPlano,
 } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { invalidarElegibilidadeVozAoVivo } from './estudio';
@@ -31,14 +28,14 @@ import {
   Mascote,
   Skeleton,
   SkeletonTrilha,
-  Stu,
   coresDaRegiao,
   regiaoDoTrecho,
   type NoCaminho,
 } from '../ui';
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
-import { aplicarEvento, gerarTrilhaAoVivo, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
+import { aplicarEvento, gerarTrilhaAoVivo, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
+import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } from './previa-trilha';
 import { Pedido, type IdTema } from './pedido';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
 import { TelaPerfil } from './perfil';
@@ -55,6 +52,7 @@ type Tela =
   | { tipo: 'planos' }
   | { tipo: 'objetivo' }
   | { tipo: 'geracao' }
+  | { tipo: 'abrindo-criada'; plano: PlanoDetalhe }
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
   | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string; aviso?: string }
   | { tipo: 'perfil' }
@@ -65,7 +63,7 @@ type Tela =
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
 
 type TelaPlano = Extract<Tela, { tipo: 'plano' }>;
-type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'apagar';
+type Acao = 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'apagar';
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 type Sincronia = { estado: 'atualizando' | 'atualizado' | 'offline'; em: number | null };
 
@@ -86,12 +84,6 @@ function SeloSincronia({ sincronia, agora, temProgresso }: { sincronia: Sincroni
     </span>
   );
 }
-
-/** Quanto "Escrevendo suas lições" fica na tela, no mínimo: com a IA falsa, o aceite volta rápido e o título piscaria. */
-const ESCRITA_MINIMA_MS = 1200;
-/** Quanto "Lições prontas!" fica na tela, no mínimo, para o visto passar por todas as lições. */
-const PAUSA_LICOES_PRONTAS_MS = 900;
-const pausa = (ms: number) => new Promise<void>((resolver) => window.setTimeout(resolver, ms));
 
 /**
  * Volta ao topo da página. Repete no quadro seguinte porque uma rolagem suave ainda em curso (o caminho mostrando a
@@ -116,6 +108,10 @@ export function Estudo() {
   const [pendente, setPendente] = useState<Acao | null>(null);
   const [abrindo, setAbrindo] = useState<string | null>(null);
   const [geracao, setGeracao] = useState<TrilhaEmGeracao | null>(null);
+  const [aceite, setAceite] = useState<EstadoAceite>('livre');
+  const [passagem, setPassagem] = useState<PassagemCriada | null>(null);
+  const aceiteAtual = useRef<AbortController | null>(null);
+  const montado = useRef(true);
   const [falhaGeracao, setFalhaGeracao] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState('');
@@ -307,6 +303,10 @@ export function Estudo() {
       if (!evento.persisted) return;
       geracaoAtiva.current?.abort();
       geracaoAtiva.current = null;
+      aceiteAtual.current?.abort();
+      aceiteAtual.current = null;
+      setAceite('livre');
+      setPassagem(null);
       setGeracao(null);
       setFalhaGeracao(null);
       setAviso(null);
@@ -328,7 +328,7 @@ export function Estudo() {
   useEffect(() => {
     const vaiFocarCampo = tela.tipo === 'objetivo' && (window.innerWidth >= 1024 || Boolean(objetivoRef.current.trim()));
     if (inicio === 'pronto' && !vaiFocarCampo && document.activeElement?.id !== 'objetivo') {
-      principal.current?.querySelector('h1')?.focus();
+      (principal.current?.querySelector<HTMLHeadingElement>('.painel--aula h1') ?? principal.current?.querySelector('h1'))?.focus();
     }
   }, [inicio, tela]);
 
@@ -336,8 +336,20 @@ export function Estudo() {
     if (erro || falhaGeracao) principal.current?.querySelector('.estado-erro')?.scrollIntoView({ block: 'nearest' });
   }, [erro, falhaGeracao]);
 
-  // Sair do Studoo no meio da geração interrompe o pedido; o servidor não guarda nada.
-  useEffect(() => () => geracaoAtiva.current?.abort(), []);
+  useEffect(() => {
+    montado.current = true;
+    function abandonar() {
+      geracaoAtiva.current?.abort();
+      aceiteAtual.current?.abort();
+    }
+    window.addEventListener('pagehide', abandonar);
+    return () => { montado.current = false; abandonar(); window.removeEventListener('pagehide', abandonar); };
+  }, []);
+  useEffect(() => {
+    if (!passagem) return;
+    const fim = window.setTimeout(() => setPassagem(null), passagem.reduzida ? 150 : 470);
+    return () => window.clearTimeout(fim);
+  }, [passagem]);
 
   /** Texto para o leitor de tela; repetir o mesmo texto ainda é anunciado. */
   function anunciar(texto: string) {
@@ -357,6 +369,11 @@ export function Estudo() {
   function navegar(destino: Tela) {
     // Saindo do Perfil com os dados abertos e alteração não salva: a confirmação do app pergunta antes.
     if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
+    aceiteAtual.current?.abort();
+    aceiteAtual.current = null;
+    setAceite('livre');
+    setPassagem(null);
+    tocaSons.descartarEfeitosPendentes();
     if (destino.tipo !== 'geracao') pararGeracao();
     if (destino.tipo !== tela.tipo) voltarAoTopo();
     setErro(null);
@@ -421,8 +438,7 @@ export function Estudo() {
    * Um erro, antes ou durante a geração, volta ao pedido com o texto mantido e a mensagem do código.
    */
   async function gerar(texto: string) {
-    if (emExecucao.current) return;
-    geracaoAtiva.current?.abort();
+    if (emExecucao.current || geracaoAtiva.current) return;
     const controle = new AbortController();
     geracaoAtiva.current = controle;
     let trilha: TrilhaEmGeracao = { objetivo: texto, titulo: null, fluxos: [], proposta: null };
@@ -436,12 +452,7 @@ export function Estudo() {
         trilha = aplicarEvento(trilha, evento);
         setGeracao(trilha);
         if (evento.tipo === 'plano') anunciar(mensagens.geracao.anuncioTitulo(evento.titulo));
-        if (evento.tipo === 'licao') void tocaSons.tocarEfeito('geracao_licao');
-        if (evento.tipo === 'pronto') {
-          void tocaSons.tocarEfeito('geracao_pronta');
-          anunciar(mensagens.geracao.anuncioPronta(nosDaPrevia(trilha).length));
-          return;
-        }
+        if (evento.tipo === 'pronto') return;
       }
       throw new ErroStudoo('falha');
     } catch (falha) {
@@ -464,37 +475,53 @@ export function Estudo() {
     anunciar(mensagens.pedido.cancelada);
   }
 
-  /** Começar: salva a trilha mostrada (o aceite gera o conteúdo das lições) e abre a primeira lição. */
-  async function comecar(proposta: PropostaPlano) {
-    const aceite = await executar('aceitar', async () => {
-      const [plano] = await Promise.all([cliente.aceitarProposta(proposta.token), pausa(ESCRITA_MINIMA_MS)]);
-      return plano;
-    });
-    if (!aceite.ok) {
-      // Volta à trilha gerada (nova tela, mesmo estado): o foco vai ao título e o erro fica no topo.
-      if (aceite.codigo !== 'nao_autenticado') setTela({ tipo: 'geracao' });
+  /** O token identifica o aceite no servidor, inclusive se a resposta se perder e houver nova tentativa. */
+  async function comecar(painel: HTMLElement) {
+    if (aceiteAtual.current || !geracao?.proposta) return;
+    const tentativa = new AbortController();
+    const somDoAceite = tocaSons.sinalDosEfeitos;
+    aceiteAtual.current = tentativa;
+    setAceite('salvando');
+    anunciar(mensagens.geracao.anuncioCriando);
+    void tocaSons.tocarEfeito('toque_opcao');
+    let plano: PlanoDetalhe;
+    try {
+      // O cliente pode sair, mas o pedido já enviado continua no servidor.
+      plano = await cliente.aceitarProposta(geracao.proposta.token);
+    } catch (falha) {
+      if (tentativa.signal.aborted) return;
+      aceiteAtual.current = null;
+      const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
+      if (codigo === 'nao_autenticado') { irParaLogin(true); return; }
+      setAceite(codigo === 'proposta_invalida' ? 'expirada' : 'erro');
       return;
     }
-    const plano = aceite.dados;
+    if (!montado.current) return;
     atualizarPlano(plano);
-    setObjetivo('');
+    if (tentativa.signal.aborted) return;
     const primeira = proximaDoCaminho(plano);
-    if (!primeira) {
+    if (!primeira) { navegar({ tipo: 'plano', plano }); return; }
+    const busca = obterLicaoComCache(primeira);
+    void tocaSons.tocarEfeito('geracao_pronta', somDoAceite);
+    setPassagem(medirPassagem(geracao, painel));
+    setGeracao(null);
+    setObjetivo('');
+    setTela({ tipo: 'abrindo-criada', plano });
+    voltarAoTopo();
+    try {
+      const licao = await busca;
+      if (tentativa.signal.aborted) return;
+      setTela({ tipo: 'licao', plano, licao });
+      anunciar(mensagens.geracao.anuncioCriada(licao.titulo));
+    } catch (falha) {
+      if (tentativa.signal.aborted) return;
+      const codigo = falha instanceof ErroStudoo ? falha.codigo : 'rede';
+      if (codigo === 'nao_autenticado') { irParaLogin(true); return; }
       navegar({ tipo: 'plano', plano });
-      return;
+      setErro(codigo);
+    } finally {
+      if (aceiteAtual.current === tentativa) aceiteAtual.current = null;
     }
-    // As lições acabaram de ficar prontas: o visto passa por elas enquanto a primeira abre.
-    const licao = await executar('abrir', async () => {
-      const [dados] = await Promise.all([cliente.obterLicao(primeira), pausa(PAUSA_LICOES_PRONTAS_MS)]);
-      return dados;
-    });
-    if (licao.ok) {
-      navegar({ tipo: 'licao', plano, licao: licao.dados });
-      return;
-    }
-    if (licao.codigo === 'nao_autenticado') return;
-    navegar({ tipo: 'plano', plano });
-    setErro(licao.codigo);
   }
 
   async function abrirPlano(id: string, origem?: string, aviso?: string) {
@@ -586,8 +613,8 @@ export function Estudo() {
   const ocupado = pendente !== null;
   const planoAtual = 'plano' in tela ? tela.plano.id : null;
   const carregandoTrilha = pendente === 'plano';
-  // Começar, na trilha gerada, já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só.
-  const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || (pendente === 'aceitar' && tela.tipo === 'geracao');
+  const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || tela.tipo === 'abrindo-criada';
+  const previa = passagem?.geracao ?? (tela.tipo === 'geracao' ? geracao : null);
   const visivel = !carregandoTrilha && !carregandoLicao;
   const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (inicio === 'pronto' && ['planos', 'objetivo', 'plano', 'perfil', 'explorar', 'configuracoes'].includes(tela.tipo))) && visivel;
   // Sem trilhas, a tela de planos já mostra o pedido.
@@ -680,9 +707,7 @@ export function Estudo() {
           {erro && <EstadoErro codigo={erro}>{acaoDoErro(erro)}</EstadoErro>}
           {inicio === 'carregando' && <SkeletonTrilha />}
           {inicio === 'pronto' && carregandoTrilha && <SkeletonTrilha />}
-          {inicio === 'pronto' && carregandoLicao && (tela.tipo === 'geracao' && geracao?.proposta
-            ? <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />
-            : <SkeletonLicao texto={mensagens.licao.carregando} />)}
+          {inicio === 'pronto' && carregandoLicao && <SkeletonLicao texto={mensagens.licao.carregando} />}
           {visivel && tela.tipo === 'apresentacao' && (
             <Apresentacao primeiraVez={tela.primeiraVez} concluir={concluirApresentacao} />
           )}
@@ -733,13 +758,12 @@ export function Estudo() {
               </section>
             );
           })()}
-          {visivel && tela.tipo === 'geracao' && geracao && (
-            <GeracaoAoVivo geracao={geracao} ocupado={ocupado}
-              cancelar={cancelarGeracao} comecar={(proposta) => void comecar(proposta)} ajustar={() => navegar({ tipo: 'objetivo' })}
-              existente={geracao.proposta
-                ? planos.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? ''))
-                : undefined}
-              abrirExistente={(id) => void abrirPlano(id)} />
+          {previa && (
+            <PreviaTrilha geracao={previa} aceite={aceite} passagem={passagem}
+              cancelar={cancelarGeracao} sair={() => navegar({ tipo: 'planos' })} ajustar={() => navegar({ tipo: 'objetivo' })}
+              aceitar={painel => void comecar(painel)} remontar={() => void gerar(objetivo || previa.objetivo)}
+              existente={previa.proposta ? planos.find(plano => trilhaRepetida(plano.titulo, previa.proposta!.titulo)) : undefined}
+              abrirExistente={id => void abrirPlano(id)} />
           )}
           {visivel && tela.tipo === 'plano' && (
             <Plano tela={tela} ocupado={ocupado} abrindo={abrindo}
@@ -1014,125 +1038,6 @@ function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar
  * O botão da esquerda é o mesmo do começo ao fim: Cancelar enquanto a IA monta e Ajustar pedido no fim; os dois voltam
  * ao pedido sem salvar nada. Começar aparece em outro lugar, então um toque atrasado em Cancelar não aceita a trilha.
  */
-function GeracaoAoVivo({ geracao, ocupado, cancelar, comecar, ajustar, existente, abrirExistente }: {
-  geracao: TrilhaEmGeracao;
-  ocupado: boolean;
-  cancelar: () => void;
-  comecar: (proposta: PropostaPlano) => void;
-  ajustar: () => void;
-  /** Uma trilha da pessoa com o mesmo nome: a tela avisa e oferece abrir a que já existe, em vez de duplicar. */
-  existente?: PlanoResumo;
-  abrirExistente: (id: string) => void;
-}) {
-  const nos = useMemo(() => nosDaPrevia(geracao), [geracao]);
-  const { titulo, proposta } = geracao;
-  const total = nos.length;
-
-  return (
-    <section className="painel painel--trilha painel--geracao">
-      <header className="trilha-cabecalho">
-        <div className="trilha-resumo">
-          <p className="contexto-tela">{mensagens.geracao.contexto}</p>
-          <h1 tabIndex={-1}>
-            {titulo ? <span className="geracao-titulo" key={titulo}>{titulo}</span> : (
-              <>
-                <span className="somente-leitor">{mensagens.geracao.montandoTitulo}</span>
-                <span className="geracao-esqueleto geracao-esqueleto--titulo" aria-hidden="true" />
-              </>
-            )}
-          </h1>
-          {titulo !== null && !repeteTitulo(titulo, geracao.objetivo) && <p className="introducao">{geracao.objetivo}</p>}
-          {/* Quem montou: a IA ou o modo demonstração (trilha pronta). Enquanto não se sabe, um texto neutro. */}
-          <p className="geracao-ia">
-            {!proposta ? mensagens.geracao.montadaDoPedido : origemDemonstracao(proposta.origem) ? mensagens.geracao.demonstracao : mensagens.geracao.ia}
-          </p>
-          {/* A origem só aparece quando acrescenta algo: na trilha pronta, o aviso acima já diz de onde ela vem. */}
-          {proposta
-            ? !origemDemonstracao(proposta.origem) && <p className="geracao-origem">{mensagens.geracao.origem(origemLegivel(proposta.origem))}</p>
-            : <span className="geracao-esqueleto geracao-esqueleto--origem" aria-hidden="true" />}
-          {proposta && existente && (
-            <div className="geracao-repetida" role="status">
-              <p>{mensagens.geracao.repetida(existente.titulo)}</p>
-              <Botao variante="secundario" disabled={ocupado} onClick={() => abrirExistente(existente.id)}>{mensagens.geracao.abrirExistente}</Botao>
-            </div>
-          )}
-        </div>
-      </header>
-      <Caminho nos={nos} stu={proposta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas}
-        chegada={proposta !== null} montando={proposta === null} />
-      <div className="geracao-acoes" data-pronta={proposta ? true : undefined}>
-        <Botao key="voltar" variante="secundario" disabled={ocupado} onClick={proposta ? ajustar : cancelar}>
-          {proposta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar}
-        </Botao>
-        <p className="geracao-situacao">
-          <span className="geracao-situacao__rotulo">{proposta ? mensagens.geracao.pronta : mensagens.geracao.montando}</span>{' '}
-          <span className="geracao-situacao__contagem">
-            {proposta ? mensagens.geracao.contagemFinal(total) : mensagens.geracao.contagem(total)}
-          </span>
-        </p>
-        {proposta && <Botao key="comecar" disabled={ocupado} onClick={() => comecar(proposta)}>{mensagens.geracao.comecar}</Botao>}
-      </div>
-    </section>
-  );
-}
-
-/**
- * Começar: o aceite salva a trilha e a IA escreve a explicação, o exemplo e o exercício de cada lição, o que leva alguns
- * segundos com a IA real. No lugar de um esqueleto, o Stu escreve as lições da trilha da pessoa e dicas se revezam.
- * O aceite é um pedido só, sem andamento por lição, então nenhuma lição ganha o visto antes da hora: o brilho que desce
- * pela lista só diz que a escrita está acontecendo. Quando o aceite volta (`prontas`), o visto passa por todas.
- */
-function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; prontas: boolean }) {
-  const titulo = useRef<HTMLHeadingElement>(null);
-  const [dica, setDica] = useState(0);
-  const dicas = mensagens.geracao.dicas;
-  const licoes = proposta.fluxos.flatMap((fluxo) => fluxo.licoes.map((licao) => licao.titulo));
-
-  // A tela começa do topo (a trilha gerada podia estar rolada até o fim) e, como o botão Começar sai da tela, o foco vem
-  // para o título, que diz o que está acontecendo.
-  useEffect(() => {
-    voltarAoTopo();
-    titulo.current?.focus({ preventScroll: true });
-  }, []);
-
-  useEffect(() => {
-    if (prontas) return;
-    const intervalo = window.setInterval(() => setDica((atual) => (atual + 1) % dicas.length), 3600);
-    return () => window.clearInterval(intervalo);
-  }, [prontas, dicas.length]);
-
-  return (
-    <section className="painel painel--preparo" data-prontas={prontas || undefined}>
-      <div className="preparo-cena" style={coresDaRegiao(0)} aria-hidden="true">
-        <span className="preparo-cena__colina" />
-        <Desenho nome="arvore" />
-        <Desenho nome="flores" />
-        <Desenho nome="arbusto" />
-        {/* O notebook da pose conta a história (o lápis e as folhas desenhados saíram, spec 13 §A2). Escrevendo: laço; em
-            "Lições prontas!", comemora com o pulo. */}
-        {prontas
-          ? <Stu expressao="stu-comemorando" tamanho={110} animado="acontecimento" acontecimento="prontas" sombra />
-          : <Stu expressao="stu-estudando" tamanho={132} animado="laco" sombra />}
-      </div>
-      <p className="contexto-tela">{proposta.titulo}</p>
-      <h1 ref={titulo} tabIndex={-1}>{prontas ? mensagens.preparo.prontas : mensagens.preparo.titulo}</h1>
-      <p className="introducao">{prontas ? mensagens.preparo.textoProntas : mensagens.preparo.texto}</p>
-      <ol className="preparo-lista" aria-label={mensagens.preparo.lista}>
-        {licoes.map((nome, indice) => (
-          <li key={indice} style={{ '--ordem': indice } as CSSProperties}>
-            <span className="preparo-lista__icone">
-              <Icone nome={nome.trim().toLocaleLowerCase('pt-BR').startsWith('revis') ? 'revisao' : 'livro'} />
-            </span>
-            <span className="preparo-lista__titulo">{nome}</span>
-          </li>
-        ))}
-      </ol>
-      <p key={dica} className="preparo-dica" aria-hidden="true" style={prontas ? { visibility: 'hidden' } : undefined}><Icone nome="lampada" />{dicas[dica]}</p>
-      <p className="somente-leitor" role="status">{prontas ? mensagens.preparo.anuncioProntas : mensagens.preparo.anuncio}</p>
-    </section>
-  );
-}
-
 /** Carregando a lição: a forma da aula (topo, título, quadro e rodapé), sem spinner (DESIGN §7). */
 function SkeletonLicao({ texto }: { texto: string }) {
   return (
@@ -1154,12 +1059,6 @@ function SkeletonLicao({ texto }: { texto: string }) {
       </div>
     </div>
   );
-}
-
-/** O pedido aparece sob o título só quando acrescenta algo: num objetivo curto, o título pode ser o próprio pedido. */
-function repeteTitulo(titulo: string | null, objetivo: string) {
-  const comparavel = (texto: string) => texto.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR');
-  return titulo !== null && comparavel(titulo) === comparavel(objetivo);
 }
 
 /**
