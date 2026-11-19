@@ -92,3 +92,68 @@ O que sai junto: os adereços desenhados da reação (`.aula-stu-estado__adereco
 ## A3. Nome
 - **Recomendação (decisão do dono): o mascote continua "Stu"** nos textos ("Ensine ao Stu", "o Stu reage"), e "Studoo" continua sendo o nome do app. "Ensine ao Studoo" mistura o app com o personagem, e os textos da web e do app já dizem Stu em todo lugar. Na folha, "Studoo" fica como nome completo e "Stu" como apelido: "Stu, o mascote do Studoo".
 - O texto alternativo, quando houver (§B8), também diz Stu.
+
+## B4. Lugares novos: onde o Stu ajuda e onde fica fora
+Regra geral: no máximo um Stu por tela, nunca mais alto que 40% da altura útil no celular, sempre ao lado do texto que dá a mensagem (ele reforça, não informa).
+
+| Momento | Imagem | Tamanho | Comportamento |
+|---|---|---|---|
+| Boas-vindas (apresentação, 5 passos) | 1: `stu-acolhida`; 2: `stu-curioso` com `acessorio-livro` e `acessorio-fone` em volta (48); 3: `stu-organizando`; 4: `stu-estudando`; 5: `stu-feliz` | 160 (passo 2 e 5: 96 e 72) | entra com o passo e dá o "pop" (§B7); Pular continua em todos |
+| Minhas trilhas, sem trilha | `stu-organizando` | 96 | título "Sua primeira trilha começa aqui" e o botão "Pedir uma trilha" |
+| Novidades, sem novidade | `stu-meio-de-boa` | 96 | "Tudo em dia por aqui." É o único uso dos óculos escuros |
+| Explorar e busca sem resultado | `stu-curioso` | 96 | como na §A2 |
+| Espera: mapa montando | `stu-curioso` | 92 | balão com pontinhos (spec 04) |
+| Espera: Escrevendo suas lições | `stu-estudando` | 132×106 | §A2; em "Lições prontas!" troca para `stu-comemorando` com pulo |
+| Espera: lendo o material enviado | `stu-concentrado` | 72 | "Lendo seu material…" ao lado. Carregamento de menos de 1 s fica só no esqueleto, sem Stu |
+| Acerto | `stu-feliz`; de primeira, `stu-comemorando` | 48 | na faixa de reação, com pulo; o painel verde continua sendo o sinal principal |
+| Erro | `stu-encorajador` | 48 | sem tremer (quem treme é o exercício, spec 04); "Quase lá!" no painel âmbar |
+| Ponte do reforço | `stu-perfil` atravessando, `stu-animado` ao chegar; balão do reforço com `stu-encorajador` | 44; balão 76 | atravessa a tábua como hoje |
+| Lição concluída | `stu-comemorando`; com exercício sem acerto, `stu-encorajador` | 140 | raios e confete só no primeiro caso (spec 04) |
+| Trilha concluída | `stu-celebrando` (com troféu) | 240 | confete, "Trilha concluída!" e "Compartilhar trilha" |
+| Fim do mapa | `acessorio-trofeu` no lugar do troféu desenhado | 72 | proposta: cinza a 40% antes; cor cheia com pop ao concluir a trilha |
+| 404 | `stu-surpreso` | 120 | com halo; "Essa página não existe" e "Voltar ao início" |
+| Erro de rede | na linha, `stu-encorajador`; tela inteira sem conexão, `stu-surpreso` | 48; 96 | "Sem conexão. Confira a internet e tente de novo." e "Tentar de novo" |
+| Prática com cronômetro | `stu-concentrado`; ao terminar, `stu-comemorando` | 48 | ao lado do cronômetro, nunca sobre o diagrama |
+| Voz: Ensine ao Stu e voz ao vivo | ouvindo `stu-concentrado`; falando `stu-animado`; pensando `stu-curioso`; anotou `stu-encorajador` | 96 | no centro da tela de voz, com as ondas de hoje em volta |
+| Compartilhar | prévia `stu-feliz`; imagem do link `stu-acolhida` | 64; 240 | depois de compartilhar, só o aviso em texto (spec 11) |
+| Controle de som (spec 12) | `acessorio-fone` | 40 | no título da folha "Som" |
+
+**Fica fora:** a área de resposta antes de "Verificar"; o texto da explicação (o Stu fica ao lado do balão, nunca por cima); formulários (perfil, configurações da trilha); listas e cartões do Explorar, salvo o vazio; avisos, menus e confirmações (spec 11); a barra do alto da aula; foto ou capa de trilha.
+
+## B5. Paleta
+**Recomendação (decisão do dono): adotar as seis cores do kit como cores da marca.** O Stu #2563FF ao lado do botão #3858D6 parece erro: são dois azuis quase iguais. Contas de contraste WCAG:
+
+| Papel | Hoje | Novo | Contraste |
+|---|---|---|---|
+| Ação (botão, link, nó atual) | #3858D6 | #2563FF | branco sobre ele 4,88:1 (AA) |
+| Ação escura (lábio, pressionado, link sobre lavanda) | #2A44A8 | #1D4ED8 | 6,70:1 no branco; 5,53:1 na lavanda |
+| Texto | #1B2A5E | #0B1B5C | 15,84:1 no branco; 13,08:1 na lavanda |
+| Destaque (marco vencido, troféu, estrela) | #FFD166 | #FBBF24, só como fundo | texto #0B1B5C sobre ele 9,49:1; nunca texto amarelo no branco (1,67:1) |
+| Violeta (enfeite, selo "Novo", voz) | — | #8B5CF6; texto em #6D28D9 | #8B5CF6 no branco 4,23:1 (só ícone ou texto ≥ 24 px); #6D28D9 7,10:1 |
+| Azul claro (foco, barra de progresso, ilustração) | — | #3B82F6, nunca texto | 3,68:1 no branco (vale para componente, não para texto) |
+| Fundo suave (halo, selecionado, momentos do Stu) | #EEF3FF | #E9E7FF | texto #0B1B5C 13,08:1; link #2563FF 4,03:1 não passa, use #1D4ED8 |
+
+Não mudam: texto secundário #5E6A85 (5,42:1), névoa, gelo, sucesso #1F7A5A, alerta #9A5B00 e erro #C23B4E. O kit não tem verde nem vermelho, e o painel de retorno da spec 04 continua como está.
+
+## B6. Logo
+O PNG do kit não é o vetor de hoje redesenhado na mesma forma: é a mesma ideia ("stud" + os óculos com sorriso) com letras bem mais grossas, outra proporção (3,0:1 contra 3,21:1; a sobreposição das formas é de 50%) e cores mais fortes (#04145B e #0731FA, fora da própria paleta do kit). Além disso, é raster: 941×314 úteis num quadro de 1024.
+
+**Recomendação (decisão do dono):** manter o desenho do vetor de hoje (`logo-com-sorriso.svg` e `logo-animado.svg`), que o dono pediu para manter em 19/11, trocando só as cores para #0B1B5C e #2563FF. Se o dono preferir o traço grosso do kit, ele entra redesenhado em SVG, nunca o PNG.
+
+## B7. Movimento com imagem parada
+- **Troca de expressão:** a imagem nova entra por cima da antiga em 120 ms (opacidade) e dá um pop de 0,92 → 1,06 → 1 em 240 ms, na curva de mola de hoje (`cubic-bezier(0.2, 0.9, 0.3, 1.3)`). Antes da aula, as cinco expressões da reação (feliz, comemorando, encorajador, curioso, concentrado) já ficam carregadas na faixa P, cinco arquivos de até 10 KB, para nada piscar.
+- **Pulo (acerto, de primeira, Lições prontas):** sobe 10 px em 160 ms, desce em 140 ms e achata ao tocar o chão (escala 1,04 × 0,94 por 80 ms). A sombra de contato encolhe enquanto ele sobe.
+- **Flutuar (mapa, vazio, espera):** sobe e desce 4 px a cada 3,2 s. O aceno da acolhida gira ±5° pela base a cada 5,2 s, como o `stu-acenar` de hoje.
+- **Chegar (boas-vindas, conclusão, 404):** escala 0,6 → 1 com subida de 12 px em 360 ms.
+- Só um Stu se mexe por vez, e nada se repete durante o exercício.
+- **Movimento reduzido:** nada se repete, não há pulo nem pop, a troca de expressão é imediata, a sombra fica parada e o confete não aparece (spec 04). A informação é a mesma.
+
+## B8. Leitor de tela
+- O Stu é sempre enfeite: `alt=""` dentro de um contêiner `aria-hidden="true"` na web, e `accessible={false}` com `importantForAccessibility="no"` no app. A mensagem está no texto ao lado (balão, título, painel de retorno), e é esse texto que o leitor anuncia (`role="status"` onde já existe).
+- A troca de expressão não gera anúncio.
+- Única exceção: a imagem de prévia do link, que tem texto alternativo nos metadados: "Stu, o mascote do Studoo, acenando".
+
+## B9. Ícone do app, tela de abertura e ícone do site
+- **Ícone do app (Android e iPhone) e ícone do site:** recomendo manter a marca de hoje (os óculos com sorriso, a mesma forma do logo), trocando o azul de #3858D6 para #2563FF. Ela é vetorial e se lê em 16 px. Um ícone com o rosto do Stu em volume, como o do Duolingo, precisa de um render novo do rosto em 1024 px ou mais: o rosto recortado do kit tem uns 550 px e ficaria borrado. **Decisão do dono**, com essa ressalva.
+- **Tela de abertura do app:** hoje o `app.json` não configura nenhuma (nem `splash` nem o plugin `expo-splash-screen`). Recomendo a marca branca sobre #2563FF, com imagem de 200 dp, porque o Android 12 ou mais novo só mostra um ícone no centro. O Stu em volume aparece logo depois, na entrada.
+- **Imagem de prévia do link:** muda, com o Stu (§A2).
