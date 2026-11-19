@@ -425,6 +425,8 @@ export const mensagens = {
     /** Controle de som (spec 12): a folha "Som", o botão no alto da aula e a seção no Perfil. Nomes e descrições dos climas: OPCOES_FUNDO_UI. */
     som: {
         titulo: 'Som',
+        musicaTitulo: 'Música de fundo',
+        musicaFaixa: 'Lo-fi de estúdio',
         fechar: 'Fechar',
         fundoTitulo: 'Som de fundo',
         fundoDica: 'Toca baixinho enquanto você estuda.',
