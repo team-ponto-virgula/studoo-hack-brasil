@@ -17,7 +17,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAparecer, useVaiVem } from './animacoes';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { AlturaDaFaixaFixa, Botao, DeslocamentoDaRolagem, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
+import { AlturaDaFaixaFixa, Botao, DeslocamentoDaRolagem, EspacoDaBarra, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
 import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { ColinaElipse, Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
@@ -175,6 +175,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const reduzir = useMovimentoReduzido();
   const { width, height: alturaTela } = useWindowDimensions();
   const largo = width >= 768;
+  // A cápsula da barra de baixo flutua sobre o fim do mapa (no mapa da trilha, com `fimSobABarra` na tela): o morro do
+  // troféu continua por baixo dela, com a altura que ela cobre a mais, sem faixa branca no fim. Sem a barra, 0.
+  const espacoDaBarra = useContext(EspacoDaBarra);
   const [aberto, setAberto] = useState<string | null>(null);
   // Largura do caminho (a serpentina usa pixels): começa pela tela e se ajusta quando a lista mede.
   const [largura, setLargura] = useState(() => (largo ? Math.min(width, 620) : width));
@@ -472,7 +475,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         )}
       </View>
       {comChegada && (
-        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : extraChegada}
+        <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : extraChegada + espacoDaBarra}
           faltam={nos.filter((no) => no.estado !== 'concluida').length} stu={stuNaChegada} festa={(festaNaChegada && festaPermitida) || (comRecem && tudoFeito)}
           doZero={trofeuDoZero}
           aoMedir={(caixa) => {

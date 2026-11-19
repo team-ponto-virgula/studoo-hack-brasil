@@ -16,17 +16,19 @@ import {
   View,
   useWindowDimensions,
   type ImageStyle,
+  type LayoutChangeEvent,
   type StyleProp,
   type TextInputProps,
   type TextStyle,
   type ViewProps,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets, type EdgeInsets } from 'react-native-safe-area-context';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NavegacaoContexto } from './navegacao';
 import { useDepoisDeSair } from './janelas';
 import { useMovimentoReduzido } from './movimento';
+import { useTransparenciaReduzida } from './transparencia';
 export { useMovimentoReduzido } from './movimento';
 
 import { Icone } from './icone';
@@ -62,6 +64,29 @@ export const RolagemDaTela = createContext<{
 export const TecladoAberto = createContext(false);
 /** Altura ocupada no pé da janela (barra de abas, rodapé ou área segura): o menu "•••" abre em cima quando não cabe acima dela. */
 export const BaixoOcupado = createContext(0);
+/**
+ * Quanto a cápsula da barra de abas cobre no pé da rolagem (a altura dela e a distância até a borda), para a tela que pinta
+ * o próprio fim por baixo dela (o morro do troféu no mapa, com `fimSobABarra`). Sem a barra, 0.
+ */
+export const EspacoDaBarra = createContext(0);
+
+/**
+ * A barra de abas em cápsula (spec 05, "Barra de abas em cápsula", pedido do dono de 20/11), igual na web estreita, no
+ * Android e no iPhone: 16 dos lados (ou a área segura lateral + 8), 8 acima da área segura de baixo e nunca menos de 16 da
+ * borda, até 480 de largura, centrada. Altura usual de 62 (respiro de 4, aba de 54, respiro de 4) e raio 31; a aba atual
+ * numa subcápsula de raio 27. As ações presas das telas de topo (o cartão da próxima lição no mapa, a barra de salvar do
+ * perfil) flutuam 12 acima dela, num bloco com a mesma superfície, de raio 24 e respiro 8. O fim da rolagem reserva a
+ * cápsula, a distância até a borda e mais 16.
+ */
+export const CAPSULA = {
+  lateral: 16, acimaDaAreaSegura: 8, minimoDaBorda: 16, larguraMaxima: 480, altura: 62, raio: 31, raioDaAba: 27,
+  acimaDaCapsula: 12, raioDoBloco: 24, folgaDoFim: 16,
+} as const;
+
+/** As margens laterais da cápsula e das ações presas: 16, ou a área segura lateral + 8 (deitado, longe do entalhe). */
+function ladosDaCapsula(insets: EdgeInsets) {
+  return { left: Math.max(CAPSULA.lateral, insets.left + 8), right: Math.max(CAPSULA.lateral, insets.right + 8) };
+}
 
 /**
  * Aviso do próprio app (spec 11, nunca do sistema): uma faixa no pé da tela, 16 acima do rodapé e da barra de abas, que
@@ -133,7 +158,12 @@ function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, acimaDaFaixa, faixaColada = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo, flutuante }: {
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, acimaDaFaixa, faixaColada = false, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo, flutuante, fimSobABarra = false }: {
+  /**
+   * O fim do conteúdo passa por baixo da cápsula da barra de abas e a tela pinta esse espaço (o mapa: o morro do troféu
+   * continua por baixo dela, com `EspacoDaBarra` a mais). Sem isso, o fim da rolagem reserva a cápsula e mais 16.
+   */
+  fimSobABarra?: boolean;
   /** Algo que flutua sobre o conteúdo, centrado e 16 acima do rodapé (ou da barra): a pílula "Ver a lição nova" da geração. */
   flutuante?: ReactNode;
   children: ReactNode;
@@ -200,18 +230,31 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const [alturaBarra, setAlturaBarra] = useState(0);
   const cabecalhoNaRolagem = !topo && !semCabecalho;
   const insets = useSafeAreaInsets();
+  // Com o teclado aberto, a cápsula some, como antes: o teclado ocupa o pé da tela.
   const comBarra = Boolean(navegacao) && !teclado;
-  // iPhone com iOS 26 ou mais novo: o rodapé neutro e a barra de baixo ficam por cima do conteúdo, para o vidro mostrar o
-  // que rola por baixo (abaixo do conteúdo, só havia o branco da tela atrás deles). No Android, no iOS anterior e na
-  // prévia web, as barras seguem no fluxo, como antes.
-  const rodapeSobreposto = VIDRO && Boolean(rodape) && !estiloRodape;
-  const barraSobreposta = VIDRO && comBarra && (!rodape || rodapeSobreposto);
-  // A área segura de baixo (barra de início do iPhone, barra de gestos do Android) fica dentro da barra que encosta na
-  // borda: o fundo dela vai até a borda, sem linha nem faixa solta embaixo. Com o teclado aberto, ele cobre essa área.
+  // A área segura de baixo (barra de início do iPhone, barra de gestos do Android): sem a cápsula, fica dentro do rodapé
+  // que encosta na borda, sem linha nem faixa solta embaixo. Com o teclado aberto, ele cobre essa área.
   const fundoSeguro = teclado ? 0 : insets.bottom;
-  const sobreposicao = (rodapeSobreposto ? alturaRodape : 0) + (barraSobreposta ? alturaBarra : 0);
-  // Sem barra embaixo, o fim da rolagem ganha a área segura (nada fica atrás da barra de início).
-  const fimDaRolagem = sobreposicao + (!rodape && !comBarra ? fundoSeguro : 0);
+  // Ação presa das telas de topo (spec 05): com a cápsula, o rodapé da tela vira um bloco que flutua 12 acima dela. Sem a
+  // cápsula (teclado aberto, ação em andamento), ele volta a ser o rodapé de sempre.
+  const rodapePreso = comBarra && Boolean(rodape);
+  // iPhone com iOS 26 ou mais novo: o rodapé neutro (das lições, da geração) fica por cima do conteúdo, para o vidro mostrar
+  // o que rola por baixo. No Android, no iOS anterior e na prévia web, ele segue no fluxo, como antes.
+  const rodapeSobreposto = VIDRO && Boolean(rodape) && !estiloRodape && !rodapePreso;
+  // O rodapé solto (o cartão da próxima lição, que flutua sobre o mapa): a tela dele já guarda o lugar do cartão.
+  const rodapeSolto = StyleSheet.flatten(estiloRodape)?.position === 'absolute';
+  // A cápsula flutua sobre o conteúdo em todas as plataformas: 8 acima da área segura de baixo e nunca menos de 16 da borda.
+  const baseDaCapsula = Math.max(CAPSULA.minimoDaBorda, fundoSeguro + CAPSULA.acimaDaAreaSegura);
+  const zonaDaBarra = comBarra ? (alturaBarra || CAPSULA.altura) + baseDaCapsula : 0;
+  const zonaDoPreso = rodapePreso ? CAPSULA.acimaDaCapsula + alturaRodape : 0;
+  // O que cobre o conteúdo no pé da tela: a cápsula, a ação presa (menos o cartão do mapa, que a tela já desconta) e o
+  // rodapé de vidro.
+  const sobreposicao = zonaDaBarra + (rodapeSolto ? 0 : zonaDoPreso) + (rodapeSobreposto ? alturaRodape : 0);
+  // A reserva do fim da rolagem: a cápsula, a distância dela até a borda e mais 16; a ação presa e mais 12; o rodapé de
+  // vidro; sem cápsula nem rodapé, a área segura (nada fica atrás da barra de início). A tela que pinta o próprio fim por
+  // baixo da cápsula (o mapa) não ganha a reserva dela.
+  const reservaDaBarra = comBarra && !fimSobABarra ? zonaDaBarra + CAPSULA.folgaDoFim + zonaDoPreso : 0;
+  const fimDaRolagem = reservaDaBarra + (rodapeSobreposto ? alturaRodape : 0) + (!rodape && !comBarra ? fundoSeguro : 0);
   const rolado = useRef(0);
   const alturaRolagem = useRef(0);
   // A altura de tudo o que rola e a trava do arrasto (o ordenar): para o rolarPor parar no fim e o dedo não rolar a tela.
@@ -288,8 +331,11 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
     </View>
   );
   const { aviso } = useContext(AvisoDoApp);
-  // O aviso fica 16 acima do que estiver embaixo: o rodapé, a barra de abas ou, sem nenhum, a área segura de baixo.
-  const baixoDoAviso = 16 + (comBarra ? alturaBarra : 0) + (rodape ? alturaRodape : 0) + (!comBarra && !rodape ? fundoSeguro : 0);
+  // O aviso fica 16 acima do que estiver embaixo: a ação presa, a cápsula, o rodapé ou, sem nenhum, a área segura de baixo.
+  const ocupadoEmbaixo = rodapePreso ? zonaDaBarra + zonaDoPreso : rodape ? alturaRodape : comBarra ? zonaDaBarra : fundoSeguro;
+  const baixoDoAviso = 16 + ocupadoEmbaixo;
+  const lados = ladosDaCapsula(insets);
+  const material = useMaterialFlutuante();
   // Os filhos de cima da rolagem numa lista sem buracos, e o índice da faixa presa é o lugar dela nessa lista. Com
   // `condição && <X/>`, o React Native Web conta os `false` nos índices de stickyHeaderIndices e o aparelho não (a faixa
   // colada da geração não grudava na prévia).
@@ -323,6 +369,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             if (campoEmFoco.current) mostrarCampoEmFoco();
           }}
           onScroll={(evento) => { rolado.current = evento.nativeEvent.contentOffset.y; aoRolar?.(evento.nativeEvent.contentOffset.y); }}
+          // No iPhone, com a cápsula, o indicador de rolagem termina acima dela (e da ação presa).
+          scrollIndicatorInsets={comBarra ? { bottom: sobreposicao } : undefined}
+          automaticallyAdjustsScrollIndicatorInsets={!comBarra}
           scrollEventThrottle={16}
           scrollEnabled={!rolagemTravada}
           onContentSizeChange={(_largura, altura) => { alturaRolavel.current = altura; aoMedirConteudo?.(altura - fimDaRolagem); }}>
@@ -337,21 +386,24 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
                 <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar, travar: setRolagemTravada, rolarPor }}>
                   <TecladoAberto.Provider value={teclado}>
                     <BaixoOcupado.Provider value={baixoDoAviso - 16}>
-                      <Entrada>{children}</Entrada>
+                      <EspacoDaBarra.Provider value={zonaDaBarra}>
+                        <Entrada>{children}</Entrada>
+                      </EspacoDaBarra.Provider>
                     </BaixoOcupado.Provider>
                   </TecladoAberto.Provider>
                 </RolagemDaTela.Provider>
               </AlturaDaFaixaFixa.Provider>
             </DeslocamentoDaRolagem.Provider>
           </View>
-          {/* O fim da rolagem passa por baixo das barras sobrepostas e da área segura de baixo, sem esconder o último item. */}
+          {/* O fim da rolagem passa por baixo da cápsula, da ação presa, do rodapé de vidro e da área segura, sem esconder o último item. */}
           {fimDaRolagem > 0 && <View style={{ height: fimDaRolagem }} />}
         </ScrollView>
         {/* O rodapé de feedback (verde ou laranja) é conteúdo e fica com a cor de hoje; o neutro vira vidro no iOS 26. */}
-        {rodape && (() => {
+        {rodape && !rodapePreso && (() => {
           const base = StyleSheet.flatten([estilos.rodapeConteudo, estiloRodapeConteudo])?.paddingBottom;
-          const fundo = comBarra ? 0 : fundoSeguro;
-          const posicao = rodapeSobreposto ? [estilos.sobreposto, { bottom: barraSobreposta ? alturaBarra : 0 }] : null;
+          // Sem a cápsula, o rodapé encosta na borda de baixo, com a área segura dentro.
+          const fundo = fundoSeguro;
+          const posicao = rodapeSobreposto ? estilos.sobreposto : null;
           return (
             <FundoDeBarra testID="rodape" estilo={[estilos.rodape, estiloRodape, posicao]} estiloVidro={estiloRodape ? undefined : [estilos.rodapeVidro, posicao]}
               onLayout={(evento) => setAlturaRodape(evento.nativeEvent.layout.height)}>
@@ -360,7 +412,17 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           );
         })()}
       </KeyboardAvoidingView>
-      {comBarra && <NavegacaoInferior fundo={fundoSeguro} sobreposta={barraSobreposta} aoMedir={setAlturaBarra} />}
+      {/* A ação presa (o cartão da próxima lição no mapa, a barra de salvar do perfil): um bloco com a superfície da cápsula,
+          12 acima dela, nas mesmas margens e com até 480 de largura (spec 05). */}
+      {rodapePreso && (
+        <View pointerEvents="box-none" style={[estilos.presoLugar, lados, { bottom: zonaDaBarra + CAPSULA.acimaDaCapsula }]}>
+          <SuperficieFlutuante testID="rodape" material={material} raio={CAPSULA.raioDoBloco} estilo={estilos.blocoPreso}
+            onLayout={(evento) => setAlturaRodape(evento.nativeEvent.layout.height)}>
+            {rodape}
+          </SuperficieFlutuante>
+        </View>
+      )}
+      {comBarra && <NavegacaoInferior base={baseDaCapsula} lados={lados} aoMedir={setAlturaBarra} />}
       {flutuante && <View pointerEvents="box-none" style={[estilos.flutuante, { bottom: baixoDoAviso }]}>{flutuante}</View>}
       {aviso && <FaixaDoAviso key={aviso.vez} aviso={aviso} baixo={baixoDoAviso} />}
     </SafeAreaView>
@@ -1052,6 +1114,30 @@ function FundoDeBarra({ estilo, estiloVidro, children, ...resto }: ViewProps & {
   return <View style={estilo} {...resto}>{children}</View>;
 }
 
+/** O material da cápsula e das ações presas: `vidro` (Liquid Glass) ou `opaca` (branco com contorno e sombra). */
+type MaterialFlutuante = 'vidro' | 'opaca';
+/**
+ * A condição única do material (spec 05): o vidro só no iPhone com iOS 26 (`isLiquidGlassAvailable`) e sem "Reduzir
+ * transparência"; senão, a superfície opaca. A troca acompanha a preferência na hora.
+ */
+function useMaterialFlutuante(): MaterialFlutuante {
+  const transparenciaReduzida = useTransparenciaReduzida();
+  return VIDRO && !transparenciaReduzida ? 'vidro' : 'opaca';
+}
+
+/**
+ * A superfície da cápsula da barra de abas e das ações presas (spec 05, P25 da spec 07): no iPhone com iOS 26 e sem "Reduzir
+ * transparência", o vidro do sistema, sem contorno nem sombra próprios (o vidro tem os dele); no iOS anterior, com "Reduzir
+ * transparência", no Android e na prévia web, branco opaco, com o contorno de 1 por fora (sem ocupar espaço) e a sombra leve.
+ * A troca acompanha a preferência na hora. O vidro nativo recebe o raio em pontos.
+ */
+function SuperficieFlutuante({ material, raio, estilo, children, ...resto }: ViewProps & { material: MaterialFlutuante; raio: number; estilo?: StyleProp<ViewStyle> }) {
+  if (material === 'vidro') {
+    return <GlassView glassEffectStyle="regular" colorScheme="light" style={[estilo, { borderRadius: raio }]} {...resto}>{children}</GlassView>;
+  }
+  return <View style={[estilo, estilos.superficieOpaca, { borderRadius: raio }]} {...resto}>{children}</View>;
+}
+
 /** Esqueleto que pulsa devagar enquanto o conteúdo carrega, como o brilho da web; parado com movimento reduzido. */
 export function usePulso() {
   const reduzir = useMovimentoReduzido();
@@ -1195,8 +1281,12 @@ export const estilos = StyleSheet.create({
   rodape: { borderTopWidth: 2, borderColor: cores.nevoa, backgroundColor: cores.fundo },
   // iOS 26: o vidro é o fundo do rodapé (sem o branco e sem a linha de cima).
   rodapeVidro: {},
-  // Barra por cima do conteúdo (com o vidro): encostada embaixo, de ponta a ponta.
+  // Rodapé por cima do conteúdo (com o vidro): encostado embaixo, de ponta a ponta.
   sobreposto: { position: 'absolute', left: 0, right: 0, bottom: 0 },
+  // A ação presa acima da cápsula: o lugar só recebe o toque no bloco (as margens deixam passar para o conteúdo); o bloco tem
+  // a largura da cápsula (até 480, centrado), raio 24 e respiro 8.
+  presoLugar: { position: 'absolute', alignItems: 'center' },
+  blocoPreso: { width: '100%', maxWidth: CAPSULA.larguraMaxima, padding: 8 },
   // A web deixa 20 px nas laterais do rodapé (350 px de botão em 390); a aula e a entrada passam as delas.
   // .acao-principal e .aula-rodape no celular: 12 em cima e 14 embaixo (o degrau do botão desce por fora, no respiro de baixo).
   rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14, gap: 10 },
@@ -1220,6 +1310,9 @@ export const estilos = StyleSheet.create({
   faixaFixaVidro: { zIndex: 6 },
   faixaColada: { zIndex: 6 },
   flutuante: { position: 'absolute', left: 16, right: 16, zIndex: 7, alignItems: 'center' },
+  // A superfície opaca da cápsula e das ações presas: branco, contorno de 1 rgba(11, 27, 92, 0,10) por fora e sombra leve,
+  // a mesma lista da web (spec 05).
+  superficieOpaca: { backgroundColor: cores.fundo, boxShadow: '0 0 0 1px rgba(11, 27, 92, 0.10), 0 8px 24px rgba(11, 27, 92, 0.14)' },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
   modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
   // Confirmação (spec 11): cartão de até 400 com respiro de 24, cantos de 24, borda de 2 e 12 entre os blocos.
@@ -1309,43 +1402,63 @@ export const estilos = StyleSheet.create({
   seloDemoTexto: { color: '#704700', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12.8, lineHeight: 20.48 },
 });
 
-/** Dois destinos persistentes, fora das aulas e da geração para preservar o foco. */
-function NavegacaoInferior({ fundo, sobreposta, aoMedir }: {
-  /** A área segura de baixo, dentro da barra (o fundo dela vai até a borda da tela). */
-  fundo: number;
-  /** Com o vidro (iOS 26+), a barra fica por cima do conteúdo, encostada na borda de baixo. */
-  sobreposta: boolean;
+/**
+ * A barra de abas em cápsula (spec 05, pedido do dono de 20/11): uma cápsula só, que flutua sobre o conteúdo, como a barra de
+ * abas do WhatsApp, com a aba atual numa subcápsula. As abas, a ordem, os nomes, os ícones, os estados e as condições são os
+ * de antes: fora das aulas, da apresentação e da geração (para preservar o foco), e some com o teclado aberto. "Nova trilha"
+ * aparece uma vez só. Cada aba tem a largura do rótulo mais a sobra dividida por igual (48 × 54 no mínimo, sem vão entre
+ * elas) e o toque vai até a borda da cápsula, sem faixa morta; as margens deixam o toque passar para o conteúdo de trás.
+ */
+function NavegacaoInferior({ base, lados, aoMedir }: {
+  /** A distância da cápsula até a borda de baixo: 8 acima da área segura, nunca menos de 16. */
+  base: number;
+  /** As margens laterais: 16, ou a área segura lateral + 8. */
+  lados: { left: number; right: number };
   aoMedir: (altura: number) => void;
 }) {
   const nav = useContext(NavegacaoContexto);
+  const material = useMaterialFlutuante();
   if (!nav) return null;
-  // As duas abas ficam dentro de uma lista de abas, como pede o papel "tab" (axe: aria-required-parent).
+  // As abas ficam dentro de uma lista de abas, como pede o papel "tab" (axe: aria-required-parent).
   const itens: { id: 'planos' | 'objetivo' | 'explorar' | 'perfil'; rotulo: string; icone: NomeIcone; acao: () => void }[] = [
     { id: 'planos', rotulo: mensagens.planos.titulo, icone: 'livro', acao: nav.planos },
     { id: 'objetivo', rotulo: mensagens.planos.novo, icone: 'lampada', acao: nav.criar },
   ];
   if (nav.explorar) itens.push({ id: 'explorar', rotulo: mensagens.comunidade.navegacao, icone: 'bussola', acao: nav.explorar });
   if (nav.perfil) itens.push({ id: 'perfil', rotulo: mensagens.perfil.navegacao, icone: 'pessoa', acao: nav.perfil });
-  // Com três itens, o vão entre eles cai de 12 para 8, como .navegacao-mobile[data-itens='3'] da web; com quatro, 4 de vão,
-  // 8 nos lados, 6 × 2 dentro do item e o rótulo de 11/1,15 (.navegacao-mobile[data-itens='4']), para caber em 360.
-  const quatro = itens.length > 3;
-  const vao = quatro ? navegacaoEstilos.faixaQuatro : itens.length > 2 ? { gap: 8 } : null;
-  const borda = [fundo > 0 && { paddingBottom: 8 + fundo }, sobreposta && estilos.sobreposto];
-  return <FundoDeBarra testID="barra-de-baixo" accessibilityRole="tablist" estilo={[navegacaoEstilos.faixa, vao, ...borda]} estiloVidro={[navegacaoEstilos.faixaVidro, vao, ...borda]}
-    onLayout={(evento) => aoMedir(evento.nativeEvent.layout.height)}>
-    {itens.map((item) => {
-      const selecionado = item.id === nav.atual || item.id === 'planos' && nav.atual === 'plano';
-      return <Pressable key={item.id} testID={`nav-${item.id}`} accessibilityRole="tab" accessibilityState={{ selected: selecionado, disabled: nav.ocupado }}
-        aria-selected={selecionado} aria-disabled={nav.ocupado}
-        accessibilityLabel={item.rotulo} disabled={nav.ocupado} onPress={item.acao}
-        style={({ pressed }) => [navegacaoEstilos.item, quatro && navegacaoEstilos.itemQuatro, selecionado && navegacaoEstilos.ativo, pressed && { opacity: 0.7 }]}>
-        <IndicadorNavegacao icone={item.icone} selecionado={selecionado} />
-        <Text style={[navegacaoEstilos.rotulo, quatro && navegacaoEstilos.rotuloQuatro, selecionado && { color: cores.acao }]}>{item.rotulo}</Text>
-      </Pressable>;
-    })}
-  </FundoDeBarra>;
+  // O material escolhido fica na árvore nativa para a automação (a conferência no aparelho), no lugar da cápsula: um testID
+  // num View que não é elemento de acessibilidade (sem rótulo nem fala) e que não some no achatamento das views
+  // (collapsable falso), no Android e no iPhone. "barra-de-baixo" e os testIDs das abas continuam onde estavam.
+  return <View testID={material === 'vidro' ? 'barra-material-vidro' : 'barra-material-opaca'} collapsable={false} pointerEvents="box-none"
+    style={[navegacaoEstilos.lugar, lados, { bottom: base }]}>
+    <SuperficieFlutuante testID="barra-de-baixo" accessibilityRole="tablist" material={material} raio={CAPSULA.raio} estilo={navegacaoEstilos.capsula}
+      onLayout={(evento: LayoutChangeEvent) => aoMedir(evento.nativeEvent.layout.height)}>
+      {itens.map((item, posicao) => {
+        const selecionado = item.id === nav.atual || item.id === 'planos' && nav.atual === 'plano';
+        // Os rótulos de uma palavra nunca quebram nem encolhem; os de duas quebram no espaço quando não cabem numa linha.
+        const umaPalavra = !item.rotulo.includes(' ');
+        // O toque vai até a borda da cápsula: os 4 de respiro em cima, embaixo e nas pontas.
+        const toque = { top: 4, bottom: 4, left: posicao === 0 ? 4 : 0, right: posicao === itens.length - 1 ? 4 : 0 };
+        return <Pressable key={item.id} testID={`nav-${item.id}`} accessibilityRole="tab" accessibilityState={{ selected: selecionado, disabled: nav.ocupado }}
+          aria-selected={selecionado} aria-disabled={nav.ocupado}
+          accessibilityLabel={item.rotulo} disabled={nav.ocupado} onPress={item.acao} hitSlop={toque}
+          style={[navegacaoEstilos.aba, umaPalavra && navegacaoEstilos.abaUmaPalavra, selecionado && navegacaoEstilos.ativa]}>
+          {({ pressed }) => <>
+            <IndicadorNavegacao icone={item.icone} selecionado={selecionado} pressionado={pressed} />
+            {/* 12/15, centrado; com o texto do sistema maior, cresce até 1,3× e para aí (a cápsula cresce junto). */}
+            <Text numberOfLines={umaPalavra ? 1 : 2} maxFontSizeMultiplier={1.3}
+              style={[navegacaoEstilos.rotulo, selecionado && navegacaoEstilos.rotuloAtivo]}>{item.rotulo}</Text>
+          </>}
+        </Pressable>;
+      })}
+    </SuperficieFlutuante>
+  </View>;
 }
-function IndicadorNavegacao({ icone, selecionado }: { icone: NomeIcone; selecionado: boolean }) {
+/**
+ * O ícone da aba (24, cheio na atual): na aba nova, 0,85 → 1 uma vez; ao pressionar, 0,9 enquanto o dedo está em cima, sem
+ * mexer na área de toque (no lugar da opacidade de 0,7). Com movimento reduzido, sem escala.
+ */
+function IndicadorNavegacao({ icone, selecionado, pressionado }: { icone: NomeIcone; selecionado: boolean; pressionado: boolean }) {
   const reduzir = useMovimentoReduzido();
   const [escala] = useState(() => new Animated.Value(1));
   useEffect(() => {
@@ -1355,18 +1468,27 @@ function IndicadorNavegacao({ icone, selecionado }: { icone: NomeIcone; selecion
     animacao.start();
     return () => { animacao.stop(); escala.setValue(1); };
   }, [selecionado, reduzir, escala]);
-  return <Animated.View style={{ transform: [{ scale: escala }] }}>
-    <Icone nome={icone} tamanho={22} cor={selecionado ? cores.acao : cores.textoSecundario} sistema={selecionado ? 'cheio' : true} />
-  </Animated.View>;
+  return <View style={pressionado && reduzir === false ? navegacaoEstilos.iconePressionado : undefined}>
+    <Animated.View style={{ transform: [{ scale: escala }] }}>
+      <Icone nome={icone} tamanho={24} cor={selecionado ? cores.acaoEscura : cores.textoSecundario} sistema={selecionado ? 'cheio' : true} />
+    </Animated.View>
+  </View>;
 }
 const navegacaoEstilos = StyleSheet.create({
-  faixa: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 8, borderTopWidth: 1, borderColor: cores.gelo, backgroundColor: cores.fundo },
-  // iOS 26: a mesma barra sobre vidro, sem o fundo branco e sem a linha de cima.
-  faixaVidro: { flexDirection: 'row', gap: 12, paddingHorizontal: 20, paddingVertical: 8 },
-  faixaQuatro: { gap: 4, paddingHorizontal: 8 },
-  item: { flex: 1, minHeight: 56, borderRadius: 18, padding: 6, alignItems: 'center', justifyContent: 'center', gap: 3 },
-  itemQuatro: { paddingHorizontal: 2 },
-  ativo: { backgroundColor: cores.nevoa },
-  rotulo: { fontFamily: fontes.corpo, fontSize: 12, fontWeight: '800', color: cores.textoSecundario, textAlign: 'center' },
-  rotuloQuatro: { fontSize: 11, lineHeight: 12.65 },
+  // O lugar da cápsula: só ela recebe o toque (as margens deixam passar para o conteúdo de trás); centrada, até 480.
+  lugar: { position: 'absolute', alignItems: 'center' },
+  // Respiro de 4 em volta das abas (62 = 4 + 54 + 4); as abas esticam até a altura da mais alta.
+  capsula: { width: '100%', maxWidth: CAPSULA.larguraMaxima, flexDirection: 'row', alignItems: 'stretch', padding: 4 },
+  // Cada aba: a largura do rótulo e a sobra dividida por igual (flex 1 1 auto), 48 × 54 no mínimo, respiro de 6, o ícone em
+  // cima e o rótulo 2 abaixo, alinhados no alto (com uma aba em duas linhas, as outras ficam com os ícones na mesma altura).
+  aba: { flexGrow: 1, flexShrink: 1, flexBasis: 'auto', minWidth: 48, minHeight: 54, padding: 6, gap: 2, alignItems: 'center',
+    borderRadius: CAPSULA.raioDaAba },
+  abaUmaPalavra: { flexShrink: 0 },
+  // A aba atual: a subcápsula opaca #E9E7FF (o "selecionado" da spec 13, §B5), também sobre o vidro, para o rótulo não
+  // depender do que passa por baixo.
+  ativa: { backgroundColor: cores.ceu },
+  rotulo: { fontFamily: fontes.corpo, fontSize: 12, lineHeight: 15, fontWeight: '800', color: cores.textoSecundario, textAlign: 'center' },
+  // #1D4ED8 na subcápsula: 5,53:1.
+  rotuloAtivo: { color: cores.acaoEscura },
+  iconePressionado: { transform: [{ scale: 0.9 }] },
 });

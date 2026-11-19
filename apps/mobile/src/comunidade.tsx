@@ -1043,8 +1043,12 @@ export function TelaPreviaTrilha({ cliente, codigo, acoesTela, aoAdicionado, aoA
   );
 }
 
-/** Fim da rolagem com a barra de baixo: 120 entre o último bloco e a barra, como `.estudo[data-navegacao] .estudo-principal` (o Perfil também usa). */
-export const FIM_COM_BARRA = { paddingBottom: 120 } as const;
+/**
+ * Fim da rolagem nas telas com a barra de abas (o Perfil e as configurações também usam): o respiro de sempre. A reserva da
+ * cápsula (a altura dela, a distância até a borda e mais 16, spec 05) vem da `Tela`; antes, com a barra no fluxo, eram 120
+ * entre o último bloco e a barra.
+ */
+export const FIM_COM_BARRA = { paddingBottom: 24 } as const;
 
 /** Capas mais baixas no celular (até 767 de largura), como a web: 112 na grade e 104 no Em alta. */
 const ALTURA_CAPA_GRADE = 112;

@@ -1805,6 +1805,9 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
 
   return (
     <Tela pagina={`plano-${plano.id}`} acoes={acoes} rodape={largo || (atualVisivel && passo) ? null : passo || novo} rolagem={rolagem}
+      // A cápsula da barra de baixo flutua sobre o fim do mapa: o morro do troféu continua por baixo dela (o caminho soma o
+      // espaço dela), sem a faixa vazia do fim da rolagem.
+      fimSobABarra={!largo}
       // Como na web no celular (levantamento de paridade, M1): a barra da marca, com "Sair" e o selo de sincronia, rola e sai
       // de vista; o cabeçalho da trilha (rótulo, nome em até duas linhas e o anel) rola até o alto e fica parado lá.
       abaixoDoLogo={largo ? undefined : <SeloSincronia sincronia={sincronia} />}
