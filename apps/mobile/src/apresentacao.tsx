@@ -20,6 +20,7 @@ import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao, 
 import { CartaoFonte } from './licao';
 import { mensagens } from './mensagens';
 import { Desenho, coresDaRegiao } from './mundo';
+import { Stu, medidasDoStu } from './mascote';
 import { iconesDosTemas, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
@@ -153,7 +154,7 @@ export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo
                 {indice === 0 && <ArteMaterial />}
                 {indice === 1 && <ArtePonte />}
                 {indice === 2 && <ArteExplique />}
-                {indice === 3 && <ArteProgresso largura={largura} />}
+                {indice === 3 && <ArteProgresso largura={largura} ativo={passo === 3} />}
               </View>
             ) : (
               <View accessibilityLabel={mensagens.apresentacao.areas} style={apresentacaoEstilos.areas}>
@@ -292,11 +293,23 @@ function NoMini({ x, y, tamanho, face, labio, icone, corIcone }: {
   );
 }
 
-/** Momento 4: trilha vencida no mapa, com as lições concluídas, o troféu no topo, "Ponte construída" e o selo de sincronia. */
-function ArteProgresso({ largura }: { largura: number }) {
+/**
+ * Momento 4: trilha vencida no mapa, com as lições concluídas, o troféu no topo, "Ponte construída" e o selo de sincronia.
+ * Spec 13 (B4, Designer 19/11): o único passo com Stu próprio — `stu-comemorando` de 40 à direita do troféu, com a base na
+ * base do nó (o lábio incluído), que se mexe uma vez a cada entrada no passo, com o pop da §B7. Fica por cima da arte, sem
+ * mudar a altura dela.
+ */
+function ArteProgresso({ largura, ativo }: { largura: number; ativo: boolean }) {
   const altura = largura * (11 / 16);
   const pontos = estradaDaMiniatura(largura, altura);
   const no = largura * 0.16;
+  const trofeu = largura * 0.19;
+  const [entradas, setEntradas] = useState(0);
+  useEffect(() => {
+    if (ativo) setEntradas((anterior) => anterior + 1);
+  }, [ativo]);
+  const stu = medidasDoStu('stu-comemorando', 40);
+  const baseDoTrofeu = altura * 0.2 + trofeu / 2 + trofeu * 0.09;
   return (
     <View style={[apresentacaoEstilos.arte, apresentacaoEstilos.mini, { height: altura, backgroundColor: coresDaRegiao(2).chao }]}>
       {tracoGrosso(pontos, largura * 0.07, 'rgba(255, 255, 255, 0.7)').map((estilo, indice) => (
@@ -309,7 +322,10 @@ function ArteProgresso({ largura }: { largura: number }) {
       <Desenho nome="pinheiro" largura={largura * 0.09} estilo={{ position: 'absolute', right: '9%', top: '50%' }} />
       <NoMini x="30%" y="78%" tamanho={no} face={cores.sucessoClaro} labio={cores.sucesso} icone="check" corIcone={cores.fundo} />
       <NoMini x="68%" y="50%" tamanho={no} face={cores.sucessoClaro} labio={cores.sucesso} icone="check" corIcone={cores.fundo} />
-      <NoMini x="38%" y="20%" tamanho={largura * 0.19} face={cores.ouro} labio={cores.ouroEscuro} icone="trofeu" corIcone={cores.ouroTexto} />
+      <NoMini x="38%" y="20%" tamanho={trofeu} face={cores.ouro} labio={cores.ouroEscuro} icone="trofeu" corIcone={cores.ouroTexto} />
+      <View testID="stu-apresentacao-progresso" style={{ position: 'absolute', left: largura * 0.38 + trofeu / 2 + 4, top: baseDoTrofeu - stu.altura }}>
+        <Stu nome="stu-comemorando" tamanho={40} animado="acontecimento" acontecimento={entradas || undefined} pop={entradas || undefined} />
+      </View>
       {/* O selo de sincronia do mapa, no canto de cima (como `.apresentacao-sincronia` da web). */}
       <View style={apresentacaoEstilos.sincronia}>
         <SeloSincronia sincronia={{ estado: 'atualizado', em: null }} />

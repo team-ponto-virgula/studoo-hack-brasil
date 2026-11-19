@@ -1207,10 +1207,12 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
         style={{ width: tamanho, height: tamanho + 7, transform: [{ scale: pop }] }}>
         {/* Halo dourado em volta do troféu. */}
         <View style={[caminhoEstilos.camada, circulo(tamanho + 28), { left: -14, top: -14, backgroundColor: 'rgba(255, 207, 77, 0.42)' }]} />
-        <View style={[caminhoEstilos.camada, circulo(tamanho), { top: 8, backgroundColor: feita ? ouroLabio : '#EBCB72' }]} />
-        <View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(tamanho), feita ? { backgroundColor: ouroFace }
-          : { backgroundColor: cores.fundo, borderWidth: 5, borderColor: '#FFE9A8' }]}>
-          <Icone nome="trofeu" cheio tamanho={Math.round(tamanho * 0.5)} cor={feita ? cores.ouroTexto : '#C98A0E'} />
+        {/* Spec 13 (B4, Designer 19/11): `acessorio-trofeu` (faixa M) no lugar do troféu desenhado, com 72% do lado da lente,
+            numa lente de face branca, borda de 3 #E0A92E e lábio #C7922A nos dois estados. Antes da conquista, silhueta
+            #8A93B0 a 40%; ao concluir, a cor cheia com o pop de hoje (o troféu não tem versão animada no kit). */}
+        <View style={[caminhoEstilos.camada, circulo(tamanho), { top: 8, backgroundColor: '#C7922A' }]} />
+        <View style={[caminhoEstilos.camada, caminhoEstilos.face, circulo(tamanho), { backgroundColor: '#FFFFFF', borderWidth: 3, borderColor: '#E0A92E' }]}>
+          <Stu nome="acessorio-trofeu" tamanho={Math.round(tamanho * 0.72)} silhueta={feita ? undefined : '#8A93B0'} estilo={feita ? undefined : { opacity: 0.4 }} />
         </View>
         {festa && <Confete quantidade={18} />}
         {bolha && feita && <Confete key={bolha + toques} quantidade={14} />}
