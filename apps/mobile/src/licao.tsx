@@ -46,6 +46,7 @@ import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco
 import { mensagens, textoDaFalta } from './mensagens';
 import { Opcao, letras } from './opcao';
 import { Stu } from './mascote';
+import { tocaSons } from './sons';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 
@@ -454,6 +455,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     if (ocupado || !exercicio || avaliacao || !respostaCompleta(exercicio, resposta, iniciais[indice])) return;
     const resultado = await avaliar(resposta, indice);
     if (!resultado) return;
+    // O som do resultado (spec 12); a reação do Stu no painel não tem som próprio.
+    void tocaSons.tocarEfeito(resultado.correta ? 'acerto' : 'erro');
     setTentativas((soma) => soma + 1);
     setPrimeiras((atuais) => atuais.map((atual, posicao) => (posicao === indice ? atual ?? resultado.correta : atual)));
     if (!resultado.correta) setErrosSeguidos((soma) => soma + 1);
@@ -589,6 +592,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           // A ponte abre sozinha na tela (o exercício recolhe): começa do alto.
           rolagem.current?.scrollTo({ y: 0, animated: false });
           setPedidoPonte((atual) => atual + 1);
+          void tocaSons.tocarEfeito('ponte_abrir');
         }}
         continuar={() => void avancar()} />
     );
@@ -666,7 +670,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               <Opcao key={opcao.id} id={opcao.id} letra={letras[posicao] ?? String(posicao + 1)} texto={opcao.texto}
                 selecionada={opcao.id === resposta} retorno={opcao.id === resposta ? retorno : null}
                 desativada={ocupado || respondido} apagada={respondido && opcao.id !== resposta}
-                acao={() => mudarResposta(opcao.id)} />
+                acao={() => { mudarResposta(opcao.id); void tocaSons.tocarEfeito('toque_opcao'); }} />
             ))}
             </View>
           </View>
@@ -686,7 +690,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 {atual.justificativas.map((opcao, posicao) => (
                   <Opcao key={opcao.id} id={`justificativa-${opcao.id}`} letra={letras[posicao] ?? String(posicao + 1)} texto={opcao.texto}
                     selecionada={opcao.id === escolhida} retorno={opcao.id === escolhida ? corDaParte('justificativa') : null}
-                    desativada={ocupado || respondido} apagada={respondido && opcao.id !== escolhida} acao={() => salvar(opcao.id)} />
+                    desativada={ocupado || respondido} apagada={respondido && opcao.id !== escolhida}
+                    acao={() => { salvar(opcao.id); void tocaSons.tocarEfeito('toque_opcao'); }} />
                 ))}
               </View>
             )} />

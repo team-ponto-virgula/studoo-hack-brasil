@@ -30,6 +30,7 @@ import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaC
 import { TelaPerfil } from './perfil';
 import { BotaoConfigurar, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
+import { tocaSons } from './sons';
 
 /*
  * Estudo no app, com os mesmos passos da web (src/app/estudo.tsx): a pessoa escreve o que quer aprender, a trilha é montada
@@ -454,6 +455,7 @@ export function Estudo({ cliente, sair, expirar }: {
   async function apagarPlano(plano: PlanoResumo) {
     const resultado = await executar('apagar', () => cliente.apagarPlano(plano.id));
     if (!resultado.ok) return;
+    void tocaSons.tocarEfeito('apagar');
     setPlanos((anteriores) => anteriores?.filter((item) => item.id !== plano.id) ?? null);
     // Apagada pelas configurações dela: a tela não existe mais, e a pessoa volta a Minhas trilhas.
     setEtapa((atual) => (atual.tipo === 'configuracoes' && atual.planoId === plano.id ? { tipo: 'planos' } : atual));
@@ -506,6 +508,9 @@ export function Estudo({ cliente, sair, expirar }: {
       resumo && { segundos: resumo.segundos, acertosDePrimeira: resumo.acertosDePrimeira, exercicios: resumo.exercicios }));
     if (resultado.ok) {
       const atualizado = resultado.dados.plano;
+      // A última lição fecha a trilha: o som é o da trilha inteira (só na primeira vez que ela fecha), como na web.
+      const fechada = (p: PlanoDetalhe['progresso']) => p.total > 0 && p.concluidas === p.total;
+      void tocaSons.tocarEfeito(fechada(atualizado.progresso) && !fechada(plano.progresso) ? 'concluir_trilha' : 'concluir_licao');
       atualizarPlano(atualizado);
       navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
       return true;

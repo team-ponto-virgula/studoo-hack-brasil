@@ -2,6 +2,7 @@ import { criarClienteStudoo, ErroStudoo, type EventoGeracao, type TransporteStud
 import { fetch } from 'expo/fetch';
 import * as SecureStore from 'expo-secure-store';
 import { codigoDaResposta, lerEventos } from './geracao-ao-vivo';
+import { tocaSons } from './sons';
 
 const tempoLimiteMs = 15_000;
 /** O aceite cria o conteúdo de todas as lições; com a IA real, isso leva mais que um pedido comum. */
@@ -86,6 +87,8 @@ function transporteNativo(token?: string): TransporteStudoo {
       return { status: resposta.status, ok: resposta.ok, json: async () => corpo };
     } catch (erro) {
       if (erro instanceof ErroStudoo || erro instanceof FalhaMobile) throw erro;
+      // Sem rede numa ação da pessoa (pedido que não é GET), o som de erro de rede, como a web; as leituras falham caladas.
+      if ((opcoes.method ?? 'GET').toUpperCase() !== 'GET') void tocaSons.tocarEfeito('erro_rede');
       throw new FalhaMobile('conexao');
     } finally {
       clearTimeout(limite);

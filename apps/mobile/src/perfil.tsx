@@ -102,7 +102,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   /** Salvo: os campos fecham, o aviso do app diz "Perfil salvo." e o foco vai para "Editar". */
   function aoSalvo() {
     setEditando(false);
-    avisar(p.salvo, { icone: 'check' });
+    avisar(p.salvo, { icone: 'check', som: 'salvo' });
     setTimeout(() => focarSemRolar(botaoEditar.current), 250);
   }
   // A barra de salvar do editor fica presa embaixo, acima da barra de abas (na web, `position: sticky` no fim do bloco).

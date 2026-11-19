@@ -35,6 +35,8 @@ import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
 import { Stu } from './mascote';
+import { tocaSons } from './sons';
+import type { IdEfeitoSonoro } from '../../../packages/contratos/src/catalogo-sons';
 
 /**
  * Quanto o conteúdo da tela começa abaixo do topo da rolagem por causa da barra da marca, que rola junto (como na web).
@@ -68,7 +70,11 @@ export const BaixoOcupado = createContext(0);
  * 7 s com ação. O estado mora na raiz do app (uma tela por vez): quem avisa pega `avisar` do contexto, e a `Tela` desenha a
  * faixa onde ela sabe a altura das barras. Nunca leva o foco; o leitor de tela ouve o texto.
  */
-export type OpcoesDoAviso = { icone?: 'check' | 'alerta' | 'valeu'; acao?: { rotulo: string; aoTocar: () => void }; duracaoMs?: number };
+export type OpcoesDoAviso = {
+  icone?: 'check' | 'alerta' | 'valeu'; acao?: { rotulo: string; aoTocar: () => void }; duracaoMs?: number;
+  /** O som do aviso (spec 12): `aviso` sem dizer nada; outro efeito (o `salvo` do perfil); `null` quando o gesto já tocou o seu. */
+  som?: IdEfeitoSonoro | null;
+};
 export type AvisoAtual = OpcoesDoAviso & { texto: string; vez: number };
 export const AvisoDoApp = createContext<{ aviso: AvisoAtual | null; avisar: (texto: string, opcoes?: OpcoesDoAviso) => void; dispensar: () => void }>({
   aviso: null, avisar: () => undefined, dispensar: () => undefined,
@@ -85,6 +91,8 @@ export function useAvisoDoAppRaiz() {
     return () => clearTimeout(relogio);
   }, [aviso]);
   const avisar = useCallback((texto: string, opcoes: OpcoesDoAviso = {}) => {
+    const som = opcoes.som === undefined ? 'aviso' : opcoes.som;
+    if (som) void tocaSons.tocarEfeito(som);
     setAviso((anterior) => ({ ...opcoes, texto, vez: (anterior?.vez ?? 0) + 1 }));
     // Papel de status, como o role="status" da web: o leitor de tela também ouve.
     setTimeout(() => AccessibilityInfo.announceForAccessibility(texto), 0);

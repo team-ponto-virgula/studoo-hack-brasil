@@ -30,6 +30,7 @@ import { Botao, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interfac
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import { Stu } from './mascote';
+import { tocaSons } from './sons';
 
 /*
  * Formatos da aula no app, com os mesmos dados e a mesma sequência da web (src/app/aula.tsx), adaptados ao toque:
@@ -47,19 +48,27 @@ const t = mensagens.licao;
 function falar(fala: Fala, devagar: boolean, aoTerminar?: (semVoz: boolean) => void) {
   let reserva: ReturnType<typeof setTimeout> | undefined;
   let terminou = false;
+  // Enquanto a voz lê, o som de fundo abaixa (spec 12): uma saída por entrada, pelo fim, pela parada, pelo erro ou pela
+  // reserva, como na web.
+  let saiuDaFala = false;
+  const sairDaFala = () => { if (!saiuDaFala) { saiuDaFala = true; tocaSons.sairDeFala(); } };
   const inicio = Date.now();
   const fim = (falhou: boolean) => {
     if (terminou) return;
     terminou = true;
     if (reserva) clearTimeout(reserva);
+    sairDaFala();
     aoTerminar?.(falhou || Date.now() - inicio < 250);
   };
   try {
     void Speech.stop();
-    if (aoTerminar) reserva = setTimeout(() => fim(false), Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
+    tocaSons.entrarEmFala();
+    reserva = setTimeout(() => fim(false), Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
     Speech.speak(fala.texto, {
       language: fala.idioma, rate: devagar ? 0.6 : 0.95,
-      onDone: () => fim(false), onStopped: () => { terminou = true; if (reserva) clearTimeout(reserva); aoTerminar?.(false); }, onError: () => fim(true),
+      onDone: () => fim(false),
+      onStopped: () => { terminou = true; if (reserva) clearTimeout(reserva); sairDaFala(); aoTerminar?.(false); },
+      onError: () => fim(true),
     });
   } catch {
     fim(true);
@@ -114,9 +123,25 @@ const duracaoDaBatida = (compassos: number) => compassos * 4 * (60 / 72) + 1.6;
 
 async function tocarSom(som: 'acorde' | 'batida', casas: number[], compassos = 2): Promise<SomTocando> {
   const bytes = som === 'acorde' ? sintetizarAcorde(casas) : sintetizarBatida(casas, { compassos });
+  // O acorde e a batida abaixam o som de fundo enquanto tocam (spec 12, como na web): uma saída por entrada, no fim, na
+  // parada ou no erro. A entrada vem antes do modo de áudio desta tela (o toca-sons não mexe no modo durante a fala).
+  tocaSons.entrarEmFala();
+  let saiu = false;
+  const sairDaFala = () => { if (!saiu) { saiu = true; tocaSons.sairDeFala(); } };
+  try {
+    return await tocarArquivo(som, bytes, compassos, casas, sairDaFala);
+  } catch (erro) {
+    sairDaFala();
+    throw erro;
+  }
+}
+
+async function tocarArquivo(som: 'acorde' | 'batida', bytes: Uint8Array, compassos: number, casas: number[], aoTerminar: () => void): Promise<SomTocando> {
   if (Platform.OS === 'web') {
-    const Reprodutor = (globalThis as unknown as { Audio: new (url: string) => { play: () => Promise<void>; pause: () => void; currentTime: number } }).Audio;
+    const Reprodutor = (globalThis as unknown as { Audio: new (url: string) => { play: () => Promise<void>; pause: () => void; currentTime: number;
+      addEventListener: (tipo: string, ouvinte: () => void, opcoes?: { once?: boolean }) => void } }).Audio;
     const audio = new Reprodutor(URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'audio/wav' })));
+    for (const tipo of ['ended', 'pause', 'error']) audio.addEventListener(tipo, aoTerminar, { once: true });
     await audio.play();
     return { parar: () => audio.pause(), tempo: () => audio.currentTime };
   }
@@ -128,12 +153,13 @@ async function tocarSom(som: 'acorde' | 'batida', casas: number[], compassos = 2
   await setAudioModeAsync({ playsInSilentMode: true }).catch(() => undefined);
   const reprodutor = createAudioPlayer({ uri: arquivo.uri });
   reprodutor.play();
-  const liberar = setTimeout(() => reprodutor.remove(), som === 'acorde' ? 4000 : (duracaoDaBatida(compassos) + 2) * 1000);
+  const liberar = setTimeout(() => { reprodutor.remove(); aoTerminar(); }, som === 'acorde' ? 4000 : (duracaoDaBatida(compassos) + 2) * 1000);
   return {
     parar: () => {
       clearTimeout(liberar);
       reprodutor.pause();
       reprodutor.remove();
+      aoTerminar();
     },
     tempo: () => reprodutor.currentTime,
   };
@@ -952,7 +978,7 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
           const marcada = escolha === opcao;
           return (
             <CartaoDegrau key={opcao} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: desativado }} aria-checked={marcada} disabled={desativado}
-              testID={`vf-${opcao}`} onPress={() => mudar(`${opcao}:${justificativa}`)} raio={16} estiloFora={[{ flex: 1 }, desativado && !marcada && { opacity: 0.55 }]}
+              testID={`vf-${opcao}`} onPress={() => { mudar(`${opcao}:${justificativa}`); void tocaSons.tocarEfeito('toque_opcao'); }} raio={16} estiloFora={[{ flex: 1 }, desativado && !marcada && { opacity: 0.55 }]}
               corDegrau={marcada && retorno === 'certa' ? '#9AD8B5' : marcada && retorno === 'errada' ? '#F2CF96' : marcada ? '#9FB1F0' : cores.gelo}
               face={[formatos.valor, marcada && formatos.cartaoEscolhido, marcada && retorno === 'certa' && formatos.cartaoCerto,
                 marcada && retorno === 'errada' && formatos.cartaoErrado]}>
@@ -1090,6 +1116,15 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
     }, 1000);
     return () => clearInterval(intervalo);
   }, [rodando]);
+  // Sons do cronômetro (spec 12, como na web): ao começar (ou retomar) e quando chega a zero contando.
+  useEffect(() => {
+    if (rodando) void tocaSons.tocarEfeito('cronometro_inicio');
+  }, [rodando]);
+  const restanteAntes = useRef(restante);
+  useEffect(() => {
+    if (restante === 0 && restanteAntes.current > 0) void tocaSons.tocarEfeito('cronometro_fim');
+    restanteAntes.current = restante;
+  }, [restante]);
 
   /** A pergunta "Como foi?": recebe o foco do leitor de tela no fim do cronômetro, depois que a lição rola até ela. */
   const perguntaComoFoi = useRef<ComponentRef<typeof Text>>(null);
