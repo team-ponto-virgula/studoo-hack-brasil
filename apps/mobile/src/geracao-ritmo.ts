@@ -9,11 +9,10 @@ export const RITMO_DA_GERACAO = {
   /** 120 ms: o caminho se desenha do nó anterior até a vaga (300 ms). */
   linhaAtrasoMs: 120,
   linhaMs: 300,
-  /** 320 ms: o nó cai 26 px e pula (0,7 → 1,08 → 1 em 380 ms); cinco estrelinhas em 300 ms; o anel fica azul por 1,2 s. */
+  /** 320 ms: o nó cai 26 px e pula (0,7 → 1,08 → 1 em 380 ms), com o contorno do rascunho; o anel fica azul por 1,2 s. */
   noAtrasoMs: 320,
   noQueda: 26,
   noMs: 380,
-  estrelasMs: 300,
   anelMs: 1200,
   /** 420 ms: o nome entra do lado (opacidade e 12 px, 220 ms) e a contagem sobe. */
   nomeAtrasoMs: 420,
@@ -29,26 +28,53 @@ export const RITMO_DA_GERACAO = {
   marcoQueda: 12,
   marcoMs: 260,
   depoisDoMarcoMs: 200,
-  /** "Mais uma!" fica 900 ms, no máximo a cada três lições. */
-  maisUmaMs: 900,
-  maisUmaACada: 3,
   /** Rolar para cima mais que isto para de acompanhar. */
   pararAcimaDe: 40,
   /** A pílula "Ver a lição nova" fica 16 px acima do rodapé. */
   pilulaAcimaDoRodape: 16,
-  /** O fim: troféu (0 → 1,1 → 1 em 420 ms), confete por 1,2 s e o rodapé que desliza 12 px em 220 ms. */
+  /** O fim da proposta: troféu (0 → 1,1 → 1 em 420 ms), sem confete e sem som, e o rodapé que desliza 12 px em 220 ms. */
   trofeuMs: 420,
-  confeteMs: 1200,
   rodapeDeslize: 12,
   rodapeMs: 220,
   /** Sem lição nova por 12 s, a placa diz que ainda está escrevendo. */
   esperaLongaMs: 12000,
   /** Movimento reduzido: nó, nome e cenário aparecem juntos, com 150 ms de opacidade. */
   reduzidoMs: 150,
-  /** "Escrevendo suas lições": a linha do brilho a 60% da altura e o visto que passa a cada 80 ms. */
-  linhaDoBrilho: 0.6,
-  vistoPorLinhaMs: 80,
+  /** O rascunho da prévia: traços de 8 com vãos de 8 (pontas redondas de 5 px, como o stroke-linecap da web). */
+  tracejadoPx: 8,
+  tracejadoEspessura: 5,
+  /** `geracao_licao` no pouso do nó, no máximo um a cada 400 ms (spec 12). */
+  somDaLicaoMinimoMs: 400,
+  /**
+   * Criar a trilha (spec 04): o toque muda o botão na hora; "Ajustar pedido" sai em 200 ms; se o nó 1 não está à vista, a
+   * prévia rola até ele em 240 ms; a linha da espera aparece depois de 1,5 s sem resposta do aceite.
+   */
+  ajustarSaiMs: 200,
+  rolarAteNo1Ms: 240,
+  esperaRealMs: 1500,
+  /** O anel do nó 1 respira enquanto a trilha é criada (1,1 s por volta). */
+  respiroMs: 1100,
+  /**
+   * A passagem (o aceite voltou): t = 0, o som e o pulso do nó 1 (1 → 1,12 → 1, 180 ms), e o caminho firma (180 ms); t = 120,
+   * o círculo cresce do nó 1 até cobrir a tela (300 ms); t = 320, a aula entra por cima (150 ms). Total: 470 ms.
+   */
+  pulsoMs: 180,
+  firmarMs: 180,
+  circuloAtrasoMs: 120,
+  circuloMs: 300,
+  aulaEntraMs: 320,
+  aulaOpacidadeMs: 150,
 } as const;
+
+/** Quando a passagem termina (a aula já está por inteiro na tela): 470 ms; com movimento reduzido, só a opacidade (150 ms). */
+export function fimDaPassagem(reduzir: boolean) {
+  return reduzir ? RITMO_DA_GERACAO.aulaOpacidadeMs : RITMO_DA_GERACAO.aulaEntraMs + RITMO_DA_GERACAO.aulaOpacidadeMs;
+}
+
+/** O raio que cobre a tela inteira a partir do ponto (x, y): até o canto mais longe. */
+export function raioQueCobre(x: number, y: number, largura: number, altura: number) {
+  return Math.ceil(Math.hypot(Math.max(x, largura - x), Math.max(y, altura - y)));
+}
 
 /**
  * Quanto a próxima lição espera depois que a anterior começou: ela começa quando a anterior chega ao passo 3 (o nó cai). Se a
@@ -87,9 +113,4 @@ export function deixouDeAcompanhar(rolado: number, maisBaixo: number) {
 /** O centro da lição nova está no mapa visível (abaixo da faixa e acima do rodapé): rolando até ela, a tela volta a acompanhar. */
 export function vagaAVista(centro: number, rolado: number, visivel: number, coberto: number) {
   return centro >= rolado + coberto && centro <= rolado + visivel;
-}
-
-/** "Mais uma!" aparece no máximo a cada três lições: na 3ª, na 6ª, na 9ª… */
-export function comMaisUma(numero: number) {
-  return numero > 0 && numero % RITMO_DA_GERACAO.maisUmaACada === 0;
 }

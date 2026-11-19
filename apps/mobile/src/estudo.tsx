@@ -23,7 +23,7 @@ import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NoCaminho, type NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
-import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
+import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, fimDaPassagem, intervaloDaFila, raioQueCobre, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
@@ -77,11 +77,15 @@ function pontoDeVolta(origem: Etapa): Etapa {
 type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'apagar';
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 
-/** Quanto "Escrevendo suas lições" fica na tela, no mínimo: com a IA falsa, o aceite volta rápido e o título piscaria. */
-const ESCRITA_MINIMA_MS = 1200;
-/** Quanto "Lições prontas!" fica na tela, no mínimo, para o visto passar por todas as lições (como na web). */
-const PAUSA_LICOES_PRONTAS_MS = 900;
-const pausa = (ms: number) => new Promise<void>((resolver) => setTimeout(resolver, ms));
+/**
+ * O toque em "Começar a lição 1" (spec 04, "Criar a trilha"): 'criando' enquanto o aceite não volta, 'erro' ou 'expirada'
+ * quando ele falha (o botão volta, com a linha do motivo) e 'criada' na passagem para a aula. Sem pausa mínima: a tela
+ * espera só a resposta.
+ */
+type FaseDaCriacao = 'criando' | 'erro' | 'expirada' | 'criada';
+/** A passagem para a aula: quando o aceite voltou, de onde o círculo cresce (o centro do nó 1, na janela) e se é a reduzida. */
+type Passagem = { inicio: number; origem: { x: number; y: number } | null; reduzida: boolean };
+const esperar = (ms: number) => new Promise<void>((resolver) => setTimeout(resolver, Math.max(0, ms)));
 
 /** Volta da lição ou da conclusão para a trilha, que rola até o nó liberado, o próximo ou a lição de origem, como na web. */
 function voltarATrilha(etapa: Extract<Etapa, { tipo: 'licao' | 'concluida' }>): EtapaPlano {
@@ -135,6 +139,16 @@ export function Estudo({ cliente, sair, expirar }: {
   const emCurso = useRef(false);
   const saidaDaLicao = useRef<(() => void) | null>(null);
   const geracaoAtiva = useRef<AbortController | null>(null);
+  /** Criar a trilha: a fase do toque, a passagem para a aula e o aceite em andamento (de quem é a resposta que chegar). */
+  const [criacao, setCriacao] = useState<FaseDaCriacao | null>(null);
+  const criacaoAtual = useRef(criacao);
+  criacaoAtual.current = criacao;
+  const [passagem, setPassagem] = useState<Passagem | null>(null);
+  const aceiteAtual = useRef<object | null>(null);
+  const lenteDoNo1 = useRef<ComponentRef<typeof View> | null>(null);
+  const reduzirMovimento = useMovimentoReduzido();
+  const reduzirAgora = useRef(reduzirMovimento);
+  reduzirAgora.current = reduzirMovimento;
   const ocupado = pendente !== null;
   /** Perfis e compartilhar (spec 09): só com `compartilhar` no /api/auth/config, como na web. */
   const [compartilhar, setCompartilhar] = useState(false);
@@ -238,6 +252,11 @@ export function Estudo({ cliente, sair, expirar }: {
     if (Platform.OS === 'web') return;
     // O mesmo voltar serve ao botão do Android e ao gesto de borda do iPhone (voltar.ts); em Minhas trilhas, o gesto não começa.
     const assinatura = ouvirVoltar(() => {
+      // Voltar durante "Criando sua trilha…": sai sem cancelar no servidor; a trilha aparece em Minhas trilhas.
+      if (criacaoAtual.current === 'criando') {
+        sairDaCriacao();
+        return true;
+      }
       if (emCurso.current) return true;
       if (etapa.tipo === 'planos') return false;
       if (etapa.tipo === 'apresentacao') {
@@ -306,7 +325,10 @@ export function Estudo({ cliente, sair, expirar }: {
   function navegar(destino: Etapa) {
     // Saindo do perfil com os dados abertos e alteração não salva: o editor pergunta antes ("Sair sem salvar?"), como na web.
     if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
-    if (destino.tipo !== 'geracao') pararGeracao();
+    if (destino.tipo !== 'geracao') {
+      pararGeracao();
+      setCriacao(null);
+    }
     setErro(null);
     setFalhaGeracao(null);
     setAviso(null);
@@ -363,6 +385,7 @@ export function Estudo({ cliente, sair, expirar }: {
     geracaoAtiva.current = controle;
     let trilha: TrilhaEmGeracao = { objetivo: texto, titulo: null, fluxos: [], proposta: null };
     Keyboard.dismiss();
+    setCriacao(null);
     navegar({ tipo: 'geracao' });
     setGeracao(trilha);
 
@@ -396,37 +419,110 @@ export function Estudo({ cliente, sair, expirar }: {
     anunciar(mensagens.pedido.cancelada);
   }
 
-  /** Começar: salva a trilha mostrada (o aceite gera o conteúdo das lições) e abre a primeira lição. */
+  /**
+   * "Começar a lição 1" (spec 04, "Criar a trilha"): um toque salva a trilha mostrada (o aceite escreve o conteúdo das
+   * lições) e abre a etapa 1 da lição 1, sem tela no meio e sem pausa mínima. Enquanto o aceite não volta, o botão diz
+   * "Criando sua trilha…". Quando volta: toca o som único da criação, o nó 1 pulsa, a busca da lição começa junto com a
+   * passagem e, aos 320 ms, a aula (ou o esqueleto dela, se a lição ainda não chegou) entra por cima do círculo. O mesmo
+   * token numa nova tentativa devolve a trilha já criada, sem duplicar. Sair durante a criação não cancela no servidor.
+   */
   async function comecar(proposta: PropostaPlano) {
-    const aceite = await executar('aceitar', async () => {
-      const [plano] = await Promise.all([cliente.aceitarProposta(proposta.token), pausa(ESCRITA_MINIMA_MS)]);
-      return plano;
-    });
-    // Sem o aceite, a trilha gerada volta (nova tela, mesmo estado), com o erro no topo e em foco.
-    if (!aceite.ok) return;
-    const plano = aceite.dados;
+    if (emCurso.current || aceiteAtual.current) return;
+    const vez = {};
+    aceiteAtual.current = vez;
+    emCurso.current = true;
+    Keyboard.dismiss();
+    setPendente('aceitar');
+    setErro(null);
+    setCriacao('criando');
+    tocaSons.tocarEfeito('toque_opcao');
+    anunciar(mensagens.geracao.anuncioCriando);
+    let plano: PlanoDetalhe;
+    try {
+      plano = await cliente.aceitarProposta(proposta.token);
+    } catch (falha) {
+      // Saiu durante a criação: a resposta não é mais desta tela.
+      if (aceiteAtual.current !== vez) return;
+      aceiteAtual.current = null;
+      emCurso.current = false;
+      setPendente(null);
+      if (sessaoInvalida(falha)) {
+        setCriacao(null);
+        await expirarGuardando();
+        return;
+      }
+      const expirada = codigoDaFalha(falha) === 'proposta_invalida';
+      setCriacao(expirada ? 'expirada' : 'erro');
+      anunciar(expirada ? mensagens.geracao.propostaExpirada : mensagens.geracao.erroCriacao);
+      return;
+    }
+    // A trilha existe no servidor: entra em Minhas trilhas mesmo se a pessoa já saiu daqui.
     atualizarPlano(plano);
     setObjetivo('');
+    if (aceiteAtual.current !== vez || etapaAtual.current.tipo !== 'geracao') return;
     const primeira = proximaDoCaminho(plano);
     if (!primeira) {
+      terminarCriacao();
       navegar({ tipo: 'plano', plano });
       return;
     }
-    // As lições acabaram de ficar prontas: o visto passa por elas enquanto a primeira abre.
-    const licao = await executar('abrir', async () => {
-      const licoes = proposta.fluxos.reduce((soma, fluxo) => soma + fluxo.licoes.length, 0);
-      const [dados] = await Promise.all([cliente.obterLicao(primeira), pausa(Math.max(PAUSA_LICOES_PRONTAS_MS, licoes * RITMO_DA_GERACAO.vistoPorLinhaMs + 500))]);
-      return dados;
+    // t = 0: o som único da criação, o pulso do nó 1, o caminho que firma e a busca da lição, juntos.
+    const inicio = Date.now();
+    const reduzida = reduzirAgora.current !== false;
+    let licao: LicaoDetalhe | null = null;
+    let falhaLicao: unknown = null;
+    const busca = cliente.obterLicao(primeira).then((dados) => { licao = dados; }, (falha: unknown) => { falhaLicao = falha ?? new ErroStudoo('falha'); });
+    tocaSons.tocarEfeito('geracao_pronta');
+    setCriacao('criada');
+    setPassagem({ inicio, origem: null, reduzida });
+    lenteDoNo1.current?.measureInWindow((x, y, largura, altura) => {
+      if (largura > 0) setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, origem: { x: x + largura / 2, y: y + altura / 2 } } : atual));
     });
-    if (licao.ok) {
-      navegar({ tipo: 'licao', plano, licao: licao.dados });
+    // Aos 320 ms (com movimento reduzido, na hora), a aula entra por cima; se a lição ainda não chegou, o esqueleto dela.
+    await esperar(inicio + (reduzida ? 0 : RITMO_DA_GERACAO.aulaEntraMs) - Date.now());
+    if (aceiteAtual.current !== vez) return;
+    if (!licao && !falhaLicao) {
+      setPendente('abrir');
+      await busca;
+      if (aceiteAtual.current !== vez) return;
+    }
+    terminarCriacao();
+    const pronta = licao as LicaoDetalhe | null;
+    if (pronta) {
+      navegar({ tipo: 'licao', plano, licao: pronta });
+      anunciar(mensagens.geracao.anuncioCriada(pronta.titulo));
       return;
     }
-    if (licao.codigo === 'nao_autenticado') return;
+    if (sessaoInvalida(falhaLicao)) {
+      await expirarGuardando();
+      return;
+    }
+    // A trilha foi criada, mas a lição não abriu: o mapa salvo, com o erro.
+    const codigo = codigoDaFalha(falhaLicao);
     navegar({ tipo: 'plano', plano });
-    setErro(mensagemDoCodigo(licao.codigo));
-    setCodigoErro(licao.codigo);
+    setErro(mensagemDoCodigo(codigo));
+    setCodigoErro(codigo);
   }
+
+  /** Fim da criação (a aula abriu, ou a pessoa foi para outra tela): libera as ações. A passagem acaba sozinha. */
+  function terminarCriacao() {
+    aceiteAtual.current = null;
+    emCurso.current = false;
+    setPendente(null);
+  }
+
+  /** Sair durante "Criando sua trilha…" (voltar, gesto ou Minhas trilhas): o aceite segue no servidor e a resposta é ignorada. */
+  function sairDaCriacao() {
+    terminarCriacao();
+    navegar({ tipo: 'planos' });
+  }
+
+  // A passagem dura 470 ms (com movimento reduzido, 150): depois, a camada do círculo sai.
+  useEffect(() => {
+    if (!passagem) return;
+    const fim = setTimeout(() => setPassagem(null), passagem.inicio + fimDaPassagem(passagem.reduzida) - Date.now() + 40);
+    return () => clearTimeout(fim);
+  }, [passagem]);
 
   /**
    * Confirmações (sair e apagar) no cartão da web (.modal-cartao), com "Cancelar" e a confirmação, no lugar da caixa do
@@ -530,8 +626,9 @@ export function Estudo({ cliente, sair, expirar }: {
   const telaDaComunidade = ['explorar', 'perfilPublico', 'previaTrilha'].includes(etapa.tipo);
   const acoes = (
     <>
+      {/* Durante "Criando sua trilha…", Minhas trilhas é a saída: o aceite segue no servidor e a trilha aparece na lista. */}
       {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil', 'configuracoes'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
-        desativado={ocupado} acao={() => abrir({ tipo: 'planos' })} />}
+        desativado={ocupado && criacao !== 'criando'} acao={criacao === 'criando' ? sairDaCriacao : () => abrir({ tipo: 'planos' })} />}
       {/* Com o compartilhar (como a web): "Sair" fica no Perfil; no alto, "Perfil" só onde não há a barra de baixo. */}
       {compartilhar
         ? !comNavegacaoAgora && <Botao rotulo={mensagens.perfil.navegacao} testID="perfil-cabecalho" compacto variante="texto" desativado={ocupado}
@@ -559,6 +656,8 @@ export function Estudo({ cliente, sair, expirar }: {
       <FolhaCompartilhar cliente={cliente} planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade}
         aoFechar={() => { setFolha(null); setVersaoFolha((versao) => versao + 1); }} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
     )}
+    {/* A passagem da criação: o círculo da cor da aula cresce do nó 1 por cima de tudo e some quando a aula já entrou. */}
+    {passagem && <PassagemDaCriacao passagem={passagem} />}
     {confirmacao && (
       <CartaoConfirmacao mensagem={confirmacao.mensagem} texto={confirmacao.texto} aviso={confirmacao.aviso} confirmarRotulo={confirmacao.confirmarRotulo}
         cancelarRotulo={confirmacao.cancelarRotulo} destrutivo={confirmacao.destrutivo}
@@ -568,12 +667,9 @@ export function Estudo({ cliente, sair, expirar }: {
   </NavegacaoContexto.Provider></AvisoDoApp.Provider>;
 
   function renderizarTela() {
-    // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. Começar, na trilha gerada,
-    // mostra o Stu escrevendo as lições até a primeira abrir: salvar o plano e abrir a lição é uma espera só.
+    // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. "Começar a lição 1" fica na
+    // própria prévia ("Criando sua trilha…") e, na passagem, a aula entra por cima; se ela ainda carrega, o esqueleto dela.
     if (pendente === 'plano') return <Tela pagina="carregando-trilha" acoes={acoes}><SkeletonTrilha /></Tela>;
-    if (etapa.tipo === 'geracao' && geracao?.proposta && (pendente === 'aceitar' || pendente === 'abrir')) {
-      return <PreparandoLicoes proposta={geracao.proposta} prontas={pendente === 'abrir'} />;
-    }
     if (pendente === 'abrir' && etapa.tipo !== 'plano') return <SkeletonLicao texto={mensagens.licao.carregando} />;
 
     if (etapa.tipo === 'apresentacao') {
@@ -627,6 +723,7 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'geracao' && geracao) {
       return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
         comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })}
+        criacao={criacao} remontar={() => void gerar(geracao.objetivo)} guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
         // Como a web 4.2: a mesma regra do contrato (o assunto antes dos dois-pontos, sem acento), em vez do "fraç" fixo.
         existente={geracao.proposta ? planos?.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '')) : undefined}
         abrirExistente={(id) => void abrirPlano(id)} />;
@@ -1093,16 +1190,24 @@ function useFilaDaGeracao(nos: readonly NoCaminho[]) {
 }
 
 /**
- * Geração que se acompanha (spec 04, "Revisão do dono (19/11)"). O cartão do título vira uma faixa de 52 presa embaixo da
- * barra da marca (pontinhos, o pedido numa linha e a contagem), com a placa do Stu presa no alto do mapa (a frase, as dicas
- * que se revezam e, depois de 12 s sem lição nova, a espera longa). Cada lição nasce em passos (o caminho, o nó que cai, o
- * nome, o cenário e a próxima vaga) e a tela rola até ela ficar a 60% do mapa, enquanto a pessoa não mexe. Rolar para cima
- * mais de 40 px para de acompanhar e mostra a pílula "Ver a lição nova · N"; tocar nela, ou rolar até a lição nova, volta a
- * acompanhar. No fim, a tela vai até o troféu (ou a pílula vira "Ver o fim da trilha"), a placa diz que a trilha ficou
- * pronta, o rodapé troca para "Ajustar pedido" e "Começar" e o foco vai para "Começar". Ao subir até o começo do mapa, o
- * cartão do título volta embaixo da faixa. Com movimento reduzido, a tela pula em vez de rolar e nada cai nem brota.
+ * Geração que se acompanha (spec 04, "Revisão do dono (19/11)" e "Criar a trilha"). O cartão do título vira uma faixa de 52
+ * presa embaixo da barra da marca (pontinhos e o pedido numa linha, sem contagem), com a placa presa no alto do mapa (só o
+ * que é verdade: montando, a espera longa depois de 12 s sem lição nova e a proposta pronta). Cada lição nasce em passos
+ * (o caminho em rascunho, o nó que cai, o nome, o cenário e a próxima vaga) e a tela rola até ela ficar a 60% do mapa,
+ * enquanto a pessoa não mexe. Rolar para cima mais de 40 px para de acompanhar e mostra a pílula "Ver a lição nova · N";
+ * tocar nela, ou rolar até a lição nova, volta a acompanhar. No fim, a tela vai até o troféu (ou a pílula vira "Ver o fim
+ * da trilha"), a placa diz que a proposta ficou pronta, o rodapé troca para "Ajustar pedido" e "Começar a lição 1" e o foco
+ * vai para ele. O toque cria a trilha na própria prévia ("Criando sua trilha…", o nó 1 e o Stu), sem tela no meio. Ao subir
+ * até o começo do mapa, o cartão do título volta embaixo da faixa. Com movimento reduzido, a tela pula em vez de rolar e
+ * nada cai nem brota.
  */
-function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente }: {
+function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente, criacao, remontar, guardarNo1 }: {
+  /** O toque em "Começar a lição 1" (spec 04, "Criar a trilha"): criando, erro, expirada ou criada (a passagem). */
+  criacao: FaseDaCriacao | null;
+  /** "Montar de novo", com a proposta expirada: a geração de novo, com o mesmo pedido. */
+  remontar: () => void;
+  /** A lente do nó 1, de onde o círculo da passagem cresce. */
+  guardarNo1: (alvo: ComponentRef<typeof View> | null) => void;
   geracao: TrilhaEmGeracao;
   erro: string | null;
   acaoErro?: AcaoDoErro;
@@ -1117,7 +1222,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
 }) {
   const todos = useMemo(() => nosDaPrevia(geracao), [geracao]);
   const { titulo, proposta } = geracao;
-  const { mostrados, contados } = useFilaDaGeracao(todos);
+  const { mostrados } = useFilaDaGeracao(todos);
   const nos = useMemo(() => todos.slice(0, mostrados), [todos, mostrados]);
   const pronta = proposta !== null && mostrados >= todos.length;
   const total = nos.length;
@@ -1144,30 +1249,44 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const [trofeuAVista, setTrofeuAVista] = useState(false);
   const [deslize] = useState(() => new Animated.Value(1));
   const dividir = pronta && !largo;
-  const rotulo = pronta ? mensagens.geracao.pronta : mensagens.geracao.montando;
-  const contagem = pronta ? mensagens.geracao.contagemFinal(total) : mensagens.geracao.contagem(contados);
-  const contagemDaFaixa = pronta ? mensagens.geracao.contagemFinal(total) : contados === 0 ? mensagens.geracao.faixaGerando : mensagens.geracao.contagemFinal(contados);
+  // Criar a trilha: enquanto o aceite anda (e na passagem), só o botão fica, na largura toda; no erro, "Ajustar pedido" volta.
+  const salvando = criacao === 'criando' || criacao === 'criada';
+  const falhou = criacao === 'erro' || criacao === 'expirada';
+  const [esperaReal, setEsperaReal] = useState(false);
+  const [saidaDoAjustar] = useState(() => new Animated.Value(0));
+  const [ajustarFora, setAjustarFora] = useState(false);
 
   // O erro aparece no topo, como na web; a tela sobe até ele.
   useEffect(() => {
     if (erro) rolagem.current?.scrollTo({ y: 0, animated: reduzir === false });
   }, [erro, reduzir]);
 
-  // Sons da geração (spec 12, momentos novos de 19/11): cada lição toca `geracao_licao` quando o nó cai no mapa (o passo 3 da
-  // spec 04, como o caminho anima; com movimento reduzido, quando aparece); rajadas dentro de 180 ms o toca-sons descarta. O
-  // fim toca `geracao_pronta` uma vez e cala a última lição, que ainda cairia (o efeito da virada para pronta, abaixo).
-  // "Mais uma!", o troféu e o foco em "Começar" não têm som; cancelar (sair da tela) cala o que faltava.
+  // Sons da geração (spec 12, revisão de "Criar a trilha"): cada lição toca `geracao_licao` quando o nó pousa no mapa (o passo 3
+  // da spec 04, o evento visível; com movimento reduzido, quando aparece), no máximo um a cada 400 ms, só com o nó à vista e
+  // nunca depois da proposta pronta. O fim da proposta (o troféu) não tem som: o único som de conclusão, `geracao_pronta`,
+  // fica para o aceite. Os dois são aquecidos ao abrir a geração. Cancelar (sair da tela) cala o que faltava.
+  useEffect(() => {
+    tocaSons.aquecerEfeitos(['geracao_licao', 'geracao_pronta', 'toque_opcao']);
+  }, []);
   const somDasLicoes = useRef(new Set<ReturnType<typeof setTimeout>>());
+  const ultimoPouso = useRef(Number.NEGATIVE_INFINITY);
   const mostradosAntes = useRef(mostrados);
+  const prontaAgora = useRef(pronta);
+  prontaAgora.current = pronta;
   useEffect(() => {
     const de = mostradosAntes.current;
     mostradosAntes.current = mostrados;
     if (pronta || mostrados <= de) return;
     for (let indice = de; indice < mostrados; indice += 1) {
       const abreTrecho = indice > 0 && todos[indice - 1]?.trecho !== todos[indice]?.trecho;
+      const id = todos[indice]?.id;
       const relogio = setTimeout(() => {
         somDasLicoes.current.delete(relogio);
-        void tocaSons.tocarEfeito('geracao_licao');
+        const centro = id ? centros.current.get(id) : undefined;
+        const aVista = centro === undefined || vagaAVista(centro, rolado.current, visivel.current || height, coberto.current);
+        if (prontaAgora.current || !aVista || Date.now() - ultimoPouso.current < RITMO_DA_GERACAO.somDaLicaoMinimoMs) return;
+        ultimoPouso.current = Date.now();
+        tocaSons.tocarEfeito('geracao_licao');
       }, reduzir !== false ? 0 : atrasosDaLicao(abreTrecho).no);
       somDasLicoes.current.add(relogio);
     }
@@ -1186,14 +1305,14 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     return () => clearTimeout(relogio);
   }, [todos.length, proposta]);
 
-  // O fim: o rodapé desliza 12 px em 220 ms, o leitor de tela ouve "Trilha pronta, 9 lições. Começar." e o foco vai para
-  // "Começar". Se a pessoa já está no alto, o cartão do título volta na hora.
+  // O fim da proposta: o rodapé desliza 12 px em 220 ms, o leitor de tela ouve "Proposta pronta: 9 lições em 3 partes. Começar
+  // a lição 1." e o foco vai para "Começar a lição 1". Sem som (a trilha ainda não existe). Se a pessoa já está no alto, o
+  // cartão do título volta na hora.
   useEffect(() => {
     if (!pronta) return;
     for (const relogio of somDasLicoes.current) clearTimeout(relogio);
     somDasLicoes.current.clear();
-    void tocaSons.tocarEfeito('geracao_pronta');
-    AccessibilityInfo.announceForAccessibility(mensagens.geracao.anuncioFim(total));
+    AccessibilityInfo.announceForAccessibility(`${mensagens.geracao.propostaPronta(total, partes)} ${mensagens.geracao.comecarLicao1}.`);
     if (rolado.current <= 4) setCartaoDeVolta(true);
     const focar = setTimeout(() => focarSemRolar(botaoComecar.current), RITMO_DA_GERACAO.rodapeMs + 60);
     if (reduzir !== false) {
@@ -1210,6 +1329,42 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     // Só na virada para pronta.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pronta]);
+
+  // O toque em "Começar a lição 1" (spec 04, "Criar a trilha"). Se o nó 1 não está à vista, a prévia rola até ele (no app, a
+  // rolagem animada do sistema; com movimento reduzido, pula), para o anel que respira e o Stu que estuda ficarem à vista.
+  useEffect(() => {
+    if (criacao !== 'criando') return;
+    const primeiro = todos[0]?.id;
+    const centro = primeiro ? centros.current.get(primeiro) : undefined;
+    if (centro === undefined || vagaAVista(centro, rolado.current, visivel.current || height, coberto.current)) return;
+    mudarAcompanhar(false);
+    rolarPara(rolagemDaVaga(centro, visivel.current || height, coberto.current));
+    // Só no toque.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [criacao]);
+
+  // A espera real: 1,5 s sem resposta do aceite, a linha embaixo do botão diz que a IA está escrevendo as lições.
+  useEffect(() => {
+    setEsperaReal(false);
+    if (criacao !== 'criando') return;
+    const relogio = setTimeout(() => setEsperaReal(true), RITMO_DA_GERACAO.esperaRealMs);
+    return () => clearTimeout(relogio);
+  }, [criacao]);
+
+  // "Ajustar pedido" sai em 200 ms enquanto a trilha é criada (o botão fica com a largura toda) e volta no erro. Com movimento
+  // reduzido, na hora.
+  useEffect(() => {
+    const destino = salvando ? 1 : 0;
+    if (destino === 0) setAjustarFora(false);
+    if (reduzir !== false) {
+      saidaDoAjustar.setValue(destino);
+      if (destino === 1) setAjustarFora(true);
+      return;
+    }
+    const animacao = Animated.timing(saidaDoAjustar, { toValue: destino, duration: RITMO_DA_GERACAO.ajustarSaiMs, easing: Easing.out(Easing.quad), useNativeDriver: false });
+    animacao.start(({ finished }) => { if (finished && destino === 1) setAjustarFora(true); });
+    return () => animacao.stop();
+  }, [salvando, reduzir, saidaDoAjustar]);
 
   function mudarAcompanhar(valor: boolean) {
     acompanhandoAgora.current = valor;
@@ -1313,11 +1468,11 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
 
   const faixa = (
     <View>
-      <View testID="faixa-geracao" accessible accessibilityRole="header" accessibilityLabel={`${geracao.objetivo}. ${contagemDaFaixa}`}
+      {/* Sem contagem (spec 04, "Criar a trilha"): os pontinhos enquanto monta e o pedido numa linha. */}
+      <View testID="faixa-geracao" accessible accessibilityRole="header" accessibilityLabel={geracao.objetivo}
         style={estudoEstilos.faixaGeracao} onLayout={(evento) => { coberto.current = Math.round(evento.nativeEvent.layout.height); }}>
         {!pronta && <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden><Pontinhos cor={cores.acao} tamanho={6} vao={4} /></View>}
         <Text numberOfLines={1} style={estudoEstilos.faixaGeracaoNome}>{geracao.objetivo}</Text>
-        <Text style={estudoEstilos.faixaGeracaoContagem}>{contagemDaFaixa}</Text>
       </View>
       {/* A placa fica presa no alto do mapa, por cima dele (16 das laterais e 10 abaixo da faixa). */}
       <View pointerEvents="none" style={estudoEstilos.placaGeracaoLugar} onLayout={(evento) => {
@@ -1329,26 +1484,45 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     </View>
   );
 
+  const expirada = criacao === 'expirada';
   const rodape = (
-    <Animated.View style={[estudoEstilos.geracaoAcoes, pronta && reduzir === false && {
+    <Animated.View style={[estudoEstilos.geracaoRodape, pronta && reduzir === false && {
       opacity: deslize, transform: [{ translateY: deslize.interpolate({ inputRange: [0, 1], outputRange: [RITMO_DA_GERACAO.rodapeDeslize, 0] }) }],
     }]}>
-      <View style={dividir ? estudoEstilos.metade : null}>
-        {/* .geracao-acoes[data-pronta] > .botao: lado a lado, com 12 nos lados (em 360, "Ajustar pedido" cabe numa linha). */}
-        <Botao rotulo={pronta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar} testID="voltar-pedido" variante="secundario"
-          desativado={ocupado} acao={pronta ? ajustar : cancelar} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
+      <View style={estudoEstilos.geracaoAcoes}>
+        {/* .geracao-acoes[data-pronta] > .botao: lado a lado, com 12 nos lados (em 360, "Ajustar pedido" cabe numa linha). Na
+            criação, "Ajustar pedido" encolhe e some em 200 ms, e "Criando sua trilha…" fica numa linha, na largura toda. */}
+        {!ajustarFora && (
+          <Animated.View style={dividir ? [estudoEstilos.metade, salvando || falhou ? {
+            flexGrow: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+            opacity: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+            marginRight: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [0, -12] }),
+          } : null] : null}>
+            <Botao rotulo={pronta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar} testID="voltar-pedido" variante="secundario"
+              desativado={ocupado} acao={pronta ? ajustar : cancelar} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
+          </Animated.View>
+        )}
+        {!dividir && !pronta && (
+          <View testID="geracao-situacao" accessible accessibilityLabel={mensagens.geracao.montando} style={estudoEstilos.situacao}>
+            <Text style={estudoEstilos.situacaoRotulo}>{mensagens.geracao.montando}</Text>
+          </View>
+        )}
+        {pronta && proposta && (
+          <View style={dividir || salvando ? estudoEstilos.metade : null}>
+            <Botao referencia={botaoComecar} testID={expirada ? 'montar-de-novo' : 'comecar-trilha'}
+              rotulo={salvando ? mensagens.geracao.criandoTrilha : expirada ? mensagens.geracao.montarDeNovo : mensagens.geracao.comecarLicao1}
+              ocupado={salvando} afundado={salvando} giro={salvando} desativado={ocupado && !salvando}
+              acao={() => (expirada ? remontar() : comecar(proposta))} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
+          </View>
+        )}
       </View>
-      {!dividir && (
-        <View testID="geracao-situacao" accessible accessibilityLabel={`${rotulo}. ${contagem}`} style={estudoEstilos.situacao}>
-          <Text style={estudoEstilos.situacaoRotulo}>{rotulo}</Text>
-          <Text style={estudoEstilos.situacaoContagem}>{contagem}</Text>
-        </View>
+      {criacao === 'criando' && esperaReal && (
+        <Text testID="criacao-espera" accessibilityLiveRegion="polite" style={estudoEstilos.criacaoEspera}>{mensagens.geracao.escrevendoLicoes}</Text>
       )}
-      {pronta && proposta && (
-        <View style={dividir ? estudoEstilos.metade : null}>
-          <Botao referencia={botaoComecar} rotulo={mensagens.geracao.comecar} testID="comecar-trilha" desativado={ocupado} acao={() => comecar(proposta)}
-            estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
-        </View>
+      {falhou && (
+        <Text testID="criacao-erro" accessibilityLiveRegion="assertive" style={estudoEstilos.criacaoErro}>
+          {expirada ? mensagens.geracao.propostaExpirada : mensagens.geracao.erroCriacao}
+        </Text>
       )}
     </Animated.View>
   );
@@ -1379,7 +1553,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
           <Text style={estudoEstilos.geracaoIa}>
             {origemDemonstracao(proposta.origem) ? mensagens.geracao.demonstracao : mensagens.geracao.ia}
           </Text>
-          {existente && (
+          {existente && !salvando && (
             <View testID="trilha-repetida" accessibilityLiveRegion="polite" style={estudoEstilos.repetida}>
               <Text style={estudoEstilos.repetidaTexto}>{mensagens.geracao.repetida(existente.titulo)}</Text>
               <Botao rotulo={mensagens.geracao.abrirExistente} testID="abrir-existente" variante="secundario" estilo={{ alignSelf: 'flex-start' }} desativado={ocupado}
@@ -1398,34 +1572,70 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
           </View>
         </View>
       )}
-      <Caminho nos={nos} stu={pronta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} dicas={mensagens.geracao.dicas} extraChegada={44}
+      {/* A prévia é rascunho, sem confete no troféu; no toque, o nó 1 e o Stu contam a criação (spec 04, "Criar a trilha"). */}
+      <Caminho nos={nos} stu={pronta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} extraChegada={44}
         chegada={pronta} montando={!pronta} acompanhar={aoChegarAoFim} semFala respiroNoAlto={alturaPlaca + 20} aoMedirNo={aoMedirNo}
-        stuNoFim festaPermitida={acompanhando || trofeuAVista} trofeuDoZero />
+        stuNoFim festaPermitida={false} trofeuDoZero rascunho guardarNo1={guardarNo1}
+        criacao={criacao === null ? null : criacao === 'criando' || criacao === 'criada' ? criacao : 'erro'} />
     </Tela>
   );
 }
 
 /**
- * A placa do Stu na geração (spec 04): fundo #FFF9EC, borda de 2 px #E8D3A8 e raio de 16. Enquanto monta: a frase, os
- * pontinhos e as dicas que se revezam; depois de 12 s sem lição nova, "Ainda escrevendo…"; no fim, "Trilha pronta! 9 lições
- * em 3 partes." com "Confira o caminho e comece quando quiser.". O leitor de tela já ouve cada lição e o fim; a placa fica
- * fora dele para não repetir.
+ * A placa da geração (spec 04, revisão de "Criar a trilha"): fundo #FFF9EC, borda de 2 px #E8D3A8 e raio de 16. Diz só o que
+ * é verdade, sem dicas que se revezam: "Montando sua trilha" enquanto chegam lições, "Ainda montando a próxima lição…"
+ * depois de 12 s sem lição nova e "Proposta pronta: 9 lições em 3 partes." no fim (a trilha só existe depois do toque). O
+ * leitor de tela já ouve cada lição e o fim; a placa fica fora dele para não repetir.
  */
 function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes }: { pronta: boolean; esperaLonga: boolean; licoes: number; partes: number }) {
-  const dicas = mensagens.geracao.dicas;
-  const [indice, setIndice] = useState(0);
-  useEffect(() => {
-    if (pronta || esperaLonga || dicas.length < 2) return;
-    const intervalo = setInterval(() => setIndice((atual) => (atual + 1) % dicas.length), 3600);
-    return () => clearInterval(intervalo);
-  }, [pronta, esperaLonga, dicas.length]);
-  const texto = pronta ? mensagens.geracao.placaPronta(licoes, partes) : esperaLonga ? mensagens.geracao.esperaLonga : mensagens.geracao.stuMontando;
-  const linha = pronta ? mensagens.geracao.placaProntaTexto : esperaLonga ? null : dicas[indice];
+  const texto = pronta ? mensagens.geracao.propostaPronta(licoes, partes) : esperaLonga ? mensagens.geracao.aguardandoLicao : mensagens.geracao.montandoTitulo;
   return (
     <View testID="placa-geracao" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={estudoEstilos.placaGeracao}>
       <Text style={estudoEstilos.placaGeracaoTexto}>{texto}</Text>
-      {linha && <Text key={linha} style={estudoEstilos.placaGeracaoLinha}>{linha}</Text>}
     </View>
+  );
+}
+
+/**
+ * A passagem da criação (spec 04, "Criar a trilha"): por cima de tudo, um círculo da cor do fundo da aula cresce do centro do
+ * nó 1 até cobrir a tela (aos 120 ms, em 300 ms, saída suave); aos 320 ms a aula já está embaixo, e a camada some em 150 ms
+ * (a aula "entra por cima"). Com movimento reduzido, sem círculo: a camada cheia some em 150 ms. Não recebe toque: a aula
+ * responde assim que monta.
+ */
+function PassagemDaCriacao({ passagem }: { passagem: Passagem }) {
+  const { width, height } = useWindowDimensions();
+  const raiz = useRef<ComponentRef<typeof View>>(null);
+  const [deslocamento, setDeslocamento] = useState<{ x: number; y: number } | null>(null);
+  const [crescer] = useState(() => new Animated.Value(0));
+  const [presenca] = useState(() => new Animated.Value(1));
+  const { inicio, reduzida, origem } = passagem;
+
+  useEffect(() => {
+    const passou = Date.now() - inicio;
+    const animacao = reduzida
+      ? Animated.timing(presenca, { toValue: 0, duration: RITMO_DA_GERACAO.aulaOpacidadeMs, easing: Easing.linear, useNativeDriver: true })
+      : Animated.parallel([
+          Animated.timing(crescer, { toValue: 1, duration: RITMO_DA_GERACAO.circuloMs, delay: Math.max(0, RITMO_DA_GERACAO.circuloAtrasoMs - passou),
+            easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(presenca, { toValue: 0, duration: RITMO_DA_GERACAO.aulaOpacidadeMs, delay: Math.max(0, RITMO_DA_GERACAO.aulaEntraMs - passou),
+            easing: Easing.linear, useNativeDriver: true }),
+        ]);
+    animacao.start();
+    return () => animacao.stop();
+  }, [inicio, reduzida, crescer, presenca]);
+
+  // O centro do nó 1 vem em coordenadas da janela; a camada pode não começar no canto da janela.
+  const ponto = origem && deslocamento ? { x: origem.x - deslocamento.x, y: origem.y - deslocamento.y } : { x: width / 2, y: height / 2 };
+  const raio = raioQueCobre(ponto.x, ponto.y, width, height);
+  return (
+    <Animated.View ref={raiz} testID="passagem-criacao" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      collapsable={false} style={[StyleSheet.absoluteFill, estudoEstilos.passagem, { opacity: presenca }]}
+      onLayout={() => raiz.current?.measureInWindow((x, y) => setDeslocamento({ x, y }))}>
+      {reduzida
+        ? <View style={[StyleSheet.absoluteFill, { backgroundColor: cores.fundo }]} />
+        : <Animated.View style={{ position: 'absolute', left: ponto.x - raio, top: ponto.y - raio, width: raio * 2, height: raio * 2, borderRadius: raio,
+            backgroundColor: cores.fundo, transform: [{ scale: crescer }] }} />}
+    </Animated.View>
   );
 }
 
@@ -1468,200 +1678,6 @@ function TextoQueChega({ texto, surgir }: { texto: string; surgir: boolean }) {
     }]}>
       {texto}
     </Animated.Text>
-  );
-}
-
-/**
- * Começar, como na web: o aceite salva a trilha e a IA escreve a explicação, o exemplo e o exercício de cada lição.
- * Enquanto isso, o Stu escreve com o lápis, as folhas voam, um brilho desce pela lista das lições e dicas se revezam.
- * O aceite é um pedido só, sem andamento por lição, então nenhuma lição ganha o visto antes da hora; com `prontas`
- * (o aceite voltou), o visto passa por todas enquanto a primeira lição abre.
- */
-function PreparandoLicoes({ proposta, prontas }: { proposta: PropostaPlano; prontas: boolean }) {
-  const licoes = proposta.fluxos.flatMap((fluxo) => fluxo.licoes.map((licao) => licao.titulo));
-  const rolagem = useRef<ComponentRef<typeof ScrollView>>(null);
-  const visivel = useRef(0);
-  const conteudo = useRef(0);
-
-  return (
-    <Tela pagina="preparando-licoes" rolagem={rolagem} aoMedir={(altura) => { visivel.current = altura; }}
-      aoMedirConteudo={(altura) => { conteudo.current = altura; }}>
-      <CenaPreparo prontas={prontas} />
-      <Text style={estudoEstilos.contexto}>{proposta.titulo}</Text>
-      <Titulo testID="titulo-preparo" foco>{prontas ? mensagens.preparo.prontas : mensagens.preparo.titulo}</Titulo>
-      <Text style={estilos.introducao}>{prontas ? mensagens.preparo.textoProntas : mensagens.preparo.texto}</Text>
-      <ListaPreparo licoes={licoes} prontas={prontas} rolagem={rolagem} visivel={visivel} conteudo={conteudo} />
-      {!prontas && <DicaPreparo />}
-    </Tela>
-  );
-}
-
-/** A lista das lições sendo escritas: fica dentro da tela, onde sabe quanto a barra da marca empurra o conteúdo. */
-function ListaPreparo({ licoes, prontas, rolagem, visivel, conteudo }: {
-  licoes: readonly string[];
-  prontas: boolean;
-  rolagem: { current: ComponentRef<typeof ScrollView> | null };
-  visivel: { current: number };
-  conteudo: { current: number };
-}) {
-  const reduzir = useMovimentoReduzido();
-  const deslocamento = useContext(DeslocamentoDaRolagem) ?? 0;
-  const topoDaLista = useRef(0);
-  const linhas = useRef<{ y: number; altura: number }[]>([]);
-  const inicio = useRef(Date.now());
-
-  /**
-   * Spec 04 (revisão de 19/11): quando as lições não cabem na tela, a lista acompanha — a linha do brilho fica a 60% da
-   * altura visível. Com tudo cabendo, nada rola.
-   */
-  function rolarAteLinha(indice: number) {
-    const linha = linhas.current[indice];
-    if (!linha || !visivel.current || conteudo.current <= visivel.current) return;
-    const centro = deslocamento + topoDaLista.current + linha.y + linha.altura / 2;
-    const y = Math.max(0, Math.min(conteudo.current - visivel.current, centro - visivel.current * RITMO_DA_GERACAO.linhaDoBrilho));
-    rolagem.current?.scrollTo({ y, animated: reduzir === false });
-  }
-
-  // O brilho desce pela lista (um ciclo para todas as linhas, a de índice i no auge aos 1100 + 200·i ms) e leva a rolagem junto.
-  useEffect(() => {
-    if (prontas || reduzir !== false) return;
-    const ciclo = 1600 + (licoes.length - 1) * 200;
-    const relogio = setInterval(() => {
-      const tempo = (Date.now() - inicio.current) % ciclo;
-      rolarAteLinha(Math.max(0, Math.min(licoes.length - 1, Math.floor((tempo - 1100) / 200))));
-    }, 200);
-    return () => clearInterval(relogio);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prontas, reduzir, licoes.length]);
-
-  // O aceite voltou: o visto passa pela lista, 80 ms de uma linha para a outra, rolando até a última antes de a primeira abrir.
-  useEffect(() => {
-    if (!prontas) return;
-    AccessibilityInfo.announceForAccessibility(mensagens.preparo.anuncioProntas);
-    const relogios = licoes.map((_, indice) => setTimeout(() => rolarAteLinha(indice), indice * RITMO_DA_GERACAO.vistoPorLinhaMs));
-    return () => relogios.forEach(clearTimeout);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prontas]);
-
-  return (
-    <View style={estudoEstilos.preparoLista} accessibilityLabel={mensagens.preparo.lista}
-      onLayout={(evento) => { topoDaLista.current = evento.nativeEvent.layout.y; }}>
-      {licoes.map((nome, indice) => (
-        <LinhaPreparo key={indice} nome={nome} indice={indice} total={licoes.length} prontas={prontas}
-          aoMedir={(y, altura) => { linhas.current[indice] = { y, altura }; }} />
-      ))}
-    </View>
-  );
-}
-
-/**
- * A cena do Escrevendo suas lições (spec 13): o céu, a colina da primeira região e o Stu estudando no notebook, em laço
- * enquanto a IA escreve (é espera), em 110 × 88 no celular, o teto em que ainda anima (E2). O notebook da pose conta a
- * história: o lápis e as folhas desenhados saíram. Com as lições prontas, ele troca para comemorando, com dois pulinhos e
- * um ciclo no acontecimento. Com movimento reduzido, a imagem parada, sem pulo.
- */
-function CenaPreparo({ prontas }: { prontas: boolean }) {
-  const reduzir = useMovimentoReduzido();
-  const { chao, relevo } = coresDaRegiao(0);
-  const [pulo] = useState(() => new Animated.Value(0));
-
-  // Lições prontas: o Stu dá dois pulinhos.
-  useEffect(() => {
-    if (!prontas || reduzir !== false) return;
-    const subir = Animated.timing(pulo, { toValue: -14, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: true });
-    const descer = Animated.timing(pulo, { toValue: 0, duration: 300, easing: Easing.in(Easing.quad), useNativeDriver: true });
-    const pular = Animated.sequence([subir, descer]);
-    pular.start();
-    return () => pular.stop();
-  }, [prontas, reduzir, pulo]);
-
-  return (
-    <View style={estudoEstilos.preparoCena} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <View style={[estudoEstilos.preparoColina, { backgroundColor: chao, borderTopColor: relevo }]} />
-      <Desenho nome="arvore" largura={52} estilo={[estudoEstilos.cartaoEnfeite, { left: '9%', bottom: 16 }]} />
-      <Desenho nome="flores" largura={30} estilo={[estudoEstilos.cartaoEnfeite, { right: '25%', bottom: 12 }]} />
-      <Desenho nome="arbusto" largura={46} estilo={[estudoEstilos.cartaoEnfeite, { right: '7%', bottom: 16 }]} />
-      <Animated.View style={[estudoEstilos.preparoStu, { transform: [{ translateY: pulo }] }]}>
-        <Stu nome={prontas ? 'stu-comemorando' : 'stu-estudando'} tamanho={prontas ? 96 : 110} sombra
-          animado={prontas ? 'acontecimento' : 'laco'} acontecimento={prontas ? 'prontas' : undefined} />
-      </Animated.View>
-    </View>
-  );
-}
-
-/** Uma lição da lista: entra em sequência; enquanto a IA escreve, um brilho passa por ela; pronta, ganha o visto. */
-function LinhaPreparo({ nome, indice, total, prontas, aoMedir }: { nome: string; indice: number; total: number; prontas: boolean; aoMedir?: (y: number, altura: number) => void }) {
-  const reduzir = useMovimentoReduzido();
-  const entrada = useAparecer(100 + indice * 60, 380);
-  const [brilho] = useState(() => new Animated.Value(0));
-  const revisao = nome.trim().toLocaleLowerCase('pt-BR').startsWith('revis');
-
-  useEffect(() => {
-    if (reduzir !== false || prontas) {
-      brilho.setValue(0);
-      return;
-    }
-    // Todas as linhas têm o mesmo ciclo; o atraso de cada uma faz o brilho descer pela lista.
-    const movimento = { duration: 500, easing: Easing.inOut(Easing.ease), isInteraction: false, useNativeDriver: true };
-    const ciclo = Animated.loop(Animated.sequence([
-      Animated.delay(600 + indice * 200),
-      Animated.timing(brilho, { ...movimento, toValue: 1 }),
-      Animated.timing(brilho, { ...movimento, toValue: 0 }),
-      Animated.delay(Math.max(0, total - indice - 1) * 200),
-    ]));
-    ciclo.start();
-    return () => ciclo.stop();
-  }, [reduzir, prontas, brilho, indice, total]);
-
-  return (
-    <Animated.View style={[estudoEstilos.preparoLinha, prontas && estudoEstilos.preparoLinhaPronta, estiloDeEntrada(entrada)]}
-      onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y, evento.nativeEvent.layout.height)}>
-      <Animated.View pointerEvents="none" style={[estudoEstilos.preparoBrilho, { opacity: brilho }]} />
-      <IconePreparo key={prontas ? 'pronta' : 'escrevendo'} pronta={prontas} atraso={indice * RITMO_DA_GERACAO.vistoPorLinhaMs} nome={revisao ? 'revisao' : 'livro'} />
-      <Text style={estudoEstilos.preparoTitulo}>{nome}</Text>
-    </Animated.View>
-  );
-}
-
-function IconePreparo({ pronta, atraso, nome }: { pronta: boolean; atraso: number; nome: NomeIcone }) {
-  const visto = useAparecer(atraso, 420, true);
-  if (!pronta) {
-    return <View style={estudoEstilos.preparoIcone}><Icone nome={nome} tamanho={20} cor={cores.acao} /></View>;
-  }
-  return (
-    <Animated.View style={[estudoEstilos.preparoIcone, {
-      transform: [
-        { scale: visto.interpolate({ inputRange: [0, 1], outputRange: [0.3, 1] }) },
-        { rotate: visto.interpolate({ inputRange: [0, 1], outputRange: ['-30deg', '0deg'] }) },
-      ],
-    }]}>
-      <Icone nome={nome} tamanho={20} cor={cores.acao} />
-    </Animated.View>
-  );
-}
-
-/** Dicas de estudo que se revezam embaixo da lista, como na geração ao vivo. */
-function DicaPreparo() {
-  const dicas = mensagens.geracao.dicas;
-  const [indice, setIndice] = useState(0);
-
-  useEffect(() => {
-    const intervalo = setInterval(() => setIndice((atual) => (atual + 1) % dicas.length), 3600);
-    return () => clearInterval(intervalo);
-  }, [dicas.length]);
-
-  return <TextoDaDica key={indice} texto={dicas[indice]} />;
-}
-
-function TextoDaDica({ texto }: { texto: string }) {
-  const entrada = useAparecer(0, 420);
-  return (
-    <Animated.View style={[estudoEstilos.preparoDica, {
-      opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
-    }]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <Icone nome="lampada" tamanho={22} cor={cores.ouroEscuro} />
-      <Text style={estudoEstilos.preparoDicaTexto}>{texto}</Text>
-    </Animated.View>
   );
 }
 
@@ -2521,14 +2537,13 @@ const estudoEstilos = StyleSheet.create({
   faixaGeracao: { height: 52, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, backgroundColor: 'rgba(255, 255, 255, 0.96)',
     borderBottomWidth: 1, borderBottomColor: cores.gelo },
   faixaGeracaoNome: { flex: 1, minWidth: 0, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 18 },
-  faixaGeracaoContagem: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16 },
   placaGeracaoLugar: { position: 'absolute', top: 62, left: 16, right: 16 },
+  passagem: { zIndex: 50, elevation: 50, overflow: 'hidden' },
   placaNoMapa: { height: 0, zIndex: 3 },
   placaNoMapaLugar: { position: 'absolute', top: 10, left: 16, right: 16 },
   placaGeracao: { paddingHorizontal: 12, paddingVertical: 10, borderWidth: 2, borderColor: '#E8D3A8', borderRadius: 16, backgroundColor: '#FFF9EC',
     boxShadow: '0 3px 0 #E8D3A8' },
   placaGeracaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
-  placaGeracaoLinha: { marginTop: 4, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 12, lineHeight: 16 },
   geracaoConteudo: { paddingTop: 0, paddingBottom: 0 },
   cartaoDeVolta: { marginTop: 20 },
   pilulaSeguir: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 44, paddingHorizontal: 16, borderRadius: 999, backgroundColor: cores.acao,
@@ -2675,13 +2690,16 @@ const estudoEstilos = StyleSheet.create({
   geracaoIa: { marginTop: 16, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   geracaoOrigem: { marginTop: 4, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 },
   esqueletoOrigem: { width: '48%', maxWidth: 256, height: 12, marginTop: 10, borderRadius: 8, backgroundColor: cores.gelo },
+  geracaoRodape: { gap: 8 },
   geracaoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  // Criar a trilha (spec 04): a linha da espera real (14/20 #5E6A85) e a do erro (#C23B4E), centradas embaixo do botão.
+  criacaoEspera: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  criacaoErro: { color: '#C23B4E', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20, textAlign: 'center' },
   metade: { flex: 1, minWidth: 0 },
   situacao: { flex: 1, minWidth: 0 },
   // .geracao-situacao__rotulo: 800 na entrelinha de 1,3.
   situacaoRotulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 20.8 },
   botaoDividido: { paddingHorizontal: 12 },
-  situacaoContagem: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   // Carregando a lição
   esqueletoTopo: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 12 },
   esqueletoFechar: { width: 44, height: 44, borderRadius: 12, backgroundColor: cores.gelo },
@@ -2693,21 +2711,4 @@ const estudoEstilos = StyleSheet.create({
   esqueletoBarraPrimeira: { width: '32%', height: 20 },
   esqueletoBarraUltima: { width: '64%' },
   esqueletoBotao: { width: '100%', height: 50, borderRadius: 16, backgroundColor: cores.gelo },
-  // Escrevendo as lições (aceite)
-  preparoCena: { height: 164, marginBottom: 18, overflow: 'hidden', alignItems: 'center', justifyContent: 'flex-end', borderRadius: 24,
-    borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: '#E4ECFF' },
-  preparoColina: { position: 'absolute', left: '-12%', right: '-12%', bottom: -64, height: 124, borderTopWidth: 7,
-    borderTopLeftRadius: 400, borderTopRightRadius: 400 },
-  preparoStu: { marginBottom: 12 },
-  preparoLista: { gap: 10, marginTop: 22 },
-  preparoLinha: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden', paddingVertical: 9, paddingLeft: 10,
-    paddingRight: 16, borderRadius: 16, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
-  preparoLinhaPronta: { borderColor: '#BFE5D2' },
-  preparoBrilho: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(37, 99, 255, 0.08)' },
-  preparoIcone: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
-  preparoIconePronto: { borderBottomWidth: 3, borderColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
-  preparoTitulo: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 21 },
-  preparoDica: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 20, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16,
-    backgroundColor: cores.nevoa },
-  preparoDicaTexto: { flex: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
 });

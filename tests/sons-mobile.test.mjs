@@ -102,15 +102,23 @@ test('aviso do app: `aviso` por padrão, `salvo` no perfil e calado quando o ges
   assert.match(ler('src/api-nativa.ts'), /if \(\(opcoes\.method \?\? 'GET'\)\.toUpperCase\(\) !== 'GET'\) void tocaSons\.tocarEfeito\('erro_rede'\);/);
 });
 
-test('geração (tabela de 19/11): cada lição quando o nó cai; o fim toca uma vez e cala a última lição; cancelar cala o resto', () => {
+test('criar a trilha (spec 12, revisão de 19/11): cada lição no pouso do nó, no máximo uma a cada 400 ms; o único som de conclusão no aceite', () => {
   const estudo = ler('src/estudo.tsx');
-  // A lição: no passo 3 da spec 04 (o mesmo atraso do caminho), nada quando a lição que entra já é a da virada para pronta.
+  // A lição: no passo 3 da spec 04 (o mesmo atraso do caminho), à vista, nunca depois da proposta pronta.
   assert.match(estudo, /if \(pronta \|\| mostrados <= de\) return;/);
-  assert.match(estudo, /void tocaSons\.tocarEfeito\('geracao_licao'\);\n\s*\}, reduzir !== false \? 0 : atrasosDaLicao\(abreTrecho\)\.no\);/);
-  // O fim: cala as lições que ainda cairiam e toca uma vez, na virada para pronta.
-  assert.match(estudo, /if \(!pronta\) return;\n\s*for \(const relogio of somDasLicoes\.current\) clearTimeout\(relogio\);\n\s*somDasLicoes\.current\.clear\(\);\n\s*void tocaSons\.tocarEfeito\('geracao_pronta'\);/);
+  assert.match(estudo, /if \(prontaAgora\.current \|\| !aVista \|\| Date\.now\(\) - ultimoPouso\.current < RITMO_DA_GERACAO\.somDaLicaoMinimoMs\) return;/);
+  assert.match(estudo, /tocaSons\.tocarEfeito\('geracao_licao'\);\n\s*\}, reduzir !== false \? 0 : atrasosDaLicao\(abreTrecho\)\.no\);/);
   // Sair da tela (cancelar) limpa os relógios.
   assert.match(estudo, /useEffect\(\(\) => \(\) => \{\n\s*for \(const relogio of somDasLicoes\.current\) clearTimeout\(relogio\);\n\s*\}, \[\]\);/);
-  // "Mais uma!", o troféu e o foco em "Começar": sem som.
+  // `geracao_pronta`: uma vez, no aceite que voltou ok (depois do aceitarProposta, antes da passagem); a proposta pronta, sem som.
+  assert.equal((estudo.match(/tocarEfeito\('geracao_pronta'\)/g) ?? []).length, 1);
+  const comecar = estudo.slice(estudo.indexOf('async function comecar('), estudo.indexOf('function terminarCriacao()'));
+  assert.ok(comecar.indexOf('await cliente.aceitarProposta') < comecar.indexOf("tocarEfeito('geracao_pronta')"));
+  assert.ok(comecar.indexOf("tocarEfeito('geracao_pronta')") < comecar.indexOf("setCriacao('criada')"));
+  const fim = estudo.slice(estudo.indexOf('// O fim da proposta:'), estudo.indexOf('function mudarAcompanhar'));
+  assert.doesNotMatch(fim.slice(0, fim.indexOf('if (rolado.current <= 4)')), /tocarEfeito/, 'a proposta pronta não tem som');
+  // Aquecidos ao abrir a geração.
+  assert.match(estudo, /tocaSons\.aquecerEfeitos\(\['geracao_licao', 'geracao_pronta', 'toque_opcao'\]\);/);
+  // O troféu, o Stu e o foco em "Começar a lição 1": sem som.
   assert.doesNotMatch(ler('src/caminho.tsx'), /tocarEfeito/);
 });
