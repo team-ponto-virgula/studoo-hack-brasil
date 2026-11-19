@@ -5,7 +5,7 @@ import { after, test } from 'node:test';
 import sharp from 'sharp';
 import jsQR from 'jsqr';
 import zx from '@zxing/library';
-import { CORES_PERFIL, FUNDO_DA_COR, svgCodigoDoLink } from '@studoo/contratos';
+import { CORES_PERFIL, FUNDO_DA_COR, geometriaCodigoStudoo, svgCodigoDoLink } from '@studoo/contratos';
 import { GET as explorarGet } from '../src/app/api/explorar/route.ts';
 import { GET as perfisGet } from '../src/app/api/perfis/[perfilId]/route.ts';
 import { GET as linkGet } from '../src/app/api/compartilhar/[codigo]/route.ts';
@@ -70,6 +70,35 @@ test('Código Studoo dos links reais (trilha e perfil com foto no centro) é lid
   }
   // A foto no centro não deixa escapar aspas nem tags.
   assert.ok(!svgCodigoDoLink('x', { fotoHref: '"><script>' }).includes('<script>'));
+});
+
+test('Código Studoo com links do tamanho do de produção (75 car.) e maiores (90, 106, 107 e 120): sempre com clareira e lido pelos dois leitores', async () => {
+  // O site de prévia tem domínio longo: o link de 75 caracteres, em H, caía na versão 8 (alinhamento no centro) e saía
+  // sem o centro. Agora a correção é escolhida para caber até a versão 6, e acima disso a clareira cobre o alinhamento.
+  const link = (n, tipo) => { const fim = `/${tipo}/AbCdEfGhIjKlMn_-`; return `https://${'studoo-previa-hackbrasil.exemplo.com.br'.padEnd(n, 'x').slice(0, n - 8 - fim.length)}${fim}`; };
+  const foto = `data:image/png;base64,${(await sharp({ create: { width: 64, height: 64, channels: 3, background: '#222' } }).png().toBuffer()).toString('base64')}`;
+  for (const n of [75, 90, 106, 107, 120]) {
+    for (const tipo of ['t', 'p']) {
+      const texto = link(n, tipo);
+      assert.equal(texto.length, n);
+      const g = geometriaCodigoStudoo(texto);
+      assert.ok(g.clareira && g.clareira.lado >= 5, `${n}: clareira (${g.nivel} v${g.versao})`);
+      assert.ok(g.versao <= 7, `${n}: versão ${g.versao} (módulo grande)`);
+      for (const [centro, opcoes] of [['sorriso', {}], ['foto', { fotoHref: foto }], ['inicial', { inicial: 'A' }]]) {
+        for (const cor of ['azul', 'laranja']) {
+          const svg = svgCodigoDoLink(texto, { mioloCor: FUNDO_DA_COR[cor], tamanho: 1200, ...opcoes });
+          for (const lado of [160, 240, 600]) {
+            const { viaJsqr, viaZxing } = await ler(svg, lado);
+            assert.equal(viaJsqr, texto, `jsQR ${n} ${centro} ${cor} ${lado}`);
+            assert.equal(viaZxing, texto, `ZXing ${n} ${centro} ${cor} ${lado}`);
+          }
+        }
+      }
+    }
+  }
+  // O de 75 caracteres sai em M versão 5 (37 módulos) com clareira de 7, como o link local de 40 em H.
+  const g75 = geometriaCodigoStudoo(link(75, 't'));
+  assert.deepEqual([g75.nivel, g75.versao, g75.clareira.lado], ['M', 5, 7]);
 });
 
 test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 6+ temas, Em alta cheio, sem login', async () => {

@@ -38,7 +38,12 @@ export interface GeometriaCodigo {
   clareira: { x: number; y: number; lado: number } | null;
   /** Desenho escuro a mais (no estilo rosto, a ponte dos óculos entre as duas lentes de cima). */
   enfeite: string;
+  /** Correção de erro e versão escolhidas (ver `escolherNivel`). */
+  nivel: NivelCorrecao;
+  versao: number;
 }
+
+export type NivelCorrecao = 'L' | 'M' | 'Q' | 'H';
 
 const f = (n: number) => Number(n.toFixed(3)).toString();
 
@@ -79,19 +84,51 @@ function bytesUtf8(texto: string): number[] {
   return bytes;
 }
 
-export function matrizCodigo(texto: string): boolean[][] {
+function gerarQr(texto: string, nivel: NivelCorrecao) {
   // O padrão da biblioteca corta cada caractere em 1 byte; o texto vai em UTF-8.
   const gerador = qrcode as unknown as typeof qrcode & { stringToBytes: (s: string) => number[] };
   gerador.stringToBytes = bytesUtf8;
-  const qr = gerador(0, 'H');
+  const qr = gerador(0, nivel);
   qr.addData(texto);
   qr.make();
+  return qr;
+}
+
+/** Versão máxima sem alinhamento no centro: até a 6, o único alinhamento fica no canto de baixo à direita. */
+export const VERSAO_SEM_ALINHAMENTO_CENTRAL = 6;
+
+/**
+ * A correção de erro do código: a mais forte que ainda cabe numa versão sem alinhamento no centro (H, depois Q, depois
+ * M, até a versão 6), porque módulo maior lê melhor em projetor e em tela de celular. Link longo demais para isso (mais
+ * de 106 bytes) fica em M, na menor versão (7 até 122 bytes), e a clareira cobre o alinhamento do centro (padrão de
+ * função: apagá-lo não custa dados). Em H a versão 11 já não lê a 160 px. Provado com jsQR e ZXing em
+ * `scripts/codigo-studoo-links.mjs` (links de 20 a 120 caracteres).
+ */
+export function escolherNivel(texto: string): NivelCorrecao {
+  for (const nivel of ['H', 'Q', 'M'] as const) {
+    if ((gerarQr(texto, nivel).getModuleCount() - 17) / 4 <= VERSAO_SEM_ALINHAMENTO_CENTRAL) return nivel;
+  }
+  return 'M';
+}
+
+/**
+ * Lado máximo da clareira por correção: em M (15% de recuperação) ela fica em 7 módulos; em M com alinhamento no centro
+ * (links de mais de 106 bytes), em 5, exatamente o alinhamento: não apaga nenhum módulo de dados. Medido: com 7, um caso
+ * de borrão falhava no ZXing a 120 caracteres; com 5, nenhum.
+ */
+const CLAREIRA_MAXIMA: Record<NivelCorrecao, number> = { H: 99, Q: 99, M: 7, L: 5 };
+const CLAREIRA_M_COM_ALINHAMENTO = 5;
+
+/** A matriz do QR (UTF-8), `true` = escuro. Sem `nivel`, a escolha automática (`escolherNivel`). */
+export function matrizCodigo(texto: string, nivel: NivelCorrecao = escolherNivel(texto)): boolean[][] {
+  const qr = gerarQr(texto, nivel);
   const n = qr.getModuleCount();
   return Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => qr.isDark(r, c)));
 }
 
-export function geometriaCodigoStudoo(texto: string, { estilo = 'rosto', clareira = 0.22 }: { estilo?: EstiloCodigo; clareira?: number } = {}): GeometriaCodigo {
-  const matriz = matrizCodigo(texto);
+export function geometriaCodigoStudoo(texto: string, { estilo = 'rosto', clareira = 0.22, nivel: nivelPedido }: { estilo?: EstiloCodigo; clareira?: number; nivel?: NivelCorrecao } = {}): GeometriaCodigo {
+  const nivel = nivelPedido ?? escolherNivel(texto);
+  const matriz = matrizCodigo(texto, nivel);
   const n = matriz.length;
   const versao = (n - 17) / 4;
   const m = MARGEM_CODIGO;
@@ -104,22 +141,29 @@ export function geometriaCodigoStudoo(texto: string, { estilo = 'rosto', clareir
   for (const [r, c] of cantos) reservar(r, c, 7);
   // Alinhamentos (5×5), fora dos olhos.
   const posicoes = ALINHAMENTO[versao] ?? [];
-  const centrosAlinhamento: [number, number][] = [];
+  let centrosAlinhamento: [number, number][] = [];
   for (const r of posicoes) for (const c of posicoes) {
     if ((r < 9 && c < 9) || (r < 9 && c > n - 10) || (r > n - 10 && c < 9)) continue;
     centrosAlinhamento.push([r, c]);
     reservar(r - 2, c - 2, 5);
   }
-  // Clareira: lado ímpar, centrada, até `clareira` do lado; só se não cobrir um alinhamento.
+  // Clareira: lado ímpar, centrada, até `clareira` do lado. Da versão 7 em diante há um alinhamento exatamente no
+  // centro: a clareira cobre esse alinhamento inteiro (lado de pelo menos 7) em vez de desistir do centro; os leitores
+  // usam o alinhamento de baixo à direita. Desiste só se encostar em outro alinhamento.
   let area: GeometriaCodigo['clareira'] = null;
-  let ladoClareira = Math.floor(n * clareira);
+  const meio = (n - 1) / 2;
+  const temAlinhamentoCentral = centrosAlinhamento.some(([r, c]) => r === meio && c === meio);
+  let ladoClareira = Math.min(Math.max(Math.floor(n * clareira), temAlinhamentoCentral ? 7 : 0), CLAREIRA_MAXIMA[nivel]);
+  if (nivel === 'M' && temAlinhamentoCentral) ladoClareira = CLAREIRA_M_COM_ALINHAMENTO;
   if (ladoClareira % 2 === 0) ladoClareira -= 1;
   if (ladoClareira >= 5) {
     const inicio = (n - ladoClareira) / 2;
-    const cobre = centrosAlinhamento.some(([r, c]) => r + 2 >= inicio && r - 2 < inicio + ladoClareira && c + 2 >= inicio && c - 2 < inicio + ladoClareira);
+    const outros = centrosAlinhamento.filter(([r, c]) => !(r === meio && c === meio));
+    const cobre = outros.some(([r, c]) => r + 2 >= inicio && r - 2 < inicio + ladoClareira && c + 2 >= inicio && c - 2 < inicio + ladoClareira);
     if (!cobre) {
       area = { x: inicio + m, y: inicio + m, lado: ladoClareira };
       reservar(inicio, inicio, ladoClareira);
+      centrosAlinhamento = outros;
     }
   }
   // Rosto: a linha 3 entre as lentes de cima vira a ponte dos óculos (desenhada à parte; a correção H cobre os módulos).
@@ -177,7 +221,7 @@ export function geometriaCodigoStudoo(texto: string, { estilo = 'rosto', clareir
   const enfeite = estilo === 'rosto'
     ? `M${f(m + 8.15)} ${f(m + 3.9)}Q${f(m + n / 2)} ${f(m + 3.5)} ${f(m + n - 8.15)} ${f(m + 3.9)}L${f(m + n - 8.15)} ${f(m + 3.1)}Q${f(m + n / 2)} ${f(m + 2.7)} ${f(m + 8.15)} ${f(m + 3.1)}Z`
     : '';
-  return { estilo, modulos: n, lado: n + 2 * m, dados: partes.join(''), olhos, alinhamentos, clareira: area, enfeite };
+  return { estilo, modulos: n, lado: n + 2 * m, dados: partes.join(''), olhos, alinhamentos, clareira: area, enfeite, nivel, versao };
 }
 
 /** Cores do código: dados e anéis em tons escuros; o miolo dos olhos aceita a cor do perfil. */
@@ -228,11 +272,21 @@ export function centroComFoto(href: string): string {
     + `<image href="${seguro}" x="2" y="2" width="96" height="96" preserveAspectRatio="xMidYMid slice" clip-path="url(#cs-foto)"/>`;
 }
 
+/** O centro com a inicial do nome num círculo na cor do perfil (perfil sem foto: o mesmo avatar de todo lugar). */
+export function centroComInicial(inicial: string, cor: string): string {
+  const letra = (inicial.trim()[0] ?? '?').replace(/[<>&"']/g, '?');
+  const fundo = /^#[0-9a-f]{6}$/i.test(cor) ? cor : '#3858d6';
+  return `<circle cx="50" cy="50" r="50" fill="#fff"/><circle cx="50" cy="50" r="46" fill="${fundo}"/>`
+    + `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="Quicksand, Nunito, sans-serif" font-weight="700" font-size="52" fill="#fff">${letra}</text>`;
+}
+
 /**
  * O Código Studoo de um link (spec 10, etapa C1), igual na web e no app: estilo "rosto" por padrão (os três ficam no
  * gerador), miolo dos olhos na cor do perfil (`mioloCor`, um hex de FUNDO_DA_COR) e, quando houver, a foto no centro.
  */
-export function svgCodigoDoLink(texto: string, { mioloCor, fotoHref, estilo = 'rosto', tamanho = 600 }: { mioloCor?: string; fotoHref?: string | null; estilo?: EstiloCodigo; tamanho?: number } = {}): string {
+export function svgCodigoDoLink(texto: string, { mioloCor, fotoHref, inicial, estilo = 'rosto', tamanho = 600, nivel }: { mioloCor?: string; fotoHref?: string | null; inicial?: string | null; estilo?: EstiloCodigo; tamanho?: number; nivel?: NivelCorrecao } = {}): string {
   const cores = { ...CORES_CODIGO_PADRAO, ...(mioloCor ? { miolo: mioloCor } : {}) };
-  return svgCodigoStudoo(geometriaCodigoStudoo(texto, { estilo }), { tamanho, cores, ...(fotoHref ? { centro: centroComFoto(fotoHref) } : {}) });
+  // Centro: a foto; sem foto, a inicial na cor (perfil); sem nenhum dos dois, o sorriso do Stu (trilha).
+  const centro = fotoHref ? centroComFoto(fotoHref) : inicial ? centroComInicial(inicial, mioloCor ?? '#3858d6') : undefined;
+  return svgCodigoStudoo(geometriaCodigoStudoo(texto, { estilo, nivel }), { tamanho, cores, ...(centro ? { centro } : {}) });
 }

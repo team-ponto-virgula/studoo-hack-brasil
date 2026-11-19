@@ -230,6 +230,14 @@ ALTER TABLE "Usuario" ADD COLUMN "perfilDemo" BOOLEAN NOT NULL DEFAULT false;
 - **Modo apresentação:** camada branca em tela cheia (Fullscreen API quando existe), com o título, o código o maior possível e "Aponte a câmera do celular". O foco vai para "Fechar", e Esc fecha.
 - Só o diálogo de cima responde ao teclado (pilha de diálogos), então o Esc da apresentação não fecha a folha.
 - **Prova de leitura:** `tests/codigo-e-demonstracao.test.mjs` lê, com jsQR e ZXing a 240 e 600 px, os links reais de trilha e de perfil (este com foto no centro) nas 6 cores.
+- **Correção (19/11): o centro sempre aparece.**
+  - O que acontecia: o link do site de prévia tem 75 caracteres; em H, isso dava a versão 8, que tem um alinhamento no centro, e a clareira era descartada (código denso, sem sorriso nem foto).
+  - Agora `escolherNivel` pega a correção mais forte que cabe até a versão 6 (H, depois Q, depois M), que não tem alinhamento no centro e tem módulos maiores.
+  - Link de mais de 106 bytes vai para M na menor versão, e a clareira cobre exatamente o alinhamento do centro (5×5, sem apagar dados).
+  - Em M, a clareira fica com no máximo 7 módulos.
+  - Resultado da varredura de 20 a 120 caracteres: até 55 em H v3 a v6; 60 a 70 em Q v5/v6; 75 a 105 em M v5/v6 (75 → M v5, 37 módulos, clareira 7); 106 a 120 em M v7 com clareira 5.
+  - Prova em `scripts/codigo-studoo-links.mjs`: links de 40, 75, 90 e 120 × trilha e perfil × sorriso, foto e inicial × 6 cores × 7 degradações × 2 leitores, 2016 de 2016. Teste automático com links de 75, 90, 106, 107 e 120 em `tests/codigo-e-demonstracao.test.mjs`.
+- **Perfil sem foto:** o centro é a inicial do nome num círculo na cor do perfil (`centroComInicial`), o mesmo avatar de todo lugar, igual na folha, na imagem baixada e na apresentação. A trilha leva o sorriso do Stu.
 
 ### Imagem de prévia do link (Open Graph)
 - `src/app/t/[codigo]/opengraph-image.tsx` e `src/app/p/[id]/opengraph-image.tsx` usam o `next/og`, que já vem no Next (nenhuma dependência nova). O desenho fica em `src/servidor/og/cartao.tsx`.

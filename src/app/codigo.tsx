@@ -6,7 +6,7 @@
  * cheia, para projetar). Tudo gerado no navegador a partir da função pura do contrato: nenhum serviço externo.
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { FUNDO_DA_COR, enderecoFoto, svgCodigoDoLink, type CorPerfil, type EstiloCodigo } from '@studoo/contratos';
+import { FUNDO_DA_COR, enderecoFoto, inicialDoNome, svgCodigoDoLink, type CorPerfil, type EstiloCodigo } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { useDialogo } from './compartilhar';
@@ -15,8 +15,8 @@ import './codigo.css';
 const k = mensagens.codigo;
 
 /** O SVG do código (função pura do contrato): cor do perfil no miolo dos olhos, foto no centro quando houver. */
-export function svgDoCodigo(texto: string, { cor, fotoHref, estilo = 'rosto', tamanho = 600 }: { cor?: CorPerfil | null; fotoHref?: string | null; estilo?: EstiloCodigo; tamanho?: number }) {
-  return svgCodigoDoLink(texto, { mioloCor: FUNDO_DA_COR[cor ?? 'azul'], fotoHref, estilo, tamanho });
+export function svgDoCodigo(texto: string, { cor, fotoHref, inicial, estilo = 'rosto', tamanho = 600 }: { cor?: CorPerfil | null; fotoHref?: string | null; inicial?: string | null; estilo?: EstiloCodigo; tamanho?: number }) {
+  return svgCodigoDoLink(texto, { mioloCor: FUNDO_DA_COR[cor ?? 'azul'], fotoHref, inicial, estilo, tamanho });
 }
 
 const dataUrlSvg = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -63,11 +63,11 @@ function linhas(ctx: CanvasRenderingContext2D, texto: string, largura: number): 
 }
 
 /** A imagem para baixar e compartilhar: cartão 1080×1350 com o título, o código, a dica e a marca (PNG). */
-export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken }: { texto: string; titulo: string; dica: string; cor?: CorPerfil | null; fotoToken?: string | null }): Promise<Blob> {
+export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inicial }: { texto: string; titulo: string; dica: string; cor?: CorPerfil | null; fotoToken?: string | null; inicial?: string | null }): Promise<Blob> {
   await document.fonts.ready;
   const fotoHref = fotoToken ? await fotoComoDataUrl(fotoToken) : null;
   const [codigo, logo] = await Promise.all([
-    carregarImagem(dataUrlSvg(svgDoCodigo(texto, { cor, fotoHref, tamanho: 1200 }))),
+    carregarImagem(dataUrlSvg(svgDoCodigo(texto, { cor, fotoHref, inicial: fotoHref ? null : inicial, tamanho: 1200 }))),
     carregarImagem('/marca/logo-com-sorriso.svg').catch(() => null),
   ]);
   const canvas = document.createElement('canvas');
@@ -132,7 +132,9 @@ export function ModoApresentacao({ svg, titulo, rotulo, aoFechar: aoFecharFora }
  * O painel do Código Studoo: o código, e as ações (copiar link e compartilhar quando `comLink`; baixar imagem,
  * compartilhar imagem quando o aparelho deixa, e apresentar). `fotoToken` põe a foto no centro.
  */
-export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, nomeArquivo, comLink = true }: {
+export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, inicial, nomeArquivo, comLink = true }: {
+  /** Perfil sem foto: a inicial na cor vai no centro (igual na folha, na imagem e na apresentação). */
+  inicial?: string | null;
   url: string;
   titulo: string;
   dica: string;
@@ -147,7 +149,8 @@ export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, nomeAr
   const [apresentando, setApresentando] = useState(false);
   const [podeArquivo, setPodeArquivo] = useState(false);
   const fotoHref = fotoToken ? enderecoFoto(fotoToken, 512) : null;
-  const svg = useMemo(() => svgDoCodigo(url, { cor, fotoHref }), [url, cor, fotoHref]);
+  const centroInicial = fotoHref ? null : inicial ?? null;
+  const svg = useMemo(() => svgDoCodigo(url, { cor, fotoHref, inicial: centroInicial }), [url, cor, fotoHref, centroInicial]);
   const avisar = (texto: string) => setStatus((anterior) => (anterior === texto ? `${texto} ` : texto));
 
   useEffect(() => {
@@ -168,7 +171,7 @@ export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, nomeAr
     setGerando(true);
     avisar(k.gerando);
     try {
-      return await imagemDoCodigo({ texto: url, titulo, dica, cor, fotoToken });
+      return await imagemDoCodigo({ texto: url, titulo, dica, cor, fotoToken, inicial: centroInicial });
     } catch {
       avisar(k.falhou);
       return null;
@@ -210,7 +213,7 @@ export function PainelCodigo({ url, titulo, dica, rotulo, cor, fotoToken, nomeAr
         <Botao variante="secundario" aria-label={k.apresentarRotulo} onClick={() => setApresentando(true)}><Icone nome="olho" />{k.apresentar}</Botao>
       </div>
       <p className="folha-status" role="status" aria-live="polite">{status}</p>
-      {apresentando && <ModoApresentacao svg={svgDoCodigo(url, { cor, fotoHref, tamanho: 1200 })} titulo={titulo} rotulo={rotulo} aoFechar={() => setApresentando(false)} />}
+      {apresentando && <ModoApresentacao svg={svgDoCodigo(url, { cor, fotoHref, inicial: centroInicial, tamanho: 1200 })} titulo={titulo} rotulo={rotulo} aoFechar={() => setApresentando(false)} />}
     </section>
   );
 }
@@ -230,7 +233,7 @@ export function FolhaCompartilharPerfil({ perfilId, nome, cor, fotoToken, aoFech
           <button type="button" className="folha-fechar" aria-label={mensagens.compartilhar.fechar} onClick={aoFechar}><Icone nome="fechar" /></button>
         </div>
         <h2 id={tituloId} tabIndex={-1} className="folha-titulo">{k.perfilTitulo}</h2>
-        <PainelCodigo url={url} titulo={k.imagemPerfil(nome)} dica={k.dicaPerfil} rotulo={k.rotuloPerfil(nome)} cor={cor} fotoToken={fotoToken}
+        <PainelCodigo url={url} titulo={k.imagemPerfil(nome)} dica={k.dicaPerfil} rotulo={k.rotuloPerfil(nome)} cor={cor} fotoToken={fotoToken} inicial={inicialDoNome(nome)}
           nomeArquivo={`studoo-perfil-${nome.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`} />
       </div>
     </div>

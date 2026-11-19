@@ -498,7 +498,7 @@ export const mensagens = {
         dicaTrilha: 'Aponte a câmera do celular para abrir a trilha.',
         dicaPerfil: 'Aponte a câmera do celular para abrir o perfil.',
         rotuloTrilha: (titulo: string) => `Código Studoo da trilha “${titulo}”. Aponte a câmera do celular para abrir.`,
-        rotuloPerfil: (nome: string) => `Código Studoo do perfil de ${nome}, com a foto no centro. Aponte a câmera do celular para abrir.`,
+        rotuloPerfil: (nome: string) => `Código Studoo do perfil de ${nome}, com a foto (ou a inicial) no centro. Aponte a câmera do celular para abrir.`,
         copiar: 'Copiar link',
         copiado: 'Link copiado',
         compartilhar: 'Compartilhar',
