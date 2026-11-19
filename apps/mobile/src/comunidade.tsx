@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
-  AccessibilityInfo, ActionSheetIOS, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions,
+  AccessibilityInfo, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 import Svg, { Defs, FeDropShadow, Filter, G, SvgXml, Text as SvgTexto } from 'react-native-svg';
 import {
@@ -11,6 +11,7 @@ import {
 import type { ClienteNativo } from './api-nativa';
 import { Icone } from './icone';
 import { Botao, Tela, Titulo, degrauFora, estilos } from './interface';
+import { useDepoisDeSair } from './janelas';
 import { mensagens } from './mensagens';
 import {
   AcoesDeQuemRecebe, Avatar, BotaoParar, CabecalhoPerfil, Esqueleto, PreviaTrilha, Status, codigoDoErro, compartilharNoSistema, copiar,
@@ -99,8 +100,8 @@ function BotaoDoCartao({ rotulo, icone, acao, testID, desativado = false }: { ro
 }
 
 /**
- * Menu "•••" com Denunciar, como o da web: no iPhone, a folha de ações do sistema (P16); no Android e na prévia web, o balão
- * acima do botão.
+ * Menu "•••" com Denunciar, como o da web: o balão acima do botão, o mesmo no iPhone, no Android e na web (regra do dono,
+ * lote 4: nada de folha de ações do sistema).
  */
 function MenuCartao({ titulo, aoDenunciar, testID }: { titulo: string; aoDenunciar: () => void; testID: string }) {
   // Onde o balão abre: à direita do botão e 6 acima dele (bottom: calc(100% + 6px) da web), medido na janela, porque o
@@ -109,6 +110,8 @@ function MenuCartao({ titulo, aoDenunciar, testID }: { titulo: string; aoDenunci
   const botao = useRef<ComponentRef<typeof Pressable>>(null);
   const item = useRef<ComponentRef<typeof Pressable>>(null);
   const janela = useWindowDimensions();
+  // "Denunciar" abre o diálogo da denúncia, outra janela: ele espera o balão sair (janelas.ts).
+  const { depoisDeSair, aoSair } = useDepoisDeSair();
   useEffect(() => {
     if (!aberto) return;
     const espera = setTimeout(() => focarSemRolar(item.current), 50);
@@ -119,12 +122,6 @@ function MenuCartao({ titulo, aoDenunciar, testID }: { titulo: string; aoDenunci
     if (devolverFoco) setTimeout(() => focarSemRolar(botao.current), 50);
   }
   function alternar() {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { title: titulo, options: [mensagens.geracao.cancelar, c.denunciar], cancelButtonIndex: 0, destructiveButtonIndex: 1 },
-        (indice) => { if (indice === 1) aoDenunciar(); });
-      return;
-    }
     if (aberto) { fechar(false); return; }
     botao.current?.measureInWindow((x, y, largura) => {
       setAberto({ direita: Math.max(0, janela.width - (x + largura)), baixo: Math.max(0, janela.height - y + 6) });
@@ -137,18 +134,21 @@ function MenuCartao({ titulo, aoDenunciar, testID }: { titulo: string; aoDenunci
         onPress={alternar} style={({ pressed }) => [comunidadeEstilos.icone, pressed && { backgroundColor: cores.nevoa }]}>
         <Icone nome="mais" tamanho={20} cor={cores.texto} />
       </Pressable>
-      {aberto && (
-        <Modal transparent visible animationType="none" statusBarTranslucent onRequestClose={() => fechar(true)}>
-          <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={() => fechar(false)} />
-          <View role="menu" style={[comunidadeEstilos.opcoes, { right: aberto.direita, bottom: aberto.baixo }]}>
-            <Pressable ref={item} testID={`${testID}-denunciar`} accessibilityRole="menuitem" role="menuitem" onPress={() => { fechar(false); aoDenunciar(); }}
-              style={({ pressed }) => [comunidadeEstilos.opcao, pressed && { backgroundColor: cores.nevoa }]}>
-              <Icone nome="bandeirinha" tamanho={18} cor="#B3261E" />
-              <Text style={comunidadeEstilos.opcaoTexto}>{c.denunciar}</Text>
-            </Pressable>
-          </View>
-        </Modal>
-      )}
+      {/* Montado sempre (visible liga e desliga): o onDismiss avisa quando o balão saiu, para a denúncia abrir depois. */}
+      <Modal transparent visible={Boolean(aberto)} animationType="none" statusBarTranslucent onRequestClose={() => fechar(true)} onDismiss={aoSair}>
+        {aberto && (
+          <>
+            <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={() => fechar(false)} />
+            <View role="menu" style={[comunidadeEstilos.opcoes, { right: aberto.direita, bottom: aberto.baixo }]}>
+              <Pressable ref={item} testID={`${testID}-denunciar`} accessibilityRole="menuitem" role="menuitem" onPress={() => { fechar(false); depoisDeSair(aoDenunciar); }}
+                style={({ pressed }) => [comunidadeEstilos.opcao, pressed && { backgroundColor: cores.nevoa }]}>
+                <Icone nome="bandeirinha" tamanho={18} cor="#B3261E" />
+                <Text style={comunidadeEstilos.opcaoTexto}>{c.denunciar}</Text>
+              </Pressable>
+            </View>
+          </>
+        )}
+      </Modal>
     </View>
   );
 }

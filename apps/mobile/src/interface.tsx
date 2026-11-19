@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   Animated,
   Easing,
   Image,
@@ -686,6 +685,7 @@ export const caixaAlta = { textTransform: 'uppercase' } as const;
 /**
  * Cartão de confirmação como .modal-cartao da web: o fundo escurece, a pergunta vem em 1,05rem/800 e as ações ficam à
  * direita, "Cancelar" (secundário) e a confirmação (vermelha quando apaga). Tocar fora ou no voltar do aparelho cancela.
+ * É o mesmo no iPhone, no Android e na web (regra do dono, lote 4: nada de alerta do sistema).
  */
 type PropsConfirmacao = {
   mensagem: string;
@@ -700,9 +700,7 @@ type PropsConfirmacao = {
   aoConfirmar: () => void;
 };
 
-export function CartaoConfirmacao(props: PropsConfirmacao) {
-  if (Platform.OS === 'ios') return <ConfirmacaoDoSistema {...props} />;
-  const { mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar } = props;
+export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar }: PropsConfirmacao) {
   const estreito = useWindowDimensions().width <= 420;
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
@@ -730,22 +728,6 @@ export function CartaoConfirmacao(props: PropsConfirmacao) {
       </Pressable>
     </Modal>
   );
-}
-
-/**
- * No iPhone, a confirmação é o alerta do sistema (UIAlertController), com o mesmo texto e as mesmas duas ações: "Cancelar"
- * e a confirmação, em vermelho quando apaga. Quem usa já tira a confirmação da tela antes de rodar a ação.
- */
-function ConfirmacaoDoSistema({ mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, aoCancelar, aoConfirmar }: PropsConfirmacao) {
-  const acoes = useRef({ aoCancelar, aoConfirmar });
-  acoes.current = { aoCancelar, aoConfirmar };
-  useEffect(() => {
-    Alert.alert(mensagem, texto, [
-      { text: cancelarRotulo, style: 'cancel', onPress: () => acoes.current.aoCancelar() },
-      { text: confirmarRotulo, style: destrutivo ? 'destructive' : 'default', onPress: () => acoes.current.aoConfirmar() },
-    ]);
-  }, [mensagem, texto, cancelarRotulo, confirmarRotulo, destrutivo]);
-  return null;
 }
 
 /** Liquid Glass só no iPhone com iOS 26 ou mais novo (expo-glass-effect); no iOS anterior, no Android e na prévia web, o fundo de hoje. */
