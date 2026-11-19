@@ -149,6 +149,9 @@
 .recorte:active { cursor: grabbing; }
 .recorte:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }
 .recorte img { position: absolute; top: 0; left: 0; max-width: none; transform-origin: 0 0; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.recorte[data-proporcao='2'] { width: min(100%, 420px); }
+.folha--recorte:has(.recorte[data-proporcao='2']) { width: min(100%, 32rem); }
+.recorte__moldura { position: absolute; inset: 0; border-radius: 14px; outline: 2px solid rgb(255 255 255 / 0.9); outline-offset: -2px; pointer-events: none; }
 .recorte__circulo { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 999px rgb(16 24 51 / 0.52); outline: 2px solid rgb(255 255 255 / 0.9); outline-offset: -2px; pointer-events: none; }
 .recorte__zoom { display: grid; gap: 2px; font-size: 0.875rem; font-weight: 800; }
 .recorte__aviso { margin: 0; font-size: 0.875rem; }

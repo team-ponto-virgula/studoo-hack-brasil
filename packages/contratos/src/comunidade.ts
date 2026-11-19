@@ -209,6 +209,30 @@ export function svgCapa({ codigo, tema, capa }: { codigo: string; tema: Tema | n
   return ehCapaGaleria(capa) ? svgCapaGaleria(capa) : svgCapaTrilha(codigo, tema);
 }
 
+/**
+ * Capa com foto (lote 4): a trilha guarda `capa = "foto:<token>"`; a imagem (2:1, WebP sem metadados) sai por
+ * `/api/capas/<token>/<largura>`, com cache imutável (o token muda a cada troca). Usa a mesma flag da foto do perfil.
+ */
+export const LIMITES_CAPA = { largura: 1024, altura: 512, larguraPequena: 480, alturaPequena: 240 } as const;
+export type TamanhoCapa = typeof LIMITES_CAPA.largura | typeof LIMITES_CAPA.larguraPequena;
+export const ehCapaFoto = (capa: unknown): capa is `foto:${string}` => typeof capa === 'string' && /^foto:[A-Za-z0-9_-]{16}$/.test(capa);
+export const tokenDaCapa = (capa: string) => capa.slice('foto:'.length);
+/** O caminho da capa com foto (a web usa direto; o app soma a base do servidor). */
+export function enderecoCapa(capa: string, tamanho: TamanhoCapa = LIMITES_CAPA.larguraPequena): string {
+  return `/api/capas/${tokenDaCapa(capa)}/${tamanho}`;
+}
+
+/**
+ * A capa pronta para pôr na página (HTML): a foto, com um véu escuro suave onde ficam o tema, "Demonstração" e o
+ * numeral do Em alta, ou o SVG da galeria ou da capa padrão. Decorativa.
+ */
+export function marcacaoCapa({ codigo, tema, capa, tamanho }: { codigo: string; tema: Tema | null; capa?: string | null; tamanho?: TamanhoCapa }): string {
+  if (ehCapaFoto(capa)) {
+    return `<img class="capa-foto" src="${enderecoCapa(capa, tamanho)}" alt="" loading="lazy" decoding="async"/><span class="capa-veu"></span>`;
+  }
+  return svgCapa({ codigo, tema, capa });
+}
+
 /** As duas cores de uma capa (para a imagem de prévia do link, que pinta o painel da capa). */
 export function coresDaCapa(tema: Tema | null, capa?: string | null): { de: string; ate: string } {
   const galeria = CAPAS_GALERIA.find((item) => item.id === capa);

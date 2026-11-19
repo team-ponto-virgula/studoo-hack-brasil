@@ -10,7 +10,8 @@ import {
   LIMITES_COMUNIDADE,
   MOTIVOS_DENUNCIA,
   TEMAS,
-  svgCapa,
+  ehCapaFoto,
+  marcacaoCapa,
   type CartaoTrilha,
   type MotivoDenuncia,
   type PaginaExplorar,
@@ -34,7 +35,7 @@ export function entrarEVoltar(caminho: string) {
 /** A capa: cor do tema e um padrão geométrico determinístico pelo código (sem imagem enviada, sem IA). */
 export function CapaTrilha({ codigo, tema, capa }: { codigo: string; tema: Tema | null; capa?: string | null }) {
   // O SVG é gerado por uma função pura do contrato: só formas, com o código já restrito a [A-Za-z0-9_-].
-  return <span className="capa-trilha" aria-hidden="true" dangerouslySetInnerHTML={{ __html: svgCapa({ codigo, tema, capa }) }} />;
+  return <span className="capa-trilha" aria-hidden="true" data-foto={ehCapaFoto(capa) || undefined} dangerouslySetInnerHTML={{ __html: marcacaoCapa({ codigo, tema, capa }) }} />;
 }
 
 export type AcoesCartao = {

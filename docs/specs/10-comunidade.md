@@ -370,3 +370,9 @@ Regras duradouras: nenhuma janela nativa do sistema ou do navegador (tudo do app
 - **Galeria:** 12 capas desenhadas em código (`CAPAS_GALERIA`, `svgCapaGaleria`, `svgCapa`); a padrão continua a de hoje. A capa aparece no cartão de Minhas trilhas (no lugar da ilustração), no alto do mapa, nos cartões do Explorar e do perfil, na página do link e na imagem de prévia. A cópia leva a capa da galeria.
 - **Tela:** entradas pelo menu "•••" (Compartilhar, Configurações, Apagar) e pela engrenagem no alto do mapa; seções Capa e nome, Quem pode ver (estado e "Mudar compartilhamento", que abre a folha de sempre) e Apagar trilha (confirmação do app). Cada campo salva ao sair dele, com "Salvo"; erro embaixo do campo; sem diálogo de sair sem salvar.
 - Testes em `tests/configuracoes-trilha.test.mjs`.
+
+### Etapa 2, parte 2: capa com foto (migração `20261124090000_trilha_capa_foto`, tabela nova)
+- `CapaFoto` (dona e trilha, token único, WebP grande 1024×512 e pequeno 480×240). A trilha guarda `capa = "foto:<token>"`.
+- `PUT` e `DELETE /api/aprendizado/planos/:id/capa` (mesma flag da foto do perfil, `STUDOO_COMPARTILHAR`): o retângulo 2:1 recortado no app, conferido pelos bytes, aberto pelo sharp com teto de pixels, sem EXIF, até 10 trocas por hora, com `revisarConteudo` antes de gravar; o token muda a cada troca. `GET /api/capas/:token/:largura` com cache imutável e os mesmos cabeçalhos e limite da foto do perfil. Escolher uma capa da galeria ou a padrão apaga a foto.
+- A cópia volta à capa padrão (a foto fica com quem enviou). A imagem de prévia do link usa a capa padrão do tema quando a capa é foto.
+- Na tela: "Usar uma foto" na galeria e o mesmo recorte do perfil na proporção 2:1 (`RecorteImagem`). Por cima da foto, um véu escuro suave no alto e embaixo mantém legíveis o tema, "Demonstração" e o numeral do Em alta (`marcacaoCapa`).
