@@ -152,7 +152,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 
 **Enquanto o aceite não volta.**
 - Sem pausa mínima: o aceite não espera nada além da resposta. Saem a `pausa(ESCRITA_MINIMA_MS)`, de 1.200 ms, e a `pausa(PAUSA_LICOES_PRONTAS_MS)`, de 900 ms, nos dois clientes.
-- Depois de 1,5 s sem resposta, aparece uma linha embaixo do botão, centrada, em 14/20 `#5E6A85`: "Escrevendo as lições da trilha. Com a IA, leva alguns segundos." (`escrevendoLicoes`). É verdade: é o aceite que escreve o conteúdo das lições.
+- Depois de 1,5 s sem resposta, aparece uma linha embaixo do botão, centrada, em 14/20 `#5E6A85`: "Escrevendo as lições da trilha. Com a IA, leva alguns segundos." (`escrevendoLicoes`). É verdade: é o aceite que escreve o conteúdo das lições. A linha é só da espera real: na referência rápida (IA falsa, rede local), o aceite volta antes de 1,5 s, e ela não aparece.
 - Sem barra, sem porcentagem e sem visto por lição, porque o aceite é um pedido só.
 - A tela Escrevendo suas lições sai, com a lista, o brilho e as dicas.
 
@@ -160,6 +160,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - t = 0: toca `geracao_pronta`. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
 - t = 120 ms: um círculo da cor do fundo da aula cresce a partir do centro do nó 1 até cobrir a tela (300 ms, ease-out).
 - t = 320 ms: a etapa 1 entra por cima (opacidade, 150 ms). Se a lição ainda carrega, entra o esqueleto da aula no mesmo lugar, sem giro.
+- A busca da lição (`obterLicao`) começa no instante em que o aceite volta, junto com a passagem, e não depois dela.
 - A aula aceita toque assim que monta: nada espera a animação acabar.
 - O foco vai para o título da etapa 1, e o leitor de tela ouve "Trilha criada. Lição 1: <título>." (`anuncioCriada`).
 - A geração sai do histórico (substitui, não empilha): voltar da aula leva ao mapa salvo, nunca à prévia.
@@ -176,7 +177,14 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 
 **Critérios observáveis.**
 - C1: do toque até o botão mudar, no máximo 100 ms (6 quadros numa gravação a 60 fps).
-- C2: com a IA falsa, do toque até a etapa 1 interativa, no máximo o tempo do aceite mais 470 ms. Em 0491ed7, eram pelo menos 2,1 s.
+- C2: o relato do tempo tem sempre quatro números:
+  - total: do toque até a etapa 1 interativa;
+  - aceite: do toque até a resposta do aceite;
+  - busca da lição: da resposta do aceite até a resposta do `obterLicao`, que é uma segunda chamada, em sequência;
+  - passagem: da resposta do aceite até a aula na tela, com o esqueleto ou com a etapa 1.
+  - **Referência rápida** (IA falsa, rede local, sem atraso simulado): passagem de no máximo 470 ms e total de no máximo o aceite mais 470 ms. Em 0491ed7, o total era de pelo menos 2,1 s.
+  - **Espera real** (IA real ou rede lenta, simulada e identificada no relato): sem meta de total. Os quatro números entram como medidos, sem descontar a demora. A passagem continua em no máximo 470 ms, mesmo com a busca da lição lenta. O esqueleto fica até a lição chegar, e a etapa 1 fica interativa em até 100 ms depois disso. A linha de 1,5 s aparece.
+  - Nos dois casos, nenhuma pausa fixa.
 - C3: nenhuma tela e nenhum segundo botão entre a prévia e a etapa 1.
 - C4: um `geracao_pronta` por trilha criada, na passagem, e nenhum som no fim da proposta.
 - C5: sem confete, sem dicas que se revezam, sem "Mais uma!", sem contagens, sem barra e sem visto por lição.
