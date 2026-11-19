@@ -209,6 +209,25 @@ metro() {
   iniciar_metro ios --go
 }
 
+# O que o áudio registra enquanto a prova da criação de trilha roda (comum.sh, fluxo_criacao): o log do simulador, ao vivo,
+# só do Expo Go e só do que é áudio (CoreAudio, CoreMedia, AVFAudio, a descoberta das unidades de áudio) ou do registro de
+# som do app, se ele existir. O log guardado no fim (simulador-expo-go.log) não tem os níveis info e debug, onde o áudio
+# escreve.
+iniciar_registro_de_audio() {
+  # O estilo padrão do log traz o fuso de cada linha ("2026-11-19 19:50:05.120123+0000"), para a linha do tempo não
+  # depender do fuso da máquina.
+  xcrun simctl spawn "$(udid)" log stream --level debug --predicate \
+    'process == "Expo Go" AND (subsystem BEGINSWITH "com.apple.coreaudio" OR subsystem BEGINSWITH "com.apple.coremedia" OR subsystem BEGINSWITH "com.apple.avfaudio" OR subsystem BEGINSWITH "com.apple.audio" OR subsystem == "com.facebook.react.log" OR eventMessage CONTAINS "[som]" OR eventMessage CONTAINS[c] "AudioUnit")' \
+    > "$1" 2>&1 &
+  echo $! > "$SAIDA/registro-de-audio.pid"
+}
+parar_registro_de_audio() {
+  if [ -f "$SAIDA/registro-de-audio.pid" ]; then
+    kill "$(cat "$SAIDA/registro-de-audio.pid")" 2> /dev/null || true
+    rm -f "$SAIDA/registro-de-audio.pid"
+  fi
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # Fluxos do Maestro: os três fluxos estão em comum.sh; aqui, o ajuste do simulador antes do fluxo 2
 

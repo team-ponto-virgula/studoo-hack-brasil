@@ -118,6 +118,23 @@ preparar_fluxos_android() {
   fi
 }
 
+# O que o áudio registra enquanto a prova da criação de trilha roda (comum.sh, fluxo_criacao): o logcat ao vivo, só com
+# as etiquetas do áudio (AudioTrack, AudioFlinger, AAudio, o servidor e o HAL de áudio, o ExoPlayer do expo-audio) e o
+# JavaScript do app (ReactNativeJS, onde fica o registro de som do app, se ele existir). O emulador roda com -noaudio: o
+# sistema de áudio funciona, mas nada sai para gravar.
+iniciar_registro_de_audio() {
+  # Com -v epoch, cada linha traz os segundos desde 1970, sem depender do fuso nem do ano do emulador.
+  adb -s "$(dispositivo)" logcat -v threadtime -v epoch -T 1 -s 'AudioTrack:V' 'AudioFlinger:V' 'AAudio:V' 'AudioPolicyManager:V' \
+    'audioserver:V' 'android.hardware.audio:V' 'ExoPlayerImpl:V' 'MediaCodec:V' 'ReactNativeJS:V' > "$1" 2>&1 &
+  echo $! > "$SAIDA/registro-de-audio.pid"
+}
+parar_registro_de_audio() {
+  if [ -f "$SAIDA/registro-de-audio.pid" ]; then
+    kill "$(cat "$SAIDA/registro-de-audio.pid")" 2> /dev/null || true
+    rm -f "$SAIDA/registro-de-audio.pid"
+  fi
+}
+
 # No fim do passo, com ou sem falha: o fim do registro do Android e a tela do emulador.
 depois_do_emulador() {
   local id
