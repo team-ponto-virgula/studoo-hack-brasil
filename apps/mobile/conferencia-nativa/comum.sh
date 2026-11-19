@@ -406,6 +406,7 @@ escrever_origem() {
     echo
     cat "$SAIDA/origem-simulador.txt" 2> /dev/null || echo "Aparelho: ? (a sonda não registrou)"
     cat "$SAIDA/origem-app.txt" 2> /dev/null || true
+    material_observado
     echo "Maestro: ${MAESTRO_VERSAO:-?}"
     echo "Commit: ${GITHUB_SHA:-$(git -C "$RAIZ" rev-parse HEAD 2> /dev/null || echo '?')}"
     echo "Ramo: ${GITHUB_REF_NAME:-$(git -C "$RAIZ" rev-parse --abbrev-ref HEAD 2> /dev/null || echo '?')}"
@@ -424,9 +425,45 @@ coletar_inicio() {
   # na pasta pedida: vai junto com os registros.
   if [ -d "$HOME/.maestro/tests" ]; then cp -R "$HOME/.maestro/tests" "$SAIDA_MAESTRO/pasta-padrao-do-maestro" 2> /dev/null || true; fi
   encurtar_registros_do_simulador
-  # O Maestro guarda cada captura em <saída>/<sessão>/<fluxo>/takeScreenshot/<nome>.png.
+  # O Maestro guarda cada captura em <saída>/<sessão>/<fluxo>/takeScreenshot/<nome>.png. A imagem do material observado
+  # (material_observado, abaixo) vai junto das capturas.
   find "$SAIDA_MAESTRO" -type f -name '[0-9][0-9]-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
+  find "$SAIDA_MAESTRO" -type f -name 'material-observado-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
   escrever_origem "$1"
+}
+
+# O material que o app desenhou de fato na barra de baixo. A View por fora da barra tem o testID barra-material-vidro ou
+# barra-material-opaca, conforme o ramo que desenhou (apps/mobile/src/interface.tsx); o fluxo 80 procura os dois e, achando
+# um, tira uma imagem com o nome dele. É o estado observado; o calculado (a conta do vidro e das preferências) é outra
+# linha do ORIGEM.txt, e os dois não se confundem.
+material_observado() {
+  local vidro opaca
+  vidro="$(find "$SAIDA_MAESTRO" -type f -name 'material-observado-vidro.png' 2> /dev/null | head -1 || true)"
+  opaca="$(find "$SAIDA_MAESTRO" -type f -name 'material-observado-opaca.png' 2> /dev/null | head -1 || true)"
+  if [ -n "$vidro" ] && [ -n "$opaca" ]; then
+    echo "Material observado da barra (testID visto no fluxo 80): os dois apareceram, barra-material-vidro e barra-material-opaca (não devia)"
+  elif [ -n "$vidro" ]; then
+    echo "Material observado da barra (testID visto no fluxo 80): vidro (barra-material-vidro; imagem material-observado-vidro.png)"
+  elif [ -n "$opaca" ]; then
+    echo "Material observado da barra (testID visto no fluxo 80): superfície opaca (barra-material-opaca; imagem material-observado-opaca.png)"
+  else
+    echo "Material observado da barra (testID visto no fluxo 80): não identificado (nenhum dos dois testID apareceu, ou o fluxo 80 não chegou lá)"
+  fi
+}
+
+# A barra de baixo no sumário: o calculado (as linhas de <origem>) e o observado, um embaixo do outro, com aviso quando o
+# observado falta ou não fecha. Uso: resumir_barra <arquivo de origem com as linhas calculadas>
+resumir_barra() {
+  local linha observado
+  observado="$(material_observado)"
+  resumo "### Barra de baixo"
+  resumo ""
+  { grep -E '^(Vidro|Reduzir|Tamanho|Material calculado)' "$1" 2> /dev/null || true; } | while IFS= read -r linha; do resumo "- $linha"; done
+  resumo "- $observado"
+  resumo ""
+  case "$observado" in
+    *"não identificado"* | *"os dois apareceram"*) aviso "O material que o app desenhou na barra de baixo não ficou claro pelo testID do fluxo 80: ${observado#*: }." ;;
+  esac
 }
 
 # A tabela das capturas no sumário, a origem e a cache do Metro. Uso: coletar_tabela <a linha de origem do sumário>

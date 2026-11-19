@@ -128,7 +128,7 @@ depois_do_emulador() {
 }
 
 no_emulador() {
-  local id comando versao api modelo escala
+  local id comando versao api modelo escala codigo
   trap depois_do_emulador EXIT
   id="$(dispositivo)"
   [ -n "$id" ] || erro "Nenhum emulador ligado no adb."
@@ -161,13 +161,20 @@ no_emulador() {
   modelo="$(adb -s "$id" shell getprop ro.product.model | tr -d '\r')"
   echo "Emulador: $modelo, Android $versao (API $api), $(adb -s "$id" shell wm size | tr -d '\r' | tail -1), $(adb -s "$id" shell wm density | tr -d '\r' | tail -1)" \
     > "$SAIDA/origem-simulador.txt"
-  # A barra de baixo no Android é sempre a superfície branca opaca (spec 05: o vidro é só do iPhone com iOS 26). O tamanho
-  # do texto do sistema entra junto, porque a barra cresce com ele.
-  escala="$(adb -s "$id" shell settings get system font_scale | tr -d '\r')"
-  if [ -z "$escala" ] || [ "$escala" = "null" ]; then escala="1.0 (o padrão)"; fi
+  # A barra de baixo no Android é sempre a superfície branca opaca (spec 05: o vidro é só do iPhone com iOS 26): é o
+  # material calculado; o observado vem do testID que o fluxo 80 viu (material_observado, em comum.sh). O tamanho do texto
+  # do sistema entra junto, porque a barra cresce com ele. "null" é a chave ausente (vale o padrão, 1,0); uma falha de
+  # leitura fica como desconhecida e não para o passo.
+  codigo=0
+  escala="$(adb -s "$id" shell settings get system font_scale 2>&1 | tr -d '\r')" || codigo=$?
+  if [ "$codigo" -ne 0 ] || [ -z "$escala" ]; then
+    escala="desconhecido (a leitura falhou, código $codigo)"
+  elif [ "$escala" = "null" ]; then
+    escala="1.0 (a chave não existe: vale o padrão)"
+  fi
   {
-    echo "Tamanho do texto do sistema: font_scale $escala"
-    echo "Material esperado da barra de baixo: superfície branca opaca (o Android não tem o vidro; spec 05)"
+    echo "Tamanho do texto do sistema (lido no emulador): font_scale $escala"
+    echo "Material calculado da barra (estimativa, não é o observado): superfície branca opaca (o Android não tem o vidro; spec 05)"
   } >> "$SAIDA/origem-simulador.txt"
   cat "$SAIDA/origem-simulador.txt"
 
@@ -182,6 +189,7 @@ no_emulador() {
 
 coletar() {
   coletar_inicio "emulador de Android numa máquina do GitHub Actions, com o build de debug do próprio projeto e o JavaScript servido pelo Metro (sem modo de desenvolvimento). Não é aparelho de verdade."
+  resumir_barra "$SAIDA/origem-simulador.txt"
   coletar_tabela "Origem: emulador de Android numa máquina do GitHub Actions, com o build de debug do projeto. Não é aparelho de verdade. Emulador, Android, app e commit estão em ORIGEM.txt, no artefato das capturas."
   coletar_fim
 }

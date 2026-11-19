@@ -6,7 +6,10 @@
 # As telas rolam com arrastos fixos, sem a busca do Maestro: no emulador de Android, cada passo da busca leva de 20 a 28 s.
 # É o primeiro fluxo das telas (telas/config.yaml). Ele acaba no mapa da Culinária, mas o seguinte recomeça o app, abrir
 # uma trilha só lê os dados, e nenhuma preferência do app muda.
-# O material que o app deveria usar (vidro ou superfície opaca) e as preferências que valeram ficam no ORIGEM.txt.
+# O material que o app desenhou de fato fica registrado aqui: a View por fora da barra tem o testID barra-material-vidro
+# ou barra-material-opaca, conforme o ramo que desenhou, e o fluxo tira uma imagem com o nome do que achar
+# (material-observado-vidro ou -opaca). A coleta põe esse estado observado no ORIGEM.txt e no sumário, ao lado do
+# material calculado pelas preferências do aparelho.
 appId: host.exp.Exponent
 name: 80-ilha-de-abas
 ---
@@ -23,6 +26,19 @@ name: 80-ilha-de-abas
 - waitForAnimationToEnd:
     timeout: 2000
 - takeScreenshot: 80-ilha-nova-trilha
+# O material desenhado (o testID muda com o ramo): só registra, não exige nenhum dos dois.
+- runFlow:
+    when:
+      visible:
+        id: barra-material-vidro
+    commands:
+      - takeScreenshot: material-observado-vidro
+- runFlow:
+    when:
+      visible:
+        id: barra-material-opaca
+    commands:
+      - takeScreenshot: material-observado-opaca
 - assertVisible:
     id: nav-objetivo
     selected: true
