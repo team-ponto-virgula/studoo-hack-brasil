@@ -11,7 +11,7 @@ export const CORES_PERFIL = ['azul', 'verde', 'laranja', 'roxo', 'rosa', 'turque
 export type CorPerfil = (typeof CORES_PERFIL)[number];
 /** Fundo de cada cor (texto branco, contraste AA em 1.125rem negrito); a web e o app usam os mesmos valores. */
 export const FUNDO_DA_COR: Record<CorPerfil, string> = {
-  azul: '#3858d6',
+  azul: '#2563ff',
   verde: '#1f7a5a',
   laranja: '#b25400',
   roxo: '#6b46c1',

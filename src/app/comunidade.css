@@ -41,7 +41,7 @@
 /* Contornos dos controles com 3:1 sobre o branco; o do cartão continua claro. */
 .cartao-trilha .botao--secundario, .cartao-trilha__icone, .cartao-trilha__valeu { border-color: #8792bd; }
 /* "Continuar" (trilha que a pessoa já tem): azul claro da marca, mais forte que o Valeu e diferente do "Quero estudar". */
-.cartao-trilha[data-situacao='adicionada'] .cartao-trilha__acoes > .botao { background: #eef3ff; }
+.cartao-trilha[data-situacao='adicionada'] .cartao-trilha__acoes > .botao { background: var(--ceu); }
 .cartao-trilha__valeu { flex: 1 1 auto; justify-content: center; }
 .cartao-trilha__icone, .cartao-trilha__valeu {
   display: inline-grid; place-items: center; min-width: 44px; min-height: 44px; padding: 0 10px; border: 2px solid var(--gelo); border-radius: 14px;
@@ -202,7 +202,7 @@
   color: var(--texto2); font: inherit; font-weight: 900; cursor: pointer;
 }
 .explorar__aba .icone { width: 18px; height: 18px; }
-.explorar__aba[aria-pressed='true'] { background: var(--fundo); color: var(--texto); box-shadow: 0 2px 8px rgb(27 42 94 / 0.12); }
+.explorar__aba[aria-pressed='true'] { background: var(--fundo); color: var(--texto); box-shadow: 0 2px 8px rgb(11 27 92 / 0.12); }
 .explorar__aba:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
 @media (hover: hover) { .explorar__aba:not([aria-pressed='true']):hover { color: var(--texto); } }
 
@@ -212,7 +212,7 @@
 .novidades__semana { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
 .novidades__lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .novidade { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 2px solid var(--gelo); border-radius: 16px; background: var(--fundo); }
-.novidade__icone { display: grid; flex: none; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: var(--ceu); color: var(--acao); }
+.novidade__icone { display: grid; flex: none; width: 40px; height: 40px; place-items: center; border-radius: 12px; background: var(--ceu); color: var(--acao-escura); }
 .novidade[data-tipo='valeus'] .novidade__icone { background: #fde8ee; color: #a3204a; }
 .novidade[data-tipo='seguidores'] .novidade__icone { background: #e3f6ea; color: #14513b; }
 .novidade__icone .icone { width: 20px; height: 20px; }

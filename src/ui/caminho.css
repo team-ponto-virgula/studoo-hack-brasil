@@ -57,7 +57,7 @@
   border-radius: 18px;
   color: var(--texto);
   background: var(--fundo);
-  box-shadow: 0 3px 0 rgb(27 42 94 / 0.08);
+  box-shadow: 0 3px 0 rgb(11 27 92 / 0.08);
   font-size: 0.9375rem;
   font-weight: 800;
   line-height: 1.35;
@@ -162,17 +162,17 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   background:
     radial-gradient(circle at 50% 28%, rgb(255 255 255 / 0.55) 0 18%, transparent 46%),
     var(--face);
-  box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.06), 0 8px 0 var(--labio), 0 16px 22px rgb(27 42 94 / 0.16);
+  box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.06), 0 8px 0 var(--labio), 0 16px 22px rgb(11 27 92 / 0.16);
   transition: transform 110ms ease-out, box-shadow 110ms ease-out, filter 150ms ease-out;
 }
 
 .caminho-no__lente > .icone { width: 42%; height: 42%; stroke-width: 3; }
 .caminho-no[data-estado='concluida'] .caminho-no__lente { --face: var(--ouro-face); --labio: var(--ouro-labio); --tinta: #7a4a00; }
-.caminho-no[data-estado='atual'] .caminho-no__lente { --face: #4466e4; --labio: #2a44a8; --tinta: var(--fundo); scale: 1.14; }
+.caminho-no[data-estado='atual'] .caminho-no__lente { --face: #4466e4; --labio: var(--acao-escura); --tinta: var(--fundo); scale: 1.14; }
 .caminho-no[data-estado='previa'] .caminho-no__lente { --face: var(--fundo); --labio: #cdd6f2; --tinta: var(--acao); }
 
 .caminho-no__alvo:active:not(:disabled) .caminho-no__lente {
-  box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.06), 0 2px 0 var(--labio), 0 6px 10px rgb(27 42 94 / 0.12);
+  box-shadow: inset 0 -5px 0 rgb(0 0 0 / 0.06), 0 2px 0 var(--labio), 0 6px 10px rgb(11 27 92 / 0.12);
   transform: translateY(6px);
 }
 
@@ -267,7 +267,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   padding: 9px 13px;
   border-radius: 16px;
   background: rgb(255 255 255 / 0.94);
-  box-shadow: 0 3px 0 rgb(27 42 94 / 0.08);
+  box-shadow: 0 3px 0 rgb(11 27 92 / 0.08);
   overflow-wrap: anywhere;
   translate: 0 -50%;
 }
@@ -302,7 +302,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-conector { display: block; width: 100%; height: 100%; overflow: visible; }
 .caminho-conector path { fill: none; stroke-linecap: round; vector-effect: non-scaling-stroke; }
 .caminho-conector__estrada { stroke: var(--estrada); stroke-width: 24px; }
-.caminho-conector__linha { stroke: rgb(27 42 94 / 0.22); stroke-width: 6px; stroke-dasharray: 0 14px; }
+.caminho-conector__linha { stroke: rgb(11 27 92 / 0.22); stroke-width: 6px; stroke-dasharray: 0 14px; }
 .caminho-ligacao[data-feita] .caminho-conector__estrada { stroke: #ffe8a6; }
 .caminho-ligacao[data-feita] .caminho-conector__linha { stroke: var(--ouro-labio); stroke-width: 6px; stroke-dasharray: none; }
 
@@ -332,7 +332,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   border-radius: 20px;
   color: var(--texto);
   background: rgb(255 255 255 / 0.92);
-  box-shadow: 0 5px 0 rgb(27 42 94 / 0.1), 0 10px 22px rgb(27 42 94 / 0.1);
+  box-shadow: 0 5px 0 rgb(11 27 92 / 0.1), 0 10px 22px rgb(11 27 92 / 0.1);
   backdrop-filter: blur(6px);
 }
 
@@ -345,7 +345,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   border-radius: 14px;
   color: var(--fundo);
   background: var(--acao);
-  box-shadow: 0 4px 0 #2a44a8;
+  box-shadow: 0 4px 0 var(--acao-escura);
 }
 
 .caminho-parte__selo .icone { width: 22px; height: 22px; }
@@ -416,7 +416,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   border-radius: 50%;
   color: var(--texto2);
   background: radial-gradient(circle at 50% 28%, rgb(255 255 255 / 0.7) 0 18%, transparent 46%), var(--fundo);
-  box-shadow: inset 0 0 0 5px rgb(225 231 250 / 0.7), 0 8px 0 #cdd6f2, 0 16px 24px rgb(27 42 94 / 0.14);
+  box-shadow: inset 0 0 0 5px rgb(225 231 250 / 0.7), 0 8px 0 #cdd6f2, 0 16px 24px rgb(11 27 92 / 0.14);
 }
 
 .caminho-chegada__lente > .icone { width: 46%; height: 46%; stroke-width: 2.75; }
@@ -453,7 +453,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   border: 2px solid var(--gelo);
   border-radius: var(--raio-bloco);
   background: var(--fundo);
-  box-shadow: 0 5px 0 var(--gelo), 0 14px 32px rgb(27 42 94 / 0.16);
+  box-shadow: 0 5px 0 var(--gelo), 0 14px 32px rgb(11 27 92 / 0.16);
   --folga-balao: 24px;
   scroll-margin-block: 24px var(--folga-balao);
   transform-origin: 50% 0;
@@ -492,7 +492,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
 .caminho-balao__titulo { padding-top: 10px; font-weight: 800; overflow-wrap: anywhere; }
 .caminho-balao__texto { padding-right: 8px; color: var(--texto2); }
 .caminho-balao > .botao { justify-self: start; }
-.caminho-balao[data-estado='concluida'] { border-color: #ffe08a; box-shadow: 0 5px 0 #ffe08a, 0 14px 32px rgb(27 42 94 / 0.14); }
+.caminho-balao[data-estado='concluida'] { border-color: #ffe08a; box-shadow: 0 5px 0 #ffe08a, 0 14px 32px rgb(11 27 92 / 0.14); }
 .caminho-balao[data-estado='concluida'] .caminho-balao__titulo { color: #9a5b00; }
 
 .caminho-balao__fechar {
@@ -558,7 +558,7 @@ div.caminho-no__alvo, .caminho-no__alvo:disabled { cursor: default; }
   z-index: -1;
   height: 8px;
   border-radius: 50%;
-  background: rgb(27 42 94 / 0.14);
+  background: rgb(11 27 92 / 0.14);
   animation: caminho-guia-sombra 2600ms ease-in-out infinite;
 }
 
@@ -869,7 +869,7 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 /* Estrada até o troféu com o mesmo pontilhado do resto (sem emenda); dourada quando a trilha foi vencida. */
 .caminho-chegada::before {
   background:
-    radial-gradient(circle, rgb(27 42 94 / 0.22) 0 3px, transparent 3.5px) center 7px / 24px 14px repeat-y,
+    radial-gradient(circle, rgb(11 27 92 / 0.22) 0 3px, transparent 3.5px) center 7px / 24px 14px repeat-y,
     var(--estrada);
 }
 .caminho-chegada[data-feita]::before { background: var(--ouro-labio) linear-gradient(#ffe8a6, #ffe8a6) center / 12px 100% no-repeat; }
@@ -886,16 +886,16 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 /* A reta até o troféu começa onde a curva da última lição termina (sem sobreposição nem pontos duplicados). */
 .caminho-chegada::before { top: calc(var(--lente-base) / 2); height: calc(140px - var(--lente-base) / 2); border-radius: 0 0 12px 12px; }
 /* Títulos com fundo opaco: a estrada não aparece por trás do texto. */
-.caminho-no[data-discreto] .caminho-no__texto { background: var(--fundo); box-shadow: 0 2px 0 rgb(27 42 94 / 0.06); }
+.caminho-no[data-discreto] .caminho-no__texto { background: var(--fundo); box-shadow: 0 2px 0 rgb(11 27 92 / 0.06); }
 
 /* O troféu ainda por conquistar já tem cara de prêmio: aro e ícone dourados sobre a face branca. */
 .caminho-chegada:not([data-feita]) .caminho-chegada__lente {
   color: #c98a0e;
-  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 16px 24px rgb(27 42 94 / 0.14);
+  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 16px 24px rgb(11 27 92 / 0.14);
 }
 /* Halo dourado em volta do troféu, antes e depois da conquista. */
 .caminho-chegada:not([data-feita]) .caminho-chegada__lente {
-  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 0 0 14px rgb(255 214 102 / 0.3), 0 16px 24px rgb(27 42 94 / 0.14);
+  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 0 0 14px rgb(255 214 102 / 0.3), 0 16px 24px rgb(11 27 92 / 0.14);
 }
 .caminho-chegada:not([data-feita]) .caminho-chegada__brilho { animation: none; opacity: 0.85; }
 
@@ -908,7 +908,7 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-parte {
   display: inline-flex; align-items: center; gap: 8px; width: auto; white-space: nowrap; padding: 4px 14px 4px 4px;
   border: 2px solid var(--fundo); border-radius: 999px; background: var(--fundo);
-  box-shadow: 0 3px 0 rgb(27 42 94 / 0.1); backdrop-filter: none;
+  box-shadow: 0 3px 0 rgb(11 27 92 / 0.1); backdrop-filter: none;
 }
 .caminho-parte__selo { width: 28px; height: 28px; border-radius: 50%; box-shadow: none; }
 .caminho-parte__selo .icone { width: 16px; height: 16px; }
@@ -921,7 +921,7 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho .caminho-no[data-fim-trecho][data-ligado]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 188px); }
 
 /* Lições à frente: moeda branca com o lábio no tom da região, bem visível sobre o chão claro (antes, cinza sobre claro). */
-.caminho-no[data-estado='bloqueada'] .caminho-no__lente { --face: var(--fundo); --labio: color-mix(in srgb, var(--relevo), #1b2a5e 22%); --tinta: #7d87a6; }
+.caminho-no[data-estado='bloqueada'] .caminho-no__lente { --face: var(--fundo); --labio: color-mix(in srgb, var(--relevo), var(--texto) 22%); --tinta: #7d87a6; }
 .caminho-no[data-estado='bloqueada'] .caminho-no__lente > .icone { opacity: 1; }
 /* Estrada opaca (o mesmo branco a 72% já misturado ao chão da região): pedaços sobrepostos não ficam mais claros na emenda. */
 .caminho-no, .caminho-chegada { --estrada: color-mix(in srgb, #fff 72%, var(--chao, #fff)); }
@@ -939,11 +939,11 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 
 /* Lições à frente num tom um pouco mais escuro que o chão: visíveis, mas claramente inativas (nem brancas nem apagadas). */
 .caminho-no[data-estado='bloqueada'] .caminho-no__lente {
-  --face: color-mix(in srgb, var(--chao), #1b2a5e 9%); --labio: color-mix(in srgb, var(--relevo), #1b2a5e 26%); --tinta: #6f7898;
+  --face: color-mix(in srgb, var(--chao), var(--texto) 9%); --labio: color-mix(in srgb, var(--relevo), var(--texto) 26%); --tinta: #6f7898;
 }
 /* "Começar" com cara de botão: pílula azul no alto do balão. */
 .caminho-no__etiqueta { gap: 6px; padding-top: 10px; }
-.caminho-no__etiqueta-acao { padding: 3px 12px; border-radius: 999px; color: var(--fundo); background: var(--acao); box-shadow: 0 2px 0 #2a44a8; }
+.caminho-no__etiqueta-acao { padding: 3px 12px; border-radius: 999px; color: var(--fundo); background: var(--acao); box-shadow: 0 2px 0 var(--acao-escura); }
 /* Respiro acima do nó atual: o balão (ação + nome) fica no espaço livre, sem cobrir a estrada até o nó anterior. */
 /* O nome embaixo do nó (até duas linhas) e o balão "Começar" do próximo não podem se encostar. */
 .caminho .caminho-no[data-discreto]:has(+ .caminho-no[data-estado='atual']) { padding-bottom: calc(var(--passo) + 172px); }
@@ -953,12 +953,12 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 /* A revisão tem formato próprio: quadrado arredondado, não moeda. */
 .caminho-no[data-revisao] .caminho-no__lente { border-radius: 32%; }
 /* Pontilhado da estrada mais visível em qualquer terreno. */
-.caminho-conector__linha { stroke: rgb(27 42 94 / 0.34); }
+.caminho-conector__linha { stroke: rgb(11 27 92 / 0.34); }
 /* Troféu cheio e dourado, com halo mais quente; o rótulo da chegada fala em dourado. */
 .caminho-chegada__lente > .icone { width: 50%; height: 50%; }
 .caminho-chegada__lente > .icone path { fill: currentColor; }
 .caminho-chegada:not([data-feita]) .caminho-chegada__lente {
-  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 0 0 14px rgb(255 207 77 / 0.42), 0 16px 24px rgb(27 42 94 / 0.14);
+  box-shadow: inset 0 0 0 5px #ffe9a8, 0 8px 0 #ebcb72, 0 0 0 14px rgb(255 207 77 / 0.42), 0 16px 24px rgb(11 27 92 / 0.14);
 }
 .caminho-chegada__texto { color: #9a5b00; }
 /* Trecho final mais curto até o troféu. */

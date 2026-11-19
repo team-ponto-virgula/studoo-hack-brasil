@@ -599,7 +599,7 @@ export interface CoresCodigo {
   fundo: string;
 }
 
-export const CORES_CODIGO_PADRAO: CoresCodigo = { dados: '#1b2a5e', dadosTopo: '#2a44a8', anel: '#1b2a5e', miolo: '#3858d6', fundo: '#ffffff' };
+export const CORES_CODIGO_PADRAO: CoresCodigo = { dados: '#0b1b5c', dadosTopo: '#1d4ed8', anel: '#0b1b5c', miolo: '#2563ff', fundo: '#ffffff' };
 
 /**
  * Diâmetro do desenho do centro (em módulos): o círculo vai quase até os pontos vizinhos, a 0,12 da borda do ponto mais
@@ -617,10 +617,10 @@ export function diametroDoCentro(lado: number): number {
 }
 
 /** O sorriso do Stu (centro do estilo rosto: com as lentes e a ponte, o código inteiro vira o rosto dele). */
-export const SORRISO_SVG = '<path d="M10 36q40 40 80 0" fill="none" stroke="#3858d6" stroke-width="16" stroke-linecap="round"/>';
+export const SORRISO_SVG = '<path d="M10 36q40 40 80 0" fill="none" stroke="#2563ff" stroke-width="16" stroke-linecap="round"/>';
 
 /** O Stu em vetor (quadrado arredondado azul, óculos redondos e sorriso), numa caixa de 100×100. */
-export const STU_SVG = '<rect width="100" height="100" rx="24" fill="#3858d6"/><g fill="none" stroke="#fff" stroke-linecap="round" stroke-width="7"><circle cx="33" cy="43" r="11.5"/><circle cx="67" cy="43" r="11.5"/><path d="M44.5 41.5q5.5-3 11 0"/><path d="M35 64q15 11 30 0"/></g>';
+export const STU_SVG = '<rect width="100" height="100" rx="24" fill="#2563ff"/><g fill="none" stroke="#fff" stroke-linecap="round" stroke-width="7"><circle cx="33" cy="43" r="11.5"/><circle cx="67" cy="43" r="11.5"/><path d="M44.5 41.5q5.5-3 11 0"/><path d="M35 64q15 11 30 0"/></g>';
 
 /**
  * O código em SVG (texto puro, sem DOM): `tamanho` em px; `centro` é o SVG de 100×100 que vai na clareira (o Stu por
@@ -665,7 +665,7 @@ export function corClara(hex: string, branco = 0.84): string {
  */
 export function centroComInicial(inicial: string, cor: string, comLetra = true): string {
   const letra = (inicial.trim()[0] ?? '?').replace(/[<>&"']/g, '?');
-  const fundo = /^#[0-9a-f]{6}$/i.test(cor) ? cor : '#3858d6';
+  const fundo = /^#[0-9a-f]{6}$/i.test(cor) ? cor : '#2563ff';
   return `<circle cx="50" cy="50" r="50" fill="#fff"/><circle cx="50" cy="50" r="46" fill="${corClara(fundo)}"/>`
     + (comLetra ? `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="Quicksand, Nunito, sans-serif" font-weight="700" font-size="52" fill="${fundo}">${letra}</text>` : '');
 }
@@ -689,6 +689,6 @@ export function centroDoCodigo(texto: string, estilo: EstiloCodigo = 'rosto'): {
 export function svgCodigoDoLink(texto: string, { mioloCor, fotoHref, inicial, letraNoCentro = true, estilo = 'rosto', tamanho = 600 }: { mioloCor?: string; fotoHref?: string | null; inicial?: string | null; letraNoCentro?: boolean; estilo?: EstiloCodigo; tamanho?: number } = {}): string {
   const cores = { ...CORES_CODIGO_PADRAO, ...(mioloCor ? { miolo: mioloCor } : {}) };
   // Centro: a foto; sem foto, a inicial na cor (perfil); sem nenhum dos dois, o sorriso do Stu (trilha).
-  const centro = fotoHref ? centroComFoto(fotoHref) : inicial ? centroComInicial(inicial, mioloCor ?? '#3858d6', letraNoCentro) : undefined;
+  const centro = fotoHref ? centroComFoto(fotoHref) : inicial ? centroComInicial(inicial, mioloCor ?? '#2563ff', letraNoCentro) : undefined;
   return svgCodigoStudoo(geometriaCodigoStudoo(texto, { estilo, centro: fotoHref || inicial ? 'disco' : 'sorriso' }), { tamanho, cores, ...(centro ? { centro } : {}) });
 }
