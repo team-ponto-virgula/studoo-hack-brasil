@@ -5,10 +5,22 @@ appId: host.exp.Exponent
 ---
 - stopApp
 - openLink: exp://127.0.0.1:8081
+# A pergunta do iOS sobre abrir o link no Expo Go foi respondida no primeiro fluxo; se voltar, ela aparece na hora.
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+# Depois de religar o simulador, a apresentação do Expo Go pode voltar: a mesma defesa da primeira abertura. O pacote já
+# está compilado no Metro, então a espera é menor.
+- runFlow:
+    file: sair-do-menu-do-expo-go.yaml
+    env:
+      ESPERA: "120000"
 - extendedWaitUntil:
     visible:
       id: nav-planos
-    timeout: 180000
+    timeout: 30000
 - extendedWaitUntil:
     visible:
       id: titulo-plano

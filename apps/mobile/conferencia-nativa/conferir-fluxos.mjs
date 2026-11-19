@@ -2,8 +2,9 @@
 // que deixou de existir aparecer em segundos, e não depois de meia hora de máquina.
 //
 // O que confere:
-//   1. todo `id:` usado num fluxo existe como `testID` em apps/mobile/src (um `testID` montado com `${...}` vale como molde);
-//   2. as capturas dos fluxos são exatamente as da lista CAPTURAS_ESPERADAS de ios.sh;
+//   1. todo `id:` usado num fluxo existe como `testID` em apps/mobile/src (um `testID` montado com `${...}` vale como molde),
+//      fora os poucos ids do próprio Expo Go, listados abaixo;
+//   2. as capturas do percurso (nomes que começam por dois dígitos) são exatamente as da lista CAPTURAS_ESPERADAS de ios.sh;
 //   3. todo arquivo de `runFlow` existe;
 //   4. a ordem em telas/config.yaml cita exatamente os fluxos de telas/, e o `name` de cada fluxo é o nome do arquivo.
 //
@@ -44,9 +45,13 @@ for (const arquivo of arquivosDe(pastaApp, (nome) => /\.tsx?$/.test(nome))) {
   // Um `testID` que chega por propriedade e é escolhido entre dois literais: testID={a ? 'x' : 'y'}.
   for (const [, a, b] of codigo.matchAll(/testID=\{[^}]*\?\s*'([^']+)'\s*:\s*'([^']+)'\s*\}/g)) { literais.add(a); literais.add(b); }
 }
+// Ids do próprio Expo Go, que os fluxos usam para sair do menu de desenvolvedor: não são testID do app. São os nomes dos
+// símbolos que o menu desenha (pacote expo-dev-menu): o "X" do menu e a engrenagem do botão flutuante.
+const idsDoExpoGo = new Set(['xmark', 'gearshape.fill']);
+
 /** O id existe se é um literal ou cabe num molde; no molde com prefixo (`${testID}-menu`), o prefixo também precisa existir. */
 function existeNoApp(id) {
-  if (literais.has(id)) return true;
+  if (literais.has(id) || idsDoExpoGo.has(id)) return true;
   return moldes.some(({ expressao, comPrefixo }) => {
     const achado = expressao.exec(id);
     return achado !== null && (!comPrefixo || existeNoApp(achado[1]));
@@ -74,10 +79,11 @@ for (const arquivo of fluxos) {
     if (!existsSync(resolve(dirname(arquivo), alvo))) problemas.push(`${curto(arquivo)}: o fluxo "${alvo}" não existe.`);
   }
 
-  // --- 2. Capturas: o nome direto, ou o molde do fluxo de exercício (${CAPTURA}) preenchido por quem o chama.
+  // --- 2. Capturas: o nome direto, ou o molde do fluxo de exercício (${CAPTURA}) preenchido por quem o chama. As do
+  // percurso começam por dois dígitos; uma imagem de diagnóstico (aviso-…) não entra na conta.
   for (const [, valor] of texto.matchAll(/^\s*-\s*takeScreenshot:\s*(.+)$/gm)) {
     const nome = semAspas(valor);
-    if (!nome.includes('${')) capturas.set(nome, curto(arquivo));
+    if (!nome.includes('${') && /^\d\d-/.test(nome)) capturas.set(nome, curto(arquivo));
   }
   for (const [, valor] of texto.matchAll(/^\s*CAPTURA:\s*(.+)$/gm)) {
     const base = semAspas(valor);
