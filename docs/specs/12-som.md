@@ -106,20 +106,24 @@ Tabela fechada com os IDs já existentes em `packages/contratos/src/catalogo-son
 
 | Área | Momento | Efeito (`IdEfeitoSonoro`) | Vol. relativo | Regra para não empilhar / quando NÃO tocar |
 |---|---|---|---|---|
-| **Geração que se acompanha** (spec 04) | Cada lição nova que chega ao mapa | `geracao_licao` | `0.38` | Cooldown mínimo de `180 ms` (rajadas no mesmo lote descartam os extras); não toca se a geração foi cancelada |
+| **Geração que se acompanha** (spec 04) | Cada lição nova que chega ao mapa | `geracao_licao` | `0.58` | Cooldown mínimo de `180 ms` (rajadas no mesmo lote descartam os extras); não toca se a geração foi cancelada |
 | **Geração que se acompanha** (spec 04) | Aviso "Mais uma!" (no máximo a cada 3 lições) | nenhum | — | A lição que acabou de chegar já tocou `geracao_licao`; outro som no mesmo lote polui |
-| **Geração que se acompanha** (spec 04) | "Trilha pronta! N lições em M partes." | `geracao_pronta` | `0.75` | Toca uma única vez ao concluir (cooldown `500 ms`); se a última lição chegou há menos de `200 ms`, suprimir `geracao_licao` e tocar só `geracao_pronta` |
+| **Geração que se acompanha** (spec 04) | "Trilha pronta! N lições em M partes." | `geracao_pronta` | `0.95` | Toca uma única vez ao concluir (cooldown `500 ms`); se a última lição chegou há menos de `200 ms`, suprimir `geracao_licao` e tocar só `geracao_pronta` |
 | **Geração que se acompanha** (spec 04) | Troféu que entra no fim da geração | nenhum | — | `geracao_pronta` já marca a conclusão da trilha |
 | **Geração que se acompanha** (spec 04) | Foco automático no botão "Começar" | nenhum | — | Foco programático nunca dispara som |
-| **Ordenar em lista única** (spec 08) | Escolher um item da lista | `toque_opcao` | `0.45` | Cooldown `45 ms` |
-| **Ordenar em lista única** (spec 08) | Trocar dois itens de lugar (por toque ou seta) | `ordenar_soltar` | `0.50` | Cooldown `50 ms`; no segundo toque que efetiva a troca, toca só `ordenar_soltar` (não soma `toque_opcao`) |
-| **Ordenar em lista única** (spec 08) | Arrastar e soltar um item | `ordenar_soltar` | `0.50` | Toca apenas ao soltar em uma **nova** posição; não toca se voltar ao mesmo lugar ou cancelar |
-| **Ordenar em lista única** (spec 08) | "Voltar à ordem inicial" | `toque_opcao` | `0.45` | Um único disparo para a ação inteira (nunca um por item movido) |
-| **Painel de retorno** (spec 13) | Reação animada do Stu junto com o retorno | nenhum | — | O efeito `acerto` (`0.78`) ou `erro` (`0.65`) já sonoriza o resultado; não sobrepor outro efeito |
-| **Configurações da trilha** | "Capa salva." | `salvo` | `0.50` | Cooldown `300 ms` |
-| **Configurações da trilha** | Salvar um campo ao sair/confirmar | `salvo` | `0.50` | Cooldown `300 ms`; só toca quando houve alteração salva (nunca em auto-save contínuo enquanto digita) |
+| **Ordenar em lista única** (spec 08) | Escolher um item da lista | `toque_opcao` | `0.76` | Cooldown `45 ms` |
+| **Ordenar em lista única** (spec 08) | Trocar dois itens de lugar (por toque ou seta) | `ordenar_soltar` | `0.63` | Cooldown `50 ms`; no segundo toque que efetiva a troca, toca só `ordenar_soltar` (não soma `toque_opcao`) |
+| **Ordenar em lista única** (spec 08) | Arrastar e soltar um item | `ordenar_soltar` | `0.63` | Toca apenas ao soltar em uma **nova** posição; não toca se voltar ao mesmo lugar ou cancelar |
+| **Ordenar em lista única** (spec 08) | "Voltar à ordem inicial" | `toque_opcao` | `0.76` | Um único disparo para a ação inteira (nunca um por item movido) |
+| **Painel de retorno** (spec 13) | Reação animada do Stu junto com o retorno | nenhum | — | O efeito `acerto` (`0.90`) ou `erro` (`0.86`) já sonoriza o resultado; não sobrepor outro efeito |
+| **Configurações da trilha** | "Capa salva." | `salvo` | `0.64` | Cooldown `300 ms` |
+| **Configurações da trilha** | Salvar um campo ao sair/confirmar | `salvo` | `0.64` | Cooldown `300 ms`; só toca quando houve alteração salva (nunca em auto-save contínuo enquanto digita) |
 | **Folha "Som"** | Prévia de um clima ao escolher | nenhum SFX | — | O próprio clima entra subindo em `600 ms` (ou após `600 ms` / `1,5 s` no leitor de tela), sem efeito por cima |
-| **Folha "Som"** | Ligar a chave "Efeitos sonoros" | `salvo` | `0.50` | Toca uma vez ao ligar; ao desligar, nenhum |
+| **Folha "Som"** | Ligar a chave "Efeitos sonoros" | `salvo` | `0.64` | Toca uma vez ao ligar; ao desligar, nenhum |
+
+## Arquivos de som (produção)
+
+Os arquivos finais e as decisões de composição estão em [som/PRODUCAO.md](../som/PRODUCAO.md): tema em Ré maior, 86 BPM, 32 compassos (89,30 s), cinco arranjos do mesmo tema, laço com a cauda dobrada no começo e efeitos com ataque em até 3,3 ms.
 
 ## Paridade
 
