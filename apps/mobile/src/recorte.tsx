@@ -319,7 +319,7 @@ const recorteEstilos = StyleSheet.create({
   // os 2 da moldura) e com 6 entre eles.
   selo: {
     position: 'absolute', left: 10, height: 28, borderRadius: 99, backgroundColor: 'rgba(255, 255, 255, 0.55)',
-    borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(27, 42, 94, 0.45)',
+    borderWidth: 1.5, borderStyle: 'dashed', borderColor: 'rgba(11, 27, 92, 0.45)',
   },
   // .recorte__zoom: o rótulo de 14 em 800 e, a 2, o controle de 44 de altura.
   zoom: { gap: 2 },
