@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
-  Alert,
   Animated,
   Easing,
   Image,
@@ -23,7 +22,7 @@ import {
   type ViewProps,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NavegacaoContexto } from './navegacao';
 import { useMovimentoReduzido } from './movimento';
@@ -44,11 +43,19 @@ export const DeslocamentoDaRolagem = createContext<number | null>(0);
  * Rola a tela até um elemento dela (medido dentro da rolagem), com uma folga no alto: o `scrollIntoView` da web, para
  * quem abre um bloco no fim da tela ("Adicionar por link") e precisa trazê-lo para cima do teclado e da barra de baixo.
  */
-export const RolagemDaTela = createContext<{ rolarAte: (no: ComponentRef<typeof View> | null, folga?: number) => void } | null>(null);
+export const RolagemDaTela = createContext<{
+  rolarAte: (no: ComponentRef<typeof View> | null, folga?: number) => void;
+  /** Traz o elemento inteiro para a parte visível, abaixo da faixa parada e acima do rodapé e da barra (o campo em foco). */
+  mostrar: (no: ComponentRef<typeof View> | null, margem?: number) => void;
+  /** O campo em foco (ou null): a tela o mantém inteiro à vista quando o teclado abre e quando a área visível encolhe. */
+  focar: (no: ComponentRef<typeof View> | null) => void;
+} | null>(null);
+/** O teclado está aberto: a entrada recolhe a parte de cima, e o rodapé deixa de somar a área segura de baixo. */
+export const TecladoAberto = createContext(false);
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
-export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, rolagem, aoMedir, aoRolar, aoMedirConteudo, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
+export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = false, semLinha = false, abaixoDoLogo, faixaFixa, rolagem, aoMedir, aoRolar, aoMedirConteudo, aoMedirNatural, estiloConteudo, estiloRodape, estiloRodapeConteudo }: {
   children: ReactNode;
   acoes?: ReactNode;
   /** Troca a faixa do topo (marca e ações) por outra, como a barra de andamento da lição. */
@@ -70,6 +77,11 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   aoRolar?: (y: number) => void;
   /** Altura de todo o conteúdo, para a tela saber se ainda tem coisa abaixo da parte visível. */
   aoMedirConteudo?: (altura: number) => void;
+  /**
+   * Altura natural do conteúdo (a barra da marca, a faixa e o conteúdo da tela), sem o que sobra até o fim da rolagem: a
+   * rolagem estica o conteúdo até a altura da janela (`flexGrow: 1`), então a medida de cima nunca fica abaixo dela.
+   */
+  aoMedirNatural?: (altura: number) => void;
   estiloConteudo?: StyleProp<ViewStyle>;
   /** Fundo do rodapé, como o verde ou o âmbar do retorno da aula. */
   estiloRodape?: StyleProp<ViewStyle>;
@@ -93,12 +105,65 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const [teclado, setTeclado] = useState(false);
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   const [alturaFaixa, setAlturaFaixa] = useState(0);
+  const [alturaRodape, setAlturaRodape] = useState(0);
+  const [alturaBarra, setAlturaBarra] = useState(0);
   const cabecalhoNaRolagem = !topo && !semCabecalho;
+  const insets = useSafeAreaInsets();
+  const comBarra = Boolean(navegacao) && !teclado;
+  // iPhone com iOS 26 ou mais novo: o rodapé neutro e a barra de baixo ficam por cima do conteúdo, para o vidro mostrar o
+  // que rola por baixo (abaixo do conteúdo, só havia o branco da tela atrás deles). No Android, no iOS anterior e na
+  // prévia web, as barras seguem no fluxo, como antes.
+  const rodapeSobreposto = VIDRO && Boolean(rodape) && !estiloRodape;
+  const barraSobreposta = VIDRO && comBarra && (!rodape || rodapeSobreposto);
+  // A área segura de baixo (barra de início do iPhone, barra de gestos do Android) fica dentro da barra que encosta na
+  // borda: o fundo dela vai até a borda, sem linha nem faixa solta embaixo. Com o teclado aberto, ele cobre essa área.
+  const fundoSeguro = teclado ? 0 : insets.bottom;
+  const sobreposicao = (rodapeSobreposto ? alturaRodape : 0) + (barraSobreposta ? alturaBarra : 0);
+  // Sem barra embaixo, o fim da rolagem ganha a área segura (nada fica atrás da barra de início).
+  const fimDaRolagem = sobreposicao + (!rodape && !comBarra ? fundoSeguro : 0);
+  const rolado = useRef(0);
+  const alturaRolagem = useRef(0);
+  const sobreposicaoAtual = useRef(0);
+  sobreposicaoAtual.current = sobreposicao;
+  const campoEmFoco = useRef<ComponentRef<typeof View> | null>(null);
+  const alturaDoConteudo = useRef(0);
+  const informarNatural = () => {
+    if (!aoMedirNatural || !alturaDoConteudo.current) return;
+    aoMedirNatural((cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? 20 + alturaFaixa : 0) + alturaDoConteudo.current);
+  };
+  // A barra da marca e a faixa entram na conta assim que são medidas.
+  useEffect(informarNatural, [alturaCabecalho, alturaFaixa]);
+  /** Leva o elemento para a parte visível, se ele não estiver inteiro lá (sem mexer quando já está). */
+  const mostrar = (no: ComponentRef<typeof View> | null, margem = 16) => {
+    const tela = rolagemInterna.current;
+    const conteudo = tela?.getInnerViewRef?.();
+    if (!tela || !conteudo || !no) return;
+    no.measureLayout(conteudo as never, (_x, y, _largura, altura) => {
+      const coberto = faixaFixa ? alturaFaixa : 0;
+      const visivel = alturaRolagem.current - sobreposicaoAtual.current;
+      if (y + altura + margem > rolado.current + visivel) tela.scrollTo({ y: Math.max(0, y + altura + margem - visivel), animated: reduzirMovimento === false });
+      else if (y - margem - coberto < rolado.current) tela.scrollTo({ y: Math.max(0, y - margem - coberto), animated: reduzirMovimento === false });
+    }, () => undefined);
+  };
+  const mostrarCampoEmFoco = () => setTimeout(() => { if (campoEmFoco.current) mostrar(campoEmFoco.current); }, 80);
+  const focar = (no: ComponentRef<typeof View> | null) => {
+    campoEmFoco.current = no;
+    if (no) mostrarCampoEmFoco();
+  };
   useEffect(() => {
-    const abriu = Keyboard.addListener('keyboardDidShow', () => setTeclado(true));
+    // Com o teclado aberto, o campo em foco sobe para cima do rodapé (a área visível acabou de encolher).
+    const abriu = Keyboard.addListener('keyboardDidShow', () => { setTeclado(true); mostrarCampoEmFoco(); });
     const fechou = Keyboard.addListener('keyboardDidHide', () => setTeclado(false));
     return () => { abriu.remove(); fechou.remove(); };
+    // O campo e a rolagem vêm de referências: o efeito só liga os ouvintes uma vez.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // A área visível muda quando as barras por cima do conteúdo são medidas: quem acompanha recebe a medida nova.
+  useEffect(() => {
+    if (alturaRolagem.current) aoMedir?.(alturaRolagem.current - sobreposicao);
+    // Só quando a parte coberta muda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sobreposicao]);
   // Como na web, a barra da marca rola junto com a página e sai de vista; só a faixa própria da tela (a barra da aula, o
   // nome da trilha) fica parada no alto.
   // Entrada e recuperação usam o logo de 112 da web (.entrada-cabecalho, .recuperar-topo); as telas de estudo, o de 102
@@ -118,7 +183,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
     </View>
   );
   return (
-    <SafeAreaView style={estilos.tela}>
+    <SafeAreaView style={estilos.tela} edges={['top', 'left', 'right']}>
       {topo && cabecalho}
 
       {/* No Android com edge-to-edge (padrão do build), a janela não encolhe com o teclado: sem o padding, o rodapé e os
@@ -130,31 +195,49 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           contentContainerStyle={estilos.rolagemConteudo}
           // O vão de 20 acima da faixa é um filho à parte: a faixa gruda colada no topo (com margem, ela parava 20 abaixo).
           stickyHeaderIndices={faixaFixa ? [(cabecalhoNaRolagem ? 1 : 0) + 1] : undefined}
-          onLayout={aoMedir && ((evento) => aoMedir(evento.nativeEvent.layout.height))}
-          onScroll={aoRolar && ((evento) => aoRolar(evento.nativeEvent.contentOffset.y))} scrollEventThrottle={aoRolar ? 16 : undefined}
-          onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura))}>
+          onLayout={(evento) => {
+            alturaRolagem.current = evento.nativeEvent.layout.height;
+            aoMedir?.(evento.nativeEvent.layout.height - sobreposicao);
+            if (campoEmFoco.current) mostrarCampoEmFoco();
+          }}
+          onScroll={(evento) => { rolado.current = evento.nativeEvent.contentOffset.y; aoRolar?.(evento.nativeEvent.contentOffset.y); }}
+          scrollEventThrottle={16}
+          onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura - fimDaRolagem))}>
           {cabecalhoNaRolagem && <View onLayout={(evento) => setAlturaCabecalho(evento.nativeEvent.layout.height)}>{cabecalho}</View>}
           {faixaFixa && <View style={estilos.faixaVao} />}
           {faixaFixa && <FundoDeBarra estilo={estilos.faixaFixa} estiloVidro={estilos.faixaFixaVidro} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</FundoDeBarra>}
           {/* .estudo-principal no celular: 28 em cima, também com o selo de sincronia (a barra tem a altura da da web). */}
-          <View style={[estilos.conteudo, !topo && !paginaDeAcesso && estilos.conteudoEstudo, estiloConteudo]}>
+          <View style={[estilos.conteudo, !topo && !paginaDeAcesso && estilos.conteudoEstudo, estiloConteudo]}
+            onLayout={(evento) => { alturaDoConteudo.current = evento.nativeEvent.layout.height; informarNatural(); }}>
             {/* null enquanto a barra da marca ou a faixa parada ainda não foram medidas: quem rola até um ponto espera. */}
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) ? null
               : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? 20 + alturaFaixa : 0)}>
               <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
-                <RolagemDaTela.Provider value={{ rolarAte }}>
-                  <Entrada>{children}</Entrada>
+                <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar }}>
+                  <TecladoAberto.Provider value={teclado}>
+                    <Entrada>{children}</Entrada>
+                  </TecladoAberto.Provider>
                 </RolagemDaTela.Provider>
               </AlturaDaFaixaFixa.Provider>
             </DeslocamentoDaRolagem.Provider>
           </View>
+          {/* O fim da rolagem passa por baixo das barras sobrepostas e da área segura de baixo, sem esconder o último item. */}
+          {fimDaRolagem > 0 && <View style={{ height: fimDaRolagem }} />}
         </ScrollView>
         {/* O rodapé de feedback (verde ou laranja) é conteúdo e fica com a cor de hoje; o neutro vira vidro no iOS 26. */}
-        {rodape && <FundoDeBarra estilo={[estilos.rodape, estiloRodape]} estiloVidro={estiloRodape ? undefined : estilos.rodapeVidro}>
-          <View style={[estilos.rodapeConteudo, estiloRodapeConteudo]}>{rodape}</View>
-        </FundoDeBarra>}
+        {rodape && (() => {
+          const base = StyleSheet.flatten([estilos.rodapeConteudo, estiloRodapeConteudo])?.paddingBottom;
+          const fundo = comBarra ? 0 : fundoSeguro;
+          const posicao = rodapeSobreposto ? [estilos.sobreposto, { bottom: barraSobreposta ? alturaBarra : 0 }] : null;
+          return (
+            <FundoDeBarra testID="rodape" estilo={[estilos.rodape, estiloRodape, posicao]} estiloVidro={estiloRodape ? undefined : [estilos.rodapeVidro, posicao]}
+              onLayout={(evento) => setAlturaRodape(evento.nativeEvent.layout.height)}>
+              <View style={[estilos.rodapeConteudo, estiloRodapeConteudo, fundo > 0 && { paddingBottom: (typeof base === 'number' ? base : 14) + fundo }]}>{rodape}</View>
+            </FundoDeBarra>
+          );
+        })()}
       </KeyboardAvoidingView>
-      {navegacao && !teclado && <NavegacaoInferior />}
+      {comBarra && <NavegacaoInferior fundo={fundoSeguro} sobreposta={barraSobreposta} aoMedir={setAlturaBarra} />}
     </SafeAreaView>
   );
 }
@@ -425,6 +508,9 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
   acessorio?: ReactNode;
 }) {
   const [focado, setFocado] = useState(false);
+  // Em foco, o campo inteiro (rótulo, caixa e erro) fica acima do rodapé e do teclado: a tela rola até ele.
+  const rolagem = useContext(RolagemDaTela);
+  const caixa = useRef<ComponentRef<typeof View>>(null);
   const rotuloId = props.testID ? `rotulo-${props.testID}` : undefined;
   const dica = [erro, props.accessibilityHint].filter(Boolean).join(' ') || undefined;
   // O campo guarda a própria referência e repassa a de fora (quem usa o Campo também foca o campo).
@@ -436,7 +522,7 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
   };
 
   return (
-    <View style={estilos.campo}>
+    <View ref={caixa} style={estilos.campo}>
       {/* Como o <label> da web: tocar no rótulo leva o foco ao campo. Não é mais uma parada do leitor de tela: o campo já tem
           o rótulo como nome. */}
       {!rotuloOculto && (
@@ -448,8 +534,8 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
           placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'}
           style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, !!erro && estilos.entradaErro,
             focado && estilos.entradaFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
-          onFocus={(evento) => { setFocado(true); props.onFocus?.(evento); }}
-          onBlur={(evento) => { setFocado(false); props.onBlur?.(evento); }} />
+          onFocus={(evento) => { setFocado(true); rolagem?.focar(caixa.current); props.onFocus?.(evento); }}
+          onBlur={(evento) => { setFocado(false); rolagem?.focar(null); props.onBlur?.(evento); }} />
         {acessorio && <View style={estilos.acessorio}>{acessorio}</View>}
       </View>
       {erro && (
@@ -599,6 +685,7 @@ export const caixaAlta = { textTransform: 'uppercase' } as const;
 /**
  * Cartão de confirmação como .modal-cartao da web: o fundo escurece, a pergunta vem em 1,05rem/800 e as ações ficam à
  * direita, "Cancelar" (secundário) e a confirmação (vermelha quando apaga). Tocar fora ou no voltar do aparelho cancela.
+ * É o mesmo no iPhone, no Android e na web (regra do dono, lote 4: nada de alerta do sistema).
  */
 type PropsConfirmacao = {
   mensagem: string;
@@ -613,9 +700,7 @@ type PropsConfirmacao = {
   aoConfirmar: () => void;
 };
 
-export function CartaoConfirmacao(props: PropsConfirmacao) {
-  if (Platform.OS === 'ios') return <ConfirmacaoDoSistema {...props} />;
-  const { mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar } = props;
+export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar }: PropsConfirmacao) {
   const estreito = useWindowDimensions().width <= 420;
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
@@ -643,22 +728,6 @@ export function CartaoConfirmacao(props: PropsConfirmacao) {
       </Pressable>
     </Modal>
   );
-}
-
-/**
- * No iPhone, a confirmação é o alerta do sistema (UIAlertController), com o mesmo texto e as mesmas duas ações: "Cancelar"
- * e a confirmação, em vermelho quando apaga. Quem usa já tira a confirmação da tela antes de rodar a ação.
- */
-function ConfirmacaoDoSistema({ mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, aoCancelar, aoConfirmar }: PropsConfirmacao) {
-  const acoes = useRef({ aoCancelar, aoConfirmar });
-  acoes.current = { aoCancelar, aoConfirmar };
-  useEffect(() => {
-    Alert.alert(mensagem, texto, [
-      { text: cancelarRotulo, style: 'cancel', onPress: () => acoes.current.aoCancelar() },
-      { text: confirmarRotulo, style: destrutivo ? 'destructive' : 'default', onPress: () => acoes.current.aoConfirmar() },
-    ]);
-  }, [mensagem, texto, cancelarRotulo, confirmarRotulo, destrutivo]);
-  return null;
 }
 
 /** Liquid Glass só no iPhone com iOS 26 ou mais novo (expo-glass-effect); no iOS anterior, no Android e na prévia web, o fundo de hoje. */
@@ -815,6 +884,8 @@ export const estilos = StyleSheet.create({
   rodape: { borderTopWidth: 2, borderColor: cores.nevoa, backgroundColor: cores.fundo },
   // iOS 26: o vidro é o fundo do rodapé (sem o branco e sem a linha de cima).
   rodapeVidro: {},
+  // Barra por cima do conteúdo (com o vidro): encostada embaixo, de ponta a ponta.
+  sobreposto: { position: 'absolute', left: 0, right: 0, bottom: 0 },
   // A web deixa 20 px nas laterais do rodapé (350 px de botão em 390); a aula e a entrada passam as delas.
   // .acao-principal e .aula-rodape no celular: 12 em cima e 14 embaixo (o degrau do botão desce por fora, no respiro de baixo).
   rodapeConteudo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingTop: 12, paddingBottom: 14, gap: 10 },
@@ -890,7 +961,13 @@ export const estilos = StyleSheet.create({
 });
 
 /** Dois destinos persistentes, fora das aulas e da geração para preservar o foco. */
-function NavegacaoInferior() {
+function NavegacaoInferior({ fundo, sobreposta, aoMedir }: {
+  /** A área segura de baixo, dentro da barra (o fundo dela vai até a borda da tela). */
+  fundo: number;
+  /** Com o vidro (iOS 26+), a barra fica por cima do conteúdo, encostada na borda de baixo. */
+  sobreposta: boolean;
+  aoMedir: (altura: number) => void;
+}) {
   const nav = useContext(NavegacaoContexto);
   if (!nav) return null;
   // As duas abas ficam dentro de uma lista de abas, como pede o papel "tab" (axe: aria-required-parent).
@@ -904,7 +981,9 @@ function NavegacaoInferior() {
   // 8 nos lados, 6 × 2 dentro do item e o rótulo de 11/1,15 (.navegacao-mobile[data-itens='4']), para caber em 360.
   const quatro = itens.length > 3;
   const vao = quatro ? navegacaoEstilos.faixaQuatro : itens.length > 2 ? { gap: 8 } : null;
-  return <FundoDeBarra accessibilityRole="tablist" estilo={[navegacaoEstilos.faixa, vao]} estiloVidro={[navegacaoEstilos.faixaVidro, vao]}>
+  const borda = [fundo > 0 && { paddingBottom: 8 + fundo }, sobreposta && estilos.sobreposto];
+  return <FundoDeBarra testID="barra-de-baixo" accessibilityRole="tablist" estilo={[navegacaoEstilos.faixa, vao, ...borda]} estiloVidro={[navegacaoEstilos.faixaVidro, vao, ...borda]}
+    onLayout={(evento) => aoMedir(evento.nativeEvent.layout.height)}>
     {itens.map((item) => {
       const selecionado = item.id === nav.atual || item.id === 'planos' && nav.atual === 'plano';
       return <Pressable key={item.id} testID={`nav-${item.id}`} accessibilityRole="tab" accessibilityState={{ selected: selecionado, disabled: nav.ocupado }}

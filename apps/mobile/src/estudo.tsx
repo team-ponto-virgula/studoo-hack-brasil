@@ -2,7 +2,7 @@ import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useCallback, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
-import { AccessibilityInfo, ActionSheetIOS, Alert, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type ViewStyle } from 'react-native';
+import { AccessibilityInfo, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
 import { codigoDaFalha, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { Apresentacao } from './apresentacao';
@@ -1730,8 +1730,9 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
         <Animated.Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
           style={[estudoEstilos.destaqueStu, { transform: [{ translateY: balanco }] }]} />
       </View>
-      {/* Como .plano-cartao__menu da web: o "•••" no canto de cima da arte, com o "Apagar" num balão embaixo. */}
-      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} testID="apagar-destaque" />
+      {/* Como .plano-cartao__menu da web: o "•••" dentro da arte, 8 do topo e da direita dela (24 do cartão), com o "Apagar"
+          num balão embaixo. */}
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} testID="apagar-destaque" estilo={estudoEstilos.menuDestaque} />
       <View style={estudoEstilos.destaqueCorpo}>
         <View style={estudoEstilos.destaqueTopo}>
           <Text style={[estudoEstilos.destaqueRotulo, caixaAlta]}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo)}</Text>
@@ -1809,27 +1810,12 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, secu
  * não competir com Começar/Continuar. Tocar no menu mostra "Apagar" ao lado; tocar nele de novo fecha. Apagar ainda pede
  * confirmação.
  */
-function MenuDoCartao({ titulo, ocupado, apagar, compartilhar, testID }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; testID: string }) {
+function MenuDoCartao({ titulo, ocupado, apagar, compartilhar, testID, estilo }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; testID: string; estilo?: StyleProp<ViewStyle> }) {
   const [aberto, setAberto] = useState(false);
-  // No iPhone, o menu é a folha de ações do sistema, com os mesmos itens ("Compartilhar" e "Apagar", em vermelho),
-  // "Cancelar" e o nome da trilha no alto; no Android e na prévia web, o balão de hoje, como o da web.
-  const alternar = () => {
-    if (Platform.OS === 'ios') {
-      const opcoes = compartilhar
-        ? [mensagens.geracao.cancelar, mensagens.compartilhar.entrada, mensagens.planos.apagar]
-        : [mensagens.geracao.cancelar, mensagens.planos.apagar];
-      ActionSheetIOS.showActionSheetWithOptions(
-        { title: titulo, options: opcoes, cancelButtonIndex: 0, destructiveButtonIndex: opcoes.length - 1 },
-        (indice) => {
-          if (compartilhar && indice === 1) compartilhar();
-          else if (indice === opcoes.length - 1) apagar();
-        });
-      return;
-    }
-    setAberto((atual) => !atual);
-  };
+  // O balão do Studoo, o mesmo no iPhone, no Android e na web (regra do dono, lote 4: nada de folha de ações do sistema).
+  const alternar = () => setAberto((atual) => !atual);
   return (
-    <View style={estudoEstilos.menu}>
+    <View style={[estudoEstilos.menu, estilo]}>
       <Pressable testID={`${testID}-menu`} accessibilityRole="button" accessibilityLabel={mensagens.planos.maisOpcoesRotulo(titulo)} hitSlop={4}
         accessibilityState={{ expanded: aberto, disabled: ocupado }} aria-expanded={aberto} disabled={ocupado}
         onPress={alternar}
@@ -2257,9 +2243,10 @@ const estudoEstilos = StyleSheet.create({
   repetida: { gap: 10, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFF6D9' },
   repetidaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
   cartaoApagar: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  // Como .plano-cartao__menu: no canto de cima da arte, botão de 40 (alvo de 48 com a folga) sobre branco translúcido.
+  // Como .plano-cartao__menu: no canto de cima da arte, botão de 44 × 44 sobre branco translúcido.
   menu: { position: 'absolute', top: 10, right: 10, zIndex: 2, alignItems: 'flex-end' },
-  menuBotao: { minWidth: 40, minHeight: 40, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+  menuDestaque: { top: 24, right: 24 },
+  menuBotao: { minWidth: 44, minHeight: 44, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.88)' },
   menuBalao: { marginTop: 4 },
   // .plano-cartao__opcoes: no mínimo 11 rem, 6 de respiro, borda de 1, cantos de 12 e a sombra do balão.
