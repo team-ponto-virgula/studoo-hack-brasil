@@ -27,6 +27,7 @@ import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, 
 import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
+import { contarLicaoParaNovidadeDoSom } from './som';
 import { TelaPerfil } from './perfil';
 import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
@@ -506,6 +507,8 @@ export function Estudo({ cliente, sair, expirar }: {
       resumo && { segundos: resumo.segundos, acertosDePrimeira: resumo.acertosDePrimeira, exercicios: resumo.exercicios }));
     if (resultado.ok) {
       const atualizado = resultado.dados.plano;
+      // Como a web: na terceira lição concluída, o ponto de novidade do botão de som some (spec 12).
+      void contarLicaoParaNovidadeDoSom();
       atualizarPlano(atualizado);
       navegar({ tipo: 'concluida', plano: atualizado, antes: plano.progresso, licao, liberadas: liberadasEntre(plano, atualizado), resumo });
       return true;

@@ -23,6 +23,17 @@ const DESENHOS_SVG = {
   engrenagem: <><Circle cx="12" cy="12" r="3" /><Path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></>,
   elo: <Path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
   setaVoltar: <Path d="M19 12H5M11 6l-6 6 6 6" />,
+  // Controle de som (spec 12): os mesmos desenhos da web (src/ui/caminho.tsx). O alto-falante de duas ondas da web é o
+  // `somDuasOndas` aqui: o `som` do app é outro desenho, usado nos botões de ouvir das lições.
+  somDuasOndas: <><Path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><Path d="M15.5 9a4 4 0 0 1 0 6M18.3 6.3a8 8 0 0 1 0 11.4" /></>,
+  somUmaOnda: <><Path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><Path d="M15.5 9a4 4 0 0 1 0 6" /></>,
+  somCortado: <><Path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><Path d="M15.5 9.5l5 5M20.5 9.5l-5 5" /></>,
+  ondas: <Path d="M3.5 9.5c2.8-2.4 5.7-2.4 8.5 0s5.7 2.4 8.5 0M3.5 14.5c2.8-2.4 5.7-2.4 8.5 0s5.7 2.4 8.5 0" />,
+  chuva: <><Path d="M7 14.5a4 4 0 0 1 .4-8 5 5 0 0 1 9.6 1.5 3.3 3.3 0 0 1-.5 6.5z" /><Path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5" /></>,
+  fones: <><Path d="M4.5 14v-2a7.5 7.5 0 0 1 15 0v2" /><Rect x="3.5" y="13.5" width="4" height="6.5" rx="1.8" /><Rect x="16.5" y="13.5" width="4" height="6.5" rx="1.8" /></>,
+  livros: <><Rect x="4" y="5" width="4" height="14.5" rx="1" /><Rect x="9.5" y="7" width="4" height="12.5" rx="1" /><Path d="M15.2 8.4l3.6-1 3 11.8-3.6 1z" /></>,
+  folha: <><Path d="M5.5 18.5C5 11 9.5 5.5 19 5c.3 8.8-4.7 13.6-13.5 13.5z" /><Path d="M5.5 18.5L13 11" /></>,
+  info: <><Circle cx="12" cy="12" r="8.5" /><Path d="M12 11v5.5" /><Circle cx="12" cy="7.8" r="0.6" fill="currentColor" /></>,
 } as const;
 type NomeIconeSvg = keyof typeof DESENHOS_SVG;
 const ehSvg = (nome: NomeIcone): nome is NomeIconeSvg => Object.hasOwn(DESENHOS_SVG, nome);

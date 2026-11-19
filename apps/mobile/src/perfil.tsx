@@ -14,6 +14,7 @@ import {
   Avatar, BotaoParar, CabecalhoPerfil, Chave, Contador, CoresDoPerfil, Esqueleto, Ficha, FolhaCompartilhar, SeloVisibilidade, Status, abrirNoNavegador,
   codigoDoErro, compartilharNoSistema, copiar, dataCurta, focarSemRolar, socialEstilos, temFolhaDoSistema, textoDoErro, urlDoLink, urlDoPerfil,
 } from './social';
+import { SomNoPerfil } from './som';
 import { cores, fontes } from './tema';
 
 /*
@@ -277,6 +278,12 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                 )}
               </View>
             )}
+
+            {/* Som, logo antes de Conta, para quem tem conta e para visitante (spec 12). */}
+            <View style={perfilEstilos.secao}>
+              <TituloSecao>{mensagens.som.titulo}</TituloSecao>
+              <SomNoPerfil />
+            </View>
 
             <View style={perfilEstilos.secao}>
               <TituloSecao>{p.conta}</TituloSecao>
