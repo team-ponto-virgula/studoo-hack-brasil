@@ -1,49 +1,78 @@
-// A linha do tempo da prova da criação de trilha: os comandos do Maestro (o gesto, a tela que apareceu, a captura) e os
-// eventos de áudio registrados enquanto o fluxo rodava, numa escala só, com o zero no toque em "Montar minha trilha".
+// A linha do tempo da prova da criação de trilha e das respostas (fluxos 90 e 95): os comandos do Maestro (o gesto, a tela
+// que apareceu, a captura) e os eventos de áudio registrados enquanto os fluxos rodavam, numa escala só, com o zero no toque
+// em "Montar minha trilha".
 // Três origens que não se confundem:
 //   - comando: o gesto do Maestro (commands.json) e, se o app registrar, a chamada de som no app ("[som] comando <id> <ms>");
 //   - reprodução: o que o sistema de áudio registrou (iPhone: log stream do simulador; Android: logcat) e, se o app
 //     registrar, o player dizendo que tocou ("[som] reproducao <id> <ms>");
 //   - saída gravada: indisponível no CI (o simulador e o emulador não têm saída de áudio que se possa gravar; o emulador
 //     roda com -noaudio). Não se mede latência física.
-// O registro do app vem de apps/mobile/src/sons.ts (registrarSom, com EXPO_PUBLIC_STUDOO_REGISTRO_SOM=1):
-// console.info(`[som] ${tipo} ${id} ${Date.now()}`), com tipo comando ou reproducao e o id do efeito ou do fundo. A mesma
-// linha pode chegar por mais de um registro (o log do sistema e o do Metro): conta uma vez só.
-// O fundo (o Lo-fi, que toca por baixo de tudo) manda amostras do que o expo-audio expõe do reprodutor (registrarFundo):
-// "[som] fundo <id> <A|B> <tocando|parado> <pos_ms>/<dur_ms> <volume> <ms>", a cada atualização de estado (500 ms enquanto
-// toca, e no play e no pause) e logo depois do comando de cada efeito e 200 ms depois. Com elas, a linha diz se o fundo
-// seguiu ao trocar de tela e no acerto e no erro: sem pausa (o reprodutor parado ou a posição atrás do relógio), sem
-// reinício (a posição voltando, ou o outro reprodutor entrando fora do fim da faixa) e sem redução (o volume do reprodutor
-// abaixo do de referência). É o estado do reprodutor, não a mistura nem a saída no alto-falante, que o CI não tem.
-// Uso: node linha-do-tempo-som.mjs --comandos <commands.json> --audio <registro> [--audio <outro>] --plataforma iphone|android
+// O registro do app vem de apps/mobile/src/sons.ts, com EXPO_PUBLIC_STUDOO_REGISTRO_SOM=1: "[som] <tipo> <id> <Date.now()>",
+// com tipo comando ou reproducao e o id do efeito ou do fundo. A mesma linha pode chegar por mais de um registro (o log do
+// sistema e o do Metro): conta uma vez só.
+//
+// O fundo (o Lo-fi de Estudo, lofi_estudo, que toca por baixo de tudo) manda amostras do que o expo-audio expõe do
+// reprodutor: "[som] fundo <id> <A|B> <tocando|parado> <pos_ms>/<dur_ms> <volume> <ms>", a cada atualização de estado
+// (500 ms enquanto toca, e no play e no pause) e logo depois do comando de cada efeito e 200 ms depois; A e B são os dois
+// reprodutores que se alternam na volta do laço. Só contam as amostras da janela dos fluxos: da última reabertura do app
+// (stopApp, openLink ou launchApp, no começo do fluxo 90) ao fim do último comando. O veredito é a linha "Fundo: ..." do fim,
+// que vai para o sumário:
+//   - FALHA: outra faixa tocando de fato (tocando e com volume), ou o lofi_estudo com pausa (o reprodutor parado, ou a
+//     posição atrás do relógio), reinício (a posição voltando, ou o outro reprodutor entrando fora do fim da faixa) ou
+//     volume abaixo do de referência fora da subida e das voltas do laço, em qualquer ponto da janela;
+//   - CONTÍNUO: só sem falha, com o lofi_estudo identificado e cada ponto coberto: cada troca de tela observada (toque
+//     concluído) com o lofi_estudo tocando antes e depois dela, a posição andando com o relógio e o volume mantido, e o erro
+//     e o acerto do fluxo 95 do mesmo jeito, com amostra também durante o efeito;
+//   - INCONCLUSIVO: o resto, que é dado ausente: sem amostras, registro que acaba antes, ponto sem amostra, o fluxo 95 que
+//     não rodou ou não chegou ao "Verificar", o comando do erro ou do acerto fora do registro.
+// É o estado do reprodutor, não a mistura nem a saída no alto-falante, que o CI não tem.
+// Uso: node linha-do-tempo-som.mjs --comandos <commands.json> [--comandos <outro>] --audio <registro> [--audio <outro>]
+//        --plataforma iphone|android [--fundo lofi_estudo]
 import { existsSync, readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
 const { values: opcoes } = parseArgs({
-  options: { comandos: { type: 'string', multiple: true }, audio: { type: 'string', multiple: true }, plataforma: { type: 'string', default: 'iphone' } },
+  options: {
+    comandos: { type: 'string', multiple: true },
+    audio: { type: 'string', multiple: true },
+    plataforma: { type: 'string', default: 'iphone' },
+    fundo: { type: 'string', default: 'lofi_estudo' },
+  },
 });
+const FUNDO = opcoes.fundo;
+const segundos = (ms) => `${(ms / 1000).toFixed(2)} s`;
 
 const eventos = [];
 let ano = new Date().getUTCFullYear();
+let reabertura = null;
+let ultimoComando = null;
 
-// --- Comandos do Maestro (relógio da máquina do CI, em ms desde 1970): os do fluxo 90 e, se houver, os do 95.
-for (const arquivo of (opcoes.comandos ?? []).filter((caminho) => existsSync(caminho))) {
+// --- Comandos do Maestro (relógio da máquina do CI, em ms desde 1970): os do fluxo 90 e, se houver, os do 95. Vale o
+// comando como rodou (evaluatedCommand: os parâmetros já trocados, como opcao-a), senão o do fluxo. No commands.json do
+// Maestro 2.12, o toque é "tapOnElement" (o nome do campo em MaestroCommand), não "tapOnElementCommand".
+const TOQUES = new Set(['tapOnElement', 'tapOnElementCommand']);
+for (const arquivo of (opcoes.comandos ?? []).filter((caminho) => caminho && existsSync(caminho))) {
   for (const item of JSON.parse(readFileSync(arquivo, 'utf8'))) {
     const meta = item.metadata ?? {};
     if (!meta.timestamp) continue;
     ano = new Date(meta.timestamp).getUTCFullYear();
-    const [tipo, corpo] = Object.entries(item.command ?? {})[0] ?? ['?', {}];
+    const [tipo, corpo] = Object.entries(meta.evaluatedCommand ?? item.command ?? {})[0] ?? ['?', {}];
     const seletor = corpo?.selector ?? corpo?.condition?.visible ?? {};
     const alvo = seletor.idRegex ? `id ${seletor.idRegex}` : seletor.textRegex ? `"${seletor.textRegex}"` : '';
     const fim = meta.timestamp + (meta.duration ?? 0);
-    if (tipo === 'tapOnElementCommand') {
-      eventos.push({ t: meta.timestamp, origem: 'comando (Maestro)', texto: `toque em ${alvo}: começo do comando (${meta.status})`, alvo: seletor.idRegex });
+    ultimoComando = Math.max(ultimoComando ?? fim, fim);
+    if (TOQUES.has(tipo)) {
+      eventos.push({ t: meta.timestamp, fim, origem: 'comando (Maestro)', texto: `toque em ${alvo}: começo do comando (${meta.status})`,
+        alvo: seletor.idRegex, alvoTexto: seletor.textRegex, status: meta.status });
     } else if (tipo === 'assertConditionCommand' && corpo?.condition?.visible) {
       eventos.push({ t: fim, origem: 'tela (Maestro)', texto: `${alvo} à vista (${meta.status})`, alvo: seletor.idRegex });
     } else if (tipo === 'takeScreenshotCommand') {
       eventos.push({ t: meta.timestamp, origem: 'captura (Maestro)', texto: corpo.path });
     } else if (tipo === 'startRecordingCommand' || tipo === 'stopRecordingCommand') {
       eventos.push({ t: meta.timestamp, origem: 'vídeo (Maestro)', texto: tipo === 'startRecordingCommand' ? `começa ${corpo.path}.mp4` : 'para o vídeo' });
+    } else if (tipo === 'stopAppCommand' || tipo === 'openLinkCommand' || tipo === 'launchAppCommand') {
+      reabertura = Math.max(reabertura ?? meta.timestamp, meta.timestamp);
+      eventos.push({ t: meta.timestamp, origem: 'app (Maestro)', texto: tipo === 'stopAppCommand' ? 'fecha o app' : 'abre o app' });
     }
   }
 }
@@ -56,9 +85,9 @@ let doSistema = 0;
 let doApp = 0;
 const vistas = new Set();
 const amostras = [];
-for (const arquivo of (opcoes.audio ?? []).filter((caminho) => existsSync(caminho))) {
+for (const arquivo of (opcoes.audio ?? []).filter((caminho) => caminho && existsSync(caminho))) {
   for (const linha of readFileSync(arquivo, 'utf8').split('\n')) {
-    const fundo = linha.match(/\[som\] fundo ([a-z0-9_]+) ([AB]) (tocando|parado) (\d+)\/(\d+) (\d+(?:\.\d+)?) (\d{13})/);
+    const fundo = linha.match(/\[som\] fundo ([a-z0-9_]+) ([AB?]) (tocando|parado) (\d+)\/(\d+) (\d+(?:\.\d+)?) (\d{13})/);
     if (fundo) {
       if (vistas.has(fundo[0])) continue;
       vistas.add(fundo[0]);
@@ -96,8 +125,21 @@ for (const arquivo of (opcoes.audio ?? []).filter((caminho) => existsSync(caminh
   }
 }
 
-// --- O fundo: começo, voltas do laço e o que fugiu do contínuo (pausa, reinício, redução), sobre as amostras do reprodutor.
-const efeitosDoApp = () => eventos.filter((evento) => evento.tipo === 'comando' && !amostras.some((amostra) => amostra.id === evento.som));
+// --- A janela do fundo: da última reabertura do app ao fim do último comando, com 2 s de folga. O que veio antes é de outra
+// execução do app (fechar e abrir de novo recomeça a música, e isso não é reinício), e o Metro registra o job todo.
+const inicioJanela = reabertura ?? -Infinity;
+const fimJanela = ultimoComando === null ? Infinity : ultimoComando + 2000;
+const naJanela = (t) => t >= inicioJanela && t <= fimJanela;
+// Uma amostra sem o nome do reprodutor ("?" no lugar de A ou B) não entra na conta da continuidade: é dado incompleto.
+const semNome = amostras.filter((amostra) => naJanela(amostra.t) && amostra.jogador === '?').length;
+const daJanela = amostras.filter((amostra) => naJanela(amostra.t) && amostra.jogador !== '?').sort((a, b) => a.t - b.t);
+const tocandoDeFato = (amostra) => amostra.tocando && amostra.vol > 0.001;
+const outrasFaixas = [...new Set(daJanela.filter((amostra) => amostra.id !== FUNDO && tocandoDeFato(amostra)).map((amostra) => amostra.id))];
+const doFundo = daJanela.filter((amostra) => amostra.id === FUNDO);
+const idsDeFundo = new Set(amostras.map((amostra) => amostra.id));
+const efeitosDoApp = eventos.filter((evento) => evento.tipo === 'comando' && evento.som !== FUNDO && !idsDeFundo.has(evento.som));
+
+// --- O lofi_estudo: começo, voltas do laço e o que fugiu do contínuo (pausa, reinício, redução), sobre as amostras dele.
 function analisarFundo(lista) {
   const ordem = [...lista].sort((a, b) => a.t - b.t);
   const inicio = ordem.find((amostra) => amostra.tocando);
@@ -118,17 +160,17 @@ function analisarFundo(lista) {
       if (saindo && saindo.dur > 0 && saindo.pos >= saindo.dur - 3000) {
         voltas.push({ t: amostra.t, de: ativo, para: amostra.jogador });
       } else {
-        ocorrencias.push({ t: amostra.t, tipo: 'reinício', texto: `o reprodutor ${amostra.jogador} entrou em ${(amostra.pos / 1000).toFixed(2)} s com o ${ativo} longe do fim da faixa (${saindo ? (saindo.pos / 1000).toFixed(2) : '?'} s)` });
+        ocorrencias.push({ t: amostra.t, tipo: 'reinício', texto: `o reprodutor ${amostra.jogador} entrou em ${segundos(amostra.pos)} com o ${ativo} longe do fim da faixa (${saindo ? segundos(saindo.pos) : '?'})` });
       }
       ativo = amostra.jogador;
       if (segmento.length) segmentos.push(segmento);
       segmento = [];
     } else if (amostra.jogador === ativo && !amostra.tocando) {
-      if (!naTroca(amostra.t)) ocorrencias.push({ t: amostra.t, tipo: 'pausa', texto: `o reprodutor ${ativo} parou em ${(amostra.pos / 1000).toFixed(2)} s` });
+      if (!naTroca(amostra.t)) ocorrencias.push({ t: amostra.t, tipo: 'pausa', texto: `o reprodutor ${ativo} parou em ${segundos(amostra.pos)}` });
       if (segmento.length) segmentos.push(segmento);
       segmento = [];
     } else if (amostra.jogador === ativo && anterior?.tocando && amostra.pos < anterior.pos - 1000 && !(anterior.dur > 0 && anterior.pos >= anterior.dur - 3000)) {
-      ocorrencias.push({ t: amostra.t, tipo: 'reinício', texto: `a posição voltou de ${(anterior.pos / 1000).toFixed(2)} s para ${(amostra.pos / 1000).toFixed(2)} s` });
+      ocorrencias.push({ t: amostra.t, tipo: 'reinício', texto: `a posição voltou de ${segundos(anterior.pos)} para ${segundos(amostra.pos)}` });
       if (segmento.length) segmentos.push(segmento);
       segmento = [amostra];
     } else if (amostra.jogador === ativo) {
@@ -169,9 +211,10 @@ function analisarFundo(lista) {
   let reducao = null;
   const fecharReducao = () => {
     if (!reducao) return;
-    const efeito = efeitosDoApp().find((evento) => reducao.t >= evento.t - 200 && reducao.t <= evento.t + 1000);
-    const duracao = reducao.n > 1 ? `${reducao.n} amostras, ${((reducao.ate - reducao.t) / 1000).toFixed(2)} s` : '1 amostra';
-    ocorrencias.push({ t: reducao.t, tipo: efeito ? 'redução no efeito' : 'redução fora de efeito', texto: `o volume do reprodutor foi a ${reducao.minimo.toFixed(3)} (referência ${referencia.toFixed(3)}; ${duracao})${efeito ? `, perto do comando de ${efeito.som}` : ''}` });
+    const efeito = efeitosDoApp.find((evento) => reducao.t >= evento.t - 200 && reducao.t <= evento.t + 1000);
+    const duracao = reducao.n > 1 ? `${reducao.n} amostras, ${segundos(reducao.ate - reducao.t)}` : '1 amostra';
+    ocorrencias.push({ t: reducao.t, tipo: efeito ? 'redução no efeito' : 'redução fora de efeito',
+      texto: `o volume do reprodutor foi a ${reducao.minimo.toFixed(3)} (referência ${referencia.toFixed(3)}; ${duracao})${efeito ? `, perto do comando de ${efeito.som}` : ''}` });
     reducao = null;
   };
   for (const amostra of tocandoAtivo) {
@@ -186,18 +229,23 @@ function analisarFundo(lista) {
   }
   fecharReducao();
   ocorrencias.sort((a, b) => a.t - b.t);
-  return { inicio, fim: ordem[ordem.length - 1], ocorrencias, voltas, referencia, ordem };
+  return { inicio, fim: ordem[ordem.length - 1], ocorrencias, voltas, referencia, ordem, subidaAte, naTroca };
 }
-const analise = analisarFundo(amostras);
+const analise = analisarFundo(doFundo);
 if (analise) {
   const { inicio } = analise;
-  eventos.push({ t: inicio.t, origem: 'fundo (player do app)', texto: `${inicio.id} tocando (reprodutor ${inicio.jogador}, posição ${(inicio.pos / 1000).toFixed(2)} s, volume ${inicio.vol.toFixed(3)})` });
+  eventos.push({ t: inicio.t, origem: 'fundo (player do app)', texto: `${inicio.id} tocando (reprodutor ${inicio.jogador}, posição ${segundos(inicio.pos)}, volume ${inicio.vol.toFixed(3)})` });
   for (const volta of analise.voltas) eventos.push({ t: volta.t, origem: 'fundo (player do app)', texto: `volta do laço: o reprodutor ${volta.para} entra no fim da faixa do ${volta.de}` });
   for (const ocorrencia of analise.ocorrencias) eventos.push({ t: ocorrencia.t, origem: 'fundo (player do app)', texto: `${ocorrencia.tipo.toUpperCase()}: ${ocorrencia.texto}` });
+}
+for (const id of outrasFaixas) {
+  const primeira = daJanela.find((amostra) => amostra.id === id && tocandoDeFato(amostra));
+  eventos.push({ t: primeira.t, origem: 'fundo (player do app)', texto: `OUTRA FAIXA: ${id} tocando (reprodutor ${primeira.jogador}, volume ${primeira.vol.toFixed(3)})` });
 }
 
 eventos.sort((a, b) => a.t - b.t);
 const zero = eventos.find((evento) => evento.alvo === 'gerar-trilha')?.t ?? eventos[0]?.t ?? 0;
+const quando = (t) => `${((t - zero) / 1000).toFixed(3)} s`;
 const comecar = eventos.find((evento) => evento.alvo === 'comecar-trilha')?.t ?? null;
 const plataforma = opcoes.plataforma === 'android' ? 'Android' : 'iPhone';
 
@@ -209,12 +257,10 @@ console.log(plataforma === 'iPhone'
 console.log('Saída gravada: indisponível no CI (sem saída de áudio que se possa gravar no simulador nem no emulador, que roda com');
 console.log('-noaudio). Latência física: não medida.');
 console.log('');
-for (const evento of eventos) {
-  const segundos = ((evento.t - zero) / 1000).toFixed(3).padStart(9);
-  console.log(`${segundos} s  ${evento.origem.padEnd(27)} ${evento.texto}`);
-}
+for (const evento of eventos) console.log(`${quando(evento.t).padStart(11)}  ${evento.origem.padEnd(27)} ${evento.texto}`);
 console.log('');
-console.log(`Eventos de áudio do sistema: ${doSistema}. Registros de som do app: ${doApp}${doApp ? '' : ' (o app não registra os sons que toca; ver LEIA-ME)'}. Amostras do fundo: ${amostras.length}.`);
+console.log(`Eventos de áudio do sistema: ${doSistema}. Registros de som do app: ${doApp}${doApp ? '' : ' (o app não registra os sons que toca; ver LEIA-ME)'}. `
+  + `Amostras do fundo: ${amostras.length}, ${daJanela.length} na janela dos fluxos.`);
 if (comecar !== null) {
   const antes = eventos.filter((evento) => evento.t < comecar && evento.origem.startsWith('reprodução')).length;
   const depois = eventos.filter((evento) => evento.t >= comecar && evento.origem.startsWith('reprodução')).length;
@@ -236,55 +282,126 @@ if (toques.length) {
     const reproducao = comando ? eventos.find((evento) => evento.t >= comando.t && evento.t < limite && evento.tipo === 'reproducao' && evento.som === comando.som) : null;
     const s = (de, ate) => `${((ate - de) / 1000).toFixed(3)} s`;
     const noFundo = (de, ate) => {
-      const amostra = comando ? amostras.find((item) => item.t >= comando.t + de && item.t <= comando.t + ate) : null;
-      return amostra ? `${amostra.tocando ? 'tocando' : 'PARADO'} em ${(amostra.pos / 1000).toFixed(2)} s, volume ${amostra.vol.toFixed(3)}` : 'sem amostra';
+      const amostra = comando ? daJanela.find((item) => item.t >= comando.t + de && item.t <= comando.t + ate) : null;
+      return amostra ? `${amostra.id} ${amostra.tocando ? 'tocando' : 'PARADO'} em ${segundos(amostra.pos)}, volume ${amostra.vol.toFixed(3)}` : 'sem amostra';
     };
     const partes = [
       comando ? `resposta confirmada (o app manda tocar ${comando.som}) ${s(toque.t, comando.t)} depois do toque` : 'sem registro do som do resultado no app',
       reproducao ? `início relatado pelo player ${s(comando.t, reproducao.t)} depois do comando` : comando ? 'sem início relatado pelo player' : null,
       retorno ? `retorno à vista no Maestro ${s(toque.t, retorno.t)} depois do toque (pelo ritmo das leituras de tela)` : 'retorno não visto pelo Maestro',
-      comando && amostras.length ? `fundo no comando: ${noFundo(0, 150)}; 200 ms depois: ${noFundo(150, 400)}` : null,
+      comando && daJanela.length ? `fundo no comando: ${noFundo(0, 150)}; 200 ms depois: ${noFundo(150, 400)}` : null,
       'saída no alto-falante: não medida (CI sem saída de áudio)',
     ].filter(Boolean);
-    console.log(`  ${posicao + 1}. toque em Verificar em ${((toque.t - zero) / 1000).toFixed(3)} s: ${partes.join('; ')}.`);
+    console.log(`  ${posicao + 1}. toque em Verificar em ${quando(toque.t)}: ${partes.join('; ')}.`);
   });
 }
 
-// --- O fundo em cada troca de tela dos fluxos 90 e 95 (de 1 s antes do toque a 2,5 s depois) e o veredito.
+// --- Os pontos do fundo. Troca de tela: o lofi_estudo tocando de 3 s antes do toque até 300 ms depois do começo dele e do
+// fim do toque (com a espera da tela) a 3 s depois, a posição andando com o relógio entre os dois lados (o piso de
+// t - posição, como acima) e o volume mantido. Erro e acerto: o mesmo em volta do comando do som, com amostra também
+// durante o efeito (até 400 ms depois do comando).
+const LIMITE_POSICAO_MS = 400;
+function conferirPonto({ antes, depois, durante = null, volume }) {
+  if (!analise) return { estado: 'inconclusivo', texto: `sem o ${FUNDO} tocando nas amostras` };
+  const tocandoEm = ([de, ate]) => analise.ordem.filter((amostra) => amostra.tocando && amostra.t >= de && amostra.t <= ate);
+  const a = tocandoEm(antes);
+  const d = tocandoEm(depois);
+  const u = durante ? tocandoEm(durante) : null;
+  const de = Math.min(antes[0], volume[0]);
+  const ate = Math.max(depois[1], volume[1]);
+  const problemas = [];
+  const outras = daJanela.filter((amostra) => amostra.id !== FUNDO && tocandoDeFato(amostra) && amostra.t >= de && amostra.t <= ate);
+  if (outras.length) problemas.push(`outra faixa tocando (${[...new Set(outras.map((amostra) => amostra.id))].join(', ')})`);
+  for (const ocorrencia of analise.ocorrencias.filter((item) => item.t >= de && item.t <= ate)) problemas.push(`${ocorrencia.tipo}: ${ocorrencia.texto}`);
+  const fora = analise.referencia === null ? []
+    : tocandoEm(volume).filter((amostra) => amostra.t > analise.subidaAte && !analise.naTroca(amostra.t) && Math.abs(amostra.vol - analise.referencia) > 0.01);
+  if (fora.length && !problemas.some((problema) => problema.startsWith('redução'))) {
+    problemas.push(`volume ${Math.min(...fora.map((amostra) => amostra.vol)).toFixed(3)}, fora da referência ${analise.referencia.toFixed(3)}`);
+  }
+  let posicao = '';
+  if (a.length && d.length) {
+    const ultimaAntes = a[a.length - 1];
+    const primeiraDepois = d[0];
+    const volta = analise.voltas.some((item) => item.t > ultimaAntes.t && item.t <= primeiraDepois.t);
+    if (volta) {
+      posicao = 'a posição seguiu, com a volta do laço no meio';
+    } else if (ultimaAntes.jogador !== primeiraDepois.jogador) {
+      problemas.push(`o reprodutor trocou de ${ultimaAntes.jogador} para ${primeiraDepois.jogador} fora do fim da faixa`);
+    } else {
+      const piso = (lista) => Math.min(...lista.filter((amostra) => amostra.jogador === ultimaAntes.jogador).map((amostra) => amostra.t - amostra.pos));
+      const diferenca = piso(d) - piso(a);
+      if (diferenca > LIMITE_POSICAO_MS) problemas.push(`a posição ficou ${diferenca} ms atrás do relógio`);
+      else if (diferenca < -LIMITE_POSICAO_MS) problemas.push(`a posição pulou ${-diferenca} ms à frente do relógio`);
+      posicao = `posição ${segundos(ultimaAntes.pos)} → ${segundos(primeiraDepois.pos)} em ${segundos(primeiraDepois.t - ultimaAntes.t)} de relógio`;
+    }
+  }
+  if (problemas.length) return { estado: 'falha', texto: [...new Set(problemas)].join('; ') };
+  const faltam = [!a.length && 'antes', u !== null && !u.length && 'durante o efeito', !d.length && 'depois'].filter(Boolean);
+  if (faltam.length) return { estado: 'inconclusivo', texto: `sem amostra do ${FUNDO} tocando ${faltam.join(', ')}` };
+  return { estado: 'coberto', texto: `tocando antes${u ? ', durante' : ''} e depois; ${posicao}; volume ${analise.referencia.toFixed(3)}` };
+}
+
 const TELAS = [
   [/^nav-objetivo$/, 'aba Objetivo'], [/^gerar-trilha$/, 'geração da trilha'], [/^comecar-trilha$/, 'etapa 1 da primeira lição'],
   [/^voltar-plano$/, 'mapa da trilha'], [/^comecar-licao$/, 'lição pelo mapa'], [/Começar\|Continuar/, 'lição pelo mapa'],
   [/^ler-mais\|avancar-licao$/, 'próxima etapa da lição'], [/^enviar-resposta$/, 'retorno da resposta'], [/^tentar-de-novo$/, 'nova tentativa'],
 ];
-console.log('');
-if (!analise) {
-  console.log(amostras.length
-    ? 'Fundo: as amostras do reprodutor de fundo não o mostram tocando nesta janela.'
-    : 'Fundo: sem amostras do reprodutor de fundo (o app desta árvore não as registra, ou o fundo não tocou). Nada a afirmar sobre pausa, reinício ou redução.');
-} else {
-  console.log('O fundo em cada troca de tela (amostras do reprodutor de 1 s antes do toque a 2,5 s depois):');
-  for (const evento of eventos.filter((item) => item.origem === 'comando (Maestro)')) {
-    const tela = TELAS.find(([padrao]) => padrao.test(evento.alvo ?? '') || (!evento.alvo && padrao.test(evento.texto)));
-    if (!tela) continue;
-    const janela = analise.ordem.filter((amostra) => amostra.t >= evento.t - 1000 && amostra.t <= evento.t + 2500);
-    const tocando = janela.filter((amostra) => amostra.tocando);
-    const problemas = analise.ocorrencias.filter((ocorrencia) => ocorrencia.t >= evento.t - 1000 && ocorrencia.t <= evento.t + 2500);
-    const quando = `${((evento.t - zero) / 1000).toFixed(3)} s`;
-    if (!janela.length) {
-      console.log(`  - ${quando}, ${tela[1]}: sem amostra do fundo${evento.t < analise.inicio.t ? ' (antes de o fundo começar)' : ''}.`);
-      continue;
-    }
-    const mesmo = tocando.filter((amostra) => amostra.jogador === tocando[tocando.length - 1]?.jogador);
-    const andou = mesmo.length > 1 ? `posição ${(mesmo[0].pos / 1000).toFixed(2)} → ${(mesmo[mesmo.length - 1].pos / 1000).toFixed(2)} s em ${((mesmo[mesmo.length - 1].t - mesmo[0].t) / 1000).toFixed(2)} s de relógio` : 'uma amostra só';
-    const volumes = tocando.map((amostra) => amostra.vol);
-    const volume = volumes.length ? (Math.max(...volumes) - Math.min(...volumes) <= 0.01 ? `volume ${volumes[0].toFixed(3)}` : `volume de ${Math.min(...volumes).toFixed(3)} a ${Math.max(...volumes).toFixed(3)}`) : 'sem volume';
-    const veredito = problemas.length ? problemas.map((ocorrencia) => ocorrencia.tipo.toUpperCase()).join(', ') : tocando.length === janela.length ? 'seguiu' : 'parado em parte da janela';
-    const comeco = analise.inicio.t >= evento.t - 1000 && analise.inicio.t <= evento.t + 2500 ? ' (o fundo começa aqui, com a subida de 600 ms)' : '';
-    console.log(`  - ${quando}, ${tela[1]}: ${veredito}; tocando em ${tocando.length} de ${janela.length} amostras; ${andou}; ${volume}${comeco}.`);
+const pontos = [];
+for (const evento of eventos.filter((item) => item.origem === 'comando (Maestro)' && item.status === 'COMPLETED' && naJanela(item.t))) {
+  const tela = TELAS.find(([padrao]) => padrao.test(evento.alvo ?? '') || (!evento.alvo && padrao.test(evento.alvoTexto ?? '')));
+  if (!tela) continue;
+  const janela = { antes: [evento.t - 3000, evento.t + 300], depois: [evento.fim, evento.fim + 3000], volume: [evento.t - 3000, evento.fim + 3000] };
+  let resultado;
+  if (analise && analise.inicio.t >= evento.t - 300 && analise.inicio.t <= janela.depois[1]) {
+    resultado = { estado: 'começo', texto: `o ${FUNDO} começa com este toque (subida de 600 ms)` };
+  } else if (analise && janela.depois[1] < analise.inicio.t) {
+    resultado = { estado: 'inconclusivo', texto: `antes de o ${FUNDO} começar` };
+  } else {
+    resultado = conferirPonto(janela);
   }
-  const conta = (tipo) => analise.ocorrencias.filter((ocorrencia) => ocorrencia.tipo === tipo).length;
-  console.log('');
-  console.log(`Fundo: ${analise.inicio.id} de ${((analise.inicio.t - zero) / 1000).toFixed(3)} s a ${((analise.fim.t - zero) / 1000).toFixed(3)} s, ${analise.ordem.length} amostras do reprodutor; `
-    + `pausas ${conta('pausa')}, reinícios ${conta('reinício')}, reduções no efeito ${conta('redução no efeito')}, outras reduções ${conta('redução fora de efeito')}; `
-    + `voltas do laço ${analise.voltas.length}; volume de referência ${analise.referencia?.toFixed(3) ?? '?'}. Estado do reprodutor (expo-audio), não a saída no alto-falante.`);
+  pontos.push({ tipo: 'troca', nome: tela[1], t: evento.t, ...resultado });
 }
+const efeitos = eventos.filter((evento) => evento.tipo === 'comando' && (evento.som === 'erro' || evento.som === 'acerto') && naJanela(evento.t));
+for (const efeito of efeitos) {
+  const c = efeito.t;
+  pontos.push({ tipo: 'efeito', nome: efeito.som, t: c, ...conferirPonto({ antes: [c - 3000, c + 50], durante: [c, c + 400], depois: [c + 150, c + 1500], volume: [c - 700, c + 1000] }) });
+}
+pontos.sort((a, b) => a.t - b.t);
+
+// --- O veredito: FALHA com qualquer falha; CONTÍNUO só com tudo coberto; INCONCLUSIVO no resto (dado ausente).
+const falhas = [];
+const inconclusivos = [];
+if (!amostras.length) inconclusivos.push('sem amostras do reprodutor de fundo no registro (o app desta árvore não as escreve, ou o registro não chegou)');
+else if (!daJanela.length && !semNome) inconclusivos.push('nenhuma amostra do fundo entre a reabertura do app no fluxo 90 e o fim do fluxo 95');
+if (semNome) inconclusivos.push(`${semNome} amostra(s) do fundo sem o nome do reprodutor (A ou B)`);
+if (outrasFaixas.length) falhas.push(`outra faixa tocando: ${outrasFaixas.join(', ')}`);
+if (daJanela.length && !doFundo.some(tocandoDeFato)) (outrasFaixas.length ? falhas : inconclusivos).push(`o ${FUNDO} não aparece tocando`);
+for (const ocorrencia of analise?.ocorrencias ?? []) falhas.push(`${ocorrencia.tipo} em ${quando(ocorrencia.t)}: ${ocorrencia.texto}`);
+if (!eventos.some((evento) => evento.alvo === 'enviar-resposta' && evento.status === 'COMPLETED')) inconclusivos.push('o fluxo 95 não rodou ou não chegou ao "Verificar"');
+for (const som of ['erro', 'acerto']) if (!efeitos.some((efeito) => efeito.som === som)) inconclusivos.push(`sem o comando do ${som} no registro do app`);
+const trocas = pontos.filter((ponto) => ponto.tipo === 'troca');
+const exigidas = trocas.filter((ponto) => ponto.estado !== 'começo');
+if (!exigidas.length) inconclusivos.push('nenhuma troca de tela observada depois do começo do fundo');
+for (const ponto of pontos) {
+  if (ponto.estado === 'falha') falhas.push(`${ponto.nome} em ${quando(ponto.t)}: ${ponto.texto}`);
+  if (ponto.estado === 'inconclusivo') inconclusivos.push(`${ponto.nome} em ${quando(ponto.t)}: ${ponto.texto}`);
+}
+const veredito = falhas.length ? 'FALHA' : inconclusivos.length ? 'INCONCLUSIVO' : 'CONTÍNUO';
+
+console.log('');
+console.log('O fundo em cada ponto (troca de tela: de 3 s antes do toque a 3 s depois do fim dele; erro e acerto: antes, durante e depois do comando):');
+if (!pontos.length) console.log('  (nenhum ponto: sem troca de tela concluída nem erro ou acerto na janela)');
+for (const ponto of pontos) console.log(`  - ${quando(ponto.t)}, ${ponto.tipo === 'efeito' ? `${ponto.nome} (efeito)` : ponto.nome}: ${ponto.estado} — ${ponto.texto}.`);
+const conta = (tipo) => (analise?.ocorrencias ?? []).filter((ocorrencia) => ocorrencia.tipo === tipo).length;
+const estadoDo = (som) => {
+  const lista = pontos.filter((ponto) => ponto.tipo === 'efeito' && ponto.nome === som);
+  return lista.length ? lista.map((ponto) => ponto.estado).join('/') : 'sem dado';
+};
+const motivos = veredito === 'FALHA' ? falhas : inconclusivos;
+const motivo = motivos.length ? ` Motivo: ${motivos.slice(0, 2).join(' | ')}${motivos.length > 2 ? ` (e mais ${motivos.length - 2})` : ''}.` : '';
+console.log('');
+console.log(`Fundo: ${veredito} — ${FUNDO}${analise ? '' : ' sem amostra tocando'}; trocas de tela cobertas ${exigidas.filter((ponto) => ponto.estado === 'coberto').length} de ${exigidas.length}`
+  + `${trocas.length > exigidas.length ? ' (fora o toque em que o fundo começa)' : ''}; erro: ${estadoDo('erro')}; acerto: ${estadoDo('acerto')}; `
+  + `pausas ${conta('pausa')}, reinícios ${conta('reinício')}, reduções ${conta('redução no efeito') + conta('redução fora de efeito')}; outras faixas: ${outrasFaixas.join(', ') || 'nenhuma'}; `
+  + `${daJanela.length} amostras na janela${amostras.length > daJanela.length ? ` (${amostras.length - daJanela.length} fora dela)` : ''}; volume de referência ${analise?.referencia?.toFixed(3) ?? '?'}.`
+  + `${motivo} Estado do reprodutor (expo-audio), não a saída no alto-falante.`);
