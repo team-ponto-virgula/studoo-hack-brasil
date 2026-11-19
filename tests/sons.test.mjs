@@ -143,7 +143,7 @@ test('Spec 12: descrições curtas em OPCOES_FUNDO_UI e regra de não enfileirar
     mudo: 'Sem som de fundo',
     foco_calmo: 'Acordes suaves e quentes',
     chuva_suave: 'Chuva leve na janela',
-    lofi_estudo: 'Batida lenta, sem melodia',
+    lofi_estudo: 'Batida lenta e abafada',
     biblioteca: 'Ambiente quieto, bom para ler',
     brisa_natural: 'Vento suave entre as folhas',
   });
