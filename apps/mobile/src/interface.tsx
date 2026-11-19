@@ -51,6 +51,10 @@ export const RolagemDaTela = createContext<{
   mostrar: (no: ComponentRef<typeof View> | null, margem?: number) => void;
   /** O campo em foco (ou null): a tela o mantém inteiro à vista quando o teclado abre e quando a área visível encolhe. */
   focar: (no: ComponentRef<typeof View> | null) => void;
+  /** Arrasto dentro da tela (o ordenar): enquanto true, o dedo não rola a tela. */
+  travar: (ativo: boolean) => void;
+  /** Rola a tela `delta` pontos sem animação (perto da borda, durante um arrasto) e devolve quanto rolou de fato. */
+  rolarPor: (delta: number) => number;
 } | null>(null);
 /** O teclado está aberto: a entrada recolhe a parte de cima, e o rodapé deixa de somar a área segura de baixo. */
 export const TecladoAberto = createContext(false);
@@ -196,6 +200,20 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const fimDaRolagem = sobreposicao + (!rodape && !comBarra ? fundoSeguro : 0);
   const rolado = useRef(0);
   const alturaRolagem = useRef(0);
+  // A altura de tudo o que rola e a trava do arrasto (o ordenar): para o rolarPor parar no fim e o dedo não rolar a tela.
+  const alturaRolavel = useRef(0);
+  const [rolagemTravada, setRolagemTravada] = useState(false);
+  const rolarPor = (delta: number) => {
+    const tela = rolagemInterna.current;
+    if (!tela) return 0;
+    const maximo = Math.max(0, alturaRolavel.current - alturaRolagem.current);
+    const destino = Math.max(0, Math.min(maximo, rolado.current + delta));
+    const andou = destino - rolado.current;
+    if (andou === 0) return 0;
+    rolado.current = destino;
+    tela.scrollTo({ y: destino, animated: false });
+    return andou;
+  };
   const sobreposicaoAtual = useRef(0);
   sobreposicaoAtual.current = sobreposicao;
   const campoEmFoco = useRef<ComponentRef<typeof View> | null>(null);
@@ -291,7 +309,8 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
           }}
           onScroll={(evento) => { rolado.current = evento.nativeEvent.contentOffset.y; aoRolar?.(evento.nativeEvent.contentOffset.y); }}
           scrollEventThrottle={16}
-          onContentSizeChange={aoMedirConteudo && ((_largura, altura) => aoMedirConteudo(altura - fimDaRolagem))}>
+          scrollEnabled={!rolagemTravada}
+          onContentSizeChange={(_largura, altura) => { alturaRolavel.current = altura; aoMedirConteudo?.(altura - fimDaRolagem); }}>
           {filhosDeCima}
           {/* .estudo-principal no celular: 28 em cima, também com o selo de sincronia (a barra tem a altura da da web). */}
           <View style={[estilos.conteudo, !topo && !paginaDeAcesso && estilos.conteudoEstudo, estiloConteudo]}
@@ -300,7 +319,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             <DeslocamentoDaRolagem.Provider value={(cabecalhoNaRolagem && !alturaCabecalho) || (faixaFixa && !alturaFaixa) ? null
               : (cabecalhoNaRolagem ? alturaCabecalho : 0) + (faixaFixa ? (faixaColada ? 0 : 20) + alturaFaixa : 0)}>
               <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
-                <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar }}>
+                <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar, travar: setRolagemTravada, rolarPor }}>
                   <TecladoAberto.Provider value={teclado}>
                     <BaixoOcupado.Provider value={baixoDoAviso - 16}>
                       <Entrada>{children}</Entrada>

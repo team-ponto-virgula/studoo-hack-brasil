@@ -510,9 +510,13 @@ test("tentar de novo mantém o que estava certo", () => {
   const avaliacao = (certos) => ({ correta: false, feedback: "", comprovante: "", certos });
   assert.equal(respostaParaTentarDeNovo(associar, "a=a,b=c,c=b", avaliacao(["a"])), "a=a");
   const ordenar = { tipo: "ordenar", enunciado: "Ordene", itens };
-  assert.equal(respostaParaTentarDeNovo(ordenar, "a,c,b", avaliacao(["a"])), "a,,", "o certo fica; as outras posições viram vaga");
-  assert.equal(respostaParaTentarDeNovo(ordenar, "c,b,a", avaliacao(["b"])), ",b,", "o do meio também fica no lugar");
-  assert.equal(respostaParaTentarDeNovo(ordenar, "c,a,b", avaliacao([])), "", "sem nada certo, recomeça");
+  // Lista única (spec 08, 19/11): a nova tentativa começa com a ordem toda como estava; os certos ficam travados pela
+  // avaliação e os outros continuam onde estavam, sem vagas.
+  assert.equal(respostaParaTentarDeNovo(ordenar, "a,c,b", avaliacao(["a"])), "a,c,b", "a ordem fica inteira; o certo trava no lugar");
+  assert.equal(respostaParaTentarDeNovo(ordenar, "c,b,a", avaliacao(["b"])), "c,b,a", "o do meio também");
+  assert.equal(respostaParaTentarDeNovo(ordenar, "c,a,b", avaliacao([])), "c,a,b", "sem nada certo, a ordem também fica");
+  assert.equal(respostaCompleta(ordenar, "a,c,b", "a,c,b"), false, "na nova tentativa, falta mudar a ordem com que ela começou");
+  assert.equal(respostaCompleta(ordenar, "a,b,c", "a,c,b"), true, "mudou: verifica");
   assert.equal(respostaCompleta(ordenar, "a,,"), false, "com vaga, ainda não dá para verificar");
   const vf = { tipo: "verdadeiro_falso", enunciado: "VF", afirmacao: "X", justificativas: itens };
   assert.equal(respostaParaTentarDeNovo(vf, "falso:b", avaliacao(["valor"])), "falso:");
