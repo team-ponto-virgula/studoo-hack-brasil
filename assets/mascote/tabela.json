@@ -1,0 +1,44 @@
+{
+  "_como": "Tabela do mascote: o que `npm run mascote:gerar` (scripts/mascote.mjs) produz. Cada grupo recorta a margem transparente com a mesma caixa para todas as imagens dele (a união das caixas), então o boneco fica na mesma escala e na mesma base em todas as poses. `tamanhos` são larguras em px de CSS (cada uma sai em 1x, 2x e 3x); um item pode trocar os do grupo com os dele. A tabela do Designer entra aqui, sem mudar o script. Tamanhos provisórios até ela chegar.",
+  "densidades": [1, 2, 3],
+  "grupos": {
+    "personagem": { "tamanhos": [64, 160] },
+    "acessorio": { "tamanhos": [48] },
+    "marca": { "tamanhos": [160] }
+  },
+  "itens": [
+    { "id": "acolhida", "grupo": "personagem", "origem": "mascote/acolhida.png", "alt": "Studoo, o mascote, acenando com a mochila e um livro" },
+    { "id": "vista-frente", "grupo": "personagem", "origem": "vistas/frente.png", "alt": "Studoo de frente" },
+    { "id": "vista-tres-quartos", "grupo": "personagem", "origem": "vistas/tres-quartos.png", "alt": "Studoo de três quartos" },
+    { "id": "vista-perfil-direito", "grupo": "personagem", "origem": "vistas/perfil.png", "alt": "Studoo de perfil, virado para a direita" },
+    { "id": "vista-perfil-esquerdo", "grupo": "personagem", "origem": "vistas/perfil-esquerdo.png", "alt": "Studoo de perfil, virado para a esquerda" },
+    { "id": "vista-costas", "grupo": "personagem", "origem": "vistas/costas.png", "alt": "Studoo de costas" },
+    { "id": "feliz", "grupo": "personagem", "origem": "expressoes/feliz.png", "alt": "Studoo feliz" },
+    { "id": "animado", "grupo": "personagem", "origem": "expressoes/animado.png", "alt": "Studoo animado" },
+    { "id": "concentrado", "grupo": "personagem", "origem": "expressoes/concentrado.png", "alt": "Studoo concentrado, lendo um livro" },
+    { "id": "pensando", "grupo": "personagem", "origem": "expressoes/curioso.png", "alt": "Studoo pensando, com um ponto de interrogação" },
+    { "id": "surpreso", "grupo": "personagem", "origem": "expressoes/surpreso.png", "alt": "Studoo surpreso" },
+    { "id": "meio-de-boa", "grupo": "personagem", "origem": "expressoes/meio-de-boa.png", "alt": "Studoo de óculos escuros, de boa" },
+    { "id": "encorajador", "grupo": "personagem", "origem": "expressoes/encorajador.png", "alt": "Studoo piscando e fazendo sinal de força" },
+    { "id": "celebrando", "grupo": "personagem", "origem": "expressoes/comemorando.png", "alt": "Studoo comemorando com os braços para cima" },
+    { "id": "pose-estudando", "grupo": "personagem", "origem": "poses/estudando.png", "alt": "Studoo estudando no notebook" },
+    { "id": "pose-organizando", "grupo": "personagem", "origem": "poses/organizando.png", "alt": "Studoo com uma lista de tarefas marcadas" },
+    { "id": "pose-conquistando", "grupo": "personagem", "origem": "poses/celebrando.png", "alt": "Studoo comemorando com um troféu" },
+    { "id": "acessorio-mochila", "grupo": "acessorio", "origem": "acessorios/mochila.png", "alt": "Mochila do Studoo" },
+    { "id": "acessorio-livro", "grupo": "acessorio", "origem": "acessorios/livro.png", "alt": "Livro" },
+    { "id": "acessorio-notebook", "grupo": "acessorio", "origem": "acessorios/notebook.png", "alt": "Notebook" },
+    { "id": "acessorio-fone", "grupo": "acessorio", "origem": "acessorios/fone.png", "alt": "Fone de ouvido" },
+    { "id": "acessorio-formatura", "grupo": "acessorio", "origem": "acessorios/chapeu-de-formatura.png", "alt": "Chapéu de formatura" },
+    { "id": "acessorio-trofeu", "grupo": "acessorio", "origem": "acessorios/trofeu.png", "alt": "Troféu" },
+    { "id": "logo", "grupo": "marca", "origem": "marca/studoo-logo.png", "alt": "Studoo" }
+  ],
+  "cores": {
+    "azul-marinho": "#0B1B5C",
+    "azul-studoo": "#2563FF",
+    "azul-claro": "#3B82F6",
+    "amarelo": "#FBBF24",
+    "violeta": "#8B5CF6",
+    "lavanda": "#E9E7FF"
+  },
+  "fora": ["studoo-character-sheet.png", "paleta/"]
+}

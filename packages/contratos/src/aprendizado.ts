@@ -10,6 +10,7 @@ export * from './voz-ao-vivo';
 export * from './compartilhar';
 export * from './comunidade';
 export * from './codigo-studoo';
+export * from './catalogo-mascote';
 export interface Progresso {
   concluidas: number;
   total: number;
