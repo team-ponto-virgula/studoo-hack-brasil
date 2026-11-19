@@ -124,6 +124,31 @@ test('MaquinaEstadoSom: posse do modo de áudio, bloqueio de SFX em gravação/v
   // Segundo plano para o fundo.
   m.definirSegundoPlano(true);
   assert.equal(m.estadoFundo(), 'parado');
+  assert.equal(m.motivoPausa(true), 'segundo_plano');
   m.definirSegundoPlano(false);
   assert.equal(m.estadoFundo(), 'tocando');
+
+  // Área não permitida (entrada, recuperação, /t, /p, logout) para o fundo.
+  m.definirAreaPermitida(false);
+  assert.equal(m.estadoFundo(), 'parado');
+  assert.equal(m.motivoPausa(true), 'fora_do_app');
+  m.definirAreaPermitida(true);
+  assert.equal(m.motivoPausa(false), 'sem_gesto');
+  assert.equal(m.motivoPausa(true), 'nenhum');
+});
+
+test('Spec 12: descrições curtas em OPCOES_FUNDO_UI e regra de não enfileirar antes do gesto na web', () => {
+  const descricoes = Object.fromEntries(OPCOES_FUNDO_UI.map((o) => [o.id, o.descricao]));
+  assert.deepEqual(descricoes, {
+    mudo: 'Sem som de fundo',
+    foco_calmo: 'Acordes suaves e quentes',
+    chuva_suave: 'Chuva leve na janela',
+    lofi_estudo: 'Batida lenta, sem melodia',
+    biblioteca: 'Ambiente quieto, bom para ler',
+    brisa_natural: 'Vento suave entre as folhas',
+  });
+
+  const webSrc = fs.readFileSync(path.join(RAIZ, 'src/app/sons.ts'), 'utf8');
+  assert.match(webSrc, /if\s*\(!this\.desbloqueado\)\s*return;/);
+  assert.match(webSrc, /preCarregarEssenciais\(\)/);
 });

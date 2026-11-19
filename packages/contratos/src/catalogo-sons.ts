@@ -69,6 +69,21 @@ export interface PreferenciasSom {
   fundo: IdSomFundo;
 }
 
+export type EstadoReproducaoFundo = 'parado' | 'carregando' | 'tocando' | 'erro';
+
+export type MotivoPausaFundo = 'nenhum' | 'sem_gesto' | 'gravando' | 'segundo_plano' | 'fora_do_app';
+
+export interface EstadoSomSnapshot {
+  efeitosAtivos: boolean;
+  fundo: IdSomFundo;
+  estadoFundo: EstadoReproducaoFundo;
+  motivoPausa: MotivoPausaFundo;
+  desbloqueado: boolean;
+  erroFundo: string | null;
+}
+
+export const MENSAGEM_ERRO_FUNDO = 'Não deu para tocar agora. Toque de novo para tentar.';
+
 export const PADRAO_PREFERENCIAS_SOM: Readonly<PreferenciasSom> = {
   efeitosAtivos: true,
   fundo: 'mudo',
@@ -152,7 +167,19 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
   },
 ];
 
+const DESCRICOES_CURTAS_FUNDO: Readonly<Record<Exclude<IdSomFundo, 'mudo'>, string>> = {
+  foco_calmo: 'Acordes suaves e quentes',
+  chuva_suave: 'Chuva leve na janela',
+  lofi_estudo: 'Batida lenta, sem melodia',
+  biblioteca: 'Ambiente quieto, bom para ler',
+  brisa_natural: 'Vento suave entre as folhas',
+};
+
 export const OPCOES_FUNDO_UI: readonly { id: IdSomFundo; rotulo: string; descricao: string }[] = [
   { id: 'mudo', rotulo: 'Mudo', descricao: 'Sem som de fundo' },
-  ...CATALOGO_FUNDOS.map(({ id, rotulo, descricao }) => ({ id, rotulo, descricao })),
+  ...CATALOGO_FUNDOS.map(({ id, rotulo }) => ({
+    id,
+    rotulo,
+    descricao: DESCRICOES_CURTAS_FUNDO[id],
+  })),
 ];
