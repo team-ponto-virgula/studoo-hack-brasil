@@ -11,7 +11,7 @@
 .configuracoes__secao { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
 @media (min-width: 768px) { .configuracoes__secao { padding: 22px 24px; } }
 .configuracoes__capa { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
-.configuracoes__previa { display: block; flex: 0 0 auto; width: min(100%, 15rem); aspect-ratio: 2 / 1; overflow: hidden; border-radius: 16px; box-shadow: 0 6px 16px rgb(27 42 94 / 0.14); }
+.configuracoes__previa { display: block; flex: 0 0 auto; width: min(100%, 15rem); aspect-ratio: 2 / 1; overflow: hidden; border-radius: 16px; box-shadow: 0 6px 16px rgb(11 27 92 / 0.14); }
 .configuracoes__previa svg { display: block; width: 100%; height: 100%; }
 .configuracoes__capa-acoes { display: grid; flex: 1 1 12rem; gap: 8px; justify-items: start; }
 .configuracoes__capa-acoes .botao .icone, .configuracoes__botao .icone { width: 18px; height: 18px; }
