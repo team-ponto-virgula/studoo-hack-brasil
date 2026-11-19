@@ -426,7 +426,19 @@ export const mensagens = {
     som: {
         titulo: 'Som',
         musicaTitulo: 'Música de fundo',
-        musicaFaixa: 'Lo-fi de estúdio',
+        musicaFaixa: 'Lo-fi de Estudo',
+        musicaEmLaco: 'Lo-fi de Estudo, em laço',
+        musicaComeca: 'Começa no primeiro toque',
+        musicaPausada: 'Pausada enquanto você grava',
+        musicaErro: 'Não deu para tocar a música. Desligue e ligue de novo para tentar.',
+        musicaAviso: 'Música de fundo ligada.',
+        desligarMusica: 'Desligar',
+        rodapeMusica: 'Os efeitos tocam por cima da música. Ela fica mais baixa quando o Studoo fala e para enquanto você grava.',
+        botaoMusicaRotulo: (ligada: boolean, efeitos: boolean, motivo?: string) => {
+            if (ligada && motivo === 'sem_gesto') return 'Som: música começa no primeiro toque';
+            if (ligada && motivo === 'gravando') return 'Som: música pausada enquanto você grava';
+            return `Som: música ${ligada ? 'ligada' : 'desligada'}, efeitos ${efeitos ? 'ligados' : 'desligados'}`;
+        },
         fechar: 'Fechar',
         fundoTitulo: 'Som de fundo',
         fundoDica: 'Toca baixinho enquanto você estuda.',
