@@ -1,0 +1,28 @@
+# Explorar, com o conteúdo de demonstração da comunidade: o alto da tela e a tela rolada.
+appId: host.exp.Exponent
+name: 40-explorar
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    id: nav-explorar
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-explorar
+    timeout: 30000
+# Os cartões chegam da API e as fotos carregam depois: espera o primeiro do Em alta, sem exigir.
+- extendedWaitUntil:
+    visible:
+      id: em-alta-1
+    timeout: 20000
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 4000
+- takeScreenshot: 40-explorar
+- swipe:
+    start: 50%, 70%
+    end: 50%, 35%
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 41-explorar-rolado

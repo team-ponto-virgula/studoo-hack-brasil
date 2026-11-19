@@ -88,7 +88,7 @@ export function useAvisoDoAppRaiz() {
   return { aviso, avisar, dispensar };
 }
 
-/** A faixa do aviso: até 480 de largura, fundo #1B2A5E, texto branco 800 de 15/22, cantos de 16; sobe 10 com a opacidade em 220 ms. */
+/** A faixa do aviso: até 480 de largura, fundo #0B1B5C, texto branco 800 de 15/22, cantos de 16; sobe 10 com a opacidade em 220 ms. */
 function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
   const reduzir = useMovimentoReduzido();
   const { dispensar } = useContext(AvisoDoApp);
@@ -1104,7 +1104,7 @@ export const estilos = StyleSheet.create({
   },
   entradaMultilinha: { minHeight: 132, textAlignVertical: 'top' },
   entradaErro: { borderColor: cores.erro },
-  entradaFocada: { borderColor: cores.acao, outlineColor: 'rgba(56, 88, 214, 0.18)', outlineWidth: 4, outlineOffset: 0, outlineStyle: 'solid' },
+  entradaFocada: { borderColor: cores.acao, outlineColor: 'rgba(37, 99, 255, 0.18)', outlineWidth: 4, outlineOffset: 0, outlineStyle: 'solid' },
   entradaErroFocada: { outlineColor: 'rgba(194, 59, 78, 0.14)' },
   entradaComAcessorio: { paddingRight: 52 },
   acessorio: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center' },

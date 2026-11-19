@@ -1,0 +1,9 @@
+# Exercício "verdadeiro-falso" no estado inicial: a lição atual da trilha ${TRILHA_VERDADEIRO_FALSO} começa por ele (preparar-dados.mjs).
+appId: host.exp.Exponent
+name: 33-exercicio-verdadeiro-falso
+---
+- runFlow:
+    file: ../partes/exercicio.yaml
+    env:
+      TRILHA: ${TRILHA_VERDADEIRO_FALSO}
+      CAPTURA: 33-exercicio-verdadeiro-falso

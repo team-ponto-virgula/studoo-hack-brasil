@@ -1,0 +1,36 @@
+# Abre o projeto no Expo Go, pelo Metro da própria máquina, e espera a entrada do Studoo.
+# No Expo Go não vale `launchApp`: o app do projeto roda dentro dele e abre por link (documentação do Maestro).
+appId: host.exp.Exponent
+---
+- stopApp
+- openLink: exp://127.0.0.1:8081
+# Na primeira vez de um simulador, o iOS pergunta se o link abre no Expo Go. A resposta vale para sempre nesse simulador.
+- extendedWaitUntil:
+    visible: "Open"
+    timeout: 12000
+    optional: true
+- runFlow:
+    when:
+      visible: "Open"
+    commands:
+      - tapOn: "Open"
+# O primeiro carregamento baixa o pacote do Metro e as fontes.
+- extendedWaitUntil:
+    visible:
+      id: titulo-entrada
+    timeout: 240000
+# Algumas versões do Expo Go abrem o menu de desenvolvedor com uma apresentação na primeira vez que um projeto carrega.
+# Se ela aparecer, sai: "Continue" fecha a apresentação e um toque fora fecha o menu.
+- waitForAnimationToEnd:
+    timeout: 3000
+- runFlow:
+    when:
+      visible: "Continue|Got it"
+    commands:
+      - tapOn: "Continue|Got it"
+- runFlow:
+    when:
+      visible: "Reload|Go home|Go Home"
+    commands:
+      - tapOn:
+          point: 50%, 8%

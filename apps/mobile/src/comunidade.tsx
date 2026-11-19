@@ -815,7 +815,7 @@ export function NovidadesDoPerfil({ cliente, abrirPlano }: { cliente: ClienteNat
       <View style={comunidadeEstilos.novidadesLista}>
         {itens.map((n, i) => {
           const fundo = n.tipo === 'valeus' ? '#FDE8EE' : n.tipo === 'seguidores' ? '#E3F6EA' : cores.ceu;
-          const cor = n.tipo === 'valeus' ? '#A3204A' : n.tipo === 'seguidores' ? '#14513B' : cores.acao;
+          const cor = n.tipo === 'valeus' ? '#A3204A' : n.tipo === 'seguidores' ? '#14513B' : cores.acaoEscura;
           return (
             <View key={`${n.tipo}-${'planoId' in n ? n.planoId : 'seguidores'}-${i}`} style={comunidadeEstilos.novidade}>
               <View style={[comunidadeEstilos.novidadeIcone, { backgroundColor: fundo }]}>
@@ -1052,7 +1052,7 @@ const comunidadeEstilos = StyleSheet.create({
   principal: { flexBasis: '100%', flexGrow: 1 },
   // Contornos dos controles com 3:1 sobre o branco (#8792BD); "Continuar" em azul claro da marca.
   contorno: { borderColor: '#8792BD' },
-  continuar: { backgroundColor: '#EEF3FF' },
+  continuar: { backgroundColor: cores.ceu },
   // .curtir: contorno de 2 #8792BD, raio 14, fundo branco (curtido também), 14 de folga e 6 entre o coração e a palavra.
   valeu: { flexGrow: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, minWidth: 44, minHeight: 44, paddingHorizontal: 14,
     borderWidth: 2, borderColor: '#8792BD', borderRadius: 14, backgroundColor: cores.fundo },
@@ -1083,7 +1083,7 @@ const comunidadeEstilos = StyleSheet.create({
   secaoPerfil: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   abas: { flexDirection: 'row', alignSelf: 'flex-start', gap: 4, padding: 4, borderRadius: 16, backgroundColor: cores.nevoa },
   aba: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 44, paddingHorizontal: 18, borderRadius: 12 },
-  abaMarcada: { backgroundColor: cores.fundo, shadowColor: '#1B2A5E', shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
+  abaMarcada: { backgroundColor: cores.fundo, shadowColor: cores.texto, shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   abaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '900' },
   // Fileiras até as bordas da tela no celular: a margem negativa do respiro da página (20) e o mesmo respiro dentro.
   fileira: { marginHorizontal: -20 },

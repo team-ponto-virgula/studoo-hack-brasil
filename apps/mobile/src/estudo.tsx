@@ -2151,7 +2151,7 @@ const estudoEstilos = StyleSheet.create({
   topoTrilhaRotulo: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 1 },
   tituloTopo: { fontSize: 26, lineHeight: 30 },
   // Com a sombra de 4 embaixo da web (0 4px 0 rgb(27 42 94 / 0.08)).
-  anel: { alignItems: 'center', justifyContent: 'center', borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: '0 4px 0 rgba(27, 42, 94, 0.08)' },
+  anel: { alignItems: 'center', justifyContent: 'center', borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: '0 4px 0 rgba(11, 27, 92, 0.08)' },
   anelMetade: { position: 'absolute', overflow: 'hidden' },
   // .anel__numero: Quicksand 700, -0,03em; no alto da trilha, 1rem (.trilha-topo .anel__numero) com entrelinha 1,5.
   anelNumero: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 26, letterSpacing: -0.66 },
@@ -2211,7 +2211,7 @@ const estudoEstilos = StyleSheet.create({
   // .trilha-proximo no celular: 10 acima da navegação, borda de 2 e degrau de 5 (0 5px 0 gelo, fora da caixa): aqui a faixa de
   // baixo soma os 7 e o cartão fica 5 acima da barra, como o pé do degrau na web.
   rodapeFlutuante: { position: 'absolute', left: 12, right: 12, bottom: 5, borderRadius: 24, borderWidth: 2, borderBottomWidth: 7,
-    borderColor: cores.gelo, backgroundColor: cores.fundo, shadowColor: '#1B2A5E', shadowOpacity: 0.16, shadowRadius: 18,
+    borderColor: cores.gelo, backgroundColor: cores.fundo, shadowColor: cores.texto, shadowOpacity: 0.16, shadowRadius: 18,
     shadowOffset: { width: 0, height: 10 }, elevation: 8 },
   // .trilha-proximo: 14 × 14 × 14 × 20 de respiro.
   rodapeFlutuanteConteudo: { paddingTop: 14, paddingBottom: 14, paddingLeft: 20, paddingRight: 14 },
@@ -2378,7 +2378,7 @@ const estudoEstilos = StyleSheet.create({
   preparoLinha: { minHeight: 58, flexDirection: 'row', alignItems: 'center', gap: 12, overflow: 'hidden', paddingVertical: 9, paddingLeft: 10,
     paddingRight: 16, borderRadius: 16, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   preparoLinhaPronta: { borderColor: '#BFE5D2' },
-  preparoBrilho: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(56, 88, 214, 0.08)' },
+  preparoBrilho: { position: 'absolute', top: 0, right: 0, bottom: 0, left: 0, backgroundColor: 'rgba(37, 99, 255, 0.08)' },
   preparoIcone: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa },
   preparoIconePronto: { borderBottomWidth: 3, borderColor: cores.sucesso, backgroundColor: cores.sucessoClaro },
   preparoTitulo: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 21 },

@@ -1015,7 +1015,7 @@ const s = StyleSheet.create({
   desafio: { gap: 12 },
   // .ensino-gravando: 12 em cima na web (24 do "Parar e transcrever", com o cartão pondo 14) e 12 até o "Enviar".
   gravando: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 10, marginBottom: -2, paddingVertical: 10, paddingHorizontal: 14,
-    borderRadius: 14, backgroundColor: '#EEF3FF' },
+    borderRadius: 14, backgroundColor: cores.ceu },
   campoEnsino: { minHeight: 156, textAlignVertical: 'top', borderColor: cores.gelo },
   campoEnsinoDesligado: { backgroundColor: '#FAFAFA' },
   // O campo já põe 8 entre o rótulo e a caixa; a textarea da web tem 10 em cima.

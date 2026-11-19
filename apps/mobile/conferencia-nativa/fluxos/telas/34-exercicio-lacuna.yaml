@@ -1,0 +1,9 @@
+# Exercício "lacuna" no estado inicial: a lição atual da trilha ${TRILHA_LACUNA} começa por ele (preparar-dados.mjs).
+appId: host.exp.Exponent
+name: 34-exercicio-lacuna
+---
+- runFlow:
+    file: ../partes/exercicio.yaml
+    env:
+      TRILHA: ${TRILHA_LACUNA}
+      CAPTURA: 34-exercicio-lacuna

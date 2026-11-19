@@ -1,0 +1,9 @@
+# Exercício "multipla-escolha" no estado inicial: a lição atual da trilha ${TRILHA_MULTIPLA_ESCOLHA} começa por ele (preparar-dados.mjs).
+appId: host.exp.Exponent
+name: 32-exercicio-multipla-escolha
+---
+- runFlow:
+    file: ../partes/exercicio.yaml
+    env:
+      TRILHA: ${TRILHA_MULTIPLA_ESCOLHA}
+      CAPTURA: 32-exercicio-multipla-escolha

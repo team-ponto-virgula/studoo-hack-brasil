@@ -210,7 +210,7 @@ export function EtapasDoEnsino({ ativa, primeira }: { ativa: 0 | 1 | 2; primeira
     <View accessible accessibilityRole="text" accessibilityLabel={`${m.ensinoEtapasLabel}: ${etapas[ativa]}`} style={aluno.etapas}>
       {etapas.map((etapa, indice) => (
         <View key={etapa} style={[aluno.etapa, indice === ativa && aluno.etapaAtiva]}>
-          <Text style={[aluno.etapaTexto, indice === ativa && { color: cores.acao }]}>{etapa}</Text>
+          <Text style={[aluno.etapaTexto, indice === ativa && { color: cores.acaoEscura }]}>{etapa}</Text>
         </View>
       ))}
     </View>
@@ -381,7 +381,7 @@ const aluno = StyleSheet.create({
   // .ensino-stu: flex, gap 14, respiro 12 × 16, borda 2 #E1E7FA, raio 18, fundo névoa; .ensino-stu .stu: 52 px de largura.
   caixa: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 16, borderWidth: 2, borderColor: cores.gelo,
     borderRadius: 18, backgroundColor: cores.nevoa },
-  caixaOuvindo: { borderColor: cores.acao, backgroundColor: '#EEF3FF' },
+  caixaOuvindo: { borderColor: cores.acao, backgroundColor: cores.ceu },
   fala: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 25.6 },
   avatar: { width: 52, alignItems: 'center', justifyContent: 'center' },
   stu: { width: 52, height: 58 },
@@ -394,7 +394,7 @@ const aluno = StyleSheet.create({
   balaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 21 },
   etapas: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   etapa: { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 999, borderWidth: 1.5, borderColor: cores.gelo },
-  etapaAtiva: { borderColor: cores.acao, backgroundColor: '#EEF3FF' },
+  etapaAtiva: { borderColor: cores.acao, backgroundColor: cores.ceu },
   etapaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 19 },
   // Como .ensino-ondas da web: cinco barras de 6 × 32 com vão de 5; sem o volume (aparelho que não informa), cheias.
   ondas: { flexDirection: 'row', alignItems: 'center', gap: 5, height: 36 },
@@ -407,7 +407,7 @@ const caderno = StyleSheet.create({
   cartao: { paddingVertical: 14, paddingHorizontal: 16, gap: 6, borderRadius: 16, borderWidth: 2 },
   acertos: { borderColor: cores.gelo, backgroundColor: '#F1F4FD' },
   lacuna: { borderColor: '#F2CF96', backgroundColor: '#FFFAF0' },
-  pergunta: { flexDirection: 'row', alignItems: 'center', gap: 14, borderColor: '#C3CDF2', backgroundColor: '#EEF3FF' },
+  pergunta: { flexDirection: 'row', alignItems: 'center', gap: 14, borderColor: '#C3CDF2', backgroundColor: cores.ceu },
   proximo: { borderColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
   // .ensino-caderno__cartao h3: 0,9375rem com a entrelinha de 1,3 dos títulos do cartão (19,5).
   titulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 15, lineHeight: 19.5 },

@@ -963,14 +963,14 @@ function ExplicacaoDoStu({ children }: { children: ReactNode }) {
 
 type EstadoStu = 'neutro' | 'pensando' | 'atento' | 'primeira' | 'acerto' | 'ponte';
 // As cores computadas de .aula-stu-estado[data-estado] na web: pensando fica na base (névoa e gelo); atento âmbar;
-// de primeira #eafbe2/#6bc445; ponte #eef3ff/#9cb4f5; acerto #eefaf3/#9ad8b5.
+// de primeira #eafbe2/#6bc445; ponte lavanda (cores.ceu)/#9cb4f5; acerto #eefaf3/#9ad8b5.
 const visualDoStu: Record<EstadoStu, { fundo: string; borda: string }> = {
   neutro: { fundo: cores.nevoa, borda: cores.gelo },
   pensando: { fundo: cores.nevoa, borda: cores.gelo },
   atento: { fundo: '#FFF6EA', borda: '#F2CF96' },
   primeira: { fundo: '#EAFBE2', borda: '#6BC445' },
   acerto: { fundo: '#EEFAF3', borda: '#9AD8B5' },
-  ponte: { fundo: '#EEF3FF', borda: '#9CB4F5' },
+  ponte: { fundo: cores.ceu, borda: '#9CB4F5' },
 };
 
 /**
