@@ -639,17 +639,10 @@
 .recurso-imagem figcaption { color: var(--texto2); font-size: 0.875rem; }
 
 /* Ordenar: a ordem montada em cima, os itens que faltam embaixo. */
-.ordenar, .associar { display: grid; gap: 12px; }
-.ordenar__instrucao, .associar__instrucao { color: var(--texto2); font-weight: 700; }
-.ordenar__rotulo { color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; }
-.ordenar__escolhidos { display: grid; gap: 8px; min-height: 64px; margin: 0; padding: 10px; border: 2px dashed var(--gelo); border-radius: 18px; list-style: none; }
-.ordenar__vazio { align-self: center; color: var(--texto2); text-align: center; }
+.associar { display: grid; gap: 12px; }
+.associar__instrucao { color: var(--texto2); font-weight: 700; }
 /* A posição vaga deixada na nova tentativa: o próximo item tocado entra aqui. */
-.ordenar__vaga { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 10px 14px; border: 2px dashed var(--gelo);
-  border-radius: 16px; color: var(--texto2); font-weight: 700; }
-.ordenar__vaga .ordenar__numero { opacity: 0.6; }
-.ordenar__disponiveis { display: flex; flex-wrap: wrap; gap: 10px; }
-.ordenar button, .associar button {
+.associar button {
   display: flex;
   min-height: 52px;
   align-items: center;
@@ -666,25 +659,11 @@
   cursor: pointer;
   transition: border-color 140ms ease-out, background-color 140ms ease-out, transform 110ms ease-out;
 }
-.ordenar__escolhidos button { width: 100%; border-color: #9fb1f0; background: #eef2ff; box-shadow: 0 4px 0 #9fb1f0; }
-.ordenar button:active:not(:disabled), .associar button:active:not(:disabled) { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
-.ordenar button:focus-visible, .associar button:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }
-.ordenar button:disabled, .associar button:disabled { cursor: default; }
-.ordenar__numero {
-  display: grid;
-  min-width: 34px;
-  height: 30px;
-  place-items: center;
-  border-radius: 9px;
-  color: var(--fundo);
-  background: var(--acao);
-  font-size: 0.875rem;
-  font-weight: 900;
-}
-.ordenar button[data-estado='certo'], .associar button[data-estado='certo'] { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; }
-.ordenar button[data-estado='certo'] .ordenar__numero { background: var(--sucesso-claro); }
-.ordenar button[data-estado='errado'], .associar button[data-estado='errado'] { border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
-.ordenar button[data-estado='errado'] .ordenar__numero { background: #e3a24a; }
+.associar button:active:not(:disabled) { box-shadow: 0 1px 0 var(--gelo); transform: translateY(3px); }
+.associar button:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }
+.associar button:disabled { cursor: default; }
+.associar button[data-estado='certo'] { border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; }
+.associar button[data-estado='errado'] { border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
 
 /* Associar: duas colunas; cada par ganha a sua cor e o seu número. */
 .associar__colunas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -867,8 +846,8 @@
 .associar .associar__colunas button[data-estado='certo'] { --cor-par: var(--sucesso-claro); border-color: var(--sucesso-claro); color: var(--sucesso); background: #eefaf3; box-shadow: 0 4px 0 #9ad8b5; }
 .associar .associar__colunas button[data-estado='errado'] { --cor-par: #e3a24a; border-color: #e3a24a; color: #7a4a00; background: #fff6ea; box-shadow: 0 4px 0 #f2cf96; }
 
-/* "Recomeçar" é um link, não um cartão (o seletor dos cartões do ordenar e do associar pega todos os botões). */
-.ordenar .exercicio-recomecar, .associar .exercicio-recomecar {
+/* "Recomeçar" é um link, não um cartão (o seletor dos cartões do associar pega todos os botões). */
+.associar .exercicio-recomecar {
   display: inline;
   width: auto;
   min-height: 0;
