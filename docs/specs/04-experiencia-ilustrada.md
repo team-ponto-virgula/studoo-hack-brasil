@@ -188,7 +188,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
   - **Espera real** (IA real ou rede lenta, simulada e identificada no relato): sem meta de total. Os quatro números entram como medidos, sem descontar a demora. A passagem continua em no máximo 470 ms, mesmo com a busca da lição lenta. O esqueleto fica até a lição chegar, e a etapa 1 fica interativa em até 100 ms depois disso. A linha de 1,5 s aparece.
   - Nos dois casos, nenhuma pausa fixa.
 - C3: nenhuma tela e nenhum segundo botão entre a prévia e a etapa 1.
-- C4: um `geracao_pronta` por trilha criada, na passagem, e nenhum som no fim da proposta.
+- C4: um `geracao_pronta` por trilha criada, na passagem, e nenhum som no fim da proposta. Com a música ligada, o Lo-fi continua por baixo (spec 12): não baixa, não para e não recomeça, também na passagem para a aula.
 - C5: sem confete, sem dicas que se revezam, sem "Mais uma!", sem contagens, sem barra e sem visto por lição.
 - C6: tentar de novo depois de uma falha não duplica (Minhas trilhas com uma trilha), e voltar da aula leva ao mapa salvo.
 - C7: com movimento reduzido, a troca é por opacidade e a informação é a mesma; os dois anúncios saem.
