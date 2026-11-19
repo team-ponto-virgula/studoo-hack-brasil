@@ -56,7 +56,9 @@ function DesenhoFaixa() {
  * O cabeçalho do perfil, o mesmo na tela Perfil, na prévia da edição e na página /p: faixa na cor do perfil, foto grande
  * sobreposta, nome, resumo, interesses e a linha de alcance. `acoes`: "Editar perfil" para a dona, "Compartilhar perfil".
  */
-export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, nivel = 'h1', acoes, semResumo, tituloRef, demo = false }: {
+export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, nivel = 'h1', acoes, semResumo, tituloRef, demo = false, publica = false }: {
+  /** Página pública: item zerado do alcance não aparece. */
+  publica?: boolean;
   /** Perfil de demonstração: selo ao lado do nome. */
   demo?: boolean;
   nome: string;
@@ -71,6 +73,7 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
   tituloRef?: RefObject<HTMLHeadingElement | null>;
 }) {
   const Nome = nivel;
+  const itensAlcance = p.alcanceItens(alcance.trilhas, alcance.pessoas, { seguidores: alcance.seguidores, semZeros: publica });
   return (
     <div className="cabeca-perfil" style={{ '--cor-perfil': FUNDO_DA_COR[cor] } as CSSProperties}>
       <div className="cabeca-perfil__faixa"><DesenhoFaixa /></div>
@@ -87,12 +90,13 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
             {interesses.map((tema) => <li key={tema}>{temas[tema]}</li>)}
           </ul>
         )}
-        <p className="cabeca-perfil__alcance">
-          <span>
-            <span className="somente-leitor">{p.alcanceRotulo}: </span>{p.alcance(alcance.trilhas, alcance.pessoas)}
-            {alcance.seguidores !== undefined && <> · <strong>{mensagens.comunidade.seguidores(alcance.seguidores)}</strong></>}
-          </span>
-        </p>
+        {itensAlcance.length > 0 && (
+          <p className="cabeca-perfil__alcance">
+            <span className="somente-leitor">{p.alcanceRotulo}: </span>
+            {/* Cada item não quebra no meio: a linha só parte nos "·". */}
+            {itensAlcance.map((item, i) => <span key={i} className="cabeca-perfil__item">{item}{i < itensAlcance.length - 1 && <span aria-hidden="true">&nbsp;·&ensp;</span>}</span>)}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -117,7 +121,7 @@ export function CabecalhoPublico({ perfil, perfilId, logado }: { perfil: PerfilP
   const [seguidores, setSeguidores] = useState(perfil.alcance.seguidores);
   const comunidade = perfil.alcance.seguidores !== undefined;
   return (
-    <CabecalhoPerfil demo={Boolean(perfil.demo)} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
+    <CabecalhoPerfil publica demo={Boolean(perfil.demo)} nome={perfil.nome} cor={perfil.cor} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
       alcance={{ ...perfil.alcance, ...(seguidores !== undefined ? { seguidores } : {}) }}
       acoes={<>
         {comunidade && <BotaoSeguir perfilId={perfilId} nome={perfil.nome} estado={perfil.seguir} logado={logado} aoMudar={setSeguidores} />}
@@ -127,8 +131,10 @@ export function CabecalhoPublico({ perfil, perfilId, logado }: { perfil: PerfilP
 }
 
 /** Tela Perfil: o cabeçalho novo; as trilhas que a pessoa compartilha; o perfil público; a conta e Sair. */
-export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirPlano, editar, sair, anunciar, comunidade = false, aoAdicionado }: {
+export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirPlano, editar, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas }: {
   perfil: Perfil | null;
+  /** O vazio de "Trilhas que você compartilha" leva a Minhas trilhas. */
+  irParaTrilhas?: () => void;
   /** Com a comunidade: o nível de cada trilha, "Visibilidade" (abre a folha) e os cartões como aparecem na página. */
   comunidade?: boolean;
   aoAdicionado?: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
@@ -147,6 +153,8 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
   const [folha, setFolha] = useState<string | null>(null);
   const [cartoes, setCartoes] = useState<CartaoTrilha[] | null>(null);
   const titulo = useRef<HTMLHeadingElement>(null);
+  const [toque, setToque] = useState(false);
+  useEffect(() => { setToque(window.matchMedia('(pointer: coarse)').matches); }, []);
   const assinaturaLinks = perfil?.links.map((link) => `${link.codigo}:${link.visibilidade ?? link.noPerfil}:${link.tema ?? ''}:${link.legenda ?? ''}`).join('|') ?? '';
 
   // Os cartões como aparecem na página pública (com a comunidade e perfil público); recarrega quando os links mudam.
@@ -170,7 +178,9 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
     setPerfil((atual) => {
       if (!atual) return atual;
       const links = novo ? atual.links.map((item) => (item.codigo === antigo.codigo ? novo : item)) : atual.links.filter((item) => item.codigo !== antigo.codigo);
-      return { ...atual, links, publico: links.some((item) => item.noPerfil), alcance: { trilhas: links.length, pessoas: links.reduce((t, l) => t + l.adicoes, 0) } };
+      // O alcance do cartão é o da página pública: só as trilhas no perfil.
+      const noPerfil = links.filter((item) => item.noPerfil);
+      return { ...atual, links, publico: noPerfil.length > 0, alcance: { ...atual.alcance, trilhas: noPerfil.length, pessoas: noPerfil.reduce((t, l) => t + l.adicoes, 0) } };
     });
     aoMudarLink(antigo.planoId, novo);
   }
@@ -207,7 +217,7 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
 
   return (
     <section className="painel painel--perfil">
-      <h1 ref={titulo} tabIndex={-1} className="painel--perfil__titulo">{p.titulo}</h1>
+      <h1 ref={titulo} tabIndex={-1} className="titulo-pagina painel--perfil__titulo">{p.titulo}</h1>
       {erro && <p className="campo-erro" role="alert">{textoErro(erro)}</p>}
       {!perfil && !erro && <div className="cabeca-perfil cabeca-perfil--esqueleto" aria-hidden="true"><div className="cabeca-perfil__faixa" /><div className="folha-esqueleto"><span /><span /><span /></div></div>}
       {perfil && (
@@ -224,6 +234,7 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
               </div>
             </div>
           ) : (
+            <div className="perfil-topo">
             <CabecalhoPerfil nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
               alcance={perfil.alcance} nivel="h2"
               semResumo={<button type="button" className="cabeca-perfil__convite" onClick={editar}>{p.semResumoDona}</button>}
@@ -231,22 +242,31 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
                 <Botao variante="secundario" onClick={editar}><Icone nome="lapis" />{p.editarPerfil}</Botao>
                 {perfil.publico && perfil.perfilId && <BotaoCompartilharPerfil perfilId={perfil.perfilId} nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} />}
               </>} />
+            {/* Novidades logo abaixo do cartão (no computador, na coluna da direita): é a recompensa do social. */}
+            {comunidade && <NovidadesDoPerfil abrirPlano={abrirPlano} />}
+            </div>
           )}
 
           {!perfil.visitante && (
             <section className="perfil-secao" aria-labelledby="perfil-compartilhadas">
-              <h2 id="perfil-compartilhadas" className="perfil-secao__titulo">{p.compartilhadas}</h2>
-              {perfil.links.length === 0 ? <p className="folha-texto">{p.nenhuma}</p> : (
+              <h2 id="perfil-compartilhadas" className="perfil-secao__titulo">{perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas}</h2>
+              {perfil.links.length === 0 ? (
+                <p className="folha-texto">
+                  {p.nenhumaAntes} {irParaTrilhas ? <button type="button" className="link-texto" onClick={irParaTrilhas}>{p.nenhumaLink}</button> : p.nenhumaLink}{p.nenhumaDepois(toque)}
+                </p>
+              ) : (
                 <ul className="perfil-links">
                   {perfil.links.map((link) => (
                     <li key={link.codigo} className="perfil-link">
                       <button type="button" className="perfil-link__titulo" onClick={() => abrirPlano(link.planoId)}>{link.titulo}</button>
                       <p className="perfil-link__meta">
-                        {p.desde(dataCurta(link.criadoEm))} · {p.adicoes(link.adicoes)}{comunidade && link.valeus !== undefined ? ` · ${mensagens.comunidade.valeus(link.valeus)}` : ''}
+                        {p.desde(dataCurta(link.criadoEm))} · {link.adicoes === 0 && !link.valeus
+                          ? (comunidade ? p.semNinguem : p.adicoes(0))
+                          : [link.adicoes > 0 && p.adicoes(link.adicoes), comunidade && link.valeus ? mensagens.comunidade.valeus(link.valeus) : null].filter(Boolean).join(' · ')}
                       </p>
                       {comunidade && link.visibilidade ? (
                         <p className="selo-visibilidade" data-nivel={link.visibilidade}>
-                          <Icone nome={link.visibilidade === 'explorar' ? 'bussola' : link.visibilidade === 'perfil' ? 'pessoa' : 'copiar'} />
+                          <Icone nome={link.visibilidade === 'explorar' ? 'bussola' : link.visibilidade === 'perfil' ? 'pessoa' : 'elo'} />
                           {mensagens.comunidade.niveis[link.visibilidade].titulo}
                           {link.visibilidade === 'explorar' && link.tema ? ` · ${temas[link.tema]}` : ''}
                         </p>
@@ -258,7 +278,7 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
                         </label>
                       )}
                       <div className="perfil-link__acoes">
-                        {comunidade && <Botao variante="secundario" aria-label={mensagens.comunidade.ajustarRotulo(link.titulo)} onClick={() => setFolha(link.planoId)}><Icone nome="bussola" />{mensagens.comunidade.ajustar}</Botao>}
+                        {comunidade && <Botao variante="secundario" aria-label={mensagens.comunidade.ajustarRotulo(link.titulo)} onClick={() => setFolha(link.planoId)}><Icone nome="olho" />{mensagens.comunidade.ajustar}</Botao>}
                         <Botao variante="secundario" onClick={() => void copiar(link)}><Icone nome="copiar" />{m.copiar}<span className="somente-leitor">: {link.titulo}</span></Botao>
                         <Botao variante="texto" className="folha-parar" disabled={ocupado} onClick={() => setParando(link)}>{m.parar}<span className="somente-leitor">: {link.titulo}</span></Botao>
                       </div>
@@ -270,10 +290,9 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
             </section>
           )}
 
-          {comunidade && !perfil.visitante && perfil.nome && <NovidadesDoPerfil abrirPlano={abrirPlano} />}
 
           {cartoes && cartoes.length > 0 && (
-            <CartoesDoPerfil key={assinaturaLinks} inicial={cartoes} logado titulo={mensagens.comunidade.naSuaPagina}
+            <CartoesDoPerfil key={assinaturaLinks} inicial={cartoes} logado titulo={mensagens.comunidade.naSuaPagina} classeTitulo="perfil-secao__titulo" semDono
               aoAbrir={abrirPlano} aoAdicionado={(id, nome, ja) => aoAdicionado?.(id, nome, ja)} />
           )}
 
@@ -289,7 +308,7 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
 
           <section className="perfil-secao" aria-labelledby="perfil-conta">
             <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
-            {!perfil.visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email}</p>}
+            {!perfil.visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email} <span className="selo-so-voce">{p.soVoceVe}</span></p>}
             <Botao variante="secundario" onClick={sair}>{mensagens.sair}</Botao>
           </section>
         </>
@@ -468,7 +487,7 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
         <Botao variante="texto" className="editar-perfil__voltar" onClick={sairDaTela}>
           <span aria-hidden="true">←</span> {p.voltarPerfil}
         </Botao>
-        <h1 id="editar-perfil-titulo" ref={titulo} tabIndex={-1}>{p.editarPerfil}</h1>
+        <h1 id="editar-perfil-titulo" ref={titulo} tabIndex={-1} className="titulo-pagina">{p.editarPerfil}</h1>
       </div>
 
       <div className="editar-perfil__grade">
@@ -490,13 +509,13 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
             </div>
           </section>
 
-          <div className="campo">
+          <div className="campo" data-erro={erros.nome ? true : undefined}>
             <label htmlFor={ids.nome}>{m.nomeRotulo}</label>
             <input id={ids.nome} ref={campoNome} value={nome} maxLength={60} autoComplete="nickname" autoCapitalize="words"
-              aria-invalid={erros.nome ? true : undefined} aria-describedby={`${ids.nomeDica}${erros.nome ? ` ${ids.nomeErro}` : ''}`}
+              aria-invalid={erros.nome ? true : undefined} aria-describedby={erros.nome ? ids.nomeErro : ids.nomeDica}
               onChange={(e) => { setNome(e.target.value); if (erros.nome) setErros((atual) => ({ ...atual, nome: undefined })); }} />
-            <p className="campo-dica" id={ids.nomeDica}>{m.comoAparecerDica}</p>
-            {erros.nome && <p className="campo-erro" id={ids.nomeErro}>{erros.nome}</p>}
+            {erros.nome && <p className="campo-erro campo-erro--colado" id={ids.nomeErro}><Icone nome="alerta" />{erros.nome}</p>}
+            <p className="campo-dica" id={ids.nomeDica} hidden={Boolean(erros.nome)}>{m.comoAparecerDica}</p>
           </div>
 
           <fieldset className="cores-perfil">
@@ -512,7 +531,7 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
             </div>
           </fieldset>
 
-          <div className="campo campo--resumo">
+          <div className="campo campo--resumo" data-erro={erros.resumo ? true : undefined}>
             <div className="campo__linha">
               <label htmlFor={ids.resumo}>{p.resumoRotulo}</label>
               <span className="campo__contador" id={ids.resumoContador} data-acima={usados > LIMITES_PERFIL.resumoMax || undefined}>
@@ -521,10 +540,10 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
               </span>
             </div>
             <textarea id={ids.resumo} ref={campoResumo} value={resumo} rows={3} maxLength={240}
-              aria-invalid={erros.resumo ? true : undefined} aria-describedby={`${ids.resumoDica} ${ids.resumoContador}${erros.resumo ? ` ${ids.resumoErro}` : ''}`}
+              aria-invalid={erros.resumo ? true : undefined} aria-describedby={`${erros.resumo ? ids.resumoErro : ids.resumoDica} ${ids.resumoContador}`}
               onChange={(e) => { setResumo(e.target.value.replace(/[\r\n]+/g, ' ')); if (erros.resumo) setErros((atual) => ({ ...atual, resumo: undefined })); }} />
-            <p className="campo-dica" id={ids.resumoDica}>{p.resumoDica}</p>
-            {erros.resumo && <p className="campo-erro" id={ids.resumoErro}>{erros.resumo}</p>}
+            {erros.resumo && <p className="campo-erro campo-erro--colado" id={ids.resumoErro}><Icone nome="alerta" />{erros.resumo}</p>}
+            <p className="campo-dica" id={ids.resumoDica} hidden={Boolean(erros.resumo)}>{p.resumoDica}</p>
           </div>
 
           <fieldset className="interesses" aria-describedby={`${ids.interesses}-dica`}>
@@ -557,8 +576,9 @@ export function TelaEditarPerfil({ perfil, aoMudarPerfil, voltar, anunciar, regi
         <aside className="editar-perfil__previa" aria-labelledby="editar-perfil-previa">
           <h2 id="editar-perfil-previa" className="editar-perfil__rotulo">{p.previaTitulo}</h2>
           <div aria-live="off">
-            <CabecalhoPerfil nome={nomeNormal || '…'} cor={cor} foto={salvo.foto} resumo={resumoNormal || null} interesses={interesses}
-              alcance={salvo.alcance} nivel="p" />
+            {/* Com erro no campo, a prévia fica com o último valor salvo (o que os outros veem de fato). */}
+            <CabecalhoPerfil nome={(erros.nome ? salvo.nome : nomeNormal) || '…'} cor={cor} foto={salvo.foto} resumo={(erros.resumo ? salvo.resumo : resumoNormal) || null} interesses={interesses}
+              alcance={salvo.alcance} nivel="p" publica />
           </div>
           <p className="campo-dica">{p.fotoAviso}</p>
         </aside>
@@ -609,6 +629,8 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
   const dicaId = useId();
   const tecladoId = useId();
   const toques = useRef(new Map<number, { x: number; y: number }>());
+  const [toque, setToque] = useState(false);
+  useEffect(() => { setToque(window.matchMedia('(pointer: coarse)').matches); }, []);
   const pinca = useRef<{ distancia: number; zoom: number } | null>(null);
   useDialogo(caixa, () => { if (!enviando) aoCancelar(); });
 
@@ -743,11 +765,11 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
     <div className="folha-fundo folha-fundo--centro" role="presentation">
       <div className="folha folha--recorte" role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={dicaId} aria-busy={enviando || undefined} ref={caixa}>
         <div className="folha-topo">
-          <p className="folha-contexto">{p.fotoRotulo}</p>
+          <span />
           <button type="button" className="folha-fechar" aria-label={p.recorteCancelar} disabled={enviando} onClick={aoCancelar}><Icone nome="fechar" /></button>
         </div>
         <h2 id={tituloId} className="folha-titulo">{p.recorteTitulo}</h2>
-        <p id={dicaId} className="folha-texto folha-texto--miudo">{p.recorteDica}</p>
+        <p id={dicaId} className="folha-texto folha-texto--miudo">{toque ? p.recorteDicaToque : p.recorteDica}</p>
         <div ref={quadro} className="recorte" tabIndex={0} role="group" aria-label={p.recorteArea} aria-describedby={tecladoId}
           onPointerDown={aoPressionar} onPointerMove={aoMover} onPointerUp={aoSoltar} onPointerCancel={aoSoltar} onKeyDown={aoTeclar}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -761,9 +783,10 @@ function RecorteFoto({ origem, aoCancelar, aoSalvar }: { origem: string; aoCance
         <label className="recorte__zoom">
           <span>{p.recorteZoom}</span>
           <input type="range" min={100} max={ZOOM_MAX * 100} step={1} value={Math.round(zoom * 100)} disabled={!natural}
+            style={{ '--preenchido': `${((zoom - 1) / (ZOOM_MAX - 1)) * 100}%` } as CSSProperties}
             onChange={(e) => aplicarZoom(Number(e.target.value) / 100)} />
         </label>
-        <p className="folha-aviso recorte__aviso" role="note">{p.fotoAviso}</p>
+        <p className="campo-dica recorte__aviso">{p.fotoAviso}</p>
         {erro && <p className="campo-erro" role="alert">{erro}</p>}
         {/* A ação principal vem primeiro (no celular fica em cima, à vista); no computador, à direita. */}
         <div className="folha-acoes recorte__acoes">

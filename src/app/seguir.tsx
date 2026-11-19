@@ -4,7 +4,7 @@
  * Seguir e Novidades na web (spec 10, etapa C2): o botão Seguir (cabeçalho do /p e cartão "Quem compartilhou" do /t)
  * e a seção Novidades da tela Perfil. Sem lista pública de seguidores e sem notificação.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { type EstadoSeguir, type Novidade, type PessoaNovidade } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
@@ -55,7 +55,7 @@ export function BotaoSeguir({ perfilId, nome, estado, logado, aoMudar }: {
     <>
       <Botao variante={seguindo ? 'secundario' : 'primario'} className="botao-seguir" aria-pressed={seguindo} disabled={ocupado}
         aria-label={seguindo ? c.seguindoRotulo(nome) : c.seguirRotulo(nome)} onClick={() => void alternar()}>
-        {seguindo ? <><Icone nome="check" />{c.seguindo}</> : <><Icone nome="pessoa" />{c.seguir}</>}
+        {seguindo ? <><Icone nome="check" />{c.seguindo}</> : <><Icone nome="pessoaMais" />{c.seguir}</>}
       </Botao>
       <span className="somente-leitor" role="status" aria-live="polite">{anuncio}</span>
     </>
@@ -78,6 +78,27 @@ function textoDaNovidade(n: Novidade): string {
   if (n.tipo === 'valeus') return c.novidadeValeus(quem, total, n.titulo);
   return c.novidadeSeguidores(n.pessoas.length > 0 ? quem : null, total);
 }
+
+/** Só os nomes e o título da trilha em negrito; o resto da frase em peso normal. */
+function comDestaques(texto: string, destaques: string[]): ReactNode[] {
+  const partes: ReactNode[] = [];
+  let resto = texto;
+  let chave = 0;
+  while (resto) {
+    let primeiro: { i: number; d: string } | null = null;
+    for (const d of destaques) {
+      const i = d ? resto.indexOf(d) : -1;
+      if (i >= 0 && (!primeiro || i < primeiro.i)) primeiro = { i, d };
+    }
+    if (!primeiro) { partes.push(resto); break; }
+    if (primeiro.i > 0) partes.push(resto.slice(0, primeiro.i));
+    partes.push(<strong key={chave++}>{primeiro.d}</strong>);
+    resto = resto.slice(primeiro.i + primeiro.d.length);
+  }
+  return partes;
+}
+
+const destaquesDe = (n: Novidade) => [...('titulo' in n ? [`“${n.titulo}”`] : []), ...(n.tipo === 'adicoes' ? [] : n.pessoas.map((p) => p.nome))];
 
 /** Novidades da dona (últimos 7 dias), agrupadas; sem novidade, uma linha discreta. Abrir a trilha leva ao mapa. */
 export function NovidadesDoPerfil({ abrirPlano }: { abrirPlano: (id: string) => void }) {
@@ -103,8 +124,8 @@ export function NovidadesDoPerfil({ abrirPlano }: { abrirPlano: (id: string) => 
             <span className="novidade__icone" aria-hidden="true"><Icone nome={n.tipo === 'adicoes' ? 'livro' : n.tipo === 'valeus' ? 'valeu' : 'pessoa'} /></span>
             <div className="novidade__corpo">
               {'planoId' in n
-                ? <button type="button" className="novidade__texto novidade__texto--link" onClick={() => abrirPlano(n.planoId)}>{textoDaNovidade(n)}</button>
-                : <p className="novidade__texto">{textoDaNovidade(n)}</p>}
+                ? <button type="button" className="novidade__texto novidade__texto--link" onClick={() => abrirPlano(n.planoId)}>{comDestaques(textoDaNovidade(n), destaquesDe(n))}</button>
+                : <p className="novidade__texto">{comDestaques(textoDaNovidade(n), destaquesDe(n))}</p>}
               <span className="novidade__quando">{c.quando(n.em)}</span>
             </div>
             {n.tipo !== 'adicoes' && <Rostos pessoas={n.pessoas} />}

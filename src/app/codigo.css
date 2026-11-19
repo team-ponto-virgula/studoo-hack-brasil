@@ -5,20 +5,20 @@
 /* O quadrado branco do código fica dentro da curva da moldura: canto arredondado, sem sobra nos cantos internos. */
 .painel-codigo__codigo svg { display: block; width: 100%; height: 100%; border-radius: 20px; }
 .painel-codigo__dica { margin: 0; color: var(--texto2); font-size: 0.9375rem; font-weight: 800; text-align: center; }
-.painel-codigo__acoes { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%; }
-.painel-codigo__acoes .botao { min-height: 44px; }
-.painel-codigo__acoes .botao .icone { width: 18px; height: 18px; }
-@media (max-width: 420px) {
-  .painel-codigo__acoes { display: grid; grid-template-columns: 1fr 1fr; }
-  .painel-codigo__acoes .botao { width: 100%; padding-inline: 8px; gap: 6px; font-size: 0.9375rem; white-space: nowrap; }
-  .painel-codigo__acoes .botao .icone { width: 16px; height: 16px; }
-}
+.painel-codigo__dica, .painel-codigo__mostra { text-wrap: balance; }
+.painel-codigo__mostra { margin: 0; color: var(--texto2); font-size: 0.875rem; line-height: 1.45; text-align: center; }
+/* As ações numa grade de duas colunas de largura igual, com o mesmo vão nas duas direções (10 px). */
+.painel-codigo__acoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; }
+.painel-codigo__acoes .botao { width: 100%; min-height: 48px; padding-inline: 12px; gap: 8px; white-space: nowrap; }
+.painel-codigo__acoes .botao .icone { width: 18px; height: 18px; flex: none; }
+/* Abaixo de 400 px, um por linha: "Baixar imagem" não encosta na borda do botão. */
+@media (max-width: 399px) { .painel-codigo__acoes { grid-template-columns: minmax(0, 1fr); } }
 .painel-codigo .folha-status { margin: 0; }
 .folha--codigo { width: min(100%, 30rem); }
 
 /* Modo apresentação: fundo branco (contraste máximo para a câmera), código o maior possível. */
 .apresentacao-codigo {
-  position: fixed; inset: 0; z-index: 60; display: grid; grid-template-rows: auto auto 1fr auto; justify-items: center; align-items: center; gap: 12px;
+  position: fixed; inset: 0; z-index: 60; display: grid; grid-template-rows: auto 1fr; justify-items: center; align-items: center; gap: 8px;
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   background: #fff; color: var(--texto); overflow: auto;
 }
@@ -28,7 +28,10 @@
 }
 .apresentacao-codigo__fechar .icone { width: 20px; height: 20px; }
 .apresentacao-codigo__fechar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
-.apresentacao-codigo__titulo { margin: 0; max-width: 40ch; font-size: clamp(1.5rem, 4vw, 3rem); text-align: center; }
-.apresentacao-codigo__codigo { display: block; width: min(88vw, calc(100svh - 260px)); max-width: 900px; aspect-ratio: 1; }
+.apresentacao-codigo__bloco { display: grid; justify-items: center; gap: 20px; padding-bottom: 48px; }
+.apresentacao-codigo__titulo { margin: 0; max-width: 40ch; font-size: clamp(1.5rem, 4vw, 3rem); text-align: center; text-wrap: balance; }
+.apresentacao-codigo__demo { justify-self: center; margin: -8px 0 0; }
+.apresentacao-codigo__codigo { display: block; width: min(92vw, calc(100svh - 330px)); max-width: 900px; aspect-ratio: 1; }
+.apresentacao-codigo__marca { display: block; width: 120px; height: auto; }
 .apresentacao-codigo__codigo svg { display: block; width: 100%; height: 100%; }
-.apresentacao-codigo__dica { margin: 0; font-size: clamp(1.125rem, 2.6vw, 1.75rem); text-align: center; }
+.apresentacao-codigo__dica { margin: 0; font-size: clamp(1.125rem, 2.6vw, 1.75rem); text-align: center; text-wrap: balance; }
