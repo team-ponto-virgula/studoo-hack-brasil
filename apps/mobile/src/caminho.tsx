@@ -25,6 +25,7 @@ import { cores, fontes } from './tema';
 import { explicar, iconeDoNo, nomeAcessivelDoNo, posicaoDoNo, posicaoX, selosDoNo, type EstadoNo, type NoCaminho } from './trilha';
 import { focoVisivel } from './foco';
 import { Stu } from './mascote';
+import { RITMO_DA_GERACAO, atrasosDaLicao, comMaisUma } from './geracao-ritmo';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
@@ -124,7 +125,22 @@ function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
  * comemora, a linha até o próximo se desenha e só então o próximo nó se abre. Árvores e flores balançam com o vento.
  */
 export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
-  rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir, estilo, extraChegada = 0 }: {
+  rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir, estilo, extraChegada = 0, semFala = false, respiroNoAlto = 0,
+  aoMedirNo, stuNoFim = false, festaPermitida = true, trofeuDoZero = false }: {
+  /**
+   * Geração que se acompanha (spec 04, revisão de 19/11): a frase do Stu vai na placa presa no alto da tela, fora do mapa;
+   * o começo do mapa fica sem balão e sem Stu, com `respiroNoAlto` em cima para a placa não cobrir a primeira lição.
+   */
+  semFala?: boolean;
+  respiroNoAlto?: number;
+  /** Onde cada nó está na rolagem da tela (o topo e a base da lente), para a tela levar a lição nova a 60% do mapa. */
+  aoMedirNo?: (id: string, topo: number, base: number) => void;
+  /** Fim da geração: o Stu pula ao lado do troféu. */
+  stuNoFim?: boolean;
+  /** O confete do fim só cai quando o troféu entra na tela (a tela não estava acompanhando). */
+  festaPermitida?: boolean;
+  /** O troféu entra crescendo de 0 a 1,1 e volta a 1 (420 ms). */
+  trofeuDoZero?: boolean;
   /** Margens de fora do mapa (a tela da trilha tem o vão de 20 da web até a faixa do nome). */
   estilo?: StyleProp<ViewStyle>;
   /**
@@ -157,7 +173,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
 }) {
   const medidas = useMedidas();
   const reduzir = useMovimentoReduzido();
-  const { width } = useWindowDimensions();
+  const { width, height: alturaTela } = useWindowDimensions();
   const largo = width >= 768;
   const [aberto, setAberto] = useState<string | null>(null);
   // Largura do caminho (a serpentina usa pixels): começa pela tela e se ajusta quando a lista mede.
@@ -187,7 +203,9 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const primeiroTrecho = nos[0]?.trecho ?? 0;
   const ultimoTrecho = nos[total - 1]?.trecho ?? 0;
   const guiaNoCaminho = !montando && nos.some((no) => no.estado === 'atual');
-  const stuNaChegada = !montando && tudoFeito;
+  const stuNaChegada = !montando && (tudoFeito || stuNoFim);
+  // Na geração, o Stu fica do lado de fora da lição mais nova (ou da vaga, antes da primeira) e anda até a próxima.
+  const [alvoStu, setAlvoStu] = useState<{ x: number; topo: number } | null>(null);
   const comRecem = recemConcluida !== null && nos.some((no) => no.id === recemConcluida);
   const comEntrada = entrada && !comRecem;
   const resumoTrechos = resumoDosTrechos(nos);
@@ -244,6 +262,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   useEffect(() => {
     tentarRolar();
     tentarAcompanhar();
+    informarNos();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deslocamentoMedido]);
 
@@ -266,6 +285,17 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     const topoLinha = deslocamento + caminho + lista + linha.y;
     const topoAlvo = deslocamento + (modo === 'novo' ? caminho + lista + alvo.y : caminho + alvo.y);
     acompanhar({ topo: topoLinha, base: topoLinha + linha.altura }, { topo: topoAlvo, base: topoAlvo + alvo.altura });
+  }
+
+  /** A posição de cada nó medido na rolagem da tela (o topo da lente e o fim do nome), para a tela acompanhar a geração. */
+  function informarNos() {
+    const { caminho, lista, linhas } = posicoes.current;
+    if (!aoMedirNo || deslocamentoMedido === null || caminho === null || lista === null) return;
+    for (const [id, caixa] of linhas) {
+      const topo = deslocamento + caminho + lista + caixa.y;
+      // O nome embaixo do nó (até duas linhas) termina perto de 56 abaixo da lente.
+      aoMedirNo(id, topo, topo + medidas.lente + 56);
+    }
   }
 
   function tocar(no: NoCaminho) {
@@ -313,8 +343,10 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     <View style={[caminhoEstilos.caminho, largo ? caminhoEstilos.caminhoLargo : caminhoEstilos.caminhoTela, estilo]} onLayout={(evento) => {
       posicoes.current.caminho = evento.nativeEvent.layout.y;
       tentarRolar();
+      informarNos();
     }}>
-      <Inicio texto={stu} trecho={primeiroTrecho} lente={medidas.lente} pensando={montando} placa={guiaNoCaminho || stuNaChegada} dicas={dicas}
+      <Inicio texto={semFala ? undefined : stu} trecho={primeiroTrecho} lente={medidas.lente} pensando={montando} placa={guiaNoCaminho || stuNaChegada} dicas={dicas}
+        respiroNoAlto={semFala ? respiroNoAlto : 0}
         comecoAtual={nos[0]?.estado === 'atual'}
         aoMedir={(altura) => {
           posicoes.current.inicio = altura;
@@ -333,6 +365,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const medida = Math.round(evento.nativeEvent.layout.width);
           if (medida > 0) setLargura((anterior) => anterior === medida ? anterior : medida);
           tentarRolar();
+          informarNos();
         }}>
         {nos.map((no, indice) => {
           const seguinte = nos[indice + 1];
@@ -379,32 +412,45 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const recem = no.id === recemConcluida;
           const guia = guiaNoCaminho && no.estado === 'atual';
           const atrasoEntrada = surgir ? 0 : 100 + indice * 70;
+          // Geração (spec 04): a lição mais nova nasce em passos (linha aos 120, nó aos 320, nome aos 420, cenário aos 560 e a
+          // espera aos 700); na primeira de um trecho novo, o marco vem antes e tudo chega 200 ms depois.
+          const novo = montando && indice === total - 1;
+          const atrasos = atrasosDaLicao(indice > 0 && nos[indice - 1].trecho !== no.trecho);
+          const linhaParaONovo = montando && seguinte !== undefined && indice === total - 2
+            ? { atraso: atrasosDaLicao(seguinte.trecho !== no.trecho).linha, duracao: RITMO_DA_GERACAO.linhaMs } : null;
+          const linhaParaAVaga = novo && vaiAteVindo ? { atraso: atrasos.espera, duracao: RITMO_DA_GERACAO.linhaMs } : null;
 
           // O espaço até o próximo nó fica dentro da linha (padding), para o chão da região não ter falhas e o marco anunciado caber nela.
           return (
             <Linha key={no.id} espaco={espaco} chao={coresDaRegiao(no.trecho).chao}
               aoMedir={(caixa) => {
                 posicoes.current.linhas.set(no.id, caixa);
+                if (montando && indice === total - 1) setAlvoStu((anterior) => anterior?.x === x && anterior.topo === caixa.y ? anterior : { x, topo: caixa.y });
                 tentarRolar();
                 tentarAcompanhar();
+                informarNos();
               }}>
               {indice === 0 && <View pointerEvents="none" style={[caminhoEstilos.estradaInicial, { backgroundColor: estradaSobre(coresDaRegiao(no.trecho).chao), left: (largura * x) / 100 - 12,
                 top: no.estado === 'atual' ? -70 : -22, height: (no.estado === 'atual' ? 70 : 22) + medidas.lente / 2 }]} />}
               <Terreno x={x} largura={largura} semEnfeites={comRotulo} trecho={no.trecho} indice={indice} medidas={medidas} brotar={surgir || comEntrada}
-                atraso={surgir ? 160 : atrasoEntrada + 160} guia={guia} atrasoGuia={comRecem ? 1350 : 300}
+                atraso={surgir ? (novo ? atrasos.cenario : 0) : atrasoEntrada + 160} guia={guia} atrasoGuia={comRecem ? 1350 : 300}
+                duracao={montando ? RITMO_DA_GERACAO.cenarioMs : 440} deZero={montando}
                 vento={indice % 2 ? ventoImpar : ventoPar} />
               {fimDoTrecho && <Fronteira trechoSeguinte={seguinte.trecho} topo={medidas.lente} />}
               {(seguinte || vaiAteChegada || vaiAteVindo) && (
                 <Ligacao de={x / 100} ate={xSeguinte / 100} feita={no.estado === 'concluida'} topo={medidas.lente / 2} chao={coresDaRegiao(no.trecho).chao}
-                  desenhar={recem && no.estado === 'concluida'} alem={vaiAteChegada ? medidas.lente / 2 : 0} />
+                  desenhar={recem && no.estado === 'concluida'} alem={vaiAteChegada ? medidas.lente / 2 : 0} surgir={linhaParaONovo ?? linhaParaAVaga} />
               )}
-              <Entra ativo={surgir || comEntrada} atraso={atrasoEntrada} reduzir={reduzir}>
+              <Entra ativo={surgir || comEntrada} atraso={novo ? atrasos.no : atrasoEntrada} reduzir={reduzir} queda={montando}>
                 <No no={no} posicao={posicaoDoNo(indice, total, montando)} x={x} largura={largura} comRotulo={comRotulo} medidas={medidas} reduzir={reduzir}
                   ocupado={ocupado} abrindo={abrindo === no.id} liberada={liberadas.includes(no.id)} recem={recem}
-                  atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => guardarAlvo(no.id, alvo)} tocar={() => tocar(no)} />
+                  atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => guardarAlvo(no.id, alvo)} tocar={() => tocar(no)}
+                  atrasoNome={novo ? atrasos.nome : undefined} />
               </Entra>
+              {montando && <Nascimento x={x} largura={largura} lente={medidas.lente} atraso={atrasos.no} animar={novo} reduzir={reduzir} />}
               {fimDoTrecho && (
-                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}>
+                <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}
+                  queda={montando}>
                   <Parte numero={trechos.indexOf(no.trecho) + 2} trecho={seguinte.trecho} resumo={resumoTrechos.get(seguinte.trecho)} />
                 </Marco>
               )}
@@ -412,16 +458,23 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           );
         })}
         {montando && (
-          <Vindo x={posicaoX(total)} largura={largura} medidas={medidas} chao={coresDaRegiao(ultimoTrecho).chao}
+          <Vindo key={total} x={posicaoX(total)} largura={largura} medidas={medidas} chao={coresDaRegiao(ultimoTrecho).chao} folgaAbaixo={Math.round(alturaTela * 0.12)}
+            aparecerEm={total === 0 ? 0 : atrasosDaLicao(total > 1 && nos[total - 2].trecho !== nos[total - 1].trecho).espera}
             aoMedir={(caixa) => {
               posicoes.current.vindo = caixa;
+              if (total === 0) setAlvoStu((anterior) => anterior?.topo === caixa.y ? anterior : { x: posicaoX(0), topo: caixa.y });
               tentarAcompanhar();
             }} />
+        )}
+        {montando && semFala && alvoStu && (
+          <StuQueAnda x={alvoStu.x} topo={alvoStu.topo} largura={largura} lente={medidas.lente} tamanho={medidas.guia} reduzir={reduzir} vez={total}
+            atraso={total === 0 ? 0 : atrasosDaLicao(total > 1 && nos[total - 2].trecho !== nos[total - 1].trecho).espera} maisUma={comMaisUma(total)} />
         )}
       </View>
       {comChegada && (
         <Chegada trecho={ultimoTrecho} lente={medidas.lente} feita={tudoFeito} total={montando ? 0 : total} extra={largo ? 0 : extraChegada}
-          faltam={nos.filter((no) => no.estado !== 'concluida').length} stu={stuNaChegada} festa={festaNaChegada || (comRecem && tudoFeito)}
+          faltam={nos.filter((no) => no.estado !== 'concluida').length} stu={stuNaChegada} festa={(festaNaChegada && festaPermitida) || (comRecem && tudoFeito)}
+          doZero={trofeuDoZero}
           aoMedir={(caixa) => {
           posicoes.current.chegada = caixa;
           tentarAcompanhar();
@@ -450,7 +503,9 @@ function circulo(tamanho: number) {
  * senão, o Stu abre o mapa com a frase num balão. Enquanto a IA monta a trilha, o Stu "pensa" (sobe e desce devagar),
  * pontinhos digitam no balão e as dicas se revezam embaixo da frase.
  */
-function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtual, aoMedir, aoMedirParte }: {
+function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtual, aoMedir, aoMedirParte, respiroNoAlto = 0 }: {
+  /** Na geração, a placa presa no alto cobre o começo do céu: o céu ganha esta altura em cima. */
+  respiroNoAlto?: number;
   aoMedir?: (altura: number) => void;
   /** Topo da faixa da Parte 1 dentro do céu. */
   aoMedirParte?: (y: number) => void;
@@ -474,7 +529,8 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
     // entre os postes da placa e o balão, sem que um cubra o outro (defeito e da rodada 4, em 360 e 412).
     // .caminho-inicio: céu em degradê contínuo (#d6e4ff até #ecf2ff aos 72%); sol em 14/18; nuvens em 22 à direita (8%) e em
     // 70 à esquerda (4%).
-    <View style={[caminhoEstilos.inicio, degrade('linear-gradient(180deg, #d6e4ff 0%, #ecf2ff 72%)'), comecoAtual && { paddingBottom: INICIO_COM_BALAO }]} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.height)}>
+    <View style={[caminhoEstilos.inicio, degrade('linear-gradient(180deg, #d6e4ff 0%, #ecf2ff 72%)'), comecoAtual && { paddingBottom: INICIO_COM_BALAO },
+      respiroNoAlto > 0 && { minHeight: Math.max(210, respiroNoAlto + 96) }]} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.height)}>
       <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
         <Desenho nome="sol" largura={44} estilo={{ position: 'absolute', top: 14, left: 18 }} />
         <Desenho nome="nuvem" largura={64} estilo={{ position: 'absolute', top: 22, right: '8%' }} />
@@ -570,21 +626,53 @@ function Linha({ espaco, chao, aoMedir, children }: {
  * Nó que cai no lugar com uma mola curta, como a web: na montagem, assim que chega; ao abrir a trilha, em sequência
  * (`atraso`). Com movimento reduzido, já aparece pronto.
  */
-function Entra({ ativo, atraso, reduzir, children }: { ativo: boolean; atraso: number; reduzir: boolean | null; children: ReactNode }) {
+function Entra({ ativo, atraso, reduzir, queda = false, children }: {
+  ativo: boolean;
+  atraso: number;
+  reduzir: boolean | null;
+  /**
+   * Geração (spec 04): o nó cai 26 px e pula, de 0,7 a 1,08 e de volta a 1, em 380 ms. Com movimento reduzido, só a
+   * opacidade, em 150 ms, junto com o nome e o cenário.
+   */
+  queda?: boolean;
+  children: ReactNode;
+}) {
   const [entrada] = useState(() => ativo ? new Animated.Value(0) : null);
+  // O atraso vale o do nascimento: quando outra lição chega, este nó não recomeça.
+  const [atrasoInicial] = useState(atraso);
 
   useEffect(() => {
     if (!entrada || reduzir === null) return;
     if (reduzir) {
-      entrada.setValue(1);
-      return;
+      if (!queda) {
+        entrada.setValue(1);
+        return;
+      }
+      const aparecer = Animated.timing(entrada, { toValue: 1, duration: RITMO_DA_GERACAO.reduzidoMs, useNativeDriver: true });
+      aparecer.start();
+      return () => aparecer.stop();
     }
-    const animacao = Animated.timing(entrada, { toValue: 1, duration: 520, delay: atraso, easing: Easing.out(Easing.back(1.6)), useNativeDriver: true });
+    const animacao = queda
+      ? Animated.timing(entrada, { toValue: 1, duration: RITMO_DA_GERACAO.noMs, delay: atrasoInicial, easing: Easing.linear, useNativeDriver: true })
+      : Animated.timing(entrada, { toValue: 1, duration: 520, delay: atrasoInicial, easing: Easing.out(Easing.back(1.6)), useNativeDriver: true });
     animacao.start();
     return () => animacao.stop();
-  }, [entrada, atraso, reduzir]);
+  }, [entrada, atrasoInicial, reduzir, queda]);
 
   if (!entrada) return <>{children}</>;
+  if (queda) {
+    return (
+      <Animated.View style={reduzir ? { opacity: entrada } : {
+        opacity: entrada.interpolate({ inputRange: [0, 0.12, 1], outputRange: [0, 1, 1] }),
+        transform: [
+          { translateY: entrada.interpolate({ inputRange: [0, 0.55, 1], outputRange: [-RITMO_DA_GERACAO.noQueda, 0, 0], easing: Easing.in(Easing.quad) }) },
+          { scale: entrada.interpolate({ inputRange: [0, 0.55, 0.8, 1], outputRange: [0.7, 1.08, 0.98, 1] }) },
+        ],
+      }}>
+        {children}
+      </Animated.View>
+    );
+  }
   return (
     <Animated.View style={{
       opacity: entrada.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }),
@@ -602,7 +690,10 @@ function Entra({ ativo, atraso, reduzir, children }: { ativo: boolean; atraso: n
  * Cenário da linha: um enfeite grande e um miúdo no lado livre do nó; no nó atual, o Stu guia no lugar do enfeite grande.
  * Árvores e flores balançam com o `vento`. Na montagem e na entrada, o cenário brota depois do nó.
  */
-function Terreno({ x, largura, semEnfeites, trecho, indice, medidas, brotar, atraso, guia, atrasoGuia, vento }: {
+function Terreno({ x, largura, semEnfeites, trecho, indice, medidas, brotar, atraso, guia, atrasoGuia, vento, duracao = 440, deZero = false }: {
+  /** Geração: o cenário brota em 260 ms, da escala 0 (com movimento reduzido, 150 ms de opacidade). */
+  duracao?: number;
+  deZero?: boolean;
   /** Posição do nó, em % da largura: o cenário vai para o lado livre e o Stu, para o lado do nó. */
   x: number;
   largura: number;
@@ -620,6 +711,7 @@ function Terreno({ x, largura, semEnfeites, trecho, indice, medidas, brotar, atr
   const { grande } = enfeitesDaLinha(trecho, indice);
   const reduzir = useMovimentoReduzido();
   const [crescer] = useState(() => brotar ? new Animated.Value(0) : null);
+  const [atrasoInicial] = useState(atraso);
   const direita = x >= 50;
   const centro = (largura * x) / 100;
   const { lente, enfeite, guia: tamGuia } = medidas;
@@ -627,16 +719,21 @@ function Terreno({ x, largura, semEnfeites, trecho, indice, medidas, brotar, atr
   useEffect(() => {
     if (!crescer || reduzir === null) return;
     if (reduzir) {
-      crescer.setValue(1);
-      return;
+      if (!deZero) {
+        crescer.setValue(1);
+        return;
+      }
+      const aparecer = Animated.timing(crescer, { toValue: 1, duration: RITMO_DA_GERACAO.reduzidoMs, useNativeDriver: true });
+      aparecer.start();
+      return () => aparecer.stop();
     }
-    const animacao = Animated.timing(crescer, { toValue: 1, duration: 440, delay: atraso, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    const animacao = Animated.timing(crescer, { toValue: 1, duration: duracao, delay: atrasoInicial, easing: Easing.out(Easing.ease), useNativeDriver: true });
     animacao.start();
     return () => animacao.stop();
-  }, [crescer, atraso, reduzir]);
+  }, [crescer, atrasoInicial, reduzir, duracao, deZero]);
 
   const ladoLivre = (distancia: number): ViewStyle => direita ? { left: distancia } : { right: distancia };
-  const animacao = crescer ? { opacity: crescer, transform: [{ scale: crescer.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) }] } : null;
+  const animacao = crescer ? { opacity: crescer, transform: [{ scale: reduzir ? 1 : crescer.interpolate({ inputRange: [0, 1], outputRange: [deZero ? 0 : 0.4, 1] }) }] } : null;
 
   return (
     <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
@@ -682,10 +779,152 @@ function GuiaStu({ tamanho, atraso, estilo, olhaParaEsquerda }: { tamanho: numbe
   );
 }
 
+/**
+ * A lição que acabou de nascer (spec 04, passo 3): cinco estrelinhas douradas (o ouro do kit, spec 13 B5) se abrem e
+ * somem (300 ms) e o anel do nó fica azul por 1,2 s. Com movimento reduzido, sem estrelinhas; o anel aparece e some sem
+ * animação. Decorativo.
+ */
+function Nascimento({ x, largura, lente, atraso, animar, reduzir }: {
+  x: number; largura: number; lente: number; atraso: number;
+  /** Só a lição que nasce agora; as que já estavam no mapa não comemoram de novo. */
+  animar: boolean;
+  reduzir: boolean | null;
+}) {
+  const [ligado] = useState(animar);
+  const [atrasoInicial] = useState(atraso);
+  const [anel] = useState(() => new Animated.Value(0));
+  const [estrelas] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!ligado || reduzir === null) return;
+    if (reduzir) {
+      anel.setValue(1);
+      const apagar = setTimeout(() => anel.setValue(0), RITMO_DA_GERACAO.anelMs);
+      return () => clearTimeout(apagar);
+    }
+    const animacao = Animated.parallel([
+      Animated.sequence([
+        Animated.delay(atrasoInicial),
+        Animated.timing(estrelas, { toValue: 1, duration: RITMO_DA_GERACAO.estrelasMs, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      ]),
+      Animated.sequence([
+        Animated.delay(atrasoInicial),
+        Animated.timing(anel, { toValue: 1, duration: 120, useNativeDriver: true }),
+        Animated.delay(RITMO_DA_GERACAO.anelMs - 120),
+        Animated.timing(anel, { toValue: 0, duration: 240, useNativeDriver: true }),
+      ]),
+    ]);
+    animacao.start();
+    return () => animacao.stop();
+  }, [ligado, reduzir, atrasoInicial, anel, estrelas]);
+  if (!ligado) return null;
+  const centro = (largura * x) / 100;
+  const raio = lente / 2 + 18;
+  return (
+    <View pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={StyleSheet.absoluteFill}>
+      <Animated.View style={[caminhoEstilos.anelNovo, circulo(lente + 8), { left: centro - lente / 2 - 4, top: -4, opacity: anel }]} />
+      {reduzir === false && [0, 1, 2, 3, 4].map((ponta) => {
+        const angulo = -Math.PI / 2 + (ponta * 2 * Math.PI) / 5;
+        return (
+          <Animated.View key={ponta} style={[caminhoEstilos.estrelinha, { left: centro - 4, top: lente / 2 - 4,
+            opacity: estrelas.interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 0] }),
+            transform: [
+              { translateX: estrelas.interpolate({ inputRange: [0, 1], outputRange: [0, Math.cos(angulo) * raio] }) },
+              { translateY: estrelas.interpolate({ inputRange: [0, 1], outputRange: [0, Math.sin(angulo) * raio] }) },
+            ] }]} />
+        );
+      })}
+    </View>
+  );
+}
+
+/**
+ * O Stu na geração (spec 04): fica do lado de fora da lição mais nova (antes da primeira, ao lado da vaga), subindo e
+ * descendo devagar, e anda até a próxima aos 700 ms (400 ms). A cada três lições, o balãozinho "Mais uma!" aparece por
+ * 900 ms. Com movimento reduzido, o Stu fica parado e pula direto para o lugar novo. Decorativo.
+ */
+function StuQueAnda({ x, topo, largura, lente, tamanho, atraso, maisUma, vez, reduzir }: {
+  x: number; topo: number; largura: number; lente: number; tamanho: number; atraso: number; maisUma: boolean; vez: number; reduzir: boolean | null;
+}) {
+  const centro = (largura * x) / 100;
+  const esquerda = x >= 50 ? centro + lente / 2 + 10 : centro - lente / 2 - 10 - tamanho;
+  const alto = topo + lente / 2 - tamanho * 0.9;
+  const [posicao] = useState(() => new Animated.ValueXY({ x: esquerda, y: alto }));
+  const [balao] = useState(() => new Animated.Value(0));
+  const flutuar = useBalanco(5, 1400, reduzir === false);
+
+  useEffect(() => {
+    if (reduzir !== false) {
+      posicao.setValue({ x: esquerda, y: alto });
+      return;
+    }
+    const andar = Animated.timing(posicao, { toValue: { x: esquerda, y: alto }, duration: RITMO_DA_GERACAO.stuMs, delay: atraso, easing: Easing.inOut(Easing.ease), useNativeDriver: true });
+    andar.start();
+    return () => andar.stop();
+    // O atraso é o da lição que acabou de nascer; só o lugar novo dispara a caminhada.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [esquerda, alto, reduzir]);
+
+  useEffect(() => {
+    if (!maisUma) return;
+    if (reduzir !== false) {
+      balao.setValue(1);
+      const apagar = setTimeout(() => balao.setValue(0), atraso + RITMO_DA_GERACAO.maisUmaMs);
+      return () => clearTimeout(apagar);
+    }
+    const mostrar = Animated.sequence([
+      Animated.delay(atraso),
+      Animated.timing(balao, { toValue: 1, duration: 140, useNativeDriver: true }),
+      Animated.delay(RITMO_DA_GERACAO.maisUmaMs - 140),
+      Animated.timing(balao, { toValue: 0, duration: 160, useNativeDriver: true }),
+    ]);
+    mostrar.start();
+    return () => mostrar.stop();
+    // Uma vez por lição que nasce.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vez]);
+
+  return (
+    <Animated.View testID="stu-geracao" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      style={[caminhoEstilos.stuQueAnda, { width: tamanho, transform: [{ translateX: posicao.x }, { translateY: posicao.y }] }]}>
+      <Animated.View testID="mais-uma" style={[caminhoEstilos.maisUma, x >= 50 ? { right: tamanho - 12 } : { left: tamanho - 12 }, { opacity: balao }]}>
+        <Text style={caminhoEstilos.maisUmaTexto}>{mensagens.geracao.maisUma}</Text>
+      </Animated.View>
+      <Animated.View style={[caminhoEstilos.guiaSombra, { transform: [{ scaleX: flutuar.interpolate({ inputRange: [-5, 0], outputRange: [0.8, 1] }) }] }]} />
+      {/* Spec 13 (E1): mapa montando é espera, `stu-curioso` em laço; o sobe-e-desce da spec 04 vai por fora e a sombra fica
+          no chão. */}
+      <Animated.View style={{ transform: [{ translateY: flutuar }] }}>
+        <Stu nome="stu-curioso" tamanho={tamanho} animado="laco" />
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
 /** Onde a próxima lição vai aparecer: lente tracejada e placa em esqueleto, fora do leitor de tela (a contagem diz o mesmo). */
-function Vindo({ x, largura, medidas, chao, aoMedir }: { x: number; largura: number; medidas: Medidas; chao: string; aoMedir: (caixa: Caixa) => void }) {
+function Vindo({ x, largura, medidas, chao, aoMedir, aparecerEm = 0, folgaAbaixo = 0 }: {
+  x: number; largura: number; medidas: Medidas; chao: string; aoMedir: (caixa: Caixa) => void;
+  /**
+   * Geração: chão a mais embaixo da vaga, na cor da região, para a página ter altura para a lição mais nova ficar a 60% do
+   * mapa (spec 04); sem ela, a rolagem batia no fim e a lição ficava a ~70%.
+   */
+  folgaAbaixo?: number;
+  /** Geração: a próxima vaga aparece aos 700 ms da lição que acabou de nascer (com movimento reduzido, já aparece). */
+  aparecerEm?: number;
+}) {
   const reduzir = useMovimentoReduzido();
   const [giro] = useState(() => new Animated.Value(0));
+  const [presenca] = useState(() => new Animated.Value(aparecerEm > 0 ? 0 : 1));
+  useEffect(() => {
+    if (aparecerEm <= 0 || reduzir === null) return;
+    if (reduzir) {
+      presenca.setValue(1);
+      return;
+    }
+    const animacao = Animated.timing(presenca, { toValue: 1, duration: 200, delay: aparecerEm, useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+    // Só no nascimento da vaga (a chave muda a cada lição).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduzir]);
   const centro = (largura * x) / 100;
   const direita = x >= 50;
   const { lente } = medidas;
@@ -698,22 +937,24 @@ function Vindo({ x, largura, medidas, chao, aoMedir }: { x: number; largura: num
   }, [reduzir, giro]);
   return (
     <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-      style={{ height: lente + 32, backgroundColor: chao }}
+      style={{ height: lente + 32 + folgaAbaixo, backgroundColor: chao }}
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
-      <Animated.View style={[circulo(lente), caminhoEstilos.vindoLente, { position: 'absolute', top: 0, left: centro - lente / 2,
+      <Animated.View style={[circulo(lente), caminhoEstilos.vindoLente, { position: 'absolute', top: 0, left: centro - lente / 2, opacity: presenca,
         transform: [{ rotate: giro.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }]} />
-      <View style={[caminhoEstilos.rotulo, { height: lente },
+      <Animated.View style={[caminhoEstilos.rotulo, { height: lente, opacity: presenca },
         direita ? { right: largura - centro + lente / 2 + 16, alignItems: 'flex-end' } : { left: centro + lente / 2 + 16, alignItems: 'flex-start' }]}>
         <View style={[caminhoEstilos.placa, caminhoEstilos.vindoPlaca, direita && caminhoEstilos.vindoPlacaDireita]}>
           <View style={caminhoEstilos.vindoTitulo} />
           <View style={caminhoEstilos.vindoEstado} />
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 }
 
-function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abrindo, liberada, recem, atrasoLiberacao, guardar, tocar }: {
+function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abrindo, liberada, recem, atrasoLiberacao, guardar, tocar, atrasoNome }: {
+  /** Geração: o nome entra do lado aos 420 ms (opacidade e 12 px, 220 ms); com movimento reduzido, 150 ms de opacidade. */
+  atrasoNome?: number;
   no: NoCaminho;
   /** "Lição 3 de 9", ou só "Lição 3" enquanto a trilha é montada. */
   posicao: string;
@@ -746,6 +987,16 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   const nome = nomeAcessivelDoNo(no, posicao);
   const rotuloA11y = no.estado === 'previa' && no.resumo ? `${nome} ${no.resumo}` : nome;
   const lugar = [caminhoEstilos.noLugar, { left: centro - lente / 2, width: lente, height: lente }];
+  const [atrasoDoNome] = useState(atrasoNome);
+  const [nomeEntrando] = useState(() => new Animated.Value(atrasoNome === undefined ? 1 : 0));
+  useEffect(() => {
+    if (atrasoDoNome === undefined || reduzir === null) return;
+    const animacao = reduzir
+      ? Animated.timing(nomeEntrando, { toValue: 1, duration: RITMO_DA_GERACAO.reduzidoMs, useNativeDriver: true })
+      : Animated.timing(nomeEntrando, { toValue: 1, duration: RITMO_DA_GERACAO.nomeMs, delay: atrasoDoNome, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [atrasoDoNome, reduzir, nomeEntrando]);
 
   const rotulo = comRotulo && (
     <View pointerEvents="none" style={[caminhoEstilos.rotulo, { height: lente }, direita
@@ -770,7 +1021,8 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
   // vez de escorregar para dentro; assim o nome quebra nas mesmas linhas.
   const larguraRotulo = Math.max(120, Math.min(224, 2 * Math.min(centro, largura - centro) - 32));
   const discreto = !comRotulo && (!atual || !!no.ponte) && (
-    <View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), width: larguraRotulo, left: centro - larguraRotulo / 2 }]}>
+    <Animated.View pointerEvents="none" style={[caminhoEstilos.discreto, { top: lente + (atual ? 20 : 12), width: larguraRotulo, left: centro - larguraRotulo / 2 },
+      atrasoDoNome !== undefined && { opacity: nomeEntrando, transform: [{ translateX: reduzir ? 0 : nomeEntrando.interpolate({ inputRange: [0, 1], outputRange: [RITMO_DA_GERACAO.nomeDeslize, 0] }) }] }]}>
       {/* O fundo fica na caixa, não no texto: assim o corte em duas linhas não deixa vazar a terceira. */}
       <View style={[caminhoEstilos.discretoCaixa, { maxWidth: larguraRotulo }, atual && caminhoEstilos.discretoCaixaAtual]}>
         {/* Até três linhas no celular (line-clamp 3) e sem palavra sozinha na última linha (text-wrap: pretty da web; no
@@ -788,7 +1040,7 @@ function No({ no, posicao, x, largura, comRotulo, medidas, reduzir, ocupado, abr
           </View>
         ))}
       </View>
-    </View>
+    </Animated.View>
   );
   const moeda = (pressionado: boolean) => (
     <View style={atual ? { transform: [{ scale: 1.14 }] } : null}>
@@ -1019,7 +1271,12 @@ export function tracoGrosso(pontos: readonly Ponto[], espessura: number, cor: st
  * Ligação até o próximo nó: a estrada clara e, por cima, a linha pontilhada adiante e contínua depois de concluída.
  * Vai do pé da lente até o fim da linha.
  */
-function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0 }: {
+function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0, surgir = null }: {
+  /**
+   * Geração (spec 04): o caminho se desenha do nó anterior até a vaga, pedaço por pedaço (aos 120 ms, em 300 ms; até a vaga
+   * seguinte, aos 700 ms). Com movimento reduzido, aparece de uma vez.
+   */
+  surgir?: { atraso: number; duracao: number } | null;
   /** Quanto a curva desce além da linha: até a chegada, a web vai metade da lente para dentro dela (.caminho-ligacao). */
   alem?: number;
   /** Chão da região, para a estrada opaca. */
@@ -1035,6 +1292,25 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0 }: {
   const [caixa, setCaixa] = useState<{ largura: number; altura: number } | null>(null);
   const reduzir = useMovimentoReduzido();
   const [traco] = useState(() => new Animated.Value(desenhar ? 0 : 1));
+  const [rastro] = useState(() => new Animated.Value(surgir ? 0 : 1));
+  const atrasoDoRastro = surgir?.atraso;
+  const duracaoDoRastro = surgir?.duracao;
+
+  useEffect(() => {
+    if (atrasoDoRastro === undefined || duracaoDoRastro === undefined) {
+      rastro.setValue(1);
+      return;
+    }
+    if (reduzir === null) return;
+    if (reduzir) {
+      rastro.setValue(1);
+      return;
+    }
+    rastro.setValue(0);
+    const animacao = Animated.timing(rastro, { toValue: 1, duration: duracaoDoRastro, delay: atrasoDoRastro, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [atrasoDoRastro, duracaoDoRastro, reduzir, rastro]);
 
   useEffect(() => {
     if (!desenhar || reduzir === null) return;
@@ -1065,7 +1341,11 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0 }: {
         const { width, height } = evento.nativeEvent.layout;
         setCaixa((anterior) => anterior?.largura === width && anterior.altura === height ? anterior : { largura: width, altura: height });
       }}>
-      {desenho.base.map((estilo, indice) => <View key={`b${indice}`} style={[caminhoEstilos.camada, estilo]} />)}
+      {desenho.base.map((estilo, indice) => surgir ? (
+        <Animated.View key={`b${indice}`} style={[caminhoEstilos.camada, estilo, {
+          opacity: rastro.interpolate({ inputRange: [indice / desenho.base.length, (indice + 1) / desenho.base.length], outputRange: [0, 1], extrapolate: 'clamp' }),
+        }]} />
+      ) : <View key={`b${indice}`} style={[caminhoEstilos.camada, estilo]} />)}
       {desenho.verde.map((estilo, indice) => (
         <Animated.View key={`v${indice}`} style={[caminhoEstilos.camada, estilo, desenhar && {
           opacity: traco.interpolate({ inputRange: [indice / pedacos, (indice + 1) / pedacos], outputRange: [0, 1], extrapolate: 'clamp' }),
@@ -1080,7 +1360,9 @@ function Ligacao({ de, ate, feita, topo, chao, desenhar = false, alem = 0 }: {
  * o trecho foi vencido. Vem depois do nó na árvore, então o leitor de tela lê "Marco 1", "Marco 2"… logo depois do
  * último nó do trecho.
  */
-function Marco({ numero, vencido, topo, noAlto = false, children }: {
+function Marco({ numero, vencido, topo, noAlto = false, queda = false, children }: {
+  /** Geração: o marco de um trecho novo cai 12 px em 260 ms, antes da lição (com movimento reduzido, já aparece). */
+  queda?: boolean;
   numero: number;
   vencido: boolean;
   topo: number;
@@ -1088,11 +1370,26 @@ function Marco({ numero, vencido, topo, noAlto = false, children }: {
   noAlto?: boolean;
   children: ReactNode;
 }) {
+  const reduzir = useMovimentoReduzido();
+  const [chegada] = useState(() => new Animated.Value(queda ? 0 : 1));
+  useEffect(() => {
+    if (!queda || reduzir === null) return;
+    if (reduzir) {
+      chegada.setValue(1);
+      return;
+    }
+    const animacao = Animated.timing(chegada, { toValue: 1, duration: RITMO_DA_GERACAO.marcoMs, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+    // Só quando o marco nasce.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduzir]);
   return (
     <View pointerEvents="box-none" style={[caminhoEstilos.ligacao, caminhoEstilos.marcoArea, { top: topo }, noAlto && caminhoEstilos.marcoNoAlto]}>
-      <View accessible accessibilityRole="text" accessibilityLabel={vencido ? mensagens.trilha.marcoVencido(numero) : mensagens.trilha.marco(numero)}>
+      <Animated.View accessible accessibilityRole="text" accessibilityLabel={vencido ? mensagens.trilha.marcoVencido(numero) : mensagens.trilha.marco(numero)}
+        style={{ opacity: chegada, transform: [{ translateY: chegada.interpolate({ inputRange: [0, 1], outputRange: [-RITMO_DA_GERACAO.marcoQueda, 0] }) }] }}>
         {children}
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -1120,7 +1417,9 @@ function Parte({ numero, resumo, trecho }: { numero: number; trecho: number; res
 }
 
 /** Chegada: o topo do caminho, com o troféu numa colina e bandeiras; fica dourada quando todas as lições estão concluídas. */
-function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, extra = 0 }: {
+function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, extra = 0, doZero = false }: {
+  /** Fim da geração: o troféu entra de 0 a 1,1 e volta a 1 em 420 ms (com movimento reduzido, já aparece). */
+  doZero?: boolean;
   /** No celular, o morro continua por baixo do cartão flutuante (pontos a mais embaixo). */
   extra?: number;
   trecho: number;
@@ -1140,7 +1439,7 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
   // .caminho-chegada__lente: lente-base + 20.
   const tamanho = lente + 20;
   const reduzir = useMovimentoReduzido();
-  const [pop] = useState(() => new Animated.Value(festa ? 0.5 : 1));
+  const [pop] = useState(() => new Animated.Value(doZero ? 0 : festa ? 0.5 : 1));
   const [bolha, setBolha] = useState<string | null>(null);
   const [toques, setToques] = useState(0);
   useEffect(() => {
@@ -1150,7 +1449,23 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
   }, [bolha]);
 
   useEffect(() => {
-    if (!festa || reduzir === null) return;
+    if (!doZero || reduzir === null) return;
+    if (reduzir) {
+      pop.setValue(1);
+      return;
+    }
+    const entrar = Animated.sequence([
+      Animated.timing(pop, { toValue: 1.1, duration: Math.round(RITMO_DA_GERACAO.trofeuMs * 0.6), easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(pop, { toValue: 1, duration: Math.round(RITMO_DA_GERACAO.trofeuMs * 0.4), easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+    ]);
+    entrar.start();
+    return () => entrar.stop();
+    // Só quando a chegada nasce.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reduzir]);
+
+  useEffect(() => {
+    if (!festa || reduzir === null || doZero) return;
     if (reduzir) {
       pop.setValue(1);
       return;
@@ -1186,9 +1501,10 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
         )}
       </View>
       {stu && (
-        // Spec 13: `stu-comemorando` de 64 ao lado do troféu, na sombra de contato, parado (como a chegada da web).
+        // Spec 13: `stu-comemorando` de 64 ao lado do troféu, na sombra de contato, parado (como a chegada da web). No fim da
+        // geração (spec 04, "o Stu pula ao lado do troféu"), um ciclo da animação quando a trilha fica pronta.
         <View style={[caminhoEstilos.chegadaStu, { bottom: 74 + extra }]}>
-          <Stu nome="stu-comemorando" tamanho={64} sombra />
+          <Stu nome="stu-comemorando" tamanho={64} sombra animado={doZero ? 'acontecimento' : undefined} acontecimento={doZero ? 'pronta' : undefined} />
         </View>
       )}
       <Pressable accessibilityRole="button" accessibilityLabel={mensagens.trilha.trofeu} disabled={total === 0 && !feita}
@@ -1436,6 +1752,13 @@ const caminhoEstilos = StyleSheet.create({
   skeletonNo: { backgroundColor: 'rgba(255, 255, 255, 0.75)' },
   skeletonNoSombra: { position: 'absolute', top: 8, backgroundColor: 'rgba(255, 255, 255, 0.45)' },
   vindoLente: { borderWidth: 3, borderStyle: 'dashed', borderColor: '#C3CDEE', backgroundColor: 'rgba(255, 255, 255, 0.7)' },
+  // Geração (spec 04): o anel azul da lição que nasce (.no--novo), as estrelinhas, o Stu que anda e o balãozinho "Mais uma!".
+  anelNovo: { position: 'absolute', zIndex: 2, borderWidth: 4, borderColor: '#9FB1F0', boxShadow: '0 0 0 8px rgba(37, 99, 255, 0.12)' },
+  estrelinha: { position: 'absolute', zIndex: 3, width: 8, height: 8, borderRadius: 4, backgroundColor: cores.ouro },
+  stuQueAnda: { position: 'absolute', left: 0, top: 0, zIndex: 3 },
+  maisUma: { position: 'absolute', bottom: '100%', marginBottom: 2, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12, backgroundColor: cores.fundo,
+    boxShadow: '0 3px 8px rgba(15, 23, 42, 0.15)' },
+  maisUmaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   vindoPlaca: { width: 144, gap: 8 },
   vindoPlacaDireita: { alignItems: 'flex-end' },
   vindoTitulo: { width: '80%', height: 14, borderRadius: 8, backgroundColor: cores.gelo },
