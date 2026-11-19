@@ -210,3 +210,12 @@ test('a engrenagem alinha pelo centro com "Compartilhar": com o botão, os 10 de
   // Sem nenhum dos dois botões, a fileira nem aparece.
   assert.match(estudo, /\{\(comCompartilhar \|\| configurar\) && \(/);
 });
+
+test('salvar um campo alterado toca "salvo" (spec 12); a capa toca pelo aviso "Capa salva."', () => {
+  const salvar = app.slice(app.indexOf('async function salvar('), app.indexOf('} catch (falha) {', app.indexOf('async function salvar(')));
+  assert.match(salvar, /marcar\(campo, 'salvo'\);[\s\S]*if \(campo !== 'capa'\) void tocaSons\.tocarEfeito\('salvo'\);/);
+  // Só chega ao salvar com mudança: o nome e a descrição comparam com o que está salvo; o tema, com o tema atual.
+  assert.match(app, /if \(normal === salvo\.titulo\) \{/);
+  assert.match(app, /if \(normal === \(salvo\.descricao \?\? ''\)\) return;/);
+  assert.match(app, /if \(!desativado && conf\.tema !== tema\) void salvar\('tema', \{ tema \}\);/);
+});
