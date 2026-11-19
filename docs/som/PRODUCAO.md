@@ -4,6 +4,8 @@
 Vale para `public/sons/` (web) e `apps/mobile/assets/sons/` (app), que são byte a byte iguais.
 A regra de onde o som toca e como a pessoa controla continua na [spec 12](../specs/12-som.md).
 
+**Decisão do dono (19/11):** só o Lo-fi de Estudo (`lofi_estudo`, versão de d5bf5aa) toca, em laço, no app inteiro, com os efeitos por cima, sem parar nem baixar a música. Os outros quatro arranjos ficam aqui como registro de produção e não são oferecidos na folha "Som". Recomendação do Designer: tirá-los do pacote do app e de `public/` (são uns 3,5 MB), mantendo as fontes que geram tudo.
+
 ## O que foi consultado (e o que não foi)
 
 Referência de clima, com áudio do próprio compositor (Ambrose Yu, para o Duolingo):
@@ -41,7 +43,7 @@ O que tirei disso, e que está no resultado: tema em laço com frase cantável, 
 
 Todos com 873 KB (limite de 1 MB), pico entre −4,7 e −11,9 dBFS e −24,3 a −24,7 dBFS RMS.
 
-**Onde cada cue toca:** o fundo é um só no app inteiro depois da entrada (decisão do dono, spec 12); o que muda é o clima escolhido. Na entrada, na recuperação de senha e nas páginas públicas `/t` e `/p` não toca. Para a demonstração, o cue é `foco_calmo`: é o tema, e é o único que tem as quatro frases com contracanto.
+**Onde a música toca:** é uma só no app inteiro, depois da entrada (spec 12): o Lo-fi de Estudo, em laço. Na entrada, na recuperação de senha e nas páginas públicas `/t` e `/p` não toca.
 
 ## Emenda do laço
 
