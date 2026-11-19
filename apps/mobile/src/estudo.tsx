@@ -440,7 +440,7 @@ export function Estudo({ cliente, sair, expirar }: {
     setPendente('aceitar');
     setErro(null);
     setCriacao('criando');
-    tocaSons.tocarEfeito('toque_opcao');
+    // Sem som no toque: o único som da criação é o geracao_pronta, quando a trilha passa a existir (spec 12).
     anunciar(mensagens.geracao.anuncioCriando);
     let plano: PlanoDetalhe;
     try {
@@ -471,12 +471,18 @@ export function Estudo({ cliente, sair, expirar }: {
       navegar({ tipo: 'plano', plano });
       return;
     }
-    // t = 0: o som único da criação, o pulso do nó 1, o caminho que firma e a busca da lição, juntos.
-    const inicio = Date.now();
-    const reduzida = reduzirAgora.current !== false;
+    // A busca da lição começa já; a passagem começa quando a rolagem do toque até o nó 1 também terminou (no máximo 240 ms
+    // depois do toque), com o nó 1 parado e à vista (spec 04, d403f5a).
     let licao: LicaoDetalhe | null = null;
     let falhaLicao: unknown = null;
     const busca = cliente.obterLicao(primeira).then((dados) => { licao = dados; }, (falha: unknown) => { falhaLicao = falha ?? new ErroStudoo('falha'); });
+    if (fimDaRolagemNo1.current > Date.now()) {
+      await esperar(fimDaRolagemNo1.current - Date.now());
+      if (aceiteAtual.current !== vez) return;
+    }
+    // t = 0: o som único da criação, o pulso do nó 1 e o caminho que firma.
+    const inicio = Date.now();
+    const reduzida = reduzirAgora.current !== false;
     tocaSons.tocarEfeito('geracao_pronta');
     setCriacao('criada');
     setPassagem({ inicio, origem: null, reduzida, aulaNaTela: false });
@@ -485,7 +491,7 @@ export function Estudo({ cliente, sair, expirar }: {
     const medirNo1 = () => lenteDoNo1.current?.measureInWindow((x, y, largura, altura) => {
       if (largura > 0) setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, origem: { x: x + largura / 2, y: y + altura / 2 } } : atual));
     });
-    if (!reduzida) setTimeout(medirNo1, Math.max(inicio + RITMO_DA_GERACAO.circuloAtrasoMs - 20, fimDaRolagemNo1.current + 20) - Date.now());
+    if (!reduzida) medirNo1();
     const aulaNaTela = () => setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, aulaNaTela: true } : atual));
     // Aos 200 ms (com movimento reduzido, na hora), a aula monta embaixo do círculo; se a lição ainda não chegou, o esqueleto
     // dela. A camada some por cima dela a partir dos 320 ms, só depois que ela está na tela.
@@ -1550,11 +1556,12 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         {!ajustarFora && (
           <Animated.View style={dividir ? [estudoEstilos.metade, salvando || falhou ? {
             flexGrow: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
-            opacity: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+            // Ao voltar (no erro), só aparece quando a largura já voltou: numa linha, sem quebrar enquanto o outro encolhe.
+            opacity: saidaDoAjustar.interpolate({ inputRange: [0, 0.15, 1], outputRange: [1, 0, 0] }),
             marginRight: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [0, -12] }),
           } : null] : null}>
             <Botao rotulo={pronta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar} testID="voltar-pedido" variante="secundario"
-              desativado={ocupado} acao={pronta ? ajustar : cancelar} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
+              desativado={ocupado} acao={pronta ? ajustar : cancelar} estilo={dividir ? estudoEstilos.botaoDividido : undefined} umaLinha />
           </Animated.View>
         )}
         {!dividir && !pronta && (
