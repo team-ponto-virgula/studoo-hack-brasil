@@ -2,7 +2,7 @@
 
 ## Experiência
 
-Nas telas de topo, a web em celular e o app têm os destinos ao alcance do polegar, numa cápsula que flutua sobre o conteúdo ("Barra de abas em cápsula", abaixo): **Minhas trilhas** e **Nova trilha**, mais **Explorar** e **Perfil** quando o servidor liga a comunidade e o compartilhamento. A aba selecionada fica numa subcápsula, e o ícone anima uma vez. A navegação fica fora da aula, da apresentação e da geração, que têm suas próprias ações. Em desktop, a web mantém a barra lateral.
+Nas telas de topo, a web em celular e o app têm os destinos ao alcance do polegar: **Minhas trilhas** e **Nova trilha**, mais **Explorar** e **Perfil** quando o servidor liga a comunidade e o compartilhamento. A seleção tem fundo claro e uma animação curta no ícone. A barra passa a ser uma cápsula que flutua sobre o conteúdo, com a aba selecionada numa subcápsula; a regra está em "Barra de abas em cápsula", abaixo, e ainda está em implementação. A navegação fica fora da aula, da apresentação e da geração, que têm suas próprias ações. Em desktop, a web mantém a barra lateral.
 
 Em Minhas trilhas, **Seu próximo passo** destaca a primeira trilha em andamento na ordem da lista. Se nenhuma foi iniciada, destaca a primeira não concluída. **Retomar trilha** abre o caminho e permite continuar pela lição disponível. A contagem de lições concluídas soma os planos salvos; não é XP nem uma métrica inventada. Se todos foram concluídos, o destaque convida a revisar ou criar outro assunto.
 
@@ -18,7 +18,9 @@ Se a proposta tem o mesmo nome de uma trilha que a pessoa já tem, a tela avisa 
 - Na web, animações CSS são pausadas em abas ocultas. Movimento reduzido preserva conteúdo, progresso, seleção e ações sem os efeitos de movimento.
 - A entrada lateral das telas não cria rolagem horizontal temporária.
 
-## Barra de abas em cápsula (pedido do dono, 20/11)
+## Barra de abas em cápsula (pedido do dono, 19/11)
+
+**Estado:** regra de design, em implementação na web e no app; ainda sem validação no aparelho.
 
 **Pedido do dono.** A barra de baixo deve parecer a do WhatsApp: uma cápsula só, que flutua acima da área de gesto, com espaço visível dos lados e embaixo, e a aba selecionada numa subcápsula. Os ícones e os textos são os do Studoo. No iPhone, o material é o Liquid Glass do sistema quando o aparelho tem. A captura que ele mandou não entra no repositório; esta descrição basta.
 

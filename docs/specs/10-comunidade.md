@@ -477,7 +477,7 @@ Confirma o que está no ar: a aba Perfil nunca mostra o cartão "Como você quer
 **Salvar com botão** (não salva sozinho). O nome é público e só vale completo: salvar campo a campo mostraria nomes pela metade nas trilhas compartilhadas.
 
 **Barra de salvar**, enquanto os campos estão abertos:
-- Presa no pé da tela, acima da barra de abas. No celular, ocupa a largura da tela; no computador, a largura do cartão. Com a barra de abas em cápsula (spec 05, 20/11), no celular ela vira um bloco que flutua 12 acima da cápsula, na largura dela, com 64 de altura e sem a área segura dentro.
+- Presa no pé da tela, acima da barra de abas. No celular, ocupa a largura da tela; no computador, a largura do cartão. Quando a barra de abas virar cápsula (spec 05, "Barra de abas em cápsula"), no celular ela passa a ser um bloco que flutua 12 acima da cápsula, na largura dela, com 64 de altura e sem a área segura dentro.
 - Altura de 72 (12 + botão de 48 + 12) mais a área segura; fundo branco e linha de 1 px #E1E7FA em cima.
 - Uma linha só: o estado à esquerda (Nunito 800, 14/18, até duas linhas) e os botões à direita, com 8 entre eles. Perfil vazio: só "Salvar" (primário, 120 de largura mínima). Editando: "Cancelar" (secundário) e "Salvar" (primário), com 104 de largura mínima cada abaixo de 400 px e 120 acima.
 
