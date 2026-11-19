@@ -727,10 +727,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               {/* O marcador fica no bloco, não numa frase: a referência é da lição inteira (não garante o apoio de uma frase). */}
               {!!licao.referencias?.length && (
                 <View style={licaoEstilos.marcadores}>
-                  <Text style={licaoEstilos.marcadoresTexto}>{mensagens.estudio.baseadoMaterial}</Text>
+                  {/* Trilha recebida feita de material (spec 09): "Baseado no material de Ana", nunca "seu material", como na web. */}
+                  <Text style={licaoEstilos.marcadoresTexto}>{licao.materialDe ? mensagens.compartilhar.baseadoMaterialDe(licao.materialDe) : mensagens.estudio.baseadoMaterial}</Text>
                   {licao.referencias.map((_, numero) => (
                     <Pressable key={numero} testID={`citacao-${numero + 1}`} accessibilityRole="button"
-                      accessibilityLabel={`${mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }} aria-expanded={citacaoAberta === numero}
+                      accessibilityLabel={`${licao.materialDe ? mensagens.compartilhar.fonteMaterialDe(licao.materialDe) : mensagens.estudio.fonteMaterial} ${numero + 1}`} accessibilityState={{ expanded: citacaoAberta === numero }} aria-expanded={citacaoAberta === numero}
                       onPress={() => mostrarCitacao(numero)}
                       hitSlop={{ top: 10, bottom: 10, left: 5, right: 5 }}
                       style={({ pressed }) => [licaoEstilos.marcador, citacaoAberta === numero && licaoEstilos.marcadorAberto, pressed && { opacity: 0.8 }]}>
@@ -743,7 +744,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             </ExplicacaoDoStu>
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (
               <View onLayout={(evento) => { citacaoY.current = evento.nativeEvent.layout.y; }}>
-                <CartaoFonte ref={cartaoCitacao} referencia={licao.referencias[citacaoAberta]} numero={citacaoAberta + 1} />
+                <CartaoFonte ref={cartaoCitacao} referencia={licao.referencias[citacaoAberta]} numero={citacaoAberta + 1} materialDe={licao.materialDe} />
               </View>
             )}
             {/* Como na web (rodada 4E): o recurso visual da lição também no conceito, de qualquer tipo. */}
@@ -1021,8 +1022,10 @@ function StuDoExercicio({ estado }: { estado: EstadoStu }) {
  * A fonte da lição em destaque (o trecho exato do material, com página, parágrafo ou linha), como o cartão da web:
  * o número do marcador, o material, o selo de demonstração quando o material é simulado e a leitura por OCR.
  */
-export function CartaoFonte({ referencia, numero, ref, titulo, parado = false }: {
+export function CartaoFonte({ referencia, numero, ref, titulo, parado = false, materialDe }: {
   referencia: NonNullable<LicaoDetalhe['referencias']>[number];
+  /** Cópia de uma trilha feita de material (spec 09): "Fonte do material de Ana" no lugar de "Fonte do seu material". */
+  materialDe?: string | null;
   numero: number;
   ref?: Ref<ComponentRef<typeof View>>;
   /** Título pronto no lugar de "material · página" (a apresentação usa o exemplo do contrato, "Frações.pdf · pág. 2"). */
@@ -1032,10 +1035,11 @@ export function CartaoFonte({ referencia, numero, ref, titulo, parado = false }:
 }) {
   const entrada = useAparecer(0, 320, true);
   const m = mensagens.estudio;
+  const fonte = materialDe ? mensagens.compartilhar.fonteMaterialDe(materialDe) : m.fonteMaterial;
   const onde = titulo ?? `${referencia.nome} · ${referencia.localizacao ?? m.pagina(referencia.pagina)}`;
   return (
     <Animated.View ref={ref} testID="cartao-fonte" accessible accessibilityRole="summary"
-      accessibilityLabel={`${m.fonteMaterial} ${numero}. ${onde}. ${referencia.trecho}`}
+      accessibilityLabel={`${fonte} ${numero}. ${onde}. ${referencia.trecho}`}
       // .aula-citacao: borda de 2 (#c3cdf2) que fecha em volta e o degrau de 4 (gelo) por fora, como a sombra da web.
       style={[degrauFora(4, 20, cores.gelo), licaoEstilos.fonteFora, parado ? { marginTop: 0 }
         : { opacity: entrada, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
@@ -1045,7 +1049,7 @@ export function CartaoFonte({ referencia, numero, ref, titulo, parado = false }:
       {/* .aula-citacao__topo: linha que quebra, com 8 entre as linhas (o cartão tem 10 entre os blocos). */}
       <View style={licaoEstilos.fonteTopo}>
         <View style={licaoEstilos.fonteSeloNumero}>
-          <Text style={[licaoEstilos.fonteRotulo, caixaAlta]}>{`[${numero}] ${m.fonteMaterial}`}</Text>
+          <Text style={[licaoEstilos.fonteRotulo, caixaAlta]}>{`[${numero}] ${fonte}`}</Text>
         </View>
         <Text style={licaoEstilos.fonteOnde}>{onde}</Text>
         {referencia.leitura === 'demonstracao' && <SeloDemonstracao emLinha />}

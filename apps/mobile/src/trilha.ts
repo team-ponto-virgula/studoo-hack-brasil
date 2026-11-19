@@ -31,7 +31,9 @@ export function selosDoNo(no: NoCaminho): SeloDoNo[] {
   return selos;
 }
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
-  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'microfone';
+  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'microfone'
+  // Perfil e compartilhar (spec 09 e 10): desenhados em SVG com os mesmos traços da web (icone.tsx).
+  | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira' | 'bussola';
 
 /**
  * Próxima lição do caminho: a do primeiro trecho que ainda tem lição pendente.

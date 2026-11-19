@@ -1,4 +1,4 @@
-import { criarClienteStudoo, ErroStudoo, type EventoGeracao } from '@studoo/contratos';
+import { criarClienteStudoo, ErroStudoo, type EventoGeracao, type TransporteStudoo } from '@studoo/contratos';
 import { fetch } from 'expo/fetch';
 import * as SecureStore from 'expo-secure-store';
 import { codigoDaResposta, lerEventos } from './geracao-ao-vivo';
@@ -57,11 +57,14 @@ export async function apagarToken() {
   }
 }
 
-export function criarClienteNativo(token?: string) {
-  const cliente = criarClienteStudoo(async (caminho, opcoes) => {
+/** O transporte do app: a origem configurada, o tempo limite e, com sessão, o token no Authorization (sem cookie). */
+function transporteNativo(token?: string): TransporteStudoo {
+  return async (caminho, opcoes) => {
     const origem = origemConfigurada().origin;
     const controle = new AbortController();
-    const aceite = opcoes.method === 'POST' && (caminho === '/api/aprendizado/planos' || caminho.startsWith('/api/estudio/'));
+    // O aceite e o estúdio geram conteúdo; a foto do perfil sobe até 2 MB em base64: os três ganham o tempo longo.
+    const aceite = (opcoes.method === 'POST' && (caminho === '/api/aprendizado/planos' || caminho.startsWith('/api/estudio/')))
+      || (opcoes.method === 'PUT' && caminho === '/api/perfil/foto');
     const limite = setTimeout(() => controle.abort(), aceite ? tempoLimiteDoAceiteMs : tempoLimiteMs);
 
     try {
@@ -87,10 +90,18 @@ export function criarClienteNativo(token?: string) {
     } finally {
       clearTimeout(limite);
     }
-  });
+  };
+}
+
+export function criarClienteNativo(token?: string) {
+  const cliente = criarClienteStudoo(transporteNativo(token));
+  // /api/auth/config é pública e recusa pedido com Authorization (rotaPublica responde 401): vai sempre sem o token. Antes,
+  // com sessão, a configuração nunca chegava (o aviso do material ficava sem o provedor e o compartilhar não aparecia).
+  const semSessao = token ? criarClienteStudoo(transporteNativo()) : cliente;
 
   return {
     ...cliente,
+    configuracaoAcesso: semSessao.configuracaoAcesso,
     gerarTrilhaAoVivo: (objetivo: string, sinal: AbortSignal) => gerarTrilhaAoVivo(objetivo, sinal, token),
   };
 }
