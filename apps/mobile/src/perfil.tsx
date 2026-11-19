@@ -4,9 +4,10 @@ import * as ImagePicker from 'expo-image-picker';
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import {
   LADO_ENVIO_FOTO, LIMITES_FOTO, LIMITES_PERFIL, TEMAS, motivoNomeInvalido, motivoResumoInvalido, normalizarNomePerfil, normalizarResumoPerfil,
-  type CorPerfil, type LinkCompartilhado, type Perfil, type Tema,
+  type CartaoTrilha, type CorPerfil, type LinkCompartilhado, type Perfil, type Tema,
 } from '@studoo/contratos';
 import type { ClienteNativo } from './api-nativa';
+import { CartoesDoPerfil, FIM_COM_BARRA, NovidadesDoPerfil } from './comunidade';
 import { Icone } from './icone';
 import { Botao, Campo, CartaoConfirmacao, Tela, Titulo, estilos } from './interface';
 import { mensagens } from './mensagens';
@@ -53,10 +54,11 @@ function TituloSecao({ children }: { children: ReactNode }) {
 
 /**
  * Tela Perfil, como `TelaPerfil` da web: o cabeçalho novo (ou o convite para completar), as trilhas que a pessoa compartilha
- * (com o nível e "Visibilidade", que abre a folha, com a comunidade), o perfil público, a conta e "Sair". Os cartões "Como
- * aparece na sua página" usam o cartão com capa do Explorar e entram com ele (App-2).
+ * (com o nível e "Visibilidade", que abre a folha, com a comunidade), as Novidades e os cartões "Como aparece na sua página"
+ * (com a comunidade), o perfil público, a conta e "Sair".
  */
-export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMudarPerfil, aoMudarLink, abrirPlano, editar, sair, desativado }: {
+export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMudarPerfil, aoMudarLink, abrirPlano, editar, sair, desativado, aoAdicionado,
+  abrirPrevia, abrirPerfil }: {
   cliente: ClienteNativo;
   perfil: Perfil | null;
   comunidade: boolean;
@@ -67,6 +69,10 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   editar: () => void;
   sair: () => void;
   desativado: boolean;
+  /** Os cartões "Como aparece na sua página" (com a comunidade): as mesmas ações do Explorar. */
+  aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
+  abrirPrevia: (codigo: string) => void;
+  abrirPerfil: (perfilId: string) => void;
 }) {
   const [perfil, setPerfil] = useState<Perfil | null>(inicial);
   const [erro, setErro] = useState<string | null>(null);
@@ -75,6 +81,16 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   const [copiado, setCopiado] = useState('');
   const [statusPerfil, setStatusPerfil] = useState('');
   const [folha, setFolha] = useState<string | null>(null);
+  const [cartoes, setCartoes] = useState<CartaoTrilha[] | null>(null);
+  const assinaturaLinks = perfil?.links.map((link) => `${link.codigo}:${link.visibilidade ?? link.noPerfil}:${link.tema ?? ''}:${link.legenda ?? ''}`).join('|') ?? '';
+
+  // Os cartões como aparecem na página pública (com a comunidade e perfil público); recarrega quando os links mudam. Como a web.
+  useEffect(() => {
+    if (!comunidade || !perfil?.publico || !perfil.perfilId) { setCartoes(null); return; }
+    let ativo = true;
+    cliente.perfilPublico(perfil.perfilId).then((dados) => { if (ativo) setCartoes(dados.cartoes ?? null); }).catch(() => { if (ativo) setCartoes(null); });
+    return () => { ativo = false; };
+  }, [cliente, comunidade, perfil?.publico, perfil?.perfilId, assinaturaLinks]);
 
   useEffect(() => {
     let ativo = true;
@@ -122,7 +138,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   }
 
   return (
-    <Tela pagina="perfil" acoes={acoes}>
+    <Tela pagina="perfil" acoes={acoes} estiloConteudo={FIM_COM_BARRA}>
       <View style={perfilEstilos.painel}>
         <Titulo testID="titulo-perfil" foco estilo={perfilEstilos.titulo}>{p.titulo}</Titulo>
         {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{textoDoErro(erro)}</Text>}
@@ -193,6 +209,14 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                 )}
                 <Status texto={copiado} />
               </View>
+            )}
+
+            {/* Com a comunidade (spec 10, C2): as Novidades da semana e os cartões como aparecem na página, antes do perfil público. */}
+            {comunidade && !perfil.visitante && perfil.nome && <NovidadesDoPerfil cliente={cliente} abrirPlano={abrirPlano} />}
+
+            {cartoes && cartoes.length > 0 && (
+              <CartoesDoPerfil key={assinaturaLinks} cliente={cliente} inicial={cartoes} titulo={cm.naSuaPagina}
+                aoAbrir={abrirPlano} aoAdicionado={aoAdicionado} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfil} />
             )}
 
             {!perfil.visitante && perfil.nome && (
@@ -476,7 +500,7 @@ export function TelaEditarPerfil({ cliente, perfil, acoes, aoMudarPerfil, voltar
           </View>
 
           <View style={socialEstilos.interesses} accessibilityLabel={p.interessesRotulo}>
-            <Text style={[socialEstilos.legenda, { marginBottom: 4 }]}>{p.interessesRotulo}</Text>
+            <Text style={[socialEstilos.legenda, socialEstilos.legendaDoGrupo]}>{p.interessesRotulo}</Text>
             <Text style={socialEstilos.dica}>{p.interessesDica(LIMITES_PERFIL.interessesMax)} {p.interessesContador(interesses.length, LIMITES_PERFIL.interessesMax)}</Text>
             <View style={socialEstilos.fichas}>
               {TEMAS.map((tema) => (

@@ -24,8 +24,9 @@ import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NomeIcone } from './trilha';
 import { focoVisivel } from './foco';
 import { ouvirVoltar } from './voltar';
-import { AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
+import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
 import { TelaEditarPerfil, TelaPerfil } from './perfil';
+import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
 
 /*
  * Estudo no app, com os mesmos passos da web (src/app/estudo.tsx): a pessoa escreve o que quer aprender, a trilha é montada
@@ -43,9 +44,29 @@ type Etapa =
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao }
   // Perfis e compartilhar (spec 09 e 10): a tela Perfil e a tela Editar perfil, só com `compartilhar` no config.
   | { tipo: 'perfil' }
-  | { tipo: 'editarPerfil' };
+  | { tipo: 'editarPerfil' }
+  // Comunidade (spec 10, B e C2), só com `comunidade` no config: o Explorar e, dentro do app, o perfil de outra pessoa (a
+  // página /p da web) e a prévia de uma trilha (a página /t); `voltar` é a tela de onde a pessoa veio. `restaurar`: o
+  // Explorar volta como estava (aba, tema, lista e rolagem) quando a pessoa volta de um perfil ou de uma trilha.
+  | { tipo: 'explorar'; restaurar?: boolean }
+  | { tipo: 'perfilPublico'; perfilId: string; voltar: Etapa }
+  | { tipo: 'previaTrilha'; codigo: string; voltar: Etapa };
 
 type EtapaPlano = Extract<Etapa, { tipo: 'plano' }>;
+type Aba = 'planos' | 'objetivo' | 'plano' | 'perfil' | 'explorar';
+const ABAS: readonly string[] = ['planos', 'objetivo', 'plano', 'perfil', 'explorar'];
+
+/** A seção da barra de baixo de uma tela: o perfil de outra pessoa e a prévia ficam na seção de onde vieram. */
+function abaDe(etapa: Etapa): Etapa['tipo'] {
+  return etapa.tipo === 'perfilPublico' || etapa.tipo === 'previaTrilha' ? abaDe(etapa.voltar) : etapa.tipo;
+}
+
+/** Para onde o voltar leva de um perfil ou de uma prévia: o Explorar como estava; a trilha, sem repetir a festa nem o aviso. */
+function pontoDeVolta(origem: Etapa): Etapa {
+  if (origem.tipo === 'explorar') return { tipo: 'explorar', restaurar: true };
+  if (origem.tipo === 'plano') return { tipo: 'plano', plano: origem.plano };
+  return origem;
+}
 type Acao = 'aceitar' | 'plano' | 'abrir' | 'avaliar' | 'concluir' | 'sair' | 'apagar';
 type Resultado<T> = { ok: true; dados: T } | { ok: false; codigo: string };
 
@@ -117,6 +138,9 @@ export function Estudo({ cliente, sair, expirar }: {
   const [folha, setFolha] = useState<string | null>(null);
   const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
   const registrarGuarda = useCallback((guarda: ((continuar: () => void) => boolean) | null) => { guardaSaida.current = guarda; }, []);
+  /** O Explorar como a pessoa deixou ao abrir um perfil ou uma trilha dele (aba, tema, lista e rolagem). */
+  const memoriaExplorar = useRef<MemoriaExplorar | null>(null);
+  const guardarExplorar = useCallback((memoria: MemoriaExplorar) => { memoriaExplorar.current = memoria; }, []);
 
   useEffect(() => {
     let ativo = true;
@@ -218,6 +242,7 @@ export function Estudo({ cliente, sair, expirar }: {
       }
       else if (etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
       else if (etapa.tipo === 'editarPerfil') navegar({ tipo: 'perfil' });
+      else if (etapa.tipo === 'perfilPublico' || etapa.tipo === 'previaTrilha') navegar(etapa.voltar);
       else navegar({ tipo: 'planos' });
       return true;
     }, etapa.tipo !== 'planos');
@@ -442,6 +467,15 @@ export function Estudo({ cliente, sair, expirar }: {
   }
   const abrirFolha = compartilhar ? (planoId: string) => setFolha(planoId) : undefined;
 
+  /** O perfil de outra pessoa dentro do app (o /p da web): pela foto e nome do cartão, "Ver o perfil de" e "Compartilhada por". */
+  function abrirPerfilPublico(perfilId: string) {
+    abrir({ tipo: 'perfilPublico', perfilId, voltar: pontoDeVolta(etapaAtual.current) });
+  }
+  /** A prévia de uma trilha dentro do app (o /t da web): pelo título do cartão. */
+  function abrirPrevia(codigo: string) {
+    abrir({ tipo: 'previaTrilha', codigo, voltar: pontoDeVolta(etapaAtual.current) });
+  }
+
   /** Abre a lição guardando qual nó está abrindo, para o caminho e o próximo passo mostrarem "Abrindo…". */
   async function abrirLicao(plano: PlanoDetalhe, id: string) {
     if (emCurso.current) return;
@@ -465,10 +499,14 @@ export function Estudo({ cliente, sair, expirar }: {
     return false;
   }
 
-  const comNavegacaoAgora = planos !== null && planos.length > 0 && ['planos', 'objetivo', 'plano', 'perfil'].includes(etapa.tipo) && !pendente;
+  // Como a web: a barra de baixo nas telas de seção com trilhas salvas e, com a comunidade, sempre no Explorar (e no perfil ou
+  // na prévia abertos dele).
+  const aba = abaDe(etapa);
+  const comNavegacaoAgora = planos !== null && !pendente && ((planos.length > 0 && ABAS.includes(aba)) || (comunidade && aba === 'explorar'));
+  const telaDaComunidade = ['explorar', 'perfilPublico', 'previaTrilha'].includes(etapa.tipo);
   const acoes = (
     <>
-      {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil'].includes(etapa.tipo) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
+      {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
         desativado={ocupado} acao={() => abrir({ tipo: 'planos' })} />}
       {/* Com o compartilhar (como a web): "Sair" fica no Perfil; no alto, "Perfil" só onde não há a barra de baixo. */}
       {compartilhar
@@ -484,11 +522,15 @@ export function Estudo({ cliente, sair, expirar }: {
   const carregandoInicio = !planos && !erro;
   const comNavegacao = (carregandoInicio && tinhaTrilhas) || comNavegacaoAgora;
   return <NavegacaoContexto.Provider value={comNavegacao ? {
-    atual: etapa.tipo as 'planos' | 'objetivo' | 'plano' | 'perfil', ocupado,
+    atual: aba as Aba, ocupado,
     planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
+    explorar: comunidade ? () => abrir({ tipo: 'explorar' }) : undefined,
     perfil: compartilhar ? () => abrir({ tipo: 'perfil' }) : undefined,
   } : null}>
-    {renderizarTela()}
+    {/* Os nomes de quem compartilhou (marcas, prévia, cartões) abrem o perfil dela dentro do app, como os links /p da web. */}
+    <AbrirPerfil.Provider value={compartilhar ? abrirPerfilPublico : null}>
+      {renderizarTela()}
+    </AbrirPerfil.Provider>
     {folha && (
       <FolhaCompartilhar cliente={cliente} planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade}
         aoFechar={() => setFolha(null)} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
@@ -557,7 +599,26 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'perfil') {
       return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
-        editar={() => abrir({ tipo: 'editarPerfil' })} sair={pedirParaSair} />;
+        editar={() => abrir({ tipo: 'editarPerfil' })} sair={pedirParaSair}
+        aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} />;
+    }
+
+    if (etapa.tipo === 'explorar' && comunidade) {
+      return <TelaExplorar cliente={cliente} acoesTela={acoes} memoria={etapa.restaurar ? memoriaExplorar.current : null} guardar={guardarExplorar}
+        aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
+        abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} irParaTrilhas={() => abrir({ tipo: 'planos' })} />;
+    }
+
+    if (etapa.tipo === 'perfilPublico') {
+      return <TelaPerfilPublico key={etapa.perfilId} cliente={cliente} perfilId={etapa.perfilId} acoesTela={acoes}
+        aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
+        abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} criarTrilha={() => abrir({ tipo: 'objetivo' })} />;
+    }
+
+    if (etapa.tipo === 'previaTrilha') {
+      return <TelaPreviaTrilha key={etapa.codigo} cliente={cliente} codigo={etapa.codigo} acoesTela={acoes}
+        aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
+        criarTrilha={() => abrir({ tipo: 'objetivo' })} />;
     }
 
     if (etapa.tipo === 'editarPerfil' && perfil && !perfil.visitante) {
@@ -570,8 +631,12 @@ export function Estudo({ cliente, sair, expirar }: {
         aviso={etapa.tipo === 'planos' && planos?.length === 0 ? mensagens.planos.semTrilhas : aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
         verPlanos={() => abrir({ tipo: 'planos' })} comoFunciona={() => abrir({ tipo: 'apresentacao', primeiraVez: false })}
-        porLink={compartilhar ? <AdicionarPorLink cliente={cliente} ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)}
-          abrirPlano={(id) => void abrirPlano(id)} /> : undefined} />;
+        porLink={compartilhar ? <>
+          <AdicionarPorLink cliente={cliente} ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)}
+            abrirPlano={(id) => void abrirPlano(id)} />
+          {/* Com a comunidade: "Ver trilhas da comunidade", logo abaixo, como na web. */}
+          {comunidade && <IrAoExplorar ocupado={ocupado} acao={() => abrir({ tipo: 'explorar' })} />}
+        </> : undefined} />;
     }
 
     // Como na web (rodada 4F): enquanto as trilhas chegam, o esqueleto do mapa (quem tem trilha cai no mapa logo depois).
