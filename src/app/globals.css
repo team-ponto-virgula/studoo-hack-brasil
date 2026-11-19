@@ -309,7 +309,8 @@ button, input, textarea { font: inherit; }
   display: grid;
   min-height: 100vh;
   min-height: 100svh;
-  grid-template-columns: clamp(216px, 21vw, 276px) minmax(0, 1fr);
+  --largura-menu: clamp(216px, 21vw, 276px);
+  grid-template-columns: var(--largura-menu) minmax(0, 1fr);
 }
 
 /* Na tela larga, a barra lateral fica parada enquanto a página rola: marca e navegação continuam à vista em trilhas longas. */
