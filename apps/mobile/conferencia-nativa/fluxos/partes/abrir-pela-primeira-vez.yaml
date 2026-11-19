@@ -14,23 +14,22 @@ appId: host.exp.Exponent
       visible: "Open"
     commands:
       - tapOn: "Open"
-# O primeiro carregamento baixa o pacote do Metro e as fontes.
+# O primeiro carregamento baixa o pacote do Metro e as fontes: até 4 minutos para o app, ou o menu do Expo Go, aparecer.
+# O menu, se vier, é tratado antes de esperar a entrada.
+- runFlow:
+    file: sair-do-menu-do-expo-go.yaml
+    env:
+      ESPERA: "240000"
+# Fechado o menu, o app já está carregado por trás dele: a espera é curta.
 - extendedWaitUntil:
     visible:
       id: titulo-entrada
-    timeout: 240000
-# Algumas versões do Expo Go abrem o menu de desenvolvedor com uma apresentação na primeira vez que um projeto carrega.
-# Se ela aparecer, sai: "Continue" fecha a apresentação e um toque fora fecha o menu.
-- waitForAnimationToEnd:
-    timeout: 3000
+    timeout: 30000
+# Se o botão flutuante do Expo Go (a engrenagem azul, id "gearshape.fill") ficou sobre o app, ele sai em todas as
+# capturas: fica registrado numa imagem à parte, e o passo de coleta avisa no sumário.
 - runFlow:
     when:
-      visible: "Continue|Got it"
+      visible:
+        id: gearshape.fill
     commands:
-      - tapOn: "Continue|Got it"
-- runFlow:
-    when:
-      visible: "Reload|Go home|Go Home"
-    commands:
-      - tapOn:
-          point: 50%, 8%
+      - takeScreenshot: aviso-botao-do-expo-go

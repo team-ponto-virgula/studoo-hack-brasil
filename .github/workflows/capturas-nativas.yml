@@ -26,10 +26,11 @@ on:
 permissions:
   contents: read
 
-# Um envio novo no mesmo ramo substitui a conferência que ainda estiver rodando.
+# Uma conferência por vez no mesmo ramo. A que está rodando vai até o fim: cancelada no meio, ela não deixa capturas nem
+# registros, e a máquina gasta à toa. Um envio novo espera na fila (só o mais novo da fila fica).
 concurrency:
   group: capturas-nativas-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   iphone:
