@@ -370,3 +370,137 @@ Regras duradouras: nenhuma janela nativa do sistema ou do navegador (tudo do app
 - **Galeria:** 12 capas desenhadas em código (`CAPAS_GALERIA`, `svgCapaGaleria`, `svgCapa`); a padrão continua a de hoje. A capa aparece no cartão de Minhas trilhas (no lugar da ilustração), no alto do mapa, nos cartões do Explorar e do perfil, na página do link e na imagem de prévia. A cópia leva a capa da galeria.
 - **Tela:** entradas pelo menu "•••" (Compartilhar, Configurações, Apagar) e pela engrenagem no alto do mapa; seções Capa e nome, Quem pode ver (estado e "Mudar compartilhamento", que abre a folha de sempre) e Apagar trilha (confirmação do app). Cada campo salva ao sair dele, com "Salvo"; erro embaixo do campo; sem diálogo de sair sem salvar.
 - Testes em `tests/configuracoes-trilha.test.mjs`.
+
+## Revisão do dono (19/11): Curtir e perfil direto nos dados
+
+Revisão de design do que foi ao ar em `6122cc2` (lote 4: `59f95bb` perfil, `8502293` Valeu), a partir das capturas do iPhone do dono e das do site em 390 e 1440. Vale igual para web, Android e iPhone: o app espelha na mesma rodada. Tudo aqui é decisão de design, menos o que está marcado **(dono)**. Esboços: `ux/01-valeu-perfil` na pasta do Designer.
+
+### O que muda, do mais grave ao menos grave
+1. **(dono) O nome do gesto.** "Valeu" não passou no teste dos 3 segundos: o dono tocou e não soube o que fazia. Recomendação: **Curtir**. O coração já quer dizer "curtir" para quem usa qualquer rede no Brasil; "Valeu" é interjeição, soa como resposta ("ok, obrigado") e não como ação; os vizinhos do cartão são verbos (Quero estudar, Compartilhar, Denunciar, Seguir). O sentido de agradecer continua no aviso e nas Novidades. A troca é na constante `GESTO` e nos textos da tabela de textos (a palavra muda de gênero: "uma curtida").
+2. **Avatar com "?" no perfil vazio.** Sem nome e sem foto, o círculo mostra o desenho `pessoa` (44 px, branco, traço 2,5) na cor do perfil. A inicial aparece assim que o nome ganha uma letra.
+3. **"Tudo salvo" sem nada salvo.** Com nada mudado, a barra não mostra estado e "Salvar" fica desligado. "Tudo salvo" sai do editor: salvar fecha os campos e mostra o aviso do app "Perfil salvo.".
+4. **Alcance com zeros e ponto pendurado no fim da linha.** A linha vira uma fileira de números com até três colunas, só com os itens acima de zero, na dona e na página pública. Tudo zero: a fileira não aparece.
+5. **Confirmação de apagar sem título.** Título, texto e aviso do link em blocos separados (ver "Confirmação de apagar trilha").
+6. **Aviso a cada toque, em três linhas.** O aviso que explica o gesto aparece só na primeira curtida da pessoa naquele aparelho, com texto de duas linhas. Nas outras, o retorno é o coração e o número; o leitor de tela ouve a frase curta.
+7. **Curtido mais forte que a ação principal.** Marcado, o botão continua branco, com o contorno de 3:1; só o coração enche. Sai o fundo rosa com borda rosa (era o achado 25 da banca: "Continuar" perdia para o Valeu).
+8. **Nome acessível que muda e botão que desliga.** O nome fica fixo e o estado vem do `aria-pressed`. O botão não desliga durante o envio: acabam a piscada de opacidade e a perda de foco.
+9. **Bloco da foto pesado.** Saem a caixa tingida, a dica técnica ("JPG, PNG ou WebP, até 2 MB…", que nem vale antes do recorte) e o "Remover foto" solto no formulário. O "Remover foto" vai para o menu da foto.
+10. **Dois textos explicando a mesma coisa.** A frase de privacidade sobe para o alto dos campos, com um cadeado, no lugar de "É assim que as pessoas te veem…"; sob o nome fica uma dica curta.
+11. **Barra de salvar que quebra.** Em 390 e 360, o estado subia para cima do botão e a barra mudava de altura. Agora ela ocupa a largura da tela, numa linha só.
+12. **"Cancelar" perde o que foi digitado sem perguntar.** Com alteração, ele abre a mesma confirmação "Sair sem salvar?".
+13. **"Nova" some na primeira curtida e o cartão encolhe.** A linha de números tem altura fixa e mostra "N estudando" ou "Nova" (ninguém estudando). A curtida mora no botão e não mexe na linha.
+14. **Ações do perfil empilhadas.** "Editar" e "Compartilhar" ficam numa fileira só.
+
+### Curtir
+**Onde aparece.** No cartão de trilha: Explorar (Em alta, Novas, Seguindo), perfil de outra pessoa e prévia `/t`. Na trilha da própria pessoa não há botão: a contagem vai na linha de números ("5 estudando · 6 curtidas").
+
+**Anatomia** (igual nos três):
+- Botão de contorno com altura mínima de 44 (48 dp de toque no Android, como a P8), raio 14, contorno de 2 px #8792BD, fundo branco e 14 de folga dos lados. Ocupa o que sobra da fileira, ao lado de Compartilhar e "•••" (44×44), com 8 entre eles.
+- Por dentro: coração de 20 px (traço 2,5), 6 px de vão, "Curtir" (Nunito 800, 16/24, #1B2A5E). Com 1 curtida ou mais, 8 px de vão e o número (Nunito 800, 16/24, algarismos tabulares, #5E6A85). Sem curtidas, sem número.
+
+| Estado | Coração | Palavra e número | Fundo e contorno |
+|---|---|---|---|
+| Normal | contorno #1B2A5E | #1B2A5E e #5E6A85 | branco, #8792BD |
+| Curtido | cheio #D6336C (4,6:1) | #A3204A (7,3:1) | branco, #8792BD |
+| Pressionado | igual | igual | fundo #F1F4FD |
+| Foco pelo teclado | igual | igual | anel de 3 px #3858D6, afastado 2 px |
+| Enviando | o estado novo já aparece | igual | continua tocável |
+
+- **Erro de rede:** volta ao estado anterior e o aviso "Não deu para curtir agora. Confira a conexão e tente de novo.".
+- **Limite (429):** volta e o aviso "Muitas curtidas seguidas. Tente de novo daqui a pouco.".
+- **Sem sessão:** o toque leva à entrada e volta ao mesmo cartão já curtido (`?curtir=<código>`, aplicado uma vez).
+- **Conta temporária:** o aviso "Para curtir, entre com uma conta." com o botão "Entrar".
+- **Toques rápidos:** vale o último estado. Com um envio em andamento, o app guarda o estado desejado e, quando a resposta chega, manda de novo só se ainda for diferente.
+
+**Movimento.**
+- Ao curtir, o coração enche e cresce para 1,3× e volta em 280 ms (curva 0.2, 0.9, 0.3, 1.4). O número sobe: o antigo sai para cima e o novo entra por baixo, em 180 ms.
+- Ao descurtir, o coração esvazia em 120 ms, sem pulo, e o número desce.
+- Com movimento reduzido, a troca é na hora, sem pulo nem rolagem do número.
+
+**Aviso da primeira vez.**
+- É o aviso do app (nunca o do sistema) e aparece só na primeira curtida da pessoa no aparelho (`studoo.gestoExplicado` no localStorage; SecureStore no app).
+- Faixa no pé da tela, 16 acima da barra de abas, largura de até 480 com 16 de margem, raio 16, fundo #1B2A5E, coração cheio de 20 px à esquerda e texto branco (Nunito 800, 15/22).
+- Entra subindo 10 px em 220 ms (com movimento reduzido, só aparece) e some em 5 s. Um aviso por vez. Não recebe foco; tem papel de status.
+- Texto: "Caio vai ver sua curtida. Curtidas levam trilhas ao Em alta." (o primeiro nome de quem fez).
+
+**Desfazer.** Tocar de novo descurte. O aviso não tem "Desfazer": o próprio botão já faz isso, e um aviso com ação teria de receber foco.
+
+**Acessibilidade.**
+- Nome fixo: "Curtir “<título>”". Estado por `aria-pressed` (web) e `accessibilityState.selected` (app).
+- A contagem vai na descrição ("6 curtidas"; sem curtidas, nada): `aria-describedby` na web e `accessibilityValue` no app.
+- Ao curtir, a região viva diz "Você curtiu “<título>”."; ao descurtir, "Curtida retirada de “<título>”.". O aviso da primeira vez também é lido.
+
+**Textos finais.** A coluna "Valeu" vale só se o dono mantiver a palavra.
+
+| Onde | Curtir (recomendado) | Valeu (se o dono mantiver) |
+|---|---|---|
+| Botão | Curtir | Valeu |
+| Contagem | 1 curtida · 6 curtidas | 1 valeu · 6 valeus |
+| Nome acessível | Curtir “X” | Mandar valeu para “X” |
+| Ao marcar (leitor de tela) | Você curtiu “X”. | Valeu enviado para “X”. |
+| Ao desmarcar (leitor de tela) | Curtida retirada de “X”. | Valeu retirado de “X”. |
+| Aviso da primeira vez | Caio vai ver sua curtida. Curtidas levam trilhas ao Em alta. | Caio vai ver seu valeu. Valeus levam trilhas ao Em alta. |
+| Erro de rede | Não deu para curtir agora. Confira a conexão e tente de novo. | Não deu para mandar o valeu agora. Confira a conexão e tente de novo. |
+| Limite | Muitas curtidas seguidas. Tente de novo daqui a pouco. | Muitos valeus seguidos. Tente de novo daqui a pouco. |
+| Conta temporária | Para curtir, entre com uma conta. | Para mandar valeu, entre com uma conta. |
+| Faixa sem conta (Explorar) | Entre para estudar e curtir. | Entre para estudar e mandar valeu. |
+| Legenda do Em alta | As trilhas que mais gente começou e curtiu nos últimos 7 dias. | As trilhas que mais gente começou e mandou valeu nos últimos 7 dias. |
+| Lista da dona, sem ninguém | Ainda sem ninguém estudando e sem curtidas | Ainda sem ninguém estudando e sem valeus |
+| Novidades | Bia curtiu “Y” · Bia e mais 2 pessoas curtiram “Y” | Bia mandou um valeu em “Y” · Bia e mais 2 pessoas mandaram valeu em “Y” |
+| Novidades, vazio | Sem novidades nesta semana. Quando alguém começar ou curtir uma trilha sua, ou seguir você, aparece aqui. | Sem novidades nesta semana. Quando alguém começar uma trilha sua, mandar um valeu ou seguir você, aparece aqui. |
+
+### Perfil direto nos dados
+Confirma o que está no ar: a aba Perfil nunca mostra o cartão "Como você quer aparecer?". Sem nome, os campos já vêm abertos; com nome, o cabeçalho mostra o perfil como os outros veem, e "Editar" abre os mesmos campos ali mesmo, sem outra tela nem diálogo.
+
+**Ordem**, igual à do cabeçalho público: privacidade, foto, nome, resumo, interesses e cor.
+
+| Campo | Rótulo | Dica | Limite | Erro |
+|---|---|---|---|---|
+| Privacidade | — | Cadeado de 16 px e "Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu e-mail nunca aparece." (Nunito 700, 14/20, #5E6A85) | — | — |
+| Foto | "Adicionar foto" (sem foto) ou "Trocar foto" | "Opcional. Sem foto, aparece a inicial do seu nome." | o recorte regrava em JPEG quadrado de até 1024 px | "Não deu para abrir esta imagem. Tente outra foto." · 422: "Use uma foto JPG, PNG ou WebP de até 2 MB." · 429: "Você trocou de foto muitas vezes. Tente de novo daqui a pouco." |
+| Nome | "Seu nome" | "Nome ou apelido, de 2 a 40 caracteres." | 2 a 40 | vazio: "Escreva como você quer aparecer." · curto: "Use pelo menos 2 caracteres." · longo: "Use até 40 caracteres." · caracteres e endereço: os de hoje |
+| Resumo | "Resumo (opcional)" | "Uma frase sobre você e o que gosta de estudar." e o contador "0 de 160" | 160, uma linha | os de hoje |
+| Interesses | "Interesses (opcional)" | "Escolha até 5 · 2 escolhidos" | 5 | na sexta: "Você já escolheu 5. Desmarque um para trocar." |
+| Cor | "Cor do perfil" | "Pinta a faixa do perfil e a inicial, quando não há foto." | 6 cores | — |
+
+**Foto.**
+- Avatar de 96 com borda branca de 4 e o selo de câmera (40×40, #3858D6, borda branca de 3) no canto de baixo à direita. Ao lado, o link "Adicionar foto" ou "Trocar foto" (Nunito 800, 16, #3858D6) e a dica.
+- Tocar no avatar ou no link abre o menu de ações do Studoo (pedido 4): "Escolher da galeria", "Tirar foto" (só em tela de toque), "Remover foto" (só com foto, em vermelho, com a confirmação de hoje) e "Cancelar". Quando o menu teria uma opção só (computador, sem foto), o seletor de arquivo abre direto.
+- No app, galeria, câmera e recorte continuam os do sistema (P18). A foto salva na hora, pelo "Usar esta foto" do recorte, à parte do botão "Salvar".
+
+**Salvar com botão** (não salva sozinho). O nome é público e só vale completo: salvar campo a campo mostraria nomes pela metade nas trilhas compartilhadas.
+
+**Barra de salvar**, enquanto os campos estão abertos:
+- Presa no pé da tela, acima da barra de abas. No celular, ocupa a largura da tela; no computador, a largura do cartão.
+- Altura de 72 (12 + botão de 48 + 12) mais a área segura; fundo branco e linha de 1 px #E1E7FA em cima.
+- Uma linha só: o estado à esquerda (Nunito 800, 14/18, até duas linhas) e os botões à direita, com 8 entre eles. Perfil vazio: só "Salvar" (primário, 120 de largura mínima). Editando: "Cancelar" (secundário) e "Salvar" (primário), com 104 de largura mínima cada abaixo de 400 px e 120 acima.
+
+| Estado | Texto na barra | "Salvar" | O resto |
+|---|---|---|---|
+| Nada mudou | nenhum | desligado | perfil vazio: desenho de pessoa no avatar |
+| Mudou algo | "Alterações não salvas" (#9A5B00, bolinha de 8 px antes) | ligado | — |
+| Salvando | "Salvando…" (#5E6A85) | "Salvando…", com `aria-busy` | campos travados |
+| Erro de campo | "Confira os campos marcados." (#C23B4E, ícone de alerta) | ligado | borda de 2 px #C23B4E, mensagem sob o campo e foco no primeiro campo com erro |
+| Erro de rede | "Não deu para salvar. Confira a conexão e tente de novo." (#C23B4E) | ligado | os campos guardam o que foi digitado |
+| Salvo | — | — | os campos fecham, o cabeçalho mostra o perfil, o aviso do app diz "Perfil salvo." e o foco vai para "Editar" |
+| Sair ou cancelar com alteração | — | — | a confirmação "Sair sem salvar?", com o texto "As mudanças no nome, no resumo, nos interesses e na cor se perdem." e as ações "Continuar editando" e "Sair sem salvar", uma por linha (o rótulo não cabe na metade) |
+
+**Perfil preenchido.**
+- O cabeçalho continua como está: faixa, foto de 96 (112 no computador), nome, resumo e interesses.
+- Sem resumo, o convite "Conte em uma frase o que você gosta de estudar." abre os campos com o foco no resumo.
+- **Números:** fileira de até três colunas, com 24 entre elas. Cada coluna tem o número (Quicksand 700, 22/26, #1B2A5E) e, embaixo, o rótulo (Nunito 700, 13/18, #5E6A85): "trilha" ou "trilhas", "estudando", "seguidor" ou "seguidores". Só entram os itens acima de zero; com tudo zero, a fileira não aparece. O leitor de tela ouve uma frase só: "2 trilhas compartilhadas, 4 pessoas estudando suas trilhas, 3 seguidores".
+- **Ações** numa fileira, metade cada, com 44 de altura: "Editar" (lápis) e "Compartilhar" (só com perfil público; sem ele, "Editar" ocupa a fileira).
+
+**Paridade.** Mesma ordem, textos e medidas na web, no Android e no iPhone. Menu e confirmações são os componentes do Studoo (pedido 4); do sistema ficam só a galeria, a câmera com o pedido de permissão e o recorte (P18). Com a barra presa no pé da tela nos dois lados, a P21 da spec 07 deixa de ser diferença.
+
+### Confirmação de apagar trilha
+Título, texto e ações separados, no componente de confirmação do Studoo (medidas e movimento no pedido 4):
+- **Título** (Quicksand 700, 20/26, #1B2A5E): "Apagar “<título>”?".
+- **Texto** (Nunito 400, 16/24, #5E6A85). Sem progresso: "A trilha e as 7 lições saem da sua conta. Não dá para desfazer." Com progresso: "A trilha, as 7 lições e o seu progresso (3 concluídas) saem da sua conta. Não dá para desfazer."
+- **Com link**, um parágrafo à parte: "O link de compartilhamento desta trilha também deixa de funcionar."
+- **Ações**, metade cada, com 48 de altura: "Cancelar" (secundário, recebe o foco) e "Apagar" (fundo #C23B4E, texto branco, lábio #8F2A39).
+- Em toda confirmação, quando um rótulo não cabe na metade, as ações ficam uma por linha, na largura toda, com a segura em cima.
+
+### O que fica para o dono
+- Curtir ou Valeu.
+- Proposta: o botão de curtir também no mapa da trilha recebida, no bloco "Esta trilha é de <nome>". Quem chega ao fim de uma trilha é quem mais tem motivo para agradecer, e hoje ali não há o botão.
