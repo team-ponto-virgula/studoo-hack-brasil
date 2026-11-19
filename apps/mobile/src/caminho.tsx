@@ -223,6 +223,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const guiaNoCaminho = !montando && nos.some((no) => no.estado === 'atual');
   // Na criação, o Stu sai do troféu e vai para o lado do nó 1.
   const stuNaChegada = !montando && (tudoFeito || stuNoFim) && criacao === null;
+  // A trilha passou a existir (o aceite voltou): todos os nós perdem o tracejado da proposta junto com o caminho.
   const firmar = criacao === 'criada';
   // Na geração, o Stu fica do lado de fora da lição mais nova (ou da vaga, antes da primeira) e anda até a próxima.
   const [alvoStu, setAlvoStu] = useState<{ x: number; topo: number } | null>(null);
@@ -466,7 +467,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 <No no={no} posicao={posicaoDoNo(indice, total, montando)} x={x} largura={largura} comRotulo={comRotulo} medidas={medidas} reduzir={reduzir}
                   ocupado={ocupado} abrindo={abrindo === no.id} liberada={liberadas.includes(no.id)} recem={recem}
                   atrasoLiberacao={comRecem ? 860 : 0} guardar={(alvo) => { guardarAlvo(no.id, alvo); if (indice === 0) guardarNo1?.(alvo); }} tocar={() => tocar(no)}
-                  atrasoNome={novo ? atrasos.nome : undefined} rascunho={rascunho && no.estado === 'previa'}
+                  atrasoNome={novo ? atrasos.nome : undefined} rascunho={rascunho && no.estado === 'previa' && !firmar}
                   respira={indice === 0 && criacao === 'criando'} virouAtual={indice === 0 && firmar} />
               </Entra>
               {montando && <Nascimento x={x} largura={largura} lente={medidas.lente} atraso={atrasos.no} animar={novo} reduzir={reduzir} />}

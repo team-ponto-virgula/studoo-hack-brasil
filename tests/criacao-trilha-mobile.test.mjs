@@ -98,6 +98,8 @@ test('a passagem: som único, pulso do nó 1, círculo do nó 1 por cima e a aul
 test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mais uma!", estrelinhas nem contagem', () => {
   assert.match(caminho, /faceRascunho: \{ borderWidth: 2, borderStyle: 'dashed', borderColor: corRascunho \}/);
   assert.match(caminho, /const corRascunho = '#9CB4F5';/);
+  // No aceite, todos os nós perdem o tracejado junto com o caminho (revisão do Lead), não só o nó 1.
+  assert.match(caminho, /rascunho=\{rascunho && no\.estado === 'previa' && !firmar\}/);
   assert.doesNotMatch(caminho, /maisUma|estrelinha|comMaisUma/);
   const placa = trecho(estudo, 'function PlacaDaGeracao(', '\n}\n');
   assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao : mensagens\.geracao\.montandoTitulo/);
