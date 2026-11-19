@@ -158,6 +158,8 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
   const requisicoes = [];
   let ctxEstado = 'suspended';
 
+  let inicios = 0;
+  let liberarArquivo;
   class FakeAudioContext {
     get state() {
       return ctxEstado;
@@ -172,7 +174,7 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
       };
     }
     createBufferSource() {
-      return { buffer: null, loop: false, loopStart: 0, loopEnd: 0, connect() {}, start() {}, stop() {}, disconnect() {} };
+      return { buffer: null, loop: false, loopStart: 0, loopEnd: 0, connect() {}, start() { inicios++; }, stop() {}, disconnect() {} };
     }
     async resume() {
       ctxEstado = 'running';
@@ -187,7 +189,7 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
   const origFetch = globalThis.fetch;
 
   globalThis.window = {
-    AudioContext: FakeAudioContext,
+    webkitAudioContext: FakeAudioContext,
     localStorage: { getItem: () => null, setItem() {} },
     addEventListener(tipo, fn) {
       ouvintesWin.set(tipo, [...(ouvintesWin.get(tipo) ?? []), fn]);
@@ -199,6 +201,7 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
   };
   globalThis.fetch = async (url) => {
     requisicoes.push(url);
+    if (new URL(url, 'https://studoo.test').pathname.endsWith('/acerto.wav')) await new Promise(ok => { liberarArquivo = ok; });
     return { ok: true, arrayBuffer: async () => new ArrayBuffer(8) };
   };
 
@@ -214,8 +217,30 @@ test('Web tocaSons: (1) primeiro gesto desbloqueia e toca no mesmo clique; (2) s
     for (const fn of ouvintesWin.get('pointerdown') ?? []) fn();
     await tocaSons.tocarEfeito('valeu');
 
-    assert.ok(requisicoes.includes('/sons/sfx/valeu.wav'), 'no primeiro gesto, valeu.wav deve ser pedido imediatamente');
-    assert.ok(!requisicoes.includes('/sons/sfx/aviso.wav') || requisicoes.indexOf('/sons/sfx/valeu.wav') !== -1);
+    const efeitos = requisicoes.map(url => new URL(url, 'https://studoo.test'));
+    assert.ok(efeitos.some(url => url.pathname === '/sons/sfx/valeu.wav'), 'o primeiro gesto pede valeu.wav');
+    assert.ok(efeitos.every(url => url.searchParams.has('v')), 'pré-carga e reprodução usam a revisão dos arquivos');
+
+    assert.equal(inicios, 1);
+    for (const fn of ouvintesWin.get('touchend') ?? []) fn();
+    const frio = tocaSons.tocarEfeito('acerto');
+    await new Promise(ok => setTimeout(ok, 110));
+    liberarArquivo();
+    await frio;
+    assert.equal(inicios, 1, 'descarta a intenção antiga, mas deixa o buffer pronto');
+    await Promise.all([tocaSons.tocarEfeito('acerto'), tocaSons.tocarEfeito('acerto')]);
+    assert.equal(inicios, 2, 'dois disparos da mesma interação tocam uma vez');
+    assert.equal(requisicoes.filter(url => url.includes('/acerto.wav')).length, 1);
+
+    const escopo = tocaSons.sinalDosEfeitos;
+    tocaSons.entrarEmGravacaoOuVoz();
+    await tocaSons.tocarEfeito('erro');
+    tocaSons.sairDeGravacaoOuVoz();
+    await tocaSons.tocarEfeito('erro', escopo);
+    assert.equal(inicios, 2, 'o resultado de antes do microfone não toca ao sair da voz');
+    await tocaSons.definirEfeitosAtivos(false);
+    await tocaSons.tocarEfeito('erro');
+    assert.equal(inicios, 2, 'efeitos desligados');
   } finally {
     globalThis.window = origWindow;
     globalThis.document = origDoc;

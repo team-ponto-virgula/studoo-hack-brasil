@@ -285,6 +285,15 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const formulario = useRef<HTMLFormElement>(null);
   const continuarAgora = useRef<() => void>(() => undefined);
   const sairAgora = useRef<(peloVoltar?: boolean) => boolean>(() => false);
+  const envioAtual = useRef<AbortController | null>(null);
+  useEffect(() => {
+    tocaSons.prepararEfeitos('toque_opcao', 'ordenar_soltar', 'acerto', 'erro', 'ponte_abrir', 'gravacao_inicio', 'gravacao_fim');
+    return () => tocaSons.descartarEfeitosPendentes();
+  }, []);
+  useEffect(() => () => {
+    envioAtual.current?.abort();
+    envioAtual.current = null;
+  }, [passo, licao.id]);
 
   const etapa = etapas[passo];
   const indice = etapa.tipo === 'exercicio' ? etapa.indice : -1;
@@ -456,7 +465,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   // Atalhos: no exercício de escolha, 1, 2, 3… marcam a opção; depois do retorno, Enter continua.
   useEffect(() => {
     function teclas(evento: KeyboardEvent) {
-      if (evento.altKey || evento.ctrlKey || evento.metaKey) return;
+      if (evento.altKey || evento.ctrlKey || evento.metaKey || evento.repeat || ocupado) return;
       const alvo = evento.target instanceof HTMLElement ? evento.target : null;
       if (alvo?.closest('.estudio-apoio')) return;
       if (avaliacao) {
@@ -491,10 +500,16 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
 
   async function responder(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
-    if (ocupado || !exercicio || avaliacao || !respostaCompleta(exercicio, resposta, iniciais[indice])) return;
-    const resultado = await avaliar(resposta, indice);
-    if (!resultado) return;
-    void tocaSons.tocarEfeito(resultado.correta ? 'acerto' : 'erro');
+    if (ocupado || envioAtual.current || !exercicio || avaliacao || !respostaCompleta(exercicio, resposta, iniciais[indice])) return;
+    const envio = new AbortController();
+    envioAtual.current = envio;
+    const somDoEnvio = tocaSons.sinalDosEfeitos;
+    void tocaSons.tocarEfeito('toque_opcao');
+    const resultado = await avaliar(resposta, indice).finally(() => {
+      if (envioAtual.current === envio) envioAtual.current = null;
+    });
+    if (!resultado || envio.signal.aborted) return;
+    void tocaSons.tocarEfeito(resultado.correta ? 'acerto' : 'erro', somDoEnvio);
     setTentativas((soma) => soma + 1);
     setPrimeiras((atuais) => atuais.map((atual, posicao) => (posicao === indice ? atual ?? resultado.correta : atual)));
     setAvaliacoes((atuais) => atuais.map((atual, posicao) => (posicao === indice ? resultado : atual)));
