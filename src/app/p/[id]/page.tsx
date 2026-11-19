@@ -59,7 +59,7 @@ export default async function PaginaDoPerfil({ params }: Props) {
     return (
       <PaginaPublica>
         <section className="pagina-publica__vazio">
-          <Stu />
+          <Stu expressao={perfil === 'limite' ? 'stu-encorajador' : 'stu-surpreso'} tamanho={96} animado="uma-vez" />
           <h1>{perfil === 'limite' ? mensagens.erros.limite_compartilhar : p.inativo}</h1>
           {perfil === 'inativo' && <p className="folha-texto">{p.inativoTexto}</p>}
           <a className="botao botao--primario" href="/">{mensagens.compartilhar.criarMinha}</a>

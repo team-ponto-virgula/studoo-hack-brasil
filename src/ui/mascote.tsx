@@ -21,6 +21,68 @@ const ouvintesDaVez = new Set<() => void>();
 const pedirVez = (id: number) => { donoDaVez = id; ouvintesDaVez.forEach((ouvir) => ouvir()); };
 const largarVez = (id: number) => { if (donoDaVez === id) { donoDaVez = 0; ouvintesDaVez.forEach((ouvir) => ouvir()); } };
 
+/*
+ * Teto por tela (spec 13, §E6): depois que a tela fica interativa, no máximo 250 KB de animação. A tela é o painel em
+ * volta do Stu (`.painel`), ou a rota quando ele não está num painel; um painel novo começa do zero. Cada arquivo conta
+ * uma vez por tela. O que passar do teto fica na imagem parada.
+ */
+export const TETO_ANIMACAO_POR_TELA = 250_000;
+type GastoDaTela = { bytes: number; arquivos: Set<string> };
+const gastoPorPainel = new WeakMap<Element, GastoDaTela>();
+const gastoPorRota = new Map<string, GastoDaTela>();
+const gastoDaTela = (onde: Element | null): GastoDaTela => {
+  const painel = onde?.closest('.painel');
+  const novo = () => ({ bytes: 0, arquivos: new Set<string>() });
+  if (painel) {
+    if (!gastoPorPainel.has(painel)) gastoPorPainel.set(painel, novo());
+    return gastoPorPainel.get(painel)!;
+  }
+  const rota = window.location.pathname;
+  if (!gastoPorRota.has(rota)) gastoPorRota.set(rota, novo());
+  return gastoPorRota.get(rota)!;
+};
+/** Reserva um arquivo animado no teto da tela; falso se não cabe (aí fica a imagem parada). */
+export function reservarAnimacao(onde: Element | null, arquivo: string, bytes: number): boolean {
+  const gasto = gastoDaTela(onde);
+  if (gasto.arquivos.has(arquivo)) return true;
+  if (gasto.bytes + bytes > TETO_ANIMACAO_POR_TELA) return false;
+  gasto.bytes += bytes;
+  gasto.arquivos.add(arquivo);
+  return true;
+}
+/** O arquivo animado que a tela vai pedir: a menor densidade que cobre a da tela (até 2x), ou a maior que existe. */
+function animadoDaTela(nome: NomeStu, tamanho: number) {
+  const item = CATALOGO_STU[nome];
+  const faixa = faixaAnimadaDoStu(nome, tamanho);
+  if (!faixa || !item.animacao) return null;
+  const daFaixa = item.animacao.web.filter((arquivo) => arquivo.faixa === faixa).sort((a, b) => a.densidade - b.densidade);
+  const densidade = Math.min(2, Math.max(1, Math.ceil((window.devicePixelRatio || 1) - 0.25)));
+  return daFaixa.find((arquivo) => arquivo.densidade >= densidade) ?? daFaixa[daFaixa.length - 1] ?? null;
+}
+
+/**
+ * Carrega de antemão as animações de acontecimento de uma tela (a aula traz as três da reação, §E6), quando ela já está
+ * interativa e se a pessoa não pediu movimento reduzido nem economia de dados. Entram no teto da tela.
+ */
+export function precarregarAnimacoesStu(onde: Element | null, nomes: readonly NomeStu[], tamanho: number): () => void {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || economia()) return () => {};
+  const carregar = () => {
+    for (const nome of nomes) {
+      const arquivo = animadoDaTela(nome, tamanho);
+      if (!arquivo || !reservarAnimacao(onde, arquivo.arquivo, arquivo.bytes)) continue;
+      const imagem = new Image();
+      imagem.decoding = 'async';
+      imagem.src = `${PASTA_STU.web}/${arquivo.arquivo}`;
+    }
+  };
+  if (typeof window.requestIdleCallback === 'function') {
+    const pedido = window.requestIdleCallback(carregar, { timeout: 1500 });
+    return () => window.cancelIdleCallback(pedido);
+  }
+  const relogio = globalThis.setTimeout(carregar, 200);
+  return () => globalThis.clearTimeout(relogio);
+}
+
 /** Algum campo de texto da tela está com foco (a animação pausa, E4). */
 const campoEmFoco = () => {
   const ativo = document.activeElement;
@@ -142,6 +204,16 @@ export function Mascote({ expressao, tamanho, decorativo = true, prioridade = fa
 
   // Um por vez: quem começa a mexer pede a vez; ao parar, devolve.
   const mover = temAnimacao && quer && permitido && !desistiu;
+  // O arquivo da tela, reservado no teto dela antes de pedir (§E6); sem lugar, fica a imagem parada.
+  const [animado1, setAnimado1] = useState<{ arquivo: string } | null>(null);
+  // A mesma instância pode trocar de expressão (o pedido troca o Stu no lugar): reserva de novo.
+  useEffect(() => { setAnimado1(null); setDesistiu(false); }, [expressao, tamanho]);
+  useEffect(() => {
+    if (!mover || animado1) return;
+    const arquivo = animadoDaTela(expressao, tamanho);
+    if (arquivo && reservarAnimacao(caixa.current, arquivo.arquivo, arquivo.bytes)) setAnimado1({ arquivo: arquivo.arquivo });
+    else setDesistiu(true);
+  }, [mover, animado1, expressao, tamanho]);
   useEffect(() => {
     if (!temAnimacao) return;
     const ouvir = () => setComVez(donoDaVez === 0 || donoDaVez === id);
@@ -152,7 +224,7 @@ export function Mascote({ expressao, tamanho, decorativo = true, prioridade = fa
     if (!mover) { largarVez(id); return; }
     pedirVez(id);
   }, [mover, id, rodada]);
-  const mostrar = mover && comVez;
+  const mostrar = mover && comVez && animado1 !== null;
 
   // Um ciclo (ou `ciclos`) depois de carregar, nos modos que não são laço; e a desistência se não chegar em 3 s.
   useEffect(() => {
@@ -180,9 +252,9 @@ export function Mascote({ expressao, tamanho, decorativo = true, prioridade = fa
     <span ref={caixa} className={[sombra ? 'mascote-pe mascote-pe--sombra' : 'mascote-pe', className].filter(Boolean).join(' ')} style={style}
       data-mexendo={mostrar && carregado ? true : undefined}>
       {parado}
-      {mostrar && (
+      {mostrar && animado1 && (
         <img key={rodada} className="mascote__animado" data-mascote-animado={expressao} alt="" aria-hidden="true" decoding="async" draggable={false}
-          src={`${PASTA_STU.web}/${animados[0].arquivo}`} srcSet={animados.map((arquivo) => `${PASTA_STU.web}/${arquivo.arquivo} ${arquivo.densidade}x`).join(', ')}
+          src={`${PASTA_STU.web}/${animado1.arquivo}`}
           onLoad={() => setCarregado(true)} onError={() => setDesistiu(true)}
           style={{ position: 'absolute', left: `${esquerda}%`, top: `${topo}%`, width: `${larguraAnimada}%`, height: `${alturaAnimada}%`, maxWidth: 'none',
             pointerEvents: 'none', opacity: carregado ? 1 : 0, transition: 'opacity 120ms ease-out' }} />

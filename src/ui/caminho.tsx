@@ -593,7 +593,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               const faltam = nos.filter((no) => no.estado !== 'concluida').length;
               setAnuncio(tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.trofeuProgresso(total - faltam, total));
             }}>
-            <Icone nome="trofeu" />
+            {/* O troféu do kit (spec 13, §B4): em silhueta antes da conquista e em cor cheia depois, com o pop de hoje. */}
+            <Mascote expressao="acessorio-trofeu" tamanho={73} className="caminho-chegada__trofeu" />
             {(festaNaChegada || (comRecem && tudoFeito)) && <Confete quantidade={18} />}
             {trofeuTocado > 0 && (
               <span key={trofeuTocado} className="caminho-chegada__bolha" aria-hidden="true">

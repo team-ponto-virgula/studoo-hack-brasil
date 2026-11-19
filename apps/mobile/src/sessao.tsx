@@ -16,6 +16,7 @@ import { apagarTinhaTrilhas, lerTinhaTrilhas } from './preferencias';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { Paisagem } from './mundo';
 import { Stu } from './mascote';
+import { tocaSons } from './sons';
 import { cores, fontes } from './tema';
 
 const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,6 +35,14 @@ export function AppMobile() {
   useEffect(() => {
     void lerTinhaTrilhas().then(setTinhaTrilhas);
   }, []);
+  // O som (spec 12): as preferências ao abrir; o fundo só com a sessão ativa (depois da entrada), e para ao sair da conta.
+  useEffect(() => {
+    void tocaSons.carregarPreferencias();
+    return () => tocaSons.definirAreaPermitida(false);
+  }, []);
+  useEffect(() => {
+    tocaSons.definirAreaPermitida(sessao.tipo === 'ativa');
+  }, [sessao.tipo]);
 
   useEffect(() => {
     let ativo = true;
@@ -76,6 +85,7 @@ export function AppMobile() {
       await cliente.logout().catch(() => undefined);
       throw erro;
     }
+    void tocaSons.tocarEfeito('entrar');
     setSessao({ tipo: 'ativa', cliente });
   }
 
@@ -99,8 +109,17 @@ export function AppMobile() {
       return <Estudo cliente={sessao.cliente} sair={() => sair(sessao.cliente)} expirar={expirar} />;
     case 'entrada':
       return <Entrada erroInicial={sessao.erro} entrar={entrar}
-        google={async () => { const token = await entrarComGoogle(); if (token) setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) }); }}
-        visitante={async () => { const token = await entrarComoVisitante(); setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) }); }}
+        google={async () => {
+          const token = await entrarComGoogle();
+          if (!token) return;
+          void tocaSons.tocarEfeito('entrar');
+          setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
+        }}
+        visitante={async () => {
+          const token = await entrarComoVisitante();
+          void tocaSons.tocarEfeito('entrar');
+          setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
+        }}
         recuperar={(email) => setSessao({ tipo: 'recuperar', email })} />;
     case 'recuperar':
       return <RecuperarAcesso emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} />;

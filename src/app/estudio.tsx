@@ -142,7 +142,7 @@ export function MaterialParaTrilha({
     >
       {mostrarCabeca && (
         <div className="estudio-cabeca">
-          <Stu />
+          <Stu expressao="stu-feliz" tamanho={56} animado="uma-vez" />
           <div>
             <h2 id="material-titulo">{mensagens.inicio.materialTitulo}</h2>
             <p>{mensagens.inicio.materialTexto}</p>
@@ -809,7 +809,8 @@ export function ApoioDaLicao({
           >
             <div className="ponte-margem ponte-margem--esquerda">
               <div className="ponte-stu" ref={stuOrigemRef} data-atravessou={atravessando || undefined}>
-                <Stu />
+                {/* De perfil atravessando a tábua (laço só na travessia); parado na margem antes dela. */}
+                <Stu expressao="stu-perfil" tamanho={44} animado={atravessando ? 'laco' : undefined} />
               </div>
               <span>{m.ponteMargemErro}</span>
             </div>
@@ -966,7 +967,15 @@ export function ApoioDaLicao({
           data-gravando={gravando || (etapaVoz === 'ativa' && estadoVoz.estado === 'ouvindo') || undefined}
           data-falando={etapaVoz === 'ativa' && estadoVoz.estado === 'stu_falando' ? 'true' : undefined}
         >
-          <Stu />
+          {/* Ouvindo: concentrado; falando: animado (laço enquanto dura); anotou: encorajador; aluno: curioso, parado. */}
+          {(() => {
+            const ouvindo = gravando || (etapaVoz === 'ativa' && estadoVoz.estado === 'ouvindo');
+            const falando = etapaVoz === 'ativa' && estadoVoz.estado === 'stu_falando';
+            if (ouvindo) return <Stu expressao="stu-concentrado" tamanho={56} animado="laco" />;
+            if (falando) return <Stu expressao="stu-animado" tamanho={56} animado="laco" />;
+            if (ensino) return <Stu expressao="stu-encorajador" tamanho={56} animado="acontecimento" acontecimento="anotou" />;
+            return <Stu expressao="stu-curioso" tamanho={56} />;
+          })()}
           <p className="ensino-stu__balao">
             {etapaVoz === 'ativa'
               ? m.vozAoVivo.estados[estadoVoz.estado]
@@ -1208,7 +1217,7 @@ export function ApoioDaLicao({
             </div>
             <div className="ensino-caderno__cartao ensino-caderno__pergunta" data-tipo="pergunta">
               <div className="ensino-caderno__stu" aria-hidden="true">
-                <Stu />
+                <Stu expressao="stu-concentrado" tamanho={48} />
                 <span className="ensino-caderno__duvida">?</span>
               </div>
               <div>

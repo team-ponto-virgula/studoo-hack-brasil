@@ -40,6 +40,7 @@ import { avisoVozVistoAgora, lerAvisoVozVisto, marcarAvisoVozVisto } from './pre
 import { cores, fontes } from './tema';
 import { iniciarControladorVozAoVivo, type ControladorVozAoVivo } from './voz-ao-vivo';
 import { focoVisivel } from './foco';
+import { tocaSons } from './sons';
 import {
   EntradaVozAoVivo, PainelVozAoVivo, PrivacidadeVozAoVivo, provedorDaGravacao, provedorDaVozAoVivo, type ClienteElegibilidadeVoz,
   type ProvedorTexto,
@@ -386,6 +387,21 @@ export function ApoioDaLicao({
   const [ensinar, setEnsinar] = useState(false);
   const [fontes, setFontes] = useState(false);
   const [gravando, setGravando] = useState(false);
+  // A gravação e o som (spec 12): o toca-sons entra antes do modo de áudio do microfone (não troca o modo nem toca outros
+  // efeitos enquanto isso), com o bipe de início; sai uma vez, depois de fechar, com o bipe de fim se o microfone abriu.
+  const somDaGravacao = useRef(false);
+  const entrarNoSomDaGravacao = () => {
+    if (somDaGravacao.current) return;
+    somDaGravacao.current = true;
+    tocaSons.entrarEmGravacaoOuVoz();
+    void tocaSons.tocarEfeito('gravacao_inicio');
+  };
+  const sairDoSomDaGravacao = (abriu: boolean) => {
+    if (!somDaGravacao.current) return;
+    somDaGravacao.current = false;
+    tocaSons.sairDeGravacaoOuVoz();
+    if (abriu) void tocaSons.tocarEfeito('gravacao_fim');
+  };
   const [segundos, setSegundos] = useState(0);
   const [aviso, setAviso] = useState('');
   // Com o metering, as ondas da gravação sobem com o volume real do microfone (OndasDoVolume).
@@ -402,18 +418,19 @@ export function ApoioDaLicao({
           .catch(() => {})
           .finally(() => {
             if (vivo.current) setGravando(false);
-            void setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+            void setAudioModeAsync({ allowsRecording: false }).catch(() => {}).finally(() => sairDoSomDaGravacao(true));
           });
       }
     });
     return () => {
       vivo.current = false;
       sub.remove();
+      const estavaGravando = ativo.current;
       if (ativo.current) {
         ativo.current = false;
         void gravador.stop().catch(() => {});
       }
-      void setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+      void setAudioModeAsync({ allowsRecording: false }).catch(() => {}).finally(() => sairDoSomDaGravacao(estavaGravando));
     };
   }, [gravador]);
   useEffect(() => {
@@ -464,6 +481,7 @@ export function ApoioDaLicao({
       const podeGravar = () =>
         vivo.current && AppState.currentState === 'active';
       if (!podeGravar()) return;
+      entrarNoSomDaGravacao();
       try {
         await setAudioModeAsync({
           allowsRecording: true,
@@ -485,6 +503,8 @@ export function ApoioDaLicao({
         if (!ativo.current) {
           await gravador.stop().catch(() => {});
           await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+          // O microfone não chegou a abrir: sai sem o bipe de fim.
+          sairDoSomDaGravacao(false);
         }
       }
     });
@@ -498,6 +518,7 @@ export function ApoioDaLicao({
       } finally {
         if (vivo.current) setGravando(false);
         await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+        sairDoSomDaGravacao(true);
       }
       if (!gravador.uri) throw new Error();
       const web = Platform.OS === 'web';
@@ -525,6 +546,15 @@ export function ApoioDaLicao({
     // Só a abertura e o fechamento avisam a lição.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ensinar]);
+  // Voz ao vivo (spec 12, como a web): com a conversa aberta, o fundo para e os outros efeitos esperam; ao fechar, o bipe de fim.
+  useEffect(() => {
+    if (etapaVoz !== 'ativa') return;
+    tocaSons.entrarEmGravacaoOuVoz();
+    return () => {
+      tocaSons.sairDeGravacaoOuVoz();
+      void tocaSons.tocarEfeito('gravacao_fim');
+    };
+  }, [etapaVoz]);
   // A opção de conversar aparece só na prévia web com a flag do servidor (e a de visitante, para visitante), como na web.
   // O aviso de privacidade já visto é lido aqui, antes do toque, para a conversa nascer dentro dele.
   useEffect(() => {

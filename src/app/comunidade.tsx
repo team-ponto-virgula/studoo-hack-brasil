@@ -463,7 +463,7 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
 
       {pagina && vazio && aba === 'seguindo' && (
         <div className="explorar__vazio">
-          <Stu />
+          <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
           <div>
             <h2 className="explorar__secao">{pagina.seguindoAlguem ? c.seguidosSemTrilhas : c.vazioSeguindoTitulo}</h2>
             {!pagina.seguindoAlguem && <p className="folha-texto">{c.vazioSeguindoTexto}</p>}
@@ -473,7 +473,7 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
       )}
       {pagina && vazio && aba === 'todos' && (
         <div className="explorar__vazio">
-          <Stu />
+          <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />
           <div>
             <h2 className="explorar__secao">{tema ? c.vazioTema(temas[tema]) : c.vazioTitulo}</h2>
             <p className="folha-texto">{tema ? c.vazioTemaTexto : c.vazioTexto}</p>

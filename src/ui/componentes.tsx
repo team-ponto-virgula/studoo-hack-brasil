@@ -1,4 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { NomeStu } from '@studoo/contratos';
+import { Mascote, type ModoAnimacaoStu } from './mascote';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 
 export function Logo({ decorativo = false }: { decorativo?: boolean }) {
@@ -11,8 +13,19 @@ export function Logo({ decorativo = false }: { decorativo?: boolean }) {
   );
 }
 
-export function Stu() {
-  return <img className="stu" src="/marca/stu-oi.svg" alt="" width={200} height={220} />;
+/**
+ * O Stu (spec 13): o mascote oficial, decorativo, com a classe `stu` que o CSS de cada lugar posiciona. `expressao` e
+ * `tamanho` pelo mapa de troca (§A2) e o modo de animação pela emenda (§E1); sem modo, a imagem parada.
+ */
+export function Stu({ expressao = 'stu-feliz', tamanho = 96, animado, acontecimento, ciclos, sombra = false }: {
+  expressao?: NomeStu;
+  tamanho?: number;
+  animado?: ModoAnimacaoStu;
+  acontecimento?: string | number;
+  ciclos?: number;
+  sombra?: boolean;
+} = {}) {
+  return <Mascote expressao={expressao} tamanho={tamanho} animado={animado} acontecimento={acontecimento} ciclos={ciclos} sombra={sombra} className="stu" />;
 }
 
 type BotaoProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -30,7 +43,7 @@ export function AcaoPrincipal({ children }: { children: ReactNode }) {
 export function EstadoErro({ codigo, children }: { codigo: string; children?: ReactNode }) {
   return (
     <div className="estado-erro">
-      <Stu />
+      <Stu expressao="stu-encorajador" tamanho={48} animado="uma-vez" />
       <div className="estado-erro__corpo">
         <p role="alert"><span className="sinal" aria-hidden="true">!</span>{textoErro(codigo)}</p>
         {children}

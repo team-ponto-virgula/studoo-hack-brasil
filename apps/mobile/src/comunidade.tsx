@@ -19,6 +19,7 @@ import {
 } from './social';
 import { cores, fontes } from './tema';
 import { Stu } from './mascote';
+import { tocaSons } from './sons';
 
 /*
  * Comunidade no app (spec 10, etapas B, C1 e C2), espelhando src/app/comunidade.tsx, src/app/seguir.tsx e a página /p da web
@@ -421,7 +422,8 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
     if (await gestoJaExplicado()) return;
     await marcarGestoExplicado();
     const primeiroNome = cartao.dono.nome.trim().split(/\s+/)[0] || cartao.dono.nome;
-    avisar(c.valeuAviso(primeiroNome), { icone: 'valeu', duracaoMs: 5000 });
+    // O gesto já tocou o seu som: o aviso entra calado.
+    avisar(c.valeuAviso(primeiroNome), { icone: 'valeu', duracaoMs: 5000, som: null });
   }
   const acoes: AcoesCartao = {
     ocupado,
@@ -448,6 +450,8 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
      */
     async valeu(cartao) {
       const ativo = !cartao.valeuMeu;
+      // O som do valeu só ao marcar (spec 12, como na web).
+      if (ativo) void tocaSons.tocarEfeito('valeu');
       setCartoes((atual) => (atual.codigo === cartao.codigo ? { ...atual, valeuMeu: ativo, valeus: Math.max(0, atual.valeus + (ativo ? 1 : -1)) } : atual));
       anunciar(ativo ? c.valeuEnviado(cartao.titulo) : c.valeuRetirado(cartao.titulo));
       if (ativo) void explicarNaPrimeiraVez(cartao);
@@ -780,6 +784,7 @@ export function BotaoSeguir({ cliente, perfilId, nome, estado, aoMudar }: {
 
   async function alternar() {
     const ativo = !seguindo;
+    if (ativo) void tocaSons.tocarEfeito('seguir');
     setOcupado(true);
     setSeguindo(ativo);
     try {

@@ -11,8 +11,9 @@ import ts from 'typescript';
 const fonte = await readFile(new URL('../apps/mobile/src/api-nativa.ts', import.meta.url), 'utf8');
 const codigo = ts.transpileModule(fonte, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
 
-function montar() {
+function montar({ semRede = false } = {}) {
   const pedidos = [];
+  const sons = [];
   class ErroStudoo extends Error {
     constructor(codigo) { super(codigo); this.codigo = codigo; }
   }
@@ -24,6 +25,7 @@ function montar() {
   });
   const fetch = async (url, opcoes) => {
     pedidos.push({ url, metodo: opcoes.method, headers: opcoes.headers });
+    if (semRede) throw new TypeError('Network request failed');
     return { status: 200, ok: true, json: async () => ({ ok: true }), headers: { get: () => 'application/json' } };
   };
   const exports = {};
@@ -37,12 +39,14 @@ function montar() {
         'expo/fetch': { fetch },
         'expo-secure-store': { WHEN_UNLOCKED_THIS_DEVICE_ONLY: 'x' },
         './geracao-ao-vivo': { codigoDaResposta: () => 'falha', lerEventos: async function* () {} },
+        // O toca-sons: só conta os efeitos (o erro de rede, numa ação sem rede).
+        './sons': { tocaSons: { tocarEfeito: async (id) => { sons.push(id); } } },
       };
       assert.ok(nome in modulos, `módulo sem dublê: ${nome}`);
       return modulos[nome];
     },
   });
-  return { ...exports, pedidos };
+  return { ...exports, pedidos, sons };
 }
 
 test('com sessão, a configuração vai sem o token e os outros pedidos vão com ele', async () => {
@@ -71,4 +75,13 @@ test('a foto do perfil vai pelo canal do app, com o token e sem cookie', async (
   assert.equal(foto.url, 'https://studoo.example.test/api/perfil/foto');
   assert.equal(foto.headers.Authorization, `Bearer ${'b'.repeat(43)}`);
   assert.equal(foto.headers.Cookie, undefined);
+});
+
+test('sem rede: numa ação da pessoa (pedido que não é GET) toca o erro de rede; nas leituras, nada (spec 12, como a web)', async () => {
+  const api = montar({ semRede: true });
+  const cliente = api.criarClienteNativo('a'.repeat(43));
+  await assert.rejects(() => cliente.listarPlanos());
+  assert.deepEqual(api.sons, [], 'a leitura falha calada');
+  await assert.rejects(() => cliente.enviarFoto('AAAA'));
+  assert.deepEqual(api.sons, ['erro_rede']);
 });

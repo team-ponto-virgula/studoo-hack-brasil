@@ -62,6 +62,13 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [brilho, setBrilho] = useState(0);
+  /** Lendo o material enviado: o Stu fica concentrado só quando a espera passa de 1 s (menos que isso, só o esqueleto). */
+  const [lendoDemorado, setLendoDemorado] = useState(false);
+  useEffect(() => {
+    if (!(modo === 'material' && ocupado)) { setLendoDemorado(false); return; }
+    const relogio = window.setTimeout(() => setLendoDemorado(true), 1000);
+    return () => window.clearTimeout(relogio);
+  }, [modo, ocupado]);
   const campo = useRef<HTMLTextAreaElement>(null);
   const focarBotaoCriar = useRef(false);
   const focouComTexto = useRef(false);
@@ -135,7 +142,13 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
       <header className="pedido-heroi">
         <div className="pedido-heroi__stu" aria-hidden="true">
           <span className="pedido-heroi__halo" />
-          <Stu />
+          {/* Convida: curioso, uma vez; escrevendo: encorajador, parado; ideia aplicada: animado, no acontecimento;
+              lendo o material: concentrado, em laço (spec 13, §A2, §B4 e §E1). */}
+          {lendoDemorado ? <Stu expressao="stu-concentrado" tamanho={96} animado="laco" />
+            : falha ? <Stu expressao="stu-encorajador" tamanho={96} />
+              : escolhida !== null && escolhida === texto ? <Stu expressao="stu-animado" tamanho={96} animado="acontecimento" acontecimento={brilho} />
+                : texto.length > 0 ? <Stu expressao="stu-encorajador" tamanho={96} />
+                  : <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />}
           <span className="pedido-heroi__estrela">✦</span>
         </div>
         <h1 tabIndex={-1}>{modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}</h1>
