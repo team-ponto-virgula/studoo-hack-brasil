@@ -2,7 +2,7 @@
 
 **Estado:** regra de design de 19/11, a partir do kit do dono ("troque todas as partes que têm o mascote e adicione os PNG, utilize o mascote no máximo de lugar que conseguir e deixe a UI e UX perfeita"). Vale igual para web, Android e iPhone. Parte A: arquivos, mapa de troca e nome. Parte B: lugares novos, paleta, logo, movimento, leitor de tela e ícones.
 
-O kit tem 31 PNG: a folha de personagem (3200×2180), a acolhida, 5 vistas, 8 expressões, 3 poses, 6 acessórios, o logo e 6 amostras de cor. As imagens do personagem e dos acessórios têm 1024×1024, fundo transparente e 260–420 KB cada. O mascote novo é o mesmo Stu de hoje (bolinha azul, topete, óculos), agora em volume e com expressões. Os originais não entram no repositório: os devs geram as versões leves desta tabela.
+O kit tem 31 PNG: a folha de personagem (3200×2180), a acolhida, 5 vistas, 8 expressões, 3 poses, 6 acessórios, o logo e 6 amostras de cor. As imagens do personagem e dos acessórios têm 1024×1024, fundo transparente e 260–420 KB cada. O mascote novo é o mesmo Stu de hoje (bolinha azul, topete, óculos), agora em volume e com expressões. Os originais entram no projeto como fonte, fora de qualquer pasta servida: PNG em `assets/mascote/originais` e GIF em `assets/mascote/originais-gif` (pedido do dono; decisão do Lead em 19/11). O script dos devs gera deles as versões leves desta tabela, e só elas vão para `public/` e para o pacote do app.
 
 ## A1. Arquivos
 
@@ -198,6 +198,7 @@ Modos: **laço** (repete enquanto está visível, com as pausas da §E4); **uma 
 - A animação só entra quando **lado na tela × densidade ≤ 330 px**, ou seja, até 165 px na web (tela 2x), 110 pt no app em tela 3x e 165 pt em tela 2x. Acima disso o GIF teria de ser ampliado e borra.
 - No celular, web e app usam o mesmo teto de 110 para os lugares animados: apresentação (160 → 110), Escrevendo suas lições (132×106 → 110×88), lição concluída (140 → 110) e 404 (120 → 110). Na tela larga da web valem os tamanhos da §A2 e §B4 até 165.
 - **XG (240) e entrada larga: PNG parado com o movimento da §B7.** Trilha concluída vira uma composição: `stu-celebrando` animado em 165 (110 no celular) no centro, com os raios girando e o confete desenhados em código atrás, como na spec 04. O PNG de 240 fica para movimento reduzido.
+- **No app, o animado existe só nas faixas P e M** (até 110 pt). Os lugares que pediriam G (lição concluída, Escrevendo suas lições, trilha concluída, apresentação) usam a M em 110, como manda o item acima.
 - **Pedido ao dono (recomendação):** `acolhida`, `celebrando` e `comemorando` em 720×720 px ou mais, em WebP animado ou APNG com transparência suave (alfa de 8 bits), no mesmo ritmo (cerca de 2,4 s em laço) e com o primeiro quadro igual à pose do PNG parado. Com eles, a XG e a entrada larga voltam a animar com nitidez.
 
 ### E3. Borda de um bit
@@ -231,4 +232,31 @@ Medido com o sharp (WebP animado, lanczos, qualidade 60 a 72, esforço 6): o `fe
 | 330 px | 240 KB | 400 KB |
 
 - **Por tela, na web:** a primeira imagem é sempre o PNG (tetos da §A1). Depois que a tela fica interativa, entram no máximo 250 KB de animação. A aula carrega só as três animações de acontecimento da reação (`feliz`, `comemorando` e `encorajador` em 96 px, até 210 KB); o resto vem quando for usado.
-- **No app:** todas as animações juntas pesam até 3,5 MB no pacote. Cada faixa leva só os tamanhos @2x e @3x, e cada imagem só as faixas em que aparece na §E1.
+- **No app:** teto de 5,5 MB para todas as animações no pacote (decisão do Lead em 19/11). Com P, M e G em @2x e @3x são 40 arquivos e 5,1 MB, medidos no 7f7ff01.
+- **Recomendação do Designer para cortar sem perder nitidez no iPhone 3x do dono:**
+  1. Tirar as 6 animações G (1,1 MB, só em @2x). Pela §E2 o animado do app vai até 110 pt, e num aparelho 3x elas seriam ampliadas 1,5 vez e borrariam.
+  2. No animado, só @3x. Aparelhos 2x usam o @3x reduzido, que fica nítido, ao custo de um pouco mais de memória ao decodificar.
+
+  Ficam P e M em @3x: 17 arquivos e 2,35 MB, e o teto de 3,5 MB volta a valer. Os PNG parados continuam com @2x e @3x.
+
+### E7. Folga em volta do Stu animado
+O GIF não é o PNG reduzido: o boneco ocupa uns 5% menos do quadro e, em quatro animações, sai dele. A camada animada fica por cima da parada e no mesmo lugar reservado, que não muda, mas precisa de folga. Medi a caixa do alfa somada de todos os quadros contra a do primeiro quadro:
+
+| Animação | Sai para cima | Sai para o lado |
+|---|---|---|
+| `comemorando` | 18% da altura | 4% da largura |
+| `celebrando` | 17% | 5% |
+| `animado` | 12% | 4% |
+| `surpreso` | 8% | 1% |
+| `acolhida` | 5% | 11% (o braço do aceno, à direita) |
+| as outras | até 2% | até 2% |
+
+- Nenhum pai do Stu animado corta: `overflow: visible` no quadro e nos contêineres que a folga atravessa; no app, sem `overflow: 'hidden'` nesses pais. Uma arte de cartão de borda arredondada que precisa cortar recebe só expressão que não pula (`feliz`).
+- Na folga não fica texto nem nada tocável. Ela pode passar por cima de fundo, cenário ou margem.
+- Folga por lugar:
+  - reação do exercício (48, `comemorando` e `animado`): 10 px livres acima do quadro;
+  - chegada do mapa (64, `comemorando`): 12 px acima;
+  - pedido, ideia aplicada (96, 72 ou 62, `animado`): 12 px acima, com o título fora dessa faixa;
+  - entrada no celular (76, `acolhida`): 10 px entre o quadro e a borda direita da faixa, que não corta;
+  - lição concluída, Lições prontas e trilha concluída (110 a 165): a folga cai sobre os raios e o confete, e não muda nada.
+- Onde a folga não couber, o lugar mostra a imagem parada no acontecimento, com o pulo da §B7.
