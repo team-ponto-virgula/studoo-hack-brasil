@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Animated, AppState, Easing, Image, Keyboard, PixelRatio, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, AppState, Easing, Image, Keyboard, PixelRatio, Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Asset } from 'expo-asset';
 import { Image as ImagemAnimada } from 'expo-image';
 import { CATALOGO_STU, faixaAnimadaDoStu, faixaDoStu, type NomeStu } from '@studoo/contratos';
 import { useMovimentoReduzido } from './movimento';
@@ -30,6 +31,15 @@ const ouvintesDoToque = new Set<() => void>();
 /** Um toque ou uma rolagem na tela: o laço que tinha parado por ociosidade volta a se mexer. */
 export function acordarMascote() {
   ouvintesDoToque.forEach((ouvir) => ouvir());
+}
+
+/**
+ * A fonte do WebP animado para o expo-image. No aparelho, o número do recurso basta: o React Native escolhe @2x ou @3x
+ * para a tela. Na prévia web, o expo-image pede a versão 1x, que não existe para o animado (só @2x e @3x): lá a densidade
+ * é escolhida antes, pelo expo-asset.
+ */
+function fonteDaAnimacao(modulo: number) {
+  return Platform.OS === 'web' ? { uri: Asset.fromModule(modulo).uri } : modulo;
 }
 
 /** Lado do quadro na tela e a altura pela proporção do recorte (para nada pular ao carregar). */
@@ -191,7 +201,7 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
       {mostrar && fonteAnimada && (
         <Animated.View style={{ position: 'absolute', left: (largura * esquerda) / 100, top: (altura * topo) / 100,
           width: (largura * larguraAnimada) / 100, height: (altura * alturaAnimada) / 100, opacity: entrada, transform: virar }}>
-          <ImagemAnimada key={rodada} source={fonteAnimada} contentFit="contain" autoplay accessible={false} style={StyleSheet.absoluteFill}
+          <ImagemAnimada key={rodada} source={fonteDaAnimacao(fonteAnimada)} contentFit="contain" autoplay accessible={false} style={StyleSheet.absoluteFill}
             onLoad={() => setCarregado(true)} onError={() => setDesistiu(true)} />
         </Animated.View>
       )}
