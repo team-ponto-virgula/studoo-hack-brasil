@@ -20,6 +20,7 @@ import { Botao, BotaoIcone, Campo, RolagemDaTela, degrade, estilos as estilosDaI
 import { mensagemDoCodigo, mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import { Stu } from './mascote';
+import { tocaSons } from './sons';
 import type { NomeIcone } from './trilha';
 
 /*
@@ -102,6 +103,8 @@ export async function compartilharNoSistema(titulo: string, texto: string, url: 
 export async function copiar(texto: string) {
   try {
     await Clipboard.setStringAsync(texto);
+    // Só links passam por aqui (trilha, perfil e convite): o som de link copiado (spec 12).
+    void tocaSons.tocarEfeito('link_copiado');
     return true;
   } catch {
     return false;

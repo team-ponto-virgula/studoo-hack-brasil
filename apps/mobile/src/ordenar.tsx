@@ -12,6 +12,7 @@ import { mensagens } from './mensagens';
 import { useMovimentoReduzido } from './movimento';
 import { cores, fontes } from './tema';
 import { destinoDoArrasto, moverEntreLivres, trocarDeLugar } from './ordenar-regras';
+import { tocaSons } from './sons';
 
 const t = mensagens.licao.ordenar;
 
@@ -113,8 +114,10 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
   function tocar(id: string) {
     // O soltar de um arrasto não vira toque.
     if (inativo || travados.has(id) || Date.now() - soltouEm.current < 300) return;
+    // Sons da spec 12: escolher toca o toque; a troca toca só o soltar (sem somar o toque).
     if (escolhido === null) {
       setEscolhido(id);
+      void tocaSons.tocarEfeito('toque_opcao');
       anunciar(t.avisoEscolhido(textoDe(id)));
       return;
     }
@@ -124,6 +127,7 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
     }
     animarLugares(240, true);
     aplicar(trocarDeLugar(ordem, escolhido, id));
+    void tocaSons.tocarEfeito('ordenar_soltar');
     brilhar(escolhido, id);
     anunciar(t.avisoTrocaram(textoDe(escolhido), textoDe(id)));
     setEscolhido(null);
@@ -137,6 +141,7 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
     const nova = moverEntreLivres(ordem, travados, id, indice + sentido);
     animarLugares(240, true);
     aplicar(nova);
+    void tocaSons.tocarEfeito('ordenar_soltar');
     brilhar(id);
     anunciar(t.avisoPosicao(textoDe(id), nova.indexOf(id) + 1, total));
   }
@@ -225,6 +230,8 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
     if (!atual) return;
     soltouEm.current = Date.now();
     const final = moverEntreLivres(atual.inicio, travados, atual.id, atual.destino);
+    // O som de soltar só numa posição nova (no mesmo lugar, nada).
+    if (final.join(',') !== atual.inicio.join(',')) void tocaSons.tocarEfeito('ordenar_soltar');
     // Onde ele fica: o topo da lista mais as alturas (e os vãos) de quem vem antes na ordem nova.
     let destinoY = Math.min(...atual.inicio.map((outro) => atual.caixas[outro]?.y ?? 0));
     for (const outro of final) {
@@ -310,6 +317,8 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
             setEscolhido(null);
             animarLugares(240, true);
             mudar(inicial || ids.join(','));
+            // Um toque só para a ação inteira (nunca um por item que voltou).
+            void tocaSons.tocarEfeito('toque_opcao');
           }}>
           <Text style={estilosOrdenar.link}>{t.voltarOrdemInicial}</Text>
         </Pressable>
