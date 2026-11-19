@@ -31,6 +31,7 @@ import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, u
 import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
+import { SecaoSomPerfil } from './som';
 import { tocaSons } from './sons';
 import './perfil.css';
 
@@ -306,6 +307,9 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
               )}
             </section>
           )}
+
+          {/* Som, logo antes de Conta, para quem tem conta e para visitante (spec 12). */}
+          <SecaoSomPerfil />
 
           <section className="perfil-secao" aria-labelledby="perfil-conta">
             <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
