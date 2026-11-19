@@ -21,7 +21,7 @@
   place-items: center;
   border-radius: 50%;
   background: conic-gradient(var(--ouro-escuro) var(--valor), var(--gelo) 0);
-  box-shadow: 0 4px 0 rgb(27 42 94 / 0.08);
+  box-shadow: 0 4px 0 rgb(11 27 92 / 0.08);
 }
 
 .anel::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: var(--fundo); }
@@ -44,7 +44,7 @@
   border: 2px solid var(--gelo);
   border-radius: 24px;
   background: var(--fundo);
-  box-shadow: 0 5px 0 var(--gelo), 0 18px 36px rgb(27 42 94 / 0.16);
+  box-shadow: 0 5px 0 var(--gelo), 0 18px 36px rgb(11 27 92 / 0.16);
 }
 
 .trilha-proximo__rotulo { grid-area: rotulo; color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -132,7 +132,7 @@
   overflow: hidden;
   margin-bottom: 22px;
   border-radius: 24px;
-  background: linear-gradient(180deg, #dbe5ff 0%, var(--ceu) 70%);
+  background: linear-gradient(180deg, #dbe5ff 0%, #eef3ff 70%);
   box-shadow: 0 4px 0 var(--gelo);
 }
 
@@ -243,7 +243,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(100deg, transparent 20%, rgb(56 88 214 / 0.1) 50%, transparent 80%);
+  background: linear-gradient(100deg, transparent 20%, rgb(37 99 255 / 0.1) 50%, transparent 80%);
   translate: -100% 0;
   pointer-events: none;
   animation: preparo-escrever 2000ms ease-in-out calc(600ms + var(--ordem) * 200ms) infinite;

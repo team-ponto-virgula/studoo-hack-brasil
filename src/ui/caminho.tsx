@@ -3,7 +3,8 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { MotivoRever } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao, Stu } from './componentes';
+import { Botao } from './componentes';
+import { Mascote } from './mascote';
 import { Confete } from './festa';
 import { Desenho, Fronteira, coresDaRegiao } from './mundo';
 import { desenhosQueBalancam, enfeitesDaLinha, regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
@@ -395,7 +396,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               <span>{stu}{montando && <span className="caminho-digitando" aria-hidden="true"><span /><span /><span /></span>}</span>
               {montando && dicas.length > 0 && <span className="caminho-inicio__dica" key={dica}>{dicas[dica]}</span>}
             </p>
-            <Stu />
+            <Mascote expressao={montando ? 'stu-curioso' : 'stu-feliz'} tamanho={92} sombra animado={montando ? 'laco' : 'uma-vez'} className="stu" />
           </div>
         )}
         {total > 0 && <FaixaParte numero={1} trecho={primeiroTrecho} resumo={resumoTrechos.get(primeiroTrecho)} />}
@@ -475,7 +476,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               }}>
               <span className="caminho-terreno" aria-hidden="true">
                 {atual && guiaNoCaminho
-                  ? <span className="caminho-guia"><Stu /></span>
+                  // De três quartos, olhando para o próximo nó: espelhado quando o caminho vira à esquerda.
+                  ? <span className="caminho-guia" data-olha={xSeguinte < x ? 'esquerda' : 'direita'}><Mascote expressao="stu-tres-quartos" tamanho={96} animado="periodico" className="stu" /></span>
                   : !comRotulo && <Desenho nome={enfeites.grande} className={classeDoEnfeite(enfeites.grande, 'caminho-enfeite caminho-enfeite--grande')} />}
                 <Desenho nome={enfeites.miudo} className={classeDoEnfeite(enfeites.miudo, 'caminho-enfeite caminho-enfeite--miudo')} />
                 <Desenho nome={lateral.grande} className={classeDoEnfeite(lateral.grande, 'caminho-enfeite caminho-enfeite--lateral')} />
@@ -573,7 +575,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               </>
             )}
           </span>
-          {stuNaChegada && <span className="caminho-chegada__stu" aria-hidden="true"><Stu /></span>}
+          {stuNaChegada && <span className="caminho-chegada__stu" aria-hidden="true"><Mascote expressao="stu-comemorando" tamanho={64} sombra /></span>}
           <button type="button" className="caminho-chegada__lente" aria-label={mensagens.trilha.trofeu} disabled={montando}
             data-tocado={trofeuTocado ? (trofeuTocado % 2 ? 'a' : 'b') : undefined}
             onClick={() => {

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type K
 import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
-import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo, Paisagem, Skeleton, Stu } from '../../ui';
+import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo, Mascote, Paisagem, Skeleton, Stu } from '../../ui';
 import { Apresentacao } from '../apresentacao';
 import { tocaSons } from '../sons';
 
@@ -174,7 +174,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
           <header className="entrada-cabecalho">
             <Logo />
             <Paisagem compacta className="entrada-banner">
-              <Stu />
+              <Mascote expressao="stu-acolhida" tamanho={76} sombra prioridade animado="laco" className="stu" />
             </Paisagem>
             <h1>{mensagens.login.titulo}</h1>
             <p className="introducao">{mensagens.login.instrucoes}</p>
@@ -259,7 +259,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
               <span key={tema} className="entrada-tema" style={{ '--i': indice } as CSSProperties}>{tema}</span>
             ))}
           </div>
-          <Stu />
+          <Mascote expressao="stu-acolhida" tamanho={240} sombra prioridade className="stu" />
         </Paisagem>
       </aside>
     </div>

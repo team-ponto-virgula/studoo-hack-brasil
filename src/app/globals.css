@@ -17,17 +17,22 @@
   --fundo: #fff;
   --nevoa: #f1f4fd;
   --gelo: #e1e7fa;
-  --texto: #1b2a5e;
+  --texto: #0b1b5c;
   --texto2: #5e6a85;
-  --acao: #3858d6;
-  --acao-escura: #2a44a8;
+  --acao: #2563ff;
+  --acao-escura: #1d4ed8;
   --sucesso: #1f7a5a;
   --sucesso-claro: #2f9e6f;
   --alerta: #9a5b00;
   --erro: #c23b4e;
-  --ouro: #ffd166;
+  --ouro: #fbbf24;
   --ouro-escuro: #e0a92e;
-  --ceu: #eef3ff;
+  --ceu: #e9e7ff;
+  /* Paleta do kit do mascote (spec 13, B5): violeta só como enfeite (texto em --violeta-texto), azul claro nunca como texto. */
+  --violeta: #8b5cf6;
+  --violeta-texto: #6d28d9;
+  --azul-claro: #3b82f6;
+  --lavanda: #e9e7ff;
   --borda-campo: #c9d1ea;
   --raio-campo: 14px;
   --raio-bloco: 20px;
@@ -131,7 +136,7 @@ button, input, textarea { font: inherit; }
 }
 /* Hover só onde há ponteiro que paira: no toque, o botão não fica "aceso" depois de tocado. */
 @media (hover: hover) {
-  .botao--primario:hover:not(:disabled) { background: #3050cc; }
+  .botao--primario:hover:not(:disabled) { background: color-mix(in srgb, var(--acao) 88%, #000); }
   .botao--sucesso:hover:not(:disabled) { background: #1a6b4f; }
   .botao--alerta:hover:not(:disabled) { background: #8a5100; }
   .botao--secundario:hover:not(:disabled), .botao--texto:hover:not(:disabled) { background: var(--nevoa); }
@@ -157,7 +162,7 @@ button, input, textarea { font: inherit; }
 }
 
 .campo input::placeholder, .campo textarea::placeholder { color: #7a84a0; }
-.campo input:focus, .campo textarea:focus { outline: none; border-color: var(--acao); box-shadow: 0 0 0 4px rgb(56 88 214 / 0.16); }
+.campo input:focus, .campo textarea:focus { outline: none; border-color: var(--acao); box-shadow: 0 0 0 4px rgb(37 99 255 / 0.16); }
 .campo textarea { min-height: 136px; resize: vertical; }
 .campo input:disabled, .campo textarea:disabled { background: var(--nevoa); }
 .campo [aria-invalid='true'] { border-color: var(--erro); }
@@ -269,7 +274,7 @@ button, input, textarea { font: inherit; }
   border-radius: 999px;
   color: var(--texto);
   background: var(--fundo);
-  box-shadow: 0 4px 0 rgb(27 42 94 / 0.08);
+  box-shadow: 0 4px 0 rgb(11 27 92 / 0.08);
   font-weight: 800;
   white-space: nowrap;
   animation: entrada-flutuar 3200ms ease-in-out calc(var(--i) * -600ms) infinite alternate;
@@ -281,7 +286,7 @@ button, input, textarea { font: inherit; }
 .entrada-tema:nth-child(4) { top: 51%; left: 15%; }
 .entrada-tema:nth-child(5) { top: 56%; right: 16%; }
 .entrada-tema:nth-child(6) { top: 47%; left: 40%; }
-.entrada-paisagem .stu { position: absolute; bottom: 7%; left: 50%; width: 22cqw; translate: -50% 0; }
+.entrada-paisagem .stu { position: absolute; bottom: 7%; left: 50%; width: 26cqw; translate: -50% 0; }
 /* Na entrada, o céu abre espaço para a frase: nuvens e balão ficam abaixo dela e à direita. */
 .entrada-paisagem .paisagem__nuvem--1 { top: 27%; left: 64%; --tam: 13cqw; }
 .entrada-paisagem .paisagem__nuvem--2 { top: 31%; left: 24%; --tam: 11cqw; }
@@ -414,7 +419,7 @@ button, input, textarea { font: inherit; }
   background: var(--chao);
 }
 .plano-destaque__cena .plano-cartao__colina { bottom: -32px; height: 68px; }
-.plano-destaque__cena .stu { position: absolute; bottom: 8px; left: 50%; width: 62px; translate: -50% 0; }
+.plano-destaque__cena .stu { position: absolute; bottom: 8px; left: 50%; width: 64px; translate: -50% 0; }
 .plano-destaque__cena .desenho { position: absolute; bottom: 10px; }
 .plano-destaque__cena .desenho:nth-of-type(1) { left: 10%; --tam: 38px; }
 .plano-destaque__cena .desenho:nth-of-type(2) { right: 10%; --tam: 34px; }
@@ -551,7 +556,12 @@ progress::-moz-progress-bar { border-radius: 999px; background: var(--acao); }
 
 .conclusao-cena .stu {
   position: relative;
-  width: 134px;
+  width: 140px;
+}
+/* Trilha concluída: o Stu com o troféu em 165 (spec 13, E2); no celular, lição e trilha ficam em 110. */
+.conclusao-cena[data-trilha] .stu { width: 165px; }
+@media (max-width: 767px) { .conclusao-cena .stu, .conclusao-cena[data-trilha] .stu { width: 110px; } }
+.conclusao-cena .stu {
   animation: conclusao-pular 480ms cubic-bezier(0.3, 0.6, 0.4, 1) 250ms 4 alternate both, conclusao-flutuar 2600ms ease-in-out 2200ms infinite;
 }
 
@@ -1001,7 +1011,7 @@ button { touch-action: manipulation; }
 @media (max-width: 480px) {
   .conclusao-historia { grid-template-columns: minmax(0, 1fr); }
 }
-.conclusao-historia li[data-tipo='ponte'] { border-color: #c3cdf2; background: #eef3ff; }
+.conclusao-historia li[data-tipo='ponte'] { border-color: #c3cdf2; background: var(--ceu); }
 .conclusao-historia li[data-tipo='ensino'] { border-color: #9ad8b5; background: #eefaf3; }
 .conclusao-historia strong { font-size: 0.8125rem; font-weight: 900; color: var(--acao); text-transform: uppercase; letter-spacing: 0.04em; }
 .conclusao-historia li[data-tipo='ensino'] strong { color: var(--sucesso); }

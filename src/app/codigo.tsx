@@ -78,12 +78,12 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
   canvas.height = 1350;
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('canvas');
-  ctx.fillStyle = '#eef3ff';
+  ctx.fillStyle = '#e9e7ff';
   ctx.fillRect(0, 0, 1080, 1350);
   // Moldura sempre no azul da marca (como na folha); a cor da pessoa fica só no miolo dos olhos e no centro.
   const moldura = (x: number, y: number, l: number, r: number, corMoldura: string) => { ctx.fillStyle = corMoldura; ctx.beginPath(); ctx.roundRect(x, y, l, l, r); ctx.fill(); };
   // Conjunto 24 px acima e moldura de 800 (antes 840): sobram 72 px ou mais embaixo do logotipo.
-  moldura(140, 250, 800, 132, '#3858d6');
+  moldura(140, 250, 800, 132, '#2563ff');
   moldura(172, 282, 736, 100, '#ffffff');
   // O código entra recortado em cantos arredondados, concêntricos com a moldura: nenhum quadradinho nos cantos.
   const [cx0, cy0, lado] = [196, 306, 688];
@@ -103,7 +103,7 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
     ctx.fillText(inicial.slice(0, 1), cx0 + centro.cx * lado, cy0 + centro.cy * lado + centro.letra * lado * 0.04);
     ctx.textBaseline = 'alphabetic';
   }
-  ctx.fillStyle = '#1b2a5e';
+  ctx.fillStyle = '#0b1b5c';
   ctx.textAlign = 'center';
   ctx.font = '700 64px Quicksand, sans-serif';
   const titulos = linhas(ctx, titulo, 920);
@@ -122,7 +122,7 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
     ctx.fillStyle = '#7a4a00';
     ctx.fillText(mensagens.comunidade.demonstracao, 540, y + 33);
   }
-  ctx.fillStyle = '#1b2a5e';
+  ctx.fillStyle = '#0b1b5c';
   ctx.font = '700 36px Nunito, sans-serif';
   ctx.fillText(dica, 540, 1124, 960);
   if (logo) ctx.drawImage(logo, 400, 1170, 280, 92);

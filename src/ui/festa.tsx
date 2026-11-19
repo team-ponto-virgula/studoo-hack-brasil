@@ -7,7 +7,7 @@ import './festa.css';
  * É decorativo: fica fora do leitor de tela e some com movimento reduzido. O app tem o mesmo (apps/mobile/src/festa.tsx).
  */
 
-export const coresFesta = ['#3858D6', '#FFD166', '#F38FB0', '#78C88B', '#86C1F4', '#EF8467'] as const;
+export const coresFesta = ['#2563ff', '#fbbf24', '#F38FB0', '#78C88B', '#86C1F4', '#EF8467'] as const;
 
 function estiloDaPeca(indice: number, quantidade: number, chuva: boolean): CSSProperties {
   const cor = coresFesta[indice % coresFesta.length];

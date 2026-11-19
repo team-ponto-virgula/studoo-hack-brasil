@@ -266,7 +266,7 @@
   background: var(--nevoa);
 }
 .ensino-stu .stu { width: 52px; height: auto; flex: none; transition: transform 240ms ease-out; }
-.ensino-stu[data-gravando='true'] { border-color: var(--acao); background: #eef3ff; }
+.ensino-stu[data-gravando='true'] { border-color: var(--acao); background: var(--ceu); }
 .ensino-stu[data-gravando='true'] .stu { animation: pedido-stu 1200ms ease-in-out infinite; }
 .ensino-stu__balao { margin: 0 !important; font-weight: 800; color: var(--texto); }
 
@@ -288,8 +288,8 @@
 }
 .ensino-passos li[data-ativo='true'] {
   border-color: var(--acao);
-  color: var(--acao);
-  background: #eef3ff;
+  color: var(--acao-escura);
+  background: var(--ceu);
 }
 
 .ensino-gravando {
@@ -299,8 +299,8 @@
   margin-top: 12px;
   padding: 10px 14px;
   border-radius: 14px;
-  background: #eef3ff;
-  color: var(--acao);
+  background: var(--ceu);
+  color: var(--acao-escura);
   font-weight: 800;
 }
 .ensino-ondas {
@@ -629,7 +629,7 @@
   align-items: center;
   gap: 14px;
   border-color: #c3cdf2;
-  background: #eef3ff;
+  background: var(--ceu);
   box-shadow: 0 4px 0 var(--gelo);
 }
 .ensino-caderno__stu { position: relative; width: 48px; flex: none; }
