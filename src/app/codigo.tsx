@@ -6,7 +6,7 @@
  * cheia, para projetar). Tudo gerado no navegador a partir da função pura do contrato: nenhum serviço externo.
  */
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { FUNDO_DA_COR, enderecoFoto, inicialDoNome, svgCodigoDoLink, type CorPerfil, type EstiloCodigo } from '@studoo/contratos';
+import { FUNDO_DA_COR, centroDoCodigo, enderecoFoto, inicialDoNome, svgCodigoDoLink, type CorPerfil, type EstiloCodigo } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { useDialogo } from './compartilhar';
@@ -15,8 +15,8 @@ import './codigo.css';
 const k = mensagens.codigo;
 
 /** O SVG do código (função pura do contrato): cor do perfil no miolo dos olhos, foto no centro quando houver. */
-export function svgDoCodigo(texto: string, { cor, fotoHref, inicial, estilo = 'rosto', tamanho = 600 }: { cor?: CorPerfil | null; fotoHref?: string | null; inicial?: string | null; estilo?: EstiloCodigo; tamanho?: number }) {
-  return svgCodigoDoLink(texto, { mioloCor: FUNDO_DA_COR[cor ?? 'azul'], fotoHref, inicial, estilo, tamanho });
+export function svgDoCodigo(texto: string, { cor, fotoHref, inicial, letraNoCentro = true, estilo = 'rosto', tamanho = 600 }: { cor?: CorPerfil | null; fotoHref?: string | null; inicial?: string | null; letraNoCentro?: boolean; estilo?: EstiloCodigo; tamanho?: number }) {
+  return svgCodigoDoLink(texto, { mioloCor: FUNDO_DA_COR[cor ?? 'azul'], fotoHref, inicial, letraNoCentro, estilo, tamanho });
 }
 
 const dataUrlSvg = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -67,7 +67,9 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
   await document.fonts.ready;
   const fotoHref = fotoToken ? await fotoComoDataUrl(fotoToken) : null;
   const [codigo, logo] = await Promise.all([
-    carregarImagem(dataUrlSvg(svgDoCodigo(texto, { cor, fotoHref, inicial: fotoHref ? null : inicial, tamanho: 1200 }))),
+    // A inicial vai sem a letra no SVG: um SVG desenhado como imagem não enxerga as fontes da página. A letra entra
+    // depois, desenhada no próprio canvas com a Quicksand da marca.
+    carregarImagem(dataUrlSvg(svgDoCodigo(texto, { cor, fotoHref, inicial: fotoHref ? null : inicial, letraNoCentro: false, tamanho: 1200 }))),
     carregarImagem('/marca/logo-com-sorriso.svg').catch(() => null),
   ]);
   const canvas = document.createElement('canvas');
@@ -88,6 +90,15 @@ export async function imagemDoCodigo({ texto, titulo, dica, cor, fotoToken, inic
   ctx.clip();
   ctx.drawImage(codigo, 180, 330, 720, 720);
   ctx.restore();
+  const centro = !fotoHref && inicial ? centroDoCodigo(texto) : null;
+  if (centro && inicial) {
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `700 ${Math.round(centro.letra * 720)}px Quicksand, sans-serif`;
+    ctx.fillText(inicial.slice(0, 1), 180 + centro.cx * 720, 330 + centro.cy * 720 + centro.letra * 720 * 0.04);
+    ctx.textBaseline = 'alphabetic';
+  }
   ctx.fillStyle = '#1b2a5e';
   ctx.textAlign = 'center';
   ctx.font = '700 64px Quicksand, sans-serif';

@@ -273,20 +273,31 @@ export function centroComFoto(href: string): string {
 }
 
 /** O centro com a inicial do nome num círculo na cor do perfil (perfil sem foto: o mesmo avatar de todo lugar). */
-export function centroComInicial(inicial: string, cor: string): string {
+export function centroComInicial(inicial: string, cor: string, comLetra = true): string {
   const letra = (inicial.trim()[0] ?? '?').replace(/[<>&"']/g, '?');
   const fundo = /^#[0-9a-f]{6}$/i.test(cor) ? cor : '#3858d6';
   return `<circle cx="50" cy="50" r="50" fill="#fff"/><circle cx="50" cy="50" r="46" fill="${fundo}"/>`
-    + `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="Quicksand, Nunito, sans-serif" font-weight="700" font-size="52" fill="#fff">${letra}</text>`;
+    + (comLetra ? `<text x="50" y="50" dy="0.35em" text-anchor="middle" font-family="Quicksand, Nunito, sans-serif" font-weight="700" font-size="52" fill="#fff">${letra}</text>` : '');
+}
+
+/**
+ * Onde fica o centro do código (em fração do lado total, 0 a 1) e o tamanho da letra da inicial: para quem desenha a
+ * letra por fora do SVG (o canvas da imagem baixada, que não enxerga as fontes da página dentro de um SVG-imagem).
+ */
+export function centroDoCodigo(texto: string, estilo: EstiloCodigo = 'rosto'): { cx: number; cy: number; letra: number } | null {
+  const g = geometriaCodigoStudoo(texto, { estilo });
+  if (!g.clareira) return null;
+  const caixa = (g.clareira.lado - 1.4) / g.lado;
+  return { cx: (g.clareira.x + g.clareira.lado / 2) / g.lado, cy: (g.clareira.y + g.clareira.lado / 2) / g.lado, letra: caixa * 0.52 };
 }
 
 /**
  * O Código Studoo de um link (spec 10, etapa C1), igual na web e no app: estilo "rosto" por padrão (os três ficam no
  * gerador), miolo dos olhos na cor do perfil (`mioloCor`, um hex de FUNDO_DA_COR) e, quando houver, a foto no centro.
  */
-export function svgCodigoDoLink(texto: string, { mioloCor, fotoHref, inicial, estilo = 'rosto', tamanho = 600, nivel }: { mioloCor?: string; fotoHref?: string | null; inicial?: string | null; estilo?: EstiloCodigo; tamanho?: number; nivel?: NivelCorrecao } = {}): string {
+export function svgCodigoDoLink(texto: string, { mioloCor, fotoHref, inicial, letraNoCentro = true, estilo = 'rosto', tamanho = 600, nivel }: { mioloCor?: string; fotoHref?: string | null; inicial?: string | null; letraNoCentro?: boolean; estilo?: EstiloCodigo; tamanho?: number; nivel?: NivelCorrecao } = {}): string {
   const cores = { ...CORES_CODIGO_PADRAO, ...(mioloCor ? { miolo: mioloCor } : {}) };
   // Centro: a foto; sem foto, a inicial na cor (perfil); sem nenhum dos dois, o sorriso do Stu (trilha).
-  const centro = fotoHref ? centroComFoto(fotoHref) : inicial ? centroComInicial(inicial, mioloCor ?? '#3858d6') : undefined;
+  const centro = fotoHref ? centroComFoto(fotoHref) : inicial ? centroComInicial(inicial, mioloCor ?? '#3858d6', letraNoCentro) : undefined;
   return svgCodigoStudoo(geometriaCodigoStudoo(texto, { estilo, nivel }), { tamanho, cores, ...(centro ? { centro } : {}) });
 }

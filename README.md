@@ -24,6 +24,32 @@ O mapa registra as lições concluídas, destaca **Ponte construída** onde houv
 
 ![Mapa da trilha com Ponte construída e selo de sincronia](docs/img/04-mapa-sincronia.jpg)
 
+## Comunidade: perfil, compartilhar e Explorar
+
+Quem estuda pode mostrar o que criou e encontrar trilhas de outras pessoas, sempre começando do zero e no seu ritmo. Não há ranking de pessoas: o **Em alta** ordena trilhas.
+
+- **Perfil**: foto (recortada no próprio app, sem metadados), resumo, interesses e o alcance das trilhas compartilhadas. Também mostra **Novidades** da semana (quem começou ou agradeceu uma trilha) e quem passou a seguir. O e-mail nunca aparece.
+- **Compartilhar**: cada trilha tem três níveis, **Só com o link**, **No meu perfil** e **No Explorar**. Quem recebe adiciona uma cópia pronta, sem IA e sem nada do estudo de quem compartilhou.
+- **Explorar**: **Em alta esta semana** (adições e valeus dos últimos 7 dias), temas, **Novas** e a aba **Seguindo**. Cada trilha tem **Quero estudar**, **Valeu** e **Denunciar**.
+- **Código Studoo**: um QR próprio com a cara do Stu, com o sorriso, a foto ou a inicial no centro. Dá para baixar como imagem ou projetar em tela cheia. É gerado localmente e lido por dois leitores independentes nos testes.
+- **Prévia do link**: o link de uma trilha ou de um perfil abre, nos apps de mensagem, uma imagem com a capa do tema, o título e quem fez.
+
+![Perfil com foto, resumo, interesses e alcance](docs/img/05-perfil-comunidade.jpg)
+
+![Explorar com Em alta esta semana e filtros por tema](docs/img/06-explorar-em-alta.jpg)
+
+![Código Studoo em tela cheia para projetar](docs/img/07-codigo-studoo.jpg)
+
+![Prévia do link de uma trilha](docs/img/08-previa-do-link.jpg)
+
+| Flag | O que liga | Padrão |
+|---|---|---|
+| `STUDOO_COMPARTILHAR=1` | Perfil, foto, compartilhar por link, páginas públicas `/t` e `/p`, Código Studoo e prévia do link. | desligada |
+| `STUDOO_COMUNIDADE=1` | Explorar, publicar, Em alta, Valeu, Denunciar, seguir e Novidades. Exige `STUDOO_COMPARTILHAR=1`. | desligada |
+| `STUDOO_COMUNIDADE_DEMO=1` | Mostra o conteúdo de demonstração rotulado (perfis com o selo **Perfil de demonstração**) e libera `npm run comunidade:demo` (cria ou renova as datas) e `npm run comunidade:demo:remover`. | desligada |
+
+Sem as flags, nada disso aparece e as rotas novas respondem 404. Detalhes em [docs/specs/10-comunidade.md](docs/specs/10-comunidade.md).
+
 ## Como rodar em três comandos (`IA=falsa`)
 
 Requer Node.js 24+ e Docker (para o PostgreSQL local). Na raiz do repositório:
@@ -63,7 +89,7 @@ Com `IA=falsa`, trilhas populares (frações, SQL, violão, inglês para viagem,
 
 - [Guia local, banco, testes e app Android](docs/RODAR-LOCALMENTE.md)
 - [Roteiro da demonstração (2 minutos)](docs/DEMO-HACKATHON.md)
-- [Especificações do produto](docs/specs/05-estudio-adaptativo.md) · [Acesso Google e recuperação](docs/specs/06-acesso-google-recuperacao.md)
+- [Especificações do produto](docs/specs/05-estudio-adaptativo.md) · [Acesso Google e recuperação](docs/specs/06-acesso-google-recuperacao.md) · [Perfis e compartilhar](docs/specs/09-perfis-e-compartilhamento.md) · [Comunidade](docs/specs/10-comunidade.md)
 
 ## Créditos e origem
 
