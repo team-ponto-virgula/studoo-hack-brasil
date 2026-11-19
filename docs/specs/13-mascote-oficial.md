@@ -2,6 +2,8 @@
 
 **Estado:** regra de design de 19/11, a partir do kit do dono ("troque todas as partes que têm o mascote e adicione os PNG, utilize o mascote no máximo de lugar que conseguir e deixe a UI e UX perfeita"). Vale igual para web, Android e iPhone. Parte A: arquivos, mapa de troca e nome. Parte B: lugares novos, paleta, logo, movimento, leitor de tela e ícones.
 
+**Revisão de 19/11 (spec 04, "Criar a trilha"):** as telas Escrevendo suas lições e Lições prontas! saíram. O `stu-estudando` fica ao lado do nó 1 da prévia enquanto a trilha é criada, no tamanho do Stu guia do mapa (o modo laço da §E1), e o `stu-comemorando` faz um ciclo na passagem do nó 1 para a aula (o modo no acontecimento). As linhas abaixo que citam essas telas valem para esses dois momentos.
+
 O kit tem 31 PNG: a folha de personagem (3200×2180), a acolhida, 5 vistas, 8 expressões, 3 poses, 6 acessórios, o logo e 6 amostras de cor. As imagens do personagem e dos acessórios têm 1024×1024, fundo transparente e 260–420 KB cada. O mascote novo é o mesmo Stu de hoje (bolinha azul, topete, óculos), agora em volume e com expressões. Os originais entram no projeto como fonte, fora de qualquer pasta servida: PNG em `assets/mascote/originais` e GIF em `assets/mascote/originais-gif` (pedido do dono; decisão do Lead em 19/11). O script dos devs gera deles as versões leves desta tabela, e só elas vão para `public/` e para o pacote do app.
 
 ## A1. Arquivos
