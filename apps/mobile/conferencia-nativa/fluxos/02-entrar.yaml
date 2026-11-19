@@ -39,6 +39,17 @@ name: 02-entrar
       visible: "Not Now"
     commands:
       - tapOn: "Not Now"
+# A barra de baixo, ou o aviso de falha da lista de trilhas. Na execução 44590901823, logo depois de entrar, o proxy da
+# conferência devolveu 502 ("servidor fora do ar") para a lista de trilhas depois de 20 s; o app ficou no aviso, sem a
+# barra, e o fluxo caiu, pulando todas as telas. A causa do 502 não ficou registrada. Com o aviso, um toque em "Tentar
+# novamente" (partes/tentar-de-novo.yaml); se a falha continuar, a espera seguinte derruba o fluxo, como antes.
+- extendedWaitUntil:
+    visible:
+      id: nav-planos|tentar-planos
+    timeout: 60000
+- runFlow: partes/tentar-de-novo.yaml
+# Zera a conta do Maestro antes da espera da barra (ver partes/reabrir.yaml).
+- evalScript: ${output.esperaDaBarra = true}
 - extendedWaitUntil:
     visible:
       id: nav-planos

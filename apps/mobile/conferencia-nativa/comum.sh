@@ -41,6 +41,7 @@ CAPTURAS_ESPERADAS="
 60-configuracoes
 70-exemplo-curto-etapa-2 71-exemplo-curto-etapa-3 72-exemplo-longo-etapa-2 73-exemplo-longo-lido 74-exemplo-longo-etapa-3
 80-ilha-nova-trilha 81-ilha-nova-trilha-fim 82-ilha-minhas-trilhas-fim 83-ilha-ultimo-toque
+90-criacao-pedido 91-criacao-em-andamento 92-criacao-pronta 93-criacao-primeira-aula 94-criacao-mapa-ao-voltar
 "
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
@@ -257,13 +258,15 @@ instalar_maestro() {
 iniciar_metro() {
   local plataforma="$1" modo="$2" manifesto pacote medida
   cd "$RAIZ/apps/mobile"
-  # O Expo embute as variáveis EXPO_PUBLIC_ no pacote. O .env.local é ignorado pelo Git.
-  printf 'EXPO_PUBLIC_STUDOO_API_URL=%s\nEXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI=studoo-dev://auth/google\n' "$API" > .env.local
+  # O Expo embute as variáveis EXPO_PUBLIC_ no pacote. O .env.local é ignorado pelo Git. EXPO_PUBLIC_STUDOO_REGISTRO_SOM
+  # pede ao app, se ele souber, que registre cada som ("[som] comando <id> <ms>" e "[som] reproducao <id> <ms>"), para a
+  # linha do tempo da criação de trilha (servidor/linha-do-tempo-som.mjs); um app que não lê a variável não muda nada.
+  printf 'EXPO_PUBLIC_STUDOO_API_URL=%s\nEXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI=studoo-dev://auth/google\nEXPO_PUBLIC_STUDOO_REGISTRO_SOM=1\n' "$API" > .env.local
 
   # Sem modo de desenvolvimento e minificado, como o servidor que o dono usa no iPhone dele: sem avisos de
   # desenvolvimento por cima das telas. EXPO_PACKAGER_PROXY_URL faz o manifesto apontar para a cache, e não para o Metro.
   CI=1 EXPO_NO_TELEMETRY=1 EXPO_PACKAGER_PROXY_URL="http://127.0.0.1:$PORTA_METRO" \
-    EXPO_PUBLIC_STUDOO_API_URL="$API" EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI="studoo-dev://auth/google" \
+    EXPO_PUBLIC_STUDOO_API_URL="$API" EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI="studoo-dev://auth/google" EXPO_PUBLIC_STUDOO_REGISTRO_SOM=1 \
     nohup npx expo start "$modo" --localhost --port "$PORTA_METRO_INTERNA" --no-dev --minify --max-workers 2 > "$REGISTROS/metro.log" 2>&1 < /dev/null &
   if ! esperar_http "http://127.0.0.1:$PORTA_METRO_INTERNA/status" 180; then
     mostrar_registro "$REGISTROS/metro.log"
@@ -349,8 +352,58 @@ fluxo_entrar() {
   resumo "✅ Entrou na conta sintética e chegou ao mapa da trilha."
 }
 
+# A criação de uma trilha (fluxos/criacao/90-criacao-da-trilha.yaml), numa fase própria antes das telas: as provas dela
+# saem cedo e sobrevivem a uma falha mais adiante (uma queda do emulador, um tempo esgotado). Enquanto o fluxo roda, cada
+# sistema grava o que o áudio dele registra (iniciar_registro_de_audio, em ios.sh e android.sh). Com ou sem falha, as
+# capturas e o vídeo da transição vão logo para o artefato, e a linha do tempo do som é montada.
+# As trilhas da conta são fotografadas antes do fluxo e comparadas depois (servidor/trilhas-da-criacao.mjs): só a trilha
+# criada pela própria prova sai, e só quando é inequívoca (exatamente uma nova, nenhuma sumida, a base do preparo
+# conferida antes). Uma fase que falha antes de criar não apaga nada; duas ou mais trilhas novas são uma falha de
+# duplicação, com o detalhe delas nos registros, e nada é apagado. Nunca para o passo; uma falha da prova que não deixe
+# captura faltando fica em $SAIDA/criacao-falhou.txt, e a coleta a acusa.
+trilhas_da_criacao() {
+  (cd "$RAIZ" && NODE_EXTRA_CA_CERTS="$TLS/ca.crt" node --env-file=.env --import tsx "$AQUI/servidor/trilhas-da-criacao.mjs" \
+    "$@" --api "$API") 2>> "$REGISTROS/trilhas-da-criacao.log" | tee -a "$REGISTROS/trilhas-da-criacao.log"
+  return "${PIPESTATUS[0]}"
+}
+
+fluxo_criacao() {
+  local plataforma=iphone comandos fluxo=falhou codigo=0 linha
+  case "$TITULO_DA_CONFERENCIA" in *Android*) plataforma=android ;; esac
+  rm -f "$SAIDA/criacao-falhou.txt"
+  trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$REGISTROS/trilhas-antes-da-criacao.json" > /dev/null || true
+  if declare -F iniciar_registro_de_audio > /dev/null; then iniciar_registro_de_audio "$REGISTROS/audio-criacao.log" || true; fi
+  if rodar_maestro criacao "$PASTA_DOS_FLUXOS/criacao/90-criacao-da-trilha.yaml"; then fluxo=passou; fi
+  if declare -F parar_registro_de_audio > /dev/null; then parar_registro_de_audio || true; fi
+  # As provas da criação vão já para o artefato das capturas, com ou sem falha.
+  find "$SAIDA_MAESTRO/criacao" -type f \( -name '9[0-9]-*.png' -o -name 'criacao-transicao*.mp4' \) -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
+  comandos="$(find "$SAIDA_MAESTRO/criacao" -type f -name commands.json -path '*90-criacao-da-trilha*' 2> /dev/null | head -1 || true)"
+  node "$AQUI/servidor/linha-do-tempo-som.mjs" --comandos "$comandos" --audio "$REGISTROS/audio-criacao.log" --plataforma "$plataforma" \
+    > "$REGISTROS/linha-do-tempo-criacao.txt" 2>&1 || true
+
+  linha="$(trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/trilhas-depois-da-criacao.json" --apagar)" || codigo=$?
+  case "$codigo:$fluxo" in
+    0:passou)
+      if printf '%s' "$linha" | grep -q 'nenhuma trilha nova'; then
+        echo "o fluxo passou, mas nenhuma trilha nova apareceu na conta" > "$SAIDA/criacao-falhou.txt"
+        resumo "❌ Criação de trilha: o fluxo passou, mas nenhuma trilha nova apareceu na conta (trilhas-depois-da-criacao.json, nos registros)."
+      else
+        resumo "✅ Criação de trilha: o pedido, em criação, pronta, a etapa 1 da primeira lição num toque só e o mapa ao voltar. $linha"
+      fi ;;
+    0:falhou)
+      resumo "❌ A criação de trilha falhou no fluxo (maestro-criacao.log e tela-no-fim-de-criacao.png, nos registros). $linha" ;;
+    4:*)
+      echo "duplicação: $linha" > "$SAIDA/criacao-falhou.txt"
+      resumo "❌ Criação de trilha duplicada: $linha O detalhe de cada trilha está em trilhas-depois-da-criacao.json, nos registros." ;;
+    *)
+      echo "$linha" > "$SAIDA/criacao-falhou.txt"
+      resumo "❌ Criação de trilha: o fluxo $fluxo, e a conferência das trilhas parou (código $codigo): $linha" ;;
+  esac
+}
+
 fluxo_telas() {
   local falhas
+  fluxo_criacao || true
   if ! rodar_maestro telas "$PASTA_DOS_FLUXOS/telas" --config "$PASTA_DOS_FLUXOS/telas/config.yaml" \
     --format junit --output "$REGISTROS/maestro-telas.xml"; then
     # Os fluxos que falharam e o motivo de cada um, tirados do relatório do Maestro.
@@ -499,6 +552,9 @@ coletar_fim() {
   tirar_senha_dos_registros
   if [ -n "$FALTAM" ]; then
     erro "Faltaram $(echo "$FALTAM" | wc -w | tr -d ' ') de $(echo "$CAPTURAS_ESPERADAS" | wc -w | tr -d ' ') capturas:$FALTAM."
+  fi
+  if [ -f "$SAIDA/criacao-falhou.txt" ]; then
+    erro "A prova da criação de trilha falhou: $(head -1 "$SAIDA/criacao-falhou.txt")"
   fi
   resumo "✅ As $TOTAL_DE_CAPTURAS capturas do percurso saíram."
 }
