@@ -525,7 +525,9 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
 export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativado = false, ocupado = false, carregando = false, variante = 'primario',
-  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia, afundado = false, giro = false }: {
+  compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia, afundado = false, giro = false, umaLinha = false }: {
+  /** O rótulo numa linha só (o "Ajustar pedido" que volta ao lado do botão principal, sem quebrar enquanto ele encolhe). */
+  umaLinha?: boolean;
   /** O botão em si, para quem leva o foco até ele (o "Começar" do fim da geração). */
   referencia?: Ref<ComponentRef<typeof Pressable>>;
   /** Fica afundado (sem o lábio), como no toque, enquanto a ação que ele começou anda ("Criando sua trilha…"). */
@@ -588,7 +590,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
         <>
           {giro && <Giro cor={corTexto} />}
           {iconeAntes && <Icone nome={iconeAntes} tamanho={18} cor={corTexto} />}
-          <Text numberOfLines={giro ? 1 : undefined} style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
+          <Text numberOfLines={giro || umaLinha ? 1 : undefined} style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
             peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
           {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} sistema /></View>}
         </>

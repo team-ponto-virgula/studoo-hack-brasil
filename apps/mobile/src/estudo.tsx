@@ -149,6 +149,8 @@ export function Estudo({ cliente, sair, expirar }: {
   const [passagem, setPassagem] = useState<Passagem | null>(null);
   const aceiteAtual = useRef<object | null>(null);
   const lenteDoNo1 = useRef<ComponentRef<typeof View> | null>(null);
+  /** A rolagem do toque até o nó 1 (na prévia): a passagem a faz terminar até o círculo começar (t = 120 ms). */
+  const rolagemDoNo1 = useRef<{ terminar: (prazoMs: number) => void } | null>(null);
   const reduzirMovimento = useMovimentoReduzido();
   const reduzirAgora = useRef(reduzirMovimento);
   reduzirAgora.current = reduzirMovimento;
@@ -438,7 +440,7 @@ export function Estudo({ cliente, sair, expirar }: {
     setPendente('aceitar');
     setErro(null);
     setCriacao('criando');
-    tocaSons.tocarEfeito('toque_opcao');
+    // Sem som no toque: o único som da criação é o geracao_pronta, quando a trilha passa a existir (spec 12).
     anunciar(mensagens.geracao.anuncioCriando);
     let plano: PlanoDetalhe;
     try {
@@ -469,24 +471,23 @@ export function Estudo({ cliente, sair, expirar }: {
       navegar({ tipo: 'plano', plano });
       return;
     }
-    // t = 0: o som único da criação, o pulso do nó 1, o caminho que firma e a busca da lição, juntos.
+    // t = 0, no aceite (spec 04, 4140a58): o som único da criação, o pulso do nó 1, o caminho que firma e a busca da lição.
+    // Se a rolagem do toque até o nó 1 ainda anda, ela termina até t = 120 ms (longe demais ou com movimento reduzido, pula).
     const inicio = Date.now();
     const reduzida = reduzirAgora.current !== false;
     let licao: LicaoDetalhe | null = null;
     let falhaLicao: unknown = null;
     const busca = cliente.obterLicao(primeira).then((dados) => { licao = dados; }, (falha: unknown) => { falhaLicao = falha ?? new ErroStudoo('falha'); });
+    rolagemDoNo1.current?.terminar(reduzida ? 0 : RITMO_DA_GERACAO.circuloAtrasoMs);
     tocaSons.tocarEfeito('geracao_pronta');
     setCriacao('criada');
     setPassagem({ inicio, origem: null, reduzida, aulaNaTela: false });
-    // De onde o círculo cresce: o centro do nó 1, medido agora e de novo logo antes do círculo (a prévia pode estar rolando
-    // até ele).
+    // De onde o círculo cresce: o centro do nó 1, medido no t = 120 ms, com a rolagem até ele já terminada. O círculo espera
+    // essa medida.
     const medirNo1 = () => lenteDoNo1.current?.measureInWindow((x, y, largura, altura) => {
       if (largura > 0) setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, origem: { x: x + largura / 2, y: y + altura / 2 } } : atual));
     });
-    if (!reduzida) {
-      medirNo1();
-      setTimeout(medirNo1, RITMO_DA_GERACAO.circuloAtrasoMs - 20);
-    }
+    if (!reduzida) setTimeout(medirNo1, RITMO_DA_GERACAO.circuloAtrasoMs + 5);
     const aulaNaTela = () => setPassagem((atual) => (atual && atual.inicio === inicio ? { ...atual, aulaNaTela: true } : atual));
     // Aos 200 ms (com movimento reduzido, na hora), a aula monta embaixo do círculo; se a lição ainda não chegou, o esqueleto
     // dela. A camada some por cima dela a partir dos 320 ms, só depois que ela está na tela.
@@ -739,6 +740,7 @@ export function Estudo({ cliente, sair, expirar }: {
       return <GeracaoAoVivo geracao={geracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} ocupado={ocupado} acoes={acoes} cancelar={cancelarGeracao}
         comecar={(proposta) => void comecar(proposta)} ajustar={() => abrir({ tipo: 'objetivo' })}
         criacao={criacao} remontar={() => void gerar(geracao.objetivo)} guardarNo1={(alvo) => { lenteDoNo1.current = alvo; }}
+        rolagemDoNo1={rolagemDoNo1}
         // Como a web 4.2: a mesma regra do contrato (o assunto antes dos dois-pontos, sem acento), em vez do "fraç" fixo.
         existente={geracao.proposta ? planos?.find((plano) => trilhaRepetida(plano.titulo, geracao.proposta?.titulo ?? '')) : undefined}
         abrirExistente={(id) => void abrirPlano(id)} />;
@@ -1216,7 +1218,9 @@ function useFilaDaGeracao(nos: readonly NoCaminho[]) {
  * até o começo do mapa, o cartão do título volta embaixo da faixa. Com movimento reduzido, a tela pula em vez de rolar e
  * nada cai nem brota.
  */
-function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente, criacao, remontar, guardarNo1 }: {
+function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, comecar, ajustar, existente, abrirExistente, criacao, remontar, guardarNo1, rolagemDoNo1 }: {
+  /** Para a passagem fazer a rolagem do toque até o nó 1 terminar até o círculo começar. */
+  rolagemDoNo1: { current: { terminar: (prazoMs: number) => void } | null };
   /** O toque em "Começar a lição 1" (spec 04, "Criar a trilha"): criando, erro, expirada ou criada (a passagem). */
   criacao: FaseDaCriacao | null;
   /** "Montar de novo", com a proposta expirada: a geração de novo, com o mesmo pedido. */
@@ -1361,7 +1365,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     const naTela = centro - rolado.current;
     if (naTela - RITMO_DA_GERACAO.no1AcimaDoCentro >= topoLivre && naTela + RITMO_DA_GERACAO.no1AbaixoDoCentro <= altura) return;
     mudarAcompanhar(false);
-    rolarPara(Math.max(0, Math.round(centro - (topoLivre + (altura - topoLivre) * RITMO_DA_GERACAO.no1NaAreaLivre))));
+    rolarAteNo1(Math.max(0, Math.round(centro - (topoLivre + (altura - topoLivre) * RITMO_DA_GERACAO.no1NaAreaLivre))));
     // Só no toque.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [criacao]);
@@ -1400,6 +1404,49 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     programada.current = { inicio: rolado.current, alvo: y, ate: Date.now() + (reduzir === false ? RITMO_DA_GERACAO.rolagemMs + 400 : 120) };
     rolagem.current?.scrollTo({ y, animated: reduzir === false });
   }
+
+  /**
+   * A rolagem do toque até o nó 1, em 240 ms com saída suave (spec 04), quadro a quadro: a rolagem animada do sistema tem
+   * duração própria (no Chromium da prévia, mais de 400 ms) e o círculo da passagem precisa saber quando ela termina.
+   * Com movimento reduzido, pula.
+   */
+  const quadroDoNo1 = useRef<number | null>(null);
+  const alvoDoNo1 = useRef<number | null>(null);
+  useEffect(() => () => { if (quadroDoNo1.current !== null) cancelAnimationFrame(quadroDoNo1.current); }, []);
+  function rolarAteNo1(alvo: number, duracaoPedida: number = RITMO_DA_GERACAO.rolarAteNo1Ms) {
+    if (quadroDoNo1.current !== null) cancelAnimationFrame(quadroDoNo1.current);
+    quadroDoNo1.current = null;
+    const de = rolado.current;
+    const duracao = reduzir === false && Math.abs(alvo - de) >= 2 ? duracaoPedida : 0;
+    const inicio = Date.now();
+    alvoDoNo1.current = alvo;
+    programada.current = { inicio: de, alvo, ate: inicio + duracao + 120 };
+    if (duracao === 0) {
+      rolagem.current?.scrollTo({ y: alvo, animated: false });
+      alvoDoNo1.current = null;
+      return;
+    }
+    const passo = () => {
+      const t = Math.min(1, (Date.now() - inicio) / duracao);
+      rolagem.current?.scrollTo({ y: de + (alvo - de) * (1 - (1 - t) ** 3), animated: false });
+      quadroDoNo1.current = t < 1 ? requestAnimationFrame(passo) : null;
+      if (t >= 1) alvoDoNo1.current = null;
+    };
+    quadroDoNo1.current = requestAnimationFrame(passo);
+  }
+  // A passagem começou com a rolagem ainda andando (spec 04, 4140a58): o que falta termina até o prazo (t = 120 ms), com
+  // saída suave; se falta mais que uma altura de tela, ou com movimento reduzido, o nó vai para o lugar na hora.
+  useEffect(() => {
+    rolagemDoNo1.current = {
+      terminar: (prazoMs) => {
+        const alvo = alvoDoNo1.current;
+        if (alvo === null) return;
+        const longe = Math.abs(alvo - rolado.current) > (visivel.current || height);
+        rolarAteNo1(alvo, prazoMs <= 0 || longe ? 0 : prazoMs);
+      },
+    };
+    return () => { rolagemDoNo1.current = null; };
+  });
 
   const fimDaTrilha = () => Math.max(0, (fim.current?.base ?? 0) + 24 - (visivel.current || height));
 
@@ -1519,11 +1566,12 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         {!ajustarFora && (
           <Animated.View style={dividir ? [estudoEstilos.metade, salvando || falhou ? {
             flexGrow: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
-            opacity: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+            // Ao voltar (no erro), só aparece quando a largura já voltou: numa linha, sem quebrar enquanto o outro encolhe.
+            opacity: saidaDoAjustar.interpolate({ inputRange: [0, 0.15, 1], outputRange: [1, 0, 0] }),
             marginRight: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [0, -12] }),
           } : null] : null}>
             <Botao rotulo={pronta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar} testID="voltar-pedido" variante="secundario"
-              desativado={ocupado} acao={pronta ? ajustar : cancelar} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
+              desativado={ocupado} acao={pronta ? ajustar : cancelar} estilo={dividir ? estudoEstilos.botaoDividido : undefined} umaLinha />
           </Animated.View>
         )}
         {!dividir && !pronta && (
@@ -1658,14 +1706,16 @@ function PassagemDaCriacao({ passagem, aoTerminar }: { passagem: Passagem; aoTer
   const terminar = useRef(aoTerminar);
   terminar.current = aoTerminar;
 
-  // O círculo cresce aos 120 ms, em 300 ms (com movimento reduzido, não há círculo: a camada já começa cheia).
+  // O círculo cresce aos 120 ms, em 300 ms, assim que o centro do nó 1 é conhecido (com movimento reduzido, não há círculo:
+  // a camada já começa cheia).
+  const temOrigem = origem !== null;
   useEffect(() => {
-    if (reduzida) return;
+    if (reduzida || !temOrigem) return;
     const crescimento = Animated.timing(crescer, { toValue: 1, duration: RITMO_DA_GERACAO.circuloMs,
       delay: Math.max(0, RITMO_DA_GERACAO.circuloAtrasoMs - (Date.now() - inicio)), easing: Easing.out(Easing.cubic), useNativeDriver: true });
     crescimento.start();
     return () => crescimento.stop();
-  }, [inicio, reduzida, crescer]);
+  }, [inicio, reduzida, temOrigem, crescer]);
 
   // A aula entra por cima: a camada some em 150 ms a partir dos 320 ms (reduzida: na hora), só com a aula já na tela.
   useEffect(() => {
@@ -1677,7 +1727,7 @@ function PassagemDaCriacao({ passagem, aoTerminar }: { passagem: Passagem; aoTer
   }, [aulaNaTela, inicio, reduzida, presenca]);
 
   // O centro do nó 1 vem em coordenadas da janela; a camada pode não começar no canto da janela.
-  const ponto = origem && deslocamento ? { x: origem.x - deslocamento.x, y: origem.y - deslocamento.y } : { x: width / 2, y: height / 2 };
+  const ponto = origem ? { x: origem.x - (deslocamento?.x ?? 0), y: origem.y - (deslocamento?.y ?? 0) } : { x: width / 2, y: height / 2 };
   const raio = raioQueCobre(ponto.x, ponto.y, width, height);
   return (
     <Animated.View ref={raiz} testID="passagem-criacao" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
@@ -1685,7 +1735,7 @@ function PassagemDaCriacao({ passagem, aoTerminar }: { passagem: Passagem; aoTer
       onLayout={() => raiz.current?.measureInWindow((x, y) => setDeslocamento({ x, y }))}>
       {reduzida
         ? <View style={[StyleSheet.absoluteFill, { backgroundColor: cores.fundo }]} />
-        : <Animated.View style={{ position: 'absolute', left: ponto.x - raio, top: ponto.y - raio, width: raio * 2, height: raio * 2, borderRadius: raio,
+        : temOrigem && <Animated.View style={{ position: 'absolute', left: ponto.x - raio, top: ponto.y - raio, width: raio * 2, height: raio * 2, borderRadius: raio,
             backgroundColor: cores.fundo, transform: [{ scale: crescer }] }} />}
     </Animated.View>
   );

@@ -39,7 +39,8 @@ test('nenhuma tela entre a prévia e a etapa 1: "Escrevendo suas lições" saiu'
 });
 
 test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro), "Ajustar pedido" sai e o leitor de tela ouve', () => {
-  assert.match(comecar, /setPendente\('aceitar'\);\n\s*setErro\(null\);\n\s*setCriacao\('criando'\);\n\s*tocaSons\.tocarEfeito\('toque_opcao'\);\n\s*anunciar\(mensagens\.geracao\.anuncioCriando\);/);
+  assert.match(comecar, /setPendente\('aceitar'\);\n\s*setErro\(null\);\n\s*setCriacao\('criando'\);\n\s*\/\/[^\n]*\n\s*anunciar\(mensagens\.geracao\.anuncioCriando\);/);
+  assert.doesNotMatch(comecar, /toque_opcao/, 'o toque em "Começar a lição 1" não tem som: o de conclusão fica sozinho');
   assert.match(geracao, /testID=\{expirada \? 'montar-de-novo' : 'comecar-trilha'\}/);
   assert.match(geracao, /rotulo=\{salvando \? mensagens\.geracao\.criandoTrilha : expirada \? mensagens\.geracao\.montarDeNovo : mensagens\.geracao\.comecarLicao1\}/);
   assert.match(geracao, /ocupado=\{salvando\} afundado=\{salvando\} giro=\{salvando\}/);
@@ -51,7 +52,8 @@ test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro
   // O botão: o giro de 16 px e uma linha só.
   const interface_ = ler('interface.tsx');
   assert.match(interface_, /\{giro && <Giro cor=\{corTexto\} \/>\}/);
-  assert.match(interface_, /<Text numberOfLines=\{giro \? 1 : undefined\}/);
+  assert.match(interface_, /<Text numberOfLines=\{giro \|\| umaLinha \? 1 : undefined\}/);
+  assert.match(geracao, /estilo=\{dividir \? estudoEstilos\.botaoDividido : undefined\} umaLinha \/>/, '"Ajustar pedido" numa linha');
   assert.match(interface_, /degrauFora\(4, 16, labio, pressed \|\| afundado\)/);
   assert.match(interface_, /giro: \{ width: 16, height: 16, borderRadius: 8, borderWidth: 2 \}/);
 });
@@ -112,7 +114,16 @@ test('o nó 1 à vista no toque: inteiro na área livre (entre a placa e o rodap
   const efeito = trecho(geracao, "if (criacao !== 'criando') return;\n    const primeiro", '}, [criacao]);');
   assert.match(efeito, /const topoLivre = cartaoDeVolta \? 0 : RITMO_DA_GERACAO\.placaTopo \+ alturaPlaca;/);
   assert.match(efeito, /if \(naTela - RITMO_DA_GERACAO\.no1AcimaDoCentro >= topoLivre && naTela \+ RITMO_DA_GERACAO\.no1AbaixoDoCentro <= altura\) return;/);
-  assert.match(efeito, /rolarPara\(Math\.max\(0, Math\.round\(centro - \(topoLivre \+ \(altura - topoLivre\) \* RITMO_DA_GERACAO\.no1NaAreaLivre\)\)\)\);/);
+  assert.match(efeito, /rolarAteNo1\(Math\.max\(0, Math\.round\(centro - \(topoLivre \+ \(altura - topoLivre\) \* RITMO_DA_GERACAO\.no1NaAreaLivre\)\)\)\);/);
+  // A rolagem tem 240 ms, quadro a quadro, com saída suave.
+  const rolar = trecho(geracao, 'function rolarAteNo1(alvo: number, duracaoPedida: number = RITMO_DA_GERACAO.rolarAteNo1Ms) {', '\n  }\n');
+  assert.match(rolar, /scrollTo\(\{ y: de \+ \(alvo - de\) \* \(1 - \(1 - t\) \*\* 3\), animated: false \}\)/);
+  // 4140a58: a passagem não espera a rolagem; com o aceite de volta, o que falta termina até t = 120 ms (longe demais ou com
+  // movimento reduzido, pula), e o círculo mede o nó 1 nesse instante.
+  assert.doesNotMatch(comecar, /fimDaRolagemNo1/);
+  assert.match(comecar, /rolagemDoNo1\.current\?\.terminar\(reduzida \? 0 : RITMO_DA_GERACAO\.circuloAtrasoMs\);/);
+  assert.match(comecar, /if \(!reduzida\) setTimeout\(medirNo1, RITMO_DA_GERACAO\.circuloAtrasoMs \+ 5\);/);
+  assert.match(geracao, /const longe = Math\.abs\(alvo - rolado\.current\) > \(visivel\.current \|\| height\);\n\s*rolarAteNo1\(alvo, prazoMs <= 0 \|\| longe \? 0 : prazoMs\);/);
   // Chegar ao alto durante a criação não traz o cartão do título de volta (ele empurraria o nó 1 para baixo do rodapé).
   assert.match(geracao, /if \(pronta && !cartaoDeVolta && y <= 4 && criacaoAgora\.current === null\) setCartaoDeVolta\(true\);/);
 });
