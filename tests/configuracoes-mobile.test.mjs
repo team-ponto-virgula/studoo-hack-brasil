@@ -222,3 +222,10 @@ test('salvar um campo alterado toca "salvo" (spec 12); a capa toca pelo aviso "C
   assert.match(app, /if \(normal === \(salvo\.descricao \?\? ''\)\) return;/);
   assert.match(app, /if \(!desativado && conf\.tema !== tema\) void salvar\('tema', \{ tema \}\);/);
 });
+
+test('o "Voltar" tem 48 de altura e o toque cresce 12 por fora, como todo botão de texto (spec 04, banca da noite §9)', () => {
+  const voltar = app.slice(app.indexOf('function Voltar('), app.indexOf('\n}\n', app.indexOf('function Voltar(')));
+  assert.match(voltar, /<Pressable testID="configuracoes-voltar" accessibilityRole="button" onPress=\{acao\} hitSlop=\{12\}/);
+  // O desenho não muda: 48 de altura, 10 de respiro nos lados e a margem de -8 que alinha a seta com o título.
+  assert.match(app, /voltar: \{ flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 6, minHeight: 48, marginLeft: -8, paddingHorizontal: 10 \}/);
+});

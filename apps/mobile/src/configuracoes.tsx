@@ -433,10 +433,14 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
   );
 }
 
-/** O "Voltar" do alto, como `.configuracoes__voltar`: seta de 20, texto 800 de 16 e 44 de altura de toque. */
+/**
+ * O "Voltar" do alto, como `.configuracoes__voltar`: seta de 20 e texto 800 de 16, em 48 de altura. Como todo botão de
+ * texto do app (spec 04, banca da noite §9), o toque cresce 12 por fora, sem mudar o desenho: mesmo contando só a parte
+ * que fica dentro da coluna (os 8 da margem negativa ficam fora dela), o alvo passa de 44 × 44.
+ */
 function Voltar({ acao }: { acao: () => void }) {
   return (
-    <Pressable testID="configuracoes-voltar" accessibilityRole="button" onPress={acao} hitSlop={4}
+    <Pressable testID="configuracoes-voltar" accessibilityRole="button" onPress={acao} hitSlop={12}
       style={({ pressed }) => [confEstilos.voltar, pressed && { opacity: 0.7 }]}>
       <Icone nome="setaVoltar" tamanho={20} cor={cores.acao} />
       <Text style={confEstilos.voltarTexto}>{k.voltar}</Text>
