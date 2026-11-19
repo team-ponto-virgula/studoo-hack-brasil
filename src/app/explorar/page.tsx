@@ -36,7 +36,7 @@ export default async function PaginaExplorarPublica() {
     return (
       <PaginaPublica>
         <section className="pagina-publica__vazio">
-          <Stu />
+          <Stu expressao="stu-encorajador" tamanho={96} animado="uma-vez" />
           <h1>{mensagens.erros.limite_compartilhar}</h1>
         </section>
       </PaginaPublica>

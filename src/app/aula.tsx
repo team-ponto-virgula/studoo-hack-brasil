@@ -35,7 +35,7 @@ import {
   type TipoTrecho,
 } from '@studoo/contratos';
 import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
-import { Botao, Confete, Icone, Mascote, Stu, type NomeIcone } from '../ui';
+import { Botao, Confete, Icone, Mascote, Stu, precarregarAnimacoesStu, type NomeIcone } from '../ui';
 import { ApoioDaLicao } from './estudio';
 import { Ordenar } from './ordenar';
 import { BotaoSom } from './som';
@@ -263,6 +263,10 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const tituloRetorno = useRef<HTMLHeadingElement>(null);
   /** O texto do retorno: rola sozinho quando o painel passaria de metade da tela (degradê de 24 px no fim). */
   const corpoRetorno = useRef<HTMLDivElement>(null);
+  // As três animações de acontecimento da reação (feliz, comemorando e encorajador, no tamanho do painel), carregadas
+  // quando a aula fica interativa: a primeira reação já se mexe sem esperar a rede (spec 13, §E6).
+  const telaDaAula = useRef<HTMLElement>(null);
+  useEffect(() => precarregarAnimacoesStu(telaDaAula.current, ['stu-feliz', 'stu-comemorando', 'stu-encorajador'], 48), []);
   const [corpoRola, setCorpoRola] = useState(false);
   useEffect(() => {
     const corpo = corpoRetorno.current;
@@ -685,7 +689,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
     : pontesPorExercicio[indice] ? 'stu-animado' : primeiras[indice] === true ? 'stu-comemorando' : 'stu-feliz';
 
   return (
-    <article className="painel painel--aula" data-retorno={retorno} data-ponte-aberta={ponteAberta || undefined}>
+    <article ref={telaDaAula} className="painel painel--aula" data-retorno={retorno} data-ponte-aberta={ponteAberta || undefined}>
       <header className="aula-topo">
         <button type="button" className="aula-fechar" aria-label={t.voltar} disabled={ocupado} onClick={() => sairAgora.current()}>
           <Icone nome="fechar" />
@@ -737,7 +741,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             {licao.concluida && <p className="aula-revisao"><Icone nome="check" />{mensagens.trilha.revisitando}</p>}
             <p className="introducao">{licao.objetivo}</p>
             <div className="aula-explicacao">
-              <Stu />
+              {/* Parado: a aula só carrega as três animações da reação (spec 13, §E6). */}
+              <Stu expressao="stu-feliz" tamanho={76} />
               <section className="aula-balao" aria-labelledby="etapa-aula">
                 <h2 id="etapa-aula">{t.explicacaoDoStu}</h2>
                 <ExplicacaoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} />
@@ -2009,7 +2014,7 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
       <p className="somente-leitor" role="status">{praticou && !escolha ? t.pratica.comoFoi : ''}</p>
       {escolha && (
         <div className="aula-explicacao aula-pratica__resposta" role="status" ref={respostaDoStu}>
-          <Stu />
+          <Stu expressao="stu-encorajador" tamanho={76} />
           <p className="aula-balao">{t.pratica.respostas[escolha]}</p>
         </div>
       )}

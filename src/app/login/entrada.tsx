@@ -259,7 +259,8 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
               <span key={tema} className="entrada-tema" style={{ '--i': indice } as CSSProperties}>{tema}</span>
             ))}
           </div>
-          <Mascote expressao="stu-acolhida" tamanho={240} sombra prioridade className="stu" />
+          {/* Sem `prioridade`: a arte larga some no celular e a imagem preguiçosa nem é pedida lá (spec 13, §E6). */}
+          <Mascote expressao="stu-acolhida" tamanho={240} sombra className="stu" />
         </Paisagem>
       </aside>
     </div>

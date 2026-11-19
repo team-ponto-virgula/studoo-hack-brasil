@@ -154,69 +154,15 @@
 
 .preparo-cena .stu {
   position: relative;
-  width: 112px;
+  width: 132px;
   height: auto;
   margin-bottom: 14px;
   transform-origin: 50% 100%;
   animation: preparo-stu 2400ms ease-in-out infinite;
 }
 
-/* O lápis: borracha, ponteira, corpo amarelo e a ponta de madeira com o grafite. */
-.preparo-lapis {
-  position: absolute;
-  bottom: 62px;
-  left: calc(50% + 36px);
-  width: 13px;
-  height: 52px;
-  border-radius: 4px 4px 1px 1px;
-  background: linear-gradient(#ff8fa3 0 9px, #c9d1ea 9px 14px, var(--ouro) 14px 100%);
-  box-shadow: inset -3px 0 0 rgb(0 0 0 / 0.08);
-  transform-origin: 50% 100%;
-  rotate: 24deg;
-  animation: preparo-lapis 520ms ease-in-out infinite alternate;
-}
 
-.preparo-lapis::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 0;
-  border-top: 11px solid #e9b880;
-  border-right: 6.5px solid transparent;
-  border-left: 6.5px solid transparent;
-}
 
-.preparo-lapis::before {
-  content: '';
-  position: absolute;
-  top: calc(100% + 7px);
-  left: 4.5px;
-  z-index: 1;
-  border-top: 4px solid var(--texto);
-  border-right: 2px solid transparent;
-  border-left: 2px solid transparent;
-}
-
-/* Folhas escritas que saem do Stu e voam para os lados. */
-.preparo-folha {
-  position: absolute;
-  bottom: 74px;
-  left: calc(50% - 13px);
-  width: 26px;
-  height: 32px;
-  border-radius: 5px;
-  background:
-    linear-gradient(var(--gelo), var(--gelo)) 5px 8px / 16px 3px no-repeat,
-    linear-gradient(var(--gelo), var(--gelo)) 5px 14px / 12px 3px no-repeat,
-    linear-gradient(var(--gelo), var(--gelo)) 5px 20px / 14px 3px no-repeat,
-    var(--fundo);
-  box-shadow: 0 2px 0 var(--borda-campo);
-  opacity: 0;
-  animation: preparo-folha 3300ms ease-out infinite;
-}
-
-.preparo-folha:nth-of-type(2) { --x: -118px; --giro: -28deg; animation-delay: 1100ms; }
-.preparo-folha:nth-of-type(3) { --x: 70px; --y: -128px; --giro: 14deg; animation-delay: 2200ms; }
 
 .preparo-lista { display: grid; gap: 10px; margin: 24px 0 0; padding: 0; list-style: none; }
 
@@ -274,7 +220,6 @@
 }
 
 .painel--preparo[data-prontas] .preparo-lista__icone .icone { stroke-width: 3; }
-.painel--preparo[data-prontas] .preparo-lapis, .painel--preparo[data-prontas] .preparo-folha { display: none; }
 .painel--preparo[data-prontas] .preparo-cena .stu { animation: preparo-pulo 300ms cubic-bezier(0.3, 0.6, 0.4, 1) 2 alternate; }
 
 .preparo-dica {
@@ -293,13 +238,6 @@
 .preparo-dica .icone { width: 22px; height: 22px; flex: none; color: var(--ouro-escuro); }
 
 @keyframes preparo-stu { 50% { transform: translateY(-6px) rotate(-2deg); } }
-@keyframes preparo-lapis { from { rotate: 16deg; translate: 0 0; } to { rotate: 32deg; translate: 4px 2px; } }
-@keyframes preparo-folha {
-  0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.5); }
-  12% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; transform: translate(var(--x, 104px), var(--y, -96px)) rotate(var(--giro, 24deg)) scale(1); }
-}
 @keyframes preparo-escrever { from { translate: -100% 0; } 55%, to { translate: 100% 0; } }
 @keyframes preparo-visto { from { transform: scale(0.3) rotate(-30deg); } }
 @keyframes preparo-pulo { to { transform: translateY(-14px); } }
@@ -307,8 +245,7 @@
 
 @media (max-width: 767px) {
   .preparo-cena { height: 164px; margin-bottom: 18px; }
-  .preparo-cena .stu { width: 98px; }
-  .preparo-lapis { bottom: 56px; left: calc(50% + 30px); }
+  .preparo-cena .stu { width: 110px; }
 }
 
 /* Celular: o mapa ocupa a largura da tela e o próximo passo vira o rodapé fixo, ao alcance do polegar. */
