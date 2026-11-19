@@ -1033,3 +1033,20 @@ button { touch-action: manipulation; }
   content: ''; position: absolute; right: 15%; bottom: 0; left: 15%; z-index: -1; aspect-ratio: 7 / 1;
   border-radius: 50%; background: rgb(11 27 92 / 0.14); filter: blur(6px); translate: 0 35%; pointer-events: none;
 }
+
+/* Entrada no celular (spec 04, banca da noite, item 1; igual ao app): cabe sem rolar. Sem a faixa ilustrada até 860 px
+   de altura (acima, 120 px); título 28/34 e texto 15/22; "Entrar" dentro do formulário, logo depois da senha, com 48 px
+   e na largura toda; "Esqueci minha senha" embaixo dele, como botão de texto de 44 px; sem rodapé preso. */
+.entrada-entrar { display: grid; margin-top: 4px; }
+.entrada-entrar > .botao { width: 100%; min-height: 48px; }
+.entrada-esqueci { justify-self: center; }
+@media (max-width: 767px) {
+  .entrada-conteudo { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+  .entrada-banner { height: 120px; margin-bottom: 20px; }
+  .entrada-cabecalho h1 { font-size: 28px; line-height: 34px; letter-spacing: -0.5px; }
+  .entrada-cabecalho .introducao { font-size: 15px; line-height: 22px; }
+  .entrada-cabecalho .acesso-link { min-height: 44px; }
+  .entrada-cabecalho .logo-quadro { margin-bottom: 20px; }
+  .entrada-forma .formulario { margin-top: 16px; }
+}
+@media (max-width: 767px) and (max-height: 860px) { .entrada-banner { display: none; } }

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type K
 import { ErroStudoo } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
-import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo, Mascote, Paisagem, Skeleton, Stu } from '../../ui';
+import { Botao, EstadoErro, Icone, Logo, Mascote, Paisagem, Skeleton, Stu } from '../../ui';
 import { Apresentacao } from '../apresentacao';
 import { tocaSons } from '../sons';
 
@@ -228,13 +228,10 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
                   <p className="campo-erro" id="senha-erro"><span className="sinal" aria-hidden="true">!</span>{errosCampo.senha}</p>
                 )}
               </div>
-              {configuracaoCarregada && recuperacaoDisponivel && (
-                <a className="acesso-link" href="/recuperar" onClick={() => {
-                  try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
-                }}>{mensagens.acesso.esqueci}</a>
-              )}
               {erro && <EstadoErro codigo={erro} />}
-              <AcaoPrincipal>
+              {/* "Entrar" logo depois da senha, na largura toda, sem rodapé preso (spec 04, banca da noite, item 1): com o
+                  visitante ligado é o secundário (o principal é experimentar); sem ele, o principal. */}
+              <div className="entrada-entrar">
                 <Botao type="submit" variante={visitanteDisponivel ? 'secundario' : 'primario'} disabled={enviando}>
                   {enviando ? (
                     <>
@@ -243,7 +240,12 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
                     </>
                   ) : mensagens.login.entrar}
                 </Botao>
-              </AcaoPrincipal>
+              </div>
+              {configuracaoCarregada && recuperacaoDisponivel && (
+                <a className="acesso-link entrada-esqueci" href="/recuperar" onClick={() => {
+                  try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
+                }}>{mensagens.acesso.esqueci}</a>
+              )}
             </form>
           )}
         </div>

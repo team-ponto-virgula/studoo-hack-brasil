@@ -3,7 +3,7 @@
 // animação por tela e a acolhida grande fora do celular.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { CATALOGO_STU } from '@studoo/contratos';
 
@@ -81,4 +81,17 @@ test('a acolhida grande da entrada não é pedida no celular (sem prioridade, e 
   const entrada = ler('src/app/login/entrada.tsx');
   assert.match(entrada, /<Mascote expressao="stu-acolhida" tamanho=\{240\} sombra className="stu" \/>/);
   assert.match(ler('src/app/globals.css'), /\.entrada-arte \{ display: none; \}/);
+});
+
+test('o Stu antigo (stu-oi) saiu da web: nenhum uso em src/ e os dois arquivos apagados (spec 13, A2)', () => {
+  const usos = [];
+  const varrer = (pasta) => readdirSync(join(raiz, pasta)).forEach((nome) => {
+    const caminho = join(pasta, nome);
+    if (statSync(join(raiz, caminho)).isDirectory()) varrer(caminho);
+    else if (/\.(ts|tsx|css|mjs|js)$/.test(nome) && ler(caminho).includes('stu-oi')) usos.push(caminho);
+  });
+  varrer('src');
+  assert.deepEqual(usos, []);
+  assert.equal(existsSync(join(raiz, 'public/marca/stu-oi.svg')), false);
+  assert.equal(existsSync(join(raiz, 'docs/marca/stu-oi.svg')), false);
 });
