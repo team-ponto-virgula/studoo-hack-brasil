@@ -84,11 +84,30 @@ export const ATRASO_MAXIMO_EFEITO_MS = 120;
 /**
  * Registro do som para a conferência nativa (Mobile 2, linha do tempo de apps/mobile/conferencia-nativa): só com
  * `EXPO_PUBLIC_STUDOO_REGISTRO_SOM=1` no Metro. "comando" sai quando o app manda tocar (depois do intervalo mínimo, antes do
- * `play()`) e "reproducao" quando o reprodutor avisa pela primeira vez que está tocando; o fundo usa o id do fundo.
+ * `play()`) e "reproducao" quando o reprodutor avisa pela primeira vez que está tocando; o fundo usa o id do fundo, e as
+ * amostras do fundo saem em `registrarFundo`.
  */
 const REGISTRAR_SOM = process.env.EXPO_PUBLIC_STUDOO_REGISTRO_SOM === '1';
 function registrarSom(tipo: 'comando' | 'reproducao', id: string): void {
   if (REGISTRAR_SOM) console.info(`[som] ${tipo} ${id} ${Date.now()}`);
+}
+
+/**
+ * Amostra do fundo para a mesma linha do tempo, só com o que o expo-audio expõe do reprodutor: se toca (`playing`), a
+ * posição e a duração (`currentTime` e `duration`, em ms) e o volume do próprio reprodutor (`volume`; a mistura e a saída no
+ * alto-falante não aparecem aqui). Sai em cada atualização de estado do reprodutor (a cada 500 ms enquanto toca, e no play e
+ * no pause) e logo depois do comando de cada efeito e 200 ms depois, por baixo dele. A e B são os dois reprodutores que se
+ * alternam na volta do laço. Formato: "[som] fundo <id> <A|B> <tocando|parado> <posição_ms>/<duração_ms> <volume> <ms>".
+ */
+function registrarFundo(id: string, nome: 'A' | 'B', jogador: AudioPlayer, status?: AudioStatus): void {
+  if (!REGISTRAR_SOM) return;
+  const ms = (segundos: number) => (Number.isFinite(segundos) ? Math.round(segundos * 1000) : 0);
+  try {
+    const estado = status ?? jogador.currentStatus;
+    console.info(`[som] fundo ${id} ${nome} ${estado.playing ? 'tocando' : 'parado'} ${ms(estado.currentTime)}/${ms(estado.duration)} ${jogador.volume.toFixed(3)} ${Date.now()}`);
+  } catch {
+    // Reprodutor já liberado: sem amostra.
+  }
 }
 
 /** Os efeitos que o app aquece quando as preferências chegam, na ordem: os do toque e da aula primeiro. */
@@ -273,6 +292,7 @@ class TocaSonsMobile {
     const { player } = jogador;
     try {
       registrarSom('comando', id);
+      if (REGISTRAR_SOM) this.amostrarFundoNoEfeito();
       jogador.esperandoReproducao = true;
       player.volume = CATALOGO_EFEITOS[id].volume;
       if (player.playing) {
@@ -590,10 +610,21 @@ class TocaSonsMobile {
     }, esperaMs);
   }
 
-  private criarJogadorDeFundo(id: Exclude<IdSomFundo, 'mudo'>): AudioPlayer {
+  /** Conferência nativa: o estado do fundo logo depois do comando de um efeito e 200 ms depois, fora do caminho do toque. */
+  private amostrarFundoNoEfeito(): void {
+    const amostrar = () => {
+      const ativo = this.ativoEhA ? this.jogadorA : this.jogadorB;
+      if (this.fundoAtualId && ativo) registrarFundo(this.fundoAtualId, this.ativoEhA ? 'A' : 'B', ativo);
+    };
+    setTimeout(amostrar, 0);
+    setTimeout(amostrar, 200);
+  }
+
+  private criarJogadorDeFundo(id: Exclude<IdSomFundo, 'mudo'>, nome: 'A' | 'B'): AudioPlayer {
     const jogador = createAudioPlayer(FONTES_FUNDOS[id]);
     if (REGISTRAR_SOM) {
       jogador.addListener('playbackStatusUpdate', (status: AudioStatus) => {
+        registrarFundo(id, nome, jogador, status);
         const esperado = this.fundoEsperandoReproducao.get(jogador);
         if (!status.playing || !esperado) return;
         this.fundoEsperandoReproducao.delete(jogador);
@@ -656,8 +687,8 @@ class TocaSonsMobile {
     this.fundoAtualId = id;
     this.ativoEhA = true;
     try {
-      this.jogadorA = this.criarJogadorDeFundo(id);
-      this.jogadorB = this.criarJogadorDeFundo(id);
+      this.jogadorA = this.criarJogadorDeFundo(id, 'A');
+      this.jogadorB = this.criarJogadorDeFundo(id, 'B');
       this.jogadorA.volume = 0;
       this.jogadorB.volume = 0;
       // A entra pelo começo do trecho (o volume sobe do zero, então o instante antes do seekTo não se ouve); B já fica lá.
