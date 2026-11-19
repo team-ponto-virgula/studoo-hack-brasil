@@ -15,7 +15,7 @@ import {
 } from '@studoo/contratos';
 import { origemConfigurada, type ClienteNativo } from './api-nativa';
 import { Icone } from './icone';
-import { Botao, BotaoIcone, Campo, RolagemDaTela, degrade, useMovimentoReduzido } from './interface';
+import { Botao, BotaoIcone, Campo, RolagemDaTela, degrade, estilos as estilosDaInterface, useMovimentoReduzido } from './interface';
 import { mensagemDoCodigo, mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
@@ -859,7 +859,8 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
         <FraseComNome frase={sua ? m.compartilhadaPor(nome) : m.publicoTitulo(nome)} nome={nome} perfilId={trilha.dono.perfilId}
           estilo={socialEstilos.previaDeTexto} />
       </View>
-      <Text ref={titulo} accessibilityRole="header" style={socialEstilos.previaTitulo}>{trilha.titulo}</Text>
+      {/* Na página /t o título é o h1 (32/40, como os títulos de tela); no "Adicionar por link", o h2 de 20. */}
+      <Text ref={titulo} accessibilityRole="header" style={calor ? estilosDaInterface.titulo : socialEstilos.previaTitulo}>{trilha.titulo}</Text>
       <Text style={socialEstilos.previaMeta}>{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</Text>
       <View style={socialEstilos.previaAcoes}>{acoes}</View>
       {!sua && <Text style={socialEstilos.previaZero}>{m.comecaDoZero}</Text>}

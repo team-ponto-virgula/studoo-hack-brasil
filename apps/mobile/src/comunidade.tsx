@@ -858,7 +858,7 @@ export function TelaPreviaTrilha({ cliente, codigo, acoesTela, aoAdicionado, aoA
       {trilha && !falha && (
         <PreviaTrilha trilha={trilha}
           calor={{ seguir: trilha.dono.perfilId && trilha.seguirDono
-            ? <View style={{ marginTop: 6 }}><BotaoSeguir cliente={cliente} perfilId={trilha.dono.perfilId} nome={trilha.dono.nome} estado={trilha.seguirDono} /></View>
+            ? <View style={comunidadeEstilos.seguirNaPrevia}><BotaoSeguir cliente={cliente} perfilId={trilha.dono.perfilId} nome={trilha.dono.nome} estado={trilha.seguirDono} /></View>
             : null }}
           acoes={<>
             <AcoesDeQuemRecebe trilha={trilha} ocupado={adicionando} adicionar={() => void adicionar()} abrir={aoAbrir} />
@@ -874,6 +874,8 @@ export const FIM_COM_BARRA = { paddingBottom: 120 } as const;
 
 const comunidadeEstilos = StyleSheet.create({
   irAoExplorar: { marginTop: 26 },
+  // .quem-compartilhou__seguir: 6 acima e a largura do próprio botão.
+  seguirNaPrevia: { marginTop: 6, alignSelf: 'flex-start' },
   // .cartao-trilha: borda de 2 em volta, cantos de 20 e o degrau de 4 por fora.
   cartaoFora: { flex: 1 },
   cartao: { flex: 1, overflow: 'hidden', borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
