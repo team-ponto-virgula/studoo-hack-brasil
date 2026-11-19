@@ -141,12 +141,14 @@ Se os eventos chegarem mais rápido que a sequência, cada lição começa quand
 O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não muda: na prévia pronta, um toque salva a trilha e abre a etapa 1 da lição 1, e o mapa salvo aparece quando a pessoa volta da aula. Não entram tela no meio, segundo botão, pausa fixa, contagem, etapas inventadas, confete nem texto de enfeite. Esboço antes e depois: `ux/13-criar-trilha/sequencia.png`, na pasta do Designer.
 
 **A prévia é rascunho.** Os nós da prévia têm face branca e contorno tracejado de 2 px `#9CB4F5`, sem o lábio. O caminho é tracejado 8/8, também em `#9CB4F5`. Quando a trilha passa a existir, eles viram os nós e o caminho de sempre.
+- O mundo ilustrado continua: regiões com a fronteira ondulada, cenário e o marco de cada parte. O marco diz só "Parte 2", sem contar lições.
+- O troféu do fim é o de antes de conquistar (spec 13, §B4): lente branca com borda de 3 px `#E0A92E` e troféu em silhueta cinza a 40%, sem brilho e sem estrelas. Brilho, estrelas e cor cheia são só da trilha concluída.
 
 **O toque (0 ms).**
 - O botão principal da prévia pronta diz "Começar a lição 1" (`comecarLicao1`).
 - Em até 100 ms do toque, o botão afunda (o lábio some), mostra o giro de 16 px e "Criando sua trilha…" (`criandoTrilha`).
 - "Ajustar pedido" sai, e o botão ocupa a largura toda, numa linha: 200 ms, ou na hora com movimento reduzido. Na metade da largura, em 390, o rótulo com o giro quebraria em duas linhas.
-- Se o nó 1 não estiver à vista, a prévia rola até ele (240 ms).
+- A prévia rola até o nó 1 (240 ms). O alvo é a área visível entre a base da placa e o topo do rodapé, não a tela toda: o nó 1, o rótulo dele e o Stu ficam inteiros nessa área, com o centro do nó a 40% da altura dela. Atrás da placa, o Stu estudando e o começo do círculo não aparecem; era o que acontecia na primeira captura do app, com o círculo à vista só perto de 377 ms.
 - O Stu anda até o nó 1 (400 ms) e passa a `stu-estudando`, em laço, no tamanho do guia do mapa. O anel do nó 1 respira. O resto da tela não muda.
 - Leitor de tela: "Criando sua trilha." (`anuncioCriando`, educado). O foco fica no botão.
 
@@ -157,7 +159,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - A tela Escrevendo suas lições sai, com a lista, o brilho e as dicas.
 
 **A trilha passa a existir (o aceite volta ok).** A passagem é a própria navegação para a aula, em até 470 ms:
-- t = 0: toca `geracao_pronta`. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
+- t = 0: toca `geracao_pronta`. A placa "Proposta pronta" sai (opacidade e 8 px para cima, 150 ms; na hora com movimento reduzido), porque a proposta virou trilha. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
 - t = 120 ms: um círculo da cor do fundo da aula cresce a partir do centro do nó 1 até cobrir a tela (300 ms, ease-out).
 - t = 320 ms: a etapa 1 entra por cima (opacidade, 150 ms). Se a lição ainda carrega, entra o esqueleto da aula no mesmo lugar, sem giro.
 - A busca da lição (`obterLicao`) começa no instante em que o aceite volta, junto com a passagem, e não depois dela.
