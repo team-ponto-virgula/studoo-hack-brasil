@@ -16,8 +16,12 @@
   z-index: 3; align-self: start; width: min(calc(100% - 32px), 44rem); margin: 12px auto 0; padding: 10px 14px;
   border: 1px solid #f0cb74; border-radius: 16px; color: var(--texto); background: #fff9ea; font-size: .94rem; font-weight: 800;
 }
-.previa-mapa { --passo: max(158px,10rem); --centro: max(64px,4rem); --fronteira: 48px; background: var(--chao); overflow: auto; overscroll-behavior: contain; min-height: 0; scrollbar-color: #a8bcca transparent; scrollbar-width: thin; }
-.painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-mapa { --passo: max(158px,10rem); --centro: max(64px,4rem); --fronteira: 48px; background: var(--chao); overflow: hidden; }
+.previa-mapa { --passo: max(158px,10rem); --centro: max(64px,4rem); --fronteira: 48px; container-type: size; background: var(--chao); overflow: auto; overscroll-behavior: contain; min-height: 0; scrollbar-color: #a8bcca transparent; scrollbar-width: thin; }
+.painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-mapa { overflow: hidden; }
+/* A altura do mapa já exclui a placa e o rodapé, inclusive quando entra a mensagem de espera. */
+.painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-percurso::before {
+  content: ''; display: block; height: max(0px,calc(40cqh - var(--centro))); background: #e3f3e8;
+}
 .previa-percurso { position: relative; isolation: isolate; margin: 0; padding: 0; list-style: none; }
 .previa-no { position: relative; height: var(--passo); background: var(--chao); }
 /* A mesma região, fronteira e vegetação do mapa salvo. O marco ganha seu próprio espaço entre os nomes. */
@@ -58,8 +62,8 @@
 .previa-vaga { position: relative; display:flex; justify-content:center; align-items:center; }
 .previa-vaga > span:first-child { width: 62px; height: 62px; border: 2px dashed #9cb4f5; border-radius: 50%; opacity: .65; }
 .previa-chegada { position: relative; min-height: var(--passo); align-content: start; padding: calc(var(--centro) - 36px) 12px 20px; font-weight: 800; }
-.previa-premio { position: relative; z-index: 2; display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; border: 2px solid #e7a01d; background: white; box-shadow: 0 4px 0 #d8951b; }
-.previa-premio > img { width: 50px; height: auto; }
+.previa-premio { position: relative; z-index: 2; display: grid; place-items: center; width: 76px; height: 76px; border-radius: 50%; border: 3px solid #e0a92e; background: white; box-shadow: 0 4px 0 #c7922a; }
+.previa-premio > img { width: 72%; height: auto; filter: grayscale(1); opacity: .4; }
 .previa-premio .previa-stu { left: calc(100% + 4px); top: -6px; }
 .previa-chegada > span:not(.previa-ligacao), .previa-chegada > small { position: relative; z-index: 2; }
 
@@ -79,6 +83,7 @@
 [data-fase='salvando'] [data-primeiro] .previa-no__face { animation: previa-anel 1.1s ease-in-out infinite; }
 [data-fase='criada'] [data-primeiro] .previa-no__face { background: var(--acao); color: white; border: 2px solid var(--acao); animation: previa-pulso 180ms ease-out; }
 [data-fase='criada'] .previa-ligacao path { stroke-dasharray: none; stroke: #a9b7db; transition: stroke 180ms; }
+[data-fase='criada'] .previa-placa { animation: previa-retirar-placa 150ms ease-out both; }
 .painel--geracao[data-passagem] { position: fixed; z-index: 20; pointer-events: none; max-height: none; min-height: 0; overflow: visible; animation: previa-sair 150ms 320ms linear forwards; }
 .painel--geracao[data-passagem='reduzida'] { animation: previa-sair 150ms linear forwards; }
 .previa-circulo { position: fixed; z-index: 8; inset: 0; pointer-events: none; background: white; clip-path: circle(0 at var(--origem-x) var(--origem-y)); animation: previa-abrir 300ms 120ms ease-out both; }
@@ -91,6 +96,7 @@
 @keyframes previa-anel { 0%,100% { box-shadow: 0 0 0 4px #8cafff; } 50% { box-shadow: 0 0 0 9px #b4cdff; } }
 @keyframes previa-pulso { 55% { transform: scale(1.12); } }
 @keyframes previa-sair { to { opacity: 0; } }
+@keyframes previa-retirar-placa { to { opacity: 0; transform: translateY(-8px); } }
 @keyframes previa-abrir { to { clip-path: circle(var(--raio) at var(--origem-x) var(--origem-y)); } }
 /* Fora do mapa, o mesmo quadro cobre a aula até ela aparecer; teclas e toques já chegam à aula. */
 @media (min-width: 768px) {
@@ -120,5 +126,6 @@
   [data-fase='montando'] .previa-no__face, [data-fase='montando'] .previa-no__titulo, [data-fase='montando'] .previa-ligacao, .previa-chegada[data-visto] .previa-premio { animation: previa-aparecer 150ms linear; }
   [data-fase='salvando'] [data-primeiro] .previa-no__face { animation: none; box-shadow: 0 0 0 4px #8cafff; }
   [data-fase='criada'] [data-primeiro] .previa-no__face, .previa-giro { animation: none; }
+  [data-fase='criada'] .previa-placa { animation: none; opacity: 0; }
   .previa-circulo { display: none; }
 }
