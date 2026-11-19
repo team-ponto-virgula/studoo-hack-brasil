@@ -74,7 +74,7 @@ export const COR_DO_TEMA: Record<Tema, string> = {
   saude: '#2f9e6f',
   culinaria: '#d9822b',
   carreira: '#475569',
-  outros: '#3858d6',
+  outros: '#2563ff',
 };
 
 /** Número de 32 bits estável a partir do código (FNV-1a), para o desenho da capa ser sempre o mesmo. */
@@ -151,7 +151,7 @@ export const CAPAS_GALERIA = [
   { id: 'oceano', de: '#0f5fa8', ate: '#2bb3c9', padrao: 'ondas' },
   { id: 'floresta', de: '#1f6b47', ate: '#6fbf73', padrao: 'montanhas' },
   { id: 'por-do-sol', de: '#d9480f', ate: '#f6b24a', padrao: 'raios' },
-  { id: 'noite', de: '#1b2a5e', ate: '#4b3a9e', padrao: 'estrelas' },
+  { id: 'noite', de: '#0b1b5c', ate: '#4b3a9e', padrao: 'estrelas' },
   { id: 'areia', de: '#b7791f', ate: '#f0d08a', padrao: 'ondas' },
   { id: 'lavanda', de: '#7c4dcc', ate: '#c6a8f0', padrao: 'losangos' },
   { id: 'menta', de: '#0f7c6c', ate: '#7fdcc3', padrao: 'pontos' },

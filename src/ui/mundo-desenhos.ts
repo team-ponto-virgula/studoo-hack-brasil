@@ -42,16 +42,16 @@ export const coresMundo = {
   chamine: '#B8644A',
   janela: '#9CCBF3',
   flor: '#F38FB0',
-  florAmarela: '#FFD166',
+  florAmarela: '#fbbf24',
   miolo: '#FFAE1A',
   nuvem: '#FFFFFF',
-  sol: '#FFD166',
+  sol: '#fbbf24',
   solHalo: '#FFEDB8',
   bandeira: '#F2667A',
-  acao: '#3858D6',
+  acao: '#2563ff',
   acaoClara: '#8DA2F2',
-  acaoEscura: '#2A44A8',
-  sombra: 'rgba(27, 42, 94, 0.12)',
+  acaoEscura: '#1d4ed8',
+  sombra: 'rgba(11, 27, 92, 0.12)',
 } as const;
 
 export type CorMundo = keyof typeof coresMundo;

@@ -26,7 +26,7 @@ type Trilha = { autor: string; id: string; plano: () => PlanoInterno; tema: Tema
 
 const PESSOAS: Pessoa[] = [
   { chave: "marina", nome: "Marina Costa", cor: "roxo", resumo: "Professora de música e fotógrafa de fim de semana.", interesses: ["artes"], retrato: { fundo: ["#ffd6a8", "#f59fb5"], pele: "#e0a57c", cabelo: "#2b1d16", roupa: "#6b46c1", estilo: "longo" } },
-  { chave: "rafael", nome: "Rafael Nunes", cor: "azul", resumo: "Viajo sempre que dá e ensino inglês para quem vai junto.", interesses: ["idiomas", "historia"], retrato: { fundo: ["#bfe3ff", "#7fb2f0"], pele: "#c98a62", cabelo: "#1f1a17", roupa: "#2a44a8", estilo: "curto" } },
+  { chave: "rafael", nome: "Rafael Nunes", cor: "azul", resumo: "Viajo sempre que dá e ensino inglês para quem vai junto.", interesses: ["idiomas", "historia"], retrato: { fundo: ["#bfe3ff", "#7fb2f0"], pele: "#c98a62", cabelo: "#1f1a17", roupa: "#1d4ed8", estilo: "curto" } },
   { chave: "lucia", nome: "Dona Lúcia", cor: "laranja", resumo: "Cozinheira de mão cheia. Ensino as receitas da família.", interesses: ["culinaria"], retrato: { fundo: ["#ffe7c2", "#ffc27a"], pele: "#8d5a3b", cabelo: "#d9d4cf", roupa: "#b25400", estilo: "coque" } },
   { chave: "tiago", nome: "Tiago Ramos", cor: "verde", resumo: "Matemática e física sem medo, com exemplos de todo dia.", interesses: ["matematica", "ciencias"], retrato: { fundo: ["#c9f2d8", "#7fd1a8"], pele: "#f1c7a5", cabelo: "#7a3b12", roupa: "#1f7a5a", estilo: "curto" } },
   { chave: "bruna", nome: "Bruna Lima", cor: "turquesa", resumo: "Dev que adora ensinar o que acabou de aprender.", interesses: ["programacao", "carreira"], retrato: { fundo: ["#c4f1f4", "#7fd3dc"], pele: "#a86b4a", cabelo: "#151012", roupa: "#0f7c86", estilo: "longo" } },

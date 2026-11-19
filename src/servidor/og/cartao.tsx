@@ -92,7 +92,7 @@ async function rodape(texto: string) {
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", marginTop: "auto" }}>
       <span style={{ fontFamily: "Nunito", fontWeight: 700, fontSize: 26, color: "#5e6a85" }}>{texto}</span>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      {marca ? <img src={marca} width={213} height={70} alt="" /> : <span style={{ fontFamily: "Quicksand", fontSize: 48, color: "#1b2a5e" }}>studoo</span>}
+      {marca ? <img src={marca} width={213} height={70} alt="" /> : <span style={{ fontFamily: "Quicksand", fontSize: 48, color: "#0b1b5c" }}>studoo</span>}
     </div>
   );
 }
@@ -104,10 +104,10 @@ const resposta = async (conteudo: React.ReactElement) => new ImageResponse(conte
 export async function imagemGenerica() {
   const desenho = await carregarStu();
   return resposta(
-    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", padding: 64, background: "#eef3ff", position: "relative" }}>
+    <div style={{ display: "flex", flexDirection: "column", width: "100%", height: "100%", padding: 64, background: "#e9e7ff", position: "relative" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {desenho && <img src={desenho} width={260} height={286} style={{ position: "absolute", right: 80, top: 70 }} alt="" />}
-      <span style={{ fontFamily: "Quicksand", fontSize: 72, color: "#1b2a5e", maxWidth: 760, lineHeight: 1.1 }}>Aprenda qualquer coisa, uma lição por vez.</span>
+      <span style={{ fontFamily: "Quicksand", fontSize: 72, color: "#0b1b5c", maxWidth: 760, lineHeight: 1.1 }}>Aprenda qualquer coisa, uma lição por vez.</span>
       {await rodape("Studoo")}
     </div>,
   );
@@ -126,12 +126,12 @@ export async function imagemDaTrilha(t: { codigo: string; titulo: string; tema: 
       </div>
       <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "56px 56px 48px" }}>
         {t.tema && (
-          <span style={{ display: "flex", alignSelf: "flex-start", padding: "8px 22px", borderRadius: 999, background: "#eef3ff", color: "#1b2a5e", fontFamily: "Nunito", fontWeight: 800, fontSize: 26 }}>
+          <span style={{ display: "flex", alignSelf: "flex-start", padding: "8px 22px", borderRadius: 999, background: "#e9e7ff", color: "#0b1b5c", fontFamily: "Nunito", fontWeight: 800, fontSize: 26 }}>
             {mensagens.temas[t.tema]}
           </span>
         )}
-        <span style={{ marginTop: 24, fontFamily: "Quicksand", fontSize: tamanhoTitulo, lineHeight: 1.12, color: "#1b2a5e", letterSpacing: -1.5 }}>{t.titulo}</span>
-        <span style={{ marginTop: 22, fontFamily: "Nunito", fontWeight: 800, fontSize: 32, color: "#3858d6" }}>{mensagens.comunidade.por(t.dono.nome)}</span>
+        <span style={{ marginTop: 24, fontFamily: "Quicksand", fontSize: tamanhoTitulo, lineHeight: 1.12, color: "#0b1b5c", letterSpacing: -1.5 }}>{t.titulo}</span>
+        <span style={{ marginTop: 22, fontFamily: "Nunito", fontWeight: 800, fontSize: 32, color: "#2563ff" }}>{mensagens.comunidade.por(t.dono.nome)}</span>
         {t.dono.demo && seloDemo()}
         {await rodape(mensagens.compartilhar.totalLicoes(t.totalLicoes))}
       </div>
@@ -147,9 +147,9 @@ export async function imagemDoPerfil(p: { nome: string; cor: CorPerfil; foto: st
       <div style={{ display: "flex", width: "100%", height: 200, background: FUNDO_DA_COR[p.cor] }} />
       <div style={{ display: "flex", flexDirection: "column", flex: 1, padding: "0 64px 48px" }}>
         <div style={{ display: "flex", marginTop: -110 }}><Avatar nome={p.nome} cor={p.cor} foto={foto} lado={210} /></div>
-        <span style={{ marginTop: 18, fontFamily: "Quicksand", fontSize: 64, color: "#1b2a5e", letterSpacing: -1.5 }}>{p.nome}</span>
+        <span style={{ marginTop: 18, fontFamily: "Quicksand", fontSize: 64, color: "#0b1b5c", letterSpacing: -1.5 }}>{p.nome}</span>
         {p.demo && seloDemo()}
-        {p.resumo && <span style={{ marginTop: 8, fontFamily: "Nunito", fontWeight: 700, fontSize: 30, color: "#1b2a5e", maxWidth: 1000, lineHeight: 1.3 }}>{p.resumo.length > 110 ? `${p.resumo.slice(0, 108)}…` : p.resumo}</span>}
+        {p.resumo && <span style={{ marginTop: 8, fontFamily: "Nunito", fontWeight: 700, fontSize: 30, color: "#0b1b5c", maxWidth: 1000, lineHeight: 1.3 }}>{p.resumo.length > 110 ? `${p.resumo.slice(0, 108)}…` : p.resumo}</span>}
         {await rodape(mensagens.perfil.alcanceItens(p.trilhas, p.pessoas, { semZeros: true }).join(" · "))}
       </div>
     </div>,
