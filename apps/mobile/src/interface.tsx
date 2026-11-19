@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import {
   AccessibilityInfo,
   Animated,
@@ -25,6 +25,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import { NavegacaoContexto } from './navegacao';
+import { useDepoisDeSair } from './janelas';
 import { useMovimentoReduzido } from './movimento';
 export { useMovimentoReduzido } from './movimento';
 
@@ -32,7 +33,7 @@ import { Icone } from './icone';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
-import { focoVisivel } from './foco';
+import { focarSemRolar, focoVisivel } from './foco';
 
 /**
  * Quanto o conteúdo da tela começa abaixo do topo da rolagem por causa da barra da marca, que rola junto (como na web).
@@ -52,6 +53,70 @@ export const RolagemDaTela = createContext<{
 } | null>(null);
 /** O teclado está aberto: a entrada recolhe a parte de cima, e o rodapé deixa de somar a área segura de baixo. */
 export const TecladoAberto = createContext(false);
+/** Altura ocupada no pé da janela (barra de abas, rodapé ou área segura): o menu "•••" abre em cima quando não cabe acima dela. */
+export const BaixoOcupado = createContext(0);
+
+/**
+ * Aviso do próprio app (spec 11, nunca do sistema): uma faixa no pé da tela, 16 acima do rodapé e da barra de abas, que
+ * some sozinha ("Perfil salvo.", o aviso da primeira curtida, "Não deu para curtir agora…"). Ícone de 20 à esquerda
+ * (visto, alerta ou coração) e, no máximo, uma ação em texto à direita ("Entrar", "Tentar de novo"). Some em 4,5 s, ou em
+ * 7 s com ação. O estado mora na raiz do app (uma tela por vez): quem avisa pega `avisar` do contexto, e a `Tela` desenha a
+ * faixa onde ela sabe a altura das barras. Nunca leva o foco; o leitor de tela ouve o texto.
+ */
+export type OpcoesDoAviso = { icone?: 'check' | 'alerta' | 'valeu'; acao?: { rotulo: string; aoTocar: () => void }; duracaoMs?: number };
+export type AvisoAtual = OpcoesDoAviso & { texto: string; vez: number };
+export const AvisoDoApp = createContext<{ aviso: AvisoAtual | null; avisar: (texto: string, opcoes?: OpcoesDoAviso) => void; dispensar: () => void }>({
+  aviso: null, avisar: () => undefined, dispensar: () => undefined,
+});
+export const DURACAO_DO_AVISO_MS = 4500;
+export const DURACAO_DO_AVISO_COM_ACAO_MS = 7000;
+
+/** O estado do aviso na raiz do app: cada `avisar` entra no lugar do anterior na hora e recomeça o tempo. */
+export function useAvisoDoAppRaiz() {
+  const [aviso, setAviso] = useState<AvisoAtual | null>(null);
+  useEffect(() => {
+    if (!aviso) return;
+    const relogio = setTimeout(() => setAviso(null), aviso.duracaoMs ?? (aviso.acao ? DURACAO_DO_AVISO_COM_ACAO_MS : DURACAO_DO_AVISO_MS));
+    return () => clearTimeout(relogio);
+  }, [aviso]);
+  const avisar = useCallback((texto: string, opcoes: OpcoesDoAviso = {}) => {
+    setAviso((anterior) => ({ ...opcoes, texto, vez: (anterior?.vez ?? 0) + 1 }));
+    // Papel de status, como o role="status" da web: o leitor de tela também ouve.
+    setTimeout(() => AccessibilityInfo.announceForAccessibility(texto), 0);
+  }, []);
+  const dispensar = useCallback(() => setAviso(null), []);
+  return { aviso, avisar, dispensar };
+}
+
+/** A faixa do aviso: até 480 de largura, fundo #1B2A5E, texto branco 800 de 15/22, cantos de 16; sobe 10 com a opacidade em 220 ms. */
+function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
+  const reduzir = useMovimentoReduzido();
+  const { dispensar } = useContext(AvisoDoApp);
+  const [entrada] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    entrada.setValue(0);
+    const animacao = Animated.timing(entrada, { toValue: 1, duration: reduzir !== false ? 120 : 220, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [aviso.vez, reduzir, entrada]);
+  return (
+    <View pointerEvents="box-none" style={[estilos.avisoLugar, { bottom: baixo }]}>
+      <Animated.View testID="aviso-app" accessibilityLiveRegion="polite" style={[estilos.aviso, {
+        opacity: entrada,
+        transform: [{ translateY: reduzir !== false ? 0 : entrada.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+      }]}>
+        {aviso.icone && <View style={estilos.avisoIcone}><Icone nome={aviso.icone} tamanho={20} cor="#FFFFFF" cheio={aviso.icone === 'valeu'} /></View>}
+        <Text style={estilos.avisoTexto}>{aviso.texto}</Text>
+        {aviso.acao && (
+          <Pressable testID="aviso-acao" accessibilityRole="button" hitSlop={8} onPress={() => { const acao = aviso.acao; dispensar(); acao?.aoTocar(); }}
+            style={({ pressed }) => [estilos.avisoAcao, pressed && { opacity: 0.7 }]}>
+            <Text style={estilos.avisoAcaoTexto}>{aviso.acao.rotulo}</Text>
+          </Pressable>
+        )}
+      </Animated.View>
+    </View>
+  );
+}
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
@@ -182,6 +247,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
       {!topo && abaixoDoLogo && <View style={[estilos.abaixoDoLogo, !paginaDeAcesso && estilos.abaixoDoLogoEstudo]}>{abaixoDoLogo}</View>}
     </View>
   );
+  const { aviso } = useContext(AvisoDoApp);
+  // O aviso fica 16 acima do que estiver embaixo: o rodapé, a barra de abas ou, sem nenhum, a área segura de baixo.
+  const baixoDoAviso = 16 + (comBarra ? alturaBarra : 0) + (rodape ? alturaRodape : 0) + (!comBarra && !rodape ? fundoSeguro : 0);
   return (
     <SafeAreaView style={estilos.tela} edges={['top', 'left', 'right']}>
       {topo && cabecalho}
@@ -215,7 +283,9 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
               <AlturaDaFaixaFixa.Provider value={faixaFixa ? alturaFaixa : 0}>
                 <RolagemDaTela.Provider value={{ rolarAte, mostrar, focar }}>
                   <TecladoAberto.Provider value={teclado}>
-                    <Entrada>{children}</Entrada>
+                    <BaixoOcupado.Provider value={baixoDoAviso - 16}>
+                      <Entrada>{children}</Entrada>
+                    </BaixoOcupado.Provider>
                   </TecladoAberto.Provider>
                 </RolagemDaTela.Provider>
               </AlturaDaFaixaFixa.Provider>
@@ -238,6 +308,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
         })()}
       </KeyboardAvoidingView>
       {comBarra && <NavegacaoInferior fundo={fundoSeguro} sobreposta={barraSobreposta} aoMedir={setAlturaBarra} />}
+      {aviso && <FaixaDoAviso key={aviso.vez} aviso={aviso} baixo={baixoDoAviso} />}
     </SafeAreaView>
   );
 }
@@ -365,7 +436,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
   /** Mostra pontinhos pulando no lugar do rótulo, que segue como nome do botão para o leitor de tela. */
   carregando?: boolean;
   /** `sucesso` e `alerta` são o verde e o âmbar do retorno da aula, com contraste para o texto branco. */
-  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto' | 'destrutivo';
+  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto' | 'destrutivo' | 'perigo';
   compacto?: boolean;
 }) {
   const [focado, setFocado] = useState(false);
@@ -381,13 +452,13 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
     if (bloqueado || reduzir !== false) { pressao.stopAnimation(); pressao.setValue(1); }
     return () => pressao.stopAnimation();
   }, [bloqueado, reduzir, pressao]);
-  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : cores.acao;
+  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : cores.acao;
   if (desativado || esmaecido) corTexto = cores.textoSecundario;
   // Como .botao da web: a face de 48 com borda de 2 que fecha em volta e o degrau de 4 por fora, na cor do lábio
   // (--labio); nos botões claros, a borda e o degrau somam a faixa de 6 da web. O botão de texto não tem degrau.
   const comDegrau = variante !== 'texto';
   const apagado = desativado || esmaecido;
-  const labio = apagado ? cores.gelo : variante === 'primario' ? cores.acaoEscura : variante === 'sucesso' ? '#145A42' : variante === 'alerta' ? '#6E4100' : cores.gelo;
+  const labio = apagado ? cores.gelo : variante === 'primario' ? cores.acaoEscura : variante === 'sucesso' ? '#145A42' : variante === 'alerta' ? '#6E4100' : variante === 'perigo' ? '#8F2A39' : cores.gelo;
   const { fora, face } = separarEstilo(estilo);
   const conteudo = (
     <Animated.View style={[estilos.botaoConteudo, { transform: [{ scale: pressao }] }]} pointerEvents="none">
@@ -411,7 +482,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
         // A caixa ocupa os 48 da face, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
         style={({ pressed }) => [degrauFora(4, 16, labio, pressed), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
         <View style={[estilos.botaoFace, variante === 'secundario' && estilos.botaoFaceSecundaria, variante === 'sucesso' && estilos.botaoFaceSucesso,
-          variante === 'alerta' && estilos.botaoFaceAlerta, variante === 'destrutivo' && estilos.botaoFaceDestrutiva,
+          variante === 'alerta' && estilos.botaoFaceAlerta, variante === 'destrutivo' && estilos.botaoFaceDestrutiva, variante === 'perigo' && estilos.botaoFacePerigo,
           compacto && estilos.botaoFaceCompacta, face, apagado && estilos.botaoFaceApagada]}>
           {conteudo}
         </View>
@@ -495,8 +566,10 @@ export function Pontinhos({ cor, tamanho = 8, vao = 5 }: { cor: string; tamanho?
   );
 }
 
-export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false, estiloRotulo, ...props }: TextInputProps & {
+export function Campo({ rotulo, campoRef, erro, erroComAlerta = false, acessorio, rotuloOculto = false, estiloRotulo, ...props }: TextInputProps & {
   rotulo: string;
+  /** O erro como no perfil (`.campo-erro--colado` da web): ícone de alerta de 16, 6 até o texto, 800 de 14/20, colado no campo. */
+  erroComAlerta?: boolean;
   /** Estilo do rótulo quando a web usa outro (o "Sua explicação" do Explique tem 16 px e peso normal). */
   estiloRotulo?: StyleProp<TextStyle>;
   /** Rótulo só para o leitor de tela (a web usa .somente-leitor quando o título da tela já faz a pergunta). */
@@ -532,16 +605,18 @@ export function Campo({ rotulo, campoRef, erro, acessorio, rotuloOculto = false,
       <View>
         <TextInput {...props} ref={referencia} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
           placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'}
-          style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, !!erro && estilos.entradaErro,
-            focado && estilos.entradaFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
+          // Com erro, a borda vermelha vale também em foco, com o anel vermelho claro ([aria-invalid='true']:focus da web).
+          style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, focado && estilos.entradaFocada, !!erro && estilos.entradaErro,
+            !!erro && focado && estilos.entradaErroFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
           onFocus={(evento) => { setFocado(true); rolagem?.focar(caixa.current); props.onFocus?.(evento); }}
           onBlur={(evento) => { setFocado(false); rolagem?.focar(null); props.onBlur?.(evento); }} />
         {acessorio && <View style={estilos.acessorio}>{acessorio}</View>}
       </View>
       {erro && (
-        <View style={estilos.campoErro} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Text style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro }]}>!</Text>
-          <Text style={estilos.campoErroTexto}>{erro}</Text>
+        <View style={[estilos.campoErro, erroComAlerta && estilos.campoErroColado]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          {erroComAlerta ? <View style={estilos.campoErroIcone}><Icone nome="alerta" tamanho={16} cor={cores.erro} /></View>
+            : <Text style={[estilos.sinal, { color: cores.erro, borderColor: cores.erro }]}>!</Text>}
+          <Text style={[estilos.campoErroTexto, erroComAlerta && estilos.campoErroTextoColado]}>{erro}</Text>
         </View>
       )}
     </View>
@@ -683,50 +758,223 @@ export function SeloDemonstracao({ estilo, emLinha = false }: { estilo?: StylePr
 export const caixaAlta = { textTransform: 'uppercase' } as const;
 
 /**
- * Cartão de confirmação como .modal-cartao da web: o fundo escurece, a pergunta vem em 1,05rem/800 e as ações ficam à
- * direita, "Cancelar" (secundário) e a confirmação (vermelha quando apaga). Tocar fora ou no voltar do aparelho cancela.
- * É o mesmo no iPhone, no Android e na web (regra do dono, lote 4: nada de alerta do sistema).
+ * Confirmação (spec 11, a mesma nas três plataformas): véu escuro, cartão no centro com o título (a pergunta, Quicksand 20/26),
+ * o texto (Nunito 16/24 em cinza), o aviso a mais num parágrafo à parte e as ações lado a lado, metade cada: "Cancelar" à
+ * esquerda e a ação à direita, vermelha cheia quando destrói algo. Se um rótulo não cabe na metade, uma por linha, com a ação
+ * em cima. Tocar no véu ou o voltar do aparelho cancelam, menos enquanto a ação é enviada; o erro fica no cartão, acima das
+ * ações. Entra com a opacidade e a escala de 0,96 a 1 (220 ms); com movimento reduzido, só a opacidade.
  */
 type PropsConfirmacao = {
+  /** O título: a pergunta, curta. */
   mensagem: string;
   confirmarRotulo: string;
-  /** Texto embaixo da pergunta, como o DialogoConfirmar da web (título, texto e duas ações). */
+  /** O que acontece, em uma ou duas frases. */
   texto?: string;
+  /** Um aviso a mais, num parágrafo à parte (o link de compartilhamento que deixa de funcionar). */
+  aviso?: string;
   /** Rótulo da ação segura quando não é "Cancelar" ("Continuar compartilhando", "Manter foto", "Continuar editando"). */
   cancelarRotulo?: string;
   destrutivo?: boolean;
   ocupado?: boolean;
+  /** O erro do envio, acima das ações (o cartão continua aberto). */
+  erro?: string | null;
   aoCancelar: () => void;
   aoConfirmar: () => void;
 };
 
-export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado = false, aoCancelar, aoConfirmar }: PropsConfirmacao) {
-  const estreito = useWindowDimensions().width <= 420;
+/** Largura média de um caractere em Nunito 800 de 16 px (para saber se o rótulo cabe na metade). */
+const LARGURA_MEDIA_DO_CARACTERE = 9.2;
+
+export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado = false, erro,
+  aoCancelar, aoConfirmar }: PropsConfirmacao) {
+  const { width } = useWindowDimensions();
+  const reduzir = useMovimentoReduzido();
+  const [entrada] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const animacao = Animated.timing(entrada, { toValue: 1, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [entrada]);
+  // Cartão de min(100% − 32, 400) com respiro de 24: cada ação fica com metade do miolo, menos os 8 entre elas.
+  const metade = (Math.min(width - 32, 400) - 48 - 8) / 2;
+  const cabe = (rotulo: string) => rotulo.length * LARGURA_MEDIA_DO_CARACTERE + 36 + 4 <= metade;
+  const empilhar = !cabe(confirmarRotulo) || !cabe(cancelarRotulo);
+  const cancelar = <Botao rotulo={cancelarRotulo} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
+  const confirmar = <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'perigo' : 'primario'} desativado={ocupado} carregando={ocupado}
+    acao={aoConfirmar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
       <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
-        {texto ? (
-          // Com título e texto, como o DialogoConfirmar da web (.folha--confirmar): título de 22, texto e as duas ações, a
-          // segura primeiro; até 420 de largura, uma embaixo da outra e na largura toda (.folha-acoes--par no celular).
-          <Pressable testID="confirmacao" accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={estilos.dialogoCartao} onPress={() => {}}>
-            <Text accessibilityRole="header" style={estilos.dialogoTitulo}>{mensagem}</Text>
-            <Text style={estilos.dialogoTexto}>{texto}</Text>
-            <View style={[estilos.dialogoAcoes, estreito && estilos.dialogoAcoesEmpilhadas]}>
-              <Botao rotulo={cancelarRotulo} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} />
-              <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'destrutivo' : 'primario'} desativado={ocupado} acao={aoConfirmar} />
+        <Animated.View style={{ width: '100%', maxWidth: 400, alignItems: 'center', opacity: entrada,
+          transform: [{ scale: reduzir !== false ? 1 : entrada.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>
+          <Pressable testID="confirmacao" accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={estilos.confirmacaoCartao} onPress={() => {}}>
+            <Text accessibilityRole="header" style={estilos.confirmacaoTitulo}>{mensagem}</Text>
+            {texto && <Text style={estilos.confirmacaoTexto}>{texto}</Text>}
+            {aviso && <Text testID="confirmacao-aviso" style={estilos.confirmacaoTexto}>{aviso}</Text>}
+            {erro && <Text accessibilityRole="alert" style={estilos.confirmacaoErro}>{erro}</Text>}
+            {/* Lado a lado: "Cancelar" à esquerda e a ação à direita; uma por linha: a ação em cima. */}
+            <View style={[estilos.confirmacaoAcoes, empilhar && estilos.confirmacaoAcoesEmpilhadas]}>
+              {empilhar ? <>{confirmar}{cancelar}</> : <>{cancelar}{confirmar}</>}
             </View>
           </Pressable>
-        ) : (
-          <Pressable testID="confirmacao" accessible={false} accessibilityViewIsModal role="dialog" aria-modal style={estilos.modalCartao} onPress={() => {}}>
-            <Text accessibilityRole="header" style={estilos.modalMensagem}>{mensagem}</Text>
-            <View style={estilos.modalAcoes}>
-              <Botao rotulo={cancelarRotulo} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} />
-              <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'destrutivo' : 'primario'} desativado={ocupado} acao={aoConfirmar} />
-            </View>
-          </Pressable>
-        )}
+        </Animated.View>
       </Pressable>
     </Modal>
+  );
+}
+
+/** Uma opção da folha de ações: ícone de 20, texto 800 de 17; a de perigo (Remover foto) em vermelho, por último. */
+export type AcaoDaFolha = { rotulo: string; icone: NomeIcone; aoEscolher: () => void; perigo?: boolean; testID?: string };
+
+/**
+ * Folha de ações do Studoo (spec 11, "Folha"; esboço "Foto do perfil"): sobe de baixo com a alça de 40 × 5, o título, as
+ * opções de 56 de altura e "Cancelar" na largura toda. Tocar no véu ou o voltar do aparelho fecham. Escolher fecha a folha e
+ * só depois roda a ação: no iPhone, a galeria, a câmera ou a confirmação só abrem depois que a folha saiu (janelas.ts).
+ */
+export function FolhaDeAcoes({ visivel, titulo, acoes, cancelarRotulo, aoFechar, testID }: {
+  visivel: boolean; titulo: string; acoes: AcaoDaFolha[]; cancelarRotulo: string; aoFechar: () => void; testID?: string;
+}) {
+  const margens = useSafeAreaInsets();
+  const reduzir = useMovimentoReduzido();
+  const { depoisDeSair, aoSair } = useDepoisDeSair();
+  const [subida] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!visivel) return;
+    subida.setValue(0);
+    const animacao = Animated.timing(subida, { toValue: 1, duration: reduzir !== false ? 120 : 260, easing: Easing.out(Easing.cubic), useNativeDriver: true });
+    animacao.start();
+    return () => animacao.stop();
+  }, [visivel, reduzir, subida]);
+  return (
+    <Modal transparent visible={visivel} animationType="fade" statusBarTranslucent navigationBarTranslucent onRequestClose={aoFechar} onDismiss={aoSair}>
+      <View style={estilos.folhaAcoesFundo}>
+        <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={aoFechar} />
+        <Animated.View testID={testID} accessibilityViewIsModal style={[estilos.folhaAcoes, { paddingBottom: 28 + margens.bottom, opacity: subida,
+          transform: [{ translateY: reduzir !== false ? 0 : subida.interpolate({ inputRange: [0, 1], outputRange: [40, 0] }) }] }]}>
+          <View style={estilos.folhaAcoesAlca} />
+          <Text accessibilityRole="header" style={estilos.folhaAcoesTitulo}>{titulo}</Text>
+          {acoes.map((acao) => (
+            <Pressable key={acao.rotulo} testID={acao.testID} accessibilityRole="button" onPress={() => { aoFechar(); depoisDeSair(acao.aoEscolher); }}
+              style={({ pressed }) => [estilos.folhaAcoesOpcao, pressed && { backgroundColor: cores.nevoa }]}>
+              <Icone nome={acao.icone} tamanho={20} cor={acao.perigo ? cores.erro : cores.texto} />
+              <Text style={[estilos.folhaAcoesOpcaoTexto, acao.perigo && { color: cores.erro }]}>{acao.rotulo}</Text>
+            </Pressable>
+          ))}
+          <Botao rotulo={cancelarRotulo} variante="secundario" testID={testID ? `${testID}-cancelar` : undefined} acao={aoFechar} estilo={{ marginTop: 10 }} />
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
+/** Uma ação do menu "•••": ícone de 20 e texto 800 de 16; a de perigo (Apagar, Denunciar) vem por último, em vermelho. */
+export type AcaoDoMenu = { rotulo: string; icone: NomeIcone; aoEscolher: () => void; perigo?: boolean; testID?: string; nomeAcessivel?: string };
+
+/** Medidas do balão (spec 11): itens de 48, respiro de 6, borda de 1 e a linha antes do perigo (1 px, com 6 acima e abaixo). */
+const ITEM_DO_MENU = 48;
+const RESPIRO_DO_MENU = 6;
+const LINHA_DO_MENU = 13;
+const CURVA_DO_MENU = Easing.bezier(0.2, 0.9, 0.3, 1);
+
+/**
+ * Menu de ações do Studoo (spec 11), o mesmo no iPhone, no Android e na web: o "•••" de 44 × 44 e o balão de 200 a 280,
+ * embaixo do botão, alinhado pela direita, a 6 (em cima quando falta espaço até a borda ou até a barra de baixo; sempre a 8
+ * das bordas). Entra em 160 ms (opacidade e escala de 0,96 a partir do canto do botão) e sai em 120 ms; com movimento
+ * reduzido, só a opacidade. Abrir leva o foco ao primeiro item; tocar fora fecha sem acionar o que estiver embaixo; voltar
+ * ou Esc fecham e devolvem o foco ao "•••". Escolher fecha o balão e só depois abre o destino (no iPhone, depois que o balão
+ * saiu, como em janelas.ts).
+ */
+export function MenuDeAcoes({ rotulo, acoes, testID, desativado = false, estiloBotao, corDosPontos = cores.textoSecundario }: {
+  /** Nome acessível do "•••" ("Mais opções de “<título>”"). */
+  rotulo: string;
+  acoes: AcaoDoMenu[];
+  testID: string;
+  desativado?: boolean;
+  /** Estilo do botão onde ele mora (no alto da capa, com sombra; na fileira do cartão do Explorar, com contorno). */
+  estiloBotao?: StyleProp<ViewStyle>;
+  corDosPontos?: string;
+}) {
+  const [lugar, setLugar] = useState<{ direita: number; topo?: number; baixo?: number } | null>(null);
+  const botao = useRef<ComponentRef<typeof Pressable>>(null);
+  const primeiro = useRef<ComponentRef<typeof Pressable>>(null);
+  const janela = useWindowDimensions();
+  const baixoOcupado = useContext(BaixoOcupado);
+  const reduzir = useMovimentoReduzido() !== false;
+  const [opacidade] = useState(() => new Animated.Value(0));
+  const [escala] = useState(() => new Animated.Value(1));
+  const fechando = useRef(false);
+  const { depoisDeSair, aoSair } = useDepoisDeSair();
+  // O perigo vem sempre por último, depois de uma linha; num menu só com ele, não há linha.
+  const comuns = acoes.filter((acao) => !acao.perigo);
+  const perigos = acoes.filter((acao) => acao.perigo);
+  const comLinha = comuns.length > 0 && perigos.length > 0;
+  const altura = 2 + 2 * RESPIRO_DO_MENU + ITEM_DO_MENU * acoes.length + (comLinha ? LINHA_DO_MENU : 0);
+
+  useEffect(() => {
+    if (!lugar) return;
+    const espera = setTimeout(() => focarSemRolar(primeiro.current), 50);
+    return () => clearTimeout(espera);
+  }, [lugar]);
+
+  function abrir() {
+    botao.current?.measureInWindow((x, y, largura, alturaBotao) => {
+      const direita = Math.max(8, janela.width - (x + largura));
+      const cabeEmbaixo = y + alturaBotao + 6 + altura <= janela.height - baixoOcupado - 8;
+      fechando.current = false;
+      opacidade.setValue(0);
+      escala.setValue(reduzir ? 1 : 0.96);
+      setLugar(cabeEmbaixo ? { direita, topo: y + alturaBotao + 6 } : { direita, baixo: Math.max(8, janela.height - y + 6) });
+      Animated.parallel([
+        Animated.timing(opacidade, { toValue: 1, duration: reduzir ? 120 : 160, easing: CURVA_DO_MENU, useNativeDriver: true }),
+        Animated.timing(escala, { toValue: 1, duration: reduzir ? 0 : 160, easing: CURVA_DO_MENU, useNativeDriver: true }),
+      ]).start();
+    });
+  }
+  function fechar(depois?: () => void, devolverFoco = false) {
+    if (fechando.current) return;
+    fechando.current = true;
+    Animated.timing(opacidade, { toValue: 0, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }).start(() => {
+      setLugar(null);
+      if (depois) depoisDeSair(depois);
+      if (devolverFoco) setTimeout(() => focarSemRolar(botao.current), 50);
+    });
+  }
+  const item = (acao: AcaoDoMenu, indice: number) => (
+    <Pressable key={acao.rotulo} ref={indice === 0 ? primeiro : undefined} testID={acao.testID} accessibilityRole="button" role="menuitem"
+      accessibilityLabel={acao.nomeAcessivel ?? acao.rotulo} onPress={() => fechar(acao.aoEscolher)}
+      style={({ pressed }) => [estilos.menuItem, pressed && { backgroundColor: cores.nevoa }]}>
+      <Icone nome={acao.icone} tamanho={20} cor={acao.perigo ? cores.erro : cores.texto} />
+      <Text numberOfLines={1} style={[estilos.menuItemTexto, acao.perigo && { color: cores.erro }]}>{acao.rotulo}</Text>
+    </Pressable>
+  );
+
+  return (
+    <>
+      <Pressable ref={botao} testID={testID} accessibilityRole="button" accessibilityLabel={rotulo} hitSlop={2}
+        accessibilityState={{ expanded: Boolean(lugar), disabled: desativado }} aria-expanded={Boolean(lugar)} aria-haspopup="menu" disabled={desativado}
+        onPress={() => (lugar ? fechar() : abrir())}
+        style={({ pressed }) => [estilos.menuBotao, estiloBotao, (Boolean(lugar) || pressed) && estilos.menuBotaoAberto, desativado && { opacity: 0.6 }]}>
+        <View style={estilos.menuPontos} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+          {[0, 1, 2].map((ponto) => <View key={ponto} style={[estilos.menuPonto, { backgroundColor: corDosPontos }]} />)}
+        </View>
+      </Pressable>
+      {/* Montado sempre (visible liga e desliga): o onDismiss avisa quando o balão saiu, para o destino abrir depois. */}
+      <Modal transparent visible={Boolean(lugar)} animationType="none" statusBarTranslucent navigationBarTranslucent onRequestClose={() => fechar(undefined, true)}
+        onDismiss={aoSair}>
+        {lugar && (
+          <>
+            <Pressable accessible={false} style={StyleSheet.absoluteFill} onPress={() => fechar()} />
+            <Animated.View testID={`${testID}-balao`} role="menu" accessibilityLabel={rotulo}
+              style={[estilos.menuBalao, { right: lugar.direita, top: lugar.topo, bottom: lugar.baixo, maxWidth: Math.min(280, janela.width - 16), opacity: opacidade,
+                transform: [{ scale: escala }], transformOrigin: lugar.topo !== undefined ? 'right top' : 'right bottom' }]}>
+              {comuns.map(item)}
+              {comLinha && <View style={estilos.menuLinha} />}
+              {perigos.map((acao, indice) => item(acao, comuns.length + indice))}
+            </Animated.View>
+          </>
+        )}
+      </Modal>
+    </>
   );
 }
 
@@ -857,10 +1105,14 @@ export const estilos = StyleSheet.create({
   entradaMultilinha: { minHeight: 132, textAlignVertical: 'top' },
   entradaErro: { borderColor: cores.erro },
   entradaFocada: { borderColor: cores.acao, outlineColor: 'rgba(56, 88, 214, 0.18)', outlineWidth: 4, outlineOffset: 0, outlineStyle: 'solid' },
+  entradaErroFocada: { outlineColor: 'rgba(194, 59, 78, 0.14)' },
   entradaComAcessorio: { paddingRight: 52 },
   acessorio: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center' },
   campoErro: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   campoErroTexto: { flex: 1, color: cores.erro, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  campoErroColado: { gap: 6, marginTop: -2 },
+  campoErroIcone: { marginTop: 2 },
+  campoErroTextoColado: { fontWeight: '800' },
   mensagem: {
     marginTop: 16, padding: 12, borderRadius: 14, borderWidth: 2,
     flexDirection: 'row', alignItems: 'flex-start', gap: 8,
@@ -908,7 +1160,41 @@ export const estilos = StyleSheet.create({
   // iOS 26: a faixa vira vidro sobre o mapa que rola por baixo (sem o branco e sem a linha de baixo).
   faixaFixaVidro: { zIndex: 6 },
   abaixoDoLogo: { width: '100%', maxWidth: 620, alignSelf: 'center', paddingHorizontal: 20, paddingBottom: 10, marginTop: -4 },
-  modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
+  modalFundo: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 16, backgroundColor: 'rgba(15, 23, 42, 0.45)' },
+  // Confirmação (spec 11): cartão de até 400 com respiro de 24, cantos de 24, borda de 2 e 12 entre os blocos.
+  confirmacaoCartao: { width: '100%', maxWidth: 400, gap: 12, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
+    shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 48, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
+  confirmacaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26 },
+  confirmacaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 24 },
+  confirmacaoErro: { color: cores.erro, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },
+  confirmacaoAcoes: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  confirmacaoAcoesEmpilhadas: { flexDirection: 'column', gap: 10 },
+  confirmacaoMetade: { flex: 1 },
+  // Folha de ações (esboço "Foto do perfil"): cantos de 24 em cima, respiro de 10 × 16 (28 embaixo, mais a área segura).
+  // Menu de ações (spec 11): botão de 44 × 44 e raio 12 com três pontos de 4 (4 entre eles); aberto, fundo névoa.
+  menuBotao: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: 12 },
+  menuBotaoAberto: { backgroundColor: cores.nevoa },
+  menuPontos: { flexDirection: 'row', gap: 4 },
+  menuPonto: { width: 4, height: 4, borderRadius: 2 },
+  menuBalao: { position: 'absolute', minWidth: 200, padding: RESPIRO_DO_MENU, borderWidth: 1, borderColor: cores.gelo, borderRadius: 16,
+    backgroundColor: cores.fundo, boxShadow: '0 12px 28px rgba(15, 23, 42, 0.18)' },
+  menuItem: { flexDirection: 'row', alignItems: 'center', gap: 12, height: ITEM_DO_MENU, paddingHorizontal: 12, borderRadius: 10 },
+  menuItemTexto: { flexShrink: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22 },
+  menuLinha: { height: 1, marginVertical: 6, marginHorizontal: 4, backgroundColor: cores.gelo },
+  folhaAcoesFundo: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(15, 23, 42, 0.45)' },
+  folhaAcoes: { gap: 4, paddingTop: 10, paddingHorizontal: 16, borderTopLeftRadius: 24, borderTopRightRadius: 24, backgroundColor: cores.fundo },
+  folhaAcoesAlca: { alignSelf: 'center', width: 40, height: 5, marginBottom: 8, borderRadius: 3, backgroundColor: cores.gelo },
+  folhaAcoesTitulo: { marginTop: 4, marginHorizontal: 4, marginBottom: 8, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26 },
+  folhaAcoesOpcao: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 56, paddingHorizontal: 12, borderRadius: 14 },
+  folhaAcoesOpcaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 17, lineHeight: 22 },
+  // Aviso (spec 11): centrado, até 480, 16 das bordas; ícone de 20 a 10 do texto branco 800 de 15/22; ação em #AFC2FF.
+  avisoLugar: { position: 'absolute', left: 16, right: 16, alignItems: 'center', zIndex: 70 },
+  aviso: { width: '100%', maxWidth: 480, flexDirection: 'row', alignItems: 'flex-start', gap: 10, paddingVertical: 12, paddingHorizontal: 16, borderRadius: 16,
+    backgroundColor: cores.texto, shadowColor: '#0F172A', shadowOpacity: 0.28, shadowRadius: 30, shadowOffset: { width: 0, height: 12 }, elevation: 10 },
+  avisoIcone: { marginTop: 1 },
+  avisoTexto: { flex: 1, color: '#FFFFFF', fontFamily: fontes.corpo, fontSize: 15, lineHeight: 22, fontWeight: '800' },
+  avisoAcao: { minHeight: 44, marginVertical: -11, justifyContent: 'center', paddingLeft: 4 },
+  avisoAcaoTexto: { color: '#AFC2FF', fontFamily: fontes.corpo, fontSize: 15, lineHeight: 22, fontWeight: '800' },
   modalCartao: { width: '100%', maxWidth: 440, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 24, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
   modalMensagem: { marginBottom: 20, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16.8, lineHeight: 25 },
@@ -929,6 +1215,8 @@ export const estilos = StyleSheet.create({
   botaoFaceSucesso: { backgroundColor: cores.sucesso },
   botaoFaceAlerta: { backgroundColor: cores.alerta },
   botaoFaceDestrutiva: { borderColor: '#F3C4C0', backgroundColor: cores.fundo },
+  // Spec 11: a ação que destrói, vermelha cheia (#C23B4E), texto branco e degrau #8F2A39.
+  botaoFacePerigo: { borderColor: cores.erro, backgroundColor: cores.erro },
   botaoFaceApagada: { borderColor: cores.gelo, backgroundColor: cores.nevoa },
   botaoFaceCompacta: { minHeight: 44, minWidth: 44, paddingHorizontal: 8 },
   // O raio do botão da web é 16 também no botão pequeno ("Sair", "Pular").

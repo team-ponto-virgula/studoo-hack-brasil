@@ -14,6 +14,7 @@ import {
   type TrilhaCompartilhada, type Visibilidade,
 } from '@studoo/contratos';
 import { origemConfigurada, type ClienteNativo } from './api-nativa';
+import { focarSemRolar } from './foco';
 import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, RolagemDaTela, degrade, estilos as estilosDaInterface, useMovimentoReduzido } from './interface';
 import { mensagemDoCodigo, mensagens } from './mensagens';
@@ -118,20 +119,8 @@ export function misturarComBranco(hex: string, proporcao: number) {
   return `#${[0, 2, 4].map((i) => canal(i).toString(16).padStart(2, '0')).join('')}`;
 }
 
-/**
- * Leva o foco do leitor de tela ao título, como o `focus()` da web. Na prévia web, foca sem rolar (o `focus()` do navegador
- * rolava a folha até o título e escondia a linha de cima), como a apresentação já faz.
- */
-export function focarSemRolar(no: unknown) {
-  if (!no) return;
-  if (Platform.OS === 'web') {
-    const elemento = no as HTMLElement;
-    if (!elemento.hasAttribute('tabindex')) elemento.setAttribute('tabindex', '-1');
-    elemento.focus({ preventScroll: true });
-    return;
-  }
-  AccessibilityInfo.sendAccessibilityEvent(no as Parameters<typeof AccessibilityInfo.sendAccessibilityEvent>[0], 'focus');
-}
+/** Levar o foco sem rolar mora em foco.ts (o menu de ações da interface também usa); daqui segue exportado como antes. */
+export { focarSemRolar };
 
 /** Linha de status que fica sempre no fluxo, como `.folha-status` da web: vazia, não tem altura nem margem (mas conta o vão). */
 export function Status({ texto }: { texto: string }) {
@@ -168,12 +157,14 @@ const FONTE_DO_LADO = { p: 15, m: 24, g: 40 } as const;
  * A foto da pessoa (128 px; 512 no tamanho grande) ou a inicial na cor, como o `Avatar` da web. Decorativo: o nome sempre
  * está escrito ao lado. Tamanhos: p (32), m (56), g (96) ou um lado livre (24 nas marcas "Compartilhada por").
  */
-export function Avatar({ nome, cor, foto = null, tamanho = 'p', estilo }: {
+export function Avatar({ nome, cor, foto = null, tamanho = 'p', estilo, vazio = false }: {
   nome: string;
   cor: CorPerfil;
   foto?: string | null;
   tamanho?: keyof typeof LADOS | number;
   estilo?: StyleProp<ViewStyle>;
+  /** Sem nome e sem foto (o perfil vazio, spec 10): o desenho de pessoa (44 em 96, branco) no lugar do "?". */
+  vazio?: boolean;
 }) {
   const lado = typeof tamanho === 'number' ? tamanho : LADOS[tamanho];
   const fonte = typeof tamanho === 'number' ? Math.round(lado * 0.47) : FONTE_DO_LADO[tamanho];
@@ -183,7 +174,8 @@ export function Avatar({ nome, cor, foto = null, tamanho = 'p', estilo }: {
       style={[socialEstilos.avatar, { width: lado, height: lado, borderRadius: lado / 2, backgroundColor: FUNDO_DA_COR[cor] }, estilo]}>
       {endereco
         ? <Image source={{ uri: endereco }} accessible={false} resizeMode="cover" style={{ width: '100%', height: '100%', borderRadius: lado / 2 }} />
-        : <Text style={[socialEstilos.avatarInicial, { fontSize: fonte, lineHeight: fonte }]}>{inicialDoNome(nome)}</Text>}
+        : vazio ? <Icone nome="pessoa" tamanho={Math.round(lado * 0.46)} cor="#FFFFFF" />
+          : <Text style={[socialEstilos.avatarInicial, { fontSize: fonte, lineHeight: fonte }]}>{inicialDoNome(nome)}</Text>}
     </View>
   );
 }
@@ -244,15 +236,27 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
             ))}
           </View>
         )}
-        <View style={socialEstilos.cabecaAlcance} accessible
-          accessibilityLabel={`${p.alcanceRotulo}: ${p.alcance(alcance.trilhas, alcance.pessoas)}${alcance.seguidores !== undefined ? ` · ${cm.seguidores(alcance.seguidores)}` : ''}`}>
-          <View style={[socialEstilos.cabecaAlcancePonto, { backgroundColor: fundo }]} />
-          <Text style={socialEstilos.cabecaAlcanceTexto}>
-            {p.alcance(alcance.trilhas, alcance.pessoas)}
-            {/* Com a comunidade: " · N seguidores" em destaque, como o <strong> da web. */}
-            {alcance.seguidores !== undefined && <> · <Text style={socialEstilos.cabecaSeguidores}>{cm.seguidores(alcance.seguidores)}</Text></>}
-          </Text>
-        </View>
+        {/* Números (spec 10, revisão de 19/11): até três colunas, só com os itens acima de zero; tudo zero, a fileira não aparece.
+            O leitor de tela ouve uma frase só. */}
+        {(() => {
+          const seguidores = alcance.seguidores ?? 0;
+          const itens = [
+            alcance.trilhas > 0 ? { n: alcance.trilhas, rotulo: p.numeroTrilhas(alcance.trilhas) } : null,
+            alcance.pessoas > 0 ? { n: alcance.pessoas, rotulo: p.numeroEstudando } : null,
+            seguidores > 0 ? { n: seguidores, rotulo: p.numeroSeguidores(seguidores) } : null,
+          ].filter((item): item is { n: number; rotulo: string } => item !== null);
+          if (itens.length === 0) return null;
+          return (
+            <View testID="perfil-numeros" accessible accessibilityLabel={p.numerosLeitor(alcance.trilhas, alcance.pessoas, seguidores)} style={socialEstilos.numeros}>
+              {itens.map((item) => (
+                <View key={item.rotulo} style={socialEstilos.numero}>
+                  <Text style={socialEstilos.numeroValor}>{item.n}</Text>
+                  <Text style={socialEstilos.numeroRotulo}>{item.rotulo}</Text>
+                </View>
+              ))}
+            </View>
+          );
+        })()}
         {acoes && <View style={socialEstilos.cabecaAcoes}>{acoes}</View>}
       </View>
     </View>
@@ -377,10 +381,11 @@ export function Ficha({ rotulo, marcada, aoTocar, papel = 'checkbox', complement
 }
 
 /** As seis cores do avatar em rádio, como `.cores-perfil`: amostra de 34 com aro branco e o anel escuro na escolhida. */
-export function CoresDoPerfil({ cor, aoEscolher }: { cor: CorPerfil; aoEscolher: (cor: CorPerfil) => void }) {
+export function CoresDoPerfil({ cor, aoEscolher, dica }: { cor: CorPerfil; aoEscolher: (cor: CorPerfil) => void; dica?: string }) {
   return (
-    <View accessibilityRole="radiogroup" accessibilityLabel={m.corRotulo}>
+    <View accessibilityRole="radiogroup" accessibilityLabel={m.corRotulo} accessibilityHint={dica}>
       <Text style={socialEstilos.legenda}>{m.corRotulo}</Text>
+      {dica && <Text style={socialEstilos.corDica}>{dica}</Text>}
       <View style={socialEstilos.cores}>
         {CORES_PERFIL.map((opcao) => (
           <Pressable key={opcao} accessibilityRole="radio" accessibilityLabel={m.cores[opcao]} accessibilityState={{ checked: cor === opcao }}
@@ -533,7 +538,11 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
               style={[socialEstilos.nivel, marcado && socialEstilos.nivelMarcado, (ocupado || bloqueado) && { opacity: 0.6 }]}>
               <Radio marcado={marcado} />
               <View style={socialEstilos.nivelTextos}>
-                <Text style={socialEstilos.nivelTitulo}>{cm.niveis[nivel].titulo}</Text>
+                {/* "Agora" dentro do cartão do nível que vale de fato (antes de publicar, o Explorar ainda não vale). */}
+                <View style={socialEstilos.nivelTituloLinha}>
+                  <Text style={socialEstilos.nivelTitulo}>{cm.niveis[nivel].titulo}</Text>
+                  {nivel === atual && <View testID={`nivel-${nivel}-agora`} style={socialEstilos.nivelAgora}><Text style={socialEstilos.nivelAgoraTexto}>{cm.agora}</Text></View>}
+                </View>
                 <Text style={socialEstilos.nivelTexto}>{texto}</Text>
               </View>
             </Pressable>
@@ -567,6 +576,7 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
             <Text style={socialEstilos.dica}>{cm.legendaDica}</Text>
           </View>
           {demonstracao && <View style={socialEstilos.aviso}><Text style={socialEstilos.avisoTexto}>{cm.demonstracaoAviso}</Text></View>}
+          {!publicada && <Text testID="publicacao-ainda" style={socialEstilos.publicacaoAinda}>{cm.aindaNaoNoExplorar(cm.niveis[atual].titulo)}</Text>}
           <View style={socialEstilos.acoesRecorte}>
             {publicada
               ? <Botao rotulo={ocupado ? p.salvando : cm.salvarPublicacao} testID="publicacao-salvar" desativado={!mudouPublicacao} ocupado={ocupado}
@@ -577,7 +587,8 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
         </View>
       )}
       {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
-      <Status texto={status} />
+      {/* Como a web: o estado ("Nível salvo…") só para o leitor de tela (ele já é anunciado). */}
+      <Text style={socialEstilos.somenteLeitor} accessibilityLiveRegion="polite">{status}</Text>
     </View>
   );
 }
@@ -715,11 +726,17 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
           onPress={() => { if (!ocupado && etapa !== 'parar') aoFechar(); }} />
         <View testID="folha-compartilhar" accessibilityViewIsModal role="dialog" aria-modal
           style={[socialEstilos.folha, { paddingBottom: 20 + insets.bottom }]}>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={socialEstilos.folhaConteudo} bounces={false}>
-            <View style={socialEstilos.folhaTopo}>
-              <Text style={socialEstilos.folhaContexto} importantForAccessibility={tituloDaEtapa === m.folhaTitulo ? 'no' : 'auto'}>
-                {tituloDaEtapa === m.folhaTitulo ? '' : m.folhaTitulo}
-              </Text>
+          {/* Cabeçalho preso no topo ao rolar: "Compartilhar trilha", o nome da trilha e o fechar (como a web na rodada de banca). */}
+          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={socialEstilos.folhaConteudo} bounces={false} stickyHeaderIndices={[0]}>
+            <View style={[socialEstilos.folhaTopo, socialEstilos.folhaTopoPreso]}>
+              <View style={socialEstilos.folhaTopoTexto}>
+                <Text style={socialEstilos.folhaContexto} importantForAccessibility={tituloDaEtapa === m.folhaTitulo ? 'no' : 'auto'}>
+                  {tituloDaEtapa === m.folhaTitulo ? '' : m.folhaTitulo}
+                </Text>
+                {previa && etapa === 'pronto' && (
+                  <Text numberOfLines={1} importantForAccessibility="no" style={socialEstilos.folhaTopoTrilha}>{previa.titulo}</Text>
+                )}
+              </View>
               {etapa !== 'parar' && <BotaoIcone icone="fechar" rotulo={m.fechar} testID="folha-fechar" desativado={ocupado} acao={aoFechar} />}
             </View>
             <Text ref={titulo} accessibilityRole="header" style={socialEstilos.folhaTitulo}>{tituloDaEtapa}</Text>
@@ -839,6 +856,7 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
   const abrirPerfil = useContext(AbrirPerfil);
   const nome = trilha.dono.nome;
   const sua = trilha.situacao === 'sua';
+  const jaTem = trilha.situacao === 'adicionada';
   const comCalor = Boolean(calor) && !sua;
   useEffect(() => {
     const alvo = titulo.current;
@@ -851,7 +869,7 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
       {comCalor && (
         <View style={socialEstilos.previaStu}>
           <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} style={socialEstilos.previaStuImagem} />
-          <View style={socialEstilos.previaBalao}><Text style={socialEstilos.previaBalaoTexto}>{m.stuConvite}</Text></View>
+          <View style={socialEstilos.previaBalao}><Text style={socialEstilos.previaBalaoTexto}>{jaTem ? m.stuDeNovo : m.stuConvite}</Text></View>
         </View>
       )}
       <View style={socialEstilos.previaDe}>
@@ -863,7 +881,23 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
       <Text ref={titulo} accessibilityRole="header" style={calor ? estilosDaInterface.titulo : socialEstilos.previaTitulo}>{trilha.titulo}</Text>
       <Text style={socialEstilos.previaMeta}>{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</Text>
       <View style={socialEstilos.previaAcoes}>{acoes}</View>
-      {!sua && <Text style={socialEstilos.previaZero}>{m.comecaDoZero}</Text>}
+      {!sua && <Text style={socialEstilos.previaZero}>{jaTem ? m.jaAdicionadaTexto : m.comecaDoZero}</Text>}
+      <View style={socialEstilos.previaPartes}>
+        {trilha.partes.map((parte, indice) => (
+          <View key={indice}>
+            <Text accessibilityRole="header" style={socialEstilos.previaParte}>{m.parte(indice + 1)} · {parte.titulo}</Text>
+            <View style={socialEstilos.previaLicoes}>
+              {parte.licoes.map((licao, i) => (
+                <View key={i} style={socialEstilos.previaLicao}>
+                  <Icone nome="livro" tamanho={18} cor={cores.acao} />
+                  <Text style={socialEstilos.previaLicaoTexto}>{licao}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        ))}
+      </View>
+      {/* Quem compartilhou vem depois das lições: no alto fica só a linha com a foto e o nome (como a web). */}
       {comCalor && (
         <View accessibilityLabel={m.quemCompartilhou} style={socialEstilos.quem}>
           <Avatar nome={nome} cor={trilha.dono.cor} foto={trilha.dono.foto} tamanho="m" estilo={socialEstilos.quemAvatar} />
@@ -881,21 +915,6 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
           </View>
         </View>
       )}
-      <View style={socialEstilos.previaPartes}>
-        {trilha.partes.map((parte, indice) => (
-          <View key={indice}>
-            <Text accessibilityRole="header" style={socialEstilos.previaParte}>{m.parte(indice + 1)} · {parte.titulo}</Text>
-            <View style={socialEstilos.previaLicoes}>
-              {parte.licoes.map((licao, i) => (
-                <View key={i} style={socialEstilos.previaLicao}>
-                  <Icone nome="livro" tamanho={18} cor={cores.acao} />
-                  <Text style={socialEstilos.previaLicaoTexto}>{licao}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        ))}
-      </View>
     </View>
   );
 }
@@ -1034,6 +1053,12 @@ export function AdicionarPorLink({ cliente, ocupado: ocupadoFora, aoAdicionar, a
 }
 
 export const socialEstilos = StyleSheet.create({
+  // .numeros (spec 10): colunas com 24 entre elas; o número em Quicksand 700 de 22/26 e o rótulo em Nunito 700 de 13/18.
+  numeros: { flexDirection: 'row', gap: 24 },
+  numero: { alignItems: 'flex-start' },
+  numeroValor: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 26 },
+  numeroRotulo: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 13, lineHeight: 18 },
+  corDica: { marginTop: -4, marginBottom: 8, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 14, lineHeight: 20 },
   avatar: { alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   avatarInicial: { color: '#FFFFFF', fontFamily: fontes.titulo, fontWeight: '900', textAlign: 'center' },
 
@@ -1119,6 +1144,11 @@ export const socialEstilos = StyleSheet.create({
   folhaConteudo: { gap: 14, paddingHorizontal: 20 },
   folhaTopo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 44, marginTop: -6, marginRight: -6, marginBottom: -10 },
   folhaContexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontWeight: '900', letterSpacing: 0.52, textTransform: 'uppercase' },
+  // .folha-topo--preso: preso no alto ao rolar, na largura toda da folha, com a linha de 2 em névoa embaixo.
+  folhaTopoPreso: { marginTop: -20, marginRight: -20, marginLeft: -20, marginBottom: -4, paddingTop: 16, paddingRight: 14, paddingBottom: 10, paddingLeft: 20,
+    borderBottomWidth: 2, borderBottomColor: cores.nevoa, backgroundColor: cores.fundo, zIndex: 3 },
+  folhaTopoTexto: { flex: 1, gap: 2, minWidth: 0 },
+  folhaTopoTrilha: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },
   folhaTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 27.5, letterSpacing: -0.33 },
   folhaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
   folhaTextoMiudo: { color: cores.textoSecundario, fontSize: 14, lineHeight: 21 },
@@ -1148,6 +1178,14 @@ export const socialEstilos = StyleSheet.create({
   nivelMarcado: { borderColor: cores.acao, backgroundColor: '#F3F6FF' },
   nivelTextos: { flex: 1, gap: 2 },
   nivelTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '900' },
+  nivelTituloLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 8 },
+  // .nivel__agora: pílula verde-clara de 12/900.
+  nivelAgora: { paddingHorizontal: 8, paddingVertical: 1, borderRadius: 999, backgroundColor: '#E3F6EA' },
+  nivelAgoraTexto: { color: '#14513B', fontFamily: fontes.corpo, fontSize: 12, lineHeight: 18, fontWeight: '900' },
+  // .publicacao__ainda: a nota em branco sobre a névoa da publicação.
+  publicacaoAinda: { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#FFFFFF', color: cores.texto, fontFamily: fontes.corpo,
+    fontSize: 16, lineHeight: 24, fontWeight: '800', overflow: 'hidden' },
+  somenteLeitor: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
   nivelTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 19.6 },
   publicacao: { gap: 14, padding: 14, borderRadius: 16, backgroundColor: cores.nevoa },
   acoesRecorte: { gap: 10, marginTop: 4 },

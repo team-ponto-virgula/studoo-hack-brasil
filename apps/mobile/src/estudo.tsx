@@ -11,7 +11,7 @@ import { aplicarEvento, nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-v
 import { Icone } from './icone';
 import { Confete } from './festa';
 import { guardarRascunho, tomarRascunho } from './rascunho';
-import { Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, degrauFora, degrade, quebraEquilibrada } from './interface';
+import { AvisoDoApp, Botao, Campo, EstadoErro, SeloSincronia, Tela, Titulo, estilos, useAvisoDoAppRaiz, useBalanco, useMovimentoReduzido, type AcaoDoErro, type Sincronia, caixaAlta, CartaoConfirmacao, MenuDeAcoes, type AcaoDoMenu, degrauFora, degrade, quebraEquilibrada } from './interface';
 import { NavegacaoContexto } from './navegacao';
 import { FrasesDaLicao } from './aula-formatos';
 import { Licao, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './licao';
@@ -25,7 +25,7 @@ import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo
 import { focoVisivel } from './foco';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
-import { TelaEditarPerfil, TelaPerfil } from './perfil';
+import { TelaPerfil } from './perfil';
 import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
 
 /*
@@ -44,7 +44,6 @@ type Etapa =
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao }
   // Perfis e compartilhar (spec 09 e 10): a tela Perfil e a tela Editar perfil, só com `compartilhar` no config.
   | { tipo: 'perfil' }
-  | { tipo: 'editarPerfil' }
   // Comunidade (spec 10, B e C2), só com `comunidade` no config: o Explorar e, dentro do app, o perfil de outra pessoa (a
   // página /p da web) e a prévia de uma trilha (a página /t); `voltar` é a tela de onde a pessoa veio. `restaurar`: o
   // Explorar volta como estava (aba, tema, lista e rolagem) quando a pessoa volta de um perfil ou de uma trilha.
@@ -138,6 +137,8 @@ export function Estudo({ cliente, sair, expirar }: {
   const [folha, setFolha] = useState<string | null>(null);
   const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
   const registrarGuarda = useCallback((guarda: ((continuar: () => void) => boolean) | null) => { guardaSaida.current = guarda; }, []);
+  // O aviso do próprio app (lote 4): o Valeu e a denúncia avisam numa faixa no pé da tela, nunca no sistema.
+  const avisoDoApp = useAvisoDoAppRaiz();
   /** O Explorar como a pessoa deixou ao abrir um perfil ou uma trilha dele (aba, tema, lista e rolagem). */
   const memoriaExplorar = useRef<MemoriaExplorar | null>(null);
   const guardarExplorar = useCallback((memoria: MemoriaExplorar) => { memoriaExplorar.current = memoria; }, []);
@@ -241,7 +242,6 @@ export function Estudo({ cliente, sair, expirar }: {
         else void abrirPlano(etapa.plano.id, etapa.licao.id);
       }
       else if (etapa.tipo === 'concluida') navegar(voltarATrilha(etapa));
-      else if (etapa.tipo === 'editarPerfil') navegar({ tipo: 'perfil' });
       else if (etapa.tipo === 'perfilPublico' || etapa.tipo === 'previaTrilha') navegar(etapa.voltar);
       else navegar({ tipo: 'planos' });
       return true;
@@ -293,8 +293,8 @@ export function Estudo({ cliente, sair, expirar }: {
 
   /** Troca de etapa. Sair da geração ao vivo cancela o pedido em andamento; cada tela nova começa do topo. */
   function navegar(destino: Etapa) {
-    // Saindo de "Editar perfil" com alteração não salva: a tela pergunta antes (a mesma confirmação do Voltar), como na web.
-    if (destino.tipo !== 'editarPerfil' && guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
+    // Saindo do perfil com os dados abertos e alteração não salva: o editor pergunta antes ("Sair sem salvar?"), como na web.
+    if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
     if (destino.tipo !== 'geracao') pararGeracao();
     setErro(null);
     setFalhaGeracao(null);
@@ -422,18 +422,24 @@ export function Estudo({ cliente, sair, expirar }: {
    * Confirmações (sair e apagar) no cartão da web (.modal-cartao), com "Cancelar" e a confirmação, no lugar da caixa do
    * sistema (levantamento de paridade, G7). O voltar do aparelho cancela.
    */
-  const [confirmacao, setConfirmacao] = useState<{ mensagem: string; confirmarRotulo: string; destrutivo?: boolean; aoConfirmar: () => void } | null>(null);
+  const [confirmacao, setConfirmacao] = useState<{ mensagem: string; texto?: string; aviso?: string; confirmarRotulo: string; cancelarRotulo?: string; destrutivo?: boolean;
+    aoConfirmar: () => void } | null>(null);
 
   /** Sair fica no alto, onde muita gente procura "voltar": pergunta antes de encerrar a sessão. Como na web. */
   function pedirParaSair() {
     setConfirmacao({ mensagem: mensagens.sairPergunta, confirmarRotulo: mensagens.sair, aoConfirmar: () => void executar('sair', sair) });
   }
 
-  /** Apaga uma trilha depois da confirmação no cartão (com o progresso, duas trilhas de mesmo nome não se confundem). */
+  /**
+   * Apaga uma trilha depois da confirmação do Studoo (spec 10 e 11, revisão de 19/11): o título "Apagar “X”?", o texto com as
+   * lições e o progresso, o aviso do link num parágrafo à parte e "Cancelar" e "Apagar" (vermelho cheio) lado a lado.
+   */
   function pedirParaApagar(plano: PlanoResumo) {
     setConfirmacao({
-      mensagem: `${mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total))}${plano.link ? ` ${mensagens.compartilhar.apagarAviso}` : ''}`,
-      confirmarRotulo: mensagens.planos.apagar, destrutivo: true, aoConfirmar: () => void apagarPlano(plano),
+      mensagem: mensagens.planos.apagarTitulo(plano.titulo),
+      texto: mensagens.planos.apagarTexto(plano.progresso.total, plano.progresso.concluidas),
+      aviso: plano.link ? mensagens.compartilhar.apagarAviso : undefined,
+      confirmarRotulo: mensagens.planos.apagar, cancelarRotulo: mensagens.planos.apagarCancelar, destrutivo: true, aoConfirmar: () => void apagarPlano(plano),
     });
   }
 
@@ -521,7 +527,7 @@ export function Estudo({ cliente, sair, expirar }: {
   // Como a web (studoo.tinhaTrilhas): na primeira carga, as abas só aparecem no esqueleto se a conta tinha trilhas.
   const carregandoInicio = !planos && !erro;
   const comNavegacao = (carregandoInicio && tinhaTrilhas) || comNavegacaoAgora;
-  return <NavegacaoContexto.Provider value={comNavegacao ? {
+  return <AvisoDoApp.Provider value={avisoDoApp}><NavegacaoContexto.Provider value={comNavegacao ? {
     atual: aba as Aba, ocupado,
     planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
     explorar: comunidade ? () => abrir({ tipo: 'explorar' }) : undefined,
@@ -536,11 +542,12 @@ export function Estudo({ cliente, sair, expirar }: {
         aoFechar={() => setFolha(null)} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
     )}
     {confirmacao && (
-      <CartaoConfirmacao mensagem={confirmacao.mensagem} confirmarRotulo={confirmacao.confirmarRotulo} destrutivo={confirmacao.destrutivo}
+      <CartaoConfirmacao mensagem={confirmacao.mensagem} texto={confirmacao.texto} aviso={confirmacao.aviso} confirmarRotulo={confirmacao.confirmarRotulo}
+        cancelarRotulo={confirmacao.cancelarRotulo} destrutivo={confirmacao.destrutivo}
         ocupado={ocupado} aoCancelar={() => setConfirmacao(null)}
         aoConfirmar={() => { const acao = confirmacao.aoConfirmar; setConfirmacao(null); acao(); }} />
     )}
-  </NavegacaoContexto.Provider>;
+  </NavegacaoContexto.Provider></AvisoDoApp.Provider>;
 
   function renderizarTela() {
     // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. Começar, na trilha gerada,
@@ -599,7 +606,7 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'perfil') {
       return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
-        editar={() => abrir({ tipo: 'editarPerfil' })} sair={pedirParaSair}
+        sair={pedirParaSair} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} />;
     }
 
@@ -619,11 +626,6 @@ export function Estudo({ cliente, sair, expirar }: {
       return <TelaPreviaTrilha key={etapa.codigo} cliente={cliente} codigo={etapa.codigo} acoesTela={acoes}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
         criarTrilha={() => abrir({ tipo: 'objetivo' })} />;
-    }
-
-    if (etapa.tipo === 'editarPerfil' && perfil && !perfil.visitante) {
-      return <TelaEditarPerfil cliente={cliente} perfil={perfil} acoes={acoes} aoMudarPerfil={setPerfil}
-        voltar={() => navegar({ tipo: 'perfil' })} registrarGuarda={registrarGuarda} />;
     }
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
@@ -1806,45 +1808,19 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, secu
 }
 
 /**
- * Rodada 4.2 da web: o "Apagar" sai de baixo de cada cartão e vai para um menu discreto ("•••", "Mais opções de …"), para
- * não competir com Começar/Continuar. Tocar no menu mostra "Apagar" ao lado; tocar nele de novo fecha. Apagar ainda pede
- * confirmação.
+ * O "•••" de cada cartão de Minhas trilhas: o menu de ações do Studoo (spec 11), igual no iPhone, no Android e na web.
+ * "Compartilhar" (só nas trilhas da pessoa) e, por último, depois de uma linha, "Apagar" em vermelho, que pede confirmação.
+ * "Configurações" entra com o item das configurações da trilha.
  */
 function MenuDoCartao({ titulo, ocupado, apagar, compartilhar, testID, estilo }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; testID: string; estilo?: StyleProp<ViewStyle> }) {
-  const [aberto, setAberto] = useState(false);
-  // O balão do Studoo, o mesmo no iPhone, no Android e na web (regra do dono, lote 4: nada de folha de ações do sistema).
-  const alternar = () => setAberto((atual) => !atual);
+  const acoes: AcaoDoMenu[] = [
+    ...(compartilhar ? [{ rotulo: mensagens.compartilhar.entrada, icone: 'compartilhar' as const, aoEscolher: compartilhar, testID: `${testID}-compartilhar`,
+      nomeAcessivel: mensagens.compartilhar.entradaRotulo(titulo) }] : []),
+    { rotulo: mensagens.planos.apagar, icone: 'lixeira', aoEscolher: apagar, perigo: true, testID, nomeAcessivel: mensagens.planos.apagarRotulo(titulo) },
+  ];
   return (
     <View style={[estudoEstilos.menu, estilo]}>
-      <Pressable testID={`${testID}-menu`} accessibilityRole="button" accessibilityLabel={mensagens.planos.maisOpcoesRotulo(titulo)} hitSlop={4}
-        accessibilityState={{ expanded: aberto, disabled: ocupado }} aria-expanded={aberto} disabled={ocupado}
-        onPress={alternar}
-        style={({ pressed }) => [estudoEstilos.menuBotao, (aberto || pressed) && estudoEstilos.menuBotaoAberto]}>
-        {/* Aberto, o "•••" fica na cor do texto (.plano-cartao__menu[open] > summary). */}
-        <Text importantForAccessibility="no" style={[estudoEstilos.menuBotaoTexto, aberto && { color: cores.texto }]}>•••</Text>
-      </Pressable>
-      {aberto && !compartilhar && (
-        <View style={estudoEstilos.menuBalao}>
-          {/* O próprio botão é o balão (.plano-cartao__menu[open] > .plano-cartao__apagar): 6 × 12, borda de 1 e cantos de 12. */}
-          <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
-            onPress={() => { setAberto(false); apagar(); }} style={[estudoEstilos.cartaoApagar, estudoEstilos.cartaoApagarBalao]}>
-            <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
-          </Pressable>
-        </View>
-      )}
-      {aberto && compartilhar && (
-        // Com o compartilhar, como .plano-cartao__opcoes da web: uma caixa só, "Compartilhar" acima de "Apagar".
-        <View style={[estudoEstilos.menuBalao, estudoEstilos.menuOpcoes]}>
-          <Pressable testID={`${testID}-compartilhar`} accessibilityRole="button" accessibilityLabel={mensagens.compartilhar.entradaRotulo(titulo)} disabled={ocupado}
-            onPress={() => { setAberto(false); compartilhar(); }} style={({ pressed }) => [estudoEstilos.menuOpcao, pressed && { backgroundColor: cores.nevoa }]}>
-            <Text style={estudoEstilos.menuOpcaoTexto}>{mensagens.compartilhar.entrada}</Text>
-          </Pressable>
-          <Pressable testID={testID} accessibilityRole="button" accessibilityLabel={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
-            onPress={() => { setAberto(false); apagar(); }} style={estudoEstilos.menuOpcao}>
-            <Text style={estudoEstilos.cartaoApagarTexto}>{mensagens.planos.apagar}</Text>
-          </Pressable>
-        </View>
-      )}
+      <MenuDeAcoes rotulo={mensagens.planos.maisOpcoesRotulo(titulo)} acoes={acoes} testID={`${testID}-menu`} desativado={ocupado} estiloBotao={estudoEstilos.menuBotao} />
     </View>
   );
 }
@@ -2242,23 +2218,10 @@ const estudoEstilos = StyleSheet.create({
   conclusaoTopo: { alignItems: 'center' },
   repetida: { gap: 10, marginTop: 14, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 16, backgroundColor: '#FFF6D9' },
   repetidaTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
-  cartaoApagar: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
-  // Como .plano-cartao__menu: no canto de cima da arte, botão de 44 × 44 sobre branco translúcido.
+  // O "•••" no canto de cima da arte (spec 11): 44 × 44, raio 12, branco com sombra leve; o balão é o menu de ações da interface.
   menu: { position: 'absolute', top: 10, right: 10, zIndex: 2, alignItems: 'flex-end' },
   menuDestaque: { top: 24, right: 24 },
-  menuBotao: { minWidth: 44, minHeight: 44, paddingHorizontal: 10, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.88)' },
-  menuBalao: { marginTop: 4 },
-  // .plano-cartao__opcoes: no mínimo 11 rem, 6 de respiro, borda de 1, cantos de 12 e a sombra do balão.
-  menuOpcoes: { minWidth: 176, padding: 6, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12, backgroundColor: cores.fundo,
-    shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
-  menuOpcao: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 10, borderRadius: 8 },
-  menuOpcaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14 },
-  cartaoApagarBalao: { paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: cores.gelo, borderRadius: 12, backgroundColor: cores.fundo,
-    shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 20, shadowOffset: { width: 0, height: 8 }, elevation: 6 },
-  menuBotaoAberto: { backgroundColor: cores.nevoa },
-  menuBotaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16 },
-  cartaoApagarTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, textDecorationLine: 'underline' },
+  menuBotao: { backgroundColor: cores.fundo, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.15)' },
   rever: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginTop: 16, alignSelf: 'center', maxWidth: 448 },
   reverIcone: { marginTop: 1 },
   resumoTrilha: { flexDirection: 'row', alignItems: 'center', alignSelf: 'center', gap: 8, marginTop: 14, paddingHorizontal: 16, paddingVertical: 8,
