@@ -1,6 +1,6 @@
 /**
  * Toca-sons da Web para o Studoo (alinhado à docs/specs/12-som.md).
- * - Usa Web Audio API (`AudioContext` + `AudioBuffer`) para zero latência nos efeitos (WAV)
+ * - Usa Web Audio API (`AudioContext` + `AudioBuffer`) para preparar os efeitos (WAV)
  *   e laço sem buraco nos fundos (MP3 decodificado em memória com `loopStart` e `loopEnd` aparados).
  * - Só desbloqueia no primeiro gesto do usuário (sem enfileirar sons disparados antes do gesto).
  * - Pré-carrega `erro_rede` e `aviso` no primeiro gesto para tocarem mesmo offline.
@@ -22,8 +22,14 @@ import {
 import { MaquinaEstadoSom } from '../../packages/contratos/src/som-estado';
 
 const CHAVE_EFEITOS = 'studoo.sons.efeitos';
+// Pré-carga, cache decodificado e reprodução compartilham a revisão publicada dos arquivos.
+const REVISAO_DOS_SONS = '24498ec';
+const arquivoSonoro = (pasta: 'sfx' | 'fundos', nome: string) => `/sons/${pasta}/${nome}?v=${REVISAO_DOS_SONS}`;
+
 const CHAVE_FUNDO = 'studoo.sons.fundo';
 const TIMEOUT_CARREGAMENTO_MS = 8000;
+// Um arquivo frio continua no cache para o próximo gesto. Depois desse limite o gesto já passou.
+const VALIDADE_EFEITO_MS = 80;
 
 const IDS_FUNDOS_VALIDOS = new Set<IdSomFundo>([
   'mudo',
@@ -42,6 +48,9 @@ class TocaSonsWeb {
   private cacheBuffers = new Map<string, AudioBuffer>();
   private carregando = new Map<string, Promise<AudioBuffer | null>>();
   private ultimoDisparo = new Map<IdEfeitoSonoro, number>();
+  private versaoEfeitos = 0;
+  private efeitosDaTela = new Set<IdEfeitoSonoro>();
+  private efeitosTocando = new Map<AudioBufferSourceNode, IdEfeitoSonoro>();
 
   private fonteFundo: AudioBufferSourceNode | null = null;
   private ganhoFundo: GainNode | null = null;
@@ -126,31 +135,58 @@ class TocaSonsWeb {
       const eraBloqueado = !this.desbloqueado;
       this.desbloqueado = true;
       const ctx = this.garantirContexto();
-      if (ctx && ctx.state === 'suspended') {
+      if (ctx && ctx.state !== 'running') {
         void ctx.resume().then(() => {
           this.preCarregarEssenciais();
           void this.atualizarEstadoFundo(600);
-        });
+        }).catch(() => { /* No iOS, a próxima soltura do toque pode liberar o contexto. */ });
       } else if (eraBloqueado || this.estadoFundo === 'erro') {
         this.preCarregarEssenciais();
         void this.atualizarEstadoFundo(600);
       }
       if (eraBloqueado) this.notificar();
     };
-    // capture: true garante que o primeiro toque desbloqueie antes do onClick do React.
-    window.addEventListener('pointerdown', desbloquear, { capture: true, passive: true });
-    window.addEventListener('keydown', desbloquear, { capture: true, passive: true });
+    // O gesto que libera áudio pode ser o início, a soltura do toque ou a ativação por teclado.
+    for (const evento of ['pointerdown', 'touchend', 'click', 'keydown']) {
+      window.addEventListener(evento, desbloquear, { capture: true, passive: true });
+    }
     document.addEventListener('visibilitychange', () => {
       this.estado.definirSegundoPlano(document.visibilityState !== 'visible');
+      if (this.estado.emSegundoPlano) this.silenciarEfeitos();
       void this.atualizarEstadoFundo(this.estado.emSegundoPlano ? 0 : 600);
     });
   }
 
   private preCarregarEssenciais(): void {
-    if (this.preCarregouEssenciais) return;
+    if (this.preCarregouEssenciais || !this.lerPreferencias().efeitosAtivos) return;
     this.preCarregouEssenciais = true;
-    void this.carregarBuffer(`/sons/sfx/${CATALOGO_EFEITOS.erro_rede.arquivo}`);
-    void this.carregarBuffer(`/sons/sfx/${CATALOGO_EFEITOS.aviso.arquivo}`);
+    this.prepararEfeitos('erro_rede', 'aviso');
+  }
+
+  /** O download e a decodificação podem acontecer antes do gesto; a preparação nunca toca um som. */
+  prepararEfeitos(...ids: IdEfeitoSonoro[]): void {
+    if (typeof window === 'undefined') return;
+    for (const id of ids) this.efeitosDaTela.add(id);
+    if (!this.lerPreferencias().efeitosAtivos || document.visibilityState === 'hidden') return;
+    for (const id of ids) void this.carregarBuffer(arquivoSonoro('sfx', CATALOGO_EFEITOS[id].arquivo));
+  }
+
+  private escopo = new AbortController();
+  get sinalDosEfeitos(): AbortSignal { return this.escopo.signal; }
+
+  descartarEfeitosPendentes(): void {
+    this.escopo.abort();
+    this.escopo = new AbortController();
+    this.versaoEfeitos++;
+  }
+
+  private silenciarEfeitos(preservarBipes = false): void {
+    this.descartarEfeitosPendentes();
+    for (const [fonte, id] of this.efeitosTocando) {
+      if (preservarBipes && this.estado.podeTocarEfeito(id)) continue;
+      fonte.stop();
+      this.efeitosTocando.delete(fonte);
+    }
   }
 
   private garantirContexto(): AudioContext | null {
@@ -160,7 +196,11 @@ class TocaSonsWeb {
         window.AudioContext ||
         (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
       if (!Ctx) return null;
-      this.ctx = new Ctx();
+      try {
+        this.ctx = new Ctx({ latencyHint: 'interactive' });
+      } catch {
+        return null;
+      }
       this.ganhoFundo = this.ctx.createGain();
       this.ganhoFundo.gain.value = 0;
       this.ganhoFundo.connect(this.ctx.destination);
@@ -203,36 +243,49 @@ class TocaSonsWeb {
    * Toca um efeito sonoro pelo ID do catálogo.
    * Sem gesto prévio do usuário, descarta o som imediatamente (não enfileira para tocar atrasado).
    */
-  async tocarEfeito(id: IdEfeitoSonoro): Promise<void> {
+  async tocarEfeito(id: IdEfeitoSonoro, escopo?: AbortSignal): Promise<void> {
+    if (escopo?.aborted) return;
     this.lerPreferencias();
     if (!this.desbloqueado) return;
-    if (!this.estado.podeTocarEfeito(id)) return;
+    if (!this.estado.podeTocarEfeito(id) || document.visibilityState === 'hidden') return;
 
     const def = CATALOGO_EFEITOS[id];
-    const agora = Date.now();
-    const ultimo = this.ultimoDisparo.get(id) ?? 0;
+    const agora = performance.now();
+    const ultimo = this.ultimoDisparo.get(id) ?? -Infinity;
     if (agora - ultimo < def.cooldownMs) return;
-    this.ultimoDisparo.set(id, agora);
+    const versao = ++this.versaoEfeitos;
 
     const ctx = this.garantirContexto();
     if (!ctx) return;
-    if (ctx.state === 'suspended') {
+    const url = arquivoSonoro('sfx', def.arquivo);
+    let buf = this.cacheBuffers.get(url);
+    if (!buf || ctx.state !== 'running') {
       try {
-        await ctx.resume();
+        const [carregado] = await Promise.all([
+          buf ?? this.carregarBuffer(url),
+          ctx.state === 'running' ? undefined : ctx.resume(),
+        ]);
+        if (!carregado || ctx.state !== 'running' || versao !== this.versaoEfeitos ||
+          performance.now() - agora > VALIDADE_EFEITO_MS || !this.estado.podeTocarEfeito(id) ||
+          document.visibilityState !== 'visible') return;
+        buf = carregado;
       } catch {
         return;
       }
     }
-
-    const buf = await this.carregarBuffer(`/sons/sfx/${def.arquivo}`);
-    if (!buf) return;
-
+    this.ultimoDisparo.set(id, performance.now());
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const gain = ctx.createGain();
     gain.gain.value = def.volume;
     src.connect(gain);
     gain.connect(ctx.destination);
+    this.efeitosTocando.set(src, id);
+    src.onended = () => {
+      this.efeitosTocando.delete(src);
+      src.disconnect();
+      gain.disconnect();
+    };
     src.start(0);
   }
 
@@ -240,6 +293,7 @@ class TocaSonsWeb {
     this.lerPreferencias();
     const mudouParaLigado = !this.estado.efeitosAtivos && ativos;
     this.estado.definirEfeitosAtivos(ativos);
+    if (!ativos) this.silenciarEfeitos();
     try {
       window.localStorage.setItem(CHAVE_EFEITOS, ativos ? '1' : '0');
     } catch {
@@ -247,6 +301,8 @@ class TocaSonsWeb {
     }
     this.notificar();
     if (mudouParaLigado) {
+      this.preCarregarEssenciais();
+      this.prepararEfeitos(...this.efeitosDaTela);
       await this.tocarEfeito('salvo');
     }
   }
@@ -320,6 +376,7 @@ class TocaSonsWeb {
 
   entrarEmGravacaoOuVoz(): void {
     this.estado.entrarEmGravacaoOuVoz();
+    this.silenciarEfeitos(true);
     void this.atualizarEstadoFundo(0);
   }
 
@@ -417,13 +474,13 @@ class TocaSonsWeb {
       this.pararComRampa(300);
     }
 
-    if (!this.cacheBuffers.has(`/sons/fundos/${def.arquivo}`)) {
+    if (!this.cacheBuffers.has(arquivoSonoro('fundos', def.arquivo))) {
       this.estadoFundo = 'carregando';
       this.erroFundo = null;
       this.notificar();
     }
 
-    const buf = await this.carregarBuffer(`/sons/fundos/${def.arquivo}`, TIMEOUT_CARREGAMENTO_MS);
+    const buf = await this.carregarBuffer(arquivoSonoro('fundos', def.arquivo), TIMEOUT_CARREGAMENTO_MS);
     if (seq !== this.sequenciaFundo) return;
 
     if (!buf) {

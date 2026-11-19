@@ -3,13 +3,11 @@
  * rodapé, que depois da resposta vira o painel de retorno e sobe verde no acerto ou âmbar no erro.
  */
 
-.estudo:has(.painel--aula), .estudo:has(.painel--concluida), .estudo:has(.painel--preparo) { grid-template-columns: minmax(0, 1fr); }
+.estudo:has(.painel--aula), .estudo:has(.painel--concluida) { grid-template-columns: minmax(0, 1fr); }
 .estudo:has(.painel--aula) .barra-lateral, .estudo:has(.painel--aula) .estudo-cabecalho,
-.estudo:has(.painel--concluida) .barra-lateral, .estudo:has(.painel--concluida) .estudo-cabecalho,
-.estudo:has(.painel--preparo) .barra-lateral, .estudo:has(.painel--preparo) .estudo-cabecalho { display: none; }
+.estudo:has(.painel--concluida) .barra-lateral, .estudo:has(.painel--concluida) .estudo-cabecalho { display: none; }
 
-.estudo-principal:has(.painel--aula),
-.estudo-principal:has(.painel--preparo) {
+.estudo-principal:has(.painel--aula) {
   width: min(100%, 57rem);
   margin-inline: auto;
   padding: clamp(12px, 2.5vw, 24px) clamp(16px, 4vw, 48px) 0;
