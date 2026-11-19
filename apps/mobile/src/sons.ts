@@ -6,9 +6,14 @@
  *   um arquivo local e rebobinado ao terminar. O toque só chama `play()`, na mesma volta do evento, sem `await`, sem
  *   trocar o modo de áudio e sem criar reprodutor. Um efeito que não consegue tocar em até 120 ms do pedido (arquivo
  *   ainda carregando, preferências ainda chegando) fica calado: um som atrasado engana mais que nenhum.
- * - Fundos em MP3 com dois reprodutores alternados em cruzamento suave (150 ms) para evitar buraco na emenda; o próximo
- *   já fica posicionado no começo do trecho, porque no iPhone `play()` é imediato e `seekTo()` chega depois.
- * - Começa apenas após o primeiro gesto (`registrarGesto()` ou toque em controle), com rampas de 600/300/400 ms.
+ * - Uma música só (decisão do dono, 19/11): o Lo-fi de Estudo (`lofi_estudo`, o arquivo de d5bf5aa), em laço no app inteiro,
+ *   ligada por padrão; "Mudo" escolhido continua em silêncio e os climas antigos viram o Lo-fi (`fundoUnicoDaPreferencia`).
+ *   Os efeitos tocam por cima, sem parar, reiniciar nem baixar a música; a fala do Studoo baixa a 20% e a gravação e a voz
+ *   ao vivo pausam. Pausar (gravação, voz, segundo plano) guarda a posição: a música volta do mesmo ponto, nunca do começo.
+ * - Dois reprodutores alternados em cruzamento suave (150 ms) para não haver buraco na emenda do laço; o próximo já fica
+ *   posicionado no começo do trecho (no iPhone, `play()` é imediato e `seekTo()` chega depois), e o cruzamento é agendado
+ *   pela posição real do reprodutor, não por um relógio desde o começo.
+ * - Começa no primeiro gesto em qualquer tela, já na entrada (login ou visitante), com rampas de 600/300/400 ms.
  * - Posse do modo de áudio delegada a `MaquinaEstadoSom` (`packages/contratos/src/som-estado.ts`):
  *   nunca chama `setAudioModeAsync` durante gravação/voz ao vivo ou fala de lição; aplica o modo normal ao carregar as
  *   preferências, antes do fundo e de novo em `sairDeFala()` e `sairDeGravacaoOuVoz()` (não a cada efeito).
@@ -23,6 +28,7 @@ import {
   CATALOGO_FUNDOS,
   MENSAGEM_ERRO_FUNDO,
   PADRAO_PREFERENCIAS_SOM,
+  fundoUnicoDaPreferencia,
   type EstadoReproducaoFundo,
   type EstadoSomSnapshot,
   type IdEfeitoSonoro,
@@ -34,14 +40,6 @@ import { MaquinaEstadoSom } from '../../../packages/contratos/src/som-estado';
 const CHAVE_EFEITOS = 'studoo.sons.efeitos';
 const CHAVE_FUNDO = 'studoo.sons.fundo';
 
-const IDS_FUNDOS_VALIDOS = new Set<IdSomFundo>([
-  'mudo',
-  'foco_calmo',
-  'chuva_suave',
-  'lofi_estudo',
-  'biblioteca',
-  'brisa_natural',
-]);
 
 const FONTES_SFX: Record<IdEfeitoSonoro, AudioSource> = {
   toque_opcao: require('../assets/sons/sfx/toque-opcao.wav'),
@@ -68,18 +66,19 @@ const FONTES_SFX: Record<IdEfeitoSonoro, AudioSource> = {
   cronometro_fim: require('../assets/sons/sfx/cronometro-fim.wav'),
 };
 
-const FONTES_FUNDOS: Record<Exclude<IdSomFundo, 'mudo'>, AudioSource> = {
-  foco_calmo: require('../assets/sons/fundos/foco-calmo.mp3'),
-  chuva_suave: require('../assets/sons/fundos/chuva-suave.mp3'),
+/** A única música do app: o Lo-fi de Estudo (os outros quatro climas saíram do pacote do app). */
+type IdMusica = 'lofi_estudo';
+const ID_DA_MUSICA: IdMusica = 'lofi_estudo';
+const FONTES_FUNDOS: Record<IdMusica, AudioSource> = {
   lofi_estudo: require('../assets/sons/fundos/lofi-estudo.mp3'),
-  biblioteca: require('../assets/sons/fundos/biblioteca.mp3'),
-  brisa_natural: require('../assets/sons/fundos/brisa-natural.mp3'),
 };
 
 type OuvinteEstado = (estado: EstadoSomSnapshot) => void;
 
 /** Até quanto depois do pedido um efeito ainda toca (arquivo carregando, preferências chegando); depois, calado. */
 export const ATRASO_MAXIMO_EFEITO_MS = 120;
+/** A música que não toca em 8 s (ou falha) mostra o erro na folha; a chave continua ligada (spec 12). */
+export const ESPERA_MAXIMA_DO_FUNDO_MS = 8000;
 
 /**
  * Registro do som para a conferência nativa (Mobile 2, linha do tempo de apps/mobile/conferencia-nativa): só com
@@ -127,7 +126,11 @@ class TocaSonsMobile {
   private fundoEsperandoReproducao = new WeakMap<AudioPlayer, string>();
 
   private listenerAppState: { remove: () => void } | null = null;
-  private fundoAtualId: Exclude<IdSomFundo, 'mudo'> | null = null;
+  private fundoAtualId: IdMusica | null = null;
+  /** A música está pausada pelo momento (gravação, voz, segundo plano), com os reprodutores guardados na posição. */
+  private fundoPausado = false;
+  private esperaDoFundo: ReturnType<typeof setTimeout> | null = null;
+  private nomeDoJogador = new WeakMap<AudioPlayer, 'A' | 'B'>();
   private jogadorA: AudioPlayer | null = null;
   private jogadorB: AudioPlayer | null = null;
   private ativoEhA = true;
@@ -162,7 +165,8 @@ class TocaSonsMobile {
         SecureStore.getItemAsync(CHAVE_FUNDO),
       ]);
       if (e !== null) efeitos = e === '1';
-      if (f && IDS_FUNDOS_VALIDOS.has(f as IdSomFundo)) fundo = f as IdSomFundo;
+      // Uma música só: "mudo" escolhido continua; qualquer outro valor (os climas antigos) e a instalação nova, o Lo-fi.
+      fundo = fundoUnicoDaPreferencia(f);
     } catch {
       // Sem armazenamento: o padrão.
     }
@@ -273,6 +277,11 @@ class TocaSonsMobile {
     const { player } = jogador;
     try {
       registrarSom('comando', id);
+      if (REGISTRAR_SOM) {
+        // A posição do fundo logo depois do efeito: ele toca por cima, e a música segue (fora do caminho do toque).
+        setTimeout(() => this.registrarFundo(), 0);
+        setTimeout(() => this.registrarFundo(), 200);
+      }
       jogador.esperandoReproducao = true;
       player.volume = CATALOGO_EFEITOS[id].volume;
       if (player.playing) {
@@ -404,26 +413,13 @@ class TocaSonsMobile {
     }
   }
 
-  /** No app com leitor de tela ligado, espera 1,5 s antes da prévia para não atropelar o anúncio. */
-  definirFundoComAtraso(fundo: IdSomFundo, atrasoMs?: number): void {
-    this.cancelarPreviewFundo();
-    const espera = atrasoMs ?? (this.leitorDeTela ? 1500 : 0);
-    if (espera <= 0) {
-      void this.definirFundo(fundo);
-      return;
-    }
-    this.estado.definirFundo(fundo);
-    this.prefsProntas = true;
-    this.desbloqueado = true;
-    void SecureStore.setItemAsync(CHAVE_FUNDO, fundo).catch(() => undefined);
-    this.notificar();
-    this.timerPreview = setTimeout(() => {
-      this.timerPreview = null;
-      void this.atualizarEstadoFundo(600);
-    }, espera);
+  /** A chave "Música de fundo": ligada é o Lo-fi de Estudo; desligada, o silêncio escolhido ("mudo"). */
+  definirMusicaLigada(ligada: boolean): Promise<void> {
+    return this.definirFundo(ligada ? ID_DA_MUSICA : 'mudo');
   }
 
-  async definirFundo(fundo: IdSomFundo): Promise<void> {
+  async definirFundo(escolha: IdSomFundo): Promise<void> {
+    const fundo = fundoUnicoDaPreferencia(escolha);
     this.cancelarPreviewFundo();
     this.estado.definirFundo(fundo);
     this.prefsProntas = true;
@@ -471,11 +467,21 @@ class TocaSonsMobile {
     }
   }
 
-  private limparFundo(): void {
+  private jogadorAtivo(): AudioPlayer | null {
+    return this.ativoEhA ? this.jogadorA : this.jogadorB;
+  }
+
+  private pararCruzamento(): void {
     if (this.timerCruzamento) {
       clearTimeout(this.timerCruzamento);
       this.timerCruzamento = null;
     }
+  }
+
+  /** Solta os dois reprodutores (a pessoa desligou a música): a próxima vez começa do compasso 1. */
+  private limparFundo(): void {
+    this.pararCruzamento();
+    this.pararEsperaDoFundo();
     if (this.timerRampa) {
       clearInterval(this.timerRampa);
       this.timerRampa = null;
@@ -493,7 +499,26 @@ class TocaSonsMobile {
     this.jogadorA = null;
     this.jogadorB = null;
     this.fundoAtualId = null;
+    this.fundoPausado = false;
     this.volumeAtual = 0;
+  }
+
+  /** Pausa onde está (gravação, voz ao vivo, segundo plano): os reprodutores ficam, e a música volta do mesmo ponto. */
+  private pausarFundo(): void {
+    this.pararCruzamento();
+    if (this.timerRampa) {
+      clearInterval(this.timerRampa);
+      this.timerRampa = null;
+    }
+    const ativo = this.jogadorAtivo();
+    try {
+      ativo?.pause();
+    } catch {
+      // Ignora.
+    }
+    this.fundoPausado = true;
+    this.volumeAtual = 0;
+    this.registrarFundo();
   }
 
   private volumeAlvo(base: number): number {
@@ -539,95 +564,156 @@ class TocaSonsMobile {
     }, 40);
   }
 
-  private agendarProximoCruzamento(id: Exclude<IdSomFundo, 'mudo'>): void {
-    if (this.timerCruzamento) clearTimeout(this.timerCruzamento);
-    const def = CATALOGO_FUNDOS.find((f) => f.id === id);
-    if (!def) return;
-
-    const esperaMs = Math.max(5000, def.duracaoMs - Math.round((def.aparoInicioSeg + def.aparoFimSeg) * 1000) - 180);
-    this.timerCruzamento = setTimeout(() => {
-      if (this.fundoAtualId !== id || this.estado.estadoFundo() === 'parado') return;
-      const atual = this.ativoEhA ? this.jogadorA : this.jogadorB;
-      const proximo = this.ativoEhA ? this.jogadorB : this.jogadorA;
-      if (!atual || !proximo) return;
-
-      const alvo = this.volumeAlvo(def.volume);
-      try {
-        // O próximo já está no começo do trecho (posicionado ao ser criado e ao sair do cruzamento anterior): no iPhone,
-        // `play()` vale na hora e `seekTo()` chega depois, e o reprodutor parado perto do fim do arquivo terminaria antes.
-        proximo.volume = 0;
-        this.tocarFundo(proximo, id);
-      } catch {
-        return;
-      }
-
-      let passo = 0;
-      const passos = 5;
-      const intervalo = setInterval(() => {
-        passo += 1;
-        const p = passo / passos;
-        try {
-          proximo.volume = alvo * p;
-          atual.volume = alvo * (1 - p);
-          this.volumeAtual = alvo;
-        } catch {
-          clearInterval(intervalo);
-          return;
-        }
-        if (passo >= passos) {
-          clearInterval(intervalo);
-          try {
-            atual.pause();
-            // Pronto para a próxima volta: parado no começo do trecho.
-            void atual.seekTo(def.aparoInicioSeg).catch(() => undefined);
-          } catch {
-            // Ignora.
-          }
-          this.ativoEhA = !this.ativoEhA;
-          this.agendarProximoCruzamento(id);
-        }
-      }, 30);
-    }, esperaMs);
+  /** Quanto falta para o fim do trecho do laço, pela posição real do reprodutor ativo. */
+  private faltaParaOFim(def: { duracaoMs: number; aparoInicioSeg: number; aparoFimSeg: number }): number {
+    let posicao = def.aparoInicioSeg;
+    try {
+      const atual = this.jogadorAtivo()?.currentTime;
+      if (typeof atual === 'number' && Number.isFinite(atual)) posicao = Math.max(def.aparoInicioSeg, atual);
+    } catch {
+      // Sem a posição: conta do começo do trecho.
+    }
+    return Math.round((def.duracaoMs / 1000 - def.aparoFimSeg - posicao) * 1000);
   }
 
-  private criarJogadorDeFundo(id: Exclude<IdSomFundo, 'mudo'>): AudioPlayer {
-    const jogador = createAudioPlayer(FONTES_FUNDOS[id]);
-    if (REGISTRAR_SOM) {
-      jogador.addListener('playbackStatusUpdate', (status: AudioStatus) => {
-        const esperado = this.fundoEsperandoReproducao.get(jogador);
-        if (!status.playing || !esperado) return;
-        this.fundoEsperandoReproducao.delete(jogador);
-        registrarSom('reproducao', esperado);
-      });
+  /** O próximo cruzamento, 180 ms antes do fim do trecho, contado da posição real (vale também ao retomar do meio). */
+  private agendarProximoCruzamento(id: IdMusica): void {
+    this.pararCruzamento();
+    const def = CATALOGO_FUNDOS.find((f) => f.id === id);
+    if (!def) return;
+    const esperaMs = Math.max(0, this.faltaParaOFim(def) - 180);
+    this.timerCruzamento = setTimeout(() => this.cruzar(id), esperaMs);
+  }
+
+  private cruzar(id: IdMusica): void {
+    this.timerCruzamento = null;
+    const def = CATALOGO_FUNDOS.find((f) => f.id === id);
+    if (!def || this.fundoAtualId !== id || this.fundoPausado || this.estado.estadoFundo() === 'parado') return;
+    // O relógio do JS pode adiantar: se ainda falta bastante (o reprodutor atrasou), espera mais um pouco.
+    if (this.faltaParaOFim(def) > 400) {
+      this.agendarProximoCruzamento(id);
+      return;
     }
+    const atual = this.jogadorAtivo();
+    const proximo = this.ativoEhA ? this.jogadorB : this.jogadorA;
+    if (!atual || !proximo) return;
+
+    const alvo = this.volumeAlvo(def.volume);
+    try {
+      // O próximo já está no começo do trecho (posicionado ao ser criado e ao sair do cruzamento anterior): no iPhone,
+      // `play()` vale na hora e `seekTo()` chega depois, e o reprodutor parado perto do fim do arquivo terminaria antes.
+      proximo.volume = 0;
+      this.tocarFundo(proximo, id);
+    } catch {
+      return;
+    }
+
+    let passo = 0;
+    const passos = 5;
+    const intervalo = setInterval(() => {
+      passo += 1;
+      const p = passo / passos;
+      try {
+        proximo.volume = alvo * p;
+        atual.volume = alvo * (1 - p);
+        this.volumeAtual = alvo;
+      } catch {
+        clearInterval(intervalo);
+        return;
+      }
+      if (passo >= passos) {
+        clearInterval(intervalo);
+        try {
+          atual.pause();
+          // Pronto para a próxima volta: parado no começo do trecho.
+          void atual.seekTo(def.aparoInicioSeg).catch(() => undefined);
+        } catch {
+          // Ignora.
+        }
+        this.ativoEhA = !this.ativoEhA;
+        this.agendarProximoCruzamento(id);
+      }
+    }, 30);
+  }
+
+  private criarJogadorDeFundo(id: IdMusica, nome: 'A' | 'B'): AudioPlayer {
+    const jogador = createAudioPlayer(FONTES_FUNDOS[id]);
+    this.nomeDoJogador.set(jogador, nome);
+    jogador.addListener('playbackStatusUpdate', (status: AudioStatus) => {
+      // "Carregando…" até o som chegar de verdade (a primeira vez baixa o arquivo); então "Tocando".
+      if (status.playing && this.estadoFundo === 'carregando' && jogador === this.jogadorAtivo()) {
+        this.pararEsperaDoFundo();
+        this.estadoFundo = 'tocando';
+        this.notificar();
+      }
+      if (!REGISTRAR_SOM) return;
+      this.registrarFundo(jogador, status);
+      const esperado = this.fundoEsperandoReproducao.get(jogador);
+      if (!status.playing || !esperado) return;
+      this.fundoEsperandoReproducao.delete(jogador);
+      registrarSom('reproducao', esperado);
+    });
     return jogador;
   }
 
-  private tocarFundo(jogador: AudioPlayer, id: Exclude<IdSomFundo, 'mudo'>): void {
+  private pararEsperaDoFundo(): void {
+    if (this.esperaDoFundo) {
+      clearTimeout(this.esperaDoFundo);
+      this.esperaDoFundo = null;
+    }
+  }
+
+  private tocarFundo(jogador: AudioPlayer, id: IdMusica): void {
     registrarSom('comando', id);
     if (REGISTRAR_SOM) this.fundoEsperandoReproducao.set(jogador, id);
     jogador.play();
   }
 
+  /**
+   * O marcador do fundo para a conferência nativa (Mobile 2), só com `EXPO_PUBLIC_STUDOO_REGISTRO_SOM=1`:
+   * "[som] fundo <id> <A|B> <tocando|parado> <pos_ms>/<dur_ms> <volume> <Date.now()>", a cada aviso do reprodutor (no play,
+   * no pause e a cada 500 ms tocando) e 0 e 200 ms depois de cada efeito, para mostrar que a música não para nem recomeça.
+   */
+  private registrarFundo(jogador: AudioPlayer | null = this.jogadorAtivo(), status?: Partial<AudioStatus>): void {
+    if (!REGISTRAR_SOM || !jogador || !this.fundoAtualId) return;
+    try {
+      const tocando = status?.playing ?? jogador.playing;
+      const posicao = status?.currentTime ?? jogador.currentTime;
+      const duracao = status?.duration ?? jogador.duration;
+      console.info(`[som] fundo ${this.fundoAtualId} ${this.nomeDoJogador.get(jogador) ?? '?'} ${tocando ? 'tocando' : 'parado'} `
+        + `${Math.round((posicao || 0) * 1000)}/${Math.round((duracao || 0) * 1000)} ${Number(jogador.volume ?? 0).toFixed(3)} ${Date.now()}`);
+    } catch {
+      // O registro nunca atrapalha o som.
+    }
+  }
+
   private async atualizarEstadoFundo(rampaMs = 600): Promise<void> {
     const versao = ++this.versaoFundo;
     const estadoDesejado = this.estado.estadoFundo();
-    const id = this.estado.fundo;
+    const ligada = this.estado.fundo !== 'mudo';
 
-    if (estadoDesejado === 'parado' || id === 'mudo' || !this.desbloqueado) {
-      const ativo = this.ativoEhA ? this.jogadorA : this.jogadorB;
-      const pararMs = !this.desbloqueado || this.estado.contGravacaoOuVoz > 0 || this.estado.emSegundoPlano ? 0 : 400;
-      if (ativo && pararMs > 0) {
-        this.ramparVolume(ativo, this.volumeAtual, 0, pararMs, () => this.limparFundo());
+    // Desligada pela pessoa (ou antes do primeiro gesto): desce em 400 ms e solta os reprodutores.
+    if (!ligada || !this.desbloqueado) {
+      const ativo = this.jogadorAtivo();
+      if (ativo && this.desbloqueado && !this.fundoPausado) {
+        this.ramparVolume(ativo, this.volumeAtual, 0, 400, () => this.limparFundo());
       } else {
         this.limparFundo();
       }
-      this.estadoFundo = this.erroFundo && id !== 'mudo' ? 'erro' : 'parado';
+      this.estadoFundo = this.erroFundo && ligada ? 'erro' : 'parado';
       this.notificar();
       return;
     }
 
-    const def = CATALOGO_FUNDOS.find((f) => f.id === id);
+    // Ligada, mas o momento pede silêncio (gravação, voz ao vivo, segundo plano): pausa onde está, para voltar do mesmo ponto.
+    if (estadoDesejado === 'parado') {
+      if (this.jogadorA && this.jogadorB && !this.fundoPausado) this.pausarFundo();
+      this.estadoFundo = 'parado';
+      this.notificar();
+      return;
+    }
+
+    const def = CATALOGO_FUNDOS.find((f) => f.id === ID_DA_MUSICA);
     if (!def) {
       this.limparFundo();
       this.estadoFundo = 'parado';
@@ -636,14 +722,28 @@ class TocaSonsMobile {
     }
 
     await this.aplicarModoNormalSePermitido();
-    // Enquanto o modo de áudio era aplicado, veio um pedido mais novo (parar, trocar de fundo, ir para o fundo do aparelho):
-    // ele decide, e este não cria um segundo par de reprodutores.
+    // Enquanto o modo de áudio era aplicado, veio um pedido mais novo (parar, desligar, ir para o fundo do aparelho): ele
+    // decide, e este não cria um segundo par de reprodutores.
     if (versao !== this.versaoFundo) return;
     const alvo = this.volumeAlvo(def.volume);
 
-    if (this.fundoAtualId === id && this.jogadorA && this.jogadorB) {
-      const ativo = this.ativoEhA ? this.jogadorA : this.jogadorB;
-      this.ramparVolume(ativo, this.volumeAtual, alvo, rampaMs);
+    if (this.fundoAtualId === ID_DA_MUSICA && this.jogadorA && this.jogadorB) {
+      const ativo = this.jogadorA && this.ativoEhA ? this.jogadorA : this.jogadorB;
+      if (this.fundoPausado) {
+        // Volta do ponto em que parou, subindo do zero em 600 ms; o cruzamento é reagendado pela posição.
+        this.fundoPausado = false;
+        try {
+          ativo.volume = 0;
+          this.tocarFundo(ativo, ID_DA_MUSICA);
+        } catch {
+          // Segue para o erro abaixo, se o reprodutor sumiu.
+        }
+        this.ramparVolume(ativo, 0, alvo, 600);
+        this.agendarProximoCruzamento(ID_DA_MUSICA);
+      } else {
+        // Só o volume muda (a fala, a folha com o leitor de tela): nunca recomeça.
+        this.ramparVolume(ativo, this.volumeAtual, alvo, rampaMs);
+      }
       this.estadoFundo = 'tocando';
       this.notificar();
       return;
@@ -653,21 +753,30 @@ class TocaSonsMobile {
     this.estadoFundo = 'carregando';
     this.notificar();
 
-    this.fundoAtualId = id;
+    this.fundoAtualId = ID_DA_MUSICA;
     this.ativoEhA = true;
     try {
-      this.jogadorA = this.criarJogadorDeFundo(id);
-      this.jogadorB = this.criarJogadorDeFundo(id);
+      this.jogadorA = this.criarJogadorDeFundo(ID_DA_MUSICA, 'A');
+      this.jogadorB = this.criarJogadorDeFundo(ID_DA_MUSICA, 'B');
       this.jogadorA.volume = 0;
       this.jogadorB.volume = 0;
       // A entra pelo começo do trecho (o volume sobe do zero, então o instante antes do seekTo não se ouve); B já fica lá.
       void this.jogadorA.seekTo(def.aparoInicioSeg).catch(() => undefined);
       void this.jogadorB.seekTo(def.aparoInicioSeg).catch(() => undefined);
-      this.tocarFundo(this.jogadorA, id);
+      this.tocarFundo(this.jogadorA, ID_DA_MUSICA);
       this.ramparVolume(this.jogadorA, 0, alvo, 600);
-      this.agendarProximoCruzamento(id);
-      this.estadoFundo = 'tocando';
+      this.agendarProximoCruzamento(ID_DA_MUSICA);
+      // Fica "Carregando…" até o reprodutor avisar que tocou; sem som em 8 s, o erro da folha (spec 12).
       this.erroFundo = null;
+      this.pararEsperaDoFundo();
+      this.esperaDoFundo = setTimeout(() => {
+        this.esperaDoFundo = null;
+        if (this.estadoFundo !== 'carregando') return;
+        this.limparFundo();
+        this.erroFundo = MENSAGEM_ERRO_FUNDO;
+        this.estadoFundo = 'erro';
+        this.notificar();
+      }, ESPERA_MAXIMA_DO_FUNDO_MS);
       this.notificar();
     } catch {
       this.limparFundo();

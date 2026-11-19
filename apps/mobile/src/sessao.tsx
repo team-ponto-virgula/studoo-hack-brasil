@@ -8,7 +8,7 @@ import { entrarComoVisitante } from './visitante-nativo';
 import { Apresentacao } from './apresentacao';
 import { RecuperarAcesso } from './recuperar';
 import { Estudo } from './estudo';
-import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useMovimentoReduzido } from './interface';
+import { AvisoDoApp, Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useAvisoDoAppRaiz, useMovimentoReduzido } from './interface';
 import { ESPERA_DA_MEDIDA_MS, ESTADO_INICIAL_DA_ENTRADA, ILUSTRACAO_MAXIMA, MARGEM_DA_ILUSTRACAO, proximoEstadoDaEntrada, type EstadoDaEntrada } from './entrada-medidas';
 import { SkeletonTrilha } from './caminho';
 import { NavegacaoContexto } from './navegacao';
@@ -17,6 +17,7 @@ import { mensagemDeErro, mensagens } from './mensagens';
 import { Paisagem } from './mundo';
 import { Stu } from './mascote';
 import { tocaSons } from './sons';
+import { useAvisoDaMusica } from './som';
 import { cores, fontes } from './tema';
 
 const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -35,14 +36,14 @@ export function AppMobile() {
   useEffect(() => {
     void lerTinhaTrilhas().then(setTinhaTrilhas);
   }, []);
-  // O som (spec 12): as preferências ao abrir; o fundo só com a sessão ativa (depois da entrada), e para ao sair da conta.
+  // O som (spec 12, uma música só): as preferências ao abrir; o Lo-fi começa no primeiro toque em qualquer tela, já na
+  // entrada (login ou visitante), e segue o mesmo ao entrar, sair da conta e trocar de tela, sem recomeçar.
   useEffect(() => {
     void tocaSons.carregarPreferencias();
-    return () => tocaSons.definirAreaPermitida(false);
   }, []);
-  useEffect(() => {
-    tocaSons.definirAreaPermitida(sessao.tipo === 'ativa');
-  }, [sessao.tipo]);
+  // O aviso do app mora aqui, na raiz, para valer também na entrada: o da primeira vez que a música toca, com "Desligar".
+  const avisoDoApp = useAvisoDoAppRaiz();
+  useAvisoDaMusica(avisoDoApp.avisar);
 
   useEffect(() => {
     let ativo = true;
@@ -104,6 +105,9 @@ export function AppMobile() {
     setSessao(await encerrarNoAparelho(mensagens.erros.nao_autenticado));
   }
 
+  return <AvisoDoApp.Provider value={avisoDoApp}>{tela()}</AvisoDoApp.Provider>;
+
+  function tela() {
   switch (sessao.tipo) {
     case 'ativa':
       return <Estudo cliente={sessao.cliente} sair={() => sair(sessao.cliente)} expirar={expirar} />;
@@ -148,6 +152,7 @@ export function AppMobile() {
           </Tela>
         </NavegacaoContexto.Provider>
       );
+  }
   }
 }
 

@@ -143,12 +143,12 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
   {
     id: 'lofi_estudo',
     rotulo: 'Lo-fi de Estudo',
-    descricao: 'Harmonia abafada a 72 BPM sem melodia concorrente',
+    descricao: 'Piano elétrico em meio-tempo, bumbo e escova, vinil discreto',
     arquivo: 'lofi-estudo.mp3',
-    duracaoMs: 60000,
-    volume: 0.22,
+    duracaoMs: 89328,
+    volume: 0.24,
     aparoInicioSeg: 0.026,
-    aparoFimSeg: 0.020,
+    aparoFimSeg: 0,
   },
   {
     id: 'biblioteca',
