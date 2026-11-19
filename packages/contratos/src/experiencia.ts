@@ -958,6 +958,17 @@ export const mensagens = {
     geracao: {
         contexto: 'Nova trilha',
         montandoTitulo: 'Montando sua trilha',
+        aguardandoLicao: 'Ainda montando a próxima lição…',
+        propostaPronta: (licoes: number, partes: number) =>
+            `Proposta pronta: ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}.`,
+        comecarLicao1: 'Começar a lição 1',
+        criandoTrilha: 'Criando sua trilha…',
+        anuncioCriando: 'Criando sua trilha.',
+        escrevendoLicoes: 'Escrevendo as lições da trilha. Com a IA, leva alguns segundos.',
+        erroCriacao: 'Não deu para criar a trilha. Confira a conexão e tente de novo.',
+        propostaExpirada: 'Esta proposta expirou. Monte de novo.',
+        montarDeNovo: 'Montar de novo',
+        anuncioCriada: (titulo: string) => `Trilha criada. Lição 1: ${titulo}.`,
         montando: 'Montando a trilha',
         pronta: 'Trilha pronta',
         contagem: (total: number) => total === 0
