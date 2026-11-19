@@ -188,6 +188,9 @@ export type SituacaoTrilhaCompartilhada = 'nova' | 'adicionada' | 'sua';
 export interface TrilhaCompartilhada {
   codigo: string;
   titulo: string;
+  /** Capa (lote 4): tema do link e capa da galeria escolhida (sem ela, a capa padrão). */
+  tema?: Tema | null;
+  capa?: string | null;
   /** Rótulo de origem: IA, material ("Material de Ana") ou demonstração. */
   origem: string;
   totalLicoes: number;

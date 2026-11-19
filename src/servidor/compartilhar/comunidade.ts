@@ -85,6 +85,8 @@ export async function definirVisibilidade(usuarioId: string, codigo: string, ent
     where: { codigo },
     data: { noPerfil: true, noExplorar: true, tema, legenda: legenda || null, ...(link.publicadaEm ? {} : { publicadaEm: new Date() }) },
   });
+  // Tema e legenda são os mesmos das configurações da trilha (a legenda é a descrição): um lugar só para a pessoa.
+  await banco.planoAprendizado.update({ where: { usuarioId_id: { usuarioId, id: link.planoId } }, data: { tema, descricao: legenda || null } });
   zerarCacheEmAlta();
   return linkPublico(alterado, link.plano.titulo);
 }
@@ -102,7 +104,7 @@ export async function cartoesDe(links: LinkDoCartao[], quem: string | null): Pro
   const [planos, donos, valeus, copias, meusValeus] = await Promise.all([
     banco.planoAprendizado.findMany({
       where: { OR: links.map((link) => ({ usuarioId: link.usuarioId, id: link.planoId })) },
-      select: { usuarioId: true, id: true, titulo: true, origem: true, fluxos: { select: { _count: { select: { licoes: true } } } } },
+      select: { usuarioId: true, id: true, titulo: true, origem: true, capa: true, fluxos: { select: { _count: { select: { licoes: true } } } } },
     }),
     banco.usuario.findMany({ where: { id: { in: [...new Set(links.map((link) => link.usuarioId))] } }, select: camposDono }),
     banco.eventoTrilha.groupBy({ by: ["codigo"], where: { tipo: "valeu", codigo: { in: codigos } }, _count: { _all: true } }),
@@ -123,6 +125,7 @@ export async function cartoesDe(links: LinkDoCartao[], quem: string | null): Pro
       codigo: link.codigo,
       titulo: plano.titulo,
       tema: ehTema(link.tema) ? link.tema : null,
+      ...(plano.capa ? { capa: plano.capa } : {}),
       legenda: link.legenda,
       totalLicoes: plano.fluxos.reduce((total, fluxo) => total + fluxo._count.licoes, 0),
       totalPartes: plano.fluxos.length,

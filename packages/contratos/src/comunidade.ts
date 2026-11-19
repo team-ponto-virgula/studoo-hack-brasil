@@ -142,11 +142,120 @@ export function svgCapaTrilha(codigo: string, tema: Tema | null): string {
     + '</svg>';
 }
 
+/**
+ * Galeria de capas do Studoo (lote 4): 12 capas prontas, desenhadas em código como a capa padrão (sem arquivo de
+ * imagem). O id fica guardado na trilha; `null` é a capa padrão (a cor e o desenho do tema).
+ */
+export const CAPAS_GALERIA = [
+  { id: 'aurora', de: '#5b3fd1', ate: '#e46fae', padrao: 'bolhas' },
+  { id: 'oceano', de: '#0f5fa8', ate: '#2bb3c9', padrao: 'ondas' },
+  { id: 'floresta', de: '#1f6b47', ate: '#6fbf73', padrao: 'montanhas' },
+  { id: 'por-do-sol', de: '#d9480f', ate: '#f6b24a', padrao: 'raios' },
+  { id: 'noite', de: '#1b2a5e', ate: '#4b3a9e', padrao: 'estrelas' },
+  { id: 'areia', de: '#b7791f', ate: '#f0d08a', padrao: 'ondas' },
+  { id: 'lavanda', de: '#7c4dcc', ate: '#c6a8f0', padrao: 'losangos' },
+  { id: 'menta', de: '#0f7c6c', ate: '#7fdcc3', padrao: 'pontos' },
+  { id: 'coral', de: '#c2410c', ate: '#f58f84', padrao: 'bolhas' },
+  { id: 'ceu', de: '#2a6fdb', ate: '#9cd3ff', padrao: 'trilha' },
+  { id: 'cereja', de: '#9d174d', ate: '#f472b6', padrao: 'losangos' },
+  { id: 'grafite', de: '#2f3a4f', ate: '#6b7a99', padrao: 'pontos' },
+] as const;
+export type CapaGaleria = (typeof CAPAS_GALERIA)[number]['id'];
+export const ehCapaGaleria = (valor: unknown): valor is CapaGaleria => CAPAS_GALERIA.some((capa) => capa.id === valor);
+
+/** Uma capa da galeria em SVG (320×160), determinística pelo id. Decorativa. */
+export function svgCapaGaleria(id: CapaGaleria): string {
+  const capa = CAPAS_GALERIA.find((item) => item.id === id) ?? CAPAS_GALERIA[0];
+  const r = sorteio(semente(`galeria-${capa.id}`));
+  const formas: string[] = [];
+  const branco = (opacidade: number) => `fill="#fff" fill-opacity="${n(opacidade)}"`;
+  if (capa.padrao === 'bolhas') {
+    for (let i = 0; i < 10; i++) formas.push(`<circle cx="${n(r() * 320)}" cy="${n(r() * 160)}" r="${n(10 + r() * 44)}" ${branco(0.08 + r() * 0.16)}/>`);
+  } else if (capa.padrao === 'ondas') {
+    for (let i = 0; i < 6; i++) {
+      const y = 16 + i * 26;
+      formas.push(`<path d="M-20 ${n(y)} C 70 ${n(y - 24)}, 150 ${n(y + 24)}, 340 ${n(y - 4)}" fill="none" stroke="#fff" stroke-opacity="${n(0.12 + r() * 0.16)}" stroke-width="${n(5 + r() * 7)}" stroke-linecap="round"/>`);
+    }
+  } else if (capa.padrao === 'montanhas') {
+    formas.push(`<path d="M-10 160 L70 70 L130 120 L200 40 L270 110 L330 70 L330 160Z" ${branco(0.16)}/>`, `<path d="M-10 160 L50 115 L120 150 L190 95 L260 140 L330 110 L330 160Z" ${branco(0.22)}/>`, `<circle cx="262" cy="36" r="18" ${branco(0.3)}/>`);
+  } else if (capa.padrao === 'raios') {
+    for (let i = 0; i < 9; i++) {
+      const a = (i / 9) * Math.PI;
+      formas.push(`<path d="M160 170 L${n(160 + Math.cos(a) * 260)} ${n(170 - Math.sin(a) * 260)} L${n(160 + Math.cos(a + 0.12) * 260)} ${n(170 - Math.sin(a + 0.12) * 260)}Z" ${branco(0.12)}/>`);
+    }
+    formas.push(`<circle cx="160" cy="170" r="54" ${branco(0.28)}/>`);
+  } else if (capa.padrao === 'estrelas') {
+    for (let i = 0; i < 26; i++) formas.push(`<circle cx="${n(r() * 320)}" cy="${n(r() * 160)}" r="${n(1 + r() * 2.4)}" ${branco(0.4 + r() * 0.5)}/>`);
+    formas.push(`<circle cx="250" cy="44" r="22" ${branco(0.85)}/><circle cx="260" cy="38" r="20" fill="${capa.de}"/>`);
+  } else if (capa.padrao === 'losangos') {
+    for (let x = 0; x < 360; x += 44) for (let y = (x / 44) % 2 ? 22 : 0; y < 200; y += 44) {
+      const t = 9 + r() * 6;
+      formas.push(`<path d="M${x} ${n(y - t)}L${n(x + t)} ${y}L${x} ${n(y + t)}L${n(x - t)} ${y}Z" ${branco(r() < 0.3 ? 0.26 : 0.1)}/>`);
+    }
+  } else if (capa.padrao === 'pontos') {
+    for (let x = 12; x < 330; x += 22) for (let y = 12; y < 170; y += 22) formas.push(`<circle cx="${x}" cy="${y}" r="${n(2 + r() * 2.5)}" ${branco(0.14 + r() * 0.16)}/>`);
+  } else {
+    formas.push(`<path d="M-10 110 C 80 30, 190 150, 330 50" fill="none" stroke="#fff" stroke-opacity="0.45" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 17"/>`);
+    for (const [x, y] of [[70, 72], [168, 98], [262, 66]]) formas.push(`<circle cx="${x}" cy="${y}" r="11" ${branco(0.3)}/>`);
+  }
+  const idGradiente = `galeria-${capa.id}`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">`
+    + `<defs><linearGradient id="${idGradiente}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${capa.de}"/><stop offset="1" stop-color="${capa.ate}"/></linearGradient></defs>`
+    + `<rect width="320" height="160" fill="url(#${idGradiente})"/>${formas.join('')}</svg>`;
+}
+
+/** A capa de uma trilha: a da galeria, quando escolhida; senão, a padrão (cor e desenho do tema, pelo código). */
+export function svgCapa({ codigo, tema, capa }: { codigo: string; tema: Tema | null; capa?: string | null }): string {
+  return ehCapaGaleria(capa) ? svgCapaGaleria(capa) : svgCapaTrilha(codigo, tema);
+}
+
+/** As duas cores de uma capa (para a imagem de prévia do link, que pinta o painel da capa). */
+export function coresDaCapa(tema: Tema | null, capa?: string | null): { de: string; ate: string } {
+  const galeria = CAPAS_GALERIA.find((item) => item.id === capa);
+  if (galeria) return { de: galeria.de, ate: galeria.ate };
+  const cor = COR_DO_TEMA[tema ?? 'outros'];
+  return { de: cor, ate: cor };
+}
+
+/** Configurações da trilha (lote 4): o que só a dona muda, na tela "Configurações da trilha". */
+export const LIMITES_TRILHA = { tituloMin: 3, tituloMax: 80 } as const;
+export type MotivoTituloInvalido = 'curto' | 'longo' | 'caracteres';
+export const normalizarTituloTrilha = (titulo: string) => titulo.normalize('NFC').replace(/\s+/g, ' ').trim();
+export function motivoTituloTrilhaInvalido(titulo: string): MotivoTituloInvalido | null {
+  if (/[\p{Cc}\p{Cf}\p{Co}\p{Cs}<>]/u.test(titulo)) return 'caracteres';
+  const tamanho = [...titulo].length;
+  if (tamanho < LIMITES_TRILHA.tituloMin) return 'curto';
+  if (tamanho > LIMITES_TRILHA.tituloMax) return 'longo';
+  return null;
+}
+
+export interface ConfiguracoesTrilha {
+  planoId: string;
+  titulo: string;
+  /** O mesmo texto que aparece no cartão e no link (a legenda); até 140. */
+  descricao: string | null;
+  tema: Tema | null;
+  /** Sugerido pelo título, para quando ainda não há tema. */
+  temaSugerido: Tema;
+  /** Id da capa da galeria; `null` = a capa padrão. */
+  capa: string | null;
+  /** Código para desenhar a capa padrão (o do link, ou o id da trilha sem link). */
+  semente: string;
+  /** Quem pode ver: `null` quando a trilha não tem link (só a dona vê). */
+  compartilhamento: { codigo: string; visibilidade: Visibilidade; estudando: number; valeus: number } | null;
+  /** Trilha adicionada de outra pessoa: a cópia é dela, mas não se compartilha de novo. */
+  recebida: boolean;
+}
+
+export type MudancaConfiguracoes = Partial<{ titulo: string; descricao: string | null; tema: Tema | null; capa: string | null }>;
+
 /** Um cartão de trilha: o mesmo no Explorar, no perfil e na prévia. Sem e-mail, ids internos, objetivo ou progresso. */
 export interface CartaoTrilha {
   codigo: string;
   titulo: string;
   tema: Tema | null;
+  /** Capa da galeria escolhida pela dona (sem ela, a capa padrão). */
+  capa?: string | null;
   legenda: string | null;
   totalLicoes: number;
   totalPartes: number;

@@ -1,7 +1,7 @@
 import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
 import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil, Tema } from './compartilhar';
-import type { MotivoDenuncia, Novidades, PaginaExplorar, ResultadoSeguir, ResultadoValeu, Visibilidade } from './comunidade';
+import type { ConfiguracoesTrilha, MotivoDenuncia, MudancaConfiguracoes, Novidades, PaginaExplorar, ResultadoSeguir, ResultadoValeu, Visibilidade } from './comunidade';
 export * from './estudio';
 export * from './licao';
 export * from './som';
@@ -29,6 +29,9 @@ export interface PlanoResumo extends MarcasCompartilhar {
   id: string;
   titulo: string;
   progresso: Progresso;
+  /** Capa da galeria escolhida nas configurações (lote 4); sem ela, o cartão fica com a ilustração de sempre. */
+  capa?: string | null;
+  tema?: Tema | null;
 }
 
 export interface PlanoDetalhe extends PlanoResumo {
@@ -349,6 +352,9 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     obterPlano: (id: string) => solicitar<PlanoDetalhe>(`/aprendizado/planos/${encodeURIComponent(id)}`),
     /** Apaga a trilha, com as lições e o progresso dela. */
     apagarPlano: (id: string) => solicitar<{ apagado: true }>(`/aprendizado/planos/${encodeURIComponent(id)}`, "DELETE"),
+    /** Configurações da trilha (lote 4): só a dona; trilha de outra pessoa responde `nao_encontrado`. */
+    obterConfiguracoes: (id: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/configuracoes`),
+    salvarConfiguracoes: (id: string, mudanca: MudancaConfiguracoes) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/configuracoes`, "PATCH", mudanca),
     /** Perfil e compartilhar trilha (spec 09; com `compartilhar` no config). */
     obterPerfil: () => solicitar<Perfil>("/perfil"),
     /** Sem `resumo` ou `interesses`, o que já existe fica como está. */

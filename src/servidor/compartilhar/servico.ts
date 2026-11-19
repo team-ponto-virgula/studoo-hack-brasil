@@ -11,6 +11,7 @@ import {
   normalizarResumoPerfil,
   origemDemonstracao,
   sugerirTema,
+  TEMAS,
   type Tema,
   type Visibilidade,
   type CorPerfil,
@@ -76,6 +77,8 @@ export function exigirCompartilhar(): void {
 
 /** 96 bits aleatórios em base64url (16 caracteres), sem relação com ids internos. */
 const novoCodigo = () => randomBytes(12).toString("base64url");
+
+const ehTemaValido = (valor: unknown): valor is Tema => (TEMAS as readonly unknown[]).includes(valor);
 
 const corValida = (valor: unknown): valor is CorPerfil => (CORES_PERFIL as readonly unknown[]).includes(valor);
 
@@ -220,6 +223,8 @@ export async function lerTrilha(usuarioId: string, planoId: string) {
       titulo: true,
       origem: true,
       origemCodigo: true,
+      capa: true,
+      tema: true,
       fluxos: {
         orderBy: { ordem: "asc" },
         select: { titulo: true, licoes: { orderBy: { ordem: "asc" }, select: { titulo: true, conteudo: true } } },
@@ -284,7 +289,8 @@ export async function previaCompartilhar(usuarioId: string, planoId: string): Pr
     tituloTemNomeDoArquivo: tituloTemNomeDoArquivo(plano.titulo, licoes),
     perfil: usuario.perfilNome ? { nome: usuario.perfilNome, cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul", foto: usuario.foto?.token ?? null } : null,
     link: link ? linkPublico(link, plano.titulo) : null,
-    ...(comunidadeAtiva() ? { temaSugerido: sugerirTema(plano.titulo), demonstracao: origemDemonstracao(plano.origem) } : {}),
+    // O tema das configurações, quando a dona já escolheu; senão, o sugerido pelo título.
+    ...(comunidadeAtiva() ? { temaSugerido: (ehTemaValido(plano.tema) ? plano.tema : null) ?? sugerirTema(plano.titulo), demonstracao: origemDemonstracao(plano.origem) } : {}),
   };
 }
 
@@ -359,9 +365,13 @@ export async function trilhaCompartilhada(codigo: string, usuarioId: string | nu
   if (!plano) throw new FalhaApi("link_inativo");
   const dono = await donoPublico(link.plano.usuario);
   const licoes = plano.fluxos.flatMap((fluxo) => fluxo.licoes);
+  const temaLink = (await banco.linkTrilha.findUnique({ where: { codigo: link.codigo }, select: { tema: true } }))?.tema ?? plano.tema;
   const previa: TrilhaCompartilhada = {
     codigo: link.codigo,
     titulo: plano.titulo,
+    // Tema e capa só quando existem (campos opcionais da resposta pública).
+    ...(ehTemaValido(temaLink) ? { tema: temaLink } : {}),
+    ...(plano.capa ? { capa: plano.capa } : {}),
     origem: ehDeMaterial(licoes) ? rotuloMaterial(dono.nome) : plano.origem,
     totalLicoes: licoes.length,
     partes: plano.fluxos.map((fluxo) => ({ titulo: fluxo.titulo, licoes: fluxo.licoes.map((licao) => licao.titulo) })),
@@ -429,6 +439,8 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
           origemNome: dono.nome,
           origemPerfilId: link.plano.usuario.perfilId,
           origemCodigo: codigo,
+          // A capa da galeria vai junto na cópia (a foto, quando houver, fica com quem enviou).
+          capa: original.capa && !original.capa.startsWith("foto:") ? original.capa : null,
         },
       }),
       banco.fluxo.createMany({ data: fluxos }),

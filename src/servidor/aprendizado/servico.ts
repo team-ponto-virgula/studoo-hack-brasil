@@ -27,7 +27,7 @@ import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
-import { MATERIAL_COMPARTILHADO } from "@studoo/contratos";
+import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
 
 /** Lições escritas ao mesmo tempo no aceite (`STUDOO_GERACAO_PARALELA`, de 1 a 10; padrão 10, todas juntas). */
 export function geracaoParalela(): number {
@@ -51,6 +51,8 @@ const DURACAO_AVALIACAO = 15 * 60 * 1000;
 const selecaoPlano = {
   id: true,
   titulo: true,
+  capa: true,
+  tema: true,
   objetivo: true,
   origem: true,
   origemNome: true,
@@ -123,6 +125,8 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
     titulo: plano.titulo,
     objetivo: plano.objetivo,
     origem: plano.origem,
+    ...(plano.capa ? { capa: plano.capa } : {}),
+    ...(plano.tema && (TEMAS as readonly string[]).includes(plano.tema) ? { tema: plano.tema as Tema } : {}),
     progresso: calcularProgresso(concluidas, total),
     fluxos,
     ...(resumos.length > 0 ? {
@@ -178,8 +182,8 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
 
   const marcas = await marcasDasTrilhas(usuarioId, planos);
   return planos.map((plano) => {
-    const { id, titulo, progresso } = apresentarPlano(plano);
-    return { id, titulo, progresso, ...marcas.get(id) };
+    const { id, titulo, progresso, capa, tema } = apresentarPlano(plano);
+    return { id, titulo, progresso, ...(capa ? { capa } : {}), ...(tema ? { tema } : {}), ...marcas.get(id) };
   });
 }
 

@@ -41,6 +41,7 @@ import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano,
 import { Pedido, type IdTema } from './pedido';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
 import { TelaPerfil } from './perfil';
+import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { Explorar } from './comunidade';
 import './aula.css';
 import './trilha.css';
@@ -54,6 +55,8 @@ type Tela =
   | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string; aviso?: string }
   | { tipo: 'perfil' }
   | { tipo: 'explorar' }
+  /** Configurações da trilha (lote 4): `volta` é de onde a pessoa veio (o mapa ou Minhas trilhas). */
+  | { tipo: 'configuracoes'; planoId: string; volta: 'planos' | 'plano' }
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao };
 
@@ -133,6 +136,8 @@ export function Estudo() {
   const [comunidade, setComunidade] = useState(false);
   const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [folha, setFolha] = useState<string | null>(null);
+  // Muda quando a folha de compartilhar fecha: a tela de configurações relê "Quem pode ver".
+  const [versaoFolha, setVersaoFolha] = useState(0);
   const guardaSaida = useRef<((continuar: () => void) => boolean) | null>(null);
   const registrarGuarda = useCallback((guarda: ((continuar: () => void) => boolean) | null) => { guardaSaida.current = guarda; }, []);
 
@@ -375,7 +380,7 @@ export function Estudo() {
   }
 
   /** Apaga uma trilha depois da confirmação; o cartão sai da lista (sem trilhas, a tela volta ao pedido). */
-  function apagarPlano(plano: PlanoResumo) {
+  function apagarPlano(plano: PlanoResumo, depois?: () => void) {
     origemConfirmacao.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     setConfirmacao({
       mensagem: `${mensagens.planos.apagarPergunta(plano.titulo, mensagens.planos.contagem(plano.progresso.concluidas, plano.progresso.total))}${plano.link ? ` ${mensagens.compartilhar.apagarAviso}` : ''}`,
@@ -386,6 +391,7 @@ export function Estudo() {
         if (!resultado.ok) return;
         setPlanos((anteriores) => anteriores.filter((item) => item.id !== plano.id));
         anunciar(mensagens.planos.apagada(plano.titulo));
+        depois?.();
       },
     });
   }
@@ -394,6 +400,7 @@ export function Estudo() {
     setPlanos((anteriores) => {
       const resumo: PlanoResumo = {
         id: plano.id, titulo: plano.titulo, progresso: plano.progresso,
+        ...(plano.capa ? { capa: plano.capa } : {}), ...(plano.tema ? { tema: plano.tema } : {}),
         ...(plano.link ? { link: plano.link } : {}), ...(plano.recebida ? { recebida: plano.recebida } : {}),
       };
       return anteriores.some((item) => item.id === plano.id)
@@ -569,7 +576,7 @@ export function Estudo() {
   // Começar, na trilha gerada, já mostra a forma da lição: salvar o plano e abrir a primeira lição é uma espera só.
   const carregandoLicao = (pendente === 'abrir' && tela.tipo !== 'plano') || (pendente === 'aceitar' && tela.tipo === 'geracao');
   const visivel = !carregandoTrilha && !carregandoLicao;
-  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (planos.length > 0 && ['planos', 'objetivo', 'plano', 'perfil', 'explorar'].includes(tela.tipo)) || (comunidade && tela.tipo === 'explorar')) && visivel;
+  const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (planos.length > 0 && ['planos', 'objetivo', 'plano', 'perfil', 'explorar', 'configuracoes'].includes(tela.tipo)) || (comunidade && tela.tipo === 'explorar')) && visivel;
   const abrirFolha = compartilhar ? (planoId: string) => setFolha(planoId) : undefined;
 
   const acaoDoErro = (codigoErro: string) =>
@@ -690,7 +697,8 @@ export function Estudo() {
                 {destaque && (
                   <CartaoDestaque plano={destaque} regiao={planos.findIndex((p) => p.id === destaque.id)}
                     ocupado={ocupado} abrir={() => void abrirPlano(destaque.id)} apagar={() => apagarPlano(destaque)}
-                    compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined} />
+                    compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined}
+                    configurar={() => navegar({ tipo: 'configuracoes', planoId: destaque.id, volta: 'planos' })} />
                 )}
                 {restantes.length > 0 && (
                   <>
@@ -700,7 +708,8 @@ export function Estudo() {
                         <li key={plano.id} style={{ '--ordem': indice } as CSSProperties}>
                           <CartaoPlano plano={plano} regiao={planos.findIndex((p) => p.id === plano.id)} ocupado={ocupado}
                             secundario abrir={() => void abrirPlano(plano.id)} apagar={() => apagarPlano(plano)}
-                            compartilhar={abrirFolha && !plano.recebida ? () => abrirFolha(plano.id) : undefined} />
+                            compartilhar={abrirFolha && !plano.recebida ? () => abrirFolha(plano.id) : undefined}
+                            configurar={() => navegar({ tipo: 'configuracoes', planoId: plano.id, volta: 'planos' })} />
                         </li>
                       ))}
                     </ul>
@@ -722,8 +731,23 @@ export function Estudo() {
               precarregarLicao={(id) => { void obterLicaoComCache(id).catch(() => undefined); }}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
               novoPlano={() => navegar({ tipo: 'objetivo' })}
-              compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined} />
+              compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined}
+              configurar={() => navegar({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })} />
           )}
+          {visivel && tela.tipo === 'configuracoes' && (() => {
+            const resumo = planos.find((item) => item.id === tela.planoId);
+            const voltarDaqui = () => (tela.volta === 'plano' ? void abrirPlano(tela.planoId) : navegar({ tipo: 'planos' }));
+            return (
+              <TelaConfiguracoes key={tela.planoId} planoId={tela.planoId} compartilhar={Boolean(abrirFolha)} versao={versaoFolha}
+                recebidaDe={resumo?.recebida?.nome ?? null}
+                voltar={voltarDaqui}
+                aoMudar={(conf) => setPlanos((anteriores) => anteriores.map((item) => (item.id === conf.planoId
+                  ? { ...item, titulo: conf.titulo, capa: conf.capa, tema: conf.tema }
+                  : item)))}
+                mudarCompartilhamento={() => abrirFolha?.(tela.planoId)}
+                apagar={() => { if (resumo) apagarPlano(resumo, () => navegar({ tipo: 'planos' })); }} />
+            );
+          })()}
           {visivel && tela.tipo === 'perfil' && (
             <TelaPerfil perfil={perfil} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
               abrirPlano={(id) => void abrirPlano(id)} registrarGuarda={registrarGuarda} sair={() => void sair()}
@@ -763,7 +787,7 @@ export function Estudo() {
       </div>
       {folha && (
         <FolhaCompartilhar planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade} anunciar={anunciar}
-          aoFechar={() => setFolha(null)} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
+          aoFechar={() => { setFolha(null); setVersaoFolha((n) => n + 1); }} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
       )}
       {confirmacao && (
         <ConfirmacaoModal
@@ -830,13 +854,14 @@ function MarcaCompartilhar({ plano }: { plano: PlanoResumo }) {
   return null;
 }
 
-function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar }: {
+function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar, configurar }: {
   plano: PlanoResumo;
   regiao: number;
   ocupado: boolean;
   abrir: () => void;
   apagar: () => void;
   compartilhar?: () => void;
+  configurar?: () => void;
 }) {
   const { concluidas, total } = plano.progresso;
   const concluido = total > 0 && concluidas === total;
@@ -847,12 +872,15 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar }:
 
   return (
     <article className="plano-destaque">
-      <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} />
+      <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} />
       <div className="plano-destaque__cena" style={coresDaRegiao(Math.max(0, regiao))} aria-hidden="true">
-        <span className="plano-cartao__colina" />
-        <Desenho nome={enfeites[0]} />
-        <Desenho nome={enfeites[2]} />
-        <Stu />
+        {/* Com capa escolhida nas configurações, ela entra no lugar da ilustração; sem capa, tudo como sempre. */}
+        {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="plano-destaque__capa" /> : <>
+          <span className="plano-cartao__colina" />
+          <Desenho nome={enfeites[0]} />
+          <Desenho nome={enfeites[2]} />
+          <Stu />
+        </>}
       </div>
       <div className="plano-destaque__corpo">
         <div className="plano-destaque__topo">
@@ -872,7 +900,7 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar }:
 }
 
 /** Menu discreto no cartão de trilha: fecha com Esc ou clique fora. */
-function MenuCartao({ titulo, ocupado, apagar, compartilhar }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void }) {
+function MenuCartao({ titulo, ocupado, apagar, compartilhar, configurar }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; configurar?: () => void }) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -899,28 +927,30 @@ function MenuCartao({ titulo, ocupado, apagar, compartilhar }: { titulo: string;
   return (
     <details className="plano-cartao__menu" ref={detailsRef}>
       <summary aria-label={mensagens.planos.maisOpcoesRotulo(titulo)}>•••</summary>
-      {compartilhar ? (
-        <div className="plano-cartao__opcoes">
+      {/* Compartilhar, Configurações e Apagar, num menu do próprio app (sem folha do sistema). */}
+      <div className="plano-cartao__opcoes">
+        {compartilhar && (
           <button type="button" className="plano-cartao__compartilhar" aria-label={mensagens.compartilhar.entradaRotulo(titulo)} disabled={ocupado}
-          onClick={() => { if (detailsRef.current) detailsRef.current.open = false; compartilhar(); }}>
-          {mensagens.compartilhar.entrada}
+            onClick={() => { if (detailsRef.current) detailsRef.current.open = false; compartilhar(); }}>
+            {mensagens.compartilhar.entrada}
           </button>
-          <button type="button" className="plano-cartao__apagar" aria-label={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
-            onClick={() => { if (detailsRef.current) detailsRef.current.open = false; apagar(); }}>
-            {mensagens.planos.apagar}
+        )}
+        {configurar && (
+          <button type="button" className="plano-cartao__compartilhar" aria-label={mensagens.configuracoes.entradaRotulo(titulo)} disabled={ocupado}
+            onClick={() => { if (detailsRef.current) detailsRef.current.open = false; configurar(); }}>
+            {mensagens.configuracoes.entrada}
           </button>
-        </div>
-      ) : (
+        )}
         <button type="button" className="plano-cartao__apagar" aria-label={mensagens.planos.apagarRotulo(titulo)} disabled={ocupado}
           onClick={() => { if (detailsRef.current) detailsRef.current.open = false; apagar(); }}>
           {mensagens.planos.apagar}
         </button>
-      )}
+      </div>
     </details>
   );
 }
 
-function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar, compartilhar }: {
+function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar, compartilhar, configurar }: {
   plano: PlanoResumo;
   regiao: number;
   ocupado: boolean;
@@ -928,6 +958,7 @@ function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar
   abrir: () => void;
   apagar: () => void;
   compartilhar?: () => void;
+  configurar?: () => void;
 }) {
   const { concluidas, total } = plano.progresso;
   const concluido = total > 0 && concluidas === total;
@@ -938,13 +969,15 @@ function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar
 
   return (
     <article className="plano-cartao">
-      <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} />
+      <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} />
       <div className="plano-cartao__cena" style={coresDaRegiao(Math.max(0, regiao))} aria-hidden="true">
-        <span className="plano-cartao__colina" />
-        <Desenho nome={enfeites[0]} />
-        <Desenho nome={enfeites[1]} />
-        <Desenho nome={enfeites[3]} />
-        <Desenho nome={enfeites[2]} />
+        {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="plano-cartao__capa" /> : <>
+          <span className="plano-cartao__colina" />
+          <Desenho nome={enfeites[0]} />
+          <Desenho nome={enfeites[1]} />
+          <Desenho nome={enfeites[3]} />
+          <Desenho nome={enfeites[2]} />
+        </>}
         {concluido && <span className="plano-cartao__selo"><Icone nome="trofeu" />{mensagens.planos.concluido}</span>}
       </div>
       <div className="plano-cartao__corpo">
@@ -1149,7 +1182,7 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
-function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar }: {
+function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar }: {
   tela: TelaPlano;
   ocupado: boolean;
   abrindo: string | null;
@@ -1157,6 +1190,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
   abrirLicao: (id: string) => void;
   novoPlano: () => void;
   compartilhar?: () => void;
+  configurar?: () => void;
 }) {
   const { plano, origem, liberadas = [] } = tela;
   const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
@@ -1174,6 +1208,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
 
   return (
     <section className="painel painel--trilha">
+      {plano.capa && <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="trilha-capa" />}
       <header className="trilha-topo">
         <div className="trilha-topo__texto">
           <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
@@ -1186,11 +1221,20 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
                 : mensagens.compartilhar.recebidaDe(plano.recebida.nome)}</span>
               {plano.recebida.codigoAtivo && <a href={`/t/${plano.recebida.codigoAtivo}`}>{mensagens.compartilhar.verOriginal}</a>}
             </p>
-          ) : compartilhar && (
-            <Botao variante="secundario" className="trilha-compartilhar" disabled={ocupado} aria-label={mensagens.compartilhar.entradaRotulo(plano.titulo)} onClick={compartilhar}>
-              <Icone nome="compartilhar" />{plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada}
-            </Botao>
-          )}
+          ) : null}
+          <div className="trilha-topo__acoes">
+            {!plano.recebida && compartilhar && (
+              <Botao variante="secundario" className="trilha-compartilhar" disabled={ocupado} aria-label={mensagens.compartilhar.entradaRotulo(plano.titulo)} onClick={compartilhar}>
+                <Icone nome="compartilhar" />{plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada}
+              </Botao>
+            )}
+            {/* A engrenagem leva às configurações da trilha (capa, nome, descrição, tema, quem pode ver, apagar). */}
+            {configurar && (
+              <Botao variante="secundario" className="trilha-configurar" disabled={ocupado} aria-label={mensagens.configuracoes.entradaRotulo(plano.titulo)} onClick={configurar}>
+                <Icone nome="engrenagem" />
+              </Botao>
+            )}
+          </div>
           {tela.aviso && <p className="trilha-aviso" role="status">{tela.aviso}</p>}
         </div>
         <AnelProgresso progresso={plano.progresso} />

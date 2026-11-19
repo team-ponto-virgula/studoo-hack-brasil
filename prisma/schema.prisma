@@ -94,6 +94,11 @@ model PlanoAprendizado {
   origemPerfilId String?
   origemCodigo   String?
   links          LinkTrilha[]
+  /// Configurações (lote 4): descrição (o mesmo texto da legenda do link), tema e capa da galeria (id; null = a capa
+  /// padrão, a de hoje). Colunas anuláveis: nenhuma trilha existente muda.
+  descricao      String?
+  tema           String?
+  capa           String?
 
   @@id([usuarioId, id])
   @@unique([usuarioId, origemCodigo])
