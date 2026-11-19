@@ -1,9 +1,7 @@
 import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import {
-  LADO_ENVIO_FOTO, LIMITES_FOTO, LIMITES_PERFIL, TEMAS, motivoNomeInvalido, motivoResumoInvalido, normalizarNomePerfil, normalizarResumoPerfil,
+  LIMITES_PERFIL, TEMAS, motivoNomeInvalido, motivoResumoInvalido, normalizarNomePerfil, normalizarResumoPerfil,
   type CartaoTrilha, type CorPerfil, type LinkCompartilhado, type Perfil, type Tema,
 } from '@studoo/contratos';
 import type { ClienteNativo } from './api-nativa';
@@ -11,6 +9,7 @@ import { CartoesDoPerfil, FIM_COM_BARRA, NovidadesDoPerfil } from './comunidade'
 import { Icone } from './icone';
 import { AvisoDoApp, Botao, Campo, CartaoConfirmacao, FolhaDeAcoes, Tela, Titulo, estilos, type AcaoDaFolha } from './interface';
 import { mensagens } from './mensagens';
+import { RecorteImagem, escolherImagem, type ImagemParaRecortar } from './recorte';
 import {
   Avatar, BotaoParar, CabecalhoPerfil, Chave, Contador, CoresDoPerfil, Esqueleto, Ficha, FolhaCompartilhar, SeloVisibilidade, Status, abrirNoNavegador,
   codigoDoErro, compartilharNoSistema, copiar, dataCurta, focarSemRolar, socialEstilos, temFolhaDoSistema, textoDoErro, urlDoLink, urlDoPerfil,
@@ -313,27 +312,6 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
 
 type ErrosCampos = { nome?: string; resumo?: string };
 
-/** Bytes de um base64 (sem o preenchimento), para o teto de 2 MB do servidor. */
-function bytesDoBase64(base64: string) {
-  return Math.floor((base64.length * 3) / 4) - (base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0);
-}
-
-/**
- * O quadrado que o sistema recortou, em JPEG de 256 a 1024 px e até 2 MB, como o recorte da web ("Usar esta foto" desenha no
- * canvas até 1024 px e tenta as qualidades 0,9, 0,8 e 0,65).
- */
-async function prepararFoto(uri: string, largura: number): Promise<string | null> {
-  const contexto = ImageManipulator.manipulate(uri);
-  const lado = Math.max(256, Math.min(LADO_ENVIO_FOTO, Math.round(largura || LADO_ENVIO_FOTO)));
-  if (largura !== lado) contexto.resize({ width: lado });
-  const imagem = await contexto.renderAsync();
-  for (const qualidade of [0.9, 0.8, 0.65]) {
-    const salva = await imagem.saveAsync({ compress: qualidade, format: SaveFormat.JPEG, base64: true });
-    if (salva.base64 && bytesDoBase64(salva.base64) <= LIMITES_FOTO.bytes) return salva.base64;
-  }
-  return null;
-}
-
 /**
  * Os dados do perfil, abertos ali mesmo na aba Perfil (spec 10, "Revisão do dono (19/11): perfil direto nos dados"; esboço
  * `perfil-390.png` do Designer): a frase de privacidade com o cadeado no alto, a foto (o círculo com o selo de câmera, o link
@@ -368,7 +346,8 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
   const [avisoInteresses, setAvisoInteresses] = useState('');
   const [erroFoto, setErroFoto] = useState<string | null>(null);
   const [statusFoto, setStatusFoto] = useState('');
-  const [enviandoFoto, setEnviandoFoto] = useState(false);
+  /** A imagem escolhida na galeria ou tirada na câmera, à espera do recorte quadrado do Studoo. */
+  const [paraRecortar, setParaRecortar] = useState<ImagemParaRecortar | null>(null);
   const [folhaDaFoto, setFolhaDaFoto] = useState(false);
   const [removendo, setRemovendo] = useState<'perguntar' | 'removendo' | null>(null);
   const [saida, setSaida] = useState<(() => void) | null>(null);
@@ -463,42 +442,24 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
     }
   }
 
-  /** Galeria ou câmera, com o recorte quadrado do sistema (P18); a foto vai na hora, como o "Usar esta foto" da web. */
+  /** Galeria ou câmera do sistema (P18); o recorte quadrado é o do Studoo, como na web. */
   async function escolherFoto(camera: boolean) {
     setErroFoto(null);
-    let resultado: ImagePicker.ImagePickerResult;
+    setStatusFoto('');
     try {
-      const opcoes: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 1 };
-      if (camera) {
-        const permissao = await ImagePicker.requestCameraPermissionsAsync();
-        // Sem permissão, o próprio sistema já explicou; nada muda na tela (como o navegador na web).
-        if (!permissao.granted) return;
-        resultado = await ImagePicker.launchCameraAsync(opcoes);
-      } else {
-        resultado = await ImagePicker.launchImageLibraryAsync(opcoes);
-      }
+      const imagem = await escolherImagem(camera);
+      if (imagem) setParaRecortar(imagem);
     } catch {
       setErroFoto(p.fotoIlegivel);
-      return;
     }
-    if (resultado.canceled || !resultado.assets[0]) return;
-    const foto = resultado.assets[0];
-    setEnviandoFoto(true);
-    setStatusFoto(p.fotoEnviando);
-    try {
-      const base64 = await prepararFoto(foto.uri, Math.min(foto.width, foto.height));
-      if (!base64) throw new Error('grande');
-      atualizarPerfil(await cliente.enviarFoto(base64));
-      setStatusFoto(p.fotoSalva);
-      anunciar(p.fotoSalva);
-    } catch (falha) {
-      setStatusFoto('');
-      const codigo = falha instanceof Error && falha.message === 'grande' ? 'grande' : codigoDoErro(falha);
-      // 422 (foto que o servidor recusa) e 429 (trocas demais) têm as mensagens da revisão de 19/11.
-      setErroFoto(codigo === 'grande' ? p.fotoIlegivel : codigo === 'foto_invalida' ? p.fotoFormato : codigo === 'limite_foto' ? p.fotoLimite : textoDoErro(codigo));
-    } finally {
-      setEnviandoFoto(false);
-    }
+  }
+
+  /** "Usar esta foto": a foto vai na hora, à parte do botão "Salvar"; o erro do envio aparece na folha do recorte. */
+  async function enviarFotoRecortada(base64: string) {
+    atualizarPerfil(await cliente.enviarFoto(base64));
+    setParaRecortar(null);
+    setStatusFoto(p.fotoSalva);
+    anunciar(p.fotoSalva);
   }
 
   /** As opções da foto, na folha do Studoo: galeria, câmera (só em tela de toque) e remover (só com foto). */
@@ -572,14 +533,14 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
       <View style={perfilEstilos.fotoLinha}>
         {/* A foto (ou a inicial na cor; sem nome e sem foto, o desenho de pessoa) com o selo de câmera: tocar abre a folha. */}
         <Pressable testID="foto-circulo" accessibilityRole="button" accessibilityLabel={salvo.foto ? p.fotoTrocar : p.fotoAdicionar}
-          disabled={enviandoFoto || salvando} onPress={tocarNaFoto} style={({ pressed }) => [perfilEstilos.circulo, pressed && { opacity: 0.85 }]}>
+          disabled={salvando} onPress={tocarNaFoto} style={({ pressed }) => [perfilEstilos.circulo, pressed && { opacity: 0.85 }]}>
           <Avatar nome={nomeNormal} cor={cor} foto={salvo.foto} tamanho="g" vazio={!nomeNormal} estilo={perfilEstilos.fotoAvatar} />
           <View style={perfilEstilos.selo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <Icone nome="camera" tamanho={20} cor="#FFFFFF" />
           </View>
         </Pressable>
         <View style={perfilEstilos.fotoTexto}>
-          <Pressable testID="foto-link" accessibilityRole="button" disabled={enviandoFoto || salvando} onPress={tocarNaFoto} hitSlop={6}
+          <Pressable testID="foto-link" accessibilityRole="button" disabled={salvando} onPress={tocarNaFoto} hitSlop={6}
             style={({ pressed }) => [perfilEstilos.fotoLink, pressed && { opacity: 0.7 }]}>
             <Text style={perfilEstilos.fotoLinkTexto}>{salvo.foto ? p.fotoTrocar : p.fotoAdicionar}</Text>
           </Pressable>
@@ -621,6 +582,10 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
 
       <FolhaDeAcoes visivel={folhaDaFoto} titulo={p.fotoRotulo} acoes={opcoesDaFoto} cancelarRotulo={p.fotoMenuCancelar} testID="folha-foto"
         aoFechar={() => setFolhaDaFoto(false)} />
+      {paraRecortar && (
+        // O recorte do Studoo, quadrado, com o círculo que mostra como o avatar fica (no lugar do recorte do sistema).
+        <RecorteImagem imagem={paraRecortar} aoCancelar={() => setParaRecortar(null)} enviar={enviarFotoRecortada} />
+      )}
       {removendo && (
         <CartaoConfirmacao mensagem={p.fotoRemoverTitulo} texto={p.fotoRemoverTexto} confirmarRotulo={p.fotoRemover} cancelarRotulo={p.fotoRemoverCancelar}
           destrutivo ocupado={removendo === 'removendo'} aoConfirmar={() => void removerFoto()} aoCancelar={() => setRemovendo(null)} />

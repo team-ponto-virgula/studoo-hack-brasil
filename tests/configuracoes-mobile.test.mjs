@@ -12,6 +12,7 @@ const app = await ler('apps/mobile/src/configuracoes.tsx');
 const web = await ler('src/app/configuracoes.tsx');
 const estudo = await ler('apps/mobile/src/estudo.tsx');
 const recorte = await ler('apps/mobile/src/recorte.tsx');
+const perfil = await ler('apps/mobile/src/perfil.tsx');
 const k = mensagens.configuracoes;
 
 /** A posição de cada trecho no arquivo, na ordem pedida; falha se um faltar. */
@@ -24,9 +25,10 @@ function posicoes(fonte, trechos, onde) {
 }
 const crescente = (lista) => lista.every((valor, indice) => indice === 0 || valor > lista[indice - 1]);
 
-test('os textos da tela vêm do contrato, nenhum escrito no JSX', () => {
-  const fonte = ts.createSourceFile('configuracoes.tsx', app, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
+test('os textos da tela e do recorte vêm do contrato, nenhum escrito no JSX', () => {
   const achados = [];
+  for (const [nome, codigo] of [['configuracoes.tsx', app], ['recorte.tsx', recorte]]) {
+  const fonte = ts.createSourceFile(nome, codigo, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TSX);
   const visitar = (no) => {
     if (ts.isJsxText(no) && /\p{L}/u.test(no.text)) achados.push(no.text.trim());
     if (ts.isJsxAttribute(no) && no.initializer && ts.isStringLiteral(no.initializer)
@@ -35,6 +37,7 @@ test('os textos da tela vêm do contrato, nenhum escrito no JSX', () => {
     ts.forEachChild(no, visitar);
   };
   visitar(fonte);
+  }
   assert.deepEqual(achados, []);
 });
 
@@ -105,6 +108,15 @@ test('a capa com foto: galeria ou câmera do sistema, sem o recorte do sistema, 
   assert.equal(k.capaFotoDica, 'Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.');
   // O véu da foto só nos 45% de cima.
   assert.match(app, /capaVeu: \{ position: 'absolute', left: 0, right: 0, top: 0, height: '45%' \}/);
+});
+
+test('a foto do perfil usa o mesmo recorte, quadrado, no lugar do recorte do sistema', () => {
+  assert.doesNotMatch(perfil, /allowsEditing|expo-image-picker|expo-image-manipulator/, 'o seletor e a redução da imagem moram em recorte.tsx');
+  assert.match(perfil, /const imagem = await escolherImagem\(camera\);/);
+  // Sem `proporcao`, o recorte é 1:1, com o círculo do avatar e os textos do perfil.
+  assert.match(perfil, /<RecorteImagem imagem=\{paraRecortar\} aoCancelar=\{\(\) => setParaRecortar\(null\)\} enviar=\{enviarFotoRecortada\} \/>/);
+  assert.match(recorte, /proporcao = 1, titulo = p\.recorteTitulo, dica = p\.recorteDicaToque, aviso = p\.fotoAviso/);
+  assert.match(perfil, /atualizarPerfil\(await cliente\.enviarFoto\(base64\)\);/);
 });
 
 test('o recorte faz a conta da web: a foto cobre o quadro e sai com 256 a 1024 px de largura', async () => {
