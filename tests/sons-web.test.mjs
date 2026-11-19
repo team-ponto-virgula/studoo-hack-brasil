@@ -36,7 +36,7 @@ for (const [arquivo, conteudo] of texto) {
   for (const [, resto] of conteudo.matchAll(/tocarEfeito\((.*)$/gm)) {
     for (const [, id] of resto.split(';')[0].matchAll(/['"](\w+)['"]/g)) disparos.set(id, [...(disparos.get(id) ?? []), relative(raiz, arquivo)]);
   }
-  for (const [, id] of conteudo.matchAll(/som: IdEfeitoSonoro \| null = '(\w+)'/g)) disparos.set(id, [...(disparos.get(id) ?? []), relative(raiz, arquivo)]);
+  for (const [, id] of conteudo.matchAll(/(?:som: IdEfeitoSonoro \| null = |opcoes\.som === undefined \? |som: )'(\w+)'/g)) disparos.set(id, [...(disparos.get(id) ?? []), relative(raiz, arquivo)]);
 }
 
 test('cada efeito disparado existe no catálogo e tem o arquivo em public/sons/sfx', () => {

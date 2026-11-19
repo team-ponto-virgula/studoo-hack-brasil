@@ -17,6 +17,7 @@ import {
   type CorPerfil,
   type DonoPublico,
   type LinkCompartilhado,
+  type MarcasCompartilhar,
   type Perfil,
   type PerfilPublico,
   type PreviaCompartilhar,
@@ -491,7 +492,7 @@ export async function perfilPublico(perfilId: string): Promise<PerfilPublico> {
  * público (se existir agora) e o código original (se ainda ativo).
  */
 export async function marcasDasTrilhas(usuarioId: string, planos: { id: string; origemNome: string | null; origemPerfilId: string | null; origemCodigo: string | null }[]) {
-  const marcas = new Map<string, { link?: { codigo: string; noPerfil: boolean }; recebida?: { nome: string; perfilId: string | null; codigoAtivo: string | null; foto: string | null } }>();
+  const marcas = new Map<string, MarcasCompartilhar>();
   if (!compartilharAtivo() || planos.length === 0) return marcas;
   const links = await banco.linkTrilha.findMany({ where: { usuarioId, planoId: { in: planos.map((plano) => plano.id) } }, select: { planoId: true, codigo: true, noPerfil: true } });
   for (const link of links) marcas.set(link.planoId, { link: { codigo: link.codigo, noPerfil: link.noPerfil } });
@@ -506,6 +507,14 @@ export async function marcasDasTrilhas(usuarioId: string, planos: { id: string; 
     });
     const publicos = new Set(donos.filter((dono) => dono.planos.length > 0).map((dono) => dono.perfilId));
     const fotos = new Map(donos.map((dono) => [dono.perfilId, dono.foto?.token ?? null]));
+    // Com a comunidade, o mapa da trilha recebida tem o botão de curtir: a contagem e se a pessoa já curtiu.
+    const curtidas = new Map<string, number>();
+    const minhas = new Set<string>();
+    if (comunidadeAtiva() && ativos.size > 0) {
+      const codigos = [...ativos];
+      for (const grupo of await banco.eventoTrilha.groupBy({ by: ["codigo"], where: { codigo: { in: codigos }, tipo: "valeu" }, _count: { _all: true } })) curtidas.set(grupo.codigo, grupo._count._all);
+      for (const evento of await banco.eventoTrilha.findMany({ where: { codigo: { in: codigos }, tipo: "valeu", usuarioId }, select: { codigo: true } })) minhas.add(evento.codigo);
+    }
     for (const plano of recebidas) {
       marcas.set(plano.id, {
         recebida: {
@@ -513,6 +522,7 @@ export async function marcasDasTrilhas(usuarioId: string, planos: { id: string; 
           perfilId: plano.origemPerfilId && publicos.has(plano.origemPerfilId) ? plano.origemPerfilId : null,
           codigoAtivo: ativos.has(plano.origemCodigo!) ? plano.origemCodigo : null,
           foto: (plano.origemPerfilId && fotos.get(plano.origemPerfilId)) || null,
+          ...(comunidadeAtiva() && ativos.has(plano.origemCodigo!) ? { valeus: curtidas.get(plano.origemCodigo!) ?? 0, valeuMeu: minhas.has(plano.origemCodigo!) } : {}),
         },
       });
     }

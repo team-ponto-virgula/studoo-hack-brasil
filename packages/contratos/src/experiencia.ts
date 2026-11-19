@@ -511,6 +511,7 @@ export const mensagens = {
         fotoAdicionar: 'Adicionar foto',
         /** Menu de ações do Studoo para a foto: galeria, câmera (só toque), remover (só com foto) e cancelar. */
         fotoGaleria: 'Escolher da galeria',
+        fotoMenuTitulo: 'Foto do perfil',
         fotoMenuCancelar: 'Cancelar',
         /** Resposta 422 do envio da foto. */
         fotoFormato: 'Use uma foto JPG, PNG ou WebP de até 2 MB.',
