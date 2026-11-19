@@ -62,3 +62,15 @@ test('o Stu antigo (stu-oi) saiu do app: nenhum uso no código e o arquivo apaga
   assert.deepEqual(usos, []);
   assert.equal(existsSync(new URL('apps/mobile/assets/marca/stu-oi.png', raiz)), false);
 });
+
+test('lendo o material (spec 13, B4): na espera de mais de 1 s, o Stu do alto do pedido fica concentrado, em laço; um Stu por tela', () => {
+  const pedido = readFileSync(new URL('apps/mobile/src/estudo.tsx', raiz), 'utf8');
+  const material = readFileSync(new URL('apps/mobile/src/estudio-adaptativo.tsx', raiz), 'utf8');
+  assert.match(pedido, /modo === 'material' && esperaMaterial \? 'stu-concentrado'/);
+  assert.match(pedido, /expressaoDoPedido === 'stu-concentrado' \? 'laco'/);
+  assert.match(pedido, /aoEsperar=\{setEsperaMaterial\}/);
+  assert.match(material, /setTimeout\(\(\) => avisarEspera\.current\?\.\(true\), 1000\)/);
+  // O cartão do material não desenha um segundo Stu.
+  const corpo = material.slice(material.indexOf('export function MaterialParaTrilha'), material.indexOf('\nfunction AvisoAlerta'));
+  assert.doesNotMatch(corpo, /<Stu\b/);
+});

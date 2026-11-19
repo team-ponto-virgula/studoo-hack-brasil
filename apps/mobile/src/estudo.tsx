@@ -752,8 +752,13 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
   else if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
   else if (texto.length >= 20) fala = mensagens.pedido.falas.pronto;
   else if (texto.length > 0) fala = mensagens.pedido.falas.curto;
-  // Spec 13 (A2): convida curioso; escrevendo (e no erro ou no limite), encorajador; ideia aplicada, animado.
-  const expressaoDoPedido: NomeStu = escolhida !== null && escolhida === texto && !falha ? 'stu-animado' : texto.length > 0 || falha ? 'stu-encorajador' : 'stu-curioso';
+  // Spec 13 (A2): convida curioso; escrevendo (e no erro ou no limite), encorajador; ideia aplicada, animado. Lendo o material
+  // (§B4), numa espera de mais de 1 s do cartão do material: concentrado, em laço (é espera).
+  const [esperaMaterial, setEsperaMaterial] = useState(false);
+  const expressaoDoPedido: NomeStu = modo === 'material' && esperaMaterial ? 'stu-concentrado'
+    : escolhida !== null && escolhida === texto && !falha ? 'stu-animado' : texto.length > 0 || falha ? 'stu-encorajador' : 'stu-curioso';
+  const animacaoDoPedido = expressaoDoPedido === 'stu-concentrado' ? 'laco' : expressaoDoPedido === 'stu-curioso' ? 'uma-vez'
+    : expressaoDoPedido === 'stu-animado' ? 'acontecimento' : undefined;
 
   function tentar() {
     if (ocupado || !texto) return;
@@ -786,8 +791,7 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
         {/* Spec 13: o Stu convida curioso (uma vez ao abrir), encoraja enquanto a pessoa escreve (parado) e se anima quando
             uma ideia entra no campo (no acontecimento); 72 no celular, com o halo lavanda no lugar do halo amarelo. */}
         <View style={estudoEstilos.pedidoStu} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-          <Stu nome={expressaoDoPedido} tamanho={72} halo animado={expressaoDoPedido === 'stu-curioso' ? 'uma-vez' : expressaoDoPedido === 'stu-animado' ? 'acontecimento' : undefined}
-            acontecimento={expressaoDoPedido === 'stu-animado' ? texto : undefined} />
+          <Stu nome={expressaoDoPedido} tamanho={72} halo animado={animacaoDoPedido} acontecimento={expressaoDoPedido === 'stu-animado' ? texto : undefined} />
           <Text style={[estudoEstilos.pedidoEstrela, { fontFamily: fontes.corpo }]}>✦</Text>
         </View>
         <Titulo testID="titulo-objetivo" foco={focarTitulo} equilibrado estilo={estudoEstilos.pedidoTitulo}>
@@ -801,7 +805,8 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
       {falha && <EstadoErro mensagem={mensagemDoCodigo(falha)} testID="erro-geracao" foco
         acao={mostrarVerPlanos ? { rotulo: mensagens.pedido.verPlanos, testID: 'ver-planos', desativado: ocupado, acao: verPlanos }
           : repetivel ? { rotulo: mensagens.tentar, testID: 'tentar-geracao', desativado: ocupado, acao: tentar } : undefined} />}
-      <View style={modo !== 'material' ? { display: 'none' } : estudoEstilos.materialNoPedido}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} ia={ia} mostrarCabeca={false} /></View>
+      <View style={modo !== 'material' ? { display: 'none' } : estudoEstilos.materialNoPedido}><MaterialParaTrilha cliente={cliente} objetivo={objetivo} onProposta={onProposta} ia={ia} mostrarCabeca={false}
+        aoEsperar={setEsperaMaterial} /></View>
       <View style={modo !== 'ideia' && { display: 'none' }}>
         <View style={estudoEstilos.campoPedido}>
           <CampoObjetivo campoRef={campo} valor={objetivo} aoMudar={aoMudar} editavel={!ocupado} dica={dica} brilho={brilho} />
