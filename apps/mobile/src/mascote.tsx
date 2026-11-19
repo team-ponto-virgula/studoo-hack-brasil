@@ -90,8 +90,13 @@ function Halo({ largura, altura }: { largura: number; altura: number }) {
  * E2, com o app em segundo plano, com o teclado aberto (um campo de texto em foco), com `pausado` e, no laço, depois de
  * 20 s sem toque nem rolagem. Um Stu se mexe por vez.
  */
-export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra = false, halo = false, pausado = false, espelhado = false, silhueta, pop, estilo }: {
+export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra = false, halo = false, pausado = false, espelhado = false, silhueta, pop, popAoMontar, estilo }: {
   nome: NomeStu;
+  /**
+   * Entra ao montar com o pop da §B7 depois de tantos ms (a reação no painel de retorno entra aos 160 ms, spec 13); até lá,
+   * fica invisível. Com movimento reduzido, aparece parado na hora.
+   */
+  popAoMontar?: number;
   /** Silhueta: a imagem parada pintada desta cor (tintColor), sem animação (o troféu do fim do mapa antes da conquista). */
   silhueta?: string;
   /** Cada valor novo (definido) dá o pop da §B7, como a troca de expressão (a entrada num passo da apresentação). */
@@ -132,7 +137,7 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
   const [desistiu, setDesistiu] = useState(false);
   const [entrada] = useState(() => new Animated.Value(0));
   // §B7: a expressão nova entra em 120 ms de opacidade com um pop de 0,92 → 1,06 → 1 em 240 ms (com movimento reduzido, na hora).
-  const [troca] = useState(() => new Animated.Value(1));
+  const [troca] = useState(() => new Animated.Value(popAoMontar !== undefined ? 0 : 1));
   // A expressão nova ou um `pop` novo: a mesma entrada.
   const chaveDoPop = `${nome}|${pop ?? ''}`;
   const popAnterior = useRef(chaveDoPop);
@@ -145,6 +150,20 @@ export function Stu({ nome, tamanho, animado, acontecimento, ciclos = 1, sombra 
     entrar.start();
     return () => entrar.stop();
   }, [chaveDoPop, reduzir, troca]);
+  // A entrada ao montar (popAoMontar): o mesmo pop, depois da espera.
+  const comEntrada = popAoMontar !== undefined;
+  useEffect(() => {
+    if (!comEntrada) return;
+    if (reduzir !== false) { troca.setValue(1); return; }
+    const entrar = Animated.sequence([
+      Animated.delay(popAoMontar ?? 0),
+      Animated.timing(troca, { toValue: 1, duration: 240, easing: Easing.bezier(0.2, 0.9, 0.3, 1.3), useNativeDriver: true }),
+    ]);
+    entrar.start();
+    return () => entrar.stop();
+    // Só ao montar (e de novo se o movimento reduzido mudar).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [comEntrada, reduzir, troca]);
 
   // Permissões da E4: a tela interativa, o app à vista, sem teclado aberto e, no laço, sem 20 s ociosos.
   useEffect(() => {
