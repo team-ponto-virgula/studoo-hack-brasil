@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties, type KeyboardEvent } f
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, Icone, Stu, coresDaRegiao } from '../ui';
 import { iconesDosTemas, type IdTema } from './pedido';
+import { FaixaDaPonte } from './ponte-reforco';
 import './apresentacao.css';
 import './aula.css';
 import './estudio.css';
@@ -177,30 +178,8 @@ function ArtePonte() {
       <div className="apresentacao-quadro__topo">
         <span className="estudio-selo">{m.simulado}</span>
       </div>
-      <div className="ponte-cena" data-concluida="true">
-        <div className="ponte-margem ponte-margem--esquerda">
-          <div className="ponte-stu-alvo" />
-          <span>{m.ponteMargemErro}</span>
-        </div>
-        <div className="ponte-vao">
-          <span className="ponte-tabua" data-ativa="true" data-erro="true">{m.ponteTabuaErro}</span>
-          <span className="ponte-tabua" data-ativa="true">{m.pontePassoExplicacao}</span>
-          <span className="ponte-tabua" data-ativa="true">{m.pontePassoExemplo}</span>
-          <span className="ponte-tabua" data-ativa="true">{m.pontePassoDesafio}</span>
-        </div>
-        <div className="ponte-margem ponte-margem--direita">
-          <div className="ponte-stu">
-            <Stu expressao="stu-perfil" tamanho={44} />
-          </div>
-          <span>{m.ponteMargemVolta}</span>
-        </div>
-      </div>
-      <ol className="ponte-legenda apresentacao-ponte-legenda" aria-hidden="true">
-        <li data-ativa="true" data-erro="true" data-vencida="true"><span className="ponte-legenda__num">1</span><span>{m.ponteTabuaErro}</span></li>
-        <li data-ativa="true" data-vencida="true"><span className="ponte-legenda__num">2</span><span>{m.pontePassoExplicacao}</span></li>
-        <li data-ativa="true" data-vencida="true"><span className="ponte-legenda__num">3</span><span>{m.pontePassoExemplo}</span></li>
-        <li data-ativa="true" data-vencida="true"><span className="ponte-legenda__num">4</span><span>{m.pontePassoDesafio}</span></li>
-      </ol>
+      <FaixaDaPonte posicao={4} />
+      <strong>{m.ponteConstruida}</strong>
     </div>
   );
 }
