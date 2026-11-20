@@ -1,13 +1,12 @@
 import type { MetaPlano } from "./gerador";
 import type { GeradorTrilha } from "./gerador";
 import type { EsqueletoPlano } from "@/dominio/aprendizado/plano";
-import { LIMITES_ESQUELETO } from "@/dominio/aprendizado/plano";
+import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { comNovasTentativas } from "./novas-tentativas";
 import {
   TEMPO_CONTEUDO_MS,
   TEMPO_ESTRUTURA_MS,
-  aparar,
   criarMontador,
   esquemaDaLicao,
   instrucoesDaEstrutura,
@@ -192,7 +191,7 @@ function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number, c
  * aceite, com Structured Outputs, e tem uma segunda tentativa se vier fora do formato.
  */
 export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
-  const origem = aparar(`IA da OpenAI (${config.modelo})`, LIMITES_ESQUELETO.titulo);
+  const origem = ORIGEM_GERADA;
 
   return {
     async *gerarEstrutura(objetivo, sinal) {
@@ -255,7 +254,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
           correcao = correcaoDoFormato("json");
           continue;
         }
-        const lida = normalizarLicao(bruto, esqueleto.origem);
+        const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem));
         if (lida.conteudo) {
           if (lida.descartados.length > 0) {
             registrar("licao_ajustada", { detalhe: lida.descartados.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });

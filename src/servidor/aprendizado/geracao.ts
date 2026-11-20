@@ -1,3 +1,4 @@
+import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { randomUUID } from "node:crypto";
 import { LIMITES_GERACAO, type EventoGeracao } from "@studoo/contratos";
 import { esqueletoValido, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
@@ -81,7 +82,7 @@ async function* emitirEventos(
     }
     if (sinal.aborted) return;
 
-    const completo = { ...meta, ...plano, fluxos: acumulado.fluxos };
+    const completo = { ...meta, origem: origemDoConteudo(meta.origem), ...plano, fluxos: acumulado.fluxos };
     if (!esqueletoValido(completo)) {
       throw new FalhaApi("falha");
     }

@@ -13,7 +13,6 @@ import {
   exerciciosDaLicao,
   linhasDePassos,
   motivoParaRever,
-  origemLegivel,
   respostaParaTentarDeNovo,
   tamanhoDaResposta,
   partesDaLacuna,
@@ -781,7 +780,6 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                     ))}
                   </div>
                 )}
-                <p className="licao-origem">{t.origem} · {origemLegivel(licao.origem)}</p>
               </section>
             </div>
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (() => {

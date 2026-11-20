@@ -1,3 +1,4 @@
+import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { randomBytes, randomUUID } from "node:crypto";
 import {
   CORES_PERFIL,
@@ -273,7 +274,7 @@ export function conteudoParaCopia(conteudo: ConteudoLicao, nomeDono: string): Co
     ...(referencias?.length
       ? { referencias: referencias.map(({ pagina, localizacao, trecho, leitura }) => ({ materialId: MATERIAL_COMPARTILHADO, nome: rotuloMaterial(nomeDono), pagina, ...(localizacao ? { localizacao } : {}), trecho, leitura })) }
       : {}),
-    origem: deMaterial ? rotuloMaterial(nomeDono) : conteudo.origem,
+    origem: deMaterial ? rotuloMaterial(nomeDono) : origemDoConteudo(conteudo.origem),
   };
 }
 
@@ -385,7 +386,7 @@ export async function trilhaCompartilhada(codigo: string, usuarioId: string | nu
     // Tema e capa só quando existem (campos opcionais da resposta pública).
     ...(ehTemaValido(temaLink) ? { tema: temaLink } : {}),
     ...(plano.capa && (!plano.capa.startsWith('foto:') || plano.capaFoto?.moderacao === 'aprovado') ? { capa: plano.capa } : {}),
-    origem: ehDeMaterial(licoes) ? rotuloMaterial(dono.nome) : plano.origem,
+    origem: ehDeMaterial(licoes) ? rotuloMaterial(dono.nome) : origemDoConteudo(plano.origem),
     totalLicoes: licoes.length,
     partes: plano.fluxos.map((fluxo) => ({ titulo: fluxo.titulo, licoes: fluxo.licoes.map((licao) => licao.titulo) })),
     dono,
@@ -454,7 +455,7 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
           titulo: original.titulo,
           // O objetivo que a dona digitou não vai: a cópia guarda o título no lugar.
           objetivo: original.titulo,
-          origem: deMaterial ? rotuloMaterial(dono.nome) : original.origem,
+          origem: deMaterial ? rotuloMaterial(dono.nome) : origemDoConteudo(original.origem),
           origemNome: dono.nome,
           origemPerfilId: link.plano.usuario.perfilId,
           origemCodigo: codigo,
@@ -489,7 +490,7 @@ export async function perfilPublico(perfilId: string, quem: string | null = null
   const trilhas = await Promise.all(links.map(async (link) => {
     const plano = await lerTrilha(usuario.id, link.planoId);
     const licoes = plano?.fluxos.flatMap((fluxo) => fluxo.licoes) ?? [];
-    return plano && { codigo: link.codigo, titulo: plano.titulo, totalLicoes: licoes.length, origem: ehDeMaterial(licoes) ? rotuloMaterial(usuario.perfilNome!) : plano.origem };
+    return plano && { codigo: link.codigo, titulo: plano.titulo, totalLicoes: licoes.length, origem: ehDeMaterial(licoes) ? rotuloMaterial(usuario.perfilNome!) : origemDoConteudo(plano.origem) };
   }));
   const atuais = await banco.linkTrilha.findMany({
     where: { AND: [await filtroPublico(quem), { usuarioId: usuario.id, noPerfil: true, plano: { usuario: { perfilRevisao: usuario.perfilRevisao } } }] },
