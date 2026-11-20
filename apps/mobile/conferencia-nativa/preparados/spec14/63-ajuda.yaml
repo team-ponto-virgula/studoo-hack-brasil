@@ -1,0 +1,27 @@
+# Spec 14, S13 no simulador: a seção Ajuda do Perfil (Falar com o suporte, Regras da comunidade, Política de privacidade).
+appId: host.exp.Exponent
+name: 63-ajuda
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-perfil
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-perfil
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: ajuda-suporte
+    direction: DOWN
+    timeout: 120000
+    speed: 50
+    centerElement: true
+- assertVisible:
+    id: ajuda-regras
+- assertVisible:
+    id: ajuda-politica
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 63-perfil-ajuda

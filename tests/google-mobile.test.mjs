@@ -112,3 +112,14 @@ test('a entrada só mostra o Google quando o servidor oferece e o build não des
   assert.ok(app.expo.plugins.includes('expo-apple-authentication'));
   assert.match(sessao, /setAppleDisponivel\(c\.apple === true && appleNoAparelho\)/);
 });
+
+test('pacote de loja: sem o texto de Face ID (o app não usa biometria) e com a fase que tira a rede local do dev-client no Release', async () => {
+  const app = JSON.parse(await readFile(new URL('../apps/mobile/app.json', import.meta.url), 'utf8')).expo;
+  const seguro = app.plugins.find((p) => Array.isArray(p) && p[0] === 'expo-secure-store');
+  assert.deepEqual(seguro?.[1], { faceIDPermission: false }, 'expo-secure-store sem NSFaceIDUsageDescription');
+  const { execSync } = await import('node:child_process');
+  const usoBiometria = execSync('grep -rln "requireAuthentication\\|LocalAuthentication" apps/mobile/src || true', { cwd: new URL('..', import.meta.url) }).toString().trim();
+  assert.equal(usoBiometria, '', 'nenhum uso de biometria no app');
+  const lancador = await readFile(new URL('../node_modules/expo-dev-launcher/plugin/build/withDevLauncher.js', import.meta.url), 'utf8');
+  assert.match(lancador, /Strip Local Network Keys for Release/, 'o expo-dev-launcher tira _expo._tcp e o texto de rede local do Release');
+});

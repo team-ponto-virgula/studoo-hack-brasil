@@ -7,6 +7,9 @@ const portaWeb = process.env.STUDOO_TESTE_PORTA?.trim() || '3000';
 const web = process.env.STUDOO_TESTE_PORTA ? `http://localhost:${portaWeb}` : process.env.STUDOO_ORIGEM || `http://localhost:${portaWeb}`;
 const portaMobile = process.env.STUDOO_MOBILE_PORTA?.trim() || '3443';
 const mobile = process.env.STUDOO_MOBILE_ORIGEM || `https://127.0.0.1:${portaMobile}`;
+// A origem configurada do servidor (STUDOO_ORIGEM): o Origin que a web manda. O canal do app só abre com ela em HTTPS, atrás
+// do proxy (o mesmo endereço que o app usa); `web` continua sendo o Next direto, em HTTP, onde a rota do app não existe.
+const origemWeb = process.env.STUDOO_ORIGEM?.trim() || web;
 const caminho = '/api/aprendizado';
 
 function chamar(base, rota, { metodo = 'GET', corpo, token, cookie, origem } = {}) {
@@ -48,7 +51,7 @@ test('sessão nativa HTTPS de 8 horas e progresso na conta web', async (t) => {
     metodo: 'POST', corpo: credenciais, origem,
   });
   assert.equal((await logar(web)).status, 404);
-  assert.equal((await logar(mobile, web)).status, 403);
+  assert.equal((await logar(mobile, origemWeb)).status, 403);
   assert.equal((await chamar(mobile, '/api/sessao')).status, 401);
 
   const entrada = await logar();
@@ -63,14 +66,14 @@ test('sessão nativa HTTPS de 8 horas e progresso na conta web', async (t) => {
   assert.equal(sessao.expiraEm - sessao.criadaEm, 8 * 60 * 60 * 1000);
   assert.equal(sessao.expiraEm.toISOString(), expiraEm);
 
-  const entradaWeb = await chamar(web, '/api/login', { metodo: 'POST', corpo: credenciais, origem: web });
+  const entradaWeb = await chamar(web, '/api/login', { metodo: 'POST', corpo: credenciais, origem: origemWeb });
   assert.equal(entradaWeb.status, 200);
   const cookie = entradaWeb.headers.get('set-cookie').split(';')[0];
   const tokenWeb = cookie.split('=')[1];
   assert.equal((await chamar(mobile, '/api/sessao', { token: tokenWeb })).status, 401);
   assert.equal((await chamar(web, '/api/sessao', { cookie: `studoo-sessao=${token}` })).status, 401);
   assert.equal((await chamar(mobile, '/api/sessao', { token, cookie })).status, 401);
-  assert.equal((await chamar(mobile, '/api/sessao', { token, origem: web })).status, 403);
+  assert.equal((await chamar(mobile, '/api/sessao', { token, origem: origemWeb })).status, 403);
   assert.equal((await chamar(mobile, '/api/sessao', { token })).status, 200);
 
   async function enviar(rota, corpo) {
