@@ -206,7 +206,7 @@ Revisão com olhar de jurado sobre o 9e6e96e. Cobre a entrada, o "Ver como funci
 
 ### 1. Entrada no celular: caber sem rolar, com "Entrar" junto dos campos (web; o app já cabe)
 - **Hoje:** em 390×844, o campo de e-mail começa na dobra e o de senha fica abaixo dela; em 390×667, nenhum campo aparece. "Entrar" fica preso no rodapé, longe dos campos, e com o modo visitante ligado vira botão branco (`src/app/login/entrada.tsx`). O app já tirou a faixa ilustrada e cabe (b1254bd).
-- **Regra (web até 767 px, igual ao app):**
+- **Regra (web até 767 px; no app, a mesma ordem e os mesmos textos, com o botão no rodapé que acompanha o teclado, P28 da spec 07):**
   - Sem faixa ilustrada quando a janela tem até 860 px de altura. Acima disso, a faixa tem 120 px.
   - Título em 28/34 (até 3 linhas em 390) e texto em 15/22 (até 3 linhas). "Ver como funciona" é um botão de texto de 44 px.
   - **Modo visitante ligado:** o cartão "Experimentar sem conta" fica como está. O formulário vem logo abaixo, e "Entrar" fica dentro dele, logo depois da senha, na largura toda, com 48 px, em estilo secundário. Não há rodapé preso.

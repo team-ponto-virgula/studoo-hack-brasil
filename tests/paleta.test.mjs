@@ -37,6 +37,7 @@ test('as cores de marca são as do kit', () => {
   assert.equal(cor('sucesso'), '#1f7a5a');
   assert.equal(cor('alerta'), '#9a5b00');
   assert.equal(cor('erro'), '#c23b4e');
+  assert.equal(cor('fundo-aviso-comunidade'), '#1b2a5e');
 });
 
 test('as contas de contraste da B5 passam', () => {
@@ -45,6 +46,7 @@ test('as contas de contraste da B5 passam', () => {
     ['ação escura no branco', cor('acao-escura'), BRANCO, 4.5],
     ['ação escura na lavanda (link sobre lavanda)', cor('acao-escura'), cor('lavanda'), 4.5],
     ['texto no branco', cor('texto'), BRANCO, 7],
+    ['texto do aviso da comunidade', BRANCO, cor('fundo-aviso-comunidade'), 7],
     ['texto na lavanda', cor('texto'), cor('lavanda'), 7],
     ['texto sobre o destaque', cor('texto'), cor('ouro'), 4.5],
     ['violeta de texto no branco', cor('violeta-texto'), BRANCO, 4.5],
@@ -70,6 +72,8 @@ test('nenhuma cor antiga de marca escrita à mão (nem em rgb)', () => {
   const antigas = /#3858d6|#2a44a8|#1b2a5e|#ffd166|#3050cc|rgba?\(\s*56[ ,]+88[ ,]+214|rgba?\(\s*27[ ,]+42[ ,]+94/i;
   for (const arquivo of codigo) {
     readFileSync(arquivo, 'utf8').split('\n').forEach((linha, i) => {
+      // A spec 11 reserva este fundo para o aviso da comunidade. A marca continua com a paleta da B5.
+      if (arquivo === join(raiz, 'src/app/globals.css') && linha.trim() === '--fundo-aviso-comunidade: #1b2a5e;') return;
       assert.doesNotMatch(linha, antigas, `${relative(raiz, arquivo)}:${i + 1} ainda tem a cor antiga`);
     });
   }

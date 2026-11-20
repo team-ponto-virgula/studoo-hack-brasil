@@ -277,7 +277,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
                           : [link.adicoes > 0 && p.adicoes(link.adicoes), comunidade && link.valeus ? mensagens.comunidade.valeus(link.valeus) : null].filter(Boolean).join(' · ')}
                       </p>
                       {comunidade && link.visibilidade ? (
-                        <p className="selo-visibilidade" data-nivel={link.visibilidade}>
+                        link.moderacao !== 'pendente' && link.moderacao !== 'recusado' && <p className="selo-visibilidade" data-nivel={link.visibilidade}>
                           <Icone nome={link.visibilidade === 'explorar' ? 'bussola' : link.visibilidade === 'perfil' ? 'pessoa' : 'elo'} />
                           {mensagens.comunidade.niveis[link.visibilidade].titulo}
                           {link.visibilidade === 'explorar' && link.tema ? ` · ${temas[link.tema]}` : ''}
