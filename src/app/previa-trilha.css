@@ -82,9 +82,8 @@
 .previa-botoes > .botao { flex: 1 1 0; min-width: 0; min-height: 48px; padding-inline: 10px; }
 .previa-rodape .previa-botoes .previa-comecar[aria-disabled='true']:not(:disabled) { color: white; border-color: transparent; background: var(--acao-escura,#1d4ed8); box-shadow: none; transform: translateY(3px); cursor: progress; }
 .previa-espera, .previa-erro { width: min(100%,36rem); margin-inline: auto; color: #5e6a85; font-size: .875rem; text-align: center; }
-.previa-ajustar { order: -1; }
 .previa-rodape[data-salvando] .previa-ajustar, .previa-espera:not([data-visivel]) { display: none; }
-.previa-espera { flex-basis: 100%; }
+.previa-espera, .previa-erro { flex-basis: 100%; }
 .previa-erro { color: #c23b4e; }
 .previa-giro { width: 16px; height: 16px; border: 2px solid #ffffff70; border-top-color: white; border-radius: 50%; animation: previa-girar .8s linear infinite; }
 [data-fase='montando'] .previa-ligacao { animation: previa-desenhar 300ms ease-out both; }
@@ -134,8 +133,12 @@
   .previa-rodape[data-proposta] .previa-botoes {
     display: grid; grid-template: "principal" auto "secundaria" minmax(44px, auto) / minmax(0, 1fr); gap: 8px;
   }
+  .previa-rodape[data-proposta][data-falha] .previa-botoes {
+    grid-template: "principal" auto "erro" auto "secundaria" auto / minmax(0, 1fr);
+  }
   .previa-botoes > .previa-comecar { grid-area: principal; }
-  .previa-rodape[data-proposta] .previa-ajustar { grid-area: secundaria; align-self: start; order: 0; min-height: 44px; }
+  .previa-erro { grid-area: erro; }
+  .previa-rodape[data-proposta] .previa-ajustar { grid-area: secundaria; align-self: start; min-height: 44px; }
   .previa-rodape[data-proposta][data-salvando] .previa-ajustar,
   .previa-rodape[data-proposta] .previa-espera:not([data-visivel]) { display: revert; visibility: hidden; }
   .previa-espera { grid-area: secundaria; align-self: center; }

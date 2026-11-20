@@ -68,12 +68,20 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const [explicacao, setExplicacao] = useState<string | null>(null);
   const [semNovidade, setSemNovidade] = useState(false);
   const [demorou, setDemorou] = useState(false);
+  const [estreito, setEstreito] = useState(false);
   const salvando = aceite === 'salvando' || !!passagem;
   const falhou = aceite === 'erro' || aceite === 'expirada';
   const stuNoTrofeu = !!proposta && trofeuAVista && !salvando && !falhou;
   const fase = passagem ? 'criada' : salvando ? 'salvando' : proposta ? 'pronta' : 'montando';
   const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
+  useLayoutEffect(() => {
+    const largura = window.matchMedia('(max-width: 600px)');
+    const atualizar = () => setEstreito(largura.matches);
+    atualizar();
+    largura.addEventListener('change', atualizar);
+    return () => largura.removeEventListener('change', atualizar);
+  }, []);
   useEffect(() => {
     tocaSons.prepararEfeitos('geracao_licao', 'geracao_pronta');
   }, []);
@@ -168,6 +176,25 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     void tocaSons.tocarEfeito('geracao_licao');
   }
 
+  const acaoPrincipal = proposta && (
+    <Botao key="principal" className="previa-comecar" aria-disabled={salvando} onClick={() => {
+      if (!painel.current || salvando) return;
+      if (aceite === 'expirada') { remontar(); return; }
+      aceitar(painel.current);
+    }}>
+      {salvando && <span className="previa-giro" aria-hidden="true" />}
+      {salvando ? t.criandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}
+    </Botao>
+  );
+  const acaoSecundaria = (
+    <Botao key="secundaria" className="previa-ajustar" variante="secundario" disabled={salvando} onClick={proposta ? ajustar : cancelar}>
+      {proposta ? t.ajustar : t.cancelar}
+    </Botao>
+  );
+  const erroDoAceite = falhou && (
+    <p key="erro" className="previa-erro" role="alert">{aceite === 'expirada' ? t.propostaExpirada : t.erroCriacao}</p>
+  );
+
   return <section ref={painel} className="painel painel--geracao" data-fase={fase} data-passagem={passagem ? (passagem.reduzida ? 'reduzida' : 'circulo') : undefined}
     style={passagem?.estilo} inert={!!passagem}>
     <header className="previa-cabecalho">
@@ -243,21 +270,13 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
         </button>
       )}
     </div>
-    <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={salvando || undefined}>
+    <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={salvando || undefined} data-falha={falhou || undefined}>
       <div className="previa-botoes">
-        {proposta && <Botao className="previa-comecar" aria-disabled={salvando} onClick={() => {
-          if (!painel.current || salvando) return;
-          if (aceite === 'expirada') { remontar(); return; }
-          aceitar(painel.current);
-        }}>{salvando && <span className="previa-giro" aria-hidden="true" />}{salvando ? t.criandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}</Botao>}
-        <Botao className="previa-ajustar" variante="secundario" disabled={salvando} onClick={proposta ? ajustar : cancelar}>
-          {proposta ? t.ajustar : t.cancelar}
-        </Botao>
+        {estreito ? [acaoPrincipal, erroDoAceite, acaoSecundaria] : [acaoSecundaria, acaoPrincipal, erroDoAceite]}
         {proposta && <p className="previa-espera" role="status" data-visivel={demorou && salvando && !passagem || undefined}>
           {t.escrevendoLicoes}
         </p>}
       </div>
-      {(aceite === 'erro' || aceite === 'expirada') && <p className="previa-erro" role="alert">{aceite === 'expirada' ? t.propostaExpirada : t.erroCriacao}</p>}
     </footer>
     {passagem && !passagem.reduzida && <div className="previa-circulo" aria-hidden="true" onAnimationStart={() => {
       if (!painel.current || !mapa.current) return;
