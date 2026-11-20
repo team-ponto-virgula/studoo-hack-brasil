@@ -169,7 +169,9 @@ function ChavesDoSom({ estado, noPerfil = false }: { estado: EstadoSomSnapshot; 
       </View>
       <View style={noPerfil ? [somEstilos.perfilLinha, somEstilos.perfilLinhaChave] : null}>
         {!noPerfil && <View style={somEstilos.linha} />}
-        <View style={[somEstilos.linhaChave, !noPerfil && somEstilos.linhaEfeitos]}>
+        {/* No Perfil, esta linha fica dentro da faixa com borda (outra linha em fila): ocupa a largura toda, para a chave ficar
+            na borda direita como a da música. */}
+        <View style={[somEstilos.linhaChave, noPerfil ? somEstilos.linhaInteira : somEstilos.linhaEfeitos]}>
           <View style={somEstilos.chaveTexto}>
             <Text style={somEstilos.chaveTitulo}>{t.efeitosTitulo}</Text>
             <Text style={somEstilos.chaveDica}>{noPerfil ? t.efeitosDicaPerfil : t.efeitosDica}</Text>
@@ -319,6 +321,7 @@ const somEstilos = StyleSheet.create({
   // As linhas das duas chaves: o texto (título 800 de 16/22 e a linha 400 de 14/20) e a chave à direita.
   linhaChave: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 64 },
   linhaEfeitos: { marginTop: 12 },
+  linhaInteira: { flex: 1 },
   chaveTexto: { flex: 1, minWidth: 0, gap: 2 },
   chaveTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22 },
   chaveDica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 },
