@@ -1,6 +1,6 @@
 # Notas do beta para o TestFlight e para a revisão da Apple (rascunho)
 
-**Estado:** rascunho de 20/11 para a candidata `24a4979` com a spec 14. Ele descreve os fluxos do produto como estão especificados. Não afirma nada que ainda não foi conferido no build. Antes de colar no App Store Connect, confira cada item marcado com [operador].
+**Estado:** revisado em 20/11 para o ramo de entrega `release/testflight-cloud` (`6afc19c`). Ele descreve os fluxos do build e o que o servidor publicado (`4a60291`) oferecia em 20/11: `/api/auth/config` com `google: true`, `visitante: true` e `comunidade: true`, e com `apple`, `cadastro` e `recuperacao` em `false`. Os itens que dependem de ligar algo no servidor estão marcados com [operador]. Antes de colar no App Store Connect, apague o que continuar desligado.
 
 Regras deste texto:
 - Nenhuma credencial aqui. A conta de demonstração vai só no campo "Informações de acesso" (Sign-In Information) do App Store Connect.
@@ -14,23 +14,23 @@ Regras deste texto:
 ### O que testar (TestFlight)
 
 O Studoo monta uma trilha de estudo com lições curtas a partir do que você quer aprender. Neste beta, teste:
-1. Entrar com a Apple, com o Google ou com e-mail e senha, e criar uma conta por e-mail (código de 6 dígitos).
+1. Entrar com o Google ou pela conta de demonstração, ou tocar em "Experimentar sem conta". [operador: só se estiverem ligados no servidor, acrescente "com a Apple" e "criar uma conta por e-mail (código de 6 dígitos)"]
 2. Criar uma trilha: em "Nova trilha", escreva o que quer aprender ou toque numa ideia, depois "Montar minha trilha" e "Começar a lição 1".
-3. Fazer uma lição: conceito, exemplo e exercício com retorno.
+3. Fazer uma lição: conceito, exemplo e exercício com retorno. Erre um exercício de propósito e toque em "Ver outro jeito de entender": em 3 passos, o Studoo mostra a ideia por outro caminho e leva você de volta ao exercício.
 4. Explorar trilhas de outras pessoas, denunciar e bloquear pelo "•••", e desbloquear em Perfil, "Pessoas bloqueadas".
 5. Pedir ajuda em Perfil, "Ajuda", ou na tela de entrada.
 Conte o que travou ou confundiu pelo "Enviar comentário" do TestFlight.
 
 ### Notas para a revisão (App Review)
 
-- **Acesso:** use a conta de demonstração das Informações de acesso. Também é possível entrar com a Apple ou criar uma conta por e-mail.
-- **IA:** a trilha e as lições são geradas por IA no servidor do Studoo. Antes da primeira trilha, o app pede permissão para enviar o pedido ao provedor de IA. A permissão pode ser desligada em Perfil, "Privacidade". [operador: confirmar que o servidor usa a IA real e qual provedor aparece no aviso]
+- **Acesso:** use a conta de demonstração das Informações de acesso. Também é possível entrar com o Google ou tocar em "Experimentar sem conta" (conta temporária). [operador: acrescente "entrar com a Apple" e "criar uma conta por e-mail" só se estiverem ligados no servidor]
+- **IA:** a trilha e as lições são geradas por IA no servidor do Studoo. Antes da primeira trilha, o app pede permissão para enviar o pedido ao provedor de IA. A permissão pode ser desligada em Perfil, "Privacidade e dados". [operador: em 20/11, o servidor anunciava `ia: deepseek`; confirme que o aviso do app nomeia o mesmo provedor]
 - **Conteúdo de outras pessoas:** a aba "Explorar" mostra trilhas que outras pessoas publicaram, com nome e foto. Em cada trilha e em cada perfil, o "•••" tem "Denunciar" e "Bloquear".
   - O bloqueio vale nos dois sentidos e pode ser desfeito em Perfil, "Pessoas bloqueadas".
   - Fotos, capas e textos sinalizados passam pela revisão da equipe do Studoo antes de aparecer para outras pessoas.
   - As regras da comunidade estão na política de privacidade.
 - **Suporte:** Perfil, "Ajuda", "Falar com o suporte", ou "Precisa de ajuda? Fale com o suporte" na tela de entrada. O endereço é `<origem>/suporte` [operador].
-- **Excluir conta:** no Perfil, em "Privacidade".
+- **Excluir conta:** no Perfil, em "Privacidade e dados", "Excluir conta".
 
 ### Roteiro breve (cerca de 5 minutos)
 
@@ -47,23 +47,23 @@ Conte o que travou ou confundiu pelo "Enviar comentário" do TestFlight.
 ### What to Test (TestFlight)
 
 Studoo builds a study path of short lessons from what you want to learn. In this beta, please try:
-1. Signing in with Apple, with Google, or with email and password, and creating an account by email (6-digit code).
+1. Signing in with Google or with the demo account, or tapping "Experimentar sem conta" (Try without an account). [operator: only if enabled on the server, add "with Apple" and "creating an account by email (6-digit code)"]
 2. Creating a path: in "Nova trilha" (New path), type what you want to learn or tap an idea, then "Montar minha trilha" and "Começar a lição 1".
-3. Taking a lesson: concept, example and an exercise with feedback.
+3. Taking a lesson: concept, example and an exercise with feedback. Answer an exercise wrong on purpose and tap "Ver outro jeito de entender" (See another way to understand): in 3 steps, Studoo explains the idea another way and takes you back to the exercise.
 4. Browsing other people's paths in "Explorar", reporting and blocking from the "•••" menu, and unblocking in Profile, "Pessoas bloqueadas" (Blocked people).
 5. Getting help from Profile, "Ajuda" (Help), or from the sign-in screen.
 Please tell us what got stuck or felt confusing through TestFlight's "Send Feedback".
 
 ### Notes for App Review
 
-- **Access:** please use the demo account in the Sign-In Information. You can also sign in with Apple or create an account by email.
-- **AI:** paths and lessons are generated by AI on Studoo's server. Before the first path, the app asks permission to send the request to the AI provider. The permission can be turned off in Profile, "Privacidade" (Privacy). [operator: confirm the server uses the real AI and which provider the notice names]
+- **Access:** please use the demo account in the Sign-In Information. You can also sign in with Google or tap "Experimentar sem conta" (a temporary account). [operator: add "sign in with Apple" and "create an account by email" only if enabled on the server]
+- **AI:** paths and lessons are generated by AI on Studoo's server. Before the first path, the app asks permission to send the request to the AI provider. The permission can be turned off in Profile, "Privacidade e dados" (Privacy and data). [operator: on 11/20 the server announced `ia: deepseek`; confirm the app notice names the same provider]
 - **Content from other people:** the "Explorar" (Explore) tab shows paths other people published, with their name and photo. On every path and every profile, the "•••" menu has "Denunciar" (Report) and "Bloquear" (Block).
   - Blocking works both ways and can be undone in Profile, "Pessoas bloqueadas".
   - Photos, covers and flagged text are reviewed by the Studoo team before other people can see them.
   - The community rules are in the privacy policy.
 - **Support:** Profile, "Ajuda", "Falar com o suporte" (Contact support), or "Precisa de ajuda? Fale com o suporte" on the sign-in screen. The address is `<origin>/suporte` [operator].
-- **Delete account:** in Profile, under "Privacidade".
+- **Delete account:** in Profile, under "Privacidade e dados", "Excluir conta" (Delete account).
 - The app interface is in Brazilian Portuguese.
 
 ### Short test script (about 5 minutes)
@@ -83,3 +83,5 @@ Please tell us what got stuck or felt confusing through TestFlight's "Send Feedb
 - Pessoas para responder às denúncias e aos pedidos do suporte. O texto não promete prazo.
 - No App Store Connect: a conta de demonstração nas Informações de acesso; a URL de suporte (`<origem>/suporte`) e a da política (`<origem>/privacidade`); o questionário de classificação etária com conteúdo gerado por usuários; a categoria. Não há evidência no repositório de que a categoria infantil foi escolhida.
 - Os itens de acesso pendentes em `docs/QA-TESTFLIGHT-ACESSO.md` (Apple, Google, cadastro por e-mail e notificações da Apple).
+- **Entrar com a Apple (regra 4.8 da Apple):** o build oferece "Continuar com Google". Para a revisão, a Apple pede também uma opção de login com as mesmas garantias de privacidade, como "Entrar com a Apple". Em 20/11, `apple` estava em `false` no servidor publicado. Ligue o login com a Apple antes de enviar para a revisão, ou decida com o dono antes do envio.
+- **Verificado em 20/11, depois da troca:** `/privacidade` e `/suporte` respondem 200 no servidor publicado.
