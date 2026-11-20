@@ -3,7 +3,6 @@ import {
   AccessibilityInfo,
   Animated,
   Easing,
-  Modal,
   Pressable,
   StyleSheet,
   Text,
@@ -12,8 +11,8 @@ import {
   type DimensionValue,
   type StyleProp,
   type ViewStyle,
+  Platform,
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAparecer, useVaiVem } from './animacoes';
 import { Confete } from './festa';
 import { Icone } from './icone';
@@ -27,6 +26,7 @@ import { focoVisivel } from './foco';
 import { Stu } from './mascote';
 import type { NomeStu } from '@studoo/contratos';
 import { RITMO_DA_GERACAO, atrasosDaLicao } from './geracao-ritmo';
+import { ouvirVoltar } from './voltar';
 
 /*
  * Caminho da trilha no app: a mesma lógica e o mesmo mundo da web (src/ui/caminho.tsx), com componentes nativos.
@@ -348,6 +348,19 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     }, 350);
   }
 
+  /** O balão do nó aberto mediu a altura: a tela rola até o balão e o nó caberem na área livre (spec 01, e198866). */
+  const balaoEnquadrado = useRef<string | null>(null);
+  useEffect(() => { if (!aberto) balaoEnquadrado.current = null; }, [aberto]);
+  function enquadrarBalao(id: string, altura: number) {
+    if (balaoEnquadrado.current === id || !aoRolar) return;
+    const { caminho, lista, linhas } = posicoes.current;
+    const linha = linhas.get(id);
+    if (caminho === null || lista === null || !linha) return;
+    balaoEnquadrado.current = id;
+    const topo = deslocamento + caminho + lista + linha.y;
+    aoRolar(topo - altura - BALAO_FOLGA, topo + medidas.lente, true, undefined, coberto);
+  }
+
   function fechar(devolverFoco = true) {
     const id = aberto;
     setAberto(null);
@@ -446,7 +459,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
 
           // O espaço até o próximo nó fica dentro da linha (padding), para o chão da região não ter falhas e o marco anunciado caber nela.
           return (
-            <Linha key={no.id} espaco={espaco} chao={coresDaRegiao(no.trecho).chao}
+            <Linha key={no.id} espaco={espaco} chao={coresDaRegiao(no.trecho).chao} elevada={aberto === no.id}
               aoMedir={(caixa) => {
                 posicoes.current.linhas.set(no.id, caixa);
                 if (montando && indice === total - 1) setAlvoStu((anterior) => anterior?.x === x && anterior.topo === caixa.y ? anterior : { x, topo: caixa.y });
@@ -473,6 +486,12 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                   atrasoNome={novo ? atrasos.nome : undefined} rascunho={rascunho && no.estado === 'previa' && !firmar}
                   respira={indice === 0 && criacao === 'criando'} virouAtual={indice === 0 && firmar} />
               </Entra>
+              {aberto === no.id && (
+                <BalaoDoNo titulo={no.titulo} texto={explicar(nos, indice)} estado={no.estado} x={x} largura={largura} reduzir={reduzir}
+                  refazer={no.estado === 'concluida' && aoAbrir ? () => { fechar(false); aoAbrir(no); } : undefined}
+                  irParaAtual={no.estado === 'bloqueada' && nos.some((outro) => outro.estado === 'atual') ? irParaAtual : undefined}
+                  fechar={() => fechar()} aoMedir={(altura) => enquadrarBalao(no.id, altura)} />
+              )}
               {montando && <Nascimento x={x} largura={largura} lente={medidas.lente} atraso={atrasos.no} animar={novo} reduzir={reduzir} />}
               {indice === 0 && criacao !== null && <StuDoNo1 x={x} largura={largura} lente={medidas.lente} tamanho={medidas.guia} criacao={criacao} reduzir={reduzir} />}
               {fimDoTrecho && (
@@ -507,16 +526,6 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           posicoes.current.chegada = caixa;
           tentarAcompanhar();
         }} />
-      )}
-      {indiceAberto >= 0 && (
-        <Folha titulo={nos[indiceAberto].titulo} texto={explicar(nos, indiceAberto)} reduzir={reduzir} estado={nos[indiceAberto].estado}
-          refazer={nos[indiceAberto].estado === 'concluida' && aoAbrir ? () => {
-            const no = nos[indiceAberto];
-            fechar(false);
-            aoAbrir(no);
-          } : undefined}
-          irParaAtual={nos[indiceAberto].estado === 'bloqueada' && nos.some((no) => no.estado === 'atual') ? irParaAtual : undefined}
-          fechar={() => fechar()} />
       )}
     </View>
   );
@@ -597,6 +606,8 @@ const INICIO_COM_BALAO = 242;
 const PARTE_COM_BALAO = 152;
 /** O balão do nó atual ("Começar" e o título em até duas linhas) começa até 22 + 96 acima da lente: o topo do conjunto. */
 const BALAO_DO_ATUAL = 22 + 96;
+/** O balão do nó concluído ou bloqueado fica 14 acima da lente (a seta aponta para o nó). */
+const BALAO_FOLGA = 14;
 
 /** Placa de madeira com a frase do Stu: entra balançando, presa em dois postes fincados nas colinas. */
 function Placa({ texto }: { texto: string }) {
@@ -637,15 +648,17 @@ function Dica({ texto }: { texto: string }) {
 }
 
 /** Linha do caminho: a faixa da região, da altura do nó até o próximo, com o nó, a ligação, a fronteira e o marco. */
-function Linha({ espaco, chao, aoMedir, children }: {
+function Linha({ espaco, chao, aoMedir, children, elevada = false }: {
   espaco: number;
   chao: string;
+  /** A linha do nó com o balão aberto fica por cima das vizinhas (o balão sobe sobre a linha de cima). */
+  elevada?: boolean;
   aoMedir: (caixa: Caixa) => void;
   children: ReactNode;
 }) {
   // Item da lista "Lições da trilha": sem o papel, o leitor de tela via botões soltos dentro da lista (axe: aria-required-children).
   return (
-    <View role="listitem" style={{ paddingBottom: espaco, backgroundColor: chao }}
+    <View role="listitem" style={{ paddingBottom: espaco, backgroundColor: chao, ...(elevada ? { zIndex: 20 } : null) }}
       onLayout={(evento) => aoMedir({ y: evento.nativeEvent.layout.y, altura: evento.nativeEvent.layout.height })}>
       {children}
     </View>
@@ -1683,53 +1696,65 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
 }
 
 /** Explicação do nó concluído ou bloqueado, numa folha que sobe do rodapé, com área segura. */
-function Folha({ titulo, texto, reduzir, estado, refazer, irParaAtual, fechar }: {
-  /** Nó bloqueado: leva até a lição atual. */
-  irParaAtual?: () => void;
+/**
+ * O balão de uma lição concluída ou bloqueada, no mapa (spec 01, c7059a8: um componente só, como a web): título e
+ * "fechar" de 44, o texto do estado (explicar()), "Refazer" na concluída e "Mostrar a lição atual no mapa" na bloqueada.
+ * Fica 14 acima da lente, com a seta para o nó, e mede a altura para a tela enquadrar o conjunto (e198866). Fecha pelo X,
+ * pelo voltar do Android e ao tocar em outro nó; o foco vai ao título ao abrir e volta ao nó ao fechar.
+ */
+function BalaoDoNo({ titulo, texto, estado, x, largura, reduzir, refazer, irParaAtual, fechar, aoMedir }: {
   titulo: string;
   texto: string;
-  reduzir: boolean | null;
   estado: EstadoNo;
+  /** Posição do nó, em % da largura do caminho. */
+  x: number;
+  largura: number;
+  reduzir: boolean | null;
   refazer?: () => void;
+  /** Nó bloqueado: leva até a lição atual. */
+  irParaAtual?: () => void;
   fechar: () => void;
+  aoMedir: (altura: number) => void;
 }) {
-  const margens = useSafeAreaInsets();
   const cabecalho = useRef<ComponentRef<typeof Text>>(null);
   const [focado, setFocado] = useState(false);
-  const subida = useAparecer(0, 320, true);
+  const [altura, setAltura] = useState(0);
+  const entrada = useAparecer(0, reduzir === false ? 200 : 0);
   const concluida = estado === 'concluida';
-
+  const largo = Math.min(320, Math.max(0, largura - 32));
+  const centro = (largura * x) / 100;
+  const esquerda = Math.min(Math.max(16, centro - largo / 2), Math.max(16, largura - largo - 16));
+  useEffect(() => {
+    const espera = setTimeout(() => { if (cabecalho.current) AccessibilityInfo.sendAccessibilityEvent(cabecalho.current, 'focus'); }, 120);
+    if (Platform.OS === 'web') return () => clearTimeout(espera);
+    const evento = ouvirVoltar(() => { fechar(); return true; });
+    return () => { clearTimeout(espera); evento.remove(); };
+    // Só ao abrir.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
-    <Modal visible transparent statusBarTranslucent navigationBarTranslucent animationType={reduzir === false ? 'fade' : 'none'}
-      onRequestClose={fechar} onShow={() => {
-        if (cabecalho.current) AccessibilityInfo.sendAccessibilityEvent(cabecalho.current, 'focus');
-      }}>
-      <View style={caminhoEstilos.fundoFolha}>
-        <Pressable accessible={false} importantForAccessibility="no" onPress={fechar} style={StyleSheet.absoluteFill} />
-        <Animated.View accessibilityViewIsModal style={[caminhoEstilos.folha, concluida && caminhoEstilos.folhaConcluida, {
-          paddingBottom: 20 + margens.bottom,
-          transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [60, 0] }) }],
-        }]}>
-          <View style={caminhoEstilos.folhaPuxador} />
-          <View style={caminhoEstilos.folhaTopo}>
-            <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-              style={[caminhoEstilos.folhaIcone, concluida && caminhoEstilos.folhaIconeConcluida]}>
-              <Icone nome={concluida ? 'check' : 'cadeado'} tamanho={20} cor={concluida ? cores.fundo : cores.tintaNeutra} />
-            </View>
-            <Text ref={cabecalho} accessible accessibilityRole="header"
-              style={[estilos.tituloBloco, caminhoEstilos.folhaTitulo, concluida && { color: cores.sucesso }]}>{titulo}</Text>
-            <Pressable accessibilityRole="button" accessibilityLabel={mensagens.trilha.fechar} onPress={fechar}
-              onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
-              style={({ pressed }) => [caminhoEstilos.fechar, pressed && caminhoEstilos.fecharPressionado, focado && estilos.foco]}>
-              <Icone nome="fechar" tamanho={20} cor={cores.textoSecundario} />
-            </Pressable>
-          </View>
-          <Text style={estilos.textoSecundario}>{texto}</Text>
-          {refazer && <View style={caminhoEstilos.folhaAcao}><Botao rotulo={mensagens.trilha.refazer} variante="secundario" acao={refazer} /></View>}
-          {irParaAtual && <View style={caminhoEstilos.folhaAcao}><Botao rotulo={mensagens.trilha.irParaAtual} icone="seta" variante="secundario" acao={irParaAtual} /></View>}
-        </Animated.View>
+    <Animated.View testID="balao-no" role="dialog" aria-label={titulo} accessibilityViewIsModal
+      onLayout={(evento) => { const h = evento.nativeEvent.layout.height; if (Math.abs(h - altura) > 1) { setAltura(h); aoMedir(h); } }}
+      style={[caminhoEstilos.balaoNo, concluida && caminhoEstilos.balaoNoConcluido, { left: esquerda, width: largo, top: -(altura + BALAO_FOLGA),
+        opacity: altura > 0 ? entrada : 0, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
+      <View style={[caminhoEstilos.balaoNoSeta, concluida && caminhoEstilos.balaoNoConcluido, { left: Math.min(Math.max(16, centro - esquerda - 7), largo - 30) }]} />
+      <View style={caminhoEstilos.folhaTopo}>
+        <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+          style={[caminhoEstilos.folhaIcone, concluida && caminhoEstilos.folhaIconeConcluida]}>
+          <Icone nome={concluida ? 'check' : 'cadeado'} tamanho={20} cor={concluida ? cores.fundo : cores.tintaNeutra} />
+        </View>
+        <Text ref={cabecalho} accessible accessibilityRole="header"
+          style={[estilos.tituloBloco, caminhoEstilos.folhaTitulo, concluida && { color: cores.sucesso }]}>{titulo}</Text>
+        <Pressable testID="balao-no-fechar" accessibilityRole="button" accessibilityLabel={mensagens.trilha.fechar} onPress={fechar}
+          onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
+          style={({ pressed }) => [caminhoEstilos.fechar, pressed && caminhoEstilos.fecharPressionado, focado && estilos.foco]}>
+          <Icone nome="fechar" tamanho={20} cor={cores.textoSecundario} />
+        </Pressable>
       </View>
-    </Modal>
+      <Text style={estilos.textoSecundario}>{texto}</Text>
+      {refazer && <View style={caminhoEstilos.folhaAcao}><Botao testID="balao-no-refazer" rotulo={mensagens.trilha.refazer} variante="secundario" acao={refazer} /></View>}
+      {irParaAtual && <View style={caminhoEstilos.folhaAcao}><Botao testID="balao-no-ir-atual" rotulo={mensagens.trilha.irParaAtual} icone="seta" variante="secundario" acao={irParaAtual} /></View>}
+    </Animated.View>
   );
 }
 
@@ -1879,6 +1904,12 @@ const caminhoEstilos = StyleSheet.create({
   folhaConcluida: { borderTopWidth: 6, borderColor: '#FFE08A' },
   folhaPuxador: { alignSelf: 'center', width: 40, height: 5, marginLeft: 8, borderRadius: 3, backgroundColor: cores.gelo },
   folhaTopo: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  // O balão da lição concluída ou bloqueada (spec 01, c7059a8): o mesmo desenho do balão do nó atual, mais largo, com a seta.
+  balaoNo: { position: 'absolute', zIndex: 30, gap: 10, paddingTop: 12, paddingBottom: 14, paddingLeft: 16, paddingRight: 8, borderRadius: 18,
+    borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: `0 4px 0 ${cores.gelo}` },
+  balaoNoConcluido: { borderColor: '#BFE5CF' },
+  balaoNoSeta: { position: 'absolute', bottom: -8, width: 14, height: 14, borderRadius: 2, borderRightWidth: 2, borderBottomWidth: 2,
+    borderColor: cores.gelo, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
   folhaIcone: { width: 36, height: 36, marginTop: 4, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.faceNeutra },
   folhaIconeConcluida: { backgroundColor: ouroFace },
   folhaTitulo: { flex: 1, paddingTop: 9 },
