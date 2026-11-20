@@ -161,7 +161,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
       <h1 tabIndex={-1}>{geracao.titulo || geracao.objetivo}</h1>
     </header>
     <div className="previa-palco">
-      <p className="previa-placa" role="status">{placa}</p>
+      <p className="previa-placa" role="status">{placa}{proposta && <span className="somente-leitor"> {t.comecarLicao1}.</span>}</p>
       {!proposta && <span className="somente-leitor" role="status">{licaoAnunciada}</span>}
       <div className="previa-mapa" ref={mapa} style={coresDaRegiao(nos.at(-1)?.trecho ?? 0)} onScroll={ev => {
         const area = ev.currentTarget;
