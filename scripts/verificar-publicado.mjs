@@ -128,6 +128,19 @@ export async function verificar({
     etapa("login", login.status, login.ok && Boolean(cookie), login.motivo);
     if (!login.ok || !cookie) return { falhou, linhas };
 
+    const privacidade = await pedir("/api/privacidade");
+    const consentimento = privacidade.dados?.consentimentoIa;
+    if (!privacidade.ok || typeof consentimento?.necessario !== "boolean" || typeof consentimento.versao !== "string" || !consentimento.versao) {
+      etapa("privacidade", privacidade.status, false, privacidade.motivo ?? "estado do consentimento indisponível");
+      return { falhou, linhas };
+    }
+    if (consentimento.necessario && !consentimento.aceitoEm) {
+      const aceite = await pedir("/api/privacidade/consentimento-ia", "POST", { versao: consentimento.versao });
+      const vigente = aceite.dados?.consentimentoIa;
+      const aceito = aceite.ok && vigente?.versao === consentimento.versao && Boolean(vigente.aceitoEm);
+      etapa("consentimento_ia", aceite.status, aceito, aceite.motivo);
+      if (!aceito) return { falhou, linhas };
+    }
     planosAntes = await listarPlanos();
 
     const proposta = await pedir("/api/aprendizado/propostas", "POST", { objetivo: "Verificacao automatica Studoo" });
