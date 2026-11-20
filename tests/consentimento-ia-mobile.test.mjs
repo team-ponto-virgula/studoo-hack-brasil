@@ -211,21 +211,34 @@ test('exclusão: só com a palavra digitada, e os textos dizem o que some e quem
   assert.equal(privacidade.confirmacaoExclusaoValida(' excluir '), true);
   assert.equal(privacidade.confirmacaoExclusaoValida('EXCLUI'), false);
   const tela = await ler('apps/mobile/src/privacidade.tsx');
-  assert.match(tela, /confirmarDesativado=\{!confirmacaoExclusaoValida\(digitado\)\}/);
+  assert.match(tela, /const valido = confirmacaoExclusaoValida\(digitado\)/);
+  assert.match(tela, /confirmarDesativado=\{!valido\}/);
   assert.match(tela, /testID="excluir-conta-campo"/);
+  assert.match(tela, /visitante \? t\.excluirVisitante : t\.excluirTexto/, 'visitante lê o texto dele, como na web');
   const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
-  assert.equal(mensagens.privacidade.excluirDigite(CONFIRMACAO_EXCLUSAO), 'Para confirmar, digite EXCLUIR');
-  assert.equal(mensagens.privacidade.pedidoItensTitulo('DeepSeek'), 'O que vai para a DeepSeek');
+  assert.equal(mensagens.privacidade.excluirDigite, 'Para confirmar, digite EXCLUIR');
+  assert.equal(mensagens.privacidade.politicaDe('DeepSeek'), 'Política de privacidade da DeepSeek');
+  // Os mesmos textos da web (src/app/privacidade-perfil.tsx e aceite-ia.tsx).
+  assert.match(await ler('apps/mobile/src/perfil.tsx'), /mensagens\.privacidade\.secaoTitulo/);
+  for (const chave of ['iaSimulada', 'iaPermitida', 'iaNaoPermitida', 'verQuem', 'revogar', 'permitirAgora', 'politica', 'excluir']) {
+    assert.match(tela, new RegExp(`t\\.${chave}\\b`), `Perfil usa privacidade.${chave}`);
+  }
+  const cartao = await ler('apps/mobile/src/consentimento-ia.tsx');
+  for (const chave of ['aceiteTitulo', 'aceiteTexto', 'aceiteQuem', 'aceiteSemIa', 'permitir', 'agoraNao', 'politicaDe']) {
+    assert.match(cartao, new RegExp(`k\\.${chave}\\b`), `cartão usa privacidade.${chave}`);
+  }
 });
 
-test('telas: Privacidade entre Som e Conta, Excluir conta depois de Sair e o app inteiro dentro da trava', async () => {
+test('telas: Privacidade e dados entre Som e Conta (com Excluir conta no fim, como na web) e o app inteiro dentro da trava', async () => {
   const perfil = await ler('apps/mobile/src/perfil.tsx');
   const som = perfil.indexOf('<SomNoPerfil />');
   const privacidade = perfil.indexOf('<SecaoPrivacidade');
   const conta = perfil.indexOf('{p.conta}');
   const sair = perfil.indexOf('testID="sair"');
-  const excluir = perfil.indexOf('<ExcluirConta');
-  assert.ok(som > 0 && som < privacidade && privacidade < conta && conta < sair && sair < excluir, 'ordem: Som, Privacidade, Conta (Sair, Excluir conta)');
+  assert.ok(som > 0 && som < privacidade && privacidade < conta && conta < sair, 'ordem: Som, Privacidade e dados, Conta (Sair)');
+  assert.match(perfil, /<SecaoPrivacidade desativado=\{desativado\} visitante=\{perfil\.visitante\} \/>/);
+  const tela = await ler('apps/mobile/src/privacidade.tsx');
+  assert.ok(tela.indexOf('testID="privacidade-politica"') < tela.indexOf('testID="excluir-conta"'), 'Excluir conta depois da política, no fim da seção');
 
   const sessao = await ler('apps/mobile/src/sessao.tsx');
   assert.match(sessao, /<ConsentimentoIa cliente=\{sessao\.cliente\} aoExcluida=\{aoExcluida\}>\s*\{\(cliente\) => <Estudo cliente=\{cliente\}/);

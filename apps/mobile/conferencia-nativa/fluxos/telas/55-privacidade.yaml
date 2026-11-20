@@ -1,5 +1,5 @@
 # Perfil, Privacidade (Apple 5.1.2(i)) e Excluir conta (5.1.1(v)) na conta sintética. Com IA=falsa no piloto nada sai do
-# servidor: a seção mostra a frase do modo demonstração e a política, sem a chave. A exclusão abre o cartão destrutivo
+# servidor: a seção mostra a frase da IA simulada, a política e "Excluir conta" (como na web). A exclusão abre o cartão destrutivo
 # (antes: a ação desligada) e liga depois de digitar EXCLUIR (depois). O fluxo cancela: a conta sintética serve aos
 # outros fluxos e não pode ser apagada.
 appId: host.exp.Exponent

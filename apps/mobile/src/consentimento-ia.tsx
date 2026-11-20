@@ -1,5 +1,5 @@
 import { ErroStudoo } from '@studoo/contratos';
-import { CAMINHO_POLITICA, consentimentoVigente, privacidadeDoErro, type EstadoPrivacidade, type ProvedorTerceiro } from '@studoo/contratos/privacidade';
+import { CAMINHO_POLITICA, consentimentoVigente, privacidadeDoErro, type EstadoPrivacidade } from '@studoo/contratos/privacidade';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import { origemConfigurada, type ClienteNativo } from './api-nativa';
@@ -169,37 +169,47 @@ export function ConsentimentoIa({ cliente, aoExcluida, children }: {
     <Contexto.Provider value={valor}>
       {children(clienteSeguro)}
       {pedindo && (
-        <CartaoConfirmacao testID="consentimento-ia" mensagem={k.pedidoTitulo} texto={k.pedidoTexto}
-          confirmarRotulo={k.pedidoAceitar} cancelarRotulo={k.pedidoRecusar} ocupado={ocupado} erro={erro}
+        <CartaoConfirmacao testID="consentimento-ia" mensagem={k.aceiteTitulo} texto={k.aceiteTexto}
+          confirmarRotulo={ocupado ? k.permitindo : k.permitir} cancelarRotulo={k.agoraNao} ocupado={ocupado} erro={erro}
           aoConfirmar={() => void aoPermitir()} aoCancelar={() => encerrarPedidos(false)}
-          extra={<ItensDoPedido provedores={estado?.consentimentoIa.provedores ?? []} politica={politicaUrl} />} />
+          extra={<ItensDoPedido estado={estado} politica={politicaUrl} />} />
       )}
     </Contexto.Provider>
   );
 }
 
-/** Quem recebe o quê (a lista de cada provedor, com a política dele), a frase de que nada sai sem permissão e a política do Studoo. */
-function ItensDoPedido({ provedores, politica }: { provedores: ProvedorTerceiro[]; politica: string | null }) {
-  // Com DeepSeek e OpenAI a lista passa da tela de 360 × 800: rola dentro do cartão, com as ações sempre à vista.
-  const { height } = useWindowDimensions();
+/** Quem recebe o quê, com o link da política de cada provedor e a do Studoo (.privacidade-provedores da web). Usado no cartão e no Perfil. */
+export function ListaProvedores({ estado, politica }: { estado: EstadoPrivacidade; politica: string | null }) {
   return (
-    <ScrollView testID="consentimento-itens" style={{ maxHeight: Math.round(height * 0.42), flexGrow: 0 }} contentContainerStyle={c.itens}>
-      {provedores.map((provedor) => (
+    <View testID="privacidade-provedores" style={c.lista}>
+      {estado.consentimentoIa.provedores.map((provedor) => (
         <View key={provedor.id} testID={`consentimento-${provedor.id}`} style={c.provedor}>
-          <Text accessibilityRole="header" style={c.itensTitulo}>{k.pedidoItensTitulo(provedor.nome)}</Text>
+          <Text style={c.nome}>{provedor.nome}</Text>
           {provedor.usos.map((uso) => (
             <View key={uso} style={c.item}>
               <Text style={c.marca} importantForAccessibility="no" accessibilityElementsHidden>•</Text>
               <Text style={c.itemTexto}>{uso}</Text>
             </View>
           ))}
-          <Text accessibilityRole="link" onPress={() => abrirNoNavegador(provedor.politica)} style={c.link}>{k.politicaProvedor(provedor.nome)}</Text>
+          <Text accessibilityRole="link" onPress={() => abrirNoNavegador(provedor.politica)} style={c.link}>{k.politicaDe(provedor.nome)}</Text>
         </View>
       ))}
-      <Text style={c.nunca}>{k.pedidoNunca}</Text>
       {politica && (
         <Text testID="consentimento-politica" accessibilityRole="link" onPress={() => abrirNoNavegador(politica)} style={c.link}>{k.politica}</Text>
       )}
+    </View>
+  );
+}
+
+/** O miolo do cartão de aceite, como a folha da web: "Quem recebe e o quê", a lista e o que segue sem permitir. */
+function ItensDoPedido({ estado, politica }: { estado: EstadoPrivacidade | null; politica: string | null }) {
+  // Com DeepSeek e OpenAI a lista passa da tela de 360 × 800: rola dentro do cartão, com as ações sempre à vista.
+  const { height } = useWindowDimensions();
+  return (
+    <ScrollView testID="consentimento-itens" style={{ maxHeight: Math.round(height * 0.42), flexGrow: 0 }} contentContainerStyle={c.itens}>
+      <Text accessibilityRole="header" style={c.subtitulo}>{k.aceiteQuem}</Text>
+      {estado && <ListaProvedores estado={estado} politica={politica} />}
+      <Text style={c.semIa}>{k.aceiteSemIa}</Text>
     </ScrollView>
   );
 }
@@ -247,13 +257,16 @@ export function comConsentimento(cliente: ClienteNativo, garantir: () => Promise
 }
 
 const c = StyleSheet.create({
-  itens: { gap: 12 },
-  provedor: { gap: 4 },
-  itensTitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
-  item: { flexDirection: 'row', gap: 8, paddingLeft: 2 },
-  marca: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
-  itemTexto: { flex: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 24 },
-  nunca: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 24 },
-  link: { alignSelf: 'flex-start', color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textDecorationLine: 'underline',
+  itens: { gap: 10 },
+  subtitulo: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
+  lista: { gap: 12 },
+  // Cada provedor num quadro de borda gelo (.privacidade-provedores > ul > li da web).
+  provedor: { gap: 6, paddingVertical: 12, paddingHorizontal: 14, borderWidth: 2, borderColor: cores.gelo, borderRadius: 16 },
+  nome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
+  item: { flexDirection: 'row', gap: 8, paddingLeft: 4 },
+  marca: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 23 },
+  itemTexto: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 23 },
+  semIa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 14, lineHeight: 21 },
+  link: { alignSelf: 'flex-start', color: cores.acaoEscura, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24, textDecorationLine: 'underline',
     paddingVertical: 10 },
 });

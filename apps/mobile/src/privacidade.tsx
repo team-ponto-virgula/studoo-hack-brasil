@@ -1,40 +1,38 @@
 import { CONFIRMACAO_EXCLUSAO, confirmacaoExclusaoValida } from '@studoo/contratos/privacidade';
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { useConsentimentoIa } from './consentimento-ia';
-import { AvisoDoApp, Botao, Campo, CartaoConfirmacao, estilos } from './interface';
-import { mensagemDeErro, mensagens } from './mensagens';
-import { Chave, abrirNoNavegador, dataCurta } from './social';
+import { ListaProvedores, useConsentimentoIa } from './consentimento-ia';
+import { Botao, Campo, CartaoConfirmacao, estilos } from './interface';
+import { mensagemDeErro, mensagemDoCodigo, mensagens } from './mensagens';
+import { abrirNoNavegador, dataCurta } from './social';
 import { cores, fontes } from './tema';
 
 /*
- * Perfil, Privacidade (Apple 5.1.2(i)): a chave "Permitir uso de IA" com a data do aceite, o que muda ao desligar (pede
- * confirmação) e o link da política. Com a IA simulada no servidor não há o que permitir: só a frase e a política. A
- * exclusão da conta (Apple 5.1.1(v)) fica em Conta, depois de Sair, com o cartão destrutivo do Studoo e o campo para
- * digitar EXCLUIR; excluída, o app volta para a entrada com o aviso. Valem para conta e para visitante.
+ * "Privacidade e dados" no Perfil, igual à web (src/app/privacidade-perfil.tsx, `mensagens.privacidade`): o estado do
+ * uso de IA, "Ver quem recebe" (a lista de cada provedor com a política dele), "Parar de usar a IA" ou "Permitir o uso de
+ * IA", a política do Studoo e, por último, "Excluir conta" (Apple 5.1.1(v)), que abre o cartão destrutivo do Studoo com o
+ * campo para digitar EXCLUIR. Com a IA simulada no servidor, só a frase, a política e a exclusão. Vale para conta e
+ * visitante (o visitante lê o texto dele na exclusão).
  */
 
-const k = mensagens.privacidade;
+const t = mensagens.privacidade;
 
-export function SecaoPrivacidade({ desativado }: { desativado: boolean }) {
+export function SecaoPrivacidade({ desativado, visitante }: { desativado: boolean; visitante: boolean }) {
   const { estado, permitido, permitir, revogar, politicaUrl } = useConsentimentoIa();
-  const { avisar } = useContext(AvisoDoApp);
+  const [verQuem, setVerQuem] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
   const [ocupado, setOcupado] = useState(false);
-  const [confirmando, setConfirmando] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
-  const semTerceiros = estado !== null && !estado.consentimentoIa.necessario;
-  const aceitoEm = estado?.consentimentoIa.aceitoEm ?? null;
+  const [aviso, setAviso] = useState('');
+  const ia = estado?.consentimentoIa;
 
-  async function mudar(ligar: boolean, fazer: () => Promise<void>) {
+  async function mudarAceite(ligar: boolean) {
     setOcupado(true);
-    setErro(null);
+    setAviso('');
     try {
-      await fazer();
-      setConfirmando(false);
-      // O aviso do app também é anunciado ao leitor de tela.
-      avisar(ligar ? k.permitido : k.revogado, { icone: 'check' });
+      await (ligar ? permitir() : revogar());
+      setAviso(ligar ? t.permitido : t.revogado);
     } catch (falha) {
-      setErro(mensagemDeErro(falha));
+      setAviso(mensagemDeErro(falha));
     } finally {
       setOcupado(false);
     }
@@ -42,44 +40,42 @@ export function SecaoPrivacidade({ desativado }: { desativado: boolean }) {
 
   return (
     <View testID="privacidade" style={p.bloco}>
-      {semTerceiros ? (
-        <Text testID="privacidade-estado" style={estilos.texto}>{k.semTerceiros}</Text>
-      ) : (
-        <>
-          <Chave rotulo={k.chave} ligada={permitido} desativada={desativado || ocupado || !estado}
-            aoMudar={(ligar) => { if (ligar) void mudar(true, permitir); else setConfirmando(true); }} />
-          {estado && (
-            <Text testID="privacidade-estado" style={estilos.texto}>
-              {permitido && aceitoEm ? k.ligada(dataCurta(aceitoEm)) : k.desligada}
-            </Text>
-          )}
-        </>
+      {ia && (
+        <Text testID="privacidade-estado" style={estilos.texto}>
+          {!ia.necessario ? t.iaSimulada : permitido && ia.aceitoEm ? t.iaPermitida(dataCurta(ia.aceitoEm)) : t.iaNaoPermitida}
+        </Text>
       )}
-      {erro && !confirmando && <Text accessibilityRole="alert" style={p.erro}>{erro}</Text>}
-      {politicaUrl && (
-        <Text testID="privacidade-politica" accessibilityRole="link" onPress={() => abrirNoNavegador(politicaUrl)} style={p.link}>{k.politica}</Text>
-      )}
-      {confirmando && (
-        <CartaoConfirmacao testID="privacidade-revogar" mensagem={k.revogarTitulo} texto={k.revogarTexto} confirmarRotulo={k.revogarConfirmar}
-          cancelarRotulo={k.revogarCancelar} destrutivo ocupado={ocupado} erro={erro}
-          aoConfirmar={() => void mudar(false, revogar)} aoCancelar={() => { setConfirmando(false); setErro(null); }} />
-      )}
+      {estado && ia?.necessario && verQuem && <ListaProvedores estado={estado} politica={politicaUrl} />}
+      <View style={p.acoes}>
+        {ia?.necessario && (
+          <Botao rotulo={t.verQuem} testID="privacidade-ver-quem" variante="secundario" desativado={desativado}
+            acao={() => setVerQuem((v) => !v)} estilo={p.acao} />
+        )}
+        {ia?.necessario && (permitido
+          ? <Botao rotulo={t.revogar} testID="privacidade-revogar" variante="secundario" desativado={desativado || ocupado} acao={() => void mudarAceite(false)} estilo={p.acao} />
+          : <Botao rotulo={t.permitirAgora} testID="privacidade-permitir" variante="secundario" desativado={desativado || ocupado} acao={() => void mudarAceite(true)} estilo={p.acao} />)}
+        {politicaUrl && (
+          <Botao rotulo={t.politica} testID="privacidade-politica" variante="secundario" desativado={desativado} acao={() => abrirNoNavegador(politicaUrl)} estilo={p.acao} />
+        )}
+      </View>
+      {/* O aviso de "Pronto" ou o erro, anunciado ao leitor de tela (role="status" na web). */}
+      {aviso ? <Text testID="privacidade-aviso" accessibilityLiveRegion="polite" style={estilos.texto}>{aviso}</Text> : null}
+      <Botao rotulo={t.excluir} testID="excluir-conta" variante="destrutivo" desativado={desativado} acao={() => setExcluindo(true)} estilo={p.excluir} />
+      {excluindo && <ConfirmarExclusao visitante={visitante} aoCancelar={() => setExcluindo(false)} />}
     </View>
   );
 }
 
-/**
- * "Excluir conta" (em Conta, depois de Sair): o cartão destrutivo com o campo "digite EXCLUIR"; a ação só liga com a
- * palavra certa. Com erro, o cartão continua aberto com a mensagem.
- */
-export function ExcluirConta({ desativado }: { desativado: boolean }) {
+/** O cartão destrutivo (sem janela nativa): o texto de conta ou de visitante e o campo "digite EXCLUIR"; a ação só liga com a palavra certa. */
+function ConfirmarExclusao({ visitante, aoCancelar }: { visitante: boolean; aoCancelar: () => void }) {
   const { excluirConta } = useConsentimentoIa();
-  const [confirmando, setConfirmando] = useState(false);
   const [digitado, setDigitado] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const valido = confirmacaoExclusaoValida(digitado);
 
   async function excluir() {
+    if (!valido) { setErro(mensagemDoCodigo('confirmacao_invalida')); return; }
     setOcupado(true);
     setErro(null);
     try {
@@ -91,29 +87,22 @@ export function ExcluirConta({ desativado }: { desativado: boolean }) {
   }
 
   return (
-    <View style={p.excluir}>
-      <Botao rotulo={k.excluir} testID="excluir-conta" variante="perigo" desativado={desativado}
-        acao={() => { setErro(null); setDigitado(''); setConfirmando(true); }} estilo={{ alignSelf: 'flex-start' }} />
-      <Text style={p.dica}>{k.excluirDica}</Text>
-      {confirmando && (
-        <CartaoConfirmacao testID="excluir-conta-confirmacao" mensagem={k.excluirTitulo} texto={k.excluirTexto} confirmarRotulo={k.excluirConfirmar}
-          cancelarRotulo={k.excluirCancelar} destrutivo ocupado={ocupado} erro={erro} confirmarDesativado={!confirmacaoExclusaoValida(digitado)}
-          aoConfirmar={() => { if (confirmacaoExclusaoValida(digitado)) void excluir(); }} aoCancelar={() => setConfirmando(false)}
-          extra={
-            <Campo testID="excluir-conta-campo" rotulo={k.excluirDigite(CONFIRMACAO_EXCLUSAO)} value={digitado} onChangeText={setDigitado}
-              autoCapitalize="characters" autoCorrect={false} autoComplete="off" spellCheck={false} editable={!ocupado}
-              returnKeyType="done" onSubmitEditing={() => { if (confirmacaoExclusaoValida(digitado)) void excluir(); }} />
-          } />
-      )}
-    </View>
+    <CartaoConfirmacao testID="excluir-conta-confirmacao" mensagem={t.excluirTitulo} texto={visitante ? t.excluirVisitante : t.excluirTexto}
+      confirmarRotulo={ocupado ? t.excluindo : t.excluirConfirmar} cancelarRotulo={t.excluirCancelar} destrutivo ocupado={ocupado} erro={erro}
+      confirmarDesativado={!valido} aoConfirmar={() => void excluir()} aoCancelar={aoCancelar}
+      extra={
+        <Campo testID="excluir-conta-campo" rotulo={t.excluirDigite} placeholder={CONFIRMACAO_EXCLUSAO} value={digitado}
+          onChangeText={(valor) => { setDigitado(valor); setErro(null); }}
+          autoCapitalize="characters" autoCorrect={false} autoComplete="off" spellCheck={false} editable={!ocupado}
+          returnKeyType="done" onSubmitEditing={() => void excluir()} />
+      } />
   );
 }
 
 const p = StyleSheet.create({
-  bloco: { gap: 10 },
+  bloco: { gap: 12 },
+  acoes: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  acao: { alignSelf: 'flex-start' },
+  excluir: { alignSelf: 'flex-start', marginTop: 4 },
   erro: { color: cores.erro, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },
-  link: { alignSelf: 'flex-start', color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24, textDecorationLine: 'underline',
-    paddingVertical: 10 },
-  excluir: { gap: 6, marginTop: 8 },
-  dica: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21 },
 });

@@ -14,7 +14,7 @@ import {
   Avatar, BotaoParar, CabecalhoPerfil, Chave, Contador, CoresDoPerfil, Esqueleto, Ficha, FolhaCompartilhar, SeloVisibilidade, Status, abrirNoNavegador,
   codigoDoErro, compartilharNoSistema, copiar, dataCurta, focarSemRolar, socialEstilos, temFolhaDoSistema, textoDoErro, urlDoLink, urlDoPerfil,
 } from './social';
-import { ExcluirConta, SecaoPrivacidade } from './privacidade';
+import { SecaoPrivacidade } from './privacidade';
 import { SomNoPerfil } from './som';
 import { cores, fontes } from './tema';
 
@@ -286,10 +286,10 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
               <SomNoPerfil />
             </View>
 
-            {/* Privacidade, entre Som e Conta: a permissão do uso de IA e a política (Apple 5.1.2(i)). */}
+            {/* Privacidade e dados, entre Som e Conta, como na web: o uso de IA, a política e "Excluir conta" (Apple 5.1.2(i) e 5.1.1(v)). */}
             <View style={perfilEstilos.secao}>
-              <TituloSecao>{mensagens.privacidade.titulo}</TituloSecao>
-              <SecaoPrivacidade desativado={desativado} />
+              <TituloSecao>{mensagens.privacidade.secaoTitulo}</TituloSecao>
+              <SecaoPrivacidade desativado={desativado} visitante={perfil.visitante} />
             </View>
 
             <View style={perfilEstilos.secao}>
@@ -304,8 +304,6 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                 </View>
               )}
               <Botao rotulo={mensagens.sair} testID="sair" variante="secundario" desativado={desativado} acao={sair} estilo={{ alignSelf: 'flex-start' }} />
-              {/* A exclusão permanente, dentro do app (Apple 5.1.1(v)), para conta e visitante. */}
-              <ExcluirConta desativado={desativado} />
             </View>
           </>
         )}
