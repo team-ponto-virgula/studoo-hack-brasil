@@ -247,7 +247,8 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                             : [link.adicoes > 0 && p.adicoes(link.adicoes), comunidade && link.valeus ? cm.valeus(link.valeus) : null].filter(Boolean).join(' · ')}
                         </Text>
                         <EstadoDaPublicacao moderacao={link.moderacao} testID={`perfil-link-${link.codigo}-moderacao`} />
-                        {comunidade && link.visibilidade ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} /> : (
+                        {/* Designer (20/11): em revisão ou não publicada, sem o chip do lugar (ele sugeriria que já está lá). */}
+                        {comunidade && link.visibilidade && (link.moderacao === 'pendente' || link.moderacao === 'recusado') ? null : comunidade && link.visibilidade ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} /> : (
                           <Chave rotulo={m.noPerfil} nomeAcessivel={`${m.noPerfil}: ${link.titulo}`} ligada={link.noPerfil} desativada={ocupado}
                             aoMudar={(valor) => void alterar(link, valor)} />
                         )}
