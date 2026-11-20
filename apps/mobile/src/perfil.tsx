@@ -247,8 +247,11 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                             : [link.adicoes > 0 && p.adicoes(link.adicoes), comunidade && link.valeus ? cm.valeus(link.valeus) : null].filter(Boolean).join(' · ')}
                         </Text>
                         <EstadoDaPublicacao moderacao={link.moderacao} testID={`perfil-link-${link.codigo}-moderacao`} />
-                        {/* Designer (20/11): em revisão ou não publicada, sem o chip do lugar (ele sugeriria que já está lá). */}
-                        {comunidade && link.visibilidade && (link.moderacao === 'pendente' || link.moderacao === 'recusado') ? null : comunidade && link.visibilidade ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} /> : (
+                        {/* "No Explorar" (verde) só para o que está aprovado e listado. Em revisão: o destino e o tema num chip neutro,
+                            "depois da aprovação"; não publicada: nenhum chip de lugar, ela continua só com a dona (Lead e Designer, 20/11). */}
+                        {comunidade && link.visibilidade && link.moderacao === 'recusado' ? null
+                          : comunidade && link.visibilidade && link.moderacao === 'pendente' ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} emRevisao />
+                          : comunidade && link.visibilidade ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} /> : (
                           <Chave rotulo={m.noPerfil} nomeAcessivel={`${m.noPerfil}: ${link.titulo}`} ligada={link.noPerfil} desativada={ocupado}
                             aoMudar={(valor) => void alterar(link, valor)} />
                         )}
