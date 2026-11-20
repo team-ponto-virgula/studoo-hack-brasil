@@ -36,6 +36,9 @@ model Usuario {
   denuncias        Denuncia[]
   /// Perfil de demonstração (spec 10, etapa C): criado pelo comando da comunidade, sem senha e sem login; selo público.
   perfilDemo       Boolean              @default(false)
+  /// Aceite do envio a IA de terceiros (App Review 5.1.2(i)): quando e qual versão do texto. Revogar zera os dois.
+  consentimentoIaEm     DateTime? @db.Timestamptz(3)
+  consentimentoIaVersao String?
   segue            Seguir[]             @relation("seguidor")
   seguidores       Seguir[]             @relation("seguido")
 }

@@ -43,7 +43,8 @@ const statusErros: Record<CodigoErro, number> = {
 };
 
 export class FalhaApi extends Error {
-  constructor(public readonly codigo: CodigoErro) {
+  /** `extra`: campos a mais no corpo do erro (o 428 `consentimento_ia` leva `privacidade`). */
+  constructor(public readonly codigo: CodigoErro, public readonly extra?: Record<string, unknown>) {
     super(codigo);
   }
 }
@@ -93,12 +94,13 @@ async function tratarRota(acao: () => Promise<Response>): Promise<Response> {
     return await acao();
   } catch (erro) {
     const codigo = erro instanceof FalhaApi ? erro.codigo : "falha";
+    const extra = erro instanceof FalhaApi ? erro.extra : undefined;
     const status = statusErros[codigo];
     const correlationId = crypto.randomUUID();
     if (status >= 500) {
       console.error(JSON.stringify({ correlationId, codigo, status, duracaoMs: Math.round(performance.now() - inicio) }));
     }
-    const resposta = responder({ codigo, mensagem: mensagensApi[codigo] }, status);
+    const resposta = responder({ ...extra, codigo, mensagem: mensagensApi[codigo] }, status);
     resposta.headers.set("X-Correlation-Id", correlationId);
     return resposta;
   }

@@ -8,6 +8,7 @@ import {
   validarSdpOferta,
   vozAoVivoAtiva,
 } from "@/servidor/ia/realtime";
+import { exigirConsentimentoIa } from "@/servidor/privacidade/consentimento";
 
 export async function POST(
   request: Request,
@@ -15,6 +16,7 @@ export async function POST(
 ) {
   return rotaPrivada(request, async (usuarioId) => {
     if (!vozAoVivoAtiva()) throw new FalhaApi("nao_encontrado");
+    await exigirConsentimentoIa(usuarioId);
 
     const corpo = await lerJson(request, 65_536) as { sdp?: unknown };
     const sdp = validarSdpOferta(corpo?.sdp);

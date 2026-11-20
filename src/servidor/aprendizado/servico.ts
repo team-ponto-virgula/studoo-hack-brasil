@@ -22,6 +22,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { banco } from "@/servidor/banco/cliente";
 import type { Prisma } from "@/servidor/banco/gerado/client";
 import { obterGerador } from "@/servidor/ia/gerador";
+import { podeUsarIa } from "@/servidor/privacidade/consentimento";
 import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
@@ -357,7 +358,10 @@ export async function avaliarLicao(usuarioId: string, id: string, resposta: stri
   if (!exercicio || !local) {
     throw new FalhaApi("invalido");
   }
-  const avaliacao = await refinarAvaliacao({ titulo: licao.titulo, conceito: licao.conteudo.conceito }, exercicio, resposta, local);
+  // Sem o aceite do envio a IA de terceiros, vale só a correção local (nada da resposta sai do servidor).
+  const avaliacao = await podeUsarIa(usuarioId)
+    ? await refinarAvaliacao({ titulo: licao.titulo, conceito: licao.conteudo.conceito }, exercicio, resposta, local)
+    : local;
 
   if (!avaliacao.correta) await banco.apoioLicao.upsert({
     where: { usuarioId_licaoId: { usuarioId, licaoId: id } },

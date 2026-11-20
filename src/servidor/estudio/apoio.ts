@@ -24,6 +24,7 @@ import {
   pedirJson,
   texto,
 } from './ia';
+import { podeUsarIa } from '../privacidade/consentimento';
 
 /**
  * O reforço guardado: `resposta` e `indice` são o erro de onde ele veio (um erro novo, ou o mesmo texto em outro
@@ -166,7 +167,8 @@ async function gerarPonte(
   await quota(usuarioId, 'ponte');
   let ponte: Reforco;
   const local = async () => reforcoFalso(licao, await conteudoDaLicao(usuarioId, licaoId), apoio.ultimaResposta, apoio.ultimoIndice);
-  if (process.env.IA === 'falsa') ponte = await local();
+  // Sem o aceite do envio a IA de terceiros, o reforço é o local (nada da resposta sai do servidor).
+  if (process.env.IA === 'falsa' || !(await podeUsarIa(usuarioId))) ponte = await local();
   else {
     try {
       ponte = await reforcoDaIa(licao, apoio.ultimaResposta, apoio.ultimoIndice);
@@ -403,7 +405,8 @@ export async function ensinarStu(
   await quota(usuarioId, 'ensino');
   const conteudo = () => conteudoDaLicao(usuarioId, licaoId);
   let feedback: FeedbackEnsino;
-  if (process.env.IA === 'falsa') feedback = ensinoFalso(licao, await conteudo(), explicacao);
+  // Sem o aceite do envio a IA de terceiros, o retorno é o local (a explicação não sai do servidor).
+  if (process.env.IA === 'falsa' || !(await podeUsarIa(usuarioId))) feedback = ensinoFalso(licao, await conteudo(), explicacao);
   else {
     try {
       feedback = await ensinoDaIa(licao, explicacao);

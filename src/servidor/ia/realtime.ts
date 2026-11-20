@@ -371,6 +371,18 @@ export async function criarChamadaVozAoVivo(
   };
 }
 
+/** Encerra todas as conversas de voz ativas da conta (exclusão da conta). Não falha: o hangup é idempotente. */
+export function encerrarChamadasDoUsuario(usuarioId: string): void {
+  const config = configuracaoRealtime();
+  for (const [chamadaId, ativa] of chamadasAtivas.entries()) {
+    if (ativa.usuarioId !== usuarioId) continue;
+    clearTimeout(ativa.timer);
+    chamadasAtivas.delete(chamadaId);
+    registrarEncerramento(chamadaId, ativa, "cliente");
+    if (config) void enviarHangup(config, chamadaId);
+  }
+}
+
 /**
  * Encerra uma chamada WebRTC ativa no servidor (`hangup`) apenas quando registrada para o próprio usuário.
  * Chamada desconhecida ou já encerrada devolve sem chamar a OpenAI.
