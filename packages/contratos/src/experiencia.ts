@@ -580,7 +580,10 @@ export const mensagens = {
         compartilharPerfil: 'Compartilhar perfil',
         textoCompartilharPerfil: (nome: string) => `As trilhas de ${nome} no Studoo`,
         linkPerfilCopiado: 'Link do perfil copiado',
-        perfilPrivadoDica: 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.',
+        // Spec 10, 7b (db773e6): com a comunidade, o perfil fica público pela folha "Postar no perfil".
+        perfilPrivadoDica: 'Para compartilhar o perfil, poste ao menos uma trilha em “Postar trilha no perfil”.',
+        /** Sem a comunidade, só existe a chave "Mostrar no meu perfil" de cada trilha. */
+        perfilPrivadoDicaSemComunidade: 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.',
         alcance: (trilhas: number, pessoas: number) =>
             mensagens.perfil.alcanceItens(trilhas, pessoas).join(' · '),
         /**
