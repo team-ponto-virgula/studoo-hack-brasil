@@ -1,5 +1,5 @@
-import { useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { AccessibilityInfo, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { useCallback, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { AccessibilityInfo, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import {
   LIMITES_PERFIL, TEMAS, motivoNomeInvalido, motivoResumoInvalido, normalizarNomePerfil, normalizarResumoPerfil,
   type CartaoTrilha, type CorPerfil, type LinkCompartilhado, type Perfil, type Tema,
@@ -7,7 +7,7 @@ import {
 import { sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { CartoesDoPerfil, FIM_COM_BARRA, NovidadesDoPerfil } from './comunidade';
 import { Icone } from './icone';
-import { AvisoDoApp, Botao, Campo, CartaoConfirmacao, FolhaDeAcoes, Tela, Titulo, estilos, type AcaoDaFolha } from './interface';
+import { AvisoDoApp, BaixoOcupado, Botao, CAPSULA, Campo, CartaoConfirmacao, FolhaDeAcoes, Tela, Titulo, estilos, type AcaoDaFolha } from './interface';
 import { mensagens } from './mensagens';
 import { RecorteImagem, escolherImagem, type ImagemParaRecortar } from './recorte';
 import {
@@ -112,6 +112,12 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   }
   // A barra de salvar do editor fica presa embaixo, acima da barra de abas (na web, `position: sticky` no fim do bloco).
   const [rodapeDoEditor, setRodapeDoEditor] = useState<ReactNode>(null);
+  // Quem precisa saber da rolagem (a linha de ações do editor, para virar bloco preso quando sai da vista) se inscreve aqui.
+  const ouvintesDaRolagem = useRef(new Set<() => void>());
+  const inscreverRolagem = useCallback((ouvinte: () => void) => {
+    ouvintesDaRolagem.current.add(ouvinte);
+    return () => { ouvintesDaRolagem.current.delete(ouvinte); };
+  }, []);
   const assinaturaLinks = perfil?.links.map((link) => `${link.codigo}:${link.visibilidade ?? link.noPerfil}:${link.tema ?? ''}:${link.legenda ?? ''}`).join('|') ?? '';
   const comEditor = Boolean(perfil && !perfil.visitante && (!perfil.nome || editando));
 
@@ -180,7 +186,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   }
 
   return (
-    <Tela pagina="perfil" acoes={acoes} estiloConteudo={FIM_COM_BARRA}
+    <Tela pagina="perfil" acoes={acoes} estiloConteudo={FIM_COM_BARRA} aoRolar={() => ouvintesDaRolagem.current.forEach((ouvinte) => ouvinte())}
       rodape={comEditor && rodapeDoEditor ? rodapeDoEditor : undefined} estiloRodapeConteudo={comEditor ? perfilEstilos.barraConteudo : undefined}
       estiloRodape={comEditor ? perfilEstilos.barraFundo : undefined}>
       <View style={perfilEstilos.painel}>
@@ -200,7 +206,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
               // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
               <EditorPerfil key={editando ? 'editar' : 'dados'} cliente={cliente} perfil={perfil} aoMudarPerfil={mudarPerfil} registrarGuarda={registrarGuarda}
                 aoSalvo={aoSalvo} focarResumo={focarResumo}
-                definirRodape={setRodapeDoEditor}
+                definirRodape={setRodapeDoEditor} inscreverRolagem={inscreverRolagem}
                 aoCancelar={perfil.nome ? () => setEditando(false) : undefined} />
             ) : (
               <>
@@ -364,13 +370,15 @@ type ErrosCampos = { nome?: string; resumo?: string };
  * numa linha só. Tocar na foto abre a folha do Studoo (galeria, câmera, remover e cancelar). "Cancelar" com alteração, e
  * qualquer saída, perguntam "Sair sem salvar?". Salvar fecha os campos (quem usa mostra o aviso "Perfil salvo.").
  */
-function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definirRodape, aoSalvo, aoCancelar, focarResumo = false }: {
+function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definirRodape, inscreverRolagem, aoSalvo, aoCancelar, focarResumo = false }: {
   cliente: ClienteNativo;
   perfil: Perfil;
   aoMudarPerfil: (perfil: Perfil) => void;
   registrarGuarda: (guarda: ((continuar: () => void) => boolean) | null) => void;
-  /** A barra de salvar vai no rodapé da tela (presa embaixo, acima da barra de abas). */
+  /** O bloco preso da tela (acima da cápsula): só com alteração e com a linha de ações fora da vista (spec 10, 56aac7e). */
   definirRodape: (rodape: ReactNode) => void;
+  /** Avisa a cada rolagem da tela, para a linha conferir se ainda está à vista. */
+  inscreverRolagem: (ouvinte: () => void) => () => void;
   /** Depois de salvar: os campos fecham e o cabeçalho mostra o perfil. */
   aoSalvo: () => void;
   /** Perfil com dados: "Cancelar" volta para o cabeçalho (sem dados, não há o que cancelar). */
@@ -378,7 +386,7 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
   /** Aberto pelo convite "Conte em uma frase…": o foco vai para o resumo. */
   focarResumo?: boolean;
 }) {
-  const { width } = useWindowDimensions();
+  const { width, height: alturaJanela } = useWindowDimensions();
   const [salvo, setSalvo] = useState(perfil);
   const [nome, setNome] = useState(perfil.nome ?? '');
   const [cor, setCor] = useState<CorPerfil>(perfil.cor ?? 'azul');
@@ -534,41 +542,73 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
     }
   }
 
-  // A barra presa embaixo, numa linha só: o estado à esquerda (nada quando nada mudou) e os botões à direita. As ações leem o
-  // estado atual por referência (a barra só é trocada quando o que ela mostra muda).
+  // As ações da linha leem o estado atual por referência (a linha e o bloco preso só são trocados quando o que mostram muda).
   const acoesDaBarra = useRef({ salvar, cancelar });
   acoesDaBarra.current = { salvar, cancelar };
   const comCancelar = Boolean(aoCancelar);
   const larguraDoBotao = comCancelar && width < 400 ? 104 : 120;
   // Com "Cancelar" e "Salvar" numa tela de até 400, o estado encurta para "Não salvo", para caber numa linha (spec 10).
   const textoNaoSalvo = comCancelar && width <= 400 ? p.naoSalvoCurto : p.alteracoesNaoSalvas;
+  const erroNaBarra = comErroDeCampo ? p.corrigirCampos : erroGeral;
+  // Spec 10, 56aac7e: a linha de ações (estado, "Cancelar" e "Salvar") fica no fluxo, no fim do cartão. Sem alteração, não
+  // há estado, "Salvar" fica desligado e nada fica preso na tela. Com alteração (ou erro, ou salvando) e a linha fora da
+  // vista, o mesmo conteúdo vira o bloco preso da spec 05, 12 acima da cápsula; volta ao lugar quando a linha aparece, e
+  // some com o teclado aberto. Nunca duas cópias para o leitor de tela.
+  const pendente = alterado || salvando || Boolean(erroNaBarra);
+  const linha = useRef<ComponentRef<typeof View>>(null);
+  const [alturaLinha, setAlturaLinha] = useState(0);
+  const [foraDaVista, setForaDaVista] = useState(false);
+  const [teclado, setTeclado] = useState(false);
+  const baixoOcupado = useContext(BaixoOcupado);
+  const preso = pendente && foraDaVista && !teclado;
+  const presoAgora = useRef(preso);
+  presoAgora.current = preso;
+  const medida = useRef({ baixoOcupado, alturaJanela, alturaLinha });
+  medida.current = { baixoOcupado, alturaJanela, alturaLinha };
+  const medir = useCallback(() => {
+    linha.current?.measureInWindow((_x, y, _largura, altura) => {
+      const { baixoOcupado: ocupado, alturaJanela: janela, alturaLinha: propria } = medida.current;
+      // O que a cápsula ocupa embaixo, sem o próprio bloco preso (que a Tela também conta quando está à vista).
+      const capsula = ocupado - (presoAgora.current ? CAPSULA.acimaDaCapsula + propria + 16 : 0);
+      setForaDaVista(y + altura > janela - capsula || y + altura < 0);
+    });
+  }, []);
+  useEffect(() => inscreverRolagem(medir), [inscreverRolagem, medir]);
+  useEffect(() => { medir(); }, [medir, pendente, alturaLinha, baixoOcupado, alturaJanela]);
   useEffect(() => {
-    const erroNaBarra = comErroDeCampo ? p.corrigirCampos : erroGeral;
-    definirRodape(
-      <View testID="editar-barra" style={perfilEstilos.barra}>
-        <View accessibilityLiveRegion="polite" style={perfilEstilos.estado}>
-          {salvando ? <Text testID="editar-estado" style={[perfilEstilos.estadoTexto, { color: cores.textoSecundario }]}>{p.salvando}</Text>
-            : erroNaBarra ? (
-              <>
-                <Icone nome="alerta" tamanho={18} cor={cores.erro} />
-                <Text testID="editar-estado" style={[perfilEstilos.estadoTexto, { color: cores.erro }]}>{erroNaBarra}</Text>
-              </>
-            ) : alterado ? (
-              <>
-                <View style={perfilEstilos.estadoPonto} />
-                <Text testID="editar-estado" style={[perfilEstilos.estadoTexto, { color: cores.alerta }]}>{textoNaoSalvo}</Text>
-              </>
-            ) : null}
-        </View>
-        <View style={perfilEstilos.botoes}>
-          {comCancelar && <Botao rotulo={p.cancelar} variante="secundario" testID="editar-cancelar" desativado={salvando}
-            acao={() => acoesDaBarra.current.cancelar()} estilo={{ minWidth: larguraDoBotao }} />}
-          <Botao rotulo={salvando ? p.salvando : p.salvar} testID="editar-salvar" desativado={!alterado} ocupado={salvando}
-            acao={() => void acoesDaBarra.current.salvar()} estilo={{ minWidth: larguraDoBotao }} />
-        </View>
-      </View>,
-    );
-  }, [alterado, salvando, erroGeral, comErroDeCampo, comCancelar, larguraDoBotao, textoNaoSalvo, definirRodape]);
+    const abre = Keyboard.addListener('keyboardDidShow', () => setTeclado(true));
+    const fecha = Keyboard.addListener('keyboardDidHide', () => setTeclado(false));
+    return () => { abre.remove(); fecha.remove(); };
+  }, []);
+  const conteudoDaBarra = (
+    <>
+      <View accessibilityLiveRegion="polite" style={perfilEstilos.estado}>
+        {salvando ? <Text testID="editar-estado" style={[perfilEstilos.estadoTexto, { color: cores.textoSecundario }]}>{p.salvando}</Text>
+          : erroNaBarra ? (
+            <>
+              <Icone nome="alerta" tamanho={18} cor={cores.erro} />
+              <Text testID="editar-estado" style={[perfilEstilos.estadoTexto, { color: cores.erro }]}>{erroNaBarra}</Text>
+            </>
+          ) : alterado ? (
+            <>
+              <View style={perfilEstilos.estadoPonto} />
+              <Text testID="editar-estado" style={[perfilEstilos.estadoTexto, { color: cores.alerta }]}>{textoNaoSalvo}</Text>
+            </>
+          ) : null}
+      </View>
+      <View style={perfilEstilos.botoes}>
+        {comCancelar && <Botao rotulo={p.cancelar} variante="secundario" testID="editar-cancelar" desativado={salvando}
+          acao={() => acoesDaBarra.current.cancelar()} estilo={{ minWidth: larguraDoBotao }} />}
+        <Botao rotulo={salvando ? p.salvando : p.salvar} testID="editar-salvar" desativado={!alterado} ocupado={salvando}
+          acao={() => void acoesDaBarra.current.salvar()} estilo={{ minWidth: larguraDoBotao }} />
+      </View>
+    </>
+  );
+  useEffect(() => {
+    definirRodape(preso ? <View testID="editar-barra-presa" style={perfilEstilos.barra}>{conteudoDaBarra}</View> : null);
+    // O bloco é trocado quando o que ele mostra muda; as ações leem o estado atual por referência.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preso, alterado, salvando, erroNaBarra, comCancelar, larguraDoBotao, textoNaoSalvo, definirRodape]);
   useEffect(() => () => definirRodape(null), [definirRodape]);
 
   return (
@@ -629,6 +669,13 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
       </View>
 
       <CoresDoPerfil cor={cor} aoEscolher={setCor} dica={p.corDica} />
+
+      {/* A linha de ações no fim do cartão. Com o bloco preso à vista, ela fica escondida do leitor de tela (uma cópia só). */}
+      <View ref={linha} testID="editar-barra" onLayout={(evento) => setAlturaLinha(evento.nativeEvent.layout.height)}
+        importantForAccessibility={preso ? 'no-hide-descendants' : 'auto'} accessibilityElementsHidden={preso}
+        style={[perfilEstilos.barra, preso && { opacity: 0 }]} pointerEvents={preso ? 'none' : 'auto'}>
+        {conteudoDaBarra}
+      </View>
 
       <FolhaDeAcoes visivel={folhaDaFoto} titulo={p.fotoFolhaTitulo} acoes={opcoesDaFoto} cancelarRotulo={p.fotoMenuCancelar} testID="folha-foto"
         aoFechar={() => setFolhaDaFoto(false)} />
