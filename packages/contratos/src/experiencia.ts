@@ -869,7 +869,6 @@ export const mensagens = {
         vazioTitulo: 'Nenhuma trilha ainda',
         vazioTexto: 'Suas trilhas ficam aqui. Conte o que quer aprender e o Studoo monta a primeira.',
         vazioAcao: 'Criar minha primeira trilha',
-        semTrilhas: 'Você ainda não tem trilhas. Comece uma aqui: escreva o que quer aprender.',
         apagada: (titulo: string) => `Trilha “${titulo}” apagada.`,
         manter: 'Manter',
         outrasTrilhas: 'Outras trilhas',

@@ -30,6 +30,21 @@ test('entrada e cadastro usam o mesmo Google colorido, decorativo e com densidad
   }
 });
 
+test('a conta sem trilhas abre o pedido, mas sua aba de trilhas tem um vazio próprio', () => {
+  const estudo = readFileSync(join(raiz, 'src/app/estudo.tsx'), 'utf8');
+  assert.match(estudo, /ativos\.length === 0 \|\| abriuComRascunho\.current\) \{\s*setTela\(\{ tipo: 'objetivo', focarCampo: true/);
+  assert.match(estudo, /visivel && tela\.tipo === 'objetivo' && \(\s*<Pedido/);
+  const inicio = estudo.indexOf('className="painel planos-sem-trilhas"');
+  const fim = estudo.indexOf('</section>', inicio);
+  assert.ok(inicio > 0);
+  const vazio = estudo.slice(inicio, fim);
+  assert.match(vazio, /data-testid="planos-vazio"/);
+  assert.match(vazio, /expressao="stu-curioso" tamanho=\{96\}/);
+  assert.match(vazio, /vazioTitulo[\s\S]*vazioTexto[\s\S]*focarCampo: true[\s\S]*vazioAcao/);
+  assert.doesNotMatch(vazio, /<Pedido|role="dialog"/);
+  assert.match(estudo, /const abaNovaTrilha = tela\.tipo === 'objetivo';/);
+});
+
 test('"Entrar" fica dentro do formulário, logo depois da senha, e "Esqueci minha senha" embaixo dele; sem rodapé preso', () => {
   const senha = entrada.indexOf('id="senha"');
   const entrar = entrada.indexOf('<div className="entrada-entrar">');
