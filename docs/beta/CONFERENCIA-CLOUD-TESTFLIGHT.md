@@ -83,7 +83,7 @@ Continua pendente (itens 4 e 5 da lista acima):
 
 - Apple: `STUDOO_APPLE`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` e `APPLE_BUNDLE_IDS` esperam a chave "Sign in with Apple" da conta que vai assinar o app. Enquanto isso o servidor anuncia `apple: false` e o botão não aparece.
 - Cadastro e recuperação por e-mail: desligados, porque não há domínio de envio verificado.
-- Restrição de acesso: `STUDOO_DOMINIO_EMAIL=example.test` com um Gmail liberado. Bloqueia revisor, jurado e "Ocultar meu e-mail"; abrir é decisão do dono.
+- Restrição de acesso: resolvida. Por ordem do dono, `STUDOO_DOMINIO_EMAIL` ficou vazio às 22:10 UTC de 20/11 e o serviço foi recarregado; pela regra do servidor (`emailPermitido`), qualquer e-mail entra, inclusive o de retransmissão da Apple. Não foi provado com uma segunda conta Google.
 - Notificações da Apple (`/api/auth/apple/notificacoes`) e a conta de demonstração nas informações de teste: dependem da conta Apple.
 
 As chaves da Apple entram pelo formulário seguro do OpenBot, para o Studoo Lead gravar no Dokploy sem expor valor. Nada de chave em chat, commit ou `app.json`.
