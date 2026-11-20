@@ -319,6 +319,18 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
   };
 }
 
+test('web: a ponte aberta ocupa a etapa inteira e esconde o ensino opcional', async () => {
+  const ui = montar(false);
+  await esperar();
+  ui.render();
+  assert.ok(ui.tipo('summary'));
+  ui.pedirPonte();
+  await esperar();
+  ui.render();
+  assert.ok(ui.tipo('PonteReforco'));
+  assert.equal(ui.tipo('summary'), null);
+});
+
 for (const nativo of [false, true]) {
   const plataforma = nativo ? 'app' : 'web';
   test(`${plataforma}: resposta atrasada não apaga reforço novo; pedido duplicado só gera uma vez`, async () => {
