@@ -20,7 +20,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
-import { autorDoAlvo, filtroPublico } from "./visibilidade";
+import { autorDoAlvo, exigirParLivre, filtroPublico } from "./visibilidade";
 import { revisarConteudo } from "./revisao";
 import { contarSeguidores, estadoSeguir, seguidosPor } from "./seguir";
 import { camposDono, demonstracaoVisivel, ehDeMaterial, lerTrilha, linkPublico, perfilPublico, type UsuarioDono } from "./servico";
@@ -82,18 +82,20 @@ export async function definirVisibilidade(usuarioId: string, codigo: string, ent
   if (ehDeMaterial(trilha.fluxos.flatMap((fluxo) => fluxo.licoes))) throw new FalhaApi("explorar_material");
   await limitar(`comunidade:publicar:${usuarioId}`, LIMITES.publicar);
   if (legenda && !(await revisarConteudo({ tipo: "legenda", usuarioId, texto: legenda })).aprovado) throw new FalhaApi("conteudo_recusado");
-  const alterado = await banco.linkTrilha.update({
-    where: { codigo },
-    data: { noPerfil: true, noExplorar: true, tema, legenda: legenda || null, ...(link.publicadaEm ? {} : { publicadaEm: new Date() }) },
+  const alterado = await banco.$transaction(async tx => {
+    // As duas atualizações podem recolocar o link em revisão. Retorne o estado após ambas.
+    await tx.planoAprendizado.update({ where: { usuarioId_id: { usuarioId, id: link.planoId } }, data: { tema, descricao: legenda || null } });
+    return tx.linkTrilha.update({
+      where: { codigo },
+      data: { noPerfil: true, noExplorar: true, tema, legenda: legenda || null, ...(link.publicadaEm ? {} : { publicadaEm: new Date() }) },
+    });
   });
-  // Tema e legenda são os mesmos das configurações da trilha (a legenda é a descrição): um lugar só para a pessoa.
-  await banco.planoAprendizado.update({ where: { usuarioId_id: { usuarioId, id: link.planoId } }, data: { tema, descricao: legenda || null } });
   zerarCacheEmAlta();
   return linkPublico(alterado, link.plano.titulo);
 }
 
-type LinkDoCartao = { codigo: string; usuarioId: string; planoId: string; tema: string | null; legenda: string | null; adicoes: number; publicadaEm: Date | null };
-const camposLink = { codigo: true, usuarioId: true, planoId: true, tema: true, legenda: true, adicoes: true, publicadaEm: true } as const;
+type LinkDoCartao = { codigo: string; revisao: number; usuarioId: string; planoId: string; tema: string | null; legenda: string | null; adicoes: number; publicadaEm: Date | null };
+const camposLink = { codigo: true, revisao: true, usuarioId: true, planoId: true, tema: true, legenda: true, adicoes: true, publicadaEm: true } as const;
 
 /**
  * Os cartões de uma lista de links, em poucas leituras: trilhas (título, origem, contagens), donos, valeus e, com
@@ -117,11 +119,17 @@ export async function cartoesDe(links: LinkDoCartao[], quem: string | null): Pro
   const valeusDe = new Map(valeus.map((grupo) => [grupo.codigo, grupo._count._all]));
   const copiaDe = new Map(copias.map((copia) => [copia.origemCodigo, copia.id]));
   const meus = new Set(meusValeus.map((evento) => evento.codigo));
+  const visiveis = await banco.linkTrilha.findMany({
+    where: { AND: [await filtroPublico(quem), { codigo: { in: codigos } }] },
+    select: { codigo: true, revisao: true, plano: { select: { usuario: { select: { perfilRevisao: true } } } } },
+  });
+  const atuais = new Map(visiveis.map(link => [link.codigo, link]));
   const cartoes: CartaoTrilha[] = [];
   for (const link of links) {
     const plano = planoDe.get(`${link.usuarioId}/${link.planoId}`);
     const dono = donoDe.get(link.usuarioId);
-    if (!plano || !dono?.perfilNome) continue;
+    const atual = atuais.get(link.codigo);
+    if (!plano || !dono?.perfilNome || atual?.revisao !== link.revisao || atual.plano.usuario.perfilRevisao !== dono.perfilRevisao) continue;
     const cartao: CartaoTrilha = {
       codigo: link.codigo,
       titulo: plano.titulo,
@@ -265,8 +273,11 @@ export async function valeu(usuarioId: string, codigo: string, entrada: unknown)
   if (link.usuarioId === usuarioId) throw new FalhaApi("trilha_propria");
   await contaQueAge(usuarioId);
   await limitar(`comunidade:valeu:${usuarioId}`, LIMITES.valeu);
-  if (ativo) await banco.eventoTrilha.createMany({ data: [{ codigo, usuarioId, tipo: "valeu" }], skipDuplicates: true });
-  else await banco.eventoTrilha.deleteMany({ where: { codigo, usuarioId, tipo: "valeu" } });
+  await banco.$transaction(async tx => {
+    await exigirParLivre(tx, usuarioId, link.usuarioId, "link_inativo");
+    if (ativo) await tx.eventoTrilha.createMany({ data: [{ codigo, usuarioId, tipo: "valeu" }], skipDuplicates: true });
+    else await tx.eventoTrilha.deleteMany({ where: { codigo, usuarioId, tipo: "valeu" } });
+  });
   const valeus = await banco.eventoTrilha.count({ where: { codigo, tipo: "valeu" } });
   return { valeus, valeuMeu: ativo };
 }

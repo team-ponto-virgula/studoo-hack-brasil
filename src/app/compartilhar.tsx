@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MenuPublicacao } from './seguranca-comunidade';
+import { MenuPublicacao, RegrasDaRecusa } from './seguranca-comunidade';
 import { useRouter } from 'next/navigation';
 
 /*
@@ -140,11 +140,12 @@ export function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => vo
 }
 
 /** Confirmação no próprio produto (nunca `window.confirm`): título, texto e duas ações; a segura recebe o foco. */
-export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, ocupado = false, aoConfirmar, aoCancelar }: {
+export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, destaqueDestrutivo = false, ocupado = false, aoConfirmar, aoCancelar }: {
   titulo: string;
   texto: string;
   confirmar: string;
   cancelar: string;
+  destaqueDestrutivo?: boolean;
   ocupado?: boolean;
   aoConfirmar: () => void;
   aoCancelar: () => void;
@@ -160,7 +161,7 @@ export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, ocupado =
       <div className="folha folha--confirmar" role="alertdialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={textoId} ref={caixa}>
         <h2 id={tituloId} className="folha-titulo">{titulo}</h2>
         <p id={textoId} className="folha-texto">{texto}</p>
-        <div className="folha-acoes folha-acoes--par">
+        <div className={`folha-acoes folha-acoes--par${destaqueDestrutivo ? " folha-acoes--destrutiva" : ""}`}>
           <Botao variante="secundario" disabled={ocupado} onClick={aoCancelar}>{cancelar}</Botao>
           <Botao variante="secundario" className="modal-confirmar--destrutivo" disabled={ocupado} onClick={aoConfirmar}>{confirmar}</Botao>
         </div>
@@ -213,7 +214,7 @@ export function FormPerfil({ inicial, enviarRotulo, aoSalvar, aoCancelar, titulo
           aria-invalid={erro ? true : undefined} aria-describedby={`${idDica}${erro ? ` ${idErro}` : ''}`}
           onChange={(e) => { setNome(e.target.value); if (erro) setErro(null); }} />
         <p className="campo-dica" id={idDica}>{m.comoAparecerDica}</p>
-        {erro && <p className="campo-erro" id={idErro} role="alert">{erro}</p>}
+        {erro && <p className="campo-erro" id={idErro} role="alert">{erro}<RegrasDaRecusa erro={erro} /></p>}
       </div>
       <fieldset className="cores-perfil">
         <legend>{m.corRotulo}</legend>
@@ -320,7 +321,7 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
           );
         })}
       </fieldset>
-      {escolhido !== 'link' && <p className="campo-dica">{mensagens.seguranca.regrasAoPublicar.antes}<a href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regrasAoPublicar.link}</a>{mensagens.seguranca.regrasAoPublicar.depois}</p>}
+      {escolhido !== 'link' && <p className="campo-dica">{mensagens.seguranca.regrasAoPublicar.antes}<Link href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regrasAoPublicar.link}</Link>{mensagens.seguranca.regrasAoPublicar.depois}</p>}
       {escolhido === 'perfil' && escolhido !== atual && <Botao disabled={ocupado} onClick={() => void salvar('perfil')}>Publicar no perfil</Botao>}
       {escolhido === 'explorar' && !deMaterial && (
         <div className="publicacao">
@@ -365,7 +366,7 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
           </div>
         </div>
       )}
-      {erro && <p className="campo-erro" role="alert">{erro} {erro === mensagens.seguranca.recusadaNaHora && <a href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regras}</a>}</p>}
+      {erro && <p className="campo-erro" role="alert">{erro}<RegrasDaRecusa erro={erro} /></p>}
       <p className="folha-status somente-leitor" role="status" aria-live="polite">{status}</p>
     </div>
   );
@@ -495,7 +496,9 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
     }
   }
 
-  const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' ? m.linkPronto : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
+  const estadoLink = link?.moderacao;
+  const tituloLink = estadoLink === 'pendente' ? mensagens.seguranca.seloEmRevisao : estadoLink === 'recusado' ? mensagens.seguranca.seloNaoPublicada : m.linkPronto;
+  const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' ? tituloLink : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
 
   return (
     <div className="folha-fundo" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !ocupado && etapa !== 'parar') aoFechar(); }}>
@@ -558,6 +561,8 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
         {etapa === 'pronto' && link && previa && (
           <>
             <p className="folha-trilha__titulo">{previa.titulo}</p>
+            {estadoLink === 'pendente' && <p className="folha-texto">{mensagens.seguranca.emRevisao}</p>}
+            {estadoLink === 'recusado' && <p className="folha-texto">{mensagens.seguranca.naoPublicada} <Link href={mensagens.seguranca.rotas.suporte}>{mensagens.seguranca.falarComSuporte}</Link></p>}
             <label className="folha-link">
               <span className="somente-leitor">{m.linkRotulo}</span>
               <input ref={campoLink} readOnly value={urlDoLink(link.codigo)} onFocus={(e) => e.currentTarget.select()} />

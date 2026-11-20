@@ -272,3 +272,23 @@ h2.previa-trilha__titulo { font-size: 1.25rem; }
 /* A capa no alto da página do link (lote 4). */
 .previa-trilha__capa { display: block; width: 100%; aspect-ratio: 4 / 1; max-height: 150px; margin-bottom: 14px; overflow: hidden; border-radius: 20px; }
 .previa-trilha__capa svg { display: block; width: 100%; height: 100%; }
+
+/* A ordem do foco começa no Cancelar. Se os rótulos não couberem, a ação destrutiva fica na linha de cima. */
+.folha-acoes.folha-acoes--destrutiva {
+  display: flex;
+  flex-flow: row wrap-reverse;
+  gap: 10px;
+}
+.folha-acoes--destrutiva > .botao {
+  flex: 1 0 max-content;
+  width: auto;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.folha-acoes--destrutiva .modal-confirmar--destrutivo:not(:disabled) {
+  --labio: #8f2a39;
+  color: white;
+  border-color: #c23b4e;
+  background: #c23b4e;
+}

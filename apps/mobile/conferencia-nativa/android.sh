@@ -135,9 +135,61 @@ parar_registro_de_audio() {
   fi
 }
 
-# No fim do passo, com ou sem falha: o fim do registro do Android e a tela do emulador.
+# As telas rodam uma sessão do Maestro por fluxo (comum.sh, fluxo_telas_uma_por_vez), com o aparelho conferido antes de
+# cada uma.
+TELAS_UMA_POR_VEZ=1
+
+# O emulador ainda está no adb e o sistema dele responde? Espera até 60 s (um adb que reconecta volta nesse tempo); se não
+# voltar, guarda o momento na carga da máquina e diz que não.
+aparelho_responde() {
+  local tentativa id
+  for tentativa in 1 2 3 4 5 6; do
+    id="$(dispositivo)"
+    if [ -n "$id" ] && [ "$(timeout 20 adb -s "$id" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = "1" ]; then
+      return 0
+    fi
+    sleep 10
+  done
+  echo "$(date -u +%H:%M:%S) o emulador não responde no adb há 60 s" >> "$REGISTROS/carga-da-maquina.log"
+  adb devices -l >> "$REGISTROS/carga-da-maquina.log" 2>&1 || true
+  return 1
+}
+
+# A carga da máquina a cada 15 s, enquanto o emulador roda: carga média, memória livre e troca, o processo do emulador
+# (memória e CPU) e se o adb ainda o vê. É o que falta para dizer por que o emulador some (máquina sem memória, sem CPU
+# ou o processo morto por outro motivo).
+iniciar_registro_de_carga() {
+  {
+    echo "hora (UTC) | carga 1/5/15 min | memória MB: total usada livre compartilhada cache disponível | troca MB: total usada livre | emulador: RSS MB, %CPU | adb"
+    while :; do
+      printf '%s | %s | %s | %s | %s | %s\n' "$(date -u +%H:%M:%S)" "$(cut -d' ' -f1-3 /proc/loadavg)" \
+        "$(free -m | awk '/^Mem:/ { print $2, $3, $4, $5, $6, $7 }')" "$(free -m | awk '/^Swap:/ { print $2, $3, $4 }')" \
+        "$(ps -C qemu-system-x86_64 -o rss=,pcpu= 2> /dev/null | awk '{ printf "%d %s", $1 / 1024, $2 }')" \
+        "$(adb devices 2> /dev/null | awk 'NR > 1 && NF { printf "%s=%s ", $1, $2 }')"
+      sleep 15
+    done
+  } >> "$REGISTROS/carga-da-maquina.log" 2>&1 &
+  echo $! > "$SAIDA/registro-de-carga.pid"
+}
+
+# Os maiores processos e o fim do registro do kernel: um emulador morto pelo kernel por falta de memória aparece aqui
+# ("Out of memory: Killed process ... qemu-system").
+guardar_estado_da_maquina() {
+  if [ -f "$SAIDA/registro-de-carga.pid" ]; then
+    kill "$(cat "$SAIDA/registro-de-carga.pid")" 2> /dev/null || true
+    rm -f "$SAIDA/registro-de-carga.pid"
+  fi
+  ps -eo pid,rss,pcpu,etime,comm --sort=-rss 2> /dev/null | head -25 > "$REGISTROS/processos-no-fim.txt" || true
+  sudo -n dmesg -T 2> /dev/null | tail -n 400 > "$REGISTROS/dmesg-fim.txt" || true
+  if grep -qiE 'out of memory|oom-kill|killed process' "$REGISTROS/dmesg-fim.txt" 2> /dev/null; then
+    aviso "O kernel matou processo por falta de memória durante o passo do emulador: $(grep -iE 'killed process' "$REGISTROS/dmesg-fim.txt" | tail -1 | cut -c1-200)"
+  fi
+}
+
+# No fim do passo, com ou sem falha: o estado da máquina, o fim do registro do Android e a tela do emulador.
 depois_do_emulador() {
   local id
+  guardar_estado_da_maquina
   id="$(dispositivo)"
   [ -n "$id" ] || return 0
   adb -s "$id" logcat -d -v time 2> /dev/null | tail -n 5000 | cut -c1-600 > "$REGISTROS/logcat-fim.txt" || true
@@ -147,6 +199,7 @@ depois_do_emulador() {
 no_emulador() {
   local id comando versao api modelo escala codigo
   trap depois_do_emulador EXIT
+  iniciar_registro_de_carga
   id="$(dispositivo)"
   [ -n "$id" ] || erro "Nenhum emulador ligado no adb."
 
