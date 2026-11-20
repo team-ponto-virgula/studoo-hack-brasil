@@ -476,7 +476,7 @@ Confirma o que está no ar: a aba Perfil nunca mostra o cartão "Como você quer
 
 **Salvar com botão** (não salva sozinho). O nome é público e só vale completo: salvar campo a campo mostraria nomes pela metade nas trilhas compartilhadas.
 
-**Barra de salvar**, enquanto os campos estão abertos:
+**Barra de salvar**, enquanto os campos estão abertos (onde e quando ela aparece foi revisto em 20/11; veja "Barra de salvar: só com alteração", logo abaixo da tabela):
 - Presa no pé da tela, acima da barra de abas. No celular, ocupa a largura da tela; no computador, a largura do cartão. Quando a barra de abas virar cápsula (spec 05, "Barra de abas em cápsula"), no celular ela passa a ser um bloco que flutua 12 acima da cápsula, na largura dela, com 64 de altura e sem a área segura dentro.
 - Altura de 72 (12 + botão de 48 + 12) mais a área segura; fundo branco e linha de 1 px #E1E7FA em cima.
 - Uma linha só: o estado à esquerda (Nunito 800, 14/18, até duas linhas) e os botões à direita, com 8 entre eles. Perfil vazio: só "Salvar" (primário, 120 de largura mínima). Editando: "Cancelar" (secundário) e "Salvar" (primário), com 104 de largura mínima cada abaixo de 400 px e 120 acima.
@@ -490,6 +490,40 @@ Confirma o que está no ar: a aba Perfil nunca mostra o cartão "Como você quer
 | Erro de rede | "Não deu para salvar. Confira a conexão e tente de novo." (#C23B4E) | ligado | os campos guardam o que foi digitado |
 | Salvo | — | — | os campos fecham, o cabeçalho mostra o perfil, o aviso do app diz "Perfil salvo." e o foco vai para "Editar" |
 | Sair ou cancelar com alteração | — | — | a confirmação "Sair sem salvar?", com o texto "As mudanças no nome, no resumo, nos interesses e na cor se perdem." e as ações "Sair sem salvar" (vermelha, em cima) e "Continuar editando" (embaixo, com o foco), uma por linha (o rótulo não cabe na metade) |
+
+**Barra de salvar: só com alteração (revisão de 20/11, achado do dono no iPhone).**
+Palavras do dono: "Tudo salvo em um lugar nada a ver ele vai ficando na tela em quanto rola". Na web, a barra é `position: sticky` no fim do formulário (`src/app/perfil.css`, `.editar-perfil__barra`). Por isso ela fica no meio da tela, colada ao fim do cartão, enquanto Som e Conta passam por baixo, e ainda mostra "Tudo salvo" com nada mudado (`perfil.tsx`, `estadoTexto`), contra o item 3 do lote 4.
+
+- **Um elemento só, no fim do formulário.** A linha de ações (estado, "Cancelar" e "Salvar") fica no fluxo, como último bloco do cartão de edição, depois de "Cor do perfil", e rola com ele. Ela não usa `sticky`.
+- **Sem alteração:**
+  - a linha não mostra estado; "Tudo salvo" sai do editor, nas duas plataformas;
+  - "Salvar" fica desligado; "Cancelar" aparece quando há perfil salvo e fecha os campos;
+  - nada fica preso na tela.
+- **Com alteração, quando a linha sai da vista:**
+  - ela vira o bloco preso da spec 05 ("Ações presas das telas de topo"): 12 px acima da cápsula, margens de 16, largura máxima de 480, 64 px de altura, raio 24, a superfície da cápsula;
+  - o conteúdo é o mesmo: "Alterações não salvas" (ou "Não salvo" até 400 px), "Cancelar" e "Salvar";
+  - quando a linha do fim do formulário volta à vista, o bloco volta para o lugar dela;
+  - é o mesmo elemento, nunca duas cópias: o leitor de tela e o Tab encontram os botões uma vez só;
+  - o fim da rolagem reserva a altura do bloco mais 12, para nada ficar atrás dele.
+- **Some quando:** a alteração é desfeita ou salva, o editor fecha, ou o teclado está aberto. Com o teclado aberto, a cápsula também some (spec 05), e a linha do fim continua no fluxo.
+- **Depois de salvar:** como na tabela, os campos fecham, o aviso do app diz "Perfil salvo." e some sozinho (spec 11), e o foco vai para "Editar".
+- **Erros de campo e de rede:** o bloco continua preso, com o texto do erro, até a pessoa corrigir ou salvar.
+- **Movimento:** o bloco entra subindo 8 px e aparecendo em 160 ms e sai do mesmo jeito. Com movimento reduzido, aparece e some sem movimento.
+- **Computador (1024 px ou mais, navegação lateral, sem cápsula):** a mesma regra. O bloco preso fica 16 px acima da borda de baixo da janela, na largura da coluna do formulário. A prévia "Como os outros veem" continua presa ao lado.
+- **App:** a mesma regra. A barra sai do rodapé fixo da `Tela` (`apps/mobile/src/perfil.tsx`, `rodape`) e passa a ser a linha do fim do formulário, presa acima da cápsula só com alteração e com a linha fora da vista.
+- **Aceite** (390 na web e no app, 1440 na web; perfil com dados, "Editar" aberto):
+
+| # | Passos | Esperado |
+|---|---|---|
+| B1 | Rola até Conta sem mudar nada | Nada preso na tela; em nenhum lugar aparece "Tudo salvo" |
+| B2 | Muda a cor e rola até Conta | O bloco "Alterações não salvas / Cancelar / Salvar" preso 12 px acima da cápsula, sem cobrir o fim da página |
+| B3 | Rola de volta até o fim do formulário | O bloco volta para o lugar dele, sem duplicar |
+| B4 | Desfaz a mudança | O bloco some, e "Salvar" desliga |
+| B5 | "Salvar" | Os campos fecham; aviso "Perfil salvo."; nada preso |
+| B6 | Toca num campo (teclado aberto) | O bloco preso some |
+| B7 | 1440 com mudança, rolado | O bloco 16 px acima da borda, na largura da coluna |
+
+Teste de cada dev: sem alteração, a barra não está presa e o editor não tem "Tudo salvo"; com alteração e a linha fora da vista, ela está presa acima da cápsula; e há um elemento só de "Salvar".
 
 **Perfil preenchido.**
 - O cabeçalho continua como está: faixa, foto de 96 (112 no computador), nome, resumo e interesses.
