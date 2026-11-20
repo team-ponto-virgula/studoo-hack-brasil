@@ -216,6 +216,7 @@ export const mensagens = {
     },
     cadastro: {
         titulo: 'Criar sua conta',
+        ou: 'ou crie com seu e-mail',
         instrucao: 'Informe seu e-mail. Vamos mandar um código para confirmar que ele é seu.',
         email: 'Seu e-mail',
         enviar: 'Enviar código',
