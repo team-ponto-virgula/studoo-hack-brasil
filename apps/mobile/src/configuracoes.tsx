@@ -315,7 +315,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
 
   const usados = [...normalizarResumoPerfil(descricao)].length;
   const comp = conf?.compartilhamento ?? null;
-  const iconeDoNivel: NomeIcone = !comp ? 'cadeado' : comp.visibilidade === 'explorar' ? 'bussola' : comp.visibilidade === 'perfil' ? 'pessoa' : 'elo';
+  const iconeDoNivel: NomeIcone = !comp || comp.moderacao === 'recusado' ? 'cadeado' : comp.visibilidade === 'explorar' ? 'bussola' : comp.visibilidade === 'perfil' ? 'pessoa' : 'elo';
   // Sem tema escolhido, o sugerido pelo título já vem marcado (a lista fechada do Web & API).
   const temaMarcado = conf ? conf.tema ?? conf.temaSugerido : null;
 
@@ -396,7 +396,11 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
                 <View style={confEstilos.linha}>
                   <Icone nome={iconeDoNivel} tamanho={20} cor={cores.acao} />
                   <Text testID="configuracoes-quem" style={confEstilos.linhaTexto}>
-                    {comp ? k.estadoCompartilhamento(mensagens.comunidade.niveis[comp.visibilidade].titulo, comp.estudando, comp.valeus) : k.soVoce}
+                    {/* Em revisão, o destino "depois da aprovação"; não publicada, só a dona vê (Lead e Designer, 20/11). */}
+                    {!comp || comp.moderacao === 'recusado' ? k.soVoce
+                      : k.estadoCompartilhamento(comp.moderacao === 'pendente'
+                        ? mensagens.seguranca.destinoDepoisDaAprovacao(mensagens.comunidade.niveis[comp.visibilidade].titulo)
+                        : mensagens.comunidade.niveis[comp.visibilidade].titulo, comp.estudando, comp.valeus)}
                   </Text>
                 </View>
                 {comp && <EstadoDaPublicacao moderacao={comp.moderacao} testID="configuracoes-moderacao" />}

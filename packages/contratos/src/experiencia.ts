@@ -1425,6 +1425,8 @@ export const mensagens = {
         fotoEmRevisao: 'Sua foto está em revisão. Até lá, os outros veem a sua inicial.',
         capaEmRevisao: 'A capa está em revisão. Até lá, os outros veem a capa padrão.',
         trilhaIndisponivel: 'Esta trilha não está disponível agora.',
+        /** O destino escolhido enquanto a publicação está em revisão: o lugar e o tema, sem afirmar que já está lá (Designer, 20/11). */
+        destinoDepoisDaAprovacao: (lugar: string) => `${lugar}, depois da aprovação`,
         // Ajuda: a seção do Perfil e o botão da entrada e da recuperação de senha
         ajudaTitulo: 'Ajuda',
         falarComSuporte: 'Falar com o suporte',

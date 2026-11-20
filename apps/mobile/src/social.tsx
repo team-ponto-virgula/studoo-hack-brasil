@@ -324,14 +324,18 @@ export function AvisoDaTrilha({ texto }: { texto: string }) {
 }
 
 /** O nível de visibilidade de um link (e o tema, quando está no Explorar), como `.selo-visibilidade` na tela Perfil. */
-export function SeloVisibilidade({ nivel, tema }: { nivel: Visibilidade; tema?: Tema | null }) {
+export function SeloVisibilidade({ nivel, tema, emRevisao = false }: {
+  nivel: Visibilidade; tema?: Tema | null;
+  /** Publicação em revisão: o destino e o tema em tom neutro, com "depois da aprovação" (nunca o verde de publicada). */
+  emRevisao?: boolean;
+}) {
   const icone: NomeIcone = nivel === 'explorar' ? 'bussola' : nivel === 'perfil' ? 'pessoa' : 'copiar';
-  const explorar = nivel === 'explorar';
+  const explorar = nivel === 'explorar' && !emRevisao;
   return (
     <View style={[socialEstilos.seloNivel, explorar && socialEstilos.seloNivelExplorar]}>
       <Icone nome={icone} tamanho={14} cor={explorar ? '#14513B' : cores.texto} />
       <Text style={[socialEstilos.seloNivelTexto, explorar && { color: '#14513B' }]}>
-        {cm.niveis[nivel].titulo}{explorar && tema ? ` · ${mensagens.temas[tema]}` : ''}
+        {emRevisao ? seg.destinoDepoisDaAprovacao(cm.niveis[nivel].titulo) : cm.niveis[nivel].titulo}{nivel === 'explorar' && tema ? ` · ${mensagens.temas[tema]}` : ''}
       </Text>
     </View>
   );
