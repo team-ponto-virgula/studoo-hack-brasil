@@ -231,7 +231,7 @@ function ArteMaterial() {
  */
 function ArtePonte() {
   return (
-    <Quadro selo>
+    <Quadro>
       {/* A legenda tem 12 embaixo na web (.ponte-legenda no celular); a cena devolve o -2 que serve ao cartão da lição. */}
       {/* A mesma faixa da ponte clara (spec 05, b75134a): as três tábuas feitas e o Stu chegando ao exercício. */}
       <View style={{ marginBottom: 14 }}><FaixaDaPonte passo={3} construida carregando={false} semLinha /></View>

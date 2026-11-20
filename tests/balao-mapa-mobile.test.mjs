@@ -20,11 +20,15 @@ test('o nó concluído ou bloqueado abre o balão no mapa, sem folha (c7059a8), 
   assert.match(balao, /testID="balao-no-refazer" rotulo=\{mensagens\.trilha\.refazer\} variante="secundario"/);
   assert.match(balao, /testID="balao-no-ir-atual" rotulo=\{mensagens\.trilha\.irParaAtual\} icone="seta" variante="secundario"/);
   assert.match(balao, /ouvirVoltar\(\(\) => \{ fechar\(\); return true; \}\)/, 'o voltar do Android fecha');
-  assert.match(caminho, /if \(cabeAcima\) aoRolar\(topo - altura - BALAO_FOLGA, topo \+ medidas\.lente, true, undefined, coberto\);/, 'nó e balão inteiros na área livre');
-  // Perto do alto da trilha, sem lugar acima mesmo com a tela no começo, o balão abre embaixo do nó.
-  assert.match(caminho, /const cabeAcima = topo - altura - BALAO_FOLGA >= deslocamento \+ 16;/);
-  assert.match(caminho, /else aoRolar\(topo, topo \+ medidas\.lente \+ BALAO_ABAIXO \+ altura, true, undefined, coberto\);/);
-  assert.match(caminho, /top: abaixo \? lente \+ BALAO_ABAIXO : -\(altura \+ BALAO_FOLGA\)/);
+  // Sempre embaixo do nó, 20 abaixo da lente, com a seta para cima, como a web (9709288); a tela rola até o conjunto caber.
+  assert.match(caminho, /aoRolar\(topo, topo \+ medidas\.lente \+ BALAO_ABAIXO \+ altura \+ BALAO_FOLGA_FIM, true, undefined, coberto\);/);
+  assert.match(caminho, /const BALAO_ABAIXO = 20;/);
+  assert.match(balao, /top: lente \+ BALAO_ABAIXO,/);
+  assert.doesNotMatch(caminho, /cabeAcima|balaoAbaixo/, 'o balão nunca troca de lado');
+  // Topo só com o título e o fechar; a concluída no âmbar da web.
+  assert.doesNotMatch(balao, /folhaIcone/);
+  assert.match(balao, /concluida && \{ color: '#9A5B00' \}/);
+  assert.match(caminho, /balaoNoConcluido: \{ borderColor: '#FFE08A' \}/);
 });
 
 test('"Mostrar a lição atual no mapa" mede com as faixas do alto e com a altura do cabeçalho preso', async () => {

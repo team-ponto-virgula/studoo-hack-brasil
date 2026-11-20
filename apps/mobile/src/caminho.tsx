@@ -350,8 +350,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
 
   /** O balão do nó aberto mediu a altura: a tela rola até o balão e o nó caberem na área livre (spec 01, e198866). */
   const balaoEnquadrado = useRef<string | null>(null);
-  const [balaoAbaixo, setBalaoAbaixo] = useState(false);
-  useEffect(() => { balaoEnquadrado.current = null; setBalaoAbaixo(false); }, [aberto]);
+  useEffect(() => { balaoEnquadrado.current = null; }, [aberto]);
   function enquadrarBalao(id: string, altura: number) {
     if (balaoEnquadrado.current === id || !aoRolar) return;
     const { caminho, lista, linhas } = posicoes.current;
@@ -359,11 +358,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     if (caminho === null || lista === null || !linha) return;
     balaoEnquadrado.current = id;
     const topo = deslocamento + caminho + lista + linha.y;
-    // Acima do nó só se, com a tela no começo, o balão já fica 16 abaixo das faixas do alto; senão, embaixo do nó.
-    const cabeAcima = topo - altura - BALAO_FOLGA >= deslocamento + 16;
-    setBalaoAbaixo(!cabeAcima);
-    if (cabeAcima) aoRolar(topo - altura - BALAO_FOLGA, topo + medidas.lente, true, undefined, coberto);
-    else aoRolar(topo, topo + medidas.lente + BALAO_ABAIXO + altura, true, undefined, coberto);
+    // O conjunto vai do topo do nó ao fim do balão (embaixo dele), com a folga: a tela rola o mínimo até caber.
+    aoRolar(topo, topo + medidas.lente + BALAO_ABAIXO + altura + BALAO_FOLGA_FIM, true, undefined, coberto);
   }
 
   function fechar(devolverFoco = true) {
@@ -495,7 +491,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 <BalaoDoNo titulo={no.titulo} texto={explicar(nos, indice)} estado={no.estado} x={x} largura={largura} reduzir={reduzir}
                   refazer={no.estado === 'concluida' && aoAbrir ? () => { fechar(false); aoAbrir(no); } : undefined}
                   irParaAtual={no.estado === 'bloqueada' && nos.some((outro) => outro.estado === 'atual') ? irParaAtual : undefined}
-                  fechar={() => fechar()} aoMedir={(altura) => enquadrarBalao(no.id, altura)} abaixo={balaoAbaixo} lente={medidas.lente} />
+                  fechar={() => fechar()} aoMedir={(altura) => enquadrarBalao(no.id, altura)} lente={medidas.lente} />
               )}
               {montando && <Nascimento x={x} largura={largura} lente={medidas.lente} atraso={atrasos.no} animar={novo} reduzir={reduzir} />}
               {indice === 0 && criacao !== null && <StuDoNo1 x={x} largura={largura} lente={medidas.lente} tamanho={medidas.guia} criacao={criacao} reduzir={reduzir} />}
@@ -611,10 +607,10 @@ const INICIO_COM_BALAO = 242;
 const PARTE_COM_BALAO = 152;
 /** O balão do nó atual ("Começar" e o título em até duas linhas) começa até 22 + 96 acima da lente: o topo do conjunto. */
 const BALAO_DO_ATUAL = 22 + 96;
-/** O balão do nó concluído ou bloqueado fica 14 acima da lente (a seta aponta para o nó). */
-const BALAO_FOLGA = 14;
-/** Sem lugar acima (a lição perto do alto da trilha), o balão abre embaixo do nó, depois do nome dele. */
-const BALAO_ABAIXO = 72;
+/** O balão do nó concluído ou bloqueado abre sempre embaixo, 20 abaixo da lente, com a seta para cima (como a web, 9709288). */
+const BALAO_ABAIXO = 20;
+/** A folga embaixo do balão, para ele ficar acima do card e da cápsula (a --folga-balao da web). */
+const BALAO_FOLGA_FIM = 24;
 
 /** Placa de madeira com a frase do Stu: entra balançando, presa em dois postes fincados nas colinas. */
 function Placa({ texto }: { texto: string }) {
@@ -1706,12 +1702,10 @@ function Chegada({ trecho, lente, feita, stu, festa, total, faltam, aoMedir, ext
 /**
  * O balão de uma lição concluída ou bloqueada, no mapa (spec 01, c7059a8: um componente só, como a web): título e
  * "fechar" de 44, o texto do estado (explicar()), "Refazer" na concluída e "Mostrar a lição atual no mapa" na bloqueada.
- * Fica 14 acima da lente, com a seta para o nó, e mede a altura para a tela enquadrar o conjunto (e198866). Fecha pelo X,
+ * Abre sempre embaixo, 20 abaixo da lente, com a seta para cima (como a web), e mede a altura para a tela enquadrar o conjunto (e198866). Fecha pelo X,
  * pelo voltar do Android e ao tocar em outro nó; o foco vai ao título ao abrir e volta ao nó ao fechar.
  */
-function BalaoDoNo({ titulo, texto, estado, x, largura, reduzir, refazer, irParaAtual, fechar, aoMedir, abaixo = false, lente }: {
-  /** Sem lugar acima do nó: o balão abre embaixo, com a seta para cima. */
-  abaixo?: boolean;
+function BalaoDoNo({ titulo, texto, estado, x, largura, reduzir, refazer, irParaAtual, fechar, aoMedir, lente }: {
   lente: number;
   titulo: string;
   texto: string;
@@ -1745,16 +1739,13 @@ function BalaoDoNo({ titulo, texto, estado, x, largura, reduzir, refazer, irPara
   return (
     <Animated.View testID="balao-no" role="dialog" aria-label={titulo} accessibilityViewIsModal
       onLayout={(evento) => { const h = evento.nativeEvent.layout.height; if (Math.abs(h - altura) > 1) { setAltura(h); aoMedir(h); } }}
-      style={[caminhoEstilos.balaoNo, concluida && caminhoEstilos.balaoNoConcluido, { left: esquerda, width: largo, top: abaixo ? lente + BALAO_ABAIXO : -(altura + BALAO_FOLGA),
+      style={[caminhoEstilos.balaoNo, concluida && caminhoEstilos.balaoNoConcluido, { left: esquerda, width: largo, top: lente + BALAO_ABAIXO,
         opacity: altura > 0 ? entrada : 0, transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
-      <View style={[caminhoEstilos.balaoNoSeta, concluida && caminhoEstilos.balaoNoConcluido, abaixo && caminhoEstilos.balaoNoSetaAcima, { left: Math.min(Math.max(16, centro - esquerda - 7), largo - 30) }]} />
+      <View style={[caminhoEstilos.balaoNoSeta, concluida && caminhoEstilos.balaoNoConcluido, { left: Math.min(Math.max(16, centro - esquerda - 7), largo - 30) }]} />
       <View style={caminhoEstilos.folhaTopo}>
-        <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-          style={[caminhoEstilos.folhaIcone, concluida && caminhoEstilos.folhaIconeConcluida]}>
-          <Icone nome={concluida ? 'check' : 'cadeado'} tamanho={20} cor={concluida ? cores.fundo : cores.tintaNeutra} />
-        </View>
+        {/* Só o título e o "fechar", sem o ícone de estado (9709288); a concluída tem o título no âmbar da web. */}
         <Text ref={cabecalho} accessible accessibilityRole="header"
-          style={[estilos.tituloBloco, caminhoEstilos.folhaTitulo, concluida && { color: cores.sucesso }]}>{titulo}</Text>
+          style={[estilos.tituloBloco, caminhoEstilos.folhaTitulo, concluida && { color: '#9A5B00' }]}>{titulo}</Text>
         <Pressable testID="balao-no-fechar" accessibilityRole="button" accessibilityLabel={mensagens.trilha.fechar} onPress={fechar}
           onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
           style={({ pressed }) => [caminhoEstilos.fechar, pressed && caminhoEstilos.fecharPressionado, focado && estilos.foco]}>
@@ -1917,9 +1908,8 @@ const caminhoEstilos = StyleSheet.create({
   // O balão da lição concluída ou bloqueada (spec 01, c7059a8): o mesmo desenho do balão do nó atual, mais largo, com a seta.
   balaoNo: { position: 'absolute', zIndex: 30, gap: 10, paddingTop: 12, paddingBottom: 14, paddingLeft: 16, paddingRight: 8, borderRadius: 18,
     borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo, boxShadow: `0 4px 0 ${cores.gelo}` },
-  balaoNoConcluido: { borderColor: '#BFE5CF' },
-  balaoNoSetaAcima: { bottom: undefined, top: -8, transform: [{ rotate: '225deg' }] },
-  balaoNoSeta: { position: 'absolute', bottom: -8, width: 14, height: 14, borderRadius: 2, borderRightWidth: 2, borderBottomWidth: 2,
+  balaoNoConcluido: { borderColor: '#FFE08A' },
+  balaoNoSeta: { position: 'absolute', top: -8, width: 14, height: 14, borderRadius: 2, borderTopWidth: 2, borderLeftWidth: 2,
     borderColor: cores.gelo, backgroundColor: cores.fundo, transform: [{ rotate: '45deg' }] },
   folhaIcone: { width: 36, height: 36, marginTop: 4, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.faceNeutra },
   folhaIconeConcluida: { backgroundColor: ouroFace },
