@@ -41,6 +41,7 @@
     "comunidade:demo:remover": "node --env-file-if-exists=.env --import tsx scripts/comunidade-demo.ts remover",
     "codigo:studoo": "node --import tsx scripts/codigo-studoo.mjs",
     "codigo:studoo:prova": "node --import tsx scripts/codigo-studoo-prova.mjs",
+    "test:privacidade": "node --env-file=.env --import tsx --test tests/privacidade.test.mjs",
     "test:email": "node --import tsx --test tests/email-resend.test.mjs",
     "test:estudio": "node --env-file=.env --import tsx --test tests/estudio.test.mjs tests/demo-zerar.test.mjs tests/voz-ao-vivo.test.mjs tests/compartilhar.test.mjs tests/perfil-rico.test.mjs tests/comunidade.test.mjs tests/codigo-e-demonstracao.test.mjs tests/codigo-folga.test.mjs tests/seguir.test.mjs tests/configuracoes-trilha.test.mjs",
     "estudio:limpar": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/limpar-materiais.ts",
