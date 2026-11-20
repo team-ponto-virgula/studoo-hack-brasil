@@ -38,6 +38,8 @@ const statusErros: Record<CodigoErro, number> = {
   limite_comunidade: 429,
   seguir_invalido: 409,
   conteudo_recusado: 422,
+  consentimento_ia: 428,
+  confirmacao_invalida: 400,
 };
 
 export class FalhaApi extends Error {

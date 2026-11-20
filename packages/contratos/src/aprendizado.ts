@@ -2,6 +2,7 @@ import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, Fe
 import type { MotivoRever } from './licao';
 import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil, Tema } from './compartilhar';
 import type { ConfiguracoesTrilha, MotivoDenuncia, MudancaConfiguracoes, Novidades, PaginaExplorar, ResultadoSeguir, ResultadoValeu, Visibilidade } from './comunidade';
+import type { EstadoPrivacidade } from './privacidade';
 export * from './estudio';
 export * from './licao';
 export * from './som';
@@ -222,12 +223,15 @@ const codigosErro = [
   "limite_comunidade",
   "seguir_invalido",
   "conteudo_recusado",
+  "consentimento_ia",
+  "confirmacao_invalida",
 ] as const;
 
 export type CodigoErro = typeof codigosErro[number];
 
 export class ErroStudoo extends Error {
-  constructor(public readonly codigo: CodigoErro) {
+  /** `corpo`: o JSON de erro como veio (no 428 "consentimento_ia" traz `privacidade`; ver privacidadeDoErro). */
+  constructor(public readonly codigo: CodigoErro, public readonly corpo?: unknown) {
     super(codigo);
     this.name = "ErroStudoo";
   }
@@ -241,7 +245,7 @@ export type EventoGeracao =
   | { tipo: "fluxo"; fluxo: number; titulo: string }
   | { tipo: "licao"; fluxo: number; licao: number; titulo: string; resumo?: string }
   | { tipo: "pronto"; proposta: PropostaPlano }
-  | { tipo: "erro"; codigo: CodigoErro };
+  | { tipo: "erro"; codigo: CodigoErro; privacidade?: EstadoPrivacidade };
 
 function texto(valor: unknown): valor is string {
   return typeof valor === "string" && valor.length > 0;
@@ -286,7 +290,10 @@ export function interpretarEventoGeracao(linha: string): EventoGeracao | null {
     }
     case "erro": {
       const codigo = codigosErro.find((valor) => valor === dado.codigo);
-      return { tipo: "erro", codigo: codigo ?? "falha" };
+      const privacidade = typeof dado.privacidade === "object" && dado.privacidade !== null
+        ? dado.privacidade as EstadoPrivacidade
+        : undefined;
+      return { tipo: "erro", codigo: codigo ?? "falha", ...(privacidade ? { privacidade } : {}) };
     }
     default:
       return null;
@@ -321,12 +328,18 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
         ? corpo.codigo
         : undefined;
       const codigo = codigosErro.find((valor) => valor === codigoRecebido);
-      throw new ErroStudoo(codigo ?? "falha");
+      throw new ErroStudoo(codigo ?? "falha", corpo ?? undefined);
     }
     return corpo as T;
   }
 
   return {
+    /** Privacidade (revisão Apple; ver `@studoo/contratos/privacidade`): o aceite do envio a IA de terceiros. */
+    privacidade: () => solicitar<EstadoPrivacidade>("/privacidade"),
+    aceitarIa: (versao: string) => solicitar<EstadoPrivacidade>("/privacidade/consentimento-ia", "POST", { versao }),
+    revogarIa: () => solicitar<EstadoPrivacidade>("/privacidade/consentimento-ia", "DELETE"),
+    /** Exclui a conta e tudo dela, no ato e em todos os aparelhos (a tela pede para digitar EXCLUIR antes). */
+    excluirConta: () => solicitar<null>("/conta", "DELETE", { confirmacao: "EXCLUIR" }),
     enviarMaterial: (arquivo: ArquivoEstudo) => solicitar<MaterialEstudo>('/estudio/materiais', 'POST', arquivo),
     materialDemo: () => solicitar<MaterialEstudo>('/estudio/materiais/demo', 'POST', {}),
     excluirMaterial: (id: string) => solicitar<null>(`/estudio/materiais/${encodeURIComponent(id)}`, 'DELETE'),

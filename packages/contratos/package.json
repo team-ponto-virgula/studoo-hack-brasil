@@ -11,6 +11,10 @@
     "./experiencia": {
       "types": "./src/experiencia.ts",
       "default": "./src/experiencia.ts"
+    },
+    "./privacidade": {
+      "types": "./src/privacidade.ts",
+      "default": "./src/privacidade.ts"
     }
   }
 }
