@@ -51,3 +51,27 @@ test('o indicador: três tábuas, o Stu na atual, "Passo n de 3 · nome" ou "Pon
   assert.match(faixa, /if \(reduzir !== false\) \{ posicao\.setValue\(alvo\); salto\.setValue\(0\); return; \}/);
   assert.match(faixa, /duration: 320/);
 });
+
+test('aceite b75134a: laço no selo, faixa da web, sem selo de demonstração, sem o Explique, rodapé branco, Stu animado ao vencer', async () => {
+  const cenas = await ler('apps/mobile/src/estudio-cenas.tsx');
+  assert.match(cenas, /<Icone nome="revisao" tamanho=\{20\} cor=\{cores\.acao\} \/>/);
+  assert.match(cenas, /faixaPonte: \{ height: 88,[^}]*borderRadius: 16, backgroundColor: '#E4F1FF'/);
+  assert.match(cenas, /faixaMargemTexto: \{ color: '#5E6A85', fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 13, lineHeight: 16/);
+  assert.match(cenas, /\{comemorar \? <Stu nome="stu-animado" tamanho=\{36\} animado="uma-vez" \/> : <Stu nome="stu-perfil" tamanho=\{36\} \/>\}/);
+  const apoio = await ler('apps/mobile/src/estudio-adaptativo.tsx');
+  assert.match(apoio, /<SeloDaPonte \/>/, 'sem "Modo demonstração" no alto da ponte');
+  assert.match(apoio, /comemorar=\{venceu\}/);
+  assert.match(apoio, /\{ultimo && !\(ponteAberta && !gravando && etapaVoz !== 'ativa'\) && <View/, 'o Explique só volta com o exercício original (fica durante uma gravação)');
+  assert.match(apoio, /testID="ponte-vencida" accessible accessibilityRole="header"[^>]*>\{m\.ponteVencida\}/, 'título do cartão vencido: "Agora tente o exercício de novo."');
+  assert.doesNotMatch(apoio, /style=\{s\.pontePassoTitulo\}>\{m\.ponteConstruida\}/, '"Ponte construída!" só no indicador');
+  const licao = await ler('apps/mobile/src/licao.tsx');
+  assert.match(licao, /estiloRodape=\{ponteAberta \? undefined : retorno === 'certa'/);
+  const apresentacao = await ler('apps/mobile/src/apresentacao.tsx');
+  assert.match(apresentacao, /<FaixaDaPonte passo=\{3\} construida carregando=\{false\} semLinha \/>/, 'a apresentação usa a mesma faixa');
+});
+
+test('a cena antiga e as chaves velhas da ponte saíram (o app e a apresentação usam a faixa nova)', async () => {
+  const cenas = await ler('apps/mobile/src/estudio-cenas.tsx');
+  assert.doesNotMatch(cenas, /function CenaPonte|function Tabua\(/);
+  for (const chave of ['construir', 'ponteDica', 'pontePronta', 'ponteVoltar', 'ponteTabuaErro', 'pontePassoErro']) assert.equal(m[chave], undefined, `mensagens.estudio.${chave} saiu do contrato`);
+});

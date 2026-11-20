@@ -185,7 +185,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     './opcao': { Opcao: 'Opcao', letras: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] },
     // Cenas do app (ponte, Stu aluno, ondas, caderno, página do material): componentes de apresentação, sem handlers.
     './estudio-cenas': {
-      CenaPonte: 'CenaPonte', FaixaDaPonte: 'FaixaDaPonte', SeloDaPonte: 'SeloDaPonte', StuAluno: 'StuAluno', EtapasDoEnsino: 'EtapasDoEnsino', OndasDoVolume: 'OndasDoVolume',
+      FaixaDaPonte: 'FaixaDaPonte', SeloDaPonte: 'SeloDaPonte', StuAluno: 'StuAluno', EtapasDoEnsino: 'EtapasDoEnsino', OndasDoVolume: 'OndasDoVolume',
       CadernoDoStu: 'CadernoDoStu', PaginaDoMaterial: 'PaginaDoMaterial',
     },
     './animacoes': { useAparecer: () => 0, estiloDeEntrada: () => ({}) },

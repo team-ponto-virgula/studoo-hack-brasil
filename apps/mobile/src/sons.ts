@@ -12,7 +12,9 @@
  *   ao vivo pausam. Pausar (gravação, voz, segundo plano) guarda a posição: a música volta do mesmo ponto, nunca do começo.
  * - Dois reprodutores alternados em cruzamento suave (150 ms) para não haver buraco na emenda do laço; o próximo já fica
  *   posicionado no começo do trecho (no iPhone, `play()` é imediato e `seekTo()` chega depois), e o cruzamento é agendado
- *   pela posição real do reprodutor, não por um relógio desde o começo.
+ *   pela posição real do reprodutor, não por um relógio desde o começo. No iPhone o `play()` leva alguns centésimos para
+ *   soar: o próximo começa 480 ms antes do fim (180 nos outros) e o volume só sobe quando ele diz que está tocando, para o
+ *   cruzamento acontecer de verdade, sem respiro na volta do laço (conferência nativa 44809026116).
  * - Começa no primeiro gesto em qualquer tela, já na entrada (login ou visitante), com rampas de 600/300/400 ms.
  * - Posse do modo de áudio delegada a `MaquinaEstadoSom` (`packages/contratos/src/som-estado.ts`):
  *   nunca chama `setAudioModeAsync` durante gravação/voz ao vivo ou fala de lição; aplica o modo normal ao carregar as
@@ -109,6 +111,11 @@ type JogadorDeEfeito = {
 
 /** O que cada toque fez, para a medida no aparelho e nos testes (só os últimos 40). */
 export type MedidaDeEfeito = { id: IdEfeitoSonoro; pedidoEm: number; playEm: number | null; resultado: 'tocou' | 'carregando' | 'atrasado' | 'calado' };
+
+/** Quanto antes do fim do trecho o próximo reprodutor do laço começa: no iPhone o play() demora alguns centésimos para soar. */
+const ANTECEDENCIA_DO_CRUZAMENTO_MS = Platform.OS === 'ios' ? 480 : 180;
+/** Quanto o cruzamento espera o próximo reprodutor dizer que está tocando antes de subir o volume mesmo assim. */
+const ESPERA_MAXIMA_PARA_SOAR_MS = 400;
 
 class TocaSonsMobile {
   private estado = new MaquinaEstadoSom();
@@ -576,12 +583,12 @@ class TocaSonsMobile {
     return Math.round((def.duracaoMs / 1000 - def.aparoFimSeg - posicao) * 1000);
   }
 
-  /** O próximo cruzamento, 180 ms antes do fim do trecho, contado da posição real (vale também ao retomar do meio). */
+  /** O próximo cruzamento, ANTECEDENCIA_DO_CRUZAMENTO_MS antes do fim do trecho, pela posição real (vale também ao retomar do meio). */
   private agendarProximoCruzamento(id: IdMusica): void {
     this.pararCruzamento();
     const def = CATALOGO_FUNDOS.find((f) => f.id === id);
     if (!def) return;
-    const esperaMs = Math.max(0, this.faltaParaOFim(def) - 180);
+    const esperaMs = Math.max(0, this.faltaParaOFim(def) - ANTECEDENCIA_DO_CRUZAMENTO_MS);
     this.timerCruzamento = setTimeout(() => this.cruzar(id), esperaMs);
   }
 
@@ -590,7 +597,7 @@ class TocaSonsMobile {
     const def = CATALOGO_FUNDOS.find((f) => f.id === id);
     if (!def || this.fundoAtualId !== id || this.fundoPausado || this.estado.estadoFundo() === 'parado') return;
     // O relógio do JS pode adiantar: se ainda falta bastante (o reprodutor atrasou), espera mais um pouco.
-    if (this.faltaParaOFim(def) > 400) {
+    if (this.faltaParaOFim(def) > ANTECEDENCIA_DO_CRUZAMENTO_MS + 220) {
       this.agendarProximoCruzamento(id);
       return;
     }
@@ -608,6 +615,21 @@ class TocaSonsMobile {
       return;
     }
 
+    // O volume só sobe quando o próximo já soa (no iPhone o play() demora alguns centésimos); até lá, o atual segue cheio.
+    const inicioDaEspera = Date.now();
+    const esperarSoar = () => {
+      if (this.fundoAtualId !== id || this.fundoPausado) return;
+      let soando = false;
+      try { soando = proximo.playing; } catch { soando = true; }
+      if (!soando && Date.now() - inicioDaEspera < ESPERA_MAXIMA_PARA_SOAR_MS) { this.timerCruzamento = setTimeout(esperarSoar, 15); return; }
+      this.timerCruzamento = null;
+      this.rampaDoCruzamento(id, def, atual, proximo, alvo);
+    };
+    esperarSoar();
+  }
+
+  /** A rampa de 150 ms (5 passos de 30): o próximo sobe, o atual desce e, no fim, para e volta ao começo do trecho. */
+  private rampaDoCruzamento(id: IdMusica, def: (typeof CATALOGO_FUNDOS)[number], atual: AudioPlayer, proximo: AudioPlayer, alvo: number): void {
     let passo = 0;
     const passos = 5;
     const intervalo = setInterval(() => {
