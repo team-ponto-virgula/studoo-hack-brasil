@@ -64,6 +64,18 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "testflight": {
+      "extends": "production",
+      "ios": {
+        "bundleIdentifier": "com.studoo.mobile.dev",
+        "appleTeamId": "$EXPO_APPLE_TEAM_ID",
+        "ascAppId": "$STUDOO_ASC_APP_ID",
+        "ascApiKeyPath": "$EXPO_ASC_API_KEY_PATH",
+        "ascApiKeyId": "$EXPO_ASC_KEY_ID",
+        "ascApiKeyIssuerId": "$EXPO_ASC_ISSUER_ID",
+        "language": "pt-BR"
+      }
+    }
   }
 }
