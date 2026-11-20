@@ -217,6 +217,15 @@ no_emulador() {
   # O teclado da tela aparece mesmo com o teclado do computador, como num celular; sem preenchimento automático de senhas.
   adb -s "$id" shell settings put secure show_ime_with_hard_keyboard 1 || true
   adb -s "$id" shell settings put secure autofill_service null || true
+  # Sem as janelas de erro do sistema por cima do app: com a máquina carregada, o "Pixel Launcher isn't responding" cobriu a
+  # entrada na execução 44809026116 e o primeiro fluxo não achou nenhum id. hide_error_dialogs esconde as janelas de travamento
+  # e de "não está respondendo"; anr_show_background=0 não mostra as de processos em segundo plano (o launcher, com o app na
+  # frente). Uma janela que já esteja aberta fecha com CLOSE_SYSTEM_DIALOGS. Os fluxos ainda tocam "Wait" se ela voltar
+  # (partes/sair-do-menu-do-expo-go.yaml).
+  adb -s "$id" shell settings put global hide_error_dialogs 1 || true
+  adb -s "$id" shell settings put secure anr_show_background 0 || true
+  adb -s "$id" shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
+  echo "Janelas de erro do sistema: hide_error_dialogs=$(adb -s "$id" shell settings get global hide_error_dialogs | tr -d '\r'), anr_show_background=$(adb -s "$id" shell settings get secure anr_show_background | tr -d '\r')"
 
   if ! adb -s "$id" install -r "$APK" > "$REGISTROS/adb-instalar.log" 2>&1; then
     mostrar_registro "$REGISTROS/adb-instalar.log"

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
-import { CATALOGO_EFEITOS, CATALOGO_FUNDOS, OPCOES_FUNDO_UI } from '../packages/contratos/src/catalogo-sons.ts';
+import { CATALOGO_EFEITOS, CATALOGO_FUNDOS, fundoUnicoDaPreferencia } from '../packages/contratos/src/catalogo-sons.ts';
 import { MaquinaEstadoSom } from '../packages/contratos/src/som-estado.ts';
 
 const RAIZ = path.resolve(import.meta.dirname, '..');
@@ -33,8 +33,11 @@ test('Catálogo e arquivos batem nas duas plataformas (sem sobras nem faltas, by
     assert.ok(a.length <= 1024 * 1024, `Fundo ${arq} excede 1 MB (${a.length} bytes)`);
   }
 
-  assert.equal(OPCOES_FUNDO_UI[0].id, 'mudo');
-  assert.equal(OPCOES_FUNDO_UI.length, 6);
+  assert.deepEqual(fundosEsperados, ['lofi-estudo.mp3']);
+  for (const anterior of [undefined, 'foco_calmo', 'chuva_suave', 'biblioteca', 'brisa_natural', 'lofi_estudo']) {
+    assert.equal(fundoUnicoDaPreferencia(anterior), 'lofi_estudo');
+  }
+  assert.equal(fundoUnicoDaPreferencia('mudo'), 'mudo');
 });
 
 test('Mesmos IDs de SFX e fundos declarados no mobile (FONTES_SFX e FONTES_FUNDOS) e na web', () => {
@@ -49,9 +52,7 @@ test('Mesmos IDs de SFX e fundos declarados no mobile (FONTES_SFX e FONTES_FUNDO
   // (fundoUnicoDaPreferencia) e não entram no pacote do app.
   const lofi = CATALOGO_FUNDOS.find((def) => def.id === 'lofi_estudo');
   assert.match(mobSrc, new RegExp(`\\blofi_estudo:\\s*require\\(['"]\\.\\./assets/sons/fundos/${lofi.arquivo}['"]\\)`), 'Falta lofi_estudo em FONTES_FUNDOS');
-  for (const def of CATALOGO_FUNDOS.filter((d) => d.id !== 'lofi_estudo')) {
-    assert.doesNotMatch(mobSrc, new RegExp(`assets/sons/fundos/${def.arquivo}`), `${def.id} não entra no pacote do app`);
-  }
+
 });
 
 test('Todos os WAVs são PCM 16-bit mono em 44.100 Hz com início em até 5 ms', () => {

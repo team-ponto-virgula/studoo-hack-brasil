@@ -151,7 +151,7 @@ test("a estrutura vem por streaming e vira eventos válidos, com índices calcul
   assert.deepEqual(eventos.filter(({ tipo }) => tipo === "licao").map(({ fluxo, licao }) => [fluxo, licao]), [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0]]);
   const pronto = eventos.at(-1);
   assert.equal(pronto.proposta.titulo, "Violão do zero");
-  assert.equal(pronto.proposta.origem, `IA da OpenAI (${MODELO_RACIOCINIO})`);
+  assert.equal(pronto.proposta.origem, "Conteúdo gerado pelo Studoo");
   assert.ok(pronto.proposta.fluxos.flatMap(({ licoes }) => licoes).some(({ titulo }) => titulo.startsWith("Revisão")));
   // O resumo que o modelo escreve para a prévia vai junto, no evento e na proposta; sem ele, a lição vem só com o título.
   const [primeira, segunda] = eventos.filter(({ tipo }) => tipo === "licao");
@@ -183,7 +183,7 @@ test("o conteúdo da lição vem com Structured Outputs e é normalizado para o 
   assert.ok(esqueletoValido(esqueleto));
   const conteudo = await gerador.gerarConteudo(esqueleto, 0, 0, new AbortController().signal);
   assert.ok(conteudoValido(conteudo));
-  assert.equal(conteudo.origem, "IA da OpenAI (teste)");
+  assert.equal(conteudo.origem, "Conteúdo gerado pelo Studoo");
   assert.deepEqual(conteudo.exercicio.opcoes.map(({ id }) => id), ["a", "b", "c"]);
   assert.deepEqual(conteudo.exercicio.gabarito, ["a"]);
   assert.equal("contexto" in conteudo.exercicio, false, "campo nulo sai do conteúdo");
@@ -459,7 +459,7 @@ test("sem a IA, ou com a IA fora do ar, vale a correção local", async () => {
 
 test("o modelo padrão não recebe o campo de raciocínio", async () => {
   const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
-  assert.equal(eventos.at(-1).proposta.origem, `IA da OpenAI (${MODELO_PADRAO})`);
+  assert.equal(eventos.at(-1).proposta.origem, "Conteúdo gerado pelo Studoo");
   assert.equal(pedidos[0].dados.model, MODELO_PADRAO);
   assert.equal(pedidos[0].dados.reasoning, undefined);
 });

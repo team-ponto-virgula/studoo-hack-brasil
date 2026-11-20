@@ -30,6 +30,28 @@ Reconstrua o app de desenvolvimento após instalar as dependências: esta entreg
 - A nova senha deve ter de 8 a 256 caracteres. A troca consome o código atomicamente e encerra as sessões web e mobile anteriores. A pessoa entra novamente após a confirmação.
 - Com `EMAIL=falso` e origem loopback, os e-mails ficam em `.studoo-local/emails/`, fora do Git, com permissão restrita. Isso permite testar o código real sem envio externo. Códigos não aparecem nos logs nem na resposta HTTP. Esse modo é recusado em origens públicas.
 
+## Botão "Continuar com Google" (regra de design, 20/11)
+
+A pedido do dono, o botão ganha o logo do Google, igual na web, no Android e no iPhone. Na web, já está em `6a34902` (entrada e cadastro), com o ativo compartilhado de `dee5318`, `packages/contratos/assets/`. As capturas em 390 × 844 foram conferidas. O app está em `1a64bde`, conferido na prévia web do Expo em 390 com densidade 3, não no aparelho.
+
+- **O logo:** o "G" oficial do Google, nas cores originais, como está no pacote de marca do Google Sign-In. Não recolorir, não redesenhar, não pôr contorno ou sombra, não trocar por ícone de fonte. Referência em `docs/specs/referencias/google/`:
+  - `google-g.svg` é o vetor do arquivo oficial "Theme=Light, Show text=No, Shape=Square, Platform=Android+Web", só sem o fundo e o contorno do botão quadrado;
+  - `google-g.png`, `@2x` e `@3x` (20, 40 e 60 px, fundo transparente) são esse vetor rasterizado, para o app e para a web.
+  - Use o PNG nas três plataformas. O SVG oficial usa `foreignObject` e filtros, que o React Native não desenha.
+- **Tamanho e lugar:** o logo tem 20 × 20 px, o mesmo do botão de 40 px do Google, sem esticar. Fica à esquerda do rótulo, com 12 px entre o logo e o texto. O par logo + texto fica centralizado no botão.
+- **O botão:** continua o secundário do Studoo, na largura toda, com 48 px, raio 16, fundo branco, borda `#E1E7FA`, lábio e o texto "Continuar com Google" (`mensagens.acesso.google`). O fundo branco atende à regra do Google de mostrar o "G" colorido só sobre branco.
+  - Ao tocar, o botão afunda como os outros, e o logo vai junto.
+  - Desativado (`enviando`/`ocupado`), o botão fica como os outros desativados, e o logo fica com 38% de opacidade, sem virar cinza.
+- **Leitor de tela:** o nome do botão é o texto "Continuar com Google". O logo é decorativo: `alt=""` na web; `accessible={false}` e sem rótulo no app.
+- **Onde:** em todo lugar que mostra "Continuar com Google", com o mesmo logo, tamanho e respiro. Isso vale para a entrada e para o primeiro passo do cadastro. No cadastro, o Google vai no topo, antes do divisor e do e-mail, na mesma ordem da entrada (P28 da spec 07).
+- **Textos do cadastro com o Google** (decisão de 20/11):
+  - O divisor do cadastro diz "ou crie com seu e-mail", na chave nova `mensagens.cadastro.ou`. O "ou entre com e-mail" (`mensagens.acesso.ou`) fica só na entrada, porque na tela "Criar sua conta" ele falava em entrar.
+  - A instrução "Informe seu e-mail. Vamos mandar um código para confirmar que ele é seu." (`mensagens.cadastro.instrucao`) fala só do caminho por e-mail. Por isso ela fica sempre logo acima do campo "Seu e-mail".
+  - Com o Google, a ordem fica: título, "Continuar com Google", divisor, instrução, campo. Sem o Google, fica título, instrução, campo, como hoje.
+  - O texto da instrução não muda.
+- **Com a Apple:** no iPhone, "Continuar com a Apple" fica acima do Google, com o botão oficial da Apple (preto, `AppleAuthenticationButton`, a regra da Apple), na mesma largura, raio 16 e altura de 52 px com o degrau. Os dois não se misturam: o Google não fica preto, e a Apple não ganha a borda do Studoo. Na web e no Android não há o botão da Apple, e o Google fica sozinho acima do "ou". Essa diferença já é a do iPhone, sem linha nova na spec 07.
+- **Aceite:** em 390, na web e no app, o "G" colorido aparece à esquerda do texto, com 20 px e 12 px de respiro; ampliar a captura não mostra borda, cor trocada ou serrilhado; o leitor de tela lê só "Continuar com Google, botão". Um teste confere que o botão do Google mostra a imagem e que ela não tem nome acessível.
+
 ## Validação
 
 `npm run test:acesso` usa o banco local migrado, cria e remove somente suas contas sintéticas e testa recuperação, expiração, concorrência, revogação, OAuth, JWT e isolamento de canais. Não exige credenciais externas. `npm run test:email` verifica o contrato HTTP do Resend e suas falhas com respostas simuladas, sem enviar mensagens reais. `npm run test:google-mobile` testa PKCE, retorno após recriação do app, cancelamento e falhas de armazenamento com módulos nativos simulados. `npm run test:paridade` verifica também os textos de acesso.

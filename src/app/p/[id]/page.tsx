@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { origemLegivel, type PerfilPublico } from '@studoo/contratos';
+import type { PerfilPublico } from '@studoo/contratos';
 import { FalhaApi } from '@/servidor/acesso/http';
 import { compartilharAtivo, comunidadeAtiva, limitarPublico, perfilPublico } from '@/servidor/compartilhar/servico';
 import { perfilPublicoComCartoes } from '@/servidor/compartilhar/comunidade';
@@ -95,7 +95,7 @@ export default async function PaginaDoPerfil({ params }: Props) {
           <li key={trilha.codigo}>
             <Link className="perfil-publico__trilha" href={`/t/${trilha.codigo}`} aria-label={p.abrirTrilha(trilha.titulo)}>
               <strong>{trilha.titulo}</strong>
-              <span>{mensagens.compartilhar.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</span>
+              <span>{mensagens.compartilhar.totalLicoes(trilha.totalLicoes)}</span>
             </Link>
           </li>
         ))}

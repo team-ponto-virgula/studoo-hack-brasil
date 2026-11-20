@@ -2,7 +2,11 @@ import { codigoAceito, normalizarEmailEntrada, senhaAceita } from '@studoo/contr
 import { CAMINHO_POLITICA } from '@studoo/contratos/privacidade';
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { criarClienteNativo, origemConfigurada } from './api-nativa';
+import { appleDisponivelNoAparelho } from './apple-nativo';
+import { googleNoAparelho } from './google-nativo';
+import { LOGO_GOOGLE } from './marca-google';
 import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
@@ -26,9 +30,13 @@ export function enderecoDaPoliticaPublica() {
  * na hora com a sessão do app. Mesmo desenho da recuperação de senha. Pedir código responde sempre "enviado" (o
  * servidor não revela quais e-mails já têm conta). Erros nos campos e do servidor no cartão de erro, sem janelas nativas.
  */
-export function CriarConta({ emailInicial, voltar, criar }: {
+export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
   emailInicial: string;
   voltar: () => void;
+  /** "Continuar com Google" no topo do primeiro passo, antes do e-mail, quando o servidor e o build o oferecem (spec 06). */
+  google?: () => Promise<void>;
+  /** "Continuar com a Apple" acima do Google, como na entrada (App Review 4.8): só no iPhone, com `apple: true`. */
+  apple?: () => Promise<void>;
   /** Cria a conta e entra (guarda a sessão no aparelho). */
   criar: (email: string, codigo: string, senha: string) => Promise<void>;
 }) {
@@ -43,6 +51,16 @@ export function CriarConta({ emailInicial, voltar, criar }: {
   const [espera, setEspera] = useState(0);
   const emCurso = useRef(false);
   const politica = enderecoDaPoliticaPublica();
+  // Os provedores, como na entrada: só o que o servidor oferece (e o aparelho permite) aparece; nada apagado.
+  const [provedores, setProvedores] = useState({ google: false, apple: false });
+  useEffect(() => {
+    let ativo = true;
+    void Promise.all([criarClienteNativo().configuracaoAcesso(), appleDisponivelNoAparelho()])
+      .then(([c, appleNoAparelho]) => { if (ativo) setProvedores({ google: Boolean(google) && c.google && googleNoAparelho(), apple: Boolean(apple) && c.apple === true && appleNoAparelho }); })
+      .catch(() => {});
+    return () => { ativo = false; };
+  }, [Boolean(google), Boolean(apple)]); // as funções nascem de novo a cada desenho da raiz; só a presença conta
+  const comProvedor = etapa === 'email' && (provedores.google || provedores.apple);
   useEffect(() => {
     if (Platform.OS === 'web') return;
     const evento = ouvirVoltar(() => { if (!emCurso.current) voltar(); return true; });
@@ -84,8 +102,25 @@ export function CriarConta({ emailInicial, voltar, criar }: {
       testID="cadastro-enviar" ocupado={ocupado} carregando={ocupado} acao={etapa === 'email' ? enviar : concluir} />}>
     <View style={visual.simbolo} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Icone nome="cadeado" tamanho={28} cor={cores.acao} /></View>
     <Titulo key={etapa} foco testID="titulo-cadastro">{m.titulo}</Titulo>
-    <Text style={estilos.introducao}>{etapa === 'email' ? m.instrucao : m.validade}</Text>
+    {/* Spec 06 (4e944df): com o Google, a instrução desce para logo acima do campo, depois do divisor. */}
+    {!comProvedor && <Text testID="cadastro-instrucao" style={estilos.introducao}>{etapa === 'email' ? m.instrucao : m.validade}</Text>}
     <View style={{ gap: 20, marginTop: 24 }}>
+      {/* Spec 06: no primeiro passo, os provedores no topo, na ordem da entrada (Apple, Google), e o "ou" antes do e-mail. */}
+      {comProvedor && provedores.apple && apple && (
+        <View testID="cadastro-apple" pointerEvents={ocupado ? 'none' : 'auto'} style={ocupado ? { opacity: 0.5 } : null} accessibilityState={{ disabled: ocupado }}>
+          <AppleAuthentication.AppleAuthenticationButton buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+            buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK} cornerRadius={16} style={visual.apple}
+            onPress={() => void executar(apple)} />
+        </View>
+      )}
+      {comProvedor && provedores.google && google && (
+        <Botao rotulo={mensagens.acesso.google} testID="cadastro-google" variante="secundario" imagemAntes={LOGO_GOOGLE} desativado={ocupado}
+          acao={() => void executar(google)} />
+      )}
+      {comProvedor && (
+        <View style={visual.divisor}><View style={visual.linha} /><Text style={estilos.legenda}>{m.ou}</Text><View style={visual.linha} /></View>
+      )}
+      {comProvedor && <Text testID="cadastro-instrucao" style={[estilos.introducao, { marginTop: 0 }]}>{m.instrucao}</Text>}
       <Campo rotulo={m.email} testID="cadastro-email" value={email} onChangeText={(v) => { setEmail(v); setErro(undefined); }}
         autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" maxLength={254}
         editable={!ocupado && etapa === 'email'} returnKeyType="send" onSubmitEditing={etapa === 'email' ? enviar : undefined} />
@@ -120,6 +155,9 @@ export function CriarConta({ emailInicial, voltar, criar }: {
 }
 
 const visual = StyleSheet.create({
+  divisor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
+  apple: { width: '100%', height: 52 },
   simbolo: { width: 56, height: 56, borderRadius: 18, backgroundColor: cores.nevoa, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   aviso: { padding: 14, borderRadius: 14, backgroundColor: cores.nevoa },
   // Como .acesso-link da web: 44 de altura, texto no centro.

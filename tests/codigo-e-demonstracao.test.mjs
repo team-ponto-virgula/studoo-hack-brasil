@@ -116,8 +116,9 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
   assert.ok(primeiro.temas >= 6);
   const datasAntes = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
   const segundo = await criarDemonstracao();
-  await banco.usuario.updateMany({ where: DONO_DEMO, data: { perfilModeracao: 'aprovado' } });
-  await banco.linkTrilha.updateMany({ where: { plano: { usuario: DONO_DEMO } }, data: { moderacao: 'aprovado' } });
+  // A demonstração já sai aprovada pela moderação (spec 14): sem isso o Explorar da conferência nativa ficava vazio.
+  assert.equal(await banco.usuario.count({ where: { ...DONO_DEMO, perfilModeracao: 'aprovado' } }), primeiro.perfis, 'perfis de demonstração aprovados');
+  assert.equal(await banco.linkTrilha.count({ where: { plano: { usuario: DONO_DEMO }, moderacao: 'aprovado' } }), primeiro.trilhas, 'trilhas de demonstração aprovadas');
   assert.deepEqual(segundo, primeiro, 'rodar de novo não duplica');
   assert.equal(await banco.usuario.count({ where: DONO_DEMO }), primeiro.perfis);
   assert.equal(await banco.linkTrilha.count({ where: { plano: { usuario: DONO_DEMO } } }), primeiro.trilhas);

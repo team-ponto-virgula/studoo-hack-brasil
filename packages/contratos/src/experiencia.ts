@@ -98,13 +98,24 @@ export const mensagens = {
       pensando: 'O Stu está preparando…', erro: 'Não foi possível concluir. Tente novamente.',
       baseadoMaterial: 'Baseado no seu material',
       fonteMaterial: 'Fonte do seu material',
+      ponteMotivo: 'Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício.',
+      ponteMotivoResposta: (resposta: string) => {
+        const letras = Array.from(resposta.trim());
+        const trecho = letras.length > 60 ? letras.slice(0, 59).join('').trimEnd() + '…' : letras.join('');
+        return `Você respondeu “${trecho}”. Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício.`;
+      },
+      ponteIndicador: (n: number) => `Passo ${n} de 3`,
+      ponteConstruida: 'Ponte construída!',
+      ponteVencida: 'Agora tente o exercício de novo.',
+      ponteRever: 'Rever explicação e exemplo',
+      ponteTentarDeNovo: 'Tentar de novo',
       ponteMargemErro: 'Onde travou',
       ponteTabuaErro: 'Sua tentativa',
-      ponteMargemVolta: 'De volta ao desafio',
+      ponteMargemVolta: 'Exercício',
       pontePassoErro: (resposta: string) => `Sua tentativa: ${resposta}`,
       pontePassoExplicacao: 'Outro caminho',
-      pontePassoExemplo: 'Novo exemplo',
-      pontePassoDesafio: 'Desafio vencido',
+      pontePassoExemplo: 'Um exemplo',
+      pontePassoDesafio: 'Desafio',
       vozAoVivo: {
         abrir: 'Conversar com o Stu',
         abrirBeneficio: 'Até 3 minutos por voz: ele pergunta, você explica.',
@@ -216,6 +227,7 @@ export const mensagens = {
     },
     cadastro: {
         titulo: 'Criar sua conta',
+        ou: 'ou crie com seu e-mail',
         instrucao: 'Informe seu e-mail. Vamos mandar um código para confirmar que ele é seu.',
         email: 'Seu e-mail',
         enviar: 'Enviar código',
@@ -283,7 +295,7 @@ export const mensagens = {
             },
             {
                 titulo: 'O erro abre outro caminho',
-                texto: 'Quando travar, a ponte explica de outro jeito em quatro passos até o desafio.',
+                texto: 'Quando travar, a ponte explica de outro jeito em três passos até o desafio.',
             },
             {
                 titulo: 'Explique com suas palavras',
@@ -449,7 +461,7 @@ export const mensagens = {
         /** O texto do recorte da capa, com a área dos selos tracejada por cima da foto (revisão de 19/11). */
         capaFotoDica: 'Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.',
     },
-    /** Controle de som (spec 12): a folha "Som", o botão no alto da aula e a seção no Perfil. Nomes e descrições dos climas: OPCOES_FUNDO_UI. */
+    /** Controle de som (spec 12): a folha "Som", o botão no alto da aula e a seção no Perfil. */
     som: {
         titulo: 'Som',
         musicaTitulo: 'Música de fundo',
@@ -467,37 +479,15 @@ export const mensagens = {
             return `Som: música ${ligada ? 'ligada' : 'desligada'}, efeitos ${efeitos ? 'ligados' : 'desligados'}`;
         },
         fechar: 'Fechar',
-        fundoTitulo: 'Som de fundo',
-        fundoDica: 'Toca baixinho enquanto você estuda.',
         efeitosTitulo: 'Efeitos sonoros',
         /** Na folha. */
         efeitosDica: 'Toques, acertos, erros e conquistas',
         /** No Perfil (linha mais curta). */
         efeitosDicaPerfil: 'Toques, acertos e conquistas',
-        rodape: 'O fundo fica mais baixo quando o Studoo fala e para enquanto você grava.',
         /** Só no iPhone (P24 da spec 07). */
         rodapeIphone: 'No modo silencioso do iPhone, nenhum som do Studoo toca.',
         tocando: 'Tocando',
         carregando: 'Carregando…',
-        erro: 'Não deu para tocar agora. Toque de novo para tentar.',
-        /** Nome acessível de cada linha da lista. */
-        linhaRotulo: (nome: string, descricao: string) => `${nome}, ${descricao}`,
-        linhaTocando: (nome: string) => `${nome}, tocando`,
-        linhaErro: (nome: string) => `${nome}, não deu para tocar agora`,
-        /** O que o leitor de tela ouve ao escolher (antes do som começar). */
-        anuncioEscolhido: (nome: string) => `${nome} escolhido. Tocando.`,
-        anuncioMudo: 'Som de fundo desligado.',
-        /** Botão do alto da aula: o nome segue o estado; `novidade` acrescenta ", novidade". */
-        botaoRotulo: ({ clima, efeitos, motivo, novidade }: { clima: string | null; efeitos: boolean; motivo?: 'sem_gesto' | 'gravando' | null; novidade?: boolean }) => {
-            const base = clima
-                ? motivo === 'sem_gesto' ? `Som: ${clima}, começa no primeiro toque`
-                    : motivo === 'gravando' ? `Som: ${clima}, pausado enquanto você grava`
-                    : `Som: ${clima}, efeitos ${efeitos ? 'ligados' : 'desligados'}`
-                : efeitos ? 'Som: fundo mudo, efeitos ligados' : 'Som: tudo desligado';
-            return novidade ? `${base}, novidade` : base;
-        },
-        /** Perfil: a linha "Som de fundo" é um botão com o valor. */
-        perfilFundoRotulo: (valor: string) => `Som de fundo: ${valor}`,
     },
     /** Página 404 própria (endereço que não existe): em português, com o Stu. */
     naoEncontrada: {
@@ -893,7 +883,9 @@ export const mensagens = {
         apagarCancelar: 'Cancelar',
         apagarPergunta: (titulo: string, detalhe?: string) =>
             `Apagar a trilha “${titulo}”${detalhe ? ` (${detalhe})` : ''}? As lições e o progresso dela também serão apagados.`,
-        semTrilhas: 'Você ainda não tem trilhas. Comece uma aqui: escreva o que quer aprender.',
+        vazioTitulo: 'Nenhuma trilha ainda',
+        vazioTexto: 'Suas trilhas ficam aqui. Conte o que quer aprender e o Studoo monta a primeira.',
+        vazioAcao: 'Criar minha primeira trilha',
         apagada: (titulo: string) => `Trilha “${titulo}” apagada.`,
         manter: 'Manter',
         outrasTrilhas: 'Outras trilhas',
@@ -1057,7 +1049,6 @@ export const mensagens = {
         abrirExistente: 'Abrir a que já existe',
         montadaDoPedido: 'Preparando a trilha para o seu pedido…',
         demonstracao: 'Trilha pronta do Studoo, a mais próxima do seu pedido. Confira as lições antes de começar.',
-        origem: (origem: string) => `Fonte: ${origem}`,
         cancelar: 'Cancelar',
         comecar: 'Começar',
         ajustar: 'Ajustar pedido',
@@ -1189,7 +1180,6 @@ export const mensagens = {
             pratica: 'Prática'
         },
         avancar: 'Ir para a próxima lição',
-        origem: 'Fonte',
         progresso: 'Progresso na trilha',
         demonstracao: 'Demonstração',
         exercicioDe: (atual: number, total: number) => `Exercício ${atual} de ${total}`,

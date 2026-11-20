@@ -27,7 +27,6 @@ import {
   inicialDoNome,
   motivoNomeInvalido,
   normalizarNomePerfil,
-  origemLegivel,
   type CorPerfil,
   type LinkCompartilhado,
   type Perfil,
@@ -658,7 +657,7 @@ export function PreviaTrilha({ trilha, nivel = 'h1', acoes, tituloRef, calor = f
         <span>{trilha.dono.perfilId ? <>{antes}<Link href={`/p/${trilha.dono.perfilId}`}>{nome}</Link>{depois}</> : frase}</span>
       </p>
       <Titulo className="previa-trilha__titulo" ref={tituloRef} tabIndex={-1}>{trilha.titulo}</Titulo>
-      <p className="previa-trilha__meta">{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</p>
+      <p className="previa-trilha__meta">{m.totalLicoes(trilha.totalLicoes)}</p>
       <div className="previa-trilha__acoes">{acoes}</div>
       {!sua && <p className="previa-trilha__zero">{jaTem ? m.jaAdicionadaTexto : m.comecaDoZero}</p>}
       <ol className="previa-trilha__partes">

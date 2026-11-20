@@ -397,6 +397,21 @@ button, input, textarea { font: inherit; }
 .acoes-tela { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 28px; }
 
 /* Meus planos: destaque único "Continue de onde parou" + grade secundária. */
+.painel.planos-sem-trilhas { max-width: 560px; animation: none; }
+.planos-vazio { display: grid; gap: 12px; margin-top: 20px; padding: 22px; border: 2px dashed var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
+.planos-vazio__halo { display: grid; place-items: center; width: 112px; height: 112px; border-radius: 50%; background: var(--lavanda, #eeebff); }
+.planos-vazio__halo span { display: block; }
+.planos-vazio h2 { font-size: 1.25rem; }
+.planos-vazio p { color: var(--texto2); font-size: 1rem; line-height: 1.5; }
+.planos-vazio .botao { width: 100%; min-height: 48px; }
+@media (prefers-reduced-motion: no-preference) {
+  .planos-vazio { animation: planos-vazio-entrar 200ms ease-out; }
+  .planos-vazio__halo .mascote { animation: planos-vazio-flutuar 3s ease-in-out infinite; }
+  .planos-vazio__halo [data-pular] { animation: planos-vazio-pular 300ms ease-in-out; }
+}
+@keyframes planos-vazio-entrar { from { opacity: 0; transform: translateY(8px); } }
+@keyframes planos-vazio-flutuar { 50% { transform: translateY(-3px); } }
+@keyframes planos-vazio-pular { 50% { transform: translateY(-8px); } }
 .painel--planos { display: grid; gap: 12px; max-width: 960px; }
 .painel--planos > .introducao { margin-top: 0; }
 
@@ -805,7 +820,7 @@ button { touch-action: manipulation; }
     --espaco-rodape: calc(var(--altura-navegacao) + var(--espaco-acao-fixa, 0px) + 16px);
     scroll-padding-bottom: var(--espaco-rodape);
   }
-  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .editor-perfil__barra, .trilha-vazia)) {
+  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .editor-perfil__barra[data-presa], .trilha-vazia)) {
     --espaco-acao-fixa: calc(var(--altura-acao-fixa, 48px) + 12px);
   }
   .estudo[data-navegacao] .planos-movel { display: none; }
@@ -920,6 +935,9 @@ button { touch-action: manipulation; }
 }
 @keyframes navegacao-selecionar { from { transform: scale(0.85); } to { transform: scale(1); } }
 
+.botao.botao-google { width: 100%; gap: 12px; }
+.botao-google img { flex: 0 0 20px; width: 20px; height: 20px; }
+.botao-google:disabled img { opacity: .38; }
 .acesso-divisor { display: flex; align-items: center; gap: 12px; color: var(--texto2); font-size: .875rem; }
 .acesso-divisor::before, .acesso-divisor::after { content: ''; flex: 1; height: 1px; background: var(--gelo); }
 .acesso-ajuda { font-size: .875rem; color: var(--texto2); }
@@ -928,6 +946,7 @@ button { touch-action: manipulation; }
 .recuperar { max-width: 540px; margin: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); }
 .recuperar-cartao { margin-top: 32px; padding: 28px; border: 2px solid var(--gelo); border-radius: 24px; background: var(--fundo); }
 .recuperar-cartao .formulario { margin-top: 24px; }
+.cadastro-google { display: grid; gap: 12px; margin-top: 16px; }
 .cadastro-links { display: grid; justify-items: center; gap: 4px; margin-top: 12px; text-align: center; }
 .recuperar-cartao > .acesso-link { margin-top: 16px; }
 .entrada-privacidade { justify-self: center; font-size: 0.875rem; color: var(--texto2); }

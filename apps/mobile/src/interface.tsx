@@ -15,6 +15,7 @@ import {
   TextInput,
   View,
   useWindowDimensions,
+  type ImageSourcePropType,
   type ImageStyle,
   type LayoutChangeEvent,
   type StyleProp,
@@ -524,7 +525,7 @@ export function Titulo({ children, testID, foco = false, estilo, linhas, equilib
  * Botão com relevo, como na web: a face e um lábio mais escuro embaixo; no toque, a face desce até o lábio
  * (a altura total não muda, então nada pula na tela). O botão de texto não tem relevo.
  */
-export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativado = false, ocupado = false, carregando = false, variante = 'primario',
+export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAntes, desativado = false, ocupado = false, carregando = false, variante = 'primario',
   compacto = false, esmaecido = false, fonte, estilo, nomeAcessivel, peso, giroIcone, referencia, afundado = false, giro = false, umaLinha = false }: {
   /** O rótulo numa linha só (o "Ajustar pedido" que volta ao lado do botão principal, sem quebrar enquanto ele encolhe). */
   umaLinha?: boolean;
@@ -536,6 +537,8 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
   giro?: boolean;
   /** Ícone antes do rótulo, como `<Icone />{texto}` nos botões da web (Compartilhar, Copiar link, Editar perfil): 18 px. */
   iconeAntes?: NomeIcone;
+  /** Imagem de marca antes do rótulo, nas cores dela e decorativa (o nome do botão continua o rótulo): o "G" do Google. */
+  imagemAntes?: { fonte: ImageSourcePropType; tamanho: number };
   /** Giro do ícone (a seta de "Continuar lendo" aponta para baixo, como .botao--ler-mais .icone da web). */
   giroIcone?: '90deg' | '180deg';
   /** Peso do texto quando a web usa outro (os botões do rodapé da aula têm 900, .aula-rodape__acoes > .botao). */
@@ -590,6 +593,11 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, desativad
         <>
           {giro && <Giro cor={corTexto} />}
           {iconeAntes && <Icone nome={iconeAntes} tamanho={18} cor={corTexto} />}
+          {imagemAntes && (
+            <Image source={imagemAntes.fonte} resizeMode="contain" accessible={false} accessibilityElementsHidden importantForAccessibility="no"
+              // 12 até o texto (o gap do botão é 8) e, desativado, 38% de opacidade sem virar cinza (spec 06).
+              style={{ width: imagemAntes.tamanho, height: imagemAntes.tamanho, marginRight: 4, opacity: apagado ? 0.38 : 1 }} />
+          )}
           <Text numberOfLines={giro || umaLinha ? 1 : undefined} style={[estilos.botaoTexto, { color: corTexto }, compacto && estilos.botaoTextoCompacto, fonte !== undefined && { fontSize: fonte, lineHeight: Math.round(fonte * 1.5) },
             peso !== undefined && { fontWeight: peso }]}>{rotulo}</Text>
           {icone && <View style={giroIcone ? { transform: [{ rotate: giroIcone }] } : undefined}><Icone nome={icone} tamanho={20} cor={corTexto} sistema /></View>}

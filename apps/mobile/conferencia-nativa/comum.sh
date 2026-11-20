@@ -38,7 +38,7 @@ CAPTURAS_ESPERADAS="
 32-exercicio-multipla-escolha 32-exercicio-multipla-escolha-abaixo 33-exercicio-verdadeiro-falso 33-exercicio-verdadeiro-falso-abaixo
 34-exercicio-lacuna 34-exercicio-lacuna-abaixo 35-exercicio-aberta 35-exercicio-aberta-abaixo
 40-explorar 41-explorar-rolado 50-perfil 51-perfil-rolado 55-perfil-privacidade 56-excluir-conta-confirmacao 57-excluir-conta-digitado
-60-configuracoes
+60-configuracoes 61-bloquear-confirmacao 61-bloquear-aviso 62-denuncia-motivo 62-denuncia-protocolo 63-perfil-ajuda
 70-exemplo-curto-etapa-2 71-exemplo-curto-etapa-3 72-exemplo-longo-etapa-2 73-exemplo-longo-lido 74-exemplo-longo-etapa-3
 80-ilha-nova-trilha 81-ilha-nova-trilha-fim 82-ilha-minhas-trilhas-fim 83-ilha-ultimo-toque
 90-criacao-pedido 91-criacao-em-andamento 92-criacao-pronta 93-criacao-primeira-aula 94-criacao-mapa-ao-voltar

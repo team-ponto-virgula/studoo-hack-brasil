@@ -24,3 +24,8 @@ executionOrder:
     # Privacidade e o cartão de excluir a conta (cancelado: a conta sintética continua).
     - 55-privacidade
     - 60-configuracoes
+    # Segurança da comunidade (spec 14), no fim: a Ajuda não muda nada; o bloqueio é desfeito no próprio fluxo; a denúncia
+    # tira um cartão da demonstração só para a conta sintética, e nenhum fluxo depois depende dele.
+    - 63-ajuda
+    - 61-bloquear
+    - 62-denunciar

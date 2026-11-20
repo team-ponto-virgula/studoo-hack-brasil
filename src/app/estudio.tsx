@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ErroStudoo,
   LIMITES_ESTUDIO,
@@ -25,6 +25,7 @@ import {
   type ControladorVozAoVivo,
 } from './voz-ao-vivo';
 import { tocaSons } from './sons';
+import { PonteReforco } from './ponte-reforco';
 import './estudio.css';
 const m = mensagens.estudio;
 /** Uma consulta a `/api/auth/config` por carga, compartilhada pela voz ao vivo e pela gravação (refeita se falhar). */
@@ -312,13 +313,6 @@ export function ApoioDaLicao({
   const [apoio, setApoio] = useState<ApoioEstudo | null>(null);
   // O retorno do "Ensine ao Stu" é o desta visita: o guardado de outra vez não volta com o campo vazio.
   const [ensino, setEnsino] = useState<ApoioEstudo['ensino']>(null);
-  const cartaoPonte = useRef<HTMLElement>(null);
-  const ponteCenaRef = useRef<HTMLDivElement>(null);
-  const legendaPonteRef = useRef<HTMLOListElement>(null);
-  const stuOrigemRef = useRef<HTMLDivElement>(null);
-  const stuDestinoRef = useRef<HTMLDivElement>(null);
-  const [atravessando, setAtravessando] = useState(false);
-  const [deslocamentoStu, setDeslocamentoStu] = useState<{ dx: number; dy: number }>({ dx: 0, dy: 0 });
   const retornoDoEnsino = useRef<HTMLDivElement>(null);
   // O aviso do microfone (ou da transcrição) aparece junto do botão Gravar, no pé da página: a tela leva até ele.
   const avisoRef = useRef<HTMLParagraphElement>(null);
@@ -353,15 +347,6 @@ export function ApoioDaLicao({
   const painelVozRef = useRef<HTMLDivElement>(null);
   const legendasVozRef = useRef<HTMLDivElement>(null);
   const usuarioRolouLegendasRef = useRef(false);
-  const [resposta, setResposta] = useState('');
-  const [passoPonte, setPassoPonte] = useState<1 | 2 | 3>(1);
-  const [vencidaNestaAbertura, setVencidaNestaAbertura] = useState(false);
-  const acaoPonteRef = useRef<HTMLDivElement>(null);
-  const desafioPonteRef = useRef<HTMLDivElement>(null);
-  const [feedback, setFeedback] = useState('');
-  /** O resultado da pergunta do reforço, para a opção marcada ficar verde (certa) ou âmbar (errada). */
-  const [resultadoPonte, setResultadoPonte] = useState<{ id: string; correta: boolean } | null>(null);
-  const retornoPonte = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
     let ativo = true;
     const suporteWebRtc =
@@ -464,18 +449,6 @@ export function ApoioDaLicao({
     tocaSons.entrarEmGravacaoOuVoz();
     return () => { tocaSons.sairDeGravacaoOuVoz(); void tocaSons.tocarEfeito('gravacao_fim'); };
   }, [etapaVoz]);
-  // O "Isso! Você pegou a ideia." aparece no fim do cartão, às vezes atrás do painel de retorno: a tela leva até ele.
-  useEffect(() => {
-    if (!feedback) return;
-    window.requestAnimationFrame(() => {
-      const alvo = retornoPonte.current;
-      if (!alvo) return;
-      const rodape = document.querySelector<HTMLElement>('.aula-rodape')?.getBoundingClientRect().height ?? 0;
-      const sobra = alvo.getBoundingClientRect().bottom - (window.innerHeight - rodape - 16);
-      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (sobra > 0) window.scrollBy({ top: sobra, behavior: reduzido ? 'auto' : 'smooth' });
-    });
-  }, [feedback]);
   const [erro, setErro] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const emExecucao = useRef(false);
@@ -653,121 +626,18 @@ export function ApoioDaLicao({
     });
   }
   const ponte = apoio?.ponte;
-  const pedidoAnterior = useRef(0);
-  const chavePonteAnterior = useRef('');
-  // "Ver outro exemplo" no painel de retorno: pede o reforço, se ainda não existe (durante uma gravação, espera ela acabar).
-  useEffect(() => {
-    if (pedidoPonte === 0) {
-      pedidoAnterior.current = 0;
-      return;
-    }
-    if (gravando) return;
-    if (pedidoPonte !== pedidoAnterior.current) {
-      pedidoAnterior.current = pedidoPonte;
-      setPassoPonte(1);
-      setResposta('');
-      setResultadoPonte(null);
-      setFeedback('');
-      setVencidaNestaAbertura(false);
-    }
+  function carregarPonte() {
     void executar(async () => atualizarApoio(await cliente.criarPonte(licao.id)));
-    // Só o pedido e o fim da gravação disparam; o resto é lido no momento.
+  }
+  useEffect(() => {
+    if (pedidoPonte > 0 && !gravando) carregarPonte();
+    // O pedido ou o fim da gravação inicia a leitura do reforço.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoPonte, gravando]);
   useEffect(() => {
-    const chave = ponte ? `${ponte.motivo}\0${ponte.conceito}\0${ponte.exercicio.enunciado}\0${ponte.concluida}` : '';
-    if (chave && chave !== chavePonteAnterior.current) {
-      const anterior = chavePonteAnterior.current;
-      chavePonteAnterior.current = chave;
-      if (anterior && !ponte?.concluida) {
-        setPassoPonte(1);
-        setResposta('');
-        setResultadoPonte(null);
-        setFeedback('');
-        setVencidaNestaAbertura(false);
-      }
-    }
-  }, [ponte]);
-
-  useEffect(() => {
-    if (!ponte || ponte.concluida) return;
-    const quadro = window.requestAnimationFrame(() => {
-      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const behavior = reduzido ? 'auto' : 'smooth';
-      if (passoPonte === 3) {
-        desafioPonteRef.current?.scrollIntoView({ block: 'end', behavior });
-        return;
-      }
-      const acao = acaoPonteRef.current;
-      if (acao && acao.getBoundingClientRect().bottom > window.innerHeight - 16) {
-        acao.scrollIntoView({ block: 'end', behavior });
-      }
-    });
-    return () => window.cancelAnimationFrame(quadro);
-  }, [passoPonte, ponte]);
-  // ... e leva ao alto do cartão, acima do painel de retorno. Rola de novo quando o reforço chega: antes, a página ainda
-  // é curta e a rolagem para no meio do caminho.
-  const pontePronta = Boolean(ponte);
-  const ponteConcluida = ponte?.concluida === true;
-  useEffect(() => {
-    if (!ponteConcluida) {
-      setAtravessando(false);
-      setDeslocamentoStu({ dx: 0, dy: 0 });
-      return;
-    }
-    if (pedidoPonte > 0) aoConcluirPonte?.();
-    const medir = () => {
-      const origem = stuOrigemRef.current;
-      const destino = stuDestinoRef.current;
-      if (!origem || !destino) return;
-      const o = origem.getBoundingClientRect();
-      const d = destino.getBoundingClientRect();
-      // Subtrai o transform atual (se já estiver deslocado) somando offset relativo ao pai.
-      const estilo = window.getComputedStyle(origem);
-      const matriz = new DOMMatrixReadOnly(estilo.transform === 'none' ? undefined : estilo.transform);
-      const baseLeft = o.left - matriz.m41;
-      const baseTop = o.top - matriz.m42;
-      setDeslocamentoStu({
-        dx: Math.round(d.left + d.width / 2 - (baseLeft + o.width / 2)),
-        dy: Math.round(d.top + d.height / 2 - (baseTop + o.height / 2)),
-      });
-    };
-    medir();
-    window.addEventListener('resize', medir);
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    (cartaoPonte.current ?? ponteCenaRef.current)?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
-    if (reduzido) {
-      setAtravessando(true);
-      return () => window.removeEventListener('resize', medir);
-    }
-    const timer = window.setTimeout(() => {
-      medir();
-      setAtravessando(true);
-    }, 380);
-    return () => {
-      window.removeEventListener('resize', medir);
-      window.clearTimeout(timer);
-    };
-    // Só a conclusão do reforço dispara.
+    if (pedidoPonte > 0 && ponte?.concluida) aoConcluirPonte?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ponteConcluida]);
-  useEffect(() => {
-    if (pedidoPonte === 0) return;
-    const quadro = window.requestAnimationFrame(() => {
-      const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const behavior = reduzido ? 'auto' : 'smooth';
-      const acao = acaoPonteRef.current;
-      if (pontePronta && acao && acao.getBoundingClientRect().bottom > window.innerHeight - 16) {
-        acao.scrollIntoView({ block: 'end', behavior });
-      } else {
-        cartaoPonte.current?.scrollIntoView({ block: 'start', behavior });
-      }
-      cartaoPonte.current?.querySelector<HTMLElement>('h2')?.focus({ preventScroll: true });
-    });
-    return () => window.cancelAnimationFrame(quadro);
-    // Só o pedido e a chegada do reforço disparam; o resto é lido no momento.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pedidoPonte, pontePronta]);
+  }, [pedidoPonte, ponte?.concluida]);
   useEffect(() => {
     if (!aviso) return;
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -779,162 +649,25 @@ export function ApoioDaLicao({
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
   }, [ensino]);
+  if (avaliacao?.correta === false && pedidoPonte > 0 && !gravando && etapaVoz !== 'ativa') {
+    return (
+      <div className="estudio-apoio">
+        <PonteReforco key={pedidoPonte} ponte={ponte} tentativa={ultimaResposta} feedbackOriginal={avaliacao.feedback}
+          ocupado={ocupado || gravando} erro={erro} voltar={aoVoltarExercicio} tentarCarregar={carregarPonte}
+          verificar={async (resposta) => {
+            let resultado;
+            await executar(async () => {
+              const r = await cliente.avaliarPonte(licao.id, resposta);
+              resultado = { correta: r.correta, feedback: r.feedback };
+              atualizarApoio(r.apoio);
+            });
+            return resultado;
+          }} />
+      </div>
+    );
+  }
   return (
     <div className="estudio-apoio">
-      {/* O reforço é do exercício que a pessoa acabou de errar (ou de um reforço começado e não terminado): não fica
-          sobrando em outros exercícios nem em outra visita à lição. */}
-      {avaliacao?.correta === false && pedidoPonte > 0 && (() => {
-        const etapaPonte = ponte?.concluida ? 3 : passoPonte;
-        const reaberta = Boolean(ponte?.concluida && !vencidaNestaAbertura);
-        return (
-        <section className="estudio-card estudio-ponte" ref={cartaoPonte} data-concluida={ponte?.concluida || undefined}>
-          <div className="ponte-cabeca">
-            <h2 tabIndex={-1}>{ponte?.concluida && !reaberta ? m.pontePronta : m.ponte}</h2>
-            <div className="ponte-cabeca__acoes">
-              {ponte?.simulado && <p className="estudio-selo">{m.simulado}</p>}
-              {!ponte?.concluida && aoVoltarExercicio && (
-                <Botao variante="texto" onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>
-              )}
-            </div>
-          </div>
-          <div
-            className="ponte-cena"
-            ref={ponteCenaRef}
-            data-concluida={ponte?.concluida || undefined}
-            style={{
-              '--ponte-dx': `${deslocamentoStu.dx}px`,
-              '--ponte-dy': `${deslocamentoStu.dy}px`,
-            } as CSSProperties}
-            aria-hidden="true"
-          >
-            <div className="ponte-margem ponte-margem--esquerda">
-              <div className="ponte-stu" ref={stuOrigemRef} data-atravessou={atravessando || undefined}>
-                {/* De perfil atravessando a tábua (laço só na travessia); parado na margem antes dela. */}
-                <Stu expressao="stu-perfil" tamanho={44} animado={atravessando ? 'laco' : undefined} />
-              </div>
-              <span>{m.ponteMargemErro}</span>
-            </div>
-            <div className="ponte-vao">
-              <span className="ponte-tabua" data-ativa="true" data-erro="true" style={{ '--ordem': 0 } as CSSProperties}>
-                {m.ponteTabuaErro}
-              </span>
-              <span className="ponte-tabua" data-ativa={Boolean(ponte) || undefined} style={{ '--ordem': 1 } as CSSProperties}>
-                {m.pontePassoExplicacao}
-              </span>
-              <span className="ponte-tabua" data-ativa={Boolean(ponte && etapaPonte >= 2) || undefined} style={{ '--ordem': 2 } as CSSProperties}>
-                {m.pontePassoExemplo}
-              </span>
-              <span className="ponte-tabua" data-ativa={Boolean(ponte && (ponte.concluida || etapaPonte >= 3 || resposta)) || undefined} style={{ '--ordem': 3 } as CSSProperties}>
-                {m.pontePassoDesafio}
-              </span>
-            </div>
-            <div className="ponte-margem ponte-margem--direita">
-              <div className="ponte-stu-alvo" ref={stuDestinoRef} />
-              <span>{m.ponteMargemVolta}</span>
-            </div>
-          </div>
-          <ol className="ponte-legenda" ref={legendaPonteRef} aria-label={m.ponte}>
-            <li data-ativa="true" data-erro="true" data-vencida={ponte?.concluida || undefined}>
-              <span className="ponte-legenda__num">1</span>
-              <span>
-                {ultimaResposta
-                  ? m.pontePassoErro(ultimaResposta.length > 80 ? `${ultimaResposta.slice(0, 79).trimEnd()}…` : ultimaResposta)
-                  : m.ponteMargemErro}
-              </span>
-            </li>
-            <li data-ativa={Boolean(ponte) || undefined} data-vencida={ponte?.concluida || undefined}>
-              <span className="ponte-legenda__num">2</span>
-              <span>{m.pontePassoExplicacao}</span>
-            </li>
-            <li data-ativa={Boolean(ponte && etapaPonte >= 2) || undefined} data-vencida={ponte?.concluida || undefined}>
-              <span className="ponte-legenda__num">3</span>
-              <span>{m.pontePassoExemplo}</span>
-            </li>
-            <li data-ativa={Boolean(ponte && (ponte.concluida || etapaPonte >= 3 || resposta)) || undefined} data-vencida={ponte?.concluida || undefined}>
-              <span className="ponte-legenda__num">4</span>
-              <span>{m.pontePassoDesafio}</span>
-            </li>
-          </ol>
-          {reaberta ? (
-            <p role="status" className="estudio-retorno-ponte">{m.ponteReabertaAviso}</p>
-          ) : feedback && (
-            <p role="status" ref={retornoPonte} className="estudio-retorno-ponte"
-              data-estado={resultadoPonte ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}>{feedback}</p>
-          )}
-          {ponte?.concluida && !reaberta && aoVoltarExercicio && (
-            <Botao variante="sucesso" onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>
-          )}
-          {!ponte?.concluida && <p>{ponte?.motivo ?? m.ponteDica}</p>}
-          {!ponte ? (
-            <p role="status">{erro || m.pensando}</p>
-          ) : ponte.concluida ? (
-            reaberta && (
-              <>
-                {ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
-                <div className="estudio-exemplo">{ponte.exemplo}</div>
-                {aoVoltarExercicio && <Botao variante="sucesso" onClick={aoVoltarExercicio}>{m.ponteVoltarExercicio}</Botao>}
-              </>
-            )
-          ) : (
-            <>
-              {/* Sequência real: 1) explicação ("Outro jeito"), 2) exemplo, 3) desafio. */}
-              {etapaPonte >= 1 && ponte.conceito !== avaliacao?.feedback && <p>{ponte.conceito}</p>}
-              {etapaPonte === 1 && !ponte.concluida && (
-                <div ref={acaoPonteRef}><Botao onClick={() => setPassoPonte(2)}>{m.ponteVerExemplo}</Botao></div>
-              )}
-              {etapaPonte >= 2 && <div className="estudio-exemplo">{ponte.exemplo}</div>}
-              {etapaPonte === 2 && !ponte.concluida && (
-                <div ref={acaoPonteRef}><Botao onClick={() => setPassoPonte(3)}>{m.ponteIrDesafio}</Botao></div>
-              )}
-              {etapaPonte >= 3 && (
-                <div className="estudio-desafio" ref={desafioPonteRef}>
-                  <h3 id="desafio-ponte-enunciado">{ponte.exercicio.enunciado}</h3>
-                  <fieldset className="opcoes" aria-labelledby="desafio-ponte-enunciado" disabled={ocupado || gravando || ponte.concluida}>
-                    {ponte.exercicio.tipo === 'multipla_escolha' &&
-                      ponte.exercicio.opcoes.map((o, pos) => (
-                        <label
-                          key={o.id}
-                          data-retorno={resultadoPonte?.id === o.id ? (resultadoPonte.correta ? 'certa' : 'errada') : undefined}
-                        >
-                          <input
-                            type="radio"
-                            name="reforco"
-                            checked={resposta === o.id}
-                            onChange={() => {
-                              setResposta(o.id);
-                              setResultadoPonte(null);
-                              setFeedback('');
-                            }}
-                          />
-                          <span className="opcao-tecla" aria-hidden="true">{String.fromCharCode(65 + pos)}</span>
-                          <span>{o.texto}</span>
-                        </label>
-                      ))}
-                  </fieldset>
-                  {!ponte.concluida && (
-                    <Botao
-                      disabled={ocupado || gravando || !resposta}
-                      aria-busy={ocupado || undefined}
-                      onClick={() =>
-                        void executar(async () => {
-                          const r = await cliente.avaliarPonte(licao.id, resposta);
-                          if (r.correta) setVencidaNestaAbertura(true);
-                          atualizarApoio(r.apoio);
-                          setResultadoPonte({ id: resposta, correta: r.correta });
-                          setFeedback(r.feedback);
-                        })
-                      }
-                    >
-                      {ocupado ? m.pensando : m.verificar}
-                    </Botao>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </section>
-        );
-      })()}
       {!!licao.referencias?.length && (
         <details className="estudio-card">
           <summary>{m.origem}</summary>

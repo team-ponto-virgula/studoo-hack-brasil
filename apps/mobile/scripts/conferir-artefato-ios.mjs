@@ -66,8 +66,11 @@ function porPrebuild(perfil) {
     const privacidade = existsSync(join(dir, 'PrivacyInfo.xcprivacy')) ? lerPlist(join(dir, 'PrivacyInfo.xcprivacy')) : null;
     const projeto = readFileSync(join(pasta, `${alvo}.xcodeproj`, 'project.pbxproj'), 'utf8');
     const bundles = [...new Set([...projeto.matchAll(/PRODUCT_BUNDLE_IDENTIFIER = "?([^";]+)"?;/g)].map((m) => m[1]))];
+    // O expo-dev-launcher acrescenta ao alvo uma fase que tira do Info.plist do Release (build sem DEBUG) o `_expo._tcp` e o
+    // texto de rede local dele; o prebuild ainda mostra as chaves, o binário de loja não.
+    const faseTiraRedeLocal = projeto.includes('[Expo Dev Launcher] Strip Local Network Keys for Release');
     return { origem: `prebuild do perfil ${perfil} (o projeto que o EAS compila; não é o binário assinado)`, env, info, entitlements, privacidade, bundles,
-      fonteEntitlements: arquivoEnt ? `ios/${alvo}/${arquivoEnt}` : null };
+      fonteEntitlements: arquivoEnt ? `ios/${alvo}/${arquivoEnt}` : null, faseTiraRedeLocal };
   } finally {
     if (!existia) rmSync(pasta, { recursive: true, force: true });
   }
@@ -110,7 +113,8 @@ const RAZOES_ESPERADAS = {
 function conferir(dados) {
   const r = [];
   const add = (nivel, item, detalhe) => r.push({ nivel, item, detalhe });
-  const { info, entitlements, privacidade, bundles, env } = dados;
+  const { info, entitlements, privacidade, bundles, env, faseTiraRedeLocal } = dados;
+  const tiradaNoRelease = ' (removida no Release pela fase "[Expo Dev Launcher] Strip Local Network Keys for Release"; fica só no build de desenvolvimento)';
 
   const bundle = bundles.find((b) => !b.includes('$(')) ?? bundles[0];
   add(bundle ? 'ok' : 'erro', 'Bundle', bundle ?? 'sem PRODUCT_BUNDLE_IDENTIFIER');
@@ -135,11 +139,12 @@ function conferir(dados) {
   for (const [chave, texto] of Object.entries(info)) {
     if (!chave.endsWith('UsageDescription') || ['NSCameraUsageDescription', 'NSPhotoLibraryUsageDescription', 'NSMicrophoneUsageDescription'].includes(chave)) continue;
     if (PADRAO_EXPO.test(String(texto))) add('aviso', `Permissão ${chave} com o texto padrão em inglês`, String(texto));
-    else if (/Expo Dev Launcher/.test(String(texto))) add('aviso', `Permissão ${chave} do cliente de desenvolvimento (expo-dev-client) no pacote`, String(texto));
+    else if (/Expo Dev Launcher/.test(String(texto))) add(faseTiraRedeLocal ? 'ok' : 'aviso', `Permissão ${chave} do cliente de desenvolvimento (expo-dev-client)`, String(texto) + (faseTiraRedeLocal ? tiradaNoRelease : ' no pacote'));
     else add('ok', `Permissão ${chave}`, String(texto));
   }
+  if (!('NSFaceIDUsageDescription' in info)) add('ok', 'NSFaceIDUsageDescription', 'ausente (o app não usa biometria; expo-secure-store com faceIDPermission: false)');
   if (Array.isArray(info.NSBonjourServices) && info.NSBonjourServices.includes('_expo._tcp')) {
-    add('aviso', 'NSBonjourServices _expo._tcp (expo-dev-client) no pacote', JSON.stringify(info.NSBonjourServices));
+    add(faseTiraRedeLocal ? 'ok' : 'aviso', 'NSBonjourServices _expo._tcp (expo-dev-client)', JSON.stringify(info.NSBonjourServices) + (faseTiraRedeLocal ? tiradaNoRelease : ' no pacote'));
   }
 
   if (!privacidade) add('erro', 'Manifesto de privacidade (PrivacyInfo.xcprivacy)', 'ausente');

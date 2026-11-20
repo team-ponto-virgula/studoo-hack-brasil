@@ -1,3 +1,4 @@
+import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { conteudosDoMaterial } from '../estudio/materiais';
 import type {
   AutoAvaliacao,
@@ -125,7 +126,7 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
     id: plano.id,
     titulo: plano.titulo,
     objetivo: plano.objetivo,
-    origem: plano.origem,
+    origem: origemDoConteudo(plano.origem),
     ...(plano.capa ? { capa: plano.capa } : {}),
     ...(plano.tema && (TEMAS as readonly string[]).includes(plano.tema) ? { tema: plano.tema as Tema } : {}),
     progresso: calcularProgresso(concluidas, total),
@@ -273,7 +274,7 @@ async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoP
   try {
     await banco.$transaction([
       banco.planoAprendizado.create({
-        data: { usuarioId, id, titulo: plano.titulo, objetivo: plano.objetivo, origem: plano.origem },
+        data: { usuarioId, id, titulo: plano.titulo, objetivo: plano.objetivo, origem: origemDoConteudo(plano.origem) },
       }),
       banco.fluxo.createMany({ data: fluxos }),
       banco.licao.createMany({ data: licoes }),
@@ -336,7 +337,7 @@ export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoD
     ...(passos ? { passos } : {}),
     ...(recurso ? { recurso } : {}),
     ...(falas ? { falas } : {}),
-    origem,
+    origem: origemDoConteudo(origem),
     exercicio: exercicios[0],
     exercicios,
     ...(pratica ? { pratica } : {}),

@@ -8,6 +8,7 @@ import { clienteStudooWeb as cliente } from '../../contratos/cliente-web';
 import { mensagens } from '../../mensagens/pt-BR';
 import { AcaoPrincipal, Botao, EstadoErro, Icone, Logo } from '../../ui';
 import { BotaoSom } from '../som';
+import { BotaoGoogle } from '../botao-google';
 
 const m = mensagens.cadastro;
 
@@ -15,7 +16,7 @@ const m = mensagens.cadastro;
  * Criar conta: e-mail → código de 6 dígitos (prova que o e-mail é da pessoa) + senha → entra na hora.
  * Mesmo desenho da recuperação de senha, sem janelas nativas do navegador.
  */
-export function Cadastro() {
+export function Cadastro({ googleDisponivel }: { googleDisponivel: boolean }) {
   const router = useRouter();
   const [etapa, setEtapa] = useState<'email' | 'codigo'>('email');
   const [email, setEmail] = useState('');
@@ -70,6 +71,10 @@ export function Cadastro() {
     <section className="recuperar-cartao">
       <div className="recuperar-simbolo" aria-hidden="true"><Icone nome="cadeado" /></div>
       <h1 ref={titulo} tabIndex={-1}>{m.titulo}</h1>
+      {etapa === 'email' && googleDisponivel && <div className="cadastro-google">
+        <BotaoGoogle ocupado={ocupado} />
+        <p className="acesso-divisor">{m.ou}</p>
+      </div>}
       <p className="introducao">{etapa === 'email' ? m.instrucao : m.validade}</p>
       <form className="formulario" noValidate aria-busy={ocupado}
         onSubmit={etapa === 'email' ? (e) => { e.preventDefault(); enviar(); } : criar}>

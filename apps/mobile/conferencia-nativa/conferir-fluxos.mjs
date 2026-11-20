@@ -48,7 +48,8 @@ for (const arquivo of arquivosDe(pastaApp, (nome) => /\.tsx?$/.test(nome))) {
 }
 // Ids do próprio Expo Go, que os fluxos usam para sair do menu de desenvolvedor: não são testID do app. São os nomes dos
 // símbolos que o menu desenha (pacote expo-dev-menu): o "X" do menu e a engrenagem do botão flutuante.
-const idsDoExpoGo = new Set(['xmark', 'gearshape.fill']);
+// Também o botão "Wait" da janela "<app> isn't responding" do Android, que os fluxos tocam se ela cobrir o app.
+const idsDoExpoGo = new Set(['xmark', 'gearshape.fill', 'android:id/aerr_wait']);
 
 /** O id existe se é um literal ou cabe num molde; no molde com prefixo (`${testID}-menu`), o prefixo também precisa existir. */
 function existeNoApp(id) {

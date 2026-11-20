@@ -9,7 +9,7 @@ import * as WebBrowser from 'expo-web-browser';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import {
   CORES_PERFIL, ErroStudoo, FUNDO_DA_COR, LIMITES_COMUNIDADE, TEMAS, VISIBILIDADES, codigoDoLink, enderecoFoto, inicialDoNome,
-  motivoLegendaInvalida, motivoNomeInvalido, normalizarNomePerfil, normalizarResumoPerfil, origemLegivel,
+  motivoLegendaInvalida, motivoNomeInvalido, normalizarNomePerfil, normalizarResumoPerfil,
   type AlcancePerfil, type CorPerfil, type LinkCompartilhado, type MarcasCompartilhar, type Perfil, type PreviaCompartilhar, type Tema,
   type TrilhaCompartilhada, type Visibilidade,
 } from '@studoo/contratos';
@@ -746,7 +746,9 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
 
   // Spec 14 (Designer, b874e95): em revisão ou não publicada, sem "Link pronto", sem o link, sem Compartilhar e sem Copiar link.
   const linkForaDoAr = link?.moderacao === 'pendente' || link?.moderacao === 'recusado';
-  const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' && !linkForaDoAr ? m.linkPronto : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
+  // Como a web (0e44f07, compartilhar.tsx): no lugar de "Link pronto", o estado da trilha, "Em revisão" ou "Não publicada".
+  const estadoForaDoAr = link?.moderacao === 'pendente' ? seg.seloEmRevisao : seg.seloNaoPublicada;
+  const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' ? (linkForaDoAr ? estadoForaDoAr : m.linkPronto) : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
 
   return (
     // Como a web (.folha só sobe com prefers-reduced-motion: no-preference): com movimento reduzido, a folha aparece parada.
@@ -915,7 +917,7 @@ export function PreviaTrilha({ trilha, acoes, calor }: {
       </View>
       {/* Na página /t o título é o h1 (32/40, como os títulos de tela); no "Adicionar por link", o h2 de 20. */}
       <Text ref={titulo} accessibilityRole="header" style={calor ? estilosDaInterface.titulo : socialEstilos.previaTitulo}>{trilha.titulo}</Text>
-      <Text style={socialEstilos.previaMeta}>{m.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</Text>
+      <Text style={socialEstilos.previaMeta}>{m.totalLicoes(trilha.totalLicoes)}</Text>
       <View style={socialEstilos.previaAcoes}>{acoes}</View>
       {!sua && <Text style={socialEstilos.previaZero}>{jaTem ? m.jaAdicionadaTexto : m.comecaDoZero}</Text>}
       <View style={socialEstilos.previaPartes}>

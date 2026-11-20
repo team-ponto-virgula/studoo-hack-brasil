@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import vm from 'node:vm';
+import * as react from 'react';
+import * as jsx from 'react/jsx-runtime';
+import { renderToStaticMarkup } from 'react-dom/server';
 import ts from 'typescript';
 
 const compilar = async (caminho) =>
@@ -149,6 +152,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     './mensagens': { mensagens },
     '../ui': { Botao: 'Botao', Stu: 'Stu' },
     './estudio.css': {},
+    './ponte-reforco': { PonteReforco: 'PonteReforco' },
     'react-native': {
       AccessibilityInfo: { sendAccessibilityEvent() {} },
       Animated: { View: 'View', Value: class { setValue(v) { this.valor = v; } } },
@@ -318,6 +322,44 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
   };
 }
 
+test('web: a ponte aberta ocupa a etapa inteira e esconde o ensino opcional', async () => {
+  const ui = montar(false);
+  await esperar();
+  ui.render();
+  assert.ok(ui.tipo('summary'));
+  ui.pedirPonte();
+  await esperar();
+  ui.render();
+  assert.ok(ui.tipo('PonteReforco'));
+  assert.equal(ui.tipo('summary'), null);
+});
+
+test('web: o reforço em preparação, falho, pronto ou reaberto tem um só indicador e a ação do estado', async () => {
+  const componentes = { Botao: 'button', Stu: () => null, Icone: () => null };
+  const imports = { react, 'react/jsx-runtime': jsx, '../ui': componentes, '../mensagens/pt-BR': { mensagens }, './sons': {} };
+  const contexto = { exports: {}, require: nome => imports[nome] };
+  vm.runInNewContext(await compilar('src/app/ponte-reforco.tsx'), contexto);
+  const base = { ocupado: false, erro: '', feedbackOriginal: '', tentativa: 'normal' };
+  const dados = { motivo: 'A palavra descreve uma reação.', conceito: 'É automática.', exemplo: 'O coração acelera.', concluida: false };
+  function quadro(props) {
+    const html = renderToStaticMarkup(react.createElement(contexto.exports.PonteReforco, { ...base, ...props }));
+    assert.equal((html.match(/<ol[ >]/g) ?? []).length, 1);
+    assert.equal((html.match(/<li[ >]/g) ?? []).length, 3);
+    return html;
+  }
+  assert.match(quadro({}), /disabled="">Ver exemplo/);
+  assert.match(quadro({ erro: 'Tente outra vez.' }), /Tentar de novo/);
+  const pronto = quadro({ ponte: dados });
+  assert.match(pronto, /aria-current="step"/);
+  assert.match(pronto, /Você respondeu “normal”/);
+  assert.match(pronto, /A palavra descreve uma reação/);
+  assert.doesNotMatch(pronto, /O coração acelera/);
+  const reaberta = quadro({ ponte: { ...dados, concluida: true } });
+  assert.match(reaberta, /O coração acelera/);
+  assert.match(reaberta, /Voltar ao exercício/);
+  assert.doesNotMatch(reaberta, /aria-current="step"/);
+});
+
 for (const nativo of [false, true]) {
   const plataforma = nativo ? 'app' : 'web';
   test(`${plataforma}: resposta atrasada não apaga reforço novo; pedido duplicado só gera uma vez`, async () => {
@@ -329,11 +371,11 @@ for (const nativo of [false, true]) {
     await esperar();
     ui.render();
     assert.equal(ui.contagem.pontes, 1);
-    assert.match(ui.texto(), /Reforço novo/);
+    assert.match(nativo ? ui.texto() : ui.tipo('PonteReforco').props.ponte?.motivo, /Reforço novo/);
     carregar.resolve({ erros: 1, ponte: null, ensino: null });
     await esperar();
     ui.render();
-    assert.match(ui.texto(), /Reforço novo/);
+    assert.match(nativo ? ui.texto() : ui.tipo('PonteReforco').props.ponte?.motivo, /Reforço novo/);
   });
   test(`${plataforma}: permissão que chega em segundo plano não inicia microfone`, async () => {
     const permissao = adiado();

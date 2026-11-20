@@ -8,6 +8,43 @@ const raiz = resolve(import.meta.dirname, '..');
 const entrada = readFileSync(join(raiz, 'src/app/login/entrada.tsx'), 'utf8');
 const css = readFileSync(join(raiz, 'src/app/globals.css'), 'utf8');
 
+test('entrada e cadastro usam o mesmo Google colorido, decorativo e com densidade adequada', () => {
+  const cadastro = readFileSync(join(raiz, 'src/app/cadastro/cadastro.tsx'), 'utf8');
+  const google = readFileSync(join(raiz, 'src/app/botao-google.tsx'), 'utf8');
+  assert.match(entrada, /googleDisponivel && \(\s*<BotaoGoogle ocupado=\{enviando\}/);
+  assert.match(cadastro, /etapa === 'email' && googleDisponivel && <div[^>]*>\s*<BotaoGoogle ocupado=\{ocupado\}/);
+  const botao = cadastro.indexOf('<BotaoGoogle');
+  const divisor = cadastro.indexOf('{m.ou}');
+  const instrucao = cadastro.indexOf('m.instrucao');
+  assert.ok(botao < divisor && divisor < instrucao && instrucao < cadastro.indexOf('id="cadastro-email"'));
+  assert.match(entrada, /mensagens\.acesso\.ou/);
+  assert.match(google, /alt="" aria-hidden="true"/);
+  assert.match(google, /width=\{20\} height=\{20\}/);
+  assert.match(google, /\{mensagens\.acesso\.google\}/);
+  assert.match(google, /window\.location\.assign\('\/api\/auth\/google\/iniciar'\)/);
+  assert.match(css, /\.botao\.botao-google[^}]*gap: 12px/);
+  for (const [nome, tamanho] of [['google-g.png', 20], ['google-g@2x.png', 40], ['google-g@3x.png', 60]]) {
+    assert.ok(google.includes('packages/contratos/assets/' + nome));
+    const imagem = readFileSync(join(raiz, 'packages/contratos/assets', nome));
+    assert.deepEqual([imagem.readUInt32BE(16), imagem.readUInt32BE(20)], [tamanho, tamanho]);
+  }
+});
+
+test('a conta sem trilhas abre o pedido, mas sua aba de trilhas tem um vazio próprio', () => {
+  const estudo = readFileSync(join(raiz, 'src/app/estudo.tsx'), 'utf8');
+  assert.match(estudo, /ativos\.length === 0 \|\| abriuComRascunho\.current\) \{\s*setTela\(\{ tipo: 'objetivo', focarCampo: true/);
+  assert.match(estudo, /visivel && tela\.tipo === 'objetivo' && \(\s*<Pedido/);
+  const inicio = estudo.indexOf('className="painel planos-sem-trilhas"');
+  const fim = estudo.indexOf('</section>', inicio);
+  assert.ok(inicio > 0);
+  const vazio = estudo.slice(inicio, fim);
+  assert.match(vazio, /data-testid="planos-vazio"/);
+  assert.match(vazio, /expressao="stu-curioso" tamanho=\{96\}/);
+  assert.match(vazio, /vazioTitulo[\s\S]*vazioTexto[\s\S]*focarCampo: true[\s\S]*vazioAcao/);
+  assert.doesNotMatch(vazio, /<Pedido|role="dialog"/);
+  assert.match(estudo, /const abaNovaTrilha = tela\.tipo === 'objetivo';/);
+});
+
 test('"Entrar" fica dentro do formulário, logo depois da senha, e "Esqueci minha senha" embaixo dele; sem rodapé preso', () => {
   const senha = entrada.indexOf('id="senha"');
   const entrar = entrada.indexOf('<div className="entrada-entrar">');

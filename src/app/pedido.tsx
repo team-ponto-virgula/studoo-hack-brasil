@@ -39,11 +39,11 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
 export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona,
-  avisoSemTrilhas = false, porLink }: {
+  focarCampo = false, porLink }: {
   /** "Adicionar por link" (spec 09, com a flag de compartilhar): logo antes de "Ver como funciona". */
   porLink?: ReactNode;
-  /** Veio de "Minhas trilhas" sem nenhuma trilha: um aviso diz isso (antes, a tela não mudava e parecia travada). */
-  avisoSemTrilhas?: boolean;
+  /** A ação da lista vazia leva diretamente ao campo de objetivo, inclusive no celular. */
+  focarCampo?: boolean;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
   /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
@@ -82,10 +82,10 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   }, [texto, ocupado]);
 
   useEffect(() => {
-    if (modo !== 'ideia' || (window.innerWidth < 1024 && !objetivo.trim())) return;
+    if (modo !== 'ideia' || (!focarCampo && window.innerWidth < 1024 && !objetivo.trim())) return;
     campo.current?.focus({ preventScroll: true });
     if (objetivo.trim()) focouComTexto.current = true;
-  }, [modo]);
+  }, [modo, focarCampo]);
 
   useEffect(() => {
     if (modo !== 'ideia' || focouComTexto.current || !texto || focarBotaoCriar.current || escolhida !== null) return;
@@ -154,7 +154,6 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         <h1 tabIndex={-1}>{modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}</h1>
         <p className="pedido-heroi__fala" aria-live="polite">{modo === 'material' ? mensagens.inicio.materialTexto : fala}</p>
       </header>
-      {avisoSemTrilhas && <p className="pedido-aviso" role="status">{mensagens.planos.semTrilhas}</p>}
       {aviso && <p className="pedido-aviso">{aviso}</p>}
       {falha && (
         <EstadoErro codigo={falha}>

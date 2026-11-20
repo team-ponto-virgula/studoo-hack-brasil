@@ -2,7 +2,7 @@
 
 **Estado:** regra de design de 19/11, pedido 6 do Lead, a pedido do dono ("SFX vivos" e som de fundo com cinco opções ou mudo). Vale para web, Android e iPhone. O catálogo e o toca-sons já estão na integração (`packages/contratos/src/catalogo-sons.ts`, `src/app/sons.ts`, `apps/mobile/src/sons.ts`); esta spec diz onde a pessoa controla o som, o que a tela mostra em cada estado e como o som se comporta. Esboço: `som-390.png`, na pasta de trabalho do Designer (`ux/06-controle-de-som`).
 
-**Revisão do dono (19/11): uma música só.** O fundo passa a ser só o Lo-fi de Estudo (`lofi_estudo`: `public/sons/fundos/lofi-estudo.mp3` e `apps/mobile/assets/sons/fundos/lofi-estudo.mp3`, na versão de d5bf5aa, com o laço que começa no compasso 1), em laço no app inteiro: já na entrada, na recuperação de senha e no modo visitante, sem recomeçar ao entrar ou sair da conta. Os efeitos tocam por cima, no volume constante deles, sem parar e sem baixar a música. Saem os cinco climas, a lista de escolha, a prévia e o ponto de novidade: a pessoa controla música e efeitos com duas chaves independentes, na folha "Som" e no Perfil, sem tela nova. Esta spec já está escrita assim; onde algo de antes mudou, está dito.
+**Revisão do dono (19/11): uma música só.** O fundo passa a ser só o Lo-fi de Estudo (`lofi_estudo`: `public/sons/fundos/lofi-estudo.mp3` e `apps/mobile/assets/sons/fundos/lofi-estudo.mp3`, na versão de d5bf5aa, com o laço que começa no compasso 1), em laço no app inteiro: já na entrada, na recuperação de senha e no modo visitante, sem recomeçar ao entrar ou sair da conta. Os efeitos tocam por cima, no volume constante deles, sem parar e sem baixar a música. Saem os outros quatro climas, a lista de escolha, a prévia e o ponto de novidade: a pessoa controla música e efeitos com duas chaves independentes, na folha "Som" e no Perfil, sem tela nova. A regra final, com o arquivo aprovado e o que ainda sobra no repositório, está em [Regra final: uma faixa só](#regra-final-uma-faixa-só-ordem-do-dono-2011). Esta spec já está escrita assim; onde algo de antes mudou, está dito.
 
 ## O que a pessoa controla
 
@@ -59,7 +59,37 @@ Não há lista nem carrossel de climas e não há prévia. É a folha da spec 11
 
 Os textos da folha e do Perfil ficam no contrato (`packages/contratos/src/experiencia.ts`, em `som`, desde 59cfe8d: `musicaFaixa`, `musicaEmLaco`, `musicaComeca`, `musicaPausada`, `musicaErro`, `musicaAviso`, `desligarMusica`, `rodapeMusica` e `botaoMusicaRotulo`), iguais nos dois lados: "Música de fundo", "Lo-fi de Estudo, em laço", "Efeitos sonoros", "Toques, acertos, erros e conquistas", "Tocando", "Carregando…", "Começa no primeiro toque", "Pausada enquanto você grava" e o erro acima.
 - O nome da faixa é **"Lo-fi de Estudo"**, como no arquivo escolhido pelo dono. O "Lo-fi de estúdio" de 31bcaa5 foi corrigido em 59cfe8d.
-- `OPCOES_FUNDO_UI` e as descrições dos cinco climas saem da tela.
+- A lista `OPCOES_FUNDO_UI` e as descrições dos outros quatro climas saem da tela e do contrato (ver [O que sai](#o-que-sai-e-quem-remove)).
+
+## Regra final: uma faixa só (ordem do dono, 20/11)
+
+"O som de fundo, eu quero só aquele lá que eu aprovei, que é o 06. Não quero que tenha para escolher som de fundo, que aqui só tenha como mutar ou ficar tocando aquele." Vale para web, Android e iPhone. Não há escolha de música em lugar nenhum: nem na folha "Som", nem no Perfil, nem por endereço, nem por preferência antiga.
+
+- **O arquivo:** o `06-Lo-fi-de-Estudo-final.mp3` do dono, 893.954 bytes, SHA-256 `9b1e28811362b3e1f8873162ce90abaf7a12ecc5f68f4791896bb1cb67bcb17f`, 89,3283 s decodificados (89328 ms no catálogo, `lofi_estudo`, volume `0.24`). As duas cópias servidas — `public/sons/fundos/lofi-estudo.mp3` (web) e `apps/mobile/assets/sons/fundos/lofi-estudo.mp3` (app) — são byte a byte o arquivo do dono: mesmo SHA-256, conferido em 20/11 na candidata 9d28103 (medida em [Conferência da faixa](#conferência-da-faixa-2011)).
+- **Ligar ou desligar:** a chave "Música de fundo" liga e desliga essa faixa. Ligada, toca o 06 em laço; desligada, nada toca. Não existe estado intermediário nem segunda faixa.
+- **Preferência antiga:** só o valor `mudo` sobrevive; qualquer outro (`foco_calmo`, `chuva_suave`, `biblioteca`, `brisa_natural` ou lixo) vira `lofi_estudo` na leitura, por `fundoUnicoDaPreferencia`. Quem tinha escolhido "chuva" passa a ouvir o Lo-fi; quem tinha Mudo continua em silêncio. A web regrava o valor guardado; o app normaliza a cada leitura.
+- **Nenhum caminho para outra faixa:** os players só conhecem o `lofi_estudo` (`FONTES_FUNDOS` com uma entrada no app; na web, `CATALOGO_FUNDOS.find(faixa => faixa.id === 'lofi_estudo')`), e as folhas só têm as duas chaves. Enquanto as sobras abaixo existirem, porém, o site publicado continua servindo os quatro MP3 antigos por endereço direto (por exemplo `/sons/fundos/chuva-suave.mp3`) e o catálogo continua aceitando os cinco IDs: por isso elas saem.
+
+## O que sai (e quem remove)
+
+| Sobra hoje na candidata 9d28103 | Onde está | Quem remove |
+|---|---|---|
+| `foco-calmo.mp3`, `chuva-suave.mp3`, `biblioteca.mp3`, `brisa-natural.mp3` — 893.954 bytes cada, **3,4 MiB** no total | `public/sons/fundos/` | **Web & API** |
+| Os mesmos quatro na pasta de assets do app — outros **3,4 MiB** no repositório (o Metro só empacota o que tem `require`, então hoje eles não entram no binário; ficam de peso e de armadilha para quem voltar a listar os climas) | `apps/mobile/assets/sons/fundos/` | **Mobile 2** |
+| `IdSomFundo` com os cinco climas (fica `'mudo' \| 'lofi_estudo'`); `CATALOGO_FUNDOS` com cinco entradas (fica só o `lofi_estudo`, com laço e volume); `DESCRICOES_CURTAS_FUNDO` com cinco; `OPCOES_FUNDO_UI` sai inteira | `packages/contratos/src/catalogo-sons.ts` | **Web & API** |
+| Textos da escolha, sem uso desde a folha nova: `fundoTitulo`, `fundoDica`, `linhaRotulo`, `linhaTocando`, `linhaErro`, `anuncioEscolhido`, `anuncioMudo`, `botaoRotulo` (o que recebe `clima`) e `perfilFundoRotulo`; dois textos que ninguém usa mais, `rodape` e `erro`; e o comentário que cita `OPCOES_FUNDO_UI` | `packages/contratos/src/experiencia.ts`, em `som` e na linha 453 | **Web & API** |
+| Testes que fixam os cinco: a contagem de arquivos nas duas pastas e `OPCOES_FUNDO_UI.length === 6` (e o import de `OPCOES_FUNDO_UI`) | `tests/sons.test.mjs` | **Web & API** (teste do contrato; o app só lê) |
+
+O que fica: `lofi-estudo.mp3` nas duas pastas; o `lofi_estudo` no catálogo, com `duracaoMs` 89328, `aparoInicioSeg` 0,026 e volume `0.24`; `fundoUnicoDaPreferencia`; os textos da música (`titulo`, `musicaTitulo`, `musicaFaixa`, `musicaEmLaco`, `musicaComeca`, `musicaPausada`, `musicaErro`, `musicaAviso`, `desligarMusica`, `rodapeMusica`, `rodapeIphone`, `botaoMusicaRotulo`, `tocando`, `carregando`, `efeitosTitulo`, `efeitosDica`, `efeitosDicaPerfil`, `fechar`); e os dois players, que já só usam a faixa. Os quatro arranjos continuam como fonte de produção, fora do repositório (`scripts/som/gerar-trilha.py --todos`), desde 0e99406 — o gerador sem `--todos` já grava só o Lo-fi; e o `apps/mobile` não tem `assetBundlePatterns`, então nada entra no app sem um `require`.
+
+Ordem: o contrato primeiro (Web & API), depois os arquivos e os testes de cada lado, numa passada só; nenhuma tela muda, porque as duas folhas já têm só as duas chaves.
+
+### Conferência da faixa (20/11)
+
+- **Comparação:** SHA-256 igual nos cinco arquivos comparados — o do dono (`06-Lo-fi-de-Estudo-final.mp3`, em duas cópias recebidas) e as cópias da web, do app e do ramo `feat/som-musica` (`d5bf5aa`). Sem escuta: a máquina não tem saída de áudio. A duração decodificada é 89,3283 s; o compasso 1 começa em 0,030 s, depois dos 26 ms de pré-rolo copiados do fim.
+- **Emenda na web** (`loopStart` 0,026 s, `loopEnd` = duração, MP3 decodificado no Chromium): trecho de 89,3023 s; 42 amostras de música puladas (0,95 ms); degrau de 0,68× o passo típico do próprio arquivo; nível de −35,5 a −15,3 dBFS na virada. Sem estalo, e o compasso 1 cai no `loopStart`, sem perder o ataque.
+- **Emenda no app** (dois reprodutores com cruzamento de 150 ms em 5 passos de 30 ms antes do fim; o que entra começa em 0,026 s e o que sai volta a 0,026 s): com o mesmo arquivo, o cruzamento de ganho linear mede degrau de 0,53× o passo típico, RMS de −24,4 dBFS no meio (cauda −34,3, cabeça −17,5) e pico de 0,217 (a cabeça sozinha chega a 0,485): sem buraco, sem estalo e sem estouro.
+- **Limites:** medida digital, não é teste de alto-falante nem de aparelho físico; Firefox e Safari não foram medidos (o pré-rolo cobre o atraso de codificador que eles mantêm).
 
 ## Como a música se comporta
 

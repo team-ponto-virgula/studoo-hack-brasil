@@ -121,6 +121,7 @@ test('em revisão ou não publicada, sem "Copiar link" nem compartilhar o link; 
   assert.match(perfil, /<BotaoParar rotulo=\{m\.parar\}/, '"Parar de compartilhar" continua');
   const social = await ler('apps/mobile/src/social.tsx');
   assert.match(social, /const linkForaDoAr = link\?\.moderacao === 'pendente' \|\| link\?\.moderacao === 'recusado';/);
-  assert.match(social, /etapa === 'pronto' && !linkForaDoAr \? m\.linkPronto/);
+  assert.match(social, /const estadoForaDoAr = link\?\.moderacao === 'pendente' \? seg\.seloEmRevisao : seg\.seloNaoPublicada;/);
+  assert.match(social, /etapa === 'pronto' \? \(linkForaDoAr \? estadoForaDoAr : m\.linkPronto\)/, 'o título é o estado da trilha, como a web');
   assert.match(social, /\{linkForaDoAr \? \(\s*<Text testID="folha-em-revisao"[^>]*>\s*\{link\.moderacao === 'pendente' \? seg\.enviadaParaRevisao : seg\.naoPublicada\}/);
 });
