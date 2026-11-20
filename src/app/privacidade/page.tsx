@@ -41,6 +41,8 @@ export default function PaginaPrivacidade() {
         <thead><tr><th>Dado</th><th>Para quê</th><th>Por quanto tempo</th></tr></thead>
         <tbody>
           <tr><td>E-mail e senha (guardada só como hash), ou a identificação da conta Google</td><td>Entrar na conta e recuperar o acesso</td><td>Até você excluir a conta</td></tr>
+          <tr><td>Identificador da conta Apple, e-mail compartilhado (que pode ser um endereço privado da Apple) e autorização de acesso</td><td>Reconhecer sua conta quando você voltar e revogar o acesso na Apple. Guardamos o token de renovação cifrado. O nome recebido da Apple não é guardado.</td><td>O identificador fica até a exclusão da conta. O token é removido quando recebemos a revogação ou quando você exclui a conta.</td></tr>
+          <tr><td>Verificação por código no e-mail</td><td>Confirmar que o endereço é seu no cadastro ou na troca de senha</td><td>O código vale por 15 minutos e só pode ser usado uma vez.</td></tr>
           <tr><td>Sessões de login (web e app)</td><td>Manter você conectado</td><td>Até você sair, a sessão vencer ou a conta ser excluída</td></tr>
           <tr><td>Fuso horário</td><td>Contar seus dias de estudo</td><td>Até você excluir a conta</td></tr>
           <tr><td>O que você pede para aprender, trilhas, lições, respostas, progresso e tempo de estudo</td><td>Montar e acompanhar seus estudos</td><td>Até você apagar a trilha ou excluir a conta</td></tr>
@@ -74,8 +76,9 @@ export default function PaginaPrivacidade() {
       <p>
         Esses serviços ficam fora do Brasil (a DeepSeek, na China; a OpenAI, nos Estados Unidos), e os dados enviados a
         eles são tratados lá. Sem a permissão, nada vai para esses serviços: as respostas são corrigidas no próprio Studoo e as funções que
-        dependem da IA pedem a permissão antes. Também usamos um serviço de e-mail para enviar o código de recuperação de
-        senha (só o seu e-mail e o código) e, se você escolher, o login com Google.
+        dependem da IA pedem a permissão antes. No cadastro e na recuperação, o serviço de e-mail recebe o endereço e a
+        mensagem com o código ou o aviso sobre uma conta existente. Se escolher entrar com Google ou Apple, o provedor
+        participa da autenticação. Com a Apple, você pode ocultar seu e-mail.
       </p>
 
       <h2>Conteúdo da comunidade</h2>
@@ -89,7 +92,7 @@ export default function PaginaPrivacidade() {
         Você pode ver e corrigir seus dados no app, parar de permitir o uso de IA e excluir sua conta em Perfil,
         Privacidade e dados, Excluir conta. A exclusão é imediata e apaga a conta, as trilhas, o progresso, os materiais,
         a foto, o perfil, os links e o que você segue. Cópias de trilhas que outras pessoas já adicionaram continuam com
-        elas, sem o seu nome. Pedidos já enviados aos serviços de IA seguem a política de cada um.
+        elas, sem o seu nome. Se você entrou com a Apple, o Studoo também solicita a revogação da autorização na Apple. Pedidos já enviados aos serviços de IA seguem a política de cada um.
       </p>
 
       <h2>Contato</h2>

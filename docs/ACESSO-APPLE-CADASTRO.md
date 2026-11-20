@@ -56,7 +56,7 @@ nunca recebe mensagem. O nome não é guardado.
 
 Exclusão (TN3194): `DELETE /api/conta` revoga o token na Apple (`/auth/revoke`) depois de apagar os dados. Se a Apple
 falhar, a exclusão segue e o log registra só `apple_revogacao_falhou`. Notificações: `consent-revoked` encerra as
-sessões e esquece o token; `account-delete` exclui a conta.
+sessões e esquece o token; `account-deleted` exclui a conta. A revogação e as notificações de contas anteriores continuam funcionando quando a entrada Apple é desligada, desde que as credenciais permaneçam configuradas. [Eventos da Apple](https://developer.apple.com/documentation/signinwithapple/processing-changes-for-sign-in-with-apple-accounts).
 
 ## Esqueci minha senha e Google
 

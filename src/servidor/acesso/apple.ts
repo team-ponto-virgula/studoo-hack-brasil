@@ -31,7 +31,6 @@ type ConfigApple = { equipe: string; chaveId: string; chave: string; bundles: st
  * app (`STUDOO_SESSAO_MOBILE_PILOTO=1`) e de origem HTTPS, como as outras entradas do app.
  */
 export function configuracaoApple(): ConfigApple | null {
-  if (process.env.STUDOO_APPLE !== '1') return null;
   const equipe = process.env.APPLE_TEAM_ID?.trim() ?? '';
   const chaveId = process.env.APPLE_KEY_ID?.trim() ?? '';
   const chave = (process.env.APPLE_PRIVATE_KEY ?? '').replace(/\\n/g, '\n').trim();
@@ -41,7 +40,7 @@ export function configuracaoApple(): ConfigApple | null {
 }
 
 export function appleAtivo() {
-  return !!configuracaoApple() && process.env.STUDOO_SESSAO_MOBILE_PILOTO === '1' && !!origemStudoo()?.startsWith('https:');
+  return process.env.STUDOO_APPLE === '1' && !!configuracaoApple() && process.env.STUDOO_SESSAO_MOBILE_PILOTO === '1' && !!origemStudoo()?.startsWith('https:');
 }
 
 function exigirConfig() {
@@ -133,7 +132,7 @@ async function trocarCodigoApple(codigo: string, identidade: IdentidadeApple): P
   } catch { throw new FalhaApi('apple_invalido'); }
   if (typeof corpo.refresh_token !== 'string' || typeof corpo.id_token !== 'string') throw new FalhaApi('apple_invalido');
   const confirmada = await verificarTokenApple(corpo.id_token, null);
-  if (confirmada.sub !== identidade.sub) throw new FalhaApi('apple_invalido');
+  if (confirmada.sub !== identidade.sub || confirmada.cliente !== identidade.cliente) throw new FalhaApi('apple_invalido');
   return corpo.refresh_token;
 }
 
@@ -176,6 +175,7 @@ export async function entrarApple(entrada: unknown, provedores: Provedores = {})
         data.email = identidade.email;
         await tx.recuperacaoSenha.deleteMany({ where: { usuarioId: usuario.id } });
       }
+      if (!emailPermitido(data.email ?? usuario.email)) throw new FalhaApi('email_nao_permitido');
       await tx.usuario.update({ where: { id: usuario.id }, data });
       return criarSessao(usuario.id, 'MOBILE', tx);
     }
@@ -218,7 +218,7 @@ export async function revogarApple(renovacaoCifrada: string | null, cliente: str
 }
 
 /**
- * Notificações servidor-a-servidor da Apple (`consent-revoked`, `account-delete`, `email-disabled`, `email-enabled`).
+ * Notificações servidor-a-servidor da Apple (`consent-revoked`, `account-deleted`, `email-disabled`, `email-enabled`).
  * Devolve o evento já validado (JWT assinado pela Apple, `aud` = bundle aceito) ou null.
  */
 export async function lerNotificacaoApple(payload: unknown, chaves: JWTVerifyGetKey = chavesApple) {
