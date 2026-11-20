@@ -13,16 +13,40 @@ function configuracaoResend() {
   if (!chave || /[\r\n]/.test(chave) || !from || /[\r\n]/.test(from)) return null;
   return { chave, from };
 }
+/** O envio de e-mail está pronto (Resend configurado, ou a caixa falsa só em loopback). Vale para recuperação e cadastro. */
 export function recuperacaoDisponivel() {
   return !!origemStudoo() && (process.env.EMAIL === 'falso' ? !!local() : process.env.EMAIL === 'resend' && !!configuracaoResend());
 }
+type Mensagem = { to: string; subject: string; text: string };
+
 export async function enviarRecuperacao(email: string, codigo: string) {
-  if (!recuperacaoDisponivel()) throw new Error('E-mail indisponível');
-  const url = new URL('/recuperar', origemStudoo()!);
-  const mensagem = {
+  const url = new URL('/recuperar', origemStudoo() ?? 'http://localhost');
+  await enviarEmail({
     to: email, subject: 'Seu código para recuperar a senha do Studoo',
     text: `Seu código do Studoo é: ${codigo}\n\nEle vale por 15 minutos e só pode ser usado uma vez. Informe-o no app ou em ${url}.\n\nSe você não solicitou a troca, ignore esta mensagem. Sua senha continua a mesma.`,
-  };
+  });
+}
+
+/** Código de posse do e-mail para criar a conta. */
+export async function enviarCodigoCadastro(email: string, codigo: string) {
+  await enviarEmail({
+    to: email, subject: 'Seu código para criar a conta no Studoo',
+    text: `Seu código do Studoo é: ${codigo}\n\nEle vale por 15 minutos e só pode ser usado uma vez. Informe-o no app ou no site para criar sua conta.\n\nSe você não pediu para criar uma conta, ignore esta mensagem.`,
+  });
+}
+
+/** Quem tenta criar conta com um e-mail que já tem conta recebe este aviso, e nenhum código (a API responde igual). */
+export async function enviarAvisoContaExistente(email: string) {
+  const url = new URL('/recuperar', origemStudoo() ?? 'http://localhost');
+  await enviarEmail({
+    to: email, subject: 'Você já tem uma conta no Studoo',
+    text: `Alguém pediu para criar uma conta no Studoo com este e-mail, mas ele já tem uma conta.\n\nPara entrar, use o mesmo jeito de sempre (e-mail e senha, Google ou Apple). Se esqueceu a senha, recupere em ${url}.\n\nSe não foi você, ignore esta mensagem.`,
+  });
+}
+
+async function enviarEmail(mensagem: Mensagem) {
+  if (!recuperacaoDisponivel()) throw new Error('E-mail indisponível');
+  const email = mensagem.to;
   if (process.env.EMAIL === 'falso') {
     // Somente loopback. Não escreve código nem e-mail em logs ou na resposta HTTP.
     const pasta = join(process.cwd(), '.studoo-local', 'emails');

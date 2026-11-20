@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { configuracaoGoogle } from '@/servidor/acesso/google';
+import { cadastroAtivo } from '@/servidor/acesso/cadastro';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
 import { usuarioDaSessao } from '@/servidor/acesso/sessao';
 import { visitanteAtivo } from '@/servidor/acesso/visitante';
@@ -22,6 +23,7 @@ export default async function Login() {
       configInicial={{
         google: !!configuracaoGoogle(),
         recuperacao: recuperacaoDisponivel(),
+        cadastro: cadastroAtivo(),
         visitante: visitanteAtivo(),
       }}
     />

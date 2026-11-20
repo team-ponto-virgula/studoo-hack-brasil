@@ -42,4 +42,10 @@ export const mensagensApi: Record<CodigoErro, string> = {
   conteudo_recusado: "Este conteúdo não pode ser publicado. Ajuste e tente de novo.",
   consentimento_ia: "Para continuar, permita o uso de IA.",
   confirmacao_invalida: "Digite EXCLUIR para confirmar.",
+  cadastro_indisponivel: "Criar conta por e-mail está indisponível no momento.",
+  limite_cadastro: "Aguarde alguns minutos antes de tentar novamente.",
+  email_nao_permitido: "Este e-mail não pode ser usado neste ambiente do Studoo.",
+  apple_indisponivel: "Iniciar sessão com a Apple está indisponível no momento.",
+  apple_invalido: "Não foi possível confirmar o acesso com a Apple. Tente novamente.",
+  apple_conta_existente: "Este e-mail já tem uma conta. Entre com o mesmo jeito de sempre ou recupere o acesso.",
 };
