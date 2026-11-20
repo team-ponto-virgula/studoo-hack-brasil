@@ -453,6 +453,10 @@ fluxo_criacao() {
 
 fluxo_telas() {
   local falhas
+  if [ "${TELAS_UMA_POR_VEZ:-}" = "1" ]; then
+    fluxo_telas_uma_por_vez
+    return
+  fi
   fluxo_criacao || true
   if ! rodar_maestro telas "$PASTA_DOS_FLUXOS/telas" --config "$PASTA_DOS_FLUXOS/telas/config.yaml" \
     --format junit --output "$REGISTROS/maestro-telas.xml"; then
@@ -467,6 +471,58 @@ fluxo_telas() {
     erro "Um ou mais fluxos das telas falharam (mapa, Minhas trilhas, exercícios, Explorar, Perfil). O sumário lista quais e o que faltou."
   fi
   resumo "✅ Telas: mapa, Minhas trilhas, menu e confirmação, os seis exercícios, Explorar e Perfil."
+}
+
+# As mesmas telas, uma sessão do Maestro por fluxo, na ordem de telas/config.yaml (o Android liga com TELAS_UMA_POR_VEZ=1).
+# Na execução 44726250118 o emulador sumiu do adb no fluxo 70, depois de 12 min na mesma sessão, e os 12 fluxos seguintes
+# falharam em milissegundos ("device not found"). Aqui cada fluxo abre e fecha a própria sessão, o aparelho é conferido
+# antes de cada um (`aparelho_responde`, do sistema) e, se ele não volta, o resto fica como "não rodou", com o motivo.
+# CONFERENCIA_TELAS (nomes separados por vírgula ou espaço, como "70-exemplo-curto,10-mapa") roda só essas telas e pula a
+# prova da criação: serve para refazer as que faltaram sem repetir o resto.
+fluxo_telas_uma_por_vez() {
+  local fluxo pedidas falhas="" naorodaram="" caiu="" quantos=0 codigo
+  pedidas="$(printf '%s' "${CONFERENCIA_TELAS:-}" | tr ',' ' ' | xargs || true)"
+  if [ -z "$pedidas" ]; then
+    fluxo_criacao || true
+  else
+    resumo "Só as telas pedidas: $pedidas (sem a prova da criação; as capturas das outras vão aparecer como faltando)."
+  fi
+
+  while IFS= read -r fluxo; do
+    if [ -n "$pedidas" ] && ! printf ' %s ' "$pedidas" | grep -qF " $fluxo "; then continue; fi
+    if [ -n "$caiu" ]; then
+      naorodaram="$naorodaram $fluxo"
+      continue
+    fi
+    if ! aparelho_responde; then
+      caiu="$fluxo"
+      naorodaram="$naorodaram $fluxo"
+      continue
+    fi
+    quantos=$((quantos + 1))
+    codigo=0
+    rodar_maestro "telas-$fluxo" "$PASTA_DOS_FLUXOS/telas/$fluxo.yaml" \
+      --format junit --output "$REGISTROS/maestro-telas-$fluxo.xml" || codigo=$?
+    if [ "$codigo" -ne 0 ]; then
+      falhas="$falhas$(node "$AQUI/servidor/falhas-do-relatorio.mjs" "$REGISTROS/maestro-telas-$fluxo.xml" 2> /dev/null || echo "- \`$fluxo\`: sem relatório do Maestro (código $codigo)")
+"
+    fi
+  done < <(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
+    "$PASTA_DOS_FLUXOS/telas/config.yaml")
+
+  [ "$quantos" -gt 0 ] || [ -n "$caiu" ] || erro "Nenhuma tela de CONFERENCIA_TELAS existe em telas/config.yaml: $pedidas"
+  if [ -n "$caiu" ]; then
+    resumo "**O aparelho parou de responder antes de \`$caiu\`.** Não rodaram:$(printf ' `%s`' $naorodaram). A carga da máquina está em carga-da-maquina.log e o fim do kernel em dmesg-fim.txt, nos registros."
+  fi
+  if [ -n "$falhas" ]; then
+    resumo "**Fluxos das telas que falharam:**"
+    resumo ""
+    resumo "$falhas"
+  fi
+  if [ -n "$falhas" ] || [ -n "$caiu" ]; then
+    erro "Um ou mais fluxos das telas falharam ou não rodaram. O sumário lista quais e por quê."
+  fi
+  resumo "✅ Telas: $quantos fluxo(s), uma sessão do Maestro por fluxo, todos passaram."
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
