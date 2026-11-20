@@ -1267,7 +1267,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const [cartaoDeVolta, setCartaoDeVolta] = useState(false);
   const [trofeuAVista, setTrofeuAVista] = useState(false);
   const [deslize] = useState(() => new Animated.Value(1));
-  const dividir = pronta && !largo;
+  const empilhar = pronta && width <= 600;
+  const dividir = pronta && !empilhar && !largo;
   // Criar a trilha: enquanto o aceite anda (e na passagem), só o botão fica, na largura toda; no erro, "Ajustar pedido" volta.
   const salvando = criacao === 'criando' || criacao === 'criada';
   const falhou = criacao === 'erro' || criacao === 'expirada';
@@ -1378,8 +1379,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     return () => clearTimeout(relogio);
   }, [criacao]);
 
-  // "Ajustar pedido" sai em 200 ms enquanto a trilha é criada (o botão fica com a largura toda) e volta no erro. Com movimento
-  // reduzido, na hora.
+  // "Ajustar pedido" sai em 200 ms durante o aceite e volta no erro. Na pilha, seu espaço fica reservado para o botão
+  // principal não mudar de lugar. Com movimento reduzido, a troca é imediata.
   useEffect(() => {
     const destino = salvando ? 1 : 0;
     if (destino === 0) setAjustarFora(false);
@@ -1556,41 +1557,47 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   );
 
   const expirada = criacao === 'expirada';
+  const espera = criacao === 'criando' && esperaReal && (
+    <Text testID="criacao-espera" accessibilityLiveRegion="polite" style={estudoEstilos.criacaoEspera}>{mensagens.geracao.escrevendoLicoes}</Text>
+  );
+  const principal = pronta && proposta && (
+    <View style={!empilhar && (dividir || salvando) ? estudoEstilos.metade : null}>
+      <Botao referencia={botaoComecar} testID={expirada ? 'montar-de-novo' : 'comecar-trilha'}
+        rotulo={salvando ? mensagens.geracao.criandoTrilha : expirada ? mensagens.geracao.montarDeNovo : mensagens.geracao.comecarLicao1}
+        ocupado={salvando} afundado={salvando} giro={salvando} desativado={ocupado && !salvando}
+        acao={() => (expirada ? remontar() : comecar(proposta))} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
+    </View>
+  );
+  const secundaria = !ajustarFora && (
+    <Animated.View pointerEvents={salvando ? 'none' : undefined} accessibilityElementsHidden={salvando}
+      importantForAccessibility={salvando ? 'no-hide-descendants' : 'auto'}
+      style={empilhar ? { opacity: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }
+        : dividir ? [estudoEstilos.metade, salvando || falhou ? {
+          flexGrow: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
+          // Ao voltar (no erro), só aparece quando a largura já voltou: numa linha, sem quebrar enquanto o outro encolhe.
+          opacity: saidaDoAjustar.interpolate({ inputRange: [0, 0.15, 1], outputRange: [1, 0, 0] }),
+          marginRight: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [0, -12] }),
+        } : null] : null}>
+      <Botao rotulo={pronta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar} testID="voltar-pedido" variante="secundario"
+        desativado={ocupado} acao={pronta ? ajustar : cancelar}
+        estilo={empilhar ? estudoEstilos.geracaoBotaoSecundario : dividir ? estudoEstilos.botaoDividido : undefined} umaLinha />
+    </Animated.View>
+  );
   const rodape = (
     <Animated.View style={[estudoEstilos.geracaoRodape, pronta && reduzir === false && {
       opacity: deslize, transform: [{ translateY: deslize.interpolate({ inputRange: [0, 1], outputRange: [RITMO_DA_GERACAO.rodapeDeslize, 0] }) }],
     }]}>
-      <View style={estudoEstilos.geracaoAcoes}>
-        {/* .geracao-acoes[data-pronta] > .botao: lado a lado, com 12 nos lados (em 360, "Ajustar pedido" cabe numa linha). Na
-            criação, "Ajustar pedido" encolhe e some em 200 ms, e "Criando sua trilha…" fica numa linha, na largura toda. */}
-        {!ajustarFora && (
-          <Animated.View style={dividir ? [estudoEstilos.metade, salvando || falhou ? {
-            flexGrow: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
-            // Ao voltar (no erro), só aparece quando a largura já voltou: numa linha, sem quebrar enquanto o outro encolhe.
-            opacity: saidaDoAjustar.interpolate({ inputRange: [0, 0.15, 1], outputRange: [1, 0, 0] }),
-            marginRight: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [0, -12] }),
-          } : null] : null}>
-            <Botao rotulo={pronta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar} testID="voltar-pedido" variante="secundario"
-              desativado={ocupado} acao={pronta ? ajustar : cancelar} estilo={dividir ? estudoEstilos.botaoDividido : undefined} umaLinha />
-          </Animated.View>
-        )}
-        {!dividir && !pronta && (
+      <View style={empilhar ? estudoEstilos.geracaoAcoesEmpilhadas : estudoEstilos.geracaoAcoes}>
+        {empilhar && principal}
+        {empilhar ? <View style={estudoEstilos.geracaoLugarSecundario}>{secundaria}{espera}</View> : secundaria}
+        {!pronta && (
           <View testID="geracao-situacao" accessible accessibilityLabel={mensagens.geracao.montando} style={estudoEstilos.situacao}>
             <Text style={estudoEstilos.situacaoRotulo}>{mensagens.geracao.montando}</Text>
           </View>
         )}
-        {pronta && proposta && (
-          <View style={dividir || salvando ? estudoEstilos.metade : null}>
-            <Botao referencia={botaoComecar} testID={expirada ? 'montar-de-novo' : 'comecar-trilha'}
-              rotulo={salvando ? mensagens.geracao.criandoTrilha : expirada ? mensagens.geracao.montarDeNovo : mensagens.geracao.comecarLicao1}
-              ocupado={salvando} afundado={salvando} giro={salvando} desativado={ocupado && !salvando}
-              acao={() => (expirada ? remontar() : comecar(proposta))} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
-          </View>
-        )}
+        {!empilhar && principal}
       </View>
-      {criacao === 'criando' && esperaReal && (
-        <Text testID="criacao-espera" accessibilityLiveRegion="polite" style={estudoEstilos.criacaoEspera}>{mensagens.geracao.escrevendoLicoes}</Text>
-      )}
+      {!empilhar && espera}
       {falhou && (
         <Text testID="criacao-erro" accessibilityLiveRegion="assertive" style={estudoEstilos.criacaoErro}>
           {expirada ? mensagens.geracao.propostaExpirada : mensagens.geracao.erroCriacao}
@@ -2794,6 +2801,9 @@ const estudoEstilos = StyleSheet.create({
   esqueletoOrigem: { width: '48%', maxWidth: 256, height: 12, marginTop: 10, borderRadius: 8, backgroundColor: cores.gelo },
   geracaoRodape: { gap: 8 },
   geracaoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  geracaoAcoesEmpilhadas: { gap: 8 },
+  geracaoLugarSecundario: { minHeight: 44, justifyContent: 'center' },
+  geracaoBotaoSecundario: { minHeight: 44 },
   // Criar a trilha (spec 04): a linha da espera real (14/20 #5E6A85) e a do erro (#C23B4E), centradas embaixo do botão.
   criacaoEspera: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20, textAlign: 'center' },
   criacaoErro: { color: '#C23B4E', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20, textAlign: 'center' },
