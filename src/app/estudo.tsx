@@ -44,6 +44,7 @@ import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, plan
 import { TelaPerfil } from './perfil';
 import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { Explorar } from './comunidade';
+import { useAtualizacaoComunidade } from './seguranca-comunidade';
 import { tocaSons } from './sons';
 import { medirAcaoFixa, medirIlha } from '../ui/rodape-movel';
 import './aula.css';
@@ -96,7 +97,12 @@ function voltarAoTopo() {
   window.requestAnimationFrame(() => window.scrollTo(0, 0));
 }
 
-export function Estudo() {
+export function ExplorarComSessao() {
+  const { versao } = useAtualizacaoComunidade();
+  return <Estudo key={versao} abrirNoExplorar />;
+}
+
+export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean }) {
   const [inicio, setInicio] = useState<'carregando' | 'pronto' | 'falha'>('carregando');
   const router = useRouter();
   const [erro, setErro] = useState<string | null>(null);
@@ -186,7 +192,7 @@ export function Estudo() {
     try {
       const sessao = await cliente.sessao();
       // Voltou do login para concluir um link de trilha (adicionar): segue para a página dele.
-      const depois = caminhoDepoisDoLogin();
+      const depois = abrirNoExplorar ? null : caminhoDepoisDoLogin();
       if (depois) {
         router.replace(depois);
         return;
@@ -217,6 +223,11 @@ export function Estudo() {
         } catch {
           // A lição não existe mais (trilha apagada): segue para a trilha em andamento.
         }
+      }
+      if (abrirNoExplorar && config?.comunidade) {
+        setTela({ tipo: 'explorar' });
+        setInicio('pronto');
+        return;
       }
       // Chegou da página de um link (adicionou ou já tinha a trilha): abre essa trilha, com o aviso.
       const pedido = planoParaAbrir();
@@ -259,7 +270,7 @@ export function Estudo() {
       setSincronia((anterior) => ({ estado: 'offline', em: anterior.em }));
       setInicio('falha');
     }
-  }, [irParaLogin, router]);
+  }, [abrirNoExplorar, irParaLogin, router]);
 
   const sincronizarAgora = useCallback(async () => {
     if (emExecucao.current || inicio !== 'pronto') return;

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
-import { MOTIVOS_DENUNCIA, type MotivoDenuncia } from '@studoo/contratos';
+import { MOTIVOS_DENUNCIA, type LinkCompartilhado, type MotivoDenuncia, type Visibilidade } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
@@ -192,6 +192,11 @@ export function SegurancaComunidade({ children }: { children: ReactNode }) {
 export function RegrasDaRecusa({ erro }: { erro?: string | null }) {
   if (erro !== seg.recusadaNaHora) return null;
   return <> <Link href={seg.rotas.regras}>{seg.regras}</Link></>;
+}
+
+export function rotuloDoDestino(nivel: Visibilidade, moderacao: LinkCompartilhado['moderacao']) {
+  const lugar = c.niveis[nivel].titulo;
+  return moderacao === 'pendente' ? seg.destinoDepoisDaAprovacao(lugar) : lugar;
 }
 
 export function EstadoModeracao({ estado }: { estado?: string | null }) {

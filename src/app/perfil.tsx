@@ -35,7 +35,7 @@ import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
 import { SecaoPrivacidade } from './privacidade-perfil';
-import { BloqueadasPerfil, EstadoModeracao, RegrasDaRecusa } from './seguranca-comunidade';
+import { BloqueadasPerfil, EstadoModeracao, RegrasDaRecusa, rotuloDoDestino } from './seguranca-comunidade';
 import { SecaoSomPerfil } from './som';
 import { tocaSons } from './sons';
 import './perfil.css';
@@ -277,9 +277,9 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
                           : [link.adicoes > 0 && p.adicoes(link.adicoes), comunidade && link.valeus ? mensagens.comunidade.valeus(link.valeus) : null].filter(Boolean).join(' · ')}
                       </p>
                       {comunidade && link.visibilidade ? (
-                        link.moderacao !== 'pendente' && link.moderacao !== 'recusado' && <p className="selo-visibilidade" data-nivel={link.visibilidade}>
+                        link.moderacao !== 'recusado' && <p className="selo-visibilidade" data-nivel={link.visibilidade} data-em-revisao={link.moderacao === 'pendente' || undefined}>
                           <Icone nome={link.visibilidade === 'explorar' ? 'bussola' : link.visibilidade === 'perfil' ? 'pessoa' : 'elo'} />
-                          {mensagens.comunidade.niveis[link.visibilidade].titulo}
+                          {rotuloDoDestino(link.visibilidade, link.moderacao)}
                           {link.visibilidade === 'explorar' && link.tema ? ` · ${temas[link.tema]}` : ''}
                         </p>
                       ) : (
