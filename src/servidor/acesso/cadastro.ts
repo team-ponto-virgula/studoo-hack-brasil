@@ -58,7 +58,7 @@ export async function pedirCodigoCadastro(entrada: unknown, rede: string) {
     if (resultado.codigo) await enviarCodigoCadastro(email, codigo);
     else if (resultado.existente) await enviarAvisoContaExistente(email);
   } catch {
-    if (resultado.codigo) await banco.verificacaoCadastro.deleteMany({ where: { chave } });
+    if (resultado.codigo) await banco.verificacaoCadastro.deleteMany({ where: { chave, codigoHash: hashCodigo(email, codigo) } });
     // Resposta neutra também quando o provedor falha: não revela se o e-mail existe nem o motivo.
     console.error(JSON.stringify({ rota: 'cadastro-codigo', codigo: 'envio_indisponivel' }));
   }

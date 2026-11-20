@@ -4,8 +4,8 @@
 
 | Ação | Pedido | Resposta |
 |---|---|---|
-| Bloquear quem publicou | `POST /api/bloqueios` com `{alvoTipo, alvo}` | `{bloqueado:true}` |
-| Ver bloqueios próprios | `GET /api/bloqueios` | `{itens:[{id,nome}]}` |
+| Bloquear quem publicou | `POST /api/bloqueios` com `{alvoTipo, alvo}` | `{bloqueado:true,id}` |
+| Ver bloqueios próprios | `GET /api/bloqueios` | `{itens:[{id,nome,perfilId}]}` |
 | Desbloquear | `DELETE /api/bloqueios/:id` | 204 |
 | Denunciar | `POST /api/denuncias` com `{alvoTipo,alvo,motivo}` | `{registrada:true,protocolo}` |
 | Abrir suporte | `/suporte` | Formulário e consulta de protocolo |

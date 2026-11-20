@@ -10,6 +10,7 @@ import { criarSessao } from '../src/servidor/acesso/sessao.ts';
 import { DOMINIO_EMAIL_VISITANTE, PREFIXO_EMAIL_VISITANTE } from '../src/servidor/acesso/visitante.ts';
 import { aceitarProposta, gerarProposta } from '../src/servidor/aprendizado/servico.ts';
 import { banco } from '../src/servidor/banco/cliente.ts';
+import { DELETE as revogarIaHttp } from '../src/app/api/privacidade/consentimento-ia/route.ts';
 import { VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
 // Estes testes simulam a OpenAI e a DeepSeek: as contas já aceitaram o envio a IA de terceiros (o aceite tem teste próprio).
 const aceiteIa = { consentimentoIaEm: new Date(), consentimentoIaVersao: VERSAO_CONSENTIMENTO_IA };
@@ -316,6 +317,16 @@ test('modo misto: IA=deepseek + chave da OpenAI + flag → voz pela OpenAI simul
 
     assert.deepEqual(pedidosOpenAi, ['/v1/realtime/calls', '/v1/realtime/calls/rtc_misto_1/hangup'], 'só a voz vai para a OpenAI');
 
+    // A pessoa retira o aceite por outra sessão enquanto a conversa está aberta.
+    assert.equal((await iniciar()).status, 200);
+    const outra = await criarSessao(u.id);
+    const revogada = await revogarIaHttp(new Request(`${origemPadrao()}/api/privacidade/consentimento-ia`, {
+      method: 'DELETE', headers: { origin: origemPadrao(), cookie: cookieSessao(outra.token) },
+    }));
+    assert.equal(revogada.status, 200);
+    assert.equal(pedidosOpenAi.at(-1), '/v1/realtime/calls/rtc_misto_1/hangup');
+    assert.equal((await iniciar()).status, 428);
+
     // Sem a chave da OpenAI: voz 404 e vozAoVivo falso.
     delete process.env.OPENAI_API_KEY;
     assert.equal((await configAtual()).vozAoVivo, false);
@@ -330,7 +341,7 @@ test('modo misto: IA=deepseek + chave da OpenAI + flag → voz pela OpenAI simul
     process.env.IA = 'falsa';
     assert.equal((await configAtual()).vozAoVivo, false);
     assert.equal((await iniciar()).status, 404);
-    assert.equal(pedidosOpenAi.length, 2, 'nenhuma chamada nova à OpenAI nos casos desligados');
+    assert.equal(pedidosOpenAi.length, 4, 'nenhuma chamada nova à OpenAI nos casos desligados');
   } finally {
     srvOpenAi.close();
     srvDeepSeek.close();

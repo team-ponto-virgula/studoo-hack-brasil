@@ -55,6 +55,6 @@ export async function excluirConta(usuarioId: string, confirmacao: unknown): Pro
     return { renovacao: usuario.appleRenovacao, cliente: usuario.appleCliente };
   });
 
-  encerrarChamadasDoUsuario(usuarioId);
+  await encerrarChamadasDoUsuario(usuarioId);
   await revogarApple(apple.renovacao, apple.cliente);
 }

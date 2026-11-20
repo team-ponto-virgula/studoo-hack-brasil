@@ -254,6 +254,7 @@ export function motivoTituloTrilhaInvalido(titulo: string): MotivoTituloInvalido
 }
 
 export interface ConfiguracoesTrilha {
+  capaModeracao?: 'pendente' | 'aprovado' | 'recusado' | null;
   planoId: string;
   titulo: string;
   /** O mesmo texto que aparece no cartão e no link (a legenda); até 140. */
