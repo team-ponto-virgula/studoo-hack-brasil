@@ -73,6 +73,7 @@ test("aceite que estoura o limite: a etapa diz o tempo, a saída falha e a trilh
   const servidor = createServer((req, res) => {
     const json = (status, corpo, extra = {}) => { res.writeHead(status, { "content-type": "application/json", ...extra }); res.end(JSON.stringify(corpo)); };
     if (req.url === "/api/login") return json(200, { autenticado: true }, { "set-cookie": "studoo-sessao=abc; Path=/; HttpOnly" });
+    if (req.url === "/api/privacidade") return json(200, { consentimentoIa: { necessario: false, versao: "ensaio", aceitoEm: null } });
     if (req.url === "/api/aprendizado/propostas") return json(200, { token: "t" });
     if (req.url === "/api/aprendizado/planos" && req.method === "POST") { setTimeout(() => { aceitou = true; }, 250); return; }
     if (req.url === "/api/aprendizado/planos") return json(200, aceitou ? [{ id: "antigo" }, { id: "novo" }] : [{ id: "antigo" }]);
@@ -98,6 +99,54 @@ test("aceite que estoura o limite: a etapa diz o tempo, a saída falha e a trilh
     servidor.closeAllConnections();
     servidor.close();
   }
+});
+
+test("a verificação aceita a versão vigente antes da proposta que exigia 428, uma única vez", async () => {
+  const versao = "versao-da-prova";
+  let aceitoEm = null;
+  let aceites = 0;
+  const propostas = [];
+  const estado = () => ({ consentimentoIa: { necessario: true, versao, aceitoEm } });
+  const servidor = createServer(async (req, res) => {
+    const json = (status, corpo, headers = {}) => {
+      res.writeHead(status, { "content-type": "application/json", ...headers });
+      res.end(JSON.stringify(corpo));
+    };
+    if (req.url === "/api/login") return json(200, {}, { "set-cookie": "studoo-sessao=sintetica; HttpOnly" });
+    if (req.url === "/api/privacidade") return json(200, estado());
+    if (req.url === "/api/privacidade/consentimento-ia" && req.method === "POST") {
+      let body = "";
+      for await (const parte of req) body += parte;
+      if (JSON.parse(body).versao !== versao) return json(400, {});
+      aceites++; aceitoEm = new Date().toISOString();
+      return json(200, estado());
+    }
+    if (req.url === "/api/aprendizado/propostas") {
+      propostas.push(aceitoEm ? 200 : 428);
+      return aceitoEm ? json(200, { token: "apenas-teste" }) : json(428, { codigo: "consentimento_ia" });
+    }
+    if (req.url === "/api/aprendizado/planos" && req.method === "GET") return json(200, []);
+    if (req.url === "/api/aprendizado/planos" && req.method === "POST") return json(200, { id: "a", fluxos: [{ licoes: [{ id: "l" }] }] });
+    if (req.url === "/api/aprendizado/licoes/l") return json(200, { exercicios: [{ tipo: "lacuna" }] });
+    if (req.url === "/api/aprendizado/licoes/l/avaliar") return json(200, { correta: false });
+    if (req.url === "/api/estudio/licoes/l/ponte") return json(200, { ponte: { exercicio: { enunciado: "Exemplo", opcoes: ["a"] } } });
+    if (req.url === "/api/estudio/licoes/l/ponte/avaliar") return json(200, { correta: true });
+    if (req.url === "/api/aprendizado/planos/a" && req.method === "DELETE") return json(200, { apagado: true });
+    json(404, {});
+  });
+  await new Promise(resolve => servidor.listen(0, "127.0.0.1", resolve));
+  try {
+    const base = `http://127.0.0.1:${servidor.address().port}`;
+    const sem = await fetch(base + "/api/aprendizado/propostas", { method: "POST" });
+    assert.equal(sem.status, 428);
+    assert.equal((await sem.json()).codigo, "consentimento_ia");
+    for (let chamada = 0; chamada < 2; chamada++) {
+      const resultado = await verificar({ base, email: "qa@example.test", senha: "teste", escrever: () => {} });
+      assert.equal(resultado.falhou, false, resultado.linhas.join("\n"));
+    }
+    assert.deepEqual(propostas, [428, 200, 200]);
+    assert.equal(aceites, 1);
+  } finally { servidor.closeAllConnections(); servidor.close(); }
 });
 
 // --- Percurso inteiro contra o servidor local (IA simulada), com cada tipo forçado como primeiro exercício. ---
