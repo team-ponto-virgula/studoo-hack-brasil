@@ -40,6 +40,12 @@ const statusErros: Record<CodigoErro, number> = {
   conteudo_recusado: 422,
   consentimento_ia: 428,
   confirmacao_invalida: 400,
+  cadastro_indisponivel: 503,
+  limite_cadastro: 429,
+  email_nao_permitido: 403,
+  apple_indisponivel: 503,
+  apple_invalido: 400,
+  apple_conta_existente: 409,
 };
 
 export class FalhaApi extends Error {

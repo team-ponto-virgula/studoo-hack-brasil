@@ -15,6 +15,10 @@
     "./privacidade": {
       "types": "./src/privacidade.ts",
       "default": "./src/privacidade.ts"
+    },
+    "./autenticacao": {
+      "types": "./src/autenticacao.ts",
+      "default": "./src/autenticacao.ts"
     }
   }
 }

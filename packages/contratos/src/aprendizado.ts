@@ -225,6 +225,12 @@ const codigosErro = [
   "conteudo_recusado",
   "consentimento_ia",
   "confirmacao_invalida",
+  "cadastro_indisponivel",
+  "limite_cadastro",
+  "email_nao_permitido",
+  "apple_indisponivel",
+  "apple_invalido",
+  "apple_conta_existente",
 ] as const;
 
 export type CodigoErro = typeof codigosErro[number];
@@ -355,7 +361,15 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     entrarVisitante: () => solicitar<Autenticacao>("/visitante", "POST"),
     entrarVisitanteNativo: () => solicitar<SessaoNativa>("/mobile/visitante", "POST"),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
-    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean; compartilhar?: boolean; comunidade?: boolean }>("/auth/config"),
+    /** Criar conta por e-mail (ver `@studoo/contratos/autenticacao`): primeiro o código, depois o cadastro. */
+    pedirCodigoCadastro: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/cadastro/codigo`, 'POST', { email }),
+    cadastrar: (email: string, codigo: string, senha: string) => solicitar<Autenticacao>('/cadastro', 'POST', { email, codigo, senha }),
+    cadastrarNativo: (email: string, codigo: string, senha: string) => solicitar<SessaoNativa>('/mobile/cadastro', 'POST', { email, codigo, senha }),
+    /** Iniciar sessão com a Apple (iPhone): nonce de uso único e depois a troca pelo token da Apple. */
+    nonceApple: () => solicitar<{ nonce: string; expiraEm: string }>('/mobile/apple/nonce', 'POST', {}),
+    entrarApple: (pedido: { identityToken: string; authorizationCode: string; nonce: string; nome?: { givenName?: string | null; familyName?: string | null } | null }) =>
+      solicitar<SessaoNativa>('/mobile/apple', 'POST', pedido),
+    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; cadastro?: boolean; apple?: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean; compartilhar?: boolean; comunidade?: boolean }>("/auth/config"),
     recuperarSenha: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/senha/recuperar`, 'POST', { email }),
     redefinirSenha: (email: string, codigo: string, senha: string, mobile = false) => solicitar<{ alterada: boolean }>(`${mobile ? '/mobile' : ''}/senha/redefinir`, 'POST', { email, codigo, senha }),
     trocarCodigoGoogle: (codigo: string, verificador: string) => solicitar<SessaoNativa>('/mobile/google', 'POST', { codigo, verificador }),
