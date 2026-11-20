@@ -450,7 +450,7 @@ export const mensagens = {
         /** O texto do recorte da capa, com a área dos selos tracejada por cima da foto (revisão de 19/11). */
         capaFotoDica: 'Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.',
     },
-    /** Controle de som (spec 12): a folha "Som", o botão no alto da aula e a seção no Perfil. Nomes e descrições dos climas: OPCOES_FUNDO_UI. */
+    /** Controle de som (spec 12): a folha "Som", o botão no alto da aula e a seção no Perfil. */
     som: {
         titulo: 'Som',
         musicaTitulo: 'Música de fundo',
@@ -468,37 +468,15 @@ export const mensagens = {
             return `Som: música ${ligada ? 'ligada' : 'desligada'}, efeitos ${efeitos ? 'ligados' : 'desligados'}`;
         },
         fechar: 'Fechar',
-        fundoTitulo: 'Som de fundo',
-        fundoDica: 'Toca baixinho enquanto você estuda.',
         efeitosTitulo: 'Efeitos sonoros',
         /** Na folha. */
         efeitosDica: 'Toques, acertos, erros e conquistas',
         /** No Perfil (linha mais curta). */
         efeitosDicaPerfil: 'Toques, acertos e conquistas',
-        rodape: 'O fundo fica mais baixo quando o Studoo fala e para enquanto você grava.',
         /** Só no iPhone (P24 da spec 07). */
         rodapeIphone: 'No modo silencioso do iPhone, nenhum som do Studoo toca.',
         tocando: 'Tocando',
         carregando: 'Carregando…',
-        erro: 'Não deu para tocar agora. Toque de novo para tentar.',
-        /** Nome acessível de cada linha da lista. */
-        linhaRotulo: (nome: string, descricao: string) => `${nome}, ${descricao}`,
-        linhaTocando: (nome: string) => `${nome}, tocando`,
-        linhaErro: (nome: string) => `${nome}, não deu para tocar agora`,
-        /** O que o leitor de tela ouve ao escolher (antes do som começar). */
-        anuncioEscolhido: (nome: string) => `${nome} escolhido. Tocando.`,
-        anuncioMudo: 'Som de fundo desligado.',
-        /** Botão do alto da aula: o nome segue o estado; `novidade` acrescenta ", novidade". */
-        botaoRotulo: ({ clima, efeitos, motivo, novidade }: { clima: string | null; efeitos: boolean; motivo?: 'sem_gesto' | 'gravando' | null; novidade?: boolean }) => {
-            const base = clima
-                ? motivo === 'sem_gesto' ? `Som: ${clima}, começa no primeiro toque`
-                    : motivo === 'gravando' ? `Som: ${clima}, pausado enquanto você grava`
-                    : `Som: ${clima}, efeitos ${efeitos ? 'ligados' : 'desligados'}`
-                : efeitos ? 'Som: fundo mudo, efeitos ligados' : 'Som: tudo desligado';
-            return novidade ? `${base}, novidade` : base;
-        },
-        /** Perfil: a linha "Som de fundo" é um botão com o valor. */
-        perfilFundoRotulo: (valor: string) => `Som de fundo: ${valor}`,
     },
     /** Página 404 própria (endereço que não existe): em português, com o Stu. */
     naoEncontrada: {
