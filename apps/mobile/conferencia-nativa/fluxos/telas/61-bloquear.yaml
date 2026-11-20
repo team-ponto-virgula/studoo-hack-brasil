@@ -37,11 +37,42 @@ name: 61-bloquear
       text: "Pessoa bloqueada."
     timeout: 15000
 - takeScreenshot: 61-bloquear-aviso
-# Desfaz na hora: a conta sintética volta a ver a pessoa, para os fluxos seguintes.
+# Desfaz: a conta sintética volta a ver a pessoa, para os fluxos seguintes. O aviso some sozinho em poucos segundos e, com a
+# máquina carregada, já tinha saído quando a captura acima terminou (execução 44809026116: "Element not found: Desfazer").
+# Então: "Desfazer" se o aviso ainda estiver na tela; depois, sempre, a lista "Pessoas bloqueadas" do Perfil (S10), que
+# desbloqueia o que tiver sobrado e tem de terminar vazia.
+- runFlow:
+    when:
+      visible: "Desfazer"
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 500
+          text: "Desfazer"
 - tapOn:
-    waitToSettleTimeoutMs: 1000
-    text: "Desfazer"
+    waitToSettleTimeoutMs: 1500
+    id: nav-perfil
+    retryTapIfNoChange: true
 - extendedWaitUntil:
     visible:
-      text: "Pessoa desbloqueada."
+      id: titulo-perfil
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: bloqueadas|bloqueadas-vazia
+    direction: DOWN
+    timeout: 120000
+    speed: 50
+    centerElement: true
+    waitToSettleTimeoutMs: 500
+- runFlow:
+    when:
+      visible:
+        id: bloqueadas
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1000
+          text: "Desbloquear"
+- extendedWaitUntil:
+    visible:
+      id: bloqueadas-vazia
     timeout: 15000

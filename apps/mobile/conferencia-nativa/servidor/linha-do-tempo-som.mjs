@@ -30,6 +30,7 @@
 //        --plataforma iphone|android [--fundo lofi_estudo]
 import { existsSync, readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
+import { analisarFundo } from './fundo-continuo.mjs';
 
 const { values: opcoes } = parseArgs({
   options: {
@@ -139,99 +140,7 @@ const doFundo = daJanela.filter((amostra) => amostra.id === FUNDO);
 const idsDeFundo = new Set(amostras.map((amostra) => amostra.id));
 const efeitosDoApp = eventos.filter((evento) => evento.tipo === 'comando' && evento.som !== FUNDO && !idsDeFundo.has(evento.som));
 
-// --- O lofi_estudo: começo, voltas do laço e o que fugiu do contínuo (pausa, reinício, redução), sobre as amostras dele.
-function analisarFundo(lista) {
-  const ordem = [...lista].sort((a, b) => a.t - b.t);
-  const inicio = ordem.find((amostra) => amostra.tocando);
-  if (!inicio) return null;
-  const ocorrencias = [];
-  const voltas = [];
-  const ultima = { A: null, B: null };
-  let ativo = inicio.jogador;
-  const subidaAte = inicio.t + 1200;
-  const naTroca = (t) => voltas.some((volta) => t >= volta.t - 500 && t <= volta.t + 1500);
-  const segmentos = [];
-  let segmento = [];
-  for (const amostra of ordem.filter((item) => item.t >= inicio.t)) {
-    const anterior = ultima[amostra.jogador];
-    if (amostra.jogador !== ativo && amostra.tocando) {
-      const saindo = ultima[ativo];
-      // O outro reprodutor entrou: volta do laço se o que saía estava no fim da faixa; senão, a música recomeçou.
-      if (saindo && saindo.dur > 0 && saindo.pos >= saindo.dur - 3000) {
-        voltas.push({ t: amostra.t, de: ativo, para: amostra.jogador });
-      } else {
-        ocorrencias.push({ t: amostra.t, tipo: 'reinício', texto: `o reprodutor ${amostra.jogador} entrou em ${segundos(amostra.pos)} com o ${ativo} longe do fim da faixa (${saindo ? segundos(saindo.pos) : '?'})` });
-      }
-      ativo = amostra.jogador;
-      if (segmento.length) segmentos.push(segmento);
-      segmento = [];
-    } else if (amostra.jogador === ativo && !amostra.tocando) {
-      if (!naTroca(amostra.t)) ocorrencias.push({ t: amostra.t, tipo: 'pausa', texto: `o reprodutor ${ativo} parou em ${segundos(amostra.pos)}` });
-      if (segmento.length) segmentos.push(segmento);
-      segmento = [];
-    } else if (amostra.jogador === ativo && anterior?.tocando && amostra.pos < anterior.pos - 1000 && !(anterior.dur > 0 && anterior.pos >= anterior.dur - 3000)) {
-      ocorrencias.push({ t: amostra.t, tipo: 'reinício', texto: `a posição voltou de ${segundos(anterior.pos)} para ${segundos(amostra.pos)}` });
-      if (segmento.length) segmentos.push(segmento);
-      segmento = [amostra];
-    } else if (amostra.jogador === ativo) {
-      segmento.push(amostra);
-    }
-    ultima[amostra.jogador] = amostra;
-  }
-  if (segmento.length) segmentos.push(segmento);
-  // Pausa sem "parado": a posição para enquanto o relógio anda. O registro chega pelo JavaScript, que pode atrasar uma
-  // amostra (o relógio dela adianta), mas nunca a deixa à frente da posição: vale o piso de t - posição nas próximas seis.
-  // Um degrau que cresce em amostras seguidas é uma pausa só; se o piso volta ao de antes, era atraso do registro.
-  for (const trecho of segmentos) {
-    const pisos = [];
-    for (let i = 0; i + 3 <= trecho.length; i += 1) pisos.push(Math.min(...trecho.slice(i, i + 6).map((amostra) => amostra.t - amostra.pos)));
-    let base = pisos[0];
-    let aberta = null;
-    pisos.forEach((piso, i) => {
-      if (piso - base > 400) {
-        aberta ??= { t: trecho[i].t, ms: 0, estavel: 0 };
-        aberta.estavel = piso - base <= aberta.ms + 50 ? aberta.estavel + 1 : 0;
-        aberta.ms = Math.max(aberta.ms, piso - base);
-        if (aberta.estavel >= 2) {
-          ocorrencias.push({ t: aberta.t, tipo: 'pausa', texto: `a posição do reprodutor ${trecho[i].jogador} parou ${aberta.ms} ms enquanto o relógio andava` });
-          base = piso;
-          aberta = null;
-        }
-      } else {
-        aberta = null;
-        base = Math.min(base, piso);
-      }
-    });
-    if (aberta) ocorrencias.push({ t: aberta.t, tipo: 'pausa', texto: `a posição do reprodutor ${trecho[0].jogador} parou ${aberta.ms} ms enquanto o relógio andava (no fim das amostras)` });
-  }
-  // Volume: o de referência é o maior do reprodutor que toca depois da subida; abaixo dele (fora da subida e das voltas do
-  // laço), é redução, no efeito se começou até 1 s depois do comando de um efeito.
-  const tocandoAtivo = segmentos.flat().filter((amostra) => amostra.t > subidaAte && !naTroca(amostra.t));
-  const referencia = tocandoAtivo.length ? Math.max(...tocandoAtivo.map((amostra) => amostra.vol)) : null;
-  let reducao = null;
-  const fecharReducao = () => {
-    if (!reducao) return;
-    const efeito = efeitosDoApp.find((evento) => reducao.t >= evento.t - 200 && reducao.t <= evento.t + 1000);
-    const duracao = reducao.n > 1 ? `${reducao.n} amostras, ${segundos(reducao.ate - reducao.t)}` : '1 amostra';
-    ocorrencias.push({ t: reducao.t, tipo: efeito ? 'redução no efeito' : 'redução fora de efeito',
-      texto: `o volume do reprodutor foi a ${reducao.minimo.toFixed(3)} (referência ${referencia.toFixed(3)}; ${duracao})${efeito ? `, perto do comando de ${efeito.som}` : ''}` });
-    reducao = null;
-  };
-  for (const amostra of tocandoAtivo) {
-    if (referencia !== null && amostra.vol < referencia - 0.01) {
-      reducao ??= { t: amostra.t, ate: amostra.t, minimo: amostra.vol, n: 0 };
-      reducao.n += 1;
-      reducao.ate = amostra.t;
-      reducao.minimo = Math.min(reducao.minimo, amostra.vol);
-    } else {
-      fecharReducao();
-    }
-  }
-  fecharReducao();
-  ocorrencias.sort((a, b) => a.t - b.t);
-  return { inicio, fim: ordem[ordem.length - 1], ocorrencias, voltas, referencia, ordem, subidaAte, naTroca };
-}
-const analise = analisarFundo(doFundo);
+const analise = analisarFundo(doFundo, efeitosDoApp);
 if (analise) {
   const { inicio } = analise;
   eventos.push({ t: inicio.t, origem: 'fundo (player do app)', texto: `${inicio.id} tocando (reprodutor ${inicio.jogador}, posição ${segundos(inicio.pos)}, volume ${inicio.vol.toFixed(3)})` });

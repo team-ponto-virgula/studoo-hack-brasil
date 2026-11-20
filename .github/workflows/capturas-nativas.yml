@@ -53,9 +53,10 @@ jobs:
     # macOS 26 arm64 fixo, e não `macos-latest`: a lista de simuladores não muda sozinha quando o rótulo mudar de sistema.
     runs-on: macos-26
     if: ${{ !inputs.so_android }}
-    # Folga sobre a soma do que cada passo costuma levar (uns 55 minutos na execução 44511779137, antes da cache do Metro):
-    # o tempo de cada passo estoura antes deste, e um passo que estoura é falha comum, com capturas e registros guardados.
-    timeout-minutes: 90
+    # Folga sobre a soma do que cada passo costuma levar (uns 55 minutos na execução 44511779137, antes da cache do Metro; 76
+    # na 44809026116, com o passo das telas cortado aos 45): o tempo de cada passo estoura antes deste, e um passo que estoura
+    # é falha comum, com capturas e registros guardados. 120, como o job do Android.
+    timeout-minutes: 120
     env:
       NEXT_TELEMETRY_DISABLED: "1"
       LANG: en_US.UTF-8
@@ -133,8 +134,10 @@ jobs:
       - name: "Fluxos das telas: mapa, Minhas trilhas, exercícios, Explorar e Perfil"
         id: fluxo_telas
         if: ${{ !cancelled() && steps.fluxo_entrar.outcome == 'success' }}
-        # Dez fluxos, cada um reabrindo o app; levou 31 minutos na execução 44511779137, antes da cache do Metro.
-        timeout-minutes: 45
+        # A prova da criação e 18 fluxos, cada um reabrindo o app: 31 minutos na execução 44511779137 (dez fluxos, antes da
+        # cache do Metro); na 44809026116 a criação levou uns 10 e as telas uns 40, e o corte aos 45 deixou 61 e 62 rodando
+        # depois do fim do passo, sem as capturas na coleta.
+        timeout-minutes: 65
         run: bash apps/mobile/conferencia-nativa/ios.sh fluxo-telas
 
       # `always()`: mesmo cancelada (um envio novo, o tempo do job), a execução guarda o que conseguiu.
