@@ -746,7 +746,9 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
 
   // Spec 14 (Designer, b874e95): em revisão ou não publicada, sem "Link pronto", sem o link, sem Compartilhar e sem Copiar link.
   const linkForaDoAr = link?.moderacao === 'pendente' || link?.moderacao === 'recusado';
-  const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' && !linkForaDoAr ? m.linkPronto : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
+  // Como a web (0e44f07, compartilhar.tsx): no lugar de "Link pronto", o estado da trilha, "Em revisão" ou "Não publicada".
+  const estadoForaDoAr = link?.moderacao === 'pendente' ? seg.seloEmRevisao : seg.seloNaoPublicada;
+  const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' ? (linkForaDoAr ? estadoForaDoAr : m.linkPronto) : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
 
   return (
     // Como a web (.folha só sobe com prefers-reduced-motion: no-preference): com movimento reduzido, a folha aparece parada.
