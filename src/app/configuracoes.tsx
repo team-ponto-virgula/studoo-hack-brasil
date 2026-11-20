@@ -5,7 +5,7 @@
  * compartilhar que já existe) e apagar. Cada campo salva sozinho ao sair dele, com a linha de estado "Salvo"; o erro
  * fica embaixo do campo. Sem diálogo de "sair sem salvar". Só a dona chega aqui (a API recusa as outras).
  */
-import { RegrasDaRecusa } from './seguranca-comunidade';
+import { EstadoModeracao, RegrasDaRecusa, rotuloDoDestino } from './seguranca-comunidade';
 import { useEffect, useId, useRef, useState } from 'react';
 import {
   CAPAS_GALERIA,
@@ -125,7 +125,8 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
 
   const usados = [...normalizarResumoPerfil(descricao)].length;
   const nomeCapa = !conf?.capa ? k.capaPadrao : ehCapaFoto(conf.capa) ? k.suaFoto : k.capas[conf.capa] ?? conf.capa;
-  const comp = conf?.compartilhamento ?? null;
+  const comp = conf?.compartilhamento;
+  const destino = comp && comp.moderacao !== 'recusado' ? comp : null;
 
   return (
     <section className="painel painel--configuracoes" aria-labelledby="configuracoes-titulo" aria-busy={!conf || undefined}>
@@ -198,9 +199,10 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
             <section className="configuracoes__secao" aria-labelledby="configuracoes-quem">
               <h2 id="configuracoes-quem" className="perfil-secao__titulo">{k.quemPodeVer}</h2>
               <p className="configuracoes__linha">
-                <Icone nome={!comp ? 'cadeado' : comp.visibilidade === 'explorar' ? 'bussola' : comp.visibilidade === 'perfil' ? 'pessoa' : 'elo'} />
-                {comp ? k.estadoCompartilhamento(mensagens.comunidade.niveis[comp.visibilidade].titulo, comp.estudando, comp.valeus) : k.soVoce}
+                <Icone nome={!destino ? 'cadeado' : destino.visibilidade === 'explorar' ? 'bussola' : destino.visibilidade === 'perfil' ? 'pessoa' : 'elo'} />
+                {destino ? k.estadoCompartilhamento(rotuloDoDestino(destino.visibilidade, destino.moderacao), destino.estudando, destino.valeus) : k.soVoce}
               </p>
+              <EstadoModeracao estado={comp?.moderacao} />
               <Botao variante="secundario" className="configuracoes__botao" onClick={mudarCompartilhamento}><Icone nome="compartilhar" />{k.mudarCompartilhamento}</Botao>
             </section>
           )}

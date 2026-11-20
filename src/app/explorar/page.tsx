@@ -6,6 +6,7 @@ import { explorar } from '@/servidor/compartilhar/comunidade';
 import { mensagens } from '../../mensagens/pt-BR';
 import { Stu } from '../../ui';
 import { ExplorarPublico } from '../comunidade';
+import { ExplorarComSessao } from '../estudo';
 import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../publico';
 
 export const dynamic = 'force-dynamic';
@@ -22,16 +23,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Explorar público (/explorar): ver não pede conta; agir (estudar, valeu, denunciar) leva ao login e volta. A primeira
- * página vem do servidor (pelo limitador das páginas públicas); filtro e "Ver mais" vão pela API.
+ * Com sessão, o Explorar abre na navegação principal. Sem sessão, a página pública oferece estudo e denúncia.
  */
 export default async function PaginaExplorarPublica() {
   if (!comunidadeAtiva()) notFound();
-  const usuarioId = await usuarioDaPagina();
+  if (await usuarioDaPagina()) return <ExplorarComSessao />;
   let inicial: PaginaExplorar | null = null;
   try {
     await limitarPublico(await redeDaPagina());
-    inicial = await explorar(usuarioId, {});
+    inicial = await explorar(null, {});
   } catch {
     return (
       <PaginaPublica>
@@ -44,7 +44,7 @@ export default async function PaginaExplorarPublica() {
   }
   return (
     <PaginaPublica>
-      <ExplorarPublico inicial={inicial} logado={Boolean(usuarioId)} />
+      <ExplorarPublico inicial={inicial} logado={false} />
     </PaginaPublica>
   );
 }

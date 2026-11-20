@@ -253,8 +253,11 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                             : [link.adicoes > 0 && p.adicoes(link.adicoes), comunidade && link.valeus ? cm.valeus(link.valeus) : null].filter(Boolean).join(' · ')}
                         </Text>
                         <EstadoDaPublicacao moderacao={link.moderacao} testID={`perfil-link-${link.codigo}-moderacao`} />
-                        {/* Designer (20/11): em revisão ou não publicada, sem o chip do lugar (ele sugeriria que já está lá). */}
-                        {comunidade && link.visibilidade && (link.moderacao === 'pendente' || link.moderacao === 'recusado') ? null : comunidade && link.visibilidade ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} /> : (
+                        {/* "No Explorar" (verde) só para o que está aprovado e listado. Em revisão: o destino e o tema num chip neutro,
+                            "depois da aprovação"; não publicada: nenhum chip de lugar, ela continua só com a dona (Lead e Designer, 20/11). */}
+                        {comunidade && link.visibilidade && link.moderacao === 'recusado' ? null
+                          : comunidade && link.visibilidade && link.moderacao === 'pendente' ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} emRevisao />
+                          : comunidade && link.visibilidade ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} /> : (
                           <Chave rotulo={m.noPerfil} nomeAcessivel={`${m.noPerfil}: ${link.titulo}`} ligada={link.noPerfil} desativada={ocupado}
                             aoMudar={(valor) => void alterar(link, valor)} />
                         )}
@@ -263,7 +266,11 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                             <Botao rotulo={cm.ajustar} iconeAntes="olho" variante="secundario" nomeAcessivel={cm.ajustarRotulo(link.titulo)}
                               testID={`perfil-visibilidade-${link.codigo}`} acao={() => setFolha(link.planoId)} />
                           )}
-                          <Botao rotulo={m.copiar} iconeAntes="copiar" variante="secundario" nomeAcessivel={`${m.copiar}: ${link.titulo}`} acao={() => void copiarLink(link)} />
+                          {/* Spec 14 (Designer, b874e95): em revisão ou não publicada, o link mostraria "Esta trilha não está disponível agora."
+                              a qualquer outra pessoa; sem "Copiar link" até a aprovação ("Quem pode ver" e "Parar de compartilhar" ficam). */}
+                          {link.moderacao !== 'pendente' && link.moderacao !== 'recusado' && (
+                            <Botao rotulo={m.copiar} iconeAntes="copiar" variante="secundario" nomeAcessivel={`${m.copiar}: ${link.titulo}`} acao={() => void copiarLink(link)} />
+                          )}
                           <BotaoParar rotulo={m.parar} nomeAcessivel={`${m.parar}: ${link.titulo}`} desativado={ocupado} acao={() => setParando(link)} />
                         </View>
                       </View>

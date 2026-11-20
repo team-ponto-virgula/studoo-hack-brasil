@@ -102,3 +102,25 @@ test('Mídia da própria pessoa: o token só para o host da API e só nas imagen
   assert.match(comunidade, /<Indisponivel titulo=\{mensagens\.seguranca\.trilhaIndisponivel\}/);
   assert.equal(s.trilhaIndisponivel, 'Esta trilha não está disponível agora.');
 });
+
+test('"No Explorar" só para o que está aprovado: em revisão, o destino "depois da aprovação" em tom neutro; recusada, sem chip de lugar', async () => {
+  assert.equal(s.destinoDepoisDaAprovacao('No Explorar'), 'No Explorar, depois da aprovação');
+  const perfil = await ler('apps/mobile/src/perfil.tsx');
+  assert.match(perfil, /link\.moderacao === 'recusado' \? null\s*: comunidade && link\.visibilidade && link\.moderacao === 'pendente' \? <SeloVisibilidade nivel=\{link\.visibilidade\} tema=\{link\.tema\} emRevisao \/>/);
+  const social = await ler('apps/mobile/src/social.tsx');
+  assert.match(social, /const explorar = nivel === 'explorar' && !emRevisao;/, 'o verde de publicada nunca aparece em revisão');
+  assert.match(social, /emRevisao \? seg\.destinoDepoisDaAprovacao\(cm\.niveis\[nivel\]\.titulo\) : cm\.niveis\[nivel\]\.titulo/);
+  const conf = await ler('apps/mobile/src/configuracoes.tsx');
+  assert.match(conf, /!comp \|\| comp\.moderacao === 'recusado' \? k\.soVoce/);
+  assert.match(conf, /comp\.moderacao === 'pendente'\s*\? mensagens\.seguranca\.destinoDepoisDaAprovacao\(/);
+});
+
+test('em revisão ou não publicada, sem "Copiar link" nem compartilhar o link; a folha troca "Link pronto" pelo aviso da revisão', async () => {
+  const perfil = await ler('apps/mobile/src/perfil.tsx');
+  assert.match(perfil, /\{link\.moderacao !== 'pendente' && link\.moderacao !== 'recusado' && \(\s*<Botao rotulo=\{m\.copiar\}/);
+  assert.match(perfil, /<BotaoParar rotulo=\{m\.parar\}/, '"Parar de compartilhar" continua');
+  const social = await ler('apps/mobile/src/social.tsx');
+  assert.match(social, /const linkForaDoAr = link\?\.moderacao === 'pendente' \|\| link\?\.moderacao === 'recusado';/);
+  assert.match(social, /etapa === 'pronto' && !linkForaDoAr \? m\.linkPronto/);
+  assert.match(social, /\{linkForaDoAr \? \(\s*<Text testID="folha-em-revisao"[^>]*>\s*\{link\.moderacao === 'pendente' \? seg\.enviadaParaRevisao : seg\.naoPublicada\}/);
+});

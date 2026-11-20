@@ -174,7 +174,7 @@
 
 /* Perfil: visibilidade na lista da dona e grade de cartões em /p. */
 .selo-visibilidade { display: inline-flex; align-items: center; gap: 6px; justify-self: start; padding: 3px 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto); font-size: 0.8125rem; font-weight: 900; }
-.selo-visibilidade[data-nivel='explorar'] { background: #e3f6ea; color: #14513b; }
+.selo-visibilidade[data-nivel='explorar']:not([data-em-revisao]) { background: #e3f6ea; color: #14513b; }
 .selo-visibilidade .icone { width: 14px; height: 14px; }
 .perfil-cartoes { display: grid; gap: 4px; }
 .denunciar-perfil { display: grid; justify-items: start; margin-top: 24px; }

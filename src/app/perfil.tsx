@@ -30,12 +30,12 @@ import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { medirAcaoFixa } from '../ui/rodape-movel';
-import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, urlDoLink, useDialogo } from './compartilhar';
+import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, podeDivulgarLink, urlDoLink, useDialogo } from './compartilhar';
 import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
 import { SecaoPrivacidade } from './privacidade-perfil';
-import { BloqueadasPerfil, EstadoModeracao, RegrasDaRecusa } from './seguranca-comunidade';
+import { BloqueadasPerfil, EstadoModeracao, RegrasDaRecusa, rotuloDoDestino } from './seguranca-comunidade';
 import { SecaoSomPerfil } from './som';
 import { tocaSons } from './sons';
 import './perfil.css';
@@ -204,6 +204,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
   }
 
   async function copiar(link: LinkCompartilhado) {
+    if (!podeDivulgarLink(link)) return;
     try {
       await navigator.clipboard.writeText(urlDoLink(link.codigo));
       void tocaSons.tocarEfeito('link_copiado');
@@ -277,9 +278,9 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
                           : [link.adicoes > 0 && p.adicoes(link.adicoes), comunidade && link.valeus ? mensagens.comunidade.valeus(link.valeus) : null].filter(Boolean).join(' · ')}
                       </p>
                       {comunidade && link.visibilidade ? (
-                        link.moderacao !== 'pendente' && link.moderacao !== 'recusado' && <p className="selo-visibilidade" data-nivel={link.visibilidade}>
+                        link.moderacao !== 'recusado' && <p className="selo-visibilidade" data-nivel={link.visibilidade} data-em-revisao={link.moderacao === 'pendente' || undefined}>
                           <Icone nome={link.visibilidade === 'explorar' ? 'bussola' : link.visibilidade === 'perfil' ? 'pessoa' : 'elo'} />
-                          {mensagens.comunidade.niveis[link.visibilidade].titulo}
+                          {rotuloDoDestino(link.visibilidade, link.moderacao)}
                           {link.visibilidade === 'explorar' && link.tema ? ` · ${temas[link.tema]}` : ''}
                         </p>
                       ) : (
@@ -291,7 +292,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
                       )}
                       <div className="perfil-link__acoes">
                         {comunidade && <Botao variante="secundario" aria-label={mensagens.comunidade.ajustarRotulo(link.titulo)} onClick={() => setFolha(link.planoId)}><Icone nome="olho" />{mensagens.comunidade.ajustar}</Botao>}
-                        <Botao variante="secundario" onClick={() => void copiar(link)}><Icone nome="copiar" />{m.copiar}<span className="somente-leitor">: {link.titulo}</span></Botao>
+                        {podeDivulgarLink(link) && <Botao variante="secundario" onClick={() => void copiar(link)}><Icone nome="copiar" />{m.copiar}<span className="somente-leitor">: {link.titulo}</span></Botao>}
                         <Botao variante="texto" className="folha-parar" disabled={ocupado} onClick={() => setParando(link)}>{m.parar}<span className="somente-leitor">: {link.titulo}</span></Botao>
                       </div>
                     </li>

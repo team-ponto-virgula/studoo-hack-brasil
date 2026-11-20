@@ -324,14 +324,18 @@ export function AvisoDaTrilha({ texto }: { texto: string }) {
 }
 
 /** O nível de visibilidade de um link (e o tema, quando está no Explorar), como `.selo-visibilidade` na tela Perfil. */
-export function SeloVisibilidade({ nivel, tema }: { nivel: Visibilidade; tema?: Tema | null }) {
+export function SeloVisibilidade({ nivel, tema, emRevisao = false }: {
+  nivel: Visibilidade; tema?: Tema | null;
+  /** Publicação em revisão: o destino e o tema em tom neutro, com "depois da aprovação" (nunca o verde de publicada). */
+  emRevisao?: boolean;
+}) {
   const icone: NomeIcone = nivel === 'explorar' ? 'bussola' : nivel === 'perfil' ? 'pessoa' : 'copiar';
-  const explorar = nivel === 'explorar';
+  const explorar = nivel === 'explorar' && !emRevisao;
   return (
     <View style={[socialEstilos.seloNivel, explorar && socialEstilos.seloNivelExplorar]}>
       <Icone nome={icone} tamanho={14} cor={explorar ? '#14513B' : cores.texto} />
       <Text style={[socialEstilos.seloNivelTexto, explorar && { color: '#14513B' }]}>
-        {cm.niveis[nivel].titulo}{explorar && tema ? ` · ${mensagens.temas[tema]}` : ''}
+        {emRevisao ? seg.destinoDepoisDaAprovacao(cm.niveis[nivel].titulo) : cm.niveis[nivel].titulo}{nivel === 'explorar' && tema ? ` · ${mensagens.temas[tema]}` : ''}
       </Text>
     </View>
   );
@@ -740,7 +744,9 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
     }
   }
 
-  const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' ? m.linkPronto : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
+  // Spec 14 (Designer, b874e95): em revisão ou não publicada, sem "Link pronto", sem o link, sem Compartilhar e sem Copiar link.
+  const linkForaDoAr = link?.moderacao === 'pendente' || link?.moderacao === 'recusado';
+  const tituloDaEtapa = etapa === 'perfil' ? m.comoAparecer : etapa === 'pronto' && !linkForaDoAr ? m.linkPronto : etapa === 'parar' ? m.pararTitulo : m.folhaTitulo;
 
   return (
     // Como a web (.folha só sobe com prefers-reduced-motion: no-preference): com movimento reduzido, a folha aparece parada.
@@ -814,6 +820,11 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
             {etapa === 'pronto' && link && previa && (
               <>
                 <Text style={socialEstilos.folhaTrilhaTitulo}>{previa.titulo}</Text>
+                {linkForaDoAr ? (
+                  <Text testID="folha-em-revisao" accessibilityLiveRegion="polite" style={socialEstilos.dica}>
+                    {link.moderacao === 'pendente' ? seg.enviadaParaRevisao : seg.naoPublicada}
+                  </Text>
+                ) : <>
                 <TextInput testID="folha-link" value={urlDoLink(link.codigo)} editable={false} selectTextOnFocus accessibilityLabel={m.linkRotulo}
                   style={socialEstilos.folhaLink} />
                 <View style={[socialEstilos.folhaAcoesPar, !sistema && socialEstilos.folhaAcoesUma]}>
@@ -824,6 +835,7 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
                   <Botao rotulo={m.copiar} iconeAntes="copiar" testID="folha-copiar" variante={sistema ? 'secundario' : 'primario'}
                     estilo={sistema ? socialEstilos.botaoMetade : undefined} acao={() => void copiarLink()} />
                 </View>
+                </>}
                 <Status texto={status} />
                 {comunidade && previa.temaSugerido ? (
                   <VisibilidadeDaTrilha cliente={cliente} link={link} temaSugerido={previa.temaSugerido} deMaterial={previa.deMaterial}
