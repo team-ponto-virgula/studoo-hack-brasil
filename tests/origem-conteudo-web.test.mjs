@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import test from 'node:test';
+import { mensagens } from '../packages/contratos/src/experiencia.ts';
 import { origemDoConteudo, ORIGEM_GERADA } from '../src/dominio/aprendizado/plano.ts';
 
 test('a leitura de planos antigos remove o provedor e mantém a referência ao próprio material', () => {
@@ -13,6 +14,8 @@ test('a leitura de planos antigos remove o provedor e mantém a referência ao p
 });
 
 test('lição, proposta, prévias, perfis e imagens públicas omitem créditos técnicos', () => {
+  assert.equal('origem' in mensagens.licao, false);
+  assert.equal('origem' in mensagens.geracao, false);
   const telas = ['aula.tsx', 'previa-trilha.tsx', 'compartilhar.tsx', 'p/[id]/page.tsx', 't/[codigo]/page.tsx'];
   const arquivos = telas.map(nome => 'src/app/' + nome);
   for (const item of readdirSync('src/servidor/og', { withFileTypes: true })) {

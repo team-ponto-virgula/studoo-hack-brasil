@@ -649,11 +649,9 @@ export function ApoioDaLicao({
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
   }, [ensino]);
-  return (
-    <div className="estudio-apoio">
-      {/* O reforço é do exercício que a pessoa acabou de errar (ou de um reforço começado e não terminado): não fica
-          sobrando em outros exercícios nem em outra visita à lição. */}
-      {avaliacao?.correta === false && pedidoPonte > 0 && (
+  if (avaliacao?.correta === false && pedidoPonte > 0 && !gravando && etapaVoz !== 'ativa') {
+    return (
+      <div className="estudio-apoio">
         <PonteReforco key={pedidoPonte} ponte={ponte} tentativa={ultimaResposta} feedbackOriginal={avaliacao.feedback}
           ocupado={ocupado || gravando} erro={erro} voltar={aoVoltarExercicio} tentarCarregar={carregarPonte}
           verificar={async (resposta) => {
@@ -665,7 +663,11 @@ export function ApoioDaLicao({
             });
             return resultado;
           }} />
-      )}
+      </div>
+    );
+  }
+  return (
+    <div className="estudio-apoio">
       {!!licao.referencias?.length && (
         <details className="estudio-card">
           <summary>{m.origem}</summary>

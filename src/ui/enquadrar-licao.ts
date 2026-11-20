@@ -22,9 +22,13 @@ export function enquadrarLicao(no: HTMLElement, balao?: HTMLElement | null) {
     top: preso ? Math.max(topo, cabecalho.getBoundingClientRect().bottom) : topo,
     bottom: abas?.height ? Math.min(base, abas.top) : base,
   };
-  const caixa = no.getBoundingClientRect();
-  const etiqueta = no.querySelector('.caminho-no__etiqueta')?.getBoundingClientRect();
-  const alvo = etiqueta?.height ? { top: Math.min(caixa.top, etiqueta.top), bottom: Math.max(caixa.bottom, etiqueta.bottom) } : caixa;
+  const partes = [no, ...no.querySelectorAll('.caminho-no__lente, .caminho-no__halo, .caminho-no__etiqueta, .caminho-no__selo')];
+  const caixas = partes.map((parte) => parte.getBoundingClientRect()).filter((caixa) => caixa.height > 0);
+  if (!caixas.length) return;
+  const alvo = {
+    top: Math.floor(Math.min(...caixas.map((caixa) => caixa.top))),
+    bottom: Math.ceil(Math.max(...caixas.map((caixa) => caixa.bottom))),
+  };
   // A animação de abertura escala o balão. A posição de layout já tem o tamanho final.
   const pai = balao?.offsetParent;
   const inicio = balao && pai instanceof HTMLElement ? pai.getBoundingClientRect().top + pai.clientTop + balao.offsetTop : 0;

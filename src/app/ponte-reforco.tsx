@@ -21,6 +21,21 @@ type Props = {
   voltar?: () => void;
 };
 
+/** A apresentação e a lição mostram as mesmas três tábuas. As margens ficam nas posições 0 e 4. */
+export function FaixaDaPonte({ posicao, comemorar = false }: { posicao: number; comemorar?: boolean }) {
+  return (
+    <div className="reforco__faixa" style={{ '--posicao': posicao } as CSSProperties}>
+      <span aria-hidden="true">{m.ponteMargemErro}</span>
+      <ol aria-label="Passos da ponte">{passos.map((nome, i) =>
+        <li key={nome} aria-current={posicao === i + 1 ? 'step' : undefined} data-feita={posicao > i + 1 || undefined}>
+          <span aria-hidden="true">{i + 1}</span><span className="somente-leitor">{nome}</span>
+        </li>)}</ol>
+      <span aria-hidden="true">{m.ponteMargemVolta}</span>
+      <div aria-hidden="true" className="reforco__viajante"><div key={posicao}><Stu expressao={posicao === 4 ? 'stu-animado' : 'stu-perfil'} tamanho={44} animado={comemorar ? 'uma-vez' : undefined} /></div></div>
+    </div>
+  );
+}
+
 export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro, tentarCarregar, verificar, voltar }: Props) {
   const [passo, setPasso] = useState(1);
   const [resposta, setResposta] = useState('');
@@ -72,15 +87,7 @@ export function PonteReforco({ ponte, tentativa, feedbackOriginal, ocupado, erro
     <p className="reforco__selo"><Icone nome="revisao" />{m.ponteMapa}</p>
     <h2 ref={titulo} id={id} tabIndex={-1}>{m.ponte}</h2>
     <p className="reforco__motivo">{reaberta ? m.ponteReabertaAviso : tentativa?.trim() ? m.ponteMotivoResposta(tentativa) : m.ponteMotivo}</p>
-    <div className="reforco__faixa" style={{ '--posicao': posicao } as CSSProperties}>
-      <span aria-hidden="true">{m.ponteMargemErro}</span>
-      <ol aria-label="Passos da ponte">{passos.map((nome, i) =>
-        <li key={nome} aria-current={posicao === i + 1 ? 'step' : undefined} data-feita={posicao > i + 1 || undefined}>
-          <span aria-hidden="true">{i + 1}</span><span className="somente-leitor">{nome}</span>
-        </li>)}</ol>
-      <span aria-hidden="true">{m.ponteMargemVolta}</span>
-      <div aria-hidden="true" className="reforco__viajante"><div key={posicao}><Stu expressao={concluida ? 'stu-animado' : 'stu-perfil'} tamanho={44} animado={concluida && !reaberta ? 'uma-vez' : undefined} /></div></div>
-    </div>
+    <FaixaDaPonte posicao={posicao} comemorar={concluida && !reaberta} />
     <p className="reforco__indicador" role="status">{indicador}{concluida && !reaberta && <span className="somente-leitor"> {m.ponteVencida}</span>}</p>
     <div className="reforco__cartao estudio-desafio" key={concluida ? 'pronta' : passo}>
       {!ponte ? <p role="status">{erro || m.pensando}</p> : <>

@@ -248,8 +248,7 @@
   .estudo[data-navegacao] .editor-perfil__barra[data-presa] {
     left: var(--margem-ilha-esq); right: var(--margem-ilha-dir); margin: auto; max-width: 480px;
     bottom: calc(var(--altura-navegacao) + 12px);
-    justify-self: center;
-    width: auto;
+    width: calc(100% - var(--margem-ilha-esq) - var(--margem-ilha-dir));
     padding: 8px;
     border: 0;
     border-radius: 24px;

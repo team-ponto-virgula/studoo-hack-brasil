@@ -356,7 +356,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     setAberto((atual) => atual === no.id ? null : no.id);
   }
 
-  /** Do balão de um nó bloqueado até a lição atual: fecha o balão, centraliza o nó atual e põe o foco nele. */
+  /** O balão da lição atual recebe o mesmo foco e enquadramento dos demais. */
   function irParaAtual() {
     const atual = nos.find((item) => item.estado === 'atual');
     if (atual) setAberto(atual.id);
@@ -442,6 +442,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const conteudo = (
             <>
               <span className="caminho-no__lente" aria-hidden="true">
+                {atual && <span className="caminho-no__halo" />}
                 <Icone nome={iconeDoNo(no)} />
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {recem && <Confete quantidade={12} />}
