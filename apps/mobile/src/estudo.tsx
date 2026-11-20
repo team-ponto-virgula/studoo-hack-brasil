@@ -27,7 +27,7 @@ import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, 
 import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
-import { TelaPerfil } from './perfil';
+import { PerfilSemSocial, TelaPerfil } from './perfil';
 import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
 import { tocaSons } from './sons';
@@ -645,11 +645,10 @@ export function Estudo({ cliente, sair, expirar }: {
       {/* Durante "Criando sua trilha…", Minhas trilhas é a saída: o aceite segue no servidor e a trilha aparece na lista. */}
       {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil', 'configuracoes'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
         desativado={ocupado && criacao !== 'criando'} acao={criacao === 'criando' ? sairDaCriacao : () => abrir({ tipo: 'planos' })} />}
-      {/* Com o compartilhar (como a web): "Sair" fica no Perfil; no alto, "Perfil" só onde não há a barra de baixo. */}
-      {compartilhar
-        ? !comNavegacaoAgora && <Botao rotulo={mensagens.perfil.navegacao} testID="perfil-cabecalho" compacto variante="texto" desativado={ocupado}
-            acao={() => abrir({ tipo: 'perfil' })} />
-        : <Botao rotulo={mensagens.sair} testID="sair" compacto variante="texto" desativado={ocupado} acao={pedirParaSair} />}
+      {/* Como a web: "Sair" fica no Perfil, que existe com ou sem o compartilhar (Som, Privacidade e dados e Conta valem
+          para toda conta e visitante); no alto, "Perfil" só onde não há a barra de baixo. */}
+      {!comNavegacaoAgora && <Botao rotulo={mensagens.perfil.navegacao} testID="perfil-cabecalho" compacto variante="texto" desativado={ocupado}
+        acao={() => abrir({ tipo: 'perfil' })} />}
     </>
   );
   // O erro de Minhas trilhas (sem rede, sessão, servidor) recebe o foco do leitor de tela, como nas outras telas.
@@ -662,7 +661,8 @@ export function Estudo({ cliente, sair, expirar }: {
     atual: aba as Aba, ocupado,
     planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
     explorar: comunidade ? () => abrir({ tipo: 'explorar' }) : undefined,
-    perfil: compartilhar ? () => abrir({ tipo: 'perfil' }) : undefined,
+    // O Perfil (com Privacidade e dados e "Excluir conta") nunca depende do compartilhar.
+    perfil: () => abrir({ tipo: 'perfil' }),
   } : null}>
     {/* Os nomes de quem compartilhou (marcas, prévia, cartões) abrem o perfil dela dentro do app, como os links /p da web. */}
     <AbrirPerfil.Provider value={compartilhar ? abrirPerfilPublico : null}>
@@ -746,6 +746,9 @@ export function Estudo({ cliente, sair, expirar }: {
         abrirExistente={(id) => void abrirPlano(id)} />;
     }
 
+    if (etapa.tipo === 'perfil' && !compartilhar) {
+      return <PerfilSemSocial cliente={cliente} acoes={acoes} desativado={ocupado} sair={pedirParaSair} />;
+    }
     if (etapa.tipo === 'perfil') {
       return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}

@@ -244,3 +244,27 @@ test('telas: Privacidade e dados entre Som e Conta (com Excluir conta no fim, co
   assert.match(sessao, /<ConsentimentoIa cliente=\{sessao\.cliente\} aoExcluida=\{aoExcluida\}>\s*\{\(cliente\) => <Estudo cliente=\{cliente\}/);
   assert.match(sessao, /async function aoExcluida\(\) \{[\s\S]*apagarPreferenciasDaConta\(\)[\s\S]*encerrarNoAparelho\(\)/);
 });
+
+test('telas: Perfil com Privacidade e dados e Excluir conta também sem o compartilhar (como a web, revisão 20/11)', async () => {
+  const estudo = await ler('apps/mobile/src/estudo.tsx');
+  // A barra de baixo e o "Perfil" do alto existem com ou sem o compartilhar; "Sair" fica dentro do Perfil.
+  assert.match(estudo, /perfil: \(\) => abrir\(\{ tipo: 'perfil' \}\),/);
+  assert.doesNotMatch(estudo, /perfil: compartilhar \?/);
+  assert.match(estudo, /\{!comNavegacaoAgora && <Botao rotulo=\{mensagens\.perfil\.navegacao\} testID="perfil-cabecalho"/);
+  assert.doesNotMatch(estudo, /: <Botao rotulo=\{mensagens\.sair\} testID="sair"/);
+  assert.match(estudo, /etapa\.tipo === 'perfil' && !compartilhar\) \{\s*return <PerfilSemSocial cliente=\{cliente\}/);
+
+  const perfil = await ler('apps/mobile/src/perfil.tsx');
+  const inicio = perfil.indexOf('export function PerfilSemSocial');
+  assert.ok(inicio > 0, 'PerfilSemSocial existe');
+  const fim = perfil.indexOf('\nconst perfilEstilos', inicio);
+  const corpo = perfil.slice(inicio, fim);
+  // Sem a parte social: nada do /api/perfil nem do perfil público; visitante vem de /api/sessao.
+  assert.doesNotMatch(corpo, /obterPerfil|perfilPublico|atualizarPerfil/);
+  assert.match(corpo, /cliente\.sessao\(\)\.then\(\(dados\) => \{ if \(ativo\) setVisitante\(dados\.visitante === true\)/);
+  const som = corpo.indexOf('<SomNoPerfil />');
+  const privacidadeSecao = corpo.indexOf('<SecaoPrivacidade desativado={desativado} visitante={visitante} />');
+  const conta = corpo.indexOf('{p.conta}');
+  const sair = corpo.indexOf('testID="sair"');
+  assert.ok(som > 0 && som < privacidadeSecao && privacidadeSecao < conta && conta < sair, 'ordem: Som, Privacidade e dados, Conta (Sair)');
+});

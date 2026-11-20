@@ -615,6 +615,45 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
   );
 }
 
+/**
+ * Perfil sem o compartilhar (o servidor sem `compartilhar` no /api/auth/config): as seções que valem para toda conta e
+ * visitante, sem a parte social e sem pedir o /api/perfil. Som, Privacidade e dados (o uso de IA, a política e "Excluir
+ * conta": Apple 5.1.2(i) e 5.1.1(v)) e Conta, com Sair. Se é visitante vem de /api/sessao. Como a web na revisão do
+ * TestFlight (20/11): o caminho para revogar a IA e excluir a conta nunca depende do compartilhar.
+ */
+export function PerfilSemSocial({ cliente, acoes, desativado, sair }: {
+  cliente: ClienteNativo;
+  acoes?: ReactNode;
+  desativado: boolean;
+  sair: () => void;
+}) {
+  const [visitante, setVisitante] = useState(false);
+  useEffect(() => {
+    let ativo = true;
+    cliente.sessao().then((dados) => { if (ativo) setVisitante(dados.visitante === true); }).catch(() => undefined);
+    return () => { ativo = false; };
+  }, [cliente]);
+  return (
+    <Tela pagina="perfil" acoes={acoes} estiloConteudo={FIM_COM_BARRA}>
+      <View style={perfilEstilos.painel}>
+        <Titulo testID="titulo-perfil" foco>{p.titulo}</Titulo>
+        <View style={perfilEstilos.secao}>
+          <TituloSecao>{mensagens.som.titulo}</TituloSecao>
+          <SomNoPerfil />
+        </View>
+        <View style={perfilEstilos.secao}>
+          <TituloSecao>{mensagens.privacidade.secaoTitulo}</TituloSecao>
+          <SecaoPrivacidade desativado={desativado} visitante={visitante} />
+        </View>
+        <View style={perfilEstilos.secao}>
+          <TituloSecao>{p.conta}</TituloSecao>
+          <Botao rotulo={mensagens.sair} testID="sair" variante="secundario" desativado={desativado} acao={sair} estilo={{ alignSelf: 'flex-start' }} />
+        </View>
+      </View>
+    </Tela>
+  );
+}
+
 const perfilEstilos = StyleSheet.create({
   // .painel--perfil: grade com vão de 20; o título "Perfil" no tamanho de título de página (o <Titulo> de 32/40), como a web.
   painel: { gap: 20 },
