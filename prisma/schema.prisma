@@ -18,6 +18,11 @@ model Usuario {
   email     String             @unique
   senhaHash String?
   googleSub String? @unique
+  /// Iniciar sessão com a Apple (App Review 4.8): `sub` do token. A conta é achada por ele, nunca só pelo e-mail.
+  appleSub  String? @unique
+  /// Token de renovação da Apple, cifrado (AES-256-GCM), e o bundle que o emitiu: usados para revogar na exclusão.
+  appleRenovacao String?
+  appleCliente   String?
   recuperacao RecuperacaoSenha?
   codigosMobile CodigoGoogleMobile[]
   fuso      String
@@ -220,6 +225,22 @@ model CodigoGoogleMobile {
   desafio String
   expiraEm DateTime @db.Timestamptz(3)
   usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  @@index([expiraEm])
+}
+
+/// Código de posse do e-mail antes de criar a conta. A chave é um HMAC do e-mail (o endereço não fica salvo).
+model VerificacaoCadastro {
+  chave      String   @id
+  codigoHash String
+  expiraEm   DateTime @db.Timestamptz(3)
+  tentativas Int      @default(0)
+  @@index([expiraEm])
+}
+
+/// Nonce de uso único do Iniciar sessão com a Apple (guardado só o hash).
+model NonceApple {
+  nonceHash String   @id
+  expiraEm  DateTime @db.Timestamptz(3)
   @@index([expiraEm])
 }
 

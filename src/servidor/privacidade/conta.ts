@@ -2,6 +2,7 @@ import { confirmacaoExclusaoValida } from "@studoo/contratos/privacidade";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { banco } from "@/servidor/banco/cliente";
 import { encerrarChamadasDoUsuario } from "@/servidor/ia/realtime";
+import { revogarApple } from "@/servidor/acesso/apple";
 
 /**
  * Exclusão da conta pelo próprio app (App Review 5.1.1(v)): apaga no ato, numa transação, a conta e tudo o que é dela.
@@ -13,14 +14,16 @@ import { encerrarChamadasDoUsuario } from "@/servidor/ia/realtime";
  *   Google; sessões de todos os aparelhos (web e app).
  * - Cópias que outras pessoas já adicionaram são delas: continuam, mas perdem o nome e o perfil de quem compartilhou.
  * - Conversa de voz ao vivo aberta é encerrada na OpenAI.
+ * - Conta com Iniciar sessão com a Apple: o token é revogado na Apple (TN3194) logo depois de apagar. Se a Apple falhar,
+ *   a exclusão continua valendo e a falha fica registrada sem token nem e-mail.
  *
  * Contadores de limite (`TentativaLogin`) guardam só um HMAC do escopo, sem o id legível, e vencem sozinhos.
  */
 export async function excluirConta(usuarioId: string, confirmacao: unknown): Promise<void> {
   if (typeof confirmacao !== "string" || !confirmacaoExclusaoValida(confirmacao)) throw new FalhaApi("confirmacao_invalida");
 
-  await banco.$transaction(async (tx) => {
-    const usuario = await tx.usuario.findUnique({ where: { id: usuarioId }, select: { perfilId: true } });
+  const apple = await banco.$transaction(async (tx) => {
+    const usuario = await tx.usuario.findUnique({ where: { id: usuarioId }, select: { perfilId: true, appleRenovacao: true, appleCliente: true } });
     if (!usuario) throw new FalhaApi("nao_autenticado");
 
     const links = (await tx.linkTrilha.findMany({ where: { usuarioId }, select: { codigo: true } })).map(({ codigo }) => codigo);
@@ -49,7 +52,9 @@ export async function excluirConta(usuarioId: string, confirmacao: unknown): Pro
     await tx.sessao.deleteMany({ where: { usuarioId } });
     // O resto cai em cascata com a conta: materiais, foto, eventos, denúncias feitas, seguir, recuperação, Google.
     await tx.usuario.delete({ where: { id: usuarioId } });
+    return { renovacao: usuario.appleRenovacao, cliente: usuario.appleCliente };
   });
 
   encerrarChamadasDoUsuario(usuarioId);
+  await revogarApple(apple.renovacao, apple.cliente);
 }

@@ -57,7 +57,7 @@ export interface PedidoEntradaApple {
   authorizationCode: string;
   /** O nonce bruto recebido de POST /api/mobile/apple/nonce. */
   nonce: string;
-  /** `credential.fullName`: a Apple só manda no primeiro acesso; vira o nome do perfil se ainda não houver. */
+  /** `credential.fullName`: opcional e hoje não é guardado (o perfil público continua pedindo o nome à pessoa). */
   nome?: NomeApple | null;
 }
 
