@@ -32,7 +32,7 @@ Reconstrua o app de desenvolvimento após instalar as dependências: esta entreg
 
 ## Botão "Continuar com Google" (regra de design, 20/11)
 
-A pedido do dono, o botão ganha o logo do Google, igual na web, no Android e no iPhone. Ainda não implementado.
+A pedido do dono, o botão ganha o logo do Google, igual na web, no Android e no iPhone. Na web, já está em `6a34902` (entrada e cadastro), com o ativo compartilhado de `dee5318`, `packages/contratos/assets/`. As capturas em 390 × 844 foram conferidas. O app ainda não foi conferido.
 
 - **O logo:** o "G" oficial do Google, nas cores originais, como está no pacote de marca do Google Sign-In. Não recolorir, não redesenhar, não pôr contorno ou sombra, não trocar por ícone de fonte. Referência em `docs/specs/referencias/google/`:
   - `google-g.svg` é o vetor do arquivo oficial "Theme=Light, Show text=No, Shape=Square, Platform=Android+Web", só sem o fundo e o contorno do botão quadrado;
@@ -43,7 +43,7 @@ A pedido do dono, o botão ganha o logo do Google, igual na web, no Android e no
   - Ao tocar, o botão afunda como os outros, e o logo vai junto.
   - Desativado (`enviando`/`ocupado`), o botão fica como os outros desativados, e o logo fica com 38% de opacidade, sem virar cinza.
 - **Leitor de tela:** o nome do botão é o texto "Continuar com Google". O logo é decorativo: `alt=""` na web; `accessible={false}` e sem rótulo no app.
-- **Onde:** em todo lugar que mostra "Continuar com Google", com o mesmo logo, tamanho e respiro. Hoje é a entrada. Se o cadastro ganhar o Google, ele vai no topo do primeiro passo, antes do e-mail, com a mesma ordem da entrada; a mudança entra na P28 da spec 07.
+- **Onde:** em todo lugar que mostra "Continuar com Google", com o mesmo logo, tamanho e respiro. Isso vale para a entrada e para o primeiro passo do cadastro. No cadastro, o Google vai no topo, antes do divisor e do e-mail, na mesma ordem da entrada (P28 da spec 07).
 - **Com a Apple:** no iPhone, "Continuar com a Apple" fica acima do Google, com o botão oficial da Apple (preto, `AppleAuthenticationButton`, a regra da Apple), na mesma largura, raio 16 e altura de 52 px com o degrau. Os dois não se misturam: o Google não fica preto, e a Apple não ganha a borda do Studoo. Na web e no Android não há o botão da Apple, e o Google fica sozinho acima do "ou". Essa diferença já é a do iPhone, sem linha nova na spec 07.
 - **Aceite:** em 390, na web e no app, o "G" colorido aparece à esquerda do texto, com 20 px e 12 px de respiro; ampliar a captura não mostra borda, cor trocada ou serrilhado; o leitor de tela lê só "Continuar com Google, botão". Um teste confere que o botão do Google mostra a imagem e que ela não tem nome acessível.
 
