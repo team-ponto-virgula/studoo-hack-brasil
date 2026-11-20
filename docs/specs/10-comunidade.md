@@ -599,11 +599,18 @@ Recomendação do Lead, aceita. O cartão do Explorar leva ao perfil da autora, 
 ### 6. Textos novos (contrato: `perfil.postar`)
 `botao` "Postar trilha no perfil"; `vazio` "Escolha quais trilhas aparecem no seu perfil."; `titulo` "Postar no perfil"; `texto` "Só aparecem no seu perfil as trilhas que você ligar aqui."; `semNome` "Para postar no perfil, escolha como você aparece."; `editarPerfil` "Editar perfil"; `semTrilhas` "Você ainda não tem trilhas."; `estadoPerfil` "No seu perfil"; `estadoPerfilExplorar` "No perfil e no Explorar"; `salvando` "Salvando…"; `erro` "Não deu para salvar. Tente de novo."; `aviso` "Trilha no seu perfil."; `avisoTirada` "Trilha tirada do seu perfil."; `confirmarTitulo` "Tirar do perfil e do Explorar?"; `confirmarTexto` "A trilha sai do seu perfil e do Explorar. Quem tem o link continua abrindo."; `confirmarAcao` "Tirar"; `menuPostar` "Postar no meu perfil"; `menuTirar` "Tirar do meu perfil".
 Os textos que vêm de antes: "Nova trilha", "Desfazer", "Cancelar", a linha das regras, os selos "Em revisão" e "Não publicada" e "Enviada para revisão…" (spec 14).
+Texto que muda: `perfil.perfilPrivadoDica`, na seção "Seu perfil público", passa de "Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha." para "Para compartilhar o perfil, poste ao menos uma trilha em “Postar trilha no perfil”.". O nome antigo não existe mais com a comunidade ligada.
 
 ### 7. Quem faz
 - **Web & API:** a seção e a folha na web; o atalho no menu do cartão e do mapa (src/app/estudo.tsx e src/ui/caminho.tsx); os textos no contrato. Sem rota nova nem migração, porque a lista junta os planos (`GET /api/aprendizado/planos`) com os links do perfil (`perfil.links`, por `planoId`).
 - **App (Mobile 2):** a mesma seção, folha e atalho em apps/mobile/src/perfil.tsx, estudo.tsx e caminho.tsx, com os componentes da spec 11 e a chave da spec 12.
 - **Spec 07:** nenhuma diferença de plataforma.
+
+### 7b. Ajustes aceitos na conferência do app (`38ed544`, 20/11)
+- Em 390, o título "Trilhas que você compartilha (N)" ocupa a largura toda, então o botão "Postar trilha no perfil" fica embaixo do título, e não ao lado. A web faz o mesmo em 390.
+- O aviso (spec 11) aparece por cima da folha, dentro dela, e não por baixo. Ele pode cobrir a última linha enquanto está à vista.
+- A chave não repete o título na tela. O nome dela para o leitor de tela é "Postar no perfil: <título>".
+- Com a confirmação "Tirar do perfil e do Explorar?" aberta, a linha não muda nem mostra "Salvando…". Ela só muda depois de "Tirar".
 
 ### 8. Roteiro de aceite
 | # | Passos | Esperado |
