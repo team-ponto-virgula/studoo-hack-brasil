@@ -1913,12 +1913,23 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
   }, [erro, reduzir]);
 
   /** Centraliza o nó só quando ele está fora da vista, como o scrollIntoView da web. Com movimento reduzido, salta direto. */
-  function rolar(topo: number, base: number, sempre = false, ceu?: { topo: number; parte: number; coberto: number }) {
+  function rolar(topo: number, base: number, sempre = false, ceu?: { topo: number; parte: number; coberto: number }, cobertoNoAlto?: number) {
     requestAnimationFrame(() => {
       const altura = visivel.current || height;
       // O card da próxima lição flutua sobre o pé da área: o nó e o título embaixo dele precisam ficar acima do card.
       const pe = base + 48;
       const limite = altura - (proximo ? 168 : 24);
+      // Spec 01 (e198866), "Mostrar a lição atual no mapa": o nó inteiro na área livre, entre o fim do cabeçalho preso (+16)
+      // e o card ou a cápsula. Se já cabe, nada rola; senão, rola o mínimo; mais alto que a área, o topo tem prioridade.
+      if (cobertoNoAlto !== undefined) {
+        const atual = rolagemY.current;
+        const cima = cobertoNoAlto + 16;
+        if (topo - atual >= cima && pe - atual <= limite) return;
+        let y = pe - atual > limite ? pe - limite : topo - cima;
+        if (topo - y < cima) y = topo - cima;
+        rolagem.current?.scrollTo({ y: Math.max(0, y), animated: reduzir === false });
+        return;
+      }
       if (!sempre && pe <= limite) return;
       // Rola só o necessário: o nó fica logo acima do card (o topo da trilha tende a continuar à vista).
       let y = Math.max(0, pe - limite);
