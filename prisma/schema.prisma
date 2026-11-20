@@ -13,7 +13,18 @@ enum CanalSessao {
   MOBILE
 }
 
+enum EstadoModeracao {
+  pendente
+  aprovado
+  recusado
+}
+
 model Usuario {
+  perfilModeracao EstadoModeracao @default(pendente)
+  perfilRevisao Int @default(1)
+  comunidadeSuspensa Boolean @default(false)
+  bloqueiosFeitos Bloqueio[] @relation("bloqueia")
+  bloqueiosRecebidos Bloqueio[] @relation("bloqueado")
   id        String             @id @default(uuid())
   email     String             @unique
   senhaHash String?
@@ -63,6 +74,7 @@ model Seguir {
 /// Foto do perfil (spec 10), já recortada e regravada em WebP (sem EXIF). O token aleatório é o endereço público e muda a
 /// cada troca; remover a foto apaga a linha.
 model FotoPerfil {
+  moderacao EstadoModeracao @default(pendente)
   usuarioId String   @id
   token     String   @unique
   grande    Bytes
@@ -115,6 +127,8 @@ model PlanoAprendizado {
 
 /// Link de compartilhamento de uma trilha (um por trilha). Encerrar apaga a linha; apagar a trilha apaga o link.
 model LinkTrilha {
+  moderacao EstadoModeracao @default(pendente)
+  revisao Int @default(1)
   codigo      String           @id
   usuarioId   String
   planoId     String
@@ -156,12 +170,45 @@ model Denuncia {
   id        String   @id @default(uuid())
   alvoTipo  String
   alvo      String
-  usuarioId String
+  usuarioId String?
+  contaVerificada Boolean @default(false)
+  estado String @default("aberto")
+  resposta String?
   motivo    String
   criadoEm  DateTime @default(now()) @db.Timestamptz(3)
-  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  usuario   Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
 
+  @@index([estado, criadoEm])
   @@unique([alvoTipo, alvo, usuarioId])
+}
+
+model Bloqueio {
+  id String @id @default(uuid())
+  deId String
+  paraId String
+  de Usuario @relation("bloqueia", fields: [deId], references: [id], onDelete: Cascade)
+  para Usuario @relation("bloqueado", fields: [paraId], references: [id], onDelete: Cascade)
+  @@unique([deId, paraId])
+  @@index([paraId])
+}
+
+model Atendimento {
+  id String @id @default(uuid())
+  mensagem String
+  estado String @default("aberto")
+  resposta String?
+  criadoEm DateTime @default(now()) @db.Timestamptz(3)
+  @@index([estado, criadoEm])
+}
+
+model DecisaoModeracao {
+  id String @id @default(uuid())
+  operadorId String
+  tipo String
+  alvo String
+  acao String
+  criadoEm DateTime @default(now()) @db.Timestamptz(3)
+  @@index([tipo, alvo])
 }
 
 model Fluxo {
@@ -283,6 +330,7 @@ model ApoioLicao {
 /// Capa da trilha com foto (lote 4): a imagem enviada pela dona, já recortada em 2:1, regravada em WebP sem metadados em
 /// dois tamanhos. O token do endereço público muda a cada troca; a trilha guarda `capa = "foto:<token>"`.
 model CapaFoto {
+  moderacao EstadoModeracao @default(pendente)
   usuarioId String
   planoId   String
   token     String           @unique

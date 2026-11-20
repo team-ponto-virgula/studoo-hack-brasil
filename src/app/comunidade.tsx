@@ -11,12 +11,10 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import {
   LIMITES_COMUNIDADE,
-  MOTIVOS_DENUNCIA,
   TEMAS,
   ehCapaFoto,
   marcacaoCapa,
   type CartaoTrilha,
-  type MotivoDenuncia,
   type PaginaExplorar,
   type Tema,
 } from '@studoo/contratos';
@@ -26,6 +24,7 @@ import { Botao, Icone, Stu } from '../ui';
 import { Avatar, CHAVE_DEPOIS_DO_LOGIN, useAbrirNoApp, codigoDoErro, guardar, urlDoLink, useDialogo } from './compartilhar';
 import { tocaSons } from './sons';
 import type { IdEfeitoSonoro } from '../../packages/contratos/src/catalogo-sons';
+import { MenuPublicacao, useVersaoComunidade } from './seguranca-comunidade';
 import './comunidade.css';
 
 const c = mensagens.comunidade;
@@ -52,39 +51,10 @@ export type AcoesCartao = {
   queroEstudar: (cartao: CartaoTrilha) => void;
   abrir: (planoId: string) => void;
   valeu: (cartao: CartaoTrilha) => void;
-  denunciar: (cartao: CartaoTrilha) => void;
   compartilhar: (cartao: CartaoTrilha) => void;
   /** O código do cartão em andamento ("Adicionando…", valeu indo). */
   ocupado: string | null;
 };
-
-/** Menu "•••" com Denunciar: abre num botão, fecha com Esc, clique fora ou ao escolher. */
-function MenuCartao({ titulo, aoDenunciar }: { titulo: string; aoDenunciar: () => void }) {
-  const [aberto, setAberto] = useState(false);
-  const caixa = useRef<HTMLDivElement>(null);
-  const botao = useRef<HTMLButtonElement>(null);
-  const idMenu = useId();
-  useEffect(() => {
-    if (!aberto) return;
-    const fora = (evento: PointerEvent) => { if (!caixa.current?.contains(evento.target as Node)) setAberto(false); };
-    const tecla = (evento: KeyboardEvent) => { if (evento.key === 'Escape') { setAberto(false); botao.current?.focus(); } };
-    document.addEventListener('pointerdown', fora);
-    document.addEventListener('keydown', tecla);
-    caixa.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
-    return () => { document.removeEventListener('pointerdown', fora); document.removeEventListener('keydown', tecla); };
-  }, [aberto]);
-  return (
-    <div className="cartao-trilha__menu" ref={caixa}>
-      <button ref={botao} type="button" className="cartao-trilha__icone" aria-label={c.mais(titulo)} aria-haspopup="menu" aria-expanded={aberto} aria-controls={aberto ? idMenu : undefined}
-        onClick={() => setAberto((valor) => !valor)}><Icone nome="mais" /></button>
-      {aberto && (
-        <div className="cartao-trilha__opcoes" role="menu" id={idMenu}>
-          <button type="button" role="menuitem" onClick={() => { setAberto(false); aoDenunciar(); }}><Icone nome="bandeirinha" />{c.denunciar}</button>
-        </div>
-      )}
-    </div>
-  );
-}
 
 /**
  * Cartão de trilha: capa (tema e, se for o caso, "Demonstração"), título (abre a prévia /t), quem fez (foto e nome,
@@ -147,67 +117,10 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
             // Na própria trilha, o compartilhar ocupa a linha, com o ícone e a palavra.
             ? <Botao variante="secundario" className="cartao-trilha__compartilhar" aria-label={c.compartilharRotulo(cartao.titulo)} onClick={() => acoes.compartilhar(cartao)}><Icone nome="compartilhar" />{c.compartilhar}</Botao>
             : <button type="button" className="cartao-trilha__icone" aria-label={c.compartilharRotulo(cartao.titulo)} onClick={() => acoes.compartilhar(cartao)}><Icone nome="compartilhar" /></button>}
-          {!sua && <MenuCartao titulo={cartao.titulo} aoDenunciar={() => acoes.denunciar(cartao)} />}
+          {!sua && <MenuPublicacao tipo="trilha" alvo={cartao.codigo} nome={cartao.dono.nome} titulo={cartao.titulo} logado={acoes.logado} />}
         </div>
       </div>
     </article>
-  );
-}
-
-/** Denunciar trilha ou perfil: motivo (rádio), enviar; foco preso, Esc fecha e devolve o foco. */
-export function DialogoDenuncia({ alvoTipo, alvo, alvoNome, aoFechar, aoEnviar }: {
-  alvoTipo: 'trilha' | 'perfil';
-  alvo: string;
-  /** O que está sendo denunciado, por extenso: «"Redação para o ENEM", de Caio Prado» ou o nome da pessoa. */
-  alvoNome: string;
-  aoFechar: () => void;
-  aoEnviar: (texto: string) => void;
-}) {
-  const [motivo, setMotivo] = useState<MotivoDenuncia | null>(null);
-  const [erro, setErro] = useState<string | null>(null);
-  const [enviando, setEnviando] = useState(false);
-  const caixa = useRef<HTMLDivElement>(null);
-  const tituloId = useId();
-  const textoId = useId();
-  useDialogo(caixa, () => { if (!enviando) aoFechar(); });
-  useEffect(() => { caixa.current?.querySelector<HTMLInputElement>('input')?.focus(); }, []);
-
-  async function enviar() {
-    if (!motivo) { setErro(c.denuncia.escolha); caixa.current?.querySelector<HTMLInputElement>('input')?.focus(); return; }
-    setEnviando(true);
-    setErro(null);
-    try {
-      await cliente.denunciar(alvoTipo, alvo, motivo);
-      aoEnviar(c.denuncia.enviada);
-    } catch (falha) {
-      setErro(textoErro(codigoDoErro(falha)));
-      setEnviando(false);
-    }
-  }
-
-  return (
-    <div className="folha-fundo folha-fundo--centro" role="presentation" onClick={(e) => { if (e.target === e.currentTarget && !enviando) aoFechar(); }}>
-      <div className="folha folha--confirmar folha--denuncia" role="dialog" aria-modal="true" aria-labelledby={tituloId} aria-describedby={textoId} ref={caixa}>
-        <h2 id={tituloId} className="folha-titulo">{alvoTipo === 'trilha' ? c.denuncia.tituloTrilha : c.denuncia.tituloPerfil}</h2>
-        <p className="denuncia__alvo">{alvoNome}</p>
-        <p id={textoId} className="folha-texto">{alvoTipo === 'trilha' ? c.denuncia.texto : c.denuncia.textoPerfil}</p>
-        <fieldset className="denuncia__motivos">
-          <legend className="somente-leitor">{c.denuncia.escolha}</legend>
-          {MOTIVOS_DENUNCIA.map((opcao) => (
-            <label key={opcao} className="denuncia__motivo">
-              <input type="radio" name="motivo-denuncia" value={opcao} checked={motivo === opcao} onChange={() => { setMotivo(opcao); setErro(null); }} />
-              <span>{c.denuncia.motivos[opcao]}</span>
-            </label>
-          ))}
-        </fieldset>
-        {erro && <p className="campo-erro" role="alert">{erro}</p>}
-        <div className="folha-acoes recorte__acoes">
-          {/* Nenhum motivo vem marcado: "Enviar" só liga depois que a pessoa escolhe. */}
-          <Botao variante="secundario" className="modal-confirmar--destrutivo" disabled={enviando || !motivo} aria-busy={enviando || undefined} onClick={() => void enviar()}>{enviando ? c.denuncia.enviando : c.denuncia.enviar}</Botao>
-          <Botao variante="secundario" disabled={enviando} onClick={aoFechar}>{c.denuncia.cancelar}</Botao>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -224,7 +137,6 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
 }) {
   const entrarEVoltar = useEntrarEVoltar();
   const [ocupado, setOcupado] = useState<string | null>(null);
-  const [denuncia, setDenuncia] = useState<CartaoTrilha | null>(null);
   const [aviso, avisar] = useAvisoDoApp();
   const acoes: AcoesCartao = {
     logado,
@@ -263,10 +175,6 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
         anunciar(textoErro(codigo));
       }
     },
-    denunciar(cartao) {
-      if (!logado) return entrarEVoltar('/explorar');
-      setDenuncia(cartao);
-    },
     async compartilhar(cartao) {
       const url = urlDoLink(cartao.codigo);
       if (typeof navigator.share === 'function') {
@@ -276,11 +184,7 @@ export function useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, an
       try { await navigator.clipboard.writeText(url); void tocaSons.tocarEfeito('link_copiado'); anunciar(c.linkCopiado); } catch { anunciar(mensagens.compartilhar.copiarFalhou); }
     },
   };
-  const dialogo = denuncia ? (
-    <DialogoDenuncia alvoTipo="trilha" alvo={denuncia.codigo} alvoNome={c.denuncia.alvoTrilha(denuncia.titulo, denuncia.dono.nome)} aoFechar={() => setDenuncia(null)}
-      aoEnviar={(texto) => { setDenuncia(null); avisar(texto); }} />
-  ) : null;
-  return { acoes, dialogo: <>{dialogo}{aviso}</> };
+  return { acoes, dialogo: aviso };
 }
 
 /**
@@ -397,6 +301,7 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
   const [erro, setErro] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState('');
   const titulo = useRef<HTMLHeadingElement>(null);
+  const versao = useVersaoComunidade();
   const primeira = useRef(Boolean(inicial));
   const anunciar = (texto: string) => setAnuncio((anterior) => (anterior === texto ? `${texto} ` : texto));
 
@@ -410,7 +315,7 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
       .catch((falha) => { if (ativo) setErro(textoErro(codigoDoErro(falha))); })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, [tema, aba]);
+  }, [tema, aba, versao]);
 
   async function verMais() {
     if (!pagina?.cursor) return;
@@ -569,22 +474,6 @@ export function ExplorarPublico({ inicial, logado }: { inicial: PaginaExplorar |
       aoAbrir={(planoId) => abrirNoApp(planoId)}
       aoAdicionado={(planoId, nome, jaTinha) => abrirNoApp(planoId, jaTinha ? undefined : c.adicionada(nome))}
       irParaTrilhas={() => router.push('/')} />
-  );
-}
-
-/** "Denunciar perfil", discreto, no fim da página /p (sem sessão, leva ao login). */
-export function DenunciarPerfil({ perfilId, logado, nome }: { perfilId: string; logado: boolean; nome: string }) {
-  const entrarEVoltar = useEntrarEVoltar();
-  const [aberto, setAberto] = useState(false);
-  const [status, setStatus] = useState('');
-  return (
-    <div className="denunciar-perfil">
-      <Botao variante="texto" className="folha-parar" onClick={() => (logado ? setAberto(true) : entrarEVoltar('/explorar'))}>
-        <Icone nome="bandeirinha" />{c.denuncia.tituloPerfil}
-      </Botao>
-      <p className="folha-status" role="status" aria-live="polite">{status}</p>
-      {aberto && <DialogoDenuncia alvoTipo="perfil" alvo={perfilId} alvoNome={nome} aoFechar={() => setAberto(false)} aoEnviar={(texto) => { setAberto(false); setStatus(texto); }} />}
-    </div>
   );
 }
 

@@ -1,3 +1,4 @@
+import { publicacaoRevisada } from './fixtures/moderacao.mjs';
 // Comunidade (spec 10, etapa C2): seguir, aba "Seguindo", Novidades e o ponto de extensão revisarConteudo.
 // Não depende do que já existe no banco (outras suítes, conteúdo de demonstração): só confere o que cria.
 import assert from 'node:assert/strict';
@@ -66,6 +67,7 @@ async function trilha(dona, nivel = 'perfil') {
   const { corpo: link } = await json(criarPost(pedido(`/api/aprendizado/planos/${plano.id}/compartilhar`, { metodo: 'POST', token: dona.token, corpo: {} }), ctx({ id: plano.id })));
   const corpo = nivel === 'explorar' ? { visibilidade: 'explorar', tema: 'matematica' } : { visibilidade: nivel };
   await json(linkPatch(pedido(`/api/compartilhar/${link.codigo}`, { metodo: 'PATCH', token: dona.token, corpo }), ctx({ codigo: link.codigo })));
+  await publicacaoRevisada(dona.id, link.codigo);
   return { plano, codigo: link.codigo };
 }
 const seguirApi = (quem, alvo, ativo = true) => json(seguirPost(pedido(`/api/perfis/${alvo.perfilId}/seguir`, { metodo: 'POST', token: quem.token, corpo: { ativo } }), ctx({ perfilId: alvo.perfilId })));

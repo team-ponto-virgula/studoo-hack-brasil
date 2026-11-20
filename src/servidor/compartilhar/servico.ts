@@ -28,6 +28,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
+import { filtroPublico } from "./visibilidade";
 import { revisarConteudo } from "./revisao";
 import type { Prisma } from "@/servidor/banco/gerado/client";
 
@@ -97,10 +98,11 @@ function validarCodigo(codigo: string) {
   if (!FORMATO_CODIGO.test(codigo)) throw new FalhaApi("link_inativo");
 }
 
-type LinkGuardado = { codigo: string; planoId: string; criadoEm: Date; adicoes: number; noPerfil: boolean; noExplorar?: boolean; tema?: string | null; legenda?: string | null };
+type LinkGuardado = { moderacao?: LinkCompartilhado['moderacao']; codigo: string; planoId: string; criadoEm: Date; adicoes: number; noPerfil: boolean; noExplorar?: boolean; tema?: string | null; legenda?: string | null };
 
 export const linkPublico = (link: LinkGuardado, titulo: string, valeus?: number): LinkCompartilhado => ({
   codigo: link.codigo,
+  moderacao: link.moderacao,
   planoId: link.planoId,
   titulo,
   criadoEm: link.criadoEm.toISOString(),
@@ -116,13 +118,13 @@ export const linkPublico = (link: LinkGuardado, titulo: string, valeus?: number)
 });
 
 /** O perfil é público quando ao menos uma trilha está marcada para aparecer nele. */
-async function perfilEhPublico(usuarioId: string) {
-  return (await banco.linkTrilha.count({ where: { usuarioId, noPerfil: true } })) > 0;
+async function perfilEhPublico(usuarioId: string, quem: string | null) {
+  return (await banco.linkTrilha.count({ where: { AND: [await filtroPublico(quem), { usuarioId, noPerfil: true }] } })) > 0;
 }
 
 /** O que entra na leitura do usuário para montar o dono público (nome, cor, foto, resumo). */
-export const camposDono = { id: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilDemo: true, foto: { select: { token: true } } } as const;
-export type UsuarioDono = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; perfilDemo: boolean; foto: { token: string } | null };
+export const camposDono = { id: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilDemo: true, foto: { select: { token: true, moderacao: true } } } as const;
+export type UsuarioDono = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; perfilDemo: boolean; foto: { token: string; moderacao: string } | null };
 
 /**
  * Conteúdo de demonstração (spec 10, etapa C): só aparece com `STUDOO_COMUNIDADE_DEMO=1`. Sem a flag, perfis e trilhas
@@ -132,13 +134,13 @@ export function demonstracaoVisivel(): boolean {
   return process.env.STUDOO_COMUNIDADE_DEMO === "1";
 }
 
-async function donoPublico(usuario: UsuarioDono): Promise<DonoPublico> {
+async function donoPublico(usuario: UsuarioDono, quem: string | null): Promise<DonoPublico> {
   return {
     nome: usuario.perfilNome ?? "",
     cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul",
-    foto: usuario.foto?.token ?? null,
+    foto: usuario.foto?.moderacao === 'aprovado' ? usuario.foto.token : null,
     resumo: usuario.perfilResumo || null,
-    perfilId: usuario.perfilId && (await perfilEhPublico(usuario.id)) ? usuario.perfilId : null,
+    perfilId: usuario.perfilId && (await perfilEhPublico(usuario.id, quem)) ? usuario.perfilId : null,
     ...(usuario.perfilDemo ? { demo: true as const } : {}),
   };
 }
@@ -151,12 +153,12 @@ const alcanceDe = (links: { adicoes: number }[]) => ({ trilhas: links.length, pe
 export async function obterPerfil(usuarioId: string): Promise<Perfil> {
   const usuario = await banco.usuario.findUniqueOrThrow({
     where: { id: usuarioId },
-    select: { email: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilInteresses: true, foto: { select: { token: true } } },
+    select: { email: true, perfilModeracao: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilInteresses: true, foto: { select: { token: true, moderacao: true } } },
   });
   const links = await banco.linkTrilha.findMany({
     where: { usuarioId },
     orderBy: { criadoEm: "desc" },
-    select: { codigo: true, planoId: true, criadoEm: true, adicoes: true, noPerfil: true, noExplorar: true, tema: true, legenda: true, plano: { select: { titulo: true } } },
+    select: { codigo: true, planoId: true, criadoEm: true, adicoes: true, moderacao: true, noPerfil: true, noExplorar: true, tema: true, legenda: true, plano: { select: { titulo: true } } },
   });
   const valeus = comunidadeAtiva() && links.length > 0
     ? new Map((await banco.eventoTrilha.groupBy({ by: ["codigo"], where: { tipo: "valeu", codigo: { in: links.map((link) => link.codigo) } }, _count: { _all: true } }))
@@ -168,10 +170,12 @@ export async function obterPerfil(usuarioId: string): Promise<Perfil> {
     resumo: usuario.perfilResumo || null,
     interesses: temasGuardados(usuario.perfilInteresses),
     foto: usuario.foto?.token ?? null,
+    perfilModeracao: usuario.perfilModeracao,
+    fotoModeracao: usuario.foto?.moderacao ?? null,
     // O mesmo alcance da página pública (só as trilhas no perfil): o total, com as só por link, fica no título da lista.
     alcance: { ...alcanceDe(links.filter((link) => link.noPerfil)), ...(comunidadeAtiva() ? { seguidores: await banco.seguir.count({ where: { seguidoId: usuarioId } }) } : {}) },
     perfilId: usuario.perfilId,
-    publico: links.some((link) => link.noPerfil),
+    publico: usuario.perfilModeracao === "aprovado" && links.some((link) => link.noPerfil && link.moderacao === "aprovado"),
     email: usuario.email,
     visitante: ehEmailVisitante(usuario.email),
     links: links.map((link) => linkPublico(link, link.plano.titulo, valeus ? valeus.get(link.codigo) ?? 0 : undefined)),
@@ -195,7 +199,7 @@ export async function salvarPerfil(usuarioId: string, entrada: unknown): Promise
   const usuario = await banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { email: true, perfilId: true } });
   if (ehEmailVisitante(usuario.email)) throw new FalhaApi("compartilhar_visitante");
   await limitar(`perfil:${usuarioId}`, LIMITES.perfil);
-  // Revisão de conteúdo (ponto de extensão; hoje aprova tudo) antes de gravar o nome e o resumo.
+  // Triagem local antes de enviar a nova versão do perfil à equipe.
   for (const [tipo, texto] of [["nome", nome], ["resumo", resumo ?? ""]] as const) {
     if (texto && !(await revisarConteudo({ tipo, usuarioId, texto })).aprovado) throw new FalhaApi("conteudo_recusado");
   }
@@ -224,6 +228,8 @@ export async function lerTrilha(usuarioId: string, planoId: string) {
       origem: true,
       origemCodigo: true,
       capa: true,
+      capaFoto: { select: { moderacao: true } },
+      descricao: true,
       tema: true,
       fluxos: {
         orderBy: { ordem: "asc" },
@@ -277,7 +283,7 @@ export async function previaCompartilhar(usuarioId: string, planoId: string): Pr
   if (!plano) throw new FalhaApi("nao_encontrado");
   const licoes = plano.fluxos.flatMap((fluxo) => fluxo.licoes);
   const [usuario, link] = await Promise.all([
-    banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { perfilNome: true, perfilCor: true, foto: { select: { token: true } } } }),
+    banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { perfilNome: true, perfilCor: true, foto: { select: { token: true, moderacao: true } } } }),
     banco.linkTrilha.findUnique({ where: { usuarioId_planoId: { usuarioId, planoId } } }),
   ]);
   return {
@@ -287,7 +293,7 @@ export async function previaCompartilhar(usuarioId: string, planoId: string): Pr
     totalPartes: plano.fluxos.length,
     deMaterial: ehDeMaterial(licoes),
     tituloTemNomeDoArquivo: tituloTemNomeDoArquivo(plano.titulo, licoes),
-    perfil: usuario.perfilNome ? { nome: usuario.perfilNome, cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul", foto: usuario.foto?.token ?? null } : null,
+    perfil: usuario.perfilNome ? { nome: usuario.perfilNome, cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul", foto: usuario.foto?.moderacao === 'aprovado' ? usuario.foto.token : null } : null,
     link: link ? linkPublico(link, plano.titulo) : null,
     // O tema das configurações, quando a dona já escolheu; senão, o sugerido pelo título.
     ...(comunidadeAtiva() ? { temaSugerido: (ehTemaValido(plano.tema) ? plano.tema : null) ?? sugerirTema(plano.titulo), demonstracao: origemDemonstracao(plano.origem) } : {}),
@@ -309,6 +315,7 @@ export async function criarLink(usuarioId: string, planoId: string): Promise<Lin
   if ((await banco.linkTrilha.count({ where: { usuarioId } })) >= LINKS_ATIVOS_MAX) throw new FalhaApi("limite_compartilhar");
   await limitar(`compartilhar:criar:${usuarioId}`, LIMITES.criar);
   try {
+    if (!(await revisarConteudo({ tipo: "titulo", usuarioId, texto: plano.titulo })).aprovado) throw new FalhaApi("conteudo_recusado");
     const link = await banco.linkTrilha.create({ data: { codigo: novoCodigo(), usuarioId, planoId } });
     return linkPublico(link, plano.titulo);
   } catch (erro) {
@@ -342,10 +349,10 @@ export async function encerrarLink(usuarioId: string, codigo: string): Promise<v
   await banco.linkTrilha.deleteMany({ where: { codigo, usuarioId } });
 }
 
-async function linkAtivo(codigo: string) {
+async function linkAtivo(codigo: string, quem: string | null) {
   validarCodigo(codigo);
-  const link = await banco.linkTrilha.findUnique({
-    where: { codigo },
+  const link = await banco.linkTrilha.findFirst({
+    where: { AND: [await filtroPublico(quem), { codigo }] },
     select: {
       codigo: true,
       usuarioId: true,
@@ -360,10 +367,10 @@ async function linkAtivo(codigo: string) {
 
 /** A prévia pública. Com sessão, diz se a trilha já é da pessoa (dela ou adicionada). */
 export async function trilhaCompartilhada(codigo: string, usuarioId: string | null): Promise<TrilhaCompartilhada> {
-  const link = await linkAtivo(codigo);
+  const link = await linkAtivo(codigo, usuarioId);
   const plano = await lerTrilha(link.usuarioId, link.planoId);
   if (!plano) throw new FalhaApi("link_inativo");
-  const dono = await donoPublico(link.plano.usuario);
+  const dono = await donoPublico(link.plano.usuario, usuarioId);
   const licoes = plano.fluxos.flatMap((fluxo) => fluxo.licoes);
   const temaLink = (await banco.linkTrilha.findUnique({ where: { codigo: link.codigo }, select: { tema: true } }))?.tema ?? plano.tema;
   const previa: TrilhaCompartilhada = {
@@ -371,7 +378,7 @@ export async function trilhaCompartilhada(codigo: string, usuarioId: string | nu
     titulo: plano.titulo,
     // Tema e capa só quando existem (campos opcionais da resposta pública).
     ...(ehTemaValido(temaLink) ? { tema: temaLink } : {}),
-    ...(plano.capa ? { capa: plano.capa } : {}),
+    ...(plano.capa && (!plano.capa.startsWith('foto:') || plano.capaFoto?.moderacao === 'aprovado') ? { capa: plano.capa } : {}),
     origem: ehDeMaterial(licoes) ? rotuloMaterial(dono.nome) : plano.origem,
     totalLicoes: licoes.length,
     partes: plano.fluxos.map((fluxo) => ({ titulo: fluxo.titulo, licoes: fluxo.licoes.map((licao) => licao.titulo) })),
@@ -397,9 +404,9 @@ export async function trilhaCompartilhada(codigo: string, usuarioId: string | nu
  * O mesmo link adicionado de novo devolve a trilha que a pessoa já tem (sem duplicar).
  */
 export async function adicionarTrilha(usuarioId: string, codigo: string): Promise<TrilhaAdicionada> {
-  const link = await linkAtivo(codigo);
+  const link = await linkAtivo(codigo, usuarioId);
   if (link.usuarioId === usuarioId) throw new FalhaApi("trilha_propria");
-  const dono = await donoPublico(link.plano.usuario);
+  const dono = await donoPublico(link.plano.usuario, usuarioId);
   const ja = await banco.planoAprendizado.findUnique({ where: { usuarioId_origemCodigo: { usuarioId, origemCodigo: codigo } }, select: { id: true } });
   if (ja) return { planoId: ja.id, jaTinha: true, dono };
   await limitar(`compartilhar:adicionar:${usuarioId}`, LIMITES.adicionar);
@@ -459,14 +466,14 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
 }
 
 /** A página pública do perfil: só as trilhas marcadas. Sem nenhuma marcada, o perfil não existe. */
-export async function perfilPublico(perfilId: string): Promise<PerfilPublico> {
+export async function perfilPublico(perfilId: string, quem: string | null = null): Promise<PerfilPublico> {
   if (!FORMATO_CODIGO.test(perfilId)) throw new FalhaApi("nao_encontrado");
   const usuario = await banco.usuario.findUnique({
     where: { perfilId },
-    select: { id: true, perfilNome: true, perfilCor: true, perfilResumo: true, perfilInteresses: true, perfilDemo: true, foto: { select: { token: true } } },
+    select: { id: true, perfilNome: true, perfilCor: true, perfilResumo: true, perfilInteresses: true, perfilDemo: true, foto: { select: { token: true, moderacao: true } } },
   });
   if (!usuario?.perfilNome || (usuario.perfilDemo && !demonstracaoVisivel())) throw new FalhaApi("nao_encontrado");
-  const links = await banco.linkTrilha.findMany({ where: { usuarioId: usuario.id, noPerfil: true }, orderBy: { criadoEm: "desc" }, select: { codigo: true, planoId: true, adicoes: true } });
+  const links = await banco.linkTrilha.findMany({ where: { AND: [await filtroPublico(quem), { usuarioId: usuario.id, noPerfil: true }] }, orderBy: { criadoEm: "desc" }, select: { codigo: true, planoId: true, adicoes: true } });
   if (links.length === 0) throw new FalhaApi("nao_encontrado");
   const trilhas = await Promise.all(links.map(async (link) => {
     const plano = await lerTrilha(usuario.id, link.planoId);
@@ -479,7 +486,7 @@ export async function perfilPublico(perfilId: string): Promise<PerfilPublico> {
     cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul",
     resumo: usuario.perfilResumo || null,
     interesses: temasGuardados(usuario.perfilInteresses),
-    foto: usuario.foto?.token ?? null,
+    foto: usuario.foto?.moderacao === 'aprovado' ? usuario.foto.token : null,
     alcance: alcanceDe(links),
     trilhas: visiveis,
     ...(usuario.perfilDemo ? { demo: true as const } : {}),
@@ -497,19 +504,20 @@ export async function marcasDasTrilhas(usuarioId: string, planos: { id: string; 
   for (const link of links) marcas.set(link.planoId, { link: { codigo: link.codigo, noPerfil: link.noPerfil } });
   const recebidas = planos.filter((plano) => plano.origemCodigo);
   if (recebidas.length > 0) {
-    const ativos = new Set((await banco.linkTrilha.findMany({ where: { codigo: { in: recebidas.map((plano) => plano.origemCodigo!) } }, select: { codigo: true } })).map((link) => link.codigo));
+    const filtro = await filtroPublico(usuarioId);
+    const ativos = new Set((await banco.linkTrilha.findMany({ where: { AND: [filtro, { codigo: { in: recebidas.map((plano) => plano.origemCodigo!) } }] }, select: { codigo: true } })).map((link) => link.codigo));
     const perfisIds = [...new Set(recebidas.map((plano) => plano.origemPerfilId).filter((valor): valor is string => Boolean(valor)))];
     // A foto é a de agora (se a pessoa remover, some daqui também); o perfil só aparece se for público agora.
     const donos = await banco.usuario.findMany({
-      where: { perfilId: { in: perfisIds } },
-      select: { perfilId: true, foto: { select: { token: true } }, planos: { where: { links: { some: { noPerfil: true } } }, select: { id: true }, take: 1 } },
+      where: { perfilId: { in: perfisIds }, planos: { some: { links: { some: filtro } } } },
+      select: { perfilId: true, foto: { select: { token: true, moderacao: true } }, planos: { where: { links: { some: { AND: [filtro, { noPerfil: true }] } } }, select: { id: true }, take: 1 } },
     });
     const publicos = new Set(donos.filter((dono) => dono.planos.length > 0).map((dono) => dono.perfilId));
-    const fotos = new Map(donos.map((dono) => [dono.perfilId, dono.foto?.token ?? null]));
+    const fotos = new Map(donos.map((dono) => [dono.perfilId, dono.foto?.moderacao === 'aprovado' ? dono.foto.token : null]));
     for (const plano of recebidas) {
       marcas.set(plano.id, {
         recebida: {
-          nome: plano.origemNome ?? "",
+          nome: ativos.has(plano.origemCodigo!) ? plano.origemNome ?? "" : "",
           perfilId: plano.origemPerfilId && publicos.has(plano.origemPerfilId) ? plano.origemPerfilId : null,
           codigoAtivo: ativos.has(plano.origemCodigo!) ? plano.origemCodigo : null,
           foto: (plano.origemPerfilId && fotos.get(plano.origemPerfilId)) || null,

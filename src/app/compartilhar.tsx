@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { MenuPublicacao } from './seguranca-comunidade';
 import { useRouter } from 'next/navigation';
 
 /*
@@ -281,10 +282,10 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
           return;
         }
         novo = await cliente.definirVisibilidade(link.codigo, 'explorar', { tema, legenda: legendaNormal });
-        setStatus(publicada ? cm.publicacaoSalva : cm.publicada);
+        setStatus(novo.moderacao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : publicada ? cm.publicacaoSalva : cm.publicada);
       } else {
         novo = await cliente.definirVisibilidade(link.codigo, nivel);
-        setStatus(cm.nivelSalvo(cm.niveis[nivel].titulo));
+        setStatus(novo.moderacao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : cm.nivelSalvo(cm.niveis[nivel].titulo));
       }
       aoMudar(novo);
       setLegenda(novo.legenda ?? '');
@@ -299,7 +300,7 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
   function escolher(nivel: Visibilidade) {
     setEscolhido(nivel);
     setStatus('');
-    if (nivel !== 'explorar') void salvar(nivel);
+    if (nivel === 'link') void salvar(nivel);
   }
 
   return (
@@ -319,6 +320,8 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
           );
         })}
       </fieldset>
+      {escolhido !== 'link' && <p className="campo-dica">{mensagens.seguranca.regrasAoPublicar.antes}<a href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regrasAoPublicar.link}</a>{mensagens.seguranca.regrasAoPublicar.depois}</p>}
+      {escolhido === 'perfil' && escolhido !== atual && <Botao disabled={ocupado} onClick={() => void salvar('perfil')}>Publicar no perfil</Botao>}
       {escolhido === 'explorar' && !deMaterial && (
         <div className="publicacao">
           {!publicada && <p className="publicacao__ainda" role="note">{cm.aindaNaoNoExplorar(cm.niveis[atual].titulo)}</p>}
@@ -362,7 +365,7 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
           </div>
         </div>
       )}
-      {erro && <p className="campo-erro" role="alert">{erro}</p>}
+      {erro && <p className="campo-erro" role="alert">{erro} {erro === mensagens.seguranca.recusadaNaHora && <a href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regras}</a>}</p>}
       <p className="folha-status somente-leitor" role="status" aria-live="polite">{status}</p>
     </div>
   );
@@ -433,7 +436,7 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
       setLink(novo);
       aoMudarLink(planoId, novo);
       setEtapa('pronto');
-      anunciar(m.linkPronto);
+      anunciar(novo.moderacao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : m.linkPronto);
     } catch (falha) {
       setErro(codigoDoErro(falha));
     } finally {
@@ -845,8 +848,9 @@ export function AdicionarPorLink({ ocupado: ocupadoFora, aoAdicionar, abrirPlano
         </div>
       )}
       {trilha && (
-        <PreviaTrilha trilha={trilha} nivel="h2" tituloRef={tituloPrevia}
+        <><PreviaTrilha trilha={trilha} nivel="h2" tituloRef={tituloPrevia}
           acoes={<AcoesDeQuemRecebe trilha={trilha} logado ocupado={adicionando} adicionar={() => void adicionar()} abrir={abrirPlano} />} />
+        {trilha.situacao !== 'sua' && <div className="seguranca-publica"><MenuPublicacao tipo="trilha" alvo={trilha.codigo} nome={trilha.dono.nome} titulo={trilha.titulo} logado /></div>}</>
       )}
     </section>
   );

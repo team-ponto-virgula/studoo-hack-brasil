@@ -116,6 +116,8 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
   assert.ok(primeiro.temas >= 6);
   const datasAntes = (await banco.linkTrilha.findMany({ where: { plano: { usuario: DONO_DEMO } }, select: { publicadaEm: true } })).map((l) => l.publicadaEm.getTime());
   const segundo = await criarDemonstracao();
+  await banco.usuario.updateMany({ where: DONO_DEMO, data: { perfilModeracao: 'aprovado' } });
+  await banco.linkTrilha.updateMany({ where: { plano: { usuario: DONO_DEMO } }, data: { moderacao: 'aprovado' } });
   assert.deepEqual(segundo, primeiro, 'rodar de novo não duplica');
   assert.equal(await banco.usuario.count({ where: DONO_DEMO }), primeiro.perfis);
   assert.equal(await banco.linkTrilha.count({ where: { plano: { usuario: DONO_DEMO } } }), primeiro.trilhas);
@@ -160,6 +162,8 @@ test('demonstração: só com a flag, idempotente (renova datas), 8+ trilhas em 
 test('demonstração: sem a flag no servidor, some do Explorar, do /p e do /t; uma pessoa de verdade que adicionou fica com a cópia ao remover', async () => {
   process.env.STUDOO_COMUNIDADE_DEMO = '1';
   await criarDemonstracao();
+  await banco.usuario.updateMany({ where: DONO_DEMO, data: { perfilModeracao: 'aprovado' } });
+  await banco.linkTrilha.updateMany({ where: { plano: { usuario: DONO_DEMO } }, data: { moderacao: 'aprovado' } });
   const link = await banco.linkTrilha.findFirst({ where: { plano: { usuario: DONO_DEMO } }, select: { codigo: true, adicoes: true, plano: { select: { usuario: { select: { perfilId: true } } } } } });
   const pessoa = await banco.usuario.create({ data: { email: `demo-real-${randomUUID()}@example.test`, fuso: 'UTC' } });
   usuarios.push(pessoa.id);

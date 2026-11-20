@@ -1,3 +1,4 @@
+import { publicacaoRevisada } from './fixtures/moderacao.mjs';
 // Privacidade (revisão Apple 5.1.1(v) e 5.1.2(i)): o aceite do envio a IA de terceiros barra as rotas no servidor, e a
 // exclusão da conta apaga tudo dela no ato. Não depende do que já existe no banco: só confere o que cria.
 import assert from 'node:assert/strict';
@@ -186,6 +187,7 @@ test('excluir conta: pede a confirmação e apaga no ato a conta, as trilhas, o 
   const plano = await aceitarProposta(ana.id, (await gerarProposta(ana.id, 'Aprender frações na cozinha')).token);
   const { corpo: link } = await json(criarLinkPost(pedido(`/api/aprendizado/planos/${plano.id}/compartilhar`, { metodo: 'POST', token: ana.token, corpo: {} }), ctx({ id: plano.id })));
   await json(linkPatch(pedido(`/api/compartilhar/${link.codigo}`, { metodo: 'PATCH', token: ana.token, corpo: { visibilidade: 'explorar', tema: 'matematica' } }), ctx({ codigo: link.codigo })));
+  await publicacaoRevisada(ana.id, link.codigo);
   const copia = await json(adicionarPost(pedido(`/api/compartilhar/${link.codigo}/adicionar`, { metodo: 'POST', token: bia.token, corpo: {} }), ctx({ codigo: link.codigo })));
   assert.equal(copia.status, 200);
   await json(valeuPost(pedido(`/api/compartilhar/${link.codigo}/valeu`, { metodo: 'POST', token: bia.token, corpo: { ativo: true } }), ctx({ codigo: link.codigo })));

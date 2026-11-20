@@ -1,11 +1,15 @@
-import { lerJson, responder, rotaPrivada } from "@/servidor/acesso/http";
-import { exigirComunidade } from "@/servidor/compartilhar/servico";
+import { lerJson, responder, rotaPublicaComSessao } from "@/servidor/acesso/http";
+import { enderecoRede } from "@/servidor/acesso/visitante";
+import { exigirCompartilhar } from "@/servidor/compartilhar/servico";
 import { denunciar } from "@/servidor/compartilhar/comunidade";
+import { lembrarRelato } from "@/servidor/compartilhar/anonimo";
 
-/** Denunciar trilha ou perfil `{ alvoTipo, alvo, motivo }`. */
 export function POST(request: Request) {
-  return rotaPrivada(request, async (usuarioId) => {
-    exigirComunidade();
-    return responder(await denunciar(usuarioId, await lerJson(request, 256)));
+  return rotaPublicaComSessao(request, async usuarioId => {
+    exigirCompartilhar();
+    const caso = await denunciar(usuarioId, await lerJson(request, 256), enderecoRede(request));
+    const resposta = responder(caso);
+    if (!usuarioId) lembrarRelato(request, resposta, caso.protocolo);
+    return resposta;
   });
 }

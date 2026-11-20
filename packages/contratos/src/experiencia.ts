@@ -1372,7 +1372,7 @@ export const mensagens = {
         explorar_material: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
         limite_comunidade: 'Muitas ações por agora. Tente de novo daqui a pouco.',
         seguir_invalido: 'Não dá para seguir este perfil.',
-        conteudo_recusado: 'Este conteúdo não pode ser publicado. Ajuste e tente de novo.',
+        conteudo_recusado: 'Não deu para publicar: o texto não segue as regras da comunidade. Revise e tente de novo.',
         consentimento_ia: 'Para continuar, permita o uso de IA.',
         confirmacao_invalida: 'Digite EXCLUIR para confirmar.',
         cadastro_indisponivel: 'Criar conta por e-mail está indisponível no momento.',

@@ -12,6 +12,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
+import { filtroPublico, restricoesDe } from "./visibilidade";
 import { demonstracaoVisivel } from "./servico";
 
 /*
@@ -35,7 +36,7 @@ async function podeAgir(usuarioId: string) {
 /** O estado do botão Seguir para quem está logado (null sem sessão). */
 export async function estadoSeguir(quem: string | null, alvoId: string): Promise<EstadoSeguir | undefined> {
   if (!quem) return undefined;
-  if (quem === alvoId || !(await podeAgir(quem))) return { seguindo: false, podeSeguir: false };
+  if (quem === alvoId || !(await podeAgir(quem)) || (await restricoesDe(quem)).autores.includes(alvoId)) return { seguindo: false, podeSeguir: false };
   const existe = await banco.seguir.findUnique({ where: { seguidorId_seguidoId: { seguidorId: quem, seguidoId: alvoId } }, select: { criadoEm: true } });
   return { seguindo: Boolean(existe), podeSeguir: true };
 }
@@ -46,7 +47,7 @@ export async function seguir(usuarioId: string, perfilId: string, entrada: unkno
   if (typeof ativo !== "boolean") throw new FalhaApi("invalido");
   if (!FORMATO_CODIGO.test(perfilId)) throw new FalhaApi("nao_encontrado");
   const alvo = await banco.usuario.findUnique({ where: { perfilId }, select: { id: true, perfilNome: true, perfilDemo: true } });
-  const publico = alvo?.perfilNome && (await banco.linkTrilha.count({ where: { usuarioId: alvo.id, noPerfil: true } })) > 0;
+  const publico = alvo?.perfilNome && (await banco.linkTrilha.count({ where: { AND: [await filtroPublico(usuarioId), { usuarioId: alvo.id, noPerfil: true }] } })) > 0;
   if (!alvo || !publico || (alvo.perfilDemo && !demonstracaoVisivel())) throw new FalhaApi("nao_encontrado");
   const quem = await banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { email: true, perfilDemo: true } });
   if (ehEmailVisitante(quem.email)) throw new FalhaApi("compartilhar_visitante");
@@ -63,17 +64,17 @@ export async function seguidosPor(usuarioId: string): Promise<string[]> {
   return (await banco.seguir.findMany({ where: { seguidorId: usuarioId }, select: { seguidoId: true } })).map((s) => s.seguidoId);
 }
 
-type UsuarioPessoa = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; foto: { token: string } | null };
-const camposPessoa = { id: true, perfilNome: true, perfilCor: true, perfilId: true, foto: { select: { token: true } } } as const;
+type UsuarioPessoa = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; foto: { token: string; moderacao: string } | null };
+const camposPessoa = { id: true, perfilNome: true, perfilCor: true, perfilId: true, foto: { select: { token: true, moderacao: true } } } as const;
 
 /** Separa quem tem perfil público (nome e foto) do resto ("alguém"). */
-async function pessoasPublicas(usuarios: UsuarioPessoa[]): Promise<{ pessoas: PessoaNovidade[]; outros: number }> {
+async function pessoasPublicas(usuarios: UsuarioPessoa[], quem: string): Promise<{ pessoas: PessoaNovidade[]; outros: number }> {
   if (usuarios.length === 0) return { pessoas: [], outros: 0 };
-  const publicos = new Set((await banco.linkTrilha.findMany({ where: { usuarioId: { in: usuarios.map((u) => u.id) }, noPerfil: true }, select: { usuarioId: true }, distinct: ["usuarioId"] })).map((l) => l.usuarioId));
+  const publicos = new Set((await banco.linkTrilha.findMany({ where: { AND: [await filtroPublico(quem), { usuarioId: { in: usuarios.map((u) => u.id) }, noPerfil: true }] }, select: { usuarioId: true }, distinct: ["usuarioId"] })).map((l) => l.usuarioId));
   const pessoas: PessoaNovidade[] = [];
   let outros = 0;
   for (const u of usuarios) {
-    if (u.perfilNome && u.perfilId && publicos.has(u.id)) pessoas.push({ nome: u.perfilNome, cor: corValida(u.perfilCor) ? u.perfilCor : "azul", foto: u.foto?.token ?? null, perfilId: u.perfilId });
+    if (u.perfilNome && u.perfilId && publicos.has(u.id)) pessoas.push({ nome: u.perfilNome, cor: corValida(u.perfilCor) ? u.perfilCor : "azul", foto: u.foto?.moderacao === 'aprovado' ? u.foto.token : null, perfilId: u.perfilId });
     else outros += 1;
   }
   return { pessoas, outros };
@@ -85,8 +86,10 @@ async function pessoasPublicas(usuarios: UsuarioPessoa[]): Promise<{ pessoas: Pe
  */
 export async function novidades(usuarioId: string, agora = new Date()): Promise<Novidades> {
   const desde = new Date(agora.getTime() - SEMANA_MS);
+  const { autores, perfis } = await restricoesDe(usuarioId);
+  const visivel = { id: { notIn: autores }, ...(perfis.length ? { NOT: { perfilId: { in: perfis } } } : {}) };
   const eventos = await banco.eventoTrilha.findMany({
-    where: { criadoEm: { gte: desde }, link: { usuarioId }, usuarioId: { not: usuarioId } },
+    where: { criadoEm: { gte: desde }, link: { usuarioId }, usuario: visivel, usuarioId: { not: usuarioId } },
     orderBy: { criadoEm: "desc" },
     select: { tipo: true, criadoEm: true, link: { select: { planoId: true, plano: { select: { titulo: true } } } }, usuario: { select: camposPessoa } },
   });
@@ -100,10 +103,10 @@ export async function novidades(usuarioId: string, agora = new Date()): Promise<
   }
   for (const [planoId, grupo] of porTrilha) {
     if (grupo.adicoes.length > 0) itens.push({ tipo: "adicoes", planoId, titulo: grupo.titulo, quantidade: grupo.adicoes.length, em: grupo.adicoes[0].toISOString() });
-    if (grupo.valeus.length > 0) itens.push({ tipo: "valeus", planoId, titulo: grupo.titulo, ...(await pessoasPublicas(grupo.valeus.map((v) => v.usuario))), em: grupo.valeus[0].em.toISOString() });
+    if (grupo.valeus.length > 0) itens.push({ tipo: "valeus", planoId, titulo: grupo.titulo, ...(await pessoasPublicas(grupo.valeus.map((v) => v.usuario), usuarioId)), em: grupo.valeus[0].em.toISOString() });
   }
-  const novos = await banco.seguir.findMany({ where: { seguidoId: usuarioId, criadoEm: { gte: desde } }, orderBy: { criadoEm: "desc" }, select: { criadoEm: true, seguidor: { select: camposPessoa } } });
-  if (novos.length > 0) itens.push({ tipo: "seguidores", ...(await pessoasPublicas(novos.map((n) => n.seguidor))), em: novos[0].criadoEm.toISOString() });
+  const novos = await banco.seguir.findMany({ where: { seguidoId: usuarioId, seguidor: visivel, criadoEm: { gte: desde } }, orderBy: { criadoEm: "desc" }, select: { criadoEm: true, seguidor: { select: camposPessoa } } });
+  if (novos.length > 0) itens.push({ tipo: "seguidores", ...(await pessoasPublicas(novos.map((n) => n.seguidor), usuarioId)), em: novos[0].criadoEm.toISOString() });
   itens.sort((a, b) => b.em.localeCompare(a.em));
   return { itens };
 }

@@ -1,3 +1,4 @@
+import { publicacaoRevisada } from './fixtures/moderacao.mjs';
 // Configurações da trilha (lote 4): nome, descrição, tema e capa da galeria. Só a dona; descrição e tema são os
 // mesmos da legenda e do tema do link; a cópia leva a capa da galeria e se configura sem mexer na original.
 // Não depende do que já existe no banco (outras suítes, demonstração): só confere o que cria.
@@ -113,6 +114,7 @@ test('configurações: descrição e tema são a legenda e o tema do link; nome 
   assert.deepEqual([conf.descricao, conf.tema, conf.compartilhamento?.visibilidade, conf.compartilhamento?.estudando], ['Receitas com frações.', 'culinaria', 'explorar', 0]);
   // Muda nas configurações: o link acompanha.
   conf = (await mudar(ana, plano.id, { descricao: 'Para cozinhar medindo.', tema: 'matematica', titulo: 'Frações de cozinha', capa: 'oceano' })).corpo;
+  await publicacaoRevisada(ana.id, link.codigo);
   const noLink = await banco.linkTrilha.findUnique({ where: { codigo: link.codigo }, select: { legenda: true, tema: true } });
   assert.deepEqual(noLink, { legenda: 'Para cozinhar medindo.', tema: 'matematica' });
   // Trilha no Explorar não fica sem tema.
@@ -136,7 +138,7 @@ test('configurações: descrição e tema são a legenda e o tema do link; nome 
 });
 
 const enviarCapa = (quem, planoId, base64) => json(capaPut(pedido(`/api/aprendizado/planos/${planoId}/capa`, { metodo: 'PUT', token: quem.token, corpo: { base64 } }), ctx({ id: planoId })));
-const lerCapa = (token, tamanho) => capaGet(pedido(`/api/capas/${token}/${tamanho}`), ctx({ token, tamanho: String(tamanho) }));
+const lerCapa = (token, tamanho, sessao) => capaGet(pedido(`/api/capas/${token}/${tamanho}`, { token: sessao }), ctx({ token, tamanho: String(tamanho) }));
 
 test('capa com foto: 2:1 em WebP sem metadados nos dois tamanhos, token novo a cada troca, a cópia volta à padrão', async () => {
   zerarCacheFotos();
@@ -155,11 +157,12 @@ test('capa com foto: 2:1 em WebP sem metadados nos dois tamanhos, token novo a c
   assert.equal(r.status, 200);
   assert.match(r.corpo.capa, /^foto:[A-Za-z0-9_-]{16}$/);
   const token = r.corpo.capa.slice(5);
+  assert.equal((await lerCapa(token, 480)).status, 404);
   for (const [largura, altura] of [[1024, 512], [480, 240]]) {
-    const resposta = await lerCapa(token, largura);
+    const resposta = await lerCapa(token, largura, ana.token);
     assert.equal(resposta.status, 200);
     assert.equal(resposta.headers.get('content-type'), 'image/webp');
-    assert.match(resposta.headers.get('cache-control'), /immutable/);
+    assert.match(resposta.headers.get('cache-control'), /no-store/);
     const bytes = Buffer.from(await resposta.arrayBuffer());
     const meta = await sharp(bytes).metadata();
     assert.deepEqual([meta.format, meta.width, meta.height], ['webp', largura, altura]);
@@ -170,6 +173,9 @@ test('capa com foto: 2:1 em WebP sem metadados nos dois tamanhos, token novo a c
   // A lista e o link mostram a foto; a cópia volta à capa padrão (a foto fica com quem enviou).
   assert.equal((await json(planosGet(pedido('/api/aprendizado/planos', { token: ana.token })))).corpo.find((item) => item.id === plano.id).capa, r.corpo.capa);
   const { corpo: link } = await json(criarPost(pedido(`/api/aprendizado/planos/${plano.id}/compartilhar`, { metodo: 'POST', token: ana.token, corpo: {} }), ctx({ id: plano.id })));
+  await publicacaoRevisada(ana.id, link.codigo);
+  assert.equal((await json(linkGet(pedido(`/api/compartilhar/${link.codigo}`), ctx({ codigo: link.codigo })))).corpo.capa, undefined);
+  await banco.capaFoto.update({ where: { token }, data: { moderacao: 'aprovado' } });
   assert.equal((await json(linkGet(pedido(`/api/compartilhar/${link.codigo}`), ctx({ codigo: link.codigo })))).corpo.capa, r.corpo.capa);
   const { corpo: adicionada } = await json(adicionarPost(pedido(`/api/compartilhar/${link.codigo}/adicionar`, { metodo: 'POST', token: bia.token, corpo: {} }), ctx({ codigo: link.codigo })));
   assert.equal((await obter(bia, adicionada.planoId)).corpo.capa, null);
