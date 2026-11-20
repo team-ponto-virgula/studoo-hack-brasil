@@ -5,6 +5,7 @@
  * compartilhar que já existe) e apagar. Cada campo salva sozinho ao sair dele, com a linha de estado "Salvo"; o erro
  * fica embaixo do campo. Sem diálogo de "sair sem salvar". Só a dona chega aqui (a API recusa as outras).
  */
+import { RegrasDaRecusa } from './seguranca-comunidade';
 import { useEffect, useId, useRef, useState } from 'react';
 import {
   CAPAS_GALERIA,
@@ -157,7 +158,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
                 aria-invalid={erros.titulo ? true : undefined} aria-describedby={erros.titulo ? ids.tituloErro : ids.tituloDica}
                 onChange={(e) => { setTitulo(e.target.value); if (erros.titulo) setErros((atual) => ({ ...atual, titulo: undefined })); }}
                 onBlur={sairDoTitulo} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }} />
-              {erros.titulo && <p className="campo-erro campo-erro--colado" id={ids.tituloErro}><Icone nome="alerta" />{erros.titulo}</p>}
+              {erros.titulo && <p className="campo-erro campo-erro--colado" id={ids.tituloErro}><Icone nome="alerta" />{erros.titulo}<RegrasDaRecusa erro={erros.titulo} /></p>}
               <p className="campo-dica" id={ids.tituloDica} hidden={Boolean(erros.titulo)}>{k.nomeDica}</p>
             </div>
 
@@ -173,7 +174,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
                 aria-invalid={erros.descricao ? true : undefined} aria-describedby={`${erros.descricao ? ids.descricaoErro : ids.descricaoDica} ${ids.descricaoContador}`}
                 onChange={(e) => { setDescricao(e.target.value.replace(/[\r\n]+/g, ' ')); if (erros.descricao) setErros((atual) => ({ ...atual, descricao: undefined })); }}
                 onBlur={sairDaDescricao} />
-              {erros.descricao && <p className="campo-erro campo-erro--colado" id={ids.descricaoErro}><Icone nome="alerta" />{erros.descricao}</p>}
+              {erros.descricao && <p className="campo-erro campo-erro--colado" id={ids.descricaoErro}><Icone nome="alerta" />{erros.descricao}<RegrasDaRecusa erro={erros.descricao} /></p>}
               <p className="campo-dica" id={ids.descricaoDica} hidden={Boolean(erros.descricao)}>{k.descricaoDica}</p>
             </div>
 

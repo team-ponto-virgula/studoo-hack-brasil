@@ -12,7 +12,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
-import { filtroPublico, restricoesDe } from "./visibilidade";
+import { exigirParLivre, filtroPublico, restricoesDe } from "./visibilidade";
 import { demonstracaoVisivel } from "./servico";
 
 /*
@@ -54,8 +54,11 @@ export async function seguir(usuarioId: string, perfilId: string, entrada: unkno
   if (alvo.id === usuarioId || quem.perfilDemo) throw new FalhaApi("seguir_invalido");
   const dentro = await banco.$transaction((tx) => consumirLimite(tx, `comunidade:seguir:${usuarioId}`, LIMITE_SEGUIR.quantidade, LIMITE_SEGUIR.janelaMs));
   if (!dentro) throw new FalhaApi("limite_comunidade");
-  if (ativo) await banco.seguir.createMany({ data: [{ seguidorId: usuarioId, seguidoId: alvo.id }], skipDuplicates: true });
-  else await banco.seguir.deleteMany({ where: { seguidorId: usuarioId, seguidoId: alvo.id } });
+  await banco.$transaction(async tx => {
+    await exigirParLivre(tx, usuarioId, alvo.id, "nao_encontrado");
+    if (ativo) await tx.seguir.createMany({ data: [{ seguidorId: usuarioId, seguidoId: alvo.id }], skipDuplicates: true });
+    else await tx.seguir.deleteMany({ where: { seguidorId: usuarioId, seguidoId: alvo.id } });
+  });
   return { seguindo: ativo, seguidores: await contarSeguidores(alvo.id) };
 }
 

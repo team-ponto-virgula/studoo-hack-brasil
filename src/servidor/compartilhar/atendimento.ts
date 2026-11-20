@@ -3,7 +3,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { conteudoValido } from "@/dominio/aprendizado/plano";
-import { conteudoParaCopia, lerTrilha } from "./servico";
+import { conteudoParaCopia, ehDeMaterial, lerTrilha } from "./servico";
 
 const uuid = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i;
 const estados = { aberto: "Recebido", encerrado: "Respondido" };
@@ -79,7 +79,7 @@ export async function detalhe(operador: string, tipo: unknown, alvo: string) {
   } else if (tipo === "trilha") {
     const link = await banco.linkTrilha.findUnique({ where: { codigo: alvo } });
     const p = link && await lerTrilha(link.usuarioId, link.planoId);
-    if (p && link) return { versao: link.revisao, estado: link.moderacao, texto: JSON.stringify({ titulo: p.titulo, descricao: p.descricao, legenda: link.legenda, origem: p.origem,
+    if (p && link) return { versao: link.revisao, estado: link.moderacao, texto: JSON.stringify({ titulo: p.titulo, descricao: p.descricao, legenda: link.legenda, origem: ehDeMaterial(p.fluxos.flatMap(f => f.licoes)) ? "Material do autor" : p.origem,
       partes: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => ({ titulo: l.titulo, conteudo: conteudoValido(l.conteudo) ? conteudoParaCopia(l.conteudo, "autor") : null })) })) }, null, 2) };
   } else if (tipo === "foto" || tipo === "capa") {
     const item = tipo === "foto" ? await banco.fotoPerfil.findUnique({ where: { token: alvo }, select: { moderacao: true } }) : await banco.capaFoto.findUnique({ where: { token: alvo }, select: { moderacao: true } });

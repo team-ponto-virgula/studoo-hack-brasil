@@ -46,12 +46,25 @@ export async function filtroPublico(quem: string | null): Promise<Prisma.LinkTri
   };
 }
 
+// Interações e bloqueios do mesmo par se ordenam, mesmo quando chegam de aparelhos diferentes.
+export async function travarPar(tx: Prisma.TransactionClient, a: string, b: string) {
+  const chave = "par:" + [a, b].sort().join(":");
+  await tx.$queryRaw`SELECT 1 FROM pg_advisory_xact_lock(hashtext(${chave}))`;
+}
+
+export async function exigirParLivre(tx: Prisma.TransactionClient, a: string, b: string, erro: "link_inativo" | "nao_encontrado") {
+  await travarPar(tx, a, b);
+  const bloqueio = await tx.bloqueio.findFirst({ where: { OR: [{ deId: a, paraId: b }, { deId: b, paraId: a }] }, select: { id: true } });
+  if (bloqueio) throw new FalhaApi(erro);
+}
+
 export async function bloquear(quem: string, entrada: unknown) {
   const { alvoTipo, alvo } = (entrada ?? {}) as Record<string, unknown>;
   const autor = await autorDoAlvo(alvoTipo, alvo);
   if (quem === autor) throw new FalhaApi("invalido");
   return banco.$transaction(async tx => {
     if (!(await consumirLimite(tx, `comunidade:bloqueio:${quem}`, 60, 3_600_000))) throw new FalhaApi("limite_comunidade");
+    await travarPar(tx, quem, autor);
     const par = await tx.bloqueio.upsert({ where: { deId_paraId: { deId: quem, paraId: autor } }, create: { deId: quem, paraId: autor }, update: {}, select: { id: true } });
     await tx.seguir.deleteMany({ where: { OR: [{ seguidorId: quem, seguidoId: autor }, { seguidorId: autor, seguidoId: quem }] } });
     return { bloqueado: true, id: par.id };
