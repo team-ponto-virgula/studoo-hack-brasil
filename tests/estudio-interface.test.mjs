@@ -149,6 +149,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     './mensagens': { mensagens },
     '../ui': { Botao: 'Botao', Stu: 'Stu' },
     './estudio.css': {},
+    './ponte-reforco': { PonteReforco: 'PonteReforco' },
     'react-native': {
       AccessibilityInfo: { sendAccessibilityEvent() {} },
       Animated: { View: 'View', Value: class { setValue(v) { this.valor = v; } } },
@@ -329,11 +330,11 @@ for (const nativo of [false, true]) {
     await esperar();
     ui.render();
     assert.equal(ui.contagem.pontes, 1);
-    assert.match(ui.texto(), /Reforço novo/);
+    assert.match(nativo ? ui.texto() : ui.tipo('PonteReforco').props.ponte?.motivo, /Reforço novo/);
     carregar.resolve({ erros: 1, ponte: null, ensino: null });
     await esperar();
     ui.render();
-    assert.match(ui.texto(), /Reforço novo/);
+    assert.match(nativo ? ui.texto() : ui.tipo('PonteReforco').props.ponte?.motivo, /Reforço novo/);
   });
   test(`${plataforma}: permissão que chega em segundo plano não inicia microfone`, async () => {
     const permissao = adiado();

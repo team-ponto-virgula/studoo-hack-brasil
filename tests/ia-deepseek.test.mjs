@@ -307,7 +307,7 @@ test("gera trilha via SSE e conteúdo via json_object com origem e gerador da De
   const eventos = await coletar(iniciarGeracao("u-ds-1", "Aprender violão"));
   const pronto = eventos.at(-1);
   assert.equal(pronto?.tipo, "pronto");
-  assert.equal(pronto.proposta.origem, `IA da DeepSeek (${MODELO_PADRAO})`);
+  assert.equal(pronto.proposta.origem, "Conteúdo gerado pelo Studoo");
   assert.equal(pedidosDeepSeek[0].auth, "Bearer sk-deepseek-teste");
   assert.equal(pedidosDeepSeek[0].corpo.model, "deepseek-flash");
   assert.deepEqual(pedidosDeepSeek[0].corpo.thinking, { type: "disabled" });

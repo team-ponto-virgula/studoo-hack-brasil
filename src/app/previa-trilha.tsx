@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { origemLegivel, type PlanoResumo } from '@studoo/contratos';
+import type { PlanoResumo } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, Fronteira, Icone, Mascote, coresDaRegiao } from '../ui';
 import { desenhosQueBalancam, enfeitesDaLinha } from '../ui/mundo-desenhos';
@@ -259,7 +259,6 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
             {stuNoTrofeu && <div className="previa-stu"><Mascote expressao="stu-feliz" tamanho={80} animado="uma-vez" sombra /></div>}
           </div>
           <span>{mensagens.trilha.chegada}</span>
-          <small>{t.origem(origemLegivel(proposta.origem))}</small>
         </div>}
         {proposta && existente && !salvando && <aside className="geracao-repetida"><p>{t.repetida(existente.titulo)}</p>
           <Botao variante="secundario" onClick={() => abrirExistente(existente.id)}>{t.abrirExistente}</Botao></aside>}

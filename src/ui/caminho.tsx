@@ -8,6 +8,7 @@ import { Mascote } from './mascote';
 import { Confete } from './festa';
 import { Desenho, Fronteira, coresDaRegiao } from './mundo';
 import { desenhosQueBalancam, enfeitesDaLinha, regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
+import { enquadrarLicao } from './enquadrar-licao';
 import './caminho.css';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
@@ -256,24 +257,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   useEffect(() => {
     if (!rolarPara) return;
     const quadro = window.requestAnimationFrame(() => {
-      const item = botoes.current.get(rolarPara)?.closest('li');
-      if (!item) return;
-      const caixa = item.getBoundingClientRect();
-      // Considera o cartão fixo da próxima lição e a navegação de baixo, que cobrem o pé da tela.
-      // Rola só o necessário: o nó para logo acima do cartão fixo, e o topo da trilha tende a continuar à vista.
-      if (caixa.top < 0 || caixa.bottom > window.innerHeight - 240) item.scrollIntoView({ block: 'end' });
-      // Se a rolagem parou no meio do céu (a placa cortada no alto), segue até a faixa da Parte 1 ficar no topo,
-      // desde que o nó continue bem à vista.
-      const inicio = item.closest('.caminho')?.querySelector('.caminho-inicio');
-      const faixa = inicio?.querySelector('.caminho-parte');
       const botao = botoes.current.get(rolarPara);
-      if (!inicio || !faixa || !botao) return;
-      const ceu = inicio.getBoundingClientRect();
-      // Desconta a barra do plano presa no topo (celular), se houver.
-      const barra = document.querySelector('.trilha-topo');
-      const coberto = barra && getComputedStyle(barra).position === 'sticky' ? barra.getBoundingClientRect().height : 0;
-      const resto = faixa.getBoundingClientRect().top - 12 - coberto;
-      if (ceu.top < 0 && resto > 0 && botao.getBoundingClientRect().top - resto > 72) window.scrollBy(0, resto);
+      if (botao) enquadrarLicao(botao);
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [rolarPara]);
@@ -339,8 +324,19 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   useEffect(() => {
     if (!aberto) return;
     const id = aberto;
-    balao.current?.focus({ preventScroll: true });
-    balao.current?.scrollIntoView({ block: 'nearest' });
+    const dialogo = balao.current;
+    const no = botoes.current.get(id);
+    if (!dialogo || !no) return;
+    const medir = () => enquadrarLicao(no, dialogo);
+    const quadro = requestAnimationFrame(() => {
+      medir();
+      dialogo.focus({ preventScroll: true });
+    });
+    const observador = new ResizeObserver(medir);
+    for (const elemento of [dialogo, document.querySelector('.trilha-topo'), document.querySelector('.navegacao-mobile')]) {
+      if (elemento) observador.observe(elemento);
+    }
+    window.visualViewport?.addEventListener('resize', medir);
 
     function aoTocarFora(evento: PointerEvent) {
       const item = botoes.current.get(id)?.closest('li');
@@ -348,27 +344,22 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     }
 
     document.addEventListener('pointerdown', aoTocarFora);
-    return () => document.removeEventListener('pointerdown', aoTocarFora);
+    return () => {
+      cancelAnimationFrame(quadro);
+      observador.disconnect();
+      window.visualViewport?.removeEventListener('resize', medir);
+      document.removeEventListener('pointerdown', aoTocarFora);
+    };
   }, [aberto]);
 
   function tocar(no: NoCaminho) {
-    if (no.estado === 'atual') {
-      setAberto(null);
-      aoAbrir?.(no);
-      return;
-    }
     setAberto((atual) => atual === no.id ? null : no.id);
   }
 
   /** Do balão de um nó bloqueado até a lição atual: fecha o balão, centraliza o nó atual e põe o foco nele. */
   function irParaAtual() {
     const atual = nos.find((item) => item.estado === 'atual');
-    setAberto(null);
-    if (!atual) return;
-    const botao = botoes.current.get(atual.id);
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    botao?.closest('li')?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
-    botao?.focus({ preventScroll: true });
+    if (atual) setAberto(atual.id);
   }
 
   function fechar() {
@@ -511,12 +502,12 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               )}
               {no.estado === 'previa' ? (
                 <button type="button" className="caminho-no__alvo" aria-label={nome} aria-haspopup="dialog" aria-expanded={estaAberto}
-                  aria-controls={estaAberto ? idBalao : undefined} onClick={() => tocar(no)}>
+                  ref={(elemento) => guardarBotao(no.id, elemento)} aria-controls={estaAberto ? idBalao : undefined} onClick={() => tocar(no)}>
                   {conteudo}
                 </button>
               ) : (
                 <button type="button" className="caminho-no__alvo" ref={(elemento) => guardarBotao(no.id, elemento)}
-                  aria-label={nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
+                  aria-label={nome} aria-haspopup="dialog" aria-expanded={estaAberto}
                   aria-controls={estaAberto ? idBalao : undefined} disabled={ocupado} onClick={() => tocar(no)}>
                   {conteudo}
                 </button>
@@ -525,19 +516,19 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 <>
                   <span className="caminho-balao__seta" aria-hidden="true" />
                   <div className="caminho-balao" id={idBalao} ref={balao} role="dialog" tabIndex={-1} data-estado={no.estado}
-                    aria-labelledby={`${idBalao}-titulo`} aria-describedby={`${idBalao}-texto`}>
+                    aria-labelledby={`${idBalao}-titulo`} aria-describedby={atual ? undefined : `${idBalao}-texto`}>
                     <div className="caminho-balao__topo">
                       <p className="caminho-balao__titulo" id={`${idBalao}-titulo`}>{no.titulo}</p>
                       <button type="button" className="caminho-balao__fechar" aria-label={mensagens.trilha.fechar} onClick={fechar}>
                         <Icone nome="fechar" />
                       </button>
                     </div>
-                    <p className="caminho-balao__texto" id={`${idBalao}-texto`}>{explicar(nos, indice)}</p>
-                    {no.estado === 'concluida' && aoAbrir && (
-                      <Botao variante="secundario" onClick={() => {
+                    {!atual && <p className="caminho-balao__texto" id={`${idBalao}-texto`}>{explicar(nos, indice)}</p>}
+                    {(atual || no.estado === 'concluida') && aoAbrir && (
+                      <Botao variante={atual ? "primario" : "secundario"} onClick={() => {
                         setAberto(null);
                         aoAbrir(no);
-                      }}>{mensagens.trilha.refazer}</Botao>
+                      }}>{atual ? (no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar) : mensagens.trilha.refazer}</Botao>
                     )}
                     {no.estado === 'bloqueada' && nos.some((item) => item.estado === 'atual') && (
                       <Botao variante="secundario" onClick={irParaAtual}>{mensagens.trilha.irParaAtual}<Icone nome="seta" /></Botao>

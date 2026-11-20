@@ -31,7 +31,7 @@ import { mensagens, textoErro } from '../mensagens/pt-BR';
 import { Botao, Icone } from '../ui';
 import { medirAcaoFixa } from '../ui/rodape-movel';
 import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, podeDivulgarLink, urlDoLink, useDialogo } from './compartilhar';
-import { CartoesDoPerfil } from './comunidade';
+import { CartoesDoPerfil, useAvisoDoApp } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
 import { SecaoPrivacidade } from './privacidade-perfil';
@@ -165,6 +165,12 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
   // Com dados, o bloco mostra o perfil como os outros veem; "Editar" abre os campos ali mesmo.
   const [editando, setEditando] = useState(false);
   const titulo = useRef<HTMLHeadingElement>(null);
+  const [avisoSalvo, avisarSalvo] = useAvisoDoApp();
+  const editarId = useId();
+  function fecharEditor() {
+    setEditando(false);
+    requestAnimationFrame(() => document.getElementById(editarId)?.focus());
+  }
   const [toque, setToque] = useState(false);
   useEffect(() => { setToque(window.matchMedia('(pointer: coarse)').matches); }, []);
   const assinaturaLinks = perfil?.links.map((link) => `${link.codigo}:${link.visibilidade ?? link.noPerfil}:${link.tema ?? ''}:${link.legenda ?? ''}`).join('|') ?? '';
@@ -233,6 +239,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
   return (
     <section className="painel painel--perfil">
       <h1 ref={titulo} tabIndex={-1} className="titulo-pagina painel--perfil__titulo">{p.titulo}</h1>
+      {avisoSalvo}
       {erro && <p className="campo-erro" role="alert">{textoErro(erro)}</p>}
       {compartilhar && !perfil && !erro && <div className="cabeca-perfil cabeca-perfil--esqueleto" aria-hidden="true"><div className="cabeca-perfil__faixa" /><div className="folha-esqueleto"><span /><span /><span /></div></div>}
       {compartilhar && perfil && (
@@ -243,14 +250,15 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
             // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
             <EditorPerfil perfil={perfil} anunciar={anunciar} registrarGuarda={registrarGuarda}
               aoMudarPerfil={(novo) => { setPerfil(novo); aoMudarPerfil(novo); }}
-              aoFechar={perfil.nome ? () => { setEditando(false); titulo.current?.focus(); } : undefined} />
+              aoSalvo={() => { fecharEditor(); avisarSalvo(p.salvo, null); }}
+              aoFechar={perfil.nome ? fecharEditor : undefined} />
           ) : (
             <div className="perfil-topo">
             <CabecalhoPerfil nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
               alcance={perfil.alcance} nivel="h2"
               semResumo={<button type="button" className="cabeca-perfil__convite" onClick={() => setEditando(true)}>{p.semResumoDona}</button>}
               acoes={<>
-                <Botao variante="secundario" onClick={() => setEditando(true)}><Icone nome="lapis" />{p.editar}</Botao>
+                <Botao id={editarId} variante="secundario" onClick={() => setEditando(true)}><Icone nome="lapis" />{p.editar}</Botao>
                 {perfil.publico && perfil.perfilId && <BotaoCompartilharPerfil perfilId={perfil.perfilId} nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} />}
               </>} />
             {perfil.links.length > 0 && <EstadoModeracao estado={perfil.perfilModeracao} />}
@@ -357,13 +365,14 @@ type ErrosCampos = { nome?: string; resumo?: string };
  * liga quando algo muda, com o estado sempre à vista e o erro no próprio campo. `aoFechar` (perfil com dados): o
  * "Cancelar" e o salvar voltam para o perfil como os outros veem.
  */
-export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda, aoFechar }: {
+export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda, aoFechar, aoSalvo }: {
   perfil: Perfil;
   aoMudarPerfil: (perfil: Perfil) => void;
   anunciar: (texto: string) => void;
   /** Qualquer navegação passa pela guarda; com alteração não salva, recebe a confirmação do app. */
   registrarGuarda?: (guarda: ((continuar: () => void) => boolean) | null) => void;
   aoFechar?: () => void;
+  aoSalvo?: () => void;
 }) {
   const [salvo, setSalvo] = useState(perfil);
   const [nome, setNome] = useState(perfil.nome ?? '');
@@ -455,9 +464,9 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
       setInteresses(novo.interesses);
       setEstado('salvo');
       void tocaSons.tocarEfeito('salvo');
-      anunciar(p.salvo);
       registrarGuarda?.(null);
-      aoFechar?.();
+      if (aoSalvo) aoSalvo();
+      else { anunciar(p.salvo); aoFechar?.(); }
     } catch (falha) {
       setErroGeral(textoErro(codigoDoErro(falha)));
       setEstado('livre');
@@ -493,7 +502,40 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
     }
   }
 
-  const estadoTexto = estado === 'salvando' ? p.salvando : alterado ? p.alteracoesNaoSalvas : p.tudoSalvo;
+  const lugarBarra = useRef<HTMLDivElement>(null);
+  const [foraDaVista, setForaDaVista] = useState(false);
+  useEffect(() => {
+    const lugar = lugarBarra.current;
+    if (!lugar || !alterado) return;
+    const raiz = document.documentElement;
+    const abas = document.querySelector<HTMLElement>('.navegacao-mobile');
+    const viewport = window.visualViewport;
+    const medir = () => {
+      const caixa = lugar.getBoundingClientRect();
+      const topo = viewport?.offsetTop ?? 0;
+      const fim = topo + (viewport?.height ?? window.innerHeight);
+      const nav = abas?.getBoundingClientRect();
+      const base = nav?.height ? Math.min(nav.top, fim) : fim;
+      lugar.style.setProperty('--coluna-esquerda', caixa.left + 'px');
+      lugar.style.setProperty('--coluna-largura', caixa.width + 'px');
+      setForaDaVista(raiz.dataset.teclado !== 'true' && (caixa.top < topo || caixa.bottom > base));
+    };
+    medir();
+    const tamanho = new ResizeObserver(medir);
+    tamanho.observe(lugar);
+    if (abas) tamanho.observe(abas);
+    const teclado = new MutationObserver(medir);
+    teclado.observe(raiz, { attributes: true, attributeFilter: ['data-teclado'] });
+    window.addEventListener('scroll', medir, { passive: true });
+    window.addEventListener('resize', medir);
+    viewport?.addEventListener('resize', medir);
+    return () => {
+      tamanho.disconnect(); teclado.disconnect();
+      window.removeEventListener('scroll', medir); window.removeEventListener('resize', medir);
+      viewport?.removeEventListener('resize', medir);
+    };
+  }, [alterado]);
+  const presa = alterado && foraDaVista;
 
   return (
     <section className="editor-perfil" aria-labelledby={ids.titulo}>
@@ -569,10 +611,13 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
           </div>
         </fieldset>
 
-        <div className="editar-perfil__barra editor-perfil__barra" ref={medirAcaoFixa}>
-          <p className="editar-perfil__estado" data-estado={estado === 'salvando' ? 'salvando' : alterado ? 'pendente' : 'salvo'} role="status" aria-live="polite">
-            {!alterado && estado !== 'salvando' && <Icone nome="check" />}{estadoTexto}
-          </p>
+        <div ref={lugarBarra} className="editor-perfil__lugar-barra">
+        <div className="editar-perfil__barra editor-perfil__barra" ref={presa ? medirAcaoFixa : undefined} data-presa={presa || undefined}>
+          {alterado && !erroGeral && <p className="editar-perfil__estado" data-estado="pendente" role="status">
+            {estado === 'salvando' ? p.salvando : erros.nome || erros.resumo ? p.corrigirCampos : <>
+              <span className="estado-perfil-longo">{p.alteracoesNaoSalvas}</span><span className="estado-perfil-curto">{p.naoSalvoCurto}</span>
+            </>}
+          </p>}
           {erroGeral && <p className="campo-erro" id="editar-perfil-erro" role="alert">{erroGeral}<RegrasDaRecusa erro={erroGeral} /></p>}
           <div className="editor-perfil__botoes">
             {aoFechar && <Botao variante="secundario" disabled={estado === 'salvando'} onClick={cancelar}>{p.cancelar}</Botao>}
@@ -580,6 +625,7 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
               {estado === 'salvando' ? p.salvando : p.salvar}
             </Botao>
           </div>
+        </div>
         </div>
       </form>
 
