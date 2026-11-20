@@ -8,6 +8,23 @@ const raiz = resolve(import.meta.dirname, '..');
 const entrada = readFileSync(join(raiz, 'src/app/login/entrada.tsx'), 'utf8');
 const css = readFileSync(join(raiz, 'src/app/globals.css'), 'utf8');
 
+test('entrada e cadastro usam o mesmo Google colorido, decorativo e com densidade adequada', () => {
+  const cadastro = readFileSync(join(raiz, 'src/app/cadastro/cadastro.tsx'), 'utf8');
+  const google = readFileSync(join(raiz, 'src/app/botao-google.tsx'), 'utf8');
+  assert.match(entrada, /googleDisponivel && \(\s*<BotaoGoogle ocupado=\{enviando\}/);
+  assert.match(cadastro, /etapa === 'email' && googleDisponivel && <>\s*<BotaoGoogle ocupado=\{ocupado\}/);
+  assert.match(google, /alt="" aria-hidden="true"/);
+  assert.match(google, /width=\{20\} height=\{20\}/);
+  assert.match(google, /\{mensagens\.acesso\.google\}/);
+  assert.match(google, /window\.location\.assign\('\/api\/auth\/google\/iniciar'\)/);
+  assert.match(css, /\.botao\.botao-google[^}]*gap: 12px/);
+  for (const [nome, tamanho] of [['google-g.png', 20], ['google-g@2x.png', 40], ['google-g@3x.png', 60]]) {
+    assert.ok(google.includes('packages/contratos/assets/' + nome));
+    const imagem = readFileSync(join(raiz, 'packages/contratos/assets', nome));
+    assert.deepEqual([imagem.readUInt32BE(16), imagem.readUInt32BE(20)], [tamanho, tamanho]);
+  }
+});
+
 test('"Entrar" fica dentro do formulário, logo depois da senha, e "Esqueci minha senha" embaixo dele; sem rodapé preso', () => {
   const senha = entrada.indexOf('id="senha"');
   const entrar = entrada.indexOf('<div className="entrada-entrar">');
