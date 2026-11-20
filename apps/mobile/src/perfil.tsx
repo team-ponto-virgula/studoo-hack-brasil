@@ -260,7 +260,11 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                             <Botao rotulo={cm.ajustar} iconeAntes="olho" variante="secundario" nomeAcessivel={cm.ajustarRotulo(link.titulo)}
                               testID={`perfil-visibilidade-${link.codigo}`} acao={() => setFolha(link.planoId)} />
                           )}
-                          <Botao rotulo={m.copiar} iconeAntes="copiar" variante="secundario" nomeAcessivel={`${m.copiar}: ${link.titulo}`} acao={() => void copiarLink(link)} />
+                          {/* Spec 14 (Designer, b874e95): em revisão ou não publicada, o link mostraria "Esta trilha não está disponível agora."
+                              a qualquer outra pessoa; sem "Copiar link" até a aprovação ("Quem pode ver" e "Parar de compartilhar" ficam). */}
+                          {link.moderacao !== 'pendente' && link.moderacao !== 'recusado' && (
+                            <Botao rotulo={m.copiar} iconeAntes="copiar" variante="secundario" nomeAcessivel={`${m.copiar}: ${link.titulo}`} acao={() => void copiarLink(link)} />
+                          )}
                           <BotaoParar rotulo={m.parar} nomeAcessivel={`${m.parar}: ${link.titulo}`} desativado={ocupado} acao={() => setParando(link)} />
                         </View>
                       </View>
