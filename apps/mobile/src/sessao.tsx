@@ -4,6 +4,7 @@ import { AccessibilityInfo, Animated, Keyboard, LayoutAnimation, Platform, Press
 import { useTremor } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { entrarComGoogle, googleNoAparelho } from './google-nativo';
+import { LOGO_GOOGLE } from './marca-google';
 import { appleDisponivelNoAparelho, entrarComApple } from './apple-nativo';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { entrarComoVisitante } from './visitante-nativo';
@@ -128,6 +129,20 @@ export function AppMobile() {
     avisoDoApp.avisar(mensagens.privacidade.excluida, { icone: 'check' });
   }
 
+  /** Google e Apple entram do mesmo jeito na entrada e no primeiro passo do cadastro (spec 06). */
+  async function continuarComGoogle() {
+    const token = await entrarComGoogle();
+    if (!token) return;
+    void tocaSons.tocarEfeito('entrar');
+    setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
+  }
+  async function continuarComApple() {
+    const token = await entrarComApple();
+    if (!token) return;
+    void tocaSons.tocarEfeito('entrar');
+    setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
+  }
+
   async function expirar() {
     setSessao({ tipo: 'verificando' });
     setSessao(await encerrarNoAparelho(mensagens.erros.nao_autenticado));
@@ -145,18 +160,8 @@ export function AppMobile() {
       );
     case 'entrada':
       return <Entrada erroInicial={sessao.erro} entrar={entrar}
-        google={async () => {
-          const token = await entrarComGoogle();
-          if (!token) return;
-          void tocaSons.tocarEfeito('entrar');
-          setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
-        }}
-        apple={async () => {
-          const token = await entrarComApple();
-          if (!token) return;
-          void tocaSons.tocarEfeito('entrar');
-          setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
-        }}
+        google={continuarComGoogle}
+        apple={continuarComApple}
         criarConta={(email) => setSessao({ tipo: 'cadastro', email })}
         visitante={async () => {
           const token = await entrarComoVisitante();
@@ -167,7 +172,8 @@ export function AppMobile() {
     case 'recuperar':
       return <RecuperarAcesso emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} />;
     case 'cadastro':
-      return <CriarConta emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} criar={cadastrar} />;
+      return <CriarConta emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} criar={cadastrar}
+        google={continuarComGoogle} apple={continuarComApple} />;
     case 'falha':
       return (
         // Como na web (3A): o erro fica num cartão com o Stu e a ação dentro dele, em vez de uma tela só com o rodapé.
@@ -449,7 +455,7 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
           </View>
         )}
         {configuracaoCarregada && googleDisponivel && (
-          <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" desativado={ocupado} acao={() => void abrirGoogle()} />
+          <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" imagemAntes={LOGO_GOOGLE} desativado={ocupado} acao={() => void abrirGoogle()} />
         )}
         {configuracaoCarregada && (visitanteDisponivel || googleDisponivel || appleDisponivel) && (
           <View style={entradaEstilos.divisor}><View style={entradaEstilos.linha} /><Text style={estilos.legenda}>{mensagens.acesso.ou}</Text><View style={entradaEstilos.linha} /></View>
