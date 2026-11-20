@@ -75,6 +75,9 @@ test('sair durante "Criando sua trilha…": sem cancelar no servidor, a resposta
   assert.match(depois, /atualizarPlano\(plano\);\n\s*if \(aceiteAtual\.current !== vez \|\| etapaAtual\.current\.tipo !== 'geracao'\) return;\n\s*setObjetivo\(''\);/,
     'a trilha entra na lista, mas só a criação ativa pode limpar o pedido');
   assert.doesNotMatch(trecho(estudo, 'function sairDaCriacao()', '\n  }\n'), /cliente\./, 'nenhuma chamada ao servidor ao sair');
+  const editar = trecho(estudo, 'function atualizarObjetivo(', 'function atualizarPlano(');
+  assert.match(editar, /etapaAtual\.current\.tipo === 'planos'\) setEtapa\(\{ tipo: 'objetivo' \}\);/,
+    'na conta sem trilhas, uma trilha nova não troca o formulário pela lista enquanto a pessoa digita');
 });
 
 test('a passagem: som único, pulso do nó 1, círculo do nó 1 por cima e a aula que entra; reduzida só com opacidade', () => {

@@ -366,6 +366,8 @@ export function Estudo({ cliente, sair, expirar }: {
 
   function atualizarObjetivo(texto: string) {
     if (emCurso.current) return;
+    // Sem trilhas, a lista mostra o pedido. Ao editar, torna a tela explícita para ela continuar aberta se uma trilha chegar.
+    if (etapaAtual.current.tipo === 'planos') setEtapa({ tipo: 'objetivo' });
     setErro(null);
     setObjetivo(texto);
   }
