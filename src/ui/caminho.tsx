@@ -516,14 +516,14 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 <>
                   <span className="caminho-balao__seta" aria-hidden="true" />
                   <div className="caminho-balao" id={idBalao} ref={balao} role="dialog" tabIndex={-1} data-estado={no.estado}
-                    aria-labelledby={`${idBalao}-titulo`} aria-describedby={`${idBalao}-texto`}>
+                    aria-labelledby={`${idBalao}-titulo`} aria-describedby={atual ? undefined : `${idBalao}-texto`}>
                     <div className="caminho-balao__topo">
                       <p className="caminho-balao__titulo" id={`${idBalao}-titulo`}>{no.titulo}</p>
                       <button type="button" className="caminho-balao__fechar" aria-label={mensagens.trilha.fechar} onClick={fechar}>
                         <Icone nome="fechar" />
                       </button>
                     </div>
-                    <p className="caminho-balao__texto" id={`${idBalao}-texto`}>{explicar(nos, indice)}</p>
+                    {!atual && <p className="caminho-balao__texto" id={`${idBalao}-texto`}>{explicar(nos, indice)}</p>}
                     {(atual || no.estado === 'concluida') && aoAbrir && (
                       <Botao variante={atual ? "primario" : "secundario"} onClick={() => {
                         setAberto(null);

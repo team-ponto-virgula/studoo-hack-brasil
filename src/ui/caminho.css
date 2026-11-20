@@ -999,4 +999,4 @@ button.caminho-chegada__lente:focus-visible { outline: 3px solid var(--acao); ou
 .caminho-chegada__trofeu { width: 72%; height: auto; pointer-events: none; }
 .caminho-chegada:not([data-feita]) .caminho-chegada__trofeu { filter: grayscale(1); opacity: 0.4; }
 
-.caminho-no[data-aberto] .caminho-no__etiqueta { visibility: hidden; }
+.caminho-no[data-aberto] .caminho-no__etiqueta { display: none; }
