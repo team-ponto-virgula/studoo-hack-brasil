@@ -55,7 +55,7 @@ test('Perfil: o botão ao lado do título ou embaixo do estado vazio; visitante 
   assert.match(fonte, /perfil\.links\.length === 0 && comunidade \? \(\s*<View testID="postar-vazio"[^>]*>\s*<Text style=\{estilos\.texto\}>\{p\.postar\.vazio\}<\/Text>\s*<Botao rotulo=\{p\.postar\.botao\}/);
   assert.match(fonte, /\{!perfil\.visitante && \(\s*<View style=\{perfilEstilos\.secao\}>\s*\{\/\*[^*]*\*\/\}\s*<View style=\{perfilEstilos\.secaoCabeca\}>/, 'a seção (e o botão) só para quem não é visitante');
   assert.match(fonte, /\{postando && perfil && !perfil\.visitante && \(\s*<FolhaPostarNoPerfil/);
-  assert.match(fonte, /editarPerfil=\{\(\) => \{ setPostando\(false\); abrirEditor\(\); \}\}/);
+  assert.match(fonte, /editarPerfil=\{\(\) => \{ setPostando\(false\); abrirEditor\(false, true\); \}\}/);
 });
 
 test('atalho do "•••": logo depois de Compartilhar; primeira vez ou sem nome abre a folha; mesmas ações', async () => {
@@ -86,4 +86,14 @@ test('achados da prévia a 390: aviso por cima da folha, chave só com o trilho,
   assert.match(estudo, /\}, \[cliente, tentativa\]\);/);
   assert.doesNotMatch(estudo, /\[cliente, expirar, tentativa\]/);
   assert.match(estudo, /await expirarAtual\.current\(\);/);
+});
+
+test('P6: "Editar perfil" da folha leva ao campo do nome, com o foco, no Perfil e pelo "•••"', async () => {
+  const perfil = await ler('apps/mobile/src/perfil.tsx');
+  assert.match(perfil, /if \(focarNome\) campoNome\.current\?\.focus\(\);\s*else if \(focarResumo\) campoResumo\.current\?\.focus\(\);/);
+  assert.match(perfil, /aoSalvo=\{aoSalvo\} focarResumo=\{focarResumo\} focarNome=\{focarNome\}/);
+  assert.match(perfil, /const \[focarNome, setFocarNome\] = useState\(focarNomeAoAbrir\);/);
+  const estudo = await ler('apps/mobile/src/estudo.tsx');
+  assert.match(estudo, /editarPerfil=\{\(\) => \{ setFolhaPostar\(false\); abrir\(\{ tipo: 'perfil', focarNome: true \}\); \}\}/);
+  assert.match(estudo, /focarNome=\{etapa\.focarNome\} \/>;/);
 });

@@ -63,9 +63,11 @@ function TituloSecao({ children }: { children: ReactNode }) {
  * (com o total no título), os cartões "Como os outros veem" (com a comunidade), o perfil público, a conta e "Sair".
  */
 export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMudarPerfil, aoMudarLink, abrirPlano, sair, desativado, aoAdicionado,
-  abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas, aoSessaoTerminada, novaTrilha }: {
+  abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas, aoSessaoTerminada, novaTrilha, focarNome: focarNomeAoAbrir = false }: {
   /** "Nova trilha" da folha "Postar no perfil" sem trilhas (spec 10). */
   novaTrilha?: () => void;
+  /** Aberto pelo "Editar perfil" da folha "Postar no perfil" (pelo "•••"): o foco vai para o campo do nome (P6). */
+  focarNome?: boolean;
   cliente: ClienteNativo;
   perfil: Perfil | null;
   comunidade: boolean;
@@ -103,10 +105,13 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   const [postando, setPostando] = useState(false);
   // Pelo convite "Conte em uma frase…", os campos abrem com o foco no resumo.
   const [focarResumo, setFocarResumo] = useState(false);
+  // Pelo "Editar perfil" da folha "Postar no perfil", os campos abrem com o foco (e a tela) no nome (spec 10, P6).
+  const [focarNome, setFocarNome] = useState(focarNomeAoAbrir);
   const botaoEditar = useRef<ComponentRef<typeof View>>(null);
   const { avisar } = useContext(AvisoDoApp);
-  function abrirEditor(resumo = false) {
+  function abrirEditor(resumo = false, nome = false) {
     setFocarResumo(resumo);
+    setFocarNome(nome);
     setEditando(true);
   }
   /** Salvo: os campos fecham, o aviso do app diz "Perfil salvo." e o foco vai para "Editar". */
@@ -216,7 +221,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
             ) : comEditor ? (
               // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
               <EditorPerfil key={editando ? 'editar' : 'dados'} cliente={cliente} perfil={perfil} aoMudarPerfil={mudarPerfil} registrarGuarda={registrarGuarda}
-                aoSalvo={aoSalvo} focarResumo={focarResumo}
+                aoSalvo={aoSalvo} focarResumo={focarResumo} focarNome={focarNome}
                 definirRodape={setRodapeDoEditor}
                 aoCancelar={perfil.nome ? () => setEditando(false) : undefined} />
             ) : (
@@ -369,7 +374,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
       </View>
       {postando && perfil && !perfil.visitante && (
         <FolhaPostarNoPerfil cliente={cliente} perfil={perfil} aoFechar={() => setPostando(false)} aoMudarLink={aplicarLink}
-          editarPerfil={() => { setPostando(false); abrirEditor(); }} novaTrilha={() => { setPostando(false); (novaTrilha ?? irParaTrilhas)(); }} />
+          editarPerfil={() => { setPostando(false); abrirEditor(false, true); }} novaTrilha={() => { setPostando(false); (novaTrilha ?? irParaTrilhas)(); }} />
       )}
       {folha && (
         <FolhaCompartilhar cliente={cliente} planoId={folha} visitante={false} comunidade={comunidade} aoFechar={() => setFolha(null)}
@@ -397,7 +402,7 @@ type ErrosCampos = { nome?: string; resumo?: string };
  * numa linha só. Tocar na foto abre a folha do Studoo (galeria, câmera, remover e cancelar). "Cancelar" com alteração, e
  * qualquer saída, perguntam "Sair sem salvar?". Salvar fecha os campos (quem usa mostra o aviso "Perfil salvo.").
  */
-function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definirRodape, aoSalvo, aoCancelar, focarResumo = false }: {
+function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definirRodape, aoSalvo, aoCancelar, focarResumo = false, focarNome = false }: {
   cliente: ClienteNativo;
   perfil: Perfil;
   aoMudarPerfil: (perfil: Perfil) => void;
@@ -410,6 +415,8 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
   aoCancelar?: () => void;
   /** Aberto pelo convite "Conte em uma frase…": o foco vai para o resumo. */
   focarResumo?: boolean;
+  /** Aberto pelo "Editar perfil" da folha "Postar no perfil": o foco vai para o nome, depois que a folha saiu. */
+  focarNome?: boolean;
 }) {
   const { width } = useWindowDimensions();
   const [salvo, setSalvo] = useState(perfil);
@@ -444,9 +451,10 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
   // Aberto pelo "Editar", o leitor de tela vai para o alto do bloco; pelo convite do resumo, o foco vai para o resumo.
   useEffect(() => {
     const espera = setTimeout(() => {
-      if (focarResumo) campoResumo.current?.focus();
+      if (focarNome) campoNome.current?.focus();
+      else if (focarResumo) campoResumo.current?.focus();
       else if (aoCancelar) focarSemRolar(privacidade.current);
-    }, 160);
+    }, focarNome ? 400 : 160);
     return () => clearTimeout(espera);
     // Só ao abrir.
     // eslint-disable-next-line react-hooks/exhaustive-deps

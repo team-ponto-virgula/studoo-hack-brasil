@@ -48,7 +48,7 @@ type Etapa =
   | { tipo: 'licao'; plano: PlanoDetalhe; licao: LicaoDetalhe }
   | { tipo: 'concluida'; plano: PlanoDetalhe; antes: Progresso; licao: LicaoDetalhe; liberadas: string[]; resumo?: ResumoLicao }
   // Perfis e compartilhar (spec 09 e 10): a tela Perfil e a tela Editar perfil, só com `compartilhar` no config.
-  | { tipo: 'perfil' }
+  | { tipo: 'perfil'; focarNome?: boolean }
   // Configurações da trilha (spec 10, lote 4), só da dona: `volta` é de onde a pessoa veio (Minhas trilhas ou o mapa).
   | { tipo: 'configuracoes'; planoId: string; volta: 'planos' | 'plano' }
   // Comunidade (spec 10, B e C2), só com `comunidade` no config: o Explorar e, dentro do app, o perfil de outra pessoa (a
@@ -712,7 +712,7 @@ export function Estudo({ cliente, sair, expirar }: {
     )}
     {folhaPostar && perfil && (
       <FolhaPostarNoPerfil cliente={cliente} perfil={perfil} aoFechar={() => setFolhaPostar(false)} aoMudarLink={aplicarLinkNoPerfil}
-        editarPerfil={() => { setFolhaPostar(false); abrir({ tipo: 'perfil' }); }} novaTrilha={() => { setFolhaPostar(false); abrir({ tipo: 'objetivo' }); }} />
+        editarPerfil={() => { setFolhaPostar(false); abrir({ tipo: 'perfil', focarNome: true }); }} novaTrilha={() => { setFolhaPostar(false); abrir({ tipo: 'objetivo' }); }} />
     )}
     {acoesDePostar.confirmacao}
     {/* A passagem da criação: o círculo da cor da aula cresce do nó 1 por cima de tudo e some quando a aula já entrou. */}
@@ -797,7 +797,7 @@ export function Estudo({ cliente, sair, expirar }: {
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
         sair={pedirParaSair} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico}
-        aoSessaoTerminada={() => void expirarGuardando()} novaTrilha={() => abrir({ tipo: 'objetivo' })} />;
+        aoSessaoTerminada={() => void expirarGuardando()} novaTrilha={() => abrir({ tipo: 'objetivo' })} focarNome={etapa.focarNome} />;
     }
 
     if (etapa.tipo === 'explorar' && comunidade) {
