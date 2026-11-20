@@ -536,3 +536,85 @@ Revisa as configurações (`094d841`) e a capa com foto (`0a77fe0`), as duas já
 - No recorte da foto, a área dos selos aparece por cima, tracejada (dois retângulos de 28 px de altura, brancos a 55%), para a pessoa não deixar o principal da foto embaixo deles. Texto do recorte: “Arraste para posicionar e afaste os dedos para aproximar. A área marcada fica embaixo dos selos.” Na web, a roda do mouse e o controle aproximam, e as setas movem 8 px (com Shift, 32 px).
 
 **Quem decide.** Tudo nesta seção é decisão de design. Nada precisa do dono.
+
+## Postar no perfil (pedido do dono, 20/11)
+
+**Estado:** regra de design de 20/11, fora da candidata do TestFlight, em ramo separado. Ainda não implementada.
+
+**Pedido do dono:** "Quero que bole alguma forma de mostrar as trilhas da pessoa no perfil dela mas só se a pessoa quiser postar no perfil dela".
+
+**O que já vale e não muda:**
+- Privado por padrão: mostrar no perfil é escolha por trilha, desligada por padrão (spec 09, decisão 2).
+- Os três níveis de "Quem pode ver" (seção da folha de compartilhar).
+- A revisão da spec 14.
+
+**O que falta:** postar no perfil não é uma ação visível. Hoje só se chega lá pela trilha, no "•••", em "Compartilhar" e depois "Quem pode ver". No Perfil, não dá para escolher uma trilha que ainda não tem link.
+
+### 1. A ação no Perfil
+- Na seção "Trilhas que você compartilha (N)", ao lado do título, um botão secundário de 44 px: "Postar trilha no perfil".
+- A seção vazia troca o texto por "Escolha quais trilhas aparecem no seu perfil." e põe o mesmo botão embaixo. Não é um cartão-convite: é o estado vazio da própria seção, depois dos dados do perfil.
+- Visitante não vê o botão, porque não tem perfil público (a aba já diz isso).
+
+### 2. A folha "Postar no perfil"
+É a folha da spec 11, igual na web, no Android e no iPhone. De cima para baixo:
+- **Título** "Postar no perfil" e o texto "Só aparecem no seu perfil as trilhas que você ligar aqui." (14/20, `#5E6A85`).
+- **Linha das regras** da spec 14, uma vez, embaixo do texto: "Ao publicar, você concorda com as Regras da comunidade.", com o link.
+- **Sem nome no perfil:** no lugar da lista, "Para postar no perfil, escolha como você aparece." e o botão "Editar perfil", que fecha a folha e põe o foco no campo do nome. Um perfil público sem nome não existe (spec 09).
+- **A lista:** as trilhas da pessoa, na ordem de Minhas trilhas, sem as recebidas de outras pessoas. Cada linha tem 64 px de altura mínima:
+  - a capa da trilha (`svgCapa`) em 56 × 40, com raio de 8;
+  - o título, em uma linha com reticências;
+  - a linha de estado (13/18);
+  - a chave do Studoo (spec 12) à direita.
+- **A linha de estado:**
+  - vazia, com a chave desligada;
+  - "Em revisão", com a chave ligada (selo neutro da spec 14);
+  - "No seu perfil", com a chave ligada e já aprovada;
+  - "No perfil e no Explorar", com a chave ligada, quando a trilha está no Explorar;
+  - "Não publicada", com a chave ligada (selo âmbar da spec 14) e o link "Falar com o suporte".
+- **Lista vazia:** "Você ainda não tem trilhas." e o botão "Nova trilha".
+
+### 3. O que a chave faz
+- **Ligar** é o mesmo que escolher "No meu perfil". Se a trilha ainda não tem link, ele é criado (`POST /api/aprendizado/planos/:id/compartilhar`); depois, `PATCH /api/compartilhar/:codigo { visibilidade: 'perfil' }`. A chave muda na hora, e a linha mostra "Salvando…" até a resposta. Com a resposta:
+  - pendente: a linha mostra "Em revisão", e o aviso diz "Enviada para revisão. Aparece para outras pessoas depois da aprovação.";
+  - aprovada: a linha mostra "No seu perfil", e o aviso diz "Trilha no seu perfil."
+- **Desligar** uma trilha que está só no perfil chama `PATCH { visibilidade: 'link' }` na hora: ela sai do perfil, e o link continua valendo para quem já o tem. Aviso: "Trilha tirada do seu perfil.", com "Desfazer".
+- **Desligar** uma trilha que está no Explorar pede a confirmação da spec 11. Ela não é destrutiva, então a ação é a primária azul:
+  - título "Tirar do perfil e do Explorar?";
+  - texto "A trilha sai do seu perfil e do Explorar. Quem tem o link continua abrindo.";
+  - ações "Tirar" e "Cancelar".
+- **Falha:** a chave volta ao estado anterior, e a linha diz "Não deu para salvar. Tente de novo." (`#C23B4E`). O limite de publicações usa o texto de limite que já existe.
+- **Copiar o link:** enquanto a trilha está pendente ou recusada, a folha não oferece copiar o link (spec 14).
+
+### 4. Atalho no "•••" da trilha
+- No menu do cartão de Minhas trilhas e do alto do mapa, logo depois de "Compartilhar":
+  - "Postar no meu perfil", quando a trilha não está no perfil;
+  - "Tirar do meu perfil", quando está.
+- O menu fica com quatro itens: Compartilhar, este, Configurações e Apagar.
+- O atalho faz o mesmo que a chave, com os mesmos avisos e a mesma confirmação.
+- Na primeira publicação no perfil, ou sem nome, o atalho abre a folha "Postar no perfil", para a linha das regras e o nome aparecerem antes.
+
+### 5. Decisão: "No Explorar" continua incluindo o perfil
+Recomendação do Lead, aceita. O cartão do Explorar leva ao perfil da autora, então uma trilha no Explorar e fora do perfil quebraria esse caminho. O texto do nível continua "Qualquer pessoa encontra no Explorar. Também aparece no seu perfil." Por isso, desligar o perfil de uma trilha no Explorar pede a confirmação da seção 3.
+
+### 6. Textos novos (contrato: `perfil.postar`)
+`botao` "Postar trilha no perfil"; `vazio` "Escolha quais trilhas aparecem no seu perfil."; `titulo` "Postar no perfil"; `texto` "Só aparecem no seu perfil as trilhas que você ligar aqui."; `semNome` "Para postar no perfil, escolha como você aparece."; `editarPerfil` "Editar perfil"; `semTrilhas` "Você ainda não tem trilhas."; `estadoPerfil` "No seu perfil"; `estadoPerfilExplorar` "No perfil e no Explorar"; `salvando` "Salvando…"; `erro` "Não deu para salvar. Tente de novo."; `aviso` "Trilha no seu perfil."; `avisoTirada` "Trilha tirada do seu perfil."; `confirmarTitulo` "Tirar do perfil e do Explorar?"; `confirmarTexto` "A trilha sai do seu perfil e do Explorar. Quem tem o link continua abrindo."; `confirmarAcao` "Tirar"; `menuPostar` "Postar no meu perfil"; `menuTirar` "Tirar do meu perfil".
+Os textos que vêm de antes: "Nova trilha", "Desfazer", "Cancelar", a linha das regras, os selos "Em revisão" e "Não publicada" e "Enviada para revisão…" (spec 14).
+
+### 7. Quem faz
+- **Web & API:** a seção e a folha na web; o atalho no menu do cartão e do mapa (src/app/estudo.tsx e src/ui/caminho.tsx); os textos no contrato. Sem rota nova nem migração, porque a lista junta os planos (`GET /api/aprendizado/planos`) com os links do perfil (`perfil.links`, por `planoId`).
+- **App (Mobile 2):** a mesma seção, folha e atalho em apps/mobile/src/perfil.tsx, estudo.tsx e caminho.tsx, com os componentes da spec 11 e a chave da spec 12.
+- **Spec 07:** nenhuma diferença de plataforma.
+
+### 8. Roteiro de aceite
+| # | Passos | Esperado |
+|---|---|---|
+| P1 | Conta com nome e três trilhas, nenhuma compartilhada; abre Perfil | Seção vazia com o texto e o botão; o perfil público não mostra trilhas |
+| P2 | "Postar trilha no perfil" | Folha com o texto, a linha das regras e as três trilhas, com as chaves desligadas |
+| P3 | Liga a trilha A, que não tinha link | Link criado; a linha mostra "Em revisão" ou "No seu perfil"; aviso conforme o estado; outra conta só a vê depois da aprovação |
+| P4 | Desliga A, que está só no perfil | Sai do perfil na hora; aviso com "Desfazer"; o link antigo ainda abre |
+| P5 | Desliga B, que está no Explorar | Confirmação "Tirar do perfil e do Explorar?"; "Tirar" tira dos dois; "Cancelar" não muda nada |
+| P6 | Conta sem nome abre a folha | "Para postar no perfil, escolha como você aparece." e "Editar perfil", que leva ao campo do nome |
+| P7 | "•••" de uma trilha fora do perfil, depois de já ter postado outra | "Postar no meu perfil" liga direto, com o aviso; no menu de uma trilha no perfil, aparece "Tirar do meu perfil" |
+| P8 | Visitante abre Perfil | Sem o botão e sem a folha |
+| P9 | Falha de rede ao ligar | A chave volta; "Não deu para salvar. Tente de novo." |
+| P10 | Mesmo roteiro em 390 na web, no Android e no iPhone | Mesmas telas, ordem, textos e estados |
