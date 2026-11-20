@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useAudioRecorderState, type AudioRecorder } from 'expo-audio';
 import type { ApoioEstudo, PaginaMaterial } from '@studoo/contratos';
@@ -354,6 +354,18 @@ const cena = StyleSheet.create({
   vao: { position: 'relative', flex: 1, alignSelf: 'center', flexDirection: 'row', gap: 4, paddingVertical: 6 },
   trilho: { position: 'absolute', left: -8, right: -8, height: 3, borderRadius: 2, backgroundColor: '#8D5C2C' },
   tabuaLugar: { flex: 1, minHeight: 32 },
+  // A faixa da ponte clara (spec 05, 62b964b): 88 de altura, o Stu em cima e a fileira de margens e tábuas embaixo.
+  seloPonte: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  seloPonteIcone: { width: 28, height: 28, borderRadius: 9, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E7ECFF' },
+  seloPonteTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.8 },
+  faixaPonte: { height: 88, justifyContent: 'flex-end', maxWidth: 560 },
+  faixaStu: { position: 'absolute', top: 0, left: 0, width: 36, height: 40, alignItems: 'center', justifyContent: 'flex-end' },
+  faixaLinha: { flexDirection: 'row', alignItems: 'stretch', gap: 6, height: 44 },
+  faixaMargem: { width: 58, minWidth: 58, justifyContent: 'center' },
+  faixaLugar: { flex: 1, justifyContent: 'center' },
+  // O anel da tábua atual: a spec cita o azul antigo; aqui é a cor de ação do tema (a paleta da web, #2563FF).
+  faixaAtual: { borderWidth: 3, borderColor: cores.acao },
+  faixaPasso: { marginTop: 8, color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   tabuaFalta: { flex: 1, minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderStyle: 'dashed', borderColor: '#9D7349',
     borderRadius: 10, backgroundColor: 'rgba(255,250,242,0.88)', opacity: 0.85 },
   tabua: { minHeight: 32, alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderRadius: 10 },
@@ -438,3 +450,83 @@ const paginas = StyleSheet.create({
     fontSize: 14, lineHeight: 20 },
   numero: { width: 48, textAlign: 'center', color: cores.textoSecundario, fontWeight: '800' },
 });
+
+/**
+ * Ponte clara (spec 05, 62b964b): o indicador único dos três passos. Uma faixa de 88 com a margem "Onde travou", as
+ * tábuas 1 a 3 (feita cheia, atual com o anel de 3 na cor de ação, futura tracejada) e a margem "Exercício", com o stu-perfil de 36
+ * sobre a tábua atual (na margem "Onde travou" carregando; na margem "Exercício" vencida ou reaberta). Embaixo, "Passo n
+ * de 3 · <nome>" ou "Ponte construída!". Não é tocável. O Stu pula de uma posição à outra em 320 ms; com movimento
+ * reduzido, aparece no lugar novo.
+ */
+export function FaixaDaPonte({ passo, construida, carregando }: { passo: 1 | 2 | 3; construida: boolean; carregando: boolean }) {
+  const reduzir = useMovimentoReduzido();
+  const alvo = carregando ? 0 : construida ? 4 : passo;
+  const [largura, setLargura] = useState(0);
+  const [posicao] = useState(() => new Animated.Value(alvo));
+  const [salto] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (reduzir !== false) { posicao.setValue(alvo); salto.setValue(0); return; }
+    const animacao = Animated.parallel([
+      Animated.timing(posicao, { toValue: alvo, duration: 320, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+      Animated.sequence([
+        Animated.timing(salto, { toValue: 1, duration: 160, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(salto, { toValue: 0, duration: 160, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+      ]),
+    ]);
+    animacao.start();
+    return () => animacao.stop();
+  }, [alvo, reduzir, posicao, salto]);
+  // O centro de cada lugar: as margens têm 58 (com 6 de vão), as três tábuas dividem o meio.
+  const MARGEM = 58, VAO = 6;
+  const meio = Math.max(0, largura - 2 * (MARGEM + VAO));
+  const centros = [MARGEM / 2, ...[1, 2, 3].map((k) => MARGEM + VAO + (k - 0.5) * (meio / 3)), largura - MARGEM / 2].map((x) => x - 18);
+  const nomes = [m.pontePassoExplicacao, m.pontePassoExemplo, m.pontePassoDesafio];
+  return (
+    <View testID="faixa-ponte">
+      <View accessible={false} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={cena.faixaPonte}
+        onLayout={(evento) => setLargura(evento.nativeEvent.layout.width)}>
+        {largura > 0 && (
+          <Animated.View testID="faixa-ponte-stu" style={[cena.faixaStu, { transform: [
+            { translateX: posicao.interpolate({ inputRange: [0, 1, 2, 3, 4], outputRange: centros }) },
+            { translateY: salto.interpolate({ inputRange: [0, 1], outputRange: [0, -10] }) },
+          ] }]}>
+            <Stu nome="stu-perfil" tamanho={36} />
+          </Animated.View>
+        )}
+        <View style={cena.faixaLinha}>
+          <View style={[cena.margem, cena.faixaMargem]}><Text style={cena.margemTexto}>{m.ponteMargemErro}</Text></View>
+          {[1, 2, 3].map((numero) => {
+            const feita = !carregando && (construida || numero < passo);
+            const atual = !carregando && !construida && numero === passo;
+            return (
+              <View key={numero} testID={feita ? 'faixa-tabua-feita' : atual ? 'faixa-tabua-atual' : 'faixa-tabua-futura'} style={cena.faixaLugar}>
+                {feita || atual ? (
+                  <View style={[cena.tabua, { backgroundColor: madeira.face, borderColor: madeira.borda }, atual && cena.faixaAtual]}>
+                    <Text style={[cena.tabuaNumero, { color: cores.fundo }]}>{numero}</Text>
+                  </View>
+                ) : (
+                  <View style={cena.tabuaFalta}><Text style={cena.tabuaNumero}>{numero}</Text></View>
+                )}
+              </View>
+            );
+          })}
+          <View style={[cena.margem, cena.margemDireita, cena.faixaMargem]}><Text style={[cena.margemTexto, { color: '#184A10' }]}>{m.ponteMargemVolta}</Text></View>
+        </View>
+      </View>
+      <Text testID="faixa-ponte-passo" accessibilityLiveRegion="polite" style={cena.faixaPasso}>
+        {construida ? m.ponteConstruida : `${m.ponteIndicador(passo)} · ${nomes[passo - 1]}`}
+      </Text>
+    </View>
+  );
+}
+
+/** O selo "REFORÇO" da ponte clara, no formato do "CONCEITO" da aula: caixa de 28 com o ícone e o rótulo em caixa alta. */
+export function SeloDaPonte({ depois }: { depois?: ReactNode }) {
+  return (
+    <View style={cena.seloPonte}>
+      <View style={cena.seloPonteIcone}><Icone nome="lampada" tamanho={20} cor={cores.acao} /></View>
+      <Text style={cena.seloPonteTexto}>{m.ponteMapa.toLocaleUpperCase('pt-BR')}</Text>
+      {depois}
+    </View>
+  );
+}

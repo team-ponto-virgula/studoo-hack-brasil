@@ -154,7 +154,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     './estudio.css': {},
     './ponte-reforco': { PonteReforco: 'PonteReforco' },
     'react-native': {
-      AccessibilityInfo: { sendAccessibilityEvent() {} },
+      AccessibilityInfo: { sendAccessibilityEvent() {}, announceForAccessibility() {} },
       Animated: { View: 'View', Value: class { setValue(v) { this.valor = v; } } },
       AppState: appState,
       Platform: { OS: 'android' },
@@ -177,17 +177,18 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
         modos.push(x);
       },
     },
-    './interface': { Botao: 'Botao', Campo: 'Campo', EstadoMensagem: 'EstadoMensagem', LinhaAbrir: 'LinhaAbrir', SeloDemonstracao: 'SeloDemonstracao', estilos: {} },
+    // Movimento reduzido: a ponte clara troca o cartão do passo na hora (sem Animated.timing).
+    './interface': { Botao: 'Botao', Campo: 'Campo', EstadoMensagem: 'EstadoMensagem', LinhaAbrir: 'LinhaAbrir', SeloDemonstracao: 'SeloDemonstracao', estilos: {}, useMovimentoReduzido: () => true },
     // O anel de foco dos botões do app segue :focus-visible (src/foco.ts); aqui, foco sempre visível.
     './foco': { focoVisivel: () => true },
     // Cartão de opção de múltipla escolha, o mesmo da aula (o desafio da ponte usa ele): componente de apresentação.
     './opcao': { Opcao: 'Opcao', letras: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] },
     // Cenas do app (ponte, Stu aluno, ondas, caderno, página do material): componentes de apresentação, sem handlers.
     './estudio-cenas': {
-      CenaPonte: 'CenaPonte', StuAluno: 'StuAluno', EtapasDoEnsino: 'EtapasDoEnsino', OndasDoVolume: 'OndasDoVolume',
+      CenaPonte: 'CenaPonte', FaixaDaPonte: 'FaixaDaPonte', SeloDaPonte: 'SeloDaPonte', StuAluno: 'StuAluno', EtapasDoEnsino: 'EtapasDoEnsino', OndasDoVolume: 'OndasDoVolume',
       CadernoDoStu: 'CadernoDoStu', PaginaDoMaterial: 'PaginaDoMaterial',
     },
-    './animacoes': { useAparecer: () => 0 },
+    './animacoes': { useAparecer: () => 0, estiloDeEntrada: () => ({}) },
     './tema': { cores: {}, fontes: {} },
     // O controlador da voz ao vivo (web e app): registra a conversa aberta para o teste mandar estados, quedas e o fim.
     './voz-ao-vivo': {

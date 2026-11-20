@@ -247,6 +247,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const conferirLeitura = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [errosSeguidos, setErrosSeguidos] = useState(0);
   const [pedidoPonte, setPedidoPonte] = useState(0);
+  /** O rodapé que a ponte clara entrega (a ação do passo atual), ou null. */
+  const [rodapePonte, setRodapePonte] = useState<ReactNode | null>(null);
   const [consultaAberta, setConsultaAberta] = useState(false);
   const [explicacaoAberta, setExplicacaoAberta] = useState(false);
   /** O reforço deste exercício foi feito: o painel troca o "Quase lá!" pelo convite a tentar de novo. Como na web. */
@@ -672,8 +674,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       </>
     );
   }
-  // A ponte tem as próprias ações ("Voltar ao exercício"); o painel de retorno não cobre a cena nem a pergunta do reforço.
-  if (ponteAberta) rodape = undefined;
+  // Com a ponte aberta, o rodapé é o dela: a ação do passo ("Ver exemplo", "Ir para o desafio", "Verificar"…), spec 05.
+  if (ponteAberta) rodape = rodapePonte ?? undefined;
 
   function campoDoExercicio(atual: ExercicioPublico): ReactNode {
     const respondido = avaliacao !== null;
@@ -944,14 +946,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         ultimaResposta={respostaLegivel(exercicio, resposta)}
         // Na vitória, o alto do cartão (título, cena, "Isso!" e "Voltar ao exercício") vem para a vista antes da travessia.
         aoMostrarCena={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 8), animated: reduzir === false })}
-        // A cada passo da ponte, a próxima ação fica à vista sem rolar: o começo do passo perto do alto, se couber; senão, a
-        // ação no pé da tela (Rodada 4.2: "Ver exemplo", "Ir para o desafio" e "Conferir" ficavam abaixo da dobra).
-        aoMostrarProximaAcao={(topo, base) => {
-          const alvo = Math.max(apoioPosicao.current + topo - 96, apoioPosicao.current + base + 24 - alturaVisivel.current);
-          if (alvo > posicaoRolagem.current + 1 || apoioPosicao.current + base + 24 > posicaoRolagem.current + alturaVisivel.current) {
-            rolagem.current?.scrollTo({ y: Math.max(0, alvo), animated: reduzir === false });
-          }
-        }}
+        // Ponte clara (spec 05, 62b964b): a ação de cada passo vem para o rodapé preso da aula.
+        definirRodapePonte={setRodapePonte}
         aoPedirEnsino={(y) => setTimeout(() => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false }), 60)}
         aoMostrarRetornoPonte={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 220), animated: reduzir === false })}
         aoMostrarEnsino={(y) => rolagem.current?.scrollTo({ y: Math.max(0, apoioPosicao.current + y - 16), animated: reduzir === false })}
