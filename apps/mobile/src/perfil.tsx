@@ -15,6 +15,7 @@ import {
   codigoDoErro, compartilharNoSistema, copiar, dataCurta, focarSemRolar, socialEstilos, temFolhaDoSistema, textoDoErro, urlDoLink, urlDoPerfil,
 } from './social';
 import { SecaoPrivacidade } from './privacidade';
+import { AvisoMidiaEmRevisao, EstadoDaPublicacao, SecaoAjuda, SecaoBloqueadas } from './seguranca';
 import { SomNoPerfil } from './som';
 import { cores, fontes } from './tema';
 
@@ -197,7 +198,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                 aoCancelar={perfil.nome ? () => setEditando(false) : undefined} />
             ) : (
               <>
-                <CabecalhoPerfil nome={perfil.nome ?? ''} cor={perfil.cor ?? 'azul'} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
+                <CabecalhoPerfil daDona nome={perfil.nome ?? ''} cor={perfil.cor ?? 'azul'} foto={perfil.foto} resumo={perfil.resumo} interesses={perfil.interesses}
                   alcance={perfil.alcance}
                   semResumo={(
                     <Pressable testID="perfil-convite" accessibilityRole="button" onPress={() => abrirEditor(true)} disabled={desativado} style={socialEstilos.cabecaConvite}>
@@ -220,6 +221,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                     </View>
                     {statusPerfil !== '' && <Text accessibilityLiveRegion="polite" style={socialEstilos.status}>{statusPerfil}</Text>}
                   </>} />
+                <AvisoMidiaEmRevisao tipo="foto" moderacao={perfil.fotoModeracao} />
                 {/* Novidades logo abaixo do cartão: é a recompensa do social (como a web na rodada de banca). */}
                 {comunidade && <NovidadesDoPerfil cliente={cliente} abrirPlano={abrirPlano} />}
               </>
@@ -244,6 +246,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                             ? (comunidade ? p.semNinguem : p.adicoes(0))
                             : [link.adicoes > 0 && p.adicoes(link.adicoes), comunidade && link.valeus ? cm.valeus(link.valeus) : null].filter(Boolean).join(' · ')}
                         </Text>
+                        <EstadoDaPublicacao moderacao={link.moderacao} testID={`perfil-link-${link.codigo}-moderacao`} />
                         {comunidade && link.visibilidade ? <SeloVisibilidade nivel={link.visibilidade} tema={link.tema} /> : (
                           <Chave rotulo={m.noPerfil} nomeAcessivel={`${m.noPerfil}: ${link.titulo}`} ligada={link.noPerfil} desativada={ocupado}
                             aoMudar={(valor) => void alterar(link, valor)} />
@@ -290,6 +293,19 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
             <View style={perfilEstilos.secao}>
               <TituloSecao>{mensagens.privacidade.secaoTitulo}</TituloSecao>
               <SecaoPrivacidade desativado={desativado} visitante={perfil.visitante} />
+            </View>
+
+            {/* Spec 14: "Pessoas bloqueadas" (com a comunidade; vale também para visitante) e "Ajuda", antes de Conta. */}
+            {comunidade && (
+              <View style={perfilEstilos.secao}>
+                <TituloSecao>{mensagens.seguranca.bloqueadasTitulo}</TituloSecao>
+                <SecaoBloqueadas cliente={cliente} desativado={desativado} />
+              </View>
+            )}
+
+            <View style={perfilEstilos.secao}>
+              <TituloSecao>{mensagens.seguranca.ajudaTitulo}</TituloSecao>
+              <SecaoAjuda desativado={desativado} />
             </View>
 
             <View style={perfilEstilos.secao}>
@@ -470,10 +486,13 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
 
   /** "Usar esta foto": a foto vai na hora, à parte do botão "Salvar"; o erro do envio aparece na folha do recorte. */
   async function enviarFotoRecortada(base64: string) {
-    atualizarPerfil(await cliente.enviarFoto(base64));
+    const novo = await cliente.enviarFoto(base64);
+    atualizarPerfil(novo);
     setParaRecortar(null);
-    setStatusFoto(p.fotoSalva);
-    anunciar(p.fotoSalva);
+    // Spec 14: a foto nova fica em revisão; o aviso nunca diz que ela já aparece para os outros.
+    const frase = novo.fotoModeracao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : p.fotoSalva;
+    setStatusFoto(frase);
+    anunciar(frase);
   }
 
   /** As opções da foto, na folha do Studoo: galeria, câmera (só em tela de toque) e remover (só com foto). */
@@ -550,7 +569,7 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
         {/* A foto (ou a inicial na cor; sem nome e sem foto, o desenho de pessoa) com o selo de câmera: tocar abre a folha. */}
         <Pressable testID="foto-circulo" accessibilityRole="button" accessibilityLabel={salvo.foto ? p.fotoTrocar : p.fotoAdicionar}
           disabled={salvando} onPress={tocarNaFoto} style={({ pressed }) => [perfilEstilos.circulo, pressed && { opacity: 0.85 }]}>
-          <Avatar nome={nomeNormal} cor={cor} foto={salvo.foto} tamanho="g" vazio={!nomeNormal} estilo={perfilEstilos.fotoAvatar} />
+          <Avatar daDona nome={nomeNormal} cor={cor} foto={salvo.foto} tamanho="g" vazio={!nomeNormal} estilo={perfilEstilos.fotoAvatar} />
           <View style={perfilEstilos.selo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <Icone nome="camera" tamanho={20} cor="#FFFFFF" />
           </View>
@@ -561,6 +580,7 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
             <Text style={perfilEstilos.fotoLinkTexto}>{salvo.foto ? p.fotoTrocar : p.fotoAdicionar}</Text>
           </Pressable>
           <Text style={perfilEstilos.dica}>{p.fotoDica}</Text>
+          <AvisoMidiaEmRevisao tipo="foto" moderacao={salvo.fotoModeracao} />
           {erroFoto && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erroFoto}</Text>}
           <Status texto={statusFoto} />
         </View>
@@ -644,6 +664,10 @@ export function PerfilSemSocial({ cliente, acoes, desativado, sair }: {
         <View style={perfilEstilos.secao}>
           <TituloSecao>{mensagens.privacidade.secaoTitulo}</TituloSecao>
           <SecaoPrivacidade desativado={desativado} visitante={visitante} />
+        </View>
+        <View style={perfilEstilos.secao}>
+          <TituloSecao>{mensagens.seguranca.ajudaTitulo}</TituloSecao>
+          <SecaoAjuda desativado={desativado} />
         </View>
         <View style={perfilEstilos.secao}>
           <TituloSecao>{p.conta}</TituloSecao>

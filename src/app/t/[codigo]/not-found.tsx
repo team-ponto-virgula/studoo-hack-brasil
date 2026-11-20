@@ -22,7 +22,7 @@ export default async function LinkInativo() {
     <PaginaPublica>
       <section className="pagina-publica__vazio pagina-publica__vazio--centro">
         <Stu expressao="stu-surpreso" tamanho={120} animado="uma-vez" />
-        <h1>{m.inativo}</h1>
+        <h1>{mensagens.seguranca.trilhaIndisponivel}</h1>
         <p className="folha-texto">{m.inativoTexto}</p>
         <Link className="botao botao--primario" href={logado ? '/' : '/login'}>{m.criarMinha}</Link>
         {comunidadeAtiva() && <Link className="botao botao--texto" href="/explorar">{m.verExplorar}</Link>}

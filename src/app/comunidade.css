@@ -256,3 +256,13 @@
    alta (237 px): o Valeu encolhe primeiro, com respiros menores. */
 .cartao-trilha__acoes { column-gap: 6px; }
 .cartao-trilha__valeu { flex: 1 1 0; min-width: 0; gap: 5px; padding-inline: 8px; white-space: nowrap; }
+
+.seguranca-publica { display: flex; justify-content: flex-end; align-items: center; min-height: 44px; }
+.seguranca-publica .cartao-trilha__menu { position: relative; inset: auto; }
+.seguranca-aviso { position: fixed; z-index: 120; bottom: max(6rem, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: min(32rem, 92vw); box-sizing: border-box; padding: .8rem 1rem; background: #fff; color: #162748; box-shadow: 0 4px 24px #17284c33; border: 1px solid #cad4e4; border-radius: 1rem; overflow-wrap: anywhere; }
+.seguranca-aviso button, .seguranca-aviso a, .seguranca-ajuda a, .seguranca-publica > a { display: inline-flex; align-items: center; min-height: 44px; margin-right: .8rem; font: inherit; font-weight: 750; color: #234cb7; background: none; border: 0; }
+.seguranca-ajuda { display: grid; }
+.seguranca-linha { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+.seguranca-estado strong { display: inline-block; padding: .25rem .65rem; border-radius: 1rem; color: #5e6a85; background: #f1f4fd; font-size: .8125rem; font-weight: 800; }
+.seguranca-estado[data-recusado] strong { color: #9a5b00; background: #fff6ea; }
+.cartao-trilha__opcoes [role=menuitem] { min-height: 44px; white-space: normal; }

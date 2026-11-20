@@ -8,7 +8,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { banco } from "@/servidor/banco/cliente";
 import { transcricaoDisponivel } from "@/servidor/estudio/voz";
 import { provedorIaAtivo } from "@/servidor/ia/gerador";
-import { vozAoVivoAtiva } from "@/servidor/ia/realtime";
+import { encerrarChamadasDoUsuario, vozAoVivoAtiva } from "@/servidor/ia/realtime";
 
 /**
  * Consentimento do envio a IA de terceiros (App Review 5.1.2(i)). Com a IA simulada nada sai do servidor e o aceite
@@ -61,6 +61,7 @@ export async function revogarConsentimentoIa(usuarioId: string): Promise<EstadoP
     where: { id: usuarioId },
     data: { consentimentoIaEm: null, consentimentoIaVersao: null },
   });
+  await encerrarChamadasDoUsuario(usuarioId);
   return montarEstado({ em: null, versao: null });
 }
 

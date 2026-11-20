@@ -133,7 +133,8 @@ export function Estudo() {
   const objetivoRef = useRef(objetivo);
   objetivoRef.current = objetivo;
   const abriuComRascunho = useRef(false);
-  /** Perfis e compartilhar (spec 09): só com `compartilhar` no /api/auth/config. */
+  const [visitante, setVisitante] = useState(false);
+  /** Os recursos sociais do Perfil dependem do compartilhamento. */
   const [compartilhar, setCompartilhar] = useState(false);
   /** Comunidade (spec 10, etapa B): Explorar, publicar, Valeu e Denunciar; só com `comunidade` no config. */
   const [comunidade, setComunidade] = useState(false);
@@ -183,7 +184,7 @@ export function Estudo() {
     invalidarElegibilidadeVozAoVivo();
     setSincronia((anterior) => ({ estado: 'atualizando', em: anterior.em }));
     try {
-      await cliente.sessao();
+      const sessao = await cliente.sessao();
       // Voltou do login para concluir um link de trilha (adicionar): segue para a página dele.
       const depois = caminhoDepoisDoLogin();
       if (depois) {
@@ -193,6 +194,7 @@ export function Estudo() {
       const [ativos, config] = await Promise.all([cliente.listarPlanos(), cliente.configuracaoAcesso().catch(() => null)]);
       if (cancelado()) return;
       setPlanos(ativos);
+      setVisitante(Boolean(sessao.visitante));
       const comCompartilhar = Boolean(config?.compartilhar);
       setCompartilhar(comCompartilhar);
       setComunidade(comCompartilhar && Boolean(config?.comunidade));
@@ -668,20 +670,17 @@ export function Estudo() {
           <Botao variante="texto" onClick={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
             {mensagens.pedido.comoFunciona}
           </Botao>
-          {compartilhar && (
-            <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
-              onClick={() => navegar({ tipo: 'perfil' })}>
-              {perfil?.nome ? <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} /> : <Icone nome="pessoa" />}
-              <span>{perfil?.nome ?? mensagens.perfil.navegacao}</span>
-            </button>
-          )}
+          <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
+            onClick={() => navegar({ tipo: 'perfil' })}>
+            {compartilhar && perfil?.nome ? <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} /> : <Icone nome="pessoa" />}
+            <span>{(compartilhar && perfil?.nome) || mensagens.perfil.navegacao}</span>
+          </button>
         </div>
       </aside>
 
       <div className="estudo-pagina">
-        {/* No computador, com o perfil ligado, a faixa do topo só tem o selo "Progresso salvo" (Minhas trilhas e dentro da
-            trilha); nas outras telas fica vazia e some. Sem o perfil, ela leva o "Sair". No celular fica sempre. */}
-        <header className="estudo-cabecalho" data-tela={tela.tipo} data-vazia-no-computador={(compartilhar && !(inicio === 'pronto' && ((tela.tipo === 'planos' && planos.length > 0) || tela.tipo === 'plano'))) || undefined}>
+        {/* No computador, a faixa só aparece quando mostra o progresso salvo. */}
+        <header className="estudo-cabecalho" data-tela={tela.tipo} data-vazia-no-computador={!(inicio === 'pronto' && ((tela.tipo === 'planos' && planos.length > 0) || tela.tipo === 'plano')) || undefined}>
           <span className="estudo-identificacao">
             <span className="estudo-identificacao__contexto">
               {tela.tipo === 'objetivo' ? mensagens.planos.novo : tela.tipo === 'explorar' ? mensagens.comunidade.titulo : tela.tipo === 'plano' ? tela.plano.titulo : mensagens.planos.titulo}
@@ -695,11 +694,7 @@ export function Estudo() {
             {inicio === 'pronto' && (
               <Botao variante="texto" className="planos-movel" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado}>{mensagens.planos.titulo}</Botao>
             )}
-            {compartilhar ? (
-              <Botao variante="texto" className="perfil-cabecalho" onClick={() => navegar({ tipo: 'perfil' })} disabled={ocupado}>{mensagens.perfil.navegacao}</Botao>
-            ) : (
-              <Botao variante="texto" onClick={() => void sair()} disabled={ocupado}>{mensagens.sair}</Botao>
-            )}
+            <Botao variante="texto" className="perfil-cabecalho" onClick={() => navegar({ tipo: 'perfil' })} disabled={ocupado}>{mensagens.perfil.navegacao}</Botao>
           </div>
         </header>
 
@@ -793,7 +788,7 @@ export function Estudo() {
             );
           })()}
           {visivel && tela.tipo === 'perfil' && (
-            <TelaPerfil perfil={perfil} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
+            <TelaPerfil perfil={compartilhar ? perfil : null} compartilhar={compartilhar} visitante={visitante} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
               abrirPlano={(id) => void abrirPlano(id)} registrarGuarda={registrarGuarda} sair={() => void sair()}
               comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} irParaTrilhas={() => navegar({ tipo: 'planos' })} />
           )}
@@ -825,8 +820,8 @@ export function Estudo() {
             onClick={() => navegar({ tipo: 'objetivo' })}><Icone nome="lampada" />{mensagens.planos.novo}</button>
           {comunidade && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.navegacao}</button>}
-          {compartilhar && <button type="button" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
-            onClick={() => navegar({ tipo: 'perfil' })}><Icone nome="pessoa" />{mensagens.perfil.navegacao}</button>}
+          <button type="button" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
+            onClick={() => navegar({ tipo: 'perfil' })}><Icone nome="pessoa" />{mensagens.perfil.navegacao}</button>
         </nav>}
       </div>
       {folha && (

@@ -372,15 +372,17 @@ export async function criarChamadaVozAoVivo(
 }
 
 /** Encerra todas as conversas de voz ativas da conta (exclusão da conta). Não falha: o hangup é idempotente. */
-export function encerrarChamadasDoUsuario(usuarioId: string): void {
+export async function encerrarChamadasDoUsuario(usuarioId: string): Promise<void> {
   const config = configuracaoRealtime();
+  const encerramentos: Promise<void>[] = [];
   for (const [chamadaId, ativa] of chamadasAtivas.entries()) {
     if (ativa.usuarioId !== usuarioId) continue;
     clearTimeout(ativa.timer);
     chamadasAtivas.delete(chamadaId);
     registrarEncerramento(chamadaId, ativa, "cliente");
-    if (config) void enviarHangup(config, chamadaId);
+    if (config) encerramentos.push(enviarHangup(config, chamadaId));
   }
+  await Promise.all(encerramentos);
 }
 
 /**

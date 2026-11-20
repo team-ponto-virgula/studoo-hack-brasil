@@ -1,3 +1,4 @@
+import { publicacaoRevisada } from './fixtures/moderacao.mjs';
 // Perfil rico (spec 10, etapa A): resumo, interesses, foto e alcance. Provedores simulados, banco real.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -56,7 +57,7 @@ const ctx = (params) => ({ params: Promise.resolve(params) });
 const json = async (promessa) => { const resposta = await promessa; return { status: resposta.status, corpo: await resposta.json() }; };
 const salvar = (quem, corpo) => json(perfilPut(pedido('/api/perfil', { metodo: 'PUT', token: quem.token, corpo })));
 const enviarFoto = (quem, bytes) => json(fotoPut(pedido('/api/perfil/foto', { metodo: 'PUT', token: quem.token, corpo: { base64: Buffer.from(bytes).toString('base64') } })));
-const lerFoto = (token, tamanho = 512) => fotoGet(new Request(`${origem}${enderecoFoto(token, tamanho)}`), ctx({ token, tamanho: String(tamanho) }));
+const lerFoto = (token, tamanho = 512, sessao) => fotoGet(pedido(enderecoFoto(token, tamanho), { token: sessao }), ctx({ token, tamanho: String(tamanho) }));
 
 /** Foto de teste: metade esquerda vermelha e direita azul; com orientação 6 (girar 90° horário) vira cima/baixo. */
 async function fotoTeste({ formato = 'jpeg', orientacao, largura = 600, altura = 300 } = {}) {
@@ -79,6 +80,7 @@ async function trilhaCompartilhada(dona) {
   const proposta = await gerarProposta(dona.id, 'Aprender frações na cozinha');
   const plano = await aceitarProposta(dona.id, proposta.token);
   const { corpo: link } = await json(criarPost(pedido(`/api/aprendizado/planos/${plano.id}/compartilhar`, { metodo: 'POST', token: dona.token, corpo: {} }), ctx({ id: plano.id })));
+  await publicacaoRevisada(dona.id, link.codigo);
   return { plano, link };
 }
 
@@ -176,7 +178,7 @@ test('foto: confere pelos bytes, recusa o que não é JPEG, PNG ou WebP, base64 
   assert.equal((await json(perfilGet(pedido('/api/perfil', { token: ana.token })))).corpo.foto, null);
 });
 
-test('foto: orientação corrigida, corte em 512 e 128, WebP sem EXIF nem GPS, cabeçalhos de cache longo e fora de buscadores', async () => {
+test('foto: orientação corrigida, corte em 512 e 128, WebP sem EXIF nem GPS, cabeçalhos de cache privado e fora de buscadores', async () => {
   const ana = await pessoa();
   await salvar(ana, { nome: 'Ana', cor: 'azul' });
   const original = await fotoTeste({ orientacao: 6 });
@@ -184,10 +186,11 @@ test('foto: orientação corrigida, corte em 512 e 128, WebP sem EXIF nem GPS, c
   const r = await enviarFoto(ana, original);
   assert.equal(r.status, 200);
   assert.match(r.corpo.foto, /^[A-Za-z0-9_-]{16}$/);
-  const resposta = await lerFoto(r.corpo.foto, 512);
+  assert.equal((await lerFoto(r.corpo.foto, 512)).status, 404);
+  const resposta = await lerFoto(r.corpo.foto, 512, ana.token);
   assert.equal(resposta.status, 200);
   assert.equal(resposta.headers.get('content-type'), 'image/webp');
-  assert.equal(resposta.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  assert.equal(resposta.headers.get('cache-control'), 'private, no-store');
   assert.equal(resposta.headers.get('x-robots-tag'), 'noindex, nofollow');
   assert.equal(resposta.headers.get('x-content-type-options'), 'nosniff');
   const grande = Buffer.from(await resposta.arrayBuffer());
@@ -203,7 +206,7 @@ test('foto: orientação corrigida, corte em 512 e 128, WebP sem EXIF nem GPS, c
   const pixel = (x, y) => [...data.subarray((y * 512 + x) * 3, (y * 512 + x) * 3 + 3)];
   assert.ok(pixel(256, 20)[0] > 200 && pixel(256, 20)[2] < 60, `cima ${pixel(256, 20)}`);
   assert.ok(pixel(256, 490)[2] > 200 && pixel(256, 490)[0] < 60, `baixo ${pixel(256, 490)}`);
-  const pequena = await sharp(Buffer.from(await (await lerFoto(r.corpo.foto, 128)).arrayBuffer())).metadata();
+  const pequena = await sharp(Buffer.from(await (await lerFoto(r.corpo.foto, 128, ana.token)).arrayBuffer())).metadata();
   assert.equal(pequena.width, 128);
   assert.equal(pequena.format, 'webp');
   // Tamanho fora da lista, token fora do formato ou inexistente: não encontrado.
@@ -222,7 +225,8 @@ test('foto: token novo a cada troca (o antigo some), remover volta à inicial, e
   const segunda = (await enviarFoto(ana, await fotoTeste({ formato: 'png' }))).corpo.foto;
   assert.notEqual(primeira, segunda);
   assert.equal((await lerFoto(primeira)).status, 404);
-  assert.equal((await lerFoto(segunda)).status, 200);
+  assert.equal((await lerFoto(segunda)).status, 404);
+  await banco.fotoPerfil.update({ where: { token: segunda }, data: { moderacao: 'aprovado' } });
   const perfil = (await json(perfilGet(pedido('/api/perfil', { token: ana.token })))).corpo;
   assert.ok(!segunda.includes(perfil.perfilId) && !perfil.perfilId.includes(segunda));
 

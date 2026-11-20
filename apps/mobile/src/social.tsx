@@ -13,10 +13,11 @@ import {
   type AlcancePerfil, type CorPerfil, type LinkCompartilhado, type MarcasCompartilhar, type Perfil, type PreviaCompartilhar, type Tema,
   type TrilhaCompartilhada, type Visibilidade,
 } from '@studoo/contratos';
-import { origemConfigurada, type ClienteNativo } from './api-nativa';
+import { fonteDaMidiaDaDona, origemConfigurada, type ClienteNativo } from './api-nativa';
 import { focarSemRolar } from './foco';
 import { Icone } from './icone';
-import { Botao, BotaoIcone, Campo, RolagemDaTela, degrade, estilos as estilosDaInterface, useMovimentoReduzido } from './interface';
+import { AvisoDoApp, Botao, BotaoIcone, Campo, RolagemDaTela, degrade, estilos as estilosDaInterface, useMovimentoReduzido } from './interface';
+import { LinhaDasRegras, RecusaDoConteudo } from './seguranca';
 import { mensagemDoCodigo, mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import { Stu } from './mascote';
@@ -32,6 +33,8 @@ import type { NomeIcone } from './trilha';
 const m = mensagens.compartilhar;
 const p = mensagens.perfil;
 const cm = mensagens.comunidade;
+/** Segurança da comunidade (spec 14): a revisão do que fica público. */
+const seg = mensagens.seguranca;
 
 /**
  * Abre o perfil público de uma pessoa dentro do app (o `/p/<id>` da web). Sem quem o forneça (o compartilhar desligado), os
@@ -161,7 +164,9 @@ const FONTE_DO_LADO = { p: 15, m: 24, g: 40 } as const;
  * A foto da pessoa (128 px; 512 no tamanho grande) ou a inicial na cor, como o `Avatar` da web. Decorativo: o nome sempre
  * está escrito ao lado. Tamanhos: p (32), m (56), g (96) ou um lado livre (24 nas marcas "Compartilhada por").
  */
-export function Avatar({ nome, cor, foto = null, tamanho = 'p', estilo, vazio = false }: {
+export function Avatar({ nome, cor, foto = null, tamanho = 'p', estilo, vazio = false, daDona = false }: {
+  /** A foto da própria pessoa: em revisão, só abre com a sessão (o token vai só para o host da API, spec 14). */
+  daDona?: boolean;
   nome: string;
   cor: CorPerfil;
   foto?: string | null;
@@ -177,7 +182,7 @@ export function Avatar({ nome, cor, foto = null, tamanho = 'p', estilo, vazio = 
     <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
       style={[socialEstilos.avatar, { width: lado, height: lado, borderRadius: lado / 2, backgroundColor: FUNDO_DA_COR[cor] }, estilo]}>
       {endereco
-        ? <Image source={{ uri: endereco }} accessible={false} resizeMode="cover" style={{ width: '100%', height: '100%', borderRadius: lado / 2 }} />
+        ? <Image source={daDona ? fonteDaMidiaDaDona(endereco) : { uri: endereco }} accessible={false} resizeMode="cover" style={{ width: '100%', height: '100%', borderRadius: lado / 2 }} />
         : vazio ? <Icone nome="pessoa" tamanho={Math.round(lado * 0.46)} cor="#FFFFFF" />
           : <Text style={[socialEstilos.avatarInicial, { fontSize: fonte, lineHeight: fonte }]}>{inicialDoNome(nome)}</Text>}
     </View>
@@ -204,7 +209,9 @@ function DesenhoFaixa() {
  * O cabeçalho do perfil, o mesmo na tela Perfil e na prévia da edição: faixa na cor do perfil, foto grande sobreposta, nome,
  * resumo, interesses e a linha de alcance. No celular, as ações vão para o fim do cartão, uma embaixo da outra.
  */
-export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, acoes, semResumo, comoTitulo = true, estilo, demo = false }: {
+export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, acoes, semResumo, comoTitulo = true, estilo, demo = false, daDona = false }: {
+  /** O cabeçalho da própria pessoa (aba Perfil): a foto vai com a sessão. */
+  daDona?: boolean;
   /** Perfil de demonstração: o selo embaixo do nome (spec 10, C1). */
   demo?: boolean;
   nome: string;
@@ -227,7 +234,7 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
         <DesenhoFaixa />
       </View>
       <View style={socialEstilos.cabecaCorpo}>
-        <Avatar nome={nome} cor={cor} foto={foto} tamanho="g" estilo={socialEstilos.cabecaAvatar} />
+        <Avatar nome={nome} cor={cor} foto={foto} tamanho="g" estilo={socialEstilos.cabecaAvatar} daDona={daDona} />
         <Text accessibilityRole={comoTitulo ? 'header' : undefined} style={socialEstilos.cabecaNome}>{nome}</Text>
         {demo && <SeloDemo />}
         {resumo ? <Text style={socialEstilos.cabecaResumo}>{resumo}</Text> : semResumo}
@@ -483,6 +490,8 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
   const [erro, setErro] = useState<string | null>(null);
   const [status, setStatus] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  const [recusado, setRecusado] = useState(false);
+  const { avisar } = useContext(AvisoDoApp);
   // Como a web (C1): no começo só o tema sugerido (ou o salvo); "Trocar tema" abre os 12, e a legenda e o botão ficam à vista.
   const [todosTemas, setTodosTemas] = useState(false);
   const campoLegenda = useRef<ComponentRef<typeof TextInput>>(null);
@@ -496,6 +505,7 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
     setErro(null);
     try {
       let novo: LinkCompartilhado;
+      setRecusado(false);
       if (nivel === 'explorar') {
         const motivo = motivoLegendaInvalida(legendaNormal);
         if (motivo) {
@@ -504,17 +514,24 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
           return;
         }
         novo = await cliente.definirVisibilidade(link.codigo, 'explorar', { tema, legenda: legendaNormal });
-        setStatus(publicada ? cm.publicacaoSalva : cm.publicada);
-        anunciar(publicada ? cm.publicacaoSalva : cm.publicada);
+        // Spec 14: pendente nunca diz que já foi publicada; o aviso do app explica a revisão.
+        const frase = novo.moderacao === 'pendente' ? seg.enviadaParaRevisao : publicada ? cm.publicacaoSalva : cm.publicada;
+        setStatus(frase);
+        anunciar(frase);
+        if (novo.moderacao === 'pendente') avisar(seg.enviadaParaRevisao);
       } else {
         novo = await cliente.definirVisibilidade(link.codigo, nivel);
-        setStatus(cm.nivelSalvo(cm.niveis[nivel].titulo));
-        anunciar(cm.nivelSalvo(cm.niveis[nivel].titulo));
+        const frase = novo.moderacao === 'pendente' ? seg.enviadaParaRevisao : cm.nivelSalvo(cm.niveis[nivel].titulo);
+        setStatus(frase);
+        anunciar(frase);
+        if (novo.moderacao === 'pendente') avisar(seg.enviadaParaRevisao);
       }
       aoMudar(novo);
       setLegenda(novo.legenda ?? '');
     } catch (falha) {
-      setErro(textoDoErro(codigoDoErro(falha)));
+      const codigo = codigoDoErro(falha);
+      // A recusa na hora (lista local de termos): o texto da spec 14, com o link das regras.
+      if (codigo === 'conteudo_recusado') setRecusado(true); else setErro(textoDoErro(codigo));
       setEscolhido(atual);
     } finally {
       setOcupado(false);
@@ -553,6 +570,8 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
           );
         })}
       </View>
+      {/* Spec 14: acima da ação que publica no perfil ou no Explorar; "Só com o link" não mostra a linha. */}
+      {escolhido !== 'link' && <LinhaDasRegras />}
       {escolhido === 'explorar' && !deMaterial && (
         <View style={socialEstilos.publicacao}>
           <View accessibilityRole="radiogroup" accessibilityLabel={cm.temaRotulo} style={socialEstilos.interesses}>
@@ -591,6 +610,7 @@ function VisibilidadeDaTrilha({ cliente, link, temaSugerido, deMaterial, demonst
         </View>
       )}
       {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
+      {recusado && <RecusaDoConteudo />}
       {/* Como a web: o estado ("Nível salvo…") só para o leitor de tela (ele já é anunciado). */}
       <Text style={socialEstilos.somenteLeitor} accessibilityLiveRegion="polite">{status}</Text>
     </View>
@@ -673,7 +693,7 @@ export function FolhaCompartilhar({ cliente, planoId, visitante, comunidade, aoF
       setLink(novo);
       aoMudarLink(planoId, novo);
       setEtapa('pronto');
-      anunciar(m.linkPronto);
+      anunciar(novo.moderacao === 'pendente' ? seg.enviadaParaRevisao : m.linkPronto);
     } catch (falha) {
       setErro(codigoDoErro(falha));
     } finally {

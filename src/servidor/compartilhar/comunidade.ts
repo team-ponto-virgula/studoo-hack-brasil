@@ -20,6 +20,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
+import { autorDoAlvo, filtroPublico } from "./visibilidade";
 import { revisarConteudo } from "./revisao";
 import { contarSeguidores, estadoSeguir, seguidosPor } from "./seguir";
 import { camposDono, demonstracaoVisivel, ehDeMaterial, lerTrilha, linkPublico, perfilPublico, type UsuarioDono } from "./servico";
@@ -104,7 +105,7 @@ export async function cartoesDe(links: LinkDoCartao[], quem: string | null): Pro
   const [planos, donos, valeus, copias, meusValeus] = await Promise.all([
     banco.planoAprendizado.findMany({
       where: { OR: links.map((link) => ({ usuarioId: link.usuarioId, id: link.planoId })) },
-      select: { usuarioId: true, id: true, titulo: true, origem: true, capa: true, fluxos: { select: { _count: { select: { licoes: true } } } } },
+      select: { usuarioId: true, id: true, titulo: true, origem: true, capa: true, capaFoto: { select: { moderacao: true } }, fluxos: { select: { _count: { select: { licoes: true } } } } },
     }),
     banco.usuario.findMany({ where: { id: { in: [...new Set(links.map((link) => link.usuarioId))] } }, select: camposDono }),
     banco.eventoTrilha.groupBy({ by: ["codigo"], where: { tipo: "valeu", codigo: { in: codigos } }, _count: { _all: true } }),
@@ -125,7 +126,7 @@ export async function cartoesDe(links: LinkDoCartao[], quem: string | null): Pro
       codigo: link.codigo,
       titulo: plano.titulo,
       tema: ehTema(link.tema) ? link.tema : null,
-      ...(plano.capa ? { capa: plano.capa } : {}),
+      ...(plano.capa && (!plano.capa.startsWith('foto:') || plano.capaFoto?.moderacao === 'aprovado') ? { capa: plano.capa } : {}),
       legenda: link.legenda,
       totalLicoes: plano.fluxos.reduce((total, fluxo) => total + fluxo._count.licoes, 0),
       totalPartes: plano.fluxos.length,
@@ -134,7 +135,7 @@ export async function cartoesDe(links: LinkDoCartao[], quem: string | null): Pro
       dono: {
         nome: dono.perfilNome,
         cor: corValida(dono.perfilCor) ? dono.perfilCor : "azul",
-        foto: dono.foto?.token ?? null,
+        foto: dono.foto?.moderacao === 'aprovado' ? dono.foto.token : null,
         resumo: dono.perfilResumo || null,
         perfilId: dono.perfilId,
         ...(dono.perfilDemo ? { demo: true as const } : {}),
@@ -210,8 +211,10 @@ export async function explorar(quem: string | null, filtro: { tema?: string | nu
   // Aba "Seguindo": as trilhas publicadas por quem a pessoa segue, das mais novas para as mais antigas (sem Em alta).
   if (filtro.seguindo && !quem) throw new FalhaApi("nao_autenticado");
   const seguidos = filtro.seguindo && quem ? await seguidosPor(quem) : null;
+  const publico = await filtroPublico(quem);
   const pagina = await banco.linkTrilha.findMany({
     where: {
+      AND: [publico],
       noExplorar: true,
       oculta: false,
       publicadaEm: { not: null },
@@ -228,10 +231,10 @@ export async function explorar(quem: string | null, filtro: { tema?: string | nu
   const novas = pagina.slice(0, LIMITES_COMUNIDADE.porPagina);
   let emAlta: CartaoTrilha[] = [];
   if (!cursor && !seguidos) {
-    const top = (await classificacaoDaSemana()).filter((item) => !tema || item.tema === tema).slice(0, LIMITES_COMUNIDADE.emAlta);
-    const linksTop = top.length === 0 ? [] : await banco.linkTrilha.findMany({ where: { codigo: { in: top.map((item) => item.codigo) }, noExplorar: true, oculta: false }, select: camposLink });
+    const top = (await classificacaoDaSemana()).filter((item) => !tema || item.tema === tema);
+    const linksTop = top.length === 0 ? [] : await banco.linkTrilha.findMany({ where: { AND: [publico], codigo: { in: top.map((item) => item.codigo) }, noExplorar: true, oculta: false }, select: camposLink });
     const porCodigo = new Map(linksTop.map((link) => [link.codigo, link]));
-    emAlta = await cartoesDe(top.map((item) => porCodigo.get(item.codigo)).filter((link): link is LinkDoCartao => Boolean(link)), quem);
+    emAlta = await cartoesDe(top.map((item) => porCodigo.get(item.codigo)).filter((link): link is LinkDoCartao => Boolean(link)).slice(0, LIMITES_COMUNIDADE.emAlta), quem);
   }
   return {
     emAlta,
@@ -243,10 +246,10 @@ export async function explorar(quem: string | null, filtro: { tema?: string | nu
 
 /** O perfil público com os cartões (com a comunidade): as trilhas marcadas, como no Explorar. */
 export async function perfilPublicoComCartoes(perfilId: string, quem: string | null): Promise<PerfilPublico> {
-  const perfil = await perfilPublico(perfilId);
+  const perfil = await perfilPublico(perfilId, quem);
   const usuario = await banco.usuario.findUnique({ where: { perfilId }, select: { id: true } });
   if (!usuario) return perfil;
-  const links = await banco.linkTrilha.findMany({ where: { usuarioId: usuario.id, noPerfil: true }, orderBy: { criadoEm: "desc" }, select: camposLink });
+  const links = await banco.linkTrilha.findMany({ where: { AND: [await filtroPublico(quem), { usuarioId: usuario.id, noPerfil: true }] }, orderBy: { criadoEm: "desc" }, select: camposLink });
   const [cartoes, seguidores, seguir] = await Promise.all([cartoesDe(links, quem), contarSeguidores(usuario.id), estadoSeguir(quem, usuario.id)]);
   return { ...perfil, alcance: { ...perfil.alcance, seguidores }, cartoes, ...(seguir ? { seguir } : {}) };
 }
@@ -257,7 +260,7 @@ export async function valeu(usuarioId: string, codigo: string, entrada: unknown)
   if (typeof ativo !== "boolean") throw new FalhaApi("invalido");
   if (!FORMATO_CODIGO.test(codigo)) throw new FalhaApi("link_inativo");
   // Vale em qualquer link ativo: quem recebeu só pelo link também pode agradecer.
-  const link = await banco.linkTrilha.findUnique({ where: { codigo }, select: { usuarioId: true } });
+  const link = await banco.linkTrilha.findFirst({ where: { AND: [await filtroPublico(usuarioId), { codigo }] }, select: { usuarioId: true } });
   if (!link) throw new FalhaApi("link_inativo");
   if (link.usuarioId === usuarioId) throw new FalhaApi("trilha_propria");
   await contaQueAge(usuarioId);
@@ -268,34 +271,31 @@ export async function valeu(usuarioId: string, codigo: string, entrada: unknown)
   return { valeus, valeuMeu: ativo };
 }
 
-/**
- * Denuncia uma trilha (código) ou um perfil (id público): motivo da lista; uma por conta por alvo (repetir não conta
- * de novo); 10 por hora. Com 3 contas distintas, a trilha sai do Explorar até revisão. Registro no banco e uma linha no
- * log; sem painel.
- */
-export async function denunciar(usuarioId: string, entrada: unknown): Promise<{ registrada: true }> {
-  const { alvoTipo, alvo, motivo } = (entrada ?? {}) as { alvoTipo?: unknown; alvo?: unknown; motivo?: unknown };
-  if ((alvoTipo !== "trilha" && alvoTipo !== "perfil") || typeof alvo !== "string" || !FORMATO_CODIGO.test(alvo)
-    || !(MOTIVOS_DENUNCIA as readonly unknown[]).includes(motivo)) throw new FalhaApi("invalido");
-  if (alvoTipo === "trilha") {
-    const link = await banco.linkTrilha.findUnique({ where: { codigo: alvo }, select: { usuarioId: true } });
-    if (!link) throw new FalhaApi("link_inativo");
-    if (link.usuarioId === usuarioId) throw new FalhaApi("trilha_propria");
-  } else {
-    const dono = await banco.usuario.findUnique({ where: { perfilId: alvo }, select: { id: true } });
-    if (!dono) throw new FalhaApi("nao_encontrado");
-    if (dono.id === usuarioId) throw new FalhaApi("trilha_propria");
-  }
-  await contaQueAge(usuarioId);
-  await limitar(`comunidade:denuncia:${usuarioId}`, LIMITES.denuncia);
-  await banco.denuncia.createMany({ data: [{ alvoTipo, alvo, usuarioId, motivo: motivo as string }], skipDuplicates: true });
-  const total = await banco.denuncia.count({ where: { alvoTipo, alvo } });
-  let ocultou = false;
-  if (alvoTipo === "trilha" && total >= LIMITES_COMUNIDADE.denunciasParaOcultar) {
-    ocultou = (await banco.linkTrilha.updateMany({ where: { codigo: alvo, oculta: false }, data: { oculta: true } })).count > 0;
-    if (ocultou) zerarCacheEmAlta();
-  }
-  // Uma linha no log, sem e-mail nem id de quem denunciou.
-  console.info(JSON.stringify({ evento: "denuncia", alvoTipo, alvo, motivo, total, ocultou }));
-  return { registrada: true };
+/** Cada registro fornece um protocolo privado. Só contas permanentes distintas contam para a retirada automática. */
+export async function denunciar(usuarioId: string | null, entrada: unknown, rede = "desconhecido") {
+  const { alvoTipo, alvo, motivo } = (entrada ?? {}) as Record<string, unknown>;
+  if ((alvoTipo !== "perfil" && alvoTipo !== "trilha") || typeof alvo !== "string" || typeof motivo !== "string"
+      || !(MOTIVOS_DENUNCIA as readonly string[]).includes(motivo)) throw new FalhaApi("invalido");
+  const autor = await autorDoAlvo(alvoTipo, alvo);
+  if (usuarioId === autor) throw new FalhaApi("trilha_propria");
+  const conta = usuarioId ? await banco.usuario.findUnique({ where: { id: usuarioId }, select: { email: true, perfilDemo: true } }) : null;
+  const verificada = Boolean(conta && !ehEmailVisitante(conta.email) && !conta.perfilDemo);
+  await limitar(`comunidade:denuncia:${usuarioId || rede}`, LIMITES.denuncia);
+  if (usuarioId && !verificada) await limitar(`comunidade:denuncia-visitante:${rede}`, LIMITES.denuncia);
+  const protocolo = await banco.$transaction(async tx => {
+    // O mesmo alvo é contado em série, inclusive se as três denúncias chegarem juntas.
+    await tx.$queryRaw`SELECT 1 FROM pg_advisory_xact_lock(hashtext(${alvoTipo + ":" + alvo}))`;
+    const dados = { alvoTipo, alvo, motivo, usuarioId, contaVerificada: verificada };
+    const caso = usuarioId
+      ? await tx.denuncia.upsert({ where: { alvoTipo_alvo_usuarioId: { alvoTipo, alvo, usuarioId } }, create: dados, update: {}, select: { id: true } })
+      : await tx.denuncia.create({ data: dados, select: { id: true } });
+    if (alvoTipo === "trilha" && verificada) {
+      const total = await tx.denuncia.count({ where: { alvoTipo, alvo, contaVerificada: true, estado: "aberto" } });
+      if (total >= LIMITES_COMUNIDADE.denunciasParaOcultar) {
+        await tx.linkTrilha.updateMany({ where: { codigo: alvo, oculta: false, moderacao: { not: "recusado" } }, data: { oculta: true, moderacao: "pendente", revisao: { increment: 1 } } });
+      }
+    }
+    return caso.id;
+  });
+  return { registrada: true as const, protocolo };
 }

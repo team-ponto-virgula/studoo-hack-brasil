@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
 import './globals.css';
+import { SegurancaComunidade } from './seguranca-comunidade';
 import { AmbienteSom } from './ambiente-som';
 import { AmbienteAceiteIa } from './aceite-ia';
 import { AmbienteMovimento } from '../ui/movimento';
@@ -32,7 +33,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/nunito-wght.woff2" />
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/quicksand-wght.woff2" />
       </head>
-      <body><AmbienteMovimento /><AmbienteSom />{children}<AmbienteAceiteIa /></body>
+      <body><AmbienteMovimento /><AmbienteSom /><SegurancaComunidade>{children}</SegurancaComunidade><AmbienteAceiteIa /></body>
     </html>
   );
 }

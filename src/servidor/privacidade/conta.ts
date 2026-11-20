@@ -10,7 +10,7 @@ import { revogarApple } from "@/servidor/acesso/apple";
  *
  * - Trilhas, trechos, lições, progresso, apoio, capas, links e publicações no Explorar (os links somem, então quem
  *   abrir recebe "link inativo"); materiais enviados; foto e perfil; quem segue e quem é seguido; valeus e adições;
- *   denúncias feitas pela conta e as feitas contra o perfil e as trilhas dela; recuperação de senha; códigos do
+ *   vínculos com as denúncias e os alvos excluídos; recuperação de senha; códigos do
  *   Google; sessões de todos os aparelhos (web e app).
  * - Cópias que outras pessoas já adicionaram são delas: continuam, mas perdem o nome e o perfil de quem compartilhou.
  * - Conversa de voz ao vivo aberta é encerrada na OpenAI.
@@ -27,14 +27,17 @@ export async function excluirConta(usuarioId: string, confirmacao: unknown): Pro
     if (!usuario) throw new FalhaApi("nao_autenticado");
 
     const links = (await tx.linkTrilha.findMany({ where: { usuarioId }, select: { codigo: true } })).map(({ codigo }) => codigo);
-    await tx.denuncia.deleteMany({
-      where: {
-        OR: [
-          ...(usuario.perfilId ? [{ alvoTipo: "perfil", alvo: usuario.perfilId }] : []),
-          ...(links.length ? [{ alvoTipo: "trilha", alvo: { in: links } }] : []),
-        ],
-      },
-    });
+    const relatos = await tx.denuncia.findMany({ where: { OR: [
+      ...(usuario.perfilId ? [{ alvoTipo: "perfil", alvo: usuario.perfilId }] : []),
+      ...(links.length ? [{ alvoTipo: "trilha", alvo: { in: links } }] : []),
+    ] }, select: { id: true, estado: true } });
+    for (const relato of relatos) {
+      // O protocolo da pessoa que denunciou continua consultável sem guardar o identificador público excluído.
+      await tx.denuncia.update({ where: { id: relato.id }, data: {
+        alvo: "retirado-" + relato.id,
+        ...(relato.estado === "aberto" ? { estado: "encerrado", resposta: "A publicação foi retirada." } : {}),
+      } });
+    }
     if (usuario.perfilId) {
       await tx.planoAprendizado.updateMany({
         where: { origemPerfilId: usuario.perfilId, NOT: { usuarioId } },
@@ -50,11 +53,11 @@ export async function excluirConta(usuarioId: string, confirmacao: unknown): Pro
     // Links, eventos dos links e capas caem em cascata com a trilha.
     await tx.planoAprendizado.deleteMany({ where: { usuarioId } });
     await tx.sessao.deleteMany({ where: { usuarioId } });
-    // O resto cai em cascata com a conta: materiais, foto, eventos, denúncias feitas, seguir, recuperação, Google.
+    // O resto cai em cascata com a conta: materiais, foto, eventos, bloqueios, seguir, recuperação, Google. As denúncias perdem o vínculo com a conta.
     await tx.usuario.delete({ where: { id: usuarioId } });
     return { renovacao: usuario.appleRenovacao, cliente: usuario.appleCliente };
   });
 
-  encerrarChamadasDoUsuario(usuarioId);
+  await encerrarChamadasDoUsuario(usuarioId);
   await revogarApple(apple.renovacao, apple.cliente);
 }

@@ -4,6 +4,7 @@ import { buscarApoio } from "@/servidor/estudio/apoio";
 import {
   consumirLimiteVozAoVivo,
   criarChamadaVozAoVivo,
+  encerrarChamadaVozAoVivo,
   montarInstrucoesVozAoVivo,
   validarSdpOferta,
   vozAoVivoAtiva,
@@ -31,6 +32,13 @@ export async function POST(
     const sessao = await criarChamadaVozAoVivo(usuarioId, sdp, instrucoes, {
       idiomaLivre: Boolean(licao.falas?.length),
     });
+    // A permissão pode ter sido retirada em outro aparelho enquanto a chamada era negociada.
+    try {
+      await exigirConsentimentoIa(usuarioId);
+    } catch (erro) {
+      await encerrarChamadaVozAoVivo(usuarioId, sessao.chamadaId);
+      throw erro;
+    }
     return responder(sessao);
   });
 }

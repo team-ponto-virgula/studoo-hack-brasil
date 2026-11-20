@@ -6,6 +6,7 @@ import { criarClienteNativo } from './api-nativa';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { ouvirVoltar } from './voltar';
+import { BotaoPrecisaDeAjuda } from './seguranca';
 
 const m = mensagens.acesso;
 export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string; voltar: () => void }) {
@@ -78,6 +79,8 @@ export function RecuperarAcesso({ emailInicial, voltar }: { emailInicial: string
         : <Botao variante="texto" rotulo={espera ? m.aguarde(espera) : m.reenviar} desativado={ocupado || espera > 0} acao={enviar} />}
     </View>}
     {erro && <EstadoErro mensagem={erro} foco />}
+    {/* Spec 14: o suporte também na recuperação de senha. */}
+    <BotaoPrecisaDeAjuda desativado={ocupado} testID="recuperar-ajuda" />
   </Tela>;
 }
 

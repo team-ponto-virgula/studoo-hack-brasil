@@ -1,3 +1,4 @@
+import { publicacaoRevisada } from './fixtures/moderacao.mjs';
 // Comunidade (spec 10, etapa B): publicar, Explorar, Em alta, Valeu e Denunciar. Provedores simulados, banco real.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -63,10 +64,15 @@ async function trilha(dona, objetivo = 'Aprender frações na cozinha') {
   const proposta = await gerarProposta(dona.id, objetivo);
   const plano = await aceitarProposta(dona.id, proposta.token);
   const { corpo: link } = await json(criarPost(pedido(`/api/aprendizado/planos/${plano.id}/compartilhar`, { metodo: 'POST', token: dona.token, corpo: {} }), ctx({ id: plano.id })));
+  await publicacaoRevisada(dona.id, link.codigo);
   return { plano, codigo: link.codigo };
 }
 const visibilidade = (quem, codigo, corpo) => json(linkPatch(pedido(`/api/compartilhar/${codigo}`, { metodo: 'PATCH', token: quem.token, corpo }), ctx({ codigo })));
-const publicar = (quem, codigo, tema = 'matematica', legenda) => visibilidade(quem, codigo, { visibilidade: 'explorar', tema, ...(legenda !== undefined ? { legenda } : {}) });
+const publicar = async (quem, codigo, tema = 'matematica', legenda) => {
+  const r = await visibilidade(quem, codigo, { visibilidade: 'explorar', tema, ...(legenda !== undefined ? { legenda } : {}) });
+  if (r.status === 200) await publicacaoRevisada(quem.id, codigo);
+  return r;
+};
 const explorar = (token, busca = '') => json(explorarGet(pedido(`/api/explorar${busca}`, { token })));
 const adicionar = (quem, codigo) => json(adicionarPost(pedido(`/api/compartilhar/${codigo}/adicionar`, { metodo: 'POST', token: quem.token, corpo: {} }), ctx({ codigo })));
 const valeu = (quem, codigo, ativo = true) => json(valeuPost(pedido(`/api/compartilhar/${codigo}/valeu`, { metodo: 'POST', token: quem.token, corpo: { ativo } }), ctx({ codigo })));
@@ -134,7 +140,7 @@ test('sem STUDOO_COMUNIDADE, nada da etapa B existe (rotas 404, config falsa, li
     assert.equal((await (await configHttp(pedido('/api/auth/config'))).json()).comunidade, false);
     assert.equal((await explorar(null)).status, 404);
     assert.equal((await valeu(ana, codigo)).status, 404);
-    assert.equal((await denunciar(ana, { alvoTipo: 'trilha', alvo: codigo, motivo: 'spam' })).status, 404);
+    assert.equal((await denunciar(ana, { alvoTipo: 'trilha', alvo: codigo, motivo: 'spam' })).corpo.codigo, 'trilha_propria');
     assert.equal((await publicar(ana, codigo)).status, 404);
     const previa = (await json(previaGet(pedido(`/api/aprendizado/planos/${plano.id}/compartilhar`, { token: ana.token }), ctx({ id: plano.id })))).corpo;
     assert.ok(!('temaSugerido' in previa) && !('visibilidade' in previa.link));
@@ -311,7 +317,7 @@ test('Denunciar: motivo da lista, uma por conta, 3 contas tiram a trilha do Expl
   assert.equal((await denunciar(bia, { alvoTipo: 'trilha', alvo: codigo, motivo: 'astrologia' })).status, 400);
   assert.equal((await denunciar(ana, { alvoTipo: 'trilha', alvo: codigo, motivo: 'spam' })).corpo.codigo, 'trilha_propria');
   const vis = await visitante();
-  assert.equal((await denunciar(vis, { alvoTipo: 'trilha', alvo: codigo, motivo: 'spam' })).corpo.codigo, 'compartilhar_visitante');
+  assert.equal((await denunciar(vis, { alvoTipo: 'trilha', alvo: codigo, motivo: 'spam' })).status, 200);
   assert.equal((await denunciar(bia, { alvoTipo: 'trilha', alvo: codigo, motivo: 'spam' })).status, 200);
   assert.equal((await denunciar(bia, { alvoTipo: 'trilha', alvo: codigo, motivo: 'ofensivo' })).status, 200, 'repetir não conta de novo');
   assert.equal((await denunciar(caio, { alvoTipo: 'trilha', alvo: codigo, motivo: 'direitos' })).status, 200);
@@ -321,9 +327,9 @@ test('Denunciar: motivo da lista, uma por conta, 3 contas tiram a trilha do Expl
   assert.ok(!(await naLista()), 'com 3 contas, sai do Explorar');
   zerarCacheEmAlta();
   assert.ok(!(await classificacao([codigo])).length, 'fora do Em alta');
-  assert.equal((await banco.denuncia.count({ where: { alvo: codigo } })), 3);
-  // O link continua funcionando para quem tem.
-  assert.equal((await adicionar(await pessoa('Edu'), codigo)).status, 200);
+  assert.equal((await banco.denuncia.count({ where: { alvo: codigo, contaVerificada: true } })), 3);
+  // A retenção do link também impede que outra pessoa adicione a cópia.
+  assert.equal((await adicionar(await pessoa('Edu'), codigo)).status, 404);
 
   const perfil = (await json(perfilGet(pedido('/api/perfil', { token: ana.token })))).corpo;
   assert.equal((await denunciar(bia, { alvoTipo: 'perfil', alvo: perfil.perfilId, motivo: 'spam' })).status, 200);

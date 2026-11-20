@@ -9,8 +9,11 @@ import { perfilPublicoComCartoes } from '@/servidor/compartilhar/comunidade';
 import { mensagens } from '../../../mensagens/pt-BR';
 import { Stu } from '../../../ui';
 import { CabecalhoPublico } from '../../perfil';
-import { CartoesPublicos, DenunciarPerfil, VoltarDaPagina } from '../../comunidade';
+import { CartoesPublicos, VoltarDaPagina } from '../../comunidade';
 import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../../publico';
+
+import { MenuPublicacao, PerfilBloqueado } from '../../seguranca-comunidade';
+import { banco } from '@/servidor/banco/cliente';
 
 export const dynamic = 'force-dynamic';
 const p = mensagens.perfil;
@@ -26,7 +29,7 @@ const carregar = cache(async (id: string): Promise<{ perfil: PerfilPublico; loga
   }
   try {
     // Com a comunidade, as trilhas vêm como cartões (e, com sessão, a situação de cada uma).
-    return { perfil: comunidadeAtiva() ? await perfilPublicoComCartoes(id, usuarioId) : await perfilPublico(id), logado: Boolean(usuarioId) };
+    return { perfil: comunidadeAtiva() ? await perfilPublicoComCartoes(id, usuarioId) : await perfilPublico(id, usuarioId), logado: Boolean(usuarioId) };
   } catch (erro) {
     if (erro instanceof FalhaApi && erro.codigo === 'nao_encontrado') return 'inativo';
     throw erro;
@@ -56,6 +59,11 @@ export default async function PaginaDoPerfil({ params }: Props) {
   const perfil = resultado && typeof resultado !== 'string' ? resultado.perfil : resultado;
   const logado = Boolean(resultado && typeof resultado !== 'string' && resultado.logado);
   if (perfil === null) notFound();
+  if (perfil === 'inativo') {
+    const quem = await usuarioDaPagina();
+    const bloqueio = quem && await banco.bloqueio.findFirst({ where: { deId: quem, para: { perfilId: id } }, select: { id: true } });
+    if (bloqueio) return <PaginaPublica><PerfilBloqueado id={bloqueio.id} /></PaginaPublica>;
+  }
   if (typeof perfil === 'string') {
     return (
       <PaginaPublica>
@@ -72,10 +80,13 @@ export default async function PaginaDoPerfil({ params }: Props) {
     <PaginaPublica>
       {logado && <VoltarDaPagina destino={comunidadeAtiva() ? '/explorar' : '/'} />}
       <CabecalhoPublico perfil={perfil} perfilId={id} logado={logado} />
+      {!perfil.cartoes?.some(t => t.situacao === 'sua') && <div className="seguranca-publica">
+        {logado ? <MenuPublicacao tipo="perfil" alvo={id} nome={perfil.nome} titulo={perfil.nome} logado />
+          : <Link href={mensagens.seguranca.rotaDenunciaSemSessao('perfil', id)}>{mensagens.comunidade.denunciar}</Link>}</div>}
       {perfil.cartoes ? (
         <>
           <CartoesPublicos inicial={perfil.cartoes} logado={logado} titulo={p.paginaTitulo(perfil.nome)} />
-          <DenunciarPerfil perfilId={id} logado={logado} nome={perfil.nome} />
+
         </>
       ) : <>
       <h2 className="perfil-publico__titulo">{p.paginaTitulo(perfil.nome)}</h2>
