@@ -24,6 +24,98 @@ Após uma resposta incorreta, **Ver outro jeito de entender** abre a seção de 
 
 Acertar o reforço não conclui a lição nem infla o progresso. A pessoa retorna ao exercício original. A ponte é persistida e reaproveitada; falhas do provedor permitem nova tentativa. O motivo descreve uma possível dificuldade, sem afirmar um diagnóstico do aluno. O comportamento existente de continuar a lição após ler o feedback permanece disponível.
 
+### Ponte clara (revisão de 20/11, pedido do dono)
+
+Palavras do dono: "Nessa parte aqui de outro jeito de entender tá meio confuso, eu inicialmente cliquei e não entendi qual o sentido dessa parte. Melhore a UI e UX." Vale para web, Android e iPhone, entra na candidata do TestFlight e substitui a apresentação acima. A ideia e o servidor não mudam: a ponte leva de onde a pessoa travou de volta ao exercício, em três passos (outro caminho, exemplo, desafio). Ainda não implementado.
+
+**O que confundia** (captura do dono): nada dizia por que a pessoa estava ali. A primeira ação era sair ("Voltar ao exercício"). O desenho da ponte e os quatro cartões mostravam a mesma coisa duas vezes, sem dizer o que era tocável nem o passo atual. Os rótulos eram de sistema ("Sua tentativa: normal", "Desafio vencido" antes de vencer). A explicação e a ação principal ficavam fora da primeira tela.
+
+**Em uma olhada:** por que estou aqui (a frase do topo), em que passo estou (um só indicador) e o que faço agora (um botão principal no rodapé).
+
+**Ordem em 390** (o alto da aula, com X, andamento e som, continua):
+1. **Rótulo e título:** o selo "REFORÇO" (`ponteMapa`, no estilo do "CONCEITO" da lição, com o ícone da ponte) e o título "Outro jeito de entender" (`ponte`), o mesmo nome do botão que abriu a tela.
+2. **Por que estou aqui**, em 16/24 `#0B1B5C`:
+   - com resposta escrita ou escolhida: "Você respondeu “<resposta>”. Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício." (`ponteMotivoResposta`, com a resposta cortada em 60 caracteres e "…");
+   - sem resposta de texto (ordenar, associar): "Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício." (`ponteMotivo`).
+3. **O indicador, um só:** a faixa da ponte, com 88 px de altura e a largura do conteúdo.
+   - Margem da esquerda "Onde travou" (`ponteMargemErro`), três tábuas numeradas 1, 2 e 3, e a margem da direita "Exercício" (`ponteMargemVolta`, texto novo).
+   - Tábua feita: cheia, com o tom de madeira de hoje. Tábua atual: cheia, com o anel de 3 px `#3858D6`. Tábua futura: tracejada.
+   - O Stu (`stu-perfil`, 44 na web e 36 no app, spec 13) fica sobre a tábua atual.
+   - Embaixo da faixa, em 14/20 800 `#5E6A85`: "Passo 1 de 3 · Outro caminho" (`ponteIndicador(n)` e o nome do passo).
+   - A faixa não é tocável: sem borda de botão, sem cursor de mão, sem foco.
+   - Os quatro cartões numerados saem.
+4. **O passo atual**, um por vez, num cartão branco com borda de 2 px `#E1E7FA` e raio 20:
+   - **Passo 1, "Outro caminho"** (`pontePassoExplicacao`): o `motivo` da ponte e, embaixo, o `conceito`. Se o conceito repetir o retorno do exercício, fica só o motivo.
+   - **Passo 2, "Um exemplo"** (`pontePassoExemplo`, texto novo): o `exemplo`, no bloco de exemplo de hoje.
+   - **Passo 3, "Desafio"** (`pontePassoDesafio`, texto novo): o enunciado e as opções do exercício da ponte, como numa questão da aula. Em cima dele, o botão de texto "Rever explicação e exemplo" (`ponteRever`), que abre os dois passos anteriores ali mesmo, recolhíveis.
+5. **A saída**, depois do cartão, no fluxo: o botão de texto de 44 px "Voltar ao exercício" (`ponteVoltarExercicio`). Ele volta ao exercício sem vencer a ponte e nunca vem antes do conteúdo.
+6. **O rodapé preso da aula** troca o "Avançar" pela ação do passo, sempre à vista:
+
+| Passo | Ação principal | Depois |
+|---|---|---|
+| 1 | "Ver exemplo" (`ponteVerExemplo`) | vai ao passo 2 |
+| 2 | "Ir para o desafio" (`ponteIrDesafio`) | vai ao passo 3 |
+| 3, sem escolha | "Verificar", desligado | — |
+| 3, com escolha | "Verificar" | certo: "Ponte construída!"; errado: retorno no cartão |
+| 3, errou | "Tentar de novo" (`ponteTentarDeNovo`, novo) | limpa a escolha; o retorno fica até a nova escolha |
+| Vencida | "Voltar ao exercício" (verde, `sucesso`) | volta ao exercício original, como hoje |
+
+**Ponte vencida:**
+- a terceira tábua se completa, e o Stu chega à margem "Exercício" e vira `stu-animado` (uma vez, spec 13);
+- a linha do indicador diz "Ponte construída!";
+- o cartão mostra "Agora tente o exercício de novo." (`ponteVencida`, que substitui `ponteVoltar`), com o retorno do desafio;
+- a saída do item 5 some, porque a ação principal já é voltar.
+
+**Ponte reaberta** (já construída): as três tábuas cheias, o Stu na margem "Exercício" e o aviso de hoje (`ponteReabertaAviso`) no lugar da frase do topo. O cartão mostra a explicação e o exemplo, e o rodapé mostra "Voltar ao exercício".
+
+**Carregando** (a ponte ainda vem do servidor): a faixa com as três tábuas tracejadas, o Stu na margem "Onde travou" e, no cartão, "O Stu está preparando…" (`pensando`). O rodapé fica com "Ver exemplo" desligado. Erro: a mensagem de hoje e "Tentar de novo".
+
+**Computador (1024 px ou mais):** a mesma ordem e os mesmos blocos, na coluna da aula (até 680 px). A faixa vai até 560 px. O rodapé continua o da aula.
+
+**Movimento:**
+- ao avançar, a tábua do passo se enche em 240 ms, o Stu dá um pulo até a próxima (320 ms) e o cartão troca subindo 8 px e aparecendo em 200 ms;
+- ao vencer, o Stu atravessa até a margem e faz um ciclo de `stu-animado`;
+- com movimento reduzido, tudo troca na hora e o Stu aparece no lugar novo.
+
+**Som** (spec 12, sem som novo): `ponte_abrir` ao abrir a ponte, como hoje; `acerto` e `erro` no "Verificar" do desafio. Avançar de passo não tem som.
+
+**Leitor de tela:**
+- ao abrir, o foco vai para o título;
+- a faixa é uma lista com o rótulo "Passos da ponte", com `aria-current="step"` na tábua atual, e as margens e o Stu são decorativos;
+- a cada passo, o foco vai para o título do cartão, e a região educada anuncia "Passo 2 de 3 · Um exemplo";
+- ao vencer, anuncia "Ponte construída! Agora tente o exercício de novo." e leva o foco ao "Voltar ao exercício" do rodapé.
+
+**Textos** (contrato, `estudio`):
+- **Novos:**
+  - `ponteMotivoResposta(resposta)` "Você respondeu “<resposta>”. Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício.";
+  - `ponteMotivo` "Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício.";
+  - `ponteIndicador(n)` "Passo <n> de 3";
+  - `ponteConstruida` "Ponte construída!";
+  - `ponteVencida` "Agora tente o exercício de novo.";
+  - `ponteRever` "Rever explicação e exemplo";
+  - `ponteTentarDeNovo` "Tentar de novo".
+- **Mudam:** `ponteMargemVolta` passa a "Exercício"; `pontePassoExemplo` passa a "Um exemplo"; `pontePassoDesafio` passa a "Desafio".
+- **Continuam:** `verPonte`, `ponte`, `ponteMapa`, `ponteMargemErro`, `pontePassoExplicacao` ("Outro caminho"), `ponteVerExemplo`, `ponteIrDesafio`, `verificar`, `ponteVoltarExercicio`, `ponteReabertaAviso`, `pensando` e `ponteMapaFeita`.
+- **Saem:** `ponteDica`, `ponteVoltar`, `ponteTabuaErro`, `pontePassoErro` e `construir`.
+
+**Spec 07:** nenhuma diferença de plataforma.
+
+**Aceite** (390, web e app; mesma lição, errar de propósito; quadros de cada passo, com a tela limpa):
+
+| # | Passos | Esperado |
+|---|---|---|
+| R1 | Erra e toca em "Ver outro jeito de entender" | Selo, título, "Você respondeu “…”…", faixa com o Stu na tábua 1, "Passo 1 de 3 · Outro caminho", explicação e "Ver exemplo" no rodapé, tudo na primeira tela, a não ser o fim da explicação |
+| R2 | "Ver exemplo" | Tábua 1 feita, Stu na 2, "Passo 2 de 3 · Um exemplo", o exemplo, "Ir para o desafio" |
+| R3 | "Ir para o desafio" | "Passo 3 de 3 · Desafio", enunciado e opções, "Verificar" desligado até escolher |
+| R4 | Escolhe errado e verifica | Som de erro, retorno no cartão, "Tentar de novo" |
+| R5 | Escolhe certo e verifica | Som de acerto, Stu na margem "Exercício", "Ponte construída!", "Voltar ao exercício" verde |
+| R6 | "Voltar ao exercício" | O exercício original, como hoje; o mapa marca "Ponte construída" |
+| R7 | Abre a ponte já construída | Três tábuas cheias, aviso de reaberta, explicação e exemplo, "Voltar ao exercício" |
+| R8 | "Voltar ao exercício" do fluxo no passo 1 | Volta ao exercício sem vencer |
+| R9 | Movimento reduzido | Sem pulo nem troca animada |
+| R10 | Leitor de tela de R1 a R5 | Foco e anúncios desta seção |
+| R11 | 1440 | Mesma ordem, na coluna da aula |
+
 ## Explique com suas palavras (opcional)
 
 A pessoa escreve de 20 a 3.000 caracteres ou grava até 60 segundos. O limite de duração é aplicado pelo cliente; o servidor limita a 5 MB e confere o formato. O áudio vai à transcrição, volta como texto editável e só é avaliado quando a pessoa toca em **Enviar minha explicação**. A gravação para ao sair da tela ou colocar o app em segundo plano. Negar acesso ao microfone não impede digitar.
