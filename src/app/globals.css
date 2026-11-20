@@ -820,7 +820,7 @@ button { touch-action: manipulation; }
     --espaco-rodape: calc(var(--altura-navegacao) + var(--espaco-acao-fixa, 0px) + 16px);
     scroll-padding-bottom: var(--espaco-rodape);
   }
-  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .editor-perfil__barra, .trilha-vazia)) {
+  html:has(.estudo[data-navegacao] :is(.trilha-proximo, .editor-perfil__barra[data-presa], .trilha-vazia)) {
     --espaco-acao-fixa: calc(var(--altura-acao-fixa, 48px) + 12px);
   }
   .estudo[data-navegacao] .planos-movel { display: none; }

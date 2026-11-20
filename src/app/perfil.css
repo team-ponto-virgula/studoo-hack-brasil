@@ -124,9 +124,9 @@
 .interesses__aviso:empty { display: none; }
 
 .editar-perfil__barra {
-  position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
   padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
-  border-top: 2px solid var(--gelo); background: var(--fundo); box-shadow: 0 -8px 16px rgb(255 255 255 / 0.9);
+  border-top: 2px solid var(--gelo); background: var(--fundo);
 }
 .editar-perfil__estado { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 800; }
 .editar-perfil__estado .icone { width: 18px; height: 18px; }
@@ -231,16 +231,25 @@
 }
 .editar-foto__selo .icone { width: 20px; height: 20px; }
 @media (hover: hover) { .editar-foto__circulo:hover .editar-foto__selo { background: var(--acao-escura); } }
-.editor-perfil__barra { bottom: var(--altura-navegacao, 0px); margin-inline: -4px; padding-inline: 4px; }
-.editor-perfil__botoes { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.editor-perfil__lugar-barra { min-height: 64px; }
+.editor-perfil__botoes { display: flex; gap: 8px; margin-left: auto; }
+.estado-perfil-curto { display: none; }
+.editor-perfil__barra[data-presa] {
+  position: fixed; z-index: 6; bottom: 16px; left: var(--coluna-esquerda);
+  width: var(--coluna-largura); min-height: 64px; padding: 8px 16px; border: 0;
+  border-radius: 24px; background: var(--fundo); box-shadow: var(--sombra-ilha, 0 8px 24px rgb(11 27 92 / 0.14));
+  animation: perfil-barra-entrar 160ms ease-out;
+}
+@keyframes perfil-barra-entrar { from { transform: translateY(8px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .editor-perfil__barra[data-presa] { animation: none; } }
+@media (max-width: 400px) { .estado-perfil-curto { display: inline; } .estado-perfil-longo { display: none; } }
 @media (max-width: 767px) {
   .estudo[data-navegacao] .editar-perfil__form { grid-template-columns: minmax(0, 1fr); }
-  .estudo[data-navegacao] .editor-perfil__barra {
+  .estudo[data-navegacao] .editor-perfil__barra[data-presa] {
+    left: var(--margem-ilha-esq); right: var(--margem-ilha-dir); margin: auto; max-width: 480px;
     bottom: calc(var(--altura-navegacao) + 12px);
     justify-self: center;
-    width: var(--largura-ilha, 100%);
-    translate: calc((var(--margem-ilha-esq) - var(--margem-ilha-dir)) / 2) 0;
-    margin-inline: 0;
+    width: auto;
     padding: 8px;
     border: 0;
     border-radius: 24px;
