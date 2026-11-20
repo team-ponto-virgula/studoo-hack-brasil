@@ -971,7 +971,6 @@ export const mensagens = {
             { id: 'dia-a-dia', nome: 'Dia a dia', exemplos: ['Culinária: receitas básicas', 'Primeiros socorros essenciais', 'Jardinagem em apartamento'] },
         ],
         surpresa: 'Surpreenda-me',
-        seuMaterial: 'Seu material',
         sugestaoAplicada: (texto: string) => `Objetivo preenchido: ${texto}.`,
         gerar: 'Gerar trilha',
         cancelada: 'Geração cancelada. Nada foi salvo.',

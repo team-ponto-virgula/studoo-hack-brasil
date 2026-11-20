@@ -216,7 +216,7 @@
 }
 
 /* Tablet e computador: coluna centrada, Stu maior, áreas em linhas e ideias em duas colunas. */
-.pedido-ideias { flex-wrap: wrap; justify-content: center; margin-inline: 0; padding-inline: 0; overflow: visible; }
+
 
 @media (min-width: 768px) {
   .painel--pedido { justify-self: center; gap: 28px; }
@@ -326,9 +326,12 @@
 .pedido-novo .pedido-campo textarea::placeholder { color: #9aa3bf; font-weight: 600; }
 .pedido-novo .pedido-criar { width: 100%; min-height: 56px; font-size: 1.0625rem; }
 
-/* Ideias: fichas que quebram linha (veja abaixo). */
+/* A primeira ideia fica alinhada ao campo. As demais ficam ao alcance da rolagem horizontal. */
 .pedido-ideias {
   display: flex;
+  min-width: 0;
+  flex-wrap: nowrap;
+  scroll-padding-inline: var(--espaco-pagina);
   gap: 10px;
   margin: 2px calc(-1 * var(--espaco-pagina)) 0;
   padding: 4px var(--espaco-pagina) 8px;
@@ -344,7 +347,7 @@
   flex: none;
   align-items: center;
   gap: 8px;
-  min-height: 46px;
+  min-height: 44px;
   padding: 8px 16px 8px 10px;
   border: 2px solid var(--gelo);
   border-radius: 999px;
@@ -395,7 +398,7 @@
   .pedido-alternar:hover:not(:disabled) { border-color: var(--acao); background: #f8faff; }
 }
 
-.pedido-ideias { flex-wrap: wrap; justify-content: center; margin-inline: 0; padding-inline: 0; overflow: visible; }
+
 
 @media (min-width: 768px) {
   .painel--pedido.pedido-novo { width: min(100%, 44rem); gap: 16px; }
@@ -420,14 +423,17 @@
   background: linear-gradient(135deg, #f4f7ff 0%, var(--fundo) 70%);
   box-shadow: 0 3px 0 var(--gelo);
 }
-.pedido-alternar__selo {
-  display: inline-block;
-  margin-left: 8px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  color: var(--acao);
-  background: #e5ebff;
-  font-size: 0.75rem;
-  font-weight: 800;
-  vertical-align: middle;
+@media (max-width: 767px) {
+  .painel--pedido.pedido-novo { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .pedido-heroi { padding-top: 0; }
+  .pedido-heroi__stu { width: 82px; height: 82px; }
+  .pedido-heroi__stu .stu { width: 72px; }
+  .pedido-novo .pedido-campo textarea { min-height: 88px; padding: 12px 16px; }
+  .pedido-novo .pedido-criar { min-height: 48px; }
+  .pedido-alternar { min-height: 64px; padding-block: 8px; }
+}
+@media (max-width: 767px) and (max-height: 700px) {
+  .pedido-heroi__stu { width: 64px; height: 64px; }
+  .pedido-heroi__stu .stu { width: 56px; }
+  .pedido-novo[data-modo='ideia'] .pedido-heroi__fala { display: none; }
 }

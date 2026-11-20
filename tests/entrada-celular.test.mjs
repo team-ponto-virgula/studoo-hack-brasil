@@ -64,3 +64,15 @@ test('no celular: sem faixa até 860 px de altura (120 px acima), título 28/34,
   assert.match(bloco, /@media \(max-width: 767px\) and \(max-height: 860px\) \{ \.entrada-banner \{ display: none; \} \}/);
   assert.match(bloco, /\.entrada-cabecalho \.acesso-link \{ min-height: 44px; \}/);
 });
+
+test('no pedido as sugestões formam uma fileira rolável e Surpreenda-me fecha a lista', () => {
+  const pedido = readFileSync(join(raiz, 'src/app/pedido.tsx'), 'utf8');
+  const estilo = readFileSync(join(raiz, 'src/app/pedido.css'), 'utf8');
+  const ideias = pedido.indexOf('tema.exemplos.map');
+  assert.ok(pedido.indexOf('className="pedido-alternar"') < ideias);
+  assert.ok(ideias > 0 && pedido.indexOf('onClick={surpreender}') > ideias);
+  assert.doesNotMatch(pedido, /pedido-alternar__selo|pedido\.seuMaterial/);
+  assert.match(estilo, /\.pedido-ideias\s*\{[^}]*overflow-x: auto/);
+  assert.match(estilo, /\.pedido-ideias\s*\{[^}]*flex-wrap: nowrap/);
+  assert.match(estilo, /\.pedido-ideia\s*\{[^}]*min-height: 44px/);
+});
