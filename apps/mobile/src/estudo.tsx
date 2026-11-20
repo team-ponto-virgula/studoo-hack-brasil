@@ -1275,6 +1275,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const [esperaReal, setEsperaReal] = useState(false);
   const [saidaDoAjustar] = useState(() => new Animated.Value(0));
   const [ajustarFora, setAjustarFora] = useState(false);
+  const [alturaDoAjuste, setAlturaDoAjuste] = useState(44);
   const criacaoAgora = useRef(criacao);
   criacaoAgora.current = criacao;
 
@@ -1560,6 +1561,11 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const espera = criacao === 'criando' && esperaReal && (
     <Text testID="criacao-espera" accessibilityLiveRegion="polite" style={estudoEstilos.criacaoEspera}>{mensagens.geracao.escrevendoLicoes}</Text>
   );
+  const erroDaCriacao = falhou && (
+    <Text testID="criacao-erro" accessibilityLiveRegion="assertive" style={estudoEstilos.criacaoErro}>
+      {expirada ? mensagens.geracao.propostaExpirada : mensagens.geracao.erroCriacao}
+    </Text>
+  );
   const principal = pronta && proposta && (
     <View style={!empilhar && (dividir || salvando) ? estudoEstilos.metade : null}>
       <Botao referencia={botaoComecar} testID={expirada ? 'montar-de-novo' : 'comecar-trilha'}
@@ -1571,6 +1577,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const secundaria = (empilhar || !ajustarFora) && (
     <Animated.View pointerEvents={salvando ? 'none' : undefined} accessibilityElementsHidden={salvando}
       importantForAccessibility={salvando ? 'no-hide-descendants' : 'auto'}
+      onLayout={empilhar ? ({ nativeEvent: { layout } }) => setAlturaDoAjuste(Math.max(44, layout.height)) : undefined}
       style={empilhar ? { opacity: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }
         : dividir ? [estudoEstilos.metade, salvando || falhou ? {
           flexGrow: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
@@ -1589,9 +1596,11 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     }]}>
       <View style={empilhar ? estudoEstilos.geracaoAcoesEmpilhadas : estudoEstilos.geracaoAcoes}>
         {empilhar && principal}
+        {empilhar && erroDaCriacao}
         {empilhar ? <View style={estudoEstilos.geracaoLugarSecundario}>
           {secundaria}
-          {espera && <View style={estudoEstilos.geracaoEsperaSobreposta}>{espera}</View>}
+          {/* Usa o mesmo espaço do ajuste. Se a fonte fizer o texto ficar mais alto, a linha pode crescer. */}
+          {espera && <View style={[estudoEstilos.geracaoEsperaEmpilhada, { marginTop: -alturaDoAjuste, minHeight: alturaDoAjuste }]}>{espera}</View>}
         </View> : secundaria}
         {!pronta && (
           <View testID="geracao-situacao" accessible accessibilityLabel={mensagens.geracao.montando} style={estudoEstilos.situacao}>
@@ -1601,11 +1610,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         {!empilhar && principal}
       </View>
       {!empilhar && espera}
-      {falhou && (
-        <Text testID="criacao-erro" accessibilityLiveRegion="assertive" style={estudoEstilos.criacaoErro}>
-          {expirada ? mensagens.geracao.propostaExpirada : mensagens.geracao.erroCriacao}
-        </Text>
-      )}
+      {!empilhar && erroDaCriacao}
     </Animated.View>
   );
 
@@ -2808,7 +2813,7 @@ const estudoEstilos = StyleSheet.create({
   geracaoAcoesEmpilhadas: { gap: 8 },
   geracaoRodapeEstreito: { paddingHorizontal: 16 },
   geracaoLugarSecundario: { minHeight: 44, justifyContent: 'center' },
-  geracaoEsperaSobreposta: { ...StyleSheet.absoluteFillObject, justifyContent: 'center' },
+  geracaoEsperaEmpilhada: { justifyContent: 'center' },
   geracaoBotaoSecundario: { minHeight: 44 },
   // Criar a trilha (spec 04): a linha da espera real (14/20 #5E6A85) e a do erro (#C23B4E), centradas embaixo do botão.
   criacaoEspera: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20, textAlign: 'center' },

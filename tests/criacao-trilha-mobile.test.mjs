@@ -60,7 +60,8 @@ test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro
 
 test('até 600 px, a ação principal ocupa a largura e vem antes do ajuste; o espaço do ajuste mantém o botão parado ao criar', () => {
   assert.match(geracao, /const empilhar = pronta && width <= 600;/);
-  assert.match(geracao, /<View style=\{empilhar \? estudoEstilos\.geracaoAcoesEmpilhadas : estudoEstilos\.geracaoAcoes\}>\s*\{empilhar && principal\}\s*\{empilhar \? <View style=\{estudoEstilos\.geracaoLugarSecundario\}>\s*\{secundaria\}\s*\{espera && <View style=\{estudoEstilos\.geracaoEsperaSobreposta\}>\{espera\}<\/View>\}\s*<\/View> : secundaria\}/);
+  assert.match(geracao, /\{empilhar && principal\}\s*\{empilhar && erroDaCriacao\}\s*\{empilhar \? <View style=\{estudoEstilos\.geracaoLugarSecundario\}>/);
+  assert.match(geracao, /marginTop: -alturaDoAjuste, minHeight: alturaDoAjuste/, 'a espera ocupa o espaço do ajuste e pode crescer');
   assert.match(estudo, /geracaoAcoesEmpilhadas: \{ gap: 8 \}/);
   assert.match(estudo, /geracaoRodapeEstreito: \{ paddingHorizontal: 16 \}/);
   assert.match(estudo, /geracaoLugarSecundario: \{ minHeight: 44, justifyContent: 'center' \}/);
