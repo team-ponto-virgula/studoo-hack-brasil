@@ -23,8 +23,11 @@ test('o botão do Google mostra a imagem, na entrada e no primeiro passo do cada
   const cadastro = await ler('apps/mobile/src/cadastro.tsx');
   assert.match(cadastro, /<Botao rotulo=\{mensagens\.acesso\.google\} testID="cadastro-google" variante="secundario" imagemAntes=\{LOGO_GOOGLE\}/);
   // No topo do primeiro passo, antes do e-mail; a Apple (iPhone) acima do Google, como na entrada.
-  const [apple, google, ou, email] = ['testID="cadastro-apple"', 'testID="cadastro-google"', 'mensagens.acesso.ou', 'testID="cadastro-email"'].map((x) => cadastro.indexOf(x));
-  assert.ok(apple > 0 && apple < google && google < ou && ou < email, `ordem: ${[apple, google, ou, email]}`);
+  // Com o Google (4e944df): título, provedores, divisor "ou crie com seu e-mail", instrução e campo; sem ele, como antes.
+  const [apple, google, ou, instrucao, email] = ['testID="cadastro-apple"', 'testID="cadastro-google"', '{m.ou}', '{comProvedor && <Text testID="cadastro-instrucao"', 'testID="cadastro-email"'].map((x) => cadastro.indexOf(x));
+  assert.ok(apple > 0 && apple < google && google < ou && ou < instrucao && instrucao < email, `ordem: ${[apple, google, ou, instrucao, email]}`);
+  assert.match(cadastro, /\{!comProvedor && <Text testID="cadastro-instrucao" style=\{estilos\.introducao\}>\{etapa === 'email' \? m\.instrucao : m\.validade\}<\/Text>\}/);
+  assert.doesNotMatch(cadastro, /mensagens\.acesso\.ou/, 'o "ou entre com e-mail" fica só na entrada');
   assert.match(cadastro, /const comProvedor = etapa === 'email' && \(provedores\.google \|\| provedores\.apple\);/);
   assert.match(sessao, /google=\{continuarComGoogle\} apple=\{continuarComApple\} \/>;/);
 });
