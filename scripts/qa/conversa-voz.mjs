@@ -140,9 +140,11 @@ async function executar() {
     encerrou.catch(()=>{});
     await p.getByRole("button",{name:"Começar conversa"}).click();
     const r=await abriu;
-    if(r.status()!==201) throw new Error("Negociação de voz HTTP "+r.status());
-    // Só o limite numérico sai da resposta; ela também contém o SDP e o identificador da chamada.
-    const limite=(await r.json()).limiteSegundos;
+    if(r.status()!==200) throw new Error("Negociação de voz HTTP "+r.status());
+    // O Studoo devolve JSON com HTTP 200. Da sessão, apenas o limite vai para o relatório.
+    const sessao=await r.json();
+    if (!sessao.chamadaId || !sessao.sdpResposta?.trim()) throw new Error("Sessão de voz incompleta.");
+    const limite=sessao.limiteSegundos;
     if(!Number.isFinite(limite)||limite<=0) throw new Error("A chamada não informou o limite.");
     relatorio.limite=limite; const t=performance.now();
     etapa("Conversa aberta; microfone sintético");
