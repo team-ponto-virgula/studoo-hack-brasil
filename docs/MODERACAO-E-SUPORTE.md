@@ -38,3 +38,16 @@ Com o banco de testes `studoo_local`, origem de loopback, provedores falsos e fl
 ```sh
 STUDOO_QA_ORIGEM=http://127.0.0.1:3831 STUDOO_EQUIPE_EMAILS=equipe-qa@example.test EMAIL=falso IA=falsa node --env-file=.env --import tsx scripts/qa-moderacao-local.mjs
 ```
+
+## Passagem da prévia para a candidata
+
+A referência de código da prévia, `d9be93c`, tem 14 migrações. A candidata acrescenta consentimento, cadastro com Apple e moderação. O histórico efetivo e o tamanho do acervo da prévia devem ser consultados pelo responsável na conexão correta.
+
+1. Na infraestrutura já usada pela prévia, prepare o pacote do SHA escolhido, uma cópia de segurança restaurável e a lista de contas que vão operar a caixa. Confira a origem HTTPS, a conexão PostgreSQL, o histórico com `npx --no-install prisma migrate status` e o espaço disponível. Se houver migração divergente ou incompleta, resolva a divergência antes da troca.
+2. Ensaie a atualização em uma restauração isolada. Compare contagens de contas, trilhas, links, denúncias, fotos e capas e a associação de cada capa com a sua trilha. Na candidata, contas antigas começam sem consentimento para IA de terceiros, e o acervo público começa pendente. As URLs das publicações continuam válidas após a aprovação.
+3. Retire a versão antiga da rotação antes de aplicar a migração. Ela ignora os novos estados de revisão. A migração de moderação usa uma transação e atualiza referências de mídia existentes, o que requer escrita e bloqueios nas tabelas envolvidas. O intervalo da troca depende do volume medido no ensaio.
+4. Execute `npm run db:migrate` no banco da prévia, confira o status e inicie a candidata compilada com `npm run start`. Use o mesmo domínio e o PostgreSQL persistente. A rotina de geração do Prisma é de compilação. O comando de migração aplica apenas as versões registradas como pendentes.
+5. Antes de liberar o tráfego, consulte `/api/saude`, `/api/auth/config`, `/privacidade` e `/suporte`. Entre com uma conta da equipe em `/equipe/moderacao`. Confira uma publicação pendente como visitante, aprove-a, abra a URL pública e valide o tratamento de um pedido sintético. A equipe pode revisar o restante do acervo gradualmente com a comunidade ligada.
+6. Se a validação falhar, mantenha a versão antiga fora da rotação. Preserve o banco e o histórico das operações. O operador pode corrigir para a frente ou restaurar o conjunto aplicativo/banco para um ponto consistente, considerando as escritas feitas desde a cópia.
+
+O ensaio automatizado da preservação está em `tests/moderacao-migracao.test.mjs`. O roteiro entre duas sessões do mesmo servidor está em `scripts/qa-paridade-acesso-local.mjs`. Ele usa uma origem HTTPS de loopback, certificado local confiável, e-mail falso e o alvo sintético de `scripts/qa-moderacao-local.mjs`, executado com `STUDOO_QA_PRESERVAR_PUBLICACAO=1`. A prova de revogação usa o modo de IA de terceiros sem chave e verifica a recusa antes de qualquer chamada ao provedor.
