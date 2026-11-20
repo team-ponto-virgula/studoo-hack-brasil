@@ -114,3 +114,13 @@ test('"No Explorar" só para o que está aprovado: em revisão, o destino "depoi
   assert.match(conf, /!comp \|\| comp\.moderacao === 'recusado' \? k\.soVoce/);
   assert.match(conf, /comp\.moderacao === 'pendente'\s*\? mensagens\.seguranca\.destinoDepoisDaAprovacao\(/);
 });
+
+test('em revisão ou não publicada, sem "Copiar link" nem compartilhar o link; a folha troca "Link pronto" pelo aviso da revisão', async () => {
+  const perfil = await ler('apps/mobile/src/perfil.tsx');
+  assert.match(perfil, /\{link\.moderacao !== 'pendente' && link\.moderacao !== 'recusado' && \(\s*<Botao rotulo=\{m\.copiar\}/);
+  assert.match(perfil, /<BotaoParar rotulo=\{m\.parar\}/, '"Parar de compartilhar" continua');
+  const social = await ler('apps/mobile/src/social.tsx');
+  assert.match(social, /const linkForaDoAr = link\?\.moderacao === 'pendente' \|\| link\?\.moderacao === 'recusado';/);
+  assert.match(social, /etapa === 'pronto' && !linkForaDoAr \? m\.linkPronto/);
+  assert.match(social, /\{linkForaDoAr \? \(\s*<Text testID="folha-em-revisao"[^>]*>\s*\{link\.moderacao === 'pendente' \? seg\.enviadaParaRevisao : seg\.naoPublicada\}/);
+});

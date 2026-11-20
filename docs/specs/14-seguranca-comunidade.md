@@ -54,6 +54,11 @@
 | Capa pendente | — | "A capa está em revisão. Até lá, os outros veem a capa padrão." |
 
 - **Logo depois de publicar ou trocar a foto**, quando ela fica `pendente`, o aviso diz "Enviada para revisão. Aparece para outras pessoas depois da aprovação." Nunca diz que já foi publicada.
+- **Ações da trilha enquanto ela está pendente ou recusada (decidido em 20/11):**
+  - "Copiar link" e o compartilhar do link não aparecem, no cartão do Perfil, nas configurações ou na folha, porque o link mostraria "Esta trilha não está disponível agora." a qualquer outra pessoa.
+  - "Quem pode ver" e "Parar de compartilhar" continuam.
+  - Na folha, quando o salvamento volta pendente, o bloco "Link pronto" dá lugar ao texto "Enviada para revisão. Aparece para outras pessoas depois da aprovação."
+  - Depois da aprovação, "Copiar link" volta. Vale igual na web e no app.
 - **O que os outros veem:** nada do que está pendente. O link de uma trilha fora do ar mostra "Esta trilha não está disponível agora."
 - O selo "Em revisão" usa o selo neutro da spec 10 (fundo `#F1F4FD`, texto `#5E6A85`, 13 px 800). "Não publicada" usa o tom de alerta (`#9A5B00` sobre `#FFF6EA`).
 

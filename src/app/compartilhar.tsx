@@ -79,6 +79,10 @@ export function guardar(chave: string, valor: string) {
   try { sessionStorage.setItem(chave, valor); } catch { /* Sem armazenamento: a pessoa refaz o passo. */ }
 }
 
+export function podeDivulgarLink(link: LinkCompartilhado) {
+  return link.moderacao !== 'pendente' && link.moderacao !== 'recusado';
+}
+
 export const urlDoLink = (codigo: string) => `${window.location.origin}/t/${codigo}`;
 export const codigoDoErro = (erro: unknown) => (erro instanceof ErroStudoo ? erro.codigo : 'rede');
 
@@ -436,7 +440,8 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
       setLink(novo);
       aoMudarLink(planoId, novo);
       setEtapa('pronto');
-      anunciar(novo.moderacao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : m.linkPronto);
+      const aviso = novo.moderacao === 'recusado' ? mensagens.seguranca.naoPublicada : mensagens.seguranca.enviadaParaRevisao;
+      anunciar(podeDivulgarLink(novo) ? m.linkPronto : aviso);
     } catch (falha) {
       setErro(codigoDoErro(falha));
     } finally {
@@ -445,7 +450,7 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
   }
 
   async function copiar() {
-    if (!link) return;
+    if (!link || !podeDivulgarLink(link)) return;
     try {
       await navigator.clipboard.writeText(urlDoLink(link.codigo));
       void tocaSons.tocarEfeito('link_copiado');
@@ -457,7 +462,7 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
   }
 
   async function compartilhar() {
-    if (!link || !previa) return;
+    if (!link || !previa || !podeDivulgarLink(link)) return;
     try {
       await navigator.share({ title: previa.titulo, text: m.textoCompartilhar(previa.titulo), url: urlDoLink(link.codigo) });
     } catch { /* A pessoa fechou a folha do sistema: nada a fazer. */ }
@@ -560,19 +565,23 @@ export function FolhaCompartilhar({ planoId, visitante, comunidade = false, aoFe
         {etapa === 'pronto' && link && previa && (
           <>
             <p className="folha-trilha__titulo">{previa.titulo}</p>
-            {estadoLink === 'pendente' && <p className="folha-texto">{mensagens.seguranca.emRevisao}</p>}
+            {estadoLink === 'pendente' && <p className="folha-texto">{mensagens.seguranca.enviadaParaRevisao}</p>}
             {estadoLink === 'recusado' && <p className="folha-texto">{mensagens.seguranca.naoPublicada} <Link href={mensagens.seguranca.rotas.suporte}>{mensagens.seguranca.falarComSuporte}</Link></p>}
-            <label className="folha-link">
-              <span className="somente-leitor">{m.linkRotulo}</span>
-              <input ref={campoLink} readOnly value={urlDoLink(link.codigo)} onFocus={(e) => e.currentTarget.select()} />
-            </label>
-            <div className="folha-acoes folha-acoes--empilhadas">
-              {podeCompartilhar && <Botao onClick={() => void compartilhar()}><Icone nome="compartilhar" />{m.compartilhar}</Botao>}
-              <Botao variante={podeCompartilhar ? 'secundario' : 'primario'} onClick={() => void copiar()}><Icone nome="copiar" />{m.copiar}</Botao>
-            </div>
-            <p className="folha-status" role="status" aria-live="polite">{status}</p>
-            <PainelCodigo url={urlDoLink(link.codigo)} titulo={previa.titulo} dica={mensagens.codigo.dicaTrilha} rotulo={mensagens.codigo.rotuloTrilha(previa.titulo)}
-              cor={previa.perfil?.cor} comLink={false} nomeArquivo={`studoo-trilha-${link.codigo}`} demonstracao={Boolean(previa.demonstracao)} />
+            {podeDivulgarLink(link) && (
+              <>
+                <label className="folha-link">
+                  <span className="somente-leitor">{m.linkRotulo}</span>
+                  <input ref={campoLink} readOnly value={urlDoLink(link.codigo)} onFocus={(e) => e.currentTarget.select()} />
+                </label>
+                <div className="folha-acoes folha-acoes--empilhadas">
+                  {podeCompartilhar && <Botao onClick={() => void compartilhar()}><Icone nome="compartilhar" />{m.compartilhar}</Botao>}
+                  <Botao variante={podeCompartilhar ? 'secundario' : 'primario'} onClick={() => void copiar()}><Icone nome="copiar" />{m.copiar}</Botao>
+                </div>
+                <p className="folha-status" role="status" aria-live="polite">{status}</p>
+                <PainelCodigo url={urlDoLink(link.codigo)} titulo={previa.titulo} dica={mensagens.codigo.dicaTrilha} rotulo={mensagens.codigo.rotuloTrilha(previa.titulo)}
+                  cor={previa.perfil?.cor} comLink={false} nomeArquivo={`studoo-trilha-${link.codigo}`} demonstracao={Boolean(previa.demonstracao)} />
+              </>
+            )}
             {comunidade && previa.temaSugerido ? (
               <VisibilidadeDaTrilha link={link} temaSugerido={previa.temaSugerido} deMaterial={previa.deMaterial} demonstracao={Boolean(previa.demonstracao)}
                 aoMudar={(novo) => { setLink(novo); aoMudarLink(planoId, novo); }} />
