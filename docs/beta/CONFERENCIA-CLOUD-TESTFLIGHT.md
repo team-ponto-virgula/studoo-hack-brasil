@@ -66,6 +66,28 @@ Portanto, a candidata local atual não está inteiramente publicada nessa origem
 5. Conferir Google, callback HTTPS, notificações Apple e ausência de restrição de domínio/email que bloqueie o revisor e o Hide My Email. Definir contato de privacidade, equipe que atende o suporte e conta demo por senha nas informações privadas de teste.
 6. Repetir a sondagem; exigir páginas públicas 200 e flags de Apple, Google, cadastro e recuperação corretas. Conferir os fluxos reais de acesso antes de declarar prontos.
 
+## Servidor publicado: atualizado em 20/11/2026, 21:55 UTC (Studoo Lead, OpenBot)
+
+O bloqueio acima foi resolvido em parte, com autorização do dono e pelo acesso ao Dokploy que o Lead já tinha.
+
+Feito e conferido:
+
+- A origem acima passou a servir `4a60291dfde722b0488f128066b883eefb43ec83` (deployment `M9bpVaHYMcT5IxbdYTsFW`, concluído às 21:53:38 UTC). Antes servia `0491ed7`.
+- Migrações de 14 para 17 aplicadas com `prisma migrate deploy` no contêiner novo, sem pendência. Antes da troca foi feita a cópia `studoo_bkp_20261120_antes_da_troca` no mesmo PostgreSQL, com as mesmas contagens do original (9 contas, 37 trilhas, 10 links, 185 lições).
+- O conteúdo de demonstração foi reaprovado com `npm run comunidade:demo` (6 perfis, 10 trilhas). Não havia publicação de pessoa real para ficar pendente.
+- [Sondagem nova](conferencia-cloud/api-publicada-depois-da-troca.json): saúde 200; `/privacidade` 200; `/suporte` 200; `GET /api/mobile/apple/nonce` 405 (rota POST presente); `/api/auth/config` anuncia `google: true`, `apple: false`, `cadastro: false`, `recuperacao: false`.
+- Percurso logado `studoo-verificar` dentro do contêiner, iniciado depois do deployment: `login`, `consentimento_ia`, `proposta`, `criar_trilha`, `errar_exercicio`, `criar_ponte`, `acertar_ponte` e `apagar_trilha`, todos HTTP 200, com a IA real.
+- Variáveis acrescentadas: `STUDOO_EQUIPE_EMAILS` (o e-mail do dono, que modera) e `STUDOO_CONTATO_PRIVACIDADE` (a página `/suporte`). O Google já estava ligado, com cliente OAuth Web do projeto do dono e retorno em `/api/auth/google/retorno`; o login completo pelo Google foi provado na web com a conta do dono.
+
+Continua pendente (itens 4 e 5 da lista acima):
+
+- Apple: `STUDOO_APPLE`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` e `APPLE_BUNDLE_IDS` esperam a chave "Sign in with Apple" da conta que vai assinar o app. Enquanto isso o servidor anuncia `apple: false` e o botão não aparece.
+- Cadastro e recuperação por e-mail: desligados, porque não há domínio de envio verificado.
+- Restrição de acesso: `STUDOO_DOMINIO_EMAIL=example.test` com um Gmail liberado. Bloqueia revisor, jurado e "Ocultar meu e-mail"; abrir é decisão do dono.
+- Notificações da Apple (`/api/auth/apple/notificacoes`) e a conta de demonstração nas informações de teste: dependem da conta Apple.
+
+As chaves da Apple entram pelo formulário seguro do OpenBot, para o Studoo Lead gravar no Dokploy sem expor valor. Nada de chave em chat, commit ou `app.json`.
+
 ## Próximo envio
 
 O dono informou já ter Apple Developer. Ainda é necessário configurar o acesso de assinatura/submissão (certificado/perfil no EAS ou API key de equipe App Store Connect; o `.p8` de Sign in with Apple no servidor é uma chave diferente). Não gravar chaves em app.json, eas.json, EXPO_PUBLIC_ ou commits.
