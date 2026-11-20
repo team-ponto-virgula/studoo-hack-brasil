@@ -1,9 +1,9 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, Easing, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAudioRecorderState, type AudioRecorder } from 'expo-audio';
 import type { ApoioEstudo, PaginaMaterial } from '@studoo/contratos';
 import { Icone } from './icone';
-import { estilos, useMovimentoReduzido, LinhaAbrir, degrauFora, degrade } from './interface';
+import { estilos, useMovimentoReduzido, LinhaAbrir, degrauFora } from './interface';
 import { mensagens } from './mensagens';
 import { Stu } from './mascote';
 import { cores, fontes } from './tema';
@@ -16,158 +16,7 @@ import { cores, fontes } from './tema';
  */
 
 const m = mensagens.estudio;
-/** O céu de .ponte-cena: degradê de #f3f9ff a #e4f1ff até 66% (a água vem por cima a partir daí). */
-const CEU_DA_PONTE = degrade('linear-gradient(180deg, #f3f9ff 0%, #e4f1ff 66%)');
 const madeira = { face: '#9C5619', borda: '#703B10' };
-const madeiraErro = { face: '#B54B14', borda: '#7D310A' };
-const madeiraVencida = { face: '#2F7D22', borda: '#1E5916' };
-const legendaPosta = { borda: '#9C5619', fundo: '#FFF7EE', texto: '#4B2809' };
-const legendaErro = { borda: '#B54B14', fundo: '#FFF4EC', texto: '#4B2809' };
-const legendaVencida = { borda: '#2F7D22', fundo: '#EEFAF0', texto: '#184A10' };
-/** Durações da direção: tábua que entra (mola curta), escalonamento de 120 ms e a travessia, um momento raro. */
-const ENTRADA_TABUA_MS = 360;
-const ESCALONAMENTO_MS = 120;
-const ESPERA_TRAVESSIA_MS = 380;
-const TRAVESSIA_MS = 700;
-
-/** Uma tábua da ponte: tracejada enquanto falta; ao entrar, cai no lugar com uma mola curta. */
-function Tabua({ numero, ativa, erro, vencida, ordem, reduzir }: { numero: number; ativa: boolean; erro?: boolean; vencida: boolean; ordem: number; reduzir: boolean | null }) {
-  const [entrada] = useState(() => new Animated.Value(ativa ? 1 : 0));
-  useEffect(() => {
-    if (!ativa) { entrada.setValue(0); return; }
-    if (reduzir !== false) { entrada.setValue(1); return; }
-    const animacao = Animated.timing(entrada, {
-      toValue: 1, duration: ENTRADA_TABUA_MS, delay: ordem * ESCALONAMENTO_MS, easing: Easing.bezier(0.2, 0.9, 0.3, 1.3), useNativeDriver: true,
-    });
-    animacao.start();
-    return () => animacao.stop();
-  }, [ativa, reduzir, entrada, ordem]);
-  const cor = vencida ? madeiraVencida : erro ? madeiraErro : madeira;
-  // Como .ponte-tabua da web no celular: em pé, com o número; a que falta fica tracejada e meio apagada.
-  return (
-    <View testID={ativa ? (vencida ? 'tabua-vencida' : 'tabua-posta') : 'tabua-falta'} style={cena.tabuaLugar}>
-      {!ativa && <View style={cena.tabuaFalta}><Text style={cena.tabuaNumero}>{numero}</Text></View>}
-      {/* A tábua posta: face de 32 com borda de 2 que fecha em volta e o degrau de 4 por fora (box-shadow 0 4px 0 da web),
-          que cobre a corda de baixo como no site (36 px à vista). */}
-      {ativa && (
-        <Animated.View style={[degrauFora(4, 10, cor.borda), {
-          opacity: entrada.interpolate({ inputRange: [0, 0.3, 1], outputRange: [0, 1, 1] }),
-          transform: [{ translateY: entrada.interpolate({ inputRange: [0, 1], outputRange: [-16, 0] }) }],
-        }]}>
-          <View style={[cena.tabua, { backgroundColor: cor.face, borderColor: cor.borda }]}>
-            <Text style={[cena.tabuaNumero, { color: cores.fundo }]}>{numero}</Text>
-          </View>
-        </Animated.View>
-      )}
-    </View>
-  );
-}
-
-/**
- * A ponte de reforço como cena: a margem "Onde travou" (com o Stu), o vão com as cordas e quatro tábuas que entram
- * conforme a pessoa avança (a 1ª nasce da resposta errada; a 2ª e a 3ª chegam com o outro caminho e o novo exemplo; a 4ª
- * com o desafio) e a margem "De volta ao desafio". Ao vencer, as tábuas ficam verdes e o Stu atravessa, depois de a lição
- * trazer a cena para a vista (`aoMedir`). Embaixo, a legenda das tábuas com o texto de cada uma, legível no celular.
- */
-export function CenaPonte({ resposta, primeiraTabua, temPonte, exemplo = temPonte, desafio, concluida, montada = false, semLegenda = false, aoMedir, estilo }: {
-  /** Margens de fora (o cartão da ponte tira o vão do cartão, que a web não tem entre a cabeça e a cena). */
-  estilo?: StyleProp<ViewStyle>;
-  /** A resposta errada em texto legível (o texto da opção, não o código). */
-  resposta: string;
-  /** Texto da 1ª tábua sem resposta (a ilustração da apresentação usa "Sua tentativa", como as tábuas da web). */
-  primeiraTabua?: string;
-  temPonte: boolean;
-  /** A 3ª tábua (o novo exemplo): na ponte em passos (rodada 4D da web), só entra com o "Ver exemplo". */
-  exemplo?: boolean;
-  desafio: boolean;
-  concluida: boolean;
-  /** A ponte já construída antes (releitura): as quatro tábuas verdes e o Stu do outro lado, sem travessia nova. */
-  montada?: boolean;
-  /** Sem a legenda das tábuas (a ponte construída, como a web no celular): a ação fica mais perto da cena. */
-  semLegenda?: boolean;
-  /** Onde a cena fica, a partir do topo do cartão, para a lição rolar até ela antes da travessia. */
-  aoMedir?: (y: number, altura: number) => void;
-}) {
-  const reduzir = useMovimentoReduzido();
-  const vencida = concluida || montada;
-  const [travessia] = useState(() => new Animated.Value(vencida ? 1 : 0));
-  // Spec 13: o Stu de perfil atravessa (em laço só durante a travessia) e, ao chegar, troca para animado (um ciclo).
-  const [etapaDoStu, setEtapaDoStu] = useState<'esperando' | 'atravessando' | 'chegou'>(vencida ? 'chegou' : 'esperando');
-  useEffect(() => {
-    if (montada) { travessia.setValue(1); setEtapaDoStu('chegou'); return; }
-    if (!concluida) { travessia.setValue(0); setEtapaDoStu('esperando'); return; }
-    if (reduzir !== false) { travessia.setValue(1); setEtapaDoStu('chegou'); return; }
-    const comeco = setTimeout(() => setEtapaDoStu('atravessando'), ESPERA_TRAVESSIA_MS);
-    const animacao = Animated.timing(travessia, {
-      toValue: 1, duration: TRAVESSIA_MS, delay: ESPERA_TRAVESSIA_MS, easing: Easing.bezier(0.2, 0.9, 0.3, 1.2), useNativeDriver: true,
-    });
-    animacao.start(({ finished }) => { if (finished) setEtapaDoStu('chegou'); });
-    return () => { clearTimeout(comeco); animacao.stop(); };
-  }, [concluida, montada, reduzir, travessia]);
-  // Como a legenda da web (rodada 3A): a tentativa inteira, cortada só depois de 80 caracteres.
-  const tentativa = resposta.length > 80 ? `${resposta.slice(0, 79).trimEnd()}…` : resposta;
-  const passos = [
-    { texto: tentativa ? m.pontePassoErro(tentativa) : (primeiraTabua ?? m.ponteMargemErro), ativa: true, erro: true },
-    { texto: m.pontePassoExplicacao, ativa: temPonte || montada },
-    { texto: m.pontePassoExemplo, ativa: (temPonte && exemplo) || montada },
-    { texto: m.pontePassoDesafio, ativa: desafio || vencida },
-  ];
-  // O Stu sai do centro da margem esquerda e para no centro da direita (as margens têm a largura do texto, como na web).
-  const [margens, setMargens] = useState<{ esquerda: { x: number; largura: number } | null; direita: { x: number; largura: number } | null }>({ esquerda: null, direita: null });
-  const distancia = margens.esquerda && margens.direita
-    ? Math.max(0, margens.direita.x + margens.direita.largura / 2 - (margens.esquerda.x + margens.esquerda.largura / 2)) : 0;
-
-  return (
-    <View style={estilo} onLayout={(evento) => aoMedir?.(evento.nativeEvent.layout.y, evento.nativeEvent.layout.height)}>
-      {/* Como .ponte-cena da web no celular: céu, água a partir de 66% com as faixas claras no pé, margens e o vão. */}
-      <View testID="cena-ponte" style={[cena.cena, CEU_DA_PONTE]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-        <View style={cena.agua} />
-        <View style={cena.faixas}>{Array.from({ length: 14 }, (_, indice) => <View key={indice} style={cena.faixa} />)}</View>
-        <View style={cena.linha}>
-          <View style={[cena.margem, cena.margemEsquerda]}
-            onLayout={(evento) => { const { x, width } = evento.nativeEvent.layout; setMargens((antes) => ({ ...antes, esquerda: { x, largura: width } })); }}>
-            <Animated.View style={[cena.stu, { transform: [
-                { translateX: travessia.interpolate({ inputRange: [0, 1], outputRange: [0, distancia] }) },
-                { translateY: travessia.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, -12, 0] }) },
-              ] }]}>
-              <Stu nome={etapaDoStu === 'chegou' ? 'stu-animado' : 'stu-perfil'} tamanho={36}
-                animado={etapaDoStu === 'atravessando' ? 'laco' : etapaDoStu === 'chegou' ? 'uma-vez' : undefined} />
-            </Animated.View>
-            <Text style={cena.margemTexto}>{m.ponteMargemErro}</Text>
-          </View>
-          <View style={cena.vao}>
-            {/* As cordas vêm antes das tábuas: as tábuas (z-index 1 na web) passam por cima delas. */}
-            <View style={[cena.trilho, { top: 2 }]} />
-            <View style={[cena.trilho, { bottom: 2 }]} />
-            {passos.map((passo, indice) => (
-              <Tabua key={indice} numero={indice + 1} ativa={passo.ativa} erro={passo.erro} vencida={vencida} reduzir={reduzir}
-                ordem={indice === 0 ? 0 : indice === 3 ? 0 : indice - 1} />
-            ))}
-          </View>
-          <View style={[cena.margem, cena.margemDireita]}
-            onLayout={(evento) => { const { x, width } = evento.nativeEvent.layout; setMargens((antes) => ({ ...antes, direita: { x, largura: width } })); }}>
-            <View style={cena.lugarStu} />
-            <Text style={[cena.margemTexto, { color: '#184A10' }]}>{m.ponteMargemVolta}</Text>
-          </View>
-        </View>
-      </View>
-      {/* Como .ponte-legenda da web: duas colunas; o número num círculo; a tábua posta com borda cheia, a que falta tracejada. */}
-      {!semLegenda && <View style={cena.legenda} accessible accessibilityLabel={passos.filter((passo) => passo.ativa).map((passo) => passo.texto).join('. ')}>
-        {passos.map((passo, indice) => {
-          const cor = vencida && passo.ativa ? legendaVencida : passo.erro ? legendaErro : legendaPosta;
-          return (
-            <View key={indice} style={[cena.passo, passo.ativa ? { borderStyle: 'solid', borderColor: cor.borda, backgroundColor: cor.fundo } : null]}>
-              <View style={[cena.passoNumero, passo.ativa && { backgroundColor: cor.borda }]}>
-                <Text style={[cena.passoNumeroTexto, passo.ativa && { color: cores.fundo }]}>{indice + 1}</Text>
-              </View>
-              <Text style={[cena.passoTexto, passo.ativa && { color: cor.texto }]}>{passo.texto}</Text>
-            </View>
-          );
-        })}
-      </View>}
-    </View>
-  );
-}
 
 /**
  * O Stu como aluno no "Ensine ao Stu": com dúvida, ouvindo (balança devagar enquanto grava ou na conversa ao vivo), falando

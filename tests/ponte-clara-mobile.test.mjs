@@ -69,3 +69,9 @@ test('aceite b75134a: laço no selo, faixa da web, sem selo de demonstração, s
   const apresentacao = await ler('apps/mobile/src/apresentacao.tsx');
   assert.match(apresentacao, /<FaixaDaPonte passo=\{3\} construida carregando=\{false\} semLinha \/>/, 'a apresentação usa a mesma faixa');
 });
+
+test('a cena antiga e as chaves velhas da ponte saíram (o app e a apresentação usam a faixa nova)', async () => {
+  const cenas = await ler('apps/mobile/src/estudio-cenas.tsx');
+  assert.doesNotMatch(cenas, /function CenaPonte|function Tabua\(/);
+  for (const chave of ['construir', 'ponteDica', 'pontePronta', 'ponteVoltar', 'ponteTabuaErro', 'pontePassoErro']) assert.equal(m[chave], undefined, `mensagens.estudio.${chave} saiu do contrato`);
+});
