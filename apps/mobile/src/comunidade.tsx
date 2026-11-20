@@ -4,7 +4,7 @@ import {
 } from 'react-native';
 import Svg, { Defs, FeDropShadow, Filter, G, LinearGradient, Rect, Stop, SvgXml, Text as SvgTexto } from 'react-native-svg';
 import {
-  LIMITES_COMUNIDADE, MOTIVOS_DENUNCIA, TEMAS, origemLegivel, svgCapa,
+  LIMITES_COMUNIDADE, MOTIVOS_DENUNCIA, TEMAS, svgCapa,
   type CartaoTrilha, type EstadoSeguir, type MotivoDenuncia, type Novidade, type PaginaExplorar, type PerfilPublico, type PessoaNovidade, type Tema,
   type TrilhaCompartilhada,
 } from '@studoo/contratos';
@@ -1124,7 +1124,7 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
                       onPress={() => abrirPrevia(trilha.codigo)} style={[degrauFora(4, 18, cores.gelo), comunidadeEstilos.listaSimplesFora]}>
                       <View style={comunidadeEstilos.listaSimplesItem}>
                         <Text style={comunidadeEstilos.listaSimplesTitulo}>{trilha.titulo}</Text>
-                        <Text style={comunidadeEstilos.listaSimplesMeta}>{mensagens.compartilhar.totalLicoes(trilha.totalLicoes)} · {origemLegivel(trilha.origem)}</Text>
+                        <Text style={comunidadeEstilos.listaSimplesMeta}>{mensagens.compartilhar.totalLicoes(trilha.totalLicoes)}</Text>
                       </View>
                     </Pressable>
                   ))}

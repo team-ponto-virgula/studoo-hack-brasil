@@ -9,7 +9,6 @@ import {
   faltaParaVerificar,
   motivoParaRever,
   ordemInicial,
-  origemLegivel,
   respostaParaTentarDeNovo,
   respostaCompleta,
   ultimoExercicio,
@@ -811,7 +810,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   ))}
                 </View>
               )}
-              <Text style={estilos.legenda}>{t.origem} · {origemLegivel(licao.origem)}</Text>
+              {/* Spec 08 (c20ed0f): o provedor de IA nunca aparece como fonte; os marcadores [n] do material continuam. */}
             </ExplicacaoDoStu>
             {citacaoAberta !== null && licao.referencias?.[citacaoAberta] && (
               <View onLayout={(evento) => { citacaoY.current = evento.nativeEvent.layout.y; }}>

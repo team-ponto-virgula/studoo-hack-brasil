@@ -1,6 +1,6 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, origemLegivel, trilhaRepetida, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
@@ -192,6 +192,9 @@ export function Estudo({ cliente, sair, expirar }: {
         if (comCompartilhar) void cliente.obterPerfil().then((dados) => { if (ativo) setPerfil(dados); }).catch(() => undefined);
         setPlanos(lista);
         marcarSincronia();
+        // Sem trilhas, a abertura é a "Nova trilha", com o foco no campo (regra de 19/11); o vazio de Minhas trilhas só
+        // aparece quando a pessoa toca em "Minhas trilhas" (spec 05, d8df51c).
+        if (lista.length === 0) setEtapa((atual) => (atual.tipo === 'planos' ? { tipo: 'objetivo' } : atual));
         // Como na web: com planos salvos, abre direto na trilha em andamento (só se a pessoa ainda está em Meus planos).
         const inicial = planoInicial(lista);
         if (inicial) {
@@ -342,6 +345,13 @@ export function Estudo({ cliente, sair, expirar }: {
     setFalhaGeracao(null);
     setAviso(null);
     setEtapa(destino);
+  }
+
+  /** "Minhas trilhas" (aba ou botão do alto): com o vazio já na tela, o Stu dá um pulo; senão, abre a lista. */
+  const [puloDoVazio, setPuloDoVazio] = useState(0);
+  function tocarMinhasTrilhas() {
+    if (etapa.tipo === 'planos' && planos?.length === 0) { setPuloDoVazio((vezes) => vezes + 1); return; }
+    abrir({ tipo: 'planos' });
   }
 
   /** Troca de etapa por um toque: espera a ação em andamento terminar. */
@@ -642,13 +652,14 @@ export function Estudo({ cliente, sair, expirar }: {
   // Como a web: a barra de baixo nas telas de seção com trilhas salvas e, com a comunidade, sempre no Explorar (e no perfil ou
   // na prévia abertos dele).
   const aba = abaDe(etapa);
-  const comNavegacaoAgora = planos !== null && !pendente && ((planos.length > 0 && ABAS.includes(aba)) || (comunidade && aba === 'explorar'));
+  // Spec 04 (item 5) e spec 05 (d8df51c): a barra aparece também sem trilhas, senão não há "Minhas trilhas" para tocar.
+  const comNavegacaoAgora = planos !== null && !pendente && (ABAS.includes(aba) || (comunidade && aba === 'explorar'));
   const telaDaComunidade = ['explorar', 'perfilPublico', 'previaTrilha'].includes(etapa.tipo);
   const acoes = (
     <>
       {/* Durante "Criando sua trilha…", Minhas trilhas é a saída: o aceite segue no servidor e a trilha aparece na lista. */}
       {etapa.tipo !== 'planos' && !['objetivo', 'plano', 'perfil', 'configuracoes'].includes(etapa.tipo) && !(telaDaComunidade && comNavegacaoAgora) && <Botao rotulo={mensagens.planos.titulo} testID="meus-planos" compacto variante="texto"
-        desativado={ocupado && criacao !== 'criando'} acao={criacao === 'criando' ? sairDaCriacao : () => abrir({ tipo: 'planos' })} />}
+        desativado={ocupado && criacao !== 'criando'} acao={criacao === 'criando' ? sairDaCriacao : tocarMinhasTrilhas} />}
       {/* Como a web: "Sair" fica no Perfil, que existe com ou sem o compartilhar (Som, Privacidade e dados e Conta valem
           para toda conta e visitante); no alto, "Perfil" só onde não há a barra de baixo. */}
       {!comNavegacaoAgora && <Botao rotulo={mensagens.perfil.navegacao} testID="perfil-cabecalho" compacto variante="texto" desativado={ocupado}
@@ -663,7 +674,7 @@ export function Estudo({ cliente, sair, expirar }: {
   const comNavegacao = (carregandoInicio && tinhaTrilhas) || comNavegacaoAgora;
   return <AvisoDoApp.Provider value={avisoDoApp}><ProvedorBloqueio cliente={cliente}><NavegacaoContexto.Provider value={comNavegacao ? {
     atual: aba as Aba, ocupado,
-    planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
+    planos: tocarMinhasTrilhas, criar: () => abrir({ tipo: 'objetivo' }),
     explorar: comunidade ? () => abrir({ tipo: 'explorar' }) : undefined,
     // O Perfil (com Privacidade e dados e "Excluir conta") nunca depende do compartilhar.
     perfil: () => abrir({ tipo: 'perfil' }),
@@ -780,7 +791,7 @@ export function Estudo({ cliente, sair, expirar }: {
         criarTrilha={() => abrir({ tipo: 'objetivo' })} irAoExplorar={() => abrir({ tipo: 'explorar' })} />;
     }
 
-    if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
+    if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao') {
       return <Pedido cliente={cliente} onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado}
         aviso={aviso} falha={falhaGeracao} erro={erro} acaoErro={erro ? acaoDoErro(codigoErro) : undefined} areaInicial={areaInicial}
         temPlanos={(planos?.length ?? 0) > 0} acoes={acoes} aoMudar={atualizarObjetivo} gerar={(texto) => void gerar(texto)}
@@ -802,8 +813,13 @@ export function Estudo({ cliente, sair, expirar }: {
         {/* Como na web: o aviso de erro (sem rede, sessão) vem no alto, antes do título, sem margem em cima e a 16 dele. */}
         {erro && <EstadoErro mensagem={erro} foco acao={acaoDoErro(codigoErro)} estilo={estudoEstilos.erroNaLista} />}
         <Titulo testID="titulo-planos" foco>{mensagens.planos.titulo}</Titulo>
-        {/* .painel--planos: grade com vão de 12 (a introdução não tem margem própria ali). */}
-        <Text style={[estilos.introducao, estudoEstilos.introducaoPlanos]}>{mensagens.planos.subtitulo}</Text>
+        {/* Sem trilhas (spec 05, d8df51c): sem o subtítulo da lista, o bloco vazio com o Stu e "Criar minha primeira trilha". */}
+        {planos && planos.length === 0 ? (
+          <VazioDasTrilhas pulo={puloDoVazio} criar={() => abrir({ tipo: 'objetivo' })} />
+        ) : (
+          /* .painel--planos: grade com vão de 12 (a introdução não tem margem própria ali). */
+          <Text style={[estilos.introducao, estudoEstilos.introducaoPlanos]}>{mensagens.planos.subtitulo}</Text>
+        )}
         {planos && planos.length > 0 && (() => {
           // Como na web: um destaque só ("Seu próximo passo", com o único botão primário) e as outras trilhas embaixo.
           const destaque = planoInicial(planos);
@@ -1657,7 +1673,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
                 acao={() => abrirExistente(existente.id)} />
             </View>
           )}
-          {!origemDemonstracao(proposta.origem) && <Text style={estudoEstilos.geracaoOrigem}>{mensagens.geracao.origem(origemLegivel(proposta.origem))}</Text>}
+          {/* Spec 08 (c20ed0f): sem a linha "Fonte: <provedor>"; "Gerada por IA a partir do seu pedido…" continua acima. */}
         </View>
       )}
       {cartaoDeVolta && (
@@ -2540,6 +2556,13 @@ function CartaoNumero({ icone, rotulo, valor, cor, ordem, base }: {
 }
 
 const estudoEstilos = StyleSheet.create({
+  // "Minhas trilhas" sem trilhas: o mesmo bloco do vazio do Explorar (tracejado, céu, 22 de respiro, raio 20).
+  semTrilhas: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 18, padding: 22, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo,
+    borderRadius: 20, backgroundColor: cores.ceu, marginTop: 8, maxWidth: 560 },
+  semTrilhasTexto: { flexGrow: 1, flexShrink: 1, flexBasis: 256, gap: 8, alignItems: 'flex-start' },
+  semTrilhasTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
+  semTrilhasCorpo: { color: '#5E6A85', fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24 },
+  semTrilhasAcao: { alignSelf: 'stretch', marginTop: 8 },
   // Fim da rolagem como a web desde bf8cf37: 40 entre o último conteúdo e o rodapé ou a barra fixos (conclusão, minhas
   // trilhas, nova trilha).
   fimQuarenta: { paddingBottom: 40 },
@@ -2815,7 +2838,6 @@ const estudoEstilos = StyleSheet.create({
     letterSpacing: 0.5, textTransform: 'uppercase' },
   esqueletoTitulo: { width: '72%', maxWidth: 384, height: 28, marginVertical: 2, borderRadius: 8, backgroundColor: cores.gelo },
   geracaoIa: { marginTop: 16, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
-  geracaoOrigem: { marginTop: 4, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 },
   esqueletoOrigem: { width: '48%', maxWidth: 256, height: 12, marginTop: 10, borderRadius: 8, backgroundColor: cores.gelo },
   geracaoRodape: { gap: 8 },
   geracaoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 12 },
@@ -2844,3 +2866,43 @@ const estudoEstilos = StyleSheet.create({
   esqueletoBarraUltima: { width: '64%' },
   esqueletoBotao: { width: '100%', height: 50, borderRadius: 16, backgroundColor: cores.gelo },
 });
+
+/**
+ * "Minhas trilhas" sem trilhas (spec 05, d8df51c): o bloco vazio igual ao do Explorar, com o stu-curioso de 96 e halo,
+ * "Nenhuma trilha ainda", o texto e "Criar minha primeira trilha" (abre a Nova trilha com o foco no campo e o que já foi
+ * escrito). Entra subindo 8 px em 200 ms; cada `pulo` novo faz o Stu subir 8 px e voltar em 300 ms. Com movimento
+ * reduzido, nada se mexe. O título fica com o foco (a Tela); a região educada anuncia "Nenhuma trilha ainda.".
+ */
+function VazioDasTrilhas({ pulo, criar }: { pulo: number; criar: () => void }) {
+  const t = mensagens.planos;
+  const reduzir = useMovimentoReduzido();
+  const entrada = useAparecer(0, 200);
+  const [salto] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    const espera = setTimeout(() => AccessibilityInfo.announceForAccessibility(`${t.vazioTitulo}.`), 400);
+    return () => clearTimeout(espera);
+  }, [t.vazioTitulo]);
+  useEffect(() => {
+    if (!pulo || reduzir !== false) return;
+    salto.setValue(0);
+    const animacao = Animated.sequence([
+      Animated.timing(salto, { toValue: 1, duration: 150, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+      Animated.timing(salto, { toValue: 0, duration: 150, easing: Easing.in(Easing.quad), useNativeDriver: true }),
+    ]);
+    animacao.start();
+    return () => animacao.stop();
+  }, [pulo, reduzir, salto]);
+  return (
+    <Animated.View testID="planos-vazio" style={[estudoEstilos.semTrilhas, estiloDeEntrada(entrada, 8, 1)]}>
+      <Animated.View testID="planos-vazio-stu" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+        style={{ transform: [{ translateY: salto.interpolate({ inputRange: [0, 1], outputRange: [0, -8] }) }] }}>
+        <Stu nome="stu-curioso" tamanho={96} halo animado="uma-vez" />
+      </Animated.View>
+      <View style={estudoEstilos.semTrilhasTexto}>
+        <Text accessibilityRole="header" accessibilityLiveRegion="polite" style={estudoEstilos.semTrilhasTitulo}>{t.vazioTitulo}</Text>
+        <Text style={estudoEstilos.semTrilhasCorpo}>{t.vazioTexto}</Text>
+        <Botao rotulo={t.vazioAcao} testID="planos-vazio-criar" acao={criar} estilo={estudoEstilos.semTrilhasAcao} />
+      </View>
+    </Animated.View>
+  );
+}
