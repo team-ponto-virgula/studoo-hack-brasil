@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { configuracaoGoogle } from '@/servidor/acesso/google';
 import { cadastroAtivo } from '@/servidor/acesso/cadastro';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
 import { usuarioDaSessao } from '@/servidor/acesso/sessao';
@@ -12,5 +13,5 @@ export default async function PaginaCadastro() {
   const token = (await cookies()).get(nomeCookieSessao())?.value;
   if (token && (await usuarioDaSessao(token, 'WEB'))) redirect('/');
   if (!cadastroAtivo()) redirect('/login');
-  return <Cadastro />;
+  return <Cadastro googleDisponivel={Boolean(configuracaoGoogle())} />;
 }

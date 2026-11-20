@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { BotaoSom } from '../som';
+import { BotaoGoogle } from '../botao-google';
 import { useRouter } from 'next/navigation';
 
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent, type KeyboardEvent } from 'react';
@@ -204,8 +205,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
                 </div>
               )}
               {configuracaoCarregada && googleDisponivel && (
-                <Botao variante="secundario" disabled={enviando}
-                  onClick={() => { window.location.assign('/api/auth/google/iniciar'); }}>{mensagens.acesso.google}</Botao>
+                <BotaoGoogle ocupado={enviando} />
               )}
               {(visitanteDisponivel || (configuracaoCarregada && googleDisponivel)) && (
                 <p className="acesso-divisor">{mensagens.acesso.ou}</p>
