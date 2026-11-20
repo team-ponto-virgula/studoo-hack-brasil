@@ -61,3 +61,9 @@ Teste de cada dev: depois do toque, o topo do balão fica a 16 px ou mais do fim
 - **App:** sai a `Folha` em `Modal` do nó concluído e do bloqueado.
 - **Spec 07:** nenhuma diferença de plataforma.
 - **Aceite** (390, web e app, depois de M1 a M7): tocar numa lição concluída e numa bloqueada abre o balão no mapa, inteiro na área livre, com o mesmo título, texto e botão nos dois lados; nenhuma folha sobe. "Mostrar a lição atual no mapa" fecha o balão e abre o do nó atual.
+
+### Lado e aparência do balão (conferência do app 695b843, 20/11)
+
+- **Sempre embaixo do nó**, com a seta para cima, como a web (`.caminho-balao` com `top: calc(var(--lente) + 20px)`). Isso vale para lição atual, concluída e bloqueada, e nunca vira para cima. O nó tocado fica à vista acima do balão, e o enquadramento acima rola até caber. Assim, o balão não cobre o nó de cima nem o "Começar" do nó atual, que o app cobria na trilha recebida (quadro n4). O app muda: hoje ele abre acima e só desce quando não cabe.
+- **Concluída**, como na web: borda `#FFE08A` e título `#9A5B00`, o âmbar do troféu, e não verde.
+- **Topo do balão:** só o título e o "fechar", como na web, sem o ícone redondo de estado (o visto ou o cadeado) à esquerda. O estado já aparece no nó e no texto.
