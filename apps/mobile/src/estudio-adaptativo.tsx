@@ -794,19 +794,19 @@ export function ApoioDaLicao({
         // Ponte clara (spec 05, 62b964b): selo e título, por que estou aqui, um só indicador, o passo atual num cartão e a
         // saída depois dele. A ação de cada passo fica no rodapé preso da aula (definirRodapePonte).
         <View testID="ponte-clara" onLayout={(evento) => { cartaoPonteY.current = evento.nativeEvent.layout.y; }} style={s.ponteClara}>
-          <SeloDaPonte depois={ponte?.simulado ? <SeloDemonstracao estilo={s.seloPonte} /> : undefined} />
+          <SeloDaPonte />
           <Text ref={tituloPonte} testID="titulo-ponte" accessible accessibilityRole="header" style={[estilos.subtitulo, s.tituloPonte]}>{m.ponte}</Text>
           <Text testID="ponte-motivo" style={s.ponteMotivo}>
             {revendo && ponte ? m.ponteReabertaAviso : ultimaResposta.trim() ? m.ponteMotivoResposta(ultimaResposta) : m.ponteMotivo}
           </Text>
-          <FaixaDaPonte passo={etapaPonte} construida={venceu || (revendo && Boolean(ponte))} carregando={!ponte} />
+          <FaixaDaPonte passo={etapaPonte} construida={venceu || (revendo && Boolean(ponte))} carregando={!ponte} comemorar={venceu} />
           <Animated.View key={`passo-${venceu ? 'vencida' : revendo ? 'reaberta' : etapaPonte}`} style={[s.ponteCartao, estiloDeEntrada(entradaPasso, 8, 1)]}>
             {!ponte ? (
               <Text accessibilityLiveRegion="polite" style={estilos.texto}>{erro || m.pensando}</Text>
             ) : venceu ? (
               <>
-                <Text ref={tituloPassoPonte} accessible accessibilityRole="header" style={s.pontePassoTitulo}>{m.ponteConstruida}</Text>
-                <Text testID="ponte-vencida" accessibilityLiveRegion="polite" style={[estilos.texto, { fontWeight: '800' }]}>{m.ponteVencida}</Text>
+                {/* "Ponte construída!" fica só na linha do indicador (d29947f); o título do cartão é o que fazer agora. */}
+                <Text ref={tituloPassoPonte} testID="ponte-vencida" accessible accessibilityRole="header" accessibilityLiveRegion="polite" style={s.pontePassoTitulo}>{m.ponteVencida}</Text>
                 {!!retorno && <Text testID="retorno-vitoria" style={[estilos.texto, { color: cores.sucesso, fontWeight: '800' }]}>{retorno}</Text>}
               </>
             ) : revendo ? (
@@ -879,7 +879,9 @@ export function ApoioDaLicao({
         </View>
       )}
       {ponteAberta && cartaoOrigem}
-      {ultimo && <View onLayout={(evento) => { cartaoEnsinoY.current = evento.nativeEvent.layout.y; }}><Card>
+      {/* Só a ponte em cena (b75134a): o "Explique" volta com o exercício original. Com uma gravação ou conversa em curso,
+          ele fica até ela acabar (o "Parar" continua à vista; o reforço espera a gravação). */}
+      {ultimo && !(ponteAberta && !gravando && etapaVoz !== 'ativa') && <View onLayout={(evento) => { cartaoEnsinoY.current = evento.nativeEvent.layout.y; }}><Card>
         <LinhaAbrir rotulo={m.ensinar} aberto={ensinar} desativado={gravando || ocupado} alternar={() => setEnsinar(!ensinar)} />
         {ensinar && (
           <>

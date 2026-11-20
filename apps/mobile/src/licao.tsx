@@ -740,7 +740,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
       // "Continuar lendo" ficava num conteúdo que não rola.
       aoMedirNatural={(altura) => { alturaConteudo.current = altura; medirMais(); }}
       estiloConteudo={licaoEstilos.conteudo} estiloRodapeConteudo={licaoEstilos.rodapeConteudo}
-      estiloRodape={retorno === 'certa' ? licaoEstilos.rodapeCerto : retorno === 'errada' ? licaoEstilos.rodapeErrado : undefined}>
+      estiloRodape={ponteAberta ? undefined : retorno === 'certa' ? licaoEstilos.rodapeCerto : retorno === 'errada' ? licaoEstilos.rodapeErrado : undefined}>
       {/* Com a ponte aberta, a etapa fica recolhida (sem desmontar: a resposta e as medidas continuam), como na web 4D. */}
       <View style={ponteAberta ? licaoEstilos.recolhido : undefined}>
       {/* Como na web: na revisão rápida, a etapa entra de novo, mesmo com o mesmo exercício (o último, pulado agora). */}
