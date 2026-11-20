@@ -186,7 +186,6 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
         <span className="pedido-alternar__texto">
           <strong>
             {modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}
-            {modo === 'ideia' && <span className="pedido-alternar__selo">{mensagens.pedido.seuMaterial}</span>}
           </strong>
           <small>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</small>
         </span>
@@ -194,14 +193,14 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
       </button>
       {modo === 'ideia' && (
         <div className="pedido-ideias" role="group" aria-label={mensagens.pedido.sugestoes}>
-          <button type="button" className="pedido-ideia pedido-ideia--surpresa" disabled={ocupado} onClick={surpreender}>
-            <Desenho nome="estrela" />{mensagens.pedido.surpresa}
-          </button>
           {tema.exemplos.map(exemplo => (
             <button key={exemplo} type="button" className="pedido-ideia" aria-pressed={texto === exemplo} disabled={ocupado} onClick={() => sugerir(exemplo)}>
               <Desenho nome={iconeDoExemplo(tema, exemplo)} />{exemplo}
             </button>
           ))}
+          <button type="button" className="pedido-ideia pedido-ideia--surpresa" disabled={ocupado} onClick={surpreender}>
+            <Desenho nome="estrela" />{mensagens.pedido.surpresa}
+          </button>
         </div>
       )}
       {porLink}
