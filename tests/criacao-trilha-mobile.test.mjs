@@ -44,7 +44,7 @@ test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro
   assert.match(geracao, /testID=\{expirada \? 'montar-de-novo' : 'comecar-trilha'\}/);
   assert.match(geracao, /rotulo=\{salvando \? mensagens\.geracao\.criandoTrilha : expirada \? mensagens\.geracao\.montarDeNovo : mensagens\.geracao\.comecarLicao1\}/);
   assert.match(geracao, /ocupado=\{salvando\} afundado=\{salvando\} giro=\{salvando\}/);
-  assert.match(geracao, /const secundaria = !ajustarFora && \(/, '"Ajustar pedido" sai após a animação');
+  assert.match(geracao, /const secundaria = \(empilhar \|\| !ajustarFora\) && \(/, '"Ajustar pedido" mantém a medida só no rodapé empilhado');
   assert.match(geracao, /duration: RITMO_DA_GERACAO\.ajustarSaiMs/);
   // A espera real: a linha só depois de 1,5 s sem resposta.
   assert.match(geracao, /setTimeout\(\(\) => setEsperaReal\(true\), RITMO_DA_GERACAO\.esperaRealMs\)/);
@@ -60,8 +60,9 @@ test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro
 
 test('até 600 px, a ação principal ocupa a largura e vem antes do ajuste; o espaço do ajuste mantém o botão parado ao criar', () => {
   assert.match(geracao, /const empilhar = pronta && width <= 600;/);
-  assert.match(geracao, /<View style=\{empilhar \? estudoEstilos\.geracaoAcoesEmpilhadas : estudoEstilos\.geracaoAcoes\}>\s*\{empilhar && principal\}\s*\{empilhar \? <View style=\{estudoEstilos\.geracaoLugarSecundario\}>\{secundaria\}\{espera\}<\/View> : secundaria\}/);
+  assert.match(geracao, /<View style=\{empilhar \? estudoEstilos\.geracaoAcoesEmpilhadas : estudoEstilos\.geracaoAcoes\}>\s*\{empilhar && principal\}\s*\{empilhar \? <View style=\{estudoEstilos\.geracaoLugarSecundario\}>\s*\{secundaria\}\s*\{espera && <View style=\{estudoEstilos\.geracaoEsperaSobreposta\}>\{espera\}<\/View>\}\s*<\/View> : secundaria\}/);
   assert.match(estudo, /geracaoAcoesEmpilhadas: \{ gap: 8 \}/);
+  assert.match(estudo, /geracaoRodapeEstreito: \{ paddingHorizontal: 16 \}/);
   assert.match(estudo, /geracaoLugarSecundario: \{ minHeight: 44, justifyContent: 'center' \}/);
   assert.match(geracao, /pointerEvents=\{salvando \? 'none' : undefined\} accessibilityElementsHidden=\{salvando\}/);
 });

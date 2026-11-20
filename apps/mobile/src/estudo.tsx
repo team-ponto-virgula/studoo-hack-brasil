@@ -1568,7 +1568,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         acao={() => (expirada ? remontar() : comecar(proposta))} estilo={dividir ? estudoEstilos.botaoDividido : undefined} />
     </View>
   );
-  const secundaria = !ajustarFora && (
+  const secundaria = (empilhar || !ajustarFora) && (
     <Animated.View pointerEvents={salvando ? 'none' : undefined} accessibilityElementsHidden={salvando}
       importantForAccessibility={salvando ? 'no-hide-descendants' : 'auto'}
       style={empilhar ? { opacity: saidaDoAjustar.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }) }
@@ -1589,7 +1589,10 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     }]}>
       <View style={empilhar ? estudoEstilos.geracaoAcoesEmpilhadas : estudoEstilos.geracaoAcoes}>
         {empilhar && principal}
-        {empilhar ? <View style={estudoEstilos.geracaoLugarSecundario}>{secundaria}{espera}</View> : secundaria}
+        {empilhar ? <View style={estudoEstilos.geracaoLugarSecundario}>
+          {secundaria}
+          {espera && <View style={estudoEstilos.geracaoEsperaSobreposta}>{espera}</View>}
+        </View> : secundaria}
         {!pronta && (
           <View testID="geracao-situacao" accessible accessibilityLabel={mensagens.geracao.montando} style={estudoEstilos.situacao}>
             <Text style={estudoEstilos.situacaoRotulo}>{mensagens.geracao.montando}</Text>
@@ -1617,6 +1620,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   return (
     // Com o cartão do título de volta (no fim, no alto), a faixa volta a ser o cartão: ela sai, e a placa fica no alto do mapa.
     <Tela pagina="geracao" acoes={acoes} rodape={rodape} rolagem={rolagem} estiloConteudo={estudoEstilos.geracaoConteudo} faixaFixa={cartaoDeVolta ? undefined : faixa} faixaColada
+      estiloRodapeConteudo={empilhar ? estudoEstilos.geracaoRodapeEstreito : undefined}
       flutuante={pilula || undefined} aoMedir={(altura) => { visivel.current = altura; }} aoRolar={aoRolar}>
       {erro && <EstadoErro mensagem={erro} foco acao={acaoErro} />}
       {/* No fim, ao subir até o começo do mapa, a faixa volta a ser o cartão do título (o título, o pedido e de onde veio). */}
@@ -2802,7 +2806,9 @@ const estudoEstilos = StyleSheet.create({
   geracaoRodape: { gap: 8 },
   geracaoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   geracaoAcoesEmpilhadas: { gap: 8 },
+  geracaoRodapeEstreito: { paddingHorizontal: 16 },
   geracaoLugarSecundario: { minHeight: 44, justifyContent: 'center' },
+  geracaoEsperaSobreposta: { ...StyleSheet.absoluteFillObject, justifyContent: 'center' },
   geracaoBotaoSecundario: { minHeight: 44 },
   // Criar a trilha (spec 04): a linha da espera real (14/20 #5E6A85) e a do erro (#C23B4E), centradas embaixo do botão.
   criacaoEspera: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20, textAlign: 'center' },
