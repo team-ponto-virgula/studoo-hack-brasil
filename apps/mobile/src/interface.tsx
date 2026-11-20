@@ -316,7 +316,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   // nome da trilha) fica parada no alto.
   // Entrada e recuperação usam o logo de 112 da web (.entrada-cabecalho, .recuperar-topo); as telas de estudo, o de 102
   // (.estudo-cabecalho até 767 px, com 64 de altura e 16 nos lados).
-  const paginaDeAcesso = pagina === 'entrada' || Boolean(pagina?.startsWith('recuperar'));
+  const paginaDeAcesso = pagina === 'entrada' || Boolean(pagina?.startsWith('recuperar') || pagina?.startsWith('cadastro'));
   const cabecalho = !semCabecalho && (
     <View style={[estilos.cabecalho, semLinha && { borderBottomWidth: 0 }]}>
       <View style={[estilos.marcaConteudo, !topo && paginaDeAcesso && estilos.marcaAcesso, !topo && !paginaDeAcesso && estilos.marcaEstudo, !topo && !paginaDeAcesso && Boolean(abaixoDoLogo) && estilos.marcaComSelo]}>
@@ -914,9 +914,14 @@ type PropsConfirmacao = {
   texto?: string;
   /** Um aviso a mais, num parágrafo à parte (o link de compartilhamento que deixa de funcionar). */
   aviso?: string;
+  /** Conteúdo a mais depois do texto (a lista do que vai para a IA e o link da política, no pedido de permissão). */
+  extra?: ReactNode;
+  testID?: string;
   /** Rótulo da ação segura quando não é "Cancelar" ("Continuar compartilhando", "Manter foto", "Continuar editando"). */
   cancelarRotulo?: string;
   destrutivo?: boolean;
+  /** A ação fica desligada até a pessoa cumprir o que o cartão pede (digitar EXCLUIR). */
+  confirmarDesativado?: boolean;
   ocupado?: boolean;
   /** O erro do envio, acima das ações (o cartão continua aberto). */
   erro?: string | null;
@@ -927,8 +932,8 @@ type PropsConfirmacao = {
 /** Largura média de um caractere em Nunito 800 de 16 px (para saber se o rótulo cabe na metade). */
 const LARGURA_MEDIA_DO_CARACTERE = 9.2;
 
-export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false, ocupado = false, erro,
-  aoCancelar, aoConfirmar }: PropsConfirmacao) {
+export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, extra, testID = 'confirmacao', cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false,
+  confirmarDesativado = false, ocupado = false, erro, aoCancelar, aoConfirmar }: PropsConfirmacao) {
   const { width } = useWindowDimensions();
   const reduzir = useMovimentoReduzido();
   const [entrada] = useState(() => new Animated.Value(0));
@@ -942,16 +947,17 @@ export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, can
   const cabe = (rotulo: string) => rotulo.length * LARGURA_MEDIA_DO_CARACTERE + 36 + 4 <= metade;
   const empilhar = !cabe(confirmarRotulo) || !cabe(cancelarRotulo);
   const cancelar = <Botao rotulo={cancelarRotulo} testID="confirmacao-cancelar" variante="secundario" desativado={ocupado} acao={aoCancelar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
-  const confirmar = <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'perigo' : 'primario'} desativado={ocupado} carregando={ocupado}
+  const confirmar = <Botao rotulo={confirmarRotulo} testID="confirmacao-confirmar" variante={destrutivo ? 'perigo' : 'primario'} desativado={ocupado || confirmarDesativado} carregando={ocupado}
     acao={aoConfirmar} estilo={empilhar ? null : estilos.confirmacaoMetade} />;
   return (
     <Modal transparent visible animationType="fade" statusBarTranslucent onRequestClose={() => { if (!ocupado) aoCancelar(); }}>
       <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
         <Animated.View style={{ width: '100%', maxWidth: 400, alignItems: 'center', opacity: entrada,
           transform: [{ scale: reduzir !== false ? 1 : entrada.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>
-          <Pressable testID="confirmacao" accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={estilos.confirmacaoCartao} onPress={() => {}}>
+          <Pressable testID={testID} accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={estilos.confirmacaoCartao} onPress={() => {}}>
             <Text accessibilityRole="header" style={estilos.confirmacaoTitulo}>{mensagem}</Text>
             {texto && <Text style={estilos.confirmacaoTexto}>{texto}</Text>}
+            {extra}
             {aviso && <Text testID="confirmacao-aviso" style={estilos.confirmacaoTexto}>{aviso}</Text>}
             {erro && <Text accessibilityRole="alert" style={estilos.confirmacaoErro}>{erro}</Text>}
             {/* Lado a lado: "Cancelar" à esquerda e a ação à direita; uma por linha: a ação em cima. */}

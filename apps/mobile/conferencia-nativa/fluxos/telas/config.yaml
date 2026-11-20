@@ -21,4 +21,6 @@ executionOrder:
     - 35-exercicio-aberta
     - 40-explorar
     - 50-perfil
+    # Privacidade e o cartão de excluir a conta (cancelado: a conta sintética continua).
+    - 55-privacidade
     - 60-configuracoes
