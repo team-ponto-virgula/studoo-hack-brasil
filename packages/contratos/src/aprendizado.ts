@@ -10,6 +10,7 @@ export { fundoUnicoDaPreferencia } from './catalogo-sons';
 export * from './fala';
 export * from './voz-ao-vivo';
 export * from './compartilhar';
+export { perfilComLink, linksPublicosNoPerfil } from './perfil-estado';
 export * from './comunidade';
 export * from './codigo-studoo';
 export * from './catalogo-mascote';

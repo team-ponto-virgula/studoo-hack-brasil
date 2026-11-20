@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import { AccessibilityInfo, Keyboard, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
 import {
-  LIMITES_PERFIL, TEMAS, motivoNomeInvalido, motivoResumoInvalido, normalizarNomePerfil, normalizarResumoPerfil,
+  LIMITES_PERFIL, TEMAS, perfilComLink, linksPublicosNoPerfil, motivoNomeInvalido, motivoResumoInvalido, normalizarNomePerfil, normalizarResumoPerfil,
   type CartaoTrilha, type CorPerfil, type LinkCompartilhado, type Perfil, type Tema,
 } from '@studoo/contratos';
 import { sessaoInvalida, type ClienteNativo } from './api-nativa';
@@ -153,25 +153,13 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   }, []);
 
   function trocarLink(antigo: LinkCompartilhado, novo: LinkCompartilhado | null) {
-    setPerfil((atual) => {
-      if (!atual) return atual;
-      const links = novo ? atual.links.map((item) => (item.codigo === antigo.codigo ? novo : item)) : atual.links.filter((item) => item.codigo !== antigo.codigo);
-      // O alcance do cartão é o da página pública: só as trilhas no perfil (o total vai no título da seção).
-      const noPerfil = links.filter((item) => item.noPerfil);
-      return { ...atual, links, publico: noPerfil.length > 0, alcance: { ...atual.alcance, trilhas: noPerfil.length, pessoas: noPerfil.reduce((t, l) => t + l.adicoes, 0) } };
-    });
+    setPerfil((atual) => atual && perfilComLink(atual, antigo.planoId, novo));
     aoMudarLink(antigo.planoId, novo);
   }
 
   /** Um link mudou na folha "Postar no perfil": troca o que já estava na lista, ou entra (o link acabou de ser criado). */
   function aplicarLink(planoId: string, novo: LinkCompartilhado) {
-    setPerfil((atual) => {
-      if (!atual) return atual;
-      const existe = atual.links.some((item) => item.planoId === planoId);
-      const links = existe ? atual.links.map((item) => (item.planoId === planoId ? novo : item)) : [novo, ...atual.links];
-      const noPerfil = links.filter((item) => item.noPerfil);
-      return { ...atual, links, publico: noPerfil.length > 0, alcance: { ...atual.alcance, trilhas: noPerfil.length, pessoas: noPerfil.reduce((total, l) => total + l.adicoes, 0) } };
-    });
+    setPerfil((atual) => atual && perfilComLink(atual, planoId, novo));
     aoMudarLink(planoId, novo);
   }
 
@@ -329,7 +317,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
             {!perfil.visitante && perfil.nome && (
               <View style={perfilEstilos.secao}>
                 <TituloSecao>{p.publicoTitulo}</TituloSecao>
-                <Text style={estilos.texto}>{perfil.publico ? p.publico(perfil.links.filter((link) => link.noPerfil).length) : `${p.privado} ${comunidade ? p.perfilPrivadoDica : p.perfilPrivadoDicaSemComunidade}`}</Text>
+                <Text style={estilos.texto}>{perfil.publico ? p.publico(linksPublicosNoPerfil(perfil).length) : `${p.privado} ${comunidade ? p.perfilPrivadoDica : p.perfilPrivadoDicaSemComunidade}`}</Text>
                 {perfil.publico && perfil.perfilId && (
                   <Botao rotulo={p.verComoOutros} variante="secundario" testID="perfil-ver-publico" acao={() => abrirNoNavegador(urlDoPerfil(perfil.perfilId!))}
                     estilo={{ alignSelf: 'flex-start' }} />

@@ -1,6 +1,6 @@
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
-import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
+import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
 import { useCallback, useContext, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { AccessibilityInfo, Animated, AppState, Platform, Easing, Image, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import { estiloDeEntrada, useAparecer, useContagem, usePulinho } from './animacoes';
@@ -613,12 +613,7 @@ export function Estudo({ cliente, sair, expirar }: {
   const [folhaPostar, setFolhaPostar] = useState(false);
   function aplicarLinkNoPerfil(planoId: string, novo: LinkCompartilhado) {
     mudarLink(planoId, novo);
-    setPerfil((atual) => {
-      if (!atual) return atual;
-      const existe = atual.links.some((item) => item.planoId === planoId);
-      const links = existe ? atual.links.map((item) => (item.planoId === planoId ? novo : item)) : [novo, ...atual.links];
-      return { ...atual, links, publico: links.some((item) => item.noPerfil) };
-    });
+    setPerfil((atual) => atual && perfilComLink(atual, planoId, novo));
   }
   const acoesDePostar = useAcoesDePostar({ cliente, aoMudarLink: aplicarLinkNoPerfil });
   async function postarPeloMenu(plano: PlanoResumo) {
