@@ -180,7 +180,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
    * `ceu`, na abertura: o topo do céu e o da faixa da Parte 1 na rolagem e a altura da faixa presa no alto, para a tela seguir
    * a regra da web (com o céu cortado, sobe até a Parte 1 ficar logo abaixo do cabeçalho preso).
    */
-  aoRolar?: (topo: number, base: number, sempre?: boolean, ceu?: { topo: number; parte: number; coberto: number }) => void;
+  aoRolar?: (topo: number, base: number, sempre?: boolean, ceu?: { topo: number; parte: number; coberto: number }, cobertoNoAlto?: number) => void;
   /** Posição da lente do nó atual na rolagem (topo e base), para a tela esconder o cartão fixo enquanto ele está à vista. */
   aoMedirAtual?: (topo: number, base: number) => void;
   acompanhar?: (ultimo: Faixa, alvo: Faixa) => void;
@@ -336,8 +336,11 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     const { caminho, lista, linhas } = posicoes.current;
     const linha = linhas.get(atual.id);
     if (aoRolar && caminho !== null && lista !== null && linha) {
-      const topo = caminho + lista + linha.y;
-      aoRolar(topo, topo + medidas.lente, true);
+      // Spec 01 (e198866): na mesma conta da abertura (com as faixas do alto, `deslocamento`) e com a altura medida do
+      // cabeçalho preso da trilha, para o nó nunca parar embaixo dele.
+      const topo = deslocamento + caminho + lista + linha.y;
+      // O conjunto é o nó e o balão dele, que fica acima da lente: o topo que precisa caber é o do balão.
+      aoRolar(topo - BALAO_DO_ATUAL, topo + medidas.lente, true, undefined, coberto);
     }
     setTimeout(() => {
       const alvo = alvos.current.get(atual.id);
@@ -592,6 +595,8 @@ function Inicio({ texto, trecho, lente, pensando, placa, dicas, parte, comecoAtu
 // .caminho[data-comeco-atual] .caminho-inicio { padding-bottom: 242px } e a faixa da parte a 152 do pé.
 const INICIO_COM_BALAO = 242;
 const PARTE_COM_BALAO = 152;
+/** O balão do nó atual ("Começar" e o título em até duas linhas) começa até 22 + 96 acima da lente: o topo do conjunto. */
+const BALAO_DO_ATUAL = 22 + 96;
 
 /** Placa de madeira com a frase do Stu: entra balançando, presa em dois postes fincados nas colinas. */
 function Placa({ texto }: { texto: string }) {
