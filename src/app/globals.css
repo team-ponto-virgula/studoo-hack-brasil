@@ -946,12 +946,12 @@ button { touch-action: manipulation; }
   .entrada-cabecalho .logo { width: 112px; }
   .entrada-banner { height: 140px; margin-bottom: 24px; }
   .entrada-banner .stu { width: 72px; }
-  .recuperar { max-width: 620px; padding: 0 20px calc(108px + env(safe-area-inset-bottom)); }
+  .recuperar { max-width: 620px; padding: 0 20px max(24px, env(safe-area-inset-bottom)); }
   .recuperar-topo { min-height: 60px; padding: max(8px, env(safe-area-inset-top)) 0 8px; border-bottom: 2px solid var(--nevoa); }
   .recuperar-topo .logo { width: 112px; }
   .recuperar-cartao { margin-top: 24px; padding: 0; border: 0; border-radius: 0; }
   .recuperar-voltar { display: none; }
-  .recuperar .acao-principal { padding: 16px 16px max(16px, env(safe-area-inset-bottom)); }
+  .recuperar .acao-principal { position: static; width: 100%; padding: 4px 0; margin: 0; border: 0; box-shadow: none; }
   .recuperar .acao-principal > .botao { width: 100%; }
 }
 @media (max-width: 767px) {
