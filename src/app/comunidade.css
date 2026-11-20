@@ -266,3 +266,30 @@
 .seguranca-estado strong { display: inline-block; padding: .25rem .65rem; border-radius: 1rem; color: #5e6a85; background: #f1f4fd; font-size: .8125rem; font-weight: 800; }
 .seguranca-estado[data-recusado] strong { color: #9a5b00; background: #fff6ea; }
 .cartao-trilha__opcoes [role=menuitem] { min-height: 44px; white-space: normal; }
+
+.seguranca-faixa {
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  z-index: 80;
+}
+body:has(.navegacao-mobile) .seguranca-faixa { bottom: var(--espaco-rodape, calc(94px + env(safe-area-inset-bottom))); }
+.seguranca-faixa p {
+  display: flex; align-items: center; gap: 10px; padding: 6px 16px;
+  min-height: 48px; background: #1b2a5e; color: #fff;
+  font-size: 15px; line-height: 22px; pointer-events: auto; overflow-wrap: anywhere;
+}
+.seguranca-faixa .icone { flex: none; width: 20px; height: 20px; }
+.seguranca-faixa span { flex: 1; }
+.seguranca-faixa button {
+  min-height: 44px; padding: 0 4px; border: 0; color: #afc2ff;
+  background: transparent; font: inherit; cursor: pointer;
+}
+.seguranca-faixa button:focus-visible { outline: 2px solid white; border-radius: 6px; }
+.seguranca-lista { border: 2px solid var(--gelo); border-radius: 16px; overflow: hidden; }
+.seguranca-ajuda > a, .seguranca-linha {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 56px; margin: 0; padding: 8px 16px;
+  font-weight: 800; color: var(--texto); text-decoration: none;
+}
+.seguranca-lista > :not(:last-child) { border-bottom: 1px solid var(--gelo); }
+.seguranca-ajuda .icone { width: 18px; height: 18px; color: var(--texto2); }
+.seguranca-linha .botao { min-height: 44px; padding: 6px 12px; }

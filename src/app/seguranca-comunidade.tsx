@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { createContext, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { createContext, useCallback, useContext, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { MOTIVOS_DENUNCIA, type MotivoDenuncia } from '@studoo/contratos';
 import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
 import { mensagens, textoErro } from '../mensagens/pt-BR';
@@ -14,8 +14,8 @@ const c = mensagens.comunidade;
 const seg = mensagens.seguranca;
 type Alvo = { tipo: 'perfil' | 'trilha'; alvo: string; nome: string; titulo: string };
 type Acao = 'bloquear' | 'denunciar';
-const Contexto = createContext({ versao: 0, abrir: (_alvo: Alvo, _acao: Acao) => {} });
-export const useVersaoComunidade = () => useContext(Contexto).versao;
+const Contexto = createContext({ versao: 0, confirmarLeitura: (_versao: number) => {}, abrir: (_alvo: Alvo, _acao: Acao) => {} });
+export const useAtualizacaoComunidade = () => useContext(Contexto);
 
 export function MenuPublicacao({ tipo, alvo, nome, titulo, logado }: Alvo & { logado: boolean }) {
   const central = useContext(Contexto);
@@ -123,10 +123,30 @@ export function DialogoDenuncia({ alvoTipo, alvo, alvoNome, aoFechar, aoEnviar }
 
 
 
-type Aviso = { texto: string; protocolo?: string; bloqueio?: string; alvo?: Alvo };
+type Aviso = { texto: string; bloqueio?: string; alvo?: Alvo };
+function FaixaComunidade({ aviso, aoFechar, aoAgir }: { aviso: Aviso; aoFechar: () => void; aoAgir: () => void }) {
+  const [pausado, pausar] = useState(false);
+  const inicioToque = useRef<number | null>(null);
+  const acao = aviso.alvo ? seg.bloquearAcao : aviso.bloqueio ? seg.desfazer : null;
+  useEffect(() => {
+    if (pausado) return;
+    const id = window.setTimeout(aoFechar, acao ? 7000 : 4500);
+    return () => window.clearTimeout(id);
+  }, [aviso, acao, pausado, aoFechar]);
+  return <aside className="aviso-app seguranca-faixa" onMouseEnter={() => pausar(true)} onMouseLeave={() => pausar(false)}
+    onFocus={() => pausar(true)} onBlur={() => pausar(false)}
+    onTouchStart={e => { inicioToque.current = e.touches[0].clientY; }}
+    onTouchEnd={e => { if (inicioToque.current !== null && e.changedTouches[0].clientY - inicioToque.current > 40) aoFechar(); inicioToque.current = null; }}>
+    <p><Icone nome="check" /><span role="status" aria-live="polite">{aviso.texto}</span>
+      {acao && <button type="button" onClick={aoAgir}>{acao}</button>}</p>
+  </aside>;
+}
 export function SegurancaComunidade({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [versao, mudar] = useState(0);
+  const [lida, confirmarLeitura] = useState(0);
+  const caminho = usePathname();
+  const fecharAviso = useCallback(() => avisar(null), []);
   const [dialogo, abrir] = useState<{ alvo: Alvo; acao: Acao } | null>(null);
   const [aviso, avisar] = useState<Aviso | null>(null);
   const [ocupado, ocupar] = useState(false);
@@ -153,19 +173,19 @@ export function SegurancaComunidade({ children }: { children: ReactNode }) {
     try { await cliente.desbloquear(id); avisar({ texto: seg.desbloqueada }); atualizar(); }
     catch(e) { falhar(textoErro(codigoDoErro(e))); } finally { ocupar(false); }
   }
-  return <Contexto.Provider value={{versao, abrir: abrirAcao}}>
+  return <Contexto.Provider value={{versao, confirmarLeitura, abrir: abrirAcao}}>
     {children}
-    {dialogo?.acao === 'bloquear' && <DialogoConfirmar destaqueDestrutivo titulo={seg.bloquearTitulo(dialogo.alvo.nome)} texto={seg.bloquearTexto}
+    {dialogo?.acao === 'bloquear' && <DialogoConfirmar titulo={seg.bloquearTitulo(dialogo.alvo.nome)} texto={seg.bloquearTexto}
       confirmar={seg.bloquearAcao} cancelar={seg.cancelar} ocupado={ocupado} aoConfirmar={() => void confirmar()} aoCancelar={() => { if (!ocupado) abrir(null); }} />}
     {dialogo?.acao === 'denunciar' && <DialogoDenuncia alvoTipo={dialogo.alvo.tipo} alvo={dialogo.alvo.alvo}
       alvoNome={dialogo.alvo.tipo === 'trilha' ? c.denuncia.alvoTrilha(dialogo.alvo.titulo, dialogo.alvo.nome) : dialogo.alvo.nome}
-      aoFechar={() => abrir(null)} aoEnviar={protocolo => { avisar({ texto: seg.denunciaEnviada(protocolo), protocolo, alvo: dialogo.alvo }); atualizar(); }} />}
+      aoFechar={() => abrir(null)} aoEnviar={protocolo => { avisar({ texto: seg.denunciaEnviada(protocolo), alvo: dialogo.alvo }); atualizar(); }} />}
     {erro && <p className="seguranca-aviso" role="alert">{erro}<button onClick={() => falhar('')}>Fechar</button></p>}
-    {aviso && !dialogo && <aside className="seguranca-aviso"><p role="status" aria-live="polite">{aviso.texto}</p>
-      {aviso.protocolo && <Link onClick={() => avisar(null)} href={seg.rotas.suporte + "#protocolo=" + aviso.protocolo}>Acompanhar protocolo</Link>}
-      {aviso.alvo && <button type="button" onClick={() => abrirAcao(aviso.alvo!, 'bloquear')}>{seg.bloquearAcao}</button>}
-      {aviso.bloqueio && <button type="button" disabled={ocupado} onClick={() => void desfazer(aviso.bloqueio!)}>{seg.desfazer}</button>}
-      <button type="button" onClick={() => avisar(null)}>Fechar</button></aside>}
+    {aviso && !dialogo && caminho === '/explorar' && lida === versao &&
+      <FaixaComunidade aviso={aviso} aoFechar={fecharAviso} aoAgir={() => {
+        if (aviso.alvo) abrirAcao(aviso.alvo, 'bloquear');
+        if (aviso.bloqueio && !ocupado) void desfazer(aviso.bloqueio);
+      }} />}
   </Contexto.Provider>;
 }
 
@@ -193,7 +213,7 @@ export function BloqueadasPerfil() {
   }
   return <section className="perfil-secao"><h2 className="perfil-secao__titulo">{seg.bloqueadasTitulo}</h2>
     {itens?.length === 0 && <p>{seg.bloqueadasVazia}</p>}
-    {itens?.map(b => <div className="seguranca-linha" key={b.id}><span>{b.nome}</span><Botao variante="texto" aria-label={seg.desbloquearRotulo(b.nome)} disabled={ocupado !== null} onClick={() => void remover(b.id)}>{seg.desbloquear}</Botao></div>)}
+    {!!itens?.length && <div className="seguranca-lista">{itens.map(b => <div className="seguranca-linha" key={b.id}><span>{b.nome}</span><Botao variante="secundario" aria-label={seg.desbloquearRotulo(b.nome)} disabled={ocupado !== null} onClick={() => void remover(b.id)}>{seg.desbloquear}</Botao></div>)}</div>}
     <p role="status">{status}</p></section>;
 }
 

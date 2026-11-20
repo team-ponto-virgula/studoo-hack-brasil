@@ -324,8 +324,8 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
       <SecaoPrivacidade visitante={visitante} />
       {compartilhar && <BloqueadasPerfil />}
       <section className="perfil-secao"><h2 className="perfil-secao__titulo">{mensagens.seguranca.ajudaTitulo}</h2>
-        <div className="seguranca-ajuda"><Link href={mensagens.seguranca.rotas.suporte}>{mensagens.seguranca.falarComSuporte}</Link>
-        <Link href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regras}</Link><Link href={mensagens.seguranca.rotas.politica}>{mensagens.seguranca.politica}</Link></div>
+        <div className="seguranca-lista seguranca-ajuda"><Link href={mensagens.seguranca.rotas.suporte}>{mensagens.seguranca.falarComSuporte}<Icone nome="seta" /></Link>
+        <Link href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regras}<Icone nome="seta" /></Link><Link href={mensagens.seguranca.rotas.politica}>{mensagens.seguranca.politica}<Icone nome="seta" /></Link></div>
       </section>
       <section className="perfil-secao" aria-labelledby="perfil-conta">
         <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>

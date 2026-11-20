@@ -174,5 +174,6 @@ const seg = StyleSheet.create({
   seloAlertaTexto: { color: '#9A5B00' },
   estadoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 },
   link: { color: cores.acao, fontWeight: '800', textDecorationLine: 'underline' },
-  regras: { color: '#5E6A85', fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 },
+  // Designer (20/11): 12 acima, depois do último cartão de nível, e 16 abaixo, antes do bloco seguinte.
+  regras: { color: '#5E6A85', fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20, marginTop: 12, marginBottom: 16 },
 });
