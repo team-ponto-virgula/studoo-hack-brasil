@@ -10,7 +10,8 @@ import {
   motivoTituloTrilhaInvalido, normalizarResumoPerfil, normalizarTituloTrilha, svgCapa,
   type ConfiguracoesTrilha, type MudancaConfiguracoes, type Tema,
 } from '@studoo/contratos';
-import { origemConfigurada, type ClienteNativo } from './api-nativa';
+import { fonteDaMidiaDaDona, origemConfigurada, type ClienteNativo } from './api-nativa';
+import { AvisoMidiaEmRevisao, EstadoDaPublicacao } from './seguranca';
 import { FIM_COM_BARRA } from './comunidade';
 import { Icone } from './icone';
 import { AvisoDoApp, Botao, BotaoIcone, Campo, FolhaDeAcoes, Tela, Titulo, degrade, degrauFora, useMovimentoReduzido } from './interface';
@@ -61,7 +62,9 @@ function nomeDaCapa(capa: string | null | undefined) {
  * ou a padrão do tema, desenhadas com o SVG do contrato. O fundo já vem na cor da capa (`coresDaCapa`), para não piscar
  * branco enquanto o desenho chega.
  */
-export function CapaDaTrilha({ semente, tema, capa, grande = false, estilo }: {
+export function CapaDaTrilha({ semente, tema, capa, grande = false, estilo, daDona = false }: {
+  /** A capa da própria pessoa: em revisão, ela só abre com a sessão (o token vai só para o host da API). */
+  daDona?: boolean;
   semente: string;
   tema: Tema | null;
   capa: string | null | undefined;
@@ -75,7 +78,7 @@ export function CapaDaTrilha({ semente, tema, capa, grande = false, estilo }: {
       style={[confEstilos.capa, { backgroundColor: coresDaCapa(tema, capa).de }, estilo]}>
       {foto ? (
         <>
-          <Image source={{ uri: foto }} accessible={false} resizeMode="cover" style={StyleSheet.absoluteFill} />
+          <Image source={daDona ? fonteDaMidiaDaDona(foto) : { uri: foto }} accessible={false} resizeMode="cover" style={StyleSheet.absoluteFill} />
           <View style={[confEstilos.capaVeu, degrade('linear-gradient(to bottom, rgba(15, 23, 42, 0.38), rgba(15, 23, 42, 0))')]} />
         </>
       ) : (
@@ -283,7 +286,8 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
     const novo = await cliente.enviarCapa(planoId, base64);
     aoMudar(novo);
     if (montada.current) { setConf(novo); setParaRecortar(null); }
-    avisar(k.capaSalva, { icone: 'check', som: 'salvo' });
+    // Spec 14: a foto nova fica em revisão; o aviso nunca diz que ela já aparece para os outros.
+    avisar(novo.capaModeracao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : k.capaSalva, { icone: 'check', som: 'salvo' });
   }
 
   // Ao sair da tela (Voltar, barra de baixo, voltar do aparelho), o que ficou escrito e ainda vale é salvo.
@@ -335,13 +339,14 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
                 <Pressable testID="configuracoes-capa" accessibilityRole="button" accessibilityLabel={k.trocarCapaRotulo(nomeDaCapa(conf.capa))}
                   disabled={desativado} onPress={() => { Keyboard.dismiss(); setGaleria(true); }}
                   style={({ pressed }) => [confEstilos.previa, pressed && { opacity: 0.9 }]}>
-                  <CapaDaTrilha semente={conf.semente} tema={conf.tema} capa={conf.capa} grande estilo={StyleSheet.absoluteFill} />
+                  <CapaDaTrilha semente={conf.semente} tema={conf.tema} capa={conf.capa} grande estilo={StyleSheet.absoluteFill} daDona={!recebidaDe} />
                   <View style={confEstilos.trocar}>
                     <Icone nome="imagem" tamanho={18} cor={cores.acaoEscura} traco={2.4} />
                     <Text style={confEstilos.trocarTexto}>{k.trocarCapa}</Text>
                   </View>
                 </Pressable>
                 {erros.capa && <ErroDoCampo texto={erros.capa} />}
+                <AvisoMidiaEmRevisao tipo="capa" moderacao={conf.capaModeracao} />
               </View>
 
               <View style={confEstilos.campo}>
@@ -394,6 +399,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
                     {comp ? k.estadoCompartilhamento(mensagens.comunidade.niveis[comp.visibilidade].titulo, comp.estudando, comp.valeus) : k.soVoce}
                   </Text>
                 </View>
+                {comp && <EstadoDaPublicacao moderacao={comp.moderacao} testID="configuracoes-moderacao" />}
                 <Botao rotulo={k.mudarCompartilhamento} iconeAntes="compartilhar" variante="secundario" testID="configuracoes-compartilhar"
                   desativado={desativado} acao={() => { Keyboard.dismiss(); mudarCompartilhamento(); }} estilo={confEstilos.botao} />
               </Secao>

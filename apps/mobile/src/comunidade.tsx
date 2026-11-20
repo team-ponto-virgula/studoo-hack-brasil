@@ -1199,7 +1199,8 @@ export function TelaPreviaTrilha({ cliente, codigo, acoesTela, aoAdicionado, aoA
     <Tela pagina={`previa-${codigo}`} acoes={acoesTela} estiloConteudo={FIM_COM_BARRA}>
       {!trilha && !falha && <Esqueleto />}
       {falha && (falha === 'link_inativo' || falha === 'nao_encontrado'
-        ? <Indisponivel titulo={mensagens.compartilhar.inativo} texto={mensagens.compartilhar.inativoTexto} criar={criarTrilha} />
+        // Spec 14: a trilha fora do ar (link encerrado, removida ou em revisão) usa o mesmo título da página /t da web.
+        ? <Indisponivel titulo={mensagens.seguranca.trilhaIndisponivel} texto={mensagens.compartilhar.inativoTexto} criar={criarTrilha} />
         : <Text accessibilityRole="alert" style={socialEstilos.erro}>{textoDoErro(falha)}</Text>)}
       {trilha && !falha && (
         <PreviaTrilha trilha={trilha}

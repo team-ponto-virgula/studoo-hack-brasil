@@ -10,6 +10,7 @@ import { entrarComoVisitante } from './visitante-nativo';
 import { Apresentacao } from './apresentacao';
 import { RecuperarAcesso } from './recuperar';
 import { CriarConta, enderecoDaPoliticaPublica } from './cadastro';
+import { BotaoPrecisaDeAjuda } from './seguranca';
 import { abrirNoNavegador } from './social';
 import { Estudo } from './estudo';
 import { AvisoDoApp, Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useAvisoDoAppRaiz, useMovimentoReduzido } from './interface';
@@ -479,6 +480,8 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
             <Text style={entradaEstilos.linkTexto}>{mensagens.acesso.esqueci}</Text>
           </Pressable>
         )}
+        {/* Spec 14: o suporte do Studoo, embaixo de "Esqueci minha senha" (abre /suporte no navegador do sistema). */}
+        <BotaoPrecisaDeAjuda desativado={ocupado} />
         {/* Como na web: "Ainda não tem conta? Criar conta", só quando o servidor oferece o cadastro. */}
         {configuracaoCarregada && cadastroDisponivel && (
           <Pressable testID="criar-conta" accessibilityRole="link" disabled={ocupado} accessibilityState={{ disabled: ocupado }}

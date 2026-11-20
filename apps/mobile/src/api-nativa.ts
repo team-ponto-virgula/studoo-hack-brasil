@@ -31,10 +31,14 @@ function chaveDoToken() {
   return `studoo.sessao.${host.replace(/[^a-z0-9._-]/gi, '_')}`;
 }
 
+/** O token da sessão em memória, só para as imagens da própria pessoa em revisão (`fonteDaMidiaDaDona`). */
+let tokenEmMemoria: string | null = null;
+
 export async function lerToken() {
   const chave = chaveDoToken();
   try {
-    return await SecureStore.getItemAsync(chave);
+    tokenEmMemoria = await SecureStore.getItemAsync(chave);
+    return tokenEmMemoria;
   } catch {
     throw new FalhaMobile('armazenamento');
   }
@@ -44,6 +48,7 @@ export async function guardarToken(token: string) {
   const chave = chaveDoToken();
   try {
     await SecureStore.setItemAsync(chave, token, { keychainAccessible: SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY });
+    tokenEmMemoria = token;
   } catch {
     throw new FalhaMobile('armazenamento');
   }
@@ -51,11 +56,25 @@ export async function guardarToken(token: string) {
 
 export async function apagarToken() {
   const chave = chaveDoToken();
+  tokenEmMemoria = null;
   try {
     await SecureStore.deleteItemAsync(chave);
   } catch {
     throw new FalhaMobile('armazenamento');
   }
+}
+
+/**
+ * A fonte de uma imagem da própria pessoa (foto do perfil, capa): a foto ou a capa em revisão só abre para a dona, com a
+ * sessão (spec 14, contrato c66a33d). O token vai só para o host da API configurada; qualquer outro endereço vai sem ele.
+ */
+export function fonteDaMidiaDaDona(uri: string): { uri: string; headers?: Record<string, string> } {
+  try {
+    if (tokenEmMemoria && new URL(uri).origin === origemConfigurada().origin) return { uri, headers: { Authorization: `Bearer ${tokenEmMemoria}` } };
+  } catch {
+    // Endereço inválido: sem o token.
+  }
+  return { uri };
 }
 
 /** O transporte do app: a origem configurada, o tempo limite e, com sessão, o token no Authorization (sem cookie). */
