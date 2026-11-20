@@ -256,6 +256,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
                   try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
                 }}>{mensagens.acesso.esqueci}</Link>
               )}
+              <Link className="acesso-link entrada-esqueci" href="/suporte">{mensagens.seguranca.precisaDeAjuda}</Link>
               {configuracaoCarregada && cadastroDisponivel && (
                 <p className="acesso-ajuda entrada-criar">{mensagens.acesso.semConta}{' '}
                   <Link className="acesso-link" href="/cadastro">{mensagens.acesso.criarConta}</Link></p>

@@ -12,6 +12,6 @@ export function GET(request: Request, context: { params: Promise<{ perfilId: str
     exigirCompartilhar();
     await limitarPublico(enderecoRede(request));
     const { perfilId } = await context.params;
-    return responder(comunidadeAtiva() ? await perfilPublicoComCartoes(perfilId, usuarioId) : await perfilPublico(perfilId));
+    return responder(comunidadeAtiva() ? await perfilPublicoComCartoes(perfilId, usuarioId) : await perfilPublico(perfilId, usuarioId));
   });
 }

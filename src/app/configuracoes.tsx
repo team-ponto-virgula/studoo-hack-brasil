@@ -145,7 +145,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
             <div className="configuracoes__capa">
               <CapaDaTrilha semente={conf.semente} tema={conf.tema} capa={conf.capa} className="configuracoes__previa" />
               <div className="configuracoes__capa-acoes">
-                <p className="campo-dica">{k.capaEscolhida(nomeCapa)}</p>
+                <p className="campo-dica">{conf.capaModeracao === 'pendente' ? mensagens.seguranca.capaEmRevisao : k.capaEscolhida(nomeCapa)}</p>
                 <Botao variante="secundario" onClick={() => setGaleria(true)}><Icone nome="imagem" />{k.trocarCapa}</Botao>
                 {erros.capa && <p className="campo-erro campo-erro--colado"><Icone nome="alerta" />{erros.capa}</p>}
               </div>

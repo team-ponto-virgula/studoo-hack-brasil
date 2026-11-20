@@ -93,6 +93,7 @@ export function Recuperar() {
           ? <Botao variante="texto" disabled={ocupado} onClick={() => { setEtapa('codigo'); setValidacao(''); setErro(null); }}>{m.tenhoCodigo}</Botao>
           : <Botao variante="texto" disabled={ocupado || espera > 0} onClick={enviar}>{espera ? m.aguarde(espera) : m.reenviar}</Botao>}
       </form>}
+      <Link className="acesso-link entrada-esqueci" href="/suporte">{mensagens.seguranca.precisaDeAjuda}</Link>
       <div className={etapa === 'pronto' ? 'acao-principal' : 'recuperar-voltar'}><Link className={etapa === 'pronto' ? 'botao botao--primario' : 'acesso-link'} href="/login">{m.entrar}</Link></div>
     </section>
   </main>;

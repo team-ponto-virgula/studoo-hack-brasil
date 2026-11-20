@@ -33,6 +33,7 @@ import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
 import { SecaoPrivacidade } from './privacidade-perfil';
+import { BloqueadasPerfil, EstadoModeracao } from './seguranca-comunidade';
 import { SecaoSomPerfil } from './som';
 import { tocaSons } from './sons';
 import './perfil.css';
@@ -266,6 +267,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
                   {perfil.links.map((link) => (
                     <li key={link.codigo} className="perfil-link">
                       <button type="button" className="perfil-link__titulo" onClick={() => abrirPlano(link.planoId)}>{link.titulo}</button>
+                      <EstadoModeracao estado={link.moderacao} />
                       <p className="perfil-link__meta">
                         {p.desde(dataCurta(link.criadoEm))} · {link.adicoes === 0 && !link.valeus
                           ? (comunidade ? p.semNinguem : p.adicoes(0))
@@ -317,6 +319,11 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
       )}
       <SecaoSomPerfil />
       <SecaoPrivacidade visitante={visitante} />
+      {compartilhar && <BloqueadasPerfil />}
+      <section className="perfil-secao"><h2 className="perfil-secao__titulo">{mensagens.seguranca.ajudaTitulo}</h2>
+        <div className="seguranca-ajuda"><a href="/suporte">{mensagens.seguranca.falarComSuporte}</a>
+        <a href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regras}</a><a href="/privacidade">{mensagens.seguranca.politica}</a></div>
+      </section>
       <section className="perfil-secao" aria-labelledby="perfil-conta">
         <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
         {compartilhar && perfil && !visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email} <span className="selo-so-voce">{p.soVoceVe}</span></p>}
@@ -497,7 +504,7 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
             <span className="editar-foto__selo" aria-hidden="true"><Icone nome="camera" /></span>
           </button>
           <div className="editar-foto__corpo">
-            <p className="campo-dica">{p.fotoDica}</p>
+            <p className="campo-dica">{salvo.fotoModeracao === 'pendente' ? mensagens.seguranca.fotoEmRevisao : p.fotoDica}</p>
             {salvo.foto && <Botao variante="texto" className="folha-parar" disabled={removendo !== null} onClick={() => setRemovendo('perguntar')}><Icone nome="lixeira" />{p.fotoRemover}</Botao>}
             {erroFoto && !arquivo && <p className="campo-erro" role="alert">{erroFoto}</p>}
             <p className="folha-status" role="status" aria-live="polite">{statusFoto}</p>
@@ -574,7 +581,7 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
 
       {arquivo && (
         <RecorteFoto origem={arquivo} aoCancelar={() => setArquivo(null)}
-          aoSalvar={(novo) => { atualizarPerfil(novo); setArquivo(null); setStatusFoto(p.fotoSalva); anunciar(p.fotoSalva); }} />
+          aoSalvar={(novo) => { atualizarPerfil(novo); setArquivo(null); const frase = novo.fotoModeracao === 'pendente' ? mensagens.seguranca.enviadaParaRevisao : p.fotoSalva; setStatusFoto(frase); anunciar(frase); }} />
       )}
       {removendo && (
         <DialogoConfirmar titulo={p.fotoRemoverTitulo} texto={p.fotoRemoverTexto} confirmar={p.fotoRemover} cancelar={p.fotoRemoverCancelar}

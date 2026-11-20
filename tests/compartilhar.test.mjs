@@ -1,3 +1,4 @@
+import { publicacaoRevisada } from './fixtures/moderacao.mjs';
 // Perfis e compartilhar trilha (spec 09): rotas, cópia, privacidade e flag. Provedores simulados, banco real.
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
@@ -65,7 +66,11 @@ async function trilha(dono, objetivo = 'Aprender frações na cozinha com segred
   return aceitarProposta(dono.id, proposta.token);
 }
 const salvarNome = (quem, nome = 'Ana', cor = 'verde') => json(perfilPut(pedido('/api/perfil', { metodo: 'PUT', token: quem.token, corpo: { nome, cor } })));
-const criarLink = (quem, planoId) => json(criarPost(pedido(`/api/aprendizado/planos/${planoId}/compartilhar`, { metodo: 'POST', token: quem.token, corpo: {} }), ctx({ id: planoId })));
+const criarLink = async (quem, planoId) => {
+  const r = await json(criarPost(pedido(`/api/aprendizado/planos/${planoId}/compartilhar`, { metodo: 'POST', token: quem.token, corpo: {} }), ctx({ id: planoId })));
+  if (r.status === 200) await publicacaoRevisada(quem.id, r.corpo.codigo);
+  return r;
+};
 const previaPublica = (codigo, token) => json(linkGet(pedido(`/api/compartilhar/${codigo}`, { token }), ctx({ codigo })));
 const adicionar = (quem, codigo) => json(adicionarPost(pedido(`/api/compartilhar/${codigo}/adicionar`, { metodo: 'POST', token: quem.token, corpo: {} }), ctx({ codigo })));
 

@@ -4,6 +4,7 @@
  * quadro, girada pelo EXIF, cortada no centro em 1024×512 e 480×240 e regravada em WebP (sem EXIF, GPS, XMP nem ICC).
  * O endereço público usa um token aleatório que muda a cada troca; a trilha guarda `capa = "foto:<token>"`.
  */
+import { midiaVisivel } from "@/servidor/compartilhar/visibilidade";
 import { randomBytes } from "node:crypto";
 import sharp from "sharp";
 import { FORMATO_CODIGO, LIMITES_CAPA, LIMITES_FOTO, ehCapaFoto, type ConfiguracoesTrilha } from "@studoo/contratos";
@@ -44,7 +45,7 @@ export async function salvarCapaFoto(usuarioId: string, planoId: string, entrada
   const { grande, pequena } = await processarCapa(bytes);
   if (!(await revisarConteudo({ tipo: "foto", usuarioId, bytes: new Uint8Array(grande) })).aprovado) throw new FalhaApi("conteudo_recusado");
   const token = randomBytes(12).toString("base64url");
-  const dados = { token, grande: new Uint8Array(grande), pequena: new Uint8Array(pequena) };
+  const dados = { token, moderacao: 'pendente' as const, grande: new Uint8Array(grande), pequena: new Uint8Array(pequena) };
   await banco.$transaction([
     banco.capaFoto.upsert({ where: { usuarioId_planoId: { usuarioId, planoId } }, create: { usuarioId, planoId, ...dados }, update: { ...dados, criadaEm: new Date() } }),
     banco.planoAprendizado.update({ where: { usuarioId_id: { usuarioId, id: planoId } }, data: { capa: `foto:${token}` } }),
@@ -64,9 +65,10 @@ export async function removerCapaFoto(usuarioId: string, planoId: string): Promi
 }
 
 /** Os bytes da capa pelo token; token fora do formato, trocado ou removido responde igual (não encontrado). */
-export async function lerCapa(token: string, tamanho: string): Promise<Buffer> {
+export async function lerCapa(token: string, tamanho: string, quem: string | null = null): Promise<Buffer> {
   const largura = Number(tamanho);
   if (!FORMATO_CODIGO.test(token) || (largura !== LIMITES_CAPA.largura && largura !== LIMITES_CAPA.larguraPequena)) throw new FalhaApi("nao_encontrado");
+  if (!(await midiaVisivel("capa", token, quem))) throw new FalhaApi("nao_encontrado");
   const grande = largura === LIMITES_CAPA.largura;
   const capa = await banco.capaFoto.findUnique({ where: { token }, select: { grande, pequena: !grande } });
   const bytes = grande ? capa?.grande : capa?.pequena;
