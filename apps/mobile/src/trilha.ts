@@ -33,7 +33,7 @@ export function selosDoNo(no: NoCaminho): SeloDoNo[] {
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
   | 'lampada' | 'relogio' | 'alvo' | 'som' | 'microfone'
   // Perfil e compartilhar (spec 09 e 10): desenhados em SVG com os mesmos traços da web (icone.tsx).
-  | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha' | 'alerta'
+  | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha' | 'bloquear' | 'alerta'
   // Configurações da trilha (spec 10, lote 4): a engrenagem do mapa, o elo de "Quem tem o link" e a seta do "Voltar".
   | 'engrenagem' | 'elo' | 'setaVoltar'
   // Controle de som (spec 12): o botão da aula e as linhas da folha "Som".

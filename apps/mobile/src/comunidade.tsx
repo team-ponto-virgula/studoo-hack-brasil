@@ -1,4 +1,4 @@
-import { useContext, useEffect, useLayoutEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle,
 } from 'react-native';
@@ -10,7 +10,7 @@ import {
 } from '@studoo/contratos';
 import type { ClienteNativo } from './api-nativa';
 import { Icone } from './icone';
-import { AvisoDoApp, Botao, MenuDeAcoes, Tela, Titulo, degrauFora, estilos, useMovimentoReduzido } from './interface';
+import { AvisoDoApp, Botao, CartaoConfirmacao, MenuDeAcoes, Tela, Titulo, degrauFora, estilos, useMovimentoReduzido } from './interface';
 import { gestoJaExplicado, marcarGestoExplicado } from './preferencias';
 import { mensagens } from './mensagens';
 import {
@@ -28,6 +28,7 @@ import { tocaSons } from './sons';
  */
 
 const c = mensagens.comunidade;
+const s = mensagens.seguranca;
 const temas = mensagens.temas;
 
 function anunciar(texto: string) {
@@ -85,6 +86,8 @@ export type AcoesCartao = {
   abrir: (planoId: string) => void;
   valeu: (cartao: CartaoTrilha) => void;
   denunciar: (cartao: CartaoTrilha) => void;
+  /** Bloquear quem fez a trilha (spec 14), logo abaixo de "Denunciar". */
+  bloquear: (cartao: CartaoTrilha) => void;
   compartilhar: (cartao: CartaoTrilha) => void;
   /** Título: a prévia da trilha (a página /t da web) dentro do app. */
   abrirPrevia: (codigo: string) => void;
@@ -109,13 +112,92 @@ function BotaoDoCartao({ rotulo, icone, acao, testID, desativado = false }: { ro
  * e na web, com "Denunciar" em vermelho. Na fileira do cartão, o botão tem o contorno dos vizinhos (Curtir e Compartilhar).
  * "Denunciar" abre o diálogo da denúncia, outra janela: ela espera o balão sair (janelas.ts, dentro do menu).
  */
-function MenuCartao({ titulo, aoDenunciar, testID }: { titulo: string; aoDenunciar: () => void; testID: string }) {
+export function MenuCartao({ titulo, aoDenunciar, aoBloquear, nomeDono, testID, estilo }: {
+  titulo: string; aoDenunciar: () => void; testID: string;
+  /** "Bloquear <nome>" (spec 14), logo abaixo de "Denunciar"; nunca no próprio conteúdo. */
+  aoBloquear?: () => void; nomeDono?: string; estilo?: StyleProp<ViewStyle>;
+}) {
   return (
-    <View style={comunidadeEstilos.menu}>
+    <View style={estilo ?? comunidadeEstilos.menu}>
       <MenuDeAcoes rotulo={mensagens.planos.maisOpcoesRotulo(titulo)} testID={testID} estiloBotao={comunidadeEstilos.icone} corDosPontos={cores.texto}
-        acoes={[{ rotulo: c.denunciar, icone: 'bandeirinha', aoEscolher: aoDenunciar, perigo: true, testID: `${testID}-denunciar` }]} />
+        acoes={[
+          { rotulo: c.denunciar, icone: 'bandeirinha', aoEscolher: aoDenunciar, perigo: true, testID: `${testID}-denunciar` },
+          ...(aoBloquear && nomeDono ? [{ rotulo: s.bloquear(nomeDono), icone: 'bloquear' as const, aoEscolher: aoBloquear, perigo: true, testID: `${testID}-bloquear` }] : []),
+        ]} />
     </View>
   );
+}
+
+type PedidoBloqueio = { alvoTipo: 'perfil' | 'trilha'; alvo: string; nome: string; perfilId?: string | null };
+type DepoisDoBloqueio = { aoBloquear?: () => void; aoDesbloquear?: () => void };
+
+/**
+ * Bloquear (spec 14, seção 1): a confirmação do Studoo ("Bloquear <nome>?", "Bloquear" vermelho e "Cancelar"), o
+ * POST /api/bloqueios e o aviso "Pessoa bloqueada." com "Desfazer", que chama o desbloqueio. O id do bloqueio vem na resposta;
+ * sem ele, o app procura na lista (GET /api/bloqueios) pelo perfil ou pelo nome. Depois de bloquear, quem chamou volta ao
+ * Explorar recarregado (`aoBloquear`). Vale para conta e visitante com sessão.
+ */
+function useConfirmacaoDeBloqueio(cliente: ClienteNativo) {
+  const [pedido, setPedido] = useState<(PedidoBloqueio & DepoisDoBloqueio) | null>(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+  const { avisar } = useContext(AvisoDoApp);
+  async function desfazer(id: string | undefined, alvo: PedidoBloqueio & DepoisDoBloqueio) {
+    try {
+      let chave = id;
+      if (!chave) {
+        const { itens } = await cliente.bloqueados();
+        chave = (itens as { id: string; nome: string; perfilId?: string | null }[])
+          .find((item) => (alvo.perfilId && item.perfilId === alvo.perfilId) || item.nome === alvo.nome)?.id;
+      }
+      if (!chave) { avisar(textoDoErro('nao_encontrado'), { icone: 'alerta' }); return; }
+      await cliente.desbloquear(chave);
+      avisar(s.desbloqueada);
+      alvo.aoDesbloquear?.();
+    } catch (falha) {
+      avisar(textoDoErro(codigoDoErro(falha)), { icone: 'alerta' });
+    }
+  }
+  async function confirmar() {
+    if (!pedido) return;
+    const alvo = pedido;
+    setOcupado(true);
+    setErro(null);
+    try {
+      const r = await cliente.bloquear(alvo.alvoTipo, alvo.alvo) as { bloqueado: true; id?: string };
+      setPedido(null);
+      avisar(s.bloqueada, { acao: { rotulo: s.desfazer, aoTocar: () => void desfazer(r.id, alvo) } });
+      alvo.aoBloquear?.();
+    } catch (falha) {
+      setErro(textoDoErro(codigoDoErro(falha)));
+    } finally {
+      setOcupado(false);
+    }
+  }
+  const dialogo = pedido ? (
+    <CartaoConfirmacao testID="bloquear" mensagem={s.bloquearTitulo(pedido.nome)} texto={s.bloquearTexto} confirmarRotulo={s.bloquearAcao}
+      cancelarRotulo={s.cancelar} destrutivo ocupado={ocupado} erro={erro}
+      aoCancelar={() => { setPedido(null); setErro(null); }} aoConfirmar={() => void confirmar()} />
+  ) : null;
+  return { pedir: (alvo: PedidoBloqueio, depois: DepoisDoBloqueio) => { setErro(null); setPedido({ ...alvo, ...depois }); }, dialogo };
+}
+
+/**
+ * A confirmação do bloqueio mora na raiz do Estudo: o "Bloquear" do aviso da denúncia e o "Desfazer" seguem funcionando
+ * depois que a tela que pediu saiu (o perfil denunciado volta ao Explorar).
+ */
+const BloqueioDoApp = createContext<((alvo: PedidoBloqueio, depois: DepoisDoBloqueio) => void) | null>(null);
+
+export function ProvedorBloqueio({ cliente, children }: { cliente: ClienteNativo; children: ReactNode }) {
+  const { pedir, dialogo } = useConfirmacaoDeBloqueio(cliente);
+  return <BloqueioDoApp.Provider value={pedir}>{children}{dialogo}</BloqueioDoApp.Provider>;
+}
+
+export function useBloqueio({ cliente, aoBloquear, aoDesbloquear }: { cliente: ClienteNativo } & DepoisDoBloqueio) {
+  const raiz = useContext(BloqueioDoApp);
+  const local = useConfirmacaoDeBloqueio(cliente);
+  const pedir = raiz ?? local.pedir;
+  return { pedirBloqueio: (alvo: PedidoBloqueio) => pedir(alvo, { aoBloquear, aoDesbloquear }), dialogo: raiz ? null : local.dialogo };
 }
 
 /**
@@ -205,7 +287,8 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, dua
             ) : (
               <BotaoDoCartao rotulo={c.compartilharRotulo(cartao.titulo)} icone="compartilhar" testID={`${id}-compartilhar`} acao={() => acoes.compartilhar(cartao)} />
             )}
-            {!sua && <MenuCartao titulo={cartao.titulo} testID={`${id}-mais`} aoDenunciar={() => acoes.denunciar(cartao)} />}
+            {!sua && <MenuCartao titulo={cartao.titulo} testID={`${id}-mais`} aoDenunciar={() => acoes.denunciar(cartao)}
+              aoBloquear={() => acoes.bloquear(cartao)} nomeDono={cartao.dono.nome} />}
           </View>
         </View>
       </View>
@@ -324,7 +407,8 @@ export function DialogoDenuncia({ cliente, alvoTipo, alvo, alvoNome, aoFechar, a
   cliente: ClienteNativo; alvoTipo: 'trilha' | 'perfil'; alvo: string;
   /** O que está sendo denunciado, por extenso. */
   alvoNome: string;
-  aoFechar: () => void; aoEnviar: (texto: string) => void;
+  /** Enviada: o protocolo do servidor, para o aviso "Denúncia enviada (protocolo …)" (spec 14). */
+  aoFechar: () => void; aoEnviar: (protocolo: string | undefined) => void;
 }) {
   const [motivo, setMotivo] = useState<MotivoDenuncia | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -342,8 +426,8 @@ export function DialogoDenuncia({ cliente, alvoTipo, alvo, alvoNome, aoFechar, a
     setEnviando(true);
     setErro(null);
     try {
-      await cliente.denunciar(alvoTipo, alvo, motivo);
-      aoEnviar(c.denuncia.enviada);
+      const r = await cliente.denunciar(alvoTipo, alvo, motivo) as { registrada: true; protocolo?: string };
+      aoEnviar(r.protocolo);
     } catch (falha) {
       setErro(textoDoErro(codigoDoErro(falha)));
       setEnviando(false);
@@ -385,9 +469,13 @@ export function DialogoDenuncia({ cliente, alvoTipo, alvo, alvoNome, aoFechar, a
  * As ações dos cartões (Quero estudar, Valeu, Compartilhar, Denunciar) com o estado da lista, como `useAcoesDeCartao` da
  * web: um só lugar para o Explorar, o perfil da dona e o perfil de outra pessoa. O app sempre tem sessão.
  */
-export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, aoAnunciar }: {
+export function useAcoesDeCartao({ cliente, setCartoes, removerCartao, aoBloquear, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, aoAnunciar }: {
   cliente: ClienteNativo;
   setCartoes: (mudar: (cartao: CartaoTrilha) => CartaoTrilha) => void;
+  /** Depois da denúncia, o cartão some para quem denunciou (spec 14; o servidor filtra nas leituras seguintes). */
+  removerCartao?: (codigo: string) => void;
+  /** Depois de bloquear ou desbloquear: voltar ao Explorar recarregado (spec 14). */
+  aoBloquear?: () => void;
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
   aoAbrir: (planoId: string) => void;
   abrirPrevia: (codigo: string) => void;
@@ -398,6 +486,9 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
   const [denuncia, setDenuncia] = useState<CartaoTrilha | null>(null);
   // O aviso do próprio app (lote 4): o Valeu e a denúncia enviada avisam numa faixa no pé da tela, nunca no sistema.
   const { avisar } = useContext(AvisoDoApp);
+  const { pedirBloqueio, dialogo: dialogoBloqueio } = useBloqueio({ cliente, aoBloquear, aoDesbloquear: aoBloquear });
+  const bloquearDono = (cartao: CartaoTrilha) =>
+    pedirBloqueio({ alvoTipo: 'trilha', alvo: cartao.codigo, nome: cartao.dono.nome, perfilId: cartao.dono.perfilId ?? null });
   const falar = (texto: string) => { anunciar(texto); aoAnunciar?.(texto); };
   // Um envio de curtida por cartão: o estado que a pessoa quer agora e o de antes do primeiro toque (para voltar no erro).
   const envios = useRef(new Map<string, { desejado: boolean; antes: { valeuMeu: boolean; valeus: number } }>());
@@ -463,6 +554,7 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
     denunciar(cartao) {
       setDenuncia(cartao);
     },
+    bloquear: bloquearDono,
     async compartilhar(cartao) {
       const url = urlDoLink(cartao.codigo);
       if (temFolhaDoSistema()) {
@@ -472,11 +564,29 @@ export function useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, a
       falar((await copiar(url)) ? c.linkCopiado : mensagens.compartilhar.copiarFalhou);
     },
   };
-  const dialogo = denuncia ? (
-    <DialogoDenuncia cliente={cliente} alvoTipo="trilha" alvo={denuncia.codigo} alvoNome={c.denuncia.alvoTrilha(denuncia.titulo, denuncia.dono.nome)}
-      aoFechar={() => setDenuncia(null)} aoEnviar={(texto) => { setDenuncia(null); avisar(texto); }} />
-  ) : null;
+  const dialogo = (
+    <>
+      {denuncia && (
+        <DialogoDenuncia cliente={cliente} alvoTipo="trilha" alvo={denuncia.codigo} alvoNome={c.denuncia.alvoTrilha(denuncia.titulo, denuncia.dono.nome)}
+          aoFechar={() => setDenuncia(null)} aoEnviar={(protocolo) => {
+            const cartao = denuncia;
+            setDenuncia(null);
+            removerCartao?.(cartao.codigo);
+            avisarDenuncia(avisar, protocolo, () => bloquearDono(cartao));
+          }} />
+      )}
+      {dialogoBloqueio}
+    </>
+  );
   return { acoes, dialogo };
+}
+
+/**
+ * O aviso depois da denúncia (spec 14): "Denúncia enviada (protocolo …). Obrigado por avisar." com a ação "Bloquear" (quem
+ * ainda vê o conteúdo ainda não bloqueou a pessoa). Sem protocolo na resposta, o texto de antes.
+ */
+export function avisarDenuncia(avisar: (texto: string, opcoes?: { acao?: { rotulo: string; aoTocar: () => void } }) => void, protocolo: string | undefined, bloquear?: () => void) {
+  avisar(protocolo ? s.denunciaEnviada(protocolo) : c.denuncia.enviada, bloquear ? { acao: { rotulo: s.bloquearAcao, aoTocar: bloquear } } : undefined);
 }
 
 /** Esmaecimento de 24 na borda da fileira que ainda tem conteúdo (a máscara `linear-gradient` da web): o fundo da página por cima. */
@@ -641,6 +751,8 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
   atual.current = pagina ? { tema, aba, pagina, y: 0 } : null;
   useEffect(() => () => { if (atual.current) guardar?.({ ...atual.current, y: rolado.current }); }, [guardar]);
 
+  // Depois de bloquear ou desbloquear alguém (spec 14), o Explorar recarrega do zero.
+  const [recarga, setRecarga] = useState(0);
   useEffect(() => {
     if (primeira.current) { primeira.current = false; return; }
     let ativo = true;
@@ -650,7 +762,7 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
       .catch((falha) => { if (ativo) setErro(textoDoErro(codigoDoErro(falha))); })
       .finally(() => { if (ativo) setCarregando(false); });
     return () => { ativo = false; };
-  }, [cliente, tema, aba]);
+  }, [cliente, tema, aba, recarga]);
 
   async function verMais() {
     if (!pagina?.cursor) return;
@@ -667,7 +779,9 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
 
   const setCartoes = (mudar: (cartao: CartaoTrilha) => CartaoTrilha) =>
     setPagina((atual) => atual && { ...atual, emAlta: atual.emAlta.map(mudar), novas: atual.novas.map(mudar) });
-  const { acoes, dialogo } = useAcoesDeCartao({ cliente, setCartoes, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil });
+  const removerCartao = (codigo: string) =>
+    setPagina((atual) => atual && { ...atual, emAlta: atual.emAlta.filter((cartao) => cartao.codigo !== codigo), novas: atual.novas.filter((cartao) => cartao.codigo !== codigo) });
+  const { acoes, dialogo } = useAcoesDeCartao({ cliente, setCartoes, removerCartao, aoBloquear: () => setRecarga((n) => n + 1), aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil });
   const vazio = pagina && pagina.emAlta.length === 0 && pagina.novas.length === 0;
 
   return (
@@ -748,8 +862,10 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
 }
 
 /** Grade de cartões do perfil (a página da dona e o perfil de outra pessoa), com as mesmas ações do Explorar. */
-export function CartoesDoPerfil({ cliente, inicial, titulo, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil }: {
+export function CartoesDoPerfil({ cliente, inicial, titulo, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, aoBloquear }: {
   cliente: ClienteNativo;
+  /** No perfil de outra pessoa: depois de bloquear, o Explorar recarregado (spec 14). */
+  aoBloquear?: () => void;
   inicial: CartaoTrilha[];
   titulo: string;
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
@@ -760,7 +876,8 @@ export function CartoesDoPerfil({ cliente, inicial, titulo, aoAdicionado, aoAbri
   const [cartoes, setLista] = useState(inicial);
   useEffect(() => { setLista(inicial); }, [inicial]);
   const { acoes, dialogo } = useAcoesDeCartao({
-    cliente, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, setCartoes: (mudar) => setLista((atual) => atual.map(mudar)),
+    cliente, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, aoBloquear, setCartoes: (mudar) => setLista((atual) => atual.map(mudar)),
+    removerCartao: (codigo) => setLista((atual) => atual.filter((cartao) => cartao.codigo !== codigo)),
   });
   return (
     <View testID="perfil-cartoes" style={comunidadeEstilos.perfilCartoes}>
@@ -903,9 +1020,11 @@ function Indisponivel({ titulo, texto, criar }: { titulo: string; texto?: string
  * O perfil de outra pessoa dentro do app (a página /p da web): o cabeçalho com Seguir (e a contagem que muda na hora) e
  * "Compartilhar perfil", os cartões dela ("Trilhas de Ana") e "Denunciar perfil" no fim. Sem a comunidade, a lista simples.
  */
-export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, criarTrilha }: {
+export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, aoAbrir, abrirPrevia, abrirPerfil, criarTrilha, irAoExplorar }: {
   cliente: ClienteNativo;
   perfilId: string;
+  /** Depois de bloquear, de denunciar o perfil ou de desbloquear: o Explorar recarregado (spec 14). */
+  irAoExplorar: () => void;
   acoesTela?: ReactNode;
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
   aoAbrir: (planoId: string) => void;
@@ -917,16 +1036,46 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
   const [falha, setFalha] = useState<string | null>(null);
   const [seguidores, setSeguidores] = useState<number | undefined>(undefined);
   const [denunciando, setDenunciando] = useState(false);
+  // Perfil de quem você bloqueou, aberto por um link (spec 14): o servidor responde nao_encontrado nos dois sentidos; o app
+  // procura o perfil na própria lista de bloqueios para mostrar "Você bloqueou esta pessoa." com "Desbloquear".
+  const [bloqueio, setBloqueio] = useState<{ id: string; nome: string } | null>(null);
+  const [desbloqueando, setDesbloqueando] = useState(false);
+  const [recarga, setRecarga] = useState(0);
   // A denúncia enviada usa o aviso do próprio app (lote 4).
   const { avisar } = useContext(AvisoDoApp);
+  const { pedirBloqueio, dialogo: dialogoBloqueio } = useBloqueio({ cliente, aoBloquear: irAoExplorar, aoDesbloquear: irAoExplorar });
   useEffect(() => {
     let ativo = true;
     setPerfil(null);
     setFalha(null);
+    setBloqueio(null);
     cliente.perfilPublico(perfilId).then((dados) => { if (ativo) { setPerfil(dados); setSeguidores(dados.alcance.seguidores); } })
-      .catch((erro) => { if (ativo) setFalha(codigoDoErro(erro)); });
+      .catch(async (erro) => {
+        const codigo = codigoDoErro(erro);
+        if (codigo === 'nao_encontrado') {
+          const meu = await cliente.bloqueados()
+            .then(({ itens }) => (itens as { id: string; nome: string; perfilId?: string | null }[]).find((item) => item.perfilId === perfilId) ?? null)
+            .catch(() => null);
+          if (ativo && meu) { setBloqueio({ id: meu.id, nome: meu.nome }); return; }
+        }
+        if (ativo) setFalha(codigo);
+      });
     return () => { ativo = false; };
-  }, [cliente, perfilId]);
+  }, [cliente, perfilId, recarga]);
+
+  async function desbloquear() {
+    if (!bloqueio) return;
+    setDesbloqueando(true);
+    try {
+      await cliente.desbloquear(bloqueio.id);
+      avisar(s.desbloqueada);
+      setRecarga((n) => n + 1);
+    } catch (falha) {
+      avisar(textoDoErro(codigoDoErro(falha)), { icone: 'alerta' });
+    } finally {
+      setDesbloqueando(false);
+    }
+  }
   const comunidade = perfil?.alcance.seguidores !== undefined;
 
   return (
@@ -936,6 +1085,13 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
           <View style={socialEstilos.cabeca} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <View style={[socialEstilos.cabecaFaixa, { backgroundColor: cores.gelo }]} />
             <Esqueleto estilo={{ padding: 18 }} />
+          </View>
+        )}
+        {bloqueio && (
+          <View testID="perfil-bloqueado" style={comunidadeEstilos.indisponivel}>
+            <Titulo foco>{s.perfilBloqueado}</Titulo>
+            <Botao rotulo={s.desbloquear} testID="perfil-desbloquear" variante="secundario" ocupado={desbloqueando} acao={() => void desbloquear()}
+              dica={s.desbloquearRotulo(bloqueio.nome)} estilo={{ alignSelf: 'flex-start' }} />
           </View>
         )}
         {falha && (falha === 'nao_encontrado' || falha === 'link_inativo'
@@ -952,9 +1108,11 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
             {perfil.cartoes ? (
               <>
                 <CartoesDoPerfil cliente={cliente} inicial={perfil.cartoes} titulo={mensagens.perfil.paginaTitulo(perfil.nome)}
-                  aoAdicionado={aoAdicionado} aoAbrir={aoAbrir} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfil} />
+                  aoAdicionado={aoAdicionado} aoAbrir={aoAbrir} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfil} aoBloquear={irAoExplorar} />
                 <View style={comunidadeEstilos.denunciarPerfil}>
                   <BotaoParar rotulo={c.denuncia.tituloPerfil} icone="bandeirinha" testID="denunciar-perfil" acao={() => setDenunciando(true)} />
+                  <BotaoParar rotulo={s.bloquear(perfil.nome)} icone="bloquear" testID="bloquear-perfil"
+                    acao={() => pedirBloqueio({ alvoTipo: 'perfil', alvo: perfilId, nome: perfil.nome, perfilId })} />
                 </View>
               </>
             ) : (
@@ -978,8 +1136,15 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
       </View>
       {denunciando && (
         <DialogoDenuncia cliente={cliente} alvoTipo="perfil" alvo={perfilId} alvoNome={perfil?.nome ?? ''} aoFechar={() => setDenunciando(false)}
-          aoEnviar={(texto) => { setDenunciando(false); avisar(texto); }} />
+          aoEnviar={(protocolo) => {
+            const nome = perfil?.nome ?? '';
+            setDenunciando(false);
+            // O perfil denunciado some para quem denunciou (spec 14): de volta ao Explorar recarregado.
+            avisarDenuncia(avisar, protocolo, () => pedirBloqueio({ alvoTipo: 'perfil', alvo: perfilId, nome, perfilId }));
+            irAoExplorar();
+          }} />
       )}
+      {dialogoBloqueio}
     </Tela>
   );
 }
@@ -989,9 +1154,11 @@ export function TelaPerfilPublico({ cliente, perfilId, acoesTela, aoAdicionado, 
  * ações ("Adicionar às minhas trilhas", "Abrir nas minhas trilhas" ou "Abrir trilha"), "Quem compartilhou" com Seguir e as
  * lições por parte. Link encerrado: "Este link não está mais ativo".
  */
-export function TelaPreviaTrilha({ cliente, codigo, acoesTela, aoAdicionado, aoAbrir, criarTrilha }: {
+export function TelaPreviaTrilha({ cliente, codigo, acoesTela, aoAdicionado, aoAbrir, criarTrilha, irAoExplorar }: {
   cliente: ClienteNativo;
   codigo: string;
+  /** Depois de denunciar ou bloquear pelo "•••" da prévia: o Explorar recarregado (spec 14). */
+  irAoExplorar: () => void;
   acoesTela?: ReactNode;
   aoAdicionado: (planoId: string, nomeDono: string, jaTinha: boolean) => void;
   aoAbrir: (planoId: string) => void;
@@ -1001,6 +1168,11 @@ export function TelaPreviaTrilha({ cliente, codigo, acoesTela, aoAdicionado, aoA
   const [falha, setFalha] = useState<string | null>(null);
   const [adicionando, setAdicionando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
+  const [denunciando, setDenunciando] = useState(false);
+  const { avisar } = useContext(AvisoDoApp);
+  const { pedirBloqueio, dialogo: dialogoBloqueio } = useBloqueio({ cliente, aoBloquear: irAoExplorar, aoDesbloquear: irAoExplorar });
+  const bloquearDono = (t: TrilhaCompartilhada) =>
+    pedirBloqueio({ alvoTipo: 'trilha', alvo: t.codigo, nome: t.dono.nome, perfilId: t.dono.perfilId ?? null });
   useEffect(() => {
     let ativo = true;
     cliente.trilhaCompartilhada(codigo).then((dados) => { if (ativo) setTrilha(dados); })
@@ -1037,8 +1209,23 @@ export function TelaPreviaTrilha({ cliente, codigo, acoesTela, aoAdicionado, aoA
           acoes={<>
             <AcoesDeQuemRecebe trilha={trilha} ocupado={adicionando} adicionar={() => void adicionar()} abrir={aoAbrir} />
             {erro && <Text accessibilityRole="alert" style={socialEstilos.erro}>{erro}</Text>}
+            {/* O "•••" da trilha recebida (spec 14): Denunciar e "Bloquear <nome>"; nunca na própria trilha. */}
+            {trilha.situacao !== 'sua' && (
+              <MenuCartao titulo={trilha.titulo} testID="previa-mais" estilo={comunidadeEstilos.menuPrevia} aoDenunciar={() => setDenunciando(true)}
+                aoBloquear={() => bloquearDono(trilha)} nomeDono={trilha.dono.nome} />
+            )}
           </>} />
       )}
+      {denunciando && trilha && (
+        <DialogoDenuncia cliente={cliente} alvoTipo="trilha" alvo={trilha.codigo} alvoNome={c.denuncia.alvoTrilha(trilha.titulo, trilha.dono.nome)}
+          aoFechar={() => setDenunciando(false)} aoEnviar={(protocolo) => {
+            setDenunciando(false);
+            // A trilha denunciada some para quem denunciou: de volta ao Explorar recarregado.
+            avisarDenuncia(avisar, protocolo, () => bloquearDono(trilha));
+            irAoExplorar();
+          }} />
+      )}
+      {dialogoBloqueio}
     </Tela>
   );
 }
@@ -1157,7 +1344,8 @@ const comunidadeEstilos = StyleSheet.create({
   perfilCartoes: { gap: 4 },
   perfilCartoesTitulo: { marginTop: 28, marginBottom: 12, color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26, letterSpacing: -0.3 },
   perfilPublico: { gap: 0 },
-  denunciarPerfil: { marginTop: 24, alignItems: 'flex-start' },
+  denunciarPerfil: { marginTop: 24, alignItems: 'flex-start', gap: 8 },
+  menuPrevia: { alignSelf: 'flex-start', marginTop: 4 },
   listaSimples: { gap: 12 },
   listaSimplesFora: {},
   listaSimplesItem: { gap: 4, paddingHorizontal: 18, paddingVertical: 16, borderWidth: 2, borderColor: cores.gelo, borderRadius: 18, backgroundColor: cores.fundo },

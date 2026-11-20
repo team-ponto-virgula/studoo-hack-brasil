@@ -17,6 +17,8 @@ const DESENHOS_SVG = {
   valeu: <Path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z" />,
   mais: <><Circle cx="6" cy="12" r="1.3" fill="currentColor" /><Circle cx="12" cy="12" r="1.3" fill="currentColor" /><Circle cx="18" cy="12" r="1.3" fill="currentColor" /></>,
   bandeirinha: <><Path d="M6 20.5V4" /><Path d="M6 4.5h11l-2.5 4 2.5 4H6" /></>,
+  // Bloquear (spec 14): o círculo cortado.
+  bloquear: <><Circle cx="12" cy="12" r="8.5" /><Path d="M6 18L18 6" /></>,
   // Alerta (spec 11): o círculo com a exclamação dos erros de campo, da barra de salvar e do aviso.
   alerta: <><Circle cx="12" cy="12" r="8.5" /><Path d="M12 7.8v5.2" /><Circle cx="12" cy="16.3" r="0.6" fill="currentColor" /></>,
   // Configurações da trilha (spec 10, lote 4): os mesmos desenhos de `engrenagem`, `elo` e `setaVoltar` da web.
