@@ -134,6 +134,7 @@ export interface DonoPublico {
 
 /** Um link da própria pessoa (só a dona vê `adicoes`). */
 export interface LinkCompartilhado {
+  moderacao?: "pendente" | "aprovado" | "recusado";
   codigo: string;
   planoId: string;
   titulo: string;
