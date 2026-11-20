@@ -713,7 +713,7 @@ export const mensagens = {
         denuncia: {
             tituloTrilha: 'Denunciar trilha',
             tituloPerfil: 'Denunciar perfil',
-            texto: 'Conte o motivo. Com denúncias de pessoas diferentes, a trilha sai do Explorar até a equipe do Studoo revisar.',
+            texto: 'Conte o motivo. A equipe do Studoo revisa as denúncias; com denúncias de pessoas diferentes, a trilha sai do Explorar até a revisão.',
             textoPerfil: 'Conte o motivo. A equipe do Studoo revisa cada denúncia.',
             alvoTrilha: (titulo: string, nome: string) => `“${titulo}”, de ${nome}`,
             motivos: { spam: 'Spam ou propaganda', ofensivo: 'Conteúdo ofensivo', direitos: 'Cópia ou direitos autorais', outro: 'Outro motivo' },
@@ -1386,6 +1386,53 @@ export const mensagens = {
         conexao: 'Confira a conexão e tente novamente.',
         configuracao: 'O app precisa do endereço HTTPS do servidor do piloto.',
         armazenamento: 'Não foi possível acessar a sessão segura no aparelho. Tente novamente.'
+    },
+    /**
+     * Segurança da comunidade (spec 14, 20/11; regra 1.2 da Apple): bloquear e desbloquear, a denúncia com protocolo, a
+     * revisão do que fica público, a ajuda com o suporte e a linha das regras na folha de compartilhar. Web e app usam os
+     * mesmos textos; a caixa da equipe (/equipe/moderacao) é só da web. Nenhum texto promete prazo.
+     */
+    seguranca: {
+        // As páginas do Studoo (no app, abrem no navegador do sistema, P20 da spec 07)
+        rotas: { suporte: '/suporte', regras: '/privacidade#regras-da-comunidade', politica: '/privacidade' },
+        /** O formulário do suporte com o alvo preenchido, para denunciar sem sessão (página pública /t ou /p). */
+        rotaDenunciaSemSessao: (alvoTipo: 'trilha' | 'perfil', alvo: string) => `/suporte?alvoTipo=${alvoTipo}&alvo=${encodeURIComponent(alvo)}`,
+        // Bloquear: o item do menu "•••", logo abaixo de "Denunciar"
+        bloquear: (nome: string) => `Bloquear ${nome}`,
+        bloquearTitulo: (nome: string) => `Bloquear ${nome}?`,
+        bloquearTexto: 'Você deixa de ver as trilhas e o perfil dessa pessoa, e ela deixa de ver os seus no Studoo. Ela não é avisada.',
+        bloquearAcao: 'Bloquear',
+        bloqueando: 'Bloqueando…',
+        cancelar: 'Cancelar',
+        bloqueada: 'Pessoa bloqueada.',
+        desfazer: 'Desfazer',
+        desbloqueada: 'Pessoa desbloqueada.',
+        // A lista no Perfil e o perfil de quem você bloqueou, aberto por um link
+        bloqueadasTitulo: 'Pessoas bloqueadas',
+        bloqueadasVazia: 'Ninguém bloqueado.',
+        desbloquear: 'Desbloquear',
+        desbloquearRotulo: (nome: string) => `Desbloquear ${nome}`,
+        perfilBloqueado: 'Você bloqueou esta pessoa.',
+        // Depois de denunciar: o aviso com o protocolo e a ação "Bloquear" (se a pessoa ainda não estiver bloqueada)
+        denunciaEnviada: (protocolo: string) => `Denúncia enviada (protocolo ${protocolo}). Obrigado por avisar.`,
+        // Revisão do que fica público: o que a dona vê
+        enviadaParaRevisao: 'Enviada para revisão. Aparece para outras pessoas depois da aprovação.',
+        recusadaNaHora: 'Não deu para publicar: o texto não segue as regras da comunidade. Revise e tente de novo.',
+        seloEmRevisao: 'Em revisão',
+        emRevisao: 'Em revisão pela equipe do Studoo. Por enquanto, só você vê.',
+        seloNaoPublicada: 'Não publicada',
+        naoPublicada: 'A equipe do Studoo não aprovou esta publicação. Ela continua só com você.',
+        fotoEmRevisao: 'Sua foto está em revisão. Até lá, os outros veem a sua inicial.',
+        capaEmRevisao: 'A capa está em revisão. Até lá, os outros veem a capa padrão.',
+        trilhaIndisponivel: 'Esta trilha não está disponível agora.',
+        // Ajuda: a seção do Perfil e o botão da entrada e da recuperação de senha
+        ajudaTitulo: 'Ajuda',
+        falarComSuporte: 'Falar com o suporte',
+        regras: 'Regras da comunidade',
+        politica: 'Política de privacidade',
+        precisaDeAjuda: 'Precisa de ajuda? Fale com o suporte',
+        // A linha da folha de compartilhar (acima da ação que publica no perfil ou no Explorar; não em "Só com o link")
+        regrasAoPublicar: { antes: 'Ao publicar, você concorda com as ', link: 'Regras da comunidade', depois: '.' },
     },
     /**
      * Privacidade (revisão Apple): o aceite antes de dados irem a uma IA de terceiro, a seção "Privacidade e dados" do
