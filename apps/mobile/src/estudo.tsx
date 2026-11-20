@@ -29,7 +29,7 @@ import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
 import { PerfilSemSocial, TelaPerfil } from './perfil';
 import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
-import { IrAoExplorar, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
+import { IrAoExplorar, ProvedorBloqueio, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
 import { tocaSons } from './sons';
 
 /*
@@ -657,7 +657,7 @@ export function Estudo({ cliente, sair, expirar }: {
   // Como a web (studoo.tinhaTrilhas): na primeira carga, as abas só aparecem no esqueleto se a conta tinha trilhas.
   const carregandoInicio = !planos && !erro;
   const comNavegacao = (carregandoInicio && tinhaTrilhas) || comNavegacaoAgora;
-  return <AvisoDoApp.Provider value={avisoDoApp}><NavegacaoContexto.Provider value={comNavegacao ? {
+  return <AvisoDoApp.Provider value={avisoDoApp}><ProvedorBloqueio cliente={cliente}><NavegacaoContexto.Provider value={comNavegacao ? {
     atual: aba as Aba, ocupado,
     planos: () => abrir({ tipo: 'planos' }), criar: () => abrir({ tipo: 'objetivo' }),
     explorar: comunidade ? () => abrir({ tipo: 'explorar' }) : undefined,
@@ -680,7 +680,7 @@ export function Estudo({ cliente, sair, expirar }: {
         ocupado={ocupado} aoCancelar={() => setConfirmacao(null)}
         aoConfirmar={() => { const acao = confirmacao.aoConfirmar; setConfirmacao(null); acao(); }} />
     )}
-  </NavegacaoContexto.Provider></AvisoDoApp.Provider>;
+  </NavegacaoContexto.Provider></ProvedorBloqueio></AvisoDoApp.Provider>;
 
   function renderizarTela() {
     // Carregando, como na web: a trilha mostra o esqueleto do caminho e a lição, a forma da aula. "Começar a lição 1" fica na
@@ -765,13 +765,14 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'perfilPublico') {
       return <TelaPerfilPublico key={etapa.perfilId} cliente={cliente} perfilId={etapa.perfilId} acoesTela={acoes}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
-        abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} criarTrilha={() => abrir({ tipo: 'objetivo' })} />;
+        abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} criarTrilha={() => abrir({ tipo: 'objetivo' })}
+        irAoExplorar={() => abrir({ tipo: 'explorar' })} />;
     }
 
     if (etapa.tipo === 'previaTrilha') {
       return <TelaPreviaTrilha key={etapa.codigo} cliente={cliente} codigo={etapa.codigo} acoesTela={acoes}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} aoAbrir={(id) => void abrirPlano(id)}
-        criarTrilha={() => abrir({ tipo: 'objetivo' })} />;
+        criarTrilha={() => abrir({ tipo: 'objetivo' })} irAoExplorar={() => abrir({ tipo: 'explorar' })} />;
     }
 
     if (etapa.tipo === 'objetivo' || etapa.tipo === 'geracao' || planos?.length === 0) {
