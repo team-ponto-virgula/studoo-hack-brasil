@@ -57,8 +57,8 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const { proposta } = geracao;
   const painel = useRef<HTMLElement>(null);
   const mapa = useRef<HTMLDivElement>(null);
-  const acompanhar = useRef(true);
-  const anterior = useRef(0);
+  const [acompanhando, setAcompanhando] = useState(true);
+  const maiorRolagem = useRef(0);
   const propostaApresentada = useRef<string | null>(null);
   const trofeu = useRef<HTMLDivElement>(null);
   const [trofeuAVista, setTrofeuAVista] = useState(false);
@@ -68,12 +68,20 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const [explicacao, setExplicacao] = useState<string | null>(null);
   const [semNovidade, setSemNovidade] = useState(false);
   const [demorou, setDemorou] = useState(false);
+  const [estreito, setEstreito] = useState(false);
   const salvando = aceite === 'salvando' || !!passagem;
   const falhou = aceite === 'erro' || aceite === 'expirada';
   const stuNoTrofeu = !!proposta && trofeuAVista && !salvando && !falhou;
   const fase = passagem ? 'criada' : salvando ? 'salvando' : proposta ? 'pronta' : 'montando';
   const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
+  useLayoutEffect(() => {
+    const largura = window.matchMedia('(max-width: 600px)');
+    const atualizar = () => setEstreito(largura.matches);
+    atualizar();
+    largura.addEventListener('change', atualizar);
+    return () => largura.removeEventListener('change', atualizar);
+  }, []);
   useEffect(() => {
     tocaSons.prepararEfeitos('geracao_licao', 'geracao_pronta');
   }, []);
@@ -97,7 +105,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     if (proposta) {
       if (propostaApresentada.current === proposta.token) return;
       propostaApresentada.current = proposta.token;
-      if (acompanhar.current && trofeu.current) {
+      if (acompanhando && trofeu.current) {
         const destino = trofeu.current.getBoundingClientRect().bottom - area.getBoundingClientRect().bottom + area.scrollTop;
         area.scrollTo({ top: Math.max(0, destino), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
         painel.current?.querySelector<HTMLButtonElement>('.previa-comecar')?.focus({ preventScroll: true });
@@ -106,10 +114,24 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     }
     propostaApresentada.current = null;
     const vaga = area.querySelector<HTMLElement>('[data-mais-novo]');
-    if (!vaga || !acompanhar.current) return;
+    if (!vaga || !acompanhando) return;
     const centro = vaga.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop + vaga.offsetHeight / 2;
     area.scrollTo({ top: Math.max(0, centro - area.clientHeight * 0.6), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
-  }, [nos.length, proposta]);
+  }, [nos.length, proposta, acompanhando]);
+
+  function voltarAAcompanhar() {
+    const area = mapa.current;
+    if (!area) return;
+    const alvo = proposta ? trofeu.current : area.querySelector<HTMLElement>('[data-mais-novo]');
+    if (!alvo) return;
+    area.focus({ preventScroll: true });
+    maiorRolagem.current = 0;
+    setAcompanhando(true);
+    if (proposta) {
+      const destino = alvo.getBoundingClientRect().bottom - area.getBoundingClientRect().bottom + area.scrollTop;
+      area.scrollTo({ top: Math.max(0, destino), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
+    }
+  }
 
   useLayoutEffect(() => {
     const area = mapa.current;
@@ -154,6 +176,25 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     void tocaSons.tocarEfeito('geracao_licao');
   }
 
+  const acaoPrincipal = proposta && (
+    <Botao key="principal" className="previa-comecar" aria-disabled={salvando} onClick={() => {
+      if (!painel.current || salvando) return;
+      if (aceite === 'expirada') { remontar(); return; }
+      aceitar(painel.current);
+    }}>
+      {salvando && <span className="previa-giro" aria-hidden="true" />}
+      {salvando ? t.criandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}
+    </Botao>
+  );
+  const acaoSecundaria = (
+    <Botao key="secundaria" className="previa-ajustar" variante="secundario" disabled={salvando} onClick={proposta ? ajustar : cancelar}>
+      {proposta ? t.ajustar : t.cancelar}
+    </Botao>
+  );
+  const erroDoAceite = falhou && (
+    <p key="erro" className="previa-erro" role="alert">{aceite === 'expirada' ? t.propostaExpirada : t.erroCriacao}</p>
+  );
+
   return <section ref={painel} className="painel painel--geracao" data-fase={fase} data-passagem={passagem ? (passagem.reduzida ? 'reduzida' : 'circulo') : undefined}
     style={passagem?.estilo} inert={!!passagem}>
     <header className="previa-cabecalho">
@@ -163,11 +204,18 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     <div className="previa-palco">
       <p className="previa-placa" role="status">{placa}{proposta && <span className="somente-leitor"> {t.comecarLicao1}.</span>}</p>
       {!proposta && <span className="somente-leitor" role="status">{licaoAnunciada}</span>}
-      <div className="previa-mapa" ref={mapa} style={coresDaRegiao(nos.at(-1)?.trecho ?? 0)} onScroll={ev => {
+      <div className="previa-mapa" ref={mapa} tabIndex={-1} style={coresDaRegiao(nos.at(-1)?.trecho ?? 0)} onScroll={ev => {
         const area = ev.currentTarget;
-        if (area.scrollTop < anterior.current - 2) acompanhar.current = false;
-        if (area.scrollHeight - area.clientHeight - area.scrollTop < 24) acompanhar.current = true;
-        anterior.current = area.scrollTop;
+        if (salvando) return;
+        const { scrollTop, scrollHeight, clientHeight } = area;
+        if (scrollHeight - clientHeight - scrollTop < 24) {
+          maiorRolagem.current = scrollTop;
+          setAcompanhando(true);
+        } else if (scrollTop < maiorRolagem.current - 40) {
+          setAcompanhando(false);
+        } else {
+          maiorRolagem.current = Math.max(maiorRolagem.current, scrollTop);
+        }
       }}>
         <ol className="previa-percurso" aria-label={t.contexto}>
           {nos.map((no, i) => {
@@ -187,7 +235,9 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
               {i > 0 && <LigacaoRascunho de={antes} ate={x} />}
               <div className="previa-no__centro">
                 <button type="button" className="previa-no__alvo" disabled={salvando} aria-expanded={mostrar} aria-label={no.titulo}
-                  onClick={() => setExplicacao(mostrar ? null : no.id)}>
+                  onFocus={ev => {
+                    if (ev.currentTarget.matches(':focus-visible')) setAcompanhando(false);
+                  }} onClick={() => setExplicacao(mostrar ? null : no.id)}>
                   <span className="previa-no__face" onAnimationEnd={ev => {
                     if (ev.animationName === 'previa-pousar' || ev.animationName === 'previa-aparecer') pousou(ev.currentTarget, i + 1, no.titulo);
                   }}><Icone nome={no.titulo.startsWith('Revis') ? 'revisao' : 'livro'} /></span>
@@ -214,18 +264,19 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
         {proposta && existente && !salvando && <aside className="geracao-repetida"><p>{t.repetida(existente.titulo)}</p>
           <Botao variante="secundario" onClick={() => abrirExistente(existente.id)}>{t.abrirExistente}</Botao></aside>}
       </div>
+      {!acompanhando && !salvando && nos.length > 0 && !(proposta && trofeuAVista) && (
+        <button type="button" className="previa-seguir" onClick={voltarAAcompanhar}>
+          <Icone nome="seta" />{proposta ? t.verFimDaTrilha : t.verLicaoNova(nos.length)}
+        </button>
+      )}
     </div>
-    <footer className="previa-rodape">
+    <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={salvando || undefined} data-falha={falhou || undefined}>
       <div className="previa-botoes">
-        {!salvando && <Botao variante="secundario" onClick={proposta ? ajustar : cancelar}>{proposta ? t.ajustar : t.cancelar}</Botao>}
-        {proposta && <Botao className="previa-comecar" aria-disabled={salvando} onClick={() => {
-          if (!painel.current || salvando) return;
-          if (aceite === 'expirada') { remontar(); return; }
-          aceitar(painel.current);
-        }}>{salvando && <span className="previa-giro" aria-hidden="true" />}{salvando ? t.criandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}</Botao>}
+        {estreito ? [acaoPrincipal, erroDoAceite, acaoSecundaria] : [acaoSecundaria, acaoPrincipal, erroDoAceite]}
+        {proposta && <p className="previa-espera" role="status" data-visivel={demorou && salvando && !passagem || undefined}>
+          {t.escrevendoLicoes}
+        </p>}
       </div>
-      {demorou && salvando && !passagem && <p className="previa-espera" role="status">{t.escrevendoLicoes}</p>}
-      {(aceite === 'erro' || aceite === 'expirada') && <p className="previa-erro" role="alert">{aceite === 'expirada' ? t.propostaExpirada : t.erroCriacao}</p>}
     </footer>
     {passagem && !passagem.reduzida && <div className="previa-circulo" aria-hidden="true" onAnimationStart={() => {
       if (!painel.current || !mapa.current) return;

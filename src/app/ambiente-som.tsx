@@ -35,9 +35,26 @@ export function AmbienteSom() {
   }, [visivel, emFoco]);
   useLayoutEffect(() => {
     if (!visivel) return;
+    const tamanho = new ResizeObserver(posicionar);
+    let ancora: Element | null = null;
     function posicionar() {
       const el = aviso.current;
       if (!el) return;
+      const previa = document.querySelector('.painel--geracao:not([inert])');
+      const controles = previa?.querySelector('.previa-seguir') ?? previa?.querySelector('.previa-rodape') ?? null;
+      if (ancora !== controles) {
+        if (ancora) tamanho.unobserve(ancora);
+        if (controles) tamanho.observe(controles);
+        ancora = controles;
+      }
+      if (controles) {
+        const caixa = controles.getBoundingClientRect();
+        el.style.top = 'auto';
+        el.style.left = caixa.left + caixa.width / 2 + 'px';
+        el.style.bottom = innerHeight - caixa.top + 16 + 'px';
+        el.style.maxWidth = '';
+        return;
+      }
       const barra = document.querySelector('.som-marca, .recuperar-topo')?.getBoundingClientRect();
       const ilha = document.querySelector('.navegacao-mobile')?.getBoundingClientRect();
       el.style.top = barra ? Math.max(8, barra.bottom + 8) + 'px' : '';
@@ -52,6 +69,7 @@ export function AmbienteSom() {
     window.addEventListener('scroll', posicionar, true);
     return () => {
       mudanca.disconnect();
+      tamanho.disconnect();
       window.removeEventListener('resize', posicionar);
       window.removeEventListener('scroll', posicionar, true);
     };

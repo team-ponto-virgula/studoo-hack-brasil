@@ -44,7 +44,7 @@ test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro
   assert.match(geracao, /testID=\{expirada \? 'montar-de-novo' : 'comecar-trilha'\}/);
   assert.match(geracao, /rotulo=\{salvando \? mensagens\.geracao\.criandoTrilha : expirada \? mensagens\.geracao\.montarDeNovo : mensagens\.geracao\.comecarLicao1\}/);
   assert.match(geracao, /ocupado=\{salvando\} afundado=\{salvando\} giro=\{salvando\}/);
-  assert.match(geracao, /\{!ajustarFora && \(/, '"Ajustar pedido" sai depois de encolher');
+  assert.match(geracao, /const secundaria = \(empilhar \|\| !ajustarFora\) && \(/, '"Ajustar pedido" mantém a medida só no rodapé empilhado');
   assert.match(geracao, /duration: RITMO_DA_GERACAO\.ajustarSaiMs/);
   // A espera real: a linha só depois de 1,5 s sem resposta.
   assert.match(geracao, /setTimeout\(\(\) => setEsperaReal\(true\), RITMO_DA_GERACAO\.esperaRealMs\)/);
@@ -53,9 +53,19 @@ test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro
   const interface_ = ler('interface.tsx');
   assert.match(interface_, /\{giro && <Giro cor=\{corTexto\} \/>\}/);
   assert.match(interface_, /<Text numberOfLines=\{giro \|\| umaLinha \? 1 : undefined\}/);
-  assert.match(geracao, /estilo=\{dividir \? estudoEstilos\.botaoDividido : undefined\} umaLinha \/>/, '"Ajustar pedido" numa linha');
+  assert.match(geracao, /estilo=\{empilhar \? estudoEstilos\.geracaoBotaoSecundario : dividir \? estudoEstilos\.botaoDividido : undefined\} umaLinha \/>/, '"Ajustar pedido" numa linha');
   assert.match(interface_, /degrauFora\(4, 16, labio, pressed \|\| afundado\)/);
   assert.match(interface_, /giro: \{ width: 16, height: 16, borderRadius: 8, borderWidth: 2 \}/);
+});
+
+test('até 600 px, a ação principal ocupa a largura e vem antes do ajuste; o espaço do ajuste mantém o botão parado ao criar', () => {
+  assert.match(geracao, /const empilhar = pronta && width <= 600;/);
+  assert.match(geracao, /\{empilhar && principal\}\s*\{empilhar && erroDaCriacao\}\s*\{empilhar \? <View style=\{estudoEstilos\.geracaoLugarSecundario\}>/);
+  assert.match(geracao, /marginTop: -alturaDoAjuste, minHeight: alturaDoAjuste/, 'a espera ocupa o espaço do ajuste e pode crescer');
+  assert.match(estudo, /geracaoAcoesEmpilhadas: \{ gap: 8 \}/);
+  assert.match(estudo, /geracaoRodapeEstreito: \{ paddingHorizontal: 16 \}/);
+  assert.match(estudo, /geracaoLugarSecundario: \{ minHeight: 44, justifyContent: 'center' \}/);
+  assert.match(geracao, /pointerEvents=\{salvando \? 'none' : undefined\} accessibilityElementsHidden=\{salvando\}/);
 });
 
 test('erro e proposta expirada: o botão volta, a linha diz o motivo e o novo toque usa o mesmo token', () => {
