@@ -16,6 +16,7 @@
 .avatar[data-grande] { width: 56px; height: 56px; font-size: 1.5rem; }
 
 .campo-dica { margin: 0; color: var(--texto2); font-size: 0.875rem; line-height: 1.45; }
+.regras-publicacao { margin: 12px 0 16px; }
 .campo-erro { margin: 0; color: var(--erro); font-size: 0.9375rem; font-weight: 800; }
 
 /* Folha: sobe de baixo no celular; no computador, cartão no centro. */

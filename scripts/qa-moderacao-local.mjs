@@ -42,6 +42,16 @@ async function publicar(u, assunto){
   assert.equal(conf.moderacao,'pendente');
   return { codigo, id:plano.id };
 }
+async function encontrarNaCaixa(equipe, grupo, corresponde) {
+  let pagina = 0;
+  for (;;) {
+    const { data } = await solicitar('/api/equipe/moderacao?pagina='+pagina, equipe.cookie);
+    const item = data[grupo].find(corresponde);
+    if (item) return item;
+    assert.ok(data.mais, 'Item esperado na fila da equipe: '+grupo);
+    pagina++;
+  }
+}
 async function decisao(e,tipo,alvo,acao,extra={}) {
   const det=(await solicitar('/api/equipe/moderacao?'+new URLSearchParams({tipo,alvo}),e.cookie)).data;
   assert.ok(det.texto);
@@ -65,9 +75,8 @@ try {
   await solicitar(trilha(t),b.cookie,'GET',undefined,404); assert.equal(await aparece(t),false);
   await solicitar('/api/equipe/moderacao',null,'GET',undefined,401);
   await solicitar('/api/equipe/moderacao',b.cookie,'GET',undefined,404);
-  const lista=(await solicitar('/api/equipe/moderacao',e.cookie)).data;
-  assert.ok(lista.itens.some(i=>i.tipo==='perfil'&&i.alvo===a.perfilId));
-  assert.ok(lista.itens.some(i=>i.tipo==='trilha'&&i.alvo===t.codigo));
+  await encontrarNaCaixa(e, 'itens', i => i.tipo === 'perfil' && i.alvo === a.perfilId);
+  await encontrarNaCaixa(e, 'itens', i => i.tipo === 'trilha' && i.alvo === t.codigo);
   for(const [dono,publicacao] of [[a,t],[b,tb]]) {
     await decisao(e,'perfil',dono.perfilId,'aprovar'); await decisao(e,'trilha',publicacao.codigo,'aprovar');
   }
@@ -121,7 +130,7 @@ try {
   await relatar(d,'trilha',t.codigo);assert.equal(await aparece(t),false);
   await solicitar(trilha(t),null,'GET',undefined,404);
   assert.equal((await solicitar('/api/perfil',a.cookie)).data.links.find(l=>l.codigo===t.codigo).moderacao,'pendente');
-  const grupo=(await solicitar('/api/equipe/moderacao',e.cookie)).data.denuncias.find(g=>g.alvo===t.codigo);
+  const grupo = await encontrarNaCaixa(e, 'denuncias', g => g.tipo === 'trilha' && g.alvo === t.codigo);
   assert.equal(grupo.total,5);await decisao(e,'trilha',t.codigo,'manter');
   assert.ok(await aparece(t));assert.match((await acompanhar(rv.protocolo)).resposta,/manteve/);
   assert.equal((await acompanhar(anon.data.protocolo)).estado,'Respondido');assert.equal((await acompanhar(rb.protocolo,b)).estado,'Respondido');
@@ -134,8 +143,7 @@ try {
   console.log('S4–S7/S12 · cinco relatos; só três contas retiram a publicação. Visitante e pessoa sem sessão consultaram os protocolos antes e depois da resposta.');
   const ajuda=(await solicitar('/api/suporte',null,'POST',{mensagem:'Pedido sintético para conferir o atendimento.'},201)).data;
   assert.equal((await acompanhar(ajuda.protocolo)).estado,'Recebido');
-  const caixa=(await solicitar('/api/equipe/moderacao',e.cookie)).data;
-  assert.ok(caixa.pedidos.some(p=>p.id===ajuda.protocolo));
+  await encontrarNaCaixa(e, 'pedidos', p => p.id === ajuda.protocolo);
   await solicitar('/api/equipe/moderacao',e.cookie,'POST',{tipo:'atendimento',acao:'responder',alvo:ajuda.protocolo,resposta:'Conferência local concluída.'});
   assert.equal((await acompanhar(ajuda.protocolo)).resposta,'Conferência local concluída.');
   assert.ok((await solicitar('/login')).data.includes('/suporte'));assert.ok((await solicitar('/recuperar')).data.includes('/suporte'));

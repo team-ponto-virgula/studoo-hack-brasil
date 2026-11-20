@@ -320,7 +320,7 @@ export function VisibilidadeDaTrilha({ link, temaSugerido, deMaterial, demonstra
           );
         })}
       </fieldset>
-      {escolhido !== 'link' && <p className="campo-dica">{mensagens.seguranca.regrasAoPublicar.antes}<Link href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regrasAoPublicar.link}</Link>{mensagens.seguranca.regrasAoPublicar.depois}</p>}
+      {escolhido !== 'link' && <p className="campo-dica regras-publicacao">{mensagens.seguranca.regrasAoPublicar.antes}<Link href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regrasAoPublicar.link}</Link>{mensagens.seguranca.regrasAoPublicar.depois}</p>}
       {escolhido === 'perfil' && escolhido !== atual && <Botao disabled={ocupado} onClick={() => void salvar('perfil')}>Publicar no perfil</Botao>}
       {escolhido === 'explorar' && !deMaterial && (
         <div className="publicacao">
