@@ -135,10 +135,12 @@ export function CabecalhoPublico({ perfil, perfilId, logado }: { perfil: PerfilP
 }
 
 /** Tela Perfil: o cabeçalho novo; as trilhas que a pessoa compartilha; o perfil público; a conta e Sair. */
-export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirPlano, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas, registrarGuarda }: {
+export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPerfil, aoMudarLink, abrirPlano, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas, registrarGuarda }: {
   /** Guarda de saída do editor (alteração não salva pede a confirmação do app ao navegar). */
   registrarGuarda?: (guarda: ((continuar: () => void) => boolean) | null) => void;
   perfil: Perfil | null;
+  compartilhar: boolean;
+  visitante: boolean;
   /** O vazio de "Trilhas que você compartilha" leva a Minhas trilhas. */
   irParaTrilhas?: () => void;
   /** Com a comunidade: o nível de cada trilha, "Visibilidade" (abre a folha) e os cartões como aparecem na página. */
@@ -174,12 +176,13 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
 
   useEffect(() => {
     let ativo = true;
+    if (!compartilhar) return;
     cliente.obterPerfil().then((dados) => { if (ativo) { setPerfil(dados); aoMudarPerfil(dados); } })
       .catch((falha) => { if (ativo) setErro(codigoDoErro(falha)); });
     return () => { ativo = false; };
     // Recarrega ao abrir a tela (as adições e os links podem ter mudado).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [compartilhar]);
 
   function trocarLink(antigo: LinkCompartilhado, novo: LinkCompartilhado | null) {
     setPerfil((atual) => {
@@ -227,8 +230,8 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
     <section className="painel painel--perfil">
       <h1 ref={titulo} tabIndex={-1} className="titulo-pagina painel--perfil__titulo">{p.titulo}</h1>
       {erro && <p className="campo-erro" role="alert">{textoErro(erro)}</p>}
-      {!perfil && !erro && <div className="cabeca-perfil cabeca-perfil--esqueleto" aria-hidden="true"><div className="cabeca-perfil__faixa" /><div className="folha-esqueleto"><span /><span /><span /></div></div>}
-      {perfil && (
+      {compartilhar && !perfil && !erro && <div className="cabeca-perfil cabeca-perfil--esqueleto" aria-hidden="true"><div className="cabeca-perfil__faixa" /><div className="folha-esqueleto"><span /><span /><span /></div></div>}
+      {compartilhar && perfil && (
         <>
           {perfil.visitante ? (
             <div className="perfil-cartao"><p className="perfil-cartao__visitante">{p.visitante}</p></div>
@@ -310,19 +313,15 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
             </section>
           )}
 
-          {/* Som, logo antes de Conta, para quem tem conta e para visitante (spec 12). */}
-          <SecaoSomPerfil />
-
-          {/* Privacidade e dados (revisão Apple): aceite de IA, política e "Excluir conta", para conta e visitante. */}
-          <SecaoPrivacidade visitante={perfil.visitante} />
-
-          <section className="perfil-secao" aria-labelledby="perfil-conta">
-            <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
-            {!perfil.visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email} <span className="selo-so-voce">{p.soVoceVe}</span></p>}
-            <Botao variante="secundario" onClick={sair}>{mensagens.sair}</Botao>
-          </section>
         </>
       )}
+      <SecaoSomPerfil />
+      <SecaoPrivacidade visitante={visitante} />
+      <section className="perfil-secao" aria-labelledby="perfil-conta">
+        <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
+        {compartilhar && perfil && !visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email} <span className="selo-so-voce">{p.soVoceVe}</span></p>}
+        <Botao variante="secundario" onClick={sair}>{mensagens.sair}</Botao>
+      </section>
       {folha && (
         <FolhaCompartilhar planoId={folha} visitante={false} comunidade={comunidade} anunciar={anunciar} aoFechar={() => setFolha(null)}
           aoMudarPerfil={(novo) => { setPerfil(novo); aoMudarPerfil(novo); }}

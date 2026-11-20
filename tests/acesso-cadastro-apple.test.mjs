@@ -16,6 +16,8 @@ import { excluirConta } from '../src/servidor/privacidade/conta.ts';
 import { POST as codigoWeb } from '../src/app/api/cadastro/codigo/route.ts';
 import { POST as cadastroWeb } from '../src/app/api/cadastro/route.ts';
 import { POST as cadastroMobile } from '../src/app/api/mobile/cadastro/route.ts';
+import { POST as appleMobile } from '../src/app/api/mobile/apple/route.ts';
+import { POST as notificacaoApple } from '../src/app/api/auth/apple/notificacoes/route.ts';
 import { POST as nonceMobile } from '../src/app/api/mobile/apple/nonce/route.ts';
 import { GET as configAcesso } from '../src/app/api/auth/config/route.ts';
 
@@ -271,6 +273,54 @@ test('Apple: rota do nonce só no canal do app; excluir conta revoga o token na 
   assert.equal(await usuarioDaSessao(sessao.token, 'MOBILE'), null);
   // Falha da Apple não impede a exclusão nem lança.
   assert.equal(await revogarApple(cifrar('rt'), 'com.studoo.mobile', async () => new Response('', { status: 500 })), false);
+});
+
+test('Apple: sessão pelo endpoint nativo, revogação, reentrada e exclusão notificada com o login desligado', async (t) => {
+  usarHttps();
+  const sub = `apple-${randomUUID()}`; subs.push(sub);
+  const email = emailNovo();
+  const renovar = await tokenApple({ sub });
+  let revogacoes = 0;
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    switch (new URL(url).pathname) {
+      case '/auth/keys': return Response.json({ keys: [jwk] });
+      case '/auth/token': return Response.json({ refresh_token: 'renovacao-simulada', id_token: renovar });
+      case '/auth/revoke': revogacoes++; return new Response(null, { status: 200 });
+      default: throw new Error('Destino fora da simulação');
+    }
+  });
+  const requisicao = (rota, body) => new Request(new URL(rota, process.env.STUDOO_ORIGEM), {
+    method: 'POST', headers: { host: 'studoo.example.test', 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const entrarNativo = async () => {
+    const { nonce } = await (await nonceMobile(requisicao('/api/mobile/apple/nonce', {}))).json();
+    const resp = await appleMobile(requisicao('/api/mobile/apple', {
+      nonce, identityToken: await tokenApple({ nonce: sha256Hex(nonce), sub, email, email_verified: true }),
+      authorizationCode: randomUUID(),
+    }));
+    assert.equal(resp.status, 200);
+    return (await resp.json()).token;
+  };
+  const notificar = async type => {
+    const payload = await tokenApple({ events: { type, sub, event_time: Math.floor(Date.now() / 1000) } });
+    return notificacaoApple(requisicao('/api/auth/apple/notificacoes', { payload }));
+  };
+  const primeira = await entrarNativo();
+  const id = await usuarioDaSessao(primeira, 'MOBILE');
+  assert.ok(id);
+  assert.equal((await notificar('consent-revoked')).status, 200);
+  assert.equal(await usuarioDaSessao(primeira, 'MOBILE'), null);
+  assert.equal((await banco.usuario.findUniqueOrThrow({ where: { id } })).appleRenovacao, null);
+  const segunda = await entrarNativo();
+  assert.equal(await usuarioDaSessao(segunda, 'MOBILE'), id);
+  process.env.STUDOO_APPLE = '0';
+  assert.equal(appleAtivo(), false);
+  assert.equal((await notificar('account-deleted')).status, 200);
+  assert.equal(await banco.usuario.findUnique({ where: { id } }), null);
+  assert.equal(await usuarioDaSessao(segunda, 'MOBILE'), null);
+  assert.equal(revogacoes, 1);
+  assert.equal((await notificar('account-deleted')).status, 200);
 });
 
 test('Apple: notificação servidor-a-servidor só vale assinada pela Apple', async () => {
