@@ -33,7 +33,7 @@ Palavras do dono: "Nessa parte aqui de outro jeito de entender tá meio confuso,
 **Em uma olhada:** por que estou aqui (a frase do topo), em que passo estou (um só indicador) e o que faço agora (um botão principal no rodapé).
 
 **Ordem em 390** (o alto da aula, com X, andamento e som, continua):
-1. **Rótulo e título:** o selo "REFORÇO" (`ponteMapa`, no estilo do "CONCEITO" da lição, com o ícone da lâmpada, porque não há ícone de ponte no conjunto) e o título "Outro jeito de entender" (`ponte`), o mesmo nome do botão que abriu a tela.
+1. **Rótulo e título:** o selo "REFORÇO" (`ponteMapa`, no estilo do "CONCEITO" da lição, com o ícone `revisao` (o laço), o mesmo do selo "Reforço" no mapa, que existe na web e no app) e o título "Outro jeito de entender" (`ponte`), o mesmo nome do botão que abriu a tela.
 2. **Por que estou aqui**, em 16/24 `#0B1B5C`:
    - com resposta escrita ou escolhida: "Você respondeu “<resposta>”. Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício." (`ponteMotivoResposta`, com a resposta cortada em 60 caracteres e "…");
    - sem resposta de texto (ordenar, associar): "Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício." (`ponteMotivo`).
@@ -59,6 +59,13 @@ Palavras do dono: "Nessa parte aqui de outro jeito de entender tá meio confuso,
 | 3, com escolha | "Verificar" | certo: "Ponte construída!"; errado: retorno no cartão |
 | 3, errou | "Tentar de novo" (`ponteTentarDeNovo`, novo) | limpa a escolha; o retorno fica até a nova escolha |
 | Vencida | "Voltar ao exercício" (verde, `sucesso`) | volta ao exercício original, como hoje |
+
+**Conferência de 20/11** (web 21286c4 e app 86411f8; decisões de paridade, iguais nos dois):
+- **A faixa** segue a da web: fundo de água azul-claro com raio 16, as margens "Onde travou" e "Exercício" como texto (13/16 800 `#5E6A85`), sem caixas verdes, e as três tábuas no meio, com o Stu sobre a atual. A apresentação inicial usa a mesma faixa.
+- **Sem o selo "Modo demonstração"** no alto da ponte. O conteúdo simulado continua marcado onde a lição já marca.
+- **Só a ponte em cena:** do passo 1 até a ponte vencida, o cartão "Explique com suas palavras (opcional)" não aparece. Ele volta com o exercício original.
+- **O rodapé preso** da ponte é branco, como o da aula sem retorno. O tom pêssego é do retorno de erro e sai quando a ponte abre.
+- **Ao vencer**, o Stu na margem "Exercício" é o `stu-animado`, e não o `stu-perfil`.
 
 **Ponte vencida:**
 - a terceira tábua se completa, e o Stu chega à margem "Exercício" e vira `stu-animado` (uma vez, spec 13);
