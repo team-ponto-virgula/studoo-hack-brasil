@@ -1,6 +1,6 @@
 # Passo a passo para subir o Studoo ao TestFlight (Apple Developer, App Store Connect e EAS)
 
-Página única para quem gera e envia o build do iPhone. Ela não repete o histórico. Detalhes estão em:
+Página única para quem gera e envia o build do iPhone. Ela não repete o histórico. Para a preparação atual do beta externo no Cloud, veja [EXTERNO-CLOUD.md](EXTERNO-CLOUD.md), incluindo o acesso Apple encontrado e o bloqueio de contrato. Detalhes estão em:
 - `docs/beta/CONFERENCIA-CLOUD-TESTFLIGHT.md`: o que já foi conferido e o estado do servidor;
 - `docs/ACESSO-APPLE-CADASTRO.md`: o login com a Apple no servidor;
 - `docs/QA-REVISAO-APPLE.md`: o QA.
@@ -68,12 +68,12 @@ npx eas-cli@latest login            # conta Expo dona do projeto (owner do app.j
 npx eas-cli@latest build -p ios --profile testflight
 #   Na primeira vez, aceite que o EAS gerencie as credenciais (login Apple no próprio CLI, ou uma chave da API do App Store
 #   Connect). Ele cria ou usa o App ID, o certificado de distribuição e o perfil de provisionamento.
-npx eas-cli@latest submit -p ios --profile production --latest
+npx eas-cli@latest submit -p ios --profile testflight --id <ID_DO_BUILD_CONFERIDO> --no-auto-testflight-setup
 #   Pede o Apple ID do app (passo 2.1) ou usa a chave da API do App Store Connect. Para não perguntar de novo, dá para
-#   gravar `ascAppId` em submit.production do eas.json.
+#   definir `STUDOO_ASC_APP_ID`; o perfil submit.testflight resolve os identificadores e a chave pelas variáveis do ambiente.
 ```
 
-Depois de enviado, o build aparece no TestFlight em 10 a 30 minutos, em "Processando". Quando estiver pronto, adicione-o ao grupo interno.
+Depois do upload, acompanhe o processamento no App Store Connect. O tempo varia; upload concluído não comprova que o build já esteja disponível. Para o beta externo, configure o grupo e envie o build à revisão beta quando os requisitos abaixo estiverem atendidos.
 
 ## 4. Rótulo de privacidade (App Store Connect → Privacidade do app), tirado do código
 
