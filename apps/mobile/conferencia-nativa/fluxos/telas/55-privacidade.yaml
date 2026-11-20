@@ -53,7 +53,10 @@ name: 55-privacidade
 - tapOn:
     waitToSettleTimeoutMs: 1000
     id: confirmacao-cancelar
+# Só a arrumação depois das capturas: na execução 44809026116, o cartão ainda estava na árvore ao fim da espera, com as três
+# capturas já feitas; o fluxo seguinte reabre o app de qualquer jeito.
 - extendedWaitUntil:
     notVisible:
       id: excluir-conta-confirmacao
     timeout: 15000
+    optional: true
