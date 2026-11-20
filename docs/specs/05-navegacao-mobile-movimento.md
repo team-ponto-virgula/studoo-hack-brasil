@@ -86,6 +86,60 @@ Se a proposta tem o mesmo nome de uma trilha que a pessoa já tem, a tela avisa 
 
 **Verificação.** Esboço com seis casos, na pasta do Designer (`ux/12-barra-de-abas/capsula.png` e `capsula.html`), com a conferência automática de encaixe acima. Não conferido no aparelho. Falta conferir no aparelho: o vidro, o contraste sobre ele, a "Reduzir transparência" e o TalkBack/VoiceOver com a cápsula sobreposta.
 
+## "Minhas trilhas" sem trilhas (pedido do dono, 20/11)
+
+**Estado:** regra de design de 20/11, para a candidata do TestFlight. Vale para web, Android e iPhone. Ainda não implementada.
+
+**Pedido do dono:** "Quando eu logo clico em minha trilha e eu não tenho trilha, não dá nenhum pop-up, não dá nada. Então coloque alguma reação quando não tiver trilha e clicar em minha trilha."
+
+**Hoje:** na web, sem trilhas, a tela `planos` desenha o mesmo formulário de "Nova trilha" (`src/app/estudo.tsx`, `<Pedido … avisoSemTrilhas>`). A aba "Nova trilha" continua marcada (`abaNovaTrilha`). Para quem toca em "Minhas trilhas", só aparece a frase `planos.semTrilhas`, fácil de não ver.
+
+**Decisão:** é um estado vazio da própria aba, sem aviso flutuante e sem janela. A troca de tela já é a resposta: a aba tocada fica marcada, e o conteúdo muda para o vazio com o Stu. Um aviso por cima repetiria a mesma frase e sumiria sozinho.
+
+1. **Ao entrar continua igual** (regra do dono de 19/11). Depois de entrar, criar conta ou começar como visitante, sem trilhas, a tela é a "Nova trilha", com o foco no campo e a aba "Nova trilha" marcada. A abertura sem trilhas vai para `objetivo`, e não para a lista. O estado vazio só aparece quando a pessoa pede "Minhas trilhas".
+2. **Ao tocar em "Minhas trilhas" sem trilhas:**
+   - a aba "Minhas trilhas" fica marcada (`aria-current="page"` na web; `selected` no app), com o 0,85 → 1 do ícone (260 ms, seção "Barra de abas em cápsula");
+   - o alto da tela é o de sempre: o título "Minhas trilhas" (`planos.titulo`), sem o subtítulo da lista;
+   - embaixo, o bloco vazio, igual ao vazio do Explorar (spec 13), de cima para baixo:
+     - o `stu-curioso` de 96, com o halo lavanda e o flutuar da spec 13;
+     - "Nenhuma trilha ainda" (`planos.vazioTitulo`), no estilo de subtítulo de seção;
+     - "Suas trilhas ficam aqui. Conte o que quer aprender e o Studoo monta a primeira." (`planos.vazioTexto`, 16/24, `#5E6A85`);
+     - o botão principal "Criar minha primeira trilha" (`planos.vazioAcao`), com 48 px, na largura do conteúdo.
+   - O botão abre a "Nova trilha" com o foco no campo. O que a pessoa já tinha escrito continua lá.
+   - O formulário de pedido e a frase `planos.semTrilhas` saem da tela `planos`; a frase sai do contrato.
+3. **Movimento:**
+   - o bloco entra subindo 8 px e aparecendo em 200 ms, e depois o Stu flutua;
+   - tocar de novo em "Minhas trilhas" com o vazio na tela faz o Stu dar um pulo (sobe 8 px e volta, 300 ms) e leva a tela ao topo;
+   - com movimento reduzido, nada se mexe: a troca é imediata e o Stu fica parado.
+4. **Som:** nenhum som novo. As abas não têm efeito na spec 12, e um som só nesta aba ficaria isolado.
+5. **Leitor de tela:**
+   - o foco vai para o título "Minhas trilhas", como nas outras trocas de seção;
+   - a região educada anuncia "Nenhuma trilha ainda.";
+   - o Stu é decorativo, e o botão se chama "Criar minha primeira trilha".
+6. **Tela larga (navegação lateral):** o mesmo. "Minhas trilhas" fica marcada na lateral, e o bloco vazio fica na coluna do conteúdo, alinhado à esquerda, com até 560 px.
+7. **Com a primeira trilha** (pronta, ou ainda sendo criada), "Minhas trilhas" mostra a lista de sempre.
+8. **Onde mais:** o botão "Minhas trilhas" do alto, onde ele existe (por exemplo, o `meus-planos` do app), leva ao mesmo estado.
+9. **A barra de abas aparece também sem trilhas** (spec 04, banca, item 5; spec 07). No app, `comNavegacaoAgora` (`apps/mobile/src/estudo.tsx`) ainda exige `planos.length > 0`. Sem a barra, não há "Minhas trilhas" para tocar: o app precisa seguir a regra.
+
+**Textos novos** (contrato, `planos`): `vazioTitulo` "Nenhuma trilha ainda"; `vazioTexto` "Suas trilhas ficam aqui. Conte o que quer aprender e o Studoo monta a primeira."; `vazioAcao` "Criar minha primeira trilha". Sai `semTrilhas`.
+
+**Spec 07:** nenhuma diferença de plataforma.
+
+**Aceite** (web em 390 e 1440; app na prévia e no iPhone do TestFlight; conta nova sem trilhas):
+
+| # | Passos | Esperado |
+|---|---|---|
+| V1 | Entra com a conta nova | "Nova trilha" com o foco no campo; aba "Nova trilha" marcada |
+| V2 | Toca em "Minhas trilhas" | Aba "Minhas trilhas" marcada; título, Stu curioso, "Nenhuma trilha ainda", o texto e "Criar minha primeira trilha"; sem formulário |
+| V3 | Escreve no campo, vai a "Minhas trilhas" e toca em "Criar minha primeira trilha" | Volta à "Nova trilha", com o foco no campo e o texto mantido |
+| V4 | Toca de novo em "Minhas trilhas" no vazio | O Stu pula uma vez |
+| V5 | Movimento reduzido | Troca imediata, sem pulo |
+| V6 | Leitor de tela em V2 | Foco no título; anúncio "Nenhuma trilha ainda." |
+| V7 | 1440, navegação lateral | Mesmo bloco, com "Minhas trilhas" marcada na lateral |
+| V8 | Cria a primeira trilha | "Minhas trilhas" mostra a lista |
+
+Teste de cada dev: com zero trilhas, a tela `planos` mostra o bloco vazio (`planos-vazio`), sem o pedido, com a aba "Minhas trilhas" marcada; a abertura sem trilhas continua em `objetivo`.
+
 ## Paridade e verificação
 
 Web e app usam os mesmos textos de retomada e a mesma prioridade de planos. Não há mudança em API, contratos ou banco, nem dependência nativa nova. O mascote não foi substituído nesta mudança.
