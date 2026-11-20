@@ -4,9 +4,13 @@ import { AccessibilityInfo, Animated, Keyboard, LayoutAnimation, Platform, Press
 import { useTremor } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { entrarComGoogle } from './google-nativo';
+import { appleDisponivelNoAparelho, entrarComApple } from './apple-nativo';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { entrarComoVisitante } from './visitante-nativo';
 import { Apresentacao } from './apresentacao';
 import { RecuperarAcesso } from './recuperar';
+import { CriarConta, enderecoDaPoliticaPublica } from './cadastro';
+import { abrirNoNavegador } from './social';
 import { Estudo } from './estudo';
 import { AvisoDoApp, Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useAvisoDoAppRaiz, useMovimentoReduzido } from './interface';
 import { ESPERA_DA_MEDIDA_MS, ESTADO_INICIAL_DA_ENTRADA, ILUSTRACAO_MAXIMA, MARGEM_DA_ILUSTRACAO, proximoEstadoDaEntrada, type EstadoDaEntrada } from './entrada-medidas';
@@ -28,6 +32,7 @@ type Sessao =
   | { tipo: 'verificando' }
   | { tipo: 'entrada'; erro?: string }
   | { tipo: 'recuperar'; email: string }
+  | { tipo: 'cadastro'; email: string }
   | { tipo: 'falha'; erro: string }
   | { tipo: 'ativa'; cliente: ClienteNativo };
 
@@ -79,6 +84,17 @@ export function AppMobile() {
 
   async function entrar(email: string, senha: string) {
     const { token } = await criarClienteNativo().loginNativo(email, senha);
+    await abrirSessao(token);
+  }
+
+  /** Criar conta por e-mail: a conta nasce já com a sessão do app (201 + SessaoNativa). */
+  async function cadastrar(email: string, codigo: string, senha: string) {
+    const { token } = await criarClienteNativo().cadastrarNativo(email, codigo, senha);
+    await abrirSessao(token);
+  }
+
+  /** Guarda o token novo no aparelho e abre o estudo; sem conseguir guardar, encerra a sessão no servidor. */
+  async function abrirSessao(token: string) {
     if (!/^[A-Za-z0-9_-]{43}$/.test(token)) throw new ErroStudoo('falha');
 
     const cliente = criarClienteNativo(token);
@@ -134,6 +150,13 @@ export function AppMobile() {
           void tocaSons.tocarEfeito('entrar');
           setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
         }}
+        apple={async () => {
+          const token = await entrarComApple();
+          if (!token) return;
+          void tocaSons.tocarEfeito('entrar');
+          setSessao({ tipo: 'ativa', cliente: criarClienteNativo(token) });
+        }}
+        criarConta={(email) => setSessao({ tipo: 'cadastro', email })}
         visitante={async () => {
           const token = await entrarComoVisitante();
           void tocaSons.tocarEfeito('entrar');
@@ -142,6 +165,8 @@ export function AppMobile() {
         recuperar={(email) => setSessao({ tipo: 'recuperar', email })} />;
     case 'recuperar':
       return <RecuperarAcesso emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} />;
+    case 'cadastro':
+      return <CriarConta emailInicial={sessao.email} voltar={() => setSessao({ tipo: 'entrada' })} criar={cadastrar} />;
     case 'falha':
       return (
         // Como na web (3A): o erro fica num cartão com o Stu e a ação dentro dele, em vez de uma tela só com o rodapé.
@@ -224,8 +249,12 @@ function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: n
   );
 }
 
-function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
+function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, recuperar }: {
   google: () => Promise<void>;
+  /** "Continuar com a Apple" (App Review 4.8): só no iPhone e só com `apple: true` em /api/auth/config. */
+  apple: () => Promise<void>;
+  /** "Criar conta" por e-mail: só com `cadastro: true` em /api/auth/config. */
+  criarConta: (email: string) => void;
   /** "Experimentar sem conta" (rodada 4.3): só aparece quando o servidor oferece o visitante. */
   visitante: () => Promise<void>;
   recuperar: (email: string) => void;
@@ -236,6 +265,8 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   const [googleDisponivel, setGoogleDisponivel] = useState(false);
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(false);
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(false);
+  const [cadastroDisponivel, setCadastroDisponivel] = useState(false);
+  const [appleDisponivel, setAppleDisponivel] = useState(false);
   const [experimentando, setExperimentando] = useState(false);
   /** "Ver como funciona" (rodada 4.4 da web): a apresentação sem sessão, aberta da própria entrada. */
   const [vendoApresentacao, setVendoApresentacao] = useState(false);
@@ -255,8 +286,12 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   const [configuracaoCarregada, setConfiguracaoCarregada] = useState(false);
   useEffect(() => {
     let ativo = true;
-    void criarClienteNativo().configuracaoAcesso()
-      .then((c) => { if (ativo) { setGoogleDisponivel(c.google); setRecuperacaoDisponivel(c.recuperacao); setVisitanteDisponivel(c.visitante === true); } })
+    void Promise.all([criarClienteNativo().configuracaoAcesso(), appleDisponivelNoAparelho()])
+      .then(([c, appleNoAparelho]) => {
+        if (!ativo) return;
+        setGoogleDisponivel(c.google); setRecuperacaoDisponivel(c.recuperacao); setVisitanteDisponivel(c.visitante === true);
+        setCadastroDisponivel(c.cadastro === true); setAppleDisponivel(c.apple === true && appleNoAparelho);
+      })
       .catch(() => {})
       .finally(() => { if (ativo) setConfiguracaoCarregada(true); });
     return () => { ativo = false; };
@@ -275,6 +310,7 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   const campoEmail = useRef<ComponentRef<typeof TextInput>>(null);
   const campoSenha = useRef<ComponentRef<typeof TextInput>>(null);
   const podeEntrar = !ocupado;
+  const politica = enderecoDaPoliticaPublica();
 
   // Entrada sem rolar (regra do dono, spec 04): tudo cabe de uma vez. Cede, nesta ordem: a ilustração (da altura que
   // sobra até 140; abaixo de 44, sai), os espaços (nível 1), o tamanho do título e da descrição (nível 2) e a descrição
@@ -312,6 +348,14 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
     emEnvio.current = true; setOcupado(true); setErro(undefined); Keyboard.dismiss();
     try { await google(); }
     catch (e) { setErro(mensagemDeErro(e)); }
+    finally { emEnvio.current = false; setOcupado(false); }
+  }
+
+  async function abrirApple() {
+    if (emEnvio.current) return;
+    emEnvio.current = true; setOcupado(true); setErro(undefined); Keyboard.dismiss();
+    try { await apple(); }
+    catch (e) { setErro(mensagemDeErro(e)); setErros((total) => total + 1); }
     finally { emEnvio.current = false; setOcupado(false); }
   }
 
@@ -393,10 +437,19 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
             <Text testID="aviso-visitante" style={estilos.legenda}>{mensagens.acesso.experimentarAvisoApp}</Text>
           </View>
         )}
+        {/* Apple acima do Google, com o botão oficial da Apple (Human Interface Guidelines), na altura dos outros botões. */}
+        {configuracaoCarregada && appleDisponivel && (
+          <View testID="login-apple" pointerEvents={ocupado ? 'none' : 'auto'} style={ocupado ? { opacity: 0.5 } : null}
+            accessibilityState={{ disabled: ocupado }}>
+            <AppleAuthentication.AppleAuthenticationButton buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK} cornerRadius={16} style={entradaEstilos.apple}
+              onPress={() => void abrirApple()} />
+          </View>
+        )}
         {configuracaoCarregada && googleDisponivel && (
           <Botao rotulo={mensagens.acesso.google} testID="login-google" variante="secundario" desativado={ocupado} acao={() => void abrirGoogle()} />
         )}
-        {configuracaoCarregada && (visitanteDisponivel || googleDisponivel) && (
+        {configuracaoCarregada && (visitanteDisponivel || googleDisponivel || appleDisponivel) && (
           <View style={entradaEstilos.divisor}><View style={entradaEstilos.linha} /><Text style={estilos.legenda}>{mensagens.acesso.ou}</Text><View style={entradaEstilos.linha} /></View>
         )}
         <Campo testID="login-email" rotulo={mensagens.entrada.email} value={email} campoRef={campoEmail} erro={erroEmail}
@@ -425,7 +478,23 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
             <Text style={entradaEstilos.linkTexto}>{mensagens.acesso.esqueci}</Text>
           </Pressable>
         )}
+        {/* Como na web: "Ainda não tem conta? Criar conta", só quando o servidor oferece o cadastro. */}
+        {configuracaoCarregada && cadastroDisponivel && (
+          <Pressable testID="criar-conta" accessibilityRole="link" disabled={ocupado} accessibilityState={{ disabled: ocupado }}
+            accessibilityLabel={`${mensagens.acesso.semConta} ${mensagens.acesso.criarConta}`}
+            hitSlop={{ top: 2, bottom: 2 }} onPress={() => criarConta(email)}
+            style={({ pressed }) => [entradaEstilos.linkCentro, pressed && { opacity: 0.7 }]}>
+            <Text style={entradaEstilos.ajudaTexto}>{mensagens.acesso.semConta}{' '}<Text style={entradaEstilos.linkTexto}>{mensagens.acesso.criarConta}</Text></Text>
+          </Pressable>
+        )}
         {erro && <EstadoErro mensagem={erro} estilo={entradaEstilos.erro} />}
+        {/* Política pública (revisão Apple), ao alcance antes de criar conta ou entrar como visitante. */}
+        {politica && (
+          <Pressable testID="entrada-privacidade" accessibilityRole="link" disabled={ocupado} hitSlop={{ top: 2, bottom: 2 }}
+            onPress={() => abrirNoNavegador(politica)} style={({ pressed }) => [entradaEstilos.linkCentro, pressed && { opacity: 0.7 }]}>
+            <Text style={entradaEstilos.linkTexto}>{mensagens.privacidade.politica}</Text>
+          </Pressable>
+        )}
       </Animated.View>
     </Tela>
   );
@@ -455,6 +524,9 @@ const entradaEstilos = StyleSheet.create({
   // .estado-erro não tem margem própria: o vão de 20 do formulário já separa o cartão do link.
   erro: { marginTop: 0 },
   linkTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 24 },
+  ajudaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 24, textAlign: 'center' },
+  // O botão da Apple na altura dos botões do Studoo (52 com o degrau).
+  apple: { width: '100%', height: 52 },
   // A web deixa 24 px nas laterais do "Entrar" (342 px em 390).
   rodape: { paddingHorizontal: 24 },
 });

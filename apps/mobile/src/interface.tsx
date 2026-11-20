@@ -316,7 +316,7 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   // nome da trilha) fica parada no alto.
   // Entrada e recuperação usam o logo de 112 da web (.entrada-cabecalho, .recuperar-topo); as telas de estudo, o de 102
   // (.estudo-cabecalho até 767 px, com 64 de altura e 16 nos lados).
-  const paginaDeAcesso = pagina === 'entrada' || Boolean(pagina?.startsWith('recuperar'));
+  const paginaDeAcesso = pagina === 'entrada' || Boolean(pagina?.startsWith('recuperar') || pagina?.startsWith('cadastro'));
   const cabecalho = !semCabecalho && (
     <View style={[estilos.cabecalho, semLinha && { borderBottomWidth: 0 }]}>
       <View style={[estilos.marcaConteudo, !topo && paginaDeAcesso && estilos.marcaAcesso, !topo && !paginaDeAcesso && estilos.marcaEstudo, !topo && !paginaDeAcesso && Boolean(abaixoDoLogo) && estilos.marcaComSelo]}>
