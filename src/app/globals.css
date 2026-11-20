@@ -920,6 +920,9 @@ button { touch-action: manipulation; }
 }
 @keyframes navegacao-selecionar { from { transform: scale(0.85); } to { transform: scale(1); } }
 
+.botao.botao-google { width: 100%; gap: 12px; }
+.botao-google img { flex: 0 0 20px; width: 20px; height: 20px; }
+.botao-google:disabled img { opacity: .38; }
 .acesso-divisor { display: flex; align-items: center; gap: 12px; color: var(--texto2); font-size: .875rem; }
 .acesso-divisor::before, .acesso-divisor::after { content: ''; flex: 1; height: 1px; background: var(--gelo); }
 .acesso-ajuda { font-size: .875rem; color: var(--texto2); }
