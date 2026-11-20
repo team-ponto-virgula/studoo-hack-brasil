@@ -40,3 +40,24 @@ Palavras do dono: "Quero que nessa parte não deixe ficar cortado. Sempre que eu
 | M7 | 1440 | Mesma regra, até a borda de baixo da janela |
 
 Teste de cada dev: depois do toque, o topo do balão fica a 16 px ou mais do fim do cabeçalho medido, e o fim do conjunto fica a 16 px ou mais do começo da cápsula. O teste vale nas duas alturas de cabeçalho.
+
+### Um componente só: o balão no mapa (decisão de paridade, 20/11)
+
+**Hoje:** a web abre um balão dentro do mapa para todo nó (`src/ui/caminho.tsx`). O app abre o balão só no nó atual. Para lição concluída ou bloqueada, ele abre uma folha que sobe do rodapé, em `Modal` (`apps/mobile/src/caminho.tsx`, `Folha`). A spec 07 não registra essa diferença.
+
+**Decisão:** é o balão no mapa, para lição atual, concluída e bloqueada, em 390 e no computador, na web, no Android e no iPhone. O app muda; a web fica como está.
+- **Por quê:** é o mesmo componente do nó atual, então tocar em qualquer nó responde do mesmo jeito. O nó e os vizinhos continuam à vista, e a pessoa vê onde está a lição em relação à atual. O defeito que o dono viu, o balão cortado, sai com a regra de enquadramento acima. Nada na plataforma obriga a usar uma folha.
+- **O balão** (como na web): título da lição e "fechar" de 44 px no topo; embaixo, o texto do estado.
+  - Concluída: o texto de concluída (`concluidaTexto`, `concluidaComReforco` ou `concluidaRever`) e o botão secundário "Refazer" (`refazer`).
+  - Bloqueada: o texto de bloqueada e o botão secundário "Mostrar a lição atual no mapa" (`irParaAtual`), quando existe lição atual.
+  - Atual: "Começar" ou "Continuar", como hoje.
+- **O texto não diverge.** Os dois lados usam a mesma regra do contrato:
+  - falta uma lição: "Conclua “<anterior>” para liberar esta lição." (`bloqueadaUma`);
+  - faltam várias: "Faltam <n> lições antes desta. Comece por “<primeira>”." (`bloqueadaVarias`);
+  - sem passo possível: `bloqueadaSemPasso`.
+  A captura do dono tinha uma pendente; a do app, oito. O texto continua.
+- **Fechar:** o "fechar", um toque fora do balão, Esc na web, o voltar do Android e o gesto de voltar do iPhone. O foco volta ao nó.
+- **Leitor de tela:** como na web. O balão é `dialog` com o título como nome e o texto como descrição, e o foco vai ao balão quando a tela para (regra de enquadramento acima).
+- **App:** sai a `Folha` em `Modal` do nó concluído e do bloqueado.
+- **Spec 07:** nenhuma diferença de plataforma.
+- **Aceite** (390, web e app, depois de M1 a M7): tocar numa lição concluída e numa bloqueada abre o balão no mapa, inteiro na área livre, com o mesmo título, texto e botão nos dois lados; nenhuma folha sobe. "Mostrar a lição atual no mapa" fecha o balão e abre o do nó atual.
