@@ -11,6 +11,8 @@ import { AcoesDaPaginaPublica, PreviaTrilha } from '../../compartilhar';
 import { VoltarDaPagina } from '../../comunidade';
 import { PaginaPublica, baseDoSite, redeDaPagina, usuarioDaPagina } from '../../publico';
 
+import { MenuPublicacao } from '../../seguranca-comunidade';
+
 export const dynamic = 'force-dynamic';
 const m = mensagens.compartilhar;
 
@@ -73,8 +75,10 @@ export default async function PaginaDoLink({ params }: Props) {
   return (
     <PaginaPublica>
       {resultado.logado && <VoltarDaPagina destino={comunidadeAtiva() ? '/explorar' : '/'} />}
+      {resultado.trilha.situacao !== 'sua' && <div className="seguranca-publica">{resultado.logado
+        ? <MenuPublicacao tipo="trilha" alvo={resultado.trilha.codigo} nome={resultado.trilha.dono.nome} titulo={resultado.trilha.titulo} logado />
+        : <Link href={mensagens.seguranca.rotaDenunciaSemSessao('trilha', resultado.trilha.codigo)}>{mensagens.comunidade.denunciar}</Link>}</div>}
       <PreviaTrilha trilha={resultado.trilha} calor logado={resultado.logado} comunidade={comunidadeAtiva()} acoes={<AcoesDaPaginaPublica trilha={resultado.trilha} logado={resultado.logado} />} />
     </PaginaPublica>
   );
 }
-

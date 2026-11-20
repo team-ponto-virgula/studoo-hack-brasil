@@ -1,21 +1,21 @@
-import { rotaPublica } from "@/servidor/acesso/http";
+import { rotaPublicaComSessao } from "@/servidor/acesso/http";
 import { enderecoRede } from "@/servidor/acesso/visitante";
 import { lerCapa } from "@/servidor/aprendizado/capa";
 import { limitarLeituraFoto } from "@/servidor/compartilhar/foto";
 import { exigirCompartilhar } from "@/servidor/compartilhar/servico";
 
-/** A capa com foto pelo token (muda a cada troca: cache longo e imutável). Os mesmos cabeçalhos da foto do perfil. */
+/** Revalida a visibilidade antes de entregar os bytes, inclusive ao dono. */
 export function GET(request: Request, context: { params: Promise<{ token: string; tamanho: string }> }) {
-  return rotaPublica(request, async () => {
+  return rotaPublicaComSessao(request, async quem => {
     exigirCompartilhar();
     limitarLeituraFoto(enderecoRede(request));
     const { token, tamanho } = await context.params;
-    const bytes = await lerCapa(token, tamanho);
+    const bytes = await lerCapa(token, tamanho, quem);
     return new Response(new Uint8Array(bytes), {
       headers: {
         "Content-Type": "image/webp",
         "Content-Length": String(bytes.length),
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": "private, no-store",
         "Content-Security-Policy": "default-src 'none'; sandbox",
         "Cross-Origin-Resource-Policy": "cross-origin",
         "Referrer-Policy": "no-referrer",

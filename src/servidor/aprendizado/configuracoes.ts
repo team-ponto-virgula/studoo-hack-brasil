@@ -29,12 +29,12 @@ const LIMITE_MUDANCAS = { quantidade: 240, janelaMs: 60 * 60_000 };
 export async function obterConfiguracoes(usuarioId: string, planoId: string): Promise<ConfiguracoesTrilha> {
   const plano = await banco.planoAprendizado.findUnique({
     where: { usuarioId_id: { usuarioId, id: planoId } },
-    select: { id: true, titulo: true, descricao: true, tema: true, capa: true, origemCodigo: true },
+    select: { id: true, titulo: true, descricao: true, tema: true, capa: true, capaFoto: { select: { moderacao: true } }, origemCodigo: true },
   });
   if (!plano) throw new FalhaApi("nao_encontrado");
   const link = await banco.linkTrilha.findUnique({
     where: { usuarioId_planoId: { usuarioId, planoId } },
-    select: { codigo: true, noPerfil: true, noExplorar: true, adicoes: true, legenda: true, tema: true },
+    select: { codigo: true, noPerfil: true, noExplorar: true, moderacao: true, adicoes: true, legenda: true, tema: true },
   });
   const valeus = link ? await banco.eventoTrilha.count({ where: { codigo: link.codigo, tipo: "valeu" } }) : 0;
   const tema = ehTema(plano.tema) ? plano.tema : ehTema(link?.tema) ? link.tema : null;
@@ -46,8 +46,9 @@ export async function obterConfiguracoes(usuarioId: string, planoId: string): Pr
     tema,
     temaSugerido: tema ?? sugerirTema(plano.titulo),
     capa: plano.capa ?? null,
+    capaModeracao: plano.capaFoto?.moderacao ?? null,
     semente: link?.codigo ?? plano.id,
-    compartilhamento: link && visibilidade ? { codigo: link.codigo, visibilidade, estudando: link.adicoes, valeus } : null,
+    compartilhamento: link && visibilidade ? { codigo: link.codigo, visibilidade, moderacao: link.moderacao, estudando: link.adicoes, valeus } : null,
     recebida: Boolean(plano.origemCodigo),
   };
 }
@@ -85,7 +86,7 @@ export async function salvarConfiguracoes(usuarioId: string, planoId: string, en
 
   const dentro = await banco.$transaction((tx) => consumirLimite(tx, `trilha:configuracoes:${usuarioId}`, LIMITE_MUDANCAS.quantidade, LIMITE_MUDANCAS.janelaMs));
   if (!dentro) throw new FalhaApi("limite_compartilhar");
-  // O mesmo gancho de revisão do resto do conteúdo público (hoje aprova tudo, sem serviço externo).
+  // Aplica a mesma triagem local do editor de publicação.
   if (dados.titulo && !(await revisarConteudo({ tipo: "titulo", usuarioId, texto: dados.titulo })).aprovado) throw new FalhaApi("conteudo_recusado");
   if (dados.descricao && !(await revisarConteudo({ tipo: "legenda", usuarioId, texto: dados.descricao })).aprovado) throw new FalhaApi("conteudo_recusado");
 
