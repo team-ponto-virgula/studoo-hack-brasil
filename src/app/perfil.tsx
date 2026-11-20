@@ -32,6 +32,7 @@ import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, u
 import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
+import { SecaoPrivacidade } from './privacidade-perfil';
 import { SecaoSomPerfil } from './som';
 import { tocaSons } from './sons';
 import './perfil.css';
@@ -311,6 +312,9 @@ export function TelaPerfil({ perfil: inicial, aoMudarPerfil, aoMudarLink, abrirP
 
           {/* Som, logo antes de Conta, para quem tem conta e para visitante (spec 12). */}
           <SecaoSomPerfil />
+
+          {/* Privacidade e dados (revisão Apple): aceite de IA, política e "Excluir conta", para conta e visitante. */}
+          <SecaoPrivacidade visitante={perfil.visitante} />
 
           <section className="perfil-secao" aria-labelledby="perfil-conta">
             <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>

@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { mensagens } from '../mensagens/pt-BR';
 import './globals.css';
 import { AmbienteSom } from './ambiente-som';
+import { AmbienteAceiteIa } from './aceite-ia';
 import { AmbienteMovimento } from '../ui/movimento';
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/nunito-wght.woff2" />
         <link rel="preload" as="font" type="font/woff2" crossOrigin="anonymous" href="/marca/quicksand-wght.woff2" />
       </head>
-      <body><AmbienteMovimento /><AmbienteSom />{children}</body>
+      <body><AmbienteMovimento /><AmbienteSom />{children}<AmbienteAceiteIa /></body>
     </html>
   );
 }

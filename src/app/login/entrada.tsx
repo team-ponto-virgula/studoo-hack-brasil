@@ -32,6 +32,9 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
   const [googleDisponivel, setGoogleDisponivel] = useState(Boolean(configInicial?.google));
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(Boolean(configInicial?.recuperacao));
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(Boolean(configInicial?.visitante));
+  // Depois de "Excluir conta" no Perfil, o login confirma que a conta se foi.
+  const [contaExcluida, setContaExcluida] = useState(false);
+  useEffect(() => { setContaExcluida(new URLSearchParams(window.location.search).get('conta') === 'excluida'); }, []);
   const [configuracaoCarregada, setConfiguracaoCarregada] = useState(Boolean(configInicial));
   const [verificando, setVerificando] = useState(!sessaoVerificada);
   const [enviando, setEnviando] = useState(false);
@@ -252,6 +255,9 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
               )}
             </form>
           )}
+          {contaExcluida && <p className="folha-status" role="status">{mensagens.privacidade.excluida}</p>}
+          {/* Política pública (revisão Apple): ao alcance antes de criar conta ou entrar como visitante. */}
+          <a className="acesso-link entrada-privacidade" href="/privacidade" target="_blank" rel="noopener">{mensagens.privacidade.politica}</a>
         </div>
       </main>
       <aside className="entrada-arte" aria-label={mensagens.login.arteTitulo}>
