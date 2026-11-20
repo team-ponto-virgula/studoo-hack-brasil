@@ -103,3 +103,13 @@ test('P5: com a confirmação de tirar do Explorar aberta, a linha não muda (se
   assert.match(folha, /if \(!feito\) return null;\s*\}\s*aoConfirmado\?\.\(\);\s*return tirar\(planoId, link\);/);
   assert.match(folha, /if \(ligada\) \{ marcar\(\); await ligar\(id, linha\.link\); \}\s*else if \(linha\.link\) await desligar\(id, linha\.link, marcar\);/);
 });
+
+test('a dica do perfil privado aponta para "Postar trilha no perfil" com a comunidade (spec 10, 7b)', async () => {
+  const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
+  assert.equal(mensagens.perfil.perfilPrivadoDica, 'Para compartilhar o perfil, poste ao menos uma trilha em “Postar trilha no perfil”.');
+  assert.equal(mensagens.perfil.perfilPrivadoDicaSemComunidade, 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.');
+  const fonte = await ler('apps/mobile/src/perfil.tsx');
+  assert.match(fonte, /`\$\{p\.privado\} \$\{comunidade \? p\.perfilPrivadoDica : p\.perfilPrivadoDicaSemComunidade\}`/);
+  // Em 390 o título ocupa a largura e o botão desce para baixo dele (quebra da fileira).
+  assert.match(fonte, /secaoCabeca: \{ flexDirection: 'row', flexWrap: 'wrap',/);
+});

@@ -323,7 +323,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
             {!perfil.visitante && perfil.nome && (
               <View style={perfilEstilos.secao}>
                 <TituloSecao>{p.publicoTitulo}</TituloSecao>
-                <Text style={estilos.texto}>{perfil.publico ? p.publico(perfil.links.filter((link) => link.noPerfil).length) : `${p.privado} ${p.perfilPrivadoDica}`}</Text>
+                <Text style={estilos.texto}>{perfil.publico ? p.publico(perfil.links.filter((link) => link.noPerfil).length) : `${p.privado} ${comunidade ? p.perfilPrivadoDica : p.perfilPrivadoDicaSemComunidade}`}</Text>
                 {perfil.publico && perfil.perfilId && (
                   <Botao rotulo={p.verComoOutros} variante="secundario" testID="perfil-ver-publico" acao={() => abrirNoNavegador(urlDoPerfil(perfil.perfilId!))}
                     estilo={{ alignSelf: 'flex-start' }} />
