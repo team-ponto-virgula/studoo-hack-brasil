@@ -54,3 +54,29 @@ npx eas-cli@latest submit --platform ios --profile testflight --id <ID_DO_BUILD_
 O comando submit faz upload; não equivale a aprovação ou distribuição externa. Não usar `--latest` quando houver builds em paralelo. Não usar `--auto-submit` antes da conferência do IPA e da prontidão do servidor.
 
 Até este registro não houve build iOS assinado, upload ao App Store Connect, envio à revisão beta ou teste de Apple real. Logs locais em `/workspace/work/testflight-externo/` e `/workspace/work/testflight/moderacao-*.log`; não publicar a pasta inteira.
+
+## Primeiro IPA concluído — atualização em 20/11/2026
+
+O aceite do contrato foi confirmado e a API da Apple passou a responder 200. A consulta filtrada pelo bundle ainda não encontrou um registro de app no App Store Connect. Esse registro inicial é criado pelo titular no site; a API oficial gerencia apps existentes, não cria o registro.
+
+Recursos provisionados:
+
+- Bundle ID `com.studoo.mobile.dev`, nome Studoo, recurso `56LH772ZWX`.
+- Sign in with Apple habilitado como app principal pela API oficial e conferido por leitura: `APPLE_ID_AUTH`, configuração `APPLE_ID_AUTH_APP_CONSENT`, opção `PRIMARY_APP_CONSENT`.
+- Certificado de distribuição válido do mesmo time reutilizado; nenhum certificado de outro app foi revogado.
+- Novo perfil App Store do Studoo, ativo e com entitlement Apple.
+
+O EAS CLI 27.11.0 tentou enviar o nome antigo `TIBURON_APP_CONSENT` e recebeu erro de validação da Apple. A configuração correta foi aplicada e conferida diretamente pela API; esta compilação usou `EXPO_NO_CAPABILITY_SYNC=1` apenas no comando local para impedir que o CLI sobrescrevesse a configuração correta. Não se retirou o entitlement do app. Antes de futuros builds com essa versão do CLI, reconferir a capability na Apple; atualizar o CLI quando a incompatibilidade estiver corrigida.
+
+[Build EAS 20b7bdac-da61-4ed8-8003-ccc98d3f35cb](https://expo.dev/accounts/miguelvzs/projects/studoo-mobile/builds/20b7bdac-da61-4ed8-8003-ccc98d3f35cb): **FINISHED**, iOS **0.1.0 (3)**, perfil `testflight`, fonte `6c8b1d2664e595cae49ec4ca020742ec51b2eef3`. As tentativas de provisionamento anteriores consumiram os números remotos 1 e 2; não geraram outros IPAs.
+
+O IPA foi baixado do artefato desse build (29.817.385 bytes) e passou no [auditor do pacote](conferencia-cloud/ipa-0.1.0-3.json): **0 erros, 0 avisos**. Foram conferidos Info.plist, manifesto e entitlement do perfil de provisionamento. Não foi feita validação `codesign` do executável em Mac nem instalação em iPhone. O arquivo permanece privado fora do Git em `/workspace/work/testflight-externo/studoo-0.1.0-3.ipa`.
+
+Pendências atuais:
+
+1. Criar o registro Studoo em App Store Connect com o bundle acima; consultar seu Apple ID e preencher `STUDOO_ASC_APP_ID`. O dono já recebeu os campos exatos.
+2. Criar/configurar a chave específica de Sign in with Apple e ativar o servidor; o dono recebeu o caminho para disponibilizá-la pelo canal seguro do operador. A chave de equipe App Store Connect não substitui essa chave.
+3. Completar conta demo e contato de revisão, conferir o IPA no iPhone e obter resultado da conferência nativa. O workflow ainda está executando; o Fluxo 1 do iPhone registrou falha e os logs finais ainda não estavam disponíveis. Não atribuir a causa ao app nem ao Expo Go sem esses logs.
+4. Submeter esse ID de build, acompanhar o processamento e enviar para Beta App Review/grupo externo. Até esta atualização nenhum upload ou pedido de revisão beta foi feito.
+
+A disponibilidade a testadores externos depende da aprovação da Apple; o objetivo do dono é concluir a entrega em 20/11, sem afirmar aprovação antes do resultado.
