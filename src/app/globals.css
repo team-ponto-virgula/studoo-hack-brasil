@@ -19,6 +19,7 @@
   --gelo: #e1e7fa;
   --texto: #0b1b5c;
   --texto2: #5e6a85;
+  --fundo-aviso-comunidade: #1b2a5e;
   --acao: #2563ff;
   --acao-escura: #1d4ed8;
   --sucesso: #1f7a5a;
@@ -950,9 +951,8 @@ button { touch-action: manipulation; }
   .recuperar-topo { min-height: 60px; padding: max(8px, env(safe-area-inset-top)) 0 8px; border-bottom: 2px solid var(--nevoa); }
   .recuperar-topo .logo { width: 112px; }
   .recuperar-cartao { margin-top: 24px; padding: 0; border: 0; border-radius: 0; }
-  .recuperar-voltar { display: none; }
-  .recuperar .acao-principal { position: static; width: 100%; padding: 4px 0; margin: 0; border: 0; box-shadow: none; }
-  .recuperar .acao-principal > .botao { width: 100%; }
+  .recuperar .acao-principal { position: static; width: 100%; padding: 0; margin-top: 16px; border: 0; background: none; box-shadow: none; }
+  .recuperar .acao-principal > .botao { width: 100%; min-height: 48px; }
 }
 @media (max-width: 767px) {
   .entrada-cabecalho .som-marca { width: calc(100% + 40px); margin: -16px -20px 24px; padding: 8px 20px; min-height: 60px; border-bottom: 2px solid var(--nevoa); }
