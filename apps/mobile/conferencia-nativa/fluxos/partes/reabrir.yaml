@@ -3,8 +3,13 @@
 # para não depender de onde o fluxo anterior parou (uma folha aberta, uma lição pela metade).
 appId: host.exp.Exponent
 ---
-- stopApp
-- openLink: exp://127.0.0.1:8081
+# O simulador às vezes não abre o link a tempo com a máquina carregada ("Simulator device failed to open exp://127.0.0.1:8081.
+# Operation timed out", fluxos 40 e 62 da execução 44809026116, antes de qualquer tela do app): até duas tentativas a mais.
+- retry:
+    maxRetries: 2
+    commands:
+      - stopApp
+      - openLink: exp://127.0.0.1:8081
 # A pergunta do iOS sobre abrir o link no Expo Go, respondida no primeiro fluxo, não voltou nas reaberturas da execução
 # 44511779137; conferir a cada vez custava uns 9 s.
 # Depois de religar o simulador, a apresentação do Expo Go pode voltar: a mesma defesa da primeira abertura. O pacote vem
