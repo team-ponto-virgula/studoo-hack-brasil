@@ -33,13 +33,13 @@ Palavras do dono: "Nessa parte aqui de outro jeito de entender tá meio confuso,
 **Em uma olhada:** por que estou aqui (a frase do topo), em que passo estou (um só indicador) e o que faço agora (um botão principal no rodapé).
 
 **Ordem em 390** (o alto da aula, com X, andamento e som, continua):
-1. **Rótulo e título:** o selo "REFORÇO" (`ponteMapa`, no estilo do "CONCEITO" da lição, com o ícone da ponte) e o título "Outro jeito de entender" (`ponte`), o mesmo nome do botão que abriu a tela.
+1. **Rótulo e título:** o selo "REFORÇO" (`ponteMapa`, no estilo do "CONCEITO" da lição, com o ícone da lâmpada, porque não há ícone de ponte no conjunto) e o título "Outro jeito de entender" (`ponte`), o mesmo nome do botão que abriu a tela.
 2. **Por que estou aqui**, em 16/24 `#0B1B5C`:
    - com resposta escrita ou escolhida: "Você respondeu “<resposta>”. Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício." (`ponteMotivoResposta`, com a resposta cortada em 60 caracteres e "…");
    - sem resposta de texto (ordenar, associar): "Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício." (`ponteMotivo`).
 3. **O indicador, um só:** a faixa da ponte, com 88 px de altura e a largura do conteúdo.
    - Margem da esquerda "Onde travou" (`ponteMargemErro`), três tábuas numeradas 1, 2 e 3, e a margem da direita "Exercício" (`ponteMargemVolta`, texto novo).
-   - Tábua feita: cheia, com o tom de madeira de hoje. Tábua atual: cheia, com o anel de 3 px `#3858D6`. Tábua futura: tracejada.
+   - Tábua feita: cheia, com o tom de madeira de hoje. Tábua atual: cheia, com o anel de 3 px na cor de ação (`--acao` na web, `cores.acao` no app, `#2563FF`). Tábua futura: tracejada.
    - O Stu (`stu-perfil`, 44 na web e 36 no app, spec 13) fica sobre a tábua atual.
    - Embaixo da faixa, em 14/20 800 `#5E6A85`: "Passo 1 de 3 · Outro caminho" (`ponteIndicador(n)` e o nome do passo).
    - A faixa não é tocável: sem borda de botão, sem cursor de mão, sem foco.
@@ -63,7 +63,7 @@ Palavras do dono: "Nessa parte aqui de outro jeito de entender tá meio confuso,
 **Ponte vencida:**
 - a terceira tábua se completa, e o Stu chega à margem "Exercício" e vira `stu-animado` (uma vez, spec 13);
 - a linha do indicador diz "Ponte construída!";
-- o cartão mostra "Agora tente o exercício de novo." (`ponteVencida`, que substitui `ponteVoltar`), com o retorno do desafio;
+- o cartão mostra "Agora tente o exercício de novo." (`ponteVencida`, que substitui `ponteVoltar`) como título, com o retorno do desafio embaixo. "Ponte construída!" aparece só uma vez, na linha do indicador;
 - a saída do item 5 some, porque a ação principal já é voltar.
 
 **Ponte reaberta** (já construída): as três tábuas cheias, o Stu na margem "Exercício" e o aviso de hoje (`ponteReabertaAviso`) no lugar da frase do topo. O cartão mostra a explicação e o exemplo, e o rodapé mostra "Voltar ao exercício".
