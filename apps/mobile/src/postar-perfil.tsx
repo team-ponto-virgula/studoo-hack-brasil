@@ -81,12 +81,17 @@ export function useAcoesDePostar({ cliente, aoMudarLink }: { cliente: ClienteNat
     return novo;
   }
 
-  /** Desligar: só no perfil, na hora; no Explorar, depois de "Tirar" na confirmação. Devolve null se a pessoa cancelou. */
-  async function desligar(planoId: string, link: LinkCompartilhado): Promise<LinkCompartilhado | null> {
+  /**
+   * Desligar: só no perfil, na hora; no Explorar, depois de "Tirar" na confirmação. Devolve null se a pessoa cancelou.
+   * `aoConfirmado` roda quando a mudança vai mesmo acontecer (na hora, ou depois de "Tirar"): a linha só diz "Salvando…"
+   * a partir daí, e com a confirmação aberta nada muda na folha.
+   */
+  async function desligar(planoId: string, link: LinkCompartilhado, aoConfirmado?: () => void): Promise<LinkCompartilhado | null> {
     if (link.visibilidade === 'explorar') {
       const feito = await new Promise<boolean>((resolver) => setConfirmando({ link, resolver }));
       if (!feito) return null;
     }
+    aoConfirmado?.();
     return tirar(planoId, link);
   }
 
@@ -144,11 +149,10 @@ export function FolhaPostarNoPerfil({ cliente, perfil, aoFechar, aoMudarLink, ed
   async function alternar(linha: Linha, ligada: boolean) {
     const id = linha.plano.id;
     setErroDe((atual) => ({ ...atual, [id]: null }));
-    setOtimista((atual) => ({ ...atual, [id]: ligada }));
-    setSalvando(id);
+    const marcar = () => { setOtimista((atual) => ({ ...atual, [id]: ligada })); setSalvando(id); };
     try {
-      if (ligada) await ligar(id, linha.link);
-      else if (linha.link) await desligar(id, linha.link);
+      if (ligada) { marcar(); await ligar(id, linha.link); }
+      else if (linha.link) await desligar(id, linha.link, marcar);
     } catch (falha) {
       setErroDe((atual) => ({ ...atual, [id]: erroDePostar(falha) }));
     } finally {

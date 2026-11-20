@@ -97,3 +97,9 @@ test('P6: "Editar perfil" da folha leva ao campo do nome, com o foco, no Perfil 
   assert.match(estudo, /editarPerfil=\{\(\) => \{ setFolhaPostar\(false\); abrir\(\{ tipo: 'perfil', focarNome: true \}\); \}\}/);
   assert.match(estudo, /focarNome=\{etapa\.focarNome\} \/>;/);
 });
+
+test('P5: com a confirmação de tirar do Explorar aberta, a linha não muda (sem "Salvando…" nem chave desligada)', async () => {
+  const folha = await ler('apps/mobile/src/postar-perfil.tsx');
+  assert.match(folha, /if \(!feito\) return null;\s*\}\s*aoConfirmado\?\.\(\);\s*return tirar\(planoId, link\);/);
+  assert.match(folha, /if \(ligada\) \{ marcar\(\); await ligar\(id, linha\.link\); \}\s*else if \(linha\.link\) await desligar\(id, linha\.link, marcar\);/);
+});
