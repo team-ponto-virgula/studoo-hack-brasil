@@ -150,6 +150,15 @@ export async function criarDemonstracao(agora = new Date()) {
     banco.seguir.deleteMany({ where: { seguidorId: { in: todos }, seguidoId: { in: todos } } }),
     banco.seguir.createMany({ data: seguir }),
   ]);
+  // Moderação (spec 14): o Explorar só mostra perfil, trilha e foto aprovados, e o padrão do banco é "pendente". O conteúdo
+  // de demonstração (rotulado, fictício, só com STUDOO_COMUNIDADE_DEMO=1) nasce aprovado. Fica no fim, depois de todas as
+  // escritas: os gatilhos da migração voltam a decisão para "pendente" quando o texto, a legenda ou as lições mudam, e estas
+  // atualizações não tocam nesses campos.
+  await banco.$transaction([
+    banco.usuario.updateMany({ where: { id: { in: todos } }, data: { perfilModeracao: "aprovado" } }),
+    banco.fotoPerfil.updateMany({ where: { usuarioId: { in: todos } }, data: { moderacao: "aprovado" } }),
+    banco.linkTrilha.updateMany({ where: { codigo: { in: codigos } }, data: { moderacao: "aprovado" } }),
+  ]);
   zerarCacheEmAlta();
   return { perfis: ids.size, trilhas: codigos.length, temas: new Set(TRILHAS.map((t) => t.tema)).size };
 }
