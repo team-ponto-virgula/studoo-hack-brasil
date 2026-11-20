@@ -1016,6 +1016,25 @@ button { touch-action: manipulation; }
 .modal-mensagem { margin: 0 0 20px; color: var(--texto); font-size: 1.05rem; font-weight: 800; line-height: 1.5; }
 .modal-acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; }
 .modal-confirmar--destrutivo { color: #b3261e; border-color: #f3c4c0; }
+/* A ordem do foco começa no Cancelar. Se os rótulos não couberem, a ação destrutiva fica na linha de cima. */
+:is(.folha-acoes--par, .modal-acoes):has(.modal-confirmar--destrutivo) {
+  display: flex;
+  flex-flow: row wrap-reverse;
+  gap: 10px;
+}
+:is(.folha-acoes--par, .modal-acoes):has(.modal-confirmar--destrutivo) > .botao {
+  flex: 1 0 max-content;
+  width: auto;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+:is(.folha-acoes--par, .modal-acoes):has(.modal-confirmar--destrutivo) .modal-confirmar--destrutivo:not(:disabled) {
+  --labio: #8f2a39;
+  color: white;
+  border-color: #c23b4e;
+  background: #c23b4e;
+}
 
 /* Fim da trilha: um resumo da trilha inteira antes dos números da última lição. */
 .conclusao-trilha {

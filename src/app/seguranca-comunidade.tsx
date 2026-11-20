@@ -155,7 +155,7 @@ export function SegurancaComunidade({ children }: { children: ReactNode }) {
   }
   return <Contexto.Provider value={{versao, abrir: abrirAcao}}>
     {children}
-    {dialogo?.acao === 'bloquear' && <DialogoConfirmar destaqueDestrutivo titulo={seg.bloquearTitulo(dialogo.alvo.nome)} texto={seg.bloquearTexto}
+    {dialogo?.acao === 'bloquear' && <DialogoConfirmar titulo={seg.bloquearTitulo(dialogo.alvo.nome)} texto={seg.bloquearTexto}
       confirmar={seg.bloquearAcao} cancelar={seg.cancelar} ocupado={ocupado} aoConfirmar={() => void confirmar()} aoCancelar={() => { if (!ocupado) abrir(null); }} />}
     {dialogo?.acao === 'denunciar' && <DialogoDenuncia alvoTipo={dialogo.alvo.tipo} alvo={dialogo.alvo.alvo}
       alvoNome={dialogo.alvo.tipo === 'trilha' ? c.denuncia.alvoTrilha(dialogo.alvo.titulo, dialogo.alvo.nome) : dialogo.alvo.nome}
