@@ -21,9 +21,17 @@ Mobile & QA, 20/11/2026. Base: contrato `@studoo/contratos/autenticacao` (`1f52e
 | `STUDOO_DOMINIO_EMAIL` e `STUDOO_EMAILS_PERMITIDOS` vazios (revisor da Apple e "Ocultar meu e-mail") | servidor publicado | Pendente |
 | Endpoint de notificações `${STUDOO_ORIGEM}/api/auth/apple/notificacoes` | Apple Developer | Pendente |
 | Conta de demonstração com senha nas informações de teste | App Store Connect | Pendente |
+| Perfil `testflight` sem `EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO=desligado` e P27 retirada da spec 07 | `apps/mobile/eas.json`, spec 07 | Falta |
 
-Com o perfil `testflight`, o Google segue desligado no aparelho (`EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO=desligado`). Com a Apple
-pronta, a regra 4.8 deixa de exigir isso; religar é decisão à parte, depois deste roteiro passar.
+Decisão do Julio (20/11): o TestFlight externo leva "Iniciar sessão com a Apple" ao lado de "Continuar com Google",
+criar conta por e-mail e "Esqueci minha senha". Com a Apple no mesmo build, a 4.8 está atendida e o perfil `testflight`
+religa o Google (sai `EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO=desligado` e a exceção P27 da spec 07). Os dois mudam juntos: build
+com Google e sem Apple é recusado na revisão.
+
+A entrada Apple de verdade só fecha no build com `com.studoo.mobile.dev`. No Expo Go o token chega com
+`aud = host.exp.Exponent`; mesmo aceito em `APPLE_BUNDLE_IDS`, a troca do `authorizationCode` em `/auth/token` usa esse
+`aud` como `client_id` com a chave do nosso Team e a Apple recusa (`apple_invalido`). A conferência no Expo Go só
+fotografa o botão.
 
 ## Automático (antes de cada build)
 
@@ -81,7 +89,7 @@ Para cada caso: resultado esperado, captura, e o registro do servidor sem códig
 | # | Passos | Esperado |
 | --- | --- | --- |
 | R1 | Esqueci minha senha → código → nova senha | Entra com a nova; a antiga falha |
-| R2 | Build `testflight` | Botão do Google não aparece; `studoo-dev://auth/google` recusado |
+| R2 | Build `testflight` | Botões da Apple e do Google aparecem juntos; Google entra e volta por `studoo-dev://auth/google` |
 | R3 | Build `preview` no Android | Google segue funcionando como antes |
 
 ### Revisão da Apple
