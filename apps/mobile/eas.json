@@ -69,8 +69,8 @@
       "extends": "production",
       "ios": {
         "bundleIdentifier": "com.studoo.mobile.dev",
-        "appleTeamId": "$EXPO_APPLE_TEAM_ID",
-        "ascAppId": "$STUDOO_ASC_APP_ID",
+        "appleTeamId": "PYZ6U56AMV",
+        "ascAppId": "6837508955",
         "ascApiKeyPath": "$EXPO_ASC_API_KEY_PATH",
         "ascApiKeyId": "$EXPO_ASC_KEY_ID",
         "ascApiKeyIssuerId": "$EXPO_ASC_ISSUER_ID",

@@ -70,7 +70,7 @@ npx eas-cli@latest build -p ios --profile testflight
 #   Connect). Ele cria ou usa o App ID, o certificado de distribuição e o perfil de provisionamento.
 npx eas-cli@latest submit -p ios --profile testflight --id <ID_DO_BUILD_CONFERIDO> --no-auto-testflight-setup
 #   Pede o Apple ID do app (passo 2.1) ou usa a chave da API do App Store Connect. Para não perguntar de novo, dá para
-#   definir `STUDOO_ASC_APP_ID`; o perfil submit.testflight resolve os identificadores e a chave pelas variáveis do ambiente.
+#   o registro do Studoo já está em `submit.testflight` (`ascAppId: 6837508955`); somente os campos da chave são resolvidos pelas variáveis do ambiente.
 ```
 
 Depois do upload, acompanhe o processamento no App Store Connect. O tempo varia; upload concluído não comprova que o build já esteja disponível. Para o beta externo, configure o grupo e envie o build à revisão beta quando os requisitos abaixo estiverem atendidos.
