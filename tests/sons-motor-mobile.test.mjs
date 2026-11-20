@@ -21,7 +21,7 @@ function modulo(fonte, requerer = () => ({})) {
 const catalogo = modulo(fonteCatalogo);
 const estado = modulo(fonteEstado);
 
-function ambiente({ salvo = {}, plataforma = 'ios', registro = false } = {}) {
+function ambiente({ salvo = {}, plataforma = 'ios', registro = false, atrasoPlay = 0 } = {}) {
   let relogio = 1000;
   const temporizadores = new Map();
   let proximoId = 1;
@@ -49,7 +49,16 @@ function ambiente({ salvo = {}, plataforma = 'ios', registro = false } = {}) {
     addListener(_evento, ouvinte) { this.ouvintes.add(ouvinte); return { remove: () => this.ouvintes.delete(ouvinte) }; }
     avisar(status) { for (const ouvinte of this.ouvintes) ouvinte({ isLoaded: this.isLoaded, playing: this.playing, didJustFinish: false, ...status }); }
     carregar() { this.isLoaded = true; this.avisar({}); }
-    play() { chamadas.push(['play', this.fonte, relogio]); this.desde = relogio; this.playing = true; this.avisar({ playing: true }); }
+    play() {
+      chamadas.push(['play', this.fonte, relogio]);
+      // No iPhone, o reprodutor só soa alguns centésimos depois do play() (atrasoPlay); até lá, a posição não anda.
+      if (atrasoPlay > 0 && this.fonte.endsWith('.mp3')) {
+        const id = proximoId++;
+        temporizadores.set(id, { funcao: () => { this.desde = relogio; this.playing = true; this.avisar({ playing: true }); }, quando: relogio + atrasoPlay, intervalo: null });
+        return;
+      }
+      this.desde = relogio; this.playing = true; this.avisar({ playing: true });
+    }
     pause() { chamadas.push(['pause', this.fonte, relogio]); this.base = this.currentTime; this.playing = false; }
     seekTo(segundos) { chamadas.push(['seek', this.fonte, segundos]); this.base = segundos; this.desde = relogio; return Promise.resolve(); }
     terminar() { this.playing = false; this.avisar({ didJustFinish: true, playing: false }); }
@@ -251,7 +260,8 @@ test('registro para a conferência nativa: comando antes do play e reprodução 
 });
 
 test('virada do laço: B já fica no começo do trecho; no cruzamento (180 ms antes do fim, pela posição), play() sem seek', async () => {
-  const a = ambiente();
+  // Fora do iPhone, o play() soa na hora: o cruzamento começa 180 ms antes do fim.
+  const a = ambiente({ plataforma: 'android' });
   await a.abrir();
   a.tocaSons.registrarGesto();
   for (let i = 0; i < 4; i += 1) await a.microtarefas();
@@ -354,4 +364,36 @@ test('registro do fundo para a conferência nativa: posição, volume e qual rep
   const fundo = a.registros.filter((linha) => linha.startsWith('[som] fundo '));
   assert.ok(fundo.length >= 2, 'duas linhas depois do efeito');
   assert.match(fundo[0], /^\[som\] fundo lofi_estudo A tocando \d+\/89328 \d\.\d{3} \d+$/);
+});
+
+test('iPhone: o play() demora a soar; o próximo começa 480 ms antes do fim e o volume só sobe quando ele toca (sem respiro)', async () => {
+  // Medição da conferência nativa 44809026116: A parou em 10,48 s e B só soou em 10,55 s. Aqui o B demora 70 ms.
+  const a = ambiente({ atrasoPlay: 70 });
+  await a.abrir();
+  a.tocaSons.registrarGesto();
+  for (let i = 0; i < 4; i += 1) await a.microtarefas();
+  a.avancar(80);
+  const [jA, jB] = a.jogadores.filter((j) => j.fonte === 'lofi-estudo.mp3');
+  assert.ok(jA.playing, 'A tocando');
+  const def = catalogo.CATALOGO_FUNDOS.find((f) => f.id === 'lofi_estudo');
+  const fimDoTrecho = def.duracaoMs - Math.round((def.aparoInicioSeg + def.aparoFimSeg) * 1000);
+  // Anda até 10 ms antes do cruzamento e confere, de 5 em 5 ms até depois do fim do trecho, que sempre algo soa.
+  a.avancar(fimDoTrecho - 80 - 480 - 10);
+  assert.equal(jB.playing, false, 'B ainda não começou');
+  let silencio = 0; let maximoAntesDeSoar = 0; let pausouAntesDeBSoar = false;
+  for (let t = 0; t < 900; t += 5) {
+    a.avancar(5);
+    const somA = jA.playing && jA.volume > 0.01 && jA.currentTime * 1000 < def.duracaoMs;
+    const somB = jB.playing && jB.volume > 0.01;
+    if (!somA && !somB) silencio += 5;
+    if (!jB.playing) maximoAntesDeSoar = Math.max(maximoAntesDeSoar, jB.volume);
+    if (!jA.playing && !jB.playing) pausouAntesDeBSoar = true;
+  }
+  assert.equal(silencio, 0, 'nenhum instante sem música na volta do laço');
+  assert.equal(maximoAntesDeSoar, 0, 'o volume de B só sobe depois que ele soa');
+  assert.equal(pausouAntesDeBSoar, false, 'A só para depois que B já soa');
+  assert.ok(jB.playing && !jA.playing, 'a volta terminou em B');
+  const playB = a.chamadas.filter(([tipo, fonte]) => tipo === 'play' && fonte === 'lofi-estudo.mp3').at(-1)[2];
+  const pauseA = a.chamadas.filter(([tipo, fonte]) => tipo === 'pause' && fonte === 'lofi-estudo.mp3').at(-1)[2];
+  assert.ok(pauseA - playB >= 70 + 150, `A para depois de B soar e da rampa de 150 ms (play de B ${playB}, pausa de A ${pauseA})`);
 });
