@@ -102,7 +102,8 @@ export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
       testID="cadastro-enviar" ocupado={ocupado} carregando={ocupado} acao={etapa === 'email' ? enviar : concluir} />}>
     <View style={visual.simbolo} accessibilityElementsHidden importantForAccessibility="no-hide-descendants"><Icone nome="cadeado" tamanho={28} cor={cores.acao} /></View>
     <Titulo key={etapa} foco testID="titulo-cadastro">{m.titulo}</Titulo>
-    <Text style={estilos.introducao}>{etapa === 'email' ? m.instrucao : m.validade}</Text>
+    {/* Spec 06 (4e944df): com o Google, a instrução desce para logo acima do campo, depois do divisor. */}
+    {!comProvedor && <Text testID="cadastro-instrucao" style={estilos.introducao}>{etapa === 'email' ? m.instrucao : m.validade}</Text>}
     <View style={{ gap: 20, marginTop: 24 }}>
       {/* Spec 06: no primeiro passo, os provedores no topo, na ordem da entrada (Apple, Google), e o "ou" antes do e-mail. */}
       {comProvedor && provedores.apple && apple && (
@@ -117,8 +118,9 @@ export function CriarConta({ emailInicial, voltar, criar, google, apple }: {
           acao={() => void executar(google)} />
       )}
       {comProvedor && (
-        <View style={visual.divisor}><View style={visual.linha} /><Text style={estilos.legenda}>{mensagens.acesso.ou}</Text><View style={visual.linha} /></View>
+        <View style={visual.divisor}><View style={visual.linha} /><Text style={estilos.legenda}>{m.ou}</Text><View style={visual.linha} /></View>
       )}
+      {comProvedor && <Text testID="cadastro-instrucao" style={[estilos.introducao, { marginTop: 0 }]}>{m.instrucao}</Text>}
       <Campo rotulo={m.email} testID="cadastro-email" value={email} onChangeText={(v) => { setEmail(v); setErro(undefined); }}
         autoCapitalize="none" autoCorrect={false} keyboardType="email-address" autoComplete="email" textContentType="emailAddress" maxLength={254}
         editable={!ocupado && etapa === 'email'} returnKeyType="send" onSubmitEditing={etapa === 'email' ? enviar : undefined} />
