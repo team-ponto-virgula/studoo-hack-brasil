@@ -243,16 +243,20 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
         </button>
       )}
     </div>
-    <footer className="previa-rodape">
+    <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={salvando || undefined}>
       <div className="previa-botoes">
-        {!salvando && <Botao variante="secundario" onClick={proposta ? ajustar : cancelar}>{proposta ? t.ajustar : t.cancelar}</Botao>}
         {proposta && <Botao className="previa-comecar" aria-disabled={salvando} onClick={() => {
           if (!painel.current || salvando) return;
           if (aceite === 'expirada') { remontar(); return; }
           aceitar(painel.current);
         }}>{salvando && <span className="previa-giro" aria-hidden="true" />}{salvando ? t.criandoTrilha : aceite === 'expirada' ? t.montarDeNovo : t.comecarLicao1}</Botao>}
+        <Botao className="previa-ajustar" variante="secundario" disabled={salvando} onClick={proposta ? ajustar : cancelar}>
+          {proposta ? t.ajustar : t.cancelar}
+        </Botao>
+        {proposta && <p className="previa-espera" role="status" data-visivel={demorou && salvando && !passagem || undefined}>
+          {t.escrevendoLicoes}
+        </p>}
       </div>
-      {demorou && salvando && !passagem && <p className="previa-espera" role="status">{t.escrevendoLicoes}</p>}
       {(aceite === 'erro' || aceite === 'expirada') && <p className="previa-erro" role="alert">{aceite === 'expirada' ? t.propostaExpirada : t.erroCriacao}</p>}
     </footer>
     {passagem && !passagem.reduzida && <div className="previa-circulo" aria-hidden="true" onAnimationStart={() => {
