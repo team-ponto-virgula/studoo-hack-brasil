@@ -80,3 +80,18 @@ Pendências atuais:
 4. Submeter esse ID de build, acompanhar o processamento e enviar para Beta App Review/grupo externo. Até esta atualização nenhum upload ou pedido de revisão beta foi feito.
 
 A disponibilidade a testadores externos depende da aprovação da Apple; o objetivo do dono é concluir a entrega em 20/11, sem afirmar aprovação antes do resultado.
+
+## Registro confirmado e upload concluído — atualização em 20/11/2026
+
+O dono criou o registro pelo App Store Connect e viu o aviso “your user settings could not be saved”. A consulta autenticada confirmou que esse aviso **não impediu a criação do aplicativo**; não foi identificada a preferência específica que falhou.
+
+- Apple ID do app: `6837508955`, nome Studoo, bundle `com.studoo.mobile.dev`, idioma `pt-BR`.
+- O perfil `submit.testflight` agora contém os IDs reais do app e do time. No EAS CLI utilizado, só os campos `ascApiKeyPath`, `ascApiKeyId` e `ascApiKeyIssuerId` interpolam variáveis; IDs de app/time não são interpolados. A primeira tentativa parou na validação antes de agendar. O perfil foi corrigido em `3077f6d`.
+- [Submissão EAS fcf8f42b-864a-4bcf-ad52-6598a981a194](https://expo.dev/accounts/miguelvzs/projects/studoo-mobile/submissions/fcf8f42b-864a-4bcf-ad52-6598a981a194) **FINISHED**: o upload do mesmo build `20b7bdac` foi concluído, sem submissão duplicada.
+- A Apple confirmou o build `4eea9ee9-145e-4076-8ad1-e130af015d6c`, versão de build `3`, e o processamento passou a **VALID**. Isso não é aprovação do beta externo.
+- Grupo **Studoo Beta Externo** criado (`34be86e5-92cb-4d59-9ffb-eafdd7d64a25`), sem link público habilitado, sem envio de convites e sem acesso automático a todos os builds.
+- Descrições do beta e “O que testar” preparados em `pt-BR` e `en-US`, com a URL pública de privacidade. [Descrições](conferencia-cloud/beta-localizacoes.json), [O que testar](conferencia-cloud/build-3-o-que-testar.json), [estado sanitizado do upload](conferencia-cloud/upload-ios-3.json).
+
+O fluxo externo **ainda não foi enviado à Beta App Review**. O gate público continua bloqueando pelo login Apple desligado no servidor. Os contatos de revisão do registro novo estavam vazios; o telefone real foi solicitado ao dono. A conta demo e a configuração específica de Sign in with Apple precisam estar prontas, sem inventar contato ou senha.
+
+A conferência Android terminou em falha porque o dispositivo `emulator-5554` e o processo do emulador desapareceram durante o percurso. Entrada e login passaram e a proposta foi gerada; a interface da primeira lição e 46 das 54 capturas ficaram sem prova. A API registrou geração, aceite e leitura da primeira lição com HTTP 200. A causa raiz da morte do emulador é indeterminada, sem evidência para atribuí-la ao app ou descartá-lo. O iPhone passou pelo login sintético e segue nos fluxos de telas; a falha anterior do Fluxo 1 ainda aguarda os registros finais. Esse workflow não é uma execução do IPA no TestFlight e não constitui aprovação nativa completa.
