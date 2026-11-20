@@ -24,7 +24,7 @@ import { Botao, Icone, Stu } from '../ui';
 import { Avatar, CHAVE_DEPOIS_DO_LOGIN, useAbrirNoApp, codigoDoErro, guardar, urlDoLink, useDialogo } from './compartilhar';
 import { tocaSons } from './sons';
 import type { IdEfeitoSonoro } from '../../packages/contratos/src/catalogo-sons';
-import { MenuPublicacao, useVersaoComunidade } from './seguranca-comunidade';
+import { MenuPublicacao, useAtualizacaoComunidade } from './seguranca-comunidade';
 import './comunidade.css';
 
 const c = mensagens.comunidade;
@@ -301,21 +301,22 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
   const [erro, setErro] = useState<string | null>(null);
   const [anuncio, setAnuncio] = useState('');
   const titulo = useRef<HTMLHeadingElement>(null);
-  const versao = useVersaoComunidade();
+  const { versao, confirmarLeitura } = useAtualizacaoComunidade();
   const primeira = useRef(Boolean(inicial));
   const anunciar = (texto: string) => setAnuncio((anterior) => (anterior === texto ? `${texto} ` : texto));
 
   useEffect(() => { titulo.current?.focus({ preventScroll: true }); }, []);
   useEffect(() => {
-    if (primeira.current) { primeira.current = false; return; }
+    if (primeira.current) { primeira.current = false; if (!versao) return; }
     let ativo = true;
     setCarregando(true);
+    setPagina(null);
     setErro(null);
     cliente.explorar({ tema, seguindo: aba === 'seguindo' }).then((dados) => { if (ativo) setPagina(dados); })
       .catch((falha) => { if (ativo) setErro(textoErro(codigoDoErro(falha))); })
-      .finally(() => { if (ativo) setCarregando(false); });
+      .finally(() => { if (ativo) { setCarregando(false); confirmarLeitura(versao); } });
     return () => { ativo = false; };
-  }, [tema, aba, versao]);
+  }, [tema, aba, versao, confirmarLeitura]);
 
   async function verMais() {
     if (!pagina?.cursor) return;
