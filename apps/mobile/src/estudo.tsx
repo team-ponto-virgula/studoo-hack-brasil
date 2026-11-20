@@ -463,8 +463,8 @@ export function Estudo({ cliente, sair, expirar }: {
     }
     // A trilha existe no servidor: entra em Minhas trilhas mesmo se a pessoa já saiu daqui.
     atualizarPlano(plano);
-    setObjetivo('');
     if (aceiteAtual.current !== vez || etapaAtual.current.tipo !== 'geracao') return;
+    setObjetivo('');
     const primeira = proximaDoCaminho(plano);
     if (!primeira) {
       terminarCriacao();
