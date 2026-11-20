@@ -9,7 +9,7 @@ o build, o App Store Connect ou a revisão Beta confirmam está marcado como pen
 ```sh
 cd apps/mobile
 npx eas-cli@latest login                 # ou EXPO_TOKEN no ambiente
-npx eas-cli@latest init                  # uma vez: grava owner e extra.eas.projectId no app.json (commitar)
+npx eas-cli@latest project:info          # projeto já vinculado a @miguelvzs/studoo-mobile
 npx eas-cli@latest build --platform ios --profile testflight
 npx eas-cli@latest submit --platform ios --latest   # envia ao App Store Connect; o TestFlight externo é ligado lá
 ```
@@ -22,7 +22,7 @@ provisionamento; o registro do app no App Store Connect também é criado no pri
 
 | Item | Situação | Evidência |
 | --- | --- | --- |
-| Projeto EAS vinculado | **Falta.** `app.json` não tem `owner` nem `extra.eas.projectId` | `app.json`; `eas init` grava os dois |
+| Projeto EAS vinculado | **Feito.** `owner: miguelvzs`, projeto `81f67b49-67e1-4807-bf88-16f187169dfd` | `app.json`; `eas project:info` confirmado no Cloud |
 | Bundle ID | `com.studoo.mobile.dev` (o mesmo do Android). Vale para a loja; trocar depois de criado no App Store Connect não dá | `app.json` |
 | Xcode e SDK aceitos | A Apple exige Xcode 26+ com SDK do iOS 26 desde 28/04/2026. O perfil usa `image: auto`, que no SDK 58 é `macos-tahoe-26.6-xcode-27.1` (Xcode 27.1 RC) | docs.expo.dev/build-reference/infrastructure, developer.apple.com/news/upcoming-requirements |
 | Ciclo de vida por cena (Xcode 27 / iOS 27) | O template do SDK 58 já traz `SceneDelegate.swift` e `UIApplicationSceneManifest` | `expo-template-bare-minimum@58.0.35` |
@@ -32,7 +32,7 @@ provisionamento; o registro do app no App Store Connect também é criado no pri
 | Áudio em segundo plano | **Corrigido.** O `expo-audio` liga `UIBackgroundModes: audio` por padrão (`enableBackgroundPlayback = true`), mas o app não toca nem grava fora da tela: a gravação é descartada quando o app sai (`aula-formatos.tsx`) e o som de fundo vai a 0 (`sons.ts`). A revisão recusa modo de fundo sem uso (2.5.4). Agora `enableBackgroundPlayback` e `enableBackgroundRecording` são `false` (no Android, saem o serviço e as permissões de primeiro plano) | `expo-audio/plugin/build/withAudio.js` |
 | Textos de permissão | **Ajustados.** Câmera, fotos e microfone eram perguntas ("Permitir que o Studoo…?"); viraram o uso concreto (material de estudo, foto do perfil e da capa, gravar a explicação) | `app.json`; usos em `recorte.tsx`, `estudio-adaptativo.tsx`, `aula-formatos.tsx` |
 | Manifesto de privacidade | **Adicionado** em `ios.privacyManifests`. O template do SDK 58 não traz `PrivacyInfo.xcprivacy`, e a Expo avisa que a Apple não lê bem os manifestos das dependências estáticas do CocoaPods; por isso o app declara a soma deles | docs.expo.dev/guides/apple-privacy; manifestos em `node_modules` |
-| Face ID | O `expo-secure-store` grava `NSFaceIDUsageDescription` com o texto padrão em inglês; o app não usa `requireAuthentication`, então o pedido nunca aparece. Ficou como está | `withSecureStore.js` |
+| Face ID | O app não usa biometria; `faceIDPermission: false` remove o texto de Face ID do projeto nativo | `app.json`; prebuild conferido no Cloud |
 | Rede local | `NSLocalNetworkUsageDescription` e `NSBonjourServices` vêm do `expo-dev-client`; o lançador só entra no build Debug (`:configurations => :debug`), então o pedido não aparece no build de loja | `expo-dev-client.podspec` |
 | Orientação | `app.json` não fixa `orientation`; o iPhone aceita retrato e paisagem. Não foi conferido em paisagem | `introspect` |
 
@@ -68,8 +68,15 @@ recusada. A revisão Beta da Apple pede uma conta de demonstração com senha na
 
 ## Fica para quem tem as contas
 
-1. `eas init` e commitar `owner` e `extra.eas.projectId`.
+1. Projeto já vinculado e configuração commitada; conferir acesso com `eas project:info`.
 2. Primeiro `eas build --profile testflight --platform ios` (credenciais da Apple pelo EAS).
 3. `eas submit`, depois, no App Store Connect: grupo de teste externo, informações de teste com a conta de demonstração, rótulo de privacidade.
 4. No servidor publicado e na conta Apple: os itens "Pendente" de `docs/QA-TESTFLIGHT-ACESSO.md` (capacidade Sign in with Apple no App ID,
    `APPLE_BUNDLE_IDS`, `STUDOO_APPLE`, `STUDOO_CADASTRO` com Resend, notificações da Apple e conta de demonstração).
+
+
+## Retomada no Codex Cloud
+
+A candidata integrada de 20/11 (`4a60291`) foi preparada na branch `release/testflight-cloud`. O projeto EAS foi vinculado à conta do dono e os testes antigos de reabertura da ponte foram corrigidos. Ver [a conferência e os bloqueios do envio](beta/CONFERENCIA-CLOUD-TESTFLIGHT.md).
+
+**Antes do envio:** a API HTTPS configurada no perfil ainda respondeu com a versão anterior: `/privacidade` e `/suporte` deram 404, e a configuração pública não anunciou Apple nem cadastro. Não confundir build local aprovado com servidor publicado atualizado. A atualização do backend e a configuração das contas precisam preceder o beta externo.

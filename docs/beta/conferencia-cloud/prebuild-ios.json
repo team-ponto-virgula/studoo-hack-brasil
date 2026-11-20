@@ -1,0 +1,101 @@
+{
+  "origem": "prebuild do perfil testflight (o projeto que o EAS compila; não é o binário assinado)",
+  "perfil": "testflight",
+  "resultado": [
+    {
+      "nivel": "ok",
+      "item": "Bundle",
+      "detalhe": "com.studoo.mobile.dev"
+    },
+    {
+      "nivel": "aviso",
+      "item": "Bundle de loja",
+      "detalhe": "com.studoo.mobile.dev termina em .dev no perfil testflight; o App ID no App Store Connect precisa ser este"
+    },
+    {
+      "nivel": "ok",
+      "item": "Versão",
+      "detalhe": "0.1.0 (1; com appVersionSource remoto, o EAS troca o número do build)"
+    },
+    {
+      "nivel": "ok",
+      "item": "Entitlement Sign in with Apple (regra 4.8)",
+      "detalhe": "[\"Default\"]"
+    },
+    {
+      "nivel": "ok",
+      "item": "Criptografia declarada (ITSAppUsesNonExemptEncryption)",
+      "detalhe": "false"
+    },
+    {
+      "nivel": "ok",
+      "item": "ATS sem cargas arbitrárias",
+      "detalhe": "{\"NSAllowsArbitraryLoads\":false,\"NSAllowsLocalNetworking\":true}"
+    },
+    {
+      "nivel": "ok",
+      "item": "Permissão NSCameraUsageDescription",
+      "detalhe": "O Studoo usa a câmera para fotografar o seu material de estudo e a foto do perfil ou da capa da trilha."
+    },
+    {
+      "nivel": "ok",
+      "item": "Permissão NSPhotoLibraryUsageDescription",
+      "detalhe": "O Studoo usa as suas fotos para escolher o material de estudo e a foto do perfil ou da capa da trilha."
+    },
+    {
+      "nivel": "ok",
+      "item": "Permissão NSMicrophoneUsageDescription",
+      "detalhe": "O Studoo usa o microfone para gravar a sua explicação em voz alta, transcrever e revisar o que você disse."
+    },
+    {
+      "nivel": "ok",
+      "item": "Permissão NSLocalNetworkUsageDescription do cliente de desenvolvimento (expo-dev-client)",
+      "detalhe": "Expo Dev Launcher uses the local network to discover and connect to development servers running on your computer. (removida no Release pela fase \"[Expo Dev Launcher] Strip Local Network Keys for Release\"; fica só no build de desenvolvimento)"
+    },
+    {
+      "nivel": "ok",
+      "item": "NSFaceIDUsageDescription",
+      "detalhe": "ausente (o app não usa biometria; expo-secure-store com faceIDPermission: false)"
+    },
+    {
+      "nivel": "ok",
+      "item": "NSBonjourServices _expo._tcp (expo-dev-client)",
+      "detalhe": "[\"_expo._tcp\"] (removida no Release pela fase \"[Expo Dev Launcher] Strip Local Network Keys for Release\"; fica só no build de desenvolvimento)"
+    },
+    {
+      "nivel": "ok",
+      "item": "NSPrivacyTracking",
+      "detalhe": "false"
+    },
+    {
+      "nivel": "ok",
+      "item": "Razão declarada UserDefaults",
+      "detalhe": "CA92.1"
+    },
+    {
+      "nivel": "ok",
+      "item": "Razão declarada FileTimestamp",
+      "detalhe": "C617.1, 0A2A.1, 3B52.1"
+    },
+    {
+      "nivel": "ok",
+      "item": "Razão declarada SystemBootTime",
+      "detalhe": "35F9.1"
+    },
+    {
+      "nivel": "ok",
+      "item": "Razão declarada DiskSpace",
+      "detalhe": "E174.1, 85F4.1"
+    },
+    {
+      "nivel": "ok",
+      "item": "Esquema do retorno do Google",
+      "detalhe": "studoo-dev em [studoo-dev, com.studoo.mobile.dev, exp+studoo-mobile]"
+    },
+    {
+      "nivel": "ok",
+      "item": "API do perfil em HTTPS",
+      "detalhe": "https"
+    }
+  ]
+}
