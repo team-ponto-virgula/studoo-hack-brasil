@@ -53,7 +53,7 @@ import './trilha.css';
 type Tela =
   | { tipo: 'apresentacao'; primeiraVez: boolean }
   | { tipo: 'planos' }
-  | { tipo: 'objetivo' }
+  | { tipo: 'objetivo'; focarCampo?: boolean }
   | { tipo: 'geracao' }
   | { tipo: 'abrindo-criada'; plano: PlanoDetalhe }
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
@@ -109,6 +109,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   const [tela, setTela] = useState<Tela>({ tipo: 'planos' });
   const [planos, setPlanos] = useState<PlanoResumo[]>([]);
   const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
+  const [puloVazio, setPuloVazio] = useState(0);
   const [objetivo, setObjetivo] = useState('');
   /** Área escolhida no fim da apresentação: o pedido abre com as ideias dela. */
   const [areaInicial, setAreaInicial] = useState<IdTema | undefined>();
@@ -244,8 +245,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
         }
       }
       // Com planos salvos, abre direto na trilha em andamento, exceto se voltou com um rascunho de pedido salvo.
-      if (abriuComRascunho.current) {
-        setTela({ tipo: 'objetivo' });
+      if (ativos.length === 0 || abriuComRascunho.current) {
+        setTela({ tipo: 'objetivo', focarCampo: true });
       } else {
         const inicial = planoInicial(ativos);
         if (inicial) {
@@ -341,7 +342,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   }, [carregar]);
 
   useEffect(() => {
-    const vaiFocarCampo = tela.tipo === 'objetivo' && (window.innerWidth >= 1024 || Boolean(objetivoRef.current.trim()));
+    const vaiFocarCampo = tela.tipo === 'objetivo' && (tela.focarCampo || window.innerWidth >= 1024 || Boolean(objetivoRef.current.trim()));
     if (inicio === 'pronto' && !vaiFocarCampo && document.activeElement?.id !== 'objetivo') {
       (principal.current?.querySelector<HTMLHeadingElement>('.painel--aula h1') ?? principal.current?.querySelector('h1'))?.focus();
     }
@@ -384,6 +385,12 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   function navegar(destino: Tela) {
     // Saindo do Perfil com os dados abertos e alteração não salva: a confirmação do app pergunta antes.
     if (guardaSaida.current?.(() => { guardaSaida.current = null; navegar(destino); })) return;
+    if (destino.tipo === 'planos' && tela.tipo === 'planos' && planos.length === 0 && inicio === 'pronto') {
+      voltarAoTopo();
+      setPuloVazio(pulo => pulo + 1);
+      return;
+    }
+    setPuloVazio(0);
     aceiteAtual.current?.abort();
     aceiteAtual.current = null;
     setAceite('livre');
@@ -394,7 +401,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
     setErro(null);
     setFalhaGeracao(null);
     setAviso(null);
-    setAnuncio('');
+    setAnuncio(destino.tipo === 'planos' && planos.length === 0 ? `${mensagens.planos.vazioTitulo}.` : '');
     setTela(destino);
   }
 
@@ -631,8 +638,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
   const previa = passagem?.geracao ?? (tela.tipo === 'geracao' ? geracao : null);
   const visivel = !carregandoTrilha && !carregandoLicao;
   const comNavegacao = ((inicio === 'carregando' && tinhaTrilhas) || (inicio === 'pronto' && ['planos', 'objetivo', 'plano', 'perfil', 'explorar', 'configuracoes'].includes(tela.tipo))) && visivel;
-  // Sem trilhas, a tela de planos já mostra o pedido.
-  const abaNovaTrilha = tela.tipo === 'objetivo' || (inicio === 'pronto' && tela.tipo === 'planos' && planos.length === 0);
+  const abaNovaTrilha = tela.tipo === 'objetivo';
   const abrirFolha = compartilhar ? (planoId: string) => setFolha(planoId) : undefined;
 
   const acaoDoErro = (codigoErro: string) =>
@@ -668,7 +674,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               </li>
             ))}
           </ul>}
-          <Botao variante="secundario" className="navegacao-novo" onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
+          <Botao variante="secundario" className="navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
             <span aria-hidden="true">+</span> {mensagens.planos.novo}
           </Botao>
           {comunidade && (
@@ -718,20 +724,28 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
           {visivel && tela.tipo === 'apresentacao' && (
             <Apresentacao primeiraVez={tela.primeiraVez} concluir={concluirApresentacao} />
           )}
-          {visivel && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
+          {visivel && tela.tipo === 'objetivo' && (
             <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
-              avisoSemTrilhas={tela.tipo === 'planos' && planos.length === 0 && inicio === 'pronto'}
-              aoMudar={(texto) => {
-                setObjetivo(texto);
-                // O pedido aberto na lista vazia não deve sumir se outra trilha terminar enquanto a pessoa digita.
-                if (tela.tipo === 'planos') setTela({ tipo: 'objetivo' });
-              }} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
+              focarCampo={tela.focarCampo} aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })}
               porLink={compartilhar ? <>
                 <AdicionarPorLink ocupado={ocupado} aoAdicionar={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPlano={(id) => void abrirPlano(id)} />
                 {comunidade && <button type="button" className="por-link__abrir" disabled={ocupado} onClick={() => navegar({ tipo: 'explorar' })}><Icone nome="bussola" />{mensagens.comunidade.irAoExplorar}</button>}
               </> : undefined} />
+          )}
+          {inicio === 'pronto' && visivel && tela.tipo === 'planos' && planos.length === 0 && (
+            <section className="painel planos-sem-trilhas" aria-labelledby="planos-vazio-titulo">
+              <h1 tabIndex={-1} id="planos-vazio-titulo">{mensagens.planos.titulo}</h1>
+              <div className="planos-vazio" data-testid="planos-vazio">
+                <div className="planos-vazio__halo" aria-hidden="true">
+                  <span key={puloVazio} data-pular={puloVazio > 0 || undefined}><Mascote expressao="stu-curioso" tamanho={96} /></span>
+                </div>
+                <h2>{mensagens.planos.vazioTitulo}</h2>
+                <p>{mensagens.planos.vazioTexto}</p>
+                <Botao onClick={() => navegar({ tipo: 'objetivo', focarCampo: true })}>{mensagens.planos.vazioAcao}</Botao>
+              </div>
+            </section>
           )}
           {visivel && tela.tipo === 'planos' && planos.length > 0 && (() => {
             const destaque = planoInicial(planos);
