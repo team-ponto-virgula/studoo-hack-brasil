@@ -12,7 +12,9 @@ import { AvisoDoApp, Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos
 import { ESPERA_DA_MEDIDA_MS, ESTADO_INICIAL_DA_ENTRADA, ILUSTRACAO_MAXIMA, MARGEM_DA_ILUSTRACAO, proximoEstadoDaEntrada, type EstadoDaEntrada } from './entrada-medidas';
 import { SkeletonTrilha } from './caminho';
 import { NavegacaoContexto } from './navegacao';
-import { apagarTinhaTrilhas, lerTinhaTrilhas } from './preferencias';
+import { apagarPreferenciasDaConta, apagarTinhaTrilhas, lerTinhaTrilhas } from './preferencias';
+import { ConsentimentoIa } from './consentimento-ia';
+import { tomarRascunho } from './rascunho';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { Paisagem } from './mundo';
 import { Stu } from './mascote';
@@ -100,6 +102,15 @@ export function AppMobile() {
     setSessao(await encerrarNoAparelho());
   }
 
+  /** Conta excluída no servidor: o aparelho esquece a sessão e o que guardava dela, e a entrada mostra o aviso. */
+  async function aoExcluida() {
+    tomarRascunho();
+    await apagarPreferenciasDaConta();
+    setSessao({ tipo: 'verificando' });
+    setSessao(await encerrarNoAparelho());
+    avisoDoApp.avisar(mensagens.privacidade.excluida, { icone: 'check' });
+  }
+
   async function expirar() {
     setSessao({ tipo: 'verificando' });
     setSessao(await encerrarNoAparelho(mensagens.erros.nao_autenticado));
@@ -110,7 +121,11 @@ export function AppMobile() {
   function tela() {
   switch (sessao.tipo) {
     case 'ativa':
-      return <Estudo cliente={sessao.cliente} sair={() => sair(sessao.cliente)} expirar={expirar} />;
+      return (
+        <ConsentimentoIa cliente={sessao.cliente} aoExcluida={aoExcluida}>
+          {(cliente) => <Estudo cliente={cliente} sair={() => sair(sessao.cliente)} expirar={expirar} />}
+        </ConsentimentoIa>
+      );
     case 'entrada':
       return <Entrada erroInicial={sessao.erro} entrar={entrar}
         google={async () => {

@@ -119,3 +119,14 @@ export async function marcarGestoExplicado() {
     // Sem o armazenamento, vale só enquanto o app está aberto.
   }
 }
+
+/**
+ * A conta foi excluída: some o que este aparelho guardava dela (a marca de trilhas, o aviso da voz e o da curtida já
+ * vistos). A apresentação e o som são do aparelho e ficam.
+ */
+export async function apagarPreferenciasDaConta() {
+  tinhaTrilhasNaMemoria = null;
+  avisoVozVistoNaMemoria = null;
+  gestoExplicadoNaMemoria = false;
+  await Promise.all([chaveTinhaTrilhas, chaveAvisoVoz, chaveGestoExplicado].map((chave) => SecureStore.deleteItemAsync(chave).catch(() => undefined)));
+}
