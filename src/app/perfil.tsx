@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+
 /*
  * Perfil rico (spec 10, etapa A) na web: o cabeçalho do perfil (igual na tela Perfil e em /p), "Compartilhar perfil",
  * a tela Perfil, a tela "Editar perfil" com prévia ao vivo e o recorte da foto (arrastar, zoom, teclado).
@@ -33,7 +35,7 @@ import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
 import { SecaoPrivacidade } from './privacidade-perfil';
-import { BloqueadasPerfil, EstadoModeracao } from './seguranca-comunidade';
+import { BloqueadasPerfil, EstadoModeracao, RegrasDaRecusa } from './seguranca-comunidade';
 import { SecaoSomPerfil } from './som';
 import { tocaSons } from './sons';
 import './perfil.css';
@@ -250,6 +252,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
                 <Botao variante="secundario" onClick={() => setEditando(true)}><Icone nome="lapis" />{p.editar}</Botao>
                 {perfil.publico && perfil.perfilId && <BotaoCompartilharPerfil perfilId={perfil.perfilId} nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} />}
               </>} />
+            {perfil.links.length > 0 && <EstadoModeracao estado={perfil.perfilModeracao} />}
             {/* Novidades logo abaixo do cartão (no computador, na coluna da direita): é a recompensa do social. */}
             {comunidade && <NovidadesDoPerfil abrirPlano={abrirPlano} />}
             </div>
@@ -321,8 +324,8 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
       <SecaoPrivacidade visitante={visitante} />
       {compartilhar && <BloqueadasPerfil />}
       <section className="perfil-secao"><h2 className="perfil-secao__titulo">{mensagens.seguranca.ajudaTitulo}</h2>
-        <div className="seguranca-ajuda"><a href="/suporte">{mensagens.seguranca.falarComSuporte}</a>
-        <a href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regras}</a><a href="/privacidade">{mensagens.seguranca.politica}</a></div>
+        <div className="seguranca-ajuda"><Link href={mensagens.seguranca.rotas.suporte}>{mensagens.seguranca.falarComSuporte}</Link>
+        <Link href={mensagens.seguranca.rotas.regras}>{mensagens.seguranca.regras}</Link><Link href={mensagens.seguranca.rotas.politica}>{mensagens.seguranca.politica}</Link></div>
       </section>
       <section className="perfil-secao" aria-labelledby="perfil-conta">
         <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
@@ -569,7 +572,7 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
           <p className="editar-perfil__estado" data-estado={estado === 'salvando' ? 'salvando' : alterado ? 'pendente' : 'salvo'} role="status" aria-live="polite">
             {!alterado && estado !== 'salvando' && <Icone nome="check" />}{estadoTexto}
           </p>
-          {erroGeral && <p className="campo-erro" id="editar-perfil-erro" role="alert">{erroGeral}</p>}
+          {erroGeral && <p className="campo-erro" id="editar-perfil-erro" role="alert">{erroGeral}<RegrasDaRecusa erro={erroGeral} /></p>}
           <div className="editor-perfil__botoes">
             {aoFechar && <Botao variante="secundario" disabled={estado === 'salvando'} onClick={cancelar}>{p.cancelar}</Botao>}
             <Botao type="submit" disabled={estado === 'salvando' || !alterado} aria-busy={estado === 'salvando' || undefined}>

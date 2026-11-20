@@ -28,7 +28,7 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { consumirLimite } from "@/servidor/acesso/seguranca";
 import { ehEmailVisitante } from "@/servidor/acesso/visitante";
 import { banco } from "@/servidor/banco/cliente";
-import { filtroPublico } from "./visibilidade";
+import { exigirParLivre, filtroPublico } from "./visibilidade";
 import { revisarConteudo } from "./revisao";
 import type { Prisma } from "@/servidor/banco/gerado/client";
 
@@ -123,8 +123,8 @@ async function perfilEhPublico(usuarioId: string, quem: string | null) {
 }
 
 /** O que entra na leitura do usuário para montar o dono público (nome, cor, foto, resumo). */
-export const camposDono = { id: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilDemo: true, foto: { select: { token: true, moderacao: true } } } as const;
-export type UsuarioDono = { id: string; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; perfilDemo: boolean; foto: { token: string; moderacao: string } | null };
+export const camposDono = { id: true, perfilRevisao: true, perfilNome: true, perfilCor: true, perfilId: true, perfilResumo: true, perfilDemo: true, foto: { select: { token: true, moderacao: true } } } as const;
+export type UsuarioDono = { id: string; perfilRevisao: number; perfilNome: string | null; perfilCor: string | null; perfilId: string | null; perfilResumo: string | null; perfilDemo: boolean; foto: { token: string; moderacao: string } | null };
 
 /**
  * Conteúdo de demonstração (spec 10, etapa C): só aparece com `STUDOO_COMUNIDADE_DEMO=1`. Sem a flag, perfis e trilhas
@@ -355,6 +355,7 @@ async function linkAtivo(codigo: string, quem: string | null) {
     where: { AND: [await filtroPublico(quem), { codigo }] },
     select: {
       codigo: true,
+      revisao: true,
       usuarioId: true,
       planoId: true,
       plano: { select: { usuario: { select: camposDono } } },
@@ -372,7 +373,12 @@ export async function trilhaCompartilhada(codigo: string, usuarioId: string | nu
   if (!plano) throw new FalhaApi("link_inativo");
   const dono = await donoPublico(link.plano.usuario, usuarioId);
   const licoes = plano.fluxos.flatMap((fluxo) => fluxo.licoes);
-  const temaLink = (await banco.linkTrilha.findUnique({ where: { codigo: link.codigo }, select: { tema: true } }))?.tema ?? plano.tema;
+  const atual = await banco.linkTrilha.findFirst({
+    where: { AND: [await filtroPublico(usuarioId), { codigo, revisao: link.revisao, plano: { usuario: { perfilRevisao: link.plano.usuario.perfilRevisao } } }] },
+    select: { tema: true },
+  });
+  if (!atual) throw new FalhaApi("link_inativo");
+  const temaLink = atual.tema ?? plano.tema;
   const previa: TrilhaCompartilhada = {
     codigo: link.codigo,
     titulo: plano.titulo,
@@ -412,7 +418,7 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
   await limitar(`compartilhar:adicionar:${usuarioId}`, LIMITES.adicionar);
   // O evento com data (para o "Em alta"): um por conta por trilha; conta de visitante não conta.
   const quem = await banco.usuario.findUniqueOrThrow({ where: { id: usuarioId }, select: { email: true } });
-  const evento = ehEmailVisitante(quem.email) ? [] : [banco.eventoTrilha.createMany({ data: [{ codigo, usuarioId, tipo: "adicao" }], skipDuplicates: true })];
+  const contarEvento = !ehEmailVisitante(quem.email);
 
   const original = await lerTrilha(link.usuarioId, link.planoId);
   if (!original) throw new FalhaApi("link_inativo");
@@ -434,8 +440,14 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
     };
   }));
   try {
-    await banco.$transaction([
-      banco.planoAprendizado.create({
+    await banco.$transaction(async tx => {
+      await exigirParLivre(tx, usuarioId, link.usuarioId, "link_inativo");
+      const vigente = await tx.linkTrilha.updateMany({
+        where: { codigo, revisao: link.revisao, moderacao: "aprovado", oculta: false, plano: { usuario: { perfilModeracao: "aprovado", perfilRevisao: link.plano.usuario.perfilRevisao } } },
+        data: { adicoes: { increment: 1 } },
+      });
+      if (!vigente.count) throw new FalhaApi("link_inativo");
+      await tx.planoAprendizado.create({
         data: {
           usuarioId,
           id,
@@ -449,12 +461,11 @@ export async function adicionarTrilha(usuarioId: string, codigo: string): Promis
           // A capa da galeria vai junto na cópia (a foto, quando houver, fica com quem enviou).
           capa: original.capa && !original.capa.startsWith("foto:") ? original.capa : null,
         },
-      }),
-      banco.fluxo.createMany({ data: fluxos }),
-      banco.licao.createMany({ data: copias }),
-      banco.linkTrilha.update({ where: { codigo }, data: { adicoes: { increment: 1 } } }),
-      ...evento,
-    ]);
+      });
+      await tx.fluxo.createMany({ data: fluxos });
+      await tx.licao.createMany({ data: copias });
+      if (contarEvento) await tx.eventoTrilha.createMany({ data: [{ codigo, usuarioId, tipo: "adicao" }], skipDuplicates: true });
+    });
   } catch (erro) {
     // Dois pedidos ao mesmo tempo: o segundo encontra a trilha do primeiro.
     if ((erro as { code?: string })?.code !== "P2002") throw erro;
@@ -470,24 +481,32 @@ export async function perfilPublico(perfilId: string, quem: string | null = null
   if (!FORMATO_CODIGO.test(perfilId)) throw new FalhaApi("nao_encontrado");
   const usuario = await banco.usuario.findUnique({
     where: { perfilId },
-    select: { id: true, perfilNome: true, perfilCor: true, perfilResumo: true, perfilInteresses: true, perfilDemo: true, foto: { select: { token: true, moderacao: true } } },
+    select: { id: true, perfilRevisao: true, perfilNome: true, perfilCor: true, perfilResumo: true, perfilInteresses: true, perfilDemo: true, foto: { select: { token: true, moderacao: true } } },
   });
   if (!usuario?.perfilNome || (usuario.perfilDemo && !demonstracaoVisivel())) throw new FalhaApi("nao_encontrado");
-  const links = await banco.linkTrilha.findMany({ where: { AND: [await filtroPublico(quem), { usuarioId: usuario.id, noPerfil: true }] }, orderBy: { criadoEm: "desc" }, select: { codigo: true, planoId: true, adicoes: true } });
+  const links = await banco.linkTrilha.findMany({ where: { AND: [await filtroPublico(quem), { usuarioId: usuario.id, noPerfil: true }] }, orderBy: { criadoEm: "desc" }, select: { codigo: true, planoId: true, adicoes: true, revisao: true } });
   if (links.length === 0) throw new FalhaApi("nao_encontrado");
   const trilhas = await Promise.all(links.map(async (link) => {
     const plano = await lerTrilha(usuario.id, link.planoId);
     const licoes = plano?.fluxos.flatMap((fluxo) => fluxo.licoes) ?? [];
     return plano && { codigo: link.codigo, titulo: plano.titulo, totalLicoes: licoes.length, origem: ehDeMaterial(licoes) ? rotuloMaterial(usuario.perfilNome!) : plano.origem };
   }));
-  const visiveis = trilhas.filter((trilha) => trilha !== null);
+  const atuais = await banco.linkTrilha.findMany({
+    where: { AND: [await filtroPublico(quem), { usuarioId: usuario.id, noPerfil: true, plano: { usuario: { perfilRevisao: usuario.perfilRevisao } } }] },
+    select: { codigo: true, revisao: true },
+  });
+  const revisoes = new Map(atuais.map(link => [link.codigo, link.revisao]));
+  const linksVisiveis = links.filter(link => revisoes.get(link.codigo) === link.revisao);
+  if (!linksVisiveis.length) throw new FalhaApi("nao_encontrado");
+  const codigosVisiveis = new Set(linksVisiveis.map(link => link.codigo));
+  const visiveis = trilhas.filter(trilha => trilha !== null).filter(trilha => codigosVisiveis.has(trilha.codigo));
   return {
     nome: usuario.perfilNome,
     cor: corValida(usuario.perfilCor) ? usuario.perfilCor : "azul",
     resumo: usuario.perfilResumo || null,
     interesses: temasGuardados(usuario.perfilInteresses),
     foto: usuario.foto?.moderacao === 'aprovado' ? usuario.foto.token : null,
-    alcance: alcanceDe(links),
+    alcance: alcanceDe(linksVisiveis),
     trilhas: visiveis,
     ...(usuario.perfilDemo ? { demo: true as const } : {}),
   };

@@ -26,12 +26,27 @@ export function MenuPublicacao({ tipo, alvo, nome, titulo, logado }: Alvo & { lo
   useEffect(() => {
     if (!aberto) return;
     const fora = (evento: PointerEvent) => { if (!caixa.current?.contains(evento.target as Node)) setAberto(false); };
-    const tecla = (evento: KeyboardEvent) => { if (evento.key === 'Escape') { setAberto(false); botao.current?.focus(); } };
+    const tecla = (evento: KeyboardEvent) => {
+      if (evento.key === 'Escape') { setAberto(false); botao.current?.focus(); return; }
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(evento.key)) return;
+      const itens = Array.from(caixa.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? []);
+      const atual = itens.indexOf(document.activeElement as HTMLElement);
+      if (atual < 0) return;
+      evento.preventDefault();
+      const indice = evento.key === 'Home' ? 0 : evento.key === 'End' ? itens.length - 1 :
+        (atual + (evento.key === 'ArrowDown' ? 1 : -1) + itens.length) % itens.length;
+      itens[indice].focus();
+    };
     document.addEventListener('pointerdown', fora);
     document.addEventListener('keydown', tecla);
     caixa.current?.querySelector<HTMLButtonElement>('[role="menuitem"]')?.focus();
     return () => { document.removeEventListener('pointerdown', fora); document.removeEventListener('keydown', tecla); };
   }, [aberto]);
+  function escolher(acao: Acao) {
+    botao.current?.focus();
+    setAberto(false);
+    central.abrir({ tipo, alvo, nome, titulo }, acao);
+  }
   return (
     <div className="cartao-trilha__menu" ref={caixa}>
       <button ref={botao} type="button" className="cartao-trilha__icone" aria-label={c.mais(titulo)} aria-haspopup="menu" aria-expanded={aberto} aria-controls={aberto ? idMenu : undefined}
@@ -39,8 +54,8 @@ export function MenuPublicacao({ tipo, alvo, nome, titulo, logado }: Alvo & { lo
       {aberto && (
         <div className="cartao-trilha__opcoes" role="menu" id={idMenu}>
           {logado ? <>
-            <button type="button" role="menuitem" onClick={() => { setAberto(false); central.abrir({ tipo, alvo, nome, titulo }, 'denunciar'); }}><Icone nome="bandeirinha" />{c.denunciar}</button>
-            <button type="button" role="menuitem" onClick={() => { setAberto(false); central.abrir({ tipo, alvo, nome, titulo }, 'bloquear'); }}>{seg.bloquear(nome)}</button>
+            <button type="button" role="menuitem" onClick={() => escolher('denunciar')}><Icone nome="bandeirinha" />{c.denunciar}</button>
+            <button type="button" role="menuitem" onClick={() => escolher('bloquear')}>{seg.bloquear(nome)}</button>
           </> : <Link role="menuitem" href={seg.rotaDenunciaSemSessao(tipo, alvo)}>{c.denunciar}</Link>}
         </div>
       )}
@@ -140,18 +155,23 @@ export function SegurancaComunidade({ children }: { children: ReactNode }) {
   }
   return <Contexto.Provider value={{versao, abrir: abrirAcao}}>
     {children}
-    {dialogo?.acao === 'bloquear' && <DialogoConfirmar titulo={seg.bloquearTitulo(dialogo.alvo.nome)} texto={seg.bloquearTexto}
+    {dialogo?.acao === 'bloquear' && <DialogoConfirmar destaqueDestrutivo titulo={seg.bloquearTitulo(dialogo.alvo.nome)} texto={seg.bloquearTexto}
       confirmar={seg.bloquearAcao} cancelar={seg.cancelar} ocupado={ocupado} aoConfirmar={() => void confirmar()} aoCancelar={() => { if (!ocupado) abrir(null); }} />}
     {dialogo?.acao === 'denunciar' && <DialogoDenuncia alvoTipo={dialogo.alvo.tipo} alvo={dialogo.alvo.alvo}
       alvoNome={dialogo.alvo.tipo === 'trilha' ? c.denuncia.alvoTrilha(dialogo.alvo.titulo, dialogo.alvo.nome) : dialogo.alvo.nome}
       aoFechar={() => abrir(null)} aoEnviar={protocolo => { avisar({ texto: seg.denunciaEnviada(protocolo), protocolo, alvo: dialogo.alvo }); atualizar(); }} />}
     {erro && <p className="seguranca-aviso" role="alert">{erro}<button onClick={() => falhar('')}>Fechar</button></p>}
     {aviso && !dialogo && <aside className="seguranca-aviso"><p role="status" aria-live="polite">{aviso.texto}</p>
-      {aviso.protocolo && <Link href={seg.rotas.suporte + "#protocolo=" + aviso.protocolo}>Acompanhar protocolo</Link>}
+      {aviso.protocolo && <Link onClick={() => avisar(null)} href={seg.rotas.suporte + "#protocolo=" + aviso.protocolo}>Acompanhar protocolo</Link>}
       {aviso.alvo && <button type="button" onClick={() => abrirAcao(aviso.alvo!, 'bloquear')}>{seg.bloquearAcao}</button>}
       {aviso.bloqueio && <button type="button" disabled={ocupado} onClick={() => void desfazer(aviso.bloqueio!)}>{seg.desfazer}</button>}
       <button type="button" onClick={() => avisar(null)}>Fechar</button></aside>}
   </Contexto.Provider>;
+}
+
+export function RegrasDaRecusa({ erro }: { erro?: string | null }) {
+  if (erro !== seg.recusadaNaHora) return null;
+  return <> <Link href={seg.rotas.regras}>{seg.regras}</Link></>;
 }
 
 export function EstadoModeracao({ estado }: { estado?: string | null }) {

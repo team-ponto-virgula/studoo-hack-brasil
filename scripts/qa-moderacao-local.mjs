@@ -29,7 +29,7 @@ async function pessoa(nome, equipe = false) {
   if (!email || !email.endsWith('@example.test')) throw Error('A caixa exige um endereço sintético @example.test.');
   // Contas de teste da nossa execução. Não reutilizar uma conta existente com o mesmo endereço.
   await banco.usuario.create({ data: { id, email, fuso: 'UTC' } });
-  const cookie = cookieSessao((await criarSessao(id)).token).split(';')[0];
+  const cookie = cookieSessao((await criarSessao(id, 'WEB')).token).split(';')[0];
   const u = { cookie, nome }; alunos.push(u);
   if (!equipe) u.perfilId = (await solicitar('/api/perfil',cookie,'PUT',{nome,cor:'verde'})).data.perfilId;
   return u;
