@@ -268,3 +268,11 @@ test('telas: Perfil com Privacidade e dados e Excluir conta também sem o compar
   const sair = corpo.indexOf('testID="sair"');
   assert.ok(som > 0 && som < privacidadeSecao && privacidadeSecao < conta && conta < sair, 'ordem: Som, Privacidade e dados, Conta (Sair)');
 });
+
+test('telas: o Perfil volta à entrada quando a sessão terminou no servidor (conta excluída em outro aparelho)', async () => {
+  const estudo = await ler('apps/mobile/src/estudo.tsx');
+  assert.equal((estudo.match(/aoSessaoTerminada=\{\(\) => void expirarGuardando\(\)\}/g) ?? []).length, 2, 'TelaPerfil e PerfilSemSocial');
+  const perfil = await ler('apps/mobile/src/perfil.tsx');
+  assert.match(perfil, /if \(sessaoInvalida\(falha\) && aoSessaoTerminada\) \{ aoSessaoTerminada\(\); return; \}/);
+  assert.match(perfil, /\.catch\(\(falha\) => \{ if \(ativo && sessaoInvalida\(falha\)\) aoSessaoTerminada\?\.\(\); \}\)/);
+});
