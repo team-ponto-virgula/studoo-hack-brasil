@@ -839,3 +839,29 @@
     animation: none !important;
   }
 }
+
+/* Reforço da lição, com três tábuas e uma ação por passo. */
+.reforco { display: grid; gap: 12px; width: min(100%, 680px); margin: 0 auto; padding-bottom: 88px; }
+.reforco h2, .reforco h3, .reforco p { margin: 0; }
+.reforco h2 { line-height: 1.2; font-size: clamp(1.5rem, 5vw, 2rem); }
+.reforco h2:focus, .reforco h3:focus { outline: none; }
+.reforco__selo { display: flex; align-items: center; gap: 8px; color: var(--acao-escura); font-weight: 900; text-transform: uppercase; }
+.reforco__motivo { color: var(--texto2); line-height: 1.5; }
+.reforco__faixa { position: relative; display: grid; grid-template-columns: 1fr 3fr 1fr; align-items: end; max-width: 560px;
+  height: 88px; padding-bottom: 9px; border-radius: 16px; background: linear-gradient(to top,#bfdef7 0 16%,#edf6ff 16%); }
+.reforco__faixa > span { align-self: end; padding-inline: 3px; text-align: center; font-size: .73rem; font-weight: 800; color: var(--texto2); }
+.reforco__faixa ol { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin: 0; padding: 0; list-style: none; }
+.reforco__faixa li { display: grid; place-items: center; border: 2px dashed #927456; border-radius: 8px; color: #564232; font-weight: 900; height: 30px; background: #f4eee7; transition: background 240ms; }
+.reforco__faixa li[data-feita], .reforco__faixa li[aria-current] { border: 2px solid #74441c; color: white; background: #905d32; }
+.reforco__faixa li[aria-current] { outline: 3px solid var(--acao-escura); outline-offset: 1px; }
+.reforco__viajante { position: absolute; top: 2px; left: calc((var(--posicao) + .5) * 20%); transform: translateX(-50%); transition: left 320ms ease-out; }
+.reforco__viajante > div { animation: reforco-pulo 320ms ease; }
+.reforco__indicador { font-weight: 800; font-size: .875rem; color: var(--texto2); }
+.reforco__cartao { display: grid; gap: 12px; padding: 16px; border: 2px solid var(--gelo); border-radius: 20px; background: var(--fundo); line-height: 1.5; animation: reforco-aparece 200ms ease; }
+.reforco__cartao .botao--texto, .reforco > .botao--texto { justify-self: start; min-height: 44px; }
+.reforco__rodape { position: fixed; z-index: 5; bottom: 0; inset-inline: 0; display: flex; justify-content: center;
+  padding: 10px max(16px,env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)); border-top: 2px solid var(--gelo); background: var(--fundo); }
+.reforco__rodape .botao { min-height: 48px; width: min(100%,680px); }
+@keyframes reforco-pulo { 50% { transform: translateY(-8px); } }
+@keyframes reforco-aparece { from { transform: translateY(8px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .reforco *, .reforco *::before { animation: none !important; transition: none !important; } }

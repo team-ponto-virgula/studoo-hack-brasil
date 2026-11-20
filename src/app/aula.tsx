@@ -819,7 +819,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
       </div>
       {exercicio && (
         <ApoioDaLicao key={indice} licao={licao} avaliacao={avaliacao} pedidoPonte={pedidoPonte} ultimo={indice === exercicios.length - 1}
-          ultimaResposta={respostaLegivel(exercicio, resposta)}
+          ultimaResposta={exercicio.tipo === 'ordenar' || exercicio.tipo === 'associar' ? '' : respostaLegivel(exercicio, resposta)}
           aoVoltarExercicio={tentarDeNovo}
           aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
           aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
