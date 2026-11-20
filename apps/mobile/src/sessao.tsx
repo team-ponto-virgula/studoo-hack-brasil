@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { AccessibilityInfo, Animated, Keyboard, LayoutAnimation, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
 import { useTremor } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
-import { entrarComGoogle } from './google-nativo';
+import { entrarComGoogle, googleNoAparelho } from './google-nativo';
 import { appleDisponivelNoAparelho, entrarComApple } from './apple-nativo';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import { entrarComoVisitante } from './visitante-nativo';
@@ -262,6 +262,7 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
   entrar: (email: string, senha: string) => Promise<void>;
 }) {
   // Como na web (rodada 4A): o Google e o "Esqueci minha senha" só aparecem quando o servidor os oferece; nada apagado.
+  // No beta do iPhone (spec 07, P27), o build pode desligar o Google: aí ele não aparece, mesmo com o servidor oferecendo.
   const [googleDisponivel, setGoogleDisponivel] = useState(false);
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(false);
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(false);
@@ -289,7 +290,7 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
     void Promise.all([criarClienteNativo().configuracaoAcesso(), appleDisponivelNoAparelho()])
       .then(([c, appleNoAparelho]) => {
         if (!ativo) return;
-        setGoogleDisponivel(c.google); setRecuperacaoDisponivel(c.recuperacao); setVisitanteDisponivel(c.visitante === true);
+        setGoogleDisponivel(c.google && googleNoAparelho()); setRecuperacaoDisponivel(c.recuperacao); setVisitanteDisponivel(c.visitante === true);
         setCadastroDisponivel(c.cadastro === true); setAppleDisponivel(c.apple === true && appleNoAparelho);
       })
       .catch(() => {})
