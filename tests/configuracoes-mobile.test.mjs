@@ -116,7 +116,8 @@ test('a foto do perfil usa o mesmo recorte, quadrado, no lugar do recorte do sis
   // Sem `proporcao`, o recorte é 1:1, com o círculo do avatar e os textos do perfil.
   assert.match(perfil, /<RecorteImagem imagem=\{paraRecortar\} aoCancelar=\{\(\) => setParaRecortar\(null\)\} enviar=\{enviarFotoRecortada\} \/>/);
   assert.match(recorte, /proporcao = 1, titulo = p\.recorteTitulo, dica = p\.recorteDicaToque, aviso = p\.fotoAviso/);
-  assert.match(perfil, /atualizarPerfil\(await cliente\.enviarFoto\(base64\)\);/);
+  // A foto vai na hora e atualiza o perfil (spec 14: o aviso diz se ela ficou em revisão).
+  assert.match(perfil, /const novo = await cliente\.enviarFoto\(base64\);\s*atualizarPerfil\(novo\);/);
 });
 
 test('o recorte faz a conta da web: a foto cobre o quadro e sai com 256 a 1024 px de largura', async () => {
@@ -215,7 +216,9 @@ test('salvar um campo alterado toca "salvo" (spec 12); a capa toca pelo aviso "C
   const salvar = app.slice(app.indexOf('async function salvar('), app.indexOf('} catch (falha) {', app.indexOf('async function salvar(')));
   assert.match(salvar, /marcar\(campo, 'salvo'\);[\s\S]*if \(campo !== 'capa'\) void tocaSons\.tocarEfeito\('salvo'\);/);
   // "Capa salva." toca "salvo" pelo aviso do app (o padrão do aviso seria o efeito "aviso").
-  assert.equal((app.match(/avisar\(k\.capaSalva, \{ icone: 'check', som: 'salvo' \}\);/g) ?? []).length, 2);
+  // A capa com foto pode ficar em revisão (spec 14): o mesmo aviso, com o texto da revisão no lugar de "Capa salva.".
+  assert.equal((app.match(/avisar\(k\.capaSalva, \{ icone: 'check', som: 'salvo' \}\);/g) ?? []).length, 1);
+  assert.match(app, /avisar\(novo\.capaModeracao === 'pendente' \? mensagens\.seguranca\.enviadaParaRevisao : k\.capaSalva, \{ icone: 'check', som: 'salvo' \}\);/);
   assert.doesNotMatch(app, /avisar\(k\.capaSalva, \{ icone: 'check' \}\)/);
   // Só chega ao salvar com mudança: o nome e a descrição comparam com o que está salvo; o tema, com o tema atual.
   assert.match(app, /if \(normal === salvo\.titulo\) \{/);
