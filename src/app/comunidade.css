@@ -267,14 +267,14 @@
 .seguranca-estado[data-recusado] strong { color: #9a5b00; background: #fff6ea; }
 .cartao-trilha__opcoes [role=menuitem] { min-height: 44px; white-space: normal; }
 
-.seguranca-faixa {
+.aviso-app.seguranca-faixa {
   bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 80;
 }
 body:has(.navegacao-mobile) .seguranca-faixa { bottom: var(--espaco-rodape, calc(94px + env(safe-area-inset-bottom))); }
-.seguranca-faixa p {
+.aviso-app.seguranca-faixa p {
   display: flex; align-items: center; gap: 10px; padding: 6px 16px;
-  min-height: 48px; background: #1b2a5e; color: #fff;
+  min-height: 48px; background: var(--fundo-aviso-comunidade); color: var(--fundo);
   font-size: 15px; line-height: 22px; pointer-events: auto; overflow-wrap: anywhere;
 }
 .seguranca-faixa .icone { flex: none; width: 20px; height: 20px; }

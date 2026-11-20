@@ -102,8 +102,10 @@ export function Cadastro() {
           <Botao variante="texto" disabled={ocupado} onClick={() => { setEtapa('email'); setCodigo(''); setValidacao(''); setErro(null); }}>{m.trocarEmail}</Botao>
         </>}
       </form>
-      <p className="acesso-ajuda"><a className="acesso-link" href="/privacidade" target="_blank" rel="noopener">{m.politica}</a></p>
-      <div className="recuperar-voltar"><Link className="acesso-link" href="/login">{mensagens.acesso.jaTenhoConta}</Link></div>
+      <div className="cadastro-links">
+        <a className="acesso-link" href="/privacidade" target="_blank" rel="noopener">{m.politica}</a>
+        <Link className="acesso-link" href="/login">{mensagens.acesso.jaTenhoConta}</Link>
+      </div>
     </section>
   </main>;
 }

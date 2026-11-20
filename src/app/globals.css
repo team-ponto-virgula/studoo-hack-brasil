@@ -19,6 +19,7 @@
   --gelo: #e1e7fa;
   --texto: #0b1b5c;
   --texto2: #5e6a85;
+  --fundo-aviso-comunidade: #1b2a5e;
   --acao: #2563ff;
   --acao-escura: #1d4ed8;
   --sucesso: #1f7a5a;
@@ -927,6 +928,7 @@ button { touch-action: manipulation; }
 .recuperar { max-width: 540px; margin: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); }
 .recuperar-cartao { margin-top: 32px; padding: 28px; border: 2px solid var(--gelo); border-radius: 24px; background: var(--fundo); }
 .recuperar-cartao .formulario { margin-top: 24px; }
+.cadastro-links { display: grid; justify-items: center; gap: 4px; margin-top: 12px; text-align: center; }
 .recuperar-cartao > .acesso-link { margin-top: 16px; }
 .entrada-privacidade { justify-self: center; font-size: 0.875rem; color: var(--texto2); }
 .recuperar-simbolo { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 20px; border-radius: 18px; color: var(--acao); background: var(--nevoa); }
@@ -945,13 +947,12 @@ button { touch-action: manipulation; }
   .entrada-cabecalho .logo { width: 112px; }
   .entrada-banner { height: 140px; margin-bottom: 24px; }
   .entrada-banner .stu { width: 72px; }
-  .recuperar { max-width: 620px; padding: 0 20px calc(108px + env(safe-area-inset-bottom)); }
+  .recuperar { max-width: 620px; padding: 0 20px max(24px, env(safe-area-inset-bottom)); }
   .recuperar-topo { min-height: 60px; padding: max(8px, env(safe-area-inset-top)) 0 8px; border-bottom: 2px solid var(--nevoa); }
   .recuperar-topo .logo { width: 112px; }
   .recuperar-cartao { margin-top: 24px; padding: 0; border: 0; border-radius: 0; }
-  .recuperar-voltar { display: none; }
-  .recuperar .acao-principal { padding: 16px 16px max(16px, env(safe-area-inset-bottom)); }
-  .recuperar .acao-principal > .botao { width: 100%; }
+  .recuperar .acao-principal { position: static; width: 100%; padding: 0; margin-top: 16px; border: 0; background: none; box-shadow: none; }
+  .recuperar .acao-principal > .botao { width: 100%; min-height: 48px; }
 }
 @media (max-width: 767px) {
   .entrada-cabecalho .som-marca { width: calc(100% + 40px); margin: -16px -20px 24px; padding: 8px 20px; min-height: 60px; border-bottom: 2px solid var(--nevoa); }
