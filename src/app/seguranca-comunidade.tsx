@@ -14,7 +14,7 @@ const c = mensagens.comunidade;
 const seg = mensagens.seguranca;
 type Alvo = { tipo: 'perfil' | 'trilha'; alvo: string; nome: string; titulo: string };
 type Acao = 'bloquear' | 'denunciar';
-const Contexto = createContext({ versao: 0, confirmarLeitura: (_versao: number) => {}, abrir: (_alvo: Alvo, _acao: Acao) => {} });
+const Contexto = createContext({ versao: 0, confirmarLeitura: (_versao: number) => {}, abrir: (_alvo: Alvo, _acao: Acao) => {}, avisarDesbloqueio: () => {} });
 export const useAtualizacaoComunidade = () => useContext(Contexto);
 
 export function MenuPublicacao({ tipo, alvo, nome, titulo, logado }: Alvo & { logado: boolean }) {
@@ -49,7 +49,7 @@ export function MenuPublicacao({ tipo, alvo, nome, titulo, logado }: Alvo & { lo
   }
   return (
     <div className="cartao-trilha__menu" ref={caixa}>
-      <button ref={botao} type="button" className="cartao-trilha__icone" aria-label={c.mais(titulo)} aria-haspopup="menu" aria-expanded={aberto} aria-controls={aberto ? idMenu : undefined}
+      <button ref={botao} type="button" className="cartao-trilha__icone" aria-label={mensagens.planos.maisOpcoesRotulo(titulo)} aria-haspopup="menu" aria-expanded={aberto} aria-controls={aberto ? idMenu : undefined}
         onClick={() => setAberto((valor) => !valor)}><Icone nome="mais" /></button>
       {aberto && (
         <div className="cartao-trilha__opcoes" role="menu" id={idMenu}>
@@ -123,7 +123,7 @@ export function DialogoDenuncia({ alvoTipo, alvo, alvoNome, aoFechar, aoEnviar }
 
 
 
-type Aviso = { texto: string; bloqueio?: string; alvo?: Alvo };
+type Aviso = { texto: string; bloqueio?: string; alvo?: Alvo; imediato?: boolean };
 function FaixaComunidade({ aviso, aoFechar, aoAgir }: { aviso: Aviso; aoFechar: () => void; aoAgir: () => void }) {
   const [pausado, pausar] = useState(false);
   const inicioToque = useRef<number | null>(null);
@@ -173,7 +173,8 @@ export function SegurancaComunidade({ children }: { children: ReactNode }) {
     try { await cliente.desbloquear(id); avisar({ texto: seg.desbloqueada }); atualizar(); }
     catch(e) { falhar(textoErro(codigoDoErro(e))); } finally { ocupar(false); }
   }
-  return <Contexto.Provider value={{versao, confirmarLeitura, abrir: abrirAcao}}>
+  const avisarDesbloqueio = () => avisar({ texto: seg.desbloqueada, imediato: true });
+  return <Contexto.Provider value={{ versao, confirmarLeitura, abrir: abrirAcao, avisarDesbloqueio }}>
     {children}
     {dialogo?.acao === 'bloquear' && <DialogoConfirmar titulo={seg.bloquearTitulo(dialogo.alvo.nome)} texto={seg.bloquearTexto}
       confirmar={seg.bloquearAcao} cancelar={seg.cancelar} ocupado={ocupado} aoConfirmar={() => void confirmar()} aoCancelar={() => { if (!ocupado) abrir(null); }} />}
@@ -181,7 +182,7 @@ export function SegurancaComunidade({ children }: { children: ReactNode }) {
       alvoNome={dialogo.alvo.tipo === 'trilha' ? c.denuncia.alvoTrilha(dialogo.alvo.titulo, dialogo.alvo.nome) : dialogo.alvo.nome}
       aoFechar={() => abrir(null)} aoEnviar={protocolo => { avisar({ texto: seg.denunciaEnviada(protocolo), alvo: dialogo.alvo }); atualizar(); }} />}
     {erro && <p className="seguranca-aviso" role="alert">{erro}<button onClick={() => falhar('')}>Fechar</button></p>}
-    {aviso && !dialogo && caminho === '/explorar' && lida === versao &&
+    {aviso && !dialogo && (aviso.imediato || (caminho === '/explorar' && lida === versao)) &&
       <FaixaComunidade aviso={aviso} aoFechar={fecharAviso} aoAgir={() => {
         if (aviso.alvo) abrirAcao(aviso.alvo, 'bloquear');
         if (aviso.bloqueio && !ocupado) void desfazer(aviso.bloqueio);
@@ -225,8 +226,24 @@ export function BloqueadasPerfil() {
 export function PerfilBloqueado({ id }: { id: string }) {
   const router = useRouter();
   const [erro, falhar] = useState('');
-  const [pronto, concluir] = useState(false);
-  return <section className="pagina-publica__vazio"><h1>{pronto ? seg.desbloqueada : seg.perfilBloqueado}</h1>
-    {!pronto && <Botao onClick={async () => { try { await cliente.desbloquear(id); concluir(true); router.refresh(); } catch(e) { falhar(textoErro(codigoDoErro(e))); } }}>{seg.desbloquear}</Botao>}
+  const [ocupado, ocupar] = useState(false);
+  const { avisarDesbloqueio } = useContext(Contexto);
+
+  async function desbloquear() {
+    if (ocupado) return;
+    ocupar(true);
+    falhar('');
+    try {
+      await cliente.desbloquear(id);
+      avisarDesbloqueio();
+      router.refresh();
+    } catch (e) {
+      falhar(textoErro(codigoDoErro(e)));
+      ocupar(false);
+    }
+  }
+
+  return <section className="pagina-publica__vazio"><h1>{seg.perfilBloqueado}</h1>
+    <Botao disabled={ocupado} aria-busy={ocupado} onClick={() => void desbloquear()}>{seg.desbloquear}</Botao>
     <p role="status">{erro}</p></section>;
 }
