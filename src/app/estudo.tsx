@@ -715,7 +715,11 @@ export function Estudo() {
           {visivel && (tela.tipo === 'objetivo' || tela.tipo === 'planos' && planos.length === 0) && (
             <Pedido onProposta={p => { navegar({ tipo: 'geracao' }); setGeracao({ objetivo: p.objetivo, titulo: p.titulo, fluxos: p.fluxos.map(f => ({ titulo: f.titulo, licoes: f.licoes.map(l => l.titulo) })), proposta: p }); }} objetivo={objetivo} ocupado={ocupado} aviso={aviso} falha={falhaGeracao} temPlanos={planos.length > 0} areaInicial={areaInicial}
               avisoSemTrilhas={tela.tipo === 'planos' && planos.length === 0 && inicio === 'pronto'}
-              aoMudar={setObjetivo} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
+              aoMudar={(texto) => {
+                setObjetivo(texto);
+                // O pedido aberto na lista vazia não deve sumir se outra trilha terminar enquanto a pessoa digita.
+                if (tela.tipo === 'planos') setTela({ tipo: 'objetivo' });
+              }} anunciar={anunciar} gerar={(texto) => void gerar(texto)}
               verPlanos={() => navegar({ tipo: 'planos' })}
               comoFunciona={() => navegar({ tipo: 'apresentacao', primeiraVez: false })}
               porLink={compartilhar ? <>
