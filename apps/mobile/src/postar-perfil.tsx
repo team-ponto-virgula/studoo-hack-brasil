@@ -5,7 +5,7 @@ import type { LinkCompartilhado, Perfil, PlanoResumo, Tema } from '@studoo/contr
 import { codigoDaFalha, type ClienteNativo } from './api-nativa';
 import { CapaTrilha } from './comunidade';
 import { Icone } from './icone';
-import { AvisoDoApp, Botao, CartaoConfirmacao, useMovimentoReduzido } from './interface';
+import { AvisoDoApp, AvisoSobreAFolha, Botao, CartaoConfirmacao, useMovimentoReduzido } from './interface';
 import { mensagemDeErro, mensagens } from './mensagens';
 import { LinhaDasRegras, abrirPaginaDoStudoo } from './seguranca';
 import { Chave, socialEstilos } from './social';
@@ -195,6 +195,8 @@ export function FolhaPostarNoPerfil({ cliente, perfil, aoFechar, aoMudarLink, ed
             )}
           </ScrollView>
         </View>
+        {/* "Trilha no seu perfil.", "Enviada para revisão…" e "Desfazer" por cima da folha, onde a pessoa os vê e toca. */}
+        <AvisoSobreAFolha baixo={16 + insets.bottom} />
       </View>
       {confirmacao}
     </Modal>
@@ -226,7 +228,7 @@ function LinhaDaTrilha({ linha, salvando, erro, ligadaOtimista, desativada, aoMu
         <Text numberOfLines={1} style={estilosPostar.titulo}>{linha.plano.titulo}</Text>
         {linhaDeEstado}
       </View>
-      <Chave rotulo={linha.plano.titulo} nomeAcessivel={`${t.titulo}: ${linha.plano.titulo}`} ligada={ligada} desativada={desativada} aoMudar={aoMudar} />
+      <Chave rotulo={linha.plano.titulo} nomeAcessivel={`${t.titulo}: ${linha.plano.titulo}`} ligada={ligada} desativada={desativada} aoMudar={aoMudar} semTexto />
     </View>
   );
 }
@@ -240,7 +242,7 @@ const estilosPostar = StyleSheet.create({
   bloco: { gap: 12, paddingVertical: 4 },
   lista: { borderWidth: 2, borderColor: cores.gelo, borderRadius: 16, overflow: 'hidden' },
   linha: { minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: cores.gelo },
-  capa: { width: 56, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: cores.gelo },
+  capa: { width: 56, height: 40, flexShrink: 0, borderRadius: 8, overflow: 'hidden', backgroundColor: cores.gelo },
   miolo: { flex: 1, minWidth: 0, gap: 4 },
   titulo: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 22, fontWeight: '800' },
   estado: { color: '#5E6A85', fontFamily: fontes.corpo, fontSize: 13, lineHeight: 18, fontWeight: '700' },

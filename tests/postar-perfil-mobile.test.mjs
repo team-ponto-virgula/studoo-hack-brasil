@@ -70,3 +70,20 @@ test('atalho do "•••": logo depois de Compartilhar; primeira vez ou sem no
   assert.match(fonte, /abrirFolha && comunidade && !plano\.recebida && !perfil\?\.visitante/);
   assert.equal((fonte.match(/postar=\{postarDe\(/g) ?? []).length, 2, 'destaque e demais cartões');
 });
+
+test('achados da prévia a 390: aviso por cima da folha, chave só com o trilho, lista que não recarrega com um aviso', async () => {
+  const folha = await ler('apps/mobile/src/postar-perfil.tsx');
+  // A folha é um Modal: no aparelho ela cobre a faixa que a Tela desenha; "Desfazer" precisa estar por cima, onde se toca.
+  assert.match(folha, /<AvisoSobreAFolha baixo=\{16 \+ insets\.bottom\} \/>\s*<\/View>\s*\{confirmacao\}\s*<\/Modal>/);
+  assert.match(folha, /aoMudar=\{aoMudar\} semTexto \/>/, 'a linha já mostra o título: a chave não repete o texto');
+  assert.match(folha, /capa: \{ width: 56, height: 40, flexShrink: 0,/);
+  const social = await ler('apps/mobile/src/social.tsx');
+  assert.match(social, /\{!semTexto && <Text style=\{socialEstilos\.chaveTexto\}>\{rotulo\}<\/Text>\}/);
+  const interfaceApp = await ler('apps/mobile/src/interface.tsx');
+  assert.match(interfaceApp, /export function AvisoSobreAFolha\(\{ baixo \}: \{ baixo: number \}\) \{\s*const \{ aviso \} = useContext\(AvisoDoApp\);\s*return aviso \? <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} baixo=\{baixo\} \/> : null;/);
+  // `expirar` muda a cada desenho da raiz (um aviso basta): fora das dependências, a lista não recarrega nem reabre a trilha.
+  const estudo = await ler('apps/mobile/src/estudo.tsx');
+  assert.match(estudo, /\}, \[cliente, tentativa\]\);/);
+  assert.doesNotMatch(estudo, /\[cliente, expirar, tentativa\]/);
+  assert.match(estudo, /await expirarAtual\.current\(\);/);
+});
