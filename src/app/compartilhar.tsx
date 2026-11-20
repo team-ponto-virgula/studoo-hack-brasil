@@ -144,11 +144,12 @@ export function useDialogo(caixa: RefObject<HTMLElement | null>, aoEsc: () => vo
 }
 
 /** Confirmação no próprio produto (nunca `window.confirm`): título, texto e duas ações; a segura recebe o foco. */
-export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, ocupado = false, aoConfirmar, aoCancelar }: {
+export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, destrutivo = true, ocupado = false, aoConfirmar, aoCancelar }: {
   titulo: string;
   texto: string;
   confirmar: string;
   cancelar: string;
+  destrutivo?: boolean;
   ocupado?: boolean;
   aoConfirmar: () => void;
   aoCancelar: () => void;
@@ -166,7 +167,7 @@ export function DialogoConfirmar({ titulo, texto, confirmar, cancelar, ocupado =
         <p id={textoId} className="folha-texto">{texto}</p>
         <div className="folha-acoes folha-acoes--par">
           <Botao variante="secundario" disabled={ocupado} onClick={aoCancelar}>{cancelar}</Botao>
-          <Botao variante="secundario" className="modal-confirmar--destrutivo" disabled={ocupado} onClick={aoConfirmar}>{confirmar}</Botao>
+          <Botao variante={destrutivo ? 'secundario' : 'primario'} className={destrutivo ? 'modal-confirmar--destrutivo' : undefined} disabled={ocupado} onClick={aoConfirmar}>{confirmar}</Botao>
         </div>
       </div>
     </div>

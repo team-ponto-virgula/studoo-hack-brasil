@@ -156,6 +156,26 @@
 .perfil-cartao__visitante { margin: 0; line-height: 1.5; }
 .perfil-secao { display: grid; gap: 10px; }
 .perfil-secao__titulo { margin: 0; font-size: 1.125rem; }
+.postar-cabecalho { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+.postar-cabecalho .botao, .postar-botao { min-height: 44px; justify-self: start; }
+.folha-postar .folha-texto { color: var(--texto2); font-size: .875rem; line-height: 1.25rem; }
+.folha-postar .regras-publicacao { margin: 0; }
+.postar-lista { padding: 0; margin: 0; list-style: none; }
+.postar-linha { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 64px; padding: 8px 4px; }
+.postar-linha + .postar-linha { border-top: 1px solid var(--gelo); }
+.postar-capa { display: block; width: 56px; height: 40px; border-radius: 8px; overflow: hidden; }
+.postar-capa svg { display: block; width: 100%; height: 100%; }
+.postar-linha__texto { display: grid; justify-items: start; min-width: 0; }
+.postar-linha__texto strong { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.postar-linha__texto a, .postar-estado { font-size: .8125rem; line-height: 1.125rem; }
+.postar-estado { color: var(--texto2); }
+.postar-estado[data-revisao='pendente'], .postar-estado[data-revisao='recusado'] { padding: 2px 8px; border-radius: 1rem; font-weight: 800; }
+.postar-estado[data-revisao='pendente'] { background: var(--nevoa); }
+.postar-estado[data-revisao='recusado'] { color: #9a5b00; background: #fff6ea; }
+.postar-estado[data-erro] { color: var(--erro); background: none; padding: 0; }
+.trilha-topo__acoes .plano-cartao__menu { position: relative; inset: auto; }
+.trilha-topo__acoes .plano-cartao__opcoes { left: 0; right: auto; }
+
 .perfil-links { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .perfil-link { display: grid; gap: 6px; padding: 14px 16px; border: 2px solid var(--gelo); border-radius: 16px; }
 .perfil-link__titulo {

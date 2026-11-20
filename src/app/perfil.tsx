@@ -35,6 +35,7 @@ import { CartoesDoPerfil } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
 import { SecaoPrivacidade } from './privacidade-perfil';
+import { usePostarNoPerfil } from './postar-no-perfil';
 import { BloqueadasPerfil, EstadoModeracao, RegrasDaRecusa, rotuloDoDestino } from './seguranca-comunidade';
 import { SecaoSomPerfil } from './som';
 import { tocaSons } from './sons';
@@ -138,10 +139,11 @@ export function CabecalhoPublico({ perfil, perfilId, logado }: { perfil: PerfilP
 }
 
 /** Tela Perfil: o cabeçalho novo; as trilhas que a pessoa compartilha; o perfil público; a conta e Sair. */
-export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPerfil, aoMudarLink, abrirPlano, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas, registrarGuarda }: {
+export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarPerfil, aoMudarLink, abrirPlano, sair, anunciar, comunidade = false, aoAdicionado, irParaTrilhas, registrarGuarda }: {
   /** Guarda de saída do editor (alteração não salva pede a confirmação do app ao navegar). */
   registrarGuarda?: (guarda: ((continuar: () => void) => boolean) | null) => void;
   perfil: Perfil | null;
+  focoNome?: number;
   compartilhar: boolean;
   visitante: boolean;
   /** O vazio de "Trilhas que você compartilha" leva a Minhas trilhas. */
@@ -155,7 +157,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
   sair: () => void;
   anunciar: (texto: string) => void;
 }) {
-  const [perfil, setPerfil] = useState<Perfil | null>(inicial);
+  const postagem = usePostarNoPerfil();
   const [erro, setErro] = useState<string | null>(null);
   const [parando, setParando] = useState<LinkCompartilhado | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -167,7 +169,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
   const titulo = useRef<HTMLHeadingElement>(null);
   const [toque, setToque] = useState(false);
   useEffect(() => { setToque(window.matchMedia('(pointer: coarse)').matches); }, []);
-  const assinaturaLinks = perfil?.links.map((link) => `${link.codigo}:${link.visibilidade ?? link.noPerfil}:${link.tema ?? ''}:${link.legenda ?? ''}`).join('|') ?? '';
+  const assinaturaLinks = perfil?.links.map((link) => `${link.codigo}:${link.visibilidade ?? link.noPerfil}:${link.moderacao}:${link.tema ?? ''}:${link.legenda ?? ''}`).join('|') ?? '';
 
   // Os cartões como aparecem na página pública (com a comunidade e perfil público); recarrega quando os links mudam.
   useEffect(() => {
@@ -180,7 +182,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
   useEffect(() => {
     let ativo = true;
     if (!compartilhar) return;
-    cliente.obterPerfil().then((dados) => { if (ativo) { setPerfil(dados); aoMudarPerfil(dados); } })
+    cliente.obterPerfil().then((dados) => { if (ativo) aoMudarPerfil(dados); })
       .catch((falha) => { if (ativo) setErro(codigoDoErro(falha)); });
     return () => { ativo = false; };
     // Recarrega ao abrir a tela (as adições e os links podem ter mudado).
@@ -188,13 +190,6 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
   }, [compartilhar]);
 
   function trocarLink(antigo: LinkCompartilhado, novo: LinkCompartilhado | null) {
-    setPerfil((atual) => {
-      if (!atual) return atual;
-      const links = novo ? atual.links.map((item) => (item.codigo === antigo.codigo ? novo : item)) : atual.links.filter((item) => item.codigo !== antigo.codigo);
-      // O alcance do cartão é o da página pública: só as trilhas no perfil.
-      const noPerfil = links.filter((item) => item.noPerfil);
-      return { ...atual, links, publico: noPerfil.length > 0, alcance: { ...atual.alcance, trilhas: noPerfil.length, pessoas: noPerfil.reduce((t, l) => t + l.adicoes, 0) } };
-    });
     aoMudarLink(antigo.planoId, novo);
   }
 
@@ -241,8 +236,8 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
             <div className="perfil-cartao"><p className="perfil-cartao__visitante">{p.visitante}</p></div>
           ) : !perfil.nome || editando ? (
             // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
-            <EditorPerfil perfil={perfil} anunciar={anunciar} registrarGuarda={registrarGuarda}
-              aoMudarPerfil={(novo) => { setPerfil(novo); aoMudarPerfil(novo); }}
+            <EditorPerfil perfil={perfil} focoNome={focoNome} anunciar={anunciar} registrarGuarda={registrarGuarda}
+              aoMudarPerfil={aoMudarPerfil}
               aoFechar={perfil.nome ? () => { setEditando(false); titulo.current?.focus(); } : undefined} />
           ) : (
             <div className="perfil-topo">
@@ -261,8 +256,12 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
 
           {!perfil.visitante && (
             <section className="perfil-secao" aria-labelledby="perfil-compartilhadas">
-              <h2 id="perfil-compartilhadas" className="perfil-secao__titulo">{perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas}</h2>
+              <div className="postar-cabecalho">
+                <h2 id="perfil-compartilhadas" className="perfil-secao__titulo">{perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas}</h2>
+                {perfil.links.length > 0 && postagem && <Botao variante="secundario" onClick={postagem.abrir}>{p.postar.botao}</Botao>}
+              </div>
               {perfil.links.length === 0 ? (
+                postagem ? <><p className="folha-texto">{p.postar.vazio}</p><Botao variante="secundario" className="postar-botao" onClick={postagem.abrir}>{p.postar.botao}</Botao></> :
                 <p className="folha-texto">
                   {p.nenhumaAntes} {irParaTrilhas ? <button type="button" className="link-texto" onClick={irParaTrilhas}>{p.nenhumaLink}</button> : p.nenhumaLink}{p.nenhumaDepois(toque)}
                 </p>
@@ -335,7 +334,7 @@ export function TelaPerfil({ perfil: inicial, compartilhar, visitante, aoMudarPe
       </section>
       {folha && (
         <FolhaCompartilhar planoId={folha} visitante={false} comunidade={comunidade} anunciar={anunciar} aoFechar={() => setFolha(null)}
-          aoMudarPerfil={(novo) => { setPerfil(novo); aoMudarPerfil(novo); }}
+          aoMudarPerfil={aoMudarPerfil}
           aoMudarLink={(planoId, novo) => {
             const antigo = perfil?.links.find((item) => item.planoId === planoId);
             if (antigo) trocarLink(antigo, novo); else aoMudarLink(planoId, novo);
@@ -357,8 +356,9 @@ type ErrosCampos = { nome?: string; resumo?: string };
  * liga quando algo muda, com o estado sempre à vista e o erro no próprio campo. `aoFechar` (perfil com dados): o
  * "Cancelar" e o salvar voltam para o perfil como os outros veem.
  */
-export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda, aoFechar }: {
+export function EditorPerfil({ perfil, focoNome, aoMudarPerfil, anunciar, registrarGuarda, aoFechar }: {
   perfil: Perfil;
+  focoNome?: number;
   aoMudarPerfil: (perfil: Perfil) => void;
   anunciar: (texto: string) => void;
   /** Qualquer navegação passa pela guarda; com alteração não salva, recebe a confirmação do app. */
@@ -394,6 +394,11 @@ export function EditorPerfil({ perfil, aoMudarPerfil, anunciar, registrarGuarda,
   const abertoPeloEditar = useRef(Boolean(aoFechar));
   const tituloBloco = useRef<HTMLHeadingElement>(null);
   useEffect(() => { if (abertoPeloEditar.current) tituloBloco.current?.focus(); }, []);
+  useEffect(() => {
+    if (!focoNome) return;
+    const quadro = requestAnimationFrame(() => campoNome.current?.focus());
+    return () => cancelAnimationFrame(quadro);
+  }, [focoNome]);
   useEffect(() => { if (alterado && estado === 'salvo') setEstado('livre'); }, [alterado, estado]);
 
   const alteradoRef = useRef(alterado);
