@@ -244,7 +244,7 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
           ) : !perfil.nome || editando ? (
             // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
             <EditorPerfil perfil={perfil} focoNome={focoNome} anunciar={anunciar} registrarGuarda={registrarGuarda}
-              aoMudarPerfil={(novo) => { setPerfil(novo); aoMudarPerfil(novo); }}
+              aoMudarPerfil={aoMudarPerfil}
               aoSalvo={() => { fecharEditor(); avisarSalvo(p.salvo, null); }}
               aoFechar={perfil.nome ? fecharEditor : undefined} />
           ) : (
