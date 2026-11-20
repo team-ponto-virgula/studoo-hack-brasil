@@ -30,6 +30,7 @@ import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaC
 import { PerfilSemSocial, TelaPerfil } from './perfil';
 import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, ProvedorBloqueio, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
+import { FolhaPostarNoPerfil, erroDePostar, estadoNoPerfil, ligadaNoPerfil, useAcoesDePostar } from './postar-perfil';
 import { tocaSons } from './sons';
 
 /*
@@ -591,6 +592,39 @@ export function Estudo({ cliente, sair, expirar }: {
     setEtapa((atual) => ('plano' in atual && atual.plano.id === planoId ? { ...atual, plano: { ...atual.plano, link: marca } } : atual));
   }
 
+  /**
+   * Postar no perfil (spec 10, 20/11): o atalho do "•••" faz o mesmo que a chave da folha, com os mesmos avisos e a mesma
+   * confirmação. Na primeira publicação no perfil, ou sem nome, abre a folha, para a linha das regras e o nome virem antes.
+   */
+  const [folhaPostar, setFolhaPostar] = useState(false);
+  function aplicarLinkNoPerfil(planoId: string, novo: LinkCompartilhado) {
+    mudarLink(planoId, novo);
+    setPerfil((atual) => {
+      if (!atual) return atual;
+      const existe = atual.links.some((item) => item.planoId === planoId);
+      const links = existe ? atual.links.map((item) => (item.planoId === planoId ? novo : item)) : [novo, ...atual.links];
+      return { ...atual, links, publico: links.some((item) => item.noPerfil) };
+    });
+  }
+  const acoesDePostar = useAcoesDePostar({ cliente, aoMudarLink: aplicarLinkNoPerfil });
+  async function postarPeloMenu(plano: PlanoResumo) {
+    let atual = perfil;
+    try {
+      if (!atual) { atual = await cliente.obterPerfil(); setPerfil(atual); }
+      const link = atual.links.find((item) => item.planoId === plano.id) ?? null;
+      if (!ligadaNoPerfil(estadoNoPerfil(link))) {
+        if (!atual.nome?.trim() || !atual.links.some((item) => item.noPerfil)) { setFolhaPostar(true); return; }
+        await acoesDePostar.ligar(plano.id, link);
+      } else if (link) {
+        await acoesDePostar.desligar(plano.id, link);
+      }
+    } catch (falha) {
+      avisoDoApp.avisar(erroDePostar(falha), { icone: 'alerta' });
+    }
+  }
+  const postarDe = (plano: PlanoResumo) => (abrirFolha && comunidade && !plano.recebida && !perfil?.visitante
+    ? { noPerfil: Boolean(plano.link?.noPerfil), acao: () => void postarPeloMenu(plano) } : undefined);
+
   /** Trilha adicionada pelo link (ou já tinha): abre o mapa dela, com o aviso de quem compartilhou. Como na web. */
   async function aoAdicionarPorLink(planoId: string, nomeDono: string, jaTinha: boolean) {
     try {
@@ -672,6 +706,11 @@ export function Estudo({ cliente, sair, expirar }: {
       <FolhaCompartilhar cliente={cliente} planoId={folha} visitante={Boolean(perfil?.visitante)} comunidade={comunidade}
         aoFechar={() => { setFolha(null); setVersaoFolha((versao) => versao + 1); }} aoMudarLink={mudarLink} aoMudarPerfil={setPerfil} />
     )}
+    {folhaPostar && perfil && (
+      <FolhaPostarNoPerfil cliente={cliente} perfil={perfil} aoFechar={() => setFolhaPostar(false)} aoMudarLink={aplicarLinkNoPerfil}
+        editarPerfil={() => { setFolhaPostar(false); abrir({ tipo: 'perfil' }); }} novaTrilha={() => { setFolhaPostar(false); abrir({ tipo: 'objetivo' }); }} />
+    )}
+    {acoesDePostar.confirmacao}
     {/* A passagem da criação: o círculo da cor da aula cresce do nó 1 por cima de tudo e some quando a aula já entrou. */}
     {passagem && <PassagemDaCriacao passagem={passagem} aoTerminar={() => setPassagem(null)} />}
     {confirmacao && (
@@ -754,7 +793,7 @@ export function Estudo({ cliente, sair, expirar }: {
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
         sair={pedirParaSair} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
         aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico}
-        aoSessaoTerminada={() => void expirarGuardando()} />;
+        aoSessaoTerminada={() => void expirarGuardando()} novaTrilha={() => abrir({ tipo: 'objetivo' })} />;
     }
 
     if (etapa.tipo === 'explorar' && comunidade) {
@@ -810,7 +849,7 @@ export function Estudo({ cliente, sair, expirar }: {
                 <CartaoDestaque plano={destaque} indice={planos.indexOf(destaque)} sincronia={sincronia} ocupado={ocupado}
                   abrir={() => void abrirPlano(destaque.id)} apagar={() => pedirParaApagar(destaque)}
                   configurar={() => abrir({ tipo: 'configuracoes', planoId: destaque.id, volta: 'planos' })}
-                  compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined} />
+                  compartilhar={abrirFolha && !destaque.recebida ? () => abrirFolha(destaque.id) : undefined} postar={postarDe(destaque)} />
               )}
               {restantes.length > 0 && (
                 <Text accessibilityRole="header" style={[estudoEstilos.secaoTitulo, caixaAlta]}>{mensagens.planos.outrasTrilhas}</Text>
@@ -821,7 +860,7 @@ export function Estudo({ cliente, sair, expirar }: {
                 <CartaoPlano key={plano.id} plano={plano} indice={planos.indexOf(plano)} ocupado={ocupado} secundario
                   abrir={() => void abrirPlano(plano.id)} apagar={() => pedirParaApagar(plano)}
                   configurar={() => abrir({ tipo: 'configuracoes', planoId: plano.id, volta: 'planos' })}
-                  compartilhar={abrirFolha && !plano.recebida ? () => abrirFolha(plano.id) : undefined} />
+                  compartilhar={abrirFolha && !plano.recebida ? () => abrirFolha(plano.id) : undefined} postar={postarDe(plano)} />
               ))}
               </View>}
             </>
@@ -2144,7 +2183,8 @@ function BarraProgresso({ progresso, testID, naFaixa = false, comPercentual = fa
  * sincronia, o título, o progresso com a porcentagem e o único botão primário da tela. Com tudo concluído, o rótulo vira
  * "Você concluiu suas trilhas!" e a ação, rever. O "Apagar" continua discreto, como nos outros cartões.
  */
-function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, compartilhar, configurar }: {
+function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, compartilhar, configurar, postar }: {
+  postar?: AtalhoPostar;
   plano: PlanoResumo;
   indice: number;
   sincronia: Sincronia;
@@ -2186,7 +2226,7 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
       </View>
       {/* Como .plano-cartao__menu da web: o "•••" dentro da arte, 8 do topo e da direita dela (24 do cartão), com o "Apagar"
           num balão embaixo. */}
-      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} testID="apagar-destaque" estilo={estudoEstilos.menuDestaque} />
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} postar={postar} testID="apagar-destaque" estilo={estudoEstilos.menuDestaque} />
       <View style={estudoEstilos.destaqueCorpo}>
         <View style={estudoEstilos.destaqueTopo}>
           <Text style={[estudoEstilos.destaqueRotulo, caixaAlta]}>{(concluido ? mensagens.retomada.concluido : mensagens.retomada.titulo)}</Text>
@@ -2207,7 +2247,8 @@ function CartaoDestaque({ plano, indice, sincronia, ocupado, abrir, apagar, comp
  * Cartão de um plano em Meus planos, como na web: uma faixa do mundo (cada plano numa região), o título, o progresso e a
  * ação que cabe: começar, continuar ou rever a trilha concluída.
  */
-function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, configurar, secundario = false }: {
+function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, configurar, secundario = false, postar }: {
+  postar?: AtalhoPostar;
   /** "Configurações" no menu "•••", antes de "Apagar". */
   configurar: () => void;
   /** "Compartilhar" no menu "•••", acima de "Apagar" (só na trilha da própria pessoa, com o compartilhar ligado). */
@@ -2260,7 +2301,7 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, conf
             nomeAcessivel={`${acao}: ${plano.titulo}`} desativado={ocupado} acao={abrir} />
         </View>
       </View>
-      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} testID={`apagar-plano-${indice}`} />
+      <MenuDoCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} postar={postar} testID={`apagar-plano-${indice}`} />
     </View>
     </Animated.View>
   );
@@ -2271,10 +2312,16 @@ function CartaoPlano({ plano, indice, ocupado, abrir, apagar, compartilhar, conf
  * "Compartilhar" (só nas trilhas da pessoa), "Configurações" e, por último, depois de uma linha, "Apagar" em vermelho, que
  * pede confirmação.
  */
-function MenuDoCartao({ titulo, ocupado, apagar, compartilhar, configurar, testID, estilo }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; configurar: () => void; testID: string; estilo?: StyleProp<ViewStyle> }) {
+/** O atalho "Postar no meu perfil" / "Tirar do meu perfil" do "•••" (spec 10): se a trilha já está no perfil e o que fazer. */
+type AtalhoPostar = { noPerfil: boolean; acao: () => void };
+
+function MenuDoCartao({ titulo, ocupado, apagar, compartilhar, configurar, postar, testID, estilo }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; configurar: () => void; postar?: AtalhoPostar; testID: string; estilo?: StyleProp<ViewStyle> }) {
   const acoes: AcaoDoMenu[] = [
     ...(compartilhar ? [{ rotulo: mensagens.compartilhar.entrada, icone: 'compartilhar' as const, aoEscolher: compartilhar, testID: `${testID}-compartilhar`,
       nomeAcessivel: mensagens.compartilhar.entradaRotulo(titulo) }] : []),
+    // Spec 10: logo depois de "Compartilhar"; o menu fica com Compartilhar, este, Configurações e Apagar.
+    ...(postar ? [{ rotulo: postar.noPerfil ? mensagens.perfil.postar.menuTirar : mensagens.perfil.postar.menuPostar, icone: 'pessoa' as const,
+      aoEscolher: postar.acao, testID: `${testID}-postar` }] : []),
     { rotulo: mensagens.configuracoes.entrada, icone: 'engrenagem', aoEscolher: configurar, testID: `${testID}-configuracoes`,
       nomeAcessivel: mensagens.configuracoes.entradaRotulo(titulo) },
     { rotulo: mensagens.planos.apagar, icone: 'lixeira', aoEscolher: apagar, perigo: true, testID, nomeAcessivel: mensagens.planos.apagarRotulo(titulo) },
