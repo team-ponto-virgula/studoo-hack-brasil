@@ -927,6 +927,7 @@ button { touch-action: manipulation; }
 .recuperar { max-width: 540px; margin: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(32px, env(safe-area-inset-bottom)); }
 .recuperar-cartao { margin-top: 32px; padding: 28px; border: 2px solid var(--gelo); border-radius: 24px; background: var(--fundo); }
 .recuperar-cartao .formulario { margin-top: 24px; }
+.cadastro-links { display: grid; justify-items: center; gap: 4px; margin-top: 12px; text-align: center; }
 .recuperar-cartao > .acesso-link { margin-top: 16px; }
 .entrada-privacidade { justify-self: center; font-size: 0.875rem; color: var(--texto2); }
 .recuperar-simbolo { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 20px; border-radius: 18px; color: var(--acao); background: var(--nevoa); }
