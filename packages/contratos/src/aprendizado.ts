@@ -409,8 +409,8 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
       const texto = busca.toString();
       return solicitar<PaginaExplorar>(`/explorar${texto ? `?${texto}` : ""}`);
     },
-    bloqueados: () => solicitar<{ itens: { id: string; nome: string }[] }>('/bloqueios'),
-    bloquear: (alvoTipo: 'perfil' | 'trilha', alvo: string) => solicitar<{ bloqueado: true }>('/bloqueios', 'POST', { alvoTipo, alvo }),
+    bloqueados: () => solicitar<{ itens: { id: string; nome: string; perfilId: string | null }[] }>('/bloqueios'),
+    bloquear: (alvoTipo: 'perfil' | 'trilha', alvo: string) => solicitar<{ bloqueado: true; id: string }>('/bloqueios', 'POST', { alvoTipo, alvo }),
     desbloquear: (id: string) => solicitar<null>(`/bloqueios/${encodeURIComponent(id)}`, 'DELETE'),
     /** Seguir ou deixar de seguir um perfil público (etapa C2). */
     seguir: (perfilId: string, ativo: boolean) => solicitar<ResultadoSeguir>(`/perfis/${encodeURIComponent(perfilId)}/seguir`, "POST", { ativo }),

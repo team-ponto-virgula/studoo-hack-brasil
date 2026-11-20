@@ -150,6 +150,8 @@ export interface LinkCompartilhado {
 
 /** GET /api/perfil */
 export interface Perfil {
+  fotoModeracao?: 'pendente' | 'aprovado' | 'recusado' | null;
+  perfilModeracao?: 'pendente' | 'aprovado' | 'recusado';
   nome: string | null;
   cor: CorPerfil | null;
   resumo: string | null;
