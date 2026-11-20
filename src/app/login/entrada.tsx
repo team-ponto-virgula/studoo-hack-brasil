@@ -24,6 +24,7 @@ const formatoEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 type ConfigAcessoInicial = {
   google: boolean;
   recuperacao: boolean;
+  cadastro?: boolean;
   visitante: boolean;
 };
 
@@ -32,6 +33,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
   const [googleDisponivel, setGoogleDisponivel] = useState(Boolean(configInicial?.google));
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(Boolean(configInicial?.recuperacao));
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(Boolean(configInicial?.visitante));
+  const [cadastroDisponivel, setCadastroDisponivel] = useState(Boolean(configInicial?.cadastro));
   // Depois de "Excluir conta" no Perfil, o login confirma que a conta se foi.
   const [contaExcluida, setContaExcluida] = useState(false);
   useEffect(() => { setContaExcluida(new URLSearchParams(window.location.search).get('conta') === 'excluida'); }, []);
@@ -79,6 +81,7 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
           setGoogleDisponivel(config.google);
           setRecuperacaoDisponivel(Boolean(config.recuperacao));
           setVisitanteDisponivel(Boolean(config.visitante));
+          setCadastroDisponivel(Boolean(config.cadastro));
         }
       })
         .catch(() => undefined).finally(() => { if (ativo) setConfiguracaoCarregada(true); });
@@ -252,6 +255,10 @@ export function Entrada({ configInicial, sessaoVerificada = false }: { configIni
                 <Link className="acesso-link entrada-esqueci" href="/recuperar" onClick={() => {
                   try { sessionStorage.setItem('studoo.recuperar.email', campoEmail.current?.value.trim() ?? ''); } catch { /* A recuperação também funciona sem armazenamento. */ }
                 }}>{mensagens.acesso.esqueci}</Link>
+              )}
+              {configuracaoCarregada && cadastroDisponivel && (
+                <p className="acesso-ajuda entrada-criar">{mensagens.acesso.semConta}{' '}
+                  <Link className="acesso-link" href="/cadastro">{mensagens.acesso.criarConta}</Link></p>
               )}
             </form>
           )}
