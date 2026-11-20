@@ -82,6 +82,7 @@ async function* emitirEventos(
     }
     if (sinal.aborted) return;
 
+    if (!meta) throw new FalhaApi("falha");
     const completo = { ...meta, origem: origemDoConteudo(meta.origem), ...plano, fluxos: acumulado.fluxos };
     if (!esqueletoValido(completo)) {
       throw new FalhaApi("falha");
