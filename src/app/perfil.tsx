@@ -311,7 +311,7 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
           {!perfil.visitante && perfil.nome && (
             <section className="perfil-secao" aria-labelledby="perfil-publico">
               <h2 id="perfil-publico" className="perfil-secao__titulo">{p.publicoTitulo}</h2>
-              <p className="folha-texto">{perfil.publico ? p.publico(perfil.links.filter((link) => link.noPerfil).length) : `${p.privado} ${p.perfilPrivadoDica}`}</p>
+              <p className="folha-texto">{perfil.publico ? p.publico(perfil.links.filter((link) => link.noPerfil).length) : `${p.privado} ${comunidade ? p.perfilPrivadoDica : p.perfilPrivadoDicaSemComunidade}`}</p>
               {perfil.publico && perfil.perfilId && (
                 <a className="botao botao--secundario perfil-ver" href={`/p/${perfil.perfilId}`} target="_blank" rel="noopener">{p.verComoOutros}</a>
               )}

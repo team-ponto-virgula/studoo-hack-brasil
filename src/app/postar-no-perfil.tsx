@@ -153,7 +153,7 @@ function Linha({ plano, link, progresso, alterar }: { plano: PlanoResumo; link?:
   return <li className="postar-linha" aria-busy={salvando || undefined}>
     <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="postar-capa" />
     <div className="postar-linha__texto">
-      <strong id={tituloId}>{plano.titulo}</strong>
+      <strong id={tituloId}><span className="somente-leitor">{p.titulo}: </span>{plano.titulo}</strong>
       <span id={estadoId} role="status" className="postar-estado" data-revisao={salvando ? undefined : revisao} data-erro={!!progresso?.erro || undefined}>{estado}</span>
       {ligada && revisao === 'recusado' && !salvando && <Link href={s.rotas.suporte}>{s.falarComSuporte}</Link>}
     </div>
