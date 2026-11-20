@@ -5,11 +5,20 @@ import { ErroStudoo } from '@studoo/contratos';
 import { criarClienteNativo, guardarToken, origemConfigurada } from './api-nativa';
 
 export const retornoGoogle = () => process.env.EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI ?? 'studoo-dev://auth/google';
+/**
+ * Beta do iPhone pelo TestFlight (spec 07, P27): o perfil `testflight` do eas.json grava
+ * `EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO=desligado` no build. Sem Google, o app não cai na regra 4.8 da Apple (login de
+ * terceiro pede uma opção equivalente, como o "Iniciar sessão com a Apple"): fica só a conta do próprio Studoo (e-mail e
+ * senha, recuperação e visitante, quando o servidor oferece). O botão não aparece e o retorno `auth/google` é recusado,
+ * mesmo que o servidor diga `google: true`. Os outros builds seguem como antes.
+ */
+export const googleNoAparelho = () => process.env.EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO !== 'desligado';
 const chave = () => `studoo.google.${origemConfigurada().host.replace(/[^a-z0-9._-]/gi, '_')}`;
 let emCurso: Promise<string | null> | null = null;
 const trocas = new Map<string, Promise<string>>();
 
 export function entrarComGoogle() {
+  if (!googleNoAparelho()) return Promise.reject(new ErroStudoo('google_indisponivel'));
   if (emCurso) return emCurso;
   emCurso = iniciar().finally(() => { emCurso = null; });
   return emCurso;
@@ -29,6 +38,7 @@ async function iniciar() {
   return concluirGoogle(resultado.url);
 }
 export function concluirGoogle(retorno: string): Promise<string> {
+  if (!googleNoAparelho()) return Promise.reject(new ErroStudoo('google_indisponivel'));
   const url = new URL(retorno); const esperado = new URL(retornoGoogle());
   if (url.protocol !== esperado.protocol || url.host !== esperado.host || url.pathname !== esperado.pathname) {
     return Promise.reject(new ErroStudoo('google_invalido'));

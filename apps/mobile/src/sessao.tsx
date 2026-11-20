@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { AccessibilityInfo, Animated, Keyboard, LayoutAnimation, Platform, Pressable, StyleSheet, Text, View, useWindowDimensions, type TextInput } from 'react-native';
 import { useTremor } from './animacoes';
 import { apagarToken, criarClienteNativo, guardarToken, lerToken, sessaoInvalida, type ClienteNativo } from './api-nativa';
-import { entrarComGoogle } from './google-nativo';
+import { entrarComGoogle, googleNoAparelho } from './google-nativo';
 import { entrarComoVisitante } from './visitante-nativo';
 import { Apresentacao } from './apresentacao';
 import { RecuperarAcesso } from './recuperar';
@@ -218,6 +218,7 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   entrar: (email: string, senha: string) => Promise<void>;
 }) {
   // Como na web (rodada 4A): o Google e o "Esqueci minha senha" só aparecem quando o servidor os oferece; nada apagado.
+  // No beta do iPhone (spec 07, P27), o build pode desligar o Google: aí ele não aparece, mesmo com o servidor oferecendo.
   const [googleDisponivel, setGoogleDisponivel] = useState(false);
   const [recuperacaoDisponivel, setRecuperacaoDisponivel] = useState(false);
   const [visitanteDisponivel, setVisitanteDisponivel] = useState(false);
@@ -241,7 +242,7 @@ function Entrada({ erroInicial, entrar, google, visitante, recuperar }: {
   useEffect(() => {
     let ativo = true;
     void criarClienteNativo().configuracaoAcesso()
-      .then((c) => { if (ativo) { setGoogleDisponivel(c.google); setRecuperacaoDisponivel(c.recuperacao); setVisitanteDisponivel(c.visitante === true); } })
+      .then((c) => { if (ativo) { setGoogleDisponivel(c.google && googleNoAparelho()); setRecuperacaoDisponivel(c.recuperacao); setVisitanteDisponivel(c.visitante === true); } })
       .catch(() => {})
       .finally(() => { if (ativo) setConfiguracaoCarregada(true); });
     return () => { ativo = false; };

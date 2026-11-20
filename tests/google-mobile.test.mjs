@@ -7,7 +7,7 @@ import ts from 'typescript';
 
 const fonte = await readFile(new URL('../apps/mobile/src/google-nativo.ts', import.meta.url), 'utf8');
 const { outputText } = ts.transpileModule(fonte, { compilerOptions: { module: ts.ModuleKind.CommonJS } });
-function ambiente({ cancelado = false, falharArmazenamento = false } = {}) {
+function ambiente({ cancelado = false, falharArmazenamento = false, env = {} } = {}) {
   const dados = new Map(); const chamadas = { troca: 0, logout: 0, salvo: null, url: null };
   const codigo = randomBytes(32).toString('base64url'); const token = randomBytes(32).toString('base64url');
   const chave = 'studoo.google.api.example.test'; const retorno = `studoo-dev://auth/google?codigo=${codigo}`;
@@ -34,7 +34,7 @@ function ambiente({ cancelado = false, falharArmazenamento = false } = {}) {
     },
   };
   const exports = {};
-  runInNewContext(outputText, { exports, require: nome => modulos[nome], URL, process: { env: {} }, setTimeout: () => 0 });
+  runInNewContext(outputText, { exports, require: nome => modulos[nome], URL, process: { env }, setTimeout: () => 0 });
   return { api: exports, dados, chamadas, chave, retorno, token };
 }
 
@@ -77,4 +77,34 @@ test('falha ao guardar a sessão revoga o token recém-criado', async () => {
   await assert.rejects(a.api.entrarComGoogle());
   assert.equal(a.chamadas.logout, 1);
   assert.equal(a.chamadas.salvo, null);
+});
+
+test('beta do iPhone sem Google (spec 07, P27): o build desligado não abre o navegador nem troca código', async () => {
+  const a = ambiente({ env: { EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO: 'desligado' } });
+  assert.equal(a.api.googleNoAparelho(), false);
+  await assert.rejects(a.api.entrarComGoogle(), erro => erro.codigo === 'google_indisponivel');
+  a.dados.set(a.chave, JSON.stringify({ verificador: randomBytes(32).toString('hex'), expiraEm: Date.now() + 60_000 }));
+  await assert.rejects(a.api.concluirGoogle(a.retorno), erro => erro.codigo === 'google_indisponivel');
+  assert.equal(a.chamadas.url, null);
+  assert.equal(a.chamadas.troca, 0);
+  assert.equal(a.chamadas.salvo, null);
+});
+
+test('sem a chave (ou com outro valor), o Google segue ligado como antes', () => {
+  assert.equal(ambiente().api.googleNoAparelho(), true);
+  assert.equal(ambiente({ env: { EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO: 'ligado' } }).api.googleNoAparelho(), true);
+});
+
+test('a entrada só mostra o Google quando o servidor oferece e o build não desligou', async () => {
+  const sessao = await readFile(new URL('../apps/mobile/src/sessao.tsx', import.meta.url), 'utf8');
+  assert.match(sessao, /setGoogleDisponivel\(c\.google && googleNoAparelho\(\)\)/);
+  const eas = JSON.parse(await readFile(new URL('../apps/mobile/eas.json', import.meta.url), 'utf8'));
+  const perfil = eas.build.testflight;
+  assert.equal(perfil.ios.simulator, undefined);
+  assert.equal(perfil.distribution, 'store');
+  assert.equal(perfil.env.EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO, 'desligado');
+  assert.match(perfil.env.EXPO_PUBLIC_STUDOO_API_URL, /^https:\/\//);
+  for (const nome of Object.keys(eas.build).filter(n => n !== 'testflight')) {
+    assert.notEqual(eas.build[nome].env?.EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO, 'desligado', nome);
+  }
 });
