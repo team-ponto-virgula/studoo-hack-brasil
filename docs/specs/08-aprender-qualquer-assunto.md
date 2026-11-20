@@ -98,6 +98,39 @@ A pergunta é uma só: dá para entender o que fazer em 3 segundos? Do mais grav
 - **IA da OpenAI**: a estrutura da trilha traz, para cada lição, um `resumo` (o que a pessoa vai saber fazer), que aparece na prévia. O esquema estrito da lição pede `exemploTipo`, `passos`, `outroJeito`, `recurso`, `falas` (com tradução e pronúncia), `pratica` (com o som de referência no violão) e 2 ou 3 `exercicios` nos seis formatos (ao menos um de produzir a resposta: lacuna, ordenar ou aberta; o normalizador ainda aceita um só), com os critérios da aberta marcados como essenciais ou não e as armadilhas da lacuna e da aberta. O recurso de acorde aceita o `anterior` da troca. Tudo o que as trilhas prontas têm escrito à mão, a IA também escreve. Numa lição de idioma, as frases entre aspas retas do conceito e do exemplo viram aspas curvas, que o app torna tocáveis; fora dos idiomas, as aspas ficam como vieram, porque podem ser código. O normalizador refaz ids, monta o gabarito de ordenar e associar a partir da ordem do modelo e descarta só o opcional que não fecha (uma pronúncia longa demais, um som com cinco cordas, um exercício extra fora do formato), mantendo o resto da lição; uma armadilha que aparece numa resposta certa (no gabarito ou na resposta modelo) sai, e o essencial só vale quando se destaca (no máximo dois, nunca todos). O formato antigo (um `exercicio`, critérios só com o texto) continua aceito.
 - **Modo demonstração** (IA falsa): trilhas prontas, com pelo menos dois exercícios em cada lição (as de inglês têm três, com menos de 40% de “ouça e escolha” e quase metade de produzir a resposta, como “I'm ___ Brazil” e a ordem do check-in no aeroporto; toda escuta tem tradução, e um teste garante). Os números de inglês ficam no exemplo, com os algarismos na tradução, e a explicação fala só do que confunde (‑teen e ‑ty). Quase todas as lições de inglês têm prática com cronômetro (falar em voz alta a apresentação, o balcão do aeroporto, o check-in do hotel, os preços e a viagem inteira na revisão), e a revisão retoma a imigração e o hotel numa resposta aberta. O violão ensina as mãos, a postura e as cordas já na primeira lição, com a afinação como bônus (com um app afinador ou comparando com o Mi que o Studoo toca), sem pressão no primeiro dia; a trilha de inglês tem uma lição de aeroporto (check-in e embarque) e fecha com a revisão, depois do restaurante e conteúdo de verdade para violão, inglês para viagem (com frases para a imigração do aeroporto), culinária básica, história do Brasil, frações e fotografia com o celular (`src/servidor/ia/demos.ts`), além de SQL. Para quem aprende, a origem aparece como “Trilha pronta do Studoo sobre…” (`origemLegivel`), sem jargão técnico. Todas as ideias populares da tela inicial têm trilha pronta (um teste garante). Outros assuntos recebem a trilha genérica, que também usa os formatos novos.
 
+## Sem provedor de IA como fonte (pedido do dono, 20/11)
+
+Palavras do dono: "Nao quero que mostre nunca a fonte, ia deepseek". Vale para web, Android e iPhone e entra na candidata do TestFlight. Ainda não implementado.
+
+**A regra:** o nome do provedor de IA (DeepSeek, OpenAI) e o do modelo (por exemplo, "deepseek-flash") nunca aparecem como fonte, origem ou autoria do conteúdo. No lugar da linha, não fica nada: nem outra frase, nem "Gerado por IA". A trilha é do Studoo.
+
+**Onde a linha da origem sai** (o campo `origem` deixa de aparecer em qualquer tela; hoje ele vem por `origemLegivel`):
+
+| Tela | Hoje | Fica |
+|---|---|---|
+| Lição, balão "O Stu explica" (web `aula.tsx`, app `licao.tsx`) | "Fonte · IA da DeepSeek (deepseek-flash)" | sem a linha; o balão termina no texto ou nos marcadores [1] do material |
+| Proposta da trilha (web `previa-trilha.tsx`, app `estudo.tsx`, `geracao.origem`) | "Fonte: …" | sem a linha. O texto `geracao.ia` ("Gerada por IA a partir do seu pedido. Confira as lições antes de começar.") continua, porque não cita provedor e avisa que é preciso conferir |
+| Folha e prévia de compartilhar, Explorar, perfil e páginas públicas `/t` e `/p` (web `compartilhar.tsx` e `p/[id]/page.tsx`, app `social.tsx` e `comunidade.tsx`) | "N lições · <origem>" | "N lições" |
+| Imagens de prévia do link (`src/servidor/og`) | — | conferir que nenhuma traz a origem |
+
+Isso vale também para o modo demonstração. Lá, a proposta já diz "Trilha pronta do Studoo, a mais próxima do seu pedido." (`geracao.demonstracao`), e a linha da origem também sai, para todas as telas seguirem uma regra só.
+
+**O que continua:**
+- **A fonte do material da própria pessoa:** os marcadores [1], [2] e o cartão da citação da lição ("Fonte do seu material", "Material de <nome>"); no Estúdio, "De onde veio esta ideia". É um dos quatro momentos do roteiro da demo, e a fonte é o material, não a IA.
+- **As telas de privacidade**, que dizem a quem o dado vai (regra 5.1.2(i) da Apple): o cartão "Permitir o uso de IA?", os avisos de envio de material, de gravação e da voz ao vivo, Perfil "Privacidade e dados" e a Política de privacidade. Elas não mudam. Nenhuma delas é "fonte" de conteúdo.
+
+**Dado antigo:** as trilhas criadas antes guardam "IA da DeepSeek (…)" ou "IA da OpenAI (…)". Como a linha some das telas, o dado antigo também não aparece. O que o servidor grava daqui em diante e o que as respostas públicas (`/api/compartilhar`, `/t`, `/p`, prévia) levam é decisão do Web & API, sem migração destrutiva.
+
+**Textos:** saem do contrato `licao.origem` ("Fonte") e `geracao.origem` ("Fonte: …"). `origemLegivel` deixa de ser usado em tela.
+
+**Aceite** (390, web e app, a mesma lição da captura do dono, mais uma trilha de demonstração e uma com material):
+- E1: o balão "O Stu explica" termina no texto, sem "Fonte".
+- E2: a proposta mostra "Gerada por IA a partir do seu pedido…", sem "Fonte:".
+- E3: os cartões do Explorar e do perfil, a prévia de compartilhar, `/t` e `/p` mostram só "N lições".
+- E4: a lição com material mostra os marcadores e o cartão da citação, como hoje.
+- E5: o cartão de aceite de IA e os avisos de material, gravação e voz continuam com o nome do provedor.
+- Teste: nenhum texto de tela traz "DeepSeek", "OpenAI" ou um nome de modelo, fora da lista de telas de privacidade acima.
+
 ## Quando a pessoa erra
 
 O retorno de erro dá uma pista, sem entregar a resposta: nas trilhas prontas, um teste garante que a dica não repete a opção certa, não começa por “É falsa” e não cita todos os pares. O título é **Quase lá!** só quando parte da resposta está certa (itens na posição, pares, o valor ou o porquê, critérios); sem nada certo, **Não foi dessa vez**. No erro, a pessoa pode tentar de novo ou **Pular por agora**; quem pula termina com menos acertos no resumo e a sugestão de rever.
