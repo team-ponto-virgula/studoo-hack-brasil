@@ -1021,7 +1021,6 @@ export const mensagens = {
         abrirExistente: 'Abrir a que já existe',
         montadaDoPedido: 'Preparando a trilha para o seu pedido…',
         demonstracao: 'Trilha pronta do Studoo, a mais próxima do seu pedido. Confira as lições antes de começar.',
-        origem: (origem: string) => `Fonte: ${origem}`,
         cancelar: 'Cancelar',
         comecar: 'Começar',
         ajustar: 'Ajustar pedido',
@@ -1153,7 +1152,6 @@ export const mensagens = {
             pratica: 'Prática'
         },
         avancar: 'Ir para a próxima lição',
-        origem: 'Fonte',
         progresso: 'Progresso na trilha',
         demonstracao: 'Demonstração',
         exercicioDe: (atual: number, total: number) => `Exercício ${atual} de ${total}`,
