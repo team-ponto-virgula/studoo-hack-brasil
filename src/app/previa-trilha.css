@@ -11,12 +11,20 @@
 .previa-cabecalho h1 { color: var(--texto); font-size: clamp(1rem, 2vw, 1.4rem); line-height: 1.22; overflow-wrap: anywhere; }
 .previa-voltar { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border: 0; border-radius: 50%; background: var(--nevoa); color: var(--texto2); cursor: pointer; }
 .previa-voltar .icone { width: 20px; transform: rotate(180deg); }
-.previa-palco { display: grid; grid-template-rows: auto minmax(0,1fr); min-height: 0; background: #e3f3e8; }
+.previa-palco { position: relative; display: grid; grid-template-rows: auto minmax(0,1fr); min-height: 0; background: #e3f3e8; }
 .previa-placa {
   z-index: 3; align-self: start; width: min(calc(100% - 32px), 44rem); margin: 12px auto 0; padding: 10px 14px;
   border: 1px solid #f0cb74; border-radius: 16px; color: var(--texto); background: #fff9ea; font-size: .94rem; font-weight: 800;
 }
 .previa-mapa { --passo: max(158px,10rem); --centro: max(64px,4rem); --fronteira: 48px; container-type: size; background: var(--chao); overflow: auto; overscroll-behavior: contain; min-height: 0; scrollbar-color: #a8bcca transparent; scrollbar-width: thin; }
+.previa-seguir {
+  position: absolute; z-index: 3; inset: auto auto 16px 50%; transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px;
+  border: 0; border-radius: 999px; background: var(--acao); color: white;
+  font: inherit; font-weight: 800; white-space: nowrap; cursor: pointer;
+  box-shadow: 0 3px 0 var(--acao-escura);
+}
+.previa-seguir .icone { width: 18px; height: 18px; transform: rotate(90deg); }
 .painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-mapa { overflow: hidden; }
 /* A altura do mapa já exclui a placa e o rodapé, inclusive quando entra a mensagem de espera. */
 .painel--geracao:is([data-fase=salvando],[data-fase=criada]) .previa-percurso::before {
