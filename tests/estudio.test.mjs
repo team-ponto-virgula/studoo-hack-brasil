@@ -7,6 +7,9 @@ import { cookieSessao } from '../src/servidor/acesso/origem.ts';
 import { POST as demoHttp } from '../src/app/api/estudio/materiais/demo/route.ts';
 import { lerArquivo } from '../src/servidor/estudio/http.ts';
 import { banco } from '../src/servidor/banco/cliente.ts';
+import { VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
+// Estes testes simulam a OpenAI e a DeepSeek: as contas já aceitaram o envio a IA de terceiros (o aceite tem teste próprio).
+const aceiteIa = { consentimentoIaEm: new Date(), consentimentoIaVersao: VERSAO_CONSENTIMENTO_IA };
 import {
   criarMaterial,
   proporMaterial,
@@ -41,7 +44,7 @@ const codigo = (c) => (e) => e.codigo === c;
 const usuarios = [];
 async function pessoa() {
   const u = await banco.usuario.create({
-    data: { email: `estudio-${crypto.randomUUID()}@example.test`, fuso: 'UTC' },
+    data: { email: `estudio-${crypto.randomUUID()}@example.test`, fuso: 'UTC', ...aceiteIa },
   });
   usuarios.push(u.id);
   return u.id;

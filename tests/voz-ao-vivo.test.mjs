@@ -10,6 +10,9 @@ import { criarSessao } from '../src/servidor/acesso/sessao.ts';
 import { DOMINIO_EMAIL_VISITANTE, PREFIXO_EMAIL_VISITANTE } from '../src/servidor/acesso/visitante.ts';
 import { aceitarProposta, gerarProposta } from '../src/servidor/aprendizado/servico.ts';
 import { banco } from '../src/servidor/banco/cliente.ts';
+import { VERSAO_CONSENTIMENTO_IA } from '@studoo/contratos/privacidade';
+// Estes testes simulam a OpenAI e a DeepSeek: as contas já aceitaram o envio a IA de terceiros (o aceite tem teste próprio).
+const aceiteIa = { consentimentoIaEm: new Date(), consentimentoIaVersao: VERSAO_CONSENTIMENTO_IA };
 import { buscarApoio, ensinarStu } from '../src/servidor/estudio/apoio.ts';
 import { consumirGeracaoPersistente } from '../src/servidor/ia/limite.ts';
 import {
@@ -34,7 +37,7 @@ const chavesLimite = [];
 
 async function criarUsuario(email = `voz-${crypto.randomUUID()}@example.test`) {
   const u = await banco.usuario.create({
-    data: { email, fuso: 'UTC' },
+    data: { email, fuso: 'UTC', ...aceiteIa },
   });
   usuarios.push(u.id);
   const { token } = await criarSessao(u.id);
