@@ -71,13 +71,13 @@ export function Cadastro({ googleDisponivel }: { googleDisponivel: boolean }) {
     <section className="recuperar-cartao">
       <div className="recuperar-simbolo" aria-hidden="true"><Icone nome="cadeado" /></div>
       <h1 ref={titulo} tabIndex={-1}>{m.titulo}</h1>
+      {etapa === 'email' && googleDisponivel && <div className="cadastro-google">
+        <BotaoGoogle ocupado={ocupado} />
+        <p className="acesso-divisor">{m.ou}</p>
+      </div>}
       <p className="introducao">{etapa === 'email' ? m.instrucao : m.validade}</p>
       <form className="formulario" noValidate aria-busy={ocupado}
         onSubmit={etapa === 'email' ? (e) => { e.preventDefault(); enviar(); } : criar}>
-        {etapa === 'email' && googleDisponivel && <>
-          <BotaoGoogle ocupado={ocupado} />
-          <p className="acesso-divisor">{mensagens.acesso.ou}</p>
-        </>}
         <div className="campo"><label htmlFor="cadastro-email">{m.email}</label>
           <input id="cadastro-email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email}
             disabled={ocupado || etapa === 'codigo'} maxLength={254} required

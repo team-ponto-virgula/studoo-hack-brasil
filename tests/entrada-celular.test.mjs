@@ -12,7 +12,12 @@ test('entrada e cadastro usam o mesmo Google colorido, decorativo e com densidad
   const cadastro = readFileSync(join(raiz, 'src/app/cadastro/cadastro.tsx'), 'utf8');
   const google = readFileSync(join(raiz, 'src/app/botao-google.tsx'), 'utf8');
   assert.match(entrada, /googleDisponivel && \(\s*<BotaoGoogle ocupado=\{enviando\}/);
-  assert.match(cadastro, /etapa === 'email' && googleDisponivel && <>\s*<BotaoGoogle ocupado=\{ocupado\}/);
+  assert.match(cadastro, /etapa === 'email' && googleDisponivel && <div[^>]*>\s*<BotaoGoogle ocupado=\{ocupado\}/);
+  const botao = cadastro.indexOf('<BotaoGoogle');
+  const divisor = cadastro.indexOf('{m.ou}');
+  const instrucao = cadastro.indexOf('m.instrucao');
+  assert.ok(botao < divisor && divisor < instrucao && instrucao < cadastro.indexOf('id="cadastro-email"'));
+  assert.match(entrada, /mensagens\.acesso\.ou/);
   assert.match(google, /alt="" aria-hidden="true"/);
   assert.match(google, /width=\{20\} height=\{20\}/);
   assert.match(google, /\{mensagens\.acesso\.google\}/);
