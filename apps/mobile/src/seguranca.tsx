@@ -124,7 +124,7 @@ export function EstadoDaPublicacao({ moderacao, testID }: { moderacao: EstadoMod
       </View>
       <Text style={seg.estadoTexto}>{recusada ? s.naoPublicada : s.emRevisao}</Text>
       {recusada && (
-        <Text accessibilityRole="link" onPress={() => abrirPaginaDoStudoo(s.rotas.suporte)} style={seg.link}>{s.falarComSuporte}</Text>
+        <Text accessibilityRole="link" onPress={() => abrirPaginaDoStudoo(s.rotas.suporte)} style={[seg.estadoTexto, seg.link]}>{s.falarComSuporte}</Text>
       )}
     </View>
   );
