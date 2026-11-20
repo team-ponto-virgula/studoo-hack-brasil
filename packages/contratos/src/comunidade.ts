@@ -266,7 +266,7 @@ export interface ConfiguracoesTrilha {
   /** Código para desenhar a capa padrão (o do link, ou o id da trilha sem link). */
   semente: string;
   /** Quem pode ver: `null` quando a trilha não tem link (só a dona vê). */
-  compartilhamento: { codigo: string; visibilidade: Visibilidade; estudando: number; valeus: number } | null;
+  compartilhamento: { codigo: string; visibilidade: Visibilidade; estudando: number; valeus: number; moderacao?: "pendente" | "aprovado" | "recusado" } | null;
   /** Trilha adicionada de outra pessoa: a cópia é dela, mas não se compartilha de novo. */
   recebida: boolean;
 }

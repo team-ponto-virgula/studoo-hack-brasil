@@ -409,12 +409,15 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
       const texto = busca.toString();
       return solicitar<PaginaExplorar>(`/explorar${texto ? `?${texto}` : ""}`);
     },
+    bloqueados: () => solicitar<{ itens: { id: string; nome: string }[] }>('/bloqueios'),
+    bloquear: (alvoTipo: 'perfil' | 'trilha', alvo: string) => solicitar<{ bloqueado: true }>('/bloqueios', 'POST', { alvoTipo, alvo }),
+    desbloquear: (id: string) => solicitar<null>(`/bloqueios/${encodeURIComponent(id)}`, 'DELETE'),
     /** Seguir ou deixar de seguir um perfil público (etapa C2). */
     seguir: (perfilId: string, ativo: boolean) => solicitar<ResultadoSeguir>(`/perfis/${encodeURIComponent(perfilId)}/seguir`, "POST", { ativo }),
     /** As Novidades da própria pessoa (últimos 7 dias). */
     novidades: () => solicitar<Novidades>("/perfil/novidades"),
     valeu: (codigo: string, ativo: boolean) => solicitar<ResultadoValeu>(`/compartilhar/${encodeURIComponent(codigo)}/valeu`, "POST", { ativo }),
-    denunciar: (alvoTipo: "trilha" | "perfil", alvo: string, motivo: MotivoDenuncia) => solicitar<{ registrada: true }>("/denuncias", "POST", { alvoTipo, alvo, motivo }),
+    denunciar: (alvoTipo: "trilha" | "perfil", alvo: string, motivo: MotivoDenuncia) => solicitar<{ registrada: true; protocolo: string }>("/denuncias", "POST", { alvoTipo, alvo, motivo }),
     /** Encerra o link; as cópias de quem já adicionou continuam. */
     encerrarLink: (codigo: string) => solicitar<{ encerrado: true }>(`/compartilhar/${encodeURIComponent(codigo)}`, "DELETE"),
     trilhaCompartilhada: (codigo: string) => solicitar<TrilhaCompartilhada>(`/compartilhar/${encodeURIComponent(codigo)}`),
