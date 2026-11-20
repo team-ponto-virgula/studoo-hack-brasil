@@ -18,9 +18,9 @@ export function useEstadoSom(): EstadoSomSnapshot {
 }
 
 /** A chave do Studoo (nunca a do sistema): 52 × 32, trilho cinza ou azul, botão branco que anda 20 px. */
-export function ChaveStudoo({ ligada, aoMudar, rotuloId, descricaoId }: { ligada: boolean; aoMudar: (ligada: boolean) => void; rotuloId: string; descricaoId?: string }) {
+export function ChaveStudoo({ ligada, aoMudar, rotuloId, descricaoId, desabilitada }: { ligada: boolean; aoMudar: (ligada: boolean) => void; rotuloId: string; descricaoId?: string; desabilitada?: boolean }) {
   return (
-    <button type="button" role="switch" aria-checked={ligada} aria-labelledby={rotuloId} aria-describedby={descricaoId} className="chave-studoo"
+    <button type="button" role="switch" aria-checked={ligada} aria-labelledby={rotuloId} aria-describedby={descricaoId} disabled={desabilitada} className="chave-studoo"
       onClick={() => aoMudar(!ligada)}>
       <span className="chave-studoo__botao" aria-hidden="true" />
     </button>

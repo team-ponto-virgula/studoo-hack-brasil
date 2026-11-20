@@ -124,20 +124,19 @@ export function DialogoDenuncia({ alvoTipo, alvo, alvoNome, aoFechar, aoEnviar }
 
 
 type Aviso = { texto: string; bloqueio?: string; alvo?: Alvo; imediato?: boolean };
-function FaixaComunidade({ aviso, aoFechar, aoAgir }: { aviso: Aviso; aoFechar: () => void; aoAgir: () => void }) {
+export function FaixaComunidade({ texto, acao, aoFechar, aoAgir }: { texto: string; acao?: string; aoFechar: () => void; aoAgir?: () => void }) {
   const [pausado, pausar] = useState(false);
   const inicioToque = useRef<number | null>(null);
-  const acao = aviso.alvo ? seg.bloquearAcao : aviso.bloqueio ? seg.desfazer : null;
   useEffect(() => {
     if (pausado) return;
     const id = window.setTimeout(aoFechar, acao ? 7000 : 4500);
     return () => window.clearTimeout(id);
-  }, [aviso, acao, pausado, aoFechar]);
+  }, [texto, acao, pausado, aoFechar]);
   return <aside className="aviso-app seguranca-faixa" onMouseEnter={() => pausar(true)} onMouseLeave={() => pausar(false)}
     onFocus={() => pausar(true)} onBlur={() => pausar(false)}
     onTouchStart={e => { inicioToque.current = e.touches[0].clientY; }}
     onTouchEnd={e => { if (inicioToque.current !== null && e.changedTouches[0].clientY - inicioToque.current > 40) aoFechar(); inicioToque.current = null; }}>
-    <p><Icone nome="check" /><span role="status" aria-live="polite">{aviso.texto}</span>
+    <p><Icone nome="check" /><span role="status" aria-live="polite">{texto}</span>
       {acao && <button type="button" onClick={aoAgir}>{acao}</button>}</p>
   </aside>;
 }
@@ -183,7 +182,7 @@ export function SegurancaComunidade({ children }: { children: ReactNode }) {
       aoFechar={() => abrir(null)} aoEnviar={protocolo => { avisar({ texto: seg.denunciaEnviada(protocolo), alvo: dialogo.alvo }); atualizar(); }} />}
     {erro && <p className="seguranca-aviso" role="alert">{erro}<button onClick={() => falhar('')}>Fechar</button></p>}
     {aviso && !dialogo && (aviso.imediato || (caminho === '/explorar' && lida === versao)) &&
-      <FaixaComunidade aviso={aviso} aoFechar={fecharAviso} aoAgir={() => {
+      <FaixaComunidade texto={aviso.texto} acao={aviso.alvo ? seg.bloquearAcao : aviso.bloqueio ? seg.desfazer : undefined} aoFechar={fecharAviso} aoAgir={() => {
         if (aviso.alvo) abrirAcao(aviso.alvo, 'bloquear');
         if (aviso.bloqueio && !ocupado) void desfazer(aviso.bloqueio);
       }} />}

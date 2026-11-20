@@ -42,6 +42,8 @@ import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } f
 import { Pedido, type IdTema } from './pedido';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
 import { TelaPerfil } from './perfil';
+import { PostarNoPerfil, usePostarNoPerfil } from './postar-no-perfil';
+import { perfilComLink } from './postar-estado';
 import { CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { Explorar } from './comunidade';
 import { useAtualizacaoComunidade } from './seguranca-comunidade';
@@ -58,7 +60,7 @@ type Tela =
   | { tipo: 'abrindo-criada'; plano: PlanoDetalhe }
   /** `concluida`: a lição que a pessoa acabou de concluir, para o caminho comemorar no nó dela. */
   | { tipo: 'plano'; plano: PlanoDetalhe; origem?: string; liberadas?: string[]; concluida?: string; aviso?: string }
-  | { tipo: 'perfil' }
+  | { tipo: 'perfil'; focoNome?: number }
   | { tipo: 'explorar' }
   /** Configurações da trilha (lote 4): `volta` é de onde a pessoa veio (o mapa ou Minhas trilhas). */
   | { tipo: 'configuracoes'; planoId: string; volta: 'planos' | 'plano' }
@@ -559,6 +561,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
 
   /** O link de uma trilha mudou (criado, alterado ou encerrado): a lista e o mapa mostram o selo certo. */
   function mudarLink(planoId: string, link: LinkCompartilhado | null) {
+    setPerfil(atual => atual && perfilComLink(atual, planoId, link));
     const marca = link ? { codigo: link.codigo, noPerfil: link.noPerfil } : undefined;
     setPlanos((anteriores) => anteriores.map((item) => (item.id === planoId ? { ...item, link: marca } : item)));
     setTela((atual) => ('plano' in atual && atual.plano.id === planoId ? { ...atual, plano: { ...atual.plano, link: marca } } : atual));
@@ -657,6 +660,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
     );
 
   return (
+    <PostarNoPerfil ativo={inicio === 'pronto' && comunidade && !visitante} planos={planos} perfil={perfil}
+      atualizarPerfil={setPerfil} mudarLink={mudarLink} novaTrilha={() => navegar({ tipo: 'objetivo' })} editarNome={() => navegar({ tipo: 'perfil', focoNome: Date.now() })}>
     <div className="estudo" data-navegacao={comNavegacao || undefined}>
       <a className="pular" href="#conteudo-principal">{mensagens.pular}</a>
       <aside className="barra-lateral" inert={!!passagem}>
@@ -796,7 +801,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
               novoPlano={() => navegar({ tipo: 'objetivo' })}
               compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined}
-              configurar={() => navegar({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })} />
+              configurar={() => navegar({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })}
+              apagar={() => apagarPlano(tela.plano, () => navegar({ tipo: 'planos' }))} />
           )}
           {visivel && tela.tipo === 'configuracoes' && (() => {
             const resumo = planos.find((item) => item.id === tela.planoId);
@@ -813,7 +819,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
             );
           })()}
           {visivel && tela.tipo === 'perfil' && (
-            <TelaPerfil perfil={compartilhar ? perfil : null} compartilhar={compartilhar} visitante={visitante} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
+            <TelaPerfil focoNome={tela.focoNome} perfil={compartilhar ? perfil : null} compartilhar={compartilhar} visitante={visitante} aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} anunciar={anunciar}
               abrirPlano={(id) => void abrirPlano(id)} registrarGuarda={registrarGuarda} sair={() => void sair()}
               comunidade={comunidade} aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} irParaTrilhas={() => navegar({ tipo: 'planos' })} />
           )}
@@ -871,6 +877,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
         />
       )}
     </div>
+    </PostarNoPerfil>
   );
 }
 
@@ -936,7 +943,7 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar, c
 
   return (
     <article className="plano-destaque">
-      <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} />
+      <MenuCartao plano={plano} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} />
       <div className="plano-destaque__cena" style={coresDaRegiao(Math.max(0, regiao))} aria-hidden="true">
         {/* Com capa escolhida nas configurações, ela entra no lugar da ilustração; sem capa, tudo como sempre. */}
         {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="plano-destaque__capa" /> : <>
@@ -964,7 +971,9 @@ function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar, c
 }
 
 /** Menu discreto no cartão de trilha: fecha com Esc ou clique fora. */
-function MenuCartao({ titulo, ocupado, apagar, compartilhar, configurar }: { titulo: string; ocupado: boolean; apagar: () => void; compartilhar?: () => void; configurar?: () => void }) {
+function MenuCartao({ plano, ocupado, apagar, compartilhar, configurar }: { plano: PlanoResumo; ocupado: boolean; apagar: () => void; compartilhar?: () => void; configurar?: () => void }) {
+  const { titulo } = plano;
+  const post = usePostarNoPerfil()?.menu(plano);
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
   useEffect(() => {
@@ -999,6 +1008,10 @@ function MenuCartao({ titulo, ocupado, apagar, compartilhar, configurar }: { tit
             {mensagens.compartilhar.entrada}
           </button>
         )}
+        {post && <button type="button" className="plano-cartao__compartilhar" disabled={ocupado} onClick={() => {
+          if (detailsRef.current) { detailsRef.current.open = false; detailsRef.current.querySelector('summary')?.focus(); }
+          post.executar();
+        }}>{post.texto}</button>}
         {configurar && (
           <button type="button" className="plano-cartao__compartilhar" aria-label={mensagens.configuracoes.entradaRotulo(titulo)} disabled={ocupado}
             onClick={() => { if (detailsRef.current) detailsRef.current.open = false; configurar(); }}>
@@ -1033,7 +1046,7 @@ function CartaoPlano({ plano, regiao, ocupado, secundario = false, abrir, apagar
 
   return (
     <article className="plano-cartao">
-      <MenuCartao titulo={plano.titulo} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} />
+      <MenuCartao plano={plano} ocupado={ocupado} apagar={apagar} compartilhar={compartilhar} configurar={configurar} />
       <div className="plano-cartao__cena" style={coresDaRegiao(Math.max(0, regiao))} aria-hidden="true">
         {plano.capa ? <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="plano-cartao__capa" /> : <>
           <span className="plano-cartao__colina" />
@@ -1121,8 +1134,9 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
-function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar }: {
+function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar, apagar }: {
   tela: TelaPlano;
+  apagar: () => void;
   ocupado: boolean;
   abrindo: string | null;
   precarregarLicao: (id: string) => void;
@@ -1132,6 +1146,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
   configurar?: () => void;
 }) {
   const { plano, origem, liberadas = [] } = tela;
+  const postagem = usePostarNoPerfil();
   const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
   // Ao abrir (ou recarregar), a tela vai até a lição atual; na volta de uma lição, até a liberada.
   const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : proximo?.no.id ?? null;
@@ -1162,6 +1177,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
             </p>
           ) : null}
           <div className="trilha-topo__acoes">
+            {postagem && !plano.recebida ? <MenuCartao plano={plano} compartilhar={compartilhar} configurar={configurar} apagar={apagar} ocupado={ocupado} /> : <>
             {!plano.recebida && compartilhar && (
               <Botao variante="secundario" className="trilha-compartilhar" disabled={ocupado} aria-label={mensagens.compartilhar.entradaRotulo(plano.titulo)} onClick={compartilhar}>
                 <Icone nome="compartilhar" />{plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada}
@@ -1173,6 +1189,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
                 <Icone nome="engrenagem" />
               </Botao>
             )}
+            </>}
           </div>
           {tela.aviso && <p className="trilha-aviso" role="status">{tela.aviso}</p>}
         </div>

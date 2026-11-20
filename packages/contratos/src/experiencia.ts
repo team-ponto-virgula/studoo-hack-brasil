@@ -497,6 +497,31 @@ export const mensagens = {
     perfil: {
         titulo: 'Perfil',
         navegacao: 'Perfil',
+        /**
+         * Postar no perfil (spec 10, "Postar no perfil", 20/11; pedido do dono): a pessoa escolhe quais trilhas aparecem no
+         * perfil dela. Web, Android e iPhone com os mesmos textos; "Nova trilha", "Desfazer", "Cancelar", a linha das regras,
+         * os selos "Em revisão" e "Não publicada" e "Enviada para revisão…" vêm de onde já estavam (spec 14).
+         */
+        postar: {
+            botao: 'Postar trilha no perfil',
+            vazio: 'Escolha quais trilhas aparecem no seu perfil.',
+            titulo: 'Postar no perfil',
+            texto: 'Só aparecem no seu perfil as trilhas que você ligar aqui.',
+            semNome: 'Para postar no perfil, escolha como você aparece.',
+            editarPerfil: 'Editar perfil',
+            semTrilhas: 'Você ainda não tem trilhas.',
+            estadoPerfil: 'No seu perfil',
+            estadoPerfilExplorar: 'No perfil e no Explorar',
+            salvando: 'Salvando…',
+            erro: 'Não deu para salvar. Tente de novo.',
+            aviso: 'Trilha no seu perfil.',
+            avisoTirada: 'Trilha tirada do seu perfil.',
+            confirmarTitulo: 'Tirar do perfil e do Explorar?',
+            confirmarTexto: 'A trilha sai do seu perfil e do Explorar. Quem tem o link continua abrindo.',
+            confirmarAcao: 'Tirar',
+            menuPostar: 'Postar no meu perfil',
+            menuTirar: 'Tirar do meu perfil',
+        },
         editar: 'Editar',
         salvar: 'Salvar',
         salvando: 'Salvando…',
@@ -543,7 +568,10 @@ export const mensagens = {
         compartilharPerfil: 'Compartilhar perfil',
         textoCompartilharPerfil: (nome: string) => `As trilhas de ${nome} no Studoo`,
         linkPerfilCopiado: 'Link do perfil copiado',
-        perfilPrivadoDica: 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.',
+        // Spec 10, 7b (db773e6): com a comunidade, o perfil fica público pela folha "Postar no perfil".
+        perfilPrivadoDica: 'Para compartilhar o perfil, poste ao menos uma trilha em “Postar trilha no perfil”.',
+        /** Sem a comunidade, só existe a chave "Mostrar no meu perfil" de cada trilha. */
+        perfilPrivadoDicaSemComunidade: 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.',
         alcance: (trilhas: number, pessoas: number) =>
             mensagens.perfil.alcanceItens(trilhas, pessoas).join(' · '),
         /**
