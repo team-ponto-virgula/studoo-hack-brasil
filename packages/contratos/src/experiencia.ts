@@ -98,13 +98,24 @@ export const mensagens = {
       pensando: 'O Stu está preparando…', erro: 'Não foi possível concluir. Tente novamente.',
       baseadoMaterial: 'Baseado no seu material',
       fonteMaterial: 'Fonte do seu material',
+      ponteMotivo: 'Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício.',
+      ponteMotivoResposta: (resposta: string) => {
+        const letras = Array.from(resposta.trim());
+        const trecho = letras.length > 60 ? letras.slice(0, 59).join('').trimEnd() + '…' : letras.join('');
+        return `Você respondeu “${trecho}”. Em 3 passos curtos, você vê a ideia por outro caminho e volta ao exercício.`;
+      },
+      ponteIndicador: (n: number) => `Passo ${n} de 3`,
+      ponteConstruida: 'Ponte construída!',
+      ponteVencida: 'Agora tente o exercício de novo.',
+      ponteRever: 'Rever explicação e exemplo',
+      ponteTentarDeNovo: 'Tentar de novo',
       ponteMargemErro: 'Onde travou',
       ponteTabuaErro: 'Sua tentativa',
-      ponteMargemVolta: 'De volta ao desafio',
+      ponteMargemVolta: 'Exercício',
       pontePassoErro: (resposta: string) => `Sua tentativa: ${resposta}`,
       pontePassoExplicacao: 'Outro caminho',
-      pontePassoExemplo: 'Novo exemplo',
-      pontePassoDesafio: 'Desafio vencido',
+      pontePassoExemplo: 'Um exemplo',
+      pontePassoDesafio: 'Desafio',
       vozAoVivo: {
         abrir: 'Conversar com o Stu',
         abrirBeneficio: 'Até 3 minutos por voz: ele pergunta, você explica.',
@@ -284,7 +295,7 @@ export const mensagens = {
             },
             {
                 titulo: 'O erro abre outro caminho',
-                texto: 'Quando travar, a ponte explica de outro jeito em quatro passos até o desafio.',
+                texto: 'Quando travar, a ponte explica de outro jeito em três passos até o desafio.',
             },
             {
                 titulo: 'Explique com suas palavras',
