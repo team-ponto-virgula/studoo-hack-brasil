@@ -16,6 +16,7 @@ import {
 } from './social';
 import { SecaoPrivacidade } from './privacidade';
 import { AvisoMidiaEmRevisao, EstadoDaPublicacao, SecaoAjuda, SecaoBloqueadas } from './seguranca';
+import { FolhaPostarNoPerfil } from './postar-perfil';
 import { SomNoPerfil } from './som';
 import { cores, fontes } from './tema';
 
@@ -62,7 +63,11 @@ function TituloSecao({ children }: { children: ReactNode }) {
  * (com o total no título), os cartões "Como os outros veem" (com a comunidade), o perfil público, a conta e "Sair".
  */
 export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMudarPerfil, aoMudarLink, abrirPlano, sair, desativado, aoAdicionado,
-  abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas, aoSessaoTerminada }: {
+  abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas, aoSessaoTerminada, novaTrilha, focarNome: focarNomeAoAbrir = false }: {
+  /** "Nova trilha" da folha "Postar no perfil" sem trilhas (spec 10). */
+  novaTrilha?: () => void;
+  /** Aberto pelo "Editar perfil" da folha "Postar no perfil" (pelo "•••"): o foco vai para o campo do nome (P6). */
+  focarNome?: boolean;
   cliente: ClienteNativo;
   perfil: Perfil | null;
   comunidade: boolean;
@@ -96,12 +101,17 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   const [cartoes, setCartoes] = useState<CartaoTrilha[] | null>(null);
   // Com dados, o bloco mostra o perfil como os outros veem; "Editar" abre os campos ali mesmo (como a web).
   const [editando, setEditando] = useState(false);
+  /** A folha "Postar no perfil" (spec 10, 20/11). */
+  const [postando, setPostando] = useState(false);
   // Pelo convite "Conte em uma frase…", os campos abrem com o foco no resumo.
   const [focarResumo, setFocarResumo] = useState(false);
+  // Pelo "Editar perfil" da folha "Postar no perfil", os campos abrem com o foco (e a tela) no nome (spec 10, P6).
+  const [focarNome, setFocarNome] = useState(focarNomeAoAbrir);
   const botaoEditar = useRef<ComponentRef<typeof View>>(null);
   const { avisar } = useContext(AvisoDoApp);
-  function abrirEditor(resumo = false) {
+  function abrirEditor(resumo = false, nome = false) {
     setFocarResumo(resumo);
+    setFocarNome(nome);
     setEditando(true);
   }
   /** Salvo: os campos fecham, o aviso do app diz "Perfil salvo." e o foco vai para "Editar". */
@@ -151,6 +161,18 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
       return { ...atual, links, publico: noPerfil.length > 0, alcance: { ...atual.alcance, trilhas: noPerfil.length, pessoas: noPerfil.reduce((t, l) => t + l.adicoes, 0) } };
     });
     aoMudarLink(antigo.planoId, novo);
+  }
+
+  /** Um link mudou na folha "Postar no perfil": troca o que já estava na lista, ou entra (o link acabou de ser criado). */
+  function aplicarLink(planoId: string, novo: LinkCompartilhado) {
+    setPerfil((atual) => {
+      if (!atual) return atual;
+      const existe = atual.links.some((item) => item.planoId === planoId);
+      const links = existe ? atual.links.map((item) => (item.planoId === planoId ? novo : item)) : [novo, ...atual.links];
+      const noPerfil = links.filter((item) => item.noPerfil);
+      return { ...atual, links, publico: noPerfil.length > 0, alcance: { ...atual.alcance, trilhas: noPerfil.length, pessoas: noPerfil.reduce((total, l) => total + l.adicoes, 0) } };
+    });
+    aoMudarLink(planoId, novo);
   }
 
   async function alterar(link: LinkCompartilhado, noPerfil: boolean) {
@@ -205,7 +227,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
             ) : comEditor ? (
               // Sem tela de convite: sem nome, os campos já vêm abertos; com nome, "Editar" abre os mesmos campos aqui.
               <EditorPerfil key={editando ? 'editar' : 'dados'} cliente={cliente} perfil={perfil} aoMudarPerfil={mudarPerfil} registrarGuarda={registrarGuarda}
-                aoSalvo={aoSalvo} focarResumo={focarResumo}
+                aoSalvo={aoSalvo} focarResumo={focarResumo} focarNome={focarNome}
                 definirRodape={setRodapeDoEditor} inscreverRolagem={inscreverRolagem}
                 aoCancelar={perfil.nome ? () => setEditando(false) : undefined} />
             ) : (
@@ -241,8 +263,20 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
 
             {!perfil.visitante && (
               <View style={perfilEstilos.secao}>
-                <TituloSecao>{perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas}</TituloSecao>
-                {perfil.links.length === 0 ? (
+                {/* Spec 10, "Postar no perfil": o botão secundário de 44 ao lado do título (com trilhas) ou embaixo do estado vazio. */}
+                <View style={perfilEstilos.secaoCabeca}>
+                  <TituloSecao>{perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas}</TituloSecao>
+                  {comunidade && perfil.links.length > 0 && (
+                    <Botao rotulo={p.postar.botao} testID="postar-abrir" variante="secundario" compacto desativado={desativado} acao={() => setPostando(true)} />
+                  )}
+                </View>
+                {perfil.links.length === 0 && comunidade ? (
+                  <View testID="postar-vazio" style={perfilEstilos.postarVazio}>
+                    <Text style={estilos.texto}>{p.postar.vazio}</Text>
+                    <Botao rotulo={p.postar.botao} testID="postar-abrir" variante="secundario" compacto desativado={desativado} acao={() => setPostando(true)}
+                      estilo={{ alignSelf: 'flex-start' }} />
+                  </View>
+                ) : perfil.links.length === 0 ? (
                   <Text style={estilos.texto}>
                     {p.nenhumaAntes} <Text accessibilityRole="link" onPress={irParaTrilhas} style={perfilEstilos.linkTexto}>{p.nenhumaLink}</Text>{p.nenhumaDepois(true)}
                   </Text>
@@ -295,7 +329,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
             {!perfil.visitante && perfil.nome && (
               <View style={perfilEstilos.secao}>
                 <TituloSecao>{p.publicoTitulo}</TituloSecao>
-                <Text style={estilos.texto}>{perfil.publico ? p.publico(perfil.links.filter((link) => link.noPerfil).length) : `${p.privado} ${p.perfilPrivadoDica}`}</Text>
+                <Text style={estilos.texto}>{perfil.publico ? p.publico(perfil.links.filter((link) => link.noPerfil).length) : `${p.privado} ${comunidade ? p.perfilPrivadoDica : p.perfilPrivadoDicaSemComunidade}`}</Text>
                 {perfil.publico && perfil.perfilId && (
                   <Botao rotulo={p.verComoOutros} variante="secundario" testID="perfil-ver-publico" acao={() => abrirNoNavegador(urlDoPerfil(perfil.perfilId!))}
                     estilo={{ alignSelf: 'flex-start' }} />
@@ -344,6 +378,10 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
           </>
         )}
       </View>
+      {postando && perfil && !perfil.visitante && (
+        <FolhaPostarNoPerfil cliente={cliente} perfil={perfil} aoFechar={() => setPostando(false)} aoMudarLink={aplicarLink}
+          editarPerfil={() => { setPostando(false); abrirEditor(false, true); }} novaTrilha={() => { setPostando(false); (novaTrilha ?? irParaTrilhas)(); }} />
+      )}
       {folha && (
         <FolhaCompartilhar cliente={cliente} planoId={folha} visitante={false} comunidade={comunidade} aoFechar={() => setFolha(null)}
           aoMudarPerfil={mudarPerfil}
@@ -370,7 +408,7 @@ type ErrosCampos = { nome?: string; resumo?: string };
  * numa linha só. Tocar na foto abre a folha do Studoo (galeria, câmera, remover e cancelar). "Cancelar" com alteração, e
  * qualquer saída, perguntam "Sair sem salvar?". Salvar fecha os campos (quem usa mostra o aviso "Perfil salvo.").
  */
-function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definirRodape, inscreverRolagem, aoSalvo, aoCancelar, focarResumo = false }: {
+function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definirRodape, inscreverRolagem, aoSalvo, aoCancelar, focarResumo = false, focarNome = false }: {
   cliente: ClienteNativo;
   perfil: Perfil;
   aoMudarPerfil: (perfil: Perfil) => void;
@@ -385,6 +423,8 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
   aoCancelar?: () => void;
   /** Aberto pelo convite "Conte em uma frase…": o foco vai para o resumo. */
   focarResumo?: boolean;
+  /** Aberto pelo "Editar perfil" da folha "Postar no perfil": o foco vai para o nome, depois que a folha saiu. */
+  focarNome?: boolean;
 }) {
   const { width, height: alturaJanela } = useWindowDimensions();
   const [salvo, setSalvo] = useState(perfil);
@@ -419,9 +459,10 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
   // Aberto pelo "Editar", o leitor de tela vai para o alto do bloco; pelo convite do resumo, o foco vai para o resumo.
   useEffect(() => {
     const espera = setTimeout(() => {
-      if (focarResumo) campoResumo.current?.focus();
+      if (focarNome) campoNome.current?.focus();
+      else if (focarResumo) campoResumo.current?.focus();
       else if (aoCancelar) focarSemRolar(privacidade.current);
-    }, 160);
+    }, focarNome ? 400 : 160);
     return () => clearTimeout(espera);
     // Só ao abrir.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -745,6 +786,8 @@ const perfilEstilos = StyleSheet.create({
   // .painel--perfil: grade com vão de 20; o título "Perfil" no tamanho de título de página (o <Titulo> de 32/40), como a web.
   painel: { gap: 20 },
   secao: { gap: 10 },
+  secaoCabeca: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 12, rowGap: 8 },
+  postarVazio: { gap: 12, alignItems: 'flex-start' },
   secaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 18, lineHeight: 23.4, letterSpacing: -0.27 },
   cartao: { gap: 12, padding: 18, borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
   links: { gap: 12 },

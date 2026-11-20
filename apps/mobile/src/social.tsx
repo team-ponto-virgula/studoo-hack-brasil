@@ -342,8 +342,10 @@ export function SeloVisibilidade({ nivel, tema, emRevisao = false }: {
 }
 
 /** Chave (interruptor) acessível, como `.chave` da web: trilho de 46 × 28 com a bolinha. */
-export function Chave({ rotulo, nomeAcessivel, ligada, desativada = false, aoMudar, dica }: {
+export function Chave({ rotulo, nomeAcessivel, ligada, desativada = false, aoMudar, dica, semTexto = false }: {
   rotulo: string;
+  /** Só o trilho, sem o rótulo ao lado (a linha da folha "Postar no perfil" já mostra o título); o nome acessível continua. */
+  semTexto?: boolean;
   nomeAcessivel?: string;
   ligada: boolean;
   desativada?: boolean;
@@ -357,7 +359,7 @@ export function Chave({ rotulo, nomeAcessivel, ligada, desativada = false, aoMud
       <View style={[socialEstilos.chaveTrilho, ligada && { backgroundColor: cores.acao }, desativada && { opacity: 0.6 }]}>
         <View style={[socialEstilos.chaveBolinha, ligada && { transform: [{ translateX: 18 }] }]} />
       </View>
-      <Text style={socialEstilos.chaveTexto}>{rotulo}</Text>
+      {!semTexto && <Text style={socialEstilos.chaveTexto}>{rotulo}</Text>}
     </Pressable>
   );
 }

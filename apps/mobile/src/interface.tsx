@@ -156,6 +156,14 @@ function FaixaDoAviso({ aviso, baixo }: { aviso: AvisoAtual; baixo: number }) {
     </View>
   );
 }
+/**
+ * O aviso do app dentro de uma folha (Modal): no aparelho a folha cobre a `Tela`, que desenha a faixa por baixo dela; a
+ * folha que avisa algo com a ação ("Desfazer") desenha a mesma faixa por cima, `baixo` acima do pé dela.
+ */
+export function AvisoSobreAFolha({ baixo }: { baixo: number }) {
+  const { aviso } = useContext(AvisoDoApp);
+  return aviso ? <FaixaDoAviso key={aviso.vez} aviso={aviso} baixo={baixo} /> : null;
+}
 /** Altura da faixa que fica presa no alto da tela (o cabeçalho da trilha), para quem rola descontar o que ela cobre. */
 export const AlturaDaFaixaFixa = createContext(0);
 
