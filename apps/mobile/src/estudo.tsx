@@ -747,13 +747,14 @@ export function Estudo({ cliente, sair, expirar }: {
     }
 
     if (etapa.tipo === 'perfil' && !compartilhar) {
-      return <PerfilSemSocial cliente={cliente} acoes={acoes} desativado={ocupado} sair={pedirParaSair} />;
+      return <PerfilSemSocial cliente={cliente} acoes={acoes} desativado={ocupado} sair={pedirParaSair} aoSessaoTerminada={() => void expirarGuardando()} />;
     }
     if (etapa.tipo === 'perfil') {
       return <TelaPerfil cliente={cliente} perfil={perfil} comunidade={comunidade} acoes={acoes} desativado={ocupado}
         aoMudarPerfil={setPerfil} aoMudarLink={mudarLink} abrirPlano={(id) => void abrirPlano(id)}
         sair={pedirParaSair} registrarGuarda={registrarGuarda} irParaTrilhas={() => abrir({ tipo: 'planos' })}
-        aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico} />;
+        aoAdicionado={(id, nome, ja) => void aoAdicionarPorLink(id, nome, ja)} abrirPrevia={abrirPrevia} abrirPerfil={abrirPerfilPublico}
+        aoSessaoTerminada={() => void expirarGuardando()} />;
     }
 
     if (etapa.tipo === 'explorar' && comunidade) {

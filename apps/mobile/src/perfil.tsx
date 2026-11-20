@@ -4,7 +4,7 @@ import {
   LIMITES_PERFIL, TEMAS, motivoNomeInvalido, motivoResumoInvalido, normalizarNomePerfil, normalizarResumoPerfil,
   type CartaoTrilha, type CorPerfil, type LinkCompartilhado, type Perfil, type Tema,
 } from '@studoo/contratos';
-import type { ClienteNativo } from './api-nativa';
+import { sessaoInvalida, type ClienteNativo } from './api-nativa';
 import { CartoesDoPerfil, FIM_COM_BARRA, NovidadesDoPerfil } from './comunidade';
 import { Icone } from './icone';
 import { AvisoDoApp, Botao, Campo, CartaoConfirmacao, FolhaDeAcoes, Tela, Titulo, estilos, type AcaoDaFolha } from './interface';
@@ -62,7 +62,7 @@ function TituloSecao({ children }: { children: ReactNode }) {
  * (com o total no título), os cartões "Como os outros veem" (com a comunidade), o perfil público, a conta e "Sair".
  */
 export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMudarPerfil, aoMudarLink, abrirPlano, sair, desativado, aoAdicionado,
-  abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas }: {
+  abrirPrevia, abrirPerfil, registrarGuarda, irParaTrilhas, aoSessaoTerminada }: {
   cliente: ClienteNativo;
   perfil: Perfil | null;
   comunidade: boolean;
@@ -83,6 +83,8 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   registrarGuarda: (guarda: ((continuar: () => void) => boolean) | null) => void;
   /** O vazio de "Trilhas que você compartilha" leva a Minhas trilhas. */
   irParaTrilhas: () => void;
+  /** A sessão terminou no servidor (conta excluída em outro aparelho, sessão revogada): volta à entrada, como as outras telas. */
+  aoSessaoTerminada?: () => void;
 }) {
   const [perfil, setPerfil] = useState<Perfil | null>(inicial);
   const [erro, setErro] = useState<string | null>(null);
@@ -124,7 +126,11 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
   useEffect(() => {
     let ativo = true;
     cliente.obterPerfil().then((dados) => { if (ativo) { setPerfil(dados); aoMudarPerfil(dados); } })
-      .catch((falha) => { if (ativo) setErro(codigoDoErro(falha)); });
+      .catch((falha) => {
+        if (!ativo) return;
+        if (sessaoInvalida(falha) && aoSessaoTerminada) { aoSessaoTerminada(); return; }
+        setErro(codigoDoErro(falha));
+      });
     return () => { ativo = false; };
     // Recarrega ao abrir a tela (as adições e os links podem ter mudado), como na web.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -645,8 +651,9 @@ function EditorPerfil({ cliente, perfil, aoMudarPerfil, registrarGuarda, definir
  * conta": Apple 5.1.2(i) e 5.1.1(v)) e Conta, com Sair. Se é visitante vem de /api/sessao. Como a web na revisão do
  * TestFlight (20/11): o caminho para revogar a IA e excluir a conta nunca depende do compartilhar.
  */
-export function PerfilSemSocial({ cliente, acoes, desativado, sair }: {
+export function PerfilSemSocial({ cliente, acoes, desativado, sair, aoSessaoTerminada }: {
   cliente: ClienteNativo;
+  aoSessaoTerminada?: () => void;
   acoes?: ReactNode;
   desativado: boolean;
   sair: () => void;
@@ -654,7 +661,8 @@ export function PerfilSemSocial({ cliente, acoes, desativado, sair }: {
   const [visitante, setVisitante] = useState(false);
   useEffect(() => {
     let ativo = true;
-    cliente.sessao().then((dados) => { if (ativo) setVisitante(dados.visitante === true); }).catch(() => undefined);
+    cliente.sessao().then((dados) => { if (ativo) setVisitante(dados.visitante === true); })
+      .catch((falha) => { if (ativo && sessaoInvalida(falha)) aoSessaoTerminada?.(); });
     return () => { ativo = false; };
   }, [cliente]);
   return (
