@@ -107,6 +107,10 @@ export function Estudo({ cliente, sair, expirar }: {
   sair: () => Promise<void>;
   expirar: () => Promise<void>;
 }) {
+  // `expirar` nasce de novo a cada desenho da raiz (um aviso do app já basta): fica numa referência, para a lista não
+  // recarregar e reabrir a trilha em andamento quando alguém só avisou algo em Minhas trilhas.
+  const expirarAtual = useRef(expirar);
+  expirarAtual.current = expirar;
   const [planos, setPlanos] = useState<PlanoResumo[] | null>(null);
   const [tinhaTrilhas, setTinhaTrilhas] = useState(false);
   useEffect(() => {
@@ -211,7 +215,7 @@ export function Estudo({ cliente, sair, expirar }: {
 
     void carregarPlanos();
     return () => { ativo = false; };
-  }, [cliente, expirar, tentativa]);
+  }, [cliente, tentativa]);
 
   // Sair do estudo no meio da geração interrompe o pedido; o servidor não guarda nada.
   useEffect(() => () => geracaoAtiva.current?.abort(), []);
@@ -300,7 +304,7 @@ export function Estudo({ cliente, sair, expirar }: {
   /** A sessão terminou: guarda o pedido em andamento antes de voltar à entrada (o aviso da entrada diz o motivo). */
   async function expirarGuardando() {
     guardarRascunho(objetivoAtual.current);
-    await expirar();
+    await expirarAtual.current();
   }
 
   /** Mostra o erro de uma falha: o texto para o cartão e o código para a ação que cabe. */
