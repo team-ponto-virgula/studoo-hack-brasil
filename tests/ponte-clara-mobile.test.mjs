@@ -68,6 +68,7 @@ test('aceite b75134a: laço no selo, faixa da web, sem selo de demonstração, s
   assert.match(licao, /estiloRodape=\{ponteAberta \? undefined : retorno === 'certa'/);
   const apresentacao = await ler('apps/mobile/src/apresentacao.tsx');
   assert.match(apresentacao, /<FaixaDaPonte passo=\{3\} construida carregando=\{false\} semLinha \/>/, 'a apresentação usa a mesma faixa');
+  assert.doesNotMatch(apresentacao, /<Quadro selo>/, 'sem o selo "Modo demonstração" na arte do tour (spec 04, banca §2)');
 });
 
 test('a cena antiga e as chaves velhas da ponte saíram (o app e a apresentação usam a faixa nova)', async () => {
