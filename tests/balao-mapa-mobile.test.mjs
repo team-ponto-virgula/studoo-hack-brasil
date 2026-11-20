@@ -9,11 +9,18 @@ import { test } from 'node:test';
 const raiz = new URL('../', import.meta.url);
 const ler = (caminho) => readFile(new URL(caminho, raiz), 'utf8');
 
-test('o nó concluído ou bloqueado abre a folha em Modal (não um balão dentro da rolagem)', async () => {
+test('o nó concluído ou bloqueado abre o balão no mapa, sem folha (c7059a8), e o balão segue o enquadramento', async () => {
   const caminho = await ler('apps/mobile/src/caminho.tsx');
   assert.match(caminho, /if \(no\.estado === 'atual'\) \{\s*setAberto\(null\);\s*aoAbrir\?\.\(no\);\s*return;\s*\}\s*setAberto\(no\.id\);/);
-  const folha = caminho.slice(caminho.indexOf('\nfunction Folha'));
-  assert.match(folha, /<Modal visible transparent statusBarTranslucent/);
+  assert.doesNotMatch(caminho, /<Modal|function Folha\(/, 'a folha em Modal saiu');
+  assert.match(caminho, /\{aberto === no\.id && \(\s*<BalaoDoNo titulo=\{no\.titulo\} texto=\{explicar\(nos, indice\)\}/);
+  const balao = caminho.slice(caminho.indexOf('function BalaoDoNo('), caminho.indexOf('/** Carregando a trilha'));
+  assert.match(balao, /testID="balao-no" role="dialog" aria-label=\{titulo\}/);
+  assert.match(balao, /testID="balao-no-fechar" accessibilityRole="button" accessibilityLabel=\{mensagens\.trilha\.fechar\}/);
+  assert.match(balao, /testID="balao-no-refazer" rotulo=\{mensagens\.trilha\.refazer\} variante="secundario"/);
+  assert.match(balao, /testID="balao-no-ir-atual" rotulo=\{mensagens\.trilha\.irParaAtual\} icone="seta" variante="secundario"/);
+  assert.match(balao, /ouvirVoltar\(\(\) => \{ fechar\(\); return true; \}\)/, 'o voltar do Android fecha');
+  assert.match(caminho, /aoRolar\(topo - altura - BALAO_FOLGA, topo \+ medidas\.lente, true, undefined, coberto\);/, 'nó e balão inteiros na área livre');
 });
 
 test('"Mostrar a lição atual no mapa" mede com as faixas do alto e com a altura do cabeçalho preso', async () => {
