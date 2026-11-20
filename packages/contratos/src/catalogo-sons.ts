@@ -28,13 +28,7 @@ export type IdEfeitoSonoro =
   | 'cronometro_inicio'
   | 'cronometro_fim';
 
-export type IdSomFundo =
-  | 'mudo'
-  | 'foco_calmo'
-  | 'chuva_suave'
-  | 'lofi_estudo'
-  | 'biblioteca'
-  | 'brisa_natural';
+export type IdSomFundo = 'mudo' | 'lofi_estudo';
 
 export type PrioridadeSom = 'baixa' | 'media' | 'alta';
 
@@ -119,32 +113,8 @@ export const CATALOGO_EFEITOS: Readonly<Record<IdEfeitoSonoro, DefinicaoEfeitoSo
   cronometro_fim: { id: 'cronometro_fim', arquivo: 'cronometro-fim.wav', duracaoMs: 700, volume: 0.85, prioridade: 'alta', cooldownMs: 500 },
 };
 
-/**
- * Os cinco climas são arranjos do mesmo tema do Studoo (Ré maior, 86 BPM,
- * quatro frases de 8 compassos). Duração de laço: 32 compassos = 89,30 s.
- * Volumes medidos a −24 LUFS integrados; os arquivos têm 6 dB de folga de pico.
- */
+/** Lo-fi de Estudo: 32 compassos em laço, com 6 dB de folga de pico. */
 export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
-  {
-    id: 'foco_calmo',
-    rotulo: 'Foco Calmo',
-    descricao: 'Tema do Studoo em kalimba e pad quente, com contracanto de flauta',
-    arquivo: 'foco-calmo.mp3',
-    duracaoMs: 89328,
-    volume: 0.24,
-    aparoInicioSeg: 0.026,
-    aparoFimSeg: 0,
-  },
-  {
-    id: 'chuva_suave',
-    rotulo: 'Chuva Suave',
-    descricao: 'Caixinha de música esparsa sobre chuva leve na janela',
-    arquivo: 'chuva-suave.mp3',
-    duracaoMs: 89328,
-    volume: 0.24,
-    aparoInicioSeg: 0.026,
-    aparoFimSeg: 0,
-  },
   {
     id: 'lofi_estudo',
     rotulo: 'Lo-fi de Estudo',
@@ -155,41 +125,4 @@ export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
     aparoInicioSeg: 0.026,
     aparoFimSeg: 0,
   },
-  {
-    id: 'biblioteca',
-    rotulo: 'Biblioteca',
-    descricao: 'Piano de feltro com muito espaço e tom de sala',
-    arquivo: 'biblioteca.mp3',
-    duracaoMs: 89328,
-    volume: 0.24,
-    aparoInicioSeg: 0.026,
-    aparoFimSeg: 0,
-  },
-  {
-    id: 'brisa_natural',
-    rotulo: 'Brisa Natural',
-    descricao: 'Flauta à frente do tema, harpa e vento suave entre folhas',
-    arquivo: 'brisa-natural.mp3',
-    duracaoMs: 89328,
-    volume: 0.24,
-    aparoInicioSeg: 0.026,
-    aparoFimSeg: 0,
-  },
-];
-
-const DESCRICOES_CURTAS_FUNDO: Readonly<Record<Exclude<IdSomFundo, 'mudo'>, string>> = {
-  foco_calmo: 'Acordes suaves e quentes',
-  chuva_suave: 'Chuva leve na janela',
-  lofi_estudo: 'Batida lenta e abafada',
-  biblioteca: 'Ambiente quieto, bom para ler',
-  brisa_natural: 'Vento suave entre as folhas',
-};
-
-export const OPCOES_FUNDO_UI: readonly { id: IdSomFundo; rotulo: string; descricao: string }[] = [
-  { id: 'mudo', rotulo: 'Mudo', descricao: 'Sem som de fundo' },
-  ...CATALOGO_FUNDOS.map(({ id, rotulo }) => ({
-    id,
-    rotulo,
-    descricao: DESCRICOES_CURTAS_FUNDO[id],
-  })),
 ];
