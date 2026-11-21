@@ -1,4 +1,4 @@
-import { ehSinal, formulaCanonica, formulaLinear, percorrerFormula, type NoFormula, type OperadorFormula } from "./formula";
+import { ehSinal, formulaCanonica, formulaLinear, percorrerFormula, semEspacos, type NoFormula, type OperadorFormula } from "./formula";
 
 /*
  * Conferência da conta (spec 15, seção 4; decisão 6 do Lead): o servidor avalia, com racionais exatos, o que dá para avaliar
@@ -317,7 +317,9 @@ function declarar(clausula: readonly NoFormula[], valores: Declaracoes): { chave
  * Confere as fórmulas de uma resolução (na ordem dos passos). Reprova só quando uma conta que se resolve por inteiro não fecha
  * ou quando a mesma variável recebe dois valores. `declaradas` traz o que ficou valendo (para conferir as opções do "Sua vez").
  */
-export function conferirConta(formulas: readonly NoFormula[]): ResultadoConta {
+export function conferirConta(brutas: readonly NoFormula[]): ResultadoConta {
+  // Os espaços (`\,`, `\quad`, `\;`) são só desenho: a conta não os vê.
+  const formulas = brutas.map(semEspacos);
   const valores: Declaracoes = new Map();
   for (let volta = 0; volta < 3; volta += 1) {
     for (const formula of formulas) {
@@ -386,7 +388,8 @@ export interface ResultadoDaFormula {
  * uma só, e o valor (ou o par) do primeiro lado que se avalia, do fim para o começo. `null` quando nada se avalia (incógnita, texto,
  * desigualdade). Serve ao "Sua vez": é o que a pessoa ainda não pode ver antes de escolher.
  */
-export function resultadoDaFormula(no: NoFormula, declaradas: Record<string, string>): ResultadoDaFormula | null {
+export function resultadoDaFormula(bruto: NoFormula, declaradas: Record<string, string>): ResultadoDaFormula | null {
+  const no = semEspacos(bruto);
   const valores = declaracoesDe(declaradas);
   const topo = semDestaque(no);
   const itens = topo.tipo === "sequencia" ? topo.itens : [topo];
@@ -404,7 +407,8 @@ export function resultadoDaFormula(no: NoFormula, declaradas: Record<string, str
 }
 
 /** Para as opções do "Sua vez": a fórmula `y_C = 6 - 1 - 5` dá `{ chave: "y_C", valor: 0 }`; sem `=`, só o valor. */
-export function valorDaOpcao(no: NoFormula, declaradas: Record<string, string>): { chave?: string; valor: Racional; esperado?: Racional } | null {
+export function valorDaOpcao(bruto: NoFormula, declaradas: Record<string, string>): { chave?: string; valor: Racional; esperado?: Racional } | null {
+  const no = semEspacos(bruto);
   const valores = declaracoesDe(declaradas);
   const itens = no.tipo === "sequencia" ? no.itens : [no];
   const { partes, relacoes } = partirNasRelacoes(itens);

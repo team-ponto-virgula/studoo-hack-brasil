@@ -26,6 +26,7 @@ import {
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
 import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+import { ordemDoSuaVez } from "./ordem-sua-vez";
 
 export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
 
@@ -41,6 +42,8 @@ export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual 
 
 export interface OpcoesDeVisuais {
   capacidades: Capacidades;
+  /** De quem é a lição: as opções do "Sua vez" vão embaralhadas por (conta, lição), a mesma ordem do POST /resolucao. Sem isso, a ordem guardada. */
+  usuarioId?: string;
   /** Gera o PNG do build 3 (custa CPU: só a rota da lição pede; o reforço e a voz não precisam dele). */
   desenharPng?: boolean;
 }
@@ -229,7 +232,7 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
 
   const comResolva = capacidades.visuais >= 1 && capacidades.resolucao >= 1;
   if (limpo.resolucao) {
-    if (comResolva) saida.resolucao = resolucaoParaCliente(limpo.resolucao);
+    if (comResolva) saida.resolucao = resolucaoParaCliente(limpo.resolucao, opcoes.usuarioId ? ordemDoSuaVez(opcoes.usuarioId, detalhe.id) : undefined);
     // Quem não desenha o "Resolva comigo" lê o exemplo em passos de texto, sem "Sua vez".
     else if (!detalhe.passos) saida.passos = passosEmTexto(limpo.resolucao, emTexto);
   }
