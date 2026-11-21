@@ -158,3 +158,34 @@ test('item 10: na entrada do celular, o stu-acolhida de 72 acena à direita do t
   // O laço do Stu para com movimento reduzido (o próprio componente do mascote).
   assert.match(await ler('mascote.tsx'), /useMovimentoReduzido/);
 });
+
+test('item 24: com o "Explique" aberto, o acerto é uma linha só: "✓ Isso aí!" à esquerda e "Continuar" à direita, sem o texto', async () => {
+  const licao = await ler('licao.tsx');
+  assert.match(licao, /compacto=\{expliqueAberto\}/);
+  assert.match(licao, /const linhaCompacta = Boolean\(compacto && certa\);/);
+  assert.match(licao, /linhaCompacta && licaoEstilos\.painelLinha\]\}>/);
+  // O texto do retorno já fica fora no compacto; o "Continuar" sai da metade e vai à direita do título.
+  assert.match(licao, /\{!compacto && \(\n\s*<View style=\{licaoEstilos\.encolhe\}>/);
+  assert.match(licao, /<View style=\{certa && !linhaCompacta \? licaoEstilos\.metade : undefined\}>/);
+  assert.match(licao, /painelLinha: \{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 \}/);
+  assert.match(licao, /retornoTituloLinha: \{ fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22, letterSpacing: 0, color: cores\.sucesso \}/);
+  assert.match(await ler('tema.ts'), /sucesso: '#1F7A5A'/);
+});
+
+test('item 25: os passos do "Explique" são uma linha de indicador não tocável, "Passo 1 de 3 · Gravar ou escrever"', async () => {
+  const cenas = await ler('estudio-cenas.tsx');
+  const nomeDaEtapaDoEnsino = funcao(cenas, 'nomeDaEtapaDoEnsino');
+  assert.equal(nomeDaEtapaDoEnsino('1. Gravar ou escrever'), 'Gravar ou escrever');
+  assert.equal(nomeDaEtapaDoEnsino('1. Conversar, gravar ou escrever'), 'Conversar, gravar ou escrever');
+  const etapas = cenas.slice(cenas.indexOf('export function EtapasDoEnsino('), cenas.indexOf('const PESOS_ONDA'));
+  assert.match(etapas, /accessibilityLabel=\{`\$\{passo\}: \$\{etapas\[ativa\]\}`\}/);
+  assert.match(etapas, /\{`\$\{passo\} · \$\{etapas\[ativa\]\}`\}/);
+  assert.doesNotMatch(etapas, /Pressable|onPress|borderWidth/);
+  assert.match(cenas, /etapaLinha: \{ color: '#5E6A85', fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 \}/);
+  assert.match(contrato, /ponteIndicador: \(n: number\) => `Passo \$\{n\} de 3`/);
+});
+
+test('item 29: o convite do "Explique" sem "o mascote do Studoo"', () => {
+  assert.match(contrato, /ensinoDica: 'Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu\. O Stu aponta o que fez sentido e propõe uma situação nova\.'/);
+  assert.doesNotMatch(contrato, /O Stu, o mascote do Studoo, aponta/);
+});

@@ -1212,6 +1212,9 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
   const icone = useAparecer(80, 460, true);
   const area = useRef<ComponentRef<typeof View>>(null);
   const comStu = reacao !== undefined && !compacto;
+  // Spec 16, item 24: com o "Explique" aberto, o acerto vira uma linha de 64: "✓ Isso aí!" à esquerda e "Continuar" à
+  // direita, compacto, no mesmo verde claro; o texto do retorno sai (já foi lido). Ao fechar o "Explique", volta ao normal.
+  const linhaCompacta = Boolean(compacto && certa);
   const janela = useWindowDimensions();
   const margens = useSafeAreaInsets();
   const alturaMaxima = Math.max(200, Math.floor(janela.height * 0.5) - MOLDURA_DO_RODAPE - margens.bottom - reservaAcima);
@@ -1226,11 +1229,11 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
   }, []);
 
   return (
-    <Animated.View testID="painel-retorno" style={{ gap: 6, maxHeight: alturaMaxima, opacity: subida,
-      transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
+    <Animated.View testID="painel-retorno" style={[{ gap: 6, maxHeight: alturaMaxima, opacity: subida,
+      transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }, linhaCompacta && licaoEstilos.painelLinha]}>
       <View ref={area} testID="feedback-licao" accessible accessibilityRole="alert"
         accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${falarTextoComFormulas(avaliacao.feedback)} ${extras.map(falarTextoComFormulas).join(' ')}${certa && descricaoDaFigura ? ` ${descricaoDaFigura}` : ''}`}
-        style={[licaoEstilos.retorno, licaoEstilos.encolhe]}>
+        style={[licaoEstilos.retorno, licaoEstilos.encolhe, linhaCompacta && licaoEstilos.painelLinhaTexto]}>
         {/* Como na web: o ícone pequeno ao lado do título e o texto na largura toda, embaixo (o painel ocupava ~40% da tela). */}
         <View style={licaoEstilos.retornoCabecalho}>
           {/* .aula-retorno__icone no celular: círculo de 34 com o degrau de 3 por fora (sombra da web) e o ícone de 20 com traço 3,2. */}
@@ -1245,7 +1248,7 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
               {certa && <Confete quantidade={14} />}
             </View>
           </Animated.View>
-          <Text style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 },
+          <Text numberOfLines={linhaCompacta ? 1 : undefined} style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, linhaCompacta && licaoEstilos.retornoTituloLinha, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 },
             comStu && licaoEstilos.retornoTituloComStu]}>{titulo}</Text>
           {comStu && (
             // Enfeite: o toque passa e o leitor de tela não lê (o anúncio é o do painel).
@@ -1276,15 +1279,15 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
         estilo={licaoEstilos.convite} />}
       {!certa && !compacto && <Botao testID="ver-outro-jeito" peso="900" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
       {/* Compacto (Explique aberto): 16 entre o título e o "Continuar" (o visto ficava a 4 px do botão); a web segue o mesmo. */}
-      <View style={[licaoEstilos.retornoAcoes, compacto && licaoEstilos.retornoAcoesCompacto]}>
+      <View style={[licaoEstilos.retornoAcoes, compacto && licaoEstilos.retornoAcoesCompacto, linhaCompacta && licaoEstilos.retornoAcoesLinha]}>
         {!certa && (
           <View style={licaoEstilos.acaoTentar}>
             <Botao testID="tentar-de-novo" variante="secundario" peso="900" rotulo={mensagens.licao.tentarDeNovo} desativado={ocupado} acao={tentarDeNovo} />
           </View>
         )}
-        <View style={certa ? licaoEstilos.metade : undefined}>
+        <View style={certa && !linhaCompacta ? licaoEstilos.metade : undefined}>
           <Botao testID="continuar-licao" rotulo={concluindo ? mensagens.licao.concluindo : certa ? mensagens.licao.continuar : rotuloPular}
-            variante={certa ? 'sucesso' : 'texto'} peso="900" estilo={certa ? undefined : licaoEstilos.pular}
+            variante={certa ? 'sucesso' : 'texto'} peso="900" estilo={linhaCompacta ? licaoEstilos.continuarLinha : certa ? undefined : licaoEstilos.pular}
             desativado={ocupado} ocupado={concluindo} carregando={concluindo} acao={continuar} />
         </View>
       </View>
@@ -1480,6 +1483,12 @@ const licaoEstilos = StyleSheet.create({
   retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   retornoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -2 },
   retornoAcoesCompacto: { marginTop: 10 },
+  // A linha do acerto com o "Explique" aberto (item 24): título e "Continuar" lado a lado, 48 + 8 de cada lado = 64.
+  painelLinha: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 },
+  painelLinhaTexto: { flex: 1, minWidth: 0 },
+  retornoTituloLinha: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22, letterSpacing: 0, color: cores.sucesso },
+  retornoAcoesLinha: { marginTop: 0 },
+  continuarLinha: { minHeight: 48, paddingHorizontal: 4 },
   metade: { flex: 1, minWidth: 0 },
   /** "Tentar de novo" ocupa o que sobra da linha; "Pular por agora" fica do tamanho do rótulo, discreto. */
   acaoTentar: { flex: 1, minWidth: 0 },
