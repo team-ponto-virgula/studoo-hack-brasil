@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-11-21T02:14:12.535Z",
+  "appId": "6837508955",
+  "groupId": "b54c8449-a903-4bc3-885a-5b3dcd6dd21a",
+  "name": "Studoo Beta Interno",
+  "internal": true,
+  "allBuilds": false,
+  "builds": [
+    {
+      "id": "4eea9ee9-145e-4076-8ad1-e130af015d6c",
+      "version": "3",
+      "processingState": "VALID"
+    }
+  ],
+  "testerCount": 1,
+  "ownerMember": true,
+  "ownerTesterState": "INVITED",
+  "ownerInviteType": "EMAIL",
+  "otherUsersAdded": false,
+  "rolesChanged": false,
+  "limits": "Confirma associação do build, titular, estado INVITED e recebimento do convite oficial por email; não comprova aceite, instalação ou funcionamento no iPhone.",
+  "invitationEmailReceived": true,
+  "invitationEmailSentAt": "2026-11-21T02:13:50Z"
+}

@@ -1,8 +1,12 @@
 # Beta externo — estado de entrega
 
-## Estado atual — 21/11/2026, 00:14 UTC (20/11, 21:14 em São Paulo)
+## Estado atual — 21/11/2026, 02:14 UTC (20/11, 23:14 em São Paulo)
 
 O **Studoo 0.1.0 (3) está compilado, assinado, enviado e processado pela Apple**. O build está `VALID`, com estado externo `READY_FOR_BETA_SUBMISSION`. **Ainda não foi enviado à Beta App Review e não está disponível para testadores externos.**
+
+**Teste interno ativado por pedido explícito do titular.** Grupo **Studoo Beta Interno** (`b54c8449-a903-4bc3-885a-5b3dcd6dd21a`), com acesso somente ao build 3 e um testador: o titular já existente no App Store Connect. A leitura do grupo confirmou estado **`INVITED`**. Não houve alteração de papéis, inclusão de Julio ou de outras pessoas. [Confirmação sanitizada](conferencia-cloud/internal-testing-3.json).
+
+Para instalar: no iPhone, abrir o convite oficial do TestFlight enviado ao email da conta do titular, aceitar e instalar o Studoo no app TestFlight. A API confirmou o convite e o email oficial da Apple foi recebido às 02:13:50 UTC; aceite, instalação e funcionamento no aparelho ainda não foram comprovados. O login Apple continua desligado no servidor; o teste interno não remove esse bloqueio do beta externo. A associação interna não gerou outro IPA nem upload.
 
 Novas ações concluídas, com leitura de confirmação pela API:
 
@@ -17,7 +21,7 @@ Faltam duas intervenções no servidor: **chave/configuração específica de Si
 
 Antes de declarar a entrega validada, ainda é necessário instalar o build 3 num iPhone e conferir logins reais, gerar/aceitar trilha, concluir a primeira lição, progresso salvo/retomada, avisos/protocolo/Desfazer da comunidade, exclusão/revogação e áudio no aparelho. A execução de simulador não substitui essa prova.
 
-Depois de configurar o servidor e salvar a conta demo nos campos privados da Apple, repetir os gates e enviar **o build existente** à Beta App Review. Não repetir `eas submit` nem gerar outro IPA para uma alteração apenas no servidor/metadados. Nenhum testador interno foi adicionado; não houve convite para Julio ou alteração de papéis. Disponibilidade externa depende da aprovação da Apple.
+Depois de configurar o servidor e salvar a conta demo nos campos privados da Apple, repetir os gates e enviar **o build existente** à Beta App Review. Não repetir `eas submit` nem gerar outro IPA para uma alteração apenas no servidor/metadados. Disponibilidade externa depende da aprovação da Apple.
 
 Links: [TestFlight](https://appstoreconnect.apple.com/apps/6837508955/testflight/ios), [build EAS](https://expo.dev/accounts/miguelvzs/projects/studoo-mobile/builds/20b7bdac-da61-4ed8-8003-ccc98d3f35cb), [upload concluído](https://expo.dev/accounts/miguelvzs/projects/studoo-mobile/submissions/fcf8f42b-864a-4bcf-ad52-6598a981a194).
 
