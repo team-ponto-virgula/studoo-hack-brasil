@@ -104,9 +104,7 @@ As mudanças de tela do app congelam na noite de 25/11: P0 e P1 cabem até lá, 
 - **Hoje:** "Se pular, este exercício volta no fim da lição." vem em negrito centralizado, antes dos botões, e disputa com o título.
 - **Regra:** a frase passa para baixo da fileira de botões, em 13/18 regular `#5E6A85`, alinhada com "Pular por agora".
 
-**12. O nome da trilha no alto da criação** (iPhone e Android `91` e `92`)
-- **Hoje:** "Entender, comparar e somar frações." aparece em letra pequena, como rodapé.
-- **Regra:** 15/20 800 `#0B1B5C`, numa linha, com reticências.
+**12. O nome da trilha no alto da criação** (iPhone e Android `91` e `92`): substituído pelo item 34, que sobe para P1.
 
 ## O que já está refinado (mantém)
 
@@ -223,8 +221,8 @@ A demo mostra a citação sem procurar. Os problemas deste momento são os itens
 
 **23. A ordem das opções muda entre a web e o app** (achado do Mobile & QA, no mesmo exercício: A 3, B 8, C 11 na web e A 11, B 3, C 8 no app)
 - **Regra:**
-  - a ordem das opções vem do servidor, já embaralhada uma vez por exercício e guardada;
-  - a web e o app mostram essa mesma ordem, sem embaralhar no cliente;
+  - a ordem das opções sai de uma semente compartilhada pela web e pelo app (proposta do Web & API): a mesma tentativa mostra a mesma ordem nas duas plataformas;
+  - a revisão pode embaralhar de novo, com uma semente nova também compartilhada, para a pessoa não decorar a posição da resposta;
   - a letra (A, B, C) é a mesma para a mesma opção nas duas plataformas, porque a demo pode mostrar as duas lado a lado.
 - **Onde:** as três plataformas, com o Web & API no servidor.
 
@@ -266,3 +264,48 @@ A demo mostra a citação sem procurar. Os problemas deste momento são os itens
 - **Regra:** "Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu. O Stu aponta o que fez sentido e propõe uma situação nova." Sai "o mascote do Studoo", que a pessoa já conhece. É um texto do contrato.
 
 **Próximo:** o Android completo da rodada nova (run 44920181903) e a matemática no aparelho, quando houver captura nativa.
+
+## Decisões sobre a banca do Mobile & QA (lote 1, 21/11)
+
+**30. Legenda com um símbolo que não está no desenho** (P1-4; exercício "Em qual ponto a reta corta o eixo y?", web e app)
+- **Regra:**
+  - a legenda só lista os símbolos que aparecem na figura;
+  - no enunciado, o procurado não é desenhado, então a legenda não tem o item "procurado" com o círculo tracejado e fica só com a linha "C = ?", em `#9A5B00`, sem símbolo antes;
+  - no retorno, entra "resposta", com o ponto verde;
+  - vale para o plano, a reta numérica e a função (spec 15).
+- **Onde:** é do motor, igual nas três plataformas.
+
+**31. O estado do compartilhamento diferente no mapa e no Perfil** (P1-5; iPhone `05` e `51`)
+- **Regra:** um estado só, curto, no botão do alto do mapa (item 26) e no selo do cartão de Minhas trilhas:
+  - sem link: "Compartilhar";
+  - link criado e aprovado: "Compartilhada";
+  - à espera da revisão da equipe: "Em revisão", no selo neutro da spec 14;
+  - recusada: "Não publicada", no selo âmbar da spec 14.
+  O texto longo ("Em revisão pela equipe do Studoo. Por enquanto, só você vê.") fica só no Perfil e na folha de compartilhar.
+- **Onde:** as três plataformas.
+
+**32. "Compartilhar" e "postar" se confundem no Perfil** (P1-6; iPhone `51` e `55`)
+- **Regra:** os dois termos ficam, cada um com um sentido:
+  - **compartilhar** é ter um link: só quem recebe o link abre;
+  - **postar** é aparecer no perfil.
+- **Textos novos** (contrato `perfil`):
+  - o título da seção "Trilhas que você compartilha (N)" passa a "Trilhas com link (N)", com a linha "Só quem tem o link abre. Para aparecer no seu perfil, use “Postar trilha no perfil”.";
+  - "Seu perfil público", quando vazio, passa a "Privado: nenhuma trilha está postada no seu perfil. Para aparecer nele, use “Postar trilha no perfil”.".
+- **Onde:** as três plataformas.
+
+**33. O visitante sem a navegação no site** (P1-3; site publicado, 390 e 768)
+- **Regra:**
+  - o visitante tem a mesma navegação da conta: a cápsula de abas embaixo até 1023 px (Minhas trilhas, Nova trilha, Explorar quando a comunidade está ligada, Perfil) e a lateral a partir de 1024 px;
+  - entre 768 e 1023 px, a web usa a cápsula embaixo, como no celular, e não os links no alto;
+  - o Perfil do visitante é a versão de conta temporária, já existente.
+- **Onde:** web, para igualar o app.
+
+**34. O cabeçalho da proposta da trilha** (P2-9; app `01-aprender-funcoes-trilha-pronta` × web; sobe para P1, porque é a tela do primeiro contato)
+- **Regra:** nas três plataformas, como a web:
+  - o botão de voltar ao pedido, de 44 px, à esquerda;
+  - o nome da trilha em 17/22 800 `#0B1B5C`, até 2 linhas e sem reticências (com 3 linhas ou mais, o tamanho cai para 15/20);
+  - embaixo, a faixa "Proposta pronta: N lições em M partes".
+  O objetivo do pedido não aparece no alto.
+- **Onde:** o app, para igualar a web. Substitui o item 12.
+
+A captura da web da proposta (`01-aprender-funcoes-trilha-pronta`) confirma de novo os itens 1 (a tela no troféu) e 13 (cenário gigante na web).
