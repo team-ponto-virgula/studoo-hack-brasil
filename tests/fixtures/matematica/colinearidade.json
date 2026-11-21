@@ -1,0 +1,114 @@
+{
+  "descricao": "Item d da folha: valor de k para os pontos A(−1, −1), B(2, 5) e C(k, 1) serem colineares, por determinante 3×3 (−6k = 0 → k = 0). O exemplo resolvido usa outros números (A(0, 1), B(1, 3), C(k, 5) → k = 2).",
+  "resposta": { "k": 0 },
+  "licao": {
+    "titulo": "Pontos colineares e o determinante",
+    "objetivo": "Decidir quando três pontos estão alinhados usando o determinante das coordenadas.",
+    "conceito": "Três pontos estão alinhados (são colineares) quando o determinante das suas coordenadas, com uma coluna de 1, é zero: det [x_A, y_A, 1; x_B, y_B, 1; x_C, y_C, 1] = 0.",
+    "exemplo": "Com A(0, 1), B(1, 3) e C(k, 5): o determinante é 0 · (3 − 5) − 1 · (1 − k) + 1 · (5 − 3k) = 4 − 2k. Igualando a zero, k = 2.",
+    "origem": "Conteúdo gerado pelo Studoo",
+    "visuais": [
+      {
+        "tipo": "formula",
+        "latex": "\\begin{vmatrix} x_A & y_A & 1 \\\\ x_B & y_B & 1 \\\\ x_C & y_C & 1 \\end{vmatrix} = 0",
+        "alt": "Condição de alinhamento"
+      },
+      {
+        "tipo": "plano",
+        "x": [-3, 4],
+        "y": [-3, 7],
+        "pontos": [
+          { "id": "A", "papel": "dado", "x": -1, "y": -1 },
+          { "id": "B", "papel": "dado", "x": 2, "y": 5 },
+          { "id": "C", "papel": "procurado", "x": 0, "y": 1 }
+        ],
+        "segmentos": [{ "de": "A", "ate": "B" }],
+        "alt": "Os pontos A (−1, −1) e B (2, 5) no plano; C tem ordenada 1 e abscissa k, desconhecida."
+      }
+    ],
+    "exercicio": {
+      "tipo": "multipla_escolha",
+      "enunciado": "Para que valor de k os pontos A(−1, −1), B(2, 5) e C(k, 1) são colineares?",
+      "opcoes": [
+        { "id": "a", "texto": "k = 0" },
+        { "id": "b", "texto": "k = 6" },
+        { "id": "c", "texto": "k = −6" }
+      ],
+      "gabarito": ["a"],
+      "feedbackCorreto": "Isso! O determinante vale −6k, e −6k = 0 só para k = 0: C(0, 1) está na reta y = 2x + 1, que passa por A e B.",
+      "feedbackIncorreto": "Monte o determinante com as coordenadas e uma coluna de 1; igualado a zero, ele dá −6k = 0.",
+      "visual": {
+        "tipo": "plano",
+        "x": [-3, 4],
+        "y": [-3, 7],
+        "pontos": [
+          { "id": "A", "papel": "dado", "x": -1, "y": -1 },
+          { "id": "B", "papel": "dado", "x": 2, "y": 5 },
+          { "id": "C", "papel": "procurado", "x": 0, "y": 1 }
+        ],
+        "segmentos": [{ "de": "A", "ate": "B" }],
+        "alt": "Os pontos A (−1, −1) e B (2, 5) no plano; C tem ordenada 1 e abscissa k, desconhecida."
+      }
+    },
+    "resolucao": {
+      "problema": "Para que valor de k os pontos A(0, 1), B(1, 3) e C(k, 5) são colineares?",
+      "visual": {
+        "tipo": "plano",
+        "x": [-2, 4],
+        "y": [-1, 7],
+        "pontos": [
+          { "id": "A", "papel": "dado", "x": 0, "y": 1 },
+          { "id": "B", "papel": "dado", "x": 1, "y": 3 },
+          { "id": "C", "papel": "procurado", "x": 2, "y": 5 }
+        ],
+        "segmentos": [{ "de": "A", "ate": "B" }],
+        "alt": "Os pontos A (0, 1) e B (1, 3) no plano; C tem ordenada 5 e abscissa k, desconhecida."
+      },
+      "passos": [
+        {
+          "nome": "A condição",
+          "texto": "Três pontos estão alinhados quando o determinante das coordenadas é zero.",
+          "formula": "\\foco{\\begin{vmatrix} x_A & y_A & 1 \\\\ x_B & y_B & 1 \\\\ x_C & y_C & 1 \\end{vmatrix}} = 0"
+        },
+        {
+          "nome": "Troque os valores",
+          "texto": "Coloque as coordenadas de A, B e C no determinante.",
+          "formula": "\\begin{vmatrix} 0 & 1 & 1 \\\\ 1 & 3 & 1 \\\\ \\procurado{k} & 5 & 1 \\end{vmatrix} = 0"
+        },
+        {
+          "nome": "Calcule o determinante",
+          "texto": "Desenvolva pela primeira linha: 0 · (3 − 5) − 1 · (1 − k) + 1 · (5 − 3k).",
+          "formula": "-1 + k + 5 - 3k = \\foco{4 - 2k}"
+        },
+        {
+          "nome": "Isole k",
+          "texto": "Iguale a zero: 4 − 2k = 0.",
+          "formula": "4 - 2k = 0",
+          "tentativa": {
+            "pergunta": "Quanto vale k?",
+            "opcoes": [
+              { "formula": "k = \\frac{4}{2}", "correta": true, "porque": "De 4 − 2k = 0 sai 2k = 4, e k = 4 ÷ 2 = 2." },
+              { "formula": "k = -\\frac{4}{2}", "correta": false, "porque": "O sinal não muda: 4 passa somando para o outro lado, e 2k = 4." },
+              { "formula": "k = 4 \\times 2", "correta": false, "porque": "Para isolar k, divide-se por 2; multiplicar dá o valor errado." }
+            ]
+          }
+        },
+        {
+          "nome": "O valor de k",
+          "texto": "Então k = 2, e C = (2, 5) fica na reta de A e B.",
+          "formula": "k = \\resposta{2}",
+          "visual": {
+            "tipo": "plano",
+            "pontos": [
+              { "id": "A", "papel": "dado", "x": 0, "y": 1 },
+              { "id": "B", "papel": "dado", "x": 1, "y": 3 },
+              { "id": "C", "papel": "resposta", "x": 2, "y": 5 }
+            ],
+            "segmentos": [{ "de": "A", "ate": "B" }, { "de": "B", "ate": "C" }],
+            "alt": "Os pontos A (0, 1), B (1, 3) e C (2, 5) alinhados sobre a mesma reta."
+          }
+        }
+      ]
+    }
+  }
+}

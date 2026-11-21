@@ -3,7 +3,12 @@ import type { MotivoRever } from './licao';
 import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil, Tema } from './compartilhar';
 import type { ConfiguracoesTrilha, MotivoDenuncia, MudancaConfiguracoes, Novidades, PaginaExplorar, ResultadoSeguir, ResultadoValeu, Visibilidade } from './comunidade';
 import type { EstadoPrivacidade } from './privacidade';
+import type { Resolucao, Visual } from './visuais';
 export * from './estudio';
+export * from './visuais';
+export * from './formula';
+export { conferirConta, type ResultadoConta } from './formula-conta';
+export * from './visuais-validacao';
 export * from './licao';
 export * from './som';
 export { fundoUnicoDaPreferencia } from './catalogo-sons';
@@ -121,6 +126,11 @@ interface Enunciado {
   trechoTipo?: TipoTrecho;
   /** Áudio do exercício (ouça e responda). Sem trecho, o texto fica escondido até a pessoa pedir para ler. */
   fala?: Fala;
+  /**
+   * Figura da pergunta (plano, reta numérica) ou fórmula (spec 15). Só vai com `visuais@1` no cabeçalho `X-Studoo-Capacidades`,
+   * e sem a posição do ponto procurado (`visualParaEnunciado`): a resposta chega em `Avaliacao.visual`.
+   */
+  visual?: Visual;
 }
 
 /**
@@ -155,6 +165,13 @@ export interface LicaoDetalhe {
   exemploTipo?: "exemplo" | "demonstracao";
   passos?: string[];
   recurso?: Recurso;
+  /**
+   * Fórmulas e figuras da lição, até 3 (spec 15). Só vão com `visuais@1` no cabeçalho `X-Studoo-Capacidades`; sem ele (build 3,
+   * site antigo) o servidor omite este campo e põe o desenho num PNG em `recurso`, nas lições de matemática.
+   */
+  visuais?: Visual[];
+  /** "Resolva comigo": o exemplo resolvido passo a passo, com o "Sua vez". Só vai com `resolucao@1` no cabeçalho. */
+  resolucao?: Resolucao;
   /** Frases para ouvir e repetir, no exemplo. */
   falas?: Fala[];
   origem: string;
@@ -183,6 +200,11 @@ export interface Avaliacao {
   modelo?: string;
   /** A correção da resposta aberta foi a do modo demonstração (ideias-chave, sem IA). */
   simulado?: boolean;
+  /**
+   * Exercício com figura, depois do acerto: o visual completo, com o ponto procurado virado em resposta (só com
+   * `visuais@1`). Quem erra não recebe a posição.
+   */
+  visual?: Visual;
 }
 
 export interface Conclusao {
