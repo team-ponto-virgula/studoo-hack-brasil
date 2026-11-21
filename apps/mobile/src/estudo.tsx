@@ -24,7 +24,7 @@ import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NoCaminho, type NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
-import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, raioQueCobre, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
+import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, raioQueCobre, rolagemDaTrilhaPronta, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
@@ -1324,6 +1324,8 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const [acompanhando, setAcompanhando] = useState(true);
   const acompanhandoAgora = useRef(true);
   const [alturaPlaca, setAlturaPlaca] = useState(0);
+  const alturaPlacaAgora = useRef(0);
+  alturaPlacaAgora.current = alturaPlaca;
   const [esperaLonga, setEsperaLonga] = useState(false);
   const [cartaoDeVolta, setCartaoDeVolta] = useState(false);
   const [trofeuAVista, setTrofeuAVista] = useState(false);
@@ -1397,22 +1399,52 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     for (const relogio of somDasLicoes.current) clearTimeout(relogio);
     somDasLicoes.current.clear();
     AccessibilityInfo.announceForAccessibility(`${mensagens.geracao.propostaPronta(total, partes)} ${mensagens.geracao.comecarLicao1}.`);
-    if (rolado.current <= 4) setCartaoDeVolta(true);
+    const noAlto = rolado.current <= 4;
+    if (noAlto) setCartaoDeVolta(true);
+    // A tela deixa de seguir o fim: em vez de parar no troféu, ela rola até o nó 1, no meio da área livre (spec 16, item 1).
+    // O troféu fica a uma rolagem, com a pílula "Ver o fim da trilha". Espera um quadro: o troféu e, no alto, o cartão do
+    // título entram agora e mudam a página.
+    mudarAcompanhar(false);
+    centrarNo1NaPronta.current = true;
+    const irAoNo1 = setTimeout(() => centrarNo1(noAlto, RITMO_DA_GERACAO.prontaAteNo1Ms), 50);
+    // Depois da rolagem, a pessoa que sobe ao alto por conta própria não é puxada de volta ao nó 1.
+    const fimDoCentro = setTimeout(() => { centrarNo1NaPronta.current = false; }, 50 + RITMO_DA_GERACAO.prontaAteNo1Ms + 600);
     const focar = setTimeout(() => focarSemRolar(botaoComecar.current), RITMO_DA_GERACAO.rodapeMs + 60);
     if (reduzir !== false) {
       deslize.setValue(1);
-      return () => clearTimeout(focar);
+      return () => { clearTimeout(focar); clearTimeout(irAoNo1); clearTimeout(fimDoCentro); };
     }
     deslize.setValue(0);
     const entrar = Animated.timing(deslize, { toValue: 1, duration: RITMO_DA_GERACAO.rodapeMs, easing: Easing.out(Easing.quad), useNativeDriver: true });
     entrar.start();
     return () => {
       clearTimeout(focar);
+      clearTimeout(irAoNo1);
+      clearTimeout(fimDoCentro);
       entrar.stop();
     };
     // Só na virada para pronta.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pronta]);
+
+  /** O centro do nó 1 no meio da área livre (spec 16, item 1); sem a placa quando o cartão do título voltou no alto. */
+  const centrarNo1NaPronta = useRef(false);
+  function centrarNo1(semPlaca: boolean, duracao: number) {
+    const primeiro = todos[0]?.id;
+    const centro = primeiro ? centros.current.get(primeiro) : undefined;
+    if (centro === undefined) return;
+    const topoLivre = semPlaca ? 0 : RITMO_DA_GERACAO.placaTopo + alturaPlacaAgora.current;
+    rolarAteNo1(rolagemDaTrilhaPronta(centro, visivel.current || height, topoLivre), duracao);
+  }
+  // A rolagem até o nó 1 pode passar pelo alto: o cartão do título volta, empurra o mapa para baixo e o nó 1 cairia atrás do
+  // rodapé. Com o cartão medido, o nó 1 volta ao meio da área livre, sem animação (o movimento já aconteceu).
+  useEffect(() => {
+    if (!cartaoDeVolta || !pronta || !centrarNo1NaPronta.current) return;
+    const relogio = setTimeout(() => centrarNo1(true, 0), 50);
+    return () => clearTimeout(relogio);
+    // Só quando o cartão volta.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartaoDeVolta]);
 
   // O toque em "Começar a lição 1" (spec 04, "Criar a trilha"). Se o nó 1 não está à vista, a prévia rola até ele (no app, a
   // rolagem animada do sistema; com movimento reduzido, pula), para o anel que respira e o Stu que estuda ficarem à vista.
@@ -1724,7 +1756,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
       {/* A prévia é rascunho, sem confete no troféu; no toque, o nó 1 e o Stu contam a criação (spec 04, "Criar a trilha"). */}
       <Caminho nos={nos} stu={pronta ? mensagens.geracao.stuPronta : mensagens.geracao.stuMontando} extraChegada={44}
         chegada={pronta} montando={!pronta} acompanhar={aoChegarAoFim} semFala respiroNoAlto={alturaPlaca + 20} aoMedirNo={aoMedirNo}
-        stuNoFim festaPermitida={false} trofeuDoZero rascunho guardarNo1={guardarNo1}
+        stuNoNo1={pronta} festaPermitida={false} trofeuDoZero rascunho guardarNo1={guardarNo1}
         criacao={criacao === null ? null : criacao === 'criando' || criacao === 'criada' ? criacao : 'erro'} />
     </Tela>
   );

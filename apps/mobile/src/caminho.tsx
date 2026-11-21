@@ -130,7 +130,7 @@ function trechoVencido(nos: readonly NoCaminho[], trecho: number) {
  */
 export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false, ocupado = false, abrindo = null, liberadas = [],
   rolarPara = null, recemConcluida = null, aoRolar, aoMedirAtual, acompanhar, aoAbrir, estilo, extraChegada = 0, semFala = false, respiroNoAlto = 0,
-  aoMedirNo, stuNoFim = false, festaPermitida = true, trofeuDoZero = false, rascunho = false, criacao = null, guardarNo1 }: {
+  aoMedirNo, stuNoNo1 = false, festaPermitida = true, trofeuDoZero = false, rascunho = false, criacao = null, guardarNo1 }: {
   /**
    * A prévia é rascunho (spec 04, "Criar a trilha"): nós de face branca com contorno tracejado de 2 px `#9CB4F5`, sem o lábio,
    * e o caminho tracejado 8/8 na mesma cor. Quando a trilha passa a existir (`criacao` = 'criada'), viram os de sempre.
@@ -151,8 +151,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   respiroNoAlto?: number;
   /** Onde cada nó está na rolagem da tela (o topo e a base da lente), para a tela levar a lição nova a 60% do mapa. */
   aoMedirNo?: (id: string, topo: number, base: number) => void;
-  /** Fim da geração: o Stu pula ao lado do troféu. */
-  stuNoFim?: boolean;
+  /** Fim da geração (proposta pronta): o Stu feliz fica ao lado do nó 1, não do troféu (spec 16, item 1). */
+  stuNoNo1?: boolean;
   /** O confete do fim só cai quando o troféu entra na tela (a tela não estava acompanhando). */
   festaPermitida?: boolean;
   /** O troféu entra crescendo de 0 a 1,1 e volta a 1 (420 ms). */
@@ -223,7 +223,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   const ultimoTrecho = nos[total - 1]?.trecho ?? 0;
   const guiaNoCaminho = !montando && nos.some((no) => no.estado === 'atual');
   // Na criação, o Stu sai do troféu e vai para o lado do nó 1.
-  const stuNaChegada = !montando && (tudoFeito || stuNoFim) && criacao === null;
+  const stuNaChegada = !montando && tudoFeito && criacao === null;
   // A trilha passou a existir (o aceite voltou): todos os nós perdem o tracejado da proposta junto com o caminho.
   const firmar = criacao === 'criada';
   // Na geração, o Stu fica do lado de fora da lição mais nova (ou da vaga, antes da primeira) e anda até a próxima.
@@ -495,7 +495,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                   fechar={() => fechar()} aoMedir={(altura) => enquadrarBalao(no.id, altura)} lente={medidas.lente} />
               )}
               {montando && <Nascimento x={x} largura={largura} lente={medidas.lente} atraso={atrasos.no} animar={novo} reduzir={reduzir} />}
-              {indice === 0 && criacao !== null && <StuDoNo1 x={x} largura={largura} lente={medidas.lente} tamanho={medidas.guia} criacao={criacao} reduzir={reduzir} />}
+              {indice === 0 && (criacao !== null || stuNoNo1) && <StuDoNo1 x={x} largura={largura} lente={medidas.lente} tamanho={medidas.guia} criacao={criacao ?? 'pronta'} reduzir={reduzir} />}
               {fimDoTrecho && (
                 <Marco numero={trechos.indexOf(no.trecho) + 1} vencido={marcoVencido} topo={medidas.lente + (no.estado === 'atual' ? 37 : 36)} noAlto={seguinte?.estado === 'atual'}
                   queda={montando}>
@@ -865,13 +865,14 @@ function Nascimento({ x, largura, lente, atraso, animar, reduzir }: {
 }
 
 /**
- * O Stu ao lado do nó 1 quando a pessoa toca em "Começar a lição 1" (spec 04 e 13, "Criar a trilha"), no tamanho do guia
+ * O Stu ao lado do nó 1: feliz (`stu-feliz`) quando a proposta fica pronta (spec 16, item 1) e, quando a pessoa toca em
+ * "Começar a lição 1" (spec 04 e 13, "Criar a trilha"), no tamanho do guia
  * do mapa: chega andando (400 ms) e estuda em laço (`stu-estudando`) enquanto o aceite não volta; no erro, fica parado e
  * encorajador; quando a trilha passa a existir, faz um ciclo de `stu-comemorando`. Com movimento reduzido, já está no
  * lugar e não anda. Decorativo.
  */
 function StuDoNo1({ x, largura, lente, tamanho, criacao, reduzir }: {
-  x: number; largura: number; lente: number; tamanho: number; criacao: 'criando' | 'erro' | 'criada'; reduzir: boolean | null;
+  x: number; largura: number; lente: number; tamanho: number; criacao: 'pronta' | 'criando' | 'erro' | 'criada'; reduzir: boolean | null;
 }) {
   const centro = (largura * x) / 100;
   const direita = x < 50;
@@ -890,7 +891,8 @@ function StuDoNo1({ x, largura, lente, tamanho, criacao, reduzir }: {
   }, []);
   const pose: { nome: NomeStu; animado?: 'laco' | 'acontecimento'; acontecimento?: string } = criacao === 'criando'
     ? { nome: 'stu-estudando', animado: 'laco' }
-    : criacao === 'criada' ? { nome: 'stu-comemorando', animado: 'acontecimento', acontecimento: 'criada' } : { nome: 'stu-encorajador' };
+    : criacao === 'criada' ? { nome: 'stu-comemorando', animado: 'acontecimento', acontecimento: 'criada' }
+      : criacao === 'pronta' ? { nome: 'stu-feliz' } : { nome: 'stu-encorajador' };
   return (
     <Animated.View testID="stu-no1" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
       style={[caminhoEstilos.stuQueAnda, { width: tamanho, left: esquerda, top: lente / 2 - tamanho * 0.9, opacity: chegada,
