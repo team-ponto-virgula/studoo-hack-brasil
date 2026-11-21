@@ -115,3 +115,9 @@ export function alturaMaximaDaFigura(larguraUtil: number, alturaNaTela = 200): n
   if (!(larguraUtil > 0)) return alturaNaTela;
   return Math.round((alturaNaTela * 320) / larguraUtil);
 }
+
+/** A altura da figura do exercício na tela: 200 numa janela de 844 ou mais; abaixo disso, na proporção (158 no iPhone SE, 667). */
+export function alturaDaFiguraNaTela(alturaDaJanela: number): number {
+  if (!(alturaDaJanela > 0)) return 200;
+  return Math.min(200, Math.round((alturaDaJanela * 200) / 844));
+}

@@ -87,6 +87,10 @@ test('visuais abertos na lição: conceito e exemplo com a fórmula antes do dia
   const formula = { tipo: 'formula', latex: 'x = 1' };
   assert.deepEqual(ordenarVisuais([plano, formula]).map((v) => v.tipo), ['formula', 'plano']);
   assert.equal(alturaMaximaDaFigura(358), Math.round(200 * 320 / 358), 'figura do exercício com até 200 na tela de 390');
+  const { alturaDaFiguraNaTela } = await import('../apps/mobile/src/desenho-svg.ts');
+  assert.equal(alturaDaFiguraNaTela(844), 200); assert.equal(alturaDaFiguraNaTela(932), 200);
+  assert.equal(alturaDaFiguraNaTela(667), 158, 'no iPhone SE, a figura encolhe para as opções começarem na primeira tela');
+  assert.match(await ler('apps/mobile/src/licao.tsx'), /alturaMaximaDaFigura\(larguraJanela - 32 - 2 \* \(respiroQuadro\.padding \+ 2\), alturaDaFiguraNaTela\(alturaJanela\)\)/);
   const licao = await ler('apps/mobile/src/licao.tsx');
   assert.match(licao, /<VisuaisDaLicao visuais=\{licao\.visuais\} \/>/, 'no conceito');
   assert.match(licao, /<VisuaisDaLicao visuais=\{licao\.visuais\} testID="visual-exemplo" \/>/, 'no exemplo');

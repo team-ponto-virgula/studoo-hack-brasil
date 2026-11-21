@@ -43,7 +43,7 @@ import {
   pararVoz,
 } from './aula-formatos';
 import { CONTEXTO_DO_ENUNCIADO, CONTEXTO_DO_RETORNO, DesenhoDoVisual, OPCOES_DA_FORMULA, VisuaisDaLicao } from './desenho';
-import { alturaMaximaDaFigura } from './desenho-svg';
+import { alturaDaFiguraNaTela, alturaMaximaDaFigura } from './desenho-svg';
 import { Confete } from './festa';
 import { useResolvaComigo } from './resolva-comigo';
 import { FormulasNoTexto, TextoComFormulas } from './texto-com-formulas';
@@ -212,10 +212,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   responderSuaVez?: (escolha: EscolhaNoSuaVez) => Promise<unknown>;
 }) {
   // .aula-quadro da web: respiro clamp(16px, 5vw, 28px) (19,5 px em 390, 18 em 360).
-  const { width: larguraJanela } = useWindowDimensions();
+  const { width: larguraJanela, height: alturaJanela } = useWindowDimensions();
   const respiroQuadro = { padding: Math.min(28, Math.max(16, larguraJanela * 0.05)) };
-  /** A figura do exercício: até 200 na tela (spec 15), na largura útil do quadro (janela, margens de 16 e o respiro com a borda de 2). */
-  const alturaDaFigura = alturaMaximaDaFigura(larguraJanela - 32 - 2 * (respiroQuadro.padding + 2));
+  /**
+   * A figura do exercício: até 200 na tela em 390 × 844 (spec 15), na largura útil do quadro (janela, margens de 16 e o respiro com
+   * a borda de 2). Em tela mais baixa (iPhone SE, 667), ela encolhe na proporção da altura, para as opções começarem na primeira tela.
+   */
+  const alturaDaFigura = alturaMaximaDaFigura(larguraJanela - 32 - 2 * (respiroQuadro.padding + 2), alturaDaFiguraNaTela(alturaJanela));
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   // Como na web: as opções mudam de ordem a cada visita.
   const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
