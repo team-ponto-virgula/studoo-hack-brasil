@@ -9,6 +9,8 @@ import {
   ErroStudoo,
   codificarResposta,
   conferirFala,
+  contemMarcaDeFormula,
+  falarTextoComFormulas,
   linhasDePassos,
   partesDaLacuna,
   semAspas,
@@ -526,8 +528,12 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
 
 /** Texto com as lacunas destacadas (um espaço sublinhado). */
 /** `preenchimento`: o que a pessoa escreve na lacuna, no lugar do espaço, enquanto digita. Como na web. */
-function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: StyleProp<TextStyle>; preenchimento?: string }) {
+function ComLacunas({ texto, estilo, preenchimento, puro = false }: { texto: string; estilo?: StyleProp<TextStyle>; preenchimento?: string; puro?: boolean }) {
   const partes = partesDaLacuna(texto);
+  // Fora do código, o texto em volta de cada lacuna pode trazer fórmula marcada ($…$): ela é desenhada em linha, e o leitor ouve a
+  // fala dela no rótulo do trecho inteiro (as fórmulas desenhadas não têm texto para o leitor).
+  const comFormula = !puro && partes.some((parte) => contemMarcaDeFormula(parte));
+  const rotulo = comFormula ? partes.map((parte) => falarTextoComFormulas(parte)).join(preenchimento ? ` ${preenchimento} ` : ' lacuna ') : undefined;
   // Como .trecho-lacuna da web: a lacuna vazia é uma barra de 3,2em × 3 px na cor do texto a 70%, com 0,15em dos lados, logo
   // abaixo da linha (a caixa em linha da web tem a altura da linha e desce 0,1em; a borda de baixo fica ~9 px abaixo da base
   // num texto de 20/28). A barra em linha nasce com a base na linha de base; o deslocamento a leva para o mesmo lugar.
@@ -537,10 +543,10 @@ function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: 
   const barra: ViewStyle = { width: fonte * 3.2, height: 3, marginHorizontal: fonte * 0.15, opacity: 0.7,
     backgroundColor: typeof plano.color === 'string' ? plano.color : cores.texto, transform: [{ translateY: linha / 2 - fonte * 0.229 + 3 }] };
   return (
-    <Text selectable style={estilo}>
+    <Text selectable style={estilo} accessibilityLabel={rotulo}>
       {partes.map((parte, posicao) => (
         <Text key={posicao}>
-          {parte}
+          {comFormula ? <TextoComFormulas texto={parte} estilo={estilo} /> : parte}
           {posicao < partes.length - 1 && (preenchimento
             ? <Text style={[formatos.lacuna, formatos.lacunaPreenchida]}>{preenchimento}</Text>
             : <View accessible accessibilityLabel="lacuna" style={barra} />)}
@@ -554,7 +560,7 @@ function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: 
 export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: string; tipo?: TipoTrecho; fala?: Fala; preenchimento?: string }) {
   switch (tipo) {
     case 'codigo':
-      return <ComLacunas texto={texto} estilo={formatos.codigo} preenchimento={preenchimento} />;
+      return <ComLacunas texto={texto} estilo={formatos.codigo} preenchimento={preenchimento} puro />;
     case 'citacao':
       return (
         <View style={formatos.citacao}>
@@ -870,6 +876,8 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     return esquerda.findIndex((item) => item.id === esquerdaDoPar) + 1;
   };
   const texto = (lista: Opcao[], id: string) => lista.find((item) => item.id === id)?.texto ?? '';
+  /** O que o leitor de tela ouve de um item: a fórmula marcada ($…$) lida pela árvore ("seno de x"), nunca o cifrão (P32). */
+  const fala = (lista: Opcao[], id: string) => falarTextoComFormulas(texto(lista, id));
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
 
   function tocarEsquerda(id: string) {
@@ -885,7 +893,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     }
     setEscolhida((atual) => {
       const nova = atual === id ? null : id;
-      if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhido(texto(esquerda, nova)));
+      if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhido(fala(esquerda, nova)));
       return nova;
     });
   }
@@ -896,7 +904,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
       else {
         setEscolhidaDireita((atual) => {
           const nova = atual === id ? null : id;
-          if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhidoDireita(texto(direita, nova)));
+          if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhidoDireita(fala(direita, nova)));
           return nova;
         });
       }
@@ -913,11 +921,12 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     const chave = par ? par[0] : null;
     const fixo = travado(chave);
     const estado = certos && chave ? (certos.includes(chave) ? 'certo' : 'errado') : fixo ? 'certo' : null;
-    let rotulo = item.texto;
-    if (fixo && par) rotulo = t.associar.travado(texto(esquerda, par[0]), texto(direita, par[1]));
-    else if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(texto(esquerda, escolhida), item.texto);
-    else if (lado === 'esquerda' && escolhidaDireita) rotulo = t.associar.ligar(item.texto, texto(direita, escolhidaDireita));
-    else if (par) rotulo = t.associar.desfazer(texto(esquerda, par[0]), texto(direita, par[1]));
+    const falaDoItem = falarTextoComFormulas(item.texto);
+    let rotulo = falaDoItem;
+    if (fixo && par) rotulo = t.associar.travado(fala(esquerda, par[0]), fala(direita, par[1]));
+    else if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(fala(esquerda, escolhida), falaDoItem);
+    else if (lado === 'esquerda' && escolhidaDireita) rotulo = t.associar.ligar(falaDoItem, fala(direita, escolhidaDireita));
+    else if (par) rotulo = t.associar.desfazer(fala(esquerda, par[0]), fala(direita, par[1]));
     return (
       <CartaoDegrau key={item.id} accessibilityRole="button" accessibilityLabel={rotulo} disabled={desativado || fixo}
         accessibilityState={{ selected: escolhida === item.id || escolhidaDireita === item.id }}
@@ -941,10 +950,10 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
 
   return (
     <View style={formatos.secaoOrdenar}>
-      <Text style={formatos.instrucao} accessibilityLiveRegion="polite">
-        {escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
-          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao}
-      </Text>
+      {/* A instrução mostra o item escolhido com a fórmula desenhada; o leitor ouve a fala dela (TextoComFormulas). */}
+      <TextoComFormulas estilo={formatos.instrucao} accessibilityLiveRegion="polite"
+        texto={escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
+          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao} />
       <View style={formatos.colunas}>
         <View style={formatos.coluna} accessibilityLabel={t.associar.esquerda}>{esquerda.map((item) => cartao(item, 'esquerda'))}</View>
         <View style={formatos.coluna} accessibilityLabel={t.associar.direita}>{direita.map((item) => cartao(item, 'direita'))}</View>
@@ -1038,11 +1047,11 @@ export function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao:
           <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.aberta.criterios}</Text>
           {avaliacao.criterios.map((criterio, posicao) => (
             <View key={posicao} style={formatos.criterio} accessible
-              accessibilityLabel={`${criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: ${criterio.texto}`}>
+              accessibilityLabel={`${criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: ${falarTextoComFormulas(criterio.texto)}`}>
               <View style={[formatos.criterioIcone, criterio.atendido && { backgroundColor: cores.sucessoClaro }]}>
                 <Icone nome={criterio.atendido ? 'check' : 'fechar'} tamanho={14} cor={cores.fundo} />
               </View>
-              <Text style={[estilos.texto, { flex: 1, fontWeight: '700' }]}>{criterio.texto}</Text>
+              <TextoComFormulas texto={criterio.texto} estilo={[estilos.texto, { flex: 1, fontWeight: '700' }]} />
             </View>
           ))}
         </>

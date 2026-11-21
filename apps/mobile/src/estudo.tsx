@@ -1,3 +1,4 @@
+import { falarTextoComFormulas } from '@studoo/contratos';
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
@@ -1258,7 +1259,7 @@ function useFilaDaGeracao(nos: readonly NoCaminho[]) {
       relogios.current.push(setTimeout(() => {
         setContados((atual) => Math.max(atual, indice + 1));
         const licao = lista.current[indice];
-        if (licao) AccessibilityInfo.announceForAccessibility(mensagens.geracao.anuncioLicao(indice + 1, licao.titulo));
+        if (licao) AccessibilityInfo.announceForAccessibility(mensagens.geracao.anuncioLicao(indice + 1, falarTextoComFormulas(licao.titulo)));
       }, atrasosDaLicao(abriu(indice)).nome));
     }, espera);
     return () => clearTimeout(relogio);
@@ -2135,7 +2136,7 @@ function ProximoPasso({ titulo, detalhe, abrindo, ocupado, rodape, aoAbrir, anda
         <View style={estudoEstilos.proximoTextos}>
           <Text style={[estudoEstilos.proximoRotulo, estudoEstilos.proximoRotuloRodape]}>{mensagens.trilha.proxima}</Text>
           {/* .trilha-proximo__titulo no celular: 15 px em 800, entrelinha 1,25 e até 3 linhas (o nome cortado com reticências era defeito). */}
-          <Text numberOfLines={3} accessibilityLabel={titulo} style={[estudoEstilos.proximoTitulo, estudoEstilos.proximoTituloRodape]}>
+          <Text numberOfLines={3} accessibilityLabel={falarTextoComFormulas(titulo)} style={[estudoEstilos.proximoTitulo, estudoEstilos.proximoTituloRodape]}>
             {titulo}
           </Text>
         </View>

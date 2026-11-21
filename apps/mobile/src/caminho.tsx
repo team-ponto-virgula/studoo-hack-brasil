@@ -1,3 +1,4 @@
+import { falarTextoComFormulas } from '@studoo/contratos';
 import { useContext, useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
@@ -233,7 +234,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
 
   useEffect(() => {
     if (!tituloLiberada) return;
-    const espera = setTimeout(() => AccessibilityInfo.announceForAccessibility(mensagens.trilha.liberada(tituloLiberada)), 900);
+    const espera = setTimeout(() => AccessibilityInfo.announceForAccessibility(mensagens.trilha.liberada(falarTextoComFormulas(tituloLiberada))), 900);
     return () => clearTimeout(espera);
   }, [tituloLiberada]);
 
