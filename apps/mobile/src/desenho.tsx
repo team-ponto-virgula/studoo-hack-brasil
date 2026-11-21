@@ -1,5 +1,5 @@
 import { memo, useMemo, useState, type ReactNode } from 'react';
-import { Animated, ScrollView, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, ScrollView, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { falarFormula, formulaLinear, lerFormula, type ContextoDoDesenho, type Desenho, type OpcoesDaFigura, type OpcoesDaFormula, type Visual } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
@@ -123,10 +123,14 @@ export function DesenhoDoVisual({ visual, contexto, opcoes, rotulo, testID, esti
   caixa?: number;
 }) {
   const chaveDoContexto = contexto.tipo === 'passo' ? `passo:${contexto.ultimo}` : contexto.tipo;
-  const desenho = useMemo(() => desenhoDoVisual(visual, contexto, opcoes),
+  // A fórmula em bloco cresce com o tamanho de letra do sistema, como o texto em volta (spec 15, seção 16; WCAG 1.4.4), até 2×;
+  // larga demais, o motor a reduz até 85% e ela rola. As figuras não mudam (a altura delas é a da caixa).
+  const { fontScale } = useWindowDimensions();
+  const tamanho = visual.tipo === 'formula' && opcoes?.tamanho ? Math.round(opcoes.tamanho * Math.min(2, Math.max(1, fontScale || 1)) * 10) / 10 : opcoes?.tamanho;
+  const desenho = useMemo(() => desenhoDoVisual(visual, contexto, { ...opcoes, ...(tamanho ? { tamanho } : {}) }),
     // O visual chega da lição (mesma referência entre desenhos); o contexto e as opções valem pelo conteúdo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [visual, chaveDoContexto, opcoes?.tamanho, opcoes?.fundo, opcoes?.alturaMaxima]);
+    [visual, chaveDoContexto, tamanho, opcoes?.fundo, opcoes?.alturaMaxima]);
   if (!desenho) return visual.tipo === 'formula' ? <FormulaEmTexto latex={visual.latex} testID={testID} /> : null;
   // O motor respeita a altura pedida e, quando nem assim cabe, avisa (`naoCabe`): no lugar da figura, a descrição dela.
   if (desenho.naoCabe && visual.tipo !== 'formula') return <FiguraEmTexto alt={visual.alt} testID={testID} />;

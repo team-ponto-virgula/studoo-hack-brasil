@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type RefObject } from 'react';
-import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import { falarFormula, falarTextoComFormulas, formulaLinear, lerFormula, type EscolhaNoSuaVez, type LicaoDetalhe, type OpcaoDoSuaVez, type PassoDaResolucao } from '@studoo/contratos';
+import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { falarFormula, falarTextoComFormulas, formulaLinear, lerFormula, type EscolhaNoSuaVez, type LicaoDetalhe, type OpcaoDoSuaVez, type PassoDaResolucao, type RespostaDoSuaVez } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
 import { DesenhoDoVisual, OPCOES_DA_FORMULA } from './desenho';
 import { desenhoDoVisual, temProcurado } from './desenho-svg';
@@ -34,6 +34,12 @@ function formulaEmTexto(latex: string | undefined): { texto: string; falado: str
 }
 
 /** A opção do "Sua vez" como texto com fórmula em linha: a fórmula da opção vai marcada (`$…$`) e o motor a desenha. */
+/** O que o leitor de tela ouve depois do "Verificar": o porquê da escolha e, quando a resposta vem revelada, o da certa. */
+export function falaDaCorrecao(resposta: RespostaDoSuaVez): string {
+  const partes = resposta.correta ? [t.isso, resposta.porque] : [resposta.porque, ...(resposta.porqueDaCerta ? [resposta.porqueDaCerta] : [])];
+  return partes.map((parte) => falarTextoComFormulas(parte)).join(' ');
+}
+
 function textoDaOpcao(opcao: OpcaoDoSuaVez): string {
   if (opcao.texto) return opcao.texto;
   return opcao.formula && formulaEmTexto(opcao.formula) ? `$${opcao.formula}$` : '';
@@ -47,7 +53,8 @@ function FormulaEmBloco({ latex, testID }: { latex: string | undefined; testID?:
 function Indicador({ atual, total }: { atual: number; total: number }) {
   return (
     <View style={estilos.indicador}>
-      <Text testID="resolva-indicador" accessibilityLiveRegion="polite" style={estilos.indicadorTexto}>{t.passo(atual + 1, total)}</Text>
+      {/* Sem região viva aqui: o passo novo já é anunciado uma vez (announceForAccessibility), como o `role="status"` da web. */}
+      <Text testID="resolva-indicador" style={estilos.indicadorTexto}>{t.passo(atual + 1, total)}</Text>
       <View style={estilos.tracos} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
         {Array.from({ length: total }, (_, posicao) => (
           <View key={posicao} style={[estilos.traco, posicao <= atual && { backgroundColor: cores.acao }, posicao === atual && { width: 34 }]} />
@@ -213,6 +220,9 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
       if (!respostaValida(corpo)) throw new Error('resposta');
       void tocaSons.tocarEfeito(corpo.correta ? 'acerto' : 'erro');
       setEstado((atual) => (atual ? aplicarResposta(atual, corpo) : atual));
+      // O VoiceOver não lê região viva (accessibilityLiveRegion é do Android): no iPhone, o porquê (e, no acerto ou na segunda
+      // errada, o "Isso!" e o porquê da certa) é anunciado aqui, como o `role="status"` da web; no Android, a região viva lê.
+      if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(falaDaCorrecao(corpo));
     } catch {
       // Sem rede (ou uma resposta que não serve): o exemplo segue em texto, e a lição continua.
       setEstado((atual) => (atual ? { ...atual, emTexto: true } : atual));

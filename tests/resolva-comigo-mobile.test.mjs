@@ -104,3 +104,27 @@ test('a tela: forma da etapa Exemplo, rodapé preso, POST da escolha e o exemplo
   const estudo = await ler('apps/mobile/src/estudo.tsx');
   assert.match(estudo, /responderSuaVez=\{\(escolha\) => cliente\.responderSuaVez\(etapa\.licao\.id, escolha\)\}/);
 });
+
+
+test('paridade com a web (auditoria): leitor de tela e texto grande no "Resolva comigo"', async () => {
+  const tela = await ler('apps/mobile/src/resolva-comigo.tsx');
+  // O passo novo é anunciado uma vez só: sem região viva no indicador (no Android ela repetia o anúncio).
+  assert.doesNotMatch(tela, /testID="resolva-indicador" accessibilityLiveRegion/);
+  assert.match(tela, /AccessibilityInfo\.announceForAccessibility\(descricao \?/);
+  // No iPhone (o VoiceOver não lê região viva), o porquê e o "Isso!" são anunciados depois do "Verificar", como o role="status" da web.
+  assert.match(tela, /if \(Platform\.OS === 'ios'\) AccessibilityInfo\.announceForAccessibility\(falaDaCorrecao\(corpo\)\);/);
+  assert.match(tela, /testID="resolva-porque" accessibilityLiveRegion="polite"/, 'no Android, a região viva lê');
+  // "O método" no fim do exemplo, antes de "Agora é com você" (spec 15, seções 4 e 16), além de "Rever a explicação".
+  assert.match(tela, /\{ultimo && <CartaoMetodo passos=\{estado\.passos\}/);
+  // A fórmula em bloco cresce com o tamanho de letra do sistema (WCAG 1.4.4), até 2×.
+  const desenho = await ler('apps/mobile/src/desenho.tsx');
+  assert.match(desenho, /opcoes\.tamanho \* Math\.min\(2, Math\.max\(1, fontScale \|\| 1\)\)/);
+});
+
+test('fala da correção do "Sua vez": acerto, primeira errada e segunda errada', async () => {
+  const fonte = await ler('apps/mobile/src/resolva-comigo.tsx');
+  const corpo = fonte.slice(fonte.indexOf('export function falaDaCorrecao'), fonte.indexOf('function textoDaOpcao'));
+  assert.match(corpo, /resposta\.correta \? \[t\.isso, resposta\.porque\]/);
+  assert.match(corpo, /resposta\.porqueDaCerta \? \[resposta\.porqueDaCerta\] : \[\]/);
+  assert.match(corpo, /falarTextoComFormulas\(parte\)/, 'a fórmula lida pela árvore, nunca o $…$ cru');
+});
