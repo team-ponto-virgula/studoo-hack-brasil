@@ -2,18 +2,24 @@ import { lerFormula, percorrerFormula, type NoFormula } from "./formula";
 import { marcarFormulasSoltas, normalizarTextoComFormulas } from "./formula-no-texto";
 import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
 import { acharVazamento, alvosDoSuaVez, chaveDoValor, letrasDoTexto, lerNumero, motivoDoVazamento, numerosDoTexto } from "./resolucao-vazamento";
+import { avaliarFuncao, interceptoDaFuncao, lerExpressaoDaFuncao, lerNumeroComPi, raizesDaFuncao, verticeDaFuncao, type ModeloDaFuncao } from "./funcao-expressao";
 import { desenharVisual } from "./motor-visuais";
 import { comDescricaoDaResposta } from "./visuais-descricao";
 import {
   LIMITES_VISUAIS,
+  NOMES_DE_CURVA,
   PAPEIS_PONTO,
   TETO_DE_PRIMITIVAS,
+  TIPOS_DE_DESTAQUE,
   janelaDosDados,
+  type CurvaDaFuncao,
   type Derivado,
   type IntervaloDaReta,
+  type NomeDeCurva,
   type OpcaoCorrigida,
   type PapelPonto,
   type PassoGuardado,
+  type PontoDaFuncao,
   type PontoDaReta,
   type PontoDoPlano,
   type ResolucaoGuardada,
@@ -21,6 +27,7 @@ import {
   type Visual,
   type VisualFigura,
   type VisualFormula,
+  type VisualFuncao,
   type VisualPlano,
   type VisualRetaNumerica,
 } from "./visuais";
@@ -262,7 +269,9 @@ function vazaResposta(alt: string, ocultos: readonly Oculto[]): boolean {
 /** Eixos e intervalo que o passo seguinte herda (spec 15: o desenho troca no mesmo lugar, sem pular de escala). */
 export type Quadro =
   | { tipo: "plano"; x: [number, number]; y: [number, number] }
-  | { tipo: "reta_numerica"; de: number; ate: number };
+  | { tipo: "reta_numerica"; de: number; ate: number }
+  /** O gráfico de função não vale como passo da resolução (marco 12b): o quadro só existe para a recusa. */
+  | { tipo: "funcao" };
 
 export interface OpcoesDoVisual {
   /** O visual pode mostrar a resposta (último passo da resolução): libera o `alt` e a fórmula com `\resposta`. */
@@ -353,6 +362,145 @@ function normalizarPlano(bruto: Record<string, unknown>, opcoes: OpcoesDoVisual)
     ...(poligonos.length ? { poligonos } : {}),
     ...(guias.length ? { guias } : {}),
   };
+}
+
+/* ----- Gráfico de função (spec 15, seção 15) ----- */
+
+interface CurvaLida extends CurvaDaFuncao {
+  modelo: ModeloDaFuncao;
+}
+
+/** `curvas`: de 1 a 3, cada uma com a expressão lida e conferida; a que não vale (tangente, log, divisão por x…) some e a figura segue sem ela. */
+function lerCurvas(brutas: unknown): CurvaLida[] {
+  if (!Array.isArray(brutas)) return [];
+  const curvas: CurvaLida[] = [];
+  const usados = new Set<NomeDeCurva>();
+  for (const bruta of brutas) {
+    if (curvas.length >= LIMITES_VISUAIS.curvas) break;
+    const campos: Record<string, unknown> = typeof bruta === "string" ? { latex: bruta } : objeto(bruta) ? bruta : {};
+    const lida = lerExpressaoDaFuncao(campos.latex);
+    if (!lida.ok) continue;
+    // O nome é a letra da curva; sem ele (ou repetido), a próxima livre na ordem f, g, h.
+    const pedido = typeof campos.nome === "string" ? (campos.nome.trim().toLowerCase() as NomeDeCurva) : undefined;
+    const nome = pedido && (NOMES_DE_CURVA as readonly string[]).includes(pedido) && !usados.has(pedido) ? pedido : NOMES_DE_CURVA.find((letra) => !usados.has(letra));
+    if (!nome) continue;
+    usados.add(nome);
+    // O domínio (com π nas pontas) vale quando é um intervalo de verdade; do contrário, o motor escolhe.
+    const de = ausente(campos.de) ? undefined : lerNumeroComPi(campos.de);
+    const ate = ausente(campos.ate) ? undefined : lerNumeroComPi(campos.ate);
+    const dominio = de !== undefined && de !== null && ate !== undefined && ate !== null && de < ate && Math.abs(de) <= LIMITES_VISUAIS.coordenadaMaxima && Math.abs(ate) <= LIMITES_VISUAIS.coordenadaMaxima
+      ? { de: arredondar(de), ate: arredondar(ate) }
+      : {};
+    curvas.push({ nome, latex: lida.canonica, ...dominio, modelo: lida.modelo });
+  }
+  return curvas;
+}
+
+/** Seis casas: o que o servidor calcula (π/2, a raiz irracional) guarda com folga, e o rótulo arredonda para a tela. */
+const arredondar = (valor: number): number => Math.round(valor * 1e6) / 1e6 + 0;
+
+/** A tolerância de um ponto que a IA deu: a curva passa por ele com no máximo 0,01 de erro em y (spec 15, seção 15). */
+const TOLERANCIA_DO_PONTO = 0.01;
+
+interface PontoDaFuncaoLido {
+  id: string;
+  papel: PapelPonto;
+  tipo?: PontoDaFuncao["tipo"];
+  curva: NomeDeCurva;
+  x: number;
+  y: number;
+  rotulo?: boolean;
+}
+
+/**
+ * Os pontos sobre a curva. Os de destaque (`raiz`, `vertice`, `intercepto`, `valor`) o servidor calcula; o ponto que a IA dá com x e y só fica se a
+ * curva passa por ele (|f(x) − y| ≤ 0,01), e fora do domínio da curva não há ponto. Quem não vale sai sem derrubar a figura ("O (0, 0)" sem a
+ * curva passar ali). Vértice, raiz, intercepto e interseção são `especial`, a não ser que sejam o procurado.
+ */
+function lerPontosDaFuncao(brutos: unknown, curvas: readonly CurvaLida[]): PontoDaFuncaoLido[] {
+  if (!Array.isArray(brutos)) return [];
+  const lidos: PontoDaFuncaoLido[] = [];
+  const raizesJaDadas = new Map<NomeDeCurva, number>();
+  for (const bruto of brutos.slice(0, LIMITES_VISUAIS.pontos)) {
+    if (!objeto(bruto)) continue;
+    const { id } = bruto;
+    if (typeof id !== "string" || !ID_DO_PONTO.test(id) || lidos.some((ponto) => ponto.id === id)) continue;
+    const tipo = typeof bruto.tipo === "string" && (TIPOS_DE_DESTAQUE as readonly string[]).includes(bruto.tipo) ? (bruto.tipo as PontoDaFuncao["tipo"]) : undefined;
+    const nomeDaCurva = typeof bruto.curva === "string" ? bruto.curva.trim().toLowerCase() : undefined;
+    const curva = curvas.find((outra) => outra.nome === nomeDaCurva) ?? curvas[0];
+    const x = lerNumeroComPi(bruto.x);
+    const y = lerNumeroComPi(bruto.y);
+    let posicao: [number, number] | null = null;
+    if (tipo === "raiz") {
+      const raizes = raizesDaFuncao(curva.modelo);
+      if (raizes && raizes.length > 0) {
+        // Com o x da IA, a raiz mais perto dele (até 0,01); sem ele, a próxima raiz ainda sem ponto, da menor para a maior.
+        const escolhida = x !== null ? raizes.find((raiz) => Math.abs(raiz - x) <= TOLERANCIA_DO_PONTO) : raizes[raizesJaDadas.get(curva.nome) ?? 0];
+        if (escolhida !== undefined) {
+          posicao = [escolhida, 0];
+          if (x === null) raizesJaDadas.set(curva.nome, (raizesJaDadas.get(curva.nome) ?? 0) + 1);
+        }
+      }
+    } else if (tipo === "vertice") {
+      posicao = verticeDaFuncao(curva.modelo);
+    } else if (tipo === "intercepto") {
+      posicao = interceptoDaFuncao(curva.modelo);
+    } else if (tipo === "valor") {
+      if (x !== null) {
+        const valor = avaliarFuncao(curva.modelo, x);
+        if (Number.isFinite(valor)) posicao = [x, valor];
+      }
+    } else if (tipo === undefined && x !== null && y !== null) {
+      const valor = avaliarFuncao(curva.modelo, x);
+      // O ponto cai na curva (x, f(x)): o y da IA só serve para conferir, e o que se guarda e se desenha é o da conta.
+      if (Number.isFinite(valor) && Math.abs(valor - y) <= TOLERANCIA_DO_PONTO) posicao = [x, valor];
+    }
+    // A interseção de duas curvas fica para o marco 12b (tipo "intersecao"): sem posição calculada, o ponto sai.
+    if (!posicao) continue;
+    const [px, py] = [arredondar(posicao[0]), arredondar(posicao[1])];
+    if (curva.de !== undefined && px < curva.de - 1e-9) continue;
+    if (curva.ate !== undefined && px > curva.ate + 1e-9) continue;
+    if (Math.abs(px) > LIMITES_VISUAIS.coordenadaMaxima || Math.abs(py) > LIMITES_VISUAIS.coordenadaMaxima) continue;
+    // Dois pontos no mesmo lugar não se leem (a raiz na origem que também é o vértice e o intercepto): fica o primeiro.
+    if (lidos.some((ponto) => Math.abs(ponto.x - px) < 1e-6 && Math.abs(ponto.y - py) < 1e-6)) continue;
+    const papelPedido = typeof bruto.papel === "string" && (PAPEIS_PONTO as readonly string[]).includes(bruto.papel) ? (bruto.papel as PapelPonto) : undefined;
+    const destaque = tipo === "raiz" || tipo === "vertice" || tipo === "intercepto" || tipo === "intersecao";
+    const papel: PapelPonto = destaque && (papelPedido === undefined || papelPedido === "dado") ? "especial" : papelPedido ?? "dado";
+    lidos.push({ id, papel, ...(tipo ? { tipo } : {}), curva: curva.nome, x: px, y: py, ...(typeof bruto.rotulo === "boolean" ? { rotulo: bruto.rotulo } : {}) });
+  }
+  limitarRotulos(lidos);
+  return lidos;
+}
+
+/**
+ * O gráfico de função. Sem nenhuma curva válida o visual vira `plano`, se a IA deu pontos com x e y, ou some (a lição segue em texto). O gráfico
+ * não leva a janela: o motor a escolhe pelo que aparece em cada contexto (no enunciado de um exercício que pergunta um ponto da curva, a curva e o
+ * ponto procurado não entram na conta).
+ */
+function normalizarFuncao(bruto: Record<string, unknown>, opcoes: OpcoesDoVisual): VisualFuncao | VisualPlano {
+  if (opcoes.quadro) return recusar("o gráfico de função ainda não vale como passo do \"Resolva comigo\"");
+  const alt = textoCortado(bruto.alt, LIMITES_VISUAIS.alt, "alt", 1.5);
+  const curvas = lerCurvas(bruto.curvas);
+  if (curvas.length === 0) {
+    const comCoordenadas = Array.isArray(bruto.pontos)
+      ? bruto.pontos.filter((ponto) => objeto(ponto) && typeof ponto.x === "number" && typeof ponto.y === "number" && ausente(ponto.tipo))
+      : [];
+    if (comCoordenadas.length === 0) return recusar("funcao: nenhuma curva que valha e nenhum ponto para virar um plano");
+    return normalizarPlano({ tipo: "plano", alt, pontos: comCoordenadas }, opcoes);
+  }
+  const lidos = lerPontosDaFuncao(bruto.pontos, curvas);
+  const ocultos = lidos.filter((ponto) => ponto.papel === "procurado" || ponto.papel === "resposta").map((ponto) => ({ id: ponto.id, valores: [ponto.x, ponto.y] }));
+  conferirAlt(alt, ocultos, opcoes.revela);
+  const pontos: PontoDaFuncao[] = lidos.map((ponto) => ({
+    id: ponto.id,
+    papel: ponto.papel,
+    ...(ponto.tipo ? { tipo: ponto.tipo } : {}),
+    ...(curvas.length > 1 ? { curva: ponto.curva } : {}),
+    x: ponto.x,
+    y: ponto.y,
+    ...(ponto.rotulo === false ? { rotulo: false } : {}),
+  }));
+  return { tipo: "funcao", alt, curvas: curvas.map(({ modelo: _modelo, ...curva }) => curva), ...(pontos.length ? { pontos } : {}) };
 }
 
 function lerIntervalos(bruto: unknown): IntervaloDaReta[] {
@@ -465,6 +613,9 @@ export function validarVisual(bruto: unknown, opcoes: OpcoesDoVisual = {}): Resu
       case "reta_numerica":
         visual = normalizarReta(bruto, opcoes);
         break;
+      case "funcao":
+        visual = normalizarFuncao(bruto, opcoes);
+        break;
       case "formula":
         visual = normalizarFormula(bruto, opcoes);
         break;
@@ -504,6 +655,7 @@ export function normalizarVisuais(brutos: unknown): Visual[] | undefined {
 }
 
 export function quadroDoVisual(visual: VisualFigura): Quadro {
+  if (visual.tipo === "funcao") return { tipo: "funcao" };
   return visual.tipo === "plano"
     ? { tipo: "plano", x: visual.x, y: visual.y }
     : { tipo: "reta_numerica", de: visual.de, ate: visual.ate };
@@ -533,6 +685,11 @@ export function visualParaEnunciado<V extends Visual>(visual: V): V {
     const [de, ate] = visual.intervalos?.length ? [visual.de, visual.ate] : janelaDosDados(visiveis, false);
     return { ...visual, de, ate, pontos } as V;
   }
+  if (visual.tipo === "funcao") {
+    // Sem a posição do procurado (a curva só entra no desenho do retorno; no enunciado o motor não a desenha quando há procurado).
+    const pontos = (visual.pontos ?? []).map(({ x, y, ...resto }) => (escondido(resto.papel) ? resto : { ...resto, x, y }));
+    return { ...visual, ...(pontos.length ? { pontos } : {}) } as V;
+  }
   return visual;
 }
 
@@ -546,6 +703,9 @@ export function visualRevelado<V extends Visual>(visual: V): V {
   }
   if (visual.tipo === "reta_numerica") {
     return comDescricaoDaResposta({ ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) }) as V;
+  }
+  if (visual.tipo === "funcao") {
+    return comDescricaoDaResposta({ ...visual, pontos: (visual.pontos ?? []).map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) }) as V;
   }
   return visual;
 }
@@ -563,14 +723,22 @@ function formulaDoCampo(bruto: unknown, onde: string): FormulaLida {
   return { canonica: lida.canonica, arvore: lida.arvore };
 }
 
-function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigida; arvore?: NoFormula } {
+function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigida; arvore?: NoFormula; ajuste?: string } {
   const onde = `opção ${posicao + 1}`;
   if (!objeto(bruto)) return recusar(`${onde}: formato inválido`);
   if (typeof bruto.correta !== "boolean") return recusar(`${onde}: correta precisa ser verdadeiro ou falso`);
   const temTexto = !ausente(bruto.texto) && bruto.texto !== "";
   const temFormula = !ausente(bruto.formula) && bruto.formula !== "";
-  if (temTexto === temFormula) return recusar(`${onde}: precisa de texto ou de fórmula, só um dos dois`);
+  if (!temTexto && !temFormula) return recusar(`${onde}: precisa de texto ou de fórmula`);
   const porque = textoAte(bruto.porque, LIMITES_VISUAIS.porque, `${onde}: porque`, true);
+  if (temTexto && temFormula) {
+    // A IA mandou a frase e a conta da MESMA opção: a conta entra na frase, entre cifrões (nada se perde: é só onde ela fica), e segue
+    // conferida como fórmula. Uma opção com as duas continua sendo uma opção só.
+    if (typeof bruto.texto !== "string") return recusar(`${onde}: texto ausente ou com LaTeX solto`);
+    const lida = formulaDoCampo(bruto.formula, `${onde}: fórmula`);
+    const texto = textoAte(`${bruto.texto.trim()} $${lida.canonica}$`, LIMITES_VISUAIS.textoDaOpcao, `${onde}: texto`, true);
+    return { opcao: { texto, correta: bruto.correta, porque }, arvore: lida.arvore, ajuste: `${onde}: texto e fórmula juntos (a fórmula foi para dentro do texto)` };
+  }
   if (temFormula) {
     const lida = formulaDoCampo(bruto.formula, `${onde}: fórmula`);
     return { opcao: { formula: lida.canonica, correta: bruto.correta, porque }, arvore: lida.arvore };
@@ -578,7 +746,11 @@ function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigi
   return { opcao: { texto: textoAte(bruto.texto, LIMITES_VISUAIS.textoDaOpcao, `${onde}: texto`, true), correta: bruto.correta, porque } };
 }
 
-function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): { tentativa: TentativaGuardada; correta: { arvore?: NoFormula; texto?: string } } {
+function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): {
+  tentativa: TentativaGuardada;
+  correta: { arvore?: NoFormula; texto?: string };
+  ajustes: string[];
+} {
   if (!objeto(bruto)) return recusar("sua vez: formato inválido");
   const pergunta = textoAte(bruto.pergunta, LIMITES_VISUAIS.pergunta, "sua vez: pergunta", true);
   if (!Array.isArray(bruto.opcoes) || bruto.opcoes.length !== 3) return recusar("sua vez: precisa de exatamente 3 opções");
@@ -598,6 +770,7 @@ function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>)
   return {
     tentativa: { pergunta, opcoes: lidas.map(({ opcao }) => opcao) },
     correta: { ...(certa?.arvore ? { arvore: certa.arvore } : {}), ...(certa?.opcao.texto ? { texto: certa.opcao.texto } : {}) },
+    ajustes: lidas.flatMap(({ ajuste }) => (ajuste ? [ajuste] : [])),
   };
 }
 
@@ -643,8 +816,20 @@ function conferirFraseDoSuaVez(entrada: {
 }
 
 export type ResultadoResolucao =
-  | { ok: true; resolucao: ResolucaoGuardada; conta: { conferidas: number; puladas: number } }
+  /** `ajustes`: o que o validador aceitou de um jeito um pouco diferente do que veio (`opção N: texto e fórmula juntos…`), para o relato. */
+  | { ok: true; resolucao: ResolucaoGuardada; conta: { conferidas: number; puladas: number }; ajustes?: string[] }
   | { ok: false; motivo: string };
+
+/** O nome do passo feito é texto em peso 800, onde nunca entra fórmula (spec 15, seção 14): o sublinhado, o expoente, a barra, o cifrão e a chave não podem aparecer. */
+const SIMBOLO_NO_NOME = /[_^\\${}]/;
+
+export interface OpcoesDaResolucao {
+  /**
+   * Na GERAÇÃO (a IA acabou de escrever): o nome do passo com símbolo (`Isole x_C`) recusa a resolução e o motivo vai na nova tentativa.
+   * Na leitura do que já está guardado, não: a lição gravada antes desta regra segue com o "Resolva comigo" dela.
+   */
+  nomeSimples?: boolean;
+}
 
 /**
  * Valida a resolução inteira: de 3 a 5 passos, cada um com nome (até 24 caracteres), frase e, se houver, fórmula e visual;
@@ -652,7 +837,7 @@ export type ResultadoResolucao =
  * falha, `motivo` diz o quê, e a lição fica com o exemplo em texto. O que sai é a forma GUARDADA (com `correta` e `porque`);
  * `resolucaoParaCliente` faz a que vai pela rede.
  */
-export function validarResolucao(bruto: unknown): ResultadoResolucao {
+export function validarResolucao(bruto: unknown, opcoes: OpcoesDaResolucao = {}): ResultadoResolucao {
   try {
     if (!objeto(bruto)) return recusar("a resolução não é um objeto");
     const problema = textoAte(bruto.problema, LIMITES_VISUAIS.problema, "problema", true);
@@ -665,6 +850,8 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
     let quadro: Quadro | undefined;
     const usar = (visualBruto: unknown, revela: boolean): VisualFigura | undefined => {
       if (ausente(visualBruto)) return undefined;
+      // O gráfico de função ainda não vale no "Resolva comigo" (marco 12b: os passos não trocam a figura): o visual some e o exemplo segue.
+      if (objeto(visualBruto) && visualBruto.tipo === "funcao") return undefined;
       const figura = normalizarFigura(visualBruto, { revela, ...(quadro ? { quadro } : {}) });
       if (figura && !quadro) quadro = quadroDoVisual(figura);
       return figura ?? undefined;
@@ -678,6 +865,9 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
       const onde = `passo ${posicao + 1}`;
       if (!objeto(passoBruto)) return recusar(`${onde}: formato inválido`);
       const nome = textoCortado(passoBruto.nome, LIMITES_VISUAIS.nomeDoPasso, `${onde}: nome`, 3);
+      if (opcoes.nomeSimples && SIMBOLO_NO_NOME.test(nome)) {
+        return recusar(`${onde}: o nome "${nome}" tem símbolo (_ ^ \\ $ { }); o nome do passo é só texto simples e curto, sem letra com índice nem fórmula ("Isole a abscissa de C", e não "Isole x_C")`);
+      }
       const texto = textoAte(passoBruto.texto, LIMITES_VISUAIS.textoDoPasso, `${onde}: texto`, true);
       const formula = ausente(passoBruto.formula) || passoBruto.formula === "" ? undefined : formulaDoCampo(passoBruto.formula, `${onde}: fórmula`);
       if (formula) formulas.push(formula.arvore);
@@ -704,13 +894,18 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
       // Um defeito do conferidor não derruba a lição: sem conferência, a conta fica para a revisão.
     }
     const passoComTentativa = passosBrutos[comTentativa] as Record<string, unknown>;
-    const { tentativa, correta } = normalizarTentativa(passoComTentativa.tentativa, declaradas);
+    const { tentativa, correta, ajustes } = normalizarTentativa(passoComTentativa.tentativa, declaradas);
     passos[comTentativa] = { ...passos[comTentativa], tentativa };
     conferirFraseDoSuaVez({
       passo: passos[comTentativa], posicao: comTentativa, correta, declaradas, problema,
       arvoreDoPasso: arvoresDosPassos[comTentativa], arvoreDoUltimo: arvoresDosPassos[total - 1], figura: visualDoProblema,
     });
-    return { ok: true, conta, resolucao: { problema, ...(visualDoProblema ? { visual: visualDoProblema } : {}), passos } };
+    return {
+      ok: true,
+      conta,
+      resolucao: { problema, ...(visualDoProblema ? { visual: visualDoProblema } : {}), passos },
+      ...(ajustes.length > 0 ? { ajustes: ajustes.map((ajuste) => `passo ${comTentativa + 1}, ${ajuste}`) } : {}),
+    };
   } catch (erro) {
     if (erro instanceof Recusa) return { ok: false, motivo: erro.message };
     throw erro;

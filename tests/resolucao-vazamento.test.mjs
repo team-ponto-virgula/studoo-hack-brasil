@@ -21,7 +21,7 @@ const alvosDa = (formula, extras = {}) => alvosDoSuaVez({ correta: { arvore: arv
 
 /* ----- Os dumps reais aceitos antes do marco 8 (fixtures sem chave) ----- */
 
-const REAIS = JSON.parse(readFileSync(new URL("./fixtures/matematica/sua-vez-reais.json", import.meta.url), "utf8")).casos;
+const REAIS = JSON.parse(readFileSync(new URL("./fixtures/matematica-ia-real/sua-vez-reais.json", import.meta.url), "utf8")).casos;
 const escapar = (texto) => texto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 test("dumps reais (cb532bb e bf94aed): as 9 resoluções de 31 cujo \"Sua vez\" traz o resultado são recusadas, com a letra e o valor; as outras 22 seguem aceitas", () => {

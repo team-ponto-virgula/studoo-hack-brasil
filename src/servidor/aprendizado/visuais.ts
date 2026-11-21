@@ -23,9 +23,11 @@ import {
   type Visual,
   type VisualFigura,
   type VisualFormula,
+  VISUAIS_COM_FUNCAO,
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
 import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+import { ordemDoSuaVez } from "./ordem-sua-vez";
 
 export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
 
@@ -41,6 +43,8 @@ export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual 
 
 export interface OpcoesDeVisuais {
   capacidades: Capacidades;
+  /** De quem é a lição: as opções do "Sua vez" vão embaralhadas por (conta, lição), a mesma ordem do POST /resolucao. Sem isso, a ordem guardada. */
+  usuarioId?: string;
   /** Gera o PNG do build 3 (custa CPU: só a rota da lição pede; o reforço e a voz não precisam dele). */
   desenharPng?: boolean;
 }
@@ -112,6 +116,34 @@ export function limparVisuais(conteudo: ConteudoLicao): VisuaisLimpos {
   };
   limpos.guardar(chave, limpo);
   return limpo;
+}
+
+/* ----- O gráfico de função: quem o recebe e a fórmula que ele já traz ----- */
+
+/** Quem anuncia `visuais@2` desenha o gráfico de função; quem anuncia só `visuais@1` (ou nada) não o recebe: o lugar dele some e a lição segue. */
+const desenhaFuncao = (capacidades: Capacidades): boolean => capacidades.visuais >= VISUAIS_COM_FUNCAO;
+
+/**
+ * O gráfico de função traz a faixa de fórmulas dele em cima (uma por curva): o visual `formula` da lição que é a mesma fórmula ("f(x) = x² − 4x + 3",
+ * ou só a expressão) não se repete (spec 15, seção 15). As outras fórmulas ficam. Sem gráfico de função na lista, ela volta como veio.
+ */
+export function semFormulaRepetida(visuais: readonly Visual[]): Visual[] {
+  const repetidas = new Set<string>();
+  for (const visual of visuais) {
+    if (visual.tipo !== "funcao") continue;
+    for (const curva of visual.curvas) {
+      for (const fonte of [`${curva.nome}(x) = ${curva.latex}`, `y = ${curva.latex}`, curva.latex]) {
+        const lida = lerFormula(fonte);
+        if (lida.ok) repetidas.add(lida.canonica);
+      }
+    }
+  }
+  if (repetidas.size === 0) return [...visuais];
+  return visuais.filter((visual) => {
+    if (visual.tipo !== "formula") return true;
+    const lida = lerFormula(visual.latex);
+    return !(lida.ok && repetidas.has(lida.canonica));
+  });
 }
 
 /* ----- O PNG do build 3 ----- */
@@ -217,10 +249,14 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
   const saida: LicaoDetalhe = { ...detalhe };
 
   if (capacidades.visuais >= 1) {
-    if (limpo.visuais) saida.visuais = limpo.visuais.map(visualParaEnunciado);
-    if (limpo.dosExercicios.some(Boolean)) {
+    // O gráfico de função só vai com `visuais@2`; sem ele o lugar dele some (a fórmula repetida só sai quando o gráfico fica).
+    const dosVisuais = (limpo.visuais ?? []).filter((visual) => desenhaFuncao(capacidades) || visual.tipo !== "funcao");
+    const visuais = desenhaFuncao(capacidades) ? semFormulaRepetida(dosVisuais) : dosVisuais;
+    if (visuais.length > 0) saida.visuais = visuais.map(visualParaEnunciado);
+    const dosExercicios = limpo.dosExercicios.map((visual) => (visual && (desenhaFuncao(capacidades) || visual.tipo !== "funcao") ? visual : undefined));
+    if (dosExercicios.some(Boolean)) {
       saida.exercicios = detalhe.exercicios.map((exercicio, posicao) => {
-        const visual = limpo.dosExercicios[posicao];
+        const visual = dosExercicios[posicao];
         return visual ? { ...exercicio, visual: visualParaEnunciado(visual) } : exercicio;
       });
       saida.exercicio = saida.exercicios[0];
@@ -229,7 +265,7 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
 
   const comResolva = capacidades.visuais >= 1 && capacidades.resolucao >= 1;
   if (limpo.resolucao) {
-    if (comResolva) saida.resolucao = resolucaoParaCliente(limpo.resolucao);
+    if (comResolva) saida.resolucao = resolucaoParaCliente(limpo.resolucao, opcoes.usuarioId ? ordemDoSuaVez(opcoes.usuarioId, detalhe.id) : undefined);
     // Quem não desenha o "Resolva comigo" lê o exemplo em passos de texto, sem "Sua vez".
     else if (!detalhe.passos) saida.passos = passosEmTexto(limpo.resolucao, emTexto);
   }
@@ -237,7 +273,8 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
   // Build 3 e site antigo: o desenho no lugar da foto, só em lição de matemática com visual válido (a foto continua guardada).
   const fotoOuNada = !detalhe.recurso || detalhe.recurso.tipo === "imagem";
   if (capacidades.visuais < 1 && desenharPng && limpo.visuais && fotoOuNada) {
-    const imagem = await recursoDoDesenho(limpo.visuais);
+    // O PNG é a figura inteira (o gráfico de função leva a faixa de fórmulas dele): a fórmula igual da lição não se repete.
+    const imagem = await recursoDoDesenho(semFormulaRepetida(limpo.visuais));
     if (imagem) saida.recurso = imagem;
   }
   return saida;
@@ -247,6 +284,7 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
 export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacidades: Capacidades): VisualFigura | undefined {
   if (capacidades.visuais < 1) return undefined;
   const visual = limparVisuais(conteudo).dosExercicios[indice];
+  if (visual?.tipo === "funcao" && !desenhaFuncao(capacidades)) return undefined;
   return visual && visual.tipo !== "formula" ? visualRevelado(visual) : undefined;
 }
 

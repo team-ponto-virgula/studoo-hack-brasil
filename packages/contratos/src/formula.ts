@@ -35,14 +35,26 @@ export const PAPEIS_DESTAQUE: readonly PapelDestaque[] = ["foco", "procurado", "
 /** O menos fica como hífen na árvore; quem mostra usa o sinal de menos de verdade (`−`, U+2212). */
 export type OperadorFormula = "+" | "-" | "×" | "÷" | "=" | "≠" | "<" | ">" | "≤" | "≥" | "→";
 
+/** Os espaços de LaTeX que a fórmula desenha: fino (`\,`), médio (`\:`), grosso (`\;`), `\quad` e `\qquad`. (`\ ` vale `\;`; `\!` não desenha nada.) */
+export type ComandoDeEspaco = "," | ":" | ";" | "quad" | "qquad";
+
+/** A largura de cada espaço em "em" (a altura da letra), como no LaTeX: 3/18, 4/18, 5/18, 1 e 2. */
+export const LARGURA_DO_ESPACO_EM_EM: Readonly<Record<ComandoDeEspaco, number>> = { ",": 3 / 18, ":": 4 / 18, ";": 5 / 18, quad: 1, qquad: 2 };
+
+const COMANDO_LATEX_DO_ESPACO: Readonly<Record<ComandoDeEspaco, string>> = { ",": "\\,", ":": "\\:", ";": "\\;", quad: "\\quad", qquad: "\\qquad" };
+
 export type NoFormula =
   | { tipo: "numero"; valor: string }
   | { tipo: "variavel"; valor: string }
   /** O grego da fase 1: Δ (discriminante) e π. Reto, como número, com o contorno da Noto Sans Bold. */
   | { tipo: "simbolo"; valor: "Δ" | "π" }
   | { tipo: "operador"; valor: OperadorFormula }
-  | { tipo: "separador"; valor: "," | ";" }
-  | { tipo: "texto"; valor: string }
+  /** `espaco`: o `\quad` entre duas equações lado a lado (`x_C = 10 \quad y_C = 6`): um vão, sem sinal, que separa as cláusulas. */
+  | { tipo: "separador"; valor: "," | ";" | "espaco" }
+  /** `espacoAntes`/`espacoDepois`: o `\text{ palavra }` que já traz espaço na ponta (o desenho põe UM vão, e não soma o vão automático). */
+  | { tipo: "texto"; valor: string; espacoAntes?: true; espacoDepois?: true }
+  /** Um espaço de LaTeX (`\,`, `\:`, `\;`, `\quad`, `\qquad`): sempre desenhado como um vão (`LARGURA_DO_ESPACO_EM_EM`). */
+  | { tipo: "espaco"; comando: ComandoDeEspaco }
   | { tipo: "porcento" }
   | { tipo: "fracao"; numerador: NoFormula; denominador: NoFormula }
   /** Índice (`x_A`) e expoente (`x^2`) da mesma base: o índice desce e o expoente sobe, os dois retos. */
@@ -50,8 +62,8 @@ export type NoFormula =
   | { tipo: "raiz"; radicando: NoFormula }
   | { tipo: "parenteses"; conteudo: NoFormula }
   | { tipo: "sequencia"; itens: NoFormula[] }
-  /** `barras` é o determinante; `colchetes`, a matriz (`pmatrix` também vira colchetes). */
-  | { tipo: "matriz"; moldura: "colchetes" | "barras"; linhas: NoFormula[][] }
+  /** `barras` é o determinante; `colchetes`, a matriz (`pmatrix` também vira colchetes); `nenhuma`, a `matrix` sem moldura (as colunas repetidas de Sarrus). */
+  | { tipo: "matriz"; moldura: "colchetes" | "barras" | "nenhuma"; linhas: NoFormula[][] }
   | { tipo: "destaque"; papel: PapelDestaque; conteudo: NoFormula };
 
 export type ResultadoFormula =
@@ -73,8 +85,55 @@ const OPERADORES_POR_CARACTERE: Readonly<Record<string, OperadorFormula>> = {
   "≠": "≠", "≤": "≤", "≥": "≥", "→": "→",
 };
 
-const COMANDOS_DE_ESPACO = new Set([",", ";", ":", "!", " ", "quad", "qquad"]);
-const MOLDURAS: Readonly<Record<string, "colchetes" | "barras">> = { bmatrix: "colchetes", pmatrix: "colchetes", vmatrix: "barras" };
+/** Os comandos de espaço que o analisador conhece e o que cada um vira (`\ ` vale `\;`; `\!`, o espaço negativo, não desenha nada: `null`). */
+const COMANDOS_DE_ESPACO: Readonly<Record<string, ComandoDeEspaco | null>> = { ",": ",", ":": ":", ";": ";", " ": ";", "!": null, quad: "quad", qquad: "qquad" };
+
+const RELACOES_DA_FORMULA: ReadonlySet<OperadorFormula> = new Set(["=", "≠", "<", ">", "≤", "≥"]);
+
+function temRelacao(itens: readonly NoFormula[]): boolean {
+  return itens.some((item) => item.tipo === "operador" && RELACOES_DA_FORMULA.has(item.valor));
+}
+
+/**
+ * O que a sequência faz com os espaços que o analisador leu, cada corrida de espaços entre dois blocos de itens:
+ * - entre duas afirmações com `=` (ou outra relação), ela as SEPARA (marco 9): vira um separador `espaco`, e a conta lê duas cláusulas
+ *   (antes o comando sumia, e `x_C \quad 12 = …` virava o produto x_C·12);
+ * - em qualquer outro lugar (`2\,x`, `m_2 \quad \text{paralelas}`) fica como espaço, e é DESENHADO como um vão;
+ * - no começo e no fim da sequência sai (a fórmula centralizada não se desloca).
+ */
+function resolverEspacos(itens: NoFormula[]): NoFormula[] {
+  if (!itens.some((item) => item.tipo === "espaco")) return itens;
+  const blocos: { itens: NoFormula[]; espacosAntes: NoFormula[] }[] = [];
+  let atual: { itens: NoFormula[]; espacosAntes: NoFormula[] } = { itens: [], espacosAntes: [] };
+  let pendentes: NoFormula[] = [];
+  for (const item of itens) {
+    if (item.tipo === "espaco") {
+      if (atual.itens.length > 0) {
+        blocos.push(atual);
+        atual = { itens: [], espacosAntes: [] };
+      }
+      pendentes.push(item);
+    } else {
+      if (atual.itens.length === 0) {
+        atual.espacosAntes = pendentes;
+        pendentes = [];
+      }
+      atual.itens.push(item);
+    }
+  }
+  if (atual.itens.length > 0) blocos.push(atual);
+  const saida: NoFormula[] = [];
+  blocos.forEach((bloco, posicao) => {
+    if (posicao > 0 && bloco.espacosAntes.length > 0) {
+      if (temRelacao(blocos[posicao - 1].itens) && temRelacao(bloco.itens)) saida.push({ tipo: "separador", valor: "espaco" });
+      else saida.push(...bloco.espacosAntes);
+    }
+    saida.push(...bloco.itens);
+  });
+  return saida;
+}
+
+const MOLDURAS: Readonly<Record<string, "colchetes" | "barras" | "nenhuma">> = { bmatrix: "colchetes", pmatrix: "colchetes", vmatrix: "barras", matrix: "nenhuma" };
 const SOBRESCRITOS: Readonly<Record<string, string>> = { "²": "2", "³": "3" };
 
 const ehDigito = (c: string | undefined): c is string => c !== undefined && c >= "0" && c <= "9";
@@ -149,13 +208,15 @@ class Analisador {
       const item = this.item(profundidade);
       if (item) itens.push(item);
     }
-    return itens.length === 1 ? itens[0] : { tipo: "sequencia", itens };
+    const resolvidos = resolverEspacos(itens);
+    return resolvidos.length === 1 ? resolvidos[0] : { tipo: "sequencia", itens: resolvidos };
   }
 
   /** Um átomo e, se ele aceita, o índice e o expoente que vêm logo depois. Devolve null para o que só ocupa espaço. */
   private item(profundidade: number): NoFormula | null {
     const atomo = this.atomo(profundidade);
     if (!atomo) return null;
+    if (atomo.tipo === "espaco") return atomo;
     this.contar();
     if (!podeTerScript(atomo)) {
       const proximo = this.s[this.i];
@@ -292,7 +353,10 @@ class Analisador {
     const posicao = this.i;
     const nome = this.nomeDoComando();
     if (nome in OPERADORES_POR_COMANDO) return { tipo: "operador", valor: OPERADORES_POR_COMANDO[nome] };
-    if (COMANDOS_DE_ESPACO.has(nome)) return null;
+    if (Object.hasOwn(COMANDOS_DE_ESPACO, nome)) {
+      const comando = COMANDOS_DE_ESPACO[nome];
+      return comando ? { tipo: "espaco", comando } : null;
+    }
     switch (nome) {
       case "%":
         return { tipo: "porcento" };
@@ -354,7 +418,12 @@ class Analisador {
     const valor = this.s.slice(inicio, fim);
     if (!valor.trim() || valor.length > LIMITES_FORMULA.texto || !TEXTO_PERMITIDO.test(valor)) falhar("texto não permitido em \\text", inicio);
     this.i = fim + 1;
-    return { tipo: "texto", valor: valor.replace(/\s+/g, " ").trim() };
+    return {
+      tipo: "texto",
+      valor: valor.replace(/\s+/g, " ").trim(),
+      ...(/^\s/.test(valor) ? { espacoAntes: true as const } : {}),
+      ...(/\s$/.test(valor) ? { espacoDepois: true as const } : {}),
+    };
   }
 
   private matriz(profundidade: number): NoFormula {
@@ -510,6 +579,14 @@ function prepararFonte(entrada: string): string {
   return saida;
 }
 
+/** A fórmula sem os espaços de desenho (`espaco`): é o que a conta lê. Os separadores entre afirmações ficam (separam as cláusulas). */
+export function semEspacos(no: NoFormula): NoFormula {
+  const filho = mapearFilhos(no, semEspacos);
+  if (filho.tipo !== "sequencia") return filho;
+  const itens = filho.itens.filter((item) => item.tipo !== "espaco");
+  return itens.length === 1 ? itens[0] : { tipo: "sequencia", itens };
+}
+
 function mapearFilhos(no: NoFormula, f: (filho: NoFormula) => NoFormula): NoFormula {
   switch (no.tipo) {
     case "fracao":
@@ -573,9 +650,38 @@ const OPERADOR_LATEX: Readonly<Record<OperadorFormula, string>> = {
 export function ehSinal(itens: readonly NoFormula[], posicao: number): boolean {
   const no = itens[posicao];
   if (no.tipo !== "operador" || (no.valor !== "+" && no.valor !== "-")) return false;
-  if (posicao === 0) return true;
-  const anterior = itens[posicao - 1];
+  // Um espaço (`= \; -2`) não muda o que vem antes do sinal.
+  let antes = posicao - 1;
+  while (antes >= 0 && itens[antes].tipo === "espaco") antes -= 1;
+  if (antes < 0) return true;
+  const anterior = itens[antes];
   return anterior.tipo === "operador" || anterior.tipo === "separador";
+}
+
+/**
+ * O vão automático entre uma palavra (`\text{…}`) e a matemática que encosta nela sem nenhum espaço (`m_2\text{paralelas}`,
+ * `\text{área}x`): sem ele a palavra ficava colada na fórmula. Não vale ao lado de operador (que tem o respiro dele), de separador
+ * ou de espaço (que já são um vão) nem onde a palavra já traz espaço na ponta (`\text{ paralelas}`): aí o vão é um só.
+ */
+export function vaoAutomatico(anterior: NoFormula | undefined, atual: NoFormula): boolean {
+  if (!anterior || anterior.tipo === "operador" || anterior.tipo === "separador" || anterior.tipo === "espaco") return false;
+  if (atual.tipo === "operador" || atual.tipo === "separador" || atual.tipo === "espaco") return false;
+  if (anterior.tipo === "texto" && atual.tipo === "texto") return false;
+  if (atual.tipo === "texto") return !atual.espacoAntes;
+  if (anterior.tipo === "texto") return !anterior.espacoDepois;
+  return false;
+}
+
+/** Há um vão (o automático ou o da palavra que traz espaço) entre estes dois irmãos? Quem escreve em texto põe um espaço. */
+export function haVao(anterior: NoFormula | undefined, atual: NoFormula): boolean {
+  return vaoAutomatico(anterior, atual) || vaoDaPalavra(anterior, atual);
+}
+
+/** O vão de UMA palavra que já traz espaço na ponta: o espaço de uma palavra (`0,28 em`), o mesmo que o desenho põe. */
+export function vaoDaPalavra(anterior: NoFormula | undefined, atual: NoFormula): boolean {
+  if (!anterior || anterior.tipo === "operador" || anterior.tipo === "separador" || anterior.tipo === "espaco") return false;
+  if (atual.tipo === "operador" || atual.tipo === "separador" || atual.tipo === "espaco") return false;
+  return (atual.tipo === "texto" && atual.espacoAntes === true) || (anterior.tipo === "texto" && anterior.espacoDepois === true);
 }
 
 function argumentoCanonico(no: NoFormula): string {
@@ -591,7 +697,9 @@ function sequenciaCanonica(itens: readonly NoFormula[]): string {
     } else if (item.tipo === "operador") {
       saida += item.valor;
     } else if (item.tipo === "separador") {
-      saida += `${item.valor} `;
+      saida += item.valor === "espaco" ? " \\quad " : `${item.valor} `;
+    } else if (item.tipo === "espaco") {
+      saida += ` ${COMANDO_LATEX_DO_ESPACO[item.comando]} `;
     } else {
       // Duas variáveis seguidas ficam separadas: `a b c` não pode virar `abc`, que seria uma palavra solta ao reler.
       if (item.tipo === "variavel" && itens[posicao - 1]?.tipo === "variavel") saida += " ";
@@ -614,9 +722,11 @@ export function formulaCanonica(no: NoFormula): string {
     case "operador":
       return OPERADOR_LATEX[no.valor];
     case "separador":
-      return no.valor;
+      return no.valor === "espaco" ? "\\quad" : no.valor;
+    case "espaco":
+      return COMANDO_LATEX_DO_ESPACO[no.comando];
     case "texto":
-      return `\\text{${no.valor}}`;
+      return `\\text{${no.espacoAntes ? " " : ""}${no.valor}${no.espacoDepois ? " " : ""}}`;
     case "porcento":
       return "\\%";
     case "fracao":
@@ -632,7 +742,7 @@ export function formulaCanonica(no: NoFormula): string {
     case "sequencia":
       return sequenciaCanonica(no.itens);
     case "matriz": {
-      const ambiente = no.moldura === "barras" ? "vmatrix" : "bmatrix";
+      const ambiente = no.moldura === "barras" ? "vmatrix" : no.moldura === "nenhuma" ? "matrix" : "bmatrix";
       const linhas = no.linhas.map((linha) => linha.map(formulaCanonica).join(" & ")).join(" \\\\ ");
       return `\\begin{${ambiente}} ${linhas} \\end{${ambiente}}`;
     }
@@ -642,6 +752,9 @@ export function formulaCanonica(no: NoFormula): string {
 }
 
 /* ----- Texto linear ----- */
+
+/** O separador como texto (linear e peças): a vírgula, o ponto e vírgula e, no lugar do vão entre duas equações, o ponto e vírgula. */
+const textoDoSeparador = (valor: "," | ";" | "espaco"): string => (valor === "espaco" ? ";" : valor);
 
 const SINAL_DE_MENOS = "−";
 const OPERADOR_LINEAR: Readonly<Record<OperadorFormula, string>> = {
@@ -702,7 +815,9 @@ export function formulaLinear(no: NoFormula): string {
     case "operador":
       return OPERADOR_LINEAR[no.valor];
     case "separador":
-      return no.valor;
+      return textoDoSeparador(no.valor);
+    case "espaco":
+      return " ";
     case "texto":
       return no.valor;
     case "porcento":
@@ -732,8 +847,9 @@ export function formulaLinear(no: NoFormula): string {
       no.itens.forEach((item, posicao) => {
         if (item.tipo === "operador" && !ehSinal(no.itens, posicao)) saida += ` ${OPERADOR_LINEAR[item.valor]} `;
         else if (item.tipo === "operador") saida += OPERADOR_LINEAR[item.valor];
-        else if (item.tipo === "separador") saida += `${item.valor} `;
-        else saida += formulaLinear(item);
+        else if (item.tipo === "separador") saida += `${textoDoSeparador(item.valor)} `;
+        else if (item.tipo === "espaco") saida += " ";
+        else saida += `${haVao(no.itens[posicao - 1], item) ? " " : ""}${formulaLinear(item)}`;
       });
       return saida.replace(/\s+/g, " ").trim();
     }
@@ -804,7 +920,9 @@ export function falarFormula(no: NoFormula): string {
     case "operador":
       return OPERADOR_FALADO[no.valor];
     case "separador":
-      return no.valor;
+      return no.valor === "espaco" ? "," : no.valor;
+    case "espaco":
+      return no.comando === "quad" || no.comando === "qquad" ? "," : "";
     case "texto":
       return no.valor;
     case "porcento":
@@ -836,7 +954,9 @@ export function falarFormula(no: NoFormula): string {
           if (ehSinal(no.itens, posicao)) saida += `${OPERADOR_FALADO[item.valor]} `;
           else saida += `${aditivo && aditivos >= 2 ? "," : ""} ${OPERADOR_FALADO[item.valor]} `;
         } else if (item.tipo === "separador") {
-          saida += `${item.valor} `;
+          saida += item.valor === "espaco" ? ", " : `${item.valor} `;
+        } else if (item.tipo === "espaco") {
+          saida += item.comando === "quad" || item.comando === "qquad" ? ", " : " ";
         } else {
           const anterior = no.itens[posicao - 1];
           if (saida && !/\s$/.test(saida) && anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador") saida += " ";
@@ -924,6 +1044,11 @@ export function formulaEmPecas(no: NoFormula, podeDesenhar: PodeDesenharEmLinha 
         texto(OPERADOR_LINEAR[atual.valor]);
         return;
       case "separador":
+        texto(textoDoSeparador(atual.valor));
+        return;
+      case "espaco":
+        texto(" ");
+        return;
       case "texto":
         texto(atual.valor);
         return;
@@ -973,8 +1098,11 @@ export function formulaEmPecas(no: NoFormula, podeDesenhar: PodeDesenharEmLinha 
         atual.itens.forEach((item, posicao) => {
           if (item.tipo === "operador" && !ehSinal(atual.itens, posicao)) texto(` ${OPERADOR_LINEAR[item.valor]} `);
           else if (item.tipo === "operador") texto(OPERADOR_LINEAR[item.valor]);
-          else if (item.tipo === "separador") texto(`${item.valor} `);
-          else andar(item);
+          else if (item.tipo === "separador") texto(`${textoDoSeparador(item.valor)} `);
+          else {
+            if (haVao(atual.itens[posicao - 1], item)) texto(" ");
+            andar(item);
+          }
         });
         return;
       case "matriz":

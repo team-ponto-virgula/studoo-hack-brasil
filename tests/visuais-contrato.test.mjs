@@ -59,7 +59,8 @@ test("X-Studoo-Capacidades: lista com versão, desconhecidos ignorados, o servid
   assert.deepEqual(lerCapacidades(" Visuais@1 , RESOLUCAO@1 "), { visuais: 1, resolucao: 1 });
   assert.deepEqual(lerCapacidades("visuais@1"), { visuais: 1, resolucao: 0 });
   assert.deepEqual(lerCapacidades("resolucao@1"), { visuais: 0, resolucao: 0 }, "a resolução só vale junto dos visuais");
-  assert.deepEqual(lerCapacidades("visuais@2,resolucao@3"), { visuais: 1, resolucao: 1 }, "versão acima do que o servidor sabe vira a dele");
+  assert.deepEqual(lerCapacidades("visuais@2,resolucao@3"), { visuais: 2, resolucao: 1 }, "versão acima do que o servidor sabe vira a dele (visuais@2 é o gráfico de função)");
+  assert.deepEqual(lerCapacidades("visuais@3"), { visuais: 2, resolucao: 0 }, "e acima de 2, o 2 do servidor");
   assert.deepEqual(lerCapacidades("visuais@2,resolucao@3", { visuais: 2, resolucao: 3 }), { visuais: 2, resolucao: 3 });
   assert.deepEqual(lerCapacidades("visuais@1,visuais@2", { visuais: 2, resolucao: 1 }), { visuais: 2, resolucao: 0 }, "versões cumulativas: vale a maior");
   assert.deepEqual(lerCapacidades("grafico@1,visuais@1,x,@1"), { visuais: 1, resolucao: 0 }, "entradas desconhecidas são ignoradas");
@@ -450,8 +451,11 @@ test("'Sua vez': 3 opções, 1 certa, sem repetição, texto ou fórmula, e a co
   assert.match(trocar((t) => (t.opcoes[1].correta = true)), /exatamente 1 opção certa/);
   assert.match(trocar((t) => (t.opcoes[0].correta = false)), /exatamente 1 opção certa/);
   assert.match(trocar((t) => (t.opcoes[2] = { ...t.opcoes[0], correta: false })), /duas opções iguais/);
-  assert.match(trocar((t) => (t.opcoes[1].texto = "7")), /só um dos dois/);
-  assert.match(trocar((t) => delete t.opcoes[1].formula), /só um dos dois/);
+  // Texto e fórmula na mesma opção valem (marco 9: a conta vai para dentro do texto, e segue conferida); sem nenhum dos dois, não.
+  const comAsDuas = resolucaoDe();
+  comAsDuas.passos[3].tentativa.opcoes[1].texto = "7";
+  assert.equal(validarResolucao(comAsDuas).ok, true);
+  assert.match(trocar((t) => { delete t.opcoes[1].formula; delete t.opcoes[1].texto; }), /precisa de texto ou de fórmula/);
   assert.match(trocar((t) => (t.opcoes[1].porque = "")), /porque/);
   assert.match(trocar((t) => (t.opcoes[0].correta = "sim")), /correta precisa ser verdadeiro ou falso/);
   assert.match(trocar((t) => (t.opcoes[0].formula = String.raw`\input{x}`)), /opção 1: fórmula/);

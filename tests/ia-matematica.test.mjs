@@ -14,7 +14,7 @@ const { GERADOR_OPENAI, configuracaoOpenAi, corpoDaLicao, criarGeradorOpenAi } =
 const { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek, instrucoesLicaoJsonDeMatematica } = await import("../src/servidor/ia/deepseek.ts");
 const {
   contagensDoRelato, correcaoDaResolucao, ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, instrucoesDeFigurasDoMaterial,
-  instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
+  instrucoesDeMatematica, instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
   repararResolucao, repararVisuais,
 } = await import("../src/servidor/ia/matematica.ts");
 const {
@@ -1420,4 +1420,41 @@ test("a demonstração de geometria não vaza o ponto procurado: no JSON públic
       assert.equal(JSON.stringify(saida.resolucao).includes("correta"), false, `${licao.titulo}: sem o gabarito do Sua vez`);
     }
   }
+});
+
+test("marco 11: o pedido manda marcar só a fórmula completa e deixar a conta que fica pela metade da lacuna em texto comum, na lição e no material", () => {
+  for (const [nome, instrucoes] of [["lição", instrucoesDeMatematica], ["material", instrucoesDeNotacaoDoMaterial]]) {
+    assert.match(instrucoes, /Marque só a fórmula COMPLETA, que fecha antes da lacuna/, nome);
+    assert.match(instrucoes, /"\$h = 12\$" está certo e "\$h = \$ ___" está errado/, `${nome}: o exemplo certo e o errado`);
+    assert.match(instrucoes, /sem cifrões \("h = ___"\)/, `${nome}: a conta pela metade vai em texto comum`);
+  }
+});
+
+/* ----- Marco 11b: o nome do passo é só texto (peso 800: nunca entra fórmula, spec 15, seção 14) ----- */
+
+test("marco 11b: o nome do passo com símbolo recusa a resolução da IA, com o motivo na nova tentativa; o já gravado segue lendo; a IA falsa não escreve assim", () => {
+  const base = JSON.parse(JSON.stringify(licoesDaGeometria.find(({ titulo }) => titulo.startsWith("Baricentro")).resolucao));
+  const comNome = (nome) => ({ ...base, passos: base.passos.map((passo, posicao) => (posicao === 2 ? { ...passo, nome } : passo)) });
+  for (const nome of ["Isole x_C", "Isole $x_C$", "Eleve a x^2", "Valor em $y_{AB}$"]) {
+    const lida = lerResolucaoDoModelo(comNome(nome));
+    assert.equal(lida.resolucao, undefined, `${nome} devia ser recusado`);
+    assert.match(lida.motivo, /passo 3: o nome ".*" tem símbolo \(_ \^ \\ \$ \{ \}\)/, nome);
+    assert.ok(correcaoDaResolucao(lida.motivo).includes('"Isole a abscissa de C", e não "Isole x_C"'), `${nome}: a nova tentativa recebe o motivo e o exemplo`);
+  }
+  for (const nome of ["Isole a abscissa de C", "Isole k", "A fórmula", "O vértice C", "O mesmo para a ordenada"]) {
+    const lida = lerResolucaoDoModelo(comNome(nome));
+    assert.ok(lida.resolucao, `${nome}: ${lida.motivo}`);
+  }
+  // A barra e a chave soltas o texto simples já limpa antes (viram a letra grega ou somem): o nome sai limpo, e não recusado.
+  assert.equal(lerResolucaoDoModelo(comNome("Troque \\alpha")).resolucao?.passos[2].nome, "Troque α");
+  assert.equal(lerResolucaoDoModelo(comNome("Isole {C}")).resolucao?.passos[2].nome, "Isole C");
+  // A lição gravada antes da regra segue com o "Resolva comigo" dela: a leitura não é a geração.
+  assert.ok(normalizarResolucao(comNome("Isole x_C")), "o gravado com x_C segue lendo");
+  assert.match(instrucoesDeMatematica, /sem letra com índice, sem expoente e sem fórmula; "Isole a abscissa de C", e não "Isole x_C"/, "o pedido à IA diz como é o nome");
+  // A IA falsa (as demonstrações) já não escreve nome de passo com símbolo, e o que ela escreve passa pela geração.
+  for (const licao of licoesDaGeometria) {
+    for (const passo of licao.resolucao?.passos ?? []) assert.doesNotMatch(passo.nome, /[_^\\${}]/, `${licao.titulo}: ${passo.nome}`);
+    if (licao.resolucao) assert.ok(lerResolucaoDoModelo(licao.resolucao).resolucao, `${licao.titulo}: a demonstração passa pela geração`);
+  }
+  assert.deepEqual(licoesDaGeometria.flatMap((licao) => licao.resolucao?.passos.map((passo) => passo.nome) ?? []).filter((nome) => /^(Isole a abscissa de C|O mesmo para a ordenada)$/.test(nome)), ["Isole a abscissa de C", "O mesmo para a ordenada"]);
 });

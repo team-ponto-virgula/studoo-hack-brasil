@@ -23,8 +23,9 @@ import { formulaCabeNaLinha } from "./motor-formula";
  * - não usa a barra invertida como marcador, então não cai nas armadilhas do JSON (`\f`, `\t`, `\n`);
  * - os modelos já escrevem assim, e reproduzem com um exemplo curto no prompt;
  * - não colide com o texto em português: um `$` só abre fórmula se não vier colado numa letra ou número ("R$ 5,00", "US$10") e
- *   se o próximo caractere não for espaço, e só fecha se o anterior não for espaço e o seguinte não for letra ou número. "R$ 5,00 e
- *   R$ 10,00", "$ 5" e "custa $5 e $10" não formam par.
+ *   se o próximo caractere não for espaço, e só fecha se o seguinte não for letra ou número e, vindo depois de um espaço, só se o que está
+ *   dentro é uma conta começada (`$h = $ ___`: termina em `=`, `+`, `×`…, e a lacuna ficou fora da marca). "R$ 5,00 e R$ 10,00", "$ 5",
+ *   "custa $5 e $10", "$5 e o capacete $ 80" e "$x_G $" não formam par. A conta começada não é fórmula: vira texto ("h = ___"), sem cifrão.
  *
  * Dentro da marca, `a/b` com dois termos simples (número, variável, variável com índice) é a fração "a/b" desenhada em linha e
  * lida "a sobre b" ("$1/2$": numa frase, meio é um número); as outras barras continuam ÷ (`x_G = (x_A + x_B) / 3`).
@@ -120,6 +121,18 @@ interface Marca {
   fim: number;
 }
 
+/** O que a fórmula `h = ` deixa sem fechar: termina num sinal que pede mais (`=`, `+`, `−`, `×`, `<`, `(`…, ou o comando dele: `\\times`). */
+const TERMINA_EM_SINAL = /(?:[=+\-−×÷·*/<>≤≥≠^_(,;]|\\(?:times|cdot|div|le|leq|ge|geq|ne|neq|pm|mp))\s*$/;
+
+/**
+ * O cifrão que fecha depois de um espaço (`$h = $ ___`: a IA abre a fórmula, deixa a lacuna de fora e põe o espaço dentro). Vale SÓ quando o
+ * que está entre os cifrões é uma conta começada (termina num sinal): um cifrão depois de espaço e de um sinal não pode ser o começo de outra
+ * marca. A fórmula completa com espaço antes do fecho (`$x_G $`, `$5 e o capacete $ 80`, `$HOME e $PATH`) continua sem par, como sempre foi.
+ */
+function fechaDepoisDeEspaco(conteudo: string): boolean {
+  return TERMINA_EM_SINAL.test(conteudo);
+}
+
 /** Lê a marca que abre no `$` da posição `inicio`, ou null se ele é cifrão de dinheiro (ou não fecha). */
 function lerMarca(texto: string, inicio: number): Marca | null {
   const comprimento = texto[inicio + 1] === "$" ? 2 : 1;
@@ -131,8 +144,10 @@ function lerMarca(texto: string, inicio: number): Marca | null {
   for (let j = inicio + comprimento + 1; j < limite; j += 1) {
     if (texto[j] === "\n") return null;
     if (texto[j] !== "$" || (comprimento === 2 && texto[j + 1] !== "$")) continue;
-    if (ehEspaco(texto[j - 1]) || ehDePalavra(texto[j + comprimento])) continue;
-    return { conteudo: texto.slice(inicio + comprimento, j), fim: j + comprimento };
+    if (ehDePalavra(texto[j + comprimento])) continue;
+    const conteudo = texto.slice(inicio + comprimento, j);
+    if (ehEspaco(texto[j - 1]) && !fechaDepoisDeEspaco(conteudo)) continue;
+    return { conteudo, fim: j + comprimento };
   }
   return null;
 }
@@ -159,6 +174,12 @@ function barraSimplesEmFracao(fonte: string): string {
  * árvore inteira, nunca do texto linear. Que não lê (comando de fora da lista): texto linear de melhor esforço, sem LaTeX cru.
  */
 function marcaDe(conteudo: string): Parte {
+  // A fórmula começada que ficou sem o resto (`h =`, `x +`, `3 \\times`: o resto, a lacuna, está fora da marca) não é fórmula: é texto, sem
+  // cifrão e sem desenho (o resto da frase está em texto, e uma só fórmula desenhada no meio dela destoaria).
+  if (TERMINA_EM_SINAL.test(conteudo)) {
+    const linear = linearizarTolerante(conteudo);
+    return { tipo: "marca", segmentos: [{ tipo: "texto", texto: linear }], falado: linear, linear, latex: null };
+  }
   const lida = lerFormula(barraSimplesEmFracao(conteudo));
   if (!lida.ok) {
     const linear = linearizarTolerante(conteudo);

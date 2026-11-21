@@ -434,12 +434,12 @@ export const LICAO_BARICENTRO: Bruto = {
         "formula": "1 = \\frac{2 + (-1) + \\procurado{x_C}}{3}"
       },
       {
-        "nome": "Isole x_C",
+        "nome": "Isole a abscissa de C",
         "texto": "Multiplique os dois lados por 3 e passe os outros termos para o outro lado.",
         "formula": "x_C = 3 \\times 1 - 2 - (-1) = \\foco{2}"
       },
       {
-        "nome": "O mesmo para y_C",
+        "nome": "O mesmo para a ordenada",
         "texto": "Repita o método na ordenada, com $y_G = 2$, $y_A = 1$ e $y_B = 5$.",
         "formula": "y_C = 3 \\times 2 - 1 - 5",
         "tentativa": {
