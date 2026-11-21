@@ -559,8 +559,8 @@ A frase do d1 ainda traz "…portanto k = 0". A captura é do dado de antes da c
 - **Quando não há procurado na curva** (conceito, exemplo e exercício que não pergunta um ponto dela, como "qual gráfico é o de f?"), a curva aparece desde o início.
 
 **5. alt**
-- **Obrigatório:** até 140 caracteres, com o tipo de curva, a fórmula falada curta e os pontos que aparecem.
-- **No enunciado:** nunca traz o procurado. O validador recusa o alt com a coordenada do procurado, como no plano. Exemplo: "Parábola de f(x) = x² − 4x + 3, com o ponto C (0, 3). O vértice é o procurado."
+- **Obrigatório:** até 140 caracteres, com o tipo de curva, a fórmula marcada com `$…$` e os pontos que aparecem. Na tela, a fórmula aparece desenhada em linha; no leitor de tela, ela é falada pela árvore (`falarTextoComFormulas`).
+- **No enunciado:** nunca traz o procurado. O validador recusa o alt com a coordenada do procurado, como no plano. Exemplo: "Parábola de $f(x) = x^2 - 4x + 3$, com o ponto C (0, 3). O vértice é o procurado."
 - **No retorno:** ganha o ponto achado.
 
 **6. Capacidade**
@@ -581,7 +581,7 @@ A frase do d1 ainda traz "…portanto k = 0". A captura é do dado de antes da c
   - janela x de −2,5 a 2,5 e y de −3 a 4, com escala igual; a reta sai pela borda de cima a partir de x = 1,5;
   - rótulos "C (0, 1)" e "R (−0,5; 0)" e o nome "g".
 - **Seno em [0, 2π]:**
-  - curva: h(x) = sin x;
+  - curva: h(x) = sen x (a IA escreve `\sin x`);
   - pontos: máximo M (π/2, 1), raiz P (π, 0) e mínimo N (3π/2, −1), os três como especial;
   - x marcado em 0, π/2, π, 3π/2 e 2π; y de −1,5 a 1,5, com marcas em −1, 0 e 1; escalas independentes, com a altura em cerca de metade da largura;
   - rótulos "M (π/2, 1)", "P (π, 0)", "N (3π/2, −1)" e o nome "h".
@@ -654,7 +654,7 @@ Capturas do Mobile 2 em 390 e 320 (parábola, reta, seno e vértice, no enunciad
 - **Fórmula no `alt`:** os textos 1, 2, 3, 5, 7 e 8 trazem a fórmula em símbolos ("f(x) = x² − 4x + 3"), e cada leitor fala de um jeito. A fórmula do `alt` vem marcada com `$…$`, e o rótulo de acessibilidade usa `falarTextoComFormulas` (seção 9). O texto visível continua com os símbolos.
 - **Regras de fala novas** (seção 9):
   - função aplicada: "f(x)", "g(2)", "h(x)", com f, g ou h seguidas de parênteses com um número ou uma variável, se falam "f de x", "g de 2", "h de x". O ponto 4 hoje diz "f abre parênteses x fecha parênteses";
-  - "sin x" se fala "seno de x", e "cos x", "cosseno de x";
+  - "sen x" se fala "seno de x", e "cos x", "cosseno de x" (veja a notação na seção 18);
   - "π" se fala "pi", "2π" "2 pi" e "π/2" "pi sobre 2";
   - ponto com coordenadas (letra maiúscula seguida de par) se fala "V de coordenadas 2 e menos 1". O ponto 6 hoje diz "V abre parênteses 2, menos 1 fecha parênteses".
 - **Aceito como está:** um elemento de imagem por figura (1 a 3), nada do vértice antes da resposta (5), uma fala só no retorno sem repetir a figura (7 e 8), o prefixo "Figura:" no SE (9), uma fala só no último passo (10) e a troca imediata com movimento reduzido (11).
@@ -663,3 +663,17 @@ Capturas do Mobile 2 em 390 e 320 (parábola, reta, seno e vértice, no enunciad
 - a parábola e a reta com a curva, a faixa da fórmula, os destaques em losango, o "R (−0,5; 0)", a reta recortada em y = 4 e o nome da curva;
 - o vértice sem a curva no enunciado, com "V = ?";
 - o retorno re-enquadrado, com a curva e V verde.
+
+## 18. Notação brasileira das funções (decisão de 21/11)
+
+- **Escrita na tela:** "sen x", "cos x", "tg x", "ln x", "log x" e "log₂ x", em letra reta (não itálica), no peso do texto, com um vão fino (0,17 em) antes do argumento. O argumento composto vai entre parênteses ("sen(2x + 1)"). Não se usa "sin" nem "tan" na tela.
+- **Fala:**
+  - "sen x": "seno de x";
+  - "cos x": "cosseno de x";
+  - "tg x": "tangente de x";
+  - "ln x": "logaritmo natural de x";
+  - "log x": "logaritmo de x";
+  - "log₂ x": "logaritmo de x na base 2".
+- **O que a IA escreve** no LaTeX restrito continua sendo `\sin`, `\cos`, `\tan`, `\ln` e `\log` (`\log_2`). O Studoo traduz para a notação brasileira ao desenhar e ao falar. "sen" e "tg" escritos pela IA também são aceitos.
+- **No gráfico de função:** o conjunto aceito na seção 15 continua seno e cosseno. Tangente e logaritmo valem só na fórmula, ainda não como curva.
+- Isso vale em todo lugar: fórmula em linha, fórmula em bloco, faixa da figura, PNG, `alt` e opções.
