@@ -267,3 +267,57 @@ Na fase 1, o build 3 e o site atual recebem os visuais da lição como **uma ima
 | F3 | Ampliar a captura | Texto legível (o rótulo menor com uns 11 px na tela), sem serrilhado |
 | F4 | Leitor de tela na imagem | "Desenho do Studoo: <descrição>" |
 | F5 | Lição sem visual, ou com visual inválido | O recurso de antes (foto ou nada), sem caixa vazia |
+
+## 8. Parecer do motor (a130fe0, 21/11)
+
+Conferido nas imagens do motor em 4× (baricentro, colinearidade, reta das abscissas e galeria de fórmulas). Elas são de dados sintéticos e não são telas.
+
+**Está bom e fica:**
+- a faixa da fórmula em cima com a figura embaixo, em 320 × 352, separadas pela linha `#E1E7FA`;
+- o procurado só na legenda ("C = ?"), sem segmento nem polígono que aponte para ele;
+- fração, fração dentro de fração, raiz com barra, parênteses altos, matriz com colchetes, determinante com barras;
+- Δ e π;
+- o ";" no par com decimal, "área" e "base" retos e os destaques de foco e resposta.
+
+**Muda, por ordem de importância:**
+1. **Número de eixo nunca some.** Hoje, quando um rótulo de ponto chega perto, o motor apaga o número do eixo: no baricentro faltam o 4 e o 8 do eixo y, e na colinearidade faltam o −6, o −4, o −2 e o 0 do eixo x. Os números dos eixos têm lugar fixo e prioridade. Quem se move é o rótulo do ponto, que tenta os outros lados (direita, esquerda, acima, abaixo, depois as diagonais). Só se nenhum lado couber o rótulo do ponto vira só o nome ("A").
+2. **Grade de 1 em 1.** As linhas da grade ficam a cada unidade até 20 unidades no eixo, para a pessoa ler A (1, 2) contando quadradinhos. Acima de 12 unidades, só os números passam a aparecer de 2 em 2. Hoje a grade também pula de 2 em 2, e A (1, 2) fica entre linhas.
+3. **Respiro dos sinais:**
+   - relações (=, ≠, ≤, ≥, <, >, →) com 5 unidades de cada lado: hoje "a≤b≠c→d≥e" fica colado;
+   - "+", "−", "×" e "÷" com 4;
+   - 6 entre colchete ou barra que fecha e o sinal seguinte ("|…| = 0" e "] × [");
+   - dentro do expoente e do índice, metade do respiro ("n+1", não "n + 1").
+4. **Fim da reta e dos eixos:** a seta começa uma unidade depois da última marca. Hoje o "8" da reta numérica fica embaixo da ponta da seta.
+5. **π:** o glifo da Noto Sans Bold está mais pesado e mais largo que a Nunito ao lado. Use o peso SemiBold, ou reduza a 92% na tabela, e o mesmo para o Δ, se ficar desigual.
+
+**Cores finais** (decididas aqui; os testes passam a travar estes valores, sem exceção):
+
+| Papel | Uso | Valor | Contraste |
+|---|---|---|---|
+| `focoTexto` | texto em foco na fórmula | `#1D4ED8` sobre `#EAF0FF` | 5,87:1 |
+| `foco` | traço ou marca em foco (guia, eixo em foco) | `#2563FF` | gráfico, 4,9:1 sobre branco |
+| `procurado` | anel tracejado e símbolo da legenda | `#B9780F` | gráfico, 3,65:1 sobre branco |
+| `procuradoTexto` | "C = ?" e o `\procurado{…}` | `#9A5B00` | texto, acima de 4,5:1 sobre branco e sobre `#FFF6EA` |
+
+O âmbar fica coerente como par: o tom do gráfico é mais claro e o do texto mais escuro, como o roxo do especial (`#7C5CFF` no losango e `#5B3FD9` no texto) e o azul (`#2563FF` no traço e `#1D4ED8` no texto em foco).
+
+**Piso de texto: 13 unidades em todos os papéis**, no lugar do 15 do motor e do 11 e 13 da seção 7.
+- **Por que não 15:** o piso alto é o que tira os números dos eixos (item 1) e deixa o índice quase do tamanho da base dentro da fração. Um termo de 17 com índice de 15 perde a hierarquia.
+- **Por que 13:** na tela de 280, 13 dá 11,4 pt, acima do mínimo de 11.
+- **Tamanhos por papel:**
+  - rótulos dos pontos 14 em 800;
+  - legenda e linha "C = ?" 14;
+  - números dos eixos 13;
+  - índice e expoente com 65% da base e piso 13;
+  - fórmula 22 na faixa e termos de fração 17.
+
+**Aceite F1 a F5 da seção 7:**
+- **Aceitos com as imagens, depois dos itens 1 a 3 acima:**
+  - F1, o conteúdo: fórmula geral em cima, A, B e G rotulados, "C = ?" sem posição e legenda;
+  - F2, o conteúdo: reta com A, B e G e "C = ?" fora da reta.
+- **Só a tela real prova** (build 3 no iPhone e site atual):
+  - a legenda "Desenho do Studoo · …", que vem de `fonte` e `descricao`, fora da imagem;
+  - a caixa sem encolher nos 360 px;
+  - F3, a legibilidade no tamanho real;
+  - F4, o leitor de tela;
+  - F5, o recurso antigo quando não há visual.
