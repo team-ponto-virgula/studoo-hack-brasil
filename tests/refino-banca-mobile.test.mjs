@@ -56,3 +56,25 @@ test('P1-8: no Android, a borda, o fundo e o respiro dos campos ficam numa caixa
   assert.match(interfaceApp, /<CaixaDoCampo focar=\{\(\) => interno\.current\?\.focus\(\)\}/);
   assert.match(formatos, /<CaixaDoCampo focar=\{\(\) => campo\.current\?\.focus\(\)\} estilo=\{\[formatos\.aberta,/);
 });
+
+test('P2-1: o troféu da criação é pré-carregado na tela do pedido (no iPhone não fica um disco branco)', async () => {
+  const mascote = await ler('mascote.tsx');
+  assert.match(mascote, /export const TROFEU_DA_CRIACAO = \['acessorio-trofeu-p', 'acessorio-trofeu-m'\] as const;/);
+  assert.match(mascote, /lugar: \{ position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden' \}/);
+  assert.match(mascote, /accessibilityElementsHidden style=\{estilosDaPreCarga\.lugar\}/);
+  assert.match(estudo, /<Tela pagina="objetivo"[^\n]*>\n\s*\{\/\*[^\n]*\*\/\}\n\s*<PreCargaDoStu arquivos=\{TROFEU_DA_CRIACAO\} \/>/);
+  const arquivos = await ler('stu-arquivos.ts');
+  assert.match(arquivos, /'acessorio-trofeu-p': require/);
+  assert.match(arquivos, /'acessorio-trofeu-m': require/);
+});
+
+test('P2-3: a barra da lacuna fica na linha de base, como um sublinhado (não meia linha abaixo)', async () => {
+  const formatos = await ler('aula-formatos.tsx');
+  const inicio = formatos.indexOf('export function deslocamentoDaLacuna(');
+  const js = ts.transpileModule(formatos.slice(inicio, formatos.indexOf('\n}\n', inicio) + 2).replace('export ', ''), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const deslocamentoDaLacuna = new Function(`${js}; return deslocamentoDaLacuna;`)();
+  assert.equal(deslocamentoDaLacuna(20), 2.4);
+  assert.equal(deslocamentoDaLacuna(16), 1.9);
+  assert.match(formatos, /transform: \[\{ translateY: deslocamentoDaLacuna\(fonte\) \}\]/);
+  assert.doesNotMatch(formatos, /linha \/ 2 - fonte \* 0\.229/);
+});

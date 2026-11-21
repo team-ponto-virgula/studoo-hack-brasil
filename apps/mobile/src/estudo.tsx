@@ -25,7 +25,7 @@ import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NoCaminho, type NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
 import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, raioQueCobre, rolagemDaTrilhaPronta, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
-import { Stu } from './mascote';
+import { PreCargaDoStu, Stu, TROFEU_DA_CRIACAO } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida, estadoCurtoDoCompartilhar, rotuloCurtoDoCompartilhar } from './social';
 import { PerfilSemSocial, TelaPerfil } from './perfil';
@@ -997,6 +997,8 @@ function Pedido({ cliente, onProposta, objetivo, ocupado, aviso, falha, erro, ac
 
   return (
     <Tela pagina="objetivo" acoes={acoes} estiloConteudo={estudoEstilos.fimQuarenta}>
+      {/* O troféu da criação já decodificado antes do mapa (banca P2-1: no iPhone, um disco branco nos primeiros quadros). */}
+      <PreCargaDoStu arquivos={TROFEU_DA_CRIACAO} />
       <View style={[estudoEstilos.pedidoHeroi, baixa && estudoEstilos.pedidoHeroiBaixo]}>
         {/* Spec 13: o Stu convida curioso (uma vez ao abrir), encoraja enquanto a pessoa escreve (parado) e se anima quando
             uma ideia entra no campo (no acontecimento); 72 no celular (56 na janela baixa), com o halo lavanda. Sem a estrela
