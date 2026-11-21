@@ -42,7 +42,7 @@ import {
   pararVoz,
 } from './aula-formatos';
 import { CONTEXTO_DO_ENUNCIADO, CONTEXTO_DO_RETORNO, DesenhoDoVisual, OPCOES_DA_FORMULA, VisuaisDaLicao } from './desenho';
-import { alturaDaFiguraNaTela, alturaMaximaDaFigura } from './desenho-svg';
+import { alturaDaFiguraNaTela, alturaMaximaDaFigura, desenhoDoVisual } from './desenho-svg';
 import { Confete } from './festa';
 import { useResolvaComigo } from './resolva-comigo';
 import { TextoComFormulas } from './texto-com-formulas';
@@ -316,6 +316,20 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const exercicio = indice >= 0 ? exercicios[indice] : null;
   const resposta = indice >= 0 ? respostas[indice] : '';
   const avaliacao = indice >= 0 ? avaliacoes[indice] : null;
+  /**
+   * Spec 15, seção 12: a figura do retorno se reenquadra (o procurado entra na janela), mas fica na CAIXA da figura do enunciado
+   * (a altura dela, em unidades do desenho): só a escala muda, e nem as opções nem o rodapé pulam.
+   */
+  const caixaDaFigura = useMemo(() => {
+    if (!exercicio?.visual || exercicio.visual.tipo === 'formula') return undefined;
+    const desenho = desenhoDoVisual(exercicio.visual, CONTEXTO_DO_ENUNCIADO, { alturaMaxima: alturaDaFigura });
+    return desenho && !desenho.naoCabe ? desenho.altura : undefined;
+  }, [exercicio, alturaDaFigura]);
+  /** A descrição da figura revelada, para o leitor de tela ouvir junto do retorno, numa frase só. */
+  const descricaoDoRetorno = useMemo(() => {
+    if (!avaliacao?.correta || !avaliacao.visual || !exercicio?.visual) return undefined;
+    return desenhoDoVisual(avaliacao.visual, CONTEXTO_DO_RETORNO, { alturaMaxima: alturaDaFigura })?.descricao;
+  }, [avaliacao, exercicio, alturaDaFigura]);
   const ocupado = pendente !== null;
   const total = etapas.length;
   const ultima = passo === total - 1;
@@ -623,7 +637,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   let rodape: ReactNode;
   if (avaliacao) {
     rodape = (
-      <PainelRetorno avaliacao={avaliacao} reacao={reacaoDoStu}
+      <PainelRetorno avaliacao={avaliacao} reacao={reacaoDoStu} descricaoDaFigura={descricaoDoRetorno}
         // A pílula fica acima, com as margens de -6 e -2 e o vão de 10 do rodapé.
         reservaAcima={temAbaixo && etapa.tipo === 'exercicio' && alturaDaPilula > 0 ? alturaDaPilula - 6 - 2 + 10 : 0}
         titulo={avaliacao.correta
@@ -877,10 +891,12 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 ela troca no lugar pela do retorno (o procurado vira resposta, entrando de leve); no erro, nada muda. A troca
                 remonta o desenho (chave nova), e a entrada roda uma vez só. */}
             {exercicio.visual && (avaliacao?.correta && avaliacao.visual ? (
-              <DesenhoDoVisual key="retorno" visual={avaliacao.visual} contexto={CONTEXTO_DO_RETORNO} testID="visual-retorno"
+              <DesenhoDoVisual key="retorno" visual={avaliacao.visual} contexto={CONTEXTO_DO_RETORNO} testID="visual-retorno" caixa={caixaDaFigura}
+                // A descrição nova vai na fala do retorno (uma frase só): a figura não anuncia de novo.
+                rotulo={descricaoDoRetorno}
                 opcoes={avaliacao.visual.tipo === 'formula' ? OPCOES_DA_FORMULA : { alturaMaxima: alturaDaFigura }} />
             ) : (
-              <DesenhoDoVisual key="enunciado" visual={exercicio.visual} contexto={CONTEXTO_DO_ENUNCIADO} testID="visual-enunciado" entrada={false}
+              <DesenhoDoVisual key="enunciado" visual={exercicio.visual} contexto={CONTEXTO_DO_ENUNCIADO} testID="visual-enunciado" entrada={false} caixa={caixaDaFigura}
                 opcoes={exercicio.visual.tipo === 'formula' ? OPCOES_DA_FORMULA : { alturaMaxima: alturaDaFigura }} />
             ))}
             {exercicio.trecho && (
@@ -1145,7 +1161,9 @@ export function CartaoFonte({ referencia, numero, ref, titulo, parado = false, m
  * painel inteiro cabe em metade da janela: passando disso, só o texto rola, com o esmaecer de 24 no fim.
  */
 function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarDeNovo, continuar, verReforco, rotuloPular, compacto = false, avisoPular,
-  iconeErro = 'fechar', convite, reacao, reservaAcima = 0 }: {
+  iconeErro = 'fechar', convite, reacao, reservaAcima = 0, descricaoDaFigura }: {
+  /** No acerto com figura: a descrição dela, ouvida junto do retorno, numa frase só (spec 15, seção 12). */
+  descricaoDaFigura?: string;
   /** A expressão do Stu na linha do título (acerto, de primeira, depois da ponte ou erro). */
   reacao?: ReacaoDoStu;
   /** O que mais divide o rodapé com o painel, acima dele (a pílula "Ver mais abaixo"), para o rodapé inteiro caber em metade da janela. */
@@ -1192,7 +1210,7 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
     <Animated.View testID="painel-retorno" style={{ gap: 6, maxHeight: alturaMaxima, opacity: subida,
       transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
       <View ref={area} testID="feedback-licao" accessible accessibilityRole="alert"
-        accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${falarTextoComFormulas(avaliacao.feedback)} ${extras.map(falarTextoComFormulas).join(' ')}`}
+        accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${falarTextoComFormulas(avaliacao.feedback)} ${extras.map(falarTextoComFormulas).join(' ')}${certa && descricaoDaFigura ? ` ${descricaoDaFigura}` : ''}`}
         style={[licaoEstilos.retorno, licaoEstilos.encolhe]}>
         {/* Como na web: o ícone pequeno ao lado do título e o texto na largura toda, embaixo (o painel ocupava ~40% da tela). */}
         <View style={licaoEstilos.retornoCabecalho}>

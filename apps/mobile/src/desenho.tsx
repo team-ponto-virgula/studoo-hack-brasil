@@ -3,7 +3,7 @@ import { Animated, ScrollView, Text, View, type StyleProp, type ViewStyle } from
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { falarFormula, formulaLinear, lerFormula, type ContextoDoDesenho, type Desenho, type OpcoesDaFigura, type OpcoesDaFormula, type Visual } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
-import { desenhoDoVisual, elementoDaPrimitiva, medidasNaTela, ordenarVisuais, type ElementoSvg } from './desenho-svg';
+import { desenhoDoVisual, elementoDaPrimitiva, medidasNaCaixa, medidasNaTela, ordenarVisuais, separarPontoResposta, type ElementoSvg } from './desenho-svg';
 import { cores, fontes } from './tema';
 
 /*
@@ -24,7 +24,7 @@ function montar(elementos: (ElementoSvg | null)[]): ReactNode[] {
 }
 
 /** O desenho pronto do motor, na largura útil de quem o recebe. */
-export const DesenhoSvg = memo(function DesenhoSvg({ desenho, rotulo, testID, estilo, entrada = true }: {
+export const DesenhoSvg = memo(function DesenhoSvg({ desenho, rotulo, testID, estilo, entrada = true, caixa }: {
   desenho: Desenho;
   /** O nome para o leitor de tela; sem ele, a descrição do motor. */
   rotulo?: string;
@@ -32,11 +32,42 @@ export const DesenhoSvg = memo(function DesenhoSvg({ desenho, rotulo, testID, es
   estilo?: StyleProp<ViewStyle>;
   /** Entra subindo de leve (o ponto procurado virando resposta, o passo novo do "Resolva comigo"). */
   entrada?: boolean;
+  /**
+   * Altura fixa da caixa, em unidades do desenho (a da figura do enunciado): a figura do retorno entra nela, só a escala muda, e
+   * nada pula (spec 15, seção 12). Com caixa, a entrada é a figura aparecendo no lugar em 200 ms e, depois, o ponto resposta
+   * crescendo em 200 ms, já verde e com o rótulo (camada própria, por fora do Svg); com movimento reduzido, tudo na hora.
+   */
+  caixa?: number;
 }) {
   const [largura, setLargura] = useState(0);
-  const elementos = useMemo(() => montar(desenho.primitivas.map((primitiva) => elementoDaPrimitiva(primitiva))), [desenho]);
+  const camadas = useMemo(() => (caixa !== undefined ? separarPontoResposta(desenho.primitivas) : null), [desenho, caixa]);
+  const elementos = useMemo(() => montar((camadas?.base ?? desenho.primitivas).map((primitiva) => elementoDaPrimitiva(primitiva))), [desenho, camadas]);
+  const elementosDoPonto = useMemo(() => (camadas ? montar(camadas.ponto.map((primitiva) => elementoDaPrimitiva(primitiva))) : null), [camadas]);
   const medidas = medidasNaTela(desenho, largura);
   const aparecer = useAparecer(0, 200);
+  const crescer = useAparecer(200, 200);
+  if (caixa !== undefined) {
+    const naCaixa = medidasNaCaixa(desenho, largura, caixa);
+    const viewBox = `0 0 ${desenho.largura} ${desenho.altura}`;
+    return (
+      <Animated.View testID={testID} accessible accessibilityRole="image" accessibilityLabel={rotulo ?? desenho.descricao}
+        onLayout={(evento) => { const w = evento.nativeEvent.layout.width; if (Math.abs(w - largura) > 0.5) setLargura(w); }}
+        style={[{ width: '100%', aspectRatio: desenho.largura / caixa, alignItems: 'center' }, entrada && { opacity: aparecer }, estilo]}>
+        {largura > 0 && (
+          <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden style={{ width: naCaixa.largura, height: naCaixa.altura }}>
+            <Svg width={naCaixa.largura} height={naCaixa.altura} viewBox={viewBox}>{elementos}</Svg>
+            {camadas && elementosDoPonto && (
+              <Animated.View pointerEvents="none" style={{ position: 'absolute', left: 0, top: 0, width: naCaixa.largura, height: naCaixa.altura,
+                transformOrigin: `${camadas.centro[0] * naCaixa.escala}px ${camadas.centro[1] * naCaixa.escala}px`,
+                transform: [{ scale: entrada ? crescer : 1 }] }}>
+                <Svg width={naCaixa.largura} height={naCaixa.altura} viewBox={viewBox}>{elementosDoPonto}</Svg>
+              </Animated.View>
+            )}
+          </View>
+        )}
+      </Animated.View>
+    );
+  }
   const svg = largura > 0 && (
     <Svg width={medidas.rola ? medidas.larguraDoConteudo : medidas.largura} height={medidas.altura} viewBox={medidas.viewBox}>
       {elementos}
@@ -61,7 +92,7 @@ export const DesenhoSvg = memo(function DesenhoSvg({ desenho, rotulo, testID, es
  * Um visual do contrato no contexto dado (enunciado, passo, retorno). Se o motor não o desenha (fórmula que não lê, teto de
  * primitivas, erro), não ocupa lugar nenhum: a lição segue em texto (spec 15, seção 3).
  */
-export function DesenhoDoVisual({ visual, contexto, opcoes, rotulo, testID, estilo, entrada }: {
+export function DesenhoDoVisual({ visual, contexto, opcoes, rotulo, testID, estilo, entrada, caixa }: {
   visual: Visual;
   contexto: ContextoDoDesenho;
   opcoes?: OpcoesDaFormula & OpcoesDaFigura;
@@ -69,6 +100,8 @@ export function DesenhoDoVisual({ visual, contexto, opcoes, rotulo, testID, esti
   testID?: string;
   estilo?: StyleProp<ViewStyle>;
   entrada?: boolean;
+  /** Altura fixa da caixa, em unidades do desenho (ver `DesenhoSvg`). */
+  caixa?: number;
 }) {
   const chaveDoContexto = contexto.tipo === 'passo' ? `passo:${contexto.ultimo}` : contexto.tipo;
   const desenho = useMemo(() => desenhoDoVisual(visual, contexto, opcoes),
@@ -78,7 +111,7 @@ export function DesenhoDoVisual({ visual, contexto, opcoes, rotulo, testID, esti
   if (!desenho) return visual.tipo === 'formula' ? <FormulaEmTexto latex={visual.latex} testID={testID} /> : null;
   // O motor respeita a altura pedida e, quando nem assim cabe, avisa (`naoCabe`): no lugar da figura, a descrição dela.
   if (desenho.naoCabe && visual.tipo !== 'formula') return <FiguraEmTexto alt={visual.alt} testID={testID} />;
-  return <DesenhoSvg desenho={desenho} rotulo={rotulo} testID={testID} estilo={estilo} entrada={entrada} />;
+  return <DesenhoSvg desenho={desenho} rotulo={rotulo} testID={testID} estilo={estilo} entrada={entrada} caixa={caixa} />;
 }
 
 /**

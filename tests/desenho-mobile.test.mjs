@@ -131,3 +131,34 @@ test('figura que não cabe na altura (naoCabe): no lugar dela, o alt em texto, c
   const apertado = desenhoDoVisual(figura, { tipo: 'enunciado' }, { alturaMaxima: 40 });
   assert.ok(!apertado || apertado.naoCabe || apertado.altura <= 40, 'o motor respeita a altura ou avisa que não cabe');
 });
+
+test('troca no acerto (spec 15, seção 12): a figura reenquadrada fica na caixa do enunciado, só a escala muda; o ponto resposta cresce numa camada própria', async () => {
+  const { separarPontoResposta, medidasNaCaixa } = await import('../apps/mobile/src/desenho-svg.ts');
+  for (const nome of ['baricentro', 'colinearidade']) {
+    const licao = await fixture(nome);
+    const figura = normalizarVisual(licao.exercicio.visual);
+    const enunciado = desenhoDoVisual(visualParaEnunciado(figura), { tipo: 'enunciado' }, { alturaMaxima: 179 });
+    const retorno = desenhoDoVisual(visualRevelado(figura), { tipo: 'retorno' }, { alturaMaxima: 179 });
+    for (const largura of [302, 318, 343]) {
+      const caixaEnunciado = medidasNaCaixa(enunciado, largura, enunciado.altura);
+      const caixaRetorno = medidasNaCaixa(retorno, largura, enunciado.altura);
+      assert.equal(caixaRetorno.alturaDaCaixa, caixaEnunciado.alturaDaCaixa, `${nome}: a caixa não muda (${largura})`);
+      assert.ok(caixaRetorno.altura <= caixaRetorno.alturaDaCaixa + 0.01 && caixaRetorno.largura <= largura + 0.01, `${nome}: o retorno cabe na caixa`);
+    }
+    const camadas = separarPontoResposta(retorno.primitivas);
+    assert.ok(camadas && camadas.ponto.length >= 1, `${nome}: o ponto resposta separado`);
+    assert.equal(camadas.base.length + camadas.ponto.length, retorno.primitivas.length);
+    assert.equal(separarPontoResposta(enunciado.primitivas), null, `${nome}: o enunciado não tem ponto resposta`);
+  }
+  const fonte = await ler('apps/mobile/src/desenho.tsx');
+  assert.match(fonte, /entrada && \{ opacity: aparecer \}/, 'a figura nova aparece no lugar (200 ms), sem subir');
+  assert.match(fonte, /const crescer = useAparecer\(200, 200\);/, 'depois, o ponto cresce em 200 ms (movimento reduzido: na hora)');
+  assert.match(fonte, /transform: \[\{ scale: entrada \? crescer : 1 \}\]/);
+  const licaoFonte = await ler('apps/mobile/src/licao.tsx');
+  assert.match(licaoFonte, /testID="visual-retorno" caixa=\{caixaDaFigura\}/);
+  assert.match(licaoFonte, /testID="visual-enunciado" entrada=\{false\} caixa=\{caixaDaFigura\}/);
+  assert.match(licaoFonte, /\$\{certa && descricaoDaFigura \? ` \$\{descricaoDaFigura\}` : ''\}/, 'a descrição nova na fala do retorno, numa frase só');
+  const resolva = await ler('apps/mobile/src/resolva-comigo.tsx');
+  assert.match(resolva, /key=\{ultimo \? 'revelado' : 'passos'\}[\s\S]{0,200}entrada=\{ultimo\} caixa=\{caixa\}/);
+  assert.match(resolva, /`\$\{t\.passo\(estado\.atual \+ 1, estado\.total\)\}\. \$\{descricao\}`/);
+});

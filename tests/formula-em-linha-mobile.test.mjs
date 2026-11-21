@@ -102,3 +102,12 @@ test('o peso da fórmula segue o do texto em volta (pronto para o motor com peso
   assert.equal(pesoDoTexto(undefined), 400); assert.equal(pesoDoTexto('400'), 400); assert.equal(pesoDoTexto('500'), 400);
   assert.equal(pesoDoTexto('700'), 700); assert.equal(pesoDoTexto('800'), 700); assert.equal(pesoDoTexto('bold'), 700); assert.equal(pesoDoTexto(700), 700);
 });
+
+test('Δ e π valem como termo: "Δ ≠ 0" e "π = 3,14" saem desenhados em linha (marco 2e)', async () => {
+  const { itensDaFrase } = await import('../apps/mobile/src/formula-em-linha.ts');
+  for (const frase of ['Se Δ ≠ 0, há duas raízes.', 'Use π = 3,14 na conta.']) {
+    const itens = itensDaFrase(partirTextoComFormulas(marcarFormulasSoltas(frase)), 16, 1, 240);
+    assert.equal(itens.filter((item) => item.tipo === 'desenho').length, 1, frase);
+    assert.ok(itens.every((item) => item.tipo !== 'texto' || !/[Δπ≠=]/.test(item.texto)), `${frase}: a conta inteira no desenho`);
+  }
+});

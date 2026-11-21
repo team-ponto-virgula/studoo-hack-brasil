@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState, type ComponentRef, type ReactNode, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type RefObject } from 'react';
 import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { falarFormula, formulaLinear, lerFormula, type EscolhaNoSuaVez, type LicaoDetalhe, type OpcaoDoSuaVez, type PassoDaResolucao } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
 import { DesenhoDoVisual, OPCOES_DA_FORMULA } from './desenho';
+import { desenhoDoVisual } from './desenho-svg';
 import { focarSemRolar } from './foco';
 import { Icone } from './icone';
 import { Botao } from './interface';
@@ -167,12 +168,25 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
   const [ocupado, setOcupado] = useState(false);
   const frase = useRef<ComponentRef<typeof Text> | null>(null);
   const primeiro = useRef(true);
+  /**
+   * A caixa do desenho de cima: a altura da figura do problema (unidades do desenho). No último passo o gráfico se reenquadra com
+   * o procurado (marco 2e) e fica nesta caixa: só a escala muda, e o resto não pula (spec 15, seção 12).
+   */
+  const caixa = useMemo(() => {
+    if (!resolucao?.visual) return undefined;
+    const desenho = desenhoDoVisual(resolucao.visual, { tipo: 'passo', ultimo: false });
+    return desenho && !desenho.naoCabe ? desenho.altura : undefined;
+  }, [resolucao?.visual]);
 
   // A cada passo novo, o foco vai para a frase do passo e a região educada anuncia "Passo n de N" (spec 15, leitor de tela).
   useEffect(() => {
     if (!estado || !visivel) return;
     if (primeiro.current) { primeiro.current = false; return; }
-    AccessibilityInfo.announceForAccessibility(t.passo(estado.atual + 1, estado.total));
+    // No último passo, a descrição do desenho revelado vai na mesma fala do anúncio (uma frase só).
+    const noUltimo = estado.revelado && estado.atual === estado.total - 1;
+    const revelado = noUltimo && resolucao ? visualDoPasso(resolucao, estado) : undefined;
+    const descricao = revelado ? desenhoDoVisual(revelado, contextoDoPasso(estado))?.descricao : undefined;
+    AccessibilityInfo.announceForAccessibility(descricao ? `${t.passo(estado.atual + 1, estado.total)}. ${descricao}` : t.passo(estado.atual + 1, estado.total));
     const espera = setTimeout(() => focarSemRolar(frase.current), 250);
     return () => clearTimeout(espera);
   }, [estado?.atual, visivel]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -218,7 +232,11 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
     <View testID="resolva-comigo" style={{ gap: 14 }}>
       <TextoComFormulas testID="resolva-problema" accessibilityRole="header" texto={resolucao.problema} estilo={estilos.problema} />
       {/* O desenho de cima troca no mesmo lugar quando o passo mexe nele; o procurado só vira resposta no último passo. */}
-      {visual && <DesenhoDoVisual visual={visual} contexto={contextoDoPasso(estado)} testID="resolva-visual" entrada={false} />}
+      {visual && (
+        // No último passo, a figura revelada entra no lugar (200 ms) e o ponto resposta cresce depois; a chave nova remonta a figura.
+        <DesenhoDoVisual key={ultimo ? 'revelado' : 'passos'} visual={visual} contexto={contextoDoPasso(estado)} testID="resolva-visual"
+          entrada={ultimo} caixa={caixa} />
+      )}
       <Indicador atual={estado.atual} total={estado.total} />
       {estado.passos.slice(0, estado.atual).map((feito, numero) => <LinhaFeita key={numero} passo={feito} numero={numero + 1} />)}
       {passo && <CartaoDoPasso key={estado.atual} passo={passo} estado={estado} ultimo={ultimo} ocupado={ocupado} escolher={escolher} referenciaDaFrase={frase} />}

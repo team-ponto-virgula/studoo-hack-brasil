@@ -121,3 +121,42 @@ export function alturaDaFiguraNaTela(alturaDaJanela: number): number {
   if (!(alturaDaJanela > 0)) return 200;
   return Math.min(200, Math.round((alturaDaJanela * 200) / 844));
 }
+
+/** O primeiro ponto (x, y) de um caminho SVG ("M x y …"). */
+function inicioDoCaminho(d: string): [number, number] | null {
+  const numeros = /M\s*(-?[\d.]+)[\s,]+(-?[\d.]+)/.exec(d);
+  return numeros ? [Number(numeros[1]), Number(numeros[2])] : null;
+}
+
+/**
+ * O ponto resposta do retorno, para ele crescer depois que a figura nova aparece (spec 15, seção 12): o círculo `resposta` com o
+ * anel branco e o rótulo `respostaTexto` perto dele (até 80 unidades). O resto fica na camada de baixo. `null` sem ponto resposta.
+ */
+export function separarPontoResposta(primitivas: readonly Primitiva[]): { base: Primitiva[]; ponto: Primitiva[]; centro: [number, number] } | null {
+  const circulo = primitivas.find((p) => p.tipo === 'circulo' && p.preenchimento === 'resposta' && p.borda === 'branco');
+  if (!circulo || circulo.tipo !== 'circulo') return null;
+  const centro: [number, number] = [circulo.cx, circulo.cy];
+  const perto = (p: Primitiva) => {
+    if (p === circulo) return true;
+    if (p.tipo !== 'caminho' || (p.preenchimento !== 'respostaTexto' && p.borda !== 'respostaTexto')) return false;
+    const inicio = inicioDoCaminho(p.d);
+    return Boolean(inicio && Math.hypot(inicio[0] - centro[0], inicio[1] - centro[1]) <= 80);
+  };
+  return { base: primitivas.filter((p) => !perto(p)), ponto: primitivas.filter(perto), centro };
+}
+
+/**
+ * Medidas numa caixa de altura fixa (em unidades do desenho, na largura de 320): a figura do retorno fica na caixa da figura do
+ * enunciado e só a escala muda, para nada pular (spec 15, seção 12). Centralizada na largura.
+ */
+export function medidasNaCaixa(desenho: Desenho, larguraUtil: number, caixa: number) {
+  const escalaDaLargura = larguraUtil > 0 ? larguraUtil / desenho.largura : 0;
+  const alturaDaCaixa = Math.round(caixa * escalaDaLargura * 100) / 100;
+  const escala = Math.min(escalaDaLargura, desenho.altura > 0 ? alturaDaCaixa / desenho.altura : 0);
+  return {
+    alturaDaCaixa,
+    escala,
+    largura: Math.round(desenho.largura * escala * 100) / 100,
+    altura: Math.round(desenho.altura * escala * 100) / 100,
+  };
+}

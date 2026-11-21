@@ -95,7 +95,7 @@ test('a tela: forma da etapa Exemplo, rodapé preso, POST da escolha e o exemplo
   assert.match(licao, /etapa\.tipo === 'exemplo' && !resolva\.ativo && \(/, 'sem resolução (ou sem rede), o exemplo em texto de sempre');
   const tela = await ler('apps/mobile/src/resolva-comigo.tsx');
   assert.match(tela, /setEstado\(\(atual\) => \(atual \? \{ \.\.\.atual, emTexto: true \} : atual\)\);/, 'sem rede no "Sua vez": exemplo em texto');
-  assert.match(tela, /AccessibilityInfo\.announceForAccessibility\(t\.passo\(estado\.atual \+ 1, estado\.total\)\)/);
+  assert.match(tela, /AccessibilityInfo\.announceForAccessibility\(descricao \? `\$\{t\.passo\(estado\.atual \+ 1, estado\.total\)\}\. \$\{descricao\}` : t\.passo\(estado\.atual \+ 1, estado\.total\)\)/);
   assert.match(tela, /accessibilityRole="radiogroup" accessibilityLabel=\{tentativa\.pergunta\}/);
   assert.match(tela, /tocarEfeito\(corpo\.correta \? 'acerto' : 'erro'\)/);
   const api = await ler('apps/mobile/src/api-nativa.ts');
