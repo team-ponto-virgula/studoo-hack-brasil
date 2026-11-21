@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { PALETA_DO_DESENHO, desenharFormulaEmLinha, partirTextoComFormulas } from '../packages/contratos/src/aprendizado.ts';
+import { PALETA_DO_DESENHO, desenharFormulaEmLinha, marcarFormulasSoltas, partirTextoComFormulas } from '../packages/contratos/src/aprendizado.ts';
 import { corDoPapel, elementoDaPrimitiva } from '../apps/mobile/src/desenho-svg.ts';
 
 // Fórmula em linha no app (spec 15, seção 1, "Em linha"; contrato 3b): os trechos do contrato desenhados pelo motor, num Svg em
@@ -39,12 +39,12 @@ test('fora dos destaques, a fórmula toma a cor da frase; os destaques ficam com
 
 test('o componente: Svg do motor em View em linha, base na linha de base, toque passa, largo demais vira linear', async () => {
   const fonte = await ler('apps/mobile/src/texto-com-formulas.tsx');
-  assert.match(fonte, /desenharFormulaEmLinha\(segmento\.arvore, tamanho\)/);
+  assert.match(await ler('apps/mobile/src/formula-em-linha.ts'), /desenharComPeso\(no, tamanho, peso\)/);
   assert.match(fonte, /height: desenho\.linhaDeBase \* escala, overflow: 'visible'/, 'a caixa mede só acima da linha de base: a linha não cresce');
   assert.match(fonte, /style=\{\{ position: 'absolute', top: 0, left: 0 \}\}/);
   assert.match(fonte, /pointerEvents="none"/, 'o toque chega ao Text');
-  assert.match(fonte, /desenho\.largura \* escala <= LARGURA_MAXIMA \? desenho : null/, 'não quebra: se não cabe, linear');
-  assert.match(fonte, /if \(!desenho\) \{ saida\.push\(trecho\.linear\); continue; \}/, 'o linear entra como texto comum, que quebra (nunca no trecho sem quebra)');
+  assert.match(fonte, /montarItens\(itensDaFrase\(trechos, tamanho, escala, limite, pesoDoTexto\(plano\.fontWeight\)\), escala, cor\)/, 'a fórmula larga vai em peças, no peso do texto em volta');
+  assert.match(fonte, /const limite = largura > 0 \? Math\.min\(largura, LARGURA_MAXIMA\) : LARGURA_MAXIMA;/, 'o limite é a largura do parágrafo');
   assert.match(fonte, /accessibilityLabel=\{accessibilityLabel \?\? falarTextoComFormulas\(texto\)\}/);
   assert.match(fonte, /const \{ fontScale \} = useWindowDimensions\(\);/, 'cresce com o tamanho de letra do sistema');
   assert.match(fonte, /partirTextoComFormulas\(texto \?\? ''\), \[texto\]\)/, 'só o que está marcado: a heurística é do servidor (3c)');
@@ -67,11 +67,38 @@ test('onde o texto tem fórmula: conceito, objetivo, exemplo, enunciado, retorno
 });
 
 test('a pontuação colada na fórmula não vai sozinha para a outra linha', async () => {
-  const { colarPontuacao } = await import('../apps/mobile/src/texto-com-formulas.tsx').catch(() => ({}));
   const fonte = await ler('apps/mobile/src/texto-com-formulas.tsx');
   assert.match(fonte, /const SEM_QUEBRA = '\\u2060';/);
-  assert.match(fonte, /trechos\[indice - 1\]\?\.tipo === 'formula' && \/\^\[\.,;:!\?/);
-  assert.match(fonte, /saida\.push\(colarPontuacao\(trechos, indice\)\)/);
+  assert.match(fonte, /itens\[indice - 1\]\?\.tipo === 'desenho' && FECHA\.test\(texto\)/);
   assert.match(fonte, /<Text key=\{`j\$\{indice\}`\} style=\{\{ whiteSpace: 'nowrap' \} as TextStyle\}>\{formula\}\{pontuacao\}<\/Text>/, 'na prévia web, fórmula e pontuação num trecho sem quebra');
-  void colarPontuacao;
+});
+
+test('fórmula larga vai em peças desenhadas: nenhum _ ^ \\ { } no texto da tela (390, 320 e 200%)', async () => {
+  const { itensDaFrase } = await import('../apps/mobile/src/formula-em-linha.ts');
+  // Limites: o parágrafo do balão do Stu em 390 (~240) e em 320 (~170); a 200%, a mesma largura com escala 2; e um aperto extremo.
+  const casos = [[1, 240], [1, 170], [2, 240], [2, 170], [1, 60]];
+  const proibido = /[_^\\{}]/;
+  let pecas = 0;
+  const textos = [];
+  for (const nome of ['baricentro', 'abscissas', 'colinearidade']) textos.push(...textosDa(JSON.parse(await ler(`tests/fixtures/matematica/${nome}.json`)).licao));
+  textos.push('A abscissa do baricentro é a média das abscissas dos três vértices: $x_G = (x_A + x_B + x_C) \\div 3$.', 'Metade de 8 é $1/2$ de 8. Qual é $x_C$?', '$x^2$ é o quadrado de x.');
+  for (const bruto of textos) {
+    // O servidor marca os tokens soltos da lição de matemática (3c); o app lê só o que está marcado.
+    const trechos = partirTextoComFormulas(marcarFormulasSoltas(bruto));
+    for (const [escala, limite] of casos) {
+      const itens = itensDaFrase(trechos, 16, escala, limite);
+      for (const item of itens) {
+        if (item.tipo === 'texto') assert.doesNotMatch(item.texto, proibido, `"${item.texto}" (escala ${escala}, limite ${limite})`);
+        else assert.ok(item.desenho.largura * escala <= limite + 1e-6, `desenho de ${item.desenho.largura} cabe em ${limite}`);
+      }
+      if (trechos.some((t) => t.tipo === 'formula') && itens.filter((i) => i.tipo === 'desenho').length > trechos.filter((t) => t.tipo === 'formula').length) pecas++;
+    }
+  }
+  assert.ok(pecas > 0, 'algum caso foi em peças');
+});
+
+test('o peso da fórmula segue o do texto em volta (pronto para o motor com peso)', async () => {
+  const { pesoDoTexto } = await import('../apps/mobile/src/formula-em-linha.ts');
+  assert.equal(pesoDoTexto(undefined), 400); assert.equal(pesoDoTexto('400'), 400); assert.equal(pesoDoTexto('500'), 400);
+  assert.equal(pesoDoTexto('700'), 700); assert.equal(pesoDoTexto('800'), 700); assert.equal(pesoDoTexto('bold'), 700); assert.equal(pesoDoTexto(700), 700);
 });

@@ -1,7 +1,8 @@
-import { memo, useMemo, type ComponentRef, type ReactNode, type Ref } from 'react';
+import { memo, useMemo, useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { Platform, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
-import { desenharFormulaEmLinha, falarTextoComFormulas, partirTextoComFormulas, type DesenhoEmLinha, type SegmentoDeTexto } from '@studoo/contratos';
+import { falarTextoComFormulas, partirTextoComFormulas, type DesenhoEmLinha, type SegmentoDeTexto } from '@studoo/contratos';
+import { itensDaFrase, pesoDoTexto, type ItemDaFrase } from './formula-em-linha';
 import { elementoDaPrimitiva } from './desenho-svg';
 
 /*
@@ -14,18 +15,8 @@ import { elementoDaPrimitiva } from './desenho-svg';
 
 
 const COMPONENTES = { Line, Rect, Circle, Path } as const;
-/** Fórmula mais larga que isto (em pontos) não cabe numa linha de 390: vai em texto linear, que quebra. */
+/** Teto da fórmula inteira em linha (pontos), antes de medir o parágrafo; acima do limite, ela vai em peças. */
 const LARGURA_MAXIMA = 260;
-
-/** O desenho da fórmula em linha, ou `null` quando ela não serve ou não cabe numa linha (aí vai o linear, que quebra). */
-function desenhoQueCabe(segmento: Extract<SegmentoDeTexto, { tipo: 'formula' }>, tamanho: number, escala: number): DesenhoEmLinha | null {
-  try {
-    const desenho = desenharFormulaEmLinha(segmento.arvore, tamanho);
-    return desenho.largura > 0 && desenho.largura * escala <= LARGURA_MAXIMA ? desenho : null;
-  } catch {
-    return null;
-  }
-}
 
 const FormulaEmLinha = memo(function FormulaEmLinha({ desenho, escala, cor }: { desenho: DesenhoEmLinha; escala: number; cor?: string }) {
   const elementos = useMemo(() => desenho.primitivas.map((primitiva, indice) => {
@@ -48,40 +39,33 @@ const FormulaEmLinha = memo(function FormulaEmLinha({ desenho, escala, cor }: { 
 
 /** O "word joiner" (U+2060): invisível, impede a quebra de linha onde está. */
 const SEM_QUEBRA = '\u2060';
+const FECHA = /^[.,;:!?)\]}…»”%]+/u;
+const ABRE = /[(\[{«“]$/u;
 
 /**
- * A pontuação colada na fórmula não vai sozinha para a outra linha (", qual é" no começo da linha): o texto que vem depois de uma
- * fórmula e começa com pontuação de fechar, e o que vem antes e termina com pontuação de abrir, ganham o "word joiner" na junta.
+ * Os itens na ordem, com a pontuação colada na fórmula: o texto depois de uma fórmula que começa com pontuação de fechar, e o
+ * que vem antes e termina com pontuação de abrir, ganham o "word joiner" na junta (no aparelho, a regra de quebra do Unicode já
+ * não separa os dois). Na prévia web, o navegador quebra depois de qualquer elemento em linha: lá a fórmula e a pontuação de fechar
+ * vão num trecho sem quebra.
  */
-export function colarPontuacao(trechos: readonly SegmentoDeTexto[], indice: number): string {
-  const trecho = trechos[indice];
-  if (trecho.tipo !== 'texto') return '';
-  let texto = trecho.texto;
-  if (trechos[indice - 1]?.tipo === 'formula' && /^[.,;:!?)\]}…»”%]/u.test(texto)) texto = SEM_QUEBRA + texto;
-  if (trechos[indice + 1]?.tipo === 'formula' && /[(\[{«“]$/u.test(texto)) texto += SEM_QUEBRA;
-  return texto;
-}
-
-/**
- * Os trechos na ordem. A pontuação de fechar logo depois da fórmula vai junto com ela num trecho sem quebra: no aparelho, a regra
- * de quebra do Unicode já não separa os dois (e o "word joiner" reforça); na prévia web, o navegador quebra depois de qualquer
- * elemento em linha, e o `nowrap` do trecho segura.
- */
-function montarTrechos(trechos: readonly SegmentoDeTexto[], tamanho: number, escala: number, cor: string | undefined): ReactNode[] {
+function montarItens(itens: readonly ItemDaFrase[], escala: number, cor: string | undefined): ReactNode[] {
   const saida: ReactNode[] = [];
-  for (let indice = 0; indice < trechos.length; indice++) {
-    const trecho = trechos[indice];
-    if (trecho.tipo === 'texto') { saida.push(colarPontuacao(trechos, indice)); continue; }
-    const desenho = desenhoQueCabe(trecho, tamanho, escala);
-    // Larga demais para a linha: o linear, como texto comum (quebra como as palavras).
-    if (!desenho) { saida.push(trecho.linear); continue; }
-    const formula = <FormulaEmLinha key={indice} desenho={desenho} escala={escala} cor={cor} />;
-    const seguinte = trechos[indice + 1];
-    const pontuacao = seguinte?.tipo === 'texto' ? /^[.,;:!?)\]}…»”%]+/u.exec(seguinte.texto)?.[0] : undefined;
+  for (let indice = 0; indice < itens.length; indice++) {
+    const item = itens[indice];
+    if (item.tipo === 'texto') {
+      let texto = item.texto;
+      if (itens[indice - 1]?.tipo === 'desenho' && FECHA.test(texto)) texto = SEM_QUEBRA + texto;
+      if (itens[indice + 1]?.tipo === 'desenho' && ABRE.test(texto)) texto += SEM_QUEBRA;
+      saida.push(texto);
+      continue;
+    }
+    const formula = <FormulaEmLinha key={indice} desenho={item.desenho} escala={escala} cor={cor} />;
+    const seguinte = itens[indice + 1];
+    const pontuacao = seguinte?.tipo === 'texto' ? FECHA.exec(seguinte.texto)?.[0] : undefined;
     if (!pontuacao || Platform.OS !== 'web') { saida.push(formula); continue; }
     saida.push(<Text key={`j${indice}`} style={{ whiteSpace: 'nowrap' } as TextStyle}>{formula}{pontuacao}</Text>);
-    const resto = (seguinte as Extract<SegmentoDeTexto, { tipo: 'texto' }>).texto.slice(pontuacao.length);
-    if (resto) saida.push(resto);
+    const resto = (seguinte as Extract<ItemDaFrase, { tipo: 'texto' }>).texto.slice(pontuacao.length);
+    if (resto) saida.push(itens[indice + 2]?.tipo === 'desenho' && ABRE.test(resto) ? resto + SEM_QUEBRA : resto);
     indice++;
   }
   return saida;
@@ -97,7 +81,7 @@ export function useTrechos(texto: string): SegmentoDeTexto[] {
  * Um texto com as fórmulas desenhadas no meio. Sem fórmula, é o Text de sempre (com o texto linear do que veio em LaTeX solto:
  * nunca um `$` ou uma barra crua na tela).
  */
-export function TextoComFormulas({ texto, estilo, accessibilityLabel, referencia, ...resto }: {
+export function TextoComFormulas({ texto, estilo, accessibilityLabel, referencia, onLayout, ...resto }: {
   texto: string;
   referencia?: Ref<ComponentRef<typeof Text>>;
   estilo?: StyleProp<TextStyle>;
@@ -106,14 +90,18 @@ export function TextoComFormulas({ texto, estilo, accessibilityLabel, referencia
   // O texto em volta cresce com o tamanho de letra do sistema; a fórmula cresce junto.
   const { fontScale } = useWindowDimensions();
   const escala = fontScale > 0 ? fontScale : 1;
+  // A largura do próprio parágrafo é o limite da fórmula inteira (no balão do Stu, ela é menor que a da tela).
+  const [largura, setLargura] = useState(0);
+  const limite = largura > 0 ? Math.min(largura, LARGURA_MAXIMA) : LARGURA_MAXIMA;
   const temFormula = trechos.some((trecho) => trecho.tipo === 'formula');
-  if (!temFormula) return <Text ref={referencia} style={estilo} accessibilityLabel={accessibilityLabel} {...resto}>{trechos.map((trecho) => (trecho.tipo === 'texto' ? trecho.texto : '')).join('')}</Text>;
+  if (!temFormula) return <Text ref={referencia} style={estilo} accessibilityLabel={accessibilityLabel} onLayout={onLayout} {...resto}>{trechos.map((trecho) => (trecho.tipo === 'texto' ? trecho.texto : '')).join('')}</Text>;
   const plano = StyleSheet.flatten(estilo) ?? {};
   const tamanho = typeof plano.fontSize === 'number' ? plano.fontSize : 16;
   const cor = typeof plano.color === 'string' ? plano.color : undefined;
   return (
-    <Text ref={referencia} style={estilo} accessibilityLabel={accessibilityLabel ?? falarTextoComFormulas(texto)} {...resto}>
-      {montarTrechos(trechos, tamanho, escala, cor)}
+    <Text ref={referencia} style={estilo} accessibilityLabel={accessibilityLabel ?? falarTextoComFormulas(texto)} {...resto}
+      onLayout={(evento) => { const w = evento.nativeEvent.layout.width; if (Math.abs(w - largura) > 0.5) setLargura(w); onLayout?.(evento); }}>
+      {montarItens(itensDaFrase(trechos, tamanho, escala, limite, pesoDoTexto(plano.fontWeight)), escala, cor)}
     </Text>
   );
 }
