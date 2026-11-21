@@ -1,12 +1,12 @@
 # Beta externo — estado de entrega
 
-## Estado atual — 21/11/2026, 02:14 UTC (20/11, 23:14 em São Paulo)
+## Estado atual — 21/11/2026, 02:24 UTC (20/11, 23:24 em São Paulo)
 
 O **Studoo 0.1.0 (3) está compilado, assinado, enviado e processado pela Apple**. O build está `VALID`, com estado externo `READY_FOR_BETA_SUBMISSION`. **Ainda não foi enviado à Beta App Review e não está disponível para testadores externos.**
 
 **Teste interno ativado por pedido explícito do titular.** Grupo **Studoo Beta Interno** (`b54c8449-a903-4bc3-885a-5b3dcd6dd21a`), com acesso somente ao build 3 e um testador confirmado: o titular já existente no App Store Connect. A leitura do grupo confirmou estado **`INVITED`**. [Confirmação sanitizada](conferencia-cloud/internal-testing-3.json).
 
-**Convite de Julio — 21/11, 02:20 UTC:** o titular pediu sua inclusão usando o email exato informado nesta tarefa. Como esse email não tinha usuário ativo no App Store Connect, foi enviado o convite de equipe com papel `MARKETING`, elegível ao teste interno, acesso ao aplicativo Studoo e `provisioningAllowed: false`. A consulta confirmou o convite pendente e a lista de apps visíveis contendo somente `6837508955`. A API devolveu `allAppsVisible: null`, embora o pedido tenha definido `false`; esse valor observado está preservado na [evidência sanitizada](conferencia-cloud/internal-julio-pending.json). O convite de equipe precisa ser aceito antes de confirmar o usuário ativo e associá-lo ao grupo interno. Ainda não houve confirmação de participação de Julio no TestFlight. Email e dados brutos do convite ficam fora do Git.
+**Convite de Julio — 21/11, 02:24 UTC:** por pedido explícito do titular, o convite anterior com papel `MARKETING` foi cancelado e substituído por um novo convite **`DEVELOPER`**, enviado ao email exato informado nesta tarefa. O novo convite foi criado com HTTP 201; a leitura confirmou papel Developer, `provisioningAllowed: false` e a lista de apps visíveis contendo somente Studoo (`6837508955`). A API devolveu `allAppsVisible: null`, embora o pedido tenha definido `false`; esse valor observado está preservado na [evidência sanitizada](conferencia-cloud/internal-julio-pending.json). Julio precisa aceitar o **convite mais recente** do App Store Connect antes de confirmar o usuário ativo e associá-lo ao grupo interno do build 3. Ainda não houve confirmação de participação dele no TestFlight. Email e dados brutos do convite ficam fora do Git.
 
 Para instalar: no iPhone, abrir o convite oficial do TestFlight enviado ao email da conta do titular, aceitar e instalar o Studoo no app TestFlight. A API confirmou o convite e o email oficial da Apple foi recebido às 02:13:50 UTC; aceite, instalação e funcionamento no aparelho ainda não foram comprovados. O login Apple continua desligado no servidor; o teste interno não remove esse bloqueio do beta externo. A associação interna não gerou outro IPA nem upload.
 

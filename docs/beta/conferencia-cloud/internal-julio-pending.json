@@ -1,12 +1,14 @@
 {
-  "checkedAt": "2026-11-21T02:20:20.217Z",
+  "checkedAt": "2026-11-21T02:24:35.287Z",
   "appId": "6837508955",
   "groupId": "b54c8449-a903-4bc3-885a-5b3dcd6dd21a",
   "requestedTester": "Julio Akamine",
-  "appStoreConnectInvitationSent": true,
+  "userActive": false,
   "appStoreConnectInvitationPending": true,
+  "appStoreConnectInvitationSent": true,
+  "previousMarketingInvitationReplaced": true,
   "roles": [
-    "MARKETING"
+    "DEVELOPER"
   ],
   "allAppsVisibleRequested": false,
   "allAppsVisibleReported": null,
@@ -14,7 +16,7 @@
   "visibleAppIds": [
     "6837508955"
   ],
-  "expiresAt": "2026-11-23T18:19:06.071-08:00",
+  "expiresAt": "2026-11-23T18:24:26.949-08:00",
   "testFlightMembershipConfirmed": false,
-  "nextStep": "O convidado precisa aceitar o convite oficial do App Store Connect. Depois, confirmar usuário ativo e associá-lo ao grupo interno do build 3."
+  "nextStep": "O convidado precisa aceitar o convite mais recente, com papel Developer. Depois, confirmar usuário ativo e associá-lo ao grupo interno do build 3."
 }
