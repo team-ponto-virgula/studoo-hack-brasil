@@ -430,3 +430,32 @@ Ajuste pequeno: na multiplicação sem sinal (`4ac`), os fatores ficam colados, 
   2. **Unidade mínima de 12 unidades de projeto.** Se, com a janela ajustada e a legenda ao lado, a unidade ficar abaixo de 12, a figura não é desenhada: o desenho sai com `naoCabe`, e o cliente mostra o `alt` no lugar, como texto da lição.
   3. **A fórmula e a reta numérica** seguem o piso de texto 13. Se não couberem, saem com `naoCabe` e o texto linear.
 - O "0" fora do lugar na colinearidade apertada já está com o Web & API.
+
+## 12. Parecer do motor 2e (920d0a5, 21/11)
+
+**Aceito:**
+- a janela dos dados com uma unidade de folga e a origem;
+- o gráfico que estreita e centraliza, com a legenda na lateral quando dá escala maior;
+- a unidade mínima de 12, com `naoCabe` abaixo dela;
+- o "0" da origem perto dela ou fora;
+- "Δ ≠ 0", "Δ ≥ 0" e "π = 3,14" em linha;
+- "4ac" e "2x" colados;
+- os dois desenhos de 158 (12,0 e 13,5 pt por unidade), legíveis.
+
+**Duas regras de rótulo que faltam:**
+1. **O rótulo de ponto não cruza nem encosta na linha dos eixos, nem na seta.** Os eixos têm a mesma prioridade dos números: o rótulo procura outro lado e, sem lugar, vai para a legenda. Hoje:
+   - "A (1, 2)" cruza a seta do eixo x (baricentro de 158);
+   - "B (2, 5)" encosta no eixo y (colinearidade de 158);
+   - "A (−1, −1)" encosta no "−2" do eixo y (colinearidade na fase 1).
+2. **Ponto sobre um número de eixo.** O ponto não pode mudar de lugar. Quando a bolinha cobre um número do eixo (o A da colinearidade em cima do "−1" do eixo y), só aquele número sai, e a grade continua permitindo contar. É a única exceção a "número de eixo nunca some".
+
+**Re-enquadramento no acerto (decisão):** aceito. No enunciado, a janela é a dos pontos que aparecem. No retorno depois do acerto e no último passo da resolução, a janela passa a incluir o procurado. Assim, a borda do gráfico nunca entrega a resposta.
+- **A caixa não muda de altura:** a figura nova é desenhada na mesma altura máxima da anterior, e só a escala muda. Assim, nada na tela pula, e as opções e o rodapé ficam no lugar. Manter a mesma escala e só estender a janela faria a caixa crescer ou cortar o desenho, por isso essa opção fica fora.
+- **Transição:**
+  - a figura antiga some e a nova aparece no mesmo lugar, em 200 ms;
+  - depois disso, o ponto resposta cresce de 0 a 100% em 200 ms, já verde e com o rótulo ("C (4, 0)");
+  - a fórmula e o cartão do retorno seguem os tempos de sempre;
+  - com movimento reduzido, a troca é imediata e o ponto já aparece pronto.
+- **Leitor de tela:** a descrição nova do desenho, que já inclui o procurado como resposta, entra junto com o anúncio do retorno, numa frase só.
+
+**F1 e F2:** fechados no conteúdo, depois das duas regras de rótulo acima. A legenda "Desenho do Studoo", F3, F4 e F5 continuam dependendo da tela real (seção 8).
