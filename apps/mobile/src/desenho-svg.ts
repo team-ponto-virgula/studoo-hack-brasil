@@ -169,3 +169,42 @@ export function temProcurado(visual: Visual | undefined): boolean {
   if (!visual || visual.tipo === 'formula') return false;
   return visual.pontos.some((ponto) => ponto.papel === 'procurado' || ponto.papel === 'resposta');
 }
+
+/** As coordenadas x de uma primitiva (para a caixa do conteúdo). */
+function xsDaPrimitiva(p: Primitiva): number[] {
+  switch (p.tipo) {
+    case 'linha': return [p.x1, p.x2];
+    case 'retangulo': return [p.x, p.x + p.largura];
+    case 'circulo': return [p.cx - p.raio, p.cx + p.raio];
+    case 'caminho': return [...p.d.matchAll(/(-?\d*\.?\d+)[\s,]+(-?\d*\.?\d+)/g)].map((m) => Number(m[1]));
+    default: return [];
+  }
+}
+
+/**
+ * O bloco da fórmula (spec 15, seções 1 e 13): com o fundo do motor, o conteúdo fica com 12 de folga de cada lado. Se faltar
+ * folga (ou o motor mandar rolar por pouco), o conteúdo reduz até 85% e é centralizado, sem rolar; só abaixo disso rola. Devolve
+ * o fundo, o resto e a `viewBox` do conteúdo, ou `null` quando não é bloco com fundo ou quando já cabe com folga.
+ */
+export function ajusteDoBloco(desenho: Desenho): { fundo: Extract<Primitiva, { tipo: 'retangulo' }>; conteudo: Primitiva[]; fator: number; viewBox: string } | null {
+  const [primeira, ...conteudo] = desenho.primitivas;
+  if (!primeira || primeira.tipo !== 'retangulo' || primeira.preenchimento !== 'fundo' || primeira.x !== 0 || primeira.largura < desenho.largura - 0.5) return null;
+  const xs = conteudo.flatMap(xsDaPrimitiva).filter(Number.isFinite);
+  if (!xs.length) return null;
+  const minimo = Math.min(...xs), maximo = Math.max(...xs);
+  const largura = maximo - minimo;
+  const fator = Math.min(1, (desenho.largura - 2 * FOLGA_DO_BLOCO) / largura);
+  const folgaAtual = Math.min(minimo, desenho.largura - maximo);
+  if (fator >= 1 && folgaAtual >= FOLGA_DO_BLOCO - 0.01 && !((desenho.larguraDoConteudo ?? desenho.largura) > desenho.largura)) return null;
+  if (fator < 0.85) return null;
+  const centro = (minimo + maximo) / 2;
+  const larguraDaVista = desenho.largura / fator;
+  const alturaDaVista = desenho.altura / fator;
+  return {
+    fundo: primeira, conteudo, fator,
+    viewBox: `${centro - larguraDaVista / 2} ${desenho.altura / 2 - alturaDaVista / 2} ${larguraDaVista} ${alturaDaVista}`,
+  };
+}
+
+/** A folga interna mínima do bloco da fórmula, de cada lado (spec 15, seção 13). */
+export const FOLGA_DO_BLOCO = 12;

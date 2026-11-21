@@ -11,7 +11,7 @@ import { Stu } from './mascote';
 import { mensagens } from './mensagens';
 import { Opcao, letras } from './opcao';
 import {
-  acaoDoRodape, aplicarResposta, avancar, comecarResolva, contextoDoPasso, formulaDeContexto, formulaDoMetodo, indiceDoSuaVez,
+  acaoDoRodape, aplicarResposta, avancar, comecarResolva, contextoDoPasso, formulaDoMetodo, indiceDoSuaVez,
   noSuaVez, resolucaoUtil, respostaValida, tentarDeNovo, visualDoPasso, voltar, type EstadoResolva,
 } from './resolva-comigo-regras';
 import { tocaSons } from './sons';
@@ -96,7 +96,7 @@ function SuaVez({ passo, estado, ocupado, escolher }: {
   const travado = ocupado || revelado || (resposta !== null && estado.escolha === corrigida);
   return (
     <View style={{ gap: 12 }}>
-      {!revelado && <FormulaEmBloco latex={formulaDeContexto(estado)} testID="resolva-formula-contexto" />}
+      {/* Spec 15, seção 13: antes da escolha, nenhum bloco de fórmula no cartão; o contexto é a linha do passo feito logo acima. */}
       <View style={estilos.seloSuaVez}><Text style={estilos.seloSuaVezTexto}>{t.suaVez.toUpperCase()}</Text></View>
       <TextoComFormulas testID="resolva-pergunta" texto={tentativa.pergunta} estilo={estilos.pergunta} />
       <View accessibilityRole="radiogroup" accessibilityLabel={falarTextoComFormulas(tentativa.pergunta)} style={{ gap: 10 }}>
@@ -273,7 +273,8 @@ const estilos = StyleSheet.create({
   frase: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
   seloSuaVez: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#FFF1CC' },
   seloSuaVezTexto: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
-  pergunta: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22 },
+  // 700: o peso da fórmula em linha é o do texto ao redor (spec 15, seções 10 e 13), e o motor desenha 400 ou 700.
+  pergunta: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
   porqueErrado: { padding: 12, borderRadius: 14, backgroundColor: '#FFF6EA' },
   porqueErradoTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
   isso: { gap: 8, padding: 12, borderRadius: 14, backgroundColor: cores.sucessoFundo },

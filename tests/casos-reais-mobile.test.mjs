@@ -92,3 +92,32 @@ test('(d) os passos feitos mostram a fórmula desenhada (em peças se larga), nu
   assert.match(fonte, /<TextoComFormulas texto=\{`\$\$\{passo\.formula\}\$`\} estilo=\{estilos\.feitoFormula\} numberOfLines=\{1\} \/>/);
   assert.doesNotMatch(fonte, /\{formula\.texto\}/);
 });
+
+test('revisão do Designer (spec 15, seção 13) sobre os casos reais', async () => {
+  const desenho = await ler('apps/mobile/src/desenho.tsx');
+  // (1) figura que não cabe: linha discreta, ícone de gráfico de 16, 14/20 #5E6A85 (textoSecundario), sem caixa; "Figura: <alt>".
+  assert.match(desenho, /accessibilityLabel=\{`Figura: \$\{alt\}`\}/);
+  assert.match(desenho, /<Icone nome="grafico" tamanho=\{16\} cor=\{cores\.textoSecundario\}/);
+  assert.match(desenho, /color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontSize: 14, lineHeight: 20/);
+  const figura = desenho.slice(desenho.indexOf('function FiguraEmTexto'), desenho.indexOf('const blocoDaFormula'));
+  assert.doesNotMatch(figura, /blocoDaFormula|backgroundColor/, 'sem caixa');
+  // (3) a pergunta do "Sua vez" no peso que o motor desenha (700), o mesmo da fórmula em linha.
+  const resolva = await ler('apps/mobile/src/resolva-comigo.tsx');
+  assert.match(resolva, /pergunta: \{ color: cores\.texto, fontFamily: fontes\.corpo, fontWeight: '700'/);
+  // (5) antes da escolha, nenhum bloco de fórmula no cartão do "Sua vez".
+  assert.doesNotMatch(resolva, /resolva-formula-contexto|formulaDeContexto\(/);
+  // (4) o bloco da equação real do b1 reduz (≥ 85%) e fica com 12 de folga de cada lado, sem rolar.
+  const { ajusteDoBloco, FOLGA_DO_BLOCO } = await import('../apps/mobile/src/desenho-svg.ts');
+  const caso = await real('b-visuais-parciais-sem-figura');
+  const visuais = normalizarVisuais(caso.visuais);
+  const larga = visuais.find((v) => v.tipo === 'formula' && v.latex.includes('5k'));
+  const d = desenhoDoVisual(larga, { tipo: 'enunciado' }, { tamanho: 22, fundo: true });
+  const ajuste = ajusteDoBloco(d);
+  assert.ok(ajuste && ajuste.fator >= 0.85 && ajuste.fator < 1, `reduz: ${ajuste?.fator}`);
+  const [, , vistaLargura] = ajuste.viewBox.split(' ').map(Number);
+  const xs = ajuste.conteudo.flatMap((p) => (p.tipo === 'caminho' ? [...p.d.matchAll(/(-?\d*\.?\d+)[\s,]+(-?\d*\.?\d+)/g)].map((m) => Number(m[1])) : p.tipo === 'linha' ? [p.x1, p.x2] : []));
+  const larguraDoConteudo = Math.max(...xs) - Math.min(...xs);
+  assert.ok(((vistaLargura - larguraDoConteudo) / 2) * ajuste.fator >= FOLGA_DO_BLOCO - 0.01, 'folga de 12 de cada lado');
+  const determinante = desenhoDoVisual(visuais.find((v) => v.latex.includes('vmatrix')), { tipo: 'enunciado' }, { tamanho: 22, fundo: true });
+  assert.equal(ajusteDoBloco(determinante), null, 'o que já cabe com folga fica como o motor desenhou');
+});

@@ -3,7 +3,8 @@ import { Animated, ScrollView, Text, View, type StyleProp, type ViewStyle } from
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { falarFormula, formulaLinear, lerFormula, type ContextoDoDesenho, type Desenho, type OpcoesDaFigura, type OpcoesDaFormula, type Visual } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
-import { desenhoDoVisual, elementoDaPrimitiva, medidasNaCaixa, medidasNaTela, ordenarVisuais, separarPontoResposta, type ElementoSvg } from './desenho-svg';
+import { ajusteDoBloco, corDoPapel, desenhoDoVisual, elementoDaPrimitiva, medidasNaCaixa, medidasNaTela, ordenarVisuais, separarPontoResposta, type ElementoSvg } from './desenho-svg';
+import { Icone } from './icone';
 import { cores, fontes } from './tema';
 
 /*
@@ -46,6 +47,24 @@ export const DesenhoSvg = memo(function DesenhoSvg({ desenho, rotulo, testID, es
   const medidas = medidasNaTela(desenho, largura);
   const aparecer = useAparecer(0, 200);
   const crescer = useAparecer(200, 200);
+  const bloco = useMemo(() => (caixa === undefined ? ajusteDoBloco(desenho) : null), [desenho, caixa]);
+  const elementosDoBloco = useMemo(() => (bloco ? montar(bloco.conteudo.map((primitiva) => elementoDaPrimitiva(primitiva))) : null), [bloco]);
+  if (bloco) {
+    // O bloco da fórmula reduzido (até 85%) e centralizado, com 12 de folga de cada lado: o fundo é o do motor, e não rola.
+    const altura = medidas.altura;
+    return (
+      <Animated.View testID={testID} accessible accessibilityRole="image" accessibilityLabel={rotulo ?? desenho.descricao}
+        onLayout={(evento) => { const w = evento.nativeEvent.layout.width; if (Math.abs(w - largura) > 0.5) setLargura(w); }}
+        style={[{ width: '100%', aspectRatio: desenho.largura / desenho.altura, borderRadius: (bloco.fundo.raio ?? 0) * (medidas.escala || 1),
+          backgroundColor: corDoPapel(bloco.fundo.preenchimento) }, entrada && { opacity: aparecer }, estilo]}>
+        {largura > 0 && (
+          <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+            <Svg width={medidas.largura} height={altura} viewBox={bloco.viewBox}>{elementosDoBloco}</Svg>
+          </View>
+        )}
+      </Animated.View>
+    );
+  }
   if (caixa !== undefined) {
     const naCaixa = medidasNaCaixa(desenho, largura, caixa);
     const viewBox = `0 0 ${desenho.largura} ${desenho.altura}`;
@@ -130,11 +149,16 @@ function FormulaEmTexto({ latex, testID }: { latex: string; testID?: string }) {
   );
 }
 
-/** A figura que não coube na altura: o `alt` dela, em texto, com o mesmo nome para o leitor de tela. */
+/**
+ * A figura que não coube na altura (spec 15, seção 13): uma linha discreta logo abaixo do enunciado, com o ícone de gráfico de
+ * 16 e o `alt` em 14/20 `#5E6A85`, sem caixa (a caixa parecia dica e repetia o enunciado). Leitor de tela: "Figura: <alt>".
+ */
 function FiguraEmTexto({ alt, testID }: { alt: string; testID?: string }) {
   return (
-    <View testID={testID ? `${testID}-texto` : undefined} accessible accessibilityRole="text" accessibilityLabel={alt} style={blocoDaFormula}>
-      <Text style={{ color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 }}>{alt}</Text>
+    <View testID={testID ? `${testID}-texto` : undefined} accessible accessibilityRole="text" accessibilityLabel={`Figura: ${alt}`}
+      style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
+      <View style={{ paddingTop: 2 }}><Icone nome="grafico" tamanho={16} cor={cores.textoSecundario} traco={2} /></View>
+      <Text style={{ flex: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 }}>{alt}</Text>
     </View>
   );
 }

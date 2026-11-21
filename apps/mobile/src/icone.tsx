@@ -11,6 +11,8 @@ const DESENHOS_SVG = {
   camera: <><Path d="M4 8.5A2 2 0 0 1 6 6.5h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><Circle cx="12" cy="13" r="3.5" /></>,
   imagem: <><Rect x="4" y="4.5" width="16" height="15" rx="3" /><Circle cx="9" cy="9.5" r="1.6" /><Path d="M4.5 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5" /></>,
   lapis: <Path d="M14.5 5.5l4 4M5 19l1-4.5L15.5 5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9.5 18z" />,
+  // Gráfico (spec 15, seção 13): os eixos e uma linha que sobe, na frente do alt da figura que não coube.
+  grafico: <Path d="M5 4.5V19h14.5M8.5 15l3.5-4 3 2.5 4-5.5" />,
   lixeira: <Path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />,
   bussola: <><Circle cx="12" cy="12" r="8.5" /><Path d="M15.5 8.5l-2 5-5 2 2-5z" /></>,
   // Valeu: coração com a curva de um sorriso (agradecer, não "curtir" uma pessoa).

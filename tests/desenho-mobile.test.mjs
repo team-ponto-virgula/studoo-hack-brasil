@@ -125,7 +125,7 @@ test('o enunciado nunca desenha o procurado na posição; o retorno o desenha co
 test('figura que não cabe na altura (naoCabe): no lugar dela, o alt em texto, com o mesmo rótulo', async () => {
   const fonte = await ler('apps/mobile/src/desenho.tsx');
   assert.match(fonte, /if \(desenho\.naoCabe && visual\.tipo !== 'formula'\) return <FiguraEmTexto alt=\{visual\.alt\} testID=\{testID\} \/>;/);
-  assert.match(fonte, /accessibilityRole="text" accessibilityLabel=\{alt\}/);
+  assert.match(fonte, /accessibilityRole="text" accessibilityLabel=\{`Figura: \$\{alt\}`\}/);
   const licao = await fixture('baricentro');
   const figura = visualParaEnunciado(normalizarVisual(licao.exercicio.visual));
   const apertado = desenhoDoVisual(figura, { tipo: 'enunciado' }, { alturaMaxima: 40 });
