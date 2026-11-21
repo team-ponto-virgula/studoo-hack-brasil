@@ -119,3 +119,14 @@ test('item 32: com trilhas com link, a linha diz que só quem tem o link abre e 
   assert.match(perfil, /\{perfil\.links\.length > 0 && \(\n\s*<Text testID="perfil-links-linha" style=\{perfilEstilos\.linhaSecao\}>\{comunidade \? p\.compartilhadasLinha : p\.compartilhadasLinhaSemComunidade\}<\/Text>/);
   assert.match(contrato, /compartilhadasTotal: \(n: number\) => `Trilhas com link/);
 });
+
+test('item 14: o aviso "Música de fundo ligada." fica no alto, 8 abaixo do que está preso, em todas as telas', async () => {
+  const som = await ler('som.tsx');
+  const interfaceApp = await ler('interface.tsx');
+  assert.match(som, /avisar\(t\.musicaAviso, \{ som: null, noAlto: true, acao:/);
+  // A Tela desenha o aviso do alto dentro da área abaixo da área segura e da barra fixa; o de baixo continua para os outros.
+  assert.match(interfaceApp, /\{aviso\?\.noAlto && <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} alto=\{altoDoAviso\} \/>\}/);
+  assert.match(interfaceApp, /\{aviso && !aviso\.noAlto && <FaixaDoAviso key=\{aviso\.vez\} aviso=\{aviso\} baixo=\{baixoDoAviso\} \/>\}/);
+  assert.match(interfaceApp, /const altoDoAviso = 8 \+ \(faixaFixa\n\s*\? Math\.max\(0, inicioDaFaixa - roladoDoAviso\) \+ alturaFaixa\n\s*: cabecalhoNaRolagem \? Math\.max\(0, alturaCabecalho - roladoDoAviso\) : 0\);/);
+  assert.match(interfaceApp, /deCima \? \{ top: alto \} : \{ bottom: baixo \}/);
+});
