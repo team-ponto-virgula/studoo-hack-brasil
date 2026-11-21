@@ -540,7 +540,7 @@ A frase do d1 ainda traz "…portanto k = 0". A captura é do dado de antes da c
 - **Rótulos com π:** coordenadas que são múltiplos de π/4 aparecem como fração de π ("M (π/2, 1)"), e as outras com vírgula decimal.
 
 **3. A curva**
-- **Traço:** 3 unidades, cheio, ponta e junção redondas.
+- **Traço:** 3 unidades, cheio, com ponta reta (a ponta das primitivas do contrato) e junção redonda. A ponta reta corta a curva limpa na borda da janela.
 - **Cores:**
   - curva 1: `#2563FF`;
   - curva 2: `#5B3FD9`;
@@ -635,3 +635,31 @@ Conferido nas lições l3 e l4 (completo, segunda errada, teclado e sem rede), e
   - Na web, o foco não vai mais direto para o botão do rodapé.
   - Mover o foco para o botão logo depois do anúncio corta o anúncio no VoiceOver e no TalkBack, e o cartão garante que o retorno seja ouvido nas duas plataformas.
 - **Foco depois de "Tentar de novo":** a escolha é limpa, e o foco do teclado e do leitor de tela vai para a primeira opção, como a web já faz. O app passa a mover o foco do VoiceOver e do TalkBack para ela.
+
+## 17. Revisão do gráfico de função no app (prévia web do app, 21/11)
+
+Capturas do Mobile 2 em 390 e 320 (parábola, reta, seno e vértice, no enunciado e no retorno) e o roteiro de leitor de tela de 11 pontos.
+
+**Decisões:**
+- **Ponta da curva:** reta, com junção redonda (seção 15, item 3). Com 3 unidades, a diferença para a ponta redonda é de 1,5 unidade na ponta. Como a curva quase sempre termina cortada na borda, a ponta reta fica até melhor.
+- **A mesma caixa no enunciado e no retorno** (seções 12 e 15): os dois desenhos usam a mesma caixa. Se um deles não cabe, nenhum é desenhado, e os dois viram a linha "Figura: <alt>". Assim, a figura não aparece num e some no outro.
+- **iPhone SE:** aceito que o gráfico de função apareça só como a linha "Figura: <alt>". Nessa linha, a fórmula do `alt` é desenhada em linha (o `alt` marca a fórmula com `$…$`), para a pessoa continuar vendo a função. Não entra caixa nova.
+
+**Problemas:**
+1. **Grave, a palavra "sin" some da fórmula em linha** (`seno-1-conceito`, balão do Stu): o texto diz "A onda h(x) = x vai de −1 a 1", sem o seno, e o sentido muda. A fórmula em linha (seção 9) precisa aceitar `\sin` e `\cos`, mostrados como "sin" e "cos" retos. Uma peça que o leitor não conhece nunca é apagada: na falta de leitura, sai o texto como veio, sem barra. No mesmo balão, o "h(x)" sai como texto e não como fórmula.
+2. **Os pontos do seno estão como dado** (`seno-1-conceito`): M, P e N são máximo, raiz e mínimo, então são especiais, com o losango roxo (seção 15, item 1), como na parábola e na reta.
+3. **Rótulos que se encostam** (`parabola-1-conceito`): "A (1, 0)" e "B (3, 0)" ficam colados. Entre dois rótulos fica um vão de no mínimo 4 unidades. Sem lugar, um deles vai para a legenda.
+
+**Leitor de tela** (roteiro):
+- **Fórmula no `alt`:** os textos 1, 2, 3, 5, 7 e 8 trazem a fórmula em símbolos ("f(x) = x² − 4x + 3"), e cada leitor fala de um jeito. A fórmula do `alt` vem marcada com `$…$`, e o rótulo de acessibilidade usa `falarTextoComFormulas` (seção 9). O texto visível continua com os símbolos.
+- **Regras de fala novas** (seção 9):
+  - função aplicada: "f(x)", "g(2)", "h(x)", com f, g ou h seguidas de parênteses com um número ou uma variável, se falam "f de x", "g de 2", "h de x". O ponto 4 hoje diz "f abre parênteses x fecha parênteses";
+  - "sin x" se fala "seno de x", e "cos x", "cosseno de x";
+  - "π" se fala "pi", "2π" "2 pi" e "π/2" "pi sobre 2";
+  - ponto com coordenadas (letra maiúscula seguida de par) se fala "V de coordenadas 2 e menos 1". O ponto 6 hoje diz "V abre parênteses 2, menos 1 fecha parênteses".
+- **Aceito como está:** um elemento de imagem por figura (1 a 3), nada do vértice antes da resposta (5), uma fala só no retorno sem repetir a figura (7 e 8), o prefixo "Figura:" no SE (9), uma fala só no último passo (10) e a troca imediata com movimento reduzido (11).
+
+**Aceito nas capturas:**
+- a parábola e a reta com a curva, a faixa da fórmula, os destaques em losango, o "R (−0,5; 0)", a reta recortada em y = 4 e o nome da curva;
+- o vértice sem a curva no enunciado, com "V = ?";
+- o retorno re-enquadrado, com a curva e V verde.
