@@ -3,7 +3,7 @@ import type { ClienteEstudio, NomeStu } from '@studoo/contratos';
 import type { ClienteElegibilidadeVoz } from './voz-ao-vivo-painel';
 import {
   acertouParte,
-  embaralharExercicio,
+  embaralharExercicioDaRodada,
   etapasDaLicao,
   exerciciosDaLicao,
   faltaParaVerificar,
@@ -219,13 +219,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
    */
   const alturaDaFigura = alturaMaximaDaFigura(larguraJanela - 32 - 2 * (respiroQuadro.padding + 2), alturaDaFiguraNaTela(alturaJanela));
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
-  // Como na web: as opções mudam de ordem a cada visita.
-  const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
-  /** Cada revisão rápida embaralha de novo. Como na web. */
+  // Spec 16, item 23: a ordem das opções vem da semente do contrato (id da lição, índice do exercício e rodada), a mesma da
+  // web: a mesma tentativa tem a mesma letra para a mesma opção nas duas plataformas. Cada revisão rápida sobe a rodada e
+  // embaralha de novo, sem repetir a ordem anterior (também igual na web).
   const [rodadaDeOpcoes, setRodadaDeOpcoes] = useState(0);
   const exercicios = useMemo(
-    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicio(exercicio, semente + numero + rodadaDeOpcoes * 7919)),
-    [licao, semente, rodadaDeOpcoes],
+    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicioDaRodada(exercicio, licao.id, numero, rodadaDeOpcoes)),
+    [licao, rodadaDeOpcoes],
   );
   // Quem saiu no meio continua de onde parou.
   const [retomada] = useState(() => lerAndamento(licao, etapas.length, exercicios.length));

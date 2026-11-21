@@ -79,3 +79,15 @@ test('item 17: a capa leva só o tema; "Exemplo" vai para a linha "6 lições ·
   assert.match(linha, /c\.contagem\(cartao\.totalLicoes, cartao\.totalPartes\)\}\{cartao\.demonstracao \? ' · ' : ''\}/);
   assert.match(linha, /\{c\.demonstracao\}/);
 });
+
+test('item 23: a aula do app usa a semente do contrato (id da lição, índice, rodada), como a web, sem sorteio', async () => {
+  const licao = await ler('licao.tsx');
+  const aulaWeb = await readFile(new URL('../src/app/aula.tsx', import.meta.url), 'utf8');
+  const chamada = /embaralharExercicioDaRodada\(exercicio, licao\.id, numero, rodadaDeOpcoes\)/;
+  assert.match(licao, chamada);
+  assert.match(aulaWeb, chamada, 'a mesma chamada da web');
+  assert.doesNotMatch(licao, /Math\.random/, 'nada de sorteio na aula: a ordem é a mesma na web e no app');
+  assert.doesNotMatch(licao, /embaralharExercicio\(/, 'a semente avulsa saiu da aula');
+  assert.match(licao, /setRodadaDeOpcoes\(/, 'a revisão rápida continua subindo a rodada');
+  assert.match(licao, /\[licao, rodadaDeOpcoes\],/);
+});
