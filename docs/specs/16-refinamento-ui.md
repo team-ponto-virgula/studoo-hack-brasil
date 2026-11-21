@@ -24,7 +24,8 @@ As mudanças de tela do app congelam na noite de 25/11: P0 e P1 cabem até lá, 
 **1. A trilha pronta mostra o fim, não a lição 1** (iPhone `92-criacao-pronta` e Android `92-criacao-pronta`; criação, spec 04)
 - **Hoje:** quando a proposta fica pronta, a tela fica parada no troféu ("Fim da trilha"), com o Stu ao lado dele, e mostra as últimas lições ("Revisão: explique uma soma de frações"). Enquanto isso, o botão diz "Começar a lição 1". O primeiro contato termina olhando para o lugar errado.
 - **Regra:**
-  - ao ficar pronta, a tela rola em 600 ms (saída suave) até o nó 1 ficar no centro da área livre, entre o alto e o rodapé;
+  - ao ficar pronta, a tela rola em 600 ms (saída suave) até o nó 1 aparecer inteiro no alto da área livre, com o rótulo à vista. Não entra céu vazio acima dele para centralizá-lo: em tela baixa, isso empurraria o conteúdo útil para baixo, sem mudar o que a pessoa entende (decisão de 21/11, opção A do Lead);
+  - o botão de texto "Ver o fim da trilha" leva ao troféu;
   - o Stu (`stu-feliz`) passa para o lado do nó 1;
   - o troféu continua a uma rolagem de distância;
   - com movimento reduzido, a tela vai direto ao nó 1.
