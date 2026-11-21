@@ -1,0 +1,57 @@
+/* Controle de som (spec 12). A folha usa .folha-fundo e .folha (sobe do pé até 767 px; cartão no centro a partir de 768). */
+.folha--som { gap: 12px; max-height: 92svh; overflow: auto; }
+.folha--som .folha__alca { justify-self: center; width: 40px; height: 4px; margin: -8px 0 0; border-radius: 2px; background: var(--gelo); }
+@media (min-width: 768px), (hover: hover) and (pointer: fine) { .folha--som .folha__alca { display: none; } }
+.folha-som__topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.folha-som__titulo { margin: 0; font-family: Quicksand, sans-serif; font-size: 1.25rem; font-weight: 700; line-height: 1.3; }
+.folha-som__titulo:focus { outline: none; }
+.som-controles .som-perfil__linha { padding-inline: 0; }
+.som-efeitos__texto { display: grid; flex: 1 1 auto; min-width: 0; }
+.som-efeitos__titulo { font-weight: 800; }
+.som-efeitos__dica { color: var(--texto2); font-size: 0.875rem; line-height: 1.43; }
+.folha-som__rodape { display: flex; align-items: flex-start; gap: 8px; margin: 0; color: var(--texto2); font-size: 0.875rem; line-height: 1.43; }
+.folha-som__rodape .icone { flex: none; width: 16px; height: 16px; margin-top: 2px; }
+
+/* A chave do Studoo: 52 × 32, raio 16; desligada #C9D1EA, ligada ação; o botão de 26 px anda 20 px em 160 ms. */
+.chave-studoo { position: relative; flex: none; width: 52px; height: 32px; padding: 0; border: 0; border-radius: 16px; background: #c9d1ea; cursor: pointer; }
+.chave-studoo[aria-checked='true'] { background: var(--acao); }
+.chave-studoo__botao { position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgb(11 27 92 / 0.25); }
+.chave-studoo[aria-checked='true'] .chave-studoo__botao { translate: 20px 0; }
+@media (prefers-reduced-motion: no-preference) { .chave-studoo__botao { transition: translate 160ms ease-out; } }
+.chave-studoo:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+/* Área de toque de 44 em volta da chave. */
+.chave-studoo::before { content: ''; position: absolute; inset: -6px -2px; }
+
+/* Botão de som da aula, da entrada e da recuperação. */
+.aula-som { position: relative; display: grid; width: 44px; height: 44px; place-items: center; padding: 0; border: 0; border-radius: 12px; color: var(--texto2); background: transparent; cursor: pointer; }
+.aula-som[data-ativo] { color: var(--acao); }
+.aula-som .icone { width: 24px; height: 24px; }
+@media (hover: hover) { .aula-som:hover { background: var(--nevoa); } }
+.aula-som:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+
+/* Perfil: um bloco com duas linhas de 64. */
+.som-perfil { display: grid; border: 2px solid var(--gelo); border-radius: 24px; overflow: hidden; }
+.som-perfil__linha {
+  display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 16px; border: 0; background: var(--fundo);
+  color: var(--texto); font: inherit; text-align: start;
+}
+.som-perfil__linha + .som-perfil__linha { border-top: 1px solid var(--gelo); }
+.som-perfil__titulo { flex: 1 1 auto; font-weight: 800; }
+.som-perfil__linha .icone { flex: none; width: 20px; height: 20px; color: var(--texto2); }
+
+.folha-som__topo h2 { flex: 1; }
+.som-situacao { display: flex; align-items: center; gap: 6px; color: var(--acao-escura); font-size: .875rem; font-weight: 750; }
+.som-situacao:empty { display: none; }
+.som-situacao[data-erro] { color: #c23b4e; }
+.som-barras { height: 14px; display: inline-flex; align-items: center; gap: 2px; }
+.som-barras i { display: block; width: 3px; height: 8px; border-radius: 3px; background: currentColor; }
+.som-barras i:nth-child(2) { height: 13px; }
+.som-giro { width: 14px; height: 14px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; }
+@media (prefers-reduced-motion: no-preference) {
+  .som-barras i { animation: som-onda 900ms ease-in-out infinite alternate; }
+  .som-barras i:nth-child(2) { animation-delay: 150ms; }
+  .som-barras i:nth-child(3) { animation-delay: 300ms; }
+  .som-giro { animation: som-girar 800ms linear infinite; }
+  @keyframes som-onda { to { transform: scaleY(.45); } }
+  @keyframes som-girar { to { transform: rotate(1turn); } }
+}

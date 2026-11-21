@@ -1,0 +1,33 @@
+# Recomeça o app do zero, com a sessão que já existe: fecha o Expo Go, abre o projeto de novo e espera a barra de baixo
+# e o mapa da trilha em andamento (é onde o Studoo abre para quem tem trilhas). Cada fluxo de `telas/` começa por aqui,
+# para não depender de onde o fluxo anterior parou (uma folha aberta, uma lição pela metade).
+appId: host.exp.Exponent
+---
+# O simulador às vezes não abre o link a tempo com a máquina carregada ("Simulator device failed to open exp://127.0.0.1:8081.
+# Operation timed out", fluxos 40 e 62 da execução 44809026116, antes de qualquer tela do app): até duas tentativas a mais.
+- retry:
+    maxRetries: 2
+    commands:
+      - stopApp
+      - openLink: exp://127.0.0.1:8081
+# A pergunta do iOS sobre abrir o link no Expo Go, respondida no primeiro fluxo, não voltou nas reaberturas da execução
+# 44511779137; conferir a cada vez custava uns 9 s.
+# Depois de religar o simulador, a apresentação do Expo Go pode voltar: a mesma defesa da primeira abertura. O pacote vem
+# da cache na frente do Metro (servidor/cache-do-metro.mjs), já pronto, então a espera é menor.
+- runFlow:
+    file: sair-do-menu-do-expo-go.yaml
+    env:
+      ESPERA: "120000"
+- extendedWaitUntil:
+    visible:
+      id: nav-planos
+    timeout: 30000
+# O Maestro desconta de toda espera pelo que está na tela, mesmo com `timeout`, o tempo passado desde o último comando que
+# ele conta como interação (adjustedToLatestInteraction, no Orchestra.kt da 2.12.1), e as esperas acima não contam. Na
+# execução 44565509060, o app levou 37 s para abrir e o mapa do fluxo 70 ficou com 6 s dos 45. O `evalScript` conta como
+# interação e não toca no aparelho: zera a conta antes da espera do mapa.
+- evalScript: ${output.esperaDoMapa = true}
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 45000

@@ -53,6 +53,21 @@ export type ApoioEstudo = {
   ponte: PonteReforco | null;
   ensino: FeedbackEnsino | null;
 };
+export type EstadoVozAoVivo =
+  | 'pedindo_mic'
+  | 'conectando'
+  | 'ouvindo'
+  | 'stu_falando'
+  | 'encerrando'
+  | 'erro';
+export type SessaoVozAoVivo = {
+  chamadaId: string;
+  sdpResposta: string;
+  modelo: string;
+  voz: string;
+  limiteSegundos: number;
+  avisoSegundos: number;
+};
 export type ClienteEstudio = {
   enviarMaterial: (arquivo: ArquivoEstudo) => Promise<MaterialEstudo>;
   materialDemo: () => Promise<MaterialEstudo>;
@@ -66,4 +81,6 @@ export type ClienteEstudio = {
   ) => Promise<{ correta: boolean; feedback: string; apoio: ApoioEstudo }>;
   ensinarStu: (id: string, texto: string) => Promise<FeedbackEnsino>;
   transcrever: (arquivo: ArquivoEstudo) => Promise<{ texto: string }>;
+  iniciarVozAoVivo?: (id: string, sdp: string) => Promise<SessaoVozAoVivo>;
+  encerrarVozAoVivo?: (id: string, chamadaId: string) => Promise<null>;
 };

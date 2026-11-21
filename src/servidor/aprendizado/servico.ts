@@ -1,3 +1,4 @@
+import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { conteudosDoMaterial } from '../estudio/materiais';
 import type {
   AutoAvaliacao,
@@ -9,7 +10,7 @@ import type {
   PlanoResumo,
   PropostaPlano,
 } from "@studoo/contratos";
-import { motivoParaRever } from "@studoo/contratos";
+import { motivoParaRever, normalizarResolucao, responderSuaVez, type Capacidades, type EscolhaNoSuaVez, type RespostaDoSuaVez } from "@studoo/contratos";
 import {
   apresentarExercicio,
   avaliarResposta,
@@ -22,19 +23,45 @@ import { FalhaApi } from "@/servidor/acesso/http";
 import { banco } from "@/servidor/banco/cliente";
 import type { Prisma } from "@/servidor/banco/gerado/client";
 import { obterGerador } from "@/servidor/ia/gerador";
+import { podeUsarIa } from "@/servidor/privacidade/consentimento";
 import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
+import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
+import { ordemDoSuaVez } from "./ordem-sua-vez";
+import { SEM_CAPACIDADES, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, semCifraoSolto, visualDoRetorno } from "./visuais";
+import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
+import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
 
-/** Tempo para criar o conteúdo de todas as lições no aceite (com a IA real, em paralelo e com uma segunda tentativa). */
-const TEMPO_CONTEUDO = 75_000;
+/** Lições escritas ao mesmo tempo no aceite (`STUDOO_GERACAO_PARALELA`, de 1 a 10; padrão 10, todas juntas). */
+export function geracaoParalela(): number {
+  const valor = Number(process.env.STUDOO_GERACAO_PARALELA?.trim());
+  return Number.isInteger(valor) && valor >= 1 && valor <= 10 ? valor : 10;
+}
+
+/**
+ * Tempo para criar o conteúdo de todas as lições no aceite. As lições (de 7 a 10) saem em ondas de até
+ * `geracaoParalela()` chamadas; cada onda cabe nos 75 s de sempre (o que valia para todas em paralelo: uma chamada tem
+ * prazo próprio de 40 s, a segunda tentativa de formato e as novas tentativas do 429, até 8 s, cabem quase sempre
+ * aí). Teto = 75 s × ondas, limitado a 240 s: com o padrão (10) e até 10 lições, 1 onda = 75 s, como antes; com 3 e 8
+ * lições, 3 ondas = 225 s; com 1 (em série), 240 s.
+ */
+export function tempoDoAceite(licoes: number, paralelas = geracaoParalela()): number {
+  const ondas = Math.max(1, Math.ceil(licoes / paralelas));
+  return Math.min(240_000, 75_000 * ondas);
+}
 const DURACAO_AVALIACAO = 15 * 60 * 1000;
 
 const selecaoPlano = {
   id: true,
   titulo: true,
+  capa: true,
+  tema: true,
   objetivo: true,
   origem: true,
+  origemNome: true,
+  origemPerfilId: true,
+  origemCodigo: true,
   fluxos: {
     orderBy: { ordem: "asc" },
     select: {
@@ -57,7 +84,10 @@ type PlanoPersistido = Prisma.PlanoAprendizadoGetPayload<{ select: typeof seleca
 
 /** Proposta de uma vez, para o cliente que não acompanha a geração (POST /propostas). */
 export async function gerarProposta(usuarioId: string, objetivo: string): Promise<PropostaPlano> {
-  const geracao = iniciarGeracao(usuarioId, objetivo);
+  const geracao = iniciarGeracao(usuarioId, objetivo, { verificarLimite: false });
+  if (!(await consumirGeracaoPersistente(usuarioId))) {
+    throw new FalhaApi("limite_geracoes");
+  }
   for await (const evento of geracao.eventos(new AbortController().signal, { aoVivo: false })) {
     if (evento.tipo === "pronto") return evento.proposta;
     if (evento.tipo === "erro") throw new FalhaApi(evento.codigo);
@@ -74,7 +104,7 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
         id,
         titulo,
         concluida: conclusao !== null,
-        ...(apoio?.reforco ? { ponte: { concluida: apoio.reforcoConcluido } } : {}),
+        ...(apoio?.reforco ? { ponte: { concluida: apoio.reforcoConcluido || Boolean((apoio.reforco as { algumaConcluida?: boolean } | null)?.algumaConcluida) } } : {}),
         ...(rever ? { rever } : {}),
       };
     });
@@ -98,7 +128,9 @@ function apresentarPlano(plano: PlanoPersistido): PlanoDetalhe {
     id: plano.id,
     titulo: plano.titulo,
     objetivo: plano.objetivo,
-    origem: plano.origem,
+    origem: origemDoConteudo(plano.origem),
+    ...(plano.capa ? { capa: plano.capa } : {}),
+    ...(plano.tema && (TEMAS as readonly string[]).includes(plano.tema) ? { tema: plano.tema as Tema } : {}),
     progresso: calcularProgresso(concluidas, total),
     fluxos,
     ...(resumos.length > 0 ? {
@@ -123,7 +155,8 @@ export async function buscarPlano(usuarioId: string, id: string): Promise<PlanoD
   if (!plano) {
     throw new FalhaApi("nao_encontrado");
   }
-  return apresentarPlano(plano);
+  const marcas = await marcasDasTrilhas(usuarioId, [plano]);
+  return { ...apresentarPlano(plano), ...marcas.get(plano.id) };
 }
 
 /**
@@ -151,20 +184,38 @@ export async function listarPlanos(usuarioId: string): Promise<PlanoResumo[]> {
     select: selecaoPlano,
   });
 
+  const marcas = await marcasDasTrilhas(usuarioId, planos);
   return planos.map((plano) => {
-    const { id, titulo, progresso } = apresentarPlano(plano);
-    return { id, titulo, progresso };
+    const { id, titulo, progresso, capa, tema } = apresentarPlano(plano);
+    return { id, titulo, progresso, ...(capa ? { capa } : {}), ...(tema ? { tema } : {}), ...marcas.get(id) };
   });
 }
 
 /** Pede ao gerador o conteúdo de cada lição do esqueleto aceito e valida o que voltou. */
-async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
+export async function gerarConteudos(usuarioId: string, plano: EsqueletoPlano): Promise<ConteudoLicao[][]> {
   if (plano.gerador === "material-v1" && plano.materialId) return conteudosDoMaterial(usuarioId, plano.materialId);
   const gerador = obterGerador();
-  const sinal = AbortSignal.timeout(TEMPO_CONTEUDO);
-  const conteudos = await Promise.all(plano.fluxos.map((fluxo, indiceFluxo) =>
-    Promise.all(fluxo.licoes.map((_licao, indiceLicao) =>
-      gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal)))));
+  // Uma chamada por lição, no máximo `geracaoParalela()` em andamento. Contas com limite baixo por minuto (a OpenAI do
+  // dono: 10 mil tokens/min) usam 1 ou 2; com todas juntas, as chamadas estouram o limite ao mesmo tempo (429 em todas).
+  // Cada chamada mantém as novas tentativas do 429 (`comNovasTentativas`). Na primeira falha, nenhuma nova começa.
+  const tarefas = plano.fluxos.flatMap((fluxo, indiceFluxo) => fluxo.licoes.map((_licao, indiceLicao) => ({ indiceFluxo, indiceLicao })));
+  const paralelas = geracaoParalela();
+  const sinal = AbortSignal.timeout(tempoDoAceite(tarefas.length, paralelas));
+  const conteudos: ConteudoLicao[][] = plano.fluxos.map(() => []);
+  let proxima = 0;
+  let falhou = false;
+  async function trabalhar() {
+    while (!falhou && proxima < tarefas.length) {
+      const { indiceFluxo, indiceLicao } = tarefas[proxima++];
+      try {
+        conteudos[indiceFluxo][indiceLicao] = await gerador.gerarConteudo(plano, indiceFluxo, indiceLicao, sinal);
+      } catch (erro) {
+        falhou = true;
+        throw erro;
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(paralelas, tarefas.length) }, trabalhar));
   if (!conteudos.every((licoes) => licoes.every(conteudoValido))) {
     throw new FalhaApi("ia_indisponivel");
   }
@@ -225,7 +276,7 @@ async function criarPlanoAceito(usuarioId: string, id: string, plano: EsqueletoP
   try {
     await banco.$transaction([
       banco.planoAprendizado.create({
-        data: { usuarioId, id, titulo: plano.titulo, objetivo: plano.objetivo, origem: plano.origem },
+        data: { usuarioId, id, titulo: plano.titulo, objetivo: plano.objetivo, origem: origemDoConteudo(plano.origem) },
       }),
       banco.fluxo.createMany({ data: fluxos }),
       banco.licao.createMany({ data: licoes }),
@@ -252,7 +303,7 @@ async function lerLicao(usuarioId: string, id: string) {
       titulo: true,
       fluxoId: true,
       conteudo: true,
-      fluxo: { select: { planoId: true } },
+      fluxo: { select: { planoId: true, plano: { select: { origemNome: true } } } },
       conclusao: { select: { concluidoEm: true } },
     },
   });
@@ -269,14 +320,29 @@ async function lerLicao(usuarioId: string, id: string) {
 
 /** Conteúdo interno da lição (com gabarito), para o reforço sem IA montar uma pergunta sobre o exercício errado. */
 export async function conteudoDaLicao(usuarioId: string, id: string): Promise<ConteudoLicao> {
-  return (await lerLicao(usuarioId, id)).conteudo;
+  const { conteudo } = await lerLicao(usuarioId, id);
+  // Quem lê o conteúdo por aqui (reforço, ponte, voz) escreve para qualquer cliente: as fórmulas em linha vão em texto linear.
+  return conteudoEhDeMatematica(conteudo) ? comTextoLinear(semCifraoSolto(conteudo)) : conteudo;
 }
 
-export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoDetalhe> {
+/** A lição é de matemática? Para o texto de IA que volta sem passar pela lição (a ponte do reforço e o "Ensine o Stu"), que chega em texto linear a todos os clientes. */
+export async function licaoEhDeMatematica(usuarioId: string, id: string): Promise<boolean> {
+  const { conteudo } = await lerLicao(usuarioId, id);
+  return conteudoEhDeMatematica(conteudo);
+}
+
+/**
+ * A lição como a pessoa a vê. `capacidades` vem do cabeçalho `X-Studoo-Capacidades`: sem `visuais@1` (build 3, site antigo) a
+ * lição não leva campo novo e o desenho de matemática vai como PNG em `recurso` (se `desenharPng`); com ele, vão `visuais`, o
+ * `visual` dos exercícios e, com `resolucao@1`, a resolução até o "Sua vez". Lição sem visual sai como sempre.
+ */
+export async function buscarLicao(
+  usuarioId: string, id: string, opcoes: { capacidades?: Capacidades; desenharPng?: boolean } = {},
+): Promise<LicaoDetalhe> {
   const licao = await lerLicao(usuarioId, id);
   const { objetivo, conceito, exemplo, origem, exercicio, extras, exemploTipo, passos, recurso, falas, pratica, referencias } = licao.conteudo;
   const exercicios = [exercicio, ...(extras ?? [])].map(apresentarExercicio);
-  return {
+  const detalhe: LicaoDetalhe = {
     id: licao.id,
     planoId: licao.fluxo.planoId,
     fluxoId: licao.fluxoId,
@@ -288,24 +354,53 @@ export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoD
     ...(passos ? { passos } : {}),
     ...(recurso ? { recurso } : {}),
     ...(falas ? { falas } : {}),
-    origem,
+    origem: origemDoConteudo(origem),
     exercicio: exercicios[0],
     exercicios,
     ...(pratica ? { pratica } : {}),
     ...(referencias ? { referencias } : {}),
     concluida: licao.conclusao !== null,
+    // Lição de material numa trilha recebida: a aula diz "material de Ana" e não oferece nada que busque o material.
+    // Vale mesmo com a flag desligada depois: a cópia nunca pode dizer "seu material".
+    ...(licao.fluxo.plano.origemNome && referencias?.some((ref) => ref.materialId === MATERIAL_COMPARTILHADO)
+      ? { materialDe: licao.fluxo.plano.origemNome }
+      : {}),
   };
+  const capacidades = opcoes.capacidades ?? SEM_CAPACIDADES;
+  const completa = await comVisuais(detalhe, licao.conteudo, { capacidades, desenharPng: opcoes.desenharPng ?? false, usuarioId });
+  // Sem `visuais@1` o cliente não desenha a fórmula em linha: `$x_A$` chega como texto linear, sem cifrão. Com ele, as marcas
+  // chegam completas (os tokens soltos, `x_A`, também) e só em lição de matemática.
+  return comFormulasParaOCliente(completa, licao.conteudo, capacidades);
+}
+
+/**
+ * O "Sua vez" do "Resolva comigo": corrige a escolha e, no acerto ou na segunda errada, devolve a revelação do passo e os
+ * passos que faltam (antes disso nada disso vai ao cliente). Lição sem resolução: `nao_encontrado`.
+ */
+export async function responderSuaVezDaLicao(usuarioId: string, id: string, escolha: EscolhaNoSuaVez): Promise<RespostaDoSuaVez> {
+  const licao = await lerLicao(usuarioId, id);
+  const resolucao = licao.conteudo.resolucao ? normalizarResolucao(licao.conteudo.resolucao) : null;
+  if (!resolucao) throw new FalhaApi("nao_encontrado");
+  // O índice que chega é o que a lição mostrou: a mesma ordem por (conta, lição) que ela usou, desfeita aqui.
+  const resposta = responderSuaVez(resolucao, escolha, ordemDoSuaVez(usuarioId, licao.id));
+  if (!resposta) throw new FalhaApi("invalido");
+  return resposta;
 }
 
 /** Avalia a resposta do exercício `indice` da lição (0 é o principal). */
-export async function avaliarLicao(usuarioId: string, id: string, resposta: string, indice = 0): Promise<Avaliacao> {
+export async function avaliarLicao(
+  usuarioId: string, id: string, resposta: string, indice = 0, capacidades: Capacidades = SEM_CAPACIDADES,
+): Promise<Avaliacao> {
   const licao = await lerLicao(usuarioId, id);
   const exercicio = [licao.conteudo.exercicio, ...(licao.conteudo.extras ?? [])][indice];
   const local = exercicio ? avaliarResposta(exercicio, resposta) : null;
   if (!exercicio || !local) {
     throw new FalhaApi("invalido");
   }
-  const avaliacao = await refinarAvaliacao({ titulo: licao.titulo, conceito: licao.conteudo.conceito }, exercicio, resposta, local);
+  // Sem o aceite do envio a IA de terceiros, vale só a correção local (nada da resposta sai do servidor).
+  const avaliacao = await podeUsarIa(usuarioId)
+    ? await refinarAvaliacao({ titulo: licao.titulo, conceito: licao.conteudo.conceito }, exercicio, resposta, local)
+    : local;
 
   if (!avaliacao.correta) await banco.apoioLicao.upsert({
     where: { usuarioId_licaoId: { usuarioId, licaoId: id } },
@@ -316,7 +411,10 @@ export async function avaliarLicao(usuarioId: string, id: string, resposta: stri
     id,
     expiraEm: Date.now() + DURACAO_AVALIACAO,
   });
-  return { ...avaliacao, comprovante };
+  // Exercício com figura, para quem desenha (`visuais@1`): quem acertou vê o procurado virar resposta.
+  const visual = avaliacao.correta ? visualDoRetorno(licao.conteudo, indice, capacidades) : undefined;
+  const resultado = { ...avaliacao, ...(visual ? { visual } : {}), comprovante };
+  return comFormulasParaOCliente(resultado, licao.conteudo, capacidades);
 }
 
 /** Registra a conclusão (uma vez) e, quando a lição tem prática, como ela foi (a mais recente fica). */

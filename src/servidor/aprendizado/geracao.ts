@@ -1,3 +1,4 @@
+import { origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { randomUUID } from "node:crypto";
 import { LIMITES_GERACAO, type EventoGeracao } from "@studoo/contratos";
 import { esqueletoValido, type EsqueletoPlano } from "@/dominio/aprendizado/plano";
@@ -17,13 +18,17 @@ export interface Geracao {
  * Tudo o que pode falhar antes de a resposta começar: objetivo, IA disponível e teto de gerações.
  * Lança FalhaApi (JSON de erro). Depois daqui, os problemas viram o evento `erro`.
  */
-export function iniciarGeracao(usuarioId: string, objetivo: string): Geracao {
+export function iniciarGeracao(
+  usuarioId: string,
+  objetivo: string,
+  opcoes?: { verificarLimite?: boolean },
+): Geracao {
   const texto = objetivo.trim();
   if (texto.length < LIMITES_GERACAO.objetivoMin || texto.length > LIMITES_GERACAO.objetivoMax) {
     throw new FalhaApi("invalido");
   }
   const gerador = obterGerador();
-  if (!registrarGeracao(usuarioId)) {
+  if (opcoes?.verificarLimite !== false && !registrarGeracao(usuarioId)) {
     throw new FalhaApi("limite_geracoes");
   }
 
@@ -77,7 +82,8 @@ async function* emitirEventos(
     }
     if (sinal.aborted) return;
 
-    const completo = { ...meta, ...plano, fluxos: acumulado.fluxos };
+    if (!meta) throw new FalhaApi("falha");
+    const completo = { ...meta, origem: origemDoConteudo(meta.origem), ...plano, fluxos: acumulado.fluxos };
     if (!esqueletoValido(completo)) {
       throw new FalhaApi("falha");
     }

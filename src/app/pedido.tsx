@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { LIMITES_GERACAO } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, EstadoErro, Icone, Stu, type NomeDesenho } from '../ui';
@@ -39,9 +39,11 @@ const todosOsExemplos = Array.from(new Set(mensagens.pedido.temas.flatMap((tema)
  * "Surpreenda-me" sorteia uma. Tocar numa ideia preenche o campo, e a pessoa ainda pode ajustar o texto.
  */
 export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos, areaInicial, aoMudar, anunciar, gerar, verPlanos, comoFunciona,
-  avisoSemTrilhas = false }: {
-  /** Veio de "Minhas trilhas" sem nenhuma trilha: um aviso diz isso (antes, a tela não mudava e parecia travada). */
-  avisoSemTrilhas?: boolean;
+  focarCampo = false, porLink }: {
+  /** "Adicionar por link" (spec 09, com a flag de compartilhar): logo antes de "Ver como funciona". */
+  porLink?: ReactNode;
+  /** A ação da lista vazia leva diretamente ao campo de objetivo, inclusive no celular. */
+  focarCampo?: boolean;
   onProposta: (p: PropostaPlano) => void;
   objetivo: string;
   /** Área que abre primeiro, como a escolhida no fim da apresentação; sem ela, Populares. */
@@ -60,12 +62,42 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   const [curto, setCurto] = useState(false);
   const [escolhida, setEscolhida] = useState<string | null>(null);
   const [brilho, setBrilho] = useState(0);
+  /** Lendo o material enviado: o Stu fica concentrado só quando a espera passa de 1 s (menos que isso, só o esqueleto). */
+  const [lendoDemorado, setLendoDemorado] = useState(false);
+  useEffect(() => {
+    if (!(modo === 'material' && ocupado)) { setLendoDemorado(false); return; }
+    const relogio = window.setTimeout(() => setLendoDemorado(true), 1000);
+    return () => window.clearTimeout(relogio);
+  }, [modo, ocupado]);
   const campo = useRef<HTMLTextAreaElement>(null);
+  const focarBotaoCriar = useRef(false);
+  const focouComTexto = useRef(false);
   const texto = objetivo.trim();
+
+  useEffect(() => {
+    if (focarBotaoCriar.current && texto && !ocupado) {
+      focarBotaoCriar.current = false;
+      campo.current?.closest('form')?.querySelector<HTMLButtonElement>('.pedido-criar')?.focus();
+    }
+  }, [texto, ocupado]);
+
+  useEffect(() => {
+    if (modo !== 'ideia' || (!focarCampo && window.innerWidth < 1024 && !objetivo.trim())) return;
+    campo.current?.focus({ preventScroll: true });
+    if (objetivo.trim()) focouComTexto.current = true;
+  }, [modo, focarCampo]);
+
+  useEffect(() => {
+    if (modo !== 'ideia' || focouComTexto.current || !texto || focarBotaoCriar.current || escolhida !== null) return;
+    focouComTexto.current = true;
+    campo.current?.focus({ preventScroll: true });
+  }, [modo, texto, escolhida]);
 
   // O Stu reage ao pedido: convida, incentiva enquanto a pessoa escreve e comemora a ideia escolhida.
   let fala: string = mensagens.pedido.falas.vazio;
-  if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
+  if (falha === 'limite_geracoes' || falha === 'limite_estudio') fala = mensagens.pedido.falas.limite;
+  else if (falha) fala = mensagens.pedido.falas.erro;
+  else if (escolhida !== null && escolhida === texto) fala = mensagens.pedido.falas.escolhida;
   else if (texto.length >= 20) fala = mensagens.pedido.falas.pronto;
   else if (texto.length > 0) fala = mensagens.pedido.falas.curto;
   // As ideias vêm da área escolhida na apresentação; sem ela, das mais populares.
@@ -92,6 +124,7 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
   }
 
   function sugerir(ideia: string) {
+    focarBotaoCriar.current = true;
     aoMudar(ideia);
     setCurto(false);
     setEscolhida(ideia);
@@ -109,18 +142,30 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
       <header className="pedido-heroi">
         <div className="pedido-heroi__stu" aria-hidden="true">
           <span className="pedido-heroi__halo" />
-          <Stu />
+          {/* Convida: curioso, uma vez; escrevendo: encorajador, parado; ideia aplicada: animado, no acontecimento;
+              lendo o material: concentrado, em laço (spec 13, §A2, §B4 e §E1). */}
+          {lendoDemorado ? <Stu expressao="stu-concentrado" tamanho={96} animado="laco" />
+            : falha ? <Stu expressao="stu-encorajador" tamanho={96} />
+              : escolhida !== null && escolhida === texto ? <Stu expressao="stu-animado" tamanho={96} animado="acontecimento" acontecimento={brilho} />
+                : texto.length > 0 ? <Stu expressao="stu-encorajador" tamanho={96} />
+                  : <Stu expressao="stu-curioso" tamanho={96} animado="uma-vez" />}
           <span className="pedido-heroi__estrela">✦</span>
         </div>
         <h1 tabIndex={-1}>{modo === 'material' ? mensagens.inicio.materialTitulo : mensagens.pedido.titulo}</h1>
         <p className="pedido-heroi__fala" aria-live="polite">{modo === 'material' ? mensagens.inicio.materialTexto : fala}</p>
       </header>
-      {falha === 'limite_geracoes' && temPlanos && <Botao variante="secundario" onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>}
-      {avisoSemTrilhas && <p className="pedido-aviso" role="status">{mensagens.planos.semTrilhas}</p>}
       {aviso && <p className="pedido-aviso">{aviso}</p>}
-      {falha && <EstadoErro codigo={falha}>{repetivel && <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>}</EstadoErro>}
+      {falha && (
+        <EstadoErro codigo={falha}>
+          {falha === 'limite_geracoes' && temPlanos ? (
+            <Botao variante="secundario" onClick={verPlanos}>{mensagens.pedido.verPlanos}</Botao>
+          ) : repetivel ? (
+            <Botao variante="secundario" disabled={ocupado} onClick={tentar}>{mensagens.tentarNovamente}</Botao>
+          ) : null}
+        </EstadoErro>
+      )}
       <div hidden={modo !== 'material'} className="pedido-material">
-        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} />
+        <MaterialParaTrilha objetivo={objetivo} onProposta={onProposta} mostrarCabeca={false} />
       </div>
       <form hidden={modo !== 'ideia'} className="formulario pedido-formulario" method="post" noValidate onSubmit={enviar}>
         <div className="campo pedido-campo">
@@ -135,25 +180,30 @@ export function Pedido({ onProposta, objetivo, ocupado, aviso, falha, temPlanos,
           {mostrarContador && <small id="objetivo-contador">{mensagens.pedido.contador(objetivo.length, LIMITES_GERACAO.objetivoMax)}</small>}
         </div>
         <Botao type="submit" className="pedido-criar" disabled={ocupado || !texto}>{mensagens.inicio.criar}<Icone nome="seta" /></Botao>
+      </form>
+      <button type="button" className="pedido-alternar" disabled={ocupado} onClick={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}>
+        <span className="pedido-alternar__icone" aria-hidden="true"><Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} /></span>
+        <span className="pedido-alternar__texto">
+          <strong>
+            {modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}
+          </strong>
+          <small>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</small>
+        </span>
+        <Icone nome="seta" />
+      </button>
+      {modo === 'ideia' && (
         <div className="pedido-ideias" role="group" aria-label={mensagens.pedido.sugestoes}>
-          <button type="button" className="pedido-ideia pedido-ideia--surpresa" disabled={ocupado} onClick={surpreender}>
-            <Desenho nome="estrela" />{mensagens.pedido.surpresa}
-          </button>
           {tema.exemplos.map(exemplo => (
             <button key={exemplo} type="button" className="pedido-ideia" aria-pressed={texto === exemplo} disabled={ocupado} onClick={() => sugerir(exemplo)}>
               <Desenho nome={iconeDoExemplo(tema, exemplo)} />{exemplo}
             </button>
           ))}
+          <button type="button" className="pedido-ideia pedido-ideia--surpresa" disabled={ocupado} onClick={surpreender}>
+            <Desenho nome="estrela" />{mensagens.pedido.surpresa}
+          </button>
         </div>
-      </form>
-      <button type="button" className="pedido-alternar" disabled={ocupado} onClick={() => setModo(modo === 'ideia' ? 'material' : 'ideia')}>
-        <span className="pedido-alternar__icone" aria-hidden="true"><Icone nome={modo === 'ideia' ? 'livro' : 'lampada'} /></span>
-        <span className="pedido-alternar__texto">
-          <strong>{modo === 'ideia' ? mensagens.inicio.material : mensagens.inicio.voltarIdeia}</strong>
-          <small>{modo === 'ideia' ? mensagens.inicio.materialDica : mensagens.inicio.ideiaDica}</small>
-        </span>
-        <Icone nome="seta" />
-      </button>
+      )}
+      {porLink}
       <button type="button" className="pedido-como" onClick={comoFunciona}>{mensagens.inicio.saberMais}</button>
     </section>
   );

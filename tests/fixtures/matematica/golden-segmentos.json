@@ -1,0 +1,149 @@
+{
+ "4": [
+  "4"
+ ],
+ "x_G = (x_A + x_B + x_C) / 3": [
+  "[x_G]",
+  " = (",
+  "[x_A + x_B + x_C]",
+  ") / 3"
+ ],
+ "x_A = 3, x_B = 5 e x_C": [
+  "[x_A = 3]",
+  ", ",
+  "[x_B = 5]",
+  " e ",
+  "[x_C]"
+ ],
+ "então x_C = 12 − 8 = 4": [
+  "então ",
+  "[x_C = 12 - 8 = 4]"
+ ],
+ "R$ 5,00 e R$ 10,00": [
+  "R$ 5,00 e R$ 10,00"
+ ],
+ "3 · 4 = 3 + 5 + x_C": [
+  "[3 \\times 4 = 3 + 5 + x_C]"
+ ],
+ "Os vértices A e B têm abscissas 3 e 5. Qual é a do terceiro?": [
+  "Os vértices A e B têm abscissas 3 e 5. Qual é a do terceiro?"
+ ],
+ "Use $x_G = (x_A + x_B + x_C) / 3$ para achar o ponto.": [
+  "Use ",
+  "[x_G = (x_A + x_B + x_C) \\div 3]",
+  " para achar o ponto."
+ ],
+ "O valor de $x_C$ é $4$, não R$ 4,00.": [
+  "O valor de ",
+  "[x_C]",
+  " é ",
+  "[4]",
+  ", não R$ 4,00."
+ ],
+ "Com A(2, 1) e C($k$, 5): $3 · 1 = 2 + (−1) + x_C$, então $x_C = 2$.": [
+  "Com A(2, 1) e C(",
+  "[k]",
+  ", 5): ",
+  "[3 \\times 1 = 2 + (-1) + x_C]",
+  ", então ",
+  "[x_C = 2]",
+  "."
+ ],
+ "($x_A$) e [$y_B$]; “$x^2$”, $b^2 - 4ac$.": [
+  "(",
+  "[x_A]",
+  ") e [",
+  "[y_B]",
+  "]; “",
+  "[x^2]",
+  "”, ",
+  "[b^2 - 4a c]",
+  "."
+ ],
+ "$$x_G = 1$$ vale.": [
+  "[x_G = 1]",
+  " vale."
+ ],
+ "Isso vale $\\frac{x_A + x_B}{2}$ no ponto médio.": [
+  "Isso vale (",
+  "[x_A]",
+  " + ",
+  "[x_B]",
+  ") ÷ 2 no ponto médio."
+ ],
+ "A raiz é $\\sqrt{x + 1}$ aqui e $\\sqrt{x_A + 1}$ ali.": [
+  "A raiz é √(",
+  "[x]",
+  " + 1) aqui e √(",
+  "[x_A]",
+  " + 1) ali."
+ ],
+ "O determinante $\\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix}$ vale −2.": [
+  "O determinante det[1, 2; 3, 4] vale −2."
+ ],
+ "Metade: $1/2$ da pizza, ou $\\frac{1}{2}$, ou $x_A/2$, ou $x = 1/2$.": [
+  "Metade: ",
+  "[\\frac{1}{2}]",
+  " da pizza, ou ",
+  "[\\frac{1}{2}]",
+  ", ou ",
+  "[\\frac{x_A}{2}]",
+  ", ou ",
+  "[x = \\frac{1}{2}]",
+  "."
+ ],
+ "Mas $(x_A + x_B)/2$, $2x/3$, $6 \\div 3$ e $a/b/c$ ficam com ÷.": [
+  "Mas ",
+  "[(x_A + x_B) \\div 2]",
+  ", ",
+  "[2x \\div 3]",
+  ", ",
+  "[6 \\div 3]",
+  " e ",
+  "[a \\div b \\div c]",
+  " ficam com ÷."
+ ],
+ "Se $\\frac{x_A + x_B + x_C}{3} = \\frac{3 + 5 + 4}{3}$, então $x_G = 4$.": [
+  "Se (",
+  "[x_A]",
+  " + ",
+  "[x_B]",
+  " + ",
+  "[x_C]",
+  ") ÷ 3 = (3 + 5 + 4) ÷ 3, então ",
+  "[x_G = 4]",
+  "."
+ ],
+ "A água é H_2O e o gás é CO_2.": [
+  "A água é H₂O e o gás é CO₂."
+ ],
+ "Escreva $\\foo{x} + 1$ aqui": [
+  "Escreva foo(x) + 1 aqui"
+ ],
+ "Veja $\\alpha + \\beta$ e $\\pi r^2$.": [
+  "Veja ",
+  "[\\alpha + \\beta]",
+  " e ",
+  "[\\pi r^2]",
+  "."
+ ],
+ "Calcule \\frac{1}{2} + \\sqrt{9} agora": [
+  "Calcule ",
+  "[\\frac{1}{2}]",
+  " + √9 agora"
+ ],
+ "custa $5 e $10": [
+  "custa $5 e $10"
+ ],
+ "preço $ 5 e $ 6": [
+  "preço $ 5 e $ 6"
+ ],
+ "US$10 e R$5 e 5$": [
+  "US$10 e R$5 e 5$"
+ ],
+ "Ganhou R$ 5,00 e gastou $x$.": [
+  "Ganhou R$ 5,00 e gastou ",
+  "[x]",
+  "."
+ ]
+}

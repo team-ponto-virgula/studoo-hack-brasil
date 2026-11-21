@@ -2,8 +2,7 @@ import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from '
 import {
   AccessibilityInfo,
   Animated,
-  Easing,
-  Image,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,33 +10,28 @@ import {
   View,
   useWindowDimensions,
   type DimensionValue,
-  type ViewStyle,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { usePulinho } from './animacoes';
 import { tracoGrosso } from './caminho';
+import { CadernoDoStu, FaixaDaPonte } from './estudio-cenas';
 import { Icone } from './icone';
-import { Botao, estilos, useBalanco, useMovimentoReduzido } from './interface';
+import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao, degrauFora, quebraEquilibrada } from './interface';
+import { CartaoFonte } from './licao';
 import { mensagens } from './mensagens';
-import type { NomeDesenho } from './mundo-desenhos';
-import { Desenho, Paisagem, coresDaRegiao } from './mundo';
+import { Desenho, coresDaRegiao } from './mundo';
+import { Stu, medidasDoStu } from './mascote';
 import { iconesDosTemas, type IdTema } from './temas';
 import { cores, fontes } from './tema';
 import type { NomeIcone } from './trilha';
+import { focoVisivel } from './foco';
+import { ouvirVoltar, travarGesto } from './voltar';
 
 /*
- * Apresentação do Studoo no app, com os mesmos cinco passos da web (src/app/apresentacao.tsx): o Stu, qualquer assunto,
- * a trilha que nasce, o progresso salvo e a área de interesse. No celular, os passos são páginas que a pessoa também pode deslizar para o lado.
+ * Apresentação do Studoo no app, com os mesmos cinco passos da web (src/app/apresentacao.tsx): desde a rodada 4.5, os quatro
+ * momentos do pitch (o material vira lição, o erro abre outro caminho, explique com suas palavras e o progresso salvo no
+ * mapa) e a área de interesse. No celular, os passos são páginas que a pessoa também pode deslizar para o lado.
  */
-
-const temasDaArte: readonly { nome: string; icone: NomeDesenho; posicao: ViewStyle }[] = [
-  { nome: mensagens.apresentacao.temas[0], icone: 'temaMusica', posicao: { top: '10%', left: '6%' } },
-  { nome: mensagens.apresentacao.temas[1], icone: 'temaIdiomas', posicao: { top: '22%', right: '8%' } },
-  { nome: mensagens.apresentacao.temas[2], icone: 'temaMatematica', posicao: { top: '36%', left: '10%' } },
-  { nome: mensagens.apresentacao.temas[3], icone: 'temaArtes', posicao: { top: '44%', right: '5%' } },
-  { nome: mensagens.apresentacao.temas[4], icone: 'temaDiaADia', posicao: { top: '58%', left: '3%' } },
-  { nome: mensagens.apresentacao.temas[5], icone: 'temaTecnologia', posicao: { top: '6%', left: '44%' } },
-];
 
 /** Áreas para escolher no último passo: as do pedido, menos Populares. */
 const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 'populares');
@@ -46,9 +40,20 @@ const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 
  * Passos da apresentação, em páginas, como os cinco da web; o último é a escolha da área que interessa, que já abre o
  * pedido com as ideias dela. Na primeira vez termina em "Criar minha primeira trilha"; reaberta pelo pedido, termina em
  * "Entendi". Pular encerra a qualquer momento. O título de cada passo recebe o foco e diz a posição; as páginas fora da
- * vista ficam fora do leitor de tela. As ilustrações são decorativas.
+ * vista ficam fora do leitor de tela. As ilustrações são decorativas e paradas, montadas com as peças do próprio app.
  */
-export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; concluir: (area?: IdTema) => void }) {
+export function Apresentacao({ primeiraVez, semSessao = false, rotuloFinalUltimo, concluir }: {
+  primeiraVez: boolean;
+  /**
+   * Aberta pelo "Ver como funciona" da entrada, sem sessão (rodada 4.4 da web): só os quatro primeiros passos, sem a escolha
+   * da área. O voltar do aparelho e o Esc (na prévia web) fecham, como o "Pular".
+   */
+  semSessao?: boolean;
+  /** Rótulo do último passo no lugar de "Entendi" (na entrada, "Experimentar sem conta" quando o visitante está ligado). */
+  rotuloFinalUltimo?: string;
+  /** `concluiuFinal`: a pessoa tocou o botão do último passo (e não "Pular", voltar ou Esc). */
+  concluir: (area?: IdTema, concluiuFinal?: boolean) => void;
+}) {
   const { width } = useWindowDimensions();
   const reduzir = useMovimentoReduzido();
   const [passo, setPasso] = useState(0);
@@ -56,7 +61,7 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
   const paginas = useRef<ComponentRef<typeof ScrollView>>(null);
   const titulos = useRef<(ComponentRef<typeof Text> | null)[]>([]);
   const primeira = useRef(true);
-  const passos = mensagens.apresentacao.passos;
+  const passos = semSessao ? mensagens.apresentacao.passos.slice(0, 4) : mensagens.apresentacao.passos;
   const total = passos.length;
   const ultimo = passo === total - 1;
   const largura = Math.min(width, 620) - 40;
@@ -65,7 +70,15 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
     const titulo = titulos.current[passo];
     if (!titulo) return;
     // Na abertura, o foco vai ao primeiro título como em qualquer tela; depois, a cada passo.
-    const espera = setTimeout(() => AccessibilityInfo.sendAccessibilityEvent(titulo, 'focus'), primeira.current ? 0 : 150);
+    // Na prévia web, o focus() do navegador rolava o passo até o título (4 px no último passo); a web foca sem rolar.
+    const focar = () => {
+      if (Platform.OS === 'web') {
+        const no = titulo as unknown as HTMLElement;
+        if (!no.hasAttribute('tabindex')) no.setAttribute('tabindex', '-1');
+        no.focus({ preventScroll: true });
+      } else AccessibilityInfo.sendAccessibilityEvent(titulo, 'focus');
+    };
+    const espera = setTimeout(focar, primeira.current ? 0 : 150);
     primeira.current = false;
     return () => clearTimeout(espera);
   }, [passo]);
@@ -75,13 +88,47 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
     paginas.current?.scrollTo({ x: indice * width, animated: reduzir === false });
   }
 
+  // Sem sessão, o voltar do aparelho fecha a apresentação e volta à entrada (em vez de fechar o app).
+  useEffect(() => {
+    if (!semSessao) return;
+    const assinatura = ouvirVoltar(() => { concluir(); return true; });
+    return () => assinatura.remove();
+  }, [semSessao, concluir]);
+  // No iPhone, o arrasto na horizontal é do carrossel: o gesto de voltar da borda fica desligado nesta tela (voltar.ts).
+  useEffect(() => travarGesto(), []);
+  // Na prévia web, o teclado também anda e fecha, como a apresentação da web: setas e Esc.
+  const passoAtual = useRef(passo);
+  passoAtual.current = passo;
+  useEffect(() => {
+    if (!semSessao || Platform.OS !== 'web' || typeof document === 'undefined') return;
+    const teclas = (evento: KeyboardEvent) => {
+      if (evento.key === 'Escape') { evento.preventDefault(); concluir(); return; }
+      if (evento.key === 'ArrowRight' && passoAtual.current < total - 1) { evento.preventDefault(); irPara(passoAtual.current + 1); }
+      if (evento.key === 'ArrowLeft' && passoAtual.current > 0) { evento.preventDefault(); irPara(passoAtual.current - 1); }
+    };
+    document.addEventListener('keydown', teclas);
+    return () => document.removeEventListener('keydown', teclas);
+    // irPara lê a largura do momento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [semSessao, concluir, total]);
+
   let rotuloFinal: string = mensagens.apresentacao.continuar;
-  if (ultimo) rotuloFinal = primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi;
+  if (ultimo) rotuloFinal = rotuloFinalUltimo ?? (primeiraVez ? mensagens.apresentacao.comecar : mensagens.apresentacao.entendi);
+  // "Experimentar sem conta" não cabe numa linha ao lado de "Voltar" em telas de celular. Com um rótulo longo no último passo,
+  // os botões ficam um sobre o outro: a ação principal em cima e "Voltar" embaixo, como na web (4.6) e no painel de erro.
+  // No app, a ordem de leitura do TalkBack segue a da tela (a principal primeiro).
+  const empilhar = ultimo && passo > 0 && rotuloFinal.length > 14 && width < 600;
+  const voltar = passo > 0 && (
+    <View style={!empilhar && apresentacaoEstilos.metade}>
+      <Botao rotulo={mensagens.apresentacao.voltar} testID="voltar-apresentacao" variante="secundario" acao={() => irPara(passo - 1)} />
+    </View>
+  );
 
   return (
     <SafeAreaView style={estilos.tela}>
-      <View style={estilos.cabecalho}>
-        <View style={estilos.marcaConteudo}>
+      <View style={apresentacaoEstilos.topo}>
+        {/* .apresentacao-topo no celular: 12 do respiro da página em cima e 48 de altura. */}
+        <View style={[estilos.marcaConteudo, apresentacaoEstilos.topoConteudo]}>
           <View style={apresentacaoEstilos.andamento} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <View style={apresentacaoEstilos.pontos}>
               {passos.map((item, indice) => (
@@ -91,7 +138,7 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
             </View>
             <Text style={apresentacaoEstilos.posicao}>{mensagens.apresentacao.posicao(passo + 1, total)}</Text>
           </View>
-          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto acao={() => concluir()} />}
+          {!ultimo && <Botao rotulo={mensagens.apresentacao.pular} testID="pular-apresentacao" variante="texto" compacto fonte={16} estilo={{ paddingHorizontal: 12 }} acao={() => concluir()} />}
         </View>
       </View>
       <ScrollView ref={paginas} horizontal pagingEnabled showsHorizontalScrollIndicator={false} style={estilos.tela}
@@ -104,10 +151,10 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
             importantForAccessibility={indice === passo ? 'auto' : 'no-hide-descendants'} accessibilityElementsHidden={indice !== passo}>
             {indice < 4 ? (
               <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-                {indice === 0 && <ArteStu largura={largura} />}
-                {indice === 1 && <ArteTemas largura={largura} />}
-                {indice === 2 && <ArteTrilha largura={largura} animar={indice === passo && reduzir === false} />}
-                {indice === 3 && <ArteProgresso largura={largura} />}
+                {indice === 0 && <ArteMaterial />}
+                {indice === 1 && <ArtePonte />}
+                {indice === 2 && <ArteExplique />}
+                {indice === 3 && <ArteProgresso largura={largura} ativo={passo === 3} />}
               </View>
             ) : (
               <View accessibilityLabel={mensagens.apresentacao.areas} style={apresentacaoEstilos.areas}>
@@ -118,23 +165,21 @@ export function Apresentacao({ primeiraVez, concluir }: { primeiraVez: boolean; 
               </View>
             )}
             <Text ref={(titulo) => { titulos.current[indice] = titulo; }} testID={`titulo-apresentacao-${indice}`} accessible
-              accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`}
-              style={[estilos.titulo, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
+              accessibilityRole="header" accessibilityLabel={`${mensagens.apresentacao.posicao(indice + 1, total)}: ${item.titulo}`} textBreakStrategy="balanced"
+              style={[estilos.titulo, quebraEquilibrada, apresentacaoEstilos.titulo]}>{item.titulo}</Text>
             <Text style={[estilos.introducao, apresentacaoEstilos.texto]}>{item.texto}</Text>
           </ScrollView>
         ))}
       </ScrollView>
-      <View style={estilos.rodape}>
-        <View style={[estilos.rodapeConteudo, apresentacaoEstilos.acoes]}>
-          {passo > 0 && (
-            <View style={apresentacaoEstilos.metade}>
-              <Botao rotulo={mensagens.apresentacao.voltar} testID="voltar-apresentacao" variante="secundario" acao={() => irPara(passo - 1)} />
-            </View>
-          )}
-          <View style={[apresentacaoEstilos.metade, ultimo && apresentacaoEstilos.principalLargo]}>
+      {/* Como .apresentacao-rodape da web: a linha de cima fica dentro das margens do conteúdo, não de ponta a ponta. */}
+      <View style={apresentacaoEstilos.rodape}>
+        <View style={[apresentacaoEstilos.rodapeConteudo, !empilhar && apresentacaoEstilos.acoes]}>
+          {!empilhar && voltar}
+          <View style={!empilhar && apresentacaoEstilos.metade}>
             <Botao rotulo={rotuloFinal} testID="avancar-apresentacao" icone={ultimo ? undefined : 'seta'}
-              acao={() => (ultimo ? concluir(area) : irPara(passo + 1))} />
+              acao={() => (ultimo ? concluir(area, true) : irPara(passo + 1))} />
           </View>
+          {empilhar && voltar}
         </View>
       </View>
     </SafeAreaView>
@@ -147,7 +192,7 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
   const pulo = usePulinho(escolhida, 1.3);
   return (
     <Pressable testID={`area-apresentacao-${id}`} accessibilityRole="button" accessibilityState={{ selected: escolhida }}
-      onPress={escolher} onFocus={() => setFocada(true)} onBlur={() => setFocada(false)}
+      onPress={escolher} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
       style={({ pressed }) => [apresentacaoEstilos.area, escolhida && apresentacaoEstilos.areaEscolhida, pressed && apresentacaoEstilos.areaAfundada,
         focada && estilos.foco]}>
       <Animated.View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
@@ -159,60 +204,52 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
   );
 }
 
-/** Algo que surge com um pulinho, uma vez, depois de `atraso`; parado com movimento reduzido. */
-function Surge({ atraso, animar, estilo, children }: { atraso: number; animar: boolean; estilo?: ViewStyle; children: ReactNode }) {
-  const [valor] = useState(() => new Animated.Value(animar ? 0 : 1));
-
-  useEffect(() => {
-    if (!animar) {
-      valor.setValue(1);
-      return;
-    }
-    valor.setValue(0);
-    const animacao = Animated.timing(valor, { toValue: 1, duration: 380, delay: atraso, easing: Easing.out(Easing.back(1.6)), useNativeDriver: true });
-    animacao.start();
-    return () => animacao.stop();
-  }, [animar, atraso, valor]);
-
+/** Moldura das ilustrações dos momentos (como `.apresentacao-quadro` da web no celular), com o selo de demonstração no alto. */
+function Quadro({ selo = false, children }: { selo?: boolean; children: ReactNode }) {
   return (
-    <Animated.View style={[estilo, { opacity: valor, transform: [{ scale: valor.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }] }]}>
+    <View style={apresentacaoEstilos.quadro}>
+      {selo && <View style={apresentacaoEstilos.quadroTopo}><SeloDemonstracao emLinha /></View>}
       {children}
-    </Animated.View>
+    </View>
   );
 }
 
-function ArteStu({ largura }: { largura: number }) {
+/** Momento 1: o cartão "Fonte do seu material" da lição, com o exemplo de demonstração do contrato. */
+function ArteMaterial() {
+  const ex = mensagens.apresentacao.exemplos;
   return (
-    <Paisagem altura={largura * 0.75} estilo={apresentacaoEstilos.arte}>
-      {(l) => (
-        <>
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            style={{ position: 'absolute', bottom: '6%', left: l * 0.33, width: l * 0.34, height: l * 0.34 * 1.1 }} />
-          <View style={[apresentacaoEstilos.oi, { bottom: '52%', left: '62%' }]}>
-            <Text style={apresentacaoEstilos.oiTexto}>{mensagens.apresentacao.oi}</Text>
-          </View>
-        </>
-      )}
-    </Paisagem>
+    <Quadro>
+      <CartaoFonte parado numero={1} titulo={ex.fonteArquivo}
+        referencia={{ materialId: 'apresentacao', nome: ex.fonteArquivo, pagina: 2, trecho: ex.fonteTrecho, leitura: 'demonstracao' }} />
+    </Quadro>
   );
 }
 
-function ArteTemas({ largura }: { largura: number }) {
+/**
+ * Momento 2: a cena da ponte já vencida (as quatro tábuas verdes), com o Stu do lado da chegada. Os rótulos das tábuas da
+ * web ("Sua tentativa", "Outro jeito"…) ficam na legenda numerada da cena, como na lição: no app, as tábuas não cabem texto.
+ */
+function ArtePonte() {
   return (
-    <Paisagem altura={largura * 0.75} estilo={apresentacaoEstilos.arte}>
-      {(l) => (
-        <>
-          {temasDaArte.map((tema) => (
-            <View key={tema.nome} style={[apresentacaoEstilos.tema, tema.posicao]}>
-              <Desenho nome={tema.icone} largura={22} />
-              <Text style={apresentacaoEstilos.temaTexto}>{tema.nome}</Text>
-            </View>
-          ))}
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false}
-            style={{ position: 'absolute', bottom: '5%', left: l * 0.4, width: l * 0.2, height: l * 0.2 * 1.1 }} />
-        </>
-      )}
-    </Paisagem>
+    <Quadro>
+      {/* A legenda tem 12 embaixo na web (.ponte-legenda no celular); a cena devolve o -2 que serve ao cartão da lição. */}
+      {/* A mesma faixa da ponte clara (spec 05, b75134a): as três tábuas feitas e o Stu chegando ao exercício. */}
+      <View style={{ marginBottom: 14 }}><FaixaDaPonte passo={3} construida carregando={false} semLinha /></View>
+    </Quadro>
+  );
+}
+
+/** Momento 3: os quatro cartões do Explique, compactos, com a legenda do retorno automático. */
+function ArteExplique() {
+  const ex = mensagens.apresentacao.exemplos;
+  return (
+    <Quadro>
+      {/* .ensino-caderno tem 16 em cima também na apresentação. */}
+      <View style={{ paddingTop: 16 }}>
+        <CadernoDoStu compacto
+          ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: true }} />
+      </View>
+    </Quadro>
   );
 }
 
@@ -250,51 +287,30 @@ function NoMini({ x, y, tamanho, face, labio, icone, corIcone }: {
     <View style={{ position: 'absolute', left: x, top: y, marginLeft: -tamanho / 2, marginTop: -tamanho / 2, width: tamanho, height: tamanho }}>
       <View style={[apresentacaoEstilos.camada, { top: tamanho * 0.09, width: tamanho, height: tamanho, borderRadius: tamanho / 2, backgroundColor: labio }]} />
       <View style={[apresentacaoEstilos.camada, apresentacaoEstilos.noFace, { width: tamanho, height: tamanho, borderRadius: tamanho / 2, backgroundColor: face }]}>
-        <Icone nome={icone} tamanho={Math.round(tamanho * 0.44)} cor={corIcone} />
+        {/* Traço 3 como a web (3,08 px num ícone de 25; 3,66 no troféu de 29). */}
+        <Icone nome={icone} tamanho={Math.round(tamanho * 0.44)} cor={corIcone} traco={3} />
       </View>
     </View>
   );
 }
 
-/** Pedaço de trilha: estrada em curva e três nós que surgem em sequência, com o cenário brotando ao redor. */
-function ArteTrilha({ largura, animar }: { largura: number; animar: boolean }) {
+/**
+ * Momento 4: trilha vencida no mapa, com as lições concluídas, o troféu no topo, "Ponte construída" e o selo de sincronia.
+ * Spec 13 (B4, Designer 19/11): o único passo com Stu próprio — `stu-comemorando` de 40 à direita do troféu, com a base na
+ * base do nó (o lábio incluído), que se mexe uma vez a cada entrada no passo, com o pop da §B7. Fica por cima da arte, sem
+ * mudar a altura dela.
+ */
+function ArteProgresso({ largura, ativo }: { largura: number; ativo: boolean }) {
   const altura = largura * (11 / 16);
   const pontos = estradaDaMiniatura(largura, altura);
   const no = largura * 0.16;
-  const flutuar = useBalanco(4, 800, animar);
-  return (
-    <View style={[apresentacaoEstilos.arte, apresentacaoEstilos.mini, { height: altura, backgroundColor: coresDaRegiao(0).chao }]}>
-      {tracoGrosso(pontos, largura * 0.07, 'rgba(255, 255, 255, 0.7)').map((estilo, indice) => (
-        <View key={`e${indice}`} style={[apresentacaoEstilos.camada, estilo]} />
-      ))}
-      {pontos.filter((_, indice) => indice % 2 === 1).map((ponto, indice) => (
-        <View key={`p${indice}`} style={[apresentacaoEstilos.camada, apresentacaoEstilos.pontinho, { left: ponto.x - 2.5, top: ponto.y - 2.5 }]} />
-      ))}
-      <Surge atraso={900} animar={animar} estilo={{ position: 'absolute', left: '4%', top: '8%' }}><Desenho nome="arvore" largura={largura * 0.13} /></Surge>
-      <Surge atraso={500} animar={animar} estilo={{ position: 'absolute', right: '10%', top: '66%' }}><Desenho nome="flores" largura={largura * 0.09} /></Surge>
-      <Surge atraso={1300} animar={animar} estilo={{ position: 'absolute', right: '12%', top: '14%' }}><Desenho nome="arbusto" largura={largura * 0.12} /></Surge>
-      <Surge atraso={300} animar={animar} estilo={{ position: 'absolute', left: '3%', top: '66%' }}><Desenho nome="lagoa" largura={largura * 0.17} /></Surge>
-      <Surge atraso={600} animar={animar} estilo={StyleSheet.absoluteFill}>
-        <NoMini x="68%" y="50%" tamanho={no} face={cores.fundo} labio="#CDD6F2" icone="livro" corIcone={cores.acao} />
-      </Surge>
-      <Surge atraso={1100} animar={animar} estilo={StyleSheet.absoluteFill}>
-        <NoMini x="38%" y="20%" tamanho={no} face={cores.fundo} labio="#CDD6F2" icone="revisao" corIcone={cores.acao} />
-      </Surge>
-      <Surge atraso={100} animar={animar} estilo={StyleSheet.absoluteFill}>
-        <NoMini x="30%" y="78%" tamanho={no} face={cores.acao} labio={cores.acaoEscura} icone="livro" corIcone={cores.fundo} />
-        <Animated.View style={[apresentacaoEstilos.etiqueta, { left: '30%', top: '78%', marginTop: -no / 2 - 38, transform: [{ translateX: -48 }, { translateY: flutuar }] }]}>
-          <Text style={apresentacaoEstilos.etiquetaTexto}>{mensagens.trilha.comecar.toLocaleUpperCase('pt-BR')}</Text>
-        </Animated.View>
-      </Surge>
-    </View>
-  );
-}
-
-/** Trilha vencida: lições concluídas, o troféu dourado no topo da montanha e o selo de progresso salvo. */
-function ArteProgresso({ largura }: { largura: number }) {
-  const altura = largura * (11 / 16);
-  const pontos = estradaDaMiniatura(largura, altura);
-  const no = largura * 0.16;
+  const trofeu = largura * 0.19;
+  const [entradas, setEntradas] = useState(0);
+  useEffect(() => {
+    if (ativo) setEntradas((anterior) => anterior + 1);
+  }, [ativo]);
+  const stu = medidasDoStu('stu-comemorando', 40);
+  const baseDoTrofeu = altura * 0.2 + trofeu / 2 + trofeu * 0.09;
   return (
     <View style={[apresentacaoEstilos.arte, apresentacaoEstilos.mini, { height: altura, backgroundColor: coresDaRegiao(2).chao }]}>
       {tracoGrosso(pontos, largura * 0.07, 'rgba(255, 255, 255, 0.7)').map((estilo, indice) => (
@@ -305,14 +321,22 @@ function ArteProgresso({ largura }: { largura: number }) {
       ))}
       <Desenho nome="picos" largura={largura * 0.22} estilo={{ position: 'absolute', left: '3%', top: '10%' }} />
       <Desenho nome="pinheiro" largura={largura * 0.09} estilo={{ position: 'absolute', right: '9%', top: '50%' }} />
-      <Desenho nome="estrela" largura={largura * 0.06} estilo={{ position: 'absolute', left: '27%', top: '5%' }} />
-      <Desenho nome="estrela" largura={largura * 0.04} estilo={{ position: 'absolute', left: '48%', top: '4%' }} />
       <NoMini x="30%" y="78%" tamanho={no} face={cores.sucessoClaro} labio={cores.sucesso} icone="check" corIcone={cores.fundo} />
       <NoMini x="68%" y="50%" tamanho={no} face={cores.sucessoClaro} labio={cores.sucesso} icone="check" corIcone={cores.fundo} />
-      <NoMini x="38%" y="20%" tamanho={largura * 0.19} face={cores.ouro} labio={cores.ouroEscuro} icone="trofeu" corIcone={cores.ouroTexto} />
-      <View style={apresentacaoEstilos.selo}>
-        <Icone nome="check" tamanho={18} cor={cores.sucesso} />
-        <Text style={apresentacaoEstilos.seloTexto}>{mensagens.apresentacao.salvo}</Text>
+      <NoMini x="38%" y="20%" tamanho={trofeu} face={cores.ouro} labio={cores.ouroEscuro} icone="trofeu" corIcone={cores.ouroTexto} />
+      <View testID="stu-apresentacao-progresso" style={{ position: 'absolute', left: largura * 0.38 + trofeu / 2 + 4, top: baseDoTrofeu - stu.altura }}>
+        <Stu nome="stu-comemorando" tamanho={40} animado="acontecimento" acontecimento={entradas || undefined} pop={entradas || undefined} />
+      </View>
+      {/* O selo de sincronia do mapa, no canto de cima (como `.apresentacao-sincronia` da web). */}
+      <View style={apresentacaoEstilos.sincronia}>
+        <SeloSincronia sincronia={{ estado: 'atualizado', em: null }} />
+      </View>
+      {/* Ficha "Ponte construída": 36 de altura com o degrau de 4 por fora (0 4px 0 rgba(11, 27, 92, 0.08) na web). */}
+      <View style={[apresentacaoEstilos.seloFora, degrauFora(4, 999, 'rgba(11, 27, 92, 0.08)')]}>
+        <View style={apresentacaoEstilos.selo}>
+          <Icone nome="check" tamanho={18} cor={cores.sucesso} traco={3} />
+          <Text style={apresentacaoEstilos.seloTexto}>{mensagens.estudio.ponteMapaFeita}</Text>
+        </View>
       </View>
     </View>
   );
@@ -324,34 +348,38 @@ const apresentacaoEstilos = StyleSheet.create({
   ponto: { width: 10, height: 10, borderRadius: 5, backgroundColor: cores.gelo },
   pontoFeito: { backgroundColor: '#9FB1F0' },
   pontoAtivo: { width: 28, backgroundColor: cores.acao },
-  posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  posicao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
+  topo: { backgroundColor: cores.fundo },
+  // min-height de 48 da .apresentacao-topo mais os 12 de cima (no Yoga a altura mínima conta o padding): no último passo,
+  // sem o "Pular", a linha não encolhe e o conteúdo fica na mesma altura dos outros passos.
+  topoConteudo: { paddingTop: 12, paddingBottom: 0, minHeight: 60 },
+  rodape: { paddingHorizontal: 20, backgroundColor: cores.fundo },
+  // 22 da face do botão até a borda, como a web: o degrau de 4 desce por fora, no respiro de baixo (18 à vista).
+  rodapeConteudo: { width: '100%', maxWidth: 580, alignSelf: 'center', gap: 12, paddingTop: 16, paddingBottom: 22, borderTopWidth: 2, borderColor: cores.nevoa },
   pagina: { paddingTop: 20 },
-  titulo: { marginTop: 24 },
-  texto: { fontSize: 18, lineHeight: 26 },
+  // .painel--apresentacao no celular: 20 entre a arte e os textos; .apresentacao-textos: 18/24 e 16 entre o título e o texto
+  // (a introdução já tem 8 em cima).
+  titulo: { marginTop: 20 },
+  texto: { fontSize: 18, lineHeight: 24, marginTop: 16 },
   acoes: { flexDirection: 'row' },
   metade: { flex: 1, minWidth: 0 },
-  principalLargo: { flex: 1.9 },
   arte: { borderRadius: 28, overflow: 'hidden' },
   mini: { position: 'relative' },
   camada: { position: 'absolute', left: 0, top: 0 },
-  pontinho: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: 'rgba(27, 42, 94, 0.24)' },
+  pontinho: { width: 5, height: 5, borderRadius: 2.5, backgroundColor: 'rgba(11, 27, 92, 0.24)' },
   noFace: { alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(255, 255, 255, 0.2)' },
-  oi: { position: 'absolute', paddingHorizontal: 14, paddingVertical: 6, borderTopLeftRadius: 16, borderTopRightRadius: 16,
-    borderBottomRightRadius: 16, borderBottomLeftRadius: 4, backgroundColor: cores.fundo },
-  oiTexto: { color: cores.acao, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 22, lineHeight: 28 },
-  tema: { position: 'absolute', flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 6, paddingRight: 12, paddingVertical: 5,
-    borderRadius: 999, backgroundColor: cores.fundo, borderBottomWidth: 3, borderBottomColor: 'rgba(27, 42, 94, 0.08)' },
-  temaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 18 },
-  etiqueta: { position: 'absolute', width: 96, alignItems: 'center', paddingVertical: 4, borderRadius: 10, borderWidth: 2,
-    borderColor: cores.gelo, backgroundColor: cores.fundo },
-  etiquetaTexto: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
+  // Moldura dos momentos: como `.apresentacao-quadro` da web no celular (12 de respiro, cantos de 22, borda gelo, fundo névoa).
+  quadro: { gap: 10, padding: 12, borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.nevoa },
+  quadroTopo: { flexDirection: 'row', justifyContent: 'flex-end' },
+  sincronia: { position: 'absolute', top: '6%', right: '5%' },
   areas: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 14, borderRadius: 28, backgroundColor: cores.ceu },
   area: { width: '47.5%', flexGrow: 1, minHeight: 92, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12,
     borderRadius: 18, borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
   areaEscolhida: { borderColor: cores.acao, borderBottomColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
   areaAfundada: { borderBottomWidth: 2, marginTop: 3 },
   areaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
-  selo: { position: 'absolute', right: '5%', bottom: '7%', flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10,
-    paddingRight: 14, paddingVertical: 8, borderRadius: 999, backgroundColor: cores.fundo },
-  seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 20 },
+  seloFora: { position: 'absolute', right: '5%', bottom: '7%' },
+  selo: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingLeft: 10, paddingRight: 14, paddingVertical: 9, borderRadius: 999,
+    backgroundColor: cores.fundo },
+  seloTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18 },
 });

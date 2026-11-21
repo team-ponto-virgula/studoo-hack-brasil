@@ -1,0 +1,41 @@
+# Ensaio local de consentimento, geração e voz
+
+Execute na raiz da worktree compilada do Studoo, com Node 24 e PostgreSQL embarcado instalado pelo projeto em Linux x64. A bancada usa a interface local 127.0.0.1. Cada porta recebe um banco novo, migrations e uma conta sintética exclusiva. Os dois roteiros usam a mesma conta e devem rodar um de cada vez.
+
+## Iniciar e encerrar
+
+```sh
+node scripts/qa/ensaio-ia.mjs subir 3892
+```
+
+O padrão é IA falsa e e-mail falso. Para o ensaio com provedores, o responsável fornece ao processo de início as variáveis de IA e voz já autorizadas no cofre. A migração e a criação da conta usam adaptadores falsos. O processo Next recebe as variáveis dos provedores. O arquivo privado `.studoo-local/ensaio-ia-3892/piloto.env` contém apenas a porta, a origem e o login sintético. O e-mail segue simulado em todos os modos.
+
+## Cinco temas
+
+```sh
+node --env-file=.studoo-local/ensaio-ia-3892/piloto.env scripts/qa/cinco-temas.mjs
+```
+
+O modo padrão verifica a recusa HTTP 428, aceita a versão vigente, propõe e cria cinco trilhas, erra um exercício e constrói a ponte. A saída traz duração e status por operação. Ao terminar ele apaga as trilhas criadas, confere a lista, recompõe a escolha de privacidade e encerra a sessão. Com IA falsa, acrescente `--simulada`. Nesse modo a proposta pode seguir sem consentimento. Para testar apenas a barreira HTTP em uma bancada com `IA=deepseek` e sem chaves, use `--barreira`.
+
+## Conversa de voz
+
+```sh
+node --env-file=.studoo-local/ensaio-ia-3892/piloto.env scripts/qa/conversa-voz.mjs
+```
+
+O roteiro usa Chromium com sandbox e um áudio de fala gerado localmente em português. Ele entra pela tela de login, cria uma trilha sintética de frações pela API, provoca um erro e cria a ponte. Na interface, abre o mapa, a lição, o último exercício e “Explique com suas palavras”. O modo real clica em “Conversar com o Stu” e aguarda o encerramento automático da chamada. Confere eventos do canal, legendas dos dois participantes e as respostas de ensino e de ponte. O relatório grava o JSON das duas respostas e os tempos. A saída padrão fica em `.studoo-local/voz-qa-<instante>/voz.json`. Use `--saida=<diretorio>` para escolher outro local privado. O cadastro e a trilha são exclusivamente de ensaio. Os dados de voz usados são sintéticos.
+
+Na bancada com IA falsa, `--simulada` verifica o mesmo percurso até “Explique”, a alternativa de texto e os dois JSONs. A conversa de áudio exige o modo real.
+
+Esta worktree já dispõe de Chromium e de `playwright-core` para o ensaio. Em outra cópia com o mesmo cache do Chromium, a dependência de teste pode ser instalada sem modificar os manifestos do aplicativo.
+
+```sh
+npm install --prefix .studoo-local/navegador-qa --no-fund --no-audit --ignore-scripts --no-package-lock playwright-core@1.59.1
+```
+
+Para encerrar o servidor, parar o PostgreSQL e descartar os dados criados por esta bancada, rode na mesma worktree:
+
+```sh
+node scripts/qa/ensaio-ia.mjs parar 3892
+```

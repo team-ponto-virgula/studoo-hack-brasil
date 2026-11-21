@@ -19,3 +19,6 @@ next-env.d.ts
 *.jks
 *.keystore
 *.log
+
+# Chaves privadas da Apple ficam fora do repositório e do arquivo enviado ao EAS.
+*.p8

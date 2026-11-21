@@ -17,7 +17,7 @@ export function proxy(request: NextRequest) {
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${desenvolvimento ? " 'unsafe-eval'" : ""}`,
     `style-src 'self' ${estilo}`,
-    // React usa atributos style para cores, posições e progresso. O nonce continua exigido nas tags style.
+    // React usa atributos style para cores, posições e progresso. Em produção, tags style exigem nonce.
     "style-src-attr 'unsafe-inline'",
     `connect-src 'self'${websocket}`,
     "img-src 'self' data:",
@@ -40,7 +40,9 @@ export function proxy(request: NextRequest) {
   resposta.headers.set("Referrer-Policy", "no-referrer");
   resposta.headers.set("X-Content-Type-Options", "nosniff");
   resposta.headers.set("X-Frame-Options", "DENY");
+  // Páginas públicas do compartilhar (spec 09): links não listados, fora de buscadores.
+  if (/^\/(?:t\/|p\/|explorar(?:\/|$))/.test(request.nextUrl.pathname)) resposta.headers.set("X-Robots-Tag", "noindex, nofollow");
   return resposta;
 }
 
-export const config = { matcher: ["/", "/login", "/recuperar"] };
+export const config = { matcher: ["/", "/login", "/cadastro", "/recuperar", "/privacidade", "/suporte", "/equipe/:path*", "/t/:codigo*", "/p/:id*", "/explorar"] };

@@ -45,12 +45,30 @@ export const codificarResposta = {
   verdadeiroFalso: (verdadeiro: boolean, justificativa: string) => `${verdadeiro ? 'verdadeiro' : 'falso'}:${justificativa}`,
 };
 
-/** A resposta já pode ser verificada: ordem completa, todos os pares, valor e justificativa, mínimo de caracteres… */
-export function respostaCompleta(exercicio: ExercicioPublico, resposta: string): boolean {
+/**
+ * Ordenar em lista única (spec 08, revisão de 19/11): a ordem com que a tentativa começou. Na primeira, a do servidor
+ * (`exercicio.itens`, que nunca é a resposta); na nova tentativa, quem chama passa a ordem do começo dela.
+ */
+export function ordemInicial(exercicio: Extract<ExercicioPublico, { tipo: 'ordenar' }>): string {
+  return codificarResposta.ordem(exercicio.itens.map((item) => item.id));
+}
+
+/** A ordem está completa (todos os itens, sem vaga) e mudou em relação à ordem com que a tentativa começou. */
+function ordemMudou(exercicio: Extract<ExercicioPublico, { tipo: 'ordenar' }>, valor: string, inicial?: string): 'incompleta' | 'igual' | 'mudou' {
+  const ids = valor.split(',').map((id) => id.trim());
+  if (ids.filter(Boolean).length !== exercicio.itens.length) return 'incompleta';
+  return ids.join(',') === (inicial ?? ordemInicial(exercicio)).split(',').map((id) => id.trim()).join(',') ? 'igual' : 'mudou';
+}
+
+/**
+ * A resposta já pode ser verificada: ordem completa e mudada, todos os pares, valor e justificativa, mínimo de
+ * caracteres… `inicial` (só no ordenar): a ordem com que a tentativa começou; sem ela, a do servidor.
+ */
+export function respostaCompleta(exercicio: ExercicioPublico, resposta: string, inicial?: string): boolean {
   const valor = resposta.trim();
   switch (exercicio.tipo) {
     case 'ordenar':
-      return valor.split(',').filter(Boolean).length === exercicio.itens.length;
+      return ordemMudou(exercicio, valor, inicial) === 'mudou';
     case 'associar':
       return valor.split(',').filter(Boolean).length === exercicio.esquerda.length;
     case 'verdadeiro_falso': {
@@ -74,17 +92,22 @@ export type FaltaParaVerificar =
   | { tipo: 'escrever' }
   | { tipo: 'escolher' }
   | { tipo: 'ordenar'; faltam: number }
+  /** Ordenar em lista única: a ordem ainda é a do começo da tentativa. */
+  | { tipo: 'mudarOrdem' }
   | { tipo: 'associar'; faltam: number }
   | { tipo: 'valor' }
   | { tipo: 'justificativa' }
   | { tipo: 'caracteres'; faltam: number };
 
-export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string): FaltaParaVerificar | null {
-  if (respostaCompleta(exercicio, resposta)) return null;
+export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string, inicial?: string): FaltaParaVerificar | null {
+  if (respostaCompleta(exercicio, resposta, inicial)) return null;
   const valor = resposta.trim();
   switch (exercicio.tipo) {
     case 'ordenar':
-      return { tipo: 'ordenar', faltam: exercicio.itens.length - valor.split(',').filter(Boolean).length };
+      // Lista única: completa desde o começo, falta só mudar. Fichas (o modelo antigo, até as plataformas migrarem): faltam itens.
+      return ordemMudou(exercicio, valor, inicial) === 'igual'
+        ? { tipo: 'mudarOrdem' }
+        : { tipo: 'ordenar', faltam: exercicio.itens.length - valor.split(',').filter(Boolean).length };
     case 'associar':
       return { tipo: 'associar', faltam: exercicio.esquerda.length - valor.split(',').filter(Boolean).length };
     case 'verdadeiro_falso':
@@ -98,7 +121,7 @@ export function faltaParaVerificar(exercicio: ExercicioPublico, resposta: string
   }
 }
 
-/** Embaralha uma lista sempre do mesmo jeito para a mesma semente (mulberry32): cada visita à lição tem a sua ordem. */
+/** Embaralha uma lista sempre do mesmo jeito para a mesma semente (mulberry32): a mesma semente, a mesma ordem, em qualquer plataforma. */
 export function embaralharComSemente<T>(lista: readonly T[], semente: number): T[] {
   let estado = semente >>> 0;
   const aleatorio = () => {
@@ -127,6 +150,45 @@ export function embaralharExercicio(exercicio: ExercicioPublico, semente: number
       return { ...exercicio, opcoes: embaralharComSemente(exercicio.opcoes, semente) };
     case 'verdadeiro_falso':
       return { ...exercicio, justificativas: embaralharComSemente(exercicio.justificativas, semente) };
+    default:
+      return exercicio;
+  }
+}
+
+/**
+ * A semente da ordem das opções de um exercício (spec 16, item 23). A mesma tentativa tem a mesma ordem na web e no app: a semente sai só do id da
+ * lição, do índice do exercício e da rodada (0 ao abrir a lição; cada revisão rápida sobe 1). Hash FNV-1a em inteiros de 32 bits: igual em qualquer
+ * plataforma, sem sorteio e sem relógio.
+ */
+export function sementeDasOpcoes(licaoId: string, indiceDoExercicio: number, rodada: number): number {
+  let resultado = 0x811c9dc5;
+  for (const caractere of `${licaoId}|${indiceDoExercicio}|${rodada}`) resultado = Math.imul(resultado ^ caractere.codePointAt(0)!, 0x01000193) >>> 0;
+  return resultado;
+}
+
+/**
+ * O exercício como a tentativa o mostra: as opções (as da escolha e os porquês do verdadeiro/falso) na ordem da `rodada`, a mesma na web e no app.
+ * A rodada 0 é a abertura da lição e cada revisão rápida sobe a rodada. A ordem de uma rodada nunca repete a da anterior (com 2 ou mais opções):
+ * a revisão embaralha de verdade, não só "quase sempre". Ordenar e associar ficam na ordem do servidor, que já é a mesma para todos.
+ */
+export function embaralharExercicioDaRodada(exercicio: ExercicioPublico, licaoId: string, indiceDoExercicio: number, rodada: number): ExercicioPublico {
+  const ultima = Math.max(0, Math.trunc(rodada) || 0);
+  const ordenar = <T>(lista: readonly T[]): T[] => {
+    let anterior: T[] | null = null;
+    let atual: T[] = [...lista];
+    for (let passo = 0; passo <= ultima; passo += 1) {
+      atual = embaralharComSemente(lista, sementeDasOpcoes(licaoId, indiceDoExercicio, passo));
+      const previa: T[] | null = anterior;
+      if (previa && atual.length > 1 && atual.every((item, indice) => item === previa[indice])) atual.push(atual.shift() as T);
+      anterior = atual;
+    }
+    return atual;
+  };
+  switch (exercicio.tipo) {
+    case 'multipla_escolha':
+      return { ...exercicio, opcoes: ordenar(exercicio.opcoes) };
+    case 'verdadeiro_falso':
+      return { ...exercicio, justificativas: ordenar(exercicio.justificativas) };
     default:
       return exercicio;
   }
@@ -233,11 +295,10 @@ export function respostaParaTentarDeNovo(exercicio: ExercicioPublico, resposta: 
       const [valor = '', justificativa = ''] = resposta.split(':');
       return `${certos.has('valor') ? valor : ''}:${certos.has('justificativa') ? justificativa : ''}`.replace(/^:$/, '');
     }
-    case 'ordenar': {
-      // Cada item que estava na posição certa fica onde estava; as outras posições ficam vagas (",,") para a nova tentativa.
-      const ids = resposta.split(',');
-      return ids.some((id) => certos.has(id)) ? ids.map((id) => (certos.has(id) ? id : '')).join(',') : '';
-    }
+    case 'ordenar':
+      // Lista única (spec 08, revisão de 19/11): a nova tentativa começa com a ordem toda como estava. Os certos ficam
+      // travados no lugar (a tela trava pelos `certos` da avaliação) e os outros continuam onde estavam, sem vagas.
+      return resposta;
     default:
       return '';
   }

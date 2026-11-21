@@ -1,4 +1,5 @@
 import type { ExercicioInterno, ResultadoAvaliacao } from "@/dominio/aprendizado/plano";
+import { configuracaoDeepSeek, pedirCorrecaoDeepSeek } from "@/servidor/ia/deepseek";
 import { configuracaoOpenAi, pedirCorrecao } from "@/servidor/ia/openai";
 
 /*
@@ -48,8 +49,16 @@ function registrar(motivo: string) {
   console.error(JSON.stringify({ rota: "ia-correcao", codigo: "local", motivo }));
 }
 
+type PedirCorrecaoFn = (
+  nome: string,
+  esquema: Record<string, unknown>,
+  instrucoes: string,
+  dados: unknown,
+  ms?: number,
+) => Promise<unknown>;
+
 async function corrigirAberta(
-  config: NonNullable<ReturnType<typeof configuracaoOpenAi>>,
+  pedir: PedirCorrecaoFn,
   contexto: Contexto,
   exercicio: Extract<ExercicioInterno, { tipo: "aberta" }>,
   resposta: string,
@@ -57,7 +66,7 @@ async function corrigirAberta(
 ): Promise<ResultadoAvaliacao> {
   const criterios = exercicio.criterios ?? exercicio.gabarito.map((grupo) => grupo.split("|").join(" ou "));
   const essenciais = exercicio.essenciais ?? [];
-  const bruto = await pedirCorrecao(config, "correcao_aberta", esquemaAberta, instrucoesAberta, {
+  const bruto = await pedir("correcao_aberta", esquemaAberta, instrucoesAberta, {
     licao: contexto.titulo,
     conceito: contexto.conceito,
     enunciado: exercicio.enunciado,
@@ -92,12 +101,12 @@ async function corrigirAberta(
 }
 
 async function desempatarLacuna(
-  config: NonNullable<ReturnType<typeof configuracaoOpenAi>>,
+  pedir: PedirCorrecaoFn,
   exercicio: Extract<ExercicioInterno, { tipo: "lacuna" }>,
   resposta: string,
   local: ResultadoAvaliacao,
 ): Promise<ResultadoAvaliacao> {
-  const bruto = await pedirCorrecao(config, "desempate_lacuna", esquemaLacuna, instrucoesLacuna, {
+  const bruto = await pedir("desempate_lacuna", esquemaLacuna, instrucoesLacuna, {
     enunciado: exercicio.enunciado,
     ...(exercicio.trecho ? { frase: exercicio.trecho } : {}),
     aceitas: exercicio.gabarito,
@@ -119,14 +128,22 @@ export async function refinarAvaliacao(
   resposta: string,
   local: ResultadoAvaliacao,
 ): Promise<ResultadoAvaliacao> {
-  if (process.env.IA !== "openai" || (exercicio.tipo !== "aberta" && (exercicio.tipo !== "lacuna" || local.correta))) return local;
+  const ia = process.env.IA;
+  if ((ia !== "openai" && ia !== "deepseek") || (exercicio.tipo !== "aberta" && (exercicio.tipo !== "lacuna" || local.correta))) return local;
   // Uma armadilha conhecida (“chave” por tarraxa) é um erro previsto pela lição: a IA não a transforma em acerto.
   if (exercicio.tipo === "lacuna" && local.observacao && exercicio.armadilhas?.some(({ aviso }) => aviso === local.observacao)) return local;
-  const config = configuracaoOpenAi();
-  if (!config) return local;
+  let pedir: PedirCorrecaoFn | null = null;
+  if (ia === "openai") {
+    const config = configuracaoOpenAi();
+    if (config) pedir = (nome, esquema, instrucoes, dados, ms) => pedirCorrecao(config, nome, esquema, instrucoes, dados, ms);
+  } else {
+    const config = configuracaoDeepSeek();
+    if (config) pedir = (nome, esquema, instrucoes, dados, ms) => pedirCorrecaoDeepSeek(config, nome, esquema, instrucoes, dados, ms);
+  }
+  if (!pedir) return local;
   try {
-    if (exercicio.tipo === "aberta") return await corrigirAberta(config, contexto, exercicio, resposta, local);
-    if (exercicio.tipo === "lacuna") return await desempatarLacuna(config, exercicio, resposta, local);
+    if (exercicio.tipo === "aberta") return await corrigirAberta(pedir, contexto, exercicio, resposta, local);
+    if (exercicio.tipo === "lacuna") return await desempatarLacuna(pedir, exercicio, resposta, local);
   } catch {
     registrar("indisponivel");
   }

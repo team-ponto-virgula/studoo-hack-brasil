@@ -1,0 +1,9 @@
+# Exercício "aberta" no estado inicial: a lição atual da trilha ${TRILHA_ABERTA} começa por ele (preparar-dados.mjs).
+appId: host.exp.Exponent
+name: 35-exercicio-aberta
+---
+- runFlow:
+    file: ../partes/exercicio.yaml
+    env:
+      TRILHA: ${TRILHA_ABERTA}
+      CAPTURA: 35-exercicio-aberta

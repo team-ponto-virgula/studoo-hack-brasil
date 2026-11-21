@@ -1,0 +1,81 @@
+{
+  "cli": {
+    "version": ">= 16.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "node": "24.22.3",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
+      }
+    },
+    "development-ios-simulador": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "node": "24.22.3",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
+      }
+    },
+    "preview-ios-simulador": {
+      "extends": "preview",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "production": {
+      "node": "24.22.3",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
+      }
+    },
+    "testflight": {
+      "distribution": "store",
+      "node": "24.22.3",
+      "autoIncrement": true,
+      "ios": {
+        "image": "auto"
+      },
+      "env": {
+        "EXPO_PUBLIC_STUDOO_API_URL": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+        "EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI": "studoo-dev://auth/google"
+      }
+    }
+  },
+  "submit": {
+    "production": {},
+    "testflight": {
+      "extends": "production",
+      "ios": {
+        "bundleIdentifier": "com.studoo.mobile.dev",
+        "appleTeamId": "PYZ6U56AMV",
+        "ascAppId": "6837508955",
+        "ascApiKeyPath": "$EXPO_ASC_API_KEY_PATH",
+        "ascApiKeyId": "$EXPO_ASC_KEY_ID",
+        "ascApiKeyIssuerId": "$EXPO_ASC_ISSUER_ID",
+        "language": "pt-BR"
+      }
+    }
+  }
+}

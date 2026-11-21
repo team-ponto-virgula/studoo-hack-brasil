@@ -79,6 +79,7 @@ function responderStreaming(resposta, linhas) {
 
 before(async () => {
   servidor = createServer((pedido, resposta) => {
+    resposta.shouldKeepAlive = false; // cada resposta fecha a conexão: nada de socket velho reaproveitado (ECONNRESET ao acaso)
     // Conexões cortadas pelo cliente (cancelamento) não derrubam o servidor de teste.
     pedido.on("error", () => undefined);
     resposta.on("error", () => undefined);
@@ -151,7 +152,7 @@ test("a estrutura vem por streaming e vira eventos válidos, com índices calcul
   assert.deepEqual(eventos.filter(({ tipo }) => tipo === "licao").map(({ fluxo, licao }) => [fluxo, licao]), [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0]]);
   const pronto = eventos.at(-1);
   assert.equal(pronto.proposta.titulo, "Violão do zero");
-  assert.equal(pronto.proposta.origem, `IA da OpenAI (${MODELO_RACIOCINIO})`);
+  assert.equal(pronto.proposta.origem, "Conteúdo gerado pelo Studoo");
   assert.ok(pronto.proposta.fluxos.flatMap(({ licoes }) => licoes).some(({ titulo }) => titulo.startsWith("Revisão")));
   // O resumo que o modelo escreve para a prévia vai junto, no evento e na proposta; sem ele, a lição vem só com o título.
   const [primeira, segunda] = eventos.filter(({ tipo }) => tipo === "licao");
@@ -183,7 +184,7 @@ test("o conteúdo da lição vem com Structured Outputs e é normalizado para o 
   assert.ok(esqueletoValido(esqueleto));
   const conteudo = await gerador.gerarConteudo(esqueleto, 0, 0, new AbortController().signal);
   assert.ok(conteudoValido(conteudo));
-  assert.equal(conteudo.origem, "IA da OpenAI (teste)");
+  assert.equal(conteudo.origem, "Conteúdo gerado pelo Studoo");
   assert.deepEqual(conteudo.exercicio.opcoes.map(({ id }) => id), ["a", "b", "c"]);
   assert.deepEqual(conteudo.exercicio.gabarito, ["a"]);
   assert.equal("contexto" in conteudo.exercicio, false, "campo nulo sai do conteúdo");
@@ -459,7 +460,7 @@ test("sem a IA, ou com a IA fora do ar, vale a correção local", async () => {
 
 test("o modelo padrão não recebe o campo de raciocínio", async () => {
   const eventos = await coletar(iniciarGeracao(`teste-${crypto.randomUUID()}`, "Quero aprender violão do zero"));
-  assert.equal(eventos.at(-1).proposta.origem, `IA da OpenAI (${MODELO_PADRAO})`);
+  assert.equal(eventos.at(-1).proposta.origem, "Conteúdo gerado pelo Studoo");
   assert.equal(pedidos[0].dados.model, MODELO_PADRAO);
   assert.equal(pedidos[0].dados.reasoning, undefined);
 });
@@ -510,4 +511,38 @@ test("cancelar no meio para a leitura, sem pronto e sem erro", async () => {
   }
   assert.ok(eventos.length >= 3);
   assert.ok(!eventos.some(({ tipo }) => tipo === "pronto" || tipo === "erro"));
+});
+
+test("429 da OpenAI: retry-after respeitado, uma nova tentativa e resposta normal; leitura do retry-after", async () => {
+  const { comNovasTentativas, esperaPedida } = await import("../src/servidor/ia/novas-tentativas.ts");
+  assert.equal(esperaPedida(new Headers({ "retry-after": "2" })), 2000);
+  assert.equal(esperaPedida(new Headers({ "retry-after-ms": "350", "retry-after": "9" })), 350);
+  assert.equal(esperaPedida(new Headers({ "retry-after": new Date(10_000 + 3_000).toUTCString() }), 10_000), 3000);
+  assert.equal(esperaPedida(new Headers({})), null);
+
+  const original = console.error;
+  console.error = () => {};
+  try {
+    let chamadas = 0;
+    const resposta = await comNovasTentativas(async () => {
+      chamadas += 1;
+      return chamadas === 1
+        ? new Response("{}", { status: 429, headers: { "retry-after-ms": "20" } })
+        : Response.json({ ok: true });
+    }, { rota: "ia-openai" });
+    assert.equal(resposta.status, 200);
+    assert.deepEqual(await resposta.json(), { ok: true });
+    assert.equal(chamadas, 2);
+
+    // Sempre 429: 1 pedido + no máximo 2 novas tentativas.
+    chamadas = 0;
+    const limite = await comNovasTentativas(async () => {
+      chamadas += 1;
+      return new Response("{}", { status: 429, headers: { "retry-after": "0" } });
+    }, { rota: "ia-openai" });
+    assert.equal(limite.status, 429);
+    assert.equal(chamadas, 3);
+  } finally {
+    console.error = original;
+  }
 });

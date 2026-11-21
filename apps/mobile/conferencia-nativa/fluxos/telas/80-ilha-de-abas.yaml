@@ -1,0 +1,107 @@
+# A barra de baixo nas duas abas fixas: a seleção vai de Minhas trilhas para Nova trilha e volta (cada troca conferida pelo
+# estado "selecionado" das abas), o fim de cada tela com o último item acima da barra e um toque perto da borda de baixo
+# do último botão de Minhas trilhas. Se a barra cobrir esse ponto, o toque cai nela e o mapa da trilha não abre.
+# Explorar e Perfil com a barra por cima ficam nas capturas 40, 41, 50 e 51; o mapa rolado por baixo dela, nas 11 e 12.
+# Cada captura vem antes da conferência da seleção: se ela falhar, a imagem fica.
+# As telas rolam com arrastos fixos, sem a busca do Maestro: no emulador de Android, cada passo da busca leva de 20 a 28 s.
+# É o primeiro fluxo das telas (telas/config.yaml). Ele acaba no mapa da Culinária, mas o seguinte recomeça o app, abrir
+# uma trilha só lê os dados, e nenhuma preferência do app muda.
+# O material que o app desenhou de fato fica registrado aqui: a View por fora da barra tem o testID barra-material-vidro
+# ou barra-material-opaca, conforme o ramo que desenhou, e o fluxo tira uma imagem com o nome do que achar
+# (material-observado-vidro ou -opaca). A coleta põe esse estado observado no ORIGEM.txt e no sumário, ao lado do
+# material calculado pelas preferências do aparelho.
+appId: host.exp.Exponent
+name: 80-ilha-de-abas
+---
+- runFlow: ../partes/reabrir.yaml
+# 1. Nova trilha: a seleção sai de Minhas trilhas, que fica marcada no mapa.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-objetivo
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-objetivo
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 80-ilha-nova-trilha
+# O material desenhado (o testID muda com o ramo): só registra, não exige nenhum dos dois.
+- runFlow:
+    when:
+      visible:
+        id: barra-material-vidro
+    commands:
+      - takeScreenshot: material-observado-vidro
+- runFlow:
+    when:
+      visible:
+        id: barra-material-opaca
+    commands:
+      - takeScreenshot: material-observado-opaca
+- assertVisible:
+    id: nav-objetivo
+    selected: true
+- assertVisible:
+    id: nav-planos
+    selected: false
+# O fim de Nova trilha: "Ver como funciona", o último item, inteiro acima da barra.
+- repeat:
+    times: 3
+    commands:
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 70%
+          end: 50%, 25%
+          duration: 500
+- extendedWaitUntil:
+    visible:
+      id: como-funciona
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 81-ilha-nova-trilha-fim
+# 2. De volta a Minhas trilhas, até o fim da lista. A conta sintética tem seis trilhas (uma por formato de exercício); o
+# último cartão é o da mais antiga, Culinária, com o índice 5 na lista (o destaque é o 0).
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-planos
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-planos
+    timeout: 30000
+- repeat:
+    times: 6
+    commands:
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 70%
+          end: 50%, 20%
+          duration: 500
+- extendedWaitUntil:
+    visible:
+      id: abrir-plano-5
+    timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 82-ilha-minhas-trilhas-fim
+# A seleção voltou para Minhas trilhas.
+- assertVisible:
+    id: nav-planos
+    selected: true
+- assertVisible:
+    id: nav-objetivo
+    selected: false
+# 3. O toque a 85% da altura do último botão.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: abrir-plano-5
+    point: "50%, 85%"
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 83-ilha-ultimo-toque

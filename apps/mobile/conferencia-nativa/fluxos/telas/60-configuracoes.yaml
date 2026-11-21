@@ -1,0 +1,51 @@
+# Configurações da trilha, abertas pela engrenagem do alto do mapa, e o toque na borda do "Voltar" (spec 04, banca da
+# noite §9: todo botão de texto com 44 × 44 de toque no mínimo). O "Voltar" tem 48 de altura e uma margem de -8, que põe
+# o respiro esquerdo dele fora da coluna da tela: o primeiro toque cai ali, a 2% da largura do botão, e o segundo, perto
+# da borda de cima. Cada um tem de levar de volta ao mapa.
+appId: host.exp.Exponent
+name: 60-configuracoes
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: plano-configurar
+- extendedWaitUntil:
+    visible:
+      id: titulo-configuracoes
+    timeout: 20000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 60-configuracoes
+# Borda esquerda: o respiro que fica fora da coluna.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: configuracoes-voltar
+    point: "2%, 50%"
+- extendedWaitUntil:
+    notVisible:
+      id: titulo-configuracoes
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 15000
+# Borda de cima, numa segunda visita.
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: plano-configurar
+- extendedWaitUntil:
+    visible:
+      id: titulo-configuracoes
+    timeout: 20000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: configuracoes-voltar
+    point: "50%, 4%"
+- extendedWaitUntil:
+    notVisible:
+      id: titulo-configuracoes
+    timeout: 15000
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 15000

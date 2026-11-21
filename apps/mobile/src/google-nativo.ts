@@ -5,11 +5,19 @@ import { ErroStudoo } from '@studoo/contratos';
 import { criarClienteNativo, guardarToken, origemConfigurada } from './api-nativa';
 
 export const retornoGoogle = () => process.env.EXPO_PUBLIC_STUDOO_GOOGLE_REDIRECT_URI ?? 'studoo-dev://auth/google';
+/**
+ * Chave de emergência do Google no aparelho: um build com `EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO=desligado` esconde o botão e
+ * recusa o retorno `auth/google`, mesmo que o servidor diga `google: true`. Desde a decisão de 20/11 nenhum perfil do
+ * eas.json a usa: o TestFlight leva "Continuar com Google" ao lado de "Continuar com a Apple" (regra 4.8 atendida), com
+ * cadastro por e-mail e "Esqueci minha senha" (docs/QA-TESTFLIGHT-ACESSO.md). Google sem Apple no iPhone é recusado na revisão.
+ */
+export const googleNoAparelho = () => process.env.EXPO_PUBLIC_STUDOO_GOOGLE_NATIVO !== 'desligado';
 const chave = () => `studoo.google.${origemConfigurada().host.replace(/[^a-z0-9._-]/gi, '_')}`;
 let emCurso: Promise<string | null> | null = null;
 const trocas = new Map<string, Promise<string>>();
 
 export function entrarComGoogle() {
+  if (!googleNoAparelho()) return Promise.reject(new ErroStudoo('google_indisponivel'));
   if (emCurso) return emCurso;
   emCurso = iniciar().finally(() => { emCurso = null; });
   return emCurso;
@@ -29,6 +37,7 @@ async function iniciar() {
   return concluirGoogle(resultado.url);
 }
 export function concluirGoogle(retorno: string): Promise<string> {
+  if (!googleNoAparelho()) return Promise.reject(new ErroStudoo('google_indisponivel'));
   const url = new URL(retorno); const esperado = new URL(retornoGoogle());
   if (url.protocol !== esperado.protocol || url.host !== esperado.host || url.pathname !== esperado.pathname) {
     return Promise.reject(new ErroStudoo('google_invalido'));

@@ -1,9 +1,35 @@
-import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino } from './estudio';
+import type { ArquivoEstudo, MaterialEstudo, ReferenciaMaterial, ApoioEstudo, FeedbackEnsino, SessaoVozAoVivo } from './estudio';
 import type { MotivoRever } from './licao';
+import type { LinkCompartilhado, MarcasCompartilhar, Perfil, PerfilPublico, PreviaCompartilhar, TrilhaAdicionada, TrilhaCompartilhada, CorPerfil, Tema } from './compartilhar';
+import type { ConfiguracoesTrilha, MotivoDenuncia, MudancaConfiguracoes, Novidades, PaginaExplorar, ResultadoSeguir, ResultadoValeu, Visibilidade } from './comunidade';
+import type { EstadoPrivacidade } from './privacidade';
+import type { Resolucao, Visual } from './visuais';
 export * from './estudio';
+export * from './visuais';
+export * from './formula';
+export { conferirConta, resultadoDaFormula, type ResultadoConta, type ResultadoDaFormula } from './formula-conta';
+export { acharVazamento, alvosDoSuaVez, motivoDoVazamento, type AlvoDoSuaVez, type ContextoDoVazamento, type Vazamento } from './resolucao-vazamento';
+export * from './visuais-validacao';
+export * from './funcao-expressao';
+export * from './resolucao-publica';
+export { TAMANHO_MAXIMO_DA_DESCRICAO, comDescricaoDaResposta, descricaoDaFigura } from './visuais-descricao';
+export * from './formula-no-texto';
+export {
+  comAlturaMinima, comporDesenhos, dentroDoTeto, desenharFormula, desenharFormulaEmLinha, desenharPlano, desenharRetaNumerica, desenharVisual, desenhoParaSvg,
+  numeroParaTela, rotuloDoPonto, type OpcoesDaFigura, type OpcoesDaFormula, type OpcoesDoSvg,
+} from './motor-visuais';
+export { ALTURA_DA_LINHA_EM_EM, LARGURA_MAXIMA_EM_LINHA, PISO_EM_LINHA, formulaCabeNaLinha, semGlifoNaFormula } from './motor-formula';
+export { caminhoValido, larguraDoTexto, semGlifo, temGlifo } from './texto-vetorial';
 export * from './licao';
 export * from './som';
+export { fundoUnicoDaPreferencia } from './catalogo-sons';
 export * from './fala';
+export * from './voz-ao-vivo';
+export * from './compartilhar';
+export { perfilComLink, linksPublicosNoPerfil } from './perfil-estado';
+export * from './comunidade';
+export * from './codigo-studoo';
+export * from './catalogo-mascote';
 export interface Progresso {
   concluidas: number;
   total: number;
@@ -19,10 +45,13 @@ export interface PropostaPlano {
   fluxos: { titulo: string; licoes: { titulo: string; resumo?: string }[] }[];
 }
 
-export interface PlanoResumo {
+export interface PlanoResumo extends MarcasCompartilhar {
   id: string;
   titulo: string;
   progresso: Progresso;
+  /** Capa da galeria escolhida nas configurações (lote 4); sem ela, o cartão fica com a ilustração de sempre. */
+  capa?: string | null;
+  tema?: Tema | null;
 }
 
 export interface PlanoDetalhe extends PlanoResumo {
@@ -108,6 +137,11 @@ interface Enunciado {
   trechoTipo?: TipoTrecho;
   /** Áudio do exercício (ouça e responda). Sem trecho, o texto fica escondido até a pessoa pedir para ler. */
   fala?: Fala;
+  /**
+   * Figura da pergunta (plano, reta numérica) ou fórmula (spec 15). Só vai com `visuais@1` no cabeçalho `X-Studoo-Capacidades`,
+   * e sem a posição do ponto procurado (`visualParaEnunciado`): a resposta chega em `Avaliacao.visual`.
+   */
+  visual?: Visual;
 }
 
 /**
@@ -142,6 +176,16 @@ export interface LicaoDetalhe {
   exemploTipo?: "exemplo" | "demonstracao";
   passos?: string[];
   recurso?: Recurso;
+  /**
+   * Fórmulas e figuras da lição, até 3 (spec 15). Só vão com `visuais@1` no cabeçalho `X-Studoo-Capacidades`; sem ele (build 3,
+   * site antigo) o servidor omite este campo e põe o desenho num PNG em `recurso`, nas lições de matemática.
+   */
+  visuais?: Visual[];
+  /**
+   * "Resolva comigo": o exemplo resolvido passo a passo, com o "Sua vez". Só vai com `resolucao@1` no cabeçalho, e só até o passo
+   * do "Sua vez", sem a resposta dele (`resolucaoParaCliente`); o resto vem de `POST /api/aprendizado/licoes/[id]/resolucao`.
+   */
+  resolucao?: Resolucao;
   /** Frases para ouvir e repetir, no exemplo. */
   falas?: Fala[];
   origem: string;
@@ -152,6 +196,8 @@ export interface LicaoDetalhe {
   /** Prática no mundo real, depois dos exercícios. */
   pratica?: Pratica;
   concluida: boolean;
+  /** Lição de material numa trilha recebida: o nome de quem compartilhou ("Baseado no material de Ana"). */
+  materialDe?: string;
 }
 
 export interface Avaliacao {
@@ -168,6 +214,11 @@ export interface Avaliacao {
   modelo?: string;
   /** A correção da resposta aberta foi a do modo demonstração (ideias-chave, sem IA). */
   simulado?: boolean;
+  /**
+   * Exercício com figura, depois do acerto: o visual completo, com o ponto procurado virado em resposta (só com
+   * `visuais@1`). Quem erra não recebe a posição.
+   */
+  visual?: Visual;
 }
 
 export interface Conclusao {
@@ -176,7 +227,8 @@ export interface Conclusao {
 }
 
 const codigosErro = [
-  "material_invalido", "material_ilegivel", "reforco_indisponivel", "limite_estudio", "voz_indisponivel",
+  "material_invalido", "material_ilegivel", "reforco_indisponivel", "limite_estudio",
+  "voz_indisponivel", "voz_vazia", "voz_tempo", "voz_falha",
   "google_indisponivel",
   "google_invalido",
   "google_conta_existente",
@@ -193,14 +245,36 @@ const codigosErro = [
   "avaliacao_invalida",
   "credenciais_invalidas",
   "limite_login",
+  "limite_visitante",
   "ia_indisponivel",
   "limite_geracoes",
+  "link_inativo",
+  "limite_compartilhar",
+  "perfil_incompleto",
+  "compartilhar_visitante",
+  "trilha_recebida",
+  "trilha_propria",
+  "foto_invalida",
+  "limite_foto",
+  "explorar_material",
+  "limite_comunidade",
+  "seguir_invalido",
+  "conteudo_recusado",
+  "consentimento_ia",
+  "confirmacao_invalida",
+  "cadastro_indisponivel",
+  "limite_cadastro",
+  "email_nao_permitido",
+  "apple_indisponivel",
+  "apple_invalido",
+  "apple_conta_existente",
 ] as const;
 
 export type CodigoErro = typeof codigosErro[number];
 
 export class ErroStudoo extends Error {
-  constructor(public readonly codigo: CodigoErro) {
+  /** `corpo`: o JSON de erro como veio (no 428 "consentimento_ia" traz `privacidade`; ver privacidadeDoErro). */
+  constructor(public readonly codigo: CodigoErro, public readonly corpo?: unknown) {
     super(codigo);
     this.name = "ErroStudoo";
   }
@@ -214,7 +288,7 @@ export type EventoGeracao =
   | { tipo: "fluxo"; fluxo: number; titulo: string }
   | { tipo: "licao"; fluxo: number; licao: number; titulo: string; resumo?: string }
   | { tipo: "pronto"; proposta: PropostaPlano }
-  | { tipo: "erro"; codigo: CodigoErro };
+  | { tipo: "erro"; codigo: CodigoErro; privacidade?: EstadoPrivacidade };
 
 function texto(valor: unknown): valor is string {
   return typeof valor === "string" && valor.length > 0;
@@ -259,14 +333,17 @@ export function interpretarEventoGeracao(linha: string): EventoGeracao | null {
     }
     case "erro": {
       const codigo = codigosErro.find((valor) => valor === dado.codigo);
-      return { tipo: "erro", codigo: codigo ?? "falha" };
+      const privacidade = typeof dado.privacidade === "object" && dado.privacidade !== null
+        ? dado.privacidade as EstadoPrivacidade
+        : undefined;
+      return { tipo: "erro", codigo: codigo ?? "falha", ...(privacidade ? { privacidade } : {}) };
     }
     default:
       return null;
   }
 }
 
-type Autenticacao = { autenticado: true };
+type Autenticacao = { autenticado: true; visitante?: boolean };
 
 export interface SessaoNativa {
   token: string;
@@ -294,12 +371,18 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
         ? corpo.codigo
         : undefined;
       const codigo = codigosErro.find((valor) => valor === codigoRecebido);
-      throw new ErroStudoo(codigo ?? "falha");
+      throw new ErroStudoo(codigo ?? "falha", corpo ?? undefined);
     }
     return corpo as T;
   }
 
   return {
+    /** Privacidade (revisão Apple; ver `@studoo/contratos/privacidade`): o aceite do envio a IA de terceiros. */
+    privacidade: () => solicitar<EstadoPrivacidade>("/privacidade"),
+    aceitarIa: (versao: string) => solicitar<EstadoPrivacidade>("/privacidade/consentimento-ia", "POST", { versao }),
+    revogarIa: () => solicitar<EstadoPrivacidade>("/privacidade/consentimento-ia", "DELETE"),
+    /** Exclui a conta e tudo dela, no ato e em todos os aparelhos (a tela pede para digitar EXCLUIR antes). */
+    excluirConta: () => solicitar<null>("/conta", "DELETE", { confirmacao: "EXCLUIR" }),
     enviarMaterial: (arquivo: ArquivoEstudo) => solicitar<MaterialEstudo>('/estudio/materiais', 'POST', arquivo),
     materialDemo: () => solicitar<MaterialEstudo>('/estudio/materiais/demo', 'POST', {}),
     excluirMaterial: (id: string) => solicitar<null>(`/estudio/materiais/${encodeURIComponent(id)}`, 'DELETE'),
@@ -308,10 +391,22 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     criarPonte: (id: string) => solicitar<ApoioEstudo>(`/estudio/licoes/${encodeURIComponent(id)}/ponte`, 'POST', {}),
     avaliarPonte: (id: string, resposta: string) => solicitar<{ correta: boolean; feedback: string; apoio: ApoioEstudo }>(`/estudio/licoes/${encodeURIComponent(id)}/ponte/avaliar`, 'POST', { resposta }),
     ensinarStu: (id: string, texto: string) => solicitar<FeedbackEnsino>(`/estudio/licoes/${encodeURIComponent(id)}/ensinar`, 'POST', { texto }),
-    transcrever: (arquivo: ArquivoEstudo) => solicitar<{ texto: string }>('/estudio/voz', 'POST', arquivo),
+    iniciarVozAoVivo: (id: string, sdp: string) => solicitar<SessaoVozAoVivo>(`/estudio/licoes/${encodeURIComponent(id)}/voz-ao-vivo`, 'POST', { sdp }),
+    encerrarVozAoVivo: (id: string, chamadaId: string) => solicitar<null>(`/estudio/licoes/${encodeURIComponent(id)}/voz-ao-vivo/encerrar`, 'POST', { chamadaId }),
+    transcrever: (arquivo: ArquivoEstudo & { idioma?: string }) => solicitar<{ texto: string }>('/estudio/voz', 'POST', arquivo),
     login: (email: string, senha: string) => solicitar<Autenticacao>("/login", "POST", { email, senha }),
+    entrarVisitante: () => solicitar<Autenticacao>("/visitante", "POST"),
+    entrarVisitanteNativo: () => solicitar<SessaoNativa>("/mobile/visitante", "POST"),
     loginNativo: (email: string, senha: string) => solicitar<SessaoNativa>("/mobile/sessao", "POST", { email, senha }),
-    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean }>("/auth/config"),
+    /** Criar conta por e-mail (ver `@studoo/contratos/autenticacao`): primeiro o código, depois o cadastro. */
+    pedirCodigoCadastro: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/cadastro/codigo`, 'POST', { email }),
+    cadastrar: (email: string, codigo: string, senha: string) => solicitar<Autenticacao>('/cadastro', 'POST', { email, codigo, senha }),
+    cadastrarNativo: (email: string, codigo: string, senha: string) => solicitar<SessaoNativa>('/mobile/cadastro', 'POST', { email, codigo, senha }),
+    /** Iniciar sessão com a Apple (iPhone): nonce de uso único e depois a troca pelo token da Apple. */
+    nonceApple: () => solicitar<{ nonce: string; expiraEm: string }>('/mobile/apple/nonce', 'POST', {}),
+    entrarApple: (pedido: { identityToken: string; authorizationCode: string; nonce: string; nome?: { givenName?: string | null; familyName?: string | null } | null }) =>
+      solicitar<SessaoNativa>('/mobile/apple', 'POST', pedido),
+    configuracaoAcesso: () => solicitar<{ google: boolean; recuperacao: boolean; cadastro?: boolean; apple?: boolean; ia: ProvedorIa; visitante: boolean; vozAoVivo?: boolean; vozAoVivoVisitante?: boolean; transcricao?: boolean; compartilhar?: boolean; comunidade?: boolean }>("/auth/config"),
     recuperarSenha: (email: string, mobile = false) => solicitar<{ enviado: boolean }>(`${mobile ? '/mobile' : ''}/senha/recuperar`, 'POST', { email }),
     redefinirSenha: (email: string, codigo: string, senha: string, mobile = false) => solicitar<{ alterada: boolean }>(`${mobile ? '/mobile' : ''}/senha/redefinir`, 'POST', { email, codigo, senha }),
     trocarCodigoGoogle: (codigo: string, verificador: string) => solicitar<SessaoNativa>('/mobile/google', 'POST', { codigo, verificador }),
@@ -323,6 +418,48 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     obterPlano: (id: string) => solicitar<PlanoDetalhe>(`/aprendizado/planos/${encodeURIComponent(id)}`),
     /** Apaga a trilha, com as lições e o progresso dela. */
     apagarPlano: (id: string) => solicitar<{ apagado: true }>(`/aprendizado/planos/${encodeURIComponent(id)}`, "DELETE"),
+    /** Configurações da trilha (lote 4): só a dona; trilha de outra pessoa responde `nao_encontrado`. */
+    obterConfiguracoes: (id: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/configuracoes`),
+    salvarConfiguracoes: (id: string, mudanca: MudancaConfiguracoes) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/configuracoes`, "PATCH", mudanca),
+    /** Capa com foto (lote 4): o retângulo 2:1 já recortado, em base64 (JPEG, PNG ou WebP, até 2 MB). */
+    enviarCapa: (id: string, base64: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/capa`, "PUT", { base64 }),
+    removerCapa: (id: string) => solicitar<ConfiguracoesTrilha>(`/aprendizado/planos/${encodeURIComponent(id)}/capa`, "DELETE"),
+    /** Perfil e compartilhar trilha (spec 09; com `compartilhar` no config). */
+    obterPerfil: () => solicitar<Perfil>("/perfil"),
+    /** Sem `resumo` ou `interesses`, o que já existe fica como está. */
+    salvarPerfil: (nome: string, cor: CorPerfil, extra?: { resumo?: string; interesses?: Tema[] }) => solicitar<Perfil>("/perfil", "PUT", { nome, cor, ...extra }),
+    /** Foto já recortada (quadrada), em base64: JPEG, PNG ou WebP até 2 MB. Troca a anterior (e o endereço dela). */
+    enviarFoto: (base64: string) => solicitar<Perfil>("/perfil/foto", "PUT", { base64 }),
+    removerFoto: () => solicitar<Perfil>("/perfil/foto", "DELETE"),
+    previaCompartilhar: (planoId: string) => solicitar<PreviaCompartilhar>(`/aprendizado/planos/${encodeURIComponent(planoId)}/compartilhar`),
+    /** Cria o link da trilha (ou devolve o que já existe). */
+    criarLink: (planoId: string) => solicitar<LinkCompartilhado>(`/aprendizado/planos/${encodeURIComponent(planoId)}/compartilhar`, "POST", {}),
+    alterarLink: (codigo: string, noPerfil: boolean) => solicitar<LinkCompartilhado>(`/compartilhar/${encodeURIComponent(codigo)}`, "PATCH", { noPerfil }),
+    /** Comunidade (spec 10, etapa B; com `comunidade` no config). "explorar" pede o tema; a legenda é opcional. */
+    definirVisibilidade: (codigo: string, visibilidade: Visibilidade, publicacao?: { tema: Tema; legenda?: string }) =>
+      solicitar<LinkCompartilhado>(`/compartilhar/${encodeURIComponent(codigo)}`, "PATCH", { visibilidade, ...publicacao }),
+    explorar: (filtro: { tema?: Tema | null; cursor?: string | null; seguindo?: boolean } = {}) => {
+      const busca = new URLSearchParams();
+      if (filtro.seguindo) busca.set("seguindo", "1");
+      if (filtro.tema) busca.set("tema", filtro.tema);
+      if (filtro.cursor) busca.set("cursor", filtro.cursor);
+      const texto = busca.toString();
+      return solicitar<PaginaExplorar>(`/explorar${texto ? `?${texto}` : ""}`);
+    },
+    bloqueados: () => solicitar<{ itens: { id: string; nome: string; perfilId: string | null }[] }>('/bloqueios'),
+    bloquear: (alvoTipo: 'perfil' | 'trilha', alvo: string) => solicitar<{ bloqueado: true; id: string }>('/bloqueios', 'POST', { alvoTipo, alvo }),
+    desbloquear: (id: string) => solicitar<null>(`/bloqueios/${encodeURIComponent(id)}`, 'DELETE'),
+    /** Seguir ou deixar de seguir um perfil público (etapa C2). */
+    seguir: (perfilId: string, ativo: boolean) => solicitar<ResultadoSeguir>(`/perfis/${encodeURIComponent(perfilId)}/seguir`, "POST", { ativo }),
+    /** As Novidades da própria pessoa (últimos 7 dias). */
+    novidades: () => solicitar<Novidades>("/perfil/novidades"),
+    valeu: (codigo: string, ativo: boolean) => solicitar<ResultadoValeu>(`/compartilhar/${encodeURIComponent(codigo)}/valeu`, "POST", { ativo }),
+    denunciar: (alvoTipo: "trilha" | "perfil", alvo: string, motivo: MotivoDenuncia) => solicitar<{ registrada: true; protocolo: string }>("/denuncias", "POST", { alvoTipo, alvo, motivo }),
+    /** Encerra o link; as cópias de quem já adicionou continuam. */
+    encerrarLink: (codigo: string) => solicitar<{ encerrado: true }>(`/compartilhar/${encodeURIComponent(codigo)}`, "DELETE"),
+    trilhaCompartilhada: (codigo: string) => solicitar<TrilhaCompartilhada>(`/compartilhar/${encodeURIComponent(codigo)}`),
+    adicionarTrilha: (codigo: string) => solicitar<TrilhaAdicionada>(`/compartilhar/${encodeURIComponent(codigo)}/adicionar`, "POST", {}),
+    perfilPublico: (perfilId: string) => solicitar<PerfilPublico>(`/perfis/${encodeURIComponent(perfilId)}`),
     obterLicao: (id: string) => solicitar<LicaoDetalhe>(`/aprendizado/licoes/${encodeURIComponent(id)}`),
     /** `indice`: qual exercício da lição (0 é o primeiro). */
     avaliarLicao: (id: string, resposta: string, indice = 0) => solicitar<Avaliacao>(`/aprendizado/licoes/${encodeURIComponent(id)}/avaliar`, "POST", { resposta, indice }),
@@ -330,4 +467,17 @@ export function criarClienteStudoo(transporte: TransporteStudoo) {
     concluirLicao: (id: string, comprovante: string, pratica?: AutoAvaliacao, resumo?: ResumoConclusao) =>
       solicitar<Conclusao>(`/aprendizado/licoes/${encodeURIComponent(id)}/concluir`, "POST", { comprovante, ...(pratica ? { pratica } : {}), ...(resumo ? { resumo } : {}) }),
   };
+}
+
+export type ProvedorIa = "falsa" | "openai" | "deepseek";
+
+function normalizarAssuntoTrilha(titulo: string): string {
+  return titulo.split(':')[0].normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+/** Indica se duas trilhas tratam do mesmo assunto (assunto antes dos dois-pontos, normalizado). */
+export function trilhaRepetida(tituloExistente: string, tituloProposto: string): boolean {
+  const existente = normalizarAssuntoTrilha(tituloExistente);
+  const proposto = normalizarAssuntoTrilha(tituloProposto);
+  return existente.length > 0 && existente === proposto;
 }

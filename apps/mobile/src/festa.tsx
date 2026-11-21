@@ -8,7 +8,7 @@ import { useMovimentoReduzido } from './interface';
  * índice. É decorativo: fica fora do leitor de tela e não aparece com movimento reduzido.
  */
 
-export const coresFesta = ['#3858D6', '#FFD166', '#F38FB0', '#78C88B', '#86C1F4', '#EF8467'] as const;
+export const coresFesta = ['#2563FF', '#FBBF24', '#F38FB0', '#78C88B', '#86C1F4', '#EF8467'] as const;
 
 const duracaoDaChuva = 4600;
 

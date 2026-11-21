@@ -1,0 +1,128 @@
+/**
+ * Catálogo único de efeitos sonoros (SFX) e sons de fundo do Studoo.
+ * Compartilhado entre Web (`src/app/sons.ts`) e Mobile (`apps/mobile/src/sons.ts`)
+ * para garantir paridade de momentos, volumes relativos e prioridades.
+ */
+
+export type IdEfeitoSonoro =
+  | 'toque_opcao'
+  | 'ordenar_soltar'
+  | 'acerto'
+  | 'erro'
+  | 'ponte_abrir'
+  | 'concluir_licao'
+  | 'concluir_trilha'
+  | 'conta_criada'
+  | 'entrar'
+  | 'geracao_licao'
+  | 'geracao_pronta'
+  | 'valeu'
+  | 'seguir'
+  | 'link_copiado'
+  | 'salvo'
+  | 'aviso'
+  | 'erro_rede'
+  | 'apagar'
+  | 'gravacao_inicio'
+  | 'gravacao_fim'
+  | 'cronometro_inicio'
+  | 'cronometro_fim';
+
+export type IdSomFundo = 'mudo' | 'lofi_estudo';
+
+export type PrioridadeSom = 'baixa' | 'media' | 'alta';
+
+export interface DefinicaoEfeitoSonoro {
+  readonly id: IdEfeitoSonoro;
+  /** Nome do arquivo em `public/sons/sfx/` (web) e `apps/mobile/assets/sons/sfx/` (app). */
+  readonly arquivo: string;
+  readonly duracaoMs: number;
+  /** Ganho relativo (0..1) aplicado pelo toca-sons. */
+  readonly volume: number;
+  readonly prioridade: PrioridadeSom;
+  /** Intervalo mínimo entre disparos repetidos do mesmo efeito (ms). */
+  readonly cooldownMs: number;
+}
+
+export interface DefinicaoSomFundo {
+  readonly id: Exclude<IdSomFundo, 'mudo'>;
+  readonly rotulo: string;
+  readonly descricao: string;
+  /** Nome do arquivo em `public/sons/fundos/` (web) e `apps/mobile/assets/sons/fundos/` (app). */
+  readonly arquivo: string;
+  readonly duracaoMs: number;
+  /** Ganho base (0..1) para ficar bem abaixo dos efeitos e da voz. */
+  readonly volume: number;
+  /** Atraso típico de codificador MP3 a aparar no início/fim do laço (segundos). */
+  readonly aparoInicioSeg: number;
+  readonly aparoFimSeg: number;
+}
+
+export interface PreferenciasSom {
+  efeitosAtivos: boolean;
+  fundo: IdSomFundo;
+}
+
+export type EstadoReproducaoFundo = 'parado' | 'carregando' | 'tocando' | 'erro';
+
+export type MotivoPausaFundo = 'nenhum' | 'sem_gesto' | 'gravando' | 'segundo_plano' | 'fora_do_app';
+
+export interface EstadoSomSnapshot {
+  efeitosAtivos: boolean;
+  fundo: IdSomFundo;
+  estadoFundo: EstadoReproducaoFundo;
+  motivoPausa: MotivoPausaFundo;
+  desbloqueado: boolean;
+  erroFundo: string | null;
+}
+
+export const MENSAGEM_ERRO_FUNDO = 'Não deu para tocar agora. Toque de novo para tentar.';
+
+/** Mantém o silêncio escolhido no aparelho e traz os antigos fundos ligados para a faixa única. */
+export function fundoUnicoDaPreferencia(valor: unknown): 'mudo' | 'lofi_estudo' {
+  return valor === 'mudo' ? 'mudo' : 'lofi_estudo';
+}
+
+export const PADRAO_PREFERENCIAS_SOM: Readonly<PreferenciasSom> = {
+  efeitosAtivos: true,
+  fundo: 'lofi_estudo',
+};
+
+export const CATALOGO_EFEITOS: Readonly<Record<IdEfeitoSonoro, DefinicaoEfeitoSonoro>> = {
+  toque_opcao: { id: 'toque_opcao', arquivo: 'toque-opcao.wav', duracaoMs: 60, volume: 0.76, prioridade: 'baixa', cooldownMs: 45 },
+  ordenar_soltar: { id: 'ordenar_soltar', arquivo: 'ordenar-soltar.wav', duracaoMs: 85, volume: 0.63, prioridade: 'baixa', cooldownMs: 50 },
+  acerto: { id: 'acerto', arquivo: 'acerto.wav', duracaoMs: 480, volume: 0.90, prioridade: 'alta', cooldownMs: 120 },
+  erro: { id: 'erro', arquivo: 'erro.wav', duracaoMs: 330, volume: 0.86, prioridade: 'alta', cooldownMs: 120 },
+  ponte_abrir: { id: 'ponte_abrir', arquivo: 'ponte-abrir.wav', duracaoMs: 420, volume: 0.60, prioridade: 'media', cooldownMs: 250 },
+  concluir_licao: { id: 'concluir_licao', arquivo: 'concluir-licao.wav', duracaoMs: 820, volume: 0.90, prioridade: 'alta', cooldownMs: 500 },
+  concluir_trilha: { id: 'concluir_trilha', arquivo: 'concluir-trilha.wav', duracaoMs: 1250, volume: 0.84, prioridade: 'alta', cooldownMs: 800 },
+  conta_criada: { id: 'conta_criada', arquivo: 'conta-criada.wav', duracaoMs: 800, volume: 0.99, prioridade: 'alta', cooldownMs: 800 },
+  entrar: { id: 'entrar', arquivo: 'entrar.wav', duracaoMs: 280, volume: 0.61, prioridade: 'media', cooldownMs: 500 },
+  geracao_licao: { id: 'geracao_licao', arquivo: 'geracao-licao.wav', duracaoMs: 140, volume: 0.58, prioridade: 'baixa', cooldownMs: 180 },
+  geracao_pronta: { id: 'geracao_pronta', arquivo: 'geracao-pronta.wav', duracaoMs: 620, volume: 0.95, prioridade: 'alta', cooldownMs: 500 },
+  valeu: { id: 'valeu', arquivo: 'valeu.wav', duracaoMs: 260, volume: 0.54, prioridade: 'media', cooldownMs: 120 },
+  seguir: { id: 'seguir', arquivo: 'seguir.wav', duracaoMs: 240, volume: 0.50, prioridade: 'media', cooldownMs: 150 },
+  link_copiado: { id: 'link_copiado', arquivo: 'link-copiado.wav', duracaoMs: 160, volume: 0.59, prioridade: 'media', cooldownMs: 200 },
+  salvo: { id: 'salvo', arquivo: 'salvo.wav', duracaoMs: 240, volume: 0.64, prioridade: 'media', cooldownMs: 300 },
+  aviso: { id: 'aviso', arquivo: 'aviso.wav', duracaoMs: 180, volume: 0.77, prioridade: 'media', cooldownMs: 1200 },
+  erro_rede: { id: 'erro_rede', arquivo: 'erro-rede.wav', duracaoMs: 300, volume: 0.93, prioridade: 'alta', cooldownMs: 1000 },
+  apagar: { id: 'apagar', arquivo: 'apagar.wav', duracaoMs: 260, volume: 0.58, prioridade: 'media', cooldownMs: 300 },
+  gravacao_inicio: { id: 'gravacao_inicio', arquivo: 'gravacao-inicio.wav', duracaoMs: 140, volume: 0.98, prioridade: 'alta', cooldownMs: 300 },
+  gravacao_fim: { id: 'gravacao_fim', arquivo: 'gravacao-fim.wav', duracaoMs: 120, volume: 1.00, prioridade: 'alta', cooldownMs: 300 },
+  cronometro_inicio: { id: 'cronometro_inicio', arquivo: 'cronometro-inicio.wav', duracaoMs: 90, volume: 1.00, prioridade: 'media', cooldownMs: 250 },
+  cronometro_fim: { id: 'cronometro_fim', arquivo: 'cronometro-fim.wav', duracaoMs: 700, volume: 0.85, prioridade: 'alta', cooldownMs: 500 },
+};
+
+/** Lo-fi de Estudo: 32 compassos em laço, com 6 dB de folga de pico. */
+export const CATALOGO_FUNDOS: readonly DefinicaoSomFundo[] = [
+  {
+    id: 'lofi_estudo',
+    rotulo: 'Lo-fi de Estudo',
+    descricao: 'Piano elétrico em meio-tempo, bumbo e escova, vinil discreto',
+    arquivo: 'lofi-estudo.mp3',
+    duracaoMs: 89328,
+    volume: 0.24,
+    aparoInicioSeg: 0.026,
+    aparoFimSeg: 0,
+  },
+];

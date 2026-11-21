@@ -1,5 +1,6 @@
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
-import { AccessibilityInfo, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions } from 'react-native';
+import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { TextoComFormulas } from './texto-com-formulas';
+import { AccessibilityInfo, AppState, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import * as Speech from 'expo-speech';
 import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
 import { File, Paths } from 'expo-file-system';
@@ -8,6 +9,8 @@ import {
   ErroStudoo,
   codificarResposta,
   conferirFala,
+  contemMarcaDeFormula,
+  falarTextoComFormulas,
   linhasDePassos,
   partesDaLacuna,
   semAspas,
@@ -26,9 +29,11 @@ import {
 } from '@studoo/contratos';
 import { arquivo } from './estudio-adaptativo';
 import { Icone } from './icone';
-import { Botao, estilos } from './interface';
+import { Botao, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
+import { Stu } from './mascote';
+import { tocaSons } from './sons';
 
 /*
  * Formatos da aula no app, com os mesmos dados e a mesma sequência da web (src/app/aula.tsx), adaptados ao toque:
@@ -40,35 +45,67 @@ const t = mensagens.licao;
 
 /**
  * Lê a fala em voz alta com a voz do aparelho, no idioma dela. `aoTerminar` avisa quando a voz acaba (ou é
- * interrompida), com uma reserva pelo tamanho da frase, como na web.
+ * interrompida), com uma reserva pelo tamanho da frase, como na web. Como na web, uma fala que falha ou acaba em menos
+ * de 250 ms conta como "sem voz" (o aparelho não tem voz para o idioma): `aoTerminar(true)`.
  */
-function falar(fala: Fala, devagar: boolean, aoTerminar?: () => void) {
+function falar(fala: Fala, devagar: boolean, aoTerminar?: (semVoz: boolean) => void) {
   let reserva: ReturnType<typeof setTimeout> | undefined;
-  const fim = () => {
+  let terminou = false;
+  // Enquanto a voz lê, o som de fundo abaixa (spec 12): uma saída por entrada, pelo fim, pela parada, pelo erro ou pela
+  // reserva, como na web.
+  let saiuDaFala = false;
+  const sairDaFala = () => { if (!saiuDaFala) { saiuDaFala = true; tocaSons.sairDeFala(); } };
+  const inicio = Date.now();
+  const fim = (falhou: boolean) => {
+    if (terminou) return;
+    terminou = true;
     if (reserva) clearTimeout(reserva);
-    aoTerminar?.();
+    sairDaFala();
+    aoTerminar?.(falhou || Date.now() - inicio < 250);
   };
   try {
     void Speech.stop();
-    if (aoTerminar) reserva = setTimeout(aoTerminar, Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
-    Speech.speak(fala.texto, { language: fala.idioma, rate: devagar ? 0.6 : 0.95, onDone: fim, onStopped: fim, onError: fim });
+    tocaSons.entrarEmFala();
+    reserva = setTimeout(() => fim(false), Math.max(1500, (fala.texto.length * 90) / (devagar ? 0.6 : 0.95)));
+    Speech.speak(fala.texto, {
+      language: fala.idioma, rate: devagar ? 0.6 : 0.95,
+      onDone: () => fim(false),
+      onStopped: () => { terminou = true; if (reserva) clearTimeout(reserva); sairDaFala(); aoTerminar?.(false); },
+      onError: () => fim(true),
+    });
   } catch {
-    fim();
+    fim(true);
     AccessibilityInfo.announceForAccessibility(t.audio.semVoz);
   }
 }
 
-/** O que está tocando agora (normal ou devagar), para o chip mostrar "Tocando…". */
+/** O que está tocando agora (normal ou devagar), para o chip mostrar "Tocando…", e se o aparelho ficou sem voz. */
 function useTocando(fala: Fala) {
   const [tocando, setTocando] = useState<'normal' | 'devagar' | null>(null);
+  const [semVoz, setSemVoz] = useState(false);
   const tocar = (devagar: boolean) => {
     setTocando(devagar ? 'devagar' : 'normal');
-    falar(fala, devagar, () => setTocando(null));
+    setSemVoz(false);
+    falar(fala, devagar, (faltou) => { setTocando(null); if (faltou) setSemVoz(true); });
   };
-  return [tocando, tocar] as const;
+  return [tocando, tocar, semVoz] as const;
 }
 
 /** Para a voz (ao sair da aula ou da etapa). */
+/**
+ * Caixa tocável com degrau, como os cartões da web (ordenar, associar, verdadeiro ou falso, "como foi"): a face com a borda
+ * de 2 que fecha em volta e o degrau de 4 por fora, na cor da sombra da web (0 4px 0), sem ocupar lugar embaixo.
+ */
+function CartaoDegrau({ face, corDegrau, raio = 14, estiloFora, children, ...resto }: Omit<PressableProps, 'style' | 'children'> & {
+  face: StyleProp<ViewStyle>; corDegrau: string; raio?: number; estiloFora?: StyleProp<ViewStyle>; children: ReactNode;
+}) {
+  return (
+    <Pressable {...resto} style={({ pressed }) => [degrauFora(4, raio, corDegrau, pressed), estiloFora]}>
+      <View style={face}>{children}</View>
+    </Pressable>
+  );
+}
+
 export function pararVoz() {
   try {
     void Speech.stop();
@@ -89,9 +126,25 @@ const duracaoDaBatida = (compassos: number) => compassos * 4 * (60 / 72) + 1.6;
 
 async function tocarSom(som: 'acorde' | 'batida', casas: number[], compassos = 2): Promise<SomTocando> {
   const bytes = som === 'acorde' ? sintetizarAcorde(casas) : sintetizarBatida(casas, { compassos });
+  // O acorde e a batida abaixam o som de fundo enquanto tocam (spec 12, como na web): uma saída por entrada, no fim, na
+  // parada ou no erro. A entrada vem antes do modo de áudio desta tela (o toca-sons não mexe no modo durante a fala).
+  tocaSons.entrarEmFala();
+  let saiu = false;
+  const sairDaFala = () => { if (!saiu) { saiu = true; tocaSons.sairDeFala(); } };
+  try {
+    return await tocarArquivo(som, bytes, compassos, casas, sairDaFala);
+  } catch (erro) {
+    sairDaFala();
+    throw erro;
+  }
+}
+
+async function tocarArquivo(som: 'acorde' | 'batida', bytes: Uint8Array, compassos: number, casas: number[], aoTerminar: () => void): Promise<SomTocando> {
   if (Platform.OS === 'web') {
-    const Reprodutor = (globalThis as unknown as { Audio: new (url: string) => { play: () => Promise<void>; pause: () => void; currentTime: number } }).Audio;
+    const Reprodutor = (globalThis as unknown as { Audio: new (url: string) => { play: () => Promise<void>; pause: () => void; currentTime: number;
+      addEventListener: (tipo: string, ouvinte: () => void, opcoes?: { once?: boolean }) => void } }).Audio;
     const audio = new Reprodutor(URL.createObjectURL(new Blob([bytes as BlobPart], { type: 'audio/wav' })));
+    for (const tipo of ['ended', 'pause', 'error']) audio.addEventListener(tipo, aoTerminar, { once: true });
     await audio.play();
     return { parar: () => audio.pause(), tempo: () => audio.currentTime };
   }
@@ -103,12 +156,13 @@ async function tocarSom(som: 'acorde' | 'batida', casas: number[], compassos = 2
   await setAudioModeAsync({ playsInSilentMode: true }).catch(() => undefined);
   const reprodutor = createAudioPlayer({ uri: arquivo.uri });
   reprodutor.play();
-  const liberar = setTimeout(() => reprodutor.remove(), som === 'acorde' ? 4000 : (duracaoDaBatida(compassos) + 2) * 1000);
+  const liberar = setTimeout(() => { reprodutor.remove(); aoTerminar(); }, som === 'acorde' ? 4000 : (duracaoDaBatida(compassos) + 2) * 1000);
   return {
     parar: () => {
       clearTimeout(liberar);
       reprodutor.pause();
       reprodutor.remove();
+      aoTerminar();
     },
     tempo: () => reprodutor.currentTime,
   };
@@ -133,12 +187,16 @@ function Chip({ rotulo, acao, icone, destaque = false, grande = false, nomeAcess
 }
 
 export function BotoesOuvir({ fala }: { fala: Fala }) {
-  const [tocando, tocar] = useTocando(fala);
+  const [tocando, tocar, semVoz] = useTocando(fala);
   return (
-    <View style={formatos.ouvir}>
-      <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvir} icone="som" destaque nomeAcessivel={t.audio.ouvirFrase(fala.texto)}
-        acao={() => tocar(false)} />
-      <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} nomeAcessivel={t.audio.ouvirDevagar(fala.texto)} acao={() => tocar(true)} />
+    <View style={{ gap: 6 }}>
+      <View style={formatos.ouvir}>
+        <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvir} icone="som" destaque nomeAcessivel={t.audio.ouvirFrase(fala.texto)}
+          acao={() => tocar(false)} />
+        <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} nomeAcessivel={t.audio.ouvirDevagar(fala.texto)} acao={() => tocar(true)} />
+      </View>
+      {/* Como na web: sem voz para a frase no aparelho, o aviso aparece no lugar do silêncio. */}
+      {semVoz && <Text accessibilityLiveRegion="polite" style={formatos.avisoSemVoz}>{t.audio.semVozFrase}</Text>}
     </View>
   );
 }
@@ -147,24 +205,27 @@ export function BotoesOuvir({ fala }: { fala: Fala }) {
  * ficam à vista (antes, a tradução entregaria a resposta), como na web. */
 export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolean }) {
   const [mostrar, setMostrar] = useState(false);
-  const [tocando, tocar] = useTocando(fala);
+  const [tocando, tocar, semVoz] = useTocando(fala);
+  // Como na web: sem voz no aparelho, o texto da escuta aparece sozinho (a pessoa não fica sem a frase).
+  const verTexto = mostrar || acertou || semVoz;
   return (
     <View style={formatos.escuta}>
       <View style={formatos.rotuloLinha}>
         <Icone nome="som" tamanho={16} cor={cores.acaoEscura} />
-        <Text style={[formatos.rotuloCaixa, { color: cores.acaoEscura }]}>{t.audio.escuta.toLocaleUpperCase('pt-BR')}</Text>
+        <Text style={[formatos.rotuloCaixa, { color: cores.acaoEscura }, caixaAlta]}>{t.audio.escuta}</Text>
       </View>
       <View style={formatos.ouvir}>
         <Chip rotulo={tocando === 'normal' ? t.audio.tocando : t.audio.ouvirExercicio} icone="som" destaque grande acao={() => tocar(false)} />
         <Chip rotulo={tocando === 'devagar' ? t.audio.tocando : t.audio.devagar} grande acao={() => tocar(true)} />
       </View>
-      {!acertou && (
-        <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} onPress={() => setMostrar((atual) => !atual)}>
+      {semVoz && <Text accessibilityLiveRegion="polite" style={formatos.avisoSemVoz}>{t.audio.semVozFrase}</Text>}
+      {!acertou && !semVoz && (
+        <Pressable accessibilityRole="button" accessibilityState={{ expanded: mostrar }} aria-expanded={mostrar} onPress={() => setMostrar((atual) => !atual)} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{mostrar ? t.audio.esconderTexto : t.audio.mostrarTexto}</Text>
         </Pressable>
       )}
-      {(mostrar || acertou) && <Text selectable style={formatos.fraseGrande}>{fala.texto}</Text>}
-      {(mostrar || acertou) && fala.pronuncia && <Text style={formatos.pronuncia}>{fala.pronuncia}</Text>}
+      {verTexto && <Text selectable style={formatos.fraseGrande}>{fala.texto}</Text>}
+      {verTexto && fala.pronuncia && <Text style={formatos.pronuncia}>{fala.pronuncia}</Text>}
       {acertou && fala.traducao && <Text style={[estilos.legenda, { fontWeight: '700' }]}>{fala.traducao}</Text>}
     </View>
   );
@@ -172,7 +233,26 @@ export function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolea
 
 /** Ouça e repita: cada frase com a tradução e os botões de ouvir. */
 /** Quem transcreve a fala gravada (a rota de voz do servidor), dado pela lição; sem ela, o "Falar" não aparece. */
-export const TranscritorContexto = createContext<((entrada: ArquivoEstudo) => Promise<{ texto: string }>) | null>(null);
+type Transcritor = (entrada: ArquivoEstudo & { idioma?: string }) => Promise<{ texto: string }>;
+export const TranscritorContexto = createContext<Transcritor | null>(null);
+
+/**
+ * O aviso do "Falar" para cada falha da rota de voz: sem provedor de voz, não ouviu nada, demorou, falhou, limite de
+ * pedidos, conexão. Demorou e falhou têm textos próprios do "Falar" (`erros.falar_voz_*`, rodada 3A.2): os `erros.voz_*`
+ * mandam escrever a explicação, o que só existe no Explique.
+ */
+export function avisoDaFala(falha: unknown): string {
+  const codigo = falha instanceof ErroStudoo ? falha.codigo : (falha as { codigo?: unknown } | null)?.codigo;
+  switch (codigo) {
+    case 'voz_indisponivel': return t.audio.falaPrecisaIa;
+    case 'voz_vazia': return t.audio.naoOuviu;
+    case 'limite_estudio': return mensagens.erros.limite_estudio;
+    case 'conexao': return mensagens.erros.conexao;
+    case 'voz_tempo': return mensagens.erros.falar_voz_tempo;
+    case 'voz_falha': return mensagens.erros.falar_voz_falha;
+    default: return t.audio.naoOuviu;
+  }
+}
 
 function textoDaConferencia(conferencia: ConferenciaDaFala): string {
   const palavras = conferencia.faltaram.map((palavra) => `“${palavra}”`).join(', ');
@@ -271,53 +351,97 @@ function FalarNoNavegador({ fala }: { fala: Fala }) {
   );
 }
 
-/** No aparelho: grava (até 10 s), a rota de voz transcreve e a frase é conferida. Sem a IA ligada, avisa. */
-function FalarNoAparelho({ fala, transcrever }: { fala: Fala; transcrever: (entrada: ArquivoEstudo) => Promise<{ texto: string }> }) {
+/**
+ * No aparelho: grava (até 8 s, como o reconhecimento da web), a rota de voz transcreve no idioma da frase e a frase é
+ * conferida. Cada falha da voz tem o seu aviso (`avisoDaFala`). Um toque duplo não abre duas gravações; ir para o
+ * segundo plano ou sair da etapa para a gravação sem enviar e devolve o modo de áudio, como no "Explique".
+ */
+function FalarNoAparelho({ fala, transcrever }: { fala: Fala; transcrever: Transcritor }) {
   const gravador = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
   const [estado, setEstado] = useState<'parado' | 'ouvindo' | 'conferindo'>('parado');
   const [resultado, setResultado] = useState<Conferido>(null);
   const [erro, setErro] = useState<string | null>(null);
   const limite = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => () => {
+  /** Uma ação por vez: começar, terminar ou descartar (o estado só muda depois das esperas). */
+  const emCurso = useRef(false);
+  const gravando = useRef(false);
+  const vivo = useRef(true);
+
+  /** Para a gravação sem enviar nada (segundo plano, fim da etapa) e devolve o modo de áudio. */
+  async function descartar() {
     if (limite.current) clearTimeout(limite.current);
-    void gravador.stop().catch(() => undefined);
+    if (!gravando.current) return;
+    gravando.current = false;
+    await gravador.stop().catch(() => undefined);
+    await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+    if (vivo.current) setEstado('parado');
+  }
+
+  useEffect(() => {
+    vivo.current = true;
+    const assinatura = AppState.addEventListener('change', (atual) => { if (atual !== 'active') void descartar(); });
+    return () => {
+      vivo.current = false;
+      assinatura.remove();
+      void descartar();
+    };
+    // descartar lê as referências do momento.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gravador]);
 
   async function comecar() {
+    if (emCurso.current || gravando.current) return;
+    emCurso.current = true;
     setErro(null);
     setResultado(null);
-    const permissao = await requestRecordingPermissionsAsync().catch(() => ({ granted: false }));
-    if (!permissao.granted) {
-      // Como na web: sem a permissão, o aviso diz onde liberar (nos ajustes do app), em vez de "confira a permissão".
-      setErro(t.audio.microfoneBloqueado);
-      return;
-    }
     try {
-      pararVoz();
-      await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
-      await gravador.prepareToRecordAsync();
-      gravador.record();
-      setEstado('ouvindo');
-      limite.current = setTimeout(() => void terminar(), 10_000);
-    } catch {
-      setErro(t.audio.semMicrofone);
-      await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+      const permissao = await requestRecordingPermissionsAsync().catch(() => ({ granted: false }));
+      if (!permissao.granted) {
+        // Como na web: sem a permissão, o aviso diz onde liberar (nos ajustes do app), em vez de "confira a permissão".
+        setErro(t.audio.microfoneBloqueado);
+        return;
+      }
+      // A permissão pode chegar com o app já em segundo plano ou a etapa fechada: aí não grava.
+      if (!vivo.current || AppState.currentState !== 'active') return;
+      try {
+        pararVoz();
+        await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true });
+        await gravador.prepareToRecordAsync();
+        if (!vivo.current || AppState.currentState !== 'active') {
+          await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+          return;
+        }
+        gravador.record();
+        gravando.current = true;
+        setEstado('ouvindo');
+        limite.current = setTimeout(() => void terminar(), 8_000);
+      } catch {
+        setErro(t.audio.semMicrofone);
+        await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
+      }
+    } finally {
+      emCurso.current = false;
     }
   }
 
   async function terminar() {
     if (limite.current) clearTimeout(limite.current);
+    if (emCurso.current || !gravando.current) return;
+    emCurso.current = true;
+    gravando.current = false;
     setEstado('conferindo');
     try {
       await gravador.stop();
       await setAudioModeAsync({ allowsRecording: false }).catch(() => undefined);
       if (!gravador.uri) throw new Error();
-      const { texto } = await transcrever(await arquivo(gravador.uri, 'fala.m4a', 'audio/mp4'));
-      setResultado({ dito: texto, conferencia: conferirFala(fala.texto, texto, fala.idioma) });
+      // O idioma da frase (BCP 47, como en-US) evita que um inglês curto volte transcrito em português.
+      const { texto } = await transcrever({ ...await arquivo(gravador.uri, 'fala.m4a', 'audio/mp4'), idioma: fala.idioma });
+      if (vivo.current) setResultado({ dito: texto, conferencia: conferirFala(fala.texto, texto, fala.idioma) });
     } catch (falha) {
-      setErro(falha instanceof ErroStudoo && falha.codigo === 'voz_indisponivel' ? t.audio.falaPrecisaIa : t.audio.naoOuviu);
+      if (vivo.current) setErro(avisoDaFala(falha));
     } finally {
-      setEstado('parado');
+      emCurso.current = false;
+      if (vivo.current) setEstado('parado');
     }
   }
 
@@ -341,7 +465,7 @@ function BotaoFalar({ fala }: { fala: Fala }) {
 export function Falas({ falas }: { falas: Fala[] }) {
   return (
     <View style={formatos.secao}>
-      <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.audio.falasTitulo.toLocaleUpperCase('pt-BR')}</Text>
+      <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.audio.falasTitulo}</Text>
       {falas.some(({ pronuncia }) => pronuncia) && <Text style={estilos.legenda}>{t.audio.comoLerPronuncia}</Text>}
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
@@ -361,7 +485,8 @@ export function Falas({ falas }: { falas: Fala[] }) {
  * Numa lição em português, o texto fica como está.
  */
 export function TextoComFalas({ texto, idioma, estilo }: { texto: string; idioma?: string; estilo?: object }) {
-  if (!idioma || idioma.toLowerCase().startsWith('pt')) return <Text style={estilo}>{texto}</Text>;
+  // Em português (a matemática), a fórmula em linha no meio da frase (spec 15); as frases para ouvir são das outras línguas.
+  if (!idioma || idioma.toLowerCase().startsWith('pt')) return <TextoComFormulas texto={texto} estilo={estilo as StyleProp<TextStyle>} />;
   const partes = texto.split(/“([^”]+)”/);
   const tocaveis = partes.some((parte, indice) => indice % 2 === 1 && !/[ãõçáéíóúâêôà]/i.test(parte));
   return (
@@ -387,7 +512,7 @@ export function TextoComFalas({ texto, idioma, estilo }: { texto: string; idioma
 export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
   return (
     <View testID="frases-da-licao" style={formatos.secao}>
-      <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.frasesDaLicao.toLocaleUpperCase('pt-BR')}</Text>
+      <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.frasesDaLicao}</Text>
       {falas.some(({ pronuncia }) => pronuncia) && <Text style={estilos.legenda}>{t.audio.comoLerPronuncia}</Text>}
       {falas.map((fala, posicao) => (
         <View key={posicao} style={formatos.fala}>
@@ -403,18 +528,28 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
 
 /** Texto com as lacunas destacadas (um espaço sublinhado). */
 /** `preenchimento`: o que a pessoa escreve na lacuna, no lugar do espaço, enquanto digita. Como na web. */
-function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: object; preenchimento?: string }) {
+function ComLacunas({ texto, estilo, preenchimento, puro = false }: { texto: string; estilo?: StyleProp<TextStyle>; preenchimento?: string; puro?: boolean }) {
   const partes = partesDaLacuna(texto);
+  // Fora do código, o texto em volta de cada lacuna pode trazer fórmula marcada ($…$): ela é desenhada em linha, e o leitor ouve a
+  // fala dela no rótulo do trecho inteiro (as fórmulas desenhadas não têm texto para o leitor).
+  const comFormula = !puro && partes.some((parte) => contemMarcaDeFormula(parte));
+  const rotulo = comFormula ? partes.map((parte) => falarTextoComFormulas(parte)).join(preenchimento ? ` ${preenchimento} ` : ' lacuna ') : undefined;
+  // Como .trecho-lacuna da web: a lacuna vazia é uma barra de 3,2em × 3 px na cor do texto a 70%, com 0,15em dos lados, logo
+  // abaixo da linha (a caixa em linha da web tem a altura da linha e desce 0,1em; a borda de baixo fica ~9 px abaixo da base
+  // num texto de 20/28). A barra em linha nasce com a base na linha de base; o deslocamento a leva para o mesmo lugar.
+  const plano = StyleSheet.flatten(estilo) ?? {};
+  const fonte = typeof plano.fontSize === 'number' ? plano.fontSize : 16;
+  const linha = typeof plano.lineHeight === 'number' ? plano.lineHeight : fonte * 1.5;
+  const barra: ViewStyle = { width: fonte * 3.2, height: 3, marginHorizontal: fonte * 0.15, opacity: 0.7,
+    backgroundColor: typeof plano.color === 'string' ? plano.color : cores.texto, transform: [{ translateY: linha / 2 - fonte * 0.229 + 3 }] };
   return (
-    <Text selectable style={estilo}>
+    <Text selectable style={estilo} accessibilityLabel={rotulo}>
       {partes.map((parte, posicao) => (
         <Text key={posicao}>
-          {parte}
-          {posicao < partes.length - 1 && (
-            <Text accessibilityLabel={preenchimento ? undefined : 'lacuna'} style={[formatos.lacuna, preenchimento ? formatos.lacunaPreenchida : null]}>
-              {preenchimento || '   '}
-            </Text>
-          )}
+          {comFormula ? <TextoComFormulas texto={parte} estilo={estilo} /> : parte}
+          {posicao < partes.length - 1 && (preenchimento
+            ? <Text style={[formatos.lacuna, formatos.lacunaPreenchida]}>{preenchimento}</Text>
+            : <View accessible accessibilityLabel="lacuna" style={barra} />)}
         </Text>
       ))}
     </Text>
@@ -425,7 +560,7 @@ function ComLacunas({ texto, estilo, preenchimento }: { texto: string; estilo?: 
 export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: string; tipo?: TipoTrecho; fala?: Fala; preenchimento?: string }) {
   switch (tipo) {
     case 'codigo':
-      return <ComLacunas texto={texto} estilo={formatos.codigo} preenchimento={preenchimento} />;
+      return <ComLacunas texto={texto} estilo={formatos.codigo} preenchimento={preenchimento} puro />;
     case 'citacao':
       return (
         <View style={formatos.citacao}>
@@ -436,10 +571,11 @@ export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: 
     case 'formula':
       return <View style={formatos.formula}><ComLacunas texto={texto} estilo={formatos.formulaTexto} preenchimento={preenchimento} /></View>;
     case 'passos':
-      return <Passos passos={linhasDePassos(texto)} />;
+      // Como na web: a lacuna de cada passo aparece como espaço sublinhado e recebe o que a pessoa digita.
+      return <Passos passos={linhasDePassos(texto)} preenchimento={preenchimento} />;
     default:
       return (
-        <View style={formatos.frase}>
+        <View style={[formatos.frase, partesDaLacuna(texto).length > 1 && formatos.fraseComLacuna]}>
           <ComLacunas texto={texto} estilo={formatos.fraseTexto} preenchimento={preenchimento} />
           {fala && <BotoesOuvir fala={fala} />}
         </View>
@@ -448,16 +584,16 @@ export function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: 
 }
 
 /** Passo a passo numerado (demonstração e trechos em passos). */
-export function Passos({ passos, titulo }: { passos: string[]; titulo?: string }) {
+export function Passos({ passos, titulo, preenchimento }: { passos: string[]; titulo?: string; preenchimento?: string }) {
   return (
     <View style={formatos.secao}>
-      {titulo && <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{titulo.toLocaleUpperCase('pt-BR')}</Text>}
+      {titulo && <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{titulo}</Text>}
       {passos.map((passo, posicao) => (
         <View key={posicao} style={formatos.passo}>
           <View style={formatos.passoNumero} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
             <Text style={formatos.passoNumeroTexto}>{posicao + 1}</Text>
           </View>
-          <Text style={[estilos.texto, formatos.passoTexto]}>{passo}</Text>
+          <ComLacunas texto={passo} estilo={[estilos.texto, formatos.passoTexto]} preenchimento={preenchimento} />
         </View>
       ))}
     </View>
@@ -487,7 +623,7 @@ export function RecursoDaLicao({ recurso, longa = false, semBatida = false }: { 
   if (recurso.tipo === 'linha_do_tempo') {
     return (
       <View style={formatos.secao}>
-        <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.recursos.linhaDoTempo.toLocaleUpperCase('pt-BR')}</Text>
+        <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.recursos.linhaDoTempo}</Text>
         <View style={formatos.linhaTempo}>
           <View style={formatos.linhaTempoTrilho} />
           {recurso.eventos.map((evento, posicao) => (
@@ -501,10 +637,23 @@ export function RecursoDaLicao({ recurso, longa = false, semBatida = false }: { 
       </View>
     );
   }
+  return <ImagemDoMaterial src={recurso.src} fonte={recurso.fonte} descricao={recurso.descricao} />;
+}
+
+/** Foto do material como .recurso-imagem da web: a largura toda na proporção da própria imagem (até 360 de altura) e a
+ * legenda a 8 embaixo. Antes de a medida chegar, vale 16:10. */
+function ImagemDoMaterial({ src, fonte, descricao }: { src: string; fonte?: string; descricao: string }) {
+  const [proporcao, setProporcao] = useState(16 / 10);
+  useEffect(() => {
+    let vivo = true;
+    Image.getSize(src, (largura, altura) => { if (vivo && largura > 0 && altura > 0) setProporcao(largura / altura); }, () => {});
+    return () => { vivo = false; };
+  }, [src]);
   return (
-    <View style={formatos.secao}>
-      <Image source={{ uri: recurso.src }} accessibilityLabel={`${recurso.fonte ?? t.recursos.doMaterial}: ${recurso.descricao}`} resizeMode="contain" style={formatos.imagem} />
-      <Text style={estilos.legenda}><Text style={{ fontWeight: '800' }}>{recurso.fonte ?? t.recursos.doMaterial}</Text> · {recurso.descricao}</Text>
+    <View style={formatos.imagemSecao}>
+      <Image source={{ uri: src }} accessibilityLabel={`${fonte ?? t.recursos.doMaterial}: ${descricao}`} resizeMode="contain"
+        style={[formatos.imagem, { aspectRatio: proporcao }]} />
+      <Text style={[estilos.legenda, { lineHeight: 21 }]}><Text style={{ fontWeight: '700' }}>{fonte ?? t.recursos.doMaterial}</Text> · {descricao}</Text>
     </View>
   );
 }
@@ -704,79 +853,6 @@ function TocarSom({ rotulo, casas }: { rotulo: string; casas: number[] }) {
   );
 }
 
-/** Ordenar tocando: cada toque coloca o item na próxima posição; tocar num item colocado tira ele da ordem. */
-export function Ordenar({ itens, valor, mudar, desativado, certos, fixos }: {
-  itens: Opcao[];
-  valor: string;
-  mudar: (valor: string) => void;
-  desativado: boolean;
-  certos?: string[];
-  /** Na nova tentativa: os itens que já estavam na posição certa ficam travados nela; o resto vira vaga. Como na web. */
-  fixos?: string[];
-}) {
-  const posicoes = valor ? valor.split(',').map((id) => (itens.some((item) => item.id === id) ? id : '')) : [];
-  const travado = (id: string) => Boolean(fixos?.includes(id));
-  const comTravados = posicoes.some(travado);
-  const ordem = posicoes.filter(Boolean);
-  const restantes = itens.filter((item) => !ordem.includes(item.id));
-  const texto = (id: string) => itens.find((item) => item.id === id)?.texto ?? '';
-  function colocar(id: string) {
-    const vaga = posicoes.indexOf('');
-    mudar((vaga >= 0 ? posicoes.map((atual, posicao) => (posicao === vaga ? id : atual)) : [...posicoes, id]).join(','));
-  }
-  function tirar(posicao: number) {
-    const novas = comTravados ? posicoes.map((atual, indice) => (indice === posicao ? '' : atual)) : posicoes.filter((_, indice) => indice !== posicao);
-    mudar(novas.some(Boolean) ? novas.join(',') : '');
-  }
-  return (
-    <View style={formatos.secao}>
-      <Text style={formatos.instrucao}>{t.ordenar.instrucao}</Text>
-      <Text style={formatos.rotuloCaixa}>{t.ordenar.suaOrdem.toLocaleUpperCase('pt-BR')}</Text>
-      <View style={formatos.ordemCaixa}>
-        {posicoes.length === 0 && <Text style={[estilos.legenda, { textAlign: 'center' }]}>{t.ordenar.vazio}</Text>}
-        {posicoes.map((id, posicao) => {
-          if (!id) {
-            return (
-              <View key={`vaga-${posicao}`} style={formatos.vaga} accessible accessibilityLabel={`${t.ordenar.posicao(posicao + 1)}: ${t.ordenar.vaga}`}>
-                <View style={[formatos.posicao, { opacity: 0.5 }]}><Text style={formatos.posicaoTexto}>{t.ordenar.posicao(posicao + 1)}</Text></View>
-                <Text style={[estilos.legenda, { flex: 1 }]}>{t.ordenar.vaga}</Text>
-              </View>
-            );
-          }
-          const fixo = travado(id);
-          const estado = certos ? (certos.includes(id) ? 'certo' : 'errado') : fixo ? 'certo' : null;
-          return (
-            <Pressable key={id} accessibilityRole="button" disabled={desativado || fixo}
-              accessibilityLabel={fixo ? t.ordenar.travado(texto(id), posicao + 1) : t.ordenar.tirar(texto(id), posicao + 1)}
-              onPress={() => tirar(posicao)}
-              style={({ pressed }) => [formatos.cartao, formatos.cartaoEscolhido, estado === 'certo' && formatos.cartaoCerto,
-                estado === 'errado' && formatos.cartaoErrado, pressed && formatos.cartaoAfundado]}>
-              <View style={[formatos.posicao, estado === 'certo' && { backgroundColor: cores.sucessoClaro }, estado === 'errado' && { backgroundColor: '#E3A24A' }]}>
-                <Text style={formatos.posicaoTexto}>{t.ordenar.posicao(posicao + 1)}</Text>
-              </View>
-              <Text style={[estilos.texto, formatos.cartaoTexto]}>{texto(id)}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
-      {restantes.length > 0 && <View style={formatos.disponiveis} accessibilityRole="none" accessibilityLabel={t.ordenar.disponiveis}>
-        {restantes.map((item) => (
-          <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={t.ordenar.colocar(item.texto)} disabled={desativado}
-            onPress={() => colocar(item.id)}
-            style={({ pressed }) => [formatos.cartao, pressed && formatos.cartaoAfundado]}>
-            <Text style={[estilos.texto, formatos.cartaoTexto]}>{item.texto}</Text>
-          </Pressable>
-        ))}
-      </View>}
-      {ordem.some((id) => !travado(id)) && !desativado && (
-        <Pressable accessibilityRole="button" onPress={() => mudar(comTravados ? posicoes.map((id) => (travado(id) ? id : '')).join(',') : '')}>
-          <Text style={formatos.link}>{t.ordenar.recomecar}</Text>
-        </Pressable>
-      )}
-    </View>
-  );
-}
-
 const coresDosPares = [cores.acao, '#C25A8A', '#1F8A8A', '#B7791F', '#6B3FA0', '#5E6A85'];
 
 /** Associar tocando: um item da esquerda e depois o par na direita; cada par ganha um número e uma cor. */
@@ -800,6 +876,8 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     return esquerda.findIndex((item) => item.id === esquerdaDoPar) + 1;
   };
   const texto = (lista: Opcao[], id: string) => lista.find((item) => item.id === id)?.texto ?? '';
+  /** O que o leitor de tela ouve de um item: a fórmula marcada ($…$) lida pela árvore ("seno de x"), nunca o cifrão (P32). */
+  const fala = (lista: Opcao[], id: string) => falarTextoComFormulas(texto(lista, id));
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
 
   function tocarEsquerda(id: string) {
@@ -815,7 +893,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     }
     setEscolhida((atual) => {
       const nova = atual === id ? null : id;
-      if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhido(texto(esquerda, nova)));
+      if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhido(fala(esquerda, nova)));
       return nova;
     });
   }
@@ -826,7 +904,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
       else {
         setEscolhidaDireita((atual) => {
           const nova = atual === id ? null : id;
-          if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhidoDireita(texto(direita, nova)));
+          if (nova) AccessibilityInfo.announceForAccessibility(t.associar.escolhidoDireita(fala(direita, nova)));
           return nova;
         });
       }
@@ -843,18 +921,21 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
     const chave = par ? par[0] : null;
     const fixo = travado(chave);
     const estado = certos && chave ? (certos.includes(chave) ? 'certo' : 'errado') : fixo ? 'certo' : null;
-    let rotulo = item.texto;
-    if (fixo && par) rotulo = t.associar.travado(texto(esquerda, par[0]), texto(direita, par[1]));
-    else if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(texto(esquerda, escolhida), item.texto);
-    else if (lado === 'esquerda' && escolhidaDireita) rotulo = t.associar.ligar(item.texto, texto(direita, escolhidaDireita));
-    else if (par) rotulo = t.associar.desfazer(texto(esquerda, par[0]), texto(direita, par[1]));
+    const falaDoItem = falarTextoComFormulas(item.texto);
+    let rotulo = falaDoItem;
+    if (fixo && par) rotulo = t.associar.travado(fala(esquerda, par[0]), fala(direita, par[1]));
+    else if (lado === 'direita' && escolhida) rotulo = t.associar.ligar(fala(esquerda, escolhida), falaDoItem);
+    else if (lado === 'esquerda' && escolhidaDireita) rotulo = t.associar.ligar(falaDoItem, fala(direita, escolhidaDireita));
+    else if (par) rotulo = t.associar.desfazer(fala(esquerda, par[0]), fala(direita, par[1]));
     return (
-      <Pressable key={item.id} accessibilityRole="button" accessibilityLabel={rotulo} disabled={desativado || fixo}
+      <CartaoDegrau key={item.id} accessibilityRole="button" accessibilityLabel={rotulo} disabled={desativado || fixo}
         accessibilityState={{ selected: escolhida === item.id || escolhidaDireita === item.id }}
         onPress={() => (lado === 'esquerda' ? tocarEsquerda(item.id) : tocarDireita(item.id))}
-        style={({ pressed }) => [formatos.cartao, formatos.cartaoPar, { overflow: 'visible' }, par && { borderColor: cor, borderBottomColor: cor },
-          (escolhida === item.id || escolhidaDireita === item.id) && formatos.cartaoEscolhido, estado === 'certo' && formatos.cartaoCerto,
-          estado === 'errado' && formatos.cartaoErrado, pressed && formatos.cartaoAfundado]}>
+        // Como .associar button: a sombra tem a cor do par (ou o azul da escolhida, o verde e o âmbar da correção).
+        corDegrau={estado === 'certo' ? '#9AD8B5' : estado === 'errado' ? '#F2CF96' : (escolhida === item.id || escolhidaDireita === item.id) ? cores.acao : par ? cor : cores.gelo}
+        face={[formatos.cartao, formatos.cartaoPar, { overflow: 'visible' }, par && { borderColor: cor },
+          (escolhida === item.id || escolhidaDireita === item.id) && formatos.cartaoEscolhidaAssociar, estado === 'certo' && formatos.cartaoCerto,
+          estado === 'errado' && formatos.cartaoErrado]}>
         {par && (
           // Como na web: na coluna da direita, o número vira uma etiqueta no canto, e a definição usa a largura toda.
           <View style={[formatos.numeroPar, lado === 'direita' && formatos.numeroParCanto,
@@ -862,23 +943,23 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
             <Text style={formatos.posicaoTexto}>{indice}</Text>
           </View>
         )}
-        <Text style={[estilos.texto, formatos.cartaoTexto, { fontSize: 15 }]}>{item.texto}</Text>
-      </Pressable>
+        <TextoComFormulas texto={item.texto} estilo={[estilos.texto, formatos.cartaoTexto, formatos.cartaoParTexto]} />
+      </CartaoDegrau>
     );
   }
 
   return (
-    <View style={formatos.secao}>
-      <Text style={formatos.instrucao} accessibilityLiveRegion="polite">
-        {escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
-          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao}
-      </Text>
+    <View style={formatos.secaoOrdenar}>
+      {/* A instrução mostra o item escolhido com a fórmula desenhada; o leitor ouve a fala dela (TextoComFormulas). */}
+      <TextoComFormulas estilo={formatos.instrucao} accessibilityLiveRegion="polite"
+        texto={escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
+          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao} />
       <View style={formatos.colunas}>
         <View style={formatos.coluna} accessibilityLabel={t.associar.esquerda}>{esquerda.map((item) => cartao(item, 'esquerda'))}</View>
         <View style={formatos.coluna} accessibilityLabel={t.associar.direita}>{direita.map((item) => cartao(item, 'direita'))}</View>
       </View>
       {pares.some(([item]) => !travado(item)) && !desativado && (
-        <Pressable accessibilityRole="button" onPress={() => { salvar(pares.filter(([item]) => travado(item))); setEscolhida(null); }}>
+        <Pressable accessibilityRole="button" onPress={() => { salvar(pares.filter(([item]) => travado(item))); setEscolhida(null); }} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{t.associar.recomecar}</Text>
         </Pressable>
       )}
@@ -899,24 +980,32 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
 }) {
   const [escolha = '', justificativa = ''] = valor.split(':');
   return (
-    <View style={formatos.secao}>
-      <View style={formatos.afirmacao}><Text style={formatos.afirmacaoTexto}>{afirmacao}</Text></View>
-      <Text style={formatos.rotuloCaixa}>{t.verdadeiroFalso.valor.toLocaleUpperCase('pt-BR')}</Text>
+    <View style={formatos.vf}>
+      {/* A afirmação pode trazer fórmula marcada ($…$, lição de matemática): desenhada em linha, nunca o cifrão cru. */}
+      <View style={formatos.afirmacao}><TextoComFormulas texto={afirmacao} estilo={formatos.afirmacaoTexto} /></View>
+      <View style={formatos.vfGrupo}>
+      <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.valor}</Text>
       <View style={formatos.valores} accessibilityRole="radiogroup" accessibilityLabel={t.verdadeiroFalso.valor}>
         {(['verdadeiro', 'falso'] as const).map((opcao) => {
           const marcada = escolha === opcao;
           return (
-            <Pressable key={opcao} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: desativado }} disabled={desativado}
-              testID={`vf-${opcao}`} onPress={() => mudar(`${opcao}:${justificativa}`)}
-              style={({ pressed }) => [formatos.valor, marcada && formatos.cartaoEscolhido, marcada && retorno === 'certa' && formatos.cartaoCerto,
-                marcada && retorno === 'errada' && formatos.cartaoErrado, desativado && !marcada && { opacity: 0.55 }, pressed && formatos.cartaoAfundado]}>
-              <Text style={formatos.valorTexto}>{opcao === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : t.verdadeiroFalso.falso}</Text>
-            </Pressable>
+            <CartaoDegrau key={opcao} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: desativado }} aria-checked={marcada} disabled={desativado}
+              testID={`vf-${opcao}`} onPress={() => { mudar(`${opcao}:${justificativa}`); void tocaSons.tocarEfeito('toque_opcao'); }} raio={16} estiloFora={[{ flex: 1 }, desativado && !marcada && { opacity: 0.55 }]}
+              corDegrau={marcada && retorno === 'certa' ? '#9AD8B5' : marcada && retorno === 'errada' ? '#F2CF96' : marcada ? '#9FB1F0' : cores.gelo}
+              face={[formatos.valor, marcada && formatos.cartaoEscolhido, marcada && retorno === 'certa' && formatos.cartaoCerto,
+                marcada && retorno === 'errada' && formatos.cartaoErrado]}>
+              {/* .vf__valores label: o texto fica azul escuro na marcada, verde na certa e âmbar na errada. */}
+              <Text style={[formatos.valorTexto, marcada && { color: retorno === 'certa' ? cores.sucesso : retorno === 'errada' ? '#7A4A00' : cores.acaoEscura }]}>
+                {opcao === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : t.verdadeiroFalso.falso}</Text>
+            </CartaoDegrau>
           );
         })}
       </View>
-      <Text style={formatos.rotuloCaixa}>{t.verdadeiroFalso.porque.toLocaleUpperCase('pt-BR')}</Text>
-      {justificativas(justificativa, (nova) => mudar(`${escolha}:${nova}`))}
+      </View>
+      <View style={formatos.vfGrupo}>
+        <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.porque}</Text>
+        {justificativas(justificativa, (nova) => mudar(`${escolha}:${nova}`))}
+      </View>
     </View>
   );
 }
@@ -931,10 +1020,15 @@ export function CampoAberta({ valor, mudar, minimo, desativado, retorno }: {
 }) {
   // Como na web: letras e números, sem os espaços (o contador diz “letras”).
   const usados = tamanhoDaResposta(valor);
+  // Com o teclado aberto, a área de texto, a dica e o contador ficam inteiros acima do rodapé (lote 1 do iPhone), como os
+  // campos que usam <Campo>.
+  const rolagem = useContext(RolagemDaTela);
+  const secao = useRef<ComponentRef<typeof View>>(null);
   return (
-    <View style={formatos.secao}>
+    <View ref={secao} style={formatos.secao}>
       <Text style={estilos.rotulo}>{t.aberta.rotulo}</Text>
       <TextInput testID="resposta-aberta" multiline value={valor} onChangeText={mudar} editable={!desativado} maxLength={1000}
+        onFocus={() => rolagem?.focar(secao.current)} onBlur={() => rolagem?.focar(null)}
         accessibilityLabel={t.aberta.rotulo} accessibilityHint={t.aberta.dica} textAlignVertical="top"
         style={[formatos.aberta, retorno === 'certa' && formatos.cartaoCerto, retorno === 'errada' && formatos.cartaoErrado]} />
       <Text style={estilos.legenda}>{t.aberta.dica}</Text>
@@ -950,14 +1044,14 @@ export function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao:
     <View style={formatos.correcao}>
       {avaliacao.criterios && (
         <>
-          <Text accessibilityRole="header" style={formatos.rotuloCaixa}>{t.aberta.criterios.toLocaleUpperCase('pt-BR')}</Text>
+          <Text accessibilityRole="header" style={[formatos.rotuloCaixa, caixaAlta]}>{t.aberta.criterios}</Text>
           {avaliacao.criterios.map((criterio, posicao) => (
             <View key={posicao} style={formatos.criterio} accessible
-              accessibilityLabel={`${criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: ${criterio.texto}`}>
+              accessibilityLabel={`${criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: ${falarTextoComFormulas(criterio.texto)}`}>
               <View style={[formatos.criterioIcone, criterio.atendido && { backgroundColor: cores.sucessoClaro }]}>
                 <Icone nome={criterio.atendido ? 'check' : 'fechar'} tamanho={14} cor={cores.fundo} />
               </View>
-              <Text style={[estilos.texto, { flex: 1, fontWeight: '700' }]}>{criterio.texto}</Text>
+              <TextoComFormulas texto={criterio.texto} estilo={[estilos.texto, { flex: 1, fontWeight: '700' }]} />
             </View>
           ))}
         </>
@@ -965,7 +1059,7 @@ export function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao:
       {avaliacao.modelo && !mostrarModelo && <Text style={estilos.legenda}>{t.aberta.modeloDepois}</Text>}
       {avaliacao.modelo && mostrarModelo && (
         <View style={formatos.modelo}>
-          <Text style={formatos.rotuloCaixa}>{t.aberta.modelo.toLocaleUpperCase('pt-BR')}</Text>
+          <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.aberta.modelo}</Text>
           <Text style={estilos.texto}>{avaliacao.modelo}</Text>
         </View>
       )}
@@ -1034,13 +1128,28 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
     }, 1000);
     return () => clearInterval(intervalo);
   }, [rodando]);
-
+  // Sons do cronômetro (spec 12, como na web): ao começar (ou retomar) e quando chega a zero contando.
   useEffect(() => {
-    if (acabou && !avisado.current) {
-      avisado.current = true;
-      AccessibilityInfo.announceForAccessibility(t.pratica.acabou);
-      aoAcabar?.();
-    }
+    if (rodando) void tocaSons.tocarEfeito('cronometro_inicio');
+  }, [rodando]);
+  const restanteAntes = useRef(restante);
+  useEffect(() => {
+    if (restante === 0 && restanteAntes.current > 0) void tocaSons.tocarEfeito('cronometro_fim');
+    restanteAntes.current = restante;
+  }, [restante]);
+
+  /** A pergunta "Como foi?": recebe o foco do leitor de tela no fim do cronômetro, depois que a lição rola até ela. */
+  const perguntaComoFoi = useRef<ComponentRef<typeof Text>>(null);
+  useEffect(() => {
+    if (!acabou || avisado.current) return;
+    avisado.current = true;
+    aoAcabar?.();
+    // O leitor lê "acabou" na própria pergunta e segue para as opções; sem a pergunta montada, fica o anúncio.
+    const espera = setTimeout(() => {
+      if (perguntaComoFoi.current) AccessibilityInfo.sendAccessibilityEvent(perguntaComoFoi.current, 'focus');
+      else AccessibilityInfo.announceForAccessibility(t.pratica.acabou);
+    }, 400);
+    return () => clearTimeout(espera);
     // Só o fim do cronômetro dispara.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [acabou]);
@@ -1056,6 +1165,15 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
   // Como na web: o que já foi praticado não se perde no "Recomeçar" nem no "Praticar mais um pouco" (conta todo o tempo).
   const praticado = Math.max(praticadoTotal, total - restante);
   const praticou = semCronometro || praticado >= minimo;
+  // Como a região de status da web: quando a prática mínima chega, o leitor ouve que já dá para contar como foi.
+  const anunciouComoFoi = useRef(false);
+  useEffect(() => {
+    if (!praticou || escolha || acabou || anunciouComoFoi.current) return;
+    anunciouComoFoi.current = true;
+    AccessibilityInfo.announceForAccessibility(t.pratica.comoFoi);
+    // Só a chegada ao mínimo dispara.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [praticou]);
 
   return (
     <View style={formatos.secao} onLayout={(evento) => { raizY.current = evento.nativeEvent.layout.y; }}>
@@ -1066,7 +1184,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
           {pratica.passos.map((passo, posicao) => {
             const feito = feitos.includes(posicao);
             return (
-              <Pressable key={posicao} accessibilityRole="checkbox" accessibilityState={{ checked: feito }}
+              <Pressable key={posicao} accessibilityRole="checkbox" accessibilityState={{ checked: feito }} aria-checked={feito}
                 onPress={() => setFeitos((atuais) => (feito ? atuais.filter((item) => item !== posicao) : [...atuais, posicao]))}
                 style={formatos.conferir}>
                 <View style={[formatos.caixinha, feito && formatos.caixinhaMarcada]}>{feito && <Icone nome="check" tamanho={14} cor={cores.fundo} />}</View>
@@ -1109,7 +1227,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
       {pratica.som && <TocarSom rotulo={pratica.som.rotulo} casas={pratica.som.casas} />}
       {recurso?.tipo === 'acorde' && recurso.batida && <DiagramaAcorde recurso={recurso} longa soBatida />}
       {/* "Como foi?" espera o cronômetro começar: a prática pede praticar. */}
-      <Text accessibilityRole="header" style={formatos.comoFoi}
+      <Text ref={perguntaComoFoi} accessible accessibilityRole="header" style={formatos.comoFoi}
         onLayout={(evento) => aoMedirComoFoi?.(raizY.current + evento.nativeEvent.layout.y)}>
         {acabou ? t.pratica.acabou
           : praticou || escolha ? t.pratica.comoFoi
@@ -1118,7 +1236,7 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
               : t.pratica.comeceAntes}
       </Text>
       {!praticou && !escolha && (
-        <Pressable accessibilityRole="button" onPress={() => setSemCronometro(true)} hitSlop={8}>
+        <Pressable accessibilityRole="button" onPress={() => setSemCronometro(true)} hitSlop={8} style={formatos.linkAlvo}>
           <Text style={formatos.link}>{t.audio.jaPratiquei}</Text>
         </Pressable>
       )}
@@ -1127,19 +1245,19 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
           const marcada = escolha === valor;
           const travada = !praticou && !escolha;
           return (
-            <Pressable key={valor} testID={`como-foi-${valor}`} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: travada }}
-              disabled={travada} onPress={() => escolher(valor)}
-              style={({ pressed }) => [formatos.valor, { flex: 1 }, travada && { opacity: 0.55 }, marcada && valor === 'consegui' && formatos.cartaoCerto,
-                marcada && valor === 'quase' && formatos.cartaoQuase, marcada && valor === 'ainda_nao' && formatos.cartaoEscolhido,
-                pressed && formatos.cartaoAfundado]}>
+            <CartaoDegrau key={valor} testID={`como-foi-${valor}`} accessibilityRole="radio" accessibilityState={{ checked: marcada, disabled: travada }} aria-checked={marcada}
+              disabled={travada} onPress={() => escolher(valor)} raio={16} estiloFora={[{ flex: 1 }, travada && { opacity: 0.55 }]}
+              corDegrau={marcada && valor === 'consegui' ? '#9AD8B5' : marcada && valor === 'quase' ? '#F2CF96' : marcada ? '#9FB1F0' : cores.gelo}
+              face={[formatos.valor, marcada && valor === 'consegui' && formatos.cartaoCerto,
+                marcada && valor === 'quase' && formatos.cartaoQuase, marcada && valor === 'ainda_nao' && formatos.cartaoEscolhido]}>
               <Text style={[formatos.valorTexto, { fontSize: 15, textAlign: 'center' }]}>{t.pratica.opcoes[valor]}</Text>
-            </Pressable>
+            </CartaoDegrau>
           );
         })}
       </View>
       {escolha && (
         <View style={formatos.resposta} accessibilityLiveRegion="polite">
-          <Image source={require('../assets/marca/stu-oi.png')} resizeMode="contain" accessible={false} importantForAccessibility="no" style={formatos.stu} />
+          <Stu nome="stu-encorajador" tamanho={56} estilo={formatos.stu} />
           <View style={formatos.respostaBalao}><Text style={[estilos.texto, { fontWeight: '700' }]}>{t.pratica.respostas[escolha]}</Text></View>
         </View>
       )}
@@ -1151,11 +1269,21 @@ export function EtapaPratica({ pratica, escolha, escolher, consulta, aoMedirComo
 
 const formatos = StyleSheet.create({
   secao: { gap: 10 },
+  // .ordenar e .associar: grade com vão de 12.
+  secaoOrdenar: { gap: 12 },
+  // .vf: vão de 14 entre a afirmação, os valores e o porquê; as legendas têm 8 embaixo.
+  vf: { gap: 14 },
+  vfGrupo: { gap: 8 },
   rotuloLinha: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  rotuloCaixa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 12, lineHeight: 16, letterSpacing: 0.8 },
-  instrucao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
+  // .ordenar__rotulo e as legendas do V/F: 13 px em 900, 0,05em; .ordenar__instrucao: 16 px em 700.
+  rotuloCaixa: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 19.5, letterSpacing: 0.65 },
+  instrucao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 24 },
+  // .ordenar__vazio: o texto do corpo (16 px) na cor secundária.
+  /** O toque de um link de texto: 48 dp de altura, mesmo com o texto numa linha só. */
+  linkAlvo: { minHeight: 48, justifyContent: 'center', alignSelf: 'flex-start' },
   link: { color: cores.acao, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22, textDecorationLine: 'underline' },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 40, paddingHorizontal: 14, borderRadius: 999, borderWidth: 2,
+  avisoSemVoz: { color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 6, minHeight: 48, paddingHorizontal: 14, borderRadius: 999, borderWidth: 2,
     borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
   chipDestaque: { borderColor: '#B9C6F3' },
   chipGrande: { minHeight: 50, paddingHorizontal: 18 },
@@ -1167,8 +1295,6 @@ const formatos = StyleSheet.create({
   falaInline: { color: cores.acaoEscura, fontWeight: '800', textDecorationLine: 'underline', textDecorationStyle: 'dotted' },
   pronuncia: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontStyle: 'italic', fontWeight: '700', fontSize: 14, lineHeight: 20 },
   soBatida: { alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: '#FFFAF0' },
-  vaga: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 52, paddingHorizontal: 14, borderRadius: 16, borderWidth: 2,
-    borderStyle: 'dashed', borderColor: cores.gelo },
   fala: { gap: 6, padding: 12, borderRadius: 16, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   falaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 18, lineHeight: 24 },
   lacuna: { textDecorationLine: 'underline', textDecorationStyle: 'solid' },
@@ -1179,9 +1305,13 @@ const formatos = StyleSheet.create({
   aspas: { position: 'absolute', top: -2, left: 10, color: '#C9A24A', fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }), fontSize: 48, lineHeight: 56 },
   citacaoTexto: { color: '#4D3A12', fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }), fontStyle: 'italic', fontSize: 20, lineHeight: 28 },
   formula: { padding: 16, borderRadius: 14, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo, backgroundColor: cores.fundo },
-  formulaTexto: { color: cores.texto, fontFamily: Platform.select({ ios: 'Georgia', default: 'serif' }), fontSize: 20, lineHeight: 28, textAlign: 'center' },
-  frase: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.ceu },
-  fraseTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19, lineHeight: 27 },
+  // Como a web 4.2 (`.trecho--formula`): a fonte da interface, forte, com algarismos de largura igual (antes, serifa).
+  formulaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 21, lineHeight: 28, fontVariant: ['tabular-nums'], textAlign: 'center' },
+  // .trecho--frase: 16 × 18 de respiro. Na web, a lacuna é um bloco em linha com borda de 3 embaixo, que alonga a linha em
+  // uns 4 px; aqui a barra desce por deslocamento (sem mudar a linha), então o quadro devolve esse espaço embaixo.
+  frase: { gap: 10, paddingVertical: 16, paddingHorizontal: 18, borderRadius: 16, backgroundColor: cores.ceu },
+  fraseComLacuna: { paddingBottom: 20 },
+  fraseTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 20, lineHeight: 28 },
   passo: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
   passoNumero: { width: 30, height: 30, borderRadius: 8, borderBottomWidth: 3, borderColor: '#9A6A08', alignItems: 'center', justifyContent: 'center',
     backgroundColor: '#C88A12' },
@@ -1199,7 +1329,8 @@ const formatos = StyleSheet.create({
   fracaoCheia: { backgroundColor: '#8B5A2B' },
   fracaoLegenda: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'baseline', gap: 10 },
   fracaoRotulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 },
-  imagem: { width: '100%', aspectRatio: 16 / 10, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  imagem: { width: '100%', maxHeight: 360, borderRadius: 16, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
+  imagemSecao: { gap: 8 },
   acorde: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: 14, borderRadius: 20, borderWidth: 2,
     borderColor: '#FFE3A3', backgroundColor: cores.fundo },
   acordeDesenho: { width: 200, height: 214 },
@@ -1229,29 +1360,34 @@ const formatos = StyleSheet.create({
   dedoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 16 },
   acordeLegenda: { flex: 1, minWidth: 150, gap: 8 },
   acordeNome: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, lineHeight: 30 },
-  ordemCaixa: { gap: 8, minHeight: 64, padding: 10, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', borderColor: cores.gelo, justifyContent: 'center' },
-  disponiveis: { gap: 10 },
+  // .ordenar button, .associar button: face de 52 com borda de 2 em volta e 10 × 14 de respiro; o degrau de 4 vem por fora
+  // (CartaoDegrau).
   cartao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 14,
-    borderWidth: 2, borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo },
+    borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   cartaoPar: { paddingHorizontal: 10, gap: 8 },
+  // .associar button até 600 px: 0,95rem (15,2) com a entrelinha de 1,5.
+  cartaoParTexto: { fontSize: 15.2, lineHeight: 22.8 },
   cartaoTexto: { flex: 1, fontWeight: '700' },
   cartaoEscolhido: { borderColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
-  cartaoCerto: { borderColor: cores.sucessoClaro, borderBottomColor: '#9AD8B5', backgroundColor: '#EEFAF3' },
-  cartaoErrado: { borderColor: '#E3A24A', borderBottomColor: '#F2CF96', backgroundColor: '#FFF6EA' },
-  cartaoQuase: { borderColor: '#E0A92E', borderBottomColor: '#F2CF96', backgroundColor: '#FFF6D9' },
-  cartaoAfundado: { borderBottomWidth: 2, marginTop: 3 },
-  posicao: { minWidth: 34, height: 30, borderRadius: 9, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 6, backgroundColor: cores.acao },
+  cartaoEscolhidaAssociar: { borderColor: cores.acao, backgroundColor: '#EEF2FF' },
+  cartaoCerto: { borderColor: cores.sucessoClaro, backgroundColor: '#EEFAF3' },
+  cartaoErrado: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
+  cartaoQuase: { borderColor: '#E0A92E', backgroundColor: '#FFF6D9' },
   posicaoTexto: { color: cores.fundo, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 17 },
   numeroPar: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   numeroParCanto: { position: 'absolute', top: -10, left: -8, width: 24, height: 24, borderRadius: 12, borderWidth: 3, borderColor: cores.fundo, zIndex: 1 },
   colunas: { flexDirection: 'row', gap: 8 },
-  coluna: { flex: 1, gap: 8 },
-  afirmacao: { padding: 14, borderLeftWidth: 5, borderLeftColor: cores.acao, borderRadius: 14, backgroundColor: cores.ceu },
-  afirmacaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 18, lineHeight: 25 },
-  valores: { flexDirection: 'row', gap: 10 },
-  valor: { flex: 1, minHeight: 56, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 2,
-    borderBottomWidth: 5, borderColor: cores.gelo, backgroundColor: cores.fundo, paddingHorizontal: 6 },
-  valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 17, lineHeight: 22 },
+  // Até 600 px: colunas com vão de 8 e 10 entre os cartões de cada coluna (.associar__colunas > div).
+  coluna: { flex: 1, gap: 10 },
+  // .vf__afirmacao: 16 × 18 de respiro, cantos de 6 à esquerda e 16 à direita.
+  afirmacao: { paddingVertical: 16, paddingHorizontal: 18, borderLeftWidth: 5, borderLeftColor: cores.acao, borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6, borderTopRightRadius: 16, borderBottomRightRadius: 16, backgroundColor: cores.ceu },
+  afirmacaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 19.2, lineHeight: 29 },
+  valores: { flexDirection: 'row', gap: 12 },
+  // .vf__valores label: face de 60 com borda de 2 em volta; o degrau de 4 vem por fora (CartaoDegrau).
+  valor: { minHeight: 60, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 16, borderWidth: 2,
+    borderColor: cores.gelo, backgroundColor: cores.fundo, paddingHorizontal: 6 },
+  valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 18, lineHeight: 27 },
   aberta: { minHeight: 140, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: cores.bordaCampo, color: cores.texto,
     backgroundColor: cores.fundo, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24 },
   contador: { alignSelf: 'flex-end', color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
@@ -1261,7 +1397,7 @@ const formatos = StyleSheet.create({
   modelo: { gap: 4, padding: 12, borderLeftWidth: 4, borderLeftColor: cores.sucessoClaro, borderRadius: 12, backgroundColor: cores.fundo },
   tarefa: { padding: 14, borderRadius: 14, backgroundColor: cores.fundo, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800',
     fontSize: 18, lineHeight: 26 },
-  conferir: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40 },
+  conferir: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 },
   caixinha: { flexShrink: 0, width: 24, height: 24, borderRadius: 7, borderWidth: 2, borderColor: '#B9A3D8', alignItems: 'center', justifyContent: 'center',
     backgroundColor: cores.fundo },
   caixinhaMarcada: { borderColor: '#6B3FA0', backgroundColor: '#6B3FA0' },
@@ -1275,6 +1411,6 @@ const formatos = StyleSheet.create({
   comoFoi: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 19, lineHeight: 24, marginTop: 4 },
   opcoesComoFoi: { flexDirection: 'row', gap: 8 },
   resposta: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  stu: { width: 48, height: 54 },
+  stu: { flexShrink: 0 },
   respostaBalao: { flex: 1, padding: 12, borderRadius: 18, borderWidth: 2, borderBottomWidth: 4, borderColor: cores.gelo, backgroundColor: cores.fundo },
 });

@@ -21,7 +21,7 @@
   place-items: center;
   border-radius: 50%;
   background: conic-gradient(var(--ouro-escuro) var(--valor), var(--gelo) 0);
-  box-shadow: 0 4px 0 rgb(27 42 94 / 0.08);
+  box-shadow: 0 4px 0 rgb(11 27 92 / 0.08);
 }
 
 .anel::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: var(--fundo); }
@@ -44,7 +44,7 @@
   border: 2px solid var(--gelo);
   border-radius: 24px;
   background: var(--fundo);
-  box-shadow: 0 5px 0 var(--gelo), 0 18px 36px rgb(27 42 94 / 0.16);
+  box-shadow: 0 5px 0 var(--gelo), 0 18px 36px rgb(11 27 92 / 0.16);
 }
 
 .trilha-proximo__rotulo { grid-area: rotulo; color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -81,236 +81,6 @@
 .conclusao-liberada { display: flex; align-items: center; gap: 8px; margin-top: 16px; color: var(--acao); font-weight: 800; }
 .conclusao-liberada .icone { width: 20px; height: 20px; }
 
-/*
- * Geração ao vivo: o título entra quando chega (antes disso, um esqueleto com a forma dele) e a barra de ações
- * fica presa ao fim da tela, com o andamento da IA e, no fim, Ajustar pedido e Começar.
- */
-.painel--geracao .trilha-cabecalho { grid-template-columns: minmax(0, 1fr); }
-.painel--geracao .contexto-tela { color: var(--acao); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
-.geracao-titulo { display: block; animation: geracao-titulo 200ms ease-out backwards; }
-.geracao-ia { margin-top: 16px; color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
-.geracao-origem { margin-top: 4px; color: var(--texto2); font-size: 0.875rem; overflow-wrap: anywhere; }
-.geracao-esqueleto { display: block; border-radius: 8px; background: var(--gelo); }
-.geracao-esqueleto--titulo { width: min(72%, 24rem); height: 28px; margin-block: 2px; }
-.geracao-esqueleto--origem { width: min(48%, 16rem); height: 12px; margin-top: 10px; }
-
-.geracao-acoes {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  gap: 12px 16px;
-  padding: 16px 0 calc(18px + env(safe-area-inset-bottom));
-  border-top: 2px solid var(--nevoa);
-  background: var(--fundo);
-}
-
-.geracao-acoes > .botao { flex: none; }
-.geracao-situacao { display: grid; flex: 1 1 auto; min-width: 0; }
-.geracao-situacao__rotulo { font-weight: 800; line-height: 1.3; }
-.geracao-situacao__contagem { color: var(--texto2); font-size: 0.875rem; font-weight: 700; }
-
-@keyframes geracao-titulo { from { opacity: 0; transform: translateY(4px); } }
-
-@media (prefers-reduced-motion: reduce) {
-  .geracao-titulo { animation: none; }
-}
-
-/*
- * Escrevendo as lições (aceite): o Stu escreve com o lápis e as folhas voam; um brilho desce pela lista de lições, sem
- * marcar nenhuma como pronta. Quando o aceite volta, o visto verde passa pela lista, uma lição de cada vez.
- */
-.estudo-principal:has(.painel--preparo) { width: min(100%, 40rem); margin-inline: auto; padding-top: clamp(16px, 4vw, 40px); }
-.painel--preparo .contexto-tela { color: var(--acao); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; overflow-wrap: anywhere; }
-
-.preparo-cena {
-  position: relative;
-  display: grid;
-  height: 184px;
-  place-items: end center;
-  overflow: hidden;
-  margin-bottom: 22px;
-  border-radius: 24px;
-  background: linear-gradient(180deg, #dbe5ff 0%, var(--ceu) 70%);
-  box-shadow: 0 4px 0 var(--gelo);
-}
-
-.preparo-cena__colina {
-  position: absolute;
-  right: -12%;
-  bottom: -64px;
-  left: -12%;
-  height: 124px;
-  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
-  background: var(--chao);
-  box-shadow: inset 0 7px 0 var(--relevo);
-}
-
-.preparo-cena .desenho { position: absolute; bottom: 16px; }
-.preparo-cena .desenho:nth-of-type(1) { left: 9%; --tam: 52px; }
-.preparo-cena .desenho:nth-of-type(2) { right: 25%; bottom: 12px; --tam: 30px; }
-.preparo-cena .desenho:nth-of-type(3) { right: 7%; --tam: 46px; }
-
-.preparo-cena .stu {
-  position: relative;
-  width: 112px;
-  height: auto;
-  margin-bottom: 14px;
-  transform-origin: 50% 100%;
-  animation: preparo-stu 2400ms ease-in-out infinite;
-}
-
-/* O lápis: borracha, ponteira, corpo amarelo e a ponta de madeira com o grafite. */
-.preparo-lapis {
-  position: absolute;
-  bottom: 62px;
-  left: calc(50% + 36px);
-  width: 13px;
-  height: 52px;
-  border-radius: 4px 4px 1px 1px;
-  background: linear-gradient(#ff8fa3 0 9px, #c9d1ea 9px 14px, var(--ouro) 14px 100%);
-  box-shadow: inset -3px 0 0 rgb(0 0 0 / 0.08);
-  transform-origin: 50% 100%;
-  rotate: 24deg;
-  animation: preparo-lapis 520ms ease-in-out infinite alternate;
-}
-
-.preparo-lapis::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 0;
-  border-top: 11px solid #e9b880;
-  border-right: 6.5px solid transparent;
-  border-left: 6.5px solid transparent;
-}
-
-.preparo-lapis::before {
-  content: '';
-  position: absolute;
-  top: calc(100% + 7px);
-  left: 4.5px;
-  z-index: 1;
-  border-top: 4px solid var(--texto);
-  border-right: 2px solid transparent;
-  border-left: 2px solid transparent;
-}
-
-/* Folhas escritas que saem do Stu e voam para os lados. */
-.preparo-folha {
-  position: absolute;
-  bottom: 74px;
-  left: calc(50% - 13px);
-  width: 26px;
-  height: 32px;
-  border-radius: 5px;
-  background:
-    linear-gradient(var(--gelo), var(--gelo)) 5px 8px / 16px 3px no-repeat,
-    linear-gradient(var(--gelo), var(--gelo)) 5px 14px / 12px 3px no-repeat,
-    linear-gradient(var(--gelo), var(--gelo)) 5px 20px / 14px 3px no-repeat,
-    var(--fundo);
-  box-shadow: 0 2px 0 var(--borda-campo);
-  opacity: 0;
-  animation: preparo-folha 3300ms ease-out infinite;
-}
-
-.preparo-folha:nth-of-type(2) { --x: -118px; --giro: -28deg; animation-delay: 1100ms; }
-.preparo-folha:nth-of-type(3) { --x: 70px; --y: -128px; --giro: 14deg; animation-delay: 2200ms; }
-
-.preparo-lista { display: grid; gap: 10px; margin: 24px 0 0; padding: 0; list-style: none; }
-
-.preparo-lista li {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 58px;
-  padding: 9px 16px 9px 10px;
-  overflow: hidden;
-  border: 2px solid var(--gelo);
-  border-radius: 16px;
-  background: var(--fundo);
-  box-shadow: 0 3px 0 var(--gelo);
-  font-weight: 800;
-  line-height: 1.3;
-  transition: border-color 200ms ease-out, box-shadow 200ms ease-out;
-  animation: painel-entrar 380ms cubic-bezier(0.2, 0.8, 0.3, 1) calc(100ms + var(--ordem) * 60ms) backwards;
-}
-
-/* O brilho que desce pela lista: a escrita está acontecendo. */
-.preparo-lista li::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(100deg, transparent 20%, rgb(56 88 214 / 0.1) 50%, transparent 80%);
-  translate: -100% 0;
-  pointer-events: none;
-  animation: preparo-escrever 2000ms ease-in-out calc(600ms + var(--ordem) * 200ms) infinite;
-}
-
-.preparo-lista__icone {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  flex: none;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--acao);
-  background: var(--nevoa);
-}
-
-.preparo-lista__icone .icone { width: 20px; height: 20px; }
-.preparo-lista__titulo { min-width: 0; overflow-wrap: anywhere; }
-
-.painel--preparo[data-prontas] .preparo-lista li { border-color: #bfe5d2; box-shadow: 0 3px 0 #bfe5d2; }
-.painel--preparo[data-prontas] .preparo-lista li::after { display: none; }
-
-.painel--preparo[data-prontas] .preparo-lista__icone {
-  color: var(--fundo);
-  background: var(--sucesso-claro);
-  box-shadow: 0 3px 0 var(--sucesso);
-  animation: preparo-visto 420ms cubic-bezier(0.2, 0.9, 0.3, 1.6) calc(var(--ordem) * 45ms) backwards;
-}
-
-.painel--preparo[data-prontas] .preparo-lista__icone .icone { stroke-width: 3; }
-.painel--preparo[data-prontas] .preparo-lapis, .painel--preparo[data-prontas] .preparo-folha { display: none; }
-.painel--preparo[data-prontas] .preparo-cena .stu { animation: preparo-pulo 300ms cubic-bezier(0.3, 0.6, 0.4, 1) 2 alternate; }
-
-.preparo-dica {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-  padding: 12px 16px;
-  border-radius: 16px;
-  color: var(--texto2);
-  background: var(--nevoa);
-  font-weight: 700;
-  animation: preparo-dica 420ms ease-out backwards;
-}
-
-.preparo-dica .icone { width: 22px; height: 22px; flex: none; color: var(--ouro-escuro); }
-
-@keyframes preparo-stu { 50% { transform: translateY(-6px) rotate(-2deg); } }
-@keyframes preparo-lapis { from { rotate: 16deg; translate: 0 0; } to { rotate: 32deg; translate: 4px 2px; } }
-@keyframes preparo-folha {
-  0% { opacity: 0; transform: translate(0, 0) rotate(0deg) scale(0.5); }
-  12% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; transform: translate(var(--x, 104px), var(--y, -96px)) rotate(var(--giro, 24deg)) scale(1); }
-}
-@keyframes preparo-escrever { from { translate: -100% 0; } 55%, to { translate: 100% 0; } }
-@keyframes preparo-visto { from { transform: scale(0.3) rotate(-30deg); } }
-@keyframes preparo-pulo { to { transform: translateY(-14px); } }
-@keyframes preparo-dica { from { opacity: 0; transform: translateY(6px); } }
-
-@media (max-width: 767px) {
-  .preparo-cena { height: 164px; margin-bottom: 18px; }
-  .preparo-cena .stu { width: 98px; }
-  .preparo-lapis { bottom: 56px; left: calc(50% + 30px); }
-}
-
 /* Celular: o mapa ocupa a largura da tela e o próximo passo vira o rodapé fixo, ao alcance do polegar. */
 @media (max-width: 767px) {
   .painel--trilha { gap: 20px; }
@@ -324,18 +94,15 @@
     width: auto;
   }
 
-  .estudo[data-navegacao] .trilha-proximo { bottom: calc(var(--altura-navegacao) + 10px); }
-
-  .geracao-acoes {
-    position: fixed;
-    inset: auto 0 0;
-    gap: 12px;
-    padding: 12px max(20px, env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+  .estudo[data-navegacao] .trilha-proximo {
+    inset: auto var(--margem-ilha-dir) calc(var(--altura-navegacao) + 12px) var(--margem-ilha-esq);
+    max-width: 480px;
+    padding: 8px;
+    border: 0;
+    box-shadow: var(--sombra-ilha);
   }
 
-  /* Trilha pronta: os dois botões dividem o rodapé; o andamento já foi dito no caminho e ao leitor de tela. */
-  .geracao-acoes[data-pronta] .geracao-situacao { display: none; }
-  .geracao-acoes[data-pronta] > .botao { flex: 1 1 0; min-width: 0; padding-inline: 12px; }
+
 }
 
 /* Tablet: coluna única centrada, com o próximo passo dentro da faixa do topo. */
@@ -345,7 +112,7 @@
 
 /* Computador: faixa larga no topo, com o próximo passo à direita; o mapa usa a largura toda, com o caminho no centro. */
 @media (min-width: 1024px) {
-  .painel--trilha { width: min(100%, 52rem); justify-self: center; }
+  .painel--trilha { width: min(100%, 60rem); justify-self: center; }
 
   .painel--trilha > .trilha-vazia { width: min(100%, 36rem); justify-self: center; }
 }
@@ -358,9 +125,12 @@
 
 /* Celular: o mapa termina com cantos arredondados, como um cartão, em vez de um corte reto. */
 @media (max-width: 767px) {
+  .trilha-proximo__titulo { font-size: 0.9375rem; -webkit-line-clamp: 3; line-clamp: 3; }
   /* O morro do troféu continua por baixo do cartão flutuante até a navegação: o mapa não termina num corte branco. */
   .painel--trilha > .caminho { margin-bottom: -120px; }
   .painel--trilha .caminho-chegada { --extra: 120px; }
+  .estudo[data-navegacao] .painel--trilha > .caminho { margin-bottom: calc(-1 * var(--espaco-rodape)); }
+  .estudo[data-navegacao] .painel--trilha .caminho-chegada { --extra: var(--espaco-rodape); }
 }
 
 /* Com o nó atual à vista, o cartão fixo da próxima lição desce e some (em qualquer tela): o balão "Começar" já faz esse
@@ -369,14 +139,16 @@
 html[data-atual-visivel] .trilha-proximo { translate: 0 calc(100% + 40px); opacity: 0; visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .trilha-proximo { transition: none; } }
 
-/* Celular: o nome do plano fica numa barra compacta presa no topo, como a faixa da unidade nos melhores apps. */
+/* Celular: o nome do plano fica numa barra compacta presa no topo, como a faixa da unidade nos melhores apps. Spec 16, item 3: sem vidro (o Android e a web não têm),
+   o fundo é branco a 94% e a linha de 1 px (#E1E7FA) só aparece quando o mapa rola por baixo dele (`data-preso`, src/app/cabecalho-preso.ts). */
 @media (max-width: 767px) {
   .trilha-topo {
     position: sticky; top: 0; z-index: 6; margin: -8px calc(-1 * var(--espaco-pagina)) 0; padding: 10px var(--espaco-pagina);
-    background: rgb(255 255 255 / 0.96); box-shadow: 0 2px 0 var(--gelo); backdrop-filter: blur(8px);
+    background: rgb(255 255 255 / 0.94);
   }
+  .trilha-topo[data-preso] { box-shadow: 0 1px 0 #e1e7fa; }
   .trilha-topo__rotulo { font-size: 0.6875rem; }
-  .trilha-topo h1 { overflow: hidden; font-size: 1.125rem; text-overflow: ellipsis; white-space: nowrap; }
+  .trilha-topo h1 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 1.125rem; white-space: normal; }
   .trilha-topo .anel { width: 44px; height: 44px; }
   .trilha-topo .anel__numero { font-size: 1rem; }
 }

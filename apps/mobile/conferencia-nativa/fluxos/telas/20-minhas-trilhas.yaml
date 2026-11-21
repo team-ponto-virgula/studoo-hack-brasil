@@ -1,0 +1,65 @@
+# Minhas trilhas: a lista, a lista rolada, o menu "…" do cartão em destaque aberto e a confirmação de apagar.
+# A confirmação é cancelada: nada é apagado.
+appId: host.exp.Exponent
+name: 20-minhas-trilhas
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-planos
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-planos
+    timeout: 30000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 20-minhas-trilhas
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 70%
+    end: 50%, 35%
+    duration: 800
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 21-minhas-trilhas-rolada
+# De volta ao alto, onde fica o cartão "Seu próximo passo".
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 35%
+    end: 50%, 85%
+    duration: 500
+- swipe:
+    waitToSettleTimeoutMs: 1000
+    start: 50%, 35%
+    end: 50%, 85%
+    duration: 500
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: apagar-destaque-menu
+- extendedWaitUntil:
+    visible:
+      id: apagar-destaque
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 22-menu-aberto
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: apagar-destaque
+- extendedWaitUntil:
+    visible:
+      id: confirmacao-cancelar
+    timeout: 15000
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 23-confirmacao-de-apagar
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: confirmacao-cancelar
+- extendedWaitUntil:
+    notVisible:
+      id: confirmacao-cancelar
+    timeout: 15000
+- assertVisible:
+    id: titulo-planos

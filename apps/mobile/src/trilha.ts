@@ -13,15 +13,31 @@ export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 /** `resumo`: na prévia, o que a lição ensina (aparece embaixo do título). Como na web. */
 export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever; resumo?: string };
 
-/** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. Como na web. */
-export function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string; rever: boolean } | null {
-  if (no.ponte && !no.ponte.concluida) return { icone: 'revisao', texto: mensagens.estudio.ponteMapa, rever: false };
-  if (no.rever && no.estado === 'concluida') return { icone: 'revisao', texto: mensagens.trilha.valeRever, rever: true };
-  if (no.ponte) return { icone: 'check', texto: mensagens.estudio.ponteMapaFeita, rever: false };
-  return null;
+export type SeloDoNo = { icone: NomeIcone; texto: string; rever: boolean };
+
+/**
+ * Os selos embaixo do nó, em ordem: primeiro o reforço (a ponte pendente ou atravessada), depois o "vale rever", que
+ * aparece junto, sem sumir. Antes, o "vale rever" escondia a ponte feita, e o mapa não mostrava a ponte depois do erro
+ * (spec 05: o mapa marca a ponte na lição de origem e indica quando foi atravessada; o roteiro da demo mostra a ponte).
+ */
+export function selosDoNo(no: NoCaminho): SeloDoNo[] {
+  const selos: SeloDoNo[] = [];
+  if (no.ponte) {
+    selos.push(no.ponte.concluida
+      ? { icone: 'check', texto: mensagens.estudio.ponteMapaFeita, rever: false }
+      : { icone: 'revisao', texto: mensagens.estudio.ponteMapa, rever: false });
+  }
+  if (no.rever && no.estado === 'concluida') selos.push({ icone: 'revisao', texto: mensagens.trilha.valeRever, rever: true });
+  return selos;
 }
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
-  | 'lampada' | 'relogio' | 'alvo' | 'som';
+  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'microfone'
+  // Perfil e compartilhar (spec 09 e 10): desenhados em SVG com os mesmos traços da web (icone.tsx).
+  | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'grafico' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha' | 'bloquear' | 'alerta'
+  // Configurações da trilha (spec 10, lote 4): a engrenagem do mapa, o elo de "Quem tem o link" e a seta do "Voltar".
+  | 'engrenagem' | 'elo' | 'setaVoltar'
+  // Controle de som (spec 12): o botão da aula e as linhas da folha "Som".
+  | 'somDuasOndas' | 'somUmaOnda' | 'somCortado' | 'ondas' | 'chuva' | 'fones' | 'livros' | 'folha' | 'info';
 
 /**
  * Próxima lição do caminho: a do primeiro trecho que ainda tem lição pendente.
@@ -61,7 +77,10 @@ export function montarTrilha(plano: PlanoDetalhe, temAndamento: (id: string) => 
 /** Frase curta do Stu no começo do caminho, conforme o progresso. */
 export function falaDoStu(nos: readonly NoCaminho[]) {
   if (!nos.some((no) => no.estado === 'atual')) return mensagens.trilha.stuFim;
-  if (!nos.some((no) => no.estado === 'concluida')) return mensagens.trilha.stuInicio;
+  // Como na web 4.2: com a primeira lição já começada, a placa diz para continuar de onde parou.
+  if (!nos.some((no) => no.estado === 'concluida')) {
+    return nos.some((no) => no.estado === 'atual' && no.andamento) ? mensagens.trilha.stuInicioEmAndamento : mensagens.trilha.stuInicio;
+  }
   return mensagens.trilha.stuMeio;
 }
 
@@ -109,6 +128,18 @@ export function posicaoDoNo(indice: number, total: number, montando = false) {
 export function nomeDoNo(no: NoCaminho, posicao: string) {
   if (no.estado === 'atual') return no.andamento ? mensagens.trilha.nomeNoContinuar(no.titulo, posicao) : mensagens.trilha.nomeNoAtual(no.titulo, posicao);
   return mensagens.trilha.nomeNo(no.titulo, posicao, mensagens.trilha.estados[no.estado].toLocaleLowerCase('pt-BR'));
+}
+
+/**
+ * Nome acessível do nó com os selos, no mesmo formato da web (rodada 4.6, src/ui/caminho.tsx). O atual começa pela ação,
+ * como o balão, e os selos vêm no fim ("Começar: título. Lição 1 de 6, atual."). Nos outros, os selos vêm logo depois do
+ * título, na ordem da tela ("título. Ponte construída. Vale rever. Lição 1 de 3, concluída.").
+ */
+export function nomeAcessivelDoNo(no: NoCaminho, posicao: string) {
+  const selos = selosDoNo(no).map((selo) => selo.texto).join('. ');
+  if (no.estado === 'atual') return selos ? `${nomeDoNo(no, posicao)} ${selos}.` : nomeDoNo(no, posicao);
+  if (!selos) return nomeDoNo(no, posicao);
+  return `${no.titulo}. ${selos}. ${posicao}, ${mensagens.trilha.estados[no.estado].toLocaleLowerCase('pt-BR')}.`;
 }
 
 /** O pedido aparece sob o título só quando acrescenta algo: num objetivo curto, o título pode ser o próprio pedido. */

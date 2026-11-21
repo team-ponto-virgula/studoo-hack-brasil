@@ -1,6 +1,7 @@
 /* Mundo ilustrado (src/ui/mundo.tsx): desenhos, fronteira entre regiões e a paisagem das telas de entrada. */
 
-.desenho { display: block; width: var(--tam, 40px); height: auto; overflow: visible; }
+/* O desenho do mundo se chama `mundo-desenho`: o nome `desenho` é das figuras de matemática da aula (aula.css), e as duas regras se pisavam (largura 100%), deixando os enfeites do mapa do tamanho da coluna. */
+.mundo-desenho { display: block; width: var(--tam, 40px); height: auto; overflow: visible; }
 
 /* Fronteira: ocupa o espaço abaixo do nó; a onda fica no meio e o resto já tem o chão da região seguinte. */
 .mundo-fronteira { position: absolute; inset: var(--lente, 0px) 0 0; z-index: 0; pointer-events: none; }

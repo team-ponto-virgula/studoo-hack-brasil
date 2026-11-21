@@ -1,0 +1,12 @@
+[
+  {
+    "locale": "pt-BR",
+    "description": "O Studoo transforma objetivos de estudo em trilhas com lições curtas. Cada lição combina explicação, exemplo e exercício com feedback, e o progresso fica salvo. Neste beta, teste criar e retomar trilhas, praticar exercícios, usar reforços e explorar trilhas compartilhadas. Envie comentários pelo TestFlight. A interface está em português do Brasil.",
+    "privacyPolicyUrl": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io/privacidade"
+  },
+  {
+    "locale": "en-US",
+    "description": "Studoo turns learning goals into paths of short lessons. Each lesson combines an explanation, an example, and an exercise with feedback, and saves your progress. In this beta, please try creating and resuming paths, practicing exercises, using additional explanations, and exploring shared paths. Send feedback through TestFlight. The app interface is in Brazilian Portuguese.",
+    "privacyPolicyUrl": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io/privacidade"
+  }
+]

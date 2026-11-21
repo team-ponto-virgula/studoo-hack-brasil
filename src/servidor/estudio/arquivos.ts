@@ -84,7 +84,10 @@ export async function lerMaterial(entrada: unknown) {
     extensao === 'csv' &&
     [
       'text/csv',
+      'text/comma-separated-values',
       'application/csv',
+      'application/x-csv',
+      'text/x-csv',
       'text/plain',
       'application/vnd.ms-excel',
       'application/octet-stream',

@@ -1,0 +1,51 @@
+# Defesa contra o menu de desenvolvedor do Expo Go. Na primeira vez que um projeto carrega, o Expo Go abre o menu
+# sozinho, com uma apresentação por cima ("This is the developer menu…" e o botão "Continue"). Com o menu aberto, a
+# árvore de elementos só tem o Expo Go: nenhum id do app aparece, e esperar por um deles só acaba no tempo limite.
+# O passo do simulador (ios.sh) já desliga a apresentação, a abertura automática e o botão flutuante nas preferências do
+# Expo Go; esta parte é a segunda linha, para quando as preferências não pegarem.
+# Recebe ESPERA: quanto esperar, em milissegundos, pelo app ou pelo menu.
+appId: host.exp.Exponent
+---
+# O que aparecer primeiro: o app (a entrada ou a barra de baixo), o menu (o "X" dele tem o id "xmark") ou, no Android, a
+# janela "<app> isn't responding" do sistema (o botão "Wait" tem o id android:id/aerr_wait). Na execução 44809026116, o
+# "Pixel Launcher isn't responding" cobriu a entrada já desenhada, com a máquina carregada, e nenhum id do app aparecia.
+- extendedWaitUntil:
+    visible:
+      id: titulo-entrada|nav-planos|xmark|android:id/aerr_wait
+    timeout: ${ESPERA}
+# A janela do sistema (só Android; o preparo do emulador já desliga essas janelas, isto é a segunda linha): "Wait" deixa o
+# processo que travou seguir, sem fechar nada, e o app que estava por baixo volta a aparecer.
+- runFlow:
+    when:
+      visible:
+        id: android:id/aerr_wait
+    commands:
+      - tapOn:
+          id: android:id/aerr_wait
+      - waitForAnimationToEnd:
+          timeout: 1500
+      - extendedWaitUntil:
+          visible:
+            id: titulo-entrada|nav-planos|xmark
+          timeout: 30000
+# Com as preferências do Expo Go gravadas pelo passo do simulador, o menu não abre (conferido na execução 44511779137).
+# A conferência abaixo fica como segunda linha e custa só o que sobra dos 7 s do Maestro depois da abertura (ele desconta
+# das esperas, inclusive das que têm `timeout`, o tempo passado desde o último toque; ver reabrir.yaml).
+- runFlow:
+    when:
+      visible:
+        id: xmark
+    commands:
+      # "Continue" fecha a apresentação e a marca como vista, para ela não voltar nas próximas aberturas.
+      - runFlow:
+          when:
+            visible: "Continue"
+          commands:
+            - tapOn: "Continue"
+            - waitForAnimationToEnd:
+                timeout: 1500
+      # O "X" do menu ("Close"): mais seguro que tocar fora, porque a folha do menu muda de altura.
+      - tapOn:
+          id: xmark
+      - waitForAnimationToEnd:
+          timeout: 1500

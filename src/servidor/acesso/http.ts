@@ -5,7 +5,8 @@ import { lerCookieSessao, origemStudoo } from "./origem";
 import { usuarioDaSessao } from "./sessao";
 
 const statusErros: Record<CodigoErro, number> = {
-  material_invalido: 400, material_ilegivel: 422, reforco_indisponivel: 409, limite_estudio: 429, voz_indisponivel: 503,
+  material_invalido: 400, material_ilegivel: 422, reforco_indisponivel: 409, limite_estudio: 429,
+  voz_indisponivel: 503, voz_vazia: 422, voz_tempo: 504, voz_falha: 502,
   google_indisponivel: 503,
   google_invalido: 400,
   google_conta_existente: 409,
@@ -22,12 +23,34 @@ const statusErros: Record<CodigoErro, number> = {
   avaliacao_invalida: 400,
   credenciais_invalidas: 401,
   limite_login: 429,
+  limite_visitante: 429,
   ia_indisponivel: 503,
   limite_geracoes: 429,
+  link_inativo: 404,
+  limite_compartilhar: 429,
+  perfil_incompleto: 409,
+  compartilhar_visitante: 403,
+  trilha_recebida: 409,
+  trilha_propria: 409,
+  foto_invalida: 422,
+  limite_foto: 429,
+  explorar_material: 409,
+  limite_comunidade: 429,
+  seguir_invalido: 409,
+  conteudo_recusado: 422,
+  consentimento_ia: 428,
+  confirmacao_invalida: 400,
+  cadastro_indisponivel: 503,
+  limite_cadastro: 429,
+  email_nao_permitido: 403,
+  apple_indisponivel: 503,
+  apple_invalido: 400,
+  apple_conta_existente: 409,
 };
 
 export class FalhaApi extends Error {
-  constructor(public readonly codigo: CodigoErro) {
+  /** `extra`: campos a mais no corpo do erro (o 428 `consentimento_ia` leva `privacidade`). */
+  constructor(public readonly codigo: CodigoErro, public readonly extra?: Record<string, unknown>) {
     super(codigo);
   }
 }
@@ -77,12 +100,13 @@ async function tratarRota(acao: () => Promise<Response>): Promise<Response> {
     return await acao();
   } catch (erro) {
     const codigo = erro instanceof FalhaApi ? erro.codigo : "falha";
+    const extra = erro instanceof FalhaApi ? erro.extra : undefined;
     const status = statusErros[codigo];
     const correlationId = crypto.randomUUID();
     if (status >= 500) {
       console.error(JSON.stringify({ correlationId, codigo, status, duracaoMs: Math.round(performance.now() - inicio) }));
     }
-    const resposta = responder({ codigo, mensagem: mensagensApi[codigo] }, status);
+    const resposta = responder({ ...extra, codigo, mensagem: mensagensApi[codigo] }, status);
     resposta.headers.set("X-Correlation-Id", correlationId);
     return resposta;
   }
@@ -107,6 +131,14 @@ function validarCanalMobile(request: Request, indisponivel: "nao_encontrado" | "
 
   const url = new URL(request.url);
   const autorizada = new URL(origem);
+  if (process.env.STUDOO_PROXY_HTTPS === "1") {
+    const proto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase();
+    const hostEncaminhado = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() || request.headers.get("host");
+    if ((proto !== "https" && url.protocol !== "https:") || hostEncaminhado !== autorizada.host) {
+      throw new FalhaApi(indisponivel);
+    }
+    return;
+  }
   // O Next normaliza o host interno de Request.url no HTTPS local.
   if (url.protocol !== "https:" || url.port !== autorizada.port || request.headers.get("host") !== autorizada.host) {
     throw new FalhaApi(indisponivel);
@@ -118,6 +150,25 @@ export function rotaPublica(request: Request, acao: () => Promise<Response>): Pr
     validarOrigemWeb(request);
     if (request.headers.has("authorization")) throw new FalhaApi("nao_autenticado");
     return acao();
+  });
+}
+
+/**
+ * Rota pública que também aceita sessão (cookie da web ou Bearer do app), sem exigir: a prévia de um link
+ * compartilhado diz a quem está logado se a trilha já é dela. Sem sessão válida, segue como visitante anônimo.
+ */
+export function rotaPublicaComSessao(
+  request: Request,
+  acao: (usuarioId: string | null) => Promise<Response>,
+): Promise<Response> {
+  return tratarRota(async () => {
+    if (request.headers.get("authorization") === null) {
+      validarOrigemWeb(request);
+      const token = lerCookieSessao(request);
+      return acao(token ? await usuarioDaSessao(token, "WEB") : null);
+    }
+    const credencial = lerCredencial(request);
+    return acao(await usuarioDaSessao(credencial.token, credencial.canal));
   });
 }
 

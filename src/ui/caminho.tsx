@@ -3,10 +3,12 @@
 import { useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { MotivoRever } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
-import { Botao, Stu } from './componentes';
+import { Botao } from './componentes';
+import { Mascote } from './mascote';
 import { Confete } from './festa';
 import { Desenho, Fronteira, coresDaRegiao } from './mundo';
 import { desenhosQueBalancam, enfeitesDaLinha, regiaoDoTrecho, type NomeDesenho } from './mundo-desenhos';
+import { enquadrarLicao } from './enquadrar-licao';
 import './caminho.css';
 
 export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
@@ -19,25 +21,37 @@ export type EstadoNo = 'concluida' | 'atual' | 'bloqueada' | 'previa';
 export type NoCaminho = { id: string; titulo: string; estado: EstadoNo; trecho: number; ponte?: { concluida: boolean }; andamento?: boolean; rever?: MotivoRever; resumo?: string };
 
 /** O título sem quebra no meio de uma palavra com hífen (“check-" numa linha e “in” na outra). */
-function semQuebrarHifen(texto: string): ReactNode {
+export function semQuebrarHifen(texto: string): ReactNode {
   const partes = texto.split(/(\S*\p{L}-\p{L}\S*)/u);
   return partes.length === 1 ? texto : partes.map((parte, indice) => (indice % 2 ? <span key={indice} className="sem-quebra">{parte}</span> : parte));
 }
 
-/** O selo embaixo do nó: o reforço pendente, senão o "vale rever", senão o reforço feito. */
-function seloDoNo(no: NoCaminho): { icone: NomeIcone; texto: string } | null {
-  if (no.ponte && !no.ponte.concluida) return { icone: 'revisao', texto: mensagens.estudio.ponteMapa };
-  if (no.rever && no.estado === 'concluida') return { icone: 'revisao', texto: mensagens.trilha.valeRever };
-  if (no.ponte) return { icone: 'check', texto: mensagens.estudio.ponteMapaFeita };
-  return null;
+/** Os selos embaixo do nó: reforço pendente; se concluído, a marca da ponte feita vem primeiro e "Vale rever" segue junto quando houver. */
+function selosDoNo(no: NoCaminho): { icone: NomeIcone; texto: string }[] {
+  if (no.ponte && !no.ponte.concluida) return [{ icone: 'revisao', texto: mensagens.estudio.ponteMapa }];
+  const selos: { icone: NomeIcone; texto: string }[] = [];
+  if (no.ponte) selos.push({ icone: 'check', texto: mensagens.estudio.ponteMapaFeita });
+  if (no.rever && no.estado === 'concluida') selos.push({ icone: 'revisao', texto: mensagens.trilha.valeRever });
+  return selos;
 }
 
 export type NomeIcone = 'check' | 'livro' | 'revisao' | 'cadeado' | 'bandeira' | 'trofeu' | 'fechar' | 'olho' | 'olhoFechado' | 'seta'
-  | 'lampada' | 'relogio' | 'alvo' | 'som';
+  | 'lampada' | 'relogio' | 'alvo' | 'som' | 'pessoa' | 'compartilhar' | 'copiar' | 'camera' | 'imagem' | 'lapis' | 'grafico' | 'lixeira' | 'bussola' | 'valeu' | 'mais' | 'bandeirinha'
+  | 'elo' | 'telaCheia' | 'alerta' | 'setaVoltar' | 'pessoaMais' | 'engrenagem'
+  | 'somUmaOnda' | 'somCortado' | 'ondas' | 'chuva' | 'fones' | 'livros' | 'folha' | 'info';
 
 const desenhos: Record<NomeIcone, ReactNode> = {
+  // Controle de som (spec 12): o alto-falante com uma onda e cortado, e os ícones dos climas.
+  somUmaOnda: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6" /></>,
+  somCortado: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9.5l5 5M20.5 9.5l-5 5" /></>,
+  ondas: <path d="M3.5 9.5c2.8-2.4 5.7-2.4 8.5 0s5.7 2.4 8.5 0M3.5 14.5c2.8-2.4 5.7-2.4 8.5 0s5.7 2.4 8.5 0" />,
+  chuva: <><path d="M7 14.5a4 4 0 0 1 .4-8 5 5 0 0 1 9.6 1.5 3.3 3.3 0 0 1-.5 6.5z" /><path d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5" /></>,
+  fones: <><path d="M4.5 14v-2a7.5 7.5 0 0 1 15 0v2" /><rect x="3.5" y="13.5" width="4" height="6.5" rx="1.8" /><rect x="16.5" y="13.5" width="4" height="6.5" rx="1.8" /></>,
+  livros: <><rect x="4" y="5" width="4" height="14.5" rx="1" /><rect x="9.5" y="7" width="4" height="12.5" rx="1" /><path d="M15.2 8.4l3.6-1 3 11.8-3.6 1z" /></>,
+  folha: <><path d="M5.5 18.5C5 11 9.5 5.5 19 5c.3 8.8-4.7 13.6-13.5 13.5z" /><path d="M5.5 18.5L13 11" /></>,
+  info: <><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5" /><circle cx="12" cy="7.8" r="0.6" fill="currentColor" /></>,
   check: <path d="M5 12.5l4.2 4.2L19 7" />,
-  livro: <path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5zM12 6.5V19" />,
+  livro: <><path d="M12 6.5C10.3 5.3 8 4.8 4.5 5v12.5c3.5-.2 5.8.3 7.5 1.5 1.7-1.2 4-1.7 7.5-1.5V5c-3.5-.2-5.8.3-7.5 1.5z" /><path className="icone__detalhe" d="M12 6.5V19" /></>,
   // Repetir: arco de três quartos com uma seta, o mesmo desenho do app.
   revisao: <path d="M6.7 6.7A7.5 7.5 0 1 1 6.7 17.3M10.6 15.5H5.8v4.7" />,
   cadeado: <><rect x="5.5" y="10.5" width="13" height="9" rx="2.5" /><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" /></>,
@@ -53,6 +67,32 @@ const desenhos: Record<NomeIcone, ReactNode> = {
   alvo: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="0.8" /></>,
   // Alto-falante com duas ondas: ouvir uma frase, um áudio ou um acorde.
   som: <><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path d="M15.5 9a4 4 0 0 1 0 6M18.3 6.3a8 8 0 0 1 0 11.4" /></>,
+  pessoa: <><circle cx="12" cy="8.5" r="3.8" /><path d="M4.8 20c.9-3.8 3.7-5.8 7.2-5.8s6.3 2 7.2 5.8" /></>,
+  // Três pontos ligados: compartilhar.
+  compartilhar: <><circle cx="17.5" cy="5.5" r="2.5" /><circle cx="6.5" cy="12" r="2.5" /><circle cx="17.5" cy="18.5" r="2.5" /><path d="M8.7 10.8l6.6-4M8.7 13.2l6.6 4" /></>,
+  copiar: <><rect x="8.5" y="8.5" width="11" height="11" rx="2.5" /><path d="M15.5 8.5V6.5a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2" /></>,
+  camera: <><path d="M4 8.5A2 2 0 0 1 6 6.5h2l1.5-2h5l1.5 2h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z" /><circle cx="12" cy="13" r="3.5" /></>,
+  imagem: <><rect x="4" y="4.5" width="16" height="15" rx="3" /><circle cx="9" cy="9.5" r="1.6" /><path d="M4.5 17l4.5-4.5 3.5 3.5 2.5-2.5 4.5 4.5" /></>,
+  lapis: <path d="M14.5 5.5l4 4M5 19l1-4.5L15.5 5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9.5 18z" />,
+  // Gráfico (spec 15, seção 13): os eixos e uma linha que sobe, na frente do alt da figura que não coube.
+  grafico: <path d="M5 4.5V19h14.5M8.5 15l3.5-4 3 2.5 4-5.5" />,
+  lixeira: <path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10.5 10.5v5M13.5 10.5v5" />,
+  bussola: <><circle cx="12" cy="12" r="8.5" /><path className="icone__detalhe" d="M15.5 8.5l-2 5-5 2 2-5z" /></>,
+  // Valeu: coração com a curva de um sorriso (agradecer, não "curtir" uma pessoa).
+  valeu: <path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10z" />,
+  mais: <><circle cx="6" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="18" cy="12" r="1.3" fill="currentColor" /></>,
+  bandeirinha: <><path d="M6 20.5V4" /><path d="M6 4.5h11l-2.5 4 2.5 4H6" /></>,
+  // Elo de corrente: "Só com o link" (estado), diferente de "Copiar link" (ação).
+  elo: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />,
+  // Quatro cantos: tela cheia (Apresentar).
+  telaCheia: <path d="M4.5 9V4.5H9M15 4.5h4.5V9M19.5 15v4.5H15M9 19.5H4.5V15" />,
+  // Alerta: círculo com exclamação (erro no campo).
+  alerta: <><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5v5.5" /><circle cx="12" cy="16.3" r="0.6" fill="currentColor" /></>,
+  setaVoltar: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  // Pessoa com "+": Seguir.
+  // Engrenagem: configurações da trilha.
+  engrenagem: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></>,
+  pessoaMais: <><circle cx="10" cy="8.5" r="3.8" /><path d="M3 20c.9-3.8 3.6-5.8 7-5.8 1.6 0 3 .4 4.2 1.2M18.5 13.5v6M15.5 16.5h6" /></>,
 };
 
 export function Icone({ nome }: { nome: NomeIcone }) {
@@ -219,24 +259,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   useEffect(() => {
     if (!rolarPara) return;
     const quadro = window.requestAnimationFrame(() => {
-      const item = botoes.current.get(rolarPara)?.closest('li');
-      if (!item) return;
-      const caixa = item.getBoundingClientRect();
-      // Considera o cartão fixo da próxima lição e a navegação de baixo, que cobrem o pé da tela.
-      // Rola só o necessário: o nó para logo acima do cartão fixo, e o topo da trilha tende a continuar à vista.
-      if (caixa.top < 0 || caixa.bottom > window.innerHeight - 240) item.scrollIntoView({ block: 'end' });
-      // Se a rolagem parou no meio do céu (a placa cortada no alto), segue até a faixa da Parte 1 ficar no topo,
-      // desde que o nó continue bem à vista.
-      const inicio = item.closest('.caminho')?.querySelector('.caminho-inicio');
-      const faixa = inicio?.querySelector('.caminho-parte');
       const botao = botoes.current.get(rolarPara);
-      if (!inicio || !faixa || !botao) return;
-      const ceu = inicio.getBoundingClientRect();
-      // Desconta a barra do plano presa no topo (celular), se houver.
-      const barra = document.querySelector('.trilha-topo');
-      const coberto = barra && getComputedStyle(barra).position === 'sticky' ? barra.getBoundingClientRect().height : 0;
-      const resto = faixa.getBoundingClientRect().top - 12 - coberto;
-      if (ceu.top < 0 && resto > 0 && botao.getBoundingClientRect().top - resto > 72) window.scrollBy(0, resto);
+      if (botao) enquadrarLicao(botao);
     });
     return () => window.cancelAnimationFrame(quadro);
   }, [rolarPara]);
@@ -261,7 +285,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
         else vistos.delete(entrada.target);
       }
       raiz.toggleAttribute('data-atual-visivel', vistos.size > 0);
-    }, { rootMargin: '-40px 0px -240px 0px', threshold: 0 });
+    }, { rootMargin: '-40px 0px -170px 0px', threshold: 0 });
     alvos.forEach((alvo) => observador.observe(alvo));
     return () => {
       observador.disconnect();
@@ -302,8 +326,19 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   useEffect(() => {
     if (!aberto) return;
     const id = aberto;
-    balao.current?.focus({ preventScroll: true });
-    balao.current?.scrollIntoView({ block: 'nearest' });
+    const dialogo = balao.current;
+    const no = botoes.current.get(id);
+    if (!dialogo || !no) return;
+    const medir = () => enquadrarLicao(no, dialogo);
+    const quadro = requestAnimationFrame(() => {
+      medir();
+      dialogo.focus({ preventScroll: true });
+    });
+    const observador = new ResizeObserver(medir);
+    for (const elemento of [dialogo, document.querySelector('.trilha-topo'), document.querySelector('.navegacao-mobile')]) {
+      if (elemento) observador.observe(elemento);
+    }
+    window.visualViewport?.addEventListener('resize', medir);
 
     function aoTocarFora(evento: PointerEvent) {
       const item = botoes.current.get(id)?.closest('li');
@@ -311,27 +346,22 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
     }
 
     document.addEventListener('pointerdown', aoTocarFora);
-    return () => document.removeEventListener('pointerdown', aoTocarFora);
+    return () => {
+      cancelAnimationFrame(quadro);
+      observador.disconnect();
+      window.visualViewport?.removeEventListener('resize', medir);
+      document.removeEventListener('pointerdown', aoTocarFora);
+    };
   }, [aberto]);
 
   function tocar(no: NoCaminho) {
-    if (no.estado === 'atual') {
-      setAberto(null);
-      aoAbrir?.(no);
-      return;
-    }
     setAberto((atual) => atual === no.id ? null : no.id);
   }
 
-  /** Do balão de um nó bloqueado até a lição atual: fecha o balão, centraliza o nó atual e põe o foco nele. */
+  /** O balão da lição atual recebe o mesmo foco e enquadramento dos demais. */
   function irParaAtual() {
     const atual = nos.find((item) => item.estado === 'atual');
-    setAberto(null);
-    if (!atual) return;
-    const botao = botoes.current.get(atual.id);
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    botao?.closest('li')?.scrollIntoView({ block: 'center', behavior: reduzido ? 'auto' : 'smooth' });
-    botao?.focus({ preventScroll: true });
+    if (atual) setAberto(atual.id);
   }
 
   function fechar() {
@@ -369,7 +399,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               <span>{stu}{montando && <span className="caminho-digitando" aria-hidden="true"><span /><span /><span /></span>}</span>
               {montando && dicas.length > 0 && <span className="caminho-inicio__dica" key={dica}>{dicas[dica]}</span>}
             </p>
-            <Stu />
+            <Mascote expressao={montando ? 'stu-curioso' : 'stu-feliz'} tamanho={92} sombra animado={montando ? 'laco' : 'uma-vez'} className="stu" />
           </div>
         )}
         {total > 0 && <FaixaParte numero={1} trecho={primeiroTrecho} resumo={resumoTrechos.get(primeiroTrecho)} />}
@@ -394,9 +424,14 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const idBalao = `${base}-balao-${indice}`;
           const posicao = montando ? mensagens.trilha.posicaoParcial(indice + 1) : mensagens.trilha.posicao(indice + 1, total);
           const estado = mensagens.trilha.estados[no.estado];
-          const nome = atual
+          const selos = selosDoNo(no);
+          const selosTexto = selos.map((selo) => selo.texto).join('. ');
+          const nomeBase = atual
             ? (no.andamento ? mensagens.trilha.nomeNoContinuar(no.titulo, posicao) : mensagens.trilha.nomeNoAtual(no.titulo, posicao))
-            : mensagens.trilha.nomeNo(no.titulo, posicao, estado.toLocaleLowerCase('pt-BR'));
+            : (selos.length > 0
+              ? `${no.titulo}. ${selosTexto}. ${posicao}, ${estado.toLocaleLowerCase('pt-BR')}.`
+              : mensagens.trilha.nomeNo(no.titulo, posicao, estado.toLocaleLowerCase('pt-BR')));
+          const nome = atual && selos.length > 0 ? `${nomeBase} ${selosTexto}.` : nomeBase;
           let linha = no.estado === 'previa' ? posicao : estado;
           if (abrindo === no.id) linha = mensagens.trilha.abrindo;
           const enfeites = enfeitesDaLinha(no.trecho, indice);
@@ -405,24 +440,26 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
           const numeroMarco = trechos.indexOf(no.trecho) + 1;
           const recem = no.id === recemConcluida;
           const desenhar = recem && no.estado === 'concluida' && ligado;
-          const selo = seloDoNo(no);
 
           const conteudo = (
             <>
               <span className="caminho-no__lente" aria-hidden="true">
+                {atual && <span className="caminho-no__halo" />}
                 <Icone nome={iconeDoNo(no)} />
                 {liberada && <span className="caminho-no__cadeado"><Icone nome="cadeado" /></span>}
                 {recem && <Confete quantidade={12} />}
-                {/* Um balão só no nó atual: a ação e o nome da lição juntos. */}
-                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar}</span><span className="caminho-no__etiqueta-titulo">{semQuebrarHifen(no.titulo)}</span></span>}
+                {/* Um balão só no nó atual: a ação e o nome da lição juntos (\u200B evita colar palavras no axe). */}
+                {atual && <span className="caminho-no__etiqueta"><span className="caminho-no__etiqueta-acao">{no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar}{'\u200B'}</span><span className="caminho-no__etiqueta-titulo">{semQuebrarHifen(no.titulo)}</span></span>}
                 {no.estado === 'bloqueada' && <span className="caminho-no__selo"><Icone nome="cadeado" /></span>}
               </span>
               {/* O nome de cada lição fica à vista embaixo do nó (o atual já mostra o nome no balão "Começar"): dá para achar uma lição para rever sem tocar uma por uma. */}
               {(!atual || no.estado === 'previa') && <span className="caminho-no__texto" aria-hidden="true">
-                <span className="caminho-no__titulo">{semQuebrarHifen(no.titulo)}</span>
+                <span className="caminho-no__titulo">{semQuebrarHifen(no.titulo)}{selos.length > 0 ? '\u200B' : ''}</span>
                 {comRotulo && !atual && <span className="caminho-no__estado">{linha}</span>}
-                {/* O reforço e o "vale rever" são um selo com ícone (o desenho de blocos parecia um carregamento travado). */}
-                {selo && <span className="caminho-ponte" data-rever={selo.texto === mensagens.trilha.valeRever || undefined}><Icone nome={selo.icone} />{selo.texto}</span>}
+                {/* O reforço e o "vale rever" são selos com ícone (a marca da ponte feita vem antes do "Vale rever"). */}
+                {selos.map((selo, sIdx) => (
+                  <span key={selo.texto} className="caminho-ponte" data-rever={selo.texto === mensagens.trilha.valeRever || undefined}><Icone nome={selo.icone} />{selo.texto}{sIdx < selos.length - 1 ? '\u200B' : ''}</span>
+                ))}
               </span>}
             </>
           );
@@ -443,7 +480,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               }}>
               <span className="caminho-terreno" aria-hidden="true">
                 {atual && guiaNoCaminho
-                  ? <span className="caminho-guia"><Stu /></span>
+                  // De três quartos, olhando para o próximo nó: espelhado quando o caminho vira à esquerda.
+                  ? <span className="caminho-guia" data-olha={xSeguinte < x ? 'esquerda' : 'direita'}><Mascote expressao="stu-tres-quartos" tamanho={96} animado="periodico" className="stu" /></span>
                   : !comRotulo && <Desenho nome={enfeites.grande} className={classeDoEnfeite(enfeites.grande, 'caminho-enfeite caminho-enfeite--grande')} />}
                 <Desenho nome={enfeites.miudo} className={classeDoEnfeite(enfeites.miudo, 'caminho-enfeite caminho-enfeite--miudo')} />
                 <Desenho nome={lateral.grande} className={classeDoEnfeite(lateral.grande, 'caminho-enfeite caminho-enfeite--lateral')} />
@@ -467,12 +505,12 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               )}
               {no.estado === 'previa' ? (
                 <button type="button" className="caminho-no__alvo" aria-label={nome} aria-haspopup="dialog" aria-expanded={estaAberto}
-                  aria-controls={estaAberto ? idBalao : undefined} onClick={() => tocar(no)}>
+                  ref={(elemento) => guardarBotao(no.id, elemento)} aria-controls={estaAberto ? idBalao : undefined} onClick={() => tocar(no)}>
                   {conteudo}
                 </button>
               ) : (
                 <button type="button" className="caminho-no__alvo" ref={(elemento) => guardarBotao(no.id, elemento)}
-                  aria-label={selo ? `${nome} ${selo.texto}.` : nome} aria-haspopup={atual ? undefined : 'dialog'} aria-expanded={atual ? undefined : estaAberto}
+                  aria-label={nome} aria-haspopup="dialog" aria-expanded={estaAberto}
                   aria-controls={estaAberto ? idBalao : undefined} disabled={ocupado} onClick={() => tocar(no)}>
                   {conteudo}
                 </button>
@@ -481,19 +519,19 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
                 <>
                   <span className="caminho-balao__seta" aria-hidden="true" />
                   <div className="caminho-balao" id={idBalao} ref={balao} role="dialog" tabIndex={-1} data-estado={no.estado}
-                    aria-labelledby={`${idBalao}-titulo`} aria-describedby={`${idBalao}-texto`}>
+                    aria-labelledby={`${idBalao}-titulo`} aria-describedby={atual ? undefined : `${idBalao}-texto`}>
                     <div className="caminho-balao__topo">
                       <p className="caminho-balao__titulo" id={`${idBalao}-titulo`}>{no.titulo}</p>
                       <button type="button" className="caminho-balao__fechar" aria-label={mensagens.trilha.fechar} onClick={fechar}>
                         <Icone nome="fechar" />
                       </button>
                     </div>
-                    <p className="caminho-balao__texto" id={`${idBalao}-texto`}>{explicar(nos, indice)}</p>
-                    {no.estado === 'concluida' && aoAbrir && (
-                      <Botao variante="secundario" onClick={() => {
+                    {!atual && <p className="caminho-balao__texto" id={`${idBalao}-texto`}>{explicar(nos, indice)}</p>}
+                    {(atual || no.estado === 'concluida') && aoAbrir && (
+                      <Botao variante={atual ? "primario" : "secundario"} onClick={() => {
                         setAberto(null);
                         aoAbrir(no);
-                      }}>{mensagens.trilha.refazer}</Botao>
+                      }}>{atual ? (no.andamento ? mensagens.trilha.continuarNo : mensagens.trilha.comecar) : mensagens.trilha.refazer}</Botao>
                     )}
                     {no.estado === 'bloqueada' && nos.some((item) => item.estado === 'atual') && (
                       <Botao variante="secundario" onClick={irParaAtual}>{mensagens.trilha.irParaAtual}<Icone nome="seta" /></Botao>
@@ -541,7 +579,7 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               </>
             )}
           </span>
-          {stuNaChegada && <span className="caminho-chegada__stu" aria-hidden="true"><Stu /></span>}
+          {stuNaChegada && <span className="caminho-chegada__stu" aria-hidden="true"><Mascote expressao="stu-comemorando" tamanho={64} sombra /></span>}
           <button type="button" className="caminho-chegada__lente" aria-label={mensagens.trilha.trofeu} disabled={montando}
             data-tocado={trofeuTocado ? (trofeuTocado % 2 ? 'a' : 'b') : undefined}
             onClick={() => {
@@ -549,7 +587,8 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
               const faltam = nos.filter((no) => no.estado !== 'concluida').length;
               setAnuncio(tudoFeito ? mensagens.trilha.trofeuConquistado : mensagens.trilha.trofeuProgresso(total - faltam, total));
             }}>
-            <Icone nome="trofeu" />
+            {/* O troféu do kit (spec 13, §B4): em silhueta antes da conquista e em cor cheia depois, com o pop de hoje. */}
+            <Mascote expressao="acessorio-trofeu" tamanho={73} className="caminho-chegada__trofeu" />
             {(festaNaChegada || (comRecem && tudoFeito)) && <Confete quantidade={18} />}
             {trofeuTocado > 0 && (
               <span key={trofeuTocado} className="caminho-chegada__bolha" aria-hidden="true">

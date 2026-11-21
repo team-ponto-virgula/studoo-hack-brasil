@@ -223,3 +223,22 @@ test("a prévia diz o que cada lição ensina: o resumo vem no evento e na propo
   assert.ok(esqueletoValido({ gerador: "g", titulo: "T", objetivo: "O", origem: "o", fluxos: [{ titulo: "F", licoes: [{ titulo: "L", resumo: "Montar o acorde." }] }] }));
   assert.equal(esqueletoValido({ gerador: "g", titulo: "T", objetivo: "O", origem: "o", fluxos: [{ titulo: "F", licoes: [{ titulo: "L", resumo: "x".repeat(201) }] }] }), false);
 });
+
+test("títulos com <, >, tags HTML e <script> passam inteiros pela geração e pelo token da proposta", async () => {
+  const entradas = [
+    "Comparar proporções: 1/2 < 3/4 e 3/4 > 1/4",
+    "Inequações: x < 3 e y > 2",
+    "HTML: a tag <b> e a tag <i>",
+    '<script>alert("x")</script> Quero aprender astronomia',
+  ];
+  for (const entrada of entradas) {
+    const uid = usuario();
+    const eventos = await coletar(iniciarGeracao(uid, entrada));
+    const planoEvento = eventos.find(({ tipo }) => tipo === "plano");
+    const { proposta } = eventos.at(-1);
+    const lida = lerComprovante("proposta", uid, proposta.token);
+    assert.equal(planoEvento.titulo, entrada);
+    assert.equal(proposta.titulo, entrada);
+    assert.equal(lida.plano.titulo, entrada);
+  }
+});

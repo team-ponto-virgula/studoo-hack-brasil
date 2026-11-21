@@ -1,0 +1,49 @@
+{
+  "origem": "https://studoo-web-suqmqb-3a8f9c-187-53-116-195.sslip.io",
+  "verificadoEm": "2026-11-20T21:59:14.180Z",
+  "commitPublicado": "4a60291dfde722b0488f128066b883eefb43ec83",
+  "results": [
+    {
+      "path": "/api/saude",
+      "status": 200,
+      "html": false,
+      "json": {
+        "ok": true,
+        "status": "ok"
+      }
+    },
+    {
+      "path": "/api/auth/config",
+      "status": 200,
+      "html": false,
+      "json": {
+        "google": true,
+        "recuperacao": false,
+        "cadastro": false,
+        "apple": false,
+        "ia": "deepseek",
+        "visitante": true,
+        "vozAoVivo": true,
+        "vozAoVivoVisitante": false,
+        "transcricao": true,
+        "compartilhar": true,
+        "comunidade": true
+      }
+    },
+    {
+      "path": "/privacidade",
+      "status": 200,
+      "html": true
+    },
+    {
+      "path": "/suporte",
+      "status": 200,
+      "html": true
+    },
+    {
+      "path": "/api/mobile/apple/nonce",
+      "status": 405,
+      "html": false
+    }
+  ]
+}

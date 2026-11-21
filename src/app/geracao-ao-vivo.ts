@@ -1,5 +1,7 @@
-import { ErroStudoo, interpretarEventoGeracao, type EventoGeracao, type PropostaPlano } from '@studoo/contratos';
+import { CABECALHO_CAPACIDADES, ErroStudoo, interpretarEventoGeracao, type EventoGeracao, type PropostaPlano } from '@studoo/contratos';
 import type { NoCaminho } from '../ui';
+import { comAceiteIa } from './aceite-ia';
+import { CAPACIDADES_DO_SITE } from '../contratos/capacidades';
 
 const rota = '/api/aprendizado/propostas/ao-vivo';
 
@@ -25,18 +27,19 @@ function codigoDaResposta(corpo: unknown) {
  * Abortar o sinal interrompe a leitura, e o servidor para a geração sem guardar nada.
  */
 export async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal): AsyncGenerator<EventoGeracao> {
-  const resposta = await fetch(rota, {
+  // Sem o aceite de IA vigente, o servidor responde 428 antes de abrir o fluxo: a folha pergunta e o pedido é refeito.
+  const resposta = await comAceiteIa(() => fetch(rota, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson' },
+    headers: { 'Content-Type': 'application/json', Accept: 'application/x-ndjson', [CABECALHO_CAPACIDADES]: CAPACIDADES_DO_SITE },
     body: JSON.stringify({ objetivo }),
     credentials: 'same-origin',
     cache: 'no-store',
     signal: sinal,
-  });
+  }));
 
   if (!resposta.ok || !resposta.body || !resposta.headers.get('content-type')?.includes('application/x-ndjson')) {
     const corpo: unknown = await resposta.json().catch(() => null);
-    throw new ErroStudoo(codigoDaResposta(corpo));
+    throw new ErroStudoo(codigoDaResposta(corpo), corpo ?? undefined);
   }
 
   const leitor = resposta.body.getReader();

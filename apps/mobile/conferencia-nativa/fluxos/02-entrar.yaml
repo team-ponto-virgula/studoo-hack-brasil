@@ -1,0 +1,65 @@
+# Entra com a conta sintética e captura o que o Studoo mostra logo depois. Roda com o preenchimento automático de senhas
+# desligado no simulador: com ele ligado, digitar num campo de senha falha (problema conhecido do Maestro no iOS).
+appId: host.exp.Exponent
+name: 02-entrar
+---
+- runFlow: partes/abrir-pela-primeira-vez.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: login-email
+- inputText: ${EMAIL}
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: login-senha
+# Com `label`, a saída do Maestro mostra esta frase no lugar do texto digitado.
+- inputText:
+    text: ${SENHA}
+    label: Digitar a senha da conta sintética
+- waitForAnimationToEnd:
+    timeout: 1500
+- takeScreenshot: 04-entrada-preenchida
+# O campo da senha envia pelo teclado (returnKeyType "go"). Se o Enter não enviar, o botão "Entrar" envia.
+- pressKey: Enter
+- extendedWaitUntil:
+    visible:
+      id: nav-planos
+    timeout: 25000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: entrar
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: entrar
+# Com o preenchimento automático desligado, o iOS não oferece guardar a senha; se oferecer, a resposta é "agora não".
+- runFlow:
+    when:
+      visible: "Not Now"
+    commands:
+      - tapOn: "Not Now"
+# A barra de baixo, ou o aviso de falha da lista de trilhas. Na execução 44590901823, logo depois de entrar, o proxy da
+# conferência devolveu 502 ("servidor fora do ar") para a lista de trilhas depois de 20 s; o app ficou no aviso, sem a
+# barra, e o fluxo caiu, pulando todas as telas. A causa do 502 não ficou registrada. Com o aviso, um toque em "Tentar
+# novamente" (partes/tentar-de-novo.yaml); se a falha continuar, a espera seguinte derruba o fluxo, como antes.
+- extendedWaitUntil:
+    visible:
+      id: nav-planos|tentar-planos
+    timeout: 60000
+- runFlow: partes/tentar-de-novo.yaml
+# Zera a conta do Maestro antes da espera da barra (ver partes/reabrir.yaml).
+- evalScript: ${output.esperaDaBarra = true}
+- extendedWaitUntil:
+    visible:
+      id: nav-planos
+    timeout: 60000
+# Zera a conta do Maestro (ver partes/reabrir.yaml): sem isto, a espera da barra de baixo consome a do mapa.
+- evalScript: ${output.esperaDoMapa = true}
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano
+    timeout: 45000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 05-depois-de-entrar

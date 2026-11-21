@@ -1,0 +1,142 @@
+{
+ "origem": "saída real da IA guardada pelo servidor (cb532bb), material-3 material-licao3, sem a citação do material; aceita pelo validador do marco 8 (caso 7 de sua-vez-reais.json)",
+ "visuais": [
+  {
+   "tipo": "formula",
+   "latex": "\\begin{vmatrix} x_A & y_A & 1 \\\\ x_B & y_B & 1 \\\\ x_C & y_C & 1 \\end{vmatrix} = 0"
+  }
+ ],
+ "exercicios": [
+  {
+   "tipo": "multipla_escolha",
+   "enunciado": "Qual condição garante que $A$, $B$ e $C$ sejam colineares?",
+   "visual": null
+  }
+ ],
+ "resolucao": {
+  "problema": "Para que valores de $k$ os pontos $A = (2, 1)$, $B = (1, 4)$ e $C = (k, -2)$ são colineares?",
+  "visual": {
+   "tipo": "plano",
+   "alt": "Pontos A e B dados e um ponto C sobre uma reta, a ser determinado pela condição de colinearidade.",
+   "x": [
+    -1,
+    5
+   ],
+   "y": [
+    -3,
+    5
+   ],
+   "pontos": [
+    {
+     "id": "A",
+     "papel": "dado",
+     "x": 2,
+     "y": 1
+    },
+    {
+     "id": "B",
+     "papel": "dado",
+     "x": 1,
+     "y": 4
+    },
+    {
+     "id": "C",
+     "papel": "procurado",
+     "x": 4,
+     "y": -2
+    }
+   ]
+  },
+  "passos": [
+   {
+    "nome": "Montar a matriz",
+    "texto": "Colocamos as coordenadas de $A$, $B$ e $C$ em linhas, com a coluna de $1$.",
+    "formula": "\\begin{vmatrix} 2 & 1 & 1 \\\\ 1 & 4 & 1 \\\\ k & -2 & 1 \\end{vmatrix}"
+   },
+   {
+    "nome": "Calcular o determinante",
+    "texto": "Pela regra de Sarrus, o determinante vale $8 + k - 2 - 4k - 4 + 1$, que simplifica para $3 - 3k$.",
+    "formula": "8 + k - 2 - 4k - 4 + 1 = 3 - 3k"
+   },
+   {
+    "nome": "Igualar a zero",
+    "texto": "Para os pontos serem colineares, o determinante deve ser nulo.",
+    "formula": "\\foco{3 - 3k} = 0"
+   },
+   {
+    "nome": "Isolar e achar k",
+    "texto": "Resolvendo a equação, encontramos o valor de $k$ que torna os três pontos colineares.",
+    "formula": "\\resposta{k = 1}",
+    "visual": {
+     "tipo": "plano",
+     "alt": "Reta passando pelos pontos A, B e C, com C na posição que torna os três alinhados.",
+     "x": [
+      -1,
+      5
+     ],
+     "y": [
+      -3,
+      5
+     ],
+     "pontos": [
+      {
+       "id": "A",
+       "papel": "dado",
+       "x": 2,
+       "y": 1
+      },
+      {
+       "id": "B",
+       "papel": "dado",
+       "x": 1,
+       "y": 4
+      },
+      {
+       "id": "C",
+       "papel": "resposta",
+       "x": 1,
+       "y": -2
+      }
+     ]
+    },
+    "tentativa": {
+     "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+     "opcoes": [
+      {
+       "formula": "k = 1",
+       "correta": true,
+       "porque": "De $3 - 3k = 0$ vem $k = 1$."
+      },
+      {
+       "formula": "k = 3",
+       "correta": false,
+       "porque": "Erro na simplificação do determinante; com $k = 3$ o determinante vale $-6$."
+      },
+      {
+       "formula": "k = -1",
+       "correta": false,
+       "porque": "Sinal trocado ao isolar $k$; com $k = -1$ o determinante vale $6$."
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "relato": {
+  "visuais": {
+   "enviados": 1,
+   "aceitos": 1
+  },
+  "figuras": {
+   "enviadas": 0,
+   "aceitas": 0
+  },
+  "resolucao": {
+   "enviada": true,
+   "aceita": true,
+   "conferidas": 3,
+   "puladas": 1
+  },
+  "motivos": []
+ }
+}

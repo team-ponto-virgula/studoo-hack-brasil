@@ -1,0 +1,84 @@
+{
+ "origem": "saída real da IA guardada pelo servidor (cb532bb), material-2 material-licao4, sem a citação do material",
+ "visuais": [
+  {
+   "tipo": "formula",
+   "latex": "\\begin{vmatrix} -1 & -1 & 1 \\\\ 2 & 5 & 1 \\\\ k & 1 & 1 \\end{vmatrix} = 0"
+  },
+  {
+   "tipo": "formula",
+   "latex": "(-5) + (-k) + 2 - 5k - (-1) - (-2) = 0"
+  }
+ ],
+ "exercicios": [
+  {
+   "tipo": "multipla_escolha",
+   "enunciado": "Ao resolver a condição de colinearidade de $A$, $B$ e $C$, obtém-se a equação $0 - 6k = 0$. Qual é a solução?",
+   "visual": null
+  }
+ ],
+ "resolucao": {
+  "problema": "Para quais valores de $k$ os pontos $A = (2, 1)$, $B = (4, 7)$ e $C = (k, 4)$ são colineares?",
+  "passos": [
+   {
+    "nome": "Montar o determinante",
+    "texto": "A colinearidade exige determinante nulo com as coordenadas e uma coluna de $1$.",
+    "formula": "\\begin{vmatrix} 2 & 1 & 1 \\\\ 4 & 7 & 1 \\\\ k & 4 & 1 \\end{vmatrix} = 0"
+   },
+   {
+    "nome": "Aplicar a regra de…",
+    "texto": "Multiplicam-se as diagonais: três no sentido principal e três no sentido inverso.",
+    "formula": "14 + k + 16 - 7k - 8 - 2 = 0"
+   },
+   {
+    "nome": "Agrupar os termos",
+    "texto": "Somam-se os constantes e juntam-se os termos em $k$.",
+    "formula": "20 - 6k = 0"
+   },
+   {
+    "nome": "Isolar o k",
+    "texto": "Leva-se o termo em $k$ para o outro lado e divide-se pelo coeficiente.",
+    "formula": "\\foco{-6k} = -20 \\to \\resposta{k = \\frac{20}{6}}",
+    "tentativa": {
+     "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
+     "opcoes": [
+      {
+       "formula": "k = \\frac{20}{6}",
+       "correta": true,
+       "porque": "De $20 - 6k = 0$ vem $6k = 20$, logo $k = \\frac{20}{6}$."
+      },
+      {
+       "formula": "k = -\\frac{20}{6}",
+       "correta": false,
+       "porque": "O sinal se perde ao passar o termo: $20 - 6k = 0$ dá $6k = 20$, positivo."
+      },
+      {
+       "formula": "k = 20",
+       "correta": false,
+       "porque": "Faltou dividir pelo coeficiente $-6$ do termo em $k$."
+      }
+     ]
+    }
+   }
+  ]
+ },
+ "relato": {
+  "visuais": {
+   "enviados": 3,
+   "aceitos": 2
+  },
+  "figuras": {
+   "enviadas": 0,
+   "aceitas": 0
+  },
+  "resolucao": {
+   "enviada": true,
+   "aceita": true,
+   "conferidas": 0,
+   "puladas": 4
+  },
+  "motivos": [
+   "visuais[2]: fórmula: o destaque \\resposta só vale no último passo"
+  ]
+ }
+}

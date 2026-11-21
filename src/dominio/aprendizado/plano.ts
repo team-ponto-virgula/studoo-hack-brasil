@@ -1,4 +1,4 @@
-import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial } from "@studoo/contratos";
+import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial, ResolucaoGuardada, Visual } from "@studoo/contratos";
 import { LIMITES_RESPOSTA, TIPOS_TRECHO, inferirTipoTrecho, tamanhoDaResposta } from "@studoo/contratos";
 
 /**
@@ -10,6 +10,13 @@ import { LIMITES_RESPOSTA, TIPOS_TRECHO, inferirTipoTrecho, tamanhoDaResposta } 
  * - `verdadeiro_falso`: `verdadeiro` ou `falso` e o id da justificativa certa;
  * - `aberta`: grupos de palavras-chave (`termo|sinônimo|radical`), um por ideia que a resposta precisa trazer.
  */
+export const ORIGEM_GERADA = "Conteúdo gerado pelo Studoo";
+
+/** Formato usado nas trilhas antigas. A referência ao material continua íntegra. */
+export function origemDoConteudo(origem: string): string {
+  return /^(?:IA (?:da|do) )?(?:DeepSeek|OpenAI|gpt-[\w.-]+)\b/i.test(origem.trim()) ? ORIGEM_GERADA : origem;
+}
+
 export type ExercicioInterno = ExercicioPublico & {
   gabarito: string[];
   feedbackCorreto: string;
@@ -41,6 +48,13 @@ export type ConteudoLicao = {
   exemploTipo?: "exemplo" | "demonstracao";
   passos?: string[];
   recurso?: Recurso;
+  /**
+   * Fórmulas e figuras (spec 15), já validadas na geração (`normalizarVisuais`) e guardadas completas, com a posição do ponto
+   * procurado. Opcional e sem validação rígida em `conteudoValido`: uma lição salva continua abrindo mesmo que uma versão futura do
+   * validador recuse o visual dela (o visual some, a lição fica).
+   */
+  visuais?: Visual[];
+  resolucao?: ResolucaoGuardada;
   falas?: Fala[];
   origem: string;
   exercicio: ExercicioInterno;

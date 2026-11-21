@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-11-21T03:14:21.232Z",
+  "appId": "6837508955",
+  "groupId": "b54c8449-a903-4bc3-885a-5b3dcd6dd21a",
+  "name": "Studoo Beta Interno",
+  "internal": true,
+  "allBuilds": false,
+  "builds": [
+    {
+      "id": "4eea9ee9-145e-4076-8ad1-e130af015d6c",
+      "version": "3",
+      "processingState": "VALID"
+    }
+  ],
+  "testerCount": 2,
+  "ownerMember": true,
+  "ownerTesterState": "INSTALLED",
+  "julioMember": true,
+  "julioTesterState": "ACCEPTED",
+  "julioRoles": [
+    "DEVELOPER"
+  ],
+  "julioAllAppsVisible": false,
+  "julioProvisioningAllowed": false,
+  "julioVisibleAppIds": [
+    "6837508955"
+  ],
+  "limits": "Confirma associação dos dois testadores, escopo, instalação do titular e aceite do TestFlight de Julio conforme estados da Apple; não comprova instalação de Julio nem funcionamento dos fluxos no aparelho."
+}

@@ -1,0 +1,268 @@
+/* Perfil rico (spec 10, etapa A). 360 px é o mínimo; toques de 44 px; hover só onde há ponteiro fino. */
+
+/* Avatar: foto ou inicial na cor, em três tamanhos. */
+.avatar { overflow: hidden; }
+.avatar img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.avatar[data-tamanho='g'] { width: 96px; height: 96px; font-size: 2.5rem; }
+@media (min-width: 768px) { .avatar[data-tamanho='g'] { width: 112px; height: 112px; font-size: 2.875rem; } }
+.marca-recebida .avatar, .trilha-recebida .avatar { width: 24px; height: 24px; }
+
+/* Cabeçalho do perfil: faixa na cor, foto sobreposta, nome, resumo, interesses e alcance. */
+.cabeca-perfil {
+  --cor-perfil: var(--acao);
+  position: relative; overflow: hidden; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo);
+}
+.cabeca-perfil__faixa {
+  position: relative; height: 104px;
+  background: linear-gradient(120deg, var(--cor-perfil) 0%, color-mix(in srgb, var(--cor-perfil) 72%, #ffffff) 100%);
+}
+@media (min-width: 768px) { .cabeca-perfil__faixa { height: 128px; } }
+.cabeca-perfil__desenho { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cabeca-perfil__corpo { display: grid; gap: 8px; padding: 0 18px 18px; }
+@media (min-width: 768px) { .cabeca-perfil__corpo { padding: 0 24px 22px; } }
+.cabeca-perfil__topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 12px; margin-top: -48px; }
+@media (min-width: 768px) { .cabeca-perfil__topo { margin-top: -56px; } }
+.cabeca-perfil__topo .avatar { position: relative; border: 4px solid #fff; box-shadow: 0 8px 20px rgb(11 27 92 / 0.18); }
+.cabeca-perfil__acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.cabeca-perfil__acoes .botao { min-height: 44px; }
+.cabeca-perfil__acoes .botao .icone { width: 18px; height: 18px; }
+/* Celular: a foto sobe na faixa sozinha e as ações vão para o fim do cartão, lado a lado quando cabem. */
+@media (max-width: 559px) {
+  .cabeca-perfil__topo { display: contents; }
+  .cabeca-perfil__topo .avatar { justify-self: start; margin-top: -48px; }
+  .cabeca-perfil__acoes { order: 10; display: grid; grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr)); margin-top: 8px; }
+  .cabeca-perfil__acoes .botao { width: 100%; }
+}
+.cabeca-perfil__status { flex-basis: 100%; grid-column: 1 / -1; color: var(--sucesso); font-size: 0.875rem; font-weight: 800; }
+.cabeca-perfil__status:empty { display: none; }
+.cabeca-perfil__nome { margin: 4px 0 0; font-family: Quicksand, sans-serif; font-size: 1.625rem; font-weight: 700; line-height: 1.2; letter-spacing: -0.035em; overflow-wrap: anywhere; }
+.cabeca-perfil__nome:focus { outline: none; }
+@media (min-width: 768px) { .cabeca-perfil__nome { font-size: 1.875rem; } }
+.cabeca-perfil__resumo { margin: 0; color: var(--texto); font-size: 1.0625rem; line-height: 1.5; overflow-wrap: anywhere; }
+.cabeca-perfil__convite {
+  justify-self: start; min-height: 44px; padding: 8px 14px; border: 2px dashed var(--borda-campo); border-radius: 14px;
+  color: var(--acao); background: none; font: inherit; font-weight: 800; text-align: start; cursor: pointer;
+}
+.cabeca-perfil__convite:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
+@media (hover: hover) { .cabeca-perfil__convite:hover { background: var(--nevoa); } }
+.cabeca-perfil__interesses { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 0; padding: 0; list-style: none; }
+.cabeca-perfil__interesses li {
+  padding: 4px 12px; border: 1.5px solid color-mix(in srgb, var(--cor-perfil) 36%, #ffffff); border-radius: 999px;
+  background: color-mix(in srgb, var(--cor-perfil) 9%, #ffffff); color: var(--texto); font-size: 0.875rem; font-weight: 800;
+}
+.cabeca-perfil__alcance { display: flex; flex-wrap: wrap; margin: 4px 0 0; color: var(--texto2); font-size: 0.9375rem; font-weight: 800; }
+/* Cada item fica inteiro: a linha só parte entre os itens, nunca no meio de "4 pessoas estudando suas trilhas". */
+.cabeca-perfil__item { white-space: nowrap; }
+.cabeca-perfil--esqueleto .folha-esqueleto { padding: 18px; }
+.cabeca-perfil--esqueleto .cabeca-perfil__faixa { background: var(--gelo); }
+
+/* O título "Perfil" usa o tamanho de título de página de todas as telas (o h1 global: 32 px no celular, até 40 px). */
+
+/* Cartão e Novidades: um embaixo do outro; no computador largo, Novidades na coluna da direita. */
+.perfil-topo { display: grid; gap: 20px; align-items: start; }
+@media (min-width: 1240px) {
+  .painel--perfil:has(.perfil-topo) { width: min(100%, 70rem); }
+  .painel--perfil:has(.perfil-topo) > :not(.perfil-topo) { max-width: 44rem; }
+  .perfil-topo { grid-template-columns: minmax(0, 44rem) minmax(18rem, 1fr); gap: 28px; }
+}
+.selo-so-voce { justify-self: start; padding: 2px 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto2); font-size: 0.8125rem; font-weight: 800; }
+.link-texto { padding: 0; border: 0; background: none; color: var(--acao); font: inherit; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.link-texto:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 4px; }
+.perfil-completar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--ceu); }
+.perfil-completar .stu { width: 80px; height: auto; flex: none; }
+.perfil-completar > div { display: grid; flex: 1 1 14rem; gap: 8px; justify-items: start; }
+.perfil-completar .botao .icone { width: 18px; height: 18px; }
+
+/* Tela Editar perfil: formulário e prévia (lado a lado no computador; a prévia fica presa ao rolar). */
+.painel--editar-perfil { display: grid; gap: 16px; width: min(100%, 70rem); }
+.editar-perfil__topo { display: grid; gap: 2px; }
+.editar-perfil__topo h1:focus { outline: none; }
+.editar-perfil__voltar { justify-self: start; min-height: 44px; padding-inline: 0; }
+.editar-perfil__grade { display: grid; gap: 24px; }
+@media (min-width: 1024px) {
+  .editar-perfil__grade { grid-template-columns: minmax(0, 1fr) minmax(19rem, 25rem); align-items: start; gap: 32px; }
+  .editar-perfil__previa { position: sticky; top: 24px; }
+}
+.editar-perfil__form { display: grid; gap: 22px; }
+.editar-perfil__rotulo { margin: 0; font-size: 1rem; }
+.editar-perfil__previa { display: grid; gap: 10px; }
+.editar-perfil__previa .cabeca-perfil { box-shadow: 0 10px 30px rgb(11 27 92 / 0.08); }
+
+.editar-foto { display: flex; flex-wrap: wrap; align-items: center; gap: 16px 18px; padding: 16px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--nevoa); }
+.editar-foto > .avatar { border: 4px solid #fff; box-shadow: 0 6px 16px rgb(11 27 92 / 0.14); }
+.editar-foto__corpo { display: grid; flex: 1 1 15rem; gap: 8px; min-width: 0; }
+.editar-foto__acoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.editar-foto__acoes .botao { min-height: 44px; }
+.editar-foto__acoes .botao .icone { width: 18px; height: 18px; }
+.editar-foto .folha-parar { display: inline-flex; align-items: center; gap: 6px; padding-inline: 6px; }
+
+.campo__linha { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; }
+.campo__contador { color: var(--texto2); font-size: 0.875rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.campo__contador[data-acima] { color: var(--erro); }
+.campo--resumo textarea { min-height: 96px; resize: none; }
+/* Campo com erro: borda vermelha de 2 px (o foco vira um anel externo) e a mensagem colada embaixo, com ícone. */
+.campo[data-erro] input, .campo[data-erro] textarea, .campo[data-erro] input:focus, .campo[data-erro] textarea:focus { border-color: #c23b4e; }
+.campo[data-erro] input:focus, .campo[data-erro] textarea:focus { box-shadow: 0 0 0 4px rgb(194 59 78 / 0.22); }
+.campo-erro--colado { display: flex; align-items: flex-start; gap: 6px; margin: -2px 0 0; color: #c23b4e; }
+.campo-erro--colado .icone { flex: none; width: 18px; height: 18px; margin-top: 1px; }
+.cores-perfil { margin-inline: 0; padding-inline: 0; }
+.painel--perfil p, .painel--editar-perfil p, .painel--explorar p, .folha p, .cabeca-perfil p { text-wrap: pretty; }
+
+.interesses { display: grid; gap: 8px; margin: 0; padding: 0; border: 0; min-width: 0; }
+.interesses legend { margin-bottom: 4px; padding: 0; font-size: 0.875rem; font-weight: 800; }
+.interesses__lista { display: flex; flex-wrap: wrap; gap: 8px; }
+.interesse { position: relative; display: inline-flex; }
+.interesse input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.interesse span {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 2px solid var(--borda-campo); border-radius: 999px;
+  color: var(--texto); background: var(--fundo); font-weight: 800; cursor: pointer; user-select: none;
+}
+.interesse input:checked + span { border-color: var(--acao); background: var(--acao); color: #fff; }
+.interesse input:checked + span::before { content: '✓'; font-weight: 900; }
+.interesse input:focus-visible + span { outline: 3px solid var(--acao); outline-offset: 2px; }
+@media (hover: hover) { .interesse input:not(:checked) + span:hover { background: var(--nevoa); } }
+.interesses__aviso:empty { display: none; }
+
+.editar-perfil__barra {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+  border-top: 2px solid var(--gelo); background: var(--fundo);
+}
+.editar-perfil__estado { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-weight: 800; }
+.editar-perfil__estado .icone { width: 18px; height: 18px; }
+.editar-perfil__estado[data-estado='pendente'] { color: var(--alerta); }
+.editar-perfil__estado[data-estado='salvo'] { color: var(--sucesso); }
+.editar-perfil__estado[data-estado='salvando'] { color: var(--texto2); }
+.editar-perfil__barra .campo-erro { flex-basis: 100%; order: 3; }
+.editar-perfil__barra .botao { min-height: 48px; min-width: 9rem; }
+/* Em 360, estado e botão cabem lado a lado (165 + 12 + 128 px em 320). */
+@media (max-width: 379px) { .editar-perfil__barra { flex-wrap: nowrap; } .editar-perfil__barra .botao { min-width: 8rem; padding-inline: 16px; } }
+@media (max-width: 339px) { .editar-perfil__barra { flex-wrap: wrap; } .editar-perfil__barra .botao { flex: 1 1 100%; } }
+.estudo-principal:has(.painel--editar-perfil) { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+
+/* Recorte: quadro quadrado, círculo do avatar, controle de zoom. */
+.folha--recorte { gap: 12px; grid-auto-rows: max-content; width: min(100%, 26rem); border-bottom: 2px solid var(--gelo); border-radius: 24px; padding-bottom: 20px; }
+.recorte {
+  position: relative; justify-self: center; width: min(100%, 300px, 32svh); aspect-ratio: 1; overflow: hidden;
+  border-radius: 18px; background: #101833; touch-action: none; cursor: grab; user-select: none;
+}
+.recorte:active { cursor: grabbing; }
+.recorte:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }
+.recorte img { position: absolute; top: 0; left: 0; max-width: none; transform-origin: 0 0; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.recorte[data-proporcao='2'] { width: min(100%, 420px); }
+.folha--recorte:has(.recorte[data-proporcao='2']) { width: min(100%, 32rem); }
+.recorte__moldura { position: absolute; inset: 0; border-radius: 14px; outline: 2px solid rgb(255 255 255 / 0.9); outline-offset: -2px; pointer-events: none; }
+.recorte__circulo { position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 999px rgb(16 24 51 / 0.52); outline: 2px solid rgb(255 255 255 / 0.9); outline-offset: -2px; pointer-events: none; }
+.recorte__zoom { display: grid; gap: 2px; font-size: 0.875rem; font-weight: 800; }
+.recorte__aviso { margin: 0; font-size: 0.875rem; }
+/* Controle de aproximar com a cara do Studoo: trilho de 8 px arredondado, trecho preenchido em azul, bolinha de 28 px
+   com borda branca e área de toque de 44 px (a altura do próprio controle). */
+.recorte__zoom input {
+  --preenchido: 0%;
+  width: 100%; height: 44px; margin: 0; background: transparent; cursor: pointer; -webkit-appearance: none; appearance: none;
+}
+.recorte__zoom input::-webkit-slider-runnable-track {
+  height: 8px; border-radius: 999px; background: linear-gradient(to right, var(--acao) var(--preenchido), #e1e7fa var(--preenchido));
+}
+.recorte__zoom input::-moz-range-track { height: 8px; border-radius: 999px; background: #e1e7fa; }
+.recorte__zoom input::-moz-range-progress { height: 8px; border-radius: 999px; background: var(--acao); }
+.recorte__zoom input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 28px; height: 28px; margin-top: -10px; border: 3px solid #fff; border-radius: 50%;
+  background: var(--acao); box-shadow: 0 2px 6px rgb(11 27 92 / 0.35);
+}
+.recorte__zoom input::-moz-range-thumb { width: 22px; height: 22px; border: 3px solid #fff; border-radius: 50%; background: var(--acao); box-shadow: 0 2px 6px rgb(11 27 92 / 0.35); }
+.recorte__zoom input:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; border-radius: 8px; }
+.recorte__zoom input:disabled { opacity: 0.5; cursor: default; }
+.recorte__acoes { display: grid; grid-template-columns: 1fr; }
+.recorte__acoes > .botao { width: 100%; }
+@media (min-width: 601px) {
+  .recorte__acoes { display: flex; flex-direction: row-reverse; justify-content: flex-start; }
+  .recorte__acoes > .botao { width: auto; }
+}
+
+/* Página /t: o Stu dá as boas-vindas e o cartão de quem compartilhou. */
+.previa-trilha__stu { display: flex; align-items: flex-end; gap: 10px; margin-bottom: 4px; }
+.previa-trilha__stu .stu { flex: none; width: 64px; height: auto; }
+.previa-trilha__balao {
+  position: relative; margin: 0 0 14px; padding: 10px 14px; border: 2px solid var(--gelo); border-radius: 18px 18px 18px 6px;
+  background: var(--ceu); font-weight: 800; line-height: 1.4;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .previa-trilha__stu .stu { animation: stu-chega 700ms cubic-bezier(0.2, 0.9, 0.3, 1.3) both; }
+  .previa-trilha__balao { animation: balao-chega 420ms 260ms ease-out both; }
+  @keyframes stu-chega { from { opacity: 0; transform: translateY(14px) rotate(-6deg); } }
+  @keyframes balao-chega { from { opacity: 0; transform: translateX(-6px) scale(0.96); } }
+}
+.quem-compartilhou { display: flex; align-items: flex-start; gap: 14px; margin-top: 4px; padding: 16px; border: 2px solid var(--gelo); border-radius: 18px; background: var(--nevoa); }
+.quem-compartilhou .avatar { border: 3px solid #fff; }
+.quem-compartilhou__texto { display: grid; gap: 2px; min-width: 0; }
+.quem-compartilhou__texto p { margin: 0; overflow-wrap: anywhere; }
+.quem-compartilhou__rotulo { color: var(--texto2); font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.04em; text-transform: uppercase; }
+.quem-compartilhou__nome { font-size: 1.125rem; font-weight: 900; }
+.quem-compartilhou__resumo { line-height: 1.45; }
+.quem-compartilhou__link { display: inline-flex; align-items: center; min-height: 44px; color: var(--acao); font-weight: 800; }
+
+/* Página /p: o cabeçalho e a lista de trilhas. */
+.perfil-publico__titulo { margin: 28px 0 12px; font-size: 1.25rem; }
+
+/* App instalado na tela de início (iPhone e Android): as laterais respeitam o recorte da tela no modo paisagem. */
+@media (display-mode: standalone) and (max-width: 1023px) {
+  .pagina-publica__topo { padding-inline: max(var(--espaco-pagina), env(safe-area-inset-left)) max(var(--espaco-pagina), env(safe-area-inset-right)); }
+  .pagina-publica__corpo { padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right)); }
+  .estudo-cabecalho { padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
+  .estudo-principal { padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right)); }
+  .folha { padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right)); }
+}
+
+/* Contorno de campo e de etiqueta não marcada com 3:1 sobre o branco (o contorno é o que identifica o campo). */
+.painel--editar-perfil .campo:not([data-erro]) input:not(:focus), .painel--editar-perfil .campo:not([data-erro]) textarea:not(:focus),
+.painel--editar-perfil .interesse input:not(:checked) + span { border-color: #8591c0; }
+
+/* Perfil direto nos dados (lote 4): os campos abertos na aba Perfil, num bloco só. */
+.editor-perfil { display: grid; gap: 14px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
+@media (min-width: 768px) { .editor-perfil { padding: 22px 24px; } }
+.editor-perfil__linha { margin: 0; color: var(--texto2); font-weight: 700; line-height: 1.45; }
+.editar-foto__circulo { position: relative; flex: none; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.editar-foto__circulo .avatar { border: 4px solid #fff; box-shadow: 0 6px 16px rgb(11 27 92 / 0.14); }
+.editar-foto__circulo:focus-visible { outline: 3px solid var(--acao); outline-offset: 3px; }
+.editar-foto__selo {
+  position: absolute; right: -2px; bottom: -2px; display: grid; width: 40px; height: 40px; place-items: center;
+  border: 3px solid #fff; border-radius: 50%; background: var(--acao); color: #fff; box-shadow: 0 4px 10px rgb(11 27 92 / 0.25);
+}
+.editar-foto__selo .icone { width: 20px; height: 20px; }
+@media (hover: hover) { .editar-foto__circulo:hover .editar-foto__selo { background: var(--acao-escura); } }
+.editor-perfil__lugar-barra { min-height: 64px; }
+.editor-perfil__botoes { display: flex; gap: 8px; margin-left: auto; }
+.estado-perfil-curto { display: none; }
+.editor-perfil__barra[data-presa] {
+  position: fixed; z-index: 6; bottom: 16px; left: var(--coluna-esquerda);
+  width: var(--coluna-largura); min-height: 64px; padding: 8px 16px; border: 0;
+  border-radius: 24px; background: var(--fundo); box-shadow: var(--sombra-ilha, 0 8px 24px rgb(11 27 92 / 0.14));
+  animation: perfil-barra-entrar 160ms ease-out;
+}
+@keyframes perfil-barra-entrar { from { transform: translateY(8px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .editor-perfil__barra[data-presa] { animation: none; } }
+/* Computador e tablet (768 px ou mais): a barra presa fica 16 px acima da borda de baixo da janela. O fim da rolagem reserva essa
+   margem, a altura do bloco (medida em --altura-acao-fixa) e 12 px de folga, para o último item da página (Sair) não ficar atrás
+   dela (spec 10, "Barra de salvar: só com alteração"). Até 767 px a reserva é a de --espaco-rodape (globals.css), que soma a cápsula. */
+@media (min-width: 768px) {
+  .estudo-principal:has(.editor-perfil__barra[data-presa]) { padding-bottom: calc(16px + var(--altura-acao-fixa, 64px) + 12px); }
+}
+@media (max-width: 400px) { .estado-perfil-curto { display: inline; } .estado-perfil-longo { display: none; } }
+@media (max-width: 767px) {
+  .estudo[data-navegacao] .editar-perfil__form { grid-template-columns: minmax(0, 1fr); }
+  .estudo[data-navegacao] .editor-perfil__barra[data-presa] {
+    left: var(--margem-ilha-esq); right: var(--margem-ilha-dir); margin: auto; max-width: 480px;
+    bottom: calc(var(--altura-navegacao) + 12px);
+    width: calc(100% - var(--margem-ilha-esq) - var(--margem-ilha-dir));
+    padding: 8px;
+    border: 0;
+    border-radius: 24px;
+    box-shadow: var(--sombra-ilha);
+  }
+  .estudo[data-navegacao] .editor-perfil__barra .editar-perfil__estado { flex: 1 1 0; min-width: 0; }
+  .estudo[data-navegacao] .editor-perfil__botoes { flex-wrap: nowrap; }
+  .estudo[data-navegacao] .editor-perfil__botoes .botao { flex: none; min-width: 48px; padding-inline: 12px; }
+  .estudo[data-navegacao] .editor-perfil__botoes > :only-child { min-width: min(9rem, 40vw); }
+  html[data-teclado='true'] .estudo[data-navegacao] .editor-perfil__barra { width: 100%; translate: none; }
+}

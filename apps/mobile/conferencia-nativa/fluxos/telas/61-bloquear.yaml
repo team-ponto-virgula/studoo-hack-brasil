@@ -1,0 +1,78 @@
+# Spec 14, S9/S10 no simulador: bloquear quem publicou pelo "•••" do cartão no Explorar, confirmar, ver o aviso e desfazer.
+appId: host.exp.Exponent
+name: 61-bloquear
+---
+- runFlow: ../partes/reabrir.yaml
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-explorar
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-explorar
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      text: "Mais opções de .*"
+    direction: DOWN
+    timeout: 60000
+    speed: 50
+    centerElement: true
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    text: "Mais opções de .*"
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    text: "Bloquear .*"
+- extendedWaitUntil:
+    visible:
+      id: confirmacao-confirmar
+    timeout: 10000
+- takeScreenshot: 61-bloquear-confirmacao
+- tapOn:
+    waitToSettleTimeoutMs: 1000
+    id: confirmacao-confirmar
+- extendedWaitUntil:
+    visible:
+      text: "Pessoa bloqueada."
+    timeout: 15000
+- takeScreenshot: 61-bloquear-aviso
+# Desfaz: a conta sintética volta a ver a pessoa, para os fluxos seguintes. O aviso some sozinho em poucos segundos e, com a
+# máquina carregada, já tinha saído quando a captura acima terminou (execução 44809026116: "Element not found: Desfazer").
+# Então: "Desfazer" se o aviso ainda estiver na tela; depois, sempre, a lista "Pessoas bloqueadas" do Perfil (S10), que
+# desbloqueia o que tiver sobrado e tem de terminar vazia.
+- runFlow:
+    when:
+      visible: "Desfazer"
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 500
+          text: "Desfazer"
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-perfil
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-perfil
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: bloqueadas|bloqueadas-vazia
+    direction: DOWN
+    timeout: 120000
+    speed: 50
+    centerElement: true
+    waitToSettleTimeoutMs: 500
+- runFlow:
+    when:
+      visible:
+        id: bloqueadas
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1000
+          text: "Desbloquear"
+- extendedWaitUntil:
+    visible:
+      id: bloqueadas-vazia
+    timeout: 15000

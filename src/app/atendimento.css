@@ -1,0 +1,12 @@
+.atendimento { max-width: 44rem; margin: 0 auto; width: 100%; overflow-wrap: anywhere; padding-bottom: 4rem; }
+.atendimento h1 { font-size: clamp(1.7rem, 5vw, 2.4rem); }
+.atendimento section, .atendimento form { display: grid; gap: .7rem; margin: 1rem 0; }
+.atendimento section { border-top: 1px solid #d6ddeb; padding-top: 1.2rem; }
+.atendimento fieldset { border: 0; padding: 0; margin: 0; }
+.atendimento input:not([type=radio]), .atendimento textarea { width: 100%; box-sizing: border-box; min-height: 44px; padding: .7rem; border: 1px solid #8995ab; border-radius: .65rem; color: #17284c; background: #fff; font: inherit; }
+.atendimento label, .atendimento legend { font-weight: 750; }
+.atendimento article { padding: .8rem 0; border-bottom: 1px solid #e3e9f2; }
+.atendimento pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 28rem; overflow-y: auto; }
+.atendimento-midia { max-width: 100%; max-height: 20rem; object-fit: contain; }
+.atendimento code { user-select: all; font-size: 1rem; }
+.atendimento .botao { justify-self: start; }
