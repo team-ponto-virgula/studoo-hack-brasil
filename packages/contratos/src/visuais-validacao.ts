@@ -660,13 +660,24 @@ export type ResultadoResolucao =
   | { ok: true; resolucao: ResolucaoGuardada; conta: { conferidas: number; puladas: number }; ajustes?: string[] }
   | { ok: false; motivo: string };
 
+/** O nome do passo feito é texto em peso 800, onde nunca entra fórmula (spec 15, seção 14): o sublinhado, o expoente, a barra, o cifrão e a chave não podem aparecer. */
+const SIMBOLO_NO_NOME = /[_^\\${}]/;
+
+export interface OpcoesDaResolucao {
+  /**
+   * Na GERAÇÃO (a IA acabou de escrever): o nome do passo com símbolo (`Isole x_C`) recusa a resolução e o motivo vai na nova tentativa.
+   * Na leitura do que já está guardado, não: a lição gravada antes desta regra segue com o "Resolva comigo" dela.
+   */
+  nomeSimples?: boolean;
+}
+
 /**
  * Valida a resolução inteira: de 3 a 5 passos, cada um com nome (até 24 caracteres), frase e, se houver, fórmula e visual;
  * exatamente 1 "Sua vez", no penúltimo ou no último passo; e a conta conferida (`formula-conta.ts`). Tudo ou nada: se algo
  * falha, `motivo` diz o quê, e a lição fica com o exemplo em texto. O que sai é a forma GUARDADA (com `correta` e `porque`);
  * `resolucaoParaCliente` faz a que vai pela rede.
  */
-export function validarResolucao(bruto: unknown): ResultadoResolucao {
+export function validarResolucao(bruto: unknown, opcoes: OpcoesDaResolucao = {}): ResultadoResolucao {
   try {
     if (!objeto(bruto)) return recusar("a resolução não é um objeto");
     const problema = textoAte(bruto.problema, LIMITES_VISUAIS.problema, "problema", true);
@@ -692,6 +703,9 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
       const onde = `passo ${posicao + 1}`;
       if (!objeto(passoBruto)) return recusar(`${onde}: formato inválido`);
       const nome = textoCortado(passoBruto.nome, LIMITES_VISUAIS.nomeDoPasso, `${onde}: nome`, 3);
+      if (opcoes.nomeSimples && SIMBOLO_NO_NOME.test(nome)) {
+        return recusar(`${onde}: o nome "${nome}" tem símbolo (_ ^ \\ $ { }); o nome do passo é só texto simples e curto, sem letra com índice nem fórmula ("Isole a abscissa de C", e não "Isole x_C")`);
+      }
       const texto = textoAte(passoBruto.texto, LIMITES_VISUAIS.textoDoPasso, `${onde}: texto`, true);
       const formula = ausente(passoBruto.formula) || passoBruto.formula === "" ? undefined : formulaDoCampo(passoBruto.formula, `${onde}: fórmula`);
       if (formula) formulas.push(formula.arvore);

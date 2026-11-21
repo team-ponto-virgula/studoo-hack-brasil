@@ -188,7 +188,10 @@ test("opção com texto e fórmula juntos: a conta vai para dentro do texto, ent
   assert.equal(opcao.texto, "Só soma tudo $y_C = 2 + 1 + 5$");
   assert.equal(opcao.formula, undefined, "uma opção é de texto ou de fórmula: a que veio com as duas fica de texto");
   assert.deepEqual(resultado.ajustes, [`passo ${posicao + 1}, opção 2: texto e fórmula juntos (a fórmula foi para dentro do texto)`]);
-  assert.deepEqual(lerResolucaoDoModelo(com).reparos, resultado.ajustes, "o relato conta como reparo");
+  // Na geração o nome do passo é só texto (marco 11b): a fixture guardada tem "Isole x_C", e o que a IA entrega aqui vai sem o símbolo.
+  const semSimbolo = copia(com);
+  for (const passo of semSimbolo.passos) passo.nome = passo.nome.replace("x_C", "a abscissa").replace("y_C", "a ordenada");
+  assert.deepEqual(lerResolucaoDoModelo(semSimbolo).reparos, resultado.ajustes, "o relato conta como reparo");
   // A conta continua conferida: a opção marcada como errada que na verdade dá o valor da resolução é recusada, com a frase junto.
   const enganada = copia(base);
   enganada.passos[posicao].tentativa.opcoes[1] = { texto: "Triplica e tira", formula: "y_C = 3 \\times 2 - 1 - 5", correta: false, porque: "x" };
