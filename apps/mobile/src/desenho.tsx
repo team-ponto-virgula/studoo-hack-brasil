@@ -76,6 +76,8 @@ export function DesenhoDoVisual({ visual, contexto, opcoes, rotulo, testID, esti
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [visual, chaveDoContexto, opcoes?.tamanho, opcoes?.fundo, opcoes?.alturaMaxima]);
   if (!desenho) return visual.tipo === 'formula' ? <FormulaEmTexto latex={visual.latex} testID={testID} /> : null;
+  // O motor respeita a altura pedida e, quando nem assim cabe, avisa (`naoCabe`): no lugar da figura, a descrição dela.
+  if (desenho.naoCabe && visual.tipo !== 'formula') return <FiguraEmTexto alt={visual.alt} testID={testID} />;
   return <DesenhoSvg desenho={desenho} rotulo={rotulo} testID={testID} estilo={estilo} entrada={entrada} />;
 }
 
@@ -91,6 +93,15 @@ function FormulaEmTexto({ latex, testID }: { latex: string; testID?: string }) {
       <Text style={{ color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 18, lineHeight: 26, textAlign: 'center' }}>
         {formulaLinear(lida.arvore)}
       </Text>
+    </View>
+  );
+}
+
+/** A figura que não coube na altura: o `alt` dela, em texto, com o mesmo nome para o leitor de tela. */
+function FiguraEmTexto({ alt, testID }: { alt: string; testID?: string }) {
+  return (
+    <View testID={testID ? `${testID}-texto` : undefined} accessible accessibilityRole="text" accessibilityLabel={alt} style={blocoDaFormula}>
+      <Text style={{ color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 }}>{alt}</Text>
     </View>
   );
 }

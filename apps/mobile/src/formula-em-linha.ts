@@ -7,7 +7,7 @@ import { desenharFormulaEmLinha, formulaEmPecas, formulaLinear, type DesenhoEmLi
 
 /**
  * O peso da fórmula é o do texto em volta (spec 15, seção 10): regular (400) na aula, negrito (700) no enunciado e nos títulos.
- * O motor ainda só desenha 700; quando `desenharFormulaEmLinha` ganhar o `peso`, ele já chega por aqui.
+ * O motor desenha o peso pedido (marco 2d), com as variáveis em itálico.
  */
 export type PesoDaFormula = 400 | 700;
 
@@ -17,12 +17,10 @@ export function pesoDoTexto(fontWeight: unknown): PesoDaFormula {
   return Number.isFinite(numero) && numero >= 600 ? 700 : 400;
 }
 
-const desenharComPeso = desenharFormulaEmLinha as (arvore: NoFormula, tamanho?: number, peso?: PesoDaFormula) => DesenhoEmLinha;
-
 /** O desenho de um nó em linha, ou `null` quando ele não se desenha ou não cabe em `limite` pontos (já com a escala). */
 export function desenhoQueCabe(no: NoFormula, tamanho: number, escala: number, limite: number, peso: PesoDaFormula = 700): DesenhoEmLinha | null {
   try {
-    const desenho = desenharComPeso(no, tamanho, peso);
+    const desenho = desenharFormulaEmLinha(no, tamanho, peso);
     return desenho.largura > 0 && desenho.largura * escala <= limite ? desenho : null;
   } catch {
     return null;

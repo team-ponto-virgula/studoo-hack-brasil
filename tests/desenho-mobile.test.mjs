@@ -121,3 +121,13 @@ test('o enunciado nunca desenha o procurado na posição; o retorno o desenha co
   assert.ok(!enunciado.textos.some((texto) => /^C\s*\(?\s*\d/.test(texto)), 'sem o valor de C no enunciado');
   assert.ok(retorno.primitivas.some((p) => (p.preenchimento ?? p.cor) === 'resposta'), 'o procurado vira resposta (verde)');
 });
+
+test('figura que não cabe na altura (naoCabe): no lugar dela, o alt em texto, com o mesmo rótulo', async () => {
+  const fonte = await ler('apps/mobile/src/desenho.tsx');
+  assert.match(fonte, /if \(desenho\.naoCabe && visual\.tipo !== 'formula'\) return <FiguraEmTexto alt=\{visual\.alt\} testID=\{testID\} \/>;/);
+  assert.match(fonte, /accessibilityRole="text" accessibilityLabel=\{alt\}/);
+  const licao = await fixture('baricentro');
+  const figura = visualParaEnunciado(normalizarVisual(licao.exercicio.visual));
+  const apertado = desenhoDoVisual(figura, { tipo: 'enunciado' }, { alturaMaxima: 40 });
+  assert.ok(!apertado || apertado.naoCabe || apertado.altura <= 40, 'o motor respeita a altura ou avisa que não cabe');
+});

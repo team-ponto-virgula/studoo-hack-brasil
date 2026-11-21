@@ -39,7 +39,7 @@ test('fora dos destaques, a fórmula toma a cor da frase; os destaques ficam com
 
 test('o componente: Svg do motor em View em linha, base na linha de base, toque passa, largo demais vira linear', async () => {
   const fonte = await ler('apps/mobile/src/texto-com-formulas.tsx');
-  assert.match(await ler('apps/mobile/src/formula-em-linha.ts'), /desenharComPeso\(no, tamanho, peso\)/);
+  assert.match(await ler('apps/mobile/src/formula-em-linha.ts'), /desenharFormulaEmLinha\(no, tamanho, peso\)/);
   assert.match(fonte, /height: desenho\.linhaDeBase \* escala, overflow: 'visible'/, 'a caixa mede só acima da linha de base: a linha não cresce');
   assert.match(fonte, /style=\{\{ position: 'absolute', top: 0, left: 0 \}\}/);
   assert.match(fonte, /pointerEvents="none"/, 'o toque chega ao Text');
