@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import sharp from "sharp";
-import { lerCapacidades, normalizarVisual, visualParaEnunciado } from "@studoo/contratos";
+import { comCaixaDoPar, lerCapacidades, normalizarVisual, visualParaEnunciado } from "@studoo/contratos";
 import { apresentarExercicio, conteudoValido, recursoValido } from "../src/dominio/aprendizado/plano.ts";
 import { SEM_CAPACIDADES, comFormulasMarcadas, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, descricaoDaPrancheta, limparVisuais, pranchetaDosVisuais, recursoDoDesenho, temVisual, visualDoRetorno } from "../src/servidor/aprendizado/visuais.ts";
 import { ehAssuntoDeMatematica } from "../src/servidor/ia/matematica.ts";
@@ -138,7 +138,9 @@ test("com visuais@1: os visuais e a figura dos exercícios, sem a posição do p
     const escondido = figura.pontos.find((ponto) => ponto.papel === "procurado");
     assert.deepEqual(Object.keys(escondido).sort(), ["id", "papel"], `${nome}: o procurado sem posição`);
     assert.equal(JSON.stringify(saida).includes("derivado"), false);
-    assert.deepEqual(saida.exercicio.visual, visualParaEnunciado(normalizarVisual(conteudo.exercicio.visual)));
+    // A figura do exercício com procurado leva a caixa que o enunciado e o retorno dividem (12a, grupo 6): se um não cabe, nenhum desenha.
+    assert.equal(typeof saida.exercicio.visual.alturaMinimaComRetorno, "number", `${nome}: a caixa do par`);
+    assert.deepEqual(saida.exercicio.visual, visualParaEnunciado(comCaixaDoPar(normalizarVisual(conteudo.exercicio.visual))));
     assert.deepEqual(saida.exercicios[0].visual, saida.exercicio.visual);
   }
 });

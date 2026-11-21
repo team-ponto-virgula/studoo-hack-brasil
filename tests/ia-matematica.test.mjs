@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { after, afterEach, before, beforeEach, test } from "node:test";
-import { formulaLinear, lerFormula, normalizarResolucao, normalizarVisual } from "@studoo/contratos";
+import { desenharVisual, formulaLinear, lerFormula, normalizarResolucao, normalizarVisual } from "@studoo/contratos";
 import { conteudoValido, esqueletoValido } from "../src/dominio/aprendizado/plano.ts";
 import { reiniciarLimiteDeGeracoes } from "../src/servidor/ia/limite.ts";
 
@@ -14,7 +14,7 @@ const { GERADOR_OPENAI, configuracaoOpenAi, corpoDaLicao, criarGeradorOpenAi } =
 const { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek, instrucoesLicaoJsonDeMatematica } = await import("../src/servidor/ia/deepseek.ts");
 const {
   contagensDoRelato, correcaoDaResolucao, ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, instrucoesDeFigurasDoMaterial,
-  instrucoesDeMatematica, instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
+  esquemaDoVisual, instrucoesDeMatematica, instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
   repararResolucao, repararVisuais,
 } = await import("../src/servidor/ia/matematica.ts");
 const {
@@ -1457,4 +1457,98 @@ test("marco 11b: o nome do passo com símbolo recusa a resolução da IA, com o 
     if (licao.resolucao) assert.ok(lerResolucaoDoModelo(licao.resolucao).resolucao, `${licao.titulo}: a demonstração passa pela geração`);
   }
   assert.deepEqual(licoesDaGeometria.flatMap((licao) => licao.resolucao?.passos.map((passo) => passo.nome) ?? []).filter((nome) => /^(Isole a abscissa de C|O mesmo para a ordenada)$/.test(nome)), ["Isole a abscissa de C", "O mesmo para a ordenada"]);
+});
+
+/* ----- Marco 12a: o pedido à IA do gráfico de função, o esquema e a IA falsa de funções ----- */
+
+test("12a: o pedido à IA traz o gráfico de função (regras, a curva escondida do procurado e os três exemplos) e o esquema aceita o que ele pede", () => {
+  for (const [nome, instrucoes] of [["lição", instrucoesDeMatematica], ["figuras do material", instrucoesDeFigurasDoMaterial]]) {
+    assert.match(instrucoes, /Gráfico de função, para a lição que fala de uma função de x/, nome);
+    assert.match(instrucoes, /{tipo: "funcao", alt, curvas, pontos}/, `${nome}: o formato`);
+    assert.match(instrucoes, /Tangente, log, exponencial, divisão por x e módulo NÃO valem/, `${nome}: o que invalida a curva`);
+    assert.match(instrucoes, /dê só o tipo \("raiz", "vertice", "intercepto", "valor" com o x\).*NÃO escreva x e y desses/, `${nome}: o servidor calcula os destaques`);
+    assert.match(instrucoes, /esse ponto leva papel "procurado" e o seu tipo: o gráfico do enunciado fica SEM a curva/, `${nome}: o procurado`);
+    for (const exemplo of ['latex: "x^2 - 4x + 3"', 'latex: "2x + 1", nome: "g"', 'latex: "\\sin x", nome: "h"']) assert.ok(instrucoes.includes(exemplo), `${nome}: o exemplo ${exemplo}`);
+    assert.match(instrucoes, /ainda não vale no "Resolva comigo"/, `${nome}: fora da resolução`);
+  }
+  // O esquema (Structured Outputs: todos os campos, null onde não se aplica) aceita o gráfico e o ponto com tipo.
+  assert.ok(esquemaDoVisual.properties.tipo.enum.includes("funcao"));
+  assert.deepEqual(Object.keys(esquemaDoVisual.properties.curvas.items.properties), ["latex", "nome", "de", "ate"]);
+  const ponto = esquemaDoVisual.properties.pontos.items.properties;
+  assert.deepEqual(ponto.tipo.enum, ["raiz", "vertice", "intercepto", "intersecao", "valor", null]);
+  assert.deepEqual(ponto.x.type, ["number", "string", "null"], "o x pode trazer π");
+  assert.equal(esquemaDoVisual.required.length, Object.keys(esquemaDoVisual.properties).length, "todos os campos obrigatórios (nulos onde não se aplicam)");
+  // O que o modelo devolve nesse esquema, com os nulos, vira o gráfico validado.
+  const doModelo = {
+    tipo: "funcao", alt: "Parábola de f(x) = x² − 4x + 3, com as raízes A e B e o vértice V.", latex: null, de: null, ate: null,
+    curvas: [{ latex: "x^2 - 4x + 3", nome: "f", de: null, ate: null }],
+    pontos: ["A", "B"].map((id) => ({ id, papel: "especial", x: null, y: null, valor: null, tipo: "raiz", curva: null, rotulo: null, derivado: null }))
+      .concat([{ id: "V", papel: "especial", x: null, y: null, valor: null, tipo: "vertice", curva: null, rotulo: null, derivado: null }]),
+    segmentos: null, poligonos: null, guias: null, intervalos: null,
+  };
+  const lido = lerVisuaisDoModelo([doModelo]);
+  assert.equal(lido.visuais?.[0].tipo, "funcao", lido.motivos.join("; "));
+  assert.deepEqual(lido.visuais[0].pontos.map(({ id, x, y }) => [id, x, y]), [["A", 1, 0], ["B", 3, 0], ["V", 2, -1]]);
+});
+
+const funcoes = DEMOS.find(({ chave }) => chave === "funcoes");
+const licoesDeFuncoes = funcoes.plano.fluxos.flatMap(({ licoes }) => licoes);
+
+test("12a: a demonstração de funções reconhece o objetivo sem tirar a vez da geometria, e toda lição fecha com o gráfico que desenha", () => {
+  for (const objetivo of ["Funções do segundo grau e parábolas", "gráfico do seno e do cosseno", "Como é o gráfico de uma função afim"]) {
+    assert.equal(demoDoObjetivo(objetivo)?.chave, "funcoes", objetivo);
+  }
+  for (const objetivo of ["Geometria analítica: do ponto ao alinhamento", "Quero entender o baricentro de um triângulo", "plano cartesiano"]) {
+    assert.equal(demoDoObjetivo(objetivo)?.chave, "geometria", objetivo);
+  }
+  assert.deepEqual(licoesDeFuncoes.map(({ titulo }) => titulo), ["O gráfico de uma reta", "A parábola e os seus pontos", "Lendo a onda do seno", "Revisão: reta, parábola e seno"]);
+  assert.deepEqual(funcoes.plano.fluxos.map(({ titulo }) => titulo), ["Primeiros passos", "Praticando", "Desafio"]);
+  for (const licao of licoesDeFuncoes) {
+    assert.ok(conteudoValido(licao), licao.titulo);
+    assert.ok(licao.visuais.some((visual) => visual.tipo === "funcao"), `${licao.titulo}: o gráfico da lição`);
+    assert.ok(licao.outroJeito && licao.outroJeito !== licao.conceito && licao.outroJeito !== licao.exemplo, licao.titulo);
+    for (const visual of licao.visuais) assert.deepEqual(normalizarVisual(visual), visual, `${licao.titulo}: o guardado é o que o validador devolve`);
+    for (const exercicio of [licao.exercicio, ...(licao.extras ?? [])]) {
+      if (exercicio.visual) assert.deepEqual(normalizarVisual(exercicio.visual), exercicio.visual, `${licao.titulo}: figura do exercício`);
+    }
+    // Cada gráfico se desenha no enunciado e no retorno, sem faltar lugar.
+    for (const visual of [...licao.visuais, ...[licao.exercicio, ...(licao.extras ?? [])].flatMap((exercicio) => (exercicio.visual ? [exercicio.visual] : []))]) {
+      if (visual.tipo !== "funcao") continue;
+      for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }]) {
+        const desenho = desenharVisual(visual, contexto);
+        assert.ok(desenho && !desenho.naoCabe, `${licao.titulo}: ${contexto.tipo}`);
+      }
+    }
+  }
+  // A lição da parábola leva a fórmula igual à da faixa de cima como visual `formula`: o servidor não a repete.
+  assert.deepEqual(licoesDeFuncoes[1].visuais.map((visual) => visual.tipo), ["formula", "funcao"]);
+  // Os quatro exercícios com figura perguntam um ponto da curva: o enunciado esconde a curva, e o retorno a mostra.
+  const comFigura = licoesDeFuncoes.flatMap((licao) => [licao.exercicio, ...(licao.extras ?? [])]).filter((exercicio) => exercicio.visual);
+  assert.equal(comFigura.length, 4);
+  for (const exercicio of comFigura) {
+    const procurados = exercicio.visual.pontos.filter((ponto) => ponto.papel === "procurado");
+    assert.equal(procurados.length, 1, exercicio.enunciado);
+  }
+});
+
+test("12a: a demonstração de funções não vaza o ponto procurado (o JSON público dele sem a posição) e a curva do enunciado fica escondida", async () => {
+  for (const licao of licoesDeFuncoes) {
+    const exercicios = [licao.exercicio, ...(licao.extras ?? [])].map(apresentarExercicio);
+    const detalhe = {
+      id: "licao-1", planoId: "plano-1", fluxoId: "fluxo-1", titulo: licao.titulo, objetivo: licao.objetivo, conceito: licao.conceito, exemplo: licao.exemplo,
+      origem: licao.origem, exercicio: exercicios[0], exercicios, concluida: false,
+    };
+    const saida = await comVisuais(detalhe, licao, { capacidades: { visuais: 2, resolucao: 1 }, desenharPng: false });
+    const escondidos = saida.exercicios.flatMap((exercicio) => exercicio.visual?.pontos?.filter((ponto) => ponto.papel === "procurado" || ponto.papel === "resposta") ?? []);
+    assert.ok(escondidos.length >= 1, licao.titulo);
+    for (const ponto of escondidos) assert.deepEqual(Object.keys(ponto).sort(), ["id", "papel", "tipo"].filter((chave) => chave in ponto), `${licao.titulo}: ${ponto.id}`);
+    for (const exercicio of saida.exercicios.filter((item) => item.visual)) {
+      const enunciado = desenharVisual(exercicio.visual, { tipo: "enunciado" });
+      assert.equal(enunciado.primitivas.filter((primitiva) => primitiva.tipo === "caminho" && primitiva.larguraDaBorda === 3 && primitiva.borda !== "branco").length, 0, `${licao.titulo}: sem a curva no enunciado`);
+    }
+    // Com só visuais@1 nenhum gráfico de função vai; sem cabeçalho, nenhum campo novo e o PNG.
+    const so1 = await comVisuais(detalhe, licao, { capacidades: { visuais: 1, resolucao: 1 } });
+    assert.ok(!(so1.visuais ?? []).some((visual) => visual.tipo === "funcao"), `${licao.titulo}: visuais@1`);
+    assert.ok(so1.exercicios.every((exercicio) => !exercicio.visual), `${licao.titulo}: o exercício sem figura`);
+  }
 });

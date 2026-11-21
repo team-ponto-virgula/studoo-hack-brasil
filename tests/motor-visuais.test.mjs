@@ -293,9 +293,11 @@ test("paleta do desenho: um mapa por papel, exportado pelo pacote, com as cores 
 });
 
 test("glifos: a tabela cobre o que a fórmula e o rótulo usam, com Δ e π, e o preenchimento nonzero deixa o miolo vazado", async () => {
-  for (const caractere of "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,;:!?'’()/%+=<>-−×÷·ÀÁÂÃÇÉÊÍÓÔÕÚÜàáâãçéêíóôõúüΔπ") assert.ok(temGlifo(caractere, 700), caractere);
+  for (const caractere of "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .,;:!?'’()/%+=<>-−×÷·ÀÁÂÃÇÉÊÍÓÔÕÚÜàáâãçéêíóôõúüΔπαβγδθλμσφωΣΩ°≈") assert.ok(temGlifo(caractere, 700), caractere);
+  for (const caractere of "ΔπαβγδθλμσφωΣΩ°≈") assert.ok(temGlifo(caractere, 400), `${caractere} no 400`);
   for (const caractere of "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,()−?'=") assert.ok(temGlifo(caractere, 800), caractere);
-  assert.equal(temGlifo("α"), false, "o resto do grego fica para a fase 2");
+  assert.equal(temGlifo("ε"), false, "o grego que a escola não usa fica de fora (ε, ρ, τ, η, ζ)");
+  assert.equal(temGlifo("ρ"), false);
   // Tudo o que `\text{…}` aceita tem glifo.
   for (const pedaco of ["ÀÁÂÃÇÉÊÍÓÔÕÚÜ", "àáâãçéêíóôõúü", "0-9 .,;:!?()'/%+=<> z", "ação e não"]) {
     assert.equal(lerFormula(`\\text{${pedaco}}`).ok, true, pedaco);
@@ -957,7 +959,7 @@ test("os números do eixo x nunca se encostam, mesmo com milhares", () => {
 });
 
 test("2e: o motor nunca emite '?' no lugar de um glifo ausente: vira vão, e a fórmula que o traz não é desenhada (fica o texto linear)", () => {
-  const AUSENTES = ["≥", "≤", "≠", "→", "α", "β", "∈", "√", "₂", "⁴", "€", "✓"];
+  const AUSENTES = ["≥", "≤", "≠", "→", "ε", "ρ", "∈", "√", "₂", "⁴", "€", "✓"];
   const interrogacao = glifoDe("?");
   assert.ok(interrogacao[1].length > 20, "a tabela tem o '?' (o da legenda 'C = ?')");
   for (const caractere of AUSENTES) {

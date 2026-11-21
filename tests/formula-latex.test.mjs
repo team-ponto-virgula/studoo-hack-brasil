@@ -133,7 +133,6 @@ test("só o que está na lista entra: o resto invalida a fórmula (que cai para 
     String.raw`\begin{array}{c} x \end{array}`,
     String.raw`\sqrt[3]{8}`,
     String.raw`|x|`,
-    String.raw`\alpha + \beta`,
     String.raw`\pm 1`,
     String.raw`\overline{AB}`,
     String.raw`\sum_{i=1}^{n} i`,
@@ -145,8 +144,9 @@ test("só o que está na lista entra: o resto invalida a fórmula (que cai para 
     String.raw`\text{}`,
     String.raw`\text{sem fechar`,
     String.raw`\foco x`,
-    "sin x",
-    "log x",
+    String.raw`\epsilon + \rho + \tau`,
+    String.raw`\operatorname{foo} x`,
+    String.raw`\circ`,
     String.raw`x^23`,
     String.raw`x_10`,
     String.raw`x^-1`,
@@ -230,6 +230,13 @@ test("reparar comandos de controle só age quando o resto forma um comando da li
   assert.equal(repararComandosDeControle("\resposta{4}"), String.raw`\resposta{4}`);
   assert.equal(repararComandosDeControle("\bbegin{vmatrix}"), "\bbegin{vmatrix}");
   assert.equal(repararComandosDeControle("\u0008egin{vmatrix}"), String.raw`\begin{vmatrix}`);
+  // Os comandos novos que o JSON também come: `\tan` (tab + an), `\tg`, `\theta` (tab + heta) e `\beta` (backspace + eta).
+  assert.equal(repararComandosDeControle("\tan x"), String.raw`\tan x`);
+  assert.equal(repararComandosDeControle("\theta = 30"), String.raw`\theta = 30`);
+  assert.equal(repararComandosDeControle("\tg x"), String.raw`\tg x`);
+  assert.equal(repararComandosDeControle("\u0008eta + 1"), String.raw`\beta + 1`);
+  assert.equal(repararComandosDeControle("\tangente"), "\tangente", "tab + angente não é comando");
+  assert.equal(repararComandosDeControle("\u0008etas"), "\u0008etas", "backspace + etas não é comando");
   assert.equal(repararComandosDeControle("x\t+\ny"), "x\t+\ny", "tab e quebra de linha comuns ficam");
   assert.equal(repararComandosDeControle("sem controle"), "sem controle");
 });
@@ -355,7 +362,7 @@ test("conferência da conta: o que não dá para avaliar é pulado, não reprova
 
 /* ----- Parecer do Designer e adendo 3: grego, pares com decimal, falado ----- */
 
-test("Δ e π entram (os outros gregos continuam recusados e caem no texto linear)", () => {
+test("Δ e π entram, e com eles as letras gregas da escola (os outros gregos continuam recusados e caem no texto linear)", () => {
   assert.equal(ok(String.raw`\pi r^2`).canonica, String.raw`\pi r^2`);
   assert.equal(ok("π r²").canonica, String.raw`\pi r^2`);
   assert.equal(ok(String.raw`\Delta = b^2 - 4ac`).canonica, String.raw`\Delta = b^2 - 4a c`);
@@ -371,7 +378,105 @@ test("Δ e π entram (os outros gregos continuam recusados e caem no texto linea
   assert.equal(falarFormula(ok(String.raw`\pi r^2`).arvore), "pi r ao quadrado");
   assert.equal(falarFormula(ok(String.raw`\Delta = 0`).arvore), "delta é igual a 0");
   assert.equal(formulaCabeEmLinha(ok(String.raw`\pi r^2`).arvore), true);
-  for (const fonte of [String.raw`\alpha`, String.raw`\beta + 1`, String.raw`\theta`, String.raw`\lambda`, String.raw`\mu`, String.raw`\sigma`, String.raw`\omega`, String.raw`\phi`, String.raw`\pir`, "α", "θ", "Σ"]) falha(fonte);
+  // As letras gregas da escola (spec 15, seção 18): retas, como Δ e π, e a canônica é estável.
+  for (const [fonte, canonica] of [
+    [String.raw`\alpha`, String.raw`\alpha`], [String.raw`\beta + 1`, String.raw`\beta + 1`], [String.raw`\theta`, String.raw`\theta`], [String.raw`\lambda`, String.raw`\lambda`],
+    [String.raw`\mu`, String.raw`\mu`], [String.raw`\sigma`, String.raw`\sigma`], [String.raw`\omega`, String.raw`\omega`], [String.raw`\phi`, String.raw`\phi`],
+    [String.raw`\gamma`, String.raw`\gamma`], [String.raw`\delta`, String.raw`\delta`], [String.raw`\Sigma`, String.raw`\Sigma`], [String.raw`\Omega`, String.raw`\Omega`],
+    ["α", String.raw`\alpha`], ["θ", String.raw`\theta`], ["Σ", String.raw`\Sigma`], [String.raw`\varphi`, String.raw`\phi`], [String.raw`\alpha \beta \gamma`, String.raw`\alpha \beta \gamma`],
+  ]) {
+    const lida = ok(fonte);
+    assert.equal(lida.canonica, canonica, fonte);
+    assert.deepEqual(ok(lida.canonica).arvore, lida.arvore, `canônica instável: ${fonte}`);
+  }
+  assert.equal(formulaLinear(ok(String.raw`\theta = \alpha + \beta`).arvore), "θ = α + β");
+  assert.equal(falarFormula(ok(String.raw`\theta + \alpha`).arvore), "teta, mais alfa".replace(",", ""), "teta mais alfa");
+  for (const fonte of [String.raw`\pir`, String.raw`\epsilon`, String.raw`\rho`, String.raw`\tau`, String.raw`\eta`, "ε", "ρ"]) falha(fonte);
+});
+
+test("funções (spec 15, seção 18): \\sin, \\cos, \\tan, \\cot, \\ln, \\log e os arcos entram; a tela diz sen, cos, tg, cotg, ln, log, e a fala diz o nome por extenso", () => {
+  // A IA escreve em inglês (ou em português, com ou sem barra); a forma canônica é a de sempre (\sin, \tan…).
+  for (const [fonte, canonica, linear, falado] of [
+    [String.raw`\sin x`, String.raw`\sin x`, "sen x", "seno de x"],
+    [String.raw`\cos x`, String.raw`\cos x`, "cos x", "cosseno de x"],
+    [String.raw`\tan x`, String.raw`\tan x`, "tg x", "tangente de x"],
+    [String.raw`\cot x`, String.raw`\cot x`, "cotg x", "cotangente de x"],
+    [String.raw`\ln x`, String.raw`\ln x`, "ln x", "logaritmo natural de x"],
+    [String.raw`\log x`, String.raw`\log x`, "log x", "logaritmo de x"],
+    [String.raw`\arcsin x`, String.raw`\arcsin x`, "arcsen x", "arco seno de x"],
+    [String.raw`\arccos x`, String.raw`\arccos x`, "arccos x", "arco cosseno de x"],
+    [String.raw`\arctan x`, String.raw`\arctan x`, "arctg x", "arco tangente de x"],
+    [String.raw`\sen x`, String.raw`\sin x`, "sen x", "seno de x"],
+    [String.raw`\tg x`, String.raw`\tan x`, "tg x", "tangente de x"],
+    [String.raw`\operatorname{sen} x`, String.raw`\sin x`, "sen x", "seno de x"],
+    [String.raw`\mathrm{tg} x`, String.raw`\tan x`, "tg x", "tangente de x"],
+    ["sen x", String.raw`\sin x`, "sen x", "seno de x"],
+    ["sin x", String.raw`\sin x`, "sen x", "seno de x"],
+    ["tg x", String.raw`\tan x`, "tg x", "tangente de x"],
+    ["ln x", String.raw`\ln x`, "ln x", "logaritmo natural de x"],
+    ["log x", String.raw`\log x`, "log x", "logaritmo de x"],
+  ]) {
+    const lida = ok(fonte);
+    assert.equal(lida.canonica, canonica, fonte);
+    assert.equal(formulaLinear(lida.arvore), linear, fonte);
+    assert.equal(falarFormula(lida.arvore), falado, fonte);
+    assert.deepEqual(ok(lida.canonica).arvore, lida.arvore, `canônica instável: ${fonte}`);
+    assert.equal(formulaLinear(lida.arvore).includes("sin"), false, "a tela nunca mostra sin");
+    assert.equal(formulaLinear(lida.arvore).includes("tan"), false, "a tela nunca mostra tan");
+  }
+  // Os casos do pedido do Lead.
+  const pitagorica = ok(String.raw`\sin^2 x + \cos^2 x = 1`);
+  assert.equal(pitagorica.canonica, String.raw`\sin^2 x + \cos^2 x = 1`);
+  assert.equal(formulaLinear(pitagorica.arvore), "sen² x + cos² x = 1");
+  assert.equal(falarFormula(pitagorica.arvore), "seno ao quadrado de x mais cosseno ao quadrado de x é igual a 1");
+  const grau = ok(String.raw`\theta = 30^\circ`);
+  assert.equal(grau.canonica, String.raw`\theta = 30^\circ`);
+  assert.equal(formulaLinear(grau.arvore), "θ = 30°");
+  assert.equal(falarFormula(grau.arvore), "teta é igual a 30 graus");
+  const logaritmo = ok(String.raw`\log_2 8 = 3`);
+  assert.equal(logaritmo.canonica, String.raw`\log_2 8 = 3`);
+  assert.equal(falarFormula(logaritmo.arvore), "logaritmo de 8 na base 2 é igual a 3");
+  assert.equal(falarFormula(ok(String.raw`\log_2 x`).arvore), "logaritmo de x na base 2");
+  // O argumento: um parêntese é lido sem "abre parênteses" e se escreve colado (sen(2x + 1)); sem parêntese, com o vão fino; sem argumento, só o nome.
+  const composto = ok(String.raw`\sin(2x + 1)`);
+  assert.equal(formulaLinear(composto.arvore), "sen(2x + 1)");
+  assert.equal(falarFormula(composto.arvore), "seno de 2 x mais 1");
+  assert.equal(formulaLinear(ok(String.raw`2\sin x - 3\cos x`).arvore), "2 sen x − 3 cos x");
+  assert.equal(falarFormula(ok(String.raw`2\sin x - 3\cos x`).arvore), "2 seno de x menos 3 cosseno de x");
+  assert.equal(falarFormula(ok(String.raw`\tan x = \frac{\sin x}{\cos x}`).arvore), "tangente de x é igual a fração: numerador seno de x, denominador cosseno de x");
+  // Só o nome (a "função seno" numa frase) também vale: "sen", lido "seno".
+  assert.equal(formulaLinear(ok(String.raw`\sin`).arvore), "sen");
+  assert.equal(falarFormula(ok(String.raw`\sin`).arvore), "seno");
+  assert.equal(falarFormula(ok(String.raw`f(x) = \sin x`).arvore).endsWith("é igual a seno de x"), true);
+  // A função cabe numa frase (é texto reto) e o raiz-de-tudo (fração composta) não.
+  assert.equal(formulaCabeEmLinha(pitagorica.arvore), true);
+  // `sen` e `tg` também valem como palavra solta de duas ou três letras; outra palavra de três letras continua recusada.
+  falha("abc");
+  falha("cosx", "cosx não é uma palavra da lista");
+  ok("sen(x)");
+});
+
+test("o grau (30^\\circ ou 30°) e o ≈ entram; o grau só vale depois de um número, de uma variável ou de um parêntese", () => {
+  for (const fonte of [String.raw`30^\circ`, "30°", String.raw`30^{\circ}`, String.raw`30 ^ \circ`]) {
+    const lida = ok(fonte);
+    assert.equal(lida.canonica, String.raw`30^\circ`, fonte);
+    assert.equal(formulaLinear(lida.arvore), "30°");
+    assert.equal(falarFormula(lida.arvore), "30 graus");
+  }
+  assert.equal(ok(String.raw`(90 - x)^\circ`).canonica, String.raw`(90 - x)^\circ`);
+  assert.equal(formulaLinear(ok(String.raw`(90 - x)^\circ`).arvore), "(90 − x)°");
+  assert.equal(formulaLinear(ok(String.raw`\alpha + \beta + \gamma = 180^\circ`).arvore), "α + β + γ = 180°");
+  falha(String.raw`\circ`);
+  falha(String.raw`x \circ y`);
+  falha(String.raw`°`);
+  const aproximado = ok(String.raw`\pi \approx 3.14`);
+  assert.equal(aproximado.canonica, String.raw`\pi \approx 3.14`);
+  assert.equal(formulaLinear(aproximado.arvore), "π ≈ 3,14");
+  assert.equal(falarFormula(aproximado.arvore), "pi é aproximadamente igual a 3,14");
+  assert.equal(ok("x ≈ 2").canonica, String.raw`x \approx 2`);
+  // A vírgula decimal do LaTeX (`3{,}14`) é o número 3,14, não dois números separados por vírgula.
+  assert.equal(ok(String.raw`x \approx 3{,}14`).canonica, String.raw`x \approx 3.14`);
+  assert.equal(formulaLinear(ok(String.raw`\pi \approx 3{,}14159`).arvore), "π ≈ 3,14159");
 });
 
 test("Δ conta como incógnita; π é número que não cabe em racional e a conta pula", () => {

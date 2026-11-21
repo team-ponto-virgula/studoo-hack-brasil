@@ -70,7 +70,14 @@ const GREGAS: Readonly<Record<string, string>> = {
 };
 const SIMBOLOS: Readonly<Record<string, string>> = {
   times: "×", cdot: "×", div: "÷", pm: "±", leq: "≤", le: "≤", geq: "≥", ge: "≥", neq: "≠", ne: "≠", approx: "≈", to: "→",
-  rightarrow: "→", infty: "∞", in: "∈", cup: "∪", cap: "∩", ldots: "…", cdots: "…",
+  rightarrow: "→", infty: "∞", in: "∈", cup: "∪", cap: "∩", ldots: "…", cdots: "…", circ: "°", degree: "°", angle: "∠", perp: "⊥", parallel: "∥",
+  triangle: "△", sum: "∑", prod: "∏", int: "∫", partial: "∂", nabla: "∇", subset: "⊂", supset: "⊃", notin: "∉", forall: "∀", exists: "∃", Rightarrow: "⇒",
+  Leftrightarrow: "⇔", leftrightarrow: "↔", sim: "∼", equiv: "≡", propto: "∝", mp: "∓",
+};
+/** O nome de função que a tela mostra (notação brasileira): "sen", nunca "sin"; "tg", nunca "tan". */
+const FUNCOES: Readonly<Record<string, string>> = {
+  sin: "sen", sen: "sen", cos: "cos", tan: "tg", tg: "tg", cot: "cotg", cotg: "cotg", sec: "sec", csc: "cossec", cosec: "cossec", ln: "ln", log: "log",
+  arcsin: "arcsen", arcsen: "arcsen", arccos: "arccos", arctan: "arctg", arctg: "arctg", lim: "lim",
 };
 const SOBRESCRITO: Readonly<Record<string, string>> = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
 
@@ -83,6 +90,15 @@ export function linearizarTolerante(fonte: string): string {
   const lida = lerFormula(arrumada);
   if (lida.ok) return formulaLinear(lida.arvore);
   let texto = arrumada.replace(/^\$+|\$+$/g, "").replace(/\\left|\\right/g, "").replace(/\\[,;:! ]|\\q?quad/g, " ");
+  // A matriz que o leitor recusou (um determinante que não é quadrado, uma célula vazia) lê como a conta escreve: "det[1, 2; 3, 4]", nunca com "vmatrix",
+  // "begin", "end" nem "&" na tela. O `\\` que separa as linhas pode ter vindo com uma barra só (o JSON a come) antes de um espaço.
+  texto = texto.replace(/\\begin\s*\{([bpv]?)matrix\}([\s\S]*?)\\end\s*\{\1matrix\}/g, (_inteiro, tipo: string, miolo: string) => {
+    const linhas = miolo.split(/\\\\|\\(?=\s)/).map((linha) => linha.trim()).filter((linha) => linha !== "");
+    const escritas = linhas.map((linha) => linha.split("&").map((celula) => linearizarTolerante(celula)).join(", "));
+    return `${tipo === "v" ? "det" : ""}[${escritas.join("; ")}]`;
+  });
+  // O grau (`30^\circ`, `30^{\circ}`) vira "30°" já: depois, o `^{…}` o faria "30^(°)".
+  texto = texto.replace(/\^\s*(?:\{\s*\\circ\s*\}|\\circ(?![A-Za-z]))/g, "°");
   for (let volta = 0; volta < 5; volta += 1) {
     const antes = texto;
     texto = texto
@@ -92,29 +108,54 @@ export function linearizarTolerante(fonte: string): string {
         return `${simples(a) ? a.trim() : `(${a.trim()})`} ÷ ${simples(b) ? b.trim() : `(${b.trim()})`}`;
       })
       .replace(/\\sqrt\s*\{([^{}]*)\}/g, (_inteiro, a: string) => (/^[\w.,−-]+$/u.test(a.trim()) ? `√${a.trim()}` : `√(${a.trim()})`))
-      .replace(/\\(?:text|mathrm|textbf|mathbf|operatorname)\s*\{([^{}]*)\}/g, "$1")
+      .replace(/\\(?:text|textit|mathrm|mathbb|mathcal|mathit|mathsf|mathtt|textbf|mathbf|boldsymbol|underline|cancel|operatorname)\s*\{([^{}]*)\}/g, "$1")
       .replace(/\\(?:foco|procurado|resposta|overline|vec|hat|bar)\s*\{([^{}]*)\}/g, "$1")
+      // Um comando desconhecido com argumento (`\unknown{y}`) lê "unknown(y)", e a função com chaves (`\sin{x}`) lê "sen x": nada cola nem some.
+      .replace(/\\([A-Za-z]+)\s*\{([^{}]*)\}/g, (inteiro, nome: string, argumento: string) => {
+        if (/^(?:d?frac|sqrt|begin|end|left|right)$/.test(nome) || GREGAS[nome] || SIMBOLOS[nome]) return inteiro;
+        if (FUNCOES[nome]) return `${FUNCOES[nome]} ${argumento}`;
+        return nome.length > 1 ? `${nome}(${argumento})` : inteiro;
+      })
       .replace(/\^\{([^{}]*)\}/g, (_inteiro, a: string) => (a.length === 1 && SOBRESCRITO[a] ? SOBRESCRITO[a] : `^(${a})`))
       .replace(/_\{([^{}]*)\}/g, (_inteiro, a: string) => `_${a}`);
     if (texto === antes) break;
   }
+  // Uma peça desconhecida NUNCA some: a função vira o nome da tela ("\sin x" lê "sen x"), o símbolo conhecido vira o símbolo e qualquer outro comando
+  // fica com o nome, sem a barra ("\foo x" lê "foo x"). Apagar o comando mudava o sentido ("h(x) = \sin x" lia "h(x) = x").
   texto = texto
     .replace(/\^([0-9])(?![0-9])/g, (_inteiro, a: string) => SOBRESCRITO[a] ?? `^${a}`)
-    .replace(/\\([A-Za-z]+)/g, (inteiro, nome: string) => GREGAS[nome] ?? SIMBOLOS[nome] ?? (nome.length > 1 ? "" : inteiro))
+    .replace(/\\([A-Za-z]+)/g, (inteiro, nome: string) => GREGAS[nome] ?? SIMBOLOS[nome] ?? FUNCOES[nome] ?? (nome.length > 1 ? nome : inteiro))
     .replace(/[\\{}]/g, "")
     .replace(/\s+/g, " ")
     .trim();
   return texto;
 }
 
-/** O texto com o LaTeX que ficou solto (sem cifrões) trocado pelo texto linear: nunca barra, nunca chave na tela. */
+/**
+ * O cifrão que abre LaTeX (`$\begin{vmatrix}…`, `$ \sin x $`, uma marca que passou do limite): num texto de matemática, é cifrão de fórmula, não de
+ * dinheiro. Serve a quem decide se a lição é de matemática e se há cifrão cru para tirar.
+ */
+export function contemCifraoDeLatex(texto: string): boolean {
+  return typeof texto === "string" && texto.includes("$") && /\$[^$\n]{0,400}?\\[A-Za-z]/.test(texto);
+}
+
+/**
+ * O texto com o LaTeX que ficou solto (sem cifrões) trocado pelo texto linear: nunca barra, nunca chave na tela, e nunca o cifrão de uma fórmula que
+ * não virou marca (comprida demais, com espaço colado no cifrão, sem o par): os cifrões que cercam LaTeX saem junto com ele. O de dinheiro
+ * ("R$ 5,00", "$ 80") não tem LaTeX dentro e fica.
+ */
 function semLatexCru(texto: string): string {
-  return /[\\{}]/.test(texto) ? linearizarTolerante(texto.replace(/\s+/g, " ")) : texto;
+  if (!/[\\{}]/.test(texto)) return texto;
+  const semCifrao = texto
+    .replace(/\${1,2}([^$\n]*\\[A-Za-z][^$\n]*)\${1,2}/g, " $1 ")
+    .replace(/\${1,2}(?=\\[A-Za-z])/g, "");
+  return linearizarTolerante(semCifrao.replace(/\s+/g, " "));
 }
 
 /* ----- A marcação com cifrões ----- */
 
-const TAMANHO_MAXIMO_DA_MARCA = 200;
+/** A fórmula lê até 300 caracteres (`LIMITES_FORMULA`); a marca que a cerca ganha uma folga de espaços e de `\\left`: uma conta de 201 caracteres era "cifrão cru". */
+const TAMANHO_MAXIMO_DA_MARCA = 320;
 
 interface Marca {
   conteudo: string;
@@ -141,13 +182,17 @@ function lerMarca(texto: string, inicio: number): Marca | null {
   const primeiro = texto[inicio + comprimento];
   if (primeiro === undefined || ehEspaco(primeiro) || primeiro === "$") return null;
   const limite = Math.min(texto.length, inicio + comprimento + TAMANHO_MAXIMO_DA_MARCA);
+  // Um cifrão no meio que não fechou (`custa $5 e a conta $x \\times 2$`): ele é o começo de outra marca, não parte desta; o primeiro era dinheiro.
+  let passouPorOutroCifrao = false;
   for (let j = inicio + comprimento + 1; j < limite; j += 1) {
     if (texto[j] === "\n") return null;
     if (texto[j] !== "$" || (comprimento === 2 && texto[j + 1] !== "$")) continue;
-    if (ehDePalavra(texto[j + comprimento])) continue;
     const conteudo = texto.slice(inicio + comprimento, j);
-    if (ehEspaco(texto[j - 1]) && !fechaDepoisDeEspaco(conteudo)) continue;
-    return { conteudo, fim: j + comprimento };
+    if (ehDePalavra(texto[j + comprimento]) || (ehEspaco(texto[j - 1]) && !fechaDepoisDeEspaco(conteudo))) {
+      passouPorOutroCifrao = true;
+      continue;
+    }
+    return passouPorOutroCifrao ? null : { conteudo, fim: j + comprimento };
   }
   return null;
 }
@@ -313,6 +358,22 @@ function juntarVizinhos(segmentos: SegmentoDeTexto[]): SegmentoDeTexto[] {
   return saida;
 }
 
+/** Dinheiro sem "R": `$5`, `$25,00`, `$1.250,50` (o número fecha com espaço, pontuação ou o fim). */
+const DINHEIRO_COLADO = /^\$\d+(?:[.,]\d{3})*(?:[.,]\d{1,2})?(?![\p{L}\p{N}^_{(\\])/u;
+
+/**
+ * Num texto de MATEMÁTICA, o `$` único que não formou par e vem colado na letra, no número ou na barra que o segue ("uma linha de $A com uma coluna de B": a
+ * IA abriu `$A$` e perdeu o par) é marcador solto, não dinheiro: sai do texto. Ficam o de dinheiro ("R$ 25,00" e "US$10" têm letra antes; "$ 5" tem espaço
+ * depois; "$5" e "$25,00" são preço) e o que está depois de letra ou número ("5$"). Fora de matemática ninguém chama isto ("$HOME" é de shell).
+ */
+function ehCifraoSolto(texto: string, posicao: number): boolean {
+  const anterior = texto[posicao - 1];
+  if (anterior !== undefined && ehDePalavra(anterior)) return false;
+  const proximo = texto[posicao + 1];
+  if (proximo === undefined || ehEspaco(proximo) || proximo === "$") return false;
+  return !DINHEIRO_COLADO.test(texto.slice(posicao));
+}
+
 /** O texto em partes: o que fica entre marcas é texto (sem LaTeX cru), e cada marca vem lida. Com `heuristica`, os tokens soltos também. */
 function partirEmPartes(texto: string, heuristica: boolean): Parte[] {
   if (typeof texto !== "string" || texto === "") return [];
@@ -363,6 +424,34 @@ export function partirTextoComFormulas(texto: string, opcoes: OpcoesDoTexto = {}
 /** O texto para quem não desenha fórmula (cliente antigo): cada fórmula marcada em texto linear, sem cifrão nem LaTeX cru. */
 export function textoSemFormulas(texto: string): string {
   return partirEmPartes(texto, false).map((parte) => (parte.tipo === "texto" ? parte.texto : parte.linear)).join("");
+}
+
+/**
+ * O texto de uma lição de MATEMÁTICA sem o `$` solto: as marcas ficam como estão e o `$` único que não formou par e vem colado na letra ou no número que o
+ * segue sai ("uma linha de $A com uma coluna de B" vira "uma linha de A com uma coluna de B"). Quem chama é o servidor, e só na lição de matemática: numa lição
+ * de shell, "$HOME" é de shell. Idempotente.
+ */
+export function tirarCifraoSolto(texto: string): string {
+  if (typeof texto !== "string" || !texto.includes("$")) return texto;
+  let saida = "";
+  let i = 0;
+  while (i < texto.length) {
+    if (texto[i] === "$") {
+      const marca = lerMarca(texto, i);
+      if (marca) {
+        saida += texto.slice(i, marca.fim);
+        i = marca.fim;
+        continue;
+      }
+      if (ehCifraoSolto(texto, i)) {
+        i += 1;
+        continue;
+      }
+    }
+    saida += texto[i];
+    i += 1;
+  }
+  return saida;
 }
 
 /**

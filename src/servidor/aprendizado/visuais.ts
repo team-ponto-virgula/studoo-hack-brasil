@@ -13,6 +13,7 @@ import {
   normalizarVisuais,
   passosEmTexto,
   resolucaoParaCliente,
+  comCaixaDoPar,
   visualParaEnunciado,
   visualRevelado,
   type Capacidades,
@@ -23,12 +24,13 @@ import {
   type Visual,
   type VisualFigura,
   type VisualFormula,
+  VISUAIS_COM_FUNCAO,
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
-import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, semCifraoSolto, temVisual } from "./formulas-na-licao";
 import { ordemDoSuaVez } from "./ordem-sua-vez";
 
-export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, semCifraoSolto, temVisual } from "./formulas-na-licao";
 
 /*
  * Visuais da lição no servidor (spec 15). Duas portas, as duas atrás do cabeçalho `X-Studoo-Capacidades`:
@@ -115,6 +117,34 @@ export function limparVisuais(conteudo: ConteudoLicao): VisuaisLimpos {
   };
   limpos.guardar(chave, limpo);
   return limpo;
+}
+
+/* ----- O gráfico de função: quem o recebe e a fórmula que ele já traz ----- */
+
+/** Quem anuncia `visuais@2` desenha o gráfico de função; quem anuncia só `visuais@1` (ou nada) não o recebe: o lugar dele some e a lição segue. */
+const desenhaFuncao = (capacidades: Capacidades): boolean => capacidades.visuais >= VISUAIS_COM_FUNCAO;
+
+/**
+ * O gráfico de função traz a faixa de fórmulas dele em cima (uma por curva): o visual `formula` da lição que é a mesma fórmula ("f(x) = x² − 4x + 3",
+ * ou só a expressão) não se repete (spec 15, seção 15). As outras fórmulas ficam. Sem gráfico de função na lista, ela volta como veio.
+ */
+export function semFormulaRepetida(visuais: readonly Visual[]): Visual[] {
+  const repetidas = new Set<string>();
+  for (const visual of visuais) {
+    if (visual.tipo !== "funcao") continue;
+    for (const curva of visual.curvas) {
+      for (const fonte of [`${curva.nome}(x) = ${curva.latex}`, `y = ${curva.latex}`, curva.latex]) {
+        const lida = lerFormula(fonte);
+        if (lida.ok) repetidas.add(lida.canonica);
+      }
+    }
+  }
+  if (repetidas.size === 0) return [...visuais];
+  return visuais.filter((visual) => {
+    if (visual.tipo !== "formula") return true;
+    const lida = lerFormula(visual.latex);
+    return !(lida.ok && repetidas.has(lida.canonica));
+  });
 }
 
 /* ----- O PNG do build 3 ----- */
@@ -220,11 +250,16 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
   const saida: LicaoDetalhe = { ...detalhe };
 
   if (capacidades.visuais >= 1) {
-    if (limpo.visuais) saida.visuais = limpo.visuais.map(visualParaEnunciado);
-    if (limpo.dosExercicios.some(Boolean)) {
+    // O gráfico de função só vai com `visuais@2`; sem ele o lugar dele some (a fórmula repetida só sai quando o gráfico fica).
+    const dosVisuais = (limpo.visuais ?? []).filter((visual) => desenhaFuncao(capacidades) || visual.tipo !== "funcao");
+    const visuais = desenhaFuncao(capacidades) ? semFormulaRepetida(dosVisuais) : dosVisuais;
+    if (visuais.length > 0) saida.visuais = visuais.map(visualParaEnunciado);
+    const dosExercicios = limpo.dosExercicios.map((visual) => (visual && (desenhaFuncao(capacidades) || visual.tipo !== "funcao") ? visual : undefined));
+    if (dosExercicios.some(Boolean)) {
       saida.exercicios = detalhe.exercicios.map((exercicio, posicao) => {
-        const visual = limpo.dosExercicios[posicao];
-        return visual ? { ...exercicio, visual: visualParaEnunciado(visual) } : exercicio;
+        const visual = dosExercicios[posicao];
+        // A figura com ponto procurado leva a caixa que o enunciado e o retorno dividem: se um não cabe, nenhum desenha.
+        return visual ? { ...exercicio, visual: visual.tipo === "formula" ? visualParaEnunciado(visual) : visualParaEnunciado(comCaixaDoPar(visual)) } : exercicio;
       });
       saida.exercicio = saida.exercicios[0];
     }
@@ -240,7 +275,8 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
   // Build 3 e site antigo: o desenho no lugar da foto, só em lição de matemática com visual válido (a foto continua guardada).
   const fotoOuNada = !detalhe.recurso || detalhe.recurso.tipo === "imagem";
   if (capacidades.visuais < 1 && desenharPng && limpo.visuais && fotoOuNada) {
-    const imagem = await recursoDoDesenho(limpo.visuais);
+    // O PNG é a figura inteira (o gráfico de função leva a faixa de fórmulas dele): a fórmula igual da lição não se repete.
+    const imagem = await recursoDoDesenho(semFormulaRepetida(limpo.visuais));
     if (imagem) saida.recurso = imagem;
   }
   return saida;
@@ -250,7 +286,8 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
 export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacidades: Capacidades): VisualFigura | undefined {
   if (capacidades.visuais < 1) return undefined;
   const visual = limparVisuais(conteudo).dosExercicios[indice];
-  return visual && visual.tipo !== "formula" ? visualRevelado(visual) : undefined;
+  if (visual?.tipo === "funcao" && !desenhaFuncao(capacidades)) return undefined;
+  return visual && visual.tipo !== "formula" ? visualRevelado(comCaixaDoPar(visual)) : undefined;
 }
 
 /* ----- Fórmula em linha: o texto linear para quem não desenha, e as marcas para quem desenha ----- */
@@ -263,5 +300,7 @@ export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacid
  */
 export function comFormulasParaOCliente<T>(valor: T, conteudo: ConteudoLicao, capacidades: Capacidades): T {
   if (!conteudoEhDeMatematica(conteudo)) return valor;
-  return capacidades.visuais >= 1 ? comFormulasMarcadas(valor) : comTextoLinear(valor);
+  // O `$` solto colado numa letra ("uma linha de $A com B") sai primeiro, antes de as marcas serem lidas.
+  const limpo = semCifraoSolto(valor);
+  return capacidades.visuais >= 1 ? comFormulasMarcadas(limpo) : comTextoLinear(limpo);
 }

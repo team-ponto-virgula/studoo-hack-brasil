@@ -118,10 +118,12 @@
   "A água é H₂O e o gás é CO₂."
  ],
  "Escreva $\\foo{x} + 1$ aqui": [
-  "Escreva x + 1 aqui"
+  "Escreva foo(x) + 1 aqui"
  ],
  "Veja $\\alpha + \\beta$ e $\\pi r^2$.": [
-  "Veja α + β e ",
+  "Veja ",
+  "[\\alpha + \\beta]",
+  " e ",
   "[\\pi r^2]",
   "."
  ],

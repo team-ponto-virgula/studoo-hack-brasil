@@ -1,0 +1,53 @@
+{
+  "origem": "Spec 15, seção 15, caso 2: reta com intercepto e raiz (R (−0,5; 0)).",
+  "bruto": {
+    "tipo": "funcao",
+    "alt": "A reta g(x) = 2x + 1 de −2 a 2, com o intercepto C e a raiz R.",
+    "curvas": [
+      {
+        "latex": "2x+1",
+        "nome": "g",
+        "de": -2,
+        "ate": 2
+      }
+    ],
+    "pontos": [
+      {
+        "id": "C",
+        "tipo": "intercepto"
+      },
+      {
+        "id": "R",
+        "tipo": "raiz"
+      }
+    ]
+  },
+  "guardado": {
+    "tipo": "funcao",
+    "alt": "A reta g(x) = 2x + 1 de −2 a 2, com o intercepto C e a raiz R.",
+    "curvas": [
+      {
+        "nome": "g",
+        "latex": "2x + 1",
+        "de": -2,
+        "ate": 2
+      }
+    ],
+    "pontos": [
+      {
+        "id": "C",
+        "papel": "especial",
+        "tipo": "intercepto",
+        "x": 0,
+        "y": 1
+      },
+      {
+        "id": "R",
+        "papel": "especial",
+        "tipo": "raiz",
+        "x": -0.5,
+        "y": 0
+      }
+    ]
+  }
+}

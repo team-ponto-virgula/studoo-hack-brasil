@@ -1,8 +1,10 @@
 import {
+  contemCifraoDeLatex,
   contemFormulaMarcada,
   contemMarcaDeFormula,
   marcarFormulasSoltas,
   textoSemFormulas,
+  tirarCifraoSolto,
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
 import { ehAssuntoDeMatematica } from "@/servidor/ia/matematica";
@@ -70,7 +72,7 @@ export function conteudoEhDeMatematica(conteudo: ConteudoLicao): boolean {
   return temVisual(conteudo) ||
     exercicios(conteudo).some((exercicio) => exercicio.trechoTipo === "formula") ||
     ehAssuntoDeMatematica(conteudo.objetivo, conteudo.conceito, conteudo.exemplo) ||
-    algumTexto(conteudo, contemFormulaMarcada);
+    algumTexto(conteudo, (texto) => contemFormulaMarcada(texto) || contemCifraoDeLatex(texto));
 }
 
 /**
@@ -78,7 +80,16 @@ export function conteudoEhDeMatematica(conteudo: ConteudoLicao): boolean {
  * linha (build 3, site antigo): sem cifrão e sem LaTeX cru. O mesmo objeto quando não há marca.
  */
 export function comTextoLinear<T>(valor: T): T {
-  return transformarTextos(valor, (texto) => (contemMarcaDeFormula(texto) ? textoSemFormulas(texto) : texto)) as T;
+  return transformarTextos(valor, (texto) => (contemMarcaDeFormula(texto) || contemCifraoDeLatex(texto) ? textoSemFormulas(texto) : texto)) as T;
+}
+
+/**
+ * Na lição de matemática, o `$` único que não formou par e vem colado numa letra ou número ("uma linha de $A com uma coluna de B": a IA abriu `$A$` e perdeu
+ * o par) é marcador solto e sai do texto; dinheiro ("R$ 25,00", "US$10", "$ 5") fica. Quem chama é o servidor, e só com a lição já reconhecida como de
+ * matemática: numa lição de shell, "$HOME" é de shell. O mesmo objeto quando nada muda.
+ */
+export function semCifraoSolto<T>(valor: T): T {
+  return transformarTextos(valor, tirarCifraoSolto) as T;
 }
 
 /**
