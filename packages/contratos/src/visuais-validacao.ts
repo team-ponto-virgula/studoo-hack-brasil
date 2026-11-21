@@ -2,6 +2,7 @@ import { lerFormula, percorrerFormula, type NoFormula } from "./formula";
 import { marcarFormulasSoltas, normalizarTextoComFormulas } from "./formula-no-texto";
 import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
 import { desenharVisual } from "./motor-visuais";
+import { comDescricaoDaResposta } from "./visuais-descricao";
 import {
   LIMITES_VISUAIS,
   PAPEIS_PONTO,
@@ -518,13 +519,16 @@ export function visualParaEnunciado<V extends Visual>(visual: V): V {
   return visual;
 }
 
-/** O visual com o procurado virado em resposta (depois do acerto): o motor passa a desenhá-lo na posição. */
+/**
+ * O visual com o procurado virado em resposta (depois do acerto): o motor passa a desenhá-lo na posição, e o `alt` passa a ser a
+ * descrição montada dos DADOS ("… e o vértice C (4, 0)."), nunca o texto da IA, que no enunciado fala do procurado sem posição.
+ */
 export function visualRevelado<V extends Visual>(visual: V): V {
   if (visual.tipo === "plano") {
-    return { ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) } as V;
+    return comDescricaoDaResposta({ ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) }) as V;
   }
   if (visual.tipo === "reta_numerica") {
-    return { ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) } as V;
+    return comDescricaoDaResposta({ ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) }) as V;
   }
   return visual;
 }

@@ -19,6 +19,8 @@ import {
   responderSuaVez,
   validarResolucao,
   validarVisual,
+  comDescricaoDaResposta,
+  descricaoDaFigura,
   visualParaEnunciado,
   visualRevelado,
 } from "@studoo/contratos";
@@ -595,4 +597,92 @@ test("o exemplo em texto para o cliente sem `resolucao@1`: passos com a fórmula
   assert.equal(passos.some((passo) => /[\\{}]/.test(passo)), false, "nunca LaTeX cru na tela");
   const abscissas = passosEmTexto(guardada("abscissas"), linear);
   assert.match(abscissas[2], /15 = 2 \+ 6 \+ x_C$/);
+});
+
+/* ----- Marco 2g: o alt revelado é montado dos dados ----- */
+
+const DESCRICAO_REVELADA = {
+  baricentro: "Plano cartesiano com A (1, 2), B (−2, 7), baricentro G (1, 3) e o vértice C (4, 0).",
+  abscissas: "Reta numérica de 0 a 8 com A em 3, B em 5, baricentro G em 4 e o ponto C em 4.",
+  colinearidade: "Plano cartesiano com A (−1, −1), B (2, 5) e o ponto C (0, 1).",
+};
+
+test("2g: Avaliacao.visual leva o alt montado dos dados, com a resposta; o enunciado continua com o alt da IA, sem a posição do procurado", () => {
+  const posicaoDoProcurado = { baricentro: "C (4, 0)", abscissas: "C em 4", colinearidade: "C (0, 1)" };
+  for (const nome of NOMES) {
+    const completo = normalizarVisual(fixture(nome).licao.exercicio.visual);
+    const enunciado = visualParaEnunciado(completo);
+    assert.equal(enunciado.alt, completo.alt, `${nome}: o enunciado mantém o alt da IA`);
+    assert.equal(enunciado.alt.includes(posicaoDoProcurado[nome]), false, `${nome}: o alt do enunciado não traz a posição do procurado`);
+    const revelado = visualRevelado(completo);
+    assert.equal(revelado.alt, DESCRICAO_REVELADA[nome]);
+    assert.ok(revelado.alt.includes(posicaoDoProcurado[nome]), `${nome}: o alt revelado diz onde está o procurado`);
+    assert.doesNotMatch(revelado.alt, /procurad/, `${nome}: já não é procurado`);
+    assert.ok(revelado.alt.length <= 140, `${nome}: cabe nos 140 de sempre`);
+    assert.notEqual(completo.alt, revelado.alt, `${nome}: o original não muda`);
+  }
+});
+
+test("2g: o alt revelado não vem do texto da IA: um alt qualquer da IA é trocado pela frase dos dados", () => {
+  const completo = normalizarVisual(fixture("baricentro").licao.exercicio.visual);
+  const outro = { ...completo, alt: "Qualquer coisa que a IA escreveu, inclusive uma coordenada errada (9, 9)." };
+  assert.equal(visualRevelado(outro).alt, DESCRICAO_REVELADA.baricentro);
+  assert.equal(JSON.stringify(visualRevelado(outro)).includes("9, 9"), false);
+});
+
+test("2g: depois do 'Sua vez', a figura que mostra a resposta leva o alt montado dos dados; a que não mostra, o da IA", () => {
+  for (const nome of NOMES) {
+    const completa = guardada(nome);
+    const corte = completa.passos.findIndex((passo) => passo.tentativa);
+    const certa = completa.passos[corte].tentativa.opcoes.findIndex((opcao) => opcao.correta);
+    const { depois } = responderSuaVez(completa, { opcao: certa, tentativa: 1 });
+    const figuras = [depois.visual, ...depois.passos.map((passo) => passo.visual)].filter(Boolean);
+    assert.ok(figuras.length >= 1, `${nome}: o retorno tem a figura da resposta`);
+    for (const figura of figuras) {
+      if (figura.pontos.some((ponto) => ponto.papel === "resposta")) {
+        assert.equal(figura.alt, descricaoDaFigura(figura), `${nome}: o alt da resposta sai dos dados`);
+        assert.match(figura.alt, /^(Plano cartesiano|Reta numérica)/);
+      }
+    }
+    const ultimo = depois.passos.at(-1).visual ?? depois.visual;
+    assert.match(ultimo.alt, /o (vértice|ponto) C (\(|em )/, `${nome}: a frase do último passo diz onde está C`);
+    // Antes da escolha, nada disso vai pela rede: o alt dos passos é o da IA e não há descrição da resposta.
+    const publica = resolucaoParaCliente(completa);
+    const json = JSON.stringify(publica);
+    assert.equal(json.includes(ultimo.alt), false, `${nome}: a descrição da resposta não vai antes da hora`);
+    // O que o servidor guarda não muda.
+    const guardadoDoUltimo = completa.passos.at(-1).visual;
+    if (guardadoDoUltimo) assert.notEqual(guardadoDoUltimo.alt, ultimo.alt, `${nome}: o guardado mantém o alt da IA`);
+  }
+});
+
+test("2g: a descrição dos dados: derivado achado, ponto fora de polígono, decimais, procurado ainda sem posição e frase longa", () => {
+  const figura = (pontos, extra = {}) => normalizarVisual({ tipo: "plano", alt: "Os pontos no plano.", pontos, ...extra });
+  const medio = figura([{ id: "A", x: 1, y: 2 }, { id: "B", x: 5, y: 8 }, { id: "M", papel: "resposta", derivado: { tipo: "ponto_medio", de: ["A", "B"] } }], { segmentos: [{ de: "A", ate: "B" }] });
+  assert.equal(descricaoDaFigura(medio), "Plano cartesiano com A (1, 2), B (5, 8) e o ponto médio M (3, 5).");
+  const media = normalizarVisual({ tipo: "reta_numerica", alt: "Reta com A em 2 e B em 6.", pontos: [{ id: "A", valor: 2 }, { id: "B", valor: 6 }, { id: "M", papel: "resposta", derivado: { tipo: "media", de: ["A", "B"] } }] });
+  assert.equal(descricaoDaFigura(media), "Reta numérica de 1 a 7 com A em 2, B em 6 e a média M em 4.");
+  const decimal = figura([{ id: "A", x: 1.5, y: 2 }, { id: "P", papel: "resposta", x: -0.5, y: 3.25 }]);
+  assert.equal(descricaoDaFigura(decimal), "Plano cartesiano com A (1,5; 2) e o ponto P (−0,5; 3,25).");
+  // O procurado que ainda não foi achado fica sem posição.
+  const escondido = visualParaEnunciado(figura([{ id: "A", x: 1, y: 2 }, { id: "B", x: 3, y: 4 }, { id: "C", papel: "procurado", x: 5, y: 6 }], { poligonos: [{ pontos: ["A", "B", "C"] }] }));
+  assert.equal(descricaoDaFigura(escondido), "Plano cartesiano com A (1, 2), B (3, 4) e o vértice procurado C.");
+  // Sem resposta na figura (um passo do meio, o enunciado), o alt é o da IA: o mesmo objeto.
+  assert.equal(comDescricaoDaResposta(escondido), escondido);
+  assert.equal(comDescricaoDaResposta(escondido).alt, "Os pontos no plano.");
+  // Muitos pontos com coordenadas compridas: a frase passaria de 200 caracteres e vira a contagem, com o que foi achado.
+  const comprida = {
+    tipo: "plano", alt: "", x: [-2000, 2000], y: [-2000, 2000],
+    pontos: [
+      ...Array.from({ length: 11 }, (_, i) => ({ id: `P${i + 1}`, papel: "dado", x: -1234.5 + i * 111.25, y: 6789.75 - i * 321.5 })),
+      { id: "Q", papel: "resposta", x: 7, y: 5.5 },
+    ],
+  };
+  const longa = descricaoDaFigura(comprida);
+  assert.ok(longa.length <= 200, longa);
+  assert.equal(longa, "Plano cartesiano com 12 pontos, entre eles o ponto Q (7; 5,5).");
+  // Com 12 pontos curtos a frase inteira ainda cabe (183 caracteres), e é a inteira que sai.
+  const curtos = figura([...Array.from({ length: 11 }, (_, i) => ({ id: `P${i + 1}`, x: i * 2 - 11, y: i * 1.5 - 8, rotulo: false })), { id: "Q", papel: "resposta", x: 7, y: 5.5 }]);
+  assert.ok(curtos, "12 pontos é o teto da figura");
+  assert.match(descricaoDaFigura(curtos), /^Plano cartesiano com P1 \(−11, −8\), .* e o ponto Q \(7; 5,5\)\.$/);
 });

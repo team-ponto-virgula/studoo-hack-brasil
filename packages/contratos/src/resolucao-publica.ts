@@ -1,5 +1,6 @@
 import { textoSemFormulas } from "./formula-no-texto";
 import { visualParaEnunciado } from "./visuais-validacao";
+import { comDescricaoDaResposta } from "./visuais-descricao";
 import type { EscolhaNoSuaVez, OpcaoDoSuaVez, PassoDaResolucao, PassoGuardado, Resolucao, ResolucaoGuardada, RespostaDoSuaVez, VisualFigura } from "./visuais";
 
 /*
@@ -25,10 +26,17 @@ function opcaoPublica(opcao: OpcaoDoSuaVez): OpcaoDoSuaVez {
   return { ...(opcao.texto !== undefined ? { texto: opcao.texto } : {}), ...(opcao.formula !== undefined ? { formula: opcao.formula } : {}) };
 }
 
-/** O passo completo, como vai depois do acerto: a posição do procurado e o `\resposta{}` incluídos. */
+/**
+ * O passo completo, como vai depois do acerto: a posição do procurado e o `\resposta{}` incluídos. A figura que já mostra a resposta
+ * leva a descrição montada dos dados (`comDescricaoDaResposta`), que é o que o leitor de tela anuncia.
+ */
 function completoDoPasso(passo: PassoGuardado): PassoDaResolucao {
-  const { tentativa, ...resto } = passo;
-  return { ...resto, ...(tentativa ? { tentativa: { pergunta: tentativa.pergunta, opcoes: tentativa.opcoes.map(opcaoPublica) } } : {}) };
+  const { tentativa, visual, ...resto } = passo;
+  return {
+    ...resto,
+    ...(visual ? { visual: comDescricaoDaResposta(visual) } : {}),
+    ...(tentativa ? { tentativa: { pergunta: tentativa.pergunta, opcoes: tentativa.opcoes.map(opcaoPublica) } } : {}),
+  };
 }
 
 function indiceDoSuaVez(resolucao: ResolucaoGuardada): number {
@@ -74,7 +82,7 @@ export function responderSuaVez(resolucao: ResolucaoGuardada, escolha: EscolhaNo
       ? {
         depois: {
           ...(passo.formula ? { formula: passo.formula } : {}),
-          ...(passo.visual ? { visual: passo.visual } : {}),
+          ...(passo.visual ? { visual: comDescricaoDaResposta(passo.visual) } : {}),
           passos: resolucao.passos.slice(corte + 1).map(completoDoPasso),
         },
       }

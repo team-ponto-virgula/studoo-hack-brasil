@@ -178,6 +178,8 @@ test("o retorno de quem acerta leva o procurado virado em resposta, só com visu
   assert.equal(visualDoRetorno(conteudo, 0, SEM_CAPACIDADES), undefined);
   const visual = visualDoRetorno(conteudo, 0, SO_VISUAIS);
   assert.deepEqual(visual.pontos.find((ponto) => ponto.id === "C"), { id: "C", papel: "resposta", x: 4, y: 0 });
+  // Marco 2g: o alt do retorno é montado dos dados e diz onde está a resposta (o app o anuncia).
+  assert.equal(visual.alt, "Plano cartesiano com A (1, 2), B (−2, 7), baricentro G (1, 3) e o vértice C (4, 0).");
   assert.equal(visualDoRetorno(conteudo, 1, SO_VISUAIS), undefined, "exercício sem figura");
   const semVisual = conteudoDa("baricentro");
   delete semVisual.exercicio.visual;

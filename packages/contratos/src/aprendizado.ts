@@ -10,6 +10,7 @@ export * from './formula';
 export { conferirConta, type ResultadoConta } from './formula-conta';
 export * from './visuais-validacao';
 export * from './resolucao-publica';
+export { TAMANHO_MAXIMO_DA_DESCRICAO, comDescricaoDaResposta, descricaoDaFigura } from './visuais-descricao';
 export * from './formula-no-texto';
 export {
   comAlturaMinima, comporDesenhos, dentroDoTeto, desenharFormula, desenharFormulaEmLinha, desenharPlano, desenharRetaNumerica, desenharVisual, desenhoParaSvg,
