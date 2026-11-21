@@ -71,13 +71,57 @@
   " vale."
  ],
  "Isso vale $\\frac{x_A + x_B}{2}$ no ponto médio.": [
-  "Isso vale (x_A + x_B) / 2 no ponto médio."
+  "Isso vale (",
+  "[x_A]",
+  " + ",
+  "[x_B]",
+  ") ÷ 2 no ponto médio."
  ],
- "A raiz é $\\sqrt{x + 1}$ aqui.": [
-  "A raiz é √(x + 1) aqui."
+ "A raiz é $\\sqrt{x + 1}$ aqui e $\\sqrt{x_A + 1}$ ali.": [
+  "A raiz é √(",
+  "[x]",
+  " + 1) aqui e √(",
+  "[x_A]",
+  " + 1) ali."
  ],
  "O determinante $\\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix}$ vale −2.": [
   "O determinante det[1, 2; 3, 4] vale −2."
+ ],
+ "Metade: $1/2$ da pizza, ou $\\frac{1}{2}$, ou $x_A/2$, ou $x = 1/2$.": [
+  "Metade: ",
+  "[\\frac{1}{2}]",
+  " da pizza, ou ",
+  "[\\frac{1}{2}]",
+  ", ou ",
+  "[\\frac{x_A}{2}]",
+  ", ou ",
+  "[x = \\frac{1}{2}]",
+  "."
+ ],
+ "Mas $(x_A + x_B)/2$, $2x/3$, $6 \\div 3$ e $a/b/c$ ficam com ÷.": [
+  "Mas ",
+  "[(x_A + x_B) \\div 2]",
+  ", ",
+  "[2x \\div 3]",
+  ", ",
+  "[6 \\div 3]",
+  " e ",
+  "[a \\div b \\div c]",
+  " ficam com ÷."
+ ],
+ "Se $\\frac{x_A + x_B + x_C}{3} = \\frac{3 + 5 + 4}{3}$, então $x_G = 4$.": [
+  "Se (",
+  "[x_A]",
+  " + ",
+  "[x_B]",
+  " + ",
+  "[x_C]",
+  ") ÷ 3 = (3 + 5 + 4) ÷ 3, então ",
+  "[x_G = 4]",
+  "."
+ ],
+ "A água é H_2O e o gás é CO_2.": [
+  "A água é H₂O e o gás é CO₂."
  ],
  "Escreva $\\foo{x} + 1$ aqui": [
   "Escreva x + 1 aqui"
@@ -88,7 +132,7 @@
   "."
  ],
  "Calcule \\frac{1}{2} + \\sqrt{9} agora": [
-  "Calcule 1 / 2 + √(9) agora"
+  "Calcule 1/2 + √9 agora"
  ],
  "custa $5 e $10": [
   "custa $5 e $10"

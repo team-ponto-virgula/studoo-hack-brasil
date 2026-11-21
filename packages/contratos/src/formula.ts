@@ -703,7 +703,9 @@ export function formulaLinear(no: NoFormula): string {
     case "porcento":
       return "%";
     case "fracao":
-      return `${seEnvolve(no.numerador, formulaLinear(no.numerador))} / ${seEnvolve(no.denominador, formulaLinear(no.denominador))}`;
+      // Dois termos simples: "1/2", como se escreve numa frase. As outras: "(x + 1) ÷ 2", sem barra que se confunda com endereço.
+      if (fracaoSimples(no)) return `${formulaLinear(no.numerador)}/${formulaLinear(no.denominador)}`;
+      return `${seEnvolve(no.numerador, formulaLinear(no.numerador))} ÷ ${seEnvolve(no.denominador, formulaLinear(no.denominador))}`;
     case "script": {
       const base = no.base.tipo === "sequencia" ? `(${formulaLinear(no.base)})` : formulaLinear(no.base);
       const indice = no.indice ? `_${linearDoScript(no.indice)}` : "";
@@ -847,10 +849,15 @@ export function falarFormula(no: NoFormula): string {
   }
 }
 
-/** Cabe no meio de uma frase? Só número, variável, índice, expoente, operador e parênteses: fração, raiz e matriz vão em bloco. */
+/**
+ * Cabe no meio de uma frase? Número, variável, índice, expoente, operador e parênteses, e a fração de dois termos simples, que vai
+ * como "a/b" (spec 15, seção 9). Fração composta, raiz e matriz vão em bloco; dentro da frase, o texto linear em peças
+ * (`formulaEmPecas`). Esta é a regra pelo TIPO de nó: o motor ainda confere a altura e a largura (`formulaCabeNaLinha`).
+ */
 export function formulaCabeEmLinha(no: NoFormula): boolean {
   switch (no.tipo) {
     case "fracao":
+      return fracaoSimples(no);
     case "raiz":
     case "matriz":
       return false;
@@ -864,6 +871,125 @@ export function formulaCabeEmLinha(no: NoFormula): boolean {
     default:
       return true;
   }
+}
+
+/**
+ * Uma peça do texto linear: o texto que se escreve como está, ou a árvore que se DESENHA em linha (variável, símbolo, índice,
+ * expoente, fração simples). Nada de sublinhado cru na tela: o índice é desenhado, não escrito.
+ */
+export type PecaDeFormula = string | NoFormula;
+
+/** Quem desenha mede a peça (largura e altura de 1,5 em, `formulaCabeNaLinha`); sem medida, vale o tipo de nó. */
+export type PodeDesenharEmLinha = (no: NoFormula) => boolean;
+
+/**
+ * O texto linear de uma fórmula em peças (spec 15, seção 9): cada variável, símbolo, índice e expoente como árvore para desenhar
+ * em linha, e o resto como texto, que quebra de linha como qualquer palavra. `(x_A + x_B) / 2` vira "(" + x_A + " + " + x_B + ")
+ * ÷ 2": só a fração composta vira ÷ em texto, e o sublinhado nunca aparece. Quem fala a fórmula inteira lê a árvore
+ * (`falarFormula`), não estas peças. Peças de texto vizinhas se juntam.
+ */
+export function formulaEmPecas(no: NoFormula, podeDesenhar: PodeDesenharEmLinha = formulaCabeEmLinha): PecaDeFormula[] {
+  const desenhavel = (candidato: NoFormula): boolean =>
+    (candidato.tipo === "variavel" || candidato.tipo === "simbolo" || candidato.tipo === "script" || candidato.tipo === "fracao") && podeDesenhar(candidato);
+  const saida: PecaDeFormula[] = [];
+  const texto = (valor: string): void => {
+    if (valor === "") return;
+    if (typeof saida[saida.length - 1] === "string") saida[saida.length - 1] = `${saida[saida.length - 1] as string}${valor}`;
+    else saida.push(valor);
+  };
+  const envolvido = (filho: NoFormula): void => {
+    if (atomico(filho)) {
+      andar(filho);
+      return;
+    }
+    texto("(");
+    andar(filho);
+    texto(")");
+  };
+  const andar = (atual: NoFormula): void => {
+    switch (atual.tipo) {
+      case "numero":
+        texto(numeroNaTela(atual.valor));
+        return;
+      case "variavel":
+      case "simbolo":
+        saida.push(atual);
+        return;
+      case "operador":
+        texto(OPERADOR_LINEAR[atual.valor]);
+        return;
+      case "separador":
+      case "texto":
+        texto(atual.valor);
+        return;
+      case "porcento":
+        texto("%");
+        return;
+      case "fracao":
+        if (desenhavel(atual)) {
+          saida.push(atual);
+          return;
+        }
+        envolvido(atual.numerador);
+        texto(" ÷ ");
+        envolvido(atual.denominador);
+        return;
+      case "script":
+        if (desenhavel(atual)) {
+          saida.push(atual);
+          return;
+        }
+        // Índice ou expoente que não cabe em linha (uma fração composta dentro dele): a base e o resto, em palavras, sem `_` nem `^`.
+        andar(atual.base);
+        if (atual.indice) {
+          texto(" índice ");
+          envolvido(atual.indice);
+        }
+        if (atual.expoente) {
+          texto(" elevado a ");
+          envolvido(atual.expoente);
+        }
+        return;
+      case "raiz":
+        texto("√");
+        if (atomico(atual.radicando) && atual.radicando.tipo !== "parenteses") andar(atual.radicando);
+        else {
+          texto("(");
+          andar(atual.radicando);
+          texto(")");
+        }
+        return;
+      case "parenteses":
+        texto("(");
+        andar(atual.conteudo);
+        texto(")");
+        return;
+      case "sequencia":
+        atual.itens.forEach((item, posicao) => {
+          if (item.tipo === "operador" && !ehSinal(atual.itens, posicao)) texto(` ${OPERADOR_LINEAR[item.valor]} `);
+          else if (item.tipo === "operador") texto(OPERADOR_LINEAR[item.valor]);
+          else if (item.tipo === "separador") texto(`${item.valor} `);
+          else andar(item);
+        });
+        return;
+      case "matriz":
+        texto(atual.moldura === "barras" ? "det[" : "[");
+        atual.linhas.forEach((linha, i) => {
+          if (i > 0) texto("; ");
+          linha.forEach((celula, j) => {
+            if (j > 0) texto(", ");
+            andar(celula);
+          });
+        });
+        texto("]");
+        return;
+      case "destaque":
+        andar(atual.conteudo);
+        return;
+    }
+  };
+  andar(no);
+  return saida.map((peca) => (typeof peca === "string" ? peca.replace(/ {2,}/g, " ") : peca));
 }
 
 /** Todos os nós da árvore, em ordem de leitura (para quem confere, mede ou desenha). */

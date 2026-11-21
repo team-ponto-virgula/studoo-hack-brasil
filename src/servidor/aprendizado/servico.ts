@@ -28,7 +28,7 @@ import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
-import { SEM_CAPACIDADES, comTextoLinear, comVisuais, conteudoEhDeMatematica, visualDoRetorno } from "./visuais";
+import { SEM_CAPACIDADES, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, visualDoRetorno } from "./visuais";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
 import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
 
@@ -361,8 +361,9 @@ export async function buscarLicao(
   };
   const capacidades = opcoes.capacidades ?? SEM_CAPACIDADES;
   const completa = await comVisuais(detalhe, licao.conteudo, { capacidades, desenharPng: opcoes.desenharPng ?? false });
-  // Sem `visuais@1` o cliente não desenha a fórmula em linha: `$x_A$` chega como texto linear, sem cifrão.
-  return capacidades.visuais >= 1 || !conteudoEhDeMatematica(licao.conteudo) ? completa : comTextoLinear(completa);
+  // Sem `visuais@1` o cliente não desenha a fórmula em linha: `$x_A$` chega como texto linear, sem cifrão. Com ele, as marcas
+  // chegam completas (os tokens soltos, `x_A`, também) e só em lição de matemática.
+  return comFormulasParaOCliente(completa, licao.conteudo, capacidades);
 }
 
 /**
@@ -405,7 +406,7 @@ export async function avaliarLicao(
   // Exercício com figura, para quem desenha (`visuais@1`): quem acertou vê o procurado virar resposta.
   const visual = avaliacao.correta ? visualDoRetorno(licao.conteudo, indice, capacidades) : undefined;
   const resultado = { ...avaliacao, ...(visual ? { visual } : {}), comprovante };
-  return capacidades.visuais >= 1 || !conteudoEhDeMatematica(licao.conteudo) ? resultado : comTextoLinear(resultado);
+  return comFormulasParaOCliente(resultado, licao.conteudo, capacidades);
 }
 
 /** Registra a conclusão (uma vez) e, quando a lição tem prática, como ela foi (a mais recente fica). */

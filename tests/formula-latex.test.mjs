@@ -74,14 +74,15 @@ test("a forma canônica junta os apelidos num operador só", () => {
 });
 
 test("texto linear: o que um cliente que não desenha mostra", () => {
-  assert.equal(formulaLinear(ok(DA_FOLHA[0]).arvore), "x_G = (x_A + x_B + x_C) / 3");
-  assert.equal(formulaLinear(ok(DA_FOLHA[1]).arvore), "1 = (1 + (−2) + x_C) / 3");
+  assert.equal(formulaLinear(ok(DA_FOLHA[0]).arvore), "x_G = (x_A + x_B + x_C) ÷ 3", "fração composta: (…) ÷ 3, sem barra que se confunda com endereço");
+  assert.equal(formulaLinear(ok(DA_FOLHA[1]).arvore), "1 = (1 + (−2) + x_C) ÷ 3");
   assert.equal(formulaLinear(ok(String.raw`x_C = 3 \times 4 - 3 - 5`).arvore), "x_C = 3 × 4 − 3 − 5");
   assert.equal(formulaLinear(ok(String.raw`3.5 \div 2 \geq -1.25`).arvore), "3,5 ÷ 2 ≥ −1,25");
   assert.equal(formulaLinear(ok(String.raw`x^2 + y^{n+1}`).arvore), "x² + y^(n + 1)");
   assert.equal(formulaLinear(ok(String.raw`\sqrt{x + 1} + \sqrt{9}`).arvore), "√(x + 1) + √9");
-  assert.equal(formulaLinear(ok(String.raw`\frac{1}{2}`).arvore), "1 / 2");
-  assert.equal(formulaLinear(ok(String.raw`\frac{-b}{2a}`).arvore), "(−b) / (2a)");
+  assert.equal(formulaLinear(ok(String.raw`\frac{1}{2}`).arvore), "1/2", "fração de dois termos simples: a/b");
+  assert.equal(formulaLinear(ok(String.raw`\frac{x_A}{2}`).arvore), "x_A/2");
+  assert.equal(formulaLinear(ok(String.raw`\frac{-b}{2a}`).arvore), "(−b) ÷ (2a)");
   assert.equal(formulaLinear(ok(DA_FOLHA[9]).arvore), "det[−1, −1, 1; 2, 5, 1; k, 1, 1] = 0");
   assert.equal(formulaLinear(ok(DA_FOLHA[14]).arvore), "[1, 2; 3, 4]");
   assert.equal(formulaLinear(ok(String.raw`\foco{x_C} = \resposta{4}`).arvore), "x_C = 4");
@@ -268,7 +269,10 @@ test("cifrões e parênteses de LaTeX em volta da fórmula são tirados", () => 
 
 test("cabe em linha só o simples; ehSinal separa sinal de operador", () => {
   assert.equal(formulaCabeEmLinha(ok("x_A + 2y^2 = 3").arvore), true);
-  assert.equal(formulaCabeEmLinha(ok(String.raw`\frac{1}{2}`).arvore), false);
+  assert.equal(formulaCabeEmLinha(ok(String.raw`\frac{1}{2}`).arvore), true, "a fração de dois termos simples cabe: vai como a/b");
+  assert.equal(formulaCabeEmLinha(ok(String.raw`\frac{x_A}{2} + \frac{-1}{3}`).arvore), true);
+  assert.equal(formulaCabeEmLinha(ok(String.raw`\frac{x_A + x_B}{2}`).arvore), false, "fração composta vai em bloco");
+  assert.equal(formulaCabeEmLinha(ok(String.raw`\frac{1}{2x}`).arvore), false);
   assert.equal(formulaCabeEmLinha(ok(String.raw`\sqrt{2} + 1`).arvore), false);
   assert.equal(formulaCabeEmLinha(ok(DA_FOLHA[9]).arvore), false);
   assert.equal(formulaCabeEmLinha(ok(String.raw`\foco{x_C} = 4`).arvore), true);

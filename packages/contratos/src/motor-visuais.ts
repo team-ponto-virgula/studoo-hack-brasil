@@ -1,5 +1,5 @@
 import { falarFormula, lerFormula, type NoFormula } from "./formula";
-import { caixaDaFormula, deslocar, pisar, textoEmCaixa, type Caixa, type Comando, type Marca } from "./motor-formula";
+import { caixaDaFormula, caixaDaFormulaEmLinha, deslocar, pisar, textoEmCaixa, type Caixa, type Comando, type Marca } from "./motor-formula";
 import { arredondar, caminhoDoTexto, deslocarCaminho, larguraDoTexto, type PesoDoTexto } from "./texto-vetorial";
 import {
   LARGURA_DO_DESENHO,
@@ -180,12 +180,14 @@ export function desenharFormula(arvore: NoFormula, opcoes: OpcoesDaFormula = {})
 }
 
 /**
- * A fórmula em linha (variável, índice, expoente, número, operador, parênteses): uma caixa do tamanho do texto ao redor (`tamanho`,
- * 16 ou 17), com a linha de base marcada, para o cliente pôr no meio da frase. Fração, raiz, matriz e determinante não vêm
- * aqui (`formulaCabeEmLinha`): vão em bloco, e na frase caem em texto linear.
+ * A fórmula em linha (variável, índice, expoente, número, operador, parênteses, fração simples "a/b"): uma caixa do tamanho do
+ * texto ao redor (`tamanho`, 16 ou 17), com a linha de base marcada, para o cliente pôr no meio da frase (spec 15, seção 9):
+ * índice e expoente a 70% (no mínimo 11), o índice desce 0,3 em e o expoente sobe 0,45 em, dentro da linha de 1,5 em, sem a
+ * linha crescer; 0,2 em de cada lado dos sinais; a caixa não quebra. Fração composta, raiz e matriz não vêm aqui
+ * (`formulaCabeNaLinha`): na frase caem em texto linear em peças (`partirTextoComFormulas`).
  */
 export function desenharFormulaEmLinha(arvore: NoFormula, tamanho = 16): DesenhoEmLinha {
-  const caixa = caixaDaFormula(arvore, tamanho);
+  const caixa = caixaDaFormulaEmLinha(arvore, tamanho);
   const { primitivas, menorTexto } = emitir(deslocar(caixa.marcas, 0, caixa.a));
   return { largura: r2(caixa.l), altura: r2(caixa.a + caixa.p), linhaDeBase: r2(caixa.a), primitivas, falado: falarFormula(arvore), menorTexto };
 }

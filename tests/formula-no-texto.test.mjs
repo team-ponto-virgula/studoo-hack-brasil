@@ -2,18 +2,27 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { test } from "node:test";
 import {
+  contemFormulaMarcada,
   contemMarcaDeFormula,
+  falarFormula,
   falarTextoComFormulas,
+  formulaCabeNaLinha,
+  lerFormula,
   linearizarTolerante,
+  marcarFormulasSoltas,
   normalizarTextoComFormulas,
   partirTextoComFormulas,
   textoSemFormulas,
 } from "@studoo/contratos";
+import { caixaDaFormulaEmLinha } from "../packages/contratos/src/motor-formula.ts";
 
 const GOLDEN = new URL("./fixtures/matematica/golden-segmentos.json", import.meta.url);
 
 /** O segmento no formato do golden: o texto como veio, ou `[forma canônica]` para a fórmula. */
 const resumo = (segmentos) => segmentos.map((segmento) => (segmento.tipo === "texto" ? segmento.texto : `[${segmento.latex}]`));
+
+/** Como o cliente lê o texto de uma lição de matemática: o servidor marca os tokens soltos (`marcarFormulasSoltas`) e o cliente parte. */
+const lido = (texto) => partirTextoComFormulas(marcarFormulasSoltas(texto));
 
 const FRASES = [
   // As frases das primeiras telas reais do app (sublinhados crus) e os casos de borda do pedido.
@@ -30,10 +39,16 @@ const FRASES = [
   "Com A(2, 1) e C($k$, 5): $3 · 1 = 2 + (−1) + x_C$, então $x_C = 2$.",
   "($x_A$) e [$y_B$]; “$x^2$”, $b^2 - 4ac$.",
   "$$x_G = 1$$ vale.",
-  // Marcadas que não cabem ou não valem: texto linear, sem cifrão nem LaTeX cru.
+  // Marcadas que não cabem em linha: peças (variáveis e índices desenhados, o resto em texto); que não valem: texto linear.
   "Isso vale $\\frac{x_A + x_B}{2}$ no ponto médio.",
-  "A raiz é $\\sqrt{x + 1}$ aqui.",
+  "A raiz é $\\sqrt{x + 1}$ aqui e $\\sqrt{x_A + 1}$ ali.",
   "O determinante $\\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix}$ vale −2.",
+  // A fração simples vai desenhada "a/b" e se fala "1 sobre 2"; as outras barras continuam ÷.
+  "Metade: $1/2$ da pizza, ou $\\frac{1}{2}$, ou $x_A/2$, ou $x = 1/2$.",
+  "Mas $(x_A + x_B)/2$, $2x/3$, $6 \\div 3$ e $a/b/c$ ficam com ÷.",
+  "Se $\\frac{x_A + x_B + x_C}{3} = \\frac{3 + 5 + 4}{3}$, então $x_G = 4$.",
+  // Fórmula química em lição de matemática: sem sublinhado.
+  "A água é H_2O e o gás é CO_2.",
   "Escreva $\\foo{x} + 1$ aqui",
   "Veja $\\alpha + \\beta$ e $\\pi r^2$.",
   // LaTeX solto fora de marca.
@@ -46,7 +61,7 @@ const FRASES = [
 ];
 
 test("golden: os segmentos das frases do pedido e dos casos de borda", () => {
-  const atual = Object.fromEntries(FRASES.map((frase) => [frase, resumo(partirTextoComFormulas(frase))]));
+  const atual = Object.fromEntries(FRASES.map((frase) => [frase, resumo(lido(frase))]));
   if (process.env.ATUALIZAR_GOLDEN === "1" || !existsSync(GOLDEN)) {
     writeFileSync(GOLDEN, `${JSON.stringify(atual, null, 1)}\n`);
     return;
@@ -56,14 +71,20 @@ test("golden: os segmentos das frases do pedido e dos casos de borda", () => {
   for (const frase of Object.keys(esperado)) assert.deepEqual(atual[frase], esperado[frase], `${frase}: os segmentos mudaram (ATUALIZAR_GOLDEN=1 regrava)`);
 });
 
-test("sem marcação, os tokens soltos viram índice e expoente (as frases das telas reais)", () => {
-  assert.deepEqual(resumo(partirTextoComFormulas("x_G = (x_A + x_B + x_C) / 3")), ["[x_G]", " = (", "[x_A]", " + ", "[x_B]", " + ", "[x_C]", ") / 3"]);
-  assert.deepEqual(resumo(partirTextoComFormulas("x_A = 3, x_B = 5 e x_C")), ["[x_A]", " = 3, ", "[x_B]", " = 5 e ", "[x_C]"]);
-  assert.deepEqual(resumo(partirTextoComFormulas("então x_C = 12 − 8 = 4")), ["então ", "[x_C]", " = 12 − 8 = 4"]);
-  assert.deepEqual(resumo(partirTextoComFormulas("3 · 4 = 3 + 5 + x_C")), ["3 · 4 = 3 + 5 + ", "[x_C]"]);
-  assert.deepEqual(resumo(partirTextoComFormulas("b^2 e x^2 e 10^3 e x_10 e x_AB e x_A^2 e y^n")), ["[b^2]", " e ", "[x^2]", " e ", "[10^3]", " e ", "[x_{10}]", " e ", "[x_{A B}]", " e ", "[x_A^2]", " e ", "[y^n]"]);
+test("sem marcação, os tokens soltos viram índice e expoente quando a lição é de matemática (as frases das telas reais)", () => {
+  const solto = (texto) => partirTextoComFormulas(texto, { heuristica: true });
+  assert.deepEqual(resumo(solto("x_G = (x_A + x_B + x_C) / 3")), ["[x_G]", " = (", "[x_A]", " + ", "[x_B]", " + ", "[x_C]", ") / 3"]);
+  assert.deepEqual(resumo(solto("x_A = 3, x_B = 5 e x_C")), ["[x_A]", " = 3, ", "[x_B]", " = 5 e ", "[x_C]"]);
+  assert.deepEqual(resumo(solto("então x_C = 12 − 8 = 4")), ["então ", "[x_C]", " = 12 − 8 = 4"]);
+  assert.deepEqual(resumo(solto("3 · 4 = 3 + 5 + x_C")), ["3 · 4 = 3 + 5 + ", "[x_C]"]);
+  assert.deepEqual(resumo(solto("b^2 e x^2 e 10^3 e x_10 e x_AB e x_A^2 e y^n")), ["[b^2]", " e ", "[x^2]", " e ", "[10^3]", " e ", "[x_{10}]", " e ", "[x_{A B}]", " e ", "[x_A^2]", " e ", "[y^n]"]);
+  // O cliente lê o texto que o servidor marcou: o mesmo resultado, sem ligar a heurística por conta própria.
+  for (const frase of ["x_G = (x_A + x_B + x_C) / 3", "então x_C = 12 − 8 = 4", "b^2 e x^2 e 10^3 e x_10 e x_AB e x_A^2 e y^n", "A água é H_2O e $x_A$."]) {
+    assert.deepEqual(resumo(lido(frase)), resumo(solto(frase)), frase);
+  }
+  assert.equal(marcarFormulasSoltas("x_A = 3, x_B = 5 e x_C"), "$x_A$ = 3, $x_B$ = 5 e $x_C$");
   // Cada segmento de fórmula traz a árvore, a forma canônica, o texto linear e o falado.
-  const [formula] = partirTextoComFormulas("x_G");
+  const [formula] = partirTextoComFormulas("$x_G$");
   assert.equal(formula.tipo, "formula");
   assert.equal(formula.arvore.tipo, "script");
   assert.equal(formula.latex, "x_G");
@@ -77,11 +98,13 @@ test("só o inequívoco: palavra, endereço, arquivo, código e frase comum fica
     "R$ 5,00 e R$ 10,00", "4", "Os vértices A e B têm abscissas 3 e 5.", "x_1000 e x_ABC e 1234^2 e x^(n+1) e x^-1 e (x+1)^2",
     "Resposta: a_b_c", "e-mail: nome_x@dominio.com",
   ]) {
-    assert.deepEqual(resumo(partirTextoComFormulas(texto)), [texto], texto);
+    assert.deepEqual(resumo(partirTextoComFormulas(texto, { heuristica: true })), [texto], texto);
+    assert.equal(marcarFormulasSoltas(texto), texto, `marcar não mexe: ${texto}`);
   }
-  // Sem heurística, nada é reconhecido sem marca.
+  // Sem heurística (o padrão), nada é reconhecido sem marca.
+  assert.deepEqual(resumo(partirTextoComFormulas("x_G = 1")), ["x_G = 1"]);
   assert.deepEqual(resumo(partirTextoComFormulas("x_G = 1", { heuristica: false })), ["x_G = 1"]);
-  assert.deepEqual(resumo(partirTextoComFormulas("$x_G$ e x_A", { heuristica: false })), ["[x_G]", " e x_A"]);
+  assert.deepEqual(resumo(partirTextoComFormulas("$x_G$ e x_A")), ["[x_G]", " e x_A"]);
 });
 
 test("o cifrão do LaTeX marca; o de dinheiro não", () => {
@@ -95,6 +118,8 @@ test("o cifrão do LaTeX marca; o de dinheiro não", () => {
   // Espaço junto ao cifrão, ou letra colada depois dele, não é marca.
   assert.deepEqual(resumo(partirTextoComFormulas("$ x_G$ e $x_G $ e $x_G$a", { heuristica: false })), ["$ x_G$ e $x_G $ e $x_G$a"]);
   assert.deepEqual(resumo(partirTextoComFormulas("$ x$ e $x $")), ["$ x$ e $x $"]);
+  // Token solto colado em dinheiro, em letra acentuada ou em outro cifrão não vira marca (a marca não reabriria).
+  assert.equal(marcarFormulasSoltas("R$x_A e x_Aé e $x_A e 2x_A"), "R$x_A e x_Aé e $x_A e 2x_A");
   assert.equal(contemMarcaDeFormula("R$ 5,00 e R$ 10,00"), false);
   assert.equal(contemMarcaDeFormula("custa $5 e $10"), false);
   assert.equal(contemMarcaDeFormula("vale $x_G$."), true);
@@ -104,26 +129,26 @@ test("o cifrão do LaTeX marca; o de dinheiro não", () => {
   assert.equal(contemMarcaDeFormula(`$${"x + ".repeat(60)}x$`), false);
 });
 
-test("fórmula marcada que não vale ou não cabe em linha nunca derruba o texto: cai em texto linear, sem LaTeX cru", () => {
+test("fórmula marcada que não vale nunca derruba o texto: cai em texto linear, e a que não cabe em linha vira peças; sem LaTeX cru", () => {
   const casos = [
-    ["Isso vale $\\frac{x_A + x_B}{2}$ no ponto médio.", "Isso vale (x_A + x_B) / 2 no ponto médio."],
+    ["Isso vale $\\frac{x_A + x_B}{2}$ no ponto médio.", "Isso vale (x_A + x_B) ÷ 2 no ponto médio."],
     ["A raiz é $\\sqrt{x + 1}$ aqui.", "A raiz é √(x + 1) aqui."],
     ["O determinante $\\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix}$ vale −2.", "O determinante det[1, 2; 3, 4] vale −2."],
     ["Escreva $\\foo{x} + 1$ aqui", "Escreva x + 1 aqui"],
     ["Veja $\\alpha + \\beta$ e $\\pi r^2$.", "Veja α + β e πr²."],
-    ["Calcule \\frac{1}{2} + \\sqrt{9} agora", "Calcule 1 / 2 + √(9) agora"],
+    ["Calcule \\frac{1}{2} + \\sqrt{9} agora", "Calcule 1/2 + √9 agora"],
     ["$\\left( x \\right)^{2}$ e $x^{n+1}$", "(x)² e x^(n + 1)"],
   ];
   for (const [entrada, esperado] of casos) {
     const segmentos = partirTextoComFormulas(entrada);
     const texto = segmentos.filter((segmento) => segmento.tipo === "texto").map((segmento) => segmento.texto).join("");
-    assert.equal(/[\\{}$]/.test(texto), false, `LaTeX cru ou cifrão sobrou em ${entrada}: ${texto}`);
+    assert.equal(/[\\{}$_^]/.test(texto), false, `LaTeX cru, cifrão ou sublinhado sobrou em ${entrada}: ${texto}`);
     assert.equal(textoSemFormulas(entrada), esperado, entrada);
   }
-  // O que lê e cabe em linha segue como fórmula, ao lado do que caiu.
-  assert.deepEqual(resumo(partirTextoComFormulas("$x_A$ e $\\frac{1}{2}$ e $\\foo{y}$")), ["[x_A]", " e 1 / 2 e y"]);
+  // O que lê e cabe em linha segue como fórmula, ao lado do que caiu; a fração simples também é fórmula.
+  assert.deepEqual(resumo(partirTextoComFormulas("$x_A$ e $\\frac{1}{2}$ e $\\foo{y}$")), ["[x_A]", " e ", "[\\frac{1}{2}]", " e y"]);
   // A frase continua inteira, com a pontuação em volta.
-  assert.equal(textoSemFormulas("Se $\\frac{a}{b}$, então: $a = 2b$."), "Se a / b, então: a = 2b.");
+  assert.equal(textoSemFormulas("Se $\\frac{a}{b}$, então: $a = 2b$."), "Se a/b, então: a = 2b.");
 });
 
 test("textoSemFormulas é o texto para quem não desenha; falarTextoComFormulas, o do leitor de tela", () => {
@@ -132,25 +157,32 @@ test("textoSemFormulas é o texto para quem não desenha; falarTextoComFormulas,
   assert.equal(textoSemFormulas("sem matemática nenhuma, só R$ 5,00"), "sem matemática nenhuma, só R$ 5,00");
   assert.equal(textoSemFormulas("x_G = 1"), "x_G = 1", "token solto fica como está (já é legível)");
   assert.equal(falarTextoComFormulas("Então $x_C = 12 − 8 = 4$."), "Então x índice C é igual a 12 menos 8 é igual a 4.");
-  assert.equal(falarTextoComFormulas("Com x_A = 3 e $x_B = 5$."), "Com x índice A = 3 e x índice B é igual a 5.");
+  assert.equal(falarTextoComFormulas("Com $x_A = 3$ e $x_B = 5$."), "Com x índice A é igual a 3 e x índice B é igual a 5.");
+  assert.equal(falarTextoComFormulas(marcarFormulasSoltas("Com x_A = 3 e $x_B = 5$.")), "Com x índice A = 3 e x índice B é igual a 5.", "o servidor marca o token solto e a fala sai da árvore (o `=` solto fica como texto)");
   assert.equal(falarTextoComFormulas("Só texto, sem fórmula."), "Só texto, sem fórmula.");
 });
 
 test("normalizarTextoComFormulas: o texto como o servidor o guarda", () => {
   assert.equal(normalizarTextoComFormulas("Use $x_G=(x_A+x_B)/3$ e $x_{AB}^{2}$"), "Use $x_G = (x_A + x_B) \\div 3$ e $x_{A B}^2$");
   assert.equal(normalizarTextoComFormulas("Use $x_G=(x_A+x_B)/3$ aqui", false), "Use x_G = (x_A + x_B) ÷ 3 aqui");
-  assert.equal(normalizarTextoComFormulas("Veja $\\frac{1}{2}$ e $\\foo{x}$ e R$ 5,00"), "Veja 1 / 2 e x e R$ 5,00");
+  // A que lê fica marcada, cabendo ou não em linha (a fala sai da árvore inteira); a que não lê vira texto linear.
+  assert.equal(normalizarTextoComFormulas("Veja $1/2$ e $\\frac{x_A + x_B}{2}$ e $\\foo{x}$ e R$ 5,00"), "Veja $\\frac{1}{2}$ e $\\frac{x_A + x_B}{2}$ e x e R$ 5,00");
+  assert.equal(normalizarTextoComFormulas("Veja $\\frac{x_A + x_B}{2}$ e $1/2$", false), "Veja (x_A + x_B) ÷ 2 e 1/2");
   assert.equal(normalizarTextoComFormulas("x_G = 1 e R$ 5,00"), "x_G = 1 e R$ 5,00", "tokens soltos ficam como a IA escreveu");
-  for (const texto of ["Use $x_G=(x_A+x_B)/3$ e $x_{AB}^{2}$", "R$ 5,00 e $x$", "Calcule \\frac{1}{2}", "sem nada", "$\\frac{a}{b}$ e $y_C$"]) {
+  assert.equal(marcarFormulasSoltas("x_G = 1 e R$ 5,00 e H_2O"), "$x_G$ = 1 e R$ 5,00 e H₂O", "e nas lições de matemática o servidor os marca");
+  for (const texto of ["Use $x_G=(x_A+x_B)/3$ e $x_{AB}^{2}$", "R$ 5,00 e $x$", "Calcule \\frac{1}{2}", "sem nada", "$\\frac{a}{b}$ e $y_C$", "$1/2$ e $\\frac{x_A + x_B}{2}$", "x_A e H_2O e b^2 e $a/b$"]) {
     const uma = normalizarTextoComFormulas(texto);
     assert.equal(normalizarTextoComFormulas(uma), uma, `não é estável: ${texto}`);
+    const marcada = marcarFormulasSoltas(texto);
+    assert.equal(marcarFormulasSoltas(marcada), marcada, `marcar não é estável: ${texto}`);
+    assert.deepEqual(resumo(partirTextoComFormulas(marcada)), resumo(partirTextoComFormulas(texto, { heuristica: true })), `marcar e ler dão o mesmo: ${texto}`);
   }
 });
 
 test("linearizarTolerante: o que a IA quis dizer, sem barra e sem chave", () => {
-  assert.equal(linearizarTolerante("x_G = \\frac{x_A + x_B}{2}"), "x_G = (x_A + x_B) / 2", "o que lê sai pela árvore");
+  assert.equal(linearizarTolerante("x_G = \\frac{x_A + x_B}{2}"), "x_G = (x_A + x_B) ÷ 2", "o que lê sai pela árvore");
   const casos = [
-    ["\\frac{1}{2}", "1 / 2"], ["\\frac{x + 1}{2}", "(x + 1) / 2"], ["\\sqrt{x + 1}", "√(x + 1)"], ["2 \\times 3 \\leq 7", "2 × 3 ≤ 7"],
+    ["\\frac{1}{2}", "1/2"], ["\\frac{x + 1}{2}", "(x + 1) ÷ 2"], ["\\sqrt{x + 1}", "√(x + 1)"], ["2 \\times 3 \\leq 7", "2 × 3 ≤ 7"],
     ["\\alpha + \\beta", "α + β"], ["x^{2}", "x²"], ["x^{n+1}", "x^(n + 1)"], ["\\text{área} = b \\cdot h", "área = b × h"],
     ["\\left( a + b \\right)", "(a + b)"], ["\\foo{x} + 1", "x + 1"], ["\\resposta{4}", "4"],
   ];
@@ -185,13 +217,13 @@ test("nunca lança, nunca deixa texto vazio, e a fórmula de cada segmento é a 
 });
 
 test("a fórmula em linha vira uma caixa do tamanho do texto, com a linha de base para alinhar com as palavras", async () => {
-  const { desenharFormulaEmLinha, lerFormula, PISO_DO_TEXTO, caminhoValido } = await import("@studoo/contratos");
-  const [formula] = partirTextoComFormulas("x_G");
+  const { desenharFormulaEmLinha, lerFormula, PISO_DO_TEXTO, PISO_EM_LINHA, caminhoValido } = await import("@studoo/contratos");
+  const [formula] = partirTextoComFormulas("$x_G$");
   for (const tamanho of [16, 17]) {
     const caixa = desenharFormulaEmLinha(formula.arvore, tamanho);
     assert.ok(caixa.largura > 0 && caixa.altura >= tamanho * 0.9 && caixa.altura <= tamanho * 1.6, `${tamanho}: altura ${caixa.altura}`);
     assert.ok(caixa.linhaDeBase > 0 && caixa.linhaDeBase < caixa.altura, "a linha de base fica dentro da caixa");
-    assert.ok(caixa.menorTexto >= PISO_DO_TEXTO);
+    assert.ok(caixa.menorTexto >= PISO_EM_LINHA && caixa.menorTexto < PISO_DO_TEXTO, "índice a 70%, com mínimo 11 (o piso de 13 é do desenho avulso)");
     assert.equal(caixa.falado, "x índice G");
     assert.ok(caixa.primitivas.length >= 1 && caixa.primitivas.every((primitiva) => primitiva.tipo !== "caminho" || caminhoValido(primitiva.d)));
     // Tudo dentro da caixa.
@@ -205,4 +237,161 @@ test("a fórmula em linha vira uma caixa do tamanho do texto, com a linha de bas
   const maior = desenharFormulaEmLinha(lerFormula("x_A^2 + 3").arvore, 16);
   assert.ok(maior.largura > desenharFormulaEmLinha(lerFormula("x").arvore, 16).largura);
   assert.equal(desenharFormulaEmLinha(lerFormula("x").arvore, 17).largura > desenharFormulaEmLinha(lerFormula("x").arvore, 16).largura, true, "escala com o texto");
+});
+
+/* ----- Marco 3c (parecer do Designer sobre o 3b, spec 15, seção 9) ----- */
+
+const CORPUS = [
+  "x_G = (x_A + x_B + x_C) / 3", "x_A^2 + y_B^2 = r^2", String.raw`\frac{x_A + x_B}{2}`, String.raw`\frac{1}{2}`, String.raw`\frac{x_A}{x_B}`,
+  String.raw`\sqrt{x_A + 1}`, String.raw`\sqrt{9}`, "b^2 - 4ac", String.raw`\frac{-b + \sqrt{\Delta}}{2a}`, String.raw`\Delta = b^2 - 4ac`, String.raw`\pi r^2`,
+  "C = (4, 0)", String.raw`\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix}`, String.raw`\begin{bmatrix} x_A & y_A \\ x_B & y_B \end{bmatrix}`,
+  String.raw`\foco{x_C} = 4`, String.raw`\foco{x_A^2}`, String.raw`x_{AB}^2`, "(x_A + x_B)^2", "e^{x^2}", "3 \\times 4 - 3 - 5",
+  String.raw`x_G = \frac{x_A + x_B + x_C}{3} = \frac{3 + 5 + 4}{3}`,
+  String.raw`\frac{x_A + x_B + x_C + x_D}{4} = \frac{3 + 5 + 4 + 2}{4} = \frac{14}{4}`, String.raw`\frac{y_B - y_A}{x_B - x_A}`,
+  String.raw`\frac{1}{3} + \frac{1}{6}`, String.raw`\left( \frac{x_A + x_B}{2}, \frac{y_A + y_B}{2} \right)`, String.raw`x^{\frac{a + b}{2}}`,
+  String.raw`\frac{1}{2x}`, "x_A / 2 + 1", "2x / 3",
+];
+
+test("3c (1): o que não cabe em linha vira peças desenhadas, sem sublinhado cru, e a fala sai da árvore inteira", () => {
+  // O exemplo do Designer, peça por peça.
+  const segmentos = partirTextoComFormulas("Isso vale $\\frac{x_A + x_B}{2}$.");
+  assert.deepEqual(resumo(segmentos), ["Isso vale (", "x_A", " + ", "x_B", ") ÷ 2.",].map((peça, i) => (i === 1 || i === 3 ? `[${peça}]` : peça)));
+  assert.deepEqual(segmentos.filter((segmento) => segmento.tipo === "formula").map((segmento) => segmento.falado), ["x índice A", "x índice B"]);
+  // A fala é a da árvore inteira, nunca a do texto linear (que tem o sublinhado) e nunca "sublinhado".
+  const falado = falarTextoComFormulas("Isso vale $\\frac{x_A + x_B}{2}$.");
+  assert.equal(falado, "Isso vale fração: numerador x índice A mais x índice B, denominador 2.");
+  assert.equal(/_|sublinhado/.test(falado), false);
+  // Raiz e determinante também, com as variáveis desenhadas; sem variável, só texto.
+  assert.deepEqual(resumo(partirTextoComFormulas("$\\sqrt{x_A + 1}$")), ["√(", "[x_A]", " + 1)"]);
+  assert.deepEqual(resumo(partirTextoComFormulas("$\\sqrt{x}$ e $\\sqrt{9}$")), ["√", "[x]", " e √9"]);
+  assert.deepEqual(resumo(partirTextoComFormulas("$\\begin{vmatrix} x_1 & 2 \\\\ 3 & 4 \\end{vmatrix}$")), ["det[", "[x_1]", ", 2; 3, 4]"]);
+  assert.deepEqual(resumo(partirTextoComFormulas("$\\frac{x_A}{x_B + 1}$")), ["[x_A]", " ÷ (", "[x_B]", " + 1)"]);
+  // Em todo o corpus: nada de sublinhado, expoente, barra ou chave em texto; cada peça desenhada cabe na linha; o texto linear é o de sempre.
+  for (const formula of CORPUS) {
+    const marca = `$${formula}$`;
+    assert.equal(lerFormula(formula).ok, true, formula);
+    const partes = partirTextoComFormulas(marca);
+    for (const parte of partes) {
+      if (parte.tipo === "texto") assert.equal(/[_^\\{}$]/.test(parte.texto), false, `${formula}: texto cru "${parte.texto}"`);
+      else {
+        assert.equal(formulaCabeNaLinha(parte.arvore, 16), true, `${formula}: peça que não cabe na linha`);
+        for (const tamanho of [16, 17]) {
+          const caixa = caixaDaFormulaEmLinha(parte.arvore, tamanho);
+          assert.ok(caixa.a + caixa.p <= 1.5 * tamanho + 1e-9, `${formula} a ${tamanho}: altura ${caixa.a + caixa.p}`);
+        }
+      }
+    }
+    const lidaInteira = lerFormula(formula);
+    // (A barra com termos simples vira a fração "a/b" só dentro de marca de texto, e a fala dela é "sobre": ver o item 1a.)
+    if (!/\s\/\s/.test(formula)) assert.equal(falarTextoComFormulas(marca), falarFormula(lidaInteira.arvore), `${formula}: a fala vem da árvore inteira`);
+    assert.equal(/[_]|sublinhado/.test(falarTextoComFormulas(marca)), false, `${formula}: a fala leu um sublinhado`);
+    // (Só o expoente que é uma fração composta troca o `^` por palavras nas peças: "x elevado a …", sem caractere cru.)
+    if (!formula.startsWith("x^{\\frac")) assert.equal(partes.map((parte) => (parte.tipo === "texto" ? parte.texto : parte.linear)).join(""), textoSemFormulas(marca), `${formula}: as peças formam o texto linear`);
+    assert.equal(partes.every((parte, k) => parte.tipo !== "texto" || partes[k + 1]?.tipo !== "texto"), true, "textos vizinhos se juntam");
+  }
+  assert.deepEqual(resumo(partirTextoComFormulas("$x^{\\frac{a + b}{2}}$")), ["[x]", " elevado a ((", "[a]", " + ", "[b]", ") ÷ 2)"]);
+  // A que cabe fica uma peça só; a larga demais ou alta demais quebra em peças que quebram como palavras.
+  assert.equal(partirTextoComFormulas("$x_G = (x_A + x_B + x_C) / 3$").length, 1);
+  assert.ok(partirTextoComFormulas(`$${CORPUS[21]}$`).length > 8, "larga demais: peças");
+  assert.deepEqual(resumo(partirTextoComFormulas("$\\foco{x_A^2}$")), ["[x_A^2]"], "o destaque some, mas o expoente e o índice seguem desenhados");
+});
+
+test("3c (1a): a fração simples é desenhada a/b em linha e lida 'a sobre b'; as outras barras continuam ÷", async () => {
+  const { desenharFormulaEmLinha } = await import("@studoo/contratos");
+  for (const marca of ["$1/2$", "$1 / 2$", "$\\frac{1}{2}$"]) {
+    const [um, ...resto] = partirTextoComFormulas(`Metade: ${marca}`).slice(1);
+    assert.equal(resto.length, 0, marca);
+    assert.equal(um.tipo, "formula");
+    assert.equal(um.latex, "\\frac{1}{2}");
+    assert.equal(um.linear, "1/2");
+    assert.equal(um.falado, "1 sobre 2", "numa frase, meio é um número: não 'dividido por'");
+    assert.equal(falarTextoComFormulas(`Metade: ${marca}.`), "Metade: 1 sobre 2.");
+    const caixa = desenharFormulaEmLinha(um.arvore, 16);
+    assert.equal(caixa.primitivas.some((primitiva) => primitiva.tipo === "linha"), false, "nenhuma barra de fração empilhada");
+    assert.ok(caixa.altura <= 1.5 * 16 && caixa.largura > 12 && caixa.largura < 30, `1/2 em linha: ${caixa.largura} × ${caixa.altura}`);
+  }
+  for (const [marca, latex, falado] of [
+    ["$x_A/2$", "\\frac{x_A}{2}", "x índice A sobre 2"], ["$x = 1/2$", "x = \\frac{1}{2}", "x é igual a 1 sobre 2"], ["$x/2 + 1$", "\\frac{x}{2} + 1", "x sobre 2 mais 1"],
+    ["$-1/2$", "-\\frac{1}{2}", "menos 1 sobre 2"], ["$\\frac{x_A}{x_B}$", "\\frac{x_A}{x_B}", "x índice A sobre x índice B"], ["$3/4 + 1/4$", "\\frac{3}{4} + \\frac{1}{4}", "3 sobre 4 mais 1 sobre 4"],
+  ]) {
+    const [formula, ...resto] = partirTextoComFormulas(marca);
+    assert.equal(resto.length, 0, marca);
+    assert.equal(formula.latex, latex, marca);
+    assert.equal(formula.falado, falado, marca);
+  }
+  // Barra com termo composto, ou outra barra em volta, continua ÷ e se fala "dividido por".
+  for (const [marca, latex] of [
+    ["$(x_A + x_B + x_C) / 3$", "(x_A + x_B + x_C) \\div 3"], ["$2x/3$", "2x \\div 3"], ["$6 \\div 3$", "6 \\div 3"], ["$a/b/c$", "a \\div b \\div c"],
+    ["$x^2/3$", "x^2 \\div 3"], ["$1/2x$", "1 \\div 2x"], ["$\\text{km/h}$", "\\text{km/h}"],
+  ]) {
+    const [formula, ...resto] = partirTextoComFormulas(marca);
+    assert.equal(resto.length, 0, marca);
+    assert.equal(formula.latex, latex, marca);
+  }
+  assert.match(partirTextoComFormulas("$6 \\div 3$")[0].falado, /dividido por/);
+  // Fora de marca, a barra é do texto.
+  assert.deepEqual(resumo(partirTextoComFormulas("1/2 e a/b")), ["1/2 e a/b"]);
+  // Em bloco (a fórmula da lição), a fração segue empilhada: a regra é do texto corrido.
+  assert.equal(lerFormula("1/2").arvore.itens[1].valor, "÷");
+});
+
+test("3c (2): a heurística não liga sozinha; o servidor a liga na lição de matemática; química sem sublinhado", () => {
+  // O perigo real: código numa lição de programação.
+  const python = "Em Python, use x_1 = 3 e print(x_1).";
+  assert.deepEqual(resumo(partirTextoComFormulas(python)), [python], "o cliente que parte o texto não lê o que não está marcado");
+  assert.equal(textoSemFormulas(python), python);
+  assert.equal(falarTextoComFormulas(python), python);
+  assert.equal(normalizarTextoComFormulas(python), python);
+  // Quem decide se a lição é de matemática é o servidor; só ele chama `marcarFormulasSoltas` (ver visuais-servidor.test.mjs).
+  assert.equal(marcarFormulasSoltas("Em Python, use x_1 = 3."), "Em Python, use $x_1$ = 3.", "na lição de matemática x_1 é índice");
+  // Química: o índice é uma contagem de átomos, em algarismo subscrito, sem sublinhado e sem desenho.
+  for (const [entrada, esperado] of [
+    ["H_2O", "H₂O"], ["CO_2", "CO₂"], ["C_6H_12O_6", "C₆H₁₂O₆"], ["H_2SO_4", "H₂SO₄"], ["Na_2CO_3", "Na₂CO₃"], ["A água é H_2O.", "A água é H₂O."],
+    ["o CO_2 e o O_2", "o CO₂ e o $O_2$"],
+  ]) {
+    assert.equal(marcarFormulasSoltas(entrada), esperado, entrada);
+  }
+  assert.equal(/_/.test(marcarFormulasSoltas("H_2O e CO_2")), false);
+  // Tokens com código ou nome de variável longo seguem como estão.
+  for (const texto of ["use meu_valor_1 e snake_case", "x_total + y_total", "CO_2x", "H_2O_ e (CO_2)x"]) assert.equal(marcarFormulasSoltas(texto).includes("$"), false, texto);
+});
+
+test("3c (3): a regra de desenho em linha: 70% com mínimo 11, índice desce 0,3 em, expoente sobe 0,45 em, dentro da linha de 1,5 em", () => {
+  for (const tamanho of [16, 17]) {
+    // Índice e expoente: tamanho, posição e altura da caixa.
+    const indice = caixaDaFormulaEmLinha(lerFormula("x_A").arvore, tamanho);
+    const [base, filho] = indice.marcas;
+    assert.equal(base.y, 0, "a base fica na linha de base");
+    assert.equal(base.tamanho, tamanho);
+    assert.ok(Math.abs(filho.tamanho - Math.max(11, 0.7 * tamanho)) < 1e-9, `${tamanho}: índice a ${filho.tamanho}`);
+    assert.ok(Math.abs(filho.y - 0.3 * tamanho) < 1e-9, "o índice desce 0,3 em");
+    const expoente = caixaDaFormulaEmLinha(lerFormula("x^2").arvore, tamanho);
+    assert.ok(Math.abs(expoente.marcas[1].y + 0.45 * tamanho) < 1e-9, "o expoente sobe 0,45 em");
+    assert.ok(Math.abs(expoente.marcas[1].tamanho - Math.max(11, 0.7 * tamanho)) < 1e-9);
+    // Dentro da linha, sem a linha crescer: nenhuma fórmula em linha passa de 1,5 em, nem com índice e expoente juntos.
+    for (const formula of ["x_A", "x^2", "x_A^2", "x_{AB}^{2}", "e^{x^2}", "x_G = (x_A + x_B + x_C) \\div 3", "(x_A + x_B)^2", "x_A^2 + y_B^2 = r^2", "\\frac{x_A^2}{y_B}", "\\pi r^2", "\\foco{x_C} = 4"]) {
+      const caixa = caixaDaFormulaEmLinha(lerFormula(formula).arvore, tamanho);
+      assert.ok(caixa.a + caixa.p <= 1.5 * tamanho + 1e-9, `${formula} a ${tamanho}: ${caixa.a + caixa.p} > ${1.5 * tamanho}`);
+    }
+    // Sinais com 0,2 em de cada lado; parênteses do tamanho do texto (nunca esticados); fração simples "a/b" sem barra.
+    const soma = caixaDaFormulaEmLinha(lerFormula("x + y").arvore, tamanho);
+    const [x, mais, y] = soma.marcas;
+    const larguraDoX = caixaDaFormulaEmLinha(lerFormula("x").arvore, tamanho).l;
+    const larguraDoMais = caixaDaFormulaEmLinha(lerFormula("x + y").arvore, tamanho).l - larguraDoX - caixaDaFormulaEmLinha(lerFormula("y").arvore, tamanho).l - 2 * 0.2 * tamanho;
+    assert.ok(Math.abs(mais.x - (x.x + larguraDoX + 0.2 * tamanho)) < 1e-6, "0,2 em antes do sinal");
+    assert.ok(Math.abs(y.x - (mais.x + larguraDoMais + 0.2 * tamanho)) < 1e-6, "0,2 em depois do sinal");
+    const parenteses = caixaDaFormulaEmLinha(lerFormula("(x_A + x_B)").arvore, tamanho);
+    assert.equal(parenteses.marcas.some((marca) => marca.m === "caminho"), false, "parênteses são texto do tamanho do texto, não curvas esticadas");
+    assert.equal(parenteses.marcas.filter((marca) => marca.m === "texto" && (marca.texto === "(" || marca.texto === ")")).every((marca) => marca.tamanho === tamanho), true);
+    const meio = caixaDaFormulaEmLinha(lerFormula("\\frac{x_A}{2}").arvore, tamanho);
+    assert.equal(meio.marcas.some((marca) => marca.m === "linha"), false);
+    assert.ok(meio.marcas.some((marca) => marca.m === "texto" && marca.texto === "/"));
+  }
+  // O mínimo de 11: texto pequeno não afunda o índice.
+  assert.equal(caixaDaFormulaEmLinha(lerFormula("x_A").arvore, 12).marcas[1].tamanho, 11);
+  // O que não cabe na linha (altura de 1,5 em, ou largura) cai nas peças do item (1).
+  assert.equal(formulaCabeNaLinha(lerFormula("\\foco{x_A^2}").arvore, 16), false);
+  assert.equal(formulaCabeNaLinha(lerFormula("\\frac{x_A + x_B}{2}").arvore, 16), false);
+  assert.equal(formulaCabeNaLinha(lerFormula("x_A").arvore, 16), true);
+  assert.equal(formulaCabeNaLinha(lerFormula(CORPUS[21]).arvore, 16), false, "larga demais");
 });

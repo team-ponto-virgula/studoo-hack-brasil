@@ -1,5 +1,5 @@
 import { lerFormula, percorrerFormula, type NoFormula } from "./formula";
-import { normalizarTextoComFormulas } from "./formula-no-texto";
+import { marcarFormulasSoltas, normalizarTextoComFormulas } from "./formula-no-texto";
 import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
 import { desenharVisual } from "./motor-visuais";
 import {
@@ -61,14 +61,16 @@ function cortar(texto: string, maximo: number): string {
 }
 
 /**
- * Texto simples, sem caractere de controle e sem LaTeX cru. Com `manterMarcas`, a fórmula entre cifrões que vale e cabe em linha
- * (`$x_G = 1$`) fica, na forma canônica, para o cliente desenhá-la dentro da frase; a que não vale, ou que não cabe em linha (fração,
- * raiz, matriz), cai em texto linear, e o texto nunca é recusado por isso. Sem `manterMarcas` (legenda, `alt`, nome do passo), toda
- * fórmula vira texto linear. LaTeX solto fora das marcas também vira texto linear.
+ * Texto simples, sem caractere de controle e sem LaTeX cru. Com `manterMarcas`, a fórmula entre cifrões que vale (`$x_G = 1$`,
+ * `$\\frac{x_A + x_B}{2}$`) fica, na forma canônica, para o cliente desenhá-la dentro da frase (inteira, ou em peças quando não
+ * cabe em linha), e os tokens soltos (`x_A`, `b^2`) também ganham a marca: este texto é da resolução, que só existe em lição de
+ * matemática. A que não vale (comando de fora da lista) cai em texto linear, e o texto nunca é recusado por isso. Sem `manterMarcas`
+ * (legenda, `alt`, nome do passo), toda fórmula vira texto linear. LaTeX solto fora das marcas também vira texto linear.
  */
 function textoSimples(valor: unknown, manterMarcas = false): string | null {
   if (typeof valor !== "string" || /[\u0000-\u001f]/.test(valor.replace(/\s/g, " "))) return null;
-  const texto = normalizarTextoComFormulas(valor.replace(/\s+/g, " ").trim(), manterMarcas);
+  const limpo = valor.replace(/\s+/g, " ").trim();
+  const texto = manterMarcas ? marcarFormulasSoltas(limpo) : normalizarTextoComFormulas(limpo, false);
   return texto ? texto : null;
 }
 

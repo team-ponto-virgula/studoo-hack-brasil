@@ -4,7 +4,7 @@ import { test } from "node:test";
 import sharp from "sharp";
 import { lerCapacidades, normalizarVisual, visualParaEnunciado } from "@studoo/contratos";
 import { apresentarExercicio, conteudoValido, recursoValido } from "../src/dominio/aprendizado/plano.ts";
-import { SEM_CAPACIDADES, comTextoLinear, comVisuais, conteudoEhDeMatematica, descricaoDaPrancheta, limparVisuais, pranchetaDosVisuais, recursoDoDesenho, temVisual, visualDoRetorno } from "../src/servidor/aprendizado/visuais.ts";
+import { SEM_CAPACIDADES, comFormulasMarcadas, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, descricaoDaPrancheta, limparVisuais, pranchetaDosVisuais, recursoDoDesenho, temVisual, visualDoRetorno } from "../src/servidor/aprendizado/visuais.ts";
 import { ehAssuntoDeMatematica } from "../src/servidor/ia/matematica.ts";
 
 const NOMES = ["baricentro", "abscissas", "colinearidade"];
@@ -278,4 +278,45 @@ test("o assunto de matemática vem das palavras do título, do objetivo e do con
   }
   assert.equal(ehAssuntoDeMatematica(undefined, "", "A equação da reta"), true);
   assert.equal(ehAssuntoDeMatematica(), false);
+});
+
+test("3c: a heurística dos tokens soltos só liga em lição de matemática e NUNCA em lição com código", () => {
+  const FRASE = "Em Python, use x_1 = 3 e print(x_1).";
+  const base = {
+    objetivo: "Usar variáveis em Python", conceito: FRASE, exemplo: FRASE, origem: "x",
+    exercicio: { tipo: "lacuna", enunciado: FRASE, gabarito: ["3"], feedbackCorreto: "ok", feedbackIncorreto: "não" },
+  };
+  // 1) Lição de programação, sem nenhum sinal de matemática: nada muda, com ou sem o cabeçalho.
+  assert.equal(conteudoEhDeMatematica(base), false);
+  for (const capacidades of [SEM_CAPACIDADES, SO_VISUAIS, TUDO]) {
+    const detalhe = detalheDe(base);
+    assert.equal(comFormulasParaOCliente(detalhe, base, capacidades), detalhe, "o mesmo objeto");
+  }
+  // 2) Com um trecho de código, nunca é matemática: nem com assunto de matemática, nem com `$x$` no texto.
+  const comCodigo = { ...base, objetivo: "Equação do 2º grau em Python", conceito: "Calcule $x_A$ e use x_1 = 3.", exercicio: { ...base.exercicio, trecho: "x_1 = 3\nprint(x_1)", trechoTipo: "codigo" } };
+  assert.equal(conteudoEhDeMatematica(comCodigo), false);
+  const detalheDoCodigo = detalheDe(comCodigo);
+  assert.equal(comFormulasParaOCliente(detalheDoCodigo, comCodigo, TUDO), detalheDoCodigo);
+  // 3) Matemática: o assunto, um visual, um trecho de fórmula ou uma fórmula marcada que lê.
+  assert.equal(conteudoEhDeMatematica({ ...base, objetivo: "Baricentro de um triângulo" }), true, "assunto");
+  assert.equal(conteudoEhDeMatematica({ ...base, exercicio: { ...base.exercicio, trecho: "x^2 + 1", trechoTipo: "formula" } }), true, "trecho de fórmula");
+  assert.equal(conteudoEhDeMatematica({ ...base, conceito: "Use $x_A + 1$ aqui." }), true, "fórmula marcada que lê");
+  assert.equal(conteudoEhDeMatematica({ ...base, conceito: "Em shell, $HOME e ${a}+${b} guardam valores." }), false, "cifrão de shell não é fórmula");
+  assert.equal(conteudoEhDeMatematica({ ...base, conceito: "Custa R$ 5,00 e R$ 10,00." }), false, "dinheiro não é fórmula");
+  for (const nome of NOMES) assert.equal(conteudoEhDeMatematica(conteudoDa(nome)), true, nome);
+  // 4) Na lição de matemática, quem desenha recebe os tokens soltos já marcados; quem não desenha, texto linear sem cifrão.
+  const soltos = { ...base, objetivo: "Baricentro de um triângulo", conceito: "Veja x_A e x_B, b^2 e a água H_2O. Custa R$ 5,00.", exemplo: "x_G = (x_A + x_B)/2" };
+  const marcado = comFormulasParaOCliente(detalheDe(soltos), soltos, SO_VISUAIS);
+  assert.equal(marcado.conceito, "Veja $x_A$ e $x_B$, $b^2$ e a água H₂O. Custa R$ 5,00.");
+  assert.equal(marcado.exemplo, "$x_G$ = ($x_A$ + $x_B$)/2");
+  const linear = comFormulasParaOCliente(detalheDe(soltos), soltos, SEM_CAPACIDADES);
+  assert.equal(linear.conceito, "Veja x_A e x_B, b^2 e a água H_2O. Custa R$ 5,00.", "sem o cabeçalho nada é marcado: o texto já é legível");
+  // O que não é texto das pessoas fica: gabarito, comprovante, visuais, resolução, trecho de código.
+  const exercicio = { ...base.exercicio, gabarito: ["x_1"], trecho: "x_1 = 3", trechoTipo: "codigo" };
+  assert.deepEqual(comFormulasMarcadas({ gabarito: ["x_1"], feedback: "Use x_1.", comprovante: "x_1.$a$" }), { gabarito: ["x_1"], feedback: "Use $x_1$.", comprovante: "x_1.$a$" });
+  assert.deepEqual(comFormulasMarcadas({ trecho: "x_1 = 3", trechoTipo: "codigo", enunciado: "x_1" }), { trecho: "x_1 = 3", trechoTipo: "codigo", enunciado: "$x_1$" });
+  assert.equal(exercicio.gabarito[0], "x_1");
+  // Idempotente: o que já está marcado não muda.
+  const outra = comFormulasParaOCliente(marcado, soltos, SO_VISUAIS);
+  assert.deepEqual(outra, marcado);
 });

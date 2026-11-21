@@ -1,5 +1,5 @@
 import { EIXO_MATEMATICO, UNIDADES_POR_EM } from "./glifos";
-import { ehSinal, numeroNaTela, type NoFormula, type PapelDestaque } from "./formula";
+import { ehSinal, formulaCabeEmLinha, numeroNaTela, type NoFormula, type PapelDestaque } from "./formula";
 import { caixaDoGlifo, larguraDoTexto, type PesoDoTexto } from "./texto-vetorial";
 import { PISO_DO_TEXTO, type PapelDeCor, type Tracejado } from "./visuais";
 
@@ -36,6 +36,11 @@ export interface Estilo {
   italico: boolean;
   /** 1 no corpo da fórmula; 0,5 dentro do índice e do expoente ("n+1", não "n + 1"). */
   respiro: number;
+  /**
+   * No meio de uma frase (spec 15, seção 9): índice e expoente a 70% do texto (no mínimo 11), 0,2 em de cada lado dos sinais,
+   * parênteses do tamanho do texto, a fração simples como "a/b", tudo dentro de uma linha de 1,5 em.
+   */
+  linha?: boolean;
 }
 
 export const A_DO_TEXTO = 0.74;
@@ -50,6 +55,14 @@ const BARRA_DA_FRACAO = 2;
 const FOLGA_DA_FRACAO = 4;
 
 export const pisar = (tamanho: number): number => Math.max(PISO_DO_TEXTO, tamanho);
+/** Em linha o índice e o expoente podem ir a 11 (70% de 16): o piso de 13 é do desenho avulso, não do texto corrido. */
+export const PISO_EM_LINHA = 11;
+const pisoDo = (estilo: Estilo): number => (estilo.linha ? PISO_EM_LINHA : PISO_DO_TEXTO);
+const tamanhoDo = (estilo: Estilo): number => Math.max(pisoDo(estilo), estilo.tamanho);
+/** Escala do índice e do expoente: 65% no desenho avulso, 70% em linha. */
+const escalaDoScript = (estilo: Estilo): number => (estilo.linha ? 0.7 : 0.65);
+/** O respiro de cada lado de um sinal, em linha: 0,2 em. */
+const RESPIRO_EM_LINHA_EM_EM = 0.2;
 export const eixoDe = (tamanho: number): number => (EIXO_MATEMATICO / UNIDADES_POR_EM) * tamanho;
 
 function moverComando(comando: Comando, dx: number, dy: number): Comando {
@@ -82,7 +95,7 @@ export function deslocar(marcas: readonly Marca[], dx: number, dy: number): Marc
 }
 
 export function textoEmCaixa(valor: string, estilo: Estilo, opcoes: { peso?: PesoDoTexto; italico?: boolean } = {}): Caixa {
-  const tamanho = pisar(estilo.tamanho);
+  const tamanho = tamanhoDo(estilo);
   const peso = opcoes.peso ?? 700;
   return {
     l: larguraDoTexto(valor, tamanho, peso),
@@ -118,7 +131,7 @@ export function juntar(partes: readonly Parte[]): Caixa {
 const GLIFO_DO_OPERADOR: Readonly<Record<string, string>> = { "+": "+", "-": "−", "×": "×", "÷": "÷", "=": "=", "<": "<", ">": ">" };
 
 function operador(valor: string, estilo: Estilo): Caixa {
-  const tamanho = pisar(estilo.tamanho);
+  const tamanho = tamanhoDo(estilo);
   const eixo = eixoDe(tamanho);
   const traco = Math.max(1.5, tamanho * 0.09);
   if (valor === "≤" || valor === "≥") {
@@ -172,7 +185,7 @@ function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
         partes.push({ caixa: operador(item.valor, estilo) });
         return;
       }
-      const lado = (RELACOES.has(item.valor) ? ESPACO_DA_RELACAO : ESPACO_DO_SINAL) * estilo.respiro;
+      const lado = (estilo.linha ? RESPIRO_EM_LINHA_EM_EM * tamanhoDo(estilo) : RELACOES.has(item.valor) ? ESPACO_DA_RELACAO : ESPACO_DO_SINAL) * estilo.respiro;
       const antes = anterior?.tipo === "matriz" ? ESPACO_DA_MOLDURA * estilo.respiro : lado;
       const depois = seguinte?.tipo === "matriz" ? ESPACO_DA_MOLDURA * estilo.respiro : lado;
       partes.push({ caixa: operador(item.valor, estilo), antes });
@@ -181,7 +194,7 @@ function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
     }
     if (item.tipo === "separador") {
       partes.push({ caixa: caixaDe(item, estilo) });
-      partes.push({ caixa: folga(ESPACO_DO_SINAL * estilo.respiro) });
+      partes.push({ caixa: folga((estilo.linha ? 0.25 * tamanhoDo(estilo) : ESPACO_DO_SINAL) * estilo.respiro) });
       return;
     }
     partes.push({ caixa: caixaDe(item, estilo), antes: anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" ? RESPIRO : 0 });
@@ -190,6 +203,8 @@ function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
 }
 
 function fracao(no: Extract<NoFormula, { tipo: "fracao" }>, estilo: Estilo): Caixa {
+  // No meio da frase só a fração simples cabe, e vai como "a/b", no tamanho do texto (nunca empilhada: a linha não cresce).
+  if (estilo.linha) return juntar([{ caixa: caixaDe(no.numerador, estilo) }, { caixa: textoEmCaixa("/", estilo) }, { caixa: caixaDe(no.denominador, estilo) }]);
   const menor: Estilo = { ...estilo, tamanho: pisar(estilo.tamanho * 0.85) };
   const numerador = caixaDe(no.numerador, menor);
   const denominador = caixaDe(no.denominador, menor);
@@ -211,10 +226,10 @@ function fracao(no: Extract<NoFormula, { tipo: "fracao" }>, estilo: Estilo): Cai
 
 function script(no: Extract<NoFormula, { tipo: "script" }>, estilo: Estilo): Caixa {
   const base = caixaDe(no.base, estilo);
-  const menor: Estilo = { ...estilo, tamanho: pisar(estilo.tamanho * 0.65), italico: false, respiro: 0.5 };
+  const menor: Estilo = { ...estilo, tamanho: Math.max(pisoDo(estilo), estilo.tamanho * escalaDoScript(estilo)), italico: false, respiro: 0.5 };
   const indice = no.indice ? caixaDe(no.indice, menor) : null;
   const expoente = no.expoente ? caixaDe(no.expoente, menor) : null;
-  const tamanho = pisar(estilo.tamanho);
+  const tamanho = tamanhoDo(estilo);
   const descida = 0.3 * tamanho;
   const subida = base.a > 0.9 * tamanho ? base.a - 0.3 * menor.tamanho : 0.45 * tamanho;
   const largura = Math.max(indice?.l ?? 0, expoente?.l ?? 0);
@@ -231,7 +246,7 @@ function script(no: Extract<NoFormula, { tipo: "script" }>, estilo: Estilo): Cai
 
 function raiz(no: Extract<NoFormula, { tipo: "raiz" }>, estilo: Estilo): Caixa {
   const radicando = caixaDe(no.radicando, estilo);
-  const tamanho = pisar(estilo.tamanho);
+  const tamanho = tamanhoDo(estilo);
   const folga = 3;
   const topo = -(radicando.a + folga);
   const fundo = radicando.p + 1;
@@ -261,8 +276,8 @@ function raiz(no: Extract<NoFormula, { tipo: "raiz" }>, estilo: Estilo): Caixa {
 
 function parenteses(no: Extract<NoFormula, { tipo: "parenteses" }>, estilo: Estilo): Caixa {
   const conteudo = caixaDe(no.conteudo, estilo);
-  const tamanho = pisar(estilo.tamanho);
-  if (conteudo.a <= 0.9 * tamanho && conteudo.p <= 0.3 * tamanho) {
+  const tamanho = tamanhoDo(estilo);
+  if (estilo.linha || (conteudo.a <= 0.9 * tamanho && conteudo.p <= 0.3 * tamanho)) {
     return juntar([{ caixa: textoEmCaixa("(", estilo) }, { caixa: conteudo }, { caixa: textoEmCaixa(")", estilo) }]);
   }
   const topo = -conteudo.a - 2;
@@ -294,7 +309,7 @@ function matriz(no: Extract<NoFormula, { tipo: "matriz" }>, estilo: Estilo): Cai
   const alturas = celulas.map((linha) => ({ a: Math.max(...linha.map((c) => c.a)), p: Math.max(...linha.map((c) => c.p)) }));
   const altura = alturas.reduce((soma, linha) => soma + linha.a + linha.p, 0) + LINHA_ENTRE * (alturas.length - 1);
   const larguraDaGrade = larguras.reduce((soma, valor) => soma + valor, 0) + COLUNA_ENTRE * (colunas - 1);
-  const tamanho = pisar(estilo.tamanho);
+  const tamanho = tamanhoDo(estilo);
   const topo = -(eixoDe(tamanho) + altura / 2);
   const moldura = no.moldura === "barras" ? 2 : 6;
   const marcas: Marca[] = [];
@@ -325,7 +340,7 @@ function destaque(no: Extract<NoFormula, { tipo: "destaque" }>, estilo: Estilo):
   const cores = CORES_DO_DESTAQUE[no.papel];
   const conteudo = caixaDe(no.conteudo, { ...estilo, cor: cores.texto });
   const lado = 3;
-  const folga = 2;
+  const folga = estilo.linha ? 1 : 2;
   return {
     l: conteudo.l + 2 * lado,
     a: conteudo.a + folga,
@@ -373,4 +388,25 @@ export function caixaDe(no: NoFormula, estilo: Estilo): Caixa {
 /** A fórmula inteira no tamanho pedido: linha de base em y = 0. */
 export function caixaDaFormula(arvore: NoFormula, tamanho: number, cor: PapelDeCor = "texto"): Caixa {
   return caixaDe(arvore, { tamanho: pisar(tamanho), cor, italico: true, respiro: 1 });
+}
+
+/** A fórmula no meio da frase, com `tamanho` o do texto ao redor (16, ou 17): linha de base em y = 0. */
+export function caixaDaFormulaEmLinha(arvore: NoFormula, tamanho: number, cor: PapelDeCor = "texto"): Caixa {
+  return caixaDe(arvore, { tamanho: Math.max(PISO_EM_LINHA, tamanho), cor, italico: true, respiro: 1, linha: true });
+}
+
+/** A linha de texto tem 1,5 em: a fórmula em linha cabe nela sem fazer a linha crescer. */
+export const ALTURA_DA_LINHA_EM_EM = 1.5;
+/** Largura máxima de uma fórmula em linha, com o texto a 16 (escala com ele): mais larga que isto quebra em peças, que quebram como palavras. */
+export const LARGURA_MAXIMA_EM_LINHA = 280;
+
+/**
+ * A fórmula cabe no meio da frase? Pelo tipo de nó (`formulaCabeEmLinha`) e pela medida: a caixa não passa de 1,5 vezes o
+ * tamanho do texto de altura (índice e expoente ficam dentro da linha) nem de `LARGURA_MAXIMA_EM_LINHA` de largura. Senão, cai
+ * no texto linear em peças (`formulaEmPecas`).
+ */
+export function formulaCabeNaLinha(arvore: NoFormula, tamanho = 16): boolean {
+  if (!formulaCabeEmLinha(arvore)) return false;
+  const caixa = caixaDaFormulaEmLinha(arvore, tamanho);
+  return caixa.a + caixa.p <= ALTURA_DA_LINHA_EM_EM * tamanho + 1e-9 && caixa.l <= (LARGURA_MAXIMA_EM_LINHA * tamanho) / 16 + 1e-9;
 }

@@ -229,7 +229,7 @@ test("reta numérica: intervalos abertos e fechados, até o infinito", () => {
 test("alt: obrigatório, em texto simples, cortado em 140 e sem entregar a resposta", () => {
   assert.match(recusado(plano({ alt: undefined })), /alt/);
   assert.match(recusado(plano({ alt: "" })), /alt/);
-  assert.equal(normalizarVisual(plano({ alt: String.raw`Veja \frac{1}{2}` })).alt, "Veja 1 / 2", "LaTeX solto no alt vira texto linear: nunca barra na tela");
+  assert.equal(normalizarVisual(plano({ alt: String.raw`Veja \frac{1}{2}` })).alt, "Veja 1/2", "LaTeX solto no alt vira texto linear: nunca barra na tela");
   assert.match(recusado(plano({ alt: "x".repeat(400) })), /longo demais/);
   assert.equal(normalizarVisual(plano({ alt: `A ${"palavra ".repeat(20)}fim` })).alt.length <= 140, true);
   assert.match(normalizarVisual(plano({ alt: `A ${"palavra ".repeat(20)}fim` })).alt, /…$/);
@@ -382,7 +382,7 @@ test("resolução: tudo ou nada, e o motivo diz o quê", () => {
   assert.match(motivoDa(semTexto), /passo 3: texto/);
   const comLatex = resolucaoDe();
   comLatex.passos[2].texto = String.raw`Use \frac{1}{2}.`;
-  assert.equal(validarResolucao(comLatex).resolucao.passos[2].texto, "Use 1 / 2.", "LaTeX solto no texto do passo vira texto linear");
+  assert.equal(validarResolucao(comLatex).resolucao.passos[2].texto, "Use 1/2.", "LaTeX solto no texto do passo vira texto linear");
 });
 
 test("resolução: nome do passo em até 24 caracteres (corta, não derruba) e fórmula entre cifrões no texto vira linear", () => {
@@ -397,8 +397,11 @@ test("resolução: nome do passo em até 24 caracteres (corta, não derruba) e f
   cifrao.passos[1].texto = "Troque: $x_G=1$ e siga.";
   assert.equal(validarResolucao(cifrao).resolucao.passos[1].texto, "Troque: $x_G = 1$ e siga.", "a fórmula em linha fica entre cifrões, na forma canônica");
   const fracao = resolucaoDe();
-  fracao.passos[1].texto = String.raw`Troque: $\frac{x_A}{2}$ e $\foo{x}$ e R$ 5,00.`;
-  assert.equal(validarResolucao(fracao).resolucao.passos[1].texto, "Troque: x_A / 2 e x e R$ 5,00.", "o que não cabe em linha ou não lê vira texto linear, e o dinheiro fica");
+  fracao.passos[1].texto = String.raw`Troque: $\frac{x_A + x_B}{2}$ e $\foo{x}$ e R$ 5,00.`;
+  assert.equal(validarResolucao(fracao).resolucao.passos[1].texto, String.raw`Troque: $\frac{x_A + x_B}{2}$ e x e R$ 5,00.`, "a que lê fica marcada (inteira ou em peças, quem lê decide); a que não lê vira texto linear; o dinheiro fica");
+  const solto = resolucaoDe();
+  solto.passos[1].texto = "Troque x_A por 3 e deixe H_2O em paz.";
+  assert.equal(validarResolucao(solto).resolucao.passos[1].texto, "Troque $x_A$ por 3 e deixe H₂O em paz.", "na resolução (só de matemática) o token solto ganha a marca");
   const nomeComMarca = resolucaoDe();
   nomeComMarca.passos[0].nome = "Isole $x_C$";
   assert.equal(validarResolucao(nomeComMarca).resolucao.passos[0].nome, "Isole x_C", "o nome do passo é texto simples");
@@ -576,7 +579,7 @@ test("o exemplo em texto para o cliente sem `resolucao@1`: passos com a fórmula
   };
   const passos = passosEmTexto(guardada("baricentro"), linear);
   assert.equal(passos.length, 5);
-  assert.equal(passos[0], "1. A fórmula: A abscissa do baricentro é a média das abscissas dos vértices. x_G = (x_A + x_B + x_C) / 3");
+  assert.equal(passos[0], "1. A fórmula: A abscissa do baricentro é a média das abscissas dos vértices. x_G = (x_A + x_B + x_C) ÷ 3");
   assert.match(passos[3], /^4\. O mesmo para y_C: .* y_C = 3 × 2 − 1 − 5$/);
   assert.equal(passos[4].endsWith("C = (2, 0)"), true);
   assert.equal(passos.every((passo) => passo.length <= 300), true);
