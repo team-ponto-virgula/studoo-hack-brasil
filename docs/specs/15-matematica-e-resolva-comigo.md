@@ -624,7 +624,7 @@ Conferido nas lições l3 e l4 (completo, segunda errada, teclado e sem rede), e
   - O botão tem `aria-busy` na web e `busy` no app.
   - O leitor de tela fala "Verificando…" uma vez, pela região educada.
   - A web troca "Avaliando…" por "Verificando…", e o app passa a trocar o texto além do giro.
-- **Foco depois de "Verificar":** o foco do teclado e do leitor de tela vai para o cartão do retorno ("Isso!" com o porquê, ou o porquê da opção errada), que é lido inteiro. O próximo elemento é a ação do rodapé.
+- **Foco depois de "Verificar":** o foco do teclado e do leitor de tela vai para o cartão do retorno ("Isso!" com o porquê, ou o porquê da opção errada), que é lido inteiro. Depois dele, a ordem do teclado e do leitor é a ordem da tela: "Voltar um passo", quando aparece, e então a ação do rodapé. Não há reordenação só para o leitor, para o que se ouve bater com o que se vê.
   - Na web, o foco não vai mais direto para o botão do rodapé.
   - Mover o foco para o botão logo depois do anúncio corta o anúncio no VoiceOver e no TalkBack, e o cartão garante que o retorno seja ouvido nas duas plataformas.
 - **Foco depois de "Tentar de novo":** a escolha é limpa, e o foco do teclado e do leitor de tela vai para a primeira opção, como a web já faz. O app passa a mover o foco do VoiceOver e do TalkBack para ela.
