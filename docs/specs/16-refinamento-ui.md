@@ -129,13 +129,14 @@ Os quatro momentos da demo ficam para o lote 3, com as capturas do Mobile & QA.
 **13. Cenário gigante atrás do caminho no mapa da web em 390** (capturas do Web & API, `explorar-1` e `explorar-2`, servidor local)
 - **Hoje:** uma árvore enorme e círculos vermelhos e brancos ocupam a coluna inteira atrás dos nós. No app, os enfeites são árvores pequenas dos lados do caminho (iPhone `10`).
 - **Regra:** os enfeites do mapa na web têm o tamanho e o lugar do app (spec 04, `--tam-enfeite` e `--tam-miudo`), sempre dos lados do caminho e nunca atrás dos nós. O fundo da região continua só a cor dela.
-- **Confirmar no site publicado**, porque a captura é do servidor local.
+- **Confirmar no site publicado**, porque a captura é do servidor local. O lote 3 mostrou o mesmo na web em 390 (`a4`, `a5`, `d2` e `51`: a casa e a árvore gigantes), sempre no servidor local.
 - **Onde:** web, para igualar o app.
 
 ### P1
 
 **14. O aviso de música cobre o botão do balão no mapa** (web `explorar-2`)
-- **Regra:** o aviso "Música de fundo ligada." da primeira vez nunca cobre o balão nem a ação do rodapé. No mapa, ele fica no alto, 8 px abaixo do cabeçalho preso, como na entrada (spec 12).
+- **Regra:** o aviso "Música de fundo ligada." da primeira vez fica sempre no alto, 8 px abaixo do cabeçalho ou da barra da marca, em todas as telas, como já fica na entrada (spec 12). Ele nunca cobre o balão, os botões do rodapé ou a barra de abas.
+- O lote 3 mostrou o aviso cobrindo também "Prefiro escrever o assunto" (`a2`) e o balão do mapa (`d2` e `50`).
 - **Onde:** as três plataformas.
 
 **15. Dois cabeçalhos empilhados no mapa da web em 390** (web `explorar-1`)
@@ -195,4 +196,71 @@ Ainda não há captura nativa (iPhone nem Android) dos visuais, do "Resolva comi
 - o desenho em `react-native-svg` no tamanho real.
 Isso fica para a rodada nativa.
 
-**Próximo lote:** os quatro momentos da demo (material e citação, erro e ponte, "Ensine ao Stu", sincronia) e o Android completo da rodada nova.
+## Lote 3: os quatro momentos da demo
+
+**Fontes:** as capturas do Mobile & QA em 390 × 844 (`banca-21-11/momentos`, base `b0fa9ad`, servidor local com IA de demonstração e contas sintéticas). `web-390` é o navegador e `app-390` é a prévia web do app. Não é o site publicado nem o aparelho.
+
+**Momento a, material e citação (`a1` a `a7`):** está de acordo:
+- a prévia "Confira o conteúdo antes de gerar";
+- "Baseado no seu material [1]" no balão do Stu;
+- o cartão "[1] Fonte do seu material", com página e trecho, já aberto ao entrar na lição;
+- "Do seu material · Página 1" na figura.
+A demo mostra a citação sem procurar. Os problemas deste momento são os itens 1 (a trilha pronta mostra o fim), 13 (cenário gigante na web) e 14 (aviso de música).
+
+**Momento b, erro e ponte (`b1` a `b6`):** a ponte bate com a spec 05 nos dois lados (indicador, passos, rodapé e vencida).
+
+**Momento c, "Ensine ao Stu" (`c1` a `c6`):** o fluxo está certo. Os ajustes são os itens 24 e 25. O "Faltou só um exemplo seu", mesmo com o exemplo da pizza, é o retorno da IA de demonstração e fica com o Lead.
+
+**Momento d, sincronia (`d1`, `d2` e a prova cruzada `50` e `51`):** está de acordo:
+- a conclusão com os três números e "Ponte construída";
+- o mapa com "Ponte construída" e "Vale rever" no nó;
+- o "Progresso salvo agora";
+- a mesma trilha aberta do outro lado com o mesmo progresso.
+
+### P1
+
+**23. A ordem das opções muda entre a web e o app** (achado do Mobile & QA, no mesmo exercício: A 3, B 8, C 11 na web e A 11, B 3, C 8 no app)
+- **Regra:**
+  - a ordem das opções vem do servidor, já embaralhada uma vez por exercício e guardada;
+  - a web e o app mostram essa mesma ordem, sem embaralhar no cliente;
+  - a letra (A, B, C) é a mesma para a mesma opção nas duas plataformas, porque a demo pode mostrar as duas lado a lado.
+- **Onde:** as três plataformas, com o Web & API no servidor.
+
+**24. O rodapé do acerto ocupa a tela durante o "Explique com suas palavras"** (`c2` a `c5`, web e app)
+- **Hoje:** o painel verde "Isso aí!" com "Continuar" fica preso embaixo, com uns 150 px, e cobre o fim da explicação e do retorno.
+- **Regra:**
+  - enquanto o "Explique com suas palavras" está aberto, o rodapé do acerto encolhe para uma linha de 64 px: "✓ Isso aí!" à esquerda (16 800, `#1F7A5A`) e "Continuar" à direita, compacto, no mesmo fundo verde claro;
+  - o texto do retorno do exercício sai do rodapé, porque já foi lido antes;
+  - ao fechar o "Explique", o rodapé volta ao normal;
+  - a ação do "Explique" ("Enviar minha explicação") continua no fluxo da página.
+- **Onde:** as três plataformas.
+
+**25. Os passos do "Explique" parecem botões** (`c2` e `c3`)
+- **Hoje:** "1. Gravar ou escrever", "2. Revisar texto" e "3. Ver retorno do Stu" são pílulas com borda, iguais a filtros, e convidam ao toque.
+- **Regra:**
+  - vira uma linha só de indicador, como a da ponte: "Passo 1 de 3 · Gravar ou escrever", em 14/20 800 `#5E6A85`, com os traços da spec 05;
+  - não é tocável;
+  - o leitor de tela lê "Passo 1 de 3: Gravar ou escrever".
+- **Onde:** as três plataformas.
+
+**26. O alto do mapa: "•••" na web e botões no app** (web `d2` e `51`; app `d2` e `51`)
+- **Regra:** nas três plataformas, como o app já faz:
+  - "Compartilhar" (secundário, com ícone) e a engrenagem de 44 px abaixo do título;
+  - "Compartilhada" quando a trilha já tem link;
+  - o "•••" sozinho no alto do mapa da web sai, porque esconde as duas ações mais usadas.
+- **Onde:** web, para igualar o app.
+
+**27. "De onde veio esta ideia" só no app, na ponte** (app `b3` e `b6`; web `b3` e `b6`)
+- **Regra:** nas lições feitas de material, a ponte mostra o recolhível "De onde veio esta ideia" (a citação do material) depois do cartão do passo e antes de "Voltar ao exercício", fechado, nas três plataformas. Ele reforça o momento a da demo. Lição sem material não o mostra.
+- **Onde:** web, para igualar o app.
+
+### P2
+
+**28. Os botões tracejados do material** (`a2`)
+- **Hoje:** "Escolher arquivo" e "Usar a câmera" são tracejados, o desenho de área de soltar, que não existe no celular e parece rascunho.
+- **Regra:** até 767 px, os dois viram botões secundários comuns. A área tracejada de soltar arquivo fica só na web a partir de 768 px.
+
+**29. Texto do convite do "Explique"**
+- **Regra:** "Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu. O Stu aponta o que fez sentido e propõe uma situação nova." Sai "o mascote do Studoo", que a pessoa já conhece. É um texto do contrato.
+
+**Próximo:** o Android completo da rodada nova (run 44920181903) e a matemática no aparelho, quando houver captura nativa.
