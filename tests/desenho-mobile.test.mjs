@@ -64,11 +64,11 @@ test('escala pela largura útil e rola para o lado quando a fórmula é larga', 
 
 test('o app declara a própria lista de capacidades e a manda no solicitar e na geração ao vivo', async () => {
   const fonte = await ler('apps/mobile/src/api-nativa.ts');
-  assert.match(fonte, /export const CAPACIDADES_DO_APP = 'visuais@1,resolucao@1';/);
+  assert.match(fonte, /export const CAPACIDADES_DO_APP = 'visuais@2,resolucao@1';/);
   assert.equal((fonte.match(/\[CABECALHO_CAPACIDADES\]: CAPACIDADES_DO_APP,/g) ?? []).length, 2, 'nos dois fetch');
   assert.doesNotMatch(fonte, /import \{[^}]*CAPACIDADES_DESTE_CLIENTE/, 'não importa a constante do contrato');
   assert.equal(CABECALHO_CAPACIDADES, 'X-Studoo-Capacidades');
-  assert.deepEqual(lerCapacidades('visuais@1,resolucao@1'), { visuais: 1, resolucao: 1 });
+  assert.deepEqual(lerCapacidades('visuais@2,resolucao@1'), { visuais: 2, resolucao: 1 });
 });
 
 test('o componente: imagem com nome para o leitor de tela, entrada por fora do Svg, altura reservada', async () => {

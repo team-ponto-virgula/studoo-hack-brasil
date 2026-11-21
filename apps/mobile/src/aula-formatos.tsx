@@ -934,7 +934,7 @@ export function Associar({ esquerda, direita, valor, mudar, desativado, certos, 
             <Text style={formatos.posicaoTexto}>{indice}</Text>
           </View>
         )}
-        <Text style={[estilos.texto, formatos.cartaoTexto, formatos.cartaoParTexto]}>{item.texto}</Text>
+        <TextoComFormulas texto={item.texto} estilo={[estilos.texto, formatos.cartaoTexto, formatos.cartaoParTexto]} />
       </CartaoDegrau>
     );
   }
@@ -972,7 +972,8 @@ export function VerdadeiroFalso({ afirmacao, valor, mudar, desativado, retorno, 
   const [escolha = '', justificativa = ''] = valor.split(':');
   return (
     <View style={formatos.vf}>
-      <View style={formatos.afirmacao}><Text style={formatos.afirmacaoTexto}>{afirmacao}</Text></View>
+      {/* A afirmação pode trazer fórmula marcada ($…$, lição de matemática): desenhada em linha, nunca o cifrão cru. */}
+      <View style={formatos.afirmacao}><TextoComFormulas texto={afirmacao} estilo={formatos.afirmacaoTexto} /></View>
       <View style={formatos.vfGrupo}>
       <Text style={[formatos.rotuloCaixa, caixaAlta]}>{t.verdadeiroFalso.valor}</Text>
       <View style={formatos.valores} accessibilityRole="radiogroup" accessibilityLabel={t.verdadeiroFalso.valor}>

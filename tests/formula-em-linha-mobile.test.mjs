@@ -111,3 +111,11 @@ test('Δ e π valem como termo: "Δ ≠ 0" e "π = 3,14" saem desenhados em linh
     assert.ok(itens.every((item) => item.tipo !== 'texto' || !/[Δπ≠=]/.test(item.texto)), `${frase}: a conta inteira no desenho`);
   }
 });
+
+test('verdadeiro ou falso, associar e ordenar desenham a fórmula marcada (trilha "funcoes": "$h(x) = \\sin x$" aparecia cru)', async () => {
+  const formatos = await ler('apps/mobile/src/aula-formatos.tsx');
+  assert.match(formatos, /<TextoComFormulas texto=\{afirmacao\} estilo=\{formatos\.afirmacaoTexto\} \/>/);
+  assert.match(formatos, /<TextoComFormulas texto=\{item\.texto\} estilo=\{\[estilos\.texto, formatos\.cartaoTexto, formatos\.cartaoParTexto\]\} \/>/);
+  assert.match(await ler('apps/mobile/src/ordenar.tsx'), /<TextoComFormulas numberOfLines=\{3\} texto=\{texto\} estilo=\{estilosOrdenar\.texto\} \/>/);
+  for (const trecho of partirTextoComFormulas('A onda $h(x) = \\sin x$ passa de 1 em algum ponto.')) if (trecho.tipo === 'texto') assert.doesNotMatch(trecho.texto, /[$\\]/);
+});

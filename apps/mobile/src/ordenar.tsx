@@ -6,6 +6,7 @@ import {
 import { GestureDetector, GestureHandlerRootView, usePanGesture } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { focoVisivel } from './foco';
+import { TextoComFormulas } from './texto-com-formulas';
 import { Icone } from './icone';
 import { RolagemDaTela, estilos } from './interface';
 import { mensagens } from './mensagens';
@@ -453,7 +454,7 @@ function Face({ texto, posicao, estado, brilho = 0, reduzir = false, arrastando 
       <View style={[estilosOrdenar.numero, numero]}>
         <Text style={[estilosOrdenar.numeroTexto, numeroBranco && { color: cores.fundo }]}>{posicao}</Text>
       </View>
-      <Text numberOfLines={3} style={estilosOrdenar.texto}>{texto}</Text>
+      <TextoComFormulas numberOfLines={3} texto={texto} estilo={estilosOrdenar.texto} />
       {estado === 'certo' ? (
         <View style={estilosOrdenar.alca}><Icone nome="check" tamanho={20} cor={COR.certo} traco={3} /></View>
       ) : estado === 'errado' ? (

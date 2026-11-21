@@ -64,9 +64,9 @@ test('o app trata funcao como as outras figuras: nada decide por plano/reta, e o
   assert.match(await ler('apps/mobile/src/desenho.tsx'), /if \(desenho\.naoCabe && visual\.tipo !== 'formula'\) return <FiguraEmTexto alt=\{visual\.alt\} descricao=\{desenho\.descricao\}/);
 });
 
-test('capacidade: o app anuncia a própria lista (ainda visuais@1), não a constante do contrato', async () => {
+test('capacidade: o app anuncia a própria lista (visuais@2 desde o 12a, desenha funcao), não a constante do contrato', async () => {
   const api = await ler('apps/mobile/src/api-nativa.ts');
-  assert.match(api, /export const CAPACIDADES_DO_APP = 'visuais@1,resolucao@1';/);
+  assert.match(api, /export const CAPACIDADES_DO_APP = 'visuais@2,resolucao@1';/);
   assert.doesNotMatch(api, /import \{[^}]*CAPACIDADES_DESTE_CLIENTE/);
 });
 
