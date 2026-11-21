@@ -63,6 +63,14 @@ Tudo o que estiver fora dessa lista invalida a fórmula, que vira o texto linear
 
 **Leitor de tela:** a fórmula tem um texto falado que o Studoo gera a partir da árvore, não a IA. Por exemplo: "x índice C é igual a 3 vezes 4, menos 3, menos 5". Uma fração é lida assim: "fração: numerador 1 mais menos 2 mais x C, denominador 3". Na web, o bloco é `role="math"` com esse texto em `aria-label`; no app, `accessibilityLabel`. Em linha, a frase inteira é lida com a fórmula falada no meio.
 
+**Ajustes da revisão do contrato (244d5fd, 21/11):**
+- **Coordenadas com decimal:** a vírgula é o decimal na tela, então o separador do par vira ponto e vírgula sempre que uma coordenada do ponto tem casa decimal: "A (1,5; 2)". Com inteiros, continua "A (1, 2)". Vale para o rótulo, para o separador dentro da fórmula ("C = (4, 0)") e para o texto falado.
+- **Texto falado:**
+  - "→" lê "então", e não "seta para";
+  - fração de dois termos simples lê "1 sobre 3";
+  - as outras frações leem "fração: numerador …, denominador …" e, quando vem mais coisa depois da fração, "fim da fração", como a raiz faz. Sem isso, "denominador b mais c" fica ambíguo.
+- **Letras gregas:** Δ e π entram já na fase 1, porque o Δ = b² − 4ac (Bhaskara) e o π do círculo são os mais comuns da escola. Os glifos vêm da Noto Sans Bold (licença OFL), desenhados como contorno na mesma tabela de glifos da Nunito. α, β, θ, λ, μ e σ ficam para a fase 2. O "Δ" de triângulo na frase continua sendo texto.
+
 ## 2. O diagrama
 
 **Princípio:** a IA escolhe o visual mais simples que responde à pergunta. O exercício da namorada só fala de abscissas, então o visual certo é a reta numérica, não o plano inteiro (esboço, quadro 1).
@@ -161,6 +169,7 @@ O último passo mostra a resposta no papel "resposta", na fórmula e no desenho.
 - **errado:** som `erro`, a opção fica vermelha e aparece a frase do porquê daquela opção (a IA entrega uma por opção errada). O rodapé passa a "Tentar de novo". Na segunda escolha errada, o Studoo mostra a certa, com o porquê, e segue. Nunca trava a pessoa;
 - digitar a resposta fica para depois (fase 3 ou seguinte). Por isso, a `tentativa` não tem `esperada` nem `dica`: ela tem `pergunta` e 3 `opcoes`, cada uma com `texto` ou `formula`, `correta` e `porque`;
 - o "Sua vez" não conta no progresso nem no comprovante da lição.
+- **No passo do "Sua vez", nada entrega a resposta antes da escolha:** a fórmula do passo, o `\resposta{…}` e o ponto revelado no desenho só aparecem depois do acerto ou da segunda escolha errada. Até lá, o cartão mostra a frase e a pergunta, e a fórmula do passo anterior fica como contexto.
 
 **Fim do exemplo:**
 - o cartão "O método" (`resolvaComigo.metodo`) lista os passos em uma linha cada, com a fórmula geral em bloco (por exemplo, x_G = (x_A + x_B + x_C) ÷ 3);
