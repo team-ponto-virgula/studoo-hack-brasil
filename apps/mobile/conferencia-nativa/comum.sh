@@ -43,6 +43,7 @@ CAPTURAS_ESPERADAS="
 80-ilha-nova-trilha 81-ilha-nova-trilha-fim 82-ilha-minhas-trilhas-fim 83-ilha-ultimo-toque
 90-criacao-pedido 91-criacao-em-andamento 92-criacao-pronta 93-criacao-primeira-aula 94-criacao-mapa-ao-voltar
 95-resposta-exercicio 96-resposta-errada 97-resposta-certa
+98-ponte-passo-1 98-ponte-desafio 99-ensine-explicacao-escrita 99-ensine-retorno-do-stu
 "
 
 # Os fluxos do Maestro; o Android usa uma cópia com o pacote e o link do app dele.
@@ -429,8 +430,20 @@ fluxo_criacao() {
     resposta="não rodou: $(tail -n 1 "$REGISTROS/resposta-da-prova.log" 2> /dev/null || echo 'as opções não foram escolhidas')"
   fi
   if declare -F parar_registro_de_audio > /dev/null; then parar_registro_de_audio || true; fi
-  # As provas da criação e das respostas vão já para o artefato das capturas, com ou sem falha.
-  find "$SAIDA_MAESTRO/criacao" "$SAIDA_MAESTRO/resposta" -type f \( -name '9[0-9]-*.png' -o -name 'criacao-transicao*.mp4' \) \
+  # Os momentos "erro → ponte" e "Ensine ao Stu" (fluxo 98, aprovado pelo Lead em 21/11), na mesma trilha temporária,
+  # depois do 95 e fora da linha do tempo do som. No Android, só com o emulador nunca religado nesta execução.
+  local ponte="não rodou: o fluxo 95 não passou"
+  if [ "$resposta" = passou ]; then
+    if [ "$plataforma" = android ] && [ "${REVIVIDOS:-0}" -ne 0 ]; then
+      ponte="não rodou: o emulador foi religado nesta execução (o fluxo 98 só roda com REVIVIDOS=0)"
+    elif rodar_maestro ponte "$PASTA_DOS_FLUXOS/criacao/98-ponte-e-ensine.yaml" -e "RESPOSTA_CERTA=$certa" -e "RESPOSTA_ERRADA=$errada"; then
+      ponte=passou
+    else
+      ponte="falhou (maestro-ponte.log e tela-no-fim-de-ponte.png, nos registros)"
+    fi
+  fi
+  # As provas da criação, das respostas e da ponte vão já para o artefato das capturas, com ou sem falha.
+  find "$SAIDA_MAESTRO/criacao" "$SAIDA_MAESTRO/resposta" "$SAIDA_MAESTRO/ponte" -type f \( -name '9[0-9]-*.png' -o -name 'criacao-transicao*.mp4' \) \
     -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
   comandos90="$(find "$SAIDA_MAESTRO/criacao" -type f -name commands.json -path '*90-criacao-da-trilha*' 2> /dev/null | head -1 || true)"
   comandos95="$(find "$SAIDA_MAESTRO/resposta" -type f -name commands.json -path '*95-resposta-certa-e-errada*' 2> /dev/null | head -1 || true)"
@@ -444,6 +457,11 @@ fluxo_criacao() {
     resumo "❌ Resposta errada e certa na trilha temporária (fluxo 95): $resposta."
   fi
   resumir_fundo "$REGISTROS/linha-do-tempo-criacao.txt"
+  if [ "$ponte" = passou ]; then
+    resumo "✅ Erro → ponte e \"Ensine ao Stu\" em texto na trilha temporária (fluxo 98): capturas 98 e 99."
+  else
+    resumo "❌ Erro → ponte e \"Ensine ao Stu\" (fluxo 98): $ponte."
+  fi
 
   linha="$(trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" --saida "$REGISTROS/trilhas-depois-da-criacao.json" --apagar)" || codigo=$?
   case "$codigo:$fluxo" in
