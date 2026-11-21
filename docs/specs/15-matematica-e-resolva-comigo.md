@@ -179,8 +179,7 @@ O último passo mostra a resposta no papel "resposta", na fórmula e no desenho.
 - no exercício, "Rever a explicação" passa a abrir também "O método".
 
 **Movimento:**
-- o passo novo entra subindo 8 px em 200 ms;
-- o foco da fórmula acende em 240 ms;
+- o passo novo entra subindo 8 px em 200 ms, e o foco da fórmula aparece junto com o cartão, sem animação própria;
 - um ponto novo no desenho cresce de 0 a 100% em 200 ms;
 - com movimento reduzido, tudo troca na hora.
 
@@ -594,3 +593,28 @@ A frase do d1 ainda traz "…portanto k = 0". A captura é do dado de antes da c
   - `visuais@2`;
   - na prova da t3-licao3: o V como especial, sem o "O (0, 0)", e o "3" do eixo que fica meio escondido atrás de C sai, pela regra da bolinha sobre o número (seção 12).
 - **Mobile 2:** o motor vem pronto em `packages/contratos`. Falta anunciar `visuais@2` no cabeçalho quando o pacote do app tiver o motor com `funcao`, e capturar os três casos acima em 320 e 390.
+
+## 16. Revisão do "Resolva comigo" na web (capturas do Web & API, navegador real, IA de demonstração, 21/11)
+
+Conferido nas lições l3 e l4 (completo, segunda errada, teclado e sem rede), em 390, 768, 1280, com texto grande e com movimento. Estão de acordo:
+- o desenho com o procurado só na legenda e o re-enquadramento no último passo, com C verde;
+- "Passo n de 5" com os traços;
+- os passos feitos compactos;
+- o "Sua vez" sem bloco antes da escolha, com a pergunta em 700, e a frase que diz o que fazer sem entregar o resultado;
+- "Tentar de novo" e o porquê da opção errada;
+- "Agora é com você";
+- o exemplo em texto quando não há rede;
+- "O método" em "Rever a explicação".
+
+**Problemas:**
+1. **Texto grande** (`03-…-sua-vez-390-texto-grande`): as opções e o alto da aula crescem, mas a frase do passo, a pergunta do "Sua vez", os nomes e as fórmulas dos passos feitos ficam no tamanho normal. Tudo o que é texto ou fórmula no "Resolva comigo" cresce junto com o texto do sistema e do navegador (WCAG 1.4.4).
+2. **Rodapé em 1280** (`07-…-ultimo-passo-1280`): o botão fica à esquerda. O padrão da web é o `.aula-rodape`: o rodapé na largura do alto da aula, com o texto de estado à esquerda e as ações à direita (`justify-content: flex-end`), como o "Verificar" do exercício em `09-…-1280`. "Próximo passo", "Tentar de novo" e "Agora é com você" seguem esse padrão, alinhados à direita. A coluna do conteúdo não muda.
+3. **"O método" no fim do exemplo** (`07-…-ultimo-passo-390`): depois do cartão do último passo vem o cartão "O método" (a lista dos passos e a fórmula geral), antes de "Agora é com você", como diz a seção 4. Hoje ele só aparece em "Rever a explicação" no exercício. Vale conferir também no app.
+4. **Nomes dos passos crus** ("Isole x_C", "O mesmo para y_C"): o Web & API já vai exigir texto simples nos nomes, pela seção 14. Nada a mudar na tela.
+
+**Ajustes da spec à tela que ficou melhor:**
+- **Selo:** "RESOLVA COMIGO" usa o estilo do selo "EXEMPLO" (âmbar, com o ícone de lápis), porque ocupa a etapa Exemplo. O "estilo do CONCEITO" da seção 4 fica substituído.
+- **Opção errada no "Sua vez":** usa o mesmo estado de erro das opções da aula (borda e fundo âmbar, `#E3A24A` sobre `#FFF6EA`), e não vermelho. O vermelho da seção 4 fica substituído.
+- **Foco da fórmula:** o "acende em 240 ms" sai da spec. O foco aparece junto com a entrada do cartão (seção 4), na web e no app.
+
+**Fora deste escopo:** a "Dica: use as teclas de A a C…" aparece também em 390, numa tela de toque. É o componente de exercício de hoje, comum a todas as lições. Mostrá-la só com teclado e ponteiro (`hover: hover` e `pointer: fine`) seria mudança global e fica para depois.
