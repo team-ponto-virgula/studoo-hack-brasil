@@ -91,9 +91,56 @@ export interface VisualFormula {
   alt?: string;
 }
 
-export type VisualFigura = VisualPlano | VisualRetaNumerica;
+/* ----- Gráfico de função (spec 15, seção 15): `visuais@2` ----- */
+
+export const NOMES_DE_CURVA = ["f", "g", "h"] as const;
+export type NomeDeCurva = (typeof NOMES_DE_CURVA)[number];
+
+/**
+ * Uma curva de uma função de x. `latex` é a expressão no LaTeX restrito (`funcao-expressao.ts`), guardada na forma canônica e sem o `f(x) =`;
+ * `nome` é a letra da curva (f, g ou h; sem ela, na ordem); `de` e `ate`, o domínio, que a IA pode omitir (o motor escolhe pelo que aparece).
+ */
+export interface CurvaDaFuncao {
+  nome: NomeDeCurva;
+  latex: string;
+  de?: number;
+  ate?: number;
+}
+
+/** O que o servidor sabe calcular numa curva: raiz e vértice (até o grau 2), intercepto em y, interseção de duas curvas (12b) e o valor f(a). */
+export const TIPOS_DE_DESTAQUE = ["raiz", "vertice", "intercepto", "intersecao", "valor"] as const;
+export type TipoDeDestaque = (typeof TIPOS_DE_DESTAQUE)[number];
+
+/**
+ * Ponto sobre a curva. Raiz, vértice, intercepto e interseção são sempre do papel `especial` (losango), a não ser que sejam o procurado. As
+ * coordenadas, no que o servidor guarda, sempre existem (ele as calcula e confere); só faltam nos pontos `procurado` e `resposta` do enunciado
+ * público (`visualParaEnunciado`).
+ */
+export interface PontoDaFuncao {
+  id: string;
+  papel: PapelPonto;
+  tipo?: TipoDeDestaque;
+  curva?: NomeDeCurva;
+  x?: number;
+  y?: number;
+  rotulo?: boolean;
+}
+
+/**
+ * O gráfico de uma ou até três funções, com os pontos de destaque. Quando o exercício pergunta um ponto da curva (há um ponto `procurado`),
+ * o motor NÃO desenha a curva no enunciado: ler o cruzamento com o eixo ou a ponta da parábola entregaria a resposta.
+ */
+export interface VisualFuncao {
+  tipo: "funcao";
+  alt: string;
+  /** De 1 a 3. */
+  curvas: CurvaDaFuncao[];
+  pontos?: PontoDaFuncao[];
+}
+
+export type VisualFigura = VisualPlano | VisualRetaNumerica | VisualFuncao;
 export type Visual = VisualFigura | VisualFormula;
-export const TIPOS_VISUAL = ["plano", "reta_numerica", "formula"] as const;
+export const TIPOS_VISUAL = ["plano", "reta_numerica", "funcao", "formula"] as const;
 export type TipoVisual = (typeof TIPOS_VISUAL)[number];
 
 /* ----- "Resolva comigo" ----- */
@@ -212,6 +259,7 @@ export const LIMITES_VISUAIS = {
   verticesDoPoligono: 8,
   guias: 6,
   pontosDaReta: 8,
+  curvas: 3,
   intervalos: 3,
   coordenadaMaxima: 1000,
   casasDecimais: 2,

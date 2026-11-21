@@ -1047,6 +1047,9 @@ export function desenharVisual(visual: Visual, contexto: ContextoDoDesenho, opco
       return desenharPlano(visual, contexto, opcoes);
     case "reta_numerica":
       return desenharRetaNumerica(visual, contexto, opcoes);
+    case "funcao":
+      // O motor do gráfico de função vem no commit seguinte do marco 12a.
+      return null;
     case "formula": {
       const lida = lerFormula(visual.latex);
       return lida.ok ? desenharFormula(lida.arvore, opcoes) : null;

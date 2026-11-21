@@ -10,6 +10,7 @@ export * from './formula';
 export { conferirConta, resultadoDaFormula, type ResultadoConta, type ResultadoDaFormula } from './formula-conta';
 export { acharVazamento, alvosDoSuaVez, motivoDoVazamento, type AlvoDoSuaVez, type ContextoDoVazamento, type Vazamento } from './resolucao-vazamento';
 export * from './visuais-validacao';
+export * from './funcao-expressao';
 export * from './resolucao-publica';
 export { TAMANHO_MAXIMO_DA_DESCRICAO, comDescricaoDaResposta, descricaoDaFigura } from './visuais-descricao';
 export * from './formula-no-texto';
