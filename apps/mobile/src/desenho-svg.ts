@@ -167,7 +167,7 @@ export function medidasNaCaixa(desenho: Desenho, larguraUtil: number, caixa: num
  */
 export function temProcurado(visual: Visual | undefined): boolean {
   if (!visual || visual.tipo === 'formula') return false;
-  return visual.pontos.some((ponto) => ponto.papel === 'procurado' || ponto.papel === 'resposta');
+  return (visual.pontos ?? []).some((ponto) => ponto.papel === 'procurado' || ponto.papel === 'resposta');
 }
 
 /** As coordenadas x de uma primitiva (para a caixa do conteúdo). */
