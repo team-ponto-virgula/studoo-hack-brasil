@@ -146,6 +146,7 @@ function FaixaDoAviso({ aviso, baixo, alto }: { aviso: AvisoAtual; baixo?: numbe
   }, [aviso.vez, reduzir, entrada]);
   return (
     <View pointerEvents="box-none" style={[estilos.avisoLugar, deCima ? { top: alto } : { bottom: baixo }]}>
+      {/* Spec 12 e 16 (item 14): fora da faixa, nada é bloqueado (o lugar é box-none); dentro dela, só a ação responde. */}
       <Animated.View testID="aviso-app" accessibilityLiveRegion="polite" style={[estilos.aviso, {
         opacity: entrada,
         // Embaixo, sobe 10; no alto, desce 10 (sempre vindo de onde não há nada para cobrir).

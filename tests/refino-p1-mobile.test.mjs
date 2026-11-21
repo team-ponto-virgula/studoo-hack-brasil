@@ -189,3 +189,17 @@ test('item 29: o convite do "Explique" sem "o mascote do Studoo"', () => {
   assert.match(contrato, /ensinoDica: 'Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu\. O Stu aponta o que fez sentido e propõe uma situação nova\.'/);
   assert.doesNotMatch(contrato, /O Stu, o mascote do Studoo, aponta/);
 });
+
+test('item 14 (ee85828): o balão do nó fecha o aviso do alto na hora; o aviso não bloqueia toque fora dele, só "Desligar" responde', async () => {
+  const caminho = await ler('caminho.tsx');
+  const interfaceApp = await ler('interface.tsx');
+  // (1) Balão abrindo com o aviso do alto à vista: dispensar() tira o aviso na hora (sem animação de saída).
+  assert.match(caminho, /const \{ aviso, dispensar \} = useContext\(AvisoDoApp\);\n\s*useEffect\(\(\) => \{\n\s*if \(aberto !== null && aviso\?\.noAlto\) dispensar\(\);/);
+  assert.match(interfaceApp, /const dispensar = useCallback\(\(\) => setAviso\(null\), \[\]\);/);
+  // (2) O lugar do aviso deixa passar o toque (box-none); dentro da faixa, o único tocável é a ação ("Desligar").
+  const faixa = interfaceApp.slice(interfaceApp.indexOf('function FaixaDoAviso('), interfaceApp.indexOf('export function AvisoSobreAFolha('));
+  assert.match(faixa, /<View pointerEvents="box-none" style=\{\[estilos\.avisoLugar,/);
+  assert.equal((faixa.match(/<Pressable /g) ?? []).length, 1, 'só a ação é tocável');
+  assert.match(faixa, /<Pressable testID="aviso-acao" accessibilityRole="button"/);
+  assert.doesNotMatch(faixa, /onPress=\{dispensar\}|onTouch/);
+});
