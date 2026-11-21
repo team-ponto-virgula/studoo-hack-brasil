@@ -242,6 +242,15 @@ preparar_aparelho() {
 # opções do workflow, sem snapshot: o disco do AVD continua, então o APK instalado e a sessão do app ficam. Espera o boot
 # (até 6 min), prepara o aparelho de novo e devolve 0; sem o binário ou sem boot, devolve 1 e os fluxos seguintes ficam como
 # "não rodou", como antes.
+# O driver do Maestro parado e os encaminhamentos de porta dele desfeitos, para a nova partida (rodar_maestro, em comum.sh).
+# Só `adb forward`: o `adb reverse` da API e do Metro continua.
+limpar_driver_maestro() {
+  local id; id="$(dispositivo)"
+  adb -s "$id" shell am force-stop dev.mobile.maestro > /dev/null 2>&1 || true
+  adb -s "$id" shell am force-stop dev.mobile.maestro.test > /dev/null 2>&1 || true
+  adb -s "$id" forward --remove-all > /dev/null 2>&1 || true
+}
+
 REVIVIDOS=0
 reviver_aparelho() {
   local sdk emulador avd id fim

@@ -335,6 +335,20 @@ rodar_maestro() {
   codigo=${PIPESTATUS[0]}
   set -e
 
+  # O driver do Maestro às vezes morre na partida, antes do primeiro comando (execução 44920181903, Android: "Server
+  # running on port [37701]" e, 0,3 s depois, "Failed to bind to address [::]:37701" no gRPC do próprio driver, e o
+  # Maestro desiste com DeviceServerDiedException em 'deviceInfo'). Não é o app nem o fluxo: o fluxo roda de novo uma vez,
+  # com o driver parado e os encaminhamentos dele desfeitos (limpar_driver_maestro, do android.sh; o adb reverse fica).
+  if [ "$codigo" -ne 0 ] && [ -z "${MAESTRO_JA_REPETIU:-}" ] \
+    && grep -qE "DeviceServerDiedException|Failed to bind to address|Device server died" "$REGISTROS/maestro-$fase.log"; then
+    resumo "⚠️ O driver do Maestro caiu na partida da fase \`$fase\` (antes do primeiro comando); a fase rodou de novo uma vez."
+    cp "$REGISTROS/maestro-$fase.log" "$REGISTROS/maestro-$fase-primeira-tentativa.log"
+    if declare -F limpar_driver_maestro > /dev/null; then limpar_driver_maestro; fi
+    sleep 5
+    MAESTRO_JA_REPETIU=1 rodar_maestro "$fase" "$alvo" "$@"
+    return $?
+  fi
+
   # A tela do aparelho no fim da fase: mostra onde parou, com ou sem falha. (Do passo que falha, o Maestro guarda
   # também a árvore de elementos, na saída dele: é com ela que se corrige um seletor.)
   capturar_tela_do_aparelho "$REGISTROS/tela-no-fim-de-$fase.png"
