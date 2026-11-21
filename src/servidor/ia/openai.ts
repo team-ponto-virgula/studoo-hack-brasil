@@ -1,16 +1,19 @@
 import type { MetaPlano } from "./gerador";
 import type { GeradorTrilha } from "./gerador";
-import type { EsqueletoPlano } from "@/dominio/aprendizado/plano";
+import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { comNovasTentativas } from "./novas-tentativas";
 import {
+  TEMPO_CONTEUDO_DE_MATEMATICA_MS,
   TEMPO_CONTEUDO_MS,
   TEMPO_ESTRUTURA_MS,
   criarMontador,
   esquemaDaLicao,
+  esquemaDaLicaoDeMatematica,
   instrucoesDaEstrutura,
   instrucoesDaLicao,
+  instrucoesDaLicaoDeMatematica,
   lerLinha,
   correcaoDoFormato,
   normalizarConteudo,
@@ -19,6 +22,7 @@ import {
   sinalComPrazo,
   validarBaseUrl,
 } from "./comum";
+import { contagensDoRelato, correcaoDaResolucao, licaoEhDeMatematica, motivoDaResolucao, valorDaMatematica } from "./matematica";
 
 export { normalizarConteudo };
 
@@ -174,15 +178,23 @@ function corpoDaEstrutura(objetivo: string) {
   };
 }
 
-function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number, correcao = "") {
+/** O pedido da lição. Só a lição de matemática leva o bloco de fórmulas e figuras, o esquema com `visuais` e `resolucao` e mais espaço para a resposta. */
+export function corpoDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number, correcao = "", matematica = false) {
   return {
     input: [
-      { role: "system", content: instrucoesDaLicao },
+      { role: "system", content: matematica ? instrucoesDaLicaoDeMatematica : instrucoesDaLicao },
       { role: "user", content: promptDaLicao(esqueleto, fluxo, licao) },
       ...(correcao ? [{ role: "user", content: correcao }] : []),
     ],
-    text: { format: { type: "json_schema", name: "licao_studoo", schema: esquemaDaLicao, strict: true } },
-    max_output_tokens: 6000,
+    text: {
+      format: {
+        type: "json_schema",
+        name: matematica ? "licao_studoo_matematica" : "licao_studoo",
+        schema: matematica ? esquemaDaLicaoDeMatematica : esquemaDaLicao,
+        strict: true,
+      },
+    },
+    max_output_tokens: matematica ? 10_000 : 6000,
   };
 }
 
@@ -232,15 +244,35 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
 
     async gerarConteudo(esqueleto, fluxo, licao, sinal) {
       if (esqueleto.gerador !== GERADOR_OPENAI || !esqueleto.fluxos[fluxo]?.licoes[licao]) throw new FalhaApi("proposta_invalida");
+      // Lição de matemática: o primeiro pedido leva fórmulas, figuras e resolução. Se ele não fecha (prazo, erro do provedor, formato), a
+      // segunda tentativa volta ao pedido de sempre, sem matemática: a matemática nunca derruba a lição, e o aceite não falha por ela.
+      let matematica = licaoEhDeMatematica(esqueleto, fluxo, licao);
+      const desligarMatematica = (motivo: string) => {
+        if (!matematica) return;
+        registrar("matematica_desligada", { motivo });
+        matematica = false;
+      };
+      // A primeira lição válida cuja resolução foi recusada (estrutura, formato ou conta): a segunda tentativa, uma só, pede a lição de novo com
+      // o motivo e só a substitui se for melhor. Qualquer falha dela (prazo, erro, formato) devolve esta: nunca pior do que a primeira.
+      let reserva: { conteudo: ConteudoLicao; valor: number } | undefined;
       let correcao = "";
       for (let tentativa = 0; tentativa < 2; tentativa += 1) {
-        const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, TEMPO_CONTEUDO_MS);
+        const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, matematica ? TEMPO_CONTEUDO_DE_MATEMATICA_MS : TEMPO_CONTEUDO_MS);
         let corpo: unknown;
         try {
-          const resposta = await pedir(config, corpoDaLicao(esqueleto, fluxo, licao, correcao), comPrazo);
+          const resposta = await pedir(config, corpoDaLicao(esqueleto, fluxo, licao, correcao, matematica), comPrazo);
           corpo = await resposta.json();
         } catch (erro) {
-          if (sinal.aborted || estourou()) throw new FalhaApi("ia_indisponivel");
+          if (reserva) {
+            registrar("resolucao_nova_tentativa", { aceita: false, motivo: "falhou" });
+            return reserva.conteudo;
+          }
+          if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
+          if (matematica && tentativa === 0) {
+            desligarMatematica(estourou() ? "tempo" : erro instanceof FalhaApi ? "http" : "rede");
+            continue;
+          }
+          if (estourou()) throw new FalhaApi("ia_indisponivel");
           if (erro instanceof FalhaApi) throw erro; // HTTP: já registrado com o status em `pedir`.
           registrar("ia_indisponivel", { motivo: "rede", tentativa });
           continue;
@@ -249,9 +281,14 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
         try {
           bruto = JSON.parse(textoDaResposta(corpo));
         } catch (erro) {
+          if (reserva) {
+            registrar("resolucao_nova_tentativa", { aceita: false, motivo: "formato" });
+            return reserva.conteudo;
+          }
           if (erro instanceof FalhaApi) throw erro; // recusa do modelo
           registrar("ia_indisponivel", { motivo: "formato", detalhe: "json", tentativa });
           correcao = correcaoDoFormato("json");
+          desligarMatematica("formato");
           continue;
         }
         const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem));
@@ -259,11 +296,30 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
           if (lida.descartados.length > 0) {
             registrar("licao_ajustada", { detalhe: lida.descartados.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
           }
+          // O que a matemática deu, só em contagens (os motivos de recusa citam fórmulas: não vão ao registro).
+          if (lida.matematica) registrar("licao_matematica", { ...contagensDoRelato(lida.matematica), tentativa });
+          if (reserva) {
+            const melhor = valorDaMatematica(lida.matematica) > reserva.valor;
+            registrar("resolucao_nova_tentativa", { aceita: lida.matematica?.resolucao.aceita === true, melhor });
+            return melhor ? lida.conteudo : reserva.conteudo;
+          }
+          const motivo = matematica && tentativa === 0 ? motivoDaResolucao(lida.matematica) : undefined;
+          if (motivo) {
+            reserva = { conteudo: lida.conteudo, valor: valorDaMatematica(lida.matematica) };
+            correcao = correcaoDaResolucao(motivo);
+            continue;
+          }
           return lida.conteudo;
+        }
+        if (reserva) {
+          registrar("resolucao_nova_tentativa", { aceita: false, motivo: "formato" });
+          return reserva.conteudo;
         }
         registrar("ia_indisponivel", { motivo: "formato", detalhe: lida.motivo, tentativa });
         correcao = correcaoDoFormato(lida.motivo ?? "formato");
+        desligarMatematica("formato");
       }
+      if (reserva) return reserva.conteudo;
       throw new FalhaApi("ia_indisponivel");
     },
   };

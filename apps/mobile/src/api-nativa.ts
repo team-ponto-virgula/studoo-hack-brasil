@@ -1,8 +1,16 @@
-import { criarClienteStudoo, ErroStudoo, type EventoGeracao, type TransporteStudoo } from '@studoo/contratos';
+import { CABECALHO_CAPACIDADES, criarClienteStudoo, ErroStudoo, type EscolhaNoSuaVez, type EventoGeracao, type TransporteStudoo } from '@studoo/contratos';
 import { fetch } from 'expo/fetch';
 import * as SecureStore from 'expo-secure-store';
 import { codigoDaResposta, lerEventos } from './geracao-ao-vivo';
 import { tocaSons } from './sons';
+
+/**
+ * O que ESTE app sabe desenhar (spec 15): vai em toda chamada no cabeçalho `X-Studoo-Capacidades`. É uma constante do app, não a
+ * do contrato (`CAPACIDADES_DESTE_CLIENTE`): o contrato pode subir antes de o app desenhar os tipos novos, e o app só pede o que
+ * sabe mostrar. `visuais@2` desde o marco 12a: o app desenha o gráfico de função (`funcao`). Sem o cabeçalho (build 3), o servidor
+ * manda o desenho como PNG no `recurso`.
+ */
+export const CAPACIDADES_DO_APP = 'visuais@2,resolucao@1';
 
 const tempoLimiteMs = 15_000;
 /** O aceite cria o conteúdo de todas as lições; com a IA real, isso leva mais que um pedido comum. */
@@ -95,6 +103,7 @@ function transporteNativo(token?: string): TransporteStudoo {
         signal: controle.signal,
         headers: {
           'Cache-Control': 'no-store',
+          [CABECALHO_CAPACIDADES]: CAPACIDADES_DO_APP,
           ...opcoes.headers,
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
@@ -125,7 +134,21 @@ export function criarClienteNativo(token?: string) {
     ...cliente,
     configuracaoAcesso: semSessao.configuracaoAcesso,
     gerarTrilhaAoVivo: (objetivo: string, sinal: AbortSignal) => gerarTrilhaAoVivo(objetivo, sinal, token),
+    responderSuaVez: (id: string, escolha: EscolhaNoSuaVez) => responderSuaVez(transporteNativo(token), id, escolha),
   };
+}
+
+/**
+ * O "Sua vez" do "Resolva comigo" (spec 15): `POST /api/aprendizado/licoes/[id]/resolucao` com a opção e a tentativa. Devolve o
+ * corpo cru (quem chama confere a forma); erro da API vira `ErroStudoo`, sem rede vira `FalhaMobile('conexao')`.
+ */
+async function responderSuaVez(transporte: TransporteStudoo, id: string, escolha: EscolhaNoSuaVez): Promise<unknown> {
+  const resposta = await transporte(`/api/aprendizado/licoes/${encodeURIComponent(id)}/resolucao`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opcao: escolha.opcao, tentativa: escolha.tentativa }),
+  });
+  const corpo: unknown = await resposta.json();
+  if (!resposta.ok) throw new ErroStudoo(codigoDaResposta(corpo));
+  return corpo;
 }
 
 /**
@@ -149,6 +172,7 @@ async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal, token?: 
       signal: controle.signal,
       headers: {
         'Cache-Control': 'no-store',
+        [CABECALHO_CAPACIDADES]: CAPACIDADES_DO_APP,
         'Content-Type': 'application/json',
         Accept: 'application/x-ndjson',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),

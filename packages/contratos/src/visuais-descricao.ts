@@ -1,0 +1,95 @@
+import { textoSemFormulas } from "./formula-no-texto";
+import { rotuloLatexDaFuncao } from "./funcao-expressao";
+import { numeroParaTela, rotuloDoPonto } from "./motor-visuais";
+import type { PapelPonto, TipoDeDestaque, TipoDerivado, VisualFigura, VisualFuncao } from "./visuais";
+
+/*
+ * A descrição que o leitor de tela lê (`alt`) depois que a resposta é revelada (spec 15, seção 12; pedido do Designer): montada pelo
+ * motor a partir dos DADOS da figura, os pontos, os papéis e as coordenadas, nunca do texto da IA. O `alt` do enunciado é o da IA
+ * (o validador não deixa ele trazer a posição do procurado); o do retorno, que já traz a resposta, é este, para a frase que o app
+ * anuncia dizer onde o ponto está: "Plano cartesiano com A (1, 2), B (−2, 7), baricentro G (1, 3) e o vértice C (4, 0).".
+ */
+
+const DERIVADOS: Readonly<Record<TipoDerivado, { nome: string; artigo: "o" | "a" }>> = {
+  baricentro: { nome: "baricentro", artigo: "o" },
+  ponto_medio: { nome: "ponto médio", artigo: "o" },
+  media: { nome: "média", artigo: "a" },
+};
+
+/** Acima disto a frase seria longa demais para um anúncio: vira a contagem dos pontos e o que foi achado. */
+export const TAMANHO_MAXIMO_DA_DESCRICAO = 200;
+
+const lista = (itens: readonly string[]): string => (itens.length <= 1 ? itens.join("") : `${itens.slice(0, -1).join(", ")} e ${itens.at(-1)}`);
+
+interface PontoLido {
+  id: string;
+  papel: PapelPonto;
+  x?: number;
+  y?: number;
+  valor?: number;
+  derivado?: { tipo: TipoDerivado };
+}
+
+const DESTAQUES: Readonly<Record<TipoDeDestaque, string>> = { raiz: "raiz", vertice: "vértice", intercepto: "intercepto", intersecao: "interseção", valor: "ponto" };
+/** O artigo de cada nome ("a raiz A", "o vértice V"). */
+const ARTIGO_DO_DESTAQUE: Readonly<Record<TipoDeDestaque, "o" | "a">> = { raiz: "a", vertice: "o", intercepto: "o", intersecao: "a", valor: "o" };
+
+/** A fórmula marcada com cifrões: o cliente a desenha em linha e o leitor de tela a fala pela árvore ("f de x é igual a …", "V de coordenadas 2 e menos 1"). */
+const marcada = (latex: string): string => `$${latex}$`;
+
+/**
+ * "Gráfico de $f(x) = x^2 - 4x + 3$, com a raiz $A(1, 0)$, …": as curvas e os pontos, dos dados, com cada fórmula marcada por `$…$` (spec 15, seção 18). Para quem não
+ * desenha, `textoSemFormulas` a lê "Gráfico de f(x) = x² − 4x + 3, com a raiz A(1, 0), …"; para quem fala, `falarTextoComFormulas`.
+ */
+function descricaoDaFuncao(visual: VisualFuncao): string {
+  const curvas = visual.curvas.map((curva) => marcada(`${curva.nome}(x) = ${curva.latex}`));
+  const pontos = visual.pontos ?? [];
+  const onde = (ponto: VisualFuncao["pontos"] extends (infer P)[] | undefined ? P : never): string =>
+    marcada(ponto.x !== undefined && ponto.y !== undefined ? rotuloLatexDaFuncao(ponto.id, ponto.x, ponto.y) : ponto.id);
+  const nome = (ponto: (typeof pontos)[number]): string => (ponto.tipo ? DESTAQUES[ponto.tipo] : "ponto");
+  const artigo = (ponto: (typeof pontos)[number]): string => (ponto.tipo ? ARTIGO_DO_DESTAQUE[ponto.tipo] : "o");
+  const dados = pontos.filter((ponto) => ponto.papel === "dado").map(onde);
+  const especiais = pontos.filter((ponto) => ponto.papel === "especial").map((ponto) => `${artigo(ponto)} ${nome(ponto)} ${onde(ponto)}`);
+  const respostas = pontos.filter((ponto) => ponto.papel === "resposta").map((ponto) => `${artigo(ponto)} ${nome(ponto)} ${onde(ponto)}`);
+  const procurados = pontos.filter((ponto) => ponto.papel === "procurado").map((ponto) => `${artigo(ponto)} ${nome(ponto)} procurad${artigo(ponto) === "a" ? "a" : "o"} ${marcada(ponto.id)}`);
+  const cabeca = `Gráfico de ${lista(curvas)}`;
+  const itens = [...dados, ...especiais, ...respostas, ...procurados];
+  const inteira = itens.length > 0 ? `${cabeca}, com ${lista(itens)}.` : `${cabeca}.`;
+  // O tamanho é o do que se lê (as fórmulas sem os cifrões e sem a barra), não o do LaTeX.
+  if (textoSemFormulas(inteira).length <= TAMANHO_MAXIMO_DA_DESCRICAO) return inteira;
+  return `${cabeca}, com ${pontos.length} pontos${respostas.length > 0 ? `, entre eles ${lista(respostas)}` : ""}.`;
+}
+
+/**
+ * A frase da figura, dos dados: primeiro os pontos dados, depois os de destaque (com o nome do que são: "baricentro G"), depois o que
+ * foi achado ("o vértice C (4, 0)": vértice se está num polígono, ponto médio ou baricentro se é derivado, senão ponto) e, se ainda
+ * houver um procurado sem posição, "o ponto procurado C". Sem inventar nada além do que está nos pontos e nos polígonos.
+ */
+export function descricaoDaFigura(visual: VisualFigura): string {
+  if (visual.tipo === "funcao") return descricaoDaFuncao(visual);
+  const noPoligono = new Set(visual.tipo === "plano" ? (visual.poligonos ?? []).flatMap((poligono) => poligono.pontos) : []);
+  const pontos = visual.pontos as PontoLido[];
+  const onde = (ponto: PontoLido): string => {
+    if (visual.tipo === "plano") return ponto.x !== undefined && ponto.y !== undefined ? rotuloDoPonto(ponto.id, [ponto.x, ponto.y]) : ponto.id;
+    return ponto.valor !== undefined ? `${ponto.id} em ${numeroParaTela(ponto.valor)}` : ponto.id;
+  };
+  const dados = pontos.filter((ponto) => ponto.papel === "dado").map(onde);
+  const especiais = pontos.filter((ponto) => ponto.papel === "especial").map((ponto) => (ponto.derivado ? `${DERIVADOS[ponto.derivado.tipo].nome} ${onde(ponto)}` : onde(ponto)));
+  const respostas = pontos.filter((ponto) => ponto.papel === "resposta").map((ponto) => {
+    const { nome, artigo } = ponto.derivado ? DERIVADOS[ponto.derivado.tipo] : { nome: noPoligono.has(ponto.id) ? "vértice" : "ponto", artigo: "o" as const };
+    return `${artigo} ${nome} ${onde(ponto)}`;
+  });
+  const procurados = pontos.filter((ponto) => ponto.papel === "procurado").map((ponto) => `o ${noPoligono.has(ponto.id) ? "vértice" : "ponto"} procurado ${ponto.id}`);
+  const cabeca = visual.tipo === "plano" ? "Plano cartesiano" : `Reta numérica de ${numeroParaTela(visual.de)} a ${numeroParaTela(visual.ate)}`;
+  const inteira = `${cabeca} com ${lista([...dados, ...especiais, ...respostas, ...procurados])}.`;
+  if (inteira.length <= TAMANHO_MAXIMO_DA_DESCRICAO) return inteira;
+  return `${cabeca} com ${pontos.length} pontos${respostas.length > 0 ? `, entre eles ${lista(respostas)}` : ""}.`;
+}
+
+/**
+ * A figura com a descrição da resposta, quando ela traz um ponto `resposta` (o último passo da resolução, o retorno de quem acertou):
+ * o `alt` passa a ser a frase montada dos dados. Figura sem resposta (um passo do meio, o enunciado) volta como está, com o `alt` dela.
+ */
+export function comDescricaoDaResposta<V extends VisualFigura>(visual: V): V {
+  return (visual.pontos ?? []).some((ponto) => ponto.papel === "resposta") ? { ...visual, alt: descricaoDaFigura(visual) } : visual;
+}

@@ -1,0 +1,105 @@
+{
+  "descricao": "O exercício da captura do dono: abscissas 3 e 5 e baricentro 4, qual é a abscissa de C? Pede a reta numérica (o Designer o desenhou assim), com C fora da reta, só na legenda 'C = ?'. O exemplo resolvido usa outros números (2, 6 e 5 → 7).",
+  "resposta": { "valor": 4 },
+  "licao": {
+    "titulo": "Abscissas e o baricentro",
+    "objetivo": "Achar a abscissa que falta de um vértice a partir da abscissa do baricentro.",
+    "conceito": "A abscissa do baricentro é a média das abscissas dos três vértices: $x_G = (x_A + x_B + x_C) / 3$. Conhecendo duas abscissas e a do baricentro, a terceira sai por conta.",
+    "exemplo": "Com $x_A = 2$, $x_B = 6$ e $x_G = 5$: $3 · 5 = 2 + 6 + x_C$, então $x_C = 15 − 2 − 6 = 7$.",
+    "origem": "Conteúdo gerado pelo Studoo",
+    "visuais": [
+      { "tipo": "formula", "latex": "x_G = \\frac{x_A + x_B + x_C}{3}", "alt": "Fórmula do baricentro" },
+      {
+        "tipo": "reta_numerica",
+        "de": 0,
+        "ate": 8,
+        "pontos": [
+          { "id": "A", "papel": "dado", "valor": 3 },
+          { "id": "B", "papel": "dado", "valor": 5 },
+          { "id": "C", "papel": "procurado", "valor": 4 },
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
+        ],
+        "alt": "Reta numérica com A em 3, B em 5 e o baricentro G em 4; C é o ponto procurado."
+      }
+    ],
+    "exercicio": {
+      "tipo": "multipla_escolha",
+      "enunciado": "Três vértices têm abscissas $x_A = 3$, $x_B = 5$ e $x_C$. A abscissa do baricentro é 4. Qual é $x_C$?",
+      "opcoes": [
+        { "id": "a", "texto": "2" },
+        { "id": "b", "texto": "6" },
+        { "id": "c", "texto": "4" }
+      ],
+      "gabarito": ["c"],
+      "feedbackCorreto": "Isso! $3 · 4 = 3 + 5 + x_C$, então $x_C = 12 − 8 = 4$.",
+      "feedbackIncorreto": "Multiplique a abscissa do baricentro por 3 e subtraia as outras duas: $x_C = 3 · 4 − 3 − 5$.",
+      "visual": {
+        "tipo": "reta_numerica",
+        "de": 0,
+        "ate": 8,
+        "pontos": [
+          { "id": "A", "papel": "dado", "valor": 3 },
+          { "id": "B", "papel": "dado", "valor": 5 },
+          { "id": "C", "papel": "procurado", "valor": 4 },
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
+        ],
+        "alt": "Reta numérica com A em 3, B em 5 e o baricentro G em 4; C é o ponto procurado."
+      }
+    },
+    "resolucao": {
+      "problema": "Na reta, A tem abscissa 2, B tem abscissa 6 e o baricentro G tem abscissa 5. Qual é a abscissa de C?",
+      "visual": {
+        "tipo": "reta_numerica",
+        "de": 0,
+        "ate": 9,
+        "pontos": [
+          { "id": "A", "papel": "dado", "valor": 2 },
+          { "id": "B", "papel": "dado", "valor": 6 },
+          { "id": "C", "papel": "procurado", "valor": 7 },
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
+        ],
+        "alt": "Reta numérica com A em 2, B em 6 e o baricentro G em 5; C é o ponto procurado."
+      },
+      "passos": [
+        {
+          "nome": "A fórmula",
+          "texto": "A abscissa do baricentro é a média das abscissas dos vértices.",
+          "formula": "x_G = \\foco{\\frac{x_A + x_B + x_C}{3}}"
+        },
+        {
+          "nome": "Troque os valores",
+          "texto": "Coloque $x_G = 5$, $x_A = 2$ e $x_B = 6$ na fórmula.",
+          "formula": "5 = \\frac{2 + 6 + \\procurado{x_C}}{3}"
+        },
+        {
+          "nome": "Multiplique por 3",
+          "texto": "Multiplique os dois lados por 3 para tirar o denominador.",
+          "formula": "\\foco{15} = 2 + 6 + x_C",
+          "tentativa": {
+            "pergunta": "Quanto dá 3 × 5?",
+            "opcoes": [
+              { "texto": "15", "correta": true, "porque": "Multiplicar os dois lados por 3 leva 5 a 3 × 5 = 15." },
+              { "texto": "8", "correta": false, "porque": "8 é a soma de $x_A$ e $x_B$, e não o resultado de multiplicar por 3." },
+              { "texto": "5", "correta": false, "porque": "O 5 é a abscissa do baricentro: falta multiplicar por 3." }
+            ]
+          }
+        },
+        {
+          "nome": "A abscissa de C",
+          "texto": "Isole $x_C$: $15 − 2 − 6 = 7$.",
+          "formula": "x_C = 15 - 2 - 6 = \\resposta{7}",
+          "visual": {
+            "tipo": "reta_numerica",
+            "pontos": [
+              { "id": "A", "papel": "dado", "valor": 2 },
+              { "id": "B", "papel": "dado", "valor": 6 },
+              { "id": "C", "papel": "resposta", "valor": 7 },
+              { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
+            ],
+            "alt": "Reta numérica com A em 2, B em 6, C em 7 e o baricentro G em 5."
+          }
+        }
+      ]
+    }
+  }
+}

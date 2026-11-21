@@ -146,6 +146,8 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
       formatarTempoVoz: (s) => `00:${String(s).padStart(2, '0')}`,
       prepararExplicacaoParaAvaliacao: (t) => t,
       textoErroVozAoVivo: () => 'erro',
+      // A fala da fórmula marcada (P32): aqui, o próprio texto (a ponte do teste não tem fórmula).
+      falarTextoComFormulas: (t) => t,
     },
     '../contratos/cliente-web': { clienteStudooWeb: cliente },
     '../mensagens/pt-BR': { mensagens },
@@ -183,6 +185,8 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     './foco': { focoVisivel: () => true },
     // Cartão de opção de múltipla escolha, o mesmo da aula (o desafio da ponte usa ele): componente de apresentação.
     './opcao': { Opcao: 'Opcao', letras: ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'] },
+    // O texto com fórmula em linha (a ponte desenha a fórmula marcada): componente de apresentação.
+    './texto-com-formulas': { TextoComFormulas: 'TextoComFormulas' },
     // Cenas do app (ponte, Stu aluno, ondas, caderno, página do material): componentes de apresentação, sem handlers.
     './estudio-cenas': {
       FaixaDaPonte: 'FaixaDaPonte', SeloDaPonte: 'SeloDaPonte', StuAluno: 'StuAluno', EtapasDoEnsino: 'EtapasDoEnsino', OndasDoVolume: 'OndasDoVolume',
@@ -301,6 +305,8 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     if (Array.isArray(no)) return no.map(conteudo).join(' ');
     if (typeof no === 'string') return no;
     if (!no || typeof no !== 'object') return '';
+    // O texto com fórmula em linha (TextoComFormulas) leva o texto na prop `texto`, não nos filhos.
+    if (typeof no.props?.texto === 'string') return [no.props.texto, conteudo(no.props?.children)].join(' ');
     return conteudo(no.props?.children);
   }
   render();

@@ -19,6 +19,7 @@ import {
   setAudioModeAsync,
 } from 'expo-audio';
 import {
+  falarTextoComFormulas,
   ErroStudoo,
   LIMITES_ESTUDIO,
   estadoInicialVozAoVivo,
@@ -32,6 +33,7 @@ import {
   type PropostaPlano,
   type ProvedorIa,
 } from '@studoo/contratos';
+import { TextoComFormulas } from './texto-com-formulas';
 import { Botao, Campo, estilos, SeloDemonstracao, LinhaAbrir, useMovimentoReduzido } from './interface';
 import { Opcao, letras } from './opcao';
 import { CadernoDoStu, EtapasDoEnsino, FaixaDaPonte, OndasDoVolume, PaginaDoMaterial, SeloDaPonte, StuAluno } from './estudio-cenas';
@@ -60,6 +62,10 @@ function Card({ children }: { children: ReactNode }) {
 // .estudio-card p: entrelinha de 1,6.
 function T({ children }: { children: ReactNode }) {
   return <Text style={[estilos.texto, s.paragrafo]}>{children}</Text>;
+}
+/** Um parágrafo de conteúdo da lição (a ponte): a fórmula marcada ($…$) desenhada em linha e falada pela árvore, nunca crua. */
+function TF({ texto }: { texto: string }) {
+  return <TextoComFormulas texto={texto} estilo={[estilos.texto, s.paragrafo]} />;
 }
 function H({ children }: { children: ReactNode }) {
   return (
@@ -807,25 +813,25 @@ export function ApoioDaLicao({
               <>
                 {/* "Ponte construída!" fica só na linha do indicador (d29947f); o título do cartão é o que fazer agora. */}
                 <Text ref={tituloPassoPonte} testID="ponte-vencida" accessible accessibilityRole="header" accessibilityLiveRegion="polite" style={s.pontePassoTitulo}>{m.ponteVencida}</Text>
-                {!!retorno && <Text testID="retorno-vitoria" style={[estilos.texto, { color: cores.sucesso, fontWeight: '800' }]}>{retorno}</Text>}
+                {!!retorno && <TextoComFormulas testID="retorno-vitoria" texto={retorno} estilo={[estilos.texto, { color: cores.sucesso, fontWeight: '800' }]} />}
               </>
             ) : revendo ? (
               <>
                 <Text ref={tituloPassoPonte} accessible accessibilityRole="header" style={s.pontePassoTitulo}>{m.pontePassoExplicacao}</Text>
-                <T>{ponte.motivo}</T>
-                {conceitoDaPonte && <T>{conceitoDaPonte}</T>}
-                <View style={s.exemplo}><Text style={[estilos.texto, s.exemploTexto]}>{ponte.exemplo}</Text></View>
+                <TF texto={ponte.motivo} />
+                {conceitoDaPonte && <TF texto={conceitoDaPonte} />}
+                <View style={s.exemplo}><TextoComFormulas texto={ponte.exemplo} estilo={[estilos.texto, s.exemploTexto]} /></View>
               </>
             ) : etapaPonte === 1 ? (
               <>
                 <Text ref={tituloPassoPonte} accessible accessibilityRole="header" style={s.pontePassoTitulo}>{m.pontePassoExplicacao}</Text>
-                <T>{ponte.motivo}</T>
-                {conceitoDaPonte && <T>{conceitoDaPonte}</T>}
+                <TF texto={ponte.motivo} />
+                {conceitoDaPonte && <TF texto={conceitoDaPonte} />}
               </>
             ) : etapaPonte === 2 ? (
               <>
                 <Text ref={tituloPassoPonte} accessible accessibilityRole="header" style={s.pontePassoTitulo}>{m.pontePassoExemplo}</Text>
-                <View ref={exemploPonte} accessible style={s.exemplo}><Text style={[estilos.texto, s.exemploTexto]}>{ponte.exemplo}</Text></View>
+                <View ref={exemploPonte} accessible accessibilityLabel={falarTextoComFormulas(ponte.exemplo)} style={s.exemplo}><TextoComFormulas texto={ponte.exemplo} estilo={[estilos.texto, s.exemploTexto]} /></View>
               </>
             ) : (
               <>
@@ -834,15 +840,15 @@ export function ApoioDaLicao({
                   estilo={{ alignSelf: 'flex-start' }} />
                 {reverPonte && (
                   <View testID="ponte-revisao" style={s.ponteRevisao}>
-                    <T>{ponte.motivo}</T>
-                    {conceitoDaPonte && <T>{conceitoDaPonte}</T>}
-                    <View style={s.exemplo}><Text style={[estilos.texto, s.exemploTexto]}>{ponte.exemplo}</Text></View>
+                    <TF texto={ponte.motivo} />
+                    {conceitoDaPonte && <TF texto={conceitoDaPonte} />}
+                    <View style={s.exemplo}><TextoComFormulas texto={ponte.exemplo} estilo={[estilos.texto, s.exemploTexto]} /></View>
                   </View>
                 )}
                 <View style={s.desafio}>
-                  <Text ref={desafioPonte} accessible style={s.perguntaDesafio}>{ponte.exercicio.enunciado}</Text>
+                  <TextoComFormulas referencia={desafioPonte} accessible texto={ponte.exercicio.enunciado} estilo={s.perguntaDesafio} />
                   {ponte.exercicio.tipo === 'multipla_escolha' && (
-                    <View accessibilityRole="radiogroup" accessibilityLabel={ponte.exercicio.enunciado} style={s.opcoesDesafio}>
+                    <View accessibilityRole="radiogroup" accessibilityLabel={falarTextoComFormulas(ponte.exercicio.enunciado)} style={s.opcoesDesafio}>
                       {ponte.exercicio.opcoes.map((o, posicao) => {
                         const conferida = resultadoPonte?.id === o.id ? resultadoPonte : null;
                         return (
@@ -859,14 +865,13 @@ export function ApoioDaLicao({
                     </View>
                   )}
                   {!!retorno && (
-                    <Text testID="retorno-ponte" accessibilityLiveRegion="polite" style={[estilos.texto, s.paragrafo, resultadoPonte && !resultadoPonte.correta && s.retornoPonte]}
+                    <TextoComFormulas testID="retorno-ponte" accessibilityLiveRegion="polite" texto={retorno}
+                      estilo={[estilos.texto, s.paragrafo, resultadoPonte && !resultadoPonte.correta && s.retornoPonte]}
                       onLayout={(evento) => {
                         if (retornoRolado.current === retorno) return;
                         retornoRolado.current = retorno;
                         aoMostrarRetornoPonte?.(cartaoPonteY.current + evento.nativeEvent.layout.y);
-                      }}>
-                      {retorno}
-                    </Text>
+                      }} />
                   )}
                 </View>
               </>

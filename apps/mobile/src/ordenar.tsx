@@ -5,7 +5,9 @@ import {
 } from 'react-native';
 import { GestureDetector, GestureHandlerRootView, usePanGesture } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { falarTextoComFormulas } from '@studoo/contratos';
 import { focoVisivel } from './foco';
+import { TextoComFormulas } from './texto-com-formulas';
 import { Icone } from './icone';
 import { RolagemDaTela, estilos } from './interface';
 import { mensagens } from './mensagens';
@@ -72,6 +74,8 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
   const total = ordem.length;
   const inativo = desativado || Boolean(certos);
   const textoDe = (id: string) => itens.find((item) => item.id === id)?.texto ?? '';
+  /** O que o leitor de tela ouve de um item: a fórmula marcada lida pela árvore, nunca o cifrão (P32). */
+  const falaDe = (id: string) => falarTextoComFormulas(textoDe(id));
 
   const [escolhido, setEscolhido] = useState<string | null>(null);
   const [previa, setPrevia] = useState<string[] | null>(null);
@@ -118,7 +122,7 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
     if (escolhido === null) {
       setEscolhido(id);
       void tocaSons.tocarEfeito('toque_opcao');
-      anunciar(t.avisoEscolhido(textoDe(id)));
+      anunciar(t.avisoEscolhido(falaDe(id)));
       return;
     }
     if (escolhido === id) {
@@ -129,7 +133,7 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
     aplicar(trocarDeLugar(ordem, escolhido, id));
     void tocaSons.tocarEfeito('ordenar_soltar');
     brilhar(escolhido, id);
-    anunciar(t.avisoTrocaram(textoDe(escolhido), textoDe(id)));
+    anunciar(t.avisoTrocaram(falaDe(escolhido), falaDe(id)));
     setEscolhido(null);
   }
 
@@ -143,7 +147,7 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
     aplicar(nova);
     void tocaSons.tocarEfeito('ordenar_soltar');
     brilhar(id);
-    anunciar(t.avisoPosicao(textoDe(id), nova.indexOf(id) + 1, total));
+    anunciar(t.avisoPosicao(falaDe(id), nova.indexOf(id) + 1, total));
   }
 
   /** As caixas de uma ordem, relativas ao topo da lista: cada cartão começa depois das alturas e dos vãos dos anteriores. */
@@ -245,7 +249,7 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
       if (final.join(',') === atual.inicio.join(',')) return;
       aplicar(final);
       if (reduzir) brilhar(atual.id);
-      anunciar(t.avisoPosicao(textoDe(atual.id), final.indexOf(atual.id) + 1, total));
+      anunciar(t.avisoPosicao(falaDe(atual.id), final.indexOf(atual.id) + 1, total));
     };
     if (reduzir) {
       terminar();
@@ -378,7 +382,8 @@ function CartaoDaOrdem({ id, texto, posicao, total, estado, travado, escondido, 
     return () => animacao.stop();
   }, [estado, reduzir, subida]);
 
-  const rotulo = travado ? t.travadoRotulo(texto, posicao) : t.cartaoRotulo(posicao, total, texto);
+  const falado = falarTextoComFormulas(texto);
+  const rotulo = travado ? t.travadoRotulo(falado, posicao) : t.cartaoRotulo(posicao, total, falado);
   const degrau = estado === 'escolhido' ? 6 : 4;
   const corDegrau = estado === 'escolhido' ? cores.acaoEscura : estado === 'certo' ? COR.certoDegrau : estado === 'errado' ? COR.erradoDegrau : COR.borda;
   const tocavel = podeArrastar;
@@ -453,7 +458,7 @@ function Face({ texto, posicao, estado, brilho = 0, reduzir = false, arrastando 
       <View style={[estilosOrdenar.numero, numero]}>
         <Text style={[estilosOrdenar.numeroTexto, numeroBranco && { color: cores.fundo }]}>{posicao}</Text>
       </View>
-      <Text numberOfLines={3} style={estilosOrdenar.texto}>{texto}</Text>
+      <TextoComFormulas numberOfLines={3} texto={texto} estilo={estilosOrdenar.texto} />
       {estado === 'certo' ? (
         <View style={estilosOrdenar.alca}><Icone nome="check" tamanho={20} cor={COR.certo} traco={3} /></View>
       ) : estado === 'errado' ? (

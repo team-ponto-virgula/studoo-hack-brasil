@@ -1,4 +1,4 @@
-import { TIPOS_TRECHO, type Recurso, type TipoTrecho } from "@studoo/contratos";
+import { TIPOS_TRECHO, repararBarrasDoJson, type Recurso, type TipoTrecho } from "@studoo/contratos";
 import type { ConteudoLicao, EsqueletoPlano, ExercicioInterno } from "@/dominio/aprendizado/plano";
 import {
   LIMITES_ESQUELETO,
@@ -12,10 +12,26 @@ import {
   termosPresentes,
 } from "@/dominio/aprendizado/plano";
 import type { EventoEstrutura } from "./gerador";
+import {
+  esquemaDaResolucaoOuNula,
+  esquemaDoVisual,
+  esquemaDoVisualOuNulo,
+  instrucoesDeMatematica,
+  lerFiguraDoModelo,
+  lerResolucaoDoModelo,
+  lerVisuaisDoModelo,
+  relatoDaMatematica,
+  type RelatoDaMatematica,
+} from "./matematica";
 import { instrucoesDeOrdem } from "./ordem";
 
 export const TEMPO_ESTRUTURA_MS = 45_000;
 export const TEMPO_CONTEUDO_MS = 40_000;
+/**
+ * A lição de matemática leva fórmulas, figuras e a resolução em passos: a resposta é bem maior (de 2 a 3 vezes), e o pedido ganha prazo
+ * próprio. Fica abaixo dos 75 s do aceite para sobrar tempo ao pedido sem matemática, que é a volta quando este não fecha.
+ */
+export const TEMPO_CONTEUDO_DE_MATEMATICA_MS = 50_000;
 export const TITULO_MAXIMO = 120;
 
 /** Valida URL base: só aceita HTTPS (ou HTTP no próprio computador, para testes). */
@@ -42,11 +58,14 @@ export function aparar(texto: string, maximo: number) {
   return limpo.length <= maximo ? limpo : `${limpo.slice(0, maximo - 1).trimEnd()}…`;
 }
 
-/** Tenta extrair JSON mesmo se o modelo envolver em cercas de markdown. */
-export function analisarJson(bruto: string): unknown {
+/**
+ * Tenta extrair JSON mesmo se o modelo envolver em cercas de markdown. Com `comMatematica`, a barra do LaTeX que o modelo não dobrou
+ * (`\frac`, `\div`, `\resposta`) é consertada antes do parse: sem isso, `\frac` vira uma quebra de página e `\div`, um erro.
+ */
+export function analisarJson(bruto: string, comMatematica = false): unknown {
   const limpo = bruto.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
   if (!limpo) throw new Error("json_vazio");
-  return JSON.parse(limpo);
+  return JSON.parse(comMatematica ? repararBarrasDoJson(limpo) : limpo);
 }
 
 /** Uma linha JSON do modelo, aceitando cercas de código, vírgulas no fim e marcadores de lista. */
@@ -212,6 +231,28 @@ export const esquemaDaLicao = objetoEstrito({
   exercicios: { type: "array", items: esquemaDoExercicio },
 });
 
+/**
+ * O esquema da lição de matemática: o de sempre, mais `visuais` e `resolucao` (antes dos exercícios, para o modelo decidir a figura e o
+ * exemplo resolvido antes de escrever as perguntas) e `visual` em cada exercício (logo depois do enunciado). Mesmos campos obrigatórios,
+ * `null` onde não se aplica. As figuras vêm como dados; quem desenha é o Studoo.
+ */
+const { exercicios: _exercicios, ...camposDaLicao } = esquemaDaLicao.properties as Record<string, unknown>;
+const { tipo: _tipo, enunciado: _enunciado, ...camposDoExercicio } = esquemaDoExercicio.properties as Record<string, unknown>;
+export const esquemaDaLicaoDeMatematica = objetoEstrito({
+  ...camposDaLicao,
+  visuais: { type: ["array", "null"], items: esquemaDoVisual },
+  resolucao: esquemaDaResolucaoOuNula,
+  exercicios: {
+    type: "array",
+    items: objetoEstrito({
+      tipo: (esquemaDoExercicio.properties as Record<string, unknown>).tipo,
+      enunciado: textoJson,
+      visual: esquemaDoVisualOuNulo,
+      ...camposDoExercicio,
+    }),
+  },
+});
+
 export const instrucoesDaLicao = [
   "Você é a IA do Studoo e escreve uma lição curta de uma trilha de estudo, em português do Brasil, para alguém que está aprendendo. O assunto pode ser qualquer coisa: idioma, música, culinária, história, ciência, esporte, programação.",
   "A lição tem: objetivo (uma frase que começa com um verbo), conceito (de 2 a 4 frases simples, com um único conceito novo), exemplo (um caso concreto e resolvido) e 2 ou 3 exercícios com feedback.",
@@ -237,6 +278,9 @@ export const instrucoesDaLicao = [
   "- Se o título da lição começar com \"Revisão\", misture conceitos das lições anteriores.",
   "Não use markdown nem emojis. Não peça dados pessoais. Nada de práticas perigosas.",
 ].join("\n");
+
+/** As instruções da lição de matemática: as de sempre e o bloco de notação, figuras e resolução. */
+export const instrucoesDaLicaoDeMatematica = `${instrucoesDaLicao}\n${instrucoesDeMatematica}`;
 
 export function promptDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: number): string {
   const titulos = esqueleto.fluxos.flatMap((trecho) => trecho.licoes.map(({ titulo }) => titulo));
@@ -333,11 +377,17 @@ const TIPOS_EXERCICIO = ["multipla_escolha", "lacuna", "ordenar", "associar", "v
  * O exercício normalizado e válido, ou o motivo de não fechar, sem conteúdo: `<tipo>:<campo>` (como `ordenar:itens`),
  * `<tipo>:validacao` (normalizou, mas não passa nas regras do domínio), `tipo` (tipo desconhecido) ou `formato`.
  */
-function lerExercicio(bruto: unknown): { exercicio: ExercicioInterno | null; motivo?: string } {
+function lerExercicio(bruto: unknown): { exercicio: ExercicioInterno | null; motivo?: string; figura?: { enviada: boolean; aceita: boolean; motivo?: string } } {
   const lido = montarExercicio(bruto);
   if (typeof lido === "string") return { exercicio: null, motivo: lido };
   if (!exercicioValido(lido)) return { exercicio: null, motivo: `${(lido as ExercicioInterno).tipo}:validacao` };
-  return { exercicio: lido };
+  // A figura do enunciado (matemática, spec 15) se valida sozinha: a que não vale some, e o exercício fica como sempre foi.
+  const figura = lerFiguraDoModelo((bruto as { visual?: unknown }).visual);
+  if (!figura.enviada) return { exercicio: lido };
+  return {
+    exercicio: figura.figura ? { ...lido, visual: figura.figura } : lido,
+    figura: { enviada: true, aceita: figura.figura !== undefined, ...(figura.motivo ? { motivo: figura.motivo } : {}) },
+  };
 }
 
 function montarExercicio(bruto: unknown): ExercicioInterno | string {
@@ -455,6 +505,8 @@ export type LicaoNormalizada = {
   descartados: string[];
   /** O tipo do extra que virou principal quando o principal não fechou. */
   promovido?: string;
+  /** O que a matemática da lição deu (visuais, figuras, resolução). Só quando o modelo mandou algo disso. */
+  matematica?: RelatoDaMatematica;
 };
 
 /**
@@ -479,6 +531,23 @@ export function normalizarLicao(bruto: unknown, origem: string): LicaoNormalizad
   if (validos.length === 0) return { conteudo: null, motivo: descartados.join(";") || "principal:ausente", descartados: [] };
   const [principal, ...extras] = validos;
   const promovido = lidos[0]?.exercicio ? undefined : principal.tipo;
+
+  // Matemática (spec 15): os visuais da lição, a resolução "Resolva comigo" e a figura do enunciado de cada exercício que fechou. Cada
+  // coisa se valida sozinha e a que não vale some (o motivo vai no relato; no registro, só o código, sem conteúdo): a lição fica como
+  // ficaria sem ela. Sem nada disso no que o modelo mandou, a lição sai exatamente como sempre saiu.
+  const visuaisLidos = lerVisuaisDoModelo(dado.visuais);
+  const resolucaoLida = lerResolucaoDoModelo(dado.resolucao);
+  const figuras = lidos.flatMap((lido, indice) => (lido.exercicio && lido.figura ? [{ onde: rotulo(indice), ...lido.figura }] : []));
+  const matematica: Pick<ConteudoLicao, "visuais" | "resolucao"> = {
+    ...(visuaisLidos.visuais ? { visuais: visuaisLidos.visuais } : {}),
+    ...(resolucaoLida.resolucao ? { resolucao: resolucaoLida.resolucao } : {}),
+  };
+  const relato = relatoDaMatematica(visuaisLidos, figuras, resolucaoLida);
+  if (relato) {
+    if (relato.visuais.aceitos < relato.visuais.enviados) descartados.push("visuais:recusados");
+    for (const figura of figuras) if (figura.enviada && !figura.aceita) descartados.push(`${figura.onde}:visual`);
+    if (relato.resolucao.enviada && !relato.resolucao.aceita) descartados.push("resolucao:recusada");
+  }
 
   const passos = Array.isArray(dado.passos) ? dado.passos.map((passo) => textoAte(passo, 300)).filter(Boolean).slice(0, 8) : [];
   const falas = Array.isArray(dado.falas)
@@ -561,8 +630,14 @@ export function normalizarLicao(bruto: unknown, origem: string): LicaoNormalizad
     ...(extras.length > 0 ? { extras } : {}),
     ...(pratica && praticaValida(pratica) ? { pratica } : {}),
     ...(outroJeito ? { outroJeito } : {}),
+    ...matematica,
   };
-  const resultado = (valido: ConteudoLicao): LicaoNormalizada => ({ conteudo: valido, descartados, ...(promovido ? { promovido } : {}) });
+  const resultado = (valido: ConteudoLicao): LicaoNormalizada => ({
+    conteudo: valido,
+    descartados,
+    ...(promovido ? { promovido } : {}),
+    ...(relato ? { matematica: relato } : {}),
+  });
   if (conteudoValido(conteudo)) return resultado(conteudo);
   // Se algo opcional não fechou, a lição ainda vale só com o essencial.
   const essencial: ConteudoLicao = {
@@ -572,8 +647,9 @@ export function normalizarLicao(bruto: unknown, origem: string): LicaoNormalizad
     origem,
     exercicio: principal,
     ...(extras.length > 0 ? { extras } : {}),
+    ...matematica,
   };
   if (conteudoValido(essencial)) return resultado(essencial);
-  const soPrincipal: ConteudoLicao = { objetivo: textoDe(dado.objetivo), conceito: textoDe(dado.conceito), exemplo: textoDe(dado.exemplo), origem, exercicio: principal };
+  const soPrincipal: ConteudoLicao = { objetivo: textoDe(dado.objetivo), conceito: textoDe(dado.conceito), exemplo: textoDe(dado.exemplo), origem, exercicio: principal, ...matematica };
   return conteudoValido(soPrincipal) ? resultado(soPrincipal) : { conteudo: null, motivo: "licao", descartados: [] };
 }

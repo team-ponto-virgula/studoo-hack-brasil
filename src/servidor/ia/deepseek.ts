@@ -1,9 +1,10 @@
-import type { EsqueletoPlano } from "@/dominio/aprendizado/plano";
+import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { comNovasTentativas } from "./novas-tentativas";
 import type { GeradorTrilha, MetaPlano } from "./gerador";
 import {
+  TEMPO_CONTEUDO_DE_MATEMATICA_MS,
   TEMPO_CONTEUDO_MS,
   TEMPO_ESTRUTURA_MS,
   analisarJson,
@@ -17,6 +18,7 @@ import {
   sinalComPrazo,
   validarBaseUrl,
 } from "./comum";
+import { contagensDoRelato, correcaoDaResolucao, exemploDeMatematica, instrucoesDeMatematica, licaoEhDeMatematica, motivoDaResolucao, valorDaMatematica } from "./matematica";
 
 /*
  * IA real do Studoo com a API Chat Completions da DeepSeek (POST /chat/completions), chamada por fetch, sem SDK.
@@ -210,6 +212,18 @@ const instrucoesLicaoJson = [
 ].join("\n");
 
 /**
+ * A lição de matemática: as instruções de sempre, o bloco de notação, figuras e resolução, e o exemplo json de uma lição inteira de
+ * matemática (o ponto médio, com os campos novos preenchidos e a conta conferida) no lugar do exemplo genérico.
+ */
+export const instrucoesLicaoJsonDeMatematica = [
+  instrucoesDaLicao,
+  instrucoesDeMatematica,
+  "",
+  "Formato de saída obrigatório: responda exclusivamente com um objeto json válido (sem texto fora do json), seguindo exatamente a estrutura deste exemplo json (os campos que não se aplicam levam null; a lição pode ter 2 ou 3 exercícios, de tipos variados; cada barra invertida do LaTeX é dobrada, como no exemplo):",
+  JSON.stringify(exemploDeMatematica),
+].join("\n");
+
+/**
  * Pedido curto em JSON para correção durante a aula (aberta e desempate de lacuna).
  * Tem uma segunda tentativa se vier vazio ou fora do JSON.
  */
@@ -255,6 +269,12 @@ function converterAnexosDeepSeek(anexos: unknown[]): unknown[] {
   });
 }
 
+/**
+ * Opções de um pedido JSON do Estúdio. `prazoMs` (padrão 60 s) e `tentativas` (padrão 2) limitam o tempo; `matematica` conserta, antes do
+ * parse, a barra do LaTeX que o modelo não dobrou (`\frac`, `\div`). Sem opções, o pedido é o de sempre.
+ */
+export type OpcoesDoPedidoJson = { prazoMs?: number; tentativas?: number; matematica?: boolean };
+
 /** Pedido JSON do Estúdio (reforço, ensinar Stu, leitura de material e geração de trilha a partir do material). */
 export async function pedirJsonDeepSeek(
   config: ConfiguracaoDeepSeek,
@@ -263,6 +283,7 @@ export async function pedirJsonDeepSeek(
   instrucoes: string,
   dados: unknown,
   anexos: unknown[] = [],
+  opcoes: OpcoesDoPedidoJson = {},
 ): Promise<unknown> {
   if (anexos.length > 0 && !modeloDeepSeekSuportaImagem(config.modelo)) {
     registrar("ia_indisponivel", { motivo: "sem_visao" });
@@ -273,7 +294,7 @@ export async function pedirJsonDeepSeek(
     ? [{ type: "text", text: JSON.stringify(dados) }, ...converterAnexosDeepSeek(anexos)]
     : JSON.stringify(dados);
 
-  for (let tentativa = 0; tentativa < 2; tentativa += 1) {
+  for (let tentativa = 0; tentativa < (opcoes.tentativas ?? 2); tentativa += 1) {
     try {
       const resposta = await pedir(config, {
         messages: [
@@ -282,13 +303,13 @@ export async function pedirJsonDeepSeek(
         ],
         response_format: { type: "json_object" },
         max_tokens: 8192,
-      }, AbortSignal.timeout(60_000));
+      }, AbortSignal.timeout(opcoes.prazoMs ?? 60_000));
       const texto = textoDaRespostaChat(await resposta.json());
       if (!texto.trim()) {
         registrar("ia_indisponivel", { motivo: "vazio", tentativa });
         continue;
       }
-      return analisarJson(texto);
+      return analisarJson(texto, opcoes.matematica ?? false);
     } catch (erro) {
       if (erro instanceof FalhaApi) throw erro;
       registrar("ia_indisponivel", { motivo: "formato", tentativa });
@@ -350,15 +371,31 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
 
     async gerarConteudo(esqueleto, fluxo, licao, sinal) {
       if (esqueleto.gerador !== GERADOR_DEEPSEEK || !esqueleto.fluxos[fluxo]?.licoes[licao]) throw new FalhaApi("proposta_invalida");
+      // Lição de matemática: o primeiro pedido leva fórmulas, figuras e resolução. Se ele não fecha (prazo, erro do provedor, vazio, formato),
+      // a segunda tentativa volta ao pedido de sempre, sem matemática: a matemática nunca derruba a lição, e o aceite não falha por ela.
+      let matematica = licaoEhDeMatematica(esqueleto, fluxo, licao);
+      const desligarMatematica = (motivo: string) => {
+        if (!matematica) return;
+        registrar("matematica_desligada", { motivo });
+        matematica = false;
+      };
+      // A primeira lição válida cuja resolução foi recusada (estrutura, formato ou conta): a segunda tentativa, uma só, pede a lição de novo com
+      // o motivo e só a substitui se for melhor. Qualquer falha dela (prazo, erro, vazio, formato) devolve esta: nunca pior do que a primeira.
+      let reserva: { conteudo: ConteudoLicao; valor: number } | undefined;
+      const usarReserva = (motivo: string): ConteudoLicao | undefined => {
+        if (!reserva) return undefined;
+        registrar("resolucao_nova_tentativa", { aceita: false, motivo });
+        return reserva.conteudo;
+      };
       // Na segunda tentativa, o pedido diz o que veio fora do formato (em vez de repetir igual e receber o mesmo erro).
       let correcao = "";
       for (let tentativa = 0; tentativa < 2; tentativa += 1) {
-        const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, TEMPO_CONTEUDO_MS);
+        const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, matematica ? TEMPO_CONTEUDO_DE_MATEMATICA_MS : TEMPO_CONTEUDO_MS);
         let resposta: Response;
         try {
           resposta = await pedir(config, {
             messages: [
-              { role: "system", content: instrucoesLicaoJson },
+              { role: "system", content: matematica ? instrucoesLicaoJsonDeMatematica : instrucoesLicaoJson },
               { role: "user", content: promptDaLicao(esqueleto, fluxo, licao) },
               ...(correcao ? [{ role: "user", content: correcao }] : []),
             ],
@@ -366,7 +403,14 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
             max_tokens: 8192,
           }, comPrazo);
         } catch (erro) {
-          if (sinal.aborted || estourou()) throw new FalhaApi("ia_indisponivel");
+          const guardada = usarReserva("falhou");
+          if (guardada) return guardada;
+          if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
+          if (matematica && tentativa === 0) {
+            desligarMatematica(estourou() ? "tempo" : erro instanceof FalhaApi ? "http" : "rede");
+            continue;
+          }
+          if (estourou()) throw new FalhaApi("ia_indisponivel");
           if (erro instanceof FalhaApi) throw erro; // HTTP: já registrado com o status em `pedir`.
           registrar("ia_indisponivel", { motivo: "rede", tentativa });
           continue;
@@ -375,20 +419,34 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
         try {
           texto = textoDaRespostaChat(await resposta.json());
         } catch {
-          if (sinal.aborted || estourou()) throw new FalhaApi("ia_indisponivel");
+          const guardada = usarReserva("rede");
+          if (guardada) return guardada;
+          if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
+          if (matematica && tentativa === 0) {
+            desligarMatematica(estourou() ? "tempo" : "rede");
+            continue;
+          }
+          if (estourou()) throw new FalhaApi("ia_indisponivel");
           registrar("ia_indisponivel", { motivo: "rede", tentativa });
           continue;
         }
         if (!texto.trim()) {
+          const guardada = usarReserva("vazio");
+          if (guardada) return guardada;
           registrar("ia_indisponivel", { motivo: "vazio", tentativa });
+          desligarMatematica("vazio");
           continue;
         }
         let bruto: unknown;
         try {
-          bruto = analisarJson(texto);
+          // Na matemática, a barra do LaTeX que o modelo não dobrou (`\frac`, `\div`) é consertada antes do parse.
+          bruto = analisarJson(texto, matematica);
         } catch {
+          const guardada = usarReserva("formato");
+          if (guardada) return guardada;
           registrar("ia_indisponivel", { motivo: "formato", detalhe: "json", tentativa });
           correcao = correcaoDoFormato("json");
+          desligarMatematica("formato");
           continue;
         }
         const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem));
@@ -396,11 +454,28 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
           if (lida.descartados.length > 0) {
             registrar("licao_ajustada", { detalhe: lida.descartados.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
           }
+          // O que a matemática deu, só em contagens (os motivos de recusa citam fórmulas: não vão ao registro).
+          if (lida.matematica) registrar("licao_matematica", { ...contagensDoRelato(lida.matematica), tentativa });
+          if (reserva) {
+            const melhor = valorDaMatematica(lida.matematica) > reserva.valor;
+            registrar("resolucao_nova_tentativa", { aceita: lida.matematica?.resolucao.aceita === true, melhor });
+            return melhor ? lida.conteudo : reserva.conteudo;
+          }
+          const motivo = matematica && tentativa === 0 ? motivoDaResolucao(lida.matematica) : undefined;
+          if (motivo) {
+            reserva = { conteudo: lida.conteudo, valor: valorDaMatematica(lida.matematica) };
+            correcao = correcaoDaResolucao(motivo);
+            continue;
+          }
           return lida.conteudo;
         }
+        const guardada = usarReserva("formato");
+        if (guardada) return guardada;
         registrar("ia_indisponivel", { motivo: "formato", detalhe: lida.motivo, tentativa });
         correcao = correcaoDoFormato(lida.motivo ?? "formato");
+        desligarMatematica("formato");
       }
+      if (reserva) return reserva.conteudo;
       throw new FalhaApi("ia_indisponivel");
     },
   };

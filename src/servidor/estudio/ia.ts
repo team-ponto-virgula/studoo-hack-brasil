@@ -1,8 +1,16 @@
 import { embaralharComSemente } from '@studoo/contratos';
 import { FalhaApi } from '../acesso/http';
-import { configuracaoDeepSeek, pedirJsonDeepSeek } from '../ia/deepseek';
+import { configuracaoDeepSeek, pedirJsonDeepSeek, type OpcoesDoPedidoJson } from '../ia/deepseek';
 import { configuracaoOpenAi } from '../ia/openai';
 import { comNovasTentativas } from '../ia/novas-tentativas';
+import {
+  lerFiguraDoModelo,
+  lerResolucaoDoModelo,
+  lerVisuaisDoModelo,
+  relatoDaMatematica,
+  type NovaTentativaDaResolucao,
+  type RelatoDaMatematica,
+} from '../ia/matematica';
 
 export const objeto = (properties: Record<string, unknown>) => ({
   type: 'object',
@@ -71,24 +79,28 @@ export function licaoGeradaValida(v: unknown): v is LicaoGerada {
     x.trecho.length <= 400
   );
 }
-/** Instruções do sistema e dados não confiáveis ficam em mensagens distintas. Sem tools, URLs ou ações externas. */
+/**
+ * Instruções do sistema e dados não confiáveis ficam em mensagens distintas. Sem tools, URLs ou ações externas. `opcoes` (prazo, número
+ * de tentativas da DeepSeek, conserto das barras do LaTeX) só vale para os pedidos de matemática; sem ela, o pedido é o de sempre.
+ */
 export async function pedirJson(
   nome: string,
   schema: unknown,
   instrucoes: string,
   dados: unknown,
   anexos: unknown[] = [],
+  opcoes: OpcoesDoPedidoJson = {},
 ): Promise<unknown> {
   if (process.env.IA === 'deepseek') {
     const config = configuracaoDeepSeek();
     if (!config) throw new FalhaApi('ia_indisponivel');
-    return pedirJsonDeepSeek(config, nome, schema, instrucoes, dados, anexos);
+    return pedirJsonDeepSeek(config, nome, schema, instrucoes, dados, anexos, opcoes);
   }
   const config = configuracaoOpenAi();
   if (process.env.IA !== 'openai' || !config)
     throw new FalhaApi('ia_indisponivel');
   try {
-    const sinal = AbortSignal.timeout(60_000);
+    const sinal = AbortSignal.timeout(opcoes.prazoMs ?? 60_000);
     const resposta = await comNovasTentativas(() => fetch(`${config.base}/responses`, {
       method: 'POST',
       redirect: 'error',
@@ -135,23 +147,46 @@ export async function pedirJson(
     throw new FalhaApi('ia_indisponivel');
   }
 }
-export function conteudoDaGerada(x: LicaoGerada, origem: string) {
+/** As figuras e o exemplo resolvido de uma lição de material de matemática, como o modelo os devolveu (ainda sem validar). */
+export type FigurasDaLicao = { visuais?: unknown; visual?: unknown; resolucao?: unknown; novaTentativa?: NovaTentativaDaResolucao };
+
+/**
+ * O conteúdo da lição e, quando há `figuras` (material de matemática, spec 15), o que a matemática deu: cada figura e a resolução se
+ * validam sozinhas, e a que não vale some (a lição fica como ficaria sem ela). Sem `figuras`, é exatamente a lição de sempre.
+ */
+export function conteudoDaGeradaComRelato(x: LicaoGerada, origem: string, figuras?: FigurasDaLicao) {
   // Modelos tendem a pôr a certa em primeiro: a ordem mostrada gira por uma semente do enunciado (sempre a mesma para a
   // mesma pergunta), e cada opção guarda como id o índice que o modelo deu, que é o que o gabarito aponta.
   const semente = [...x.pergunta].reduce((soma, letra) => Math.imul(soma ^ letra.codePointAt(0)!, 16777619) >>> 0, 2166136261);
   const ordem = embaralharComSemente(x.opcoes.map((_, indice) => indice), semente);
+  const visuais = lerVisuaisDoModelo(figuras?.visuais);
+  const figura = lerFiguraDoModelo(figuras?.visual);
+  const resolucao = lerResolucaoDoModelo(figuras?.resolucao);
+  const relato: RelatoDaMatematica | undefined = figuras
+    ? relatoDaMatematica(visuais, [{ onde: 'pergunta', enviada: figura.enviada, aceita: figura.figura !== undefined, motivo: figura.motivo }], resolucao, figuras.novaTentativa)
+    : undefined;
   return {
-    objetivo: x.objetivo,
-    conceito: x.conceito,
-    exemplo: x.exemplo,
-    origem,
-    exercicio: {
-      tipo: 'multipla_escolha' as const,
-      enunciado: x.pergunta,
-      opcoes: ordem.map((indice) => ({ id: String(indice), texto: x.opcoes[indice] })),
-      gabarito: [String(x.correta)],
-      feedbackCorreto: x.feedbackCorreto,
-      feedbackIncorreto: x.feedbackIncorreto,
+    conteudo: {
+      objetivo: x.objetivo,
+      conceito: x.conceito,
+      exemplo: x.exemplo,
+      origem,
+      exercicio: {
+        tipo: 'multipla_escolha' as const,
+        enunciado: x.pergunta,
+        opcoes: ordem.map((indice) => ({ id: String(indice), texto: x.opcoes[indice] })),
+        gabarito: [String(x.correta)],
+        feedbackCorreto: x.feedbackCorreto,
+        feedbackIncorreto: x.feedbackIncorreto,
+        ...(figura.figura ? { visual: figura.figura } : {}),
+      },
+      ...(visuais.visuais ? { visuais: visuais.visuais } : {}),
+      ...(resolucao.resolucao ? { resolucao: resolucao.resolucao } : {}),
     },
+    ...(relato ? { matematica: relato } : {}),
   };
+}
+
+export function conteudoDaGerada(x: LicaoGerada, origem: string, figuras?: FigurasDaLicao) {
+  return conteudoDaGeradaComRelato(x, origem, figuras).conteudo;
 }

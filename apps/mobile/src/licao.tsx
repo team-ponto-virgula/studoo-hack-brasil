@@ -14,6 +14,9 @@ import {
   ultimoExercicio,
   type AutoAvaliacao,
   type Avaliacao,
+  falarTextoComFormulas,
+  textoSemFormulas,
+  type EscolhaNoSuaVez,
   type EtapaAula,
   type ExercicioPublico,
   type LicaoDetalhe,
@@ -38,7 +41,11 @@ import {
   VerdadeiroFalso,
   pararVoz,
 } from './aula-formatos';
+import { CONTEXTO_DO_ENUNCIADO, CONTEXTO_DO_RETORNO, DesenhoDoVisual, OPCOES_DA_FORMULA, VisuaisDaLicao } from './desenho';
+import { alturaDaFiguraNaTela, alturaMaximaDaFigura, desenhoDoVisual, temProcurado } from './desenho-svg';
 import { Confete } from './festa';
+import { useResolvaComigo } from './resolva-comigo';
+import { TextoComFormulas } from './texto-com-formulas';
 import { Ordenar } from './ordenar';
 import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron, degrauFora, quebraEquilibrada } from './interface';
@@ -189,7 +196,7 @@ function respostaLegivel(exercicio: ExercicioPublico, resposta: string): string 
  * registra a conclusão (se a confirmação expirar, a aula volta ao último exercício). O título de cada etapa e o do retorno
  * recebem o foco do leitor de tela.
  */
-export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, concluir }: {
+export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, concluir, responderSuaVez }: {
   /** O cliente do app (com `configuracaoAcesso` e `sessao`, a conversa ao vivo do Explique pode aparecer na prévia web). */
   cliente: ClienteEstudio & Pick<ClienteElegibilidadeVoz, 'configuracaoAcesso' | 'sessao'>;
   licao: LicaoDetalhe;
@@ -200,10 +207,17 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   saida?: MutableRefObject<(() => void) | null>;
   avaliar: (resposta: string, indice: number) => Promise<Avaliacao | null>;
   concluir: (comprovante: string, resumo: ResumoLicao, pratica?: AutoAvaliacao) => Promise<boolean>;
+  /** O "Sua vez" do "Resolva comigo" (spec 15): sem isto, o exemplo fica em texto. */
+  responderSuaVez?: (escolha: EscolhaNoSuaVez) => Promise<unknown>;
 }) {
   // .aula-quadro da web: respiro clamp(16px, 5vw, 28px) (19,5 px em 390, 18 em 360).
-  const { width: larguraJanela } = useWindowDimensions();
+  const { width: larguraJanela, height: alturaJanela } = useWindowDimensions();
   const respiroQuadro = { padding: Math.min(28, Math.max(16, larguraJanela * 0.05)) };
+  /**
+   * A figura do exercício: até 200 na tela em 390 × 844 (spec 15), na largura útil do quadro (janela, margens de 16 e o respiro com
+   * a borda de 2). Em tela mais baixa (iPhone SE, 667), ela encolhe na proporção da altura, para as opções começarem na primeira tela.
+   */
+  const alturaDaFigura = alturaMaximaDaFigura(larguraJanela - 32 - 2 * (respiroQuadro.padding + 2), alturaDaFiguraNaTela(alturaJanela));
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   // Como na web: as opções mudam de ordem a cada visita.
   const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
@@ -293,10 +307,29 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const tremor = useTremor(errosSeguidos);
 
   const etapa = etapas[passo];
+  /** Spec 15: com `resolucao`, a etapa Exemplo é o "Resolva comigo" (o contador de etapas não muda). */
+  const resolva = useResolvaComigo({
+    licao, responder: responderSuaVez, visivel: etapa.tipo === 'exemplo',
+    aoTerminar: () => { posicoesDasEtapas.current[passo] = posicaoRolagem.current; setPasso((atual) => atual + 1); },
+  });
   const indice = etapa.tipo === 'exercicio' ? etapa.indice : -1;
   const exercicio = indice >= 0 ? exercicios[indice] : null;
   const resposta = indice >= 0 ? respostas[indice] : '';
   const avaliacao = indice >= 0 ? avaliacoes[indice] : null;
+  /**
+   * Spec 15, seção 12: a figura do retorno se reenquadra (o procurado entra na janela), mas fica na CAIXA da figura do enunciado
+   * (a altura dela, em unidades do desenho): só a escala muda, e nem as opções nem o rodapé pulam.
+   */
+  const caixaDaFigura = useMemo(() => {
+    if (!exercicio?.visual || exercicio.visual.tipo === 'formula') return undefined;
+    const desenho = desenhoDoVisual(exercicio.visual, CONTEXTO_DO_ENUNCIADO, { alturaMaxima: alturaDaFigura });
+    return desenho && !desenho.naoCabe ? desenho.altura : undefined;
+  }, [exercicio, alturaDaFigura]);
+  /** A descrição da figura revelada, para o leitor de tela ouvir junto do retorno, numa frase só. */
+  const descricaoDoRetorno = useMemo(() => {
+    if (!avaliacao?.correta || !avaliacao.visual || !temProcurado(exercicio?.visual)) return undefined;
+    return desenhoDoVisual(avaliacao.visual, CONTEXTO_DO_RETORNO, { alturaMaxima: alturaDaFigura })?.descricao;
+  }, [avaliacao, exercicio, alturaDaFigura]);
   const ocupado = pendente !== null;
   const total = etapas.length;
   const ultima = passo === total - 1;
@@ -304,7 +337,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const andamento = revisao && exercicio ? t.revisaoAndamento : t.posicao(passo + 1, total);
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : null;
   let nomeEtapa: string = t.conceito;
-  if (etapa.tipo === 'exemplo') nomeEtapa = licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
+  if (etapa.tipo === 'exemplo') nomeEtapa = resolva.ativo ? mensagens.resolvaComigo.selo : licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
   else if (etapa.tipo === 'exercicio') {
     nomeEtapa = revisao
@@ -594,7 +627,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           <Text style={licaoEstilos.posicao}>{andamento}</Text>
         </View>
         {/* Como na web (rodada 4B): o nome da lição fica pequeno no topo; no exercício, o título é a pergunta. */}
-        <Text testID="titulo-topo" numberOfLines={1} style={licaoEstilos.tituloTopo}>{licao.titulo}</Text>
+        <Text testID="titulo-topo" numberOfLines={1} style={licaoEstilos.tituloTopo}>{textoSemFormulas(licao.titulo)}</Text>
       </View>
       {/* Spec 12: o som no alto, à direita do andamento (a folha e o botão moram em som.tsx). */}
       <BotaoSom />
@@ -604,7 +637,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   let rodape: ReactNode;
   if (avaliacao) {
     rodape = (
-      <PainelRetorno avaliacao={avaliacao} reacao={reacaoDoStu}
+      <PainelRetorno avaliacao={avaliacao} reacao={reacaoDoStu} descricaoDaFigura={descricaoDoRetorno}
         // A pílula fica acima, com as margens de -6 e -2 e o vão de 10 do rodapé.
         reservaAcima={temAbaixo && etapa.tipo === 'exercicio' && alturaDaPilula > 0 ? alturaDaPilula - 6 - 2 + 10 : 0}
         titulo={avaliacao.correta
@@ -652,6 +685,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           acao={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())} />
       </View>
     );
+  } else if (etapa.tipo === 'exemplo' && resolva.ativo) {
+    // O rodapé preso do "Resolva comigo": "Próximo passo", "Verificar", "Tentar de novo" ou "Agora é com você".
+    rodape = resolva.rodape;
   } else if (temMais) {
     // Como .botao--ler-mais da web: a seta depois do texto, girada para baixo.
     rodape = <Botao testID="ler-mais" peso="900" rotulo={t.continuarLendo} icone="seta" giroIcone="90deg" acao={lerMais} />;
@@ -755,13 +791,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         <View style={[licaoEstilos.etapa, !(passo > 0 && !revisao) && licaoEstilos.etapaNoTopo]}>
           <View style={[licaoEstilos.etapaIcone, { backgroundColor: coresDaEtapa[etapa.tipo].fundo }]}>
             {/* .aula-etapa .icone: caixa de 28 com 4 de respiro, desenho de 20. */}
-            <Icone nome={iconesDaEtapa[etapa.tipo]} tamanho={20} cor={coresDaEtapa[etapa.tipo].texto} />
+            <Icone nome={etapa.tipo === 'exemplo' && resolva.ativo ? 'lapis' : iconesDaEtapa[etapa.tipo]} tamanho={20} cor={coresDaEtapa[etapa.tipo].texto} />
           </View>
           <Text style={[licaoEstilos.etapaTexto, { color: coresDaEtapa[etapa.tipo].texto }, caixaAlta]}>{nomeEtapa}</Text>
         </View>
         {/* Rodada 4B da web: o nome da lição é o título no conceito e na prática; no exemplo, o título é "Exemplo" e, no
             exercício, a própria pergunta. O nome continua pequeno no topo. */}
-        {(etapa.tipo === 'conceito' || etapa.tipo === 'pratica') && <Titulo testID="titulo-licao" foco={passo === 0} equilibrado estilo={licaoEstilos.tituloLicao}>{licao.titulo}</Titulo>}
+        {(etapa.tipo === 'conceito' || etapa.tipo === 'pratica') && <Titulo testID="titulo-licao" foco={passo === 0} equilibrado estilo={licaoEstilos.tituloLicao}>{textoSemFormulas(licao.titulo)}</Titulo>}
         {/* Como na web: o erro (rede no Verificar, conclusão) fica no alto, em foco, e a tela sobe até ele. */}
         {/* O cartão de erro da web (3A), sem ação: na lição, a nova tentativa é o próprio botão do rodapé (Verificar, Concluir). */}
         {erro && <EstadoErro mensagem={erro} testID="erro-licao" foco />}
@@ -792,7 +828,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 <Text style={licaoEstilos.revisaoTexto}>{mensagens.trilha.revisitando}</Text>
               </View>
             )}
-            <Text style={estilos.introducao}>{licao.objetivo}</Text>
+            <TextoComFormulas texto={licao.objetivo} estilo={estilos.introducao} />
             <ExplicacaoDoStu>
               <Text accessibilityRole="header" style={licaoEstilos.balaoTitulo}>{t.explicacaoDoStu}</Text>
               <TextoComFalas texto={licao.conceito} idioma={licao.falas?.[0]?.idioma} estilo={estilos.texto} />
@@ -819,19 +855,23 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 <CartaoFonte ref={cartaoCitacao} referencia={licao.referencias[citacaoAberta]} numero={citacaoAberta + 1} materialDe={licao.materialDe} />
               </View>
             )}
+            {/* Spec 15 (seção 3): as fórmulas e figuras da lição ficam abertas, na largura do conteúdo, a fórmula antes do diagrama. */}
+            {!!licao.visuais?.length && <View style={{ marginTop: 16 }}><VisuaisDaLicao visuais={licao.visuais} /></View>}
             {/* Como na web (rodada 4E): o recurso visual da lição também no conceito, de qualquer tipo. */}
             {licao.recurso && (
               <View style={{ marginTop: 16 }}><RecursoDaLicao recurso={licao.recurso} /></View>
             )}
           </>
         )}
-        {etapa.tipo === 'exemplo' && (
+        {etapa.tipo === 'exemplo' && resolva.ativo && <View style={{ marginTop: 10 }}>{resolva.corpo}</View>}
+        {etapa.tipo === 'exemplo' && !resolva.ativo && (
           <View style={[licaoEstilos.quadro, respiroQuadro, licaoEstilos.quadroExemplo]}>
             {/* Como na web 4B: o título do quadro aparece ("Exemplo" ou "Demonstração") e recebe o foco. */}
             <Text ref={tituloEtapa} testID="titulo-etapa" accessible accessibilityRole="header" textBreakStrategy="balanced" style={[licaoEstilos.tituloQuadro, quebraEquilibrada]}>
               {licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}
             </Text>
-            <Text style={estilos.texto}>{licao.exemplo}</Text>
+            <TextoComFormulas texto={licao.exemplo} estilo={estilos.texto} />
+            <VisuaisDaLicao visuais={licao.visuais} testID="visual-exemplo" />
             {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
             {licao.passos && <Passos passos={licao.passos} titulo={t.recursos.passos} />}
             {licao.falas && <Falas falas={licao.falas} />}
@@ -844,10 +884,22 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               fimDoExercicio.current = evento.nativeEvent.layout.y + evento.nativeEvent.layout.height;
             }}>
             {/* Como na web 4B: a pergunta é o título do exercício (e recebe o foco); o selo no alto diz qual exercício é. */}
-            <Text ref={tituloEtapa} testID="pergunta-exercicio" accessible accessibilityRole="header" textBreakStrategy="balanced" style={[licaoEstilos.pergunta, quebraEquilibrada]}>
-              {exercicio.enunciado}
-            </Text>
-            {exercicio.contexto && <Text style={estilos.texto}>{exercicio.contexto}</Text>}
+            <TextoComFormulas referencia={tituloEtapa} testID="pergunta-exercicio" accessible accessibilityRole="header" textBreakStrategy="balanced"
+              estilo={[licaoEstilos.pergunta, exercicio.visual && licaoEstilos.perguntaComVisual, quebraEquilibrada]} texto={exercicio.enunciado} />
+            {exercicio.contexto && <TextoComFormulas texto={exercicio.contexto} estilo={estilos.texto} />}
+            {/* Spec 15 (seção 3): enunciado, visual e opções, nessa ordem; a figura com até 200 de altura em 390. Depois do acerto,
+                ela troca no lugar pela do retorno (o procurado vira resposta, entrando de leve); no erro, nada muda. A troca
+                remonta o desenho (chave nova), e a entrada roda uma vez só. */}
+            {/* Sem ponto procurado, a figura do retorno é a mesma do enunciado: fica a do enunciado, sem troca nem animação. */}
+            {exercicio.visual && (avaliacao?.correta && avaliacao.visual && temProcurado(exercicio.visual) ? (
+              <DesenhoDoVisual key="retorno" visual={avaliacao.visual} contexto={CONTEXTO_DO_RETORNO} testID="visual-retorno" caixa={caixaDaFigura}
+                // A descrição nova vai na fala do retorno (uma frase só): a figura não anuncia de novo.
+                rotulo={descricaoDoRetorno}
+                opcoes={avaliacao.visual.tipo === 'formula' ? OPCOES_DA_FORMULA : { alturaMaxima: alturaDaFigura }} />
+            ) : (
+              <DesenhoDoVisual key="enunciado" visual={exercicio.visual} contexto={CONTEXTO_DO_ENUNCIADO} testID="visual-enunciado" entrada={false} caixa={caixaDaFigura}
+                opcoes={exercicio.visual.tipo === 'formula' ? OPCOES_DA_FORMULA : { alturaMaxima: alturaDaFigura }} />
+            ))}
             {exercicio.trecho && (
               <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}
                 preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
@@ -860,8 +912,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   <Icone nome="lampada" tamanho={16} cor="#7A4A00" />
                   <Text style={[licaoEstilos.dicaTitulo, caixaAlta]}>{t.dicaAnterior}</Text>
                 </View>
-                <Text style={licaoEstilos.dicaTexto}>{errosAnteriores[indice]?.feedback}</Text>
-                {errosAnteriores[indice]?.observacao && <Text style={licaoEstilos.dicaTexto}>{errosAnteriores[indice]?.observacao}</Text>}
+                <TextoComFormulas texto={errosAnteriores[indice]?.feedback ?? ''} estilo={licaoEstilos.dicaTexto} />
+                {errosAnteriores[indice]?.observacao && <TextoComFormulas texto={errosAnteriores[indice]?.observacao ?? ''} estilo={licaoEstilos.dicaTexto} />}
               </View>
             )}
             {/* Para consultar, depois da resposta e recolhido para a pergunta ficar no alto: o acorde e a barra de fração (a
@@ -875,8 +927,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 </Pressable>
                 {explicacaoAberta && (
                   <View style={licaoEstilos.consultaConteudo}>
-                    <Text style={estilos.texto}>{licao.conceito}</Text>
-                    <Text style={estilos.texto}><Text style={{ fontWeight: '800' }}>{t.exemplo}: </Text>{licao.exemplo}</Text>
+                    <TextoComFormulas texto={licao.conceito} estilo={estilos.texto} />
+                    <Text style={estilos.texto}><Text style={{ fontWeight: '800' }}>{t.exemplo}: </Text><TextoComFormulas texto={licao.exemplo} estilo={estilos.texto} /></Text>
+                    {resolva.metodo}
                   </View>
                 )}
               </View>
@@ -1109,7 +1162,9 @@ export function CartaoFonte({ referencia, numero, ref, titulo, parado = false, m
  * painel inteiro cabe em metade da janela: passando disso, só o texto rola, com o esmaecer de 24 no fim.
  */
 function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarDeNovo, continuar, verReforco, rotuloPular, compacto = false, avisoPular,
-  iconeErro = 'fechar', convite, reacao, reservaAcima = 0 }: {
+  iconeErro = 'fechar', convite, reacao, reservaAcima = 0, descricaoDaFigura }: {
+  /** No acerto com figura: a descrição dela, ouvida junto do retorno, numa frase só (spec 15, seção 12). */
+  descricaoDaFigura?: string;
   /** A expressão do Stu na linha do título (acerto, de primeira, depois da ponte ou erro). */
   reacao?: ReacaoDoStu;
   /** O que mais divide o rodapé com o painel, acima dele (a pílula "Ver mais abaixo"), para o rodapé inteiro caber em metade da janela. */
@@ -1156,7 +1211,7 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
     <Animated.View testID="painel-retorno" style={{ gap: 6, maxHeight: alturaMaxima, opacity: subida,
       transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
       <View ref={area} testID="feedback-licao" accessible accessibilityRole="alert"
-        accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${avaliacao.feedback} ${extras.join(' ')}`}
+        accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${falarTextoComFormulas(avaliacao.feedback)} ${extras.map(falarTextoComFormulas).join(' ')}${certa && descricaoDaFigura ? ` ${descricaoDaFigura}` : ''}`}
         style={[licaoEstilos.retorno, licaoEstilos.encolhe]}>
         {/* Como na web: o ícone pequeno ao lado do título e o texto na largura toda, embaixo (o painel ocupava ~40% da tela). */}
         <View style={licaoEstilos.retornoCabecalho}>
@@ -1191,8 +1246,8 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
               onScroll={({ nativeEvent: { contentOffset, layoutMeasurement, contentSize } }) =>
                 setNoFim(contentOffset.y + layoutMeasurement.height >= contentSize.height - 1)}>
               {/* .aula-retorno p no celular: 15 px com entrelinha 1,4. */}
-              <Text style={[estilos.texto, licaoEstilos.retornoTexto]}>{avaliacao.feedback}</Text>
-              {extras.map((linha) => <Text key={linha} style={licaoEstilos.retornoExtra}>{linha}</Text>)}
+              <TextoComFormulas texto={avaliacao.feedback} estilo={[estilos.texto, licaoEstilos.retornoTexto]} />
+              {extras.map((linha) => <TextoComFormulas key={linha} texto={linha} estilo={licaoEstilos.retornoExtra} />)}
               {!certa && avisoPular && <Text style={licaoEstilos.avisoPular}>{avisoPular}</Text>}
             </ScrollView>
             {transborda && !noFim && <EsmaecerTexto cor={certa ? CORES_DO_PAINEL.certa : CORES_DO_PAINEL.errada} />}
@@ -1247,6 +1302,8 @@ const licaoEstilos = StyleSheet.create({
   tituloQuadro: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -0.5, lineHeight: 28, marginTop: -6 },
   /** A pergunta como título do exercício, como `.aula-pergunta` da web: entrelinha de 27,6 e 6 embaixo. */
   pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 27.6, marginTop: -6, marginBottom: 6 },
+  /** Com visual, o enunciado desce para 22 (spec 15, seção 3): as opções começam na primeira tela. */
+  perguntaComVisual: { fontSize: 22, lineHeight: 25.3, letterSpacing: -0.8 },
   /** O formulário da resposta: 4 em cima (.aula-quadro .formulario). */
   formulario: { marginTop: 4 },
   trilha: { flex: 1, height: 18, borderRadius: 9, backgroundColor: cores.gelo, overflow: 'hidden' },

@@ -1,0 +1,114 @@
+{
+  "descricao": "Item c da folha de geometria analítica: o terceiro vértice a partir do baricentro. O exercício usa os números da folha (A(1, 2), B(−2, 7), G(1, 3) → C(4, 0)); o exemplo resolvido usa outros (A(2, 1), B(−1, 5), G(1, 2) → C(2, 0)). Como a IA devolveria: LaTeX restrito com a barra dobrada do JSON, pontos com papel, o procurado com a posição guardada e o baricentro derivado.",
+  "resposta": { "vertice": "C(4, 0)", "x": 4, "y": 0 },
+  "licao": {
+    "titulo": "Baricentro: achando o terceiro vértice",
+    "objetivo": "Achar o vértice que falta de um triângulo a partir do baricentro.",
+    "conceito": "O baricentro G é o ponto onde as três medianas do triângulo se cruzam. Cada coordenada dele é a média das coordenadas dos vértices: $x_G = (x_A + x_B + x_C) / 3$ e $y_G = (y_A + y_B + y_C) / 3$.",
+    "exemplo": "Com A(2, 1), B(−1, 5) e G(1, 2): $3 · 1 = 2 + (−1) + x_C$, então $x_C = 2$; e $3 · 2 = 1 + 5 + y_C$, então $y_C = 0$. Logo C = (2, 0).",
+    "origem": "Conteúdo gerado pelo Studoo",
+    "visuais": [
+      { "tipo": "formula", "latex": "x_G = \\frac{x_A + x_B + x_C}{3}", "alt": "Fórmula do baricentro" },
+      {
+        "tipo": "plano",
+        "x": [-3, 6],
+        "y": [-1, 8],
+        "pontos": [
+          { "id": "A", "papel": "dado", "x": 1, "y": 2 },
+          { "id": "B", "papel": "dado", "x": -2, "y": 7 },
+          { "id": "C", "papel": "procurado", "x": 4, "y": 0 },
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
+        ],
+        "poligonos": [{ "pontos": ["A", "B", "C"] }],
+        "alt": "Triângulo ABC no plano, com A (1, 2), B (−2, 7) e o baricentro G (1, 3); C é o vértice procurado."
+      }
+    ],
+    "exercicio": {
+      "tipo": "multipla_escolha",
+      "enunciado": "Os vértices A(1, 2) e B(−2, 7) e o baricentro G(1, 3) são dados. Qual é o terceiro vértice, C?",
+      "opcoes": [
+        { "id": "a", "texto": "C(4, 0)" },
+        { "id": "b", "texto": "C(0, 4)" },
+        { "id": "c", "texto": "C(2, 6)" }
+      ],
+      "gabarito": ["a"],
+      "feedbackCorreto": "Isso! De $3 · 1 = 1 + (−2) + x_C$ sai $x_C = 4$, e de $3 · 3 = 2 + 7 + y_C$ sai $y_C = 0$.",
+      "feedbackIncorreto": "Multiplique por 3 a coordenada do baricentro e subtraia as dos outros dois vértices: $x_C = 3 · 1 − 1 − (−2)$ e $y_C = 3 · 3 − 2 − 7$.",
+      "visual": {
+        "tipo": "plano",
+        "x": [-3, 6],
+        "y": [-1, 8],
+        "pontos": [
+          { "id": "A", "papel": "dado", "x": 1, "y": 2 },
+          { "id": "B", "papel": "dado", "x": -2, "y": 7 },
+          { "id": "C", "papel": "procurado", "x": 4, "y": 0 },
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
+        ],
+        "poligonos": [{ "pontos": ["A", "B", "C"] }],
+        "alt": "Triângulo ABC no plano, com A (1, 2), B (−2, 7) e o baricentro G (1, 3); C é o vértice procurado."
+      }
+    },
+    "resolucao": {
+      "problema": "Os vértices A(2, 1) e B(−1, 5) e o baricentro G(1, 2) são dados. Ache o vértice C.",
+      "visual": {
+        "tipo": "plano",
+        "x": [-3, 5],
+        "y": [-1, 7],
+        "pontos": [
+          { "id": "A", "papel": "dado", "x": 2, "y": 1 },
+          { "id": "B", "papel": "dado", "x": -1, "y": 5 },
+          { "id": "C", "papel": "procurado", "x": 2, "y": 0 },
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
+        ],
+        "poligonos": [{ "pontos": ["A", "B", "C"] }],
+        "alt": "Triângulo ABC com A (2, 1), B (−1, 5) e o baricentro G (1, 2); C é o vértice procurado."
+      },
+      "passos": [
+        {
+          "nome": "A fórmula",
+          "texto": "A abscissa do baricentro é a média das abscissas dos vértices.",
+          "formula": "x_G = \\foco{\\frac{x_A + x_B + x_C}{3}}"
+        },
+        {
+          "nome": "Troque os valores",
+          "texto": "Coloque $x_G = 1$, $x_A = 2$ e $x_B = −1$ na fórmula.",
+          "formula": "1 = \\frac{2 + (-1) + \\procurado{x_C}}{3}"
+        },
+        {
+          "nome": "Isole x_C",
+          "texto": "Multiplique os dois lados por 3 e passe os outros termos para o outro lado.",
+          "formula": "x_C = 3 \\times 1 - 2 - (-1) = \\foco{2}"
+        },
+        {
+          "nome": "O mesmo para y_C",
+          "texto": "Repita o método na ordenada, com $y_G = 2$, $y_A = 1$ e $y_B = 5$.",
+          "formula": "y_C = 3 \\times 2 - 1 - 5",
+          "tentativa": {
+            "pergunta": "Quanto vale y_C?",
+            "opcoes": [
+              { "formula": "y_C = 6 - 1 - 5", "correta": true, "porque": "Multiplica-se y_G por 3 e subtraem-se y_A e y_B: 6 − 1 − 5 = 0." },
+              { "formula": "y_C = 6 + 1 + 5", "correta": false, "porque": "Os outros vértices se subtraem: a soma das três ordenadas é 3 · y_G." },
+              { "formula": "y_C = 2 - 1 - 5", "correta": false, "porque": "Falta multiplicar y_G por 3 antes de subtrair." }
+            ]
+          }
+        },
+        {
+          "nome": "O vértice C",
+          "texto": "Então C = (2, 0), e o baricentro confere: G = (1, 2).",
+          "formula": "C = \\resposta{(2, 0)}",
+          "visual": {
+            "tipo": "plano",
+            "pontos": [
+              { "id": "A", "papel": "dado", "x": 2, "y": 1 },
+              { "id": "B", "papel": "dado", "x": -1, "y": 5 },
+              { "id": "C", "papel": "resposta", "x": 2, "y": 0 },
+              { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
+            ],
+            "poligonos": [{ "pontos": ["A", "B", "C"] }],
+            "alt": "Triângulo ABC com A (2, 1), B (−1, 5), C (2, 0) e o baricentro G (1, 2) dentro dele."
+          }
+        }
+      ]
+    }
+  }
+}

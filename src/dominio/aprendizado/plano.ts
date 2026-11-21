@@ -1,4 +1,4 @@
-import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial } from "@studoo/contratos";
+import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial, ResolucaoGuardada, Visual } from "@studoo/contratos";
 import { LIMITES_RESPOSTA, TIPOS_TRECHO, inferirTipoTrecho, tamanhoDaResposta } from "@studoo/contratos";
 
 /**
@@ -48,6 +48,13 @@ export type ConteudoLicao = {
   exemploTipo?: "exemplo" | "demonstracao";
   passos?: string[];
   recurso?: Recurso;
+  /**
+   * Fórmulas e figuras (spec 15), já validadas na geração (`normalizarVisuais`) e guardadas completas, com a posição do ponto
+   * procurado. Opcional e sem validação rígida em `conteudoValido`: uma lição salva continua abrindo mesmo que uma versão futura do
+   * validador recuse o visual dela (o visual some, a lição fica).
+   */
+  visuais?: Visual[];
+  resolucao?: ResolucaoGuardada;
   falas?: Fala[];
   origem: string;
   exercicio: ExercicioInterno;
