@@ -1,3 +1,4 @@
+import { geometria } from "./demo-geometria";
 import { ILUSTRACAO_VIOLAO } from "./ilustracao-violao";
 import type { Opcao } from "@studoo/contratos";
 import type { PlanoInterno } from "@/dominio/aprendizado/plano";
@@ -1705,7 +1706,7 @@ const fotografia: Demo = {
 };
 
 /** Demos na ordem de reconhecimento. SQL tem a sua própria trilha em `falsa.ts`. */
-export const DEMOS: readonly Demo[] = [violao, ingles, culinaria, historia, fracoes, fotografia];
+export const DEMOS: readonly Demo[] = [violao, ingles, culinaria, historia, fracoes, fotografia, geometria];
 
 export function demoDoObjetivo(objetivo: string): Demo | undefined {
   return DEMOS.find((demo) => demo.reconhecer(objetivo));
