@@ -84,6 +84,16 @@ export function comTextoLinear<T>(valor: T): T {
 }
 
 /**
+ * O texto que a IA escreve FORA da lição (a ponte do reforço e o retorno do "Ensine o Stu"): nenhum cliente desenha fórmula nessas telas, então tudo chega em
+ * texto linear, para o cliente novo e para o antigo (a mesma linearização do cliente sem cabeçalho). Na lição de matemática, o `$` solto sai e toda marca vira
+ * texto linear; fora dela só a marca que LÊ (e o `$…$` com LaTeX dentro) vira texto: "R$ 25,00" e "$HOME" ficam. O mesmo objeto quando nada muda.
+ */
+export function comTextoSimples<T>(valor: T, daMatematica: boolean): T {
+  if (daMatematica) return comTextoLinear(semCifraoSolto(valor));
+  return transformarTextos(valor, (texto) => (contemFormulaMarcada(texto) || contemCifraoDeLatex(texto) ? textoSemFormulas(texto) : texto)) as T;
+}
+
+/**
  * Na lição de matemática, o `$` único que não formou par e vem colado numa letra ou número ("uma linha de $A com uma coluna de B": a IA abriu `$A$` e perdeu
  * o par) é marcador solto e sai do texto; dinheiro ("R$ 25,00", "US$10", "$ 5") fica. Quem chama é o servidor, e só com a lição já reconhecida como de
  * matemática: numa lição de shell, "$HOME" é de shell. O mesmo objeto quando nada muda.
