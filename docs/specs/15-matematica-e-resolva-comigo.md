@@ -376,3 +376,38 @@ Conferido em `formula-no-texto.ts`, no teste e em `golden-segmentos.json`, e rod
 - uma opção de exercício com "x_C";
 - um enunciado com "1/2";
 - o mesmo com o texto ampliado a 200%, para ver que índice e expoente não cortam nem encostam na linha de cima.
+
+## 10. Aceite do desenho em linha (prévia web do app beb96c7 sobre f03ea86, 21/11)
+
+Conferido nas quatro capturas de 390 e nas quatro da simulação de 200% do Mobile 2, com o `medidas.json`. A origem é a prévia web do app, não o aparelho, com uma lição sintética.
+
+**Aceito em 390:**
+- o tamanho igual ao do texto;
+- índice e expoente perto de 70%, nas alturas certas;
+- a base na linha de base (desvio 0);
+- o passo de linha constante de 24;
+- o respiro dos sinais;
+- a fórmula sem quebrar;
+- a pontuação colada ("x_C?", "25.");
+- nenhum "$" na tela;
+- "1/2" desenhado como fração em linha.
+
+**Muda, por ordem de importância:**
+1. **O peso da fórmula é o do texto ao redor.** Hoje, num texto regular (o balão "O Stu explica" e o exemplo), a fórmula sai em negrito, e "com x = 3, x² = 9" mistura um x regular com um x² negrito na mesma frase. A fórmula em linha usa o peso do texto:
+   - regular no texto da aula;
+   - negrito no enunciado e nos títulos, como já sai certo na captura 4.
+   As variáveis continuam em itálico. O negrito fica para os destaques, que já têm cor.
+2. **Variável sozinha na frase de matemática.** "x = 3" e "lado x" ficam em texto reto, e o x² ao lado fica em itálico. Duas ações:
+   - o gerador marca com `$…$` toda variável e toda conta curta nas lições de matemática (prompt do Web & API);
+   - nessas lições, a heurística também pega "letra sozinha, espaço, sinal (= + − × ÷ < > ≤ ≥) e número ou letra" ("x = 3", "a + b").
+   A letra solta numa palavra ("lado x") só vira fórmula com a marca.
+3. **Conferir a medida da fração em linha.** No enunciado, o "1/2" tem desvio de −25,3 no `medidas.json`. Na imagem, ele está alinhado. Meça a base do algarismo, não a caixa da fração, e confirme 0.
+
+**Simulação de 200%:**
+- **Aceito:** índice e expoente não encostam na linha de cima nem na de baixo; a pontuação fica colada; a opção "x_C = 2" fica legível.
+- **Só a rodada nativa prova** (texto grande do sistema no iPhone e escala de fonte no Android):
+  - no enunciado simulado, as linhas com índice ficaram mais altas que as outras, e a regra é que a linha não cresce;
+  - o parágrafo largo deve cair no linear com as peças desenhadas (já pedido ao Mobile 2);
+  - a letra da opção e o resto da tela devem crescer junto com o texto.
+
+**"CO₂":** aceito com os algarismos subscritos do Unicode (U+2080 a U+2089), desde que a fonte do texto (Nunito) tenha esses glifos nas três plataformas. Sem o glifo, sai "CO2" simples, e nunca o quadrado de glifo ausente. O leitor de tela lê o algarismo normalmente ("C O 2").
