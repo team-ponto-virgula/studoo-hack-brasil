@@ -806,13 +806,17 @@ export function Campo({ rotulo, campoRef, erro, erroComAlerta = false, acessorio
           onPress={() => interno.current?.focus()}>{rotulo}</Text>
       )}
       <View>
-        <TextInput {...props} ref={referencia} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
-          placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'}
-          // Com erro, a borda vermelha vale também em foco, com o anel vermelho claro ([aria-invalid='true']:focus da web).
-          style={[estilos.entrada, props.multiline && estilos.entradaMultilinha, focado && estilos.entradaFocada, !!erro && estilos.entradaErro,
-            !!erro && focado && estilos.entradaErroFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}
-          onFocus={(evento) => { setFocado(true); rolagem?.focar(caixa.current); props.onFocus?.(evento); }}
-          onBlur={(evento) => { setFocado(false); rolagem?.focar(null); props.onBlur?.(evento); }} />
+        {/* Com erro, a borda vermelha vale também em foco, com o anel vermelho claro ([aria-invalid='true']:focus da web). */}
+        <CaixaDoCampo focar={() => interno.current?.focus()}
+          estilo={[estilos.entrada, props.multiline && estilos.entradaMultilinha, focado && estilos.entradaFocada, !!erro && estilos.entradaErro,
+            !!erro && focado && estilos.entradaErroFocada, !!acessorio && estilos.entradaComAcessorio, props.style]}>
+          {(estilo) => (
+            <TextInput {...props} ref={referencia} accessibilityLabel={rotulo} accessibilityLabelledBy={rotuloOculto ? undefined : rotuloId} accessibilityHint={dica}
+              placeholderTextColor={props.placeholderTextColor ?? '#7A84A0'} style={estilo}
+              onFocus={(evento) => { setFocado(true); rolagem?.focar(caixa.current); props.onFocus?.(evento); }}
+              onBlur={(evento) => { setFocado(false); rolagem?.focar(null); props.onBlur?.(evento); }} />
+          )}
+        </CaixaDoCampo>
         {acessorio && <View style={estilos.acessorio}>{acessorio}</View>}
       </View>
       {erro && (
@@ -823,6 +827,37 @@ export function Campo({ rotulo, campoRef, erro, erroComAlerta = false, acessorio
         </View>
       )}
     </View>
+  );
+}
+
+/**
+ * O que é da caixa (borda, fundo, respiro, tamanho, anel de foco) e o que é do texto (cor, fonte, entrelinha, alinhamento),
+ * para o Android desenhar a caixa numa View em volta do campo.
+ */
+export function separarCaixaDoTexto(estilo: StyleProp<TextStyle>): { caixa: ViewStyle; texto: TextStyle } {
+  const plano = (StyleSheet.flatten(estilo) ?? {}) as Record<string, unknown>;
+  const caixa: Record<string, unknown> = {};
+  const texto: Record<string, unknown> = {};
+  for (const [chave, valor] of Object.entries(plano)) {
+    if (/^(padding|border|background|outline|margin|minHeight|maxHeight|height|width|minWidth|maxWidth|alignSelf|flex|boxShadow|opacity)/.test(chave)) caixa[chave] = valor;
+    else texto[chave] = valor;
+  }
+  return { caixa: caixa as ViewStyle, texto: texto as TextStyle };
+}
+
+/**
+ * A caixa dos campos de texto (banca P1-8). No Android, quando o React Native troca o fundo do EditText (borda, cor, foco),
+ * o respiro do próprio campo volta ao do tema e o texto encosta na borda (o iPhone e a web têm os 20 px). Lá, a borda, o
+ * fundo e o respiro ficam numa View em volta, que leva o toque ao campo; o campo fica sem borda, sem fundo e sem respiro.
+ * No iPhone e na prévia web, nada muda: o próprio campo leva o estilo inteiro.
+ */
+export function CaixaDoCampo({ estilo, focar, children }: { estilo: StyleProp<TextStyle>; focar: () => void; children: (estilo: StyleProp<TextStyle>) => ReactNode }) {
+  if (Platform.OS !== 'android') return <>{children(estilo)}</>;
+  const { caixa, texto } = separarCaixaDoTexto(estilo);
+  return (
+    <Pressable accessible={false} importantForAccessibility="no" onPress={focar} style={caixa}>
+      {children([texto, estilos.campoSemCaixa])}
+    </Pressable>
   );
 }
 
@@ -1343,6 +1378,8 @@ export const estilos = StyleSheet.create({
   entradaFocada: { borderColor: cores.acao, outlineColor: 'rgba(37, 99, 255, 0.18)', outlineWidth: 4, outlineOffset: 0, outlineStyle: 'solid' },
   entradaErroFocada: { outlineColor: 'rgba(194, 59, 78, 0.14)' },
   entradaComAcessorio: { paddingRight: 52 },
+  // O campo dentro da caixa do Android: a caixa desenha borda, fundo e respiro; o campo preenche o que sobra.
+  campoSemCaixa: { flexGrow: 1, padding: 0, margin: 0, borderWidth: 0, backgroundColor: 'transparent' },
   acessorio: { position: 'absolute', right: 4, top: 0, bottom: 0, justifyContent: 'center' },
   campoErro: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   campoErroTexto: { flex: 1, color: cores.erro, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },

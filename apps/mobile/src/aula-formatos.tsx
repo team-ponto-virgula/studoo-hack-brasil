@@ -29,7 +29,7 @@ import {
 } from '@studoo/contratos';
 import { arquivo } from './estudio-adaptativo';
 import { Icone } from './icone';
-import { Botao, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
+import { Botao, CaixaDoCampo, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import { Stu } from './mascote';
@@ -1024,13 +1024,18 @@ export function CampoAberta({ valor, mudar, minimo, desativado, retorno }: {
   // campos que usam <Campo>.
   const rolagem = useContext(RolagemDaTela);
   const secao = useRef<ComponentRef<typeof View>>(null);
+  const campo = useRef<ComponentRef<typeof TextInput>>(null);
   return (
     <View ref={secao} style={formatos.secao}>
       <Text style={estilos.rotulo}>{t.aberta.rotulo}</Text>
-      <TextInput testID="resposta-aberta" multiline value={valor} onChangeText={mudar} editable={!desativado} maxLength={1000}
-        onFocus={() => rolagem?.focar(secao.current)} onBlur={() => rolagem?.focar(null)}
-        accessibilityLabel={t.aberta.rotulo} accessibilityHint={t.aberta.dica} textAlignVertical="top"
-        style={[formatos.aberta, retorno === 'certa' && formatos.cartaoCerto, retorno === 'errada' && formatos.cartaoErrado]} />
+      {/* No Android, a borda e o respiro ficam numa caixa em volta (banca P1-8; ver CaixaDoCampo). */}
+      <CaixaDoCampo focar={() => campo.current?.focus()} estilo={[formatos.aberta, retorno === 'certa' && formatos.cartaoCerto, retorno === 'errada' && formatos.cartaoErrado]}>
+        {(estilo) => (
+          <TextInput ref={campo} testID="resposta-aberta" multiline value={valor} onChangeText={mudar} editable={!desativado} maxLength={1000}
+            onFocus={() => rolagem?.focar(secao.current)} onBlur={() => rolagem?.focar(null)}
+            accessibilityLabel={t.aberta.rotulo} accessibilityHint={t.aberta.dica} textAlignVertical="top" style={estilo} />
+        )}
+      </CaixaDoCampo>
       <Text style={estilos.legenda}>{t.aberta.dica}</Text>
       {/* Spec 16, item 8: antes da primeira letra, só o rodapé orienta; depois, "Faltam N letras" em cinza, até o mínimo. */}
       {usados > 0 && usados < minimo && <Text testID="aberta-contador" style={formatos.contador}>{t.aberta.contador(usados, minimo)}</Text>}

@@ -37,3 +37,22 @@ test('P0-3: o mapa, a marca do cartão e as configurações só montam a frase c
   assert.match(configuracoes, /daDona=\{recebidaDe == null\}/);
   assert.match(configuracoes, /\{compartilhar && recebidaDe == null && \(/);
 });
+
+test('P1-8: no Android, a borda, o fundo e o respiro dos campos ficam numa caixa em volta (o texto não encosta na borda)', async () => {
+  const interfaceApp = await ler('interface.tsx');
+  const formatos = await ler('aula-formatos.tsx');
+  const caixa = interfaceApp.slice(interfaceApp.indexOf('export function CaixaDoCampo('), interfaceApp.indexOf('/** Botão só com ícone'));
+  assert.match(caixa, /if \(Platform\.OS !== 'android'\) return <>\{children\(estilo\)\}<\/>;/, 'iPhone e prévia web sem mudança');
+  assert.match(caixa, /<Pressable accessible=\{false\} importantForAccessibility="no" onPress=\{focar\} style=\{caixa\}>/);
+  assert.match(caixa, /children\(\[texto, estilos\.campoSemCaixa\]\)/);
+  assert.match(interfaceApp, /campoSemCaixa: \{ flexGrow: 1, padding: 0, margin: 0, borderWidth: 0, backgroundColor: 'transparent' \}/);
+  const separar = interfaceApp.slice(interfaceApp.indexOf('export function separarCaixaDoTexto('), interfaceApp.indexOf('/**\n * A caixa dos campos de texto'));
+  const js = ts.transpileModule(`const StyleSheet = { flatten: (e) => Object.assign({}, ...[e].flat(9).filter(Boolean)) };\n${separar.replace('export ', '')}; return separarCaixaDoTexto;`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
+  const separarCaixaDoTexto = new Function(js)();
+  const { caixa: c, texto: t } = separarCaixaDoTexto([{ minHeight: 112, paddingVertical: 18, paddingHorizontal: 20, borderWidth: 3, borderRadius: 24, borderColor: '#E1E7FA', backgroundColor: '#fff', fontSize: 19, lineHeight: 27, fontWeight: '700', color: '#0B1B5C', textAlignVertical: 'top' }, false, { paddingRight: 52 }]);
+  assert.deepEqual(Object.keys(c).sort(), ['backgroundColor', 'borderColor', 'borderRadius', 'borderWidth', 'minHeight', 'paddingHorizontal', 'paddingRight', 'paddingVertical']);
+  assert.deepEqual(Object.keys(t).sort(), ['color', 'fontSize', 'fontWeight', 'lineHeight', 'textAlignVertical']);
+  // Os campos do app (o pedido, a entrada, o perfil) passam pelo Campo; a resposta aberta da aula também usa a caixa.
+  assert.match(interfaceApp, /<CaixaDoCampo focar=\{\(\) => interno\.current\?\.focus\(\)\}/);
+  assert.match(formatos, /<CaixaDoCampo focar=\{\(\) => campo\.current\?\.focus\(\)\} estilo=\{\[formatos\.aberta,/);
+});
