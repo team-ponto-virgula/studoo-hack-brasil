@@ -1266,6 +1266,96 @@ test("trilha (DeepSeek): a mesma nova tentativa, com o motivo numa mensagem, e a
   assert.equal(pedidos.length, 2);
 });
 
+/* ----- Marco 8: a frase do "Sua vez" que traz o resultado é recusada, e o motivo (a letra e o valor) vai à nova tentativa ----- */
+
+const comFraseQueEntrega = (resolucao) => {
+  const nova = copiaDe(resolucao);
+  nova.passos.find((passo) => passo.tentativa).texto = "Faça igual: $y_M = (2 + 8) / 2 = 5$.";
+  return nova;
+};
+const figurasQueEntregam = () => ({ ...figurasDoModelo(), resolucao: comFraseQueEntrega(figurasDoModelo().resolucao) });
+const MOTIVO_DA_FRASE = 'o texto do passo 4 (o "Sua vez") traz o resultado y_M = 5 antes da escolha: a frase só diz o que fazer (como "Agora junte os termos e isole k"), sem o valor nem a conta já feita';
+
+test("a frase do \"Sua vez\" que traz o resultado: o motivo, com a letra e o valor, é o da recusa e o da frase da nova tentativa", () => {
+  const recusada = lerResolucaoDoModelo(comFraseQueEntrega(exemploDeMatematica.resolucao));
+  assert.equal(recusada.resolucao, undefined);
+  assert.equal(recusada.motivo, MOTIVO_DA_FRASE);
+  assert.equal(
+    correcaoDaResolucao(recusada.motivo),
+    `O "Resolva comigo" da sua resposta anterior foi RECUSADO: ${MOTIVO_DA_FRASE}. Refaça a resolução corrigindo exatamente isso e conferindo cada conta, com OUTROS números que os da pergunta.`,
+  );
+  // A frase do exemplo (só diz o que fazer) vale, e o reparo de cor não mexe nisso.
+  assert.ok(lerResolucaoDoModelo(exemploDeMatematica.resolucao).resolucao);
+});
+
+test("material: a frase do \"Sua vez\" que traz o resultado ganha UMA nova tentativa, com a letra e o valor no motivo; a segunda, sem o vazamento, vale", async () => {
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    const { licao, correcao } = dadosDoPedido({ dados });
+    return ok(licao.titulo.startsWith("Lição 2") && !correcao ? figurasQueEntregam() : figurasDoModelo());
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  assert.equal(pedidos.length, 5, "1 das lições, 3 de figuras e 1 nova tentativa");
+  const [nova] = pedidosDeFiguras().filter((pedido) => dadosDoPedido(pedido).correcao);
+  assert.equal(dadosDoPedido(nova).licao.titulo, "Lição 2: o vértice que falta");
+  assert.equal(dadosDoPedido(nova).correcao, correcaoDaResolucao(MOTIVO_DA_FRASE));
+  assert.match(dadosDoPedido(nova).correcao, /RECUSADO: o texto do passo 4 \(o "Sua vez"\) traz o resultado y_M = 5 antes da escolha/);
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal(conteudos[1].resolucao.passos[3].texto, "Faça igual com as ordenadas de A e de B.", "a resolução da segunda resposta");
+  assert.deepEqual(relatos[1].novaTentativa, { motivo: MOTIVO_DA_FRASE, aceita: true });
+  assert.deepEqual(registrosDe("resolucao_nova_tentativa"), [{ rota: "estudio-material", codigo: "resolucao_nova_tentativa", aceita: true }]);
+  // Nenhuma resolução que fica entrega o resultado no texto público do passo do "Sua vez".
+  for (const conteudo of conteudos) {
+    const passo = conteudo.resolucao.passos.find((candidato) => candidato.tentativa);
+    assert.doesNotMatch(passo.texto, /= ?5|\b5\b/);
+  }
+});
+
+test("material: a segunda que entrega de novo deixa a lição sem o \"Resolva comigo\" (tudo ou nada), com o resto, e nunca há terceira", async () => {
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    return ok(dadosDoPedido({ dados }).licao.titulo.startsWith("Lição 3") ? figurasQueEntregam() : figurasDoModelo());
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  assert.equal(pedidos.length, 5, "a lição 3 é pedida duas vezes e nenhuma terceira");
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal("resolucao" in conteudos[2], false);
+  assert.equal(relatos[2].novaTentativa.aceita, false);
+  assert.equal(relatos[2].novaTentativa.motivoDaSegunda, MOTIVO_DA_FRASE);
+  assert.ok(conteudos[2].visuais.length === 2 && conteudoValido(conteudos[2]), "os visuais e a figura do exercício seguem");
+});
+
+test("trilha (OpenAI e DeepSeek): a lição cuja frase do \"Sua vez\" entrega é pedida UMA vez de novo, com o motivo; a segunda, sem vazamento, substitui a primeira", async () => {
+  const entrega = () => {
+    const bruto = copiaDe(exemploDeMatematica);
+    bruto.resolucao = comFraseQueEntrega(bruto.resolucao);
+    return bruto;
+  };
+  let chamadas = 0;
+  responder = () => { chamadas += 1; return ok(chamadas === 1 ? entrega() : exemploDeMatematica); };
+  const conteudo = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2);
+  assert.equal(pedidos[1].dados.input.at(-1).content, correcaoDaResolucao(MOTIVO_DA_FRASE));
+  assert.equal(conteudo.resolucao.passos[3].texto, "Faça igual com as ordenadas de A e de B.");
+  assert.deepEqual(registrosDe("resolucao_nova_tentativa"), [{ rota: "ia-openai", codigo: "resolucao_nova_tentativa", aceita: true, melhor: true }]);
+  // DeepSeek: a mesma coisa, o motivo vai numa mensagem.
+  process.env.IA = "deepseek";
+  pedidos = [];
+  chamadas = 0;
+  responder = () => { chamadas += 1; return ok(JSON.stringify(chamadas === 1 ? entrega() : exemploDeMatematica)); };
+  const deSeek = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
+  assert.equal(pedidos.length, 2);
+  assert.equal(pedidos[1].dados.messages.at(-1).content, correcaoDaResolucao(MOTIVO_DA_FRASE));
+  assert.equal(deSeek.resolucao.passos[3].texto, "Faça igual com as ordenadas de A e de B.");
+  // Entrega de novo: a lição fica sem o "Resolva comigo", com o resto, e são só duas chamadas.
+  pedidos = [];
+  responder = () => ok(JSON.stringify(entrega()));
+  const igual = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
+  assert.equal(pedidos.length, 2);
+  assert.equal("resolucao" in igual, false);
+  assert.ok(conteudoValido(igual));
+});
+
 /* ----- A IA falsa de geometria analítica (demonstração, sem chave) ----- */
 
 const geometria = DEMOS.find(({ chave }) => chave === "geometria");

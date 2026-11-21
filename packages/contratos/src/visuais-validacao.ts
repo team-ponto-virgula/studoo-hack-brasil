@@ -1,6 +1,7 @@
 import { lerFormula, percorrerFormula, type NoFormula } from "./formula";
 import { marcarFormulasSoltas, normalizarTextoComFormulas } from "./formula-no-texto";
 import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
+import { acharVazamento, alvosDoSuaVez, chaveDoValor, letrasDoTexto, lerNumero, motivoDoVazamento, numerosDoTexto } from "./resolucao-vazamento";
 import { desenharVisual } from "./motor-visuais";
 import { comDescricaoDaResposta } from "./visuais-descricao";
 import {
@@ -577,7 +578,7 @@ function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigi
   return { opcao: { texto: textoAte(bruto.texto, LIMITES_VISUAIS.textoDaOpcao, `${onde}: texto`, true), correta: bruto.correta, porque } };
 }
 
-function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): TentativaGuardada {
+function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): { tentativa: TentativaGuardada; correta: { arvore?: NoFormula; texto?: string } } {
   if (!objeto(bruto)) return recusar("sua vez: formato inválido");
   const pergunta = textoAte(bruto.pergunta, LIMITES_VISUAIS.pergunta, "sua vez: pergunta", true);
   if (!Array.isArray(bruto.opcoes) || bruto.opcoes.length !== 3) return recusar("sua vez: precisa de exatamente 3 opções");
@@ -593,7 +594,52 @@ function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>)
     if (opcao.correta && !bate) recusar(`sua vez: a opção ${posicao + 1} está marcada como certa, mas a conta dela não dá o valor da resolução`);
     if (!opcao.correta && bate) recusar(`sua vez: a opção ${posicao + 1} está marcada como errada, mas a conta dela dá o valor da resolução`);
   });
-  return { pergunta, opcoes: lidas.map(({ opcao }) => opcao) };
+  const certa = lidas.find(({ opcao }) => opcao.correta);
+  return {
+    tentativa: { pergunta, opcoes: lidas.map(({ opcao }) => opcao) },
+    correta: { ...(certa?.arvore ? { arvore: certa.arvore } : {}), ...(certa?.opcao.texto ? { texto: certa.opcao.texto } : {}) },
+  };
+}
+
+/** Os números que o problema informa (no enunciado e nos pontos dados da figura), para um número solto da frase que é dado não ser entrega. */
+function dadosDoProblema(problema: string, figura: VisualFigura | undefined): Set<string> {
+  const dados = new Set(numerosDoTexto(problema));
+  const somar = (numero: number | undefined) => {
+    const valor = numero === undefined ? null : lerNumero(String(numero));
+    if (valor) dados.add(chaveDoValor(valor));
+  };
+  if (figura?.tipo === "plano") {
+    for (const ponto of figura.pontos) if (ponto.papel === "dado" && !ponto.derivado) { somar(ponto.x); somar(ponto.y); }
+  } else if (figura?.tipo === "reta_numerica") {
+    for (const ponto of figura.pontos) if (ponto.papel === "dado" && !ponto.derivado) somar(ponto.valor);
+  }
+  return dados;
+}
+
+/**
+ * A frase do passo do "Sua vez" (e o nome dele e a pergunta) não traz o resultado que a escolha vai achar: o cartão mostra isso ANTES da
+ * escolha (`resolucao-publica.ts` tira só a fórmula e o desenho). A resolução que o traz é recusada, e o motivo diz a letra e o valor.
+ */
+function conferirFraseDoSuaVez(entrada: {
+  passo: PassoGuardado;
+  posicao: number;
+  correta: { arvore?: NoFormula; texto?: string };
+  declaradas: Record<string, string>;
+  problema: string;
+  arvoreDoPasso: NoFormula | undefined;
+  arvoreDoUltimo: NoFormula | undefined;
+  figura: VisualFigura | undefined;
+}): void {
+  const { passo, posicao, correta, declaradas, problema, arvoreDoPasso, arvoreDoUltimo, figura } = entrada;
+  if (!passo.tentativa) return;
+  const alvos = alvosDoSuaVez({ correta, ...(arvoreDoPasso ? { arvoreDoPasso } : {}), ...(arvoreDoUltimo ? { arvoreDoUltimo } : {}), declaradas });
+  if (alvos.length === 0) return;
+  const contexto = { dados: dadosDoProblema(problema, figura), letras: letrasDoTexto(passo.tentativa.pergunta) };
+  const campos = [["texto", passo.texto], ["nome", passo.nome], ["pergunta", passo.tentativa.pergunta]] as const;
+  for (const [onde, frase] of campos) {
+    const achado = acharVazamento(frase, alvos, contexto);
+    if (achado) recusar(motivoDoVazamento(onde, achado.alvo, posicao + 1));
+  }
 }
 
 export type ResultadoResolucao =
@@ -625,6 +671,7 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
     };
     const visualDoProblema = usar(bruto.visual, false);
     const formulas: NoFormula[] = [];
+    const arvoresDosPassos: (NoFormula | undefined)[] = [];
     const total = passosBrutos.length;
     let comTentativa = -1;
     const passos: PassoGuardado[] = passosBrutos.map((passoBruto, posicao) => {
@@ -634,6 +681,7 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
       const texto = textoAte(passoBruto.texto, LIMITES_VISUAIS.textoDoPasso, `${onde}: texto`, true);
       const formula = ausente(passoBruto.formula) || passoBruto.formula === "" ? undefined : formulaDoCampo(passoBruto.formula, `${onde}: fórmula`);
       if (formula) formulas.push(formula.arvore);
+      arvoresDosPassos.push(formula?.arvore);
       const visual = usar(passoBruto.visual, posicao === total - 1);
       if (!ausente(passoBruto.tentativa)) {
         if (comTentativa >= 0) return recusar("a resolução tem mais de um \"Sua vez\"");
@@ -656,7 +704,12 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
       // Um defeito do conferidor não derruba a lição: sem conferência, a conta fica para a revisão.
     }
     const passoComTentativa = passosBrutos[comTentativa] as Record<string, unknown>;
-    passos[comTentativa] = { ...passos[comTentativa], tentativa: normalizarTentativa(passoComTentativa.tentativa, declaradas) };
+    const { tentativa, correta } = normalizarTentativa(passoComTentativa.tentativa, declaradas);
+    passos[comTentativa] = { ...passos[comTentativa], tentativa };
+    conferirFraseDoSuaVez({
+      passo: passos[comTentativa], posicao: comTentativa, correta, declaradas, problema,
+      arvoreDoPasso: arvoresDosPassos[comTentativa], arvoreDoUltimo: arvoresDosPassos[total - 1], figura: visualDoProblema,
+    });
     return { ok: true, conta, resolucao: { problema, ...(visualDoProblema ? { visual: visualDoProblema } : {}), passos } };
   } catch (erro) {
     if (erro instanceof Recusa) return { ok: false, motivo: erro.message };

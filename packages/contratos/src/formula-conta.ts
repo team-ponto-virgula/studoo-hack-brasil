@@ -359,12 +359,53 @@ export function conferirConta(formulas: readonly NoFormula[]): ResultadoConta {
   return { ok: true, conferidas, puladas, declaradas: Object.fromEntries([...valores].map(([chave, valor]) => [chave, racionalNaTela(valor)])) };
 }
 
-/** Para as opções do "Sua vez": a fórmula `y_C = 6 - 1 - 5` dá `{ chave: "y_C", valor: 0 }`; sem `=`, só o valor. */
-export function valorDaOpcao(no: NoFormula, declaradas: Record<string, string>): { chave?: string; valor: Racional; esperado?: Racional } | null {
-  const valores: Declaracoes = new Map(Object.entries(declaradas).map(([chave, texto]) => {
+/** Os valores já declarados (`x_C: "4"`, `k: "3/2"`) como a conta os usa. */
+function declaracoesDe(declaradas: Record<string, string>): Declaracoes {
+  return new Map(Object.entries(declaradas).map(([chave, texto]) => {
     const [n, d = "1"] = texto.split("/");
     return [chave, racional(Number(n), Number(d))];
   }));
+}
+
+function semDestaque(no: NoFormula): NoFormula {
+  let atual = no;
+  while (atual.tipo === "destaque") atual = atual.conteudo;
+  return atual;
+}
+
+export interface ResultadoDaFormula {
+  /** A letra do começo (`y_C`, `k`), quando a fórmula começa por uma só. */
+  chave?: string;
+  valor?: Racional;
+  /** O ponto, quando o resultado é um par ordenado (`M = (5, 4)`). */
+  par?: [Racional, Racional];
+}
+
+/**
+ * O que uma fórmula de resposta diz (`y_G = \frac{9}{3} = 3`, `14 - 14 = 0`, `M = (5, 4)`, `k = \frac{20}{6}`): a letra do começo, quando é
+ * uma só, e o valor (ou o par) do primeiro lado que se avalia, do fim para o começo. `null` quando nada se avalia (incógnita, texto,
+ * desigualdade). Serve ao "Sua vez": é o que a pessoa ainda não pode ver antes de escolher.
+ */
+export function resultadoDaFormula(no: NoFormula, declaradas: Record<string, string>): ResultadoDaFormula | null {
+  const valores = declaracoesDe(declaradas);
+  const topo = semDestaque(no);
+  const itens = topo.tipo === "sequencia" ? topo.itens : [topo];
+  const { partes, relacoes } = partirNasRelacoes(itens);
+  if (relacoes.some((relacao) => relacao !== "=")) return null;
+  const chave = partes.length > 1 && partes[0].length === 1 ? chaveDaVariavel(semDestaque(partes[0][0])) : null;
+  for (let posicao = partes.length - 1; posicao >= (chave ? 1 : 0); posicao -= 1) {
+    const valor = tentar(partes[posicao], valores);
+    if (valor) return { ...(chave ? { chave } : {}), valor };
+    const par = parOrdenado(partes[posicao], valores);
+    if (par) return { ...(chave ? { chave } : {}), par };
+  }
+  const declarado = chave ? valores.get(chave) : undefined;
+  return chave && declarado ? { chave, valor: declarado } : null;
+}
+
+/** Para as opções do "Sua vez": a fórmula `y_C = 6 - 1 - 5` dá `{ chave: "y_C", valor: 0 }`; sem `=`, só o valor. */
+export function valorDaOpcao(no: NoFormula, declaradas: Record<string, string>): { chave?: string; valor: Racional; esperado?: Racional } | null {
+  const valores = declaracoesDe(declaradas);
   const itens = no.tipo === "sequencia" ? no.itens : [no];
   const { partes, relacoes } = partirNasRelacoes(itens);
   if (relacoes.length === 0) {
