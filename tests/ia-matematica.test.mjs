@@ -14,7 +14,7 @@ const { GERADOR_OPENAI, configuracaoOpenAi, corpoDaLicao, criarGeradorOpenAi } =
 const { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek, instrucoesLicaoJsonDeMatematica } = await import("../src/servidor/ia/deepseek.ts");
 const {
   contagensDoRelato, correcaoDaResolucao, ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, instrucoesDeFigurasDoMaterial,
-  instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
+  instrucoesDeMatematica, instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
   repararResolucao, repararVisuais,
 } = await import("../src/servidor/ia/matematica.ts");
 const {
@@ -1419,5 +1419,13 @@ test("a demonstração de geometria não vaza o ponto procurado: no JSON públic
       assert.equal(corte, saida.resolucao.passos.length - 1, `${licao.titulo}: nenhum passo depois do Sua vez`);
       assert.equal(JSON.stringify(saida.resolucao).includes("correta"), false, `${licao.titulo}: sem o gabarito do Sua vez`);
     }
+  }
+});
+
+test("marco 11: o pedido manda marcar só a fórmula completa e deixar a conta que fica pela metade da lacuna em texto comum, na lição e no material", () => {
+  for (const [nome, instrucoes] of [["lição", instrucoesDeMatematica], ["material", instrucoesDeNotacaoDoMaterial]]) {
+    assert.match(instrucoes, /Marque só a fórmula COMPLETA, que fecha antes da lacuna/, nome);
+    assert.match(instrucoes, /"\$h = 12\$" está certo e "\$h = \$ ___" está errado/, `${nome}: o exemplo certo e o errado`);
+    assert.match(instrucoes, /sem cifrões \("h = ___"\)/, `${nome}: a conta pela metade vai em texto comum`);
   }
 });

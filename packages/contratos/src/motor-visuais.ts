@@ -730,6 +730,16 @@ function desenharPlanoUmaVez(
   if (lateral && aoLadoDeAntes.largura > 0) obstaculos.push({ x: direita + DECORACAO_DA_DIREITA + 4, y: topo - 2, l: aoLadoDeAntes.largura + 8, a: aoLadoDeAntes.altura + 4 });
   const caixaDoPonto = (ponto: PontoDesenhado): Ret => ({ x: ponto.x - 10 * fatorDoPonto, y: ponto.y - 10 * fatorDoPonto, l: 20 * fatorDoPonto, a: 20 * fatorDoPonto });
 
+  // A ÚNICA exceção a "número de eixo nunca some" (spec 15, seção 12): a bolinha (ou o losango) de um ponto que cobre o número (a caixa do
+  // número encosta no círculo do ponto, com a borda branca) tira só aquele número; a grade continua permitindo contar. Vale para o número
+  // do eixo e para o número em foco de uma linha-guia: o ponto sobre o eixo (C = (0, 3) com a guia em y) o taparia pela metade.
+  const cobertoPorPonto = (ret: Ret): boolean =>
+    pontos.some((ponto) => {
+      const dx = Math.max(ret.x - ponto.x, 0, ponto.x - (ret.x + ret.l));
+      const dy = Math.max(ret.y - ponto.y, 0, ponto.y - (ret.y + ret.a));
+      return Math.hypot(dx, dy) < raioDoPonto(ponto.papel) + 1;
+    });
+
   // 4. Linhas-guia, com o valor do eixo em foco (o número do eixo que ele cobre sai: o foco é o próprio número).
   const emFocoNoX = new Set<number>();
   const emFocoNoY = new Set<number>();
@@ -740,7 +750,6 @@ function desenharPlanoUmaVez(
     const original = visual.pontos.find((outro) => outro.id === guia.ponto);
     if (!ponto || !original || original.x === undefined || original.y === undefined) continue;
     const destaque = guia.eixo === "x" ? original.x : original.y;
-    (guia.eixo === "x" ? emFocoNoX : emFocoNoY).add(destaque);
     const texto = numeroParaTela(destaque);
     const largura = larguraDoTexto(texto, TAMANHO_DO_NUMERO, 700);
     base.push(
@@ -751,6 +760,9 @@ function desenharPlanoUmaVez(
     const retDoFoco: Ret = guia.eixo === "x"
       ? { x: ponto.x - largura / 2 - 3, y: eixoY + 4, l: largura + 6, a: 17 }
       : { x: eixoX - largura - 9, y: ponto.y - 9, l: largura + 6, a: 17 };
+    // Um ponto que cobre o número em foco (o ponto está sobre o eixo, a guia tem comprimento zero) tira o foco: o rótulo do ponto já diz o valor.
+    if (cobertoPorPonto(retDoFoco)) continue;
+    (guia.eixo === "x" ? emFocoNoX : emFocoNoY).add(destaque);
     focos.push({ m: "retangulo", x: retDoFoco.x, y: retDoFoco.y, largura: retDoFoco.l, altura: retDoFoco.a, raio: 4, preenchimento: "focoFundo" });
     textosDoFoco.push(escrever(texto, retDoFoco.x + 3, retDoFoco.y + 13, TAMANHO_DO_NUMERO, 700, "focoTexto"));
     caixa("foco", texto, retDoFoco);
@@ -772,14 +784,6 @@ function desenharPlanoUmaVez(
   const noY = passoDosNumeros(yMax - yMin, passoY, unidade, 16);
   const baseDoX = eixoY + 17;
   const numeros: Marca[] = [];
-  // A ÚNICA exceção a "número de eixo nunca some" (spec 15, seção 12): a bolinha de um ponto que cobre o número (a caixa do número
-  // encosta no círculo do ponto, com a borda branca) tira só aquele número; a grade continua permitindo contar.
-  const cobertoPorPonto = (ret: Ret): boolean =>
-    pontos.some((ponto) => {
-      const dx = Math.max(ret.x - ponto.x, 0, ponto.x - (ret.x + ret.l));
-      const dy = Math.max(ret.y - ponto.y, 0, ponto.y - (ret.y + ret.a));
-      return Math.hypot(dx, dy) < raioDoPonto(ponto.papel) + 1;
-    });
   for (const v of multiplos(xMin, xMax, noX)) {
     if (v === 0 || emFocoNoX.has(v)) continue;
     const texto = numeroParaTela(v);
