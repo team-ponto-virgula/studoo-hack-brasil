@@ -151,3 +151,29 @@ test("o ponto sobre o eixo não tapa o número em foco da guia (o \"3\" atrás d
     }
   }
 });
+
+/* ----- 12a, grupo 2: a conta comprida da lição 8 (prova real 12a3), com matriz dentro da marca ----- */
+
+const MATRIZ = String.raw`\begin{vmatrix} 1 & 2 & 1 \\ 3 & 4 & 1 \\ 5 & 6 & 1 \end{vmatrix}`;
+const CONTA = String.raw`1 \times 4 \times 1 + 2 \times 1 \times 5 + 1 \times 3 \times 6 - 5 \times 4 \times 1 - 6 \times 1 \times 1 - 1 \times 3 \times 2`;
+/** O exemplo como a IA o escreveu: a marca tem 201 caracteres, um a mais que o limite antigo, e o cifrão ia cru para o site e o build 3. */
+const EXEMPLO_DA_LICAO_8 = `Com A(1, 2), B(3, 4) e C(5, 6): o determinante é $${MATRIZ} = ${CONTA} = 0$. Como deu zero, os três pontos estão alinhados.`;
+const LINEAR_DA_LICAO_8 = "Com A(1, 2), B(3, 4) e C(5, 6): o determinante é det[1, 2, 1; 3, 4, 1; 5, 6, 1] = 1 × 4 × 1 + 2 × 1 × 5 + 1 × 3 × 6 − 5 × 4 × 1 − 6 × 1 × 1 − 1 × 3 × 2 = 0. Como deu zero, os três pontos estão alinhados.";
+
+test("a lição 8 da prova real: a matriz dentro da marca comprida sai como \"det[…]\" para o cliente sem cabeçalho, sem cifrão, vmatrix nem &", () => {
+  assert.equal(`${MATRIZ} = ${CONTA} = 0`.length, 201);
+  assert.equal(contemMarcaDeFormula(EXEMPLO_DA_LICAO_8), true);
+  assert.equal(textoSemFormulas(EXEMPLO_DA_LICAO_8), LINEAR_DA_LICAO_8);
+  const conteudo = { objetivo: "Pontos colineares", conceito: "Três pontos estão alinhados quando o determinante é zero.", exemplo: EXEMPLO_DA_LICAO_8, exercicio: { tipo: "aberta", enunciado: "Explique.", minimo: 10, gabarito: [], termos: [] } };
+  assert.equal(conteudoEhDeMatematica(conteudo), true);
+  const entregue = comFormulasParaOCliente(conteudo, conteudo, { visuais: 0, resolucao: 0 });
+  assert.equal(entregue.exemplo, LINEAR_DA_LICAO_8, "o que o site e o build 3 recebem");
+  assert.equal(/[$&{}\\]|vmatrix|begin/.test(entregue.exemplo), false);
+  // O cliente que desenha recebe a marca inteira, na forma canônica (a fórmula lê: 201 caracteres cabem nos 300).
+  const desenha = comFormulasParaOCliente(conteudo, conteudo, { visuais: 1, resolucao: 1 });
+  assert.equal(desenha.exemplo.includes(String.raw`$\begin{vmatrix} 1 & 2 & 1 \\ 3 & 4 & 1 \\ 5 & 6 & 1 \end{vmatrix} = 1 \times 4 \times 1`), true);
+  // A lição de matemática que só tem LaTeX sem par (a conta cortada) também é reconhecida: o `$` que abre LaTeX é de matemática.
+  const cortada = { ...conteudo, exemplo: String.raw`Calcule $\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix} = 1 \times 4 −`, objetivo: "Conta", conceito: "Uma conta." };
+  assert.equal(conteudoEhDeMatematica(cortada), true);
+  assert.equal(comTextoLinear(cortada).exemplo, "Calcule det[1, 2; 3, 4] = 1 × 4 −");
+});

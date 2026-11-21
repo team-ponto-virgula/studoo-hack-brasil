@@ -1,4 +1,5 @@
 import {
+  contemCifraoDeLatex,
   contemFormulaMarcada,
   contemMarcaDeFormula,
   marcarFormulasSoltas,
@@ -70,7 +71,7 @@ export function conteudoEhDeMatematica(conteudo: ConteudoLicao): boolean {
   return temVisual(conteudo) ||
     exercicios(conteudo).some((exercicio) => exercicio.trechoTipo === "formula") ||
     ehAssuntoDeMatematica(conteudo.objetivo, conteudo.conceito, conteudo.exemplo) ||
-    algumTexto(conteudo, contemFormulaMarcada);
+    algumTexto(conteudo, (texto) => contemFormulaMarcada(texto) || contemCifraoDeLatex(texto));
 }
 
 /**
@@ -78,7 +79,7 @@ export function conteudoEhDeMatematica(conteudo: ConteudoLicao): boolean {
  * linha (build 3, site antigo): sem cifrão e sem LaTeX cru. O mesmo objeto quando não há marca.
  */
 export function comTextoLinear<T>(valor: T): T {
-  return transformarTextos(valor, (texto) => (contemMarcaDeFormula(texto) ? textoSemFormulas(texto) : texto)) as T;
+  return transformarTextos(valor, (texto) => (contemMarcaDeFormula(texto) || contemCifraoDeLatex(texto) ? textoSemFormulas(texto) : texto)) as T;
 }
 
 /**

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { test } from "node:test";
 import {
+  contemCifraoDeLatex,
   contemFormulaMarcada,
   contemMarcaDeFormula,
   falarFormula,
@@ -125,9 +126,10 @@ test("o cifrão do LaTeX marca; o de dinheiro não", () => {
   assert.equal(contemMarcaDeFormula("custa $5 e $10"), false);
   assert.equal(contemMarcaDeFormula("vale $x_G$."), true);
   assert.equal(contemMarcaDeFormula("sem nada"), false);
-  // A marca não atravessa linha nem passa de 200 caracteres.
+  // A marca não atravessa linha nem passa de 320 caracteres (a fórmula lê até 300; a conta de 201 caracteres da lição 8 era "cifrão cru" com o limite de 200).
   assert.equal(contemMarcaDeFormula("$x\ny$"), false);
-  assert.equal(contemMarcaDeFormula(`$${"x + ".repeat(60)}x$`), false);
+  assert.equal(contemMarcaDeFormula(`$${"x + ".repeat(60)}x$`), true);
+  assert.equal(contemMarcaDeFormula(`$${"x + ".repeat(90)}x$`), false);
 });
 
 test("fórmula marcada que não vale nunca derruba o texto: cai em texto linear, e a que não cabe em linha vira peças; sem LaTeX cru", () => {
@@ -602,4 +604,33 @@ test("12a: \\sin, \\cos, \\tan, \\ln e \\log no texto em linha não somem: a fra
   assert.equal(/begin|end|vmatrix|&|\$/.test(textoSemFormulas(naoQuadrado)), false);
   assert.equal(linearizarTolerante("\\begin{bmatrix} 1 & \\frac{1}{2} \\\\ 3 & 4 \\\\ 5 & 6 \\end{bmatrix}"), "[1, 1/2; 3, 4; 5, 6]");
   assert.equal(linearizarTolerante("\\begin{vmatrix} a & b \\ c & d \\end{vmatrix}"), "det[a, b; c, d]", "o `\\\\` que o JSON comeu separa as linhas do mesmo jeito");
+});
+
+test("12a, grupo 2: a fórmula em linha com matriz no cliente sem cabeçalho nunca deixa cifrão, vmatrix, begin, end nem & (o caso da lição 8 da IA real)", () => {
+  const matriz = String.raw`\begin{vmatrix} 1 & 2 & 1 \\ 3 & 4 & 1 \\ 5 & 6 & 1 \end{vmatrix}`;
+  const conta = ["1 X 4 X 1", "2 X 1 X 5", "1 X 3 X 6"].join(" + ") + " - " + ["5 X 4 X 1", "6 X 1 X 1", "1 X 3 X 2"].join(" - ");
+  const limpo = (linear) => !/[$&\\{}]|vmatrix|begin|end\b/.test(linear);
+  // Com `\times` a marca tem 201 caracteres (o limite era 200: a marca não se formava, e o cifrão e o "vmatrix" iam para a tela).
+  for (const operador of ["×", String.raw`\times`, String.raw` \times `, String.raw`\cdot`]) {
+    const conteudo = `${matriz} = ${conta.replaceAll("X", operador)} = 0`;
+    const texto = `Com A(1, 2), B(3, 4) e C(5, 6): o determinante é $${conteudo}$. Como deu zero, os três pontos estão alinhados.`;
+    assert.equal(contemMarcaDeFormula(texto), true, `marca com ${conteudo.length} caracteres`);
+    const linear = textoSemFormulas(texto);
+    assert.equal(limpo(linear), true, linear);
+    assert.match(linear, /o determinante é det\[1, 2, 1; 3, 4, 1; 5, 6, 1\] = 1 × 4 × 1 \+ 2 × 1 × 5/);
+    assert.equal(limpo(falarTextoComFormulas(texto)), true);
+    assert.equal(limpo(normalizarTextoComFormulas(texto, false)), true);
+  }
+  // A marca que passa de 320 caracteres, a que ficou sem o par (texto cortado) e a que tem espaço colado no cifrão também saem sem cifrão: o cifrão que
+  // cerca LaTeX vai embora com ele. O de dinheiro fica.
+  const enorme = `Veja $${matriz} = ${conta.replaceAll("X", String.raw` \times `)} = ${"0 + ".repeat(40)}0$ pronto.`;
+  assert.equal(limpo(textoSemFormulas(enorme)), true, textoSemFormulas(enorme));
+  assert.equal(textoSemFormulas("Aberta: $\\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix} = 1 \\times 4 − 2 \\times 3 ou…"), "Aberta: det[1, 2; 3, 4] = 1 × 4 − 2 × 3 ou…");
+  assert.equal(textoSemFormulas("Use $ \\sin x $ agora"), "Use sen x agora");
+  assert.equal(textoSemFormulas("$$\\sin x$$ duplo"), "sen x duplo");
+  assert.equal(textoSemFormulas("Dinheiro R$ 5,00 e $ 80 e US$10, e \\alpha solto"), "Dinheiro R$ 5,00 e $ 80 e US$10, e α solto");
+  // O cifrão de dinheiro antes de 5 não rouba o par da marca que vem depois.
+  assert.equal(textoSemFormulas("custa $5 e a conta $x \\times 2$ fecha"), "custa $5 e a conta x × 2 fecha");
+  assert.equal(contemCifraoDeLatex("$\\begin{vmatrix}"), true);
+  assert.equal(contemCifraoDeLatex("R$ 5,00 e US$10"), false);
 });

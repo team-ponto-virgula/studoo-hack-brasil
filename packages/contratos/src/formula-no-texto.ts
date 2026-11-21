@@ -131,14 +131,31 @@ export function linearizarTolerante(fonte: string): string {
   return texto;
 }
 
-/** O texto com o LaTeX que ficou solto (sem cifrões) trocado pelo texto linear: nunca barra, nunca chave na tela. */
+/**
+ * O cifrão que abre LaTeX (`$\begin{vmatrix}…`, `$ \sin x $`, uma marca que passou do limite): num texto de matemática, é cifrão de fórmula, não de
+ * dinheiro. Serve a quem decide se a lição é de matemática e se há cifrão cru para tirar.
+ */
+export function contemCifraoDeLatex(texto: string): boolean {
+  return typeof texto === "string" && texto.includes("$") && /\$[^$\n]{0,400}?\\[A-Za-z]/.test(texto);
+}
+
+/**
+ * O texto com o LaTeX que ficou solto (sem cifrões) trocado pelo texto linear: nunca barra, nunca chave na tela, e nunca o cifrão de uma fórmula que
+ * não virou marca (comprida demais, com espaço colado no cifrão, sem o par): os cifrões que cercam LaTeX saem junto com ele. O de dinheiro
+ * ("R$ 5,00", "$ 80") não tem LaTeX dentro e fica.
+ */
 function semLatexCru(texto: string): string {
-  return /[\\{}]/.test(texto) ? linearizarTolerante(texto.replace(/\s+/g, " ")) : texto;
+  if (!/[\\{}]/.test(texto)) return texto;
+  const semCifrao = texto
+    .replace(/\${1,2}([^$\n]*\\[A-Za-z][^$\n]*)\${1,2}/g, " $1 ")
+    .replace(/\${1,2}(?=\\[A-Za-z])/g, "");
+  return linearizarTolerante(semCifrao.replace(/\s+/g, " "));
 }
 
 /* ----- A marcação com cifrões ----- */
 
-const TAMANHO_MAXIMO_DA_MARCA = 200;
+/** A fórmula lê até 300 caracteres (`LIMITES_FORMULA`); a marca que a cerca ganha uma folga de espaços e de `\\left`: uma conta de 201 caracteres era "cifrão cru". */
+const TAMANHO_MAXIMO_DA_MARCA = 320;
 
 interface Marca {
   conteudo: string;
@@ -165,13 +182,17 @@ function lerMarca(texto: string, inicio: number): Marca | null {
   const primeiro = texto[inicio + comprimento];
   if (primeiro === undefined || ehEspaco(primeiro) || primeiro === "$") return null;
   const limite = Math.min(texto.length, inicio + comprimento + TAMANHO_MAXIMO_DA_MARCA);
+  // Um cifrão no meio que não fechou (`custa $5 e a conta $x \\times 2$`): ele é o começo de outra marca, não parte desta; o primeiro era dinheiro.
+  let passouPorOutroCifrao = false;
   for (let j = inicio + comprimento + 1; j < limite; j += 1) {
     if (texto[j] === "\n") return null;
     if (texto[j] !== "$" || (comprimento === 2 && texto[j + 1] !== "$")) continue;
-    if (ehDePalavra(texto[j + comprimento])) continue;
     const conteudo = texto.slice(inicio + comprimento, j);
-    if (ehEspaco(texto[j - 1]) && !fechaDepoisDeEspaco(conteudo)) continue;
-    return { conteudo, fim: j + comprimento };
+    if (ehDePalavra(texto[j + comprimento]) || (ehEspaco(texto[j - 1]) && !fechaDepoisDeEspaco(conteudo))) {
+      passouPorOutroCifrao = true;
+      continue;
+    }
+    return passouPorOutroCifrao ? null : { conteudo, fim: j + comprimento };
   }
   return null;
 }
