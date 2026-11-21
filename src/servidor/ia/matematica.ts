@@ -347,6 +347,8 @@ export function lerResolucaoDoModelo(valor: unknown): {
 const texto = { type: "string" } as const;
 const textoOuNulo = { type: ["string", "null"] } as const;
 const numeroOuNulo = { type: ["number", "null"] } as const;
+/** O x e o y do ponto do gráfico de função podem trazer π ("\\frac{\\pi}{2}"), e o domínio da curva também. */
+const numeroOuTextoOuNulo = { type: ["number", "string", "null"] } as const;
 const booleanoOuNulo = { type: ["boolean", "null"] } as const;
 const nulo = { type: "null" } as const;
 const objeto = (propriedades: Record<string, unknown>) => ({
@@ -359,22 +361,27 @@ const objeto = (propriedades: Record<string, unknown>) => ({
 const esquemaDoPonto = objeto({
   id: texto,
   papel: { type: "string", enum: ["dado", "especial", "procurado", "resposta"] },
-  x: numeroOuNulo,
-  y: numeroOuNulo,
+  x: numeroOuTextoOuNulo,
+  y: numeroOuTextoOuNulo,
   valor: numeroOuNulo,
+  /** Só no gráfico de função: o que o Studoo calcula sobre a curva (raiz, vértice, intercepto, valor f(a)); a curva do ponto, se há mais de uma. */
+  tipo: { type: ["string", "null"], enum: ["raiz", "vertice", "intercepto", "intersecao", "valor", null] },
+  curva: textoOuNulo,
   rotulo: booleanoOuNulo,
   derivado: {
     anyOf: [objeto({ tipo: { type: "string", enum: ["baricentro", "ponto_medio", "media"] }, de: { type: "array", items: texto } }), nulo],
   },
 });
 
-/** Um visual: fórmula (`tipo` "formula" e `latex`), plano (`pontos` com `x` e `y`, segmentos, polígonos, guias) ou reta numérica (`de`, `ate`, `pontos` com `valor`, intervalos). */
+/** Um visual: fórmula (`tipo` "formula" e `latex`), plano (`pontos` com `x` e `y`, segmentos, polígonos, guias), reta numérica (`de`, `ate`, `pontos` com `valor`, intervalos) ou gráfico de função (`curvas` e `pontos` sobre elas). */
 export const esquemaDoVisual = objeto({
-  tipo: { type: "string", enum: ["plano", "reta_numerica", "formula"] },
+  tipo: { type: "string", enum: ["plano", "reta_numerica", "funcao", "formula"] },
   alt: textoOuNulo,
   latex: textoOuNulo,
   de: numeroOuNulo,
   ate: numeroOuNulo,
+  /** Só no gráfico de função: de 1 a 3 curvas, cada uma com a expressão em x, a letra (f, g, h) e o domínio, que pode trazer π. */
+  curvas: { type: ["array", "null"], items: objeto({ latex: texto, nome: textoOuNulo, de: numeroOuTextoOuNulo, ate: numeroOuTextoOuNulo }) },
   pontos: { type: ["array", "null"], items: esquemaDoPonto },
   segmentos: { type: ["array", "null"], items: objeto({ de: texto, ate: texto }) },
   poligonos: { type: ["array", "null"], items: objeto({ pontos: { type: "array", items: texto } }) },
@@ -421,6 +428,19 @@ const REGRAS_DE_PONTOS = [
   "alt (até 140 caracteres, texto simples, sem LaTeX e sem $) descreve a figura para quem não a vê. Ele NUNCA diz onde está o ponto procurado, nem a coordenada dele, nem o valor da resposta (\"C é o vértice procurado\"); os pontos dados podem ter as coordenadas no alt.",
 ];
 
+/**
+ * O gráfico de função (spec 15, seção 15, marco 12a): quando a lição fala de uma função de x e o desenho ajuda. O Studoo calcula raízes, vértice,
+ * intercepto e f(a), confere o ponto que a IA dá contra a curva e tira o que não está nela; a curva do exercício que PERGUNTA um ponto dela não
+ * aparece no enunciado.
+ */
+const REGRAS_DE_FUNCAO = [
+  "Gráfico de função, para a lição que fala de uma função de x (reta, parábola, seno, cosseno) quando o desenho ajuda: {tipo: \"funcao\", alt, curvas, pontos}, no lugar do plano. curvas tem de 1 a 3 itens {latex, nome (\"f\", \"g\" ou \"h\"), de, ate}: latex é a expressão em x, só uma soma de termos: um número, um polinômio até o grau 3 (x^2 - 4x + 3), um número vezes \\sin(a x + b) ou \\cos(a x + b) (2\\cos(\\pi x)) ou um número vezes \\sqrt{a x + b}; \\pi vale nos coeficientes. Tangente, log, exponencial, divisão por x e módulo NÃO valem (a curva some). Expanda os parênteses: x^2 - 4x + 3, e não (x - 2)^2 - 1. de e ate (o domínio, com \\pi se quiser: \"2\\pi\") só quando o texto fala de um intervalo; no seno e no cosseno, sem domínio, vale de 0 a 2π.",
+  "Os pontos do gráfico ficam SOBRE a curva: {id, papel, tipo, curva, x, y}. Para a raiz, o vértice (só na parábola), o intercepto com o eixo y e o valor f(a), dê só o tipo (\"raiz\", \"vertice\", \"intercepto\", \"valor\" com o x): o Studoo calcula a posição, e duas raízes são dois pontos \"raiz\"; NÃO escreva x e y desses. O ponto sem tipo leva x e y (o x pode ter \\pi: \"\\frac{\\pi}{2}\") e só fica se a curva passa por ele; nunca ponha a origem (0, 0) nem outro ponto que a curva não cruza. Raiz, vértice e intercepto saem como pontos especiais.",
+  "Se o exercício PERGUNTA um ponto da curva (as raízes, o vértice, o valor de f em a), esse ponto leva papel \"procurado\" e o seu tipo: o gráfico do enunciado fica SEM a curva (só a fórmula e os pontos dados) e a curva aparece no retorno. O alt (até 140 caracteres) diz o tipo da curva e a fórmula e NUNCA a posição do procurado: \"Parábola de f(x) = x² − 4x + 3, com o ponto C (0, 3). O vértice é o procurado.\".",
+  "Exemplos do gráfico de função (os campos que não se aplicam ficam null): a parábola {tipo: \"funcao\", alt: \"Parábola de f(x) = x² − 4x + 3, com as raízes A e B, o vértice V e o intercepto C.\", curvas: [{latex: \"x^2 - 4x + 3\", nome: \"f\", de: null, ate: null}], pontos: [{id: \"A\", papel: \"especial\", tipo: \"raiz\"}, {id: \"B\", papel: \"especial\", tipo: \"raiz\"}, {id: \"V\", papel: \"especial\", tipo: \"vertice\"}, {id: \"C\", papel: \"especial\", tipo: \"intercepto\"}]}; a reta {tipo: \"funcao\", alt: \"A reta g(x) = 2x + 1.\", curvas: [{latex: \"2x + 1\", nome: \"g\", de: -2, ate: 2}], pontos: [{id: \"C\", papel: \"especial\", tipo: \"intercepto\"}, {id: \"R\", papel: \"especial\", tipo: \"raiz\"}]}; o seno {tipo: \"funcao\", alt: \"A onda h(x) = sin x de 0 a 2π.\", curvas: [{latex: \"\\sin x\", nome: \"h\", de: 0, ate: \"2\\pi\"}], pontos: [{id: \"M\", papel: \"especial\", x: \"\\frac{\\pi}{2}\", y: 1}, {id: \"N\", papel: \"especial\", x: \"\\frac{3\\pi}{2}\", y: -1}]}.",
+  "O gráfico de função ainda não vale no \"Resolva comigo\" (a figura do problema e a dos passos são plano ou reta numérica): use-o só em visuais e no visual do exercício.",
+];
+
 const REGRAS_DE_RESOLUCAO = [
   "resolucao (ou null): o \"Resolva comigo\", um exemplo resolvido com OUTROS números que os do exercício: {problema, visual, passos}. problema é a pergunta, com as fórmulas entre $…$; visual é a figura do problema (plano ou reta numérica, com o procurado nas coordenadas reais). passos tem de 3 a 5 passos, cada um com nome (até 24 caracteres, como \"A condição\": só texto simples e curto, sem letra com índice, sem expoente e sem fórmula; \"Isole a abscissa de C\", e não \"Isole x_C\"), texto (uma frase de até 300 caracteres), formula (LaTeX restrito, ou null; com \\foco{…} no que mudou e, no último passo, \\resposta{…} no valor achado) e visual (a figura inteira do passo, ou null: os pontos e a janela seguem os do problema; só o último passo traz o ponto como \"resposta\").",
   "O \"Sua vez\": exatamente UM passo, o penúltimo ou o último, tem tentativa = {pergunta, opcoes}: 3 opções, exatamente 1 com correta true, cada uma com porque (uma frase que explica por que está certa ou errada). A pergunta é por um valor que a resolução revela adiante (o do último passo, em \\resposta{…}). Cada opção tem formula (a conta que dá o valor, como \"y_M = \\frac{10}{2}\") OU texto (só quando a opção não é uma conta; uma frase com uma conta no meio vai toda em texto, a conta entre cifrões), nunca os dois: o Studoo refaz a conta das opções em fórmula e compara com o valor da resposta, então prefira formula. A formula e o visual do passo que tem a tentativa são o que a pessoa vê depois da escolha: o app só os mostra depois. A frase (texto) e o nome do passo que tem o \"Sua vez\" dizem o que fazer (\"Agora junte os termos e isole k\", \"Faça igual com as ordenadas\"), nunca o resultado nem a conta já feita (nada de \"k = 3\", \"chega-se a 3\", \"dá zero\"): o valor só aparece na formula, nas opções e no porque. O Studoo RECUSA a resolução em que a frase ou o nome desse passo traz o valor. Nos outros passos, tentativa é null.",
@@ -435,12 +455,13 @@ const REGRAS_DE_MARCAS = [
 export const instrucoesDeMatematica = [
   "",
   "Esta lição é de MATEMÁTICA. Além do que está acima, ela leva fórmulas e figuras em dados (você não desenha nada), e os campos novos do formato são:",
-  "- visuais (ou null): até 3 visuais da lição. Uma fórmula: {tipo: \"formula\", latex, alt (até 60 caracteres)}. Na geometria e na reta numérica, uma figura: {tipo: \"plano\", alt, pontos, segmentos, poligonos, guias} ou {tipo: \"reta_numerica\", alt, de, ate, pontos, intervalos}. Os campos que não se aplicam ao tipo ficam null.",
+  "- visuais (ou null): até 3 visuais da lição. Uma fórmula: {tipo: \"formula\", latex, alt (até 60 caracteres)}. Na geometria e na reta numérica, uma figura: {tipo: \"plano\", alt, pontos, segmentos, poligonos, guias} ou {tipo: \"reta_numerica\", alt, de, ate, pontos, intervalos}; numa função de x, o gráfico {tipo: \"funcao\", alt, curvas, pontos} (regras abaixo). Os campos que não se aplicam ao tipo ficam null.",
   "- visual, em cada exercício (ou null): a figura do enunciado, no mesmo formato.",
   "- resolucao (ou null): o \"Resolva comigo\".",
   ...REGRAS_DE_MARCAS.map((regra) => `- ${regra}`),
   ...REGRAS_DE_LATEX.map((regra) => `- ${regra}`),
   ...REGRAS_DE_PONTOS.map((regra) => `- ${regra}`),
+  ...REGRAS_DE_FUNCAO.map((regra) => `- ${regra}`),
   ...REGRAS_DE_RESOLUCAO.map((regra) => `- ${regra}`),
   "- Sem figura nem fórmula que ajudem de verdade, visuais, visual e resolucao são null: a lição continua valendo só com o texto.",
 ].join("\n");
@@ -467,12 +488,13 @@ export const esquemaDasFigurasDoMaterial = objeto({
 /** As instruções do segundo pedido: dada uma lição de matemática já escrita, devolver os dados das figuras e da resolução. */
 export const instrucoesDeFigurasDoMaterial = [
   "Você recebe UMA lição de matemática, já escrita a partir de um material de estudo (título, objetivo, conceito, exemplo, a pergunta com as alternativas e o índice da certa) e a página do material de onde ela veio. Devolva só os dados das figuras e do exemplo resolvido que acompanham a lição: visuais, visual e resolucao. Você não desenha nada: o Studoo valida os dados e desenha. Campos que não se aplicam ficam null.",
-  "- visuais (ou null): até 3 visuais da explicação. Uma fórmula: {tipo: \"formula\", latex, alt (até 60 caracteres)}. Na geometria e na reta numérica, uma figura: {tipo: \"plano\", alt, pontos, segmentos, poligonos, guias} ou {tipo: \"reta_numerica\", alt, de, ate, pontos, intervalos}. Os campos que não se aplicam ao tipo ficam null. Reproduza só o que o material mostra ou diz (coordenadas, valores); nada inventado.",
+  "- visuais (ou null): até 3 visuais da explicação. Uma fórmula: {tipo: \"formula\", latex, alt (até 60 caracteres)}. Na geometria e na reta numérica, uma figura: {tipo: \"plano\", alt, pontos, segmentos, poligonos, guias} ou {tipo: \"reta_numerica\", alt, de, ate, pontos, intervalos}; numa função de x, o gráfico {tipo: \"funcao\", alt, curvas, pontos} (regras abaixo). Os campos que não se aplicam ao tipo ficam null. Reproduza só o que o material mostra ou diz (coordenadas, valores); nada inventado.",
   "- visual (ou null): a figura da pergunta da lição, no mesmo formato. O ponto que a pergunta procura leva as coordenadas da alternativa certa (papel \"procurado\").",
   "- resolucao (ou null): o \"Resolva comigo\", um exemplo resolvido da MESMA ideia com OUTROS números que os da pergunta e do material.",
   ...REGRAS_DE_MARCAS.map((regra) => `- ${regra}`),
   ...REGRAS_DE_LATEX.map((regra) => `- ${regra}`),
   ...REGRAS_DE_PONTOS.map((regra) => `- ${regra}`),
+  ...REGRAS_DE_FUNCAO.map((regra) => `- ${regra}`),
   ...REGRAS_DE_RESOLUCAO.map((regra) => `- ${regra}`),
   "- Sem figura nem fórmula que ajudem de verdade, visuais, visual e resolucao são null.",
   "- Se os dados trouxerem `correcao`, a sua resposta anterior para esta lição teve o \"Resolva comigo\" RECUSADO pelo motivo dito (com as letras e os valores usados, quando é conta): refaça visuais, visual e resolucao corrigindo exatamente isso e conferindo cada conta.",
@@ -480,8 +502,8 @@ export const instrucoesDeFigurasDoMaterial = [
 
 /* ----- O exemplo do json (DeepSeek): o mesmo formato do esquema, com um exemplo de verdade ----- */
 
-const visualVazio = { alt: null, latex: null, de: null, ate: null, pontos: null, segmentos: null, poligonos: null, guias: null, intervalos: null };
-const pontoVazio = { x: null, y: null, valor: null, rotulo: null, derivado: null };
+const visualVazio = { alt: null, latex: null, de: null, ate: null, curvas: null, pontos: null, segmentos: null, poligonos: null, guias: null, intervalos: null };
+const pontoVazio = { x: null, y: null, valor: null, tipo: null, curva: null, rotulo: null, derivado: null };
 
 /** A figura do ponto médio de A (1, 2) e B (5, 8): dado, dado e especial (derivado). */
 const figuraDoExemploResolvido = (papelDoM: "especial" | "resposta") => ({
