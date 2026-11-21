@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-21T02:14:12.535Z",
+  "checkedAt": "2026-11-21T03:14:21.232Z",
   "appId": "6837508955",
   "groupId": "b54c8449-a903-4bc3-885a-5b3dcd6dd21a",
   "name": "Studoo Beta Interno",
@@ -12,13 +12,18 @@
       "processingState": "VALID"
     }
   ],
-  "testerCount": 1,
+  "testerCount": 2,
   "ownerMember": true,
-  "ownerTesterState": "INVITED",
-  "ownerInviteType": "EMAIL",
-  "otherUsersAdded": false,
-  "rolesChanged": false,
-  "limits": "Confirma associação do build, titular, estado INVITED e recebimento do convite oficial por email; não comprova aceite, instalação ou funcionamento no iPhone.",
-  "invitationEmailReceived": true,
-  "invitationEmailSentAt": "2026-11-21T02:13:50Z"
+  "ownerTesterState": "INSTALLED",
+  "julioMember": true,
+  "julioTesterState": "ACCEPTED",
+  "julioRoles": [
+    "DEVELOPER"
+  ],
+  "julioAllAppsVisible": false,
+  "julioProvisioningAllowed": false,
+  "julioVisibleAppIds": [
+    "6837508955"
+  ],
+  "limits": "Confirma associação dos dois testadores, escopo, instalação do titular e aceite do TestFlight de Julio conforme estados da Apple; não comprova instalação de Julio nem funcionamento dos fluxos no aparelho."
 }
