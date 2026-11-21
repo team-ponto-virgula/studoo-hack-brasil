@@ -61,11 +61,38 @@ test('o app trata funcao como as outras figuras: nada decide por plano/reta, e o
     assert.doesNotMatch(await ler(arquivo), /tipo === 'plano'|tipo === 'reta_numerica'/, `${arquivo} não assume plano/reta`);
   }
   assert.match(await ler('apps/mobile/src/desenho-svg.ts'), /return \(visual\.pontos \?\? \[\]\)\.some/, 'funcao pode vir sem pontos');
-  assert.match(await ler('apps/mobile/src/desenho.tsx'), /if \(desenho\.naoCabe && visual\.tipo !== 'formula'\) return <FiguraEmTexto alt=\{visual\.alt\}/);
+  assert.match(await ler('apps/mobile/src/desenho.tsx'), /if \(desenho\.naoCabe && visual\.tipo !== 'formula'\) return <FiguraEmTexto alt=\{visual\.alt\} descricao=\{desenho\.descricao\}/);
 });
 
 test('capacidade: o app anuncia a própria lista (ainda visuais@1), não a constante do contrato', async () => {
   const api = await ler('apps/mobile/src/api-nativa.ts');
   assert.match(api, /export const CAPACIDADES_DO_APP = 'visuais@1,resolucao@1';/);
   assert.doesNotMatch(api, /import \{[^}]*CAPACIDADES_DESTE_CLIENTE/);
+});
+
+test('alt marcado do gráfico de função (contrato 919d7e3): a linha "Figura:" desenha as fórmulas, nada cru, em 320 e 390', async () => {
+  const { partirTextoComFormulas, falarTextoComFormulas } = await import('../packages/contratos/src/aprendizado.ts');
+  const { itensDaFrase, pesoDoTexto } = await import('../apps/mobile/src/formula-em-linha.ts');
+  const desenhoFonte = await ler('apps/mobile/src/desenho.tsx');
+  assert.match(desenhoFonte, /<FiguraEmTexto alt=\{visual\.alt\} descricao=\{desenho\.descricao\} testID=\{testID\} \/>/);
+  assert.match(desenhoFonte, /accessibilityLabel=\{`Figura: \$\{descricao \|\| falarTextoComFormulas\(alt\)\}`\}/, 'o leitor ouve a descrição falada do motor');
+  assert.equal(pesoDoTexto(undefined), 400, 'a linha é texto regular: a fórmula em 400');
+  for (const nome of ['parabola', 'reta', 'seno']) {
+    const visual = normalizarVisual((await fixture(nome)).guardado);
+    const enunciado = visualParaEnunciado(visual);
+    assert.match(enunciado.alt, /\$/, `${nome}: o alt vem marcado`);
+    const desenho320 = desenhoDoVisual(enunciado, { tipo: 'enunciado' }, { alturaMaxima: 158 });
+    assert.doesNotMatch(desenho320.descricao, CRU, `${nome}: a descrição (leitor) sem cifrão nem barra`);
+    // A linha "Figura:" em 320 (largura do texto ~272 depois do ícone) e em 390 (~322), no texto de 14.
+    for (const limite of [272, 322]) {
+      const itens = itensDaFrase(partirTextoComFormulas(enunciado.alt), 14, 1, limite, 400);
+      assert.ok(itens.some((item) => item.tipo === 'desenho'), `${nome}: fórmulas desenhadas (${limite})`);
+      for (const item of itens) if (item.tipo === 'texto') assert.doesNotMatch(item.texto, CRU, `${nome} (${limite}): "${item.texto}"`);
+    }
+    assert.doesNotMatch(falarTextoComFormulas(enunciado.alt), CRU);
+  }
+  const seno = visualParaEnunciado(normalizarVisual((await fixture('seno')).guardado));
+  assert.match(seno.alt, /\\sin x/); assert.match(seno.alt, /M\(\\frac\{\\pi\}\{2\}, 1\)/);
+  const parabola = visualParaEnunciado(normalizarVisual((await fixture('parabola')).guardado));
+  assert.match(parabola.alt, /\$f\(x\) = x\^2 - 4x \+ 3\$/);
 });

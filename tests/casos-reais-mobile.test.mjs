@@ -104,9 +104,9 @@ test('(d) os passos feitos mostram a fórmula desenhada (em peças se larga), nu
 test('revisão do Designer (spec 15, seção 13) sobre os casos reais', async () => {
   const desenho = await ler('apps/mobile/src/desenho.tsx');
   // (1) figura que não cabe: linha discreta, ícone de gráfico de 16, 14/20 #5E6A85 (textoSecundario), sem caixa; "Figura: <alt>".
-  assert.match(desenho, /accessibilityLabel=\{`Figura: \$\{alt\}`\}/);
+  assert.match(desenho, /accessibilityLabel=\{`Figura: \$\{descricao \|\| falarTextoComFormulas\(alt\)\}`\}/);
   assert.match(desenho, /<Icone nome="grafico" tamanho=\{16\} cor=\{cores\.textoSecundario\}/);
-  assert.match(desenho, /color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontSize: 14, lineHeight: 20/);
+  assert.match(desenho, /<TextoComFormulas texto=\{alt\} estilo=\{\{ flex: 1, color: cores\.textoSecundario, fontFamily: fontes\.corpo, fontSize: 14, lineHeight: 20 \}\} \/>/);
   const figura = desenho.slice(desenho.indexOf('function FiguraEmTexto'), desenho.indexOf('const blocoDaFormula'));
   assert.doesNotMatch(figura, /blocoDaFormula|backgroundColor/, 'sem caixa');
   // (3) a pergunta do "Sua vez" no peso que o motor desenha (700), o mesmo da fórmula em linha.

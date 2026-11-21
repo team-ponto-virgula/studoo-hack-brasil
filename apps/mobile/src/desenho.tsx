@@ -1,10 +1,11 @@
 import { memo, useMemo, useState, type ReactNode } from 'react';
 import { Animated, ScrollView, Text, View, useWindowDimensions, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
-import { falarFormula, formulaLinear, lerFormula, type ContextoDoDesenho, type Desenho, type OpcoesDaFigura, type OpcoesDaFormula, type Visual } from '@studoo/contratos';
+import { falarFormula, falarTextoComFormulas, formulaLinear, lerFormula, type ContextoDoDesenho, type Desenho, type OpcoesDaFigura, type OpcoesDaFormula, type Visual } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
 import { ajusteDoBloco, corDoPapel, desenhoDoVisual, elementoDaPrimitiva, medidasNaCaixa, medidasNaTela, ordenarVisuais, separarPontoResposta, type ElementoSvg } from './desenho-svg';
 import { Icone } from './icone';
+import { TextoComFormulas } from './texto-com-formulas';
 import { cores, fontes } from './tema';
 
 /*
@@ -133,7 +134,7 @@ export function DesenhoDoVisual({ visual, contexto, opcoes, rotulo, testID, esti
     [visual, chaveDoContexto, tamanho, opcoes?.fundo, opcoes?.alturaMaxima]);
   if (!desenho) return visual.tipo === 'formula' ? <FormulaEmTexto latex={visual.latex} testID={testID} /> : null;
   // O motor respeita a altura pedida e, quando nem assim cabe, avisa (`naoCabe`): no lugar da figura, a descrição dela.
-  if (desenho.naoCabe && visual.tipo !== 'formula') return <FiguraEmTexto alt={visual.alt} testID={testID} />;
+  if (desenho.naoCabe && visual.tipo !== 'formula') return <FiguraEmTexto alt={visual.alt} descricao={desenho.descricao} testID={testID} />;
   return <DesenhoSvg desenho={desenho} rotulo={rotulo} testID={testID} estilo={estilo} entrada={entrada} caixa={caixa} />;
 }
 
@@ -157,12 +158,14 @@ function FormulaEmTexto({ latex, testID }: { latex: string; testID?: string }) {
  * A figura que não coube na altura (spec 15, seção 13): uma linha discreta logo abaixo do enunciado, com o ícone de gráfico de
  * 16 e o `alt` em 14/20 `#5E6A85`, sem caixa (a caixa parecia dica e repetia o enunciado). Leitor de tela: "Figura: <alt>".
  */
-function FiguraEmTexto({ alt, testID }: { alt: string; testID?: string }) {
+function FiguraEmTexto({ alt, descricao, testID }: { alt: string; descricao?: string; testID?: string }) {
+  // O alt pode trazer fórmulas marcadas com $…$ (o gráfico de função, contrato 919d7e3): elas são desenhadas em linha, no peso do
+  // texto (400), e nunca aparecem cruas. O leitor de tela ouve a descrição do motor, já falada ("f de x é igual a…").
   return (
-    <View testID={testID ? `${testID}-texto` : undefined} accessible accessibilityRole="text" accessibilityLabel={`Figura: ${alt}`}
+    <View testID={testID ? `${testID}-texto` : undefined} accessible accessibilityRole="text" accessibilityLabel={`Figura: ${descricao || falarTextoComFormulas(alt)}`}
       style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 6 }}>
       <View style={{ paddingTop: 2 }}><Icone nome="grafico" tamanho={16} cor={cores.textoSecundario} traco={2} /></View>
-      <Text style={{ flex: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 }}>{alt}</Text>
+      <TextoComFormulas texto={alt} estilo={{ flex: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 20 }} />
     </View>
   );
 }
