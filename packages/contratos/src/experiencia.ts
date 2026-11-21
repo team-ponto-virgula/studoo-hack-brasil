@@ -541,9 +541,17 @@ export const mensagens = {
             /** Campo vazio ao salvar (revisão de 19/11). */
             vazio: 'Escreva como você quer aparecer.',
         },
-        compartilhadas: 'Trilhas que você compartilha',
+        /**
+         * Dois termos, cada um com o seu sentido (spec 16, item 32): compartilhar é ter um link (só quem o recebe abre); postar é aparecer no perfil.
+         * O título da seção fala do link, e a linha de baixo diz como aparecer no perfil.
+         */
+        compartilhadas: 'Trilhas com link',
         /** Título da seção com o total (inclui as trilhas só com o link). */
-        compartilhadasTotal: (n: number) => `Trilhas que você compartilha (${n})`,
+        compartilhadasTotal: (n: number) => `Trilhas com link (${n})`,
+        /** Sob o título, quando há trilhas com link: com a comunidade, o caminho é "Postar trilha no perfil". */
+        compartilhadasLinha: 'Só quem tem o link abre. Para aparecer no seu perfil, use “Postar trilha no perfil”.',
+        /** Sem a comunidade, só existe a chave "Mostrar no meu perfil" de cada trilha. */
+        compartilhadasLinhaSemComunidade: 'Só quem tem o link abre. Para aparecer no seu perfil, marque “Mostrar no meu perfil”.',
         nenhuma: 'Você ainda não compartilha nenhuma trilha. Abra uma trilha e toque em “Compartilhar”.',
         nenhumaAntes: 'Você ainda não compartilha nenhuma trilha.',
         nenhumaLink: 'Abra uma trilha',
@@ -553,7 +561,8 @@ export const mensagens = {
         /** Na lista da dona, quando ninguém começou nem curtiu: uma frase só. */
         semNinguem: GESTO.semNinguem,
         publicoTitulo: 'Seu perfil público',
-        privado: 'Privado. Nenhuma trilha aparece no seu perfil.',
+        /** Perfil vazio: esta frase e a dica de baixo formam uma só ("Privado: nenhuma trilha está postada no seu perfil. Para aparecer nele, use “Postar trilha no perfil”."). */
+        privado: 'Privado: nenhuma trilha está postada no seu perfil.',
         publico: (n: number) => `Público. ${n === 1 ? '1 trilha aparece' : `${n} trilhas aparecem`} no seu perfil, para quem tiver o endereço dele.`,
         verComoOutros: 'Ver como os outros veem',
         conta: 'Conta',
@@ -572,9 +581,9 @@ export const mensagens = {
         textoCompartilharPerfil: (nome: string) => `As trilhas de ${nome} no Studoo`,
         linkPerfilCopiado: 'Link do perfil copiado',
         // Spec 10, 7b (db773e6): com a comunidade, o perfil fica público pela folha "Postar no perfil".
-        perfilPrivadoDica: 'Para compartilhar o perfil, poste ao menos uma trilha em “Postar trilha no perfil”.',
+        perfilPrivadoDica: 'Para aparecer nele, use “Postar trilha no perfil”.',
         /** Sem a comunidade, só existe a chave "Mostrar no meu perfil" de cada trilha. */
-        perfilPrivadoDicaSemComunidade: 'Para compartilhar o perfil, marque “Mostrar no meu perfil” em ao menos uma trilha.',
+        perfilPrivadoDicaSemComunidade: 'Para aparecer nele, marque “Mostrar no meu perfil” em ao menos uma trilha.',
         alcance: (trilhas: number, pessoas: number) =>
             mensagens.perfil.alcanceItens(trilhas, pessoas).join(' · '),
         /**

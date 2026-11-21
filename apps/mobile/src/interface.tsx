@@ -232,9 +232,13 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   const [alturaCabecalho, setAlturaCabecalho] = useState(0);
   const [alturaFaixa, setAlturaFaixa] = useState(0);
   const [alturaAcima, setAlturaAcima] = useState(0);
+  const [faixaPresa, setFaixaPresa] = useState(false);
+  const faixaPresaAgora = useRef(false);
   // O que fica acima da faixa parada entra na conta de onde o conteúdo começa (só existe com a faixa).
   const comAcima = Boolean(faixaFixa && acimaDaFaixa);
   const acima = comAcima ? alturaAcima : 0;
+  // Onde a faixa começa no conteúdo: a partir daí, ela gruda no alto e o que rola passa por baixo dela.
+  const inicioDaFaixa = (!topo && !semCabecalho ? alturaCabecalho : 0) + (faixaColada ? 0 : 20) + acima;
   const [alturaRodape, setAlturaRodape] = useState(0);
   const [alturaBarra, setAlturaBarra] = useState(0);
   const cabecalhoNaRolagem = !topo && !semCabecalho;
@@ -356,7 +360,15 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
   if (faixaFixa) {
     filhosDeCima.push(faixaColada
       ? <View key="faixa" style={estilos.faixaColada} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</View>
-      : <FundoDeBarra key="faixa" estilo={estilos.faixaFixa} estiloVidro={estilos.faixaFixaVidro} onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>{faixaFixa}</FundoDeBarra>);
+      // O ScrollView passa o `style` do filho preso para o invólucro que gruda e troca o do filho por `flex: 1`: o fundo e a
+      // linha ficam no filho direto (uma View), e o vidro vai dentro dele. Com o fundo dentro do FundoDeBarra, o Android
+      // perdia o branco e o mapa aparecia atrás do nome da trilha (spec 16, item 3).
+      : (
+        <View key="faixa" style={VIDRO ? estilos.faixaFixaVidro : [estilos.faixaFixa, faixaPresa && estilos.faixaFixaPresa]}
+          testID="faixa-fixa" onLayout={(evento) => setAlturaFaixa(evento.nativeEvent.layout.height)}>
+          <FundoDeBarra estilo={estilos.faixaFixaMiolo} estiloVidro={estilos.faixaFixaMiolo}>{faixaFixa}</FundoDeBarra>
+        </View>
+      ));
   }
 
   return (
@@ -377,7 +389,14 @@ export function Tela({ children, acoes, topo, rodape, pagina, semCabecalho = fal
             aoMedir?.(evento.nativeEvent.layout.height - sobreposicao);
             if (campoEmFoco.current) mostrarCampoEmFoco();
           }}
-          onScroll={(evento) => { rolado.current = evento.nativeEvent.contentOffset.y; aoRolar?.(evento.nativeEvent.contentOffset.y); }}
+          onScroll={(evento) => {
+            const y = evento.nativeEvent.contentOffset.y;
+            rolado.current = y;
+            // A linha embaixo da faixa só aparece quando o mapa já passa por baixo dela (a faixa grudou no alto).
+            const presa = Boolean(faixaFixa) && !faixaColada && y > inicioDaFaixa + 0.5;
+            if (presa !== faixaPresaAgora.current) { faixaPresaAgora.current = presa; setFaixaPresa(presa); }
+            aoRolar?.(y);
+          }}
           // No iPhone, com a cápsula, o indicador de rolagem termina acima dela (e da ação presa).
           scrollIndicatorInsets={comBarra ? { bottom: sobreposicao } : undefined}
           automaticallyAdjustsScrollIndicatorInsets={!comBarra}
@@ -1351,9 +1370,13 @@ export const estilos = StyleSheet.create({
   // .trilha-topo no celular: 20 abaixo da barra da marca (28 do respiro da página menos 8), colada no topo ao rolar.
   faixaVao: { height: 20 },
   // .trilha-topo no celular: a linha de baixo é sombra por fora (box-shadow 0 2px 0 gelo), não borda.
-  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.96)', boxShadow: `0 2px 0 ${cores.gelo}` },
+  // Sem vidro (Android, iPhone antes do iOS 26 e prévia web): branco a 94% sempre, e a linha de 1 #E1E7FA embaixo só quando
+  // o mapa rola sob a faixa (spec 16, item 3).
+  faixaFixa: { zIndex: 6, backgroundColor: 'rgba(255, 255, 255, 0.94)' },
+  faixaFixaPresa: { boxShadow: `0 1px 0 ${cores.gelo}` },
   // iOS 26: a faixa vira vidro sobre o mapa que rola por baixo (sem o branco e sem a linha de baixo).
   faixaFixaVidro: { zIndex: 6 },
+  faixaFixaMiolo: { flex: 1 },
   faixaColada: { zIndex: 6 },
   flutuante: { position: 'absolute', left: 16, right: 16, zIndex: 7, alignItems: 'center' },
   // A superfície opaca da cápsula e das ações presas: branco, contorno de 1 rgba(11, 27, 92, 0,10) por fora e sombra leve,

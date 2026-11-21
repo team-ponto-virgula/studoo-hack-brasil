@@ -6,7 +6,7 @@ import {
   acertouParte,
   codificarResposta,
   conferirFala,
-  embaralharExercicio,
+  embaralharExercicioDaRodada,
   etapasDaLicao,
   faltaParaVerificar,
   ordemInicial,
@@ -221,13 +221,14 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
   responderSuaVez?: (escolha: EscolhaNoSuaVez) => Promise<unknown>;
 }) {
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
-  // As opções mudam de ordem a cada visita: a certa não fica sempre no mesmo lugar e não dá para decorar a posição.
-  const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
-  /** Cada revisão rápida embaralha de novo (antes, as opções voltavam na mesma ordem). */
+  /**
+   * A ordem das opções vem do id da lição, do índice do exercício e da rodada (contrato, `sementeDasOpcoes`): a mesma tentativa tem a mesma ordem
+   * na web e no app, e a certa não fica sempre no mesmo lugar de um exercício para o outro. Cada revisão rápida sobe a rodada e embaralha de novo.
+   */
   const [rodadaDeOpcoes, setRodadaDeOpcoes] = useState(0);
   const exercicios = useMemo(
-    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicio(exercicio, semente + numero + rodadaDeOpcoes * 7919)),
-    [licao, semente, rodadaDeOpcoes],
+    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicioDaRodada(exercicio, licao.id, numero, rodadaDeOpcoes)),
+    [licao, rodadaDeOpcoes],
   );
   // Quem saiu no meio continua de onde parou (o andamento fica no navegador por um dia).
   const [retomada] = useState(() => lerAndamento(licao, etapas.length, exercicios.length));
