@@ -424,7 +424,10 @@ function multiplos(de: number, ate: number, passo: number): number[] {
   return valores;
 }
 
-const FOLGA_DO_ROTULO_DOS_NUMEROS = 2;
+/** O rótulo inteiro fica a pelo menos isto de um número de eixo (o halo de 3 de cada lado não pode se encostar). */
+const FOLGA_DO_ROTULO_DOS_NUMEROS = 4;
+/** O rótulo fica a pelo menos isto do traço do eixo (e das asas da seta): o traço de 2, o halo de 3 do texto e um respiro. */
+const MARGEM_DO_ROTULO_AOS_EIXOS = 4;
 /** O 0 da origem fica a no máximo isto da origem (a caixa dele, em qualquer dos quatro quadrantes): mais longe se leria como número de eixo. */
 export const DISTANCIA_MAXIMA_DO_ZERO = 8;
 const AFASTAMENTO_LATERAL_DO_ZERO = 4.6;
@@ -769,11 +772,20 @@ function desenharPlanoUmaVez(
   const noY = passoDosNumeros(yMax - yMin, passoY, unidade, 16);
   const baseDoX = eixoY + 17;
   const numeros: Marca[] = [];
+  // A ÚNICA exceção a "número de eixo nunca some" (spec 15, seção 12): a bolinha de um ponto que cobre o número (a caixa do número
+  // encosta no círculo do ponto, com a borda branca) tira só aquele número; a grade continua permitindo contar.
+  const cobertoPorPonto = (ret: Ret): boolean =>
+    pontos.some((ponto) => {
+      const dx = Math.max(ret.x - ponto.x, 0, ponto.x - (ret.x + ret.l));
+      const dy = Math.max(ret.y - ponto.y, 0, ponto.y - (ret.y + ret.a));
+      return Math.hypot(dx, dy) < raioDoPonto(ponto.papel) + 1;
+    });
   for (const v of multiplos(xMin, xMax, noX)) {
     if (v === 0 || emFocoNoX.has(v)) continue;
     const texto = numeroParaTela(v);
     const largura = larguraDoTexto(texto, TAMANHO_DO_NUMERO, 700);
     const ret: Ret = { x: X(v) - largura / 2, y: baseDoX - ALTURA_DO_DIGITO - 0.3, l: largura, a: ALTURA_DO_DIGITO + 0.7 };
+    if (cobertoPorPonto(ret)) continue;
     numeros.push(escrever(texto, ret.x, baseDoX, TAMANHO_DO_NUMERO, 700, "suave"));
     numerosDeEixo.push(ret);
     caixa("numero", texto, ret);
@@ -783,6 +795,7 @@ function desenharPlanoUmaVez(
     const texto = numeroParaTela(v);
     const largura = larguraDoTexto(texto, TAMANHO_DO_NUMERO, 700);
     const ret: Ret = { x: eixoX - 6 - largura, y: Y(v) - ALTURA_DO_DIGITO / 2 - 0.4, l: largura, a: ALTURA_DO_DIGITO + 0.7 };
+    if (cobertoPorPonto(ret)) continue;
     numeros.push(escrever(texto, ret.x, Y(v) + ALTURA_DO_DIGITO / 2, TAMANHO_DO_NUMERO, 700, "suave"));
     numerosDeEixo.push(ret);
     caixa("numero", texto, ret);
@@ -825,6 +838,16 @@ function desenharPlanoUmaVez(
     numerosDeEixo.push(retDoZero);
     caixa("numero", "0", retDoZero);
   }
+
+  // Os eixos têm prioridade sobre os rótulos, como já têm sobre os números (spec 15, seção 12): o traço, o halo do texto e um respiro de
+  // cada lado, e a ponta da seta com as asas de 5. O rótulo procura outro lado, ou o ponto fica sem letra e as coordenadas vão à legenda.
+  const m = MARGEM_DO_ROTULO_AOS_EIXOS;
+  obstaculos.push(
+    { x: eixoX - 1 - m, y: fimDoEixoY - 8 - m, l: 2 + 2 * m, a: fundo - fimDoEixoY + 8 + m },
+    { x: esquerda, y: eixoY - 1 - m, l: fimDoEixoX + 8 + m - esquerda, a: 2 + 2 * m },
+    { x: fimDoEixoX - m, y: eixoY - 5 - m, l: 8 + 2 * m, a: 10 + 2 * m },
+    { x: eixoX - 5 - m, y: fimDoEixoY - 8 - m, l: 10 + 2 * m, a: 8 + 2 * m },
+  );
 
   // 7. Rótulos dos pontos: quem se move é o rótulo; sem lugar para o inteiro, só o nome, e as coordenadas vão para a legenda.
   const rotulos: Marca[] = [];

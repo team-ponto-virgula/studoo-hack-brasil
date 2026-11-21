@@ -796,13 +796,13 @@
    },
    {
     "tipo": "caminho",
-    "d": "#e80aef3e02:31775",
+    "d": "#7d76e45cca:31149",
     "borda": "branco",
     "larguraDaBorda": 6
    },
    {
     "tipo": "caminho",
-    "d": "#d376677de7:16932",
+    "d": "#a8b4157fbe:16306",
     "preenchimento": "suave"
    },
    {
@@ -1700,18 +1700,18 @@
    },
    {
     "tipo": "caminho",
-    "d": "#e191649388:20566",
+    "d": "#3def915de6:19742",
     "borda": "branco",
     "larguraDaBorda": 6
    },
    {
     "tipo": "caminho",
-    "d": "#927490913f:13223",
+    "d": "#97f5218fa1:12402",
     "preenchimento": "suave"
    },
    {
     "tipo": "caminho",
-    "d": "#133c863cdf:7343",
+    "d": "#b6aa9daf8a:7340",
     "preenchimento": "texto"
    },
    {
@@ -1948,18 +1948,18 @@
    },
    {
     "tipo": "caminho",
-    "d": "#e191649388:20566",
+    "d": "#3def915de6:19742",
     "borda": "branco",
     "larguraDaBorda": 6
    },
    {
     "tipo": "caminho",
-    "d": "#927490913f:13223",
+    "d": "#97f5218fa1:12402",
     "preenchimento": "suave"
    },
    {
     "tipo": "caminho",
-    "d": "#133c863cdf:7343",
+    "d": "#b6aa9daf8a:7340",
     "preenchimento": "texto"
    },
    {
@@ -2196,13 +2196,13 @@
    },
    {
     "tipo": "caminho",
-    "d": "#e0594b2e1c:24189",
+    "d": "#add886cc13:22795",
     "borda": "branco",
     "larguraDaBorda": 6
    },
    {
     "tipo": "caminho",
-    "d": "#927490913f:13223",
+    "d": "#afff8ddcca:11832",
     "preenchimento": "suave"
    },
    {
@@ -2212,7 +2212,7 @@
    },
    {
     "tipo": "caminho",
-    "d": "#133c863cdf:7343",
+    "d": "#b6aa9daf8a:7340",
     "preenchimento": "texto"
    },
    {

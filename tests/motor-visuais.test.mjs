@@ -364,6 +364,8 @@ const bate = (a, b, folga = 0, tolerancia = 0) =>
   a.x - folga < b.x + b.largura - tolerancia && b.x < a.x + a.largura + folga - tolerancia &&
   a.y - folga < b.y + b.altura - tolerancia && b.y < a.y + a.altura + folga - tolerancia;
 
+// A única exceção a "número de eixo nunca some" é a bolinha de um ponto que o cobre (marco 2f, regra 2: teste abaixo); aqui nenhum rótulo
+// de ponto apaga número nenhum. Nas fixtures de altura normal e nos dados abaixo, a bolinha não cobre número, então todos aparecem.
 test("número de eixo nunca some: nenhum rótulo de ponto o apaga, e o rótulo procura outro lado", () => {
   for (const nome of NOMES) {
     const figura = normalizarVisual(fixture(nome).visuais.find((visual) => visual.tipo === "plano" || visual.tipo === "reta_numerica"));
@@ -674,6 +676,22 @@ function grade(desenho) {
   return { verticais, horizontais, unidade: verticais.length > 1 ? verticais[1] - verticais[0] : 0, largura: verticais.length > 1 ? verticais.at(-1) - verticais[0] : 0 };
 }
 
+/** Os eixos do desenho como retângulos: os dois traços (de 2) e as duas setas (caixa do caminho). */
+function retangulosDosEixos(desenho) {
+  const saida = [];
+  for (const primitiva of desenho.primitivas) {
+    if (primitiva.tipo === "linha" && primitiva.cor === "eixo") {
+      saida.push({ x: Math.min(primitiva.x1, primitiva.x2) - 1, y: Math.min(primitiva.y1, primitiva.y2) - 1, largura: Math.abs(primitiva.x2 - primitiva.x1) + 2, altura: Math.abs(primitiva.y2 - primitiva.y1) + 2 });
+    } else if (primitiva.tipo === "caminho" && primitiva.preenchimento === "eixo" && primitiva.d.length < 80) {
+      const numeros = primitiva.d.match(/-?\d+(?:\.\d+)?/g).map(Number);
+      const xs = numeros.filter((_, i) => i % 2 === 0);
+      const ys = numeros.filter((_, i) => i % 2 === 1);
+      saida.push({ x: Math.min(...xs), y: Math.min(...ys), largura: Math.max(...xs) - Math.min(...xs), altura: Math.max(...ys) - Math.min(...ys) });
+    }
+  }
+  return saida;
+}
+
 /** A origem do desenho: onde os dois eixos se cruzam (a linha vertical do eixo y e a horizontal do eixo x). */
 function origemDoDesenho(desenho) {
   const eixos = desenho.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "eixo");
@@ -838,6 +856,13 @@ test("a letra do ponto fica a no máximo 8 unidades da borda dele, em qualquer d
     for (let a = 0; a < caixas.length; a += 1) {
       for (let b = a + 1; b < caixas.length; b += 1) assert.equal(bate(caixas[a], caixas[b], 0, 1.5), false, `caso ${i}: ${caixas[a].texto} bate em ${caixas[b].texto}`);
     }
+    // Marco 2f: nenhum rótulo cruza nem encosta em eixo ou seta; nenhum número de eixo fica sob a bolinha de um ponto.
+    for (const rotulo of rotulos) {
+      for (const eixo of retangulosDosEixos(desenho)) assert.equal(bate(rotulo, eixo, 3), false, `caso ${i}: o rótulo ${rotulo.texto} encosta no eixo ou na seta`);
+    }
+    for (const numero of desenho.caixas.filter((caixa) => caixa.tipo === "numero")) {
+      for (const ponto of desenhados) assert.ok(distanciaDaBorda(numero, ponto) >= 0.999 || ponto.raio === 0, `caso ${i}: a bolinha cobre o número ${numero.texto}`);
+    }
     // O 0 do eixo só quando não há ponto na origem; e, existindo, perto dela (marco 2e).
     const haPontoNaOrigem = visual.pontos.some((ponto) => ponto.x === 0 && ponto.y === 0);
     const zero = desenho.caixas.find((caixa) => caixa.tipo === "numero" && caixa.texto === "0");
@@ -958,5 +983,63 @@ test("2e: o motor nunca emite '?' no lugar de um glifo ausente: vira vão, e a f
   for (const desenho of TODOS()) {
     for (const texto of desenho.textos.filter((candidato) => candidato.includes("?"))) assert.match(texto, /^[A-Za-z][A-Za-z0-9']{0,2} = \?$/, `texto com '?': ${texto}`);
     assert.equal(desenho.textos.some((texto) => semGlifo(texto).length > 0), false, "todo texto desenhado tem glifo");
+  }
+});
+
+test("2f (regra 1): rótulo de ponto nunca cruza nem encosta em eixo nem na seta: o eixo tem prioridade e o rótulo procura outro lado", () => {
+  let conferidos = 0;
+  for (const [nome, figura] of Object.entries(figurasDoTeste())) {
+    if (figura.tipo !== "plano") continue;
+    for (const alturaMaxima of [158, 160, 179, 200, 352]) {
+      for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }]) {
+        const desenho = desenharVisual(figura, contexto, { alturaMaxima });
+        if (desenho.naoCabe) continue;
+        const eixos = retangulosDosEixos(desenho);
+        assert.equal(eixos.length, 4, "dois traços e duas setas");
+        for (const rotulo of desenho.caixas.filter((caixa) => caixa.tipo === "rotulo")) {
+          conferidos += 1;
+          for (const eixo of eixos) assert.equal(bate(rotulo, eixo, 3), false, `${nome} · ${contexto.tipo} · ${alturaMaxima}: "${rotulo.texto}" a menos de 3 de um eixo ou de uma seta`);
+          // O rótulo inteiro também fica a 4 ou mais de qualquer número de eixo.
+          if (rotulo.texto.includes("(")) {
+            for (const numero of desenho.caixas.filter((caixa) => caixa.tipo === "numero")) assert.equal(bate(rotulo, numero, 3.9), false, `${nome} · ${alturaMaxima}: "${rotulo.texto}" encosta no número ${numero.texto}`);
+          }
+        }
+        // Sem lugar a menos de 8 da borda, o ponto fica sem letra e as coordenadas vão para a legenda: nunca somem.
+        for (const ponto of figura.pontos.filter((candidato) => candidato.rotulo !== false && candidato.papel !== "procurado" && candidato.x !== undefined)) {
+          const inteiro = rotuloDoPonto(ponto.id, [ponto.x, ponto.y]);
+          const noPlano = desenho.caixas.some((caixa) => caixa.tipo === "rotulo" && caixa.texto === inteiro);
+          const naLegenda = desenho.textos.includes(inteiro);
+          assert.ok(noPlano || naLegenda, `${nome} · ${alturaMaxima}: ${inteiro} sumiu`);
+        }
+      }
+    }
+  }
+  assert.ok(conferidos >= 40, `${conferidos} rótulos conferidos`);
+});
+
+test("2f (regra 2): a bolinha que cobre um número do eixo tira só aquele número; a grade continua", () => {
+  // Uma janela de 22 unidades (escala de 11,4): o ponto A (−1, −2) fica sobre o "−2" do eixo y; dois pontos sem rótulo fixam a janela.
+  const ancoras = [{ id: "F1", x: -10, y: -6, rotulo: false }, { id: "F2", x: 10, y: 6, rotulo: false }];
+  const com = normalizarVisual({ tipo: "plano", alt: "Um ponto perto do eixo y.", pontos: [{ id: "A", x: -1, y: -2 }, ...ancoras] });
+  const sem = normalizarVisual({ tipo: "plano", alt: "Os mesmos pontos sem o A.", pontos: ancoras });
+  const desenhoCom = desenharVisual(com, { tipo: "enunciado" });
+  const desenhoSem = desenharVisual(sem, { tipo: "enunciado" });
+  const numeros = (desenho) => desenho.caixas.filter((caixa) => caixa.tipo === "numero" && caixa.texto !== "0");
+  const bolinha = pontosDesenhados(desenhoCom).find((ponto) => ponto.raio > 0 && Math.abs(ponto.y - origemDoDesenho(desenhoCom).y) > 1);
+  assert.ok(bolinha, "a bolinha de A");
+  const cobertos = numeros(desenhoSem).filter((numero) => distanciaDaBorda(numero, { ...bolinha, raio: bolinha.raio + 1 }) < 0);
+  assert.equal(cobertos.length >= 1, true, "o A cobre ao menos um número do eixo (senão o teste não prova nada)");
+  const faltam = numeros(desenhoSem).filter((numero) => !numeros(desenhoCom).some((outro) => outro.texto === numero.texto && Math.abs(outro.x - numero.x) < 0.01 && Math.abs(outro.y - numero.y) < 0.01));
+  assert.deepEqual(faltam.map((numero) => `${numero.texto}@${numero.x},${numero.y}`).sort(), cobertos.map((numero) => `${numero.texto}@${numero.x},${numero.y}`).sort(), "só some o que a bolinha cobre");
+  assert.equal(numeros(desenhoCom).length, numeros(desenhoSem).length - cobertos.length, "e nenhum outro");
+  // A grade é a mesma: continua dando para contar.
+  const quantas = (desenho) => desenho.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "grade").length;
+  assert.equal(quantas(desenhoCom), quantas(desenhoSem));
+  // Sem bolinha em cima, número nenhum some: o baricentro de altura normal tem todos os números.
+  for (const nome of ["baricentro", "colinearidade"]) {
+    const figura = figurasDoTeste()[nome];
+    const normal = desenharVisual(figura, { tipo: "enunciado" }, { alturaMaxima: 352 });
+    const todos = desenharVisual({ ...figura, pontos: figura.pontos.map((ponto) => ({ ...ponto, rotulo: false })) }, { tipo: "enunciado" }, { alturaMaxima: 352 });
+    assert.deepEqual(numerosDeEixo(normal), numerosDeEixo(todos), `${nome}: nenhum número some sem bolinha em cima`);
   }
 });
