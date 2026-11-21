@@ -9,11 +9,12 @@
  * entra de uma vez. Teclado: Enter ou Espaço escolhe; com um escolhido, as setas movem ele e Esc desfaz.
  */
 import { useEffect, useLayoutEffect, useRef, useState, type KeyboardEvent as TeclaReact, type PointerEvent as PonteiroReact } from 'react';
-import type { Opcao } from '@studoo/contratos';
+import { falarTextoComFormulas, type Opcao } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Icone } from '../ui';
 import { tocaSons } from './sons';
 import { destinoDoArrasto, moverEntreLivres, trocarDeLugar } from './ordenar-regras';
+import { TextoComFormulas } from './texto-com-formulas';
 import './ordenar.css';
 
 const t = mensagens.licao.ordenar;
@@ -56,6 +57,8 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
   const total = ordem.length;
   const inativo = desativado || Boolean(certos);
   const textoDe = (id: string) => itens.find((item) => item.id === id)?.texto ?? '';
+  /** O que o leitor de tela ouve do item (rótulo do cartão e avisos): a fala da fórmula ("seno de x"), nunca o cifrão nem a barra. */
+  const falaDe = (id: string) => falarTextoComFormulas(textoDe(id));
   const mudou = ordem.join(',') !== (inicial || ids.join(','));
 
   const [escolhido, setEscolhido] = useState<string | null>(null);
@@ -105,12 +108,12 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
 
   function tocar(id: string) {
     if (inativo || travados.has(id) || Date.now() - soltouEm.current < 300) return;
-    if (escolhido === null) { setEscolhido(id); void tocaSons.tocarEfeito('toque_opcao'); anunciar(t.avisoEscolhido(textoDe(id))); return; }
+    if (escolhido === null) { setEscolhido(id); void tocaSons.tocarEfeito('toque_opcao'); anunciar(t.avisoEscolhido(falaDe(id))); return; }
     if (escolhido === id) { setEscolhido(null); return; }
     aplicar(trocarDeLugar(ordem, escolhido, id));
     void tocaSons.tocarEfeito('ordenar_soltar');
     brilhar(escolhido, id);
-    anunciar(t.avisoTrocaram(textoDe(escolhido), textoDe(id)));
+    anunciar(t.avisoTrocaram(falaDe(escolhido), falaDe(id)));
     setEscolhido(null);
   }
 
@@ -123,7 +126,7 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
     aplicar(nova);
     void tocaSons.tocarEfeito('ordenar_soltar');
     brilhar(id);
-    anunciar(t.avisoPosicao(textoDe(id), nova.indexOf(id) + 1, total));
+    anunciar(t.avisoPosicao(falaDe(id), nova.indexOf(id) + 1, total));
     window.requestAnimationFrame(() => cartoes.current.get(id)?.querySelector<HTMLButtonElement>('button')?.focus());
   }
 
@@ -204,7 +207,7 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
       aplicar(final, false);
       void tocaSons.tocarEfeito('ordenar_soltar');
       if (reduzido()) brilhar(atual.id);
-      anunciar(t.avisoPosicao(textoDe(atual.id), final.indexOf(atual.id) + 1, total));
+      anunciar(t.avisoPosicao(falaDe(atual.id), final.indexOf(atual.id) + 1, total));
     };
     if (reduzido()) { terminar(); return; }
     // O arrastado desliza até o lugar novo (200 ms, mola curta) e só então a ordem entra.
@@ -305,13 +308,13 @@ export function Ordenar({ itens, valor, inicial, mudar, desativado, certos, fixo
               data-brilho={brilhos[id] ? brilhos[id] % 2 : undefined}
               style={arrasto ? { transform: `translateY(${deslocamento(id)}px)${ehArrastado && soltando !== id && !reduzido() ? ' scale(1.03)' : ''}` } : undefined}>
               <button type="button" className="ordenar-cartao__corpo" aria-pressed={estado === 'escolhido'}
-                aria-label={travado ? t.travadoRotulo(textoDe(id), posicao) : t.cartaoRotulo(posicao, total, textoDe(id))}
+                aria-label={travado ? t.travadoRotulo(falaDe(id), posicao) : t.cartaoRotulo(posicao, total, falaDe(id))}
                 aria-disabled={inativo || travado || undefined}
                 onClick={() => tocar(id)} onKeyDown={(evento) => teclaNoCartao(evento, id)}
                 onPointerDown={(evento) => aoApertar(evento, id, false)} onPointerMove={aoMover} onPointerUp={aoLargar} onPointerCancel={aoLargar}
                 data-arrastavel={podeArrastar || undefined}>
                 <span className="ordenar-cartao__numero" aria-hidden="true">{posicao}</span>
-                <span className="ordenar-cartao__texto">{textoDe(id)}</span>
+                <TextoComFormulas className="ordenar-cartao__texto" texto={textoDe(id)} />
                 {estado === 'certo' ? <span className="ordenar-cartao__alca" aria-hidden="true"><Icone nome="check" /></span>
                   : estado === 'errado' ? <span className="ordenar-cartao__alca" aria-hidden="true"><Icone nome="fechar" /></span>
                     : (

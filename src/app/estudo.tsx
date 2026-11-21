@@ -15,7 +15,7 @@ import {
   type PlanoResumo,
   type Progresso,
 } from '@studoo/contratos';
-import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
+import { clienteStudooWeb as cliente, responderSuaVez } from '../contratos/cliente-web';
 import { invalidarElegibilidadeVozAoVivo } from './estudio';
 import { mensagens, textoParaRever } from '../mensagens/pt-BR';
 import {
@@ -38,6 +38,7 @@ import {
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
+import { TextoComFormulas } from './texto-com-formulas';
 import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } from './previa-trilha';
 import { Pedido, type IdTema } from './pedido';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
@@ -834,7 +835,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
                 return resultado.ok ? resultado.dados : null;
               }}
               concluir={(comprovante, resumo, pratica) => concluir(tela.plano, tela.licao, comprovante, resumo, pratica)}
-              voltar={() => void abrirPlano(tela.plano.id, tela.licao.id)} />
+              voltar={() => void abrirPlano(tela.plano.id, tela.licao.id)}
+              responderSuaVez={(escolha) => responderSuaVez(tela.licao.id, escolha)} />
           )}
           {visivel && tela.tipo === 'concluida' && (
             <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado}
@@ -1359,7 +1361,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       <ul className="conclusao-historia" aria-label={mensagens.licao.historia.titulo}>
         <li>
           <strong>{mensagens.licao.historia.praticou}</strong>
-          <p>{licao.objetivo}</p>
+          <TextoComFormulas como="p" texto={licao.objetivo} />
         </li>
         {resumo?.ponteConstruida && (
           <li data-tipo="ponte">
