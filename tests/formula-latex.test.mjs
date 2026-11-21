@@ -70,7 +70,8 @@ test("a forma canônica junta os apelidos num operador só", () => {
   assert.equal(ok("a b c").canonica, "a b c", "três letras separadas não viram uma palavra solta");
   assert.equal(ok("xy").canonica, "x y");
   assert.equal(ok(String.raw`{x}`).canonica, "x");
-  assert.equal(ok(String.raw`x\,+\;y\ z`).canonica, String.raw`x + y z`);
+  // Os espaços de LaTeX ficam (são desenhados como vão, marco 10); `\ ` vale `\;`.
+  assert.equal(ok(String.raw`x\,+\;y\ z`).canonica, String.raw`x \, + \; y \; z`);
 });
 
 test("texto linear: o que um cliente que não desenha mostra", () => {
@@ -358,7 +359,7 @@ test("Δ e π entram (os outros gregos continuam recusados e caem no texto linea
   assert.equal(ok(String.raw`\pi r^2`).canonica, String.raw`\pi r^2`);
   assert.equal(ok("π r²").canonica, String.raw`\pi r^2`);
   assert.equal(ok(String.raw`\Delta = b^2 - 4ac`).canonica, String.raw`\Delta = b^2 - 4a c`);
-  assert.equal(ok(String.raw`\pi\,r`).canonica, String.raw`\pi r`, "\\pi r não vira \\pir");
+  assert.equal(ok(String.raw`\pi\,r`).canonica, String.raw`\pi \, r`, "\\pi r não vira \\pir (e o espaço fino fica)");
   assert.equal(ok(String.raw`2\pi r`).canonica, String.raw`2\pi r`);
   assert.equal(ok(String.raw`(\pi)`).canonica, String.raw`(\pi)`);
   for (const fonte of [String.raw`\pi r^2`, String.raw`\Delta = \sqrt{b^2 - 4ac}`, String.raw`x_{\pi} + \Delta^2`, String.raw`\frac{\pi}{2}`, String.raw`2\pi`]) {

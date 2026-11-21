@@ -1,5 +1,5 @@
 import { EIXO_MATEMATICO, UNIDADES_POR_EM } from "./glifos";
-import { ehSinal, formulaCabeEmLinha, numeroNaTela, percorrerFormula, type NoFormula, type PapelDestaque } from "./formula";
+import { LARGURA_DO_ESPACO_EM_EM, ehSinal, formulaCabeEmLinha, numeroNaTela, percorrerFormula, vaoAutomatico, vaoDaPalavra, type NoFormula, type PapelDestaque } from "./formula";
 import { caixaDoGlifo, larguraDoTexto, semGlifo, type PesoDoTexto } from "./texto-vetorial";
 import { PISO_DO_TEXTO, type PapelDeCor, type Tracejado } from "./visuais";
 
@@ -180,6 +180,18 @@ const CORES_DO_DESTAQUE: Readonly<Record<PapelDestaque, { texto: PapelDeCor; fun
 
 const folga = (largura: number): Caixa => ({ l: largura, a: 0, p: 0, marcas: [] });
 
+/**
+ * O vão entre uma palavra (`\text{…}`) e a matemática que encosta nela: o automático (0,22 em) quando nada separa os dois, e o espaço de uma
+ * palavra (0,28 em) quando o `\text{ palavra }` já traz espaço na ponta, UM vão só, nunca os dois somados. O espaço explícito
+ * (`\quad`, `\;`) é um nó à parte e vale sozinho.
+ */
+const VAO_AUTOMATICO_EM_EM = 0.22;
+const VAO_DA_PALAVRA_EM_EM = 0.28;
+const vaoDaPalavraEntre = (anterior: NoFormula | undefined, atual: NoFormula, estilo: Estilo): number => {
+  if (vaoDaPalavra(anterior, atual)) return VAO_DA_PALAVRA_EM_EM * tamanhoDo(estilo);
+  return vaoAutomatico(anterior, atual) ? VAO_AUTOMATICO_EM_EM * tamanhoDo(estilo) : 0;
+};
+
 const eLetra = (no: NoFormula): boolean => no.tipo === "variavel" || no.tipo === "simbolo" || (no.tipo === "script" && eLetra(no.base));
 
 /**
@@ -210,6 +222,11 @@ function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
       partes.push({ caixa: folga(depois) });
       return;
     }
+    if (item.tipo === "espaco") {
+      // `\quad`, `\qquad`, `\;`, `\,`: sempre um vão, em fração da altura da letra (1, 2, 0,28 e 0,17), com ou sem "=".
+      partes.push({ caixa: caixaDe(item, estilo) });
+      return;
+    }
     if (item.tipo === "separador" && item.valor === "espaco") {
       // O `\quad` entre duas equações lado a lado: um vão de uma altura de letra (menos no meio da frase), sem sinal.
       partes.push({ caixa: folga((estilo.linha ? 0.7 : 1.1) * tamanhoDo(estilo) * estilo.respiro) });
@@ -220,7 +237,11 @@ function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
       partes.push({ caixa: folga((estilo.linha ? 0.25 * tamanhoDo(estilo) : ESPACO_DO_SINAL) * estilo.respiro) });
       return;
     }
-    partes.push({ caixa: caixaDe(item, estilo), antes: anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" ? espacoEntreFatores(anterior, item, estilo) : 0 });
+    const vaoDaPalavra = vaoDaPalavraEntre(anterior, item, estilo);
+    partes.push({
+      caixa: caixaDe(item, estilo),
+      antes: vaoDaPalavra > 0 ? vaoDaPalavra : anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" && anterior.tipo !== "espaco" ? espacoEntreFatores(anterior, item, estilo) : 0,
+    });
   });
   return juntar(partes);
 }
@@ -389,6 +410,8 @@ export function caixaDe(no: NoFormula, estilo: Estilo): Caixa {
       return textoEmCaixa("%", estilo);
     case "separador":
       return no.valor === "espaco" ? folga(tamanhoDo(estilo)) : textoEmCaixa(no.valor, estilo);
+    case "espaco":
+      return folga(LARGURA_DO_ESPACO_EM_EM[no.comando] * tamanhoDo(estilo) * estilo.respiro);
     case "operador":
       return operador(no.valor, estilo);
     case "fracao":

@@ -41,7 +41,7 @@ test("\\quad, \\qquad, \\; e \\, entre duas afirmações com \"=\" as separam: n
   assert.equal(lida.arvore.itens.filter((item) => item.tipo === "separador").length, 1);
   // A forma canônica é a que o servidor guarda e relê: ida e volta, a mesma.
   assert.equal(ok(lida.canonica).canonica, lida.canonica);
-  for (const espaco of [String.raw`\quad`, String.raw`\qquad`, String.raw`\;`, String.raw`\,`, String.raw`\:`, String.raw`\!`, String.raw`\quad\quad`, String.raw`\; \,`]) {
+  for (const espaco of [String.raw`\quad`, String.raw`\qquad`, String.raw`\;`, String.raw`\,`, String.raw`\:`, String.raw`\ `, String.raw`\quad\quad`, String.raw`\; \,`]) {
     assert.equal(ok(`x_C = 10 ${espaco} y_C = 6`).canonica, String.raw`x_C = 10 \quad y_C = 6`, espaco);
   }
   assert.equal(ok(String.raw`x_G = \frac{x_A + x_B}{2} \quad y_G = \frac{y_A + y_B}{2}`).canonica, String.raw`x_G = \frac{x_A + x_B}{2} \quad y_G = \frac{y_A + y_B}{2}`, "com fração antes: não cola mais no 2");
@@ -49,14 +49,19 @@ test("\\quad, \\qquad, \\; e \\, entre duas afirmações com \"=\" as separam: n
   assert.equal(ok(String.raw`a = 1 \quad b = 2 \quad c = 3`).arvore.itens.filter((item) => item.tipo === "separador").length, 2);
 });
 
-test("\\quad e \\, que NÃO separam duas afirmações continuam sendo só espaço", () => {
-  assert.equal(ok(String.raw`2\,x + 3\,y = 7`).canonica, "2x + 3y = 7", "espaço fino entre fatores");
-  assert.equal(ok(String.raw`1\,000 = 10^3`).canonica, "1000 = 10^3");
-  assert.equal(ok(String.raw`x \quad y = 2`).canonica, "x y = 2", "sem relação do lado esquerdo");
-  assert.equal(ok(String.raw`x = 1 \quad y`).canonica, "x = 1y", "sem relação do lado direito (como sempre foi)");
-  assert.equal(ok(String.raw`x = 1 \quad \to \quad y = 2`).canonica, String.raw`x = 1 \to y = 2`, "a seta não é relação: sem separador");
-  assert.equal(ok(String.raw`\begin{vmatrix} a \quad & b \\ c & d \end{vmatrix} \quad = \quad ad - bc`).canonica, String.raw`\begin{vmatrix} a & b \\ c & d \end{vmatrix} = a d - b c`, "dentro da célula e em volta do =");
+test("\\quad e \\, que NÃO separam duas afirmações são um vão desenhado (marco 10), e a conta não os vê", () => {
+  // O espaço fica na forma canônica e vira um vão no desenho; só a conta o ignora.
+  assert.equal(ok(String.raw`2\,x + 3\,y = 7`).canonica, String.raw`2 \, x + 3 \, y = 7`, "espaço fino entre fatores");
+  assert.equal(ok(String.raw`1\,000 = 10^3`).canonica, String.raw`1 \, 000 = 10^3`);
+  assert.equal(ok(String.raw`x \quad y = 2`).canonica, String.raw`x \quad y = 2`, "sem relação do lado esquerdo: não separa as equações, mas é um vão");
+  assert.equal(ok(String.raw`x = 1 \quad y`).canonica, String.raw`x = 1 \quad y`);
+  assert.equal(ok(String.raw`x = 1 \quad \to \quad y = 2`).canonica, String.raw`x = 1 \quad \to \quad y = 2`, "a seta não é relação: sem separador, com os vãos");
+  assert.equal(ok(String.raw`\begin{vmatrix} a \quad & b \\ c & d \end{vmatrix} \quad = \quad ad - bc`).canonica, String.raw`\begin{vmatrix} a & b \\ c & d \end{vmatrix} \quad = \quad a d - b c`, "no fim da célula sai; em volta do = fica");
   assert.equal(lerFormula(String.raw`\quad`).ok, false, "só espaço: fórmula vazia");
+  assert.equal(ok(String.raw`x_C = 10 \! y_C = 6`).canonica, "x_C = 10y_C = 6", "\\! é espaço NEGATIVO: não separa nem desenha vão");
+  // A conta não os vê.
+  const conta = conferirConta([ok(String.raw`x = 3`).arvore, ok(String.raw`2\,x = 6`).arvore, ok(String.raw`2 \; x \; = \; 6`).arvore, ok(String.raw`y = \; -2`).arvore]);
+  assert.deepEqual({ ok: conta.ok, conferidas: conta.conferidas, declaradas: conta.declaradas }, { ok: true, conferidas: 4, declaradas: { x: "3", y: "-2" } });
 });
 
 test("a conta das duas equações é conferida uma a uma: certas, conferidas; errada de verdade, recusada e diz qual", () => {
