@@ -4,7 +4,7 @@ import { createElement, memo, useCallback, useEffect, useLayoutEffect, useMemo, 
 import { falarTextoComFormulas, partirTextoComFormulas, textoSemFormulas, type DesenhoEmLinha, type SegmentoDeTexto } from '@studoo/contratos';
 import { elementoDaPrimitiva } from './desenho-svg';
 import { itensDaFrase, pesoDoTexto, type ItemDaFrase, type PesoDaFormula } from './formula-em-linha';
-import { montar } from './desenho';
+import { montar } from './montar-svg';
 
 /*
  * Fórmula dentro da frase (spec 15, seção 1, "Em linha"; contrato 3b): o texto é partido em trechos de texto e de fórmula, e cada fórmula é

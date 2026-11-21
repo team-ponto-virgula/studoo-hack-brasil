@@ -44,7 +44,7 @@ test('os textos do "Resolva comigo" vêm do contrato, os mesmos da spec, e o "Ve
 
 test('o cliente da web manda o cabeçalho de capacidades em toda chamada e na geração ao vivo; "Sua vez" é um POST com a opção e a tentativa', async () => {
   const { CAPACIDADES_DO_SITE } = await import('../src/contratos/capacidades.ts');
-  assert.equal(CAPACIDADES_DO_SITE, 'visuais@1,resolucao@1');
+  assert.equal(CAPACIDADES_DO_SITE, 'visuais@2,resolucao@1');
   assert.equal(CABECALHO_CAPACIDADES, 'X-Studoo-Capacidades');
   const chamadas = [];
   const original = globalThis.fetch;

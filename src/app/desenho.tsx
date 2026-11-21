@@ -1,7 +1,11 @@
-import { createElement, memo, useMemo, type CSSProperties, type ReactNode } from 'react';
+import { memo, useMemo, type CSSProperties } from 'react';
 import { falarFormula, formulaLinear, lerFormula, type ContextoDoDesenho, type Desenho, type OpcoesDaFigura, type OpcoesDaFormula, type Visual } from '@studoo/contratos';
 import { Icone } from '../ui';
-import { ajusteDoBloco, alturaDaFiguraNaTela, alturaMaximaDaFigura, desenhoDoVisual, elementoDaPrimitiva, ordenarVisuais, separarPontoResposta, temProcurado, type ElementoSvg } from './desenho-svg';
+import { ajusteDoBloco, alturaDaFiguraNaTela, alturaMaximaDaFigura, desenhoDoVisual, elementoDaPrimitiva, ordenarVisuais, separarPontoResposta, temProcurado } from './desenho-svg';
+import { montar } from './montar-svg';
+import { TextoComFormulas } from './texto-com-formulas';
+
+export { montar };
 
 /*
  * Um visual da lição (spec 15) desenhado pelo motor compartilhado: a web só monta as primitivas em SVG, que escala sozinho pela largura do
@@ -10,13 +14,6 @@ import { ajusteDoBloco, alturaDaFiguraNaTela, alturaMaximaDaFigura, desenhoDoVis
  * Para o leitor de tela é uma imagem só, com a descrição do motor (o texto falado da fórmula, o `alt` da figura). A entrada é uma classe
  * (`data-entrada`): o CSS a anima em 200 ms e, com movimento reduzido, nada anima.
  */
-
-const ETIQUETAS = { Line: 'line', Rect: 'rect', Circle: 'circle', Path: 'path' } as const;
-
-/** As primitivas do motor como elementos de SVG; o tipo que esta web não conhece (contrato mais novo) é ignorado. */
-export function montar(elementos: readonly (ElementoSvg | null)[]): ReactNode[] {
-  return elementos.map((item, indice) => (item ? createElement(ETIQUETAS[item.elemento], { key: indice, ...item.props }) : null));
-}
 
 /** Até que ponto a fórmula em bloco cresce: 400 de largura (escala 1,25 do desenho de 320): acima disso o 22 do motor viraria 40 numa coluna de 680. */
 const ESCALA_MAXIMA_DO_BLOCO = 1.25;
@@ -132,13 +129,15 @@ function FormulaEmTexto({ latex, testID }: { latex: string; testID?: string }) {
 
 /**
  * A figura que não coube na altura (spec 15, seção 13): uma linha discreta logo abaixo do enunciado, com o ícone de gráfico de 16 e o `alt`
- * em 14/20 `#5E6A85`, sem caixa (a caixa parecia dica e repetia o enunciado). Leitor de tela: "Figura: <alt>".
+ * em 14/20 `#5E6A85`, sem caixa (a caixa parecia dica e repetia o enunciado). Leitor de tela: "Figura: <alt>". O `alt` do gráfico de função traz as
+ * fórmulas marcadas com `$…$` (spec 15, seção 18): elas aparecem desenhadas em linha, como no texto da lição, e o leitor de tela as ouve pela árvore
+ * ("f de x é igual a …"); nunca um cifrão na tela.
  */
 function FiguraEmTexto({ alt, testID }: { alt: string; testID?: string }) {
   return (
     <p className="figura-em-texto" data-testid={testID ? `${testID}-texto` : undefined}>
       <Icone nome="grafico" />
-      <span><span className="somente-leitor">Figura: </span>{alt}</span>
+      <span><span className="somente-leitor">Figura: </span><TextoComFormulas texto={alt} /></span>
     </p>
   );
 }
