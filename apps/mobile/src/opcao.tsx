@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ComponentRef, type Ref } from 'react';
 import { falarTextoComFormulas } from '@studoo/contratos';
 import { TextoComFormulas } from './texto-com-formulas';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -15,7 +15,9 @@ export const letras = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
  * Opção de múltipla escolha da aula: cartão com a letra à esquerda, o texto alinhado à esquerda e os estados de marcada,
  * certa e errada. O desafio da ponte usa o mesmo cartão, como decidido no levantamento de paridade (PT5).
  */
-export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apagada, acao, corTextoErro = '#7A4A00' }: {
+export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apagada, acao, corTextoErro = '#7A4A00', referencia }: {
+  /** A opção em si, para quem leva o foco do leitor de tela até ela (o "Tentar de novo" do "Resolva comigo"). */
+  referencia?: Ref<ComponentRef<typeof Pressable>>;
   /** Cor do texto da opção errada: âmbar na aula; no desafio da ponte, a web mantém o azul da marcada. */
   corTextoErro?: string;
   id: string;
@@ -39,7 +41,7 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
   return (
     <Animated.View style={{ transform: [{ scale: pulo }], opacity: apagada ? 0.55 : 1 }}>
       {/* aria-checked além do accessibilityState: o React Native Web só lê os atributos aria-* (o leitor de tela da web precisava do estado). */}
-      <Pressable testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }} aria-checked={selecionada}
+      <Pressable ref={referencia} testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }} aria-checked={selecionada}
         // O texto falado (a fórmula lida pela árvore): nunca o texto cru com `$…$` (caso real cb532bb, opções só em fórmula).
         accessibilityLabel={falarTextoComFormulas(texto)} disabled={desativada} onPress={acao} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
         style={({ pressed }) => [degrauFora(4, 16, corDegrau, pressed), focada && estilos.foco]}>

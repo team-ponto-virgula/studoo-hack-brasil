@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type RefObject } from 'react';
-import { AccessibilityInfo, Animated, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 import { falarFormula, falarTextoComFormulas, formulaLinear, lerFormula, type EscolhaNoSuaVez, type LicaoDetalhe, type OpcaoDoSuaVez, type PassoDaResolucao, type RespostaDoSuaVez } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
 import { DesenhoDoVisual, OPCOES_DA_FORMULA } from './desenho';
@@ -34,10 +34,18 @@ function formulaEmTexto(latex: string | undefined): { texto: string; falado: str
 }
 
 /** A opção do "Sua vez" como texto com fórmula em linha: a fórmula da opção vai marcada (`$…$`) e o motor a desenha. */
-/** O que o leitor de tela ouve depois do "Verificar": o porquê da escolha e, quando a resposta vem revelada, o da certa. */
-export function falaDaCorrecao(resposta: RespostaDoSuaVez): string {
-  const partes = resposta.correta ? [t.isso, resposta.porque] : [resposta.porque, ...(resposta.porqueDaCerta ? [resposta.porqueDaCerta] : [])];
-  return partes.map((parte) => falarTextoComFormulas(parte)).join(' ');
+/** Os lugares para onde o foco do leitor de tela vai no "Sua vez" (spec 15, seção 16). */
+type FocosDoSuaVez = {
+  primeiraOpcao: RefObject<ComponentRef<typeof Pressable> | null>;
+  cartaoDoPorque: RefObject<ComponentRef<typeof View> | null>;
+  cartaoDoIsso: RefObject<ComponentRef<typeof View> | null>;
+};
+
+/** O cartão verde lido inteiro: "Isso!" (no acerto), o porquê (o da certa, na segunda errada) e a fórmula revelada. */
+export function falaDoIsso(resposta: RespostaDoSuaVez, formula: string | undefined): string {
+  const porque = resposta.correta ? resposta.porque : resposta.porqueDaCerta ?? '';
+  const revelada = formulaEmTexto(formula)?.falado;
+  return [...(resposta.correta ? [t.isso] : []), falarTextoComFormulas(porque), ...(revelada ? [revelada] : [])].filter(Boolean).join(' ');
 }
 
 function textoDaOpcao(opcao: OpcaoDoSuaVez): string {
@@ -88,9 +96,10 @@ function LinhaFeita({ passo, numero }: { passo: PassoDaResolucao; numero: number
 }
 
 /** O "Sua vez": a pergunta e as três opções; depois da correção, o porquê (e, no acerto ou na segunda errada, a revelação). */
-function SuaVez({ passo, estado, ocupado, escolher }: {
-  passo: PassoDaResolucao; estado: EstadoResolva; ocupado: boolean; escolher: (opcao: number) => void;
+function SuaVez({ passo, estado, ocupado, escolher, focos }: {
+  passo: PassoDaResolucao; estado: EstadoResolva; ocupado: boolean; escolher: (opcao: number) => void; focos: FocosDoSuaVez;
 }) {
+  const { primeiraOpcao, cartaoDoPorque, cartaoDoIsso } = focos;
   const tentativa = passo.tentativa;
   if (!tentativa) return null;
   const { resposta, corrigida, revelado } = estado;
@@ -108,18 +117,19 @@ function SuaVez({ passo, estado, ocupado, escolher }: {
       <TextoComFormulas testID="resolva-pergunta" texto={tentativa.pergunta} estilo={estilos.pergunta} />
       <View accessibilityRole="radiogroup" accessibilityLabel={falarTextoComFormulas(tentativa.pergunta)} style={{ gap: 10 }}>
         {tentativa.opcoes.map((opcao, numero) => (
-          <Opcao key={numero} id={`suavez-${numero}`} letra={letras[numero]} texto={textoDaOpcao(opcao)}
+          <Opcao key={numero} id={`suavez-${numero}`} letra={letras[numero]} texto={textoDaOpcao(opcao)} referencia={numero === 0 ? primeiraOpcao : undefined}
             selecionada={estado.escolha === numero} retorno={retornoDa(numero)} desativada={travado}
             apagada={revelado && retornoDa(numero) === null} acao={() => escolher(numero)} />
         ))}
       </View>
       {resposta && !resposta.correta && (
-        <View testID="resolva-porque" accessibilityLiveRegion="polite" style={estilos.porqueErrado}>
+        // Spec 15, seção 16: depois do "Verificar", o foco do leitor de tela vem para o cartão do retorno, lido inteiro.
+        <View ref={cartaoDoPorque} testID="resolva-porque" accessible accessibilityRole="text" accessibilityLabel={falarTextoComFormulas(resposta.porque)} style={estilos.porqueErrado}>
           <TextoComFormulas texto={resposta.porque} estilo={estilos.porqueErradoTexto} />
         </View>
       )}
       {resposta && revelado && (
-        <View testID="resolva-isso" accessibilityLiveRegion="polite" style={estilos.isso}>
+        <View ref={cartaoDoIsso} testID="resolva-isso" accessible accessibilityRole="text" accessibilityLabel={falaDoIsso(resposta, passo.formula)} style={estilos.isso}>
           {resposta.correta && <Text style={estilos.issoTitulo}>{t.isso}</Text>}
           <TextoComFormulas texto={(resposta.correta ? resposta.porque : resposta.porqueDaCerta) ?? ''} estilo={estilos.issoTexto} />
           <FormulaEmBloco latex={passo.formula} testID="resolva-formula-revelada" />
@@ -130,9 +140,9 @@ function SuaVez({ passo, estado, ocupado, escolher }: {
 }
 
 /** O cartão do passo atual: o Stu, a frase e a fórmula (ou o "Sua vez"). Entra subindo 8 em 200 ms (na hora, sem movimento). */
-function CartaoDoPasso({ passo, estado, ultimo, ocupado, escolher, referenciaDaFrase }: {
+function CartaoDoPasso({ passo, estado, ultimo, ocupado, escolher, referenciaDaFrase, focos }: {
   passo: PassoDaResolucao; estado: EstadoResolva; ultimo: boolean; ocupado: boolean; escolher: (opcao: number) => void;
-  referenciaDaFrase: RefObject<ComponentRef<typeof Text> | null>;
+  referenciaDaFrase: RefObject<ComponentRef<typeof Text> | null>; focos: FocosDoSuaVez;
 }) {
   const aparecer = useAparecer(0, 200);
   return (
@@ -142,7 +152,7 @@ function CartaoDoPasso({ passo, estado, ultimo, ocupado, escolher, referenciaDaF
         <Stu nome={ultimo ? 'stu-animado' : 'stu-concentrado'} tamanho={40} />
         <TextoComFormulas referencia={referenciaDaFrase} testID="resolva-frase" accessible texto={passo.texto} estilo={estilos.frase} />
       </View>
-      {passo.tentativa ? <SuaVez passo={passo} estado={estado} ocupado={ocupado} escolher={escolher} />
+      {passo.tentativa ? <SuaVez passo={passo} estado={estado} ocupado={ocupado} escolher={escolher} focos={focos} />
         : <FormulaEmBloco latex={passo.formula} testID="resolva-formula" />}
     </Animated.View>
   );
@@ -175,6 +185,10 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
   const [estado, setEstado] = useState<EstadoResolva | null>(() => (resolucao ? comecarResolva(resolucao) : null));
   const [ocupado, setOcupado] = useState(false);
   const frase = useRef<ComponentRef<typeof Text> | null>(null);
+  const primeiraOpcao = useRef<ComponentRef<typeof Pressable> | null>(null);
+  const cartaoDoPorque = useRef<ComponentRef<typeof View> | null>(null);
+  const cartaoDoIsso = useRef<ComponentRef<typeof View> | null>(null);
+  const focos: FocosDoSuaVez = { primeiraOpcao, cartaoDoPorque, cartaoDoIsso };
   const primeiro = useRef(true);
   /**
    * A caixa do desenho de cima: a altura da figura do problema (unidades do desenho). No último passo o gráfico se reenquadra com
@@ -215,14 +229,16 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
   async function verificar() {
     if (!estado || estado.escolha === null || ocupado || !responder) return;
     setOcupado(true);
+    // "Verificando…" dito uma vez (spec 15, seção 16), como a região educada da web.
+    AccessibilityInfo.announceForAccessibility(mensagens.licao.avaliando);
     try {
       const corpo = await responder({ opcao: estado.escolha, tentativa: estado.tentativa });
       if (!respostaValida(corpo)) throw new Error('resposta');
       void tocaSons.tocarEfeito(corpo.correta ? 'acerto' : 'erro');
       setEstado((atual) => (atual ? aplicarResposta(atual, corpo) : atual));
-      // O VoiceOver não lê região viva (accessibilityLiveRegion é do Android): no iPhone, o porquê (e, no acerto ou na segunda
-      // errada, o "Isso!" e o porquê da certa) é anunciado aqui, como o `role="status"` da web; no Android, a região viva lê.
-      if (Platform.OS === 'ios') AccessibilityInfo.announceForAccessibility(falaDaCorrecao(corpo));
+      // O foco do VoiceOver e do TalkBack vai para o cartão do retorno, lido inteiro (o porquê; no acerto, o "Isso!"); não para o
+      // botão do rodapé, que cortaria a leitura. Na segunda errada, o porquê da errada vem primeiro e o cartão da certa logo abaixo.
+      setTimeout(() => focarSemRolar((corpo.correta ? focos.cartaoDoIsso : focos.cartaoDoPorque).current), 300);
     } catch {
       // Sem rede (ou uma resposta que não serve): o exemplo segue em texto, e a lição continua.
       setEstado((atual) => (atual ? { ...atual, emTexto: true } : atual));
@@ -233,10 +249,15 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
 
   const acao = acaoDoRodape(estado);
   const rodape = acao === 'verificar'
-    ? <Botao testID="resolva-verificar" peso="900" rotulo={t.verificar} desativado={ocupado || estado.escolha === null} carregando={ocupado} ocupado={ocupado}
-        acao={() => void verificar()} />
+    // Ocupado (spec 15, seção 16): afundado e desligado, o giro de 16 antes de "Verificando…" numa linha só, e busy.
+    ? <Botao testID="resolva-verificar" peso="900" rotulo={ocupado ? mensagens.licao.avaliando : t.verificar} desativado={ocupado || estado.escolha === null}
+        ocupado={ocupado} afundado={ocupado} giro={ocupado} umaLinha acao={() => void verificar()} />
     : acao === 'tentar'
-      ? <Botao testID="resolva-tentar" peso="900" rotulo={t.tentarDeNovo} acao={() => setEstado((atual) => (atual ? tentarDeNovo(atual) : atual))} />
+      ? <Botao testID="resolva-tentar" peso="900" rotulo={t.tentarDeNovo} acao={() => {
+          setEstado((atual) => (atual ? tentarDeNovo(atual) : atual));
+          // A escolha é limpa e o foco do leitor de tela vai para a primeira opção (spec 15, seção 16).
+          setTimeout(() => focarSemRolar(focos.primeiraOpcao.current), 250);
+        }} />
       : acao === 'agora'
         ? <Botao testID="resolva-agora" peso="900" rotulo={t.agora} icone="seta" acao={aoTerminar} />
         : <Botao testID="resolva-proximo" peso="900" rotulo={t.proximo} icone="seta" acao={() => setEstado((atual) => (atual ? avancar(atual) : atual))} />;
@@ -252,7 +273,7 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
       )}
       <Indicador atual={estado.atual} total={estado.total} />
       {estado.passos.slice(0, estado.atual).map((feito, numero) => <LinhaFeita key={numero} passo={feito} numero={numero + 1} />)}
-      {passo && <CartaoDoPasso key={estado.atual} passo={passo} estado={estado} ultimo={ultimo} ocupado={ocupado} escolher={escolher} referenciaDaFrase={frase} />}
+      {passo && <CartaoDoPasso key={estado.atual} passo={passo} estado={estado} ultimo={ultimo} ocupado={ocupado} escolher={escolher} referenciaDaFrase={frase} focos={focos} />}
       {estado.atual > 0 && (
         <Botao testID="resolva-voltar" variante="texto" rotulo={t.voltar} desativado={ocupado} acao={() => setEstado((atual) => (atual ? voltar(atual) : atual))} />
       )}

@@ -111,9 +111,8 @@ test('paridade com a web (auditoria): leitor de tela e texto grande no "Resolva 
   // O passo novo é anunciado uma vez só: sem região viva no indicador (no Android ela repetia o anúncio).
   assert.doesNotMatch(tela, /testID="resolva-indicador" accessibilityLiveRegion/);
   assert.match(tela, /AccessibilityInfo\.announceForAccessibility\(descricao \?/);
-  // No iPhone (o VoiceOver não lê região viva), o porquê e o "Isso!" são anunciados depois do "Verificar", como o role="status" da web.
-  assert.match(tela, /if \(Platform\.OS === 'ios'\) AccessibilityInfo\.announceForAccessibility\(falaDaCorrecao\(corpo\)\);/);
-  assert.match(tela, /testID="resolva-porque" accessibilityLiveRegion="polite"/, 'no Android, a região viva lê');
+  // Depois do "Verificar", o foco vai para o cartão do retorno (spec 15, seção 16), nas duas plataformas: sem região viva nele.
+  assert.doesNotMatch(tela, /testID="resolva-(porque|isso)" accessibilityLiveRegion/);
   // "O método" no fim do exemplo, antes de "Agora é com você" (spec 15, seções 4 e 16), além de "Rever a explicação".
   assert.match(tela, /\{ultimo && <CartaoMetodo passos=\{estado\.passos\}/);
   // A fórmula em bloco cresce com o tamanho de letra do sistema (WCAG 1.4.4), até 2×.
@@ -121,10 +120,33 @@ test('paridade com a web (auditoria): leitor de tela e texto grande no "Resolva 
   assert.match(desenho, /opcoes\.tamanho \* Math\.min\(2, Math\.max\(1, fontScale \|\| 1\)\)/);
 });
 
-test('fala da correção do "Sua vez": acerto, primeira errada e segunda errada', async () => {
+test('"Verificar" ocupado e o foco do leitor de tela no "Sua vez" (spec 15, seção 16)', async () => {
+  const tela = await ler('apps/mobile/src/resolva-comigo.tsx');
+  // Ocupado: "Verificando…" (a chave avaliando do contrato), afundado, desligado, giro de 16, numa linha, busy (Botao ocupado).
+  const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
+  assert.equal(mensagens.licao.avaliando, 'Verificando…');
+  assert.match(tela, /rotulo=\{ocupado \? mensagens\.licao\.avaliando : t\.verificar\}/);
+  assert.match(tela, /ocupado=\{ocupado\} afundado=\{ocupado\} giro=\{ocupado\} umaLinha/);
+  assert.doesNotMatch(tela.slice(tela.indexOf('resolva-verificar'), tela.indexOf('resolva-verificar') + 300), /carregando=/, 'giro com texto, não os pontinhos no lugar do texto');
+  const botao = await ler('apps/mobile/src/interface.tsx');
+  assert.match(botao, /accessibilityState=\{\{ disabled: bloqueado, busy: ocupado \|\| carregando \}\}/, 'busy no app');
+  // "Verificando…" dito uma vez, ao começar.
+  assert.equal((tela.match(/announceForAccessibility\(mensagens\.licao\.avaliando\)/g) ?? []).length, 1);
+  // Depois do "Verificar": o foco vai para o cartão do retorno, lido inteiro (acerto: o "Isso!"; erro: o porquê), não para o botão.
+  assert.match(tela, /focarSemRolar\(\(corpo\.correta \? focos\.cartaoDoIsso : focos\.cartaoDoPorque\)\.current\)/);
+  assert.match(tela, /ref=\{cartaoDoPorque\} testID="resolva-porque" accessible accessibilityRole="text" accessibilityLabel=\{falarTextoComFormulas\(resposta\.porque\)\}/);
+  assert.match(tela, /ref=\{cartaoDoIsso\} testID="resolva-isso" accessible accessibilityRole="text" accessibilityLabel=\{falaDoIsso\(resposta, passo\.formula\)\}/);
+  assert.doesNotMatch(tela, /focarSemRolar\([^)]*rodape|resolva-proximo[^\n]*focar/, 'nunca o foco direto no botão do rodapé');
+  // Depois de "Tentar de novo": a escolha é limpa e o foco vai para a primeira opção.
+  assert.match(tela, /tentarDeNovo\(atual\) : atual\)\);[\s\S]{0,160}focarSemRolar\(focos\.primeiraOpcao\.current\)/);
+  assert.match(tela, /referencia=\{numero === 0 \? primeiraOpcao : undefined\}/);
+  assert.match(await ler('apps/mobile/src/opcao.tsx'), /<Pressable ref=\{referencia\} testID=\{`opcao-\$\{id\}`\}/);
+});
+
+test('fala do cartão verde: "Isso!" e o porquê no acerto; na segunda errada, o porquê da certa; a fórmula revelada falada', async () => {
   const fonte = await ler('apps/mobile/src/resolva-comigo.tsx');
-  const corpo = fonte.slice(fonte.indexOf('export function falaDaCorrecao'), fonte.indexOf('function textoDaOpcao'));
-  assert.match(corpo, /resposta\.correta \? \[t\.isso, resposta\.porque\]/);
-  assert.match(corpo, /resposta\.porqueDaCerta \? \[resposta\.porqueDaCerta\] : \[\]/);
-  assert.match(corpo, /falarTextoComFormulas\(parte\)/, 'a fórmula lida pela árvore, nunca o $…$ cru');
+  const corpo = fonte.slice(fonte.indexOf('export function falaDoIsso'), fonte.indexOf('function textoDaOpcao'));
+  assert.match(corpo, /resposta\.correta \? resposta\.porque : resposta\.porqueDaCerta/);
+  assert.match(corpo, /\.\.\.\(resposta\.correta \? \[t\.isso\] : \[\]\)/);
+  assert.match(corpo, /falarTextoComFormulas\(porque\)/, 'a fórmula lida pela árvore, nunca o $…$ cru');
 });
