@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { randomBytes, randomUUID } from "node:crypto";
 import { after, test } from "node:test";
-import { CABECALHO_CAPACIDADES, interpretarEventoGeracao } from "@studoo/contratos";
+import { CABECALHO_CAPACIDADES, interpretarEventoGeracao, lerFormula } from "@studoo/contratos";
 import { respostaCerta, respostaErrada } from "../src/dominio/aprendizado/plano.ts";
 import { DEMOS } from "../src/servidor/ia/demos.ts";
 
@@ -197,13 +197,21 @@ test("geometria analítica pela IA simulada, de ponta a ponta: a porta de cada c
     const id = ids[ponto];
     const resolucao = licoesDaDemo[ponto].resolucao;
     const corte = resolucao.passos.findIndex((passo) => passo.tentativa);
-    const opcoes = resolucao.passos[corte].tentativa.opcoes;
-    const certa = opcoes.findIndex((opcao) => opcao.correta);
-    const errada = opcoes.findIndex((opcao) => !opcao.correta);
+    const guardadas = resolucao.passos[corte].tentativa.opcoes;
+    // O servidor embaralha as opções por (conta, lição): o índice que vale é o MOSTRADO (o da lição que o cliente recebeu), achado pelo conteúdo.
+    const mostradas = (await lerLicao(cookie, id, TUDO)).resolucao.passos.at(-1).tentativa.opcoes;
+    const chave = (opcao) => opcao.texto ?? lerFormula(opcao.formula).canonica;
+    const mostrada = (guardada) => mostradas.findIndex((opcao) => chave(opcao) === chave(guardada));
+    const opcoes = guardadas;
+    const certa = mostrada(guardadas.find((opcao) => opcao.correta));
+    const guardadaErrada = guardadas.find((opcao) => !opcao.correta);
+    const errada = mostrada(guardadaErrada);
+    assert.ok(certa >= 0 && errada >= 0 && certa !== errada, "as três opções chegam ao cliente, só em outra ordem");
+    assert.equal(mostradas.length, 3);
     const escolher = (opcao, tentativa) => chamar(`${prefixo}/licoes/${id}/resolucao`, { metodo: "POST", corpo: { opcao, tentativa }, cookie, capacidades: TUDO });
 
     const primeira = await (await escolher(errada, 1)).json();
-    assert.deepEqual(primeira, { correta: false, porque: opcoes[errada].porque }, "a primeira errada não revela");
+    assert.deepEqual(primeira, { correta: false, porque: guardadaErrada.porque }, "a primeira errada não revela");
 
     const acerto = await (await escolher(certa, 1)).json();
     assert.equal(acerto.correta, true);

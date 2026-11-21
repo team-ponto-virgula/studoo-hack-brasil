@@ -28,6 +28,7 @@ import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
+import { ordemDoSuaVez } from "./ordem-sua-vez";
 import { SEM_CAPACIDADES, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, visualDoRetorno } from "./visuais";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
 import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
@@ -360,7 +361,7 @@ export async function buscarLicao(
       : {}),
   };
   const capacidades = opcoes.capacidades ?? SEM_CAPACIDADES;
-  const completa = await comVisuais(detalhe, licao.conteudo, { capacidades, desenharPng: opcoes.desenharPng ?? false });
+  const completa = await comVisuais(detalhe, licao.conteudo, { capacidades, desenharPng: opcoes.desenharPng ?? false, usuarioId });
   // Sem `visuais@1` o cliente não desenha a fórmula em linha: `$x_A$` chega como texto linear, sem cifrão. Com ele, as marcas
   // chegam completas (os tokens soltos, `x_A`, também) e só em lição de matemática.
   return comFormulasParaOCliente(completa, licao.conteudo, capacidades);
@@ -371,10 +372,11 @@ export async function buscarLicao(
  * passos que faltam (antes disso nada disso vai ao cliente). Lição sem resolução: `nao_encontrado`.
  */
 export async function responderSuaVezDaLicao(usuarioId: string, id: string, escolha: EscolhaNoSuaVez): Promise<RespostaDoSuaVez> {
-  const { conteudo } = await lerLicao(usuarioId, id);
-  const resolucao = conteudo.resolucao ? normalizarResolucao(conteudo.resolucao) : null;
+  const licao = await lerLicao(usuarioId, id);
+  const resolucao = licao.conteudo.resolucao ? normalizarResolucao(licao.conteudo.resolucao) : null;
   if (!resolucao) throw new FalhaApi("nao_encontrado");
-  const resposta = responderSuaVez(resolucao, escolha);
+  // O índice que chega é o que a lição mostrou: a mesma ordem por (conta, lição) que ela usou, desfeita aqui.
+  const resposta = responderSuaVez(resolucao, escolha, ordemDoSuaVez(usuarioId, licao.id));
   if (!resposta) throw new FalhaApi("invalido");
   return resposta;
 }
