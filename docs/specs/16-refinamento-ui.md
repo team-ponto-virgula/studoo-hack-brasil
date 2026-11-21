@@ -138,6 +138,10 @@ Os quatro momentos da demo ficam para o lote 3, com as capturas do Mobile & QA.
 **14. O aviso de música cobre o botão do balão no mapa** (web `explorar-2`)
 - **Regra:** o aviso "Música de fundo ligada." da primeira vez fica sempre no alto, 8 px abaixo do cabeçalho ou da barra da marca, em todas as telas, como já fica na entrada (spec 12). Ele nunca cobre o balão, os botões do rodapé ou a barra de abas.
 - O lote 3 mostrou o aviso cobrindo também "Prefiro escrever o assunto" (`a2`) e o balão do mapa (`d2` e `50`).
+- **Em tela baixa** (320 × 568), o aviso pode passar por cima do nó atual nos poucos segundos em que fica (decisão de 21/11: aceito, porque aparece uma vez por aparelho e some sozinho), com duas condições:
+  1. se a pessoa toca no nó e o balão abre enquanto o aviso está à vista, o aviso fecha na hora, sem animação;
+  2. o aviso nunca bloqueia o toque fora dele (spec 12), e só o "Desligar" responde dentro dele.
+  Não entra regra de altura nem posição diferente por tela, e nada muda na spec 07.
 - **Onde:** as três plataformas.
 
 **15. Dois cabeçalhos empilhados no mapa da web em 390** (web `explorar-1`)
