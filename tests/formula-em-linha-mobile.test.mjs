@@ -63,3 +63,13 @@ test('onde o texto tem fórmula: conceito, objetivo, exemplo, enunciado, retorno
   assert.match(resolva, /`\$\$\{opcao\.formula\}\$`/, 'a fórmula da opção do "Sua vez" vai marcada para o motor');
   assert.doesNotMatch(await ler('apps/mobile/src/aula-formatos.tsx'), /<TextoComFormulas[^>]*trecho/, 'nunca no trecho de código');
 });
+
+test('a pontuação colada na fórmula não vai sozinha para a outra linha', async () => {
+  const { colarPontuacao } = await import('../apps/mobile/src/texto-com-formulas.tsx').catch(() => ({}));
+  const fonte = await ler('apps/mobile/src/texto-com-formulas.tsx');
+  assert.match(fonte, /const SEM_QUEBRA = '\\u2060';/);
+  assert.match(fonte, /trechos\[indice - 1\]\?\.tipo === 'formula' && \/\^\[\.,;:!\?/);
+  assert.match(fonte, /saida\.push\(colarPontuacao\(trechos, indice\)\)/);
+  assert.match(fonte, /<Text key=\{`j\$\{indice\}`\} style=\{\{ whiteSpace: 'nowrap' \} as TextStyle\}>\{formula\}\{pontuacao\}<\/Text>/, 'na prévia web, fórmula e pontuação num trecho sem quebra');
+  void colarPontuacao;
+});

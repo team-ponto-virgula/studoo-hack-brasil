@@ -1,5 +1,5 @@
 import { createContext, memo, useContext, useMemo, type ComponentRef, type ReactNode, type Ref } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle } from 'react-native';
+import { Platform, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type TextProps, type TextStyle } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
 import { desenharFormulaEmLinha, falarTextoComFormulas, partirTextoComFormulas, type SegmentoDeTexto } from '@studoo/contratos';
 import { elementoDaPrimitiva } from './desenho-svg';
@@ -50,6 +50,44 @@ const FormulaEmLinha = memo(function FormulaEmLinha({ segmento, tamanho, cor }: 
   );
 });
 
+/** O "word joiner" (U+2060): invisível, impede a quebra de linha onde está. */
+const SEM_QUEBRA = '\u2060';
+
+/**
+ * A pontuação colada na fórmula não vai sozinha para a outra linha (", qual é" no começo da linha): o texto que vem depois de uma
+ * fórmula e começa com pontuação de fechar, e o que vem antes e termina com pontuação de abrir, ganham o "word joiner" na junta.
+ */
+export function colarPontuacao(trechos: readonly SegmentoDeTexto[], indice: number): string {
+  const trecho = trechos[indice];
+  if (trecho.tipo !== 'texto') return '';
+  let texto = trecho.texto;
+  if (trechos[indice - 1]?.tipo === 'formula' && /^[.,;:!?)\]}…»”%]/u.test(texto)) texto = SEM_QUEBRA + texto;
+  if (trechos[indice + 1]?.tipo === 'formula' && /[(\[{«“]$/u.test(texto)) texto += SEM_QUEBRA;
+  return texto;
+}
+
+/**
+ * Os trechos na ordem. A pontuação de fechar logo depois da fórmula vai junto com ela num trecho sem quebra: no aparelho, a regra
+ * de quebra do Unicode já não separa os dois (e o "word joiner" reforça); na prévia web, o navegador quebra depois de qualquer
+ * elemento em linha, e o `nowrap` do trecho segura.
+ */
+function montarTrechos(trechos: readonly SegmentoDeTexto[], tamanho: number, cor: string | undefined): ReactNode[] {
+  const saida: ReactNode[] = [];
+  for (let indice = 0; indice < trechos.length; indice++) {
+    const trecho = trechos[indice];
+    if (trecho.tipo === 'texto') { saida.push(colarPontuacao(trechos, indice)); continue; }
+    const formula = <FormulaEmLinha key={indice} segmento={trecho} tamanho={tamanho} cor={cor} />;
+    const seguinte = trechos[indice + 1];
+    const pontuacao = seguinte?.tipo === 'texto' ? /^[.,;:!?)\]}…»”%]+/u.exec(seguinte.texto)?.[0] : undefined;
+    if (!pontuacao || Platform.OS !== 'web') { saida.push(formula); continue; }
+    saida.push(<Text key={`j${indice}`} style={{ whiteSpace: 'nowrap' } as TextStyle}>{formula}{pontuacao}</Text>);
+    const resto = (seguinte as Extract<SegmentoDeTexto, { tipo: 'texto' }>).texto.slice(pontuacao.length);
+    if (resto) saida.push(resto);
+    indice++;
+  }
+  return saida;
+}
+
 /** Os trechos já partidos de um texto (para quem precisa saber se há fórmula). */
 export function useTrechos(texto: string, heuristica?: boolean): SegmentoDeTexto[] {
   const contexto = useContext(FormulasNoTexto);
@@ -75,8 +113,7 @@ export function TextoComFormulas({ texto, estilo, heuristica, accessibilityLabel
   const cor = typeof plano.color === 'string' ? plano.color : undefined;
   return (
     <Text ref={referencia} style={estilo} accessibilityLabel={accessibilityLabel ?? falarTextoComFormulas(texto)} {...resto}>
-      {trechos.map((trecho, indice) => (trecho.tipo === 'texto' ? trecho.texto
-        : <FormulaEmLinha key={indice} segmento={trecho} tamanho={tamanho} cor={cor} />))}
+      {montarTrechos(trechos, tamanho, cor)}
     </Text>
   );
 }
