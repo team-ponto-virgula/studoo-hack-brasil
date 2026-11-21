@@ -114,9 +114,16 @@ export function relatoDaMatematica(
  * A frase que volta à IA quando a resolução foi recusada (estrutura, formato ou conta): o motivo do validador, que já traz as letras e os
  * valores quando é conta (`com k = 3/2`), e o que fazer. É a ÚNICA nova tentativa: se a segunda também for recusada, fica o tudo ou nada.
  */
-export function correcaoDaResolucao(motivo: string): string {
+export function correcaoDaResolucao(motivo: string, figuraQueEntregou?: string): string {
   const dito = motivo.length > 300 ? `${motivo.slice(0, 299)}…` : motivo;
-  return `O "Resolva comigo" da sua resposta anterior foi RECUSADO: ${dito}. Refaça a resolução corrigindo exatamente isso e conferindo cada conta, com OUTROS números que os da pergunta.`;
+  const figura = figuraQueEntregou ? ` A figura do exercício também foi DESCARTADA (${figuraQueEntregou.slice(0, 160)}): a figura nunca mostra como ponto o que a pergunta pede.` : "";
+  return `O "Resolva comigo" da sua resposta anterior foi RECUSADO: ${dito}. Refaça a resolução corrigindo exatamente isso e conferindo cada conta, com OUTROS números que os da pergunta.${figura}`;
+}
+
+/** O motivo da figura do exercício descartada por mostrar a resposta (sem o prefixo `principal.visual: `), ou `undefined`. Serve de aviso na nova tentativa que já acontece. */
+export function motivoDaFiguraQueEntrega(relato: RelatoDaMatematica | undefined): string | undefined {
+  const motivo = relato?.motivos.find((texto) => texto.includes(`.visual: ${FIGURA_ENTREGA_A_RESPOSTA}`));
+  return motivo?.slice(motivo.indexOf(": ") + 2);
 }
 
 /** O motivo da recusa da resolução no relato (`resolucao: <motivo>`), ou `undefined` se ela não foi recusada. */
@@ -317,6 +324,85 @@ export function lerVisuaisDoModelo(valor: unknown): { visuais: Visual[] | undefi
   return { visuais: visuais.length > 0 ? visuais : undefined, enviados: brutos.length, motivos, reparos };
 }
 
+/* ----- A figura que entrega a resposta (marco 13) ----- */
+
+/** Como todo motivo da figura que entrega a resposta começa (o relato e a nova tentativa o reconhecem por ele). */
+export const FIGURA_ENTREGA_A_RESPOSTA = "figura entrega a resposta";
+
+/** O que a regra precisa do exercício: o tipo, o gabarito e, na múltipla escolha, as opções. */
+export interface ExercicioComResposta {
+  tipo: string;
+  gabarito: readonly string[];
+  opcoes?: readonly { id: string; texto: string }[];
+}
+
+/** Os textos da resposta certa: o texto da opção certa (múltipla escolha) ou o gabarito (lacuna). Os outros tipos não têm um par de coordenadas como resposta. */
+function textosDaRespostaCerta(exercicio: ExercicioComResposta): string[] {
+  if (exercicio.tipo === "multipla_escolha") return (exercicio.opcoes ?? []).filter((opcao) => exercicio.gabarito.includes(opcao.id)).map((opcao) => opcao.texto);
+  if (exercicio.tipo === "lacuna") return [...exercicio.gabarito];
+  return [];
+}
+
+function numeroDoPar(texto: string, virgulaDecimal: boolean): number | null {
+  const limpo = texto.trim().replace(/[−–]/g, "-").replace(/^\+/, "");
+  const valor = virgulaDecimal ? limpo.replace(",", ".") : limpo;
+  if (/^-?\d+(?:\.\d+)?$/.test(valor)) return Number(valor);
+  const fracao = /^(-?\d+)\s*\/\s*(\d+)$/.exec(valor);
+  return fracao && Number(fracao[2]) !== 0 ? Number(fracao[1]) / Number(fracao[2]) : null;
+}
+
+/**
+ * Os pares (x, y) que um texto escreve: `(0, 1)`, `A(3; 2,5)`, `$C(−1, 2)$`, `(0, 1) e (1, 3)`. Com ponto e vírgula no meio a vírgula é decimal; com vírgula, o número é inteiro ou
+ * decimal com ponto. O que não tem dois números (`(x + 1)`, `(2, 3, 4)`) não é par.
+ */
+export function paresDeCoordenadasDoTexto(texto: string): [number, number][] {
+  const fonte = texto.replace(/\$/g, " ").replace(/\\left|\\right/g, "").replace(/\\frac\{(-?\d+)\}\{(\d+)\}/g, (_inteiro, n: string, d: string) => String(Number(n) / Number(d)));
+  const pares: [number, number][] = [];
+  for (const [, dentro] of fonte.matchAll(/\(([^()]{1,40})\)/g)) {
+    const comPontoEVirgula = dentro.includes(";");
+    const partes = comPontoEVirgula ? dentro.split(";") : dentro.split(",");
+    if (partes.length !== 2) continue;
+    const [x, y] = partes.map((parte) => numeroDoPar(parte, comPontoEVirgula));
+    if (x !== null && y !== null) pares.push([x, y]);
+  }
+  return pares;
+}
+
+/** Os pontos da figura que se veem com as coordenadas: dado ou especial, com rótulo ("A (0, 1)", na figura ou na legenda). Sem rótulo, a coordenada se lê na grade, não no texto. */
+function pontosComCoordenadaVisivel(figura: VisualFigura): { id: string; x: number; y: number }[] {
+  if (figura.tipo === "reta_numerica") return [];
+  return (figura.pontos ?? []).flatMap((ponto) => (
+    ponto.papel !== "procurado" && ponto.papel !== "resposta" && ponto.rotulo !== false && ponto.x !== undefined && ponto.y !== undefined ? [{ id: ponto.id, x: ponto.x, y: ponto.y }] : []
+  ));
+}
+
+const numeroNaFrase = (valor: number): string => String(Math.round(valor * 100) / 100).replace("-", "−").replace(".", ",");
+/** O par como o Studoo o escreve: `(0, 1)` e, com decimal, `(1,5; 2)`. */
+const parNaFrase = ([x, y]: readonly [number, number]): string => (Number.isInteger(x) && Number.isInteger(y) ? `(${numeroNaFrase(x)}, ${numeroNaFrase(y)})` : `(${numeroNaFrase(x)}; ${numeroNaFrase(y)})`);
+const mesmoPar = (a: readonly [number, number], b: readonly [number, number]): boolean => Math.abs(a[0] - b[0]) < 0.011 && Math.abs(a[1] - b[1]) < 0.011;
+
+/**
+ * A figura do exercício que MOSTRA a resposta: se um dos pares (x, y) da opção certa (ou do gabarito da lacuna) é o de um ponto da figura que se vê com a coordenada
+ * (rótulo "A (0, 1)"), a pergunta é lida na figura e não pensada. Devolve o motivo (`figura entrega a resposta: …`) e a figura é descartada: o exercício segue sem ela.
+ * O ponto procurado nunca entra (ele nem aparece no enunciado) e o ponto sem rótulo também não: ler a coordenada na grade é a pergunta legítima.
+ */
+export function figuraQueEntregaARespostaDoExercicio(exercicio: ExercicioComResposta, figura: VisualFigura): string | null {
+  const certos = textosDaRespostaCerta(exercicio).flatMap(paresDeCoordenadasDoTexto);
+  if (certos.length === 0) return null;
+  for (const ponto of pontosComCoordenadaVisivel(figura)) {
+    const par: [number, number] = [ponto.x, ponto.y];
+    if (certos.some((certo) => mesmoPar(certo, par))) {
+      return `${FIGURA_ENTREGA_A_RESPOSTA}: o ponto ${ponto.id} ${parNaFrase(par)} da figura é ${certos.length > 1 ? "um dos pares da" : "o par da"} opção certa`;
+    }
+  }
+  // O alt é o que o leitor de tela lê e o que aparece no lugar da figura que não cabe: o par da opção certa também não pode estar nele. (O alt do gráfico de função é feito pelo Studoo a partir dos pontos.)
+  if (figura.tipo === "plano") {
+    const noAlt = paresDeCoordenadasDoTexto(figura.alt).find((par) => certos.some((certo) => mesmoPar(certo, par)));
+    if (noAlt) return `${FIGURA_ENTREGA_A_RESPOSTA}: o alt da figura traz o par ${parNaFrase(noAlt)} da opção certa`;
+  }
+  return null;
+}
+
 /** A figura do enunciado de um exercício (plano ou reta numérica). */
 export function lerFiguraDoModelo(valor: unknown): { figura: VisualFigura | undefined; enviada: boolean; motivo?: string } {
   if (valor === null || valor === undefined) return { figura: undefined, enviada: false };
@@ -324,6 +410,13 @@ export function lerFiguraDoModelo(valor: unknown): { figura: VisualFigura | unde
   if (!lido.ok) return { figura: undefined, enviada: true, motivo: lido.motivo };
   if (lido.visual.tipo === "formula") return { figura: undefined, enviada: true, motivo: "a figura do enunciado é um plano ou uma reta numérica, não uma fórmula" };
   return { figura: lido.visual, enviada: true };
+}
+
+/** A figura do exercício como a geração a aceita: válida (`lerFiguraDoModelo`) e sem mostrar a resposta como ponto (o motivo diz qual ponto). */
+export function lerFiguraDoExercicio(valor: unknown, exercicio: ExercicioComResposta): ReturnType<typeof lerFiguraDoModelo> {
+  const lida = lerFiguraDoModelo(valor);
+  const entrega = lida.figura ? figuraQueEntregaARespostaDoExercicio(exercicio, lida.figura) : null;
+  return entrega ? { figura: undefined, enviada: true, motivo: entrega } : lida;
 }
 
 /** A resolução "Resolva comigo" como o servidor a guarda (3 a 5 passos, 1 "Sua vez", a conta conferida): tudo ou nada. */
@@ -426,6 +519,7 @@ const REGRAS_DE_PONTOS = [
   "Escolha números em que nenhum ponto cai em cima de outro. Num exercício de baricentro, ponto médio ou triângulo, o resultado NÃO coincide com outro ponto (o procurado C não é igual a G, a A nem a B) e os três vértices não ficam alinhados; só a lição de pontos colineares usa pontos alinhados. Confira antes de escrever: C = 3·G − A − B em cada coordenada (se G é o ponto médio de AB, C cai em G e o triângulo é achatado: troque os números). No plano, o Studoo DESCARTA a figura que tem dois pontos no mesmo lugar.",
   "Não informe a janela (x e y do plano, de e ate da reta quando há pontos): o Studoo a ajusta aos pontos. Segmentos {de, ate}, polígonos {pontos: [ids]} (3 a 8 vértices), guias {ponto, eixo} (linha tracejada até o eixo): só entre pontos que existem. Um segmento que toca o ponto procurado não é desenhado no enunciado.",
   "alt (até 140 caracteres, texto simples, sem LaTeX e sem $) descreve a figura para quem não a vê. Ele NUNCA diz onde está o ponto procurado, nem a coordenada dele, nem o valor da resposta (\"C é o vértice procurado\"); os pontos dados podem ter as coordenadas no alt.",
+  "A figura do exercício nunca mostra como ponto o que a pergunta pede: se a opção certa é um par (x, y), ou uma lista de pares (\"(0, 1) e (1, 3)\"), nenhum ponto dado ou especial da figura leva esse par. A figura serve para ler o enunciado e pensar, nunca para entregar a resposta; o Studoo DESCARTA a figura que traz a resposta como ponto (o exercício segue sem figura). Num exercício que pergunta \"quais pontos pertencem à reta?\", mostre só a reta, e as opções com os pares ficam para a pessoa conferir.",
 ];
 
 /**

@@ -1,14 +1,16 @@
 import type { MaterialEstudo, PaginaMaterial } from '@studoo/contratos';
 import { FalhaApi } from '../acesso/http';
 import {
+  FIGURA_ENTREGA_A_RESPOSTA,
   correcaoDaResolucao,
   esquemaDasFigurasDoMaterial,
   instrucoesDeFigurasDoMaterial,
   instrucoesDeNotacaoDoMaterial,
-  lerFiguraDoModelo,
+  lerFiguraDoExercicio,
   lerResolucaoDoModelo,
   lerVisuaisDoModelo,
   materialEhDeMatematica,
+  type ExercicioComResposta,
   type RelatoDaMatematica,
 } from '../ia/matematica';
 import {
@@ -299,13 +301,18 @@ async function chamarFiguras(licao: LicaoGerada, paginas: PaginaMaterial[], praz
   }
 }
 
+/** A pergunta da lição como o material a monta (múltipla escolha; `correta` é o índice da certa): o que a regra da figura que entrega a resposta lê. */
+function exercicioDaLicao(licao: LicaoGerada): ExercicioComResposta {
+  return { tipo: 'multipla_escolha', gabarito: [String(licao.correta)], opcoes: licao.opcoes.map((texto, indice) => ({ id: String(indice), texto })) };
+}
+
 /**
  * As duas respostas juntas, quando a segunda trouxe a resolução aceita: a resolução é a da segunda, e os visuais e a figura do exercício
  * ficam com a resposta que teve mais aceitos (a primeira, no empate). A nova tentativa nunca deixa a lição pior do que a primeira a deixaria.
  */
-function melhorDosDois(primeira: FigurasDaLicao, segunda: FigurasDaLicao): FigurasDaLicao {
+function melhorDosDois(licao: LicaoGerada, primeira: FigurasDaLicao, segunda: FigurasDaLicao): FigurasDaLicao {
   const visuaisAceitos = (figuras: FigurasDaLicao) => lerVisuaisDoModelo(figuras.visuais).visuais?.length ?? 0;
-  const figuraAceita = (figuras: FigurasDaLicao) => lerFiguraDoModelo(figuras.visual).figura !== undefined;
+  const figuraAceita = (figuras: FigurasDaLicao) => lerFiguraDoExercicio(figuras.visual, exercicioDaLicao(licao)).figura !== undefined;
   return {
     visuais: visuaisAceitos(segunda) > visuaisAceitos(primeira) ? segunda.visuais : primeira.visuais,
     visual: figuraAceita(primeira) || !figuraAceita(segunda) ? primeira.visual : segunda.visual,
@@ -330,12 +337,15 @@ async function pedirFiguras(licao: LicaoGerada, paginas: PaginaMaterial[], prazo
     registrar('nova_tentativa_sem_tempo');
     return { figuras: primeira, ms: Date.now() - inicio };
   }
-  const segunda = await chamarFiguras(licao, paginas, Math.min(PRAZO_DAS_FIGURAS_MS, restante - 2_000), correcaoDaResolucao(lida.motivo));
+  // Se a figura da primeira também entregava a resposta, a nova tentativa que já vai acontecer leva esse aviso junto (não há tentativa só por causa dela).
+  const motivoDaFigura = lerFiguraDoExercicio(primeira.visual, exercicioDaLicao(licao)).motivo;
+  const avisoDaFigura = motivoDaFigura?.startsWith(FIGURA_ENTREGA_A_RESPOSTA) ? motivoDaFigura : undefined;
+  const segunda = await chamarFiguras(licao, paginas, Math.min(PRAZO_DAS_FIGURAS_MS, restante - 2_000), correcaoDaResolucao(lida.motivo, avisoDaFigura));
   const lidaDaSegunda = segunda ? lerResolucaoDoModelo(segunda.resolucao) : undefined;
   const aceita = lidaDaSegunda?.resolucao !== undefined;
   registrar('resolucao_nova_tentativa', { aceita });
   const novaTentativa = { motivo: lida.motivo, aceita, ...(lidaDaSegunda?.motivo ? { motivoDaSegunda: lidaDaSegunda.motivo } : {}) };
-  const figuras = aceita && segunda ? melhorDosDois(primeira, segunda) : primeira;
+  const figuras = aceita && segunda ? melhorDosDois(licao, primeira, segunda) : primeira;
   return { figuras: { ...figuras, novaTentativa }, ms: Date.now() - inicio };
 }
 

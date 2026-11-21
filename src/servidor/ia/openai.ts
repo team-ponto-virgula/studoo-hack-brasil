@@ -22,7 +22,7 @@ import {
   sinalComPrazo,
   validarBaseUrl,
 } from "./comum";
-import { contagensDoRelato, correcaoDaResolucao, licaoEhDeMatematica, motivoDaResolucao, valorDaMatematica } from "./matematica";
+import { contagensDoRelato, correcaoDaResolucao, licaoEhDeMatematica, motivoDaFiguraQueEntrega, motivoDaResolucao, valorDaMatematica } from "./matematica";
 
 export { normalizarConteudo };
 
@@ -306,7 +306,7 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
           const motivo = matematica && tentativa === 0 ? motivoDaResolucao(lida.matematica) : undefined;
           if (motivo) {
             reserva = { conteudo: lida.conteudo, valor: valorDaMatematica(lida.matematica) };
-            correcao = correcaoDaResolucao(motivo);
+            correcao = correcaoDaResolucao(motivo, motivoDaFiguraQueEntrega(lida.matematica));
             continue;
           }
           return lida.conteudo;

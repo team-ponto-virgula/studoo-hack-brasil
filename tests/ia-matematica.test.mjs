@@ -13,8 +13,8 @@ const { analisarJson, esquemaDaLicao, esquemaDaLicaoDeMatematica, instrucoesDaLi
 const { GERADOR_OPENAI, configuracaoOpenAi, corpoDaLicao, criarGeradorOpenAi } = await import("../src/servidor/ia/openai.ts");
 const { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek, instrucoesLicaoJsonDeMatematica } = await import("../src/servidor/ia/deepseek.ts");
 const {
-  contagensDoRelato, correcaoDaResolucao, ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, instrucoesDeFigurasDoMaterial,
-  esquemaDoVisual, instrucoesDeMatematica, instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
+  contagensDoRelato, correcaoDaResolucao, ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, figuraQueEntregaARespostaDoExercicio, instrucoesDeFigurasDoMaterial,
+  motivoDaFiguraQueEntrega, paresDeCoordenadasDoTexto, esquemaDoVisual, instrucoesDeMatematica, instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
   repararResolucao, repararVisuais,
 } = await import("../src/servidor/ia/matematica.ts");
 const {
@@ -1552,3 +1552,249 @@ test("12a: a demonstração de funções não vaza o ponto procurado (o JSON pú
     assert.ok(so1.exercicios.every((exercicio) => !exercicio.visual), `${licao.titulo}: o exercício sem figura`);
   }
 });
+
+/* ----- Marco 13a: a figura do exercício que entrega a resposta ----- */
+
+/** O exemplo de matemática com o exercício principal trocado: o que a IA mandaria (a opção "a" é a certa, a menos que o gabarito diga outra). */
+function licaoComFigura({ enunciado, opcoes, visual, gabarito = ["a"], tipo = "multipla_escolha" }) {
+  const bruto = copia(exemploDeMatematica);
+  const exercicio = bruto.exercicios[0];
+  exercicio.tipo = tipo;
+  exercicio.enunciado = enunciado;
+  exercicio.opcoes = tipo === "multipla_escolha" ? opcoes.map((texto, indice) => ({ id: "abc"[indice], texto })) : null;
+  exercicio.gabarito = gabarito;
+  exercicio.visual = visual;
+  return bruto;
+}
+
+const planoDe = (alt, pontos, extra = {}) => ({ tipo: "plano", alt, pontos, ...extra });
+
+test("13a: os pares de coordenadas de um texto: (0, 1) e (1, 3), com $, \\left, decimal com ponto e vírgula, fração; o que não é par fica de fora", () => {
+  assert.deepEqual(paresDeCoordenadasDoTexto("(0, 1) e (1, 3)"), [[0, 1], [1, 3]]);
+  assert.deepEqual(paresDeCoordenadasDoTexto("$(0, 1)$ e $(1, 3)$"), [[0, 1], [1, 3]]);
+  assert.deepEqual(paresDeCoordenadasDoTexto("Q(3, 2)"), [[3, 2]]);
+  assert.deepEqual(paresDeCoordenadasDoTexto("$C(−1, 2)$"), [[-1, 2]]);
+  assert.deepEqual(paresDeCoordenadasDoTexto("$\\left(0, 1\\right)$"), [[0, 1]]);
+  assert.deepEqual(paresDeCoordenadasDoTexto("(0,1)"), [[0, 1]]);
+  assert.deepEqual(paresDeCoordenadasDoTexto("A(1,5; −2)"), [[1.5, -2]], "com ponto e vírgula, a vírgula é decimal");
+  assert.deepEqual(paresDeCoordenadasDoTexto("(1.5, 2)"), [[1.5, 2]]);
+  assert.deepEqual(paresDeCoordenadasDoTexto("$(1/2, 3)$"), [[0.5, 3]]);
+  assert.deepEqual(paresDeCoordenadasDoTexto("$\\left(\\frac{1}{2}, 3\\right)$"), [[0.5, 3]]);
+  for (const nao of ["(x + 1)", "(2, 3, 4)", "f(2)", "(a, b)", "x = 3", "(1,5, 2)", "(2 + 3)", ""]) assert.deepEqual(paresDeCoordenadasDoTexto(nao), [], nao);
+});
+
+test("13a: o caso real 1 (f(x) = 2x + 1): os pontos A (0, 1) e B (1, 3) estão na figura e são a opção certa; a figura sai, o exercício e a lição ficam", () => {
+  const lida = normalizarLicao(licaoComFigura({
+    enunciado: "Na função $f(x) = 2x + 1$, quais pontos pertencem ao gráfico?",
+    opcoes: ["$(0, 1)$ e $(1, 3)$", "$(0, 2)$ e $(1, 4)$", "$(1, 0)$ e $(3, 1)$"],
+    visual: planoDe("Os pontos A (0, 1) e B (1, 3) no plano, por onde passa a reta de f.", [
+      { id: "A", papel: "dado", x: 0, y: 1 }, { id: "B", papel: "dado", x: 1, y: 3 },
+    ], { segmentos: [{ de: "A", ate: "B" }] }),
+  }), ORIGEM);
+  assert.equal("visual" in lida.conteudo.exercicio, false, "o exercício segue sem figura");
+  assert.ok(conteudoValido(lida.conteudo));
+  assert.equal(lida.conteudo.exercicio.enunciado, "Na função $f(x) = 2x + 1$, quais pontos pertencem ao gráfico?");
+  assert.deepEqual(lida.descartados, ["principal:visual"]);
+  assert.deepEqual(lida.matematica.figuras, { enviadas: 1, aceitas: 0 });
+  assert.equal(lida.matematica.motivos.length, 1);
+  assert.match(lida.matematica.motivos[0], /^principal\.visual: figura entrega a resposta: o ponto A \(0, 1\) da figura é um dos pares da opção certa$/);
+  assert.ok(lida.conteudo.visuais.length >= 1 && lida.conteudo.resolucao, "os visuais e a resolução da lição não mudam");
+});
+
+test("13a: o caso real 2: a opção certa (3, 2) é o ponto Q que a figura rotula; em múltipla escolha e em lacuna", () => {
+  const visual = planoDe("Os pontos P (1, 1) e Q (3, 2) no plano.", [{ id: "P", papel: "dado", x: 1, y: 1 }, { id: "Q", papel: "dado", x: 3, y: 2 }]);
+  const emEscolha = normalizarLicao(licaoComFigura({
+    enunciado: "O ponto Q é o ponto P deslocado 2 para a direita e 1 para cima. Quais são as coordenadas de Q?",
+    opcoes: ["$(3, 2)$", "$(2, 3)$", "$(3, 1)$"], visual,
+  }), ORIGEM);
+  assert.equal("visual" in emEscolha.conteudo.exercicio, false);
+  assert.match(emEscolha.matematica.motivos[0], /figura entrega a resposta: o ponto Q \(3, 2\) da figura é o par da opção certa/);
+  const emLacuna = normalizarLicao(licaoComFigura({
+    enunciado: "Q é o ponto P deslocado 2 para a direita e 1 para cima. Então Q = ___.", tipo: "lacuna", opcoes: [], gabarito: ["(3, 2)"], visual,
+  }), ORIGEM);
+  assert.equal(emLacuna.conteudo.exercicio.tipo, "lacuna");
+  assert.equal("visual" in emLacuna.conteudo.exercicio, false);
+  assert.match(emLacuna.matematica.motivos[0], /^principal\.visual: figura entrega a resposta: o ponto Q/);
+});
+
+test("13a: o exercício que NÃO entrega fica com a figura: o procurado escondido, os pontos dados diferentes da resposta e a leitura da grade sem rótulo", () => {
+  // O exemplo de sempre: a opção certa é o ponto médio M, que a figura marca como PROCURADO (nem aparece no enunciado).
+  const exemplo = normalizarLicao(copia(exemploDeMatematica), ORIGEM);
+  assert.equal(exemplo.conteudo.exercicio.visual.tipo, "plano");
+  assert.deepEqual(exemplo.descartados, []);
+  assert.deepEqual(exemplo.matematica.figuras, { enviadas: 1, aceitas: 1 });
+  // Os pontos dados A e B são rotulados e a resposta é outro par.
+  const outroPar = normalizarLicao(licaoComFigura({
+    enunciado: "O ponto $C$ é o simétrico de $A(2, 4)$ em relação à origem. Quais as coordenadas de $C$?",
+    opcoes: ["$(−2, −4)$", "$(2, −4)$", "$(−2, 4)$"],
+    visual: planoDe("Os pontos A (2, 4) e B (6, 10) no plano.", [{ id: "A", papel: "dado", x: 2, y: 4 }, { id: "B", papel: "dado", x: 6, y: 10 }]),
+  }), ORIGEM);
+  assert.equal(outroPar.conteudo.exercicio.visual.tipo, "plano");
+  assert.deepEqual(outroPar.descartados, []);
+  // A leitura da coordenada na grade: o ponto Q SEM rótulo (nem letra, nem par) é a pergunta legítima, e o alt não diz o par.
+  const lerNaGrade = normalizarLicao(licaoComFigura({
+    enunciado: "Quais são as coordenadas do ponto marcado no plano?",
+    opcoes: ["$(3, 2)$", "$(2, 3)$", "$(3, −2)$"],
+    visual: planoDe("Um ponto marcado no primeiro quadrante.", [{ id: "Q", papel: "dado", x: 3, y: 2, rotulo: false }]),
+  }), ORIGEM);
+  assert.equal(lerNaGrade.conteudo.exercicio.visual.tipo, "plano");
+  assert.deepEqual(lerNaGrade.descartados, []);
+  // O mesmo ponto COM o rótulo "Q (3, 2)" entrega: a figura sai.
+  const comRotulo = normalizarLicao(licaoComFigura({
+    enunciado: "Quais são as coordenadas do ponto marcado no plano?",
+    opcoes: ["$(3, 2)$", "$(2, 3)$", "$(3, −2)$"],
+    visual: planoDe("Um ponto marcado no primeiro quadrante.", [{ id: "Q", papel: "dado", x: 3, y: 2 }]),
+  }), ORIGEM);
+  assert.equal("visual" in comRotulo.conteudo.exercicio, false);
+  assert.match(comRotulo.matematica.motivos[0], /figura entrega a resposta: o ponto Q \(3, 2\)/);
+  // Resposta que não é par (distância, área) nunca é afetada; o par numa opção ERRADA também não.
+  const distancia = normalizarLicao(licaoComFigura({
+    enunciado: "Qual é a distância entre $A(0, 0)$ e $B(3, 4)$?",
+    opcoes: ["$5$", "$7$", "$(3, 4)$"],
+    visual: planoDe("Os pontos A (0, 0) e B (3, 4) no plano.", [{ id: "A", papel: "dado", x: 0, y: 0 }, { id: "B", papel: "dado", x: 3, y: 4 }]),
+  }), ORIGEM);
+  assert.equal(distancia.conteudo.exercicio.visual.tipo, "plano", "o (3, 4) está numa opção errada: não é a resposta");
+});
+
+test("13a: o ponto derivado visível (ponto médio dado) e o que o alt diz também contam; a reta numérica e o procurado, não", () => {
+  const medio = normalizarLicao(licaoComFigura({
+    enunciado: "Qual é o ponto médio de $A(0, 0)$ e $B(4, 2)$?",
+    opcoes: ["$(2, 1)$", "$(4, 2)$", "$(1, 2)$"],
+    visual: planoDe("Os pontos A, B e M no plano.", [
+      { id: "A", papel: "dado", x: 0, y: 0 }, { id: "B", papel: "dado", x: 4, y: 2 }, { id: "M", papel: "especial", derivado: { tipo: "ponto_medio", de: ["A", "B"] } },
+    ]),
+  }), ORIGEM);
+  assert.equal("visual" in medio.conteudo.exercicio, false, "o M calculado pelo servidor aparece rotulado: (2, 1) é a resposta");
+  assert.match(medio.matematica.motivos[0], /o ponto M \(2, 1\)/);
+  // O ponto sem rótulo, mas o alt diz o par: o leitor de tela e a figura que não cabe entregam a resposta.
+  const noAlt = normalizarLicao(licaoComFigura({
+    enunciado: "Quais são as coordenadas do ponto marcado no plano?",
+    opcoes: ["$(3, 2)$", "$(2, 3)$", "$(3, −2)$"],
+    visual: planoDe("O ponto Q (3, 2) marcado no plano.", [{ id: "Q", papel: "dado", x: 3, y: 2, rotulo: false }]),
+  }), ORIGEM);
+  assert.equal("visual" in noAlt.conteudo.exercicio, false);
+  assert.match(noAlt.matematica.motivos[0], /figura entrega a resposta: o alt da figura traz o par \(3, 2\) da opção certa/);
+  // Reta numérica não tem par; o procurado (escondido) e a resposta (só no retorno) não entregam nada.
+  const certo = { tipo: "multipla_escolha", gabarito: ["a"], opcoes: [{ id: "a", texto: "$(3, 2)$" }, { id: "b", texto: "$(2, 3)$" }] };
+  assert.equal(figuraQueEntregaARespostaDoExercicio(certo, normalizarVisual({ tipo: "reta_numerica", alt: "x", de: 0, ate: 5, pontos: [{ id: "A", papel: "dado", valor: 3 }] })), null);
+  for (const papel of ["procurado", "resposta"]) {
+    const figura = normalizarVisual(planoDe("Um ponto.", [{ id: "A", papel: "dado", x: 1, y: 1 }, { id: "Q", papel, x: 3, y: 2 }]));
+    assert.equal(figuraQueEntregaARespostaDoExercicio(certo, figura), null, papel);
+  }
+  // Sem par na resposta, sem entrega (e os outros tipos de exercício nem olham).
+  const sem = { tipo: "multipla_escolha", gabarito: ["a"], opcoes: [{ id: "a", texto: "$5$" }] };
+  assert.equal(figuraQueEntregaARespostaDoExercicio(sem, normalizarVisual(planoDe("x", [{ id: "A", papel: "dado", x: 5, y: 5 }]))), null);
+  assert.equal(figuraQueEntregaARespostaDoExercicio({ tipo: "verdadeiro_falso", gabarito: ["v"] }, normalizarVisual(planoDe("x", [{ id: "A", papel: "dado", x: 3, y: 2 }]))), null);
+});
+
+test("13a: o gráfico de função com o ponto especial (intercepto) que é a opção certa também perde a figura", () => {
+  const funcao = {
+    tipo: "funcao", alt: "x", curvas: [{ nome: "f", latex: "2x + 1" }],
+    pontos: [{ id: "A", papel: "especial", tipo: "intercepto", curva: "f" }],
+  };
+  const lida = normalizarLicao(licaoComFigura({
+    enunciado: "Onde a reta $f(x) = 2x + 1$ corta o eixo $y$?",
+    opcoes: ["$(0, 1)$", "$(1, 0)$", "$(0, 2)$"], visual: funcao,
+  }), ORIGEM);
+  assert.equal("visual" in lida.conteudo.exercicio, false);
+  assert.match(lida.matematica.motivos[0], /^principal\.visual: figura entrega a resposta: o ponto A \(0, 1\) da figura é o par da opção certa/);
+  // O mesmo ponto como PROCURADO fica escondido: a figura vale (o motor nem desenha a curva no enunciado).
+  const escondido = copia(funcao);
+  escondido.pontos[0].papel = "procurado";
+  const guardada = normalizarLicao(licaoComFigura({ enunciado: "Onde a reta $f(x) = 2x + 1$ corta o eixo $y$?", opcoes: ["$(0, 1)$", "$(1, 0)$", "$(0, 2)$"], visual: escondido }), ORIGEM);
+  assert.equal(guardada.conteudo.exercicio.visual.tipo, "funcao");
+});
+
+test("13a: o pedido à IA diz que a figura nunca mostra como ponto o que a pergunta pede, e que o Studoo a descarta", () => {
+  for (const [nome, instrucoes] of [["lição", instrucoesDeMatematica], ["figuras do material", instrucoesDeFigurasDoMaterial]]) {
+    assert.match(instrucoes, /A figura do exercício nunca mostra como ponto o que a pergunta pede/, nome);
+    assert.match(instrucoes, /DESCARTA a figura que traz a resposta/, nome);
+  }
+});
+
+test("13a, material: a pergunta cuja opção certa é um ponto rotulado da figura perde a figura, e o relato diz por quê", async () => {
+  const { conteudoDaGeradaComRelato } = await import("../src/servidor/estudio/ia.ts");
+  const gerada = {
+    objetivo: "Reconhecer pontos da reta.", conceito: "Um ponto pertence ao gráfico quando as coordenadas dele satisfazem a função.",
+    exemplo: "Em $f(x) = 2x + 1$, o ponto $(0, 1)$ pertence ao gráfico porque $f(0) = 1$.",
+    pergunta: "Na função $f(x) = 2x + 1$, qual ponto pertence ao gráfico?", opcoes: ["$(0, 1)$", "$(0, 2)$", "$(1, 0)$"], correta: 0,
+    feedbackCorreto: "Isso! $f(0) = 1$.", feedbackIncorreto: "Troque x pelo valor e confira o y.",
+  };
+  const entrega = conteudoDaGeradaComRelato(gerada, "Do seu material", { visual: planoDe("O ponto A (0, 1) no plano.", [{ id: "A", papel: "dado", x: 0, y: 1 }]) });
+  assert.equal("visual" in entrega.conteudo.exercicio, false);
+  assert.match(entrega.matematica.motivos[0], /^pergunta\.visual: figura entrega a resposta: o ponto A \(0, 1\)/);
+  assert.deepEqual(entrega.matematica.figuras, { enviadas: 1, aceitas: 0 });
+  const nao = conteudoDaGeradaComRelato(gerada, "Do seu material", { visual: planoDe("O ponto B (1, 3) no plano.", [{ id: "B", papel: "dado", x: 1, y: 3 }]) });
+  assert.equal(nao.conteudo.exercicio.visual.tipo, "plano");
+  assert.deepEqual(nao.matematica.figuras, { enviadas: 1, aceitas: 1 });
+});
+
+const AVISO_DO_PONTO_M = "figura entrega a resposta: o ponto M (4, 7) da figura é o par da opção certa";
+/** A lição do exemplo cuja resolução vem sem "Sua vez" (recusada) E cuja figura do exercício traz o M (4, 7), a opção certa, como ponto dado. */
+const licaoQueEntregaERecusada = () => {
+  const bruto = licaoSemSuaVez();
+  bruto.exercicios[0].visual.pontos.find((ponto) => ponto.id === "M").papel = "dado";
+  return bruto;
+};
+
+test("13a: a frase da nova tentativa leva o aviso da figura descartada, e sem o aviso é exatamente a de sempre", () => {
+  const motivo = 'a resolução precisa de exatamente um "Sua vez"';
+  assert.equal(correcaoDaResolucao(motivo), correcaoDaResolucao(motivo, undefined));
+  const com = correcaoDaResolucao(motivo, AVISO_DO_PONTO_M);
+  assert.ok(com.startsWith(correcaoDaResolucao(motivo)), "o aviso vem DEPOIS do pedido da resolução");
+  assert.match(com, /A figura do exercício também foi DESCARTADA \(figura entrega a resposta: o ponto M \(4, 7\) da figura é o par da opção certa\): a figura nunca mostra como ponto o que a pergunta pede\.$/);
+  const lida = normalizarLicao(licaoQueEntregaERecusada(), ORIGEM);
+  assert.equal(motivoDaFiguraQueEntrega(lida.matematica), AVISO_DO_PONTO_M);
+  assert.equal(motivoDaFiguraQueEntrega(normalizarLicao(copia(exemploDeMatematica), ORIGEM).matematica), undefined);
+  assert.equal(motivoDaFiguraQueEntrega(undefined), undefined);
+});
+
+test("13a, trilha (OpenAI e DeepSeek): a nova tentativa que já acontece (resolução recusada) leva o aviso da figura; a figura boa da segunda vale", async () => {
+  let chamadas = 0;
+  responder = () => { chamadas += 1; return ok(chamadas === 1 ? licaoQueEntregaERecusada() : exemploDeMatematica); };
+  const conteudo = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2);
+  assert.equal(pedidos[1].dados.input.at(-1).content, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ, AVISO_DO_PONTO_M));
+  assert.equal(conteudo.exercicio.visual.pontos.find((ponto) => ponto.id === "M").papel, "procurado", "a figura da segunda (o M escondido) é a que fica");
+  // A DeepSeek faz o mesmo na mensagem.
+  process.env.IA = "deepseek";
+  pedidos = [];
+  chamadas = 0;
+  responder = () => { chamadas += 1; return ok(JSON.stringify(chamadas === 1 ? licaoQueEntregaERecusada() : exemploDeMatematica)); };
+  await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
+  assert.equal(pedidos.length, 2);
+  assert.equal(pedidos[1].dados.messages.at(-1).content, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ, AVISO_DO_PONTO_M));
+});
+
+test("13a, trilha: a figura que entrega sozinha NÃO gera uma segunda chamada (a lição vem sem a figura, de uma vez só)", async () => {
+  const entrega = copiaDe(exemploDeMatematica);
+  entrega.exercicios[0].visual.pontos.find((ponto) => ponto.id === "M").papel = "dado";
+  responder = () => ok(entrega);
+  const conteudo = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 1, "uma figura decorativa não vale outra chamada à IA");
+  assert.equal("visual" in conteudo.exercicio, false);
+  assert.ok(conteudo.resolucao && conteudo.visuais.length >= 1, "o resto da lição segue");
+  assert.deepEqual(registrosDe("licao_matematica").map((registro) => registro.figuras), ["0/1"]);
+  assert.equal(JSON.stringify(registros).includes("figura entrega"), false, "o registro leva só a contagem, nunca o motivo");
+});
+
+test("13a, material: a nova tentativa que já acontece leva o aviso da figura; a figura boa da segunda (e não a da primeira, que entregava) é a que fica", async () => {
+  const entrega = () => {
+    const figuras = figurasSemSuaVez();
+    figuras.visual.pontos.push({ id: "C", papel: "dado", x: 4, y: 0 });
+    return figuras;
+  };
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    const { licao, correcao } = dadosDoPedido({ dados });
+    return ok(licao.titulo.startsWith("Lição 2") && !correcao ? entrega() : figurasDoModelo());
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  const [nova] = pedidosDeFiguras().filter((pedido) => dadosDoPedido(pedido).correcao);
+  assert.equal(dadosDoPedido(nova).correcao, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ, "figura entrega a resposta: o ponto C (4, 0) da figura é o par da opção certa"));
+  const { conteudos } = conteudosDoGerado(gerado);
+  assert.equal(conteudos[1].exercicio.visual.tipo, "plano");
+  assert.equal(conteudos[1].exercicio.visual.pontos.some((ponto) => ponto.id === "C"), false, "a figura da segunda, sem o ponto que entregava");
+  assert.equal(conteudos[1].resolucao.passos.length, 5);
+});
+
