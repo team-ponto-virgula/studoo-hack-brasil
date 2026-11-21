@@ -450,8 +450,11 @@ test("'Sua vez': 3 opções, 1 certa, sem repetição, texto ou fórmula, e a co
   assert.match(trocar((t) => (t.opcoes[1].correta = true)), /exatamente 1 opção certa/);
   assert.match(trocar((t) => (t.opcoes[0].correta = false)), /exatamente 1 opção certa/);
   assert.match(trocar((t) => (t.opcoes[2] = { ...t.opcoes[0], correta: false })), /duas opções iguais/);
-  assert.match(trocar((t) => (t.opcoes[1].texto = "7")), /só um dos dois/);
-  assert.match(trocar((t) => delete t.opcoes[1].formula), /só um dos dois/);
+  // Texto e fórmula na mesma opção valem (marco 9: a conta vai para dentro do texto, e segue conferida); sem nenhum dos dois, não.
+  const comAsDuas = resolucaoDe();
+  comAsDuas.passos[3].tentativa.opcoes[1].texto = "7";
+  assert.equal(validarResolucao(comAsDuas).ok, true);
+  assert.match(trocar((t) => { delete t.opcoes[1].formula; delete t.opcoes[1].texto; }), /precisa de texto ou de fórmula/);
   assert.match(trocar((t) => (t.opcoes[1].porque = "")), /porque/);
   assert.match(trocar((t) => (t.opcoes[0].correta = "sim")), /correta precisa ser verdadeiro ou falso/);
   assert.match(trocar((t) => (t.opcoes[0].formula = String.raw`\input{x}`)), /opção 1: fórmula/);

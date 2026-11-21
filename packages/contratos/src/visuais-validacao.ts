@@ -563,14 +563,22 @@ function formulaDoCampo(bruto: unknown, onde: string): FormulaLida {
   return { canonica: lida.canonica, arvore: lida.arvore };
 }
 
-function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigida; arvore?: NoFormula } {
+function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigida; arvore?: NoFormula; ajuste?: string } {
   const onde = `opção ${posicao + 1}`;
   if (!objeto(bruto)) return recusar(`${onde}: formato inválido`);
   if (typeof bruto.correta !== "boolean") return recusar(`${onde}: correta precisa ser verdadeiro ou falso`);
   const temTexto = !ausente(bruto.texto) && bruto.texto !== "";
   const temFormula = !ausente(bruto.formula) && bruto.formula !== "";
-  if (temTexto === temFormula) return recusar(`${onde}: precisa de texto ou de fórmula, só um dos dois`);
+  if (!temTexto && !temFormula) return recusar(`${onde}: precisa de texto ou de fórmula`);
   const porque = textoAte(bruto.porque, LIMITES_VISUAIS.porque, `${onde}: porque`, true);
+  if (temTexto && temFormula) {
+    // A IA mandou a frase e a conta da MESMA opção: a conta entra na frase, entre cifrões (nada se perde: é só onde ela fica), e segue
+    // conferida como fórmula. Uma opção com as duas continua sendo uma opção só.
+    if (typeof bruto.texto !== "string") return recusar(`${onde}: texto ausente ou com LaTeX solto`);
+    const lida = formulaDoCampo(bruto.formula, `${onde}: fórmula`);
+    const texto = textoAte(`${bruto.texto.trim()} $${lida.canonica}$`, LIMITES_VISUAIS.textoDaOpcao, `${onde}: texto`, true);
+    return { opcao: { texto, correta: bruto.correta, porque }, arvore: lida.arvore, ajuste: `${onde}: texto e fórmula juntos (a fórmula foi para dentro do texto)` };
+  }
   if (temFormula) {
     const lida = formulaDoCampo(bruto.formula, `${onde}: fórmula`);
     return { opcao: { formula: lida.canonica, correta: bruto.correta, porque }, arvore: lida.arvore };
@@ -578,7 +586,11 @@ function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigi
   return { opcao: { texto: textoAte(bruto.texto, LIMITES_VISUAIS.textoDaOpcao, `${onde}: texto`, true), correta: bruto.correta, porque } };
 }
 
-function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): { tentativa: TentativaGuardada; correta: { arvore?: NoFormula; texto?: string } } {
+function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): {
+  tentativa: TentativaGuardada;
+  correta: { arvore?: NoFormula; texto?: string };
+  ajustes: string[];
+} {
   if (!objeto(bruto)) return recusar("sua vez: formato inválido");
   const pergunta = textoAte(bruto.pergunta, LIMITES_VISUAIS.pergunta, "sua vez: pergunta", true);
   if (!Array.isArray(bruto.opcoes) || bruto.opcoes.length !== 3) return recusar("sua vez: precisa de exatamente 3 opções");
@@ -598,6 +610,7 @@ function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>)
   return {
     tentativa: { pergunta, opcoes: lidas.map(({ opcao }) => opcao) },
     correta: { ...(certa?.arvore ? { arvore: certa.arvore } : {}), ...(certa?.opcao.texto ? { texto: certa.opcao.texto } : {}) },
+    ajustes: lidas.flatMap(({ ajuste }) => (ajuste ? [ajuste] : [])),
   };
 }
 
@@ -643,7 +656,8 @@ function conferirFraseDoSuaVez(entrada: {
 }
 
 export type ResultadoResolucao =
-  | { ok: true; resolucao: ResolucaoGuardada; conta: { conferidas: number; puladas: number } }
+  /** `ajustes`: o que o validador aceitou de um jeito um pouco diferente do que veio (`opção N: texto e fórmula juntos…`), para o relato. */
+  | { ok: true; resolucao: ResolucaoGuardada; conta: { conferidas: number; puladas: number }; ajustes?: string[] }
   | { ok: false; motivo: string };
 
 /**
@@ -704,13 +718,18 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
       // Um defeito do conferidor não derruba a lição: sem conferência, a conta fica para a revisão.
     }
     const passoComTentativa = passosBrutos[comTentativa] as Record<string, unknown>;
-    const { tentativa, correta } = normalizarTentativa(passoComTentativa.tentativa, declaradas);
+    const { tentativa, correta, ajustes } = normalizarTentativa(passoComTentativa.tentativa, declaradas);
     passos[comTentativa] = { ...passos[comTentativa], tentativa };
     conferirFraseDoSuaVez({
       passo: passos[comTentativa], posicao: comTentativa, correta, declaradas, problema,
       arvoreDoPasso: arvoresDosPassos[comTentativa], arvoreDoUltimo: arvoresDosPassos[total - 1], figura: visualDoProblema,
     });
-    return { ok: true, conta, resolucao: { problema, ...(visualDoProblema ? { visual: visualDoProblema } : {}), passos } };
+    return {
+      ok: true,
+      conta,
+      resolucao: { problema, ...(visualDoProblema ? { visual: visualDoProblema } : {}), passos },
+      ...(ajustes.length > 0 ? { ajustes: ajustes.map((ajuste) => `passo ${comTentativa + 1}, ${ajuste}`) } : {}),
+    };
   } catch (erro) {
     if (erro instanceof Recusa) return { ok: false, motivo: erro.message };
     throw erro;

@@ -173,8 +173,34 @@ function fechamento(texto: string, abertura: number): number {
 }
 
 /**
- * A fórmula com os realces que não valem desembrulhados: dentro de outro realce, `\resposta` onde não vale, `\procurado` no passo da resposta
- * e, passando de 2, os que vêm depois dos dois primeiros (o texto de dentro fica). Devolve os motivos, um por realce desembrulhado.
+ * O conteúdo de um realce atravessa células de matriz (`\foco{2 & 3 & 1}`: a linha inteira)? Há `&` ou `\\` fora de qualquer
+ * ambiente aberto dentro dele. O realce marca UMA célula; em volta de várias o analisador recusa o `&` solto, e a fórmula inteira caía.
+ */
+function atravessaCelulas(conteudo: string): boolean {
+  let ambientes = 0;
+  for (let i = 0; i < conteudo.length; i += 1) {
+    if (conteudo.startsWith("\\begin{", i)) {
+      ambientes += 1;
+      i += 6;
+    } else if (conteudo.startsWith("\\end{", i)) {
+      ambientes = Math.max(0, ambientes - 1);
+      i += 4;
+    } else if (conteudo.startsWith("\\\\", i)) {
+      if (ambientes === 0) return true;
+      i += 1;
+    } else if (conteudo[i] === "\\") {
+      i += 1;
+    } else if (conteudo[i] === "&" && ambientes === 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * A fórmula com os realces que não valem desembrulhados: dentro de outro realce, `\resposta` onde não vale, `\procurado` no passo da resposta,
+ * em volta de células de matriz e, passando de 2, os que vêm depois dos dois primeiros (o texto de dentro fica). Devolve os motivos, um por
+ * realce desembrulhado.
  */
 export function reescreverRealces(latex: string, regras: RegrasDeRealce): { latex: string; motivos: string[] } {
   const motivos: string[] = [];
@@ -198,16 +224,18 @@ export function reescreverRealces(latex: string, regras: RegrasDeRealce): { late
         continue;
       }
       const nome = achado[1];
+      const conteudo = texto.slice(abre + 1, fecha);
       const motivo = dentro
         ? "dentro de outro realce"
         : nome === "resposta" && !regras.resposta
           ? "\\resposta fora do último passo"
           : nome === "procurado" && !regras.procurado
             ? "\\procurado no passo da resposta"
-            : mantidos >= MAXIMO_DE_REALCES
-              ? `mais de ${MAXIMO_DE_REALCES} realces`
-              : null;
-      const conteudo = texto.slice(abre + 1, fecha);
+            : atravessaCelulas(conteudo)
+              ? "em volta de várias células da matriz"
+              : mantidos >= MAXIMO_DE_REALCES
+                ? `mais de ${MAXIMO_DE_REALCES} realces`
+                : null;
       if (motivo) {
         motivos.push(motivo);
         saida += rever(conteudo, dentro);
@@ -310,7 +338,8 @@ export function lerResolucaoDoModelo(valor: unknown): {
   const { valor: reparada, reparos } = repararResolucao(semNulos(valor));
   const lida = validarResolucao(reparada);
   if (!lida.ok) return { resolucao: undefined, enviada: true, motivo: lida.motivo, reparos };
-  return { resolucao: lida.resolucao, enviada: true, conta: lida.conta, reparos };
+  // O que o validador aceitou de um jeito um pouco diferente (a conta da opção que veio junto da frase) conta como reparo no relato.
+  return { resolucao: lida.resolucao, enviada: true, conta: lida.conta, reparos: [...reparos, ...(lida.ajustes ?? [])] };
 }
 
 /* ----- O esquema do que o modelo devolve (Structured Outputs: todos os campos, `null` onde não se aplica) ----- */
@@ -381,7 +410,7 @@ export const esquemaDaResolucaoOuNula = {
 /* ----- As instruções (só nas lições de matemática) ----- */
 
 const REGRAS_DE_LATEX = [
-  "LaTeX restrito: dentro de $…$ e nos campos `latex` e `formula`, só vale isto: números (ponto decimal: 3.5), variáveis de uma letra (x, a, k), índices (x_A, x_{AB}), expoentes (x^2, x^{n+1}), frações (\\frac{a}{b}), raiz quadrada (\\sqrt{x}), os sinais + - \\times \\div = \\neq < > \\leq \\geq \\to, parênteses, \\text{…} (letras, números e pontuação simples), \\%, \\Delta e \\pi, matrizes (\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}) e determinantes (\\begin{vmatrix} … \\end{vmatrix}), até 4 × 4. Nada fora desta lista (nem \\alpha, nem \\int, nem \\left). Na resposta em JSON, cada barra invertida é dobrada: \"\\\\frac{1}{2}\".",
+  "LaTeX restrito: dentro de $…$ e nos campos `latex` e `formula`, só vale isto: números (ponto decimal: 3.5), variáveis de uma letra (x, a, k), índices (x_A, x_{AB}), expoentes (x^2, x^{n+1}), frações (\\frac{a}{b}), raiz quadrada (\\sqrt{x}), os sinais + - \\times \\div = \\neq < > \\leq \\geq \\to, parênteses, \\text{…} (letras, números e pontuação simples), \\%, \\Delta e \\pi, matrizes (\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}) e determinantes (\\begin{vmatrix} … \\end{vmatrix}), até 4 × 4 e no máximo 2 por fórmula. O determinante é quadrado (2 × 2, 3 × 3 ou 4 × 4), e o Sarrus escreve-se SÓ como a soma dos produtos das diagonais, sem repetir colunas ao lado e sem matriz 3 × 5. O & e a quebra \\\\ só existem entre as células de uma matriz: nunca dentro de \\foco{…}, \\procurado{…} ou \\resposta{…}, que marcam UMA célula. Duas equações lado a lado se separam com \\quad. Produto de variáveis com espaço ou \\times (a e i, não aei). Nada fora desta lista (nem \\alpha, nem \\int, nem \\left). Na resposta em JSON, cada barra invertida é dobrada: \"\\\\frac{1}{2}\".",
   "Realces numa fórmula: \\foco{…} no que mudou no passo, \\procurado{…} no valor que ainda se procura e \\resposta{…} no valor achado; no máximo 2 por fórmula (3 realces é recusado: conte antes de escrever e fique nos 2 mais importantes) e um dentro do outro nunca. \\resposta só na fórmula do ÚLTIMO passo (nunca nos visuais da lição, nas opções do \"Sua vez\" nem nos outros passos), e \\procurado nunca nesse último passo.",
 ];
 
@@ -394,7 +423,7 @@ const REGRAS_DE_PONTOS = [
 
 const REGRAS_DE_RESOLUCAO = [
   "resolucao (ou null): o \"Resolva comigo\", um exemplo resolvido com OUTROS números que os do exercício: {problema, visual, passos}. problema é a pergunta, com as fórmulas entre $…$; visual é a figura do problema (plano ou reta numérica, com o procurado nas coordenadas reais). passos tem de 3 a 5 passos, cada um com nome (até 24 caracteres, como \"A condição\"), texto (uma frase de até 300 caracteres), formula (LaTeX restrito, ou null; com \\foco{…} no que mudou e, no último passo, \\resposta{…} no valor achado) e visual (a figura inteira do passo, ou null: os pontos e a janela seguem os do problema; só o último passo traz o ponto como \"resposta\").",
-  "O \"Sua vez\": exatamente UM passo, o penúltimo ou o último, tem tentativa = {pergunta, opcoes}: 3 opções, exatamente 1 com correta true, cada uma com porque (uma frase que explica por que está certa ou errada). A pergunta é por um valor que a resolução revela adiante (o do último passo, em \\resposta{…}). Cada opção tem formula (a conta que dá o valor, como \"y_M = \\frac{10}{2}\") OU texto (só quando a opção não é uma conta), nunca os dois: o Studoo refaz a conta das opções em fórmula e compara com o valor da resposta, então prefira formula. A formula e o visual do passo que tem a tentativa são o que a pessoa vê depois da escolha: o app só os mostra depois. A frase (texto) e o nome do passo que tem o \"Sua vez\" dizem o que fazer (\"Agora junte os termos e isole k\", \"Faça igual com as ordenadas\"), nunca o resultado nem a conta já feita (nada de \"k = 3\", \"chega-se a 3\", \"dá zero\"): o valor só aparece na formula, nas opções e no porque. O Studoo RECUSA a resolução em que a frase ou o nome desse passo traz o valor. Nos outros passos, tentativa é null.",
+  "O \"Sua vez\": exatamente UM passo, o penúltimo ou o último, tem tentativa = {pergunta, opcoes}: 3 opções, exatamente 1 com correta true, cada uma com porque (uma frase que explica por que está certa ou errada). A pergunta é por um valor que a resolução revela adiante (o do último passo, em \\resposta{…}). Cada opção tem formula (a conta que dá o valor, como \"y_M = \\frac{10}{2}\") OU texto (só quando a opção não é uma conta; uma frase com uma conta no meio vai toda em texto, a conta entre cifrões), nunca os dois: o Studoo refaz a conta das opções em fórmula e compara com o valor da resposta, então prefira formula. A formula e o visual do passo que tem a tentativa são o que a pessoa vê depois da escolha: o app só os mostra depois. A frase (texto) e o nome do passo que tem o \"Sua vez\" dizem o que fazer (\"Agora junte os termos e isole k\", \"Faça igual com as ordenadas\"), nunca o resultado nem a conta já feita (nada de \"k = 3\", \"chega-se a 3\", \"dá zero\"): o valor só aparece na formula, nas opções e no porque. O Studoo RECUSA a resolução em que a frase ou o nome desse passo traz o valor. Nos outros passos, tentativa é null.",
   "Confira cada conta, passo a passo e nas opções: o Studoo refaz as contas das fórmulas e das opções e DESCARTA a resolução inteira que errar (a lição fica sem o \"Resolva comigo\").",
 ];
 

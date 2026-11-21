@@ -210,6 +210,11 @@ function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
       partes.push({ caixa: folga(depois) });
       return;
     }
+    if (item.tipo === "separador" && item.valor === "espaco") {
+      // O `\quad` entre duas equações lado a lado: um vão de uma altura de letra (menos no meio da frase), sem sinal.
+      partes.push({ caixa: folga((estilo.linha ? 0.7 : 1.1) * tamanhoDo(estilo) * estilo.respiro) });
+      return;
+    }
     if (item.tipo === "separador") {
       partes.push({ caixa: caixaDe(item, estilo) });
       partes.push({ caixa: folga((estilo.linha ? 0.25 * tamanhoDo(estilo) : ESPACO_DO_SINAL) * estilo.respiro) });
@@ -329,7 +334,7 @@ function matriz(no: Extract<NoFormula, { tipo: "matriz" }>, estilo: Estilo): Cai
   const larguraDaGrade = larguras.reduce((soma, valor) => soma + valor, 0) + COLUNA_ENTRE * (colunas - 1);
   const tamanho = tamanhoDo(estilo);
   const topo = -(eixoDe(tamanho) + altura / 2);
-  const moldura = no.moldura === "barras" ? 2 : 6;
+  const moldura = no.moldura === "barras" ? 2 : no.moldura === "nenhuma" ? 0 : 6;
   const marcas: Marca[] = [];
   let y = topo;
   celulas.forEach((linha, i) => {
@@ -345,7 +350,7 @@ function matriz(no: Extract<NoFormula, { tipo: "matriz" }>, estilo: Estilo): Cai
   const de = topo - 2;
   const ate = topo + altura + 2;
   const haste = (x: number): Marca => ({ m: "linha", x1: x, y1: de, x2: x, y2: ate, cor: estilo.cor, largura: 2 });
-  marcas.push(haste(1), haste(l - 1));
+  if (no.moldura !== "nenhuma") marcas.push(haste(1), haste(l - 1));
   if (no.moldura === "colchetes") {
     for (const [y1, x0, x1] of [[de + 1, 1, 6], [ate - 1, 1, 6], [de + 1, l - 6, l - 1], [ate - 1, l - 6, l - 1]] as const) {
       marcas.push({ m: "linha", x1: x0, y1, x2: x1, y2: y1, cor: estilo.cor, largura: 2 });
@@ -383,7 +388,7 @@ export function caixaDe(no: NoFormula, estilo: Estilo): Caixa {
     case "porcento":
       return textoEmCaixa("%", estilo);
     case "separador":
-      return textoEmCaixa(no.valor, estilo);
+      return no.valor === "espaco" ? folga(tamanhoDo(estilo)) : textoEmCaixa(no.valor, estilo);
     case "operador":
       return operador(no.valor, estilo);
     case "fracao":
