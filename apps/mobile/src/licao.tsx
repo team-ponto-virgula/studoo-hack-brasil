@@ -14,6 +14,7 @@ import {
   ultimoExercicio,
   type AutoAvaliacao,
   type Avaliacao,
+  type EscolhaNoSuaVez,
   type EtapaAula,
   type ExercicioPublico,
   type LicaoDetalhe,
@@ -41,6 +42,7 @@ import {
 import { CONTEXTO_DO_ENUNCIADO, CONTEXTO_DO_RETORNO, DesenhoDoVisual, OPCOES_DA_FORMULA, VisuaisDaLicao } from './desenho';
 import { alturaMaximaDaFigura } from './desenho-svg';
 import { Confete } from './festa';
+import { useResolvaComigo } from './resolva-comigo';
 import { Ordenar } from './ordenar';
 import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron, degrauFora, quebraEquilibrada } from './interface';
@@ -191,7 +193,7 @@ function respostaLegivel(exercicio: ExercicioPublico, resposta: string): string 
  * registra a conclusão (se a confirmação expirar, a aula volta ao último exercício). O título de cada etapa e o do retorno
  * recebem o foco do leitor de tela.
  */
-export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, concluir }: {
+export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, concluir, responderSuaVez }: {
   /** O cliente do app (com `configuracaoAcesso` e `sessao`, a conversa ao vivo do Explique pode aparecer na prévia web). */
   cliente: ClienteEstudio & Pick<ClienteElegibilidadeVoz, 'configuracaoAcesso' | 'sessao'>;
   licao: LicaoDetalhe;
@@ -202,6 +204,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   saida?: MutableRefObject<(() => void) | null>;
   avaliar: (resposta: string, indice: number) => Promise<Avaliacao | null>;
   concluir: (comprovante: string, resumo: ResumoLicao, pratica?: AutoAvaliacao) => Promise<boolean>;
+  /** O "Sua vez" do "Resolva comigo" (spec 15): sem isto, o exemplo fica em texto. */
+  responderSuaVez?: (escolha: EscolhaNoSuaVez) => Promise<unknown>;
 }) {
   // .aula-quadro da web: respiro clamp(16px, 5vw, 28px) (19,5 px em 390, 18 em 360).
   const { width: larguraJanela } = useWindowDimensions();
@@ -297,6 +301,11 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const tremor = useTremor(errosSeguidos);
 
   const etapa = etapas[passo];
+  /** Spec 15: com `resolucao`, a etapa Exemplo é o "Resolva comigo" (o contador de etapas não muda). */
+  const resolva = useResolvaComigo({
+    licao, responder: responderSuaVez, visivel: etapa.tipo === 'exemplo',
+    aoTerminar: () => { posicoesDasEtapas.current[passo] = posicaoRolagem.current; setPasso((atual) => atual + 1); },
+  });
   const indice = etapa.tipo === 'exercicio' ? etapa.indice : -1;
   const exercicio = indice >= 0 ? exercicios[indice] : null;
   const resposta = indice >= 0 ? respostas[indice] : '';
@@ -308,7 +317,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const andamento = revisao && exercicio ? t.revisaoAndamento : t.posicao(passo + 1, total);
   const retorno = avaliacao ? (avaliacao.correta ? 'certa' : 'errada') : null;
   let nomeEtapa: string = t.conceito;
-  if (etapa.tipo === 'exemplo') nomeEtapa = licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
+  if (etapa.tipo === 'exemplo') nomeEtapa = resolva.ativo ? mensagens.resolvaComigo.selo : licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
   else if (etapa.tipo === 'exercicio') {
     nomeEtapa = revisao
@@ -656,6 +665,9 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           acao={() => (autoAvaliacao ? void avancar() : mostrarComoFoi())} />
       </View>
     );
+  } else if (etapa.tipo === 'exemplo' && resolva.ativo) {
+    // O rodapé preso do "Resolva comigo": "Próximo passo", "Verificar", "Tentar de novo" ou "Agora é com você".
+    rodape = resolva.rodape;
   } else if (temMais) {
     // Como .botao--ler-mais da web: a seta depois do texto, girada para baixo.
     rodape = <Botao testID="ler-mais" peso="900" rotulo={t.continuarLendo} icone="seta" giroIcone="90deg" acao={lerMais} />;
@@ -759,7 +771,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
         <View style={[licaoEstilos.etapa, !(passo > 0 && !revisao) && licaoEstilos.etapaNoTopo]}>
           <View style={[licaoEstilos.etapaIcone, { backgroundColor: coresDaEtapa[etapa.tipo].fundo }]}>
             {/* .aula-etapa .icone: caixa de 28 com 4 de respiro, desenho de 20. */}
-            <Icone nome={iconesDaEtapa[etapa.tipo]} tamanho={20} cor={coresDaEtapa[etapa.tipo].texto} />
+            <Icone nome={etapa.tipo === 'exemplo' && resolva.ativo ? 'lapis' : iconesDaEtapa[etapa.tipo]} tamanho={20} cor={coresDaEtapa[etapa.tipo].texto} />
           </View>
           <Text style={[licaoEstilos.etapaTexto, { color: coresDaEtapa[etapa.tipo].texto }, caixaAlta]}>{nomeEtapa}</Text>
         </View>
@@ -831,7 +843,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             )}
           </>
         )}
-        {etapa.tipo === 'exemplo' && (
+        {etapa.tipo === 'exemplo' && resolva.ativo && <View style={{ marginTop: 10 }}>{resolva.corpo}</View>}
+        {etapa.tipo === 'exemplo' && !resolva.ativo && (
           <View style={[licaoEstilos.quadro, respiroQuadro, licaoEstilos.quadroExemplo]}>
             {/* Como na web 4B: o título do quadro aparece ("Exemplo" ou "Demonstração") e recebe o foco. */}
             <Text ref={tituloEtapa} testID="titulo-etapa" accessible accessibilityRole="header" textBreakStrategy="balanced" style={[licaoEstilos.tituloQuadro, quebraEquilibrada]}>
@@ -895,6 +908,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                   <View style={licaoEstilos.consultaConteudo}>
                     <Text style={estilos.texto}>{licao.conceito}</Text>
                     <Text style={estilos.texto}><Text style={{ fontWeight: '800' }}>{t.exemplo}: </Text>{licao.exemplo}</Text>
+                    {resolva.metodo}
                   </View>
                 )}
               </View>

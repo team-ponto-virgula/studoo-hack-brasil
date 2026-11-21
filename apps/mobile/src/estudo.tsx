@@ -748,6 +748,7 @@ export function Estudo({ cliente, sair, expirar }: {
           const resultado = await executar('avaliar', () => cliente.avaliarLicao(etapa.licao.id, resposta, indice));
           return resultado.ok ? resultado.dados : null;
         }}
+        responderSuaVez={(escolha) => cliente.responderSuaVez(etapa.licao.id, escolha)}
         concluir={(comprovante, resumo, pratica) => concluir(etapa.plano, etapa.licao, comprovante, resumo, pratica)} />;
     }
 

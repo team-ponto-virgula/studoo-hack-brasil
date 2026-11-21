@@ -1,4 +1,4 @@
-import { CABECALHO_CAPACIDADES, criarClienteStudoo, ErroStudoo, type EventoGeracao, type TransporteStudoo } from '@studoo/contratos';
+import { CABECALHO_CAPACIDADES, criarClienteStudoo, ErroStudoo, type EscolhaNoSuaVez, type EventoGeracao, type TransporteStudoo } from '@studoo/contratos';
 import { fetch } from 'expo/fetch';
 import * as SecureStore from 'expo-secure-store';
 import { codigoDaResposta, lerEventos } from './geracao-ao-vivo';
@@ -133,7 +133,21 @@ export function criarClienteNativo(token?: string) {
     ...cliente,
     configuracaoAcesso: semSessao.configuracaoAcesso,
     gerarTrilhaAoVivo: (objetivo: string, sinal: AbortSignal) => gerarTrilhaAoVivo(objetivo, sinal, token),
+    responderSuaVez: (id: string, escolha: EscolhaNoSuaVez) => responderSuaVez(transporteNativo(token), id, escolha),
   };
+}
+
+/**
+ * O "Sua vez" do "Resolva comigo" (spec 15): `POST /api/aprendizado/licoes/[id]/resolucao` com a opção e a tentativa. Devolve o
+ * corpo cru (quem chama confere a forma); erro da API vira `ErroStudoo`, sem rede vira `FalhaMobile('conexao')`.
+ */
+async function responderSuaVez(transporte: TransporteStudoo, id: string, escolha: EscolhaNoSuaVez): Promise<unknown> {
+  const resposta = await transporte(`/api/aprendizado/licoes/${encodeURIComponent(id)}/resolucao`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ opcao: escolha.opcao, tentativa: escolha.tentativa }),
+  });
+  const corpo: unknown = await resposta.json();
+  if (!resposta.ok) throw new ErroStudoo(codigoDaResposta(corpo));
+  return corpo;
 }
 
 /**
