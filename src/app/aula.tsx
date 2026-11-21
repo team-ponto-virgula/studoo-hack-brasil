@@ -32,6 +32,7 @@ import {
   type Opcao,
   type Pratica,
   type Recurso,
+  falarTextoComFormulas,
   textoSemFormulas,
   type TipoTrecho,
 } from '@studoo/contratos';
@@ -174,16 +175,18 @@ export function formatarTempo(segundos: number) {
  * no acerto (com confete) ou âmbar no erro (o exercício treme), e dá para tentar de novo. Continuar segue para a próxima
  * etapa; na última, registra a conclusão. O título de cada etapa e o do retorno recebem o foco.
  */
-function respostaLegivel(exercicio: LicaoDetalhe['exercicio'], resposta: string): string {
+export function respostaLegivel(exercicio: LicaoDetalhe['exercicio'], resposta: string): string {
   const limpa = resposta.trim();
   if (!limpa) return '';
+  // Em texto linear (sem `$`): a frase "Você respondeu «…»" da ponte corta a resposta em 60 letras, e o corte não pode partir uma marca de fórmula.
+  const linear = (texto?: string) => (texto === undefined ? undefined : textoSemFormulas(texto));
   switch (exercicio.tipo) {
     case 'multipla_escolha':
-      return exercicio.opcoes.find((o) => o.id === limpa)?.texto ?? '';
+      return linear(exercicio.opcoes.find((o) => o.id === limpa)?.texto) ?? '';
     case 'ordenar':
       return limpa
         .split(',')
-        .map((id) => exercicio.itens.find((item) => item.id === id)?.texto)
+        .map((id) => linear(exercicio.itens.find((item) => item.id === id)?.texto))
         .filter(Boolean)
         .join(' · ');
     case 'associar':
@@ -191,8 +194,8 @@ function respostaLegivel(exercicio: LicaoDetalhe['exercicio'], resposta: string)
         .split(',')
         .map((par) => {
           const [idE, idD] = par.split('=');
-          const e = exercicio.esquerda.find((item) => item.id === idE)?.texto;
-          const d = exercicio.direita.find((item) => item.id === idD)?.texto;
+          const e = linear(exercicio.esquerda.find((item) => item.id === idE)?.texto);
+          const d = linear(exercicio.direita.find((item) => item.id === idD)?.texto);
           return e && d ? `${e} → ${d}` : '';
         })
         .filter(Boolean)
@@ -200,7 +203,7 @@ function respostaLegivel(exercicio: LicaoDetalhe['exercicio'], resposta: string)
     case 'verdadeiro_falso': {
       const [valor = '', justId = ''] = limpa.split(':');
       const rotulo = valor === 'verdadeiro' ? t.verdadeiroFalso.verdadeiro : valor === 'falso' ? t.verdadeiroFalso.falso : '';
-      const just = exercicio.justificativas.find((item) => item.id === justId)?.texto;
+      const just = linear(exercicio.justificativas.find((item) => item.id === justId)?.texto);
       return rotulo && just ? `${rotulo} · ${just}` : rotulo;
     }
     default:
@@ -951,7 +954,7 @@ function EtapaExemplo({ licao, titulo }: { licao: LicaoDetalhe; titulo: Ref<HTML
           <h3 id="aula-passos-titulo">{t.recursos.passos}</h3>
           <ol>
             {licao.passos.map((passo, posicao) => (
-              <li key={posicao}><span className="aula-passos__numero" aria-hidden="true">{posicao + 1}</span><span>{passo}</span></li>
+              <li key={posicao}><span className="aula-passos__numero" aria-hidden="true">{posicao + 1}</span><TextoComFormulas texto={passo} /></li>
             ))}
           </ol>
         </section>
@@ -1591,14 +1594,17 @@ function Escuta({ fala, acertou = false }: { fala: Fala; acertou?: boolean }) {
   );
 }
 
-/** Texto com as lacunas destacadas. */
-function ComLacunas({ texto, preenchimento }: { texto: string; preenchimento?: string }) {
+/**
+ * Texto com as lacunas destacadas. O texto em volta de cada lacuna pode trazer fórmula marcada (`$…$`, lição de matemática): vai pelo texto com fórmula
+ * em linha, como o resto da aula. O código (`puro`) fica como está: nele o `$` é de shell ou de PHP, nunca fórmula.
+ */
+function ComLacunas({ texto, preenchimento, puro = false }: { texto: string; preenchimento?: string; puro?: boolean }) {
   const partes = partesDaLacuna(texto);
   return (
     <>
       {partes.map((parte, posicao) => (
         <span key={posicao}>
-          {parte}
+          {puro ? parte : <TextoComFormulas texto={parte} />}
           {posicao < partes.length - 1 && (
             <span className="trecho-lacuna" data-preenchida={preenchimento ? true : undefined} aria-label={preenchimento ? undefined : 'lacuna'}>
               {preenchimento || '  '}
@@ -1615,7 +1621,7 @@ function ComLacunas({ texto, preenchimento }: { texto: string; preenchimento?: s
 function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: string; tipo?: TipoTrecho; fala?: Fala; preenchimento?: string }) {
   switch (tipo) {
     case 'codigo':
-      return <pre className="licao-codigo"><code><ComLacunas texto={texto} preenchimento={preenchimento} /></code></pre>;
+      return <pre className="licao-codigo"><code><ComLacunas texto={texto} preenchimento={preenchimento} puro /></code></pre>;
     case 'citacao':
       return <blockquote className="trecho trecho--citacao"><p><ComLacunas texto={semAspas(texto)} preenchimento={preenchimento} /></p></blockquote>;
     case 'formula':
@@ -1798,6 +1804,8 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
     return esquerda.findIndex((item) => item.id === esquerdaDoPar) + 1;
   };
   const texto = (lista: Opcao[], id: string) => lista.find((item) => item.id === id)?.texto ?? '';
+  /** O que o leitor de tela ouve de um item: a fala da fórmula ("seno de x"), nunca o cifrão nem a barra. */
+  const fala = (lista: Opcao[], id: string) => falarTextoComFormulas(texto(lista, id));
   const salvar = (novos: [string, string][]) => mudar(codificarResposta.pares(novos));
 
   function tocarEsquerda(id: string) {
@@ -1826,10 +1834,9 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
 
   return (
     <div className="associar">
-      <p className="associar__instrucao" aria-live="polite">
-        {escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
-          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao}
-      </p>
+      <TextoComFormulas como="p" className="associar__instrucao" aria-live="polite"
+        texto={escolhida ? t.associar.escolhido(texto(esquerda, escolhida))
+          : escolhidaDireita ? t.associar.escolhidoDireita(texto(direita, escolhidaDireita)) : t.associar.instrucao} />
       <div className="associar__colunas">
         <div role="group" aria-label={t.associar.esquerda}>
           {esquerda.map((item) => {
@@ -1837,13 +1844,13 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
             const fixo = travado(item.id);
             return (
               <button key={item.id} type="button" disabled={desativado || fixo} aria-pressed={escolhida === item.id}
-                aria-label={escolhidaDireita && !fixo ? t.associar.ligar(item.texto, texto(direita, escolhidaDireita))
-                  : par ? (fixo ? t.associar.travado(item.texto, texto(direita, par[1])) : t.associar.desfazer(item.texto, texto(direita, par[1]))) : item.texto}
+                aria-label={escolhidaDireita && !fixo ? t.associar.ligar(fala(esquerda, item.id), fala(direita, escolhidaDireita))
+                  : par ? (fixo ? t.associar.travado(fala(esquerda, item.id), fala(direita, par[1])) : t.associar.desfazer(fala(esquerda, item.id), fala(direita, par[1]))) : fala(esquerda, item.id)}
                 data-par={par ? numero(item.id) : undefined} data-escolhida={escolhida === item.id || undefined}
                 data-estado={certos ? (certos.includes(item.id) ? 'certo' : 'errado') : fixo ? 'certo' : undefined}
                 onClick={() => tocarEsquerda(item.id)}>
                 {par && <span className="associar__numero" aria-hidden="true">{numero(item.id)}</span>}
-                <span>{item.texto}</span>
+                <TextoComFormulas texto={item.texto} />
               </button>
             );
           })}
@@ -1852,16 +1859,16 @@ function Associar({ esquerda, direita, valor, mudar, desativado, certos, fixos }
           {direita.map((item) => {
             const par = parDaDireita(item.id);
             const fixo = travado(par?.[0]);
-            const rotulo = fixo && par ? t.associar.travado(texto(esquerda, par[0]), item.texto)
-              : escolhida ? t.associar.ligar(texto(esquerda, escolhida), item.texto)
-                : par ? t.associar.desfazer(texto(esquerda, par[0]), item.texto) : item.texto;
+            const rotulo = fixo && par ? t.associar.travado(fala(esquerda, par[0]), fala(direita, item.id))
+              : escolhida ? t.associar.ligar(fala(esquerda, escolhida), fala(direita, item.id))
+                : par ? t.associar.desfazer(fala(esquerda, par[0]), fala(direita, item.id)) : fala(direita, item.id);
             return (
               <button key={item.id} type="button" disabled={desativado || fixo} aria-label={rotulo} data-par={par ? numero(item.id) : undefined}
                 aria-pressed={escolhidaDireita === item.id} data-escolhida={escolhidaDireita === item.id || undefined}
                 data-estado={certos && par ? (certos.includes(par[0]) ? 'certo' : 'errado') : fixo ? 'certo' : undefined}
                 onClick={() => tocarDireita(item.id)}>
                 {par && <span className="associar__numero" aria-hidden="true">{numero(item.id)}</span>}
-                <span>{item.texto}</span>
+                <TextoComFormulas texto={item.texto} />
               </button>
             );
           })}
@@ -1891,7 +1898,7 @@ function VerdadeiroFalso({ afirmacao, justificativas, valor, mudar, desativado, 
   const corDaParte = (parte: 'valor' | 'justificativa') => (retorno ? (certos?.includes(parte) ? 'certa' : 'errada') : undefined);
   return (
     <div className="vf">
-      <blockquote className="vf__afirmacao"><p>{afirmacao}</p></blockquote>
+      <blockquote className="vf__afirmacao"><TextoComFormulas como="p" texto={afirmacao} /></blockquote>
       <fieldset className="vf__valores" disabled={desativado}>
         <legend>{t.verdadeiroFalso.valor}</legend>
         {(['verdadeiro', 'falso'] as const).map((opcao) => (
@@ -1908,7 +1915,7 @@ function VerdadeiroFalso({ afirmacao, justificativas, valor, mudar, desativado, 
             <input type="radio" name="vf-justificativa" value={opcao.id} checked={justificativa === opcao.id}
               onChange={() => { salvar(escolha, opcao.id); void tocaSons.tocarEfeito('toque_opcao'); }} />
             <span className="opcao-tecla" aria-hidden="true">{String.fromCharCode(65 + posicao)}</span>
-            <span>{opcao.texto}</span>
+            <TextoComFormulas texto={opcao.texto} />
           </label>
         ))}
       </fieldset>
@@ -1927,7 +1934,7 @@ function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao: Avalia
             {avaliacao.criterios.map((criterio, posicao) => (
               <li key={posicao} data-atendido={criterio.atendido || undefined}>
                 <Icone nome={criterio.atendido ? 'check' : 'fechar'} />
-                <span><span className="somente-leitor">{criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: </span>{criterio.texto}</span>
+                <span><span className="somente-leitor">{criterio.atendido ? t.aberta.atendido : t.aberta.faltou}: </span><TextoComFormulas texto={criterio.texto} /></span>
               </li>
             ))}
           </ul>
@@ -1937,7 +1944,7 @@ function CorrecaoAberta({ avaliacao, mostrarModelo = true }: { avaliacao: Avalia
       {avaliacao.modelo && mostrarModelo && (
         <div className="correcao-aberta__modelo">
           <h3>{t.aberta.modelo}</h3>
-          <p>{avaliacao.modelo}</p>
+          <TextoComFormulas como="p" texto={avaliacao.modelo} />
         </div>
       )}
       {avaliacao.simulado && <p className="correcao-aberta__nota">{t.aberta.simulada}</p>}
@@ -2037,15 +2044,15 @@ function EtapaPratica({ pratica, titulo, escolha, escolher, recurso, passos, fal
     <section className="aula-quadro aula-pratica" data-etapa="pratica" aria-labelledby="etapa-aula">
       <h2 id="etapa-aula" ref={titulo} tabIndex={-1}>{t.pratica.titulo}</h2>
       <p className="aula-pratica__subtitulo">{t.pratica.subtitulo}</p>
-      <p className="aula-pratica__tarefa">{pratica.tarefa}</p>
+      <TextoComFormulas como="p" className="aula-pratica__tarefa" texto={pratica.tarefa} />
       {pratica.passos && (
         <ul className="aula-pratica__passos" aria-label={t.pratica.passos}>
           {pratica.passos.map((passo, posicao) => (
-            <li key={posicao}><label><input type="checkbox" /><span>{passo}</span></label></li>
+            <li key={posicao}><label><input type="checkbox" /><TextoComFormulas texto={passo} /></label></li>
           ))}
         </ul>
       )}
-      {pratica.dica && <p className="aula-pratica__dica"><Icone nome="lampada" /><span><strong>{t.pratica.dica}:</strong> {pratica.dica}</span></p>}
+      {pratica.dica && <p className="aula-pratica__dica"><Icone nome="lampada" /><span><strong>{t.pratica.dica}:</strong> <TextoComFormulas texto={pratica.dica} /></span></p>}
       <div className="cronometro" ref={cronometro} data-estado={acabou ? 'fim' : rodando ? 'rodando' : 'parado'}
         style={{ '--andamento': 1 - restante / total } as CSSProperties}>
         <div className="cronometro__mostrador" role="timer" aria-label={`${t.pratica.cronometro}: ${t.pratica.restante(formatarTempo(restante))}`}>

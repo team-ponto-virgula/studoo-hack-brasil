@@ -153,6 +153,8 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     '../ui': { Botao: 'Botao', Stu: 'Stu' },
     './estudio.css': {},
     './ponte-reforco': { PonteReforco: 'PonteReforco' },
+    // A fórmula em linha do texto da lição (o objetivo no "Ensine o Stu"): componente de apresentação.
+    './texto-com-formulas': { TextoComFormulas: 'TextoComFormulas' },
     'react-native': {
       AccessibilityInfo: { sendAccessibilityEvent() {}, announceForAccessibility() {} },
       Animated: { View: 'View', Value: class { setValue(v) { this.valor = v; } } },

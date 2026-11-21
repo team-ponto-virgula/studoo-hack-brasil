@@ -26,6 +26,7 @@ import {
 } from './voz-ao-vivo';
 import { tocaSons } from './sons';
 import { PonteReforco } from './ponte-reforco';
+import { TextoComFormulas } from './texto-com-formulas';
 import './estudio.css';
 const m = mensagens.estudio;
 /** Uma consulta a `/api/auth/config` por carga, compartilhada pela voz ao vivo e pela gravação (refeita se falhar). */
@@ -727,7 +728,7 @@ export function ApoioDaLicao({
           <li data-ativo={Boolean(ensino) || undefined} aria-current={ensino ? 'step' : undefined}>{m.ensinoEtapas[2]}</li>
         </ol>
         <p>{m.ensinoDica}</p>
-        <p className="estudio-legenda">{m.ensinoIdeia(licao.objetivo)}</p>
+        <TextoComFormulas como="p" className="estudio-legenda" texto={m.ensinoIdeia(licao.objetivo)} />
         {vozAoVivoDisponivel && etapaVoz === 'inativa' && (
           <div className="voz-ao-vivo-entrada">
             <div className="voz-ao-vivo-entrada__cabeca">

@@ -38,6 +38,7 @@ import {
 import { Apresentacao, marcarApresentacaoVista } from './apresentacao';
 import { aplicarEvento, gerarTrilhaAoVivo, type TrilhaEmGeracao } from './geracao-ao-vivo';
 import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano, type ResumoLicao } from './aula';
+import { TextoComFormulas } from './texto-com-formulas';
 import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } from './previa-trilha';
 import { Pedido, type IdTema } from './pedido';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
@@ -1360,7 +1361,7 @@ function LicaoConcluida({ plano, antes, licao, liberadas, resumo, ocupado, abrir
       <ul className="conclusao-historia" aria-label={mensagens.licao.historia.titulo}>
         <li>
           <strong>{mensagens.licao.historia.praticou}</strong>
-          <p>{licao.objetivo}</p>
+          <TextoComFormulas como="p" texto={licao.objetivo} />
         </li>
         {resumo?.ponteConstruida && (
           <li data-tipo="ponte">
