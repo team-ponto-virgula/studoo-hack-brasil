@@ -12,7 +12,7 @@
  *   corrido da aula usa e a fórmula em linha precisa igualar. O script instancia o peso pedido lendo `fvar`, `avar` e `gvar` (deltas
  *   dos pontos, com IUP, e dos componentes dos glifos compostos, e dos pontos fantasma, que dão o avanço); a conferência está em
  *   `instanciaConfere`: o mesmo código, no peso 700, reproduz a tabela estática do 700;
- * - NotoSans-Bold.ttf e NotoSans-Regular.ttf (Google, SIL OFL 1.1, texto em public/marca/OFL-NotoSans.txt): só o Δ e o π, que a
+ * - NotoSans-Bold.ttf e NotoSans-Regular.ttf (Google, SIL OFL 1.1, texto em public/marca/OFL-NotoSans.txt): só as letras gregas (Δ π α β γ δ θ λ μ σ φ ω Σ Ω), que a
  *   Nunito não tem (decisão do Designer: contorno da Noto Sans na mesma tabela, nunca desenhado à mão; Bold nos pesos 700, Regular
  *   no 400). Padrão do caminho: o da instalação do pacote fonts-noto-core do Debian.
  * O itálico das variáveis é o mesmo glifo inclinado pelo motor (`texto-vetorial.ts`): não há tabela de itálico.
@@ -28,7 +28,7 @@ import { caminho, lerFonte, r } from "./fonte-truetype.mjs";
 /** O português do Brasil: á ã â à é ê í ó ô õ ú ü ç, em minúscula e maiúscula. */
 const LATINAS = "ÀÁÂÃÇÉÊÍÓÔÕÚÜàáâãçéêíóôõúü";
 const BASICOS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-const SIMBOLOS_700 = " .,;:!?'’()[]/%+=<>-−×÷·";
+const SIMBOLOS_700 = " .,;:!?'’()[]/%+=<>-−×÷·°";
 const SIMBOLOS_800 = " .,()−?'=";
 
 function tabela(caminhoDoArquivo, caracteres, unidadesAlvo = 0, reducao = 1, peso = null) {
@@ -63,14 +63,19 @@ const t400 = tabela(`${raiz}public/marca/Nunito[wght].ttf`, BASICOS + LATINAS + 
 if (t400.unidades !== t700.unidades) throw new Error("unidades por em diferentes no 400");
 
 /**
- * O grego da fase 1: Δ (discriminante) e π (círculo). Contorno da Noto Sans Bold, na escala da Nunito e a 92% (parecer do
- * Designer: a Bold da Noto é mais pesada e mais larga que a Nunito; o pacote não traz a SemiBold).
+ * As letras gregas da escola: Δ (discriminante), π (círculo), α β γ δ θ λ μ σ φ ω e Σ Ω. Contorno da Noto Sans Bold, na escala da Nunito e a 92%
+ * (parecer do Designer: a Bold da Noto é mais pesada e mais larga que a Nunito; o pacote não traz a SemiBold). O grau (°) vem da própria Nunito.
  */
+const GREGAS = "ΔπαβγδθλμσφωΣΩ";
 const caminhoDaNoto = process.argv[2] ?? "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf";
 const caminhoDaNotoRegular = process.argv[3] ?? "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf";
-const grego = tabela(caminhoDaNoto, "Δπ", t700.unidades, 0.92);
+const grego = tabela(caminhoDaNoto, GREGAS, t700.unidades, 0.92);
 Object.assign(t700.saida, grego.saida);
-Object.assign(t400.saida, tabela(caminhoDaNotoRegular, "Δπ", t700.unidades, 0.92).saida);
+Object.assign(t400.saida, tabela(caminhoDaNotoRegular, GREGAS, t700.unidades, 0.92).saida);
+/** O sinal ≈ não está no subconjunto estático do Nunito 700: sai da fonte variável instanciada em wght 700 (e em 400, para o texto corrido). */
+const variavel = `${raiz}public/marca/Nunito[wght].ttf`;
+Object.assign(t700.saida, tabela(variavel, "≈", t700.unidades, 1, 700).saida);
+Object.assign(t400.saida, tabela(variavel, "≈", t700.unidades, 1, 400).saida);
 const sha256 = createHash("sha256").update(readFileSync(caminhoDaNoto)).digest("hex");
 const sha256Regular = createHash("sha256").update(readFileSync(caminhoDaNotoRegular)).digest("hex");
 const sha256Variavel = createHash("sha256").update(readFileSync(`${raiz}public/marca/Nunito[wght].ttf`)).digest("hex");
@@ -82,7 +87,7 @@ const linhas = (nome, dados) =>
 
 const conteudo = `/*
  * Gerado por scripts/gerar-glifos.mjs a partir do Nunito 400, 700 e 800 (SIL OFL 1.1, public/marca/OFL-Nunito.txt; o 400 vem da
- * fonte variável public/marca/Nunito[wght].ttf, sha256 ${sha256Variavel}, instanciada em wght 400) e, só para o Δ e o π, da Noto
+ * fonte variável public/marca/Nunito[wght].ttf, sha256 ${sha256Variavel}, instanciada em wght 400; dela também vem o ≈ nos pesos 400 e 700) e, só para as letras gregas, da Noto
  * Sans (Google, SIL OFL 1.1, public/marca/OFL-NotoSans.txt; Bold nos pesos 700 e 800, sha256 ${sha256}; Regular no 400, sha256
  * ${sha256Regular}). Não edite à mão.
  * Cada glifo é [avanço, caminho] em unidades da fonte (${t700.unidades} por em), com y para cima; o caminho só tem M, L, Q e Z.

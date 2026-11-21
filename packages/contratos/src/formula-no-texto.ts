@@ -70,7 +70,14 @@ const GREGAS: Readonly<Record<string, string>> = {
 };
 const SIMBOLOS: Readonly<Record<string, string>> = {
   times: "×", cdot: "×", div: "÷", pm: "±", leq: "≤", le: "≤", geq: "≥", ge: "≥", neq: "≠", ne: "≠", approx: "≈", to: "→",
-  rightarrow: "→", infty: "∞", in: "∈", cup: "∪", cap: "∩", ldots: "…", cdots: "…",
+  rightarrow: "→", infty: "∞", in: "∈", cup: "∪", cap: "∩", ldots: "…", cdots: "…", circ: "°", degree: "°", angle: "∠", perp: "⊥", parallel: "∥",
+  triangle: "△", sum: "∑", prod: "∏", int: "∫", partial: "∂", nabla: "∇", subset: "⊂", supset: "⊃", notin: "∉", forall: "∀", exists: "∃", Rightarrow: "⇒",
+  Leftrightarrow: "⇔", leftrightarrow: "↔", sim: "∼", equiv: "≡", propto: "∝", mp: "∓",
+};
+/** O nome de função que a tela mostra (notação brasileira): "sen", nunca "sin"; "tg", nunca "tan". */
+const FUNCOES: Readonly<Record<string, string>> = {
+  sin: "sen", sen: "sen", cos: "cos", tan: "tg", tg: "tg", cot: "cotg", cotg: "cotg", sec: "sec", csc: "cossec", cosec: "cossec", ln: "ln", log: "log",
+  arcsin: "arcsen", arcsen: "arcsen", arccos: "arccos", arctan: "arctg", arctg: "arctg", lim: "lim",
 };
 const SOBRESCRITO: Readonly<Record<string, string>> = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
 
@@ -83,6 +90,15 @@ export function linearizarTolerante(fonte: string): string {
   const lida = lerFormula(arrumada);
   if (lida.ok) return formulaLinear(lida.arvore);
   let texto = arrumada.replace(/^\$+|\$+$/g, "").replace(/\\left|\\right/g, "").replace(/\\[,;:! ]|\\q?quad/g, " ");
+  // A matriz que o leitor recusou (um determinante que não é quadrado, uma célula vazia) lê como a conta escreve: "det[1, 2; 3, 4]", nunca com "vmatrix",
+  // "begin", "end" nem "&" na tela. O `\\` que separa as linhas pode ter vindo com uma barra só (o JSON a come) antes de um espaço.
+  texto = texto.replace(/\\begin\s*\{([bpv]?)matrix\}([\s\S]*?)\\end\s*\{\1matrix\}/g, (_inteiro, tipo: string, miolo: string) => {
+    const linhas = miolo.split(/\\\\|\\(?=\s)/).map((linha) => linha.trim()).filter((linha) => linha !== "");
+    const escritas = linhas.map((linha) => linha.split("&").map((celula) => linearizarTolerante(celula)).join(", "));
+    return `${tipo === "v" ? "det" : ""}[${escritas.join("; ")}]`;
+  });
+  // O grau (`30^\circ`, `30^{\circ}`) vira "30°" já: depois, o `^{…}` o faria "30^(°)".
+  texto = texto.replace(/\^\s*(?:\{\s*\\circ\s*\}|\\circ(?![A-Za-z]))/g, "°");
   for (let volta = 0; volta < 5; volta += 1) {
     const antes = texto;
     texto = texto
@@ -92,15 +108,23 @@ export function linearizarTolerante(fonte: string): string {
         return `${simples(a) ? a.trim() : `(${a.trim()})`} ÷ ${simples(b) ? b.trim() : `(${b.trim()})`}`;
       })
       .replace(/\\sqrt\s*\{([^{}]*)\}/g, (_inteiro, a: string) => (/^[\w.,−-]+$/u.test(a.trim()) ? `√${a.trim()}` : `√(${a.trim()})`))
-      .replace(/\\(?:text|mathrm|textbf|mathbf|operatorname)\s*\{([^{}]*)\}/g, "$1")
+      .replace(/\\(?:text|textit|mathrm|mathbb|mathcal|mathit|mathsf|mathtt|textbf|mathbf|boldsymbol|underline|cancel|operatorname)\s*\{([^{}]*)\}/g, "$1")
       .replace(/\\(?:foco|procurado|resposta|overline|vec|hat|bar)\s*\{([^{}]*)\}/g, "$1")
+      // Um comando desconhecido com argumento (`\unknown{y}`) lê "unknown(y)", e a função com chaves (`\sin{x}`) lê "sen x": nada cola nem some.
+      .replace(/\\([A-Za-z]+)\s*\{([^{}]*)\}/g, (inteiro, nome: string, argumento: string) => {
+        if (/^(?:d?frac|sqrt|begin|end|left|right)$/.test(nome) || GREGAS[nome] || SIMBOLOS[nome]) return inteiro;
+        if (FUNCOES[nome]) return `${FUNCOES[nome]} ${argumento}`;
+        return nome.length > 1 ? `${nome}(${argumento})` : inteiro;
+      })
       .replace(/\^\{([^{}]*)\}/g, (_inteiro, a: string) => (a.length === 1 && SOBRESCRITO[a] ? SOBRESCRITO[a] : `^(${a})`))
       .replace(/_\{([^{}]*)\}/g, (_inteiro, a: string) => `_${a}`);
     if (texto === antes) break;
   }
+  // Uma peça desconhecida NUNCA some: a função vira o nome da tela ("\sin x" lê "sen x"), o símbolo conhecido vira o símbolo e qualquer outro comando
+  // fica com o nome, sem a barra ("\foo x" lê "foo x"). Apagar o comando mudava o sentido ("h(x) = \sin x" lia "h(x) = x").
   texto = texto
     .replace(/\^([0-9])(?![0-9])/g, (_inteiro, a: string) => SOBRESCRITO[a] ?? `^${a}`)
-    .replace(/\\([A-Za-z]+)/g, (inteiro, nome: string) => GREGAS[nome] ?? SIMBOLOS[nome] ?? (nome.length > 1 ? "" : inteiro))
+    .replace(/\\([A-Za-z]+)/g, (inteiro, nome: string) => GREGAS[nome] ?? SIMBOLOS[nome] ?? FUNCOES[nome] ?? (nome.length > 1 ? nome : inteiro))
     .replace(/[\\{}]/g, "")
     .replace(/\s+/g, " ")
     .trim();

@@ -45,7 +45,7 @@ const parabola = (procurado?: "V" | "C"): Bruto =>
 /** O seno de 0 a 2π com o máximo M, a raiz P e o mínimo N. */
 const seno = (procurado?: "M"): Bruto =>
   funcao(
-    procurado === "M" ? "A onda h(x) = sin x de 0 a 2π, com a raiz P e o mínimo N. O máximo é o procurado." : "A onda h(x) = sin x de 0 a 2π, com o máximo M, a raiz P e o mínimo N.",
+    procurado === "M" ? "A onda h(x) = sen x de 0 a 2π, com a raiz P e o mínimo N. O máximo é o procurado." : "A onda h(x) = sen x de 0 a 2π, com o máximo M, a raiz P e o mínimo N.",
     [{ latex: "\\sin x", nome: "h", de: 0, ate: "2\\pi" }],
     [
       { id: "M", papel: procurado === "M" ? "procurado" : "especial", x: "\\frac{\\pi}{2}", y: 1 },

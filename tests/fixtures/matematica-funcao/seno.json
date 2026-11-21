@@ -2,7 +2,7 @@
   "origem": "Spec 15, seção 15, caso 3: o seno em [0, 2π] com o máximo M, a raiz P e o mínimo N.",
   "bruto": {
     "tipo": "funcao",
-    "alt": "A onda h(x) = sin x de 0 a 2π, com o máximo M, a raiz P e o mínimo N.",
+    "alt": "A onda h(x) = sen x de 0 a 2π, com o máximo M, a raiz P e o mínimo N.",
     "curvas": [
       {
         "latex": "\\sin x",
@@ -31,11 +31,11 @@
   },
   "guardado": {
     "tipo": "funcao",
-    "alt": "A onda h(x) = sin x de 0 a 2π, com o máximo M, a raiz P e o mínimo N.",
+    "alt": "A onda h(x) = sen x de 0 a 2π, com o máximo M, a raiz P e o mínimo N.",
     "curvas": [
       {
         "nome": "h",
-        "latex": "\\text{sin}x",
+        "latex": "\\sin x",
         "de": 0,
         "ate": 6.283185
       }

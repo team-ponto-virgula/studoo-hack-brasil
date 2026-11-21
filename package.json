@@ -21,7 +21,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:marco": "node --env-file=.env --test tests/marco-local.test.mjs",
     "test:dominio": "node --env-file=.env --import tsx --test tests/dominio-geracao.test.mjs tests/ponte-reaberta.test.mjs",
-    "test:formatos": "node --env-file=.env --import tsx --test tests/licao-formatos.test.mjs tests/formula-latex.test.mjs tests/visuais-contrato.test.mjs tests/motor-visuais.test.mjs tests/visuais-servidor.test.mjs tests/resolucao-vazamento.test.mjs tests/formula-forma-ia.test.mjs tests/sua-vez-embaralhado.test.mjs tests/formula-espacos.test.mjs tests/formula-no-texto.test.mjs tests/glifos-nunito.test.mjs tests/cifrao-cru.test.mjs tests/funcao-expressao.test.mjs tests/funcao-visual.test.mjs tests/funcao-motor.test.mjs tests/funcao-servidor.test.mjs",
+    "test:formatos": "node --env-file=.env --import tsx --test tests/licao-formatos.test.mjs tests/formula-latex.test.mjs tests/visuais-contrato.test.mjs tests/motor-visuais.test.mjs tests/visuais-servidor.test.mjs tests/resolucao-vazamento.test.mjs tests/formula-forma-ia.test.mjs tests/sua-vez-embaralhado.test.mjs tests/formula-espacos.test.mjs tests/formula-no-texto.test.mjs tests/glifos-nunito.test.mjs tests/cifrao-cru.test.mjs tests/funcao-expressao.test.mjs tests/funcao-visual.test.mjs tests/funcao-motor.test.mjs tests/funcao-servidor.test.mjs tests/formula-funcoes.test.mjs",
     "test:trilha": "node --env-file=.env --import tsx --test tests/trilha-ao-vivo.test.mjs tests/verificar-publicado.test.mjs tests/matematica-ao-vivo.test.mjs",
     "test:mobile": "node --env-file=.env --test tests/marco-mobile-local.test.mjs",
     "test:movimento": "node --test tests/movimento-mobile.test.mjs",

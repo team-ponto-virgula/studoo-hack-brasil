@@ -135,7 +135,7 @@ test("fórmula marcada que não vale nunca derruba o texto: cai em texto linear,
     ["Isso vale $\\frac{x_A + x_B}{2}$ no ponto médio.", "Isso vale (x_A + x_B) ÷ 2 no ponto médio."],
     ["A raiz é $\\sqrt{x + 1}$ aqui.", "A raiz é √(x + 1) aqui."],
     ["O determinante $\\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix}$ vale −2.", "O determinante det[1, 2; 3, 4] vale −2."],
-    ["Escreva $\\foo{x} + 1$ aqui", "Escreva x + 1 aqui"],
+    ["Escreva $\\foo{x} + 1$ aqui", "Escreva foo(x) + 1 aqui"],
     ["Veja $\\alpha + \\beta$ e $\\pi r^2$.", "Veja α + β e πr²."],
     ["Calcule \\frac{1}{2} + \\sqrt{9} agora", "Calcule 1/2 + √9 agora"],
     ["$\\left( x \\right)^{2}$ e $x^{n+1}$", "(x)² e x^(n + 1)"],
@@ -147,7 +147,7 @@ test("fórmula marcada que não vale nunca derruba o texto: cai em texto linear,
     assert.equal(textoSemFormulas(entrada), esperado, entrada);
   }
   // O que lê e cabe em linha segue como fórmula, ao lado do que caiu; a fração simples também é fórmula.
-  assert.deepEqual(resumo(partirTextoComFormulas("$x_A$ e $\\frac{1}{2}$ e $\\foo{y}$")), ["[x_A]", " e ", "[\\frac{1}{2}]", " e y"]);
+  assert.deepEqual(resumo(partirTextoComFormulas("$x_A$ e $\\frac{1}{2}$ e $\\foo{y}$")), ["[x_A]", " e ", "[\\frac{1}{2}]", " e foo(y)"]);
   // A frase continua inteira, com a pontuação em volta.
   assert.equal(textoSemFormulas("Se $\\frac{a}{b}$, então: $a = 2b$."), "Se a/b, então: a = 2b.");
 });
@@ -167,7 +167,7 @@ test("normalizarTextoComFormulas: o texto como o servidor o guarda", () => {
   assert.equal(normalizarTextoComFormulas("Use $x_G=(x_A+x_B)/3$ e $x_{AB}^{2}$"), "Use $x_G = (x_A + x_B) \\div 3$ e $x_{A B}^2$");
   assert.equal(normalizarTextoComFormulas("Use $x_G=(x_A+x_B)/3$ aqui", false), "Use x_G = (x_A + x_B) ÷ 3 aqui");
   // A que lê fica marcada, cabendo ou não em linha (a fala sai da árvore inteira); a que não lê vira texto linear.
-  assert.equal(normalizarTextoComFormulas("Veja $1/2$ e $\\frac{x_A + x_B}{2}$ e $\\foo{x}$ e R$ 5,00"), "Veja $\\frac{1}{2}$ e $\\frac{x_A + x_B}{2}$ e x e R$ 5,00");
+  assert.equal(normalizarTextoComFormulas("Veja $1/2$ e $\\frac{x_A + x_B}{2}$ e $\\foo{x}$ e R$ 5,00"), "Veja $\\frac{1}{2}$ e $\\frac{x_A + x_B}{2}$ e foo(x) e R$ 5,00");
   assert.equal(normalizarTextoComFormulas("Veja $\\frac{x_A + x_B}{2}$ e $1/2$", false), "Veja (x_A + x_B) ÷ 2 e 1/2");
   assert.equal(normalizarTextoComFormulas("x_G = 1 e R$ 5,00"), "x_G = 1 e R$ 5,00", "tokens soltos ficam como a IA escreveu");
   assert.equal(marcarFormulasSoltas("x_G = 1 e R$ 5,00 e H_2O"), "$x_G = 1$ e R$ 5,00 e H₂O", "e nas lições de matemática o servidor os marca");
@@ -185,7 +185,10 @@ test("linearizarTolerante: o que a IA quis dizer, sem barra e sem chave", () => 
   const casos = [
     ["\\frac{1}{2}", "1/2"], ["\\frac{x + 1}{2}", "(x + 1) ÷ 2"], ["\\sqrt{x + 1}", "√(x + 1)"], ["2 \\times 3 \\leq 7", "2 × 3 ≤ 7"],
     ["\\alpha + \\beta", "α + β"], ["x^{2}", "x²"], ["x^{n+1}", "x^(n + 1)"], ["\\text{área} = b \\cdot h", "área = b × h"],
-    ["\\left( a + b \\right)", "(a + b)"], ["\\foo{x} + 1", "x + 1"], ["\\resposta{4}", "4"],
+    ["\\left( a + b \\right)", "(a + b)"], ["\\foo{x} + 1", "foo(x) + 1"], ["\\resposta{4}", "4"],
+    // Uma peça desconhecida NUNCA some (spec 15, seção 18): o nome fica, sem a barra; a função e o símbolo viram o que a tela mostra.
+    ["\\foo x + 1", "foo x + 1"], ["\\sin x + \\unknown{y}", "sen x + unknown(y)"], ["\\vec{v} + \\mathbb{R}", "v + R"],
+    ["\\theta = 30^{\\circ} + \\vec{v}", "θ = 30° + v"], ["\\lim_{x \\to 0} \\sin{x}", "lim_x → 0 sen x"], ["\\angle ABC = 90^\\circ", "∠ ABC = 90°"],
   ];
   for (const [entrada, esperado] of casos) {
     const saida = linearizarTolerante(entrada);
@@ -567,4 +570,36 @@ test("2e: 'Δ ≠ 0', 'Δ ≥ 0' e 'π = 3,14' no meio da frase são fórmula em
   assert.equal(formula.falado, "delta é diferente de 0");
   // Letra grega no meio de uma palavra não é conta.
   assert.equal(marcarFormulasSoltas("O Δ do problema e o π da roda"), "O Δ do problema e o π da roda");
+});
+
+test("12a: \\sin, \\cos, \\tan, \\ln e \\log no texto em linha não somem: a frase do pedido, a notação brasileira e a peça desconhecida que sai como veio", () => {
+  const frase = "A onda $h(x) = \\sin x$ vai de −1 a 1.";
+  assert.equal(textoSemFormulas(frase), "A onda h(x) = sen x vai de −1 a 1.", "nunca \"h(x) = x\": a função fica, com o nome da tela");
+  assert.equal(falarTextoComFormulas(frase).includes("seno de x"), true);
+  const segmentos = partirTextoComFormulas(frase);
+  assert.equal(segmentos.some((segmento) => segmento.tipo === "formula" && segmento.latex === "h(x) = \\sin x"), true, "é fórmula em linha, com a forma canônica");
+  // Notação brasileira na tela, em qualquer ordem de escrita; nunca "sin" nem "tan".
+  for (const [entrada, esperado] of [
+    ["$\\sin^2 x + \\cos^2 x = 1$", "sen² x + cos² x = 1"],
+    ["$\\theta = 30^\\circ$", "θ = 30°"],
+    ["$\\log_2 8 = 3$", "log_2 8 = 3"],
+    ["$\\tan \\theta = \\frac{\\sin \\theta}{\\cos \\theta}$", "tg θ = (sen θ) ÷ (cos θ)"],
+    ["$\\ln x$ e $\\sin(2x + 1)$ e $2\\cos x$", "ln x e sen(2x + 1) e 2 cos x"],
+    ["$sen x$ e $tg x$ e $\\operatorname{sen} x$", "sen x e tg x e sen x"],
+  ]) {
+    const linear = textoSemFormulas(entrada);
+    assert.equal(linear, esperado, entrada);
+    assert.equal(/sin|tan|\\|\$/.test(linear), false, `sin, tan, barra ou cifrão na tela: ${linear}`);
+  }
+  // A fórmula que o leitor não conhece sai COMO VEIO (legível, sem barra, sem cifrão), nunca com o comando apagado.
+  assert.equal(textoSemFormulas("Use $\\foo x + 1$ aqui"), "Use foo x + 1 aqui");
+  assert.equal(textoSemFormulas("Use $\\sin x + \\unknown{y}$ aqui"), "Use sen x + unknown(y) aqui");
+  assert.equal(textoSemFormulas("Use $\\sum_{i=1} a_i + \\sin x$ aqui").includes("sen x"), true);
+  assert.equal(normalizarTextoComFormulas("Veja $\\tan x$ e $\\foo x$"), "Veja $\\tan x$ e foo x");
+  // A matriz que o leitor recusa (um determinante 2 × 3 não é quadrado) lê como a conta escreve, sem "begin", "vmatrix", "end" nem "&" na tela.
+  const naoQuadrado = "O determinante $\\begin{vmatrix} 1 & 2 & 5 \\\\ 3 & 4 & k \\end{vmatrix} = 0$ vale zero.";
+  assert.equal(textoSemFormulas(naoQuadrado), "O determinante det[1, 2, 5; 3, 4, k] = 0 vale zero.");
+  assert.equal(/begin|end|vmatrix|&|\$/.test(textoSemFormulas(naoQuadrado)), false);
+  assert.equal(linearizarTolerante("\\begin{bmatrix} 1 & \\frac{1}{2} \\\\ 3 & 4 \\\\ 5 & 6 \\end{bmatrix}"), "[1, 1/2; 3, 4; 5, 6]");
+  assert.equal(linearizarTolerante("\\begin{vmatrix} a & b \\ c & d \\end{vmatrix}"), "det[a, b; c, d]", "o `\\\\` que o JSON comeu separa as linhas do mesmo jeito");
 });

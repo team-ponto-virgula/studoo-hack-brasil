@@ -1,5 +1,5 @@
 import { EIXO_MATEMATICO, UNIDADES_POR_EM } from "./glifos";
-import { LARGURA_DO_ESPACO_EM_EM, ehSinal, formulaCabeEmLinha, numeroNaTela, percorrerFormula, vaoAutomatico, vaoDaPalavra, type NoFormula, type PapelDestaque } from "./formula";
+import { LARGURA_DO_ESPACO_EM_EM, ehFuncao, ehGrau, ehSinal, formulaCabeEmLinha, numeroNaTela, percorrerFormula, vaoAutomatico, vaoDaFuncao, vaoDaPalavra, type NoFormula, type PapelDestaque } from "./formula";
 import { caixaDoGlifo, larguraDoTexto, semGlifo, type PesoDoTexto } from "./texto-vetorial";
 import { PISO_DO_TEXTO, type PapelDeCor, type Tracejado } from "./visuais";
 
@@ -51,7 +51,7 @@ export const P_DO_TEXTO = 0.22;
 const ESPACO_DA_RELACAO = 5;
 const ESPACO_DO_SINAL = 4;
 const ESPACO_DA_MOLDURA = 6;
-const RELACOES: ReadonlySet<string> = new Set(["=", "≠", "<", ">", "≤", "≥", "→"]);
+const RELACOES: ReadonlySet<string> = new Set(["=", "≠", "≈", "<", ">", "≤", "≥", "→"]);
 const RESPIRO = 1;
 const BARRA_DA_FRACAO = 2;
 const FOLGA_DA_FRACAO = 4;
@@ -130,7 +130,7 @@ export function juntar(partes: readonly Parte[]): Caixa {
 
 /* ----- Operadores ----- */
 
-const GLIFO_DO_OPERADOR: Readonly<Record<string, string>> = { "+": "+", "-": "−", "×": "×", "÷": "÷", "=": "=", "<": "<", ">": ">" };
+const GLIFO_DO_OPERADOR: Readonly<Record<string, string>> = { "+": "+", "-": "−", "×": "×", "÷": "÷", "=": "=", "≈": "≈", "<": "<", ">": ">" };
 
 /** A espessura dos traços que o motor desenha no lugar de um glifo (≤ ≥ ≠ →): a da barra do "=" no peso do texto. */
 const TRACO_EM_EM: Readonly<Record<PesoDoTexto, number>> = { 400: 0.07, 700: 0.09, 800: 0.1 };
@@ -238,9 +238,11 @@ function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
       return;
     }
     const vaoDaPalavra = vaoDaPalavraEntre(anterior, item, estilo);
+    // O nome de uma função leva um vão fino (0,17 em) antes do argumento e depois do número que a multiplica; antes de parêntese, nenhum ("sen(2x + 1)").
+    const vaoDaFuncaoAqui = vaoDaFuncao(anterior, item) ? LARGURA_DO_ESPACO_EM_EM[","] * tamanhoDo(estilo) : 0;
     partes.push({
       caixa: caixaDe(item, estilo),
-      antes: vaoDaPalavra > 0 ? vaoDaPalavra : anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" && anterior.tipo !== "espaco" ? espacoEntreFatores(anterior, item, estilo) : 0,
+      antes: vaoDaPalavra > 0 ? vaoDaPalavra : vaoDaFuncaoAqui > 0 ? vaoDaFuncaoAqui : anterior && ehFuncao(anterior) && item.tipo === "parenteses" ? 0 : anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" && anterior.tipo !== "espaco" ? espacoEntreFatores(anterior, item, estilo) : 0,
     });
   });
   return juntar(partes);
@@ -270,6 +272,8 @@ function fracao(no: Extract<NoFormula, { tipo: "fracao" }>, estilo: Estilo): Cai
 
 function script(no: Extract<NoFormula, { tipo: "script" }>, estilo: Estilo): Caixa {
   const base = caixaDe(no.base, estilo);
+  // O grau (`30^\circ`) não é expoente que sobe e encolhe: o `°` vem colado no número, no tamanho do texto (o glifo já fica no alto da linha).
+  if (ehGrau(no.expoente) && !no.indice) return juntar([{ caixa: base }, { caixa: textoEmCaixa("°", estilo) }]);
   const menor: Estilo = { ...estilo, tamanho: Math.max(pisoDo(estilo), estilo.tamanho * escalaDoScript(estilo)), italico: false, respiro: 0.5 };
   const indice = no.indice ? caixaDe(no.indice, menor) : null;
   const expoente = no.expoente ? caixaDe(no.expoente, menor) : null;
@@ -406,6 +410,9 @@ export function caixaDe(no: NoFormula, estilo: Estilo): Caixa {
       return textoEmCaixa(no.valor, estilo);
     case "texto":
       return textoEmCaixa(no.valor, estilo);
+    case "funcao":
+      // Reto e no peso do texto (spec 15, seção 18): "sen", "cos", "tg", "ln", "log"; nunca itálico, como a variável.
+      return textoEmCaixa(no.nome, estilo);
     case "porcento":
       return textoEmCaixa("%", estilo);
     case "separador":
@@ -449,7 +456,7 @@ export function caixaDaFormulaEmLinha(arvore: NoFormula, tamanho: number, cor: P
 export function semGlifoNaFormula(arvore: NoFormula): string[] {
   const faltam = new Set<string>();
   percorrerFormula(arvore, (no) => {
-    const texto = no.tipo === "texto" || no.tipo === "variavel" || no.tipo === "simbolo" ? no.valor : no.tipo === "numero" ? numeroNaTela(no.valor) : "";
+    const texto = no.tipo === "texto" || no.tipo === "variavel" || no.tipo === "simbolo" ? no.valor : no.tipo === "funcao" ? no.nome : no.tipo === "numero" ? numeroNaTela(no.valor) : no.tipo === "operador" && no.valor === "≈" ? "≈" : "";
     for (const caractere of semGlifo(texto)) faltam.add(caractere);
   });
   return [...faltam];

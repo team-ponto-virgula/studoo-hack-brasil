@@ -47,7 +47,7 @@ test("os três casos da spec: a parábola x² − 4x + 3, a reta 2x + 1 e o seno
   assert.equal(verticeDaFuncao(reta.modelo), null, "reta não tem vértice");
 
   const seno = ok("\\sin(x)");
-  assert.equal(seno.canonica, "\\text{sin}(x)", "a fórmula da figura desenha sin como texto, como no exemplo \"h(x) = sin x\"");
+  assert.equal(seno.canonica, "\\sin (x)", "a fórmula da figura é a função reta: a tela mostra \"h(x) = sen x\" (spec 15, seção 18)");
   assert.deepEqual(seno.modelo.atomos, [{ tipo: "seno", coef: 1, a: 1, b: 0 }]);
   perto(avaliarFuncao(seno.modelo, Math.PI / 2), 1);
   perto(avaliarFuncao(seno.modelo, Math.PI), 0);
@@ -84,7 +84,9 @@ test("o que vale: número, polinômio até o grau 3, produto e potência que exp
   assert.equal(mista.modelo.atomos.length, 1);
   perto(avaliarFuncao(mista.modelo, Math.PI / 2), Math.PI / 2 + 1);
   assert.equal(ok("\\sin 2x").modelo.atomos[0].a, 2, "sin 2x é sin(2x)");
-  assert.equal(ok("\\text{sen}(x)").canonica, "\\text{sin}(x)", "sen em português também vale, e a figura o desenha como sin");
+  assert.equal(ok("\\text{sen}(x)").canonica, "\\sin (x)", "o que se guardava como texto (\\text{sen}) vale como a função");
+  assert.equal(ok("sen(x)").canonica, "\\sin (x)", "sen em português também vale, e a figura o desenha como sen");
+  assert.equal(ok("\\cos x + \\sin x").modelo.atomos.length, 2);
   // A raiz entra no 12a como termo de número × √(a·x + b) (os destaques calculados dela ficam para o 12b).
   const raiz = ok("2\\sqrt{x+1}");
   assert.equal(familiaDaFuncao(raiz.modelo), "raiz");
@@ -94,7 +96,9 @@ test("o que vale: número, polinômio até o grau 3, produto e potência que exp
 
 test("o que invalida a curva: tangente, log, exponencial, divisão por x, grau acima de 3, outra variável, produto de funções, mais de duas casas", () => {
   for (const [fonte, motivo] of [
-    ["\\tan(x)", /\\tan fora da lista|tan/],
+    ["\\tan(x)", /tg não vale na curva/],
+    ["\\ln(x)", /ln não vale na curva/],
+    ["\\log x", /log não vale na curva/],
     ["\\log(x)", /\\log fora da lista|log/],
     ["2^x", /expoente/],
     ["\\frac{1}{x}", /só se divide por um número/],
@@ -114,7 +118,7 @@ test("o que invalida a curva: tangente, log, exponencial, divisão por x, grau a
     ["x = 1", /igualdade|sem igualdade/],
     ["", /1 a 80 caracteres/],
     ["x +", /termina num sinal/],
-    ["\\text{abs}(x)", /só sin e cos/],
+    ["\\text{abs}(x)", /o texto abs não vale numa função/],
   ]) assert.match(recusada(fonte), motivo, fonte);
   assert.equal(lerExpressaoDaFuncao(42).ok, false);
   assert.equal(lerExpressaoDaFuncao("x".repeat(81)).ok, false, "até 80 caracteres");

@@ -60,13 +60,13 @@ test("a reta da spec: g(x) = 2x + 1 de −2 a 2, com o intercepto C (0, 1) e a r
   assert.equal(rotuloDaFuncao("R", -0.5, 0), "R (−0,5; 0)", "o ponto e vírgula, pela vírgula decimal");
 });
 
-test("o seno da spec: h(x) = sin x em [0, 2π], com M (π/2, 1), P (π, 0) e N (3π/2, −1), rótulos com π", () => {
+test("o seno da spec: h(x) = sen x em [0, 2π], com M (π/2, 1), P (π, 0) e N (3π/2, −1), rótulos com π", () => {
   const visual = valido({
-    tipo: "funcao", alt: "A onda h(x) = sin x de 0 a 2π, com o máximo M, a raiz P e o mínimo N.",
+    tipo: "funcao", alt: "A onda h(x) = sen x de 0 a 2π, com o máximo M, a raiz P e o mínimo N.",
     curvas: [{ latex: "\\sin x", nome: "h", de: 0, ate: "2\\pi" }],
     pontos: [{ id: "M", x: "\\frac{\\pi}{2}", y: 1 }, { id: "P", x: "\\pi", y: 0 }, { id: "N", x: "\\frac{3\\pi}{2}", y: -1 }],
   });
-  assert.equal(visual.curvas[0].latex, "\\text{sin}x");
+  assert.equal(visual.curvas[0].latex, "\\sin x");
   assert.equal(visual.curvas[0].de, 0);
   assert.equal(visual.curvas[0].ate, 6.283185);
   assert.deepEqual(visual.pontos.map(({ id, x, y }) => [id, x, y]), [["M", 1.570796, 1], ["P", 3.141593, 0], ["N", 4.712389, -1]]);
