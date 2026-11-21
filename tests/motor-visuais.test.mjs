@@ -332,6 +332,22 @@ test("o PNG do desenho sai com sharp (o SVG é válido) e cabe com folga no limi
 
 const numerosDeEixo = (desenho) => desenho.textos.filter((texto) => /^−?\d+$/.test(texto));
 
+/** Um ponto cercado por oito vizinhos, na origem: não cabe rótulo inteiro nem nome sem encostar em número de eixo. */
+const CERCADO = {
+  tipo: "plano", alt: "Um ponto cercado por oito vizinhos.", x: [-6, 6], y: [-6, 6],
+  pontos: [{ id: "A", x: 0, y: 0 }, ...[[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].map(([x, y], i) => ({ id: `V${i}`, x, y, rotulo: false }))],
+};
+/** Um ponto colado na origem, com os eixos e os números em volta. */
+const NA_ORIGEM = {
+  tipo: "plano", alt: "Os pontos O, P e Q perto da origem.", x: [-4, 5], y: [-3, 5],
+  pontos: [{ id: "O", x: 0, y: 0 }, { id: "P", x: 1, y: 1 }, { id: "Q", x: -1, y: 2, papel: "especial" }],
+  segmentos: [{ de: "O", ate: "P" }, { de: "P", ate: "Q" }],
+};
+/** Bate? `folga` aumenta a distância exigida; `tolerancia` perdoa o espaço lateral que o glifo deixa dentro da caixa. */
+const bate = (a, b, folga = 0, tolerancia = 0) =>
+  a.x - folga < b.x + b.largura - tolerancia && b.x < a.x + a.largura + folga - tolerancia &&
+  a.y - folga < b.y + b.altura - tolerancia && b.y < a.y + a.altura + folga - tolerancia;
+
 test("número de eixo nunca some: nenhum rótulo de ponto o apaga, e o rótulo procura outro lado", () => {
   for (const nome of NOMES) {
     const figura = normalizarVisual(fixture(nome).visuais.find((visual) => visual.tipo === "plano" || visual.tipo === "reta_numerica"));
@@ -352,12 +368,11 @@ test("número de eixo nunca some: nenhum rótulo de ponto o apaga, e o rótulo p
   // Com os rótulos inteiros (com as coordenadas) onde cabem.
   const textos = desenharVisual(normalizarVisual(fixture("colinearidade").visuais[1]), { tipo: "enunciado" }).textos;
   assert.ok(textos.includes("A (−1, −1)") && textos.includes("B (2, 5)"));
-  // Sem lado livre para o rótulo inteiro, o ponto fica só com o nome, e os números continuam todos lá.
-  const vizinhos = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].map(([x, y], i) => ({ id: `V${i}`, x, y, rotulo: false }));
-  const apertado = normalizarVisual({ tipo: "plano", alt: "Um ponto cercado por oito vizinhos.", x: [-6, 6], y: [-6, 6], pontos: [{ id: "A", x: 0, y: 0 }, ...vizinhos] });
-  const desenho = desenharVisual(apertado, { tipo: "enunciado" });
-  assert.ok(desenho.textos.includes("A"), "só o nome");
-  assert.equal(desenho.textos.includes("A (0, 0)"), false);
+  // Sem lado livre para o rótulo inteiro, o ponto fica só com o nome (ou sem nada, se nem o nome cabe) e as coordenadas vão para a
+  // legenda, em linha própria; os números continuam todos lá.
+  const desenho = desenharVisual(normalizarVisual(CERCADO), { tipo: "enunciado" });
+  assert.equal(desenho.textos.lastIndexOf("A (0, 0)") > desenho.textos.findIndex((texto) => texto === "dados"), true, "as coordenadas perdidas vão para a legenda");
+  assert.equal(desenho.caixas.some((caixa) => caixa.tipo === "rotulo" && caixa.texto === "A (0, 0)"), false, "e não ficam no plano");
   assert.ok(numerosDeEixo(desenho).length >= 10);
 });
 
@@ -433,4 +448,89 @@ test("os tamanhos do parecer: rótulos de ponto 14 em 800, legenda 14, números 
   assert.ok(baricentro.textos.includes("dados") && baricentro.textos.includes("A (1, 2)"));
   // O motor devolve os textos na ordem em que saem; nenhum é vazio.
   for (const desenho of Object.values(desenhosDasFixtures())) assert.ok(desenho.textos.every((texto) => texto.length > 0));
+});
+
+/* ----- Marco 2c: halo, nome longe dos números, coordenadas na legenda ----- */
+
+const TODOS = () => [
+  ...Object.values(desenhosDasFixtures()),
+  ...[CERCADO, NA_ORIGEM].flatMap((bruto) => [{ tipo: "enunciado" }, { tipo: "retorno" }].map((contexto) => desenharVisual(normalizarVisual(bruto), contexto))),
+];
+
+test("nenhum texto do gráfico bate em outro, e rótulo só com o nome nunca encosta em número de eixo", () => {
+  for (const desenho of TODOS()) {
+    const caixas = desenho.caixas.filter((caixa) => caixa.tipo !== "foco");
+    for (let i = 0; i < caixas.length; i += 1) {
+      for (let j = i + 1; j < caixas.length; j += 1) {
+        assert.equal(bate(caixas[i], caixas[j], 0, 1.5), false, `${caixas[i].texto} bate em ${caixas[j].texto}`);
+      }
+    }
+    for (const nome of caixas.filter((caixa) => caixa.tipo === "rotulo" && !caixa.texto.includes("("))) {
+      for (const numero of caixas.filter((caixa) => caixa.tipo === "numero")) {
+        assert.equal(bate(nome, numero, 8), false, `o nome ${nome.texto} fica a menos de uma unidade de glifo do número ${numero.texto}`);
+      }
+    }
+  }
+});
+
+test("as coordenadas que o rótulo perdeu vão para a legenda, em linha própria, no enunciado e na resposta", () => {
+  for (const [bruto, esperado] of [[CERCADO, "A (0, 0)"], [NA_ORIGEM, "O (0, 0)"]]) {
+    for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }]) {
+      const desenho = desenharVisual(normalizarVisual(bruto), contexto);
+      const completos = desenho.caixas.filter((caixa) => caixa.tipo === "rotulo" && caixa.texto.includes("("));
+      const visual = normalizarVisual(bruto);
+      for (const ponto of visual.pontos.filter((p) => p.rotulo !== false)) {
+        const inteiro = `${ponto.id} (${ponto.x}, ${ponto.y})`.replace("-", "−").replace("-", "−");
+        const noPlano = completos.some((caixa) => caixa.texto === inteiro);
+        const naLegenda = desenho.textos.slice(desenho.textos.indexOf("dados") > 0 ? 0 : 0).filter((texto) => texto === inteiro).length;
+        assert.ok(noPlano || naLegenda > 0, `${inteiro} sumiu (${contexto.tipo})`);
+        assert.ok(!(noPlano && naLegenda > 1), `${inteiro} duplicado`);
+      }
+    }
+  }
+  const cercado = desenharVisual(normalizarVisual(CERCADO), { tipo: "enunciado" });
+  assert.ok(cercado.textos.includes("A (0, 0)"));
+  assert.equal(cercado.caixas.filter((caixa) => caixa.tipo === "rotulo").length <= 1, true);
+  // A legenda cresce para as coordenadas e a figura continua cabendo na prancheta.
+  assert.ok(cercado.altura <= 320 + 1e-9);
+  const { xmin, xmax, ymin, ymax } = limites(cercado);
+  assert.ok(xmin >= -0.5 && xmax <= 320.5 && ymin >= -0.5 && ymax <= cercado.altura + 0.5);
+});
+
+test("halo branco em todo texto do gráfico: por baixo dos textos, por cima da grade e dos traços", () => {
+  const ehHalo = (primitiva) => primitiva.tipo === "caminho" && !primitiva.preenchimento && primitiva.borda === "branco" && primitiva.larguraDaBorda === 6;
+  const ehTexto = (primitiva) => primitiva.tipo === "caminho" && primitiva.preenchimento && !primitiva.borda && /Texto$|^suave$|^texto$/.test(primitiva.preenchimento);
+  for (const nome of ["baricentro", "colinearidade"]) {
+    for (const contexto of ["enunciado", "resposta"]) {
+      const desenho = desenhosDasFixtures()[`${nome}/${contexto}`];
+      const ps = desenho.primitivas;
+      const halos = ps.map((primitiva, i) => (ehHalo(primitiva) ? i : -1)).filter((i) => i >= 0);
+      assert.equal(halos.length, 1, `${nome}/${contexto}: um halo só, por baixo de todos os textos do gráfico`);
+      const ultimoTraco = Math.max(...ps.map((primitiva, i) => ((primitiva.tipo === "linha" && primitiva.cor === "segmento") ? i : -1)));
+      const ultimaGrade = Math.max(...ps.map((primitiva, i) => ((primitiva.tipo === "linha" && primitiva.cor === "grade") ? i : -1)));
+      assert.ok(halos[0] > ultimoTraco && halos[0] > ultimaGrade, "o halo vem depois da grade e dos segmentos");
+      // O halo cobre exatamente o contorno dos textos que vêm logo depois.
+      let juntos = "";
+      for (let i = halos[0] + 1; i < ps.length && ehTexto(ps[i]); i += 1) juntos += ps[i].d;
+      assert.equal(ps[halos[0]].d, juntos, "o halo é o contorno dos textos seguintes");
+      assert.ok(juntos.length > 200);
+      // Os pontos vêm depois dos textos, e a legenda (fora do gráfico) não leva halo.
+      const primeiroPonto = ps.findIndex((primitiva, i) => i > halos[0] && (primitiva.tipo === "circulo" || (primitiva.tipo === "caminho" && primitiva.borda === "branco" && primitiva.larguraDaBorda === 2)));
+      assert.ok(primeiroPonto > halos[0]);
+      assert.equal(ps.slice(primeiroPonto).some(ehHalo), false);
+    }
+  }
+  // A reta numérica também: números e nomes com halo; a frase da legenda sem.
+  const reta = desenhosDasFixtures()["abscissas/enunciado"];
+  assert.equal(reta.primitivas.filter(ehHalo).length, 1);
+  // E a fórmula não: ela está sobre fundo liso.
+  assert.equal(desenhosDasFixtures()["baricentro/formula-bloco"].primitivas.some(ehHalo), false);
+  assert.equal(desenhosDasFixtures()["colinearidade/formula-faixa"].primitivas.some(ehHalo), false);
+});
+
+test("o ponto colado na origem: números, nomes e legenda sem se pisar", () => {
+  const desenho = desenharVisual(normalizarVisual(NA_ORIGEM), { tipo: "enunciado" });
+  for (const esperado of ["−4", "−3", "−2", "−1", "1", "2", "3", "4", "5", "0"]) assert.ok(numerosDeEixo(desenho).includes(esperado), `falta o ${esperado}`);
+  assert.ok(desenho.textos.some((texto) => texto.startsWith("P (")) || desenho.textos.includes("P"));
+  assert.ok(desenho.menorTexto >= 13);
 });

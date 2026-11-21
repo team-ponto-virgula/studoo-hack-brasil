@@ -16,7 +16,7 @@ export type Comando =
   | readonly ["Z"];
 
 export type Marca =
-  | { m: "texto"; texto: string; x: number; y: number; tamanho: number; peso: PesoDoTexto; italico: boolean; cor: PapelDeCor; opacidade?: number }
+  | { m: "texto"; texto: string; x: number; y: number; tamanho: number; peso: PesoDoTexto; italico: boolean; cor: PapelDeCor; opacidade?: number; halo?: boolean }
   | { m: "linha"; x1: number; y1: number; x2: number; y2: number; cor: PapelDeCor; largura: number; tracejado?: Tracejado; opacidade?: number }
   | { m: "retangulo"; x: number; y: number; largura: number; altura: number; raio?: number; preenchimento?: PapelDeCor; borda?: PapelDeCor; larguraDaBorda?: number; opacidade?: number }
   | { m: "circulo"; cx: number; cy: number; raio: number; preenchimento?: PapelDeCor; borda?: PapelDeCor; larguraDaBorda?: number; tracejado?: Tracejado; opacidade?: number }

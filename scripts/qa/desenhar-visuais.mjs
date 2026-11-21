@@ -69,3 +69,10 @@ const galeria = [
 ];
 const faixas = galeria.map((fonte) => desenharFormula(lerFormula(fonte).arvore, { fundo: false })).filter(Boolean);
 await png(comporDesenhos(faixas, { separador: true }), "galeria-formulas");
+
+// Casos de borda do plano: um ponto colado na origem e um ponto cercado, onde o rótulo não cabe e as coordenadas vão para a legenda.
+const casosDeBorda = {
+  "ponto-na-origem": { tipo: "plano", alt: "Os pontos O, P e Q perto da origem.", x: [-4, 5], y: [-3, 5], pontos: [{ id: "O", x: 0, y: 0 }, { id: "P", x: 1, y: 1 }, { id: "Q", x: -1, y: 2, papel: "especial" }], segmentos: [{ de: "O", ate: "P" }, { de: "P", ate: "Q" }] },
+  "ponto-cercado": { tipo: "plano", alt: "Um ponto cercado por oito vizinhos.", x: [-6, 6], y: [-6, 6], pontos: [{ id: "A", x: 0, y: 0 }, ...[[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].map(([x, y], i) => ({ id: `V${i}`, x, y, rotulo: false }))] },
+};
+for (const [nome, bruto] of Object.entries(casosDeBorda)) await png(desenharVisual(normalizarVisual(bruto), { tipo: "enunciado" }), nome);

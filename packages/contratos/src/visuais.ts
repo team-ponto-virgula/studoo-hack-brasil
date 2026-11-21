@@ -326,7 +326,9 @@ export type Tracejado = readonly [number, number];
  * - preenchimento `nonzero` (`REGRA_DE_PREENCHIMENTO`): os contornos de dentro (o miolo do "o", do "8", do Δ) vêm no sentido
  *   contrário do de fora, e é isso que os deixa vazados;
  * - ponta da linha `butt` e junção `round` (`PONTA_DA_LINHA`, `JUNCAO_DA_LINHA`): a ponta redonda alongaria cada traço do tracejado;
- * - `opacidade` vale para o primitivo inteiro (preenchimento e borda).
+ * - `opacidade` vale para o primitivo inteiro (preenchimento e borda);
+ * - o texto sobre o gráfico (rótulos, números e nomes dos eixos) leva um halo: um `caminho` só de contorno (borda `branco`, 6) que o
+ *   motor desenha por baixo dos textos e por cima da grade e dos traços, para nenhuma linha atravessar uma letra.
  */
 export type Primitiva =
   | { tipo: "linha"; x1: number; y1: number; x2: number; y2: number; cor: PapelDeCor; largura: number; tracejado?: Tracejado; opacidade?: number }
@@ -346,6 +348,16 @@ export const JUNCAO_DA_LINHA = "round" as const;
  */
 export const PISO_DO_TEXTO = 13;
 
+/** Retângulo de um texto do gráfico, do canto de cima à esquerda, em unidades de projeto. */
+export interface CaixaDeTexto {
+  tipo: "numero" | "rotulo" | "eixo" | "foco";
+  texto: string;
+  x: number;
+  y: number;
+  largura: number;
+  altura: number;
+}
+
 export interface Desenho {
   /** Sempre `LARGURA_DO_DESENHO`: o `viewBox` é `0 0 largura altura`. */
   largura: number;
@@ -357,6 +369,8 @@ export interface Desenho {
   menorTexto: number;
   /** Os textos que o desenho escreve, na ordem em que saem (rótulos, números dos eixos, legenda): para conferir e para o teste. */
   textos: string[];
+  /** Onde cada texto da figura (número de eixo, rótulo de ponto, nome de eixo) ficou, em unidades de projeto: o teste prova que nada bate em nada. */
+  caixas: CaixaDeTexto[];
   /** Fórmula mais larga que o desenho (depois de encolher até 85%): o cliente rola para o lado. Sem isto, tudo cabe. */
   larguraDoConteudo?: number;
 }

@@ -231,11 +231,6 @@
     "preenchimento": "eixo"
    },
    {
-    "tipo": "caminho",
-    "d": "#d97aa142cb:1173",
-    "preenchimento": "suave"
-   },
-   {
     "tipo": "linha",
     "x1": 143,
     "y1": 164,
@@ -246,8 +241,24 @@
    },
    {
     "tipo": "caminho",
-    "d": "#7d4f4df747:12594",
+    "d": "#47e3a2024b:24892",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
+    "d": "#76c3cd3079:13816",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#e4933c76c2:4383",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#0424e64080:6693",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -273,16 +284,6 @@
     "preenchimento": "especial",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#e4933c76c2:4383",
-    "preenchimento": "especialTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#0424e64080:6693",
-    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -563,11 +564,6 @@
     "preenchimento": "eixo"
    },
    {
-    "tipo": "caminho",
-    "d": "#d97aa142cb:1173",
-    "preenchimento": "suave"
-   },
-   {
     "tipo": "linha",
     "x1": 143,
     "y1": 164,
@@ -578,8 +574,24 @@
    },
    {
     "tipo": "caminho",
-    "d": "#7d4f4df747:12594",
+    "d": "#47e3a2024b:24892",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
+    "d": "#76c3cd3079:13816",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#e4933c76c2:4383",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#0424e64080:6693",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -605,16 +617,6 @@
     "preenchimento": "especial",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#e4933c76c2:4383",
-    "preenchimento": "especialTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#0424e64080:6693",
-    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -883,11 +885,6 @@
     "preenchimento": "eixo"
    },
    {
-    "tipo": "caminho",
-    "d": "#5b7ae847d7:1163",
-    "preenchimento": "suave"
-   },
-   {
     "tipo": "linha",
     "x1": 141.78,
     "y1": 178.67,
@@ -916,8 +913,29 @@
    },
    {
     "tipo": "caminho",
-    "d": "#a641d176aa:16924",
+    "d": "#dc894c9dc6:32933",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
+    "d": "#d7271ed5fa:18088",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#0b7a83a2ac:4407",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#57b9ccaaca:3700",
+    "preenchimento": "respostaTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#4092952c4e:6738",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -952,21 +970,6 @@
     "preenchimento": "especial",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#0b7a83a2ac:4407",
-    "preenchimento": "especialTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#57b9ccaaca:3700",
-    "preenchimento": "respostaTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#4092952c4e:6738",
-    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -1211,8 +1214,24 @@
    },
    {
     "tipo": "caminho",
+    "d": "#fdcde762a9:9663",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
     "d": "#787b88c806:7593",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#60b4eae2cf:933",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#950a364c5f:1137",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -1238,16 +1257,6 @@
     "preenchimento": "especial",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#60b4eae2cf:933",
-    "preenchimento": "especialTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#950a364c5f:1137",
-    "preenchimento": "texto"
    },
    {
     "tipo": "caminho",
@@ -1363,8 +1372,24 @@
    },
    {
     "tipo": "caminho",
+    "d": "#fdcde762a9:9663",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
     "d": "#787b88c806:7593",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#60b4eae2cf:933",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#950a364c5f:1137",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -1390,16 +1415,6 @@
     "preenchimento": "especial",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#60b4eae2cf:933",
-    "preenchimento": "especialTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#950a364c5f:1137",
-    "preenchimento": "texto"
    },
    {
     "tipo": "caminho",
@@ -1515,8 +1530,29 @@
    },
    {
     "tipo": "caminho",
+    "d": "#fbfb91da61:10495",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
     "d": "#5f5ff80929:7593",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#f72c7b3c00:933",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#16bf58195f:832",
+    "preenchimento": "respostaTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#d41c177be4:1137",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -1551,21 +1587,6 @@
     "preenchimento": "especial",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#f72c7b3c00:933",
-    "preenchimento": "especialTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#16bf58195f:832",
-    "preenchimento": "respostaTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#d41c177be4:1137",
-    "preenchimento": "texto"
    },
    {
     "tipo": "caminho",
@@ -1930,11 +1951,6 @@
     "preenchimento": "eixo"
    },
    {
-    "tipo": "caminho",
-    "d": "#4a01323922:1173",
-    "preenchimento": "suave"
-   },
-   {
     "tipo": "linha",
     "x1": 121,
     "y1": 208,
@@ -1945,8 +1961,19 @@
    },
    {
     "tipo": "caminho",
-    "d": "#ca361e99f9:14010",
+    "d": "#da859088d2:22630",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
+    "d": "#27e3dbc3d1:15253",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#bdc787965f:7377",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -1965,11 +1992,6 @@
     "preenchimento": "dado",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#bdc787965f:7377",
-    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -2249,11 +2271,6 @@
     "preenchimento": "eixo"
    },
    {
-    "tipo": "caminho",
-    "d": "#4a01323922:1173",
-    "preenchimento": "suave"
-   },
-   {
     "tipo": "linha",
     "x1": 121,
     "y1": 208,
@@ -2264,8 +2281,19 @@
    },
    {
     "tipo": "caminho",
-    "d": "#ca361e99f9:14010",
+    "d": "#da859088d2:22630",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
+    "d": "#27e3dbc3d1:15253",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#bdc787965f:7377",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -2284,11 +2312,6 @@
     "preenchimento": "dado",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#bdc787965f:7377",
-    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -2568,11 +2591,6 @@
     "preenchimento": "eixo"
    },
    {
-    "tipo": "caminho",
-    "d": "#4a01323922:1173",
-    "preenchimento": "suave"
-   },
-   {
     "tipo": "linha",
     "x1": 121,
     "y1": 208,
@@ -2583,8 +2601,24 @@
    },
    {
     "tipo": "caminho",
-    "d": "#ca361e99f9:14010",
+    "d": "#d10acdc28b:26251",
+    "borda": "branco",
+    "larguraDaBorda": 6
+   },
+   {
+    "tipo": "caminho",
+    "d": "#27e3dbc3d1:15253",
     "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#274b2b0721:3621",
+    "preenchimento": "respostaTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#bdc787965f:7377",
+    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",
@@ -2612,16 +2646,6 @@
     "preenchimento": "resposta",
     "borda": "branco",
     "larguraDaBorda": 2
-   },
-   {
-    "tipo": "caminho",
-    "d": "#274b2b0721:3621",
-    "preenchimento": "respostaTexto"
-   },
-   {
-    "tipo": "caminho",
-    "d": "#bdc787965f:7377",
-    "preenchimento": "texto"
    },
    {
     "tipo": "circulo",

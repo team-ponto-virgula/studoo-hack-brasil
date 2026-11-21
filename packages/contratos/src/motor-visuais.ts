@@ -1,6 +1,6 @@
 import { falarFormula, lerFormula, type NoFormula } from "./formula";
 import { caixaDaFormula, deslocar, pisar, textoEmCaixa, type Caixa, type Comando, type Marca } from "./motor-formula";
-import { arredondar, caminhoDoTexto, deslocarCaminho, larguraDoTexto } from "./texto-vetorial";
+import { arredondar, caminhoDoTexto, deslocarCaminho, larguraDoTexto, type PesoDoTexto } from "./texto-vetorial";
 import {
   LARGURA_DO_DESENHO,
   PALETA_DO_DESENHO,
@@ -40,30 +40,46 @@ function comandosParaD(comandos: readonly Comando[]): string {
   return d;
 }
 
-/** As marcas na ordem em que se desenham; textos seguidos da mesma cor viram um caminho só (o teto de primitivas agradece). */
+/** O halo do texto sobre o gráfico: contorno branco de 3 unidades para cada lado, por baixo do texto. */
+const LARGURA_DO_HALO = 6;
+
+/**
+ * As marcas na ordem em que se desenham. Textos seguidos viram caminhos (um por cor, o teto de primitivas agradece); os que levam
+ * `halo` (rótulos, números e nomes dos eixos, sobre grade e traços) ganham antes dos caminhos um contorno branco só, por baixo de
+ * todos, para o texto nunca se perder em cima de uma linha.
+ */
 export function emitir(marcas: readonly Marca[]): { primitivas: Primitiva[]; menorTexto: number; textos: string[] } {
   const primitivas: Primitiva[] = [];
   const textos: string[] = [];
   let menor = Infinity;
-  let corrida: { cor: PapelDeCor; opacidade?: number; d: string } | null = null;
-  const fechar = () => {
-    if (corrida?.d) {
+  let grupo: Extract<Marca, { m: "texto" }>[] = [];
+  const fecharGrupo = () => {
+    if (grupo.length === 0) return;
+    const corridas: { cor: PapelDeCor; opacidade?: number; d: string }[] = [];
+    let todos = "";
+    for (const marca of grupo) {
+      const d = caminhoDoTexto(marca.texto, marca.x, marca.y, marca.tamanho, marca.peso, marca.italico);
+      if (!d) continue;
+      todos += d;
+      const ultima = corridas[corridas.length - 1];
+      if (ultima && ultima.cor === marca.cor && ultima.opacidade === marca.opacidade) ultima.d += d;
+      else corridas.push({ cor: marca.cor, ...(marca.opacidade !== undefined ? { opacidade: marca.opacidade } : {}), d });
+    }
+    if (grupo[0].halo === true && todos) primitivas.push({ tipo: "caminho", d: todos, borda: "branco", larguraDaBorda: LARGURA_DO_HALO });
+    for (const corrida of corridas) {
       primitivas.push({ tipo: "caminho", d: corrida.d, preenchimento: corrida.cor, ...(corrida.opacidade !== undefined ? { opacidade: corrida.opacidade } : {}) });
     }
-    corrida = null;
+    grupo = [];
   };
   for (const marca of marcas) {
     if (marca.m === "texto") {
       menor = Math.min(menor, marca.tamanho);
       textos.push(marca.texto);
-      if (corrida && (corrida.cor !== marca.cor || corrida.opacidade !== marca.opacidade)) fechar();
-      const d = caminhoDoTexto(marca.texto, marca.x, marca.y, marca.tamanho, marca.peso, marca.italico);
-      if (!d) continue;
-      corrida = corrida ?? { cor: marca.cor, ...(marca.opacidade !== undefined ? { opacidade: marca.opacidade } : {}), d: "" };
-      corrida.d += d;
+      if (grupo.length > 0 && (grupo[0].halo === true) !== (marca.halo === true)) fecharGrupo();
+      grupo.push(marca);
       continue;
     }
-    fechar();
+    fecharGrupo();
     switch (marca.m) {
       case "linha":
         primitivas.push({
@@ -97,13 +113,13 @@ export function emitir(marcas: readonly Marca[]): { primitivas: Primitiva[]; men
         break;
     }
   }
-  fechar();
+  fecharGrupo();
   return { primitivas, menorTexto: Number.isFinite(menor) ? menor : PISO_DO_TEXTO, textos };
 }
 
 function desenhoDe(marcas: readonly Marca[], altura: number, descricao: string, extra: Partial<Desenho> = {}): Desenho {
   const { primitivas, menorTexto, textos } = emitir(marcas);
-  return { largura: LARGURA_DO_DESENHO, altura: r2(altura), primitivas, descricao, menorTexto, textos, ...extra };
+  return { largura: LARGURA_DO_DESENHO, altura: r2(altura), primitivas, descricao, menorTexto, textos, caixas: [], ...extra };
 }
 
 /* ----- Números e rótulos ----- */
@@ -189,6 +205,8 @@ const TAMANHO_DA_LEGENDA = 14;
 const TAMANHO_DO_NUMERO = 13;
 const TAMANHO_DO_NOME_DO_EIXO = 14;
 const FOLGA_DA_SETA = 16;
+/** A altura do traço de um dígito (a caixa de um número de eixo é a do traço, não a da linha: assim ela não invade o vizinho). */
+const ALTURA_DO_DIGITO = 9.5;
 
 const COR_DO_ROTULO: Readonly<Record<PapelEfetivo, PapelDeCor>> = { dado: "texto", especial: "especialTexto", procurado: "procuradoTexto", resposta: "respostaTexto" };
 
@@ -249,9 +267,17 @@ function losango(cx: number, cy: number, meia: number): readonly Comando[] {
   return [["M", cx, cy - meia], ["L", cx + meia, cy], ["L", cx, cy + meia], ["L", cx - meia, cy], ["Z"]];
 }
 
+/** Rótulo que perdeu as coordenadas no desenho por falta de lugar: elas vão para a legenda, em linha própria, para nunca se perder. */
+interface CoordenadasNaLegenda {
+  texto: string;
+  cor: PapelDeCor;
+}
+
 /** A legenda em linhas de até 288 de largura, a partir de (16, topo). Devolve as marcas e a altura que ocupa. */
-function legenda(itens: readonly ItemDaLegenda[], escondidos: readonly string[], topo: number): { marcas: Marca[]; altura: number } {
-  if (itens.length === 0) return { marcas: [], altura: 0 };
+function legenda(
+  itens: readonly ItemDaLegenda[], escondidos: readonly string[], perdidas: readonly CoordenadasNaLegenda[], topo: number,
+): { marcas: Marca[]; altura: number } {
+  if (itens.length === 0 && perdidas.length === 0) return { marcas: [], altura: 0 };
   const marcas: Marca[] = [];
   const entradas: { largura: number; fazer: (x: number, y: number) => Marca[] }[] = itens.map((item) => ({
     largura: 12 + 5 + larguraDoTexto(item.palavra, TAMANHO_DA_LEGENDA, 700),
@@ -268,14 +294,26 @@ function legenda(itens: readonly ItemDaLegenda[], escondidos: readonly string[],
     });
   }
   let x = 16;
-  let linha = 0;
+  let linha = -1;
+  const proximaLinha = () => {
+    x = 16;
+    linha += 1;
+  };
+  if (entradas.length > 0) proximaLinha();
   for (const entrada of entradas) {
-    if (x > 16 && x + entrada.largura > LARGURA_DO_DESENHO - 16) {
-      x = 16;
-      linha += 1;
-    }
+    if (x > 16 && x + entrada.largura > LARGURA_DO_DESENHO - 16) proximaLinha();
     marcas.push(...entrada.fazer(x, topo + 14 + linha * ALTURA_DA_LINHA_DA_LEGENDA));
     x += entrada.largura + 16;
+  }
+  // As coordenadas que o rótulo perdeu, numa linha própria.
+  if (perdidas.length > 0) {
+    proximaLinha();
+    for (const perdida of perdidas) {
+      const largura = larguraDoTexto(perdida.texto, TAMANHO_DA_LEGENDA, 800);
+      if (x > 16 && x + largura > LARGURA_DO_DESENHO - 16) proximaLinha();
+      marcas.push({ m: "texto", texto: perdida.texto, x, y: topo + 14 + linha * ALTURA_DA_LINHA_DA_LEGENDA, tamanho: TAMANHO_DA_LEGENDA, peso: 800, italico: false, cor: perdida.cor });
+      x += largura + 16;
+    }
   }
   return { marcas, altura: (linha + 1) * ALTURA_DA_LINHA_DA_LEGENDA + 2 };
 }
@@ -314,46 +352,62 @@ function multiplos(de: number, ate: number, passo: number): number[] {
   return valores;
 }
 
+const FOLGA_DO_ROTULO_DOS_NUMEROS = 2;
+/** O rótulo só com o nome nunca encosta em número de eixo: no mínimo uma unidade de glifo (um dígito) de folga. */
+const FOLGA_DO_NOME_DOS_NUMEROS = 8;
+
+const inflar = (ret: Ret, folga: number): Ret => ({ x: ret.x - folga, y: ret.y - folga, l: ret.l + 2 * folga, a: ret.a + 2 * folga });
+
+interface LugarDoRotulo {
+  texto: string;
+  x: number;
+  y: number;
+  l: number;
+  a: number;
+}
+
 /**
  * O rótulo de um ponto procura um lado que não cubra outro ponto, número de eixo, rótulo ou eixo: direita, esquerda, acima, abaixo
- * e depois as diagonais. Se nenhum lado couber o rótulo inteiro ("A (1, 2)"), fica só o nome ("A") no primeiro lado livre; sem
- * nenhum livre, o nome no lado em que bate menos.
+ * e depois as diagonais; entre os lados livres ganha o que cobre menos traço. Se nenhum lado couber o rótulo inteiro ("A (1, 2)"),
+ * fica só o nome ("A") no lado livre mais perto (até 6 unidades de afastamento: mais longe o nome deixaria de parecer do ponto),
+ * sempre a uma unidade de glifo de qualquer número de eixo. Sem lugar nem para o nome, devolve `null`. Nos dois casos, quem chama
+ * põe as coordenadas na legenda (`soONome` pula direto para o nome).
  */
 function acharLugarDoRotulo(
-  cx: number, cy: number, raioDoPonto: number, completo: string, nome: string, obstaculos: readonly Ret[], limites: { esquerda: number; direita: number; topo: number },
-  moles: readonly Ret[] = [],
-): { texto: string; x: number; y: number; l: number; a: number } {
+  cx: number, cy: number, raioDoPonto: number, completo: string, nome: string, obstaculos: readonly Ret[], numeros: readonly Ret[],
+  limites: { esquerda: number; direita: number; topo: number }, moles: readonly Ret[] = [], soONome = false,
+): LugarDoRotulo | null {
   const lugares = (l: number, a: number, anel = 0) => {
     const folga = raioDoPonto + 4 + anel;
     return [
-    { x: cx + folga, y: cy - a / 2 },
-    { x: cx - folga - l, y: cy - a / 2 },
-    { x: cx - l / 2, y: cy - folga - a },
-    { x: cx - l / 2, y: cy + folga },
-    { x: cx + folga - 3, y: cy - folga - a + 2 },
-    { x: cx - folga - l + 3, y: cy - folga - a + 2 },
-    { x: cx + folga - 3, y: cy + folga - 2 },
-    { x: cx - folga - l + 3, y: cy + folga - 2 },
+      { x: cx + folga, y: cy - a / 2 },
+      { x: cx - folga - l, y: cy - a / 2 },
+      { x: cx - l / 2, y: cy - folga - a },
+      { x: cx - l / 2, y: cy + folga },
+      { x: cx + folga - 3, y: cy - folga - a + 2 },
+      { x: cx - folga - l + 3, y: cy - folga - a + 2 },
+      { x: cx + folga - 3, y: cy + folga - 2 },
+      { x: cx - folga - l + 3, y: cy + folga - 2 },
     ];
   };
-  const custo = (ret: Ret) => {
-    const fora = ret.x < limites.esquerda || ret.x + ret.l > limites.direita || ret.y < limites.topo ? 1e6 : 0;
-    return fora + obstaculos.reduce((soma, obstaculo) => soma + sobreposicao(ret, obstaculo), 0);
+  const livre = (ret: Ret, folgaDosNumeros: number) => {
+    if (ret.x < limites.esquerda || ret.x + ret.l > limites.direita || ret.y < limites.topo) return false;
+    return !obstaculos.some((obstaculo) => bate(ret, obstaculo)) && !numeros.some((numero) => bate(ret, inflar(numero, folgaDosNumeros)));
   };
-  // 1. o rótulo inteiro em algum lado; 2. só o nome, no lado livre mais perto (afastando de 2 em 2); 3. o nome onde bate menos.
-  // Entre os lados livres, o que cobre menos dos traços (segmentos) ganha; o que não cobre nenhum, mais ainda.
-  const tentativas: (readonly [string, number])[] = [[completo, 0], [nome, 0], ...Array.from({ length: 10 }, (_, i) => [nome, 2 * (i + 1)] as const)];
-  for (const [texto, anel] of tentativas) {
+  // 1. o rótulo inteiro em algum lado; 2. só o nome, no lado livre mais perto (afastando de 2 em 2).
+  const tentativas: (readonly [string, number, number])[] = [
+    ...(soONome ? [] : [[completo, 0, FOLGA_DO_ROTULO_DOS_NUMEROS] as const]),
+    ...Array.from({ length: 4 }, (_, i) => [nome, 2 * i, FOLGA_DO_NOME_DOS_NUMEROS] as const),
+  ];
+  for (const [texto, anel, folgaDosNumeros] of tentativas) {
     const { l, a } = caixaDoRotulo(texto);
     const livres = lugares(l, a, anel)
-      .filter((lugar) => custo({ ...lugar, l, a }) === 0)
+      .filter((lugar) => livre({ ...lugar, l, a }, folgaDosNumeros))
       .map((lugar, ordem) => ({ lugar, ordem, traco: moles.reduce((soma, mole) => soma + sobreposicao({ ...lugar, l, a }, mole), 0) }))
       .sort((x, y) => x.traco - y.traco || x.ordem - y.ordem);
     if (livres.length) return { texto, ...livres[0].lugar, l, a };
   }
-  const { l, a } = caixaDoRotulo(nome);
-  const melhor = lugares(l, a).map((lugar) => ({ lugar, custo: custo({ ...lugar, l, a }) })).sort((x, y) => x.custo - y.custo)[0].lugar;
-  return { texto: nome, ...melhor, l, a };
+  return null;
 }
 
 /* ----- Plano cartesiano ----- */
@@ -368,9 +422,36 @@ interface PontoDesenhado {
   completo: string | null;
 }
 
+/**
+ * O plano. O rótulo que não coube inteiro ("A (1, 2)") vira só o nome (ou some, se nem o nome cabe) e as coordenadas vão para a
+ * legenda, em linha própria. Como a legenda ocupa altura, a altura muda a escala e a escala muda onde os rótulos cabem, o
+ * desenho se refaz até estabilizar.
+ */
 export function desenharPlano(visual: VisualPlano, contexto: ContextoDoDesenho, opcoes: OpcoesDaFigura = {}): Desenho {
+  const naLegenda = new Set<string>();
+  for (let volta = 0; volta < 6; volta += 1) {
+    const feito = desenharPlanoUmaVez(visual, contexto, opcoes, naLegenda);
+    if (feito.novos.length === 0) return feito.desenho;
+    feito.novos.forEach((id) => naLegenda.add(id));
+  }
+  // Não estabilizou: todos os rótulos viram só o nome, com as coordenadas na legenda (assim sempre estabiliza).
+  return desenharPlanoUmaVez(visual, contexto, opcoes, new Set(visual.pontos.map((ponto) => ponto.id))).desenho;
+}
+
+function desenharPlanoUmaVez(
+  visual: VisualPlano, contexto: ContextoDoDesenho, opcoes: OpcoesDaFigura, forcados: ReadonlySet<string>,
+): { desenho: Desenho; novos: string[] } {
+  const rotuloCompleto = (ponto: VisualPlano["pontos"][number]) => rotuloDoPonto(ponto.id, [ponto.x as number, ponto.y as number]);
+  const doContexto = visual.pontos.flatMap((ponto) => {
+    const papel = papelNoContexto(ponto.papel, contexto);
+    return papel === "procurado" || ponto.x === undefined || ponto.y === undefined ? [] : [{ ponto, papel }];
+  });
+  const emLegenda: CoordenadasNaLegenda[] = doContexto
+    .filter(({ ponto }) => ponto.rotulo !== false && forcados.has(ponto.id))
+    .map(({ ponto, papel }) => ({ texto: rotuloCompleto(ponto), cor: COR_DO_ROTULO[papel] }));
+
   const legendaPrevia = itensDaLegenda(visual.pontos, contexto);
-  const alturaDaLegenda = legendaPrevia.itens.length ? legenda(legendaPrevia.itens, legendaPrevia.escondidos, 0).altura + 8 : 0;
+  const alturaDaLegenda = legendaPrevia.itens.length || emLegenda.length ? legenda(legendaPrevia.itens, legendaPrevia.escondidos, emLegenda, 0).altura + 8 : 0;
   const larguraDaGrade = GRADE.direita - GRADE.esquerda;
   const reservado = GRADE.topo + GRADE.bandaDeBaixo + alturaDaLegenda + 8;
   const maximo = Math.max(80, (opcoes.alturaMaxima ?? 320) - reservado);
@@ -399,20 +480,25 @@ export function desenharPlano(visual: VisualPlano, contexto: ContextoDoDesenho, 
   const eixoX = Math.min(Math.max(X(0), esquerda), direita);
   const eixoY = Math.min(Math.max(Y(0), topo), fundo);
 
-  const pontos: PontoDesenhado[] = [];
-  for (const ponto of visual.pontos) {
-    const papel = papelNoContexto(ponto.papel, contexto);
-    if (papel === "procurado" || ponto.x === undefined || ponto.y === undefined) continue;
-    pontos.push({ id: ponto.id, papel, x: X(ponto.x), y: Y(ponto.y), completo: ponto.rotulo === false ? null : rotuloDoPonto(ponto.id, [ponto.x, ponto.y]) });
-  }
+  const pontos: PontoDesenhado[] = doContexto.map(({ ponto, papel }) => ({
+    id: ponto.id, papel, x: X(ponto.x as number), y: Y(ponto.y as number), completo: ponto.rotulo === false ? null : rotuloCompleto(ponto),
+  }));
   const visiveis = new Map(pontos.map((ponto) => [ponto.id, ponto]));
 
-  const marcas: Marca[] = [];
+  // Camadas, de baixo para cima: grade, polígonos, eixos, guias e segmentos; depois, com halo, os textos; por fim os pontos.
+  const base: Marca[] = [];
+  const textos: Marca[] = [];
+  const caixas: Desenho["caixas"] = [];
+  const caixa = (tipo: Desenho["caixas"][number]["tipo"], texto: string, ret: Ret) =>
+    caixas.push({ tipo, texto, x: r2(ret.x), y: r2(ret.y), largura: r2(ret.l), altura: r2(ret.a) });
+  const escrever = (texto: string, x: number, y: number, tamanho: number, peso: PesoDoTexto, cor: PapelDeCor, italico = false): Marca =>
+    ({ m: "texto", texto, x, y, tamanho, peso, italico, cor, halo: true });
+
   // 1. Grade: uma linha por unidade até 20 unidades no eixo.
   const passoX = passoDaGrade(xMax - xMin);
   const passoY = passoDaGrade(yMax - yMin);
-  for (const v of multiplos(xMin, xMax, passoX)) marcas.push({ m: "linha", x1: X(v), y1: topo, x2: X(v), y2: fundo, cor: "grade", largura: 1 });
-  for (const v of multiplos(yMin, yMax, passoY)) marcas.push({ m: "linha", x1: esquerda, y1: Y(v), x2: direita, y2: Y(v), cor: "grade", largura: 1 });
+  for (const v of multiplos(xMin, xMax, passoX)) base.push({ m: "linha", x1: X(v), y1: topo, x2: X(v), y2: fundo, cor: "grade", largura: 1 });
+  for (const v of multiplos(yMin, yMax, passoY)) base.push({ m: "linha", x1: esquerda, y1: Y(v), x2: direita, y2: Y(v), cor: "grade", largura: 1 });
 
   // 2. Polígonos (preenchimento) e o contorno de cada lado.
   const lados: [string, string][] = [];
@@ -427,7 +513,7 @@ export function desenharPlano(visual: VisualPlano, contexto: ContextoDoDesenho, 
     const vertices = poligono.pontos.map((id) => visiveis.get(id));
     if (vertices.some((vertice) => !vertice)) continue;
     const cmds: Comando[] = vertices.map((vertice, i) => [i === 0 ? "M" : "L", vertice!.x, vertice!.y] as Comando);
-    marcas.push({ m: "caminho", cmds: [...cmds, ["Z"]], preenchimento: "preenchimento", opacidade: 0.07 });
+    base.push({ m: "caminho", cmds: [...cmds, ["Z"]], preenchimento: "preenchimento", opacidade: 0.07 });
   }
   for (const poligono of visual.poligonos ?? []) {
     poligono.pontos.forEach((id, i) => juntarLado(id, poligono.pontos[(i + 1) % poligono.pontos.length]));
@@ -437,26 +523,28 @@ export function desenharPlano(visual: VisualPlano, contexto: ContextoDoDesenho, 
   // 3. Eixos: a seta começa uma folga depois da última marca.
   const fimDoEixoX = direita + FOLGA_DA_SETA;
   const fimDoEixoY = topo - FOLGA_DA_SETA;
-  marcas.push({ m: "linha", x1: esquerda, y1: eixoY, x2: fimDoEixoX, y2: eixoY, cor: "eixo", largura: 2 });
-  marcas.push({ m: "linha", x1: eixoX, y1: fundo, x2: eixoX, y2: fimDoEixoY, cor: "eixo", largura: 2 });
-  marcas.push(seta(fimDoEixoX + 8, eixoY, "direita", "eixo"), seta(eixoX, fimDoEixoY - 8, "cima", "eixo"));
-  marcas.push({ m: "texto", texto: "x", x: fimDoEixoX + 4, y: eixoY + 18, tamanho: TAMANHO_DO_NOME_DO_EIXO, peso: 700, italico: true, cor: "suave" });
-  marcas.push({ m: "texto", texto: "y", x: eixoX + 8, y: fimDoEixoY - 3, tamanho: TAMANHO_DO_NOME_DO_EIXO, peso: 700, italico: true, cor: "suave" });
+  base.push({ m: "linha", x1: esquerda, y1: eixoY, x2: fimDoEixoX, y2: eixoY, cor: "eixo", largura: 2 });
+  base.push({ m: "linha", x1: eixoX, y1: fundo, x2: eixoX, y2: fimDoEixoY, cor: "eixo", largura: 2 });
+  base.push(seta(fimDoEixoX + 8, eixoY, "direita", "eixo"), seta(eixoX, fimDoEixoY - 8, "cima", "eixo"));
 
-  // Obstáculos dos rótulos: os eixos, os nomes dos eixos, os pontos e, com prioridade, os números dos eixos (que não se movem).
+  // Obstáculos dos rótulos: os eixos, os nomes dos eixos e os pontos; os números dos eixos ficam à parte (têm folga própria).
   const obstaculos: Ret[] = [
     { x: eixoX - 2, y: fimDoEixoY - 8, l: 4, a: fundo - fimDoEixoY + 8 },
     { x: esquerda, y: eixoY - 2, l: fimDoEixoX + 8 - esquerda, a: 4 },
-    { x: fimDoEixoX + 2, y: eixoY + 5, l: 14, a: 17 },
-    { x: eixoX + 6, y: fimDoEixoY - 14, l: 12, a: 16 },
   ];
+  const nomeDoX = { x: fimDoEixoX + 4, y: eixoY + 7, l: larguraDoTexto("x", TAMANHO_DO_NOME_DO_EIXO, 700), a: 15 };
+  const nomeDoY = { x: eixoX + 8, y: fimDoEixoY - 14, l: larguraDoTexto("y", TAMANHO_DO_NOME_DO_EIXO, 700), a: 15 };
+  textos.push(escrever("x", nomeDoX.x, eixoY + 18, TAMANHO_DO_NOME_DO_EIXO, 700, "suave", true), escrever("y", nomeDoY.x, fimDoEixoY - 3, TAMANHO_DO_NOME_DO_EIXO, 700, "suave", true));
+  caixa("eixo", "x", nomeDoX);
+  caixa("eixo", "y", nomeDoY);
+  obstaculos.push({ ...nomeDoX, x: nomeDoX.x - 2, l: nomeDoX.l + 4 }, { ...nomeDoY, x: nomeDoY.x - 2, l: nomeDoY.l + 4 });
   const caixaDoPonto = (ponto: PontoDesenhado): Ret => ({ x: ponto.x - 10, y: ponto.y - 10, l: 20, a: 20 });
 
-  // 4. Linhas-guia, com o valor do eixo em foco (e o número do eixo que ele cobre sai: o foco é o próprio número).
-  const guias: Marca[] = [];
-  const valoresEmFoco: Marca[] = [];
+  // 4. Linhas-guia, com o valor do eixo em foco (o número do eixo que ele cobre sai: o foco é o próprio número).
   const emFocoNoX = new Set<number>();
   const emFocoNoY = new Set<number>();
+  const focos: Marca[] = [];
+  const textosDoFoco: Marca[] = [];
   for (const guia of visual.guias ?? []) {
     const ponto = visiveis.get(guia.ponto);
     const original = visual.pontos.find((outro) => outro.id === guia.ponto);
@@ -465,70 +553,76 @@ export function desenharPlano(visual: VisualPlano, contexto: ContextoDoDesenho, 
     (guia.eixo === "x" ? emFocoNoX : emFocoNoY).add(destaque);
     const texto = numeroParaTela(destaque);
     const largura = larguraDoTexto(texto, TAMANHO_DO_NUMERO, 700);
-    guias.push(
+    base.push(
       guia.eixo === "x"
         ? { m: "linha", x1: ponto.x, y1: ponto.y, x2: ponto.x, y2: eixoY, cor: "suave", largura: 2, tracejado: [4, 4] }
         : { m: "linha", x1: ponto.x, y1: ponto.y, x2: eixoX, y2: ponto.y, cor: "suave", largura: 2, tracejado: [4, 4] },
     );
-    const caixa: Ret = guia.eixo === "x"
+    const retDoFoco: Ret = guia.eixo === "x"
       ? { x: ponto.x - largura / 2 - 3, y: eixoY + 4, l: largura + 6, a: 17 }
       : { x: eixoX - largura - 9, y: ponto.y - 9, l: largura + 6, a: 17 };
-    valoresEmFoco.push(
-      { m: "retangulo", x: caixa.x, y: caixa.y, largura: caixa.l, altura: caixa.a, raio: 4, preenchimento: "focoFundo" },
-      { m: "texto", texto, x: caixa.x + 3, y: caixa.y + 13, tamanho: TAMANHO_DO_NUMERO, peso: 700, italico: false, cor: "focoTexto" },
-    );
+    focos.push({ m: "retangulo", x: retDoFoco.x, y: retDoFoco.y, largura: retDoFoco.l, altura: retDoFoco.a, raio: 4, preenchimento: "focoFundo" });
+    textosDoFoco.push(escrever(texto, retDoFoco.x + 3, retDoFoco.y + 13, TAMANHO_DO_NUMERO, 700, "focoTexto"));
+    caixa("foco", texto, retDoFoco);
+    obstaculos.push(retDoFoco);
   }
-  marcas.push(...guias);
 
   // 5. Segmentos.
   for (const [de, ate] of lados) {
     const a = visiveis.get(de)!;
     const b = visiveis.get(ate)!;
-    marcas.push({ m: "linha", x1: a.x, y1: a.y, x2: b.x, y2: b.y, cor: "segmento", largura: 3 });
+    base.push({ m: "linha", x1: a.x, y1: a.y, x2: b.x, y2: b.y, cor: "segmento", largura: 3 });
   }
 
   // 6. Números dos eixos: lugar fixo e prioridade; nenhum rótulo de ponto os apaga.
-  const numeros: Marca[] = [];
+  const numerosDeEixo: Ret[] = [];
   const noX = passoDosNumeros(xMax - xMin, passoX, unidade, 24);
   const noY = passoDosNumeros(yMax - yMin, passoY, unidade, 16);
   const baseDoX = eixoY + 17;
+  const numeros: Marca[] = [];
   for (const v of multiplos(xMin, xMax, noX)) {
     if (v === 0 || emFocoNoX.has(v)) continue;
     const texto = numeroParaTela(v);
     const largura = larguraDoTexto(texto, TAMANHO_DO_NUMERO, 700);
-    const caixa: Ret = { x: X(v) - largura / 2, y: baseDoX - 10, l: largura, a: 13 };
-    numeros.push({ m: "texto", texto, x: caixa.x, y: baseDoX, tamanho: TAMANHO_DO_NUMERO, peso: 700, italico: false, cor: "suave" });
-    obstaculos.push(caixa);
+    const ret: Ret = { x: X(v) - largura / 2, y: baseDoX - ALTURA_DO_DIGITO - 0.3, l: largura, a: ALTURA_DO_DIGITO + 0.7 };
+    numeros.push(escrever(texto, ret.x, baseDoX, TAMANHO_DO_NUMERO, 700, "suave"));
+    numerosDeEixo.push(ret);
+    caixa("numero", texto, ret);
   }
   for (const v of multiplos(yMin, yMax, noY)) {
     if (v === 0 || emFocoNoY.has(v)) continue;
     const texto = numeroParaTela(v);
     const largura = larguraDoTexto(texto, TAMANHO_DO_NUMERO, 700);
-    const caixa: Ret = { x: eixoX - 6 - largura, y: Y(v) - 5.5, l: largura, a: 13 };
-    numeros.push({ m: "texto", texto, x: caixa.x, y: Y(v) + 4.5, tamanho: TAMANHO_DO_NUMERO, peso: 700, italico: false, cor: "suave" });
-    obstaculos.push(caixa);
+    const ret: Ret = { x: eixoX - 6 - largura, y: Y(v) - ALTURA_DO_DIGITO / 2 - 0.4, l: largura, a: ALTURA_DO_DIGITO + 0.7 };
+    numeros.push(escrever(texto, ret.x, Y(v) + ALTURA_DO_DIGITO / 2, TAMANHO_DO_NUMERO, 700, "suave"));
+    numerosDeEixo.push(ret);
+    caixa("numero", texto, ret);
   }
-  // O 0 da origem é o único que escolhe o canto, para não bater nos vizinhos.
+  // O 0 da origem é o único que escolhe o canto: o mais longe de qualquer número ou ponto (assim "−1" e "0" não se leem "−10").
   const larguraDoZero = larguraDoTexto("0", TAMANHO_DO_NUMERO, 700);
   const cantos = [
-    { x: eixoX - 6 - larguraDoZero, y: eixoY + 7 },
     { x: eixoX + 6, y: eixoY + 7 },
+    { x: eixoX - 6 - larguraDoZero, y: eixoY + 7 },
     { x: eixoX - 6 - larguraDoZero, y: eixoY - 20 },
     { x: eixoX + 6, y: eixoY - 20 },
   ];
-  const vizinhos = [...obstaculos, ...pontos.map(caixaDoPonto)];
-  const canto = cantos.find((c) => !vizinhos.some((outro) => bate({ x: c.x, y: c.y, l: larguraDoZero, a: 13 }, outro))) ?? cantos[0];
-  numeros.push({ m: "texto", texto: "0", x: canto.x, y: canto.y + 10, tamanho: TAMANHO_DO_NUMERO, peso: 700, italico: false, cor: "suave" });
-  obstaculos.push({ x: canto.x, y: canto.y, l: larguraDoZero, a: 13 }, ...valoresEmFoco.flatMap((marca) => (marca.m === "retangulo" ? [{ x: marca.x, y: marca.y, l: marca.largura, a: marca.altura }] : [])));
-  marcas.push(...numeros, ...valoresEmFoco);
+  const vizinhos = [...obstaculos, ...numerosDeEixo, ...pontos.map((ponto) => ({ x: ponto.x - 8, y: ponto.y - 8, l: 16, a: 16 }))];
+  const doZero = (c: { x: number; y: number }): Ret => ({ x: c.x, y: c.y + 0.4, l: larguraDoZero, a: ALTURA_DO_DIGITO + 0.7 });
+  const distancia = (a: Ret, b: Ret) => Math.hypot(Math.max(0, a.x - (b.x + b.l), b.x - (a.x + a.l)), Math.max(0, a.y - (b.y + b.a), b.y - (a.y + a.a)));
+  const folgaDoCanto = (c: { x: number; y: number }) => Math.min(...vizinhos.map((outro) => distancia(doZero(c), outro)));
+  const numerosQueBatem = (c: { x: number; y: number }) => numerosDeEixo.filter((numero) => bate(doZero(c), numero)).length;
+  const livres = cantos.filter((c) => !vizinhos.some((outro) => bate(doZero(c), outro)));
+  // O canto livre de tudo e mais folgado; senão o que não bate em número nenhum (um ponto só tapa um pedaço da caixa, nunca o
+  // dígito); senão o que bate em menos números.
+  const canto = livres.length > 0
+    ? [...livres].sort((a, b) => folgaDoCanto(b) - folgaDoCanto(a))[0]
+    : cantos.find((c) => numerosQueBatem(c) === 0) ?? [...cantos].sort((a, b) => numerosQueBatem(a) - numerosQueBatem(b))[0];
+  const retDoZero = doZero(canto);
+  numeros.push(escrever("0", canto.x, canto.y + 10, TAMANHO_DO_NUMERO, 700, "suave"));
+  numerosDeEixo.push(retDoZero);
+  caixa("numero", "0", retDoZero);
 
-  // 7. Pontos.
-  for (const ponto of pontos) {
-    if (ponto.papel === "especial") marcas.push({ m: "caminho", cmds: losango(ponto.x, ponto.y, 8.5), preenchimento: "especial", borda: "branco", larguraDaBorda: 2 });
-    else marcas.push({ m: "circulo", cx: ponto.x, cy: ponto.y, raio: ponto.papel === "resposta" ? 8 : 6, preenchimento: ponto.papel === "resposta" ? "resposta" : "dado", borda: "branco", larguraDaBorda: 2 });
-  }
-
-  // 8. Rótulos dos pontos: quem se move é o rótulo.
+  // 7. Rótulos dos pontos: quem se move é o rótulo; sem lugar para o inteiro, só o nome, e as coordenadas vão para a legenda.
   const tracos: Ret[] = lados.flatMap(([de, ate]) => {
     const a = visiveis.get(de)!;
     const b = visiveis.get(ate)!;
@@ -536,25 +630,35 @@ export function desenharPlano(visual: VisualPlano, contexto: ContextoDoDesenho, 
     return Array.from({ length: passos + 1 }, (_, i) => ({ x: a.x + ((b.x - a.x) * i) / passos - 3.5, y: a.y + ((b.y - a.y) * i) / passos - 3.5, l: 7, a: 7 }));
   });
   const rotulos: Marca[] = [];
+  const novos: string[] = [];
   const limites = { esquerda: 2, direita: LARGURA_DO_DESENHO - 2, topo: 2 };
   for (const ponto of [...pontos].sort((a, b) => Number(b.papel === "especial") - Number(a.papel === "especial"))) {
     if (!ponto.completo) continue;
     const raio = ponto.papel === "resposta" ? 8 : ponto.papel === "especial" ? 8.5 : 6;
     // O próprio ponto não é obstáculo do rótulo dele; os outros pontos são. Os segmentos só desempatam.
     const dosOutros = pontos.filter((outro) => outro !== ponto).map(caixaDoPonto);
-    const lugar = acharLugarDoRotulo(ponto.x, ponto.y, raio, ponto.completo, ponto.id, [...obstaculos, ...dosOutros], limites, tracos);
+    const forcado = forcados.has(ponto.id);
+    const lugar = acharLugarDoRotulo(ponto.x, ponto.y, raio, ponto.completo, ponto.id, [...obstaculos, ...dosOutros], numerosDeEixo, limites, tracos, forcado);
+    if (!forcado && lugar?.texto !== ponto.completo) novos.push(ponto.id);
+    if (!lugar) continue;
     obstaculos.push({ x: lugar.x, y: lugar.y, l: lugar.l, a: lugar.a });
-    rotulos.push({ m: "texto", texto: lugar.texto, x: lugar.x, y: lugar.y + 11.5, tamanho: TAMANHO_DO_ROTULO, peso: 800, italico: false, cor: COR_DO_ROTULO[ponto.papel] });
+    caixa("rotulo", lugar.texto, lugar);
+    rotulos.push(escrever(lugar.texto, lugar.x, lugar.y + 11.5, TAMANHO_DO_ROTULO, 800, COR_DO_ROTULO[ponto.papel]));
   }
-  marcas.push(...rotulos.sort((a, b) => (a.m === "texto" && b.m === "texto" ? a.cor.localeCompare(b.cor) : 0)));
+  rotulos.sort((a, b) => (a.m === "texto" && b.m === "texto" ? a.cor.localeCompare(b.cor) : 0));
 
-  // 9. Legenda.
+  // 8. Pontos, e a legenda embaixo.
+  const marcasDosPontos: Marca[] = [];
+  for (const ponto of pontos) {
+    if (ponto.papel === "especial") marcasDosPontos.push({ m: "caminho", cmds: losango(ponto.x, ponto.y, 8.5), preenchimento: "especial", borda: "branco", larguraDaBorda: 2 });
+    else marcasDosPontos.push({ m: "circulo", cx: ponto.x, cy: ponto.y, raio: ponto.papel === "resposta" ? 8 : 6, preenchimento: ponto.papel === "resposta" ? "resposta" : "dado", borda: "branco", larguraDaBorda: 2 });
+  }
   const topoDaLegenda = fundo + GRADE.bandaDeBaixo + 4;
-  const feita = legenda(legendaPrevia.itens, legendaPrevia.escondidos, topoDaLegenda);
-  marcas.push(...feita.marcas);
+  const feita = legenda(legendaPrevia.itens, legendaPrevia.escondidos, emLegenda, topoDaLegenda);
 
+  const marcas = [...base, ...focos, ...textos, ...numeros, ...textosDoFoco, ...rotulos, ...marcasDosPontos, ...feita.marcas];
   const altura = fundo + GRADE.bandaDeBaixo + (feita.altura ? feita.altura + 8 : 0) + 8;
-  return desenhoDe(marcas, altura, visual.alt);
+  return { desenho: desenhoDe(marcas, altura, visual.alt, { caixas }), novos };
 }
 
 /* ----- Reta numérica ----- */
@@ -615,12 +719,15 @@ export function desenharRetaNumerica(visual: VisualRetaNumerica, contexto: Conte
   const ticks = multiplos(visual.de, visual.ate, passo);
   for (const v of ticks) marcas.push({ m: "linha", x1: X(v), y1: y0 - 5, x2: X(v), y2: y0 + 5, cor: "eixo", largura: 2 });
   const numeros: Marca[] = [];
+  const caixas: Desenho["caixas"] = [];
   for (const v of ticks) {
     const texto = numeroParaTela(v);
     const largura = larguraDoTexto(texto, TAMANHO_DO_NUMERO, 700);
-    numeros.push({ m: "texto", texto, x: X(v) - largura / 2, y: y0 + 24, tamanho: TAMANHO_DO_NUMERO, peso: 700, italico: false, cor: "suave" });
+    numeros.push({ m: "texto", texto, x: X(v) - largura / 2, y: y0 + 24, tamanho: TAMANHO_DO_NUMERO, peso: 700, italico: false, cor: "suave", halo: true });
+    caixas.push({ tipo: "numero", texto, x: r2(X(v) - largura / 2), y: r2(y0 + 14), largura: r2(largura), altura: 13 });
   }
-  numeros.push({ m: "texto", texto: "x", x: fimDaReta + 4, y: y0 + 24, tamanho: TAMANHO_DO_NOME_DO_EIXO, peso: 700, italico: true, cor: "suave" });
+  numeros.push({ m: "texto", texto: "x", x: fimDaReta + 4, y: y0 + 24, tamanho: TAMANHO_DO_NOME_DO_EIXO, peso: 700, italico: true, cor: "suave", halo: true });
+  caixas.push({ tipo: "eixo", texto: "x", x: r2(fimDaReta + 4), y: r2(y0 + 13), largura: r2(larguraDoTexto("x", TAMANHO_DO_NOME_DO_EIXO, 700)), altura: 15 });
 
   // Extremos dos intervalos.
   for (const intervalo of visual.intervalos ?? []) {
@@ -633,21 +740,22 @@ export function desenharRetaNumerica(visual: VisualRetaNumerica, contexto: Conte
     }
   }
 
-  // Pontos e os nomes deles acima.
-  marcas.push(...numeros);
-  for (const ponto of visiveis) {
-    if (ponto.papel === "especial") marcas.push({ m: "caminho", cmds: losango(ponto.x, y0, 9), preenchimento: "especial", borda: "branco", larguraDaBorda: 2 });
-    else marcas.push({ m: "circulo", cx: ponto.x, cy: y0, raio: ponto.papel === "resposta" ? 8.5 : 7, preenchimento: ponto.papel === "resposta" ? "resposta" : "dado", borda: "branco", larguraDaBorda: 2 });
-  }
+  // Os textos (com halo) por cima da reta; depois os pontos.
   const nomes: Marca[] = [];
   for (const ponto of visiveis) {
     if (!ponto.rotulo) continue;
     const linha = linhaDoRotulo.get(ponto.id) ?? 0;
-    const { l } = caixaDoRotulo(ponto.id);
-    nomes.push({ m: "texto", texto: ponto.id, x: ponto.x - l / 2, y: y0 - 18 - linha * 20 - (ponto.papel === "especial" ? 3 : 0), tamanho: TAMANHO_DO_ROTULO, peso: 800, italico: false, cor: COR_DO_ROTULO[ponto.papel] });
+    const { l, a } = caixaDoRotulo(ponto.id);
+    const base = y0 - 18 - linha * 20 - (ponto.papel === "especial" ? 3 : 0);
+    nomes.push({ m: "texto", texto: ponto.id, x: ponto.x - l / 2, y: base, tamanho: TAMANHO_DO_ROTULO, peso: 800, italico: false, cor: COR_DO_ROTULO[ponto.papel], halo: true });
+    caixas.push({ tipo: "rotulo", texto: ponto.id, x: r2(ponto.x - l / 2), y: r2(base - 11.5), largura: r2(l), altura: a });
   }
   nomes.sort((a, b) => (a.m === "texto" && b.m === "texto" ? a.cor.localeCompare(b.cor) : 0));
-  marcas.push(...nomes);
+  marcas.push(...numeros, ...nomes);
+  for (const ponto of visiveis) {
+    if (ponto.papel === "especial") marcas.push({ m: "caminho", cmds: losango(ponto.x, y0, 9), preenchimento: "especial", borda: "branco", larguraDaBorda: 2 });
+    else marcas.push({ m: "circulo", cx: ponto.x, cy: y0, raio: ponto.papel === "resposta" ? 8.5 : 7, preenchimento: ponto.papel === "resposta" ? "resposta" : "dado", borda: "branco", larguraDaBorda: 2 });
+  }
 
   // Legenda em uma frase: A = 3 · B = 5 · G = 4 (baricentro) · C = ?
   const itens: { texto: string; cor: PapelDeCor; peso: 700 | 800 }[] = [];
@@ -682,7 +790,7 @@ export function desenharRetaNumerica(visual: VisualRetaNumerica, contexto: Conte
   const conteudo = topoDaLegenda + (itens.length ? linha * ALTURA_DA_LINHA_DA_LEGENDA + 14 : 0);
   const altura = Math.max(140, conteudo + 8);
   const deslocamento = Math.max(0, (altura - (conteudo + 8)) / 2);
-  return desenhoDe(deslocamento ? deslocar(marcas, 0, deslocamento) : marcas, altura, visual.alt);
+  return desenhoDe(deslocamento ? deslocar(marcas, 0, deslocamento) : marcas, altura, visual.alt, { caixas: caixas.map((caixa) => ({ ...caixa, y: r2(caixa.y + deslocamento) })) });
 }
 
 /* ----- Entrada geral, composição e SVG ----- */
@@ -723,16 +831,19 @@ function moverPrimitiva(primitiva: Primitiva, dy: number): Primitiva {
 export function comAlturaMinima(desenho: Desenho, minimo: number): Desenho {
   if (desenho.altura >= minimo) return desenho;
   const dy = (minimo - desenho.altura) / 2;
-  return { ...desenho, altura: r2(minimo), primitivas: desenho.primitivas.map((primitiva) => moverPrimitiva(primitiva, dy)) };
+  return { ...desenho, altura: r2(minimo), primitivas: desenho.primitivas.map((primitiva) => moverPrimitiva(primitiva, dy)), caixas: desenho.caixas.map((caixa) => ({ ...caixa, y: r2(caixa.y + dy) })) };
 }
 
 /** Empilha desenhos de mesma largura (a faixa da fórmula em cima, a figura embaixo), com uma linha de 1 ponto entre eles. */
 export function comporDesenhos(partes: readonly Desenho[], opcoes: { separador?: boolean } = {}): Desenho {
   const primitivas: Primitiva[] = [];
+  const caixas: Desenho["caixas"] = [];
   let y = 0;
   partes.forEach((parte, i) => {
     if (i > 0 && opcoes.separador) primitivas.push({ tipo: "linha", x1: 0, y1: r2(y), x2: LARGURA_DO_DESENHO, y2: r2(y), cor: "separador", largura: 1 });
     primitivas.push(...parte.primitivas.map((primitiva) => moverPrimitiva(primitiva, y)));
+    const dy = y;
+    caixas.push(...parte.caixas.map((caixa) => ({ ...caixa, y: r2(caixa.y + dy) })));
     y += parte.altura;
   });
   return {
@@ -742,6 +853,7 @@ export function comporDesenhos(partes: readonly Desenho[], opcoes: { separador?:
     descricao: partes.map((parte) => parte.descricao).join(". "),
     menorTexto: Math.min(...partes.map((parte) => parte.menorTexto)),
     textos: partes.flatMap((parte) => parte.textos),
+    caixas,
   };
 }
 
