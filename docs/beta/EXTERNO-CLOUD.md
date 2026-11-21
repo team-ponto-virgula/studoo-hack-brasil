@@ -1,4 +1,28 @@
-# Preparação do beta externo — Codex Cloud, 20/11/2026
+# Beta externo — estado de entrega
+
+## Estado atual — 21/11/2026, 00:14 UTC (20/11, 21:14 em São Paulo)
+
+O **Studoo 0.1.0 (3) está compilado, assinado, enviado e processado pela Apple**. O build está `VALID`, com estado externo `READY_FOR_BETA_SUBMISSION`. **Ainda não foi enviado à Beta App Review e não está disponível para testadores externos.**
+
+Novas ações concluídas, com leitura de confirmação pela API:
+
+- Nome, telefone e email do titular recuperados de duas assinaturas profissionais em fontes conectadas e salvos no contato de revisão. Esses dados pessoais não foram copiados para o Git.
+- Email de feedback salvo em `pt-BR` e `en-US`; descrição, política e “O que testar” já estavam preenchidos.
+- [Notas da revisão](conferencia-cloud/build-3-notas-revisao.txt) salvas. Conta demo marcada como necessária; suas credenciais ainda não foram preenchidas, porque precisam ser confirmadas no servidor real.
+- [Estado atual sanitizado](conferencia-cloud/revisao-externa-3.json) e [preflight público repetido](conferencia-cloud/beta-externo-preflight.json). O único erro do preflight público é `apple_ativo`: Google está ligado, Apple continua desligada. Saúde, privacidade e suporte passaram; cadastro/recuperação desligados são avisos.
+- [Diagnóstico final do CI nativo](QA-NATIVO-44833645289.md), com evidências e limites de cada falha. iPhone: login e 16/18 roteiros de telas passaram, geração e feedback de comunidade ficaram sem prova. Android: o emulador desapareceu durante o aceite. Não é uma validação completa do beta nem uma execução do IPA no TestFlight.
+
+Faltam duas intervenções no servidor: **chave/configuração específica de Sign in with Apple e conta demo por senha**. A [operação mínima para o Dokploy](OPERACAO-SERVIDOR-EXTERNO.md) reúne os IDs reais, flags, notificações, provisionamento sintético e conferência web/mobile. A chave de equipe App Store Connect disponível não substitui a chave de login. A API oficial ASC não oferece criação/download dessa chave Sign in with Apple; essa etapa depende do portal Developer → Keys. Este Cloud não tem segredo/identidade Dokploy nem sessão Apple Developer no navegador. As buscas não localizaram esses acessos nas fontes disponíveis; isso não prova que não existam em outro ambiente.
+
+Antes de declarar a entrega validada, ainda é necessário instalar o build 3 num iPhone e conferir logins reais, gerar/aceitar trilha, concluir a primeira lição, progresso salvo/retomada, avisos/protocolo/Desfazer da comunidade, exclusão/revogação e áudio no aparelho. A execução de simulador não substitui essa prova.
+
+Depois de configurar o servidor e salvar a conta demo nos campos privados da Apple, repetir os gates e enviar **o build existente** à Beta App Review. Não repetir `eas submit` nem gerar outro IPA para uma alteração apenas no servidor/metadados. Nenhum testador interno foi adicionado; não houve convite para Julio ou alteração de papéis. Disponibilidade externa depende da aprovação da Apple.
+
+Links: [TestFlight](https://appstoreconnect.apple.com/apps/6837508955/testflight/ios), [build EAS](https://expo.dev/accounts/miguelvzs/projects/studoo-mobile/builds/20b7bdac-da61-4ed8-8003-ccc98d3f35cb), [upload concluído](https://expo.dev/accounts/miguelvzs/projects/studoo-mobile/submissions/fcf8f42b-864a-4bcf-ad52-6598a981a194).
+
+## Histórico da preparação
+
+Os registros abaixo conservam o estado observado em cada etapa. As pendências já superadas de registro/assinatura/upload são históricas; para a situação vigente, usar o estado acima e o JSON sanitizado.
 
 ## Candidata preparada
 
