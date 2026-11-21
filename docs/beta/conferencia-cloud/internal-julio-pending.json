@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-21T02:24:35.287Z",
+  "checkedAt": "2026-11-21T02:38:47.451188Z",
   "appId": "6837508955",
   "groupId": "b54c8449-a903-4bc3-885a-5b3dcd6dd21a",
   "requestedTester": "Julio Akamine",
@@ -18,5 +18,13 @@
   ],
   "expiresAt": "2026-11-23T18:24:26.949-08:00",
   "testFlightMembershipConfirmed": false,
-  "nextStep": "O convidado precisa aceitar o convite mais recente, com papel Developer. Depois, confirmar usuário ativo e associá-lo ao grupo interno do build 3."
+  "nextStep": "O convidado precisa aceitar o convite mais recente, com papel Developer. Depois, confirmar usuário ativo e associá-lo ao grupo interno do build 3.",
+  "associationAttempt": {
+    "httpStatus": 409,
+    "code": "STATE_ERROR",
+    "detail": "Tester(s) cannot be assigned",
+    "subsequentChecks": 4,
+    "developerInvitationStillPending": true,
+    "activeUserFound": false
+  }
 }
