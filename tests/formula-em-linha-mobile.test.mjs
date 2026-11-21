@@ -19,7 +19,7 @@ test('as frases das fixtures: as fórmulas viram trechos desenháveis e o texto 
   for (const nome of ['baricentro', 'abscissas', 'colinearidade']) {
     const licao = JSON.parse(await ler(`tests/fixtures/matematica/${nome}.json`)).licao;
     for (const texto of textosDa(licao)) {
-      for (const trecho of partirTextoComFormulas(texto, { heuristica: true })) {
+      for (const trecho of partirTextoComFormulas(texto)) {
         if (trecho.tipo === 'texto') { assert.doesNotMatch(trecho.texto, /\$/, `${nome}: "${trecho.texto}"`); continue; }
         formulas++;
         const desenho = desenharFormulaEmLinha(trecho.arvore, 16);
@@ -43,10 +43,12 @@ test('o componente: Svg do motor em View em linha, base na linha de base, toque 
   assert.match(fonte, /height: desenho\.linhaDeBase \* escala, overflow: 'visible'/, 'a caixa mede só acima da linha de base: a linha não cresce');
   assert.match(fonte, /style=\{\{ position: 'absolute', top: 0, left: 0 \}\}/);
   assert.match(fonte, /pointerEvents="none"/, 'o toque chega ao Text');
-  assert.match(fonte, /desenho\.largura \* escala > LARGURA_MAXIMA\) return <Text>\{segmento\.linear\}<\/Text>/, 'não quebra: se não cabe, linear');
+  assert.match(fonte, /desenho\.largura \* escala <= LARGURA_MAXIMA \? desenho : null/, 'não quebra: se não cabe, linear');
+  assert.match(fonte, /if \(!desenho\) \{ saida\.push\(trecho\.linear\); continue; \}/, 'o linear entra como texto comum, que quebra (nunca no trecho sem quebra)');
   assert.match(fonte, /accessibilityLabel=\{accessibilityLabel \?\? falarTextoComFormulas\(texto\)\}/);
   assert.match(fonte, /const \{ fontScale \} = useWindowDimensions\(\);/, 'cresce com o tamanho de letra do sistema');
-  assert.match(fonte, /createContext<\{ heuristica: boolean \}>\(\{ heuristica: false \}\)/, 'fora da lição de matemática, só a marcação');
+  assert.match(fonte, /partirTextoComFormulas\(texto \?\? ''\), \[texto\]\)/, 'só o que está marcado: a heurística é do servidor (3c)');
+  assert.doesNotMatch(fonte, /heuristica/, 'o app não adivinha fórmula em texto solto');
 });
 
 test('onde o texto tem fórmula: conceito, objetivo, exemplo, enunciado, retorno, dica, opções e "Resolva comigo"; títulos sem cifrão', async () => {
@@ -54,7 +56,7 @@ test('onde o texto tem fórmula: conceito, objetivo, exemplo, enunciado, retorno
   for (const trecho of ['texto={licao.objetivo}', 'texto={licao.exemplo}', 'texto={exercicio.enunciado}', 'texto={exercicio.contexto}', 'texto={avaliacao.feedback}', 'texto={licao.conceito}']) {
     assert.ok(licao.includes(trecho), trecho);
   }
-  assert.match(licao, /<FormulasNoTexto\.Provider value=\{formulas\}>/);
+  assert.doesNotMatch(licao, /FormulasNoTexto|heuristica/);
   assert.equal((licao.match(/textoSemFormulas\(licao\.titulo\)/g) ?? []).length, 2);
   assert.match(await ler('apps/mobile/src/aula-formatos.tsx'), /return <TextoComFormulas texto=\{texto\} estilo=/);
   assert.match(await ler('apps/mobile/src/opcao.tsx'), /<TextoComFormulas texto=\{texto\}/);

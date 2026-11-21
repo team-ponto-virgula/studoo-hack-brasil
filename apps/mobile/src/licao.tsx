@@ -14,7 +14,6 @@ import {
   ultimoExercicio,
   type AutoAvaliacao,
   type Avaliacao,
-  contemMarcaDeFormula,
   falarTextoComFormulas,
   textoSemFormulas,
   type EscolhaNoSuaVez,
@@ -46,7 +45,7 @@ import { CONTEXTO_DO_ENUNCIADO, CONTEXTO_DO_RETORNO, DesenhoDoVisual, OPCOES_DA_
 import { alturaDaFiguraNaTela, alturaMaximaDaFigura } from './desenho-svg';
 import { Confete } from './festa';
 import { useResolvaComigo } from './resolva-comigo';
-import { FormulasNoTexto, TextoComFormulas } from './texto-com-formulas';
+import { TextoComFormulas } from './texto-com-formulas';
 import { Ordenar } from './ordenar';
 import { Icone } from './icone';
 import { Botao, BotaoIcone, Campo, EstadoErro, Tela, Titulo, estilos, useBalanco, useMovimentoReduzido, caixaAlta, SeloDemonstracao, Chevron, degrauFora, quebraEquilibrada } from './interface';
@@ -308,11 +307,6 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   const tremor = useTremor(errosSeguidos);
 
   const etapa = etapas[passo];
-  /** Lição de matemática (visual, resolução ou fórmula marcada): o texto solto (`x_A`, `b^2`) também vira fórmula em linha. */
-  const formulas = useMemo(() => ({
-    heuristica: Boolean(licao.visuais?.length || licao.resolucao || exercicios.some((item) => item.visual)
-      || [licao.conceito, licao.exemplo, licao.objetivo].some((texto) => contemMarcaDeFormula(texto ?? ''))),
-  }), [licao, exercicios]);
   /** Spec 15: com `resolucao`, a etapa Exemplo é o "Resolva comigo" (o contador de etapas não muda). */
   const resolva = useResolvaComigo({
     licao, responder: responderSuaVez, visivel: etapa.tipo === 'exemplo',
@@ -760,7 +754,6 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   return (
     // A conferência da fala grava e manda para a rota de voz do servidor (no aparelho).
     <TranscritorContexto.Provider value={cliente.transcrever}>
-    <FormulasNoTexto.Provider value={formulas}>
     <Tela pagina={`licao-${licao.id}`} topo={topo} semLinha rodape={rodape} rolagem={rolagem}
       aoMedir={(altura) => { alturaVisivel.current = altura; medirMais(); }} aoRolar={(y) => { posicaoRolagem.current = y; medirMais(); }}
       // A altura real do conteúdo (iPhone, 20/11): a da caixa da rolagem, menos o espaço do fim, ficava velha numa etapa curta
@@ -1008,7 +1001,6 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
           }
         }} /></View>}
     </Tela>
-    </FormulasNoTexto.Provider>
     </TranscritorContexto.Provider>
   );
 }
