@@ -282,9 +282,11 @@ export const PAPEIS_DE_COR = [
 export type PapelDeCor = (typeof PAPEIS_DE_COR)[number];
 
 /**
- * Cores da spec 15. Texto a pelo menos 4,5:1 sobre o fundo dele; o roxo `#7C5CFF` só preenche (como texto usa-se
- * `#5B3FD9`); o vermelho não existe aqui: fica só no retorno de erro. `preenchimento` vale com opacidade 0,07 e `fundo` é o
- * bloco da fórmula no app (no PNG o fundo é branco).
+ * Cores da spec 15 (as finais, do Designer). Texto a pelo menos 4,5:1 sobre o fundo dele; gráfico a pelo menos 3:1 sobre o
+ * branco. Cada cor de traço tem um par mais escuro para texto: o roxo `#7C5CFF` do losango e `#5B3FD9` no texto, o azul `#2563FF`
+ * do traço e `#1D4ED8` do texto em foco, o âmbar `#B9780F` do anel do procurado e `#9A5B00` no "C = ?". O vermelho não existe
+ * aqui: fica só no retorno de erro. `preenchimento` vale com opacidade 0,07 e `fundo` é o bloco da fórmula no app (no PNG o
+ * fundo é branco).
  */
 export const PALETA_DO_DESENHO: Readonly<Record<PapelDeCor, string>> = {
   texto: "#0B1B5C",
@@ -299,17 +301,17 @@ export const PALETA_DO_DESENHO: Readonly<Record<PapelDeCor, string>> = {
   dado: "#2563FF",
   especial: "#7C5CFF",
   especialTexto: "#5B3FD9",
-  procurado: "#C98A1A",
+  procurado: "#B9780F",
   procuradoTexto: "#9A5B00",
   procuradoFundo: "#FFF6EA",
   resposta: "#1F7A5A",
   respostaTexto: "#1F7A5A",
   respostaFundo: "#E8F6EF",
   foco: "#2563FF",
-  focoTexto: "#2563FF",
+  focoTexto: "#1D4ED8",
   focoFundo: "#EAF0FF",
   soma: "#2563FF",
-  subtrai: "#C98A1A",
+  subtrai: "#B9780F",
 };
 
 /** Traço e vazio, em unidades de projeto. */
@@ -337,10 +339,12 @@ export const PONTA_DA_LINHA = "butt" as const;
 export const JUNCAO_DA_LINHA = "round" as const;
 
 /**
- * O menor tamanho de texto do desenho, em unidades de projeto. Com a largura útil de um iPhone SE (cerca de 280) a escala é
- * 0,875: 15 unidades saem com 13 pt. O motor nunca desenha texto menor (rótulo, número da grade, índice, expoente).
+ * O menor tamanho de texto do desenho, em unidades de projeto (decisão do Designer, spec 15, seção 8). Na largura útil de um
+ * iPhone SE (cerca de 280) a escala é 0,875: 13 unidades saem com 11,4 pt, acima do mínimo de 11. O motor nunca desenha texto
+ * menor (rótulo, número do eixo, índice, expoente). Tamanhos: rótulos de ponto 14 em 800, legenda 14, números dos eixos 13,
+ * índice e expoente com 65% da base (piso 13), fórmula 22.
  */
-export const PISO_DO_TEXTO = 15;
+export const PISO_DO_TEXTO = 13;
 
 export interface Desenho {
   /** Sempre `LARGURA_DO_DESENHO`: o `viewBox` é `0 0 largura altura`. */
@@ -351,6 +355,8 @@ export interface Desenho {
   descricao: string;
   /** O menor texto que o desenho usa, em unidades de projeto (nunca menos que `PISO_DO_TEXTO`). */
   menorTexto: number;
+  /** Os textos que o desenho escreve, na ordem em que saem (rótulos, números dos eixos, legenda): para conferir e para o teste. */
+  textos: string[];
   /** Fórmula mais larga que o desenho (depois de encolher até 85%): o cliente rola para o lado. Sem isto, tudo cabe. */
   larguraDoConteudo?: number;
 }

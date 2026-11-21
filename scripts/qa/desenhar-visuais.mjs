@@ -9,7 +9,7 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import sharp from "sharp";
-import { comporDesenhos, desenharVisual, desenhoParaSvg, normalizarVisual, validarResolucao } from "../../packages/contratos/src/aprendizado.ts";
+import { comporDesenhos, desenharFormula, desenharVisual, desenhoParaSvg, lerFormula, normalizarVisual, validarResolucao } from "../../packages/contratos/src/aprendizado.ts";
 
 const saida = process.argv[2];
 const escala = Number(process.argv[3] ?? 4);
@@ -27,7 +27,7 @@ async function png(desenho, nome) {
   console.log(`${nome}.png ${desenho.largura}×${desenho.altura} · ${desenho.primitivas.length} primitivas · menor texto ${desenho.menorTexto} · ${(buffer.length / 1024).toFixed(1)} KB`);
 }
 
-for (const arquivo of readdirSync(dirFixtures).filter((nome) => nome.endsWith(".json"))) {
+for (const arquivo of readdirSync(dirFixtures).filter((nome) => nome.endsWith(".json") && !nome.startsWith("golden"))) {
   const nome = arquivo.replace(".json", "");
   const { licao } = JSON.parse(readFileSync(join(dirFixtures, arquivo), "utf8"));
   const formula = normalizarVisual(licao.visuais.find((visual) => visual.tipo === "formula"));
@@ -52,3 +52,20 @@ for (const arquivo of readdirSync(dirFixtures).filter((nome) => nome.endsWith(".
     if (passo.visual) await png(desenharVisual(passo.visual, { tipo: "passo", ultimo: i === resolucao.passos.length - 1 }), `${nome}-passo${i + 1}-visual`);
   }
 }
+
+// A galeria de fórmulas: o que o motor sabe desenhar, uma abaixo da outra, no tamanho da faixa do PNG.
+const galeria = [
+  String.raw`\Delta = b^2 - 4ac`,
+  String.raw`A = \pi r^2 = 12.5`,
+  String.raw`\left(\frac{x + 1}{2}\right)^2 \geq \sqrt{\frac{a}{b}}`,
+  String.raw`a \leq b \neq c \to d \geq e`,
+  String.raw`\begin{bmatrix} 1 & 2 \\ 3 & x_A \end{bmatrix} \times \begin{bmatrix} 5 \\ 6 \end{bmatrix}`,
+  String.raw`\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix} = -2`,
+  String.raw`x_G = \frac{x_A + x_B + x_C}{3} = \frac{\frac{1}{2} + 3}{4}`,
+  String.raw`\text{área} = \frac{1}{2} \times \text{base} \times h`,
+  String.raw`\foco{x_C} = \resposta{4} \neq 5`,
+  String.raw`x_{A B}^{2} + y^{n+1} - 3.5 \div 2 = (1.5, 2)`,
+  String.raw`\frac{-b + \sqrt{b^2 - 4ac}}{2a}`,
+];
+const faixas = galeria.map((fonte) => desenharFormula(lerFormula(fonte).arvore, { fundo: false })).filter(Boolean);
+await png(comporDesenhos(faixas, { separador: true }), "galeria-formulas");

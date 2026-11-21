@@ -240,9 +240,9 @@ const BASICOS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 const SIMBOLOS_700 = " .,;:!?'’()[]/%+=<>-−×÷·";
 const SIMBOLOS_800 = " .,()−?'=";
 
-function tabela(caminhoDoArquivo, caracteres, unidadesAlvo = 0) {
+function tabela(caminhoDoArquivo, caracteres, unidadesAlvo = 0, reducao = 1) {
   const fonte = lerFonte(caminhoDoArquivo);
-  const escala = unidadesAlvo ? unidadesAlvo / fonte.unidades : 1;
+  const escala = (unidadesAlvo ? unidadesAlvo / fonte.unidades : 1) * reducao;
   const saida = {};
   for (const caractere of new Set(caracteres)) {
     const indice = fonte.indiceDo(caractere.codePointAt(0));
@@ -268,9 +268,12 @@ const t700 = tabela(`${dirOg}nunito-latin-700-normal.woff`, BASICOS + LATINAS + 
 const t800 = tabela(`${dirOg}nunito-latin-800-normal.woff`, BASICOS + SIMBOLOS_800);
 if (t700.unidades !== t800.unidades) throw new Error("unidades por em diferentes");
 
-/** O grego da fase 1: Δ (discriminante) e π (círculo). Contorno da Noto Sans Bold, na escala da Nunito. */
+/**
+ * O grego da fase 1: Δ (discriminante) e π (círculo). Contorno da Noto Sans Bold, na escala da Nunito e a 92% (parecer do
+ * Designer: a Bold da Noto é mais pesada e mais larga que a Nunito; o pacote não traz a SemiBold).
+ */
 const caminhoDaNoto = process.argv[2] ?? "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf";
-const grego = tabela(caminhoDaNoto, "Δπ", t700.unidades);
+const grego = tabela(caminhoDaNoto, "Δπ", t700.unidades, 0.92);
 Object.assign(t700.saida, grego.saida);
 const sha256 = createHash("sha256").update(readFileSync(caminhoDaNoto)).digest("hex");
 

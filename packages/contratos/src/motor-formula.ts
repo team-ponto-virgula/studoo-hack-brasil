@@ -34,11 +34,17 @@ export interface Estilo {
   cor: PapelDeCor;
   /** As variáveis vão em itálico; no índice e no expoente ficam retas. */
   italico: boolean;
+  /** 1 no corpo da fórmula; 0,5 dentro do índice e do expoente ("n+1", não "n + 1"). */
+  respiro: number;
 }
 
 export const A_DO_TEXTO = 0.74;
 export const P_DO_TEXTO = 0.22;
+/** Respiro de cada lado: 5 nas relações, 4 em + − × ÷, 6 ao lado de colchete ou de barra de determinante (spec 15, seção 8). */
+const ESPACO_DA_RELACAO = 5;
 const ESPACO_DO_SINAL = 4;
+const ESPACO_DA_MOLDURA = 6;
+const RELACOES: ReadonlySet<string> = new Set(["=", "≠", "<", ">", "≤", "≥", "→"]);
 const RESPIRO = 1;
 const BARRA_DA_FRACAO = 2;
 const FOLGA_DA_FRACAO = 4;
@@ -154,23 +160,31 @@ const CORES_DO_DESTAQUE: Readonly<Record<PapelDestaque, { texto: PapelDeCor; fun
   resposta: { texto: "respostaTexto", fundo: "respostaFundo" },
 };
 
+const folga = (largura: number): Caixa => ({ l: largura, a: 0, p: 0, marcas: [] });
+
 function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
   const partes: Parte[] = [];
   itens.forEach((item, posicao) => {
     const anterior = itens[posicao - 1];
+    const seguinte = itens[posicao + 1];
     if (item.tipo === "operador") {
-      const sinal = ehSinal(itens, posicao);
-      partes.push({ caixa: operador(item.valor, estilo), antes: sinal ? (anterior?.tipo === "operador" ? 0 : 0) : ESPACO_DO_SINAL });
-      if (!sinal) partes.push({ caixa: { l: ESPACO_DO_SINAL, a: 0, p: 0, marcas: [] } });
+      if (ehSinal(itens, posicao)) {
+        partes.push({ caixa: operador(item.valor, estilo) });
+        return;
+      }
+      const lado = (RELACOES.has(item.valor) ? ESPACO_DA_RELACAO : ESPACO_DO_SINAL) * estilo.respiro;
+      const antes = anterior?.tipo === "matriz" ? ESPACO_DA_MOLDURA * estilo.respiro : lado;
+      const depois = seguinte?.tipo === "matriz" ? ESPACO_DA_MOLDURA * estilo.respiro : lado;
+      partes.push({ caixa: operador(item.valor, estilo), antes });
+      partes.push({ caixa: folga(depois) });
       return;
     }
     if (item.tipo === "separador") {
       partes.push({ caixa: caixaDe(item, estilo) });
-      partes.push({ caixa: { l: ESPACO_DO_SINAL, a: 0, p: 0, marcas: [] } });
+      partes.push({ caixa: folga(ESPACO_DO_SINAL * estilo.respiro) });
       return;
     }
-    const juntoDeSinal = anterior?.tipo === "operador" && ehSinal(itens, posicao - 1);
-    partes.push({ caixa: caixaDe(item, estilo), antes: anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" ? RESPIRO : juntoDeSinal ? 0 : 0 });
+    partes.push({ caixa: caixaDe(item, estilo), antes: anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" ? RESPIRO : 0 });
   });
   return juntar(partes);
 }
@@ -197,7 +211,7 @@ function fracao(no: Extract<NoFormula, { tipo: "fracao" }>, estilo: Estilo): Cai
 
 function script(no: Extract<NoFormula, { tipo: "script" }>, estilo: Estilo): Caixa {
   const base = caixaDe(no.base, estilo);
-  const menor: Estilo = { ...estilo, tamanho: pisar(estilo.tamanho * 0.65), italico: false };
+  const menor: Estilo = { ...estilo, tamanho: pisar(estilo.tamanho * 0.65), italico: false, respiro: 0.5 };
   const indice = no.indice ? caixaDe(no.indice, menor) : null;
   const expoente = no.expoente ? caixaDe(no.expoente, menor) : null;
   const tamanho = pisar(estilo.tamanho);
@@ -358,5 +372,5 @@ export function caixaDe(no: NoFormula, estilo: Estilo): Caixa {
 
 /** A fórmula inteira no tamanho pedido: linha de base em y = 0. */
 export function caixaDaFormula(arvore: NoFormula, tamanho: number, cor: PapelDeCor = "texto"): Caixa {
-  return caixaDe(arvore, { tamanho: pisar(tamanho), cor, italico: true });
+  return caixaDe(arvore, { tamanho: pisar(tamanho), cor, italico: true, respiro: 1 });
 }

@@ -22,6 +22,7 @@ import {
   validarVisual,
 } from "@studoo/contratos";
 import { GLIFOS_700, GLIFOS_800 } from "../packages/contratos/src/glifos.ts";
+import { caixaDaFormula } from "../packages/contratos/src/motor-formula.ts";
 
 const NOMES = ["baricentro", "abscissas", "colinearidade"];
 const fixture = (nome) => JSON.parse(readFileSync(new URL(`./fixtures/matematica/${nome}.json`, import.meta.url), "utf8")).licao;
@@ -150,8 +151,8 @@ function limites(desenho) {
   return { xmin, ymin, xmax, ymax };
 }
 
-test("nada do desenho cai fora da prancheta, e o texto nunca é menor que o piso (15)", () => {
-  assert.equal(PISO_DO_TEXTO, 15);
+test("nada do desenho cai fora da prancheta, e o texto nunca é menor que o piso (13)", () => {
+  assert.equal(PISO_DO_TEXTO, 13);
   for (const [chave, desenho] of Object.entries(desenhosDasFixtures())) {
     assert.equal(desenho.largura, LARGURA_DO_DESENHO, chave);
     assert.ok(desenho.menorTexto >= PISO_DO_TEXTO, `${chave}: menor texto ${desenho.menorTexto}`);
@@ -249,25 +250,35 @@ const canal = (v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c 
 const luminancia = (hex) => { const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)); return 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b); };
 const contraste = (a, b) => { const [x, y] = [luminancia(a), luminancia(b)].sort((m, n) => n - m); return (x + 0.05) / (y + 0.05); };
 
-test("paleta do desenho: um mapa por papel, exportado pelo pacote, com o contraste da spec 15", () => {
+test("paleta do desenho: um mapa por papel, exportado pelo pacote, com as cores finais do Designer e o contraste da spec 15, sem exceção", () => {
   assert.deepEqual(Object.keys(PALETA_DO_DESENHO).sort(), [...PAPEIS_DE_COR].sort());
   for (const [papel, hex] of Object.entries(PALETA_DO_DESENHO)) assert.match(hex, /^#[0-9A-F]{6}$/, papel);
   const P = PALETA_DO_DESENHO;
+  // As cores finais (spec 15, seção 8).
+  assert.equal(P.focoTexto, "#1D4ED8");
+  assert.equal(P.foco, "#2563FF");
+  assert.equal(P.focoFundo, "#EAF0FF");
+  assert.equal(P.procurado, "#B9780F");
+  assert.equal(P.procuradoTexto, "#9A5B00");
+  assert.equal(P.procuradoFundo, "#FFF6EA");
+  assert.equal(P.especial, "#7C5CFF");
+  assert.equal(P.especialTexto, "#5B3FD9");
+  assert.equal(P.resposta, "#1F7A5A");
+  assert.equal(P.respostaFundo, "#E8F6EF");
+  assert.equal(P.texto, "#0B1B5C");
+  assert.equal(P.suave, "#5E6A85");
+  assert.equal(P.grade, "#E1E7FA");
   // Texto: 4,5:1 sobre o fundo dele (7:1 para o texto principal).
   const texto = [
     ["texto", "branco", 7], ["texto", "fundo", 7], ["suave", "branco", 4.5], ["suave", "fundo", 4.5],
     ["especialTexto", "branco", 4.5], ["procuradoTexto", "branco", 4.5], ["procuradoTexto", "procuradoFundo", 4.5],
-    ["respostaTexto", "branco", 4.5], ["respostaTexto", "respostaFundo", 4.5], ["focoTexto", "branco", 4.5],
-    // Achado: #2563FF sobre #EAF0FF dá 4,27:1. Passa como texto grande em negrito (3:1), e é o que a fórmula usa (22 pt, 700); o
-    // índice dentro do foco fica abaixo disso. Sugestão ao Designer: #1D4ED8 (5,87:1). O piso abaixo trava o valor de hoje.
-    ["focoTexto", "focoFundo", 4.2],
+    ["respostaTexto", "branco", 4.5], ["respostaTexto", "respostaFundo", 4.5], ["focoTexto", "branco", 4.5], ["focoTexto", "focoFundo", 4.5],
   ];
   for (const [frente, fundo, minimo] of texto) assert.ok(contraste(P[frente], P[fundo]) >= minimo, `${frente} sobre ${fundo}: ${contraste(P[frente], P[fundo]).toFixed(2)}:1`);
-  // O roxo só preenche; como texto usa-se especialTexto (a spec 15 proíbe #7C5CFF em texto).
+  // O roxo só preenche; como texto usa-se especialTexto.
   assert.ok(contraste(P.especial, P.branco) < 4.5 && contraste(P.especialTexto, P.branco) >= 4.5);
-  // Gráfico (3:1 sobre o branco). O âmbar do procurado (#C98A1A) fica em 2,94:1: sugestão ao Designer, #B9780F (3,65:1).
-  for (const papel of ["dado", "especial", "resposta", "segmento", "eixo"]) assert.ok(contraste(P[papel], P.branco) >= 3, papel);
-  assert.ok(contraste(P.procurado, P.branco) >= 2.9, "procurado");
+  // Gráfico: 3:1 sobre o branco.
+  for (const papel of ["dado", "especial", "procurado", "resposta", "segmento", "foco", "eixo", "subtrai", "soma"]) assert.ok(contraste(P[papel], P.branco) >= 3, `${papel}: ${contraste(P[papel], P.branco).toFixed(2)}:1`);
   // O vermelho não existe no desenho: fica só no retorno de erro.
   for (const hex of Object.values(P)) {
     const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
@@ -303,6 +314,8 @@ test("glifos: a tabela cobre o que a fórmula e o rótulo usam, com Δ e π, e o
     else assert.equal(centro > 200, vazado, `${caractere}: miolo ${vazado ? "vazio" : "cheio"} (pixel ${centro})`);
   }
   assert.ok(Object.keys(GLIFOS_800).length > 60);
+  // Δ e π da Noto Sans Bold a 92%, para parecerem da família da Nunito (a Bold da Noto é mais pesada e mais larga).
+  assert.deepEqual([GLIFOS_700["Δ"][0], GLIFOS_700["π"][0]], [605, 680]);
 });
 
 test("o PNG do desenho sai com sharp (o SVG é válido) e cabe com folga no limite de 700.000 caracteres", async () => {
@@ -313,4 +326,111 @@ test("o PNG do desenho sai com sharp (o SVG é válido) e cabe com folga no limi
   assert.equal(meta.width, 1280);
   assert.equal(meta.height, Math.round(desenho.altura * 4));
   assert.ok(Math.ceil((png.length * 4) / 3) < 350_000, `${png.length} bytes`);
+});
+
+/* ----- Parecer do Designer (spec 15, seção 8) ----- */
+
+const numerosDeEixo = (desenho) => desenho.textos.filter((texto) => /^−?\d+$/.test(texto));
+
+test("número de eixo nunca some: nenhum rótulo de ponto o apaga, e o rótulo procura outro lado", () => {
+  for (const nome of NOMES) {
+    const figura = normalizarVisual(fixture(nome).visuais.find((visual) => visual.tipo === "plano" || visual.tipo === "reta_numerica"));
+    if (figura.tipo !== "plano") continue;
+    const semRotulos = structuredClone(figura);
+    semRotulos.pontos.forEach((ponto) => { ponto.rotulo = false; });
+    for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }]) {
+      const com = numerosDeEixo(desenharVisual(figura, contexto));
+      const sem = numerosDeEixo(desenharVisual(semRotulos, contexto));
+      assert.deepEqual(com, sem, `${nome}/${contexto.tipo}: os números do eixo são os mesmos com e sem rótulos`);
+    }
+  }
+  // O que o Designer viu faltar: o 4 e o 8 do eixo y do baricentro e os pares do eixo x da colinearidade.
+  const baricentro = numerosDeEixo(desenharVisual(normalizarVisual(fixture("baricentro").visuais[1]), { tipo: "enunciado" }));
+  for (const esperado of ["1", "2", "3", "4", "5", "6", "7", "8", "0"]) assert.ok(baricentro.includes(esperado), `baricentro: falta o ${esperado}`);
+  const colinearidade = numerosDeEixo(desenharVisual(normalizarVisual(fixture("colinearidade").visuais[1]), { tipo: "enunciado" }));
+  for (const esperado of ["−4", "−2", "0", "2", "4", "6"]) assert.ok(colinearidade.includes(esperado), `colinearidade: falta o ${esperado}`);
+  // Com os rótulos inteiros (com as coordenadas) onde cabem.
+  const textos = desenharVisual(normalizarVisual(fixture("colinearidade").visuais[1]), { tipo: "enunciado" }).textos;
+  assert.ok(textos.includes("A (−1, −1)") && textos.includes("B (2, 5)"));
+  // Sem lado livre para o rótulo inteiro, o ponto fica só com o nome, e os números continuam todos lá.
+  const vizinhos = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].map(([x, y], i) => ({ id: `V${i}`, x, y, rotulo: false }));
+  const apertado = normalizarVisual({ tipo: "plano", alt: "Um ponto cercado por oito vizinhos.", x: [-6, 6], y: [-6, 6], pontos: [{ id: "A", x: 0, y: 0 }, ...vizinhos] });
+  const desenho = desenharVisual(apertado, { tipo: "enunciado" });
+  assert.ok(desenho.textos.includes("A"), "só o nome");
+  assert.equal(desenho.textos.includes("A (0, 0)"), false);
+  assert.ok(numerosDeEixo(desenho).length >= 10);
+});
+
+test("a grade é de 1 em 1 até 20 unidades no eixo (os números, de 2 em 2 acima de 12); A (1, 2) cai no cruzamento", () => {
+  const plano = (x, y) => normalizarVisual({ tipo: "plano", alt: "Um ponto no plano.", x, y, pontos: [{ id: "A", x: 1, y: 2 }, { id: "B", x: -2, y: 3 }] });
+  const linhasDaGrade = (desenho) => desenho.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "grade");
+  for (const quadro of [[[-3, 6], [-1, 8]], [[-8, 9], [-4, 8]], [[-10, 10], [-10, 10]]]) {
+    const desenho = desenharVisual(plano(...quadro), { tipo: "enunciado" });
+    const circulos = desenho.primitivas.filter((primitiva) => primitiva.tipo === "circulo" && primitiva.preenchimento === "dado");
+    const grade = linhasDaGrade(desenho);
+    for (const ponto of circulos) {
+      assert.ok(grade.some((linha) => linha.x1 === linha.x2 && Math.abs(linha.x1 - ponto.cx) < 0.02), "uma linha vertical por onde passa o ponto");
+      assert.ok(grade.some((linha) => linha.y1 === linha.y2 && Math.abs(linha.y1 - ponto.cy) < 0.02), "uma linha horizontal por onde passa o ponto");
+    }
+  }
+  // Acima de 12 unidades, só os números passam a ir de 2 em 2.
+  const largo = numerosDeEixo(desenharVisual(plano([-8, 9], [-4, 8]), { tipo: "enunciado" }));
+  assert.ok(largo.includes("−4") && largo.includes("−2") && !largo.includes("−3") && !largo.includes("−5"), `de 2 em 2: ${largo.join(" ")}`);
+  const curto = numerosDeEixo(desenharVisual(plano([-3, 6], [-1, 8]), { tipo: "enunciado" }));
+  assert.ok(curto.includes("−3") && curto.includes("5"), `de 1 em 1: ${curto.join(" ")}`);
+  // Acima de 20 unidades a grade deixa de ser de 1 em 1 (senão são linhas demais).
+  const enorme = linhasDaGrade(desenharVisual(plano([-30, 30], [-10, 10]), { tipo: "enunciado" })).filter((linha) => linha.y1 === linha.y2);
+  assert.ok(enorme.length <= 14, `${enorme.length} linhas horizontais`);
+});
+
+test("respiro das fórmulas: relações com 5, + − × ÷ com 4, 6 ao lado de colchete e barra, metade no expoente e no índice", () => {
+  const largura = (fonte, tamanho = 22) => caixaDaFormula(lerFormula(fonte).arvore, tamanho).l;
+  const soltos = (a, op, b) => largura(a) + largura(op) + largura(b);
+  for (const [operador, esperado] of [["=", 10], [String.raw`\neq`, 10], [String.raw`\leq`, 10], [String.raw`\geq`, 10], ["<", 10], [">", 10], [String.raw`\to`, 10], ["+", 8], ["-", 8], [String.raw`\times`, 8], [String.raw`\div`, 8]]) {
+    const juntos = largura(`a ${operador} b`);
+    assert.ok(Math.abs(juntos - soltos("a", operador, "b") - esperado) < 0.01, `${operador}: ${juntos - soltos("a", operador, "b")} em vez de ${esperado}`);
+  }
+  // O sinal de menos que abre o número é sinal, não operador: sem respiro.
+  assert.ok(Math.abs(largura("-2") - largura("-") - largura("2")) < 0.01);
+  // 6 depois de colchete ou de barra, antes do sinal ("|…| = 0", "] × [").
+  const determinante = String.raw`\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix}`;
+  assert.ok(Math.abs(largura(`${determinante} = 0`) - largura(determinante) - largura("=") - largura("0") - (6 + 5)) < 0.01);
+  const matriz = String.raw`\begin{bmatrix} 1 & 2 \end{bmatrix}`;
+  assert.ok(Math.abs(largura(`${matriz} \\times ${matriz}`) - 2 * largura(matriz) - largura("\\times") - 12) < 0.01);
+  // Dentro do expoente e do índice, metade: "n+1" e não "n + 1" (2 de cada lado do sinal, em vez de 4).
+  const tamanhoDoExpoente = 22 * 0.65;
+  const doExpoente = largura("x^{n + 1}") - largura("x") - 1;
+  const esperadoDoExpoente = largura("n", tamanhoDoExpoente) + largura("+", tamanhoDoExpoente) + largura("1", tamanhoDoExpoente) + 2 * 2;
+  assert.ok(Math.abs(doExpoente - esperadoDoExpoente) < 0.01, `${doExpoente} em vez de ${esperadoDoExpoente}`);
+  const doIndice = largura("x_{n + 1}") - largura("x") - 1;
+  assert.ok(Math.abs(doIndice - esperadoDoExpoente) < 0.01);
+});
+
+test("a seta do eixo começa uma folga depois da última marca, e o 8 da reta não fica sob a ponta", () => {
+  const reta = normalizarVisual(fixture("abscissas").visuais[1]);
+  const desenho = desenharVisual(reta, { tipo: "enunciado" });
+  const marcas = desenho.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "eixo" && primitiva.largura === 2 && primitiva.x1 === primitiva.x2);
+  const ultimaMarca = Math.max(...marcas.map((marca) => marca.x1));
+  const seta = desenho.primitivas.find((primitiva) => primitiva.tipo === "caminho" && primitiva.preenchimento === "eixo");
+  const xs = seta.d.match(/-?\d+(?:\.\d+)?/g).map(Number).filter((_, i) => i % 2 === 0);
+  assert.ok(Math.min(...xs) >= ultimaMarca + 14, `a seta começa em ${Math.min(...xs)}, a última marca está em ${ultimaMarca}`);
+  assert.ok(Math.max(...xs) <= 320);
+  // No plano, o mesmo nos dois eixos.
+  const plano = desenharVisual(normalizarVisual(fixture("baricentro").visuais[1]), { tipo: "enunciado" });
+  const setas = plano.primitivas.filter((primitiva) => primitiva.tipo === "caminho" && primitiva.preenchimento === "eixo");
+  assert.equal(setas.length, 2);
+  const grade = plano.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "grade");
+  const direitaDaGrade = Math.max(...grade.map((linha) => Math.max(linha.x1, linha.x2)));
+  const topoDaGrade = Math.min(...grade.map((linha) => Math.min(linha.y1, linha.y2)));
+  const pontosDasSetas = setas.map((seta) => seta.d.match(/-?\d+(?:\.\d+)?/g).map(Number));
+  assert.ok(Math.min(...pontosDasSetas[0].filter((_, i) => i % 2 === 0)) >= direitaDaGrade + 14);
+  assert.ok(Math.max(...pontosDasSetas[1].filter((_, i) => i % 2 === 1)) <= topoDaGrade - 14);
+});
+
+test("os tamanhos do parecer: rótulos de ponto 14 em 800, legenda 14, números dos eixos 13, tudo a partir do piso", () => {
+  const baricentro = desenhosDasFixtures()["baricentro/resposta"];
+  assert.equal(baricentro.menorTexto, 13, "os números dos eixos são o menor texto");
+  assert.ok(baricentro.textos.includes("dados") && baricentro.textos.includes("A (1, 2)"));
+  // O motor devolve os textos na ordem em que saem; nenhum é vazio.
+  for (const desenho of Object.values(desenhosDasFixtures())) assert.ok(desenho.textos.every((texto) => texto.length > 0));
 });
