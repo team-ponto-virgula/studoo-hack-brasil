@@ -316,8 +316,12 @@ export const VERSOES_DO_SERVIDOR: Readonly<Capacidades> = { visuais: 2, resoluca
 /** A versão de `visuais` a partir da qual o cliente desenha o gráfico de função (spec 15, seção 15). */
 export const VISUAIS_COM_FUNCAO = 2;
 
-/** O que um cliente que desenha tudo isto manda. */
-export const CAPACIDADES_DESTE_CLIENTE = "visuais@1,resolucao@1";
+/**
+ * O que um cliente que desenha tudo isto manda. `visuais@2` (marco 12a): o cliente desenha o gráfico de função (`funcao`) com o motor deste contrato (a web e o app já o
+ * fazem a partir das mesmas fixtures); `resolucao@1`: o "Resolva comigo". Cada cliente tem a sua constante (a web em `src/contratos/capacidades.ts`, o app na dele): esta é a do
+ * contrato, para quem desenha tudo.
+ */
+export const CAPACIDADES_DESTE_CLIENTE = "visuais@2,resolucao@1";
 
 const CABECALHO_MAXIMO = 200;
 
