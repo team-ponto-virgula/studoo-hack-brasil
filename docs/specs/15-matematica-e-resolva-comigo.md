@@ -411,3 +411,22 @@ Conferido nas quatro capturas de 390 e nas quatro da simulação de 200% do Mobi
   - a letra da opção e o resto da tela devem crescer junto com o texto.
 
 **"CO₂":** aceito com os algarismos subscritos do Unicode (U+2080 a U+2089), desde que a fonte do texto (Nunito) tenha esses glifos nas três plataformas. Sem o glifo, sai "CO2" simples, e nunca o quadrado de glifo ausente. O leitor de tela lê o algarismo normalmente ("C O 2").
+
+## 11. Parecer do motor 2d (a641735, 21/11)
+
+**Aceito:**
+- F1 e F2 no conteúdo, em altura normal;
+- a letra a até 8 unidades do ponto e, sem lugar, as coordenadas na legenda com o símbolo antes;
+- "O (0, 0)" no gráfico quando cabe ("ponto-origem-livre") e na legenda quando não cabe ("ponto-na-origem"), sem o "0" do eixo;
+- o segmento O–P cheio;
+- o peso da fórmula em linha, 400 no texto regular e 700 no negrito, em 16 e 17: as duas famílias de linhas acompanham o texto.
+
+Ajuste pequeno: na multiplicação sem sinal (`4ac`), os fatores ficam colados, sem respiro. Hoje há um vão entre o "4" e o "a".
+
+**Figura apertada (altura de 158):** os dois desenhos não servem.
+- Para manter a largura de 320, o motor abre o eixo x (de −18 a 22), e a unidade cai para uns 6 pt. A grade vira um risco denso, não dá para contar quadradinhos e os pontos se amontoam junto do eixo y. No baricentro, o halo do "5" chega a esconder o segmento.
+- **Regra:**
+  1. **A janela continua ajustada aos dados**, com uma unidade de folga, mais a origem. Quando a altura limita, o gráfico fica mais estreito e centralizado, e não ganha unidades vazias dos lados. A legenda pode ir para a lateral, no espaço que sobra.
+  2. **Unidade mínima de 12 unidades de projeto.** Se, com a janela ajustada e a legenda ao lado, a unidade ficar abaixo de 12, a figura não é desenhada: o desenho sai com `naoCabe`, e o cliente mostra o `alt` no lugar, como texto da lição.
+  3. **A fórmula e a reta numérica** seguem o piso de texto 13. Se não couberem, saem com `naoCabe` e o texto linear.
+- O "0" fora do lugar na colinearidade apertada já está com o Web & API.
