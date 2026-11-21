@@ -590,7 +590,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
   /** Mostra pontinhos pulando no lugar do rótulo, que segue como nome do botão para o leitor de tela. */
   carregando?: boolean;
   /** `sucesso` e `alerta` são o verde e o âmbar do retorno da aula, com contraste para o texto branco. */
-  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto' | 'destrutivo' | 'perigo';
+  variante?: 'primario' | 'sucesso' | 'alerta' | 'secundario' | 'texto' | 'destrutivo' | 'destrutivoBaixo' | 'perigo';
   compacto?: boolean;
 }) {
   const [focado, setFocado] = useState(false);
@@ -606,7 +606,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
     if (bloqueado || reduzir !== false) { pressao.stopAnimation(); pressao.setValue(1); }
     return () => pressao.stopAnimation();
   }, [bloqueado, reduzir, pressao]);
-  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : cores.acao;
+  let corTexto: string = variante === 'primario' || variante === 'sucesso' || variante === 'alerta' || variante === 'perigo' ? cores.fundo : variante === 'destrutivo' ? '#B3261E' : variante === 'destrutivoBaixo' ? cores.erro : cores.acao;
   if (desativado || esmaecido) corTexto = cores.textoSecundario;
   // Como .botao da web: a face de 48 com borda de 2 que fecha em volta e o degrau de 4 por fora, na cor do lábio
   // (--labio); nos botões claros, a borda e o degrau somam a faixa de 6 da web. O botão de texto não tem degrau.
@@ -643,6 +643,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
         style={({ pressed }) => [degrauFora(4, 16, labio, pressed || afundado), compacto && estilos.botaoDegrauCompacto, fora, focado && estilos.foco]}>
         <View style={[estilos.botaoFace, variante === 'secundario' && estilos.botaoFaceSecundaria, variante === 'sucesso' && estilos.botaoFaceSucesso,
           variante === 'alerta' && estilos.botaoFaceAlerta, variante === 'destrutivo' && estilos.botaoFaceDestrutiva, variante === 'perigo' && estilos.botaoFacePerigo,
+          variante === 'destrutivoBaixo' && estilos.botaoFaceDestrutivaBaixa,
           compacto && estilos.botaoFaceCompacta, face, apagado && estilos.botaoFaceApagada]}>
           {conteudo}
         </View>
@@ -1438,6 +1439,8 @@ export const estilos = StyleSheet.create({
   botaoFaceSucesso: { backgroundColor: cores.sucesso },
   botaoFaceAlerta: { backgroundColor: cores.alerta },
   botaoFaceDestrutiva: { borderColor: '#F3C4C0', backgroundColor: cores.fundo },
+  // Spec 16, item 20 (spec 11, ação destrutiva de baixa ênfase, "Excluir conta"): secundário de 44 com borda e texto #C23B4E.
+  botaoFaceDestrutivaBaixa: { minHeight: 44, borderColor: cores.erro, backgroundColor: cores.fundo },
   // Spec 11: a ação que destrói, vermelha cheia (#C23B4E), texto branco e degrau #8F2A39.
   botaoFacePerigo: { borderColor: cores.erro, backgroundColor: cores.erro },
   botaoFaceApagada: { borderColor: cores.gelo, backgroundColor: cores.nevoa },

@@ -91,3 +91,31 @@ test('item 23: a aula do app usa a semente do contrato (id da lição, índice, 
   assert.match(licao, /setRodadaDeOpcoes\(/, 'a revisão rápida continua subindo a rodada');
   assert.match(licao, /\[licao, rodadaDeOpcoes\],/);
 });
+
+test('item 19: a política de privacidade fica só em "Ajuda" (sai da seção "Privacidade e dados")', async () => {
+  const privacidade = await ler('privacidade.tsx');
+  const seguranca = await ler('seguranca.tsx');
+  assert.doesNotMatch(privacidade, /privacidade-politica|t\.politica\b/);
+  assert.match(seguranca, /\{ rotulo: s\.politica, caminho: s\.rotas\.politica, testID: 'ajuda-politica' \}/);
+  // Na seção sobram "Ver quem recebe" e "Permitir o uso de IA" (ou revogar), conforme o estado.
+  assert.match(privacidade, /testID="privacidade-ver-quem"/);
+  assert.match(privacidade, /testID="privacidade-permitir"/);
+});
+
+test('item 20: "Excluir conta" é o secundário de 44 com borda e texto #C23B4E, depois de "Sair"', async () => {
+  const privacidade = await ler('privacidade.tsx');
+  const perfil = await ler('perfil.tsx');
+  const interfaceApp = await ler('interface.tsx');
+  assert.match(privacidade, /testID="excluir-conta" variante="destrutivoBaixo"/);
+  assert.match(interfaceApp, /botaoFaceDestrutivaBaixa: \{ minHeight: 44, borderColor: cores\.erro, backgroundColor: cores\.fundo \}/);
+  assert.match(interfaceApp, /variante === 'destrutivoBaixo' \? cores\.erro :/);
+  assert.match(await ler('tema.ts'), /erro: '#C23B4E'/);
+  for (const sair of perfil.matchAll(/testID="sair"[^\n]*\n\s*<BotaoExcluirConta /g)) assert.ok(sair);
+  assert.equal([...perfil.matchAll(/testID="sair"[^\n]*\n\s*<BotaoExcluirConta /g)].length, 2, 'nas duas telas de perfil, logo depois de Sair');
+});
+
+test('item 32: com trilhas com link, a linha diz que só quem tem o link abre e como aparecer no perfil', async () => {
+  const perfil = await ler('perfil.tsx');
+  assert.match(perfil, /\{perfil\.links\.length > 0 && \(\n\s*<Text testID="perfil-links-linha" style=\{perfilEstilos\.linhaSecao\}>\{comunidade \? p\.compartilhadasLinha : p\.compartilhadasLinhaSemComunidade\}<\/Text>/);
+  assert.match(contrato, /compartilhadasTotal: \(n: number\) => `Trilhas com link/);
+});
