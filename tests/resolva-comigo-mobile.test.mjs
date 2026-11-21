@@ -129,7 +129,7 @@ test('"Verificar" ocupado e o foco do leitor de tela no "Sua vez" (spec 15, seç
   assert.match(tela, /ocupado=\{ocupado\} afundado=\{ocupado\} giro=\{ocupado\} umaLinha/);
   assert.doesNotMatch(tela.slice(tela.indexOf('resolva-verificar'), tela.indexOf('resolva-verificar') + 300), /carregando=/, 'giro com texto, não os pontinhos no lugar do texto');
   const botao = await ler('apps/mobile/src/interface.tsx');
-  assert.match(botao, /accessibilityState=\{\{ disabled: bloqueado, busy: ocupado \|\| carregando \}\}/, 'busy no app');
+  assert.match(botao, /accessibilityState=\{\{ disabled: bloqueado, busy: ocupado \|\| carregando \}\} aria-busy=\{ocupado \|\| carregando\}/, 'busy no app (e aria-busy, que a prévia web também lê)');
   // "Verificando…" dito uma vez, ao começar.
   assert.equal((tela.match(/announceForAccessibility\(mensagens\.licao\.avaliando\)/g) ?? []).length, 1);
   // Depois do "Verificar": o foco vai para o cartão do retorno, lido inteiro (acerto: o "Isso!"; erro: o porquê), não para o botão.

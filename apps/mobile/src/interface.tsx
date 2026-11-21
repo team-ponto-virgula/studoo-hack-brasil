@@ -617,7 +617,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
   if (comDegrau) {
     return (
       <Pressable ref={referencia} testID={testID} accessibilityRole="button" accessibilityLabel={nomeAcessivel ?? rotulo} accessibilityHint={dica}
-        accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} disabled={bloqueado}
+        accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} aria-busy={ocupado || carregando} disabled={bloqueado}
         onPressIn={() => pressionar(0.97)} onPressOut={() => pressionar(1)} onPress={acao}
         onFocus={() => setFocado(focoVisivel())} onBlur={() => setFocado(false)}
         // A caixa ocupa os 48 da face, como na web; o degrau desce por fora, no vão de baixo (como a sombra de .botao).
@@ -638,7 +638,7 @@ export function Botao({ rotulo, acao, testID, dica, icone, iconeAntes, imagemAnt
       accessibilityRole="button"
       accessibilityLabel={nomeAcessivel ?? rotulo}
       accessibilityHint={dica}
-      accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }}
+      accessibilityState={{ disabled: bloqueado, busy: ocupado || carregando }} aria-busy={ocupado || carregando}
       disabled={bloqueado}
       onPressIn={() => pressionar(0.97)}
       onPressOut={() => pressionar(1)}
