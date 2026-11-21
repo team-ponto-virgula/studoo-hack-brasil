@@ -10,7 +10,7 @@ import type {
   PlanoResumo,
   PropostaPlano,
 } from "@studoo/contratos";
-import { motivoParaRever } from "@studoo/contratos";
+import { motivoParaRever, normalizarResolucao, responderSuaVez, type Capacidades, type EscolhaNoSuaVez, type RespostaDoSuaVez } from "@studoo/contratos";
 import {
   apresentarExercicio,
   avaliarResposta,
@@ -28,6 +28,7 @@ import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
+import { SEM_CAPACIDADES, comVisuais, visualDoRetorno } from "./visuais";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
 import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
 
@@ -321,11 +322,18 @@ export async function conteudoDaLicao(usuarioId: string, id: string): Promise<Co
   return (await lerLicao(usuarioId, id)).conteudo;
 }
 
-export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoDetalhe> {
+/**
+ * A lição como a pessoa a vê. `capacidades` vem do cabeçalho `X-Studoo-Capacidades`: sem `visuais@1` (build 3, site antigo) a
+ * lição não leva campo novo e o desenho de matemática vai como PNG em `recurso` (se `desenharPng`); com ele, vão `visuais`, o
+ * `visual` dos exercícios e, com `resolucao@1`, a resolução até o "Sua vez". Lição sem visual sai como sempre.
+ */
+export async function buscarLicao(
+  usuarioId: string, id: string, opcoes: { capacidades?: Capacidades; desenharPng?: boolean } = {},
+): Promise<LicaoDetalhe> {
   const licao = await lerLicao(usuarioId, id);
   const { objetivo, conceito, exemplo, origem, exercicio, extras, exemploTipo, passos, recurso, falas, pratica, referencias } = licao.conteudo;
   const exercicios = [exercicio, ...(extras ?? [])].map(apresentarExercicio);
-  return {
+  const detalhe: LicaoDetalhe = {
     id: licao.id,
     planoId: licao.fluxo.planoId,
     fluxoId: licao.fluxoId,
@@ -349,10 +357,26 @@ export async function buscarLicao(usuarioId: string, id: string): Promise<LicaoD
       ? { materialDe: licao.fluxo.plano.origemNome }
       : {}),
   };
+  return comVisuais(detalhe, licao.conteudo, { capacidades: opcoes.capacidades ?? SEM_CAPACIDADES, desenharPng: opcoes.desenharPng ?? false });
+}
+
+/**
+ * O "Sua vez" do "Resolva comigo": corrige a escolha e, no acerto ou na segunda errada, devolve a revelação do passo e os
+ * passos que faltam (antes disso nada disso vai ao cliente). Lição sem resolução: `nao_encontrado`.
+ */
+export async function responderSuaVezDaLicao(usuarioId: string, id: string, escolha: EscolhaNoSuaVez): Promise<RespostaDoSuaVez> {
+  const { conteudo } = await lerLicao(usuarioId, id);
+  const resolucao = conteudo.resolucao ? normalizarResolucao(conteudo.resolucao) : null;
+  if (!resolucao) throw new FalhaApi("nao_encontrado");
+  const resposta = responderSuaVez(resolucao, escolha);
+  if (!resposta) throw new FalhaApi("invalido");
+  return resposta;
 }
 
 /** Avalia a resposta do exercício `indice` da lição (0 é o principal). */
-export async function avaliarLicao(usuarioId: string, id: string, resposta: string, indice = 0): Promise<Avaliacao> {
+export async function avaliarLicao(
+  usuarioId: string, id: string, resposta: string, indice = 0, capacidades: Capacidades = SEM_CAPACIDADES,
+): Promise<Avaliacao> {
   const licao = await lerLicao(usuarioId, id);
   const exercicio = [licao.conteudo.exercicio, ...(licao.conteudo.extras ?? [])][indice];
   const local = exercicio ? avaliarResposta(exercicio, resposta) : null;
@@ -373,7 +397,9 @@ export async function avaliarLicao(usuarioId: string, id: string, resposta: stri
     id,
     expiraEm: Date.now() + DURACAO_AVALIACAO,
   });
-  return { ...avaliacao, comprovante };
+  // Exercício com figura, para quem desenha (`visuais@1`): quem acertou vê o procurado virar resposta.
+  const visual = avaliacao.correta ? visualDoRetorno(licao.conteudo, indice, capacidades) : undefined;
+  return { ...avaliacao, ...(visual ? { visual } : {}), comprovante };
 }
 
 /** Registra a conclusão (uma vez) e, quando a lição tem prática, como ela foi (a mais recente fica). */

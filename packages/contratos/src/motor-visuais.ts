@@ -678,6 +678,13 @@ function moverPrimitiva(primitiva: Primitiva, dy: number): Primitiva {
   }
 }
 
+/** Centraliza o desenho numa altura mínima (o PNG só com fórmula tem pelo menos 100 de altura). */
+export function comAlturaMinima(desenho: Desenho, minimo: number): Desenho {
+  if (desenho.altura >= minimo) return desenho;
+  const dy = (minimo - desenho.altura) / 2;
+  return { ...desenho, altura: r2(minimo), primitivas: desenho.primitivas.map((primitiva) => moverPrimitiva(primitiva, dy)) };
+}
+
 /** Empilha desenhos de mesma largura (a faixa da fórmula em cima, a figura embaixo), com uma linha de 1 ponto entre eles. */
 export function comporDesenhos(partes: readonly Desenho[], opcoes: { separador?: boolean } = {}): Desenho {
   const primitivas: Primitiva[] = [];
