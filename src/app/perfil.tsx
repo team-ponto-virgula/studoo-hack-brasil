@@ -269,6 +269,8 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
                 <h2 id="perfil-compartilhadas" className="perfil-secao__titulo">{perfil.links.length > 0 ? p.compartilhadasTotal(perfil.links.length) : p.compartilhadas}</h2>
                 {perfil.links.length > 0 && postagem && <Botao variante="secundario" onClick={postagem.abrir}>{p.postar.botao}</Botao>}
               </div>
+              {/* Compartilhar é ter um link; aparecer no perfil é postar (spec 16, item 32): a linha diz a diferença. */}
+              {perfil.links.length > 0 && <p className="folha-texto perfil-secao__linha">{postagem ? p.compartilhadasLinha : p.compartilhadasLinhaSemComunidade}</p>}
               {perfil.links.length === 0 ? (
                 postagem ? <><p className="folha-texto">{p.postar.vazio}</p><Botao variante="secundario" className="postar-botao" onClick={postagem.abrir}>{p.postar.botao}</Botao></> :
                 <p className="folha-texto">
