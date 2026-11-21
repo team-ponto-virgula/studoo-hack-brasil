@@ -992,6 +992,11 @@ function termoSimples(no: NoFormula): boolean {
     case "variavel":
     case "simbolo":
       return true;
+    case "sequencia":
+      // `3\pi`: um número colado num símbolo (o π dos ângulos) é um termo só: "3π/2" é "3 pi sobre 2", não "fração: numerador 3 pi…". (`2a` e `-b` seguem como conta:
+      // "−b/2a" não diz se o 2 divide ou multiplica.)
+      if (no.itens.length === 2 && no.itens[0].tipo === "numero" && no.itens[1].tipo === "simbolo") return true;
+      return ehNumeroComSinal(no);
     case "script":
       return no.base.tipo !== "sequencia" && termoSimples(no.base) && (!no.indice || termoSimples(no.indice)) && (!no.expoente || termoSimples(no.expoente));
     default:
@@ -1002,6 +1007,34 @@ function termoSimples(no: NoFormula): boolean {
 /** Fração de dois termos simples (um número, uma variável, um índice): lida "1 sobre 3". */
 function fracaoSimples(no: Extract<NoFormula, { tipo: "fracao" }>): boolean {
   return termoSimples(no.numerador) && termoSimples(no.denominador);
+}
+
+/** Os itens de dentro de um parêntese separados por vírgula ou ponto e vírgula (`(2, −1)`): um grupo por item; `null` se não há separador (`(x)`, `(x + 1)`). */
+function gruposDoPar(conteudo: NoFormula): NoFormula[] | null {
+  if (conteudo.tipo !== "sequencia" || !conteudo.itens.some((item) => item.tipo === "separador" && item.valor !== "espaco")) return null;
+  const grupos: NoFormula[][] = [[]];
+  for (const item of conteudo.itens) {
+    if (item.tipo === "separador" && item.valor !== "espaco") grupos.push([]);
+    else grupos[grupos.length - 1].push(item);
+  }
+  if (grupos.some((grupo) => grupo.length === 0)) return null;
+  return grupos.map((grupo): NoFormula => (grupo.length === 1 ? grupo[0] : { tipo: "sequencia", itens: grupo }));
+}
+
+/**
+ * A letra colada num parêntese: `f(x)` é "f de x" (a função f, ou g, h: o argumento sem "abre parênteses"), e `V(2, −1)`, a maiúscula com um par ou trio, é "V de
+ * coordenadas 2 e menos 1" (spec 15, seção 18). Qualquer outra letra com parêntese (`a(b + c)`, um produto) continua como estava; `C = (4, 0)` também (o par vem
+ * depois do `=`, não colado na letra). `null` quando não é o caso.
+ */
+function falarLetraComParenteses(letra: NoFormula | undefined, parenteses: NoFormula | undefined): string | null {
+  if (letra?.tipo !== "variavel" || parenteses?.tipo !== "parenteses") return null;
+  const grupos = gruposDoPar(parenteses.conteudo);
+  if (grupos) {
+    if (!/^[A-Z]$/.test(letra.valor) || grupos.length < 2 || grupos.length > 3) return null;
+    const falados = grupos.map(falarFormula);
+    return `${letra.valor} de coordenadas ${falados.length === 2 ? falados.join(" e ") : `${falados.slice(0, -1).join(", ")} e ${falados.at(-1)}`}`;
+  }
+  return /^[fghFGH]$/.test(letra.valor) ? `${letra.valor} de ${falarFormula(parenteses.conteudo)}` : null;
 }
 
 function terminaEmFracaoLonga(no: NoFormula): boolean {
@@ -1082,7 +1115,12 @@ export function falarFormula(no: NoFormula): string {
             saida += `${nome}${base}`;
           }
         } else if (argumentosLidos.has(posicao)) {
-          // já lido junto com o nome da função
+          // já lido junto com o nome da função (ou com a letra que leva o parêntese)
+        } else if (falarLetraComParenteses(item, no.itens[posicao + 1]) !== null) {
+          const anterior = no.itens[posicao - 1];
+          if (saida && !/\s$/.test(saida) && anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador") saida += " ";
+          saida += falarLetraComParenteses(item, no.itens[posicao + 1]);
+          argumentosLidos.add(posicao + 1);
         } else {
           const anterior = no.itens[posicao - 1];
           if (saida && !/\s$/.test(saida) && anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador") saida += " ";

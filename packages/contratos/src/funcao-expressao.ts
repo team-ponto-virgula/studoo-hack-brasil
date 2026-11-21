@@ -349,6 +349,30 @@ function numeroDecimalParaTela(valor: number): string {
   return texto === "−0" ? "0" : texto;
 }
 
+/**
+ * O valor em LaTeX restrito, para a fórmula que o `alt` marca com `$…$`: múltiplo de π/4 vira fração de π (`\frac{\pi}{2}`, `\frac{3\pi}{2}`, `-\frac{\pi}{4}`, `2\pi`,
+ * `\pi`); o resto, com ponto decimal e duas casas. A fala sai da árvore: "pi sobre 2".
+ */
+export function numeroComPiParaLatex(valor: number): string {
+  const multiplo = multiploDePiSobre4(valor);
+  if (multiplo === null || multiplo === 0) {
+    const texto = String(Math.round(valor * 100) / 100);
+    return texto === "-0" ? "0" : texto;
+  }
+  const sinal = multiplo < 0 ? "-" : "";
+  const n = Math.abs(multiplo);
+  const divisor = n % 4 === 0 ? 1 : n % 2 === 0 ? 2 : 4;
+  const numerador = n / (4 / divisor);
+  const pi = `${numerador === 1 ? "" : numerador}\\pi`;
+  return `${sinal}${divisor === 1 ? pi : `\\frac{${pi}}{${divisor}}`}`;
+}
+
+/** O ponto sobre a curva em LaTeX restrito: `A(1, 0)`, `M(\frac{\pi}{2}, 1)`, e com decimal `R(-0.5; 0)` (o ponto e vírgula, como na tela). */
+export function rotuloLatexDaFuncao(id: string, x: number, y: number): string {
+  const [tx, ty] = [numeroComPiParaLatex(x), numeroComPiParaLatex(y)];
+  return `${id}(${tx}${tx.includes(".") || ty.includes(".") ? "; " : ", "}${ty})`;
+}
+
 /** O rótulo do ponto sobre a curva: "A (1, 0)", "M (π/2, 1)", e com decimal "R (−0,5; 0)" (a vírgula decimal não se confunde com a do par). */
 export function rotuloDaFuncao(id: string, x: number, y: number): string {
   const [tx, ty] = [numeroComPiParaTela(x), numeroComPiParaTela(y)];

@@ -1,4 +1,5 @@
 import { falarFormula, lerFormula, type NoFormula } from "./formula";
+import { falarTextoComFormulas } from "./formula-no-texto";
 import { lerExpressaoDaFuncao, numeroComPiParaTela, rotuloDaFuncao, type ModeloDaFuncao } from "./funcao-expressao";
 import { janelaDaFuncao, trechosDaCurva } from "./funcao-janela";
 import { caixaDaFormula, caixaDaFormulaEmLinha, deslocar, pisar, semGlifoNaFormula, textoEmCaixa, type Caixa, type Comando, type Marca } from "./motor-formula";
@@ -121,6 +122,9 @@ export function emitir(marcas: readonly Marca[]): { primitivas: Primitiva[]; men
   fecharGrupo();
   return { primitivas, menorTexto: Number.isFinite(menor) ? menor : PISO_DO_TEXTO, textos };
 }
+
+/** O `alt` do gráfico de função traz fórmulas marcadas com `$…$`: o leitor de tela lê a fala da árvore ("f de x é igual a …"), nunca o cifrão nem o LaTeX. */
+const descricaoParaLer = (alt: string): string => (alt.includes("$") ? falarTextoComFormulas(alt) : alt);
 
 function desenhoDe(marcas: readonly Marca[], altura: number, descricao: string, extra: Partial<Desenho> = {}): Desenho {
   const { primitivas, menorTexto, textos } = emitir(marcas);
@@ -1072,7 +1076,7 @@ function desenharPlanoUmaVez(
 
   const marcas = [...(faixa?.marcas ?? []), ...base, ...focos, ...textos, ...numeros, ...textosDoFoco, ...rotulos, ...marcasDosPontos, ...marcasDaLegenda];
   // A faixa de fórmulas que não cabe na largura (mais de 296) tira o desenho inteiro: `naoCabe`, e o cliente mostra o `alt`.
-  return { desenho: desenhoDe(marcas, altura, visual.alt, { caixas }), unidade: faixa && !faixa.cabe ? 0 : unidade, viavel: viavel && (!faixa || faixa.cabe), novos };
+  return { desenho: desenhoDe(marcas, altura, descricaoParaLer(visual.alt), { caixas }), unidade: faixa && !faixa.cabe ? 0 : unidade, viavel: viavel && (!faixa || faixa.cabe), novos };
 }
 
 /* ----- Reta numérica ----- */
@@ -1210,7 +1214,7 @@ export function desenharRetaNumerica(visual: VisualRetaNumerica, contexto: Conte
   // A reta tem 140 de altura, centrada; se o cliente dá menos, ela desce até o que o conteúdo pede, e abaixo disso sai `naoCabe`.
   const altura = Math.max(Math.min(140, opcoes.alturaMaxima ?? 140), conteudo + 8);
   const deslocamento = Math.max(0, (altura - (conteudo + 8)) / 2);
-  const desenho = desenhoDe(deslocamento ? deslocar(marcas, 0, deslocamento) : marcas, altura, visual.alt, { caixas: caixas.map((caixa) => ({ ...caixa, y: r2(caixa.y + deslocamento) })) });
+  const desenho = desenhoDe(deslocamento ? deslocar(marcas, 0, deslocamento) : marcas, altura, descricaoParaLer(visual.alt), { caixas: caixas.map((caixa) => ({ ...caixa, y: r2(caixa.y + deslocamento) })) });
   return opcoes.alturaMaxima !== undefined && altura > opcoes.alturaMaxima + 1e-6 ? { ...desenho, naoCabe: true } : desenho;
 }
 

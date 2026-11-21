@@ -4,7 +4,7 @@ import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
 import { acharVazamento, alvosDoSuaVez, chaveDoValor, letrasDoTexto, lerNumero, motivoDoVazamento, numerosDoTexto } from "./resolucao-vazamento";
 import { avaliarFuncao, interceptoDaFuncao, lerExpressaoDaFuncao, lerNumeroComPi, raizesDaFuncao, verticeDaFuncao, type ModeloDaFuncao } from "./funcao-expressao";
 import { ALTURA_PADRAO_DA_FIGURA, desenharVisual } from "./motor-visuais";
-import { comDescricaoDaResposta } from "./visuais-descricao";
+import { comDescricaoDaResposta, descricaoDaFigura } from "./visuais-descricao";
 import {
   LIMITES_VISUAIS,
   NOMES_DE_CURVA,
@@ -690,7 +690,9 @@ export function visualParaEnunciado<V extends Visual>(visual: V): V {
   if (visual.tipo === "funcao") {
     // Sem a posição do procurado (a curva só entra no desenho do retorno; no enunciado o motor não a desenha quando há procurado).
     const pontos = (visual.pontos ?? []).map(({ x, y, ...resto }) => (escondido(resto.papel) ? resto : { ...resto, x, y }));
-    return { ...visual, ...(pontos.length ? { pontos } : {}) } as V;
+    // O alt do gráfico de função é sempre o montado dos DADOS (as curvas e os pontos, com a fórmula marcada por `$…$`; o procurado, sem posição): assim a frase tem
+    // a fórmula desenhada em linha e falada pela árvore, nunca o texto solto da IA.
+    return { ...visual, alt: descricaoDaFigura(visual), ...(pontos.length ? { pontos } : {}) } as V;
   }
   return visual;
 }
