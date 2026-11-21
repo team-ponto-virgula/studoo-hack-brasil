@@ -618,3 +618,13 @@ Conferido nas lições l3 e l4 (completo, segunda errada, teclado e sem rede), e
 - **Foco da fórmula:** o "acende em 240 ms" sai da spec. O foco aparece junto com a entrada do cartão (seção 4), na web e no app.
 
 **Fora deste escopo:** a "Dica: use as teclas de A a C…" aparece também em 390, numa tela de toque. É o componente de exercício de hoje, comum a todas as lições. Mostrá-la só com teclado e ponteiro (`hover: hover` e `pointer: fine`) seria mudança global e fica para depois.
+
+**Paridade web × app (auditoria do Mobile 2, 21/11).** As duas decisões valem igual na web e no app.
+- **"Verificar" ocupado:** o botão fica afundado e desligado, com o giro de 16 px antes do texto e o rótulo trocado para "Verificando…" (a chave `avaliando` do contrato, que já existe), numa linha só, como o "Criando sua trilha…" da spec 04.
+  - O botão tem `aria-busy` na web e `busy` no app.
+  - O leitor de tela fala "Verificando…" uma vez, pela região educada.
+  - A web troca "Avaliando…" por "Verificando…", e o app passa a trocar o texto além do giro.
+- **Foco depois de "Verificar":** o foco do teclado e do leitor de tela vai para o cartão do retorno ("Isso!" com o porquê, ou o porquê da opção errada), que é lido inteiro. O próximo elemento é a ação do rodapé.
+  - Na web, o foco não vai mais direto para o botão do rodapé.
+  - Mover o foco para o botão logo depois do anúncio corta o anúncio no VoiceOver e no TalkBack, e o cartão garante que o retorno seja ouvido nas duas plataformas.
+- **Foco depois de "Tentar de novo":** a escolha é limpa, e o foco do teclado e do leitor de tela vai para a primeira opção, como a web já faz. O app passa a mover o foco do VoiceOver e do TalkBack para ela.
