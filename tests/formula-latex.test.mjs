@@ -132,7 +132,6 @@ test("só o que está na lista entra: o resto invalida a fórmula (que cai para 
     String.raw`\sqrt[3]{8}`,
     String.raw`|x|`,
     String.raw`\alpha + \beta`,
-    String.raw`\pi r^2`,
     String.raw`\pm 1`,
     String.raw`\overline{AB}`,
     String.raw`\sum_{i=1}^{n} i`,
@@ -347,4 +346,59 @@ test("conferência da conta: o que não dá para avaliar é pulado, não reprova
   assert.equal(conferirConta(arvores(["999999999999 \\times 999999999999 = 1"])).ok, true);
   // Dois números seguidos não são uma conta.
   assert.equal(conferirConta(arvores(["2 3 = 6"])).conferidas, 0);
+});
+
+/* ----- Parecer do Designer e adendo 3: grego, pares com decimal, falado ----- */
+
+test("Δ e π entram (os outros gregos continuam recusados e caem no texto linear)", () => {
+  assert.equal(ok(String.raw`\pi r^2`).canonica, String.raw`\pi r^2`);
+  assert.equal(ok("π r²").canonica, String.raw`\pi r^2`);
+  assert.equal(ok(String.raw`\Delta = b^2 - 4ac`).canonica, String.raw`\Delta = b^2 - 4a c`);
+  assert.equal(ok(String.raw`\pi\,r`).canonica, String.raw`\pi r`, "\\pi r não vira \\pir");
+  assert.equal(ok(String.raw`2\pi r`).canonica, String.raw`2\pi r`);
+  assert.equal(ok(String.raw`(\pi)`).canonica, String.raw`(\pi)`);
+  for (const fonte of [String.raw`\pi r^2`, String.raw`\Delta = \sqrt{b^2 - 4ac}`, String.raw`x_{\pi} + \Delta^2`, String.raw`\frac{\pi}{2}`, String.raw`2\pi`]) {
+    const lida = ok(fonte);
+    assert.deepEqual(ok(lida.canonica).arvore, lida.arvore, `canônica instável: ${fonte}`);
+  }
+  assert.equal(formulaLinear(ok(String.raw`\pi r^2`).arvore), "πr²");
+  assert.equal(formulaLinear(ok(String.raw`\Delta = b^2 - 4ac`).arvore), "Δ = b² − 4ac");
+  assert.equal(falarFormula(ok(String.raw`\pi r^2`).arvore), "pi r ao quadrado");
+  assert.equal(falarFormula(ok(String.raw`\Delta = 0`).arvore), "delta é igual a 0");
+  assert.equal(formulaCabeEmLinha(ok(String.raw`\pi r^2`).arvore), true);
+  for (const fonte of [String.raw`\alpha`, String.raw`\beta + 1`, String.raw`\theta`, String.raw`\lambda`, String.raw`\mu`, String.raw`\sigma`, String.raw`\omega`, String.raw`\phi`, String.raw`\pir`, "α", "θ", "Σ"]) falha(fonte);
+});
+
+test("Δ conta como incógnita; π é número que não cabe em racional e a conta pula", () => {
+  assert.equal(conferirConta(arvores([String.raw`\Delta = 5^2 - 4 \times 1 \times 6`, String.raw`\Delta = 1`])).ok, true);
+  assert.equal(conferirConta(arvores([String.raw`\Delta = 5^2 - 4 \times 1 \times 6`, String.raw`\Delta = 2`])).ok, false);
+  const comPi = conferirConta(arvores([String.raw`A = \pi r^2`, String.raw`r = 2`]));
+  assert.equal(comPi.ok, true);
+  assert.equal(comPi.conferidas, 1, "só o `r = 2`; a conta com π é pulada");
+});
+
+test("par com decimal usa ponto e vírgula: (1,5; 2); com inteiros continua (1, 2)", () => {
+  const decimal = ok(String.raw`A = (1.5, 2)`);
+  assert.equal(decimal.canonica, "A = (1.5; 2)");
+  assert.equal(formulaLinear(decimal.arvore), "A = (1,5; 2)");
+  assert.equal(falarFormula(decimal.arvore), "A é igual a abre parênteses 1,5; 2 fecha parênteses");
+  assert.equal(ok(decimal.canonica).canonica, decimal.canonica, "estável");
+  assert.equal(formulaLinear(ok(String.raw`(-0.5, 2, 3)`).arvore), "(−0,5; 2; 3)");
+  assert.equal(formulaLinear(ok(String.raw`(1, 2.5 + x)`).arvore), "(1; 2,5 + x)");
+  assert.equal(formulaLinear(ok(String.raw`A = (1, 2)`).arvore), "A = (1, 2)");
+  assert.equal(formulaLinear(ok(String.raw`f(x) = 2.5, g(x) = 1`).arvore), "f(x) = 2,5, g(x) = 1", "vírgula fora de par não muda");
+});
+
+test("falado: '→' é 'então'; fração simples é 'sobre'; 'fim da fração' quando vem algo depois", () => {
+  assert.equal(falarFormula(ok(String.raw`a \to b`).arvore), "a então b");
+  assert.equal(falarFormula(ok(String.raw`\frac{1}{3}`).arvore), "1 sobre 3");
+  assert.equal(falarFormula(ok(String.raw`\frac{x}{2}`).arvore), "x sobre 2");
+  assert.equal(falarFormula(ok(String.raw`\frac{x_A}{x_B}`).arvore), "x índice A sobre x índice B");
+  assert.equal(falarFormula(ok(String.raw`\frac{-1}{2}`).arvore), "menos 1 sobre 2");
+  assert.equal(falarFormula(ok(String.raw`\frac{a}{b} + c`).arvore), "a sobre b mais c");
+  assert.equal(falarFormula(ok(String.raw`\frac{x + 1}{2}`).arvore), "fração: numerador x mais 1, denominador 2");
+  assert.equal(falarFormula(ok(String.raw`\frac{x + 1}{2} + c`).arvore), "fração: numerador x mais 1, denominador 2, fim da fração mais c");
+  assert.equal(falarFormula(ok(String.raw`\foco{\frac{x + 1}{2}} = 4`).arvore), "fração: numerador x mais 1, denominador 2, fim da fração é igual a 4");
+  assert.equal(falarFormula(ok(String.raw`x = \frac{x + 1}{2}`).arvore), "x é igual a fração: numerador x mais 1, denominador 2", "sem nada depois, sem 'fim da fração'");
+  assert.equal(falarFormula(ok(String.raw`\frac{x_{A B}}{2}`).arvore), "fração: numerador x índice A B, denominador 2");
 });

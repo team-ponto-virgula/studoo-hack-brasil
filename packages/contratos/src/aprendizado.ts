@@ -9,6 +9,7 @@ export * from './visuais';
 export * from './formula';
 export { conferirConta, type ResultadoConta } from './formula-conta';
 export * from './visuais-validacao';
+export * from './resolucao-publica';
 export * from './licao';
 export * from './som';
 export { fundoUnicoDaPreferencia } from './catalogo-sons';
@@ -170,7 +171,10 @@ export interface LicaoDetalhe {
    * site antigo) o servidor omite este campo e põe o desenho num PNG em `recurso`, nas lições de matemática.
    */
   visuais?: Visual[];
-  /** "Resolva comigo": o exemplo resolvido passo a passo, com o "Sua vez". Só vai com `resolucao@1` no cabeçalho. */
+  /**
+   * "Resolva comigo": o exemplo resolvido passo a passo, com o "Sua vez". Só vai com `resolucao@1` no cabeçalho, e só até o passo
+   * do "Sua vez", sem a resposta dele (`resolucaoParaCliente`); o resto vem de `POST /api/aprendizado/licoes/[id]/resolucao`.
+   */
   resolucao?: Resolucao;
   /** Frases para ouvir e repetir, no exemplo. */
   falas?: Fala[];

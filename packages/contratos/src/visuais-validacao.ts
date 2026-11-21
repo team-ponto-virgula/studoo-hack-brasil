@@ -5,13 +5,13 @@ import {
   PAPEIS_PONTO,
   type Derivado,
   type IntervaloDaReta,
-  type OpcaoDoSuaVez,
+  type OpcaoCorrigida,
   type PapelPonto,
-  type PassoDaResolucao,
+  type PassoGuardado,
   type PontoDaReta,
   type PontoDoPlano,
-  type Resolucao,
-  type Tentativa,
+  type ResolucaoGuardada,
+  type TentativaGuardada,
   type Visual,
   type VisualFigura,
   type VisualFormula,
@@ -514,7 +514,7 @@ function formulaDoCampo(bruto: unknown, onde: string): FormulaLida {
   return { canonica: lida.canonica, arvore: lida.arvore };
 }
 
-function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoDoSuaVez; arvore?: NoFormula } {
+function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigida; arvore?: NoFormula } {
   const onde = `opção ${posicao + 1}`;
   if (!objeto(bruto)) return recusar(`${onde}: formato inválido`);
   if (typeof bruto.correta !== "boolean") return recusar(`${onde}: correta precisa ser verdadeiro ou falso`);
@@ -529,7 +529,7 @@ function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoDoSuaVe
   return { opcao: { texto: textoAte(bruto.texto, LIMITES_VISUAIS.textoDaOpcao, `${onde}: texto`), correta: bruto.correta, porque } };
 }
 
-function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): Tentativa {
+function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): TentativaGuardada {
   if (!objeto(bruto)) return recusar("sua vez: formato inválido");
   const pergunta = textoAte(bruto.pergunta, LIMITES_VISUAIS.pergunta, "sua vez: pergunta");
   if (!Array.isArray(bruto.opcoes) || bruto.opcoes.length !== 3) return recusar("sua vez: precisa de exatamente 3 opções");
@@ -549,13 +549,14 @@ function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>)
 }
 
 export type ResultadoResolucao =
-  | { ok: true; resolucao: Resolucao; conta: { conferidas: number; puladas: number } }
+  | { ok: true; resolucao: ResolucaoGuardada; conta: { conferidas: number; puladas: number } }
   | { ok: false; motivo: string };
 
 /**
  * Valida a resolução inteira: de 3 a 5 passos, cada um com nome (até 24 caracteres), frase e, se houver, fórmula e visual;
  * exatamente 1 "Sua vez", no penúltimo ou no último passo; e a conta conferida (`formula-conta.ts`). Tudo ou nada: se algo
- * falha, `motivo` diz o quê, e a lição fica com o exemplo em texto.
+ * falha, `motivo` diz o quê, e a lição fica com o exemplo em texto. O que sai é a forma GUARDADA (com `correta` e `porque`);
+ * `resolucaoParaCliente` faz a que vai pela rede.
  */
 export function validarResolucao(bruto: unknown): ResultadoResolucao {
   try {
@@ -576,7 +577,7 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
     const formulas: NoFormula[] = [];
     const total = passosBrutos.length;
     let comTentativa = -1;
-    const passos: PassoDaResolucao[] = passosBrutos.map((passoBruto, posicao) => {
+    const passos: PassoGuardado[] = passosBrutos.map((passoBruto, posicao) => {
       const onde = `passo ${posicao + 1}`;
       if (!objeto(passoBruto)) return recusar(`${onde}: formato inválido`);
       const nome = textoCortado(passoBruto.nome, LIMITES_VISUAIS.nomeDoPasso, `${onde}: nome`, 3);
@@ -613,7 +614,7 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
   }
 }
 
-export function normalizarResolucao(bruto: unknown): Resolucao | null {
+export function normalizarResolucao(bruto: unknown): ResolucaoGuardada | null {
   const resultado = validarResolucao(bruto);
   return resultado.ok ? resultado.resolucao : null;
 }

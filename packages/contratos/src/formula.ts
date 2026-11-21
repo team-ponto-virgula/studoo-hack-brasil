@@ -6,10 +6,12 @@
  *
  * O que vale:
  * - números (`3`, `3.5`: o ponto decimal vem na fonte e a vírgula aparece na tela), variáveis de uma letra e vírgula ou
- *   ponto e vírgula como separador (`C = (4, 0)`);
+ *   ponto e vírgula como separador (`C = (4, 0)`); um par com decimal usa ponto e vírgula, para não confundir com a vírgula
+ *   decimal: `(1.5, 2)` fica `(1.5; 2)` e aparece "(1,5; 2)";
  * - operadores `+ - \times \div = \neq < > \leq \geq \to` (e os apelidos `\cdot * / \ne \le \ge \rightarrow` e os
  *   caracteres `− × ÷ · ≠ ≤ ≥ →`, que viram o operador de sempre) e parênteses (`\left( … \right)` vale);
- * - `\frac{a}{b}`, `x^2`, `x_A`, `x_A^2`, `\sqrt{x}` (só a raiz quadrada), `\text{…}`, `\%`;
+ * - `\frac{a}{b}`, `x^2`, `x_A`, `x_A^2`, `\sqrt{x}` (só a raiz quadrada), `\text{…}`, `\%`, e os dois símbolos gregos da fase 1,
+ *   `\Delta` (discriminante) e `\pi` (círculo); os outros gregos (α, β, θ…) ficam para a fase 2 e invalidam a fórmula;
  * - `\begin{bmatrix|pmatrix|vmatrix} a & b \\ c & d \end{…}`, até 4 × 4 (`vmatrix` é o determinante e é quadrado);
  * - os três destaques `\foco{…}`, `\procurado{…}` e `\resposta{…}`, no máximo dois por fórmula e sem um dentro do outro.
  * Espaços (`\,`, `\;`, `\:`, `\!`, `\ `, `\quad`, `\qquad`) são aceitos e ignorados: quem decide o respiro é o motor.
@@ -36,6 +38,8 @@ export type OperadorFormula = "+" | "-" | "×" | "÷" | "=" | "≠" | "<" | ">" 
 export type NoFormula =
   | { tipo: "numero"; valor: string }
   | { tipo: "variavel"; valor: string }
+  /** O grego da fase 1: Δ (discriminante) e π. Reto, como número, com o contorno da Noto Sans Bold. */
+  | { tipo: "simbolo"; valor: "Δ" | "π" }
   | { tipo: "operador"; valor: OperadorFormula }
   | { tipo: "separador"; valor: "," | ";" }
   | { tipo: "texto"; valor: string }
@@ -76,11 +80,11 @@ const SOBRESCRITOS: Readonly<Record<string, string>> = { "²": "2", "³": "3" };
 const ehDigito = (c: string | undefined): c is string => c !== undefined && c >= "0" && c <= "9";
 const ehLetra = (c: string | undefined): c is string => c !== undefined && /^[A-Za-z]$/.test(c);
 
-/** Só estas coisas entram dentro de `\text{…}`: letras (com acento do português), números, espaço e pontuação simples. */
-const TEXTO_PERMITIDO = /^[A-Za-zÀ-ÖØ-öø-ÿ0-9 .,;:!?()'’/%+=<>-]*$/u;
+/** Só estas coisas entram dentro de `\text{…}`: letras (com os acentos do português), números, espaço e pontuação simples; todas têm glifo em `glifos.ts`. */
+const TEXTO_PERMITIDO = /^[A-Za-zÀÁÂÃÇÉÊÍÓÔÕÚÜàáâãçéêíóôõúü0-9 .,;:!?()'’/%+=<>-]*$/u;
 
 function podeTerScript(no: NoFormula): boolean {
-  return no.tipo === "numero" || no.tipo === "variavel" || no.tipo === "parenteses" || no.tipo === "sequencia" ||
+  return no.tipo === "numero" || no.tipo === "variavel" || no.tipo === "simbolo" || no.tipo === "parenteses" || no.tipo === "sequencia" ||
     no.tipo === "fracao" || no.tipo === "raiz";
 }
 
@@ -222,6 +226,10 @@ class Analisador {
     const c = this.s[this.i];
     if (ehDigito(c)) return this.numero();
     if (ehLetra(c)) return this.letra();
+    if (c === "Δ" || c === "π") {
+      this.i += 1;
+      return { tipo: "simbolo", valor: c };
+    }
     if (c === "\\") return this.comando(profundidade);
     if (c === "(") {
       this.i += 1;
@@ -288,6 +296,10 @@ class Analisador {
     switch (nome) {
       case "%":
         return { tipo: "porcento" };
+      case "Delta":
+        return { tipo: "simbolo", valor: "Δ" };
+      case "pi":
+        return { tipo: "simbolo", valor: "π" };
       case "frac": {
         const numerador = this.grupo(profundidade);
         const denominador = this.grupo(profundidade);
@@ -498,6 +510,44 @@ function prepararFonte(entrada: string): string {
   return saida;
 }
 
+function mapearFilhos(no: NoFormula, f: (filho: NoFormula) => NoFormula): NoFormula {
+  switch (no.tipo) {
+    case "fracao":
+      return { ...no, numerador: f(no.numerador), denominador: f(no.denominador) };
+    case "script":
+      return { tipo: "script", base: f(no.base), ...(no.indice ? { indice: f(no.indice) } : {}), ...(no.expoente ? { expoente: f(no.expoente) } : {}) };
+    case "raiz":
+      return { ...no, radicando: f(no.radicando) };
+    case "parenteses":
+    case "destaque":
+      return { ...no, conteudo: f(no.conteudo) };
+    case "sequencia":
+      return { ...no, itens: no.itens.map(f) };
+    case "matriz":
+      return { ...no, linhas: no.linhas.map((linha) => linha.map(f)) };
+    default:
+      return no;
+  }
+}
+
+/** Par com casa decimal: o separador vira ponto e vírgula, para "(1,5, 2)" não ficar ambíguo: "(1,5; 2)". */
+function ajustarSeparadores(no: NoFormula): NoFormula {
+  const novo = mapearFilhos(no, ajustarSeparadores);
+  if (novo.tipo !== "parenteses" || novo.conteudo.tipo !== "sequencia") return novo;
+  let decimal = false;
+  percorrerFormula(novo.conteudo, (visitado) => {
+    if (visitado.tipo === "numero" && visitado.valor.includes(".")) decimal = true;
+  });
+  if (!decimal) return novo;
+  return {
+    tipo: "parenteses",
+    conteudo: {
+      tipo: "sequencia",
+      itens: novo.conteudo.itens.map((item): NoFormula => (item.tipo === "separador" && item.valor === "," ? { tipo: "separador", valor: ";" } : item)),
+    },
+  };
+}
+
 /** Lê uma fórmula. Fora da lista, devolve `ok: false` com o motivo, e nunca lança. */
 export function lerFormula(fonte: unknown): ResultadoFormula {
   if (typeof fonte !== "string") return { ok: false, erro: "a fórmula não é texto" };
@@ -505,7 +555,7 @@ export function lerFormula(fonte: unknown): ResultadoFormula {
   if (!preparada) return { ok: false, erro: "fórmula vazia" };
   if (preparada.length > LIMITES_FORMULA.caracteres) return { ok: false, erro: `fórmula com mais de ${LIMITES_FORMULA.caracteres} caracteres` };
   try {
-    const arvore = new Analisador(preparada).raiz();
+    const arvore = ajustarSeparadores(new Analisador(preparada).raiz());
     return { ok: true, arvore, canonica: formulaCanonica(arvore) };
   } catch (erro) {
     if (erro instanceof ErroFormula) return { ok: false, erro: erro.message };
@@ -546,6 +596,8 @@ function sequenciaCanonica(itens: readonly NoFormula[]): string {
       // Duas variáveis seguidas ficam separadas: `a b c` não pode virar `abc`, que seria uma palavra solta ao reler.
       if (item.tipo === "variavel" && itens[posicao - 1]?.tipo === "variavel") saida += " ";
       saida += formulaCanonica(item);
+      // `\pi r` não pode virar `\pir`, um comando que não existe.
+      if (item.tipo === "simbolo") saida += " ";
     }
   });
   return saida.replace(/\s+/g, " ").trim();
@@ -557,6 +609,8 @@ export function formulaCanonica(no: NoFormula): string {
     case "numero":
     case "variavel":
       return no.valor;
+    case "simbolo":
+      return no.valor === "Δ" ? "\\Delta" : "\\pi";
     case "operador":
       return OPERADOR_LATEX[no.valor];
     case "separador":
@@ -603,6 +657,7 @@ function atomico(no: NoFormula): boolean {
   switch (no.tipo) {
     case "numero":
     case "variavel":
+    case "simbolo":
     case "texto":
     case "parenteses":
     case "raiz":
@@ -637,6 +692,7 @@ export function formulaLinear(no: NoFormula): string {
     case "numero":
       return numeroNaTela(no.valor);
     case "variavel":
+    case "simbolo":
       return no.valor;
     case "operador":
       return OPERADOR_LINEAR[no.valor];
@@ -687,7 +743,7 @@ export function formulaLinear(no: NoFormula): string {
 
 const OPERADOR_FALADO: Readonly<Record<OperadorFormula, string>> = {
   "+": "mais", "-": "menos", "×": "vezes", "÷": "dividido por", "=": "é igual a", "≠": "é diferente de", "<": "é menor que",
-  ">": "é maior que", "≤": "é menor ou igual a", "≥": "é maior ou igual a", "→": "seta para",
+  ">": "é maior que", "≤": "é menor ou igual a", "≥": "é maior ou igual a", "→": "então",
 };
 
 function ehNumeroComSinal(no: NoFormula): boolean {
@@ -702,9 +758,33 @@ function falarMatriz(no: Extract<NoFormula, { tipo: "matriz" }>): string {
   return `matriz de ${no.linhas.length} ${no.linhas.length === 1 ? "linha" : "linhas"} e ${no.linhas[0].length} ${no.linhas[0].length === 1 ? "coluna" : "colunas"}: ${linhas}`;
 }
 
+function termoSimples(no: NoFormula): boolean {
+  switch (no.tipo) {
+    case "numero":
+    case "variavel":
+    case "simbolo":
+      return true;
+    case "script":
+      return no.base.tipo !== "sequencia" && termoSimples(no.base) && (!no.indice || termoSimples(no.indice)) && (!no.expoente || termoSimples(no.expoente));
+    default:
+      return ehNumeroComSinal(no);
+  }
+}
+
+/** Fração de dois termos simples (um número, uma variável, um índice): lida "1 sobre 3". */
+function fracaoSimples(no: Extract<NoFormula, { tipo: "fracao" }>): boolean {
+  return termoSimples(no.numerador) && termoSimples(no.denominador);
+}
+
+function terminaEmFracaoLonga(no: NoFormula): boolean {
+  if (no.tipo === "destaque") return terminaEmFracaoLonga(no.conteudo);
+  return no.tipo === "fracao" && !fracaoSimples(no);
+}
+
 /**
  * O texto que o leitor de tela lê, gerado da árvore (a IA não escreve isto): "x índice C é igual a 3 vezes 4, menos 3,
- * menos 5". Fração: "fração: numerador …, denominador …". Em soma e subtração de três ou mais termos, uma vírgula marca a pausa.
+ * menos 5". Fração de dois termos simples: "1 sobre 3"; as outras: "fração: numerador …, denominador …" (e "fim da fração"
+ * quando vem algo depois). Em soma e subtração de três ou mais termos, uma vírgula marca a pausa. "→" é "então".
  */
 export function falarFormula(no: NoFormula): string {
   switch (no.tipo) {
@@ -712,6 +792,8 @@ export function falarFormula(no: NoFormula): string {
       return numeroNaTela(no.valor);
     case "variavel":
       return no.valor;
+    case "simbolo":
+      return no.valor === "Δ" ? "delta" : "pi";
     case "operador":
       return OPERADOR_FALADO[no.valor];
     case "separador":
@@ -721,6 +803,7 @@ export function falarFormula(no: NoFormula): string {
     case "porcento":
       return "por cento";
     case "fracao":
+      if (fracaoSimples(no)) return `${falarFormula(no.numerador)} sobre ${falarFormula(no.denominador)}`;
       return `fração: numerador ${falarFormula(no.numerador)}, denominador ${falarFormula(no.denominador)}`;
     case "script": {
       let saida = no.base.tipo === "sequencia" ? `abre parênteses ${falarFormula(no.base)} fecha parênteses` : falarFormula(no.base);
@@ -751,6 +834,8 @@ export function falarFormula(no: NoFormula): string {
           const anterior = no.itens[posicao - 1];
           if (saida && !/\s$/.test(saida) && anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador") saida += " ";
           saida += falarFormula(item);
+          // "a/b + c" lido como "fração: numerador a, denominador b, mais c" não diz onde a fração acaba.
+          if (terminaEmFracaoLonga(item) && posicao < no.itens.length - 1) saida += ", fim da fração";
         }
       });
       return saida.replace(/\s+/g, " ").replace(/\s+,/g, ",").trim();

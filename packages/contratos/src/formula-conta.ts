@@ -75,7 +75,8 @@ export type Declaracoes = Map<string, Racional>;
 
 /** O nome com que a variável entra na conta: `k`, `x_C`, `x_AB`. */
 export function chaveDaVariavel(no: NoFormula): string | null {
-  if (no.tipo === "variavel") return no.valor;
+  // O Δ é incógnita como qualquer letra (`Δ = b² − 4ac`); o π não é: é um número que não cabe em racional.
+  if (no.tipo === "variavel" || (no.tipo === "simbolo" && no.valor === "Δ")) return no.valor;
   if (no.tipo === "script" && no.base.tipo === "variavel" && no.indice && !no.expoente) {
     return `${no.base.valor}_${formulaCanonica(no.indice).replace(/[{}\s]/g, "")}`;
   }
@@ -95,7 +96,7 @@ function determinante(linhas: Racional[][]): Racional {
 }
 
 function ehInicioDeFator(no: NoFormula): boolean {
-  return no.tipo === "numero" || no.tipo === "variavel" || no.tipo === "script" || no.tipo === "parenteses" ||
+  return no.tipo === "numero" || no.tipo === "variavel" || no.tipo === "simbolo" || no.tipo === "script" || no.tipo === "parenteses" ||
     no.tipo === "fracao" || no.tipo === "raiz" || no.tipo === "destaque" || no.tipo === "sequencia" ||
     (no.tipo === "matriz" && no.moldura === "barras");
 }
@@ -108,7 +109,8 @@ function avaliarFator(no: NoFormula, valores: Declaracoes): Racional {
   switch (no.tipo) {
     case "numero":
       return decimal(no.valor);
-    case "variavel": {
+    case "variavel":
+    case "simbolo": {
       const valor = valores.get(no.valor);
       if (!valor) throw new NaoAvaliavel(`${no.valor} sem valor`);
       return valor;

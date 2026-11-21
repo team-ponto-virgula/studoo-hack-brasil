@@ -1,4 +1,4 @@
-import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial, Resolucao, Visual } from "@studoo/contratos";
+import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial, ResolucaoGuardada, Visual } from "@studoo/contratos";
 import { LIMITES_RESPOSTA, TIPOS_TRECHO, inferirTipoTrecho, tamanhoDaResposta } from "@studoo/contratos";
 
 /**
@@ -54,7 +54,7 @@ export type ConteudoLicao = {
    * validador recuse o visual dela (o visual some, a lição fica).
    */
   visuais?: Visual[];
-  resolucao?: Resolucao;
+  resolucao?: ResolucaoGuardada;
   falas?: Fala[];
   origem: string;
   exercicio: ExercicioInterno;

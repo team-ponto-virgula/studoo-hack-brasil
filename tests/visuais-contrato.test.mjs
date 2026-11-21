@@ -6,12 +6,17 @@ import {
   CAPACIDADES_DESTE_CLIENTE,
   LIMITES_VISUAIS,
   cabecalhoDeCapacidades,
+  formulaLinear,
   lerCapacidades,
+  lerFormula,
   normalizarFigura,
   normalizarResolucao,
   normalizarVisual,
   normalizarVisuais,
+  passosEmTexto,
   pontoApareceNaPosicao,
+  resolucaoParaCliente,
+  responderSuaVez,
   validarResolucao,
   validarVisual,
   visualParaEnunciado,
@@ -480,4 +485,96 @@ test("o validador nunca lança, com qualquer coisa que a IA mande", () => {
     assert.doesNotThrow(() => normalizarVisuais(lixo));
     assert.doesNotThrow(() => normalizarVisuais([lixo]));
   }
+});
+
+/* ----- "Sua vez" sem vazamento (parecer do Designer, item d) ----- */
+
+const guardada = (nome) => validarResolucao(fixture(nome).licao.resolucao).resolucao;
+const pontosEscondidos = (visual) => (visual ? visual.pontos.filter((ponto) => ponto.papel === "procurado" || ponto.papel === "resposta") : []);
+
+test("o JSON que vai antes da escolha não traz a resposta do 'Sua vez' nem dos passos que vêm depois", () => {
+  for (const nome of NOMES) {
+    const completa = guardada(nome);
+    const corte = completa.passos.findIndex((passo) => passo.tentativa);
+    const passo = completa.passos[corte];
+    const publica = resolucaoParaCliente(completa);
+    const json = JSON.stringify(publica);
+
+    assert.equal(publica.total, completa.passos.length, `${nome}: o total vale para a resolução inteira`);
+    assert.equal(publica.passos.length, corte + 1, `${nome}: só até o passo do Sua vez`);
+    const noCorte = publica.passos[corte];
+    assert.equal(noCorte.formula, undefined, `${nome}: a fórmula do passo é a revelação`);
+    assert.equal(noCorte.visual, undefined, `${nome}: o desenho do passo é a revelação`);
+    assert.equal(noCorte.tentativa.opcoes.length, 3);
+    // Nada de certo ou errado nem de porquê.
+    assert.equal(json.includes('"correta"'), false, `${nome}: sem correta`);
+    assert.equal(json.includes('"porque"'), false, `${nome}: sem porque`);
+    for (const opcao of passo.tentativa.opcoes) assert.equal(json.includes(JSON.stringify(opcao.porque)), false);
+    // A revelação e tudo o que vem depois.
+    if (passo.formula) assert.equal(json.includes(JSON.stringify(passo.formula)), false, `${nome}: fórmula revelada`);
+    for (const depois of completa.passos.slice(corte + 1)) {
+      assert.equal(json.includes(JSON.stringify(depois.nome)), false, `${nome}: nome do passo seguinte`);
+      assert.equal(json.includes(JSON.stringify(depois.texto)), false, `${nome}: texto do passo seguinte`);
+      if (depois.formula) assert.equal(json.includes(JSON.stringify(depois.formula)), false, `${nome}: fórmula do passo seguinte`);
+    }
+    assert.equal(json.includes("\\resposta"), false, `${nome}: sem \\resposta antes do acerto`);
+    // Nenhum desenho leva a posição do procurado, nem o que o derivado diz.
+    for (const visual of [publica.visual, ...publica.passos.map((outro) => outro.visual)]) {
+      for (const ponto of pontosEscondidos(visual)) assert.deepEqual(Object.keys(ponto).sort(), ["id", "papel"], `${nome}: ponto ${ponto.id} sem posição`);
+    }
+    assert.equal(json.includes("derivado"), false);
+    // O que o cliente precisa para perguntar continua lá.
+    assert.ok(noCorte.tentativa.pergunta && noCorte.texto);
+  }
+});
+
+test("escolher no 'Sua vez': o acerto e a segunda errada revelam; a primeira errada só diz o porquê", () => {
+  for (const nome of NOMES) {
+    const completa = guardada(nome);
+    const corte = completa.passos.findIndex((passo) => passo.tentativa);
+    const { opcoes } = completa.passos[corte].tentativa;
+    const certa = opcoes.findIndex((opcao) => opcao.correta);
+    const errada = opcoes.findIndex((opcao) => !opcao.correta);
+
+    const acerto = responderSuaVez(completa, { opcao: certa, tentativa: 1 });
+    assert.equal(acerto.correta, true);
+    assert.equal(acerto.porque, opcoes[certa].porque);
+    assert.equal(acerto.certa, undefined);
+    assert.equal(acerto.depois.formula, completa.passos[corte].formula);
+    assert.equal(acerto.depois.passos.length, completa.passos.length - corte - 1);
+    assert.equal(JSON.stringify(acerto.depois.passos).includes("correta"), false);
+    if (corte < completa.passos.length - 1) assert.ok(JSON.stringify(acerto.depois.passos).includes("\\resposta") || acerto.depois.passos.at(-1).visual);
+
+    const primeira = responderSuaVez(completa, { opcao: errada, tentativa: 1 });
+    assert.deepEqual(primeira, { correta: false, porque: opcoes[errada].porque }, `${nome}: a primeira errada não revela`);
+
+    const segunda = responderSuaVez(completa, { opcao: errada, tentativa: 2 });
+    assert.equal(segunda.correta, false);
+    assert.equal(segunda.certa, certa);
+    assert.equal(segunda.porqueDaCerta, opcoes[certa].porque);
+    assert.deepEqual(segunda.depois, acerto.depois, `${nome}: depois da segunda errada segue como no acerto`);
+
+    for (const ruim of [-1, 3, 1.5, NaN, undefined, "0"]) assert.equal(responderSuaVez(completa, { opcao: ruim, tentativa: 1 }), null);
+  }
+  const colinearidade = guardada("colinearidade");
+  const final = responderSuaVez(colinearidade, { opcao: 0, tentativa: 1 }).depois.passos.at(-1);
+  assert.equal(final.formula, String.raw`k = \resposta{2}`);
+  assert.equal(final.visual.pontos.find((ponto) => ponto.id === "C").papel, "resposta");
+  assert.equal(final.visual.pontos.find((ponto) => ponto.id === "C").x, 2, "depois do acerto o desenho traz a posição");
+});
+
+test("o exemplo em texto para o cliente sem `resolucao@1`: passos com a fórmula em texto linear e sem 'Sua vez'", () => {
+  const linear = (formula) => {
+    const lida = lerFormula(formula);
+    return lida.ok ? formulaLinear(lida.arvore) : null;
+  };
+  const passos = passosEmTexto(guardada("baricentro"), linear);
+  assert.equal(passos.length, 5);
+  assert.equal(passos[0], "1. A fórmula: A abscissa do baricentro é a média das abscissas dos vértices. x_G = (x_A + x_B + x_C) / 3");
+  assert.match(passos[3], /^4\. O mesmo para y_C: .* y_C = 3 × 2 − 1 − 5$/);
+  assert.equal(passos[4].endsWith("C = (2, 0)"), true);
+  assert.equal(passos.every((passo) => passo.length <= 300), true);
+  assert.equal(passos.some((passo) => /[\\{}]/.test(passo)), false, "nunca LaTeX cru na tela");
+  const abscissas = passosEmTexto(guardada("abscissas"), linear);
+  assert.match(abscissas[2], /15 = 2 \+ 6 \+ x_C$/);
 });

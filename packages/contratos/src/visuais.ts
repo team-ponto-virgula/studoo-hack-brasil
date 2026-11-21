@@ -98,24 +98,38 @@ export type TipoVisual = (typeof TIPOS_VISUAL)[number];
 
 /* ----- "Resolva comigo" ----- */
 
-/** Uma opção do "Sua vez": um número (`texto`) ou uma fórmula em linha (`formula`), nunca os dois. */
+/**
+ * O "Sua vez" é uma pergunta de escolha com 3 opções e exatamente 1 certa. Não é corrigido para valer nota, não tem resposta
+ * digitada e não conta no progresso nem no comprovante. Na segunda escolha errada o cliente mostra a certa e segue.
+ *
+ * Duas formas, para a resposta não ir pela rede antes da hora:
+ * - `Tentativa` é o que o cliente recebe: a pergunta e as opções (um número em `texto` ou uma fórmula em linha em `formula`,
+ *   nunca os dois), sem `correta` nem `porque`;
+ * - `TentativaGuardada` é o que o servidor guarda: as mesmas opções com `correta` e o `porque` de cada uma.
+ */
 export interface OpcaoDoSuaVez {
   texto?: string;
   formula?: string;
+}
+export interface OpcaoCorrigida extends OpcaoDoSuaVez {
   correta: boolean;
   /** Por que esta opção está certa ou errada (a frase do cartão "Isso!" e a de cada opção errada). */
   porque: string;
 }
-
-/**
- * O "Sua vez": uma pergunta de escolha com 3 opções e exatamente 1 certa. Na segunda escolha errada o cliente mostra a certa e
- * segue. Não é corrigida pelo servidor, não tem resposta digitada e não conta no progresso nem no comprovante.
- */
 export interface Tentativa {
   pergunta: string;
   opcoes: OpcaoDoSuaVez[];
 }
+export interface TentativaGuardada {
+  pergunta: string;
+  opcoes: OpcaoCorrigida[];
+}
 
+/**
+ * Passo como o cliente o recebe. No passo do "Sua vez", `formula` e `visual` são a REVELAÇÃO (o resultado que a pessoa vai
+ * escolher e o desenho dele): o servidor só os manda depois do acerto ou da segunda escolha errada (`RespostaDoSuaVez.depois`),
+ * e tira o `\resposta{}` e a posição do ponto procurado de tudo o que vem antes.
+ */
 export interface PassoDaResolucao {
   /** Até 24 caracteres: aparece na linha compacta do passo feito. */
   nome: string;
@@ -125,16 +139,51 @@ export interface PassoDaResolucao {
   formula?: string;
   /** O desenho inteiro deste passo; mantém os eixos e o intervalo do passo anterior (o servidor força isso). */
   visual?: VisualFigura;
-  /** Exatamente um passo da resolução tem, e é o penúltimo ou o último. */
   tentativa?: Tentativa;
 }
+export interface PassoGuardado extends Omit<PassoDaResolucao, "tentativa"> {
+  /** Exatamente um passo da resolução tem, e é o penúltimo ou o último. */
+  tentativa?: TentativaGuardada;
+}
 
-/** Exemplo resolvido junto com a pessoa: de 3 a 5 passos, com outros números que os do exercício. */
+/**
+ * "Resolva comigo" como o cliente recebe, ANTES do "Sua vez": os passos até o do "Sua vez", sem a revelação dele e sem os que
+ * vêm depois. `total` é o número de passos da resolução inteira ("Passo 2 de 4").
+ */
 export interface Resolucao {
   problema: string;
   /** O desenho do problema, com o procurado marcado (sem a posição dele). */
   visual?: VisualFigura;
+  total: number;
   passos: PassoDaResolucao[];
+}
+
+/** O que o servidor guarda: de 3 a 5 passos, com outros números que os do exercício, e a resposta de tudo. */
+export interface ResolucaoGuardada {
+  problema: string;
+  visual?: VisualFigura;
+  passos: PassoGuardado[];
+}
+
+/** Quantas vezes a pessoa já escolheu no "Sua vez" (1 ou 2): na segunda errada o servidor mostra a certa. */
+export interface EscolhaNoSuaVez {
+  opcao: number;
+  tentativa: 1 | 2;
+}
+
+/** A resposta de `POST /api/aprendizado/licoes/[id]/resolucao`: a correção de uma escolha e, quando vale, o que vem depois. */
+export interface RespostaDoSuaVez {
+  correta: boolean;
+  /** O porquê da opção escolhida. */
+  porque: string;
+  /** Só na segunda escolha errada: o índice da opção certa e o porquê dela ("o Studoo mostra a certa, com o porquê"). */
+  certa?: number;
+  porqueDaCerta?: string;
+  /**
+   * Só no acerto e na segunda errada: o que o passo do "Sua vez" mostra depois (a fórmula e o desenho dele) e os passos que
+   * faltam, com o `\resposta{}` e o ponto procurado na posição.
+   */
+  depois?: { formula?: string; visual?: VisualFigura; passos: PassoDaResolucao[] };
 }
 
 export const LIMITES_VISUAIS = {
@@ -222,28 +271,76 @@ export const LARGURA_DO_DESENHO = 320;
 export const TETO_DE_PRIMITIVAS = 300;
 
 /**
- * As cores são papéis, nunca hexadecimais no dado: cada cliente aplica o seu tema e o PNG do servidor usa o mesmo mapa
- * (`PALETA_DO_DESENHO`, no motor).
+ * As cores são papéis, nunca hexadecimais no dado: cada cliente aplica o seu tema e o PNG do servidor usa o mesmo mapa,
+ * `PALETA_DO_DESENHO` (o app importa este e o teste de paleta o trava).
  */
 export const PAPEIS_DE_COR = [
-  "texto", "suave", "eixo", "grade", "segmento", "preenchimento", "separador", "fundo",
+  "texto", "suave", "eixo", "grade", "segmento", "preenchimento", "separador", "fundo", "branco",
   "dado", "especial", "especialTexto", "procurado", "procuradoTexto", "procuradoFundo",
   "resposta", "respostaTexto", "respostaFundo", "foco", "focoTexto", "focoFundo", "soma", "subtrai",
 ] as const;
 export type PapelDeCor = (typeof PAPEIS_DE_COR)[number];
+
+/**
+ * Cores da spec 15. Texto a pelo menos 4,5:1 sobre o fundo dele; o roxo `#7C5CFF` só preenche (como texto usa-se
+ * `#5B3FD9`); o vermelho não existe aqui: fica só no retorno de erro. `preenchimento` vale com opacidade 0,07 e `fundo` é o
+ * bloco da fórmula no app (no PNG o fundo é branco).
+ */
+export const PALETA_DO_DESENHO: Readonly<Record<PapelDeCor, string>> = {
+  texto: "#0B1B5C",
+  suave: "#5E6A85",
+  eixo: "#0B1B5C",
+  grade: "#E1E7FA",
+  segmento: "#2563FF",
+  preenchimento: "#2563FF",
+  separador: "#E1E7FA",
+  fundo: "#F1F4FD",
+  branco: "#FFFFFF",
+  dado: "#2563FF",
+  especial: "#7C5CFF",
+  especialTexto: "#5B3FD9",
+  procurado: "#C98A1A",
+  procuradoTexto: "#9A5B00",
+  procuradoFundo: "#FFF6EA",
+  resposta: "#1F7A5A",
+  respostaTexto: "#1F7A5A",
+  respostaFundo: "#E8F6EF",
+  foco: "#2563FF",
+  focoTexto: "#2563FF",
+  focoFundo: "#EAF0FF",
+  soma: "#2563FF",
+  subtrai: "#C98A1A",
+};
 
 /** Traço e vazio, em unidades de projeto. */
 export type Tracejado = readonly [number, number];
 
 /**
  * O que o motor desenha, em coordenadas da largura de projeto, com `y` para baixo. O texto (rótulos, números, a fórmula)
- * já vem como contorno de glifos num `caminho`; o `d` só tem M, L, C, Q e Z e é gerado pelo motor, nunca pela IA.
+ * já vem como contorno de glifos num `caminho`, e a ponta de seta também é um `caminho` preenchido, de tamanho fixo (nada de
+ * `Marker`: ele é instável no Android). O `d` só tem M, L, Q e Z e é gerado pelo motor, nunca pela IA.
+ *
+ * Regras que todo cliente aplica igual (senão o desenho muda de um para o outro):
+ * - preenchimento `nonzero` (`REGRA_DE_PREENCHIMENTO`): os contornos de dentro (o miolo do "o", do "8", do Δ) vêm no sentido
+ *   contrário do de fora, e é isso que os deixa vazados;
+ * - ponta da linha `butt` e junção `round` (`PONTA_DA_LINHA`, `JUNCAO_DA_LINHA`): a ponta redonda alongaria cada traço do tracejado;
+ * - `opacidade` vale para o primitivo inteiro (preenchimento e borda).
  */
 export type Primitiva =
-  | { tipo: "linha"; x1: number; y1: number; x2: number; y2: number; cor: PapelDeCor; largura: number; tracejado?: Tracejado; opacidade?: number; seta?: boolean }
+  | { tipo: "linha"; x1: number; y1: number; x2: number; y2: number; cor: PapelDeCor; largura: number; tracejado?: Tracejado; opacidade?: number }
   | { tipo: "retangulo"; x: number; y: number; largura: number; altura: number; raio?: number; preenchimento?: PapelDeCor; borda?: PapelDeCor; larguraDaBorda?: number; opacidade?: number }
   | { tipo: "circulo"; cx: number; cy: number; raio: number; preenchimento?: PapelDeCor; borda?: PapelDeCor; larguraDaBorda?: number; tracejado?: Tracejado; opacidade?: number }
   | { tipo: "caminho"; d: string; preenchimento?: PapelDeCor; borda?: PapelDeCor; larguraDaBorda?: number; tracejado?: Tracejado; opacidade?: number };
+
+export const REGRA_DE_PREENCHIMENTO = "nonzero" as const;
+export const PONTA_DA_LINHA = "butt" as const;
+export const JUNCAO_DA_LINHA = "round" as const;
+
+/**
+ * O menor tamanho de texto do desenho, em unidades de projeto. Com a largura útil de um iPhone SE (cerca de 280) a escala é
+ * 0,875: 15 unidades saem com 13 pt. O motor nunca desenha texto menor (rótulo, número da grade, índice, expoente).
+ */
+export const PISO_DO_TEXTO = 15;
 
 export interface Desenho {
   /** Sempre `LARGURA_DO_DESENHO`: o `viewBox` é `0 0 largura altura`. */
@@ -252,6 +349,10 @@ export interface Desenho {
   primitivas: Primitiva[];
   /** Texto para o leitor de tela (para a fórmula, o texto falado). */
   descricao: string;
+  /** O menor texto que o desenho usa, em unidades de projeto (nunca menos que `PISO_DO_TEXTO`). */
+  menorTexto: number;
+  /** Fórmula mais larga que o desenho (depois de encolher até 85%): o cliente rola para o lado. Sem isto, tudo cabe. */
+  larguraDoConteudo?: number;
 }
 
 /**
