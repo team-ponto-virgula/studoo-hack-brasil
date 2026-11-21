@@ -1,6 +1,6 @@
 import type { MetaPlano } from "./gerador";
 import type { GeradorTrilha } from "./gerador";
-import type { EsqueletoPlano } from "@/dominio/aprendizado/plano";
+import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { comNovasTentativas } from "./novas-tentativas";
@@ -22,7 +22,7 @@ import {
   sinalComPrazo,
   validarBaseUrl,
 } from "./comum";
-import { contagensDoRelato, licaoEhDeMatematica } from "./matematica";
+import { contagensDoRelato, correcaoDaResolucao, licaoEhDeMatematica, motivoDaResolucao, valorDaMatematica } from "./matematica";
 
 export { normalizarConteudo };
 
@@ -252,6 +252,9 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
         registrar("matematica_desligada", { motivo });
         matematica = false;
       };
+      // A primeira lição válida cuja resolução foi recusada (estrutura, formato ou conta): a segunda tentativa, uma só, pede a lição de novo com
+      // o motivo e só a substitui se for melhor. Qualquer falha dela (prazo, erro, formato) devolve esta: nunca pior do que a primeira.
+      let reserva: { conteudo: ConteudoLicao; valor: number } | undefined;
       let correcao = "";
       for (let tentativa = 0; tentativa < 2; tentativa += 1) {
         const { sinal: comPrazo, estourou } = sinalComPrazo(sinal, matematica ? TEMPO_CONTEUDO_DE_MATEMATICA_MS : TEMPO_CONTEUDO_MS);
@@ -260,6 +263,10 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
           const resposta = await pedir(config, corpoDaLicao(esqueleto, fluxo, licao, correcao, matematica), comPrazo);
           corpo = await resposta.json();
         } catch (erro) {
+          if (reserva) {
+            registrar("resolucao_nova_tentativa", { aceita: false, motivo: "falhou" });
+            return reserva.conteudo;
+          }
           if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
           if (matematica && tentativa === 0) {
             desligarMatematica(estourou() ? "tempo" : erro instanceof FalhaApi ? "http" : "rede");
@@ -274,6 +281,10 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
         try {
           bruto = JSON.parse(textoDaResposta(corpo));
         } catch (erro) {
+          if (reserva) {
+            registrar("resolucao_nova_tentativa", { aceita: false, motivo: "formato" });
+            return reserva.conteudo;
+          }
           if (erro instanceof FalhaApi) throw erro; // recusa do modelo
           registrar("ia_indisponivel", { motivo: "formato", detalhe: "json", tentativa });
           correcao = correcaoDoFormato("json");
@@ -287,12 +298,28 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
           }
           // O que a matemática deu, só em contagens (os motivos de recusa citam fórmulas: não vão ao registro).
           if (lida.matematica) registrar("licao_matematica", { ...contagensDoRelato(lida.matematica), tentativa });
+          if (reserva) {
+            const melhor = valorDaMatematica(lida.matematica) > reserva.valor;
+            registrar("resolucao_nova_tentativa", { aceita: lida.matematica?.resolucao.aceita === true, melhor });
+            return melhor ? lida.conteudo : reserva.conteudo;
+          }
+          const motivo = matematica && tentativa === 0 ? motivoDaResolucao(lida.matematica) : undefined;
+          if (motivo) {
+            reserva = { conteudo: lida.conteudo, valor: valorDaMatematica(lida.matematica) };
+            correcao = correcaoDaResolucao(motivo);
+            continue;
+          }
           return lida.conteudo;
+        }
+        if (reserva) {
+          registrar("resolucao_nova_tentativa", { aceita: false, motivo: "formato" });
+          return reserva.conteudo;
         }
         registrar("ia_indisponivel", { motivo: "formato", detalhe: lida.motivo, tentativa });
         correcao = correcaoDoFormato(lida.motivo ?? "formato");
         desligarMatematica("formato");
       }
+      if (reserva) return reserva.conteudo;
       throw new FalhaApi("ia_indisponivel");
     },
   };

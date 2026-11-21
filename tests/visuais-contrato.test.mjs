@@ -380,6 +380,9 @@ test("resolução: tudo ou nada, e o motivo diz o quê", () => {
   const noUltimo = resolucaoDe();
   noUltimo.passos[4].tentativa = noUltimo.passos[3].tentativa;
   delete noUltimo.passos[3].tentativa;
+  // O texto do último passo dá a resposta ("Então C = (2, 0)…"): no passo do "Sua vez" a frase só diz o que fazer (marco 8).
+  assert.match(motivoDa(noUltimo), /^o texto do passo 5 \(o "Sua vez"\) traz o resultado \(2, 0\) antes da escolha/);
+  noUltimo.passos[4].texto = "Agora monte o ponto C com as duas coordenadas que você achou.";
   assert.equal(validarResolucao(noUltimo).ok, true, "o último passo também pode ser o 'Sua vez'");
 
   const semProblema = resolucaoDe();

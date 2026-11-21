@@ -153,6 +153,7 @@ async function desenharConteudo(conteudo, prefixo) {
   }
 }
 
+const resumo = { licoes: 0, visuais: [0, 0], figuras: [0, 0], resolucao: [0, 0], reparos: 0, novas: [0, 0], ms: 0, chamadas: [] };
 const tiposDe = (visuais) => (visuais ?? []).map((visual) => visual.tipo).join(", ") || "nenhum";
 
 function imprimirMatematica(conteudo, relato) {
@@ -167,9 +168,19 @@ function imprimirMatematica(conteudo, relato) {
   else if (resolucao.aceita) {
     console.log(`  resolução (Resolva comigo): ACEITA · ${conteudo.resolucao.passos.length} passos · contas conferidas ${resolucao.conferidas ?? 0}, puladas ${resolucao.puladas ?? 0}`);
   } else console.log("  resolução (Resolva comigo): RECUSADA (tudo ou nada: a lição fica com o exemplo em texto)");
+  for (const reparo of relato.reparos ?? []) console.log(`  reparado: ${reparo}`);
   for (const motivo of relato.motivos) console.log(`  recusado → ${motivo}`);
+  if (relato.novaTentativa) {
+    const { motivo, aceita, motivoDaSegunda } = relato.novaTentativa;
+    console.log(`  nova tentativa (uma só): disse à IA "${motivo}" → ${aceita ? "ACEITA" : `RECUSADA de novo${motivoDaSegunda ? `: ${motivoDaSegunda}` : " (sem resposta)"}`}`);
+  }
   if (conteudo.exercicio.visual?.pontos?.some((ponto) => ponto.papel === "procurado")) {
     console.log(`  descrição depois do acerto: ${descricaoDaFigura(visualRevelado(conteudo.exercicio.visual))}`);
+  }
+  resumo.reparos += relato.reparos?.length ?? 0;
+  if (relato.novaTentativa) {
+    resumo.novas[1] += 1;
+    if (relato.novaTentativa.aceita) resumo.novas[0] += 1;
   }
   return {
     visuais: [visuais.aceitos, visuais.enviados],
@@ -178,7 +189,6 @@ function imprimirMatematica(conteudo, relato) {
   };
 }
 
-const resumo = { licoes: 0, visuais: [0, 0], figuras: [0, 0], resolucao: [0, 0], ms: 0, chamadas: [] };
 const somar = (alvo, parcial) => { alvo[0] += parcial[0]; alvo[1] += parcial[1]; };
 
 /* ----- Modo material (foto, PDF, caderno) ----- */
@@ -235,6 +245,7 @@ async function rodarMaterial() {
     somar(resumo.visuais, contagens.visuais); somar(resumo.figuras, contagens.figuras); somar(resumo.resolucao, contagens.resolucao);
     await desenharConteudo(conteudo, `material-licao${i + 1}`);
     await gravarBruto(`material-licao${i + 1}-figuras-bruto`, figuras[0]?.texto);
+    await gravarBruto(`material-licao${i + 1}-figuras-bruto-nova-tentativa`, figuras[1]?.texto);
     gravarAceito(`material-licao${i + 1}-aceito`, aceitoDe(conteudo, relatos[i], { como: citacoes[i], trecho: conteudo.referencias[0].trecho }));
   }
 }
@@ -278,13 +289,25 @@ async function rodarTrilha() {
     resumo.chamadas.push(...dele);
     resumo.licoes += 1;
     console.log(`  ${dele.length} pedido${dele.length === 1 ? "" : "s"} ao provedor: ${segundos(dele.reduce((s, c) => s + c.ms, 0))} · ${linhaDeTokens(dele)}${dele.length > 1 ? " (houve segunda tentativa)" : ""}`);
-    // O que a primeira resposta da IA tinha de matemática e o que o validador fez com ela (com os motivos).
+    // O que cada resposta da IA tinha de matemática e o que o validador fez com ela (com os motivos): a segunda só existe quando a resolução
+    // da primeira foi recusada (a única nova tentativa), e a lição entregue é a que o servidor escolheu.
     let relato;
-    const primeira = dele[0]?.texto;
-    if (primeira) {
-      try { relato = normalizarLicao(analisarJson(primeira, true), "QA").matematica; } catch { /* resposta fora do formato: a segunda tentativa cuida */ }
+    for (const [k, chamada] of dele.entries()) {
+      if (!chamada.texto) continue;
+      let lida;
+      try { lida = normalizarLicao(analisarJson(chamada.texto, true), "QA"); } catch { continue; }
+      const entregue = lida.conteudo && JSON.stringify({ ...lida.conteudo, origem: conteudo.origem }) === JSON.stringify(conteudo);
+      if (dele.length > 1) console.log(`  --- tentativa ${k + 1}${entregue ? " (a lição entregue)" : ""}`);
+      if (entregue || (!relato && k === 0)) relato = lida.matematica;
+      if (dele.length > 1) imprimirMatematica(lida.conteudo ?? conteudo, lida.matematica);
     }
-    const contagens = imprimirMatematica(conteudo, relato);
+    const contagens = dele.length > 1 ? { visuais: [0, 0], figuras: [0, 0], resolucao: [0, 0] } : imprimirMatematica(conteudo, relato);
+    if (dele.length > 1) {
+      const entregue = relato;
+      somar(resumo.visuais, [entregue?.visuais.aceitos ?? 0, entregue?.visuais.enviados ?? 0]);
+      somar(resumo.figuras, [entregue?.figuras.aceitas ?? 0, entregue?.figuras.enviadas ?? 0]);
+      somar(resumo.resolucao, [entregue?.resolucao.aceita ? 1 : 0, entregue?.resolucao.enviada ? 1 : 0]);
+    }
     somar(resumo.visuais, contagens.visuais); somar(resumo.figuras, contagens.figuras); somar(resumo.resolucao, contagens.resolucao);
     await desenharConteudo(conteudo, `trilha-licao${i + 1}`);
     for (const [k, chamada] of dele.entries()) await gravarBruto(`trilha-licao${i + 1}-${k === 0 ? "bruto" : `bruto-tentativa${k + 1}`}`, chamada.texto);
@@ -296,6 +319,6 @@ if (opcoes.material) await rodarMaterial();
 if (opcoes.trilha) await rodarTrilha();
 
 const { entrada, saida } = tokensDe(resumo.chamadas);
-console.log(`\n== Resumo: ${resumo.licoes} lições · visuais ${resumo.visuais[0]}/${resumo.visuais[1]} · figuras de exercício ${resumo.figuras[0]}/${resumo.figuras[1]} · resoluções ${resumo.resolucao[0]}/${resumo.resolucao[1]} · ${resumo.chamadas.length} pedidos · ${segundos(resumo.ms)} · ${milhar(entrada + saida)} tokens (${milhar(entrada)} de entrada, ${milhar(saida)} de saída)`);
+console.log(`\n== Resumo: ${resumo.licoes} lições · visuais ${resumo.visuais[0]}/${resumo.visuais[1]} · figuras de exercício ${resumo.figuras[0]}/${resumo.figuras[1]} · resoluções ${resumo.resolucao[0]}/${resumo.resolucao[1]} · ${resumo.reparos} reparos de realce · novas tentativas aceitas ${resumo.novas[0]}/${resumo.novas[1]} · ${resumo.chamadas.length} pedidos · ${segundos(resumo.ms)} · ${milhar(entrada + saida)} tokens (${milhar(entrada)} de entrada, ${milhar(saida)} de saída)`);
 if (pastaPng) console.log(`   PNG em ${pastaPng}`);
 globalThis.fetch = fetchOriginal;

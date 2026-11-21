@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import { after, afterEach, before, beforeEach, test } from "node:test";
-import { normalizarResolucao, normalizarVisual } from "@studoo/contratos";
+import { formulaLinear, lerFormula, normalizarResolucao, normalizarVisual } from "@studoo/contratos";
 import { conteudoValido, esqueletoValido } from "../src/dominio/aprendizado/plano.ts";
 import { reiniciarLimiteDeGeracoes } from "../src/servidor/ia/limite.ts";
 
@@ -13,8 +13,9 @@ const { analisarJson, esquemaDaLicao, esquemaDaLicaoDeMatematica, instrucoesDaLi
 const { GERADOR_OPENAI, configuracaoOpenAi, corpoDaLicao, criarGeradorOpenAi } = await import("../src/servidor/ia/openai.ts");
 const { GERADOR_DEEPSEEK, configuracaoDeepSeek, criarGeradorDeepSeek, instrucoesLicaoJsonDeMatematica } = await import("../src/servidor/ia/deepseek.ts");
 const {
-  ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, instrucoesDeFigurasDoMaterial, instrucoesDeNotacaoDoMaterial,
-  licaoEhDeMatematica, materialEhDeMatematica,
+  contagensDoRelato, correcaoDaResolucao, ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, instrucoesDeFigurasDoMaterial,
+  instrucoesDeNotacaoDoMaterial, lerResolucaoDoModelo, lerVisuaisDoModelo, licaoEhDeMatematica, materialEhDeMatematica, reescreverRealces,
+  repararResolucao, repararVisuais,
 } = await import("../src/servidor/ia/matematica.ts");
 const {
   INSTRUCOES_DAS_LICOES_DO_MATERIAL, TRECHO_DA_PAGINA_INTEIRA, TRECHO_MAXIMO, TRECHO_MINIMO, conteudosDasLicoes, gerarLicoesDoMaterial, localizarCitacao,
@@ -37,6 +38,8 @@ let servidor;
 let pedidos = [];
 /** Quem responde: (dados, caminho) => { status?, corpo } com `corpo` o objeto (ou texto) que o modelo devolve. Sem isso, 500. */
 let responder = () => ({ status: 500, corpo: { error: { message: "sem resposta programada" } } });
+/** Quanto o servidor demora para responder a um pedido (ms), para os testes de prazo. */
+let atraso = () => 0;
 let registros = [];
 let consoleErro;
 
@@ -56,9 +59,14 @@ before(async () => {
       const dados = corpo ? JSON.parse(corpo) : {};
       pedidos.push({ caminho: pedido.url, dados });
       const { status = 200, corpo: saida } = responder(dados, pedido.url, pedidos.length);
-      resposta.writeHead(status, { "Content-Type": "application/json" });
-      if (status !== 200) return resposta.end(JSON.stringify(saida));
-      resposta.end(JSON.stringify(pedido.url.endsWith("/responses") ? saidaDaOpenAi(saida) : saidaDaDeepSeek(saida)));
+      const enviar = () => {
+        resposta.writeHead(status, { "Content-Type": "application/json" });
+        if (status !== 200) return resposta.end(JSON.stringify(saida));
+        return resposta.end(JSON.stringify(pedido.url.endsWith("/responses") ? saidaDaOpenAi(saida) : saidaDaDeepSeek(saida)));
+      };
+      const espera = atraso(dados);
+      if (espera > 0) setTimeout(enviar, espera);
+      else enviar();
     });
   });
   await new Promise((resolver) => servidor.listen(0, "127.0.0.1", resolver));
@@ -84,6 +92,7 @@ beforeEach(() => {
   pedidos = [];
   registros = [];
   responder = () => ({ status: 500, corpo: { error: { message: "sem resposta programada" } } });
+  atraso = () => 0;
   reiniciarLimiteDeGeracoes();
   consoleErro = console.error;
   console.error = (...partes) => { registros.push(partes.join(" ")); };
@@ -431,7 +440,9 @@ test("OpenAI: resolução com a conta errada e visual inválido não derrubam ne
   bruto.exercicios[0].visual = { tipo: "plano", alt: "x", pontos: [] };
   responder = () => ok(bruto);
   const conteudo = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
-  assert.equal(pedidos.length, 1, "um pedido só: o que não vale some, não se pede de novo");
+  // O visual e a figura que não valem somem sem pedir de novo; a resolução com a conta errada ganha UMA nova tentativa (marco 7). Aqui a IA
+  // repete o mesmo erro: fica o tudo ou nada, com o que a primeira trouxe, e nunca há terceiro pedido.
+  assert.equal(pedidos.length, 2, "a resolução recusada por conta é pedida uma vez de novo, e só uma");
   assert.ok(conteudoValido(conteudo));
   assert.equal("resolucao" in conteudo, false);
   assert.equal("visual" in conteudo.exercicio, false);
@@ -892,6 +903,457 @@ test("6: o baricentro que a IA marca como dado, com derivado, é um ponto de des
   assert.deepEqual(g, { id: "G", papel: "especial", x: 1, y: 3, derivado: { tipo: "baricentro", de: ["A", "B", "C"] } });
   // E com um ponto de coordenadas dadas e sem derivado, o papel dado fica.
   assert.equal(lida.conteudo.exercicio.visual.pontos.find((p) => p.id === "A").papel, "dado");
+});
+
+/* ----- Marco 7: o reparo da cor das fórmulas e a única nova tentativa da resolução ----- */
+
+const copiaDe = (valor) => JSON.parse(JSON.stringify(valor));
+const semSuaVez = (resolucao) => {
+  const sem = copiaDe(resolucao);
+  for (const passo of sem.passos) passo.tentativa = null;
+  return sem;
+};
+
+test("reparo: três realces numa fórmula (o caso real da IA) ficam dois; o texto de dentro e a conta ficam", () => {
+  const { latex, motivos } = reescreverRealces("\\foco{3} = \\frac{\\foco{1} + \\foco{5} + y_C}{3}", { resposta: false, procurado: true });
+  assert.equal(latex, "\\foco{3} = \\frac{\\foco{1} + 5 + y_C}{3}", "ficam os dois primeiros, e o terceiro perde só o comando e as chaves");
+  assert.deepEqual(motivos, ["mais de 2 realces"]);
+  // A fórmula que o validador recusava agora lê, e a conta é a mesma.
+  assert.equal(lerFormula("\\foco{3} = \\frac{\\foco{1} + \\foco{5} + y_C}{3}").ok, false);
+  const lida = lerFormula(latex);
+  assert.equal(lida.ok, true);
+  assert.equal(formulaLinear(lida.arvore), "3 = (1 + 5 + y_C) ÷ 3");
+  // Quatro realces: ficam os dois primeiros e os outros dois saem; com 2 ou menos, nada muda.
+  assert.equal(reescreverRealces("\\foco{a} + \\procurado{b} + \\foco{c} + \\foco{d}", { resposta: true, procurado: true }).latex, "\\foco{a} + \\procurado{b} + c + d");
+  const intacta = "\\foco{x_C} = \\frac{\\resposta{6}}{2}";
+  assert.deepEqual(reescreverRealces(intacta, { resposta: true, procurado: true }), { latex: intacta, motivos: [] });
+  // Chaves dentro do realce (fração, matriz) não confundem o fim dele, e o que não é realce passa como está.
+  assert.equal(reescreverRealces("\\foco{\\frac{a}{b}} + \\foco{\\sqrt{2}} + \\foco{\\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix}}", { resposta: true, procurado: true }).latex, "\\foco{\\frac{a}{b}} + \\foco{\\sqrt{2}} + \\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix}");
+});
+
+test("reparo: \\resposta só fica no último passo, \\procurado sai do último, e realce dentro de realce perde o de dentro", () => {
+  const passos = (formulas) => ({ problema: "Quanto vale k?", passos: formulas.map((formula, i) => ({ nome: `Passo ${i + 1}`, texto: "Texto do passo.", formula })) });
+  const { valor, reparos } = repararResolucao(passos([
+    "2k = \\resposta{6}",
+    "\\foco{\\resposta{k}} = 3",
+    "\\procurado{k} = \\resposta{3}",
+  ]));
+  assert.deepEqual(valor.passos.map((passo) => passo.formula), ["2k = 6", "\\foco{k} = 3", "k = \\resposta{3}"]);
+  assert.deepEqual(reparos, [
+    "passo 1: 1 realce desembrulhado (\\resposta fora do último passo)",
+    "passo 2: 1 realce desembrulhado (dentro de outro realce)",
+    "passo 3: 1 realce desembrulhado (\\procurado no passo da resposta)",
+  ]);
+  // Nas opções do "Sua vez" o \resposta entregaria a certa: sai.
+  const comOpcoes = passos(["k = 3"]);
+  comOpcoes.passos[0].tentativa = { pergunta: "?", opcoes: [{ formula: "k = \\resposta{3}", correta: true, porque: "a" }, { formula: "k = 4", correta: false, porque: "b" }] };
+  const { valor: semEntrega, reparos: reparosDasOpcoes } = repararResolucao(comOpcoes);
+  assert.equal(semEntrega.passos[0].tentativa.opcoes[0].formula, "k = 3");
+  assert.deepEqual(reparosDasOpcoes, ["passo 1, opção 1: 1 realce desembrulhado (\\resposta fora do último passo)"]);
+  // Os visuais da lição não têm último passo: \resposta sai; \foco e \procurado ficam.
+  const visuais = repararVisuais([{ tipo: "formula", latex: "x_G = \\foco{\\frac{a}{3}} \\to \\resposta{4}" }, { tipo: "formula", latex: "\\procurado{k} = 2" }, { tipo: "plano", alt: "Os pontos A e B.", pontos: [{ id: "A", x: 1, y: 1 }] }]);
+  assert.equal(visuais.valor[0].latex, "x_G = \\foco{\\frac{a}{3}} \\to 4");
+  assert.equal(visuais.valor[1].latex, "\\procurado{k} = 2");
+  assert.deepEqual(visuais.valor[2], { tipo: "plano", alt: "Os pontos A e B.", pontos: [{ id: "A", x: 1, y: 1 }] }, "a figura não é tocada");
+  assert.deepEqual(visuais.reparos, ["visuais[0]: 1 realce desembrulhado (\\resposta fora do último passo)"]);
+  // O objeto que a IA mandou não muda (o reparo devolve uma cópia).
+  const original = passos(["\\foco{a} + \\foco{b} + \\foco{c}"]);
+  const antes = copiaDe(original);
+  repararResolucao(original);
+  assert.deepEqual(original, antes);
+});
+
+test("reparo: o realce a mais numa resolução vale; a conta errada, a resposta final errada e o 'Sua vez' que falta continuam recusados", () => {
+  const bom = copiaDe(exemploDeMatematica);
+  // 1) O caso real: o passo da substituição com 3 realces (a conta estava certa).
+  const tres = copiaDe(bom.resolucao);
+  tres.passos[1].formula = "x_M = \\frac{\\foco{1} + \\foco{5}}{\\foco{2}}";
+  const lida = lerResolucaoDoModelo(tres);
+  assert.ok(lida.resolucao, lida.motivo);
+  assert.deepEqual(lida.reparos, ["passo 2: 1 realce desembrulhado (mais de 2 realces)"]);
+  assert.equal(lida.resolucao.passos[1].formula, "x_M = \\frac{\\foco{1} + \\foco{5}}{2}");
+  // 2) A conta errada com realce a mais: o realce é consertado, a conta continua recusada, com o motivo da conta.
+  const contaErrada = copiaDe(bom.resolucao);
+  contaErrada.passos[0].formula = "k = 3 \\times 7";
+  contaErrada.passos[1].formula = "\\foco{6} - \\foco{2}k = \\foco{0}";
+  const errada = lerResolucaoDoModelo(contaErrada);
+  assert.equal(errada.resolucao, undefined);
+  assert.match(errada.motivo, /a conta não fecha em "6 − 2k = 0": -36 = 0 é falso, com k = 21/);
+  assert.deepEqual(errada.reparos, ["passo 2: 1 realce desembrulhado (mais de 2 realces)"]);
+  // 3) O "Sua vez" que falta é estrutura: nada a consertar, e a resolução continua recusada.
+  const sem = lerResolucaoDoModelo(semSuaVez(bom.resolucao));
+  assert.equal(sem.resolucao, undefined);
+  assert.equal(sem.motivo, 'a resolução precisa de exatamente um "Sua vez"');
+  assert.deepEqual(sem.reparos, []);
+  // 4) A resposta final errada com realces a mais: recusada pela conta, não pela cor.
+  const finalErrada = copiaDe(bom.resolucao);
+  finalErrada.passos[4].formula = "M = \\resposta{(3, 6)}";
+  assert.match(lerResolucaoDoModelo(finalErrada).motivo, /a conta não fecha/);
+});
+
+test("reparo: não mexe em vazamento nem em papel de ponto: o alt que entrega o procurado e o ponto em cima de outro continuam recusados", () => {
+  const vazando = { tipo: "plano", alt: "O triângulo ABC, com C em (4, 0).", pontos: [{ id: "A", papel: "dado", x: 1, y: 2 }, { id: "B", papel: "dado", x: -2, y: 7 }, { id: "C", papel: "procurado", x: 4, y: 0 }] };
+  const emCima = { tipo: "plano", alt: "Dois pontos.", pontos: [{ id: "A", papel: "dado", x: 1, y: 2 }, { id: "B", papel: "dado", x: 1, y: 2 }] };
+  const formula = { tipo: "formula", latex: "\\foco{a} + \\foco{b} + \\foco{c} = \\resposta{d}", alt: "Fórmula" };
+  const lidos = lerVisuaisDoModelo([vazando, emCima, formula]);
+  assert.equal(lidos.visuais.length, 1, "só a fórmula, consertada, vale");
+  assert.equal(lidos.visuais[0].tipo, "formula");
+  assert.equal(lidos.visuais[0].latex, "\\foco{a} + \\foco{b} + c = d");
+  assert.match(lidos.motivos[0], /^visuais\[0\]: alt: entrega a posição do ponto procurado/);
+  assert.match(lidos.motivos[1], /^visuais\[1\]: pontos: B cai em cima de A/);
+  assert.deepEqual(lidos.reparos, ["visuais[2]: 1 realce desembrulhado (mais de 2 realces)", "visuais[2]: 1 realce desembrulhado (\\resposta fora do último passo)"]);
+  // Os dados da figura que vazou não foram tocados pelo reparo.
+  assert.equal(vazando.alt, "O triângulo ABC, com C em (4, 0).");
+});
+
+test("reparo: o relato conta o que foi consertado, o registro leva só a contagem e a lição segue", async () => {
+  const bruto = copiaDe(exemploDeMatematica);
+  bruto.resolucao.passos[1].formula = "x_M = \\frac{\\foco{1} + \\foco{5}}{\\foco{2}}";
+  bruto.visuais.push({ ...bruto.visuais[0], tipo: "formula", latex: "x_M = \\foco{a} \\to \\resposta{b}", alt: "Outra" });
+  const lida = normalizarLicao(bruto, ORIGEM);
+  assert.ok(lida.conteudo.resolucao);
+  assert.deepEqual(lida.matematica.reparos, ["visuais[2]: 1 realce desembrulhado (\\resposta fora do último passo)", "passo 2: 1 realce desembrulhado (mais de 2 realces)"]);
+  assert.deepEqual(lida.descartados, []);
+  assert.equal(contagensDoRelato(lida.matematica).reparos, 2);
+  assert.equal("reparos" in contagensDoRelato(normalizarLicao(copiaDe(exemploDeMatematica), ORIGEM).matematica), false, "sem reparo, o registro é o de sempre");
+  responder = () => ok(bruto);
+  await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.deepEqual(registrosDe("licao_matematica")[0], { rota: "ia-openai", codigo: "licao_matematica", visuais: "3/3", figuras: "1/1", resolucao: "aceita", reparos: 2, tentativa: 0 });
+});
+
+test("o prompt reforça o limite de realces e onde \\resposta e \\procurado valem", () => {
+  const { content } = corpoDaLicao(esqueletoDeMatematica(GERADOR_OPENAI), 0, 0, "", true).input[0];
+  for (const texto of [content, instrucoesDeFigurasDoMaterial]) {
+    assert.match(texto, /3 realces é recusado: conte antes de escrever e fique nos 2 mais importantes/);
+    assert.match(texto, /\\resposta só na fórmula do ÚLTIMO passo \(nunca nos visuais da lição, nas opções do "Sua vez" nem nos outros passos\), e \\procurado nunca nesse último passo/);
+  }
+  assert.match(instrucoesDeFigurasDoMaterial, /Se os dados trouxerem `correcao`/);
+});
+
+test("a frase da nova tentativa leva o motivo e, quando é conta, as letras e os valores; passa de 300 caracteres, é cortada", () => {
+  assert.equal(
+    correcaoDaResolucao('a conta não fecha em "6 − 2k = 0": -36 = 0 é falso, com k = 21'),
+    'O "Resolva comigo" da sua resposta anterior foi RECUSADO: a conta não fecha em "6 − 2k = 0": -36 = 0 é falso, com k = 21. Refaça a resolução corrigindo exatamente isso e conferindo cada conta, com OUTROS números que os da pergunta.',
+  );
+  assert.ok(correcaoDaResolucao("x".repeat(900)).includes(`${"x".repeat(299)}…`));
+});
+
+const figurasSemSuaVez = () => ({ ...figurasDoModelo(), resolucao: semSuaVez(figurasDoModelo().resolucao) });
+const dadosDoPedido = (pedido) => JSON.parse(pedido.dados.input[0].content[0].text);
+const pedidosDeFiguras = () => pedidos.filter((pedido) => pedido.dados.text?.format?.name === "figuras_licao");
+const MOTIVO_SEM_SUA_VEZ = 'a resolução precisa de exatamente um "Sua vez"';
+const gerarOMaterialDeMatematica = (opcoes) => gerarLicoesDoMaterial({ objetivo: "Estudar baricentro", nome: "Folha", paginas: PAGINAS_DE_MATEMATICA }, opcoes);
+const conteudosDoGerado = (gerado) => conteudosDasLicoes({ licoes: gerado.licoes, figuras: gerado.figuras, paginas: PAGINAS_DE_MATEMATICA, materialId: "m", nome: "Folha", leitura: "ocr", origem: "Material enviado · Folha" });
+
+test("material: a resolução recusada por estrutura ganha UMA nova tentativa, com o motivo em uma frase; aceita na segunda, vale", async () => {
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    const { licao, correcao } = dadosDoPedido({ dados });
+    return ok(licao.titulo.startsWith("Lição 2") && !correcao ? figurasSemSuaVez() : figurasDoModelo());
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  assert.equal(pedidos.length, 5, "1 das lições, 3 de figuras e 1 nova tentativa");
+  const [nova] = pedidosDeFiguras().filter((pedido) => dadosDoPedido(pedido).correcao);
+  assert.equal(pedidosDeFiguras().filter((pedido) => dadosDoPedido(pedido).correcao).length, 1);
+  assert.equal(dadosDoPedido(nova).licao.titulo, "Lição 2: o vértice que falta");
+  assert.equal(dadosDoPedido(nova).correcao, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ));
+  assert.match(dadosDoPedido(nova).correcao, /RECUSADO: a resolução precisa de exatamente um "Sua vez"\./);
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal(conteudos[1].resolucao.passos.length, 5, "a resolução da segunda resposta");
+  assert.deepEqual(relatos[1].novaTentativa, { motivo: MOTIVO_SEM_SUA_VEZ, aceita: true });
+  assert.equal(relatos[0].novaTentativa, undefined);
+  assert.equal(conteudos[1].visuais.length, 2, "os visuais e a figura do exercício seguem");
+  assert.deepEqual(registrosDe("resolucao_nova_tentativa"), [{ rota: "estudio-material", codigo: "resolucao_nova_tentativa", aceita: true }]);
+});
+
+test("material: a recusa por CONTA volta com as letras e os valores já usados; recusada na segunda, fica o tudo ou nada, sem terceira", async () => {
+  const contaErrada = () => {
+    const figuras = figurasDoModelo();
+    figuras.resolucao.passos[0].formula = "k = 3 \\times 7";
+    figuras.resolucao.passos[1].formula = "6 - 2k = 0";
+    return figuras;
+  };
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    return ok(dadosDoPedido({ dados }).licao.titulo.startsWith("Lição 3") ? contaErrada() : figurasDoModelo());
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  assert.equal(pedidos.length, 5, "a lição 3 é pedida duas vezes e nenhuma terceira");
+  const [nova] = pedidosDeFiguras().filter((pedido) => dadosDoPedido(pedido).correcao);
+  assert.match(dadosDoPedido(nova).correcao, /a conta não fecha em "6 − 2k = 0": -36 = 0 é falso, com k = 21\./);
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal("resolucao" in conteudos[2], false, "recusada de novo: o tudo ou nada de hoje");
+  assert.equal(relatos[2].novaTentativa.aceita, false);
+  assert.match(relatos[2].novaTentativa.motivoDaSegunda, /a conta não fecha em "6 − 2k = 0"/);
+  assert.equal(relatos[2].resolucao.aceita, false);
+  assert.ok(conteudos[2].visuais.length === 2 && conteudoValido(conteudos[2]), "a lição fica com o que a primeira já tinha");
+  assert.deepEqual(registrosDe("resolucao_nova_tentativa"), [{ rota: "estudio-material", codigo: "resolucao_nova_tentativa", aceita: false }]);
+});
+
+test("material: a segunda que falha (erro do provedor) deixa a lição como a primeira a deixaria; a que vale traz só a resolução melhor", async () => {
+  let chamadasDaLicao2 = 0;
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    const { licao } = dadosDoPedido({ dados });
+    if (!licao.titulo.startsWith("Lição 2")) return ok(figurasDoModelo());
+    chamadasDaLicao2 += 1;
+    return chamadasDaLicao2 === 1 ? ok(figurasSemSuaVez()) : erro(500);
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  assert.equal(chamadasDaLicao2, 2);
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal("resolucao" in conteudos[1], false);
+  assert.deepEqual(relatos[1].novaTentativa, { motivo: MOTIVO_SEM_SUA_VEZ, aceita: false });
+  assert.equal(registrosDe("nova_tentativa_indisponivel").length, 1);
+  // A segunda aceita, mas com visuais piores: a resolução é a da segunda, e os visuais ficam os da primeira (mais aceitos).
+  pedidos = [];
+  registros = [];
+  chamadasDaLicao2 = 0;
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    const { licao } = dadosDoPedido({ dados });
+    if (!licao.titulo.startsWith("Lição 2")) return ok(figurasDoModelo());
+    chamadasDaLicao2 += 1;
+    return ok(chamadasDaLicao2 === 1 ? figurasSemSuaVez() : { ...figurasDoModelo(), visuais: [{ tipo: "grafico" }], visual: null });
+  };
+  const outro = conteudosDoGerado(await gerarOMaterialDeMatematica());
+  assert.equal(outro.conteudos[1].resolucao.passos.length, 5);
+  assert.equal(outro.conteudos[1].visuais.length, 2, "os visuais da primeira resposta, que eram melhores");
+  assert.ok(outro.conteudos[1].exercicio.visual, "e a figura do exercício também");
+});
+
+test("material: sem nova tentativa quando a resolução vale, não veio ou só tinha realce a mais (o reparo basta)", async () => {
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    const { licao } = dadosDoPedido({ dados });
+    if (licao.titulo.startsWith("Lição 2")) return ok({ ...figurasDoModelo(), resolucao: null });
+    if (licao.titulo.startsWith("Lição 3")) {
+      const figuras = figurasDoModelo();
+      figuras.resolucao.passos[1].formula = "x_M = \\frac{\\foco{1} + \\foco{5}}{\\foco{2}}";
+      return ok(figuras);
+    }
+    return ok(figurasDoModelo());
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  assert.equal(pedidos.length, 4, "uma lição só de pedido e três de figuras: nenhuma repetição");
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal("resolucao" in conteudos[1], false);
+  assert.equal(conteudos[2].resolucao.passos.length, 5, "o realce a mais foi consertado e a resolução vale");
+  assert.deepEqual(relatos[2].reparos, ["passo 2: 1 realce desembrulhado (mais de 2 realces)"]);
+  for (const relato of relatos) assert.equal(relato.novaTentativa, undefined);
+  assert.equal(registrosDe("resolucao_nova_tentativa").length, 0);
+});
+
+test("material: a nova tentativa respeita a janela da proposta: sem tempo para ela (menos de 12 s), a lição fica como está", async () => {
+  responder = (dados) => (dados.text.format.name === "trilha_material" ? ok(propostaDoMaterial()) : ok(dadosDoPedido({ dados }).licao.titulo.startsWith("Lição 2") ? figurasSemSuaVez() : figurasDoModelo()));
+  atraso = (dados) => (dados.text?.format?.name === "figuras_licao" ? 400 : 0);
+  // O orçamento deixa 12 s e um pouco para as figuras; depois de 400 ms de resposta, sobra menos de 12 s: não repete.
+  const gerado = await gerarOMaterialDeMatematica({ orcamentoMs: 12_250 });
+  assert.equal(pedidos.length, 4, "nenhuma nova tentativa");
+  assert.equal(registrosDe("nova_tentativa_sem_tempo").length, 1);
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal("resolucao" in conteudos[1], false);
+  assert.equal(relatos[1].novaTentativa, undefined);
+  // Com folga, a mesma lição ganha a nova tentativa.
+  pedidos = [];
+  registros = [];
+  await gerarOMaterialDeMatematica({ orcamentoMs: 30_000 });
+  assert.equal(pedidos.length, 5);
+});
+
+const licaoSemSuaVez = () => {
+  const bruto = copiaDe(exemploDeMatematica);
+  bruto.resolucao = semSuaVez(bruto.resolucao);
+  return bruto;
+};
+
+test("trilha (OpenAI): a lição com a resolução recusada é pedida UMA vez de novo, com o motivo; a segunda, melhor, substitui a primeira", async () => {
+  let chamadas = 0;
+  responder = () => { chamadas += 1; return ok(chamadas === 1 ? licaoSemSuaVez() : exemploDeMatematica); };
+  const conteudo = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2);
+  assert.equal(pedidos[1].dados.text.format.name, "licao_studoo_matematica", "a nova tentativa é o mesmo pedido de matemática");
+  assert.equal(pedidos[1].dados.input.at(-1).content, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ));
+  assert.equal(conteudo.resolucao.passos.length, 5);
+  assert.ok(conteudoValido(conteudo));
+  assert.deepEqual(registrosDe("resolucao_nova_tentativa"), [{ rota: "ia-openai", codigo: "resolucao_nova_tentativa", aceita: true, melhor: true }]);
+  assert.equal(registrosDe("matematica_desligada").length, 0, "a matemática segue ligada");
+});
+
+test("trilha (OpenAI): recusada de novo, falha ou pior que a primeira: fica a primeira lição (o tudo ou nada), e nunca há terceira", async () => {
+  // Recusada de novo.
+  responder = () => ok(licaoSemSuaVez());
+  const igual = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2, "uma nova tentativa só");
+  assert.equal("resolucao" in igual, false);
+  assert.ok(conteudoValido(igual));
+  assert.equal(igual.visuais.length, 2, "a lição fica com o que a primeira trouxe");
+  // Erro do provedor na segunda: devolve a primeira, sem lançar.
+  pedidos = [];
+  let chamadas = 0;
+  responder = () => { chamadas += 1; return chamadas === 1 ? ok(licaoSemSuaVez()) : erro(500); };
+  const comErro = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2);
+  assert.equal("resolucao" in comErro, false);
+  // JSON quebrado na segunda: também a primeira.
+  pedidos = [];
+  chamadas = 0;
+  responder = () => { chamadas += 1; return chamadas === 1 ? ok(licaoSemSuaVez()) : ok("isto não é json"); };
+  assert.equal("resolucao" in (await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI))), false);
+  assert.equal(pedidos.length, 2);
+  // A segunda traz a resolução aceita, mas perdeu todos os visuais e a figura do exercício: vale mais a primeira (resolução conta 2).
+  pedidos = [];
+  chamadas = 0;
+  const pior = copiaDe(exemploDeMatematica);
+  pior.visuais = [{ tipo: "grafico" }, { tipo: "grafico" }, { tipo: "grafico" }];
+  pior.exercicios[0].visual = { tipo: "grafico" };
+  responder = () => { chamadas += 1; return ok(chamadas === 1 ? licaoSemSuaVez() : pior); };
+  const mantida = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2);
+  assert.equal("resolucao" in mantida, false, "a segunda vale 2 (a resolução) e a primeira vale 3 (dois visuais e a figura): fica a primeira");
+  assert.equal(mantida.visuais.length, 2);
+  assert.ok(mantida.exercicio.visual);
+  assert.equal(registrosDe("resolucao_nova_tentativa").at(-1).melhor, false);
+  // A segunda perde só UM visual e traz a resolução (vale 4 contra 3): a segunda substitui a primeira.
+  pedidos = [];
+  chamadas = 0;
+  const quaseIgual = copiaDe(exemploDeMatematica);
+  quaseIgual.visuais = [quaseIgual.visuais[0], { tipo: "grafico" }];
+  responder = () => { chamadas += 1; return ok(chamadas === 1 ? licaoSemSuaVez() : quaseIgual); };
+  const trocada = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2);
+  assert.equal(trocada.resolucao.passos.length, 5);
+  assert.equal(trocada.visuais.length, 1);
+});
+
+test("trilha: a lição de resolução aceita é pedida uma vez só, e sem matemática (o pedido de sempre) não há nova tentativa", async () => {
+  responder = () => ok(exemploDeMatematica);
+  await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 1);
+  pedidos = [];
+  responder = () => ok(licaoComum);
+  await conteudoDaOpenAi(esqueletoDeViolao(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 1);
+  // Matemática desligada pelo primeiro erro (HTTP): a segunda tentativa é a de sempre, e uma lição comum não tem resolução a refazer.
+  pedidos = [];
+  let chamadas = 0;
+  responder = () => { chamadas += 1; return chamadas === 1 ? erro(400) : ok(licaoComum); };
+  await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2);
+});
+
+test("trilha (DeepSeek): a mesma nova tentativa, com o motivo numa mensagem, e a primeira lição volta se a segunda falhar", async () => {
+  process.env.IA = "deepseek";
+  let chamadas = 0;
+  responder = () => { chamadas += 1; return ok(JSON.stringify(chamadas === 1 ? licaoSemSuaVez() : exemploDeMatematica)); };
+  const conteudo = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
+  assert.equal(pedidos.length, 2);
+  assert.equal(pedidos[1].dados.messages.at(-1).content, correcaoDaResolucao(MOTIVO_SEM_SUA_VEZ));
+  assert.equal(instrucaoDe(pedidos[1]), instrucoesLicaoJsonDeMatematica);
+  assert.equal(conteudo.resolucao.passos.length, 5);
+  // A segunda falha: a primeira.
+  pedidos = [];
+  chamadas = 0;
+  responder = () => { chamadas += 1; return chamadas === 1 ? ok(JSON.stringify(licaoSemSuaVez())) : erro(500); };
+  const mantida = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
+  assert.equal(pedidos.length, 2);
+  assert.equal("resolucao" in mantida, false);
+  assert.ok(conteudoValido(mantida));
+  // Recusada de novo: duas chamadas, nunca três.
+  pedidos = [];
+  responder = () => ok(JSON.stringify(licaoSemSuaVez()));
+  await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
+  assert.equal(pedidos.length, 2);
+});
+
+/* ----- Marco 8: a frase do "Sua vez" que traz o resultado é recusada, e o motivo (a letra e o valor) vai à nova tentativa ----- */
+
+const comFraseQueEntrega = (resolucao) => {
+  const nova = copiaDe(resolucao);
+  nova.passos.find((passo) => passo.tentativa).texto = "Faça igual: $y_M = (2 + 8) / 2 = 5$.";
+  return nova;
+};
+const figurasQueEntregam = () => ({ ...figurasDoModelo(), resolucao: comFraseQueEntrega(figurasDoModelo().resolucao) });
+const MOTIVO_DA_FRASE = 'o texto do passo 4 (o "Sua vez") traz o resultado y_M = 5 antes da escolha: a frase só diz o que fazer (como "Agora junte os termos e isole k"), sem o valor nem a conta já feita';
+
+test("a frase do \"Sua vez\" que traz o resultado: o motivo, com a letra e o valor, é o da recusa e o da frase da nova tentativa", () => {
+  const recusada = lerResolucaoDoModelo(comFraseQueEntrega(exemploDeMatematica.resolucao));
+  assert.equal(recusada.resolucao, undefined);
+  assert.equal(recusada.motivo, MOTIVO_DA_FRASE);
+  assert.equal(
+    correcaoDaResolucao(recusada.motivo),
+    `O "Resolva comigo" da sua resposta anterior foi RECUSADO: ${MOTIVO_DA_FRASE}. Refaça a resolução corrigindo exatamente isso e conferindo cada conta, com OUTROS números que os da pergunta.`,
+  );
+  // A frase do exemplo (só diz o que fazer) vale, e o reparo de cor não mexe nisso.
+  assert.ok(lerResolucaoDoModelo(exemploDeMatematica.resolucao).resolucao);
+});
+
+test("material: a frase do \"Sua vez\" que traz o resultado ganha UMA nova tentativa, com a letra e o valor no motivo; a segunda, sem o vazamento, vale", async () => {
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    const { licao, correcao } = dadosDoPedido({ dados });
+    return ok(licao.titulo.startsWith("Lição 2") && !correcao ? figurasQueEntregam() : figurasDoModelo());
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  assert.equal(pedidos.length, 5, "1 das lições, 3 de figuras e 1 nova tentativa");
+  const [nova] = pedidosDeFiguras().filter((pedido) => dadosDoPedido(pedido).correcao);
+  assert.equal(dadosDoPedido(nova).licao.titulo, "Lição 2: o vértice que falta");
+  assert.equal(dadosDoPedido(nova).correcao, correcaoDaResolucao(MOTIVO_DA_FRASE));
+  assert.match(dadosDoPedido(nova).correcao, /RECUSADO: o texto do passo 4 \(o "Sua vez"\) traz o resultado y_M = 5 antes da escolha/);
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal(conteudos[1].resolucao.passos[3].texto, "Faça igual com as ordenadas de A e de B.", "a resolução da segunda resposta");
+  assert.deepEqual(relatos[1].novaTentativa, { motivo: MOTIVO_DA_FRASE, aceita: true });
+  assert.deepEqual(registrosDe("resolucao_nova_tentativa"), [{ rota: "estudio-material", codigo: "resolucao_nova_tentativa", aceita: true }]);
+  // Nenhuma resolução que fica entrega o resultado no texto público do passo do "Sua vez".
+  for (const conteudo of conteudos) {
+    const passo = conteudo.resolucao.passos.find((candidato) => candidato.tentativa);
+    assert.doesNotMatch(passo.texto, /= ?5|\b5\b/);
+  }
+});
+
+test("material: a segunda que entrega de novo deixa a lição sem o \"Resolva comigo\" (tudo ou nada), com o resto, e nunca há terceira", async () => {
+  responder = (dados) => {
+    if (dados.text.format.name === "trilha_material") return ok(propostaDoMaterial());
+    return ok(dadosDoPedido({ dados }).licao.titulo.startsWith("Lição 3") ? figurasQueEntregam() : figurasDoModelo());
+  };
+  const gerado = await gerarOMaterialDeMatematica();
+  assert.equal(pedidos.length, 5, "a lição 3 é pedida duas vezes e nenhuma terceira");
+  const { conteudos, relatos } = conteudosDoGerado(gerado);
+  assert.equal("resolucao" in conteudos[2], false);
+  assert.equal(relatos[2].novaTentativa.aceita, false);
+  assert.equal(relatos[2].novaTentativa.motivoDaSegunda, MOTIVO_DA_FRASE);
+  assert.ok(conteudos[2].visuais.length === 2 && conteudoValido(conteudos[2]), "os visuais e a figura do exercício seguem");
+});
+
+test("trilha (OpenAI e DeepSeek): a lição cuja frase do \"Sua vez\" entrega é pedida UMA vez de novo, com o motivo; a segunda, sem vazamento, substitui a primeira", async () => {
+  const entrega = () => {
+    const bruto = copiaDe(exemploDeMatematica);
+    bruto.resolucao = comFraseQueEntrega(bruto.resolucao);
+    return bruto;
+  };
+  let chamadas = 0;
+  responder = () => { chamadas += 1; return ok(chamadas === 1 ? entrega() : exemploDeMatematica); };
+  const conteudo = await conteudoDaOpenAi(esqueletoDeMatematica(GERADOR_OPENAI));
+  assert.equal(pedidos.length, 2);
+  assert.equal(pedidos[1].dados.input.at(-1).content, correcaoDaResolucao(MOTIVO_DA_FRASE));
+  assert.equal(conteudo.resolucao.passos[3].texto, "Faça igual com as ordenadas de A e de B.");
+  assert.deepEqual(registrosDe("resolucao_nova_tentativa"), [{ rota: "ia-openai", codigo: "resolucao_nova_tentativa", aceita: true, melhor: true }]);
+  // DeepSeek: a mesma coisa, o motivo vai numa mensagem.
+  process.env.IA = "deepseek";
+  pedidos = [];
+  chamadas = 0;
+  responder = () => { chamadas += 1; return ok(JSON.stringify(chamadas === 1 ? entrega() : exemploDeMatematica)); };
+  const deSeek = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
+  assert.equal(pedidos.length, 2);
+  assert.equal(pedidos[1].dados.messages.at(-1).content, correcaoDaResolucao(MOTIVO_DA_FRASE));
+  assert.equal(deSeek.resolucao.passos[3].texto, "Faça igual com as ordenadas de A e de B.");
+  // Entrega de novo: a lição fica sem o "Resolva comigo", com o resto, e são só duas chamadas.
+  pedidos = [];
+  responder = () => ok(JSON.stringify(entrega()));
+  const igual = await conteudoDaDeepSeek(esqueletoDeMatematica(GERADOR_DEEPSEEK));
+  assert.equal(pedidos.length, 2);
+  assert.equal("resolucao" in igual, false);
+  assert.ok(conteudoValido(igual));
 });
 
 /* ----- A IA falsa de geometria analítica (demonstração, sem chave) ----- */

@@ -1,4 +1,4 @@
-import type { EsqueletoPlano } from "@/dominio/aprendizado/plano";
+import type { ConteudoLicao, EsqueletoPlano } from "@/dominio/aprendizado/plano";
 import { ORIGEM_GERADA, origemDoConteudo } from "@/dominio/aprendizado/plano";
 import { FalhaApi } from "@/servidor/acesso/http";
 import { comNovasTentativas } from "./novas-tentativas";
@@ -18,7 +18,7 @@ import {
   sinalComPrazo,
   validarBaseUrl,
 } from "./comum";
-import { contagensDoRelato, exemploDeMatematica, instrucoesDeMatematica, licaoEhDeMatematica } from "./matematica";
+import { contagensDoRelato, correcaoDaResolucao, exemploDeMatematica, instrucoesDeMatematica, licaoEhDeMatematica, motivoDaResolucao, valorDaMatematica } from "./matematica";
 
 /*
  * IA real do Studoo com a API Chat Completions da DeepSeek (POST /chat/completions), chamada por fetch, sem SDK.
@@ -379,6 +379,14 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
         registrar("matematica_desligada", { motivo });
         matematica = false;
       };
+      // A primeira lição válida cuja resolução foi recusada (estrutura, formato ou conta): a segunda tentativa, uma só, pede a lição de novo com
+      // o motivo e só a substitui se for melhor. Qualquer falha dela (prazo, erro, vazio, formato) devolve esta: nunca pior do que a primeira.
+      let reserva: { conteudo: ConteudoLicao; valor: number } | undefined;
+      const usarReserva = (motivo: string): ConteudoLicao | undefined => {
+        if (!reserva) return undefined;
+        registrar("resolucao_nova_tentativa", { aceita: false, motivo });
+        return reserva.conteudo;
+      };
       // Na segunda tentativa, o pedido diz o que veio fora do formato (em vez de repetir igual e receber o mesmo erro).
       let correcao = "";
       for (let tentativa = 0; tentativa < 2; tentativa += 1) {
@@ -395,6 +403,8 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
             max_tokens: 8192,
           }, comPrazo);
         } catch (erro) {
+          const guardada = usarReserva("falhou");
+          if (guardada) return guardada;
           if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
           if (matematica && tentativa === 0) {
             desligarMatematica(estourou() ? "tempo" : erro instanceof FalhaApi ? "http" : "rede");
@@ -409,6 +419,8 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
         try {
           texto = textoDaRespostaChat(await resposta.json());
         } catch {
+          const guardada = usarReserva("rede");
+          if (guardada) return guardada;
           if (sinal.aborted) throw new FalhaApi("ia_indisponivel");
           if (matematica && tentativa === 0) {
             desligarMatematica(estourou() ? "tempo" : "rede");
@@ -419,6 +431,8 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
           continue;
         }
         if (!texto.trim()) {
+          const guardada = usarReserva("vazio");
+          if (guardada) return guardada;
           registrar("ia_indisponivel", { motivo: "vazio", tentativa });
           desligarMatematica("vazio");
           continue;
@@ -428,6 +442,8 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
           // Na matemática, a barra do LaTeX que o modelo não dobrou (`\frac`, `\div`) é consertada antes do parse.
           bruto = analisarJson(texto, matematica);
         } catch {
+          const guardada = usarReserva("formato");
+          if (guardada) return guardada;
           registrar("ia_indisponivel", { motivo: "formato", detalhe: "json", tentativa });
           correcao = correcaoDoFormato("json");
           desligarMatematica("formato");
@@ -440,12 +456,26 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
           }
           // O que a matemática deu, só em contagens (os motivos de recusa citam fórmulas: não vão ao registro).
           if (lida.matematica) registrar("licao_matematica", { ...contagensDoRelato(lida.matematica), tentativa });
+          if (reserva) {
+            const melhor = valorDaMatematica(lida.matematica) > reserva.valor;
+            registrar("resolucao_nova_tentativa", { aceita: lida.matematica?.resolucao.aceita === true, melhor });
+            return melhor ? lida.conteudo : reserva.conteudo;
+          }
+          const motivo = matematica && tentativa === 0 ? motivoDaResolucao(lida.matematica) : undefined;
+          if (motivo) {
+            reserva = { conteudo: lida.conteudo, valor: valorDaMatematica(lida.matematica) };
+            correcao = correcaoDaResolucao(motivo);
+            continue;
+          }
           return lida.conteudo;
         }
+        const guardada = usarReserva("formato");
+        if (guardada) return guardada;
         registrar("ia_indisponivel", { motivo: "formato", detalhe: lida.motivo, tentativa });
         correcao = correcaoDoFormato(lida.motivo ?? "formato");
         desligarMatematica("formato");
       }
+      if (reserva) return reserva.conteudo;
       throw new FalhaApi("ia_indisponivel");
     },
   };

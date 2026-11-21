@@ -8,6 +8,7 @@ import {
   lerResolucaoDoModelo,
   lerVisuaisDoModelo,
   relatoDaMatematica,
+  type NovaTentativaDaResolucao,
   type RelatoDaMatematica,
 } from '../ia/matematica';
 
@@ -147,7 +148,7 @@ export async function pedirJson(
   }
 }
 /** As figuras e o exemplo resolvido de uma lição de material de matemática, como o modelo os devolveu (ainda sem validar). */
-export type FigurasDaLicao = { visuais?: unknown; visual?: unknown; resolucao?: unknown };
+export type FigurasDaLicao = { visuais?: unknown; visual?: unknown; resolucao?: unknown; novaTentativa?: NovaTentativaDaResolucao };
 
 /**
  * O conteúdo da lição e, quando há `figuras` (material de matemática, spec 15), o que a matemática deu: cada figura e a resolução se
@@ -162,7 +163,7 @@ export function conteudoDaGeradaComRelato(x: LicaoGerada, origem: string, figura
   const figura = lerFiguraDoModelo(figuras?.visual);
   const resolucao = lerResolucaoDoModelo(figuras?.resolucao);
   const relato: RelatoDaMatematica | undefined = figuras
-    ? relatoDaMatematica(visuais, [{ onde: 'pergunta', enviada: figura.enviada, aceita: figura.figura !== undefined, motivo: figura.motivo }], resolucao)
+    ? relatoDaMatematica(visuais, [{ onde: 'pergunta', enviada: figura.enviada, aceita: figura.figura !== undefined, motivo: figura.motivo }], resolucao, figuras.novaTentativa)
     : undefined;
   return {
     conteudo: {
