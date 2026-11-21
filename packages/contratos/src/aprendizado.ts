@@ -10,6 +10,11 @@ export * from './formula';
 export { conferirConta, type ResultadoConta } from './formula-conta';
 export * from './visuais-validacao';
 export * from './resolucao-publica';
+export {
+  comporDesenhos, dentroDoTeto, desenharFormula, desenharPlano, desenharRetaNumerica, desenharVisual, desenhoParaSvg,
+  numeroParaTela, rotuloDoPonto, type OpcoesDaFigura, type OpcoesDaFormula, type OpcoesDoSvg,
+} from './motor-visuais';
+export { caminhoValido, larguraDoTexto, temGlifo } from './texto-vetorial';
 export * from './licao';
 export * from './som';
 export { fundoUnicoDaPreferencia } from './catalogo-sons';

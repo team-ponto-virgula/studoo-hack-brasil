@@ -1,8 +1,10 @@
 import { formulaLinear, lerFormula, percorrerFormula, type NoFormula } from "./formula";
 import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
+import { desenharVisual } from "./motor-visuais";
 import {
   LIMITES_VISUAIS,
   PAPEIS_PONTO,
+  TETO_DE_PRIMITIVAS,
   type Derivado,
   type IntervaloDaReta,
   type OpcaoCorrigida,
@@ -416,6 +418,22 @@ function normalizarFormula(bruto: Record<string, unknown>, opcoes: OpcoesDoVisua
   return { tipo: "formula", latex: lida.canonica, ...(alt ? { alt } : {}) };
 }
 
+/**
+ * O teto de primitivas depois do layout: o visual precisa sair do motor, no enunciado e na resposta (onde aparecem todos os pontos),
+ * com no máximo `TETO_DE_PRIMITIVAS`. Acima disso, ou se o motor falhar, o visual some e a lição segue.
+ */
+function conferirDesenho(visual: Visual): void {
+  for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }] as const) {
+    let primitivas: number;
+    try {
+      primitivas = desenharVisual(visual, contexto)?.primitivas.length ?? 0;
+    } catch {
+      return recusar("o desenho não saiu");
+    }
+    if (primitivas > TETO_DE_PRIMITIVAS) recusar(`desenho com ${primitivas} primitivas (o teto é ${TETO_DE_PRIMITIVAS})`);
+  }
+}
+
 export type ResultadoVisual = { ok: true; visual: Visual } | { ok: false; motivo: string };
 
 /** Valida e limpa um visual. `motivo` diz por que ele foi recusado (para o teste com IA real e para o registro). */
@@ -423,16 +441,22 @@ export function validarVisual(bruto: unknown, opcoes: OpcoesDoVisual = {}): Resu
   try {
     if (!objeto(bruto)) return recusar("o visual não é um objeto");
     if (opcoes.quadro && bruto.tipo !== opcoes.quadro.tipo) return recusar("o tipo mudou: o passo não mantém os eixos do anterior");
+    let visual: Visual;
     switch (bruto.tipo) {
       case "plano":
-        return { ok: true, visual: normalizarPlano(bruto, opcoes) };
+        visual = normalizarPlano(bruto, opcoes);
+        break;
       case "reta_numerica":
-        return { ok: true, visual: normalizarReta(bruto, opcoes) };
+        visual = normalizarReta(bruto, opcoes);
+        break;
       case "formula":
-        return { ok: true, visual: normalizarFormula(bruto, opcoes) };
+        visual = normalizarFormula(bruto, opcoes);
+        break;
       default:
         return recusar(`tipo ${String(bruto.tipo)} não existe`);
     }
+    conferirDesenho(visual);
+    return { ok: true, visual };
   } catch (erro) {
     if (erro instanceof Recusa) return { ok: false, motivo: erro.message };
     throw erro;

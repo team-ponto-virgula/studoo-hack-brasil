@@ -1,0 +1,2157 @@
+{
+ "baricentro/enunciado": {
+  "altura": 320,
+  "menorTexto": 15,
+  "descricao": "Triângulo ABC no plano, com A (1, 2), B (−2, 7) e o baricentro G (1, 3); C é o vértice procurado.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 37.11,
+    "y1": 26,
+    "x2": 37.11,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 82.89,
+    "y1": 26,
+    "x2": 82.89,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.67,
+    "y1": 26,
+    "x2": 128.67,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 174.44,
+    "y1": 26,
+    "x2": 174.44,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 220.22,
+    "y1": 26,
+    "x2": 220.22,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 266,
+    "y1": 26,
+    "x2": 266,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 209.11,
+    "x2": 296,
+    "y2": 209.11,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 163.33,
+    "x2": 296,
+    "y2": 163.33,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 117.56,
+    "x2": 296,
+    "y2": 117.56,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 71.78,
+    "x2": 296,
+    "y2": 71.78,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 26,
+    "x2": 296,
+    "y2": 26,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 209.11,
+    "x2": 296,
+    "y2": 209.11,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.67,
+    "y1": 232,
+    "x2": 128.67,
+    "y2": 26,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M304 209.11L296 214.11L296 204.11Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M128.67 18L133.67 26L123.67 26Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#8c079931d5:1191",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "linha",
+    "x1": 151.56,
+    "y1": 163.33,
+    "x2": 82.89,
+    "y2": 48.89,
+    "cor": "segmento",
+    "largura": 3
+   },
+   {
+    "tipo": "circulo",
+    "cx": 151.56,
+    "cy": 163.33,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 82.89,
+    "cy": 48.89,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M151.56 131.94L160.06 140.44L151.56 148.94L143.06 140.44Z",
+    "preenchimento": "especial",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#3379003049:4429",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#0a818bc4ed:6808",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#ee9cee123c:7999",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 22,
+    "cy": 271,
+    "raio": 5,
+    "preenchimento": "dado"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#a84d2177e0:4339",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M97.17 264.5L103.67 271L97.17 277.5L90.67 271Z",
+    "preenchimento": "especial"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#7241e8009a:7690",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 201.34,
+    "cy": 271,
+    "raio": 5,
+    "preenchimento": "procuradoFundo",
+    "borda": "procurado",
+    "larguraDaBorda": 1.5,
+    "tracejado": [
+     3,
+     2.5
+    ]
+   },
+   {
+    "tipo": "caminho",
+    "d": "#879ce62326:7025",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#6c14335a17:2347",
+    "preenchimento": "procuradoTexto"
+   }
+  ]
+ },
+ "baricentro/passo-intermediario": {
+  "altura": 320,
+  "menorTexto": 15,
+  "descricao": "Triângulo ABC no plano, com A (1, 2), B (−2, 7) e o baricentro G (1, 3); C é o vértice procurado.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 37.11,
+    "y1": 26,
+    "x2": 37.11,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 82.89,
+    "y1": 26,
+    "x2": 82.89,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.67,
+    "y1": 26,
+    "x2": 128.67,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 174.44,
+    "y1": 26,
+    "x2": 174.44,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 220.22,
+    "y1": 26,
+    "x2": 220.22,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 266,
+    "y1": 26,
+    "x2": 266,
+    "y2": 232,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 209.11,
+    "x2": 296,
+    "y2": 209.11,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 163.33,
+    "x2": 296,
+    "y2": 163.33,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 117.56,
+    "x2": 296,
+    "y2": 117.56,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 71.78,
+    "x2": 296,
+    "y2": 71.78,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 26,
+    "x2": 296,
+    "y2": 26,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 209.11,
+    "x2": 296,
+    "y2": 209.11,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.67,
+    "y1": 232,
+    "x2": 128.67,
+    "y2": 26,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M304 209.11L296 214.11L296 204.11Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M128.67 18L133.67 26L123.67 26Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#8c079931d5:1191",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "linha",
+    "x1": 151.56,
+    "y1": 163.33,
+    "x2": 82.89,
+    "y2": 48.89,
+    "cor": "segmento",
+    "largura": 3
+   },
+   {
+    "tipo": "circulo",
+    "cx": 151.56,
+    "cy": 163.33,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 82.89,
+    "cy": 48.89,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M151.56 131.94L160.06 140.44L151.56 148.94L143.06 140.44Z",
+    "preenchimento": "especial",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#3379003049:4429",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#0a818bc4ed:6808",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#ee9cee123c:7999",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 22,
+    "cy": 271,
+    "raio": 5,
+    "preenchimento": "dado"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#a84d2177e0:4339",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M97.17 264.5L103.67 271L97.17 277.5L90.67 271Z",
+    "preenchimento": "especial"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#7241e8009a:7690",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 201.34,
+    "cy": 271,
+    "raio": 5,
+    "preenchimento": "procuradoFundo",
+    "borda": "procurado",
+    "larguraDaBorda": 1.5,
+    "tracejado": [
+     3,
+     2.5
+    ]
+   },
+   {
+    "tipo": "caminho",
+    "d": "#879ce62326:7025",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#6c14335a17:2347",
+    "preenchimento": "procuradoTexto"
+   }
+  ]
+ },
+ "baricentro/resposta": {
+  "altura": 320,
+  "menorTexto": 15,
+  "descricao": "Triângulo ABC no plano, com A (1, 2), B (−2, 7) e o baricentro G (1, 3); C é o vértice procurado.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 74.33,
+    "y1": 26,
+    "x2": 74.33,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 125,
+    "y1": 26,
+    "x2": 125,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 175.67,
+    "y1": 26,
+    "x2": 175.67,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 226.33,
+    "y1": 26,
+    "x2": 226.33,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 277,
+    "y1": 26,
+    "x2": 277,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 228.67,
+    "x2": 296,
+    "y2": 228.67,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 178,
+    "x2": 296,
+    "y2": 178,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 127.33,
+    "x2": 296,
+    "y2": 127.33,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 76.67,
+    "x2": 296,
+    "y2": 76.67,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 26,
+    "x2": 296,
+    "y2": 26,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "caminho",
+    "d": "M150.33 178L74.33 51.33L226.33 228.67Z",
+    "preenchimento": "preenchimento",
+    "opacidade": 0.07
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 228.67,
+    "x2": 296,
+    "y2": 228.67,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 125,
+    "y1": 254,
+    "x2": 125,
+    "y2": 26,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M304 228.67L296 233.67L296 223.67Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M125 18L130 26L120 26Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#30942d0410:1196",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "linha",
+    "x1": 150.33,
+    "y1": 178,
+    "x2": 74.33,
+    "y2": 51.33,
+    "cor": "segmento",
+    "largura": 3
+   },
+   {
+    "tipo": "linha",
+    "x1": 74.33,
+    "y1": 51.33,
+    "x2": 226.33,
+    "y2": 228.67,
+    "cor": "segmento",
+    "largura": 3
+   },
+   {
+    "tipo": "linha",
+    "x1": 226.33,
+    "y1": 228.67,
+    "x2": 150.33,
+    "y2": 178,
+    "cor": "segmento",
+    "largura": 3
+   },
+   {
+    "tipo": "circulo",
+    "cx": 150.33,
+    "cy": 178,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 74.33,
+    "cy": 51.33,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 226.33,
+    "cy": 228.67,
+    "raio": 8,
+    "preenchimento": "resposta",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M150.33 144.17L158.83 152.67L150.33 161.17L141.83 152.67Z",
+    "preenchimento": "especial",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#c7a67bbd14:4411",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#fdb12e5ec7:3677",
+    "preenchimento": "respostaTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#68f3055e55:6739",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#8f34e5a8f7:6543",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 22,
+    "cy": 293,
+    "raio": 5,
+    "preenchimento": "dado"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#b25aa3f478:4339",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M97.17 286.5L103.67 293L97.17 299.5L90.67 293Z",
+    "preenchimento": "especial"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#3cb308959a:7690",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 201.34,
+    "cy": 293,
+    "raio": 5.5,
+    "preenchimento": "resposta"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#97b3ca1e19:7112",
+    "preenchimento": "suave"
+   }
+  ]
+ },
+ "baricentro/formula-bloco": {
+  "altura": 70.7,
+  "menorTexto": 15,
+  "descricao": "x índice G é igual a fração: numerador x índice A, mais x índice B, mais x índice C, denominador 3",
+  "primitivas": [
+   {
+    "tipo": "retangulo",
+    "x": 0,
+    "y": 0,
+    "largura": 320,
+    "altura": 70.7,
+    "raio": 14,
+    "preenchimento": "fundo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#8555169441:1970",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "linha",
+    "x1": 126.75,
+    "y1": 37.75,
+    "x2": 238.5,
+    "y2": 37.75,
+    "cor": "texto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#edf80bbdf6:6197",
+    "preenchimento": "texto"
+   }
+  ]
+ },
+ "baricentro/formula-faixa": {
+  "altura": 67.3,
+  "menorTexto": 15,
+  "descricao": "x índice G é igual a fração: numerador x índice A, mais x índice B, mais x índice C, denominador 3",
+  "primitivas": [
+   {
+    "tipo": "caminho",
+    "d": "#9709ecfa43:1974",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.02,
+    "y1": 35.98,
+    "x2": 234.94,
+    "y2": 35.98,
+    "cor": "texto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#efc1a75f0e:6238",
+    "preenchimento": "texto"
+   }
+  ]
+ },
+ "baricentro/passo-formula": {
+  "altura": 74.7,
+  "menorTexto": 15,
+  "descricao": "x índice G é igual a fração: numerador x índice A, mais x índice B, mais x índice C, denominador 3",
+  "primitivas": [
+   {
+    "tipo": "retangulo",
+    "x": 0,
+    "y": 0,
+    "largura": 320,
+    "altura": 74.7,
+    "raio": 14,
+    "preenchimento": "fundo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#cccfa01c4d:1942",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "retangulo",
+    "x": 123.75,
+    "y": 10,
+    "largura": 117.75,
+    "altura": 54.7,
+    "raio": 6,
+    "preenchimento": "focoFundo"
+   },
+   {
+    "tipo": "linha",
+    "x1": 126.75,
+    "y1": 39.75,
+    "x2": 238.5,
+    "y2": 39.75,
+    "cor": "focoTexto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#4605b999c8:6197",
+    "preenchimento": "focoTexto"
+   }
+  ]
+ },
+ "abscissas/enunciado": {
+  "altura": 140,
+  "menorTexto": 15,
+  "descricao": "Reta numérica com A em 3, B em 5 e o baricentro G em 4; C é o ponto procurado.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 12,
+    "y1": 63,
+    "x2": 306,
+    "y2": 63,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M312 63L304 68L304 58Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "linha",
+    "x1": 24,
+    "y1": 58,
+    "x2": 24,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 58,
+    "y1": 58,
+    "x2": 58,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 92,
+    "y1": 58,
+    "x2": 92,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 126,
+    "y1": 58,
+    "x2": 126,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 160,
+    "y1": 58,
+    "x2": 160,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 194,
+    "y1": 58,
+    "x2": 194,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 228,
+    "y1": 58,
+    "x2": 228,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 262,
+    "y1": 58,
+    "x2": 262,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 296,
+    "y1": 58,
+    "x2": 296,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 126,
+    "cy": 63,
+    "raio": 7,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 194,
+    "cy": 63,
+    "raio": 7,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M160 54L169 63L160 72L151 63Z",
+    "preenchimento": "especial",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#492c771161:943",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#4e58649dd6:1149",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#3fffae8a37:23432",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#326e113a72:2508",
+    "preenchimento": "procuradoTexto"
+   }
+  ]
+ },
+ "abscissas/passo-intermediario": {
+  "altura": 140,
+  "menorTexto": 15,
+  "descricao": "Reta numérica com A em 3, B em 5 e o baricentro G em 4; C é o ponto procurado.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 12,
+    "y1": 63,
+    "x2": 306,
+    "y2": 63,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M312 63L304 68L304 58Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "linha",
+    "x1": 24,
+    "y1": 58,
+    "x2": 24,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 58,
+    "y1": 58,
+    "x2": 58,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 92,
+    "y1": 58,
+    "x2": 92,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 126,
+    "y1": 58,
+    "x2": 126,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 160,
+    "y1": 58,
+    "x2": 160,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 194,
+    "y1": 58,
+    "x2": 194,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 228,
+    "y1": 58,
+    "x2": 228,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 262,
+    "y1": 58,
+    "x2": 262,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 296,
+    "y1": 58,
+    "x2": 296,
+    "y2": 68,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 126,
+    "cy": 63,
+    "raio": 7,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 194,
+    "cy": 63,
+    "raio": 7,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M160 54L169 63L160 72L151 63Z",
+    "preenchimento": "especial",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#492c771161:943",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#4e58649dd6:1149",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#3fffae8a37:23432",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#326e113a72:2508",
+    "preenchimento": "procuradoTexto"
+   }
+  ]
+ },
+ "abscissas/resposta": {
+  "altura": 142,
+  "menorTexto": 15,
+  "descricao": "Reta numérica com A em 3, B em 5 e o baricentro G em 4; C é o ponto procurado.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 12,
+    "y1": 74,
+    "x2": 306,
+    "y2": 74,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M312 74L304 79L304 69Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "linha",
+    "x1": 24,
+    "y1": 69,
+    "x2": 24,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 58,
+    "y1": 69,
+    "x2": 58,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 92,
+    "y1": 69,
+    "x2": 92,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 126,
+    "y1": 69,
+    "x2": 126,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 160,
+    "y1": 69,
+    "x2": 160,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 194,
+    "y1": 69,
+    "x2": 194,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 228,
+    "y1": 69,
+    "x2": 228,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 262,
+    "y1": 69,
+    "x2": 262,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 296,
+    "y1": 69,
+    "x2": 296,
+    "y2": 79,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 126,
+    "cy": 74,
+    "raio": 7,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 194,
+    "cy": 74,
+    "raio": 7,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 160,
+    "cy": 74,
+    "raio": 8.5,
+    "preenchimento": "resposta",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M160 65L169 74L160 83L151 74Z",
+    "preenchimento": "especial",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#8661de2528:943",
+    "preenchimento": "especialTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#bbc2e2b155:838",
+    "preenchimento": "respostaTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#2ab0b1fb76:1149",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#183f073070:12320",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#12dc29c809:2023",
+    "preenchimento": "respostaTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#30d1ecf556:11215",
+    "preenchimento": "suave"
+   }
+  ]
+ },
+ "abscissas/formula-bloco": {
+  "altura": 70.7,
+  "menorTexto": 15,
+  "descricao": "x índice G é igual a fração: numerador x índice A, mais x índice B, mais x índice C, denominador 3",
+  "primitivas": [
+   {
+    "tipo": "retangulo",
+    "x": 0,
+    "y": 0,
+    "largura": 320,
+    "altura": 70.7,
+    "raio": 14,
+    "preenchimento": "fundo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#8555169441:1970",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "linha",
+    "x1": 126.75,
+    "y1": 37.75,
+    "x2": 238.5,
+    "y2": 37.75,
+    "cor": "texto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#edf80bbdf6:6197",
+    "preenchimento": "texto"
+   }
+  ]
+ },
+ "abscissas/formula-faixa": {
+  "altura": 67.3,
+  "menorTexto": 15,
+  "descricao": "x índice G é igual a fração: numerador x índice A, mais x índice B, mais x índice C, denominador 3",
+  "primitivas": [
+   {
+    "tipo": "caminho",
+    "d": "#9709ecfa43:1974",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.02,
+    "y1": 35.98,
+    "x2": 234.94,
+    "y2": 35.98,
+    "cor": "texto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#efc1a75f0e:6238",
+    "preenchimento": "texto"
+   }
+  ]
+ },
+ "abscissas/passo-formula": {
+  "altura": 74.7,
+  "menorTexto": 15,
+  "descricao": "x índice G é igual a fração: numerador x índice A, mais x índice B, mais x índice C, denominador 3",
+  "primitivas": [
+   {
+    "tipo": "retangulo",
+    "x": 0,
+    "y": 0,
+    "largura": 320,
+    "altura": 74.7,
+    "raio": 14,
+    "preenchimento": "fundo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#cccfa01c4d:1942",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "retangulo",
+    "x": 123.75,
+    "y": 10,
+    "largura": 117.75,
+    "altura": 54.7,
+    "raio": 6,
+    "preenchimento": "focoFundo"
+   },
+   {
+    "tipo": "linha",
+    "x1": 126.75,
+    "y1": 39.75,
+    "x2": 238.5,
+    "y2": 39.75,
+    "cor": "focoTexto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#4605b999c8:6197",
+    "preenchimento": "focoTexto"
+   }
+  ]
+ },
+ "colinearidade/enunciado": {
+  "altura": 320,
+  "menorTexto": 15,
+  "descricao": "Os pontos A (−1, −1) e B (2, 5) no plano; C tem ordenada 1 e abscissa k, desconhecida.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 60.4,
+    "y1": 26,
+    "x2": 60.4,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 106,
+    "y1": 26,
+    "x2": 106,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 151.6,
+    "y1": 26,
+    "x2": 151.6,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 197.2,
+    "y1": 26,
+    "x2": 197.2,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 242.8,
+    "y1": 26,
+    "x2": 242.8,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 288.4,
+    "y1": 26,
+    "x2": 288.4,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 231.2,
+    "x2": 296,
+    "y2": 231.2,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 185.6,
+    "x2": 296,
+    "y2": 185.6,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 140,
+    "x2": 296,
+    "y2": 140,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 94.4,
+    "x2": 296,
+    "y2": 94.4,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 48.8,
+    "x2": 296,
+    "y2": 48.8,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 185.6,
+    "x2": 296,
+    "y2": 185.6,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 151.6,
+    "y1": 254,
+    "x2": 151.6,
+    "y2": 26,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M304 185.6L296 190.6L296 180.6Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M151.6 18L156.6 26L146.6 26Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#99184645e7:1196",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.8,
+    "y1": 208.4,
+    "x2": 197.2,
+    "y2": 71.6,
+    "cor": "segmento",
+    "largura": 3
+   },
+   {
+    "tipo": "circulo",
+    "cx": 128.8,
+    "cy": 208.4,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 197.2,
+    "cy": 71.6,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#aea6690892:7369",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#e64d41b327:6130",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 22,
+    "cy": 293,
+    "raio": 5,
+    "preenchimento": "dado"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#b25aa3f478:4339",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 97.17,
+    "cy": 293,
+    "raio": 5,
+    "preenchimento": "procuradoFundo",
+    "borda": "procurado",
+    "larguraDaBorda": 1.5,
+    "tracejado": [
+     3,
+     2.5
+    ]
+   },
+   {
+    "tipo": "caminho",
+    "d": "#59ca0e26bc:7015",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#95bbfbc6ed:2538",
+    "preenchimento": "procuradoTexto"
+   }
+  ]
+ },
+ "colinearidade/passo-intermediario": {
+  "altura": 320,
+  "menorTexto": 15,
+  "descricao": "Os pontos A (−1, −1) e B (2, 5) no plano; C tem ordenada 1 e abscissa k, desconhecida.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 60.4,
+    "y1": 26,
+    "x2": 60.4,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 106,
+    "y1": 26,
+    "x2": 106,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 151.6,
+    "y1": 26,
+    "x2": 151.6,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 197.2,
+    "y1": 26,
+    "x2": 197.2,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 242.8,
+    "y1": 26,
+    "x2": 242.8,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 288.4,
+    "y1": 26,
+    "x2": 288.4,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 231.2,
+    "x2": 296,
+    "y2": 231.2,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 185.6,
+    "x2": 296,
+    "y2": 185.6,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 140,
+    "x2": 296,
+    "y2": 140,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 94.4,
+    "x2": 296,
+    "y2": 94.4,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 48.8,
+    "x2": 296,
+    "y2": 48.8,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 185.6,
+    "x2": 296,
+    "y2": 185.6,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 151.6,
+    "y1": 254,
+    "x2": 151.6,
+    "y2": 26,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M304 185.6L296 190.6L296 180.6Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M151.6 18L156.6 26L146.6 26Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#99184645e7:1196",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.8,
+    "y1": 208.4,
+    "x2": 197.2,
+    "y2": 71.6,
+    "cor": "segmento",
+    "largura": 3
+   },
+   {
+    "tipo": "circulo",
+    "cx": 128.8,
+    "cy": 208.4,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 197.2,
+    "cy": 71.6,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#aea6690892:7369",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#e64d41b327:6130",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 22,
+    "cy": 293,
+    "raio": 5,
+    "preenchimento": "dado"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#b25aa3f478:4339",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 97.17,
+    "cy": 293,
+    "raio": 5,
+    "preenchimento": "procuradoFundo",
+    "borda": "procurado",
+    "larguraDaBorda": 1.5,
+    "tracejado": [
+     3,
+     2.5
+    ]
+   },
+   {
+    "tipo": "caminho",
+    "d": "#59ca0e26bc:7015",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#95bbfbc6ed:2538",
+    "preenchimento": "procuradoTexto"
+   }
+  ]
+ },
+ "colinearidade/resposta": {
+  "altura": 320,
+  "menorTexto": 15,
+  "descricao": "Os pontos A (−1, −1) e B (2, 5) no plano; C tem ordenada 1 e abscissa k, desconhecida.",
+  "primitivas": [
+   {
+    "tipo": "linha",
+    "x1": 60.4,
+    "y1": 26,
+    "x2": 60.4,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 106,
+    "y1": 26,
+    "x2": 106,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 151.6,
+    "y1": 26,
+    "x2": 151.6,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 197.2,
+    "y1": 26,
+    "x2": 197.2,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 242.8,
+    "y1": 26,
+    "x2": 242.8,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 288.4,
+    "y1": 26,
+    "x2": 288.4,
+    "y2": 254,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 231.2,
+    "x2": 296,
+    "y2": 231.2,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 185.6,
+    "x2": 296,
+    "y2": 185.6,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 140,
+    "x2": 296,
+    "y2": 140,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 94.4,
+    "x2": 296,
+    "y2": 94.4,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 48.8,
+    "x2": 296,
+    "y2": 48.8,
+    "cor": "grade",
+    "largura": 1
+   },
+   {
+    "tipo": "linha",
+    "x1": 30,
+    "y1": 185.6,
+    "x2": 296,
+    "y2": 185.6,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 151.6,
+    "y1": 254,
+    "x2": 151.6,
+    "y2": 26,
+    "cor": "eixo",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "M304 185.6L296 190.6L296 180.6Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "M151.6 18L156.6 26L146.6 26Z",
+    "preenchimento": "eixo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#99184645e7:1196",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "linha",
+    "x1": 128.8,
+    "y1": 208.4,
+    "x2": 197.2,
+    "y2": 71.6,
+    "cor": "segmento",
+    "largura": 3
+   },
+   {
+    "tipo": "circulo",
+    "cx": 128.8,
+    "cy": 208.4,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 197.2,
+    "cy": 71.6,
+    "raio": 6,
+    "preenchimento": "dado",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "circulo",
+    "cx": 151.6,
+    "cy": 162.8,
+    "raio": 8,
+    "preenchimento": "resposta",
+    "borda": "branco",
+    "larguraDaBorda": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#62d3cca75e:3612",
+    "preenchimento": "respostaTexto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#aea6690892:7369",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#e64d41b327:6130",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 22,
+    "cy": 293,
+    "raio": 5,
+    "preenchimento": "dado"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#b25aa3f478:4339",
+    "preenchimento": "suave"
+   },
+   {
+    "tipo": "circulo",
+    "cx": 97.17,
+    "cy": 293,
+    "raio": 5.5,
+    "preenchimento": "resposta"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#5595f25dde:7090",
+    "preenchimento": "suave"
+   }
+  ]
+ },
+ "colinearidade/formula-bloco": {
+  "altura": 118.54,
+  "menorTexto": 15,
+  "descricao": "determinante de ordem 3: linha 1: x índice A, y índice A, 1; linha 2: x índice B, y índice B, 1; linha 3: x índice C, y índice C, 1 é igual a 0",
+  "primitivas": [
+   {
+    "tipo": "retangulo",
+    "x": 0,
+    "y": 0,
+    "largura": 320,
+    "altura": 118.54,
+    "raio": 14,
+    "preenchimento": "fundo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#709acf9576:8961",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "linha",
+    "x1": 89.25,
+    "y1": 10,
+    "x2": 89.25,
+    "y2": 108.54,
+    "cor": "texto",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 196.35,
+    "y1": 10,
+    "x2": 196.35,
+    "y2": 108.54,
+    "cor": "texto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#f855a272ce:980",
+    "preenchimento": "texto"
+   }
+  ]
+ },
+ "colinearidade/formula-faixa": {
+  "altura": 112.3,
+  "menorTexto": 15,
+  "descricao": "determinante de ordem 3: linha 1: x índice A, y índice A, 1; linha 2: x índice B, y índice B, 1; linha 3: x índice C, y índice C, 1 é igual a 0",
+  "primitivas": [
+   {
+    "tipo": "caminho",
+    "d": "#0f2e07c203:8878",
+    "preenchimento": "texto"
+   },
+   {
+    "tipo": "linha",
+    "x1": 92.12,
+    "y1": 10,
+    "x2": 92.12,
+    "y2": 102.3,
+    "cor": "texto",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 195.88,
+    "y1": 10,
+    "x2": 195.88,
+    "y2": 102.3,
+    "cor": "texto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#8c31075c22:1010",
+    "preenchimento": "texto"
+   }
+  ]
+ },
+ "colinearidade/passo-formula": {
+  "altura": 122.54,
+  "menorTexto": 15,
+  "descricao": "determinante de ordem 3: linha 1: x índice A, y índice A, 1; linha 2: x índice B, y índice B, 1; linha 3: x índice C, y índice C, 1 é igual a 0",
+  "primitivas": [
+   {
+    "tipo": "retangulo",
+    "x": 0,
+    "y": 0,
+    "largura": 320,
+    "altura": 122.54,
+    "raio": 14,
+    "preenchimento": "fundo"
+   },
+   {
+    "tipo": "retangulo",
+    "x": 85.25,
+    "y": 10,
+    "largura": 115.1,
+    "altura": 102.54,
+    "raio": 6,
+    "preenchimento": "focoFundo"
+   },
+   {
+    "tipo": "caminho",
+    "d": "#6a35f17d06:8971",
+    "preenchimento": "focoTexto"
+   },
+   {
+    "tipo": "linha",
+    "x1": 89.25,
+    "y1": 12,
+    "x2": 89.25,
+    "y2": 110.54,
+    "cor": "focoTexto",
+    "largura": 2
+   },
+   {
+    "tipo": "linha",
+    "x1": 196.35,
+    "y1": 12,
+    "x2": 196.35,
+    "y2": 110.54,
+    "cor": "focoTexto",
+    "largura": 2
+   },
+   {
+    "tipo": "caminho",
+    "d": "#04ec6779e4:980",
+    "preenchimento": "texto"
+   }
+  ]
+ }
+}

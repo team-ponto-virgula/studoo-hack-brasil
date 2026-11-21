@@ -17,7 +17,7 @@
           { "id": "A", "papel": "dado", "valor": 3 },
           { "id": "B", "papel": "dado", "valor": 5 },
           { "id": "C", "papel": "procurado", "valor": 4 },
-          { "id": "G", "papel": "especial", "derivado": { "tipo": "media", "de": ["A", "B", "C"] } }
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
         ],
         "alt": "Reta numérica com A em 3, B em 5 e o baricentro G em 4; C é o ponto procurado."
       }
@@ -41,7 +41,7 @@
           { "id": "A", "papel": "dado", "valor": 3 },
           { "id": "B", "papel": "dado", "valor": 5 },
           { "id": "C", "papel": "procurado", "valor": 4 },
-          { "id": "G", "papel": "especial", "derivado": { "tipo": "media", "de": ["A", "B", "C"] } }
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
         ],
         "alt": "Reta numérica com A em 3, B em 5 e o baricentro G em 4; C é o ponto procurado."
       }
@@ -56,7 +56,7 @@
           { "id": "A", "papel": "dado", "valor": 2 },
           { "id": "B", "papel": "dado", "valor": 6 },
           { "id": "C", "papel": "procurado", "valor": 7 },
-          { "id": "G", "papel": "especial", "derivado": { "tipo": "media", "de": ["A", "B", "C"] } }
+          { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
         ],
         "alt": "Reta numérica com A em 2, B em 6 e o baricentro G em 5; C é o ponto procurado."
       },
@@ -94,7 +94,7 @@
               { "id": "A", "papel": "dado", "valor": 2 },
               { "id": "B", "papel": "dado", "valor": 6 },
               { "id": "C", "papel": "resposta", "valor": 7 },
-              { "id": "G", "papel": "especial", "derivado": { "tipo": "media", "de": ["A", "B", "C"] } }
+              { "id": "G", "papel": "especial", "derivado": { "tipo": "baricentro", "de": ["A", "B", "C"] } }
             ],
             "alt": "Reta numérica com A em 2, B em 6, C em 7 e o baricentro G em 5."
           }
