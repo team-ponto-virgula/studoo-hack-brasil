@@ -61,8 +61,9 @@ export const DesenhoSvg = memo(function DesenhoSvg({ desenho, rotulo, testID, en
 
   if (caixa !== undefined) {
     return (
+      // A caixa não passa de 480 de altura no computador (spec 15, seção 3): a largura é limitada pela proporção dela, e a figura fica centralizada.
       <div className="desenho desenho--caixa" role="img" aria-label={nome} data-testid={testID} data-entrada={entrada || undefined}
-        style={{ aspectRatio: `${desenho.largura} / ${caixa}` }}>
+        style={{ aspectRatio: `${desenho.largura} / ${caixa}`, maxWidth: (ALTURA_MAXIMA_DO_VISUAL * desenho.largura) / caixa }}>
         <svg viewBox={`0 0 ${desenho.largura} ${desenho.altura}`} preserveAspectRatio="xMidYMid meet" focusable="false" aria-hidden="true">
           {base}
           {camadas && ponto && <g className="desenho__ponto" style={{ transformOrigin: `${camadas.centro[0]}px ${camadas.centro[1]}px` }}>{ponto}</g>}

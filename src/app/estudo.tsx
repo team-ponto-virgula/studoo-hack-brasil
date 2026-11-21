@@ -15,7 +15,7 @@ import {
   type PlanoResumo,
   type Progresso,
 } from '@studoo/contratos';
-import { clienteStudooWeb as cliente } from '../contratos/cliente-web';
+import { clienteStudooWeb as cliente, responderSuaVez } from '../contratos/cliente-web';
 import { invalidarElegibilidadeVozAoVivo } from './estudio';
 import { mensagens, textoParaRever } from '../mensagens/pt-BR';
 import {
@@ -834,7 +834,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
                 return resultado.ok ? resultado.dados : null;
               }}
               concluir={(comprovante, resumo, pratica) => concluir(tela.plano, tela.licao, comprovante, resumo, pratica)}
-              voltar={() => void abrirPlano(tela.plano.id, tela.licao.id)} />
+              voltar={() => void abrirPlano(tela.plano.id, tela.licao.id)}
+              responderSuaVez={(escolha) => responderSuaVez(tela.licao.id, escolha)} />
           )}
           {visivel && tela.tipo === 'concluida' && (
             <LicaoConcluida plano={tela.plano} antes={tela.antes} licao={tela.licao} liberadas={tela.liberadas} resumo={tela.resumo} ocupado={ocupado}

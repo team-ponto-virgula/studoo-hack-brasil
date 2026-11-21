@@ -24,6 +24,7 @@ import {
   type AutoAvaliacao,
   type Avaliacao,
   type ConferenciaDaFala,
+  type EscolhaNoSuaVez,
   type EtapaAula,
   type ExercicioPublico,
   type Fala,
@@ -38,6 +39,7 @@ import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
 import { Botao, Confete, Icone, Mascote, Stu, precarregarAnimacoesStu, type NomeIcone } from '../ui';
 import { FiguraDoExercicio, VisuaisDaLicao, alturaDoDesenhoDaFigura, caixaDaFigura, descricaoDaFiguraRevelada } from './desenho';
 import { ApoioDaLicao } from './estudio';
+import { useResolvaComigo } from './resolva-comigo';
 import { TextoComFormulas } from './texto-com-formulas';
 import { Ordenar } from './ordenar';
 import { BotaoSom } from './som';
@@ -206,12 +208,14 @@ function respostaLegivel(exercicio: LicaoDetalhe['exercicio'], resposta: string)
   }
 }
 
-export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
+export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSuaVez }: {
   licao: LicaoDetalhe;
   pendente: string | null;
   avaliar: (resposta: string, indice: number) => Promise<Avaliacao | null>;
   concluir: (comprovante: string, resumo: ResumoLicao, pratica?: AutoAvaliacao) => Promise<boolean>;
   voltar: () => void;
+  /** O "Sua vez" do "Resolva comigo" (spec 15): sem isto, o exemplo fica em texto. */
+  responderSuaVez?: (escolha: EscolhaNoSuaVez) => Promise<unknown>;
 }) {
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   // As opções mudam de ordem a cada visita: a certa não fica sempre no mesmo lugar e não dá para decorar a posição.
@@ -298,6 +302,11 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   }, [passo, licao.id]);
 
   const etapa = etapas[passo];
+  /** Spec 15: com `resolucao`, a etapa Exemplo é o "Resolva comigo" (o contador de etapas não muda). */
+  const resolva = useResolvaComigo({
+    licao, responder: responderSuaVez, visivel: etapa.tipo === 'exemplo', titulo: tituloEtapa,
+    aoTerminar: () => { posicoesDasEtapas.current[passo] = window.scrollY; setPasso((atual) => atual + 1); },
+  });
   const indice = etapa.tipo === 'exercicio' ? etapa.indice : -1;
   const exercicio = indice >= 0 ? exercicios[indice] : null;
   const resposta = indice >= 0 ? respostas[indice] : '';
@@ -338,7 +347,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   // Na revisão, o contador de etapas voltaria para trás: o topo diz "Revisão rápida" e a barra fica cheia.
   const andamento = revisao && exercicio ? t.revisaoAndamento : t.posicao(passo + 1, total);
   let nomeEtapa: string = t.conceito;
-  if (etapa.tipo === 'exemplo') nomeEtapa = licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
+  if (etapa.tipo === 'exemplo') nomeEtapa = resolva.ativo ? mensagens.resolvaComigo.selo : licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo;
   else if (etapa.tipo === 'pratica') nomeEtapa = t.pratica.etapa;
   else if (etapa.tipo === 'exercicio') {
     // Na revisão, o contador é o da revisão ("Revisão 1 de 1"), não o dos exercícios da lição.
@@ -716,6 +725,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         </Botao>
       </>
     );
+  } else if (etapa.tipo === 'exemplo' && resolva.ativo) {
+    // O rodapé preso do "Resolva comigo": "Próximo passo", "Verificar", "Tentar de novo" ou "Agora é com você".
+    acao = resolva.rodape;
   } else if (temMais) {
     acao = <Botao className="botao--ler-mais" onClick={lerMais}>{t.continuarLendo}<Icone nome="seta" /></Botao>;
   } else {
@@ -760,7 +772,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             <Icone nome="seta" />{t.etapaAnterior}
           </button>
         )}
-        <p className="aula-etapa" data-etapa={etapa.tipo}><Icone nome={iconesDaEtapa[etapa.tipo]} />{nomeEtapa}</p>
+        <p className="aula-etapa" data-etapa={etapa.tipo}><Icone nome={etapa.tipo === 'exemplo' && resolva.ativo ? 'lapis' : iconesDaEtapa[etapa.tipo]} />{nomeEtapa}</p>
         {etapa.tipo === 'conceito' && <h1 tabIndex={-1}>{semQuebrarHifen(textoSemFormulas(licao.titulo))}</h1>}
         {etapa.tipo === 'pratica' && <h1 tabIndex={-1}>{semQuebrarHifen(textoSemFormulas(licao.titulo))}</h1>}
         {avisoRetomada && (
@@ -830,13 +842,13 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
           </>
         )}
-        {etapa.tipo === 'exemplo' && <EtapaExemplo licao={licao} titulo={tituloEtapa} />}
+        {etapa.tipo === 'exemplo' && (resolva.ativo ? resolva.corpo : <EtapaExemplo licao={licao} titulo={tituloEtapa} />)}
         {exercicio && (() => {
           return (
             <>
               <EtapaExercicio exercicio={exercicio} indice={indice} total={exercicios.length} resposta={resposta} inicial={iniciais[indice]} mudar={mudarResposta}
                 consulta={licao.recurso && licao.recurso.tipo !== 'linha_do_tempo' ? licao.recurso : undefined}
-                explicacao={licao.conceito} exemplo={licao.exemplo}
+                explicacao={licao.conceito} exemplo={licao.exemplo} metodo={resolva.metodo}
                 errouAntes={Boolean(errosAnteriores[indice])}
                 avaliacao={avaliacao} ocupado={ocupado} responder={responder} formulario={formulario} titulo={tituloEtapa}
                 alturaDaFigura={alturaDaFigura} caixaDaFigura={caixaDaFiguraDoExercicio} descricaoDoRetorno={descricaoDoRetorno}
@@ -1621,7 +1633,7 @@ function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: string;
 }
 
 export function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mudar, avaliacao, ocupado, responder, formulario, titulo, consulta, dica,
-  explicacao, exemplo, errouAntes = false, alturaDaFigura = 203, caixaDaFigura: caixa, descricaoDoRetorno }: {
+  explicacao, exemplo, metodo, errouAntes = false, alturaDaFigura = 203, caixaDaFigura: caixa, descricaoDoRetorno }: {
   /** A altura máxima da figura no desenho (unidades do motor), a caixa dela e a descrição da figura revelada (ver `FiguraDoExercicio`). */
   alturaDaFigura?: number;
   caixaDaFigura?: number;
@@ -1633,6 +1645,8 @@ export function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mu
   /** A explicação do Stu e o exemplo, para rever durante o exercício (recolhidos). */
   explicacao?: string;
   exemplo?: string;
+  /** "O método" do "Resolva comigo" (spec 15, seção 4): depois que a pessoa viu a resolução inteira, "Rever a explicação" abre também ele. */
+  metodo?: ReactNode;
   /** Já errou este exercício antes: a resposta modelo da aberta só aparece na segunda vez. */
   errouAntes?: boolean;
   /** A correção da tentativa anterior (errada): a dica fica embaixo do campo enquanto a pessoa tenta de novo. */
@@ -1740,6 +1754,7 @@ export function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mu
           <summary>{t.reverExplicacao}</summary>
           <TextoComFormulas como="p" texto={explicacao} />
           {exemplo && <p><strong>{t.exemplo}:</strong> <TextoComFormulas texto={exemplo} /></p>}
+          {metodo}
         </details>
       )}
       {consulta && (
