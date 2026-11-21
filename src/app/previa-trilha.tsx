@@ -7,7 +7,7 @@ import { Botao, Desenho, Fronteira, Icone, Mascote, coresDaRegiao } from '../ui'
 import { desenhosQueBalancam, enfeitesDaLinha } from '../ui/mundo-desenhos';
 import { posicaoX, semQuebrarHifen } from '../ui/caminho';
 import { nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
-import { DURACAO_ATE_O_NO_1_MS, rolagemNoInstante, rolagemParaCentrarNo } from './previa-trilha-regras';
+import { DURACAO_ACOMPANHAR_MS, DURACAO_ATE_O_NO_1_MS, entradaMaisNova, rolagemParaCentrarNo, rolarAte } from './previa-trilha-regras';
 import { tocaSons } from './sons';
 import './previa-trilha.css';
 
@@ -15,33 +15,6 @@ export type EstadoAceite = 'livre' | 'salvando' | 'erro' | 'expirada';
 export type PassagemCriada = { geracao: TrilhaEmGeracao; estilo: CSSProperties; reduzida: boolean; rolagem: number };
 const t = mensagens.geracao;
 const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-/**
- * Rola a área até `alvo` em `duracao` ms (saída suave); com `duracao` 0, vai direto. Se a pessoa mexer na rolagem no meio, a animação larga o controle.
- * Devolve quem cancela.
- */
-function rolarAte(area: HTMLElement, alvo: number, duracao: number, aoTerminar: () => void): () => void {
-  const de = area.scrollTop;
-  if (duracao <= 0 || Math.abs(alvo - de) < 1) {
-    area.scrollTop = alvo;
-    aoTerminar();
-    return () => undefined;
-  }
-  const inicio = performance.now();
-  let quadro = 0;
-  let ultimo = de;
-  const passo = (agora: number) => {
-    // A pessoa tocou na rolagem (roda, dedo, teclado): a animação sai da frente.
-    if (Math.abs(area.scrollTop - ultimo) > 2) { aoTerminar(); return; }
-    const decorrido = agora - inicio;
-    ultimo = rolagemNoInstante(de, alvo, decorrido, duracao);
-    area.scrollTop = ultimo;
-    if (decorrido < duracao) quadro = requestAnimationFrame(passo);
-    else { area.scrollTop = alvo; aoTerminar(); }
-  };
-  quadro = requestAnimationFrame(passo);
-  return () => cancelAnimationFrame(quadro);
-}
 
 function origemDoCirculo(painel: HTMLElement, faltaRolar = 0) {
   const caixa = painel.getBoundingClientRect();
@@ -157,7 +130,9 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     const vaga = area.querySelector<HTMLElement>('[data-mais-novo]');
     if (!vaga || !acompanhando) return;
     const centro = vaga.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop + vaga.offsetHeight / 2;
-    area.scrollTo({ top: Math.max(0, centro - area.clientHeight * 0.6), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
+    // A mesma rolagem própria da trilha pronta (sem `scrollTo` suave nativo): o que anda nesta área é sempre uma só, e a proposta que chega no meio dela a substitui.
+    cancelarRolagem.current?.();
+    cancelarRolagem.current = rolarAte(area, Math.max(0, centro - area.clientHeight * 0.6), movimentoReduzido() ? 0 : DURACAO_ACOMPANHAR_MS, () => undefined);
   }, [nos.length, proposta, acompanhando]);
 
   function voltarAAcompanhar() {
@@ -170,7 +145,8 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     setAcompanhando(true);
     if (proposta) {
       const destino = alvo.getBoundingClientRect().bottom - area.getBoundingClientRect().bottom + area.scrollTop;
-      area.scrollTo({ top: Math.max(0, destino), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
+      cancelarRolagem.current?.();
+      cancelarRolagem.current = rolarAte(area, Math.max(0, destino), movimentoReduzido() ? 0 : DURACAO_ACOMPANHAR_MS, () => undefined);
     }
   }
 
@@ -179,6 +155,9 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     if (!area) return;
     if (aceite === 'erro' || aceite === 'expirada') { area.scrollTop = 0; return; }
     if (aceite !== 'salvando' && !passagem) return;
+    // A pessoa tocou em "Começar a lição 1" no meio da rolagem até o nó 1: a volta ao topo da passagem assume.
+    cancelarRolagem.current?.();
+    setIndoAoPrimeiro(false);
     const de = passagem?.rolagem ?? area.scrollTop;
     const duracao = passagem ? 120 : 240;
     if (movimentoReduzido() || !de) { area.scrollTop = 0; return; }
@@ -199,7 +178,9 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     if (!proposta || !mapa.current || !trofeu.current) {
       setViuTrofeu(false); setTrofeuAVista(false); return;
     }
-    const observador = new IntersectionObserver(([entrada]) => {
+    const observador = new IntersectionObserver((entradas) => {
+      const entrada = entradaMaisNova(entradas);
+      if (!entrada) return;
       setTrofeuAVista(entrada.isIntersecting);
       if (entrada.isIntersecting) setViuTrofeu(true);
     }, { root: mapa.current, threshold: 0.45 });
