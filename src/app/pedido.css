@@ -109,7 +109,7 @@
   cursor: pointer;
 }
 
-.pedido-surpresa .desenho { --tam: 18px; }
+.pedido-surpresa .mundo-desenho { --tam: 18px; }
 .pedido-surpresa:active:not(:disabled) { box-shadow: 0 1px 0 #ffe3a3; transform: translateY(2px); }
 .pedido-surpresa:disabled { color: var(--texto2); border-color: var(--gelo); background: var(--nevoa); box-shadow: none; cursor: default; }
 
@@ -145,8 +145,8 @@
   transition: border-color 140ms ease-out, background-color 140ms ease-out, color 140ms ease-out;
 }
 
-.pedido-tema .desenho { --tam: 22px; }
-.pedido-tema[aria-pressed='true'] .desenho { animation: pedido-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
+.pedido-tema .mundo-desenho { --tam: 22px; }
+.pedido-tema[aria-pressed='true'] .mundo-desenho { animation: pedido-icone 560ms cubic-bezier(0.2, 0.9, 0.3, 1.5); }
 .pedido-tema[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f0f4ff; }
 .pedido-tema:disabled { color: var(--texto2); background: var(--nevoa); cursor: default; }
 
@@ -172,7 +172,7 @@
 }
 
 .pedido-exemplo__icone { display: grid; width: 42px; height: 42px; place-items: center; border-radius: 12px; background: var(--nevoa); }
-.pedido-exemplo__icone .desenho { --tam: 26px; }
+.pedido-exemplo__icone .mundo-desenho { --tam: 26px; }
 .pedido-exemplo__texto { overflow-wrap: anywhere; }
 .pedido-exemplo__acao { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 50%; color: var(--texto2); }
 .pedido-exemplo__acao .icone { width: 18px; height: 18px; }
@@ -363,7 +363,7 @@
   transition: transform 110ms ease-out, box-shadow 110ms ease-out, border-color 140ms ease-out;
 }
 
-.pedido-ideia .desenho { --tam: 24px; }
+.pedido-ideia .mundo-desenho { --tam: 24px; }
 .pedido-ideia:active:not(:disabled) { box-shadow: 0 0 0 var(--gelo); transform: translateY(3px); }
 .pedido-ideia[aria-pressed='true'] { border-color: var(--acao); color: var(--acao); background: #f3f6ff; box-shadow: 0 3px 0 #b9c7f5; }
 .pedido-ideia--surpresa { border-color: #ffe08a; color: #7a4a00; background: #fff8e1; box-shadow: 0 3px 0 #ffe08a; }

@@ -39,7 +39,7 @@ function FormaSvg({ forma }: { forma: Forma }) {
 export function Desenho({ nome, className = '', style }: { nome: NomeDesenho; className?: string; style?: CSSProperties }) {
   const desenho = desenhosMundo[nome];
   return (
-    <svg className={`desenho ${className}`} viewBox={`0 0 ${desenho.largura} ${desenho.altura}`} width={desenho.largura}
+    <svg className={`mundo-desenho ${className}`} viewBox={`0 0 ${desenho.largura} ${desenho.altura}`} width={desenho.largura}
       height={desenho.altura} aria-hidden="true" focusable="false" style={style}>
       {desenho.formas.map((forma, indice) => <FormaSvg key={indice} forma={forma} />)}
     </svg>

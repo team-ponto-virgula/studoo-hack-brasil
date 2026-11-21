@@ -723,9 +723,13 @@ export const mensagens = {
         linkCopiado: 'Link da trilha copiado',
         mais: (titulo: string) => `Mais ações para “${titulo}”`,
         denunciar: 'Denunciar',
-        demonstracao: 'Demonstração',
+        /** O selo do conteúdo sintético do Explorar (spec 16, item 9): "Exemplo", no selo neutro; a honestidade continua, o conteúdo segue marcado. */
+        demonstracao: 'Exemplo',
+        /** O nome do selo para o leitor de tela (a palavra "Exemplo" na tela fica escondida dele, para não repetir). */
+        demonstracaoRotulo: 'Exemplo criado pelo Studoo para mostrar o app',
         demonstracaoDica: 'Trilha pronta do modo demonstração.',
-        demonstracaoExplica: '“Demonstração” marca conteúdo de exemplo, criado para mostrar o Studoo.',
+        /** O parágrafo do alto do Explorar saiu (spec 16, item 9); o app ainda o usa até a troca (Mobile 2), por isso a chave fica, coerente com "Exemplo". */
+        demonstracaoExplica: '“Exemplo” marca conteúdo criado pelo Studoo para mostrar o app.',
         entrarParaAgir: GESTO.faixaSemConta,
         entrar: 'Entrar',
         adicionada: (nome: string) => `Trilha adicionada. Feita por ${nome}.`,
@@ -768,7 +772,7 @@ export const mensagens = {
         publicada: 'Publicada no Explorar.',
         publicacaoSalva: 'Tema e legenda salvos.',
         materialFora: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
-        demonstracaoAviso: 'Esta trilha é do modo demonstração e aparece no Explorar com o rótulo “Demonstração”.',
+        demonstracaoAviso: 'Esta trilha é do modo demonstração e aparece no Explorar com o rótulo “Exemplo”.',
         verNoExplorar: 'Ver no Explorar',
         irAoExplorar: 'Ver trilhas da comunidade',
         // Tela Perfil (dona)

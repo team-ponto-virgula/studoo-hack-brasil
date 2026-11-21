@@ -128,6 +128,7 @@ async function gerarEsqueletoDireto(objetivo, sinal = new AbortController().sign
 
 before(async () => {
   servidorDeepSeek = createServer(async (req, res) => {
+    res.shouldKeepAlive = false; // cada resposta fecha a conexão: nada de socket velho reaproveitado (ECONNRESET ao acaso)
     const pedacos = [];
     for await (const p of req) pedacos.push(p);
     const corpo = JSON.parse(Buffer.concat(pedacos).toString("utf8"));
@@ -247,6 +248,7 @@ before(async () => {
   });
 
   servidorOpenAiArmadilha = createServer((req, res) => {
+    res.shouldKeepAlive = false;
     pedidosOpenAi.push(req.url);
     // Modo misto: só a transcrição da gravação pode ir para a OpenAI. Texto (/responses) nunca.
     if (req.method === "POST" && req.url === "/audio/transcriptions") {

@@ -437,9 +437,9 @@ button, input, textarea { font: inherit; }
 }
 .plano-destaque__cena .plano-cartao__colina { bottom: -32px; height: 68px; }
 .plano-destaque__cena .stu { position: absolute; bottom: 8px; left: 50%; width: 64px; translate: -50% 0; }
-.plano-destaque__cena .desenho { position: absolute; bottom: 10px; }
-.plano-destaque__cena .desenho:nth-of-type(1) { left: 10%; --tam: 38px; }
-.plano-destaque__cena .desenho:nth-of-type(2) { right: 10%; --tam: 34px; }
+.plano-destaque__cena .mundo-desenho { position: absolute; bottom: 10px; }
+.plano-destaque__cena .mundo-desenho:nth-of-type(1) { left: 10%; --tam: 38px; }
+.plano-destaque__cena .mundo-desenho:nth-of-type(2) { right: 10%; --tam: 34px; }
 .plano-destaque__corpo { display: grid; gap: 8px; min-width: 0; }
 .plano-destaque__topo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .plano-destaque__rotulo { color: var(--acao); font-size: 0.75rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
@@ -479,11 +479,11 @@ button, input, textarea { font: inherit; }
 }
 
 .plano-cartao__cena { position: relative; height: 92px; overflow: hidden; background: var(--chao); }
-.plano-cartao__cena .desenho { position: absolute; bottom: 10px; }
-.plano-cartao__cena .desenho:nth-of-type(1) { left: 8%; --tam: 46px; }
-.plano-cartao__cena .desenho:nth-of-type(2) { left: 30%; --tam: 26px; }
-.plano-cartao__cena .desenho:nth-of-type(3) { right: 26%; --tam: 34px; }
-.plano-cartao__cena .desenho:nth-of-type(4) { right: 6%; --tam: 44px; }
+.plano-cartao__cena .mundo-desenho { position: absolute; bottom: 10px; }
+.plano-cartao__cena .mundo-desenho:nth-of-type(1) { left: 8%; --tam: 46px; }
+.plano-cartao__cena .mundo-desenho:nth-of-type(2) { left: 30%; --tam: 26px; }
+.plano-cartao__cena .mundo-desenho:nth-of-type(3) { right: 26%; --tam: 34px; }
+.plano-cartao__cena .mundo-desenho:nth-of-type(4) { right: 6%; --tam: 44px; }
 .plano-cartao__colina { position: absolute; right: -10%; bottom: -36px; left: -10%; height: 72px; border-radius: 50% 50% 0 0 / 100% 100% 0 0; background: var(--relevo); }
 
 .plano-cartao__selo {

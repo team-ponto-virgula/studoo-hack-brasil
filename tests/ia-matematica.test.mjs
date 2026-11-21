@@ -51,6 +51,9 @@ const saidaDaDeepSeek = (corpo) => ({ choices: [{ message: { content: typeof cor
 
 before(async () => {
   servidor = createServer((pedido, resposta) => {
+    // Cada resposta fecha a conexão: o cliente (fetch) nunca reaproveita um socket que o servidor já fechou (ECONNRESET ao acaso, sobretudo com a CPU ocupada: a nova tentativa
+    // da matemática "voltava ao pedido de sempre" por causa de uma falha de rede do próprio teste).
+    resposta.shouldKeepAlive = false;
     pedido.on("error", () => undefined);
     resposta.on("error", () => undefined);
     let corpo = "";
