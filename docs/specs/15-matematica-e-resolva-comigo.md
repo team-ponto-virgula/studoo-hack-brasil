@@ -525,10 +525,11 @@ A frase do d1 ainda traz "…portanto k = 0". A captura é do dado de antes da c
 
 **2. Janela, eixos e tamanho**
 - **x:** o domínio, com meia unidade de folga.
-- **y:**
-  - a faixa da curva no domínio somada à dos pontos de destaque, com uma unidade de folga;
-  - se a faixa da curva passar de 3 unidades além dos pontos de destaque, o y para nos pontos ± 3, e a curva é recortada na borda;
-  - os pontos de destaque nunca ficam fora.
+- **y**, com a conta exata (C é a faixa da curva no domínio, D a dos pontos de destaque e f a folga):
+  - y mínimo = maior valor entre (menor de C e D) − f e (menor de D) − 3;
+  - y máximo = menor valor entre (maior de C e D) + f e (maior de D) + 3;
+  - a folga é de uma unidade, e no seno e no cosseno é metade da amplitude;
+  - a curva que sai da janela é recortada na borda, e os pontos de destaque nunca ficam fora.
 - **Escala:** a mesma unidade em x e y em polinômio, módulo e raiz, para a parábola não ficar torta. No seno e no cosseno, as escalas são independentes:
   - o x é marcado em π/2 (0, π/2, π, 3π/2, 2π);
   - o y fica em −1, 0 e 1 (ou nos múltiplos da amplitude);
@@ -577,13 +578,19 @@ A frase do d1 ainda traz "…portanto k = 0". A captura é do dado de antes da c
 - **Reta com intercepto:**
   - curva: g(x) = 2x + 1, de −2 a 2;
   - pontos: intercepto C (0, 1) e raiz R (−0,5; 0), com o ponto e vírgula pela vírgula decimal;
-  - janela x de −2,5 a 2,5 e y de −4 a 6, com escala igual;
+  - janela x de −2,5 a 2,5 e y de −3 a 4, com escala igual; a reta sai pela borda de cima a partir de x = 1,5;
   - rótulos "C (0, 1)" e "R (−0,5; 0)" e o nome "g".
 - **Seno em [0, 2π]:**
   - curva: h(x) = sin x;
   - pontos: máximo M (π/2, 1), raiz P (π, 0) e mínimo N (3π/2, −1), os três como especial;
   - x marcado em 0, π/2, π, 3π/2 e 2π; y de −1,5 a 1,5, com marcas em −1, 0 e 1; escalas independentes, com a altura em cerca de metade da largura;
   - rótulos "M (π/2, 1)", "P (π, 0)", "N (3π/2, −1)" e o nome "h".
+
+**A fórmula da curva fica dentro da figura.** A faixa de cima da própria figura traz uma linha por curva ("f(x) = x² − 4x + 3"), na cor da curva, com as regras da seção 1, separada do gráfico pela linha `#E1E7FA`, como no PNG do baricentro.
+- O PNG do build 3 e do site atual é a figura inteira, então a fórmula precisa estar nela.
+- A faixa aparece sempre, e não só quando a curva fica escondida.
+- Com `naoCabe`, a figura inteira sai, e o `alt` traz a fórmula falada ("Parábola de f(x) igual a x ao quadrado menos 4 x mais 3…").
+- Se a lição também tiver um visual `formula` com a mesma expressão, o servidor não o repete.
 
 **Quem faz o quê** (só o necessário):
 - **Web & API:**
