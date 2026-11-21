@@ -78,7 +78,10 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
         {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{posicao}</span>}
         {/* O tema sempre inteiro no alto; "Demonstração" embaixo à esquerda; o numeral do Em alta embaixo à direita. */}
         {cartao.tema && <span className="cartao-trilha__tema">{temas[cartao.tema]}</span>}
-        {cartao.demonstracao && <span className="cartao-trilha__demo">{c.demonstracao}</span>}
+        {cartao.demonstracao && (
+          // O selo neutro "Exemplo" na tela e, para o leitor de tela, o nome inteiro (a palavra solta fica escondida dele, para não repetir).
+          <span className="cartao-trilha__demo"><span aria-hidden="true">{c.demonstracao}</span><span className="somente-leitor">{c.demonstracaoRotulo}</span></span>
+        )}
       </div>
       <div className="cartao-trilha__corpo">
         {posicao !== undefined && <p className="somente-leitor">{c.posicao(posicao)}</p>}
@@ -336,7 +339,6 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
   const { acoes, dialogo } = useAcoesDeCartao({ logado, setCartoes, aoAdicionado, aoAbrir, anunciar });
   const vazio = pagina && pagina.emAlta.length === 0 && pagina.novas.length === 0;
   const fichas = useFileira<HTMLDivElement>(logado);
-  const comDemonstracao = Boolean(pagina && [...pagina.emAlta, ...pagina.novas].some((cartao) => cartao.demonstracao));
   // Na aba Seguindo sem ninguém seguido, as fichas de tema não têm o que filtrar.
   const semFichas = aba === 'seguindo' && pagina?.seguindoAlguem === false;
 
@@ -347,7 +349,6 @@ export function Explorar({ logado, inicial = null, aoAdicionado, aoAbrir, irPara
       <header className="explorar__topo">
         <h1 ref={titulo} tabIndex={-1}>{c.titulo}</h1>
         <p className="explorar__subtitulo">{c.subtitulo}</p>
-        {comDemonstracao && <p className="explorar__demo"><span className="cartao-trilha__demo">{c.demonstracao}</span>{c.demonstracaoExplica.replace(`“${c.demonstracao}” `, '')}</p>}
       </header>
 
       {logado && (

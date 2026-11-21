@@ -29,6 +29,7 @@ const textos = (valor) => (typeof valor === 'string' ? [valor] : Array.isArray(v
 
 before(async () => {
   servidor = createServer((pedido, resposta) => {
+    resposta.shouldKeepAlive = false; // cada resposta fecha a conexão: nada de socket velho reaproveitado (ECONNRESET ao acaso)
     let corpo = '';
     pedido.on('data', (parte) => { corpo += parte; });
     pedido.on('end', () => {

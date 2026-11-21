@@ -79,6 +79,7 @@ function responderStreaming(resposta, linhas) {
 
 before(async () => {
   servidor = createServer((pedido, resposta) => {
+    resposta.shouldKeepAlive = false; // cada resposta fecha a conexão: nada de socket velho reaproveitado (ECONNRESET ao acaso)
     // Conexões cortadas pelo cliente (cancelamento) não derrubam o servidor de teste.
     pedido.on("error", () => undefined);
     resposta.on("error", () => undefined);
