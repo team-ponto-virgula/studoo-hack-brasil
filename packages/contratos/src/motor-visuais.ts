@@ -439,6 +439,25 @@ const AFASTAMENTO_VERTICAL_DO_ZERO = 6.4;
 const DISTANCIA_MAXIMA_DO_ROTULO = 8;
 /** O rótulo só com o nome nunca encosta em número de eixo: no mínimo uma unidade de glifo (um dígito) de folga. */
 const FOLGA_DO_NOME_DOS_NUMEROS = 8;
+/**
+ * No gráfico de função o rótulo de um destaque foge da curva (nenhuma amostra do traço dentro da caixa dele, com o halo) e deixa um vão de pelo menos
+ * isto dos rótulos já postos, para "A (1, 0)" e "B (3, 0)" não se lerem como uma frase. Quando nenhum lugar a no máximo 8 da borda do ponto dá os dois,
+ * vale o de sempre (o que cobre menos traço): a curva passa por baixo do rótulo, com o halo, e ele continua lendo.
+ */
+const FOLGA_ENTRE_ROTULOS_DA_FUNCAO = 8;
+/** No gráfico de função, o vão que nenhum rótulo de destaque deixa de ter para outro (spec 15, seção 17): abaixo disto os dois se lêem como um só. */
+const VAO_MINIMO_ENTRE_ROTULOS = 4;
+/** O halo do texto (3) menos o respiro da caixa do glifo: o rótulo não encosta no traço da curva. */
+const FOLGA_DO_ROTULO_DA_CURVA = 1.5;
+/** As amostras do traço da curva que os rótulos evitam: uma a cada tanto (em unidades de projeto) e de tantos de lado. */
+const PASSO_DAS_AMOSTRAS_DA_CURVA = 3;
+const LADO_DA_AMOSTRA_DA_CURVA = 5;
+
+/** O que o gráfico de função passa para o rótulo de um destaque: o traço da curva e os rótulos que já foram postos. */
+interface FugaDoRotulo {
+  curva: readonly Ret[];
+  rotulos: readonly Ret[];
+}
 
 const inflar = (ret: Ret, folga: number): Ret => ({ x: ret.x - folga, y: ret.y - folga, l: ret.l + 2 * folga, a: ret.a + 2 * folga });
 
@@ -459,7 +478,7 @@ interface LugarDoRotulo {
  */
 function acharLugarDoRotulo(
   cx: number, cy: number, raioDoPonto: number, completo: string, nome: string, obstaculos: readonly Ret[], numeros: readonly Ret[],
-  limites: { esquerda: number; direita: number; topo: number; fundo: number }, moles: readonly Ret[] = [], soONome = false,
+  limites: { esquerda: number; direita: number; topo: number; fundo: number }, moles: readonly Ret[] = [], soONome = false, fuga?: FugaDoRotulo,
 ): LugarDoRotulo | null {
   const lugares = (l: number, a: number, anel = 0) => {
     const folga = raioDoPonto + 4 + anel;
@@ -472,6 +491,18 @@ function acharLugarDoRotulo(
       { x: cx - folga - l + 3, y: cy - folga - a + 2 },
       { x: cx + folga - 3, y: cy + folga - 2 },
       { x: cx - folga - l + 3, y: cy + folga - 2 },
+      // Só no gráfico de função (o destaque costuma estar SOBRE o eixo e a curva sobe dos dois lados dele): ao lado do ponto, subido ou descido até a
+      // caixa passar da margem do eixo, e acima ou abaixo, puxado para um lado. Vêm depois dos oito de sempre, que continuam a preferência.
+      ...(fuga ? [
+        { x: cx + folga, y: cy - a - MARGEM_DO_ROTULO_AOS_EIXOS - 2 },
+        { x: cx - folga - l, y: cy - a - MARGEM_DO_ROTULO_AOS_EIXOS - 2 },
+        { x: cx + folga, y: cy + MARGEM_DO_ROTULO_AOS_EIXOS + 2 },
+        { x: cx - folga - l, y: cy + MARGEM_DO_ROTULO_AOS_EIXOS + 2 },
+        { x: cx - l / 4, y: cy - folga - a },
+        { x: cx - (3 * l) / 4, y: cy - folga - a },
+        { x: cx - l / 4, y: cy + folga },
+        { x: cx - (3 * l) / 4, y: cy + folga },
+      ] : []),
     ];
   };
   /** A distância da caixa do rótulo à BORDA do ponto (não ao centro): é ela que não passa de `DISTANCIA_MAXIMA_DO_ROTULO`. */
@@ -484,17 +515,30 @@ function acharLugarDoRotulo(
   // 1. o rótulo inteiro em algum lado; 2. só o nome, no lado livre mais perto. Os dois a no máximo 8 unidades da borda do ponto, em
   // qualquer das 8 direções e mesmo sobre a grade (o halo resolve a leitura); sem lugar assim, o ponto fica sem letra.
   const afastamentos = [0, 1, 2, 3, 4];
-  const tentativas: (readonly [string, number, number])[] = [
-    ...(soONome ? [] : afastamentos.map((anel) => [completo, anel, FOLGA_DO_ROTULO_DOS_NUMEROS] as const)),
-    ...afastamentos.map((anel) => [nome, anel, FOLGA_DO_NOME_DOS_NUMEROS] as const),
+  const textos: (readonly [string, number])[] = [
+    ...(soONome ? [] : [[completo, FOLGA_DO_ROTULO_DOS_NUMEROS] as const]),
+    [nome, FOLGA_DO_NOME_DOS_NUMEROS] as const,
   ];
-  for (const [texto, anel, folgaDosNumeros] of tentativas) {
+  /** Fora do traço da curva e a um vão dos rótulos já postos (só no gráfico de função). */
+  const incomoda = (ret: Ret): boolean => !!fuga
+    && (fuga.curva.some((amostra) => bate(inflar(ret, FOLGA_DO_ROTULO_DA_CURVA), amostra)) || fuga.rotulos.some((posto) => bate(ret, inflar(posto, FOLGA_ENTRE_ROTULOS_DA_FUNCAO))));
+  const molesComACurva = fuga ? [...moles, ...fuga.curva] : moles;
+  for (const [texto, folgaDosNumeros] of textos) {
     const { l, a } = caixaDoRotulo(texto);
-    const livres = lugares(l, a, anel)
-      .filter((lugar) => livre({ ...lugar, l, a }, folgaDosNumeros))
-      .map((lugar, ordem) => ({ lugar, ordem, traco: moles.reduce((soma, mole) => soma + sobreposicao({ ...lugar, l, a }, mole), 0) }))
-      .sort((x, y) => x.traco - y.traco || x.ordem - y.ordem);
-    if (livres.length) return { texto, ...livres[0].lugar, l, a };
+    // No gráfico de função, primeiro o lugar mais perto do ponto que não pisa na curva nem cola noutro rótulo (qualquer anel, até os 8 da borda).
+    if (fuga) {
+      for (const anel of afastamentos) {
+        const limpo = lugares(l, a, anel).find((lugar) => livre({ ...lugar, l, a }, folgaDosNumeros) && !incomoda({ ...lugar, l, a }));
+        if (limpo) return { texto, ...limpo, l, a };
+      }
+    }
+    for (const anel of afastamentos) {
+      const livres = lugares(l, a, anel)
+        .filter((lugar) => livre({ ...lugar, l, a }, folgaDosNumeros))
+        .map((lugar, ordem) => ({ lugar, ordem, traco: molesComACurva.reduce((soma, mole) => soma + sobreposicao({ ...lugar, l, a }, mole), 0) }))
+        .sort((x, y) => x.traco - y.traco || x.ordem - y.ordem);
+      if (livres.length) return { texto, ...livres[0].lugar, l, a };
+    }
   }
   return null;
 }
@@ -799,6 +843,8 @@ function desenharPlanoUmaVez(
 
   // 3b. As curvas (a ordem da spec: grade, eixos, curvas): linha contínua de 3 unidades, recortada na borda do gráfico, sem seta; a terceira tracejada.
   const nomesDasCurvas: { nome: string; cor: PapelDeCor; ponta: [number, number] }[] = [];
+  // O traço de cada curva que aparece, em caixinhas a cada 3 unidades de projeto: os rótulos dos destaques fogem delas.
+  const amostrasDaCurva: Ret[] = [];
   const amostras = Math.min(400, Math.max(64, Math.round(2 * larguraDaGrade)));
   for (const curva of extra?.curvas ?? []) {
     // A curva que o enunciado não pode mostrar (o exercício pergunta um ponto dela) fica só na faixa de cima, como fórmula.
@@ -811,6 +857,14 @@ function desenharPlanoUmaVez(
       base.push({
         m: "caminho", cmds: trecho.map(([vx, vy], i) => [i === 0 ? "M" : "L", X(vx), Y(vy)] as Comando),
         borda: curva.cor, larguraDaBorda: 3, ...(curva.tracejada ? { tracejado: [6, 4] as const } : {}),
+      });
+      let anterior: [number, number] | null = null;
+      trecho.forEach(([vx, vy], i) => {
+        const ponta = i === trecho.length - 1;
+        const [px, py] = [X(vx), Y(vy)];
+        if (anterior && !ponta && Math.hypot(px - anterior[0], py - anterior[1]) < PASSO_DAS_AMOSTRAS_DA_CURVA) return;
+        amostrasDaCurva.push({ x: px - LADO_DA_AMOSTRA_DA_CURVA / 2, y: py - LADO_DA_AMOSTRA_DA_CURVA / 2, l: LADO_DA_AMOSTRA_DA_CURVA, a: LADO_DA_AMOSTRA_DA_CURVA });
+        anterior = [px, py];
       });
     }
     const ultimo = trechos.at(-1)?.at(-1);
@@ -969,6 +1023,7 @@ function desenharPlanoUmaVez(
 
   // 7. Rótulos dos pontos: quem se move é o rótulo; sem lugar para o inteiro, só o nome, e as coordenadas vão para a legenda.
   const rotulos: Marca[] = [];
+  const rotulosPostos: Ret[] = [];
   const novos: string[] = [];
   // O rótulo fica dentro do desenho: não passa da borda de baixo da faixa dos números do eixo x (embaixo dela vem a legenda).
   const limites = { esquerda: 2, direita: LARGURA_DO_DESENHO - 2, topo: 2, fundo: fundo + banda };
@@ -978,10 +1033,16 @@ function desenharPlanoUmaVez(
     // O próprio ponto não é obstáculo do rótulo dele; os outros pontos são. Os segmentos só desempatam.
     const dosOutros = pontos.filter((outro) => outro !== ponto).map(caixaDoPonto);
     const forcado = forcados.has(ponto.id);
-    const lugar = acharLugarDoRotulo(ponto.x, ponto.y, raio, ponto.completo, ponto.id, [...obstaculos, ...dosOutros], numerosDeEixo, limites, tracos, forcado);
+    const lugar = acharLugarDoRotulo(
+      ponto.x, ponto.y, raio, ponto.completo, ponto.id, [...obstaculos, ...dosOutros], numerosDeEixo, limites, tracos, forcado,
+      extra ? { curva: amostrasDaCurva, rotulos: rotulosPostos } : undefined,
+    );
     if (!forcado && lugar?.texto !== ponto.completo) novos.push(ponto.id);
     if (!lugar) continue;
-    obstaculos.push({ x: lugar.x, y: lugar.y, l: lugar.l, a: lugar.a });
+    // No gráfico de função um rótulo nunca encosta noutro: o vão entre os dois é de pelo menos 4 (cada um engorda 2); sem lugar assim, o que sobra vira só o nome
+    // e as coordenadas vão para a legenda.
+    obstaculos.push(extra ? inflar({ x: lugar.x, y: lugar.y, l: lugar.l, a: lugar.a }, VAO_MINIMO_ENTRE_ROTULOS / 2) : { x: lugar.x, y: lugar.y, l: lugar.l, a: lugar.a });
+    rotulosPostos.push({ x: lugar.x, y: lugar.y, l: lugar.l, a: lugar.a });
     caixa("rotulo", lugar.texto, lugar);
     rotulos.push(escrever(lugar.texto, lugar.x, lugar.y + 11.5, TAMANHO_DO_ROTULO, 800, COR_DO_ROTULO[ponto.papel]));
   }
