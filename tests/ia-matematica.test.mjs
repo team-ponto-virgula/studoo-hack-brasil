@@ -16,7 +16,9 @@ const {
   ehAssuntoDeMatematica, esquemaDasFigurasDoMaterial, exemploDeMatematica, instrucoesDeFigurasDoMaterial, instrucoesDeNotacaoDoMaterial,
   licaoEhDeMatematica, materialEhDeMatematica,
 } = await import("../src/servidor/ia/matematica.ts");
-const { INSTRUCOES_DAS_LICOES_DO_MATERIAL, conteudosDasLicoes, gerarLicoesDoMaterial } = await import("../src/servidor/estudio/licoes-do-material.ts");
+const {
+  INSTRUCOES_DAS_LICOES_DO_MATERIAL, TRECHO_DA_PAGINA_INTEIRA, TRECHO_MAXIMO, TRECHO_MINIMO, conteudosDasLicoes, gerarLicoesDoMaterial, localizarCitacao,
+} = await import("../src/servidor/estudio/licoes-do-material.ts");
 const { DEMOS, demoDoObjetivo } = await import("../src/servidor/ia/demos.ts");
 const { comVisuais } = await import("../src/servidor/aprendizado/visuais.ts");
 const { apresentarExercicio } = await import("../src/dominio/aprendizado/plano.ts");
@@ -613,11 +615,15 @@ test("material que não é de matemática: um pedido só, com as instruções de
   assert.deepEqual(relatos, [undefined, undefined, undefined]);
 });
 
-test("material: o trecho que não está na página ou a página que não existe ainda derrubam a proposta, como antes", () => {
+test("material: só a página que não existe (ou sem texto) derruba a proposta; o trecho inventado cai na página inteira", () => {
   const licoes = propostaDoMaterial(3).licoes;
   const base = { paginas: PAGINAS_DE_MATEMATICA, materialId: "m", nome: "Folha", leitura: "ocr", origem: "Material enviado · Folha" };
-  assert.throws(() => conteudosDasLicoes({ ...base, licoes: [{ ...licoes[0], trecho: "um trecho inventado que não está na página" }, licoes[1], licoes[2]] }), (e) => e.codigo === "ia_indisponivel");
   assert.throws(() => conteudosDasLicoes({ ...base, licoes: [{ ...licoes[0], pagina: 9 }, licoes[1], licoes[2]] }), (e) => e.codigo === "ia_indisponivel");
+  assert.throws(() => conteudosDasLicoes({ ...base, paginas: [{ numero: 1, texto: "curta" }], licoes }), (e) => e.codigo === "ia_indisponivel", "página sem o que citar");
+  const inventada = conteudosDasLicoes({ ...base, licoes: [{ ...licoes[0], trecho: "um trecho inventado que não está na página" }, licoes[1], licoes[2]] });
+  assert.deepEqual(inventada.citacoes, ["pagina-inteira", "literal", "literal"]);
+  assert.equal(inventada.conteudos[0].referencias[0].trecho, PAGINA.trim().slice(0, TRECHO_DA_PAGINA_INTEIRA).trim(), "a referência é o começo da página");
+  assert.ok(conteudoValido(inventada.conteudos[0]));
 });
 
 test("material com a DeepSeek: a barra única do LaTeX nas lições e nas figuras é consertada", async () => {
@@ -633,6 +639,198 @@ test("material com a DeepSeek: a barra única do LaTeX nas lições e nas figura
   assert.equal(gerado.figuras.every((figuras) => figuras?.resolucao), true);
   const { conteudos } = conteudosDasLicoes({ licoes: gerado.licoes, figuras: gerado.figuras, paginas: PAGINAS_DE_MATEMATICA, materialId: "m", nome: "Folha", leitura: "ocr", origem: "Material enviado · Folha" });
   assert.equal(conteudos[0].resolucao.passos.length, 5);
+});
+
+/* ----- A citação do material (marco 6): a IA reescreve o trecho, o servidor guarda o LITERAL da página ----- */
+
+/** A folha do dono como o app a leu (a página que a validação recusava em metade das rodadas). */
+const FOLHA =
+  "c) qual o 3º vértice do Δ a seguir?\n" +
+  "\n" +
+  "A=(1, 2)\n" +
+  "B (-2, 7)\n" +
+  "G (1, 3)\n" +
+  "C = ?\n" +
+  "\n" +
+  "c) XG = (XA + XB + XC) / 3 => 1 = 1 + (-2) + XC / 3 -> 3 . 1 = 1 + (-2) + XC\n" +
+  "\n" +
+  "=> 3 = -1 + XC => 3 + 1 = XC -> XC = 4\n" +
+  "\n" +
+  "yG = (YA + YB + YC) / 3 = 3 = 2 + 7 + YC / 3 -> 9 = 9 - 9 = YC = 0\n" +
+  "\n" +
+  "-> C = (4, 0)\n" +
+  "\n" +
+  "D) Qual o valor de k para que os pontos A, B e C sejam colineares?\n" +
+  "A = (-1, -1) ; B = (2, 5) ; C = (k, 1)\n" +
+  "\n" +
+  "A = -1  -1  1  -1  -1\n" +
+  "    2    5  1   2   5\n" +
+  "    k    1  1   k   1\n" +
+  "\n" +
+  "-1 . 5 . 1 = 5 ;\n" +
+  "-1 . 1 . k = -1 ;\n" +
+  "1 . 2 . 1 = 2 ;\n" +
+  "1 . 5 . k = 5k ;\n" +
+  "1 . 1 . -1 = -1 ;\n" +
+  "1 . 2 . -1 = -2 ;\n" +
+  "\n" +
+  "(-5) + (-k) + 2 - 5k - (-1) - (-2) = 0\n" +
+  "-5 + 2 + 1 + 2 = 0\n" +
+  "-k - 5k - 6k\n" +
+  "\n" +
+  "0 - 6k = 0\n" +
+  "k = 0 / -6 -> k = 0";
+
+const dentroDaPagina = (pagina, citacao) => {
+  assert.ok(citacao, "a citação existe");
+  assert.ok(pagina.includes(citacao.trecho), `o trecho é literal da página: ${JSON.stringify(citacao.trecho)}`);
+  assert.ok(citacao.trecho.length >= TRECHO_MINIMO && citacao.trecho.length <= TRECHO_MAXIMO, `${citacao.trecho.length} caracteres`);
+  assert.equal(citacao.trecho, citacao.trecho.trim());
+};
+
+test("citação: as duas da folha do dono, como a IA as reescreve (quebra de linha em ' / ', seta, espaços), voltam como trecho literal", () => {
+  const casos = [
+    // As duas que a validação antiga recusava (o trecho é curto: cresce, em linhas inteiras, até ter 20 caracteres).
+    ["k = 0 / -6 -> k = 0", "literal", /k = 0 \/ -6 -> k = 0$/],
+    ["-> C = (4, 0)", "literal", /-> C = \(4, 0\)$/],
+    // A quebra de linha da folha trocada por " / ", por espaço, por "|" ou por " -> ".
+    ["0 - 6k = 0 / k = 0 / -6 -> k = 0", "normalizada", /0 - 6k = 0\nk = 0 \/ -6 -> k = 0$/],
+    ["0 - 6k = 0 k = 0 / -6 -> k = 0", "normalizada", /k = 0 \/ -6 -> k = 0$/],
+    ["0 - 6k = 0 | k = 0 / -6 -> k = 0", "normalizada", /k = 0 \/ -6 -> k = 0$/],
+    ["yG = (YA + YB + YC) / 3 = 3 = 2 + 7 + YC / 3 -> 9 = 9 - 9 = YC = 0 -> C = (4, 0)", "normalizada", /YC = 0\n\n-> C = \(4, 0\)$/],
+    ["yG = (YA + YB + YC) / 3 = 3 = 2 + 7 + YC / 3 -> 9 = 9 - 9 = YC = 0 / -> C = (4, 0)", "normalizada", /YC = 0\n\n-> C = \(4, 0\)$/],
+    // Seta e menos de outro caractere, caixa e aspas.
+    ["yG = (YA + YB + YC) / 3 = 3 = 2 + 7 + YC / 3 → 9 = 9 − 9 = YC = 0 → C = (4, 0)", "normalizada", /-> C = \(4, 0\)$/],
+    ["“K = 0 / −6 → k = 0”", "normalizada", /k = 0 \/ -6 -> k = 0$/],
+    // As linhas da matriz, com os espaços da foto colapsados.
+    ["A = -1 -1 1 -1 -1 2 5 1 2 5 k 1 1 k 1", "normalizada", /k {4}1 {2}1 {3}k {3}1$/],
+    // O ponto final que a IA acrescenta.
+    ["D) Qual o valor de k para que os pontos A, B e C sejam colineares?.", "normalizada", /sejam colineares/],
+  ];
+  for (const [citacao, como, termina] of casos) {
+    const achada = localizarCitacao(FOLHA, citacao);
+    dentroDaPagina(FOLHA, achada);
+    assert.equal(achada.como, como, citacao);
+    assert.match(achada.trecho, termina, citacao);
+  }
+});
+
+test("citação: o literal que já valia continua valendo, sem mudar uma letra", () => {
+  for (const trecho of ["XG = (XA + XB + XC) / 3 => 1 = 1 + (-2) + XC / 3", "D) Qual o valor de k para que os pontos A, B e C sejam colineares?", "(-5) + (-k) + 2 - 5k - (-1) - (-2) = 0"]) {
+    assert.deepEqual(localizarCitacao(FOLHA, trecho), { trecho, como: "literal" });
+  }
+  // Com espaços nas pontas, o literal é o mesmo sem eles.
+  assert.deepEqual(localizarCitacao(FOLHA, "  (-5) + (-k) + 2 - 5k - (-1) - (-2) = 0\n"), { trecho: "(-5) + (-k) + 2 - 5k - (-1) - (-2) = 0", como: "literal" });
+});
+
+test("citação: a quebra de linha trocada por ' / ', por espaço ou por '|' em qualquer página; acento e aspas não derrubam", () => {
+  const pagina = "Frações: partes de um inteiro.\nO denominador indica em quantas partes iguais o inteiro foi dividido.\nO numerador indica quantas foram consideradas.";
+  for (const citacao of [
+    "O denominador indica em quantas partes iguais o inteiro foi dividido. / O numerador indica quantas foram consideradas.",
+    "O denominador indica em quantas partes iguais o inteiro foi dividido. O numerador indica quantas foram consideradas.",
+    "o denominador indica em quantas partes iguais o inteiro foi dividido. | o numerador indica quantas foram consideradas.",
+    "“O denominador indica em quantas partes iguais o inteiro foi dividido.”",
+    "O  denominador   indica em quantas partes iguais o inteiro foi dividido.",
+  ]) {
+    const achada = localizarCitacao(pagina, citacao);
+    dentroDaPagina(pagina, achada);
+    assert.equal(achada.como, "normalizada", citacao);
+    assert.ok(achada.trecho.includes("O denominador indica em quantas partes iguais o inteiro foi dividido."));
+  }
+  // Sem acento só se for preciso: a primeira tentativa já acha, e a de sem acento fica para o resto.
+  const sem = localizarCitacao(pagina, "Fracoes: partes de um inteiro.");
+  dentroDaPagina(pagina, sem);
+  assert.equal(sem.como, "sem-acento");
+  assert.equal(sem.trecho, "Frações: partes de um inteiro.");
+});
+
+test("citação: sem trecho que case, a janela de linhas inteiras com mais de 80% das palavras; abaixo disso, a página inteira", () => {
+  // Um número trocado na reescrita (8 das 9 palavras iguais): a linha da folha.
+  const quase = localizarCitacao(FOLHA, "A = (-1, -1) ; B = (2, 5) ; C = (k, 2)");
+  dentroDaPagina(FOLHA, quase);
+  assert.equal(quase.como, "melhor-janela");
+  assert.equal(quase.trecho, "A = (-1, -1) ; B = (2, 5) ; C = (k, 1)");
+  // Reescrita em palavras suas, com a maior parte do vocabulário da linha: a janela da linha, inteira.
+  const parafrase = localizarCitacao(FOLHA, "Qual o valor de k para que os pontos A, B e C fiquem colineares? D)");
+  dentroDaPagina(FOLHA, parafrase);
+  assert.equal(parafrase.como, "melhor-janela");
+  assert.match(parafrase.trecho, /^D\) Qual o valor de k/);
+  // Outro assunto: nenhuma janela chega perto, e a lição segue com a referência à página (os primeiros 200 caracteres), sem recusa.
+  const inventada = localizarCitacao(FOLHA, "A Revolução Francesa começou em 1789 e mudou a Europa inteira para sempre");
+  assert.equal(inventada.como, "pagina-inteira");
+  assert.equal(inventada.trecho, FOLHA.trim().slice(0, TRECHO_DA_PAGINA_INTEIRA).trim());
+  dentroDaPagina(FOLHA, inventada);
+  // Citação vazia, só reticências ou com menos de 3 palavras que não casam: também a página inteira.
+  for (const citacao of ["", "   ", "...", "banana"]) {
+    assert.equal(localizarCitacao(FOLHA, citacao).como, "pagina-inteira", JSON.stringify(citacao));
+  }
+});
+
+test("citação: trecho curto (menos de 20) cresce, em linhas inteiras, até 20; página sem texto não tem o que citar", () => {
+  const curta = localizarCitacao(FOLHA, "XC = 4");
+  dentroDaPagina(FOLHA, curta);
+  assert.equal(curta.como, "literal");
+  assert.equal(curta.trecho, "=> 3 = -1 + XC => 3 + 1 = XC -> XC = 4", "a linha inteira onde ele está");
+  const aindaCurta = localizarCitacao("Título\nk = 0\nfim da folha de exercícios resolvidos", "k = 0");
+  assert.equal(aindaCurta.trecho, "Título\nk = 0\nfim da folha de exercícios resolvidos");
+  assert.ok(aindaCurta.trecho.length >= TRECHO_MINIMO);
+  // Página com menos de 20 caracteres de texto: nada literal a citar.
+  assert.equal(localizarCitacao("oi", "oi"), null);
+  assert.equal(localizarCitacao("   \n  ok  \n ", "ok"), null);
+});
+
+test("citação: o literal tem no máximo 400 caracteres, cortado na última palavra inteira", () => {
+  const linha = Array.from({ length: 70 }, (_, i) => `palavra${i + 1}`).join("  ");
+  const pagina = `Cabeçalho da página\n${linha}\nRodapé`;
+  assert.ok(linha.length > TRECHO_MAXIMO);
+  // A IA copia o começo da linha (até 400 caracteres) com os espaços colapsados; o literal tem os espaços duplos e passaria de 400.
+  const copia = linha.replace(/ {2}/g, " ").slice(0, 380).replace(/\s\S*$/, "");
+  const achada = localizarCitacao(pagina, copia);
+  dentroDaPagina(pagina, achada);
+  assert.equal(achada.como, "normalizada");
+  assert.ok(achada.trecho.length <= TRECHO_MAXIMO);
+  assert.ok(achada.trecho.startsWith("palavra1  palavra2"));
+  assert.match(achada.trecho, /palavra\d+$/, "termina numa palavra inteira");
+});
+
+test("a proposta com a folha real: a citação reescrita não derruba mais; o trecho de cada lição fica literal e o relato diz como casou", () => {
+  const paginas = [{ numero: 1, texto: FOLHA }];
+  const reescritas = [
+    "0 - 6k = 0 / k = 0 / -6 -> k = 0",
+    "yG = (YA + YB + YC) / 3 = 3 = 2 + 7 + YC / 3 -> 9 = 9 - 9 = YC = 0 → C = (4, 0)",
+    "XG = (XA + XB + XC) / 3 => 1 = 1 + (-2) + XC / 3",
+    "Uma frase que a IA inventou e não está na folha",
+  ];
+  const licoes = reescritas.map((trecho, i) => licaoDoMaterial(i + 1, trecho));
+  const { conteudos, citacoes } = conteudosDasLicoes({ licoes, paginas, materialId: "m", nome: "Folha", leitura: "ocr", origem: "Material enviado · Folha" });
+  assert.deepEqual(citacoes, ["normalizada", "normalizada", "literal", "pagina-inteira"]);
+  for (const conteudo of conteudos) {
+    assert.ok(conteudoValido(conteudo));
+    const { trecho } = conteudo.referencias[0];
+    assert.ok(FOLHA.includes(trecho) && trecho.length >= TRECHO_MINIMO && trecho.length <= TRECHO_MAXIMO, trecho);
+    assert.equal(conteudo.referencias[0].leitura, "ocr");
+  }
+  // O que aconteceu fica no registro, sem o texto da página: só o jeito como a citação casou.
+  assert.deepEqual(registrosDe("citacao_ajustada").map((registro) => registro.como), ["normalizada", "normalizada", "pagina-inteira"]);
+  assert.equal(registros.join("\n").includes("Revolução"), false);
+});
+
+test("a proposta não cai por citação nem por trecho comprido demais ou página escrita como texto: a lição sai com a referência certa", async () => {
+  const proposta = propostaDoMaterial(3);
+  proposta.licoes[0].trecho = `${TRECHO} ${"e mais texto copiado da página ".repeat(20)}`;
+  proposta.licoes[1].pagina = "1";
+  proposta.licoes[2].trecho = "0 - 6k = 0 / k = 0";
+  responder = () => ok(proposta);
+  const gerado = await gerarLicoesDoMaterial({ objetivo: "Estudar para a prova", nome: "caderno.pdf", paginas: PAGINAS_DE_FRACOES });
+  assert.equal(gerado.licoes.length, 3, "nenhuma das três derruba a proposta");
+  assert.ok(gerado.licoes[0].trecho.length <= TRECHO_MAXIMO);
+  assert.equal(gerado.licoes[1].pagina, 1);
+  assert.equal(typeof gerado.licoes[1].pagina, "number");
+  const folha = [{ numero: 1, texto: FOLHA }];
+  const { conteudos, citacoes } = conteudosDasLicoes({ licoes: gerado.licoes, paginas: folha, materialId: "m", nome: "Folha", leitura: "ocr", origem: "Material enviado · Folha" });
+  assert.equal(conteudos.length, 3);
+  for (const conteudo of conteudos) assert.ok(FOLHA.includes(conteudo.referencias[0].trecho));
+  assert.equal(citacoes[2], "normalizada");
 });
 
 /* ----- A IA falsa de geometria analítica (demonstração, sem chave) ----- */

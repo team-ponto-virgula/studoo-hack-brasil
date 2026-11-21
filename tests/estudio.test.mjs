@@ -325,7 +325,7 @@ test('material expirado não gera proposta', async () => {
     codigo('nao_encontrado'),
   );
 });
-test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados', async () => {
+test('OpenAI: schema, recusa, citação inventada (não derruba), página inexistente, áudio e feedback validados', async () => {
   const original = globalThis.fetch;
   const anterior = { ...process.env };
   process.env.IA = 'openai';
@@ -380,10 +380,16 @@ test('OpenAI: schema, recusa, citação inventada, áudio e feedback validados',
         status: 'completed',
         output_text: JSON.stringify({ titulo: 'Frações', licoes: [l, l, l] }),
       });
+    // Marco 6: a citação que não casa com a página (inventada, reescrita) não derruba a proposta: a referência vira um trecho literal da
+    // página (aqui o começo dela). Só a lição que cita uma página que não existe é recusada.
+    const comCitacaoInventada = await proporMaterial(u, material.id, 'Frações');
+    assert.equal(comCitacaoInventada.fluxos.flatMap((fluxo) => fluxo.licoes).length, 3);
+    l.pagina = 9;
     await assert.rejects(
       proporMaterial(u, material.id, 'Frações'),
       codigo('ia_indisponivel'),
     );
+    l.pagina = 1;
     l.trecho =
       'O denominador indica em quantas partes iguais o inteiro foi dividido.';
     const proposta = await proporMaterial(u, material.id, 'Frações');

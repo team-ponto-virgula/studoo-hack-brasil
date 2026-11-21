@@ -39,6 +39,208 @@ export const ORCAMENTO_DA_PROPOSTA_MS = 85_000;
 export const PRAZO_DAS_FIGURAS_MS = 50_000;
 export const MINIMO_PARA_FIGURAS_MS = 12_000;
 
+/* ----- A citação: a IA reescreve o trecho, o servidor confere com tolerância e guarda o LITERAL da página ----- */
+
+/*
+ * Cada lição cita um trecho da página de onde saiu. A IA devolve o trecho reescrito (a quebra de linha da foto vira " / ", " -> " ou um
+ * espaço; a seta, o travessão e as aspas mudam de caractere), e conferir com `includes` recusava a proposta inteira (a pessoa via um
+ * erro) em material de foto com várias linhas. Agora a conferência é tolerante e a referência continua sendo um trecho LITERAL do
+ * material: o que se guarda é sempre uma parte da página, nunca o texto da IA.
+ *   1. literal; 2. normalizada (espaços e quebras valem um espaço, " / " e "|" de quebra, caixa, aspas, travessões, setas); 3. normalizada
+ *   e sem acento; 4. a janela de linhas inteiras da página que mais se parece (mais de 80% das palavras); 5. a página inteira (os
+ *   primeiros 200 caracteres). A proposta só falha se a lição cita uma página que não existe ou que quase não tem texto.
+ */
+
+export const TRECHO_MINIMO = 20;
+export const TRECHO_MAXIMO = 400;
+export const TRECHO_DA_PAGINA_INTEIRA = 200;
+export const LIMIAR_DA_JANELA = 0.8;
+
+export type ComoACitacaoCasou = 'literal' | 'normalizada' | 'sem-acento' | 'melhor-janela' | 'pagina-inteira';
+export type CitacaoDoMaterial = { trecho: string; como: ComoACitacaoCasou };
+
+/** O texto normalizado e, para cada caractere dele, de onde veio na página (início e fim do que o gerou, em unidades UTF-16). */
+interface Normalizado {
+  texto: string;
+  inicios: number[];
+  fins: number[];
+}
+
+/** O que a IA põe no lugar de uma quebra de linha: vale como espaço, dos dois lados da comparação. */
+const SEPARADORES = new Set(['/', '|', '¶', '↵', '⏎']);
+const ASPAS = new Set([...'"“”„‟«»″\'‘’‚‛′`´']);
+const TRACOS = new Set([...'−–—‐‑‒―']);
+const SETAS: Readonly<Record<string, string>> = { '→': '->', '⟶': '->', '➔': '->', '➜': '->', '➝': '->', '➞': '->', '⇒': '=>', '⟹': '=>' };
+
+/**
+ * O texto sem o que a IA costuma mexer ao copiar: espaços e quebras de linha viram UM espaço, separadores de quebra (`/`, `|`) também,
+ * aspas somem, travessões viram `-`, setas viram `->` e `=>`, `∆` vira `Δ`, e tudo em minúsculas (e sem acento, se `semAcento`). A mesma
+ * conta vale para a página e para a citação, então a comparação é simétrica; `inicios` e `fins` levam um trecho achado de volta ao literal.
+ */
+function normalizarComMapa(texto: string, semAcento: boolean): Normalizado {
+  const saida: string[] = [];
+  const inicios: number[] = [];
+  const fins: number[] = [];
+  let espaco: { inicio: number; fim: number } | null = null;
+  const marcarEspaco = (inicio: number, fim: number) => {
+    espaco = espaco ? { inicio: espaco.inicio, fim } : { inicio, fim };
+  };
+  const empurrar = (pedaco: string, inicio: number, fim: number) => {
+    // O espaço só entra entre dois textos: o do começo e o do fim não contam.
+    if (espaco && saida.length > 0) {
+      saida.push(' ');
+      inicios.push(espaco.inicio);
+      fins.push(espaco.fim);
+    }
+    espaco = null;
+    for (const unidade of pedaco) {
+      saida.push(unidade);
+      inicios.push(inicio);
+      fins.push(fim);
+    }
+  };
+  let i = 0;
+  while (i < texto.length) {
+    const inicio = i;
+    const c = String.fromCodePoint(texto.codePointAt(i)!);
+    i += c.length;
+    // "\n" escrito com duas letras (a IA repetindo o escape do JSON) vale como quebra de linha.
+    if (c === '\\' && /[nrt]/.test(texto[i] ?? '')) {
+      i += 1;
+      marcarEspaco(inicio, i);
+      continue;
+    }
+    if (/\s/u.test(c) || SEPARADORES.has(c)) {
+      marcarEspaco(inicio, i);
+      continue;
+    }
+    if (ASPAS.has(c) || c === '​' || c === '﻿') continue;
+    let pedaco = TRACOS.has(c) ? '-' : (SETAS[c] ?? (c === '…' ? '...' : c === '∆' ? 'Δ' : c));
+    pedaco = pedaco.toLowerCase();
+    if (semAcento) pedaco = pedaco.normalize('NFD').replace(/\p{M}+/gu, '');
+    if (pedaco) empurrar(pedaco, inicio, i);
+  }
+  return { texto: saida.join(''), inicios, fins };
+}
+
+/** Onde a citação cai na página, comparando os dois normalizados. Sem pontuação nas pontas (a IA põe ou tira "…" e ".") na segunda tentativa. */
+function acharNormalizado(pagina: string, citacao: string, semAcento: boolean): { inicio: number; fim: number } | null {
+  const alvo = normalizarComMapa(citacao, semAcento).texto;
+  const semPontas = alvo.replace(/^(?:\.{3,}|[.,;:!?])+\s*|\s*(?:\.{3,}|[.,;:!?])+$/g, '');
+  const base = normalizarComMapa(pagina, semAcento);
+  for (const candidato of new Set([alvo, semPontas])) {
+    if (!candidato) continue;
+    const posicao = base.texto.indexOf(candidato);
+    if (posicao >= 0) return { inicio: base.inicios[posicao], fim: base.fins[posicao + candidato.length - 1] };
+  }
+  return null;
+}
+
+/** As palavras e os números do texto (sem acento, caixa nem pontuação). */
+const palavrasDe = (texto: string): string[] => normalizarComMapa(texto, true).texto.match(/[\p{L}\p{N}]+/gu) ?? [];
+
+/**
+ * A janela de linhas inteiras da página, do tamanho da citação, com mais palavras em comum com ela: a parte da citação que a janela
+ * cobre, dividida pelo maior dos dois tamanhos. Só vale se passar do limiar; citação com menos de 3 palavras não dá para comparar.
+ */
+function melhorJanela(pagina: string, citacao: string): { inicio: number; fim: number } | null {
+  const alvo = palavrasDe(citacao);
+  if (alvo.length < 3) return null;
+  const linhas: { inicio: number; fim: number; palavras: string[] }[] = [];
+  let inicio = 0;
+  for (const linha of pagina.split('\n')) {
+    const palavras = palavrasDe(linha);
+    if (palavras.length > 0) linhas.push({ inicio, fim: inicio + linha.length, palavras });
+    inicio += linha.length + 1;
+  }
+  const faltam = new Map<string, number>();
+  for (const palavra of alvo) faltam.set(palavra, (faltam.get(palavra) ?? 0) + 1);
+  let melhor: { nota: number; de: number; ate: number } | null = null;
+  for (let de = 0; de < linhas.length; de += 1) {
+    const janela: string[] = [];
+    for (let ate = de; ate < linhas.length; ate += 1) {
+      janela.push(...linhas[ate].palavras);
+      if (janela.length > alvo.length * 1.5 && ate > de) break;
+      const restantes = new Map(faltam);
+      let comuns = 0;
+      for (const palavra of janela) {
+        const resta = restantes.get(palavra) ?? 0;
+        if (resta > 0) {
+          restantes.set(palavra, resta - 1);
+          comuns += 1;
+        }
+      }
+      const nota = comuns / Math.max(alvo.length, janela.length);
+      if (!melhor || nota > melhor.nota) melhor = { nota, de, ate };
+    }
+  }
+  return melhor && melhor.nota >= LIMIAR_DA_JANELA ? { inicio: linhas[melhor.de].inicio, fim: linhas[melhor.ate].fim } : null;
+}
+
+/**
+ * O trecho curto (menos de 20 caracteres) cresce, em linhas inteiras, até ter ao menos 20: continua sendo uma parte literal da página.
+ * Cresce para trás primeiro (a linha curta de uma folha costuma ser a conclusão da conta que vem antes) e, no começo da página, para a frente.
+ */
+function ampliar(pagina: string, inicio: number, fim: number): string {
+  const comecoDaLinha = (posicao: number) => (posicao <= 0 ? 0 : pagina.lastIndexOf('\n', posicao - 1) + 1);
+  const fimDaLinha = (posicao: number) => {
+    const quebra = pagina.indexOf('\n', posicao);
+    return quebra < 0 ? pagina.length : quebra;
+  };
+  let a = comecoDaLinha(inicio);
+  let b = fimDaLinha(Math.max(fim - 1, inicio));
+  while (pagina.slice(a, b).trim().length < TRECHO_MINIMO) {
+    if (a > 0) a = comecoDaLinha(a - 1);
+    else if (b < pagina.length) b = fimDaLinha(b + 1);
+    else break;
+  }
+  return pagina.slice(a, b).trim();
+}
+
+/** Mais de 400 caracteres é cortado na última palavra inteira (o começo do literal continua literal). */
+function cortarNoMaximo(literal: string): string {
+  if (literal.length <= TRECHO_MAXIMO) return literal;
+  const corte = literal.slice(0, TRECHO_MAXIMO);
+  const espaco = corte.search(/\s\S*$/);
+  return (espaco >= TRECHO_MINIMO ? corte.slice(0, espaco) : corte).trim();
+}
+
+/** O literal da página entre `inicio` e `fim`, com no mínimo 20 e no máximo 400 caracteres. */
+function literalDe(pagina: string, inicio: number, fim: number): string {
+  const achado = pagina.slice(inicio, fim).trim();
+  return cortarNoMaximo(achado.length >= TRECHO_MINIMO ? achado : ampliar(pagina, inicio, fim));
+}
+
+/**
+ * A citação de uma lição conferida com a página: o que se guarda é um trecho LITERAL dela (de 20 a 400 caracteres) e `como` diz por que
+ * passo ele foi achado. `null` só quando a página quase não tem texto (menos de 20 caracteres): não há o que citar.
+ */
+export function localizarCitacao(pagina: string, citacao: string): CitacaoDoMaterial | null {
+  if (pagina.trim().length < TRECHO_MINIMO) return null;
+  const dada = citacao.trim();
+  if (dada) {
+    const posicao = pagina.indexOf(dada);
+    if (posicao >= 0) return { trecho: literalDe(pagina, posicao, posicao + dada.length), como: 'literal' };
+    for (const [semAcento, como] of [[false, 'normalizada'], [true, 'sem-acento']] as const) {
+      const achado = acharNormalizado(pagina, dada, semAcento);
+      if (achado) return { trecho: literalDe(pagina, achado.inicio, achado.fim), como };
+    }
+    const janela = melhorJanela(pagina, dada);
+    if (janela) return { trecho: literalDe(pagina, janela.inicio, janela.fim), como: 'melhor-janela' };
+  }
+  return { trecho: pagina.trim().slice(0, TRECHO_DA_PAGINA_INTEIRA).trim(), como: 'pagina-inteira' };
+}
+
+/**
+ * A lição como o modelo a devolveu, antes de validar o formato, sem as falhas que não valem a proposta: o trecho com mais de 400
+ * caracteres é cortado (a referência guarda o literal da página, não o texto da IA) e a página que veio como texto ("2") vira número.
+ */
+function aliviarLicao(licao: LicaoGerada): LicaoGerada {
+  const trecho = typeof licao?.trecho === 'string' && licao.trecho.length > TRECHO_MAXIMO ? cortarNoMaximo(licao.trecho) : licao?.trecho;
+  const pagina = typeof licao?.pagina === 'string' && /^\s*\d{1,4}\s*$/.test(licao.pagina) ? Number(licao.pagina) : licao?.pagina;
+  return licao && typeof licao === 'object' ? { ...licao, trecho, pagina } : licao;
+}
+
 export type LicoesDoMaterial = {
   titulo: string;
   licoes: LicaoGerada[];
@@ -109,7 +311,8 @@ export async function gerarLicoesDoMaterial(
     [],
     matematica ? { matematica: true } : {},
   );
-  const x = result as { titulo: string; licoes: LicaoGerada[] };
+  const bruto = result as { titulo: string; licoes: LicaoGerada[] };
+  const x = bruto && Array.isArray(bruto.licoes) ? { ...bruto, licoes: bruto.licoes.map(aliviarLicao) } : bruto;
   if (
     !x ||
     typeof x.titulo !== 'string' ||
@@ -140,9 +343,10 @@ export async function gerarLicoesDoMaterial(
 }
 
 /**
- * O conteúdo de cada lição do material: a lição, a foto da página (quando ela tem) e a referência ao trecho literal. Falha com
- * `ia_indisponivel` se a lição cita uma página que não existe ou um trecho que não está nela. `relatos` traz, por lição, o que a
- * matemática deu (só nos materiais de matemática).
+ * O conteúdo de cada lição do material: a lição, a foto da página (quando ela tem) e a referência a um trecho LITERAL da página
+ * (`localizarCitacao`: a citação da IA é conferida com tolerância e trocada pelo literal). Falha com `ia_indisponivel` só se a lição cita
+ * uma página que não existe ou que quase não tem texto. `relatos` traz, por lição, o que a matemática deu (só nos materiais de
+ * matemática); `citacoes`, como cada citação foi achada.
  */
 export function conteudosDasLicoes(entrada: {
   licoes: LicaoGerada[];
@@ -155,14 +359,14 @@ export function conteudosDasLicoes(entrada: {
 }) {
   const { licoes, figuras = [], paginas, materialId, nome, leitura, origem } = entrada;
   const relatos: (RelatoDaMatematica | undefined)[] = [];
+  const citacoes: ComoACitacaoCasou[] = [];
   const conteudos = licoes.map((x, indice) => {
     const pagina = paginas.find((p) => p.numero === x.pagina);
-    if (
-      !pagina ||
-      x.trecho.trim().length < 20 ||
-      !pagina.texto.includes(x.trecho)
-    )
-      throw new FalhaApi('ia_indisponivel');
+    if (!pagina) throw new FalhaApi('ia_indisponivel');
+    const citacao = localizarCitacao(pagina.texto, typeof x.trecho === 'string' ? x.trecho : '');
+    if (!citacao) throw new FalhaApi('ia_indisponivel');
+    citacoes.push(citacao.como);
+    if (citacao.como !== 'literal') registrar('citacao_ajustada', { como: citacao.como });
     const { conteudo, matematica } = conteudoDaGeradaComRelato(x, origem, figuras[indice]);
     relatos.push(matematica);
     return {
@@ -178,11 +382,11 @@ export function conteudosDasLicoes(entrada: {
           nome,
           pagina: x.pagina,
           ...(pagina.rotulo ? { localizacao: pagina.rotulo } : {}),
-          trecho: x.trecho,
+          trecho: citacao.trecho,
           leitura,
         },
       ],
     };
   });
-  return { conteudos, relatos };
+  return { conteudos, relatos, citacoes };
 }
