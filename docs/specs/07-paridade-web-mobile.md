@@ -75,7 +75,7 @@ A anatomia, as medidas e o movimento do menu de ações, da confirmação, do av
 ## O que não é diferença de tela
 
 - "Esqueci minha senha" e "Experimentar sem conta" aparecem conforme `/api/auth/config`, com a mesma regra nos dois. No site, recuperação e visitante estão desligados.
-- Trilhas da conta, textos gerados pela IA e a ordem das opções (sorteada por sessão, com a mesma regra em `aula.tsx` e `licao.tsx`) mudam de um ambiente para outro.
+- Trilhas da conta e textos gerados pela IA mudam de um ambiente para outro. A ordem das opções não muda entre a web e o app: ela vem do contrato (`embaralharExercicioDaRodada`, com a semente do id da lição, do índice do exercício e da rodada; a revisão rápida sobe a rodada e a ordem nunca repete a anterior), então a mesma tentativa tem a mesma ordem nos dois (spec 16, item 23).
 - As ondas do mapa (começo da trilha e fronteira entre partes) usam no app os mesmos caminhos SVG da web, com `react-native-svg` (pedido 6779fab3): não há mais o "V" sob a faixa "Parte N" nem nas colinas da geração. Ícones, olho de mostrar senha, colinas da entrada (elipses de CSS na web), morro do troféu e a estrada até ele seguem desenhados com Views, no mesmo desenho da web.
 - Animações em andamento na hora da captura: o balão "Começar" flutua 4 a 5 px e a estrela do pedido cintila, nos dois.
 - No balão do nó atual, um espaço de largura zero separa a ação do título. Assim o texto visível continua contido no nome acessível ("Começar: <título>. Lição X de Y, atual."), no formato da web 4.6.
