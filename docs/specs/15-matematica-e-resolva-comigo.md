@@ -501,3 +501,96 @@ Não entra peso 800 no motor (a opção b), e não fica a diferença de peso ent
 - o exemplo e os visuais são da mesma lição (c1).
 
 A frase do d1 ainda traz "…portanto k = 0". A captura é do dado de antes da correção do servidor, e essa parte é do Web & API.
+
+## 15. Gráfico de função (`funcao`, 21/11)
+
+**Motivo:** na prova com a IA real, a lição "Funções do segundo grau e parábolas" saiu com o plano e os pontos A (1, 0), B (3, 0), V (2, −1) e C (0, 3), mas sem a parábola (`e2e-real-d77bfe1-d/png/t3-licao3.png`). Uma parábola sem a curva não ensina. O tipo novo `funcao` desenha a curva no mesmo plano da seção 2.1, com as mesmas regras de eixos, grade, rótulos, halo, piso de 13 no texto, unidade mínima de 12, `naoCabe` com "Figura: <alt>", e o peso e o vão das seções 12 a 14.
+
+**1. O que a IA manda e o que o servidor valida**
+- `{ tipo: "funcao", alt, curvas: [{ latex, nome?, de?, ate? }], pontos?: [...] }`, com 1 a 3 curvas. O `nome` é uma letra ("f", "g", "h") e, sem ele, as curvas recebem "f", "g" e "h" na ordem.
+- **Expressões aceitas**, em x, no LaTeX restrito da seção 1: uma soma de termos, e cada termo é um destes:
+  - um número;
+  - número × xⁿ, com n de 1 a 3, ou seja, polinômio até o grau 3;
+  - número × |expressão até o grau 2|;
+  - número × √(a·x + b);
+  - número × sin(a·x + b) ou número × cos(a·x + b).
+  Os coeficientes têm até duas casas, e π vale nos coeficientes e no domínio. Qualquer outra coisa (tangente, log, exponencial, divisão por x, x dentro de raiz não linear) invalida a curva, e a figura segue sem ela. Sem nenhuma curva válida, o visual vira `plano`, se tiver pontos, ou some.
+- **Domínio:** `de` e `ate`, opcionais. Sem eles, o domínio vai da menor à maior abscissa dos pontos de destaque, com uma unidade de folga de cada lado e pelo menos 4 unidades de largura. No seno e no cosseno, sem domínio, vale [0, 2π].
+- **Pontos de destaque:** `{ id, papel, tipo?, curva?, x?, y? }`, em que `tipo` é raiz, vértice, intercepto, interseção ou valor. O servidor calcula o que sabe calcular:
+  - raízes reais do grau 1 e do grau 2;
+  - vértice do grau 2;
+  - intercepto em y de qualquer curva;
+  - interseção de duas curvas até o grau 2;
+  - valor de f(a), com o `x` dado.
+  Ponto dado pela IA é conferido: se |f(x) − y| passar de 0,01, o ponto sai. Vértice, raiz, intercepto e interseção são sempre do papel especial (losango), a não ser que sejam o procurado. Não entra ponto que não é da função, como "O (0, 0)" sem a curva passar ali.
+
+**2. Janela, eixos e tamanho**
+- **x:** o domínio, com meia unidade de folga.
+- **y:**
+  - a faixa da curva no domínio somada à dos pontos de destaque, com uma unidade de folga;
+  - se a faixa da curva passar de 3 unidades além dos pontos de destaque, o y para nos pontos ± 3, e a curva é recortada na borda;
+  - os pontos de destaque nunca ficam fora.
+- **Escala:** a mesma unidade em x e y em polinômio, módulo e raiz, para a parábola não ficar torta. No seno e no cosseno, as escalas são independentes:
+  - o x é marcado em π/2 (0, π/2, π, 3π/2, 2π);
+  - o y fica em −1, 0 e 1 (ou nos múltiplos da amplitude);
+  - a altura do gráfico fica em cerca de metade da largura;
+  - com amplitude 1 e escala igual, a onda ficaria achatada.
+- **Igual às outras figuras:** eixos, grade de 1 em 1 (de π/2 em π/2 no seno), números de eixo fixos, rótulos que se movem, halo, legenda e janela na altura da caixa.
+- **Unidade mínima:** 12 no y e 12 no passo da grade em x. Abaixo disso, `naoCabe`.
+- **Rótulos com π:** coordenadas que são múltiplos de π/4 aparecem como fração de π ("M (π/2, 1)"), e as outras com vírgula decimal.
+
+**3. A curva**
+- **Traço:** 3 unidades, cheio, ponta e junção redondas.
+- **Cores:**
+  - curva 1: `#2563FF`;
+  - curva 2: `#5B3FD9`;
+  - curva 3: `#0B1B5C`, tracejada (6 e 4).
+  O âmbar e o verde ficam reservados ao procurado e à resposta.
+- **Nome da curva:** "f", "g" ou "h", em itálico 14 800, na cor da curva, perto da ponta direita dentro da janela, com halo. Com uma curva só, o nome aparece se a fórmula da faixa de cima usar a letra.
+- **Amostragem:** no mínimo 64 pontos e 2 por unidade de projeto da largura (até 400), mais as abscissas dos pontos de destaque e as pontas do domínio, ligados como linha contínua.
+- **Recorte:** a curva para na borda da janela, sem seta. Onde ela não existe, não há traço: a raiz quadrada começa onde o radicando é zero, e esse começo só ganha bolinha se for ponto de destaque. Domínio dado pela IA mais curto que a janela: a curva termina nas pontas do domínio, sem bolinha. As funções aceitas não têm assíntota, então não entra tracejado de assíntota.
+- **Ordem de desenho:** grade, eixos, curvas, segmentos, e depois o texto com halo e os pontos.
+
+**4. O procurado**
+- **Quando o exercício pergunta um ponto da curva** (raiz, vértice, f(a), interseção), a curva não aparece no enunciado: ler o cruzamento com o eixo ou a ponta da parábola entregaria a resposta.
+  - O enunciado mostra a fórmula ("f(x) = x² − 4x + 3", na faixa de cima) e os pontos dados, com o procurado só na legenda ("V = ?").
+  - A janela é a dos pontos que aparecem e do domínio que o enunciado cita, nunca a da curva.
+  - No retorno depois do acerto e no último passo do "Resolva comigo", a figura se re-enquadra (seção 12), com a curva e o procurado já como resposta.
+- **Quando não há procurado na curva** (conceito, exemplo e exercício que não pergunta um ponto dela, como "qual gráfico é o de f?"), a curva aparece desde o início.
+
+**5. alt**
+- **Obrigatório:** até 140 caracteres, com o tipo de curva, a fórmula falada curta e os pontos que aparecem.
+- **No enunciado:** nunca traz o procurado. O validador recusa o alt com a coordenada do procurado, como no plano. Exemplo: "Parábola de f(x) = x² − 4x + 3, com o ponto C (0, 3). O vértice é o procurado."
+- **No retorno:** ganha o ponto achado.
+
+**6. Capacidade**
+- `funcao` é `visuais@2`. O app e a web passam a anunciar `visuais@2` quando o motor que desenha `funcao` estiver no pacote.
+- O build 3 e o site atual (sem cabeçalho) recebem o PNG do servidor pelo `recurso`, pela regra da fase 1 (seção 7). A `funcao` conta como figura.
+- Um cliente com `visuais@1` não recebe a `funcao`: no lugar dela, ele mostra a linha "Figura: <alt>" (seção 13). Não entra contrato novo para isso.
+
+**7. Casos de exemplo**
+- **Parábola com duas raízes:**
+  - curva: f(x) = x² − 4x + 3, sem domínio;
+  - pontos calculados: raízes A (1, 0) e B (3, 0), vértice V (2, −1) e intercepto C (0, 3), os quatro como especial;
+  - domínio [−1, 4]; janela x de −1,5 a 4,5 e y de −2 a 6, com a curva recortada em 6 nas pontas (f(−1) = 8);
+  - rótulos "A (1, 0)", "B (3, 0)", "V (2, −1)", "C (0, 3)" e o nome "f" na ponta direita;
+  - no exercício "Qual é o vértice?", o enunciado mostra A, B e C, a fórmula e "V = ?", sem a curva.
+- **Reta com intercepto:**
+  - curva: g(x) = 2x + 1, de −2 a 2;
+  - pontos: intercepto C (0, 1) e raiz R (−0,5; 0), com o ponto e vírgula pela vírgula decimal;
+  - janela x de −2,5 a 2,5 e y de −4 a 6, com escala igual;
+  - rótulos "C (0, 1)" e "R (−0,5; 0)" e o nome "g".
+- **Seno em [0, 2π]:**
+  - curva: h(x) = sin x;
+  - pontos: máximo M (π/2, 1), raiz P (π, 0) e mínimo N (3π/2, −1), os três como especial;
+  - x marcado em 0, π/2, π, 3π/2 e 2π; y de −1,5 a 1,5, com marcas em −1, 0 e 1; escalas independentes, com a altura em cerca de metade da largura;
+  - rótulos "M (π/2, 1)", "P (π, 0)", "N (3π/2, −1)" e o nome "h".
+
+**Quem faz o quê** (só o necessário):
+- **Web & API:**
+  - o tipo `funcao` no contrato e no validador (expressões, conferência dos pontos, cálculo dos destaques);
+  - no motor: janela, amostragem, recorte e rótulos com π;
+  - o PNG da fase 1;
+  - `visuais@2`;
+  - na prova da t3-licao3: o V como especial, sem o "O (0, 0)", e o "3" do eixo que fica meio escondido atrás de C sai, pela regra da bolinha sobre o número (seção 12).
+- **Mobile 2:** o motor vem pronto em `packages/contratos`. Falta anunciar `visuais@2` no cabeçalho quando o pacote do app tiver o motor com `funcao`, e capturar os três casos acima em 320 e 390.
