@@ -321,3 +321,25 @@ O âmbar fica coerente como par: o tom do gráfico é mais claro e o do texto ma
   - F3, a legibilidade no tamanho real;
   - F4, o leitor de tela;
   - F5, o recurso antigo quando não há visual.
+
+**Aceite final do desenho (b4cb4ec, 21/11).** As correções (i) a (v), as cores, o piso de 13 e o halo branco de 3 unidades estão certos. F1 e F2 estão aceitos no conteúdo, com três ajustes pequenos (pela ordem):
+1. **O rótulo só com o nome fica junto do ponto.** Na colinearidade, o "A" fica a umas 25 unidades do ponto, acima e à esquerda, e parece solto. A letra fica a no máximo 8 unidades da borda do ponto, em qualquer das 8 direções, mesmo sobre a grade (o halo resolve). Se nenhuma direção couber, o ponto fica sem letra, e a legenda traz "A (−1, −1)" com o símbolo do ponto antes. Continua valendo levar as coordenadas para a legenda.
+2. **Ponto na origem.** Quando um ponto está em (0, 0), o "0" da origem não aparece, para não ficar ao lado da letra "O", que é quase igual. O ponto ganha o rótulo inteiro, "O (0, 0)", e não vai para a legenda.
+3. **Tracejado só com motivo.** No ponto-na-origem, o segmento OP está tracejado sem depender de ponto escondido. Pela seção 2.1, segmento comum é cheio de 3 unidades. O tracejado fica para a linha-guia e para o que depende do procurado.
+
+**Aceito como está:**
+- os vãos do halo no segmento quando ele passa atrás de um número do eixo (baricentro, nos números 4 e 5), porque o número legível vale mais que o traço contínuo;
+- "A (1, 2)" sobre a aresta BC na resposta, com halo;
+- a reta numérica e a galeria (respiros, π, determinante e ";").
+
+**Determinante (Sarrus):** as diagonais que subtraem passam a `#B9780F`, o âmbar gráfico do procurado, e as que somam continuam `#2563FF`. Aprovado. A seção 1 passa a valer com esse valor.
+
+**Para fechar F3 a F5 e a fase 2, na tela real:**
+- **Build 3 no iPhone e site atual, em 390 e 1440**, numa lição de geometria analítica gerada pelo servidor com o motor:
+  - captura de "Ver a ilustração" aberto, com a imagem inteira na caixa, sem encolher abaixo da largura, e a legenda "Desenho do Studoo · …";
+  - captura ampliada, para ver o texto menor (13 unidades) no tamanho real;
+  - VoiceOver lendo "Desenho do Studoo: <descrição>", com gravação ou com o texto do painel de legendas do VoiceOver;
+  - uma lição sem visual e uma com visual inválido, para ver o recurso antigo sem caixa vazia.
+- **Build 4 e site com os visuais no aparelho:**
+  - o roteiro X1 a X10 da seção 6;
+  - a fórmula em linha dentro da frase (marco 3b), conferida à parte quando o contrato dela chegar.
