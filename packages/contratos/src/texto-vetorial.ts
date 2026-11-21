@@ -15,12 +15,22 @@ const TABELAS: Readonly<Record<PesoDoTexto, Readonly<Record<string, readonly [nu
 /** O itálico das variáveis: o Nunito não tem itálico no pacote, e o dele é um oblíquo de uns 11°; aqui o glifo reto é inclinado. */
 export const INCLINACAO_DO_ITALICO = 0.2;
 
+/**
+ * O glifo de um caractere: [avanço, contorno]. O que a tabela não tem NUNCA vira "?" (que mentiria sobre o que está escrito): vira um
+ * vão do tamanho de um espaço, sem contorno. Quem desenha confere antes com `semGlifo` e, se falta algum, não desenha (a fórmula fica
+ * em texto linear e o cliente escreve com a fonte do sistema); o validador não deixa chegar aqui nada fora da tabela.
+ */
 export function glifoDe(caractere: string, peso: PesoDoTexto = 700): readonly [number, string] {
-  return TABELAS[peso][caractere] ?? GLIFOS_700[caractere] ?? GLIFOS_700["?"];
+  return TABELAS[peso][caractere] ?? GLIFOS_700[caractere] ?? [(GLIFOS_700[" "] ?? [250, ""])[0], ""];
 }
 
 export function temGlifo(caractere: string, peso: PesoDoTexto = 700): boolean {
   return TABELAS[peso][caractere] !== undefined || GLIFOS_700[caractere] !== undefined;
+}
+
+/** Os caracteres do texto que não têm glifo na tabela (sem repetir), na ordem em que aparecem. */
+export function semGlifo(texto: string, peso: PesoDoTexto = 700): string[] {
+  return [...new Set([...texto].filter((caractere) => !temGlifo(caractere, peso)))];
 }
 
 export function larguraDoTexto(texto: string, tamanho: number, peso: PesoDoTexto = 700): number {

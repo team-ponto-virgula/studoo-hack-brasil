@@ -222,14 +222,14 @@ function lerTokenSolto(texto: string, inicio: number, fim: number): Parte | stri
 
 const PEDACO_DO_EXPOENTE = String.raw`(?:\^(?:\{[A-Za-z0-9]{1,3}\}|\d{1,3}|[A-Za-z]))`;
 /** Um termo da conta curta: uma letra sozinha (com índice e expoente, se tiver) ou um número, com sinal e vírgula decimal: `x`, `x_A`, `b^2`, `-3`, `3,5`. */
-const TERMO_DA_CONTA = String.raw`(?:[A-Za-z](?:_(?:\{[A-Za-z0-9]{1,3}\}|[A-Za-z]{1,2}|\d{1,3}))?${PEDACO_DO_EXPOENTE}?|[−-]?\d+(?:[.,]\d+)?${PEDACO_DO_EXPOENTE}?)`;
+const TERMO_DA_CONTA = String.raw`(?:[A-Za-zΔπ](?:_(?:\{[A-Za-z0-9]{1,3}\}|[A-Za-z]{1,2}|\d{1,3}))?${PEDACO_DO_EXPOENTE}?|[−-]?\d+(?:[.,]\d+)?${PEDACO_DO_EXPOENTE}?)`;
 /** Entre dois termos: `=`, `+`, `×`, `÷`, `−`, `<`, `>`, `≤`, `≥`, `≠`, `*` (com espaço ou sem) ou ` - `, ` · `, ` / ` (espaço dos dois lados). */
 const SINAL_DA_CONTA = String.raw`(?:\s?(?:=|\+|×|÷|−|<|>|≤|≥|≠|\*)\s?|\s(?:-|·|/)\s)`;
 const CONTA_CURTA = new RegExp(String.raw`(?<![\p{L}\p{N}_.\\/$@#~:-])${TERMO_DA_CONTA}(?:${SINAL_DA_CONTA}${TERMO_DA_CONTA})+(?![\p{L}\p{N}_])`, "gu");
 
 /**
- * A conta curta como fórmula, ou null: precisa ler e ter ao menos uma variável ("3 + 4 = 7" fica texto; o que não tem letra não
- * mistura peso nem itálico com o resto). Uma letra solta no meio de uma palavra ("lado x", "a casa") não é conta: só vira fórmula
+ * A conta curta como fórmula, ou null: precisa ler e ter ao menos uma variável ou um símbolo grego (Δ, π): "Δ ≠ 0" é conta,
+ * "3 + 4 = 7" fica texto (o que não tem letra não mistura peso nem itálico com o resto). Uma letra solta no meio de uma palavra ("lado x", "a casa") não é conta: só vira fórmula
  * com marca. "2x", "4ac" e "x²" em Unicode também ficam texto.
  */
 function lerContaCurta(trecho: string): Parte | null {
@@ -238,7 +238,7 @@ function lerContaCurta(trecho: string): Parte | null {
   if (!lida.ok) return null;
   let temVariavel = false;
   percorrerFormula(lida.arvore, (no) => {
-    if (no.tipo === "variavel") temVariavel = true;
+    if (no.tipo === "variavel" || no.tipo === "simbolo") temVariavel = true;
   });
   if (!temVariavel) return null;
   const parte = marcaDe(fonte);

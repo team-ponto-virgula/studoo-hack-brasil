@@ -186,6 +186,23 @@ export interface RespostaDoSuaVez {
   depois?: { formula?: string; visual?: VisualFigura; passos: PassoDaResolucao[] };
 }
 
+/**
+ * A janela de um eixo ajustada aos dados (spec 15, seção 11): do menor ao maior valor, com `folga` unidades a mais de cada lado, em
+ * inteiros, incluindo a origem se `incluirOrigem`, e no mínimo 4 de largura. Sem unidades vazias: o gráfico estreita quando a altura
+ * limita, em vez de abrir a janela para encher a largura.
+ */
+export function janelaDosDados(valores: readonly number[], incluirOrigem: boolean, folga = 1): [number, number] {
+  const todos = incluirOrigem ? [...valores, 0] : [...valores];
+  if (todos.length === 0) return [-2, 2];
+  let minimo = Math.floor(Math.min(...todos) - folga);
+  let maximo = Math.ceil(Math.max(...todos) + folga);
+  while (maximo - minimo < 4) {
+    minimo -= 1;
+    maximo += 1;
+  }
+  return [minimo, maximo];
+}
+
 export const LIMITES_VISUAIS = {
   visuaisPorLicao: 3,
   pontos: 12,

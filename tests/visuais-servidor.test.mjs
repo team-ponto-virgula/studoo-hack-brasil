@@ -333,6 +333,12 @@ test("o PNG da fase 1: a prancheta 320×352 leva a faixa da fórmula e o plano i
     assert.ok(prancheta.figura, `${nome}: a figura está na prancheta`);
     assert.ok(prancheta.formulas.length >= 1, `${nome}: e a faixa da fórmula também`);
     assert.ok(prancheta.desenho.menorTexto >= 13);
+    // O plano da prancheta tem a unidade de pelo menos 12 (a janela é a dos dados, o gráfico estreita e centraliza em vez de encolher).
+    if (prancheta.figura.tipo === "plano") {
+      const verticais = prancheta.desenho.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "grade" && primitiva.x1 === primitiva.x2).map((primitiva) => primitiva.x1).sort((a, b) => a - b);
+      assert.ok(verticais[1] - verticais[0] >= 12, `${nome}: unidade ${verticais[1] - verticais[0]} na prancheta`);
+      assert.ok(verticais.at(-1) - verticais[0] < 252, `${nome}: o gráfico da prancheta estreitou`);
+    }
     // Na prancheta, a figura é o plano com a legenda das coordenadas (nada some): cada rótulo está no desenho ou na legenda.
     const visual = prancheta.figura;
     if (visual.tipo === "plano") {

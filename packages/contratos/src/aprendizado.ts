@@ -15,8 +15,8 @@ export {
   comAlturaMinima, comporDesenhos, dentroDoTeto, desenharFormula, desenharFormulaEmLinha, desenharPlano, desenharRetaNumerica, desenharVisual, desenhoParaSvg,
   numeroParaTela, rotuloDoPonto, type OpcoesDaFigura, type OpcoesDaFormula, type OpcoesDoSvg,
 } from './motor-visuais';
-export { ALTURA_DA_LINHA_EM_EM, LARGURA_MAXIMA_EM_LINHA, PISO_EM_LINHA, formulaCabeNaLinha } from './motor-formula';
-export { caminhoValido, larguraDoTexto, temGlifo } from './texto-vetorial';
+export { ALTURA_DA_LINHA_EM_EM, LARGURA_MAXIMA_EM_LINHA, PISO_EM_LINHA, formulaCabeNaLinha, semGlifoNaFormula } from './motor-formula';
+export { caminhoValido, larguraDoTexto, semGlifo, temGlifo } from './texto-vetorial';
 export * from './licao';
 export * from './som';
 export { fundoUnicoDaPreferencia } from './catalogo-sons';

@@ -8,13 +8,14 @@ import {
   falarTextoComFormulas,
   formulaCabeNaLinha,
   lerFormula,
+  larguraDoTexto,
   linearizarTolerante,
   marcarFormulasSoltas,
   normalizarTextoComFormulas,
   partirTextoComFormulas,
   textoSemFormulas,
 } from "@studoo/contratos";
-import { caixaDaFormulaEmLinha } from "../packages/contratos/src/motor-formula.ts";
+import { caixaDaFormula, caixaDaFormulaEmLinha } from "../packages/contratos/src/motor-formula.ts";
 
 const GOLDEN = new URL("./fixtures/matematica/golden-segmentos.json", import.meta.url);
 
@@ -531,4 +532,39 @@ test("2d (c): a linhaDeBase fica na base dos algarismos e das letras, não no fu
   // Com expoente, a caixa cresce para cima e a linhaDeBase com ela: a base do "x" é a mesma distância do topo.
   const expoente = desenharFormulaEmLinha(lerFormula("x^2").arvore, 16, 700);
   assert.ok(expoente.linhaDeBase > desenharFormulaEmLinha(lerFormula("x").arvore, 16, 700).linhaDeBase + 0.2 * 16, "o topo da caixa sobe com o expoente");
+});
+
+test("2e: fatores sem sinal leem colados ('4ac', '2x', 'xy'), no desenho em linha e no bloco; com sinal, o respiro fica", () => {
+  // O vão entre o fim do avanço de uma marca e o começo da seguinte: positivo é um espaço entre os fatores.
+  const vaos = (formula, tamanho = 16) => {
+    const marcas = caixaDaFormulaEmLinha(lerFormula(formula).arvore, tamanho, "texto", 700).marcas.filter((marca) => marca.m === "texto");
+    return marcas.slice(1).map((marca, i) => marca.x - (marcas[i].x + larguraDoTexto(marcas[i].texto, tamanho, 700)));
+  };
+  for (const tamanho of [16, 17, 22]) {
+    // número → variável e variável → variável: colados, sem vão (no máximo um pixel de encaixe para dentro).
+    for (const formula of ["4ac", "2x", "xy", "a b c", "3 x y"]) {
+      for (const vao of vaos(formula, tamanho)) assert.ok(vao <= 0.01 && vao >= -0.07 * tamanho - 0.01, `${formula} a ${tamanho}: vão de ${vao}`);
+    }
+    // Com sinal, o respiro de sempre (0,2 em de cada lado) fica.
+    for (const vao of vaos("4 + a", tamanho)) assert.ok(vao >= 0.19 * tamanho, `4 + a a ${tamanho}: vão de ${vao}`);
+  }
+  // Letra com índice depois de um número também cola: "2x_A".
+  assert.ok(vaos("2x_A")[0] <= 0.01);
+  // Número seguido de número não existe sem sinal; número seguido de parênteses mantém o respiro de 1.
+  assert.ok(vaos("2(x + 1)")[0] >= 0.9);
+  // O desenho em bloco usa a mesma regra.
+  const bloco = caixaDaFormula(lerFormula("4ac").arvore, 22).marcas.filter((marca) => marca.m === "texto");
+  assert.ok(bloco[1].x - (bloco[0].x + larguraDoTexto("4", 22, 700)) <= 0.01);
+});
+
+test("2e: 'Δ ≠ 0', 'Δ ≥ 0' e 'π = 3,14' no meio da frase são fórmula em linha (letra grega, sinal e número)", () => {
+  assert.equal(marcarFormulasSoltas("Se Δ ≠ 0, há duas raízes."), "Se $\\Delta \\neq 0$, há duas raízes.");
+  assert.equal(marcarFormulasSoltas("Com Δ ≥ 0 e Δ > 0"), "Com $\\Delta \\geq 0$ e $\\Delta > 0$");
+  assert.equal(marcarFormulasSoltas("Use π = 3,14."), "Use $\\pi = 3.14$.");
+  assert.equal(marcarFormulasSoltas("Δ = b^2 - 4ac vale 25"), "$\\Delta = b^2$ - 4ac vale 25", "o produto 4ac não é termo da conta curta: fica texto");
+  const [formula] = partirTextoComFormulas("Δ ≠ 0", { heuristica: true });
+  assert.equal(formula.tipo, "formula");
+  assert.equal(formula.falado, "delta é diferente de 0");
+  // Letra grega no meio de uma palavra não é conta.
+  assert.equal(marcarFormulasSoltas("O Δ do problema e o π da roda"), "O Δ do problema e o π da roda");
 });

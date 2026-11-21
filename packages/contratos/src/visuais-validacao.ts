@@ -6,6 +6,7 @@ import {
   LIMITES_VISUAIS,
   PAPEIS_PONTO,
   TETO_DE_PRIMITIVAS,
+  janelaDosDados,
   type Derivado,
   type IntervaloDaReta,
   type OpcaoCorrigida,
@@ -268,8 +269,10 @@ function normalizarPlano(bruto: Record<string, unknown>, opcoes: OpcoesDoVisual)
     if (opcoes.quadro.tipo !== "plano") return recusar("o visual anterior não é um plano");
     ({ x, y } = opcoes.quadro);
   } else {
-    x = eixoLido(bruto.x, "x") ?? ajustarEixo(xs, true, 0.1);
-    y = eixoLido(bruto.y, "y") ?? ajustarEixo(ys, true, 0.1);
+    // A janela é a dos dados com uma unidade de folga, mais a origem (spec 15, seção 11): a que a IA mandar não vale, porque unidade
+    // vazia encolhe o gráfico e a grade vira risco. Os passos da resolução herdam a do problema, ajustada a todos eles.
+    x = janelaDosDados(xs, true);
+    y = janelaDosDados(ys, true);
   }
   lidos.forEach((ponto) => {
     dentro(ponto.coordenadas![0], x, `ponto ${ponto.id}: x`);
@@ -500,11 +503,17 @@ const escondido = (papel: PapelPonto): boolean => papel === "procurado" || papel
 export function visualParaEnunciado<V extends Visual>(visual: V): V {
   if (visual.tipo === "plano") {
     const pontos = visual.pontos.map(({ derivado: _derivado, x, y, ...resto }) => (escondido(resto.papel) ? resto : { ...resto, x, y }));
-    return { ...visual, pontos } as V;
+    // A janela também não pode entregar o procurado (a borda do gráfico seria a coordenada dele mais 1): no enunciado ela é a dos
+    // pontos que aparecem. Quem recebe a resposta (o retorno, o último passo) recebe a janela guardada, que a inclui.
+    const visiveis = visual.pontos.filter((ponto) => !escondido(ponto.papel) && ponto.x !== undefined && ponto.y !== undefined);
+    return { ...visual, x: janelaDosDados(visiveis.map((ponto) => ponto.x as number), true), y: janelaDosDados(visiveis.map((ponto) => ponto.y as number), true), pontos } as V;
   }
   if (visual.tipo === "reta_numerica") {
     const pontos = visual.pontos.map(({ derivado: _derivado, valor, ...resto }) => (escondido(resto.papel) ? resto : { ...resto, valor }));
-    return { ...visual, pontos } as V;
+    const visiveis = visual.pontos.flatMap((ponto) => (!escondido(ponto.papel) && ponto.valor !== undefined ? [ponto.valor] : []));
+    // Com intervalos (trechos até o infinito) a janela guardada é a que vale; sem eles, é a dos pontos que aparecem.
+    const [de, ate] = visual.intervalos?.length ? [visual.de, visual.ate] : janelaDosDados(visiveis, false);
+    return { ...visual, de, ate, pontos } as V;
   }
   return visual;
 }
@@ -585,6 +594,8 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
     if (!Array.isArray(passosBrutos) || passosBrutos.length < LIMITES_VISUAIS.passosMin || passosBrutos.length > LIMITES_VISUAIS.passosMax) {
       return recusar(`a resolução precisa de ${LIMITES_VISUAIS.passosMin} a ${LIMITES_VISUAIS.passosMax} passos`);
     }
+    // Todas as figuras da resolução dividem a janela da primeira que vale (a do problema, ajustada aos dados dela, o procurado incluído):
+    // um ponto fora dela tira o visual do passo, em vez de abrir a janela de todos.
     let quadro: Quadro | undefined;
     const usar = (visualBruto: unknown, revela: boolean): VisualFigura | undefined => {
       if (ausente(visualBruto)) return undefined;

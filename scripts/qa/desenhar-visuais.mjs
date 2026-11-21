@@ -76,14 +76,15 @@ await png(comporDesenhos(faixas, { separador: true }), "galeria-formulas");
 
 // Casos de borda do plano: um ponto colado na origem e um ponto cercado, onde o rótulo não cabe e as coordenadas vão para a legenda.
 const casosDeBorda = {
-  "ponto-na-origem": { tipo: "plano", alt: "Os pontos O, P e Q perto da origem.", x: [-4, 5], y: [-3, 5], pontos: [{ id: "O", x: 0, y: 0 }, { id: "P", x: 1, y: 1 }, { id: "Q", x: -1, y: 2, papel: "especial" }], segmentos: [{ de: "O", ate: "P" }, { de: "P", ate: "Q" }] },
-  "ponto-cercado": { tipo: "plano", alt: "Um ponto cercado por oito vizinhos.", x: [-6, 6], y: [-6, 6], pontos: [{ id: "A", x: 0, y: 0 }, ...[[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].map(([x, y], i) => ({ id: `V${i}`, x, y, rotulo: false }))] },
+  // A janela é a dos dados: dois pontos sem rótulo, nos cantos, abrem a janela como ela era.
+  "ponto-na-origem": { tipo: "plano", alt: "Os pontos O, P e Q perto da origem.", pontos: [{ id: "O", x: 0, y: 0 }, { id: "P", x: 1, y: 1 }, { id: "Q", x: -1, y: 2, papel: "especial" }, { id: "F1", x: -4, y: -3, rotulo: false }, { id: "F2", x: 5, y: 5, rotulo: false }], segmentos: [{ de: "O", ate: "P" }, { de: "P", ate: "Q" }] },
+  "ponto-cercado": { tipo: "plano", alt: "Um ponto cercado por oito vizinhos.", pontos: [{ id: "A", x: 0, y: 0 }, ...[[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].map(([x, y], i) => ({ id: `V${i}`, x, y, rotulo: false })), { id: "F1", x: 8, y: 8, rotulo: false }, { id: "F2", x: -8, y: -8, rotulo: false }] },
 };
 for (const [nome, bruto] of Object.entries(casosDeBorda)) await png(desenharVisual(normalizarVisual(bruto), { tipo: "enunciado" }), nome);
 
 // O ponto na origem com espaço: o rótulo inteiro "O (0, 0)" no gráfico e nenhum 0 de eixo.
 await png(desenharVisual(normalizarVisual({
-  tipo: "plano", alt: "O ponto O na origem e dois pontos longe dele.", x: [-5, 6], y: [-4, 6],
+  tipo: "plano", alt: "O ponto O na origem e dois pontos longe dele.",
   pontos: [{ id: "O", x: 0, y: 0 }, { id: "P", x: 4, y: 4 }, { id: "Q", x: -4, y: 3, papel: "especial" }], segmentos: [{ de: "P", ate: "Q" }],
 }), { tipo: "enunciado" }), "ponto-origem-livre");
 
@@ -126,7 +127,7 @@ const frasesEmLinha = [
   "Se x = 3, então x^2 = 9 e a + b = 5.",
   "O valor de $x_C$ é 4: $x_G = (x_A + x_B + x_C) / 3$.",
   "Metade: $1/2$ ou $\\frac{x_A}{2}$; o ponto médio é $\\frac{x_A + x_B}{2}$.",
-  "Com $b^2 - 4ac = 0$ e outro, $\\Delta = b^2 - 4ac$ vale 25.",
+  "Com $b^2 - 4ac = 0$ e Δ ≥ 0, $\\Delta = b^2 - 4ac$ vale 25; $4ac$ e $2x$ leem coladas.",
 ];
 const linhas = [];
 for (const [peso, tamanho] of [[400, 16], [700, 16], [700, 17]]) {

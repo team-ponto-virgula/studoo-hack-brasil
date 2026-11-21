@@ -1,6 +1,6 @@
 import { EIXO_MATEMATICO, UNIDADES_POR_EM } from "./glifos";
-import { ehSinal, formulaCabeEmLinha, numeroNaTela, type NoFormula, type PapelDestaque } from "./formula";
-import { caixaDoGlifo, larguraDoTexto, type PesoDoTexto } from "./texto-vetorial";
+import { ehSinal, formulaCabeEmLinha, numeroNaTela, percorrerFormula, type NoFormula, type PapelDestaque } from "./formula";
+import { caixaDoGlifo, larguraDoTexto, semGlifo, type PesoDoTexto } from "./texto-vetorial";
 import { PISO_DO_TEXTO, type PapelDeCor, type Tracejado } from "./visuais";
 
 /*
@@ -180,6 +180,19 @@ const CORES_DO_DESTAQUE: Readonly<Record<PapelDestaque, { texto: PapelDeCor; fun
 
 const folga = (largura: number): Caixa => ({ l: largura, a: 0, p: 0, marcas: [] });
 
+const eLetra = (no: NoFormula): boolean => no.tipo === "variavel" || no.tipo === "simbolo" || (no.tipo === "script" && eLetra(no.base));
+
+/**
+ * O espaço entre dois fatores sem sinal (spec 15, seção 11): "4ac" e "2x" leem coladas, como no caderno. O número encosta na
+ * variável e a variável na variável (o oblíquo da variável já se afasta um pouco do número que vem antes, e a margem do glifo faz
+ * o resto: sem sinal não há vão); nos outros casos fica o respiro de 1.
+ */
+function espacoEntreFatores(anterior: NoFormula, atual: NoFormula, estilo: Estilo): number {
+  if (anterior.tipo === "numero" && eLetra(atual)) return -0.06 * tamanhoDo(estilo);
+  if (eLetra(anterior) && eLetra(atual)) return 0;
+  return RESPIRO;
+}
+
 function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
   const partes: Parte[] = [];
   itens.forEach((item, posicao) => {
@@ -202,7 +215,7 @@ function sequencia(itens: readonly NoFormula[], estilo: Estilo): Caixa {
       partes.push({ caixa: folga((estilo.linha ? 0.25 * tamanhoDo(estilo) : ESPACO_DO_SINAL) * estilo.respiro) });
       return;
     }
-    partes.push({ caixa: caixaDe(item, estilo), antes: anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" ? RESPIRO : 0 });
+    partes.push({ caixa: caixaDe(item, estilo), antes: anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador" ? espacoEntreFatores(anterior, item, estilo) : 0 });
   });
   return juntar(partes);
 }
@@ -400,6 +413,20 @@ export function caixaDaFormulaEmLinha(arvore: NoFormula, tamanho: number, cor: P
   return caixaDe(arvore, { tamanho: Math.max(PISO_EM_LINHA, tamanho), cor, italico: true, respiro: 1, linha: true, peso });
 }
 
+/**
+ * Os caracteres que a fórmula escreve e a tabela de glifos não tem (só um `\text{…}` montado à mão, sem passar pelo leitor, pode
+ * trazê-los: o leitor só deixa passar o que tem glifo). Com algum, o motor NÃO desenha a fórmula e não põe "?" no lugar: ela fica
+ * em texto linear.
+ */
+export function semGlifoNaFormula(arvore: NoFormula): string[] {
+  const faltam = new Set<string>();
+  percorrerFormula(arvore, (no) => {
+    const texto = no.tipo === "texto" || no.tipo === "variavel" || no.tipo === "simbolo" ? no.valor : no.tipo === "numero" ? numeroNaTela(no.valor) : "";
+    for (const caractere of semGlifo(texto)) faltam.add(caractere);
+  });
+  return [...faltam];
+}
+
 /** A linha de texto tem 1,5 em: a fórmula em linha cabe nela sem fazer a linha crescer. */
 export const ALTURA_DA_LINHA_EM_EM = 1.5;
 /** Largura máxima de uma fórmula em linha, com o texto a 16 (escala com ele): mais larga que isto quebra em peças, que quebram como palavras. */
@@ -411,7 +438,7 @@ export const LARGURA_MAXIMA_EM_LINHA = 280;
  * no texto linear em peças (`formulaEmPecas`).
  */
 export function formulaCabeNaLinha(arvore: NoFormula, tamanho = 16): boolean {
-  if (!formulaCabeEmLinha(arvore)) return false;
+  if (!formulaCabeEmLinha(arvore) || semGlifoNaFormula(arvore).length > 0) return false;
   const caixa = caixaDaFormulaEmLinha(arvore, tamanho);
   return caixa.a + caixa.p <= ALTURA_DA_LINHA_EM_EM * tamanho + 1e-9 && caixa.l <= (LARGURA_MAXIMA_EM_LINHA * tamanho) / 16 + 1e-9;
 }

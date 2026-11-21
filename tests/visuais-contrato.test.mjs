@@ -80,7 +80,7 @@ test("as três fixtures normalizam: derivados calculados pelo servidor, eixos gu
   assert.deepEqual(visuais[1], {
     tipo: "plano",
     alt: "Triângulo ABC no plano, com A (1, 2), B (−2, 7) e o baricentro G (1, 3); C é o vértice procurado.",
-    x: [-3, 6],
+    x: [-3, 5],
     y: [-1, 8],
     pontos: [
       { id: "A", papel: "dado", x: 1, y: 2 },
@@ -123,16 +123,24 @@ test("a lição fica quando o visual é inválido: o visual some, sem derrubar n
   }
 });
 
-test("eixos: o servidor ajusta aos pontos (e à origem) e guarda; o que a IA mandar vale se couber", () => {
+test("eixos: a janela do plano é a dos dados com uma unidade de folga e a origem (a da IA não conta); a da reta vale se couber", () => {
   const ajustado = normalizarVisual(plano());
   assert.deepEqual([ajustado.x, ajustado.y], [[-3, 2], [-1, 8]]);
   const reta1 = normalizarVisual(reta());
   assert.deepEqual([reta1.de, reta1.ate], [2, 6]);
-  assert.deepEqual(normalizarVisual(plano({ x: [-5, 5], y: [-5, 10] })).y, [-5, 10]);
-  assert.match(recusado(plano({ x: [0, 1] })), /fora do intervalo/);
-  assert.match(recusado(plano({ x: [3, -3] })), /o menor tem de vir primeiro/);
-  assert.match(recusado(plano({ y: [1] })), /dois números/);
-  assert.match(recusado(plano({ x: [-3, "a"] })), /não é um número/);
+  // A janela que a IA manda no plano não vale, boa ou ruim: sem unidade vazia o gráfico estreita em vez de encolher a escala.
+  for (const mandada of [{ x: [-5, 5], y: [-5, 10] }, { x: [0, 1] }, { x: [3, -3] }, { y: [1] }, { x: [-3, "a"] }, { x: [-100, 100], y: [-100, 100] }]) {
+    const visual = normalizarVisual(plano(mandada));
+    assert.deepEqual([visual.x, visual.y], [[-3, 2], [-1, 8]], JSON.stringify(mandada));
+  }
+  // A janela guardada é a de TODOS os dados, o procurado incluído; a do enunciado, a dos pontos que aparecem (a outra entregaria o procurado).
+  const comProcurado = normalizarVisual(plano({ pontos: [{ id: "A", x: 1, y: 2 }, { id: "B", x: -2, y: 7 }, { id: "C", papel: "procurado", x: 9, y: -4 }] }));
+  assert.deepEqual([comProcurado.x, comProcurado.y], [[-3, 10], [-5, 8]], "o guardado inclui o procurado");
+  const publico = visualParaEnunciado(comProcurado);
+  assert.deepEqual([publico.x, publico.y], [[-3, 2], [-1, 8]], "o do enunciado não tem o procurado");
+  assert.equal(JSON.stringify(publico).includes("9"), false, "e o 9 do procurado não está em lugar nenhum do enunciado");
+  const outroLugar = visualParaEnunciado(normalizarVisual(plano({ pontos: [{ id: "A", x: 1, y: 2 }, { id: "B", x: -2, y: 7 }, { id: "C", papel: "procurado", x: -8, y: 15 }] })));
+  assert.deepEqual(outroLugar, publico, "mudar o procurado de lugar não muda o enunciado");
   assert.match(recusado(reta({ de: 4, ate: 10 })), /fora do intervalo/);
   assert.deepEqual(normalizarVisual(reta({ de: 0, ate: 8 })).de, 0);
   // Pontos colados na origem: o intervalo ainda tem largura para desenhar.
@@ -461,7 +469,8 @@ test("passos com visual: o eixo é herdado, e visual que não cabe ou que entreg
     return resultado.resolucao;
   };
   // Eixos diferentes no último passo: valem os do problema.
-  assert.deepEqual(viu((r) => (r.passos[4].visual.x = [-9, 9])).passos[4].visual.x, [-3, 5]);
+  const quadroDoProblema = validarResolucao(resolucao).resolucao.visual.x;
+  assert.deepEqual(viu((r) => (r.passos[4].visual.x = [-9, 9])).passos[4].visual.x, quadroDoProblema);
   // Um ponto fora dos eixos herdados: o visual do passo some, o passo fica.
   const fora = viu((r) => r.passos[4].visual.pontos.push({ id: "D", x: 40, y: 40 }));
   assert.equal(fora.passos[4].visual, undefined);
@@ -483,7 +492,7 @@ test("passos com visual: o eixo é herdado, e visual que não cabe ou que entreg
   // Passo que mexe no desenho: um visual novo no meio herda os mesmos eixos.
   const meio = viu((r) => (r.passos[2].visual = { tipo: "plano", alt: "Passo com a guia até o eixo.", pontos: copia(r.visual.pontos), guias: [{ ponto: "A", eixo: "x" }] }));
   assert.deepEqual(meio.passos[2].visual.guias, [{ ponto: "A", eixo: "x" }]);
-  assert.deepEqual(meio.passos[2].visual.y, [-1, 7]);
+  assert.deepEqual(meio.passos[2].visual.y, quadroDoProblema.length ? validarResolucao(resolucao).resolucao.visual.y : [], "o visual novo herda a janela y do problema");
 });
 
 test("o validador nunca lança, com qualquer coisa que a IA mande", () => {
