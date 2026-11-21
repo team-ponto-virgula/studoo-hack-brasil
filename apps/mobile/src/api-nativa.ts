@@ -1,8 +1,15 @@
-import { criarClienteStudoo, ErroStudoo, type EventoGeracao, type TransporteStudoo } from '@studoo/contratos';
+import { CABECALHO_CAPACIDADES, criarClienteStudoo, ErroStudoo, type EventoGeracao, type TransporteStudoo } from '@studoo/contratos';
 import { fetch } from 'expo/fetch';
 import * as SecureStore from 'expo-secure-store';
 import { codigoDaResposta, lerEventos } from './geracao-ao-vivo';
 import { tocaSons } from './sons';
+
+/**
+ * O que ESTE app sabe desenhar (spec 15): vai em toda chamada no cabeçalho `X-Studoo-Capacidades`. É uma constante do app, não a
+ * do contrato (`CAPACIDADES_DESTE_CLIENTE`): se o contrato subir para `visuais@2` antes de o app desenhar os tipos novos, o app
+ * não passa a pedir o que não sabe mostrar. Sem o cabeçalho (build 3), o servidor manda o desenho como PNG no `recurso`.
+ */
+export const CAPACIDADES_DO_APP = 'visuais@1,resolucao@1';
 
 const tempoLimiteMs = 15_000;
 /** O aceite cria o conteúdo de todas as lições; com a IA real, isso leva mais que um pedido comum. */
@@ -95,6 +102,7 @@ function transporteNativo(token?: string): TransporteStudoo {
         signal: controle.signal,
         headers: {
           'Cache-Control': 'no-store',
+          [CABECALHO_CAPACIDADES]: CAPACIDADES_DO_APP,
           ...opcoes.headers,
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
@@ -149,6 +157,7 @@ async function* gerarTrilhaAoVivo(objetivo: string, sinal: AbortSignal, token?: 
       signal: controle.signal,
       headers: {
         'Cache-Control': 'no-store',
+        [CABECALHO_CAPACIDADES]: CAPACIDADES_DO_APP,
         'Content-Type': 'application/json',
         Accept: 'application/x-ndjson',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
