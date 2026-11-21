@@ -258,7 +258,9 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
 export const regrasDoResolva = { indiceDoSuaVez, noSuaVez };
 
 const estilos = StyleSheet.create({
-  problema: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 17, lineHeight: 23 },
+  // Spec 15, seção 14: todo texto que pode levar fórmula em linha usa 400 ou 700 (o motor não tem 800). O problema e a pergunta do
+  // "Sua vez" em 700 sempre; frases, porquê e retorno em 400; 800 só onde nunca entra fórmula (selos, nomes dos passos, botões).
+  problema: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 17, lineHeight: 23 },
   indicador: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
   indicadorTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20 },
   tracos: { flexDirection: 'row', gap: 4, alignItems: 'center' },
@@ -266,20 +268,20 @@ const estilos = StyleSheet.create({
   feito: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#F4F7FF' },
   feitoLinha: { minHeight: 36, flexDirection: 'row', alignItems: 'center', gap: 8 },
   feitoNome: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 20, flexShrink: 0, maxWidth: '55%' },
-  feitoFormula: { flex: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20, textAlign: 'right' },
+  feitoFormula: { flex: 1, color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 14, lineHeight: 20, textAlign: 'right' },
   feitoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 21 },
   cartao: { gap: 12, padding: 16, borderRadius: 20, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.fundo },
   cartaoTopo: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  frase: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
+  frase: { flex: 1, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 22 },
   seloSuaVez: { alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#FFF1CC' },
   seloSuaVezTexto: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 13, lineHeight: 18, letterSpacing: 0.6 },
   // 700: o peso da fórmula em linha é o do texto ao redor (spec 15, seções 10 e 13), e o motor desenha 400 ou 700.
   pergunta: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 16, lineHeight: 22 },
   porqueErrado: { padding: 12, borderRadius: 14, backgroundColor: '#FFF6EA' },
-  porqueErradoTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
+  porqueErradoTexto: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '400', fontSize: 15, lineHeight: 21 },
   isso: { gap: 8, padding: 12, borderRadius: 14, backgroundColor: cores.sucessoFundo },
   issoTitulo: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16, lineHeight: 22 },
-  issoTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },
+  issoTexto: { color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 15, lineHeight: 21 },
   metodo: { gap: 6, padding: 16, borderRadius: 20, borderWidth: 2, borderColor: '#FFE3A3', backgroundColor: '#FFFAF0' },
   metodoTitulo: { color: '#8A5A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 16, lineHeight: 22 },
   metodoLinha: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 15, lineHeight: 21 },

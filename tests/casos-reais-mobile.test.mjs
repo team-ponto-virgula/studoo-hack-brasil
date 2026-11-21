@@ -121,3 +121,28 @@ test('revisão do Designer (spec 15, seção 13) sobre os casos reais', async ()
   const determinante = desenhoDoVisual(visuais.find((v) => v.latex.includes('vmatrix')), { tipo: 'enunciado' }, { tamanho: 22, fundo: true });
   assert.equal(ajusteDoBloco(determinante), null, 'o que já cabe com folga fica como o motor desenhou');
 });
+
+test('peso do texto com fórmula em linha (spec 15, seção 14): 700 no problema e na pergunta, 400 no resto, 800 só sem fórmula', async () => {
+  const { pesoDoTexto } = await import('../apps/mobile/src/formula-em-linha.ts');
+  const peso = (fonte, nome) => new RegExp(`\\b${nome}: \\{[^}]*fontWeight: '(\\d+)'`).exec(fonte)?.[1];
+  const resolva = await ler('apps/mobile/src/resolva-comigo.tsx');
+  const opcao = await ler('apps/mobile/src/opcao.tsx');
+  const licao = await ler('apps/mobile/src/licao.tsx');
+  // 700 sempre, com ou sem fórmula: o mesmo elemento não muda de peso de uma lição para outra; a fórmula sai no mesmo peso.
+  for (const nome of ['problema', 'pergunta']) {
+    assert.equal(peso(resolva, nome), '700', nome);
+    assert.equal(pesoDoTexto(peso(resolva, nome)), 700, `${nome}: a fórmula em linha em 700`);
+  }
+  // 400: frases dos passos, porquê e retorno do "Sua vez", fórmula da linha do passo feito, opções, dica e linhas extras do retorno.
+  for (const [fonte, nome] of [[resolva, 'frase'], [resolva, 'porqueErradoTexto'], [resolva, 'issoTexto'], [resolva, 'feitoFormula'], [opcao, 'opcaoTexto'], [licao, 'dicaTexto'], [licao, 'retornoExtra']]) {
+    assert.equal(peso(fonte, nome), '400', nome);
+    assert.equal(pesoDoTexto(peso(fonte, nome)), 400, `${nome}: a fórmula em linha em 400`);
+  }
+  // O texto da aula (estilos.texto, introdução) sem peso declarado: 400.
+  const interfaceFonte = await ler('apps/mobile/src/interface.tsx');
+  assert.doesNotMatch(/\btexto: \{[^}]*\}/.exec(interfaceFonte)[0], /fontWeight/);
+  // 800 só onde nunca entra fórmula: no "Resolva comigo", o nome do passo feito e o indicador "Passo n de N".
+  const com800 = [...resolva.matchAll(/(\w+): \{[^}]*fontWeight: '800'/g)].map((m) => m[1]).sort();
+  assert.deepEqual(com800, ['feitoNome', 'indicadorTexto']);
+  for (const nome of com800) assert.doesNotMatch(resolva, new RegExp(`<TextoComFormulas[^>]*estilos\\.${nome}`), `${nome} nunca leva fórmula`);
+});
