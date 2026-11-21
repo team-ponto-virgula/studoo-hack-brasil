@@ -358,6 +358,22 @@ function juntarVizinhos(segmentos: SegmentoDeTexto[]): SegmentoDeTexto[] {
   return saida;
 }
 
+/** Dinheiro sem "R": `$5`, `$25,00`, `$1.250,50` (o número fecha com espaço, pontuação ou o fim). */
+const DINHEIRO_COLADO = /^\$\d+(?:[.,]\d{3})*(?:[.,]\d{1,2})?(?![\p{L}\p{N}^_{(\\])/u;
+
+/**
+ * Num texto de MATEMÁTICA, o `$` único que não formou par e vem colado na letra, no número ou na barra que o segue ("uma linha de $A com uma coluna de B": a
+ * IA abriu `$A$` e perdeu o par) é marcador solto, não dinheiro: sai do texto. Ficam o de dinheiro ("R$ 25,00" e "US$10" têm letra antes; "$ 5" tem espaço
+ * depois; "$5" e "$25,00" são preço) e o que está depois de letra ou número ("5$"). Fora de matemática ninguém chama isto ("$HOME" é de shell).
+ */
+function ehCifraoSolto(texto: string, posicao: number): boolean {
+  const anterior = texto[posicao - 1];
+  if (anterior !== undefined && ehDePalavra(anterior)) return false;
+  const proximo = texto[posicao + 1];
+  if (proximo === undefined || ehEspaco(proximo) || proximo === "$") return false;
+  return !DINHEIRO_COLADO.test(texto.slice(posicao));
+}
+
 /** O texto em partes: o que fica entre marcas é texto (sem LaTeX cru), e cada marca vem lida. Com `heuristica`, os tokens soltos também. */
 function partirEmPartes(texto: string, heuristica: boolean): Parte[] {
   if (typeof texto !== "string" || texto === "") return [];
@@ -408,6 +424,34 @@ export function partirTextoComFormulas(texto: string, opcoes: OpcoesDoTexto = {}
 /** O texto para quem não desenha fórmula (cliente antigo): cada fórmula marcada em texto linear, sem cifrão nem LaTeX cru. */
 export function textoSemFormulas(texto: string): string {
   return partirEmPartes(texto, false).map((parte) => (parte.tipo === "texto" ? parte.texto : parte.linear)).join("");
+}
+
+/**
+ * O texto de uma lição de MATEMÁTICA sem o `$` solto: as marcas ficam como estão e o `$` único que não formou par e vem colado na letra ou no número que o
+ * segue sai ("uma linha de $A com uma coluna de B" vira "uma linha de A com uma coluna de B"). Quem chama é o servidor, e só na lição de matemática: numa lição
+ * de shell, "$HOME" é de shell. Idempotente.
+ */
+export function tirarCifraoSolto(texto: string): string {
+  if (typeof texto !== "string" || !texto.includes("$")) return texto;
+  let saida = "";
+  let i = 0;
+  while (i < texto.length) {
+    if (texto[i] === "$") {
+      const marca = lerMarca(texto, i);
+      if (marca) {
+        saida += texto.slice(i, marca.fim);
+        i = marca.fim;
+        continue;
+      }
+      if (ehCifraoSolto(texto, i)) {
+        i += 1;
+        continue;
+      }
+    }
+    saida += texto[i];
+    i += 1;
+  }
+  return saida;
 }
 
 /**

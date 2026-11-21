@@ -15,6 +15,7 @@ import {
   normalizarTextoComFormulas,
   partirTextoComFormulas,
   textoSemFormulas,
+  tirarCifraoSolto,
 } from "@studoo/contratos";
 import { caixaDaFormula, caixaDaFormulaEmLinha } from "../packages/contratos/src/motor-formula.ts";
 
@@ -122,6 +123,8 @@ test("o cifrão do LaTeX marca; o de dinheiro não", () => {
   assert.deepEqual(resumo(partirTextoComFormulas("$ x$ e $x $")), ["$ x$ e $x $"]);
   // Token solto colado em dinheiro, em letra acentuada ou em outro cifrão não vira marca (a marca não reabriria).
   assert.equal(marcarFormulasSoltas("R$x_A e x_Aé e $x_A e 2x_A"), "R$x_A e x_Aé e $x_A e 2x_A");
+  // (Na lição de matemática o servidor tira antes o `$` único colado numa letra, `tirarCifraoSolto`; então o token ganha a marca: "… e $x_A$ e …".)
+  assert.equal(marcarFormulasSoltas(tirarCifraoSolto("R$x_A e x_Aé e $x_A e 2x_A")), "R$x_A e x_Aé e $x_A$ e 2x_A");
   assert.equal(contemMarcaDeFormula("R$ 5,00 e R$ 10,00"), false);
   assert.equal(contemMarcaDeFormula("custa $5 e $10"), false);
   assert.equal(contemMarcaDeFormula("vale $x_G$."), true);

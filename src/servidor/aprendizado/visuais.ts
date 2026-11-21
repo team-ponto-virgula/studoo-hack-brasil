@@ -26,10 +26,10 @@ import {
   VISUAIS_COM_FUNCAO,
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
-import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, semCifraoSolto, temVisual } from "./formulas-na-licao";
 import { ordemDoSuaVez } from "./ordem-sua-vez";
 
-export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, semCifraoSolto, temVisual } from "./formulas-na-licao";
 
 /*
  * Visuais da lição no servidor (spec 15). Duas portas, as duas atrás do cabeçalho `X-Studoo-Capacidades`:
@@ -298,5 +298,7 @@ export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacid
  */
 export function comFormulasParaOCliente<T>(valor: T, conteudo: ConteudoLicao, capacidades: Capacidades): T {
   if (!conteudoEhDeMatematica(conteudo)) return valor;
-  return capacidades.visuais >= 1 ? comFormulasMarcadas(valor) : comTextoLinear(valor);
+  // O `$` solto colado numa letra ("uma linha de $A com B") sai primeiro, antes de as marcas serem lidas.
+  const limpo = semCifraoSolto(valor);
+  return capacidades.visuais >= 1 ? comFormulasMarcadas(limpo) : comTextoLinear(limpo);
 }

@@ -29,7 +29,7 @@ import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
 import { ordemDoSuaVez } from "./ordem-sua-vez";
-import { SEM_CAPACIDADES, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, visualDoRetorno } from "./visuais";
+import { SEM_CAPACIDADES, comFormulasParaOCliente, comTextoLinear, comVisuais, conteudoEhDeMatematica, semCifraoSolto, visualDoRetorno } from "./visuais";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
 import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
 
@@ -322,7 +322,7 @@ async function lerLicao(usuarioId: string, id: string) {
 export async function conteudoDaLicao(usuarioId: string, id: string): Promise<ConteudoLicao> {
   const { conteudo } = await lerLicao(usuarioId, id);
   // Quem lê o conteúdo por aqui (reforço, ponte, voz) escreve para qualquer cliente: as fórmulas em linha vão em texto linear.
-  return conteudoEhDeMatematica(conteudo) ? comTextoLinear(conteudo) : conteudo;
+  return conteudoEhDeMatematica(conteudo) ? comTextoLinear(semCifraoSolto(conteudo)) : conteudo;
 }
 
 /**
