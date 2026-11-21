@@ -398,7 +398,12 @@ test("resolução: tudo ou nada, e o motivo diz o quê", () => {
   assert.match(motivoDa(semTexto), /passo 3: texto/);
   const comLatex = resolucaoDe();
   comLatex.passos[2].texto = String.raw`Use \frac{1}{2}.`;
-  assert.equal(validarResolucao(comLatex).resolucao.passos[2].texto, "Use 1/2.", "LaTeX solto no texto do passo vira texto linear");
+  assert.equal(validarResolucao(comLatex).resolucao.passos[2].texto, String.raw`Use $\frac{1}{2}$.`, "LaTeX solto no texto do passo que a gramática lê vira marca (a fração é desenhada; marco 13b)");
+  const semLeitura = resolucaoDe();
+  semLeitura.passos[2].texto = String.raw`Use \foo{x} e \begin{foo} 1 \end{foo}.`;
+  const lido = validarResolucao(semLeitura).resolucao.passos[2].texto;
+  assert.doesNotMatch(lido, /[\\{}$]/, "o que não lê sai em texto legível, sem barra, chave nem cifrão");
+  assert.match(lido, /^Use foo\(x\) e /, `o espaço antes do que não lê fica: ${lido}`);
 });
 
 test("resolução: nome do passo em até 24 caracteres (corta, não derruba) e fórmula entre cifrões no texto vira linear", () => {

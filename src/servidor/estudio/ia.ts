@@ -4,7 +4,7 @@ import { configuracaoDeepSeek, pedirJsonDeepSeek, type OpcoesDoPedidoJson } from
 import { configuracaoOpenAi } from '../ia/openai';
 import { comNovasTentativas } from '../ia/novas-tentativas';
 import {
-  lerFiguraDoModelo,
+  lerFiguraDoExercicio,
   lerResolucaoDoModelo,
   lerVisuaisDoModelo,
   relatoDaMatematica,
@@ -159,8 +159,11 @@ export function conteudoDaGeradaComRelato(x: LicaoGerada, origem: string, figura
   // mesma pergunta), e cada opção guarda como id o índice que o modelo deu, que é o que o gabarito aponta.
   const semente = [...x.pergunta].reduce((soma, letra) => Math.imul(soma ^ letra.codePointAt(0)!, 16777619) >>> 0, 2166136261);
   const ordem = embaralharComSemente(x.opcoes.map((_, indice) => indice), semente);
+  const opcoes = ordem.map((indice) => ({ id: String(indice), texto: x.opcoes[indice] }));
+  const gabarito = [String(x.correta)];
   const visuais = lerVisuaisDoModelo(figuras?.visuais);
-  const figura = lerFiguraDoModelo(figuras?.visual);
+  // A figura que mostra a resposta (o par da opção certa já é um ponto rotulado dela) some, e o relato diz por quê (marco 13).
+  const figura = lerFiguraDoExercicio(figuras?.visual, { tipo: 'multipla_escolha', gabarito, opcoes });
   const resolucao = lerResolucaoDoModelo(figuras?.resolucao);
   const relato: RelatoDaMatematica | undefined = figuras
     ? relatoDaMatematica(visuais, [{ onde: 'pergunta', enviada: figura.enviada, aceita: figura.figura !== undefined, motivo: figura.motivo }], resolucao, figuras.novaTentativa)
@@ -174,8 +177,8 @@ export function conteudoDaGeradaComRelato(x: LicaoGerada, origem: string, figura
       exercicio: {
         tipo: 'multipla_escolha' as const,
         enunciado: x.pergunta,
-        opcoes: ordem.map((indice) => ({ id: String(indice), texto: x.opcoes[indice] })),
-        gabarito: [String(x.correta)],
+        opcoes,
+        gabarito,
         feedbackCorreto: x.feedbackCorreto,
         feedbackIncorreto: x.feedbackIncorreto,
         ...(figura.figura ? { visual: figura.figura } : {}),

@@ -27,6 +27,7 @@ import {
   VISUAIS_COM_FUNCAO,
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
+import { figuraQueEntregaARespostaDoExercicio } from "@/servidor/ia/matematica";
 import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, semCifraoSolto, temVisual } from "./formulas-na-licao";
 import { ordemDoSuaVez } from "./ordem-sua-vez";
 
@@ -100,12 +101,22 @@ function exercicios(conteudo: ConteudoLicao): ExercicioInterno[] {
   return [conteudo.exercicio, ...(conteudo.extras ?? [])];
 }
 
+/** O que decide a figura do exercício: ela e a resposta certa (a figura que entrega a resposta sai, mesmo na lição já guardada). */
+const chaveDoExercicio = (exercicio: ExercicioInterno) => [exercicio.visual, exercicio.gabarito, exercicio.tipo === "multipla_escolha" ? exercicio.opcoes : undefined];
+
+/** A figura do exercício, validada de novo; some a que não vale e a que mostra a resposta como ponto da própria figura (marco 13). */
+function figuraDoExercicio(exercicio: ExercicioInterno): Visual | undefined {
+  const visual = exercicio.visual ? normalizarVisual(exercicio.visual) ?? undefined : undefined;
+  if (!visual || visual.tipo === "formula") return visual;
+  return figuraQueEntregaARespostaDoExercicio(exercicio, visual) ? undefined : visual;
+}
+
 /**
  * Valida de novo o que a lição guarda (`conteudoValido` não olha estes campos, de propósito): o visual que não vale mais some, a
  * resolução que não vale some, e a lição segue. O resultado fica em memória, por conteúdo.
  */
 export function limparVisuais(conteudo: ConteudoLicao): VisuaisLimpos {
-  const chave = hash([conteudo.visuais, conteudo.resolucao, exercicios(conteudo).map((exercicio) => exercicio.visual)]);
+  const chave = hash([conteudo.visuais, conteudo.resolucao, exercicios(conteudo).map(chaveDoExercicio)]);
   const guardado = limpos.pegar(chave);
   if (guardado) return guardado;
   const visuais = normalizarVisuais(conteudo.visuais);
@@ -113,7 +124,7 @@ export function limparVisuais(conteudo: ConteudoLicao): VisuaisLimpos {
   const limpo: VisuaisLimpos = {
     ...(visuais ? { visuais } : {}),
     ...(resolucao ? { resolucao } : {}),
-    dosExercicios: exercicios(conteudo).map((exercicio) => (exercicio.visual ? normalizarVisual(exercicio.visual) ?? undefined : undefined)),
+    dosExercicios: exercicios(conteudo).map(figuraDoExercicio),
   };
   limpos.guardar(chave, limpo);
   return limpo;

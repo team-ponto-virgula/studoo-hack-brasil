@@ -1,6 +1,7 @@
 import {
   contemCifraoDeLatex,
   contemFormulaMarcada,
+  contemLatexSolto,
   contemMarcaDeFormula,
   marcarFormulasSoltas,
   textoSemFormulas,
@@ -64,23 +65,35 @@ export function algumTexto(valor: unknown, quer: (texto: string) => boolean): bo
 
 /**
  * A lição é de matemática? Só nelas o texto é lido com marcas de fórmula e os tokens soltos (`x_A`) ganham a marca (spec 15,
- * seção 9). É quando a lição já tem matemática: um visual, um trecho de fórmula, uma fórmula marcada que lê (`$x_A$`), ou o assunto
- * (a regra de palavras). E NUNCA quando há trecho de código: "Em Python, use x_1 = 3 e print(x_1)." não é fórmula.
+ * seção 9). É quando a lição já tem matemática: um visual, um trecho de fórmula, uma fórmula marcada que lê (`$x_A$`), LaTeX solto fora de cifrões
+ * (`\begin{bmatrix}…`, `2 \times 3`: a IA o escreve até quando o assunto não bate com a regra de palavras), ou o assunto (a regra de palavras). E NUNCA quando
+ * há trecho de código: "Em Python, use x_1 = 3 e print(x_1)." não é fórmula.
  */
 export function conteudoEhDeMatematica(conteudo: ConteudoLicao): boolean {
   if (exercicios(conteudo).some((exercicio) => exercicio.trechoTipo === "codigo")) return false;
   return temVisual(conteudo) ||
     exercicios(conteudo).some((exercicio) => exercicio.trechoTipo === "formula") ||
     ehAssuntoDeMatematica(conteudo.objetivo, conteudo.conceito, conteudo.exemplo) ||
-    algumTexto(conteudo, (texto) => contemFormulaMarcada(texto) || contemCifraoDeLatex(texto));
+    algumTexto(conteudo, (texto) => contemFormulaMarcada(texto) || contemCifraoDeLatex(texto) || contemLatexSolto(texto));
 }
 
 /**
  * Cada fórmula marcada com `$…$` nos textos vira texto linear (`x_G = (x_A + x_B + x_C) ÷ 3`), para o cliente que não desenha fórmula em
- * linha (build 3, site antigo): sem cifrão e sem LaTeX cru. O mesmo objeto quando não há marca.
+ * linha (build 3, site antigo): sem cifrão e sem LaTeX cru. O LaTeX solto, fora de cifrões, também (`\begin{bmatrix} 2 & 8 \\ 7 & 7 \end{bmatrix}` vira
+ * "[2, 8; 7, 7]"): só se chama numa lição de matemática, onde uma barra seguida de letra é LaTeX. O mesmo objeto quando não há o que mudar.
  */
 export function comTextoLinear<T>(valor: T): T {
-  return transformarTextos(valor, (texto) => (contemMarcaDeFormula(texto) || contemCifraoDeLatex(texto) ? textoSemFormulas(texto) : texto)) as T;
+  return transformarTextos(valor, (texto) => (contemMarcaDeFormula(texto) || contemCifraoDeLatex(texto) || /\\[A-Za-z]/.test(texto) ? textoSemFormulas(texto) : texto)) as T;
+}
+
+/**
+ * O texto que a IA escreve FORA da lição (a ponte do reforço e o retorno do "Ensine o Stu"): nenhum cliente desenha fórmula nessas telas, então tudo chega em
+ * texto linear, para o cliente novo e para o antigo (a mesma linearização do cliente sem cabeçalho). Na lição de matemática, o `$` solto sai e toda marca vira
+ * texto linear; fora dela só a marca que LÊ (e o `$…$` com LaTeX dentro) vira texto: "R$ 25,00" e "$HOME" ficam. O mesmo objeto quando nada muda.
+ */
+export function comTextoSimples<T>(valor: T, daMatematica: boolean): T {
+  if (daMatematica) return comTextoLinear(semCifraoSolto(valor));
+  return transformarTextos(valor, (texto) => (contemFormulaMarcada(texto) || contemCifraoDeLatex(texto) ? textoSemFormulas(texto) : texto)) as T;
 }
 
 /**

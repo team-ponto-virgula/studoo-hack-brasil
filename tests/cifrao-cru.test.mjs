@@ -205,7 +205,10 @@ test("o `$` único colado numa letra, sem par, sai do texto da lição de matem�
   );
   assert.equal(tirarCifraoSolto(tirarCifraoSolto(junto)), tirarCifraoSolto(junto), "idempotente");
   assert.equal(textoSemFormulas(tirarCifraoSolto(junto)).includes("R$ 25,00 e US$10 e $ 5 e $25,00."), true);
-  assert.equal(/\$A|\$2x|\$\\alpha/.test(marcarFormulasSoltas(tirarCifraoSolto(junto))), false);
+  // O `$` solto saiu: o `\alpha` que sobrou é LaTeX solto, que vira marca COM par (`$\alpha$`, marco 13b), nunca o cifrão sozinho colado na letra.
+  const marcado = marcarFormulasSoltas(tirarCifraoSolto(junto));
+  assert.equal(/\$A |\$2x|\$\\alpha ainda/.test(marcado), false);
+  assert.ok(marcado.includes("e $\\alpha$ ainda."), marcado);
   // Um cifrão sozinho no fim, ou seguido de espaço ou de outro cifrão, não é este caso; o de shell fica onde não se chama.
   assert.equal(tirarCifraoSolto("Custa 5 $"), "Custa 5 $");
   assert.equal(tirarCifraoSolto("Só um $ solto"), "Só um $ solto");

@@ -356,3 +356,29 @@ test("o PNG da fase 1: a prancheta 320×352 leva a faixa da fórmula e o plano i
     assert.ok(height <= 352 * 4, `${nome}: PNG de ${height} px`);
   }
 });
+
+test("13a: a lição já guardada cuja figura do exercício entrega a resposta chega sem a figura (enunciado e retorno); o resto da lição fica", async () => {
+  const conteudo = conteudoDa("baricentro");
+  // A IA que não marcou o C como procurado: ele vira um ponto dado, com o rótulo "C (4, 0)", que é a opção certa.
+  conteudo.exercicio.visual.pontos.find((ponto) => ponto.id === "C").papel = "dado";
+  assert.equal(limparVisuais(conteudo).dosExercicios[0], undefined);
+  assert.equal(visualDoRetorno(conteudo, 0, SO_VISUAIS), undefined, "o retorno também fica sem a figura");
+  for (const capacidades of [SO_VISUAIS, TUDO, { visuais: 2, resolucao: 1 }]) {
+    const saida = await comVisuais(detalheDe(conteudo, FOTO), conteudo, { capacidades, desenharPng: false });
+    assert.equal("visual" in saida.exercicio, false, `visuais@${capacidades.visuais}`);
+    assert.equal("visual" in saida.exercicios[0], false);
+    assert.equal(saida.visuais.length, conteudo.visuais.length, "os visuais da lição ficam");
+    assert.equal(saida.exercicio.enunciado, conteudo.exercicio.enunciado, "o exercício é o mesmo");
+  }
+  // Sem o cabeçalho a figura do exercício nunca foi (só o PNG da lição): nada muda para o build 3.
+  const antigo = await comVisuais(detalheDe(conteudo, FOTO), conteudo, { capacidades: SEM_CAPACIDADES, desenharPng: true });
+  assert.equal(antigo.exercicios.some((exercicio) => "visual" in exercicio), false);
+  // O mesmo conteúdo com o C procurado (o que a IA deve mandar) entrega a figura.
+  assert.equal(limparVisuais(conteudoDa("baricentro")).dosExercicios[0].tipo, "plano");
+  // A memória por conteúdo não confunde: com outra opção certa (C(0, 4), que não é ponto da figura) a figura fica.
+  const outraCerta = conteudoDa("baricentro");
+  outraCerta.exercicio.visual.pontos.find((ponto) => ponto.id === "C").papel = "dado";
+  outraCerta.exercicio.gabarito = ["b"];
+  assert.equal(limparVisuais(outraCerta).dosExercicios[0].tipo, "plano");
+});
+

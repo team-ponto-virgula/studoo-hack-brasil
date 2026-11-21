@@ -17,7 +17,7 @@ import {
   esquemaDoVisual,
   esquemaDoVisualOuNulo,
   instrucoesDeMatematica,
-  lerFiguraDoModelo,
+  lerFiguraDoExercicio,
   lerResolucaoDoModelo,
   lerVisuaisDoModelo,
   relatoDaMatematica,
@@ -382,7 +382,8 @@ function lerExercicio(bruto: unknown): { exercicio: ExercicioInterno | null; mot
   if (typeof lido === "string") return { exercicio: null, motivo: lido };
   if (!exercicioValido(lido)) return { exercicio: null, motivo: `${(lido as ExercicioInterno).tipo}:validacao` };
   // A figura do enunciado (matemática, spec 15) se valida sozinha: a que não vale some, e o exercício fica como sempre foi.
-  const figura = lerFiguraDoModelo((bruto as { visual?: unknown }).visual);
+  // A que mostra a resposta (o par da opção certa já é um ponto rotulado dela) também some, e o relato diz qual ponto (marco 13).
+  const figura = lerFiguraDoExercicio((bruto as { visual?: unknown }).visual, lido);
   if (!figura.enviada) return { exercicio: lido };
   return {
     exercicio: figura.figura ? { ...lido, visual: figura.figura } : lido,

@@ -18,7 +18,7 @@ import {
   sinalComPrazo,
   validarBaseUrl,
 } from "./comum";
-import { contagensDoRelato, correcaoDaResolucao, exemploDeMatematica, instrucoesDeMatematica, licaoEhDeMatematica, motivoDaResolucao, valorDaMatematica } from "./matematica";
+import { contagensDoRelato, correcaoDaResolucao, exemploDeMatematica, instrucoesDeMatematica, licaoEhDeMatematica, motivoDaFiguraQueEntrega, motivoDaResolucao, valorDaMatematica } from "./matematica";
 
 /*
  * IA real do Studoo com a API Chat Completions da DeepSeek (POST /chat/completions), chamada por fetch, sem SDK.
@@ -464,7 +464,7 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
           const motivo = matematica && tentativa === 0 ? motivoDaResolucao(lida.matematica) : undefined;
           if (motivo) {
             reserva = { conteudo: lida.conteudo, valor: valorDaMatematica(lida.matematica) };
-            correcao = correcaoDaResolucao(motivo);
+            correcao = correcaoDaResolucao(motivo, motivoDaFiguraQueEntrega(lida.matematica));
             continue;
           }
           return lida.conteudo;

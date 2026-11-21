@@ -325,6 +325,12 @@ export async function conteudoDaLicao(usuarioId: string, id: string): Promise<Co
   return conteudoEhDeMatematica(conteudo) ? comTextoLinear(semCifraoSolto(conteudo)) : conteudo;
 }
 
+/** A lição é de matemática? Para o texto de IA que volta sem passar pela lição (a ponte do reforço e o "Ensine o Stu"), que chega em texto linear a todos os clientes. */
+export async function licaoEhDeMatematica(usuarioId: string, id: string): Promise<boolean> {
+  const { conteudo } = await lerLicao(usuarioId, id);
+  return conteudoEhDeMatematica(conteudo);
+}
+
 /**
  * A lição como a pessoa a vê. `capacidades` vem do cabeçalho `X-Studoo-Capacidades`: sem `visuais@1` (build 3, site antigo) a
  * lição não leva campo novo e o desenho de matemática vai como PNG em `recurso` (se `desenharPng`); com ele, vão `visuais`, o
