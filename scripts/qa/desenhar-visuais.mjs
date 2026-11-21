@@ -9,7 +9,11 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import sharp from "sharp";
-import { comporDesenhos, desenharFormula, desenharVisual, desenhoParaSvg, lerFormula, normalizarVisual, validarResolucao } from "../../packages/contratos/src/aprendizado.ts";
+import {
+  comporDesenhos, desenharFormula, desenharFormulaEmLinha, desenharVisual, desenhoParaSvg, lerFormula, marcarFormulasSoltas, normalizarVisual,
+  partirTextoComFormulas, validarResolucao,
+} from "../../packages/contratos/src/aprendizado.ts";
+import { caminhoDoTexto, deslocarCaminho, larguraDoTexto } from "../../packages/contratos/src/texto-vetorial.ts";
 
 const saida = process.argv[2];
 const escala = Number(process.argv[3] ?? 4);
@@ -76,3 +80,70 @@ const casosDeBorda = {
   "ponto-cercado": { tipo: "plano", alt: "Um ponto cercado por oito vizinhos.", x: [-6, 6], y: [-6, 6], pontos: [{ id: "A", x: 0, y: 0 }, ...[[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]].map(([x, y], i) => ({ id: `V${i}`, x, y, rotulo: false }))] },
 };
 for (const [nome, bruto] of Object.entries(casosDeBorda)) await png(desenharVisual(normalizarVisual(bruto), { tipo: "enunciado" }), nome);
+
+// O ponto na origem com espaço: o rótulo inteiro "O (0, 0)" no gráfico e nenhum 0 de eixo.
+await png(desenharVisual(normalizarVisual({
+  tipo: "plano", alt: "O ponto O na origem e dois pontos longe dele.", x: [-5, 6], y: [-4, 6],
+  pontos: [{ id: "O", x: 0, y: 0 }, { id: "P", x: 4, y: 4 }, { id: "Q", x: -4, y: 3, papel: "especial" }], segmentos: [{ de: "P", ate: "Q" }],
+}), { tipo: "enunciado" }), "ponto-origem-livre");
+
+// O motor respeita a altura que o cliente dá: a figura de cada fixture em 158 (iPhone pequeno), 179, 200 e 352; só o gráfico desce.
+for (const nome of ["baricentro", "colinearidade"]) {
+  const { licao } = JSON.parse(readFileSync(join(dirFixtures, `${nome}.json`), "utf8"));
+  const figura = normalizarVisual(licao.visuais.find((visual) => visual.tipo !== "formula"));
+  for (const alturaMaxima of [158, 179, 200, 352]) {
+    const desenho = desenharVisual(figura, { tipo: "enunciado" }, { alturaMaxima });
+    await png(desenho, `altura-${nome}-${alturaMaxima}`);
+    if (desenho.naoCabe || desenho.altura > alturaMaxima) throw new Error(`${nome}: ${desenho.altura} passa de ${alturaMaxima}`);
+  }
+}
+
+// A fórmula em linha ao lado do texto, no peso do texto ao redor: 400 na aula, 700 no enunciado (o texto também é desenhado pelo motor,
+// só para a comparação: o app e a web põem o texto deles e a fórmula em linha no meio, sobre a mesma linha de base).
+function linhaDeFrase(texto, peso, tamanho) {
+  const primitivas = [];
+  const base = Math.round(tamanho * 1.5);
+  let x = 6;
+  for (const segmento of partirTextoComFormulas(marcarFormulasSoltas(texto))) {
+    if (segmento.tipo === "texto") {
+      primitivas.push({ tipo: "caminho", d: caminhoDoTexto(segmento.texto, x, base, tamanho, peso), preenchimento: "texto" });
+      x += larguraDoTexto(segmento.texto, tamanho, peso);
+      continue;
+    }
+    const caixa = desenharFormulaEmLinha(segmento.arvore, tamanho, peso);
+    for (const primitiva of caixa.primitivas) {
+      const dy = base - caixa.linhaDeBase;
+      if (primitiva.tipo === "caminho") primitivas.push({ ...primitiva, d: deslocarCaminho(primitiva.d, x, dy) });
+      else if (primitiva.tipo === "linha") primitivas.push({ ...primitiva, x1: primitiva.x1 + x, x2: primitiva.x2 + x, y1: primitiva.y1 + dy, y2: primitiva.y2 + dy });
+      else if (primitiva.tipo === "retangulo") primitivas.push({ ...primitiva, x: primitiva.x + x, y: primitiva.y + dy });
+      else primitivas.push({ ...primitiva, cx: primitiva.cx + x, cy: primitiva.cy + dy });
+    }
+    x += caixa.largura;
+  }
+  return { primitivas, largura: x + 6, altura: Math.round(tamanho * 2.2) };
+}
+const frasesEmLinha = [
+  "Se x = 3, então x^2 = 9 e a + b = 5.",
+  "O valor de $x_C$ é 4: $x_G = (x_A + x_B + x_C) / 3$.",
+  "Metade: $1/2$ ou $\\frac{x_A}{2}$; o ponto médio é $\\frac{x_A + x_B}{2}$.",
+  "Com $b^2 - 4ac = 0$ e outro, $\\Delta = b^2 - 4ac$ vale 25.",
+];
+const linhas = [];
+for (const [peso, tamanho] of [[400, 16], [700, 16], [700, 17]]) {
+  for (const frase of frasesEmLinha) linhas.push({ ...linhaDeFrase(frase, peso, tamanho), rotulo: `${peso} · ${tamanho}` });
+}
+const larguraDaGaleria = Math.max(...linhas.map((linha) => linha.largura)) + 60;
+let yDaLinha = 0;
+const primitivasDaGaleria = [];
+for (const linha of linhas) {
+  primitivasDaGaleria.push({ tipo: "caminho", d: caminhoDoTexto(linha.rotulo, 4, yDaLinha + 22, 13, 700), preenchimento: "suave" });
+  for (const primitiva of linha.primitivas) {
+    const dx = 54;
+    if (primitiva.tipo === "caminho") primitivasDaGaleria.push({ ...primitiva, d: deslocarCaminho(primitiva.d, dx, yDaLinha) });
+    else if (primitiva.tipo === "linha") primitivasDaGaleria.push({ ...primitiva, x1: primitiva.x1 + dx, x2: primitiva.x2 + dx, y1: primitiva.y1 + yDaLinha, y2: primitiva.y2 + yDaLinha });
+    else if (primitiva.tipo === "retangulo") primitivasDaGaleria.push({ ...primitiva, x: primitiva.x + dx, y: primitiva.y + yDaLinha });
+    else primitivasDaGaleria.push({ ...primitiva, cx: primitiva.cx + dx, cy: primitiva.cy + yDaLinha });
+  }
+  yDaLinha += linha.altura;
+}
+await png({ largura: larguraDaGaleria, altura: yDaLinha, primitivas: primitivasDaGaleria, descricao: "Fórmulas em linha, nos pesos 400 e 700.", menorTexto: 11, textos: [], caixas: [] }, "formulas-em-linha-peso");

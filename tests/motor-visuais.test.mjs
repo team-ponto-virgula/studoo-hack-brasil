@@ -528,9 +528,298 @@ test("halo branco em todo texto do gráfico: por baixo dos textos, por cima da g
   assert.equal(desenhosDasFixtures()["colinearidade/formula-faixa"].primitivas.some(ehHalo), false);
 });
 
-test("o ponto colado na origem: números, nomes e legenda sem se pisar", () => {
+/** Os pontos do gráfico, na ordem em que o motor os desenha: centro e raio (o losango do ponto especial tem a meia-diagonal como raio). */
+function pontosDesenhados(desenho) {
+  const saida = [];
+  for (const primitiva of desenho.primitivas) {
+    if (primitiva.borda !== "branco" || primitiva.larguraDaBorda !== 2) continue;
+    if (primitiva.tipo === "circulo") saida.push({ x: primitiva.cx, y: primitiva.cy, raio: primitiva.raio });
+    else if (primitiva.tipo === "caminho" && primitiva.preenchimento === "especial") {
+      const [x1, y1, , , x3, y3] = primitiva.d.match(/-?\d+(?:\.\d+)?/g).map(Number);
+      saida.push({ x: (x1 + x3) / 2, y: (y1 + y3) / 2, raio: Math.abs(y3 - y1) / 2 });
+    }
+  }
+  return saida;
+}
+
+/** A distância da caixa de um texto à BORDA do ponto (negativa se a caixa entra no ponto). */
+const distanciaDaBorda = (caixa, ponto) =>
+  Math.hypot(Math.max(caixa.x - ponto.x, 0, ponto.x - (caixa.x + caixa.largura)), Math.max(caixa.y - ponto.y, 0, ponto.y - (caixa.y + caixa.altura))) - ponto.raio;
+
+/** Os segmentos do desenho (as linhas grossas da cor do segmento), como pares de pontos. */
+const segmentosDoDesenho = (desenho) => desenho.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "segmento");
+/** Algum ponto do segmento cai dentro da caixa (com `margem` de folga)? */
+function segmentoPassaPelaCaixa(segmento, caixa, margem = 0) {
+  const passos = Math.max(2, Math.ceil(Math.hypot(segmento.x2 - segmento.x1, segmento.y2 - segmento.y1)));
+  for (let i = 0; i <= passos; i += 1) {
+    const x = segmento.x1 + ((segmento.x2 - segmento.x1) * i) / passos;
+    const y = segmento.y1 + ((segmento.y2 - segmento.y1) * i) / passos;
+    if (x >= caixa.x - margem && x <= caixa.x + caixa.largura + margem && y >= caixa.y - margem && y <= caixa.y + caixa.altura + margem) return true;
+  }
+  return false;
+}
+
+/** Um ponto na origem com os outros longe: o rótulo inteiro "O (0, 0)" cabe no primeiro quadrante. */
+const ORIGEM_LIVRE = {
+  tipo: "plano", alt: "O ponto O na origem e dois pontos longe dele.", x: [-5, 6], y: [-4, 6],
+  pontos: [{ id: "O", x: 0, y: 0 }, { id: "P", x: 4, y: 4 }, { id: "Q", x: -4, y: 3, papel: "especial" }],
+  segmentos: [{ de: "P", ate: "Q" }],
+};
+
+/** Os símbolos da legenda (sem a borda branca dos pontos do gráfico): bolinha cheia, losango e bolinha tracejada. */
+function simbolosDaLegenda(desenho) {
+  const sem = (primitiva) => !primitiva.borda || primitiva.borda === "procurado";
+  return {
+    dado: desenho.primitivas.filter((p) => p.tipo === "circulo" && p.preenchimento === "dado" && sem(p)).length,
+    especial: desenho.primitivas.filter((p) => p.tipo === "caminho" && p.preenchimento === "especial" && sem(p)).length,
+    procurado: desenho.primitivas.filter((p) => p.tipo === "circulo" && p.borda === "procurado").length,
+  };
+}
+
+test("o ponto na origem: 'O (0, 0)' no gráfico quando cabe, na legenda com o símbolo quando não, e nunca o 0 do eixo (marco 2d)", () => {
+  // (b) Com espaço, o rótulo inteiro fica NO gráfico, a no máximo 8 unidades da borda do ponto, e o 0 do eixo não aparece.
+  const livre = desenharVisual(normalizarVisual(ORIGEM_LIVRE), { tipo: "enunciado" });
+  assert.equal(numerosDeEixo(livre).includes("0"), false, "com um ponto na origem não há 0 de eixo");
+  const daOrigem = livre.caixas.find((caixa) => caixa.tipo === "rotulo" && caixa.texto === "O (0, 0)");
+  assert.ok(daOrigem, "o rótulo inteiro da origem fica no gráfico");
+  assert.equal(livre.textos.filter((texto) => texto === "O (0, 0)").length, 1, "e não repete na legenda");
+  const origem = pontosDesenhados(livre)[0];
+  assert.ok(distanciaDaBorda(daOrigem, origem) <= 8.02 && distanciaDaBorda(daOrigem, origem) >= 0, `a ${distanciaDaBorda(daOrigem, origem)} da borda`);
+  // Sem ponto na origem o 0 do eixo está lá.
+  assert.ok(numerosDeEixo(desenharVisual(normalizarVisual({ ...ORIGEM_LIVRE, pontos: ORIGEM_LIVRE.pontos.slice(1), segmentos: [{ de: "P", ate: "Q" }] }), { tipo: "enunciado" })).includes("0"));
+
+  // Sem lugar a menos de 8 unidades (aqui o vizinho P e os números tomam os quadrantes), o ponto fica sem letra e as coordenadas
+  // vão para a legenda, em linha própria, com o símbolo dele antes.
   const desenho = desenharVisual(normalizarVisual(NA_ORIGEM), { tipo: "enunciado" });
-  for (const esperado of ["−4", "−3", "−2", "−1", "1", "2", "3", "4", "5", "0"]) assert.ok(numerosDeEixo(desenho).includes(esperado), `falta o ${esperado}`);
-  assert.ok(desenho.textos.some((texto) => texto.startsWith("P (")) || desenho.textos.includes("P"));
-  assert.ok(desenho.menorTexto >= 13);
+  for (const esperado of ["−4", "−3", "−2", "−1", "1", "2", "3", "4", "5"]) assert.ok(numerosDeEixo(desenho).includes(esperado), `falta o ${esperado}`);
+  assert.equal(numerosDeEixo(desenho).includes("0"), false, "com um ponto na origem não há 0 de eixo");
+  assert.equal(desenho.caixas.some((caixa) => caixa.tipo === "numero" && caixa.texto === "0"), false);
+  assert.equal(desenho.caixas.some((caixa) => caixa.tipo === "rotulo" && /^O\b/.test(caixa.texto)), false, "nem a letra cabe a menos de 8 unidades do ponto");
+  assert.equal(desenho.textos.filter((texto) => texto === "O (0, 0)").length, 1, "as coordenadas estão na legenda");
+  assert.ok(desenho.menorTexto >= PISO_DO_TEXTO);
+  // Legenda: "dados" e "especial" levam o símbolo, e a entrada "O (0, 0)" leva a bolinha de dado: duas bolinhas e um losango.
+  assert.deepEqual(simbolosDaLegenda(desenho), { dado: 2, especial: 1, procurado: 0 });
+  // (c) O segmento O–P é cheio: nada o corta (era o halo branco do "0" que o deixava tracejado).
+  const [op] = segmentosDoDesenho(desenho);
+  for (const caixa of desenho.caixas) {
+    assert.equal(segmentoPassaPelaCaixa(op, caixa, 0.5), false, `${caixa.tipo} "${caixa.texto}" corta o segmento O–P`);
+  }
+  // Sem ponto na origem o 0 do eixo volta, e nenhum segmento passa por ele (o halo do 0 deixava o segmento tracejado). Os outros
+  // números do eixo podem ter o halo sobre um segmento; o Designer aceitou.
+  for (const nome of NOMES) {
+    const figura = normalizarVisual(fixture(nome).visuais.find((visual) => visual.tipo === "plano"));
+    if (!figura) continue;
+    for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }]) {
+      const feito = desenharVisual(figura, contexto);
+      assert.ok(numerosDeEixo(feito).includes("0"), `${nome}: o 0 do eixo`);
+      const zero = feito.caixas.find((caixa) => caixa.tipo === "numero" && caixa.texto === "0");
+      for (const traco of segmentosDoDesenho(feito)) assert.equal(segmentoPassaPelaCaixa(traco, zero, 0.5), false, `${nome}/${contexto.tipo}: o 0 do eixo fica em cima de um segmento`);
+    }
+  }
+  // Mesmo com os segmentos passando perto da origem, o 0 foge deles: o canto escolhido é o que não tem traço por baixo.
+  const perto = normalizarVisual({
+    tipo: "plano", alt: "Segmentos perto da origem.", x: [-4, 5], y: [-3, 5],
+    pontos: [{ id: "A", x: -2, y: -2 }, { id: "B", x: 3, y: 2 }, { id: "C", x: -2, y: 3 }, { id: "D", x: 3, y: -2 }],
+    segmentos: [{ de: "A", ate: "B" }, { de: "C", ate: "D" }],
+  });
+  const cruzado = desenharVisual(perto, { tipo: "enunciado" });
+  const zeroDoCruzado = cruzado.caixas.find((caixa) => caixa.tipo === "numero" && caixa.texto === "0");
+  assert.ok(zeroDoCruzado, "o 0 do eixo está lá");
+  for (const traco of segmentosDoDesenho(cruzado)) assert.equal(segmentoPassaPelaCaixa(traco, zeroDoCruzado, 0.5), false, "o 0 foge dos dois segmentos que se cruzam na origem");
+});
+
+/* ----- Marco 2d: o motor respeita alturaMaxima, a letra fica a ≤ 8 do ponto, a legenda leva o símbolo ----- */
+
+/** O pior que o validador aceita: oito pontos com rótulo e coordenadas longas, todos juntos (todos perdem as coordenadas para a legenda). */
+const MAIOR_LEGENDA = {
+  tipo: "plano", alt: "Oito pontos juntos, com coordenadas longas.", x: [-1000, 1000], y: [-1000, 1000],
+  pontos: Array.from({ length: 8 }, (_, i) => ({ id: `P${i + 1}`, x: -123.45 - i * 0.01, y: -678.91 - i * 0.01, ...(i % 3 === 0 ? { papel: "especial" } : {}) })),
+};
+const ALTURAS_MAXIMAS = [158, 160, 179, 200, 201, 352];
+
+function figurasDoTeste() {
+  const daFixture = (nome, tipo) => normalizarVisual(fixture(nome).visuais.find((visual) => visual.tipo === tipo));
+  return {
+    baricentro: daFixture("baricentro", "plano"),
+    colinearidade: daFixture("colinearidade", "plano"),
+    abscissas: daFixture("abscissas", "reta_numerica"),
+    "ponto na origem": normalizarVisual(NA_ORIGEM),
+    "ponto cercado": normalizarVisual(CERCADO),
+    "maior legenda": normalizarVisual(MAIOR_LEGENDA),
+  };
+}
+
+test("o motor respeita alturaMaxima SEMPRE: altura ≤ alturaMaxima, ou o desenho sai marcado naoCabe; o texto nunca desce do piso", () => {
+  for (const [nome, figura] of Object.entries(figurasDoTeste())) {
+    assert.ok(figura, `${nome}: o visual vale`);
+    for (const alturaMaxima of ALTURAS_MAXIMAS) {
+      for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }, { tipo: "passo", ultimo: false }]) {
+        const desenho = desenharVisual(figura, contexto, { alturaMaxima });
+        const onde = `${nome} · ${contexto.tipo} · alturaMaxima ${alturaMaxima}`;
+        assert.equal(desenho.largura, LARGURA_DO_DESENHO, onde);
+        assert.ok(desenho.menorTexto >= PISO_DO_TEXTO, `${onde}: o texto desceu a ${desenho.menorTexto}`);
+        if (desenho.naoCabe) {
+          assert.equal(desenho.naoCabe, true);
+          assert.ok(desenho.altura > alturaMaxima, `${onde}: marcado naoCabe com altura ${desenho.altura}`);
+          continue;
+        }
+        assert.ok(desenho.altura <= alturaMaxima + 1e-9, `${onde}: altura ${desenho.altura}`);
+        const { xmin, xmax, ymin, ymax } = limites(desenho);
+        assert.ok(xmin >= -0.5 && xmax <= LARGURA_DO_DESENHO + 0.5 && ymin >= -0.5 && ymax <= desenho.altura + 0.5, `${onde}: nada cai fora do desenho`);
+        const caixas = desenho.caixas.filter((caixa) => caixa.tipo !== "foco");
+        for (let i = 0; i < caixas.length; i += 1) {
+          for (let j = i + 1; j < caixas.length; j += 1) assert.equal(bate(caixas[i], caixas[j], 0, 1.5), false, `${onde}: ${caixas[i].texto} bate em ${caixas[j].texto}`);
+        }
+      }
+    }
+  }
+  // A tela do iPhone pequeno (alturaMaxima 158) e as intermediárias: todas as figuras das fixtures cabem, e a escala do gráfico é que desce.
+  for (const nome of ["baricentro", "colinearidade", "abscissas", "ponto na origem", "ponto cercado"]) {
+    for (const alturaMaxima of [158, 160, 179, 200, 201]) {
+      const desenho = desenharVisual(figurasDoTeste()[nome], { tipo: "enunciado" }, { alturaMaxima });
+      assert.equal(desenho.naoCabe, undefined, `${nome} cabe em ${alturaMaxima}`);
+    }
+  }
+  const apertado = desenharVisual(figurasDoTeste().baricentro, { tipo: "enunciado" }, { alturaMaxima: 158 });
+  const folgado = desenharVisual(figurasDoTeste().baricentro, { tipo: "enunciado" }, { alturaMaxima: 352 });
+  assert.ok(apertado.altura <= 158 && folgado.altura > 300);
+  assert.equal(apertado.menorTexto, folgado.menorTexto, "o texto tem o mesmo tamanho nos dois: só o gráfico desceu");
+  // As coordenadas que o rótulo perdeu nunca somem, mesmo quando a legenda encolhe: estão todas lá, em qualquer altura.
+  for (const alturaMaxima of [158, 200, 352]) {
+    const desenho = desenharVisual(figurasDoTeste()["ponto cercado"], { tipo: "enunciado" }, { alturaMaxima });
+    assert.ok(desenho.textos.includes("A (0, 0)"), `alturaMaxima ${alturaMaxima}: as coordenadas de A`);
+  }
+});
+
+test("a legenda mais longa que o motor aceita: oito linhas de coordenadas cabem em 320 (e no PNG), e abaixo disso o desenho diz naoCabe", () => {
+  assert.equal(validarVisual(MAIOR_LEGENDA).ok, true, "o validador aceita o pior caso");
+  for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }]) {
+    const desenho = desenharVisual(normalizarVisual(MAIOR_LEGENDA), contexto);
+    assert.equal(desenho.naoCabe, undefined);
+    assert.ok(desenho.altura <= 320 + 1e-9, `altura ${desenho.altura}`);
+    for (let i = 1; i <= 8; i += 1) assert.ok(desenho.textos.some((texto) => texto.startsWith(`P${i} (`)), `a coordenada de P${i} está na legenda`);
+    assert.ok(desenho.menorTexto >= PISO_DO_TEXTO);
+  }
+  const apertado = desenharVisual(normalizarVisual(MAIOR_LEGENDA), { tipo: "enunciado" }, { alturaMaxima: 200 });
+  assert.equal(apertado.naoCabe, true, "200 não comporta oito linhas de legenda: o motor não finge");
+  assert.ok(apertado.altura > 200);
+  // Um visual que nem em 320 cabe é inválido: o validador o recusa (o visual some e a lição segue em texto).
+  const demais = { ...MAIOR_LEGENDA, pontos: MAIOR_LEGENDA.pontos.map((ponto) => ({ ...ponto, x: ponto.x - 700.12, y: ponto.y - 300.34 })) };
+  assert.equal(validarVisual(demais).ok, true, "coordenadas ainda mais longas cabem em 320 (a legenda tem 8 linhas, no máximo)");
+});
+
+test("a letra do ponto fica a no máximo 8 unidades da borda dele, em qualquer das 8 direções, e a legenda leva as coordenadas que sobram", () => {
+  let semente = 20261121;
+  const proximo = () => (semente = (Math.imul(semente, 1664525) + 1013904223) >>> 0) / 2 ** 32;
+  let comRotulo = 0;
+  let comLegenda = 0;
+  let semLetra = 0;
+  for (let i = 0; i < 400; i += 1) {
+    const alcance = [3, 5, 8][Math.floor(proximo() * 3)];
+    const quantidade = 3 + Math.floor(proximo() * 5);
+    const usados = new Set();
+    const pontos = [];
+    for (let k = 0; pontos.length < quantidade && k < 60; k += 1) {
+      const naOrigem = k === 0 && proximo() < 0.3;
+      const x = naOrigem ? 0 : Math.round((proximo() * 2 - 1) * alcance);
+      const y = naOrigem ? 0 : Math.round((proximo() * 2 - 1) * alcance);
+      if (usados.has(`${x},${y}`)) continue;
+      usados.add(`${x},${y}`);
+      pontos.push({ id: `P${pontos.length + 1}`, x, y, ...(proximo() < 0.25 ? { papel: "especial" } : {}) });
+    }
+    const segmentos = [];
+    for (let k = 0; k < Math.floor(proximo() * 3); k += 1) {
+      const de = pontos[Math.floor(proximo() * pontos.length)].id;
+      const ate = pontos[Math.floor(proximo() * pontos.length)].id;
+      if (de !== ate) segmentos.push({ de, ate });
+    }
+    const bruto = { tipo: "plano", alt: "Pontos no plano.", x: [-alcance - 1, alcance + 1], y: [-alcance - 1, alcance + 1], pontos, ...(segmentos.length ? { segmentos } : {}) };
+    const visual = normalizarVisual(bruto);
+    if (!visual) continue;
+    const alturaMaxima = [158, 200, 320][Math.floor(proximo() * 3)];
+    const desenho = desenharVisual(visual, { tipo: "enunciado" }, { alturaMaxima });
+    if (desenho.naoCabe) continue;
+    const desenhados = pontosDesenhados(desenho);
+    assert.equal(desenhados.length, visual.pontos.length, "um símbolo por ponto");
+    const rotulos = desenho.caixas.filter((caixa) => caixa.tipo === "rotulo");
+    visual.pontos.forEach((ponto, posicao) => {
+      const rotulo = rotulos.find((caixa) => caixa.texto === ponto.id || caixa.texto.startsWith(`${ponto.id} (`));
+      const inteiro = rotuloDoPonto(ponto.id, [ponto.x, ponto.y]);
+      const onde = `caso ${i} (${alturaMaxima}): ${inteiro}`;
+      if (rotulo) {
+        comRotulo += 1;
+        const distancia = distanciaDaBorda(rotulo, desenhados[posicao]);
+        assert.ok(distancia >= -0.01 && distancia <= 8.02, `${onde}: a letra fica a ${distancia} da borda do ponto`);
+        for (const [outro, caixaDeOutro] of desenhados.entries()) {
+          if (outro !== posicao) assert.ok(distanciaDaBorda(rotulo, caixaDeOutro) >= -0.01, `${onde}: o rótulo cobre outro ponto`);
+        }
+        // Rótulo só com o nome: as coordenadas estão na legenda; com elas, não repetem.
+        const naLegenda = desenho.textos.filter((texto) => texto === inteiro).length;
+        if (rotulo.texto === ponto.id) { assert.equal(naLegenda, 1, `${onde}: coordenadas na legenda`); comLegenda += 1; }
+        else assert.equal(naLegenda, 1, `${onde}: o rótulo inteiro está uma vez só`);
+      } else {
+        semLetra += 1;
+        assert.equal(desenho.textos.filter((texto) => texto === inteiro).length, 1, `${onde}: sem letra, as coordenadas vão para a legenda`);
+      }
+    });
+    const caixas = desenho.caixas.filter((caixa) => caixa.tipo !== "foco");
+    for (let a = 0; a < caixas.length; a += 1) {
+      for (let b = a + 1; b < caixas.length; b += 1) assert.equal(bate(caixas[a], caixas[b], 0, 1.5), false, `caso ${i}: ${caixas[a].texto} bate em ${caixas[b].texto}`);
+    }
+    // O 0 do eixo só quando não há ponto na origem.
+    const haPontoNaOrigem = visual.pontos.some((ponto) => ponto.x === 0 && ponto.y === 0);
+    assert.equal(numerosDeEixo(desenho).includes("0"), !haPontoNaOrigem, `caso ${i}: o 0 do eixo`);
+  }
+  assert.ok(comRotulo > 400 && comLegenda > 0 && semLetra > 0, `a amostra pega os três casos (${comRotulo} rótulos, ${comLegenda} só com o nome, ${semLetra} sem letra)`);
+});
+
+test("a legenda das coordenadas leva o símbolo do ponto antes: bolinha, losango, na cor do papel", () => {
+  // Um ponto especial cercado: a bolinha dos dados e o losango do especial na legenda, e o losango de novo na entrada "A (0, 0)".
+  const cercadoEspecial = { ...CERCADO, pontos: [{ id: "A", x: 0, y: 0, papel: "especial" }, ...CERCADO.pontos.slice(1)] };
+  const desenho = desenharVisual(normalizarVisual(cercadoEspecial), { tipo: "enunciado" });
+  assert.equal(desenho.caixas.some((caixa) => caixa.tipo === "rotulo" && caixa.texto.startsWith("A")), false);
+  assert.equal(desenho.textos.filter((texto) => texto === "A (0, 0)").length, 1);
+  assert.deepEqual(simbolosDaLegenda(desenho), { dado: 1, especial: 2, procurado: 0 }, "dados, especial e a entrada de A (losango)");
+  const simples = desenharVisual(normalizarVisual(CERCADO), { tipo: "enunciado" });
+  assert.deepEqual(simbolosDaLegenda(simples), { dado: 1, especial: 0, procurado: 0 }, "só a entrada de A, com a bolinha dos dados");
+  // A cor do texto da entrada é a do papel do ponto (a mesma do rótulo no gráfico).
+  const textoDeA = (feito) => feito.primitivas.filter((primitiva) => primitiva.tipo === "caminho" && /Texto$/.test(primitiva.preenchimento ?? ""));
+  assert.ok(textoDeA(desenho).some((primitiva) => primitiva.preenchimento === "especialTexto"), "a entrada do especial é roxa");
+  // Em altura apertada o gráfico desce e as linhas da legenda se juntam, e as categorias e as coordenadas continuam lá.
+  const apertado = desenharVisual(normalizarVisual(cercadoEspecial), { tipo: "enunciado" }, { alturaMaxima: 158 });
+  assert.equal(apertado.naoCabe, undefined);
+  assert.ok(apertado.textos.includes("A (0, 0)") && apertado.textos.includes("dados") && apertado.textos.includes("especial"));
+  assert.deepEqual(simbolosDaLegenda(apertado), { dado: 1, especial: 2, procurado: 0 }, "os símbolos seguem na legenda junta");
+  // Só quando nem assim cabe as categorias saem (as coordenadas ficam, com o texto na cor do papel e sem o símbolo).
+  const compacta = desenharVisual(normalizarVisual(MAIOR_LEGENDA), { tipo: "enunciado" });
+  assert.equal(compacta.naoCabe, undefined);
+  assert.equal(compacta.textos.includes("dados") || compacta.textos.includes("especial"), false);
+  assert.deepEqual(simbolosDaLegenda(compacta), { dado: 0, especial: 0, procurado: 0 });
+  assert.ok(compacta.primitivas.some((primitiva) => primitiva.tipo === "caminho" && primitiva.preenchimento === "especialTexto"), "a coordenada do especial segue roxa");
+});
+
+test("a escala do ponto desce com o gráfico: pontos vizinhos não encostam numa grade baixa", () => {
+  const figura = figurasDoTeste().baricentro;
+  const alto = pontosDesenhados(desenharVisual(figura, { tipo: "enunciado" }, { alturaMaxima: 352 }));
+  const baixo = pontosDesenhados(desenharVisual(figura, { tipo: "enunciado" }, { alturaMaxima: 158 }));
+  assert.ok(baixo.every((ponto, i) => ponto.raio < alto[i].raio), "na grade baixa os pontos são menores");
+  assert.ok(baixo.every((ponto, i) => ponto.raio >= 0.55 * alto[i].raio - 1e-9), "mas não menos que 55%");
+  // A (1, 2) e G (1, 3) ficam a uma unidade um do outro: com o raio menor as bolinhas não se cobrem.
+  const [a, g] = [baixo[0], baixo[1]];
+  const centros = baixo.map((ponto) => `${ponto.x},${ponto.y}`);
+  assert.equal(new Set(centros).size, baixo.length);
+  assert.ok(Math.hypot(a.x - g.x, a.y - g.y) >= a.raio + g.raio - 1, "os dois pontos não se cobrem");
+});
+
+test("os números do eixo x nunca se encostam, mesmo com milhares", () => {
+  for (const nome of ["maior legenda", "ponto cercado"]) {
+    for (const alturaMaxima of [158, 320]) {
+      const desenho = desenharVisual(figurasDoTeste()[nome], { tipo: "enunciado" }, { alturaMaxima });
+      const numeros = desenho.caixas.filter((caixa) => caixa.tipo === "numero").sort((a, b) => a.x - b.x);
+      for (let i = 1; i < numeros.length; i += 1) {
+        const mesmaLinha = Math.abs(numeros[i].y - numeros[i - 1].y) < 2;
+        if (mesmaLinha) assert.ok(numeros[i].x - (numeros[i - 1].x + numeros[i - 1].largura) >= 4, `${nome} ${alturaMaxima}: ${numeros[i - 1].texto} encosta em ${numeros[i].texto}`);
+      }
+    }
+  }
 });

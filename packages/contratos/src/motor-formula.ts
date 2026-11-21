@@ -41,6 +41,8 @@ export interface Estilo {
    * parênteses do tamanho do texto, a fração simples como "a/b", tudo dentro de uma linha de 1,5 em.
    */
   linha?: boolean;
+  /** O peso do texto: o do texto ao redor, em linha (400 na aula, 700 no enunciado); 700 no resto. As variáveis seguem em itálico. */
+  peso?: PesoDoTexto;
 }
 
 export const A_DO_TEXTO = 0.74;
@@ -96,7 +98,7 @@ export function deslocar(marcas: readonly Marca[], dx: number, dy: number): Marc
 
 export function textoEmCaixa(valor: string, estilo: Estilo, opcoes: { peso?: PesoDoTexto; italico?: boolean } = {}): Caixa {
   const tamanho = tamanhoDo(estilo);
-  const peso = opcoes.peso ?? 700;
+  const peso = opcoes.peso ?? estilo.peso ?? 700;
   return {
     l: larguraDoTexto(valor, tamanho, peso),
     a: A_DO_TEXTO * tamanho,
@@ -130,13 +132,16 @@ export function juntar(partes: readonly Parte[]): Caixa {
 
 const GLIFO_DO_OPERADOR: Readonly<Record<string, string>> = { "+": "+", "-": "−", "×": "×", "÷": "÷", "=": "=", "<": "<", ">": ">" };
 
+/** A espessura dos traços que o motor desenha no lugar de um glifo (≤ ≥ ≠ →): a da barra do "=" no peso do texto. */
+const TRACO_EM_EM: Readonly<Record<PesoDoTexto, number>> = { 400: 0.07, 700: 0.09, 800: 0.1 };
+
 function operador(valor: string, estilo: Estilo): Caixa {
   const tamanho = tamanhoDo(estilo);
   const eixo = eixoDe(tamanho);
-  const traco = Math.max(1.5, tamanho * 0.09);
+  const traco = Math.max(estilo.peso === 400 ? 1.2 : 1.5, tamanho * TRACO_EM_EM[estilo.peso ?? 700]);
   if (valor === "≤" || valor === "≥") {
     const caixa = textoEmCaixa(valor === "≤" ? "<" : ">", estilo);
-    const base = caixaDoGlifo(valor === "≤" ? "<" : ">");
+    const base = caixaDoGlifo(valor === "≤" ? "<" : ">", estilo.peso ?? 700);
     const y = -((base?.ymin ?? 100) / UNIDADES_POR_EM) * tamanho + 0.15 * tamanho;
     caixa.marcas.push({ m: "linha", x1: 0.14 * caixa.l, x2: 0.86 * caixa.l, y1: y, y2: y, cor: estilo.cor, largura: traco });
     caixa.p = Math.max(caixa.p, y + traco);
@@ -391,8 +396,8 @@ export function caixaDaFormula(arvore: NoFormula, tamanho: number, cor: PapelDeC
 }
 
 /** A fórmula no meio da frase, com `tamanho` o do texto ao redor (16, ou 17): linha de base em y = 0. */
-export function caixaDaFormulaEmLinha(arvore: NoFormula, tamanho: number, cor: PapelDeCor = "texto"): Caixa {
-  return caixaDe(arvore, { tamanho: Math.max(PISO_EM_LINHA, tamanho), cor, italico: true, respiro: 1, linha: true });
+export function caixaDaFormulaEmLinha(arvore: NoFormula, tamanho: number, cor: PapelDeCor = "texto", peso: PesoDoTexto = 700): Caixa {
+  return caixaDe(arvore, { tamanho: Math.max(PISO_EM_LINHA, tamanho), cor, italico: true, respiro: 1, linha: true, peso });
 }
 
 /** A linha de texto tem 1,5 em: a fórmula em linha cabe nela sem fazer a linha crescer. */

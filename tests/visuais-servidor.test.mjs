@@ -308,7 +308,7 @@ test("3c: a heurística dos tokens soltos só liga em lição de matemática e N
   const soltos = { ...base, objetivo: "Baricentro de um triângulo", conceito: "Veja x_A e x_B, b^2 e a água H_2O. Custa R$ 5,00.", exemplo: "x_G = (x_A + x_B)/2" };
   const marcado = comFormulasParaOCliente(detalheDe(soltos), soltos, SO_VISUAIS);
   assert.equal(marcado.conceito, "Veja $x_A$ e $x_B$, $b^2$ e a água H₂O. Custa R$ 5,00.");
-  assert.equal(marcado.exemplo, "$x_G$ = ($x_A$ + $x_B$)/2");
+  assert.equal(marcado.exemplo, "$x_G$ = ($x_A + x_B$)/2", "a conta curta entre parênteses é uma fórmula só");
   const linear = comFormulasParaOCliente(detalheDe(soltos), soltos, SEM_CAPACIDADES);
   assert.equal(linear.conceito, "Veja x_A e x_B, b^2 e a água H_2O. Custa R$ 5,00.", "sem o cabeçalho nada é marcado: o texto já é legível");
   // O que não é texto das pessoas fica: gabarito, comprovante, visuais, resolução, trecho de código.
@@ -319,4 +319,30 @@ test("3c: a heurística dos tokens soltos só liga em lição de matemática e N
   // Idempotente: o que já está marcado não muda.
   const outra = comFormulasParaOCliente(marcado, soltos, SO_VISUAIS);
   assert.deepEqual(outra, marcado);
+});
+
+test("o PNG da fase 1: a prancheta 320×352 leva a faixa da fórmula e o plano inteiro, nunca passa de 352 e nunca leva figura que não coube", async () => {
+  for (const nome of NOMES) {
+    const conteudo = conteudoDa(nome);
+    const visuais = limparVisuais(conteudo).visuais;
+    const prancheta = pranchetaDosVisuais(visuais);
+    assert.ok(prancheta, nome);
+    assert.equal(prancheta.desenho.largura, 320);
+    assert.ok(prancheta.desenho.altura <= 352 + 1e-9, `${nome}: prancheta de ${prancheta.desenho.altura}`);
+    assert.equal(prancheta.desenho.naoCabe, undefined, nome);
+    assert.ok(prancheta.figura, `${nome}: a figura está na prancheta`);
+    assert.ok(prancheta.formulas.length >= 1, `${nome}: e a faixa da fórmula também`);
+    assert.ok(prancheta.desenho.menorTexto >= 13);
+    // Na prancheta, a figura é o plano com a legenda das coordenadas (nada some): cada rótulo está no desenho ou na legenda.
+    const visual = prancheta.figura;
+    if (visual.tipo === "plano") {
+      for (const ponto of visual.pontos.filter((candidato) => candidato.rotulo !== false && candidato.papel !== "procurado")) {
+        const inteiro = `${ponto.id} (${String(ponto.x).replace("-", "−")}, ${String(ponto.y).replace("-", "−")})`;
+        assert.ok(prancheta.desenho.textos.some((texto) => texto === inteiro || texto === ponto.id), `${nome}: ${inteiro}`);
+      }
+    }
+    const imagem = await recursoDoDesenho(visuais);
+    const { height } = await sharp(Buffer.from(imagem.src.split(",")[1], "base64")).metadata();
+    assert.ok(height <= 352 * 4, `${nome}: PNG de ${height} px`);
+  }
 });

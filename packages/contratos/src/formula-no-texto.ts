@@ -1,9 +1,11 @@
 import {
+  CARACTERES_ESPECIAIS_DO_LINEAR,
   falarFormula,
   formulaCanonica,
   formulaEmPecas,
   formulaLinear,
   lerFormula,
+  percorrerFormula,
   repararComandosDeControle,
   type NoFormula,
 } from "./formula";
@@ -28,8 +30,9 @@ import { formulaCabeNaLinha } from "./motor-formula";
  * lida "a sobre b" ("$1/2$": numa frase, meio é um número); as outras barras continuam ÷ (`x_G = (x_A + x_B) / 3`).
  *
  * Quando a IA esquece a marcação, uma heurística determinística reconhece os tokens soltos e inequívocos: `x_A`, `y_C`, `x_G`, `b^2`,
- * `x^2`, `10^3` (uma letra, ou um número só no expoente, mais `_` ou `^` e um a três caracteres). Palavras, endereços e código não
- * entram (`snake_case`, `a/b_c`, `arquivo.x_1`, `f_x(`). A heurística NÃO liga sozinha: só em lição que já tem matemática, e quem
+ * `x^2`, `10^3` (uma letra, ou um número só no expoente, mais `_` ou `^` e um a três caracteres) e a conta curta ("letra sozinha,
+ * sinal, número ou letra": `x = 3`, `a + b`, `y − 2`, `então x_C = 12 − 8 = 4`). Palavras, endereços e código não entram
+ * (`snake_case`, `a/b_c`, `arquivo.x_1`, `f_x(`); uma letra solta no meio de uma frase ("lado x", "a casa") só vira fórmula com marca. A heurística NÃO liga sozinha: só em lição que já tem matemática, e quem
  * sabe isso é o servidor (`marcarFormulasSoltas`, que põe as marcas antes de o texto chegar ao cliente). `partirTextoComFormulas`,
  * por padrão, só lê o que está marcado: "Em Python, use x_1 = 3 e print(x_1)." continua texto.
  */
@@ -181,6 +184,14 @@ const CORRIDA = /[A-Za-z0-9_^{}]+/g;
 const ANTES_DE_CODIGO = /[/.:@#\\~$]/;
 const SUBSCRITO: Readonly<Record<string, string>> = { "0": "₀", "1": "₁", "2": "₂", "3": "₃", "4": "₄", "5": "₅", "6": "₆", "7": "₇", "8": "₈", "9": "₉" };
 
+/**
+ * Todos os caracteres fora do ASCII que o texto das fórmulas pode escrever na tela fora do desenho (texto linear, "H₂O", o grego e
+ * os símbolos do LaTeX que não lê). O teste `glifos-nunito` confere cada um contra a Nunito que a web e o app carregam.
+ */
+export const CARACTERES_ESPECIAIS_DO_TEXTO: string = [
+  ...new Set([CARACTERES_ESPECIAIS_DO_LINEAR, ...Object.values(SUBSCRITO), ...Object.values(GREGAS), ...Object.values(SIMBOLOS)].join("")),
+].join("");
+
 /** `x_AB` vira `x_{AB}`, que é o que a gramática lê. */
 function paraLatex(token: string): string {
   return token.replace(/_([A-Za-z0-9]{2,3})(?![A-Za-z0-9}])/g, "_{$1}");
@@ -207,7 +218,49 @@ function lerTokenSolto(texto: string, inicio: number, fim: number): Parte | stri
   return null;
 }
 
+/* ----- A conta curta solta: "x = 3", "a + b", "y − 2" (letra sozinha, sinal, número ou letra) ----- */
+
+const PEDACO_DO_EXPOENTE = String.raw`(?:\^(?:\{[A-Za-z0-9]{1,3}\}|\d{1,3}|[A-Za-z]))`;
+/** Um termo da conta curta: uma letra sozinha (com índice e expoente, se tiver) ou um número, com sinal e vírgula decimal: `x`, `x_A`, `b^2`, `-3`, `3,5`. */
+const TERMO_DA_CONTA = String.raw`(?:[A-Za-z](?:_(?:\{[A-Za-z0-9]{1,3}\}|[A-Za-z]{1,2}|\d{1,3}))?${PEDACO_DO_EXPOENTE}?|[−-]?\d+(?:[.,]\d+)?${PEDACO_DO_EXPOENTE}?)`;
+/** Entre dois termos: `=`, `+`, `×`, `÷`, `−`, `<`, `>`, `≤`, `≥`, `≠`, `*` (com espaço ou sem) ou ` - `, ` · `, ` / ` (espaço dos dois lados). */
+const SINAL_DA_CONTA = String.raw`(?:\s?(?:=|\+|×|÷|−|<|>|≤|≥|≠|\*)\s?|\s(?:-|·|/)\s)`;
+const CONTA_CURTA = new RegExp(String.raw`(?<![\p{L}\p{N}_.\\/$@#~:-])${TERMO_DA_CONTA}(?:${SINAL_DA_CONTA}${TERMO_DA_CONTA})+(?![\p{L}\p{N}_])`, "gu");
+
+/**
+ * A conta curta como fórmula, ou null: precisa ler e ter ao menos uma variável ("3 + 4 = 7" fica texto; o que não tem letra não
+ * mistura peso nem itálico com o resto). Uma letra solta no meio de uma palavra ("lado x", "a casa") não é conta: só vira fórmula
+ * com marca. "2x", "4ac" e "x²" em Unicode também ficam texto.
+ */
+function lerContaCurta(trecho: string): Parte | null {
+  const fonte = paraLatex(trecho.replace(/(\d),(\d)/g, "$1.$2"));
+  const lida = lerFormula(barraSimplesEmFracao(fonte));
+  if (!lida.ok) return null;
+  let temVariavel = false;
+  percorrerFormula(lida.arvore, (no) => {
+    if (no.tipo === "variavel") temVariavel = true;
+  });
+  if (!temVariavel) return null;
+  const parte = marcaDe(fonte);
+  return parte.tipo === "marca" && parte.latex !== null ? parte : null;
+}
+
 function partirPeloQueSePareceFormula(texto: string): Parte[] {
+  const saida: Parte[] = [];
+  let cursor = 0;
+  for (const achado of texto.matchAll(CONTA_CURTA)) {
+    const inicio = achado.index ?? 0;
+    const conta = lerContaCurta(achado[0]);
+    if (!conta) continue;
+    saida.push(...partirPelosTokens(texto.slice(cursor, inicio)));
+    saida.push(conta);
+    cursor = inicio + achado[0].length;
+  }
+  saida.push(...partirPelosTokens(texto.slice(cursor)));
+  return saida;
+}
+
+function partirPelosTokens(texto: string): Parte[] {
   const saida: Parte[] = [];
   let cursor = 0;
   const textoAte = (fim: number): void => {

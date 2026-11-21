@@ -1,24 +1,26 @@
-import { GLIFOS_700, GLIFOS_800, UNIDADES_POR_EM } from "./glifos";
+import { GLIFOS_400, GLIFOS_700, GLIFOS_800, UNIDADES_POR_EM } from "./glifos";
 
 /*
  * Texto como contorno: o motor de desenho não depende de nenhuma fonte do aparelho (o servidor nem tem fontes). Cada caractere
- * vira o caminho do glifo da tabela `glifos.ts` (Nunito 700 e 800; Δ e π da Noto Sans Bold), posto na linha de base, na escala
+ * vira o caminho do glifo da tabela `glifos.ts` (Nunito 400, 700 e 800; Δ e π da Noto Sans), posto na linha de base, na escala
  * do tamanho pedido. Sem kerning. Caractere que não está na tabela cai no "?" (o validador não deixa chegar aqui nada fora do
  * português do Brasil, dos números e da pontuação simples).
  */
 
-export type PesoDoTexto = 700 | 800;
+/** 400 é o texto corrido da aula (a fórmula em linha o usa ao lado dele); 700, o enunciado, os títulos e os gráficos; 800, os rótulos. */
+export type PesoDoTexto = 400 | 700 | 800;
+
+const TABELAS: Readonly<Record<PesoDoTexto, Readonly<Record<string, readonly [number, string]>>>> = { 400: GLIFOS_400, 700: GLIFOS_700, 800: GLIFOS_800 };
 
 /** O itálico das variáveis: o Nunito não tem itálico no pacote, e o dele é um oblíquo de uns 11°; aqui o glifo reto é inclinado. */
 export const INCLINACAO_DO_ITALICO = 0.2;
 
 export function glifoDe(caractere: string, peso: PesoDoTexto = 700): readonly [number, string] {
-  const tabela = peso === 800 ? GLIFOS_800 : GLIFOS_700;
-  return tabela[caractere] ?? GLIFOS_700[caractere] ?? GLIFOS_700["?"];
+  return TABELAS[peso][caractere] ?? GLIFOS_700[caractere] ?? GLIFOS_700["?"];
 }
 
 export function temGlifo(caractere: string, peso: PesoDoTexto = 700): boolean {
-  return (peso === 800 ? GLIFOS_800 : GLIFOS_700)[caractere] !== undefined || GLIFOS_700[caractere] !== undefined;
+  return TABELAS[peso][caractere] !== undefined || GLIFOS_700[caractere] !== undefined;
 }
 
 export function larguraDoTexto(texto: string, tamanho: number, peso: PesoDoTexto = 700): number {

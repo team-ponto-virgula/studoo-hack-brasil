@@ -412,17 +412,19 @@ function normalizarFormula(bruto: Record<string, unknown>, opcoes: OpcoesDoVisua
 }
 
 /**
- * O teto de primitivas depois do layout: o visual precisa sair do motor, no enunciado e na resposta (onde aparecem todos os pontos),
- * com no máximo `TETO_DE_PRIMITIVAS`. Acima disso, ou se o motor falhar, o visual some e a lição segue.
+ * O desenho depois do layout: o visual precisa sair do motor, no enunciado e na resposta (onde aparecem todos os pontos), caber na
+ * altura da figura (`naoCabe`) e ter no máximo `TETO_DE_PRIMITIVAS`. Senão, ou se o motor falhar, o visual some e a lição segue.
  */
 function conferirDesenho(visual: Visual): void {
   for (const contexto of [{ tipo: "enunciado" }, { tipo: "retorno" }] as const) {
-    let primitivas: number;
+    let desenho: ReturnType<typeof desenharVisual>;
     try {
-      primitivas = desenharVisual(visual, contexto)?.primitivas.length ?? 0;
+      desenho = desenharVisual(visual, contexto);
     } catch {
       return recusar("o desenho não saiu");
     }
+    if (desenho?.naoCabe) recusar("o desenho não cabe na altura da figura (pontos ou legenda demais)");
+    const primitivas = desenho?.primitivas.length ?? 0;
     if (primitivas > TETO_DE_PRIMITIVAS) recusar(`desenho com ${primitivas} primitivas (o teto é ${TETO_DE_PRIMITIVAS})`);
   }
 }

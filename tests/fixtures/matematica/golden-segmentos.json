@@ -5,31 +5,25 @@
  "x_G = (x_A + x_B + x_C) / 3": [
   "[x_G]",
   " = (",
-  "[x_A]",
-  " + ",
-  "[x_B]",
-  " + ",
-  "[x_C]",
+  "[x_A + x_B + x_C]",
   ") / 3"
  ],
  "x_A = 3, x_B = 5 e x_C": [
-  "[x_A]",
-  " = 3, ",
-  "[x_B]",
-  " = 5 e ",
+  "[x_A = 3]",
+  ", ",
+  "[x_B = 5]",
+  " e ",
   "[x_C]"
  ],
  "então x_C = 12 − 8 = 4": [
   "então ",
-  "[x_C]",
-  " = 12 − 8 = 4"
+  "[x_C = 12 - 8 = 4]"
  ],
  "R$ 5,00 e R$ 10,00": [
   "R$ 5,00 e R$ 10,00"
  ],
  "3 · 4 = 3 + 5 + x_C": [
-  "3 · 4 = 3 + 5 + ",
-  "[x_C]"
+  "[3 \\times 4 = 3 + 5 + x_C]"
  ],
  "Os vértices A e B têm abscissas 3 e 5. Qual é a do terceiro?": [
   "Os vértices A e B têm abscissas 3 e 5. Qual é a do terceiro?"

@@ -683,6 +683,11 @@ function linearDoScript(no: NoFormula): string {
   return simples ? texto : `(${texto})`;
 }
 
+/** Os caracteres fora do ASCII que o texto linear de uma fórmula escreve (o teste confere se a Nunito do app e da web os tem). */
+export const CARACTERES_ESPECIAIS_DO_LINEAR: string = [
+  ...new Set([...Object.values(OPERADOR_LINEAR), ...Object.values(SOBRESCRITO_LINEAR), "√", "Δ", "π"].join("").split("").filter((caractere) => caractere > "\u007f")),
+].join("");
+
 /**
  * A fórmula em texto de uma linha, para quem não desenha (cliente antigo, fórmula que não coube): `x_G = (x_A + x_B +
  * x_C) / 3`. Vírgula decimal, sinal de menos de verdade, `×`, `÷`, `≤`.

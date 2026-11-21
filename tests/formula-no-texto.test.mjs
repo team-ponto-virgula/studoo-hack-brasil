@@ -73,16 +73,16 @@ test("golden: os segmentos das frases do pedido e dos casos de borda", () => {
 
 test("sem marcação, os tokens soltos viram índice e expoente quando a lição é de matemática (as frases das telas reais)", () => {
   const solto = (texto) => partirTextoComFormulas(texto, { heuristica: true });
-  assert.deepEqual(resumo(solto("x_G = (x_A + x_B + x_C) / 3")), ["[x_G]", " = (", "[x_A]", " + ", "[x_B]", " + ", "[x_C]", ") / 3"]);
-  assert.deepEqual(resumo(solto("x_A = 3, x_B = 5 e x_C")), ["[x_A]", " = 3, ", "[x_B]", " = 5 e ", "[x_C]"]);
-  assert.deepEqual(resumo(solto("então x_C = 12 − 8 = 4")), ["então ", "[x_C]", " = 12 − 8 = 4"]);
-  assert.deepEqual(resumo(solto("3 · 4 = 3 + 5 + x_C")), ["3 · 4 = 3 + 5 + ", "[x_C]"]);
+  assert.deepEqual(resumo(solto("x_G = (x_A + x_B + x_C) / 3")), ["[x_G]", " = (", "[x_A + x_B + x_C]", ") / 3"], "a conta curta entre parênteses é uma fórmula só");
+  assert.deepEqual(resumo(solto("x_A = 3, x_B = 5 e x_C")), ["[x_A = 3]", ", ", "[x_B = 5]", " e ", "[x_C]"]);
+  assert.deepEqual(resumo(solto("então x_C = 12 − 8 = 4")), ["então ", "[x_C = 12 - 8 = 4]"]);
+  assert.deepEqual(resumo(solto("3 · 4 = 3 + 5 + x_C")), ["[3 \\times 4 = 3 + 5 + x_C]"]);
   assert.deepEqual(resumo(solto("b^2 e x^2 e 10^3 e x_10 e x_AB e x_A^2 e y^n")), ["[b^2]", " e ", "[x^2]", " e ", "[10^3]", " e ", "[x_{10}]", " e ", "[x_{A B}]", " e ", "[x_A^2]", " e ", "[y^n]"]);
   // O cliente lê o texto que o servidor marcou: o mesmo resultado, sem ligar a heurística por conta própria.
   for (const frase of ["x_G = (x_A + x_B + x_C) / 3", "então x_C = 12 − 8 = 4", "b^2 e x^2 e 10^3 e x_10 e x_AB e x_A^2 e y^n", "A água é H_2O e $x_A$."]) {
     assert.deepEqual(resumo(lido(frase)), resumo(solto(frase)), frase);
   }
-  assert.equal(marcarFormulasSoltas("x_A = 3, x_B = 5 e x_C"), "$x_A$ = 3, $x_B$ = 5 e $x_C$");
+  assert.equal(marcarFormulasSoltas("x_A = 3, x_B = 5 e x_C"), "$x_A = 3$, $x_B = 5$ e $x_C$");
   // Cada segmento de fórmula traz a árvore, a forma canônica, o texto linear e o falado.
   const [formula] = partirTextoComFormulas("$x_G$");
   assert.equal(formula.tipo, "formula");
@@ -95,7 +95,7 @@ test("sem marcação, os tokens soltos viram índice e expoente quando a lição
 test("só o inequívoco: palavra, endereço, arquivo, código e frase comum ficam como texto", () => {
   for (const texto of [
     "snake_case e user_name e x_total e x_max", "https://exemplo.com/x_1 e www.site.com/b^2", "arquivo.x_1 e @x_1 e #x_1 e ~/x_1", "f_x(2) e g^2(3)",
-    "R$ 5,00 e R$ 10,00", "4", "Os vértices A e B têm abscissas 3 e 5.", "x_1000 e x_ABC e 1234^2 e x^(n+1) e x^-1 e (x+1)^2",
+    "R$ 5,00 e R$ 10,00", "4", "Os vértices A e B têm abscissas 3 e 5.", "x_1000 e x_ABC e 1234^2 e x^-1 e f_x(2)",
     "Resposta: a_b_c", "e-mail: nome_x@dominio.com",
   ]) {
     assert.deepEqual(resumo(partirTextoComFormulas(texto, { heuristica: true })), [texto], texto);
@@ -158,7 +158,7 @@ test("textoSemFormulas é o texto para quem não desenha; falarTextoComFormulas,
   assert.equal(textoSemFormulas("x_G = 1"), "x_G = 1", "token solto fica como está (já é legível)");
   assert.equal(falarTextoComFormulas("Então $x_C = 12 − 8 = 4$."), "Então x índice C é igual a 12 menos 8 é igual a 4.");
   assert.equal(falarTextoComFormulas("Com $x_A = 3$ e $x_B = 5$."), "Com x índice A é igual a 3 e x índice B é igual a 5.");
-  assert.equal(falarTextoComFormulas(marcarFormulasSoltas("Com x_A = 3 e $x_B = 5$.")), "Com x índice A = 3 e x índice B é igual a 5.", "o servidor marca o token solto e a fala sai da árvore (o `=` solto fica como texto)");
+  assert.equal(falarTextoComFormulas(marcarFormulasSoltas("Com x_A = 3 e $x_B = 5$.")), "Com x índice A é igual a 3 e x índice B é igual a 5.", "o servidor marca a conta solta e a fala sai da árvore");
   assert.equal(falarTextoComFormulas("Só texto, sem fórmula."), "Só texto, sem fórmula.");
 });
 
@@ -169,7 +169,7 @@ test("normalizarTextoComFormulas: o texto como o servidor o guarda", () => {
   assert.equal(normalizarTextoComFormulas("Veja $1/2$ e $\\frac{x_A + x_B}{2}$ e $\\foo{x}$ e R$ 5,00"), "Veja $\\frac{1}{2}$ e $\\frac{x_A + x_B}{2}$ e x e R$ 5,00");
   assert.equal(normalizarTextoComFormulas("Veja $\\frac{x_A + x_B}{2}$ e $1/2$", false), "Veja (x_A + x_B) ÷ 2 e 1/2");
   assert.equal(normalizarTextoComFormulas("x_G = 1 e R$ 5,00"), "x_G = 1 e R$ 5,00", "tokens soltos ficam como a IA escreveu");
-  assert.equal(marcarFormulasSoltas("x_G = 1 e R$ 5,00 e H_2O"), "$x_G$ = 1 e R$ 5,00 e H₂O", "e nas lições de matemática o servidor os marca");
+  assert.equal(marcarFormulasSoltas("x_G = 1 e R$ 5,00 e H_2O"), "$x_G = 1$ e R$ 5,00 e H₂O", "e nas lições de matemática o servidor os marca");
   for (const texto of ["Use $x_G=(x_A+x_B)/3$ e $x_{AB}^{2}$", "R$ 5,00 e $x$", "Calcule \\frac{1}{2}", "sem nada", "$\\frac{a}{b}$ e $y_C$", "$1/2$ e $\\frac{x_A + x_B}{2}$", "x_A e H_2O e b^2 e $a/b$"]) {
     const uma = normalizarTextoComFormulas(texto);
     assert.equal(normalizarTextoComFormulas(uma), uma, `não é estável: ${texto}`);
@@ -343,7 +343,7 @@ test("3c (2): a heurística não liga sozinha; o servidor a liga na lição de m
   assert.equal(falarTextoComFormulas(python), python);
   assert.equal(normalizarTextoComFormulas(python), python);
   // Quem decide se a lição é de matemática é o servidor; só ele chama `marcarFormulasSoltas` (ver visuais-servidor.test.mjs).
-  assert.equal(marcarFormulasSoltas("Em Python, use x_1 = 3."), "Em Python, use $x_1$ = 3.", "na lição de matemática x_1 é índice");
+  assert.equal(marcarFormulasSoltas("Em Python, use x_1 = 3."), "Em Python, use $x_1 = 3$.", "na lição de matemática x_1 é índice");
   // Química: o índice é uma contagem de átomos, em algarismo subscrito, sem sublinhado e sem desenho.
   for (const [entrada, esperado] of [
     ["H_2O", "H₂O"], ["CO_2", "CO₂"], ["C_6H_12O_6", "C₆H₁₂O₆"], ["H_2SO_4", "H₂SO₄"], ["Na_2CO_3", "Na₂CO₃"], ["A água é H_2O.", "A água é H₂O."],
@@ -394,4 +394,141 @@ test("3c (3): a regra de desenho em linha: 70% com mínimo 11, índice desce 0,3
   assert.equal(formulaCabeNaLinha(lerFormula("\\frac{x_A + x_B}{2}").arvore, 16), false);
   assert.equal(formulaCabeNaLinha(lerFormula("x_A").arvore, 16), true);
   assert.equal(formulaCabeNaLinha(lerFormula(CORPUS[21]).arvore, 16), false, "larga demais");
+});
+
+test("3d: a conta curta solta ('x = 3', 'a + b', 'y − 2') vira fórmula; letra no meio da frase só com marca", () => {
+  // Os casos do Designer.
+  assert.equal(marcarFormulasSoltas("x = 3"), "$x = 3$");
+  assert.equal(marcarFormulasSoltas("a + b"), "$a + b$");
+  assert.equal(marcarFormulasSoltas("y − 2"), "$y - 2$");
+  assert.equal(marcarFormulasSoltas("lado x"), "lado x", "uma letra solta no meio da frase só vira fórmula com marca");
+  assert.equal(marcarFormulasSoltas("lado $x$"), "lado $x$");
+  assert.equal(marcarFormulasSoltas("a casa"), "a casa");
+  assert.equal(marcarFormulasSoltas("x = 3 reais"), "$x = 3$ reais", "a conta acaba onde a palavra começa");
+  // Em frase, com a pontuação em volta, vírgula decimal e sinal.
+  assert.equal(marcarFormulasSoltas("Se x = 3, então y = x + 2."), "Se $x = 3$, então $y = x + 2$.");
+  assert.equal(marcarFormulasSoltas("Com x=3,5 e y = -2."), "Com $x = 3.5$ e $y = -2$.");
+  assert.equal(marcarFormulasSoltas("R$ 5,00 e x = 3"), "R$ 5,00 e $x = 3$", "dinheiro não é conta");
+  assert.equal(marcarFormulasSoltas("A razão é a / b."), "A razão é $\\frac{a}{b}$.", "a / b com termos simples é a fração a/b");
+  assert.equal(marcarFormulasSoltas("(x + 1) e [a − b]"), "($x + 1$) e [$a - b$]");
+  // O que não é conta curta fica como está: sem letra, produto, potência em Unicode, palavra, lista, hífen de palavra.
+  for (const texto of [
+    "3 + 4 = 7", "2x = 6", "4ac", "x² = 9", "Plano A + plano B", "Passo 1 - escolha x", "e-mail x-3.txt", "O ponto A e o ponto B", "1, 2 e 3", "5 - 3 - 1",
+    "Opção A: x", "a) b) c)", "pág. 3 - 5", "https://exemplo.com/a=3", "arquivo_x = 3", "x == 3",
+  ]) {
+    assert.equal(marcarFormulasSoltas(texto).replace(/\$/g, "").length > 0, true);
+    assert.equal(/\$[^$]*\b[a-z]\s?[=+−-]\s?\d/.test(marcarFormulasSoltas(texto)) && !/\$/.test(texto), false, `virou fórmula: ${texto}`);
+  }
+  assert.equal(marcarFormulasSoltas("3 + 4 = 7 e 2x = 6 e x² = 9 e Plano A + plano B"), "3 + 4 = 7 e 2x = 6 e x² = 9 e Plano A + plano B");
+  assert.equal(marcarFormulasSoltas("Passo 1 - escolha x e e-mail x-3.txt e O ponto A e o ponto B"), "Passo 1 - escolha x e e-mail x-3.txt e O ponto A e o ponto B");
+  // Idempotente, e o cliente lê o mesmo que a heurística leria (sem ligar nada por conta própria).
+  for (const texto of ["x = 3", "Se x = 3, então y = x + 2.", "x_A = 3, x_B = 5 e x_C", "a + b e lado x e $x^2 = 9$"]) {
+    const marcado = marcarFormulasSoltas(texto);
+    assert.equal(marcarFormulasSoltas(marcado), marcado, texto);
+    assert.deepEqual(resumo(partirTextoComFormulas(marcado)), resumo(partirTextoComFormulas(texto, { heuristica: true })), texto);
+  }
+  // Cada conta é UMA fórmula em linha, falada pela árvore; nada de sublinhado.
+  const [conta] = partirTextoComFormulas("x = 3", { heuristica: true });
+  assert.equal(conta.tipo, "formula");
+  assert.equal(conta.falado, "x é igual a 3");
+  assert.equal(conta.linear, "x = 3");
+  assert.equal(falarTextoComFormulas(marcarFormulasSoltas("a + b")), "a mais b");
+});
+
+/* ----- Marco 2d: o peso do texto ao redor e a linha de base ----- */
+
+/** A tinta de um desenho: a soma da área dos contornos de texto (caminhos preenchidos), com as curvas achatadas. */
+function tinta(desenho) {
+  let total = 0;
+  for (const primitiva of desenho.primitivas) {
+    if (primitiva.tipo !== "caminho" || !primitiva.preenchimento) continue;
+    const re = /([MLQZ])([^MLQZ]*)/g;
+    let achado;
+    let atual = [0, 0];
+    let inicio = [0, 0];
+    let area = 0;
+    const aresta = (x1, y1, x2, y2) => { area += (x1 * y2 - x2 * y1) / 2; };
+    while ((achado = re.exec(primitiva.d))) {
+      const n = achado[2].trim() ? achado[2].trim().split(/\s+/).map(Number) : [];
+      if (achado[1] === "M") { atual = [n[0], n[1]]; inicio = atual; }
+      else if (achado[1] === "L") { aresta(...atual, n[0], n[1]); atual = [n[0], n[1]]; }
+      else if (achado[1] === "Q") {
+        let anterior = atual;
+        for (let i = 1; i <= 8; i += 1) {
+          const t = i / 8;
+          const px = (1 - t) ** 2 * atual[0] + 2 * t * (1 - t) * n[0] + t * t * n[2];
+          const py = (1 - t) ** 2 * atual[1] + 2 * t * (1 - t) * n[1] + t * t * n[3];
+          aresta(anterior[0], anterior[1], px, py);
+          anterior = [px, py];
+        }
+        atual = [n[2], n[3]];
+      } else { aresta(...atual, ...inicio); atual = inicio; }
+    }
+    total += Math.abs(area);
+  }
+  return total;
+}
+
+test("2d (a): a fórmula em linha usa o peso do texto ao redor, 400 na aula e 700 (o padrão) no enunciado; as variáveis seguem em itálico", async () => {
+  const { desenharFormulaEmLinha } = await import("@studoo/contratos");
+  for (const formula of ["x = 3", "x_A + y_B", "x^2 = 9", "\\frac{x}{2} + 1", "\\pi r^2", "\\Delta = b^2 - 4ac", "a \\leq b", "(x + 1)^2 \\neq 0"]) {
+    const arvore = lerFormula(formula).arvore;
+    const padrao = desenharFormulaEmLinha(arvore, 16);
+    const negrito = desenharFormulaEmLinha(arvore, 16, 700);
+    const regular = desenharFormulaEmLinha(arvore, 16, 400);
+    assert.deepEqual(padrao, negrito, `${formula}: 700 é o padrão, quem já chama não muda`);
+    assert.notDeepEqual(regular.primitivas, negrito.primitivas, `${formula}: o 400 desenha outros contornos`);
+    assert.ok(regular.largura <= negrito.largura + 1e-9, `${formula}: o regular não é mais largo (${regular.largura} contra ${negrito.largura})`);
+    assert.ok(tinta(regular) < 0.88 * tinta(negrito), `${formula}: o regular é mais fino (${Math.round(tinta(regular))} contra ${Math.round(tinta(negrito))})`);
+    // A caixa (altura e linha de base) não depende do peso: a fórmula entra na mesma linha do texto.
+    assert.equal(regular.altura, negrito.altura);
+    assert.equal(regular.linhaDeBase, negrito.linhaDeBase);
+    assert.equal(regular.falado, negrito.falado);
+    assert.ok(regular.menorTexto >= 11 && regular.menorTexto <= 16, `${formula}: menor texto ${regular.menorTexto}`);
+  }
+  // Cada marca de texto leva o peso pedido, e a variável sozinha continua em itálico (o número não).
+  const marcas = (formula, peso) => caixaDaFormulaEmLinha(lerFormula(formula).arvore, 16, "texto", peso).marcas.filter((marca) => marca.m === "texto");
+  for (const peso of [400, 700]) {
+    const todas = marcas("x_A = 3 + y^2", peso);
+    assert.ok(todas.length >= 6 && todas.every((marca) => marca.peso === peso), `todas as marcas em ${peso}`);
+    assert.equal(todas.find((marca) => marca.texto === "x").italico, true, "a variável é itálica");
+    assert.equal(todas.find((marca) => marca.texto === "3").italico, false, "o número é reto");
+    assert.equal(todas.find((marca) => marca.texto === "A").italico, false, "o índice é reto");
+  }
+  // O 400 é o peso do texto regular da aula e o 700 o do enunciado: as duas palavras "x" e "3" têm a mesma altura de letra.
+  assert.equal(marcas("x", 400)[0].tamanho, marcas("x", 700)[0].tamanho);
+  // Os traços que o motor desenha no lugar de ≤ ≥ ≠ → ficam mais finos no 400.
+  const traco = (formula, peso) => caixaDaFormulaEmLinha(lerFormula(formula).arvore, 16, "texto", peso).marcas.find((marca) => marca.m === "linha").largura;
+  assert.ok(traco("a \\leq b", 400) < traco("a \\leq b", 700));
+});
+
+test("2d (c): a linhaDeBase fica na base dos algarismos e das letras, não no fundo da caixa nem no do índice", async () => {
+  const { desenharFormulaEmLinha } = await import("@studoo/contratos");
+  const fundoDoTexto = (desenho) => {
+    const numeros = desenho.primitivas.filter((primitiva) => primitiva.tipo === "caminho").flatMap((primitiva) => primitiva.d.match(/-?\d+(?:\.\d+)?/g).map(Number).filter((_, i) => i % 2 === 1));
+    return Math.max(...numeros);
+  };
+  for (const tamanho of [16, 17]) {
+    for (const peso of [400, 700]) {
+      // Sem índice nem barra, a base das letras e dos algarismos é o ponto mais baixo do desenho (e a `linhaDeBase`).
+      // (Sem "y", "g", "p" nem "q": a perna dessas letras desce da base, como deve.)
+      for (const formula of ["x", "x + 1", "x = 3", "a = 12", "x^2", "a^2 + x^2 = 9"]) {
+        const desenho = desenharFormulaEmLinha(lerFormula(formula).arvore, tamanho, peso);
+        assert.ok(Math.abs(fundoDoTexto(desenho) - desenho.linhaDeBase) <= 0.6, `${formula} ${tamanho}/${peso}: base em ${fundoDoTexto(desenho)}, linhaDeBase ${desenho.linhaDeBase}`);
+        assert.ok(desenho.linhaDeBase < desenho.altura);
+      }
+      // Com índice ou fração "a/b" o fundo da caixa desce, mas a linhaDeBase continua na base do algarismo: é a mesma da fórmula sem eles.
+      const simples = desenharFormulaEmLinha(lerFormula("x").arvore, tamanho, peso).linhaDeBase;
+      assert.equal(desenharFormulaEmLinha(lerFormula("x_A").arvore, tamanho, peso).linhaDeBase, simples, "o índice não muda a linha de base");
+      assert.equal(desenharFormulaEmLinha(lerFormula("\\frac{1}{2}").arvore, tamanho, peso).linhaDeBase, simples, "1/2 fica na linha de base das letras e dos algarismos");
+      const comIndice = desenharFormulaEmLinha(lerFormula("x_A").arvore, tamanho, peso);
+      assert.ok(comIndice.altura > comIndice.linhaDeBase + 0.25 * tamanho, "o fundo da caixa vai além da base (o índice desce)");
+      // A base do algarismo de "1/2" cai na linha de base: o 1 e o 2 estão sobre ela (o contorno do "/" é que passa um pouco abaixo).
+      const meio = desenharFormulaEmLinha(lerFormula("\\frac{1}{2}").arvore, tamanho, peso);
+      assert.ok(fundoDoTexto(meio) >= meio.linhaDeBase && fundoDoTexto(meio) <= meio.linhaDeBase + 0.15 * tamanho + 0.6, "só a barra inclinada passa da base");
+    }
+  }
+  // Com expoente, a caixa cresce para cima e a linhaDeBase com ela: a base do "x" é a mesma distância do topo.
+  const expoente = desenharFormulaEmLinha(lerFormula("x^2").arvore, 16, 700);
+  assert.ok(expoente.linhaDeBase > desenharFormulaEmLinha(lerFormula("x").arvore, 16, 700).linhaDeBase + 0.2 * 16, "o topo da caixa sobe com o expoente");
 });

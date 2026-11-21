@@ -183,11 +183,13 @@ export function desenharFormula(arvore: NoFormula, opcoes: OpcoesDaFormula = {})
  * A fórmula em linha (variável, índice, expoente, número, operador, parênteses, fração simples "a/b"): uma caixa do tamanho do
  * texto ao redor (`tamanho`, 16 ou 17), com a linha de base marcada, para o cliente pôr no meio da frase (spec 15, seção 9):
  * índice e expoente a 70% (no mínimo 11), o índice desce 0,3 em e o expoente sobe 0,45 em, dentro da linha de 1,5 em, sem a
- * linha crescer; 0,2 em de cada lado dos sinais; a caixa não quebra. Fração composta, raiz e matriz não vêm aqui
+ * linha crescer; 0,2 em de cada lado dos sinais; a caixa não quebra. `peso` é o do texto ao redor: 400 (regular) na aula, 700
+ * (negrito, o padrão) no enunciado e nos títulos; as variáveis seguem em itálico. A `linhaDeBase` é a distância do topo da caixa à
+ * base dos algarismos e das letras (não ao fundo do índice nem da caixa). Fração composta, raiz e matriz não vêm aqui
  * (`formulaCabeNaLinha`): na frase caem em texto linear em peças (`partirTextoComFormulas`).
  */
-export function desenharFormulaEmLinha(arvore: NoFormula, tamanho = 16): DesenhoEmLinha {
-  const caixa = caixaDaFormulaEmLinha(arvore, tamanho);
+export function desenharFormulaEmLinha(arvore: NoFormula, tamanho = 16, peso: 400 | 700 = 700): DesenhoEmLinha {
+  const caixa = caixaDaFormulaEmLinha(arvore, tamanho, "texto", peso);
   const { primitivas, menorTexto } = emitir(deslocar(caixa.marcas, 0, caixa.a));
   return { largura: r2(caixa.l), altura: r2(caixa.a + caixa.p), linhaDeBase: r2(caixa.a), primitivas, falado: falarFormula(arvore), menorTexto };
 }
@@ -281,19 +283,48 @@ function losango(cx: number, cy: number, meia: number): readonly Comando[] {
   return [["M", cx, cy - meia], ["L", cx + meia, cy], ["L", cx, cy + meia], ["L", cx - meia, cy], ["Z"]];
 }
 
-/** Rótulo que perdeu as coordenadas no desenho por falta de lugar: elas vão para a legenda, em linha própria, para nunca se perder. */
+/**
+ * Rótulo que perdeu as coordenadas no desenho por falta de lugar: elas vão para a legenda, em linha própria, com o símbolo do
+ * ponto antes (bolinha, losango…, na cor do papel), para nunca se perder.
+ */
 interface CoordenadasNaLegenda {
   texto: string;
   cor: PapelDeCor;
+  simbolo: ItemDaLegenda["simbolo"];
 }
 
-/** A legenda em linhas de até 288 de largura, a partir de (16, topo). Devolve as marcas e a altura que ocupa. */
+/**
+ * Como a legenda se compõe (a altura é o que o desenho cede quando falta lugar, nesta ordem):
+ * - `completa`: as categorias ("dados", "baricentro", "C = ?") numa frase e as coordenadas perdidas em linha própria, cada uma com o símbolo;
+ * - `junta`: as mesmas entradas, mas as coordenadas seguem na linha das categorias (menos linhas);
+ * - `compacta`: sem as categorias (fica o "C = ?"), as coordenadas só com o texto na cor do papel, em fluxo corrido.
+ */
+export type ModoDaLegenda = "completa" | "junta" | "compacta";
+
+/**
+ * A legenda em linhas de até 288 de largura, a partir de (16, topo). Devolve as marcas e a altura que ocupa. No modo `compacta` as
+ * categorias só saem se isso poupa uma linha; senão a legenda fica como a `junta` (tirar a informação sem ganhar altura não ajuda).
+ */
 function legenda(
   itens: readonly ItemDaLegenda[], escondidos: readonly string[], perdidas: readonly CoordenadasNaLegenda[], topo: number,
+  modo: ModoDaLegenda = "completa",
 ): { marcas: Marca[]; altura: number } {
-  if (itens.length === 0 && perdidas.length === 0) return { marcas: [], altura: 0 };
-  const marcas: Marca[] = [];
-  const entradas: { largura: number; fazer: (x: number, y: number) => Marca[] }[] = itens.map((item) => ({
+  if (modo !== "compacta") return montarLegenda(itens, escondidos, perdidas, topo, modo);
+  const semCategorias = montarLegenda(itens, escondidos, perdidas, topo, "compacta");
+  const junta = montarLegenda(itens, escondidos, perdidas, topo, "junta");
+  return semCategorias.altura < junta.altura ? semCategorias : junta;
+}
+
+function montarLegenda(
+  itens: readonly ItemDaLegenda[], escondidos: readonly string[], perdidas: readonly CoordenadasNaLegenda[], topo: number, modo: ModoDaLegenda,
+): { marcas: Marca[]; altura: number } {
+  interface Entrada {
+    largura: number;
+    fazer: (x: number, y: number) => Marca[];
+    /** Começa uma linha nova (as coordenadas, na legenda completa). */
+    novaLinha?: boolean;
+  }
+  const entradas: Entrada[] = modo === "compacta" ? [] : itens.map((item) => ({
     largura: 12 + 5 + larguraDoTexto(item.palavra, TAMANHO_DA_LEGENDA, 700),
     fazer: (x, y) => [
       ...marcasDoSimbolo(item.simbolo, x, y - 5),
@@ -307,27 +338,29 @@ function legenda(
       fazer: (x, y) => [{ m: "texto", texto, x, y, tamanho: TAMANHO_DA_LEGENDA, peso: 800, italico: false, cor: "procuradoTexto" }],
     });
   }
+  // As coordenadas que o rótulo perdeu: com o símbolo do ponto antes (na compacta, só o texto na cor do papel).
+  perdidas.forEach((perdida, i) => {
+    const comSimbolo = modo !== "compacta";
+    entradas.push({
+      largura: (comSimbolo ? 17 : 0) + larguraDoTexto(perdida.texto, TAMANHO_DA_LEGENDA, 800),
+      novaLinha: modo === "completa" && i === 0,
+      fazer: (x, y) => [
+        ...(comSimbolo ? marcasDoSimbolo(perdida.simbolo, x, y - 5) : []),
+        { m: "texto", texto: perdida.texto, x: x + (comSimbolo ? 17 : 0), y, tamanho: TAMANHO_DA_LEGENDA, peso: 800, italico: false, cor: perdida.cor },
+      ],
+    });
+  });
+  if (entradas.length === 0) return { marcas: [], altura: 0 };
+  const marcas: Marca[] = [];
   let x = 16;
-  let linha = -1;
-  const proximaLinha = () => {
-    x = 16;
-    linha += 1;
-  };
-  if (entradas.length > 0) proximaLinha();
+  let linha = 0;
   for (const entrada of entradas) {
-    if (x > 16 && x + entrada.largura > LARGURA_DO_DESENHO - 16) proximaLinha();
+    if (x > 16 && (entrada.novaLinha === true || x + entrada.largura > LARGURA_DO_DESENHO - 16)) {
+      x = 16;
+      linha += 1;
+    }
     marcas.push(...entrada.fazer(x, topo + 14 + linha * ALTURA_DA_LINHA_DA_LEGENDA));
     x += entrada.largura + 16;
-  }
-  // As coordenadas que o rótulo perdeu, numa linha própria.
-  if (perdidas.length > 0) {
-    proximaLinha();
-    for (const perdida of perdidas) {
-      const largura = larguraDoTexto(perdida.texto, TAMANHO_DA_LEGENDA, 800);
-      if (x > 16 && x + largura > LARGURA_DO_DESENHO - 16) proximaLinha();
-      marcas.push({ m: "texto", texto: perdida.texto, x, y: topo + 14 + linha * ALTURA_DA_LINHA_DA_LEGENDA, tamanho: TAMANHO_DA_LEGENDA, peso: 800, italico: false, cor: perdida.cor });
-      x += largura + 16;
-    }
   }
   return { marcas, altura: (linha + 1) * ALTURA_DA_LINHA_DA_LEGENDA + 2 };
 }
@@ -353,9 +386,10 @@ function passoDaGrade(extensao: number): number {
 /** Os números vão de 1 em 1 até 12 unidades e de 2 em 2 até 20; nunca mais juntos que `minimoEmUnidades` de projeto. */
 function passoDosNumeros(extensao: number, passoDaGradeAtual: number, unidade: number, minimoEmUnidades: number): number {
   let passo = passoDaGradeAtual === 1 && extensao > 12 ? 2 : passoDaGradeAtual;
-  while (passo * unidade < minimoEmUnidades) {
-    const proximo = PASSOS_DA_GRADE[PASSOS_DA_GRADE.indexOf(passo) + 1];
-    passo = proximo ?? passo * 2;
+  for (let volta = 0; passo * unidade < minimoEmUnidades && volta < 64; volta += 1) {
+    // Depois de 1000 (o último da lista) o passo dobra; um passo fora da lista também dobra (nunca volta ao começo da lista).
+    const posicao = PASSOS_DA_GRADE.indexOf(passo);
+    passo = posicao >= 0 && posicao + 1 < PASSOS_DA_GRADE.length ? PASSOS_DA_GRADE[posicao + 1] : passo * 2;
   }
   return passo;
 }
@@ -367,6 +401,8 @@ function multiplos(de: number, ate: number, passo: number): number[] {
 }
 
 const FOLGA_DO_ROTULO_DOS_NUMEROS = 2;
+/** A letra (ou o rótulo inteiro) do ponto fica a no máximo isto da borda dele, em qualquer das 8 direções: mais longe deixa de parecer dele. */
+const DISTANCIA_MAXIMA_DO_ROTULO = 8;
 /** O rótulo só com o nome nunca encosta em número de eixo: no mínimo uma unidade de glifo (um dígito) de folga. */
 const FOLGA_DO_NOME_DOS_NUMEROS = 8;
 
@@ -383,9 +419,9 @@ interface LugarDoRotulo {
 /**
  * O rótulo de um ponto procura um lado que não cubra outro ponto, número de eixo, rótulo ou eixo: direita, esquerda, acima, abaixo
  * e depois as diagonais; entre os lados livres ganha o que cobre menos traço. Se nenhum lado couber o rótulo inteiro ("A (1, 2)"),
- * fica só o nome ("A") no lado livre mais perto (até 6 unidades de afastamento: mais longe o nome deixaria de parecer do ponto),
- * sempre a uma unidade de glifo de qualquer número de eixo. Sem lugar nem para o nome, devolve `null`. Nos dois casos, quem chama
- * põe as coordenadas na legenda (`soONome` pula direto para o nome).
+ * fica só o nome ("A") no lado livre mais perto, sempre a uma unidade de glifo de qualquer número de eixo; o rótulo, inteiro ou só
+ * o nome, fica a no máximo 8 unidades da borda do ponto (mais longe ele deixaria de parecer do ponto). Sem lugar nem para o nome,
+ * devolve `null`. Quando o rótulo perde as coordenadas, quem chama as põe na legenda (`soONome` pula direto para o nome).
  */
 function acharLugarDoRotulo(
   cx: number, cy: number, raioDoPonto: number, completo: string, nome: string, obstaculos: readonly Ret[], numeros: readonly Ret[],
@@ -404,14 +440,19 @@ function acharLugarDoRotulo(
       { x: cx - folga - l + 3, y: cy + folga - 2 },
     ];
   };
+  /** A distância da caixa do rótulo à BORDA do ponto (não ao centro): é ela que não passa de `DISTANCIA_MAXIMA_DO_ROTULO`. */
+  const distanciaDaBorda = (ret: Ret) => Math.hypot(Math.max(ret.x - cx, 0, cx - (ret.x + ret.l)), Math.max(ret.y - cy, 0, cy - (ret.y + ret.a))) - raioDoPonto;
   const livre = (ret: Ret, folgaDosNumeros: number) => {
     if (ret.x < limites.esquerda || ret.x + ret.l > limites.direita || ret.y < limites.topo) return false;
+    if (distanciaDaBorda(ret) > DISTANCIA_MAXIMA_DO_ROTULO + 1e-6) return false;
     return !obstaculos.some((obstaculo) => bate(ret, obstaculo)) && !numeros.some((numero) => bate(ret, inflar(numero, folgaDosNumeros)));
   };
-  // 1. o rótulo inteiro em algum lado; 2. só o nome, no lado livre mais perto (afastando de 2 em 2).
+  // 1. o rótulo inteiro em algum lado; 2. só o nome, no lado livre mais perto. Os dois a no máximo 8 unidades da borda do ponto, em
+  // qualquer das 8 direções e mesmo sobre a grade (o halo resolve a leitura); sem lugar assim, o ponto fica sem letra.
+  const afastamentos = [0, 1, 2, 3, 4];
   const tentativas: (readonly [string, number, number])[] = [
-    ...(soONome ? [] : [[completo, 0, FOLGA_DO_ROTULO_DOS_NUMEROS] as const]),
-    ...Array.from({ length: 4 }, (_, i) => [nome, 2 * i, FOLGA_DO_NOME_DOS_NUMEROS] as const),
+    ...(soONome ? [] : afastamentos.map((anel) => [completo, anel, FOLGA_DO_ROTULO_DOS_NUMEROS] as const)),
+    ...afastamentos.map((anel) => [nome, anel, FOLGA_DO_NOME_DOS_NUMEROS] as const),
   ];
   for (const [texto, anel, folgaDosNumeros] of tentativas) {
     const { l, a } = caixaDoRotulo(texto);
@@ -427,6 +468,8 @@ function acharLugarDoRotulo(
 /* ----- Plano cartesiano ----- */
 
 const GRADE = { esquerda: 28, direita: 280, topo: 32, bandaDeBaixo: 28 };
+/** Com esta escala (pontos de projeto por unidade) ou mais, os pontos têm o tamanho inteiro; abaixo, encolhem junto. */
+const UNIDADE_DO_PONTO_INTEIRO = 12;
 
 interface PontoDesenhado {
   id: string;
@@ -437,23 +480,56 @@ interface PontoDesenhado {
 }
 
 /**
- * O plano. O rótulo que não coube inteiro ("A (1, 2)") vira só o nome (ou some, se nem o nome cabe) e as coordenadas vão para a
- * legenda, em linha própria. Como a legenda ocupa altura, a altura muda a escala e a escala muda onde os rótulos cabem, o
- * desenho se refaz até estabilizar.
+ * O que o plano cede, nesta ordem, quando a altura que o cliente dá (`alturaMaxima`) não comporta o desenho inteiro: desce a escala do
+ * gráfico (a grade e os eixos, de 80 até 64), junta as linhas da legenda, desce o gráfico mais um pouco (52) e só então tira as
+ * categorias da legenda, se isso poupa linhas (as coordenadas ficam, com o texto na cor do papel), com o gráfico até 44. O texto
+ * nunca desce do piso. Se nem assim cabe, o desenho sai marcado `naoCabe`.
+ */
+const DEGRAUS_DO_PLANO: readonly DegrauDoPlano[] = [
+  { legenda: "completa", pisoDaGrade: 80 },
+  { legenda: "completa", pisoDaGrade: 64 },
+  { legenda: "junta", pisoDaGrade: 64 },
+  { legenda: "junta", pisoDaGrade: 52 },
+  { legenda: "compacta", pisoDaGrade: 52 },
+  { legenda: "compacta", pisoDaGrade: 44 },
+];
+
+interface DegrauDoPlano {
+  legenda: ModoDaLegenda;
+  /** A altura mínima da área da grade neste degrau. */
+  pisoDaGrade: number;
+}
+
+/**
+ * O plano, sempre dentro de `alturaMaxima` (padrão 320): o que o motor não consegue fazer caber ele marca `naoCabe`, e quem desenha
+ * (ou valida) trata como visual que não vale. O rótulo que não coube inteiro ("A (1, 2)") vira só o nome (ou some, se nem o nome
+ * cabe) e as coordenadas vão para a legenda. Como a legenda ocupa altura, a altura muda a escala e a escala muda onde os rótulos
+ * cabem, cada degrau se refaz até estabilizar.
  */
 export function desenharPlano(visual: VisualPlano, contexto: ContextoDoDesenho, opcoes: OpcoesDaFigura = {}): Desenho {
+  const limite = opcoes.alturaMaxima ?? 320;
+  let ultimo: Desenho | null = null;
+  for (const degrau of DEGRAUS_DO_PLANO) {
+    const desenho = desenharPlanoEstavel(visual, contexto, opcoes, degrau);
+    if (desenho.altura <= limite + 1e-6) return desenho;
+    ultimo = desenho;
+  }
+  return { ...(ultimo as Desenho), naoCabe: true };
+}
+
+function desenharPlanoEstavel(visual: VisualPlano, contexto: ContextoDoDesenho, opcoes: OpcoesDaFigura, degrau: DegrauDoPlano): Desenho {
   const naLegenda = new Set<string>();
   for (let volta = 0; volta < 6; volta += 1) {
-    const feito = desenharPlanoUmaVez(visual, contexto, opcoes, naLegenda);
+    const feito = desenharPlanoUmaVez(visual, contexto, opcoes, naLegenda, degrau);
     if (feito.novos.length === 0) return feito.desenho;
     feito.novos.forEach((id) => naLegenda.add(id));
   }
   // Não estabilizou: todos os rótulos viram só o nome, com as coordenadas na legenda (assim sempre estabiliza).
-  return desenharPlanoUmaVez(visual, contexto, opcoes, new Set(visual.pontos.map((ponto) => ponto.id))).desenho;
+  return desenharPlanoUmaVez(visual, contexto, opcoes, new Set(visual.pontos.map((ponto) => ponto.id)), degrau).desenho;
 }
 
 function desenharPlanoUmaVez(
-  visual: VisualPlano, contexto: ContextoDoDesenho, opcoes: OpcoesDaFigura, forcados: ReadonlySet<string>,
+  visual: VisualPlano, contexto: ContextoDoDesenho, opcoes: OpcoesDaFigura, forcados: ReadonlySet<string>, degrau: DegrauDoPlano,
 ): { desenho: Desenho; novos: string[] } {
   const rotuloCompleto = (ponto: VisualPlano["pontos"][number]) => rotuloDoPonto(ponto.id, [ponto.x as number, ponto.y as number]);
   const doContexto = visual.pontos.flatMap((ponto) => {
@@ -462,13 +538,14 @@ function desenharPlanoUmaVez(
   });
   const emLegenda: CoordenadasNaLegenda[] = doContexto
     .filter(({ ponto }) => ponto.rotulo !== false && forcados.has(ponto.id))
-    .map(({ ponto, papel }) => ({ texto: rotuloCompleto(ponto), cor: COR_DO_ROTULO[papel] }));
+    .map(({ ponto, papel }) => ({ texto: rotuloCompleto(ponto), cor: COR_DO_ROTULO[papel], simbolo: papel as ItemDaLegenda["simbolo"] }));
 
   const legendaPrevia = itensDaLegenda(visual.pontos, contexto);
-  const alturaDaLegenda = legendaPrevia.itens.length || emLegenda.length ? legenda(legendaPrevia.itens, legendaPrevia.escondidos, emLegenda, 0).altura + 8 : 0;
+  const legendaDeAntes = legenda(legendaPrevia.itens, legendaPrevia.escondidos, emLegenda, 0, degrau.legenda);
+  const alturaDaLegenda = legendaDeAntes.altura > 0 ? legendaDeAntes.altura + 8 : 0;
   const larguraDaGrade = GRADE.direita - GRADE.esquerda;
   const reservado = GRADE.topo + GRADE.bandaDeBaixo + alturaDaLegenda + 8;
-  const maximo = Math.max(80, (opcoes.alturaMaxima ?? 320) - reservado);
+  const maximo = Math.max(degrau.pisoDaGrade, (opcoes.alturaMaxima ?? 320) - reservado);
   const minimo = Math.min(maximo, Math.max(90, 200 - reservado));
 
   let [xMin, xMax] = visual.x;
@@ -489,6 +566,9 @@ function desenharPlanoUmaVez(
   }
   const X = (v: number) => GRADE.esquerda + (v - xMin) * unidade;
   const Y = (v: number) => GRADE.topo + (yMax - v) * unidade;
+  // Numa grade baixa (a escala desce para caber em `alturaMaxima`) os pontos vizinhos encostariam: o ponto desce junto, até 55%.
+  const fatorDoPonto = unidade >= UNIDADE_DO_PONTO_INTEIRO ? 1 : Math.max(0.55, unidade / UNIDADE_DO_PONTO_INTEIRO);
+  const raioDoPonto = (papel: PapelEfetivo): number => (papel === "resposta" ? 8 : papel === "especial" ? 8.5 : 6) * fatorDoPonto;
   const { esquerda, direita, topo } = GRADE;
   const fundo = GRADE.topo + alturaDaGrade;
   const eixoX = Math.min(Math.max(X(0), esquerda), direita);
@@ -552,7 +632,7 @@ function desenharPlanoUmaVez(
   caixa("eixo", "x", nomeDoX);
   caixa("eixo", "y", nomeDoY);
   obstaculos.push({ ...nomeDoX, x: nomeDoX.x - 2, l: nomeDoX.l + 4 }, { ...nomeDoY, x: nomeDoY.x - 2, l: nomeDoY.l + 4 });
-  const caixaDoPonto = (ponto: PontoDesenhado): Ret => ({ x: ponto.x - 10, y: ponto.y - 10, l: 20, a: 20 });
+  const caixaDoPonto = (ponto: PontoDesenhado): Ret => ({ x: ponto.x - 10 * fatorDoPonto, y: ponto.y - 10 * fatorDoPonto, l: 20 * fatorDoPonto, a: 20 * fatorDoPonto });
 
   // 4. Linhas-guia, com o valor do eixo em foco (o número do eixo que ele cobre sai: o foco é o próprio número).
   const emFocoNoX = new Set<number>();
@@ -590,7 +670,9 @@ function desenharPlanoUmaVez(
 
   // 6. Números dos eixos: lugar fixo e prioridade; nenhum rótulo de ponto os apaga.
   const numerosDeEixo: Ret[] = [];
-  const noX = passoDosNumeros(xMax - xMin, passoX, unidade, 24);
+  // Os números do eixo x nunca se encostam: o espaço entre eles é a largura do mais largo mais 8 (no mínimo 24).
+  const maisLargoDoX = Math.max(0, ...multiplos(xMin, xMax, passoX).map((v) => larguraDoTexto(numeroParaTela(v), TAMANHO_DO_NUMERO, 700)));
+  const noX = passoDosNumeros(xMax - xMin, passoX, unidade, Math.max(24, maisLargoDoX + 8));
   const noY = passoDosNumeros(yMax - yMin, passoY, unidade, 16);
   const baseDoX = eixoY + 17;
   const numeros: Marca[] = [];
@@ -612,7 +694,16 @@ function desenharPlanoUmaVez(
     numerosDeEixo.push(ret);
     caixa("numero", texto, ret);
   }
-  // O 0 da origem é o único que escolhe o canto: o mais longe de qualquer número ou ponto (assim "−1" e "0" não se leem "−10").
+  // Os traços dos segmentos (amostras de 7 × 7 a cada 5 unidades): o 0 da origem e os rótulos fogem deles.
+  const tracos: Ret[] = lados.flatMap(([de, ate]) => {
+    const a = visiveis.get(de)!;
+    const b = visiveis.get(ate)!;
+    const passos = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 5));
+    return Array.from({ length: passos + 1 }, (_, i) => ({ x: a.x + ((b.x - a.x) * i) / passos - 3.5, y: a.y + ((b.y - a.y) * i) / passos - 3.5, l: 7, a: 7 }));
+  });
+  // O 0 da origem é o único número que escolhe o canto (o mais folgado, longe de número, ponto e segmento, para "−1" e "0" não se
+  // lerem "−10"), e só aparece se não houver ponto na origem: com um ponto lá, o rótulo "O (0, 0)" ocupa o lugar do 0.
+  const haPontoNaOrigem = pontos.some((ponto) => Math.hypot(ponto.x - X(0), ponto.y - Y(0)) < 1);
   const larguraDoZero = larguraDoTexto("0", TAMANHO_DO_NUMERO, 700);
   const cantos = [
     { x: eixoX + 6, y: eixoY + 7 },
@@ -625,30 +716,27 @@ function desenharPlanoUmaVez(
   const distancia = (a: Ret, b: Ret) => Math.hypot(Math.max(0, a.x - (b.x + b.l), b.x - (a.x + a.l)), Math.max(0, a.y - (b.y + b.a), b.y - (a.y + a.a)));
   const folgaDoCanto = (c: { x: number; y: number }) => Math.min(...vizinhos.map((outro) => distancia(doZero(c), outro)));
   const numerosQueBatem = (c: { x: number; y: number }) => numerosDeEixo.filter((numero) => bate(doZero(c), numero)).length;
+  const tracoQueBate = (c: { x: number; y: number }) => tracos.reduce((soma, traco) => soma + sobreposicao(doZero(c), traco), 0);
   const livres = cantos.filter((c) => !vizinhos.some((outro) => bate(doZero(c), outro)));
-  // O canto livre de tudo e mais folgado; senão o que não bate em número nenhum (um ponto só tapa um pedaço da caixa, nunca o
-  // dígito); senão o que bate em menos números.
+  // O canto livre de tudo, sem traço por baixo e mais folgado; senão o que não bate em número nenhum (um ponto só tapa um pedaço
+  // da caixa, nunca o dígito) e cobre menos traço; senão o que bate em menos números.
   const canto = livres.length > 0
-    ? [...livres].sort((a, b) => folgaDoCanto(b) - folgaDoCanto(a))[0]
-    : cantos.find((c) => numerosQueBatem(c) === 0) ?? [...cantos].sort((a, b) => numerosQueBatem(a) - numerosQueBatem(b))[0];
-  const retDoZero = doZero(canto);
-  numeros.push(escrever("0", canto.x, canto.y + 10, TAMANHO_DO_NUMERO, 700, "suave"));
-  numerosDeEixo.push(retDoZero);
-  caixa("numero", "0", retDoZero);
+    ? [...livres].sort((a, b) => tracoQueBate(a) - tracoQueBate(b) || folgaDoCanto(b) - folgaDoCanto(a))[0]
+    : cantos.filter((c) => numerosQueBatem(c) === 0).sort((a, b) => tracoQueBate(a) - tracoQueBate(b))[0] ?? [...cantos].sort((a, b) => numerosQueBatem(a) - numerosQueBatem(b))[0];
+  if (!haPontoNaOrigem) {
+    const retDoZero = doZero(canto);
+    numeros.push(escrever("0", canto.x, canto.y + 10, TAMANHO_DO_NUMERO, 700, "suave"));
+    numerosDeEixo.push(retDoZero);
+    caixa("numero", "0", retDoZero);
+  }
 
   // 7. Rótulos dos pontos: quem se move é o rótulo; sem lugar para o inteiro, só o nome, e as coordenadas vão para a legenda.
-  const tracos: Ret[] = lados.flatMap(([de, ate]) => {
-    const a = visiveis.get(de)!;
-    const b = visiveis.get(ate)!;
-    const passos = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.y - a.y) / 5));
-    return Array.from({ length: passos + 1 }, (_, i) => ({ x: a.x + ((b.x - a.x) * i) / passos - 3.5, y: a.y + ((b.y - a.y) * i) / passos - 3.5, l: 7, a: 7 }));
-  });
   const rotulos: Marca[] = [];
   const novos: string[] = [];
   const limites = { esquerda: 2, direita: LARGURA_DO_DESENHO - 2, topo: 2 };
   for (const ponto of [...pontos].sort((a, b) => Number(b.papel === "especial") - Number(a.papel === "especial"))) {
     if (!ponto.completo) continue;
-    const raio = ponto.papel === "resposta" ? 8 : ponto.papel === "especial" ? 8.5 : 6;
+    const raio = raioDoPonto(ponto.papel);
     // O próprio ponto não é obstáculo do rótulo dele; os outros pontos são. Os segmentos só desempatam.
     const dosOutros = pontos.filter((outro) => outro !== ponto).map(caixaDoPonto);
     const forcado = forcados.has(ponto.id);
@@ -664,11 +752,11 @@ function desenharPlanoUmaVez(
   // 8. Pontos, e a legenda embaixo.
   const marcasDosPontos: Marca[] = [];
   for (const ponto of pontos) {
-    if (ponto.papel === "especial") marcasDosPontos.push({ m: "caminho", cmds: losango(ponto.x, ponto.y, 8.5), preenchimento: "especial", borda: "branco", larguraDaBorda: 2 });
-    else marcasDosPontos.push({ m: "circulo", cx: ponto.x, cy: ponto.y, raio: ponto.papel === "resposta" ? 8 : 6, preenchimento: ponto.papel === "resposta" ? "resposta" : "dado", borda: "branco", larguraDaBorda: 2 });
+    if (ponto.papel === "especial") marcasDosPontos.push({ m: "caminho", cmds: losango(ponto.x, ponto.y, raioDoPonto("especial")), preenchimento: "especial", borda: "branco", larguraDaBorda: 2 });
+    else marcasDosPontos.push({ m: "circulo", cx: ponto.x, cy: ponto.y, raio: raioDoPonto(ponto.papel), preenchimento: ponto.papel === "resposta" ? "resposta" : "dado", borda: "branco", larguraDaBorda: 2 });
   }
   const topoDaLegenda = fundo + GRADE.bandaDeBaixo + 4;
-  const feita = legenda(legendaPrevia.itens, legendaPrevia.escondidos, emLegenda, topoDaLegenda);
+  const feita = legenda(legendaPrevia.itens, legendaPrevia.escondidos, emLegenda, topoDaLegenda, degrau.legenda);
 
   const marcas = [...base, ...focos, ...textos, ...numeros, ...textosDoFoco, ...rotulos, ...marcasDosPontos, ...feita.marcas];
   const altura = fundo + GRADE.bandaDeBaixo + (feita.altura ? feita.altura + 8 : 0) + 8;
@@ -679,7 +767,7 @@ function desenharPlanoUmaVez(
 
 const RETA = { inicio: 14, esquerda: 24, direita: 280 };
 
-export function desenharRetaNumerica(visual: VisualRetaNumerica, contexto: ContextoDoDesenho, _opcoes: OpcoesDaFigura = {}): Desenho {
+export function desenharRetaNumerica(visual: VisualRetaNumerica, contexto: ContextoDoDesenho, opcoes: OpcoesDaFigura = {}): Desenho {
   const unidade = (RETA.direita - RETA.esquerda) / (visual.ate - visual.de);
   const X = (v: number) => RETA.esquerda + (v - visual.de) * unidade;
   const fimDaReta = RETA.direita + FOLGA_DA_SETA;
@@ -802,9 +890,11 @@ export function desenharRetaNumerica(visual: VisualRetaNumerica, contexto: Conte
   });
   marcas.push(...frase);
   const conteudo = topoDaLegenda + (itens.length ? linha * ALTURA_DA_LINHA_DA_LEGENDA + 14 : 0);
-  const altura = Math.max(140, conteudo + 8);
+  // A reta tem 140 de altura, centrada; se o cliente dá menos, ela desce até o que o conteúdo pede, e abaixo disso sai `naoCabe`.
+  const altura = Math.max(Math.min(140, opcoes.alturaMaxima ?? 140), conteudo + 8);
   const deslocamento = Math.max(0, (altura - (conteudo + 8)) / 2);
-  return desenhoDe(deslocamento ? deslocar(marcas, 0, deslocamento) : marcas, altura, visual.alt, { caixas: caixas.map((caixa) => ({ ...caixa, y: r2(caixa.y + deslocamento) })) });
+  const desenho = desenhoDe(deslocamento ? deslocar(marcas, 0, deslocamento) : marcas, altura, visual.alt, { caixas: caixas.map((caixa) => ({ ...caixa, y: r2(caixa.y + deslocamento) })) });
+  return opcoes.alturaMaxima !== undefined && altura > opcoes.alturaMaxima + 1e-6 ? { ...desenho, naoCabe: true } : desenho;
 }
 
 /* ----- Entrada geral, composição e SVG ----- */

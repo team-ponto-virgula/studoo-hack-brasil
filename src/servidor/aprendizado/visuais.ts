@@ -161,10 +161,12 @@ export function pranchetaDosVisuais(visuais: readonly Visual[]): { desenho: Dese
       const sobra = ALTURA_MAXIMA_DA_PRANCHETA - alturaDasFaixas;
       if (sobra >= minimoDaFigura || faixas.length === 0) {
         embaixo = desenharVisual(figura, { tipo: "enunciado" }, { alturaMaxima: sobra });
-        if (embaixo && alturaDasFaixas + embaixo.altura > ALTURA_MAXIMA_DA_PRANCHETA && faixas.length > 0) {
+        // A figura que não coube (`naoCabe`) ou que passa da prancheta cede o lugar a uma faixa; sem faixa, fica só o texto.
+        if (embaixo && (embaixo.naoCabe || alturaDasFaixas + embaixo.altura > ALTURA_MAXIMA_DA_PRANCHETA) && faixas.length > 0) {
           faixas = faixas.slice(0, -1);
           continue;
         }
+        if (embaixo?.naoCabe) embaixo = null;
         break;
       }
       faixas = faixas.slice(0, -1);

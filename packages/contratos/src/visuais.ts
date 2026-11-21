@@ -388,6 +388,12 @@ export interface Desenho {
   caixas: CaixaDeTexto[];
   /** Fórmula mais larga que o desenho (depois de encolher até 85%): o cliente rola para o lado. Sem isto, tudo cabe. */
   larguraDoConteudo?: number;
+  /**
+   * A figura não coube em `alturaMaxima`, nem depois de descer a escala do gráfico e a legenda até o menor tamanho (o texto nunca
+   * desce do piso). `altura` passa de `alturaMaxima` e o cliente NÃO deve mostrá-la: o visual vale como inválido e a lição segue
+   * em texto. Sem este campo, `altura <= alturaMaxima`, sempre.
+   */
+  naoCabe?: true;
 }
 
 /**
