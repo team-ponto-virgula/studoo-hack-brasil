@@ -84,7 +84,9 @@ As mudanças de tela do app congelam na noite de 25/11: P0 e P1 cabem até lá, 
   - o selo passa a "Exemplo", no selo neutro da spec 10;
   - o parágrafo do alto sai;
   - o nome do selo para o leitor de tela fica "Exemplo criado pelo Studoo para mostrar o app";
-  - o texto muda no contrato (`comunidade`), para web e app.
+  - o texto muda no contrato (`comunidade`), para web e app;
+  - a mesma chave vale na imagem do Código Studoo, também "Exemplo", sem chave à parte;
+  - na apresentação, o selo não aparece (spec 04, banca §2: "Sem o selo 'Modo demonstração' na arte do tour").
   - A honestidade continua, porque o conteúdo sintético segue marcado.
 - **Onde:** as três plataformas.
 
