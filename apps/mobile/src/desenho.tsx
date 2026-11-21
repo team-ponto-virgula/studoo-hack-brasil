@@ -1,9 +1,10 @@
 import { memo, useMemo, useState, type ReactNode } from 'react';
-import { Animated, ScrollView, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Animated, ScrollView, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg';
-import type { ContextoDoDesenho, Desenho, OpcoesDaFigura, OpcoesDaFormula, Visual } from '@studoo/contratos';
+import { falarFormula, formulaLinear, lerFormula, type ContextoDoDesenho, type Desenho, type OpcoesDaFigura, type OpcoesDaFormula, type Visual } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
-import { desenhoDoVisual, elementoDaPrimitiva, medidasNaTela, type ElementoSvg } from './desenho-svg';
+import { desenhoDoVisual, elementoDaPrimitiva, medidasNaTela, ordenarVisuais, type ElementoSvg } from './desenho-svg';
+import { cores, fontes } from './tema';
 
 /*
  * Um visual da lição (spec 15) desenhado pelo motor compartilhado: o app só escala as primitivas para a largura útil e as
@@ -74,6 +75,47 @@ export function DesenhoDoVisual({ visual, contexto, opcoes, rotulo, testID, esti
     // O visual chega da lição (mesma referência entre desenhos); o contexto e as opções valem pelo conteúdo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [visual, chaveDoContexto, opcoes?.tamanho, opcoes?.fundo, opcoes?.alturaMaxima]);
-  if (!desenho) return null;
+  if (!desenho) return visual.tipo === 'formula' ? <FormulaEmTexto latex={visual.latex} testID={testID} /> : null;
   return <DesenhoSvg desenho={desenho} rotulo={rotulo} testID={testID} estilo={estilo} entrada={entrada} />;
 }
+
+/**
+ * A fórmula que se lê mas que o motor não desenha (acima do teto, erro): vira o texto linear, no mesmo bloco, e a lição segue.
+ * A que nem se lê não aparece (o servidor já a tira; aqui, por garantia).
+ */
+function FormulaEmTexto({ latex, testID }: { latex: string; testID?: string }) {
+  const lida = lerFormula(latex);
+  if (!lida.ok) return null;
+  return (
+    <View testID={testID} accessible accessibilityRole="text" accessibilityLabel={falarFormula(lida.arvore)} style={blocoDaFormula}>
+      <Text style={{ color: cores.texto, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 18, lineHeight: 26, textAlign: 'center' }}>
+        {formulaLinear(lida.arvore)}
+      </Text>
+    </View>
+  );
+}
+
+const blocoDaFormula: ViewStyle = { paddingVertical: 10, paddingHorizontal: 12, borderRadius: 14, backgroundColor: '#F1F4FD' };
+
+/** Opções do bloco da fórmula no app (spec 15, seção 1): 22 de base, com o fundo `#F1F4FD` do próprio motor. */
+export const OPCOES_DA_FORMULA = { tamanho: 22, fundo: true } as const;
+
+/**
+ * Os visuais da lição (conceito e exemplo), abertos e na largura do conteúdo: a fórmula em bloco antes do diagrama (spec 15,
+ * seção 3). O que não desenha some sem deixar espaço.
+ */
+export function VisuaisDaLicao({ visuais, testID = 'visual-licao' }: { visuais: readonly Visual[] | undefined; testID?: string }) {
+  const ordenados = useMemo(() => ordenarVisuais(visuais ?? []), [visuais]);
+  if (!ordenados.length) return null;
+  return (
+    <View style={{ gap: 12 }}>
+      {ordenados.map((visual, numero) => (
+        <DesenhoDoVisual key={numero} visual={visual} contexto={CONTEXTO_DO_ENUNCIADO} opcoes={visual.tipo === 'formula' ? OPCOES_DA_FORMULA : undefined}
+          testID={`${testID}-${visual.tipo}`} entrada={false} />
+      ))}
+    </View>
+  );
+}
+
+export const CONTEXTO_DO_ENUNCIADO: ContextoDoDesenho = { tipo: 'enunciado' };
+export const CONTEXTO_DO_RETORNO: ContextoDoDesenho = { tipo: 'retorno' };

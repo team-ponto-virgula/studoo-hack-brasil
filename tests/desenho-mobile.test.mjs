@@ -77,5 +77,43 @@ test('o componente: imagem com nome para o leitor de tela, entrada por fora do S
   assert.match(fonte, /<Animated\.View testID=\{testID\}/);
   assert.doesNotMatch(fonte, /Animated\.createAnimatedComponent\((Path|Svg|Line)/, 'nada de animar propriedade de SVG');
   assert.match(fonte, /aspectRatio: desenho\.largura \/ desenho\.altura/);
-  assert.match(fonte, /if \(!desenho\) return null;/, 'visual inválido não ocupa lugar');
+  assert.match(fonte, /if \(!desenho\) return visual\.tipo === 'formula' \? <FormulaEmTexto latex=\{visual\.latex\} testID=\{testID\} \/> : null;/, 'figura inválida não ocupa lugar; fórmula vira texto linear');
+  assert.match(fonte, /if \(!lida\.ok\) return null;/, 'fórmula que nem se lê some');
+});
+
+test('visuais abertos na lição: conceito e exemplo com a fórmula antes do diagrama; nada atrás do "Ver a ilustração"', async () => {
+  const { ordenarVisuais, alturaMaximaDaFigura } = await import('../apps/mobile/src/desenho-svg.ts');
+  const plano = { tipo: 'plano', alt: 'p', x: [0, 4], y: [0, 4], pontos: [{ id: 'A', papel: 'dado', x: 1, y: 1 }] };
+  const formula = { tipo: 'formula', latex: 'x = 1' };
+  assert.deepEqual(ordenarVisuais([plano, formula]).map((v) => v.tipo), ['formula', 'plano']);
+  assert.equal(alturaMaximaDaFigura(358), Math.round(200 * 320 / 358), 'figura do exercício com até 200 na tela de 390');
+  const licao = await ler('apps/mobile/src/licao.tsx');
+  assert.match(licao, /<VisuaisDaLicao visuais=\{licao\.visuais\} \/>/, 'no conceito');
+  assert.match(licao, /<VisuaisDaLicao visuais=\{licao\.visuais\} testID="visual-exemplo" \/>/, 'no exemplo');
+  const consulta = licao.slice(licao.indexOf('testID="consultar-recurso"') - 1500, licao.indexOf('testID="consultar-recurso"'));
+  assert.doesNotMatch(consulta, /visua/i, 'o "Ver a ilustração" segue só com o recurso (a foto do material)');
+});
+
+test('exercício: enunciado, visual e opções; a figura troca no lugar só depois do acerto, e a retomada guarda a Avaliacao', async () => {
+  const licao = await ler('apps/mobile/src/licao.tsx');
+  const pergunta = licao.indexOf('testID="pergunta-exercicio"');
+  const visual = licao.indexOf('testID="visual-enunciado"');
+  const campo = licao.indexOf('{campoDoExercicio(exercicio)}');
+  assert.ok(pergunta > 0 && pergunta < visual && visual < campo, 'a ordem da spec 15');
+  assert.match(licao, /exercicio\.visual && licaoEstilos\.perguntaComVisual/);
+  assert.match(licao, /perguntaComVisual: \{ fontSize: 22/);
+  assert.match(licao, /avaliacao\?\.correta && avaliacao\.visual \? \(\s*<DesenhoDoVisual key="retorno" visual=\{avaliacao\.visual\} contexto=\{CONTEXTO_DO_RETORNO\}/,
+    'no acerto, o visual do retorno; no erro, segue o do enunciado');
+  assert.match(licao, /key="enunciado" visual=\{exercicio\.visual\} contexto=\{CONTEXTO_DO_ENUNCIADO\}[^>]*entrada=\{false\}/);
+  assert.match(licao, /passo, respostas, avaliacoes, primeiras/, 'as avaliações (com o visual do retorno) entram no andamento guardado');
+});
+
+test('o enunciado nunca desenha o procurado na posição; o retorno o desenha como resposta', async () => {
+  const licao = await fixture('abscissas');
+  const figura = normalizarVisual(licao.exercicio.visual);
+  const enunciado = desenhoDoVisual(visualParaEnunciado(figura), { tipo: 'enunciado' });
+  const retorno = desenhoDoVisual(visualRevelado(figura), { tipo: 'retorno' });
+  assert.ok(enunciado.textos.some((texto) => /C\s*=\s*\?/.test(texto)), `"C = ?" na legenda: ${enunciado.textos.join(' | ')}`);
+  assert.ok(!enunciado.textos.some((texto) => /^C\s*\(?\s*\d/.test(texto)), 'sem o valor de C no enunciado');
+  assert.ok(retorno.primitivas.some((p) => (p.preenchimento ?? p.cor) === 'resposta'), 'o procurado vira resposta (verde)');
 });

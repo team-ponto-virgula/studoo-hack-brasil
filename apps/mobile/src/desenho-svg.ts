@@ -96,3 +96,17 @@ export function desenhoDoVisual(visual: Visual, contexto: ContextoDoDesenho, opc
     return null;
   }
 }
+
+/** A fórmula em bloco vem antes do diagrama quando os dois aparecem juntos (spec 15, seção 3); entre iguais, a ordem da lição. */
+export function ordenarVisuais(visuais: readonly Visual[]): Visual[] {
+  return [...visuais.filter((visual) => visual.tipo === 'formula'), ...visuais.filter((visual) => visual.tipo !== 'formula')];
+}
+
+/**
+ * A altura máxima da figura no desenho (unidades do motor, 320 de largura) para ela ocupar até `alturaNaTela` na largura útil:
+ * no exercício, 200 em 390 (spec 15, seção 3).
+ */
+export function alturaMaximaDaFigura(larguraUtil: number, alturaNaTela = 200): number {
+  if (!(larguraUtil > 0)) return alturaNaTela;
+  return Math.round((alturaNaTela * 320) / larguraUtil);
+}

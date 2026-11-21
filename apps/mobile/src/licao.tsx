@@ -38,6 +38,8 @@ import {
   VerdadeiroFalso,
   pararVoz,
 } from './aula-formatos';
+import { CONTEXTO_DO_ENUNCIADO, CONTEXTO_DO_RETORNO, DesenhoDoVisual, OPCOES_DA_FORMULA, VisuaisDaLicao } from './desenho';
+import { alturaMaximaDaFigura } from './desenho-svg';
 import { Confete } from './festa';
 import { Ordenar } from './ordenar';
 import { Icone } from './icone';
@@ -204,6 +206,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   // .aula-quadro da web: respiro clamp(16px, 5vw, 28px) (19,5 px em 390, 18 em 360).
   const { width: larguraJanela } = useWindowDimensions();
   const respiroQuadro = { padding: Math.min(28, Math.max(16, larguraJanela * 0.05)) };
+  /** A figura do exercício: até 200 na tela (spec 15), na largura útil do quadro (janela, margens de 16 e o respiro com a borda de 2). */
+  const alturaDaFigura = alturaMaximaDaFigura(larguraJanela - 32 - 2 * (respiroQuadro.padding + 2));
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
   // Como na web: as opções mudam de ordem a cada visita.
   const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
@@ -819,6 +823,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
                 <CartaoFonte ref={cartaoCitacao} referencia={licao.referencias[citacaoAberta]} numero={citacaoAberta + 1} materialDe={licao.materialDe} />
               </View>
             )}
+            {/* Spec 15 (seção 3): as fórmulas e figuras da lição ficam abertas, na largura do conteúdo, a fórmula antes do diagrama. */}
+            {!!licao.visuais?.length && <View style={{ marginTop: 16 }}><VisuaisDaLicao visuais={licao.visuais} /></View>}
             {/* Como na web (rodada 4E): o recurso visual da lição também no conceito, de qualquer tipo. */}
             {licao.recurso && (
               <View style={{ marginTop: 16 }}><RecursoDaLicao recurso={licao.recurso} /></View>
@@ -832,6 +838,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               {licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}
             </Text>
             <Text style={estilos.texto}>{licao.exemplo}</Text>
+            <VisuaisDaLicao visuais={licao.visuais} testID="visual-exemplo" />
             {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
             {licao.passos && <Passos passos={licao.passos} titulo={t.recursos.passos} />}
             {licao.falas && <Falas falas={licao.falas} />}
@@ -844,10 +851,21 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
               fimDoExercicio.current = evento.nativeEvent.layout.y + evento.nativeEvent.layout.height;
             }}>
             {/* Como na web 4B: a pergunta é o título do exercício (e recebe o foco); o selo no alto diz qual exercício é. */}
-            <Text ref={tituloEtapa} testID="pergunta-exercicio" accessible accessibilityRole="header" textBreakStrategy="balanced" style={[licaoEstilos.pergunta, quebraEquilibrada]}>
+            <Text ref={tituloEtapa} testID="pergunta-exercicio" accessible accessibilityRole="header" textBreakStrategy="balanced"
+              style={[licaoEstilos.pergunta, exercicio.visual && licaoEstilos.perguntaComVisual, quebraEquilibrada]}>
               {exercicio.enunciado}
             </Text>
             {exercicio.contexto && <Text style={estilos.texto}>{exercicio.contexto}</Text>}
+            {/* Spec 15 (seção 3): enunciado, visual e opções, nessa ordem; a figura com até 200 de altura em 390. Depois do acerto,
+                ela troca no lugar pela do retorno (o procurado vira resposta, entrando de leve); no erro, nada muda. A troca
+                remonta o desenho (chave nova), e a entrada roda uma vez só. */}
+            {exercicio.visual && (avaliacao?.correta && avaliacao.visual ? (
+              <DesenhoDoVisual key="retorno" visual={avaliacao.visual} contexto={CONTEXTO_DO_RETORNO} testID="visual-retorno"
+                opcoes={avaliacao.visual.tipo === 'formula' ? OPCOES_DA_FORMULA : { alturaMaxima: alturaDaFigura }} />
+            ) : (
+              <DesenhoDoVisual key="enunciado" visual={exercicio.visual} contexto={CONTEXTO_DO_ENUNCIADO} testID="visual-enunciado" entrada={false}
+                opcoes={exercicio.visual.tipo === 'formula' ? OPCOES_DA_FORMULA : { alturaMaxima: alturaDaFigura }} />
+            ))}
             {exercicio.trecho && (
               <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}
                 preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
@@ -1247,6 +1265,8 @@ const licaoEstilos = StyleSheet.create({
   tituloQuadro: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -0.5, lineHeight: 28, marginTop: -6 },
   /** A pergunta como título do exercício, como `.aula-pergunta` da web: entrelinha de 27,6 e 6 embaixo. */
   pergunta: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 24, letterSpacing: -1, lineHeight: 27.6, marginTop: -6, marginBottom: 6 },
+  /** Com visual, o enunciado desce para 22 (spec 15, seção 3): as opções começam na primeira tela. */
+  perguntaComVisual: { fontSize: 22, lineHeight: 25.3, letterSpacing: -0.8 },
   /** O formulário da resposta: 4 em cima (.aula-quadro .formulario). */
   formulario: { marginTop: 4 },
   trilha: { flex: 1, height: 18, borderRadius: 9, backgroundColor: cores.gelo, overflow: 'hidden' },
