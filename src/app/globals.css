@@ -252,12 +252,20 @@ button, input, textarea { font: inherit; }
 .entrada-forma .formulario { margin-top: 32px; }
 .entrada-forma .botao--primario { width: 100%; }
 .entrada-banner { display: none; }
-.entrada-arte { display: grid; min-width: 0; padding: 16px 16px 16px 0; }
+/* Spec 16, item 2: a ilustração tem a altura da janela e fica presa no alto enquanto o formulário rola, então o Stu aparece inteiro na primeira dobra
+   (antes, a coluna esticava junto com o formulário e só a cabeça do Stu aparecia no pé da tela). */
+.entrada-arte { display: grid; min-width: 0; padding: 16px 16px 16px 0; position: sticky; top: 0; align-self: start; height: 100vh; height: 100svh; }
 .entrada-paisagem { min-height: 560px; border-radius: 32px; }
 
-.entrada-mensagem { position: absolute; top: 8%; right: 26%; left: 8%; display: grid; gap: 10px; }
+/* A frase fica num cartão no alto à esquerda da ilustração, que continua inteira atrás: o cinza sobre o verde e o laranja não chegava a 4,5:1.
+   O desfoque impede que, com letra grande (o cartão cresce), um tema da ilustração apareça fantasma por baixo do texto. */
+.entrada-mensagem {
+  position: absolute; z-index: 1; top: 24px; right: 24px; left: 24px; max-width: 480px; display: grid; gap: 10px; padding: 24px; border-radius: 24px;
+  background: rgb(255 255 255 / 0.92); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
 
 .entrada-mensagem__titulo {
+  color: #0b1b5c;
   font-family: Quicksand, sans-serif;
   font-size: clamp(1.75rem, 3.4cqw, 2.5rem);
   font-weight: 700;
@@ -266,7 +274,7 @@ button, input, textarea { font: inherit; }
   text-wrap: balance;
 }
 
-.entrada-mensagem p:not(.entrada-mensagem__titulo) { max-width: 30rem; color: var(--texto2); font-size: 1.0625rem; font-weight: 600; }
+.entrada-mensagem p:not(.entrada-mensagem__titulo) { max-width: 30rem; color: #5e6a85; font-size: 1.0625rem; font-weight: 600; }
 .entrada-temas { position: absolute; inset: 0; }
 
 .entrada-tema {
@@ -287,7 +295,8 @@ button, input, textarea { font: inherit; }
 .entrada-tema:nth-child(4) { top: 51%; left: 15%; }
 .entrada-tema:nth-child(5) { top: 56%; right: 16%; }
 .entrada-tema:nth-child(6) { top: 47%; left: 40%; }
-.entrada-paisagem .stu { position: absolute; bottom: 7%; left: 50%; width: 26cqw; translate: -50% 0; }
+/* O Stu da acolhida (26cqw, spec 13) pisa no alto da colina da frente: a colina tem 24% de altura e começa 6% abaixo do pé, então o alto dela fica a 18%. */
+.entrada-paisagem .stu { position: absolute; bottom: 18%; left: 50%; width: 26cqw; translate: -50% 0; }
 /* Na entrada, o céu abre espaço para a frase: nuvens e balão ficam abaixo dela e à direita. */
 .entrada-paisagem .paisagem__nuvem--1 { top: 27%; left: 64%; --tam: 13cqw; }
 .entrada-paisagem .paisagem__nuvem--2 { top: 31%; left: 24%; --tam: 11cqw; }

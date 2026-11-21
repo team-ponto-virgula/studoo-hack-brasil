@@ -1,4 +1,4 @@
-// Refinamento da UI (spec 16), o mapa e a criação na web. Cada item entra com o seu teste.
+// Refinamento da UI (spec 16), o mapa na web. Cada item entra com o seu teste.
 // Item 13: os enfeites do mapa na web saíam do tamanho da coluna inteira porque a regra das figuras de matemática da aula (`.desenho { width: 100% }`,
 // aula.css) pisava a regra dos desenhos do mundo (`.desenho { width: var(--tam) }`, mundo.css): as duas usavam a mesma classe, e o CSS é global.
 import { test } from 'node:test';
@@ -17,6 +17,7 @@ const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
 const { Desenho } = await import('../src/ui/mundo.tsx');
 const { desenhosMundo } = await import('../src/ui/mundo-desenhos.ts');
+const { cabecalhoComMapaPorBaixo } = await import('../src/app/cabecalho-preso.ts');
 
 /** Todos os .css de src/, com o caminho relativo à raiz. */
 function folhasDeEstilo(pasta = 'src') {
@@ -55,4 +56,29 @@ test('item 13: o mapa pede o tamanho do enfeite por --tam-enfeite e --tam-miudo 
   assert.match(css, /--tam-enfeite: 62px;/, 'computador');
   assert.match(css, /\.caminho-enfeite--grande \{ --tam: var\(--tam-enfeite\);/);
   assert.match(css, /\.caminho-enfeite--miudo \{ --tam: var\(--tam-miudo\);/);
+});
+
+test('item 3: o cabeçalho preso do mapa no celular tem fundo branco a 94%, sem vidro, e a linha de 1 px #E1E7FA só com o mapa rolando por baixo', () => {
+  const css = ler('src/app/trilha.css');
+  const bloco = css.slice(css.indexOf('/* Celular: o nome do plano fica numa barra compacta presa no topo'));
+  const regra = /\.trilha-topo \{([^}]*)\}/.exec(bloco)[1];
+  assert.match(regra, /position: sticky; top: 0;/);
+  assert.match(regra, /background: rgb\(255 255 255 \/ 0\.94\);/);
+  assert.doesNotMatch(regra, /backdrop-filter|box-shadow/, 'nada de vidro (a web e o Android não têm) e nenhuma linha fixa: a linha é do estado preso');
+  assert.match(bloco, /\.trilha-topo\[data-preso\] \{ box-shadow: 0 1px 0 #e1e7fa; \}/);
+});
+
+test('item 3: o cabeçalho está "preso" quando a página rolou e o topo dele chegou a 0 (antes disso, não há mapa por baixo)', () => {
+  assert.equal(cabecalhoComMapaPorBaixo(93, 0), false, 'no alto da página, com a barra da marca acima');
+  assert.equal(cabecalhoComMapaPorBaixo(0, 0), false, 'no alto e sem rolar: nada passa por baixo');
+  assert.equal(cabecalhoComMapaPorBaixo(40, 30), false, 'rolou, mas o cabeçalho ainda não chegou ao alto');
+  assert.equal(cabecalhoComMapaPorBaixo(0, 520), true, 'preso, com o mapa rolando por baixo');
+  assert.equal(cabecalhoComMapaPorBaixo(0.4, 12), true, 'meio pixel de folga');
+  assert.equal(cabecalhoComMapaPorBaixo(-408, 520), true, 'rolou além (tablet e computador não têm CSS para isso)');
+  const tela = ler('src/app/estudo.tsx');
+  assert.match(tela, /useCabecalhoPreso\(topoDoMapa\);/);
+  assert.match(tela, /<header className="trilha-topo" ref=\{topoDoMapa\}>/);
+  const gancho = ler('src/app/cabecalho-preso.ts');
+  assert.match(gancho, /getComputedStyle\(cabecalho\)\.position === 'sticky'/, 'só o cabeçalho que está mesmo preso recebe o estado');
+  assert.match(gancho, /\{ passive: true \}/, 'a rolagem não espera pelo gancho');
 });

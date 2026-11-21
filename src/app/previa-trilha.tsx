@@ -7,6 +7,7 @@ import { Botao, Desenho, Fronteira, Icone, Mascote, coresDaRegiao } from '../ui'
 import { desenhosQueBalancam, enfeitesDaLinha } from '../ui/mundo-desenhos';
 import { posicaoX, semQuebrarHifen } from '../ui/caminho';
 import { nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
+import { DURACAO_ATE_O_NO_1_MS, rolagemNoInstante, rolagemParaCentrarNo } from './previa-trilha-regras';
 import { tocaSons } from './sons';
 import './previa-trilha.css';
 
@@ -14,6 +15,33 @@ export type EstadoAceite = 'livre' | 'salvando' | 'erro' | 'expirada';
 export type PassagemCriada = { geracao: TrilhaEmGeracao; estilo: CSSProperties; reduzida: boolean; rolagem: number };
 const t = mensagens.geracao;
 const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * Rola a área até `alvo` em `duracao` ms (saída suave); com `duracao` 0, vai direto. Se a pessoa mexer na rolagem no meio, a animação larga o controle.
+ * Devolve quem cancela.
+ */
+function rolarAte(area: HTMLElement, alvo: number, duracao: number, aoTerminar: () => void): () => void {
+  const de = area.scrollTop;
+  if (duracao <= 0 || Math.abs(alvo - de) < 1) {
+    area.scrollTop = alvo;
+    aoTerminar();
+    return () => undefined;
+  }
+  const inicio = performance.now();
+  let quadro = 0;
+  let ultimo = de;
+  const passo = (agora: number) => {
+    // A pessoa tocou na rolagem (roda, dedo, teclado): a animação sai da frente.
+    if (Math.abs(area.scrollTop - ultimo) > 2) { aoTerminar(); return; }
+    const decorrido = agora - inicio;
+    ultimo = rolagemNoInstante(de, alvo, decorrido, duracao);
+    area.scrollTop = ultimo;
+    if (decorrido < duracao) quadro = requestAnimationFrame(passo);
+    else { area.scrollTop = alvo; aoTerminar(); }
+  };
+  quadro = requestAnimationFrame(passo);
+  return () => cancelAnimationFrame(quadro);
+}
 
 function origemDoCirculo(painel: HTMLElement, faltaRolar = 0) {
   const caixa = painel.getBoundingClientRect();
@@ -69,9 +97,12 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const [semNovidade, setSemNovidade] = useState(false);
   const [demorou, setDemorou] = useState(false);
   const [estreito, setEstreito] = useState(false);
+  /** Do momento em que a trilha fica pronta até a rolagem até o nó 1 terminar: o Stu já fica no lado do nó 1, e não pula para o troféu que passa pela tela. */
+  const [indoAoPrimeiro, setIndoAoPrimeiro] = useState(false);
+  const cancelarRolagem = useRef<(() => void) | null>(null);
   const salvando = aceite === 'salvando' || !!passagem;
   const falhou = aceite === 'erro' || aceite === 'expirada';
-  const stuNoTrofeu = !!proposta && trofeuAVista && !salvando && !falhou;
+  const stuNoTrofeu = !!proposta && trofeuAVista && !indoAoPrimeiro && !salvando && !falhou;
   const fase = passagem ? 'criada' : salvando ? 'salvando' : proposta ? 'pronta' : 'montando';
   const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
@@ -105,9 +136,19 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     if (proposta) {
       if (propostaApresentada.current === proposta.token) return;
       propostaApresentada.current = proposta.token;
-      if (acompanhando && trofeu.current) {
-        const destino = trofeu.current.getBoundingClientRect().bottom - area.getBoundingClientRect().bottom + area.scrollTop;
-        area.scrollTo({ top: Math.max(0, destino), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
+      if (acompanhando) {
+        // Spec 16, item 1: a trilha pronta mostra a lição 1, não o fim. O nó 1 vai para o centro da área livre em 600 ms (direto, com movimento reduzido), o Stu fica ao lado
+        // dele, e o troféu continua a uma rolagem de distância ("Ver o fim da trilha").
+        const primeiro = area.querySelector<HTMLElement>('[data-primeiro] .previa-no__face');
+        if (primeiro) {
+          const caixa = primeiro.getBoundingClientRect();
+          const alvo = rolagemParaCentrarNo({
+            centroDoNoNaTela: caixa.top + caixa.height / 2, topoDaArea: area.getBoundingClientRect().top, alturaDaArea: area.clientHeight, rolagem: area.scrollTop, alturaDoConteudo: area.scrollHeight,
+          });
+          cancelarRolagem.current?.();
+          setIndoAoPrimeiro(true);
+          cancelarRolagem.current = rolarAte(area, alvo, movimentoReduzido() ? 0 : DURACAO_ATE_O_NO_1_MS, () => setIndoAoPrimeiro(false));
+        }
         painel.current?.querySelector<HTMLButtonElement>('.previa-comecar')?.focus({ preventScroll: true });
       }
       return;
@@ -153,6 +194,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     return () => cancelAnimationFrame(quadro);
   }, [aceite, passagem]);
 
+  useEffect(() => () => cancelarRolagem.current?.(), []);
   useEffect(() => {
     if (!proposta || !mapa.current || !trofeu.current) {
       setViuTrofeu(false); setTrofeuAVista(false); return;

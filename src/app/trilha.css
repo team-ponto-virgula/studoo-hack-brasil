@@ -139,12 +139,14 @@
 html[data-atual-visivel] .trilha-proximo { translate: 0 calc(100% + 40px); opacity: 0; visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .trilha-proximo { transition: none; } }
 
-/* Celular: o nome do plano fica numa barra compacta presa no topo, como a faixa da unidade nos melhores apps. */
+/* Celular: o nome do plano fica numa barra compacta presa no topo, como a faixa da unidade nos melhores apps. Spec 16, item 3: sem vidro (o Android e a web não têm),
+   o fundo é branco a 94% e a linha de 1 px (#E1E7FA) só aparece quando o mapa rola por baixo dele (`data-preso`, src/app/cabecalho-preso.ts). */
 @media (max-width: 767px) {
   .trilha-topo {
     position: sticky; top: 0; z-index: 6; margin: -8px calc(-1 * var(--espaco-pagina)) 0; padding: 10px var(--espaco-pagina);
-    background: rgb(255 255 255 / 0.96); box-shadow: 0 2px 0 var(--gelo); backdrop-filter: blur(8px);
+    background: rgb(255 255 255 / 0.94);
   }
+  .trilha-topo[data-preso] { box-shadow: 0 1px 0 #e1e7fa; }
   .trilha-topo__rotulo { font-size: 0.6875rem; }
   .trilha-topo h1 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 1.125rem; white-space: normal; }
   .trilha-topo .anel { width: 44px; height: 44px; }
