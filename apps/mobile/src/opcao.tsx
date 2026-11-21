@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { falarTextoComFormulas } from '@studoo/contratos';
 import { TextoComFormulas } from './texto-com-formulas';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -39,7 +40,8 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
     <Animated.View style={{ transform: [{ scale: pulo }], opacity: apagada ? 0.55 : 1 }}>
       {/* aria-checked além do accessibilityState: o React Native Web só lê os atributos aria-* (o leitor de tela da web precisava do estado). */}
       <Pressable testID={`opcao-${id}`} accessibilityRole="radio" accessibilityState={{ checked: selecionada, disabled: desativada }} aria-checked={selecionada}
-        accessibilityLabel={texto} disabled={desativada} onPress={acao} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
+        // O texto falado (a fórmula lida pela árvore): nunca o texto cru com `$…$` (caso real cb532bb, opções só em fórmula).
+        accessibilityLabel={falarTextoComFormulas(texto)} disabled={desativada} onPress={acao} onFocus={() => setFocada(focoVisivel())} onBlur={() => setFocada(false)}
         style={({ pressed }) => [degrauFora(4, 16, corDegrau, pressed), focada && estilos.foco]}>
         {/* A face: borda de 2 que fecha em volta (o degrau de 4 é o pai, por fora, como a sombra da web). */}
         <View style={[opcaoEstilos.opcao, estado]}>

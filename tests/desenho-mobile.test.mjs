@@ -106,7 +106,7 @@ test('exercício: enunciado, visual e opções; a figura troca no lugar só depo
   assert.ok(pergunta > 0 && pergunta < visual && visual < campo, 'a ordem da spec 15');
   assert.match(licao, /exercicio\.visual && licaoEstilos\.perguntaComVisual/);
   assert.match(licao, /perguntaComVisual: \{ fontSize: 22/);
-  assert.match(licao, /avaliacao\?\.correta && avaliacao\.visual \? \(\s*<DesenhoDoVisual key="retorno" visual=\{avaliacao\.visual\} contexto=\{CONTEXTO_DO_RETORNO\}/,
+  assert.match(licao, /avaliacao\?\.correta && avaliacao\.visual && temProcurado\(exercicio\.visual\) \? \(\s*<DesenhoDoVisual key="retorno" visual=\{avaliacao\.visual\} contexto=\{CONTEXTO_DO_RETORNO\}/,
     'no acerto, o visual do retorno; no erro, segue o do enunciado');
   assert.match(licao, /key="enunciado" visual=\{exercicio\.visual\} contexto=\{CONTEXTO_DO_ENUNCIADO\}[^>]*entrada=\{false\}/);
   assert.match(licao, /passo, respostas, avaliacoes, primeiras/, 'as avaliações (com o visual do retorno) entram no andamento guardado');
@@ -159,6 +159,6 @@ test('troca no acerto (spec 15, seção 12): a figura reenquadrada fica na caixa
   assert.match(licaoFonte, /testID="visual-enunciado" entrada=\{false\} caixa=\{caixaDaFigura\}/);
   assert.match(licaoFonte, /\$\{certa && descricaoDaFigura \? ` \$\{descricaoDaFigura\}` : ''\}/, 'a descrição nova na fala do retorno, numa frase só');
   const resolva = await ler('apps/mobile/src/resolva-comigo.tsx');
-  assert.match(resolva, /key=\{ultimo \? 'revelado' : 'passos'\}[\s\S]{0,200}entrada=\{ultimo\} caixa=\{caixa\}/);
+  assert.match(resolva, /key=\{revela \? 'revelado' : 'passos'\}[\s\S]{0,200}entrada=\{revela\} caixa=\{caixa\}/);
   assert.match(resolva, /`\$\{t\.passo\(estado\.atual \+ 1, estado\.total\)\}\. \$\{descricao\}`/);
 });

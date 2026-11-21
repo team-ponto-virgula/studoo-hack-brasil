@@ -42,7 +42,7 @@ import {
   pararVoz,
 } from './aula-formatos';
 import { CONTEXTO_DO_ENUNCIADO, CONTEXTO_DO_RETORNO, DesenhoDoVisual, OPCOES_DA_FORMULA, VisuaisDaLicao } from './desenho';
-import { alturaDaFiguraNaTela, alturaMaximaDaFigura, desenhoDoVisual } from './desenho-svg';
+import { alturaDaFiguraNaTela, alturaMaximaDaFigura, desenhoDoVisual, temProcurado } from './desenho-svg';
 import { Confete } from './festa';
 import { useResolvaComigo } from './resolva-comigo';
 import { TextoComFormulas } from './texto-com-formulas';
@@ -327,7 +327,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
   }, [exercicio, alturaDaFigura]);
   /** A descrição da figura revelada, para o leitor de tela ouvir junto do retorno, numa frase só. */
   const descricaoDoRetorno = useMemo(() => {
-    if (!avaliacao?.correta || !avaliacao.visual || !exercicio?.visual) return undefined;
+    if (!avaliacao?.correta || !avaliacao.visual || !temProcurado(exercicio?.visual)) return undefined;
     return desenhoDoVisual(avaliacao.visual, CONTEXTO_DO_RETORNO, { alturaMaxima: alturaDaFigura })?.descricao;
   }, [avaliacao, exercicio, alturaDaFigura]);
   const ocupado = pendente !== null;
@@ -890,7 +890,8 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             {/* Spec 15 (seção 3): enunciado, visual e opções, nessa ordem; a figura com até 200 de altura em 390. Depois do acerto,
                 ela troca no lugar pela do retorno (o procurado vira resposta, entrando de leve); no erro, nada muda. A troca
                 remonta o desenho (chave nova), e a entrada roda uma vez só. */}
-            {exercicio.visual && (avaliacao?.correta && avaliacao.visual ? (
+            {/* Sem ponto procurado, a figura do retorno é a mesma do enunciado: fica a do enunciado, sem troca nem animação. */}
+            {exercicio.visual && (avaliacao?.correta && avaliacao.visual && temProcurado(exercicio.visual) ? (
               <DesenhoDoVisual key="retorno" visual={avaliacao.visual} contexto={CONTEXTO_DO_RETORNO} testID="visual-retorno" caixa={caixaDaFigura}
                 // A descrição nova vai na fala do retorno (uma frase só): a figura não anuncia de novo.
                 rotulo={descricaoDoRetorno}

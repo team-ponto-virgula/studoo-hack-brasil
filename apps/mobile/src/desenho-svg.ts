@@ -160,3 +160,12 @@ export function medidasNaCaixa(desenho: Desenho, larguraUtil: number, caixa: num
     altura: Math.round(desenho.altura * escala * 100) / 100,
   };
 }
+
+/**
+ * A figura tem ponto procurado (ou já resposta)? Só então o retorno e o último passo revelam algo: sem procurado (só pontos dados
+ * e segmentos, como a colinearidade da IA real), o enunciado e o retorno são a mesma figura, e a troca não pode piscar nem animar.
+ */
+export function temProcurado(visual: Visual | undefined): boolean {
+  if (!visual || visual.tipo === 'formula') return false;
+  return visual.pontos.some((ponto) => ponto.papel === 'procurado' || ponto.papel === 'resposta');
+}

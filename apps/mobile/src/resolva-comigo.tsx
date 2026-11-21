@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type ComponentRef, type ReactNode, type RefObject } from 'react';
 import { AccessibilityInfo, Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import { falarFormula, formulaLinear, lerFormula, type EscolhaNoSuaVez, type LicaoDetalhe, type OpcaoDoSuaVez, type PassoDaResolucao } from '@studoo/contratos';
+import { falarFormula, falarTextoComFormulas, formulaLinear, lerFormula, type EscolhaNoSuaVez, type LicaoDetalhe, type OpcaoDoSuaVez, type PassoDaResolucao } from '@studoo/contratos';
 import { useAparecer } from './animacoes';
 import { DesenhoDoVisual, OPCOES_DA_FORMULA } from './desenho';
-import { desenhoDoVisual } from './desenho-svg';
+import { desenhoDoVisual, temProcurado } from './desenho-svg';
 import { focarSemRolar } from './foco';
 import { Icone } from './icone';
 import { Botao } from './interface';
@@ -67,7 +67,8 @@ function LinhaFeita({ passo, numero }: { passo: PassoDaResolucao; numero: number
         accessibilityLabel={`${passo.nome}${formula ? `: ${formula.falado}` : ''}`} onPress={() => setAberto((atual) => !atual)} style={estilos.feitoLinha}>
         <Icone nome="check" tamanho={16} cor={cores.sucesso} />
         <Text style={estilos.feitoNome} numberOfLines={1}>{passo.nome}</Text>
-        {formula && !aberto && <Text style={estilos.feitoFormula} numberOfLines={1}>{formula.texto}</Text>}
+        {/* A fórmula do passo, reduzida e desenhada (em peças se for larga): nunca o linear com `_` na tela (caso real cb532bb). */}
+        {formula && !aberto && <TextoComFormulas texto={`$${passo.formula}$`} estilo={estilos.feitoFormula} numberOfLines={1} />}
       </Pressable>
       {aberto && (
         <View style={{ gap: 8, paddingTop: 6 }}>
@@ -98,7 +99,7 @@ function SuaVez({ passo, estado, ocupado, escolher }: {
       {!revelado && <FormulaEmBloco latex={formulaDeContexto(estado)} testID="resolva-formula-contexto" />}
       <View style={estilos.seloSuaVez}><Text style={estilos.seloSuaVezTexto}>{t.suaVez.toUpperCase()}</Text></View>
       <TextoComFormulas testID="resolva-pergunta" texto={tentativa.pergunta} estilo={estilos.pergunta} />
-      <View accessibilityRole="radiogroup" accessibilityLabel={tentativa.pergunta} style={{ gap: 10 }}>
+      <View accessibilityRole="radiogroup" accessibilityLabel={falarTextoComFormulas(tentativa.pergunta)} style={{ gap: 10 }}>
         {tentativa.opcoes.map((opcao, numero) => (
           <Opcao key={numero} id={`suavez-${numero}`} letra={letras[numero]} texto={textoDaOpcao(opcao)}
             selecionada={estado.escolha === numero} retorno={retornoDa(numero)} desativada={travado}
@@ -184,7 +185,7 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
     if (primeiro.current) { primeiro.current = false; return; }
     // No último passo, a descrição do desenho revelado vai na mesma fala do anúncio (uma frase só).
     const noUltimo = estado.revelado && estado.atual === estado.total - 1;
-    const revelado = noUltimo && resolucao ? visualDoPasso(resolucao, estado) : undefined;
+    const revelado = noUltimo && resolucao && temProcurado(resolucao.visual) ? visualDoPasso(resolucao, estado) : undefined;
     const descricao = revelado ? desenhoDoVisual(revelado, contextoDoPasso(estado))?.descricao : undefined;
     AccessibilityInfo.announceForAccessibility(descricao ? `${t.passo(estado.atual + 1, estado.total)}. ${descricao}` : t.passo(estado.atual + 1, estado.total));
     const espera = setTimeout(() => focarSemRolar(frase.current), 250);
@@ -196,6 +197,8 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
   const passo = estado.passos[estado.atual];
   const ultimo = estado.revelado && estado.atual === estado.total - 1;
   const visual = visualDoPasso(resolucao, estado);
+  /** O último passo só revela (troca no lugar e ponto que cresce) quando o problema tem ponto procurado. */
+  const revela = ultimo && temProcurado(resolucao.visual);
 
   function escolher(opcao: number) {
     void tocaSons.tocarEfeito('toque_opcao');
@@ -234,8 +237,8 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
       {/* O desenho de cima troca no mesmo lugar quando o passo mexe nele; o procurado só vira resposta no último passo. */}
       {visual && (
         // No último passo, a figura revelada entra no lugar (200 ms) e o ponto resposta cresce depois; a chave nova remonta a figura.
-        <DesenhoDoVisual key={ultimo ? 'revelado' : 'passos'} visual={visual} contexto={contextoDoPasso(estado)} testID="resolva-visual"
-          entrada={ultimo} caixa={caixa} />
+        <DesenhoDoVisual key={revela ? 'revelado' : 'passos'} visual={visual} contexto={contextoDoPasso(estado)} testID="resolva-visual"
+          entrada={revela} caixa={caixa} />
       )}
       <Indicador atual={estado.atual} total={estado.total} />
       {estado.passos.slice(0, estado.atual).map((feito, numero) => <LinhaFeita key={numero} passo={feito} numero={numero + 1} />)}
