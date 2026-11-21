@@ -1,10 +1,6 @@
 import { createHash } from "node:crypto";
 import sharp from "sharp";
 import {
-  contemFormulaMarcada,
-  contemMarcaDeFormula,
-  marcarFormulasSoltas,
-  textoSemFormulas,
   comAlturaMinima,
   comporDesenhos,
   desenharVisual,
@@ -29,7 +25,9 @@ import {
   type VisualFormula,
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
-import { ehAssuntoDeMatematica } from "@/servidor/ia/matematica";
+import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+
+export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
 
 /*
  * Visuais da lição no servidor (spec 15). Duas portas, as duas atrás do cabeçalho `X-Studoo-Capacidades`:
@@ -95,10 +93,6 @@ const limpos = new Memoria<VisuaisLimpos>(200);
 
 function exercicios(conteudo: ConteudoLicao): ExercicioInterno[] {
   return [conteudo.exercicio, ...(conteudo.extras ?? [])];
-}
-
-export function temVisual(conteudo: ConteudoLicao): boolean {
-  return Boolean(conteudo.visuais?.length || conteudo.resolucao || exercicios(conteudo).some((exercicio) => exercicio.visual));
 }
 
 /**
@@ -257,80 +251,7 @@ export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacid
 }
 
 /* ----- Fórmula em linha: o texto linear para quem não desenha, e as marcas para quem desenha ----- */
-
-/** Os campos que não têm texto de fórmula: respostas, desenhos, áudio, recurso e referências ficam como estão. */
-const FICAM = new Set(["gabarito", "visuais", "visual", "resolucao", "falas", "fala", "recurso", "referencias", "comprovante", "certos"]);
-
-/**
- * Percorre os textos da lição que as pessoas leem (menos `FICAM` e o `trecho` de código) e devolve o mesmo objeto se nada mudou.
- * `visitar` devolve o texto novo; o que ela devolver igual deixa o objeto como estava.
- */
-function transformarTextos(valor: unknown, visitar: (texto: string) => string, chave?: string, irmaos?: Record<string, unknown>): unknown {
-  if (typeof valor === "string") {
-    if ((chave !== undefined && FICAM.has(chave)) || (chave === "trecho" && irmaos?.trechoTipo === "codigo")) return valor;
-    return visitar(valor);
-  }
-  if (Array.isArray(valor)) {
-    const novos = valor.map((item) => transformarTextos(item, visitar, chave, irmaos));
-    return novos.some((novo, posicao) => novo !== valor[posicao]) ? novos : valor;
-  }
-  if (valor !== null && typeof valor === "object") {
-    if (chave !== undefined && FICAM.has(chave)) return valor;
-    const objeto = valor as Record<string, unknown>;
-    let mudou = false;
-    const novo: Record<string, unknown> = {};
-    for (const [campo, item] of Object.entries(objeto)) {
-      const convertido = transformarTextos(item, visitar, campo, objeto);
-      if (convertido !== item) mudou = true;
-      novo[campo] = convertido;
-    }
-    return mudou ? novo : valor;
-  }
-  return valor;
-}
-
-/** Algum texto lido pelas pessoas satisfaz `quer`? (Mesmos campos de `transformarTextos`.) */
-function algumTexto(valor: unknown, quer: (texto: string) => boolean): boolean {
-  let achou = false;
-  transformarTextos(valor, (texto) => {
-    if (!achou && quer(texto)) achou = true;
-    return texto;
-  });
-  return achou;
-}
-
-/** Os exercícios da lição (o principal e os extras). */
-const exerciciosDe = (conteudo: ConteudoLicao): ExercicioInterno[] => [conteudo.exercicio, ...(conteudo.extras ?? [])].filter(Boolean);
-
-/**
- * A lição é de matemática? Só nelas o texto é lido com marcas de fórmula e os tokens soltos (`x_A`) ganham a marca (spec 15,
- * seção 9). É quando a lição já tem matemática: um visual, um trecho de fórmula, uma fórmula marcada que lê (`$x_A$`), ou o assunto
- * (a regra de palavras). E NUNCA quando há trecho de código: "Em Python, use x_1 = 3 e print(x_1)." não é fórmula.
- */
-export function conteudoEhDeMatematica(conteudo: ConteudoLicao): boolean {
-  if (exerciciosDe(conteudo).some((exercicio) => exercicio.trechoTipo === "codigo")) return false;
-  return temVisual(conteudo) ||
-    exerciciosDe(conteudo).some((exercicio) => exercicio.trechoTipo === "formula") ||
-    ehAssuntoDeMatematica(conteudo.objetivo, conteudo.conceito, conteudo.exemplo) ||
-    algumTexto(conteudo, contemFormulaMarcada);
-}
-
-/**
- * Cada fórmula marcada com `$…$` nos textos vira texto linear (`x_G = (x_A + x_B + x_C) ÷ 3`), para o cliente que não desenha fórmula em
- * linha (build 3, site antigo): sem cifrão e sem LaTeX cru. O mesmo objeto quando não há marca.
- */
-export function comTextoLinear<T>(valor: T): T {
-  return transformarTextos(valor, (texto) => (contemMarcaDeFormula(texto) ? textoSemFormulas(texto) : texto)) as T;
-}
-
-/**
- * Para o cliente que desenha fórmula em linha (`visuais@1`), nas lições de matemática: os tokens soltos (`x_A`, `b^2`) ganham a marca
- * `$x_A$` e a fórmula química (`H_2O`) vira "H₂O". O cliente lê só o que está marcado, então é aqui que a heurística liga, e só aqui.
- * O mesmo objeto quando nada muda.
- */
-export function comFormulasMarcadas<T>(valor: T): T {
-  return transformarTextos(valor, (texto) => (/[_^$]/.test(texto) ? marcarFormulasSoltas(texto) : texto)) as T;
-}
+/* Os helpers puros (percorrer os textos da lição, conteudoEhDeMatematica, comTextoLinear, comFormulasMarcadas) estão em `formulas-na-licao.ts`. */
 
 /**
  * O texto da lição como o cliente o lê: nas lições de matemática, com `visuais@1` as fórmulas ficam marcadas (e os tokens soltos

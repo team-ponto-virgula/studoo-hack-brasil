@@ -2,6 +2,7 @@ import { lerFormula, percorrerFormula, type NoFormula } from "./formula";
 import { marcarFormulasSoltas, normalizarTextoComFormulas } from "./formula-no-texto";
 import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
 import { desenharVisual } from "./motor-visuais";
+import { comDescricaoDaResposta } from "./visuais-descricao";
 import {
   LIMITES_VISUAIS,
   PAPEIS_PONTO,
@@ -131,7 +132,10 @@ function lerPontos(brutos: unknown, reta: boolean, maximo: number): PontoLido[] 
     const papelBruto = ausente(bruto.papel) ? (derivado ? "especial" : "dado") : bruto.papel;
     if (typeof papelBruto !== "string" || !(PAPEIS_PONTO as readonly string[]).includes(papelBruto)) return recusar(`ponto ${id}: papel ${String(papelBruto)} não existe`);
     if (!ausente(bruto.rotulo) && typeof bruto.rotulo !== "boolean") return recusar(`ponto ${id}: rotulo precisa ser verdadeiro ou falso`);
-    const ponto: PontoLido = { id, papel: papelBruto as PapelPonto, ...(typeof bruto.rotulo === "boolean" ? { rotulo: bruto.rotulo } : {}), ...(derivado ? { derivado } : {}) };
+    // Baricentro, ponto médio e média são pontos de destaque (losango roxo, "baricentro" na legenda) mesmo quando o enunciado os informa:
+    // a IA que os marca como `dado` (bolinha azul, "dados") é corrigida aqui, não recusada. O procurado e a resposta ficam como vieram.
+    const papel = derivado && papelBruto === "dado" ? "especial" : papelBruto;
+    const ponto: PontoLido = { id, papel: papel as PapelPonto, ...(typeof bruto.rotulo === "boolean" ? { rotulo: bruto.rotulo } : {}), ...(derivado ? { derivado } : {}) };
     if (!derivado) {
       ponto.coordenadas = reta
         ? [coordenada(bruto.valor, `ponto ${id}: valor`)]
@@ -155,6 +159,19 @@ function lerPontos(brutos: unknown, reta: boolean, maximo: number): PontoLido[] 
     ponto.coordenadas = somas.map((soma) => soma / total / 100);
   }
   if (!pontos.some((ponto) => ponto.papel === "dado" || ponto.papel === "especial")) return recusar("pontos: nenhum ponto dado ou especial para aparecer");
+  // No plano, dois pontos no mesmo lugar não se leem: quando o procurado é revelado ele cai em cima de outro (o terceiro vértice C do
+  // baricentro G que é o ponto médio de AB cai em G, e o triângulo é achatado). A figura é recusada (a lição fica); na reta numérica
+  // o exercício de abscissas do dono (3, 5 e G em 4, C em 4) tem C e G no mesmo valor e se desenha bem, empilhando os rótulos.
+  if (!reta) {
+    const ocupados = new Map<string, PontoLido>();
+    for (const ponto of pontos) {
+      const [x, y] = ponto.coordenadas ?? [];
+      if (x === undefined || y === undefined) continue;
+      const outro = ocupados.get(`${x},${y}`);
+      if (outro) return recusar(`pontos: ${ponto.id} cai em cima de ${outro.id}, os dois em (${x}, ${y}): escolha números em que o resultado não coincide com outro ponto`);
+      ocupados.set(`${x},${y}`, ponto);
+    }
+  }
   return pontos;
 }
 
@@ -518,13 +535,16 @@ export function visualParaEnunciado<V extends Visual>(visual: V): V {
   return visual;
 }
 
-/** O visual com o procurado virado em resposta (depois do acerto): o motor passa a desenhá-lo na posição. */
+/**
+ * O visual com o procurado virado em resposta (depois do acerto): o motor passa a desenhá-lo na posição, e o `alt` passa a ser a
+ * descrição montada dos DADOS ("… e o vértice C (4, 0)."), nunca o texto da IA, que no enunciado fala do procurado sem posição.
+ */
 export function visualRevelado<V extends Visual>(visual: V): V {
   if (visual.tipo === "plano") {
-    return { ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) } as V;
+    return comDescricaoDaResposta({ ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) }) as V;
   }
   if (visual.tipo === "reta_numerica") {
-    return { ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) } as V;
+    return comDescricaoDaResposta({ ...visual, pontos: visual.pontos.map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) }) as V;
   }
   return visual;
 }
