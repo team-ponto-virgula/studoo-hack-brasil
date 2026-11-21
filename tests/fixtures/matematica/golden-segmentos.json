@@ -128,7 +128,9 @@
   "."
  ],
  "Calcule \\frac{1}{2} + \\sqrt{9} agora": [
-  "Calcule 1/2 + √9 agora"
+  "Calcule ",
+  "[\\frac{1}{2}]",
+  " + √9 agora"
  ],
  "custa $5 e $10": [
   "custa $5 e $10"

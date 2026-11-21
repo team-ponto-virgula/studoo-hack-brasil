@@ -146,10 +146,18 @@ export function contemCifraoDeLatex(texto: string): boolean {
  */
 function semLatexCru(texto: string): string {
   if (!/[\\{}]/.test(texto)) return texto;
-  const semCifrao = texto
+  // O espaço das pontas fica (um só): o trecho vizinha de uma marca ou de uma corrida ("e " antes de `$…$`) não pode colar nela.
+  const inicio = /^\s/.test(texto) ? " " : "";
+  const fim = /\s$/.test(texto) ? " " : "";
+  return inicio + linearizarTolerante(semCifraoDeLatex(texto).replace(/\s+/g, " ")) + fim;
+}
+
+/** Os cifrões que cercam LaTeX e não formaram marca saem junto com ele; os de dinheiro ficam. Idempotente. */
+function semCifraoDeLatex(texto: string): string {
+  if (!texto.includes("$")) return texto;
+  return texto
     .replace(/\${1,2}([^$\n]*\\[A-Za-z][^$\n]*)\${1,2}/g, " $1 ")
     .replace(/\${1,2}(?=\\[A-Za-z])/g, "");
-  return linearizarTolerante(semCifrao.replace(/\s+/g, " "));
 }
 
 /* ----- A marcação com cifrões ----- */
@@ -345,6 +353,250 @@ function partirPelosTokens(texto: string): Parte[] {
   return saida;
 }
 
+/* ----- O LaTeX solto, fora de $…$ (marco 13b) ----- */
+
+/**
+ * Os comandos que dizem "isto é matemática" quando aparecem SEM cifrão: o que a IA escreve solto numa opção, numa dica ou num retorno (`\begin{bmatrix}…`,
+ * `2 \times 3 = 6`, `\frac{1}{2}`). São a âncora de uma corrida de LaTeX solto e o sinal de lição de matemática (`contemLatexSolto`).
+ */
+const COMANDOS_ANCORA = "begin|d?frac|tfrac|sqrt|times|cdot|div|leq?|geq?|neq?|approx|pm|mp|sin|cos|tan|tg|cot|cotg|sec|csc|cosec|ln|log|lim|arcsin|arccos|arctan|arcsen|arctg|pi|alpha|beta|gamma|delta|epsilon|theta|lambda|mu|rho|sigma|phi|omega|Delta|Gamma|Sigma|Omega|Pi|infty|to|rightarrow|circ|degree|sum|prod|int|cdots|ldots|in|cup|cap|subset|angle|perp|parallel|triangle";
+const ANCORA = new RegExp(`^(?:${COMANDOS_ANCORA})$`);
+const COMANDO_SOLTO = new RegExp(String.raw`\\(?:${COMANDOS_ANCORA})(?![A-Za-z])`);
+/** Os comandos que são um sinal entre dois termos: um `e` solto colado neles não é "e" de frase, é letra da conta. */
+const COMANDO_DE_SINAL = new Set(["times", "cdot", "div", "le", "leq", "ge", "geq", "ne", "neq", "approx", "pm", "mp", "to", "rightarrow", "in"]);
+/** Quantas chaves cada comando de argumento leva (`\frac{a}{b}`: duas; `\sqrt{x}` e `\text{…}`: uma). */
+const ARGUMENTOS_DO_COMANDO: Readonly<Record<string, number>> = {
+  frac: 2, dfrac: 2, tfrac: 2, binom: 2, sqrt: 1, text: 1, textit: 1, textbf: 1, mathrm: 1, mathbb: 1, mathit: 1, operatorname: 1, vec: 1, overline: 1, hat: 1, bar: 1, underline: 1,
+};
+const LIMITE_DA_CORRIDA = 60;
+/** Quantas leituras da gramática uma corrida de LaTeX solto pode custar por texto: o texto estranho (uma conta que nunca fecha) não prende o servidor. */
+const ORCAMENTO_DE_LEITURAS = 300;
+
+type TipoDeFicha = "ancora" | "comando" | "numero" | "variavel" | "operador" | "espaco" | "quebra";
+interface Ficha {
+  tipo: TipoDeFicha;
+  inicio: number;
+  fim: number;
+  /** A letra solta que pode ser a conjunção ou o artigo ("a", "e", "o"), sozinha entre espaços. */
+  talvezPalavra?: boolean;
+}
+
+/** O índice depois do grupo balanceado que abre em `texto[i]` (`{…}` ou `[…]`), ou -1 se não fecha. */
+function fimDoGrupo(texto: string, i: number, abre: string, fecha: string): number {
+  let nivel = 0;
+  for (let j = i; j < texto.length; j += 1) {
+    if (texto[j] === "\\") { j += 1; continue; }
+    if (texto[j] === abre) nivel += 1;
+    else if (texto[j] === fecha) {
+      nivel -= 1;
+      if (nivel === 0) return j + 1;
+    }
+  }
+  return -1;
+}
+
+/** Os expoentes e índices que vêm colados num termo (`x^2`, `a_{n+1}`, `10^{-3}`, `x_1^2`): onde terminam. */
+function fimDosScripts(texto: string, inicio: number): number {
+  let i = inicio;
+  for (;;) {
+    if (texto[i] !== "^" && texto[i] !== "_") return i;
+    const proximo = texto[i + 1];
+    if (proximo === "{") {
+      const fim = fimDoGrupo(texto, i + 1, "{", "}");
+      if (fim < 0) return i;
+      i = fim;
+    } else if (proximo !== undefined && /[A-Za-z0-9]/.test(proximo)) i += 2;
+    else if (proximo === "-" && /\d/.test(texto[i + 2] ?? "")) i += 3;
+    else if (proximo === "\\") {
+      const nome = /^\\[A-Za-z]+/.exec(texto.slice(i + 1))?.[0];
+      if (!nome) return i;
+      i += 1 + nome.length;
+    } else return i;
+  }
+}
+
+const escaparParaRegex = (texto: string): string => texto.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Lê o comando que começa na barra de `texto[i]`: o ambiente `\begin…\end` inteiro, o comando com os argumentos e os scripts, ou nada (null: comando que não fecha). */
+function lerComandoSolto(texto: string, i: number): { fim: number; nome: string } | null {
+  const nome = /^\\([A-Za-z]+)/.exec(texto.slice(i, i + 40))?.[1];
+  if (!nome) return null;
+  let fim = i + 1 + nome.length;
+  if (nome === "begin") {
+    const ambiente = /^\s*\{([A-Za-z*]+)\}/.exec(texto.slice(fim));
+    if (!ambiente) return null;
+    const marcador = new RegExp(String.raw`\\begin\s*\{${escaparParaRegex(ambiente[1])}\}|\\end\s*\{${escaparParaRegex(ambiente[1])}\}`, "g");
+    marcador.lastIndex = fim + ambiente[0].length;
+    let nivel = 1;
+    for (let achado = marcador.exec(texto); achado; achado = marcador.exec(texto)) {
+      nivel += achado[0].startsWith("\\begin") ? 1 : -1;
+      if (nivel === 0) return { fim: achado.index + achado[0].length, nome };
+    }
+    return null;
+  }
+  if (nome === "left" || nome === "right") {
+    const delimitador = /^\s*(?:\\[{}|]|\\\||[()[\]|.])/.exec(texto.slice(fim));
+    return delimitador ? { fim: fim + delimitador[0].length, nome } : null;
+  }
+  if (nome === "sqrt" && texto[fim] === "[") {
+    const raiz = fimDoGrupo(texto, fim, "[", "]");
+    if (raiz < 0) return null;
+    fim = raiz;
+  }
+  for (let argumento = 0; argumento < (ARGUMENTOS_DO_COMANDO[nome] ?? 0); argumento += 1) {
+    const espacos = /^\s*/.exec(texto.slice(fim))?.[0].length ?? 0;
+    if (texto[fim + espacos] !== "{") return null;
+    const depois = fimDoGrupo(texto, fim + espacos, "{", "}");
+    if (depois < 0) return null;
+    fim = depois;
+  }
+  return { fim: fimDosScripts(texto, fim), nome };
+}
+
+/** O texto cortado em fichas de matemática (comandos, números, letras soltas, sinais) e de quebra (palavra, pontuação, o que não é conta). */
+function fichasDeMatematica(texto: string): Ficha[] {
+  const fichas: Ficha[] = [];
+  let profundidade = 0;
+  let i = 0;
+  const por = (tipo: TipoDeFicha, fim: number, extra: Partial<Ficha> = {}) => {
+    fichas.push({ tipo, inicio: i, fim, ...extra });
+    i = fim;
+  };
+  while (i < texto.length) {
+    const c = texto[i];
+    if (/\s/.test(c)) {
+      let fim = i + 1;
+      while (fim < texto.length && /\s/.test(texto[fim])) fim += 1;
+      por("espaco", fim);
+    } else if (c === "\\") {
+      const proximo = texto[i + 1];
+      if (proximo !== undefined && /[,;:! ]/.test(proximo)) por("espaco", i + 2);
+      else if (proximo === "{" || proximo === "}") por("operador", i + 2);
+      else {
+        const comando = lerComandoSolto(texto, i);
+        if (!comando) por("quebra", Math.min(texto.length, i + 1 + (/^\\[A-Za-z]+/.exec(texto.slice(i))?.[0].length ?? 1) - 1));
+        else if (/^q?quad$/.test(comando.nome)) por("espaco", comando.fim);
+        else por(ANCORA.test(comando.nome) ? "ancora" : "comando", comando.fim, COMANDO_DE_SINAL.has(comando.nome) ? { talvezPalavra: false } : {});
+      }
+    } else if (/\d/.test(c)) {
+      let fim = i + 1;
+      while (fim < texto.length && (/\d/.test(texto[fim]) || (/[.,]/.test(texto[fim]) && /\d/.test(texto[fim + 1] ?? "")))) fim += 1;
+      por("numero", fimDosScripts(texto, fim));
+    } else if (/[A-Za-z]/.test(c)) {
+      let fim = i + 1;
+      while (fim < texto.length && /[A-Za-z]/.test(texto[fim])) fim += 1;
+      if (fim - i > 1 || /[A-Za-z]/.test(texto[fim] ?? "")) por("quebra", fim);
+      else {
+        const depois = fimDosScripts(texto, fim);
+        const isolada = depois === fim && /[aeo]/.test(c) && (i === 0 || /\s/.test(texto[i - 1])) && (fim >= texto.length || /\s/.test(texto[fim]));
+        por("variavel", depois, isolada ? { talvezPalavra: true } : {});
+      }
+    } else if (/[+\-−=<>×÷·*/|]/.test(c)) por("operador", i + 1);
+    else if (c === "(" || c === "[") { profundidade += 1; por("operador", i + 1); }
+    else if (c === ")" || c === "]") { profundidade = Math.max(0, profundidade - 1); por("operador", i + 1); }
+    else if ((c === "," || c === ";") && profundidade > 0) por("operador", i + 1);
+    else por("quebra", i + 1);
+  }
+  return fichas;
+}
+
+/** O pedaço de texto de um grupo de fichas `[de, ate]`. */
+const textoDasFichas = (texto: string, fichas: readonly Ficha[], de: number, ate: number): string => texto.slice(fichas[de].inicio, fichas[ate].fim);
+
+/**
+ * As corridas de LaTeX solto de um texto: pedaços `[inicio, fim)` que são uma fórmula escrita sem cifrão e que a gramática lê, com os termos em volta que fazem parte
+ * da conta (`2 \times 3 = 6`, `x \leq 5`, `A = \begin{bmatrix}…\end{bmatrix}`, `\pi r^2`). A palavra, a pontuação e o "e" de frase param a corrida; o `\begin` sem `\end`
+ * e o comando de fora da lista ficam de fora (esses saem em texto linear, como sempre).
+ */
+function corridasDeLatexSolto(texto: string): { inicio: number; fim: number }[] {
+  const fichas = fichasDeMatematica(texto);
+  const grupos: Ficha[][] = [];
+  let atual: Ficha[] = [];
+  const vizinho = (posicao: number, passo: -1 | 1): Ficha | undefined => {
+    for (let j = posicao + passo; j >= 0 && j < fichas.length; j += passo) if (fichas[j].tipo !== "espaco") return fichas[j];
+    return undefined;
+  };
+  const sinalDoComando = (ficha: Ficha): boolean => ficha.tipo === "ancora" && COMANDO_DE_SINAL.has(/^\\([A-Za-z]+)/.exec(texto.slice(ficha.inicio))?.[1] ?? "");
+  const ehSinal = (ficha: Ficha | undefined): boolean => ficha !== undefined && (ficha.tipo === "operador" || sinalDoComando(ficha));
+  /** A corrida não abre com um sinal que pede o termo da esquerda (`=`, `+`, `×`, `\leq`…) nem fecha com um que pede o da direita (`=`, `+`, `−`, `(`…): a conta começada, `… = ___`, fica de fora. */
+  const abrePor = (ficha: Ficha): boolean => !(sinalDoComando(ficha) || (ficha.tipo === "operador" && /[+=<>×÷·*/)\],;]/.test(texto[ficha.inicio])));
+  const fechaPor = (ficha: Ficha): boolean => !(sinalDoComando(ficha) || (ficha.tipo === "operador" && /[+\-−=<>×÷·*/(\[,;]/.test(texto[ficha.inicio])));
+  fichas.forEach((ficha, posicao) => {
+    const quebra = ficha.tipo === "quebra" || (ficha.talvezPalavra === true && ficha.tipo === "variavel" && !ehSinal(vizinho(posicao, -1)) && !ehSinal(vizinho(posicao, 1)));
+    if (quebra) {
+      if (atual.length > 0) grupos.push(atual);
+      atual = [];
+    } else atual.push(ficha);
+  });
+  if (atual.length > 0) grupos.push(atual);
+  const corridas: { inicio: number; fim: number }[] = [];
+  let leituras = 0;
+  for (const grupo of grupos) {
+    // Sem espaço nas pontas: a corrida começa e termina numa ficha de matemática.
+    const util = grupo.filter((ficha) => ficha.tipo !== "espaco");
+    if (!util.some((ficha) => ficha.tipo === "ancora") || grupo.length > LIMITE_DA_CORRIDA) continue;
+    let cursor = 0;
+    while (cursor < grupo.length) {
+      let achada: [number, number] | null = null;
+      for (let de = cursor; de < grupo.length && !achada; de += 1) {
+        if (grupo[de].tipo === "espaco" || !abrePor(grupo[de])) continue;
+        for (let ate = grupo.length - 1; ate >= de; ate -= 1) {
+          if (grupo[ate].tipo === "espaco" || !fechaPor(grupo[ate])) continue;
+          if (!grupo.slice(de, ate + 1).some((ficha) => ficha.tipo === "ancora")) break;
+          if (leituras >= ORCAMENTO_DE_LEITURAS) return corridas;
+          leituras += 1;
+          if (lerFormula(barraSimplesEmFracao(textoDasFichas(texto, grupo, de, ate))).ok) { achada = [de, ate]; break; }
+        }
+      }
+      if (!achada) break;
+      corridas.push({ inicio: grupo[achada[0]].inicio, fim: grupo[achada[1]].fim });
+      cursor = achada[1] + 1;
+    }
+  }
+  return corridas;
+}
+
+/**
+ * O texto de uma lição de matemática com o LaTeX SOLTO (sem cifrão) que a gramática lê já como marca: `\begin{bmatrix} 2 & 8 \\ 7 & 7 \end{bmatrix}` numa opção vira uma fórmula
+ * desenhada, e `Confira 2 \times 1 + 0 \times 2 = 2.` marca só a conta. O que não lê (comando de fora da lista, `\begin` sem `\end`) segue para o texto linear, sem barra.
+ */
+function partirPeloLatexSolto(texto: string): Parte[] {
+  const corridas = texto.includes("\\") ? corridasDeLatexSolto(texto) : [];
+  if (corridas.length === 0) return [{ tipo: "texto", texto }];
+  const saida: Parte[] = [];
+  let cursor = 0;
+  for (const { inicio, fim } of corridas) {
+    if (inicio > cursor) saida.push({ tipo: "texto", texto: texto.slice(cursor, inicio) });
+    saida.push(marcaDe(texto.slice(inicio, fim)));
+    cursor = fim;
+  }
+  if (cursor < texto.length) saida.push({ tipo: "texto", texto: texto.slice(cursor) });
+  return saida;
+}
+
+/**
+ * Há LaTeX solto (um comando de matemática fora de `$…$`) no texto? É o sinal de lição de matemática quando as palavras do assunto não bastam, e de texto que o cliente sem
+ * cabeçalho precisa receber linear. `\text`, `\left`, `\quad` e os comandos de fora da lista não contam: sozinhos não dizem nada.
+ */
+export function contemLatexSolto(texto: string): boolean {
+  if (typeof texto !== "string" || !texto.includes("\\")) return false;
+  let fora = "";
+  let i = 0;
+  while (i < texto.length) {
+    if (texto[i] === "$") {
+      const marca = lerMarca(texto, i);
+      if (marca) {
+        fora += " ";
+        i = marca.fim;
+        continue;
+      }
+    }
+    fora += texto[i];
+    i += 1;
+  }
+  return COMANDO_SOLTO.test(fora);
+}
+
 /* ----- A função ----- */
 
 function juntarVizinhos(segmentos: SegmentoDeTexto[]): SegmentoDeTexto[] {
@@ -381,8 +633,18 @@ function partirEmPartes(texto: string, heuristica: boolean): Parte[] {
   let corrente = "";
   const fecharTexto = () => {
     if (!corrente) return;
-    const limpo = semLatexCru(corrente);
-    partes.push(...(heuristica ? partirPeloQueSePareceFormula(limpo) : [{ tipo: "texto" as const, texto: limpo }]));
+    // Com LaTeX (ou chaves) no trecho, os cifrões que o cercam saem e o espaço é um só, como o texto linear sempre fez.
+    const solto = /[\\{}]/.test(corrente) ? semCifraoDeLatex(corrente).replace(/\s+/g, " ") : corrente;
+    if (heuristica) {
+      // O LaTeX solto que a gramática lê vira marca (desenhada); o resto do texto vai para o texto linear e para os tokens soltos, como sempre.
+      for (const pedaco of partirPeloLatexSolto(solto)) {
+        if (pedaco.tipo === "texto") partes.push(...partirPeloQueSePareceFormula(semLatexCru(pedaco.texto)));
+        else partes.push(pedaco);
+      }
+    } else {
+      // Sem a heurística o LaTeX solto vira texto linear, corrida por corrida: a frase inteira nunca é lida como uma conta ("x \\leq 5 e y \\geq 2" não vira "x ≤ 5ey ≥ 2").
+      for (const pedaco of partirPeloLatexSolto(solto)) partes.push({ tipo: "texto" as const, texto: pedaco.tipo === "texto" ? semLatexCru(pedaco.texto) : pedaco.linear });
+    }
     corrente = "";
   };
   let i = 0;

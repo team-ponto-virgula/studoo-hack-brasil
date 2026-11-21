@@ -1798,3 +1798,10 @@ test("13a, material: a nova tentativa que já acontece leva o aviso da figura; a
   assert.equal(conteudos[1].resolucao.passos.length, 5);
 });
 
+test("13b: o pedido à IA manda todo comando de LaTeX para DENTRO de $…$, nas opções, dicas e retornos também (a matriz de uma opção leva os cifrões)", () => {
+  for (const [nome, instrucoes] of [["lição", instrucoesDeMatematica], ["figuras do material", instrucoesDeFigurasDoMaterial]]) {
+    assert.match(instrucoes, /Todo comando de LaTeX \(\\frac, \\sqrt, \\times, \\sin, \\begin…\\end\) vai DENTRO de \$…\$, também no texto das opções, das dicas e dos retornos: nunca solto/, nome);
+    assert.ok(instrucoes.includes('"$\\begin{bmatrix} 2 & 8 \\\\ 7 & 7 \\end{bmatrix}$"'), `${nome}: o exemplo da opção que é uma matriz, com os cifrões`);
+  }
+});
+
