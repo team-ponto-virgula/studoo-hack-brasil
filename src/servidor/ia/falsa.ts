@@ -155,6 +155,15 @@ function pausaConfigurada(): number {
   return Number.isFinite(valor) ? Math.min(Math.max(Math.trunc(valor), 0), 5000) : PAUSA_PADRAO_MS;
 }
 
+/**
+ * Pausa entre o último nó e a proposta, em ms (padrão 0: a proposta vem logo depois do último nó, como com a IA de verdade). Só serve ao ensaio da rolagem da trilha
+ * pronta: com STUDOO_IA_FALSA_PAUSA_PROPOSTA_MS entre 100 e 250, a proposta chega com a rolagem suave do último nó ainda andando (a corrida da produção).
+ */
+function pausaDaPropostaConfigurada(): number {
+  const valor = Number(process.env.STUDOO_IA_FALSA_PAUSA_PROPOSTA_MS);
+  return Number.isFinite(valor) ? Math.min(Math.max(Math.trunc(valor), 0), 5000) : 0;
+}
+
 /** Espera `ms`. Devolve false se o sinal abortou antes do fim. */
 function dormir(ms: number, sinal: AbortSignal): Promise<boolean> {
   if (sinal.aborted) return Promise.resolve(false);
@@ -213,6 +222,7 @@ export function criarGeradorFalso(): GeradorTrilha {
         if (!await dormir(pausa, sinal)) return undefined;
         yield evento;
       }
+      if (aoVivo && !await dormir(pausaDaPropostaConfigurada(), sinal)) return undefined;
       const meta: MetaPlano = { gerador, origem: plano.origem };
       return meta;
     },
