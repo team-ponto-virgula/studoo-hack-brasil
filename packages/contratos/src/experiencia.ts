@@ -445,6 +445,8 @@ export const mensagens = {
             [nivel, ...(estudando > 0 ? [`${estudando} estudando`] : []), ...(valeus > 0 ? [`${valeus} ${valeus === 1 ? GESTO.palavra : GESTO.plural}`] : [])].join(' · '),
         mudarCompartilhamento: 'Mudar compartilhamento',
         recebida: (nome: string) => `Trilha adicionada de ${nome}. As mudanças valem só para a sua cópia; a original continua como ${nome} deixou.`,
+        /** Quem compartilhou excluiu a conta ou parou de compartilhar: sem o nome (`recebidaTemNome`). */
+        recebidaSemNome: 'Trilha adicionada da comunidade. As mudanças valem só para a sua cópia; a original continua como está.',
         apagarTitulo: 'Apagar trilha',
         apagarDica: 'Apaga a trilha, as lições e o seu progresso nela.',
         apagar: 'Apagar trilha',
