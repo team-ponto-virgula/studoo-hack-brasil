@@ -169,6 +169,7 @@ O último passo mostra a resposta no papel "resposta", na fórmula e no desenho.
 - **errado:** som `erro`, a opção fica vermelha e aparece a frase do porquê daquela opção (a IA entrega uma por opção errada). O rodapé passa a "Tentar de novo". Na segunda escolha errada, o Studoo mostra a certa, com o porquê, e segue. Nunca trava a pessoa;
 - digitar a resposta fica para depois (fase 3 ou seguinte). Por isso, a `tentativa` não tem `esperada` nem `dica`: ela tem `pergunta` e 3 `opcoes`, cada uma com `texto` ou `formula`, `correta` e `porque`;
 - o "Sua vez" não conta no progresso nem no comprovante da lição.
+- **A frase do passo do "Sua vez" diz o que fazer, nunca o resultado.** Ela não traz a resposta, o valor da opção certa nem a conta pronta ("Junte os termos e descubra k.", e não "…portanto k = 0"). O servidor recusa a resolução quando a frase contém o valor da opção certa, e pede outra.
 - **No passo do "Sua vez", nada entrega a resposta antes da escolha:** a fórmula do passo, o `\resposta{…}` e o ponto revelado no desenho só aparecem depois do acerto ou da segunda escolha errada. Até lá, o cartão mostra a frase e a pergunta, e a fórmula do passo anterior fica como contexto.
 
 **Fim do exemplo:**
@@ -459,3 +460,24 @@ Ajuste pequeno: na multiplicação sem sinal (`4ac`), os fatores ficam colados, 
 - **Leitor de tela:** a descrição nova do desenho, que já inclui o procurado como resposta, entra junto com o anúncio do retorno, numa frase só.
 
 **F1 e F2:** fechados no conteúdo, depois das duas regras de rótulo acima. A legenda "Desenho do Studoo", F3, F4 e F5 continuam dependendo da tela real (seção 8).
+
+## 13. Revisão sobre casos reais (prévia web do app 32e3b9c, IA real DeepSeek, 21/11)
+
+Capturas do Mobile 2 em 320, 390 e na simulação de 200% (a1, a2, b1, b2, c1 e d1) e os PNG do motor com a folha do dono. Origem: prévia web do app, não o aparelho.
+
+**Decisões pedidas:**
+1. **Figura que não cabe (`naoCabe`):** está de acordo com a seção 11, e no iPhone SE (320) a figura da colinearidade só cabe a partir de 190 de altura.
+   - **Muda:** o `alt` não fica numa caixa lavanda (a1 em 320), que parece uma dica e repete o enunciado. Ele fica numa linha discreta logo abaixo do enunciado: o ícone de gráfico de 16 px e o texto em 14/20 `#5E6A85`, sem caixa.
+   - **Leitor de tela:** "Figura: <alt>".
+   - Figura menor, abaixo do piso de 12, continua proibida.
+2. **Altura da caixa:** confirmada. A caixa tem a altura da figura do enunciado, e a figura do acerto é desenhada dentro dessa mesma altura (seção 12). Assim, nada pula.
+3. **Figura sem ponto procurado** (a colinearidade com A, B e C dados): o enunciado e o retorno são o mesmo desenho, sem troca e sem animação, e o leitor de tela não repete a descrição.
+4. **Fórmulas em linha e determinante** (b1 e d1, em 320, 390 e 200%): o tamanho, a base, o determinante com barras e "= 0", a linha compacta do passo feito e as opções "k = 0" estão certos. Muda:
+   - **Peso na pergunta do "Sua vez" (d1):** o "k" sai mais fino que o texto em negrito ao redor. O peso é o do texto ao redor (seção 10).
+   - **Folga do bloco em 320 (b1):** a equação "(−5) + (−k) + 2 − 5k − (−1) − (−2) = 0" deixa uns 5 pt à direita. A fórmula em bloco reduz (até 85%) antes de a folga interna ficar abaixo de 12 nos dois lados, e só depois rola (seção 1).
+   - **Fórmula repetida no cartão do "Sua vez" (d1):** a fórmula do passo anterior aparece duas vezes, na linha compacta do passo feito e no bloco do cartão. No cartão do "Sua vez" não há bloco antes da escolha: o contexto é a linha do passo feito logo acima. Isso substitui o "a fórmula do passo anterior fica como contexto" da seção 4.
+5. **A frase do "Sua vez" com a resposta** ("…portanto k = 0", d1, em 5 de 31 resoluções reais): a seção 4 já dizia que nada entrega a resposta antes da escolha, mas falava da fórmula e do desenho, não da frase. A frase ficou explícita na seção 4: ela diz o que fazer, nunca o resultado, e o servidor recusa.
+
+**Achado de conteúdo** (c1, exemplo em texto quando a resolução é recusada): o texto do exemplo usa A (0, 1), B (2, 5) e C (3, 7), mas o segundo determinante mostra −1, −1 / 2, 5 / k, 1, que é de outro problema. Um visual dentro da etapa Exemplo tem de ser do exemplo. Os visuais da lição que não são do exemplo vão para o conceito. Se os números de um visual do exemplo não aparecem no texto do exemplo, o servidor não o põe ali (Web & API).
+
+**Sem achado:** a1 em 390 (o plano com A, B e C sem procurado, rótulos e grade), b2 (exercício sem figura) e o determinante geral do c1.
