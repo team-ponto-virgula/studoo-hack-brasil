@@ -274,10 +274,21 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
   );
 }
 
+/**
+ * O nome de quem compartilhou a trilha recebida, ou null quando não há nome (quem compartilhou excluiu a conta; banca P0-3):
+ * aí a frase "Esta trilha é de …" ou "Compartilhada por …" não aparece, nunca com o nome vazio.
+ */
+export function nomeDeQuemCompartilhou(recebida: { nome?: string | null } | null | undefined): string | null {
+  const nome = recebida?.nome?.trim();
+  return nome ? nome : null;
+}
+
 /** "Compartilhada" (selo da dona) ou "Compartilhada por Ana", com a foto de agora (trilha recebida), como `MarcaCompartilhar`. */
 export function MarcaCompartilhar({ marcas }: { marcas: MarcasCompartilhar }) {
   if (marcas.recebida) {
-    const { nome, foto, perfilId } = marcas.recebida;
+    const { foto, perfilId } = marcas.recebida;
+    const nome = nomeDeQuemCompartilhou(marcas.recebida);
+    if (!nome) return null;
     return (
       <View style={socialEstilos.marcaRecebida}>
         {foto && <Avatar nome={nome} cor="azul" foto={foto} tamanho={24} />}
@@ -301,10 +312,12 @@ export function MarcaCompartilhar({ marcas }: { marcas: MarcasCompartilhar }) {
  * existe; o link abre a página pública dele (na web, a mesma página na aba).
  */
 export function TrilhaRecebida({ recebida }: { recebida: NonNullable<MarcasCompartilhar['recebida']> }) {
+  const nome = nomeDeQuemCompartilhou(recebida);
+  if (!nome && !recebida.codigoAtivo) return null;
   return (
-    <View style={socialEstilos.trilhaRecebida}>
-      {recebida.foto && <Avatar nome={recebida.nome} cor="azul" foto={recebida.foto} tamanho={24} />}
-      <FraseComNome frase={m.recebidaDe(recebida.nome)} nome={recebida.nome} perfilId={recebida.perfilId} estilo={socialEstilos.trilhaRecebidaTexto} />
+    <View testID="trilha-recebida" style={socialEstilos.trilhaRecebida}>
+      {nome && recebida.foto && <Avatar nome={nome} cor="azul" foto={recebida.foto} tamanho={24} />}
+      {nome && <FraseComNome frase={m.recebidaDe(nome)} nome={nome} perfilId={recebida.perfilId} estilo={socialEstilos.trilhaRecebidaTexto} />}
       {recebida.codigoAtivo && (
         <Text accessibilityRole="link" style={socialEstilos.link} suppressHighlighting
           onPress={() => abrirNoNavegador(urlDoLink(recebida.codigoAtivo!))}>{m.verOriginal}</Text>

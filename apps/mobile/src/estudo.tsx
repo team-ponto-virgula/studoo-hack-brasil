@@ -779,7 +779,7 @@ export function Estudo({ cliente, sair, expirar }: {
     if (etapa.tipo === 'configuracoes') {
       const resumo = planos?.find((item) => item.id === etapa.planoId);
       return <TelaConfiguracoes key={etapa.planoId} cliente={cliente} planoId={etapa.planoId} acoes={acoes} desativado={ocupado}
-        compartilhar={Boolean(abrirFolha)} versao={versaoFolha} recebidaDe={resumo?.recebida?.nome ?? null}
+        compartilhar={Boolean(abrirFolha)} versao={versaoFolha} recebidaDe={resumo?.recebida ? resumo.recebida.nome ?? '' : null}
         voltar={() => (etapa.volta === 'plano' ? void abrirPlano(etapa.planoId) : abrir({ tipo: 'planos' }))}
         aoMudar={(conf) => setPlanos((anteriores) => anteriores?.map((item) => (item.id === conf.planoId
           ? { ...item, titulo: conf.titulo, capa: conf.capa, tema: conf.tema } : item)) ?? null)}
