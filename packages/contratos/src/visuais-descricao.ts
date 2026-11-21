@@ -1,5 +1,5 @@
-import { formulaLinear, lerFormula } from "./formula";
-import { rotuloDaFuncao } from "./funcao-expressao";
+import { textoSemFormulas } from "./formula-no-texto";
+import { rotuloLatexDaFuncao } from "./funcao-expressao";
 import { numeroParaTela, rotuloDoPonto } from "./motor-visuais";
 import type { PapelPonto, TipoDeDestaque, TipoDerivado, VisualFigura, VisualFuncao } from "./visuais";
 
@@ -31,25 +31,32 @@ interface PontoLido {
 }
 
 const DESTAQUES: Readonly<Record<TipoDeDestaque, string>> = { raiz: "raiz", vertice: "vértice", intercepto: "intercepto", intersecao: "interseção", valor: "ponto" };
+/** O artigo de cada nome ("a raiz A", "o vértice V"). */
+const ARTIGO_DO_DESTAQUE: Readonly<Record<TipoDeDestaque, "o" | "a">> = { raiz: "a", vertice: "o", intercepto: "o", intersecao: "a", valor: "o" };
 
-/** "Gráfico de f(x) = x² − 4x + 3, com a raiz A (1, 0), …": as curvas, e os pontos pelo nome do que são, dos dados. */
+/** A fórmula marcada com cifrões: o cliente a desenha em linha e o leitor de tela a fala pela árvore ("f de x é igual a …", "V de coordenadas 2 e menos 1"). */
+const marcada = (latex: string): string => `$${latex}$`;
+
+/**
+ * "Gráfico de $f(x) = x^2 - 4x + 3$, com a raiz $A(1, 0)$, …": as curvas e os pontos, dos dados, com cada fórmula marcada por `$…$` (spec 15, seção 18). Para quem não
+ * desenha, `textoSemFormulas` a lê "Gráfico de f(x) = x² − 4x + 3, com a raiz A(1, 0), …"; para quem fala, `falarTextoComFormulas`.
+ */
 function descricaoDaFuncao(visual: VisualFuncao): string {
-  const curvas = visual.curvas.map((curva) => {
-    const lida = lerFormula(curva.latex);
-    return `${curva.nome}(x) = ${lida.ok ? formulaLinear(lida.arvore) : curva.latex}`;
-  });
+  const curvas = visual.curvas.map((curva) => marcada(`${curva.nome}(x) = ${curva.latex}`));
   const pontos = visual.pontos ?? [];
   const onde = (ponto: VisualFuncao["pontos"] extends (infer P)[] | undefined ? P : never): string =>
-    ponto.x !== undefined && ponto.y !== undefined ? rotuloDaFuncao(ponto.id, ponto.x, ponto.y) : ponto.id;
+    marcada(ponto.x !== undefined && ponto.y !== undefined ? rotuloLatexDaFuncao(ponto.id, ponto.x, ponto.y) : ponto.id);
   const nome = (ponto: (typeof pontos)[number]): string => (ponto.tipo ? DESTAQUES[ponto.tipo] : "ponto");
+  const artigo = (ponto: (typeof pontos)[number]): string => (ponto.tipo ? ARTIGO_DO_DESTAQUE[ponto.tipo] : "o");
   const dados = pontos.filter((ponto) => ponto.papel === "dado").map(onde);
-  const especiais = pontos.filter((ponto) => ponto.papel === "especial").map((ponto) => `${nome(ponto)} ${onde(ponto)}`);
-  const respostas = pontos.filter((ponto) => ponto.papel === "resposta").map((ponto) => `o ${nome(ponto)} ${onde(ponto)}`);
-  const procurados = pontos.filter((ponto) => ponto.papel === "procurado").map((ponto) => `o ${nome(ponto)} procurado ${ponto.id}`);
+  const especiais = pontos.filter((ponto) => ponto.papel === "especial").map((ponto) => `${artigo(ponto)} ${nome(ponto)} ${onde(ponto)}`);
+  const respostas = pontos.filter((ponto) => ponto.papel === "resposta").map((ponto) => `${artigo(ponto)} ${nome(ponto)} ${onde(ponto)}`);
+  const procurados = pontos.filter((ponto) => ponto.papel === "procurado").map((ponto) => `${artigo(ponto)} ${nome(ponto)} procurad${artigo(ponto) === "a" ? "a" : "o"} ${marcada(ponto.id)}`);
   const cabeca = `Gráfico de ${lista(curvas)}`;
   const itens = [...dados, ...especiais, ...respostas, ...procurados];
   const inteira = itens.length > 0 ? `${cabeca}, com ${lista(itens)}.` : `${cabeca}.`;
-  if (inteira.length <= TAMANHO_MAXIMO_DA_DESCRICAO) return inteira;
+  // O tamanho é o do que se lê (as fórmulas sem os cifrões e sem a barra), não o do LaTeX.
+  if (textoSemFormulas(inteira).length <= TAMANHO_MAXIMO_DA_DESCRICAO) return inteira;
   return `${cabeca}, com ${pontos.length} pontos${respostas.length > 0 ? `, entre eles ${lista(respostas)}` : ""}.`;
 }
 

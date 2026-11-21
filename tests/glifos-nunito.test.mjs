@@ -9,7 +9,7 @@ const VARIAVEL = new URL("../public/marca/Nunito[wght].ttf", import.meta.url).pa
 const WEB = new URL("../public/marca/nunito-wght.woff2", import.meta.url).pathname;
 const APP = new URL("../apps/mobile/assets/fontes/Nunito.ttf", import.meta.url).pathname;
 const TABELA = new URL("../packages/contratos/src/glifos.ts", import.meta.url).pathname;
-const GREGO_DA_NOTO = "Δπ";
+const GREGO_DA_NOTO = "ΔπαβγδθλμσφωΣΩ";
 
 /** Área (soma com sinal, curvas achatadas) e caixa de um caminho M/L/Q/Z em unidades da fonte. */
 function medir(d) {
@@ -101,6 +101,6 @@ test("a Nunito que a web e o app carregam tem o que o texto linear emite: U+2080
   // O que a Nunito não tem é desenhado pela fonte do sistema (nenhum quadrado): a seta do operador `→`, e só no LaTeX que não lê,
   // as letras gregas e ∈ ∪ ∩. Se esta lista mudar, alguém emitiu um caractere novo.
   const ausentes = [...CARACTERES_ESPECIAIS_DO_TEXTO].filter((caractere) => !web.has(caractere.codePointAt(0)));
-  assert.deepEqual(ausentes.sort().join(""), [..."→αβγδεθλρσφωΓΠ∈∪∩"].sort().join(""));
+  assert.deepEqual(ausentes.sort().join(""), [..."→↔⇒⇔αβγδεθλρσφωΓΠ∀∃∇∈∉∓∝∠∥∩∪∼≡⊂⊃⊥△"].sort().join(""));
   assert.equal(/[₀-₉]/.test(ausentes.join("")), false, "nenhum subscrito falta");
 });

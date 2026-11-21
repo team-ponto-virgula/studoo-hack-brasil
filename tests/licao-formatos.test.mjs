@@ -275,6 +275,7 @@ const objetivosDasDemos = {
   fracoes: "Frações para a prova do 6º ano",
   fotografia: "Fotografia com o celular",
   geometria: "Geometria analítica: do ponto ao alinhamento",
+  funcoes: "Funções: o gráfico da reta, da parábola e do seno",
 };
 
 test("cada demo com assunto monta a própria trilha e todas as lições passam pela aula", async () => {

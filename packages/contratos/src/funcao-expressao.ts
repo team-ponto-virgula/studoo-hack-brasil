@@ -7,14 +7,10 @@ import { formulaCanonica, lerFormula, type NoFormula } from "./formula";
  * √(a·x + b) ou número × sin / cos (a·x + b); π vale nos coeficientes. Tangente, log, exponencial, divisão por x e x dentro de raiz não
  * linear NÃO valem: a expressão é recusada e a curva some (a figura segue sem ela). O módulo |·| e a interseção ficam para o marco 12b.
  *
- * A leitura parte do LaTeX restrito da seção 1 (`lerFormula`), com `\sin`, `\cos` e `\sen` trocados por `\text{sin}` e `\text{cos}` (a
- * gramática não tem função): o que se desenha na fórmula da figura é o mesmo texto canônico que se lê aqui. Parênteses e produtos
+ * A leitura parte do LaTeX restrito da seção 1 (`lerFormula`), que conhece `\sin`, `\cos` e as outras funções como nomes retos (a tela mostra
+ * "sen x", "cos x": spec 15, seção 18): o que se desenha na fórmula da figura é o mesmo texto canônico que se lê aqui. Parênteses e produtos
  * `(x − 2)^2 − 1` valem quando o resultado é um polinômio até o grau 3 (a leitura expande), e `f(x) =` ou `y =` na frente é ignorado.
  */
-
-/** O nome do seno e do cosseno como a fórmula da figura os desenha (spec 15, seção 15: "h(x) = sin x"). */
-export const NOME_DO_SENO = "sin";
-export const NOME_DO_COSSENO = "cos";
 
 export type TipoDeAtomo = "raiz" | "seno" | "cosseno";
 
@@ -115,6 +111,8 @@ function fator(no: NoFormula): ModeloDaFuncao {
       return no.valor === "π" ? constante(Math.PI) : recusar("Δ não vale numa função");
     case "variavel":
       return no.valor === "x" ? { poli: [0, 1, 0, 0], atomos: [] } : recusar(`só a variável x vale (veio ${no.valor})`);
+    case "funcao":
+      return recusar(`${no.nome} precisa do argumento: ${no.nome}(a x + b)`);
     case "parenteses":
       return soma(itensDe(no.conteudo));
     case "sequencia":
@@ -139,9 +137,10 @@ function fator(no: NoFormula): ModeloDaFuncao {
   }
 }
 
-const NOMES_DAS_FUNCOES: Readonly<Record<string, TipoDeAtomo>> = { sin: "seno", sen: "seno", cos: "cosseno" };
+/** A curva só sabe o seno e o cosseno; tangente, logaritmo e as outras funções ficam só na fórmula (e a curva some). */
+const ATOMO_DA_FUNCAO: Readonly<Record<string, TipoDeAtomo>> = { sen: "seno", cos: "cosseno" };
 
-/** Um termo: fatores lado a lado (produto), `×` e `÷` por número; `sin` e `cos` levam o argumento entre parênteses ou o produto que segue. */
+/** Um termo: fatores lado a lado (produto), `×` e `÷` por número; `sen` e `cos` levam o argumento entre parênteses ou o produto que segue. */
 function termo(itens: readonly NoFormula[]): ModeloDaFuncao {
   let acumulado = constante(1);
   let divide = false;
@@ -155,7 +154,7 @@ function termo(itens: readonly NoFormula[]): ModeloDaFuncao {
       continue;
     }
     let atual: ModeloDaFuncao;
-    if (item.tipo === "texto" && item.valor in NOMES_DAS_FUNCOES) {
+    if (item.tipo === "funcao" && item.nome in ATOMO_DA_FUNCAO) {
       const proximo = itens[i + 1];
       let argumento: ModeloDaFuncao;
       if (proximo?.tipo === "parenteses") {
@@ -168,13 +167,15 @@ function termo(itens: readonly NoFormula[]): ModeloDaFuncao {
           resto.push(itens[j]);
           j += 1;
         }
-        if (resto.length === 0) return recusar("sin e cos precisam de um argumento");
+        if (resto.length === 0) return recusar("sen e cos precisam de um argumento");
         argumento = termo(resto);
         i = j - 1;
       }
-      atual = atomoDe(NOMES_DAS_FUNCOES[item.valor], argumento);
+      atual = atomoDe(ATOMO_DA_FUNCAO[item.nome], argumento);
+    } else if (item.tipo === "funcao") {
+      return recusar(`a função ${item.nome} não vale na curva (só sen e cos); ela fica só na fórmula`);
     } else if (item.tipo === "texto") {
-      return recusar(`a função ${item.valor} não vale (só sin e cos)`);
+      return recusar(`o texto ${item.valor} não vale numa função`);
     } else {
       atual = fator(item);
     }
@@ -226,14 +227,9 @@ function ladoDireito(itens: readonly NoFormula[]): readonly NoFormula[] {
   return itens.slice(igual + 1);
 }
 
-/** `\sin`, `\sen` e `\cos` viram `\text{sin}` e `\text{cos}`: a gramática da fórmula não tem função, e o texto canônico é o que se desenha. */
+/** O que se guardava antes da notação brasileira (`\text{sin}`, `\text{sen}`, `\text{cos}`) vale como a função: o desenho passa a ser "sen" e "cos". */
 function prepararFonte(fonte: string): string {
-  return fonte
-    .replace(/\\(?:sin|sen)(?![A-Za-z])/g, `\\text{${NOME_DO_SENO}}`)
-    .replace(/\\cos(?![A-Za-z])/g, `\\text{${NOME_DO_COSSENO}}`)
-    .replace(/\\(?:operatorname|mathrm)\{(?:sen|sin)\}/g, `\\text{${NOME_DO_SENO}}`)
-    .replace(/\\(?:operatorname|mathrm)\{cos\}/g, `\\text{${NOME_DO_COSSENO}}`)
-    .replace(/\\text\{sen\}/g, `\\text{${NOME_DO_SENO}}`);
+  return fonte.replace(/\\text\{(sin|sen|cos)\}/g, (_inteiro, nome: string) => (nome === "cos" ? "\\cos " : "\\sin "));
 }
 
 /** Lê a expressão de uma curva. `canonica` é o LaTeX que a figura desenha (sem o `f(x) =`), na forma canônica da fórmula. */
@@ -351,6 +347,30 @@ export function numeroComPiParaTela(valor: number): string {
 function numeroDecimalParaTela(valor: number): string {
   const texto = String(Math.round(valor * 100) / 100).replace("-", "−").replace(".", ",");
   return texto === "−0" ? "0" : texto;
+}
+
+/**
+ * O valor em LaTeX restrito, para a fórmula que o `alt` marca com `$…$`: múltiplo de π/4 vira fração de π (`\frac{\pi}{2}`, `\frac{3\pi}{2}`, `-\frac{\pi}{4}`, `2\pi`,
+ * `\pi`); o resto, com ponto decimal e duas casas. A fala sai da árvore: "pi sobre 2".
+ */
+export function numeroComPiParaLatex(valor: number): string {
+  const multiplo = multiploDePiSobre4(valor);
+  if (multiplo === null || multiplo === 0) {
+    const texto = String(Math.round(valor * 100) / 100);
+    return texto === "-0" ? "0" : texto;
+  }
+  const sinal = multiplo < 0 ? "-" : "";
+  const n = Math.abs(multiplo);
+  const divisor = n % 4 === 0 ? 1 : n % 2 === 0 ? 2 : 4;
+  const numerador = n / (4 / divisor);
+  const pi = `${numerador === 1 ? "" : numerador}\\pi`;
+  return `${sinal}${divisor === 1 ? pi : `\\frac{${pi}}{${divisor}}`}`;
+}
+
+/** O ponto sobre a curva em LaTeX restrito: `A(1, 0)`, `M(\frac{\pi}{2}, 1)`, e com decimal `R(-0.5; 0)` (o ponto e vírgula, como na tela). */
+export function rotuloLatexDaFuncao(id: string, x: number, y: number): string {
+  const [tx, ty] = [numeroComPiParaLatex(x), numeroComPiParaLatex(y)];
+  return `${id}(${tx}${tx.includes(".") || ty.includes(".") ? "; " : ", "}${ty})`;
 }
 
 /** O rótulo do ponto sobre a curva: "A (1, 0)", "M (π/2, 1)", e com decimal "R (−0,5; 0)" (a vírgula decimal não se confunde com a do par). */

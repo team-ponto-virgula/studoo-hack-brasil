@@ -8,10 +8,14 @@
  * - números (`3`, `3.5`: o ponto decimal vem na fonte e a vírgula aparece na tela), variáveis de uma letra e vírgula ou
  *   ponto e vírgula como separador (`C = (4, 0)`); um par com decimal usa ponto e vírgula, para não confundir com a vírgula
  *   decimal: `(1.5, 2)` fica `(1.5; 2)` e aparece "(1,5; 2)";
- * - operadores `+ - \times \div = \neq < > \leq \geq \to` (e os apelidos `\cdot * / \ne \le \ge \rightarrow` e os
- *   caracteres `− × ÷ · ≠ ≤ ≥ →`, que viram o operador de sempre) e parênteses (`\left( … \right)` vale);
- * - `\frac{a}{b}`, `x^2`, `x_A`, `x_A^2`, `\sqrt{x}` (só a raiz quadrada), `\text{…}`, `\%`, e os dois símbolos gregos da fase 1,
- *   `\Delta` (discriminante) e `\pi` (círculo); os outros gregos (α, β, θ…) ficam para a fase 2 e invalidam a fórmula;
+ * - operadores `+ - \times \div = \neq \approx < > \leq \geq \to` (e os apelidos `\cdot * / \ne \le \ge \rightarrow` e os
+ *   caracteres `− × ÷ · ≠ ≈ ≤ ≥ →`, que viram o operador de sempre) e parênteses (`\left( … \right)` vale);
+ * - `\frac{a}{b}`, `x^2`, `x_A`, `x_A^2`, `\sqrt{x}` (só a raiz quadrada), `\text{…}`, `\%`, as letras gregas da escola (`\Delta`, `\pi`,
+ *   `\alpha`, `\beta`, `\gamma`, `\delta`, `\theta`, `\lambda`, `\mu`, `\sigma`, `\phi`, `\omega`, `\Sigma`, `\Omega`, ou o caractere) e o grau,
+ *   `30^\circ` (ou `30°`);
+ * - as funções `\sin \cos \tan \cot \ln \log \arcsin \arccos \arctan` (e `sen`, `tg`, `cotg`, `arcsen`, `arctg`, com ou sem barra,
+ *   que a IA também escreve): nomes retos, no peso do texto, que a tela mostra como "sen", "cos", "tg", "cotg", "ln", "log"; levam
+ *   expoente (`\sin^2 x`) e base (`\log_2 8`) e um argumento (`\sin x`, `\sin(2x + 1)`). A tela nunca mostra "sin" nem "tan";
  * - `\begin{bmatrix|pmatrix|vmatrix} a & b \\ c & d \end{…}`, até 4 × 4 (`vmatrix` é o determinante e é quadrado);
  * - os três destaques `\foco{…}`, `\procurado{…}` e `\resposta{…}`, no máximo dois por fórmula e sem um dentro do outro.
  * Espaços (`\,`, `\;`, `\:`, `\!`, `\ `, `\quad`, `\qquad`) são aceitos e ignorados: quem decide o respiro é o motor.
@@ -33,7 +37,54 @@ export type PapelDestaque = "foco" | "procurado" | "resposta";
 export const PAPEIS_DESTAQUE: readonly PapelDestaque[] = ["foco", "procurado", "resposta"];
 
 /** O menos fica como hífen na árvore; quem mostra usa o sinal de menos de verdade (`−`, U+2212). */
-export type OperadorFormula = "+" | "-" | "×" | "÷" | "=" | "≠" | "<" | ">" | "≤" | "≥" | "→";
+export type OperadorFormula = "+" | "-" | "×" | "÷" | "=" | "≠" | "≈" | "<" | ">" | "≤" | "≥" | "→";
+
+/** As letras gregas que a fórmula desenha (o contorno está em `glifos.ts`, da Noto Sans). */
+export const SIMBOLOS_GREGOS = ["Δ", "π", "α", "β", "γ", "δ", "θ", "λ", "μ", "σ", "φ", "ω", "Σ", "Ω"] as const;
+export type SimboloGrego = (typeof SIMBOLOS_GREGOS)[number];
+export type SimboloDaFormula = SimboloGrego | "°";
+
+/**
+ * As funções que a fórmula conhece, pelo nome que a TELA mostra (a notação brasileira: "sen", nunca "sin"; "tg", nunca "tan"). A IA escreve
+ * `\sin`, `\cos`, `\tan`, `\cot`, `\ln`, `\log`, `\arcsin`, `\arccos`, `\arctan`; "sen", "tg", "cotg", "arcsen" e "arctg" também valem.
+ */
+export const NOMES_DE_FUNCAO = ["sen", "cos", "tg", "cotg", "ln", "log", "arcsen", "arccos", "arctg"] as const;
+export type NomeDeFuncao = (typeof NOMES_DE_FUNCAO)[number];
+
+/** O comando (ou a palavra solta) que vira cada função: a IA em inglês, em português ou com `\operatorname`. */
+const FUNCAO_PELO_NOME: Readonly<Record<string, NomeDeFuncao>> = {
+  sin: "sen", sen: "sen", cos: "cos", tan: "tg", tg: "tg", cot: "cotg", cotg: "cotg", ln: "ln", log: "log",
+  arcsin: "arcsen", arcsen: "arcsen", arccos: "arccos", arctan: "arctg", arctg: "arctg",
+};
+
+const COMANDO_DA_FUNCAO: Readonly<Record<NomeDeFuncao, string>> = {
+  sen: "\\sin", cos: "\\cos", tg: "\\tan", cotg: "\\cot", ln: "\\ln", log: "\\log", arcsen: "\\arcsin", arccos: "\\arccos", arctg: "\\arctan",
+};
+
+/** Como o leitor de tela diz cada função (o argumento vem depois: "seno de x"). */
+const FALADO_DA_FUNCAO: Readonly<Record<NomeDeFuncao, string>> = {
+  sen: "seno", cos: "cosseno", tg: "tangente", cotg: "cotangente", ln: "logaritmo natural", log: "logaritmo",
+  arcsen: "arco seno", arccos: "arco cosseno", arctg: "arco tangente",
+};
+
+/** O comando de cada letra grega, e o contrário para ler. */
+const COMANDO_DO_SIMBOLO: Readonly<Record<SimboloDaFormula, string>> = {
+  Δ: "\\Delta", π: "\\pi", α: "\\alpha", β: "\\beta", γ: "\\gamma", δ: "\\delta", θ: "\\theta", λ: "\\lambda", μ: "\\mu", σ: "\\sigma",
+  φ: "\\phi", ω: "\\omega", Σ: "\\Sigma", Ω: "\\Omega", "°": "\\circ",
+};
+const SIMBOLO_PELO_COMANDO: Readonly<Record<string, SimboloGrego>> = {
+  Delta: "Δ", pi: "π", alpha: "α", beta: "β", gamma: "γ", delta: "δ", theta: "θ", vartheta: "θ", lambda: "λ", mu: "μ", sigma: "σ", phi: "φ", varphi: "φ",
+  omega: "ω", Sigma: "Σ", Omega: "Ω",
+};
+const FALADO_DO_SIMBOLO: Readonly<Record<SimboloDaFormula, string>> = {
+  Δ: "delta", π: "pi", α: "alfa", β: "beta", γ: "gama", δ: "delta", θ: "teta", λ: "lambda", μ: "mi", σ: "sigma", φ: "fi", ω: "ômega", Σ: "sigma", Ω: "ômega", "°": "graus",
+};
+const ehSimboloGrego = (c: string | undefined): c is SimboloGrego => c !== undefined && (SIMBOLOS_GREGOS as readonly string[]).includes(c);
+
+/** O grau como expoente (`30^\circ`): o símbolo `°` que um número carrega. */
+export const ehGrau = (no: NoFormula | undefined): boolean => no?.tipo === "simbolo" && no.valor === "°";
+/** Um nome de função, sozinho ou com expoente e base (`\sin^2`, `\log_2`): o argumento é o próximo item da sequência. */
+export const ehFuncao = (no: NoFormula | undefined): boolean => no?.tipo === "funcao" || (no?.tipo === "script" && no.base.tipo === "funcao");
 
 /** Os espaços de LaTeX que a fórmula desenha: fino (`\,`), médio (`\:`), grosso (`\;`), `\quad` e `\qquad`. (`\ ` vale `\;`; `\!` não desenha nada.) */
 export type ComandoDeEspaco = "," | ":" | ";" | "quad" | "qquad";
@@ -46,8 +97,13 @@ const COMANDO_LATEX_DO_ESPACO: Readonly<Record<ComandoDeEspaco, string>> = { ","
 export type NoFormula =
   | { tipo: "numero"; valor: string }
   | { tipo: "variavel"; valor: string }
-  /** O grego da fase 1: Δ (discriminante) e π. Reto, como número, com o contorno da Noto Sans Bold. */
-  | { tipo: "simbolo"; valor: "Δ" | "π" }
+  /**
+   * Letra grega da escola (Δ, π, α, β, γ, δ, θ, λ, μ, σ, φ, ω, Σ, Ω), reta como número, com o contorno da Noto Sans; ou o grau (`°`), que só aparece como
+   * expoente de um número (`30^\circ`) e se desenha colado nele, sem subir.
+   */
+  | { tipo: "simbolo"; valor: SimboloDaFormula }
+  /** O nome de uma função (`\sin x`): reto, no peso do texto, com um vão fino antes do argumento. O argumento é o que vem depois. */
+  | { tipo: "funcao"; nome: NomeDeFuncao }
   | { tipo: "operador"; valor: OperadorFormula }
   /** `espaco`: o `\quad` entre duas equações lado a lado (`x_C = 10 \quad y_C = 6`): um vão, sem sinal, que separa as cláusulas. */
   | { tipo: "separador"; valor: "," | ";" | "espaco" }
@@ -77,18 +133,18 @@ function falhar(mensagem: string, posicao: number): never {
 }
 
 const OPERADORES_POR_COMANDO: Readonly<Record<string, OperadorFormula>> = {
-  times: "×", cdot: "×", div: "÷", neq: "≠", ne: "≠", leq: "≤", le: "≤", geq: "≥", ge: "≥", to: "→", rightarrow: "→",
+  times: "×", cdot: "×", div: "÷", neq: "≠", ne: "≠", approx: "≈", leq: "≤", le: "≤", geq: "≥", ge: "≥", to: "→", rightarrow: "→",
 };
 
 const OPERADORES_POR_CARACTERE: Readonly<Record<string, OperadorFormula>> = {
   "+": "+", "-": "-", "−": "-", "–": "-", "=": "=", "<": "<", ">": ">", "×": "×", "·": "×", "*": "×", "÷": "÷", "/": "÷",
-  "≠": "≠", "≤": "≤", "≥": "≥", "→": "→",
+  "≠": "≠", "≈": "≈", "≤": "≤", "≥": "≥", "→": "→",
 };
 
 /** Os comandos de espaço que o analisador conhece e o que cada um vira (`\ ` vale `\;`; `\!`, o espaço negativo, não desenha nada: `null`). */
 const COMANDOS_DE_ESPACO: Readonly<Record<string, ComandoDeEspaco | null>> = { ",": ",", ":": ":", ";": ";", " ": ";", "!": null, quad: "quad", qquad: "qquad" };
 
-const RELACOES_DA_FORMULA: ReadonlySet<OperadorFormula> = new Set(["=", "≠", "<", ">", "≤", "≥"]);
+const RELACOES_DA_FORMULA: ReadonlySet<OperadorFormula> = new Set(["=", "≠", "≈", "<", ">", "≤", "≥"]);
 
 function temRelacao(itens: readonly NoFormula[]): boolean {
   return itens.some((item) => item.tipo === "operador" && RELACOES_DA_FORMULA.has(item.valor));
@@ -143,7 +199,7 @@ const ehLetra = (c: string | undefined): c is string => c !== undefined && /^[A-
 const TEXTO_PERMITIDO = /^[A-Za-zÀÁÂÃÇÉÊÍÓÔÕÚÜàáâãçéêíóôõúü0-9 .,;:!?()'’/%+=<>-]*$/u;
 
 function podeTerScript(no: NoFormula): boolean {
-  return no.tipo === "numero" || no.tipo === "variavel" || no.tipo === "simbolo" || no.tipo === "parenteses" || no.tipo === "sequencia" ||
+  return no.tipo === "numero" || no.tipo === "variavel" || no.tipo === "simbolo" || no.tipo === "funcao" || no.tipo === "parenteses" || no.tipo === "sequencia" ||
     no.tipo === "fracao" || no.tipo === "raiz";
 }
 
@@ -243,6 +299,11 @@ class Analisador {
         if (expoente) falhar("dois expoentes na mesma base", this.i);
         expoente = { tipo: "numero", valor: SOBRESCRITOS[c] };
         this.i += 1;
+      } else if (c === "°") {
+        // `30°`: o grau é o expoente de um número (ou de uma variável, de um parêntese); sai igual a `30^\circ`.
+        if (expoente) falhar("dois expoentes na mesma base", this.i);
+        expoente = { tipo: "simbolo", valor: "°" };
+        this.i += 1;
       } else {
         this.i = antes;
         break;
@@ -256,6 +317,15 @@ class Analisador {
   private argumentoDeScript(profundidade: number): NoFormula {
     this.espacos();
     const c = this.s[this.i];
+    if (c === "°") {
+      this.i += 1;
+      return { tipo: "simbolo", valor: "°" };
+    }
+    const grau = /^(?:\{\s*\\circ\s*\}|\\circ(?![A-Za-z]))/.exec(this.s.slice(this.i));
+    if (grau) {
+      this.i += grau[0].length;
+      return { tipo: "simbolo", valor: "°" };
+    }
     if (c === "{") {
       this.i += 1;
       const conteudo = this.sequencia(profundidade + 1, "grupo");
@@ -287,7 +357,7 @@ class Analisador {
     const c = this.s[this.i];
     if (ehDigito(c)) return this.numero();
     if (ehLetra(c)) return this.letra();
-    if (c === "Δ" || c === "π") {
+    if (ehSimboloGrego(c)) {
       this.i += 1;
       return { tipo: "simbolo", valor: c };
     }
@@ -327,9 +397,15 @@ class Analisador {
   }
 
   private letra(): NoFormula {
-    // Uma palavra solta (sin, cos, log) viraria o produto das letras: peça `\text{…}` ou escreva em texto linear.
+    // O nome de uma função sem a barra (`sen x`, `tg x`, `ln x`, `sin x`) é a função. Outra palavra solta viraria o produto das letras:
+    // peça `\text{…}` ou escreva em texto linear.
     let fim = this.i;
     while (ehLetra(this.s[fim])) fim += 1;
+    const palavra = this.s.slice(this.i, fim);
+    if (Object.hasOwn(FUNCAO_PELO_NOME, palavra)) {
+      this.i = fim;
+      return { tipo: "funcao", nome: FUNCAO_PELO_NOME[palavra] };
+    }
     if (fim - this.i >= 3) falhar("palavra solta (use \\text{…})", this.i);
     const valor = this.s[this.i];
     this.i += 1;
@@ -357,13 +433,23 @@ class Analisador {
       const comando = COMANDOS_DE_ESPACO[nome];
       return comando ? { tipo: "espaco", comando } : null;
     }
+    if (Object.hasOwn(FUNCAO_PELO_NOME, nome)) return { tipo: "funcao", nome: FUNCAO_PELO_NOME[nome] };
+    if (Object.hasOwn(SIMBOLO_PELO_COMANDO, nome)) return { tipo: "simbolo", valor: SIMBOLO_PELO_COMANDO[nome] };
     switch (nome) {
       case "%":
         return { tipo: "porcento" };
-      case "Delta":
-        return { tipo: "simbolo", valor: "Δ" };
-      case "pi":
-        return { tipo: "simbolo", valor: "π" };
+      case "circ":
+        return falhar("o grau vale só depois de um número ou de um parêntese: 30^\\circ", posicao);
+      case "operatorname":
+      case "mathrm": {
+        this.espacos();
+        if (this.s[this.i] !== "{") falhar(`esperava { depois de \\${nome}`, this.i);
+        const fechou = this.s.indexOf("}", this.i);
+        const palavra = fechou < 0 ? "" : this.s.slice(this.i + 1, fechou).trim();
+        if (!Object.hasOwn(FUNCAO_PELO_NOME, palavra)) falhar(`\\${nome} só vale com o nome de uma função (sen, cos, tg, ln, log…)`, this.i);
+        this.i = fechou + 1;
+        return { tipo: "funcao", nome: FUNCAO_PELO_NOME[palavra] };
+      }
       case "frac": {
         const numerador = this.grupo(profundidade);
         const denominador = this.grupo(profundidade);
@@ -484,10 +570,10 @@ export function repararComandosDeControle(fonte: string): string {
   if (!/[\u0008\t\n\r\u000c]/.test(fonte)) return fonte;
   return fonte
     .replace(/\u000c(?=rac|oco)/g, "\\f")
-    .replace(/\t(?=imes|ext|o(?![A-Za-z]))/g, "\\t")
+    .replace(/\t(?=imes|ext|o(?![A-Za-z])|an(?![A-Za-z])|heta|g(?![A-Za-z]))/g, "\\t")
     .replace(/\n(?=eq(?![A-Za-z]))/g, "\\n")
     .replace(/\r(?=ight|esposta)/g, "\\r")
-    .replace(/\u0008(?=egin)/g, "\\b");
+    .replace(/\u0008(?=egin|eta(?![A-Za-z]))/g, "\\b");
 }
 
 /**
@@ -531,7 +617,7 @@ export function repararBarrasDoJson(texto: string): string {
       continue;
     }
     const resto = texto.slice(i + 1);
-    const comandoDaLista = /^(?:frac|foco|times(?![A-Za-z])|text(?![A-Za-z])|neq(?![A-Za-z])|right(?![A-Za-z])|resposta|begin\{)/.test(resto);
+    const comandoDaLista = /^(?:frac|foco|times(?![A-Za-z])|text(?![A-Za-z])|tan(?![A-Za-z])|tg(?![A-Za-z])|theta(?![A-Za-z])|beta(?![A-Za-z])|neq(?![A-Za-z])|right(?![A-Za-z])|resposta|begin\{)/.test(resto);
     if ("bfnrt".includes(proximo) && !comandoDaLista) {
       saida += c + proximo;
       i += 1;
@@ -547,7 +633,8 @@ export function repararBarrasDoJson(texto: string): string {
  * volta e troca `\\` seguido de letra (barra dobrada demais) por uma barra só, fora das matrizes (onde `\\` separa linhas).
  */
 function prepararFonte(entrada: string): string {
-  let fonte = repararComandosDeControle(entrada).trim();
+  // `3{,}14` (a vírgula decimal do LaTeX, entre chaves) é o número 3,14: sem isto lia "3, 14", dois números.
+  let fonte = repararComandosDeControle(entrada).trim().replace(/(\d)\{,\}(?=\d)/g, "$1.");
   const envolturas: [string, string][] = [["$$", "$$"], ["$", "$"], ["\\(", "\\)"], ["\\[", "\\]"]];
   for (const [abre, fecha] of envolturas) {
     if (fonte.length > abre.length + fecha.length && fonte.startsWith(abre) && fonte.endsWith(fecha)) {
@@ -643,7 +730,7 @@ export function lerFormula(fonte: unknown): ResultadoFormula {
 /* ----- Forma canônica ----- */
 
 const OPERADOR_LATEX: Readonly<Record<OperadorFormula, string>> = {
-  "+": "+", "-": "-", "×": "\\times", "÷": "\\div", "=": "=", "≠": "\\neq", "<": "<", ">": ">", "≤": "\\leq", "≥": "\\geq", "→": "\\to",
+  "+": "+", "-": "-", "×": "\\times", "÷": "\\div", "=": "=", "≠": "\\neq", "≈": "\\approx", "<": "<", ">": ">", "≤": "\\leq", "≥": "\\geq", "→": "\\to",
 };
 
 /** O operador `+` ou `-` que abre uma sequência ou vem depois de outro operador (ou de uma vírgula) é o sinal do número. */
@@ -672,9 +759,20 @@ export function vaoAutomatico(anterior: NoFormula | undefined, atual: NoFormula)
   return false;
 }
 
-/** Há um vão (o automático ou o da palavra que traz espaço) entre estes dois irmãos? Quem escreve em texto põe um espaço. */
+/**
+ * O vão fino (0,17 em) ao lado do nome de uma função: antes do argumento (`\sin x`) e entre o número que a multiplica e o nome (`2\sin x`). Antes
+ * de um parêntese não há vão (`\sin(2x + 1)`), nem ao lado de operador, separador ou espaço, que já têm o respiro deles.
+ */
+export function vaoDaFuncao(anterior: NoFormula | undefined, atual: NoFormula): boolean {
+  if (!anterior || anterior.tipo === "operador" || anterior.tipo === "separador" || anterior.tipo === "espaco") return false;
+  if (atual.tipo === "operador" || atual.tipo === "separador" || atual.tipo === "espaco") return false;
+  if (ehFuncao(anterior)) return atual.tipo !== "parenteses";
+  return ehFuncao(atual);
+}
+
+/** Há um vão (o automático, o da palavra que traz espaço ou o da função) entre estes dois irmãos? Quem escreve em texto põe um espaço. */
 export function haVao(anterior: NoFormula | undefined, atual: NoFormula): boolean {
-  return vaoAutomatico(anterior, atual) || vaoDaPalavra(anterior, atual);
+  return vaoAutomatico(anterior, atual) || vaoDaPalavra(anterior, atual) || vaoDaFuncao(anterior, atual);
 }
 
 /** O vão de UMA palavra que já traz espaço na ponta: o espaço de uma palavra (`0,28 em`), o mesmo que o desenho põe. */
@@ -704,8 +802,8 @@ function sequenciaCanonica(itens: readonly NoFormula[]): string {
       // Duas variáveis seguidas ficam separadas: `a b c` não pode virar `abc`, que seria uma palavra solta ao reler.
       if (item.tipo === "variavel" && itens[posicao - 1]?.tipo === "variavel") saida += " ";
       saida += formulaCanonica(item);
-      // `\pi r` não pode virar `\pir`, um comando que não existe.
-      if (item.tipo === "simbolo") saida += " ";
+      // `\pi r` não pode virar `\pir`, um comando que não existe; `\sin x`, `\log_2 8` e `\theta x` pelo mesmo motivo.
+      if (item.tipo === "simbolo" || ehFuncao(item)) saida += " ";
     }
   });
   return saida.replace(/\s+/g, " ").trim();
@@ -718,7 +816,9 @@ export function formulaCanonica(no: NoFormula): string {
     case "variavel":
       return no.valor;
     case "simbolo":
-      return no.valor === "Δ" ? "\\Delta" : "\\pi";
+      return COMANDO_DO_SIMBOLO[no.valor];
+    case "funcao":
+      return COMANDO_DA_FUNCAO[no.nome];
     case "operador":
       return OPERADOR_LATEX[no.valor];
     case "separador":
@@ -733,7 +833,8 @@ export function formulaCanonica(no: NoFormula): string {
       return `\\frac{${formulaCanonica(no.numerador)}}{${formulaCanonica(no.denominador)}}`;
     case "script": {
       const base = no.base.tipo === "sequencia" ? `{${formulaCanonica(no.base)}}` : formulaCanonica(no.base);
-      return `${base}${no.indice ? `_${argumentoCanonico(no.indice)}` : ""}${no.expoente ? `^${argumentoCanonico(no.expoente)}` : ""}`;
+      const expoente = no.expoente ? (ehGrau(no.expoente) ? "^\\circ" : `^${argumentoCanonico(no.expoente)}`) : "";
+      return `${base}${no.indice ? `_${argumentoCanonico(no.indice)}` : ""}${expoente}`;
     }
     case "raiz":
       return `\\sqrt{${formulaCanonica(no.radicando)}}`;
@@ -758,7 +859,7 @@ const textoDoSeparador = (valor: "," | ";" | "espaco"): string => (valor === "es
 
 const SINAL_DE_MENOS = "−";
 const OPERADOR_LINEAR: Readonly<Record<OperadorFormula, string>> = {
-  "+": "+", "-": SINAL_DE_MENOS, "×": "×", "÷": "÷", "=": "=", "≠": "≠", "<": "<", ">": ">", "≤": "≤", "≥": "≥", "→": "→",
+  "+": "+", "-": SINAL_DE_MENOS, "×": "×", "÷": "÷", "=": "=", "≠": "≠", "≈": "≈", "<": "<", ">": ">", "≤": "≤", "≥": "≥", "→": "→",
 };
 const SOBRESCRITO_LINEAR: Readonly<Record<string, string>> = { "0": "⁰", "1": "¹", "2": "²", "3": "³", "4": "⁴", "5": "⁵", "6": "⁶", "7": "⁷", "8": "⁸", "9": "⁹" };
 
@@ -798,7 +899,7 @@ function linearDoScript(no: NoFormula): string {
 
 /** Os caracteres fora do ASCII que o texto linear de uma fórmula escreve (o teste confere se a Nunito do app e da web os tem). */
 export const CARACTERES_ESPECIAIS_DO_LINEAR: string = [
-  ...new Set([...Object.values(OPERADOR_LINEAR), ...Object.values(SOBRESCRITO_LINEAR), "√", "Δ", "π"].join("").split("").filter((caractere) => caractere > "\u007f")),
+  ...new Set([...Object.values(OPERADOR_LINEAR), ...Object.values(SOBRESCRITO_LINEAR), "√", "Δ", "π", "°"].join("").split("").filter((caractere) => caractere > "\u007f")),
 ].join("");
 
 /**
@@ -812,6 +913,8 @@ export function formulaLinear(no: NoFormula): string {
     case "variavel":
     case "simbolo":
       return no.valor;
+    case "funcao":
+      return no.nome;
     case "operador":
       return OPERADOR_LINEAR[no.valor];
     case "separador":
@@ -830,7 +933,9 @@ export function formulaLinear(no: NoFormula): string {
       const base = no.base.tipo === "sequencia" ? `(${formulaLinear(no.base)})` : formulaLinear(no.base);
       const indice = no.indice ? `_${linearDoScript(no.indice)}` : "";
       let expoente = "";
-      if (no.expoente) {
+      if (ehGrau(no.expoente)) {
+        expoente = "°";
+      } else if (no.expoente) {
         const unico = no.expoente.tipo === "numero" && no.expoente.valor.length === 1 ? SOBRESCRITO_LINEAR[no.expoente.valor] : undefined;
         expoente = unico ?? `^${linearDoScript(no.expoente)}`;
       }
@@ -866,7 +971,7 @@ export function formulaLinear(no: NoFormula): string {
 
 const OPERADOR_FALADO: Readonly<Record<OperadorFormula, string>> = {
   "+": "mais", "-": "menos", "×": "vezes", "÷": "dividido por", "=": "é igual a", "≠": "é diferente de", "<": "é menor que",
-  ">": "é maior que", "≤": "é menor ou igual a", "≥": "é maior ou igual a", "→": "então",
+  ">": "é maior que", "≤": "é menor ou igual a", "≥": "é maior ou igual a", "→": "então", "≈": "é aproximadamente igual a",
 };
 
 function ehNumeroComSinal(no: NoFormula): boolean {
@@ -887,6 +992,11 @@ function termoSimples(no: NoFormula): boolean {
     case "variavel":
     case "simbolo":
       return true;
+    case "sequencia":
+      // `3\pi`: um número colado num símbolo (o π dos ângulos) é um termo só: "3π/2" é "3 pi sobre 2", não "fração: numerador 3 pi…". (`2a` e `-b` seguem como conta:
+      // "−b/2a" não diz se o 2 divide ou multiplica.)
+      if (no.itens.length === 2 && no.itens[0].tipo === "numero" && no.itens[1].tipo === "simbolo") return true;
+      return ehNumeroComSinal(no);
     case "script":
       return no.base.tipo !== "sequencia" && termoSimples(no.base) && (!no.indice || termoSimples(no.indice)) && (!no.expoente || termoSimples(no.expoente));
     default:
@@ -897,6 +1007,34 @@ function termoSimples(no: NoFormula): boolean {
 /** Fração de dois termos simples (um número, uma variável, um índice): lida "1 sobre 3". */
 function fracaoSimples(no: Extract<NoFormula, { tipo: "fracao" }>): boolean {
   return termoSimples(no.numerador) && termoSimples(no.denominador);
+}
+
+/** Os itens de dentro de um parêntese separados por vírgula ou ponto e vírgula (`(2, −1)`): um grupo por item; `null` se não há separador (`(x)`, `(x + 1)`). */
+function gruposDoPar(conteudo: NoFormula): NoFormula[] | null {
+  if (conteudo.tipo !== "sequencia" || !conteudo.itens.some((item) => item.tipo === "separador" && item.valor !== "espaco")) return null;
+  const grupos: NoFormula[][] = [[]];
+  for (const item of conteudo.itens) {
+    if (item.tipo === "separador" && item.valor !== "espaco") grupos.push([]);
+    else grupos[grupos.length - 1].push(item);
+  }
+  if (grupos.some((grupo) => grupo.length === 0)) return null;
+  return grupos.map((grupo): NoFormula => (grupo.length === 1 ? grupo[0] : { tipo: "sequencia", itens: grupo }));
+}
+
+/**
+ * A letra colada num parêntese: `f(x)` é "f de x" (a função f, ou g, h: o argumento sem "abre parênteses"), e `V(2, −1)`, a maiúscula com um par ou trio, é "V de
+ * coordenadas 2 e menos 1" (spec 15, seção 18). Qualquer outra letra com parêntese (`a(b + c)`, um produto) continua como estava; `C = (4, 0)` também (o par vem
+ * depois do `=`, não colado na letra). `null` quando não é o caso.
+ */
+function falarLetraComParenteses(letra: NoFormula | undefined, parenteses: NoFormula | undefined): string | null {
+  if (letra?.tipo !== "variavel" || parenteses?.tipo !== "parenteses") return null;
+  const grupos = gruposDoPar(parenteses.conteudo);
+  if (grupos) {
+    if (!/^[A-Z]$/.test(letra.valor) || grupos.length < 2 || grupos.length > 3) return null;
+    const falados = grupos.map(falarFormula);
+    return `${letra.valor} de coordenadas ${falados.length === 2 ? falados.join(" e ") : `${falados.slice(0, -1).join(", ")} e ${falados.at(-1)}`}`;
+  }
+  return /^[fghFGH]$/.test(letra.valor) ? `${letra.valor} de ${falarFormula(parenteses.conteudo)}` : null;
 }
 
 function terminaEmFracaoLonga(no: NoFormula): boolean {
@@ -916,7 +1054,9 @@ export function falarFormula(no: NoFormula): string {
     case "variavel":
       return no.valor;
     case "simbolo":
-      return no.valor === "Δ" ? "delta" : "pi";
+      return FALADO_DO_SIMBOLO[no.valor];
+    case "funcao":
+      return FALADO_DA_FUNCAO[no.nome];
     case "operador":
       return OPERADOR_FALADO[no.valor];
     case "separador":
@@ -932,7 +1072,9 @@ export function falarFormula(no: NoFormula): string {
       return `fração: numerador ${falarFormula(no.numerador)}, denominador ${falarFormula(no.denominador)}`;
     case "script": {
       let saida = no.base.tipo === "sequencia" ? `abre parênteses ${falarFormula(no.base)} fecha parênteses` : falarFormula(no.base);
-      if (no.indice) saida += ` índice ${falarFormula(no.indice)}`;
+      // O logaritmo sem argumento ainda diz a base ("logaritmo na base 2"); com argumento, `falarSequencia` põe a base depois dele.
+      if (no.indice) saida += no.base.tipo === "funcao" ? ` na base ${falarFormula(no.indice)}` : ` índice ${falarFormula(no.indice)}`;
+      if (ehGrau(no.expoente)) return `${saida} graus`;
       if (no.expoente) {
         const valor = no.expoente.tipo === "numero" ? no.expoente.valor : "";
         saida += valor === "2" ? " ao quadrado" : valor === "3" ? " ao cubo" : ` elevado a ${falarFormula(no.expoente)}`;
@@ -948,6 +1090,7 @@ export function falarFormula(no: NoFormula): string {
     case "sequencia": {
       const aditivos = no.itens.filter((item, posicao) => item.tipo === "operador" && (item.valor === "+" || item.valor === "-") && !ehSinal(no.itens, posicao)).length;
       let saida = "";
+      const argumentosLidos = new Set<number>();
       no.itens.forEach((item, posicao) => {
         if (item.tipo === "operador") {
           const aditivo = (item.valor === "+" || item.valor === "-") && !ehSinal(no.itens, posicao);
@@ -957,6 +1100,27 @@ export function falarFormula(no: NoFormula): string {
           saida += item.valor === "espaco" ? ", " : `${item.valor} `;
         } else if (item.tipo === "espaco") {
           saida += item.comando === "quad" || item.comando === "qquad" ? ", " : " ";
+        } else if (ehFuncao(item)) {
+          // "seno de x", "seno ao quadrado de x", "logaritmo de 8 na base 2": o argumento é o item que vem depois (um parêntese é lido sem "abre/fecha").
+          const anterior = no.itens[posicao - 1];
+          if (saida && !/\s$/.test(saida) && anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador") saida += " ";
+          const proximo = no.itens[posicao + 1];
+          const temArgumento = proximo !== undefined && proximo.tipo !== "operador" && proximo.tipo !== "separador" && proximo.tipo !== "espaco";
+          const base = item.tipo === "script" && item.indice ? ` na base ${falarFormula(item.indice)}` : "";
+          const nome = falarFormula(item.tipo === "script" ? { ...item, indice: undefined } : item);
+          if (temArgumento) {
+            saida += `${nome} de ${proximo.tipo === "parenteses" ? falarFormula(proximo.conteudo) : falarFormula(proximo)}${base}`;
+            argumentosLidos.add(posicao + 1);
+          } else {
+            saida += `${nome}${base}`;
+          }
+        } else if (argumentosLidos.has(posicao)) {
+          // já lido junto com o nome da função (ou com a letra que leva o parêntese)
+        } else if (falarLetraComParenteses(item, no.itens[posicao + 1]) !== null) {
+          const anterior = no.itens[posicao - 1];
+          if (saida && !/\s$/.test(saida) && anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador") saida += " ";
+          saida += falarLetraComParenteses(item, no.itens[posicao + 1]);
+          argumentosLidos.add(posicao + 1);
         } else {
           const anterior = no.itens[posicao - 1];
           if (saida && !/\s$/.test(saida) && anterior && anterior.tipo !== "operador" && anterior.tipo !== "separador") saida += " ";
@@ -1040,6 +1204,9 @@ export function formulaEmPecas(no: NoFormula, podeDesenhar: PodeDesenharEmLinha 
       case "simbolo":
         saida.push(atual);
         return;
+      case "funcao":
+        texto(atual.nome);
+        return;
       case "operador":
         texto(OPERADOR_LINEAR[atual.valor]);
         return;
@@ -1071,6 +1238,10 @@ export function formulaEmPecas(no: NoFormula, podeDesenhar: PodeDesenharEmLinha 
         }
         // Índice ou expoente que não cabe em linha (uma fração composta dentro dele): a base e o resto, em palavras, sem `_` nem `^`.
         andar(atual.base);
+        if (ehGrau(atual.expoente)) {
+          texto("°");
+          return;
+        }
         if (atual.indice) {
           texto(" índice ");
           envolvido(atual.indice);

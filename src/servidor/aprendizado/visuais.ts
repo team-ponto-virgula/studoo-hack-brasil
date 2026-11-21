@@ -13,6 +13,7 @@ import {
   normalizarVisuais,
   passosEmTexto,
   resolucaoParaCliente,
+  comCaixaDoPar,
   visualParaEnunciado,
   visualRevelado,
   type Capacidades,
@@ -26,10 +27,10 @@ import {
   VISUAIS_COM_FUNCAO,
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
-import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+import { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, semCifraoSolto, temVisual } from "./formulas-na-licao";
 import { ordemDoSuaVez } from "./ordem-sua-vez";
 
-export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, temVisual } from "./formulas-na-licao";
+export { comFormulasMarcadas, comTextoLinear, conteudoEhDeMatematica, semCifraoSolto, temVisual } from "./formulas-na-licao";
 
 /*
  * Visuais da lição no servidor (spec 15). Duas portas, as duas atrás do cabeçalho `X-Studoo-Capacidades`:
@@ -257,7 +258,8 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
     if (dosExercicios.some(Boolean)) {
       saida.exercicios = detalhe.exercicios.map((exercicio, posicao) => {
         const visual = dosExercicios[posicao];
-        return visual ? { ...exercicio, visual: visualParaEnunciado(visual) } : exercicio;
+        // A figura com ponto procurado leva a caixa que o enunciado e o retorno dividem: se um não cabe, nenhum desenha.
+        return visual ? { ...exercicio, visual: visual.tipo === "formula" ? visualParaEnunciado(visual) : visualParaEnunciado(comCaixaDoPar(visual)) } : exercicio;
       });
       saida.exercicio = saida.exercicios[0];
     }
@@ -285,7 +287,7 @@ export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacid
   if (capacidades.visuais < 1) return undefined;
   const visual = limparVisuais(conteudo).dosExercicios[indice];
   if (visual?.tipo === "funcao" && !desenhaFuncao(capacidades)) return undefined;
-  return visual && visual.tipo !== "formula" ? visualRevelado(visual) : undefined;
+  return visual && visual.tipo !== "formula" ? visualRevelado(comCaixaDoPar(visual)) : undefined;
 }
 
 /* ----- Fórmula em linha: o texto linear para quem não desenha, e as marcas para quem desenha ----- */
@@ -298,5 +300,7 @@ export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacid
  */
 export function comFormulasParaOCliente<T>(valor: T, conteudo: ConteudoLicao, capacidades: Capacidades): T {
   if (!conteudoEhDeMatematica(conteudo)) return valor;
-  return capacidades.visuais >= 1 ? comFormulasMarcadas(valor) : comTextoLinear(valor);
+  // O `$` solto colado numa letra ("uma linha de $A com B") sai primeiro, antes de as marcas serem lidas.
+  const limpo = semCifraoSolto(valor);
+  return capacidades.visuais >= 1 ? comFormulasMarcadas(limpo) : comTextoLinear(limpo);
 }

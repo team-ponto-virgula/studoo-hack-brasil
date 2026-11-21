@@ -246,7 +246,7 @@ test("alt: obrigatório, em texto simples, cortado em 140 e sem entregar a respo
   assert.equal(normalizarVisual(plano({ alt: `A ${"palavra ".repeat(20)}fim` })).alt.length <= 140, true);
   assert.match(normalizarVisual(plano({ alt: `A ${"palavra ".repeat(20)}fim` })).alt, /…$/);
   assert.equal(normalizarVisual(plano({ alt: "Triângulo com $x_G = 1$ no meio." })).alt, "Triângulo com x_G = 1 no meio.");
-  assert.equal(normalizarVisual(plano({ alt: "Triângulo com $\\input{x}$." })).alt, "Triângulo com x.", "marca inválida não derruba o visual");
+  assert.equal(normalizarVisual(plano({ alt: "Triângulo com $\\input{x}$." })).alt, "Triângulo com input(x).", "marca inválida não derruba o visual, e o comando desconhecido não some");
 
   const comProcurado = (alt, extra = {}) => plano({
     alt,
@@ -284,7 +284,7 @@ test("fórmula como visual: LaTeX restrito, canônico, `\\resposta` só no últi
   assert.match(recusado({ tipo: "formula", latex: String.raw`k = \resposta{2}` }), /resposta só vale no último passo/);
   assert.ok(normalizarVisual({ tipo: "formula", latex: String.raw`k = \resposta{2}` }, { revela: true }));
   assert.ok(normalizarVisual({ tipo: "formula", latex: String.raw`\procurado{k} = 1` }), "o procurado marca a incógnita");
-  assert.equal(normalizarVisual({ tipo: "formula", latex: "a", alt: String.raw`\frac` }).alt, undefined, "alt inválido da fórmula é ignorado, não derruba");
+  assert.equal(normalizarVisual({ tipo: "formula", latex: "a", alt: "   " }).alt, undefined, "alt inválido da fórmula é ignorado, não derruba");
   assert.equal(normalizarFigura({ tipo: "formula", latex: "a" }), null, "um passo só troca figura");
 });
 
@@ -413,7 +413,7 @@ test("resolução: nome do passo em até 24 caracteres (corta, não derruba) e f
   assert.equal(validarResolucao(cifrao).resolucao.passos[1].texto, "Troque: $x_G = 1$ e siga.", "a fórmula em linha fica entre cifrões, na forma canônica");
   const fracao = resolucaoDe();
   fracao.passos[1].texto = String.raw`Troque: $\frac{x_A + x_B}{2}$ e $\foo{x}$ e R$ 5,00.`;
-  assert.equal(validarResolucao(fracao).resolucao.passos[1].texto, String.raw`Troque: $\frac{x_A + x_B}{2}$ e x e R$ 5,00.`, "a que lê fica marcada (inteira ou em peças, quem lê decide); a que não lê vira texto linear; o dinheiro fica");
+  assert.equal(validarResolucao(fracao).resolucao.passos[1].texto, String.raw`Troque: $\frac{x_A + x_B}{2}$ e foo(x) e R$ 5,00.`, "a que lê fica marcada (inteira ou em peças, quem lê decide); a que não lê vira texto linear; o dinheiro fica");
   const solto = resolucaoDe();
   solto.passos[1].texto = "Troque x_A por 3 e deixe H_2O em paz.";
   assert.equal(validarResolucao(solto).resolucao.passos[1].texto, "Troque $x_A$ por 3 e deixe H₂O em paz.", "na resolução (só de matemática) o token solto ganha a marca");

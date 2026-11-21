@@ -9,6 +9,7 @@ import {
   normalizarVisual,
   partirTextoComFormulas,
   textoSemFormulas,
+  tirarCifraoSolto,
 } from "@studoo/contratos";
 import { comFormulasMarcadas, comFormulasParaOCliente, comTextoLinear, conteudoEhDeMatematica } from "../src/servidor/aprendizado/visuais.ts";
 
@@ -150,4 +151,83 @@ test("o ponto sobre o eixo não tapa o número em foco da guia (o \"3\" atrás d
       }
     }
   }
+});
+
+/* ----- 12a, grupo 2: a conta comprida da lição 8 (prova real 12a3), com matriz dentro da marca ----- */
+
+const MATRIZ = String.raw`\begin{vmatrix} 1 & 2 & 1 \\ 3 & 4 & 1 \\ 5 & 6 & 1 \end{vmatrix}`;
+const CONTA = String.raw`1 \times 4 \times 1 + 2 \times 1 \times 5 + 1 \times 3 \times 6 - 5 \times 4 \times 1 - 6 \times 1 \times 1 - 1 \times 3 \times 2`;
+/** O exemplo como a IA o escreveu: a marca tem 201 caracteres, um a mais que o limite antigo, e o cifrão ia cru para o site e o build 3. */
+const EXEMPLO_DA_LICAO_8 = `Com A(1, 2), B(3, 4) e C(5, 6): o determinante é $${MATRIZ} = ${CONTA} = 0$. Como deu zero, os três pontos estão alinhados.`;
+const LINEAR_DA_LICAO_8 = "Com A(1, 2), B(3, 4) e C(5, 6): o determinante é det[1, 2, 1; 3, 4, 1; 5, 6, 1] = 1 × 4 × 1 + 2 × 1 × 5 + 1 × 3 × 6 − 5 × 4 × 1 − 6 × 1 × 1 − 1 × 3 × 2 = 0. Como deu zero, os três pontos estão alinhados.";
+
+test("a lição 8 da prova real: a matriz dentro da marca comprida sai como \"det[…]\" para o cliente sem cabeçalho, sem cifrão, vmatrix nem &", () => {
+  assert.equal(`${MATRIZ} = ${CONTA} = 0`.length, 201);
+  assert.equal(contemMarcaDeFormula(EXEMPLO_DA_LICAO_8), true);
+  assert.equal(textoSemFormulas(EXEMPLO_DA_LICAO_8), LINEAR_DA_LICAO_8);
+  const conteudo = { objetivo: "Pontos colineares", conceito: "Três pontos estão alinhados quando o determinante é zero.", exemplo: EXEMPLO_DA_LICAO_8, exercicio: { tipo: "aberta", enunciado: "Explique.", minimo: 10, gabarito: [], termos: [] } };
+  assert.equal(conteudoEhDeMatematica(conteudo), true);
+  const entregue = comFormulasParaOCliente(conteudo, conteudo, { visuais: 0, resolucao: 0 });
+  assert.equal(entregue.exemplo, LINEAR_DA_LICAO_8, "o que o site e o build 3 recebem");
+  assert.equal(/[$&{}\\]|vmatrix|begin/.test(entregue.exemplo), false);
+  // O cliente que desenha recebe a marca inteira, na forma canônica (a fórmula lê: 201 caracteres cabem nos 300).
+  const desenha = comFormulasParaOCliente(conteudo, conteudo, { visuais: 1, resolucao: 1 });
+  assert.equal(desenha.exemplo.includes(String.raw`$\begin{vmatrix} 1 & 2 & 1 \\ 3 & 4 & 1 \\ 5 & 6 & 1 \end{vmatrix} = 1 \times 4 \times 1`), true);
+  // A lição de matemática que só tem LaTeX sem par (a conta cortada) também é reconhecida: o `$` que abre LaTeX é de matemática.
+  const cortada = { ...conteudo, exemplo: String.raw`Calcule $\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix} = 1 \times 4 −`, objetivo: "Conta", conceito: "Uma conta." };
+  assert.equal(conteudoEhDeMatematica(cortada), true);
+  assert.equal(comTextoLinear(cortada).exemplo, "Calcule det[1, 2; 3, 4] = 1 × 4 −");
+});
+
+/* ----- 12a, grupo 2b: o `$` único colado numa letra ("uma linha de $A com uma coluna de B", lição 7 da trilha de matrizes da prova real df408ef) ----- */
+
+const CONCEITO_DA_LICAO_7 = "O produto de matrizes é feito somando os produtos de uma linha de $A com uma coluna de B.";
+
+test("o `$` único colado numa letra, sem par, sai do texto da lição de matemática; dinheiro e `$HOME` fora de matemática continuam", () => {
+  // Para o cliente sem cabeçalho e para o que desenha, o texto fica "uma linha de A com uma coluna de B".
+  const esperado = "O produto de matrizes é feito somando os produtos de uma linha de A com uma coluna de B.";
+  assert.equal(tirarCifraoSolto(CONCEITO_DA_LICAO_7), esperado);
+  assert.equal(textoSemFormulas(tirarCifraoSolto(CONCEITO_DA_LICAO_7)), esperado);
+  assert.equal(marcarFormulasSoltas(tirarCifraoSolto(CONCEITO_DA_LICAO_7)), esperado);
+  // As funções genéricas, sem o aviso de matemática, não perdem nada (o `$HOME` de uma lição de shell).
+  assert.equal(textoSemFormulas(CONCEITO_DA_LICAO_7), CONCEITO_DA_LICAO_7);
+  assert.equal(textoSemFormulas("Use $HOME e $PATH no script"), "Use $HOME e $PATH no script");
+  // O par certo continua marca: `$A$ ... $B$`.
+  assert.equal(tirarCifraoSolto("uma linha de $A$ com uma coluna de $B$."), "uma linha de $A$ com uma coluna de $B$.");
+  assert.equal(textoSemFormulas("uma linha de $A$ com uma coluna de $B$."), "uma linha de A com uma coluna de B.");
+  assert.equal(marcarFormulasSoltas("uma linha de $A$ com uma coluna de $B$."), "uma linha de $A$ com uma coluna de $B$.");
+  assert.equal(contemMarcaDeFormula("uma linha de $A$ com uma coluna de $B$."), true);
+  // Dinheiro junto: com letra antes (R$, US$), com espaço depois ($ 5), preço colado ($5, $25,00) e número com $ depois (5$) ficam; o solto sai.
+  const junto = "Pagou R$ 25,00 e US$10 e $ 5 e $25,00.\nPreço 5$ no fim e $5 também.\nUma linha de $A com $2x soma e $\\alpha ainda.";
+  assert.equal(
+    tirarCifraoSolto(junto),
+    "Pagou R$ 25,00 e US$10 e $ 5 e $25,00.\nPreço 5$ no fim e $5 também.\nUma linha de A com 2x soma e \\alpha ainda.",
+  );
+  assert.equal(tirarCifraoSolto(tirarCifraoSolto(junto)), tirarCifraoSolto(junto), "idempotente");
+  assert.equal(textoSemFormulas(tirarCifraoSolto(junto)).includes("R$ 25,00 e US$10 e $ 5 e $25,00."), true);
+  assert.equal(/\$A|\$2x|\$\\alpha/.test(marcarFormulasSoltas(tirarCifraoSolto(junto))), false);
+  // Um cifrão sozinho no fim, ou seguido de espaço ou de outro cifrão, não é este caso; o de shell fica onde não se chama.
+  assert.equal(tirarCifraoSolto("Custa 5 $"), "Custa 5 $");
+  assert.equal(tirarCifraoSolto("Só um $ solto"), "Só um $ solto");
+  assert.equal(tirarCifraoSolto("sem cifrão"), "sem cifrão");
+});
+
+test("o servidor tira o `$` solto no que entrega, só na lição de matemática (conceito, exemplo e enunciado)", () => {
+  const conteudo = {
+    objetivo: "Multiplicação de matrizes", conceito: CONCEITO_DA_LICAO_7, exemplo: "Com $A$ e $B$ de ordem 2: $A \\times B$ existe.",
+    exercicio: { tipo: "multipla_escolha", enunciado: "Qual a linha de $A que entra na conta?", opcoes: [{ id: "a", texto: "A primeira" }, { id: "b", texto: "A segunda" }], gabarito: ["a"], feedbackCorreto: "Isso.", feedbackIncorreto: "Releia." },
+  };
+  assert.equal(conteudoEhDeMatematica(conteudo), true);
+  const semCabecalho = comFormulasParaOCliente(conteudo, conteudo, { visuais: 0, resolucao: 0 });
+  assert.equal(semCabecalho.conceito, "O produto de matrizes é feito somando os produtos de uma linha de A com uma coluna de B.");
+  assert.equal(semCabecalho.exercicio.enunciado, "Qual a linha de A que entra na conta?");
+  assert.equal(/\$/.test(JSON.stringify(semCabecalho)), false);
+  const queDesenha = comFormulasParaOCliente(conteudo, conteudo, { visuais: 1, resolucao: 1 });
+  assert.equal(queDesenha.conceito, "O produto de matrizes é feito somando os produtos de uma linha de A com uma coluna de B.");
+  assert.equal(queDesenha.exemplo.includes("$A$ e $B$"), true, "o par certo segue marcado");
+  assert.equal(queDesenha.exercicio.enunciado, "Qual a linha de A que entra na conta?");
+  // Lição que não é de matemática passa como veio (o `$HOME` fica).
+  const shell = { objetivo: "Variáveis de ambiente", conceito: "Use $HOME e $PATH.", exemplo: "echo $HOME", exercicio: { tipo: "aberta", enunciado: "Mostre $HOME.", minimo: 5, gabarito: [], termos: [] } };
+  assert.equal(conteudoEhDeMatematica(shell), false);
+  assert.deepEqual(comFormulasParaOCliente(shell, shell, { visuais: 0, resolucao: 0 }), shell);
 });
