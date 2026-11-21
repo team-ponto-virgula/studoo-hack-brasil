@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode, type Ref } from 'react';
-import { falarFormula, formulaLinear, lerFormula, type EscolhaNoSuaVez, type LicaoDetalhe, type OpcaoDoSuaVez, type PassoDaResolucao, type Resolucao } from '@studoo/contratos';
+import { falarFormula, falarTextoComFormulas, formulaLinear, lerFormula, type EscolhaNoSuaVez, type LicaoDetalhe, type OpcaoDoSuaVez, type PassoDaResolucao, type Resolucao } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Icone, Stu } from '../ui';
 import { CONTEXTO_DO_ENUNCIADO, DesenhoDoVisual, OPCOES_DA_FORMULA } from './desenho';
@@ -81,9 +81,26 @@ function LinhaFeita({ passo, numero }: { passo: PassoDaResolucao; numero: number
   );
 }
 
+/** O cartão do retorno em voz alta: o porquê da opção errada, "Isso!" no acerto, o porquê da certa e a fórmula revelada, lida pela árvore. */
+export function retornoFalado(estado: EstadoResolva, formulaRevelada: string | undefined): string {
+  const { resposta, revelado } = estado;
+  if (!resposta) return '';
+  const partes: string[] = [];
+  if (!resposta.correta) partes.push(falarTextoComFormulas(resposta.porque));
+  if (revelado) {
+    if (resposta.correta) partes.push(t.isso);
+    partes.push(falarTextoComFormulas((resposta.correta ? resposta.porque : resposta.porqueDaCerta) ?? ''));
+    const lida = formulaRevelada ? lerFormula(formulaRevelada) : null;
+    if (lida?.ok) partes.push(falarFormula(lida.arvore));
+  }
+  return partes.filter(Boolean).map((parte) => parte.replace(/[.!?…]+$/u, '')).join('. ') + '.';
+}
+
 /** O "Sua vez": a pergunta e as três opções; depois da correção, o porquê (e, no acerto ou na segunda errada, a revelação). */
-export function SuaVez({ passo, estado, ocupado, escolher, grupo }: {
+export function SuaVez({ passo, estado, ocupado, escolher, grupo, retorno }: {
   passo: PassoDaResolucao; estado: EstadoResolva; ocupado: boolean; escolher: (opcao: number) => void; grupo?: Ref<HTMLFieldSetElement>;
+  /** O cartão do retorno: o foco vai para ele depois de "Verificar", e o leitor de tela lê o cartão inteiro. */
+  retorno?: Ref<HTMLDivElement>;
 }) {
   const idDaPergunta = useId();
   const tentativa = passo.tentativa;
@@ -111,16 +128,22 @@ export function SuaVez({ passo, estado, ocupado, escolher, grupo }: {
         ))}
       </fieldset>
       {!travado && <p className="opcoes-atalho">{mensagens.licao.atalho(tentativa.opcoes.length)}</p>}
-      {resposta && !resposta.correta && (
-        <div className="resolva-porque" role="status" data-testid="resolva-porque">
-          <TextoComFormulas como="p" texto={resposta.porque} />
-        </div>
-      )}
-      {resposta && revelado && (
-        <div className="resolva-isso" role="status" data-testid="resolva-isso">
-          {resposta.correta && <p className="resolva-isso__titulo">{t.isso}</p>}
-          <TextoComFormulas como="p" className="resolva-isso__texto" texto={(resposta.correta ? resposta.porque : resposta.porqueDaCerta) ?? ''} />
-          <FormulaEmBloco latex={passo.formula} testID="resolva-formula-revelada" />
+      {resposta && (
+        // O cartão do retorno: o foco vem para cá depois de "Verificar" (`tabIndex`), e o nome dele é o cartão inteiro falado ("Isso!", o porquê e
+        // a fórmula revelada), para o leitor de tela ler tudo de uma vez e o próximo elemento ser o botão do rodapé. Sem região educada: não fala duas vezes.
+        <div ref={retorno} className="resolva-retorno" tabIndex={-1} role="group" aria-label={retornoFalado(estado, passo.formula)} data-testid="resolva-retorno">
+          {!resposta.correta && (
+            <div className="resolva-porque" data-testid="resolva-porque">
+              <TextoComFormulas como="p" texto={resposta.porque} />
+            </div>
+          )}
+          {revelado && (
+            <div className="resolva-isso" data-testid="resolva-isso">
+              {resposta.correta && <p className="resolva-isso__titulo">{t.isso}</p>}
+              <TextoComFormulas como="p" className="resolva-isso__texto" texto={(resposta.correta ? resposta.porque : resposta.porqueDaCerta) ?? ''} />
+              <FormulaEmBloco latex={passo.formula} testID="resolva-formula-revelada" />
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -128,9 +151,9 @@ export function SuaVez({ passo, estado, ocupado, escolher, grupo }: {
 }
 
 /** O cartão do passo atual: o Stu, a frase e a fórmula (ou o "Sua vez"). Entra subindo 8 em 200 ms (na hora, sem movimento). */
-function CartaoDoPasso({ passo, estado, ultimo, ocupado, escolher, frase, grupo }: {
+function CartaoDoPasso({ passo, estado, ultimo, ocupado, escolher, frase, grupo, retorno }: {
   passo: PassoDaResolucao; estado: EstadoResolva; ultimo: boolean; ocupado: boolean; escolher: (opcao: number) => void;
-  frase?: Ref<HTMLElement>; grupo?: Ref<HTMLFieldSetElement>;
+  frase?: Ref<HTMLElement>; grupo?: Ref<HTMLFieldSetElement>; retorno?: Ref<HTMLDivElement>;
 }) {
   return (
     <div className="resolva-cartao" data-testid="resolva-passo">
@@ -138,7 +161,7 @@ function CartaoDoPasso({ passo, estado, ultimo, ocupado, escolher, frase, grupo 
         <Stu expressao={ultimo ? 'stu-animado' : 'stu-concentrado'} tamanho={40} />
         <TextoComFormulas como="p" ref={frase} tabIndex={-1} texto={passo.texto} className="resolva-frase" data-testid="resolva-frase" />
       </div>
-      {passo.tentativa ? <SuaVez passo={passo} estado={estado} ocupado={ocupado} escolher={escolher} grupo={grupo} />
+      {passo.tentativa ? <SuaVez passo={passo} estado={estado} ocupado={ocupado} escolher={escolher} grupo={grupo} retorno={retorno} />
         : <FormulaEmBloco latex={passo.formula} testID="resolva-formula" />}
     </div>
   );
@@ -159,7 +182,7 @@ export function CartaoMetodo({ passos, formula }: { passos: readonly PassoDaReso
 }
 
 /** O corpo do "Resolva comigo" para o estado dado: o problema, o desenho de cima, o indicador, os passos feitos e o cartão do passo atual. */
-export function CorpoDoResolva({ resolucao, estado, formulaGeral, ocupado, escolher, voltarUmPasso, caixa, anuncio, titulo, frase, grupo }: {
+export function CorpoDoResolva({ resolucao, estado, formulaGeral, ocupado, escolher, voltarUmPasso, caixa, anuncio, titulo, frase, grupo, retorno }: {
   resolucao: Resolucao; estado: EstadoResolva;
   /** A fórmula geral da lição (primeira fórmula dos visuais), para o cartão "O método" do fim. */
   formulaGeral?: string;
@@ -168,7 +191,7 @@ export function CorpoDoResolva({ resolucao, estado, formulaGeral, ocupado, escol
   caixa?: number;
   /** O texto que a região educada anuncia no passo novo ("Passo 2 de 4"). */
   anuncio?: string;
-  titulo?: Ref<HTMLHeadingElement>; frase?: Ref<HTMLElement>; grupo?: Ref<HTMLFieldSetElement>;
+  titulo?: Ref<HTMLHeadingElement>; frase?: Ref<HTMLElement>; grupo?: Ref<HTMLFieldSetElement>; retorno?: Ref<HTMLDivElement>;
 }) {
   const passo = estado.passos[estado.atual];
   const ultimo = estado.revelado && estado.atual === estado.total - 1;
@@ -185,7 +208,7 @@ export function CorpoDoResolva({ resolucao, estado, formulaGeral, ocupado, escol
       )}
       <Indicador atual={estado.atual} total={estado.total} />
       {estado.passos.slice(0, estado.atual).map((feito, numero) => <LinhaFeita key={numero} passo={feito} numero={numero + 1} />)}
-      {passo && <CartaoDoPasso key={estado.atual} passo={passo} estado={estado} ultimo={ultimo} ocupado={ocupado} escolher={escolher} frase={frase} grupo={grupo} />}
+      {passo && <CartaoDoPasso key={estado.atual} passo={passo} estado={estado} ultimo={ultimo} ocupado={ocupado} escolher={escolher} frase={frase} grupo={grupo} retorno={retorno} />}
       {estado.atual > 0 && (
         <Botao variante="texto" className="resolva-voltar" data-testid="resolva-voltar" disabled={ocupado} onClick={voltarUmPasso}>{t.voltar}</Botao>
       )}
@@ -203,8 +226,12 @@ export function RodapeDoResolva({ estado, ocupado, verificar, proximo, tentar, t
   const acao = acaoDoRodape(estado);
   if (acao === 'verificar') {
     return (
-      // Conferindo, o botão fica "desligado" só para o leitor de tela (`aria-disabled`, sem `disabled`): com `disabled`, o foco que está nele se perde.
-      <Botao data-testid="resolva-verificar" disabled={estado.escolha === null} aria-disabled={ocupado || undefined} aria-busy={ocupado || undefined} onClick={verificar}>
+      // Conferindo, o botão fica afundado e "desligado" só para o leitor de tela (`aria-disabled`, sem `disabled`: com `disabled`, o foco que está nele
+      // se perde), com o giro de 16 px na mesma linha e `aria-busy`. O nome acessível segue "Verificar": quem fala "Verificando…" é a região educada,
+      // uma vez só (o rótulo que muda dentro de um botão com foco falaria duas).
+      <Botao data-testid="resolva-verificar" disabled={estado.escolha === null} aria-disabled={ocupado || undefined} aria-busy={ocupado || undefined}
+        aria-label={ocupado ? t.verificar : undefined} data-ocupado={ocupado || undefined} onClick={verificar}>
+        {ocupado && <span className="botao__giro" aria-hidden="true" />}
         {ocupado ? mensagens.licao.avaliando : t.verificar}
       </Botao>
     );
@@ -214,7 +241,11 @@ export function RodapeDoResolva({ estado, ocupado, verificar, proximo, tentar, t
   return <Botao data-testid="resolva-proximo" onClick={proximo}>{t.proximo}<Icone nome="seta" /></Botao>;
 }
 
-/** O passo atual (o cartão) à vista, acima do rodapé preso e abaixo do topo: a página rola, e o passo novo nasce embaixo dos feitos. */
+/**
+ * O passo atual (o cartão) à vista, acima do rodapé preso e abaixo do topo: a página rola, e o passo novo nasce embaixo dos feitos. No último
+ * passo, "O método" vem logo depois do cartão: a página sobe o quanto der para mostrar o cartão e o método juntos, sem tirar o começo do cartão
+ * de baixo do topo (num celular, o método aparece inteiro ou quase; se não couber, o cartão manda).
+ */
 function mostrarOPasso() {
   const cartao = document.querySelector<HTMLElement>('.resolva-cartao');
   const rodape = document.querySelector<HTMLElement>('.aula-rodape');
@@ -222,10 +253,11 @@ function mostrarOPasso() {
   const topo = document.querySelector<HTMLElement>('.aula-topo')?.getBoundingClientRect().bottom ?? 0;
   const limite = window.innerHeight - rodape.getBoundingClientRect().height - 16;
   const caixa = cartao.getBoundingClientRect();
+  const fim = (document.querySelector<HTMLElement>('.resolva-metodo') ?? cartao).getBoundingClientRect().bottom;
   const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const comportamento = reduzido ? 'auto' : 'smooth';
   // Sobra por baixo: sobe o quanto falta, sem empurrar o começo do cartão para trás do topo (cartão maior que a janela: o começo fica à vista).
-  if (caixa.bottom > limite) window.scrollBy({ top: Math.max(0, Math.min(caixa.bottom - limite, caixa.top - topo - 8)), behavior: comportamento });
+  if (fim > limite) window.scrollBy({ top: Math.max(0, Math.min(fim - limite, caixa.top - topo - 8)), behavior: comportamento });
   else if (caixa.top < topo) window.scrollBy({ top: caixa.top - topo - 8, behavior: comportamento });
 }
 
@@ -248,6 +280,7 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel, titulo
   const [anuncio, setAnuncio] = useState('');
   const frase = useRef<HTMLElement | null>(null);
   const grupo = useRef<HTMLFieldSetElement | null>(null);
+  const retorno = useRef<HTMLDivElement | null>(null);
   /** O passo que já foi anunciado: o anúncio e o foco só valem quando o passo muda (não na abertura, nem na remontagem do modo estrito). */
   const anunciado = useRef(estado?.atual ?? 0);
   const montado = useRef(true);
@@ -326,22 +359,21 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel, titulo
   async function verificar() {
     if (!estado || estado.escolha === null || ocupado || !responder) return;
     setOcupado(true);
+    // "Verificando…" uma vez, pela região educada (o botão só gira).
+    setAnuncio(mensagens.licao.avaliando);
     const somDoEnvio = tocaSons.sinalDosEfeitos;
     try {
       const corpo = await responder({ opcao: estado.escolha, tentativa: estado.tentativa });
       if (!respostaValida(corpo)) throw new Error('resposta');
       void tocaSons.tocarEfeito(corpo.correta ? 'acerto' : 'erro', somDoEnvio);
+      setAnuncio('');
       setEstado((atual) => (atual ? aplicarResposta(atual, corpo) : atual));
-      // Quem verificou pelo teclado (Enter no grupo de opções, que trava) não perde o lugar: o foco vai para o botão do rodapé, que agora diz
-      // "Tentar de novo" ou "Próximo passo". Quem clicou no botão já está nele.
-      window.requestAnimationFrame(() => {
-        const ativo = document.activeElement;
-        if (!ativo || ativo === document.body || ativo.closest('fieldset[role="radiogroup"]') || ativo.matches('[data-testid="resolva-frase"]')) {
-          document.querySelector<HTMLElement>('.aula-rodape__acoes [data-testid^="resolva-"]')?.focus({ preventScroll: true });
-        }
-      });
+      // O foco vai para o cartão do retorno ("Isso!" ou o porquê), que o leitor de tela lê inteiro; o próximo elemento é o botão do rodapé (que agora diz
+      // "Tentar de novo" ou "Próximo passo"). Focar o botão direto cortaria o anúncio no VoiceOver e no TalkBack.
+      window.requestAnimationFrame(() => retorno.current?.focus({ preventScroll: true }));
     } catch {
       // Sem rede (ou uma resposta que não serve): o exemplo segue em texto, e a lição continua.
+      setAnuncio('');
       setEstado((atual) => (atual ? { ...atual, emTexto: true } : atual));
     } finally {
       if (montado.current) setOcupado(false);
@@ -357,7 +389,7 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel, titulo
 
   const corpo = (
     <CorpoDoResolva resolucao={resolucao} estado={estado} formulaGeral={formulaDoMetodo(licao.visuais)} ocupado={ocupado} escolher={escolher}
-      voltarUmPasso={() => setEstado((atual) => (atual ? voltar(atual) : atual))} caixa={caixa} anuncio={anuncio} titulo={titulo} frase={frase} grupo={grupo} />
+      voltarUmPasso={() => setEstado((atual) => (atual ? voltar(atual) : atual))} caixa={caixa} anuncio={anuncio} titulo={titulo} frase={frase} grupo={grupo} retorno={retorno} />
   );
   const rodape = (
     <RodapeDoResolva estado={estado} ocupado={ocupado} verificar={() => void verificar()} tentar={tentar} terminar={aoTerminar}

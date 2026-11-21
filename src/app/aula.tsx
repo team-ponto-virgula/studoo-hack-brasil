@@ -869,7 +869,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
           aoConcluirPonte={() => { setPonteFeita(true); setPontesPorExercicio((atual) => ({ ...atual, [indice]: true })); }}
           aoEnsinar={() => setEnsinou(true)} aoAbrirExplique={setExpliqueAberto} />
       )}
-      <footer className="aula-rodape" data-retorno={retorno} data-compacto={compacto || undefined}>
+      <footer className="aula-rodape" data-retorno={retorno} data-compacto={compacto || undefined} data-resolva={etapa.tipo === 'exemplo' && resolva.ativo ? '' : undefined}>
         {temAbaixo && (
           <button type="button" className="aula-mais-abaixo" onClick={lerMais}><Icone nome="seta" />{t.maisAbaixo}</button>
         )}

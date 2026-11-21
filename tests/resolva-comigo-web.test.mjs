@@ -139,7 +139,8 @@ test('a escolha marca a opção; a primeira errada mostra o porquê dela, trava 
   estado = responder(estado, errada, 1);
   const html = desenhar(estado);
   assert.match(html, new RegExp(`<label data-retorno="errada"><input type="radio" name="sua-vez"(?: checked="")? value="${errada}"`), 'a opção marcada fica âmbar');
-  assert.match(html, /<div class="resolva-porque" role="status" data-testid="resolva-porque">/, 'o porquê daquela opção, numa região educada');
+  assert.match(html, /<div class="resolva-retorno" tabindex="-1" role="group" aria-label="[^"]+" data-testid="resolva-retorno"><div class="resolva-porque" data-testid="resolva-porque">/, 'o porquê daquela opção, no cartão do retorno (que recebe o foco)');
+  assert.doesNotMatch(html, /role="status" data-testid="resolva-(?:porque|isso)"/, 'sem região educada nas caixas: o foco no cartão já faz o leitor de tela ler, e ele não fala duas vezes');
   assert.match(html, /<fieldset [^>]*disabled=""/, 'as opções travam');
   assert.doesNotMatch(html, /data-revelado/, 'a primeira errada não revela, e as outras não apagam');
   assert.doesNotMatch(html, /resolva-isso|resolva-formula-revelada/, 'nenhuma revelação na primeira errada');
@@ -154,7 +155,7 @@ test('a escolha marca a opção; a primeira errada mostra o porquê dela, trava 
   estado = responder(estado, certa, 2);
   const certaHtml = desenhar(estado);
   assert.match(certaHtml, new RegExp(`<label data-retorno="certa"><input type="radio" name="sua-vez"(?: checked="")? value="${certa}"`));
-  assert.match(certaHtml, /<div class="resolva-isso" role="status" data-testid="resolva-isso"><p class="resolva-isso__titulo">Isso!<\/p>/);
+  assert.match(certaHtml, /<div class="resolva-isso" data-testid="resolva-isso"><p class="resolva-isso__titulo">Isso!<\/p>/);
   assert.match(certaHtml, /data-testid="resolva-formula-revelada"/, 'a fórmula seguinte');
   assert.match(certaHtml, /<fieldset [^>]*data-revelado="true"/, 'depois da revelação, as outras opções apagam');
   assert.match(certaHtml, /<fieldset [^>]*disabled=""/);
@@ -170,7 +171,7 @@ test('a segunda errada mostra a certa, com o porquê dela e sem o "Isso!", e seg
   const html = desenhar(estado);
   assert.match(html, new RegExp(`<label data-retorno="certa"><input type="radio" name="sua-vez"(?: checked="")? value="${certa}"`), 'a certa aparece verde');
   assert.match(html, new RegExp(`<label data-retorno="errada"><input type="radio" name="sua-vez"(?: checked="")? value="${outraErrada}"`), 'e a marcada segue âmbar');
-  assert.match(html, /<div class="resolva-isso" role="status" data-testid="resolva-isso"><p class="resolva-isso__texto"/, 'o porquê da certa, sem o título "Isso!"');
+  assert.match(html, /<div class="resolva-isso" data-testid="resolva-isso"><p class="resolva-isso__texto"/, 'o porquê da certa, sem o título "Isso!"');
   assert.doesNotMatch(html, /resolva-isso__titulo/);
   assert.match(html, /data-testid="resolva-formula-revelada"/);
   assert.notEqual(acaoDoRodape(estado), 'tentar');
@@ -259,9 +260,110 @@ test('o CSS: opções dos exercícios também aqui, traços de 6 (o atual com 34
   assert.match(css, /\.resolva-traco \{ width: 18px; height: 6px; border-radius: 3px;/);
   assert.match(css, /\.resolva-traco\[data-atual\] \{ width: 34px; \}/);
   assert.match(css, /\.resolva-cartao \{[^}]*padding: 16px; border: 2px solid var\(--gelo\); border-radius: 20px;/);
-  assert.match(css, /\.aula-miolo \.resolva-problema \{ margin: 0; font-size: 17px; font-weight: 700; line-height: 23px;/, 'o problema em 17/23 700');
-  assert.match(css, /\.resolva-frase \{[^}]*font-size: 16px; font-weight: 400; line-height: 22px;/, 'a frase do passo em 400');
-  assert.match(css, /\.resolva-pergunta \{ margin: 0; font-size: 16px; font-weight: 700; line-height: 22px; \}/, 'a pergunta em 700');
+  assert.match(css, /\.aula-miolo \.resolva-problema \{ margin: 0; font-size: 1\.0625rem; font-weight: 700; line-height: 1\.4375rem;/, 'o problema em 17/23 700 (em rem)');
+  assert.match(css, /\.resolva-frase \{[^}]*font-size: 1rem; font-weight: 400; line-height: 1\.375rem;/, 'a frase do passo em 400');
+  assert.match(css, /\.resolva-pergunta \{ margin: 0; font-size: 1rem; font-weight: 700; line-height: 1\.375rem; \}/, 'a pergunta em 700');
   assert.match(css, /@media \(prefers-reduced-motion: no-preference\) \{\s*\.resolva-cartao \{ animation: resolva-entrar 200ms ease-out both; \}/);
   assert.match(css, /@keyframes resolva-entrar \{ from \{ opacity: 0; transform: translateY\(8px\); \}/, 'sobe 8 px');
+});
+
+/* ----- W3b: texto grande, rodapé à direita e "O método" no fim do exemplo (revisão do Designer, spec 15, seção 16) ----- */
+
+const blocoDoResolva = () => {
+  const css = ler('src/app/aula.css');
+  return css.slice(css.indexOf('/* ----- Resolva comigo (spec 15'));
+};
+
+test('texto grande (WCAG 1.4.4): todo texto e toda fórmula do Resolva comigo é em rem, e cresce com a letra do sistema como as opções', () => {
+  const bloco = blocoDoResolva();
+  assert.ok(bloco.length > 1000, 'o bloco do Resolva comigo existe');
+  assert.deepEqual(bloco.match(/(?:font-size|line-height): [\d.]+px/g) ?? [], [], 'nenhum tamanho de letra nem de linha em px');
+  // Os mesmos tamanhos do app, em rem (16 px = 1 rem): problema 17/23, frase e pergunta 16/22, feito 14/20, porquê 15/21, selo 13/18.
+  for (const regra of [
+    /\.aula-miolo \.resolva-problema \{[^}]*font-size: 1\.0625rem; font-weight: 700; line-height: 1\.4375rem;/,
+    /\.resolva-frase \{[^}]*font-size: 1rem; font-weight: 400; line-height: 1\.375rem;/,
+    /\.resolva-pergunta \{[^}]*font-size: 1rem; font-weight: 700; line-height: 1\.375rem;/,
+    /\.resolva-feito__nome \{[^}]*font-size: 0\.875rem; font-weight: 800; line-height: 1\.25rem;/,
+    /\.resolva-feito__formula \{[^}]*font-size: 0\.875rem; font-weight: 400; line-height: 1\.25rem;/,
+    /\.resolva-porque p \{[^}]*font-size: 0\.9375rem; font-weight: 400; line-height: 1\.3125rem;/,
+    /\.resolva-isso__texto \{[^}]*font-size: 0\.9375rem; font-weight: 400; line-height: 1\.3125rem;/,
+    /\.resolva-selo \{[^}]*font-size: 0\.8125rem; font-weight: 900;[^}]*line-height: 1\.125rem;/,
+    /\.resolva-indicador__texto \{[^}]*font-size: 0\.875rem; font-weight: 800; line-height: 1\.25rem;/,
+    /\.resolva-metodo__linha \{[^}]*font-size: 0\.9375rem; font-weight: 700; line-height: 1\.3125rem;/,
+  ]) assert.match(bloco, regra);
+  // A linha do passo feito e o botão de voltar crescem junto (altura mínima em rem); o visto acompanha a letra.
+  assert.match(bloco, /\.resolva-feito__linha \{[^}]*min-height: 2\.25rem;/);
+  assert.match(bloco, /\.resolva-voltar \{[^}]*min-height: 2\.75rem;/);
+  assert.match(bloco, /\.resolva-feito__linha \.icone \{[^}]*width: 1rem; height: 1rem;/);
+  // A fórmula em linha dentro dessas peças mede a letra do elemento em volta (getComputedStyle), então segue o tamanho: o desenho não tem px fixo.
+  const texto = ler('src/app/texto-com-formulas.tsx');
+  assert.match(texto, /Number\.parseFloat\(estilo\.fontSize\)/);
+});
+
+test('o rodapé do Resolva comigo põe as ações à direita, na largura do alto da aula, e só nele (a coluna não muda)', () => {
+  const aula = ler('src/app/aula.tsx');
+  assert.match(aula, /<footer className="aula-rodape" [^>]*data-resolva=\{etapa\.tipo === 'exemplo' && resolva\.ativo \? '' : undefined\}>/);
+  const bloco = blocoDoResolva();
+  assert.match(bloco, /\.aula-rodape\[data-resolva\] \.aula-rodape__acoes \{ margin-left: auto; \}/);
+  const css = ler('src/app/aula.css');
+  assert.equal((css.match(/\.aula-rodape\[data-resolva\]/g) ?? []).length, 1, 'uma regra só: as outras etapas não mudam');
+});
+
+test('"O método" vem DEPOIS do último passo e ANTES do rodapé "Agora é com você", e a página sobe para mostrá-lo junto do cartão', () => {
+  let estado = responder(escolher(ate(comecarResolva(cliente), suaVez), certa), certa, 1);
+  estado = ate(estado, estado.total - 1);
+  const html = desenhar(estado);
+  const marcas = ['resolva-passo', 'resolva-voltar', 'resolva-metodo', 'resolva-anuncio'].map((marca) => html.indexOf(`data-testid="${marca}"`));
+  assert.ok(marcas.every((posicao) => posicao >= 0), 'todos aparecem no último passo');
+  assert.deepEqual([...marcas].sort((a, b) => a - b), marcas, 'cartão do último passo, "Voltar um passo", "O método", e a região educada no fim');
+  assert.match(rodapeDe(estado), /data-testid="resolva-agora"[^>]*>Agora é com você</, 'o rodapé preso vem depois de tudo');
+  // Antes do último passo, nada de método (ele é o fim do exemplo); no último, o rolar do passo leva o fim do método à vista.
+  assert.doesNotMatch(desenhar(voltar(estado)), /resolva-metodo/);
+  const tela = ler('src/app/resolva-comigo.tsx');
+  assert.match(tela, /const fim = \(document\.querySelector<HTMLElement>\('\.resolva-metodo'\) \?\? cartao\)\.getBoundingClientRect\(\)\.bottom;/);
+  assert.match(tela, /\{ultimo && <CartaoMetodo passos=\{estado\.passos\} formula=\{formulaGeral\} \/>\}/);
+});
+
+/* ----- W3b: "Verificando…" e o foco no cartão do retorno (revisão do Designer, spec 15, seção 16) ----- */
+
+test('"Verificar" ocupado: afundado e desligado (aria-disabled, sem perder o foco), com o giro de 16 px na linha, aria-busy e "Verificando…" do contrato', () => {
+  const estado = escolher(ate(comecarResolva(cliente), suaVez), 1);
+  const parado = rodapeDe(estado);
+  assert.doesNotMatch(parado, /aria-busy|data-ocupado|botao__giro|aria-disabled/, 'sem conferir, o botão é o de sempre');
+  const ocupado = rodapeDe(estado, { ocupado: true });
+  assert.match(ocupado, /aria-disabled="true"/); assert.match(ocupado, /aria-busy="true"/); assert.match(ocupado, /data-ocupado="true"/);
+  assert.doesNotMatch(ocupado.match(/<button[^>]*>/)[0], /\sdisabled(?:=|\s|>)/, 'não usa disabled: o foco que está no botão não se perde');
+  assert.match(ocupado, /<span class="botao__giro" aria-hidden="true"><\/span>Verificando…<\/button>/, 'o giro e o texto na mesma linha');
+  assert.match(ocupado, /aria-label="Verificar"/, 'o nome acessível não muda: quem fala "Verificando…" é a região educada, uma vez');
+  const contrato = ler('packages/contratos/src/experiencia.ts');
+  assert.match(contrato, /avaliando: 'Verificando…'/, 'a chave `avaliando` do contrato já é "Verificando…", e a web usa essa');
+  const tela = ler('src/app/resolva-comigo.tsx');
+  assert.match(tela, /\{ocupado \? mensagens\.licao\.avaliando : t\.verificar\}/);
+  assert.match(tela, /setAnuncio\(mensagens\.licao\.avaliando\);/, 'a região educada fala "Verificando…" quando começa a conferir');
+  const css = ler('src/app/aula.css');
+  assert.match(css, /\.botao\[data-ocupado\] \{ box-shadow: 0 1px 0 var\(--labio\); transform: translateY\(3px\); cursor: progress; white-space: nowrap; \}/, 'afundado');
+  assert.match(css, /\.botao__giro \{ flex: none; width: 16px; height: 16px;/, 'o giro de 16 px');
+  assert.match(css, /@media \(prefers-reduced-motion: no-preference\) \{\s*\.botao__giro \{ animation: botao-giro 800ms linear infinite; \}/, 'sem movimento, o anel fica parado');
+});
+
+test('depois de "Verificar" o foco vai para o cartão do retorno, lido inteiro; depois de "Tentar de novo", para a primeira opção', () => {
+  // O cartão do retorno leva o texto falado inteiro no nome: o leitor de tela lê o porquê, o "Isso!" e a fórmula revelada de uma vez.
+  let estado = responder(escolher(ate(comecarResolva(cliente), suaVez), errada), errada, 1);
+  const errouHtml = desenhar(estado);
+  const nomeDoErro = /<div class="resolva-retorno" tabindex="-1" role="group" aria-label="([^"]+)"/.exec(errouHtml)[1];
+  assert.match(nomeDoErro, /^Os outros vértices se subtraem/, 'o porquê da opção');
+  assert.doesNotMatch(nomeDoErro, /Isso/, 'o erro não diz "Isso!"');
+  estado = tentarDeNovo(estado);
+  assert.doesNotMatch(desenhar(estado), /resolva-retorno/, 'sem correção, sem cartão');
+  estado = responder(estado, certa, 2);
+  const nomeDoAcerto = /<div class="resolva-retorno" tabindex="-1" role="group" aria-label="([^"]+)"/.exec(desenhar(estado))[1];
+  assert.match(nomeDoAcerto, /Isso\. /, '"Isso!" antes do porquê');
+  assert.match(nomeDoAcerto, /y índice C é igual a 3 vezes 2, menos 1, menos 5/, 'a fórmula revelada, falada pela árvore');
+  assert.ok(nomeDoAcerto.endsWith('.'));
+  const tela = ler('src/app/resolva-comigo.tsx');
+  assert.match(tela, /window\.requestAnimationFrame\(\(\) => retorno\.current\?\.focus\(\{ preventScroll: true \}\)\);/, 'o foco vai para o cartão do retorno, e não para o botão do rodapé');
+  assert.doesNotMatch(tela, /aula-rodape__acoes \[data-testid\^="resolva-"\]/, 'o botão do rodapé não recebe o foco à força');
+  assert.match(tela, /grupo\.current\?\.querySelector<HTMLElement>\('input'\)\?\.focus\(\{ preventScroll: true \}\)/, 'depois de "Tentar de novo", a primeira opção (como já era)');
+  const css = ler('src/app/aula.css');
+  assert.match(css, /\.resolva-retorno \{ display: grid; gap: 12px; \}\n\.resolva-retorno:focus \{ outline: none; \}/);
 });

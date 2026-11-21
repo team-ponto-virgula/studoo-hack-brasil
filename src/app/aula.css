@@ -1060,14 +1060,18 @@
 .aula-figura { margin: 2px 0 4px; }
 
 /* ----- Resolva comigo (spec 15, seção 4): a forma da etapa Exemplo quando a lição traz `resolucao`, a mesma tela do app ----- */
+/*
+ * Todo texto e toda fórmula do Resolva comigo é em rem: cresce com a letra grande do sistema e com o zoom do texto (WCAG 1.4.4), como as opções
+ * da aula. Em px ficam só os desenhos (os traços do indicador, o Stu, as bordas) e os espaços entre as peças.
+ */
 /* O selo e o problema: no app o problema desce 10 depois do selo (a grade da aula deixa 18). */
 .aula-miolo .resolva { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-top: -8px; }
-.aula-miolo .resolva-problema { margin: 0; font-size: 17px; font-weight: 700; line-height: 23px; text-wrap: wrap; }
+.aula-miolo .resolva-problema { margin: 0; font-size: 1.0625rem; font-weight: 700; line-height: 1.4375rem; text-wrap: wrap; }
 .resolva [tabindex='-1']:focus { outline: none; }
 
 /* O indicador "Passo n de N": N traços de 6; os feitos e o atual em azul, o atual mais largo (34). */
 .resolva-indicador { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.resolva-indicador__texto { color: var(--texto2); font-size: 14px; font-weight: 800; line-height: 20px; }
+.resolva-indicador__texto { color: var(--texto2); font-size: 0.875rem; font-weight: 800; line-height: 1.25rem; }
 .resolva-tracos { display: flex; align-items: center; gap: 4px; }
 .resolva-traco { width: 18px; height: 6px; border-radius: 3px; background: var(--gelo); }
 .resolva-traco[data-feito] { background: var(--acao); }
@@ -1075,19 +1079,19 @@
 
 /* Um passo feito, numa linha: o visto, o nome e a fórmula reduzida; tocar reabre o passo ali mesmo. */
 .resolva-feito { padding: 6px 12px; border-radius: 14px; background: #f4f7ff; }
-.resolva-feito__linha { display: flex; width: 100%; min-height: 36px; align-items: center; gap: 8px; padding: 0; border: 0; border-radius: 8px; color: var(--texto); background: none; font: inherit; text-align: left; cursor: pointer; }
+.resolva-feito__linha { display: flex; width: 100%; min-height: 2.25rem; align-items: center; gap: 8px; padding: 0; border: 0; border-radius: 8px; color: var(--texto); background: none; font: inherit; text-align: left; cursor: pointer; }
 .resolva-feito__linha:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
-.resolva-feito__linha .icone { flex: none; width: 16px; height: 16px; color: var(--sucesso); }
-.resolva-feito__nome { flex: none; max-width: 55%; overflow: hidden; color: var(--texto); font-size: 14px; font-weight: 800; line-height: 20px; text-overflow: ellipsis; white-space: nowrap; }
-.resolva-feito__formula { flex: 1 1 0; min-width: 0; overflow: hidden; color: var(--texto2); font-size: 14px; font-weight: 400; line-height: 20px; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
+.resolva-feito__linha .icone { flex: none; width: 1rem; height: 1rem; color: var(--sucesso); }
+.resolva-feito__nome { flex: none; max-width: 55%; overflow: hidden; color: var(--texto); font-size: 0.875rem; font-weight: 800; line-height: 1.25rem; text-overflow: ellipsis; white-space: nowrap; }
+.resolva-feito__formula { flex: 1 1 0; min-width: 0; overflow: hidden; color: var(--texto2); font-size: 0.875rem; font-weight: 400; line-height: 1.25rem; text-align: right; text-overflow: ellipsis; white-space: nowrap; }
 .resolva-feito__aberto { display: grid; gap: 8px; padding-top: 6px; }
-.resolva-feito__aberto p { margin: 0; font-size: 15px; line-height: 21px; }
+.resolva-feito__aberto p { margin: 0; font-size: 0.9375rem; line-height: 1.3125rem; }
 
 /* O cartão do passo atual: o Stu e a frase (400, como o texto da aula), a fórmula em bloco ou o "Sua vez". Entra subindo 8 em 200 ms. */
 .resolva-cartao { display: grid; gap: 12px; padding: 16px; border: 2px solid var(--gelo); border-radius: 20px; background: var(--fundo); }
 .resolva-cartao__topo { display: flex; align-items: flex-start; gap: 10px; }
 .resolva-cartao__topo .stu { flex: none; width: 40px; height: auto; }
-.resolva-frase { flex: 1 1 0; min-width: 0; margin: 0; font-size: 16px; font-weight: 400; line-height: 22px; }
+.resolva-frase { flex: 1 1 0; min-width: 0; margin: 0; font-size: 1rem; font-weight: 400; line-height: 1.375rem; }
 @keyframes resolva-entrar { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: no-preference) {
   .resolva-cartao { animation: resolva-entrar 200ms ease-out both; }
@@ -1095,9 +1099,9 @@
 
 /* "Sua vez": o selo âmbar, a pergunta (700 sempre), as opções como as dos exercícios e o porquê. */
 .resolva-suavez { display: grid; gap: 12px; }
-.resolva-selo { justify-self: start; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 900; letter-spacing: 0.6px; line-height: 18px; text-transform: uppercase; }
+.resolva-selo { justify-self: start; padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; font-weight: 900; letter-spacing: 0.05em; line-height: 1.125rem; text-transform: uppercase; }
 .resolva-selo--sua-vez { color: #8a5a00; background: #fff1cc; }
-.resolva-pergunta { margin: 0; font-size: 16px; font-weight: 700; line-height: 22px; }
+.resolva-pergunta { margin: 0; font-size: 1rem; font-weight: 700; line-height: 1.375rem; }
 .resolva .opcoes { gap: 10px; }
 /* Travar as opções (enquanto confere ou depois do porquê) não as apaga: só a revelação apaga as que não são a certa nem a marcada. */
 .resolva .opcoes:disabled label:not([data-retorno]) { opacity: 1; }
@@ -1105,14 +1109,27 @@
 @media (hover: hover) and (pointer: fine) {
   .resolva .opcoes:not(:disabled) label:hover:not(:has(input:checked)) { background: var(--nevoa); }
 }
+.resolva-retorno { display: grid; gap: 12px; }
+.resolva-retorno:focus { outline: none; }
 .resolva-porque { padding: 12px; border-radius: 14px; color: #7a4a00; background: #fff6ea; }
-.resolva-porque p { margin: 0; font-size: 15px; font-weight: 400; line-height: 21px; }
+.resolva-porque p { margin: 0; font-size: 0.9375rem; font-weight: 400; line-height: 1.3125rem; }
 .resolva-isso { display: grid; gap: 8px; padding: 12px; border-radius: 14px; color: var(--sucesso); background: #eefaf3; }
-.resolva-isso__titulo { margin: 0; font-size: 16px; font-weight: 900; line-height: 22px; }
-.resolva-isso__texto { margin: 0; font-size: 15px; font-weight: 400; line-height: 21px; }
+.resolva-isso__titulo { margin: 0; font-size: 1rem; font-weight: 900; line-height: 1.375rem; }
+.resolva-isso__texto { margin: 0; font-size: 0.9375rem; font-weight: 400; line-height: 1.3125rem; }
 
 /* "Voltar um passo" (botão de texto de 44) e "O método": os passos numa linha cada e a fórmula geral. */
-.resolva-voltar { justify-self: start; min-height: 44px; }
+.resolva-voltar { justify-self: start; min-height: 2.75rem; }
 .resolva-metodo { display: grid; gap: 6px; padding: 16px; border: 2px solid #ffe3a3; border-radius: 20px; background: #fffaf0; }
-.resolva-metodo__titulo { margin: 0; color: #8a5a00; font-size: 16px; font-weight: 900; line-height: 22px; }
-.resolva-metodo__linha { margin: 0; font-size: 15px; font-weight: 700; line-height: 21px; }
+.resolva-metodo__titulo { margin: 0; color: #8a5a00; font-size: 1rem; font-weight: 900; line-height: 1.375rem; }
+.resolva-metodo__linha { margin: 0; font-size: 0.9375rem; font-weight: 700; line-height: 1.3125rem; }
+
+/* O rodapé do Resolva comigo: as ações à direita, na largura do alto da aula (como o "Verificar" dos exercícios); a coluna não muda. */
+.aula-rodape[data-resolva] .aula-rodape__acoes { margin-left: auto; }
+
+/* "Verificar" ocupado (o Verificando… do contrato): o botão afunda e fica desligado, com o giro de 16 px na mesma linha; sem movimento, o anel fica parado. */
+.botao[data-ocupado] { box-shadow: 0 1px 0 var(--labio); transform: translateY(3px); cursor: progress; white-space: nowrap; }
+.botao__giro { flex: none; width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; }
+@keyframes botao-giro { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: no-preference) {
+  .botao__giro { animation: botao-giro 800ms linear infinite; }
+}
