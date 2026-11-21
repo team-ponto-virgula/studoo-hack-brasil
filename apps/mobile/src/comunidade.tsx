@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import {
   AccessibilityInfo, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type StyleProp, type ViewStyle,
 } from 'react-native';
-import Svg, { Defs, FeDropShadow, Filter, G, LinearGradient, Rect, Stop, SvgXml, Text as SvgTexto } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Rect, Stop, SvgXml } from 'react-native-svg';
 import {
   LIMITES_COMUNIDADE, MOTIVOS_DENUNCIA, TEMAS, svgCapa,
   type CartaoTrilha, type EstadoSeguir, type MotivoDenuncia, type Novidade, type PaginaExplorar, type PerfilPublico, type PessoaNovidade, type Tema,
@@ -48,35 +48,13 @@ export function CapaTrilha({ codigo, tema, capa }: { codigo: string; tema: Tema 
 }
 
 /**
- * O lugar no Em alta: numeral grande no canto direito da capa, branco com o contorno na cor do texto, como
- * `.cartao-trilha__posicao` da web (o contorno vem por trás do preenchimento, como o `paint-order: stroke fill`).
+ * O lugar no Em alta (spec 16, item 16): a pílula "1º" no canto superior direito da capa, 13 px 800 #0B1B5C sobre branco,
+ * 24 de altura e raio 12. Escondida do leitor de tela: o corpo do cartão diz "1º em alta".
  */
 function Posicao({ numero }: { numero: number }) {
-  const texto = String(numero);
-  // A caixa da web tem 72 de altura (5rem × 0,9) e a linha de base a 66 do alto; a tela do SVG sobra em volta para a
-  // sombra (text-shadow: 0 6px 14px), que a capa corta embaixo como na web.
-  const sobra = { lado: 24, cima: 16, baixo: 30 };
-  const largura = 56 * texto.length + sobra.lado * 2;
-  const altura = 72 + sobra.cima + sobra.baixo;
-  const x = largura - sobra.lado;
-  const y = sobra.cima + 66;
-  const sombra = `sombra-posicao-${numero}`;
   return (
-    <View pointerEvents="none" style={[comunidadeEstilos.posicao, { width: largura, height: altura, right: 12 - sobra.lado, bottom: 4 - sobra.baixo }]}
-      importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <Svg width={largura} height={altura}>
-        <Defs>
-          <Filter id={sombra} filterUnits="userSpaceOnUse" x={0} y={0} width={largura} height={altura}>
-            <FeDropShadow dx={0} dy={6} stdDeviation={7} floodColor="#0F172A" floodOpacity={0.25} />
-          </Filter>
-        </Defs>
-        <G filter={`url(#${sombra})`}>
-          <SvgTexto x={x} y={y} textAnchor="end" fontFamily={fontes.titulo} fontWeight="700" fontSize={80} letterSpacing={-4.8}
-            fill="none" stroke={cores.texto} strokeWidth={3} strokeLinejoin="round">{texto}</SvgTexto>
-          <SvgTexto x={x} y={y} textAnchor="end" fontFamily={fontes.titulo} fontWeight="700" fontSize={80} letterSpacing={-4.8}
-            fill="#FFFFFF">{texto}</SvgTexto>
-        </G>
-      </Svg>
+    <View testID={`posicao-${numero}`} pointerEvents="none" style={comunidadeEstilos.posicao} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+      <Text style={comunidadeEstilos.posicaoTexto}>{`${numero}º`}</Text>
     </View>
   );
 }
@@ -232,19 +210,15 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, dua
         <View style={[comunidadeEstilos.capa, alturaCapa !== undefined && { aspectRatio: undefined, height: alturaCapa }]}>
           <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} capa={cartao.capa} />
           {posicao !== undefined && <Posicao numero={posicao} />}
+          {/* Spec 16, item 17: a capa leva só o selo do tema ("Exemplo" vai para a linha de informações). */}
           {cartao.tema && (
-            <View style={[comunidadeEstilos.selo, comunidadeEstilos.seloTema]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-              <Text style={comunidadeEstilos.seloTexto}>{temas[cartao.tema]}</Text>
-            </View>
-          )}
-          {cartao.demonstracao && (
-            <View style={[comunidadeEstilos.selo, comunidadeEstilos.seloDemo]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-              <Text numberOfLines={1} style={[comunidadeEstilos.seloTexto, { color: '#5B3A00' }]}>{c.demonstracao}</Text>
+            <View style={[comunidadeEstilos.selo, comunidadeEstilos.seloTema, posicao !== undefined && comunidadeEstilos.seloTemaComPosicao]} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+              <Text numberOfLines={1} style={comunidadeEstilos.seloTexto}>{temas[cartao.tema]}</Text>
             </View>
           )}
         </View>
         <View style={comunidadeEstilos.corpo}>
-          {posicao !== undefined && <Text style={comunidadeEstilos.somenteLeitor}>{c.posicao(posicao)}</Text>}
+          {posicao !== undefined && <Text style={comunidadeEstilos.somenteLeitor}>{mensagens.emAlta.posicao(posicao)}</Text>}
           <Pressable accessibilityRole="link" testID={`${id}-titulo`} onPress={() => acoes.abrirPrevia(cartao.codigo)}
             style={[comunidadeEstilos.tituloToque, duasLinhas && comunidadeEstilos.tituloDuasLinhas]}>
             <Text accessibilityRole="header" style={comunidadeEstilos.titulo}>{cartao.titulo}</Text>
@@ -268,7 +242,15 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, dua
           {cartao.legenda && <Text style={comunidadeEstilos.legenda}>{cartao.legenda}</Text>}
           {/* Contagem e números ancorados logo acima dos botões: as últimas linhas batem na fileira. */}
           <View style={comunidadeEstilos.rodape}>
-            <Text style={comunidadeEstilos.meta}>{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</Text>
+            {/* "6 lições · 3 partes · Exemplo": o selo neutro (spec 10) na linha; o leitor de tela ouve o nome inteiro (item 9). */}
+            <View style={comunidadeEstilos.metaLinha}>
+              <Text style={comunidadeEstilos.meta}>{c.contagem(cartao.totalLicoes, cartao.totalPartes)}{cartao.demonstracao ? ' · ' : ''}</Text>
+              {cartao.demonstracao && (
+                <View testID={`${id}-exemplo`} accessible accessibilityLabel={c.demonstracaoRotulo} style={comunidadeEstilos.seloNeutro}>
+                  <Text style={comunidadeEstilos.seloNeutroTexto}>{c.demonstracao}</Text>
+                </View>
+              )}
+            </View>
             {/* Altura fixa: "N estudando" ou "Nova" (ninguém estudando); curtir não muda a altura do cartão. */}
             <View testID={`${id}-numeros`} style={comunidadeEstilos.numerosLinha}>
               {cartao.estudando === 0
@@ -798,13 +780,6 @@ export function TelaExplorar({ cliente, acoesTela, aoAdicionado, aoAbrir, abrirP
         <View style={comunidadeEstilos.topo}>
           <Titulo testID="titulo-explorar" foco>{c.titulo}</Titulo>
           <Text style={comunidadeEstilos.subtitulo}>{c.subtitulo}</Text>
-          {/* Enquanto houver conteúdo de exemplo na tela, uma linha explica o selo (como a web na rodada de banca). */}
-          {pagina && [...pagina.emAlta, ...pagina.novas].some((cartao) => cartao.demonstracao) && (
-            <Text testID="explorar-demo" style={comunidadeEstilos.explorarDemo}>
-              <Text style={comunidadeEstilos.explorarDemoSelo}>{` ${c.demonstracao} `}</Text>
-              {` ${c.demonstracaoExplica.replace(`“${c.demonstracao}” `, '')}`}
-            </Text>
-          )}
         </View>
 
         <View accessibilityRole="radiogroup" accessibilityLabel={c.abasRotulo} style={comunidadeEstilos.abas}>
@@ -1250,13 +1225,20 @@ const comunidadeEstilos = StyleSheet.create({
   cartaoFora: { flex: 1 },
   cartao: { flex: 1, overflow: 'hidden', borderWidth: 2, borderColor: cores.gelo, borderRadius: 20, backgroundColor: cores.fundo },
   capa: { aspectRatio: 2, overflow: 'hidden' },
-  posicao: { position: 'absolute', right: 12, bottom: 4, height: 72, zIndex: 1 },
+  posicao: { position: 'absolute', top: 10, right: 10, height: 24, minWidth: 24, paddingHorizontal: 8, borderRadius: 12, backgroundColor: '#FFFFFF',
+    alignItems: 'center', justifyContent: 'center', zIndex: 1, boxShadow: '0 2px 6px rgba(15, 23, 42, 0.12)' },
+  posicaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 18, fontWeight: '800' },
   // .cartao-trilha__tema / __demo: pílulas brancas de 20 de linha com 3 × 10 de respiro; o tema inteiro no alto, à esquerda
   // (até a largura da capa menos 20, quebrando se precisar), e "Demonstração" embaixo, à esquerda.
   selo: { position: 'absolute', left: 10, paddingVertical: 3, paddingHorizontal: 10, borderRadius: 999, backgroundColor: '#FFFFFF',
     shadowColor: '#0F172A', shadowOpacity: 0.12, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 2 },
   seloTema: { top: 10, maxWidth: '94%' },
-  seloDemo: { bottom: 10, backgroundColor: '#FFF6EA' },
+  // Com a pílula da posição à direita, o tema para antes dela (24 + 10 de margem + 8 de vão).
+  seloTemaComPosicao: { maxWidth: '72%' },
+  metaLinha: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' },
+  // O selo neutro da spec 10: #F1F4FD com o texto #5E6A85 13 px 800.
+  seloNeutro: { borderRadius: 999, paddingHorizontal: 10, paddingVertical: 1, backgroundColor: '#F1F4FD' },
+  seloNeutroTexto: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   seloTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 20, fontWeight: '900' },
   corpo: { flex: 1, gap: 6, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 16, minWidth: 0 },
   somenteLeitor: { position: 'absolute', width: 1, height: 1, overflow: 'hidden', opacity: 0 },
@@ -1325,8 +1307,6 @@ const comunidadeEstilos = StyleSheet.create({
   esmaecer: { position: 'absolute', top: 0, bottom: 0, width: 24 },
   temasConteudo: { gap: 8, paddingTop: 2, paddingBottom: 6 },
   // .explorar__demo: 15/25,5 em cinza, com o selo "Demonstração" tracejado no começo.
-  explorarDemo: { marginTop: 4, color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 25.5 },
-  explorarDemoSelo: { color: '#5B3A00', backgroundColor: '#FFF6EA', fontSize: 13, fontWeight: '900' },
   fichaTema: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 16, borderWidth: 2, borderColor: cores.bordaCampo, borderRadius: 999, backgroundColor: cores.fundo },
   fichaTemaMarcada: { borderColor: cores.texto, backgroundColor: cores.texto },
   fichaTemaTexto: { color: cores.texto, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },

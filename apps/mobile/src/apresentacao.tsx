@@ -16,7 +16,7 @@ import { usePulinho } from './animacoes';
 import { tracoGrosso } from './caminho';
 import { CadernoDoStu, FaixaDaPonte } from './estudio-cenas';
 import { Icone } from './icone';
-import { Botao, SeloSincronia, estilos, useMovimentoReduzido, SeloDemonstracao, degrauFora, quebraEquilibrada } from './interface';
+import { Botao, SeloSincronia, estilos, useMovimentoReduzido, degrauFora, quebraEquilibrada } from './interface';
 import { CartaoFonte } from './licao';
 import { mensagens } from './mensagens';
 import { Desenho, coresDaRegiao } from './mundo';
@@ -204,14 +204,12 @@ function AreaDaApresentacao({ id, nome, escolhida, escolher }: { id: IdTema; nom
   );
 }
 
-/** Moldura das ilustrações dos momentos (como `.apresentacao-quadro` da web no celular), com o selo de demonstração no alto. */
-function Quadro({ selo = false, children }: { selo?: boolean; children: ReactNode }) {
-  return (
-    <View style={apresentacaoEstilos.quadro}>
-      {selo && <View style={apresentacaoEstilos.quadroTopo}><SeloDemonstracao emLinha /></View>}
-      {children}
-    </View>
-  );
+/**
+ * Moldura das ilustrações dos momentos (como `.apresentacao-quadro` da web no celular). Sem selo de demonstração nem de
+ * "Exemplo" (spec 16, item 9, decisão de c103c3b; spec 04, banca §2): a apresentação mostra o app, não um modo.
+ */
+function Quadro({ children }: { children: ReactNode }) {
+  return <View style={apresentacaoEstilos.quadro}>{children}</View>;
 }
 
 /** Momento 1: o cartão "Fonte do seu material" da lição, com o exemplo de demonstração do contrato. */
@@ -220,7 +218,7 @@ function ArteMaterial() {
   return (
     <Quadro>
       <CartaoFonte parado numero={1} titulo={ex.fonteArquivo}
-        referencia={{ materialId: 'apresentacao', nome: ex.fonteArquivo, pagina: 2, trecho: ex.fonteTrecho, leitura: 'demonstracao' }} />
+        referencia={{ materialId: 'apresentacao', nome: ex.fonteArquivo, pagina: 2, trecho: ex.fonteTrecho, leitura: 'texto' }} />
     </Quadro>
   );
 }
@@ -370,7 +368,6 @@ const apresentacaoEstilos = StyleSheet.create({
   noFace: { alignItems: 'center', justifyContent: 'center', borderWidth: 3, borderColor: 'rgba(255, 255, 255, 0.2)' },
   // Moldura dos momentos: como `.apresentacao-quadro` da web no celular (12 de respiro, cantos de 22, borda gelo, fundo névoa).
   quadro: { gap: 10, padding: 12, borderRadius: 22, borderWidth: 2, borderColor: cores.gelo, backgroundColor: cores.nevoa },
-  quadroTopo: { flexDirection: 'row', justifyContent: 'flex-end' },
   sincronia: { position: 'absolute', top: '6%', right: '5%' },
   areas: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, padding: 14, borderRadius: 28, backgroundColor: cores.ceu },
   area: { width: '47.5%', flexGrow: 1, minHeight: 92, alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 12,

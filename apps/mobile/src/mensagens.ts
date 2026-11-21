@@ -10,6 +10,8 @@ export const mensagens = {
    * "Resolva comigo" (spec 15, seção 4): os textos da spec, aqui até o contrato trazer `resolvaComigo` em `experiencia`; quando
    * trouxer, estes saem e o app usa os do contrato, como a web.
    */
+  /** O lugar no Em alta para o leitor de tela (spec 16, item 16), aqui até o contrato trazer o texto. */
+  emAlta: { posicao: (n: number) => `${n}º em alta` },
   resolvaComigo: {
     selo: 'Resolva comigo',
     passo: (n: number, total: number) => `Passo ${n} de ${total}`,

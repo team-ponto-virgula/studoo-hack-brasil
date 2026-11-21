@@ -1032,7 +1032,8 @@ export function CampoAberta({ valor, mudar, minimo, desativado, retorno }: {
         accessibilityLabel={t.aberta.rotulo} accessibilityHint={t.aberta.dica} textAlignVertical="top"
         style={[formatos.aberta, retorno === 'certa' && formatos.cartaoCerto, retorno === 'errada' && formatos.cartaoErrado]} />
       <Text style={estilos.legenda}>{t.aberta.dica}</Text>
-      <Text style={[formatos.contador, usados >= minimo && { color: cores.sucesso }]}>{t.aberta.contador(usados, minimo)}</Text>
+      {/* Spec 16, item 8: antes da primeira letra, só o rodapé orienta; depois, "Faltam N letras" em cinza, até o mínimo. */}
+      {usados > 0 && usados < minimo && <Text testID="aberta-contador" style={formatos.contador}>{t.aberta.contador(usados, minimo)}</Text>}
     </View>
   );
 }
@@ -1390,7 +1391,7 @@ const formatos = StyleSheet.create({
   valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 18, lineHeight: 27 },
   aberta: { minHeight: 140, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: cores.bordaCampo, color: cores.texto,
     backgroundColor: cores.fundo, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24 },
-  contador: { alignSelf: 'flex-end', color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  contador: { alignSelf: 'flex-end', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   correcao: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.nevoa },
   criterio: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   criterioIcone: { width: 22, height: 22, borderRadius: 11, marginTop: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E3A24A' },
