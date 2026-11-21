@@ -482,9 +482,9 @@ fluxo_telas() {
 fluxo_telas_uma_por_vez() {
   local fluxo pedidas falhas="" naorodaram="" caiu="" quantos=0 codigo
   pedidas="$(printf '%s' "${CONFERENCIA_TELAS:-}" | tr ',' ' ' | xargs || true)"
-  if [ -z "$pedidas" ]; then
+  if [ -z "$pedidas" ] && [ "${CRIACAO_DEPOIS_DAS_TELAS:-}" != "1" ]; then
     fluxo_criacao || true
-  else
+  elif [ -n "$pedidas" ]; then
     resumo "Só as telas pedidas: $pedidas (sem a prova da criação; as capturas das outras vão aparecer como faltando)."
   fi
 
@@ -495,9 +495,14 @@ fluxo_telas_uma_por_vez() {
       continue
     fi
     if ! aparelho_responde; then
-      caiu="$fluxo"
-      naorodaram="$naorodaram $fluxo"
-      continue
+      # O Android religa o emulador (até duas vezes) e segue deste fluxo; sem isso, o resto fica como "não rodou".
+      if declare -F reviver_aparelho > /dev/null && [ "${REVIVIDOS:-0}" -lt 2 ] && reviver_aparelho; then
+        resumo "⚠️ O aparelho parou de responder antes de \`$fluxo\` e foi religado; a conferência seguiu dali."
+      else
+        caiu="$fluxo"
+        naorodaram="$naorodaram $fluxo"
+        continue
+      fi
     fi
     quantos=$((quantos + 1))
     codigo=0
@@ -510,6 +515,14 @@ fluxo_telas_uma_por_vez() {
   done < <(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
     "$PASTA_DOS_FLUXOS/telas/config.yaml")
 
+  # A criação por último (Android): com o aparelho de pé, religando se preciso.
+  if [ -z "$pedidas" ] && [ "${CRIACAO_DEPOIS_DAS_TELAS:-}" = "1" ]; then
+    if aparelho_responde || { declare -F reviver_aparelho > /dev/null && [ "${REVIVIDOS:-0}" -lt 2 ] && reviver_aparelho; }; then
+      fluxo_criacao || true
+    else
+      resumo "❌ A prova da criação não rodou: o aparelho não respondia depois das telas."
+    fi
+  fi
   [ "$quantos" -gt 0 ] || [ -n "$caiu" ] || erro "Nenhuma tela de CONFERENCIA_TELAS existe em telas/config.yaml: $pedidas"
   if [ -n "$caiu" ]; then
     resumo "**O aparelho parou de responder antes de \`$caiu\`.** Não rodaram:$(printf ' `%s`' $naorodaram). A carga da máquina está em carga-da-maquina.log e o fim do kernel em dmesg-fim.txt, nos registros."
