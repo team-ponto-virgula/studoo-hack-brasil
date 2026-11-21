@@ -484,10 +484,11 @@ Capturas do Mobile 2 em 320, 390 e na simulação de 200% (a1, a2, b1, b2, c1 e 
 
 ## 14. Peso do texto com fórmula em linha (decisão de 21/11)
 
-O motor desenha a fórmula em linha só nos pesos 400 e 700: a tabela de glifos de 800 não tem + × ÷. Por isso, todo texto que pode levar fórmula em linha usa 400 ou 700, nunca 800:
+O motor desenha a fórmula em linha só nos pesos 400 e 700 (a tabela de glifos de 800 não tem + × ÷), e a fórmula usa o peso do texto ao redor. O texto em 600 recebe a fórmula em 700, o peso mais perto. Por isso, só o que hoje está em 800 e pode levar fórmula muda:
 - o problema do "Resolva comigo" e a pergunta do "Sua vez" ficam sempre em 700, com ou sem fórmula, para o mesmo elemento não mudar de peso de uma lição para outra;
-- o texto da aula, as opções, o retorno e as frases dos passos ficam em 400;
-- o 800 continua só onde nunca entra fórmula: selos ("SUA VEZ", "RESOLVA COMIGO"), nomes dos passos feitos, botões e títulos de tela.
+- as frases dos passos do "Resolva comigo" ficam em 400, como o texto da aula;
+- **as opções, a dica e o retorno das lições de hoje não mudam** (700, 600 e 700, na web e no app). Mudá-los mexeria em componentes compartilhados e no visual de todas as lições, inclusive as sem matemática, que o dono já viu;
+- o 800 continua onde nunca entra fórmula: selos ("SUA VEZ", "RESOLVA COMIGO"), nomes dos passos feitos, botões e títulos de tela.
 
 Não entra peso 800 no motor (a opção b), e não fica a diferença de peso entre o texto e a fórmula (a opção c). Vale na web e no app, e o app já está em 700.
 
