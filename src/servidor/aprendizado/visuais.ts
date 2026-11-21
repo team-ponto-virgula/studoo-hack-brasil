@@ -13,6 +13,7 @@ import {
   normalizarVisuais,
   passosEmTexto,
   resolucaoParaCliente,
+  comCaixaDoPar,
   visualParaEnunciado,
   visualRevelado,
   type Capacidades,
@@ -257,7 +258,8 @@ export async function comVisuais(detalhe: LicaoDetalhe, conteudo: ConteudoLicao,
     if (dosExercicios.some(Boolean)) {
       saida.exercicios = detalhe.exercicios.map((exercicio, posicao) => {
         const visual = dosExercicios[posicao];
-        return visual ? { ...exercicio, visual: visualParaEnunciado(visual) } : exercicio;
+        // A figura com ponto procurado leva a caixa que o enunciado e o retorno dividem: se um não cabe, nenhum desenha.
+        return visual ? { ...exercicio, visual: visual.tipo === "formula" ? visualParaEnunciado(visual) : visualParaEnunciado(comCaixaDoPar(visual)) } : exercicio;
       });
       saida.exercicio = saida.exercicios[0];
     }
@@ -285,7 +287,7 @@ export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacid
   if (capacidades.visuais < 1) return undefined;
   const visual = limparVisuais(conteudo).dosExercicios[indice];
   if (visual?.tipo === "funcao" && !desenhaFuncao(capacidades)) return undefined;
-  return visual && visual.tipo !== "formula" ? visualRevelado(visual) : undefined;
+  return visual && visual.tipo !== "formula" ? visualRevelado(comCaixaDoPar(visual)) : undefined;
 }
 
 /* ----- Fórmula em linha: o texto linear para quem não desenha, e as marcas para quem desenha ----- */

@@ -613,7 +613,7 @@ interface PlanoFeito {
 }
 
 /** A altura padrão de uma figura: o enunciado, o retorno e o PNG da fase 1 a usam quando o cliente não dá outra. */
-const ALTURA_PADRAO_DA_FIGURA = 320;
+export const ALTURA_PADRAO_DA_FIGURA = 320;
 /** A unidade (pontos de projeto por unidade do plano) abaixo da qual a grade vira risco e os pontos se amontoam: o desenho não cabe. */
 export const UNIDADE_MINIMA_DO_PLANO = 12;
 const UNIDADE_MAXIMA_DO_PLANO = 48;
@@ -1155,8 +1155,20 @@ export function desenharRetaNumerica(visual: VisualRetaNumerica, contexto: Conte
 
 /* ----- Entrada geral, composição e SVG ----- */
 
-/** O desenho de um visual no contexto dado; `null` só para a fórmula que não lê ou, na faixa do PNG, que não cabe. */
+/**
+ * O desenho de um visual no contexto dado; `null` só para a fórmula que não lê ou, na faixa do PNG, que não cabe. A figura com ponto procurado que traz
+ * `alturaMinimaComRetorno` (o servidor a põe no que vai pela rede) só desenha, no enunciado e no retorno, quando a caixa dá para os DOIS: se um não cabe, nenhum
+ * desenha (`naoCabe` nos dois, e o cliente mostra o `alt`), para a figura não virar uma linha de texto no acerto e as opções não pularem.
+ */
 export function desenharVisual(visual: Visual, contexto: ContextoDoDesenho, opcoes: OpcoesDaFormula & OpcoesDaFigura = {}): Desenho | null {
+  const desenho = desenharSemOPar(visual, contexto, opcoes);
+  if (!desenho || desenho.naoCabe || visual.tipo === "formula" || contexto.tipo === "passo") return desenho;
+  const exigida = visual.alturaMinimaComRetorno;
+  if (exigida === undefined) return desenho;
+  return (opcoes.alturaMaxima ?? ALTURA_PADRAO_DA_FIGURA) < exigida - 1e-9 ? { ...desenho, naoCabe: true } : desenho;
+}
+
+function desenharSemOPar(visual: Visual, contexto: ContextoDoDesenho, opcoes: OpcoesDaFormula & OpcoesDaFigura): Desenho | null {
   switch (visual.tipo) {
     case "plano":
       return desenharPlano(visual, contexto, opcoes);

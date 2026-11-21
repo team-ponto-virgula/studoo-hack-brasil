@@ -50,6 +50,12 @@ export interface VisualPlano {
   poligonos?: { pontos: string[] }[];
   /** Linha tracejada de um ponto até um eixo (`x`: até o eixo das abscissas), com o valor em foco. Até 6. */
   guias?: { ponto: string; eixo: "x" | "y" }[];
+  /**
+   * Só no que vai pela rede, e só na figura que tem ponto procurado (`comCaixaDoPar`, no servidor): a menor `alturaMaxima` em que o enunciado E o retorno dela
+   * desenham. O motor a lê para que os dois usem a MESMA caixa: se um não cabe, nenhum desenha (`naoCabe` nos dois, e o cliente mostra o `alt`), e nada
+   * pula no acerto. Sem ela, cada contexto decide sozinho. Nunca é guardada: o validador a descarta.
+   */
+  alturaMinimaComRetorno?: number;
 }
 
 export interface PontoDaReta {
@@ -79,6 +85,12 @@ export interface VisualRetaNumerica {
   pontos: PontoDaReta[];
   /** Até 3. */
   intervalos?: IntervaloDaReta[];
+  /**
+   * Só no que vai pela rede, e só na figura que tem ponto procurado (`comCaixaDoPar`, no servidor): a menor `alturaMaxima` em que o enunciado E o retorno dela
+   * desenham. O motor a lê para que os dois usem a MESMA caixa: se um não cabe, nenhum desenha (`naoCabe` nos dois, e o cliente mostra o `alt`), e nada
+   * pula no acerto. Sem ela, cada contexto decide sozinho. Nunca é guardada: o validador a descarta.
+   */
+  alturaMinimaComRetorno?: number;
 }
 
 /**
@@ -136,6 +148,12 @@ export interface VisualFuncao {
   /** De 1 a 3. */
   curvas: CurvaDaFuncao[];
   pontos?: PontoDaFuncao[];
+  /**
+   * Só no que vai pela rede, e só na figura que tem ponto procurado (`comCaixaDoPar`, no servidor): a menor `alturaMaxima` em que o enunciado E o retorno dela
+   * desenham. O motor a lê para que os dois usem a MESMA caixa: se um não cabe, nenhum desenha (`naoCabe` nos dois, e o cliente mostra o `alt`), e nada
+   * pula no acerto. Sem ela, cada contexto decide sozinho. Nunca é guardada: o validador a descarta.
+   */
+  alturaMinimaComRetorno?: number;
 }
 
 export type VisualFigura = VisualPlano | VisualRetaNumerica | VisualFuncao;
@@ -459,7 +477,8 @@ export interface Desenho {
   /**
    * A figura não coube em `alturaMaxima`, nem depois de descer a escala do gráfico e a legenda até o menor tamanho (o texto nunca
    * desce do piso). `altura` passa de `alturaMaxima` e o cliente NÃO deve mostrá-la: o visual vale como inválido e a lição segue
-   * em texto. Sem este campo, `altura <= alturaMaxima`, sempre.
+   * em texto. Também sai `naoCabe` o desenho que cabe, quando o enunciado e o retorno da mesma figura (com ponto procurado) não cabem na mesma caixa:
+   * se um não cabe nenhum desenha (`alturaMinimaComRetorno`). Sem este campo, `altura <= alturaMaxima`, sempre.
    */
   naoCabe?: true;
 }

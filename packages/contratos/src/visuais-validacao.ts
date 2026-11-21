@@ -3,7 +3,7 @@ import { marcarFormulasSoltas, normalizarTextoComFormulas } from "./formula-no-t
 import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
 import { acharVazamento, alvosDoSuaVez, chaveDoValor, letrasDoTexto, lerNumero, motivoDoVazamento, numerosDoTexto } from "./resolucao-vazamento";
 import { avaliarFuncao, interceptoDaFuncao, lerExpressaoDaFuncao, lerNumeroComPi, raizesDaFuncao, verticeDaFuncao, type ModeloDaFuncao } from "./funcao-expressao";
-import { desenharVisual } from "./motor-visuais";
+import { ALTURA_PADRAO_DA_FIGURA, desenharVisual } from "./motor-visuais";
 import { comDescricaoDaResposta } from "./visuais-descricao";
 import {
   LIMITES_VISUAIS,
@@ -17,6 +17,7 @@ import {
   type IntervaloDaReta,
   type NomeDeCurva,
   type OpcaoCorrigida,
+  type ContextoDoDesenho,
   type PapelPonto,
   type PassoGuardado,
   type PontoDaFuncao,
@@ -709,6 +710,56 @@ export function visualRevelado<V extends Visual>(visual: V): V {
     return comDescricaoDaResposta({ ...visual, pontos: (visual.pontos ?? []).map((ponto) => (ponto.papel === "procurado" ? { ...ponto, papel: "resposta" as const } : ponto)) }) as V;
   }
   return visual;
+}
+
+/* ----- Enunciado e retorno na mesma caixa ----- */
+
+/**
+ * A menor `alturaMaxima` a partir da qual o desenho cabe no contexto e continua cabendo em toda caixa maior até a altura padrão; `null` se nem na altura padrão
+ * cabe. NÃO é uma busca binária: o cabimento não é monótono na altura (o seno revelado cabe em 124 a 128, não cabe em 130 a 136 e volta a caber de 138 em diante,
+ * porque o desenho usa toda a caixa e, com mais escala, os rótulos mudam de lugar e a legenda cresce). Desce de 4 em 4 desde a altura padrão até o primeiro
+ * degrau que não cabe e confere o de 2 acima dele; o resultado é o limiar estável, sempre para cima (o que sobra é folga).
+ */
+function menorCaixaDoDesenho(visual: Visual, contexto: ContextoDoDesenho): number | null {
+  const cabe = (altura: number): boolean => {
+    try {
+      const desenho = desenharVisual(visual, contexto, { alturaMaxima: altura });
+      return desenho !== null && !desenho.naoCabe;
+    } catch {
+      return false;
+    }
+  };
+  if (!cabe(ALTURA_PADRAO_DA_FIGURA)) return null;
+  let estavel = ALTURA_PADRAO_DA_FIGURA;
+  for (let altura = ALTURA_PADRAO_DA_FIGURA - 4; altura >= 60; altura -= 4) {
+    if (!cabe(altura)) return cabe(altura + 2) ? altura + 2 : estavel;
+    estavel = altura;
+  }
+  return estavel;
+}
+
+const COM_A_CAIXA_DO_PAR = new WeakMap<object, VisualFigura>();
+
+/**
+ * A figura que tem ponto procurado leva `alturaMinimaComRetorno`: a menor caixa em que o enunciado E o retorno dela desenham (a maior das duas). O motor a usa
+ * para os dois usarem a mesma caixa: se um não cabe (o retorno, com a curva e o procurado já no lugar, quase sempre pede mais que o enunciado), nenhum desenha, e
+ * o cliente mostra o `alt` nos dois, sem a figura virar uma linha de texto no acerto e sem as opções pularem. Só o servidor chama isto, no que vai pela rede
+ * (`visualParaEnunciado(comCaixaDoPar(v))` e `visualRevelado(comCaixaDoPar(v))`); o validador nunca guarda o campo. Sem ponto procurado, a figura volta como veio.
+ * O resultado fica em memória por figura (a busca roda o motor de 30 a 60 vezes, uma vez por processo).
+ */
+export function comCaixaDoPar<V extends VisualFigura>(visual: V): V {
+  if (!(visual.pontos ?? []).some((ponto: { papel: PapelPonto }) => ponto.papel === "procurado" || ponto.papel === "resposta")) return visual;
+  const guardada = COM_A_CAIXA_DO_PAR.get(visual);
+  if (guardada) return guardada as V;
+  const { alturaMinimaComRetorno: _antiga, ...limpo } = visual;
+  const [noEnunciado, noRetorno] = [
+    menorCaixaDoDesenho(visualParaEnunciado(limpo as V), { tipo: "enunciado" }),
+    menorCaixaDoDesenho(visualRevelado(limpo as V), { tipo: "retorno" }),
+  ];
+  // Se um dos dois não cabe nem na altura padrão, o validador já o teria recusado: sem número, cada contexto decide sozinho.
+  const resultado = (noEnunciado === null || noRetorno === null ? visual : { ...limpo, alturaMinimaComRetorno: Math.max(noEnunciado, noRetorno) }) as V;
+  COM_A_CAIXA_DO_PAR.set(visual, resultado);
+  return resultado;
 }
 
 /* ----- Resolução ----- */
