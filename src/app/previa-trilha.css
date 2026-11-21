@@ -40,13 +40,13 @@
   gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--relevo); color: var(--texto); font-weight: 850; font-size: .875rem; line-height: 1.35; }
 .previa-marco .icone { width: 16px; height: 16px; }
 .previa-cenario { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.previa-cenario .desenho { position: absolute; top: 16%; left: max(4%,calc(50% - 16rem)); --tam: 40px; }
-.previa-cenario .desenho:nth-child(2) { top: 68%; left: max(15%,calc(50% - 12rem)); --tam: 23px; }
+.previa-cenario .mundo-desenho { position: absolute; top: 16%; left: max(4%,calc(50% - 16rem)); --tam: 40px; }
+.previa-cenario .mundo-desenho:nth-child(2) { top: 68%; left: max(15%,calc(50% - 12rem)); --tam: 23px; }
 .previa-no[data-lado='esquerda'] .previa-cenario { transform: scaleX(-1); }
-.previa-cenario .desenho:nth-child(n+3) { display: none; }
+.previa-cenario .mundo-desenho:nth-child(n+3) { display: none; }
 @media (min-width: 768px) {
-  .previa-cenario .desenho:nth-child(3) { display: block; top: 41%; left: auto; right: 6%; --tam: 43px; }
-  .previa-cenario .desenho:nth-child(4) { display: block; top: 64%; left: 6%; --tam: 26px; }
+  .previa-cenario .mundo-desenho:nth-child(3) { display: block; top: 41%; left: auto; right: 6%; --tam: 43px; }
+  .previa-cenario .mundo-desenho:nth-child(4) { display: block; top: 64%; left: 6%; --tam: 26px; }
 }
 .previa-no:first-child { background: linear-gradient(#e3f3e8, var(--chao)); }
 .previa-no__centro { position: relative; width: min(100%,28rem); height: 100%; margin-inline: auto; }
