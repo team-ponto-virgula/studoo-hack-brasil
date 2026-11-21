@@ -58,6 +58,9 @@ const GESTO: Gesto = GESTO_CURTIR;
 /** A frase única de privacidade (perfil, recorte da foto e nome): o que fica público e o que nunca aparece. */
 const PRIVACIDADE = `Quem abrir seu perfil ou suas trilhas compartilhadas vê seu nome, foto, resumo e interesses. Seu ${EMAIL} nunca aparece.`;
 
+/** O botão de conferir a resposta: o da lição e o do "Sua vez" do "Resolva comigo". */
+const VERIFICAR = 'Verificar';
+
 export const mensagens = {
     estudio: {
       titulo: 'Seu material vira uma jornada', subtitulo: 'Traga uma foto, documento ou tabela. O Stu transforma suas ideias em uma trilha com referências.',
@@ -1093,7 +1096,7 @@ export const mensagens = {
         exemplo: 'Exemplo',
         exercicio: 'Exercício',
         resposta: 'Sua resposta',
-        avaliar: 'Verificar',
+        avaliar: VERIFICAR,
         avaliando: 'Verificando…',
         correta: 'Resposta correta',
         incorreta: 'Resposta incorreta',
@@ -1346,6 +1349,19 @@ export const mensagens = {
             concluir: 'Concluir lição',
             escolha: 'Conte como foi para concluir a lição.'
         }
+    },
+    /** "Resolva comigo" (spec 15, seção 4): os textos da web e do app; a frase de cada passo vem da IA. "Verificar" é o da lição. */
+    resolvaComigo: {
+        selo: 'Resolva comigo',
+        passo: (n: number, total: number) => `Passo ${n} de ${total}`,
+        proximo: 'Próximo passo',
+        voltar: 'Voltar um passo',
+        suaVez: 'Sua vez',
+        isso: 'Isso!',
+        tentarDeNovo: 'Tentar de novo',
+        metodo: 'O método',
+        agora: 'Agora é com você',
+        verificar: VERIFICAR
     },
     erros: {
         material_invalido: 'Use imagem JPG/PNG/WebP, PDF, DOCX ou CSV de até 5 MB, respeitando os limites de páginas, texto e tabela.',

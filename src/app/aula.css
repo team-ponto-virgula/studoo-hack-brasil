@@ -1021,3 +1021,36 @@
   .aula-retorno h2 { padding-right: 52px; }
   .aula-retorno__corpo { max-height: calc(50svh - 200px); }
 }
+
+/* ----- Matemática (spec 15): fórmula em linha, fórmula em bloco e figura, o mesmo desenho do app ----- */
+
+/* A fórmula na frase: um bloco em linha que se apoia na linha de base das palavras, só com a altura de cima; o desenho sai por baixo. */
+.formula-em-linha { position: relative; display: inline-block; overflow: visible; vertical-align: baseline; }
+.formula-em-linha > svg { position: absolute; top: 0; left: 0; overflow: visible; }
+
+/* Os visuais da lição (seção 3): abertos, na largura do conteúdo, a fórmula antes do diagrama, com 12 de vão entre eles. */
+.aula-visuais { display: grid; gap: 12px; margin-top: 16px; }
+.aula-visuais:empty { display: none; margin: 0; }
+.desenho { display: block; width: 100%; margin-inline: auto; }
+.desenho > svg { display: block; width: 100%; height: auto; }
+.desenho--caixa > svg { height: 100%; }
+.desenho--rola { overflow-x: auto; overscroll-behavior-x: contain; }
+.desenho--rola > svg { max-width: none; }
+.desenho__ponto { transform-box: view-box; }
+
+/* A fórmula que se lê mas não se desenha: o texto linear, no bloco da fórmula. */
+.desenho-formula-texto { margin: 0; padding: 10px 12px; border-radius: 14px; background: #f1f4fd; color: var(--texto); font-size: 18px; font-weight: 700; line-height: 26px; text-align: center; }
+
+/* A figura que não coube na altura (seção 13): uma linha discreta abaixo do enunciado, sem caixa. */
+.figura-em-texto { display: flex; align-items: flex-start; gap: 6px; margin: 0; color: #5e6a85; font-size: 14px; line-height: 20px; }
+.figura-em-texto .icone { flex: none; width: 16px; height: 16px; margin-top: 2px; stroke-width: 2; }
+
+/* Entrada (seção 12): o desenho sobe 8 em 200 ms; na caixa da figura do exercício ele aparece no lugar e o ponto resposta cresce depois. */
+@keyframes desenho-entrar { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes desenho-aparecer { from { opacity: 0; } to { opacity: 1; } }
+@keyframes desenho-crescer { from { transform: scale(0); } to { transform: scale(1); } }
+@media (prefers-reduced-motion: no-preference) {
+  .desenho[data-entrada]:not(.desenho--caixa) { animation: desenho-entrar 200ms ease-out both; }
+  .desenho--caixa[data-entrada] { animation: desenho-aparecer 200ms ease-out both; }
+  .desenho--caixa[data-entrada] .desenho__ponto { animation: desenho-crescer 200ms ease-out 200ms both; }
+}

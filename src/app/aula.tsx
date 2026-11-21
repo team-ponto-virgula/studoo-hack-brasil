@@ -31,11 +31,14 @@ import {
   type Opcao,
   type Pratica,
   type Recurso,
+  textoSemFormulas,
   type TipoTrecho,
 } from '@studoo/contratos';
 import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
 import { Botao, Confete, Icone, Mascote, Stu, precarregarAnimacoesStu, type NomeIcone } from '../ui';
+import { VisuaisDaLicao } from './desenho';
 import { ApoioDaLicao } from './estudio';
+import { TextoComFormulas } from './texto-com-formulas';
 import { Ordenar } from './ordenar';
 import { BotaoSom } from './som';
 import { tocaSons } from './sons';
@@ -717,7 +720,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
             </div>
             <span className="aula-posicao" aria-hidden="true">{andamento}</span>
           </div>
-          <p className="aula-titulo-topo">{semQuebrarHifen(licao.titulo)}</p>
+          <p className="aula-titulo-topo">{semQuebrarHifen(textoSemFormulas(licao.titulo))}</p>
         </div>
         {/* O som, sempre à vista no alto da aula (spec 12): abre a folha por cima da lição. */}
         <BotaoSom />
@@ -731,8 +734,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
           </button>
         )}
         <p className="aula-etapa" data-etapa={etapa.tipo}><Icone nome={iconesDaEtapa[etapa.tipo]} />{nomeEtapa}</p>
-        {etapa.tipo === 'conceito' && <h1 tabIndex={-1}>{semQuebrarHifen(licao.titulo)}</h1>}
-        {etapa.tipo === 'pratica' && <h1 tabIndex={-1}>{semQuebrarHifen(licao.titulo)}</h1>}
+        {etapa.tipo === 'conceito' && <h1 tabIndex={-1}>{semQuebrarHifen(textoSemFormulas(licao.titulo))}</h1>}
+        {etapa.tipo === 'pratica' && <h1 tabIndex={-1}>{semQuebrarHifen(textoSemFormulas(licao.titulo))}</h1>}
         {avisoRetomada && (
           <p className="aula-aviso" role="status">
             {confirmandoRecomeco ? (
@@ -753,7 +756,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
         {etapa.tipo === 'conceito' && (
           <>
             {licao.concluida && <p className="aula-revisao"><Icone nome="check" />{mensagens.trilha.revisitando}</p>}
-            <p className="introducao">{licao.objetivo}</p>
+            <TextoComFormulas como="p" className="introducao" texto={licao.objetivo} />
             <div className="aula-explicacao">
               {/* Parado: a aula só carrega as três animações da reação (spec 13, §E6). */}
               <Stu expressao="stu-feliz" tamanho={76} />
@@ -795,6 +798,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 </aside>
               );
             })()}
+            {/* Spec 15 (seção 3): as fórmulas e figuras da lição ficam abertas, na largura do conteúdo, a fórmula antes do diagrama. */}
+            <VisuaisDaLicao visuais={licao.visuais} />
             {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
           </>
         )}
@@ -844,8 +849,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 </h2>
                 {/* Só este bloco rola quando o painel passaria de metade da tela; o título e as ações ficam. */}
                 <div className="aula-retorno__corpo" ref={corpoRetorno} data-rola={corpoRola || undefined}>
-                {pedidoPonte === 0 && <p>{avaliacao.feedback}</p>}
-                {pedidoPonte === 0 && avaliacao.observacao && <p className="aula-retorno__observacao">{avaliacao.observacao}</p>}
+                {pedidoPonte === 0 && <TextoComFormulas como="p" texto={avaliacao.feedback} />}
+                {pedidoPonte === 0 && avaliacao.observacao && <TextoComFormulas como="p" className="aula-retorno__observacao" texto={avaliacao.observacao} />}
                 {avaliacao.correta && indice === exercicios.length - 1 && !ensinou && (
                   <span className="aula-retorno__link">
                     <Botao variante="texto" onClick={abrirExplique}>{t.expliqueConvite}</Botao>
@@ -898,7 +903,8 @@ function EtapaExemplo({ licao, titulo }: { licao: LicaoDetalhe; titulo: Ref<HTML
   return (
     <section className="aula-quadro" data-etapa="exemplo" aria-labelledby="etapa-aula">
       <h1 id="etapa-aula" ref={titulo} tabIndex={-1}>{licao.exemploTipo === 'demonstracao' ? t.demonstracao : t.exemplo}</h1>
-      <p>{licao.exemplo}</p>
+      <TextoComFormulas como="p" texto={licao.exemplo} />
+      <VisuaisDaLicao visuais={licao.visuais} testID="visual-exemplo" />
       {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
       {licao.passos && (
         <section className="aula-passos" aria-labelledby="aula-passos-titulo">
@@ -1447,7 +1453,8 @@ function ExplicacaoComFalas({ texto, idioma }: { texto: string; idioma?: string 
   const disponivel = useVozDisponivel();
   const [tocando, setTocando] = useState<number | null>(null);
   const [semVoz, setSemVoz] = useState(false);
-  if (!idioma || idioma.toLowerCase().startsWith('pt') || !disponivel || !temFalasNoTexto(texto, idioma)) return <p>{texto}</p>;
+  // Em português (a matemática), a fórmula em linha no meio da frase (spec 15); as frases para ouvir são das outras línguas.
+  if (!idioma || idioma.toLowerCase().startsWith('pt') || !disponivel || !temFalasNoTexto(texto, idioma)) return <TextoComFormulas como="p" texto={texto} />;
   const partes = texto.split(/“([^”]+)”/);
   function ouvir(indice: number, frase: string) {
     setTocando(indice);
@@ -1631,7 +1638,7 @@ function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mudar, av
             <label key={opcao.id} data-retorno={resposta === opcao.id ? retorno : undefined}>
               <input type="radio" name="resposta" value={opcao.id} required checked={resposta === opcao.id} onChange={() => { mudar(opcao.id); void tocaSons.tocarEfeito('toque_opcao'); }} />
               <span className="opcao-tecla" aria-hidden="true">{String.fromCharCode(65 + posicao)}</span>
-              <span>{opcao.texto}</span>
+              <TextoComFormulas texto={opcao.texto} />
             </label>
           ))}
           <p className="opcoes-atalho">{t.atalho(exercicio.opcoes.length)}</p>
@@ -1672,8 +1679,8 @@ function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mudar, av
 
   return (
     <section className="aula-quadro" data-etapa="exercicio" data-tipo={exercicio.tipo} aria-labelledby="etapa-aula">
-      <h1 id="etapa-aula" ref={titulo} tabIndex={-1} className="aula-pergunta">{exercicio.enunciado}</h1>
-      {exercicio.contexto && <p>{exercicio.contexto}</p>}
+      <TextoComFormulas como="h1" id="etapa-aula" ref={titulo} tabIndex={-1} className="aula-pergunta" texto={exercicio.enunciado} />
+      {exercicio.contexto && <TextoComFormulas como="p" texto={exercicio.contexto} />}
       {exercicio.trecho && (
         <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}
           preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
@@ -1685,16 +1692,16 @@ function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mudar, av
       {dica && (
         <div className="aula-dica" role="note" aria-label={t.dicaAnterior}>
           <p className="aula-dica__titulo"><Icone nome="lampada" />{t.dicaAnterior}</p>
-          <p>{dica.feedback}</p>
-          {dica.observacao && <p>{dica.observacao}</p>}
+          <TextoComFormulas como="p" texto={dica.feedback} />
+          {dica.observacao && <TextoComFormulas como="p" texto={dica.observacao} />}
         </div>
       )}
       {/* Para consultar, depois da resposta e recolhido: a pergunta e as opções ficam no alto. */}
       {explicacao && (
         <details className="aula-consulta aula-consulta--recolhivel" onToggle={mostrarAberto}>
           <summary>{t.reverExplicacao}</summary>
-          <p>{explicacao}</p>
-          {exemplo && <p><strong>{t.exemplo}:</strong> {exemplo}</p>}
+          <TextoComFormulas como="p" texto={explicacao} />
+          {exemplo && <p><strong>{t.exemplo}:</strong> <TextoComFormulas texto={exemplo} /></p>}
         </details>
       )}
       {consulta && (
