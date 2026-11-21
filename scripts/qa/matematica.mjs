@@ -1,0 +1,258 @@
+#!/usr/bin/env node
+/*
+ * Teste com a IA REAL das lições de matemática (spec 15, marco 5): roda exatamente o que o servidor roda, sem banco, e mostra, por
+ * lição, o que a IA devolveu e o que o validador aceitou ou recusou (com o motivo), o tempo e os tokens de cada pedido e a conferência
+ * das contas (contas conferidas e puladas na resolução).
+ *
+ * Uso:
+ *   IA=deepseek DEEPSEEK_API_KEY=... node --import tsx scripts/qa/matematica.mjs --material <arquivo.json> [opções]
+ *   IA=openai   OPENAI_API_KEY=...   node --import tsx scripts/qa/matematica.mjs --trilha "Geometria analítica" [opções]
+ *
+ * Modos (um ou os dois):
+ *   --material <arquivo.json>  Foto, PDF ou caderno: o arquivo tem `paginas: [{ numero, texto }]` (a leitura que o app guarda, como
+ *                              `leitura-deepseek-flash.json`). Roda `gerarLicoesDoMaterial` (o pedido das lições e, em material de
+ *                              matemática, um pedido de figuras por lição) e `conteudosDasLicoes`, a mesma proposta do servidor.
+ *   --trilha "<assunto>"       Trilha de texto: gera o conteúdo de cada lição como no aceite (`gerarConteudo`), com o assunto como
+ *                              objetivo e título da trilha. As lições são as de `--licoes` ("Título 1;Título 2") ou três padrão.
+ * Opções:
+ *   --objetivo "<texto>"       Objetivo da pessoa no modo material (padrão: "Estudar este material").
+ *   --nome "<texto>"           Nome do material (padrão: o do arquivo).
+ *   --png <pasta>              Desenha em PNG o que a IA mandou e o validador aceitou (enunciado e retorno de cada figura).
+ *   --orcamento <segundos>     Orçamento da proposta do material (padrão: 85).
+ *
+ * A chave vem SÓ do ambiente do servidor (`OPENAI_API_KEY` ou `DEEPSEEK_API_KEY`) e nunca é impressa; nenhum pedido leva dado de conta.
+ * O que sai na tela são títulos, contagens, tempos, tokens e os motivos de recusa do validador (que podem citar uma fórmula da IA).
+ */
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join, resolve } from "node:path";
+
+// Os erros HTTP do servidor carregam o cliente do banco ao importar; nada aqui toca no banco, então um endereço fictício basta.
+process.env.DATABASE_URL ??= "postgresql://qa:qa@127.0.0.1:5432/qa";
+process.env.STUDOO_CHAVE_ASSINATURA ??= "0123456789abcdef".repeat(4);
+
+function lerArgumentos(argv) {
+  const opcoes = {};
+  for (let i = 0; i < argv.length; i += 1) {
+    const argumento = argv[i];
+    if (!argumento.startsWith("--")) continue;
+    const proximo = argv[i + 1];
+    opcoes[argumento.slice(2)] = proximo === undefined || proximo.startsWith("--") ? true : proximo;
+    if (opcoes[argumento.slice(2)] !== true) i += 1;
+  }
+  return opcoes;
+}
+
+const opcoes = lerArgumentos(process.argv.slice(2));
+const ia = (process.env.IA ?? "").trim();
+const chave = ia === "openai" ? process.env.OPENAI_API_KEY : ia === "deepseek" ? process.env.DEEPSEEK_API_KEY : undefined;
+if (!opcoes.material && !opcoes.trilha) {
+  console.error("Uso: IA=deepseek|openai (e a chave no ambiente) node --import tsx scripts/qa/matematica.mjs --material <arquivo.json> | --trilha \"assunto\" [--png pasta]");
+  process.exit(2);
+}
+if (!["openai", "deepseek"].includes(ia) || !chave?.trim()) {
+  console.error(`Faltam IA=openai|deepseek e a chave do provedor no ambiente (${ia === "deepseek" ? "DEEPSEEK_API_KEY" : "OPENAI_API_KEY"}). Nada foi chamado.`);
+  process.exit(2);
+}
+
+/* ----- Tempo e tokens de cada pedido ao provedor: uma cópia da resposta, sem tocar no que o servidor lê ----- */
+
+const chamadas = [];
+const fetchOriginal = globalThis.fetch;
+function rotuloDoPedido(corpo) {
+  try {
+    const dados = JSON.parse(corpo);
+    const nome = dados.text?.format?.name;
+    const sistema = String(dados.instructions ?? dados.input?.[0]?.content ?? dados.messages?.[0]?.content ?? "");
+    const usuario = dados.input?.[0]?.content?.[0]?.text ?? dados.messages?.[1]?.content ?? "";
+    let titulo = "";
+    try { titulo = JSON.parse(typeof usuario === "string" ? usuario : "{}").licao?.titulo ?? ""; } catch { /* o pedido de lição de trilha não é json */ }
+    const tipo = nome ?? (sistema.includes("UMA lição de matemática") ? "figuras_licao" : sistema.includes("Crie de 3 a 5 lições") ? "trilha_material" : "licao_studoo");
+    return { tipo, titulo };
+  } catch {
+    return { tipo: "pedido", titulo: "" };
+  }
+}
+globalThis.fetch = async (entrada, init) => {
+  const url = new URL(String(entrada instanceof Request ? entrada.url : entrada));
+  const inicio = performance.now();
+  const resposta = await fetchOriginal(entrada, init);
+  if (!/\/(?:responses|chat\/completions)$/.test(url.pathname)) return resposta;
+  const registro = { ...rotuloDoPedido(typeof init?.body === "string" ? init.body : ""), status: resposta.status, ms: 0, entrada: 0, saida: 0, texto: "" };
+  chamadas.push(registro);
+  resposta.clone().json().then((corpo) => {
+    registro.ms = performance.now() - inicio;
+    registro.entrada = corpo?.usage?.input_tokens ?? corpo?.usage?.prompt_tokens ?? 0;
+    registro.saida = corpo?.usage?.output_tokens ?? corpo?.usage?.completion_tokens ?? 0;
+    registro.texto = corpo?.output_text ?? corpo?.output?.flatMap((item) => item.content ?? []).filter((parte) => parte.type === "output_text").map((parte) => parte.text).join("") ?? corpo?.choices?.[0]?.message?.content ?? "";
+  }).catch(() => { registro.ms = performance.now() - inicio; });
+  return resposta;
+};
+const esperarCopias = () => new Promise((resolver) => setTimeout(resolver, 300));
+
+const segundos = (ms) => `${(ms / 1000).toFixed(1).replace(".", ",")} s`;
+const milhar = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const tokensDe = (lista) => ({ entrada: lista.reduce((s, c) => s + c.entrada, 0), saida: lista.reduce((s, c) => s + c.saida, 0) });
+const linhaDeTokens = (lista) => {
+  const { entrada, saida } = tokensDe(lista);
+  return `${milhar(entrada + saida)} tokens (${milhar(entrada)} de entrada, ${milhar(saida)} de saída)`;
+};
+
+/* ----- O que a IA mandou e o validador aceitou ----- */
+
+const contrato = await import("../../packages/contratos/src/aprendizado.ts");
+const { desenharVisual, desenhoParaSvg, visualParaEnunciado, visualRevelado, descricaoDaFigura } = contrato;
+const sharp = opcoes.png ? (await import("sharp")).default : null;
+const pastaPng = opcoes.png === true ? resolve("qa-matematica-png") : opcoes.png ? resolve(String(opcoes.png)) : null;
+if (pastaPng) mkdirSync(pastaPng, { recursive: true });
+
+async function desenhar(desenho, nome) {
+  if (!sharp || !pastaPng) return;
+  const svg = desenhoParaSvg(desenho, { fundo: "branco", larguraEmPixels: Math.round(desenho.largura * 3) });
+  writeFileSync(join(pastaPng, `${nome}.png`), await sharp(Buffer.from(svg)).png().toBuffer());
+}
+
+async function desenharConteudo(conteudo, prefixo) {
+  for (const [k, visual] of (conteudo.visuais ?? []).entries()) {
+    if (visual.tipo !== "formula") await desenhar(desenharVisual(visual, { tipo: "enunciado" }), `${prefixo}-visual${k + 1}`);
+  }
+  for (const [k, exercicio] of [conteudo.exercicio, ...(conteudo.extras ?? [])].entries()) {
+    if (!exercicio.visual) continue;
+    await desenhar(desenharVisual(visualParaEnunciado(exercicio.visual), { tipo: "enunciado" }), `${prefixo}-exercicio${k + 1}-enunciado`);
+    await desenhar(desenharVisual(visualRevelado(exercicio.visual), { tipo: "retorno" }), `${prefixo}-exercicio${k + 1}-retorno`);
+  }
+}
+
+const tiposDe = (visuais) => (visuais ?? []).map((visual) => visual.tipo).join(", ") || "nenhum";
+
+function imprimirMatematica(conteudo, relato) {
+  if (!relato) {
+    console.log(`  matemática: a IA não mandou visuais, figura nem resolução (visuais: ${tiposDe(conteudo.visuais)})`);
+    return { visuais: [0, 0], figuras: [0, 0], resolucao: [0, 0] };
+  }
+  const { visuais, figuras, resolucao } = relato;
+  console.log(`  visuais: ${visuais.aceitos} de ${visuais.enviados} aceitos (${tiposDe(conteudo.visuais)})`);
+  console.log(`  figura do exercício: ${figuras.enviadas === 0 ? "a IA não mandou" : `${figuras.aceitas} de ${figuras.enviadas} aceita${figuras.aceitas === 1 ? "" : "s"}`}`);
+  if (!resolucao.enviada) console.log("  resolução (Resolva comigo): a IA não mandou");
+  else if (resolucao.aceita) {
+    console.log(`  resolução (Resolva comigo): ACEITA · ${conteudo.resolucao.passos.length} passos · contas conferidas ${resolucao.conferidas ?? 0}, puladas ${resolucao.puladas ?? 0}`);
+  } else console.log("  resolução (Resolva comigo): RECUSADA (tudo ou nada: a lição fica com o exemplo em texto)");
+  for (const motivo of relato.motivos) console.log(`  recusado → ${motivo}`);
+  if (conteudo.exercicio.visual?.pontos?.some((ponto) => ponto.papel === "procurado")) {
+    console.log(`  descrição depois do acerto: ${descricaoDaFigura(visualRevelado(conteudo.exercicio.visual))}`);
+  }
+  return {
+    visuais: [visuais.aceitos, visuais.enviados],
+    figuras: [figuras.aceitas, figuras.enviadas],
+    resolucao: [resolucao.aceita ? 1 : 0, resolucao.enviada ? 1 : 0],
+  };
+}
+
+const resumo = { licoes: 0, visuais: [0, 0], figuras: [0, 0], resolucao: [0, 0], ms: 0, chamadas: [] };
+const somar = (alvo, parcial) => { alvo[0] += parcial[0]; alvo[1] += parcial[1]; };
+
+/* ----- Modo material (foto, PDF, caderno) ----- */
+
+async function rodarMaterial() {
+  const caminho = resolve(String(opcoes.material));
+  const arquivo = JSON.parse(readFileSync(caminho, "utf8"));
+  const paginas = (arquivo.paginas ?? []).map((pagina) => ({ numero: pagina.numero, texto: String(pagina.texto ?? ""), ...(pagina.rotulo ? { rotulo: pagina.rotulo } : {}) }));
+  const nome = String(opcoes.nome ?? basename(caminho));
+  const objetivo = String(opcoes.objetivo ?? "Estudar este material");
+  const { gerarLicoesDoMaterial, conteudosDasLicoes } = await import("../../src/servidor/estudio/licoes-do-material.ts");
+  const { materialEhDeMatematica } = await import("../../src/servidor/ia/matematica.ts");
+  console.log(`\n== Material: ${nome} (${arquivo.leitura ?? "leitura"}, ${paginas.length} página${paginas.length === 1 ? "" : "s"}, ${paginas.reduce((s, p) => s + p.texto.length, 0)} caracteres)`);
+  console.log(`   É de matemática pela regra de palavras? ${materialEhDeMatematica(objetivo, nome, paginas) ? "sim" : "NÃO (as lições saem sem figuras)"}`);
+  const antes = chamadas.length;
+  const inicio = performance.now();
+  let gerado;
+  try {
+    gerado = await gerarLicoesDoMaterial({ objetivo, nome, paginas }, { orcamentoMs: Number(opcoes.orcamento ?? 85) * 1000 });
+  } catch (erro) {
+    await esperarCopias();
+    console.log(`   A proposta FALHOU: ${erro?.codigo ?? erro?.message ?? erro} (${segundos(performance.now() - inicio)})`);
+    return;
+  }
+  await esperarCopias();
+  const dele = chamadas.slice(antes);
+  resumo.ms += performance.now() - inicio;
+  resumo.chamadas.push(...dele);
+  const base = dele.find((chamada) => chamada.tipo === "trilha_material");
+  console.log(`   Pedido das lições: ${base ? `${segundos(base.ms)} · ${linhaDeTokens([base])}` : `${segundos(gerado.tempos.licoes)}`} · ${gerado.licoes.length} lições · "${gerado.titulo}"`);
+  let conteudos;
+  let relatos;
+  try {
+    ({ conteudos, relatos } = conteudosDasLicoes({ licoes: gerado.licoes, figuras: gerado.figuras, paginas, materialId: "qa", nome, leitura: arquivo.leitura ?? "ocr", origem: "Material enviado · QA" }));
+  } catch (erro) {
+    console.log(`   O conteúdo FALHOU na validação das citações (${erro?.codigo ?? erro?.message}): uma lição citou um trecho que não está na página, e a proposta inteira seria recusada.`);
+    return;
+  }
+  for (const [i, conteudo] of conteudos.entries()) {
+    resumo.licoes += 1;
+    const tempo = gerado.tempos.figuras[i];
+    const figuras = dele.filter((chamada) => chamada.tipo === "figuras_licao" && chamada.titulo === gerado.licoes[i].titulo);
+    console.log(`\nLição ${i + 1} · "${conteudo.titulo}" (página ${conteudo.referencias[0].pagina}, trecho literal ok)`);
+    console.log(`  pergunta: ${conteudo.exercicio.enunciado}`);
+    if (gerado.matematica) console.log(`  figuras e resolução: ${tempo === undefined ? "não pedidas (sem tempo)" : `${segundos(tempo)}${figuras.length ? ` · ${linhaDeTokens(figuras)}` : ""}${gerado.figuras[i] ? "" : " · SEM RESPOSTA (a lição fica como era)"}`}`);
+    const contagens = imprimirMatematica(conteudo, relatos[i]);
+    somar(resumo.visuais, contagens.visuais); somar(resumo.figuras, contagens.figuras); somar(resumo.resolucao, contagens.resolucao);
+    await desenharConteudo(conteudo, `material-licao${i + 1}`);
+  }
+}
+
+/* ----- Modo trilha (lições de texto, como no aceite) ----- */
+
+async function rodarTrilha() {
+  const assunto = String(opcoes.trilha);
+  const titulos = String(opcoes.licoes ?? "Ponto médio de um segmento;Baricentro de um triângulo;Pontos colineares e o determinante").split(";").map((titulo) => titulo.trim()).filter(Boolean);
+  const esqueleto = {
+    gerador: ia === "openai" ? "openai-v1" : "deepseek-v1",
+    titulo: assunto,
+    objetivo: assunto,
+    origem: ia === "openai" ? "IA da OpenAI (teste)" : "IA da DeepSeek (teste)",
+    fluxos: [{ titulo: "Primeiros passos", licoes: titulos.map((titulo) => ({ titulo })) }],
+  };
+  const { configuracaoOpenAi, criarGeradorOpenAi } = await import("../../src/servidor/ia/openai.ts");
+  const { configuracaoDeepSeek, criarGeradorDeepSeek } = await import("../../src/servidor/ia/deepseek.ts");
+  const { analisarJson, normalizarLicao } = await import("../../src/servidor/ia/comum.ts");
+  const { licaoEhDeMatematica } = await import("../../src/servidor/ia/matematica.ts");
+  const config = ia === "openai" ? configuracaoOpenAi() : configuracaoDeepSeek();
+  if (!config) { console.error("A configuração do provedor não fechou (base e chave)."); process.exit(2); }
+  const gerador = ia === "openai" ? criarGeradorOpenAi(config) : criarGeradorDeepSeek(config);
+  console.log(`\n== Trilha: "${assunto}" · ${titulos.length} lições · IA ${ia} (${config.modelo})`);
+  for (const [i, titulo] of titulos.entries()) {
+    console.log(`\nLição ${i + 1} · "${titulo}" · de matemática pela regra de palavras? ${licaoEhDeMatematica(esqueleto, 0, i) ? "sim" : "NÃO"}`);
+    const antes = chamadas.length;
+    const inicio = performance.now();
+    let conteudo;
+    try {
+      conteudo = await gerador.gerarConteudo(esqueleto, 0, i, new AbortController().signal);
+    } catch (erro) {
+      await esperarCopias();
+      console.log(`  FALHOU: ${erro?.codigo ?? erro?.message ?? erro} (${segundos(performance.now() - inicio)})`);
+      continue;
+    }
+    await esperarCopias();
+    const dele = chamadas.slice(antes);
+    resumo.ms += performance.now() - inicio;
+    resumo.chamadas.push(...dele);
+    resumo.licoes += 1;
+    console.log(`  ${dele.length} pedido${dele.length === 1 ? "" : "s"} ao provedor: ${segundos(dele.reduce((s, c) => s + c.ms, 0))} · ${linhaDeTokens(dele)}${dele.length > 1 ? " (houve segunda tentativa)" : ""}`);
+    // O que a primeira resposta da IA tinha de matemática e o que o validador fez com ela (com os motivos).
+    let relato;
+    const primeira = dele[0]?.texto;
+    if (primeira) {
+      try { relato = normalizarLicao(analisarJson(primeira, true), "QA").matematica; } catch { /* resposta fora do formato: a segunda tentativa cuida */ }
+    }
+    const contagens = imprimirMatematica(conteudo, relato);
+    somar(resumo.visuais, contagens.visuais); somar(resumo.figuras, contagens.figuras); somar(resumo.resolucao, contagens.resolucao);
+    await desenharConteudo(conteudo, `trilha-licao${i + 1}`);
+  }
+}
+
+if (opcoes.material) await rodarMaterial();
+if (opcoes.trilha) await rodarTrilha();
+
+const { entrada, saida } = tokensDe(resumo.chamadas);
+console.log(`\n== Resumo: ${resumo.licoes} lições · visuais ${resumo.visuais[0]}/${resumo.visuais[1]} · figuras de exercício ${resumo.figuras[0]}/${resumo.figuras[1]} · resoluções ${resumo.resolucao[0]}/${resumo.resolucao[1]} · ${resumo.chamadas.length} pedidos · ${segundos(resumo.ms)} · ${milhar(entrada + saida)} tokens (${milhar(entrada)} de entrada, ${milhar(saida)} de saída)`);
+if (pastaPng) console.log(`   PNG em ${pastaPng}`);
+globalThis.fetch = fetchOriginal;
