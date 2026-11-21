@@ -67,8 +67,7 @@ const opcaoEstilos = StyleSheet.create({
   opcaoSelecionada: { borderColor: '#9FB1F0', backgroundColor: '#EEF2FF' },
   opcaoCerta: { borderColor: cores.sucessoClaro, backgroundColor: '#EEFAF3' },
   opcaoErrada: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
-  // 400: a opção pode levar fórmula em linha, e o peso da fórmula é o do texto (spec 15, seção 14).
-  opcaoTexto: { flex: 1, fontWeight: '400' },
+  opcaoTexto: { flex: 1, fontWeight: '700' },
   letra: { width: 30, height: 30, borderRadius: 9, borderWidth: 2, borderColor: cores.gelo, alignItems: 'center', justifyContent: 'center' },
   letraSelecionada: { borderColor: cores.acao, backgroundColor: cores.acao },
   letraCerta: { borderColor: cores.sucessoClaro, backgroundColor: cores.sucessoClaro },

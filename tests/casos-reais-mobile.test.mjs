@@ -133,10 +133,16 @@ test('peso do texto com fórmula em linha (spec 15, seção 14): 700 no problema
     assert.equal(peso(resolva, nome), '700', nome);
     assert.equal(pesoDoTexto(peso(resolva, nome)), 700, `${nome}: a fórmula em linha em 700`);
   }
-  // 400: frases dos passos, porquê e retorno do "Sua vez", fórmula da linha do passo feito, opções, dica e linhas extras do retorno.
-  for (const [fonte, nome] of [[resolva, 'frase'], [resolva, 'porqueErradoTexto'], [resolva, 'issoTexto'], [resolva, 'feitoFormula'], [opcao, 'opcaoTexto'], [licao, 'dicaTexto'], [licao, 'retornoExtra']]) {
-    assert.equal(peso(fonte, nome), '400', nome);
-    assert.equal(pesoDoTexto(peso(fonte, nome)), 400, `${nome}: a fórmula em linha em 400`);
+  // 400, só no "Resolva comigo": frases dos passos, porquê e retorno do "Sua vez", fórmula da linha do passo feito.
+  for (const nome of ['frase', 'porqueErradoTexto', 'issoTexto', 'feitoFormula']) {
+    assert.equal(peso(resolva, nome), '400', nome);
+    assert.equal(pesoDoTexto(peso(resolva, nome)), 400, `${nome}: a fórmula em linha em 400`);
+  }
+  // Componentes compartilhados com as lições sem matemática (e o app do TestFlight) ficam como estavam: opção 700, dica 600,
+  // linhas extras do retorno 700; a fórmula em linha sai em 700 neles (o motor desenha 400 ou 700, e 600 vira 700).
+  for (const [fonte, nome, antes] of [[opcao, 'opcaoTexto', '700'], [licao, 'dicaTexto', '600'], [licao, 'retornoExtra', '700']]) {
+    assert.equal(peso(fonte, nome), antes, `${nome} como antes`);
+    assert.equal(pesoDoTexto(peso(fonte, nome)), 700, `${nome}: a fórmula em linha em 700`);
   }
   // O texto da aula (estilos.texto, introdução) sem peso declarado: 400.
   const interfaceFonte = await ler('apps/mobile/src/interface.tsx');

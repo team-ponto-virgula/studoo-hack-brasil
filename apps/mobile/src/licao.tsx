@@ -1363,7 +1363,7 @@ const licaoEstilos = StyleSheet.create({
     backgroundColor: '#FFF8E6' },
   dicaTopo: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dicaTitulo: { color: '#7A4A00', fontFamily: fontes.corpo, fontWeight: '900', fontSize: 12, lineHeight: 16, letterSpacing: 0.6 },
-  dicaTexto: { color: '#5C3B00', fontFamily: fontes.corpo, fontWeight: '400', fontSize: 15, lineHeight: 21 },
+  dicaTexto: { color: '#5C3B00', fontFamily: fontes.corpo, fontWeight: '600', fontSize: 15, lineHeight: 21 },
   revisaoTexto: { flex: 1, color: cores.sucesso, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   // .aula-explicacao: o vão de 14 da etapa (sem margem própria).
   explicacao: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginTop: 14 },
@@ -1435,7 +1435,7 @@ const licaoEstilos = StyleSheet.create({
   encolhe: { flexShrink: 1, minHeight: 0 },
   retornoRolagem: { flexGrow: 0, flexShrink: 1 },
   retornoEsmaecer: { position: 'absolute', left: 0, right: 0, bottom: 0, height: 24 },
-  retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 14, lineHeight: 20 },
+  retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   retornoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -2 },
   retornoAcoesCompacto: { marginTop: 10 },
   metade: { flex: 1, minWidth: 0 },
