@@ -249,7 +249,20 @@ function TopoDaEntrada({ ilustracao, nivel, recolher, respiro }: { ilustracao: n
           </View>
         </View>
       )}
-      <Titulo foco testID="titulo-entrada" estilo={nivel >= 2 ? entradaEstilos.tituloCompacto : undefined}>{mensagens.entrada.titulo}</Titulo>
+      {/* Spec 16, item 10: sem a paisagem (o celular comum), o stu-acolhida de 72 acena à direita do título, alinhado ao topo
+          dele; o título encolhe para dar lugar (até 3 linhas em 360). Com movimento reduzido, o Stu fica parado. */}
+      {ilustracao > 0 ? (
+        <Titulo foco testID="titulo-entrada" estilo={nivel >= 2 ? entradaEstilos.tituloCompacto : undefined}>{mensagens.entrada.titulo}</Titulo>
+      ) : (
+        <View style={entradaEstilos.tituloComStu}>
+          <View style={entradaEstilos.tituloComStuTexto}>
+            <Titulo foco testID="titulo-entrada" estilo={nivel >= 2 ? entradaEstilos.tituloCompacto : undefined}>{mensagens.entrada.titulo}</Titulo>
+          </View>
+          <View testID="entrada-stu" style={entradaEstilos.stuDoTitulo} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+            <Stu nome="stu-acolhida" tamanho={STU_DO_TITULO} animado="laco" pausado={recolher} />
+          </View>
+        </View>
+      )}
       {/* Nível 3 (só em tela muito baixa): a descrição é a última a ceder e sai; o título e "Ver como funciona" ficam. */}
       {nivel < 3 && <Text testID="entrada-descricao" style={[estilos.introducao, nivel >= 2 && entradaEstilos.textoCompacto]}>{mensagens.entrada.texto}</Text>}
     </View>
@@ -510,7 +523,13 @@ function Entrada({ erroInicial, entrar, google, apple, criarConta, visitante, re
   );
 }
 
+/** O Stu ao lado do título da entrada no celular (spec 16, item 10; spec 13). */
+const STU_DO_TITULO = 72;
+
 const entradaEstilos = StyleSheet.create({
+  tituloComStu: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  tituloComStuTexto: { flex: 1, minWidth: 0 },
+  stuDoTitulo: { width: STU_DO_TITULO, flexShrink: 0 },
   divisor: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   linha: { flex: 1, height: 1, backgroundColor: cores.gelo },
   // A ilustração recortada: a caixa tem a altura que sobra e mostra a parte de baixo da paisagem de 140.

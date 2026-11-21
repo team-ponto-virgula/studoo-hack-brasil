@@ -130,3 +130,31 @@ test('item 14: o aviso "Música de fundo ligada." fica no alto, 8 abaixo do que 
   assert.match(interfaceApp, /const altoDoAviso = 8 \+ \(faixaFixa\n\s*\? Math\.max\(0, inicioDaFaixa - roladoDoAviso\) \+ alturaFaixa\n\s*: cabecalhoNaRolagem \? Math\.max\(0, alturaCabecalho - roladoDoAviso\) : 0\);/);
   assert.match(interfaceApp, /deCima \? \{ top: alto \} : \{ bottom: baixo \}/);
 });
+
+test('item 4: Conceito e Exemplo curtos ganham o stu-feliz de 72 acima do cartão, com o conjunto no meio da sobra', async () => {
+  const licao = await ler('licao.tsx');
+  const espacoDoStuDaEtapa = funcao(licao, 'espacoDoStuDaEtapa', 'const STU_DA_ETAPA = 72; const STU_DA_ETAPA_VAO = 12;\n');
+  // Visível 700: conteúdo de 300 sobra 400 (57%): o Stu entra e o espaço acima dele é (400 - 84) / 2.
+  assert.equal(espacoDoStuDaEtapa(300, 700), 158);
+  // Sobra de 39% não basta; conteúdo maior que a tela, também não.
+  assert.equal(espacoDoStuDaEtapa(428, 700), null);
+  assert.equal(espacoDoStuDaEtapa(420, 700), 98);
+  assert.equal(espacoDoStuDaEtapa(900, 700), null);
+  assert.equal(espacoDoStuDaEtapa(0, 700), null);
+  // Só no Conceito e no Exemplo (não no "Resolva comigo" nem com a ponte aberta), decorativo e sem oscilar.
+  assert.match(licao, /const leitura = \(etapa\.tipo === 'conceito' \|\| \(etapa\.tipo === 'exemplo' && !resolva\.ativo\)\) && !ponteAberta;/);
+  assert.match(licao, /espacoDoStuDaEtapa\(alturaConteudo\.current - acrescimoDoStu\.current, alturaVisivel\.current\)/);
+  assert.match(licao, /<View testID="stu-da-etapa" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden/);
+  assert.match(licao, /<Stu nome="stu-feliz" tamanho=\{STU_DA_ETAPA\} \/>/);
+});
+
+test('item 10: na entrada do celular, o stu-acolhida de 72 acena à direita do título (parado com movimento reduzido)', async () => {
+  const sessao = await ler('sessao.tsx');
+  assert.match(sessao, /<View testID="entrada-stu" style=\{entradaEstilos\.stuDoTitulo\} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>\n\s*<Stu nome="stu-acolhida" tamanho=\{STU_DO_TITULO\} animado="laco" pausado=\{recolher\} \/>/);
+  assert.match(sessao, /const STU_DO_TITULO = 72;/);
+  assert.match(sessao, /tituloComStu: \{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 \}/);
+  // Com a paisagem (tela alta), o Stu já está nela: não aparece duas vezes.
+  assert.match(sessao, /\{ilustracao > 0 \? \(\n\s*<Titulo foco testID="titulo-entrada"/);
+  // O laço do Stu para com movimento reduzido (o próprio componente do mascote).
+  assert.match(await ler('mascote.tsx'), /useMovimentoReduzido/);
+});

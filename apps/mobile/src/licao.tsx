@@ -385,8 +385,25 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     if (retomada && passo !== retomada.passo) setAvisoRetomada(false);
   }, [passo, retomada]);
 
+  /**
+   * Spec 16, item 4: no Conceito e no Exemplo curtos (cabem sem rolar e sobram 40% ou mais da área livre), o stu-feliz de 72
+   * entra acima do cartão e o conjunto fica no meio da sobra, entre o alto da aula e o rodapé. A conta usa a altura sem o
+   * que este ajuste acrescentou (o Stu e o espaço), para não oscilar. Com conteúdo maior, tudo fica em cima, como antes.
+   */
+  const [stuDaEtapa, setStuDaEtapa] = useState<number | null>(null);
+  const acrescimoDoStu = useRef(0);
+  acrescimoDoStu.current = stuDaEtapa === null ? 0 : stuDaEtapa + STU_DA_ETAPA + STU_DA_ETAPA_VAO;
+  useEffect(() => { setStuDaEtapa(null); }, [passo]);
+  function ajustarStuDaEtapa() {
+    if (!alturaVisivel.current || !alturaConteudo.current) return;
+    const leitura = (etapa.tipo === 'conceito' || (etapa.tipo === 'exemplo' && !resolva.ativo)) && !ponteAberta;
+    const espaco = leitura ? espacoDoStuDaEtapa(alturaConteudo.current - acrescimoDoStu.current, alturaVisivel.current) : null;
+    setStuDaEtapa((antes) => (antes === espaco || (antes !== null && espaco !== null && Math.abs(antes - espaco) < 3) ? antes : espaco));
+  }
+
   /** Confere se o fim do conteúdo (a legenda, o passo a passo) ainda está abaixo da parte visível. */
   function medirMais() {
+    ajustarStuDaEtapa();
     // Sem as duas medidas (a parte visível e a altura real do conteúdo), nada se decide: com uma delas em zero, o fim
     // parecia já à vista (iPhone, 20/11).
     if (!alturaVisivel.current || !alturaConteudo.current) return;
@@ -820,6 +837,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <Text style={[licaoEstilos.avisoTexto, { color: '#7A4A00' }]}>{t.revisaoRapida}</Text>
           </View>
         )}
+        {stuDaEtapa !== null && (etapa.tipo === 'conceito' || etapa.tipo === 'exemplo') && <StuDaEtapa espaco={stuDaEtapa} />}
         {etapa.tipo === 'conceito' && (
           <>
             {licao.concluida && (
@@ -1278,6 +1296,30 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
 
 /** O fundo do painel de retorno (o rodapé da aula depois da resposta) e o esmaecer do texto que rola. */
 const CORES_DO_PAINEL = { certa: '#E3F6EA', errada: '#FFF1E0' };
+
+/** O Stu de 72 acima do cartão curto do Conceito ou do Exemplo (spec 16, item 4), com 12 até o cartão. */
+export const STU_DA_ETAPA = 72;
+export const STU_DA_ETAPA_VAO = 12;
+
+/**
+ * O espaço acima do Stu que põe o conjunto (Stu e cartão) no meio da sobra, ou null quando não entra: o conteúdo (sem o
+ * Stu) precisa caber com o Stu e deixar 40% ou mais da área visível livre.
+ */
+export function espacoDoStuDaEtapa(conteudo: number, visivel: number): number | null {
+  if (conteudo <= 0 || visivel <= 0) return null;
+  const sobra = visivel - conteudo;
+  if (sobra < visivel * 0.4 || sobra < STU_DA_ETAPA + STU_DA_ETAPA_VAO) return null;
+  return Math.floor((sobra - STU_DA_ETAPA - STU_DA_ETAPA_VAO) / 2);
+}
+
+function StuDaEtapa({ espaco }: { espaco: number }) {
+  return (
+    <View testID="stu-da-etapa" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      style={{ paddingTop: espaco, marginBottom: STU_DA_ETAPA_VAO, alignItems: 'center' }}>
+      <Stu nome="stu-feliz" tamanho={STU_DA_ETAPA} />
+    </View>
+  );
+}
 
 const licaoEstilos = StyleSheet.create({
   // A aula da web tem 16 de respiro nos lados no celular (clamp(16px, 4vw, 48px) em aula.css), no alto, no meio e no
