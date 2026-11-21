@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TextoComFormulas } from './texto-com-formulas';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { usePulinho } from './animacoes';
@@ -49,8 +50,8 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
         </View>
         {/* Como na web: o texto da opção marcada fica verde no acerto e âmbar no erro. */}
         {/* Marcada (antes de verificar), o texto vai para o azul escuro da web (.opcoes label:has(input:checked)). */}
-        <Text style={[estilos.texto, opcaoEstilos.opcaoTexto, selecionada && !retorno && { color: cores.acaoEscura },
-          retorno === 'certa' && { color: cores.sucesso }, retorno === 'errada' && { color: corTextoErro }]}>{texto}</Text>
+        <TextoComFormulas texto={texto} estilo={[estilos.texto, opcaoEstilos.opcaoTexto, selecionada && !retorno && { color: cores.acaoEscura },
+          retorno === 'certa' && { color: cores.sucesso }, retorno === 'errada' && { color: corTextoErro }]} />
         </View>
       </Pressable>
     </Animated.View>

@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
+import { TextoComFormulas } from './texto-com-formulas';
 import { AccessibilityInfo, AppState, Image, Platform, Pressable, StyleSheet, Text, TextInput, View, useWindowDimensions, type PressableProps, type StyleProp, type TextStyle, type ViewStyle } from 'react-native';
 import * as Speech from 'expo-speech';
 import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder } from 'expo-audio';
@@ -482,7 +483,8 @@ export function Falas({ falas }: { falas: Fala[] }) {
  * Numa lição em português, o texto fica como está.
  */
 export function TextoComFalas({ texto, idioma, estilo }: { texto: string; idioma?: string; estilo?: object }) {
-  if (!idioma || idioma.toLowerCase().startsWith('pt')) return <Text style={estilo}>{texto}</Text>;
+  // Em português (a matemática), a fórmula em linha no meio da frase (spec 15); as frases para ouvir são das outras línguas.
+  if (!idioma || idioma.toLowerCase().startsWith('pt')) return <TextoComFormulas texto={texto} estilo={estilo as StyleProp<TextStyle>} />;
   const partes = texto.split(/“([^”]+)”/);
   const tocaveis = partes.some((parte, indice) => indice % 2 === 1 && !/[ãõçáéíóúâêôà]/i.test(parte));
   return (

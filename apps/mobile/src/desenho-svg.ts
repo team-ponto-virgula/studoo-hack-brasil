@@ -21,8 +21,12 @@ import {
  */
 
 /** A cor de um papel; um papel desconhecido (contrato mais novo que o app) cai na cor do texto, nunca some. */
-export function corDoPapel(papel: PapelDeCor | undefined): string | undefined {
+const corDoPapelOuTexto = (papel: PapelDeCor | undefined, corDoTexto?: string) => corDoPapel(papel, corDoTexto);
+
+export function corDoPapel(papel: PapelDeCor | undefined, corDoTexto?: string): string | undefined {
   if (!papel) return undefined;
+  // A fórmula em linha toma a cor da frase em volta (o verde do retorno, o âmbar da dica): fora dos destaques, ela não tem cor.
+  if (papel === 'texto' && corDoTexto) return corDoTexto;
   return (PALETA_DO_DESENHO as Record<string, string>)[papel] ?? PALETA_DO_DESENHO.texto;
 }
 
@@ -38,7 +42,8 @@ const tracos = (p: { tracejado?: readonly [number, number]; opacidade?: number }
 });
 
 /** Uma primitiva do motor como elemento de react-native-svg; `null` para um tipo que este app não conhece (contrato mais novo). */
-export function elementoDaPrimitiva(primitiva: Primitiva): ElementoSvg | null {
+export function elementoDaPrimitiva(primitiva: Primitiva, corDoTexto?: string): ElementoSvg | null {
+  const corDoPapel = (papel: PapelDeCor | undefined) => corDoPapelOuTexto(papel, corDoTexto);
   switch (primitiva.tipo) {
     case 'linha':
       return { elemento: 'Line', props: {

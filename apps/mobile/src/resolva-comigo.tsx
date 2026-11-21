@@ -14,6 +14,7 @@ import {
   noSuaVez, resolucaoUtil, respostaValida, tentarDeNovo, visualDoPasso, voltar, type EstadoResolva,
 } from './resolva-comigo-regras';
 import { tocaSons } from './sons';
+import { TextoComFormulas } from './texto-com-formulas';
 import { cores, fontes } from './tema';
 
 /*
@@ -31,8 +32,10 @@ function formulaEmTexto(latex: string | undefined): { texto: string; falado: str
   return lida.ok ? { texto: formulaLinear(lida.arvore), falado: falarFormula(lida.arvore) } : null;
 }
 
+/** A opção do "Sua vez" como texto com fórmula em linha: a fórmula da opção vai marcada (`$…$`) e o motor a desenha. */
 function textoDaOpcao(opcao: OpcaoDoSuaVez): string {
-  return opcao.texto ?? formulaEmTexto(opcao.formula)?.texto ?? '';
+  if (opcao.texto) return opcao.texto;
+  return opcao.formula && formulaEmTexto(opcao.formula) ? `$${opcao.formula}$` : '';
 }
 
 function FormulaEmBloco({ latex, testID }: { latex: string | undefined; testID?: string }) {
@@ -67,7 +70,7 @@ function LinhaFeita({ passo, numero }: { passo: PassoDaResolucao; numero: number
       </Pressable>
       {aberto && (
         <View style={{ gap: 8, paddingTop: 6 }}>
-          <Text style={estilos.feitoTexto}>{passo.texto}</Text>
+          <TextoComFormulas texto={passo.texto} estilo={estilos.feitoTexto} />
           <FormulaEmBloco latex={passo.formula} />
         </View>
       )}
@@ -93,7 +96,7 @@ function SuaVez({ passo, estado, ocupado, escolher }: {
     <View style={{ gap: 12 }}>
       {!revelado && <FormulaEmBloco latex={formulaDeContexto(estado)} testID="resolva-formula-contexto" />}
       <View style={estilos.seloSuaVez}><Text style={estilos.seloSuaVezTexto}>{t.suaVez.toUpperCase()}</Text></View>
-      <Text testID="resolva-pergunta" style={estilos.pergunta}>{tentativa.pergunta}</Text>
+      <TextoComFormulas testID="resolva-pergunta" texto={tentativa.pergunta} estilo={estilos.pergunta} />
       <View accessibilityRole="radiogroup" accessibilityLabel={tentativa.pergunta} style={{ gap: 10 }}>
         {tentativa.opcoes.map((opcao, numero) => (
           <Opcao key={numero} id={`suavez-${numero}`} letra={letras[numero]} texto={textoDaOpcao(opcao)}
@@ -103,13 +106,13 @@ function SuaVez({ passo, estado, ocupado, escolher }: {
       </View>
       {resposta && !resposta.correta && (
         <View testID="resolva-porque" accessibilityLiveRegion="polite" style={estilos.porqueErrado}>
-          <Text style={estilos.porqueErradoTexto}>{resposta.porque}</Text>
+          <TextoComFormulas texto={resposta.porque} estilo={estilos.porqueErradoTexto} />
         </View>
       )}
       {resposta && revelado && (
         <View testID="resolva-isso" accessibilityLiveRegion="polite" style={estilos.isso}>
           {resposta.correta && <Text style={estilos.issoTitulo}>{t.isso}</Text>}
-          <Text style={estilos.issoTexto}>{resposta.correta ? resposta.porque : resposta.porqueDaCerta}</Text>
+          <TextoComFormulas texto={(resposta.correta ? resposta.porque : resposta.porqueDaCerta) ?? ''} estilo={estilos.issoTexto} />
           <FormulaEmBloco latex={passo.formula} testID="resolva-formula-revelada" />
         </View>
       )}
@@ -128,7 +131,7 @@ function CartaoDoPasso({ passo, estado, ultimo, ocupado, escolher, referenciaDaF
       { opacity: aparecer, transform: [{ translateY: aparecer.interpolate({ inputRange: [0, 1], outputRange: [8, 0] }) }] }]}>
       <View style={estilos.cartaoTopo}>
         <Stu nome={ultimo ? 'stu-animado' : 'stu-concentrado'} tamanho={40} />
-        <Text ref={referenciaDaFrase} testID="resolva-frase" accessible style={estilos.frase}>{passo.texto}</Text>
+        <TextoComFormulas referencia={referenciaDaFrase} testID="resolva-frase" accessible texto={passo.texto} estilo={estilos.frase} />
       </View>
       {passo.tentativa ? <SuaVez passo={passo} estado={estado} ocupado={ocupado} escolher={escolher} />
         : <FormulaEmBloco latex={passo.formula} testID="resolva-formula" />}
@@ -213,7 +216,7 @@ export function useResolvaComigo({ licao, responder, aoTerminar, visivel }: {
 
   const corpo = (
     <View testID="resolva-comigo" style={{ gap: 14 }}>
-      <Text testID="resolva-problema" accessibilityRole="header" style={estilos.problema}>{resolucao.problema}</Text>
+      <TextoComFormulas testID="resolva-problema" accessibilityRole="header" texto={resolucao.problema} estilo={estilos.problema} />
       {/* O desenho de cima troca no mesmo lugar quando o passo mexe nele; o procurado só vira resposta no último passo. */}
       {visual && <DesenhoDoVisual visual={visual} contexto={contextoDoPasso(estado)} testID="resolva-visual" entrada={false} />}
       <Indicador atual={estado.atual} total={estado.total} />

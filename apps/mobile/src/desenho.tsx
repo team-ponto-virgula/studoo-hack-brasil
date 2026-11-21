@@ -34,7 +34,7 @@ export const DesenhoSvg = memo(function DesenhoSvg({ desenho, rotulo, testID, es
   entrada?: boolean;
 }) {
   const [largura, setLargura] = useState(0);
-  const elementos = useMemo(() => montar(desenho.primitivas.map(elementoDaPrimitiva)), [desenho]);
+  const elementos = useMemo(() => montar(desenho.primitivas.map((primitiva) => elementoDaPrimitiva(primitiva))), [desenho]);
   const medidas = medidasNaTela(desenho, largura);
   const aparecer = useAparecer(0, 200);
   const svg = largura > 0 && (
