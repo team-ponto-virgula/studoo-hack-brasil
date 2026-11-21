@@ -283,6 +283,22 @@ export function nomeDeQuemCompartilhou(recebida: { nome?: string | null } | null
   return nome ? nome : null;
 }
 
+/**
+ * Um estado só, curto, do compartilhamento da própria trilha (spec 16, item 31), no botão do alto do mapa e no selo do
+ * cartão de Minhas trilhas: sem link, "Compartilhar"; aprovado, "Compartilhada"; à espera da equipe, "Em revisão"; recusado,
+ * "Não publicada". O texto longo fica só no Perfil e na folha de compartilhar. A revisão vem em `link.moderacao` quando o
+ * servidor a manda no resumo da trilha (sem ela, vale "Compartilhada", como hoje).
+ */
+export type EstadoCurtoDoCompartilhar = 'compartilhar' | 'compartilhada' | 'emRevisao' | 'naoPublicada';
+export function estadoCurtoDoCompartilhar(marcas: Pick<MarcasCompartilhar, 'link'>): EstadoCurtoDoCompartilhar {
+  if (!marcas.link) return 'compartilhar';
+  const moderacao = (marcas.link as { moderacao?: 'pendente' | 'aprovado' | 'recusado' | null }).moderacao;
+  return moderacao === 'pendente' ? 'emRevisao' : moderacao === 'recusado' ? 'naoPublicada' : 'compartilhada';
+}
+export function rotuloCurtoDoCompartilhar(estado: EstadoCurtoDoCompartilhar): string {
+  return estado === 'compartilhar' ? m.entrada : estado === 'compartilhada' ? m.selo : estado === 'emRevisao' ? seg.seloEmRevisao : seg.seloNaoPublicada;
+}
+
 /** "Compartilhada" (selo da dona) ou "Compartilhada por Ana", com a foto de agora (trilha recebida), como `MarcaCompartilhar`. */
 export function MarcaCompartilhar({ marcas }: { marcas: MarcasCompartilhar }) {
   if (marcas.recebida) {
@@ -293,6 +309,16 @@ export function MarcaCompartilhar({ marcas }: { marcas: MarcasCompartilhar }) {
       <View style={socialEstilos.marcaRecebida}>
         {foto && <Avatar nome={nome} cor="azul" foto={foto} tamanho={24} />}
         <FraseComNome frase={m.compartilhadaPor(nome)} nome={nome} perfilId={perfilId} estilo={socialEstilos.marcaRecebidaTexto} />
+      </View>
+    );
+  }
+  const estado = estadoCurtoDoCompartilhar(marcas);
+  if (estado === 'emRevisao' || estado === 'naoPublicada') {
+    // O selo neutro ("Em revisão") ou o âmbar ("Não publicada") da spec 14, sem o texto longo.
+    const recusada = estado === 'naoPublicada';
+    return (
+      <View testID={recusada ? 'selo-nao-publicada' : 'selo-em-revisao'} style={[socialEstilos.seloEstado, recusada && socialEstilos.seloEstadoAlerta]}>
+        <Text style={[socialEstilos.seloEstadoTexto, recusada && socialEstilos.seloEstadoAlertaTexto]}>{rotuloCurtoDoCompartilhar(estado)}</Text>
       </View>
     );
   }
@@ -1139,6 +1165,11 @@ export const socialEstilos = StyleSheet.create({
   marcaRecebidaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 14, lineHeight: 21, fontWeight: '800' },
   seloCompartilhada: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start', marginBottom: 6, paddingHorizontal: 10,
     paddingVertical: 3, borderRadius: 999, backgroundColor: cores.ceu },
+  // Os selos da spec 14: neutro (#F1F4FD / #5E6A85) e âmbar (#FFF6EA / #9A5B00), 13 px 800, no lugar do "Compartilhada".
+  seloEstado: { alignSelf: 'flex-start', marginBottom: 6, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#F1F4FD' },
+  seloEstadoTexto: { color: '#5E6A85', fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  seloEstadoAlerta: { backgroundColor: '#FFF6EA' },
+  seloEstadoAlertaTexto: { color: '#9A5B00' },
   seloCompartilhadaTexto: { color: cores.acaoEscura, fontFamily: fontes.corpo, fontSize: 13, lineHeight: 19.5, fontWeight: '900' },
   trilhaRecebida: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', columnGap: 10, rowGap: 4, marginTop: 8 },
   trilhaRecebidaTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 16, lineHeight: 24, fontWeight: '800' },

@@ -203,3 +203,24 @@ test('item 14 (ee85828): o balão do nó fecha o aviso do alto na hora; o aviso 
   assert.match(faixa, /<Pressable testID="aviso-acao" accessibilityRole="button"/);
   assert.doesNotMatch(faixa, /onPress=\{dispensar\}|onTouch/);
 });
+
+test('item 31: um estado só, curto, no botão do mapa e no selo do cartão (Compartilhar, Compartilhada, Em revisão, Não publicada)', async () => {
+  const social = await ler('social.tsx');
+  const estudo = await ler('estudo.tsx');
+  const estadoCurtoDoCompartilhar = funcao(social, 'estadoCurtoDoCompartilhar');
+  assert.equal(estadoCurtoDoCompartilhar({}), 'compartilhar');
+  assert.equal(estadoCurtoDoCompartilhar({ link: { codigo: 'x', noPerfil: false } }), 'compartilhada');
+  assert.equal(estadoCurtoDoCompartilhar({ link: { codigo: 'x', noPerfil: false, moderacao: 'aprovado' } }), 'compartilhada');
+  assert.equal(estadoCurtoDoCompartilhar({ link: { codigo: 'x', noPerfil: true, moderacao: 'pendente' } }), 'emRevisao');
+  assert.equal(estadoCurtoDoCompartilhar({ link: { codigo: 'x', noPerfil: true, moderacao: 'recusado' } }), 'naoPublicada');
+  assert.match(social, /estado === 'compartilhar' \? m\.entrada : estado === 'compartilhada' \? m\.selo : estado === 'emRevisao' \? seg\.seloEmRevisao : seg\.seloNaoPublicada/);
+  assert.match(estudo, /<Botao rotulo=\{rotuloCurtoDoCompartilhar\(estadoCurtoDoCompartilhar\(plano\)\)\} iconeAntes="compartilhar"/);
+  // No cartão: o selo neutro ou o âmbar da spec 14, sem o texto longo.
+  const marca = social.slice(social.indexOf('export function MarcaCompartilhar('), social.indexOf('export function TrilhaRecebida('));
+  assert.match(marca, /testID=\{recusada \? 'selo-nao-publicada' : 'selo-em-revisao'\}/);
+  assert.doesNotMatch(marca, /seg\.emRevisao|seg\.naoPublicada\b/);
+  assert.match(social, /seloEstado: \{ alignSelf: 'flex-start', marginBottom: 6, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#F1F4FD' \}/);
+  assert.match(social, /seloEstadoAlertaTexto: \{ color: '#9A5B00' \}/);
+  assert.match(contrato, /seloEmRevisao: 'Em revisão',/);
+  assert.match(contrato, /seloNaoPublicada: 'Não publicada',/);
+});

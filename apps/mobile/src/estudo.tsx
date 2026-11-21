@@ -27,7 +27,7 @@ import { focarSemRolar, focoVisivel } from './foco';
 import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, raioQueCobre, rolagemDaTrilhaPronta, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { Stu } from './mascote';
 import { ouvirVoltar } from './voltar';
-import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida } from './social';
+import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida, estadoCurtoDoCompartilhar, rotuloCurtoDoCompartilhar } from './social';
 import { PerfilSemSocial, TelaPerfil } from './perfil';
 import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, ProvedorBloqueio, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
@@ -2023,7 +2023,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       {(comCompartilhar || configurar) && (
         <View style={[estudoEstilos.acoesTopo, comCompartilhar && estudoEstilos.acoesTopoComCompartilhar]}>
           {!plano.recebida && compartilhar && (
-            <Botao rotulo={plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada} iconeAntes="compartilhar" variante="secundario"
+            <Botao rotulo={rotuloCurtoDoCompartilhar(estadoCurtoDoCompartilhar(plano))} iconeAntes="compartilhar" variante="secundario"
               testID="plano-compartilhar" nomeAcessivel={mensagens.compartilhar.entradaRotulo(plano.titulo)} desativado={ocupado} acao={compartilhar} />
           )}
           {configurar && <BotaoConfigurar titulo={plano.titulo} desativado={ocupado} acao={configurar} />}
