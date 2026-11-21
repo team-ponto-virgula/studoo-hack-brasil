@@ -54,7 +54,8 @@ const recusado = (bruto, opcoes) => {
 
 test("X-Studoo-Capacidades: lista com versão, desconhecidos ignorados, o servidor responde pelo menor", () => {
   assert.equal(CABECALHO_CAPACIDADES, "X-Studoo-Capacidades");
-  assert.equal(CAPACIDADES_DESTE_CLIENTE, "visuais@1,resolucao@1");
+  assert.equal(CAPACIDADES_DESTE_CLIENTE, "visuais@2,resolucao@1");
+  assert.deepEqual(lerCapacidades(CAPACIDADES_DESTE_CLIENTE), { visuais: 2, resolucao: 1 }, "o que o cliente manda é o que o servidor entrega: funcao incluída");
   assert.deepEqual(lerCapacidades("visuais@1,resolucao@1"), { visuais: 1, resolucao: 1 });
   assert.deepEqual(lerCapacidades(" Visuais@1 , RESOLUCAO@1 "), { visuais: 1, resolucao: 1 });
   assert.deepEqual(lerCapacidades("visuais@1"), { visuais: 1, resolucao: 0 });
