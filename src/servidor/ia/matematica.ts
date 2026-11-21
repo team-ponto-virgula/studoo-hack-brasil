@@ -78,13 +78,21 @@ export type RelatoDaMatematica = {
   resolucao: { enviada: boolean; aceita: boolean; conferidas?: number; puladas?: number };
   /** Por que cada coisa recusada foi recusada (o texto do validador). Não vai para o registro do servidor. */
   motivos: string[];
+  /** O que o servidor consertou na COR das fórmulas antes de validar (realces a mais, `\resposta` fora do último passo). Só apresentação. */
+  reparos: string[];
+  /** A segunda tentativa do pedido de figuras e resolução, quando a resolução da primeira foi recusada: o motivo que foi dito à IA e se a segunda valeu. */
+  novaTentativa?: NovaTentativaDaResolucao;
 };
+
+/** A segunda tentativa: o motivo que foi dito à IA, se a segunda resolução valeu e, se não, por que foi recusada de novo. */
+export type NovaTentativaDaResolucao = { motivo: string; aceita: boolean; motivoDaSegunda?: string };
 
 /** Junta o que os três validadores disseram num relato, ou `undefined` quando o modelo não mandou nada de matemática. */
 export function relatoDaMatematica(
   visuais: ReturnType<typeof lerVisuaisDoModelo>,
   figuras: { onde: string; enviada: boolean; aceita: boolean; motivo?: string }[],
   resolucao: ReturnType<typeof lerResolucaoDoModelo>,
+  novaTentativa?: NovaTentativaDaResolucao,
 ): RelatoDaMatematica | undefined {
   const enviadas = figuras.filter((figura) => figura.enviada);
   if (visuais.enviados === 0 && enviadas.length === 0 && !resolucao.enviada) return undefined;
@@ -97,22 +105,179 @@ export function relatoDaMatematica(
       ...enviadas.flatMap((figura) => (figura.motivo ? [`${figura.onde}.visual: ${figura.motivo}`] : [])),
       ...(resolucao.motivo ? [`resolucao: ${resolucao.motivo}`] : []),
     ],
+    reparos: [...visuais.reparos, ...resolucao.reparos],
+    ...(novaTentativa ? { novaTentativa } : {}),
   };
 }
 
+/**
+ * A frase que volta à IA quando a resolução foi recusada (estrutura, formato ou conta): o motivo do validador, que já traz as letras e os
+ * valores quando é conta (`com k = 3/2`), e o que fazer. É a ÚNICA nova tentativa: se a segunda também for recusada, fica o tudo ou nada.
+ */
+export function correcaoDaResolucao(motivo: string): string {
+  const dito = motivo.length > 300 ? `${motivo.slice(0, 299)}…` : motivo;
+  return `O "Resolva comigo" da sua resposta anterior foi RECUSADO: ${dito}. Refaça a resolução corrigindo exatamente isso e conferindo cada conta, com OUTROS números que os da pergunta.`;
+}
+
+/** O motivo da recusa da resolução no relato (`resolucao: <motivo>`), ou `undefined` se ela não foi recusada. */
+export function motivoDaResolucao(relato: RelatoDaMatematica | undefined): string | undefined {
+  if (!relato?.resolucao.enviada || relato.resolucao.aceita) return undefined;
+  return relato.motivos.find((motivo) => motivo.startsWith("resolucao: "))?.slice("resolucao: ".length);
+}
+
+/** Quanto a matemática de uma lição vale, para escolher entre duas respostas: cada visual e figura aceitos conta 1, a resolução aceita conta 2. */
+export function valorDaMatematica(relato: RelatoDaMatematica | undefined): number {
+  return relato ? relato.visuais.aceitos + relato.figuras.aceitas + (relato.resolucao.aceita ? 2 : 0) : 0;
+}
+
 /** O relato em contagens, para o registro do servidor (sem os motivos, que citam fórmulas). */
-export function contagensDoRelato(relato: RelatoDaMatematica): { visuais: string; figuras: string; resolucao: "aceita" | "recusada" | "sem" } {
+export function contagensDoRelato(relato: RelatoDaMatematica): { visuais: string; figuras: string; resolucao: "aceita" | "recusada" | "sem"; reparos?: number } {
   return {
     visuais: `${relato.visuais.aceitos}/${relato.visuais.enviados}`,
     figuras: `${relato.figuras.aceitas}/${relato.figuras.enviadas}`,
     resolucao: relato.resolucao.enviada ? (relato.resolucao.aceita ? "aceita" : "recusada") : "sem",
+    ...(relato.reparos.length > 0 ? { reparos: relato.reparos.length } : {}),
   };
 }
 
+/* ----- Reparo de apresentação: a COR da fórmula, e só ela ----- */
+
+/*
+ * A IA erra a cor da fórmula com frequência: três realces onde o limite é dois, `\resposta` num passo que não é o último ou num visual da
+ * lição. O validador recusa a fórmula (e, num passo, a resolução inteira) por isso, e a conta estava certa. Antes dele, o realce que não vale
+ * é desembrulhado: saem o comando e as chaves, o texto de dentro fica e a conta é a mesma. É SÓ isso: o `alt` que entrega o procurado, a
+ * conta que não fecha, o papel de um ponto e a estrutura (o "Sua vez" que falta) continuam recusados, e o relato conta o que foi consertado.
+ */
+
+const MAXIMO_DE_REALCES = 2;
+
+interface RegrasDeRealce {
+  /** `\resposta` vale só na fórmula do último passo (nunca nos visuais da lição nem nas opções). */
+  resposta: boolean;
+  /** `\procurado` não vale no último passo: o valor já foi achado. */
+  procurado: boolean;
+}
+
+/** O `}` que fecha a `{` de `abertura`, contando chaves e pulando o que vem depois de uma barra; -1 se não fecha. */
+function fechamento(texto: string, abertura: number): number {
+  let nivel = 0;
+  for (let i = abertura; i < texto.length; i += 1) {
+    if (texto[i] === "\\") i += 1;
+    else if (texto[i] === "{") nivel += 1;
+    else if (texto[i] === "}") {
+      nivel -= 1;
+      if (nivel === 0) return i;
+    }
+  }
+  return -1;
+}
+
+/**
+ * A fórmula com os realces que não valem desembrulhados: dentro de outro realce, `\resposta` onde não vale, `\procurado` no passo da resposta
+ * e, passando de 2, os que vêm depois dos dois primeiros (o texto de dentro fica). Devolve os motivos, um por realce desembrulhado.
+ */
+export function reescreverRealces(latex: string, regras: RegrasDeRealce): { latex: string; motivos: string[] } {
+  const motivos: string[] = [];
+  let mantidos = 0;
+  const rever = (texto: string, dentro: boolean): string => {
+    let saida = "";
+    let i = 0;
+    while (i < texto.length) {
+      if (texto[i] !== "\\") {
+        saida += texto[i];
+        i += 1;
+        continue;
+      }
+      const achado = /^\\(foco|procurado|resposta)\s*\{/.exec(texto.slice(i, i + 40));
+      const abre = achado ? i + achado[0].length - 1 : -1;
+      const fecha = achado ? fechamento(texto, abre) : -1;
+      if (!achado || fecha < 0) {
+        // Outro comando (ou um realce sem fechar, que o validador recusa por si): passa como está.
+        saida += texto.slice(i, i + 2);
+        i += 2;
+        continue;
+      }
+      const nome = achado[1];
+      const motivo = dentro
+        ? "dentro de outro realce"
+        : nome === "resposta" && !regras.resposta
+          ? "\\resposta fora do último passo"
+          : nome === "procurado" && !regras.procurado
+            ? "\\procurado no passo da resposta"
+            : mantidos >= MAXIMO_DE_REALCES
+              ? `mais de ${MAXIMO_DE_REALCES} realces`
+              : null;
+      const conteudo = texto.slice(abre + 1, fecha);
+      if (motivo) {
+        motivos.push(motivo);
+        saida += rever(conteudo, dentro);
+      } else {
+        mantidos += 1;
+        saida += `\\${nome}{${rever(conteudo, true)}}`;
+      }
+      i = fecha + 1;
+    }
+    return saida;
+  };
+  return { latex: rever(latex, false), motivos };
+}
+
+/** Os motivos juntos por tipo: "passo 2: 1 realce desembrulhado (mais de 2 realces)". */
+function reparoDe(onde: string, motivos: readonly string[]): string[] {
+  const contagem = new Map<string, number>();
+  for (const motivo of motivos) contagem.set(motivo, (contagem.get(motivo) ?? 0) + 1);
+  return [...contagem].map(([motivo, vezes]) => `${onde}: ${vezes} realce${vezes === 1 ? "" : "s"} desembrulhado${vezes === 1 ? "" : "s"} (${motivo})`);
+}
+
+const ehObjeto = (valor: unknown): valor is Record<string, unknown> => valor !== null && typeof valor === "object" && !Array.isArray(valor);
+
+/** A fórmula de um campo (`latex` ou `formula`), reparada; o resto do objeto não muda. */
+function repararCampo(objeto: Record<string, unknown>, campo: string, regras: RegrasDeRealce, onde: string, reparos: string[]): Record<string, unknown> {
+  const fonte = objeto[campo];
+  if (typeof fonte !== "string" || !fonte.includes("\\")) return objeto;
+  const { latex, motivos } = reescreverRealces(fonte, regras);
+  if (motivos.length === 0) return objeto;
+  reparos.push(...reparoDe(onde, motivos));
+  return { ...objeto, [campo]: latex };
+}
+
+/** A resolução que a IA mandou, com a cor das fórmulas dos passos e das opções consertada. Nada além disso muda. */
+export function repararResolucao(valor: unknown): { valor: unknown; reparos: string[] } {
+  if (!ehObjeto(valor) || !Array.isArray(valor.passos)) return { valor, reparos: [] };
+  const reparos: string[] = [];
+  const total = valor.passos.length;
+  const passos = valor.passos.map((passo, posicao) => {
+    if (!ehObjeto(passo)) return passo;
+    const ultimo = posicao === total - 1;
+    const onde = `passo ${posicao + 1}`;
+    let novo = repararCampo(passo, "formula", { resposta: ultimo, procurado: !ultimo }, onde, reparos);
+    const tentativa = novo.tentativa;
+    if (ehObjeto(tentativa) && Array.isArray(tentativa.opcoes)) {
+      const opcoes = tentativa.opcoes.map((opcao, indice) => (ehObjeto(opcao) ? repararCampo(opcao, "formula", { resposta: false, procurado: true }, `${onde}, opção ${indice + 1}`, reparos) : opcao));
+      if (opcoes.some((opcao, indice) => opcao !== (tentativa.opcoes as unknown[])[indice])) novo = { ...novo, tentativa: { ...tentativa, opcoes } };
+    }
+    return novo;
+  });
+  return reparos.length > 0 ? { valor: { ...valor, passos }, reparos } : { valor, reparos };
+}
+
+/** Os visuais da lição, com a cor das fórmulas consertada: num visual da lição `\resposta` não vale. As figuras não têm fórmula. */
+export function repararVisuais(valor: unknown): { valor: unknown; reparos: string[] } {
+  if (!Array.isArray(valor)) return { valor, reparos: [] };
+  const reparos: string[] = [];
+  const visuais = valor.map((visual, posicao) => {
+    if (!ehObjeto(visual) || visual.tipo !== "formula") return visual;
+    const campo = typeof visual.latex === "string" ? "latex" : "formula";
+    return repararCampo(visual, campo, { resposta: false, procurado: true }, `visuais[${posicao}]`, reparos);
+  });
+  return reparos.length > 0 ? { valor: visuais, reparos } : { valor, reparos };
+}
+
 /** Os visuais da lição (até 3: fórmula, plano, reta numérica), cada um validado sozinho: o que não vale some e a lição fica. */
-export function lerVisuaisDoModelo(valor: unknown): { visuais: Visual[] | undefined; enviados: number; motivos: string[] } {
-  if (!Array.isArray(valor)) return { visuais: undefined, enviados: 0, motivos: [] };
-  const brutos = semNulos(valor) as unknown[];
+export function lerVisuaisDoModelo(valor: unknown): { visuais: Visual[] | undefined; enviados: number; motivos: string[]; reparos: string[] } {
+  if (!Array.isArray(valor)) return { visuais: undefined, enviados: 0, motivos: [], reparos: [] };
+  const { valor: reparados, reparos } = repararVisuais(semNulos(valor));
+  const brutos = reparados as unknown[];
   const visuais: Visual[] = [];
   const motivos: string[] = [];
   brutos.forEach((bruto, posicao) => {
@@ -121,7 +286,7 @@ export function lerVisuaisDoModelo(valor: unknown): { visuais: Visual[] | undefi
     else if (visuais.length < LIMITES_VISUAIS.visuaisPorLicao) visuais.push(lido.visual);
     else motivos.push(`visuais[${posicao}]: passa de ${LIMITES_VISUAIS.visuaisPorLicao} visuais por lição`);
   });
-  return { visuais: visuais.length > 0 ? visuais : undefined, enviados: brutos.length, motivos };
+  return { visuais: visuais.length > 0 ? visuais : undefined, enviados: brutos.length, motivos, reparos };
 }
 
 /** A figura do enunciado de um exercício (plano ou reta numérica). */
@@ -139,11 +304,13 @@ export function lerResolucaoDoModelo(valor: unknown): {
   enviada: boolean;
   conta?: { conferidas: number; puladas: number };
   motivo?: string;
+  reparos: string[];
 } {
-  if (valor === null || valor === undefined) return { resolucao: undefined, enviada: false };
-  const lida = validarResolucao(semNulos(valor));
-  if (!lida.ok) return { resolucao: undefined, enviada: true, motivo: lida.motivo };
-  return { resolucao: lida.resolucao, enviada: true, conta: lida.conta };
+  if (valor === null || valor === undefined) return { resolucao: undefined, enviada: false, reparos: [] };
+  const { valor: reparada, reparos } = repararResolucao(semNulos(valor));
+  const lida = validarResolucao(reparada);
+  if (!lida.ok) return { resolucao: undefined, enviada: true, motivo: lida.motivo, reparos };
+  return { resolucao: lida.resolucao, enviada: true, conta: lida.conta, reparos };
 }
 
 /* ----- O esquema do que o modelo devolve (Structured Outputs: todos os campos, `null` onde não se aplica) ----- */
@@ -215,7 +382,7 @@ export const esquemaDaResolucaoOuNula = {
 
 const REGRAS_DE_LATEX = [
   "LaTeX restrito: dentro de $…$ e nos campos `latex` e `formula`, só vale isto: números (ponto decimal: 3.5), variáveis de uma letra (x, a, k), índices (x_A, x_{AB}), expoentes (x^2, x^{n+1}), frações (\\frac{a}{b}), raiz quadrada (\\sqrt{x}), os sinais + - \\times \\div = \\neq < > \\leq \\geq \\to, parênteses, \\text{…} (letras, números e pontuação simples), \\%, \\Delta e \\pi, matrizes (\\begin{bmatrix} a & b \\\\ c & d \\end{bmatrix}) e determinantes (\\begin{vmatrix} … \\end{vmatrix}), até 4 × 4. Nada fora desta lista (nem \\alpha, nem \\int, nem \\left). Na resposta em JSON, cada barra invertida é dobrada: \"\\\\frac{1}{2}\".",
-  "Realces numa fórmula: \\foco{…} no que mudou no passo, \\procurado{…} no valor que ainda se procura e \\resposta{…} no valor achado; no máximo 2 por fórmula e um dentro do outro nunca.",
+  "Realces numa fórmula: \\foco{…} no que mudou no passo, \\procurado{…} no valor que ainda se procura e \\resposta{…} no valor achado; no máximo 2 por fórmula (3 realces é recusado: conte antes de escrever e fique nos 2 mais importantes) e um dentro do outro nunca. \\resposta só na fórmula do ÚLTIMO passo (nunca nos visuais da lição, nas opções do \"Sua vez\" nem nos outros passos), e \\procurado nunca nesse último passo.",
 ];
 
 const REGRAS_DE_PONTOS = [
@@ -279,6 +446,7 @@ export const instrucoesDeFigurasDoMaterial = [
   ...REGRAS_DE_PONTOS.map((regra) => `- ${regra}`),
   ...REGRAS_DE_RESOLUCAO.map((regra) => `- ${regra}`),
   "- Sem figura nem fórmula que ajudem de verdade, visuais, visual e resolucao são null.",
+  "- Se os dados trouxerem `correcao`, a sua resposta anterior para esta lição teve o \"Resolva comigo\" RECUSADO pelo motivo dito (com as letras e os valores usados, quando é conta): refaça visuais, visual e resolucao corrigindo exatamente isso e conferindo cada conta.",
 ].join("\n");
 
 /* ----- O exemplo do json (DeepSeek): o mesmo formato do esquema, com um exemplo de verdade ----- */

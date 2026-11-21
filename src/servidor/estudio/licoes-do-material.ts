@@ -1,9 +1,13 @@
 import type { MaterialEstudo, PaginaMaterial } from '@studoo/contratos';
 import { FalhaApi } from '../acesso/http';
 import {
+  correcaoDaResolucao,
   esquemaDasFigurasDoMaterial,
   instrucoesDeFigurasDoMaterial,
   instrucoesDeNotacaoDoMaterial,
+  lerFiguraDoModelo,
+  lerResolucaoDoModelo,
+  lerVisuaisDoModelo,
   materialEhDeMatematica,
   type RelatoDaMatematica,
 } from '../ia/matematica';
@@ -257,9 +261,11 @@ function registrar(codigo: string, detalhe: Record<string, unknown> = {}) {
   console.error(JSON.stringify({ rota: 'estudio-material', codigo, ...detalhe }));
 }
 
-/** O segundo pedido: as figuras e a resolução de UMA lição, com a página de onde ela veio. Qualquer falha deixa a lição sem elas. */
-async function pedirFiguras(licao: LicaoGerada, paginas: PaginaMaterial[], prazoMs: number): Promise<{ figuras: FigurasDaLicao | undefined; ms: number }> {
-  const inicio = Date.now();
+/**
+ * O pedido de figuras e resolução de UMA lição, com a página de onde ela veio. `correcao`, na nova tentativa, diz por que a resolução
+ * anterior foi recusada. Qualquer falha deixa a lição sem elas (`undefined`).
+ */
+async function chamarFiguras(licao: LicaoGerada, paginas: PaginaMaterial[], prazoMs: number, correcao?: string): Promise<FigurasDaLicao | undefined> {
   const pagina = paginas.find((candidata) => candidata.numero === licao.pagina);
   try {
     const bruto = await pedirJson(
@@ -279,17 +285,58 @@ async function pedirFiguras(licao: LicaoGerada, paginas: PaginaMaterial[], prazo
           feedbackIncorreto: licao.feedbackIncorreto,
         },
         ...(pagina ? { pagina: { numero: pagina.numero, texto: pagina.texto } } : {}),
+        ...(correcao ? { correcao } : {}),
       },
       [],
       { prazoMs, tentativas: 1, matematica: true },
     );
-    if (!bruto || typeof bruto !== 'object') return { figuras: undefined, ms: Date.now() - inicio };
+    if (!bruto || typeof bruto !== 'object') return undefined;
     const { visuais, visual, resolucao } = bruto as Record<string, unknown>;
-    return { figuras: { visuais, visual, resolucao }, ms: Date.now() - inicio };
+    return { visuais, visual, resolucao };
   } catch {
-    registrar('figuras_indisponiveis');
-    return { figuras: undefined, ms: Date.now() - inicio };
+    registrar(correcao ? 'nova_tentativa_indisponivel' : 'figuras_indisponiveis');
+    return undefined;
   }
+}
+
+/**
+ * As duas respostas juntas, quando a segunda trouxe a resolução aceita: a resolução é a da segunda, e os visuais e a figura do exercício
+ * ficam com a resposta que teve mais aceitos (a primeira, no empate). A nova tentativa nunca deixa a lição pior do que a primeira a deixaria.
+ */
+function melhorDosDois(primeira: FigurasDaLicao, segunda: FigurasDaLicao): FigurasDaLicao {
+  const visuaisAceitos = (figuras: FigurasDaLicao) => lerVisuaisDoModelo(figuras.visuais).visuais?.length ?? 0;
+  const figuraAceita = (figuras: FigurasDaLicao) => lerFiguraDoModelo(figuras.visual).figura !== undefined;
+  return {
+    visuais: visuaisAceitos(segunda) > visuaisAceitos(primeira) ? segunda.visuais : primeira.visuais,
+    visual: figuraAceita(primeira) || !figuraAceita(segunda) ? primeira.visual : segunda.visual,
+    resolucao: segunda.resolucao,
+  };
+}
+
+/**
+ * O segundo pedido: as figuras e a resolução de UMA lição. Se a resolução vier recusada (estrutura, formato ou conta; o reparo da cor das
+ * fórmulas já rodou), há UMA nova tentativa, com o motivo em uma frase e os valores já usados quando é conta, se ainda sobrar tempo dentro
+ * de `limiteEm` (o fim do orçamento da proposta). Se a segunda também for recusada, ou falhar, a lição fica como a primeira a deixaria:
+ * o tudo ou nada de sempre. Nunca mais de uma vez.
+ */
+async function pedirFiguras(licao: LicaoGerada, paginas: PaginaMaterial[], prazoMs: number, limiteEm: number): Promise<{ figuras: FigurasDaLicao | undefined; ms: number }> {
+  const inicio = Date.now();
+  const primeira = await chamarFiguras(licao, paginas, prazoMs);
+  if (!primeira) return { figuras: undefined, ms: Date.now() - inicio };
+  const lida = lerResolucaoDoModelo(primeira.resolucao);
+  if (!lida.enviada || lida.resolucao || !lida.motivo) return { figuras: primeira, ms: Date.now() - inicio };
+  const restante = limiteEm - Date.now();
+  if (restante < MINIMO_PARA_FIGURAS_MS) {
+    registrar('nova_tentativa_sem_tempo');
+    return { figuras: primeira, ms: Date.now() - inicio };
+  }
+  const segunda = await chamarFiguras(licao, paginas, Math.min(PRAZO_DAS_FIGURAS_MS, restante - 2_000), correcaoDaResolucao(lida.motivo));
+  const lidaDaSegunda = segunda ? lerResolucaoDoModelo(segunda.resolucao) : undefined;
+  const aceita = lidaDaSegunda?.resolucao !== undefined;
+  registrar('resolucao_nova_tentativa', { aceita });
+  const novaTentativa = { motivo: lida.motivo, aceita, ...(lidaDaSegunda?.motivo ? { motivoDaSegunda: lidaDaSegunda.motivo } : {}) };
+  const figuras = aceita && segunda ? melhorDosDois(primeira, segunda) : primeira;
+  return { figuras: { ...figuras, novaTentativa }, ms: Date.now() - inicio };
 }
 
 /**
@@ -332,7 +379,8 @@ export async function gerarLicoesDoMaterial(
     const restante = (opcoes.orcamentoMs ?? ORCAMENTO_DA_PROPOSTA_MS) - tempoDasLicoes;
     if (restante >= MINIMO_PARA_FIGURAS_MS) {
       const prazoMs = Math.min(PRAZO_DAS_FIGURAS_MS, restante - 2_000);
-      const pedidos = await Promise.all(x.licoes.map((licao) => pedirFiguras(licao, paginas, prazoMs)));
+      const limiteEm = inicio + (opcoes.orcamentoMs ?? ORCAMENTO_DA_PROPOSTA_MS);
+      const pedidos = await Promise.all(x.licoes.map((licao) => pedirFiguras(licao, paginas, prazoMs, limiteEm)));
       figuras = pedidos.map((pedido) => pedido.figuras);
       temposDasFiguras = pedidos.map((pedido) => pedido.ms);
     } else {
