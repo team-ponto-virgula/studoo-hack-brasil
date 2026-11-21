@@ -343,3 +343,36 @@ O âmbar fica coerente como par: o tom do gráfico é mais claro e o do texto ma
 - **Build 4 e site com os visuais no aparelho:**
   - o roteiro X1 a X10 da seção 6;
   - a fórmula em linha dentro da frase (marco 3b), conferida à parte quando o contrato dela chegar.
+
+## 9. Fórmula em linha (contrato fa5a3e4, 21/11)
+
+Conferido em `formula-no-texto.ts`, no teste e em `golden-segmentos.json`, e rodando `partirTextoComFormulas` e `falarTextoComFormulas` em frases de exemplo. A marca `$…$`, que não pega "R$ 5,00", "US$10" nem "custa $5 e $10", e a gramática do LaTeX restrito batem com a seção 1. Os ajustes vêm por ordem de importância.
+
+1. **Nunca aparece sublinhado nem circunflexo cru na tela, nem na fala.** Hoje, a fração dentro da frase cai em "Isso vale (x_A + x_B) / 2", com "x_A" em texto e o leitor de tela lendo o sublinhado. O texto linear de uma fórmula que não cabe em linha tem de ser montado com as peças desenhadas: o índice e o expoente continuam desenhados como em linha, e só a fração vira barra ou "÷". A fala vem da árvore (`falarFormula`), nunca do texto linear.
+2. **A heurística só vale em lição de matemática.** Rodando em "Em Python, use x_1 = 3 e print(x_1).", o `x_1` vira índice, e lê-se "x índice 1". A heurística (texto sem marca) só liga quando a lição já tem matemática: uma marca `$…$`, um visual de fórmula, ou trecho do tipo `formula`. Ela nunca liga em lição com trecho do tipo `codigo`. A marca `$…$` explícita vale sempre.
+3. **Fração simples em frase:**
+   - Quando os dois termos são simples (número, variável ou variável com índice), a fração vira "a/b" desenhada em linha, sem espaços ("1/2", "x_A/2"), e se fala "1 sobre 2". Isso vale para `\frac` e para "/" dentro da marca.
+   - Os outros "/" dentro da marca são divisão, "÷", com a fala "dividido por".
+   - Fração com termo composto, em frase, vira "(x_A + x_B) ÷ 2" com as peças desenhadas (item 1).
+   - Hoje "$1/2$" sai "1 ÷ 2" e se fala "1 dividido por 2": numa frase, meio é um número, não uma conta.
+4. **Casos da heurística:**
+   - está certo: `x_A`, `x_{A}`, `a_1`, `x_10`, `x_AB`, `b^2`, `10^3`, e palavras, arquivos e endereços de fora;
+   - `2x` e `4ac` ficam texto, sem problema;
+   - `x²` em Unicode também fica texto, porque a Nunito tem ² e ³;
+   - "H_2O" vira H₂O, e isso é bom;
+   - "CO_2" continua com o sublinhado cru e cai no item 1: na falta de leitura, tire o sublinhado ("CO2") em vez de mostrá-lo.
+5. **Fala:** está natural. Por exemplo: "Use x índice G é igual a abre parênteses x índice A, mais x índice B, mais x índice C fecha parênteses dividido por 3 para achar o ponto."; "O valor de x índice C é 4, não R$ 4,00.". O resto do texto vai como está.
+6. **Desenho em linha:**
+   - **Tamanho:** a fórmula tem o tamanho do texto ao redor (16/24 nos textos da aula, 17 onde o texto é 17), na cor do texto e sem fundo, a não ser nos destaques.
+   - **Índice e expoente:** 70% do tamanho do texto, no mínimo 11 px. O índice desce 0,3 em e o expoente sobe 0,45 em, dentro da altura de linha de 1,5. A linha não cresce.
+   - **Alinhamento:** a base da fórmula fica na linha de base das palavras.
+   - **Espaço em volta:** o espaço normal entre palavras, sem margem extra.
+   - **Dentro da fórmula:** 0,2 em em volta dos sinais.
+   - **Quebra:** a fórmula não quebra no meio da linha. Se for mais larga que a linha, ela vira o texto linear do item 1, que pode quebrar nos espaços.
+
+**Quero ver antes do build 4**, em 390, na prévia web do app e na web, com a origem declarada:
+- um parágrafo da aula com "x_G = (x_A + x_B + x_C) ÷ 3" no meio;
+- uma linha que começa com x²;
+- uma opção de exercício com "x_C";
+- um enunciado com "1/2";
+- o mesmo com o texto ampliado a 200%, para ver que índice e expoente não cortam nem encostam na linha de cima.
