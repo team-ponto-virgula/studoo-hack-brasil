@@ -1,0 +1,93 @@
+{
+  "appId": "6837508955",
+  "buildId": "4eea9ee9-145e-4076-8ad1-e130af015d6c",
+  "apto": false,
+  "enviado": false,
+  "revisao": null,
+  "verificacoes": [
+    {
+      "codigo": "api_build",
+      "ok": true
+    },
+    {
+      "codigo": "api_app",
+      "ok": true
+    },
+    {
+      "codigo": "api_beta",
+      "ok": true
+    },
+    {
+      "codigo": "api_revisao",
+      "ok": true
+    },
+    {
+      "codigo": "api_contato",
+      "ok": true
+    },
+    {
+      "codigo": "api_locales",
+      "ok": true
+    },
+    {
+      "codigo": "api_novidades",
+      "ok": true
+    },
+    {
+      "codigo": "build_do_app",
+      "ok": true
+    },
+    {
+      "codigo": "bundle_do_app",
+      "ok": true
+    },
+    {
+      "codigo": "build_valido",
+      "ok": true
+    },
+    {
+      "codigo": "pronto_para_revisao",
+      "ok": true
+    },
+    {
+      "codigo": "sem_revisao_existente",
+      "ok": true
+    },
+    {
+      "codigo": "contato_nome",
+      "ok": true
+    },
+    {
+      "codigo": "contato_email",
+      "ok": true
+    },
+    {
+      "codigo": "contato_telefone",
+      "ok": true
+    },
+    {
+      "codigo": "demo_obrigatoria",
+      "ok": true
+    },
+    {
+      "codigo": "demo_preenchida",
+      "ok": false
+    },
+    {
+      "codigo": "descricoes_feedback",
+      "ok": true
+    },
+    {
+      "codigo": "o_que_testar",
+      "ok": true
+    },
+    {
+      "codigo": "preflight_publico",
+      "ok": false
+    }
+  ],
+  "bloqueiosPublicos": [
+    "apple_ativo"
+  ],
+  "limites": "Esta conferência não testa a conta demo, login Apple/Google ou o IPA no aparelho. Envio não é aprovação nem distribuição externa."
+}
