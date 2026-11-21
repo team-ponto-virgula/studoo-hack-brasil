@@ -689,7 +689,10 @@ export const mensagens = {
         emAlta: 'Em alta esta semana',
         emAltaDoTema: (tema: string) => `Em alta em ${tema} esta semana`,
         emAltaDica: GESTO.legendaEmAlta,
-        posicao: (n: number) => `${n}º lugar`,
+        /** O que o leitor de tela ouve na capa de uma trilha do Em alta (spec 16, item 16): "1º em alta". Era "1º lugar". */
+        posicao: (n: number) => `${n}º em alta`,
+        /** O que a pílula da capa escreve: "1º" (13 px 800 sobre branco). */
+        posicaoSelo: (n: number) => `${n}º`,
         anteriores: 'Ver as anteriores',
         proximas: 'Ver as próximas',
         temas: 'Filtrar por tema',

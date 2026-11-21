@@ -53,3 +53,13 @@ test('item 9: o parágrafo que explicava o selo saiu do alto do Explorar, e o se
   assert.doesNotMatch(regraDoSelo[0], /background|color/, 'o selo "Exemplo" herda o fundo branco e o texto do selo neutro do tema');
   assert.match(css, /\.cartao-trilha__tema, \.cartao-trilha__demo \{[^}]*background: #fff;[^}]*color: var\(--texto\)/s, 'o selo neutro, comum aos dois');
 });
+
+test('item 16: a posição no Em alta tem o texto da pílula ("1º") e o do leitor de tela ("1º em alta"), no contrato, para a web e o app', () => {
+  assert.equal(c.posicaoSelo(1), '1º');
+  assert.equal(c.posicaoSelo(10), '10º');
+  assert.equal(c.posicao(1), '1º em alta');
+  assert.equal(c.posicao(3), '3º em alta');
+  assert.doesNotMatch(c.posicao(2), /lugar/, 'era "2º lugar"');
+  // O leitor de tela da web já usa o texto do contrato na capa do Em alta.
+  assert.match(ler('src/app/comunidade.tsx'), /<p className="somente-leitor">\{c\.posicao\(posicao\)\}<\/p>/);
+});
