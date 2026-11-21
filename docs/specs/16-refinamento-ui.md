@@ -115,4 +115,84 @@ As mudanças de tela do app congelam na noite de 25/11: P0 e P1 cabem até lá, 
 - o pedido com "Tenho um material" e a fileira de ideias;
 - Perfil, Privacidade e Configurações da trilha.
 
-**Próximo lote:** os quatro momentos da demo (material e citação, erro e ponte, "Ensine ao Stu", sincronia), Explorar, Perfil na web e matemática nova no aparelho.
+## Lote 2 (parcial): Explorar, Perfil e mapa na web; matemática no aparelho
+
+**Fontes:**
+- iPhone nativo (`40`, `41`, `50` a `63`);
+- o site publicado em 390 e 1440, entrando como visitante;
+- as capturas do mapa na web do Web & API, com servidor local.
+
+Os quatro momentos da demo ficam para o lote 3, com as capturas do Mobile & QA.
+
+### P0
+
+**13. Cenário gigante atrás do caminho no mapa da web em 390** (capturas do Web & API, `explorar-1` e `explorar-2`, servidor local)
+- **Hoje:** uma árvore enorme e círculos vermelhos e brancos ocupam a coluna inteira atrás dos nós. No app, os enfeites são árvores pequenas dos lados do caminho (iPhone `10`).
+- **Regra:** os enfeites do mapa na web têm o tamanho e o lugar do app (spec 04, `--tam-enfeite` e `--tam-miudo`), sempre dos lados do caminho e nunca atrás dos nós. O fundo da região continua só a cor dela.
+- **Confirmar no site publicado**, porque a captura é do servidor local.
+- **Onde:** web, para igualar o app.
+
+### P1
+
+**14. O aviso de música cobre o botão do balão no mapa** (web `explorar-2`)
+- **Regra:** o aviso "Música de fundo ligada." da primeira vez nunca cobre o balão nem a ação do rodapé. No mapa, ele fica no alto, 8 px abaixo do cabeçalho preso, como na entrada (spec 12).
+- **Onde:** as três plataformas.
+
+**15. Dois cabeçalhos empilhados no mapa da web em 390** (web `explorar-1`)
+- **Hoje:** a barra da marca, com "Progresso salvo agora", vem em cima do cabeçalho da trilha, e os dois somam quase 30% da tela. O app não tem a barra da marca no mapa (iPhone `10`).
+- **Regra:** no mapa, até 767 px, a barra da marca não aparece, e o selo de sincronia entra no cabeçalho da trilha, à direita do anel.
+- **Onde:** web, para igualar o app.
+
+**16. Os números gigantes nas capas do "Em alta"** (web e iPhone `40` e `41`)
+- **Hoje:** um "1", "2", "3" ou "4" enorme, branco com contorno, fica na capa e esbarra nos selos. Ninguém lê aquilo como posição.
+- **Regra:** a posição vira uma pílula pequena no canto superior direito da capa: "1º", em 13 px 800 `#0B1B5C` sobre branco, com 24 de altura e raio 12. O leitor de tela lê "1º em alta".
+- **Onde:** as três plataformas.
+
+**17. Selos empilhados na capa** (web e iPhone `40`)
+- **Regra:**
+  - a capa leva só o selo do tema;
+  - o selo "Exemplo" (item 9) sai da capa e vai para a linha de informações do cartão: "6 lições · 3 partes · Exemplo", no selo neutro;
+  - o leitor de tela continua com o nome do item 9.
+- **Onde:** as três plataformas.
+
+**18. A navegação lateral da web, com quatro estilos** (web 1440, Explorar e Perfil)
+- **Hoje:**
+  - "Minhas trilhas" é um link sem ícone;
+  - "Nova trilha" é um botão com borda;
+  - "Explorar" selecionado é uma pílula branca com sombra;
+  - "Perfil" selecionado tem borda azul.
+  São dois jeitos diferentes de mostrar o item selecionado.
+- **Regra:**
+  - os quatro itens são iguais: 48 px de altura, ícone de 20 (os da cápsula do app: livro, lâmpada, bússola e pessoa), rótulo 16 800 e raio 14;
+  - fora da seleção, sem fundo e com o texto em `#0B1B5C`;
+  - selecionado, com fundo `#E9E7FF` e texto e ícone em `#2563FF`, a mesma subcápsula da barra de abas;
+  - "Perfil" continua embaixo.
+- **Onde:** web a partir de 1024 px.
+
+**19. A política de privacidade aparece duas vezes no Perfil** (web 390 e 1440, iPhone `55` e `63`)
+- **Regra:** "Política de privacidade do Studoo" sai da seção "Privacidade e dados" e fica só em "Ajuda". Na seção sobram "Ver quem recebe" (secundário) e "Permitir o uso de IA" ou a chave, conforme o estado.
+- **Onde:** as três plataformas.
+
+**20. "Excluir conta" diferente na web e no app**
+- **Hoje:** na web é um texto vermelho solto; no app (iPhone `55`), um botão secundário com borda vermelha.
+- **Regra:** nas três plataformas, o botão secundário de 44 px com borda e texto `#C23B4E` (spec 11, ação destrutiva de baixa ênfase), depois de "Sair".
+- **Onde:** as três plataformas.
+
+### P2
+
+**21. A coluna do Perfil larga demais na web** (web 1440)
+- **Regra:** a coluna de configurações vai até 680 px, como a da aula, para a chave não ficar longe do rótulo.
+
+**22. O cartão do visitante no Perfil sem saída** (web e app)
+- **Regra:** o cartão "Conta temporária…" ganha o botão "Entrar com uma conta", que abre a entrada.
+- Isso só vale se a entrada guardar o progresso do visitante. Se não guardar, o cartão fica como está, porque uma saída que perde o que a pessoa fez é pior que nenhuma.
+
+### Matemática no aparelho
+
+Ainda não há captura nativa (iPhone nem Android) dos visuais, do "Resolva comigo" e do gráfico de função. A revisão sobre a prévia web do app está nas seções 13, 17 e 18 da spec 15. O que só o aparelho prova:
+- o texto grande do sistema;
+- o VoiceOver e o TalkBack nos roteiros da spec 15;
+- o desenho em `react-native-svg` no tamanho real.
+Isso fica para a rodada nativa.
+
+**Próximo lote:** os quatro momentos da demo (material e citação, erro e ponte, "Ensine ao Stu", sincronia) e o Android completo da rodada nova.
