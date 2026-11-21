@@ -143,7 +143,7 @@ O acorde, a linha do tempo e a barra de fração continuam como estão.
 
 **A tela, de cima para baixo (esboço, quadros 2 e 3):**
 1. O selo "RESOLVA COMIGO" (`resolvaComigo.selo`, ícone de lápis), no estilo do "CONCEITO".
-2. O problema de exemplo, em 17/23 800, e o visual dele (seção 2), aberto, com o procurado marcado.
+2. O problema de exemplo, em 17/23 700 (seção 14), e o visual dele (seção 2), aberto, com o procurado marcado.
 3. O indicador "Passo n de N", com N traços de 6 px. Os feitos e o atual ficam em `#2563FF`, e o atual é mais largo (34 px).
 4. Os passos feitos, cada um numa linha compacta: o visto verde, o nome curto do passo e a fórmula daquele passo em linha, reduzida. Tocar numa linha a reabre no lugar.
 5. O passo atual, num cartão:
@@ -481,3 +481,22 @@ Capturas do Mobile 2 em 320, 390 e na simulação de 200% (a1, a2, b1, b2, c1 e 
 **O exemplo em texto e os visuais da etapa vêm da mesma lição.** A captura c1 juntou o texto de outra lição de teste com o determinante desta. No dado real (material-2, lição 3), o texto e o visual combinam, e o Web & API mediu 93 visuais reais sem nenhum número fora do texto. Por isso, não entra regra de servidor. Fica só a regra para as capturas de aceite: montar cada cenário com o texto e os visuais da própria lição.
 
 **Sem achado:** a1 em 390 (o plano com A, B e C sem procurado, rótulos e grade), b2 (exercício sem figura) e o determinante geral do c1.
+
+## 14. Peso do texto com fórmula em linha (decisão de 21/11)
+
+O motor desenha a fórmula em linha só nos pesos 400 e 700: a tabela de glifos de 800 não tem + × ÷. Por isso, todo texto que pode levar fórmula em linha usa 400 ou 700, nunca 800:
+- o problema do "Resolva comigo" e a pergunta do "Sua vez" ficam sempre em 700, com ou sem fórmula, para o mesmo elemento não mudar de peso de uma lição para outra;
+- o texto da aula, as opções, o retorno e as frases dos passos ficam em 400;
+- o 800 continua só onde nunca entra fórmula: selos ("SUA VEZ", "RESOLVA COMIGO"), nomes dos passos feitos, botões e títulos de tela.
+
+Não entra peso 800 no motor (a opção b), e não fica a diferença de peso entre o texto e a fórmula (a opção c). Vale na web e no app, e o app já está em 700.
+
+**Conferência das capturas de 85557c9** (prévia web do app, 320, 390 e 200% simulado): os ajustes 1 a 4 da seção 13 estão aplicados.
+- o `alt` aparece numa linha discreta, com ícone e sem caixa (a1 em 320);
+- a caixa tem a altura da figura do enunciado;
+- a figura sem procurado é igual no retorno (a2);
+- o "k" tem o peso da pergunta, e não há bloco antes da escolha (d1);
+- o bloco da equação reduz em 320 (b1);
+- o exemplo e os visuais são da mesma lição (c1).
+
+A frase do d1 ainda traz "…portanto k = 0". A captura é do dado de antes da correção do servidor, e essa parte é do Web & API.
