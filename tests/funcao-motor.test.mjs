@@ -134,7 +134,9 @@ test("a reta: o nome g, o intercepto C (0, 1) e a raiz R (−0,5; 0); a escala �
 test("o seno: x marcado em 0, π/2, π, 3π/2 e 2π, y em −1, 0 e 1, escalas independentes (altura ≈ metade da largura) e rótulos com π", () => {
   const desenho = desenharVisual(caso("seno"), { tipo: "enunciado" });
   assert.ok(!desenho.naoCabe);
-  assert.deepEqual(textosDas(desenho, "numero").sort(), ["−1", "1", "0", "π/2", "π", "3π/2", "2π"].sort());
+  // O P (π, 0) é losango (todo ponto de função é especial) e está sobre o eixo: ele cobre o "π" que fica embaixo, como a raiz cobre o número dela (a regra do
+  // ponto sobre o número de eixo); o rótulo "P (π, 0)" diz o π.
+  assert.deepEqual(textosDas(desenho, "numero").sort(), ["−1", "1", "0", "π/2", "3π/2", "2π"].sort());
   assert.deepEqual(textosDas(desenho, "rotulo").sort(), ["M (π/2, 1)", "N (3π/2, −1)", "P (π, 0)", "h"].sort());
   const grade = desenho.primitivas.filter((primitiva) => primitiva.tipo === "linha" && primitiva.cor === "grade");
   const verticais = grade.filter((linha) => linha.x1 === linha.x2);

@@ -45,7 +45,22 @@ test("a parábola da spec: as raízes A (1, 0) e B (3, 0), o vértice V (2, −1
   assert.deepEqual(normalizarVisual(visual), visual, "e volta igual");
   // A IA pode dar a raiz que quer (x) e o ponto com as coordenadas dele: o que a curva confirma fica.
   const dado = valido(parabola({ pontos: [{ id: "B", tipo: "raiz", x: 3 }, { id: "P", papel: "dado", x: 4, y: 3 }, { id: "Q", x: 2, y: -1 }] }));
-  assert.deepEqual(dado.pontos.map(({ id, papel, x, y }) => [id, papel, x, y]), [["B", "especial", 3, 0], ["P", "dado", 4, 3], ["Q", "dado", 2, -1]]);
+  assert.deepEqual(dado.pontos.map(({ id, papel, x, y }) => [id, papel, x, y]), [["B", "especial", 3, 0], ["P", "especial", 4, 3], ["Q", "especial", 2, -1]],
+    "todo ponto de um gráfico de função é especial (losango roxo), com ou sem tipo, mesmo que a IA diga \"dado\"");
+});
+
+test("todo ponto de uma função é especial por padrão (M, P, N do seno, f(a), o ponto sem tipo); só o procurado e a resposta têm outro papel", () => {
+  const seno = valido({
+    tipo: "funcao", alt: "A onda.", curvas: [{ latex: "\\sin x", nome: "h", de: 0, ate: "2\\pi" }],
+    pontos: [{ id: "M", x: "\\frac{\\pi}{2}", y: 1 }, { id: "P", papel: "dado", x: "\\pi", y: 0 }, { id: "N", papel: "especial", x: "\\frac{3\\pi}{2}", y: -1 }, { id: "R", tipo: "valor", x: 1 }],
+  });
+  assert.deepEqual(seno.pontos.map(({ id, papel }) => [id, papel]), [["M", "especial"], ["P", "especial"], ["N", "especial"], ["R", "especial"]]);
+  const procurado = valido(parabola({ pontos: [{ id: "A", tipo: "raiz", papel: "dado" }, { id: "V", tipo: "vertice", papel: "procurado" }, { id: "C", x: 0, y: 3, papel: "procurado" }] }));
+  assert.deepEqual(procurado.pontos.map(({ id, papel }) => [id, papel]), [["A", "especial"], ["V", "procurado"], ["C", "procurado"]]);
+  assert.equal(validarVisual(visualRevelado(procurado), { revela: true }).ok, true);
+  assert.deepEqual(visualRevelado(procurado).pontos.map(({ papel }) => papel), ["especial", "resposta", "resposta"]);
+  // O guardado volta igual do validador (a resposta, que a IA não manda, também vale).
+  assert.deepEqual(normalizarVisual(seno), seno);
 });
 
 test("a reta da spec: g(x) = 2x + 1 de −2 a 2, com o intercepto C (0, 1) e a raiz R (−0,5; 0)", () => {
@@ -81,7 +96,7 @@ test("o que não está na curva sai sem derrubar a figura: o \"O (0, 0)\" sem a 
   const visual = valido(parabola({ pontos: [{ id: "O", papel: "dado", x: 0, y: 0 }, { id: "A", tipo: "raiz" }, { id: "B", tipo: "raiz" }, { id: "C", papel: "dado", x: 0, y: 3 }, { id: "D", tipo: "raiz" }, { id: "E", x: 5, y: 8.005 }, { id: "F", x: 4, y: 3.05 }] }));
   assert.deepEqual(visual.pontos.map((p) => p.id), ["A", "B", "C", "E"], "O sai (f(0) = 3), a terceira raiz não existe, F erra por 0,05 e sai, e E fica (f(5) = 8, dentro de 0,01)");
   assert.deepEqual([ponto(visual, "E").x, ponto(visual, "E").y], [5, 8], "o ponto cai na curva: o y que se guarda é o da conta");
-  assert.equal(ponto(visual, "C").papel, "dado", "o ponto que a IA deu com papel dado segue dado");
+  assert.equal(ponto(visual, "C").papel, "especial", "o ponto que a IA deu como dado também sai especial: o círculo azul é do plano de geometria");
   // Domínio mais curto: a raiz 1 fica de fora e a 3 entra.
   const curto = valido(parabola({ curvas: [{ latex: "x^2 - 4x + 3", de: 2, ate: 5 }], pontos: [{ id: "A", tipo: "raiz" }, { id: "B", tipo: "raiz" }, { id: "V", tipo: "vertice" }, { id: "C", tipo: "intercepto" }] }));
   assert.deepEqual(curto.pontos.map(({ id, x }) => [id, x]), [["B", 3], ["V", 2]], "a raiz 1 e o intercepto (0, 3) estão fora do domínio [2, 5]");
@@ -89,7 +104,7 @@ test("o que não está na curva sai sem derrubar a figura: o \"O (0, 0)\" sem a 
   assert.deepEqual(valido({ ...parabola(), curvas: [{ latex: "x^2" }], pontos: [{ id: "A", tipo: "raiz" }, { id: "B", tipo: "raiz" }, { id: "V", tipo: "vertice" }, { id: "C", tipo: "intercepto" }] }).pontos.map((p) => p.id), ["A"], "raiz, vértice e intercepto no mesmo lugar: fica o primeiro");
   assert.equal(valido({ ...parabola(), curvas: [{ latex: "x^2 + 1" }], pontos: [{ id: "A", tipo: "raiz" }] }).pontos, undefined, "sem raiz real");
   // f(a): o valor no x dado.
-  assert.deepEqual(ponto(valido(parabola({ pontos: [{ id: "P", tipo: "valor", x: 5 }] })), "P"), { id: "P", papel: "dado", tipo: "valor", x: 5, y: 8 });
+  assert.deepEqual(ponto(valido(parabola({ pontos: [{ id: "P", tipo: "valor", x: 5 }] })), "P"), { id: "P", papel: "especial", tipo: "valor", x: 5, y: 8 });
 });
 
 test("a curva que não vale some e a figura segue; sem nenhuma curva, vira plano (se há pontos com x e y) ou some; de 1 a 3 curvas com nomes f, g, h", () => {

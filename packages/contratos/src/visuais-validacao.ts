@@ -464,8 +464,9 @@ function lerPontosDaFuncao(brutos: unknown, curvas: readonly CurvaLida[]): Ponto
     // Dois pontos no mesmo lugar não se leem (a raiz na origem que também é o vértice e o intercepto): fica o primeiro.
     if (lidos.some((ponto) => Math.abs(ponto.x - px) < 1e-6 && Math.abs(ponto.y - py) < 1e-6)) continue;
     const papelPedido = typeof bruto.papel === "string" && (PAPEIS_PONTO as readonly string[]).includes(bruto.papel) ? (bruto.papel as PapelPonto) : undefined;
-    const destaque = tipo === "raiz" || tipo === "vertice" || tipo === "intercepto" || tipo === "intersecao";
-    const papel: PapelPonto = destaque && (papelPedido === undefined || papelPedido === "dado") ? "especial" : papelPedido ?? "dado";
+    // Todo ponto de um gráfico de função é um destaque da curva (raiz, vértice, pico, vale, intercepto, valor): losango roxo, `especial`, com ou sem `tipo` e
+    // mesmo que a IA diga "dado" (spec 15, seção 15: o círculo azul de "dado" é do plano de geometria). Só o procurado e a resposta têm o papel deles.
+    const papel: PapelPonto = papelPedido === "procurado" || papelPedido === "resposta" ? papelPedido : "especial";
     lidos.push({ id, papel, ...(tipo ? { tipo } : {}), curva: curva.nome, x: px, y: py, ...(typeof bruto.rotulo === "boolean" ? { rotulo: bruto.rotulo } : {}) });
   }
   limitarRotulos(lidos);
