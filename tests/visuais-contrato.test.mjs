@@ -59,7 +59,8 @@ test("X-Studoo-Capacidades: lista com versão, desconhecidos ignorados, o servid
   assert.deepEqual(lerCapacidades(" Visuais@1 , RESOLUCAO@1 "), { visuais: 1, resolucao: 1 });
   assert.deepEqual(lerCapacidades("visuais@1"), { visuais: 1, resolucao: 0 });
   assert.deepEqual(lerCapacidades("resolucao@1"), { visuais: 0, resolucao: 0 }, "a resolução só vale junto dos visuais");
-  assert.deepEqual(lerCapacidades("visuais@2,resolucao@3"), { visuais: 1, resolucao: 1 }, "versão acima do que o servidor sabe vira a dele");
+  assert.deepEqual(lerCapacidades("visuais@2,resolucao@3"), { visuais: 2, resolucao: 1 }, "versão acima do que o servidor sabe vira a dele (visuais@2 é o gráfico de função)");
+  assert.deepEqual(lerCapacidades("visuais@3"), { visuais: 2, resolucao: 0 }, "e acima de 2, o 2 do servidor");
   assert.deepEqual(lerCapacidades("visuais@2,resolucao@3", { visuais: 2, resolucao: 3 }), { visuais: 2, resolucao: 3 });
   assert.deepEqual(lerCapacidades("visuais@1,visuais@2", { visuais: 2, resolucao: 1 }), { visuais: 2, resolucao: 0 }, "versões cumulativas: vale a maior");
   assert.deepEqual(lerCapacidades("grafico@1,visuais@1,x,@1"), { visuais: 1, resolucao: 0 }, "entradas desconhecidas são ignoradas");

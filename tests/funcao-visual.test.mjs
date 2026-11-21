@@ -102,7 +102,7 @@ test("a curva que não vale some e a figura segue; sem nenhuma curva, vira plano
   const nenhum = validarVisual({ tipo: "funcao", alt: "Nada se desenha.", curvas: [{ latex: "\\log x" }], pontos: [{ id: "V", tipo: "vertice" }] });
   assert.equal(nenhum.ok, false);
   assert.match(nenhum.motivo, /nenhuma curva que valha/);
-  const tres = valido({ tipo: "funcao", alt: "Três curvas.", curvas: [{ latex: "x" }, { latex: "x^2" }, { latex: "x^3" }, { latex: "5" }] });
+  const tres = valido({ tipo: "funcao", alt: "Três curvas.", curvas: [{ latex: "x/2" }, { latex: "x^2/4" }, { latex: "x^3/8" }, { latex: "5" }] });
   assert.deepEqual(tres.curvas.map((curva) => curva.nome), ["f", "g", "h"], "no máximo três, com as letras na ordem");
   const nomes = valido({ tipo: "funcao", alt: "Nomes pedidos.", curvas: [{ latex: "x", nome: "h" }, { latex: "x^2", nome: "h" }] });
   assert.deepEqual(nomes.curvas.map((curva) => curva.nome), ["h", "f"], "o nome repetido cai na próxima letra livre");

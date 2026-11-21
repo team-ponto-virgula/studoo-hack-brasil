@@ -280,7 +280,7 @@ export const LIMITES_VISUAIS = {
 /**
  * Uma lista que o cliente manda em toda chamada: `X-Studoo-Capacidades: visuais@1,resolucao@1`. Sem o cabeçalho (build 3, site
  * antigo), o servidor omite os campos novos e entrega o desenho como PNG pelo `recurso`, que esses clientes já desenham.
- * - `visuais@1`: plano, reta numérica e fórmula; `visuais@2` (futuro): gráfico de função e os demais. As versões são
+ * - `visuais@1`: plano, reta numérica e fórmula; `visuais@2`: o gráfico de função (`funcao`) também. As versões são
  *   cumulativas (`visuais@2` inclui `visuais@1`).
  * - `resolucao@1`: o "Resolva comigo" com o "Sua vez". Só vale junto de `visuais`.
  * - Nome ou versão desconhecidos são ignorados; o servidor responde pelo menor entre o que o cliente pede e o que ele sabe.
@@ -292,8 +292,11 @@ export interface Capacidades {
   resolucao: number;
 }
 
-/** O que este servidor sabe entregar. */
-export const VERSOES_DO_SERVIDOR: Readonly<Capacidades> = { visuais: 1, resolucao: 1 };
+/** O que este servidor sabe entregar: `visuais@2` é o gráfico de função (marco 12a); quem anuncia só `visuais@1` não o recebe. */
+export const VERSOES_DO_SERVIDOR: Readonly<Capacidades> = { visuais: 2, resolucao: 1 };
+
+/** A versão de `visuais` a partir da qual o cliente desenha o gráfico de função (spec 15, seção 15). */
+export const VISUAIS_COM_FUNCAO = 2;
 
 /** O que um cliente que desenha tudo isto manda. */
 export const CAPACIDADES_DESTE_CLIENTE = "visuais@1,resolucao@1";
