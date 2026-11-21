@@ -1,3 +1,4 @@
+import { textoSemFormulas } from "./formula-no-texto";
 import { visualParaEnunciado } from "./visuais-validacao";
 import type { EscolhaNoSuaVez, OpcaoDoSuaVez, PassoDaResolucao, PassoGuardado, Resolucao, ResolucaoGuardada, RespostaDoSuaVez, VisualFigura } from "./visuais";
 
@@ -90,7 +91,7 @@ export function passosEmTexto(resolucao: ResolucaoGuardada, linear: (formula: st
     const formula = passo.formula ? linear(passo.formula) : null;
     const tentativa = passo.tentativa?.opcoes.find((opcao) => opcao.correta);
     const resultado = formula ?? (tentativa?.formula ? linear(tentativa.formula) : tentativa?.texto ?? null);
-    const linha = `${posicao + 1}. ${passo.nome}: ${passo.texto}${resultado ? ` ${resultado}` : ""}`;
+    const linha = `${posicao + 1}. ${passo.nome}: ${textoSemFormulas(passo.texto)}${resultado ? ` ${resultado}` : ""}`;
     return linha.length <= 300 ? linha : `${linha.slice(0, 299)}…`;
   });
 }

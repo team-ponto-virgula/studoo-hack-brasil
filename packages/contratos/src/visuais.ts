@@ -348,6 +348,21 @@ export const JUNCAO_DA_LINHA = "round" as const;
  */
 export const PISO_DO_TEXTO = 13;
 
+/**
+ * Uma fórmula em linha, para o cliente encaixar no meio da frase como uma caixa do tamanho do texto ao redor: `largura` e `altura`
+ * em unidades de projeto (escalam com o corpo do texto), `linhaDeBase` é a distância do topo da caixa à linha de base do texto (para
+ * alinhar com as palavras), e as primitivas ficam em coordenadas da caixa, com os mesmos papéis de cor do resto do desenho.
+ */
+export interface DesenhoEmLinha {
+  largura: number;
+  altura: number;
+  linhaDeBase: number;
+  primitivas: Primitiva[];
+  /** O texto falado da fórmula, para o rótulo do leitor de tela do trecho. */
+  falado: string;
+  menorTexto: number;
+}
+
 /** Retângulo de um texto do gráfico, do canto de cima à esquerda, em unidades de projeto. */
 export interface CaixaDeTexto {
   tipo: "numero" | "rotulo" | "eixo" | "foco";

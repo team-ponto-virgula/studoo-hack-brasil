@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
 import sharp from "sharp";
 import {
+  contemMarcaDeFormula,
+  textoSemFormulas,
   comAlturaMinima,
   comporDesenhos,
   desenharVisual,
@@ -25,6 +27,7 @@ import {
   type VisualFormula,
 } from "@studoo/contratos";
 import type { ConteudoLicao, ExercicioInterno } from "@/dominio/aprendizado/plano";
+import { ehAssuntoDeMatematica } from "@/servidor/ia/matematica";
 
 /*
  * Visuais da lição no servidor (spec 15). Duas portas, as duas atrás do cabeçalho `X-Studoo-Capacidades`:
@@ -247,4 +250,46 @@ export function visualDoRetorno(conteudo: ConteudoLicao, indice: number, capacid
   if (capacidades.visuais < 1) return undefined;
   const visual = limparVisuais(conteudo).dosExercicios[indice];
   return visual && visual.tipo !== "formula" ? visualRevelado(visual) : undefined;
+}
+
+/* ----- Fórmula em linha: o texto linear para quem não desenha ----- */
+
+/** A lição é de matemática (tem visual ou resolução, ou fala de matemática)? Só nelas o texto é lido com marcas de fórmula. */
+export function conteudoEhDeMatematica(conteudo: ConteudoLicao): boolean {
+  return temVisual(conteudo) || ehAssuntoDeMatematica(conteudo.objetivo, conteudo.conceito, conteudo.exemplo);
+}
+
+/** Os campos que não têm texto de fórmula: respostas, desenhos, áudio, recurso e referências ficam como estão. */
+const FICAM = new Set(["gabarito", "visuais", "visual", "resolucao", "falas", "fala", "recurso", "referencias", "comprovante", "certos"]);
+
+function linearizarTexto(valor: unknown, chave?: string, irmaos?: Record<string, unknown>): unknown {
+  if (typeof valor === "string") {
+    if ((chave !== undefined && FICAM.has(chave)) || (chave === "trecho" && irmaos?.trechoTipo === "codigo")) return valor;
+    return contemMarcaDeFormula(valor) ? textoSemFormulas(valor) : valor;
+  }
+  if (Array.isArray(valor)) {
+    const novos = valor.map((item) => linearizarTexto(item, chave, irmaos));
+    return novos.some((novo, posicao) => novo !== valor[posicao]) ? novos : valor;
+  }
+  if (valor !== null && typeof valor === "object") {
+    if (chave !== undefined && FICAM.has(chave)) return valor;
+    const objeto = valor as Record<string, unknown>;
+    let mudou = false;
+    const novo: Record<string, unknown> = {};
+    for (const [campo, item] of Object.entries(objeto)) {
+      const convertido = linearizarTexto(item, campo, objeto);
+      if (convertido !== item) mudou = true;
+      novo[campo] = convertido;
+    }
+    return mudou ? novo : valor;
+  }
+  return valor;
+}
+
+/**
+ * Cada fórmula marcada com `$…$` nos textos vira texto linear (`x_G = (x_A + x_B) ÷ 3`), para o cliente que não desenha fórmula em
+ * linha (build 3, site antigo): sem cifrão e sem LaTeX cru. O mesmo objeto quando não há marca.
+ */
+export function comTextoLinear<T>(valor: T): T {
+  return linearizarTexto(valor) as T;
 }

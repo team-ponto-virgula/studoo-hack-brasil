@@ -4,8 +4,8 @@
   "licao": {
     "titulo": "Baricentro: achando o terceiro vértice",
     "objetivo": "Achar o vértice que falta de um triângulo a partir do baricentro.",
-    "conceito": "O baricentro G é o ponto onde as três medianas do triângulo se cruzam. Cada coordenada dele é a média das coordenadas dos vértices: x_G = (x_A + x_B + x_C) / 3 e y_G = (y_A + y_B + y_C) / 3.",
-    "exemplo": "Com A(2, 1), B(−1, 5) e G(1, 2): 3 · 1 = 2 + (−1) + x_C, então x_C = 2; e 3 · 2 = 1 + 5 + y_C, então y_C = 0. Logo C = (2, 0).",
+    "conceito": "O baricentro G é o ponto onde as três medianas do triângulo se cruzam. Cada coordenada dele é a média das coordenadas dos vértices: $x_G = (x_A + x_B + x_C) / 3$ e $y_G = (y_A + y_B + y_C) / 3$.",
+    "exemplo": "Com A(2, 1), B(−1, 5) e G(1, 2): $3 · 1 = 2 + (−1) + x_C$, então $x_C = 2$; e $3 · 2 = 1 + 5 + y_C$, então $y_C = 0$. Logo C = (2, 0).",
     "origem": "Conteúdo gerado pelo Studoo",
     "visuais": [
       { "tipo": "formula", "latex": "x_G = \\frac{x_A + x_B + x_C}{3}", "alt": "Fórmula do baricentro" },
@@ -32,8 +32,8 @@
         { "id": "c", "texto": "C(2, 6)" }
       ],
       "gabarito": ["a"],
-      "feedbackCorreto": "Isso! De 3 · 1 = 1 + (−2) + x_C sai x_C = 4, e de 3 · 3 = 2 + 7 + y_C sai y_C = 0.",
-      "feedbackIncorreto": "Multiplique por 3 a coordenada do baricentro e subtraia as dos outros dois vértices: x_C = 3 · 1 − 1 − (−2) e y_C = 3 · 3 − 2 − 7.",
+      "feedbackCorreto": "Isso! De $3 · 1 = 1 + (−2) + x_C$ sai $x_C = 4$, e de $3 · 3 = 2 + 7 + y_C$ sai $y_C = 0$.",
+      "feedbackIncorreto": "Multiplique por 3 a coordenada do baricentro e subtraia as dos outros dois vértices: $x_C = 3 · 1 − 1 − (−2)$ e $y_C = 3 · 3 − 2 − 7$.",
       "visual": {
         "tipo": "plano",
         "x": [-3, 6],
@@ -71,7 +71,7 @@
         },
         {
           "nome": "Troque os valores",
-          "texto": "Coloque x_G = 1, x_A = 2 e x_B = −1 na fórmula.",
+          "texto": "Coloque $x_G = 1$, $x_A = 2$ e $x_B = −1$ na fórmula.",
           "formula": "1 = \\frac{2 + (-1) + \\procurado{x_C}}{3}"
         },
         {
@@ -81,7 +81,7 @@
         },
         {
           "nome": "O mesmo para y_C",
-          "texto": "Repita o método na ordenada, com y_G = 2, y_A = 1 e y_B = 5.",
+          "texto": "Repita o método na ordenada, com $y_G = 2$, $y_A = 1$ e $y_B = 5$.",
           "formula": "y_C = 3 \\times 2 - 1 - 5",
           "tentativa": {
             "pergunta": "Quanto vale y_C?",

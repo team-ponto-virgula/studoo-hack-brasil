@@ -28,7 +28,7 @@ import { emitirComprovante, lerComprovante } from "./comprovantes";
 import { refinarAvaliacao } from "./correcao";
 import { consumirGeracaoPersistente } from "@/servidor/ia/limite";
 import { iniciarGeracao } from "./geracao";
-import { SEM_CAPACIDADES, comVisuais, visualDoRetorno } from "./visuais";
+import { SEM_CAPACIDADES, comTextoLinear, comVisuais, conteudoEhDeMatematica, visualDoRetorno } from "./visuais";
 import { marcasDasTrilhas } from "@/servidor/compartilhar/servico";
 import { MATERIAL_COMPARTILHADO, TEMAS, type Tema } from "@studoo/contratos";
 
@@ -319,7 +319,9 @@ async function lerLicao(usuarioId: string, id: string) {
 
 /** Conteúdo interno da lição (com gabarito), para o reforço sem IA montar uma pergunta sobre o exercício errado. */
 export async function conteudoDaLicao(usuarioId: string, id: string): Promise<ConteudoLicao> {
-  return (await lerLicao(usuarioId, id)).conteudo;
+  const { conteudo } = await lerLicao(usuarioId, id);
+  // Quem lê o conteúdo por aqui (reforço, ponte, voz) escreve para qualquer cliente: as fórmulas em linha vão em texto linear.
+  return conteudoEhDeMatematica(conteudo) ? comTextoLinear(conteudo) : conteudo;
 }
 
 /**
@@ -357,7 +359,10 @@ export async function buscarLicao(
       ? { materialDe: licao.fluxo.plano.origemNome }
       : {}),
   };
-  return comVisuais(detalhe, licao.conteudo, { capacidades: opcoes.capacidades ?? SEM_CAPACIDADES, desenharPng: opcoes.desenharPng ?? false });
+  const capacidades = opcoes.capacidades ?? SEM_CAPACIDADES;
+  const completa = await comVisuais(detalhe, licao.conteudo, { capacidades, desenharPng: opcoes.desenharPng ?? false });
+  // Sem `visuais@1` o cliente não desenha a fórmula em linha: `$x_A$` chega como texto linear, sem cifrão.
+  return capacidades.visuais >= 1 || !conteudoEhDeMatematica(licao.conteudo) ? completa : comTextoLinear(completa);
 }
 
 /**
@@ -399,7 +404,8 @@ export async function avaliarLicao(
   });
   // Exercício com figura, para quem desenha (`visuais@1`): quem acertou vê o procurado virar resposta.
   const visual = avaliacao.correta ? visualDoRetorno(licao.conteudo, indice, capacidades) : undefined;
-  return { ...avaliacao, ...(visual ? { visual } : {}), comprovante };
+  const resultado = { ...avaliacao, ...(visual ? { visual } : {}), comprovante };
+  return capacidades.visuais >= 1 || !conteudoEhDeMatematica(licao.conteudo) ? resultado : comTextoLinear(resultado);
 }
 
 /** Registra a conclusão (uma vez) e, quando a lição tem prática, como ela foi (a mais recente fica). */

@@ -229,12 +229,12 @@ test("reta numérica: intervalos abertos e fechados, até o infinito", () => {
 test("alt: obrigatório, em texto simples, cortado em 140 e sem entregar a resposta", () => {
   assert.match(recusado(plano({ alt: undefined })), /alt/);
   assert.match(recusado(plano({ alt: "" })), /alt/);
-  assert.match(recusado(plano({ alt: String.raw`Veja \frac{1}{2}` })), /LaTeX solto/);
+  assert.equal(normalizarVisual(plano({ alt: String.raw`Veja \frac{1}{2}` })).alt, "Veja 1 / 2", "LaTeX solto no alt vira texto linear: nunca barra na tela");
   assert.match(recusado(plano({ alt: "x".repeat(400) })), /longo demais/);
   assert.equal(normalizarVisual(plano({ alt: `A ${"palavra ".repeat(20)}fim` })).alt.length <= 140, true);
   assert.match(normalizarVisual(plano({ alt: `A ${"palavra ".repeat(20)}fim` })).alt, /…$/);
   assert.equal(normalizarVisual(plano({ alt: "Triângulo com $x_G = 1$ no meio." })).alt, "Triângulo com x_G = 1 no meio.");
-  assert.match(recusado(plano({ alt: "Triângulo com $\\input{x}$." })), /LaTeX solto/);
+  assert.equal(normalizarVisual(plano({ alt: "Triângulo com $\\input{x}$." })).alt, "Triângulo com x.", "marca inválida não derruba o visual");
 
   const comProcurado = (alt, extra = {}) => plano({
     alt,
@@ -382,7 +382,7 @@ test("resolução: tudo ou nada, e o motivo diz o quê", () => {
   assert.match(motivoDa(semTexto), /passo 3: texto/);
   const comLatex = resolucaoDe();
   comLatex.passos[2].texto = String.raw`Use \frac{1}{2}.`;
-  assert.match(motivoDa(comLatex), /LaTeX solto/);
+  assert.equal(validarResolucao(comLatex).resolucao.passos[2].texto, "Use 1 / 2.", "LaTeX solto no texto do passo vira texto linear");
 });
 
 test("resolução: nome do passo em até 24 caracteres (corta, não derruba) e fórmula entre cifrões no texto vira linear", () => {
@@ -394,8 +394,14 @@ test("resolução: nome do passo em até 24 caracteres (corta, não derruba) e f
   enorme.passos[2].nome = "palavra ".repeat(20);
   assert.match(motivoDa(enorme), /longo demais/);
   const cifrao = resolucaoDe();
-  cifrao.passos[1].texto = "Troque: $x_G = 1$ e siga.";
-  assert.equal(validarResolucao(cifrao).resolucao.passos[1].texto, "Troque: x_G = 1 e siga.");
+  cifrao.passos[1].texto = "Troque: $x_G=1$ e siga.";
+  assert.equal(validarResolucao(cifrao).resolucao.passos[1].texto, "Troque: $x_G = 1$ e siga.", "a fórmula em linha fica entre cifrões, na forma canônica");
+  const fracao = resolucaoDe();
+  fracao.passos[1].texto = String.raw`Troque: $\frac{x_A}{2}$ e $\foo{x}$ e R$ 5,00.`;
+  assert.equal(validarResolucao(fracao).resolucao.passos[1].texto, "Troque: x_A / 2 e x e R$ 5,00.", "o que não cabe em linha ou não lê vira texto linear, e o dinheiro fica");
+  const nomeComMarca = resolucaoDe();
+  nomeComMarca.passos[0].nome = "Isole $x_C$";
+  assert.equal(validarResolucao(nomeComMarca).resolucao.passos[0].nome, "Isole x_C", "o nome do passo é texto simples");
 });
 
 test("resolução: fórmula fora da lista e conta que não fecha derrubam o exemplo (a lição fica com o texto)", () => {

@@ -10,8 +10,9 @@ export * from './formula';
 export { conferirConta, type ResultadoConta } from './formula-conta';
 export * from './visuais-validacao';
 export * from './resolucao-publica';
+export * from './formula-no-texto';
 export {
-  comAlturaMinima, comporDesenhos, dentroDoTeto, desenharFormula, desenharPlano, desenharRetaNumerica, desenharVisual, desenhoParaSvg,
+  comAlturaMinima, comporDesenhos, dentroDoTeto, desenharFormula, desenharFormulaEmLinha, desenharPlano, desenharRetaNumerica, desenharVisual, desenhoParaSvg,
   numeroParaTela, rotuloDoPonto, type OpcoesDaFigura, type OpcoesDaFormula, type OpcoesDoSvg,
 } from './motor-visuais';
 export { caminhoValido, larguraDoTexto, temGlifo } from './texto-vetorial';

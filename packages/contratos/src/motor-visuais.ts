@@ -9,6 +9,7 @@ import {
   pontoApareceNaPosicao,
   type ContextoDoDesenho,
   type Desenho,
+  type DesenhoEmLinha,
   type PapelDeCor,
   type PapelPonto,
   type Primitiva,
@@ -176,6 +177,17 @@ export function desenharFormula(arvore: NoFormula, opcoes: OpcoesDaFormula = {})
     ...deslocar(caixa.marcas, x, PADDING_DO_BLOCO + caixa.a),
   ];
   return desenhoDe(marcas, altura, falarFormula(arvore), cabe ? {} : { larguraDoConteudo: r2(caixa.l + 2 * lateral) });
+}
+
+/**
+ * A fórmula em linha (variável, índice, expoente, número, operador, parênteses): uma caixa do tamanho do texto ao redor (`tamanho`,
+ * 16 ou 17), com a linha de base marcada, para o cliente pôr no meio da frase. Fração, raiz, matriz e determinante não vêm
+ * aqui (`formulaCabeEmLinha`): vão em bloco, e na frase caem em texto linear.
+ */
+export function desenharFormulaEmLinha(arvore: NoFormula, tamanho = 16): DesenhoEmLinha {
+  const caixa = caixaDaFormula(arvore, tamanho);
+  const { primitivas, menorTexto } = emitir(deslocar(caixa.marcas, 0, caixa.a));
+  return { largura: r2(caixa.l), altura: r2(caixa.a + caixa.p), linhaDeBase: r2(caixa.a), primitivas, falado: falarFormula(arvore), menorTexto };
 }
 
 /* ----- Pontos: papel efetivo, legenda e rótulos ----- */

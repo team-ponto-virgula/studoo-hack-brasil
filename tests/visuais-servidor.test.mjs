@@ -4,7 +4,8 @@ import { test } from "node:test";
 import sharp from "sharp";
 import { lerCapacidades, normalizarVisual, visualParaEnunciado } from "@studoo/contratos";
 import { apresentarExercicio, conteudoValido, recursoValido } from "../src/dominio/aprendizado/plano.ts";
-import { SEM_CAPACIDADES, comVisuais, descricaoDaPrancheta, limparVisuais, pranchetaDosVisuais, recursoDoDesenho, temVisual, visualDoRetorno } from "../src/servidor/aprendizado/visuais.ts";
+import { SEM_CAPACIDADES, comTextoLinear, comVisuais, conteudoEhDeMatematica, descricaoDaPrancheta, limparVisuais, pranchetaDosVisuais, recursoDoDesenho, temVisual, visualDoRetorno } from "../src/servidor/aprendizado/visuais.ts";
+import { ehAssuntoDeMatematica } from "../src/servidor/ia/matematica.ts";
 
 const NOMES = ["baricentro", "abscissas", "colinearidade"];
 const copia = (valor) => JSON.parse(JSON.stringify(valor));
@@ -197,4 +198,84 @@ test("o que está gravado é validado de novo na leitura: visual ou resolução 
   assert.equal(saida.titulo, conteudo.titulo);
   assert.deepEqual(limparVisuais(conteudo), limparVisuais(conteudo));
   assert.deepEqual(lerCapacidades("visuais@1,resolucao@1"), TUDO);
+});
+
+/* ----- Fórmula em linha: o texto linear para quem não desenha ----- */
+
+const textosDe = (valor, achados = []) => {
+  if (typeof valor === "string") achados.push(valor);
+  else if (Array.isArray(valor)) valor.forEach((item) => textosDe(item, achados));
+  else if (valor && typeof valor === "object") Object.values(valor).forEach((item) => textosDe(item, achados));
+  return achados;
+};
+
+test("sem visuais@1 as fórmulas marcadas dos textos chegam em texto linear, sem cifrão; o resto fica", () => {
+  for (const nome of NOMES) {
+    const conteudo = conteudoDa(nome);
+    assert.equal(conteudoEhDeMatematica(conteudo), true, nome);
+    const detalhe = detalheDe(conteudo, FOTO);
+    const legado = comTextoLinear(detalhe);
+    for (const texto of textosDe(legado)) {
+      assert.equal(/\$[^\s$]/.test(texto) && /[^\s$]\$/.test(texto) && texto.includes("$x_") , false, `cifrão de fórmula sobrou: ${texto.slice(0, 80)}`);
+      assert.equal(/\\(?:frac|times|div|begin|foco)/.test(texto), false, `LaTeX cru: ${texto.slice(0, 80)}`);
+    }
+    assert.deepEqual(legado.recurso, detalhe.recurso, "o recurso não é texto");
+    assert.deepEqual(legado.exercicio.opcoes.map(({ id }) => id), detalhe.exercicio.opcoes.map(({ id }) => id), "os ids ficam");
+    assert.equal(legado.id, detalhe.id);
+  }
+  const baricentro = comTextoLinear(detalheDe(conteudoDa("baricentro"), FOTO));
+  assert.equal(baricentro.conceito, "O baricentro G é o ponto onde as três medianas do triângulo se cruzam. Cada coordenada dele é a média das coordenadas dos vértices: x_G = (x_A + x_B + x_C) ÷ 3 e y_G = (y_A + y_B + y_C) ÷ 3.");
+  const abscissas = comTextoLinear(detalheDe(conteudoDa("abscissas"), FOTO));
+  assert.equal(abscissas.exercicio.enunciado, "Três vértices têm abscissas x_A = 3, x_B = 5 e x_C. A abscissa do baricentro é 4. Qual é x_C?");
+  assert.equal(abscissas.exercicio.opcoes[2].texto, "4", "opção só com número");
+  const colinearidade = comTextoLinear(detalheDe(conteudoDa("colinearidade"), FOTO));
+  assert.match(colinearidade.conceito, /det\[x_A, y_A, 1; x_B, y_B, 1; x_C, y_C, 1\] = 0\.$/, "o determinante, que só vai em bloco, vira texto linear dentro da frase");
+  assert.deepEqual(colinearidade.exercicio.opcoes.map(({ texto }) => texto), ["k = 0", "k = 6", "k = −6"]);
+});
+
+test("com visuais@1 o texto chega com as marcas, para o cliente desenhar a fórmula na frase", async () => {
+  const conteudo = conteudoDa("abscissas");
+  const saida = await comVisuais(detalheDe(conteudo, FOTO), conteudo, { capacidades: SO_VISUAIS, desenharPng: true });
+  assert.match(saida.conceito, /\$x_G = \(x_A \+ x_B \+ x_C\) ÷ 3\$|\$x_G = \(x_A \+ x_B \+ x_C\) \/ 3\$/);
+  assert.ok(saida.exercicio.enunciado.includes("$x_A = 3$"));
+  assert.ok(saida.exercicio.opcoes.every((opcao) => !opcao.texto.includes("$")));
+});
+
+test("o texto linear só entra em lição de matemática e só onde há marca de fórmula (código e dinheiro ficam)", () => {
+  const codigo = {
+    objetivo: "Usar variáveis no shell", conceito: "Em shell, $HOME e ${a}+${b} guardam valores. Custa R$ 5,00.", exemplo: "echo $HOME/$USER", origem: "x",
+    exercicio: { tipo: "lacuna", enunciado: "Complete.", trecho: "echo ${a}+${b}", trechoTipo: "codigo", gabarito: ["x"], feedbackCorreto: "ok", feedbackIncorreto: "não" },
+  };
+  // Lição que não é de matemática nunca passa pela conversão (o servidor só chama `comTextoLinear` nas de matemática).
+  assert.equal(conteudoEhDeMatematica(codigo), false);
+  // E texto sem marca de fórmula volta como veio: o mesmo objeto.
+  const semMarca = detalheDe({ ...codigo, conceito: "Custa R$ 5,00 e R$ 10,00.", exemplo: "echo $HOME" });
+  assert.equal(comTextoLinear(semMarca), semMarca, "o mesmo objeto: nada mudou");
+  // Mesmo numa lição de matemática, um trecho de código não é tocado, e dinheiro não é fórmula.
+  const mista = conteudoDa("baricentro");
+  mista.exercicio.trecho = "x = ${a}+${b}";
+  mista.exercicio.trechoTipo = "codigo";
+  mista.exemplo = "Custa R$ 5,00 e R$ 10,00.";
+  const legado = comTextoLinear(detalheDe(mista));
+  assert.equal(legado.exercicio.trecho, "x = ${a}+${b}");
+  assert.equal(legado.exemplo, "Custa R$ 5,00 e R$ 10,00.");
+  // O retorno do exercício também.
+  const avaliacao = { correta: true, feedback: "Isso! $x_C = 12 − 8 = 4$.", comprovante: "abc.$def$", certos: ["$a$"], visual: { tipo: "formula", latex: "a" } };
+  const linear = comTextoLinear(avaliacao);
+  assert.equal(linear.feedback, "Isso! x_C = 12 − 8 = 4.");
+  assert.equal(linear.comprovante, "abc.$def$", "o comprovante nunca se mexe");
+  assert.deepEqual(linear.certos, ["$a$"]);
+  assert.equal(linear.visual, avaliacao.visual);
+  assert.equal(comTextoLinear({ correta: false, feedback: "Veja R$ 5,00." }).feedback, "Veja R$ 5,00.");
+});
+
+test("o assunto de matemática vem das palavras do título, do objetivo e do conceito", () => {
+  for (const texto of ["Baricentro: achando o terceiro vértice", "Pontos colineares e o determinante", "Resolver equações do 2º grau (Bhaskara)", "Geometria analítica: ponto médio", "Frações e porcentagem", "Função afim e quadrática", "Plano cartesiano"]) {
+    assert.equal(ehAssuntoDeMatematica(texto), true, texto);
+  }
+  for (const texto of ["Acordes de violão", "Inglês: pedir um café", "SQL para a prova: JOIN", "Revolução Francesa", "Receita de bolo", "Programar uma função em JavaScript", "Variáveis no shell"]) {
+    assert.equal(ehAssuntoDeMatematica(texto), false, texto);
+  }
+  assert.equal(ehAssuntoDeMatematica(undefined, "", "A equação da reta"), true);
+  assert.equal(ehAssuntoDeMatematica(), false);
 });

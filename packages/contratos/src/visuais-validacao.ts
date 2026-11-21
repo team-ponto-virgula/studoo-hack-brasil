@@ -1,4 +1,5 @@
-import { formulaLinear, lerFormula, percorrerFormula, type NoFormula } from "./formula";
+import { lerFormula, percorrerFormula, type NoFormula } from "./formula";
+import { normalizarTextoComFormulas } from "./formula-no-texto";
 import { conferirConta, mesmoValor, valorDaOpcao } from "./formula-conta";
 import { desenharVisual } from "./motor-visuais";
 import {
@@ -60,29 +61,19 @@ function cortar(texto: string, maximo: number): string {
 }
 
 /**
- * Texto simples: sem LaTeX (barra, chaves, cifrão) e sem caractere de controle. Uma fórmula entre cifrões no meio da frase vira
- * o texto linear dela; se não ler, o texto é recusado.
+ * Texto simples, sem caractere de controle e sem LaTeX cru. Com `manterMarcas`, a fórmula entre cifrões que vale e cabe em linha
+ * (`$x_G = 1$`) fica, na forma canônica, para o cliente desenhá-la dentro da frase; a que não vale, ou que não cabe em linha (fração,
+ * raiz, matriz), cai em texto linear, e o texto nunca é recusado por isso. Sem `manterMarcas` (legenda, `alt`, nome do passo), toda
+ * fórmula vira texto linear. LaTeX solto fora das marcas também vira texto linear.
  */
-function textoSimples(valor: unknown): string | null {
-  if (typeof valor !== "string") return null;
-  let invalido = false;
-  const texto = valor
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(/\$([^$]{1,200})\$/g, (_inteiro, fonte: string) => {
-      const lida = lerFormula(fonte);
-      if (!lida.ok) {
-        invalido = true;
-        return "";
-      }
-      return formulaLinear(lida.arvore);
-    });
-  if (invalido || !texto || /[\\{}$\u0000-\u001f]/.test(texto)) return null;
-  return texto;
+function textoSimples(valor: unknown, manterMarcas = false): string | null {
+  if (typeof valor !== "string" || /[\u0000-\u001f]/.test(valor.replace(/\s/g, " "))) return null;
+  const texto = normalizarTextoComFormulas(valor.replace(/\s+/g, " ").trim(), manterMarcas);
+  return texto ? texto : null;
 }
 
-function textoAte(valor: unknown, maximo: number, onde: string): string {
-  const texto = textoSimples(valor);
+function textoAte(valor: unknown, maximo: number, onde: string, manterMarcas = false): string {
+  const texto = textoSimples(valor, manterMarcas);
   if (!texto) return recusar(`${onde}: texto ausente ou com LaTeX solto`);
   if (texto.length > maximo) return recusar(`${onde}: mais de ${maximo} caracteres`);
   return texto;
@@ -545,17 +536,17 @@ function normalizarOpcao(bruto: unknown, posicao: number): { opcao: OpcaoCorrigi
   const temTexto = !ausente(bruto.texto) && bruto.texto !== "";
   const temFormula = !ausente(bruto.formula) && bruto.formula !== "";
   if (temTexto === temFormula) return recusar(`${onde}: precisa de texto ou de fórmula, só um dos dois`);
-  const porque = textoAte(bruto.porque, LIMITES_VISUAIS.porque, `${onde}: porque`);
+  const porque = textoAte(bruto.porque, LIMITES_VISUAIS.porque, `${onde}: porque`, true);
   if (temFormula) {
     const lida = formulaDoCampo(bruto.formula, `${onde}: fórmula`);
     return { opcao: { formula: lida.canonica, correta: bruto.correta, porque }, arvore: lida.arvore };
   }
-  return { opcao: { texto: textoAte(bruto.texto, LIMITES_VISUAIS.textoDaOpcao, `${onde}: texto`), correta: bruto.correta, porque } };
+  return { opcao: { texto: textoAte(bruto.texto, LIMITES_VISUAIS.textoDaOpcao, `${onde}: texto`, true), correta: bruto.correta, porque } };
 }
 
 function normalizarTentativa(bruto: unknown, declaradas: Record<string, string>): TentativaGuardada {
   if (!objeto(bruto)) return recusar("sua vez: formato inválido");
-  const pergunta = textoAte(bruto.pergunta, LIMITES_VISUAIS.pergunta, "sua vez: pergunta");
+  const pergunta = textoAte(bruto.pergunta, LIMITES_VISUAIS.pergunta, "sua vez: pergunta", true);
   if (!Array.isArray(bruto.opcoes) || bruto.opcoes.length !== 3) return recusar("sua vez: precisa de exatamente 3 opções");
   const lidas = bruto.opcoes.map(normalizarOpcao);
   if (lidas.filter(({ opcao }) => opcao.correta).length !== 1) return recusar("sua vez: precisa de exatamente 1 opção certa");
@@ -585,7 +576,7 @@ export type ResultadoResolucao =
 export function validarResolucao(bruto: unknown): ResultadoResolucao {
   try {
     if (!objeto(bruto)) return recusar("a resolução não é um objeto");
-    const problema = textoAte(bruto.problema, LIMITES_VISUAIS.problema, "problema");
+    const problema = textoAte(bruto.problema, LIMITES_VISUAIS.problema, "problema", true);
     const passosBrutos = bruto.passos;
     if (!Array.isArray(passosBrutos) || passosBrutos.length < LIMITES_VISUAIS.passosMin || passosBrutos.length > LIMITES_VISUAIS.passosMax) {
       return recusar(`a resolução precisa de ${LIMITES_VISUAIS.passosMin} a ${LIMITES_VISUAIS.passosMax} passos`);
@@ -605,7 +596,7 @@ export function validarResolucao(bruto: unknown): ResultadoResolucao {
       const onde = `passo ${posicao + 1}`;
       if (!objeto(passoBruto)) return recusar(`${onde}: formato inválido`);
       const nome = textoCortado(passoBruto.nome, LIMITES_VISUAIS.nomeDoPasso, `${onde}: nome`, 3);
-      const texto = textoAte(passoBruto.texto, LIMITES_VISUAIS.textoDoPasso, `${onde}: texto`);
+      const texto = textoAte(passoBruto.texto, LIMITES_VISUAIS.textoDoPasso, `${onde}: texto`, true);
       const formula = ausente(passoBruto.formula) || passoBruto.formula === "" ? undefined : formulaDoCampo(passoBruto.formula, `${onde}: fórmula`);
       if (formula) formulas.push(formula.arvore);
       const visual = usar(passoBruto.visual, posicao === total - 1);
