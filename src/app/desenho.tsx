@@ -1,7 +1,7 @@
 import { createElement, memo, useMemo, type CSSProperties, type ReactNode } from 'react';
 import { falarFormula, formulaLinear, lerFormula, type ContextoDoDesenho, type Desenho, type OpcoesDaFigura, type OpcoesDaFormula, type Visual } from '@studoo/contratos';
 import { Icone } from '../ui';
-import { ajusteDoBloco, desenhoDoVisual, elementoDaPrimitiva, ordenarVisuais, separarPontoResposta, type ElementoSvg } from './desenho-svg';
+import { ajusteDoBloco, alturaDaFiguraNaTela, alturaMaximaDaFigura, desenhoDoVisual, elementoDaPrimitiva, ordenarVisuais, separarPontoResposta, temProcurado, type ElementoSvg } from './desenho-svg';
 
 /*
  * Um visual da lição (spec 15) desenhado pelo motor compartilhado: a web só monta as primitivas em SVG, que escala sozinho pela largura do
@@ -164,3 +164,66 @@ export function VisuaisDaLicao({ visuais, testID = 'visual-licao' }: { visuais: 
 
 export const CONTEXTO_DO_ENUNCIADO: ContextoDoDesenho = { tipo: 'enunciado' };
 export const CONTEXTO_DO_RETORNO: ContextoDoDesenho = { tipo: 'retorno' };
+
+/* ----- A figura do exercício (spec 15, seções 3, 12 e 13) ----- */
+
+/** A largura do quadro do exercício em 390 (a janela, as margens de 16 e o respiro de 19,5 com a borda de 2) e a do computador (coluna de 672). */
+const LARGURA_DO_QUADRO_EM_390 = 315;
+const LARGURA_DO_QUADRO_NO_COMPUTADOR = 612;
+
+/**
+ * A altura máxima da figura do exercício na tela, em pixels: 200 em 390 (e menos numa janela baixa, como no app) e, conforme o quadro se
+ * alarga, cresce até 480 no computador, em linha reta entre os dois pontos da spec (seção 3). Sem isso, o salto de 200 para 480 aconteceria
+ * numa largura qualquer.
+ */
+export function alturaDaFiguraNaWeb(larguraDoQuadro: number, alturaDaJanela: number): number {
+  const base = alturaDaFiguraNaTela(alturaDaJanela);
+  const inclinacao = (ALTURA_MAXIMA_DO_VISUAL - 200) / (LARGURA_DO_QUADRO_NO_COMPUTADOR - LARGURA_DO_QUADRO_EM_390);
+  return Math.min(ALTURA_MAXIMA_DO_VISUAL, Math.round(base + Math.max(0, larguraDoQuadro - LARGURA_DO_QUADRO_EM_390) * inclinacao));
+}
+
+/** A altura máxima no desenho (unidades do motor, 320 de largura) para a figura ocupar `alturaNaTela` na largura do quadro. */
+export function alturaDoDesenhoDaFigura(larguraDoQuadro: number, alturaDaJanela: number): number {
+  return alturaMaximaDaFigura(larguraDoQuadro > 0 ? larguraDoQuadro : LARGURA_DO_QUADRO_EM_390, alturaDaFiguraNaWeb(larguraDoQuadro, alturaDaJanela));
+}
+
+/**
+ * A caixa da figura do exercício: a altura (em unidades do desenho) da figura do enunciado. A figura do retorno entra nela e só a escala
+ * muda, e nem as opções nem o rodapé pulam (seção 12). `undefined` quando a figura não cabe (vira a linha de texto) ou não existe.
+ */
+export function caixaDaFigura(visual: Visual | undefined, alturaMaxima: number): number | undefined {
+  if (!visual || visual.tipo === 'formula') return undefined;
+  const desenho = desenhoDoVisual(visual, CONTEXTO_DO_ENUNCIADO, { alturaMaxima });
+  return desenho && !desenho.naoCabe ? desenho.altura : undefined;
+}
+
+/** A descrição da figura revelada, para o leitor de tela ouvir junto do retorno, numa frase só; sem ponto procurado, nada novo a dizer. */
+export function descricaoDaFiguraRevelada(doEnunciado: Visual | undefined, revelada: Visual | undefined, alturaMaxima: number): string | undefined {
+  if (!doEnunciado || !revelada || !temProcurado(doEnunciado)) return undefined;
+  return desenhoDoVisual(revelada, CONTEXTO_DO_RETORNO, { alturaMaxima })?.descricao;
+}
+
+/**
+ * A figura do enunciado, e no acerto a do retorno NO LUGAR dela (o procurado vira resposta, entrando de leve; no erro, nada muda). A troca
+ * remonta o desenho (chave nova), e a entrada roda uma vez só. Sem ponto procurado (só pontos dados e segmentos), o retorno é o mesmo desenho:
+ * fica o do enunciado, sem troca nem animação. A descrição nova vai na fala do retorno: a figura não anuncia de novo.
+ */
+export function FiguraDoExercicio({ visual, revelada, alturaMaxima, caixa, descricaoDoRetorno }: {
+  visual: Visual;
+  /** A figura do retorno, depois do acerto. */
+  revelada?: Visual;
+  alturaMaxima: number;
+  caixa: number | undefined;
+  descricaoDoRetorno?: string;
+}) {
+  const opcoesDe = (alvo: Visual) => (alvo.tipo === 'formula' ? OPCOES_DA_FORMULA : { alturaMaxima });
+  return (
+    <div className="aula-figura">
+      {revelada && temProcurado(visual) ? (
+        <DesenhoDoVisual key="retorno" visual={revelada} contexto={CONTEXTO_DO_RETORNO} testID="visual-retorno" caixa={caixa} rotulo={descricaoDoRetorno} opcoes={opcoesDe(revelada)} />
+      ) : (
+        <DesenhoDoVisual key="enunciado" visual={visual} contexto={CONTEXTO_DO_ENUNCIADO} testID="visual-enunciado" entrada={false} caixa={caixa} opcoes={opcoesDe(visual)} />
+      )}
+    </div>
+  );
+}

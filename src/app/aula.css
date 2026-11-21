@@ -1054,3 +1054,7 @@
   .desenho--caixa[data-entrada] { animation: desenho-aparecer 200ms ease-out both; }
   .desenho--caixa[data-entrada] .desenho__ponto { animation: desenho-crescer 200ms ease-out 200ms both; }
 }
+
+/* Com figura, o enunciado desce para 22 (seção 3): as opções começam na primeira tela. */
+.aula-miolo .aula-pergunta[data-com-visual] { font-size: 1.375rem; line-height: 1.15; }
+.aula-figura { margin: 2px 0 4px; }

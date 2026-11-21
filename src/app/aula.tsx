@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type Ref, type SyntheticEvent } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type ReactNode, type Ref, type SyntheticEvent } from 'react';
 import {
   AUTOAVALIACOES,
   acertouParte,
@@ -36,7 +36,7 @@ import {
 } from '@studoo/contratos';
 import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
 import { Botao, Confete, Icone, Mascote, Stu, precarregarAnimacoesStu, type NomeIcone } from '../ui';
-import { VisuaisDaLicao } from './desenho';
+import { FiguraDoExercicio, VisuaisDaLicao, alturaDoDesenhoDaFigura, caixaDaFigura, descricaoDaFiguraRevelada } from './desenho';
 import { ApoioDaLicao } from './estudio';
 import { TextoComFormulas } from './texto-com-formulas';
 import { Ordenar } from './ordenar';
@@ -303,6 +303,33 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
   const resposta = indice >= 0 ? respostas[indice] : '';
   const avaliacao = indice >= 0 ? avaliacoes[indice] : null;
   const ocupado = pendente !== null;
+  /**
+   * A largura do quadro do exercício e a altura da janela quando ela mudou: a figura (spec 15, seção 3) tem no máximo 200 de altura em 390 e 480 no
+   * computador, em linha reta entre os dois, e o motor a desenha dentro da altura pedida (em unidades do desenho, que dependem da largura).
+   */
+  const [medidasDoQuadro, setMedidasDoQuadro] = useState({ largura: 0, janela: 900 });
+  useLayoutEffect(() => {
+    if (etapa.tipo !== 'exercicio') return;
+    const quadro = document.querySelector<HTMLElement>('.aula-quadro[data-etapa="exercicio"]');
+    if (!quadro) return;
+    const medir = () => {
+      const estilo = window.getComputedStyle(quadro);
+      const largura = quadro.getBoundingClientRect().width - Number.parseFloat(estilo.paddingLeft) - Number.parseFloat(estilo.paddingRight)
+        - Number.parseFloat(estilo.borderLeftWidth) - Number.parseFloat(estilo.borderRightWidth);
+      setMedidasDoQuadro((atual) => (Math.abs(atual.largura - largura) < 1 ? atual : { largura, janela: window.innerHeight }));
+    };
+    medir();
+    const observador = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(medir);
+    observador?.observe(quadro);
+    return () => observador?.disconnect();
+  }, [passo, etapa.tipo]);
+  const alturaDaFigura = alturaDoDesenhoDaFigura(medidasDoQuadro.largura, medidasDoQuadro.janela);
+  const caixaDaFiguraDoExercicio = useMemo(() => caixaDaFigura(exercicio?.visual, alturaDaFigura), [exercicio, alturaDaFigura]);
+  /** A descrição da figura revelada, para o leitor de tela ouvir junto do retorno, numa frase só. */
+  const descricaoDoRetorno = useMemo(
+    () => (avaliacao?.correta ? descricaoDaFiguraRevelada(exercicio?.visual, avaliacao.visual, alturaDaFigura) : undefined),
+    [avaliacao, exercicio, alturaDaFigura],
+  );
   const total = etapas.length;
   const ultima = passo === total - 1;
   // O último exercício é o único sem acerto: pular leva direto à revisão rápida, com ele mesmo.
@@ -812,6 +839,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                 explicacao={licao.conceito} exemplo={licao.exemplo}
                 errouAntes={Boolean(errosAnteriores[indice])}
                 avaliacao={avaliacao} ocupado={ocupado} responder={responder} formulario={formulario} titulo={tituloEtapa}
+                alturaDaFigura={alturaDaFigura} caixaDaFigura={caixaDaFiguraDoExercicio} descricaoDoRetorno={descricaoDoRetorno}
                 dica={avaliacao ? null : errosAnteriores[indice]} />
             </>
           );
@@ -845,7 +873,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar }: {
                   {avaliacao.correta
                     ? avaliacao.criterios?.some(({ atendido }) => !atendido) ? t.quaseCompleta : tituloDoAcerto(`${licao.id}-${indice}`)
                     : ponteFeita ? t.ponteFeita : acertouParte(avaliacao) ? t.errada : t.erradaLonge}
-                  <span className="somente-leitor"> {avaliacao.correta ? t.correta : t.incorreta}.</span>
+                  <span className="somente-leitor"> {avaliacao.correta ? t.correta : t.incorreta}.{descricaoDoRetorno ? ` ${descricaoDoRetorno}` : ''}</span>
                 </h2>
                 {/* Só este bloco rola quando o painel passaria de metade da tela; o título e as ações ficam. */}
                 <div className="aula-retorno__corpo" ref={corpoRetorno} data-rola={corpoRola || undefined}>
@@ -1592,8 +1620,12 @@ function Trecho({ texto, tipo = 'frase', fala, preenchimento }: { texto: string;
   }
 }
 
-function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mudar, avaliacao, ocupado, responder, formulario, titulo, consulta, dica,
-  explicacao, exemplo, errouAntes = false }: {
+export function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mudar, avaliacao, ocupado, responder, formulario, titulo, consulta, dica,
+  explicacao, exemplo, errouAntes = false, alturaDaFigura = 203, caixaDaFigura: caixa, descricaoDoRetorno }: {
+  /** A altura máxima da figura no desenho (unidades do motor), a caixa dela e a descrição da figura revelada (ver `FiguraDoExercicio`). */
+  alturaDaFigura?: number;
+  caixaDaFigura?: number;
+  descricaoDoRetorno?: string;
   /** Ordenar: a ordem com que esta tentativa começou. */
   inicial: string;
   /** Recurso para consultar durante o exercício (diagrama, barra de fração, ilustração). A linha do tempo não: entregaria a ordem. */
@@ -1679,8 +1711,14 @@ function EtapaExercicio({ exercicio, indice, total, resposta, inicial, mudar, av
 
   return (
     <section className="aula-quadro" data-etapa="exercicio" data-tipo={exercicio.tipo} aria-labelledby="etapa-aula">
-      <TextoComFormulas como="h1" id="etapa-aula" ref={titulo} tabIndex={-1} className="aula-pergunta" texto={exercicio.enunciado} />
+      {/* Com figura, o enunciado desce de tamanho (spec 15, seção 3): as opções começam na primeira tela. */}
+      <TextoComFormulas como="h1" id="etapa-aula" ref={titulo} tabIndex={-1} className="aula-pergunta" data-com-visual={exercicio.visual ? '' : undefined} texto={exercicio.enunciado} />
       {exercicio.contexto && <TextoComFormulas como="p" texto={exercicio.contexto} />}
+      {/* A ordem é o enunciado, a figura e as opções. */}
+      {exercicio.visual && (
+        <FiguraDoExercicio visual={exercicio.visual} revelada={avaliacao?.correta ? avaliacao.visual : undefined} alturaMaxima={alturaDaFigura} caixa={caixa}
+          descricaoDoRetorno={descricaoDoRetorno} />
+      )}
       {exercicio.trecho && (
         <Trecho texto={exercicio.trecho} tipo={exercicio.trechoTipo} fala={exercicio.fala}
           preenchimento={exercicio.tipo === 'lacuna' ? resposta.trim().replace(/[.,;:!?…]+$/u, '') : undefined} />
