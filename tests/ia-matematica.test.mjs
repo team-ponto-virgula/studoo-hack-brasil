@@ -833,6 +833,67 @@ test("a proposta não cai por citação nem por trecho comprido demais ou págin
   assert.equal(citacoes[2], "normalizada");
 });
 
+/* ----- Marco 6: o exemplo degenerado e o papel do derivado ----- */
+
+const ponto = (id, papel, x, y, derivado) => ({ id, papel, x: x ?? null, y: y ?? null, valor: null, rotulo: null, derivado: derivado ?? null });
+
+test("o prompt de matemática, da trilha e do material, pede números sem ponto em cima de outro e o derivado como especial", () => {
+  const trilha = corpoDaLicao(esqueletoDeMatematica(GERADOR_OPENAI), 0, 0, "", true).input[0].content;
+  for (const [onde, texto] of [["trilha", trilha], ["material", instrucoesDeFigurasDoMaterial]]) {
+    assert.match(texto, /Escolha números em que nenhum ponto cai em cima de outro/, onde);
+    assert.match(texto, /o procurado C não é igual a G, a A nem a B/, onde);
+    assert.match(texto, /os três vértices não ficam alinhados; só a lição de pontos colineares usa pontos alinhados/, onde);
+    assert.match(texto, /C = 3·G − A − B em cada coordenada/, onde);
+    assert.match(texto, /DESCARTA a figura que tem dois pontos no mesmo lugar/, onde);
+    assert.match(texto, /o baricentro G, o ponto médio M e a média SEMPRE são especiais e levam derivado, mesmo quando o enunciado os informa/, onde);
+  }
+});
+
+test("6: o exercício degenerado (A(2, 3), B(4, 1), G(3, 2): C = G) perde só a figura; a lição, os visuais e a resolução ficam", () => {
+  const bruto = copia(exemploDeMatematica);
+  bruto.exercicios[0].visual.pontos = [
+    ponto("A", "dado", 2, 3), ponto("B", "dado", 4, 1), ponto("C", "procurado", 3, 2), ponto("G", "especial", null, null, { tipo: "baricentro", de: ["A", "B", "C"] }),
+  ];
+  const lida = normalizarLicao(bruto, ORIGEM);
+  assert.ok(lida.conteudo && conteudoValido(lida.conteudo));
+  assert.equal("visual" in lida.conteudo.exercicio, false);
+  assert.deepEqual(lida.descartados, ["principal:visual"]);
+  assert.match(lida.matematica.motivos[0], /^principal\.visual: pontos: G cai em cima de C, os dois em \(3, 2\): escolha números em que o resultado não coincide/);
+  assert.deepEqual(lida.matematica.figuras, { enviadas: 1, aceitas: 0 });
+  assert.equal(lida.conteudo.visuais.length, 2);
+  assert.equal(lida.conteudo.resolucao.passos.length, 5);
+  // Com números que não coincidem, a mesma figura vale: C = (4, 0) com A(1, 2), B(−2, 7) e G(1, 3).
+  const bom = copia(exemploDeMatematica);
+  bom.exercicios[0].visual.pontos = [
+    ponto("A", "dado", 1, 2), ponto("B", "dado", -2, 7), ponto("C", "procurado", 4, 0), ponto("G", "especial", null, null, { tipo: "baricentro", de: ["A", "B", "C"] }),
+  ];
+  assert.equal(normalizarLicao(bom, ORIGEM).conteudo.exercicio.visual.pontos.find((p) => p.id === "G").x, 1);
+});
+
+test("6: a figura de um passo da resolução que tem dois pontos no mesmo lugar some do passo; a resolução fica", () => {
+  const bruto = copia(exemploDeMatematica);
+  // O último passo mostra a resposta M em cima de A (os números da IA estavam errados): a figura do passo some, a conta e o texto ficam.
+  bruto.resolucao.passos[4].visual.pontos = [ponto("A", "dado", 1, 2), ponto("B", "dado", 5, 8), ponto("M", "resposta", 1, 2)];
+  const lida = normalizarLicao(bruto, ORIGEM);
+  assert.equal(lida.conteudo.resolucao.passos.length, 5);
+  assert.equal("visual" in lida.conteudo.resolucao.passos[4], false);
+  assert.ok(lida.conteudo.resolucao.visual, "a figura do problema continua");
+  assert.deepEqual(lida.matematica.resolucao, { enviada: true, aceita: true, conferidas: 4, puladas: 2 });
+});
+
+test("6: o baricentro que a IA marca como dado, com derivado, é um ponto de destaque na figura guardada (losango, 'baricentro' na legenda)", () => {
+  const bruto = copia(exemploDeMatematica);
+  bruto.exercicios[0].visual.pontos = [
+    ponto("A", "dado", 1, 2), ponto("B", "dado", -2, 7), ponto("C", "procurado", 4, 0), ponto("G", "dado", null, null, { tipo: "baricentro", de: ["A", "B", "C"] }),
+  ];
+  const lida = normalizarLicao(bruto, ORIGEM);
+  assert.deepEqual(lida.descartados, []);
+  const g = lida.conteudo.exercicio.visual.pontos.find((p) => p.id === "G");
+  assert.deepEqual(g, { id: "G", papel: "especial", x: 1, y: 3, derivado: { tipo: "baricentro", de: ["A", "B", "C"] } });
+  // E com um ponto de coordenadas dadas e sem derivado, o papel dado fica.
+  assert.equal(lida.conteudo.exercicio.visual.pontos.find((p) => p.id === "A").papel, "dado");
+});
+
 /* ----- A IA falsa de geometria analítica (demonstração, sem chave) ----- */
 
 const geometria = DEMOS.find(({ chave }) => chave === "geometria");

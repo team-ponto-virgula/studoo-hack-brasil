@@ -6,6 +6,7 @@ import {
   CAPACIDADES_DESTE_CLIENTE,
   LIMITES_VISUAIS,
   cabecalhoDeCapacidades,
+  conferirConta,
   formulaLinear,
   lerCapacidades,
   lerFormula,
@@ -173,12 +174,12 @@ test("pontos: nome, papel, coordenada, derivados e rótulos", () => {
     pontos: [
       { id: "A", x: 0, y: 0 },
       { id: "B", x: 4, y: 6 },
-      { id: "C", x: 2, y: 3, papel: "procurado" },
+      { id: "C", x: 2, y: 6, papel: "procurado" },
       { id: "M", x: 99, y: 99, derivado: { tipo: "ponto_medio", de: ["A", "B"] } },
       { id: "G", derivado: { tipo: "baricentro", de: ["A", "B", "C"] }, papel: "resposta" },
     ],
   }));
-  assert.deepEqual(derivados.pontos.slice(3).map(({ id, papel, x, y }) => [id, papel, x, y]), [["M", "especial", 2, 3], ["G", "resposta", 2, 3]]);
+  assert.deepEqual(derivados.pontos.slice(3).map(({ id, papel, x, y }) => [id, papel, x, y]), [["M", "especial", 2, 3], ["G", "resposta", 2, 4]]);
   const media = normalizarVisual(reta({ pontos: [{ id: "A", valor: 3 }, { id: "B", valor: 5 }, { id: "C", valor: 4, papel: "procurado" }, { id: "G", derivado: { tipo: "media", de: ["A", "B", "C"] } }] }));
   assert.equal(media.pontos[3].valor, 4);
   assert.match(recusado(plano({ pontos: [{ id: "A", x: 0, y: 0 }, { id: "B", x: 1, y: 0 }, { id: "C", x: 0, y: 0 }, { id: "G", derivado: { tipo: "baricentro", de: ["A", "B", "C"] } }] })), /não cai em duas casas/);
@@ -682,7 +683,77 @@ test("2g: a descrição dos dados: derivado achado, ponto fora de polígono, dec
   assert.ok(longa.length <= 200, longa);
   assert.equal(longa, "Plano cartesiano com 12 pontos, entre eles o ponto Q (7; 5,5).");
   // Com 12 pontos curtos a frase inteira ainda cabe (183 caracteres), e é a inteira que sai.
-  const curtos = figura([...Array.from({ length: 11 }, (_, i) => ({ id: `P${i + 1}`, x: i * 2 - 11, y: i * 1.5 - 8, rotulo: false })), { id: "Q", papel: "resposta", x: 7, y: 5.5 }]);
+  const curtos = figura([...Array.from({ length: 11 }, (_, i) => ({ id: `P${i + 1}`, x: i * 2 - 11, y: i * 1.5 - 8, rotulo: false })), { id: "Q", papel: "resposta", x: 8, y: 0.5 }]);
   assert.ok(curtos, "12 pontos é o teto da figura");
-  assert.match(descricaoDaFigura(curtos), /^Plano cartesiano com P1 \(−11, −8\), .* e o ponto Q \(7; 5,5\)\.$/);
+  assert.match(descricaoDaFigura(curtos), /^Plano cartesiano com P1 \(−11, −8\), .* e o ponto Q \(8; 0,5\)\.$/);
+});
+
+/* ----- Marco 6: o exemplo degenerado, o papel do derivado e a mensagem da conta ----- */
+
+test("6: dois pontos no mesmo lugar recusam a figura do plano (o caso real: A(2, 3), B(4, 1) e G(3, 2) dão C = G); na reta valem", () => {
+  const baricentro = (a, b, c) => plano({ pontos: [{ id: "A", x: a[0], y: a[1] }, { id: "B", x: b[0], y: b[1] }, { id: "C", papel: "procurado", x: c[0], y: c[1] }, { id: "G", papel: "especial", derivado: { tipo: "baricentro", de: ["A", "B", "C"] } }] });
+  // C = 3G − A − B = (3, 2): o procurado cai em cima de G (o baricentro de um triângulo achatado, com C no meio de AB).
+  assert.match(recusado(baricentro([2, 3], [4, 1], [3, 2])), /G cai em cima de C, os dois em \(3, 2\)/);
+  assert.match(recusado(baricentro([1, 1], [3, 5], [2, 3])), /cai em cima de/, "o segundo caso do Lead: A(1, 1), B(3, 5) e G(2, 3)");
+  // Os números da lição de baricentro das fixtures: nenhum ponto no lugar de outro.
+  assert.ok(normalizarVisual(baricentro([1, 2], [-2, 7], [4, 0])));
+  // Dois dados iguais, o procurado em cima de um dado e o derivado em cima do ponto de que sai.
+  assert.match(recusado(plano({ pontos: [{ id: "A", x: 1, y: 1 }, { id: "B", x: 1, y: 1 }] })), /B cai em cima de A/);
+  assert.match(recusado(plano({ pontos: [{ id: "A", x: 1, y: 2 }, { id: "B", x: 3, y: 4 }, { id: "C", papel: "procurado", x: 3, y: 4 }] })), /C cai em cima de B/);
+  assert.match(recusado(plano({ pontos: [{ id: "A", x: 0, y: 0 }, { id: "B", x: 4, y: 0 }, { id: "M", papel: "especial", derivado: { tipo: "ponto_medio", de: ["A", "A2"] } }, { id: "A2", x: 0, y: 0 }] })), /./);
+  // Pontos com a mesma abscissa ou a mesma ordenada, mas em lugares diferentes, valem.
+  assert.ok(normalizarVisual(plano({ pontos: [{ id: "A", x: 1, y: 2 }, { id: "B", x: 1, y: 5 }, { id: "C", x: 4, y: 2 }] })));
+  // Na reta numérica o exercício do dono (abscissas 3 e 5, baricentro 4, C = 4) tem C e G no mesmo valor e se desenha bem: vale.
+  assert.ok(normalizarVisual(fixture("abscissas").licao.exercicio.visual));
+  assert.ok(normalizarVisual(reta({ pontos: [{ id: "A", valor: 3 }, { id: "B", valor: 5 }, { id: "C", papel: "procurado", valor: 4 }, { id: "G", papel: "especial", derivado: { tipo: "media", de: ["A", "B"] } }] })));
+  // O motivo diz o que fazer, e a figura que some não leva a lição junto: o exercício fica sem figura, a resolução (outras figuras) segue.
+  const motivo = recusado(baricentro([2, 3], [4, 1], [3, 2]));
+  assert.match(motivo, /escolha números em que o resultado não coincide com outro ponto/);
+});
+
+test("6: baricentro, ponto médio e média são pontos de destaque mesmo quando a IA os marca como dado; o procurado e a resposta ficam como vieram", () => {
+  const figura = normalizarVisual(plano({
+    pontos: [
+      { id: "A", papel: "dado", x: 1, y: 2 },
+      { id: "B", papel: "dado", x: -2, y: 7 },
+      { id: "C", papel: "procurado", x: 4, y: 0 },
+      { id: "G", papel: "dado", derivado: { tipo: "baricentro", de: ["A", "B", "C"] } },
+    ],
+  }));
+  assert.deepEqual(figura.pontos.map(({ id, papel }) => [id, papel]), [["A", "dado"], ["B", "dado"], ["C", "procurado"], ["G", "especial"]]);
+  assert.deepEqual(figura.pontos[3], { id: "G", papel: "especial", x: 1, y: 3, derivado: { tipo: "baricentro", de: ["A", "B", "C"] } });
+  const media = normalizarVisual(reta({ pontos: [{ id: "A", valor: 2 }, { id: "B", valor: 6 }, { id: "M", papel: "dado", derivado: { tipo: "media", de: ["A", "B"] } }] }));
+  assert.equal(media.pontos[2].papel, "especial");
+  // Um derivado que é a resposta continua resposta, e um ponto com as coordenadas dadas e sem derivado continua dado.
+  const achado = normalizarVisual(plano({ pontos: [{ id: "A", x: 1, y: 2 }, { id: "B", x: 5, y: 8 }, { id: "M", papel: "resposta", derivado: { tipo: "ponto_medio", de: ["A", "B"] } }] }));
+  assert.equal(achado.pontos[2].papel, "resposta");
+  assert.equal(figura.pontos[0].papel, "dado");
+});
+
+test("6: a recusa da conta diz os valores ligados às letras dela (k = 21), e a conta certa com a letra ligada continua passando", () => {
+  const f = (latex) => lerFormula(latex).arvore;
+  const recusada = conferirConta([f("k = 3 \\times 7"), f("6 - 2k = 0")]);
+  assert.equal(recusada.ok, false);
+  assert.equal(recusada.formula, "6 − 2k = 0");
+  assert.equal(recusada.motivo, "-36 = 0 é falso, com k = 21");
+  // Só as letras que aparecem na conta e têm valor entram na mensagem, com o índice.
+  const duas = conferirConta([f("x_A = 2"), f("x_B = 6"), f("y_A = 9"), f("x_A + x_B = 9")]);
+  assert.equal(duas.motivo, "8 = 9 é falso, com x_A = 2, x_B = 6");
+  // Sem letra ligada, a mensagem é a de sempre.
+  assert.equal(conferirConta([f("2 + 2 = 5")]).motivo, "4 = 5 é falso");
+  // `2k` é `2 × k` (a justaposição é multiplicação), e a conta certa com o valor ligado passa.
+  assert.equal(conferirConta([f("k = 5"), f("6 - 2k = -4")]).ok, true);
+  // Dois valores para a mesma letra reprovam, e a mensagem diz os dois.
+  assert.equal(conferirConta([f("k = 3"), f("k = 21")]).motivo, "k vale 3 e também 21");
+  // Pela resolução: o motivo chega inteiro.
+  const motivo = validarResolucao({
+    problema: "Quanto vale k?",
+    passos: [
+      { nome: "Um", texto: "Primeiro.", formula: "k = 3 \\times 7" },
+      { nome: "Dois", texto: "Depois.", formula: "6 - 2k = 0" },
+      { nome: "Três", texto: "Então.", formula: "k = \\resposta{21}", tentativa: { pergunta: "Quanto vale k?", opcoes: [{ texto: "21", correta: true, porque: "Sim." }, { texto: "3", correta: false, porque: "Não." }, { texto: "0", correta: false, porque: "Não." }] } },
+    ],
+  });
+  assert.equal(motivo.ok, false);
+  assert.match(motivo.motivo, /a conta não fecha em "6 − 2k = 0": -36 = 0 é falso, com k = 21/);
 });

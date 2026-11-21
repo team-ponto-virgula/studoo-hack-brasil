@@ -18,6 +18,10 @@
  *   --objetivo "<texto>"       Objetivo da pessoa no modo material (padrão: "Estudar este material").
  *   --nome "<texto>"           Nome do material (padrão: o do arquivo).
  *   --png <pasta>              Desenha em PNG o que a IA mandou e o validador aceitou (enunciado e retorno de cada figura).
+ *   --bruto <pasta>            Grava, por lição, o que a IA devolveu ANTES do validador (`...-bruto.txt`, como veio, e `...-bruto.json`,
+ *                              quando lê como JSON) e o que o validador aceitou (`...-aceito.json`, com a citação e os motivos de
+ *                              recusa), para ver por que uma figura ou uma resolução foi recusada. Só saída do modelo: sem chave e
+ *                              sem dado de conta.
  *   --orcamento <segundos>     Orçamento da proposta do material (padrão: 85).
  *
  * A chave vem SÓ do ambiente do servidor (`OPENAI_API_KEY` ou `DEEPSEEK_API_KEY`) e nunca é impressa; nenhum pedido leva dado de conta.
@@ -104,6 +108,33 @@ const { desenharVisual, desenhoParaSvg, visualParaEnunciado, visualRevelado, des
 const sharp = opcoes.png ? (await import("sharp")).default : null;
 const pastaPng = opcoes.png === true ? resolve("qa-matematica-png") : opcoes.png ? resolve(String(opcoes.png)) : null;
 if (pastaPng) mkdirSync(pastaPng, { recursive: true });
+const pastaBruto = opcoes.bruto === true ? resolve("qa-matematica-bruto") : opcoes.bruto ? resolve(String(opcoes.bruto)) : null;
+if (pastaBruto) mkdirSync(pastaBruto, { recursive: true });
+
+/** O que a IA devolveu, como veio (`.txt`) e, quando lê como JSON (com as barras do LaTeX consertadas, como no servidor), bonito (`.json`). */
+async function gravarBruto(nome, texto) {
+  if (!pastaBruto || typeof texto !== "string" || !texto) return;
+  writeFileSync(join(pastaBruto, `${nome}.txt`), texto);
+  try {
+    const { analisarJson } = await import("../../src/servidor/ia/comum.ts");
+    writeFileSync(join(pastaBruto, `${nome}.json`), `${JSON.stringify(analisarJson(texto, true), null, 2)}\n`);
+  } catch {
+    // Não lê como JSON: fica só o texto como veio.
+  }
+}
+
+/** O que o validador aceitou e os motivos do que recusou. */
+function gravarAceito(nome, valor) {
+  if (pastaBruto) writeFileSync(join(pastaBruto, `${nome}.json`), `${JSON.stringify(valor, null, 2)}\n`);
+}
+
+const aceitoDe = (conteudo, relato, citacao) => ({
+  ...(citacao ? { citacao } : {}),
+  visuais: conteudo.visuais ?? null,
+  exercicios: [conteudo.exercicio, ...(conteudo.extras ?? [])].map((exercicio) => ({ tipo: exercicio.tipo, enunciado: exercicio.enunciado, visual: exercicio.visual ?? null })),
+  resolucao: conteudo.resolucao ?? null,
+  relato: relato ?? null,
+});
 
 async function desenhar(desenho, nome) {
   if (!sharp || !pastaPng) return;
@@ -170,6 +201,7 @@ async function rodarMaterial() {
   } catch (erro) {
     await esperarCopias();
     console.log(`   A proposta FALHOU: ${erro?.codigo ?? erro?.message ?? erro} (${segundos(performance.now() - inicio)})`);
+    await gravarBruto("material-proposta-bruto", chamadas.slice(antes).find((chamada) => chamada.tipo === "trilha_material")?.texto);
     return;
   }
   await esperarCopias();
@@ -177,25 +209,33 @@ async function rodarMaterial() {
   resumo.ms += performance.now() - inicio;
   resumo.chamadas.push(...dele);
   const base = dele.find((chamada) => chamada.tipo === "trilha_material");
+  await gravarBruto("material-proposta-bruto", base?.texto);
   console.log(`   Pedido das lições: ${base ? `${segundos(base.ms)} · ${linhaDeTokens([base])}` : `${segundos(gerado.tempos.licoes)}`} · ${gerado.licoes.length} lições · "${gerado.titulo}"`);
   let conteudos;
   let relatos;
+  let citacoes;
   try {
-    ({ conteudos, relatos } = conteudosDasLicoes({ licoes: gerado.licoes, figuras: gerado.figuras, paginas, materialId: "qa", nome, leitura: arquivo.leitura ?? "ocr", origem: "Material enviado · QA" }));
+    ({ conteudos, relatos, citacoes } = conteudosDasLicoes({ licoes: gerado.licoes, figuras: gerado.figuras, paginas, materialId: "qa", nome, leitura: arquivo.leitura ?? "ocr", origem: "Material enviado · QA" }));
   } catch (erro) {
-    console.log(`   O conteúdo FALHOU na validação das citações (${erro?.codigo ?? erro?.message}): uma lição citou um trecho que não está na página, e a proposta inteira seria recusada.`);
+    console.log(`   O conteúdo FALHOU (${erro?.codigo ?? erro?.message}): uma lição citou uma página que não existe (ou sem texto para citar), e a proposta inteira seria recusada.`);
+    for (const [i, licao] of gerado.licoes.entries()) {
+      await gravarBruto(`material-licao${i + 1}-figuras-bruto`, dele.find((chamada) => chamada.tipo === "figuras_licao" && chamada.titulo === licao.titulo)?.texto);
+    }
     return;
   }
   for (const [i, conteudo] of conteudos.entries()) {
     resumo.licoes += 1;
     const tempo = gerado.tempos.figuras[i];
     const figuras = dele.filter((chamada) => chamada.tipo === "figuras_licao" && chamada.titulo === gerado.licoes[i].titulo);
-    console.log(`\nLição ${i + 1} · "${conteudo.titulo}" (página ${conteudo.referencias[0].pagina}, trecho literal ok)`);
+    const jeito = { literal: "citação literal", normalizada: "citação reescrita pela IA, trocada pelo literal da página", "sem-acento": "citação sem acento, trocada pelo literal", "melhor-janela": "citação parecida, trocada pela janela mais próxima da página", "pagina-inteira": "citação que não casou: a referência é o começo da página" }[citacoes[i]];
+    console.log(`\nLição ${i + 1} · "${conteudo.titulo}" (página ${conteudo.referencias[0].pagina}, ${jeito})`);
     console.log(`  pergunta: ${conteudo.exercicio.enunciado}`);
     if (gerado.matematica) console.log(`  figuras e resolução: ${tempo === undefined ? "não pedidas (sem tempo)" : `${segundos(tempo)}${figuras.length ? ` · ${linhaDeTokens(figuras)}` : ""}${gerado.figuras[i] ? "" : " · SEM RESPOSTA (a lição fica como era)"}`}`);
     const contagens = imprimirMatematica(conteudo, relatos[i]);
     somar(resumo.visuais, contagens.visuais); somar(resumo.figuras, contagens.figuras); somar(resumo.resolucao, contagens.resolucao);
     await desenharConteudo(conteudo, `material-licao${i + 1}`);
+    await gravarBruto(`material-licao${i + 1}-figuras-bruto`, figuras[0]?.texto);
+    gravarAceito(`material-licao${i + 1}-aceito`, aceitoDe(conteudo, relatos[i], { como: citacoes[i], trecho: conteudo.referencias[0].trecho }));
   }
 }
 
@@ -229,6 +269,7 @@ async function rodarTrilha() {
     } catch (erro) {
       await esperarCopias();
       console.log(`  FALHOU: ${erro?.codigo ?? erro?.message ?? erro} (${segundos(performance.now() - inicio)})`);
+      for (const [k, chamada] of chamadas.slice(antes).entries()) await gravarBruto(`trilha-licao${i + 1}-${k === 0 ? "bruto" : `bruto-tentativa${k + 1}`}`, chamada.texto);
       continue;
     }
     await esperarCopias();
@@ -246,6 +287,8 @@ async function rodarTrilha() {
     const contagens = imprimirMatematica(conteudo, relato);
     somar(resumo.visuais, contagens.visuais); somar(resumo.figuras, contagens.figuras); somar(resumo.resolucao, contagens.resolucao);
     await desenharConteudo(conteudo, `trilha-licao${i + 1}`);
+    for (const [k, chamada] of dele.entries()) await gravarBruto(`trilha-licao${i + 1}-${k === 0 ? "bruto" : `bruto-tentativa${k + 1}`}`, chamada.texto);
+    gravarAceito(`trilha-licao${i + 1}-aceito`, aceitoDe(conteudo, relato));
   }
 }
 

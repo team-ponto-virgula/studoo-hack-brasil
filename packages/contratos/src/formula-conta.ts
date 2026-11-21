@@ -1,4 +1,4 @@
-import { ehSinal, formulaCanonica, formulaLinear, type NoFormula, type OperadorFormula } from "./formula";
+import { ehSinal, formulaCanonica, formulaLinear, percorrerFormula, type NoFormula, type OperadorFormula } from "./formula";
 
 /*
  * Conferência da conta (spec 15, seção 4; decisão 6 do Lead): o servidor avalia, com racionais exatos, o que dá para avaliar
@@ -266,6 +266,20 @@ function parOrdenado(itens: readonly NoFormula[], valores: Declaracoes): [Racion
   return x && y ? [x, y] : null;
 }
 
+/** Os valores que estavam ligados às letras da conta, para a mensagem de recusa: `k = 21`. Só as letras que aparecem nela e têm valor. */
+function ligadasEm(partes: readonly (readonly NoFormula[])[], valores: Declaracoes): string {
+  const vistas = new Set<string>();
+  for (const itens of partes) {
+    for (const item of itens) {
+      percorrerFormula(item, (no) => {
+        const chave = chaveDaVariavel(no);
+        if (chave && valores.has(chave)) vistas.add(chave);
+      });
+    }
+  }
+  return [...vistas].map((chave) => `${chave} = ${racionalNaTela(valores.get(chave) as Racional)}`).join(", ");
+}
+
 export type ResultadoConta =
   | { ok: true; conferidas: number; puladas: number; declaradas: Record<string, string> }
   | { ok: false; formula: string; motivo: string };
@@ -332,7 +346,12 @@ export function conferirConta(formulas: readonly NoFormula[]): ResultadoConta {
         }
         conferidas += 1;
         if (!seTem(relacoes[i], esquerda, direita)) {
-          return { ok: false, formula: formulaLinear(formula), motivo: `${racionalNaTela(esquerda)} ${relacoes[i]} ${racionalNaTela(direita)} é falso` };
+          const ligadas = ligadasEm([partes[i], partes[i + 1]], valores);
+          return {
+            ok: false,
+            formula: formulaLinear(formula),
+            motivo: `${racionalNaTela(esquerda)} ${relacoes[i]} ${racionalNaTela(direita)} é falso${ligadas ? `, com ${ligadas}` : ""}`,
+          };
         }
       }
     }
