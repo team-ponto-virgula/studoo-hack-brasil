@@ -1326,6 +1326,11 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
   const [alturaPlaca, setAlturaPlaca] = useState(0);
   const alturaPlacaAgora = useRef(0);
   alturaPlacaAgora.current = alturaPlaca;
+  // A faixa do alto cresce com o nome da trilha em duas linhas (item 34): a placa e a área livre a acompanham.
+  const [alturaFaixaGeracao, setAlturaFaixaGeracao] = useState(RITMO_DA_GERACAO.placaTopo - 10);
+  const alturaFaixaGeracaoAgora = useRef(RITMO_DA_GERACAO.placaTopo - 10);
+  alturaFaixaGeracaoAgora.current = alturaFaixaGeracao;
+  const [nomeLongo, setNomeLongo] = useState(false);
   const [esperaLonga, setEsperaLonga] = useState(false);
   const [cartaoDeVolta, setCartaoDeVolta] = useState(false);
   const [trofeuAVista, setTrofeuAVista] = useState(false);
@@ -1433,7 +1438,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     const primeiro = todos[0]?.id;
     const centro = primeiro ? centros.current.get(primeiro) : undefined;
     if (centro === undefined) return;
-    const topoLivre = semPlaca ? 0 : RITMO_DA_GERACAO.placaTopo + alturaPlacaAgora.current;
+    const topoLivre = semPlaca ? 0 : alturaFaixaGeracaoAgora.current + 10 + alturaPlacaAgora.current;
     rolarAteNo1(rolagemDaTrilhaPronta(centro, visivel.current || height, topoLivre), duracao);
   }
   // A rolagem até o nó 1 pode passar pelo alto: o cartão do título volta, empurra o mapa para baixo e o nó 1 cairia atrás do
@@ -1456,7 +1461,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     const centro = primeiro ? centros.current.get(primeiro) : undefined;
     if (centro === undefined) return;
     const altura = visivel.current || height;
-    const topoLivre = cartaoDeVolta ? 0 : RITMO_DA_GERACAO.placaTopo + alturaPlaca;
+    const topoLivre = cartaoDeVolta ? 0 : alturaFaixaGeracao + 10 + alturaPlaca;
     const naTela = centro - rolado.current;
     if (naTela - RITMO_DA_GERACAO.no1AcimaDoCentro >= topoLivre && naTela + RITMO_DA_GERACAO.no1AbaixoDoCentro <= altura) return;
     mudarAcompanhar(false);
@@ -1632,16 +1637,29 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     if (ultimo) rolarAteLicao(ultimo.id);
   }
 
+  // Spec 16, item 34 (como a web): voltar ao pedido (44) à esquerda e o nome da trilha em 17/22 800, até 2 linhas e sem
+  // reticências (com 3 linhas ou mais, 15/20); o objetivo do pedido só aparece enquanto o nome não chegou.
+  const nomeNoAlto = titulo || geracao.objetivo;
   const faixa = (
     <View>
-      {/* Sem contagem (spec 04, "Criar a trilha"): os pontinhos enquanto monta e o pedido numa linha. */}
-      <View testID="faixa-geracao" accessible accessibilityRole="header" accessibilityLabel={geracao.objetivo}
-        style={estudoEstilos.faixaGeracao} onLayout={(evento) => { coberto.current = Math.round(evento.nativeEvent.layout.height); }}>
+      <View testID="faixa-geracao" style={estudoEstilos.faixaGeracao} onLayout={(evento) => {
+        const medida = Math.round(evento.nativeEvent.layout.height);
+        coberto.current = medida;
+        setAlturaFaixaGeracao((anterior) => anterior === medida ? anterior : medida);
+      }}>
+        <Pressable testID="geracao-voltar" accessibilityRole="button" accessibilityLabel={pronta ? mensagens.geracao.ajustar : mensagens.geracao.cancelar}
+          disabled={ocupado || salvando} onPress={pronta ? ajustar : cancelar} hitSlop={4}
+          style={({ pressed }) => [estudoEstilos.geracaoVoltar, pressed && { opacity: 0.8 }]}>
+          <View style={{ transform: [{ rotate: '180deg' }] }}><Icone nome="seta" tamanho={20} cor={cores.textoSecundario} /></View>
+        </Pressable>
         {!pronta && <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden><Pontinhos cor={cores.acao} tamanho={6} vao={4} /></View>}
-        <Text numberOfLines={1} style={estudoEstilos.faixaGeracaoNome}>{geracao.objetivo}</Text>
+        <Text accessibilityRole="header" testID="geracao-nome" style={[estudoEstilos.faixaGeracaoNome, nomeLongo && estudoEstilos.faixaGeracaoNomeLongo]}
+          onTextLayout={(evento) => { const longo = evento.nativeEvent.lines.length >= 3; setNomeLongo((antes) => (antes === longo ? antes : longo)); }}>
+          {nomeNoAlto}
+        </Text>
       </View>
       {/* A placa fica presa no alto do mapa, por cima dele (16 das laterais e 10 abaixo da faixa). */}
-      <View pointerEvents="none" style={estudoEstilos.placaGeracaoLugar} onLayout={(evento) => {
+      <View pointerEvents="none" style={[estudoEstilos.placaGeracaoLugar, { top: alturaFaixaGeracao + 10 }]} onLayout={(evento) => {
         const medida = Math.round(evento.nativeEvent.layout.height);
         setAlturaPlaca((anterior) => anterior === medida ? anterior : medida);
       }}>
@@ -2771,9 +2789,12 @@ const estudoEstilos = StyleSheet.create({
   faixa: { marginBottom: 12, paddingTop: 4, paddingHorizontal: 4 },
   // Geração que se acompanha (spec 04): a faixa de 52 presa embaixo da barra da marca, a placa do Stu por cima do mapa, o
   // cartão do título que volta no alto e a pílula "Ver a lição nova".
-  faixaGeracao: { height: 52, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, backgroundColor: 'rgba(255, 255, 255, 0.96)',
-    borderBottomWidth: 1, borderBottomColor: cores.gelo },
-  faixaGeracaoNome: { flex: 1, minWidth: 0, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 18 },
+  // .previa-cabecalho da web: o voltar de 44 e o nome, com 8 em cima e embaixo (52 com uma linha), linha gelo embaixo.
+  faixaGeracao: { minHeight: 52, flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingVertical: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.96)', borderBottomWidth: 1, borderBottomColor: cores.gelo },
+  geracaoVoltar: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: cores.nevoa, flexShrink: 0 },
+  faixaGeracaoNome: { flex: 1, minWidth: 0, color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 17, lineHeight: 22 },
+  faixaGeracaoNomeLongo: { fontSize: 15, lineHeight: 20 },
   placaGeracaoLugar: { position: 'absolute', top: 62, left: 16, right: 16 },
   passagem: { zIndex: 50, elevation: 50, overflow: 'hidden' },
   placaNoMapa: { height: 0, zIndex: 3 },

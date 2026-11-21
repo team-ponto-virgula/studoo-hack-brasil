@@ -224,3 +224,19 @@ test('item 31: um estado só, curto, no botão do mapa e no selo do cartão (Com
   assert.match(contrato, /seloEmRevisao: 'Em revisão',/);
   assert.match(contrato, /seloNaoPublicada: 'Não publicada',/);
 });
+
+test('item 34: o alto da proposta como a web: voltar de 44, o nome da trilha em 17/22 800 até 2 linhas (15/20 com 3 ou mais)', async () => {
+  const estudo = await ler('estudo.tsx');
+  const faixa = estudo.slice(estudo.indexOf('const nomeNoAlto = titulo || geracao.objetivo;'), estudo.indexOf('const expirada = criacao === \'expirada\';'));
+  assert.match(faixa, /<Pressable testID="geracao-voltar" accessibilityRole="button"/);
+  assert.match(faixa, /onPress=\{pronta \? ajustar : cancelar\}/);
+  assert.match(faixa, /<Text accessibilityRole="header" testID="geracao-nome"/);
+  assert.doesNotMatch(faixa, /numberOfLines=\{1\}/, 'sem reticências');
+  assert.match(faixa, /evento\.nativeEvent\.lines\.length >= 3/);
+  assert.match(estudo, /geracaoVoltar: \{ width: 44, height: 44, borderRadius: 22,/);
+  assert.match(estudo, /faixaGeracaoNome: \{ flex: 1, minWidth: 0, color: cores\.texto, fontFamily: fontes\.corpo, fontWeight: '800', fontSize: 17, lineHeight: 22 \}/);
+  assert.match(estudo, /faixaGeracaoNomeLongo: \{ fontSize: 15, lineHeight: 20 \}/);
+  // A placa "Proposta pronta" e a área livre do item 1 acompanham a faixa quando o nome ocupa duas linhas.
+  assert.match(faixa, /\{ top: alturaFaixaGeracao \+ 10 \}/);
+  assert.match(estudo, /const topoLivre = semPlaca \? 0 : alturaFaixaGeracaoAgora\.current \+ 10 \+ alturaPlacaAgora\.current;/);
+});

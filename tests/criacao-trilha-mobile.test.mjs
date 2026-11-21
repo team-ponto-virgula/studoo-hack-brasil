@@ -128,7 +128,8 @@ test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mai
 
 test('o nó 1 à vista no toque: inteiro na área livre (entre a placa e o rodapé), com o centro a 40% dela', () => {
   const efeito = trecho(geracao, "if (criacao !== 'criando') return;\n    const primeiro", '}, [criacao]);');
-  assert.match(efeito, /const topoLivre = cartaoDeVolta \? 0 : RITMO_DA_GERACAO\.placaTopo \+ alturaPlaca;/);
+  // A faixa do alto cresce com o nome em duas linhas (spec 16, item 34): a placa começa 10 abaixo da faixa medida (52 com uma linha).
+  assert.match(efeito, /const topoLivre = cartaoDeVolta \? 0 : alturaFaixaGeracao \+ 10 \+ alturaPlaca;/);
   assert.match(efeito, /if \(naTela - RITMO_DA_GERACAO\.no1AcimaDoCentro >= topoLivre && naTela \+ RITMO_DA_GERACAO\.no1AbaixoDoCentro <= altura\) return;/);
   assert.match(efeito, /rolarAteNo1\(Math\.max\(0, Math\.round\(centro - \(topoLivre \+ \(altura - topoLivre\) \* RITMO_DA_GERACAO\.no1NaAreaLivre\)\)\)\);/);
   // A rolagem tem 240 ms, quadro a quadro, com saída suave.
