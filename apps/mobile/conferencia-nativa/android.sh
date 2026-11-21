@@ -58,7 +58,7 @@ sonda() {
   resumo "| | |"
   resumo "|---|---|"
   resumo "| Máquina | $(. /etc/os-release && echo "$PRETTY_NAME"), $(nproc) CPUs |"
-  resumo "| Emulador | Android 15 (API 35, google_apis x86_64), 1080 × 2340 a 480 dpi: 360 × 780 dp |"
+  resumo "| Emulador | Android 15 (API 35, google_apis x86_64), 720 × 1560 a 320 dpi: 360 × 780 dp |"
   resumo "| App | build de debug do projeto ($PACOTE_ANDROID), com o JavaScript do Metro sem modo de desenvolvimento |"
   resumo "| Dados | API do repositório nesta máquina, com IA simulada e conta sintética |"
   resumo ""
@@ -112,7 +112,10 @@ preparar_fluxos_android() {
   cp -R "$AQUI/fluxos" "$PASTA_DOS_FLUXOS"
   find "$PASTA_DOS_FLUXOS" -name '*.yaml' -exec sed -i \
     -e "s|^appId: host\\.exp\\.Exponent\$|appId: $PACOTE_ANDROID|" \
-    -e "s|openLink: exp://127\\.0\\.0\\.1:$PORTA_METRO\$|openLink: \"$LINK_DO_APP\"|" {} +
+    -e "s|openLink: exp://127\\.0\\.0\\.1:$PORTA_METRO\$|openLink: \"$LINK_DO_APP\"|" \
+    -e '/^- startRecording:/d' -e '/^- stopRecording/d' {} +
+  # Sem o vídeo da criação no Android: gravar a tela (screenrecord) com a GPU por software e o registro de áudio ao mesmo
+  # tempo pesava na máquina quando o emulador caiu (execução 44911656576). O vídeo continua no iPhone.
   if grep -rlE '^appId: host\.exp\.Exponent|openLink: exp://' "$PASTA_DOS_FLUXOS" > /dev/null; then
     erro "Algum fluxo ficou com o pacote ou o link do Expo Go na cópia do Android."
   fi
@@ -138,6 +141,8 @@ parar_registro_de_audio() {
 # As telas rodam uma sessão do Maestro por fluxo (comum.sh, fluxo_telas_uma_por_vez), com o aparelho conferido antes de
 # cada uma.
 TELAS_UMA_POR_VEZ=1
+# A prova da criação roda depois das telas no Android: se o emulador cair nela, as telas já estão capturadas.
+CRIACAO_DEPOIS_DAS_TELAS=1
 
 # O emulador ainda está no adb e o sistema dele responde? Espera até 60 s (um adb que reconecta volta nesse tempo); se não
 # voltar, guarda o momento na carga da máquina e diz que não.
@@ -196,16 +201,15 @@ depois_do_emulador() {
   capturar_tela_do_aparelho "$REGISTROS/tela-no-fim-do-emulador.png"
 }
 
-no_emulador() {
-  local id comando versao api modelo escala codigo
-  trap depois_do_emulador EXIT
-  iniciar_registro_de_carga
-  id="$(dispositivo)"
-  [ -n "$id" ] || erro "Nenhum emulador ligado no adb."
-
-  # 360 × 780 dp, a largura dos pares de 360 da web: 1080 × 2340 a 480 dpi.
-  adb -s "$id" shell wm size 1080x2340
-  adb -s "$id" shell wm density 480
+# O aparelho pronto para os fluxos: tamanho e densidade, barra fixa, teclado da tela, sem janelas de erro do sistema e as
+# portas da API e do Metro. Roda no começo e de novo depois de religar o emulador (reviver_aparelho).
+preparar_aparelho() {
+  local id="$1" comando
+  # 360 × 780 dp, a largura dos pares de 360 da web: 720 × 1560 a 320 dpi. Antes era 1080 × 2340 a 480 (os mesmos dp), mas a
+  # GPU do emulador é por software (swiftshader) e desenha cada quadro na CPU: 2,25 vezes menos pixels pesam menos na máquina
+  # que caiu na execução 44911656576 (carga 8 a 9 com 4 vCPUs, emulador a 350% de CPU e 5,8 GB quando sumiu).
+  adb -s "$id" shell wm size 720x1560
+  adb -s "$id" shell wm density 320
   # Barra de status fixa nas capturas (modo de demonstração do Android): 9:41, bateria cheia, sinal cheio, sem notificações.
   adb -s "$id" shell settings put global sysui_demo_allowed 1
   for comando in "enter" "clock -e hhmm 0941" "battery -e level 100 -e plugged false" \
@@ -227,14 +231,59 @@ no_emulador() {
   adb -s "$id" shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS > /dev/null 2>&1 || true
   echo "Janelas de erro do sistema: hide_error_dialogs=$(adb -s "$id" shell settings get global hide_error_dialogs | tr -d '\r'), anr_show_background=$(adb -s "$id" shell settings get secure anr_show_background | tr -d '\r')"
 
-  if ! adb -s "$id" install -r "$APK" > "$REGISTROS/adb-instalar.log" 2>&1; then
-    mostrar_registro "$REGISTROS/adb-instalar.log"
-    erro "O APK de debug não instalou no emulador."
-  fi
   # A API (HTTPS) e a cache do Metro chegam ao emulador como 127.0.0.1, como no iPhone.
   adb -s "$id" reverse "tcp:$PORTA_API" "tcp:$PORTA_API" > /dev/null
   adb -s "$id" reverse "tcp:$PORTA_METRO" "tcp:$PORTA_METRO" > /dev/null
 
+}
+
+# Religa o emulador quando ele some do adb (execução 44911656576: o processo do emulador saiu no toque em "Começar" da
+# criação, e os fluxos seguintes não tinham aparelho). Mesmo AVD do ReactiveCircus/android-emulator-runner ("test"), mesmas
+# opções do workflow, sem snapshot: o disco do AVD continua, então o APK instalado e a sessão do app ficam. Espera o boot
+# (até 6 min), prepara o aparelho de novo e devolve 0; sem o binário ou sem boot, devolve 1 e os fluxos seguintes ficam como
+# "não rodou", como antes.
+REVIVIDOS=0
+reviver_aparelho() {
+  local sdk emulador avd id fim
+  sdk="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+  emulador="$sdk/emulator/emulator"
+  avd="${AVD_DA_CONFERENCIA:-test}"
+  [ -x "$emulador" ] || { echo "$(date -u +%H:%M:%S) sem o binário do emulador em $emulador: não dá para religar" >> "$REGISTROS/carga-da-maquina.log"; return 1; }
+  REVIVIDOS=$((REVIVIDOS + 1))
+  echo "$(date -u +%H:%M:%S) religando o emulador ($avd), vez $REVIVIDOS" >> "$REGISTROS/carga-da-maquina.log"
+  # Um processo do emulador que ficou pendurado sem responder ao adb sai antes (é o do próprio passo, na máquina do CI).
+  pkill -f "qemu-system-x86_64.*-avd $avd" 2> /dev/null || true
+  adb kill-server > /dev/null 2>&1 || true
+  adb start-server > /dev/null 2>&1 || true
+  nohup "$emulador" -avd "$avd" -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none \
+    -cores 3 -memory 4096 > "$REGISTROS/emulador-religado-$REVIVIDOS.log" 2>&1 &
+  fim=$(( $(date +%s) + 360 ))
+  while [ "$(date +%s)" -lt "$fim" ]; do
+    id="$(dispositivo)"
+    if [ -n "$id" ] && [ "$(timeout 20 adb -s "$id" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = "1" ]; then
+      preparar_aparelho "$id"
+      echo "$(date -u +%H:%M:%S) emulador de volta ($id)" >> "$REGISTROS/carga-da-maquina.log"
+      return 0
+    fi
+    sleep 10
+  done
+  echo "$(date -u +%H:%M:%S) o emulador religado não terminou o boot em 6 min" >> "$REGISTROS/carga-da-maquina.log"
+  return 1
+}
+
+no_emulador() {
+  local id comando versao api modelo escala codigo
+  trap depois_do_emulador EXIT
+  iniciar_registro_de_carga
+  id="$(dispositivo)"
+  [ -n "$id" ] || erro "Nenhum emulador ligado no adb."
+
+  preparar_aparelho "$id"
+
+  if ! adb -s "$id" install -r "$APK" > "$REGISTROS/adb-instalar.log" 2>&1; then
+    mostrar_registro "$REGISTROS/adb-instalar.log"
+    erro "O APK de debug não instalou no emulador."
+  fi
   versao="$(adb -s "$id" shell getprop ro.build.version.release | tr -d '\r')"
   api="$(adb -s "$id" shell getprop ro.build.version.sdk | tr -d '\r')"
   modelo="$(adb -s "$id" shell getprop ro.product.model | tr -d '\r')"
