@@ -88,17 +88,18 @@ const licoes: { titulo: string; bruto: Bruto }[] = [
         visual: figuraDoPontoMedio("especial"),
         passos: [
           { nome: "A fórmula", texto: "O ponto médio tem a média das abscissas e a média das ordenadas.", formula: "x_M = \\foco{\\frac{x_A + x_B}{2}}" },
-          { nome: "Troque os valores", texto: "Coloque as coordenadas de A e de B na fórmula.", formula: "x_M = \\frac{1 + 5}{2}" },
+          { nome: "Troque os valores", texto: "Coloque as abscissas de A e de B na fórmula.", formula: "x_M = \\frac{1 + 5}{2}" },
+          { nome: "Calcule x", texto: "Some as abscissas e divida por 2.", formula: "x_M = \\frac{6}{2} = \\foco{3}" },
           {
-            nome: "Calcule x",
-            texto: "Some as abscissas e divida por 2.",
-            formula: "x_M = \\frac{6}{2} = \\foco{3}",
+            nome: "O mesmo para y",
+            texto: "Faça igual com as ordenadas de A e de B.",
+            formula: "y_M = \\frac{2 + 8}{2}",
             tentativa: {
-              pergunta: "Quanto vale a ordenada y_M, a média de 2 e 8?",
+              pergunta: "Quanto vale y_M?",
               opcoes: [
-                { texto: "5", correta: true, porque: "(2 + 8) ÷ 2 = 10 ÷ 2 = 5." },
-                { texto: "6", correta: false, porque: "6 é a média das abscissas (1 e 5), não a das ordenadas." },
-                { texto: "10", correta: false, porque: "10 é a soma 2 + 8: falta dividir por 2." },
+                { formula: "y_M = \\frac{10}{2}", correta: true, porque: "(2 + 8) ÷ 2 = 10 ÷ 2 = 5." },
+                { formula: "y_M = 2 + 8", correta: false, porque: "10 é a soma das ordenadas: falta dividir por 2." },
+                { formula: "y_M = \\frac{2 + 8}{4}", correta: false, porque: "Divide-se por 2, o número de pontos, e não por 4." },
               ],
             },
           },

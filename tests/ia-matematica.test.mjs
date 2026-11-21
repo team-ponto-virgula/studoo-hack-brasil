@@ -228,11 +228,11 @@ test("o exemplo de matemática da DeepSeek é uma lição que fecha: visuais, fi
   assert.deepEqual(lida.conteudo.visuais.map((visual) => visual.tipo), ["formula", "plano"]);
   assert.equal(lida.conteudo.exercicio.visual.tipo, "plano");
   assert.deepEqual([lida.conteudo.exercicio.tipo, ...lida.conteudo.extras.map((extra) => extra.tipo)], ["multipla_escolha", "lacuna"]);
-  assert.equal(lida.conteudo.resolucao.passos.length, 4);
+  assert.equal(lida.conteudo.resolucao.passos.length, 5);
   assert.deepEqual(lida.matematica.visuais, { enviados: 2, aceitos: 2 });
   assert.deepEqual(lida.matematica.figuras, { enviadas: 1, aceitas: 1 });
   assert.equal(lida.matematica.resolucao.aceita, true);
-  assert.ok(lida.matematica.resolucao.conferidas >= 3, `${lida.matematica.resolucao.conferidas} contas conferidas`);
+  assert.ok(lida.matematica.resolucao.conferidas >= 4, `${lida.matematica.resolucao.conferidas} contas conferidas`);
   assert.deepEqual(lida.matematica.motivos, []);
   // O exemplo mostrado ao modelo é este: o pedido da DeepSeek o leva inteiro, depois das instruções.
   assert.ok(instrucoesLicaoJsonDeMatematica.endsWith(JSON.stringify(exemploDeMatematica)));
@@ -276,30 +276,28 @@ test("o que o validador recusa some e a lição fica: visual inválido, resoluç
   assert.deepEqual(b.descartados, ["resolucao:recusada"]);
   assert.match(b.matematica.motivos[0], /^resolucao: a conta não fecha/);
   assert.deepEqual(b.matematica.resolucao, { enviada: true, aceita: false });
-  // 3) Um "Sua vez" cuja opção marcada como certa, em fórmula, não dá o valor da resolução também derruba a resolução.
+  // 3) Um "Sua vez" cuja opção marcada como certa, em fórmula, não dá o valor que a resolução revela adiante, também derruba a resolução.
   const opcaoErrada = base();
-  opcaoErrada.resolucao.passos[2].tentativa = {
-    pergunta: "Quanto vale x_M?",
-    opcoes: [
-      { texto: null, formula: "x_M = 4", correta: true, porque: "Seria 4 se a soma fosse 8." },
-      { texto: null, formula: "x_M = 3", correta: false, porque: "É o valor certo." },
-      { texto: null, formula: "x_M = 6", correta: false, porque: "É a soma, sem dividir por 2." },
-    ],
-  };
+  opcaoErrada.resolucao.passos[3].tentativa.opcoes[0].formula = "y_M = \\frac{12}{2}";
   const e = normalizarLicao(opcaoErrada, ORIGEM);
   assert.equal("resolucao" in e.conteudo, false);
   assert.match(e.matematica.motivos[0], /marcada como certa, mas a conta dela não dá o valor/);
-  // E a mesma pergunta com a certa no lugar certo fecha.
-  const opcaoCerta = base();
-  opcaoCerta.resolucao.passos[2].tentativa = {
-    pergunta: "Quanto vale x_M?",
-    opcoes: [
-      { texto: null, formula: "x_M = 3", correta: true, porque: "(1 + 5) ÷ 2 = 3." },
-      { texto: null, formula: "x_M = 4", correta: false, porque: "Seria 4 se a soma fosse 8." },
-      { texto: null, formula: "x_M = 6", correta: false, porque: "É a soma, sem dividir por 2." },
-    ],
-  };
-  assert.equal(normalizarLicao(opcaoCerta, ORIGEM).conteudo.resolucao.passos.length, 4);
+  // E a opção errada que dá o valor certo (duas contas com o mesmo resultado) também.
+  const duasCertas = base();
+  duasCertas.resolucao.passos[3].tentativa.opcoes[1].formula = "y_M = \\frac{20}{4}";
+  assert.match(normalizarLicao(duasCertas, ORIGEM).matematica.motivos[0], /marcada como errada, mas a conta dela dá o valor/);
+  // A resposta final errada (a conta do último passo não fecha com a das opções e dos passos) derruba a resolução.
+  const respostaErrada = base();
+  respostaErrada.resolucao.passos[4].formula = "M = \\resposta{(3, 6)}";
+  assert.match(normalizarLicao(respostaErrada, ORIGEM).matematica.motivos[0], /a conta não fecha/);
+  // Opção em texto (um nome, uma palavra) não tem conta para conferir: vale como está, sem derrubar a resolução.
+  const emTexto = base();
+  emTexto.resolucao.passos[3].tentativa.opcoes = [
+    { texto: "5", formula: null, correta: true, porque: "(2 + 8) ÷ 2 = 5." },
+    { texto: "10", formula: null, correta: false, porque: "10 é a soma." },
+    { texto: "4", formula: null, correta: false, porque: "Não é a média." },
+  ];
+  assert.equal(normalizarLicao(emTexto, ORIGEM).conteudo.resolucao.passos.length, 5, "a opção em texto não é conferida (por isso o prompt pede fórmula)");
   // 4) Figura do exercício que não vale: o exercício fica sem figura (e o código do descarte diz qual).
   const figuraRuim = base();
   figuraRuim.exercicios[0].visual = { tipo: "plano", alt: "x", pontos: [] };
@@ -378,7 +376,7 @@ test("OpenAI, lição de matemática: um pedido com o esquema e o bloco de matem
   assert.ok(conteudoValido(conteudo));
   assert.equal(conteudo.origem, ORIGEM);
   assert.deepEqual(conteudo.visuais.map((visual) => visual.tipo), ["formula", "plano"]);
-  assert.equal(conteudo.resolucao.passos.length, 4);
+  assert.equal(conteudo.resolucao.passos.length, 5);
   assert.equal(conteudo.exercicio.visual.tipo, "plano");
   // O registro leva só contagens, sem fórmula nem texto da lição.
   const [registro] = registrosDe("licao_matematica");
@@ -457,7 +455,7 @@ test("DeepSeek, lição de matemática: o prompt leva o bloco e o exemplo de mat
   assert.deepEqual(pedidos[0].dados.response_format, { type: "json_object" });
   assert.ok(conteudoValido(conteudo));
   assert.equal(conteudo.visuais[0].latex, "x_M = \\frac{x_A + x_B}{2}", "a fórmula chegou inteira, sem quebra de página no lugar do \\f");
-  assert.equal(conteudo.resolucao.passos.length, 4);
+  assert.equal(conteudo.resolucao.passos.length, 5);
   assert.equal(conteudo.exercicio.visual.tipo, "plano");
   assert.equal(registrosDe("licao_matematica")[0].resolucao, "aceita");
 });
@@ -554,7 +552,7 @@ test("material de matemática: o pedido das lições leva só a notação e CADA
   for (const [i, conteudo] of conteudos.entries()) {
     assert.ok(conteudoValido(conteudo));
     assert.deepEqual(conteudo.visuais.map((visual) => visual.tipo), ["formula", "plano"]);
-    assert.equal(conteudo.resolucao.passos.length, 4);
+    assert.equal(conteudo.resolucao.passos.length, 5);
     assert.equal(conteudo.exercicio.visual.tipo, "plano");
     assert.equal(conteudo.exercicio.tipo, "multipla_escolha");
     assert.equal(conteudo.referencias[0].trecho, TRECHO);
@@ -574,7 +572,7 @@ test("material de matemática: figuras que não voltam ou não valem deixam a li
   assert.equal(gerado.figuras[1], undefined, "o pedido que falhou não derruba a proposta");
   assert.equal(registrosDe("figuras_indisponiveis").length >= 1, true);
   const { conteudos, relatos } = conteudosDasLicoes({ licoes: gerado.licoes, figuras: gerado.figuras, paginas: PAGINAS_DE_MATEMATICA, materialId: "m", nome: "Folha", leitura: "ocr", origem: "Material enviado · Folha" });
-  assert.equal(conteudos[0].resolucao.passos.length, 4);
+  assert.equal(conteudos[0].resolucao.passos.length, 5);
   assert.equal("visuais" in conteudos[1], false);
   assert.equal("resolucao" in conteudos[1], false);
   assert.equal(relatos[1], undefined);
@@ -634,7 +632,7 @@ test("material com a DeepSeek: a barra única do LaTeX nas lições e nas figura
   assert.equal(gerado.licoes[0].conceito, "O baricentro: $x_G = \\frac{x_A + x_B + x_C}{3}$.", "o \\frac chegou inteiro");
   assert.equal(gerado.figuras.every((figuras) => figuras?.resolucao), true);
   const { conteudos } = conteudosDasLicoes({ licoes: gerado.licoes, figuras: gerado.figuras, paginas: PAGINAS_DE_MATEMATICA, materialId: "m", nome: "Folha", leitura: "ocr", origem: "Material enviado · Folha" });
-  assert.equal(conteudos[0].resolucao.passos.length, 4);
+  assert.equal(conteudos[0].resolucao.passos.length, 5);
 });
 
 /* ----- A IA falsa de geometria analítica (demonstração, sem chave) ----- */

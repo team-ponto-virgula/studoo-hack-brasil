@@ -226,7 +226,7 @@ const REGRAS_DE_PONTOS = [
 
 const REGRAS_DE_RESOLUCAO = [
   "resolucao (ou null): o \"Resolva comigo\", um exemplo resolvido com OUTROS números que os do exercício: {problema, visual, passos}. problema é a pergunta, com as fórmulas entre $…$; visual é a figura do problema (plano ou reta numérica, com o procurado nas coordenadas reais). passos tem de 3 a 5 passos, cada um com nome (até 24 caracteres, como \"A condição\"), texto (uma frase de até 300 caracteres), formula (LaTeX restrito, ou null; com \\foco{…} no que mudou e, no último passo, \\resposta{…} no valor achado) e visual (a figura inteira do passo, ou null: os pontos e a janela seguem os do problema; só o último passo traz o ponto como \"resposta\").",
-  "O \"Sua vez\": exatamente UM passo, o penúltimo ou o último, tem tentativa = {pergunta, opcoes}: 3 opções, exatamente 1 com correta true, cada uma com porque (uma frase que explica por que está certa ou errada). Cada opção tem texto (um número, como \"15\") OU formula (LaTeX), nunca os dois. A formula e o visual do passo que tem a tentativa são o RESULTADO que a pessoa vai escolher: o app só os mostra depois da escolha. Nos outros passos, tentativa é null.",
+  "O \"Sua vez\": exatamente UM passo, o penúltimo ou o último, tem tentativa = {pergunta, opcoes}: 3 opções, exatamente 1 com correta true, cada uma com porque (uma frase que explica por que está certa ou errada). A pergunta é por um valor que a resolução revela adiante (o do último passo, em \\resposta{…}). Cada opção tem formula (a conta que dá o valor, como \"y_M = \\frac{10}{2}\") OU texto (só quando a opção não é uma conta), nunca os dois: o Studoo refaz a conta das opções em fórmula e compara com o valor da resposta, então prefira formula. A formula e o visual do passo que tem a tentativa são o que a pessoa vê depois da escolha: o app só os mostra depois. Nos outros passos, tentativa é null.",
   "Confira cada conta, passo a passo e nas opções: o Studoo refaz as contas das fórmulas e das opções e DESCARTA a resolução inteira que errar (a lição fica sem o \"Resolva comigo\").",
 ];
 
@@ -318,18 +318,19 @@ export const exemploDeMatematica = {
     visual: figuraDoExemploResolvido("especial"),
     passos: [
       { nome: "A fórmula", texto: "O ponto médio tem a média das abscissas e a média das ordenadas.", formula: "x_M = \\foco{\\frac{x_A + x_B}{2}}", visual: null, tentativa: null },
-      { nome: "Troque os valores", texto: "Coloque as coordenadas de A e de B na fórmula.", formula: "x_M = \\frac{1 + 5}{2}", visual: null, tentativa: null },
+      { nome: "Troque os valores", texto: "Coloque as abscissas de A e de B na fórmula.", formula: "x_M = \\frac{1 + 5}{2}", visual: null, tentativa: null },
+      { nome: "Calcule x", texto: "Some as abscissas e divida por 2.", formula: "x_M = \\frac{6}{2} = \\foco{3}", visual: null, tentativa: null },
       {
-        nome: "Calcule x",
-        texto: "Some as abscissas e divida por 2.",
-        formula: "x_M = \\frac{6}{2} = \\foco{3}",
+        nome: "O mesmo para y",
+        texto: "Faça igual com as ordenadas de A e de B.",
+        formula: "y_M = \\frac{2 + 8}{2}",
         visual: null,
         tentativa: {
-          pergunta: "Quanto vale a ordenada y_M, a média de 2 e 8?",
+          pergunta: "Quanto vale y_M?",
           opcoes: [
-            { texto: "5", formula: null, correta: true, porque: "(2 + 8) ÷ 2 = 10 ÷ 2 = 5." },
-            { texto: "6", formula: null, correta: false, porque: "6 é a média das abscissas (1 e 5), não a das ordenadas." },
-            { texto: "10", formula: null, correta: false, porque: "10 é a soma 2 + 8: falta dividir por 2." },
+            { texto: null, formula: "y_M = \\frac{10}{2}", correta: true, porque: "(2 + 8) ÷ 2 = 10 ÷ 2 = 5." },
+            { texto: null, formula: "y_M = 2 + 8", correta: false, porque: "10 é a soma das ordenadas: falta dividir por 2." },
+            { texto: null, formula: "y_M = \\frac{2 + 8}{4}", correta: false, porque: "Divide-se por 2, o número de pontos, e não por 4." },
           ],
         },
       },
