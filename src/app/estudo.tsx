@@ -41,6 +41,7 @@ import { FrasesDaLicao, Licao, formatarTempo, temAndamento, temAndamentoNoPlano,
 import { TextoComFormulas } from './texto-com-formulas';
 import { medirPassagem, PreviaTrilha, type EstadoAceite, type PassagemCriada } from './previa-trilha';
 import { Pedido, type IdTema } from './pedido';
+import { useCabecalhoPreso } from './cabecalho-preso';
 import { AdicionarPorLink, Avatar, FolhaCompartilhar, caminhoDepoisDoLogin, planoParaAbrir } from './compartilhar';
 import { TelaPerfil } from './perfil';
 import { PostarNoPerfil, usePostarNoPerfil } from './postar-no-perfil';
@@ -1149,6 +1150,8 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
 }) {
   const { plano, origem, liberadas = [] } = tela;
   const postagem = usePostarNoPerfil();
+  const topoDoMapa = useRef<HTMLElement>(null);
+  useCabecalhoPreso(topoDoMapa);
   const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
   // Ao abrir (ou recarregar), a tela vai até a lição atual; na volta de uma lição, até a liberada.
   const rolarPara = origem ? liberadas[0] ?? proximo?.no.id ?? origem : proximo?.no.id ?? null;
@@ -1165,7 +1168,7 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
   return (
     <section className="painel painel--trilha">
       {plano.capa && <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="trilha-capa" grande />}
-      <header className="trilha-topo">
+      <header className="trilha-topo" ref={topoDoMapa}>
         <div className="trilha-topo__texto">
           <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
           <h1 tabIndex={-1}>{plano.titulo}</h1>
