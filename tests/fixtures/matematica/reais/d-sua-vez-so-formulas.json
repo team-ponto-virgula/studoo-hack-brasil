@@ -1,127 +1,101 @@
 {
- "origem": "saída real da IA guardada pelo servidor (cb532bb), material-1 material-licao3, sem a citação do material",
+ "origem": "saída real da IA guardada pelo servidor (cb532bb), material-3 material-licao3, sem a citação do material; aceita pelo validador do marco 8 (caso 7 de sua-vez-reais.json)",
  "visuais": [
   {
    "tipo": "formula",
-   "latex": "\\begin{vmatrix} x_A & y_A & 1 \\\\ x_B & y_B & 1 \\\\ x_C & y_C & 1 \\end{vmatrix} = 0",
-   "alt": "Determinante da matriz de coordenadas igual a zero"
-  },
-  {
-   "tipo": "formula",
-   "latex": "\\begin{bmatrix} 1 & 2 & 1 \\\\ 3 & 4 & 1 \\\\ 5 & 6 & 1 \\end{bmatrix}",
-   "alt": "Matriz 3 por 3 com as coordenadas dos pontos e coluna de 1"
+   "latex": "\\begin{vmatrix} x_A & y_A & 1 \\\\ x_B & y_B & 1 \\\\ x_C & y_C & 1 \\end{vmatrix} = 0"
   }
  ],
  "exercicios": [
   {
    "tipo": "multipla_escolha",
-   "enunciado": "Para verificar se $A=(1, 2)$, $B=(3, 4)$ e $C=(5, 6)$ são colineares usando determinante, qual matriz deve ser montada?",
+   "enunciado": "Qual condição garante que $A$, $B$ e $C$ sejam colineares?",
    "visual": null
   }
  ],
  "resolucao": {
-  "problema": "Os pontos $A = (-1, -1)$, $B = (2, 5)$ e $C = (k, 1)$ são colineares. Qual é o valor de $k$?",
+  "problema": "Para que valores de $k$ os pontos $A = (2, 1)$, $B = (1, 4)$ e $C = (k, -2)$ são colineares?",
   "visual": {
    "tipo": "plano",
-   "alt": "Pontos A e B marcados no plano, com o ponto C sobre a reta que passa por eles, com ordenada 1.",
+   "alt": "Pontos A e B dados e um ponto C sobre uma reta, a ser determinado pela condição de colinearidade.",
    "x": [
-    -2,
-    3
+    -1,
+    5
    ],
    "y": [
-    -2,
-    6
+    -3,
+    5
    ],
    "pontos": [
     {
      "id": "A",
      "papel": "dado",
-     "x": -1,
-     "y": -1
+     "x": 2,
+     "y": 1
     },
     {
      "id": "B",
      "papel": "dado",
-     "x": 2,
-     "y": 5
+     "x": 1,
+     "y": 4
     },
     {
      "id": "C",
      "papel": "procurado",
-     "x": 0,
-     "y": 1
-    }
-   ],
-   "segmentos": [
-    {
-     "de": "A",
-     "ate": "B"
+     "x": 4,
+     "y": -2
     }
    ]
   },
   "passos": [
    {
-    "nome": "A condição",
-    "texto": "Três pontos são colineares quando o determinante da matriz de coordenadas é nulo.",
-    "formula": "\\begin{vmatrix} x_A & y_A & 1 \\\\ x_B & y_B & 1 \\\\ x_C & y_C & 1 \\end{vmatrix} = 0"
-   },
-   {
     "nome": "Montar a matriz",
-    "texto": "Cada linha recebe as coordenadas de um ponto seguidas de $1$.",
-    "formula": "\\begin{bmatrix} -1 & -1 & 1 \\\\ 2 & 5 & 1 \\\\ k & 1 & 1 \\end{bmatrix}"
+    "texto": "Colocamos as coordenadas de $A$, $B$ e $C$ em linhas, com a coluna de $1$.",
+    "formula": "\\begin{vmatrix} 2 & 1 & 1 \\\\ 1 & 4 & 1 \\\\ k & -2 & 1 \\end{vmatrix}"
    },
    {
     "nome": "Calcular o determinante",
-    "texto": "Somando as diagonais principais e subtraindo as secundárias, chega-se a $-5 - k + 2 - 5k + 1 + 2$.",
-    "formula": "-5 - k + 2 - 5k + 1 + 2"
+    "texto": "Pela regra de Sarrus, o determinante vale $8 + k - 2 - 4k - 4 + 1$, que simplifica para $3 - 3k$.",
+    "formula": "8 + k - 2 - 4k - 4 + 1 = 3 - 3k"
    },
    {
     "nome": "Igualar a zero",
-    "texto": "Juntando os termos, $0 - 6k = 0$, e portanto $k = 0$.",
-    "formula": "\\resposta{k = 0}",
+    "texto": "Para os pontos serem colineares, o determinante deve ser nulo.",
+    "formula": "\\foco{3 - 3k} = 0"
+   },
+   {
+    "nome": "Isolar e achar k",
+    "texto": "Resolvendo a equação, encontramos o valor de $k$ que torna os três pontos colineares.",
+    "formula": "\\resposta{k = 1}",
     "visual": {
      "tipo": "plano",
-     "alt": "Pontos A e B marcados no plano e o ponto C achado sobre a reta que passa por eles.",
+     "alt": "Reta passando pelos pontos A, B e C, com C na posição que torna os três alinhados.",
      "x": [
-      -2,
-      3
+      -1,
+      5
      ],
      "y": [
-      -2,
-      6
+      -3,
+      5
      ],
      "pontos": [
       {
        "id": "A",
        "papel": "dado",
-       "x": -1,
-       "y": -1
+       "x": 2,
+       "y": 1
       },
       {
        "id": "B",
        "papel": "dado",
-       "x": 2,
-       "y": 5
+       "x": 1,
+       "y": 4
       },
       {
        "id": "C",
        "papel": "resposta",
-       "x": 0,
-       "y": 1
-      }
-     ],
-     "segmentos": [
-      {
-       "de": "A",
-       "ate": "B"
-      },
-      {
-       "de": "B",
-       "ate": "C"
-      },
-      {
-       "de": "A",
-       "ate": "C"
+       "x": 1,
+       "y": -2
       }
      ]
     },
@@ -129,19 +103,19 @@
      "pergunta": "Qual é o valor de $k$ que torna os pontos colineares?",
      "opcoes": [
       {
-       "formula": "k = 0",
+       "formula": "k = 1",
        "correta": true,
-       "porque": "A equação $0 - 6k = 0$ leva a $k = 0$."
+       "porque": "De $3 - 3k = 0$ vem $k = 1$."
       },
       {
-       "formula": "k = 1",
+       "formula": "k = 3",
        "correta": false,
-       "porque": "Com $k = 1$ o determinante vale $-6$, não zero."
+       "porque": "Erro na simplificação do determinante; com $k = 3$ o determinante vale $-6$."
       },
       {
        "formula": "k = -1",
        "correta": false,
-       "porque": "Com $k = -1$ o determinante vale $6$, não zero."
+       "porque": "Sinal trocado ao isolar $k$; com $k = -1$ o determinante vale $6$."
       }
      ]
     }
@@ -150,8 +124,8 @@
  },
  "relato": {
   "visuais": {
-   "enviados": 2,
-   "aceitos": 2
+   "enviados": 1,
+   "aceitos": 1
   },
   "figuras": {
    "enviadas": 0,
@@ -160,8 +134,8 @@
   "resolucao": {
    "enviada": true,
    "aceita": true,
-   "conferidas": 1,
-   "puladas": 3
+   "conferidas": 3,
+   "puladas": 1
   },
   "motivos": []
  }

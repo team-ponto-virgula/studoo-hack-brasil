@@ -66,6 +66,14 @@ test('(d) "Sua vez" só com fórmulas (texto nulo), de largura parecida: as trê
   const suaVez = cliente.passos.find((passo) => passo.tentativa);
   assert.ok(suaVez && suaVez.tentativa.opcoes.length === 3);
   for (const opcao of suaVez.tentativa.opcoes) assert.ok(opcao.formula && !opcao.texto, 'só fórmula');
+  // A fixture é a lição real aceita pelo validador do marco 8 (material-3, lição 3): antes da escolha, nada traz o resultado.
+  const certa = guardada.passos.find((passo) => passo.tentativa).tentativa.opcoes.find((opcao) => opcao.correta).formula;
+  const { falarTextoComFormulas } = await import('../packages/contratos/src/aprendizado.ts');
+  const resultado = falarTextoComFormulas(`$${certa}$`);
+  for (const texto of [suaVez.texto, suaVez.nome, suaVez.tentativa.pergunta]) {
+    assert.ok(!falarTextoComFormulas(texto).includes(resultado), `"${texto}" não traz "${resultado}"`);
+  }
+  assert.equal(suaVez.formula, undefined, 'nem a fórmula revelada');
   for (const [escala, limite] of [[1, 260], [1, 200], [2, 260]]) {
     const larguras = suaVez.tentativa.opcoes.map((opcao) => {
       const itens = itensDaFrase(partirTextoComFormulas(`$${opcao.formula}$`), 16, escala, limite);
