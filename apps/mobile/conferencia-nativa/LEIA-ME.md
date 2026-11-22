@@ -49,6 +49,12 @@ Entre o Expo Go e o Metro fica uma cache (`servidor/cache-do-metro.mjs`, na port
 
 O menu de desenvolvedor do Expo Go abre sozinho na primeira vez que um projeto carrega, com uma apresentação por cima, e depois deixa um botão flutuante (engrenagem azul) sobre o app. Com o menu aberto, a árvore de elementos só tem o Expo Go e nenhum id do app aparece (foi o que parou a primeira execução). O passo do simulador desliga a apresentação, a abertura automática e o botão nas preferências do Expo Go antes de ele abrir (o que ficou gravado está em `expo-go-preferencias.txt`). Se não pegar, toda abertura passa por `partes/sair-do-menu-do-expo-go.yaml`, que espera o app ou o menu, toca "Continue" e fecha o menu pelo "X" antes de esperar a tela do Studoo. Se o botão flutuante ficar sobre o app, a coleta avisa no sumário.
 
+### Estabilidade da abertura no iPhone
+
+- **Assinatura do manifesto aquecida.** O Expo Go pede o manifesto com `expo-expect-signature`. No primeiro pedido assim, o Expo CLI grava `~/.expo/codesigning/<projectId>/development-code-signing-settings-2.json` num temporário cujo nome é o hash do conteúdo. Dois pedidos juntos disputam o mesmo temporário, e o segundo recebe 500 (ENOENT no rename). Por isso o passo do Metro faz antes o mesmo pedido, um de cada vez, e cria o arquivo com os padrões se ele ainda faltar. O resumo diz se o aquecimento rodou.
+- **Abertura repetida uma vez.** Se as fases `entrada` ou `entrar` falham antes de a entrada aparecer, o Expo Go é parado e a fase roda de novo uma vez, com ⚠️ no resumo e a primeira tentativa guardada.
+- **E-mail conferido no fluxo 2.** O fluxo espera o teclado antes de digitar e, se o e-mail não ficou no campo, digita de novo uma vez, com ⚠️ no resumo.
+
 ## Android
 
 O job `android` segue a rota A1 de `docs/BUILD-ANDROID.md`, em `android.sh` (o que vale para os dois sistemas fica em `comum.sh`):

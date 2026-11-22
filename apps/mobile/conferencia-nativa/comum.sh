@@ -308,6 +308,47 @@ iniciar_metro() {
   fi
   echo "Pacote do app ($plataforma) compilado: $medida."
   rm -f "$FERRAMENTAS/pacote-$plataforma"
+  if [ "$modo" = --go ]; then aquecer_assinatura "$plataforma" "$manifesto"; fi
+}
+
+# O Expo Go pede o manifesto com `expo-expect-signature: …keyid="expo-root"…`. No primeiro pedido assim, o Expo CLI
+# (@expo/cli 58.1.21, build/src/utils/codesigning.js, DevelopmentCodeSigningInfoFile.readAsync) não acha
+# ~/.expo/codesigning/<projectId>/development-code-signing-settings-2.json e grava os padrões com o @expo/json-file, que
+# escreve num temporário de nome `<arquivo>.<sha256 do conteúdo>` e o renomeia (build/writeAtomic.js, getTarget). Dois
+# pedidos juntos gravam o mesmo conteúdo no MESMO temporário: o primeiro renomeia e o segundo dá ENOENT no rename, e o
+# Metro responde 500 ao Expo Go, que fica no splash (execuções 44923807240 e 44926124145; o sufixo do temporário é o
+# mesmo nas duas porque o conteúdo é o mesmo). Aqui o mesmo pedido vai antes, um de cada vez, pela cache da 8081, para o
+# arquivo já existir quando o Expo Go abrir; se ainda faltar, ele é criado com os mesmos padrões (só leitura depois).
+aquecer_assinatura() {
+  local plataforma="$1" manifesto="$2" projeto casa arquivo codigo=000 tentativa
+  projeto="$(printf '%s' "$manifesto" | jq -r '.extra.eas.projectId // empty' 2> /dev/null || true)"
+  if [ -z "$projeto" ]; then
+    projeto="$(jq -r '.expo.extra.eas.projectId // empty' "$RAIZ/apps/mobile/app.json" 2> /dev/null || true)"
+  fi
+  casa="${__UNSAFE_EXPO_HOME_DIRECTORY:-$HOME/.expo}"
+  for tentativa in 1 2 3; do
+    codigo="$(curl -s -o /dev/null -m 60 -w '%{http_code}' -H "expo-platform: $plataforma" \
+      -H 'accept: application/expo+json,application/json' \
+      -H 'expo-expect-signature: sig, keyid="expo-root", alg="rsa-v1_5-sha256"' \
+      "http://127.0.0.1:$PORTA_METRO/" || true)"
+    [ "$codigo" = 200 ] && break
+    sleep 2
+  done
+  if [ -z "$projeto" ]; then
+    resumo "⚠️ Aquecimento da assinatura do manifesto: sem o projectId do EAS no manifesto, o arquivo de assinatura não é conferido (pedido assinado: HTTP $codigo)."
+    return 0
+  fi
+  arquivo="$casa/codesigning/$projeto/development-code-signing-settings-2.json"
+  if [ "$codigo" = 200 ] && [ -s "$arquivo" ]; then
+    resumo "✅ Aquecimento da assinatura do manifesto: o pedido do Expo Go (expo-expect-signature) respondeu 200 em $tentativa tentativa(s) e o arquivo de assinatura já existe antes de abrir o Expo Go."
+  else
+    mkdir -p "$(dirname "$arquivo")"
+    if [ ! -s "$arquivo" ]; then
+      printf '{\n  "easProjectId": null,\n  "scopeKey": null,\n  "privateKey": null,\n  "certificateChain": null\n}\n' > "$arquivo"
+    fi
+    resumo "⚠️ Aquecimento da assinatura do manifesto: o pedido do Expo Go respondeu HTTP $codigo; o arquivo de assinatura foi criado aqui com os padrões do Expo CLI para o Expo Go não disputar a gravação."
+    mostrar_registro "$REGISTROS/metro.log" 40
+  fi
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -356,15 +397,46 @@ rodar_maestro() {
   return "$codigo"
 }
 
+# A fase falhou na ABERTURA do app (antes da tela de entrada): a espera de partes/abrir-pela-primeira-vez.yaml, pela
+# entrada, pelo menu do Expo Go ou pela janela de erro, deu falso. É a cara do 500 do manifesto (o Expo Go para no
+# splash). Falhas depois da entrada (um seletor, um texto) não contam.
+falhou_na_abertura() {
+  grep -qE "Assertion is false: id: titulo-entrada" "$REGISTROS/maestro-$1.log" 2> /dev/null
+}
+quinhentos_no_metro() {
+  grep -c "HTTP response error 500" "$REGISTROS/metro.log" 2> /dev/null || true
+}
+
+# Roda a fase; se ela falhar na abertura do app, para o Expo Go e roda de novo UMA vez. A repetição sempre aparece no
+# resumo com ⚠️ (com o 500 do Metro, se houver), mesmo quando a segunda tentativa passa.
+rodar_com_abertura_repetida() {
+  local fase="$1" fluxo="$2" antes depois
+  antes="$(quinhentos_no_metro)"
+  if rodar_maestro "$fase" "$fluxo"; then return 0; fi
+  falhou_na_abertura "$fase" || return 1
+  depois="$(quinhentos_no_metro)"
+  resumo "⚠️ A fase \`$fase\` falhou na abertura do app (a entrada não apareceu; respostas 500 do Metro ao Expo Go nesta fase: $(( ${depois:-0} - ${antes:-0} ))). O Expo Go foi parado e a fase rodou de novo uma vez; a primeira tentativa está em maestro-$fase-primeira-tentativa.log e tela-no-fim-de-$fase-primeira-tentativa.png."
+  cp "$REGISTROS/maestro-$fase.log" "$REGISTROS/maestro-$fase-primeira-tentativa.log"
+  cp "$REGISTROS/tela-no-fim-de-$fase.png" "$REGISTROS/tela-no-fim-de-$fase-primeira-tentativa.png" 2> /dev/null || true
+  if declare -F parar_app_do_aparelho > /dev/null; then parar_app_do_aparelho; fi
+  sleep 5
+  rodar_maestro "$fase" "$fluxo"
+}
+
 fluxo_entrada() {
-  rodar_maestro entrada "$PASTA_DOS_FLUXOS/01-entrada.yaml" \
+  rodar_com_abertura_repetida entrada "$PASTA_DOS_FLUXOS/01-entrada.yaml" \
     || erro "O fluxo da entrada falhou (app aberto, entrada em repouso e com o teclado). O passo acima diz em que comando; a tela está em tela-no-fim-de-entrada.png, nos registros."
   resumo "✅ Entrada: em repouso, e-mail em foco e senha em foco com o teclado."
 }
 
 fluxo_entrar() {
-  rodar_maestro entrar "$PASTA_DOS_FLUXOS/02-entrar.yaml" \
+  rodar_com_abertura_repetida entrar "$PASTA_DOS_FLUXOS/02-entrar.yaml" \
     || erro "O fluxo de entrar na conta falhou; sem sessão, as outras telas não são capturadas. A tela está em tela-no-fim-de-entrar.png, nos registros."
+  # O fluxo 2 digita o e-mail de novo quando o campo ficou vazio (teclado frio depois de religar o simulador): sempre no
+  # resumo, para a repetição não passar despercebida.
+  if [ "$(grep -c 'Input text ${EMAIL}' "$REGISTROS/maestro-entrar.log" 2> /dev/null || true)" -gt 1 ]; then
+    resumo "⚠️ No fluxo 2, o e-mail não ficou no campo na primeira digitação e foi digitado de novo (maestro-entrar.log)."
+  fi
   resumo "✅ Entrou na conta sintética e chegou ao mapa da trilha."
 }
 
