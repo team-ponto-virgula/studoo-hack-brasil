@@ -1,4 +1,4 @@
-import { estadoDoCompartilhamento, falarTextoComFormulas } from '@studoo/contratos';
+import { ESPERA_DA_GERACAO, dicaDaEspera, estadoDoCompartilhamento, falarTextoComFormulas, faltaParaTrocarADica } from '@studoo/contratos';
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
@@ -24,7 +24,7 @@ import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NoCaminho, type NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
-import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, fraseDaEspera, intervaloDaFila, raioQueCobre, rolagemDaTrilhaPronta, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
+import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, raioQueCobre, rolagemDaTrilhaPronta, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { PreCargaDoStu, Stu, TROFEU_DA_CRIACAO } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida, rotuloDoCompartilhamento } from './social';
@@ -1809,19 +1809,14 @@ function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, redu
   const dicas = mensagens.geracao.dicas;
   useEffect(() => {
     if (pronta) return;
-    const passo = () => setAgora(Date.now());
-    const decorrido = Date.now() - inicioDaEspera.current;
-    // Acorda na próxima troca (aos 3 s e, depois, a cada 5 s), sem relógio de alta frequência.
-    const proxima = decorrido < RITMO_DA_GERACAO.esperaMontandoMs
-      ? RITMO_DA_GERACAO.esperaMontandoMs - decorrido
-      : RITMO_DA_GERACAO.esperaFraseMs - ((decorrido - RITMO_DA_GERACAO.esperaMontandoMs) % RITMO_DA_GERACAO.esperaFraseMs);
-    const relogio = setTimeout(passo, proxima + 5);
+    // A conta do tempo é a do contrato, a mesma da web: acorda só na próxima troca, sem relógio de alta frequência.
+    const relogio = setTimeout(() => setAgora(Date.now()), faltaParaTrocarADica(Date.now() - inicioDaEspera.current) + 5);
     return () => clearTimeout(relogio);
   }, [pronta, agora]);
-  const indice = fraseDaEspera(agora - inicioDaEspera.current, dicas.length);
+  const indice = dicaDaEspera(agora - inicioDaEspera.current, dicas.length);
   const espera = !pronta && !esperaLonga;
   const texto = pronta ? mensagens.geracao.propostaPronta(licoes, partes) : esperaLonga ? mensagens.geracao.aguardandoLicao
-    : indice < 0 ? mensagens.geracao.montandoTitulo : dicas[indice];
+    : indice === null ? mensagens.geracao.montandoTitulo : dicas[indice];
   // A troca: some e aparece em 300 ms (150 + 150); com movimento reduzido, na hora.
   const [mostrado, setMostrado] = useState(texto);
   const [brilho] = useState(() => new Animated.Value(1));
@@ -1832,7 +1827,7 @@ function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, redu
       setMostrado(texto);
       return;
     }
-    const metade = RITMO_DA_GERACAO.esperaEfeitoMs / 2;
+    const metade = ESPERA_DA_GERACAO.efeitoMs / 2;
     const sumir = Animated.timing(brilho, { toValue: 0, duration: metade, easing: Easing.out(Easing.quad), useNativeDriver: true });
     sumir.start(({ finished }) => {
       if (!finished) return;

@@ -1,40 +1,47 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
-import { runInNewContext } from 'node:vm';
-import ts from 'typescript';
 
 // Spec 17 (onboarding e primeira vez), no app: mudança 1 (a espera da geração ensina o produto), 2 (a faixa da proposta e o
 // tour com os textos do contrato) e 4 (o tour sem selo de demonstração). Os textos vêm do contrato; o app não os escreve.
 const ler = (caminho) => readFile(new URL(`../apps/mobile/src/${caminho}`, import.meta.url), 'utf8');
-const ritmo = await ler('geracao-ritmo.ts');
-const { outputText } = ts.transpileModule(ritmo, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } });
-const m = {};
-runInNewContext(outputText, { exports: m });
-const { RITMO_DA_GERACAO: R, fraseDaEspera } = m;
+const { ESPERA_DA_GERACAO, dicaDaEspera, faltaParaTrocarADica } = await import('../packages/contratos/src/espera-geracao.ts');
+const { mensagens } = await import('../packages/contratos/src/experiencia.ts');
 const estudo = await ler('estudo.tsx');
 const apresentacao = await ler('apresentacao.tsx');
 
-test('mudança 1: "Montando sua trilha" por 3 s e, depois, uma frase a cada 5 s, em laço', () => {
-  assert.deepEqual([R.esperaMontandoMs, R.esperaFraseMs, R.esperaEfeitoMs], [3000, 5000, 300]);
-  assert.equal(fraseDaEspera(0, 4), -1);
-  assert.equal(fraseDaEspera(2999, 4), -1);
-  assert.equal(fraseDaEspera(3000, 4), 0);
-  assert.equal(fraseDaEspera(7999, 4), 0);
-  assert.equal(fraseDaEspera(8000, 4), 1);
-  assert.equal(fraseDaEspera(3000 + 4 * 5000, 4), 0, 'volta à primeira');
-  assert.equal(fraseDaEspera(60000, 0), -1, 'sem frases no contrato, fica "Montando sua trilha"');
+test('mudança 1: o relógio é o do contrato (o mesmo da web): 3 s de "Montando sua trilha", depois uma frase a cada 5 s', async () => {
+  assert.deepEqual({ ...ESPERA_DA_GERACAO }, { antesDaPrimeiraMs: 3000, trocaACadaMs: 5000, efeitoMs: 300 });
+  assert.equal(dicaDaEspera(2999, 4), null);
+  assert.equal(dicaDaEspera(3000, 4), 0);
+  assert.equal(dicaDaEspera(8000, 4), 1);
+  assert.equal(dicaDaEspera(3000 + 4 * 5000, 4), 0, 'volta à primeira');
+  assert.equal(faltaParaTrocarADica(1000), 2000);
+  assert.equal(faltaParaTrocarADica(4000), 4000);
+  const placa = estudo.slice(estudo.indexOf('function PlacaDaGeracao('), estudo.indexOf('function PassagemDaCriacao('));
+  assert.match(placa, /const indice = dicaDaEspera\(agora - inicioDaEspera\.current, dicas\.length\);/);
+  assert.match(placa, /setTimeout\(\(\) => setAgora\(Date\.now\(\)\), faltaParaTrocarADica\(Date\.now\(\) - inicioDaEspera\.current\) \+ 5\)/);
+  assert.match(placa, /const metade = ESPERA_DA_GERACAO\.efeitoMs \/ 2;/);
+  assert.doesNotMatch(await ler('geracao-ritmo.ts'), /esperaMontandoMs|fraseDaEspera/, 'sem conta local paralela');
+});
+
+test('mudanças 1 e 2: os textos do contrato (frases da espera, faixa da proposta e tour) cabem na regra: sem número nem promessa', () => {
+  assert.deepEqual([...mensagens.geracao.dicas], ['Lições curtas, com exercício e retorno na hora.', 'Errou? O Stu explica de outro jeito.',
+    'Você confere a trilha antes de começar.', 'Cada lição concluída fica marcada no mapa.']);
+  assert.equal(mensagens.geracao.propostaPronta(6, 3), 'Sua trilha está pronta: 6 lições curtas em 3 partes.');
+  assert.equal(mensagens.geracao.propostaPronta(4, 1), 'Sua trilha está pronta: 4 lições curtas.');
+  assert.equal(mensagens.geracao.propostaPronta(1, 1), 'Sua trilha está pronta: 1 lição curta.');
+  assert.equal(mensagens.apresentacao.passos[0].titulo, 'Seu material vira lição');
 });
 
 test('mudança 1: a placa usa as frases do contrato (geracao.dicas), a espera longa por cima e a proposta no fim', () => {
   const placa = estudo.slice(estudo.indexOf('function PlacaDaGeracao('), estudo.indexOf('function PassagemDaCriacao('));
   assert.match(placa, /const dicas = mensagens\.geracao\.dicas;/);
-  assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao\n\s*: indice < 0 \? mensagens\.geracao\.montandoTitulo : dicas\[indice\]/);
+  assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao\n\s*: indice === null \? mensagens\.geracao\.montandoTitulo : dicas\[indice\]/);
   // Nenhuma frase da espera escrita no app.
   for (const frase of ['Lições curtas', 'Errou? O Stu', 'Você confere a trilha', 'fica marcada no mapa', "'Dica: "]) assert.doesNotMatch(estudo, new RegExp(frase.replace('?', '\\?')));
   // A troca em 300 ms (150 + 150); com movimento reduzido, na hora.
   assert.match(placa, /if \(reduzir !== false \|\| !espera\) \{\n\s*brilho\.setValue\(1\);\n\s*setMostrado\(texto\);/);
-  assert.match(placa, /const metade = RITMO_DA_GERACAO\.esperaEfeitoMs \/ 2;/);
   // A linha da espera: 15/20 600 #0B1B5C, centralizada.
   assert.match(estudo, /placaGeracaoEspera: \{ fontSize: 15, lineHeight: 20, fontWeight: '600', textAlign: 'center' \}/);
   assert.match(estudo, /placaGeracaoTexto: \{ color: cores\.texto,/);
