@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
   ErroStudoo,
+  estadoDoCompartilhamento,
+  recebidaTemNome,
   trilhaRepetida,
   type AutoAvaliacao,
   type LicaoDetalhe,
@@ -811,7 +813,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
             const voltarDaqui = () => (tela.volta === 'plano' ? void abrirPlano(tela.planoId) : navegar({ tipo: 'planos' }));
             return (
               <TelaConfiguracoes key={tela.planoId} planoId={tela.planoId} compartilhar={Boolean(abrirFolha)} versao={versaoFolha}
-                recebidaDe={resumo?.recebida?.nome ?? null}
+                recebidaDe={resumo?.recebida ? resumo.recebida.nome : null}
                 voltar={voltarDaqui}
                 aoMudar={(conf) => setPlanos((anteriores) => anteriores.map((item) => (item.id === conf.planoId
                   ? { ...item, titulo: conf.titulo, capa: conf.capa, tema: conf.tema }
@@ -916,6 +918,7 @@ function BarraProgresso({ progresso, comPercentual = false, de }: { progresso: P
 function MarcaCompartilhar({ plano }: { plano: PlanoResumo }) {
   if (plano.recebida) {
     const { nome, perfilId, foto } = plano.recebida;
+    if (!recebidaTemNome(plano.recebida)) return null;
     const texto = mensagens.compartilhar.compartilhadaPor(nome);
     return (
       <p className="marca-recebida">
@@ -924,8 +927,22 @@ function MarcaCompartilhar({ plano }: { plano: PlanoResumo }) {
       </p>
     );
   }
-  if (plano.link) return <p className="selo-compartilhada"><Icone nome="compartilhar" />{mensagens.compartilhar.selo}</p>;
+  // Um estado só, curto (spec 16, item 31): "Compartilhada", "Em revisão" (neutro) ou "Não publicada" (âmbar). O texto longo fica no Perfil e na folha.
+  if (plano.link) {
+    const estado = estadoDoCompartilhamento(plano.link);
+    return <p className="selo-compartilhada" data-estado={estado}><Icone nome="compartilhar" />{rotuloDoEstado(estado)}</p>;
+  }
   return null;
+}
+
+/** O texto curto de cada estado do compartilhamento: os mesmos do app (compartilhar.entrada, compartilhar.selo, seguranca.seloEmRevisao e seguranca.seloNaoPublicada). */
+function rotuloDoEstado(estado: ReturnType<typeof estadoDoCompartilhamento>): string {
+  switch (estado) {
+    case 'em-revisao': return mensagens.seguranca.seloEmRevisao;
+    case 'nao-publicada': return mensagens.seguranca.seloNaoPublicada;
+    case 'compartilhada': return mensagens.compartilhar.selo;
+    default: return mensagens.compartilhar.entrada;
+  }
 }
 
 function CartaoDestaque({ plano, regiao, ocupado, abrir, apagar, compartilhar, configurar }: {
@@ -1172,20 +1189,21 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
         <div className="trilha-topo__texto">
           <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
           <h1 tabIndex={-1}>{plano.titulo}</h1>
-          {plano.recebida ? (
+          {/* Sem o nome de quem compartilhou (conta excluída, link parado) não há "Esta trilha é de …": a linha some, e só sobra o link original, se ainda existir. */}
+          {plano.recebida && (recebidaTemNome(plano.recebida) || plano.recebida.codigoAtivo) ? (
             <p className="trilha-recebida">
               {plano.recebida.foto && <Avatar nome={plano.recebida.nome} cor="azul" foto={plano.recebida.foto} />}
-              <span>{plano.recebida.perfilId
+              {recebidaTemNome(plano.recebida) && <span>{plano.recebida.perfilId
                 ? <>{mensagens.compartilhar.recebidaDe(plano.recebida.nome).slice(0, -plano.recebida.nome.length)}<Link href={`/p/${plano.recebida.perfilId}`}>{plano.recebida.nome}</Link></>
-                : mensagens.compartilhar.recebidaDe(plano.recebida.nome)}</span>
+                : mensagens.compartilhar.recebidaDe(plano.recebida.nome)}</span>}
               {plano.recebida.codigoAtivo && <Link href={`/t/${plano.recebida.codigoAtivo}`}>{mensagens.compartilhar.verOriginal}</Link>}
             </p>
           ) : null}
           <div className="trilha-topo__acoes">
             {postagem && !plano.recebida ? <MenuCartao plano={plano} compartilhar={compartilhar} configurar={configurar} apagar={apagar} ocupado={ocupado} /> : <>
             {!plano.recebida && compartilhar && (
-              <Botao variante="secundario" className="trilha-compartilhar" disabled={ocupado} aria-label={mensagens.compartilhar.entradaRotulo(plano.titulo)} onClick={compartilhar}>
-                <Icone nome="compartilhar" />{plano.link ? mensagens.compartilhar.selo : mensagens.compartilhar.entrada}
+              <Botao variante="secundario" className="trilha-compartilhar" data-estado={estadoDoCompartilhamento(plano.link)} disabled={ocupado} aria-label={mensagens.compartilhar.entradaRotulo(plano.titulo)} onClick={compartilhar}>
+                <Icone nome="compartilhar" />{rotuloDoEstado(estadoDoCompartilhamento(plano.link))}
               </Botao>
             )}
             {/* A engrenagem leva às configurações da trilha (capa, nome, descrição, tema, quem pode ver, apagar). */}

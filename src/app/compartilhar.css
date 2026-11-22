@@ -140,10 +140,15 @@
   border-radius: 999px; background: var(--ceu); color: var(--acao-escura); font-size: 0.8125rem; font-weight: 900;
 }
 .selo-compartilhada .icone { width: 14px; height: 14px; }
+/* Spec 16, item 31: o mesmo estado curto do Perfil (spec 14): "Em revisão" no selo neutro e "Não publicada" no âmbar. */
+.selo-compartilhada[data-estado='em-revisao'] { background: #f1f4fd; color: #5e6a85; }
+.selo-compartilhada[data-estado='nao-publicada'] { background: #fff6ea; color: #9a5b00; }
 .marca-recebida { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 8px; color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
 .marca-recebida a { color: var(--acao); }
 .trilha-compartilhar { margin-top: 10px; }
 .trilha-compartilhar .icone { width: 18px; height: 18px; }
+.trilha-compartilhar[data-estado='em-revisao'] { color: #5e6a85; }
+.trilha-compartilhar[data-estado='nao-publicada'] { color: #9a5b00; background: #fff6ea; }
 .trilha-recebida { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 8px 0 0; color: var(--texto2); font-weight: 800; }
 .trilha-recebida a { color: var(--acao); }
 .trilha-aviso { margin: 8px 0 0; padding: 10px 14px; border-radius: 14px; background: #e3f6ea; color: #14513b; font-weight: 800; }

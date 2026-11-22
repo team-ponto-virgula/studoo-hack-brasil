@@ -220,7 +220,8 @@ test('exclusão: só com a palavra digitada, e os textos dizem o que some e quem
   assert.equal(mensagens.privacidade.politicaDe('DeepSeek'), 'Política de privacidade da DeepSeek');
   // Os mesmos textos da web (src/app/privacidade-perfil.tsx e aceite-ia.tsx).
   assert.match(await ler('apps/mobile/src/perfil.tsx'), /mensagens\.privacidade\.secaoTitulo/);
-  for (const chave of ['iaSimulada', 'iaPermitida', 'iaNaoPermitida', 'verQuem', 'revogar', 'permitirAgora', 'politica', 'excluir']) {
+  // Spec 16, item 19: a política de privacidade do Studoo fica só em "Ajuda" (a seção não usa mais privacidade.politica).
+  for (const chave of ['iaSimulada', 'iaPermitida', 'iaNaoPermitida', 'verQuem', 'revogar', 'permitirAgora', 'excluir']) {
     assert.match(tela, new RegExp(`t\\.${chave}\\b`), `Perfil usa privacidade.${chave}`);
   }
   const cartao = await ler('apps/mobile/src/consentimento-ia.tsx');
@@ -236,9 +237,11 @@ test('telas: Privacidade e dados entre Som e Conta (com Excluir conta no fim, co
   const conta = perfil.indexOf('{p.conta}');
   const sair = perfil.indexOf('testID="sair"');
   assert.ok(som > 0 && som < privacidade && privacidade < conta && conta < sair, 'ordem: Som, Privacidade e dados, Conta (Sair)');
-  assert.match(perfil, /<SecaoPrivacidade desativado=\{desativado\} visitante=\{perfil\.visitante\} \/>/);
+  assert.match(perfil, /<SecaoPrivacidade desativado=\{desativado\} \/>/);
+  // Spec 16, item 20: "Excluir conta" vem logo depois de "Sair", na seção Conta.
+  assert.ok(perfil.indexOf('<BotaoExcluirConta desativado={desativado} visitante={perfil.visitante} />') > sair, 'Excluir conta depois de Sair');
   const tela = await ler('apps/mobile/src/privacidade.tsx');
-  assert.ok(tela.indexOf('testID="privacidade-politica"') < tela.indexOf('testID="excluir-conta"'), 'Excluir conta depois da política, no fim da seção');
+  assert.doesNotMatch(tela, /testID="privacidade-politica"/, 'a política fica só em Ajuda (spec 16, item 19)');
 
   const sessao = await ler('apps/mobile/src/sessao.tsx');
   assert.match(sessao, /<ConsentimentoIa cliente=\{sessao\.cliente\} aoExcluida=\{aoExcluida\}>\s*\{\(cliente\) => <Estudo cliente=\{cliente\}/);
@@ -263,10 +266,11 @@ test('telas: Perfil com Privacidade e dados e Excluir conta também sem o compar
   assert.doesNotMatch(corpo, /obterPerfil|perfilPublico|atualizarPerfil/);
   assert.match(corpo, /cliente\.sessao\(\)\.then\(\(dados\) => \{ if \(ativo\) setVisitante\(dados\.visitante === true\)/);
   const som = corpo.indexOf('<SomNoPerfil />');
-  const privacidadeSecao = corpo.indexOf('<SecaoPrivacidade desativado={desativado} visitante={visitante} />');
+  const privacidadeSecao = corpo.indexOf('<SecaoPrivacidade desativado={desativado} />');
   const conta = corpo.indexOf('{p.conta}');
   const sair = corpo.indexOf('testID="sair"');
-  assert.ok(som > 0 && som < privacidadeSecao && privacidadeSecao < conta && conta < sair, 'ordem: Som, Privacidade e dados, Conta (Sair)');
+  const excluir = corpo.indexOf('<BotaoExcluirConta desativado={desativado} visitante={visitante} />');
+  assert.ok(som > 0 && som < privacidadeSecao && privacidadeSecao < conta && conta < sair && sair < excluir, 'ordem: Som, Privacidade e dados, Conta (Sair, Excluir conta)');
 });
 
 test('telas: o Perfil volta à entrada quando a sessão terminou no servidor (conta excluída em outro aparelho)', async () => {

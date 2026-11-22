@@ -206,7 +206,7 @@ function ItensDoPedido({ estado, politica }: { estado: EstadoPrivacidade | null;
   // Com DeepSeek e OpenAI a lista passa da tela de 360 × 800: rola dentro do cartão, com as ações sempre à vista.
   const { height } = useWindowDimensions();
   return (
-    <ScrollView testID="consentimento-itens" style={{ maxHeight: Math.round(height * 0.42), flexGrow: 0 }} contentContainerStyle={c.itens}>
+    <ScrollView testID="consentimento-itens" style={{ maxHeight: Math.round(height * 0.42), flexGrow: 0, flexShrink: 1 }} contentContainerStyle={c.itens}>
       <Text accessibilityRole="header" style={c.subtitulo}>{k.aceiteQuem}</Text>
       {estado && <ListaProvedores estado={estado} politica={politica} />}
       <Text style={c.semIa}>{k.aceiteSemIa}</Text>

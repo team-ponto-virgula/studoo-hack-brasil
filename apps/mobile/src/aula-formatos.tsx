@@ -29,7 +29,7 @@ import {
 } from '@studoo/contratos';
 import { arquivo } from './estudio-adaptativo';
 import { Icone } from './icone';
-import { Botao, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
+import { Botao, CaixaDoCampo, caixaAlta, degrauFora, estilos, RolagemDaTela } from './interface';
 import { mensagens } from './mensagens';
 import { cores, fontes } from './tema';
 import { Stu } from './mascote';
@@ -526,6 +526,11 @@ export function FrasesDaLicao({ falas }: { falas: Fala[] }) {
   );
 }
 
+/** Quanto a barra da lacuna desce da linha de base: o lugar de um sublinhado (0,12 do tamanho da letra). */
+export function deslocamentoDaLacuna(fonte: number) {
+  return Math.round(fonte * 0.12 * 10) / 10;
+}
+
 /** Texto com as lacunas destacadas (um espaço sublinhado). */
 /** `preenchimento`: o que a pessoa escreve na lacuna, no lugar do espaço, enquanto digita. Como na web. */
 function ComLacunas({ texto, estilo, preenchimento, puro = false }: { texto: string; estilo?: StyleProp<TextStyle>; preenchimento?: string; puro?: boolean }) {
@@ -534,14 +539,13 @@ function ComLacunas({ texto, estilo, preenchimento, puro = false }: { texto: str
   // fala dela no rótulo do trecho inteiro (as fórmulas desenhadas não têm texto para o leitor).
   const comFormula = !puro && partes.some((parte) => contemMarcaDeFormula(parte));
   const rotulo = comFormula ? partes.map((parte) => falarTextoComFormulas(parte)).join(preenchimento ? ` ${preenchimento} ` : ' lacuna ') : undefined;
-  // Como .trecho-lacuna da web: a lacuna vazia é uma barra de 3,2em × 3 px na cor do texto a 70%, com 0,15em dos lados, logo
-  // abaixo da linha (a caixa em linha da web tem a altura da linha e desce 0,1em; a borda de baixo fica ~9 px abaixo da base
-  // num texto de 20/28). A barra em linha nasce com a base na linha de base; o deslocamento a leva para o mesmo lugar.
+  // Como .trecho-lacuna da web: a lacuna vazia é uma barra de 3,2em × 3 px na cor do texto a 70%, com 0,15em dos lados.
+  // Banca P2-3: a barra fica na linha de base do texto em volta, como um sublinhado ("Excuse me, ___ is the museum?"); antes ela
+  // descia meia linha e ficava abaixo das letras. A barra em linha nasce com a base na linha de base: desce só 0,12em.
   const plano = StyleSheet.flatten(estilo) ?? {};
   const fonte = typeof plano.fontSize === 'number' ? plano.fontSize : 16;
-  const linha = typeof plano.lineHeight === 'number' ? plano.lineHeight : fonte * 1.5;
   const barra: ViewStyle = { width: fonte * 3.2, height: 3, marginHorizontal: fonte * 0.15, opacity: 0.7,
-    backgroundColor: typeof plano.color === 'string' ? plano.color : cores.texto, transform: [{ translateY: linha / 2 - fonte * 0.229 + 3 }] };
+    backgroundColor: typeof plano.color === 'string' ? plano.color : cores.texto, transform: [{ translateY: deslocamentoDaLacuna(fonte) }] };
   return (
     <Text selectable style={estilo} accessibilityLabel={rotulo}>
       {partes.map((parte, posicao) => (
@@ -1024,15 +1028,21 @@ export function CampoAberta({ valor, mudar, minimo, desativado, retorno }: {
   // campos que usam <Campo>.
   const rolagem = useContext(RolagemDaTela);
   const secao = useRef<ComponentRef<typeof View>>(null);
+  const campo = useRef<ComponentRef<typeof TextInput>>(null);
   return (
     <View ref={secao} style={formatos.secao}>
       <Text style={estilos.rotulo}>{t.aberta.rotulo}</Text>
-      <TextInput testID="resposta-aberta" multiline value={valor} onChangeText={mudar} editable={!desativado} maxLength={1000}
-        onFocus={() => rolagem?.focar(secao.current)} onBlur={() => rolagem?.focar(null)}
-        accessibilityLabel={t.aberta.rotulo} accessibilityHint={t.aberta.dica} textAlignVertical="top"
-        style={[formatos.aberta, retorno === 'certa' && formatos.cartaoCerto, retorno === 'errada' && formatos.cartaoErrado]} />
+      {/* No Android, a borda e o respiro ficam numa caixa em volta (banca P1-8; ver CaixaDoCampo). */}
+      <CaixaDoCampo focar={() => campo.current?.focus()} estilo={[formatos.aberta, retorno === 'certa' && formatos.cartaoCerto, retorno === 'errada' && formatos.cartaoErrado]}>
+        {(estilo) => (
+          <TextInput ref={campo} testID="resposta-aberta" multiline value={valor} onChangeText={mudar} editable={!desativado} maxLength={1000}
+            onFocus={() => rolagem?.focar(secao.current)} onBlur={() => rolagem?.focar(null)}
+            accessibilityLabel={t.aberta.rotulo} accessibilityHint={t.aberta.dica} textAlignVertical="top" style={estilo} />
+        )}
+      </CaixaDoCampo>
       <Text style={estilos.legenda}>{t.aberta.dica}</Text>
-      <Text style={[formatos.contador, usados >= minimo && { color: cores.sucesso }]}>{t.aberta.contador(usados, minimo)}</Text>
+      {/* Spec 16, item 8: antes da primeira letra, só o rodapé orienta; depois, "Faltam N letras" em cinza, até o mínimo. */}
+      {usados > 0 && usados < minimo && <Text testID="aberta-contador" style={formatos.contador}>{t.aberta.contador(usados, minimo)}</Text>}
     </View>
   );
 }
@@ -1390,7 +1400,7 @@ const formatos = StyleSheet.create({
   valorTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 18, lineHeight: 27 },
   aberta: { minHeight: 140, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: cores.bordaCampo, color: cores.texto,
     backgroundColor: cores.fundo, fontFamily: fontes.corpo, fontSize: 17, lineHeight: 24 },
-  contador: { alignSelf: 'flex-end', color: cores.alerta, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
+  contador: { alignSelf: 'flex-end', color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 13, lineHeight: 18 },
   correcao: { gap: 10, padding: 14, borderRadius: 16, backgroundColor: cores.nevoa },
   criterio: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   criterioIcone: { width: 22, height: 22, borderRadius: 11, marginTop: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E3A24A' },

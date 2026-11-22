@@ -28,7 +28,7 @@ const planoSql: PlanoInterno = {
         {
           titulo: "Filtrar com WHERE incluindo o valor no limite",
           objetivo: "Filtrar linhas com WHERE incluindo o valor no limite.",
-          conceito: "WHERE seleciona as linhas que satisfazem a condição. Use <= para incluir valores até o limite e >= para incluir valores a partir dele. Nos dois casos, o próprio limite entra no resultado.",
+          conceito: "WHERE seleciona as linhas que satisfazem a condição. Use <= para incluir valores até o limite e >= para valores a partir dele: nos dois casos, o próprio limite entra no resultado.",
           exemplo: "Com produtos que custam 15, 20 e 25, o filtro WHERE preco <= 20 seleciona os de 15 e 20. O produto de 20 entra porque o operador inclui a igualdade.",
           origem,
           exercicio: {

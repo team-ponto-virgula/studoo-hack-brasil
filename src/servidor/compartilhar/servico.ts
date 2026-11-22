@@ -518,10 +518,10 @@ export async function perfilPublico(perfilId: string, quem: string | null = null
  * público (se existir agora) e o código original (se ainda ativo).
  */
 export async function marcasDasTrilhas(usuarioId: string, planos: { id: string; origemNome: string | null; origemPerfilId: string | null; origemCodigo: string | null }[]) {
-  const marcas = new Map<string, { link?: { codigo: string; noPerfil: boolean }; recebida?: { nome: string; perfilId: string | null; codigoAtivo: string | null; foto: string | null } }>();
+  const marcas = new Map<string, { link?: { codigo: string; noPerfil: boolean; moderacao: "pendente" | "aprovado" | "recusado" }; recebida?: { nome: string; perfilId: string | null; codigoAtivo: string | null; foto: string | null } }>();
   if (!compartilharAtivo() || planos.length === 0) return marcas;
-  const links = await banco.linkTrilha.findMany({ where: { usuarioId, planoId: { in: planos.map((plano) => plano.id) } }, select: { planoId: true, codigo: true, noPerfil: true } });
-  for (const link of links) marcas.set(link.planoId, { link: { codigo: link.codigo, noPerfil: link.noPerfil } });
+  const links = await banco.linkTrilha.findMany({ where: { usuarioId, planoId: { in: planos.map((plano) => plano.id) } }, select: { planoId: true, codigo: true, noPerfil: true, moderacao: true } });
+  for (const link of links) marcas.set(link.planoId, { link: { codigo: link.codigo, noPerfil: link.noPerfil, moderacao: link.moderacao } });
   const recebidas = planos.filter((plano) => plano.origemCodigo);
   if (recebidas.length > 0) {
     const filtro = await filtroPublico(usuarioId);
