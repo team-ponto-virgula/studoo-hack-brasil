@@ -59,24 +59,29 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
 ### Mudança 1 (P0): a espera da geração ensina o produto
 - **Antes:** de 15 a 25 s com "Montando sua trilha", um nó vazio e o Stu (iPhone `91`). Nada para ler.
 - **Depois:**
-  - na faixa do alto, onde hoje está "Montando sua trilha", entra uma linha que troca a cada 5 s, com o efeito de aparecer e sumir em 300 ms (com movimento reduzido, a troca é imediata);
+  - a placa do alto da geração mostra "Montando sua trilha" (`geracao.montandoTitulo`, como hoje) por 3 s;
+  - depois, ela passa a trocar a cada 5 s entre quatro frases, com o efeito de aparecer e sumir em 300 ms (com movimento reduzido, a troca é imediata);
   - a linha tem 15/20 600 `#0B1B5C`, fica centralizada e cabe em 2 linhas em 320;
-  - as frases, nesta ordem e em laço:
-    1. "Cada lição leva uns 3 minutos."
+  - as frases, nesta ordem e em laço, verdadeiras para conta e visitante, sem número nem promessa que não medimos:
+    1. "Lições curtas, com exercício e retorno na hora."
     2. "Errou? O Stu explica de outro jeito."
     3. "Você confere a trilha antes de começar."
-    4. "Seu progresso fica salvo no mapa."
-  - quando a trilha fica pronta, a linha vira "Pronto! Sua trilha está montada." por 1,5 s, e a tela vai à proposta;
-  - o leitor de tela anuncia só a primeira frase e a de pronto (região educada), sem anunciar cada troca.
-- **Contrato:** as quatro frases substituem as `geracao.dicas` de hoje, que não são usadas. A frase de pronto é a chave nova `geracao.pronta`.
+    4. "Cada lição concluída fica marcada no mapa."
+  - A frase 4 não diz "salvo", porque para o visitante o progresso dura 24 horas neste aparelho;
+  - a regra de hoje para a espera longa (`geracao.aguardandoLicao`) não muda;
+  - quando a trilha fica pronta, a placa mostra a faixa da proposta (mudança 2), como hoje;
+  - o leitor de tela anuncia só "Montando sua trilha" e a proposta pronta, sem anunciar cada troca de frase.
+- **Contrato** (`packages/contratos/src/experiencia.ts`, bloco `geracao`, linha 1054 em `6547126`): as quatro frases substituem o vetor `geracao.dicas`, que hoje não é usado em nenhuma tela. A frase 1 entra no lugar da antiga dica "lições curtas cabem em qualquer intervalo do dia".
+- **Onde a placa é desenhada:** na web, em `src/app/previa-trilha.tsx` (const `placa`, linha 80); no app, em `apps/mobile/src/estudo.tsx` (const `texto`, linha 1777). As duas escolhem hoje entre `propostaPronta`, `aguardandoLicao` e `montandoTitulo`; a troca das frases entra no ramo do `montandoTitulo`.
 - **Onde:** web e app, iguais.
 
 ### Mudança 2 (P1): textos do primeiro caminho sem palavras de dentro
-- **Faixa da proposta:**
+- **Faixa da proposta** (`geracao.propostaPronta(licoes, partes)`, em `experiencia.ts`, linha 1036; também vai para o anúncio do leitor de tela do app, `estudo.tsx`, linha 1401):
   - antes: "Proposta pronta: N lições em M partes.";
   - depois: "Sua trilha está pronta: N lições curtas em M partes.";
-  - com uma parte só: "Sua trilha está pronta: N lições curtas."
-- **Tour "Ver como funciona"** (contrato `apresentacao.passos`; o título fica acima e o texto embaixo):
+  - com uma parte só: "Sua trilha está pronta: N lições curtas.";
+  - com uma lição só: "Sua trilha está pronta: 1 lição curta."
+- **Tour "Ver como funciona"** (`apresentacao.passos[0..3]`, campos `titulo` e `texto`, em `experiencia.ts`, linhas 292 a 312; o título fica acima e o texto embaixo):
   1. "Seu material vira lição" / "Mande um PDF ou uma foto. O Stu monta lições e mostra de onde tirou cada ideia."
   2. "Errou? Tem outro jeito" / "O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo."
   3. "Explique do seu jeito" / "Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que revisar."
@@ -85,7 +90,7 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
 - **Leitor de tela:** acompanha os textos novos.
 - **Onde:** web e app.
 
-### Mudança 3 (P1): o visitante sabe como guardar o que fez
+### Mudança 3 (adiada por decisão do dono): o visitante sabe como guardar o que fez
 - **Antes:** o visitante só lê "Conta temporária…" na entrada e no Perfil, sem saída.
 - **Depois:**
   - na conclusão da lição, só para o visitante, depois dos números e antes dos botões, entra uma linha em 14/20 `#5E6A85`: "Seu progresso fica 24 horas neste aparelho." e o botão secundário "Guardar meu progresso", que abre a entrada com o Google em destaque;
@@ -98,9 +103,12 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
 ### Mudança 4 (P1): o tour sem selo de demonstração (defeito B1)
 - **Antes:** "Modo demonstração" na arte dos passos 1 e 2.
 - **Depois:** sem o selo. A arte é uma ilustração e não precisa de aviso (spec 04, banca §2).
+  - Na web, os selos estão em `src/app/apresentacao.tsx`, linhas 166 e 179 (`estudio-selo` com `estudio.simulado`).
+  - No app, em `apps/mobile/src/apresentacao.tsx`, linha 223: a referência de exemplo tem `leitura: 'demonstracao'`, que desenha o selo.
+  - Na arte do passo 3, a linha "Retorno automático: o Stu procura…" também sai (`simulado: true`, linha 250 no app). Ela explica a correção real e não serve à ilustração.
 - **Onde:** web e app.
 
-### Mudança 5 (P1): aceite de IA mais curto, com o mesmo conteúdo
+### Mudança 5 (adiada por decisão do dono): aceite de IA mais curto, com o mesmo conteúdo
 - **Antes** (cerca de 45 palavras): "Para montar trilhas, ler materiais, ouvir sua voz e comentar suas respostas, o Studoo envia esses dados a um serviço de IA de outra empresa. Nada é enviado sem a sua permissão."
 - **Depois** (cerca de 30 palavras): "Para montar trilhas, ler seus materiais, ouvir sua voz e corrigir respostas, o Studoo usa uma IA de outra empresa. Nada vai para ela sem a sua permissão."
 - Título, botões e a linha "Sem permitir…" não mudam.
@@ -108,11 +116,11 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
 - **Onde:** web e app.
 
 ### Mudança 6 (P1): o primeiro conceito é curto
-- **Regra para a IA** (Web & API, no gerador):
+- **Regra para a IA** (Web & API, no pedido ao gerador da lição e no validador do conteúdo):
   - o balão "O Stu explica" tem até 3 frases e cerca de 50 palavras em todas as lições, como a spec 04 já pede;
   - na lição 1 de cada trilha, até 2 frases;
   - o resto vai para "Continuar lendo".
-- **Na tela:** acima de 3 frases, o cliente mostra as 3 primeiras e "Continuar lendo", que já existe.
+- **Na tela:** acima de 3 frases, o cliente mostra as 3 primeiras e "Continuar lendo" (`continuarLendo`, `experiencia.ts`, linha 1102), que já existe.
 - **Onde:** o servidor, para web e app.
 
 ### Mudanças já decididas na spec 16 que pesam no primeiro contato
@@ -121,13 +129,20 @@ O item 1 (a proposta pronta mostra a lição 1), o item 10 (o Stu na entrada do 
 
 ## 3. O que entra quando
 
+**Decisão do dono (22/11):** implementar as mudanças 1, 2, 4 e 6, na web na hora e no app no build 4. As mudanças 3 e 5 ficam para depois.
+- **A 3 ("Guardar meu progresso") não funciona hoje:** o servidor não tem caminho que leve o progresso do visitante para uma conta. Entrar com o Google cria outra conta, e o progresso do visitante se perde, então o botão enganaria a pessoa. Ela volta quando esse caminho existir no servidor.
+- **A 5 (aceite de IA mais curto) é texto de privacidade** da regra 5.1.2 da Apple e não se mexe perto da revisão.
+
 | Quando | O quê |
 |---|---|
-| Web, agora | Mudanças 1, 2, 4 e 6 (o servidor vale para todos); a 5, depois do sim do Lead; a 3, quando o Web & API confirmar que o progresso do visitante vai para a conta |
-| Build 4 do app (até 25/11) | Mudanças 1, 2 e 4, com os textos vindos do contrato; a 3 e a 5, nas mesmas condições da web |
-| Depois do hackathon | Teste de nível para quem já sabe o assunto; lembrete de volta (notificação) depois da primeira lição concluída; meta diária leve, se o dono quiser (seção 4) |
+| Web, agora | Mudanças 1, 2, 4 e 6 (a 6 é do servidor e vale para todos) |
+| Build 4 do app (até 25/11) | Mudanças 1, 2 e 4, com os textos vindos do contrato; a 6 já chega pelo servidor |
+| Depois do hackathon | Mudança 3, quando o servidor levar o progresso do visitante para a conta; mudança 5, depois da revisão da Apple; teste de nível para quem já sabe o assunto; lembrete de volta (notificação) depois da primeira lição concluída; meta diária leve, se o dono quiser (seção 4) |
 
 ## 4. O que não vale mudar, e por quê
+
+**Regra geral para os textos do produto** (vale daqui para frente): nenhum texto afirma número, prazo ou promessa que não medimos ou garantimos ("leva 3 minutos", "fica salvo para sempre"). O que depende de conta ou de visitante é dito de um jeito verdadeiro para os dois, ou separado por estado.
+
 
 - **Perguntas antes da primeira lição** (motivo, nível, meta diária, como o Duolingo faz): o Studoo pergunta uma coisa só e chega à lição em 5 toques. Cada pergunta a mais atrasa o valor, e a regra do dono pede a tela direto no conteúdo.
 - **Sequência de dias e meta diária agora** (de memória, no Duolingo): é pressão de compromisso, e não há tempo para fazer direito até 30/11. A conclusão já diz "Vale rever esta lição amanhã", que é o compromisso leve. Fica para depois, se o dono quiser.
