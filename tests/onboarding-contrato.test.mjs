@@ -2,7 +2,7 @@
 // "Ver como funciona") e a conta da espera, a mesma nas duas plataformas. A tela de cada cliente tem o teste dela; aqui é só o contrato.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ESPERA_DA_GERACAO, dicaDaEspera, faltaParaTrocarADica } from '@studoo/contratos';
+import { DICAS_DA_ESPERA_LONGA, ESPERA_DA_GERACAO, dicaDaEspera, dicaDaEsperaLonga, faltaParaTrocarADica, faltaParaTrocarADicaLonga } from '@studoo/contratos';
 import { mensagens } from '@studoo/contratos/experiencia';
 
 const g = mensagens.geracao;
@@ -93,4 +93,36 @@ test('quanto falta para a próxima troca: o relógio do cliente dorme esse tempo
     assert.equal(dicaDaEspera(t + falta - 1, n), dicaDaEspera(t, n), `${t}: antes do fim da espera, a mesma frase`);
     assert.notEqual(dicaDaEspera(t + falta, n), dicaDaEspera(t, n), `${t}: ao fim da espera, a frase muda`);
   }
+});
+
+test('a espera longa (depois de "Começar a lição 1"): 3 s de "Criando sua trilha…" e depois as frases 1, 2 e 4, a cada 5 s, em laço, sem a 3ª', () => {
+  assert.deepEqual([...DICAS_DA_ESPERA_LONGA], [0, 1, 3]);
+  assert.equal(g.criandoTrilha, 'Criando sua trilha…', 'o texto dos 3 primeiros segundos já existe no contrato');
+  assert.equal(g.dicas[2], 'Você confere a trilha antes de começar.', 'a que fica de fora: a pessoa já conferiu a trilha');
+  const doTempo = (t) => dicaDaEsperaLonga(t);
+  assert.equal(doTempo(0), null);
+  assert.equal(doTempo(2999), null, 'ainda "Criando sua trilha…"');
+  assert.equal(doTempo(3000), 0, 'aos 3 s, a frase 1');
+  assert.equal(doTempo(7999), 0);
+  assert.equal(doTempo(8000), 1, 'aos 8 s, a frase 2');
+  assert.equal(doTempo(13000), 3, 'aos 13 s, a frase 4 (a 3 não entra)');
+  assert.equal(doTempo(17999), 3);
+  assert.equal(doTempo(18000), 0, 'aos 18 s, volta à frase 1 (laço de 3)');
+  assert.equal(doTempo(23000), 1);
+  assert.equal(doTempo(28000), 3);
+  assert.equal(doTempo(3000 + 5000 * 3 * 40 + 5000 * 2), 3, 'o laço segue depois de muitas voltas');
+  for (const invalido of [-1, -5000, Number.NaN, Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY]) assert.equal(doTempo(invalido), null, String(invalido));
+  // Nunca aparece o índice 2, e todo índice devolvido existe nas frases.
+  const vistos = new Set();
+  for (let t = 0; t <= 120000; t += 250) { const i = doTempo(t); if (i !== null) { vistos.add(i); assert.ok(g.dicas[i], `índice ${i}`); } }
+  assert.deepEqual([...vistos].sort(), [0, 1, 3]);
+  // O relógio é o mesmo da espera da proposta, e a troca cai exatamente onde o relógio manda dormir.
+  assert.equal(faltaParaTrocarADicaLonga, faltaParaTrocarADica);
+  for (let t = 0; t <= 60000; t += 137) {
+    const falta = faltaParaTrocarADicaLonga(t);
+    assert.equal(doTempo(t + falta - 1), doTempo(t), `${t}: antes do fim da espera, a mesma frase`);
+    assert.notEqual(doTempo(t + falta), doTempo(t), `${t}: ao fim da espera, a frase muda`);
+  }
+  // A espera da proposta segue com as quatro frases (a 3ª entra: a pessoa ainda não conferiu).
+  assert.deepEqual([3000, 8000, 13000, 18000].map((t) => dicaDaEspera(t, g.dicas.length)), [0, 1, 2, 3]);
 });
