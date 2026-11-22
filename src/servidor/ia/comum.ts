@@ -1,4 +1,4 @@
-import { TIPOS_TRECHO, repararBarrasDoJson, type Recurso, type TipoTrecho } from "@studoo/contratos";
+import { TIPOS_TRECHO, encurtarConceito, repararBarrasDoJson, type Recurso, type TipoTrecho } from "@studoo/contratos";
 import type { ConteudoLicao, EsqueletoPlano, ExercicioInterno } from "@/dominio/aprendizado/plano";
 import {
   LIMITES_ESQUELETO,
@@ -255,7 +255,7 @@ export const esquemaDaLicaoDeMatematica = objetoEstrito({
 
 export const instrucoesDaLicao = [
   "Você é a IA do Studoo e escreve uma lição curta de uma trilha de estudo, em português do Brasil, para alguém que está aprendendo. O assunto pode ser qualquer coisa: idioma, música, culinária, história, ciência, esporte, programação.",
-  "A lição tem: objetivo (uma frase que começa com um verbo), conceito (de 2 a 4 frases simples, com um único conceito novo), exemplo (um caso concreto e resolvido) e 2 ou 3 exercícios com feedback.",
+  "A lição tem: objetivo (uma frase que começa com um verbo), conceito (é o balão “O Stu explica”: no máximo 3 frases simples e cerca de 50 palavras, com um único conceito novo; na primeira lição da trilha, no máximo 2 frases), exemplo (um caso concreto e resolvido) e 2 ou 3 exercícios com feedback.",
   "Exemplo e recursos:",
   "- exemploTipo é \"demonstracao\" nas habilidades práticas (tocar, cozinhar, desenhar, praticar um esporte): o exemplo apresenta e passos traz de 3 a 6 passos curtos para fazer junto. Nos outros casos, exemploTipo é \"exemplo\" e passos é null.",
   "- outroJeito: a mesma ideia central por outro caminho, para quem errou um exercício: uma analogia do dia a dia ou uma regra prática, em 1 a 3 frases, sem repetir o conceito com outras palavras.",
@@ -286,7 +286,9 @@ export function promptDaLicao(esqueleto: EsqueletoPlano, fluxo: number, licao: n
   const titulos = esqueleto.fluxos.flatMap((trecho) => trecho.licoes.map(({ titulo }) => titulo));
   const posicao = esqueleto.fluxos.slice(0, fluxo).reduce((soma, trecho) => soma + trecho.licoes.length, 0) + licao;
   const lista = titulos.map((titulo, indice) => `${indice + 1}. ${titulo}${indice === posicao ? "  <- esta lição" : ""}`).join("\n");
-  return `Objetivo da pessoa: ${esqueleto.objetivo}\nTrilha: ${esqueleto.titulo}\nLições da trilha, em ordem:\n${lista}\n\nEscreva a lição ${posicao + 1}: "${titulos[posicao]}".`;
+  // Na primeira lição da trilha o balão do Stu é ainda mais curto (spec 17, mudança 6): é a tela mais longa do primeiro caminho.
+  const primeira = fluxo === 0 && licao === 0 ? "\nEsta é a primeira lição da trilha: o conceito tem no máximo 2 frases." : "";
+  return `Objetivo da pessoa: ${esqueleto.objetivo}\nTrilha: ${esqueleto.titulo}\nLições da trilha, em ordem:\n${lista}\n\nEscreva a lição ${posicao + 1}: "${titulos[posicao]}".${primeira}`;
 }
 
 /** Texto aparado, ou vazio. */
@@ -504,6 +506,8 @@ export type LicaoNormalizada = {
   motivo?: string;
   /** Exercícios descartados de uma lição aceita (`principal:ordenar:itens`, `extra2:associar:esquerda_direita`). */
   descartados: string[];
+  /** O conceito passou do balão do Stu (3 frases, 2 na primeira lição, cerca de 50 palavras) e foi cortado na última frase que cabe. */
+  conceitoCortado?: true;
   /** O tipo do extra que virou principal quando o principal não fechou. */
   promovido?: string;
   /** O que a matemática da lição deu (visuais, figuras, resolução). Só quando o modelo mandou algo disso. */
@@ -515,11 +519,14 @@ export type LicaoNormalizada = {
  * segue os ids, e recursos, falas e prática fora do formato são descartados (a lição continua válida sem eles).
  * Aceita também o formato antigo, com um `exercicio` só.
  */
-export function normalizarConteudo(bruto: unknown, origem: string): ConteudoLicao | null {
-  return normalizarLicao(bruto, origem).conteudo;
+export function normalizarConteudo(bruto: unknown, origem: string, opcoes: OpcoesDaLicao = {}): ConteudoLicao | null {
+  return normalizarLicao(bruto, origem, opcoes).conteudo;
 }
 
-export function normalizarLicao(bruto: unknown, origem: string): LicaoNormalizada {
+/** O que a normalização precisa saber da lição: se é a primeira da trilha (o balão do Stu tem até 2 frases, e não 3). */
+export type OpcoesDaLicao = { primeiraLicao?: boolean };
+
+export function normalizarLicao(bruto: unknown, origem: string, opcoes: OpcoesDaLicao = {}): LicaoNormalizada {
   if (typeof bruto !== "object" || bruto === null) return { conteudo: null, motivo: "json", descartados: [] };
   const dado = bruto as Record<string, unknown>;
   const brutos = Array.isArray(dado.exercicios) ? dado.exercicios : dado.exercicio ? [dado.exercicio] : [];
@@ -618,9 +625,13 @@ export function normalizarLicao(bruto: unknown, origem: string): LicaoNormalizad
   // Numa lição de idioma (com falas), as frases entre aspas retas viram aspas curvas, que o app torna tocáveis. Fora
   // dos idiomas, as aspas ficam como vieram (podem ser parte de um código).
   const aspas = (texto: string) => (falas.length > 0 ? texto.replace(/"([^"\n]{1,200})"/g, "“$1”") : texto);
+  // O balão "O Stu explica" é curto (spec 17, mudança 6): até 3 frases e cerca de 50 palavras, e 2 frases na primeira lição da trilha. O que passa disso é cortado na última frase
+  // que cabe (nunca no meio de uma frase, e a lição segue válida: nada aqui derruba o aceite de uma trilha).
+  const encurtar = (texto: string) => encurtarConceito(texto, { primeiraLicao: opcoes.primeiraLicao });
+  const conceitoCurto = encurtar(aspas(textoDe(dado.conceito)));
   const conteudo: ConteudoLicao = {
     objetivo: textoDe(dado.objetivo),
-    conceito: aspas(textoDe(dado.conceito)),
+    conceito: conceitoCurto.conceito,
     exemplo: aspas(textoDe(dado.exemplo)),
     ...(dado.exemploTipo === "demonstracao" ? { exemploTipo: "demonstracao" as const } : {}),
     ...(passos.length > 0 ? { passos } : {}),
@@ -636,6 +647,7 @@ export function normalizarLicao(bruto: unknown, origem: string): LicaoNormalizad
   const resultado = (valido: ConteudoLicao): LicaoNormalizada => ({
     conteudo: valido,
     descartados,
+    ...(conceitoCurto.cortou ? { conceitoCortado: true as const } : {}),
     ...(promovido ? { promovido } : {}),
     ...(relato ? { matematica: relato } : {}),
   });
@@ -643,7 +655,7 @@ export function normalizarLicao(bruto: unknown, origem: string): LicaoNormalizad
   // Se algo opcional não fechou, a lição ainda vale só com o essencial.
   const essencial: ConteudoLicao = {
     objetivo: textoDe(dado.objetivo),
-    conceito: textoDe(dado.conceito),
+    conceito: encurtar(textoDe(dado.conceito)).conceito,
     exemplo: textoDe(dado.exemplo),
     origem,
     exercicio: principal,
@@ -651,6 +663,6 @@ export function normalizarLicao(bruto: unknown, origem: string): LicaoNormalizad
     ...matematica,
   };
   if (conteudoValido(essencial)) return resultado(essencial);
-  const soPrincipal: ConteudoLicao = { objetivo: textoDe(dado.objetivo), conceito: textoDe(dado.conceito), exemplo: textoDe(dado.exemplo), origem, exercicio: principal, ...matematica };
+  const soPrincipal: ConteudoLicao = { objetivo: textoDe(dado.objetivo), conceito: encurtar(textoDe(dado.conceito)).conceito, exemplo: textoDe(dado.exemplo), origem, exercicio: principal, ...matematica };
   return conteudoValido(soPrincipal) ? resultado(soPrincipal) : { conteudo: null, motivo: "licao", descartados: [] };
 }

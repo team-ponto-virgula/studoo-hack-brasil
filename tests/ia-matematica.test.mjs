@@ -617,7 +617,10 @@ test("material que não é de matemática: um pedido só, com as instruções de
   assert.equal(pedidos[0].dados.text.format.name, "trilha_material");
   assert.ok(pedidos[0].dados.instructions.endsWith(INSTRUCOES_DAS_LICOES_DO_MATERIAL));
   assert.equal(pedidos[0].dados.instructions.includes("MATEMÁTICA"), false);
-  assert.equal(INSTRUCOES_DAS_LICOES_DO_MATERIAL.length, 670);
+  // O pedido de sempre, sem nada de matemática. Eram 670 caracteres; a spec 17 (mudança 6) acrescentou a frase do balão curto ("O conceito é o balão “O Stu explica”: no máximo 3 frases e
+  // cerca de 50 palavras"), e só ela: 121 caracteres. Qualquer outra mudança no pedido de sempre muda este número de propósito.
+  assert.equal(INSTRUCOES_DAS_LICOES_DO_MATERIAL.length, 791);
+  assert.match(INSTRUCOES_DAS_LICOES_DO_MATERIAL, /O conceito é o balão “O Stu explica”: no máximo 3 frases e cerca de 50 palavras \(na primeira lição, no máximo 2 frases\)\./);
   assert.deepEqual(gerado.figuras, [undefined, undefined, undefined]);
   const { conteudos, relatos } = conteudosDasLicoes({
     licoes: gerado.licoes, paginas: [{ numero: 1, texto: "O denominador indica em quantas partes iguais o inteiro foi dividido." }], materialId: "m", nome: "caderno.pdf", leitura: "texto", origem: "Material enviado · caderno",
