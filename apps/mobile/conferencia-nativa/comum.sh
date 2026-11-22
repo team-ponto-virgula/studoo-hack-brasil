@@ -168,7 +168,11 @@ servidor() {
         echo "STUDOO_COMPARTILHAR=1"
         echo "STUDOO_COMUNIDADE=1"
         echo "STUDOO_COMUNIDADE_DEMO=1"
-        echo "STUDOO_IA_FALSA_PAUSA_MS=0"
+        # A pausa entre os eventos da IA falsa só vale na geração ao vivo (src/servidor/ia/falsa.ts: `aoVivo ? pausa : 0`),
+        # que só a prova da criação (fluxo 90) usa; o preparo dos dados pede a proposta de uma vez (aoVivo: false). Com 0, a
+        # trilha de frações (10 eventos) ficava pronta antes de o driver do iPhone ler a tela (~10 s por leitura na execução
+        # 45071340280) e a faixa da geração nunca era vista; com 1500, a geração dura uns 15 s.
+        echo "STUDOO_IA_FALSA_PAUSA_MS=1500"
         echo "IA=falsa"
         echo "EMAIL=falso"
       } > .env
@@ -308,6 +312,47 @@ iniciar_metro() {
   fi
   echo "Pacote do app ($plataforma) compilado: $medida."
   rm -f "$FERRAMENTAS/pacote-$plataforma"
+  if [ "$modo" = --go ]; then aquecer_assinatura "$plataforma" "$manifesto"; fi
+}
+
+# O Expo Go pede o manifesto com `expo-expect-signature: …keyid="expo-root"…`. No primeiro pedido assim, o Expo CLI
+# (@expo/cli 58.1.21, build/src/utils/codesigning.js, DevelopmentCodeSigningInfoFile.readAsync) não acha
+# ~/.expo/codesigning/<projectId>/development-code-signing-settings-2.json e grava os padrões com o @expo/json-file, que
+# escreve num temporário de nome `<arquivo>.<sha256 do conteúdo>` e o renomeia (build/writeAtomic.js, getTarget). Dois
+# pedidos juntos gravam o mesmo conteúdo no MESMO temporário: o primeiro renomeia e o segundo dá ENOENT no rename, e o
+# Metro responde 500 ao Expo Go, que fica no splash (execuções 44923807240 e 44926124145; o sufixo do temporário é o
+# mesmo nas duas porque o conteúdo é o mesmo). Aqui o mesmo pedido vai antes, um de cada vez, pela cache da 8081, para o
+# arquivo já existir quando o Expo Go abrir; se ainda faltar, ele é criado com os mesmos padrões (só leitura depois).
+aquecer_assinatura() {
+  local plataforma="$1" manifesto="$2" projeto casa arquivo codigo=000 tentativa
+  projeto="$(printf '%s' "$manifesto" | jq -r '.extra.eas.projectId // empty' 2> /dev/null || true)"
+  if [ -z "$projeto" ]; then
+    projeto="$(jq -r '.expo.extra.eas.projectId // empty' "$RAIZ/apps/mobile/app.json" 2> /dev/null || true)"
+  fi
+  casa="${__UNSAFE_EXPO_HOME_DIRECTORY:-$HOME/.expo}"
+  for tentativa in 1 2 3; do
+    codigo="$(curl -s -o /dev/null -m 60 -w '%{http_code}' -H "expo-platform: $plataforma" \
+      -H 'accept: application/expo+json,application/json' \
+      -H 'expo-expect-signature: sig, keyid="expo-root", alg="rsa-v1_5-sha256"' \
+      "http://127.0.0.1:$PORTA_METRO/" || true)"
+    [ "$codigo" = 200 ] && break
+    sleep 2
+  done
+  if [ -z "$projeto" ]; then
+    resumo "⚠️ Aquecimento da assinatura do manifesto: sem o projectId do EAS no manifesto, o arquivo de assinatura não é conferido (pedido assinado: HTTP $codigo)."
+    return 0
+  fi
+  arquivo="$casa/codesigning/$projeto/development-code-signing-settings-2.json"
+  if [ "$codigo" = 200 ] && [ -s "$arquivo" ]; then
+    resumo "✅ Aquecimento da assinatura do manifesto: o pedido do Expo Go (expo-expect-signature) respondeu 200 em $tentativa tentativa(s) e o arquivo de assinatura já existe antes de abrir o Expo Go."
+  else
+    mkdir -p "$(dirname "$arquivo")"
+    if [ ! -s "$arquivo" ]; then
+      printf '{\n  "easProjectId": null,\n  "scopeKey": null,\n  "privateKey": null,\n  "certificateChain": null\n}\n' > "$arquivo"
+    fi
+    resumo "⚠️ Aquecimento da assinatura do manifesto: o pedido do Expo Go respondeu HTTP $codigo; o arquivo de assinatura foi criado aqui com os padrões do Expo CLI para o Expo Go não disputar a gravação."
+    mostrar_registro "$REGISTROS/metro.log" 40
+  fi
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -356,15 +401,46 @@ rodar_maestro() {
   return "$codigo"
 }
 
+# A fase falhou na ABERTURA do app (antes da tela de entrada): a espera de partes/abrir-pela-primeira-vez.yaml, pela
+# entrada, pelo menu do Expo Go ou pela janela de erro, deu falso. É a cara do 500 do manifesto (o Expo Go para no
+# splash). Falhas depois da entrada (um seletor, um texto) não contam.
+falhou_na_abertura() {
+  grep -qE "Assertion is false: id: titulo-entrada" "$REGISTROS/maestro-$1.log" 2> /dev/null
+}
+quinhentos_no_metro() {
+  grep -c "HTTP response error 500" "$REGISTROS/metro.log" 2> /dev/null || true
+}
+
+# Roda a fase; se ela falhar na abertura do app, para o Expo Go e roda de novo UMA vez. A repetição sempre aparece no
+# resumo com ⚠️ (com o 500 do Metro, se houver), mesmo quando a segunda tentativa passa.
+rodar_com_abertura_repetida() {
+  local fase="$1" fluxo="$2" antes depois
+  antes="$(quinhentos_no_metro)"
+  if rodar_maestro "$fase" "$fluxo"; then return 0; fi
+  falhou_na_abertura "$fase" || return 1
+  depois="$(quinhentos_no_metro)"
+  resumo "⚠️ A fase \`$fase\` falhou na abertura do app (a entrada não apareceu; respostas 500 do Metro ao Expo Go nesta fase: $(( ${depois:-0} - ${antes:-0} ))). O Expo Go foi parado e a fase rodou de novo uma vez; a primeira tentativa está em maestro-$fase-primeira-tentativa.log e tela-no-fim-de-$fase-primeira-tentativa.png."
+  cp "$REGISTROS/maestro-$fase.log" "$REGISTROS/maestro-$fase-primeira-tentativa.log"
+  cp "$REGISTROS/tela-no-fim-de-$fase.png" "$REGISTROS/tela-no-fim-de-$fase-primeira-tentativa.png" 2> /dev/null || true
+  if declare -F parar_app_do_aparelho > /dev/null; then parar_app_do_aparelho; fi
+  sleep 5
+  rodar_maestro "$fase" "$fluxo"
+}
+
 fluxo_entrada() {
-  rodar_maestro entrada "$PASTA_DOS_FLUXOS/01-entrada.yaml" \
+  rodar_com_abertura_repetida entrada "$PASTA_DOS_FLUXOS/01-entrada.yaml" \
     || erro "O fluxo da entrada falhou (app aberto, entrada em repouso e com o teclado). O passo acima diz em que comando; a tela está em tela-no-fim-de-entrada.png, nos registros."
   resumo "✅ Entrada: em repouso, e-mail em foco e senha em foco com o teclado."
 }
 
 fluxo_entrar() {
-  rodar_maestro entrar "$PASTA_DOS_FLUXOS/02-entrar.yaml" \
+  rodar_com_abertura_repetida entrar "$PASTA_DOS_FLUXOS/02-entrar.yaml" \
     || erro "O fluxo de entrar na conta falhou; sem sessão, as outras telas não são capturadas. A tela está em tela-no-fim-de-entrar.png, nos registros."
+  # O fluxo 2 digita o e-mail de novo quando o campo ficou vazio (teclado frio depois de religar o simulador): sempre no
+  # resumo, para a repetição não passar despercebida.
+  if [ "$(grep -c 'Input text ${EMAIL}' "$REGISTROS/maestro-entrar.log" 2> /dev/null || true)" -gt 1 ]; then
+    resumo "⚠️ No fluxo 2, o e-mail não ficou no campo na primeira digitação e foi digitado de novo (maestro-entrar.log)."
+  fi
   resumo "✅ Entrou na conta sintética e chegou ao mapa da trilha."
 }
 
@@ -414,6 +490,20 @@ fluxo_criacao() {
   trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$REGISTROS/trilhas-antes-da-criacao.json" > /dev/null || true
   if declare -F iniciar_registro_de_audio > /dev/null; then iniciar_registro_de_audio "$REGISTROS/audio-criacao.log" || true; fi
   if rodar_maestro criacao "$PASTA_DOS_FLUXOS/criacao/90-criacao-da-trilha.yaml"; then fluxo=passou; fi
+  # O emulador caiu no meio da prova da criação duas vezes (execuções 44911656576 e 45064765725, numa troca de tela, com o
+  # Maestro esperando o toque e o emulador fora do adb no fim). No Android, se ele não responde depois da falha, ele é
+  # religado (até duas vezes no total), a trilha da tentativa sai (o fluxo 95 precisa de exatamente uma trilha nova) e a
+  # criação roda de novo uma vez. A repetição aparece no resumo com ⚠️; o fluxo 98 não roda depois de religar.
+  if [ "$fluxo" != passou ] && [ "$plataforma" = android ] && ! aparelho_responde \
+    && declare -F reviver_aparelho > /dev/null && [ "${REVIVIDOS:-0}" -lt 2 ] && reviver_aparelho; then
+    resumo "⚠️ O emulador parou de responder no meio da prova da criação; foi religado, a trilha da tentativa saiu e a criação rodou de novo uma vez (a primeira tentativa está em maestro-criacao-primeira-tentativa.log)."
+    cp "$REGISTROS/maestro-criacao.log" "$REGISTROS/maestro-criacao-primeira-tentativa.log"
+    trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" \
+      --saida "$REGISTROS/trilhas-depois-da-primeira-tentativa.json" --apagar > /dev/null || true
+    if declare -F parar_registro_de_audio > /dev/null; then parar_registro_de_audio || true; fi
+    if declare -F iniciar_registro_de_audio > /dev/null; then iniciar_registro_de_audio "$REGISTROS/audio-criacao.log" || true; fi
+    if rodar_maestro criacao "$PASTA_DOS_FLUXOS/criacao/90-criacao-da-trilha.yaml"; then fluxo=passou; fi
+  fi
   # Uma resposta errada e uma certa na primeira lição da trilha temporária (fluxo 95), antes de ela sair: o app ficou no
   # mapa dela. Sem a criação, ou sem opções escolhidas sem dúvida, o fluxo não roda, e as capturas 95 a 97 faltam.
   if [ "$fluxo" != passou ]; then
@@ -520,7 +610,15 @@ fluxo_telas_uma_por_vez() {
     resumo "Só as telas pedidas: $pedidas (sem a prova da criação; as capturas das outras vão aparecer como faltando)."
   fi
 
-  while IFS= read -r fluxo; do
+  # A lista vem pelo descritor 3, que nada dentro do laço lê. Pela entrada padrão, o `adb shell` de aparelho_responde e o
+  # `adb exec-out` da captura no fim de cada fase repassavam o resto da lista ao aparelho: depois do primeiro fluxo, o
+  # `read` não achava mais nada (execuções 45064765725 e 45071340280, Android: "Telas: 1 fluxo(s)", mesmo com o Maestro
+  # já em `< /dev/null`).
+  local lista
+  lista="$(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
+    "$PASTA_DOS_FLUXOS/telas/config.yaml")"
+  echo "Fluxos das telas, um por vez ($(printf '%s\n' "$lista" | grep -c .)): $(printf '%s' "$lista" | tr '\n' ' ')"
+  while IFS= read -r fluxo <&3; do
     if [ -n "$pedidas" ] && ! printf ' %s ' "$pedidas" | grep -qF " $fluxo "; then continue; fi
     if [ -n "$caiu" ]; then
       naorodaram="$naorodaram $fluxo"
@@ -538,14 +636,15 @@ fluxo_telas_uma_por_vez() {
     fi
     quantos=$((quantos + 1))
     codigo=0
+    # `< /dev/null`: o Maestro lê a entrada padrão e, sem isto, engolia o resto da lista de fluxos deste laço (execução
+    # 45064765725, Android: só o 80 rodou, e o laço acabou dizendo "1 fluxo(s), todos passaram").
     rodar_maestro "telas-$fluxo" "$PASTA_DOS_FLUXOS/telas/$fluxo.yaml" \
-      --format junit --output "$REGISTROS/maestro-telas-$fluxo.xml" || codigo=$?
+      --format junit --output "$REGISTROS/maestro-telas-$fluxo.xml" < /dev/null || codigo=$?
     if [ "$codigo" -ne 0 ]; then
       falhas="$falhas$(node "$AQUI/servidor/falhas-do-relatorio.mjs" "$REGISTROS/maestro-telas-$fluxo.xml" 2> /dev/null || echo "- \`$fluxo\`: sem relatório do Maestro (código $codigo)")
 "
     fi
-  done < <(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
-    "$PASTA_DOS_FLUXOS/telas/config.yaml")
+  done 3< <(printf '%s\n' "$lista")
 
   # A criação por último (Android): com o aparelho de pé, religando se preciso.
   if [ -z "$pedidas" ] && [ "${CRIACAO_DEPOIS_DAS_TELAS:-}" = "1" ]; then

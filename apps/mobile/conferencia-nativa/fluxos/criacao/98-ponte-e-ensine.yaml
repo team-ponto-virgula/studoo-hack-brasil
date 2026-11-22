@@ -38,15 +38,39 @@ name: 98-ponte-e-ensine
 - extendedWaitUntil:
     visible: 'Etapa \d+ de \d+'
     timeout: 30000
-# "Recomeçar do zero" pede confirmação no mesmo lugar (recomecar-licao vira confirmar-recomeco).
+# "Recomeçar do zero" pede confirmação no mesmo lugar (recomecar-licao vira confirmar-recomeco, licao.tsx). A lição reabre
+# rolada até o exercício respondido, e o aviso fica sob o cabeçalho preso (execução 45053145066: recomecar-licao em
+# y 74–117 e o titulo-topo em y 97–113; o toque caiu no cabeçalho e a confirmação nunca apareceu). Antes do toque, a lição
+# volta ao topo; se a confirmação não vier, o toque se repete uma vez.
 - runFlow:
     when:
       visible:
         id: recomecar-licao
     commands:
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          start: 50%, 35%
+          end: 50%, 85%
+      - swipe:
+          waitToSettleTimeoutMs: 1500
+          start: 50%, 35%
+          end: 50%, 85%
       - tapOn:
           waitToSettleTimeoutMs: 1000
           id: recomecar-licao
+      - extendedWaitUntil:
+          visible:
+            id: confirmar-recomeco
+          timeout: 5000
+          optional: true
+      - runFlow:
+          when:
+            notVisible:
+              id: confirmar-recomeco
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: recomecar-licao
       - tapOn:
           waitToSettleTimeoutMs: 1500
           id: confirmar-recomeco

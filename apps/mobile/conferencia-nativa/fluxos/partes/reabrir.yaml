@@ -27,6 +27,23 @@ appId: host.exp.Exponent
 # execução 44565509060, o app levou 37 s para abrir e o mapa do fluxo 70 ficou com 6 s dos 45. O `evalScript` conta como
 # interação e não toca no aparelho: zera a conta antes da espera do mapa.
 - evalScript: ${output.esperaDoMapa = true}
+# O mapa, ou o erro da abertura: na execução 45071340280 (fluxo 20), o servidor local devolveu 502 a um GET /api/sessao
+# (o seguinte, 200 em 5,7 s) e o app ficou em "Não foi possível continuar. Tente novamente." (sessao.tsx, tentar-sessao),
+# ou no aviso da lista (tentar-planos). Um toque em "Tentar novamente", uma vez, e a espera do mapa de novo.
+- extendedWaitUntil:
+    visible:
+      id: titulo-plano|tentar-sessao|tentar-planos
+    timeout: 45000
+- runFlow:
+    when:
+      visible:
+        id: tentar-sessao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: tentar-sessao
+- runFlow: tentar-de-novo.yaml
+- evalScript: ${output.esperaDoMapaDepois = true}
 - extendedWaitUntil:
     visible:
       id: titulo-plano

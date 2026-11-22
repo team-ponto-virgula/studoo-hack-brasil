@@ -29,6 +29,24 @@ test('volta do laço como no iPhone (execução 44809026116): A pausa e volta a 
   assert.deepEqual(r.ocorrencias.filter((o) => o.tipo === 'reinício' || o.tipo === 'pausa'), []);
 });
 
+test('volta do laço com a cauda do que sai depois de o outro entrar (execução 45053145066): não é reinício', () => {
+  const b = tocando('B', 10_000, 80_000, 88_500);
+  const tFim = b.at(-1).t;
+  const lista = [
+    ...b,
+    amostra(tFim + 406, 'A', true, 26, 0), // o que entra, ainda sem volume
+    amostra(tFim + 407, 'A', true, 26, 0),
+    amostra(tFim + 500, 'B', true, 89_000, 0.096), // a cauda do que sai, já no fim da faixa
+    amostra(tFim + 556, 'B', false, 89_056, 0),
+    amostra(tFim + 593, 'B', false, 26, 0),
+    ...tocando('A', tFim + 933, 500, 6_000),
+  ];
+  const r = analisarFundo(lista);
+  assert.equal(r.voltas.length, 1, 'uma volta do laço');
+  assert.deepEqual(r.voltas[0].de + r.voltas[0].para, 'BA');
+  assert.deepEqual(r.ocorrencias.filter((o) => o.tipo === 'reinício' || o.tipo === 'pausa'), []);
+});
+
 test('o outro reprodutor entrando no meio da faixa continua sendo reinício', () => {
   const a = tocando('A', 10_000, 20_000, 30_000);
   const lista = [...a, ...tocando('B', a.at(-1).t + 300, 0, 5_000)];
