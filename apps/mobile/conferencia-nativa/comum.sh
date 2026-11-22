@@ -486,6 +486,20 @@ fluxo_criacao() {
   trilhas_da_criacao antes --dados "$DADOS/dados-da-conferencia.json" --saida "$REGISTROS/trilhas-antes-da-criacao.json" > /dev/null || true
   if declare -F iniciar_registro_de_audio > /dev/null; then iniciar_registro_de_audio "$REGISTROS/audio-criacao.log" || true; fi
   if rodar_maestro criacao "$PASTA_DOS_FLUXOS/criacao/90-criacao-da-trilha.yaml"; then fluxo=passou; fi
+  # O emulador caiu no meio da prova da criação duas vezes (execuções 44911656576 e 45064765725, numa troca de tela, com o
+  # Maestro esperando o toque e o emulador fora do adb no fim). No Android, se ele não responde depois da falha, ele é
+  # religado (até duas vezes no total), a trilha da tentativa sai (o fluxo 95 precisa de exatamente uma trilha nova) e a
+  # criação roda de novo uma vez. A repetição aparece no resumo com ⚠️; o fluxo 98 não roda depois de religar.
+  if [ "$fluxo" != passou ] && [ "$plataforma" = android ] && ! aparelho_responde \
+    && declare -F reviver_aparelho > /dev/null && [ "${REVIVIDOS:-0}" -lt 2 ] && reviver_aparelho; then
+    resumo "⚠️ O emulador parou de responder no meio da prova da criação; foi religado, a trilha da tentativa saiu e a criação rodou de novo uma vez (a primeira tentativa está em maestro-criacao-primeira-tentativa.log)."
+    cp "$REGISTROS/maestro-criacao.log" "$REGISTROS/maestro-criacao-primeira-tentativa.log"
+    trilhas_da_criacao depois --antes "$REGISTROS/trilhas-antes-da-criacao.json" \
+      --saida "$REGISTROS/trilhas-depois-da-primeira-tentativa.json" --apagar > /dev/null || true
+    if declare -F parar_registro_de_audio > /dev/null; then parar_registro_de_audio || true; fi
+    if declare -F iniciar_registro_de_audio > /dev/null; then iniciar_registro_de_audio "$REGISTROS/audio-criacao.log" || true; fi
+    if rodar_maestro criacao "$PASTA_DOS_FLUXOS/criacao/90-criacao-da-trilha.yaml"; then fluxo=passou; fi
+  fi
   # Uma resposta errada e uma certa na primeira lição da trilha temporária (fluxo 95), antes de ela sair: o app ficou no
   # mapa dela. Sem a criação, ou sem opções escolhidas sem dúvida, o fluxo não roda, e as capturas 95 a 97 faltam.
   if [ "$fluxo" != passou ]; then
@@ -610,8 +624,10 @@ fluxo_telas_uma_por_vez() {
     fi
     quantos=$((quantos + 1))
     codigo=0
+    # `< /dev/null`: o Maestro lê a entrada padrão e, sem isto, engolia o resto da lista de fluxos deste laço (execução
+    # 45064765725, Android: só o 80 rodou, e o laço acabou dizendo "1 fluxo(s), todos passaram").
     rodar_maestro "telas-$fluxo" "$PASTA_DOS_FLUXOS/telas/$fluxo.yaml" \
-      --format junit --output "$REGISTROS/maestro-telas-$fluxo.xml" || codigo=$?
+      --format junit --output "$REGISTROS/maestro-telas-$fluxo.xml" < /dev/null || codigo=$?
     if [ "$codigo" -ne 0 ]; then
       falhas="$falhas$(node "$AQUI/servidor/falhas-do-relatorio.mjs" "$REGISTROS/maestro-telas-$fluxo.xml" 2> /dev/null || echo "- \`$fluxo\`: sem relatório do Maestro (código $codigo)")
 "
