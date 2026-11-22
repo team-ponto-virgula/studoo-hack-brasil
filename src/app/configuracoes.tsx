@@ -42,7 +42,10 @@ type Campo = 'titulo' | 'descricao' | 'tema' | 'capa';
 
 export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, aoMudar, mudarCompartilhamento, apagar, versao }: {
   planoId: string;
-  /** Trilha adicionada de outra pessoa: o nome de quem compartilhou (a cópia é dela; não se compartilha de novo). */
+  /**
+   * Trilha adicionada de outra pessoa: o nome de quem compartilhou (a cópia é dela; não se compartilha de novo). `''` é a trilha recebida sem nome (a pessoa
+   * excluiu a conta ou parou de compartilhar): continua recebida, só não diz de quem. `null` ou ausente: a trilha é da própria pessoa.
+   */
   recebidaDe?: string | null;
   /** Com o compartilhar ligado: a seção "Quem pode ver". */
   compartilhar: boolean;
@@ -54,6 +57,8 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
   /** Muda quando a folha de compartilhar fecha: a linha de "Quem pode ver" relê o estado. */
   versao: number;
 }) {
+  /** Trilha recebida (com ou sem o nome de quem compartilhou): não se compartilha de novo. */
+  const recebida = recebidaDe !== null && recebidaDe !== undefined;
   const [conf, setConf] = useState<ConfiguracoesTrilha | null>(null);
   const [erroCarregar, setErroCarregar] = useState<string | null>(null);
   const [titulo, setTitulo] = useState('');
@@ -140,7 +145,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
 
       {!conf ? <div className="folha-esqueleto" aria-hidden="true"><span /><span /><span /></div> : (
         <>
-          {recebidaDe && <p className="configuracoes__recebida" role="note">{k.recebida(recebidaDe)}</p>}
+          {recebida && <p className="configuracoes__recebida" role="note">{recebidaDe ? k.recebida(recebidaDe) : k.recebidaSemNome}</p>}
 
           <section className="configuracoes__secao" aria-labelledby="configuracoes-capa-nome">
             <h2 id="configuracoes-capa-nome" className="perfil-secao__titulo">{k.capaENome}</h2>
@@ -195,7 +200,7 @@ export function TelaConfiguracoes({ planoId, recebidaDe, compartilhar, voltar, a
             </fieldset>
           </section>
 
-          {compartilhar && !recebidaDe && (
+          {compartilhar && !recebida && (
             <section className="configuracoes__secao" aria-labelledby="configuracoes-quem">
               <h2 id="configuracoes-quem" className="perfil-secao__titulo">{k.quemPodeVer}</h2>
               <p className="configuracoes__linha">

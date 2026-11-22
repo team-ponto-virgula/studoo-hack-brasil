@@ -16,6 +16,7 @@ import { comTextoSimples } from '../aprendizado/formulas-na-licao';
 import { exercicioDaResposta, reforcoDoExercicio } from '@/dominio/aprendizado/reforco';
 import { armadilhaNoTexto, normalizarResposta, termosDaLicao, termosPresentes } from '@/dominio/aprendizado/plano';
 import { quota } from './materiais';
+import { explicacaoTemExemplo } from './exemplo-na-explicacao';
 import {
   conteudoDaGerada,
   esquemaLicao,
@@ -274,14 +275,13 @@ function frasesDaLicaoNoTexto(conteudo: ConteudoLicao, explicacao: string): stri
 }
 
 function ensinoFalso(licao: LicaoDetalhe, conteudo: ConteudoLicao, explicacao: string): FeedbackEnsino {
-  const semAcento = explicacao.normalize('NFD').replace(/\p{M}+/gu, '');
   // Numa lição de idioma, usar uma frase da lição (“I'm here on vacation”) ou citar uma frase entre aspas já é dar um
   // exemplo, mesmo sem escrever “por exemplo”.
   const frasesUsadas = frasesDaLicaoNoTexto(conteudo, explicacao);
   const citou = (conteudo.falas?.length ?? 0) > 0 && /[“"][^”"]*\p{L}+\s+\p{L}+[^”"]*[”"]/u.test(explicacao);
-  // Exemplo é o que a pessoa marca como exemplo, inclusive do jeito falado (“tipo quando…”, “quando eu…”). Um “quando”
-  // solto não conta: números e “quando” aparecem em qualquer explicação de violão.
-  const marcouExemplo = /\b(?:por exemplo|exemplo|ex\.|imagine|como quando|digamos|tipo assim|tipo quando|tipo se|tipo:|quando eu|se eu|no meu caso|comigo|e o caso de|no caso de)(?=\W|$)/i.test(semAcento);
+  // Exemplo é o que a pessoa marca como exemplo, inclusive do jeito falado (“tipo quando…”, “quando eu…”), e o exemplo concreto sem marca
+  // (“Numa pizza de 8 fatias, comer 3 é 3/8”). Um “quando” ou um número soltos não contam (ver exemplo-na-explicacao.ts).
+  const marcouExemplo = explicacaoTemExemplo(explicacao);
   const comExemplo = marcouExemplo || citou || frasesUsadas.length > 0;
   const termos = termosDaLicao(conteudo);
   const trouxe = termosPresentes(explicacao, termos);

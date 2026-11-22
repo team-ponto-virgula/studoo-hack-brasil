@@ -235,8 +235,34 @@ export interface PerfilPublico {
 
 /** Nas listas e no mapa (com a flag): o selo da dona e o "Compartilhada por" de quem recebeu. */
 export interface MarcasCompartilhar {
-  /** Da dona: o link ativo da trilha. */
-  link?: { codigo: string; noPerfil: boolean };
-  /** De quem recebeu: de quem veio, o perfil público (se existir agora) e o código do link original, se ainda ativo. */
+  /**
+   * Da dona: o link ativo da trilha e, em `moderacao`, o estado da revisão da equipe (spec 16, item 31): "pendente" mostra "Em revisão", "recusado" mostra "Não publicada" e
+   * "aprovado" (ou, em respostas antigas, sem o campo) mostra "Compartilhada". O mapa e o selo de Minhas trilhas dizem o mesmo que o Perfil.
+   */
+  link?: { codigo: string; noPerfil: boolean; moderacao?: "pendente" | "aprovado" | "recusado" };
+  /**
+   * De quem recebeu: de quem veio, o perfil público (se existir agora) e o código do link original, se ainda ativo. `nome` vem VAZIO quando quem compartilhou
+   * excluiu a conta ou parou de compartilhar: a trilha continua recebida (sem Compartilhar nem Postar), mas as frases "Esta trilha é de …" e "Compartilhada por …"
+   * não se montam (`recebidaTemNome`).
+   */
   recebida?: { nome: string; perfilId: string | null; codigoAtivo: string | null; foto: string | null };
+}
+
+/** O estado curto do compartilhamento de uma trilha da própria pessoa (spec 16, item 31): o mesmo no botão do mapa, no selo de Minhas trilhas e no app. */
+export type EstadoDoCompartilhamento = 'sem-link' | 'compartilhada' | 'em-revisao' | 'nao-publicada';
+
+/**
+ * Sem link: "Compartilhar". Com link aprovado (ou, em respostas antigas, sem `moderacao`): "Compartilhada". À espera da revisão da equipe: "Em revisão" (selo neutro).
+ * Recusado: "Não publicada" (selo âmbar). O texto longo ("Em revisão pela equipe do Studoo. Por enquanto, só você vê.") fica só no Perfil e na folha de compartilhar.
+ */
+export function estadoDoCompartilhamento(link: { moderacao?: "pendente" | "aprovado" | "recusado" } | null | undefined): EstadoDoCompartilhamento {
+  if (!link) return 'sem-link';
+  if (link.moderacao === 'pendente') return 'em-revisao';
+  if (link.moderacao === 'recusado') return 'nao-publicada';
+  return 'compartilhada';
+}
+
+/** A trilha recebida diz de quem veio? Sem nome (conta excluída, link parado), o cliente não escreve a frase "de <nome>" e não deixa a linha vazia na tela. */
+export function recebidaTemNome(recebida: { nome: string }): boolean {
+  return recebida.nome.trim().length > 0;
 }

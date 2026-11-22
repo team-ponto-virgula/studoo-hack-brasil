@@ -445,6 +445,8 @@ export const mensagens = {
             [nivel, ...(estudando > 0 ? [`${estudando} estudando`] : []), ...(valeus > 0 ? [`${valeus} ${valeus === 1 ? GESTO.palavra : GESTO.plural}`] : [])].join(' · '),
         mudarCompartilhamento: 'Mudar compartilhamento',
         recebida: (nome: string) => `Trilha adicionada de ${nome}. As mudanças valem só para a sua cópia; a original continua como ${nome} deixou.`,
+        /** Quem compartilhou excluiu a conta ou parou de compartilhar: sem o nome (`recebidaTemNome`). */
+        recebidaSemNome: 'Trilha adicionada da comunidade. As mudanças valem só para a sua cópia; a original continua como está.',
         apagarTitulo: 'Apagar trilha',
         apagarDica: 'Apaga a trilha, as lições e o seu progresso nela.',
         apagar: 'Apagar trilha',
@@ -687,7 +689,10 @@ export const mensagens = {
         emAlta: 'Em alta esta semana',
         emAltaDoTema: (tema: string) => `Em alta em ${tema} esta semana`,
         emAltaDica: GESTO.legendaEmAlta,
-        posicao: (n: number) => `${n}º lugar`,
+        /** O que o leitor de tela ouve na capa de uma trilha do Em alta (spec 16, item 16): "1º em alta". Era "1º lugar". */
+        posicao: (n: number) => `${n}º em alta`,
+        /** O que a pílula da capa escreve: "1º" (13 px 800 sobre branco). */
+        posicaoSelo: (n: number) => `${n}º`,
         anteriores: 'Ver as anteriores',
         proximas: 'Ver as próximas',
         temas: 'Filtrar por tema',

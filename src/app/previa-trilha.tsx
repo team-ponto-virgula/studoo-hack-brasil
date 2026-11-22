@@ -7,6 +7,7 @@ import { Botao, Desenho, Fronteira, Icone, Mascote, coresDaRegiao } from '../ui'
 import { desenhosQueBalancam, enfeitesDaLinha } from '../ui/mundo-desenhos';
 import { posicaoX, semQuebrarHifen } from '../ui/caminho';
 import { nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
+import { DURACAO_ACOMPANHAR_MS, DURACAO_ATE_O_NO_1_MS, entradaMaisNova, rolagemParaCentrarNo, rolarAte } from './previa-trilha-regras';
 import { tocaSons } from './sons';
 import './previa-trilha.css';
 
@@ -69,9 +70,12 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const [semNovidade, setSemNovidade] = useState(false);
   const [demorou, setDemorou] = useState(false);
   const [estreito, setEstreito] = useState(false);
+  /** Do momento em que a trilha fica pronta até a rolagem até o nó 1 terminar: o Stu já fica no lado do nó 1, e não pula para o troféu que passa pela tela. */
+  const [indoAoPrimeiro, setIndoAoPrimeiro] = useState(false);
+  const cancelarRolagem = useRef<(() => void) | null>(null);
   const salvando = aceite === 'salvando' || !!passagem;
   const falhou = aceite === 'erro' || aceite === 'expirada';
-  const stuNoTrofeu = !!proposta && trofeuAVista && !salvando && !falhou;
+  const stuNoTrofeu = !!proposta && trofeuAVista && !indoAoPrimeiro && !salvando && !falhou;
   const fase = passagem ? 'criada' : salvando ? 'salvando' : proposta ? 'pronta' : 'montando';
   const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
@@ -105,9 +109,19 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     if (proposta) {
       if (propostaApresentada.current === proposta.token) return;
       propostaApresentada.current = proposta.token;
-      if (acompanhando && trofeu.current) {
-        const destino = trofeu.current.getBoundingClientRect().bottom - area.getBoundingClientRect().bottom + area.scrollTop;
-        area.scrollTo({ top: Math.max(0, destino), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
+      if (acompanhando) {
+        // Spec 16, item 1: a trilha pronta mostra a lição 1, não o fim. O nó 1 vai para o centro da área livre em 600 ms (direto, com movimento reduzido), o Stu fica ao lado
+        // dele, e o troféu continua a uma rolagem de distância ("Ver o fim da trilha").
+        const primeiro = area.querySelector<HTMLElement>('[data-primeiro] .previa-no__face');
+        if (primeiro) {
+          const caixa = primeiro.getBoundingClientRect();
+          const alvo = rolagemParaCentrarNo({
+            centroDoNoNaTela: caixa.top + caixa.height / 2, topoDaArea: area.getBoundingClientRect().top, alturaDaArea: area.clientHeight, rolagem: area.scrollTop, alturaDoConteudo: area.scrollHeight,
+          });
+          cancelarRolagem.current?.();
+          setIndoAoPrimeiro(true);
+          cancelarRolagem.current = rolarAte(area, alvo, movimentoReduzido() ? 0 : DURACAO_ATE_O_NO_1_MS, () => setIndoAoPrimeiro(false));
+        }
         painel.current?.querySelector<HTMLButtonElement>('.previa-comecar')?.focus({ preventScroll: true });
       }
       return;
@@ -116,7 +130,9 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     const vaga = area.querySelector<HTMLElement>('[data-mais-novo]');
     if (!vaga || !acompanhando) return;
     const centro = vaga.getBoundingClientRect().top - area.getBoundingClientRect().top + area.scrollTop + vaga.offsetHeight / 2;
-    area.scrollTo({ top: Math.max(0, centro - area.clientHeight * 0.6), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
+    // A mesma rolagem própria da trilha pronta (sem `scrollTo` suave nativo): o que anda nesta área é sempre uma só, e a proposta que chega no meio dela a substitui.
+    cancelarRolagem.current?.();
+    cancelarRolagem.current = rolarAte(area, Math.max(0, centro - area.clientHeight * 0.6), movimentoReduzido() ? 0 : DURACAO_ACOMPANHAR_MS, () => undefined);
   }, [nos.length, proposta, acompanhando]);
 
   function voltarAAcompanhar() {
@@ -129,7 +145,8 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     setAcompanhando(true);
     if (proposta) {
       const destino = alvo.getBoundingClientRect().bottom - area.getBoundingClientRect().bottom + area.scrollTop;
-      area.scrollTo({ top: Math.max(0, destino), behavior: movimentoReduzido() ? 'instant' : 'smooth' });
+      cancelarRolagem.current?.();
+      cancelarRolagem.current = rolarAte(area, Math.max(0, destino), movimentoReduzido() ? 0 : DURACAO_ACOMPANHAR_MS, () => undefined);
     }
   }
 
@@ -138,6 +155,9 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     if (!area) return;
     if (aceite === 'erro' || aceite === 'expirada') { area.scrollTop = 0; return; }
     if (aceite !== 'salvando' && !passagem) return;
+    // A pessoa tocou em "Começar a lição 1" no meio da rolagem até o nó 1: a volta ao topo da passagem assume.
+    cancelarRolagem.current?.();
+    setIndoAoPrimeiro(false);
     const de = passagem?.rolagem ?? area.scrollTop;
     const duracao = passagem ? 120 : 240;
     if (movimentoReduzido() || !de) { area.scrollTop = 0; return; }
@@ -153,11 +173,14 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     return () => cancelAnimationFrame(quadro);
   }, [aceite, passagem]);
 
+  useEffect(() => () => cancelarRolagem.current?.(), []);
   useEffect(() => {
     if (!proposta || !mapa.current || !trofeu.current) {
       setViuTrofeu(false); setTrofeuAVista(false); return;
     }
-    const observador = new IntersectionObserver(([entrada]) => {
+    const observador = new IntersectionObserver((entradas) => {
+      const entrada = entradaMaisNova(entradas);
+      if (!entrada) return;
       setTrofeuAVista(entrada.isIntersecting);
       if (entrada.isIntersecting) setViuTrofeu(true);
     }, { root: mapa.current, threshold: 0.45 });
