@@ -67,14 +67,25 @@ name: 61-bloquear
     speed: 50
     centerElement: true
     waitToSettleTimeoutMs: 500
-- runFlow:
-    when:
-      visible:
-        id: bloqueadas
+# O botão de cada linha tem o nome acessível "Desbloquear <nome>" (desbloquearRotulo), e a regex de texto do Maestro casa o
+# texto inteiro: "Desbloquear" sozinho não achava nada (execução 45077874039, com a lista na tela). O toque vai por
+# "Desbloquear .*" (o nome inteiro, no iPhone e na descrição do Android) e se repete enquanto a lista não fica vazia (uma
+# pessoa por toque).
+- repeat:
+    times: 3
+    while:
+      notVisible:
+        id: bloqueadas-vazia
     commands:
       - tapOn:
           waitToSettleTimeoutMs: 1000
-          text: "Desbloquear"
+          text: "Desbloquear .*"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            id: bloqueadas-vazia
+          timeout: 8000
+          optional: true
 - extendedWaitUntil:
     visible:
       id: bloqueadas-vazia
