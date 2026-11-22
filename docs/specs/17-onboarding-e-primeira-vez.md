@@ -18,18 +18,16 @@
 
 ## 0. Resumo da medição
 
-Contagem do Designer nas capturas; o Mobile & QA mede tempo e toques no aparelho. Visitante na web, do zero até:
-- **começar a primeira lição: 5 toques**
-  1. "Experimentar sem conta";
-  2. uma ideia;
-  3. "Montar minha trilha";
-  4. "Permitir e continuar";
-  5. "Começar a lição 1".
-  São 4 telas, um cartão e a espera da geração (de 15 a 25 s com a IA real).
-- **o primeiro acerto: 9 toques**, somando "Avançar" no conceito, "Avançar" no exemplo, a escolha e "Verificar".
+Medição do Mobile & QA em 22/11, no site publicado, como visitante, com a IA real, em 390 (`evidencias/onboarding`, do Mobile & QA). A estimativa anterior do Designer (5 toques) estava errada.
+- **Até a lição 1 aberta: 9 toques e 32,9 s.**
+  - O cartão de consentimento aparece aos 14,2 s, depois de 7 toques.
+  - A geração da proposta leva só 3,1 s depois de "Montar minha trilha".
+  - **A espera longa vem depois de "Começar a lição 1": 15,2 s e 18,1 s** (duas trilhas), até a lição abrir. As lições seguintes abrem em 0,1 s.
+- **Até o primeiro acerto: 13 toques e 38,4 s.**
+- Na prévia web do app, com IA falsa, os números de tempo não são comparáveis.
 
 **Comparação:** o Duolingo faz pelo menos quatro telas de perguntas antes da primeira lição (Appcues). O Studoo faz uma só ("O que você quer aprender?"). Em número de passos, o Studoo já é mais enxuto. O ponto fraco é o que a pessoa vê e lê no caminho:
-- a espera vazia da geração;
+- a espera de 15 a 18 s depois de "Começar a lição 1", sem nada para ler, e os 3 s da geração;
 - palavras de dentro do produto ("proposta", "ponte", "cartões objetivos", "Modo demonstração");
 - o visitante, que nunca é convidado a guardar o que fez.
 
@@ -57,7 +55,9 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
 ## 2. Mudanças de maior retorno, em ordem
 
 ### Mudança 1 (P0): a espera da geração ensina o produto
-- **Antes:** de 15 a 25 s com "Montando sua trilha", um nó vazio e o Stu (iPhone `91`). Nada para ler.
+- **Antes:** duas esperas sem nada para ler.
+  - A geração da proposta leva uns 3 s, com "Montando sua trilha", um nó vazio e o Stu (iPhone `91`).
+  - **A espera longa** vem depois de "Começar a lição 1": de 15 a 18 s com o botão "Criando sua trilha…" (medição do Mobile & QA; essa tela ainda não tem captura).
 - **Depois:**
   - a placa do alto da geração mostra "Montando sua trilha" (`geracao.montandoTitulo`, como hoje) por 3 s;
   - depois, ela passa a trocar a cada 5 s entre quatro frases, com o efeito de aparecer e sumir em 300 ms (com movimento reduzido, a troca é imediata);
@@ -70,6 +70,7 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
   - A frase 4 não diz "salvo", porque para o visitante o progresso dura 24 horas neste aparelho;
   - a regra de hoje para a espera longa (`geracao.aguardandoLicao`) não muda;
   - quando a trilha fica pronta, a placa mostra a faixa da proposta (mudança 2), como hoje;
+  - **na espera depois de "Começar a lição 1"**, a mesma placa mostra "Criando sua trilha…" (`geracao.criandoTrilha`) por 3 s e depois as frases 1, 2 e 4, a cada 5 s, até a lição abrir. A frase 3 ("Você confere a trilha…") fica de fora, porque a pessoa já conferiu. Essa é a espera que mais pesa;
   - o leitor de tela anuncia só "Montando sua trilha" e a proposta pronta, sem anunciar cada troca de frase.
 - **Contrato** (`packages/contratos/src/experiencia.ts`, bloco `geracao`, linha 1054 em `6547126`): as quatro frases substituem o vetor `geracao.dicas`, que hoje não é usado em nenhuma tela. A frase 1 entra no lugar da antiga dica "lições curtas cabem em qualquer intervalo do dia".
 - **Onde a placa é desenhada:** na web, em `src/app/previa-trilha.tsx` (const `placa`, linha 80); no app, em `apps/mobile/src/estudo.tsx` (const `texto`, linha 1777). As duas escolhem hoje entre `propostaPronta`, `aguardandoLicao` e `montandoTitulo`; a troca das frases entra no ramo do `montandoTitulo`.
@@ -151,6 +152,7 @@ O item 1 (a proposta pronta mostra a lição 1), o item 10 (o Stu na entrada do 
 - **Sequência de dias e meta diária agora** (de memória, no Duolingo): é pressão de compromisso, e não há tempo para fazer direito até 30/11. A conclusão já diz "Vale rever esta lição amanhã", que é o compromisso leve. Fica para depois, se o dono quiser.
 - **Pedido de notificação:** o app não pede, e não deve pedir antes de mostrar valor. Não entra neste ciclo.
 - **Tom de culpa do mascote** (Appcues chama a coruja de "guilt-tripping"): o Stu fica encorajador (spec 13).
+- **Retomar a lição pelo mapa em 2 toques** (o nó e depois "Continuar" no balão): é o balão decidido para todos os nós (spec 01). Ele mostra o que a lição é antes de abrir e evita abrir uma lição por um toque sem querer.
 - **O tour obrigatório:** fica opcional ("Ver como funciona" e "Pular"). Quem quer começar já começa.
 - **O aceite de IA:** não sai nem vai para depois da primeira trilha, porque a trilha já usa a IA (regra 5.1.2 da Apple). Só fica mais curto (mudança 5).
 - **A ponte e o "Explique com suas palavras":** são os diferenciais da demo e já foram refinados. Mexer agora traz risco sem retorno.
@@ -166,6 +168,25 @@ O item 1 (a proposta pronta mostra a lição 1), o item 10 (o Stu na entrada do 
 1. Abra o site e toque em "Experimentar sem conta".
 2. O aviso "Música de fundo ligada." aparece embaixo e cobre "Ver trilhas da comunidade". Na proposta pronta, ele cobre "Ver o fim da trilha".
 Já decidido na spec 16, item 14, e ainda não publicado.
+
+**B3. O cartão de consentimento de IA abre rolado até o fim em 390, com o título cortado** (web, produção; medição do Mobile & QA)
+1. Entre como visitante em 390 × 844.
+2. Escreva um pedido e toque em "Montar minha trilha".
+3. O cartão abre com "Permitir e continuar" à vista e o título fora da tela.
+- **Correção:** o cartão abre no topo, com o foco no título (spec 11). Os botões ficam presos embaixo do cartão, e o texto rola no meio.
+- O texto não muda (decisão do dono sobre a mudança 5).
+
+**B4. "Agora não" no consentimento leva a um beco sem saída** (web, produção)
+1. Os mesmos passos do B3.
+2. Toque em "Agora não".
+3. O pedido volta com "Não deu para gerar agora" e "Para continuar, permita o uso de IA.", sem botão para permitir.
+- **Correção:** a mensagem ganha o botão secundário "Permitir o uso de IA" (`privacidade.permitirAgora`, que já existe), que reabre o mesmo cartão. Nenhum texto novo.
+
+**B5. No exercício de lacuna, a dica depois do erro mostra a resposta** (web, produção; por exemplo "6 sobre 10")
+- **Correção** (Web & API, no gerador e no validador): a dica aponta o caminho, nunca o valor da resposta, como a regra da frase do "Sua vez" (spec 15).
+- O exercício também não mostrou "Pular por agora". O Mobile & QA confere se isso é do exercício de lacuna ou do caso medido.
+
+**B2, ampliado:** em 390, o aviso de música também cobre o rodapé e o botão principal dos passos 1 e 2 do tour (medição do Mobile & QA). É a mesma correção da spec 16, item 14.
 
 **A confirmar** (pode ser intenção, não defeito): durante a geração no iPhone (`91`), o alto mostra "Minhas trilhas" e "Perfil" como links, no estilo da web, e não a barra de abas. "Minhas trilhas" como saída da geração é intencional. O Mobile 2 diz se o "Perfil" ali também é.
 
