@@ -1030,7 +1030,16 @@ const LARGURA_MEDIA_DO_CARACTERE = 9.2;
 
 export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, extra, testID = 'confirmacao', cancelarRotulo = mensagens.geracao.cancelar, destrutivo = false,
   confirmarDesativado = false, ocupado = false, erro, aoCancelar, aoConfirmar }: PropsConfirmacao) {
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
+  const margens = useSafeAreaInsets();
+  // Spec 17, defeito B3 (e spec 11): o cartão nunca passa da tela. O título fica no alto, as ações presas embaixo e só o
+  // miolo (`extra`, como a lista de quem recebe no aceite de IA) encolhe e rola; o foco do leitor de tela vai ao título.
+  const alturaMaxima = Math.max(280, height - margens.top - margens.bottom - 32);
+  const titulo = useRef<ComponentRef<typeof Text>>(null);
+  useEffect(() => {
+    const espera = setTimeout(() => { if (titulo.current) AccessibilityInfo.sendAccessibilityEvent(titulo.current, 'focus'); }, 250);
+    return () => clearTimeout(espera);
+  }, []);
   const reduzir = useMovimentoReduzido();
   const [entrada] = useState(() => new Animated.Value(0));
   useEffect(() => {
@@ -1050,10 +1059,10 @@ export function CartaoConfirmacao({ mensagem, confirmarRotulo, texto, aviso, ext
       <Pressable testID="confirmacao-fundo" accessible={false} style={estilos.modalFundo} onPress={() => { if (!ocupado) aoCancelar(); }}>
         <Animated.View style={{ width: '100%', maxWidth: 400, alignItems: 'center', opacity: entrada,
           transform: [{ scale: reduzir !== false ? 1 : entrada.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }}>
-          <Pressable testID={testID} accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={estilos.confirmacaoCartao} onPress={() => {}}>
-            <Text accessibilityRole="header" style={estilos.confirmacaoTitulo}>{mensagem}</Text>
+          <Pressable testID={testID} accessible={false} accessibilityViewIsModal role="alertdialog" aria-modal style={[estilos.confirmacaoCartao, { maxHeight: alturaMaxima }]} onPress={() => {}}>
+            <Text ref={titulo} testID={`${testID}-titulo`} accessibilityRole="header" style={estilos.confirmacaoTitulo}>{mensagem}</Text>
             {texto && <Text style={estilos.confirmacaoTexto}>{texto}</Text>}
-            {extra}
+            {extra && <View style={estilos.confirmacaoMiolo}>{extra}</View>}
             {aviso && <Text testID="confirmacao-aviso" style={estilos.confirmacaoTexto}>{aviso}</Text>}
             {erro && <Text accessibilityRole="alert" style={estilos.confirmacaoErro}>{erro}</Text>}
             {/* Lado a lado: "Cancelar" à esquerda e a ação à direita; uma por linha: a ação em cima. */}
@@ -1451,6 +1460,8 @@ export const estilos = StyleSheet.create({
   confirmacaoCartao: { width: '100%', maxWidth: 400, gap: 12, padding: 24, borderWidth: 2, borderColor: cores.gelo, borderRadius: 24, backgroundColor: cores.fundo,
     shadowColor: '#0F172A', shadowOpacity: 0.24, shadowRadius: 48, shadowOffset: { width: 0, height: 20 }, elevation: 12 },
   confirmacaoTitulo: { color: cores.texto, fontFamily: fontes.titulo, fontWeight: '700', fontSize: 20, lineHeight: 26 },
+  // O miolo do cartão é o único que encolhe quando falta altura (as ações ficam presas embaixo, o título no alto).
+  confirmacaoMiolo: { flexShrink: 1, minHeight: 0 },
   confirmacaoTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '400', fontSize: 16, lineHeight: 24 },
   confirmacaoErro: { color: cores.erro, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 15, lineHeight: 22 },
   confirmacaoAcoes: { flexDirection: 'row', gap: 8, marginTop: 4 },

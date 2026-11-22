@@ -59,3 +59,23 @@ test('mudança 4: o tour do app sem selo de demonstração e sem a legenda "Reto
   assert.doesNotMatch(apresentacao, /SeloDemonstracao|leitura: 'demonstracao'|simulado: true/);
   assert.match(apresentacao, /proximoPasso: ex\.ensinoProximo, simulado: false \}\} \/>/);
 });
+
+test('defeito B3: o cartão de aceite cabe na tela, com o título no alto, as ações presas e só o miolo rolando; foco no título', async () => {
+  const interfaceApp = await ler('interface.tsx');
+  const consentimento = await ler('consentimento-ia.tsx');
+  const cartao = interfaceApp.slice(interfaceApp.indexOf('export function CartaoConfirmacao('), interfaceApp.indexOf('export function FolhaDeAcoes('));
+  assert.match(cartao, /const alturaMaxima = Math\.max\(280, height - margens\.top - margens\.bottom - 32\);/);
+  assert.match(cartao, /style=\{\[estilos\.confirmacaoCartao, \{ maxHeight: alturaMaxima \}\]\}/);
+  assert.match(cartao, /\{extra && <View style=\{estilos\.confirmacaoMiolo\}>\{extra\}<\/View>\}/);
+  assert.match(cartao, /AccessibilityInfo\.sendAccessibilityEvent\(titulo\.current, 'focus'\)/);
+  // O título vem antes do miolo, e as ações depois dele (presas embaixo).
+  assert.ok(cartao.indexOf('ref={titulo}') < cartao.indexOf('confirmacaoMiolo') && cartao.indexOf('confirmacaoMiolo') < cartao.indexOf('estilos.confirmacaoAcoes'));
+  assert.match(interfaceApp, /confirmacaoMiolo: \{ flexShrink: 1, minHeight: 0 \}/);
+  assert.match(consentimento, /testID="consentimento-itens" style=\{\{ maxHeight: Math\.round\(height \* 0\.42\), flexGrow: 0, flexShrink: 1 \}\}/);
+});
+
+test('defeito B4: depois de "Agora não", o aviso do pedido tem "Permitir o uso de IA", que reabre o mesmo cartão', () => {
+  assert.match(estudo, /const semAceite = falha === 'consentimento_ia';/);
+  assert.match(estudo, /: semAceite \? \{ rotulo: mensagens\.privacidade\.permitirAgora, testID: 'permitir-ia-geracao', desativado: ocupado, acao: tentar \}/);
+  assert.equal(mensagens.privacidade.permitirAgora, 'Permitir o uso de IA');
+});
