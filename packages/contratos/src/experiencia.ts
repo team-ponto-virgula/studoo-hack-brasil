@@ -289,7 +289,10 @@ export const mensagens = {
         comecar: 'Criar minha primeira trilha',
         entendi: 'Entendi',
         posicao: (passo: number, total: number) => `Passo ${passo} de ${total}`,
-        /** Spec 17, mudança 2: sem palavras de dentro do produto ("citação", "ponte", "cartões objetivos"). O 5º passo (só com sessão) não mudou. */
+        /**
+         * Spec 17, mudança 2: sem palavras de dentro do produto ("citação", "ponte", "cartões objetivos"). O 5º passo (só com sessão) não mudou. O 4º passo não promete "no computador ou no
+         * celular" nem "salvo": isso não vale para o visitante (o progresso dele dura 24 h neste aparelho); o texto vale para conta e para visitante (decisão do Lead, 22/11).
+         */
         passos: [
             {
                 titulo: 'Seu material vira lição',
@@ -304,8 +307,8 @@ export const mensagens = {
                 texto: 'Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que revisar.',
             },
             {
-                titulo: 'Seu progresso fica salvo',
-                texto: 'Continue de onde parou, no computador ou no celular.',
+                titulo: 'Seu caminho fica no mapa',
+                texto: 'Cada lição concluída fica marcada, e você continua de onde parou.',
             },
             {
                 titulo: 'O que te interessa?',
