@@ -145,7 +145,7 @@ async function* textoDoStreamingChat(resposta: Response, sinal: AbortSignal): As
 
 const exemploJsonLicao = JSON.stringify({
   objetivo: "Identificar e usar a forma correta em uma frase simples.",
-  conceito: "Explicação clara e direta do conceito em 2 ou 3 frases.",
+  conceito: "Explicação clara e direta do conceito em até 3 frases (2 na primeira lição da trilha).",
   exemplo: "Exemplo concreto e resolvido.",
   exemploTipo: "exemplo",
   passos: null,
@@ -449,10 +449,11 @@ export function criarGeradorDeepSeek(config: ConfiguracaoDeepSeek): GeradorTrilh
           desligarMatematica("formato");
           continue;
         }
-        const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem));
+        const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem), { primeiraLicao: fluxo === 0 && licao === 0 });
         if (lida.conteudo) {
-          if (lida.descartados.length > 0) {
-            registrar("licao_ajustada", { detalhe: lida.descartados.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
+          const ajustes = lida.conceitoCortado ? [...lida.descartados, "conceito:cortado"] : lida.descartados;
+          if (ajustes.length > 0) {
+            registrar("licao_ajustada", { detalhe: ajustes.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
           }
           // O que a matemática deu, só em contagens (os motivos de recusa citam fórmulas: não vão ao registro).
           if (lida.matematica) registrar("licao_matematica", { ...contagensDoRelato(lida.matematica), tentativa });

@@ -30,6 +30,7 @@ export { perfilComLink, linksPublicosNoPerfil } from './perfil-estado';
 export * from './comunidade';
 export * from './codigo-studoo';
 export * from './espera-geracao';
+export * from './conceito';
 export * from './catalogo-mascote';
 export interface Progresso {
   concluidas: number;

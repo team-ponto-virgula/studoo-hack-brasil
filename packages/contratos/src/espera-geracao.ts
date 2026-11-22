@@ -30,3 +30,24 @@ export function faltaParaTrocarADica(decorridoMs: number): number {
   if (agora < antes) return antes - agora;
   return troca - ((agora - antes) % troca);
 }
+
+/*
+ * A espera longa (spec 17, mudança 1, versão de 22/11): depois de "Começar a lição 1", a trilha leva de 15 a 18 s para ser criada. A mesma placa mostra "Criando sua trilha…"
+ * (`mensagens.geracao.criandoTrilha`) por 3 s e depois as frases de `mensagens.geracao.dicas` SEM a 3ª ("Você confere a trilha antes de começar."), porque a pessoa já conferiu a trilha:
+ * a 1ª, a 2ª e a 4ª, trocando a cada 5 s, em laço, até a lição abrir. O relógio é o mesmo da espera da proposta; muda só a lista. O tempo conta desde o toque em "Começar a lição 1".
+ */
+
+/** Os índices de `mensagens.geracao.dicas` que valem na espera longa, em ordem: a 1ª, a 2ª e a 4ª frase (a 3ª fica de fora). */
+export const DICAS_DA_ESPERA_LONGA = [0, 1, 3] as const;
+
+/**
+ * Qual frase mostrar `decorridoMs` depois do toque em "Começar a lição 1": `null` nos 3 primeiros segundos (vale "Criando sua trilha…"); depois, o índice em `mensagens.geracao.dicas`
+ * (0, 1 ou 3), mudando a cada 5 s e voltando à primeira depois da última. Tempo inválido ou negativo conta como o começo.
+ */
+export function dicaDaEsperaLonga(decorridoMs: number): number | null {
+  const posicao = dicaDaEspera(decorridoMs, DICAS_DA_ESPERA_LONGA.length);
+  return posicao === null ? null : DICAS_DA_ESPERA_LONGA[posicao];
+}
+
+/** Quanto falta, em ms, para a próxima troca da espera longa: o mesmo relógio da espera da proposta (3 s e depois 5 s), com o nome que o cliente da espera longa procura. */
+export const faltaParaTrocarADicaLonga = faltaParaTrocarADica;
