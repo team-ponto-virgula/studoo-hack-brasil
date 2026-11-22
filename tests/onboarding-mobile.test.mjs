@@ -20,7 +20,7 @@ test('mudança 1: o relógio é o do contrato (o mesmo da web): 3 s de "Montando
   assert.equal(faltaParaTrocarADica(4000), 4000);
   const placa = estudo.slice(estudo.indexOf('function PlacaDaGeracao('), estudo.indexOf('function PassagemDaCriacao('));
   assert.match(placa, /const indice = dicaDaEspera\(agora - inicioDaEspera\.current, dicas\.length\);/);
-  assert.match(placa, /setTimeout\(\(\) => setAgora\(Date\.now\(\)\), faltaParaTrocarADica\(Date\.now\(\) - inicioDaEspera\.current\) \+ 5\)/);
+  assert.match(placa, /: faltaParaTrocarADica\(Date\.now\(\) - inicioDaEspera\.current\);\n\s*const relogio = setTimeout\(\(\) => setAgora\(Date\.now\(\)\), falta \+ 5\);/);
   assert.match(placa, /const metade = ESPERA_DA_GERACAO\.efeitoMs \/ 2;/);
   assert.doesNotMatch(await ler('geracao-ritmo.ts'), /esperaMontandoMs|fraseDaEspera/, 'sem conta local paralela');
 });
@@ -78,4 +78,21 @@ test('defeito B4: depois de "Agora não", o aviso do pedido tem "Permitir o uso 
   assert.match(estudo, /const semAceite = falha === 'consentimento_ia';/);
   assert.match(estudo, /: semAceite \? \{ rotulo: mensagens\.privacidade\.permitirAgora, testID: 'permitir-ia-geracao', desativado: ocupado, acao: tentar \}/);
   assert.equal(mensagens.privacidade.permitirAgora, 'Permitir o uso de IA');
+});
+
+test('mudança 1 corrigida (3470f04): na criação depois de "Começar a lição 1", "Criando sua trilha…" por 3 s e as frases 1, 2 e 4', async () => {
+  const { DICAS_DA_ESPERA_LONGA, dicaDaEsperaLonga } = await import('../packages/contratos/src/espera-geracao.ts');
+  assert.deepEqual([...DICAS_DA_ESPERA_LONGA], [0, 1, 3]);
+  assert.equal(dicaDaEsperaLonga(2999), null);
+  assert.equal(dicaDaEsperaLonga(3000), 0);
+  assert.equal(dicaDaEsperaLonga(8000), 1);
+  assert.equal(dicaDaEsperaLonga(13000), 3);
+  assert.equal(dicaDaEsperaLonga(18000), 0);
+  const placa = estudo.slice(estudo.indexOf('function PlacaDaGeracao('), estudo.indexOf('function PassagemDaCriacao('));
+  assert.match(placa, /const texto = criando \? \(indiceLongo === null \? mensagens\.geracao\.criandoTrilha : dicas\[indiceLongo\]\)/);
+  assert.match(placa, /const falta = criando \? faltaParaTrocarADicaLonga\(Date\.now\(\) - inicioDaCriacao\.current\)/);
+  // O relógio começa no toque (quando `criando` liga) e as duas placas recebem o estado.
+  assert.match(placa, /if \(criando && !criandoAntes\.current\) inicioDaCriacao\.current = Date\.now\(\);/);
+  assert.equal((estudo.match(/criando=\{criacao === 'criando'\}/g) ?? []).length, 2);
+  assert.equal(mensagens.geracao.criandoTrilha, 'Criando sua trilha…');
 });

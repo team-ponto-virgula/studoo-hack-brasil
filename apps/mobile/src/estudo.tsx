@@ -1,4 +1,4 @@
-import { ESPERA_DA_GERACAO, dicaDaEspera, estadoDoCompartilhamento, falarTextoComFormulas, faltaParaTrocarADica } from '@studoo/contratos';
+import { ESPERA_DA_GERACAO, dicaDaEspera, dicaDaEsperaLonga, estadoDoCompartilhamento, falarTextoComFormulas, faltaParaTrocarADica, faltaParaTrocarADicaLonga } from '@studoo/contratos';
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
@@ -1677,7 +1677,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         const medida = Math.round(evento.nativeEvent.layout.height);
         setAlturaPlaca((anterior) => anterior === medida ? anterior : medida);
       }}>
-        <PlacaDaGeracao pronta={pronta} esperaLonga={esperaLonga} licoes={total} partes={partes} sai={criacao === 'criada'} reduzir={reduzir} />
+        <PlacaDaGeracao pronta={pronta} esperaLonga={esperaLonga} criando={criacao === 'criando'} licoes={total} partes={partes} sai={criacao === 'criada'} reduzir={reduzir} />
       </View>
     </View>
   );
@@ -1781,7 +1781,7 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
         // zero antes do mapa, por cima dele, sem mudar o lugar do que o mapa mede.
         <View style={estudoEstilos.placaNoMapa} pointerEvents="none">
           <View style={estudoEstilos.placaNoMapaLugar}>
-            <PlacaDaGeracao pronta={pronta} esperaLonga={false} licoes={total} partes={partes} sai={criacao === 'criada'} reduzir={reduzir} />
+            <PlacaDaGeracao pronta={pronta} esperaLonga={false} criando={criacao === 'criando'} licoes={total} partes={partes} sai={criacao === 'criada'} reduzir={reduzir} />
           </View>
         </View>
       )}
@@ -1801,8 +1801,13 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
  * a faixa da proposta (`geracao.propostaPronta`). Fora do leitor de tela: a tela anuncia só "Montando sua trilha" e a
  * proposta pronta, sem cada troca de frase.
  */
-function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, reduzir = null }: {
+function PlacaDaGeracao({ pronta, esperaLonga, criando = false, licoes, partes, sai = false, reduzir = null }: {
   pronta: boolean; esperaLonga: boolean; licoes: number; partes: number;
+  /**
+   * Depois de "Começar a lição 1", enquanto a trilha é criada (a espera longa, spec 17 corrigida em 3470f04): "Criando sua
+   * trilha…" por 3 s e depois as frases 1, 2 e 4 (`dicaDaEsperaLonga`), com o relógio contando desde o toque.
+   */
+  criando?: boolean;
   /** A proposta virou trilha (t = 0 da passagem): a placa sai, com opacidade e 8 px para cima, em 150 ms (reduzido: na hora). */
   sai?: boolean;
   reduzir?: boolean | null;
@@ -1811,16 +1816,24 @@ function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, redu
   const inicioDaEspera = useRef(Date.now());
   const [agora, setAgora] = useState(() => Date.now());
   const dicas = mensagens.geracao.dicas;
+  // O relógio da criação começa no toque em "Começar a lição 1" (quando `criando` liga) e recomeça a cada toque novo.
+  const inicioDaCriacao = useRef(0);
+  const criandoAntes = useRef(false);
+  if (criando && !criandoAntes.current) inicioDaCriacao.current = Date.now();
+  criandoAntes.current = criando;
   useEffect(() => {
-    if (pronta) return;
+    if (pronta && !criando) return;
     // A conta do tempo é a do contrato, a mesma da web: acorda só na próxima troca, sem relógio de alta frequência.
-    const relogio = setTimeout(() => setAgora(Date.now()), faltaParaTrocarADica(Date.now() - inicioDaEspera.current) + 5);
+    const falta = criando ? faltaParaTrocarADicaLonga(Date.now() - inicioDaCriacao.current) : faltaParaTrocarADica(Date.now() - inicioDaEspera.current);
+    const relogio = setTimeout(() => setAgora(Date.now()), falta + 5);
     return () => clearTimeout(relogio);
-  }, [pronta, agora]);
+  }, [pronta, criando, agora]);
   const indice = dicaDaEspera(agora - inicioDaEspera.current, dicas.length);
-  const espera = !pronta && !esperaLonga;
-  const texto = pronta ? mensagens.geracao.propostaPronta(licoes, partes) : esperaLonga ? mensagens.geracao.aguardandoLicao
-    : indice === null ? mensagens.geracao.montandoTitulo : dicas[indice];
+  const indiceLongo = criando ? dicaDaEsperaLonga(Math.max(0, agora - inicioDaCriacao.current)) : null;
+  const espera = criando || (!pronta && !esperaLonga);
+  const texto = criando ? (indiceLongo === null ? mensagens.geracao.criandoTrilha : dicas[indiceLongo])
+    : pronta ? mensagens.geracao.propostaPronta(licoes, partes) : esperaLonga ? mensagens.geracao.aguardandoLicao
+      : indice === null ? mensagens.geracao.montandoTitulo : dicas[indice];
   // A troca: some e aparece em 300 ms (150 + 150); com movimento reduzido, na hora.
   const [mostrado, setMostrado] = useState(texto);
   const [brilho] = useState(() => new Animated.Value(1));
@@ -1861,7 +1874,7 @@ function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, redu
       opacity: saida.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
       transform: [{ translateY: saida.interpolate({ inputRange: [0, 1], outputRange: [0, -RITMO_DA_GERACAO.placaSaiDeslize] }) }],
     }]}>
-      <Animated.Text testID="placa-geracao-texto" style={[estudoEstilos.placaGeracaoTexto, !pronta && estudoEstilos.placaGeracaoEspera, { opacity: brilho }]}>
+      <Animated.Text testID="placa-geracao-texto" style={[estudoEstilos.placaGeracaoTexto, (!pronta || criando) && estudoEstilos.placaGeracaoEspera, { opacity: brilho }]}>
         {mostrado}
       </Animated.Text>
     </Animated.View>
