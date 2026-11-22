@@ -39,7 +39,7 @@ const planoSql: PlanoInterno = {
             trechoTipo: "codigo",
             gabarito: [">="],
             feedbackCorreto: ">= inclui notas iguais ou maiores que 7. Bia e Caio aparecem no resultado.",
-            feedbackIncorreto: "Use >= para incluir a nota 7 de Bia e a nota 9 de Caio. Com >, apenas Caio aparece porque a condição exige uma nota acima de 7.",
+            feedbackIncorreto: "Bia tem nota 7 e precisa aparecer no resultado, junto com Caio. O operador tem de aceitar a nota igual a 7, e não só as notas acima dela.",
           },
         },
         {

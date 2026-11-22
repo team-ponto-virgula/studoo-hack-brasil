@@ -1,5 +1,5 @@
 import type { ExercicioPublico, Fala, Opcao, Pratica, Progresso, Recurso, ReferenciaMaterial, ResolucaoGuardada, Visual } from "@studoo/contratos";
-import { LIMITES_RESPOSTA, TIPOS_TRECHO, inferirTipoTrecho, tamanhoDaResposta } from "@studoo/contratos";
+import { LIMITES_RESPOSTA, TIPOS_TRECHO, frasesDoConceito, inferirTipoTrecho, tamanhoDaResposta } from "@studoo/contratos";
 
 /**
  * Exercício como fica guardado: o que a pessoa vê, mais o gabarito e os retornos.
@@ -555,6 +555,88 @@ function conferirAberta(exercicio: Extract<ExercicioInterno, { tipo: "aberta" }>
   };
 }
 
+/*
+ * A dica da lacuna aponta o caminho e nunca diz a resposta (spec 17, defeito B5; é a mesma regra da frase do "Sua vez", spec 15). Depois do erro a pessoa tenta de novo, e uma dica que traz
+ * o valor ("6 sobre 10", numa lacuna que pede 6) tira a tentativa. A conta é pura e serve a dois lugares: ao gerador (a dica que a IA escreve é aparada antes de ser guardada) e ao retorno do
+ * erro (uma lição já guardada, com uma dica que entrega a resposta, mostra a dica aparada). Ela procura cada resposta aceita no texto como palavra ou número inteiro, sem diferença de
+ * acento nem de maiúsculas ("2" não está em "12" nem em "2,5"; "tarraxa" está em "tarraxas").
+ */
+
+/** O que a lacuna mostra no lugar de uma dica que só entregava a resposta: manda a pessoa de volta ao conceito e ao exemplo da lição. */
+export const DICA_PADRAO_DA_LACUNA = "Releia o conceito e o exemplo desta lição: eles mostram o caminho.";
+
+/** O texto sem acento e em minúsculas, para comparar. */
+function semAcentoEmMinusculas(texto: string): string {
+  return texto.normalize("NFD").replace(/\p{M}+/gu, "").toLocaleLowerCase("pt-BR");
+}
+
+/** As palavras e os números do texto, em ordem: "2,5" e "1.000" são um número só (a vírgula decimal vale como ponto), e pontuação e símbolos só separam. O plural comum não distingue. */
+function pedacosDoTexto(texto: string): string[] {
+  return (semAcentoEmMinusculas(texto).match(/\d+(?:[.,]\d+)*|\p{L}+/gu) ?? []).map((pedaco) =>
+    /^\d/.test(pedaco) ? pedaco.replace(/,/g, ".") : pedaco.length >= 5 ? pedaco.replace(/(?:es|s)$/u, "") : pedaco);
+}
+
+/** A sequência `alvo` aparece inteira e seguida em `pedacos`? */
+function apareceSeguido(pedacos: readonly string[], alvo: readonly string[]): boolean {
+  for (let inicio = 0; inicio + alvo.length <= pedacos.length; inicio += 1) {
+    if (alvo.every((pedaco, deslocamento) => pedacos[inicio + deslocamento] === pedaco)) return true;
+  }
+  return false;
+}
+
+/** Os itens de `alvo` aparecem em `pedacos` na mesma ordem, com outras palavras no meio ("6 sobre 10" para a resposta 6/10)? */
+function apareceNaOrdem(pedacos: readonly string[], alvo: readonly string[]): boolean {
+  let posicao = 0;
+  for (const pedaco of pedacos) {
+    if (pedaco === alvo[posicao]) posicao += 1;
+    if (posicao === alvo.length) return true;
+  }
+  return false;
+}
+
+/** A resposta está entre aspas no texto (“de”, "to", ‘a’)? É o que vale para as respostas de uma ou duas letras. */
+function estaEntreAspas(texto: string, resposta: string): boolean {
+  const alvo = semAcentoEmMinusculas(resposta).trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return alvo !== "" && new RegExp(`[“"‘'«\`]\\s*${alvo}\\s*[”"’'»\`]`, "u").test(semAcentoEmMinusculas(texto));
+}
+
+/** A resposta feita só de símbolos (>=, +, %) aparece no texto, sem outros símbolos de operação colados a ela (">" não está em ">=")? */
+function aparecemOsSimbolos(texto: string, simbolos: string): boolean {
+  const alvo = simbolos.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return alvo !== "" && new RegExp(`(?<![<>=!+\\-*/%^&|~])${alvo}(?![<>=!+\\-*/%^&|~])`, "u").test(texto);
+}
+
+/**
+ * O texto diz alguma das respostas aceitas da lacuna? As respostas de uma ou duas letras (“a”, “de”, “to”) são palavras de ligação que a dica usa por outros motivos: só contam entre
+ * aspas. A resposta só de números (6/10) também vale quando os números aparecem na ordem, com palavras no meio ("6 sobre 10"). A resposta só de símbolos (>=) vale quando o símbolo
+ * aparece inteiro, sem outro símbolo de operação colado a ele.
+ */
+export function textoDizARespostaDaLacuna(texto: string, gabarito: readonly string[]): boolean {
+  const pedacos = pedacosDoTexto(texto);
+  return gabarito.some((resposta) => {
+    const alvo = pedacosDoTexto(resposta);
+    if (alvo.length === 0) return aparecemOsSimbolos(texto, resposta);
+    if (pedacos.length === 0) return false;
+    if (alvo.length === 1 && /^\p{L}{1,2}$/u.test(alvo[0])) return estaEntreAspas(texto, resposta);
+    return apareceSeguido(pedacos, alvo) || (alvo.length > 1 && alvo.every((pedaco) => /^\d/.test(pedaco)) && apareceNaOrdem(pedacos, alvo));
+  });
+}
+
+/**
+ * A dica da lacuna sem a resposta: sai cada frase que diz uma resposta aceita (as outras ficam, na ordem). Se nenhuma frase serve, vale `DICA_PADRAO_DA_LACUNA`. Uma dica que já aponta só o
+ * caminho volta igual. O aviso de uma armadilha da lacuna segue a mesma regra, mas sem texto no lugar: ver `avisoDaLacunaSemAResposta`.
+ */
+export function dicaDaLacunaSemAResposta(dica: string, gabarito: readonly string[]): string {
+  if (!textoDizARespostaDaLacuna(dica, gabarito)) return dica;
+  const sobra = frasesDoConceito(dica).filter((frase) => !textoDizARespostaDaLacuna(frase, gabarito)).join(" ");
+  return sobra !== "" && !textoDizARespostaDaLacuna(sobra, gabarito) ? sobra : DICA_PADRAO_DA_LACUNA;
+}
+
+/** O aviso de uma armadilha da lacuna (o nome popular, o falso cognato) que diz a resposta certa não serve: sem texto no lugar, o retorno fica com a dica da lição. */
+export function avisoDaLacunaSemAResposta(aviso: string | undefined, gabarito: readonly string[]): string | undefined {
+  return aviso && !textoDizARespostaDaLacuna(aviso, gabarito) ? aviso : undefined;
+}
+
 /**
  * Confere a resposta. Devolve null quando a resposta não é válida para o exercício (opção inexistente, ordem
  * incompleta, texto curto demais), o que vira `invalido` na API.
@@ -580,8 +662,12 @@ export function avaliarResposta(exercicio: ExercicioInterno, resposta: string): 
       const comparavel = normalizarResposta(valor);
       const armadilha = correta ? undefined
         : exercicio.armadilhas?.find(({ termos }) => termos.split("|").some((termo) => normalizarResposta(termo) === comparavel));
-      const aviso = armadilha?.aviso ?? observacao;
-      return resultado(correta, aviso ? { observacao: aviso } : {});
+      // A dica depois do erro aponta o caminho e nunca diz a resposta (spec 17, B5): uma lição guardada com uma dica que a entrega mostra a dica aparada.
+      const aviso = correta ? observacao : avisoDaLacunaSemAResposta(armadilha?.aviso, exercicio.gabarito) ?? observacao;
+      return resultado(correta, {
+        ...(aviso ? { observacao: aviso } : {}),
+        ...(correta ? {} : { feedback: dicaDaLacunaSemAResposta(exercicio.feedbackIncorreto, exercicio.gabarito) }),
+      });
     }
     case "multipla_escolha":
       if (!exercicio.opcoes.some(({ id }) => id === valor)) return null;

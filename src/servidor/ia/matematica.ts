@@ -708,7 +708,7 @@ export const exemploDeMatematica = {
       modelo: null,
       armadilhas: null,
       feedbackCorreto: "Isso! Divide-se por 2 porque a média é de dois valores.",
-      feedbackIncorreto: "A média de dois valores divide a soma por 2: $(2 + 6) / 2 = 4$.",
+      feedbackIncorreto: "A média junta os valores numa soma e reparte o total em partes iguais. Quantos valores foram somados?",
       visual: null,
     },
   ],
