@@ -44,13 +44,15 @@ test('o tour: os passos 1 a 4 da spec 17, sem palavras de dentro do produto; o 5
     { titulo: 'Seu material vira lição', texto: 'Mande um PDF ou uma foto. O Stu monta lições e mostra de onde tirou cada ideia.' },
     { titulo: 'Errou? Tem outro jeito', texto: 'O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo.' },
     { titulo: 'Explique do seu jeito', texto: 'Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que revisar.' },
-    { titulo: 'Seu progresso fica salvo', texto: 'Continue de onde parou, no computador ou no celular.' },
+    { titulo: 'Seu caminho fica no mapa', texto: 'Cada lição concluída fica marcada, e você continua de onde parou.' },
   ]);
   assert.deepEqual(passos[4], { titulo: 'O que te interessa?', texto: 'Escolha uma área para ver ideias de trilha primeiro. Dá para mudar depois.' });
   assert.equal(passos.length, 5);
   for (const { titulo, texto } of passos.slice(0, 4)) {
     assert.doesNotMatch(`${titulo} ${texto}`, /\bponte\b|cartões|citação|proposta|objetivos/i, `palavra de dentro: ${titulo}`);
   }
+  // O 4º passo vale para conta e para visitante: não promete "salvo" nem "no computador ou no celular" (o progresso do visitante dura 24 h neste aparelho).
+  assert.doesNotMatch(`${passos[3].titulo} ${passos[3].texto}`, /salv|computador|celular/i);
 });
 
 test('a conta da espera: 3 s de "Montando sua trilha", depois uma frase nova a cada 5 s, em laço (a mesma na web e no app)', () => {
