@@ -95,11 +95,17 @@ Um iPhone SE (375 × 667, áreas 20 / 0) fica com cerca de 569 de altura útil: 
 
 O dono pediu animações na geração e a tela acompanhando até a última lição. Hoje o título ocupa um cartão alto e o mapa fica parado no alto: da terceira lição em diante, o que nasce fica abaixo da dobra, e a pessoa só vê o rodapé contar. Vale para web, Android e iPhone. Esboço: `geracao-390.png`, na pasta de trabalho do Designer (`ux/05-geracao-acompanhada`).
 
-Revisto em 19/11 por "Criar a trilha", abaixo: saíram as dicas que se revezam, as estrelinhas, o "Mais uma!", o confete, as contagens e a tela Escrevendo suas lições.
+Revisto em 19/11 por "Criar a trilha", abaixo: saíram as dicas que se revezam (que voltaram em 22/11 em outra forma, com frases que explicam o Studoo; spec 17, mudança 1), as estrelinhas, o "Mais uma!", o confete, as contagens e a tela Escrevendo suas lições.
 
 **A tela durante a geração.**
 - O cartão do título vira uma faixa de 52 px presa embaixo do cabeçalho: os três pontinhos que digitam e o nome do pedido (Nunito 800 de 15 px, numa linha, com reticências), sem contagem. O mapa ganha o resto da tela.
-- A frase vai numa placa presa no alto do mapa: fundo `#FFF9EC`, borda de 2 px `#E8D3A8`, raio de 16 e 16 px das laterais. Ela diz só o que é verdade, sem dicas que se revezam: "Montando sua trilha" (`montandoTitulo`) enquanto chegam lições, "Ainda montando a próxima lição…" (`aguardandoLicao`) depois de 12 s sem lição nova e "Proposta pronta: 9 lições em 3 partes." (`propostaPronta`) no fim. O Stu (`stu-curioso`, em laço) fica do lado de fora da lição mais nova, no lado oposto ao nome, subindo e descendo devagar.
+- A frase vai numa placa presa no alto do mapa: fundo `#FFF9EC`, borda de 2 px `#E8D3A8`, raio de 16 e 16 px das laterais. Ela diz só o que é verdade:
+  - "Montando sua trilha" (`montandoTitulo`) nos primeiros 3 s;
+  - depois, enquanto chegam lições, as quatro frases de `geracao.dicas`, uma a cada 5 s, em laço (exceção de 22/11 à regra "sem dicas que se revezam", pela spec 17, mudança 1: elas explicam o Studoo e são verdadeiras para conta e visitante);
+  - "Ainda montando a próxima lição…" (`aguardandoLicao`) depois de 12 s sem lição nova;
+  - "Sua trilha está pronta: 9 lições curtas em 3 partes." (`propostaPronta`) no fim.
+
+  As frases não são anunciadas pelo leitor de tela, uma a uma. O Stu (`stu-curioso`, em laço) fica do lado de fora da lição mais nova, no lado oposto ao nome, subindo e descendo devagar.
 - O rodapé: "Cancelar" e "Montando a trilha", sem a contagem de lições.
 
 **Cada lição que nasce**, do evento até a próxima espera:
@@ -118,7 +124,7 @@ Se os eventos chegarem mais rápido que a sequência, cada lição começa quand
 - Rolar para baixo não desliga o acompanhamento.
 
 **Quando a proposta fica pronta.**
-- Se a tela está acompanhando, ela rola até o fim do caminho. O troféu entra (escala de 0 a 1,1 e de volta a 1, 420 ms), sem confete e sem som. A placa vira "Proposta pronta: 9 lições em 3 partes.": é uma proposta, e a trilha só existe depois do toque. O Stu faz um ciclo de `stu-feliz` ao lado do troféu. O rodapé mostra "Começar a lição 1" (`comecarLicao1`) e "Ajustar pedido", com a ordem abaixo para telas estreitas. A entrada desliza 12 px em 220 ms e é imediata com movimento reduzido. O foco vai para "Começar a lição 1".
+- Se a tela está acompanhando, ela rola até a lição 1 inteira no alto da área (spec 16, item 1), e "Ver o fim da trilha" leva ao troféu. O troféu entra (escala de 0 a 1,1 e de volta a 1, 420 ms), sem confete e sem som. A placa vira "Sua trilha está pronta: 9 lições curtas em 3 partes.". Por dentro ainda é uma proposta: a trilha só existe depois do toque. O Stu faz um ciclo de `stu-feliz` ao lado do troféu. O rodapé mostra "Começar a lição 1" (`comecarLicao1`) e "Ajustar pedido", com a ordem abaixo para telas estreitas. A entrada desliza 12 px em 220 ms e é imediata com movimento reduzido. O foco vai para "Começar a lição 1".
 - Se não está acompanhando, a pílula vira “Ver o fim da trilha”. O resto acontece igual.
 - Ao subir até o começo do mapa, a faixa volta a ser o cartão do título.
 
@@ -126,7 +132,7 @@ Se os eventos chegarem mais rápido que a sequência, cada lição começa quand
 
 **Movimento reduzido.** A tela continua acompanhando, mas pula direto, sem rolagem animada. Nada cai, pula, brota ou chove: o nó, o nome e o cenário aparecem juntos, com 150 ms de opacidade; o troféu aparece sem escala, e o Stu fica parado. A informação é a mesma.
 
-**Leitor de tela.** Cada lição nova é anunciada (`aria-live` educado; no app, `announceForAccessibility`): “Lição 3: Combinar condições com AND.” No fim: “Proposta pronta, 9 lições. Começar a lição 1.” Durante a geração, o foco não se mexe: fica em “Cancelar” ou onde a pessoa estiver.
+**Leitor de tela.** Cada lição nova é anunciada (`aria-live` educado; no app, `announceForAccessibility`): “Lição 3: Combinar condições com AND.” No fim: “Sua trilha está pronta: 9 lições curtas em 3 partes. Começar a lição 1.” Durante a geração, o foco não se mexe: fica em “Cancelar” ou onde a pessoa estiver.
 
 **Espera longa.** Com a IA real, uma lição pode demorar. Depois de 12 s sem lição nova, a placa diz “Ainda montando a próxima lição…”, sem barra de progresso inventada.
 
@@ -161,7 +167,7 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
 - A tela Escrevendo suas lições sai, com a lista, o brilho e as dicas.
 
 **A trilha passa a existir (o aceite volta ok).** A passagem começa no aceite, sem espera, e cabe em até 470 ms contados dele. Se o aceite volta antes de a rolagem do toque até o nó 1 acabar, a rolagem que falta termina até t = 120 ms, com saída suave, e o círculo nasce do nó 1 já no lugar. Se faltar mais que uma altura de tela, ou com movimento reduzido, o nó vai para o lugar na hora, no t = 0. Na referência rápida do app, o aceite voltou em 71 ms, antes do fim da rolagem, e no quadro de 220 ms o nó 1 estava acima da tela. A passagem é a própria navegação para a aula, em até 470 ms:
-- t = 0: toca `geracao_pronta`. A placa "Proposta pronta" sai (opacidade e 8 px para cima, 150 ms; na hora com movimento reduzido), porque a proposta virou trilha. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
+- t = 0: toca `geracao_pronta`. A placa "Sua trilha está pronta…" sai (opacidade e 8 px para cima, 150 ms; na hora com movimento reduzido), porque a proposta virou trilha. O nó 1 pulsa (1 → 1,12 → 1, 180 ms) e fica no estado atual, azul cheio. O caminho tracejado vira sólido (180 ms, opacidade), e o Stu faz um ciclo de `stu-comemorando`.
 - t = 120 ms: um círculo da cor do fundo da aula cresce a partir do centro do nó 1 até cobrir a tela (300 ms, ease-out).
 - t = 320 ms: a etapa 1 entra por cima (opacidade, 150 ms). Se a lição ainda carrega, entra o esqueleto da aula no mesmo lugar, sem giro.
 - A busca da lição (`obterLicao`) começa no instante em que o aceite volta, junto com a passagem, e não depois dela.
@@ -191,11 +197,16 @@ O dono pediu UI, UX e animação melhores ao criar uma trilha. O destino não mu
   - Nos dois casos, nenhuma pausa fixa.
 - C3: nenhuma tela e nenhum segundo botão entre a prévia e a etapa 1.
 - C4: um `geracao_pronta` por trilha criada, na passagem, e nenhum som no fim da proposta. Com a música ligada, o Lo-fi continua por baixo (spec 12): não baixa, não para e não recomeça, também na passagem para a aula.
-- C5: sem confete, sem dicas que se revezam, sem "Mais uma!", sem contagens, sem barra e sem visto por lição.
+- C5: sem confete, sem "Mais uma!", sem contagens, sem barra e sem visto por lição. Durante a espera, a placa mostra "Montando sua trilha" por 3 s e depois as quatro frases de `geracao.dicas`, a cada 5 s (spec 17).
+  - **Teste do app** (`tests/criacao-trilha-mobile.test.mjs`, perto das linhas 120 a 122, do Mobile 2): deixa de exigir a ausência de `dicas` e de `setInterval` na `PlacaDaGeracao`. Passa a exigir:
+    - `montandoTitulo` nos 3 s iniciais;
+    - a troca entre os itens de `mensagens.geracao.dicas`;
+    - nenhuma troca com movimento reduzido.
+    O resto (sem confete, sem "Mais uma!", sem estrelinhas, sem contagem) continua.
 - C6: tentar de novo depois de uma falha não duplica (Minhas trilhas com uma trilha), e voltar da aula leva ao mapa salvo.
 - C7: com movimento reduzido, a troca é por opacidade e a informação é a mesma; os dois anúncios saem.
 - C8: com tamanho de texto padrão, "Criando sua trilha…" fica numa linha em 320, 360 e 390. Em 360×800 e 390×844, conferir que a ação principal aparece na largura toda sem rolar, antes de "Ajustar pedido", também com fonte grande do sistema no Android e no iPhone e com ampliação de texto a 200% na web. O botão e as mensagens podem ganhar linhas para exibir o texto inteiro. O rodapé acompanha a altura medida do conteúdo e da área segura para manter o fim do mapa acessível, inclusive sob o vidro no iPhone. Conferir a prévia pronta, a espera depois de 1,5 s, a falha e a expiração. Em 600 px, vale a pilha; em 601 px, verificar que os controles continuam legíveis.
-- C9: no erro e na proposta expirada, nenhum quadro em branco: a prévia continua à vista do erro em diante. Depois de "Montar de novo", a linha de erro some na hora, a placa volta a "Montando sua trilha" e termina em "Proposta pronta", com "Começar a lição 1" ligado. Se já existe uma trilha com o mesmo nome, aparece o aviso "Abrir a que já existe" (spec 05). O teste observa essa proposta nova e o botão ligado; com a IA falsa, a faixa da geração pode nem chegar a aparecer.
+- C9: no erro e na proposta expirada, nenhum quadro em branco: a prévia continua à vista do erro em diante. Depois de "Montar de novo", a linha de erro some na hora, a placa volta a "Montando sua trilha" e termina em "Sua trilha está pronta…", com "Começar a lição 1" ligado. Se já existe uma trilha com o mesmo nome, aparece o aviso "Abrir a que já existe" (spec 05). O teste observa essa proposta nova e o botão ligado; com a IA falsa, a faixa da geração pode nem chegar a aparecer.
 
 **Paridade.** Igual na web, no Android e no iPhone, com os mesmos tempos e os mesmos textos.
 

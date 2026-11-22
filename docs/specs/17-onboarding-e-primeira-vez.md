@@ -85,7 +85,10 @@ Palavras visíveis por tela, aproximadas, sem contar o rodapé de abas.
   1. "Seu material vira lição" / "Mande um PDF ou uma foto. O Stu monta lições e mostra de onde tirou cada ideia."
   2. "Errou? Tem outro jeito" / "O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo."
   3. "Explique do seu jeito" / "Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que revisar."
-  4. "Seu progresso fica salvo" / "Continue de onde parou, no computador ou no celular."
+  4. **Proposta, à espera do Lead antes do Web & API mexer:** "Seu caminho fica no mapa" / "Cada lição concluída fica marcada, e você continua de onde parou."
+     - O texto de hoje ("Seu progresso fica salvo" / "Continue de onde parou, no computador ou no celular.") engana o visitante, que também vê o tour: para ele, o progresso dura 24 horas neste aparelho e não passa para outro.
+     - O novo é verdadeiro para conta e visitante, tem o mesmo tamanho e combina com a frase 4 da espera (mudança 1).
+     - Contrato: `apresentacao.passos[3]`.
   5. Só com sessão, sem mudança: "O que te interessa?".
 - **Leitor de tela:** acompanha os textos novos.
 - **Onde:** web e app.
