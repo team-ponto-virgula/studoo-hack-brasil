@@ -237,7 +237,10 @@ function ArtePonte() {
   );
 }
 
-/** Momento 3: os quatro cartões do Explique, compactos, com a legenda do retorno automático. */
+/**
+ * Momento 3: os quatro cartões do Explique, compactos. Sem a legenda "Retorno automático…" (spec 17, mudança 4): ela explica a
+ * correção real e não serve à ilustração.
+ */
 function ArteExplique() {
   const ex = mensagens.apresentacao.exemplos;
   return (
@@ -245,7 +248,7 @@ function ArteExplique() {
       {/* .ensino-caderno tem 16 em cima também na apresentação. */}
       <View style={{ paddingTop: 16 }}>
         <CadernoDoStu compacto
-          ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: true }} />
+          ensino={{ acertos: [ex.ensinoAcertos], lacuna: ex.ensinoLacuna, pergunta: ex.ensinoPergunta, proximoPasso: ex.ensinoProximo, simulado: false }} />
       </View>
     </Quadro>
   );

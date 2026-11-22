@@ -24,7 +24,7 @@ import { iconeDoExemplo, iconesDosTemas, todosOsExemplos, type IdTema } from './
 import { cores, fontes } from './tema';
 import { falaDoStu, liberadasEntre, montarTrilha, proximaDoCaminho, repeteTitulo, type NoCaminho, type NomeIcone } from './trilha';
 import { focarSemRolar, focoVisivel } from './foco';
-import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, raioQueCobre, rolagemDaTrilhaPronta, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
+import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, fraseDaEspera, intervaloDaFila, raioQueCobre, rolagemDaTrilhaPronta, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { PreCargaDoStu, Stu, TROFEU_DA_CRIACAO } from './mascote';
 import { ouvirVoltar } from './voltar';
 import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida, rotuloDoCompartilhamento } from './social';
@@ -1390,6 +1390,14 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
     for (const relogio of somDasLicoes.current) clearTimeout(relogio);
   }, []);
 
+  // Spec 17, mudança 1: o leitor de tela ouve "Montando sua trilha" uma vez, ao abrir a espera (as frases que trocam na placa
+  // não são anunciadas; a proposta pronta tem o seu anúncio).
+  useEffect(() => {
+    if (!pronta) AccessibilityInfo.announceForAccessibility(mensagens.geracao.montandoTitulo);
+    // Só ao abrir a geração.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Espera longa: 12 s sem lição nova, a placa diz que ainda está escrevendo (sem barra de progresso inventada).
   useEffect(() => {
     setEsperaLonga(false);
@@ -1783,10 +1791,11 @@ function GeracaoAoVivo({ geracao, erro, acaoErro, ocupado, acoes, cancelar, come
 }
 
 /**
- * A placa da geração (spec 04, revisão de "Criar a trilha"): fundo #FFF9EC, borda de 2 px #E8D3A8 e raio de 16. Diz só o que
- * é verdade, sem dicas que se revezam: "Montando sua trilha" enquanto chegam lições, "Ainda montando a próxima lição…"
- * depois de 12 s sem lição nova e "Proposta pronta: 9 lições em 3 partes." no fim (a trilha só existe depois do toque). O
- * leitor de tela já ouve cada lição e o fim; a placa fica fora dele para não repetir.
+ * A placa da geração (spec 04; spec 17, mudança 1): fundo #FFF9EC, borda de 2 px #E8D3A8 e raio de 16. Enquanto monta,
+ * "Montando sua trilha" por 3 s e, depois, as frases do contrato (`geracao.dicas`), uma a cada 5 s, em laço, trocando em
+ * 300 ms (movimento reduzido: na hora); "Ainda montando a próxima lição…" depois de 12 s sem lição nova (como antes); no fim,
+ * a faixa da proposta (`geracao.propostaPronta`). Fora do leitor de tela: a tela anuncia só "Montando sua trilha" e a
+ * proposta pronta, sem cada troca de frase.
  */
 function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, reduzir = null }: {
   pronta: boolean; esperaLonga: boolean; licoes: number; partes: number;
@@ -1794,7 +1803,46 @@ function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, redu
   sai?: boolean;
   reduzir?: boolean | null;
 }) {
-  const texto = pronta ? mensagens.geracao.propostaPronta(licoes, partes) : esperaLonga ? mensagens.geracao.aguardandoLicao : mensagens.geracao.montandoTitulo;
+  // O relógio da espera conta desde que a placa apareceu; a espera longa só põe a sua frase por cima, sem zerar o laço.
+  const inicioDaEspera = useRef(Date.now());
+  const [agora, setAgora] = useState(() => Date.now());
+  const dicas = mensagens.geracao.dicas;
+  useEffect(() => {
+    if (pronta) return;
+    const passo = () => setAgora(Date.now());
+    const decorrido = Date.now() - inicioDaEspera.current;
+    // Acorda na próxima troca (aos 3 s e, depois, a cada 5 s), sem relógio de alta frequência.
+    const proxima = decorrido < RITMO_DA_GERACAO.esperaMontandoMs
+      ? RITMO_DA_GERACAO.esperaMontandoMs - decorrido
+      : RITMO_DA_GERACAO.esperaFraseMs - ((decorrido - RITMO_DA_GERACAO.esperaMontandoMs) % RITMO_DA_GERACAO.esperaFraseMs);
+    const relogio = setTimeout(passo, proxima + 5);
+    return () => clearTimeout(relogio);
+  }, [pronta, agora]);
+  const indice = fraseDaEspera(agora - inicioDaEspera.current, dicas.length);
+  const espera = !pronta && !esperaLonga;
+  const texto = pronta ? mensagens.geracao.propostaPronta(licoes, partes) : esperaLonga ? mensagens.geracao.aguardandoLicao
+    : indice < 0 ? mensagens.geracao.montandoTitulo : dicas[indice];
+  // A troca: some e aparece em 300 ms (150 + 150); com movimento reduzido, na hora.
+  const [mostrado, setMostrado] = useState(texto);
+  const [brilho] = useState(() => new Animated.Value(1));
+  useEffect(() => {
+    if (texto === mostrado) return;
+    if (reduzir !== false || !espera) {
+      brilho.setValue(1);
+      setMostrado(texto);
+      return;
+    }
+    const metade = RITMO_DA_GERACAO.esperaEfeitoMs / 2;
+    const sumir = Animated.timing(brilho, { toValue: 0, duration: metade, easing: Easing.out(Easing.quad), useNativeDriver: true });
+    sumir.start(({ finished }) => {
+      if (!finished) return;
+      setMostrado(texto);
+      Animated.timing(brilho, { toValue: 1, duration: metade, easing: Easing.out(Easing.quad), useNativeDriver: true }).start();
+    });
+    return () => sumir.stop();
+    // Só quando o texto pedido muda.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texto]);
   const [saida] = useState(() => new Animated.Value(0));
   useEffect(() => {
     if (!sai) {
@@ -1814,7 +1862,9 @@ function PlacaDaGeracao({ pronta, esperaLonga, licoes, partes, sai = false, redu
       opacity: saida.interpolate({ inputRange: [0, 1], outputRange: [1, 0] }),
       transform: [{ translateY: saida.interpolate({ inputRange: [0, 1], outputRange: [0, -RITMO_DA_GERACAO.placaSaiDeslize] }) }],
     }]}>
-      <Text style={estudoEstilos.placaGeracaoTexto}>{texto}</Text>
+      <Animated.Text testID="placa-geracao-texto" style={[estudoEstilos.placaGeracaoTexto, !pronta && estudoEstilos.placaGeracaoEspera, { opacity: brilho }]}>
+        {mostrado}
+      </Animated.Text>
     </Animated.View>
   );
 }
@@ -2804,6 +2854,8 @@ const estudoEstilos = StyleSheet.create({
   placaGeracao: { paddingHorizontal: 12, paddingVertical: 10, borderWidth: 2, borderColor: '#E8D3A8', borderRadius: 16, backgroundColor: '#FFF9EC',
     boxShadow: '0 3px 0 #E8D3A8' },
   placaGeracaoTexto: { color: cores.texto, fontFamily: fontes.corpo, fontWeight: '800', fontSize: 14, lineHeight: 18 },
+  // Spec 17, mudança 1: a linha da espera em 15/20 600 #0B1B5C, centralizada (até 2 linhas em 320).
+  placaGeracaoEspera: { fontSize: 15, lineHeight: 20, fontWeight: '600', textAlign: 'center' },
   geracaoConteudo: { paddingTop: 0, paddingBottom: 0 },
   cartaoDeVolta: { marginTop: 20 },
   pilulaSeguir: { flexDirection: 'row', alignItems: 'center', gap: 8, height: 44, paddingHorizontal: 16, borderRadius: 999, backgroundColor: cores.acao,

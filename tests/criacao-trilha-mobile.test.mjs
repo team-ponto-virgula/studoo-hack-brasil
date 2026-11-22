@@ -116,8 +116,10 @@ test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mai
   assert.match(caminho, /rascunho=\{rascunho && no\.estado === 'previa' && !firmar\}/);
   assert.doesNotMatch(caminho, /maisUma|estrelinha|comMaisUma/);
   const placa = trecho(estudo, 'function PlacaDaGeracao(', '\n}\n');
-  assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao : mensagens\.geracao\.montandoTitulo/);
-  assert.doesNotMatch(placa, /dicas|placaProntaTexto|setInterval/);
+  // Spec 17, mudança 1: depois de 3 s, a placa revê as frases do contrato (geracao.dicas, verdadeiras, sem número); a espera
+  // longa e a proposta continuam como antes. Sem relógio fixo (setInterval): ela acorda só na próxima troca.
+  assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao\n\s*: indice < 0 \? mensagens\.geracao\.montandoTitulo : dicas\[indice\]/);
+  assert.doesNotMatch(placa, /placaProntaTexto|setInterval/);
   const semComentarios = geracao.replace(/\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(semComentarios, /contagem|contados|faixaGerando|dicas=|anuncioFim/);
   assert.match(geracao, /festaPermitida=\{false\} trofeuDoZero rascunho/);

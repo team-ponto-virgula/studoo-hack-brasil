@@ -85,7 +85,20 @@ export const RITMO_DA_GERACAO = {
    * área livre (entre a base da placa presa e o topo do rodapé), com o Stu feliz ao lado. O troféu fica a uma rolagem.
    */
   prontaAteNo1Ms: 600,
+  /**
+   * A espera ensina o produto (spec 17, mudança 1): "Montando sua trilha" por 3 s; depois, as frases do contrato
+   * (`geracao.dicas`) em laço, uma a cada 5 s, com o efeito de sumir e aparecer em 300 ms (movimento reduzido: na hora).
+   */
+  esperaMontandoMs: 3000,
+  esperaFraseMs: 5000,
+  esperaEfeitoMs: 300,
 } as const;
+
+/** Qual texto a placa da espera mostra depois de `ms` de espera: -1 é "Montando sua trilha"; 0 a total-1, a frase da vez. */
+export function fraseDaEspera(ms: number, total: number): number {
+  if (total <= 0 || ms < RITMO_DA_GERACAO.esperaMontandoMs) return -1;
+  return Math.floor((ms - RITMO_DA_GERACAO.esperaMontandoMs) / RITMO_DA_GERACAO.esperaFraseMs) % total;
+}
 
 /** Onde a rolagem para na proposta pronta: o centro do nó 1 no meio da área livre, sem rolar antes do começo. */
 export function rolagemDaTrilhaPronta(centro: number, visivel: number, topoLivre: number) {
