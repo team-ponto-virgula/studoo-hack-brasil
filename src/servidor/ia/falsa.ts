@@ -164,6 +164,15 @@ function pausaDaPropostaConfigurada(): number {
   return Number.isFinite(valor) ? Math.min(Math.max(Math.trunc(valor), 0), 5000) : 0;
 }
 
+/**
+ * Pausa antes de cada lição ficar pronta no aceite, em ms (padrão 0). Só serve ao ensaio da espera longa depois de "Começar a lição 1": com a IA real, escrever as lições leva de 15 a 18 s;
+ * com STUDOO_IA_FALSA_PAUSA_CONTEUDO_MS=16000 a IA falsa leva o mesmo tempo (as lições saem juntas, então o aceite todo leva uma pausa só).
+ */
+function pausaDoConteudoConfigurada(): number {
+  const valor = Number(process.env.STUDOO_IA_FALSA_PAUSA_CONTEUDO_MS);
+  return Number.isFinite(valor) ? Math.min(Math.max(Math.trunc(valor), 0), 60_000) : 0;
+}
+
 /** Espera `ms`. Devolve false se o sinal abortou antes do fim. */
 function dormir(ms: number, sinal: AbortSignal): Promise<boolean> {
   if (sinal.aborted) return Promise.resolve(false);
@@ -229,6 +238,7 @@ export function criarGeradorFalso(): GeradorTrilha {
 
     async gerarConteudo(esqueleto: EsqueletoPlano, fluxo: number, licao: number, sinal: AbortSignal) {
       sinal.throwIfAborted();
+      if (!await dormir(pausaDoConteudoConfigurada(), sinal)) sinal.throwIfAborted();
       if (esqueleto.gerador === GERADOR_SQL) return conteudoDoPlano(planoSql, fluxo, licao);
       if (esqueleto.gerador === GERADOR_GENERICO) {
         const conteudo = conteudoGenerico(esqueleto.objetivo, fluxo, licao);
