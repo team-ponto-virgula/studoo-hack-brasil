@@ -17,23 +17,19 @@ function funcao(fonte, nome) {
   return new Function(`${js}; return ${nome};`)();
 }
 
-test('P0-3: sem nome (vazio, espaços ou null), não há nome de quem compartilhou', () => {
-  const nomeDeQuemCompartilhou = funcao(social, 'nomeDeQuemCompartilhou');
-  assert.equal(nomeDeQuemCompartilhou({ nome: 'Carla Mendes' }), 'Carla Mendes');
-  assert.equal(nomeDeQuemCompartilhou({ nome: '  Ana ' }), 'Ana');
-  for (const vazio of [{ nome: '' }, { nome: '   ' }, { nome: null }, {}, null, undefined]) assert.equal(nomeDeQuemCompartilhou(vazio), null);
-});
-
-test('P0-3: o mapa, a marca do cartão e as configurações só montam a frase com nome', () => {
+test('P0-3: sem nome, a trilha recebida não monta "Esta trilha é de " nem "Compartilhada por " (recebidaTemNome do contrato)', async () => {
+  const { recebidaTemNome } = await import('../packages/contratos/src/compartilhar.ts');
+  assert.equal(recebidaTemNome({ nome: 'Carla Mendes' }), true);
+  for (const vazio of ['', '   ']) assert.equal(recebidaTemNome({ nome: vazio }), false);
+  assert.doesNotMatch(social, /nomeDeQuemCompartilhou/, 'o auxiliar local saiu: vale o do contrato');
   const recebida = social.slice(social.indexOf('export function TrilhaRecebida('), social.indexOf('\n}\n', social.indexOf('export function TrilhaRecebida(')));
-  assert.match(recebida, /const nome = nomeDeQuemCompartilhou\(recebida\);/);
+  assert.match(recebida, /const nome = recebidaTemNome\(recebida\) \? recebida\.nome\.trim\(\) : null;/);
   assert.match(recebida, /\{nome && <FraseComNome frase=\{m\.recebidaDe\(nome\)\}/);
-  assert.doesNotMatch(recebida, /m\.recebidaDe\(recebida\.nome\)/);
   const marca = social.slice(social.indexOf('export function MarcaCompartilhar('), social.indexOf('export function TrilhaRecebida('));
-  assert.match(marca, /const nome = nomeDeQuemCompartilhou\(marcas\.recebida\);\n    if \(!nome\) return null;/);
-  // Configurações: '' continua recebida (sem "Quem pode ver" e com a capa de quem recebe), mas sem a frase.
+  assert.match(marca, /if \(!recebidaTemNome\(marcas\.recebida\)\) return null;/);
+  // Configurações: '' continua recebida (sem "Quem pode ver" e com a capa de quem recebe) e mostra o texto sem nome.
   assert.match(estudo, /recebidaDe=\{resumo\?\.recebida \? resumo\.recebida\.nome \?\? '' : null\}/);
-  assert.match(configuracoes, /\{recebidaDe\?\.trim\(\) \? <Text testID="configuracoes-recebida"/);
+  assert.match(configuracoes, /\{recebidaTemNome\(\{ nome: recebidaDe \}\) \? k\.recebida\(recebidaDe\.trim\(\)\) : k\.recebidaSemNome\}/);
   assert.match(configuracoes, /daDona=\{recebidaDe == null\}/);
   assert.match(configuracoes, /\{compartilhar && recebidaDe == null && \(/);
 });

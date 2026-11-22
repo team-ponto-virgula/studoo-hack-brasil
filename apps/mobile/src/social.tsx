@@ -9,8 +9,8 @@ import * as WebBrowser from 'expo-web-browser';
 import Svg, { Circle, G, Path } from 'react-native-svg';
 import {
   CORES_PERFIL, ErroStudoo, FUNDO_DA_COR, LIMITES_COMUNIDADE, TEMAS, VISIBILIDADES, codigoDoLink, enderecoFoto, inicialDoNome,
-  motivoLegendaInvalida, motivoNomeInvalido, normalizarNomePerfil, normalizarResumoPerfil,
-  type AlcancePerfil, type CorPerfil, type LinkCompartilhado, type MarcasCompartilhar, type Perfil, type PreviaCompartilhar, type Tema,
+  estadoDoCompartilhamento, motivoLegendaInvalida, motivoNomeInvalido, normalizarNomePerfil, normalizarResumoPerfil, recebidaTemNome,
+  type AlcancePerfil, type EstadoDoCompartilhamento, type CorPerfil, type LinkCompartilhado, type MarcasCompartilhar, type Perfil, type PreviaCompartilhar, type Tema,
   type TrilhaCompartilhada, type Visibilidade,
 } from '@studoo/contratos';
 import { fonteDaMidiaDaDona, origemConfigurada, type ClienteNativo } from './api-nativa';
@@ -275,36 +275,20 @@ export function CabecalhoPerfil({ nome, cor, foto, resumo, interesses, alcance, 
 }
 
 /**
- * O nome de quem compartilhou a trilha recebida, ou null quando não há nome (quem compartilhou excluiu a conta; banca P0-3):
- * aí a frase "Esta trilha é de …" ou "Compartilhada por …" não aparece, nunca com o nome vazio.
+ * O rótulo do estado curto do compartilhamento (spec 16, item 31; o estado vem do contrato, `estadoDoCompartilhamento`):
+ * "Compartilhar", "Compartilhada", "Em revisão" ou "Não publicada", o mesmo no botão do mapa e no selo de Minhas trilhas.
  */
-export function nomeDeQuemCompartilhou(recebida: { nome?: string | null } | null | undefined): string | null {
-  const nome = recebida?.nome?.trim();
-  return nome ? nome : null;
-}
-
-/**
- * Um estado só, curto, do compartilhamento da própria trilha (spec 16, item 31), no botão do alto do mapa e no selo do
- * cartão de Minhas trilhas: sem link, "Compartilhar"; aprovado, "Compartilhada"; à espera da equipe, "Em revisão"; recusado,
- * "Não publicada". O texto longo fica só no Perfil e na folha de compartilhar. A revisão vem em `link.moderacao` quando o
- * servidor a manda no resumo da trilha (sem ela, vale "Compartilhada", como hoje).
- */
-export type EstadoCurtoDoCompartilhar = 'compartilhar' | 'compartilhada' | 'emRevisao' | 'naoPublicada';
-export function estadoCurtoDoCompartilhar(marcas: Pick<MarcasCompartilhar, 'link'>): EstadoCurtoDoCompartilhar {
-  if (!marcas.link) return 'compartilhar';
-  const moderacao = (marcas.link as { moderacao?: 'pendente' | 'aprovado' | 'recusado' | null }).moderacao;
-  return moderacao === 'pendente' ? 'emRevisao' : moderacao === 'recusado' ? 'naoPublicada' : 'compartilhada';
-}
-export function rotuloCurtoDoCompartilhar(estado: EstadoCurtoDoCompartilhar): string {
-  return estado === 'compartilhar' ? m.entrada : estado === 'compartilhada' ? m.selo : estado === 'emRevisao' ? seg.seloEmRevisao : seg.seloNaoPublicada;
+export function rotuloDoCompartilhamento(estado: EstadoDoCompartilhamento): string {
+  return estado === 'sem-link' ? m.entrada : estado === 'compartilhada' ? m.selo : estado === 'em-revisao' ? seg.seloEmRevisao : seg.seloNaoPublicada;
 }
 
 /** "Compartilhada" (selo da dona) ou "Compartilhada por Ana", com a foto de agora (trilha recebida), como `MarcaCompartilhar`. */
 export function MarcaCompartilhar({ marcas }: { marcas: MarcasCompartilhar }) {
   if (marcas.recebida) {
+    // Sem nome (quem compartilhou excluiu a conta, banca P0-3): a frase não se monta (`recebidaTemNome`, do contrato).
+    if (!recebidaTemNome(marcas.recebida)) return null;
     const { foto, perfilId } = marcas.recebida;
-    const nome = nomeDeQuemCompartilhou(marcas.recebida);
-    if (!nome) return null;
+    const nome = marcas.recebida.nome.trim();
     return (
       <View style={socialEstilos.marcaRecebida}>
         {foto && <Avatar nome={nome} cor="azul" foto={foto} tamanho={24} />}
@@ -312,13 +296,13 @@ export function MarcaCompartilhar({ marcas }: { marcas: MarcasCompartilhar }) {
       </View>
     );
   }
-  const estado = estadoCurtoDoCompartilhar(marcas);
-  if (estado === 'emRevisao' || estado === 'naoPublicada') {
+  const estado = estadoDoCompartilhamento(marcas.link);
+  if (estado === 'em-revisao' || estado === 'nao-publicada') {
     // O selo neutro ("Em revisão") ou o âmbar ("Não publicada") da spec 14, sem o texto longo.
-    const recusada = estado === 'naoPublicada';
+    const recusada = estado === 'nao-publicada';
     return (
       <View testID={recusada ? 'selo-nao-publicada' : 'selo-em-revisao'} style={[socialEstilos.seloEstado, recusada && socialEstilos.seloEstadoAlerta]}>
-        <Text style={[socialEstilos.seloEstadoTexto, recusada && socialEstilos.seloEstadoAlertaTexto]}>{rotuloCurtoDoCompartilhar(estado)}</Text>
+        <Text style={[socialEstilos.seloEstadoTexto, recusada && socialEstilos.seloEstadoAlertaTexto]}>{rotuloDoCompartilhamento(estado)}</Text>
       </View>
     );
   }
@@ -338,7 +322,7 @@ export function MarcaCompartilhar({ marcas }: { marcas: MarcasCompartilhar }) {
  * existe; o link abre a página pública dele (na web, a mesma página na aba).
  */
 export function TrilhaRecebida({ recebida }: { recebida: NonNullable<MarcasCompartilhar['recebida']> }) {
-  const nome = nomeDeQuemCompartilhou(recebida);
+  const nome = recebidaTemNome(recebida) ? recebida.nome.trim() : null;
   if (!nome && !recebida.codigoAtivo) return null;
   return (
     <View testID="trilha-recebida" style={socialEstilos.trilhaRecebida}>

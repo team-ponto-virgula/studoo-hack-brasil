@@ -54,7 +54,7 @@ export function CapaTrilha({ codigo, tema, capa }: { codigo: string; tema: Tema 
 function Posicao({ numero }: { numero: number }) {
   return (
     <View testID={`posicao-${numero}`} pointerEvents="none" style={comunidadeEstilos.posicao} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
-      <Text style={comunidadeEstilos.posicaoTexto}>{`${numero}º`}</Text>
+      <Text style={comunidadeEstilos.posicaoTexto}>{c.posicaoSelo(numero)}</Text>
     </View>
   );
 }
@@ -218,7 +218,7 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, testID, alturaCapa, dua
           )}
         </View>
         <View style={comunidadeEstilos.corpo}>
-          {posicao !== undefined && <Text style={comunidadeEstilos.somenteLeitor}>{mensagens.emAlta.posicao(posicao)}</Text>}
+          {posicao !== undefined && <Text style={comunidadeEstilos.somenteLeitor}>{c.posicao(posicao)}</Text>}
           <Pressable accessibilityRole="link" testID={`${id}-titulo`} onPress={() => acoes.abrirPrevia(cartao.codigo)}
             style={[comunidadeEstilos.tituloToque, duasLinhas && comunidadeEstilos.tituloDuasLinhas]}>
             <Text accessibilityRole="header" style={comunidadeEstilos.titulo}>{cartao.titulo}</Text>

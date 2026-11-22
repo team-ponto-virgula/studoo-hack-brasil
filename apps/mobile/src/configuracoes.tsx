@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 import {
   CAPAS_GALERIA, LIMITES_CAPA, LIMITES_COMUNIDADE, TEMAS, coresDaCapa, ehCapaFoto, enderecoCapa, motivoLegendaInvalida,
-  motivoTituloTrilhaInvalido, normalizarResumoPerfil, normalizarTituloTrilha, svgCapa,
+  motivoTituloTrilhaInvalido, normalizarResumoPerfil, normalizarTituloTrilha, recebidaTemNome, svgCapa,
   type ConfiguracoesTrilha, type MudancaConfiguracoes, type Tema,
 } from '@studoo/contratos';
 import { fonteDaMidiaDaDona, origemConfigurada, type ClienteNativo } from './api-nativa';
@@ -334,7 +334,10 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
           <View style={confEstilos.secao} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden><Esqueleto /></View>
         ) : (
           <>
-            {recebidaDe?.trim() ? <Text testID="configuracoes-recebida" style={confEstilos.recebida}>{k.recebida(recebidaDe.trim())}</Text> : null}
+            {/* Recebida: com nome, "Trilha adicionada de Ana…"; sem nome (banca P0-3), o texto do contrato sem o "de". */}
+            {recebidaDe != null ? (
+              <Text testID="configuracoes-recebida" style={confEstilos.recebida}>{recebidaTemNome({ nome: recebidaDe }) ? k.recebida(recebidaDe.trim()) : k.recebidaSemNome}</Text>
+            ) : null}
 
             <Secao titulo={k.capaENome}>
               {/* A capa na largura da seção; tocar em qualquer ponto dela abre a galeria, e "Trocar capa" mostra isso. */}

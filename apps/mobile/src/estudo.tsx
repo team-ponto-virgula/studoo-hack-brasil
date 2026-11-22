@@ -1,4 +1,4 @@
-import { falarTextoComFormulas } from '@studoo/contratos';
+import { estadoDoCompartilhamento, falarTextoComFormulas } from '@studoo/contratos';
 import { MaterialParaTrilha } from './estudio-adaptativo';
 import type { ProvedorIa } from '@studoo/contratos';
 import { ErroStudoo, LIMITES_GERACAO, origemDemonstracao, trilhaRepetida, perfilComLink, type AutoAvaliacao, type NomeStu, type LicaoDetalhe, type LinkCompartilhado, type Perfil, type PlanoDetalhe, type PlanoResumo, type Progresso, type PropostaPlano } from '@studoo/contratos';
@@ -27,7 +27,7 @@ import { focarSemRolar, focoVisivel } from './foco';
 import { RITMO_DA_GERACAO, atrasosDaLicao, deixouDeAcompanhar, intervaloDaFila, raioQueCobre, rolagemDaTrilhaPronta, rolagemDaVaga, vagaAVista } from './geracao-ritmo';
 import { PreCargaDoStu, Stu, TROFEU_DA_CRIACAO } from './mascote';
 import { ouvirVoltar } from './voltar';
-import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida, estadoCurtoDoCompartilhar, rotuloCurtoDoCompartilhar } from './social';
+import { AbrirPerfil, AdicionarPorLink, AvisoDaTrilha, FolhaCompartilhar, MarcaCompartilhar, TrilhaRecebida, rotuloDoCompartilhamento } from './social';
 import { PerfilSemSocial, TelaPerfil } from './perfil';
 import { BotaoConfigurar, CapaDaTrilha, TelaConfiguracoes } from './configuracoes';
 import { IrAoExplorar, ProvedorBloqueio, TelaExplorar, TelaPerfilPublico, TelaPreviaTrilha, type MemoriaExplorar } from './comunidade';
@@ -2043,7 +2043,7 @@ function TelaPlano({ etapa, acoes, erro, acaoErro, ocupado, abrindo, abrirLicao,
       {(comCompartilhar || configurar) && (
         <View style={[estudoEstilos.acoesTopo, comCompartilhar && estudoEstilos.acoesTopoComCompartilhar]}>
           {!plano.recebida && compartilhar && (
-            <Botao rotulo={rotuloCurtoDoCompartilhar(estadoCurtoDoCompartilhar(plano))} iconeAntes="compartilhar" variante="secundario"
+            <Botao rotulo={rotuloDoCompartilhamento(estadoDoCompartilhamento(plano.link))} iconeAntes="compartilhar" variante="secundario"
               testID="plano-compartilhar" nomeAcessivel={mensagens.compartilhar.entradaRotulo(plano.titulo)} desativado={ocupado} acao={compartilhar} />
           )}
           {configurar && <BotaoConfigurar titulo={plano.titulo} desativado={ocupado} acao={configurar} />}

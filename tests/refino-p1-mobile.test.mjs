@@ -63,11 +63,13 @@ test('item 9 (c103c3b): a apresentação não mostra selo de demonstração nem 
 });
 
 test('item 16: a posição do Em alta é a pílula "1º" (13 800 #0B1B5C, branco, 24 de altura, raio 12) e o leitor ouve "1º em alta"', () => {
-  assert.match(comunidade, /<Text style=\{comunidadeEstilos\.posicaoTexto\}>\{`\$\{numero\}º`\}<\/Text>/);
+  assert.match(comunidade, /<Text style=\{comunidadeEstilos\.posicaoTexto\}>\{c\.posicaoSelo\(numero\)\}<\/Text>/);
+  assert.match(contrato, /posicaoSelo: \(n: number\) => `\$\{n\}º`/);
   assert.match(comunidade, /posicao: \{ position: 'absolute', top: 10, right: 10, height: 24, minWidth: 24, paddingHorizontal: 8, borderRadius: 12, backgroundColor: '#FFFFFF',/);
   assert.match(comunidade, /posicaoTexto: \{ color: cores\.texto, fontFamily: fontes\.corpo, fontSize: 13, lineHeight: 18, fontWeight: '800' \}/);
-  assert.match(comunidade, /\{mensagens\.emAlta\.posicao\(posicao\)\}/);
-  assert.match(mensagensApp, /emAlta: \{ posicao: \(n: number\) => `\$\{n\}º em alta` \}/);
+  assert.match(comunidade, /\{c\.posicao\(posicao\)\}/);
+  assert.match(contrato, /posicao: \(n: number\) => `\$\{n\}º em alta`/);
+  assert.doesNotMatch(mensagensApp, /emAlta:/, 'o texto local saiu: vale o do contrato');
   assert.doesNotMatch(comunidade, /FeDropShadow|fontSize=\{80\}/);
 });
 
@@ -204,25 +206,22 @@ test('item 14 (ee85828): o balão do nó fecha o aviso do alto na hora; o aviso 
   assert.doesNotMatch(faixa, /onPress=\{dispensar\}|onTouch/);
 });
 
-test('item 31: um estado só, curto, no botão do mapa e no selo do cartão (Compartilhar, Compartilhada, Em revisão, Não publicada)', async () => {
+test('item 31: um estado só, curto, no botão do mapa e no selo do cartão, vindo do contrato (estadoDoCompartilhamento)', async () => {
   const social = await ler('social.tsx');
   const estudo = await ler('estudo.tsx');
-  const estadoCurtoDoCompartilhar = funcao(social, 'estadoCurtoDoCompartilhar');
-  assert.equal(estadoCurtoDoCompartilhar({}), 'compartilhar');
-  assert.equal(estadoCurtoDoCompartilhar({ link: { codigo: 'x', noPerfil: false } }), 'compartilhada');
-  assert.equal(estadoCurtoDoCompartilhar({ link: { codigo: 'x', noPerfil: false, moderacao: 'aprovado' } }), 'compartilhada');
-  assert.equal(estadoCurtoDoCompartilhar({ link: { codigo: 'x', noPerfil: true, moderacao: 'pendente' } }), 'emRevisao');
-  assert.equal(estadoCurtoDoCompartilhar({ link: { codigo: 'x', noPerfil: true, moderacao: 'recusado' } }), 'naoPublicada');
-  assert.match(social, /estado === 'compartilhar' \? m\.entrada : estado === 'compartilhada' \? m\.selo : estado === 'emRevisao' \? seg\.seloEmRevisao : seg\.seloNaoPublicada/);
-  assert.match(estudo, /<Botao rotulo=\{rotuloCurtoDoCompartilhar\(estadoCurtoDoCompartilhar\(plano\)\)\} iconeAntes="compartilhar"/);
-  // No cartão: o selo neutro ou o âmbar da spec 14, sem o texto longo.
+  const { estadoDoCompartilhamento } = await import('../packages/contratos/src/compartilhar.ts');
+  assert.equal(estadoDoCompartilhamento(undefined), 'sem-link');
+  assert.equal(estadoDoCompartilhamento({ codigo: 'x', noPerfil: false }), 'compartilhada');
+  assert.equal(estadoDoCompartilhamento({ codigo: 'x', noPerfil: true, moderacao: 'pendente' }), 'em-revisao');
+  assert.equal(estadoDoCompartilhamento({ codigo: 'x', noPerfil: true, moderacao: 'recusado' }), 'nao-publicada');
+  assert.doesNotMatch(social + estudo, /estadoCurtoDoCompartilhar|rotuloCurtoDoCompartilhar/, 'o auxiliar local saiu');
+  assert.match(social, /estado === 'sem-link' \? m\.entrada : estado === 'compartilhada' \? m\.selo : estado === 'em-revisao' \? seg\.seloEmRevisao : seg\.seloNaoPublicada/);
+  assert.match(estudo, /<Botao rotulo=\{rotuloDoCompartilhamento\(estadoDoCompartilhamento\(plano\.link\)\)\} iconeAntes="compartilhar"/);
   const marca = social.slice(social.indexOf('export function MarcaCompartilhar('), social.indexOf('export function TrilhaRecebida('));
+  assert.match(marca, /const estado = estadoDoCompartilhamento\(marcas\.link\);/);
   assert.match(marca, /testID=\{recusada \? 'selo-nao-publicada' : 'selo-em-revisao'\}/);
   assert.doesNotMatch(marca, /seg\.emRevisao|seg\.naoPublicada\b/);
-  assert.match(social, /seloEstado: \{ alignSelf: 'flex-start', marginBottom: 6, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, backgroundColor: '#F1F4FD' \}/);
   assert.match(social, /seloEstadoAlertaTexto: \{ color: '#9A5B00' \}/);
-  assert.match(contrato, /seloEmRevisao: 'Em revisão',/);
-  assert.match(contrato, /seloNaoPublicada: 'Não publicada',/);
 });
 
 test('item 34: o alto da proposta como a web: voltar de 44, o nome da trilha em 17/22 800 até 2 linhas (15/20 com 3 ou mais)', async () => {
