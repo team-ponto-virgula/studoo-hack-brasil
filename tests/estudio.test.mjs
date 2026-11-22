@@ -215,6 +215,22 @@ test('sem IA, o “Explique” reconhece frases da lição como exemplo e não s
   assert.doesNotMatch(falado.lacuna, /Faltou só um exemplo/);
 });
 
+test('sem IA, o “Explique” reconhece o exemplo concreto sem marca (“Numa pizza de 8 fatias, comer 3 é 3/8”) e não pede o exemplo de novo', async () => {
+  const u = await pessoa();
+  const fracoes = await aceitarProposta(u, (await gerarProposta(u, 'Entender, comparar e somar frações')).token);
+  const id = fracoes.fluxos[0].licoes[0].id;
+  const termos = termosDaLicao(DEMOS.find(({ chave }) => chave === 'fracoes').plano.fluxos[0].licoes[0]);
+  // O que a banca viu: a explicação TEM o exemplo, mas o cartão "O que revisar" dizia "Faltou só um exemplo seu".
+  const comExemplo = await ensinarStu(u, id, `${termos.join(', ')}. Numa pizza de 8 fatias, comer 3 é 3/8.`);
+  assert.equal(comExemplo.simulado, true);
+  assert.match(comExemplo.acertos.join(' '), /Você usou um exemplo/);
+  assert.doesNotMatch(comExemplo.lacuna, /Faltou só um exemplo/);
+  assert.doesNotMatch(comExemplo.proximoPasso, /Escreva uma situação sua/);
+  // Sem exemplo nenhum (só as ideias da lição), o pedido do exemplo continua valendo.
+  const semExemplo = await ensinarStu(u, id, `As ideias que importam: ${termos.join(', ')}.`);
+  assert.match(semExemplo.lacuna, /Faltou só um exemplo/);
+});
+
 test('com a IA fora do ar, o reforço e o “Explique com suas palavras” caem no retorno local', async () => {
   const u = await pessoa();
   const plano = await aceitarProposta(u, (await gerarProposta(u, 'Quero aprender violão do zero')).token);

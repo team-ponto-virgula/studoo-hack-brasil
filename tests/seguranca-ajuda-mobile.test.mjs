@@ -98,7 +98,8 @@ test('Mídia da própria pessoa: o token só para o host da API e só nas imagen
   const comunidade = await ler('apps/mobile/src/comunidade.tsx');
   assert.doesNotMatch(comunidade, /daDona/, 'cartões e perfis de outras pessoas vão sem o token');
   const conf = await ler('apps/mobile/src/configuracoes.tsx');
-  assert.match(conf, /daDona=\{!recebidaDe\}/);
+  // Recebida continua recebida mesmo sem o nome de quem compartilhou (banca P0-3): só a trilha própria (null) é da dona.
+  assert.match(conf, /daDona=\{recebidaDe == null\}/);
   assert.match(comunidade, /<Indisponivel titulo=\{mensagens\.seguranca\.trilhaIndisponivel\}/);
   assert.equal(s.trilhaIndisponivel, 'Esta trilha não está disponível agora.');
 });

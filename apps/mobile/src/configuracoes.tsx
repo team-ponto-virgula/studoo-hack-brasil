@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SvgXml } from 'react-native-svg';
 import {
   CAPAS_GALERIA, LIMITES_CAPA, LIMITES_COMUNIDADE, TEMAS, coresDaCapa, ehCapaFoto, enderecoCapa, motivoLegendaInvalida,
-  motivoTituloTrilhaInvalido, normalizarResumoPerfil, normalizarTituloTrilha, svgCapa,
+  motivoTituloTrilhaInvalido, normalizarResumoPerfil, normalizarTituloTrilha, recebidaTemNome, svgCapa,
   type ConfiguracoesTrilha, type MudancaConfiguracoes, type Tema,
 } from '@studoo/contratos';
 import { fonteDaMidiaDaDona, origemConfigurada, type ClienteNativo } from './api-nativa';
@@ -169,7 +169,10 @@ function Secao({ titulo, children }: { titulo: string; children: ReactNode }) {
 export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, acoes, desativado = false, voltar, aoMudar, mudarCompartilhamento, apagar, versao }: {
   cliente: ClienteNativo;
   planoId: string;
-  /** Trilha adicionada de outra pessoa: o nome de quem compartilhou (a cópia é dela; não se compartilha de novo). */
+  /**
+   * Trilha adicionada de outra pessoa: o nome de quem compartilhou (a cópia é dela; não se compartilha de novo). Texto vazio
+   * quando quem compartilhou excluiu a conta: continua recebida, mas sem a frase com o nome. null: a trilha é da pessoa.
+   */
   recebidaDe?: string | null;
   /** Com o compartilhar ligado: a seção "Quem pode ver". */
   compartilhar: boolean;
@@ -331,7 +334,10 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
           <View style={confEstilos.secao} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden><Esqueleto /></View>
         ) : (
           <>
-            {recebidaDe ? <Text testID="configuracoes-recebida" style={confEstilos.recebida}>{k.recebida(recebidaDe)}</Text> : null}
+            {/* Recebida: com nome, "Trilha adicionada de Ana…"; sem nome (banca P0-3), o texto do contrato sem o "de". */}
+            {recebidaDe != null ? (
+              <Text testID="configuracoes-recebida" style={confEstilos.recebida}>{recebidaTemNome({ nome: recebidaDe }) ? k.recebida(recebidaDe.trim()) : k.recebidaSemNome}</Text>
+            ) : null}
 
             <Secao titulo={k.capaENome}>
               {/* A capa na largura da seção; tocar em qualquer ponto dela abre a galeria, e "Trocar capa" mostra isso. */}
@@ -339,7 +345,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
                 <Pressable testID="configuracoes-capa" accessibilityRole="button" accessibilityLabel={k.trocarCapaRotulo(nomeDaCapa(conf.capa))}
                   disabled={desativado} onPress={() => { Keyboard.dismiss(); setGaleria(true); }}
                   style={({ pressed }) => [confEstilos.previa, pressed && { opacity: 0.9 }]}>
-                  <CapaDaTrilha semente={conf.semente} tema={conf.tema} capa={conf.capa} grande estilo={StyleSheet.absoluteFill} daDona={!recebidaDe} />
+                  <CapaDaTrilha semente={conf.semente} tema={conf.tema} capa={conf.capa} grande estilo={StyleSheet.absoluteFill} daDona={recebidaDe == null} />
                   <View style={confEstilos.trocar}>
                     <Icone nome="imagem" tamanho={18} cor={cores.acaoEscura} traco={2.4} />
                     <Text style={confEstilos.trocarTexto}>{k.trocarCapa}</Text>
@@ -391,7 +397,7 @@ export function TelaConfiguracoes({ cliente, planoId, recebidaDe, compartilhar, 
               </View>
             </Secao>
 
-            {compartilhar && !recebidaDe && (
+            {compartilhar && recebidaDe == null && (
               <Secao titulo={k.quemPodeVer}>
                 <View style={confEstilos.linha}>
                   <Icone nome={iconeDoNivel} tamanho={20} cor={cores.acao} />

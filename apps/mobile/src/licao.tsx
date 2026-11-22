@@ -3,7 +3,7 @@ import type { ClienteEstudio, NomeStu } from '@studoo/contratos';
 import type { ClienteElegibilidadeVoz } from './voz-ao-vivo-painel';
 import {
   acertouParte,
-  embaralharExercicio,
+  embaralharExercicioDaRodada,
   etapasDaLicao,
   exerciciosDaLicao,
   faltaParaVerificar,
@@ -219,13 +219,13 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
    */
   const alturaDaFigura = alturaMaximaDaFigura(larguraJanela - 32 - 2 * (respiroQuadro.padding + 2), alturaDaFiguraNaTela(alturaJanela));
   const etapas = useMemo(() => etapasDaLicao(licao), [licao]);
-  // Como na web: as opções mudam de ordem a cada visita.
-  const [semente] = useState(() => Math.floor(Math.random() * 2 ** 31));
-  /** Cada revisão rápida embaralha de novo. Como na web. */
+  // Spec 16, item 23: a ordem das opções vem da semente do contrato (id da lição, índice do exercício e rodada), a mesma da
+  // web: a mesma tentativa tem a mesma letra para a mesma opção nas duas plataformas. Cada revisão rápida sobe a rodada e
+  // embaralha de novo, sem repetir a ordem anterior (também igual na web).
   const [rodadaDeOpcoes, setRodadaDeOpcoes] = useState(0);
   const exercicios = useMemo(
-    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicio(exercicio, semente + numero + rodadaDeOpcoes * 7919)),
-    [licao, semente, rodadaDeOpcoes],
+    () => exerciciosDaLicao(licao).map((exercicio, numero) => embaralharExercicioDaRodada(exercicio, licao.id, numero, rodadaDeOpcoes)),
+    [licao, rodadaDeOpcoes],
   );
   // Quem saiu no meio continua de onde parou.
   const [retomada] = useState(() => lerAndamento(licao, etapas.length, exercicios.length));
@@ -385,8 +385,25 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
     if (retomada && passo !== retomada.passo) setAvisoRetomada(false);
   }, [passo, retomada]);
 
+  /**
+   * Spec 16, item 4: no Conceito e no Exemplo curtos (cabem sem rolar e sobram 40% ou mais da área livre), o stu-feliz de 72
+   * entra acima do cartão e o conjunto fica no meio da sobra, entre o alto da aula e o rodapé. A conta usa a altura sem o
+   * que este ajuste acrescentou (o Stu e o espaço), para não oscilar. Com conteúdo maior, tudo fica em cima, como antes.
+   */
+  const [stuDaEtapa, setStuDaEtapa] = useState<number | null>(null);
+  const acrescimoDoStu = useRef(0);
+  acrescimoDoStu.current = stuDaEtapa === null ? 0 : stuDaEtapa + STU_DA_ETAPA + STU_DA_ETAPA_VAO;
+  useEffect(() => { setStuDaEtapa(null); }, [passo]);
+  function ajustarStuDaEtapa() {
+    if (!alturaVisivel.current || !alturaConteudo.current) return;
+    const leitura = (etapa.tipo === 'conceito' || (etapa.tipo === 'exemplo' && !resolva.ativo)) && !ponteAberta;
+    const espaco = leitura ? espacoDoStuDaEtapa(alturaConteudo.current - acrescimoDoStu.current, alturaVisivel.current) : null;
+    setStuDaEtapa((antes) => (antes === espaco || (antes !== null && espaco !== null && Math.abs(antes - espaco) < 3) ? antes : espaco));
+  }
+
   /** Confere se o fim do conteúdo (a legenda, o passo a passo) ainda está abaixo da parte visível. */
   function medirMais() {
+    ajustarStuDaEtapa();
     // Sem as duas medidas (a parte visível e a altura real do conteúdo), nada se decide: com uma delas em zero, o fim
     // parecia já à vista (iPhone, 20/11).
     if (!alturaVisivel.current || !alturaConteudo.current) return;
@@ -820,6 +837,7 @@ export function Licao({ cliente, licao, erro, pendente, voltar, saida, avaliar, 
             <Text style={[licaoEstilos.avisoTexto, { color: '#7A4A00' }]}>{t.revisaoRapida}</Text>
           </View>
         )}
+        {stuDaEtapa !== null && (etapa.tipo === 'conceito' || etapa.tipo === 'exemplo') && <StuDaEtapa espaco={stuDaEtapa} />}
         {etapa.tipo === 'conceito' && (
           <>
             {licao.concluida && (
@@ -1194,6 +1212,9 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
   const icone = useAparecer(80, 460, true);
   const area = useRef<ComponentRef<typeof View>>(null);
   const comStu = reacao !== undefined && !compacto;
+  // Spec 16, item 24: com o "Explique" aberto, o acerto vira uma linha de 64: "✓ Isso aí!" à esquerda e "Continuar" à
+  // direita, compacto, no mesmo verde claro; o texto do retorno sai (já foi lido). Ao fechar o "Explique", volta ao normal.
+  const linhaCompacta = Boolean(compacto && certa);
   const janela = useWindowDimensions();
   const margens = useSafeAreaInsets();
   const alturaMaxima = Math.max(200, Math.floor(janela.height * 0.5) - MOLDURA_DO_RODAPE - margens.bottom - reservaAcima);
@@ -1208,11 +1229,11 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
   }, []);
 
   return (
-    <Animated.View testID="painel-retorno" style={{ gap: 6, maxHeight: alturaMaxima, opacity: subida,
-      transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }}>
+    <Animated.View testID="painel-retorno" style={[{ gap: 6, maxHeight: alturaMaxima, opacity: subida,
+      transform: [{ translateY: subida.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }] }, linhaCompacta && licaoEstilos.painelLinha]}>
       <View ref={area} testID="feedback-licao" accessible accessibilityRole="alert"
         accessibilityLabel={`${titulo} ${certa ? mensagens.licao.correta : mensagens.licao.incorreta}. ${falarTextoComFormulas(avaliacao.feedback)} ${extras.map(falarTextoComFormulas).join(' ')}${certa && descricaoDaFigura ? ` ${descricaoDaFigura}` : ''}`}
-        style={[licaoEstilos.retorno, licaoEstilos.encolhe]}>
+        style={[licaoEstilos.retorno, licaoEstilos.encolhe, linhaCompacta && licaoEstilos.painelLinhaTexto]}>
         {/* Como na web: o ícone pequeno ao lado do título e o texto na largura toda, embaixo (o painel ocupava ~40% da tela). */}
         <View style={licaoEstilos.retornoCabecalho}>
           {/* .aula-retorno__icone no celular: círculo de 34 com o degrau de 3 por fora (sombra da web) e o ícone de 20 com traço 3,2. */}
@@ -1227,7 +1248,7 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
               {certa && <Confete quantidade={14} />}
             </View>
           </Animated.View>
-          <Text style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 },
+          <Text numberOfLines={linhaCompacta ? 1 : undefined} style={[licaoEstilos.retornoTitulo, compacto && licaoEstilos.retornoTituloCompacto, linhaCompacta && licaoEstilos.retornoTituloLinha, !certa && licaoEstilos.retornoTituloErrado, { flex: 1 },
             comStu && licaoEstilos.retornoTituloComStu]}>{titulo}</Text>
           {comStu && (
             // Enfeite: o toque passa e o leitor de tela não lê (o anúncio é o do painel).
@@ -1258,15 +1279,15 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
         estilo={licaoEstilos.convite} />}
       {!certa && !compacto && <Botao testID="ver-outro-jeito" peso="900" rotulo={mensagens.estudio.verPonte} desativado={ocupado} acao={verReforco} />}
       {/* Compacto (Explique aberto): 16 entre o título e o "Continuar" (o visto ficava a 4 px do botão); a web segue o mesmo. */}
-      <View style={[licaoEstilos.retornoAcoes, compacto && licaoEstilos.retornoAcoesCompacto]}>
+      <View style={[licaoEstilos.retornoAcoes, compacto && licaoEstilos.retornoAcoesCompacto, linhaCompacta && licaoEstilos.retornoAcoesLinha]}>
         {!certa && (
           <View style={licaoEstilos.acaoTentar}>
             <Botao testID="tentar-de-novo" variante="secundario" peso="900" rotulo={mensagens.licao.tentarDeNovo} desativado={ocupado} acao={tentarDeNovo} />
           </View>
         )}
-        <View style={certa ? licaoEstilos.metade : undefined}>
+        <View style={certa && !linhaCompacta ? licaoEstilos.metade : undefined}>
           <Botao testID="continuar-licao" rotulo={concluindo ? mensagens.licao.concluindo : certa ? mensagens.licao.continuar : rotuloPular}
-            variante={certa ? 'sucesso' : 'texto'} peso="900" estilo={certa ? undefined : licaoEstilos.pular}
+            variante={certa ? 'sucesso' : 'texto'} peso="900" estilo={linhaCompacta ? licaoEstilos.continuarLinha : certa ? undefined : licaoEstilos.pular}
             desativado={ocupado} ocupado={concluindo} carregando={concluindo} acao={continuar} />
         </View>
       </View>
@@ -1278,6 +1299,30 @@ function PainelRetorno({ avaliacao, titulo, extras, ocupado, concluindo, tentarD
 
 /** O fundo do painel de retorno (o rodapé da aula depois da resposta) e o esmaecer do texto que rola. */
 const CORES_DO_PAINEL = { certa: '#E3F6EA', errada: '#FFF1E0' };
+
+/** O Stu de 72 acima do cartão curto do Conceito ou do Exemplo (spec 16, item 4), com 12 até o cartão. */
+export const STU_DA_ETAPA = 72;
+export const STU_DA_ETAPA_VAO = 12;
+
+/**
+ * O espaço acima do Stu que põe o conjunto (Stu e cartão) no meio da sobra, ou null quando não entra: o conteúdo (sem o
+ * Stu) precisa caber com o Stu e deixar 40% ou mais da área visível livre.
+ */
+export function espacoDoStuDaEtapa(conteudo: number, visivel: number): number | null {
+  if (conteudo <= 0 || visivel <= 0) return null;
+  const sobra = visivel - conteudo;
+  if (sobra < visivel * 0.4 || sobra < STU_DA_ETAPA + STU_DA_ETAPA_VAO) return null;
+  return Math.floor((sobra - STU_DA_ETAPA - STU_DA_ETAPA_VAO) / 2);
+}
+
+function StuDaEtapa({ espaco }: { espaco: number }) {
+  return (
+    <View testID="stu-da-etapa" pointerEvents="none" importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
+      style={{ paddingTop: espaco, marginBottom: STU_DA_ETAPA_VAO, alignItems: 'center' }}>
+      <Stu nome="stu-feliz" tamanho={STU_DA_ETAPA} />
+    </View>
+  );
+}
 
 const licaoEstilos = StyleSheet.create({
   // A aula da web tem 16 de respiro nos lados no celular (clamp(16px, 4vw, 48px) em aula.css), no alto, no meio e no
@@ -1438,6 +1483,12 @@ const licaoEstilos = StyleSheet.create({
   retornoExtra: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '700', fontSize: 14, lineHeight: 20 },
   retornoAcoes: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: -2 },
   retornoAcoesCompacto: { marginTop: 10 },
+  // A linha do acerto com o "Explique" aberto (item 24): título e "Continuar" lado a lado, 48 + 8 de cada lado = 64.
+  painelLinha: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 48 },
+  painelLinhaTexto: { flex: 1, minWidth: 0 },
+  retornoTituloLinha: { fontFamily: fontes.corpo, fontWeight: '800', fontSize: 16, lineHeight: 22, letterSpacing: 0, color: cores.sucesso },
+  retornoAcoesLinha: { marginTop: 0 },
+  continuarLinha: { minHeight: 48, paddingHorizontal: 4 },
   metade: { flex: 1, minWidth: 0 },
   /** "Tentar de novo" ocupa o que sobra da linha; "Pular por agora" fica do tamanho do rótulo, discreto. */
   acaoTentar: { flex: 1, minWidth: 0 },
