@@ -53,6 +53,11 @@ O menu de desenvolvedor do Expo Go abre sozinho na primeira vez que um projeto c
 
 - **Assinatura do manifesto aquecida.** O Expo Go pede o manifesto com `expo-expect-signature`. No primeiro pedido assim, o Expo CLI grava `~/.expo/codesigning/<projectId>/development-code-signing-settings-2.json` num temporário cujo nome é o hash do conteúdo. Dois pedidos juntos disputam o mesmo temporário, e o segundo recebe 500 (ENOENT no rename). Por isso o passo do Metro faz antes o mesmo pedido, um de cada vez, e cria o arquivo com os padrões se ele ainda faltar. O resumo diz se o aquecimento rodou.
 - **Abertura repetida uma vez.** Se as fases `entrada` ou `entrar` falham antes de a entrada aparecer, o Expo Go é parado e a fase roda de novo uma vez, com ⚠️ no resumo e a primeira tentativa guardada.
+- **Elementos passageiros não decidem o resultado.**
+  - A faixa da geração (fluxo 90) e os avisos de bloqueio e denúncia (61 e 62) duram menos que uma leitura da tela pelo driver do iPhone, cerca de 10 s neste runner. A captura vem logo depois do toque, a leitura do texto fica opcional (aparece como WARNED no registro), e o fluxo segue pelo estado final.
+  - A IA falsa espera 1,5 s entre os eventos da geração ao vivo (`STUDOO_IA_FALSA_PAUSA_MS`, só no fluxo 90).
+- **Erro da abertura.** Se a abertura cai em "Não foi possível continuar" (`tentar-sessao`) ou no aviso da lista (`tentar-planos`), `partes/reabrir.yaml` toca uma vez em "Tentar novamente".
+- **Lista das telas do Android.** A lista das telas uma a uma vem pelo descritor 3 e aparece impressa no log; os `adb` do laço não leem a entrada padrão.
 - **E-mail conferido no fluxo 2.** O fluxo espera o teclado antes de digitar e, se o e-mail não ficou no campo, digita de novo uma vez, com ⚠️ no resumo.
 
 ## Android

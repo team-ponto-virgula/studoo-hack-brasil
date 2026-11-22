@@ -168,7 +168,11 @@ servidor() {
         echo "STUDOO_COMPARTILHAR=1"
         echo "STUDOO_COMUNIDADE=1"
         echo "STUDOO_COMUNIDADE_DEMO=1"
-        echo "STUDOO_IA_FALSA_PAUSA_MS=0"
+        # A pausa entre os eventos da IA falsa só vale na geração ao vivo (src/servidor/ia/falsa.ts: `aoVivo ? pausa : 0`),
+        # que só a prova da criação (fluxo 90) usa; o preparo dos dados pede a proposta de uma vez (aoVivo: false). Com 0, a
+        # trilha de frações (10 eventos) ficava pronta antes de o driver do iPhone ler a tela (~10 s por leitura na execução
+        # 45071340280) e a faixa da geração nunca era vista; com 1500, a geração dura uns 15 s.
+        echo "STUDOO_IA_FALSA_PAUSA_MS=1500"
         echo "IA=falsa"
         echo "EMAIL=falso"
       } > .env
@@ -606,7 +610,15 @@ fluxo_telas_uma_por_vez() {
     resumo "Só as telas pedidas: $pedidas (sem a prova da criação; as capturas das outras vão aparecer como faltando)."
   fi
 
-  while IFS= read -r fluxo; do
+  # A lista vem pelo descritor 3, que nada dentro do laço lê. Pela entrada padrão, o `adb shell` de aparelho_responde e o
+  # `adb exec-out` da captura no fim de cada fase repassavam o resto da lista ao aparelho: depois do primeiro fluxo, o
+  # `read` não achava mais nada (execuções 45064765725 e 45071340280, Android: "Telas: 1 fluxo(s)", mesmo com o Maestro
+  # já em `< /dev/null`).
+  local lista
+  lista="$(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
+    "$PASTA_DOS_FLUXOS/telas/config.yaml")"
+  echo "Fluxos das telas, um por vez ($(printf '%s\n' "$lista" | grep -c .)): $(printf '%s' "$lista" | tr '\n' ' ')"
+  while IFS= read -r fluxo <&3; do
     if [ -n "$pedidas" ] && ! printf ' %s ' "$pedidas" | grep -qF " $fluxo "; then continue; fi
     if [ -n "$caiu" ]; then
       naorodaram="$naorodaram $fluxo"
@@ -632,8 +644,7 @@ fluxo_telas_uma_por_vez() {
       falhas="$falhas$(node "$AQUI/servidor/falhas-do-relatorio.mjs" "$REGISTROS/maestro-telas-$fluxo.xml" 2> /dev/null || echo "- \`$fluxo\`: sem relatório do Maestro (código $codigo)")
 "
     fi
-  done < <(awk '/flowsOrder:/ { dentro = 1; next } dentro && /^ *- / { sub(/^ *- */, ""); sub(/ *#.*/, ""); print }' \
-    "$PASTA_DOS_FLUXOS/telas/config.yaml")
+  done 3< <(printf '%s\n' "$lista")
 
   # A criação por último (Android): com o aparelho de pé, religando se preciso.
   if [ -z "$pedidas" ] && [ "${CRIACAO_DEPOIS_DAS_TELAS:-}" = "1" ]; then

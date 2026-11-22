@@ -31,7 +31,7 @@ capturar_tela_do_aparelho() {
   local id
   id="$(dispositivo)"
   [ -n "$id" ] || return 0
-  adb -s "$id" exec-out screencap -p > "$1" 2> /dev/null || true
+  adb -s "$id" exec-out screencap -p > "$1" 2> /dev/null < /dev/null || true
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -150,7 +150,7 @@ aparelho_responde() {
   local tentativa id
   for tentativa in 1 2 3 4 5 6; do
     id="$(dispositivo)"
-    if [ -n "$id" ] && [ "$(timeout 20 adb -s "$id" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = "1" ]; then
+    if [ -n "$id" ] && [ "$(timeout 20 adb -s "$id" shell getprop sys.boot_completed 2> /dev/null < /dev/null | tr -d '\r')" = "1" ]; then
       return 0
     fi
     sleep 10
@@ -269,7 +269,7 @@ reviver_aparelho() {
   fim=$(( $(date +%s) + 360 ))
   while [ "$(date +%s)" -lt "$fim" ]; do
     id="$(dispositivo)"
-    if [ -n "$id" ] && [ "$(timeout 20 adb -s "$id" shell getprop sys.boot_completed 2> /dev/null | tr -d '\r')" = "1" ]; then
+    if [ -n "$id" ] && [ "$(timeout 20 adb -s "$id" shell getprop sys.boot_completed 2> /dev/null < /dev/null | tr -d '\r')" = "1" ]; then
       preparar_aparelho "$id"
       echo "$(date -u +%H:%M:%S) emulador de volta ($id)" >> "$REGISTROS/carga-da-maquina.log"
       return 0
