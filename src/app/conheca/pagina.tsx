@@ -120,12 +120,14 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
           </Momentos>
         </section>
 
-        <section className="cn-secao cn-s3" aria-labelledby="cn-titulo-s3" data-revelar>
-          <div className="cn-s3__stu" aria-hidden="true">
-            <Mascote expressao="stu-curioso" tamanho={96} decorativo />
+        <section className="cn-secao cn-s3" aria-labelledby="cn-titulo-s3">
+          <div className="cn-s3__cabeca" data-revelar>
+            <div className="cn-s3__stu" aria-hidden="true">
+              <Mascote expressao="stu-curioso" tamanho={96} decorativo />
+            </div>
+            <h2 id="cn-titulo-s3" className="cn-secao__titulo">{textos.s3.titulo}</h2>
+            <p className="cn-secao__linha">{textos.s3.linha}</p>
           </div>
-          <h2 id="cn-titulo-s3" className="cn-secao__titulo">{textos.s3.titulo}</h2>
-          <p className="cn-secao__linha">{textos.s3.linha}</p>
           <Fichas visitanteAtivo={visitante} comSessao={comSessao} />
         </section>
 

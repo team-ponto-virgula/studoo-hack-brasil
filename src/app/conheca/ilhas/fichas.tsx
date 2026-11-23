@@ -1,50 +1,23 @@
-'use client';
-
-import { useEffect, useRef } from 'react';
 import { Desenho } from '../../../ui/mundo';
 import { textos } from '../textos';
 import { BotaoVisitante } from './visitante';
 import { IDEIAS_DO_S3, iconeDaIdeia } from '../ideias';
 
 /**
- * As seis ideias da tela inicial em fichas (spec 18, S3). Tocar numa ficha começa a sessão de visitante já com aquela ideia no campo (quem já tem sessão abre o app com a ideia, sem criar outra).
- * Com movimento permitido, a fileira corre devagar para a esquerda (40 s por volta, linear) e para com o ponteiro em cima, com foco ou
- * com toque; sem movimento, ou sem JavaScript, as fichas ficam em grade, quebrando linha. A lista está UMA vez no código que o
- * leitor de tela lê: o desenho do laço só acrescenta, no navegador, uma cópia escondida (aria-hidden e inerte) para a volta não ter emenda.
+ * As seis ideias da tela inicial (spec 18, S3 e seção 10): uma grade que quebra linha, com todas à vista. Tocar numa ficha começa a sessão de visitante já com aquela ideia no campo
+ * (quem já tem sessão abre o app com a ideia, sem criar outra). Elas entram uma a uma, uma vez, quando a lista chega à tela (60 ms entre elas, 300 ms cada, subindo 8 px: o CSS faz,
+ * só com movimento permitido); sem movimento, ou sem JavaScript, estão todas à vista desde o começo. Não há fileira em laço: nada se mexe sozinho, então a WCAG 2.2.2 não pede botão de pausa.
  */
 export function Fichas({ visitanteAtivo, comSessao }: { visitanteAtivo: boolean; comSessao: boolean }) {
-  const trilho = useRef<HTMLUListElement>(null);
-  useEffect(() => {
-    const lista = trilho.current;
-    if (!lista || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const copia = lista.cloneNode(true) as HTMLUListElement;
-    copia.removeAttribute('id');
-    copia.setAttribute('aria-hidden', 'true');
-    copia.setAttribute('inert', '');
-    copia.classList.add('cn-fichas__copia');
-    for (const botao of Array.from(copia.querySelectorAll('button, a'))) botao.setAttribute('tabindex', '-1');
-    lista.parentElement?.appendChild(copia);
-    lista.closest<HTMLElement>('.cn-fichas')?.setAttribute('data-correndo', 'true');
-    return () => { copia.remove(); lista.closest<HTMLElement>('.cn-fichas')?.removeAttribute('data-correndo'); };
-  }, []);
-
   return (
     <div className="cn-fichas">
-      <div className="cn-fichas__pista">
-        <ul ref={trilho} className="cn-fichas__lista" aria-label={textos.s3.lista}>
-          {IDEIAS_DO_S3.map((ideia) => (
-            <li key={ideia} className="cn-ficha-item">
-              <FichaDeIdeia ideia={ideia} ativo={visitanteAtivo} comSessao={comSessao} />
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ul className="cn-fichas__lista" aria-label={textos.s3.lista} data-revelar-itens>
+        {IDEIAS_DO_S3.map((ideia) => (
+          <li key={ideia} className="cn-ficha-item">
+            <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="secundario" className="cn-ficha" ideia={ideia} rotulo={ideia} icone={<Desenho nome={iconeDaIdeia(ideia)} />} />
+          </li>
+        ))}
+      </ul>
     </div>
-  );
-}
-
-function FichaDeIdeia({ ideia, ativo, comSessao }: { ideia: (typeof IDEIAS_DO_S3)[number]; ativo: boolean; comSessao: boolean }) {
-  return (
-    <BotaoVisitante ativo={ativo} comSessao={comSessao} variante="secundario" className="cn-ficha" ideia={ideia} rotulo={ideia} icone={<Desenho nome={iconeDaIdeia(ideia)} />} />
   );
 }

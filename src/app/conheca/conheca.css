@@ -302,11 +302,11 @@
 
 /* ---------- S3: as fichas de ideias ---------- */
 .cn-s3 { display: grid; justify-items: center; text-align: center; }
+.cn-s3__cabeca { display: grid; justify-items: center; }
 .cn-s3 .cn-secao__linha { margin-inline: auto; }
 .cn-s3__stu { width: 96px; min-height: 96px; margin-bottom: 8px; }
 .cn-s3 .cn-fichas { width: 100%; }
 .cn-fichas { margin-top: 28px; }
-.cn-fichas__pista { display: block; }
 .cn-fichas__lista { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .cn-ficha-item { display: block; }
 .cn-ficha.botao {
@@ -325,18 +325,15 @@
 }
 .cn-ficha .mundo-desenho { width: 28px; height: 28px; flex: none; }
 @media (prefers-reduced-motion: no-preference) {
-  /* Com movimento permitido, a fileira já nasce numa linha só, do servidor (sem salto de altura quando o laço começa); sem JavaScript ela rola de lado com o dedo. */
-  .cn-fichas { margin-inline: calc(-1 * var(--cn-margem)); -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%); }
-  .cn-fichas__pista { display: flex; width: 100%; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; padding: 6px var(--cn-margem); }
-  .cn-fichas__pista::-webkit-scrollbar { display: none; }
-  .cn-fichas__lista { flex-wrap: nowrap; justify-content: flex-start; padding-right: 12px; flex: none; }
-  .cn-fichas[data-correndo] { overflow: hidden; }
-  .cn-fichas[data-correndo] .cn-fichas__pista { width: max-content; overflow: visible; padding-inline: 0; animation: cn-correr 40s linear infinite; }
-  .cn-fichas[data-correndo]:hover .cn-fichas__pista,
-  .cn-fichas[data-correndo]:focus-within .cn-fichas__pista,
-  .cn-fichas[data-correndo]:active .cn-fichas__pista { animation-play-state: paused; }
+  /* As seis entram uma a uma, uma vez, quando a lista chega à tela (a ilha Revelar põe data-oculto e depois data-revelado): 300 ms cada, 60 ms entre elas, subindo 8 px. Só `opacity` e `transform`. */
+  .cn-ficha-item { transition: opacity 300ms ease-out, transform 300ms ease-out; }
+  .cn-ficha-item:nth-child(2) { transition-delay: 60ms; }
+  .cn-ficha-item:nth-child(3) { transition-delay: 120ms; }
+  .cn-ficha-item:nth-child(4) { transition-delay: 180ms; }
+  .cn-ficha-item:nth-child(5) { transition-delay: 240ms; }
+  .cn-ficha-item:nth-child(6) { transition-delay: 300ms; }
+  [data-revelar-itens][data-oculto]:not([data-revelado]) > .cn-ficha-item { opacity: 0; transform: translateY(8px); }
 }
-@keyframes cn-correr { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
 /* ---------- S4: instale em 3 passos ---------- */
 .cn-s4 { scroll-margin-top: 16px; }

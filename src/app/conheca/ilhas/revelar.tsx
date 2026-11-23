@@ -5,12 +5,13 @@ import { useEffect } from 'react';
 /**
  * A entrada de cada seção (spec 18, seção 4): com 20% da seção na tela, uma vez, 400 ms, sumir e aparecer subindo 16 px. Só esconde o
  * que ainda está fora da janela quando a página abre: o que já está à vista nunca pisca, e sem JavaScript ou com movimento reduzido
- * tudo já está à vista. Só mexe em opacidade e posição: nenhum salto de layout.
+ * tudo já está à vista. Só mexe em opacidade e posição: nenhum salto de layout. `data-revelar-itens` marca uma lista cujos itens entram um a um (as fichas do S3): a ilha põe
+ * `data-oculto` e depois `data-revelado` nela, e o CSS anima os filhos, não a lista.
  */
 export function Revelar() {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const alvos = Array.from(document.querySelectorAll<HTMLElement>('[data-revelar]'));
+    const alvos = Array.from(document.querySelectorAll<HTMLElement>('[data-revelar], [data-revelar-itens]'));
     const altura = window.innerHeight;
     const observador = new IntersectionObserver((entradas) => {
       for (const entrada of entradas) {

@@ -320,7 +320,7 @@ test('as molduras seguem a plataforma da captura: ilha no iPhone, ponto de câme
   assert.doesNotMatch(ler('src/app/conheca/celular.tsx'), /\d\d:\d\d|relogio|hora/i, 'o relógio que aparece é o da captura');
 });
 
-test('S3: as seis ideias da tela inicial aparecem UMA vez no código (o laço copia no navegador), com o ícone da área de origem', () => {
+test('S3: as seis ideias da tela inicial estão UMA vez no código, em grade que quebra linha com todas à vista, com o ícone da área de origem e sem fileira em laço', () => {
   const html = desenhar({ aparelho: 'android' });
   assert.deepEqual([...IDEIAS_DO_S3], [...mensagens.pedido.temas[0].exemplos], 'as mesmas seis, na ordem do app');
   for (const ideia of IDEIAS_DO_S3) assert.equal(html.split(`>${ideia}</button>`).length - 1, 1, ideia);
@@ -328,10 +328,34 @@ test('S3: as seis ideias da tela inicial aparecem UMA vez no código (o laço co
     const origem = mensagens.pedido.temas.find((tema) => tema.id !== 'populares' && tema.exemplos.includes(ideia));
     assert.equal(iconeDaIdeia(ideia), iconesDosTemas[origem?.id ?? 'populares'], `ícone de "${ideia}"`);
   }
-  assert.doesNotMatch(html, /cn-fichas__copia|aria-hidden="true" inert/);
+  // Uma lista só, com o nome para o leitor de tela e a marca da entrada uma a uma; nada de cópia escondida nem de fileira que corre.
+  const lista = html.match(/<ul class="cn-fichas__lista"[^>]*>([\s\S]*?)<\/ul>/);
+  assert.ok(lista, 'a lista de fichas');
+  assert.match(html, /<ul class="cn-fichas__lista" aria-label="[^"]+" data-revelar-itens="true">/);
+  assert.equal((lista[1].match(/<li class="cn-ficha-item">/g) ?? []).length, 6);
+  assert.equal((html.match(/cn-fichas__lista/g) ?? []).length, 1);
+  assert.doesNotMatch(html, /cn-fichas__copia|aria-hidden="true" inert|data-correndo|cn-fichas__pista/);
   const fichas = ler('src/app/conheca/ilhas/fichas.tsx');
-  assert.match(fichas, /copia\.setAttribute\('aria-hidden', 'true'\);\n    copia\.setAttribute\('inert', ''\);/, 'a cópia do laço é escondida do leitor de tela e inerte');
-  assert.match(fichas, /prefers-reduced-motion: reduce/);
+  assert.doesNotMatch(fichas, /use client|useEffect|cloneNode|setAttribute\('inert'/, 'a lista é de servidor: não copia nada no navegador');
+  const css = ler('src/app/conheca/conheca.css');
+  assert.doesNotMatch(css, /cn-correr|data-correndo|cn-fichas__pista|cn-fichas__copia/, 'sem a fileira em laço');
+  assert.match(css, /\.cn-fichas__lista \{ display: flex; flex-wrap: wrap; justify-content: center; gap: 12px;/, 'grade que quebra linha');
+});
+
+test('S3: as fichas entram uma a uma, uma vez (300 ms cada, 60 ms entre elas, subindo 8 px), só com movimento permitido; sem movimento, todas à vista', () => {
+  const css = ler('src/app/conheca/conheca.css');
+  const abertura = css.indexOf('@media (prefers-reduced-motion: no-preference) {\n  /* As seis entram uma a uma');
+  assert.ok(abertura > 0, 'a entrada das fichas vive dentro do bloco com movimento permitido');
+  const bloco = css.slice(abertura, css.indexOf('/* ---------- S4', abertura));
+  assert.match(bloco, /\.cn-ficha-item \{ transition: opacity 300ms ease-out, transform 300ms ease-out; \}/);
+  const atrasos = [...bloco.matchAll(/\.cn-ficha-item:nth-child\((\d)\) \{ transition-delay: (\d+)ms; \}/g)].map((m) => [Number(m[1]), Number(m[2])]);
+  assert.deepEqual(atrasos, [[2, 60], [3, 120], [4, 180], [5, 240], [6, 300]], '60 ms entre uma e outra');
+  assert.match(bloco, /\[data-revelar-itens\]\[data-oculto\]:not\(\[data-revelado\]\) > \.cn-ficha-item \{ opacity: 0; transform: translateY\(8px\); \}/);
+  // A ilha que revela cuida das duas marcas, e a lista das fichas não tem entrada própria da seção inteira.
+  assert.match(ler('src/app/conheca/ilhas/revelar.tsx'), /querySelectorAll<HTMLElement>\('\[data-revelar\], \[data-revelar-itens\]'\)/);
+  const html = desenhar({ aparelho: 'android' });
+  assert.match(html, /<div class="cn-s3__cabeca" data-revelar="true">/, 'o Stu, o título e a linha entram com a seção; as fichas, uma a uma');
+  assert.doesNotMatch(html, /<section class="cn-secao cn-s3"[^>]*data-revelar/);
 });
 
 test('S4: grupo de abas acessível com Android e iPhone, e os textos dos passos da spec', () => {
@@ -442,11 +466,10 @@ test('animações só dentro de prefers-reduced-motion: no-preference (com a par
   const semMovimento = sobra.split('\n').filter((linha) => /\banimation\b\s*:|\btransition\b\s*:/.test(linha) && !/^\s*\*|^\s*\/\*/.test(linha));
   // Fora do bloco "com movimento" só valem: o desligamento (animation: none / transition: none) e a troca de cor do ponto, que não é movimento.
   for (const linha of semMovimento) assert.match(linha, /animation: none|transition: none|transition: background-color 200ms linear/, linha.trim());
-  // As animações da página: o laço do herói, a entrada das seções, o pulso do selo, o correr das fichas.
-  for (const nome of ['cn-entrar', 'cn-pulso', 'cn-correr']) assert.match(css, new RegExp(`@keyframes ${nome}`));
+  // As animações da página: o laço do herói, a entrada das seções e o pulso do selo (as fichas entram por transição, uma a uma, e não correm).
+  for (const nome of ['cn-entrar', 'cn-pulso']) assert.match(css, new RegExp(`@keyframes ${nome}`));
   assert.match(css, /@media \(prefers-reduced-motion: reduce\) \{\n  \.cn-heroi__celular \.cn-tela \{ opacity: 0 !important; transition: none; \}\n  \.cn-heroi__celular \.cn-tela:nth-child\(2\) \{ opacity: 1 !important; \}/);
   assert.match(css, /cubic-bezier\(0\.2, 0\.8, 0\.2, 1\)/);
-  assert.match(css, /animation: cn-correr 40s linear infinite/, 'as fichas: 40 s por volta, linear, em laço');
   assert.match(css, /\[data-revelar\]\[data-oculto\]:not\(\[data-revelado\]\) \{ opacity: 0; transform: translateY\(16px\); \}/);
   assert.match(css, /transition: opacity 300ms linear/, 'a troca da tela do S2: 300 ms, sumir e aparecer');
 });
@@ -463,5 +486,5 @@ test('as ilhas de movimento respeitam o movimento reduzido e a aba escondida, e 
   const logo = ler('src/app/conheca/ilhas/logo.tsx');
   assert.match(logo, /source media="\(prefers-reduced-motion: reduce\)" srcSet="\/marca\/logo-com-sorriso\.svg"/);
   assert.match(logo, /setTimeout\(\(\) => setParado\(true\), 3200\)/, 'o logo acorda uma vez (um ciclo de 3 s)');
-  assert.match(ler('src/app/globals.css'), /html\[data-pausado='true'\] \*/, 'a aba escondida pausa toda animação CSS do site, inclusive a das fichas');
+  assert.match(ler('src/app/globals.css'), /html\[data-pausado='true'\] \*/, 'a aba escondida pausa toda animação CSS do site');
 });
