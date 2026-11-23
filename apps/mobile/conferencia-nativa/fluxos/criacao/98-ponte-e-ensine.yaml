@@ -101,6 +101,16 @@ name: 98-ponte-e-ensine
 # rolada até o exercício respondido, e o aviso fica sob o cabeçalho preso (execução 45053145066: recomecar-licao em
 # y 74–117 e o titulo-topo em y 97–113; o toque caiu no cabeçalho e a confirmação nunca apareceu). Antes do toque, a lição
 # volta ao topo; se a confirmação não vier, o toque se repete uma vez.
+# No Android a árvore só tem o que está na tela: com a lição rolada até o exercício já acertado no 95, o aviso ficava
+# acima, a condição abaixo não o via, o recomeço não acontecia e o fluxo tocava numa opção travada, sem "Enviar"
+# (execuções 45087664838 e 45089424008: "Isso aí!" com Continuar, enviar-resposta não achado). Antes, a lição sobe até o
+# aviso; sem aviso (lição do começo), a rolagem só não acha nada.
+- scrollUntilVisible:
+    element:
+      id: recomecar-licao
+    direction: UP
+    timeout: 15000
+    optional: true
 - runFlow:
     when:
       visible:
