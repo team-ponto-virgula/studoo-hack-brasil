@@ -43,6 +43,47 @@ export function quemDesce<T>(indiceDoCabecalho: number, seguintes: readonly (T |
   return rolagem < TOPO_DA_PAGINA ? principal : null;
 }
 
+/** A marca da tela do app: o cabeçalho do app leva `data-tela` (planos, objetivo, plano, licao, perfil, explorar…), mesmo quando a faixa dele está escondida. */
+export const MARCA_DA_TELA = '.estudo-cabecalho[data-tela]';
+
+/** A "tela" do app web, para saber quando a pessoa trocou de tela: o endereço e a marca `data-tela` (mapa, lição, perfil, nova trilha…). Mudar de etapa dentro da lição não troca de tela. */
+export function chaveDaTela(caminho: string, tela: string | null): string {
+  return `${caminho}|${tela ?? ''}`;
+}
+
+/**
+ * O espaço reservado para o aviso (spec 16, item 14, regra da saída). Ao entrar, o conteúdo desce. Ao sair (7 s, "Desligar" ou o balão do nó) o aviso some, mas o espaço continua até a pessoa trocar de tela:
+ * um salto de 56 px para cima, 7 s depois, mudaria de lugar o botão que ela ia tocar. Na tela seguinte o espaço não existe mais. Sem DOM aqui: quem usa diz como marcar, soltar e saber se o elemento ainda está na página.
+ */
+export function criarEspacoDoAviso<T>(como: { marcar(elemento: T, px: number): void; soltar(elemento: T): void; vivo(elemento: T): boolean }) {
+  let atual: { elemento: T; tela: string } | null = null;
+  function soltar() {
+    if (!atual) return;
+    como.soltar(atual.elemento);
+    atual = null;
+  }
+  return {
+    /**
+     * O aviso está à vista: o espaço vai para `elemento`, com `px` de altura, na tela `tela`. Trocar de elemento solta o anterior na hora. Sem elemento (a página rolou e o cabeçalho saiu da janela), o que já
+     * estava reservado fica: o espaço só sai pela troca de tela, nunca pela rolagem.
+     */
+    reservar(elemento: T | null, px: number, tela: string) {
+      if (!elemento) return;
+      if (atual && atual.elemento !== elemento) soltar();
+      como.marcar(elemento, px);
+      atual = { elemento, tela };
+    },
+    /** Com o aviso fora de cena: se a pessoa trocou de tela, ou o elemento saiu da página, o espaço sai na hora. Na mesma tela, nada se mexe. */
+    conferir(tela: string) {
+      if (atual && (atual.tela !== tela || !como.vivo(atual.elemento))) soltar();
+    },
+    /** Quem está com o espaço agora (ninguém, depois de soltar). */
+    elemento(): T | null {
+      return atual?.elemento ?? null;
+    },
+  };
+}
+
 /** O lugar do aviso: 8 px abaixo do cabeçalho, centrado nele, com a largura dele no máximo. Sem cabeçalho (os estilos do CSS valem): no alto, 8 px da borda. */
 export function lugarDoAviso(cabecalho: Retangulo | null, larguraDaJanela: number): { top: string; left: string; maxWidth: string } {
   if (!cabecalho) return { top: '', left: '', maxWidth: '' };
