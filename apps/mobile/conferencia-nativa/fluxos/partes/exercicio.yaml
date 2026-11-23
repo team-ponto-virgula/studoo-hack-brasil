@@ -24,8 +24,21 @@ appId: host.exp.Exponent
     direction: DOWN
     timeout: 240000
     speed: 50
+    waitToSettleTimeoutMs: 500
+# Centralizar em um passo à parte, curto e opcional. Na execução 45124630286 (Android, fluxo 30) o cartão era o ÚLTIMO da
+# lista ("Culinária: receitas básicas"): achado em y 1272, a centralização o trouxe a 1116 e a lista acabou ali; o Maestro
+# continuou tentando centralizar com o cartão parado até estourar os 240 s e terminou em "No visible element found", com
+# o cartão à vista. No fim da lista o cartão já fica acima da barra de baixo (a folga do fim da rolagem), então a
+# centralização que não anda só gasta os 45 s e segue (no emulador cada arrasto leva de 13 a 20 s).
+- scrollUntilVisible:
+    element:
+      text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+    direction: DOWN
+    timeout: 45000
+    speed: 50
     centerElement: true
     waitToSettleTimeoutMs: 500
+    optional: true
 # A barra de baixo flutua por cima do conteúdo (iOS 26 e Android): a rolagem acima centraliza o botão, que fica longe
 # da barra e da barra de status. Sem arrasto fixo depois: na execução 45113443824 (iPhone) a centralização já tinha
 # levado o botão de y 678 a 138, e o arrasto de 15% o subiu até y 18–70, sob a barra de status; o toque ali rolou a lista
@@ -35,7 +48,7 @@ appId: host.exp.Exponent
     waitToSettleTimeoutMs: 1500
     text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
 # Pelo estado: se a lista continuar na tela, sem o mapa, o botão é procurado de novo (para baixo e, se ele tiver subido
-# demais, para cima), centralizado, e tocado mais uma vez.
+# demais, para cima), centralizado num passo curto e opcional, e tocado mais uma vez.
 - extendedWaitUntil:
     visible:
       id: titulo-plano
@@ -52,9 +65,8 @@ appId: host.exp.Exponent
           element:
             text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
           direction: DOWN
-          timeout: 120000
+          timeout: 60000
           speed: 50
-          centerElement: true
           waitToSettleTimeoutMs: 500
           optional: true
       - scrollUntilVisible:
@@ -62,6 +74,14 @@ appId: host.exp.Exponent
             text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
           direction: UP
           timeout: 60000
+          speed: 50
+          waitToSettleTimeoutMs: 500
+          optional: true
+      - scrollUntilVisible:
+          element:
+            text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+          direction: DOWN
+          timeout: 45000
           speed: 50
           centerElement: true
           waitToSettleTimeoutMs: 500
