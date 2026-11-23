@@ -48,7 +48,9 @@ test('o toque: o mesmo botão vira "Criando sua trilha…" (afundado, com o giro
   assert.match(geracao, /duration: RITMO_DA_GERACAO\.ajustarSaiMs/);
   // A espera real: a linha só depois de 1,5 s sem resposta.
   assert.match(geracao, /setTimeout\(\(\) => setEsperaReal\(true\), RITMO_DA_GERACAO\.esperaRealMs\)/);
-  assert.match(geracao, /testID="criacao-espera"[^>]*>\{mensagens\.geracao\.escrevendoLicoes\}/);
+  // A linha da espera (spec 17, revisão 04fe621): "Escrevendo suas lições…" e depois as frases (tests/onboarding-mobile.test.mjs).
+  assert.match(geracao, /const espera = criacao === 'criando' && esperaReal && <LinhaDaEspera reduzir=\{reduzir\} \/>;/);
+  assert.match(estudo, /<Animated\.Text testID="criacao-espera"/);
   // O botão: o giro de 16 px e uma linha só.
   const interface_ = ler('interface.tsx');
   assert.match(interface_, /\{giro && <Giro cor=\{corTexto\} \/>\}/);
@@ -116,10 +118,10 @@ test('a prévia é rascunho e diz só o que é verdade: sem confete, dicas, "Mai
   assert.match(caminho, /rascunho=\{rascunho && no\.estado === 'previa' && !firmar\}/);
   assert.doesNotMatch(caminho, /maisUma|estrelinha|comMaisUma/);
   const placa = trecho(estudo, 'function PlacaDaGeracao(', '\n}\n');
-  // Spec 17, mudança 1: depois de 3 s, a placa revê as frases do contrato (geracao.dicas, verdadeiras, sem número); a espera
-  // longa e a proposta continuam como antes. Sem relógio fixo (setInterval): ela acorda só na próxima troca.
-  assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao\n\s*: indice === null \? mensagens\.geracao\.montandoTitulo : dicas\[indice\]/);
-  assert.doesNotMatch(placa, /placaProntaTexto|setInterval/);
+  // Spec 17 (revisão 04fe621): a placa da geração volta a não ter frases (a proposta fica pronta em ~3 s); as frases ficam
+  // na linha embaixo do botão, na espera depois de "Começar a lição 1" (tests/onboarding-mobile.test.mjs).
+  assert.match(placa, /pronta \? mensagens\.geracao\.propostaPronta\(licoes, partes\) : esperaLonga \? mensagens\.geracao\.aguardandoLicao : mensagens\.geracao\.montandoTitulo/);
+  assert.doesNotMatch(placa, /dicas|placaProntaTexto|setInterval/);
   const semComentarios = geracao.replace(/\{\/\*[\s\S]*?\*\/\}|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, '');
   assert.doesNotMatch(semComentarios, /contagem|contados|faixaGerando|dicas=|anuncioFim/);
   assert.match(geracao, /festaPermitida=\{false\} trofeuDoZero rascunho/);
