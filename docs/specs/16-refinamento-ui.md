@@ -149,6 +149,8 @@ Os quatro momentos da demo ficam para o lote 3, com as capturas do Mobile & QA.
   - na tela seguinte, o espaço não existe mais;
   - como o aviso aparece uma vez por aparelho, o vão vazio aparece no máximo uma vez.
   - Não troquei por "aviso menor" nem por "só sobre área vazia": o menor continuaria cobrindo o título em 768, e a área vazia muda de lugar a cada tela.
+  - **Etapas da lição** (conferido em `84eda5d`): avançar de etapa conta como troca de contexto, e a etapa nova vem sem o vão. O toque em "Avançar" troca o conteúdo inteiro, então não há botão que mude de lugar debaixo do dedo. Não precisa religar o espaço ao miolo novo.
+  - **Mapa a partir de 768**, aberto já rolado até o nó, sem cabeçalho à vista: nada é reservado. O aviso fica sobre o céu do mapa, longe do nó e do balão. Está certo.
 - **Onde:** as três plataformas.
 
 **15. Dois cabeçalhos empilhados no mapa da web em 390** (web `explorar-1`)
