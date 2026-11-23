@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ErroStudoo,
   estadoDoCompartilhamento,
@@ -256,13 +256,11 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
       } else {
         const inicial = planoInicial(ativos);
         if (inicial) {
-          try {
-            const plano = await cliente.obterPlano(inicial.id);
-            if (cancelado()) return;
-            setTela({ tipo: 'plano', plano });
-          } catch {
-            // Sem o detalhe do plano, a pessoa cai em Meus planos e escolhe de lá.
-          }
+          // Sem o detalhe da trilha (servidor lento ou fora do ar), a falha não é engolida: antes, a pessoa ficava em "Minhas trilhas" sem erro nem botão. Ela cai no catch
+          // de baixo, que leva ao login se a sessão venceu e, nos outros casos, mostra o cartão de erro com "Tentar novamente" (busca a lista e abre a trilha de novo).
+          const plano = await cliente.obterPlano(inicial.id);
+          if (cancelado()) return;
+          setTela({ tipo: 'plano', plano });
         }
       }
       setInicio('pronto');
@@ -672,7 +670,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
         <div className="barra-marca"><Logo /></div>
         <nav className="navegacao" aria-label={mensagens.navegacao}>
           <Botao variante="texto" className="navegacao-item" onClick={() => navegar({ tipo: 'planos' })} disabled={ocupado} aria-current={tela.tipo === 'planos' ? 'page' : undefined}>
-            {mensagens.planos.titulo}
+            <Icone nome="livro" />{mensagens.planos.titulo}
           </Botao>
           {planos.length > 0 && <ul className="navegacao-planos">
             {planos.slice(0, 5).map((plano) => (
@@ -683,8 +681,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               </li>
             ))}
           </ul>}
-          <Botao variante="secundario" className="navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
-            <span aria-hidden="true">+</span> {mensagens.planos.novo}
+          <Botao variante="texto" className="navegacao-item navegacao-novo" aria-current={abaNovaTrilha ? 'page' : undefined} onClick={() => navegar({ tipo: 'objetivo' })} disabled={ocupado}>
+            <Icone nome="lampada" />{mensagens.planos.novo}
           </Botao>
           {comunidade && (
             <Botao variante="texto" className="navegacao-item navegacao-explorar" onClick={() => navegar({ tipo: 'explorar' })} disabled={ocupado} aria-current={tela.tipo === 'explorar' ? 'page' : undefined}>
@@ -696,10 +694,10 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
           <Botao variante="texto" onClick={() => navegar({ tipo: 'apresentacao', primeiraVez: false })} disabled={ocupado}>
             {mensagens.pedido.comoFunciona}
           </Botao>
-          <button type="button" className="navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
+          <button type="button" className="navegacao-item navegacao-perfil" disabled={ocupado} aria-current={tela.tipo === 'perfil' ? 'page' : undefined}
             onClick={() => navegar({ tipo: 'perfil' })}>
-            {compartilhar && perfil?.nome ? <Avatar nome={perfil.nome} cor={perfil.cor ?? 'azul'} foto={perfil.foto} /> : <Icone nome="pessoa" />}
-            <span>{(compartilhar && perfil?.nome) || mensagens.perfil.navegacao}</span>
+            <Icone nome="pessoa" />
+            <span>{mensagens.perfil.navegacao}</span>
           </button>
         </div>
       </aside>
@@ -756,7 +754,8 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               </div>
             </section>
           )}
-          {visivel && tela.tipo === 'planos' && planos.length > 0 && (() => {
+          {/* Com a abertura falha (o cartão de erro acima), a lista não aparece junto: o "Tentar novamente" busca tudo de novo. */}
+          {visivel && inicio !== 'falha' && tela.tipo === 'planos' && planos.length > 0 && (() => {
             const destaque = planoInicial(planos);
             const restantes = destaque ? planos.filter((item) => item.id !== destaque.id) : planos;
             return (
@@ -801,6 +800,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
           )}
           {visivel && tela.tipo === 'plano' && (
             <Plano tela={tela} ocupado={ocupado} abrindo={abrindo}
+              selo={inicio === 'pronto' ? <SeloSincronia sincronia={sincronia} agora={agora} temProgresso={planos.length > 0} /> : null}
               precarregarLicao={(id) => { void obterLicaoComCache(id).catch(() => undefined); }}
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
               novoPlano={() => navegar({ tipo: 'objetivo' })}
@@ -1154,8 +1154,10 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
-function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar, apagar }: {
+function Plano({ tela, selo, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar, apagar }: {
   tela: TelaPlano;
+  /** O selo de sincronia, que no celular (até 767 px) sai da barra da marca e fica no cabeçalho da trilha (spec 16, item 15). */
+  selo: ReactNode;
   apagar: () => void;
   ocupado: boolean;
   abrindo: string | null;
@@ -1187,7 +1189,11 @@ function Plano({ tela, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano
       {plano.capa && <CapaDaTrilha semente={plano.id} tema={plano.tema ?? null} capa={plano.capa} className="trilha-capa" grande />}
       <header className="trilha-topo" ref={topoDoMapa}>
         <div className="trilha-topo__texto">
-          <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
+          {/* Spec 16, item 15: até 767 px a barra da marca sai do mapa e o selo de sincronia vem para cá, na linha do rótulo (com texto, ele não cabe ao lado do anel); de 768 px em diante ele fica na barra. */}
+          <div className="trilha-topo__linha">
+            <p className="trilha-topo__rotulo">{mensagens.trilha.suaTrilha}</p>
+            {selo && <div className="trilha-topo__selo">{selo}</div>}
+          </div>
           <h1 tabIndex={-1}>{plano.titulo}</h1>
           {/* Sem o nome de quem compartilhou (conta excluída, link parado) não há "Esta trilha é de …": a linha some, e só sobra o link original, se ainda existir. */}
           {plano.recebida && (recebidaTemNome(plano.recebida) || plano.recebida.codigoAtivo) ? (

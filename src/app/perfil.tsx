@@ -35,7 +35,7 @@ import { Avatar, DialogoConfirmar, FolhaCompartilhar, codigoDoErro, dataCurta, p
 import { CartoesDoPerfil, useAvisoDoApp } from './comunidade';
 import { FolhaCompartilharPerfil } from './codigo';
 import { BotaoSeguir, NovidadesDoPerfil } from './seguir';
-import { SecaoPrivacidade } from './privacidade-perfil';
+import { BotaoExcluirConta, SecaoPrivacidade } from './privacidade-perfil';
 import { usePostarNoPerfil } from './postar-no-perfil';
 import { BloqueadasPerfil, EstadoModeracao, RegrasDaRecusa, rotuloDoDestino } from './seguranca-comunidade';
 import { SecaoSomPerfil } from './som';
@@ -342,6 +342,7 @@ export function TelaPerfil({ perfil, focoNome, compartilhar, visitante, aoMudarP
         <h2 id="perfil-conta" className="perfil-secao__titulo">{p.conta}</h2>
         {compartilhar && perfil && !visitante && <p className="perfil-conta__email"><span>{p.email}</span> {perfil.email} <span className="selo-so-voce">{p.soVoceVe}</span></p>}
         <Botao variante="secundario" onClick={sair}>{mensagens.sair}</Botao>
+        <BotaoExcluirConta visitante={visitante} />
       </section>
       {folha && (
         <FolhaCompartilhar planoId={folha} visitante={false} comunidade={comunidade} anunciar={anunciar} aoFechar={() => setFolha(null)}

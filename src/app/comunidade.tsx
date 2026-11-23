@@ -75,13 +75,9 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
     <article className="cartao-trilha" aria-labelledby={tituloId} data-situacao={cartao.situacao}>
       <div className="cartao-trilha__capa">
         <CapaTrilha codigo={cartao.codigo} tema={cartao.tema} capa={cartao.capa} />
-        {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{posicao}</span>}
-        {/* O tema sempre inteiro no alto; "Demonstração" embaixo à esquerda; o numeral do Em alta embaixo à direita. */}
+        {/* A capa leva só o selo do tema (no alto, à esquerda) e, no Em alta, a pílula pequena da posição ("1º", no alto, à direita: spec 16, itens 16 e 17). O "Exemplo" mora na linha de informações. */}
+        {posicao !== undefined && <span className="cartao-trilha__posicao" aria-hidden="true">{c.posicaoSelo(posicao)}</span>}
         {cartao.tema && <span className="cartao-trilha__tema">{temas[cartao.tema]}</span>}
-        {cartao.demonstracao && (
-          // O selo neutro "Exemplo" na tela e, para o leitor de tela, o nome inteiro (a palavra solta fica escondida dele, para não repetir).
-          <span className="cartao-trilha__demo"><span aria-hidden="true">{c.demonstracao}</span><span className="somente-leitor">{c.demonstracaoRotulo}</span></span>
-        )}
       </div>
       <div className="cartao-trilha__corpo">
         {posicao !== undefined && <p className="somente-leitor">{c.posicao(posicao)}</p>}
@@ -99,7 +95,13 @@ export function CartaoDeTrilha({ cartao, acoes, posicao, nivel = 'h3', semDono =
         {cartao.legenda && <p className="cartao-trilha__legenda">{cartao.legenda}</p>}
         {/* Contagem e números ancorados logo acima dos botões: as últimas linhas batem na fileira. */}
         <div className="cartao-trilha__rodape">
-          <p className="cartao-trilha__meta">{c.contagem(cartao.totalLicoes, cartao.totalPartes)}</p>
+          <p className="cartao-trilha__meta">
+            {c.contagem(cartao.totalLicoes, cartao.totalPartes)}
+            {cartao.demonstracao && (
+              // "6 lições · 3 partes · Exemplo": o selo neutro na tela e, para o leitor de tela, o nome inteiro (a palavra solta fica escondida dele, para não repetir).
+              <> <span aria-hidden="true">·</span>{' '}<span className="cartao-trilha__demo"><span aria-hidden="true">{c.demonstracao}</span><span className="somente-leitor">{c.demonstracaoRotulo}</span></span></>
+            )}
+          </p>
           {cartao.estudando === 0 && cartao.valeus === 0
             ? <p className="cartao-trilha__numeros"><span className="cartao-trilha__nova" aria-label={c.novaRotulo}>{c.nova}</span></p>
             // A contagem de valeus mora no próprio botão (na trilha própria, que não tem o botão, fica aqui).

@@ -50,8 +50,8 @@ test('item 9: o parágrafo que explicava o selo saiu do alto do Explorar, e o se
   assert.doesNotMatch(css, /explorar__demo/);
   const regraDoSelo = css.split('\n').filter((linha) => /^\.cartao-trilha__demo\s*\{/.test(linha));
   assert.equal(regraDoSelo.length, 1);
-  assert.doesNotMatch(regraDoSelo[0], /background|color/, 'o selo "Exemplo" herda o fundo branco e o texto do selo neutro do tema');
-  assert.match(css, /\.cartao-trilha__tema, \.cartao-trilha__demo \{[^}]*background: #fff;[^}]*color: var\(--texto\)/s, 'o selo neutro, comum aos dois');
+  assert.match(regraDoSelo[0], /padding: 0 10px;[^}]*background: var\(--nevoa\); color: var\(--texto2\); font-size: 0\.8125rem; font-weight: 800; line-height: 20px;/, 'o selo "Exemplo" é o neutro da spec 10 (spec 14, linha 63), igual ao do app: fundo #F1F4FD, texto #5E6A85, 13 px 800, 20 de altura, 10 de respiro');
+  assert.doesNotMatch(regraDoSelo[0], /#fff1cc|#fff6ea|#704700|amarel/i, 'nada de amarelo');
 });
 
 test('item 16: a posição no Em alta tem o texto da pílula ("1º") e o do leitor de tela ("1º em alta"), no contrato, para a web e o app', () => {
@@ -62,4 +62,36 @@ test('item 16: a posição no Em alta tem o texto da pílula ("1º") e o do leit
   assert.doesNotMatch(c.posicao(2), /lugar/, 'era "2º lugar"');
   // O leitor de tela da web já usa o texto do contrato na capa do Em alta.
   assert.match(ler('src/app/comunidade.tsx'), /<p className="somente-leitor">\{c\.posicao\(posicao\)\}<\/p>/);
+});
+
+test('item 16: a posição no Em alta é uma pílula pequena no alto à direita da capa ("1º"), não mais o numeral gigante', () => {
+  const html = desenhar(cartaoDe(), { posicao: 1 });
+  const capa = html.slice(html.indexOf('<div class="cartao-trilha__capa">'), html.indexOf('<div class="cartao-trilha__corpo">'));
+  assert.match(capa, /<span class="cartao-trilha__posicao" aria-hidden="true">1º<\/span>/, 'a pílula "1º" na capa, escondida do leitor');
+  assert.match(html, /<p class="somente-leitor">1º em alta<\/p>/, 'o leitor de tela ouve "1º em alta"');
+  assert.doesNotMatch(visivel(html), /\b1\b(?!º)/, 'nenhum "1" solto como numeral');
+  assert.doesNotMatch(desenhar(cartaoDe()), /cartao-trilha__posicao|em alta/, 'fora do Em alta não há pílula nem texto de posição');
+  const css = ler('src/app/comunidade.css');
+  const pilula = css.slice(css.indexOf('.cartao-trilha__posicao {'), css.indexOf('}', css.indexOf('.cartao-trilha__posicao {')));
+  assert.match(pilula, /top: 10px; right: 10px;/, 'no canto superior direito');
+  assert.match(pilula, /height: 24px;/, '24 de altura');
+  assert.match(pilula, /border-radius: 12px;/, 'raio 12');
+  assert.match(pilula, /font-size: 0\.8125rem; font-weight: 800;/, '13 px 800');
+  assert.match(pilula, /color: #0b1b5c;/);
+  assert.match(pilula, /background: #fff;/, 'sobre branco');
+  assert.doesNotMatch(pilula, /(?<![\d.])5rem|text-stroke|bottom:/, 'o numeral gigante (5rem) com contorno saiu');
+  assert.match(css, /\.cartao-trilha__capa:has\(\.cartao-trilha__posicao\) \.cartao-trilha__tema \{ max-width: 72%; \}/, 'o selo do tema deixa a vez da pílula: até 72% da largura da capa, como no app');
+});
+
+test('item 17: a capa leva só o selo do tema; o "Exemplo" vai para a linha de informações ("6 lições · 3 partes · Exemplo"), com o nome inteiro para o leitor de tela', () => {
+  const html = desenhar(cartaoDe());
+  const capa = html.slice(html.indexOf('<div class="cartao-trilha__capa">'), html.indexOf('<div class="cartao-trilha__corpo">'));
+  assert.match(capa, /cartao-trilha__tema/, 'o tema fica na capa');
+  assert.doesNotMatch(capa, /cartao-trilha__demo|Exemplo/, 'o "Exemplo" saiu da capa');
+  const meta = /<p class="cartao-trilha__meta">(.*?)<\/p>/.exec(html)?.[1] ?? '';
+  assert.equal(visivel(`<p>${meta}</p>`).trim(), '6 lições · 3 partes · Exemplo', 'a linha que se vê');
+  assert.match(meta, /<span class="cartao-trilha__demo"><span aria-hidden="true">Exemplo<\/span><span class="somente-leitor">Exemplo criado pelo Studoo para mostrar o app<\/span><\/span>/, 'o leitor ouve o nome inteiro (item 9)');
+  assert.match(meta, /<span aria-hidden="true">·<\/span>/, 'o ponto separador não é lido');
+  // O cartão de verdade, sem conteúdo sintético, fica só com a contagem.
+  assert.equal(visivel(`<p>${/<p class="cartao-trilha__meta">(.*?)<\/p>/.exec(desenhar(cartaoDe({ demonstracao: false })))?.[1]}</p>`).trim(), '6 lições · 3 partes');
 });

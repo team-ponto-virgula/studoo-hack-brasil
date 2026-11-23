@@ -154,7 +154,7 @@
 .trilha-aviso { margin: 8px 0 0; padding: 10px 14px; border-radius: 14px; background: #e3f6ea; color: #14513b; font-weight: 800; }
 
 /* Tela Perfil. */
-.painel--perfil { display: grid; gap: 20px; width: min(100%, 44rem); }
+.painel--perfil { display: grid; gap: 20px; width: min(100%, 680px); }
 .perfil-cartao { display: grid; gap: 12px; padding: 18px; border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); }
 .perfil-cartao__linha { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
 .perfil-cartao__nome { flex: 1 1 8rem; min-width: 0; margin: 0; font-size: 1.25rem; font-weight: 900; overflow-wrap: anywhere; }
@@ -195,14 +195,7 @@
 .perfil-conta__email span { color: var(--texto2); font-size: 0.875rem; font-weight: 800; }
 .painel--perfil > .botao, .perfil-secao > .botao { justify-self: start; }
 
-/* Navegação: cartão do perfil no rodapé da lateral; "Perfil" no cabeçalho só onde não há lateral nem barra de baixo. */
-.navegacao-perfil {
-  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 52px; padding: 8px 10px; border: 2px solid var(--gelo);
-  border-radius: 16px; background: var(--fundo); color: var(--texto); font: inherit; font-weight: 900; text-align: start; cursor: pointer;
-}
-.navegacao-perfil[aria-current] { border-color: var(--acao); color: var(--acao); }
-.navegacao-perfil span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (hover: hover) { .navegacao-perfil:hover:not(:disabled) { background: var(--nevoa); } }
+/* Navegação: "Perfil" no rodapé da lateral, igual aos outros três itens (spec 16, item 18; o estilo único está em globals.css); "Perfil" no cabeçalho só onde não há lateral nem barra de baixo. */
 .perfil-cabecalho { display: none; }
 @media (max-width: 1023px) { .perfil-cabecalho { display: inline-flex; } }
 @media (max-width: 767px) { .estudo[data-navegacao] .perfil-cabecalho { display: none; } }

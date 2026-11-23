@@ -59,8 +59,8 @@ export async function gravarAceiteIa(versao: string): Promise<EstadoPrivacidade>
   return estado;
 }
 
-/** Quem recebe o quê, com o link da política de cada provedor e a do Studoo. Usado na folha e no Perfil. */
-export function ListaProvedores({ estado }: { estado: EstadoPrivacidade }) {
+/** Quem recebe o quê, com o link da política de cada provedor e a do Studoo. Usado na folha e no Perfil; no Perfil a política do Studoo mora só em "Ajuda" (spec 16, item 19), então `semPoliticaDoStudoo` a tira. */
+export function ListaProvedores({ estado, semPoliticaDoStudoo = false }: { estado: EstadoPrivacidade; semPoliticaDoStudoo?: boolean }) {
   return (
     <div className="privacidade-provedores">
       <ul>
@@ -72,7 +72,7 @@ export function ListaProvedores({ estado }: { estado: EstadoPrivacidade }) {
           </li>
         ))}
       </ul>
-      <a href={estado.politica || CAMINHO_POLITICA} target="_blank" rel="noopener">{t.politica}</a>
+      {!semPoliticaDoStudoo && <a href={estado.politica || CAMINHO_POLITICA} target="_blank" rel="noopener">{t.politica}</a>}
     </div>
   );
 }

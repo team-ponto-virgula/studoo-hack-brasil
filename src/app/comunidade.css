@@ -10,14 +10,14 @@
   border: 2px solid var(--gelo); border-radius: var(--raio-bloco); background: var(--fundo); box-shadow: 0 4px 0 var(--gelo);
 }
 .cartao-trilha__capa { position: relative; aspect-ratio: 2 / 1; overflow: hidden; }
-/* O tema sempre inteiro no alto, à esquerda; "Exemplo" (o selo neutro, spec 16 item 9) embaixo, à esquerda; o numeral do Em alta embaixo, à direita. */
-.cartao-trilha__tema, .cartao-trilha__demo {
-  display: inline-block; line-height: 20px; padding: 3px 10px; border-radius: 999px; background: #fff; color: var(--texto);
-  font-size: 0.8125rem; font-weight: 900; box-shadow: 0 2px 6px rgb(15 23 42 / 0.12);
+/* A capa leva só o selo do tema, sempre inteiro no alto, à esquerda (spec 16, item 17); no Em alta, a pílula da posição fica no alto, à direita (item 16), e o tema deixa a vez dela. */
+.cartao-trilha__tema {
+  position: absolute; top: 10px; left: 10px; max-width: calc(100% - 20px); display: inline-block; line-height: 20px; padding: 3px 10px; border-radius: 999px; background: #fff;
+  color: var(--texto); font-size: 0.8125rem; font-weight: 900; box-shadow: 0 2px 6px rgb(15 23 42 / 0.12);
 }
-.cartao-trilha__tema { position: absolute; top: 10px; left: 10px; max-width: calc(100% - 20px); }
-.cartao-trilha__capa .cartao-trilha__demo { position: absolute; bottom: 10px; left: 10px; }
-.cartao-trilha__demo { white-space: nowrap; }
+.cartao-trilha__capa:has(.cartao-trilha__posicao) .cartao-trilha__tema { max-width: 72%; }
+/* "Exemplo" (spec 16, itens 9 e 17) vai para a linha de informações: "6 lições · 3 partes · Exemplo", no selo neutro da spec 10 (spec 14, linha 63): #F1F4FD, texto #5E6A85, 13 px 800, como no app. */
+.cartao-trilha__demo { display: inline-block; padding: 0 10px; border-radius: 999px; background: var(--nevoa); color: var(--texto2); font-size: 0.8125rem; font-weight: 800; line-height: 20px; vertical-align: 1px; white-space: nowrap; }
 .cartao-trilha__corpo { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px 16px; min-width: 0; }
 .cartao-trilha__titulo { margin: 0; font-size: 1.125rem; line-height: 1.3; overflow-wrap: anywhere; }
 /* Em fileira ou grade de várias colunas, o título reserva exatamente duas linhas: o resto do cartão bate com o vizinho. */
@@ -131,11 +131,11 @@
 @container (min-width: 44rem) { .em-alta__item { width: calc((100% - 16px) / 3); } }
 @container (min-width: 60rem) { .em-alta__item { width: calc((100% - 24px) / 4); } }
 .em-alta__item .cartao-trilha { height: 100%; }
-/* O lugar no top: numeral grande no canto da capa (o princípio do top 10, na nossa identidade). */
+/* O lugar no top (spec 16, item 16): uma pílula pequena no canto superior direito da capa, "1º" em 13 px 800 #0B1B5C sobre branco, com 24 px de altura e raio de 12 (antes, um numeral gigante
+   que esbarrava nos selos). O leitor de tela ouve "1º em alta", no corpo do cartão. */
 .cartao-trilha__posicao {
-  position: absolute; right: 12px; bottom: 4px; z-index: 1; font-family: Quicksand, sans-serif; font-size: 5rem; font-weight: 700; line-height: 0.9;
-  letter-spacing: -0.06em; color: #fff; -webkit-text-stroke: 3px var(--texto); paint-order: stroke fill; text-shadow: 0 6px 14px rgb(15 23 42 / 0.25);
-  user-select: none;
+  position: absolute; top: 10px; right: 10px; z-index: 1; display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 24px; padding: 0 8px; box-sizing: border-box;
+  border-radius: 12px; background: #fff; color: #0b1b5c; font-size: 0.8125rem; font-weight: 800; line-height: 1; box-shadow: 0 2px 6px rgb(15 23 42 / 0.12); user-select: none;
 }
 
 /* Folha de compartilhar: os três níveis e a publicação. */
@@ -182,8 +182,6 @@
 
 
 /* Explorar na navegação lateral. */
-.navegacao-explorar { display: inline-flex; align-items: center; gap: 8px; margin-top: 8px; }
-.navegacao-explorar .icone { width: 18px; height: 18px; }
 .por-link__abrir + .por-link__abrir, .por-link + .por-link__abrir { margin-top: 8px; }
 
 /* Seguir (etapa C2). */
