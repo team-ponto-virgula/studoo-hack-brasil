@@ -1,7 +1,9 @@
 # Perfil, Privacidade (Apple 5.1.2(i)) e Excluir conta (5.1.1(v)) na conta sintética. Com IA=falsa no piloto nada sai do
-# servidor: a seção mostra a frase da IA simulada, a política e "Excluir conta" (como na web). A exclusão abre o cartão destrutivo
-# (antes: a ação desligada) e liga depois de digitar EXCLUIR (depois). O fluxo cancela: a conta sintética serve aos
-# outros fluxos e não pode ser apagada.
+# servidor: a seção Privacidade mostra só a frase da IA simulada (privacidade-estado). Desde o refino do app (spec 16, item
+# 19) a política de privacidade fica só em Ajuda (o fluxo 63 a cobre, ajuda-politica), e "Excluir conta" (item 20) é o
+# secundário vermelho depois de "Sair", na seção Conta, no fim do Perfil: a rolagem segue para baixo até ele. A exclusão abre
+# o cartão destrutivo (antes: a ação desligada) e liga depois de digitar EXCLUIR (depois). O fluxo cancela: a conta sintética
+# serve aos outros fluxos e não pode ser apagada.
 appId: host.exp.Exponent
 name: 55-privacidade
 ---
@@ -14,9 +16,10 @@ name: 55-privacidade
     visible:
       id: titulo-perfil
     timeout: 30000
+# A seção Privacidade no meio da tela, com o título acima da frase (a âncora era o botão da política, que saiu da seção).
 - scrollUntilVisible:
     element:
-      id: privacidade-politica
+      id: privacidade-estado
     direction: DOWN
     timeout: 120000
     speed: 50
@@ -49,7 +52,30 @@ name: 55-privacidade
 - inputText: EXCLUIR
 - waitForAnimationToEnd:
     timeout: 1500
+# A prova do conserto do teclado (feat/refino-app 22ce2de: o cartão sobe para cima do teclado, com os botões presos): com o
+# teclado AINDA ABERTO, "Excluir para sempre" (confirmacao-confirmar) e "Cancelar" (confirmacao-cancelar) estão na árvore.
+# Obrigatório nas duas plataformas. No Android, o que fica atrás do teclado sai da árvore (execução 45077874039: cartão até
+# y=1253, teclado a partir de 962, nenhum dos dois botões achado), então achar os dois é achá-los acima do teclado. A
+# espera (até 5 s) cobre a subida do cartão depois de o teclado abrir; se faltar, o Maestro guarda a hierarquia da falha.
+- extendedWaitUntil:
+    visible:
+      id: confirmacao-confirmar
+    timeout: 5000
+- extendedWaitUntil:
+    visible:
+      id: confirmacao-cancelar
+    timeout: 5000
+# A captura com o teclado aberto e os dois botões à vista.
 - takeScreenshot: 57-excluir-conta-digitado
+# Só depois da prova o teclado fecha no Android, para o cancelamento seguir como antes (com o teclado aberto, o Voltar
+# fecha só o teclado, não o cartão). O iPhone não precisa: lá o toque em Cancelar já passava com o teclado aberto.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+      - waitForAnimationToEnd:
+          timeout: 1500
 - tapOn:
     waitToSettleTimeoutMs: 1000
     id: confirmacao-cancelar

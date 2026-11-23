@@ -22,6 +22,14 @@ export function analisarFundo(lista, efeitosDoApp = []) {
   let segmento = [];
   for (const amostra of ordem.filter((item) => item.t >= inicio.t)) {
     const anterior = ultima[amostra.jogador];
+    // A cauda da volta do laço: o reprodutor que acabou de sair ainda manda uma amostra "tocando" no fim da faixa, com o
+    // volume descendo, depois de o outro entrar (execução 45053145066: B em 89,00 s com volume 0,096, 94 ms depois de A
+    // entrar em 0,026 s). Não é ele entrando de novo: sem isto, a amostra virava um "reinício" com o que entrou em 0,03 s.
+    if (amostra.jogador !== ativo && amostra.tocando && noFim(amostra) && voltas.at(-1)?.de === amostra.jogador && naTroca(amostra.t)) {
+      ultima[amostra.jogador] = amostra;
+      ultimaTocando[amostra.jogador] = amostra;
+      continue;
+    }
     if (amostra.jogador !== ativo && amostra.tocando) {
       const saindo = ultimaTocando[ativo] ?? ultima[ativo];
       // O outro reprodutor entrou: volta do laço se o que saía estava no fim da faixa; senão, a música recomeçou.
