@@ -2,7 +2,7 @@
 
 ## Organização Expo — 23/11/2026
 
-Organização **@studoo** criada, com Miguel como Owner e convite Developer enviado a Julio. A transferência do projeto existente foi recusada pela Expo por exigir reautenticação em **sudo mode**; o projeto continua em `@miguelvzs/studoo-mobile`. A [operação da organização](EXPO-ORGANIZACAO.md) registra o passo no painel e o patch de owner preparado, ainda não aplicado. [Estado sanitizado](conferencia-cloud/expo-organizacao.json). Os registros de Apple/TestFlight abaixo são das conferências datadas de 21/11.
+Organização **@studoo** com Miguel como Owner e Julio já membro Developer. O projeto existente foi transferido para **@studoo/studoo-mobile**, mantendo o UUID; `expo.owner` local está atualizado. Histórico do build 3, numeração remota e assinatura iOS foram conferidos no destino; 22/22 testes do preflight passaram. A [operação da organização](EXPO-ORGANIZACAO.md) registra a conclusão e o acesso para builds/envios. [Estado sanitizado](conferencia-cloud/expo-organizacao.json). Os registros de Apple/TestFlight abaixo são das conferências datadas de 21/11.
 
 ## Estado atual — 21/11/2026, 03:14 UTC (21/11, 00:14 em São Paulo)
 

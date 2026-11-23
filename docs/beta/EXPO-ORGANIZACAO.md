@@ -1,51 +1,51 @@
 # Organização Expo do Studoo
 
-Conferência de 23/11/2026, 14:28 UTC. [Estado sanitizado](conferencia-cloud/expo-organizacao.json).
+Conferência de **23/11/2026, 14:45 UTC**. [Estado sanitizado](conferencia-cloud/expo-organizacao.json).
 
-## Concluído
+## Configuração concluída
 
-- Organização **[@studoo](https://expo.dev/accounts/studoo)** criada, nome Studoo, ID `006e5145-dd10-4fca-b745-147fc7cf53ef`.
-- `miguelvzs` confirmado como **Owner**.
-- Convite enviado ao email exato de Julio informado nesta tarefa, com papel **Developer**: permissões `PUBLISH`, `RUN` e `VIEW`. O aceite do convite da **Expo** permanece pendente; é separado do acesso Apple/TestFlight já configurado.
-- Conferência da assinatura existente e cópia privada de recuperação concluídas antes da tentativa de transferência. Material privado fica fora do Git.
+- Organização **[@studoo](https://expo.dev/accounts/studoo)**, nome Studoo, ID `006e5145-dd10-4fca-b745-147fc7cf53ef`.
+- `miguelvzs` permanece **Owner**.
+- Julio aceitou o convite e já é membro **Developer**, com o conjunto exato `PUBLISH`, `RUN`, `VIEW`.
+- Projeto existente transferido para **[@studoo/studoo-mobile](https://expo.dev/accounts/studoo/projects/studoo-mobile)**.
+- `apps/mobile/app.json` atualizado para `expo.owner: studoo`. O UUID continua `81f67b49-67e1-4807-bf88-16f187169dfd`; slug, scheme, bundle e IDs Apple foram preservados.
 
-## Transferência pendente de reautenticação na Expo
+## O que foi conferido de fato
 
-O projeto ainda é **`@miguelvzs/studoo-mobile`**, ID `81f67b49-67e1-4807-bf88-16f187169dfd`. A nova organização está sem projetos enquanto essa etapa não termina.
+| Verificação | Resultado |
+| --- | --- |
+| Organização, projeto e associação de Julio pela API Expo | Owner e Developer confirmados; aceite concluído; um projeto na organização |
+| Configuração resolvida pelo SDK Expo | Owner `studoo`; UUID, slug, scheme e identificadores nativos preservados |
+| `eas project:info` em `apps/mobile` | `@studoo/studoo-mobile`, mesmo projectId |
+| [Build EAS existente `20b7bdac`](https://expo.dev/accounts/studoo/projects/studoo-mobile/builds/20b7bdac-da61-4ed8-8003-ccc98d3f35cb) | `FINISHED`, iOS 0.1.0 (3), fonte `6c8b1d2664e595cae49ec4ca020742ec51b2eef3` |
+| `eas build:version:get --platform ios --profile testflight` | Numeração remota preservada em `3` |
+| [Assinatura no destino](conferencia-cloud/expo-assinatura-escopo.json) | Certificado e perfil pertencem a `studoo` e estão disponíveis; serial e UUID do perfil preservados |
+| `npm run test:beta` | 22/22 passaram |
+| `git diff --check` | Passou |
 
-A chamada autenticada `me.transferApp` foi recusada pela Expo com **“This method can only be called when in sudo mode”**. A leitura seguinte confirmou que o proprietário continuava `miguelvzs`. O EAS CLI oficial exige reconfirmar a senha e, se habilitado, o segundo fator para elevar uma sessão; isso não é outra permissão do projeto ou um pedido de Admin para Julio.
+Não houve nova compilação ou upload para a Apple nesta mudança. O registro Apple `6837508955`, o build TestFlight **0.1.0 (3)** e os grupos internos permanecem recursos separados. Os testes de identidade e configuração não substituem QA no aparelho.
 
-O titular pode concluir diretamente no site da Expo:
+## Como Julio trabalha
 
-1. Abrir [as configurações do projeto existente](https://expo.dev/accounts/miguelvzs/projects/studoo-mobile/settings), usando sua conta de titular.
-2. Em **General → Transfer project**, escolher **studoo** como destino.
-3. Confirmar a transferência e a reautenticação solicitada no próprio site.
-
-## Continuidade após o painel confirmar
-
-Primeiro consultar novamente o projeto pelo UUID acima e exigir `ownerAccount.name = studoo`. Então aplicar o [patch de um campo](conferencia-cloud/expo-owner-studoo.patch):
+Para gerar builds, ele usa o próprio login Expo com acesso Developer à organização:
 
 ```sh
-git apply --check docs/beta/conferencia-cloud/expo-owner-studoo.patch
-git apply docs/beta/conferencia-cloud/expo-owner-studoo.patch
-npm run test:beta
 cd apps/mobile
+npx eas-cli@latest login
 npx eas-cli@latest project:info
+npx eas-cli@latest build --platform ios --profile testflight
 ```
 
-O patch está preparado e validado, **ainda não aplicado**, porque a transferência remota não terminou. Ele troca somente `expo.owner`; conserva UUID, slug `studoo-mobile`, scheme `studoo-dev`, bundle `com.studoo.mobile.dev`, IDs Apple e perfis EAS. Não criar outro projeto nem executar `eas init` para essa operação.
+Para automações/CI, pode usar um token pessoal limitado à organização e ao papel Developer, disponibilizado como `EXPO_TOKEN`. O login interativo não exige um token fornecido pelo titular.
 
-Conferir depois da transferência:
+**Enviar ao TestFlight exige também autenticação Apple.** A organização não possui chave App Store Connect armazenada. O perfil `submit.testflight` atual usa `EXPO_ASC_API_KEY_PATH`, `EXPO_ASC_KEY_ID` e `EXPO_ASC_ISSUER_ID` do ambiente privado do operador. Esses valores precisam estar configurados por canal seguro para o envio; a função Developer na Expo não fornece uma chave Apple por si só.
 
-- Mesmo projectId, novo endereço `@studoo/studoo-mobile`, histórico do [build `20b7bdac`](https://expo.dev/accounts/miguelvzs/projects/studoo-mobile/builds/20b7bdac-da61-4ed8-8003-ccc98d3f35cb) e numeração remota preservados.
-- Certificado e perfil de assinatura do Studoo disponíveis, comparando os metadados com a cópia privada. Não revogar ou regenerar certificados de outros apps por antecipação.
-- Convite/membro de Julio com o conjunto exato de permissões Developer.
-- Configuração local resolvida com owner `studoo` e `npm run test:beta` aprovado.
+A organização tem proteção de credenciais e variáveis desligada, conforme a configuração conferida. Os certificados/perfis de assinatura compartilhados estão disponíveis para os builds. Foram encontrados zero canais EAS Update e zero variáveis de projeto/conta a migrar nesta candidata.
 
-A conferência anterior à transferência encontrou **zero canais EAS Update, zero variáveis do projeto e zero variáveis da conta de origem**. Não havia proteção de canal para reaplicar nesta candidata. O repositório também não configura `expo-updates` ou um token Expo no CI. Ainda assim, credenciais e recursos de conta devem ser conferidos no destino: a transferência não equivale à conversão de toda a conta pessoal.
+## Histórico da transferência
 
-As associações de chave App Store Connect para builds/submissões estavam vazias no projeto. O perfil de submissão atual usa um arquivo privado fornecido pelo operador. As próximas submissões continuam dependendo desse acesso; o convite Expo, por si só, não fornece uma chave Apple ao Julio.
+A organização foi criada e o convite Developer foi enviado nesta tarefa. A primeira tentativa de `me.transferApp` foi recusada por exigir **sudo mode**. Em conferência posterior, a transferência e o aceite de Julio já estavam concluídos. O [patch de owner preparado](conferencia-cloud/expo-owner-studoo.patch) foi então aplicado. Essa etapa está concluída.
 
-O registro Apple `6837508955`, o build TestFlight **0.1.0 (3)** e seus grupos são recursos separados. Nenhum novo IPA ou upload foi criado nesta ação. [Estado do beta](EXTERNO-CLOUD.md).
+Metadados e verificações estão nos arquivos vinculados acima. Material privado de recuperação da assinatura, chaves e respostas com URLs assinadas permanecem fora do Git. [Estado do beta](EXTERNO-CLOUD.md).
 
 Fontes: [contas e transferência Expo](https://docs.expo.dev/accounts/account-types/), [identidade permanente do projeto](https://github.com/expo/fyi/blob/main/eas-project-id.md), [mapeamento oficial de papéis](https://github.com/expo/eas-cli/blob/main/packages/eas-cli/src/user/roles.ts).

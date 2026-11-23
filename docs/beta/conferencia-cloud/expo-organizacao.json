@@ -1,12 +1,12 @@
 {
-  "checkedAt": "2026-11-23T14:29:57.814Z",
+  "checkedAt": "2026-11-23T14:45:01.753Z",
   "organization": {
     "id": "006e5145-dd10-4fca-b745-147fc7cf53ef",
     "name": "studoo",
     "displayName": "Studoo",
     "personal": false,
     "viewerRole": "OWNER",
-    "projectCount": 0,
+    "projectCount": 1,
     "credentialsProtectionEnabled": false,
     "environmentVariableProtectionEnabled": false
   },
@@ -17,23 +17,40 @@
       "RUN",
       "VIEW"
     ],
-    "invitationSent": true,
-    "acceptancePending": true,
-    "member": false,
-    "expiresAt": "2026-12-03T14:27:06.889Z"
+    "invitationSent": false,
+    "acceptancePending": false,
+    "member": true,
+    "expiresAt": null
   },
   "project": {
     "id": "81f67b49-67e1-4807-bf88-16f187169dfd",
     "slug": "studoo-mobile",
-    "fullName": "@miguelvzs/studoo-mobile",
-    "currentOwner": "miguelvzs",
-    "transferComplete": false,
-    "transferBlockedBy": "EXPO_SUDO_MODE_REQUIRED",
+    "fullName": "@studoo/studoo-mobile",
+    "currentOwner": "studoo",
+    "transferComplete": true,
+    "transferBlockedBy": null,
     "projectIdPreserved": true,
     "protectedChannels": [],
     "environmentVariableCount": 0,
     "iosSigningPreserved": true
   },
-  "localOwner": "miguelvzs",
-  "limits": "Confirma organização e convite Developer. A transferência e a atualização do owner local aguardam a reautenticação do titular no painel Expo; aceite do convite de Julio ainda depende dele."
+  "localOwner": "studoo",
+  "limits": "Confirma organização, proprietário do projeto, papel Developer, aceite de Julio e configuração local. Conferências de identidade e assinatura não equivalem a uma nova compilação ou validação dos fluxos no aparelho.",
+  "verification": {
+    "projectInfoFullName": "@studoo/studoo-mobile",
+    "remoteIosBuildNumber": "3",
+    "historicalBuild": {
+      "id": "20b7bdac-da61-4ed8-8003-ccc98d3f35cb",
+      "status": "FINISHED",
+      "appVersion": "0.1.0",
+      "appBuildVersion": "3",
+      "gitCommitHash": "6c8b1d2664e595cae49ec4ca020742ec51b2eef3"
+    },
+    "testBeta": {
+      "passed": 22,
+      "failed": 0
+    },
+    "signingScopedToOrganization": true,
+    "storedAscApiKeyCount": 0
+  }
 }

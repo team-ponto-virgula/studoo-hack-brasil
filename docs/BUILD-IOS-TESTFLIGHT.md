@@ -1,5 +1,7 @@
 # Beta do iPhone pelo TestFlight externo
 
+Atualização de 23/11/2026: projeto EAS em **@studoo/studoo-mobile**, mesmo UUID; Julio é Developer da organização. O build **0.1.0 (3)** já foi enviado à Apple. [Estado atual da organização e acesso](beta/EXPO-ORGANIZACAO.md) e [conferência do beta](beta/EXTERNO-CLOUD.md). A auditoria original abaixo conserva seu alcance e sua data.
+
 Revisão de 20/11/2026 (Mobile & QA), sobre `feat/hackathon-integracao` em `d9be93c`. O que está aqui foi conferido no repositório, no
 `expo config --type introspect` e no template do SDK 58 (`expo-template-bare-minimum@58.0.35`). Nada foi enviado à Apple nem ao EAS: o que só
 o build, o App Store Connect ou a revisão Beta confirmam está marcado como pendente.
@@ -9,20 +11,21 @@ o build, o App Store Connect ou a revisão Beta confirmam está marcado como pen
 ```sh
 cd apps/mobile
 npx eas-cli@latest login                 # ou EXPO_TOKEN no ambiente
-npx eas-cli@latest project:info          # projeto já vinculado a @miguelvzs/studoo-mobile
+npx eas-cli@latest project:info          # projeto já vinculado a @studoo/studoo-mobile
 npx eas-cli@latest build --platform ios --profile testflight
-npx eas-cli@latest submit --platform ios --latest   # envia ao App Store Connect; o TestFlight externo é ligado lá
+npx eas-cli@latest submit --platform ios --profile testflight --id <ID_DO_BUILD_CONFERIDO> --no-auto-testflight-setup
 ```
 
 O perfil `testflight` (`eas.json`) é de loja (`distribution: store`), aumenta o número do build sozinho (`appVersionSource: remote` +
-`autoIncrement`), aponta para a API publicada em HTTPS e leva o Google ao lado da Apple (ver abaixo). Na primeira vez, o EAS pede o login da Apple para criar o App ID `com.studoo.mobile.dev`, o certificado de distribuição e o perfil de
-provisionamento; o registro do app no App Store Connect também é criado no primeiro `submit`.
+`autoIncrement`) e aponta para a API publicada em HTTPS. O App ID, certificado e perfil de distribuição já foram provisionados;
+o EAS pode reutilizar as credenciais compartilhadas da organização para os próximos builds. O registro App Store Connect é
+`6837508955`. Para enviar, configurar também a autenticação Apple exigida por `submit.testflight`, conforme o guia da organização.
 
 ## O que foi auditado
 
 | Item | Situação | Evidência |
 | --- | --- | --- |
-| Projeto EAS vinculado | **Feito.** `owner: miguelvzs`, projeto `81f67b49-67e1-4807-bf88-16f187169dfd` | `app.json`; `eas project:info` confirmado no Cloud |
+| Projeto EAS vinculado | **Feito.** `owner: studoo`, projeto `81f67b49-67e1-4807-bf88-16f187169dfd` | `app.json`; `eas project:info` confirmado após transferência para a organização |
 | Bundle ID | `com.studoo.mobile.dev` (o mesmo do Android). Vale para a loja; trocar depois de criado no App Store Connect não dá | `app.json` |
 | Xcode e SDK aceitos | A Apple exige Xcode 26+ com SDK do iOS 26 desde 28/04/2026. O perfil usa `image: auto`, que no SDK 58 é `macos-tahoe-26.6-xcode-27.1` (Xcode 27.1 RC) | docs.expo.dev/build-reference/infrastructure, developer.apple.com/news/upcoming-requirements |
 | Ciclo de vida por cena (Xcode 27 / iOS 27) | O template do SDK 58 já traz `SceneDelegate.swift` e `UIApplicationSceneManifest` | `expo-template-bare-minimum@58.0.35` |
