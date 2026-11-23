@@ -3,7 +3,7 @@
 // SEM RECORTE (regra do Lead): a captura nativa entra inteira, com a barra de status e tudo. O script só reduz para 1x e 2x e escreve WebP em
 // public/landing/, com um trecho do hash no nome (o arquivo nunca muda sob o mesmo nome, então pode ficar em cache para sempre). A proporção da
 // tela do celular da página é a da plataforma da captura (iPhone ou Android); uma captura de outra proporção (mais de 1% de diferença) é recusada,
-// em vez de cortada.
+// em vez de cortada (um item com `proporcaoAceita` pode aceitar um desvio maior, documentado na origem: a captura é ajustada, sem recorte).
 // Os ids do herói: `heroi-1`, `heroi-2` e `heroi-3` são o conjunto provisório (mistura plataformas); a rodada limpa do Mobile & QA entra como `heroi-N-iphone` e
 // `heroi-N-android` (a página escolhe pela plataforma do aparelho: src/app/conheca/heroi.ts), e então o provisório pode sair daqui. O `momento-N` é um por momento do S2.
 // Depois escreve src/app/conheca/imagens.gerado.ts com o endereço, a largura e a altura (1x) de cada uma.
@@ -33,7 +33,8 @@ for (const item of configuracao.capturas) {
   const aspecto = configuracao.aspectos[item.plataforma];
   if (!aspecto) { console.error(`${item.id}: plataforma desconhecida (${item.plataforma})`); process.exit(6); }
   const razao = aspecto.largura / aspecto.altura;
-  if (Math.abs(meta.width / meta.height - razao) / razao > 0.01) { console.error(`${item.id}: ${meta.width}x${meta.height} não tem a proporção da tela ${item.plataforma} (${aspecto.largura}x${aspecto.altura})`); process.exit(5); }
+  // Até 1% de diferença na proporção; um item com `proporcaoAceita` aceita esse desvio (a captura é ajustada à proporção da tela da página, nunca recortada).
+  if (Math.abs(meta.width / meta.height - razao) / razao > (item.proporcaoAceita ?? 0.01)) { console.error(`${item.id}: ${meta.width}x${meta.height} não tem a proporção da tela ${item.plataforma} (${aspecto.largura}x${aspecto.altura})`); process.exit(5); }
   const inteira = sharp(origem);
   const arquivos = {};
   let altura1x = 0;
