@@ -23,6 +23,9 @@ vm.runInNewContext(
   textos,
 );
 const mensagens = textos.exports.mensagens;
+// O indicador de passos do "Explique" (spec 16, item 25) é uma função pura do web: entra na caixa de areia como ela é.
+const ensinoPassos = { exports: {} };
+vm.runInNewContext(await compilar('src/app/ensino-passos.ts'), ensinoPassos);
 const fontes = await Promise.all(
   ['src/app/estudio.tsx', 'apps/mobile/src/estudio-adaptativo.tsx'].map(
     compilar,
@@ -155,6 +158,7 @@ function montar(nativo, { carregar, permissao, preparar, voz = { liberada: false
     '../ui': { Botao: 'Botao', Stu: 'Stu' },
     './estudio.css': {},
     './ponte-reforco': { PonteReforco: 'PonteReforco' },
+    './ensino-passos': ensinoPassos.exports,
     // A fórmula em linha do texto da lição (o objetivo no "Ensine o Stu"): componente de apresentação.
     './texto-com-formulas': { TextoComFormulas: 'TextoComFormulas' },
     'react-native': {

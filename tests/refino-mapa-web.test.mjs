@@ -101,3 +101,21 @@ test('item 15: até 767 px a barra da marca sai do mapa, e o selo de sincronia v
   assert.match(bloco, /\.trilha-topo__selo \{ display: block; min-width: 0; \}/, 'o selo do mapa aparece só no celular');
   assert.match(bloco, /\.trilha-topo \{ padding-top: max\(10px, env\(safe-area-inset-top\)\); \}/, 'sem a barra, o cabeçalho respeita a área segura do alto');
 });
+
+test('item 26: o alto do mapa tem "Compartilhar" (com o estado curto) e a engrenagem, sem o "•••" (que escondia as duas ações mais usadas), como no app', () => {
+  const estudo = ler('src/app/estudo.tsx');
+  const plano = estudo.slice(estudo.indexOf('function Plano('), estudo.indexOf('/** Anel de progresso do plano'));
+  const topo = plano.slice(plano.indexOf('<div className="trilha-topo__acoes">'), plano.indexOf('{tela.aviso && <p className="trilha-aviso"'));
+  assert.ok(topo.length > 0, 'a fileira de ações do alto do mapa');
+  assert.doesNotMatch(topo, /MenuCartao/, 'sem o "•••" no alto do mapa');
+  assert.doesNotMatch(plano, /usePostarNoPerfil|postagem/, 'o mapa não decide mais entre o menu e os botões');
+  // Na trilha da própria pessoa: "Compartilhar" (ou o estado curto: "Compartilhada", "Em revisão", "Não publicada") com o ícone, e a engrenagem.
+  assert.match(topo, /\{!plano\.recebida && compartilhar && \(\s*<Botao variante="secundario" className="trilha-compartilhar" data-estado=\{estadoDoCompartilhamento\(plano\.link\)\}[^>]*onClick=\{compartilhar\}>\s*<Icone nome="compartilhar" \/>\{rotuloDoEstado\(estadoDoCompartilhamento\(plano\.link\)\)\}\s*<\/Botao>\s*\)\}/);
+  assert.match(topo, /\{configurar && \(\s*<Botao variante="secundario" className="trilha-configurar"[^>]*onClick=\{configurar\}>\s*<Icone nome="engrenagem" \/>\s*<\/Botao>\s*\)\}/);
+  // O "•••" segue nos cartões de Minhas trilhas (o do destaque e os da lista), onde mora o "Postar no meu perfil".
+  assert.equal((estudo.match(/<MenuCartao /g) ?? []).length, 2, 'só os dois cartões da lista');
+  assert.doesNotMatch(ler('src/app/compartilhar.css'), /\.trilha-topo__acoes \.plano-cartao__menu|\.trilha-topo__acoes \.plano-cartao__opcoes/, 'as regras do "•••" no alto do mapa saíram');
+  // Os botões e a engrenagem de 48 px seguem iguais aos do app (decisão do Lead de 19/11).
+  assert.match(ler('src/app/configuracoes.css'), /\.trilha-configurar \{[^}]*width: 48px;[^}]*height: 48px;/);
+});
+

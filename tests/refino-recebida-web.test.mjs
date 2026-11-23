@@ -34,9 +34,9 @@ test('web: o mapa e o cartão não escrevem a frase sem nome, mas a trilha conti
   assert.match(tela, /\{recebidaTemNome\(plano\.recebida\) && <span>\{plano\.recebida\.perfilId/);
   // O selo "Compartilhada por" do cartão some sem nome.
   assert.match(tela, /if \(!recebidaTemNome\(plano\.recebida\)\) return null;\s*const texto = mensagens\.compartilhar\.compartilhadaPor\(nome\);/);
-  // Quem é "recebida" continua sendo o objeto (não o nome): Compartilhar, Postar e o menu seguem escondidos.
-  assert.match(tela, /postagem && !plano\.recebida \? <MenuCartao/);
+  // Quem é "recebida" continua sendo o objeto (não o nome): Compartilhar segue escondido no mapa (o "•••" do alto do mapa saiu: spec 16, item 26; o "Postar" mora nos cartões de Minhas trilhas, que não o oferecem à recebida).
   assert.match(tela, /!plano\.recebida && compartilhar && \(/);
+  assert.doesNotMatch(tela.slice(tela.indexOf('function Plano('), tela.indexOf('/** Anel de progresso do plano')), /MenuCartao/);
   assert.match(tela, /compartilhar=\{abrirFolha && !tela\.plano\.recebida \? \(\) => abrirFolha\(tela\.plano\.id\) : undefined\}/);
   // As configurações recebem "" (recebida sem nome), não null (da própria pessoa).
   assert.match(tela, /recebidaDe=\{resumo\?\.recebida \? resumo\.recebida\.nome : null\}/);

@@ -26,6 +26,7 @@ import {
 } from './voz-ao-vivo';
 import { tocaSons } from './sons';
 import { PonteReforco } from './ponte-reforco';
+import { linhaDoPassoDoEnsino, passoAtivoDoEnsino } from './ensino-passos';
 import { TextoComFormulas } from './texto-com-formulas';
 import './estudio.css';
 const m = mensagens.estudio;
@@ -155,7 +156,7 @@ export function MaterialParaTrilha({
       <details><summary>{mensagens.inicio.detalhes}</summary><p className="estudio-legenda">{m.limites}</p><p className="estudio-legenda">{m.privacidadePorProvedor(provedorIa)}</p></details>
       {!material ? (
         <div className="estudio-acoes">
-          <label className="estudio-arquivo">
+          <label className="estudio-arquivo botao botao--secundario">
             {mensagens.inicio.arquivo}
             <input
               type="file"
@@ -167,7 +168,7 @@ export function MaterialParaTrilha({
               }}
             />
           </label>
-          <label className="estudio-arquivo">
+          <label className="estudio-arquivo botao botao--secundario">
             {mensagens.inicio.camera}
             <input
               type="file"
@@ -650,10 +651,25 @@ export function ApoioDaLicao({
     const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     retornoDoEnsino.current?.scrollIntoView({ block: 'start', behavior: reduzido ? 'auto' : 'smooth' });
   }, [ensino]);
+  // "De onde veio esta ideia" (a citação do material): fica sob o exercício e, spec 16 item 27, também na ponte, depois do cartão do passo. Lição sem material não o mostra.
+  const cartaoOrigem = !!licao.referencias?.length && (
+    <details className="estudio-card">
+      <summary>{m.origem}</summary>
+      {licao.referencias.map((r, i) => (
+        <blockquote key={i}>
+          <strong>
+            {r.nome} · {r.localizacao ?? m.pagina(r.pagina)}
+          </strong>
+          <p>{r.trecho}</p>
+          {r.leitura === 'ocr' && <small>{m.ocr}</small>}
+        </blockquote>
+      ))}
+    </details>
+  );
   if (avaliacao?.correta === false && pedidoPonte > 0 && !gravando && etapaVoz !== 'ativa') {
     return (
       <div className="estudio-apoio">
-        <PonteReforco key={pedidoPonte} ponte={ponte} tentativa={ultimaResposta} feedbackOriginal={avaliacao.feedback}
+        <PonteReforco key={pedidoPonte} ponte={ponte} tentativa={ultimaResposta} feedbackOriginal={avaliacao.feedback} origem={cartaoOrigem || undefined}
           ocupado={ocupado || gravando} erro={erro} voltar={aoVoltarExercicio} tentarCarregar={carregarPonte}
           verificar={async (resposta) => {
             let resultado;
@@ -667,22 +683,15 @@ export function ApoioDaLicao({
       </div>
     );
   }
+  // Spec 16, item 25: o indicador de passos do "Explique" (a mesma conta do app).
+  const passoDoEnsino = linhaDoPassoDoEnsino(
+    passoAtivoDoEnsino({ gravando, vozAtiva: etapaVoz === 'ativa', temRetorno: Boolean(ensino), temTexto: Boolean(texto.trim()) }),
+    [vozAoVivoDisponivel ? m.vozAoVivo.passoComVoz : m.ensinoEtapas[0], m.ensinoEtapas[1], m.ensinoEtapas[2]],
+    m.ponteIndicador,
+  );
   return (
     <div className="estudio-apoio">
-      {!!licao.referencias?.length && (
-        <details className="estudio-card">
-          <summary>{m.origem}</summary>
-          {licao.referencias.map((r, i) => (
-            <blockquote key={i}>
-              <strong>
-                {r.nome} · {r.localizacao ?? m.pagina(r.pagina)}
-              </strong>
-              <p>{r.trecho}</p>
-              {r.leitura === 'ocr' && <small>{m.ocr}</small>}
-            </blockquote>
-          ))}
-        </details>
-      )}
+      {cartaoOrigem}
       {ultimo && <details
         className="estudio-card estudio-ensino"
         onToggle={(e) => {
@@ -720,13 +729,11 @@ export function ApoioDaLicao({
                   : m.ensinoStuAluno}
           </p>
         </div>
-        <ol className="ensino-passos" aria-label={m.ensinoEtapasLabel}>
-          <li data-ativo={!texto.trim() || gravando || etapaVoz === 'ativa' || undefined} aria-current={!texto.trim() || gravando || etapaVoz === 'ativa' ? 'step' : undefined}>
-            {vozAoVivoDisponivel ? m.vozAoVivo.passoComVoz : m.ensinoEtapas[0]}
-          </li>
-          <li data-ativo={(Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino) || undefined} aria-current={Boolean(texto.trim()) && !gravando && etapaVoz !== 'ativa' && !ensino ? 'step' : undefined}>{m.ensinoEtapas[1]}</li>
-          <li data-ativo={Boolean(ensino) || undefined} aria-current={ensino ? 'step' : undefined}>{m.ensinoEtapas[2]}</li>
-        </ol>
+        {/* Spec 16, item 25: os três passos viram uma linha só de indicador, como a da ponte (não tocável); o leitor de tela ouve "Passo 1 de 3: Gravar ou escrever". */}
+        <p className="ensino-indicador">
+          <span aria-hidden="true">{passoDoEnsino.visivel}</span>
+          <span className="somente-leitor">{passoDoEnsino.leitor}</span>
+        </p>
         <p>{m.ensinoDica}</p>
         <TextoComFormulas como="p" className="estudio-legenda" texto={m.ensinoIdeia(licao.objetivo)} />
         {vozAoVivoDisponivel && etapaVoz === 'inativa' && (

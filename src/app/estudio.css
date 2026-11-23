@@ -46,17 +46,21 @@
     margin-top: 0;
   }
 }
-.estudio-arquivo {
-  position: relative;
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  min-height: 48px;
-  border: 2px dashed var(--acao);
-  border-radius: 14px;
-  color: var(--acao);
-  font-weight: 700;
-  cursor: pointer;
+/* Spec 16, item 28: até 767 px "Escolher arquivo" e "Usar a câmera" são botões secundários comuns (o desenho de área de soltar arquivo, tracejado, não existe no celular e parecia rascunho);
+   a área tracejada fica só a partir de 768 px. */
+.estudio-arquivo { position: relative; }
+@media (min-width: 768px) {
+  .estudio-arquivo.botao {
+    display: flex;
+    justify-content: flex-start;
+    padding: 12px 16px;
+    border: 2px dashed var(--acao);
+    border-radius: 14px;
+    background: transparent;
+    box-shadow: none;
+    font-weight: 700;
+    text-align: start;
+  }
 }
 .estudio-arquivo input {
   position: absolute;
@@ -270,27 +274,8 @@
 .ensino-stu[data-gravando='true'] .stu { animation: pedido-stu 1200ms ease-in-out infinite; }
 .ensino-stu__balao { margin: 0 !important; font-weight: 800; color: var(--texto); }
 
-.ensino-passos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 12px;
-  padding: 0;
-  list-style: none;
-}
-.ensino-passos li {
-  padding: 4px 12px;
-  border: 1.5px solid var(--gelo);
-  border-radius: 999px;
-  color: var(--texto2);
-  font-size: 0.8125rem;
-  font-weight: 800;
-}
-.ensino-passos li[data-ativo='true'] {
-  border-color: var(--acao);
-  color: var(--acao-escura);
-  background: var(--ceu);
-}
+/* Spec 16, item 25: os passos do "Explique" são uma linha só de indicador, como a da ponte ("Passo 1 de 3 · Gravar ou escrever"): 14/20, 800, #5E6A85, sem borda e sem nada tocável. */
+.estudio-card .ensino-indicador { margin: 0 0 12px; color: #5e6a85; font-size: 0.875rem; font-weight: 800; line-height: 1.4286; }
 
 .ensino-gravando {
   display: flex;

@@ -825,8 +825,7 @@ export function Estudo({ abrirNoExplorar = false }: { abrirNoExplorar?: boolean 
               abrirLicao={(id) => void abrirLicao(tela.plano, id)}
               novoPlano={() => navegar({ tipo: 'objetivo' })}
               compartilhar={abrirFolha && !tela.plano.recebida ? () => abrirFolha(tela.plano.id) : undefined}
-              configurar={() => navegar({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })}
-              apagar={() => apagarPlano(tela.plano, () => navegar({ tipo: 'planos' }))} />
+              configurar={() => navegar({ tipo: 'configuracoes', planoId: tela.plano.id, volta: 'plano' })} />
           )}
           {visivel && tela.tipo === 'configuracoes' && (() => {
             const resumo = planos.find((item) => item.id === tela.planoId);
@@ -1174,11 +1173,10 @@ function montarTrilha(plano: PlanoDetalhe) {
   return { nos, proximo };
 }
 
-function Plano({ tela, selo, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar, apagar }: {
+function Plano({ tela, selo, ocupado, abrindo, precarregarLicao, abrirLicao, novoPlano, compartilhar, configurar }: {
   tela: TelaPlano;
   /** O selo de sincronia, que no celular (até 767 px) sai da barra da marca e fica no cabeçalho da trilha (spec 16, item 15). */
   selo: ReactNode;
-  apagar: () => void;
   ocupado: boolean;
   abrindo: string | null;
   precarregarLicao: (id: string) => void;
@@ -1188,7 +1186,6 @@ function Plano({ tela, selo, ocupado, abrindo, precarregarLicao, abrirLicao, nov
   configurar?: () => void;
 }) {
   const { plano, origem, liberadas = [] } = tela;
-  const postagem = usePostarNoPerfil();
   const topoDoMapa = useRef<HTMLElement>(null);
   useCabecalhoPreso(topoDoMapa);
   const { nos, proximo } = useMemo(() => montarTrilha(plano), [plano]);
@@ -1226,7 +1223,7 @@ function Plano({ tela, selo, ocupado, abrindo, precarregarLicao, abrirLicao, nov
             </p>
           ) : null}
           <div className="trilha-topo__acoes">
-            {postagem && !plano.recebida ? <MenuCartao plano={plano} compartilhar={compartilhar} configurar={configurar} apagar={apagar} ocupado={ocupado} /> : <>
+            {/* Spec 16, item 26: "Compartilhar" (ou o estado curto) e a engrenagem sempre à vista, como no app; o "•••" sozinho escondia as duas ações mais usadas (o "Postar no meu perfil" fica no "•••" dos cartões de Minhas trilhas e na folha de compartilhar). */}
             {!plano.recebida && compartilhar && (
               <Botao variante="secundario" className="trilha-compartilhar" data-estado={estadoDoCompartilhamento(plano.link)} disabled={ocupado} aria-label={mensagens.compartilhar.entradaRotulo(plano.titulo)} onClick={compartilhar}>
                 <Icone nome="compartilhar" />{rotuloDoEstado(estadoDoCompartilhamento(plano.link))}
@@ -1238,7 +1235,6 @@ function Plano({ tela, selo, ocupado, abrindo, precarregarLicao, abrirLicao, nov
                 <Icone nome="engrenagem" />
               </Botao>
             )}
-            </>}
           </div>
           {tela.aviso && <p className="trilha-aviso" role="status">{tela.aviso}</p>}
         </div>
