@@ -83,7 +83,7 @@ export const mensagens = {
       verPonte: 'Ver outro jeito de entender', ponte: 'Outro jeito de entender',
       ponteMapa: 'Reforço', ponteMapaFeita: 'Ponte construída',
       retornoAutomatico: 'Dica do Stu',
-      verificar: 'Verificar', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição com suas palavras, como se ensinasse um amigo, e dê um exemplo seu. O Stu, o mascote do Studoo, aponta o que faz sentido e propõe uma situação nova.',
+      verificar: 'Verificar', ensinar: 'Explique com suas palavras (opcional)', ensinoDica: 'Explique a ideia desta lição como se ensinasse um amigo e dê um exemplo seu. O Stu aponta o que fez sentido e propõe uma situação nova.',
       ensinoIdeia: (objetivo: string) => `A ideia desta lição: ${objetivo}`,
       ensinoAutomatico: 'Retorno automático: o Stu procura na sua explicação as ideias-chave desta lição.',
       explicacao: 'Sua explicação', enviar: 'Enviar minha explicação', gravar: 'Gravar explicação', parar: 'Parar e transcrever',
@@ -289,22 +289,26 @@ export const mensagens = {
         comecar: 'Criar minha primeira trilha',
         entendi: 'Entendi',
         posicao: (passo: number, total: number) => `Passo ${passo} de ${total}`,
+        /**
+         * Spec 17, mudança 2: sem palavras de dentro do produto ("citação", "ponte", "cartões objetivos"). O 5º passo (só com sessão) não mudou. O 4º passo não promete "no computador ou no
+         * celular" nem "salvo": isso não vale para o visitante (o progresso dele dura 24 h neste aparelho); o texto vale para conta e para visitante (decisão do Lead, 22/11).
+         */
         passos: [
             {
                 titulo: 'Seu material vira lição',
-                texto: 'Envie um arquivo, foto ou pedido e estude com a citação do trecho original.',
+                texto: 'Mande um PDF ou uma foto. O Stu monta lições e mostra de onde tirou cada ideia.',
             },
             {
-                titulo: 'O erro abre outro caminho',
-                texto: 'Quando travar, a ponte explica de outro jeito em três passos até o desafio.',
+                titulo: 'Errou? Tem outro jeito',
+                texto: 'O Stu explica a mesma ideia por outro caminho, em 3 passos curtos, e você tenta de novo.',
             },
             {
-                titulo: 'Explique com suas palavras',
-                texto: 'Conte ao Stu o que entendeu e receba retorno em quatro cartões objetivos.',
+                titulo: 'Explique do seu jeito',
+                texto: 'Conte ao Stu o que entendeu. Ele mostra o que fez sentido e o que revisar.',
             },
             {
-                titulo: 'Progresso salvo no mapa',
-                texto: 'Acompanhe cada lição e ponte concluída na web e no celular, no seu ritmo.',
+                titulo: 'Seu caminho fica no mapa',
+                texto: 'Cada lição concluída fica marcada, e você continua de onde parou.',
             },
             {
                 titulo: 'O que te interessa?',
@@ -445,6 +449,8 @@ export const mensagens = {
             [nivel, ...(estudando > 0 ? [`${estudando} estudando`] : []), ...(valeus > 0 ? [`${valeus} ${valeus === 1 ? GESTO.palavra : GESTO.plural}`] : [])].join(' · '),
         mudarCompartilhamento: 'Mudar compartilhamento',
         recebida: (nome: string) => `Trilha adicionada de ${nome}. As mudanças valem só para a sua cópia; a original continua como ${nome} deixou.`,
+        /** Quem compartilhou excluiu a conta ou parou de compartilhar: sem o nome (`recebidaTemNome`). */
+        recebidaSemNome: 'Trilha adicionada da comunidade. As mudanças valem só para a sua cópia; a original continua como está.',
         apagarTitulo: 'Apagar trilha',
         apagarDica: 'Apaga a trilha, as lições e o seu progresso nela.',
         apagar: 'Apagar trilha',
@@ -687,7 +693,10 @@ export const mensagens = {
         emAlta: 'Em alta esta semana',
         emAltaDoTema: (tema: string) => `Em alta em ${tema} esta semana`,
         emAltaDica: GESTO.legendaEmAlta,
-        posicao: (n: number) => `${n}º lugar`,
+        /** O que o leitor de tela ouve na capa de uma trilha do Em alta (spec 16, item 16): "1º em alta". Era "1º lugar". */
+        posicao: (n: number) => `${n}º em alta`,
+        /** O que a pílula da capa escreve: "1º" (13 px 800 sobre branco). */
+        posicaoSelo: (n: number) => `${n}º`,
         anteriores: 'Ver as anteriores',
         proximas: 'Ver as próximas',
         temas: 'Filtrar por tema',
@@ -1033,8 +1042,12 @@ export const mensagens = {
         contexto: 'Nova trilha',
         montandoTitulo: 'Montando sua trilha',
         aguardandoLicao: 'Ainda montando a próxima lição…',
+        /**
+         * A faixa da proposta (spec 17, mudança 2): "Sua trilha está pronta: 10 lições curtas em 3 partes." Com uma parte só, sem o "em M partes"; com uma lição só,
+         * "Sua trilha está pronta: 1 lição curta." Antes dizia "Proposta pronta", palavra de dentro do produto. Também é o anúncio do leitor de tela.
+         */
         propostaPronta: (licoes: number, partes: number) =>
-            `Proposta pronta: ${licoes} ${licoes === 1 ? 'lição' : 'lições'} em ${partes} ${partes === 1 ? 'parte' : 'partes'}.`,
+            `Sua trilha está pronta: ${licoes} ${licoes === 1 ? 'lição curta' : 'lições curtas'}${licoes > 1 && partes > 1 ? ` em ${partes} partes` : ''}.`,
         comecarLicao1: 'Começar a lição 1',
         criandoTrilha: 'Criando sua trilha…',
         anuncioCriando: 'Criando sua trilha.',
@@ -1051,11 +1064,16 @@ export const mensagens = {
         contagemFinal: (total: number) => `${total} ${total === 1 ? 'lição' : 'lições'}`,
         stuMontando: 'Montando sua trilha, uma lição de cada vez',
         stuPronta: 'Trilha pronta! Confira as lições e comece quando quiser.',
+        /**
+         * As frases da espera da geração (spec 17, mudança 1), nesta ordem e em laço: depois de 3 s de "Montando sua trilha", a placa do alto troca a cada 5 s entre elas
+         * (`dicaDaEspera`, em @studoo/contratos, diz qual). São verdadeiras para conta e para visitante, sem número nem promessa que não medimos (por isso a 4ª não diz "salvo": o
+         * progresso do visitante dura 24 h neste aparelho). Cada uma cabe em 2 linhas em 320 px.
+         */
         dicas: [
-            'Dica: um conceito novo por lição deixa tudo mais leve.',
-            'Dica: revisões de tempos em tempos ajudam a lembrar.',
-            'Dica: errar faz parte. O feedback mostra o caminho.',
-            'Dica: lições curtas cabem em qualquer intervalo do dia.',
+            'Lições curtas, com exercício e retorno na hora.',
+            'Errou? O Stu explica de outro jeito.',
+            'Você confere a trilha antes de começar.',
+            'Cada lição concluída fica marcada no mapa.',
         ],
         ia: 'Gerada por IA a partir do seu pedido. Confira as lições antes de começar.',
         repetida: (titulo: string) => `Você já tem a trilha “${titulo}”. Quer continuar nela em vez de criar outra igual?`,

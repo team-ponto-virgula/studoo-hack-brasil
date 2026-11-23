@@ -14,7 +14,7 @@ import {
   Avatar, BotaoParar, CabecalhoPerfil, Chave, Contador, CoresDoPerfil, Esqueleto, Ficha, FolhaCompartilhar, SeloVisibilidade, Status, abrirNoNavegador,
   codigoDoErro, compartilharNoSistema, copiar, dataCurta, focarSemRolar, socialEstilos, temFolhaDoSistema, textoDoErro, urlDoLink, urlDoPerfil,
 } from './social';
-import { SecaoPrivacidade } from './privacidade';
+import { BotaoExcluirConta, SecaoPrivacidade } from './privacidade';
 import { AvisoMidiaEmRevisao, EstadoDaPublicacao, SecaoAjuda, SecaoBloqueadas } from './seguranca';
 import { FolhaPostarNoPerfil } from './postar-perfil';
 import { SomNoPerfil } from './som';
@@ -258,6 +258,10 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                     <Botao rotulo={p.postar.botao} testID="postar-abrir" variante="secundario" compacto desativado={desativado} acao={() => setPostando(true)} />
                   )}
                 </View>
+                {/* Spec 16, item 32: compartilhar é ter link; postar é aparecer no perfil (a linha diz a diferença, como a web). */}
+                {perfil.links.length > 0 && (
+                  <Text testID="perfil-links-linha" style={perfilEstilos.linhaSecao}>{comunidade ? p.compartilhadasLinha : p.compartilhadasLinhaSemComunidade}</Text>
+                )}
                 {perfil.links.length === 0 && comunidade ? (
                   <View testID="postar-vazio" style={perfilEstilos.postarVazio}>
                     <Text style={estilos.texto}>{p.postar.vazio}</Text>
@@ -334,7 +338,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
             {/* Privacidade e dados, entre Som e Conta, como na web: o uso de IA, a política e "Excluir conta" (Apple 5.1.2(i) e 5.1.1(v)). */}
             <View style={perfilEstilos.secao}>
               <TituloSecao>{mensagens.privacidade.secaoTitulo}</TituloSecao>
-              <SecaoPrivacidade desativado={desativado} visitante={perfil.visitante} />
+              <SecaoPrivacidade desativado={desativado} />
             </View>
 
             {/* Spec 14: "Pessoas bloqueadas" (com a comunidade; vale também para visitante) e "Ajuda", antes de Conta. */}
@@ -362,6 +366,7 @@ export function TelaPerfil({ cliente, perfil: inicial, comunidade, acoes, aoMuda
                 </View>
               )}
               <Botao rotulo={mensagens.sair} testID="sair" variante="secundario" desativado={desativado} acao={sair} estilo={{ alignSelf: 'flex-start' }} />
+              <BotaoExcluirConta desativado={desativado} visitante={perfil.visitante} />
             </View>
           </>
         )}
@@ -755,7 +760,7 @@ export function PerfilSemSocial({ cliente, acoes, desativado, sair, aoSessaoTerm
         </View>
         <View style={perfilEstilos.secao}>
           <TituloSecao>{mensagens.privacidade.secaoTitulo}</TituloSecao>
-          <SecaoPrivacidade desativado={desativado} visitante={visitante} />
+          <SecaoPrivacidade desativado={desativado} />
         </View>
         <View style={perfilEstilos.secao}>
           <TituloSecao>{mensagens.seguranca.ajudaTitulo}</TituloSecao>
@@ -764,6 +769,7 @@ export function PerfilSemSocial({ cliente, acoes, desativado, sair, aoSessaoTerm
         <View style={perfilEstilos.secao}>
           <TituloSecao>{p.conta}</TituloSecao>
           <Botao rotulo={mensagens.sair} testID="sair" variante="secundario" desativado={desativado} acao={sair} estilo={{ alignSelf: 'flex-start' }} />
+          <BotaoExcluirConta desativado={desativado} visitante={visitante} />
         </View>
       </View>
     </Tela>
@@ -771,6 +777,8 @@ export function PerfilSemSocial({ cliente, acoes, desativado, sair, aoSessaoTerm
 }
 
 const perfilEstilos = StyleSheet.create({
+  // .perfil-secao__linha da web: o texto de apoio embaixo do título da seção.
+  linhaSecao: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontSize: 15, lineHeight: 22, marginTop: -4 },
   // .painel--perfil: grade com vão de 20; o título "Perfil" no tamanho de título de página (o <Titulo> de 32/40), como a web.
   painel: { gap: 20 },
   secao: { gap: 10 },

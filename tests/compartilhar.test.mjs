@@ -170,7 +170,16 @@ test('link: código aleatório de 96 bits, um por trilha, só a dona cria, alter
   const patch = await json(linkPatch(pedido(`/api/compartilhar/${codigo}`, { metodo: 'PATCH', token: dona.token, corpo: { noPerfil: true } }), ctx({ codigo })));
   assert.equal(patch.corpo.noPerfil, true);
   const lista = (await json(planosGet(pedido('/api/aprendizado/planos', { token: dona.token })))).corpo;
-  assert.deepEqual(lista.find((p) => p.id === plano.id).link, { codigo, noPerfil: true });
+  // O resumo traz a revisão da equipe (spec 16, item 31): o mapa e o selo de Minhas trilhas dizem "Em revisão" e "Não publicada" como o Perfil.
+  assert.deepEqual(lista.find((p) => p.id === plano.id).link, { codigo, noPerfil: true, moderacao: 'aprovado' });
+  const estado = async () => (await json(planosGet(pedido('/api/aprendizado/planos', { token: dona.token })))).corpo.find((p) => p.id === plano.id).link.moderacao;
+  await banco.linkTrilha.update({ where: { codigo }, data: { moderacao: 'pendente' } });
+  assert.equal(await estado(), 'pendente');
+  await banco.linkTrilha.update({ where: { codigo }, data: { moderacao: 'recusado' } });
+  assert.equal(await estado(), 'recusado');
+  // O plano aberto traz a mesma marca que a lista.
+  const aberto = (await json(planoGet(pedido(`/api/aprendizado/planos/${plano.id}`, { token: dona.token }), ctx({ id: plano.id })))).corpo;
+  assert.deepEqual(aberto.link, { codigo, noPerfil: true, moderacao: 'recusado' });
 });
 
 test('a cópia não leva nada do estudo da dona e adicionar duas vezes não duplica', async () => {
