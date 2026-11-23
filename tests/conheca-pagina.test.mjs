@@ -414,7 +414,8 @@ test('a música de fundo (cerca de 0,9 MB) não é baixada ao abrir a página: s
   const html = desenhar({ aparelho: 'android' });
   assert.match(html, /<div class="cn-pagina"[^>]* data-fundo-so-no-gesto=""/);
   const som = ler('src/app/ambiente-som.tsx');
-  assert.match(som, /if \(!document\.querySelector\('\[data-fundo-so-no-gesto\]'\)\) tocaSons\.prepararFundo\(\);/);
+  assert.match(som, /if \(!naApresentacao\(\)\) tocaSons\.prepararFundo\(\);/);
+  assert.match(som, /const naApresentacao = \(\) => document\.querySelector\(PAGINA_DE_APRESENTACAO\) !== null;/);
   assert.equal((som.match(/prepararFundo\(\)/g) ?? []).length, 1, 'uma única chamada, a protegida');
   // O som já começa do frio no primeiro gesto (mostra "carregando" e toca quando chega): a rotina que o gesto dispara carrega o arquivo se faltar.
   const sons = ler('src/app/sons.ts');

@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { BALAO_DO_NO, CABECALHOS_DO_ALTO, RESPIRO_DO_AVISO, cabecalhoDoAlto, lugarDoAviso } from '../src/app/aviso-musica-regras.ts';
+import { BALAO_DO_NO, CABECALHOS_DO_ALTO, PAGINA_DE_APRESENTACAO, RESPIRO_DO_AVISO, TOPO_DA_PAGINA, avisoPodeFicar, cabecalhoDoAlto, lugarDoAviso } from '../src/app/aviso-musica-regras.ts';
 
 const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
@@ -66,4 +66,29 @@ test('o CSS: o aviso é do alto; o contêiner não recebe toque e só o botão "
   assert.ok(regraDoTexto.length > 0 && !/pointer-events/.test(regraDoTexto), 'o texto do aviso não captura toque (herda none)');
   assert.match(css, /@keyframes aviso-desce \{ from \{ opacity: 0; transform: translateY\(-10px\); \} \}/, 'entra descendo do alto');
   assert.doesNotMatch(css, /\.aviso-musica \{ bottom: max\(/, 'a posição no pé da tela saiu');
+});
+
+test('na página de apresentação o aviso só fica com a página no alto (rolada, cobriria os botões); no app vale a regra de sempre (spec 18, seção 10)', () => {
+  assert.equal(PAGINA_DE_APRESENTACAO, '[data-fundo-so-no-gesto]');
+  assert.equal(avisoPodeFicar(true, 0), true);
+  assert.equal(avisoPodeFicar(true, TOPO_DA_PAGINA - 1), true);
+  assert.equal(avisoPodeFicar(true, TOPO_DA_PAGINA), false);
+  assert.equal(avisoPodeFicar(true, 900), false);
+  for (const rolagem of [0, TOPO_DA_PAGINA, 900]) assert.equal(avisoPodeFicar(false, rolagem), true, `no app, rolado ${rolagem}`);
+});
+
+test('o componente: com o primeiro gesto rolado a música toca e o aviso espera a volta ao alto ou a saída da página; o "já mostrei" só vale quando ele aparece', () => {
+  const fonte = ler('src/app/ambiente-som.tsx');
+  // Rolada, ao tocar a música: espera (não marca nada).
+  assert.match(fonte, /if \(!avisoPodeFicar\(naApresentacao\(\), window\.scrollY\)\) \{ esperar\(\); return; \}/);
+  // A espera: a rolagem (a volta ao alto) e a mudança do DOM (a página sai, vem a próxima tela do app); some quando o aviso aparece ou a música é desligada.
+  assert.match(fonte, /window\.addEventListener\('scroll', tentar, \{ passive: true \}\);\n      const mudanca = new MutationObserver\(tentar\);/);
+  assert.match(fonte, /if \(estado\.fundo === 'mudo'\) \{ mostrar\(false\); esperando\?\.\(\); return; \}/);
+  assert.match(fonte, /function exibir\(\) \{\n      esperando\?\.\(\);\n      jaMostrou\.current = true;/);
+  // Com o aviso à vista e a página rolando para baixo, ele sai (o espaço que abriu fica, como sempre).
+  assert.match(fonte, /if \(!avisoPodeFicar\(naApresentacao\(\), scrollY\)\) \{ mostrar\(false\); return; \}/);
+  // A marca "já mostrei" do armazenamento local só é gravada dentro de `exibir` (nunca na espera).
+  assert.equal((fonte.match(/localStorage\.setItem\(chaveAviso/g) ?? []).length, 1);
+  assert.ok(fonte.indexOf("localStorage.setItem(chaveAviso") > fonte.indexOf('function exibir()'));
+  assert.ok(fonte.indexOf("localStorage.setItem(chaveAviso") < fonte.indexOf('function tentar()'));
 });

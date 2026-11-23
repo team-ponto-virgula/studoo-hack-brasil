@@ -34,6 +34,17 @@ export function reservaDoAviso(alturaDoAviso: number): number {
 /** Até onde a página ainda está no alto (o cabeçalho na janela). Rolada além disso, descer o conteúdo moveria o que a pessoa está lendo. */
 export const TOPO_DA_PAGINA = 4;
 
+/** A página de apresentação (spec 18) leva esta marca; é onde o aviso tem uma regra a mais. */
+export const PAGINA_DE_APRESENTACAO = '[data-fundo-so-no-gesto]';
+
+/**
+ * Na página de apresentação o aviso só fica com a página no alto (spec 18, seção 10): rolada, ele, fixo no alto da janela, cobriria os botões que passam por baixo (o "Experimentar
+ * sem conta" do S4 e do S5). Se o primeiro gesto vier com a página rolada, a música toca e o aviso espera a volta ao alto ou a próxima tela do app. No app vale a regra de sempre.
+ */
+export function avisoPodeFicar(naApresentacao: boolean, rolagem: number): boolean {
+  return !naApresentacao || rolagem < TOPO_DA_PAGINA;
+}
+
 /**
  * Quem desce para dar lugar ao aviso. Com um cabeçalho à vista, o elemento que vem logo depois dele (o conteúdo da tela). Sem cabeçalho à vista (o computador não tem a faixa, ou a página já rolou),
  * o conteúdo principal, mas só se a página está no alto: rolada, o aviso fica sobre o que passa por ali e nada se mexe.
