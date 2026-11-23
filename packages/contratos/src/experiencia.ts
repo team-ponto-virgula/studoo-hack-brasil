@@ -745,7 +745,7 @@ export const mensagens = {
         demonstracao: 'Exemplo',
         /** O nome do selo para o leitor de tela (a palavra "Exemplo" na tela fica escondida dele, para não repetir). */
         demonstracaoRotulo: 'Exemplo criado pelo Studoo para mostrar o app',
-        demonstracaoDica: 'Trilha pronta do modo demonstração.',
+        demonstracaoDica: 'Trilha de exemplo do Studoo.',
         /** O parágrafo do alto do Explorar saiu (spec 16, item 9); o app ainda o usa até a troca (Mobile 2), por isso a chave fica, coerente com "Exemplo". */
         demonstracaoExplica: '“Exemplo” marca conteúdo criado pelo Studoo para mostrar o app.',
         entrarParaAgir: GESTO.faixaSemConta,
@@ -790,14 +790,14 @@ export const mensagens = {
         publicada: 'Publicada no Explorar.',
         publicacaoSalva: 'Tema e legenda salvos.',
         materialFora: 'Trilha feita de material não vai para o Explorar: o material pode ser de outra pessoa.',
-        demonstracaoAviso: 'Esta trilha é do modo demonstração e aparece no Explorar com o rótulo “Exemplo”.',
+        demonstracaoAviso: 'Esta trilha é um exemplo do Studoo e aparece no Explorar com o rótulo “Exemplo”.',
         verNoExplorar: 'Ver no Explorar',
         irAoExplorar: 'Ver trilhas da comunidade',
         // Tela Perfil (dona)
         ajustar: 'Quem pode ver',
         ajustarRotulo: (titulo: string) => `Mudar quem pode ver “${titulo}”`,
         naSuaPagina: 'Como os outros veem',
-        perfilDemo: 'Perfil de demonstração',
+        perfilDemo: 'Perfil de exemplo',
         // Seguir (etapa C2)
         seguir: 'Seguir',
         seguindo: 'Seguindo',

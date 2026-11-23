@@ -30,7 +30,9 @@
 .apresentacao-codigo__fechar:focus-visible { outline: 3px solid var(--acao); outline-offset: 2px; }
 .apresentacao-codigo__bloco { display: grid; justify-items: center; gap: 20px; padding-bottom: 48px; }
 .apresentacao-codigo__titulo { margin: 0; max-width: 40ch; font-size: clamp(1.5rem, 4vw, 3rem); text-align: center; text-wrap: balance; }
-.apresentacao-codigo__demo { justify-self: center; margin: -8px 0 0; }
+/* O selo "Exemplo" fica centrado sob o título, colado a ele. Duas classes (0,2,0) para vencer o `.selo-demo` de comunidade.css (justify-self: start; margin: 0), que tem uma só:
+   com uma classe só, quem ganhava era o arquivo que chegasse depois à página, e o selo ia para a borda esquerda. */
+.apresentacao-codigo__bloco .apresentacao-codigo__demo { justify-self: center; margin: -8px 0 0; }
 .apresentacao-codigo__codigo { display: block; width: min(92vw, calc(100svh - 330px)); max-width: 900px; aspect-ratio: 1; }
 .apresentacao-codigo__marca { display: block; width: 120px; height: auto; }
 .apresentacao-codigo__codigo svg { display: block; width: 100%; height: 100%; }
