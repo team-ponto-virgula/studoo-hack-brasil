@@ -1,4 +1,5 @@
-import { TAMANHO_OG, imagemDaApresentacao } from '@/servidor/og/cartao';
+import { TAMANHO_OG } from '@/servidor/og/base';
+import { imagemDaApresentacao } from '@/servidor/og/apresentacao';
 import { CAPTURAS } from './imagens.gerado';
 import { textos } from './textos';
 

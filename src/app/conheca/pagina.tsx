@@ -2,7 +2,6 @@ import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
 import { CABECALHO_NA_RAIZ } from '@/servidor/acesso/raiz';
-import { visitanteAtivo } from '@/servidor/acesso/visitante';
 import { Desenho } from '../../ui/mundo';
 import { Mascote } from '../../ui/mascote';
 import { BotaoSom } from '../som';
@@ -169,6 +168,8 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
 export async function PaginaDeApresentacao() {
   const cabecalhos = await headers();
   const biscoitos = await cookies();
+  // O módulo do visitante abre o cliente do banco ao ser importado: aqui, só na hora do pedido, a página (e o teste dela) não depende do banco.
+  const { visitanteAtivo } = await import('@/servidor/acesso/visitante');
   return (
     <PaginaVista
       aparelho={detectarAparelho(cabecalhos.get('user-agent'))}

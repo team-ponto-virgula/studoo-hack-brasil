@@ -352,6 +352,15 @@ test('a música de fundo (cerca de 0,9 MB) não é baixada ao abrir a página: s
   assert.match(sons, /const buf = await this\.carregarBuffer\(arquivoSonoro\('fundos', def\.arquivo\), TIMEOUT_CARREGAMENTO_MS\);/);
 });
 
+test('a página não importa o banco ao carregar (o módulo do visitante abre o cliente do banco): só na hora do pedido; por isso a suíte roda sem DATABASE_URL', () => {
+  const pagina = ler('src/app/conheca/pagina.tsx');
+  assert.doesNotMatch(pagina, /^import[^\n]*acesso\/visitante/m, 'sem importação estática do módulo do visitante');
+  assert.match(pagina, /const \{ visitanteAtivo \} = await import\('@\/servidor\/acesso\/visitante'\);/);
+  for (const arquivo of ['src/app/conheca/pagina.tsx', 'src/app/conheca/page.tsx', 'src/app/conheca/inicio.ts', 'src/app/conheca/links.ts']) {
+    assert.doesNotMatch(ler(arquivo), /^import[^\n]*(servidor\/banco|compartilhar\/servico|acesso\/sessao|acesso\/visitante)/m, `${arquivo} não importa o banco`);
+  }
+});
+
 test('o iPhone fora do Safari (outros navegadores e os de dentro de aplicativos) recebe o pedido para abrir no Safari', () => {
   const safari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
   assert.equal(foraDoSafariNoIphone(safari), false);
