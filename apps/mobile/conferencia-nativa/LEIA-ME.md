@@ -91,3 +91,10 @@ Animações ligadas, como no iPhone. Não conferido: aparelho de verdade, o volu
 - **Outro aparelho ou outro iOS**: as entradas `aparelho` e `ios` do disparo manual. Se o iOS pedido não existir na máquina, a conferência segue no mais novo que houver e avisa.
 
 `ios.sh` e `android.sh` têm um subcomando por passo do workflow; o que os dois fazem igual está em `comum.sh`, que roda no bash 3.2 do macOS e no do Ubuntu. `preparar-dados.mjs` só aceita a API do próprio computador e conta em domínio `.test`.
+
+## Repetir só o que caiu e diagnosticar o servidor local (23/11)
+
+- **Lista de telas nos dois sistemas.** `CONFERENCIA_TELAS` (nomes de `telas/config.yaml` separados por vírgula, ou `criacao`/`so-criacao` para só a prova da criação) vale também no iPhone: `fluxo_telas` passa para uma sessão do Maestro por fluxo, como no Android, e o simulador é conferido antes de cada uma (`aparelho_responde`, em `ios.sh`; o iPhone não religa o simulador). No workflow, o Android lê o input `telas_android`; o iPhone lê `telas_ios`, se o workflow tiver esse input. As capturas das telas fora da lista aparecem como faltando na coleta.
+- **Hora e desistência no proxy.** Cada linha do `proxy.log` começa pela hora UTC do fim do pedido. O pedido que quem chamou largou antes da resposta (o app fechado pelo `stopApp` de cada fluxo, o tempo limite do app) sai como `499 (quem chamou desistiu)`; até a execução 45092395865 ele aparecia como `502 (servidor fora do ar)`. O resumo conta à parte os 5xx (com os horários), os 499 e os pedidos acima de 3 s.
+- **Carga dos processos.** Do fim do preparo dos dados até o fim do job, `carga-dos-processos.log` guarda a cada 10 s a carga da máquina, a memória livre e os 8 processos com mais CPU (pid, %CPU, MB, nome), com a hora UTC que casa com a do `proxy.log`.
+

@@ -7,7 +7,10 @@
 // escritos pelo proxy e nunca aceitos de quem chama.
 //
 // Uso: node proxy-https.mjs --cert local.crt --chave local.key [--porta 3443] [--destino http://localhost:3000]
-// Sem dependências. Uma linha por pedido na saída (método, caminho sem a busca, status e tempo), sem cabeçalhos nem corpo.
+// Sem dependências. Uma linha por pedido na saída (hora UTC do fim, método, caminho sem a busca, status e tempo), sem
+// cabeçalhos nem corpo: "01:23:45.678 GET /api/sessao 200 12ms". Quem chamou desistir antes da resposta (o app fechado
+// pelo stopApp de cada fluxo, o tempo limite do app, Cancelar) sai como "499 (quem chamou desistiu)", e não como 502: até
+// a execução 45092395865 esse caso aparecia como "502 (servidor fora do ar)" e inflava a conta de quedas do servidor.
 import { readFileSync } from 'node:fs';
 import http from 'node:http';
 import https from 'node:https';
@@ -40,7 +43,8 @@ const DE_UM_SALTO = new Set(['connection', 'keep-alive', 'proxy-connection', 'te
 const servidor = https.createServer({ cert: readFileSync(values.cert), key: readFileSync(values.chave) }, (pedido, resposta) => {
   const inicio = performance.now();
   const caminho = (pedido.url ?? '/').split('?')[0];
-  const registrar = (status) => console.log(`${pedido.method} ${caminho} ${status} ${Math.round(performance.now() - inicio)}ms`);
+  const registrar = (status) => console.log(`${new Date().toISOString().slice(11, 23)} ${pedido.method} ${caminho} ${status} ${Math.round(performance.now() - inicio)}ms`);
+  let desistiu = false;
 
   const cabecalhos = {};
   for (const [nome, valor] of Object.entries(pedido.headers)) {
@@ -75,10 +79,10 @@ const servidor = https.createServer({ cert: readFileSync(values.cert), key: read
     } else {
       resposta.destroy();
     }
-    registrar('502 (servidor fora do ar)');
+    registrar(desistiu ? '499 (quem chamou desistiu)' : '502 (servidor fora do ar)');
   });
-  // Quem chamou desistiu (tempo limite do app, Cancelar): o pedido ao servidor também para.
-  resposta.once('close', () => { if (!resposta.writableEnded) adiante.destroy(); });
+  // Quem chamou desistiu (tempo limite do app, Cancelar, o app fechado): o pedido ao servidor também para.
+  resposta.once('close', () => { if (!resposta.writableEnded) { desistiu = true; adiante.destroy(); } });
   pedido.pipe(adiante);
 });
 
