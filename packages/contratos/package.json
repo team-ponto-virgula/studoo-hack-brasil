@@ -4,6 +4,10 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./abertura": {
+      "types": "./src/abertura.ts",
+      "default": "./src/abertura.ts"
+    },
     ".": {
       "types": "./src/aprendizado.ts",
       "default": "./src/aprendizado.ts"
