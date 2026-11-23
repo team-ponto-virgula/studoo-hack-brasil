@@ -1,7 +1,7 @@
 import { useState, type ComponentRef, type Ref } from 'react';
 import { falarTextoComFormulas } from '@studoo/contratos';
 import { TextoComFormulas } from './texto-com-formulas';
-import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { usePulinho } from './animacoes';
 import { degrauFora, estilos } from './interface';
@@ -38,6 +38,10 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
   else if (retorno === 'errada') { estado = opcaoEstilos.opcaoErrada; corDegrau = '#F2CF96'; }
   else if (selecionada) { estado = opcaoEstilos.opcaoSelecionada; corDegrau = '#9FB1F0'; }
 
+  // Spec 16, item 6: o quadrinho da letra cresce com o texto do sistema (lado de 1,75 × o tamanho da letra, no mínimo 30,
+  // sempre quadrado e raio 9); o texto da opção ocupa o resto da linha e quebra ao lado dele, nunca por baixo.
+  const { fontScale } = useWindowDimensions();
+  const lado = ladoDaLetra(fontScale);
   return (
     <Animated.View style={{ transform: [{ scale: pulo }], opacity: apagada ? 0.55 : 1 }}>
       {/* aria-checked além do accessibilityState: o React Native Web só lê os atributos aria-* (o leitor de tela da web precisava do estado). */}
@@ -48,7 +52,7 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
         {/* A face: borda de 2 que fecha em volta (o degrau de 4 é o pai, por fora, como a sombra da web). */}
         <View style={[opcaoEstilos.opcao, estado]}>
         <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden
-          style={[opcaoEstilos.letra, selecionada && opcaoEstilos.letraSelecionada, retorno === 'certa' && opcaoEstilos.letraCerta,
+          style={[opcaoEstilos.letra, { width: lado, height: lado }, selecionada && opcaoEstilos.letraSelecionada, retorno === 'certa' && opcaoEstilos.letraCerta,
             retorno === 'errada' && opcaoEstilos.letraErrada]}>
           <Text style={[opcaoEstilos.letraTexto, (selecionada || retorno) && { color: cores.fundo }]}>{letra}</Text>
         </View>
@@ -62,6 +66,15 @@ export function Opcao({ id, letra, texto, selecionada, retorno, desativada, apag
   );
 }
 
+/**
+ * O tamanho da letra da opção (14) e o lado do quadrinho: 1,75 × a letra já ampliada pelo sistema, no mínimo 30, sem
+ * arredondar, como a web (calc(1.75em), 30 / 36,75 / 49 a 100, 150 e 200% de texto).
+ */
+export const LETRA_DA_OPCAO = 14;
+export function ladoDaLetra(fontScale: number) {
+  return Math.max(30, 1.75 * LETRA_DA_OPCAO * (fontScale > 0 ? fontScale : 1));
+}
+
 const opcaoEstilos = StyleSheet.create({
   // .opcoes label: 60 de altura mínima, 12 × 16 de respiro, borda de 2 em volta e raio de 16.
   opcao: { minHeight: 60, flexDirection: 'row', alignItems: 'center', gap: 14, borderRadius: 16, borderWidth: 2,
@@ -70,9 +83,9 @@ const opcaoEstilos = StyleSheet.create({
   opcaoCerta: { borderColor: cores.sucessoClaro, backgroundColor: '#EEFAF3' },
   opcaoErrada: { borderColor: '#E3A24A', backgroundColor: '#FFF6EA' },
   opcaoTexto: { flex: 1, fontWeight: '700' },
-  letra: { width: 30, height: 30, borderRadius: 9, borderWidth: 2, borderColor: cores.gelo, alignItems: 'center', justifyContent: 'center' },
+  letra: { width: 30, height: 30, flexShrink: 0, alignSelf: 'center', borderRadius: 9, borderWidth: 2, borderColor: cores.gelo, alignItems: 'center', justifyContent: 'center' },
   letraSelecionada: { borderColor: cores.acao, backgroundColor: cores.acao },
   letraCerta: { borderColor: cores.sucessoClaro, backgroundColor: cores.sucessoClaro },
   letraErrada: { borderColor: '#E3A24A', backgroundColor: '#E3A24A' },
-  letraTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: 14, lineHeight: 18 },
+  letraTexto: { color: cores.textoSecundario, fontFamily: fontes.corpo, fontWeight: '900', fontSize: LETRA_DA_OPCAO, lineHeight: 18, textAlign: 'center' },
 });

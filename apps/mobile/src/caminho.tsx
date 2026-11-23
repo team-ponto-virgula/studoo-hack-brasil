@@ -17,7 +17,7 @@ import {
 import { useAparecer, useVaiVem } from './animacoes';
 import { Confete } from './festa';
 import { Icone } from './icone';
-import { AlturaDaFaixaFixa, Botao, DeslocamentoDaRolagem, EspacoDaBarra, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
+import { AlturaDaFaixaFixa, AvisoDoApp, Botao, DeslocamentoDaRolagem, EspacoDaBarra, Pontinhos, estilos, useBalanco, useMovimentoReduzido, caixaAlta, degrade, quebraSemViuva } from './interface';
 import { mensagens } from './mensagens';
 import { desenhosQueBalancam, enfeitesDaLinha, type NomeDesenho } from './mundo-desenhos';
 import { ColinaElipse, Desenho, Fronteira, Onda, coresDaRegiao } from './mundo';
@@ -195,6 +195,14 @@ export function Caminho({ nos, stu, dicas = [], chegada = true, montando = false
   // troféu continua por baixo dela, com a altura que ela cobre a mais, sem faixa branca no fim. Sem a barra, 0.
   const espacoDaBarra = useContext(EspacoDaBarra);
   const [aberto, setAberto] = useState<string | null>(null);
+  // Spec 16, item 14 (ee85828): se o balão de um nó abre com o aviso do alto à vista (o da música), o aviso fecha na hora,
+  // sem animação, para nunca disputar com o balão.
+  const { aviso, dispensar } = useContext(AvisoDoApp);
+  useEffect(() => {
+    if (aberto !== null && aviso?.noAlto) dispensar();
+    // Só quando um balão abre.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aberto]);
   // Largura do caminho (a serpentina usa pixels): começa pela tela e se ajusta quando a lista mede.
   const [largura, setLargura] = useState(() => (largo ? Math.min(width, 620) : width));
   // A entrada em sequência só acontece numa trilha que já abre pronta, não quando a geração termina.
