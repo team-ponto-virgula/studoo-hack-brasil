@@ -178,8 +178,6 @@
 .postar-estado[data-revisao='pendente'] { background: var(--nevoa); }
 .postar-estado[data-revisao='recusado'] { color: #9a5b00; background: #fff6ea; }
 .postar-estado[data-erro] { color: var(--erro); background: none; padding: 0; }
-.trilha-topo__acoes .plano-cartao__menu { position: relative; inset: auto; }
-.trilha-topo__acoes .plano-cartao__opcoes { left: 0; right: auto; }
 
 .perfil-links { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .perfil-link { display: grid; gap: 6px; padding: 14px 16px; border: 2px solid var(--gelo); border-radius: 16px; }
