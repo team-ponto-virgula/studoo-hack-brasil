@@ -235,6 +235,7 @@ servidor() {
   fi
   cat "$REGISTROS/preparar-dados.log"
   aquecer_servidor
+  iniciar_amostra_de_carga
 
   resumo "**Dados da conta sintética** (trilha de cada formato de exercício e a lição em que ela está):"
   resumo ""
@@ -260,25 +261,55 @@ aquecer_servidor() {
   echo "Servidor aquecido: $(wc -l < "$REGISTROS/aquecimento.log" | tr -d ' ') pedidos (aquecimento.log)."
 }
 
-# Uma linha no resumo com a saúde do servidor local durante os fluxos, pelo proxy.log (cada linha: método, caminho, código
-# e "<n>ms" no fim; o 502 do proxy diz "(servidor fora do ar)"): quantos 5xx e quantos pedidos acima de 3 s, e os três mais
-# lentos. Serve para separar a instabilidade da máquina de um defeito do app.
+# Diagnóstico das travadas do servidor local (Lead, 23/11): a cada 10 s, até o fim do job, a carga da máquina, a memória
+# livre e os 8 processos que mais usam CPU (pid, %CPU, memória residente em MB, nome), numa linha só, com a hora UTC, em
+# carga-dos-processos.log. A hora casa com a do proxy.log. Roda nos dois sistemas (ps do macOS e do Linux) e não para
+# nada se falhar.
+iniciar_amostra_de_carga() {
+  local registro="$REGISTROS/carga-dos-processos.log"
+  echo "hora UTC | carga 1/5/15 min | memória | 8 processos com mais CPU: pid %CPU MB nome" > "$registro"
+  (
+    set +e +o pipefail
+    while :; do
+      if [ "$(uname)" = Darwin ]; then
+        carga="$(sysctl -n vm.loadavg 2> /dev/null | tr -d '{}' | xargs)"
+        memoria="$(memory_pressure -Q 2> /dev/null | sed -n 's/.*free percentage: *//p') livre"
+        processos="$(ps -Ao pid=,pcpu=,rss=,comm= -r 2> /dev/null | head -8)"
+      else
+        carga="$(cut -d' ' -f1-3 /proc/loadavg 2> /dev/null)"
+        memoria="$(free -m 2> /dev/null | awk '/^Mem:/ { print $7 " MB disponíveis" }')"
+        processos="$(ps -eo pid=,pcpu=,rss=,comm= --sort=-pcpu 2> /dev/null | head -8)"
+      fi
+      printf '%s | %s | %s | %s\n' "$(date -u +%H:%M:%S)" "$carga" "$memoria" \
+        "$(printf '%s\n' "$processos" | awk '{ n = $4; for (i = 5; i <= NF; i++) n = n " " $i; sub(/.*\//, "", n); printf "%s %s%% %dMB %s; ", $1, $2, $3 / 1024, n }')"
+      sleep 10
+    done
+  ) >> "$registro" 2>&1 < /dev/null &
+  echo "Amostra de carga dos processos a cada 10 s em carga-dos-processos.log (pid $!)."
+}
+
+# Uma linha no resumo com a saúde do servidor local durante os fluxos, pelo proxy.log (cada linha: hora, método, caminho,
+# código e "<n>ms" no fim; o 502 do proxy diz "(servidor fora do ar)", e o 499, que o app desistiu): quantos 5xx (com os
+# horários), quantos 499, quantos pedidos acima de 3 s e o mais lento. Serve para separar a instabilidade da máquina de um defeito do app.
 resumir_proxy() {
   local registro="$REGISTROS/proxy.log" inicio linha
   [ -f "$registro" ] || return 0
   inicio="$(cat "$REGISTROS/proxy-inicio-dos-fluxos.txt" 2> /dev/null || echo 0)"
+  # A linha pode começar pela hora (proxy-https.mjs desde 23/11): "01:23:45.678 GET /api/sessao 200 12ms".
   linha="$(tail -n +"$((inicio + 1))" "$registro" | awk '
+    { hora = ""; if ($1 ~ /^[0-9][0-9]:[0-9][0-9]:/) { hora = $1; $1 = ""; $0 = $0 } }
     $1 ~ /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)$/ {
       total++
-      if ($3 ~ /^5[0-9][0-9]$/) cinco++
+      if ($3 ~ /^5[0-9][0-9]$/) { cinco++; if (hora != "" && cinco <= 6) horas = horas (horas == "" ? "" : ", ") hora }
+      if ($3 == "499") desistiu++
       ms = $NF; sub(/ms$/, "", ms); ms += 0
-      if (ms > 3000) { lentos++; lista[lentos] = ms " ms " $1 " " $2 " " $3 }
-      if (ms > maximo) maximo = ms
+      if (ms > 3000) lentos++
+      if (ms > maximo) { maximo = ms; lento = $1 " " $2 (hora != "" ? " às " hora : "") }
     }
     END {
-      printf "%d pedidos, %d com 5xx, %d acima de 3 s (o mais lento: %d ms)", total, cinco, lentos, maximo
+      printf "%d pedidos, %d com 5xx%s, %d desistidos pelo app (499), %d acima de 3 s (o mais lento: %d ms, %s)", total, cinco, horas != "" ? " (" horas ")" : "", desistiu, lentos, maximo, lento
     }')"
-  resumo "Servidor local durante os fluxos (proxy.log, depois do aquecimento): $linha."
+  resumo "Servidor local durante os fluxos (proxy.log, depois do aquecimento): $linha. A carga de cada processo, a cada 10 s, está em carga-dos-processos.log."
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -619,7 +650,9 @@ fluxo_criacao() {
 
 fluxo_telas() {
   local falhas
-  if [ "${TELAS_UMA_POR_VEZ:-}" = "1" ]; then
+  # Com CONFERENCIA_TELAS (lista de telas, ou "criacao" para só a prova da criação), nas duas plataformas: o iPhone também
+  # repete só o que caiu (input telas_ios do workflow), uma sessão do Maestro por fluxo, como o Android.
+  if [ "${TELAS_UMA_POR_VEZ:-}" = "1" ] || [ -n "${CONFERENCIA_TELAS:-}" ]; then
     fluxo_telas_uma_por_vez
     return
   fi

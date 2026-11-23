@@ -137,6 +137,13 @@ ligar() {
   echo "Simulador $id ligando em segundo plano."
 }
 
+# O simulador ainda está ligado? Usado antes de cada fluxo quando a conferência roda uma lista de telas
+# (CONFERENCIA_TELAS, comum.sh fluxo_telas_uma_por_vez). O iPhone não religa o simulador: se ele não estiver ligado, os
+# fluxos que faltam ficam como "não rodou".
+aparelho_responde() {
+  xcrun simctl list devices booted 2> /dev/null | grep -qF "$(udid)"
+}
+
 # ---------------------------------------------------------------------------------------------------------------------
 # simulador: espera ligar, instala a CA local e o Expo Go
 
