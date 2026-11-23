@@ -127,7 +127,7 @@ O momento 4 diz "com uma conta", porque o progresso do visitante fica só no apa
 **S3:**
 - título "Pode ser qualquer assunto";
 - linha "Comece com uma ideia pronta ou escreva a sua.";
-- as seis ideias da tela inicial, em fichas com o ícone de cada uma: "Violão do zero: primeiros acordes", "Inglês para conversar em viagens", "Culinária: receitas básicas", "História do Brasil para a prova", "Frações" e "Fotografia com o celular";
+- as seis ideias da tela inicial, em fichas com o ícone de cada uma, numa grade que quebra linha (todas à vista, também em 390): "Violão do zero: primeiros acordes", "Inglês para conversar em viagens", "Culinária: receitas básicas", "História do Brasil para a prova", "Frações" e "Fotografia com o celular";
 - tocar numa ficha começa a sessão de visitante já com aquela ideia no campo. Se isso pedir rota nova, a ficha só abre o visitante, sem preencher (o Web & API decide).
 
 **S4:**
@@ -175,7 +175,7 @@ O critério de todas: com função, leves, só CSS e IntersectionObserver, e a v
 | Entrada de cada seção | 20% da seção na tela, uma vez | 400 ms, sumir e aparecer, subindo 16 px, saída suave | Ritmo de leitura | Tudo já à vista |
 | Celular preso do S2 (1280) | O texto de um momento cruza o meio da tela | Troca de tela em 300 ms, sumir e aparecer; a moldura não se mexe | A tela do momento que se lê ("voar em vez de teletransportar") | Cada momento com a sua captura ao lado, como no celular |
 | Selo "Progresso salvo agora" (momento 4) | O momento 4 na tela, uma vez | Escala de 1 a 1,06 e de volta, em 320 ms, e o ponto verde acende | A sincronia acontecendo | O selo parado |
-| Fichas do S3 | A seção na tela | Fileira correndo para a esquerda, 40 s por volta, linear, em laço; para com o ponteiro em cima, com foco ou com toque | Muitos assuntos possíveis | As fichas em grade, quebrando linha |
+| Fichas do S3 | A seção na tela, uma vez | As seis fichas em grade, quebrando linha, entram uma a uma (60 ms entre elas, 300 ms cada, subindo 8 px). Não há fileira correndo em laço | Muitos assuntos possíveis | As seis fichas já à vista |
 | Stu do S5 | A seção na tela, uma vez | Um ciclo do `stu-celebrando` animado | Fechar com alegria | Parado |
 
 Nenhuma animação muda o lugar de botão ou de texto já à vista. O laço do herói e o das fichas param com a aba escondida.
@@ -252,3 +252,26 @@ Nada de prévia web dentro de moldura de celular.
   - "A ponte do Studoo: outro jeito de entender, em 3 passos";
   - "O retorno do Stu à sua explicação";
   - "O mapa da trilha no app".
+
+## 10. Conferência da primeira versão (Web & API, ramo `feat/web-landing`, 23/11)
+
+Fotos do build de produção local em 390 (Android e iPhone), 768 e 1280, com e sem movimento. Ainda não é o site publicado.
+- **Aprovado:** a estrutura e a ordem; a primeira dobra com o botão à vista em 390; os estados do botão por aparelho; o computador com "Experimentar sem conta" principal e o cartão do QR com o tamanho (114,9 MB); a folha do iPhone; o S4 com o seletor e o QR no computador; a chamada final; o rodapé; a versão parada.
+- **Decisões do Web & API, aceitas:**
+  - o momento 4 com a janela de navegador desenhada pelo Studoo, a captura real da web e o celular sobre o canto;
+  - o azul escuro `#1D4ED8` em "Entrar" e "Experimentar sem conta" sobre o céu;
+  - os `alt` do momento 1 e da janela;
+  - o `stu-curioso` de 96 no S3;
+  - os nomes acessíveis começando pelo texto visível.
+
+**Ajustes:**
+1. **Título com uma frase por linha.** Hoje ele quebra em "Aprenda qualquer coisa. Uma / lição por vez.", com a segunda frase partida. Cada frase começa numa linha própria: "Aprenda qualquer coisa." e "Uma lição por vez.". Dentro de cada frase, a quebra é a do texto, equilibrada (`text-wrap: balance`). No computador, com a coluna de 560, fica "Aprenda qualquer / coisa. / Uma lição por vez.", e em 768, como já está, uma frase por linha.
+2. **As ideias do S3 em grade, sem fileira correndo** (tabela da seção 4). Em 390, a fileira mostrava uma ficha só, o que não diz "qualquer assunto". A grade mostra as seis e dispensa o botão de pausar da regra 2.2.2 da WCAG.
+3. **O aviso de música na página só aparece no alto da página.** Com a página rolada, o aviso fixo no alto cobria botões (o "Experimentar sem conta" do S4 e do S5 em 390 e em 1280), contra a spec 16, item 14.
+   - Se o primeiro gesto acontecer com a página rolada (mais que a altura do cabeçalho), a música começa, mas o aviso espera: ele aparece quando a pessoa volta ao alto, ou na próxima tela do app;
+   - como o aviso é de uma vez por aparelho, ele não se perde.
+- **As capturas provisórias continuam até chegarem as finais** (seção 9):
+  - o herói limpo da mesma trilha;
+  - o momento 1 com o PDF de verdade, sem o selo;
+  - de preferência, o mapa do momento 4 sem "Em revisão".
+  O momento 1 não espera um build com o texto novo: espera a captura com o material de verdade.
