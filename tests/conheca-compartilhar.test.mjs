@@ -20,7 +20,7 @@ const raiz = resolve(import.meta.dirname, '..');
 const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
 const { generateMetadata } = await import('../src/app/conheca/page.tsx');
 const imagem = await import('../src/app/conheca/opengraph-image.tsx');
-const { textos } = await import('../src/app/conheca/textos.ts');
+const { textos, frasesDoTitulo } = await import('../src/app/conheca/textos.ts');
 
 const comOrigem = (valor, corpo) => {
   const antes = process.env.STUDOO_ORIGEM;
@@ -82,5 +82,5 @@ test('a linha do subtítulo e as duas linhas do título são frases inteiras da 
   const fonte = ler('src/app/conheca/opengraph-image.tsx');
   assert.match(fonte, /textos\.heroi\.subtitulo\.split\('\. '\)\.slice\(-1\)\[0\]/);
   assert.equal(textos.heroi.subtitulo.split('. ').slice(-1)[0], 'O Studoo monta lições curtas e, quando você erra, explica de outro jeito.');
-  assert.deepEqual(textos.heroi.titulo.split('. ').map((parte, i, todas) => (i < todas.length - 1 ? `${parte}.` : parte)), ['Aprenda qualquer coisa.', 'Uma lição por vez.']);
+  assert.deepEqual(frasesDoTitulo(textos.heroi.titulo), ['Aprenda qualquer coisa.', 'Uma lição por vez.']);
 });

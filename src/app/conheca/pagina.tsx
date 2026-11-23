@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 import { nomeCookieSessao } from '@/servidor/acesso/origem';
@@ -21,7 +22,7 @@ import { escolherInicio } from './inicio';
 import { linksDoSite, tamanhoDoApk, type LinksDoSite } from './links';
 import { origemPublica } from './origem-publica';
 import { svgDoQr } from './qr';
-import { textos } from './textos';
+import { frasesDoTitulo, textos } from './textos';
 import './conheca.css';
 
 /** Os `alt` da spec 18 (seção 9). O do momento 1 e o da janela do momento 4 não vêm na lista da spec: são meus, no mesmo tom. */
@@ -75,7 +76,9 @@ export function PaginaVista({ aparelho, links, origem, comSessao, visitante, naR
             <span className="cn-colina" />
           </div>
           <div className="cn-heroi__texto">
-            <h1 id="cn-titulo-heroi" className="cn-heroi__titulo">{textos.heroi.titulo}</h1>
+            <h1 id="cn-titulo-heroi" className="cn-heroi__titulo">
+              {frasesDoTitulo(textos.heroi.titulo).map((frase, indice) => <Fragment key={frase}>{indice > 0 && ' '}<span className="cn-heroi__frase">{frase}</span></Fragment>)}
+            </h1>
             <p className="cn-heroi__subtitulo">{textos.heroi.subtitulo}</p>
             <AcoesDeInstalar {...dados} qr={qrDoHeroi} lugar="heroi" />
           </div>

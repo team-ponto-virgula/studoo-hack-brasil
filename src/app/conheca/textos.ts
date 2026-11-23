@@ -3,6 +3,11 @@
  * Moram aqui, e não no contrato, porque a página só existe na web (spec 07, P34). Nenhum número, promessa ou depoimento que não
  * foi medido: o único número é o tamanho do APK, medido (links.ts).
  */
+/** O título do herói em frases ("Aprenda qualquer coisa." e "Uma lição por vez."): cada uma numa linha, como pede o Designer (spec 18, seção 10). */
+export function frasesDoTitulo(titulo: string): string[] {
+  return titulo.split('. ').map((parte, indice, todas) => (indice < todas.length - 1 ? `${parte}.` : parte));
+}
+
 export const textos = {
   pagina: {
     titulo: 'Studoo: aprenda qualquer coisa, uma lição por vez',

@@ -80,6 +80,8 @@
 }
 .cn-heroi__texto { position: relative; z-index: 1; display: grid; align-content: start; }
 .cn-heroi__titulo { font: 700 2rem/38px Quicksand, sans-serif; letter-spacing: -0.035em; color: var(--texto); }
+/* Uma frase por linha ("Aprenda qualquer coisa." e "Uma lição por vez."), cada uma equilibrada por dentro (spec 18, seção 10). */
+.cn-heroi__frase { display: block; text-wrap: balance; }
 .cn-heroi__subtitulo { margin-top: 12px; color: var(--texto2); font-size: 1.0625rem; line-height: 26px; font-weight: 600; }
 .cn-acoes { margin-top: 24px; display: grid; gap: 8px; }
 .cn-acoes--celular, .cn-acoes--computador { justify-items: stretch; }

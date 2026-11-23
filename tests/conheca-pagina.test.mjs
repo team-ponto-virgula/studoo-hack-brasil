@@ -23,7 +23,7 @@ const ler = (caminho) => readFileSync(join(raiz, caminho), 'utf8');
 const { PaginaVista } = await import('../src/app/conheca/pagina.tsx');
 const { APK_PADRAO } = await import('../src/app/conheca/links.ts');
 const { svgDoQr } = await import('../src/app/conheca/qr.ts');
-const { textos } = await import('../src/app/conheca/textos.ts');
+const { textos, frasesDoTitulo } = await import('../src/app/conheca/textos.ts');
 const { IDEIAS_DO_S3, iconeDaIdeia } = await import('../src/app/conheca/ideias.ts');
 const { iconesDosTemas } = await import('../src/app/pedido.tsx');
 const { mensagens } = await import('../src/mensagens/pt-BR.ts');
@@ -48,6 +48,15 @@ test('a página tem o título do herói, o subtítulo da spec, um só h1 e a ord
   assert.deepEqual(textos.s2.momentos.map((m) => m.titulo), ['Seu material vira lição', 'Errou? Tem outro jeito', 'Explique do seu jeito', 'No computador e no celular']);
   for (const momento of textos.s2.momentos) { assert.ok(texto(html).includes(momento.titulo)); assert.ok(texto(html).includes(momento.linha)); }
   assert.match(texto(html), /Com uma conta, a sua trilha é a mesma no site e no app\./, 'o momento 4 diz "com uma conta": o progresso do visitante fica só no aparelho dele');
+});
+
+test('o título do herói é uma frase por linha ("Aprenda qualquer coisa." e "Uma lição por vez."), cada uma equilibrada por dentro, e continua lendo-se como uma frase só', () => {
+  const html = desenhar({ aparelho: 'android' });
+  const h1 = html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/)[1];
+  assert.equal(h1, '<span class="cn-heroi__frase">Aprenda qualquer coisa.</span> <span class="cn-heroi__frase">Uma lição por vez.</span>', 'duas frases, com um espaço entre elas para o leitor de tela e a cópia do texto');
+  assert.equal(texto(h1).trim(), textos.heroi.titulo);
+  assert.deepEqual(frasesDoTitulo(textos.heroi.titulo), ['Aprenda qualquer coisa.', 'Uma lição por vez.']);
+  assert.match(ler('src/app/conheca/conheca.css'), /\.cn-heroi__frase \{ display: block; text-wrap: balance; \}/);
 });
 
 test('Android: "Baixar para Android" leva ao APK, a linha de apoio traz o tamanho medido, e não há QR', () => {
