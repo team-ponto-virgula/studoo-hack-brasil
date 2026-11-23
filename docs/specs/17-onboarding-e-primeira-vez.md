@@ -212,4 +212,17 @@ Já decidido na spec 16, item 14, e ainda não publicado.
 | `a4`, `b2` a `b6`, `d1` | Navegador, servidor local com IA de demonstração (`banca-21-11/momentos/web-390`, Mobile & QA); não é o site publicado |
 | Android | Não há captura nativa nova. Nenhuma afirmação deste documento vale para o aparelho Android; o que foi visto do app é a prévia web do app (spec 16) |
 
+**Conferência da espera nova (23/11).** No site publicado, a versão `09f6590` está no navegador a 390, com conta de teste e IA real, nas capturas do Lead em `producao-09f6590/espera` (`espera-02s`, `05s`, `09s`, `14s`, `proposta-pronta`, `depois-da-espera` e o tour). No app, a prévia web do app em `feat/refino-app`, com IA falsa, a 320 e a 390, nas capturas do Mobile 2 em `espera-nova/depois`; não é o aparelho.
+- **Bate com a mudança 1:**
+  - a linha fica embaixo do botão com o giro "Criando sua trilha…";
+  - "Escrevendo suas lições…" entra perto de 1,5 s, a frase 1 perto de 4,5 s e a 2 perto de 9,5 s;
+  - a nota "Com a IA, leva alguns segundos" saiu;
+  - a linha cabe numa só linha a 390 e em 2 a 320, centralizada, em `#5E6A85` sobre branco (acima de 4,5:1).
+  A espera medida foi de 15 s, então a frase 3 (perto de 14,5 s) só aparece nas esperas longas. Isso é o esperado; a frase não perde sentido quando aparece, porque o mapa está atrás.
+- **Movimento reduzido:** não aparece nas capturas e não foi conferido. Fica para a próxima rodada.
+- **O Stu da criação e o giro:** o Stu com o notebook ao lado do nó 1 e o giro no botão combinam com "Escrevendo suas lições…". Nada muda.
+- **A faixa "Sua trilha está pronta…" continua à vista durante a criação:** a proposta está pronta; quem está sendo escrito são as lições. As duas coisas são verdadeiras ao mesmo tempo, e nada muda.
+- **Diferença a corrigir no app:** na prévia web do app, a pílula "Ver o fim da trilha" continua à vista durante a criação, por cima do mapa; no site ela some. Durante a criação, ela some também no app, porque a pessoa já escolheu começar e a pílula disputa com o botão afundado (spec 04, C5).
+- **O tour no site:** os passos estão sem selo (mudança 4). O passo 4 já tem o texto novo ("Seu caminho fica no mapa"). O aviso de música fica no alto e não cobre nada que se toque (`cobre: 0` no relatório do Lead), como pede a spec 16, item 14.
+
 Acessibilidade: na banca do Mobile & QA, o primeiro contato no site publicado com texto a 150% e 200%, nos 3 motores e nas 3 larguras, não sai da tela. Os textos novos das mudanças 1 e 2 cabem em 2 linhas a 390 e precisam ser conferidos a 200%. O anúncio da espera (mudança 1) foi pensado para não repetir a cada troca.
