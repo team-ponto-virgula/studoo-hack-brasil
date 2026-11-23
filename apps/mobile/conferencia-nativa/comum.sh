@@ -234,6 +234,7 @@ servidor() {
     erro "O preparo dos dados falhou: $(tail -n 1 "$REGISTROS/preparar-dados.log")"
   fi
   cat "$REGISTROS/preparar-dados.log"
+  aquecer_servidor
 
   resumo "**Dados da conta sintética** (trilha de cada formato de exercício e a lição em que ela está):"
   resumo ""
@@ -241,6 +242,43 @@ servidor() {
   resumo "$(grep -E '^(- |Destaque|AVISO)' "$REGISTROS/preparar-dados.log" || true)"
   resumo '```'
   resumo ""
+}
+
+# Aquecimento: duas voltas nas rotas que os fluxos usam logo de cara, para o primeiro pedido de cada uma não pagar o
+# carregamento do módulo (sem sessão: a resposta é 401, mas a rota já carrega). O tempo de cada pedido fica em
+# aquecimento.log, e a linha do proxy.log onde os fluxos começam, em proxy-inicio-dos-fluxos.txt (resumir_proxy só conta
+# dali em diante).
+aquecer_servidor() {
+  local volta rota tempo
+  for volta in 1 2; do
+    for rota in /api/auth/config /api/sessao /api/aprendizado/planos /api/perfil /api/privacidade /api/explorar /api/bloqueios /api/perfil/novidades; do
+      tempo="$(curl -s -o /dev/null -m 30 -w '%{http_code} %{time_total}s' --cacert "$TLS/ca.crt" "$API$rota" 2> /dev/null || echo 'sem resposta')"
+      echo "volta $volta $rota $tempo" >> "$REGISTROS/aquecimento.log"
+    done
+  done
+  wc -l < "$REGISTROS/proxy.log" | tr -d ' ' > "$REGISTROS/proxy-inicio-dos-fluxos.txt"
+  echo "Servidor aquecido: $(wc -l < "$REGISTROS/aquecimento.log" | tr -d ' ') pedidos (aquecimento.log)."
+}
+
+# Uma linha no resumo com a saúde do servidor local durante os fluxos, pelo proxy.log (cada linha: método, caminho, código
+# e "<n>ms" no fim; o 502 do proxy diz "(servidor fora do ar)"): quantos 5xx e quantos pedidos acima de 3 s, e os três mais
+# lentos. Serve para separar a instabilidade da máquina de um defeito do app.
+resumir_proxy() {
+  local registro="$REGISTROS/proxy.log" inicio linha
+  [ -f "$registro" ] || return 0
+  inicio="$(cat "$REGISTROS/proxy-inicio-dos-fluxos.txt" 2> /dev/null || echo 0)"
+  linha="$(tail -n +"$((inicio + 1))" "$registro" | awk '
+    $1 ~ /^(GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS)$/ {
+      total++
+      if ($3 ~ /^5[0-9][0-9]$/) cinco++
+      ms = $NF; sub(/ms$/, "", ms); ms += 0
+      if (ms > 3000) { lentos++; lista[lentos] = ms " ms " $1 " " $2 " " $3 }
+      if (ms > maximo) maximo = ms
+    }
+    END {
+      printf "%d pedidos, %d com 5xx, %d acima de 3 s (o mais lento: %d ms)", total, cinco, lentos, maximo
+    }')"
+  resumo "Servidor local durante os fluxos (proxy.log, depois do aquecimento): $linha."
 }
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -762,6 +800,7 @@ coletar_inicio() {
   find "$SAIDA_MAESTRO" -type f -name '[0-9][0-9]-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
   find "$SAIDA_MAESTRO" -type f -name 'material-observado-*.png' -exec cp -f {} "$CAPTURAS/" \; 2> /dev/null || true
   escrever_origem "$1"
+  resumir_proxy
 }
 
 # O material que o app desenhou de fato na barra de baixo. A View por fora da barra tem o testID barra-material-vidro ou
