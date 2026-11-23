@@ -36,7 +36,8 @@ const areasDaApresentacao = mensagens.pedido.temas.filter((tema) => tema.id !== 
  * a área que interessa, que já abre o pedido com as ideias dela. Na primeira vez termina em "Criar minha primeira
  * trilha"; reaberta pelo pedido, termina em "Entendi". Pular encerra a qualquer momento. Cada passo entra deslizando
  * na direção em que a pessoa anda. O título de cada passo recebe o foco e diz a posição ("Passo 2 de 5"); as setas do
- * teclado também avançam e voltam. As ilustrações são decorativas.
+ * teclado também avançam e voltam. As ilustrações são decorativas e não levam selo de "Modo demonstração" (spec 04,
+ * banca §2; spec 17, mudança 4): a arte é ilustração, não conteúdo simulado, e a linha "Retorno automático" do passo 3 também saiu.
  */
 export function Apresentacao({
   primeiraVez,
@@ -155,7 +156,7 @@ export function Apresentacao({
   );
 }
 
-function ArteMaterial() {
+export function ArteMaterial() {
   const ex = mensagens.apresentacao.exemplos;
   return (
     <div className="apresentacao-quadro">
@@ -163,7 +164,6 @@ function ArteMaterial() {
         <div className="aula-citacao__topo">
           <span className="aula-citacao__selo">[1] {mensagens.estudio.fonteMaterial}</span>
           <strong>{ex.fonteArquivo}</strong>
-          <span className="estudio-selo">{mensagens.estudio.simulado}</span>
         </div>
         <blockquote>{ex.fonteTrecho}</blockquote>
       </div>
@@ -171,20 +171,17 @@ function ArteMaterial() {
   );
 }
 
-function ArtePonte() {
+export function ArtePonte() {
   const m = mensagens.estudio;
   return (
     <div className="apresentacao-quadro apresentacao-quadro--ponte">
-      <div className="apresentacao-quadro__topo">
-        <span className="estudio-selo">{m.simulado}</span>
-      </div>
       <FaixaDaPonte posicao={4} />
       <strong>{m.ponteConstruida}</strong>
     </div>
   );
 }
 
-function ArteExplique() {
+export function ArteExplique() {
   const m = mensagens.estudio;
   const ex = mensagens.apresentacao.exemplos;
   return (
@@ -214,7 +211,6 @@ function ArteExplique() {
           <h3>{m.proximo}</h3>
           <p>{ex.ensinoProximo}</p>
         </div>
-        <p className="estudio-legenda">{m.ensinoAutomatico}</p>
       </div>
     </div>
   );

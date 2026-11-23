@@ -291,10 +291,11 @@ export function criarGeradorOpenAi(config: ConfiguracaoOpenAi): GeradorTrilha {
           desligarMatematica("formato");
           continue;
         }
-        const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem));
+        const lida = normalizarLicao(bruto, origemDoConteudo(esqueleto.origem), { primeiraLicao: fluxo === 0 && licao === 0 });
         if (lida.conteudo) {
-          if (lida.descartados.length > 0) {
-            registrar("licao_ajustada", { detalhe: lida.descartados.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
+          const ajustes = [...lida.descartados, ...(lida.conceitoCortado ? ["conceito:cortado"] : []), ...(lida.dicaDaLacunaAparada ? ["lacuna:dica_aparada"] : [])];
+          if (ajustes.length > 0) {
+            registrar("licao_ajustada", { detalhe: ajustes.join(";"), ...(lida.promovido ? { promovido: lida.promovido } : {}), tentativa });
           }
           // O que a matemática deu, só em contagens (os motivos de recusa citam fórmulas: não vão ao registro).
           if (lida.matematica) registrar("licao_matematica", { ...contagensDoRelato(lida.matematica), tentativa });

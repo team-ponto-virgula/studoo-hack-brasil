@@ -15,7 +15,15 @@
 .previa-placa {
   z-index: 3; align-self: start; width: min(calc(100% - 32px), 44rem); margin: 12px auto 0; padding: 10px 14px;
   border: 1px solid #f0cb74; border-radius: 16px; color: var(--texto); background: #fff9ea; font-size: .94rem; font-weight: 800;
+  /* Duas linhas de 20 px: a placa não muda de altura quando a frase da espera tem uma ou duas linhas (o mapa embaixo não pula). */
+  display: grid; align-content: center; min-height: calc(2.5rem + 22px); box-sizing: border-box;
 }
+/* Spec 17, mudança 1: depois de 3 s, a placa troca a cada 5 s entre as frases da espera, com efeito de 300 ms (a frase some em 150 ms e a próxima aparece em 150 ms; reduzido: direto). */
+.previa-placa__linha { display: block; transition: opacity 150ms ease-out; }
+.previa-placa__linha[data-saindo] { opacity: 0; }
+.previa-placa[data-dica] { text-align: center; }
+.previa-placa[data-dica] .previa-placa__linha { color: #0b1b5c; font-size: .9375rem; font-weight: 600; line-height: 1.3333; }
+@media (prefers-reduced-motion: reduce) { .previa-placa__linha { transition: none; } }
 .previa-mapa { --passo: max(158px,10rem); --centro: max(64px,4rem); --fronteira: 48px; container-type: size; background: var(--chao); overflow: auto; overscroll-behavior: contain; min-height: 0; scrollbar-color: #a8bcca transparent; scrollbar-width: thin; }
 .previa-seguir {
   position: absolute; z-index: 3; inset: auto auto 16px 50%; transform: translateX(-50%);

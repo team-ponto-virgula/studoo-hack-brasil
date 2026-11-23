@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import type { PlanoResumo } from '@studoo/contratos';
+import { dicaDaEspera, dicaDaEsperaLonga, type PlanoResumo } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, Fronteira, Icone, Mascote, coresDaRegiao } from '../ui';
 import { desenhosQueBalancam, enfeitesDaLinha } from '../ui/mundo-desenhos';
 import { posicaoX, semQuebrarHifen } from '../ui/caminho';
 import { nosDaPrevia, type TrilhaEmGeracao } from './geracao-ao-vivo';
-import { DURACAO_ACOMPANHAR_MS, DURACAO_ATE_O_NO_1_MS, entradaMaisNova, rolagemParaCentrarNo, rolarAte } from './previa-trilha-regras';
+import { DURACAO_ACOMPANHAR_MS, DURACAO_ATE_O_NO_1_MS, entradaMaisNova, rolagemParaCentrarNo, rolarAte, trocarDicasDaEspera, type EstadoDaEspera } from './previa-trilha-regras';
 import { tocaSons } from './sons';
 import './previa-trilha.css';
 
@@ -15,6 +15,23 @@ export type EstadoAceite = 'livre' | 'salvando' | 'erro' | 'expirada';
 export type PassagemCriada = { geracao: TrilhaEmGeracao; estilo: CSSProperties; reduzida: boolean; rolagem: number };
 const t = mensagens.geracao;
 const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * A frase da espera (spec 17, mudança 1). Há duas esperas, cada uma com o seu relógio, que recomeça quando a espera recomeça (como em "Montar de novo"):
+ * - `proposta`: a geração da proposta (uns 3 s). A placa diz "Montando sua trilha" por 3 s e depois, a cada 5 s, as quatro frases de `geracao.dicas`, em laço;
+ * - `criacao`: a trilha sendo criada, depois de "Começar a lição 1" (de 15 a 18 s). A placa diz "Criando sua trilha…" por 3 s e depois as frases 1, 2 e 4 (a pessoa já conferiu a trilha).
+ * `indice` é a frase da vez em `geracao.dicas` (`null` é o texto de sempre da espera) e `saindo` marca a primeira metade do efeito de 300 ms. Fora das esperas (`null`), nada corre.
+ */
+function useDicaDaEspera(espera: 'proposta' | 'criacao' | null): EstadoDaEspera {
+  const [estado, setEstado] = useState<EstadoDaEspera>({ indice: null, saindo: false });
+  useEffect(() => {
+    setEstado({ indice: null, saindo: false });
+    if (!espera) return;
+    const qualDica = espera === 'criacao' ? dicaDaEsperaLonga : (decorridoMs: number) => dicaDaEspera(decorridoMs, t.dicas.length);
+    return trocarDicasDaEspera({ qualDica, reduzido: movimentoReduzido, aoMudar: setEstado });
+  }, [espera]);
+  return estado;
+}
 
 function origemDoCirculo(painel: HTMLElement, faltaRolar = 0) {
   const caixa = painel.getBoundingClientRect();
@@ -49,6 +66,19 @@ function CenarioDaPrevia({ trecho, indice }: { trecho: number; indice: number })
   </div>;
 }
 
+/**
+ * A placa do alto da geração. A linha que se vê (`aria-hidden`) e o que o leitor de tela ouve são separados: a região viva (`role="status"`) só tem o texto anunciado, que não muda
+ * quando a frase da espera troca (spec 17, mudança 1: só "Montando sua trilha", a espera longa e a proposta pronta são anunciados).
+ */
+export function PlacaDaGeracao({ texto, anunciado, ehDica = false, saindo = false }: { texto: string; anunciado: string; ehDica?: boolean; saindo?: boolean }) {
+  return (
+    <p className="previa-placa" role="status" data-dica={ehDica ? '' : undefined}>
+      <span className="somente-leitor">{anunciado}</span>
+      <span className="previa-placa__linha" aria-hidden="true" data-saindo={saindo || undefined}>{texto}</span>
+    </p>
+  );
+}
+
 export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajustar, aceitar, remontar, existente, abrirExistente }: {
   geracao: TrilhaEmGeracao; aceite: EstadoAceite; passagem: PassagemCriada | null;
   sair: () => void; cancelar: () => void; ajustar: () => void; aceitar: (painel: HTMLElement) => void;
@@ -77,7 +107,18 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const falhou = aceite === 'erro' || aceite === 'expirada';
   const stuNoTrofeu = !!proposta && trofeuAVista && !indoAoPrimeiro && !salvando && !falhou;
   const fase = passagem ? 'criada' : salvando ? 'salvando' : proposta ? 'pronta' : 'montando';
-  const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
+  // As duas esperas da placa (spec 17, mudança 1): a geração da proposta (sem proposta ainda) e a criação da trilha (depois de "Começar a lição 1", enquanto o aceite está salvando).
+  const criando = !!proposta && aceite === 'salvando' && !passagem;
+  const espera = useDicaDaEspera(!proposta ? 'proposta' : criando ? 'criacao' : null);
+  const dicaDaVez = espera.indice !== null && !(semNovidade && !proposta) ? t.dicas[espera.indice] : null;
+  // A placa: na geração, "Montando sua trilha" e, passados 3 s, as frases (a espera longa de 12 s sem lição nova continua valendo); na criação, "Criando sua trilha…" e, passados 3 s, as frases;
+  // com a proposta pronta, a faixa dela.
+  const placa = proposta
+    ? (criando ? dicaDaVez ?? t.criandoTrilha : t.propostaPronta(nos.length, proposta.fluxos.length))
+    : semNovidade ? t.aguardandoLicao : dicaDaVez ?? t.montandoTitulo;
+  // O leitor de tela ouve só "Montando sua trilha", a espera longa e a proposta pronta: a troca das frases fica fora da região viva e não é anunciada (a criação da trilha já é
+  // anunciada por `anuncioCriando`, em estudo.tsx, no toque em "Começar a lição 1").
+  const placaAnunciada = proposta ? `${t.propostaPronta(nos.length, proposta.fluxos.length)} ${t.comecarLicao1}.` : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
   useLayoutEffect(() => {
     const largura = window.matchMedia('(max-width: 600px)');
@@ -225,7 +266,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
       <h1 tabIndex={-1}>{geracao.titulo || geracao.objetivo}</h1>
     </header>
     <div className="previa-palco">
-      <p className="previa-placa" role="status">{placa}{proposta && <span className="somente-leitor"> {t.comecarLicao1}.</span>}</p>
+      <PlacaDaGeracao texto={placa} anunciado={placaAnunciada} ehDica={dicaDaVez !== null} saindo={espera.saindo} />
       {!proposta && <span className="somente-leitor" role="status">{licaoAnunciada}</span>}
       <div className="previa-mapa" ref={mapa} tabIndex={-1} style={coresDaRegiao(nos.at(-1)?.trecho ?? 0)} onScroll={ev => {
         const area = ev.currentTarget;
