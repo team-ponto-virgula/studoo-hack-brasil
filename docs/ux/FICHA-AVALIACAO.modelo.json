@@ -54,11 +54,11 @@
     {
       "id": "G3-abertura-ciclo",
       "superficie": null,
-      "eventoInicial": "Assinatura local visível",
+      "eventoInicial": "Montagem da camada React (medir também a primeira pintura visível)",
       "eventoFinal": "Assinatura concluída/removida",
       "unidade": "ms",
       "limite": 900,
-      "regra": "Teto de cada execução; não compensar estouro com média ou p95.",
+      "regra": "Teto de cada execução React; não compensar estouro com média ou p95. A guarda nativa conta desde o módulo JS; não mede o boot anterior do sistema.",
       "metodo": null
     },
     {

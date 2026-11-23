@@ -1,0 +1,232 @@
+{
+  "candidate": "f0c2b6d",
+  "reviewer": "checks_release",
+  "surface": "web",
+  "environment": "headless Chromium; local Next production; unmodified browser clock except cases explicitly identified",
+  "checkedAt": "2026-11-23T20:43:48.208Z",
+  "results": [
+    {
+      "name": "real-clock-six-fresh-contexts",
+      "passed": true,
+      "evidence": {
+        "runs": [
+          {
+            "phases": [
+              {
+                "phase": "visivel",
+                "reason": null,
+                "t": 84.90000000223517
+              },
+              {
+                "phase": "saindo",
+                "reason": "pronto",
+                "t": 413
+              },
+              {
+                "phase": "concluida",
+                "reason": "pronto",
+                "t": 522.6999999992549
+              }
+            ],
+            "visibleCycleMs": 437.8,
+            "navigationToCompleteMs": 522.7
+          },
+          {
+            "phases": [
+              {
+                "phase": "visivel",
+                "reason": null,
+                "t": 83.60000000149012
+              },
+              {
+                "phase": "saindo",
+                "reason": "pronto",
+                "t": 277.3999999985099
+              },
+              {
+                "phase": "concluida",
+                "reason": "pronto",
+                "t": 441.1000000014901
+              }
+            ],
+            "visibleCycleMs": 357.5,
+            "navigationToCompleteMs": 441.1
+          },
+          {
+            "phases": [
+              {
+                "phase": "visivel",
+                "reason": null,
+                "t": 83.30000000074506
+              },
+              {
+                "phase": "saindo",
+                "reason": "pronto",
+                "t": 268.69999999925494
+              },
+              {
+                "phase": "concluida",
+                "reason": "pronto",
+                "t": 386.9000000022352
+              }
+            ],
+            "visibleCycleMs": 303.6,
+            "navigationToCompleteMs": 386.9
+          },
+          {
+            "phases": [
+              {
+                "phase": "visivel",
+                "reason": null,
+                "t": 102.30000000074506
+              },
+              {
+                "phase": "saindo",
+                "reason": "pronto",
+                "t": 289.4000000022352
+              },
+              {
+                "phase": "concluida",
+                "reason": "pronto",
+                "t": 406.6000000014901
+              }
+            ],
+            "visibleCycleMs": 304.3,
+            "navigationToCompleteMs": 406.6
+          },
+          {
+            "phases": [
+              {
+                "phase": "visivel",
+                "reason": null,
+                "t": 77.89999999850988
+              },
+              {
+                "phase": "saindo",
+                "reason": "pronto",
+                "t": 271
+              },
+              {
+                "phase": "concluida",
+                "reason": "pronto",
+                "t": 389.29999999701977
+              }
+            ],
+            "visibleCycleMs": 311.4,
+            "navigationToCompleteMs": 389.3
+          },
+          {
+            "phases": [
+              {
+                "phase": "visivel",
+                "reason": null,
+                "t": 77
+              },
+              {
+                "phase": "saindo",
+                "reason": "pronto",
+                "t": 253.19999999925494
+              },
+              {
+                "phase": "concluida",
+                "reason": "pronto",
+                "t": 368.5
+              }
+            ],
+            "visibleCycleMs": 291.5,
+            "navigationToCompleteMs": 368.5
+          }
+        ],
+        "sampleSize": 6,
+        "allUnder900Ms": true,
+        "coldMeans": "fresh browser contexts; operating-system/server caches not cleared"
+      }
+    },
+    {
+      "name": "ssr-bypass-no-javascript-query",
+      "passed": true,
+      "evidence": {
+        "overlayCount": 0,
+        "javaScriptEnabled": false
+      }
+    },
+    {
+      "name": "ssr-bypass-no-javascript-direct",
+      "passed": true,
+      "evidence": {
+        "overlayCount": 0,
+        "javaScriptEnabled": false
+      }
+    },
+    {
+      "name": "hash-bypass-with-app-bundles-blocked",
+      "passed": true,
+      "evidence": {
+        "appBundlesBlocked": true,
+        "contentVisible": true
+      }
+    },
+    {
+      "name": "font-failure-skip-reason",
+      "passed": true,
+      "evidence": {
+        "reason": "falha",
+        "nextFormVisible": true
+      }
+    },
+    {
+      "name": "image-failure-skip-reason",
+      "passed": true,
+      "evidence": {
+        "reason": "falha",
+        "nextFormVisible": true
+      }
+    },
+    {
+      "name": "reduced-before-hydration-no-js",
+      "passed": true,
+      "evidence": {
+        "overlayVisible": false,
+        "nextFormVisible": true
+      }
+    },
+    {
+      "name": "no-unhandled-javascript-errors-in-independent-cases",
+      "passed": true,
+      "evidence": {
+        "count": 0,
+        "types": []
+      }
+    }
+  ],
+  "limits": [
+    "No native execution, real OAuth provider, production telemetry or user study."
+  ],
+  "finishedAt": "2026-11-23T20:43:54.103Z",
+  "browserVersion": "Chromium 156.0.8078.79 built on Debian GNU/Linux 13 (trixie)",
+  "candidateFullCommit": "f0c2b6d578df755ac0c7b592fc103808e979505f",
+  "carriedForwardTo": {
+    "candidate": "048ae114622c73bd1ea138c597efc528cfac11c8",
+    "unchangedWebRendererSources": [
+      {
+        "path": "src/ui/abertura.tsx",
+        "sha256": "65be739884ccfdd00951eb9f41764ca2ec531dcbfe3ee8ff4f13b661b7bf7037",
+        "identicalBetweenCandidates": true
+      },
+      {
+        "path": "src/ui/abertura.css",
+        "sha256": "97f874b6ff6752168755d3ea0dcc30f23bbdd3d9e6d2b44ea3d2ddc90cd422bb",
+        "identicalBetweenCandidates": true
+      },
+      {
+        "path": "src/app/layout.tsx",
+        "sha256": "22dde40f06f79754b9ccd3358651acd25d38f13ac34cc20472e5135d75e984ac",
+        "identicalBetweenCandidates": true
+      }
+    ],
+    "limits": [
+      "Independent browser run was made against f0c2b6d; renderer and layout are byte-identical.",
+      "The new root-query redirect case is covered by the final canonical browser suite and repeated tests, not by this earlier run."
+    ]
+  }
+}
