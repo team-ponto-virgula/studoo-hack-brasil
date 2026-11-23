@@ -1,0 +1,150 @@
+# Página de apresentação, momento 1 ("Seu material vira lição"), pedida pelo Lead em 23/11. APK final do canal interno,
+# instalado como veio e falando com o site publicado (IA real), numa sessão de visitante. O material é um PDF de uma página
+# com texto do próprio Studoo (regra-dos-tercos.pdf, "Regra dos terços na fotografia"), colocado em Downloads pelo rodar.sh
+# e escolhido pelo seletor do sistema: o app não tem outro caminho para receber um arquivo. Cria na produção uma sessão de
+# visitante, um material e uma trilha.
+appId: com.studoo.mobile.dev
+---
+- launchApp:
+    clearState: true
+- runFlow:
+    when:
+      visible:
+        id: com.android.permissioncontroller:id/permission_allow_button
+    commands:
+      - tapOn:
+          id: com.android.permissioncontroller:id/permission_allow_button
+- extendedWaitUntil:
+    visible:
+      id: titulo-entrada
+    timeout: 180000
+- scrollUntilVisible:
+    element:
+      id: experimentar-sem-conta
+    direction: DOWN
+    timeout: 120000
+    optional: true
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: experimentar-sem-conta
+- extendedWaitUntil:
+    visible:
+      id: titulo-objetivo
+    timeout: 120000
+- scrollUntilVisible:
+    element:
+      id: alternar-modo
+    direction: DOWN
+    timeout: 60000
+    optional: true
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: alternar-modo
+- scrollUntilVisible:
+    element:
+      id: escolher-arquivo
+    direction: DOWN
+    timeout: 60000
+    optional: true
+- tapOn:
+    waitToSettleTimeoutMs: 2000
+    id: escolher-arquivo
+# O seletor do sistema (DocumentsUI). Se não abrir em Downloads nem mostrar o arquivo entre os recentes, abre a lista de
+# locais e vai a Downloads.
+- extendedWaitUntil:
+    visible:
+      text: "regra-dos-tercos.*"
+    timeout: 20000
+    optional: true
+- runFlow:
+    when:
+      notVisible:
+        text: "regra-dos-tercos.*"
+    commands:
+      - tapOn:
+          text: "Show roots|Mostrar raízes"
+          optional: true
+      - tapOn:
+          text: "Downloads|Download"
+          optional: true
+      - extendedWaitUntil:
+          visible:
+            text: "regra-dos-tercos.*"
+          timeout: 20000
+- tapOn:
+    waitToSettleTimeoutMs: 2000
+    text: "regra-dos-tercos.*"
+# Com IA real, a primeira ação que envia algo a um provedor pede o consentimento (cartão do Studoo, "Permitir e continuar").
+- extendedWaitUntil:
+    visible:
+      text: "Permitir e continuar|Criar trilha deste material"
+    timeout: 120000
+- runFlow:
+    when:
+      visible:
+        text: "Permitir e continuar"
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 2000
+          text: "Permitir e continuar"
+- scrollUntilVisible:
+    element:
+      text: "Criar trilha deste material"
+    direction: DOWN
+    timeout: 180000
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: m1-material-lido
+- tapOn:
+    waitToSettleTimeoutMs: 2000
+    text: "Criar trilha deste material"
+- runFlow:
+    when:
+      visible:
+        text: "Permitir e continuar"
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 2000
+          text: "Permitir e continuar"
+# Proposta com IA real: pode levar alguns minutos.
+- extendedWaitUntil:
+    visible:
+      id: comecar-trilha|tentar-geracao
+    timeout: 300000
+- runFlow:
+    when:
+      visible:
+        id: tentar-geracao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 2000
+          id: tentar-geracao
+- extendedWaitUntil:
+    visible:
+      id: comecar-trilha
+    timeout: 300000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: m2-material-proposta
+- tapOn:
+    waitToSettleTimeoutMs: 2000
+    id: comecar-trilha
+- extendedWaitUntil:
+    visible: 'Etapa 1 de \d+'
+    timeout: 240000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: m3-material-licao
+- scrollUntilVisible:
+    element:
+      id: cartao-fonte
+    direction: DOWN
+    timeout: 60000
+    optional: true
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: m4-material-fonte
+- assertNotVisible:
+    text: "Modo demonstração"
+- assertNotVisible:
+    id: android:id/aerr_wait

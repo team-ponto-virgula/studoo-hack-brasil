@@ -1,18 +1,18 @@
-# Prova do APK FINAL do canal interno Android (Lead, 23/11), sem recompilar o app: baixa o APK que o EAS gerou, confere o
-# SHA256, instala no emulador (o mesmo de capturas-nativas.yml: API 35, google_apis x86_64, KVM) e roda um fluxo só, a
-# entrada e "Experimentar sem conta" (apps/mobile/conferencia-nativa/apk-final/visitante.yaml). Este arquivo existe só no
-# ramo de teste teste/apk-final-android e roda no push desse ramo; nada em main, development, release ou no site.
-name: APK final (Android, visitante)
+# Página de apresentação, momento 1 (Lead, 23/11): o APK FINAL do canal interno, sem recompilar, contra o site publicado (IA
+# real), numa sessão de visitante, com um PDF de uma página de texto do Studoo (apk-final/regra-dos-tercos.pdf). Captura a
+# lição com o cartão "[1] Fonte do seu material". Cria na produção uma sessão de visitante, um material e uma trilha (custo
+# aprovado pelo Lead). Mesmo emulador da prova do APK (API 35, google_apis x86_64, KVM). Só no ramo teste/landing-material.
+name: APK final (Android, material na produção)
 
 on:
   push:
-    branches: [teste/apk-final-android]
+    branches: [teste/landing-material]
 
 permissions:
   contents: read
 
 concurrency:
-  group: apk-final-android
+  group: apk-final-material
   cancel-in-progress: false
 
 env:
@@ -58,7 +58,7 @@ jobs:
           echo "MAESTRO=$RUNNER_TEMP/maestro/bin/maestro" >> "$GITHUB_ENV"
           MAESTRO_CLI_NO_ANALYTICS=1 MAESTRO_DISABLE_UPDATE_CHECK=true "$RUNNER_TEMP/maestro/bin/maestro" --version
 
-      - name: "Emulador: instalar o APK final, abrir e entrar como visitante"
+      - name: "Emulador: APK final, visitante, PDF do material e a lição com a fonte (produção)"
         timeout-minutes: 40
         uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
         with:
@@ -79,7 +79,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: apk-final-android
+          name: apk-final-material
           path: |
             ${{ runner.temp }}/apk-final
             !${{ runner.temp }}/apk-final/studoo-final.apk
