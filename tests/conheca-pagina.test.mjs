@@ -372,6 +372,17 @@ test('a página não importa o banco ao carregar (o módulo do visitante abre o 
   }
 });
 
+test('a folha do iPhone vai para a raiz da página por portal (dentro do herói, o celular do herói passava por cima dela e do escurecimento)', () => {
+  const folha = ler('src/app/conheca/ilhas/folha-iphone.tsx');
+  assert.match(folha, /import \{ createPortal \} from 'react-dom';/);
+  assert.match(folha, /document\.querySelector<HTMLElement>\('\.cn-pagina'\) \?\? document\.body/);
+  assert.match(folha, /return createPortal\(\n    <div className="folha-fundo"/);
+  // A raiz da página não cria contexto de empilhamento (sem z-index), então o z-index da folha (40) vale contra o cabeçalho (4) e o herói (1).
+  const css = ler('src/app/conheca/conheca.css');
+  assert.doesNotMatch(css.slice(css.indexOf('.cn-pagina {'), css.indexOf('}', css.indexOf('.cn-pagina {'))), /z-index|isolation|transform/);
+  assert.match(ler('src/app/compartilhar.css'), /\.folha-fundo \{[^}]*z-index: 40;/s);
+});
+
 test('o iPhone fora do Safari (outros navegadores e os de dentro de aplicativos) recebe o pedido para abrir no Safari', () => {
   const safari = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1';
   assert.equal(foraDoSafariNoIphone(safari), false);

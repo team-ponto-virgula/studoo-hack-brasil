@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { textos } from '../textos';
 import { PassosDoIphone } from './passos';
 import { BotaoVisitante } from './visitante';
@@ -17,7 +18,8 @@ export function foraDoSafariNoIphone(userAgent: string): boolean {
 /**
  * A folha "Use o Studoo no iPhone hoje" (spec 18, 1.5), antes de o TestFlight ter link público: três passos de "Adicionar à Tela de
  * Início", "Entendi" e "Experimentar sem conta". É a folha do Studoo (nunca janela do sistema): foco no título, Tab preso nela,
- * Esc e toque fora fecham, e o foco volta ao botão que a abriu.
+ * Esc e toque fora fecham, e o foco volta ao botão que a abriu. Sai do herói e entra na raiz da página (portal): lá dentro o contexto de empilhamento do texto
+ * do herói (z-index 1) deixava o celular do herói, que vem depois, passar por cima da folha e do escurecimento.
  */
 export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao }: { aoFechar: () => void; visitanteAtivo: boolean; comSessao: boolean }) {
   const caixa = useRef<HTMLDivElement>(null);
@@ -54,7 +56,8 @@ export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao }: { a
     };
   }, []);
 
-  return (
+  const raiz = document.querySelector<HTMLElement>('.cn-pagina') ?? document.body;
+  return createPortal(
     <div className="folha-fundo" role="presentation" onClick={(evento) => { if (evento.target === evento.currentTarget) aoFechar(); }}>
       <div className="folha cn-folha" role="dialog" aria-modal="true" aria-labelledby={idTitulo} ref={caixa}>
         <div className="folha-topo">
@@ -72,6 +75,7 @@ export default function FolhaIphone({ aoFechar, visitanteAtivo, comSessao }: { a
           <BotaoVisitante ativo={visitanteAtivo} comSessao={comSessao} variante="texto" />
         </div>
       </div>
-    </div>
+    </div>,
+    raiz,
   );
 }
