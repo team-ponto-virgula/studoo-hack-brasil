@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { dicaDaEspera, dicaDaEsperaLonga, type PlanoResumo } from '@studoo/contratos';
+import { dicaDaEspera, type PlanoResumo } from '@studoo/contratos';
 import { mensagens } from '../mensagens/pt-BR';
 import { Botao, Desenho, Fronteira, Icone, Mascote, coresDaRegiao } from '../ui';
 import { desenhosQueBalancam, enfeitesDaLinha } from '../ui/mundo-desenhos';
@@ -17,19 +17,18 @@ const t = mensagens.geracao;
 const movimentoReduzido = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
- * A frase da espera (spec 17, mudança 1). Há duas esperas, cada uma com o seu relógio, que recomeça quando a espera recomeça (como em "Montar de novo"):
- * - `proposta`: a geração da proposta (uns 3 s). A placa diz "Montando sua trilha" por 3 s e depois, a cada 5 s, as quatro frases de `geracao.dicas`, em laço;
- * - `criacao`: a trilha sendo criada, depois de "Começar a lição 1" (de 15 a 18 s). A placa diz "Criando sua trilha…" por 3 s e depois as frases 1, 2 e 4 (a pessoa já conferiu a trilha).
- * `indice` é a frase da vez em `geracao.dicas` (`null` é o texto de sempre da espera) e `saindo` marca a primeira metade do efeito de 300 ms. Fora das esperas (`null`), nada corre.
+ * A frase da linha de espera da criação (spec 17, mudança 1, revista em 23/11). Só a criação da trilha, depois de "Começar a lição 1" (de 12 a 21 s), tem frases: a linha embaixo do botão diz
+ * "Escrevendo suas lições…" quando entra (1,5 s depois do toque) e, 3 s depois de entrar, a MESMA linha troca para a frase 1 de `geracao.dicas` e, a cada 5 s, para a seguinte, em laço (`dicaDaEspera`,
+ * do contrato, o mesmo relógio do app). O tempo conta desde que a linha aparece: `ativa` liga quando ela entra e desliga quando ela sai (a lição abriu ou a criação falhou), e a próxima espera começa do zero.
+ * `indice` é a frase da vez em `geracao.dicas` (`null` é "Escrevendo suas lições…") e `saindo` marca a primeira metade do efeito de 300 ms. A placa do alto ("Montando sua trilha") não tem frases.
  */
-function useDicaDaEspera(espera: 'proposta' | 'criacao' | null): EstadoDaEspera {
+function useDicaDaEspera(ativa: boolean): EstadoDaEspera {
   const [estado, setEstado] = useState<EstadoDaEspera>({ indice: null, saindo: false });
   useEffect(() => {
     setEstado({ indice: null, saindo: false });
-    if (!espera) return;
-    const qualDica = espera === 'criacao' ? dicaDaEsperaLonga : (decorridoMs: number) => dicaDaEspera(decorridoMs, t.dicas.length);
-    return trocarDicasDaEspera({ qualDica, reduzido: movimentoReduzido, aoMudar: setEstado });
-  }, [espera]);
+    if (!ativa) return;
+    return trocarDicasDaEspera({ qualDica: (decorridoMs) => dicaDaEspera(decorridoMs, t.dicas.length), reduzido: movimentoReduzido, aoMudar: setEstado });
+  }, [ativa]);
   return estado;
 }
 
@@ -67,14 +66,14 @@ function CenarioDaPrevia({ trecho, indice }: { trecho: number; indice: number })
 }
 
 /**
- * A placa do alto da geração. A linha que se vê (`aria-hidden`) e o que o leitor de tela ouve são separados: a região viva (`role="status"`) só tem o texto anunciado, que não muda
- * quando a frase da espera troca (spec 17, mudança 1: só "Montando sua trilha", a espera longa e a proposta pronta são anunciados).
+ * A placa do alto da geração. A linha que se vê (`aria-hidden`) e o que o leitor de tela ouve são separados: a região viva (`role="status"`) só tem o texto anunciado ("Montando sua trilha", a espera
+ * longa ou a proposta pronta). A placa não tem frases que se revezam (spec 17, mudança 1, revista em 23/11): elas moram na linha embaixo do botão "Começar a lição 1".
  */
-export function PlacaDaGeracao({ texto, anunciado, ehDica = false, saindo = false }: { texto: string; anunciado: string; ehDica?: boolean; saindo?: boolean }) {
+export function PlacaDaGeracao({ texto, anunciado }: { texto: string; anunciado: string }) {
   return (
-    <p className="previa-placa" role="status" data-dica={ehDica ? '' : undefined}>
+    <p className="previa-placa" role="status">
       <span className="somente-leitor">{anunciado}</span>
-      <span className="previa-placa__linha" aria-hidden="true" data-saindo={saindo || undefined}>{texto}</span>
+      <span className="previa-placa__linha" aria-hidden="true">{texto}</span>
     </p>
   );
 }
@@ -107,17 +106,14 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   const falhou = aceite === 'erro' || aceite === 'expirada';
   const stuNoTrofeu = !!proposta && trofeuAVista && !indoAoPrimeiro && !salvando && !falhou;
   const fase = passagem ? 'criada' : salvando ? 'salvando' : proposta ? 'pronta' : 'montando';
-  // As duas esperas da placa (spec 17, mudança 1): a geração da proposta (sem proposta ainda) e a criação da trilha (depois de "Começar a lição 1", enquanto o aceite está salvando).
-  const criando = !!proposta && aceite === 'salvando' && !passagem;
-  const espera = useDicaDaEspera(!proposta ? 'proposta' : criando ? 'criacao' : null);
-  const dicaDaVez = espera.indice !== null && !(semNovidade && !proposta) ? t.dicas[espera.indice] : null;
-  // A placa: na geração, "Montando sua trilha" e, passados 3 s, as frases (a espera longa de 12 s sem lição nova continua valendo); na criação, "Criando sua trilha…" e, passados 3 s, as frases;
-  // com a proposta pronta, a faixa dela.
-  const placa = proposta
-    ? (criando ? dicaDaVez ?? t.criandoTrilha : t.propostaPronta(nos.length, proposta.fluxos.length))
-    : semNovidade ? t.aguardandoLicao : dicaDaVez ?? t.montandoTitulo;
-  // O leitor de tela ouve só "Montando sua trilha", a espera longa e a proposta pronta: a troca das frases fica fora da região viva e não é anunciada (a criação da trilha já é
-  // anunciada por `anuncioCriando`, em estudo.tsx, no toque em "Começar a lição 1").
+  // A linha de espera embaixo do botão (spec 17, mudança 1, revista em 23/11): só enquanto a trilha é criada (depois de "Começar a lição 1"), a partir de 1,5 s depois do toque. O relógio das frases
+  // começa quando ela aparece. A placa não tem frases: na geração, "Montando sua trilha" (e a espera longa de 12 s sem lição nova); com a proposta pronta, e também durante a criação, a faixa dela.
+  const linhaDaEspera = !!proposta && demorou && aceite === 'salvando' && !passagem;
+  const espera = useDicaDaEspera(linhaDaEspera);
+  const textoDaLinha = espera.indice === null ? t.escrevendoLicoes : t.dicas[espera.indice];
+  const placa = proposta ? t.propostaPronta(nos.length, proposta.fluxos.length) : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
+  // O leitor de tela ouve só "Montando sua trilha", a espera longa e a proposta pronta; a criação da trilha é anunciada uma vez por `anuncioCriando` (em estudo.tsx, no toque em "Começar a lição 1"),
+  // e a linha de espera, com as frases, não é região viva: a troca a cada 5 s não é anunciada.
   const placaAnunciada = proposta ? `${t.propostaPronta(nos.length, proposta.fluxos.length)} ${t.comecarLicao1}.` : semNovidade ? t.aguardandoLicao : t.montandoTitulo;
 
   useLayoutEffect(() => {
@@ -241,7 +237,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
   }
 
   const acaoPrincipal = proposta && (
-    <Botao key="principal" className="previa-comecar" aria-disabled={salvando} onClick={() => {
+    <Botao key="principal" className="previa-comecar" aria-disabled={salvando} aria-busy={salvando || undefined} onClick={() => {
       if (!painel.current || salvando) return;
       if (aceite === 'expirada') { remontar(); return; }
       aceitar(painel.current);
@@ -266,7 +262,7 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
       <h1 tabIndex={-1}>{geracao.titulo || geracao.objetivo}</h1>
     </header>
     <div className="previa-palco">
-      <PlacaDaGeracao texto={placa} anunciado={placaAnunciada} ehDica={dicaDaVez !== null} saindo={espera.saindo} />
+      <PlacaDaGeracao texto={placa} anunciado={placaAnunciada} />
       {!proposta && <span className="somente-leitor" role="status">{licaoAnunciada}</span>}
       <div className="previa-mapa" ref={mapa} tabIndex={-1} style={coresDaRegiao(nos.at(-1)?.trecho ?? 0)} onScroll={ev => {
         const area = ev.currentTarget;
@@ -336,8 +332,8 @@ export function PreviaTrilha({ geracao, aceite, passagem, sair, cancelar, ajusta
     <footer className="previa-rodape" data-proposta={!!proposta || undefined} data-salvando={salvando || undefined} data-falha={falhou || undefined}>
       <div className="previa-botoes">
         {estreito ? [acaoPrincipal, erroDoAceite, acaoSecundaria] : [acaoSecundaria, acaoPrincipal, erroDoAceite]}
-        {proposta && <p className="previa-espera" role="status" data-visivel={demorou && salvando && !passagem || undefined}>
-          {t.escrevendoLicoes}
+        {proposta && <p className="previa-espera" data-visivel={linhaDaEspera || undefined}>
+          <span className="previa-espera__linha" data-saindo={espera.saindo || undefined}>{textoDaLinha}</span>
         </p>}
       </div>
     </footer>
