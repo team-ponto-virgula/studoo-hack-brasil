@@ -31,6 +31,7 @@ export * from './comunidade';
 export * from './codigo-studoo';
 export * from './espera-geracao';
 export * from './conceito';
+export * from './aula-regras';
 export * from './catalogo-mascote';
 export interface Progresso {
   concluidas: number;
