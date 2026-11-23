@@ -26,18 +26,16 @@ appId: host.exp.Exponent
     speed: 50
     centerElement: true
     waitToSettleTimeoutMs: 500
-# A barra de baixo flutua por cima do conteúdo (iOS 26 e Android): o botão pode ter parado atrás dela. A rolagem acima
-# centraliza o botão e o arrasto sobe mais um pouco. Na execução 45098808095 (Android, fluxo 33), sem centralizar, o botão
-# "Continuar: Frações…" parou em y 1339–1443 com a barra em 1372–1496: o toque caiu em "Minhas trilhas" e a lista ficou.
-- swipe:
-    waitToSettleTimeoutMs: 1000
-    start: 50%, 55%
-    end: 50%, 40%
-    duration: 800
+# A barra de baixo flutua por cima do conteúdo (iOS 26 e Android): a rolagem acima centraliza o botão, que fica longe
+# da barra e da barra de status. Sem arrasto fixo depois: na execução 45113443824 (iPhone) a centralização já tinha
+# levado o botão de y 678 a 138, e o arrasto de 15% o subiu até y 18–70, sob a barra de status; o toque ali rolou a lista
+# de volta ao topo (o toque na barra de status faz isso no iOS) e o cartão sumiu de vista. Na execução 45098808095
+# (Android), sem centralizar, o botão parou sob a barra de baixo.
 - tapOn:
     waitToSettleTimeoutMs: 1500
     text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
-# Pelo estado: se a lista continuar na tela (o toque foi para a barra), sobe mais e toca de novo uma vez.
+# Pelo estado: se a lista continuar na tela, sem o mapa, o botão é procurado de novo (para baixo e, se ele tiver subido
+# demais, para cima), centralizado, e tocado mais uma vez.
 - extendedWaitUntil:
     visible:
       id: titulo-plano
@@ -50,11 +48,24 @@ appId: host.exp.Exponent
       notVisible:
         id: titulo-plano
     commands:
-      - swipe:
-          waitToSettleTimeoutMs: 1000
-          start: 50%, 60%
-          end: 50%, 30%
-          duration: 800
+      - scrollUntilVisible:
+          element:
+            text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+          direction: DOWN
+          timeout: 120000
+          speed: 50
+          centerElement: true
+          waitToSettleTimeoutMs: 500
+          optional: true
+      - scrollUntilVisible:
+          element:
+            text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
+          direction: UP
+          timeout: 60000
+          speed: 50
+          centerElement: true
+          waitToSettleTimeoutMs: 500
+          optional: true
       - tapOn:
           waitToSettleTimeoutMs: 1500
           text: "(Começar|Continuar|Rever trilha): ${TRILHA}"
