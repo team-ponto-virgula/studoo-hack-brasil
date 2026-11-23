@@ -41,6 +41,7 @@ import { mensagens, textoDaFalta } from '../mensagens/pt-BR';
 import { Botao, Confete, Icone, Mascote, Stu, precarregarAnimacoesStu, type NomeIcone } from '../ui';
 import { FiguraDoExercicio, VisuaisDaLicao, alturaDoDesenhoDaFigura, caixaDaFigura, descricaoDaFiguraRevelada } from './desenho';
 import { ApoioDaLicao } from './estudio';
+import { useFolgaDaEtapa } from './aula-folga';
 import { useResolvaComigo } from './resolva-comigo';
 import { TextoComFormulas } from './texto-com-formulas';
 import { Ordenar } from './ordenar';
@@ -312,6 +313,8 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
     licao, responder: responderSuaVez, visivel: etapa.tipo === 'exemplo', titulo: tituloEtapa,
     aoTerminar: () => { posicoesDasEtapas.current[passo] = window.scrollY; setPasso((atual) => atual + 1); },
   });
+  // Refino 4 (spec 16): Conceito ou Exemplo curto (cabe sem rolar e sobram 40% ou mais da área livre): o conjunto (Stu e cartão) fica centralizado na vertical, e no Exemplo o Stu entra acima do cartão.
+  const { miolo: refDoMiolo, folga } = useFolgaDaEtapa(etapa.tipo === 'conceito' || (etapa.tipo === 'exemplo' && !resolva.ativo));
   const indice = etapa.tipo === 'exercicio' ? etapa.indice : -1;
   const exercicio = indice >= 0 ? exercicios[indice] : null;
   const resposta = indice >= 0 ? respostas[indice] : '';
@@ -770,7 +773,7 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
         <BotaoSom />
       </header>
       {/* Na revisão rápida, o quadro entra de novo, mesmo quando o exercício é o mesmo (o último, pulado agora). */}
-      <div className="aula-miolo" key={`${passo}-${rodadaDeOpcoes}`}>
+      <div className="aula-miolo" key={`${passo}-${rodadaDeOpcoes}`} ref={refDoMiolo} data-folga={folga || undefined}>
         {passo > 0 && !revisao && (
           <button type="button" className="aula-voltar-etapa" disabled={ocupado}
             onClick={() => { voltandoEtapa.current = true; setPasso((atual) => Math.max(0, atual - 1)); }}>
@@ -846,6 +849,9 @@ export function Licao({ licao, pendente, avaliar, concluir, voltar, responderSua
             <VisuaisDaLicao visuais={licao.visuais} />
             {licao.recurso && <RecursoDaLicao recurso={licao.recurso} />}
           </>
+        )}
+        {etapa.tipo === 'exemplo' && !resolva.ativo && folga && (
+          <div className="aula-folga-stu" data-folga-stu="" aria-hidden="true"><Stu expressao="stu-feliz" tamanho={72} /></div>
         )}
         {etapa.tipo === 'exemplo' && (resolva.ativo ? resolva.corpo : <EtapaExemplo licao={licao} titulo={tituloEtapa} />)}
         {exercicio && (() => {

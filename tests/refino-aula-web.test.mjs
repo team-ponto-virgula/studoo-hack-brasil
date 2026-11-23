@@ -16,6 +16,31 @@ const regra = (folha, seletor) => {
   return folha.slice(inicio, folha.indexOf('}', inicio));
 };
 
+test('item 4: o Conceito e o Exemplo (fora do "Resolva comigo") medem a folga; o miolo recebe data-folga; o Stu só entra no Exemplo, acima do cartão, decorativo', () => {
+  assert.match(aula, /useFolgaDaEtapa\(etapa\.tipo === 'conceito' \|\| \(etapa\.tipo === 'exemplo' && !resolva\.ativo\)\)/);
+  assert.match(aula, /<div className="aula-miolo" key=\{`\$\{passo\}-\$\{rodadaDeOpcoes\}`\} ref=\{refDoMiolo\} data-folga=\{folga \|\| undefined\}>/);
+  assert.match(aula, /\{etapa\.tipo === 'exemplo' && !resolva\.ativo && folga && \(\s*<div className="aula-folga-stu" data-folga-stu="" aria-hidden="true"><Stu expressao="stu-feliz" tamanho=\{72\} \/><\/div>\s*\)\}/);
+  // O Stu do Conceito já fica ao lado do balão: ele não ganha um segundo.
+  assert.equal((aula.match(/aula-folga-stu/g) ?? []).length, 1);
+  const hook = ler('src/app/aula-folga.ts');
+  assert.match(hook, /'folgaStu' in filho\.dataset/, 'o Stu da folga não conta como conteúdo (senão ligaria e desligaria a folga em laço)');
+  assert.match(hook, /conteudo\.length - 1/, 'os vãos entre os filhos contam');
+  assert.match(hook, /new ResizeObserver\(conferir\)/, 'confere de novo quando um filho muda de altura (fórmula, fonte, citação)');
+  assert.doesNotMatch(hook, /marginTop|marginBottom/, 'as margens automáticas valem o que sobra e inflariam a conta');
+});
+
+test('item 4: com folga o miolo vira coluna e o conjunto fica no meio do que sobra; sem folga nada muda', () => {
+  assert.match(css, /\.aula-miolo\[data-folga\] \{ display: flex; flex-direction: column; \}/);
+  assert.match(css, /\.aula-miolo\[data-folga\] \.aula-explicacao \{ margin-block: auto; \}/);
+  assert.match(css, /\.aula-miolo\[data-folga\] \.aula-folga-stu \{ align-self: center; margin-top: auto;/);
+  assert.match(css, /\.aula-miolo\[data-folga\] > \.aula-quadro\[data-etapa='exemplo'\] \{ margin-bottom: auto; \}/);
+  assert.match(css, /\.aula-miolo\[data-folga\] \.aula-folga-stu \.stu \{ width: 72px; \}/);
+  // As regras de sempre do miolo seguem: uma grade que começa em cima.
+  const miolo = regra(css, '.aula-miolo');
+  assert.match(miolo, /display: grid;/);
+  assert.match(miolo, /align-content: start;/);
+});
+
 test('item 5: a dica "use as teclas de A a C" só aparece com teclado e ponteiro fino (hover: hover e pointer: fine) e nunca no app', () => {
   assert.match(css, /\.opcoes-atalho \{ display: none;/, 'escondida por padrão (toque)');
   assert.match(css, /@media \(hover: hover\) and \(pointer: fine\) \{\s*\.opcoes-atalho \{ display: block; \}/);

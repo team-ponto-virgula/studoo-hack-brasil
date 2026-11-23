@@ -106,6 +106,14 @@
 .aula-miolo h1 { margin-top: -6px; font-size: clamp(1.5rem, 4.6vw, 2rem); line-height: 1.15; text-wrap: balance; }
 .aula-miolo .introducao { margin-top: 0; }
 
+/* Refino 4 (spec 16): etapa curta (cabe sem rolar e sobram 40% ou mais da área livre, medido em aula-folga.ts). O miolo vira uma coluna e o conjunto (Stu e cartão) fica centralizado na
+   vertical, no que sobra abaixo do título; no Exemplo o Stu (stu-feliz, 72, decorativo) entra acima do cartão. Sem folga, nada disto vale e tudo fica em cima, como sempre foi. */
+.aula-miolo[data-folga] { display: flex; flex-direction: column; }
+.aula-miolo[data-folga] .aula-explicacao { margin-block: auto; }
+.aula-miolo[data-folga] .aula-folga-stu { align-self: center; margin-top: auto; margin-bottom: -6px; }
+.aula-miolo[data-folga] .aula-folga-stu .stu { width: 72px; }
+.aula-miolo[data-folga] > .aula-quadro[data-etapa='exemplo'] { margin-bottom: auto; }
+
 /* Conceito: o Stu explica, num balão. */
 .aula-explicacao { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 12px; }
 .aula-explicacao .stu { width: 76px; margin-top: 6px; transform-origin: 50% 100%; animation: aula-stu 3400ms ease-in-out 700ms infinite; }
