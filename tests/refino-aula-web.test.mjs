@@ -23,3 +23,15 @@ test('item 5: a dica "use as teclas de A a C" só aparece com teclado e ponteiro
   for (const arquivo of ['apps/mobile/src/licao.tsx', 'apps/mobile/src/estudo.tsx']) assert.doesNotMatch(ler(arquivo), /licao\.atalho|\bt\.atalho\(/, `${arquivo}: o app não tem a dica`);
 });
 
+test('item 6: o quadrinho da letra cresce com o texto (1,75 × a letra, mínimo 30, quadrado, raio 9) e o texto da opção quebra ao lado', () => {
+  const tecla = regra(css, '.opcao-tecla');
+  assert.match(tecla, /width: max\(30px, 1\.75em\);/, 'lado de 1,75 × o tamanho da letra (em), no mínimo 30 px');
+  assert.match(tecla, /aspect-ratio: 1;/, 'sempre quadrado');
+  assert.match(tecla, /border-radius: 9px;/);
+  assert.match(tecla, /place-items: center;/, 'a letra no centro');
+  assert.match(tecla, /flex: none;/, 'o quadrinho não encolhe nem estica');
+  assert.match(tecla, /font-size: 0\.875rem;/, 'a letra é rem: com o texto ampliado ela e o quadrinho crescem juntos');
+  assert.doesNotMatch(tecla, /height: 30px/, 'sem altura fixa');
+  assert.match(css, /:is\(\.aula-quadro, \.estudio-desafio, \.resolva\) \.opcoes label > :not\(input, \.opcao-tecla\) \{ flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; \}/, 'o texto ocupa o resto da largura e quebra sem passar por baixo do quadrinho');
+});
+
