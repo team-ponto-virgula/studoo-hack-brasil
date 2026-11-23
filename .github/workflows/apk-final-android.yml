@@ -1,0 +1,87 @@
+# Prova do APK FINAL do canal interno Android (Lead, 23/11), sem recompilar o app: baixa o APK que o EAS gerou, confere o
+# SHA256, instala no emulador (o mesmo de capturas-nativas.yml: API 35, google_apis x86_64, KVM) e roda um fluxo só, a
+# entrada e "Experimentar sem conta" (apps/mobile/conferencia-nativa/apk-final/visitante.yaml). Este arquivo existe só no
+# ramo de teste teste/apk-final-android e roda no push desse ramo; nada em main, development, release ou no site.
+name: APK final (Android, visitante)
+
+on:
+  push:
+    branches: [teste/apk-final-android]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: apk-final-android
+  cancel-in-progress: false
+
+env:
+  APK_URL: https://expo.dev/artifacts/eas/nuOIVcSzxIwsigXnnj-UTesEK1NSxGAzoZjAfBoIrbw.apk
+  APK_SHA256: 3f7fba43535372f9415dc2b60abc04f3444f8b36fd12cb89eba1c88318057d3c
+  MAESTRO_VERSAO: 2.12.1
+  MAESTRO_SHA256: 54dbb0716425626604973cbb374c585ca30272375d9ce15177a1152765ddd9d7
+
+jobs:
+  apk:
+    name: APK final no emulador
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Liberar o KVM para o emulador
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Baixar o APK final e conferir o SHA256
+        run: |
+          mkdir -p "$RUNNER_TEMP/apk-final/registros"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/apk-final/studoo-final.apk" "$APK_URL"
+          echo "$APK_SHA256  $RUNNER_TEMP/apk-final/studoo-final.apk" | sha256sum -c - | tee "$RUNNER_TEMP/apk-final/registros/sha256.txt"
+          AAPT="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)/aapt"
+          "$AAPT" dump badging "$RUNNER_TEMP/apk-final/studoo-final.apk" | grep -E "^(package|application-label|sdkVersion|targetSdkVersion|native-code)" | tee "$RUNNER_TEMP/apk-final/registros/apk-badging.txt"
+
+      - name: Maestro
+        run: |
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/maestro.zip" "https://github.com/mobile-dev-inc/Maestro/releases/download/cli-${MAESTRO_VERSAO}/maestro.zip"
+          echo "$MAESTRO_SHA256  $RUNNER_TEMP/maestro.zip" | sha256sum -c -
+          unzip -q -o "$RUNNER_TEMP/maestro.zip" -d "$RUNNER_TEMP"
+          echo "MAESTRO=$RUNNER_TEMP/maestro/bin/maestro" >> "$GITHUB_ENV"
+          MAESTRO_CLI_NO_ANALYTICS=1 MAESTRO_DISABLE_UPDATE_CHECK=true "$RUNNER_TEMP/maestro/bin/maestro" --version
+
+      - name: "Emulador: instalar o APK final, abrir e entrar como visitante"
+        timeout-minutes: 40
+        uses: ReactiveCircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d # v2.38.0
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          cores: 3
+          ram-size: 4096M
+          disk-size: 6000M
+          emulator-boot-timeout: 900
+          disable-animations: false
+          disable-spellchecker: true
+          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          script: bash apps/mobile/conferencia-nativa/apk-final/rodar.sh
+
+      - name: Guardar as capturas e os registros (3 dias)
+        if: ${{ always() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: apk-final-android
+          path: |
+            ${{ runner.temp }}/apk-final
+            !${{ runner.temp }}/apk-final/studoo-final.apk
+          retention-days: 3
+          if-no-files-found: warn

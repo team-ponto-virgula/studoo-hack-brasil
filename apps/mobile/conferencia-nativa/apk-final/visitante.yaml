@@ -1,0 +1,41 @@
+# APK final do canal interno (EAS, perfil preview), instalado como veio, sem recompilar: abre do zero e entra como visitante.
+# Prova pedida pelo Lead (23/11): a entrada aparece e "Experimentar sem conta" leva à primeira tela do visitante (Nova
+# trilha, sem trilhas). Fala com o site publicado (o endereço que vem embutido no APK).
+appId: com.studoo.mobile.dev
+---
+- launchApp:
+    clearState: true
+# Pedido de permissão do sistema (notificações no Android 13+), se aparecer.
+- runFlow:
+    when:
+      visible:
+        id: com.android.permissioncontroller:id/permission_allow_button
+    commands:
+      - tapOn:
+          id: com.android.permissioncontroller:id/permission_allow_button
+- extendedWaitUntil:
+    visible:
+      id: titulo-entrada
+    timeout: 180000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 01-apk-final-entrada
+- scrollUntilVisible:
+    element:
+      id: experimentar-sem-conta
+    direction: DOWN
+    timeout: 120000
+    optional: true
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: experimentar-sem-conta
+# O visitante sem trilhas abre na Nova trilha; a lista ou a barra de baixo também provam a sessão de visitante.
+- extendedWaitUntil:
+    visible:
+      id: titulo-objetivo|objetivo-estudo|titulo-planos|nav-objetivo
+    timeout: 120000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 02-apk-final-visitante
+- assertNotVisible:
+    id: android:id/aerr_wait
