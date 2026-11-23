@@ -33,7 +33,7 @@ const FORMATOS = [
   { formato: 'associar', demo: 'violao', objetivo: 'Quero tocar violão do zero' },
   { formato: 'multipla_escolha', demo: 'historia', objetivo: 'História do Brasil, da Colônia à República' },
   { formato: 'verdadeiro_falso', demo: 'fracoes', objetivo: 'Quero entender frações' },
-  { formato: 'aberta', demo: 'fotografia', objetivo: 'Tirar fotos melhores com o celular' },
+  // Ramo teste/landing-heroi: sem a trilha de fotografia, que o fluxo 88 cria do zero (sem o aviso de trilha repetida).
   { formato: 'lacuna', demo: 'ingles', objetivo: 'Inglês para viagem' },
 ];
 
@@ -98,7 +98,8 @@ function indiceDoFormato(demo, formato) {
 
 /** Escolhe a demonstração de cada formato: a preferida, se ainda servir; senão, a primeira livre que sirva. */
 function escolherDemos() {
-  const usadas = new Set();
+  // Ramo teste/landing-heroi: a fotografia fica livre para o fluxo 88, nunca como substituta de outra.
+  const usadas = new Set(['fotografia']);
   const escolhas = [];
   for (const pedido of FORMATOS) {
     const preferida = DEMOS.find((demo) => demo.chave === pedido.demo);

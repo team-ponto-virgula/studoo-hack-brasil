@@ -1,0 +1,135 @@
+# O herói da página de apresentação (Lead, 23/11; só no ramo teste/landing-heroi): três telas da MESMA trilha,
+# "Fotografia com o celular". (1) O pedido com a ficha da ideia tocada: o toque só preenche o campo (estudo.tsx, sugerir),
+# com o texto exato da ficha; (2) a proposta pronta, sem o aviso de trilha repetida: o preparo deste ramo não cria a trilha
+# de fotografia; (3) a lição 1 com o acerto: verdadeiro ou falso "Foto embaçada é sempre culpa de um celular ruim." é
+# Falsa, porque "Lente suja e mão tremendo deixam qualquer foto borrada" (src/servidor/ia/demos.ts, fotografia).
+appId: host.exp.Exponent
+name: 88-heroi
+---
+- runFlow: ../partes/reabrir.yaml
+- extendedWaitUntil:
+    visible:
+      id: nav-objetivo
+    timeout: 90000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: nav-objetivo
+    retryTapIfNoChange: true
+- extendedWaitUntil:
+    visible:
+      id: titulo-objetivo
+    timeout: 30000
+# A ficha é a 6ª de "Populares" (sugestao-5): a fileira rola para o lado até ela aparecer inteira.
+- repeat:
+    times: 6
+    while:
+      notVisible:
+        id: sugestao-5
+    commands:
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          from:
+            id: ideias-pedido
+          direction: LEFT
+          duration: 500
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: sugestao-5
+- assertVisible:
+    text: "Fotografia com o celular"
+# A fileira volta ao começo para a captura mostrar as primeiras fichas, com o campo já preenchido.
+- repeat:
+    times: 6
+    while:
+      notVisible:
+        id: sugestao-0
+    commands:
+      - swipe:
+          waitToSettleTimeoutMs: 1000
+          from:
+            id: ideias-pedido
+          direction: RIGHT
+          duration: 500
+- waitForAnimationToEnd:
+    timeout: 2000
+- takeScreenshot: 88-heroi-1-pedido
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: gerar-trilha
+- extendedWaitUntil:
+    visible:
+      id: comecar-trilha|tentar-geracao
+    timeout: 120000
+- runFlow:
+    when:
+      visible:
+        id: tentar-geracao
+    commands:
+      - tapOn:
+          waitToSettleTimeoutMs: 1500
+          id: tentar-geracao
+- extendedWaitUntil:
+    visible:
+      id: comecar-trilha
+    timeout: 120000
+- assertNotVisible:
+    text: "Abrir a que já existe"
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 88-heroi-2-proposta
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: comecar-trilha
+- extendedWaitUntil:
+    visible: 'Etapa 1 de \d+'
+    timeout: 90000
+# Conceito e exemplo: lê e avança até o exercício.
+- repeat:
+    times: 10
+    while:
+      notVisible:
+        id: vf-falso
+    commands:
+      - runFlow:
+          when:
+            visible:
+              id: ler-mais
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: ler-mais
+      - runFlow:
+          when:
+            visible:
+              id: avancar-licao
+          commands:
+            - tapOn:
+                waitToSettleTimeoutMs: 1500
+                id: avancar-licao
+      - scrollUntilVisible:
+          element:
+            id: vf-falso
+          direction: DOWN
+          timeout: 8000
+          optional: true
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: vf-falso
+- scrollUntilVisible:
+    element:
+      id: opcao-justificativa-lente
+    direction: DOWN
+    timeout: 45000
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: opcao-justificativa-lente
+- tapOn:
+    waitToSettleTimeoutMs: 1500
+    id: enviar-resposta
+- extendedWaitUntil:
+    visible:
+      id: continuar-licao
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 3000
+- takeScreenshot: 88-heroi-3-acerto
