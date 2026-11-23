@@ -1,6 +1,8 @@
 /*
  * Onde fica o aviso "Música de fundo ligada." (spec 16, item 14): sempre no alto, 8 px abaixo do cabeçalho (ou da barra da marca) da tela, em todas as telas, para nunca cobrir o balão do nó, os
  * botões do rodapé nem a barra de abas. Sem DOM aqui: o componente (ambiente-som.tsx) mede os cabeçalhos e passa os retângulos.
+ * E o que ele cobriria embaixo: enquanto o aviso está à vista, o que vem logo depois do cabeçalho desce a altura dele mais o respiro, e o aviso fica na faixa aberta, sem cobrir título, campo
+ * nem botão (defeito do Lead, 23/11: o título "O que você quer aprender?" ficava sob o aviso em 768 px).
  */
 
 export interface Retangulo { top: number; bottom: number; left: number; width: number; height: number }
@@ -22,6 +24,23 @@ export function cabecalhoDoAlto(retangulos: readonly Retangulo[], alturaDaJanela
     if (!mais || r.bottom > mais.bottom) mais = r;
   }
   return mais;
+}
+
+/** Quanto o conteúdo desce para dar lugar ao aviso: a altura dele mais o respiro entre os dois. */
+export function reservaDoAviso(alturaDoAviso: number): number {
+  return Math.ceil(alturaDoAviso) + RESPIRO_DO_AVISO;
+}
+
+/** Até onde a página ainda está no alto (o cabeçalho na janela). Rolada além disso, descer o conteúdo moveria o que a pessoa está lendo. */
+export const TOPO_DA_PAGINA = 4;
+
+/**
+ * Quem desce para dar lugar ao aviso. Com um cabeçalho à vista, o elemento que vem logo depois dele (o conteúdo da tela). Sem cabeçalho à vista (o computador não tem a faixa, ou a página já rolou),
+ * o conteúdo principal, mas só se a página está no alto: rolada, o aviso fica sobre o que passa por ali e nada se mexe.
+ */
+export function quemDesce<T>(indiceDoCabecalho: number, seguintes: readonly (T | null)[], principal: T | null, rolagem: number): T | null {
+  if (indiceDoCabecalho >= 0) return seguintes[indiceDoCabecalho] ?? null;
+  return rolagem < TOPO_DA_PAGINA ? principal : null;
 }
 
 /** O lugar do aviso: 8 px abaixo do cabeçalho, centrado nele, com a largura dele no máximo. Sem cabeçalho (os estilos do CSS valem): no alto, 8 px da borda. */
