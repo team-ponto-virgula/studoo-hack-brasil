@@ -253,25 +253,31 @@ interface PontoParaLegenda {
   derivado?: { tipo: keyof typeof PALAVRA_DO_DERIVADO };
 }
 
-/** A legenda só aparece quando há pontos de mais de um papel; o procurado entra como "C = ?" e nunca com a posição. */
+/**
+ * A legenda só lista o que está desenhado (spec 16, item 30): as categorias dos pontos que aparecem ("dados", "especial", o derivado, "resposta"), cada uma com o símbolo que a figura tem. O
+ * procurado ainda escondido NÃO é desenhado, então não tem categoria nem o círculo tracejado: fica só a linha "C = ?", em texto, sem símbolo antes. No retorno ele aparece e vira a "resposta",
+ * com o ponto verde. A legenda só entra quando há mais de um papel: o procurado escondido conta como um, para ela continuar aparecendo onde sempre apareceu (a linha "C = ?" mora nela).
+ */
 function itensDaLegenda(pontos: readonly PontoParaLegenda[], contexto: ContextoDoDesenho): { itens: ItemDaLegenda[]; escondidos: string[] } {
   const itens: ItemDaLegenda[] = [];
   const escondidos: string[] = [];
   const tem = (item: ItemDaLegenda) => itens.some((outro) => outro.simbolo === item.simbolo && outro.palavra === item.palavra);
   for (const ponto of pontos) {
     const papel = papelNoContexto(ponto.papel, contexto);
+    if (papel === "procurado") {
+      escondidos.push(ponto.id);
+      continue;
+    }
     const item: ItemDaLegenda =
       papel === "dado" ? { simbolo: "dado", palavra: "dados" }
         : papel === "especial" ? { simbolo: "especial", palavra: ponto.derivado ? PALAVRA_DO_DERIVADO[ponto.derivado.tipo] : "especial" }
-          : papel === "resposta" ? { simbolo: "resposta", palavra: "resposta" }
-            : { simbolo: "procurado", palavra: "procurado" };
+          : { simbolo: "resposta", palavra: "resposta" };
     if (!tem(item)) itens.push(item);
-    if (papel === "procurado") escondidos.push(ponto.id);
   }
-  const ordem = ["dado", "especial", "resposta", "procurado"];
+  const ordem = ["dado", "especial", "resposta"];
   itens.sort((a, b) => ordem.indexOf(a.simbolo) - ordem.indexOf(b.simbolo));
   const papeis = new Set(itens.map((item) => item.simbolo));
-  return papeis.size >= 2 ? { itens, escondidos } : { itens: [], escondidos: [] };
+  return papeis.size + (escondidos.length > 0 ? 1 : 0) >= 2 ? { itens, escondidos } : { itens: [], escondidos: [] };
 }
 
 const ALTURA_DA_LINHA_DA_LEGENDA = 22;
