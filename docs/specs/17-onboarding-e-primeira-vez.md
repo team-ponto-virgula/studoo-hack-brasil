@@ -106,6 +106,15 @@ Revista em 23/11 com a medição do Mobile & QA e do Lead (IA real): a proposta 
 - **Leitor de tela:** acompanha os textos novos.
 - **Onde:** web e app.
 
+**Textos que ainda dizem "demonstração" para quem usa o site publicado** (revisão de 23/11, contrato `experiencia.ts` em `feat/refino-web`). O conteúdo de vitrine se chama "Exemplo" (spec 16, item 9):
+- `compartilhar.demonstracaoAviso` passa a "Esta trilha é um exemplo do Studoo e aparece no Explorar com o rótulo “Exemplo”."
+- `comunidade.demonstracaoDica` passa a "Trilha de exemplo do Studoo."
+- `compartilhar.perfilDemo` passa a "Perfil de exemplo".
+
+**Ficam como estão:**
+- `estudio.simulado` ("Modo demonstração") e o ramo de `privacidadePorProvedor` para a IA falsa só aparecem quando o servidor roda sem IA real. Lá, dizer "modo demonstração" é o aviso honesto de que nada vai para a IA.
+- `licao.demonstracao` ("Demonstração") é o nome pedagógico da etapa em que o Stu mostra como se faz, e não o modo do servidor.
+
 ### Mudança 3 (adiada por decisão do dono): o visitante sabe como guardar o que fez
 - **Antes:** o visitante só lê "Conta temporária…" na entrada e no Perfil, sem saída.
 - **Depois:**
