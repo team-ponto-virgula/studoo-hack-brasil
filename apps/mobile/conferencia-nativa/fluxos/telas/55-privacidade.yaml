@@ -16,15 +16,24 @@ name: 55-privacidade
     visible:
       id: titulo-perfil
     timeout: 30000
+# No emulador do Android (GPU por software), cada passo da rolagem leva de 18 a 26 s: na execução 45097385589 o Maestro
+# achou privacidade-estado aos 111 s e o prazo de 120 s acabou na rolagem extra que centraliza o elemento. As rolagens do
+# Perfil e do Explorar têm 300 s (no iPhone elas acabam em segundos; o prazo só pesa quando a máquina está lenta).
 # A seção Privacidade no meio da tela, com o título acima da frase (a âncora era o botão da política, que saiu da seção).
+# A rolagem é opcional (a centralização pode estourar o prazo com o elemento já à vista); o que decide é a frase à vista.
 - scrollUntilVisible:
     element:
       id: privacidade-estado
     direction: DOWN
-    timeout: 120000
+    timeout: 300000
+    optional: true
     speed: 50
     centerElement: true
     waitToSettleTimeoutMs: 500
+- extendedWaitUntil:
+    visible:
+      id: privacidade-estado
+    timeout: 15000
 - waitForAnimationToEnd:
     timeout: 1500
 - takeScreenshot: 55-perfil-privacidade
@@ -32,7 +41,7 @@ name: 55-privacidade
     element:
       id: excluir-conta
     direction: DOWN
-    timeout: 120000
+    timeout: 300000
     speed: 50
     centerElement: true
     waitToSettleTimeoutMs: 500
@@ -56,15 +65,15 @@ name: 55-privacidade
 # teclado AINDA ABERTO, "Excluir para sempre" (confirmacao-confirmar) e "Cancelar" (confirmacao-cancelar) estão na árvore.
 # Obrigatório nas duas plataformas. No Android, o que fica atrás do teclado sai da árvore (execução 45077874039: cartão até
 # y=1253, teclado a partir de 962, nenhum dos dois botões achado), então achar os dois é achá-los acima do teclado. A
-# espera (até 5 s) cobre a subida do cartão depois de o teclado abrir; se faltar, o Maestro guarda a hierarquia da falha.
+# espera (até 15 s) cobre a subida do cartão depois de o teclado abrir; se faltar, o Maestro guarda a hierarquia da falha.
 - extendedWaitUntil:
     visible:
       id: confirmacao-confirmar
-    timeout: 5000
+    timeout: 15000
 - extendedWaitUntil:
     visible:
       id: confirmacao-cancelar
-    timeout: 5000
+    timeout: 15000
 # A captura com o teclado aberto e os dois botões à vista.
 - takeScreenshot: 57-excluir-conta-digitado
 # Só depois da prova o teclado fecha no Android, para o cancelamento seguir como antes (com o teclado aberto, o Voltar
